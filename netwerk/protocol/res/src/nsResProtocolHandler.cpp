@@ -112,7 +112,6 @@ nsResProtocolHandler::Init()
     char* path = PR_GetEnv("MOZILLA_FIVE_HOME");
     if (path) {
         char* fileURL = PR_smprintf("file:///%s", path);
-        PR_Free(path);
         rv = AppendSubstitution("Resource", fileURL);
         PR_Free(fileURL);
         if (NS_FAILED(rv)) return rv;
@@ -170,6 +169,7 @@ nsResProtocolHandler::Init()
     char* fileURL = PR_smprintf("file:///%s", buf);
     rv = AppendSubstitution("Resource", fileURL);
     if (NS_FAILED(rv)) return rv;
+    PR_Free(fileURL);
 
 #endif
 
