@@ -40,9 +40,9 @@ function go( msg )
 		}
 		else
 		{
-			// * otherwise, if multiple .IAS files exist, get list selection and determine appropriate .IAS file
+			// * otherwise, if multiple .NRS files exist, get list selection and determine appropriate .NRS file
 			var pathName = parent.parent.globals.getConfigFolder( self );
-			var theList = parent.parent.globals.document.setupPlugin.GetFolderContents( pathName,".IAS" );
+			var theList = parent.parent.globals.document.setupPlugin.GetFolderContents( pathName,".NRS" );
 
 			if ( theList != null )
 			{
@@ -123,7 +123,7 @@ function generateRegServerList()
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	// if RegServer is not specified in ACCTSET.INI and multiple .IAS files exist, build list
+	// if RegServer is not specified in ACCTSET.INI and multiple .NRS files exist, build list
 
 	var theFile = parent.parent.globals.getAcctSetupFilename( self );
 	var theRegFile = parent.parent.globals.GetNameValuePair( theFile, "New Acct Mode", "CompServer" );
@@ -131,7 +131,7 @@ function generateRegServerList()
 	if ( theRegFile == null || theRegFile == "" )
 	{
 		var pathName = parent.parent.globals.getConfigFolder( self );
-		var theList = parent.parent.globals.document.setupPlugin.GetFolderContents( pathName, ".IAS" );
+		var theList = parent.parent.globals.document.setupPlugin.GetFolderContents( pathName, ".NRS" );
 		if ( theList != null )
 		{
 			if ( theList.length > 1 )	
