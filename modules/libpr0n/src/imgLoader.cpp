@@ -529,7 +529,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   imgRequest *request = nsnull;
 
   nsCOMPtr<nsIURI> uri;
-  channel->GetOriginalURI(getter_AddRefs(uri));
+  channel->GetURI(getter_AddRefs(uri));
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
   PRBool bHasExpired;
