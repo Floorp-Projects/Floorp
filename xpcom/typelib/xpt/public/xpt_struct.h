@@ -75,11 +75,9 @@ struct XPTHeader {
     uint16                      num_interfaces;
     uint32                      file_length;
     XPTInterfaceDirectoryEntry  *interface_directory;
-    uint8                       *data_pool;
+    uint32                      data_pool;
     XPTAnnotation               *annotations;
 };
-#define XPT_HEADER_BASE_SIZE (16 + 1 + 1 + 2 + 4 + 4 + 4)
-
 
 /*
  * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at 
@@ -93,20 +91,18 @@ struct XPTInterfaceDirectoryEntry {
     char                   *namespace;
     XPTInterfaceDescriptor *interface_descriptor;
 };
-#define XPT_IDE_SIZE (16 + 4 + 4 + 4)
 
 /*
  * An InterfaceDescriptor is a variable-size record used to describe a 
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
-    XPTInterfaceDirectoryEntry  *parent_interface;
-    uint16                      num_methods;
-    XPTMethodDescriptor         *method_descriptors;
-    uint16                      num_constants;
-    XPTConstDescriptor          *const_descriptors;
+    uint32              parent_interface;
+    uint16              num_methods;
+    XPTMethodDescriptor *method_descriptors;
+    uint16              num_constants;
+    XPTConstDescriptor  *const_descriptors;
 };
-#define XPT_ID_BASE_SIZE (4 + 2 + 2)
 
 /*
  * This is our special string struct with a length value associated with it,
@@ -138,7 +134,6 @@ struct XPTTypeDescriptorPrefix {
     uint8 is_pointer:1, is_unique_pointer:1, is_reference:1,
           tag:5;
 };
-#define XPT_TDP_SIZE 1
 
 /* 
  * The following defines map mnemonic names to the different numeric values 
@@ -201,11 +196,10 @@ struct XPTTypeDescriptorPrefix {
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix *prefix;
     union {
-        XPTInterfaceDirectoryEntry *interface;
-        uint8                      argnum;
+        uint32 interface;
+        uint8  argnum;
     } type;
 };
-#define XPT_TD_SIZE (XPT_TDP_SIZE + 4)
 
 /*
  * A ConstDescriptor is a variable-size record that records the name and 
@@ -241,7 +235,6 @@ struct XPTConstDescriptor {
         XPTString *string;
     } value; /* varies according to type */
 };
-#define XPT_CD_SIZE (4 + XPT_TD_SIZE + 8)
 
 /*
  * A ParamDescriptor is a variable-size record used to describe either a 
@@ -251,7 +244,6 @@ struct XPTParamDescriptor {
     uint8             in:1, out:1, retval:1, reserved:5;
     XPTTypeDescriptor type;
 };
-#define XPT_PD_SIZE (1 + XPT_TD_SIZE)
 
 /*
  * A MethodDescriptor is a variable-size record used to describe a single 
@@ -265,7 +257,6 @@ struct XPTMethodDescriptor {
     XPTParamDescriptor  *params;
     XPTParamDescriptor  result;
 };
-#define XPT_MD_BASE_SIZE (1 + 4 + 1 + XPT_PD_SIZE)
 
 /*
  * Annotation records are variable-size records used to store secondary 
@@ -291,7 +282,6 @@ struct XPTMethodDescriptor {
 struct XPTAnnotationPrefix {
     uint8 is_last:1, tag:7;
 };
-#define XPT_AP_SIZE 1
 
 struct XPTPrivateAnnotation {
     XPTString *creator;
