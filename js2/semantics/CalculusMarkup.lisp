@@ -44,7 +44,7 @@
 
 (defparameter *semantic-keywords*
   '(not and or xor mod new
-    type tag record
+    tag record
     function
     begin end nothing
     if then elsif else
@@ -1194,7 +1194,6 @@
 (defun depict-deftype (markup-stream world depict-env name type-expr)
   (depict-semantics (markup-stream depict-env)
     (depict-logical-block (markup-stream 2)
-      (depict-semantic-keyword markup-stream 'type :after)
       (depict-type-name markup-stream name :definition)
       (depict-break markup-stream 0)
       (depict-logical-block (markup-stream 4)
