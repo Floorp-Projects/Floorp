@@ -21,16 +21,22 @@
  *    travis@netscape.com 
  */
 
-#include "nsCOMPtr.h"
+// Local Includes
 #include "nsDOMWindowList.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeNode.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIScriptGlobalObject.h"
+
+// Helper classes
+#include "nsCOMPtr.h"
+
+// Interfaces needed
+#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsIDocument.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIWebNavigation.h"
 
 nsDOMWindowList::nsDOMWindowList(nsIDocShell *aDocShell)
 {
@@ -69,11 +75,11 @@ nsDOMWindowList::GetLength(PRUint32* aLength)
 
   *aLength = 0;
   if (mDocShellNode) {
-    nsCOMPtr<nsIDocShell> shell = do_QueryInterface(mDocShellNode);
-    if (shell) {
+    nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
+    if (shellAsNav) {
       nsCOMPtr<nsIDOMDocument> domdoc;
       
-      shell->GetDocument(getter_AddRefs(domdoc));
+      shellAsNav->GetDocument(getter_AddRefs(domdoc));
       if (domdoc) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
         if (doc) {
@@ -96,11 +102,11 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 
   *aReturn = nsnull;
   if (mDocShellNode) {
-    nsCOMPtr<nsIDocShell> shell = do_QueryInterface(mDocShellNode);
-    if (shell) {
+    nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
+    if (shellAsNav) {
       nsCOMPtr<nsIDOMDocument> domdoc;
       
-      shell->GetDocument(getter_AddRefs(domdoc));
+      shellAsNav->GetDocument(getter_AddRefs(domdoc));
       if (domdoc) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
         if (doc) {
@@ -127,11 +133,11 @@ nsDOMWindowList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
 
   *aReturn = nsnull;
   if (mDocShellNode) {
-    nsCOMPtr<nsIDocShell> shell = do_QueryInterface(mDocShellNode);
-    if (shell) {
+    nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
+    if (shellAsNav) {
       nsCOMPtr<nsIDOMDocument> domdoc;
       
-      shell->GetDocument(getter_AddRefs(domdoc));
+      shellAsNav->GetDocument(getter_AddRefs(domdoc));
       if (domdoc) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
         if (doc) {
