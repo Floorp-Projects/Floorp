@@ -26,7 +26,6 @@
 #include "CNavCenterContextMenuAtt.h"
 #include "CHyperTreeFlexTable.h"
 #include "Netscape_constants.h"
-#include "CNavCenterSelectorPane.h"
 #include "URDFUtilities.h"
 
 extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
