@@ -40,7 +40,7 @@
 #include "nsCSSKeywords.h"
 #include "nsString.h"
 
-static const char* kJunkNames[] = {
+static const char* const kJunkNames[] = {
   nsnull,
   "",
   "123",
@@ -60,9 +60,9 @@ int TestProps() {
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
-  extern const char* kCSSRawProperties[];
-  const char** et = &kCSSRawProperties[0];
-  const char** end = &kCSSRawProperties[eCSSProperty_COUNT];
+  extern const char* const kCSSRawProperties[];
+  const char*const* et = &kCSSRawProperties[0];
+  const char*const* end = &kCSSRawProperties[eCSSProperty_COUNT];
   index = eCSSProperty_UNKNOWN;
   while (et < end) {
     char tagName[100];
@@ -97,7 +97,7 @@ int TestProps() {
 
   // Now make sure we don't find some garbage
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
-    const char* tag = kJunkNames[i];
+    const char* const tag = kJunkNames[i];
     id = nsCSSProps::LookupProperty(nsCAutoString(tag));
     if (id >= 0) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
@@ -116,13 +116,13 @@ int TestKeywords() {
   nsCSSKeyword id;
   nsCSSKeyword index;
 
-  extern const char* kCSSRawKeywords[];
+  extern const char* const kCSSRawKeywords[];
 
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
-  const char**  et = &kCSSRawKeywords[0];
-  const char**  end = &kCSSRawKeywords[eCSSKeyword_COUNT - 1];
+  const char*const*  et = &kCSSRawKeywords[0];
+  const char*const*  end = &kCSSRawKeywords[eCSSKeyword_COUNT - 1];
   index = eCSSKeyword_UNKNOWN;
   while (et < end) {
     char tagName[512];
@@ -165,7 +165,7 @@ int TestKeywords() {
 
   // Now make sure we don't find some garbage
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
-    const char* tag = kJunkNames[i];
+    const char* const tag = kJunkNames[i];
     id = nsCSSKeywords::LookupKeyword(nsCAutoString(tag));
     if (eCSSKeyword_UNKNOWN < id) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
