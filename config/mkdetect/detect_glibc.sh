@@ -62,7 +62,7 @@ GLIBC_CC=cc
 
 GLIBC_CLEANUP=False
 
-function glibc_usage()
+glibc_usage()
 {
 echo
 echo "Usage:   `basename $0` [options]"
@@ -138,7 +138,7 @@ GLIBC_SRC="$GLIBC_PROG_PREFIX"_"$GLIBC_OBJECT_NAME.c"
 ##
 ## Cleanup the dummy test source/program
 ##
-function glibc_cleanup()
+glibc_cleanup()
 {
 	rm -f $GLIBC_PROG $GLIBC_SRC
 }

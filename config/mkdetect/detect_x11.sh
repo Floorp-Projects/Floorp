@@ -97,7 +97,6 @@ DEFAULT_X11_SEARCH_PATH="\
 /usr/local \
 /usr/openwin \
 /usr/X11R6 \
-/usr/include/X11 \
 /usr \
 "
 
@@ -167,7 +166,7 @@ X11_STATIC_FLAGS=unknown
 X11_DYNAMIC_FLAGS=unknown
 X11_DYNAMIC_PATHS=unknown
 
-function x11_usage()
+x11_usage()
 {
 echo
 echo "Usage:   `basename $0` [options]"
@@ -339,7 +338,7 @@ X11_STATIC_LIB_NAME=libX11.$X11_STATIC_EXT
 ##
 ## Cleanup the dummy test source/program
 ##
-function x11_cleanup()
+x11_cleanup()
 {
 	rm -f $X11_PROG $X11_SRC
 }

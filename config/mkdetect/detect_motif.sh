@@ -177,7 +177,7 @@ MOTIF_STATIC_FLAGS=unknown
 MOTIF_DYNAMIC_FLAGS=unknown
 MOTIF_DYNAMIC_PATHS=unknown
 
-function motif_usage()
+motif_usage()
 {
 echo
 echo "Usage:   `basename $0` [options]"
@@ -363,7 +363,7 @@ MOTIF_STATIC_LIB_NAME=libXm.$MOTIF_STATIC_EXT
 ##
 ## Cleanup the dummy test source/program
 ##
-function motif_cleanup()
+motif_cleanup()
 {
 	rm -f $MOTIF_PROG $MOTIF_SRC
 }
@@ -371,7 +371,7 @@ function motif_cleanup()
 ##
 ## Check whether the motif libs need Xpm
 ##
-function motif_check_xpm()
+motif_check_xpm()
 {
 	_lib=
 	_count=0
