@@ -58,6 +58,7 @@ DIRS			= \
 
 include $(topsrcdir)/config/rules.mk
 
+CFLAGS			+= $(FE_X_CFLAGS)
 ifdef ENABLE_TESTS
 tests::
 	@$(MAKE) all XFE_WIDGETS_BUILD_TESTS=1

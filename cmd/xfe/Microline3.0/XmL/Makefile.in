@@ -86,4 +86,6 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
+CFLAGS		+= $(FE_X_CFLAGS)
+
 DEFINES		+= $(XFE_EXTRA_DEFINES)

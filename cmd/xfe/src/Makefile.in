@@ -324,6 +324,8 @@ CSRCS		= commands.c
 
 include $(topsrcdir)/config/rules.mk
 
+CFLAGS		+= $(FE_X_CFLAGS)
+
 INCLUDES	+= -I$(OBJDIR) -I$(srcdir)/.. -I$(srcdir)/../DtWidgets -I$(topsrcdir)/modules/libreg/include \
 		-I$(DEPTH)/dist/public/security
 
