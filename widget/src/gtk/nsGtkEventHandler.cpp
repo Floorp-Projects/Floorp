@@ -72,11 +72,6 @@ superwin_child_of_gtk_widget(nsWindow *window, GtkWidget *widget);
 static PRBool
 gtk_widget_child_of_gdk_window(GtkWidget *widget, GdkWindow *window);
 
-struct EventInfo {
-  nsWidget *widget;  // the widget
-  nsRect   *rect;    // the rect
-};
-
 // This is a flag that says if we should suppress the next key down
 // event.  This is used when that last key release event was
 // suppressed and we want the next key press event to not generate the
@@ -112,69 +107,6 @@ void InitAllocationEvent(GtkAllocation *aAlloc,
 }
 
 //==============================================================
-void InitConfigureEvent(GdkEventConfigure *aConf,
-                            gpointer   p,
-                            nsSizeEvent &anEvent,
-                            PRUint32   aEventType)
-{
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_SIZE_EVENT;
-
-  if (aConf != nsnull) {
-  /* do we accually need to alloc a new rect, or can we just set the
-     current one */
-    nsRect *foo = new nsRect(aConf->x, aConf->y, aConf->width, aConf->height);
-    anEvent.windowSize = foo;
-    anEvent.point.x = aConf->x;
-    anEvent.point.y = aConf->y;
-    anEvent.mWinWidth = aConf->width;
-    anEvent.mWinHeight = aConf->height;
-  }
-// this usually returns 0
-  anEvent.time = 0;
-}
-
-//==============================================================
-void InitExposeEvent(GdkEventExpose *aGEE,
-                     gpointer   p,
-                     nsPaintEvent &anEvent,
-                     PRUint32   aEventType)
-{
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_PAINT_EVENT;
-
-  if (aGEE != nsnull)
-  {
-#ifdef DEBUG_EVENTS
-    g_print("expose event: x = %i , y = %i , w = %i , h = %i\n",
-            aGEE->area.x, aGEE->area.y,
-            aGEE->area.width, aGEE->area.height);
-#endif
-    anEvent.point.x = aGEE->area.x;
-    anEvent.point.y = aGEE->area.y;
-
-    nsRect *rect = new nsRect(aGEE->area.x, aGEE->area.y,
-                              aGEE->area.width, aGEE->area.height);
-    anEvent.rect = rect;
-    anEvent.time = gdk_event_get_time((GdkEvent*)aGEE);
-  }
-}
-
-//=============================================================
-void UninitExposeEvent(GdkEventExpose *aGEE,
-                       gpointer   p,
-                       nsPaintEvent &anEvent,
-                       PRUint32   aEventType)
-{
-  if (aGEE != nsnull) {
-    delete anEvent.rect;
-  }
-}
-
 struct nsKeyConverter {
   int vkCode; // Platform independent key code
   int keysym; // GDK keysym key code
@@ -277,9 +209,6 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_SUBTRACT, GDK_underscore },
   { NS_VK_EQUALS, GDK_plus }
 };
-
-void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
-                                GtkWidget *w, gpointer p, GdkEventKey * event);
 
 //==============================================================
 
@@ -470,14 +399,6 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
   }
 }
 
-//=============================================================
-void UninitKeyEvent(GdkEventKey *aGEK,
-                              gpointer   p,
-                              nsKeyEvent &anEvent,
-                              PRUint32   aEventType)
-{
-}
-
 /*==============================================================
   ==============================================================
   =============================================================
@@ -494,24 +415,6 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
   NS_RELEASE(widget);
 
   delete event.windowSize;
-}
-
-gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
-{
-  if (event->type == GDK_NO_EXPOSE)
-    return PR_FALSE;
-
-  nsPaintEvent pevent;
-  InitExposeEvent(event, p, pevent, NS_PAINT);
-
-  nsWindow *win = (nsWindow *)p;
-  NS_ADDREF(win);
-  win->OnExpose(pevent);
-  NS_RELEASE(win);
-
-  UninitExposeEvent(event, p, pevent, NS_PAINT);
-
-  return PR_TRUE;
 }
 
 //==============================================================
