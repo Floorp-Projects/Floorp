@@ -101,7 +101,6 @@
 #include "nsIElementFactory.h"
 
 static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
-static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
