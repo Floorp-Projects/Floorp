@@ -472,5 +472,5 @@ bug99948.html
 bug97138.html
 bug101674.html
 # bug 141021 below does not fail as a local file
-http://bugzilla.mozilla.org/attachment.cgi?id=81602&action=view
+# http://bugzilla.mozilla.org/attachment.cgi?id=81602&action=view
 bug157890.html
