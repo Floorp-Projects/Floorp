@@ -181,6 +181,7 @@ extern PRBool MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 											 char **);
 extern char *MimeCMS_MakeSAURL(MimeObject *obj);
 extern char *IMAP_CreateReloadAllPartsUrl(const char *url);
+extern int MIMEGetRelativeCryptoNestLevel(MimeObject *obj);
 
 static void *
 MimeMultCMS_init (MimeObject *obj)
@@ -442,20 +443,7 @@ MimeMultCMS_generate (void *crypto_closure)
   PRInt32 signature_status = nsICMSMessageErrors::GENERAL_ERROR;
   nsCOMPtr<nsIX509Cert> signerCert;
 
-  // if we are the child of the topmost message, aNestLeve == 1
-  int aNestLevel = 0;
-
-  if (data->self) {
-    MimeObject *walker = data->self;
-    while (walker) {
-      // Crypto mime objects are transparent wrt nesting.
-      if (!mime_typep(walker, (MimeObjectClass *) &mimeEncryptedClass)
-          && !mime_typep(walker, (MimeObjectClass *) &mimeMultipartSignedClass)) {
-        ++aNestLevel;
-      }
-      walker = walker->parent;
-    }
-  }
+  int aRelativeNestLevel = MIMEGetRelativeCryptoNestLevel(data->self);
 
   unverified_p = data->self->options->missing_parts; 
 
@@ -533,11 +521,13 @@ MimeMultCMS_generate (void *crypto_closure)
 
   PRInt32 maxNestLevel = 0;
   if (data->smimeHeaderSink) {
-    data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
+    if (aRelativeNestLevel >= 0) {
+      data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
 
-    if (aNestLevel <= maxNestLevel)
-    {
-      data->smimeHeaderSink->SignedStatus(aNestLevel, signature_status, signerCert);
+      if (aRelativeNestLevel <= maxNestLevel)
+      {
+        data->smimeHeaderSink->SignedStatus(aRelativeNestLevel, signature_status, signerCert);
+      }
     }
   }
 

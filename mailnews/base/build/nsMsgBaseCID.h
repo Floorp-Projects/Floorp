@@ -483,4 +483,15 @@
  0xb3db9392, 0x1b15, 0x48ba,      \
  {0xa1, 0x36, 0x0c, 0xc3, 0xdb, 0x13, 0xd8, 0x7b }}
 
+//
+// nsMessengerContentHandler
+//
+#define NS_MESSENGERCONTENTHANDLER_CID          \
+{ /* 57E1BCBB-1FBA-47e7-B96B-F59E392473B0 */    \
+ 0x57e1bcbb, 0x1fba, 0x47e7,                    \
+ {0xb9, 0x6b, 0xf5, 0x9e, 0x39, 0x24, 0x73, 0xb0}}
+
+#define NS_MESSENGERCONTENTHANDLER_CONTRACTID   \
+  NS_CONTENT_HANDLER_CONTRACTID_PREFIX "x-message-display"
+
 #endif // nsMessageBaseCID_h__

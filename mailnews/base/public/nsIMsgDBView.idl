@@ -262,6 +262,7 @@ interface nsIMsgDBView : nsISupports
     attribute nsMsgViewFlagsTypeValue viewFlags;
     readonly attribute nsMsgViewSortTypeValue sortType;
     readonly attribute nsMsgViewSortOrderValue sortOrder;
+    readonly attribute nsMsgKey keyForFirstSelectedMessage;
 
     /**
      * this method will automatically expand the destination thread, 
@@ -285,7 +286,8 @@ interface nsIMsgDBView : nsISupports
 
     readonly attribute string URIForFirstSelectedMessage;
     readonly attribute nsIMsgDBHdr hdrForFirstSelectedMessage;
-    void loadMessageByMsgKey (in nsMsgKey aMsgKey);
+    void loadMessageByMsgKey(in nsMsgKey aMsgKey);
+    void loadMessageByUrl(in string aUrl);
     void reloadMessage();
     void reloadMessageWithAllParts();
 

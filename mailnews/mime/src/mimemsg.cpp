@@ -491,10 +491,8 @@ MimeMessage_close_headers (MimeObject *obj)
   //
   PRBool outer_p = !obj->headers;	/* is this the outermost message? */
 
-  if (
-      (outer_p) &&
-      ( obj->options->part_to_load == NULL )
-     )
+  if ( outer_p &&
+       (!obj->options->part_to_load || obj->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay))
   {
     // call SetMailCharacterSetToMsgWindow() to set a menu charset
     if (mime_typep(body, (MimeObjectClass *) &mimeInlineTextClass))
@@ -573,7 +571,7 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 			  }
 		  }
 	  }
-	  if (obj->options->part_to_load == nsnull && 
+	  if ((!obj->options->part_to_load  || obj->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay) && 
 		  obj->options->headers != MimeHeadersOnly)
 		  mimeEmitterEndBody(obj->options);
   }
@@ -714,6 +712,17 @@ MimeMessage_write_headers_html (MimeObject *obj)
   char *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
 									                  PR_FALSE, PR_FALSE);
   PRBool outer_p = !obj->headers; /* is this the outermost message? */
+  if (!outer_p && obj->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay &&
+      obj->options->part_to_load)
+  {
+    //Maybe we are displaying a embedded message as outer part!
+    char *id = mime_part_address(obj);
+    if (id)
+    {
+      outer_p = !strcmp(id, obj->options->part_to_load);
+      PR_Free(id);
+    }
+  }
 
   // Ok, we should really find out the charset of this part. We always
   // output UTF-8 for display, but the original charset is necessary for

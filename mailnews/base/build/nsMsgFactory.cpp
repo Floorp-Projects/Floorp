@@ -114,6 +114,9 @@
 #include "nsMessengerOS2Integration.h"
 #endif
 
+#include "nsCURILoader.h"
+#include "nsMessengerContentHandler.h"
+
 // private factory declarations for each component we know how to produce
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerBootstrap)
@@ -161,6 +164,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
 #ifdef XP_OS2
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerOS2Integration, Init);
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerContentHandler);
 
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
@@ -357,6 +361,11 @@ static const nsModuleComponentInfo gComponents[] = {
       nsMessengerOS2IntegrationConstructor,
     },
 #endif
+    { "x-message-display content handler",
+       NS_MESSENGERCONTENTHANDLER_CID,
+       NS_MESSENGERCONTENTHANDLER_CONTRACTID,
+       nsMessengerContentHandlerConstructor
+    },
 };
 
 NS_IMPL_NSGETMODULE(nsMsgBaseModule, gComponents)

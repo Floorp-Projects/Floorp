@@ -330,12 +330,22 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
   else
   {
     isIMAPPart = PR_FALSE;
-    urlSpec = mime_set_url_part(aMessageURL, part.get(), PR_TRUE);
+    char *no_part_url = nsnull;
+    if (options->part_to_load && options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay)
+      no_part_url = mime_get_base_url(aMessageURL);
+    if (no_part_url) {
+      urlSpec = mime_set_url_part(no_part_url, part.get(), PR_TRUE);
+      PR_Free(no_part_url);
+    }
+    else
+      urlSpec = mime_set_url_part(aMessageURL, part.get(), PR_TRUE);
   }
 
   if (!urlSpec)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  if ((options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay) && (nsCRT::strncasecmp(aMessageURL, urlSpec, strlen(urlSpec)) == 0))
+    return NS_OK;
   nsMsgAttachmentData *tmp = &(aAttachData[attIndex++]);
   nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec, nsnull);
 
@@ -833,7 +843,7 @@ mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
   
   // Now, write to the WriteBody method if this is a message body and not
   // a part retrevial
-  if (!msd->options->part_to_load)
+  if (!msd->options->part_to_load || msd->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay)
   {
     if (msd->output_emitter)
     {
@@ -922,7 +932,7 @@ mime_display_stream_complete (nsMIMESession *stream)
     // Ok, now we are going to process the attachment data by getting all
     // of the attachment info and then driving the emitter with this data.
     //
-    if (!msd->options->part_to_load)
+    if (!msd->options->part_to_load || msd->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay)
     {
       nsMsgAttachmentData *attachments;
       nsresult rv = MimeGetAttachmentList(obj, msd->url_name, &attachments);
@@ -1615,7 +1625,7 @@ mime_bridge_create_display_stream(
 
   // If this is a part, then we should emit the HTML to render the data
   // (i.e. embedded images)
-  if (msd->options->part_to_load)
+  if (msd->options->part_to_load && msd->options->format_out != nsMimeOutput::nsMimeMessageBodyDisplay)
     msd->options->write_html_p = PR_FALSE;
 
   if (msd->options->prefs)

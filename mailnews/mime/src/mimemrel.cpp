@@ -506,8 +506,18 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
           if (!imappartnum.IsEmpty()) 
             part = mime_set_url_imap_part(obj->options->url, imappartnum.get(), partnum.get());
           else
-            part = mime_set_url_part(obj->options->url, partnum.get(),
-                       PR_FALSE);
+          {
+            char *no_part_url = nsnull;
+            if (obj->options->part_to_load && obj->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay)
+              no_part_url = mime_get_base_url(obj->options->url);
+            if (no_part_url)
+            {
+              part = mime_set_url_part(no_part_url, partnum.get(), PR_FALSE);
+              PR_Free(no_part_url);
+            }
+            else
+              part = mime_set_url_part(obj->options->url, partnum.get(), PR_FALSE);
+          }
           if (part)
           {
             char *name = MimeHeaders_get_name(child->headers, child->options);

@@ -565,6 +565,19 @@ function UpdateMessageHeaders()
     var headerField = currentHeaderData[headerName];
     var headerEntry;
 
+    if (headerName == "subject")
+    {
+      try {
+        if (gDBView.keyForFirstSelectedMessage == nsMsgKey_None)
+        {
+          var folder = null;
+          if (gCurrentFolderUri)
+            folder = RDF.GetResource(gCurrentFolderUri).QueryInterface(Components.interfaces.nsIMsgFolder);
+          setTitleFromFolder(folder, headerField.headerValue);
+        }
+      } catch (ex) {}
+    }
+    
     if (gCollapsedHeaderViewMode && !gBuiltCollapsedView)
     { 
       headerEntry = gCollapsedHeaderView[headerName];

@@ -114,7 +114,19 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 
     part = mime_part_address(obj);
     if (!part) return MIME_OUT_OF_MEMORY;
-    image_url = mime_set_url_part(obj->options->url, part, PR_TRUE);
+    
+      char *no_part_url = nsnull;
+      if (obj->options->part_to_load && obj->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay)
+        no_part_url = mime_get_base_url(obj->options->url);
+
+        if (no_part_url)
+        {
+          image_url = mime_set_url_part(no_part_url, part, PR_TRUE);
+          PR_Free(no_part_url);
+        }
+        else
+          image_url = mime_set_url_part(obj->options->url, part, PR_TRUE);
+
     if (!image_url)
     {
 		  PR_Free(part);

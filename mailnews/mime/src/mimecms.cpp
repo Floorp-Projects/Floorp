@@ -344,6 +344,72 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
   return match;
 }
 
+int
+MIMEGetRelativeCryptoNestLevel(MimeObject *obj)
+{
+  /*
+    the part id of any mimeobj is mime_part_address(obj)
+    our currently displayed crypto part is obj
+    the part shown as the toplevel object in the current window is
+        obj->options->part_to_load
+        possibly stored in the toplevel object only ???
+        but hopefully all nested mimeobject point to the same displayooptions
+
+    we need to find out the nesting level of our currently displayed crypto object
+    wrt the shown part in the toplevel window
+  */
+
+  // if we are showing the toplevel message, aTopMessageNestLevel == 0
+  int aTopMessageNestLevel = 0;
+  MimeObject *aTopShownObject = nsnull;
+  if (obj && obj->options->part_to_load) {
+    PRBool aAlreadyFoundTop = PR_FALSE;
+    for (MimeObject *walker = obj; walker; walker = walker->parent) {
+      if (aAlreadyFoundTop) {
+        if (!mime_typep(walker, (MimeObjectClass *) &mimeEncryptedClass)
+            && !mime_typep(walker, (MimeObjectClass *) &mimeMultipartSignedClass)) {
+          ++aTopMessageNestLevel;
+        }
+      }
+      if (!aAlreadyFoundTop && !strcmp(mime_part_address(walker), walker->options->part_to_load)) {
+        aAlreadyFoundTop = PR_TRUE;
+        aTopShownObject = walker;
+      }
+      if (!aAlreadyFoundTop && !walker->parent) {
+        aTopShownObject = walker;
+      }
+    }
+  }
+
+  PRBool CryptoObjectIsChildOfTopShownObject = PR_FALSE;
+  if (!aTopShownObject) {
+    // no sub part specified, top message is displayed, and
+    // our crypto object is definitively a child of it
+    CryptoObjectIsChildOfTopShownObject = PR_TRUE;
+  }
+
+  // if we are the child of the topmost message, aCryptoPartNestLevel == 1
+  int aCryptoPartNestLevel = 0;
+  if (obj) {
+    for (MimeObject *walker = obj; walker; walker = walker->parent) {
+      // Crypto mime objects are transparent wrt nesting.
+      if (!mime_typep(walker, (MimeObjectClass *) &mimeEncryptedClass)
+          && !mime_typep(walker, (MimeObjectClass *) &mimeMultipartSignedClass)) {
+        ++aCryptoPartNestLevel;
+      }
+      if (aTopShownObject && walker->parent == aTopShownObject) {
+        CryptoObjectIsChildOfTopShownObject = PR_TRUE;
+      }
+    }
+  }
+
+  if (!CryptoObjectIsChildOfTopShownObject) {
+    return -1;
+  }
+
+  return aCryptoPartNestLevel - aTopMessageNestLevel;
+}
+
 static void *
 MimeCMS_init(MimeObject *obj,
 			   int (*output_fn) (const char *buf, PRInt32 buf_size,
@@ -444,20 +510,7 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   	return -1;
   }
 
-  // if we are the child of the topmost message, aNestLevel == 1
-  int aNestLevel = 0;
-
-  if (data->self) {
-    MimeObject *walker = data->self;
-    while (walker) {
-      // Crypto mime objects are transparent wrt nesting.
-      if (!mime_typep(walker, (MimeObjectClass *) &mimeEncryptedClass)
-          && !mime_typep(walker, (MimeObjectClass *) &mimeMultipartSignedClass)) {
-        ++aNestLevel;
-      }
-      walker = walker->parent;
-    }
-  }
+  int aRelativeNestLevel = MIMEGetRelativeCryptoNestLevel(data->self);
 
   /* Hand an EOF to the crypto library.  It may call data->output_fn.
 	 (Today, the crypto library has no flushing to do, but maybe there
@@ -480,10 +533,14 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   if (!data->smimeHeaderSink)
     return 0;
 
+  if (aRelativeNestLevel < 0) {
+    return 0;
+  }
+
   PRInt32 maxNestLevel = 0;
   data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
 
-  if (aNestLevel > maxNestLevel)
+  if (aRelativeNestLevel > maxNestLevel)
     return 0;
 
   PRInt32 status = nsICMSMessageErrors::SUCCESS;
@@ -562,7 +619,7 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   if (data->ci_is_encrypted)
   {
     data->smimeHeaderSink->EncryptionStatus(
-      aNestLevel,
+      aRelativeNestLevel,
       status,
       certOfInterest
     );
@@ -570,7 +627,7 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   else
   {
     data->smimeHeaderSink->SignedStatus(
-      aNestLevel,
+      aRelativeNestLevel,
       status,
       certOfInterest
     );

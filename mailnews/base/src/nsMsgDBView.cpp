@@ -966,6 +966,16 @@ nsresult nsMsgDBView::LoadMessageByMsgKeyHelper(nsMsgKey aMsgKey, PRBool forceAl
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBView::LoadMessageByUrl(const char *aUrl)
+{
+  NS_ASSERTION(aUrl, "trying to load a null url");
+  if (!mSuppressMsgDisplay)
+  {
+    mMessengerInstance->LoadURL(aUrl);
+    m_currentlyDisplayedMsgKey = nsMsgKey_None;
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgDBView::SelectionChanged()
 {
@@ -5394,7 +5404,7 @@ PRBool nsMsgDBView::OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndi
   return PR_FALSE;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMsgDBView::GetKeyForFirstSelectedMessage(nsMsgKey *key)
 {
   NS_ENSURE_ARG_POINTER(key);

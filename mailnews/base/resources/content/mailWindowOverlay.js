@@ -1162,7 +1162,7 @@ function MsgOpenExistingWindowForMessage(aMessageUri)
           windowID.gCurrentFolderUri = msgHdr.folder.URI;
           windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
           windowID.CreateView(gDBView);
-          windowID.gDBView.loadMessageByMsgKey(msgHdr.messageKey);
+          windowID.LoadMessageByMsgKey(msgHdr.messageKey);
         }
         else
           return false;
@@ -1911,7 +1911,9 @@ function SetupUndoRedoCommand(command)
 
 function HandleJunkStatusChanged(folder)
 {
-  if (IsCurrentLoadedFolder(folder)) {
+  // this might be the stand alone window, open to a message that was
+  // and attachment (or on disk), in which case, we want to ignore it.
+  if (IsCurrentLoadedFolder(folder) && (gDBView.keyForFirstSelectedMessage != nsMsgKey_None)) {
     var messageURI = GetLoadedMessage();
     // if multiple message are selected
     // and we change the junk status
@@ -1950,9 +1952,14 @@ function SetUpJunkBar(aMsgHdr)
 
 function OnMsgLoaded(folder, aMessageURI)
 {
-    var msgHdr = messenger.messageServiceFromURI(aMessageURI).messageURIToMsgHdr(aMessageURI);
-    SetUpJunkBar(msgHdr);
-
+    if (/type=x-message-display/.test(aMessageURI))
+      SetUpJunkBar(null);
+    else
+    {
+      var msgHdr = messenger.messageServiceFromURI(aMessageURI).messageURIToMsgHdr(aMessageURI);
+      SetUpJunkBar(msgHdr);
+    }
+    
     var currentMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
     if (!IsImapMessage(aMessageURI))
       return;

@@ -306,6 +306,11 @@ extern char *mime_imap_part_address(MimeObject *obj);
  */
 extern char *mime_set_url_part(const char *url, const char *part, PRBool append_p);
 
+/*
+  cut the part of url for display a attachment as a email.
+*/
+extern char *mime_get_base_url(const char *url);
+
 /* Puts an *IMAP* part-number into a URL.
  */
 extern char *mime_set_url_imap_part(const char *url, const char *part, const char *libmimepart);

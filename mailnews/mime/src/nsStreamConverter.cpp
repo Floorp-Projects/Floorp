@@ -489,10 +489,17 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
           mRealContentType = typeField + strlen("&type=");
         if (mRealContentType.Equals("message/rfc822"))
         {
-          mRealContentType = "text/plain";
+          mRealContentType = "x-message-display";
           CRTFREEIF(mOutputFormat);
-          mOutputFormat = nsCRT::strdup("raw");
-          *aNewType = nsMimeOutput::nsMimeMessageRaw;
+          mOutputFormat = nsCRT::strdup("text/html");
+          *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
+        }
+        else if (mRealContentType.Equals("x-message-display"))
+        {
+          mRealContentType = "";
+          CRTFREEIF(mOutputFormat);
+          mOutputFormat = nsCRT::strdup("text/html");
+          *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
         }
         else
         {
