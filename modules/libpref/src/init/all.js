@@ -140,6 +140,9 @@ pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
 pref("nglayout.widget.mode", 2);
 pref("nglayout.widget.gfxscrollbars", true);
 
+// use nsViewManager2
+pref("nglayout.view.useViewManager2", true);
+
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
 pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
