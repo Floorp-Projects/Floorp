@@ -1105,6 +1105,34 @@ nsFontMetricsXft::DoMatch(PRBool aMatchAll)
 
     if (aMatchAll) {
         set = FcFontSort(0, mPattern, FcTrue, NULL, &result);
+        if (!set || set->nfont == 1) {
+            // There is a bug in older fontconfig versions that causes it to
+            // bail if it hits a font it can't deal with.
+            // If this has happened, try just the generic font-family by
+            // removing everything else from the font list and rebuilding
+            // the pattern.
+
+            NS_WARNING("Detected buggy fontconfig, falling back to generic font");
+
+            nsCAutoString genericFont;
+            if (mGenericFont)
+                genericFont.Assign(*mGenericFont);
+
+            mFontList.Clear();
+            mFontIsGeneric.Clear();
+
+            mFontList.AppendCString(genericFont);
+            mFontIsGeneric.AppendElement((void*) PR_TRUE);
+            mGenericFont = mFontList.CStringAt(0);
+
+            FcPatternDestroy(mPattern);
+            SetupFCPattern();
+
+            if (set)
+                FcFontSetDestroy(set);
+
+            set = FcFontSort(0, mPattern, FcTrue, NULL, &result);
+        }
     }
     else {
         FcPattern* font = FcFontMatch(0, mPattern, &result);
