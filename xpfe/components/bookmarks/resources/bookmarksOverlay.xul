@@ -34,7 +34,7 @@
                   src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   </stringbundleset>
          
-  <popupset id="bookmarksPopupset" appendto="_root">
+  <popupset id="bookmarksPopupset">
     <popup id="bmContext" 
            oncreate="gBookmarksShell.createContextMenu(event);"/>
   </popupset>

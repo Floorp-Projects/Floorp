@@ -59,6 +59,7 @@
 
   <!-- context menu, tooltips, etc -->
   <popupset id="popupset"/>
+  <popupset id="bookmarksPopupset"/>
   
   <!-- bookmarks string bundle -->
   <stringbundleset id="stringbundleset"/>
