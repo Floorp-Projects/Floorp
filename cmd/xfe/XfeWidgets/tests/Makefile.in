@@ -34,7 +34,7 @@ include $(DEPTH)/config/autoconf.mk
 ifdef XFE_WIDGETS_BUILD_UNUSED
 UNUSED_DIRS		= \
 				XfeCaption \
-				XfeComboBox \
+				XfePref \
 				$(NULL)
 endif
 
@@ -43,6 +43,7 @@ DIRS			= \
 				XfeBm \
 				XfeToolBar \
 				XfeToolTip \
+				XfeComboBox \
 				XmL \
 				$(UNUSED_DIRS)
 

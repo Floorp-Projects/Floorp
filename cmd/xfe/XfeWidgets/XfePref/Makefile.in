@@ -1,4 +1,4 @@
-#! gmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -18,28 +18,51 @@
 
 ##########################################################################
 #
-# Name:			Makefile
-# Description:	Makefile for Xfe Widgets tests
+# Name:			Makefile.in
+# Description:	Autoconf Makefile.in for XfePref library
 # Author:		Ramiro Estrugo <ramiro@netscape.com>
 #
 ##########################################################################
 
-DEPTH			= ../../../..
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-ifdef XFE_WIDGETS_BUILD_UNUSED
-UNUSED_DIRS		= \
-				XfeCaption \
-				XfePref \
+include $(DEPTH)/config/autoconf.mk
+
+# XfeWidgets headers are exported to dist/public/XfePref/Xfe.  We use
+# the 'Xfe' directory to avoid the hasstle of having to remember yet another
+# include prefix.
+MODULE			= XfePref/Xfe
+
+LIBRARY_NAME	= XfePref
+
+CSRCS			= \
+				PrefGroup.c \
+				PrefPanel.c \
+				PrefPanelInfo.c \
+				PrefView.c \
 				$(NULL)
-endif
 
-DIRS			= \
-				Xfe \
-				XfeBm \
-				XfeToolBar \
-				XfeToolTip \
-				XfeComboBox \
-				XmL \
-				$(UNUSED_DIRS)
+REQUIRES		= \
+				XfeWidgets \
+				XfePref \
+				Microline
 
-include $(DEPTH)/config/rules.mk
+EXPORTS			= \
+				PrefGroup.h \
+				PrefGroupP.h \
+				PrefItem.h \
+				PrefItemP.h \
+				PrefPanel.h \
+				PrefPanelInfo.h \
+				PrefPanelInfoP.h \
+				PrefPanelP.h \
+				PrefView.h \
+				PrefViewP.h \
+				$(NULL)
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+
+include $(topsrcdir)/config/rules.mk
