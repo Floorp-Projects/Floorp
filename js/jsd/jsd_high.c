@@ -215,7 +215,9 @@ jsd_DebuggerOff(JSDContext* jsdc)
 #endif
 
     /* clean up */
+    JSD_LockScriptSubsystem(jsdc);
     jsd_DestroyAllJSDScripts(jsdc);
+    JSD_UnlockScriptSubsystem(jsdc);
     jsd_DestroyAllSources(jsdc);
     
     _destroyJSDContext(jsdc);
