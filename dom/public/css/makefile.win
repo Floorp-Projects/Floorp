@@ -24,6 +24,7 @@ DEPTH=..\..\..
 
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS= \
+  nsIDOMCounter.h \
   nsIDOMCSS2Properties.h \
   nsIDOMCSSFontFaceRule.h \
   nsIDOMCSSImportRule.h \
@@ -35,7 +36,10 @@ EXPORTS= \
   nsIDOMCSSStyleRule.h \
   nsIDOMCSSStyleSheet.h \
   nsIDOMCSSUnknownRule.h \
-  nsIDOMCSSValue.h
+  nsIDOMCSSValue.h \
+  nsIDOMCSSPrimitiveValue.h \
+  nsIDOMRect.h \
+  nsIDOMRGBColor.h
 
 MODULE=dom 
 

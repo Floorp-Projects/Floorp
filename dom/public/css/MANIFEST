@@ -32,3 +32,7 @@ nsIDOMCSSStyleRule.h
 nsIDOMCSSStyleSheet.h
 nsIDOMCSSUnknownRule.h
 nsIDOMCSSValue.h
+nsIDOMCSSPrimitiveValue.h
+nsIDOMCounter.h
+nsIDOMRGBColor.h
+nsIDOMRect.h
