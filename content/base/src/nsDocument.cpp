@@ -531,21 +531,20 @@ nsDocument::~nsDocument()
 {
   delete mXPathDocument;
 
+  mInDestructor = PR_TRUE;
+
   // XXX Inform any remaining observers that we are going away.
   // Note that this currently contradicts the rule that all
   // observers must hold on to live references to the document.
   // This notification will occur only after the reference has
   // been dropped.
-  mInDestructor = PR_TRUE;
+
+  // if an observer removes itself, we're ok (not if it removes others though)
   PRInt32 indx;
-  for (indx = 0; indx < mObservers.Count(); ++indx) {
+  for (indx = mObservers.Count() - 1; indx >= 0; --indx) {
     // XXX Should this be a kungfudeathgrip?!!!!
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->DocumentWillBeDestroyed(this);
-    // Test to see if the observer was removed
-    if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
-      indx--;
-    }
   }
 
   mLoadFlags = nsIRequest::LOAD_NORMAL; // XXX maybe not required
@@ -1801,17 +1800,9 @@ NS_IMETHODIMP
 nsDocument::BeginUpdate()
 {
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
     observer->BeginUpdate(this);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return NS_OK;
 }
@@ -1820,17 +1811,9 @@ NS_IMETHODIMP
 nsDocument::EndUpdate()
 {
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
     observer->EndUpdate(this);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return NS_OK;
 }
@@ -1839,17 +1822,9 @@ NS_IMETHODIMP
 nsDocument::BeginLoad()
 {
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
     observer->BeginLoad(this);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return NS_OK;
 }
@@ -1876,18 +1851,9 @@ NS_IMETHODIMP
 nsDocument::EndLoad()
 {
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*)mObservers[i];
     observer->EndLoad(this);
-
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
 
   // Fire a DOM event notifying listeners that this document has been
@@ -2018,17 +1984,9 @@ nsDocument::ContentChanged(nsIContent* aContent,
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentChanged(this, aContent, aSubContent);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return NS_OK;
 }
@@ -2039,17 +1997,9 @@ nsDocument::ContentStatesChanged(nsIContent* aContent1,
                                  PRInt32 aStateMask)
 {
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentStatesChanged(this, aContent1, aContent2, aStateMask);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return NS_OK;
 }
@@ -2065,13 +2015,14 @@ nsDocument::ContentAppended(nsIContent* aContainer,
   volatile
 #endif
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
+  // XXXdwh There is a hacky ordering dependency between the binding manager 
+  // and the frame constructor that forces us to walk the observer list 
+  // in a forward order
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentAppended(this, aContainer, aNewIndexInContainer);
     // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
+    // notification. If it did, update our index
     if (i < mObservers.Count() &&
         observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
@@ -2088,13 +2039,14 @@ nsDocument::ContentInserted(nsIContent* aContainer,
   NS_ABORT_IF_FALSE(aChild, "Null child!");
 
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
+  // XXXdwh There is a hacky ordering dependency between the binding manager 
+  // and the frame constructor that forces us to walk the observer list 
+  // in a forward order
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
     // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
+    // notification. If it did, update our index.
     if (i < mObservers.Count() &&
         observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
@@ -2112,18 +2064,13 @@ nsDocument::ContentReplaced(nsIContent* aContainer,
   NS_ABORT_IF_FALSE(aOldChild && aNewChild, "Null old or new child child!");
 
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  // XXXdwh There is a hacky ordering dependency between the binding manager 
+  // and the frame constructor that forces us to walk the observer list 
+  // in a reverse order
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                               aIndexInContainer);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return NS_OK;
 }
@@ -2136,18 +2083,13 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
   NS_ABORT_IF_FALSE(aChild, "Null child!");
 
   PRInt32 i;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  // XXXdwh There is a hacky ordering dependency between the binding manager 
+  // and the frame constructor that forces us to walk the observer list 
+  // in a reverse order
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentRemoved(this, aContainer, 
                              aChild, aIndexInContainer);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return NS_OK;
 }
@@ -2173,19 +2115,11 @@ nsDocument::AttributeChanged(nsIContent* aChild,
 
   PRInt32 i;
   nsresult result = NS_OK;
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     nsresult rv = observer->AttributeChanged(this, aChild, aNameSpaceID, aAttribute, aModType, aHint);
     if (NS_FAILED(rv) && NS_SUCCEEDED(result))
       result = rv;
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
   }
   return result;
 }
@@ -2200,6 +2134,8 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    // XXXbz We should _not_ be calling BeginUpdate from in here! The
+    // caller of StyleRuleChanged should do that!
     observer->BeginUpdate(this);
     observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
     // Make sure that the observer didn't remove itself during the
@@ -2223,6 +2159,8 @@ nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    // XXXbz We should _not_ be calling BeginUpdate from in here! The
+    // caller of StyleRuleAdded should do that!
     observer->BeginUpdate(this);
     observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
@@ -2246,6 +2184,8 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    // XXXbz We should _not_ be calling BeginUpdate from in here! The
+    // caller of StyleRuleRemoved should do that!
     observer->BeginUpdate(this);
     observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
