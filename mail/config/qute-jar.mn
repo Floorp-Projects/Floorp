@@ -10,13 +10,13 @@
 # mail
 #################################################################################################
 
-skin/classic/messenger,				     classic/skin/classic/messenger 	
+skin/classic/messenger,                              classic/skin/classic/messenger 	
 skin/classic/messenger/icons,                        classic/skin/classic/messenger/icons 
 skin/classic/messenger/addressbook,                  classic/skin/classic/messenger/addressbook
 skin/classic/messenger/addressbook/icons,            classic/skin/classic/messenger/addressbook/icons
 skin/classic/messenger/messengercompose,             classic/skin/classic/messenger/messengercompose
-skin/classic/messenger/smime,			     classic/skin/classic/messenger/smime
-skin/classic/messenger/smime/icons,      	     classic/skin/classic/messenger/smime/icons
+skin/classic/messenger/smime,                        classic/skin/classic/messenger/smime
+skin/classic/messenger/smime/icons,                  classic/skin/classic/messenger/smime/icons
 
 #################################################################################################
 # communicator
@@ -32,9 +32,11 @@ skin/classic/communicator/printing.css,              classic/skin/classic/commun
 skin/classic/communicator/communicator.css,          classic/skin/classic/communicator/communicator.css
 skin/classic/communicator/formatting.css,            classic/skin/classic/communicator/formatting.css
 skin/classic/communicator/prefpanels.css,            classic/skin/classic/communicator/prefpanels.css
+skin/classic/communicator/smileys.css,               classic/skin/classic/communicator/smileys.css
 
 skin/classic/communicator/icons/offline.gif,         classic/skin/classic/communicator/icons/offline.gif
 skin/classic/communicator/icons/online.gif,          classic/skin/classic/communicator/icons/online.gif
+skin/classic/communicator/icons/smileys,             classic/skin/classic/communicator/icons/smileys
 skin/classic/communicator/pref/pref.css,             classic/skin/classic/communicator/pref/pref.css
 
 skin/classic/communicator/xpinstall/xpinstall.css,   classic/skin/classic/communicator/xpinstall/xpinstall.css 
