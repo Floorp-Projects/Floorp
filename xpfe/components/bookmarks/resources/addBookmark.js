@@ -131,7 +131,7 @@ function Startup()
       if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
       document.getElementById("folderbox").setAttribute("hidden", "true");
-      windowNode = document.getElementById("newBookmarkWindow");
+      windowNode = document.getElementById("newBookmarkDialog");
       windowNode.removeAttribute("persist");
       windowNode.removeAttribute("height");
       windowNode.removeAttribute("width");
