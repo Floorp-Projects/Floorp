@@ -348,14 +348,26 @@ class nsIWidget : public nsISupports {
                       PRBool   aRepaint) = 0;
 
     /**
-     * Set's the widget's z-index.
+     * Sets the widget's z-index.
      */
     NS_IMETHOD SetZIndex(PRInt32 aZIndex) = 0;
 
     /**
-     * Get's the widget's z-index. 
+     * Gets the widget's z-index. 
      */
     NS_IMETHOD GetZIndex(PRInt32* aZIndex) = 0;
+
+    /**
+     * Minimize, maximize or normalize the window size.
+     * Takes a value from nsSizeMode (see nsGUIEvent.h)
+     */
+    NS_IMETHOD SetSizeMode(PRInt32 aMode) = 0;
+
+    /**
+     * Return size mode (minimized, maximized, normalized).
+     * Returns a value from nsSizeMode (see nsGUIEvent.h)
+     */
+    NS_IMETHOD GetSizeMode(PRInt32* aMode) = 0;
 
     /**
      * Enable or disable this Widget
