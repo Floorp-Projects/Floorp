@@ -379,7 +379,6 @@ nsHTMLMappedAttributes::nsHTMLMappedAttributes(void)
     mRuleMapper(nsnull),
     mUniqued(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsHTMLMappedAttributes::nsHTMLMappedAttributes(const nsHTMLMappedAttributes& aCopy)
@@ -390,7 +389,6 @@ nsHTMLMappedAttributes::nsHTMLMappedAttributes(const nsHTMLMappedAttributes& aCo
     mRuleMapper(aCopy.mRuleMapper),
     mUniqued(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 
   HTMLAttribute::CopyHTMLAttributes(aCopy.mFirst.mNext, &(mFirst.mNext));
 }

@@ -85,7 +85,6 @@ protected:
 
 nsSVGAnimatedRect::nsSVGAnimatedRect()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSVGAnimatedRect::~nsSVGAnimatedRect()

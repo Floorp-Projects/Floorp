@@ -467,7 +467,6 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mOwningElement(aOwningElement),
     mObserver(aObserver)
 {
-  NS_INIT_ISUPPORTS();
 
   NS_PRECONDITION(mLoader, "Must have a loader!");
   NS_ADDREF(mLoader);
@@ -492,7 +491,6 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mOwningElement(nsnull),
     mObserver(aObserver)
 {
-  NS_INIT_ISUPPORTS();
 
   NS_PRECONDITION(mLoader, "Must have a loader!");
   NS_ADDREF(mLoader);
@@ -523,7 +521,6 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mOwningElement(nsnull),
     mObserver(aObserver)
 {
-  NS_INIT_ISUPPORTS();
 
   NS_PRECONDITION(mLoader, "Must have a loader!");
   NS_ADDREF(mLoader);
@@ -546,7 +543,6 @@ CSSLoaderImpl::CSSLoaderImpl(void)
     mEnabled(PR_TRUE), 
     mCompatMode(eCompatibility_FullStandards)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CSSLoaderImpl::~CSSLoaderImpl(void)

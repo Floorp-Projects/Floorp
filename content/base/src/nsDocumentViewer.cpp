@@ -270,7 +270,6 @@ public:
                        , mGotSelectionState(PR_FALSE)
                        , mSelectionWasCollapsed(PR_FALSE)
                        {
-                         NS_INIT_ISUPPORTS();
                        }
 
   virtual              ~nsDocViewerSelectionListener() {}
@@ -493,7 +492,6 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 DocumentViewerImpl::DocumentViewerImpl()
   : mIsSticky(PR_TRUE)
 {
-  NS_INIT_ISUPPORTS();
   PrepareToStartLoad();
 
   mParentWidget = nsnull;
@@ -530,7 +528,6 @@ void DocumentViewerImpl::PrepareToStartLoad()
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   : mPresContext(aPresContext), mAllowPlugins(PR_TRUE), mIsSticky(PR_TRUE)
 {
-  NS_INIT_ISUPPORTS();
   mHintCharsetSource = kCharsetUninitialized;
   PrepareToStartLoad();
 }
@@ -3012,7 +3009,6 @@ NS_IMPL_ISUPPORTS1(nsDocViewerFocusListener, nsIDOMFocusListener);
 nsDocViewerFocusListener::nsDocViewerFocusListener()
 :mDocViewer(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDocViewerFocusListener::~nsDocViewerFocusListener(){}

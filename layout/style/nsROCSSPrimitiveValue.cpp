@@ -49,7 +49,6 @@ nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(float aT2P)
   : mType(CSS_PX), mT2P(aT2P)
 {
   mValue.mTwips = 0;
-  NS_INIT_ISUPPORTS();
 }
 
 

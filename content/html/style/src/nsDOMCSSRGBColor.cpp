@@ -48,7 +48,6 @@ nsDOMCSSRGBColor::nsDOMCSSRGBColor(nsIDOMCSSPrimitiveValue* aRed,
                                    nsIDOMCSSPrimitiveValue* aBlue)
   : mRed(aRed), mGreen(aGreen), mBlue(aBlue)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMCSSRGBColor::~nsDOMCSSRGBColor(void)

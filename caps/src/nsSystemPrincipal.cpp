@@ -168,7 +168,6 @@ nsSystemPrincipal::Write(nsIObjectOutputStream* aStream)
 
 nsSystemPrincipal::nsSystemPrincipal()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP

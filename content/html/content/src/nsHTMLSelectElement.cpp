@@ -157,7 +157,6 @@ class nsSelectState : public nsISupports {
 public:
   nsSelectState()
   {
-    NS_INIT_ISUPPORTS();
   }
   virtual ~nsSelectState()
   {

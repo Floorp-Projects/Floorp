@@ -52,7 +52,6 @@ nsSVGPoint::Create(float x, float y, nsIDOMSVGPoint** aResult)
 nsSVGPoint::nsSVGPoint(float x, float y)
     : mX(x), mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------

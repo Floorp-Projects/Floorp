@@ -573,7 +573,6 @@ public:
   nsAutoScrollTimer()
       : mSelection(0), mView(0), mPresContext(0), mPoint(0,0), mDelay(30)
   {
-    NS_INIT_ISUPPORTS();
   }
 
   virtual ~nsAutoScrollTimer()
@@ -799,7 +798,6 @@ IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent)
 nsSelectionIterator::nsSelectionIterator(nsTypedSelection *aList)
 :mIndex(0)
 {
-  NS_INIT_ISUPPORTS();
   if (!aList)
   {
     NS_NOTREACHED("nsSelection");
@@ -947,7 +945,6 @@ nsSelectionIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsSelection::nsSelection()
 {
-  NS_INIT_ISUPPORTS();
   PRInt32 i;
   for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
     mDomSelections[i] = nsnull;
@@ -4663,7 +4660,6 @@ nsTypedSelection::nsTypedSelection(nsSelection *aList)
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
   mAutoScrollTimer = nsnull;
-  NS_INIT_ISUPPORTS();
   mScrollEventPosted = PR_FALSE;
 }
 
@@ -4674,7 +4670,6 @@ nsTypedSelection::nsTypedSelection()
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
   mAutoScrollTimer = nsnull;
-  NS_INIT_ISUPPORTS();
   mScrollEventPosted = PR_FALSE;
 }
 

@@ -152,7 +152,6 @@ NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
 
 nsContentDLF::nsContentDLF()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsContentDLF::~nsContentDLF()

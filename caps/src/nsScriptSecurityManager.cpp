@@ -2529,7 +2529,6 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
 {
     NS_ASSERTION(sizeof(long) == sizeof(void*), "long and void* have different lengths on this platform. This may cause a security failure.");
-    NS_INIT_ISUPPORTS();
 
     JSContext* cx = GetSafeJSContext();
     if (sCallerID == JSVAL_VOID)

@@ -143,7 +143,6 @@ NS_IMPL_ISUPPORTS1(nsFontAlgorithmPrefObserver, nsIObserver)
 
 nsFontAlgorithmPrefObserver::nsFontAlgorithmPrefObserver()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsFontAlgorithmPrefObserver::~nsFontAlgorithmPrefObserver()

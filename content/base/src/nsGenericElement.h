@@ -235,7 +235,6 @@ class nsNode3Tearoff : public nsIDOM3Node
 
   nsNode3Tearoff(nsIContent *aContent) : mContent(aContent)
   {
-    NS_INIT_ISUPPORTS();
   }
   virtual ~nsNode3Tearoff() {};
 

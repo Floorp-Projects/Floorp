@@ -93,7 +93,6 @@ NS_NewSVGStyleValue(nsISVGStyleValue** aResult)
 
 nsSVGStyleValue::nsSVGStyleValue()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------

@@ -180,7 +180,6 @@ nsEventStateManager::nsEventStateManager()
   mLeftClickOnly = PR_TRUE;
   mNormalLMouseEventInProcess = PR_FALSE;
 
-  NS_INIT_ISUPPORTS();
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   mEventDownWidget = nsnull;

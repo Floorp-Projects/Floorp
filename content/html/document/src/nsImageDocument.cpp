@@ -131,7 +131,6 @@ public:
 
 ImageListener::ImageListener(nsImageDocument* aDoc)
 {
-  NS_INIT_ISUPPORTS();
   mDocument = aDoc;
   NS_ADDREF(aDoc);
 }

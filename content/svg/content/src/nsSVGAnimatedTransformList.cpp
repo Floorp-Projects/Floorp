@@ -86,7 +86,6 @@ protected:
 
 nsSVGAnimatedTransformList::nsSVGAnimatedTransformList()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSVGAnimatedTransformList::~nsSVGAnimatedTransformList()

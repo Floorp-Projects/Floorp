@@ -44,7 +44,6 @@
 
 nsInspectorCSSUtils::nsInspectorCSSUtils()
 {
-    NS_INIT_ISUPPORTS();
     nsCSSProps::AddRefTable();
 }
 

@@ -239,7 +239,6 @@ nsCodebasePrincipal::Write(nsIObjectOutputStream* aStream)
 
 nsCodebasePrincipal::nsCodebasePrincipal() : mTrusted(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

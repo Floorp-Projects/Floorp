@@ -47,7 +47,6 @@ NS_NewContentPolicy(nsIContentPolicy **aResult)
  */
 nsContentPolicy::nsContentPolicy()
 {
-    NS_INIT_ISUPPORTS();
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman = 
              do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);

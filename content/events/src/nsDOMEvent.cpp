@@ -148,7 +148,6 @@ nsDOMEvent::operator delete(void* aPtr)
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                        const nsAString& aEventType) 
 {
-  NS_INIT_ISUPPORTS();
 
   mPresContext = aPresContext;
   mEventIsTrusted = PR_FALSE;

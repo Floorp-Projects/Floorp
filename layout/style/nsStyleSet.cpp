@@ -390,7 +390,6 @@ StyleSetImpl::StyleSetImpl()
     ,mTimerEnabled(PR_FALSE)
 #endif
 {
-  NS_INIT_ISUPPORTS();
   if (gInstances++ == 0)
   {
     static const char kQuirk_href[] = "resource:/res/quirk.css";

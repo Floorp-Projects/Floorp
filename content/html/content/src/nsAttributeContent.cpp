@@ -257,7 +257,6 @@ NS_NewAttributeContent(nsIContent** aContent)
 nsAttributeContent::nsAttributeContent()
   : mText()
 {
-  NS_INIT_ISUPPORTS();
   mDocument = nsnull;
   mParent   = nsnull;
   mContent  = nsnull;

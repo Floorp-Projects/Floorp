@@ -69,7 +69,6 @@ nsGenericDOMDataNode::Shutdown()
 nsGenericDOMDataNode::nsGenericDOMDataNode()
   : mText(), mDocument(nsnull), mParentPtrBits(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()

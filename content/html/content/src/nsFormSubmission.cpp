@@ -100,7 +100,7 @@ public:
       mEncoder(aEncoder),
       mFormProcessor(aFormProcessor),
       mBidiOptions(aBidiOptions)
-  { NS_INIT_ISUPPORTS(); };
+  { };
   virtual ~nsFormSubmission() { };
 
   NS_DECL_ISUPPORTS

@@ -48,7 +48,6 @@ nsDOMCSSRect::nsDOMCSSRect(nsIDOMCSSPrimitiveValue* aTop,
                            nsIDOMCSSPrimitiveValue* aLeft)
   : mTop(aTop), mRight(aRight), mBottom(aBottom), mLeft(aLeft)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMCSSRect::~nsDOMCSSRect(void)

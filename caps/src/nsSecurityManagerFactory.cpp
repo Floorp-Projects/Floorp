@@ -77,7 +77,6 @@ public:
 
 nsSecurityNameSet::nsSecurityNameSet()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSecurityNameSet::~nsSecurityNameSet()

@@ -86,7 +86,6 @@ protected:
 
 nsSVGAnimatedLength::nsSVGAnimatedLength()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSVGAnimatedLength::~nsSVGAnimatedLength()

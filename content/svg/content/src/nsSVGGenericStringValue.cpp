@@ -78,7 +78,6 @@ NS_CreateSVGGenericStringValue(const nsAString& aValue,
 
 nsSVGGenericStringValue::nsSVGGenericStringValue(const nsAString& aValue)
 {
-  NS_INIT_ISUPPORTS();
   mValue = aValue;
 }
 

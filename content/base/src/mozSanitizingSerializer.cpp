@@ -88,7 +88,6 @@ nsresult NS_NewSanitizingHTMLSerializer(nsIContentSerializer** aSerializer)
 mozSanitizingHTMLSerializer::mozSanitizingHTMLSerializer()
   : mAllowedTags(30) // Just some initial buffer size
 {
-  NS_INIT_ISUPPORTS();
 
   mOutputString = nsnull;
 }

@@ -32,7 +32,6 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 nsWyciwygProtocolHandler::nsWyciwygProtocolHandler() 
 {
-  NS_INIT_ISUPPORTS();
 
 #if defined(PR_LOGGING)
   gWyciwygLog = PR_NewLogModule("nsWyciwygChannel");

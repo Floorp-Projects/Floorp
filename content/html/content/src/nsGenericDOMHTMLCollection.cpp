@@ -42,7 +42,6 @@
 
 nsGenericDOMHTMLCollection::nsGenericDOMHTMLCollection() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsGenericDOMHTMLCollection::~nsGenericDOMHTMLCollection()

@@ -435,7 +435,6 @@ CSSParserImpl::CSSParserImpl()
     mGroupStack(nsnull),
     mParsingCompoundProperty(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP
