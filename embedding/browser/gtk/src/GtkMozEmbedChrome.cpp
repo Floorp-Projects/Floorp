@@ -96,6 +96,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
 NS_INTERFACE_MAP_END
 
@@ -1140,3 +1141,72 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnHideTooltip()
      return NS_OK;
 }
 
+// missing methods for nsIBaseWindow
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::InitWindow(nativeWindow parentNativeWindow,
+			      nsIWidget * parentWidget,
+			      PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::Create(void)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::Repaint(PRBool force)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::GetParentWidget(nsIWidget * *aParentWidget)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::SetParentWidget(nsIWidget * aParentWidget)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::GetParentNativeWindow(nativeWindow *aParentNativeWindow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::GetVisibility(PRBool *aVisibility)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::SetVisibility(PRBool aVisibility)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::GetMainWidget(nsIWidget * *aMainWidget)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::FocusAvailable(nsIBaseWindow *aCurrentFocus, PRBool *aTookFocus)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
