@@ -252,6 +252,7 @@ static PRIntn DoMainEventLoop(PRIntn argc, char **argv)
 
 #pragma mark -
 
+extern void InitializeMacToolbox();
 
 //----------------------------------------------------------------------------
 void main(void)
@@ -260,11 +261,13 @@ void main(void)
 	Boolean	haveAppleEvents;
 	OSErr err;
 	char *argv[] = { NULL, NULL };
+	
+    InitializeMacToolbox();
 
 	// initialize QuickDraw globals. This is the only Toolbox init that we
 	// should do for an FBA
 	//InitGraf(&qd.thePort);
-	InitializeSIOUX(true);
+	//InitializeSIOUX(true);
 	MemoryInit(10);
 	
 	// initialize application globals
