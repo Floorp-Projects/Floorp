@@ -34,10 +34,12 @@ function chooseApp()
       filePicker.appendFilter(programsFilter, "*.exe; *.com");
     else
       filePicker.appendFilters(FP.filterAll);
-    filePicker.show();
-    var file = filePicker.file.QueryInterface(Components.interfaces.nsILocalFile);
-    gAppPath.value = file.path;
-    gAppPath.select();
+    var filePicked = filePicker.show();
+    if (filePicked == nsIFilePicker.returnOK && filePicker.file) {
+      var file = filePicker.file.QueryInterface(Components.interfaces.nsILocalFile);
+      gAppPath.value = file.path;
+      gAppPath.select();
+    }
   }
 }
 
