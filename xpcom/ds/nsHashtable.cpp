@@ -372,7 +372,7 @@ void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* closure)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsCStringKey::nsCStringKey(const nsCString& str)
-    : mStr((char*)str.GetBuffer()), mStrLen(str.Length()), mOwnsStr(PR_FALSE)
+    : mStr((char*)str.GetBuffer()), mStrLen(str.Length()), mOwnership(OWN_CLONE)
 {
     NS_ASSERTION(mStr, "null string key");
     NS_ASSERTION(mStrLen == nsCRT::strlen(mStr), "bad string length");
@@ -382,8 +382,8 @@ nsCStringKey::nsCStringKey(const nsCString& str)
     MOZ_COUNT_CTOR(nsCStringKey);
 }
 
-nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, PRBool ownsStr)
-    : mStr((char*)str), mStrLen(strLen), mOwnsStr(ownsStr)
+nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, Ownership own)
+    : mStr((char*)str), mStrLen(strLen), mOwnership(own)
 {
     NS_ASSERTION(mStr, "null string key");
     if (mStrLen == -1)
@@ -396,7 +396,7 @@ nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, PRBool ownsStr)
 
 nsCStringKey::~nsCStringKey(void)
 {
-    if (mOwnsStr)
+    if (mOwnership == OWN)
         nsMemory::Free(mStr);
     MOZ_COUNT_DTOR(nsCStringKey);
 }
@@ -420,18 +420,26 @@ nsCStringKey::Equals(const nsHashKey* aKey) const
 nsHashKey*
 nsCStringKey::Clone() const
 {
+    if (mOwnership == NEVER_OWN)
+        return new nsCStringKey(mStr, mStrLen, NEVER_OWN);
+
+    // Since this might hold binary data OR a string, we ensure that the
+    // clone string is zero terminated, but don't assume that the source 
+    // string was so terminated.
+
     PRUint32 len = mStrLen * sizeof(char);
-    char* str = (char*)nsMemory::Alloc(len);
+    char* str = (char*)nsMemory::Alloc(len + sizeof(char));
     if (str == NULL)
         return NULL;
     nsCRT::memcpy(str, mStr, len);
-    return new nsCStringKey(str, mStrLen, PR_TRUE);
+    str[len] = 0;
+    return new nsCStringKey(str, mStrLen, OWN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsStringKey::nsStringKey(const nsString& str)
-    : mStr((PRUnichar*)str.GetUnicode()), mStrLen(str.Length()), mOwnsStr(PR_FALSE)
+    : mStr((PRUnichar*)str.GetUnicode()), mStrLen(str.Length()),  mOwnership(OWN_CLONE)
 {
     NS_ASSERTION(mStr, "null string key");
     NS_ASSERTION(mStrLen == nsCRT::strlen(mStr), "bad string length");
@@ -441,8 +449,8 @@ nsStringKey::nsStringKey(const nsString& str)
     MOZ_COUNT_CTOR(nsStringKey);
 }
 
-nsStringKey::nsStringKey(const PRUnichar* str, PRInt32 strLen, PRBool ownsStr)
-    : mStr((PRUnichar*)str), mStrLen(strLen), mOwnsStr(ownsStr)
+nsStringKey::nsStringKey(const PRUnichar* str, PRInt32 strLen, Ownership own)
+    : mStr((PRUnichar*)str), mStrLen(strLen), mOwnership(own)
 {
     NS_ASSERTION(mStr, "null string key");
     if (mStrLen == -1)
@@ -455,7 +463,7 @@ nsStringKey::nsStringKey(const PRUnichar* str, PRInt32 strLen, PRBool ownsStr)
 
 nsStringKey::~nsStringKey(void)
 {
-    if (mOwnsStr)
+    if (mOwnership == OWN)
         nsMemory::Free(mStr);
     MOZ_COUNT_DTOR(nsStringKey);
 }
@@ -479,12 +487,15 @@ nsStringKey::Equals(const nsHashKey* aKey) const
 nsHashKey*
 nsStringKey::Clone() const
 {
-    PRUint32 len = mStrLen * sizeof(PRUnichar);
+    if (mOwnership == NEVER_OWN)
+        return new nsStringKey(mStr, mStrLen, NEVER_OWN);
+
+    PRUint32 len = (mStrLen+1) * sizeof(PRUnichar);
     PRUnichar* str = (PRUnichar*)nsMemory::Alloc(len);
     if (str == NULL)
         return NULL;
     nsCRT::memcpy(str, mStr, len);
-    return new nsStringKey(str, mStrLen, PR_TRUE);
+    return new nsStringKey(str, mStrLen, OWN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

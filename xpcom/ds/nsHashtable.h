@@ -267,10 +267,17 @@ public:
 
 class NS_COM nsCStringKey : public nsHashKey {
 public:
+
+  enum Ownership {
+    NEVER_OWN,  // 'str' is very long lived, even clones don't need to copy it.
+    OWN_CLONE,  // 'str' is as long lived as this key. But clones make a copy.
+    OWN         // 'str' to be free'd in key dtor. Clones make their own copy.
+  };
+
   // If strLen is not passed, and defaults to -1, the assumption here is that str
   // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
-  // length. If ownsString is true, destroying the string key will destroy str:
-  nsCStringKey(const char* str, PRInt32 strLen = -1, PRBool ownsStr = PR_FALSE);
+  // length.
+  nsCStringKey(const char* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
   nsCStringKey(const nsCString& str);
   ~nsCStringKey(void);
 
@@ -286,15 +293,22 @@ public:
 protected:
   char*         mStr;
   PRUint32      mStrLen;
-  PRBool        mOwnsStr;
+  Ownership     mOwnership;
 };
 
 class NS_COM nsStringKey : public nsHashKey {
 public:
+
+  enum Ownership {
+    NEVER_OWN,  // 'str' is very long lived, even clones don't need to copy it.
+    OWN_CLONE,  // 'str' is as long lived as this key. But clones make a copy.
+    OWN         // 'str' to be free'd in key dtor. Clones make their own copy.
+  };
+
   // If strLen is not passed, and defaults to -1, the assumption here is that str
   // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
-  // length. If ownsString is true, destroying the string key will destroy str:
-  nsStringKey(const PRUnichar* str, PRInt32 strLen = -1, PRBool ownsStr = PR_FALSE);
+  // length.
+  nsStringKey(const PRUnichar* str, PRInt32 strLen = -1,  Ownership own = OWN_CLONE);
   nsStringKey(const nsString& str);
   ~nsStringKey(void);
 
@@ -310,7 +324,7 @@ public:
 protected:
   PRUnichar*    mStr;
   PRUint32      mStrLen;
-  PRBool        mOwnsStr;
+  Ownership     mOwnership;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
