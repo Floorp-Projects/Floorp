@@ -31,36 +31,36 @@ LIBRARY_NAME	= neckobase_s
 REQUIRES	= xpcom string exthandler mimetype intl pref
 
 CPPSRCS		= \
-		nsAsyncStreamListener.cpp \
-		nsAuthURLParser.cpp \
-		nsBufferedStreams.cpp \
-		nsDirectoryIndexStream.cpp \
-		nsDownloader.cpp \
+		nsURLHelper.cpp \
 		nsFileStreams.cpp \
-		nsFileTransport.cpp \
-		nsFileTransportService.cpp \
-		nsInputStreamChannel.cpp \
+		nsBufferedStreams.cpp \
 		nsIOService.cpp \
-		nsLoadGroup.cpp \
-		nsNetModRegEntry.cpp \
-		nsNetModuleMgr.cpp \
-		nsNoAuthURLParser.cpp \
-		nsProtocolProxyService.cpp \
-		nsProxyAutoConfigUtils.cpp \
-		nsRequestObserverProxy.cpp \
-		nsSimpleStreamListener.cpp \
-		nsSimpleStreamProvider.cpp \
-		nsSimpleURI.cpp \
 		nsSocketTransport.cpp \
 		nsSocketTransportService.cpp \
-		nsStdURL.cpp \
-		nsStdURLParser.cpp \
-		nsStorageTransport.cpp \
+		nsFileTransport.cpp \
+		nsFileTransportService.cpp \
+		nsSimpleStreamListener.cpp \
+		nsSimpleStreamProvider.cpp \
+		nsRequestObserverProxy.cpp \
 		nsStreamListenerProxy.cpp \
-		nsStreamListenerTee.cpp \
-		nsStreamLoader.cpp \
 		nsStreamProviderProxy.cpp \
-		nsURLHelper.cpp \
+		nsStdURLParser.cpp \
+		nsAuthURLParser.cpp \
+		nsNoAuthURLParser.cpp \
+		nsStdURL.cpp \
+		nsSimpleURI.cpp \
+		nsNetModuleMgr.cpp \
+		nsNetModRegEntry.cpp \
+		nsLoadGroup.cpp \
+		nsInputStreamChannel.cpp \
+		nsDirectoryIndexStream.cpp \
+		nsStreamLoader.cpp \
+		nsDownloader.cpp \
+		nsProtocolProxyService.cpp \
+		nsProxyAutoConfigUtils.cpp \
+		nsAsyncStreamListener.cpp \
+		nsStorageTransport.cpp \
+        nsStreamListenerTee.cpp \
 		$(NULL)
 
 JSFILES		= \

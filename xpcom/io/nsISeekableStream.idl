@@ -36,3 +36,9 @@ interface nsISeekableStream : nsISupports
     // truncate stream to the current offset
     void setEOF();
 };
+
+[uuid(ac3fa453-e173-4044-b827-62d6e45346c6)]
+interface nsISeekableOutputStream : nsISupports
+{
+    unsigned long fill(in charPtr buf, in unsigned long count);
+};

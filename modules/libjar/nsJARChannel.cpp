@@ -103,7 +103,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsJARChannel,
 NS_METHOD
 nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    nsresult rv;
+	nsresult rv;
 
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
@@ -113,16 +113,16 @@ nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(jarChannel);
-    rv = jarChannel->QueryInterface(aIID, aResult);
+	rv = jarChannel->QueryInterface(aIID, aResult);
     NS_RELEASE(jarChannel);
-    return rv;
+	return rv;
 }
  
 nsresult 
 nsJARChannel::Init(nsIJARProtocolHandler* aHandler, nsIURI* uri)
 {
     nsresult rv;
-    mURI = do_QueryInterface(uri, &rv);
+	mURI = do_QueryInterface(uri, &rv);
     if (NS_FAILED(rv)) return rv;
 
     mMonitor = PR_NewMonitor();
@@ -130,7 +130,7 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler, nsIURI* uri)
         return NS_ERROR_OUT_OF_MEMORY;
 
     mJARProtocolHandler = aHandler;
-    return NS_OK;
+	return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ nsJARChannel::GetName(PRUnichar* *result)
 NS_IMETHODIMP
 nsJARChannel::IsPending(PRBool* result)
 {
-    NS_NOTREACHED("nsJARChannel::IsPending");
+	NS_NOTREACHED("nsJARChannel::IsPending");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -176,7 +176,7 @@ nsJARChannel::Cancel(nsresult status)
     }
 
     mStatus = status;
-    return rv;
+	return rv;
 }
 
 NS_IMETHODIMP
@@ -189,7 +189,7 @@ nsJARChannel::Suspend()
         rv = mJarExtractionTransport->Suspend();
     }
 
-    return rv;
+	return rv;
 }
 
 NS_IMETHODIMP
@@ -202,7 +202,7 @@ nsJARChannel::Resume()
         rv = mJarExtractionTransport->Resume();
     }
 
-    return rv;
+	return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +244,7 @@ nsJARChannel::OpenJARElement()
     if (NS_SUCCEEDED(rv))
         rv = GetInputStream(getter_AddRefs(mSynchronousInputStream));
     mon.Notify();       // wake up nsIChannel::Open
-    return rv;
+	return rv;
 }
 
 NS_IMETHODIMP
@@ -257,13 +257,15 @@ nsJARChannel::Open(nsIInputStream* *result)
     if (NS_FAILED(rv)) return rv;
     if (mSynchronousInputStream == nsnull) 
         mon.Wait();
-    if (!mSynchronousInputStream)
+    if (mSynchronousInputStream)
+    {
+        *result = mSynchronousInputStream; // Result of GetInputStream called on transport thread
+        NS_ADDREF(*result);
+        mSynchronousInputStream = 0;
+        return NS_OK;
+    } 
+    else 
         return NS_ERROR_FAILURE;
-
-    *result = mSynchronousInputStream; // Result of GetInputStream called on transport thread
-    NS_ADDREF(*result);
-    mSynchronousInputStream = 0;
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -286,6 +288,10 @@ nsresult
 nsJARChannel::EnsureJARFileAvailable()
 {
     nsresult rv;
+    nsCOMPtr<nsIChannel> jarBaseChannel;
+    nsCOMPtr<nsIFile> jarCacheFile;
+    nsCOMPtr<nsIChannel> jarCacheTransport;
+    nsCOMPtr<nsIInputStream> jarBaseIn;
 
 #ifdef PR_LOGGING
     nsXPIDLCString jarURLStr;
@@ -301,8 +307,8 @@ nsJARChannel::EnsureJARFileAvailable()
     if (NS_FAILED(rv)) goto error;
 
     rv = NS_NewDownloader(getter_AddRefs(mDownloader),
-                          mJARBaseURI, this, nsnull, mSynchronousRead,
-                          mLoadGroup, mCallbacks, mLoadFlags);
+                          mJARBaseURI, this, nsnull, mSynchronousRead, mLoadGroup, mCallbacks, 
+                          mLoadFlags);
 
     // if DownloadComplete() was called early, need to release the reference.
     if (mSynchronousRead && mSynchronousInputStream)
@@ -334,7 +340,7 @@ nsJARChannel::AsyncReadJARElement()
     if (mCallbacks) {
         nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
         if (sink) {
-            // XXX don't think that this is needed anymore 
+            // don't think that this is not needed anymore 
             // jarTransport->SetProgressEventSink(sink);
         }
     }
@@ -393,7 +399,7 @@ nsJARChannel::GetContentType(char* *aContentType)
             }
             else 
                 rv = NS_ERROR_OUT_OF_MEMORY;
-            
+		
             nsCRT::free(fileName);
         } 
         else {
@@ -649,7 +655,7 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
 NS_IMETHODIMP
 nsJARChannel::Close(nsresult status) 
 {
-    return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -668,7 +674,7 @@ nsJARChannel::GetInputStream(nsIInputStream* *aInputStream)
 NS_IMETHODIMP
 nsJARChannel::GetOutputStream(nsIOutputStream* *aOutputStream) 
 {
-    NS_NOTREACHED("nsJARChannel::GetOutputStream");
+	NS_NOTREACHED("nsJARChannel::GetOutputStream");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -684,7 +690,7 @@ nsJARChannel::GetName(char* *aName)
 NS_IMETHODIMP
 nsJARChannel::EnumerateEntries(const char *aRoot, nsISimpleEnumerator **_retval)
 {
-    NS_NOTREACHED("nsJARChannel::EnumerateEntries");
+	NS_NOTREACHED("nsJARChannel::EnumerateEntries");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

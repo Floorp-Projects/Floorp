@@ -246,7 +246,7 @@ static nsModuleComponentInfo components[] = {
     COMPONENT(FILESPEC, nsFileSpecImpl::Create),
     COMPONENT(DIRECTORYITERATOR, nsDirectoryIteratorImpl::Create),
 
-    COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create)
+    COMPONENT(FAST_LOAD_SERVICE, nsFastLoadService::Create)
 };
 
 #undef COMPONENT
