@@ -1,1 +1,109 @@
-interface nsIPref {};
+
+#include "nsISupports.idl"
+
+native JSContext(JSContext*);
+native JSObject(JSObject*);
+native size_t(size_t);
+native PrefChangedFunc(PrefChangedFunc);
+
+[object, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
+interface nsIPref : nsISupports {
+
+  void Startup(in string filename);
+  void Shutdown();
+
+  void ReadUserJSFile(in string filename);
+  void ReadLIJSFile(in string filename);
+
+  JSContext GetConfigContext();
+  JSObject GetGlobalConfigObject();
+  JSObject GetPrefConfigObject();
+
+  void EvaluateConfigScript(in string js_buffer, in size_t length,
+                            in string filename,
+                            in boolean bGlobalContext,
+                            in boolean bCallbacks);
+
+  /* get preferences */
+  void GetCharPref(in string pref, in string buf, inout long buf_length);
+
+  long GetIntPref(in string pref);
+  boolean GetBoolPref(in string pref);
+  void GetBinaryPref(in string pref, in voidStar buf, inout long buf_length);
+  void GetColorPref(in string pref, out short red, out short green, out short blue);
+
+  long GetColorPrefDWord(in string pref);
+  long GetRectPref(in string pref,
+                   out short left, out short top,
+                   out short right, out short bottom);
+
+  /* set preferences */
+  void SetCharPref(in string pref, in string value);
+  void SetIntPref(in string pref, in long value);
+  void SetBoolPref(in string pref, in boolean value);
+  void SetBinaryPref(in string pref, in voidStar value, in long size);
+  void SetColorPref(in string pref,in short red, in short green,in short blue);
+  void SetColorPrefDWord(in string pref, in long colorref);
+
+  void SetRectPref(in string pref,
+                   in short left, in short top,
+                   in short right, in short bottom);
+
+  /* get defaults */
+  void GetDefaultCharPref(in string pref,
+                          in string return_buf, out long buf_length);
+  long GetDefaultIntPref(in string pref);
+  boolean GetDefaultBoolPref(in string pref);
+  void GetDefaultBinaryPref(in string pref, in voidStar value,
+                            out long length);
+  void GetDefaultColorPref(in string pref,
+                           out short red, out short green, out short blue);
+
+  long GetDefaultColorPrefDWord(in string pref);
+  long GetDefaultRectPref(in string pref,
+                          out short left, out short top,
+                          out short right, out short bottom);
+
+  /* set defaults */
+  void SetDefaultCharPref(in string pref, in string value);
+  void SetDefaultIntPref(in string pref, in long value);
+  void SetDefaultBoolPref(in string pref, in boolean value);
+  void SetDefaultBinaryPref(in string pref, in voidStar value, in long size);
+  void SetDefaultColorPref(in string pref,in short red, in short green,in short blue);
+  void SetDefaultColorPrefDWord(in string pref, in long colorref);
+
+  void SetDefaultRectPref(in string pref,
+                   in short left, in short top,
+                   in short right, in short bottom);
+  
+  /* copy versions of getters */
+  string CopyCharPref(in string pref);
+  voidStar CopyBinaryPref(in string pref, out long size);
+  
+  string CopyDefaultCharPref(in string pref);
+  voidStar CopyDefaultBinaryPref(in string pref, out long size);
+
+  /* path prefs */
+  string CopyPathPref(in string pref);
+  void SetPathPref(in string pref, in string path, in boolean setdefault);
+
+  /* pref attributes */
+  boolean PrefIsLocked(in string pref);
+
+  void SavePrefFile();
+  void SavePrefFileAs(in string filename);
+  void SaveLIPrefFile(in string filename);
+
+  void RegisterCallback(in string domain,
+                        in PrefChangedFunc callback,
+                        in voidStar closure);
+  void Unregistercallback(in string domain,
+                          in PrefChangedFunc callback,
+                          in voidStar closure);
+
+  void CopyPrefsTree(in string srcRoot, in string destRoot);
+  void DeleteBranch(in string branchName);
+  
+};
+
+  
