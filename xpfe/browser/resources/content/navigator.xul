@@ -246,13 +246,16 @@
       
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
+                       tooltiptext="&minimizeButton.tooltip;"
                        oncommand="window.minimize();"/>
 
         <toolbarbutton id="restore-button" class="toolbarbutton-1"
+                       tooltiptext="&restoreButton.tooltip;"
                        oncommand="BrowserFullScreen();"/>
 
         <toolbarbutton id="close-button" class="toolbarbutton-1"
-                       oncommand="window.close();"/>
+                       tooltiptext="&closeWindow.label;"
+                       oncommand="BrowserTryToCloseWindow();"/>
       </hbox>
     </toolbar>
   

@@ -79,6 +79,9 @@
 <!ENTITY closeOtherTabs.label "Close Other Tabs">
 <!ENTITY closeWindow.label "Close Window">
 
+<!ENTITY minimizeButton.tooltip       "Minimize">
+<!ENTITY restoreButton.tooltip        "Restore">
+
 <!-- I'd like all this to move to an overlay or something -->
 <!ENTITY bidiMenu.label "Bidi Options">
 <!ENTITY directionBidiMenu.label "Default Direction">
@@ -152,13 +155,6 @@
 <!ENTITY softwareUpdatesCmd.label "Software Updates">
 <!ENTITY technicalSupportCmd.label "Technical Support">
 <!ENTITY releaseNotesCmd.label "Release Notes">
-
-<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; test case --> 
-<!ENTITY languages.label "Languages">
-<!ENTITY en-US.label "English (en-US)">
-<!ENTITY da-DK-file.label "Danish (da-DK; file)">
-<!ENTITY da-DK-http.label "Danish (da-DK; http)">
-<!-- LOCALIZATION NOTE END   : DO not localize the entities above; test case --> 
 
 <!ENTITY menuBar.tooltip                  "Menu Bar">
 <!ENTITY personalToolbar.tooltip          "Personal Toolbar">
