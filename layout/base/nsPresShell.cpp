@@ -5081,9 +5081,16 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   IsSafeToFlush(isSafeToFlush);
 
   if (isSafeToFlush) {
+    // XXXbz we should probably do a view batch no matter what here
+    // and just change the flag for the batch end based on whether
+    // Flush_OnlyPaint is set.
     PRBool batchViews = (aType & Flush_OnlyPaint);
     if (batchViews && mViewManager) {
       mViewManager->BeginUpdateViewBatch();
+    }
+
+    if (aType & Flush_StyleReresolves) {
+      mFrameConstructor->ProcessPendingRestyles();
     }
 
     if (aType & Flush_OnlyReflow) {

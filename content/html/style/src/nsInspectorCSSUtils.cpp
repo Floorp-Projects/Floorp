@@ -145,6 +145,7 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
 {
     if (!aPseudo) {
         nsIFrame* frame = nsnull;
+        aPresShell->FlushPendingNotifications(Flush_StyleReresolves);
         aPresShell->GetPrimaryFrameFor(aContent, &frame);
         if (frame) {
             nsStyleContext* result = GetStyleContextForFrame(frame);

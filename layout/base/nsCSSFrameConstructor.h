@@ -41,6 +41,11 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIXBLService.h"
 #include "nsQuoteList.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+#include "plevent.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -135,6 +140,10 @@ public:
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
                                  nsPresContext*    aPresContext);
 
+  void ProcessPendingRestyles();
+  void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
+                        nsChangeHint aMinChangeHint);
+
   // Notification that we were unable to render a replaced element.
   nsresult CantRenderReplacedElement(nsIPresShell*    aPresShell, 
                                      nsPresContext*  aPresContext,
@@ -192,13 +201,17 @@ private:
                              nsIContent*     aContent,
                              PRInt32         aStateMask);
 
+public:
+  /* aMinHint is the minimal change that should be made to the element */
   void RestyleElement(nsPresContext* aPresContext,
                       nsIContent*     aContent,
-                      nsIFrame*       aPrimaryFrame);
+                      nsIFrame*       aPrimaryFrame,
+                      nsChangeHint    aMinHint);
 
   void RestyleLaterSiblings(nsPresContext* aPresContext,
                             nsIContent*     aContent);
 
+private:
   nsresult InitAndRestoreFrame (nsPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
@@ -1030,6 +1043,32 @@ private:
       mQuoteList.RecalcAll();
   }
 
+public:
+  struct RestyleData;
+  friend struct RestyleData;
+
+  struct RestyleData {
+    nsReStyleHint mRestyleHint;  // What we want to restyle
+    nsChangeHint  mChangeHint;   // The minimal change hint for "self"
+  };
+
+  struct RestyleEvent;
+  friend struct RestyleEvent;
+
+  struct RestyleEvent : public PLEvent {
+    RestyleEvent(nsCSSFrameConstructor* aConstructor);
+    ~RestyleEvent() { }
+    void HandleEvent() {
+      nsCSSFrameConstructor* constructor =
+        NS_STATIC_CAST(nsCSSFrameConstructor*, owner);
+      constructor->ProcessPendingRestyles();
+      constructor->mRestyleEventQueue = nsnull;
+    }
+  };
+  
+protected:
+  nsCOMPtr<nsIEventQueue>        mRestyleEventQueue;
+  
 private:
   nsIDocument*        mDocument;
 
@@ -1042,6 +1081,10 @@ private:
   PRPackedBool        mQuotesDirty;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
+
+  nsCOMPtr<nsIEventQueueService> mEventQueueService;
+
+  nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingRestyles;
 
   static nsIXBLService * gXBLService;
 };
