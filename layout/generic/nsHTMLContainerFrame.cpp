@@ -30,7 +30,6 @@
 #include "nsGUIEvent.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
-#include "nsReflowCommand.h"
 #include "nsIPtr.h"
 #include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
@@ -40,6 +39,7 @@
 #include "nsHTMLFrame.h"
 #include "nsScrollFrame.h"
 #include "nsIView.h"
+#include "nsIReflowCommand.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -144,9 +144,15 @@ NS_METHOD nsHTMLContainerFrame::ContentAppended(nsIPresShell*   aShell,
   nsHTMLContainerFrame* lastInFlow = (nsHTMLContainerFrame*)GetLastInFlow();
 
   // Generate a reflow command for the frame
-  nsReflowCommand* cmd = new nsReflowCommand(aPresContext, lastInFlow,
-                                             nsReflowCommand::FrameAppended);
-  aShell->AppendReflowCommand(cmd);
+  nsIReflowCommand* cmd;
+  nsresult          result;
+                                                  
+  result = NS_NewHTMLReflowCommand(&cmd, lastInFlow, nsIReflowCommand::FrameAppended);
+  if (NS_OK == result) {
+    aShell->AppendReflowCommand(cmd);
+    NS_RELEASE(cmd);
+  }
+  
   return NS_OK;
 }
 
@@ -348,12 +354,16 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   parent->mChildCount++;
 
   // Generate a reflow command
-  nsReflowCommand* cmd = new nsReflowCommand(aPresContext, parent,
-                                             nsReflowCommand::FrameAppended,
-                                             newFrame);
-  aShell->AppendReflowCommand(cmd);
+  nsIReflowCommand* cmd;
+                                               
+  rv = NS_NewHTMLReflowCommand(&cmd, parent, nsIReflowCommand::FrameAppended,
+                               newFrame);
+  if (NS_OK == rv) {
+    aShell->AppendReflowCommand(cmd);
+    NS_RELEASE(cmd);
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult

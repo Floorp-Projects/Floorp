@@ -22,12 +22,12 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIAnchoredItems.h"
+#include "nsIReflowCommand.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIPtr.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLValue.h"
-#include "nsReflowCommand.h"
 #include "nsCSSLayout.h"
 #include "nsIView.h"
 
@@ -1446,8 +1446,13 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
     shell->PutCachedData(this, &state);
 
     // Is the reflow command target at us?
-    if (this == aReflowState.reflowCommand->GetTarget()) {
-      if (nsReflowCommand::FrameAppended == aReflowState.reflowCommand->GetType()) {
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    if (this == target) {
+      nsIReflowCommand::ReflowType  type;
+      aReflowState.reflowCommand->GetType(type);
+
+      if (nsIReflowCommand::FrameAppended == type) {
         nsLineData* lastLine = LastLine();
   
         // Restore the state
@@ -1473,7 +1478,8 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
    } else {
       // The command is passing through us. Get the next frame in the
       // reflow chain
-      nsIFrame* nextFrame = aReflowState.reflowCommand->GetNext();
+      nsIFrame* nextFrame;
+      aReflowState.reflowCommand->GetNext(nextFrame);
   
       // Restore our state as if nextFrame is the next frame to reflow
       nsLineData* line = FindLine(nextFrame);

@@ -17,7 +17,7 @@
  */
 #include "nsTableCaptionFrame.h"
 #include "nsBodyFrame.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"

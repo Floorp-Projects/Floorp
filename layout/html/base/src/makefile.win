@@ -39,6 +39,7 @@ CPPSRCS=			\
  nsHTMLHead.cpp			\
  nsHTMLIIDs.cpp			\
  nsHTMLImage.cpp		\
+ nsHTMLReflowCommand.cpp \
  nsHTMLTagContent.cpp		\
  nsImageMap.cpp			\
  nsInlineFrame.cpp		\
@@ -72,6 +73,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsHTMLHead.obj		\
  .\$(OBJDIR)\nsHTMLIIDs.obj		\
  .\$(OBJDIR)\nsHTMLImage.obj		\
+ .\$(OBJDIR)\nsHTMLReflowCommand.obj \
  .\$(OBJDIR)\nsHTMLTagContent.obj	\
  .\$(OBJDIR)\nsHTMLTags.obj		\
  .\$(OBJDIR)\nsImageMap.obj		\

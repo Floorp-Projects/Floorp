@@ -30,7 +30,6 @@ CPPSRCS =				\
 	nsPresContext.cpp		\
 	nsPresShell.cpp			\
 	nsPrintPreviewContext.cpp	\
-	nsReflowCommand.cpp		\
 	nsSelection.cpp			\
 	nsSelectionPoint.cpp		\
 	nsSelectionRange.cpp		\

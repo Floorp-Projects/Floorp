@@ -29,7 +29,6 @@ CPPSRCS =				\
 	nsPresContext.cpp		\
 	nsPresShell.cpp			\
 	nsPrintPreviewContext.cpp	\
-	nsReflowCommand.cpp		\
 	nsSelection.cpp			\
 	nsSelectionPoint.cpp		\
 	nsSelectionRange.cpp		\
@@ -53,7 +52,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsPresContext.obj		\
 	.\$(OBJDIR)\nsPresShell.obj		\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
-	.\$(OBJDIR)\nsReflowCommand.obj		\
 	.\$(OBJDIR)\nsSelection.obj		\
 	.\$(OBJDIR)\nsSelectionPoint.obj	\
 	.\$(OBJDIR)\nsSelectionRange.obj	\

@@ -19,7 +19,7 @@
 #include "nsHTMLContainer.h"
 #include "nsContainerFrame.h"
 #include "nsIDocument.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsViewsCID.h"
@@ -90,12 +90,17 @@ NS_METHOD RootFrame::Reflow(nsIPresContext*      aPresContext,
 
   if (eReflowReason_Incremental == aReflowState.reason) {
     // We don't expect the target of the reflow command to be the root frame
+#ifdef NS_DEBUG
     NS_ASSERTION(nsnull != aReflowState.reflowCommand, "no reflow command");
-    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
-                 "root frame is reflow command target");
+
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    NS_ASSERTION(target != this, "root frame is reflow command target");
+#endif
   
     // Verify that the next frame in the reflow chain is our pseudo frame
-    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    nsIFrame* next;
+    aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
   
   } else {
@@ -287,11 +292,15 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     // We don't expect the target of the reflow command to be the root
     // content frame
-    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
-                 "root content frame is reflow command target");
+#ifdef NS_DEBUG
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    NS_ASSERTION(target != this, "root content frame is reflow command target");
+#endif
   
     // Verify the next frame in the reflow chain is our child frame
-    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    nsIFrame* next;
+    aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
 
     nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);

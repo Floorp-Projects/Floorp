@@ -24,7 +24,7 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLContainer.h"
 #include "nsTableRowFrame.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContentDelegate.h"
