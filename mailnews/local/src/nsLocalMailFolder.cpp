@@ -2076,13 +2076,8 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
     {
       msgParent->PropagateDelete(srcFolder, PR_FALSE, msgWindow);  // The files have already been moved, so delete storage PR_FALSE 
       oldPath.Delete(PR_FALSE);  //berkeley mailbox
-      summarySpec.Delete(PR_FALSE); //msf file
-      if (!oldPath.IsDirectory())   //folder path cannot be directory but still check it to be safe
-      {
-        AddDirectorySeparator(oldPath);
-        if (oldPath.IsDirectory())
-          oldPath.Delete(PR_TRUE);   //delete the .sbd directory and it's content. All subfolders have been moved
-      }
+      nsCOMPtr <nsIMsgDatabase> srcDB; // we need to force closed the source db
+      srcFolder->Delete();
 
       nsCOMPtr<nsIFileSpec> parentPathSpec;
       rv = msgParent->GetPath(getter_AddRefs(parentPathSpec));
@@ -2092,7 +2087,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
       rv = parentPathSpec->GetFileSpec(&parentPath);
       NS_ENSURE_SUCCESS(rv,rv);
 
-      AddDirectorySeparator(parentPath);
+      AddDirectorySeparator(parentPath); 
       nsDirectoryIterator i(parentPath, PR_FALSE);
       // i.Exists() checks if the directory is empty or not 
       if (parentPath.IsDirectory() && !i.Exists())

@@ -784,7 +784,10 @@ function FolderPaneSelectionChange()
         var folderResource = GetFolderResource(folderTree, startIndex.value);
         var uriToLoad = folderResource.Value;
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        gPrevSelectedFolder = gMsgFolderSelected;
+        if (msgFolder == gMsgFolderSelected)
+           return;
+
+	gPrevSelectedFolder = gMsgFolderSelected;
         gMsgFolderSelected = msgFolder;
         var folderFlags = msgFolder.flags;
         // if this is same folder, and we're not showing a virtual folder
