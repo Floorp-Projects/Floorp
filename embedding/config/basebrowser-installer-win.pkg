@@ -206,6 +206,7 @@ components\pipnss.dll
 components\pipnss.xpt
 nss3.dll
 smime3.dll
+softokn3.chk
 softokn3.dll
 ssl3.dll
 nssckbi.dll

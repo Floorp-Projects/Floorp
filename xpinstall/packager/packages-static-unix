@@ -287,12 +287,15 @@ bin/components/pippki.xpt
 bin/components/libmeta_crypto.so
 bin/libnss3.so
 bin/libsmime3.so
+bin/libsoftokn3.chk
 bin/libsoftokn3.so
 bin/libssl3.so
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 ; These are required for solaris 32-bit builds
+bin/libfreebl_pure32_3.chk
 bin/libfreebl_pure32_3.so
+bin/libfreebl_hybrid_3.chk
 bin/libfreebl_hybrid_3.so
 
 [inspector]

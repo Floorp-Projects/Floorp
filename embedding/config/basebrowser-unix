@@ -208,6 +208,7 @@ chrome/pipnss.jar
 defaults/pref/security-prefs.js
 libnss3.so
 libsmime3.so
+libsoftokn3.chk
 libsoftokn3.so
 libssl3.so
 libnssckbi.so
