@@ -34,11 +34,11 @@
 #else
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsCOMPtr.h"
 #endif // NECKO
 
 #include "nsIServiceManager.h"
 #include "nsICookieStorage.h"
-#include "nsINetService.h"
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeType.h"
 #include "prprf.h"
@@ -384,6 +384,19 @@ public:
 
   NS_DECL_ISUPPORTS
 
+#ifdef NECKO
+    // nsIProgressEventSink methods:
+    NS_IMETHOD OnProgress(nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMmsg);
+    // nsIStreamObserver methods:
+    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    // nsIStreamListener methods:
+    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);  
+
+#else
   //nsIStreamObserver interface
 
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
@@ -399,6 +412,8 @@ public:
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
 
   NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
+
+#endif // Necko
 
   //locals
 
@@ -455,6 +470,17 @@ public:
 
   NS_DECL_ISUPPORTS
 
+#ifdef NECKO
+    // nsIStreamObserver methods:
+	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+	NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+	
+	// nsIStreamListener methods:
+	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+
+#else
   //nsIStreamObserver interface
 
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
@@ -470,6 +496,8 @@ public:
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
 
   NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
+
+#endif // NECKO
 
 private:
 
@@ -523,6 +551,31 @@ nsPluginCacheListener::~nsPluginCacheListener()
 
 NS_IMPL_ISUPPORTS(nsPluginCacheListener, kIStreamListenerIID);
 
+#ifdef NECKO
+NS_IMETHODIMP
+nsPluginCacheListener::OnStartBinding(nsISupports* ctxt)
+{
+	char* aContentType = nsnull;
+	nsIURI* aURL = nsnull;
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIChannel> channel(do_QueryInterface(ctxt));
+	if (channel)
+	{
+		rv = channel->GetContentType(&aContentType);
+		if (NS_FAILED(rv)) return rv;
+		rv = channel->GetURI(&aURL);
+		if (NS_FAILED(rv)) return rv;
+	}
+	// I have delibrately left out the remaining processing. 
+	// which should just be copied over from the other version of 
+	// OnStartBinding.
+
+	if (aContentType)
+		nsCRT::free(aContentType);
+
+	return rv;
+}
+#else
 NS_IMETHODIMP 
 nsPluginCacheListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
@@ -586,17 +639,30 @@ nsPluginCacheListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
 	return NS_OK;
 
 }
+#endif // NECKO
 
 NS_IMETHODIMP 
+#ifdef NECKO
+nsPluginCacheListener::OnProgress(nsISupports* ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
+#else
 nsPluginCacheListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+#endif
 {
 	return NS_OK;
 }
 
 
 NS_IMETHODIMP 
+#ifdef NECKO
+nsPluginCacheListener::OnDataAvailable(nsISupports* ctxt, 
+	nsIBufferInputStream* aIStream, 
+	PRUint32 sourceOffset, 
+	PRUint32 aLength)
+#else
 nsPluginCacheListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+#endif
 {
+
 	PRUint32 readlen;
 	char* buffer = (char*) PR_Malloc(aLength);
 	if(buffer)
@@ -619,7 +685,13 @@ nsPluginCacheListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, P
 }
 
 NS_IMETHODIMP 
+#ifdef NECKO
+nsPluginCacheListener::OnStopBinding(nsISupports* aContext, 
+	nsresult aStatus, 
+	const PRUnichar* aMsg)
+#else
 nsPluginCacheListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+#endif // NECKO
 {
 #ifdef USE_CACHE
 	if (nsnull != mCachedFile)
@@ -655,15 +727,21 @@ nsPluginCacheListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUni
 	return NS_OK;
 }
 
+#ifndef NECKO
 NS_IMETHODIMP 
 nsPluginCacheListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	// not used
 	return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP 
+#ifdef NECKO
+nsPluginCacheListener::OnStatus(nsISupports* aContext, const PRUnichar* aMsg)
+#else
 nsPluginCacheListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
+#endif // NECKO
 {
 	// not used
 	return NS_OK;
@@ -824,9 +902,25 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
 }
 
 
+#ifdef NECKO
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsISupports* aContext)
+#else
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
   nsresult  rv = NS_OK;
+
+#ifdef NECKO
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aContext));
+  if (channel)
+  {
+  	char* aContentType = nsnull;
+	rv = channel->GetContentType(&aContentType);
+	if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIURI> aURL;
+	rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+	if (NS_FAILED(rv)) return rv;
+#endif
 
   if (nsnull != aContentType)
 	  mPluginStreamInfo->SetContentType(aContentType);
@@ -868,37 +962,83 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsIURI* aURL, const cha
 	   rv = SetUpStreamListener(aURL);
 
   mOnStartBinding = PR_TRUE;
+#ifdef NECKO
+	nsCRT::free(aContentType);
+	}
+#endif //NECKO
   return rv;
 }
 
 
+#ifdef NECKO
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(
+	nsISupports* aContext, 
+	PRUint32 aProgress, 
+	PRUint32 aProgressMax)
+#else
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+#endif
 {
   nsresult rv = NS_OK;
 
+#ifdef NECKO
+	nsCOMPtr<nsIChannel> channel (do_QueryInterface(aContext));
+	if (channel)
+	{
+		nsCOMPtr<nsIURI> aURL;
+		rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+		if (NS_FAILED(rv)) return rv;
+#endif
   mPluginStreamInfo->SetLength(aProgressMax);
   if(mOnStartBinding == PR_TRUE && mSetUpListener == PR_FALSE)
 	rv = SetUpStreamListener(aURL);
 
   mGotProgress = PR_TRUE;
+#ifdef NECKO
+	}
+#endif
 
   return rv;
 }
 
+#ifdef NECKO
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(
+	nsISupports* aContext, const PRUnichar* aMsg)
+#else
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
+#endif
 {
   return NS_OK;
 }
 
+#ifndef NECKO
 NS_IMETHODIMP nsPluginStreamListenerPeer::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
   return NS_OK;
 }
+#endif
 
+
+#ifdef NECKO
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
+	nsISupports* aContext, 
+	nsIBufferInputStream *aIStream, 
+	PRUint32 sourceOffset, 
+	PRUint32 aLength)
+#else
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-                                                        PRUint32 aLength)
+       PRUint32 aLength)
+#endif
 {
   nsresult rv = NS_OK;
+#ifdef NECKO
+	nsCOMPtr<nsIChannel> channel (do_QueryInterface(aContext));
+	if (channel)
+	{
+		nsCOMPtr<nsIURI> aURL;
+		rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+		if (NS_FAILED(rv)) return rv;
+#endif
   const char* url;
 
   if(!mPStreamListener)
@@ -922,13 +1062,31 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInput
     rv = aIStream->Read(buffer, aLength, &amountRead);
     delete [] buffer;
   }
-
+#ifdef NECKO
+		nsCRT::free(urlString);
+	}
+#endif
   return rv;
 }
 
+#ifdef NECKO
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(
+	nsISupports* aContext,
+	nsresult aStatus, 
+	const PRUnichar* aMsg)
+#else
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+#endif // NECKO
 {
   nsresult rv = NS_OK;
+#ifdef NECKO
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aContext);
+  if (channel) 
+  {
+  	nsCOMPtr<nsIURI> aURL;
+	rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+	if (NS_FAILED(rv)) return rv;
+#endif // NECKO
   nsPluginReason  reason = nsPluginReason_NoReason;
 
   if(nsnull != mPStreamListener)
@@ -948,8 +1106,13 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(nsIURI* aURL, nsresult a
   }
 
   mOnStopBinding = PR_TRUE;
+#ifdef NECKO
+  }
+#endif
   return rv;
+
 }
+
 
 // private methods for nsPluginStreamListenerPeer
 
@@ -1147,7 +1310,7 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
 
     NS_RELEASE(service);
   }
-#else
+#else //TODO fix this -Gagan
   *retstring = (const char *)"Mozilla/5.0 [en] (Windows;I)";
   res = NS_OK;
 #endif
@@ -1606,6 +1769,9 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 
 		if(IsPluginEnabledForExtension(extension, mimetype) != NS_OK)
 			return NS_ERROR_FAILURE;
+#ifdef NECKO
+			nsCRT::free(filename);
+#endif
 	}
 	else
 		mimetype = aMimeType;
