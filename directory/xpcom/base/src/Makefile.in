@@ -62,6 +62,8 @@ CPPSRCS		+= \
 		nsLDAPChannel.cpp \
 		nsLDAPService.cpp \
 		$(NULL)
+
+REQUIRES	+= mimetype
 endif
 
 

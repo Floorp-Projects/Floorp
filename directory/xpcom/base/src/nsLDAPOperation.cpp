@@ -135,9 +135,12 @@ nsLDAPOperation::SimpleBind(const char *passwd)
         case LDAP_ENCODING_ERROR:
             return NS_ERROR_LDAP_ENCODING_ERROR;
 
+        case LDAP_CONNECT_ERROR:
+            return NS_ERROR_LDAP_CONNECT_ERROR;
+
         case LDAP_SERVER_DOWN:
             // XXXdmose rebind here?
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_LDAP_SERVER_DOWN;
 
         case LDAP_NO_MEMORY:
             return NS_ERROR_OUT_OF_MEMORY;

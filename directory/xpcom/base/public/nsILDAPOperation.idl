@@ -67,6 +67,11 @@ interface nsILDAPOperation : nsISupports
     readonly attribute long messageID;
 
     /**
+     * No time and/or size limit specified
+     */
+    const long NO_LIMIT = 0;
+
+    /**
      * Initializes this operation.  Must be called prior to initiating
      * any actual operations.  Note that by default, the aMessageListener
      * callbacks happen on the LDAP connection thread.  If you need them
@@ -88,10 +93,10 @@ interface nsILDAPOperation : nsISupports
      * @param passwd    the password used for binding; NULL for anon-binds
      *
      * @exception NS_ERROR_LDAP_ENCODING_ERROR  problem encoding bind request
-     * @exception NS_ERROR_FAILURE              server down (XXX rebinds?)
+     * @exception NS_ERROR_LDAP_SERVER_DOWN     server down (XXX rebinds?)
+     * @exception NS_ERROR_LDAP_CONNECT_ERROR   connection failed or lost
      * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
      * @exception NS_ERROR_UNEXPECTED           internal error
-     * 
      */
     void simpleBind(in string passwd);
 

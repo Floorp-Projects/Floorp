@@ -118,9 +118,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 
     // initialize the connection
     //
-    // XXX buglet: port = -1 fails
-    //
-    mConnectionHandle = ldap_init(aHost, aPort ? aPort : LDAP_PORT);
+    mConnectionHandle = ldap_init(aHost, aPort == -1 ? LDAP_PORT : aPort);
     if ( !mConnectionHandle ) {
         return NS_ERROR_FAILURE;  // the LDAP C SDK API gives no useful error
     }
@@ -312,22 +310,20 @@ nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // remove the operation if it's still there.  
+    //
     if (!mPendingOperations->Remove(key)) {
 
-        NS_ERROR("nsLDAPConnection::RemovePendingOperation was\n"
-                 " unable to remove the requested item from the pending\n"
-                 " operations queue.  This probably means that the item\n"
-                 " in question didn't exist in the queue, which in turn\n"
-                 " probably means that you have found a bug in the code\n"
-                 " that calls this function.\n");
+        PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+               ("nsLDAPConnection::RemovePendingOperation(): could not remove "
+                "operation; perhaps it already completed."));
+    } else {
 
-        delete key;
-        return NS_ERROR_FAILURE;
+        PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+               ("nsLDAPConnection::RemovePendingOperation(): operation "
+                "removed; total pending operations now = %d\n", 
+                mPendingOperations->Count()));
     }
-
-    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
-           ("pending operation removed; total pending operations now = %d\n", 
-            mPendingOperations->Count()));
 
     delete key;
     return NS_OK;
