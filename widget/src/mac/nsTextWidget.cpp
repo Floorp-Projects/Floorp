@@ -201,24 +201,24 @@ PRInt32							offx,offy;
 nsRect							therect;
 Rect								macrect;
 GrafPtr							theport;
-RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
 	
 	CalcOffset(offx,offy);
 	::GetPort(&theport);
 	::SetPort(mWindowPtr);
-	//::SetOrigin(-offx,-offy);
+	::SetOrigin(-offx,-offy);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	thergn = ::NewRgn();
 	::GetClip(thergn);
 	::ClipRect(&macrect);
+	::EraseRect(&macrect);
+	::PenSize(1,1);
 	WEActivate(mTE_Data);
 	WEUpdate(nsnull,mTE_Data);
-	::PenSize(1,1);
 	::FrameRect(&macrect);
 	::SetClip(thergn);
-	//::SetOrigin(0,0);
+	::SetOrigin(0,0);
 	::SetPort(theport);
 	
   return PR_FALSE;

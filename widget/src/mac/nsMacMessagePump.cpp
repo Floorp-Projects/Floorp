@@ -195,6 +195,8 @@ nsRefData			*theRefData;
 		{
 		SetPort(whichwindow);
 		BeginUpdate(whichwindow);
+		// we have to layout the entire window, so this does us no good
+		EndUpdate(whichwindow);
 		
 		theRefData = (nsRefData*)GetWRefCon (whichwindow);
 		thewindow = (nsWindow*)theRefData->GetTopWidget();
@@ -222,7 +224,7 @@ nsRefData			*theRefData;
 			// take care of the childern
 			thewindow->DoPaintWidgets(updateregion,pEvent.renderingContext);
 	    }
-		EndUpdate(whichwindow);
+		
 		}
 	
 	::SetPort(curport);

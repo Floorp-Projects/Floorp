@@ -159,29 +159,6 @@ PRBool nsButton::OnResize(nsSizeEvent &aEvent)
     return PR_FALSE;
 }
 
-#ifdef NOTNOW
-/*
- *  @update  gpk 08/27/98
- *  @param   aX -- x offset in widget local coordinates
- *  @param   aY -- y offset in widget local coordinates
- *  @return  PR_TRUE if the pt is contained in the widget
- */
-PRBool
-nsButton::PtInWindow(PRInt32 aX,PRInt32 aY)
-{
-	PRBool	result = PR_FALSE;
-	nsPoint	hitPt(aX,aY);
-	nsRect	bounds;
-	PRInt32	offx,offy;
-	
-	CalcOffset(offx,offy);
-	GetBounds(bounds);
-	bounds.MoveBy(offx,offy);
-	if(bounds.Contains(hitPt))
-		result = PR_TRUE;
-	return(result);
-}
-#endif
 
 PRBool 
 nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
