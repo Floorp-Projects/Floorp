@@ -102,6 +102,7 @@ protected:
 class NS_COM nsAutoLock : public nsAutoLockBase {
 private:
     PRLock* mLock;
+    PRBool mLocked;
 
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
@@ -125,7 +126,8 @@ private:
 public:
     nsAutoLock(PRLock* aLock)
         : nsAutoLockBase(aLock, eAutoLock),
-          mLock(aLock) {
+          mLock(aLock),
+          mLocked(PR_TRUE) {
         PR_ASSERT(mLock);
 
         // This will assert deep in the bowels of NSPR if you attempt
@@ -134,7 +136,20 @@ public:
     }
 
     ~nsAutoLock(void) {
+        if (mLocked)
+            PR_Unlock(mLock);
+    }
+
+    void lock() {
+        PR_ASSERT(!mLocked);
+        PR_Lock(mLock);
+        mLocked = PR_TRUE;
+    }
+
+    void unlock() {
+        PR_ASSERT(mLocked);
         PR_Unlock(mLock);
+        mLocked = PR_FALSE;
     }
 };
 
