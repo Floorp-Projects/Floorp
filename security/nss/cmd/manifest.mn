@@ -46,7 +46,6 @@ DIRS = lib  \
  derdump  \
  digest  \
  makepqg  \
- modutil \
  ocspclnt  \
  oidcalc  \
  p7content  \
@@ -65,6 +64,7 @@ DIRS = lib  \
 TEMPORARILY_DONT_BUILD = \
  btoa  \
  SSLsample \
+ modutil \
  $(NULL)
 
 # rsaperf  \
