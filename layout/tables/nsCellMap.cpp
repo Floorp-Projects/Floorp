@@ -303,6 +303,20 @@ nsTableCellMap::GetMapFor(nsTableRowGroupFrame& aRowGroup)
   return nsnull;
 }
 
+PRBool
+nsTableCellMap::HasMoreThanOneCell(PRInt32 aRowIndex)
+{
+  PRInt32 rowIndex = aRowIndex;
+  nsCellMap* map = mFirstMap;
+  while (map) {
+    if (map->GetRowCount() > rowIndex) {
+      return map->HasMoreThanOneCell(*this, rowIndex);
+    }
+    rowIndex -= map->GetRowCount();
+    map = map->GetNextSibling();
+  }
+  return PR_FALSE;
+}
 
 PRInt32 
 nsTableCellMap::GetEffectiveRowSpan(PRInt32 aRowIndex,
@@ -1747,6 +1761,25 @@ nsCellMap::GetRowSpanForNewCell(nsTableCellFrame& aCellFrameToAdd,
     aIsZeroRowSpan = PR_TRUE;
   }
   return rowSpan;
+}
+
+PRBool nsCellMap::HasMoreThanOneCell(nsTableCellMap& aMap,
+                                     PRInt32       aRowIndex)
+{
+  nsVoidArray* row = (nsVoidArray *)(mRows.SafeElementAt(aRowIndex));
+  if (row) {
+    PRInt32 maxColIndex = row->Count();
+    PRInt32 count = 0;
+    PRInt32 colIndex;
+    for (colIndex = 0; colIndex < maxColIndex; colIndex++) {
+      CellData* cellData = GetDataAt(aMap, aRowIndex, colIndex, PR_FALSE);
+      if (cellData && (cellData->GetCellFrame() || cellData->IsRowSpan()))
+        count++;
+      if (count > 1)
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 PRInt32 nsCellMap::GetRowSpan(nsTableCellMap& aMap,

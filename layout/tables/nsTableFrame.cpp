@@ -619,6 +619,12 @@ PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell,
     return tableCellMap->GetEffectiveColSpan(rowIndex, colIndex);
 }
 
+PRBool nsTableFrame::HasMoreThanOneCell(PRInt32 aRowIndex) const
+{
+  nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT1(1);
+  return tableCellMap->HasMoreThanOneCell(aRowIndex);
+}
+
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 {
   NS_PRECONDITION (GetCellMap(), "null cellMap.");

@@ -136,6 +136,11 @@ public:
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex);
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
+  /** indicate whether the row has more than one cell that either originates
+    * or is spanned from the rows above
+    */
+  PRBool HasMoreThanOneCell(PRInt32 aRowIndex);
+
   PRInt32 GetEffectiveRowSpan(PRInt32 aRowIndex,
                               PRInt32 aColIndex);
   PRInt32 GetEffectiveColSpan(PRInt32 aRowIndex,
@@ -314,6 +319,12 @@ public:
 
   PRBool ColHasSpanningCells(nsTableCellMap& aMap,
                              PRInt32         aColIndex);
+
+  /** indicate whether the row has more than one cell that either originates
+   * or is spanned from the rows above
+   */
+  PRBool HasMoreThanOneCell(nsTableCellMap& aMap,
+                            PRInt32         aRowIndex);
 
   PRInt32 GetRowSpan(nsTableCellMap& aMap,
                      PRInt32         aRowIndex,
