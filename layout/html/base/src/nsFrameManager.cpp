@@ -600,10 +600,11 @@ FrameManager::GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFra
 NS_IMETHODIMP
 FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
 {
+  NS_ASSERTION(aResult, "null out-param not supported");
+  *aResult = nsnull;  // initialize out param (before possibly returning due to null args/members)
+
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aContent);
-  *aResult = nsnull;  // initialize out param
 
   if (mIsDestroyingFrames) {
 #ifdef DEBUG
