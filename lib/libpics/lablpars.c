@@ -35,6 +35,9 @@ with copyright holders.
 /* #include "malloc.h" */
 /* --- END removed by mharmsen@netscape.com on 7/9/97 --- */
 /* #include "sysdep.h"  -- jhines 7/9/97 */
+/* --- BEGIN added by scullin@netscape.com on 5/27/98 --- */
+#include "prerror.h"
+/* =--- END added by scullin@netscape.com on 5/27/98 --- */
 #include "cslutils.h"
 #include "csll.h"	/* to define states in stateChange */
 #include "csparse.h"
@@ -263,7 +266,9 @@ Program aborted.\n",
 	     file, line, name);
     /* --- BEGIN changed by mharmsen@netscape.com on 7/9/97 --- */
     /* exit(1); */
-    XP_SetError( SEC_ERROR_NO_MEMORY );
+    /* --- BEGIN changed by scullin@netscape.com on 5/27/98 --- */    
+    PR_SetError( SEC_ERROR_NO_MEMORY, 0 );
+    /* --- END changed by scullin@netscape.com on 5/27/98 --- */
     return;
     /* --- END changed by mharmsen@netscape.com on 7/9/97 --- */
 }
