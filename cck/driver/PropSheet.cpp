@@ -83,13 +83,17 @@ BOOL CPropSheet::OnInitDialog()
 	//           - X-coordinate of tab control
 	width = rect.Width();
 	rect.left = tabrect.left; rect.right = tabrect.left + width;
-	
+	CString FeedbackChoice = GetGlobal("FeedbackChoice");
+	if (FeedbackChoice.Compare("Yes") == 0)
+	{
 	//Create new "Add" button and set standard font
 	m_ButtonCopy.Create("Feedback",
 			BS_PUSHBUTTON|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
 			rect, this, IDC_FEEDBACK_BUTTON);
 	m_ButtonCopy.SetFont(GetFont());
-	
+	}
+	else
+	;
 	return bResult;
 }
 
