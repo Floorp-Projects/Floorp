@@ -56,6 +56,7 @@
 #include <Script.h>
 #include <Processes.h>
 #include <StringCompare.h>
+#include <Resources.h>
 
 #include <AppleEvents.h>
 #include <AEDataModel.h>
@@ -450,6 +451,62 @@ static void myPLstrncpy(Str255 dst, const char* src, int inMax)
         srcLength = inMax;
     dst[0] = srcLength;
     memcpy(&dst[1], src, srcLength);
+}
+
+static const char* TruncNodeName(const char *aNode, char *outBuf)
+{
+    PRUint32 nodeLen;
+    if ((nodeLen = nsCRT::strlen(aNode)) > 31)
+    {
+        static PRBool sInitialized = PR_FALSE;
+        static CharByteTable sTable;
+        // Init to "..." in case we fail to get the ellipsis token
+        static char sEllipsisTokenStr[4] = { '.', '.', '.', 0 };
+        static PRUint8 sEllipsisTokenLen = 3;
+                
+        if (!sInitialized)
+        {
+            // Entries in the table are:
+            // 0 == 1 byte char
+            // 1 == 2 byte char
+            FillParseTable(sTable, smSystemScript);
+            
+            Handle itl4ResHandle = nsnull;
+            long offset, len;
+            ::GetIntlResourceTable(smSystemScript, smUnTokenTable, &itl4ResHandle, &offset, &len);
+            if (itl4ResHandle)
+            {
+                UntokenTable *untokenTableRec = (UntokenTable *)(*itl4ResHandle + offset);
+                if (untokenTableRec->lastToken >= tokenEllipsis)
+                {
+                    offset += untokenTableRec->index[tokenEllipsis];
+                    char *tokenStr = (*itl4ResHandle + offset);
+                    sEllipsisTokenLen = tokenStr[0];
+                    memcpy(sEllipsisTokenStr, &tokenStr[1], sEllipsisTokenLen);
+                }
+                ::ReleaseResource(itl4ResHandle);
+            }
+            sInitialized = PR_TRUE;
+        }
+
+        PRInt32 halfLen = (31 - sEllipsisTokenLen) / 2;
+        PRInt32 charSize = 0, srcPos, destPos;
+        for (srcPos = 0; srcPos + charSize <= halfLen; srcPos += charSize)
+            charSize = sTable[aNode[srcPos]] ? 2 : 1;
+                    
+        memcpy(outBuf, aNode, srcPos);
+        memcpy(outBuf + srcPos, sEllipsisTokenStr, sEllipsisTokenLen);
+        destPos = srcPos + sEllipsisTokenLen;
+        
+        for (; srcPos <= nodeLen - halfLen; srcPos += charSize)
+            charSize = sTable[aNode[srcPos]] ? 2 : 1;
+            
+        memcpy(outBuf + destPos, aNode + srcPos, nodeLen - srcPos);
+        destPos += (nodeLen - srcPos);
+        outBuf[destPos] = '\0';
+        return outBuf;
+    }
+    return aNode;
 }
 
 #pragma mark -
@@ -1320,13 +1377,17 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::Append(const char *node)
+nsLocalFile::Append(const char *aNode)
 {
-    NS_ENSURE_ARG(node);
-    if (strchr(node, ':'))
+    NS_ENSURE_ARG(aNode);
+    if (strchr(aNode, ':'))
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     
     MakeDirty();
+    
+    char truncBuffer[32];
+    const char *node = TruncNodeName(aNode, truncBuffer);
+    
     if (!mAppendedPath.Length())
     {
         OSErr   err;
@@ -1342,11 +1403,13 @@ nsLocalFile::Append(const char *node)
             if ((err = ::FSpGetDirectoryID(&mSpec, &dirID, &isDir)) != noErr)
                 return MacErrorMapper(err);
                 
+            FSSpec childSpec;    
             Str255 pascalNode;
             myPLstrcpy(pascalNode, node);
-            err = ::FSMakeFSSpec(mSpec.vRefNum, dirID, pascalNode, &mSpec);
+            err = ::FSMakeFSSpec(mSpec.vRefNum, dirID, pascalNode, &childSpec);
             if (err && err != fnfErr)
                 return MacErrorMapper(err);
+            mSpec = childSpec;
         }
         else if (err == fnfErr)
             mAppendedPath.Assign(node);
@@ -1427,6 +1490,9 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 
     MakeDirty();
 
+    char truncBuffer[32];
+    const char *leafName = TruncNodeName(aLeafName, truncBuffer);
+
     if (mAppendedPath.Length())
     {   // Lop off the end of the appended path and replace it with the new leaf name
         PRInt32 offset = mAppendedPath.RFindChar(':');
@@ -1434,12 +1500,12 @@ nsLocalFile::SetLeafName(const char * aLeafName)
         {
             mAppendedPath.Truncate(offset + 1);
         }
-        mAppendedPath.Append(aLeafName);
+        mAppendedPath.Append(leafName);
     }
     else
     {
         // We don't have an appended path so directly modify the FSSpec
-        myPLstrcpy(mSpec.name, aLeafName);
+        myPLstrcpy(mSpec.name, leafName);
     }
     
     return NS_OK;
