@@ -256,16 +256,13 @@
             onclick="console.onScriptClick(event);">
 
             <outlinercol id="script-name" label="&ScriptCol0.header;"
-             primary="true" class="outlinercol-header outlinercol-inset-header"
-             flex="5" persist="hidden width"/>
+             primary="true" flex="5" persist="hidden width"/>
             <splitter class="tree-splitter"/>
             <outlinercol flex="1" id="script-line-start"
-              label="&ScriptCol1.header;" persist="hidden width"
-              class="outlinercol-header outlinercol-inset-header"/>
+              label="&ScriptCol1.header;" persist="hidden width"/>
             <splitter class="tree-splitter"/>
             <outlinercol flex="1" id="script-line-extent"
-              label="&ScriptCol2.header;" persist="hidden width" hidden="true"
-              class="outlinercol-header outlinercol-inset-header"/>
+              label="&ScriptCol2.header;" persist="hidden width" hidden="true"/>
             <outlinerbody id="script-list-body" flex="1"/>
           </outliner>
         </vbox>
@@ -277,15 +274,12 @@
         <outliner id="source-outliner" flex="50" persist="width"
           onclick="console.onSourceClick(event);">
           <outlinercol id="breakpoint-col" width="20px"
-            display="&SourceCol0.display;" persist="hidden width"
-            class="outlinercol-header outlinercell-inset-header"/>
-          <outlinercol id="source-line-number" flex="5"
-            display="&SourceCol1.display;" persist="hidden width"
-            class="outlinercol-header outlinercell-inset-header"/>
-          <splitter class="tree-splitter"/>          
-          <outlinercol id="source-line-text" flex="90"
-            display="" persist="hidden width"
-            class="outlinercol-header outlinercell-inset-header"/>
+            display="&SourceCol0.display;" persist="hidden"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol id="source-line-number" flex="7"
+            display="&SourceCol1.display;" persist="hidden width"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol id="source-line-text" flex="90" persist="hidden width"/>
           <outlinerbody id="source-outliner-body" flex="1"/>
         </outliner>
 
@@ -301,23 +295,19 @@
           onselect="console.onStackSelect(event);">
 
           <outlinercol id="stack-col-0" flex="1" persist="hidden width"
-            primary="true" label="&StackCol0.header;"
-            class="outlinercol-header outlinercol-inset-header"/>
+            primary="true" label="&StackCol0.header;"/>
           <splitter class="tree-splitter"/>
 
           <outlinercol flex="2" id="stack-col-1" persist="hidden width"
-            hidden="true" label="&StackCol1.header;"
-            class="outlinercol-header outlinercol-inset-header"/>
+            hidden="true" label="&StackCol1.header;"/>
           <splitter class="tree-splitter"/>
 
           <outlinercol flex="1" id="stack-col-2" persist="hidden width"
-             label="&StackCol2.header;"
-            class="outlinercol-header outlinercol-inset-header"/>
+             label="&StackCol2.header;"/>
           <splitter class="tree-splitter"/>
 
           <outlinercol flex="1" id="stack-col-3" persist="hidden width"
-            label="&StackCol3.header;" hidden="true"
-            class="outlinercol-header outlinercol-inset-header"/>
+            label="&StackCol3.header;" hidden="true"/>
 
           <outlinerbody id="stack-body" flex="1"/>
         </outliner>
