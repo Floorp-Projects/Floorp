@@ -398,7 +398,7 @@ nsTableRowFrame::DidResize(nsIPresContext*          aPresContext,
     // Get the next child
     childFrame = iter.Next();
   }
-  StoreOverflow(aPresContext, desiredSize);
+  FinishAndStoreOverflow(&desiredSize);
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, this, GetView(), &desiredSize.mOverflowArea, 0);
   }
@@ -985,7 +985,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           desiredSize.width = cellDesiredSize.width;
           desiredSize.height = cellDesiredSize.height;
           nsRect *overflowArea =
-            cellFrame->GetOverflowAreaProperty(aPresContext);
+            cellFrame->GetOverflowAreaProperty();
           if (overflowArea)
             desiredSize.mOverflowArea = *overflowArea;
           else
@@ -1084,7 +1084,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   }
   nsRect rowRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, rowRect);
-  StoreOverflow(aPresContext, aDesiredSize);
+  FinishAndStoreOverflow(&aDesiredSize);
   return rv;
 }
 
@@ -1318,7 +1318,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
       nsIFrame* cellKidFrame = cellFrame->GetFirstChild(nsnull);
       if (cellKidFrame) {
         cellFrame->ConsiderChildOverflow(aPresContext, cellMet.mOverflowArea, cellKidFrame);
-        cellFrame->StoreOverflow(aPresContext, cellMet);
+        cellFrame->FinishAndStoreOverflow(&cellMet);
         if (cellFrame->HasView()) {
           nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, cellFrame, cellFrame->GetView(), &cellMet.mOverflowArea, 0);
         }
@@ -1335,7 +1335,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
   for (nsIFrame* cell = mFrames.FirstChild(); cell; cell = cell->GetNextSibling()) {
     ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, cell);
   }
-  StoreOverflow(aPresContext, aDesiredSize);
+  FinishAndStoreOverflow(&aDesiredSize);
   // When returning whether we're complete we need to look at each of our cell
   // frames. If any of them has a continuing frame, then we're not complete. We
   // can't just return the status of the cell frame we just reflowed...

@@ -366,17 +366,6 @@ public:
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild);
 
-  // Return the previously stored overflow area, if the frame does not 
-  // overflow and a creation is not requested it will return nsnull
-  virtual nsRect* GetOverflowAreaProperty(nsIPresContext* aPresContext,
-                                  PRBool          aCreateIfNecessary = PR_FALSE);
-
-  // Set/unset the NS_FRAME_OUTSIDE_CHILDREN flag and store the overflow area
-  // as a frame property in the frame manager so that it can be retrieved
-  // later without reflowing the frame.
-  void StoreOverflow(nsIPresContext*      aPresContext,
-                     nsHTMLReflowMetrics& aMetrics);
-
   // incorporate the child overflow area into the parent overflow area
   // if the child does not have a overflow use the child area
   void ConsiderChildOverflow(nsIPresContext* aPresContext,

@@ -3005,21 +3005,14 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     combinedAreaResult.UnionRect(combinedAreaResult, *r + origin);
   }
 
-  aCombinedArea = combinedAreaResult;
-
   // If we just computed a spans combined area, we need to update its
   // NS_FRAME_OUTSIDE_CHILDREN bit..
   if (psd->mFrame) {
     PerFrameData* spanPFD = psd->mFrame;
     nsIFrame* frame = spanPFD->mFrame;
-    if ((combinedAreaResult.x < 0) || (combinedAreaResult.y < 0) ||
-        (combinedAreaResult.XMost() > spanPFD->mBounds.width) ||
-        (combinedAreaResult.YMost() > spanPFD->mBounds.height)) {
-      frame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
-    } else {
-      frame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
-    }
+    frame->FinishAndStoreOverflow(&combinedAreaResult, frame->GetSize());
   }
+  aCombinedArea = combinedAreaResult;
 }
 
 void

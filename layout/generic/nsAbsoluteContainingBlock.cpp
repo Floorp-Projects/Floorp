@@ -206,7 +206,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
       // If the frame has visible overflow, then take it into account, too.
       if (kidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
         // Get the property
-        nsRect* overflowArea =  kidFrame->GetOverflowAreaProperty(aPresContext);
+        nsRect* overflowArea =  kidFrame->GetOverflowAreaProperty();
 
         if (overflowArea) {
           // The overflow area is in the child's coordinate space, so translate
@@ -237,7 +237,7 @@ nsAbsoluteContainingBlock::CalculateChildBounds(nsIPresContext* aPresContext,
     // If the frame has visible overflow, then take it into account, too.
     if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
       // Get the property
-      nsRect* overflowArea = f->GetOverflowAreaProperty(aPresContext);
+      nsRect* overflowArea = f->GetOverflowAreaProperty();
   
       if (overflowArea) {
         // The overflow area is in the child's coordinate space, so translate
@@ -489,7 +489,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   // the frame
   if (aKidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
     // Get the property (creating a rect struct if necessary)
-    nsRect* overflowArea = aKidFrame->GetOverflowAreaProperty(aPresContext, PR_TRUE);
+    nsRect* overflowArea = aKidFrame->GetOverflowAreaProperty(PR_TRUE);
 
     NS_ASSERTION(overflowArea, "should have created rect");
     if (overflowArea) {

@@ -99,6 +99,11 @@ public:
    */
   virtual nsIAtom* GetType() const;
   
+  /**
+   * This frame does clip its child (the scrolled frame).
+   */
+  virtual PRBool DoesClipChildren() { return PR_TRUE; }
+
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -117,7 +122,6 @@ public:
 
   virtual nsresult GetContentOf(nsIContent** aContent);
   
-
 protected:
   nsScrollBoxFrame(nsIPresShell* aShell);
 
