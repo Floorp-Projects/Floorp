@@ -40,9 +40,7 @@ CPPSRCS =                              \
     nsPluginFactory.cpp  \
     ns4xPlugin.cpp  \
     ns4xPluginInstance.cpp  \
-    ns4xPluginStream.cpp  \
     nsPluginInstancePeer.cpp  \
-    nsPluginStreamPeer.cpp  \
     nsMalloc.cpp  \
     $(NULL)
 
