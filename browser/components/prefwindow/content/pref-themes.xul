@@ -57,7 +57,7 @@
     <description>&installedThemes.label;</description>
   
     <listbox id="skinsList" datasources="rdf:chrome" 
-          onselect="themeSelect();"
+          onselect="themeSelect();" flex="1"
           ref="urn:mozilla:skin:root" rows="3">
       <template>
         <rule>
@@ -106,7 +106,7 @@
   <vbox flex="1">
     
     <listbox id="extList" datasources="rdf:chrome" 
-          onselect="extensionSelect();"
+          onselect="extensionSelect();" flex="1"
           ref="urn:mozilla:package:root" rows="10">
       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
         <rule chrome:extension="true">
