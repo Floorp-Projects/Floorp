@@ -273,7 +273,7 @@ nsresult nsEudoraWin32::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *
 					name = fName;
 				}
 				ext.ToLowerCase();
-				if (!ext.Compare( ".fol")) {
+				if (!ext.CompareWithConversion( ".fol")) {
 					isFolder = PR_FALSE;
 					entry->IsDirectory( &isFolder);
 					if (isFolder) {
@@ -287,7 +287,7 @@ nsresult nsEudoraWin32::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *
 						}
 					}
 				}
-				else if (!ext.Compare( ".mbx")) {
+				else if (!ext.CompareWithConversion( ".mbx")) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);
 					if (isFile) {
@@ -686,7 +686,7 @@ void nsEudoraWin32::GetAccountName( const char *pSection, nsString& str)
 
 	nsCString	s = pSection;
 	
-	if (!s.Compare( "Settings", PR_TRUE)) {
+	if (!s.CompareWithConversion( "Settings", PR_TRUE)) {
 		str.AssignWithConversion("Eudora ");
 		str.AppendWithConversion( pSection);
 	}
@@ -694,8 +694,8 @@ void nsEudoraWin32::GetAccountName( const char *pSection, nsString& str)
 		nsCString tStr;
 		str.AssignWithConversion(pSection);
 		if (s.Length() > 8) {
-			s.Left( tStr, 8);
-			if (!tStr.Compare( "Persona-", PR_TRUE)) {
+			s.Left( tStr, 8); 
+			if (!tStr.CompareWithConversion( "Persona-", PR_TRUE)) {
 				s.Right( tStr, s.Length() - 8);
 				str.AssignWithConversion((const char *)tStr);
 			}
@@ -961,7 +961,7 @@ PRBool nsEudoraWin32::FindMimeIniFile( nsIFileSpec *pSpec)
 					name = fName;
 				}
 				ext.ToLowerCase();
-				if (!ext.Compare( ".ini")) {
+				if (!ext.CompareWithConversion( ".ini")) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);
 					if (isFile) {
@@ -1320,7 +1320,7 @@ nsresult nsEudoraWin32::ScanAddressDir( nsIFileSpec *pDir, nsISupportsArray *pAr
 					name = fName;
 				}
 				ext.ToLowerCase();
-				if (!ext.Compare( ".txt")) {
+				if (!ext.CompareWithConversion( ".txt")) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);
 					if (isFile) {
@@ -1361,7 +1361,7 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 		nsCRT::free( pLeaf);
 		nsString	tStr;
 		name.Right( tStr, 4);
-		if (!tStr.Compare( NS_ConvertASCIItoUCS2(".txt").GetUnicode(), PR_TRUE)) {
+		if (!tStr.CompareWithConversion( NS_ConvertASCIItoUCS2(".txt").GetUnicode(), PR_TRUE)) {
 			name.Left( tStr, name.Length() - 4);
 			name = tStr;
 		}
