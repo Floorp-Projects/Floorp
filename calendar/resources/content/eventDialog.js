@@ -127,7 +127,7 @@ function loadCalendarEventDialog()
     // Set up dialog as event or todo
     if (isEvent(event)) {
         processComponentType("event");
-    } else if (isTodo(event)) {
+    } else if (isToDo(event)) {
         processComponentType("todo");
     } else {
         dump("loadCalendarEventDialog: ERROR! Got a bogus event! Not event or todo!\n");
@@ -171,10 +171,13 @@ function loadCalendarEventDialog()
             setFieldValue("event-status-field", "ICAL_STATUS_CANCELLED");
             break;
         }
-    } else if (isTodo(event)) {
+    } else if (isToDo(event)) {
         var hasStart = event.start && event.start.isSet;
         if (hasStart) 
-          gStartDate = event.startDate.jsDate;
+            gStartDate = event.startDate.jsDate;
+        else
+            gStartDate = null;
+
         var startPicker = document.getElementById( "start-datetime" );
         startPicker.value = gStartDate;
         startPicker.disabled = !hasStart;
@@ -182,13 +185,20 @@ function loadCalendarEventDialog()
 
         var hasDue = event.due && event.due.isSet;
         if (hasDue)
-          gDueDate = event.dueDate.jsDate;
+            gDueDate = event.dueDate.jsDate;
+        else
+            gDueDate = null;
+
         var duePicker = document.getElementById( "due-datetime" );
         duePicker.value = gDueDate;
         duePicker.disabled = !hasDue;
         document.getElementById("due-checkbox").checked = hasDue;
 
-        gDuration = gDueDate.getTime() - gStartDate.getTime(); //in ms
+        if (hasStart && hasDue) {
+            gDuration = gDueDate.getTime() - gStartDate.getTime(); //in ms
+        } else {
+            gDuration = 0;
+        }
 
         // todo status fields
         switch(event.status) {
@@ -277,7 +287,7 @@ function loadCalendarEventDialog()
         // we can only display at most one rule and one set of exceptions;
         // nothing else.
         var theRule = null;
-        var theExceptions = null;
+        var theExceptions = Array();
 
         var ritems = event.recurrenceInfo.getRecurrenceItems({});
         for (i in ritems) {
@@ -286,16 +296,17 @@ function loadCalendarEventDialog()
                     dump ("XXXX eventDialog already found a calIRecurrenceRule, we can't handle multiple ones!\n");
                 } else {
                     theRule = ritems[i].QueryInterface(calIRecurrenceRule);
-                }
-            } else if (ritems[i] instanceof calIRecurrenceDateSet) {
-                if (theExceptions) {
-                    dump ("XXXX eventDialog already found a calIRecurrenceDateSet, we can't handle multiple ones!\n");
-                } else {
-                    theExceptions = ritems[i].QueryInterface(calIRecurrenceDateSet);
-                    if (theExceptions.isNegative != true) {
-                        dump ("XXXX eventDialog found a calIRecurrenceDateSet that wasn't an exception set!\n");
-                        theExceptions = null;
+                    if (theRule.isNegative) {
+                        dump ("XXXX eventDialog found an EXRULE, we can't handle this!\n");
+                        theRule = null;
                     }
+                }
+            } else if (ritems[i] instanceof calIRecurrenceDate) {
+                var exc = ritems[i].QueryInterface(calIRecurrenceDate);
+                if (exc.isNegative) {
+                    theExceptions.push(exc);
+                } else {
+                    dump ("XXXX eventDialog found a calIRecurrenceDate that wasn't an exception!\n");
                 }
             }
         }
@@ -324,10 +335,9 @@ function loadCalendarEventDialog()
             }
         }
 
-        if (theExceptions) {
-            var dates = theExceptions.getDates({});
-            for (i in dates) {
-                var date = dates[i].jsDate;
+        if (theExceptions.length > 0) {
+            for (i in theExceptions) {
+                var date = theExceptions[i].date.jsDate;
                 addException(date);
             }
         }
@@ -461,16 +471,35 @@ function onOKCommand()
 
     // if this event isn't mutable, we need to clone it like a sheep
     var originalEvent = event;
-    if (!event.isMutable)
-        // I will cut vlad for making me do this QI
-        event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
-
     // get values from the form and put them into the event
 
     // calIEvent properties
-    event.startDate.jsDate = gStartDate;
-    event.endDate.jsDate   = gEndDate;
-    event.isAllDay = getFieldValue( "all-day-event-checkbox", "checked" );
+    if (isEvent(event)) {
+        if (!event.isMutable)
+            // I will cut vlad for making me do this QI
+            event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
+
+        event.startDate.jsDate = gStartDate;
+        event.endDate.jsDate   = gEndDate;
+        event.isAllDay = getFieldValue( "all-day-event-checkbox", "checked" );
+    } else if (isToDo(event)) {
+        if (!event.isMutable)
+            // I will cut vlad for making me do this QI
+            event = originalEvent.clone().QueryInterface(Components.interfaces.calITodo);
+
+        dump ("this todo is: " + event + "\n");
+        if (gStartDate) {
+            event.entryDate = gStartDate;
+        } else {
+            event.entryDate.reset();
+        }
+
+        if (gDueDate) {
+            event.dueDate = gDueDate;
+        } else {
+            event.dueDate.reset();
+        }
+    }
 
     // XXX should do an idiot check here to see if duration is negative
 
@@ -520,6 +549,11 @@ function onOKCommand()
             recRule.endDate = jsDateToDateTime(recurEndDate);
         }
 
+        // don't allow for a null interval here; js
+        // silently converts that to 0, which confuses
+        // libical.
+        if (recurInterval == null)
+            recurInterval = 1;
         recRule.interval = recurInterval;
         
         var typeMap = { "days"   : "DAILY",
@@ -543,16 +577,11 @@ function onOKCommand()
             var dateObj = new Date(parseInt(listbox.childNodes[i].value));
             var dt = jsDateToDateTime(dateObj);
             dt.isDate = true;
-            exceptionArray.push(dt);
-        }
 
-        if (exceptionArray.length > 0) {
-            var recExceptions = new calRecurrenceDateSet();
-            recExceptions.isNegative = true;
-            for (i in exceptionArray) {
-                recExceptions.addDate(exceptionArray[i]);
-            }
-            recurrenceInfo.appendRecurrenceItem(recExceptions);
+            var dateitem = new calRecurrenceDate();
+            dateitem.isNegative = true;
+            dateitem.date = dt;
+            recurrenceInfo.appendRecurrenceItem(dateitem);
         }
 
         // Finally, set the recurrenceInfo
@@ -1635,12 +1664,10 @@ function processComponentType(componentType)
 
     switch( componentType ) {
     case "event":
-        // Set the menu properly if it isn't already
-        if( componentMenu.selectedItem.value != "event")
-            componentMenu.selectedItem.value = "event"
-
         // Hide and show the appropriate fields and widgets
         changeMenuState("todo", "event");
+
+        componentMenu.selectedIndex = 0;
 
         // calling just enableElement _should_ work here, but it doesn't
         document.getElementById("start-datetime").setAttribute( "disabled", "false" );
@@ -1655,6 +1682,8 @@ function processComponentType(componentType)
     case "todo":
         // Hide and show the appropriate fields and widgets
         changeMenuState("event", "todo");
+
+        componentMenu.selectedIndex = 1;
 
         onDateTimeCheckbox("start-checkbox", "start-datetime")
         onDateTimeCheckbox("due-checkbox", "due-datetime")
@@ -1853,9 +1882,8 @@ function updateCompletedItemEnabled()
 function percentCompleteCommand()
 {
     var percentCompleteMenu = getFieldValue( "percent-complete-menulist" );
-    percentCompleteMenu =  parseInt( percentcomplete );
-    if( percentCompleteMenu == 100)
-        setFieldValue( "completed-checkbox", "true", "checked" );
+    if( percentCompleteMenu == "100")
+        setFieldValue( "completed-checkbox", "checked" );
 
     updateCompletedItemEnabled();
 }

@@ -687,11 +687,11 @@ var calITodo = Components.interfaces.calITodo;
 
 var calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
 var calIRecurrenceRule = Components.interfaces.calIRecurrenceRule;
-var calIRecurrenceDateSet = Components.interfaces.calIRecurrenceDateSet;
+var calIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
 
 var calRecurrenceInfo = Components.Constructor("@mozilla.org/calendar/recurrence-info;1", calIRecurrenceInfo);
 var calRecurrenceRule = Components.Constructor("@mozilla.org/calendar/recurrence-rule;1", calIRecurrenceRule);
-var calRecurrenceDateSet = Components.Constructor("@mozilla.org/calendar/recurrence-date-set;1", calIRecurrenceDateSet);
+var calRecurrenceDate = Components.Constructor("@mozilla.org/calendar/recurrence-date;1", calIRecurrenceDate);
 
 function createEvent()
 {
