@@ -170,6 +170,11 @@ nsBrowserStatusHandler.prototype =
       this.statusTextField.label = text;
   },
 
+  mimeTypeIsTextBased : function(contentType)
+  {
+    return /^text\/|\+xml$/.test(contentType);
+  },
+
   onLinkIconAvailable : function(aHref) {
     if (gProxyFavIcon && pref.getBoolPref("browser.chrome.site_icons"))
     {
@@ -223,7 +228,6 @@ nsBrowserStatusHandler.prototype =
         this.stopButton.disabled = false;
         this.stopMenu.removeAttribute('disabled');
         this.stopContext.removeAttribute('disabled');
-        this.isImage.removeAttribute('disabled');
 
         // Initialize the progress stuff...
         this.useRealProgressFlag = false;
@@ -258,7 +262,9 @@ nsBrowserStatusHandler.prototype =
           this.setDefaultStatus(msg);
           try {
             ctype = aRequest.QueryInterface(nsIChannel).contentType;
-            if (ctype.match(/^image\//))
+            if (this.mimeTypeIsTextBased(ctype)) 
+              this.isImage.removeAttribute('disabled');
+            else
               this.isImage.setAttribute('disabled', 'true');
           }
           catch (e) {}
@@ -302,6 +308,12 @@ nsBrowserStatusHandler.prototype =
       if (location == "about:blank")
         location = "";
     }
+
+    // Disable menu entries for images, enable otherwise
+    if (this.mimeTypeIsTextBased(content.document.contentType))
+      this.isImage.removeAttribute('disabled');
+    else
+      this.isImage.setAttribute('disabled', 'true');
 
     // We should probably not do this if the value has changed since the user
     // searched
