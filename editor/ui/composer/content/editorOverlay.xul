@@ -522,7 +522,26 @@
        <titledbutton id="text-align-justify" align="left" value="&alignJustify.label;"/>
       </menuitem>
     </menupopup>
-     
+    
+    <!-- InsertPopup is used by messengercompose.xul -->
+    <menupopup id="InsertPopup">
+      <menuitem oncommand="EditorInsertLink()">
+       <titledbutton id="linkButton-dark" darkcolor="true" align="left" value="&linkToolbarCmd.label;"/>
+      </menuitem>
+      <menuitem oncommand="EditorInsertNamedAnchor()">
+       <titledbutton id="namedAnchorButton-dark" align="left" value="&anchorToolbarCmd.label;"/>
+      </menuitem>
+      <menuitem oncommand="EditorInsertImage()">
+       <titledbutton id="imageButton-dark" align="left" value="&imageToolbarCmd.label;"/>
+      </menuitem>
+      <menuitem oncommand="EditorInsertHLine()">
+       <titledbutton id="hlineButton-dark" align="left" value="&hruleToolbarCmd.label;"/>
+      </menuitem>
+      <menuitem oncommand="EditorInsertOrEditTable(true)">
+       <titledbutton id="tableButton-dark" align="left" value="&tableToolbarCmd.label;"/>
+      </menuitem>
+    </menupopup>
+
     <!-- Editor toolbar items -->
     <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
     <titledbutton id="newButton"         class="button28" observes="cmd_newEditor" value="&newMenu.label;" />
@@ -607,6 +626,9 @@
     <titledbutton id="outdentButton"    class="format"        onclick="EditorIndent('outdent')"/>
     <titledbutton id="indentButton"     class="format"        onclick="EditorIndent('indent')"/>
     <titledbutton id="AlignPopupButton" class="format popup"  popupanchor="bottomleft"/>
+    
+    <!-- InsertPopupButton is used by messengercompose.xul -->
+    <titledbutton id="InsertPopupButton" class="format popup"  popupanchor="bottomleft"/>
 
 
     <!-- DEBUG only -->

@@ -212,6 +212,21 @@ titledbutton#hlineButton {
 titledbutton#tableButton {
 	list-style-image:url("chrome://editor/skin/images/table-white.gif");
 }
+titledbutton#linkButton-dark {
+	list-style-image:url("chrome://editor/skin/images/link.gif");
+}
+titledbutton#imageButton-dark {
+	list-style-image:url("chrome://editor/skin/images/image.gif");
+}
+titledbutton#namedAnchorButton-dark {
+	list-style-image:url("chrome://editor/skin/images/anchor.gif");
+}
+titledbutton#hlineButton-dark {
+	list-style-image:url("chrome://editor/skin/images/hline.gif");
+}
+titledbutton#tableButton-dark {
+	list-style-image:url("chrome://editor/skin/images/table.gif");
+}
 titledbutton#spellingButton {
 	list-style-image:url("chrome://editor/skin/images/spell.gif");
 }
@@ -257,6 +272,9 @@ titledbutton#indentButton {
 }
 titledbutton#AlignPopupButton {
 	list-style-image:url("chrome://editor/skin/images/align.gif");
+}
+titledbutton#InsertPopupButton {
+	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
 /* Doesn't work! */
