@@ -1382,7 +1382,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
     }
     if ((PR_TRUE == result) &&
         (nsnull != aSelector->mPseudoClassList)) {  // test for pseudo class match
-      // first-child, lang, active, focus, hover, link, outOfDate, visited
+      // first-child, root, lang, active, focus, hover, link, outOfDate, visited
       // XXX disabled, enabled, selected, selection
       nsAtomList* pseudoClass = aSelector->mPseudoClassList;
       PRInt32 eventState = NS_EVENT_STATE_UNSPECIFIED;
@@ -1419,6 +1419,17 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           }
           result = PRBool(aContent == firstChild);
           NS_IF_RELEASE(firstChild);
+        }
+        else if (nsCSSAtoms::rootPseudo == pseudoClass->mAtom) {
+          nsIContent* parent;
+          aContent->GetParent(parent);
+          if (parent) {
+            NS_RELEASE(parent);
+            result = PR_FALSE;
+          }
+          else {
+            result = PR_TRUE;
+          }
         }
         else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
           // XXX not yet implemented
