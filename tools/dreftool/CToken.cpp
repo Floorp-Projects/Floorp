@@ -123,34 +123,6 @@ int CToken::consume(char aChar,CScanner& aScanner) {
   return result;
 }
 
-
-/**
- *  This debug method causes the token to dump its content
- *  to the given stream (formated for debugging).
- *  
- *  @update gess 3/25/98
- *  @param  ostream -- output stream to accept output data
- */
-void CToken::debugDumpToken(ostream& anOutputStream) {
-  anOutputStream << "[" << getClassName() << "] ";
-  int i=0;
-  for(i=0;i<(int) mTextValue.Length();i++){
-    anOutputStream << char(mTextValue.CharAt(i));
-  }
-  anOutputStream << ": " << mTypeID << endl;
-}
-
-/**
- *  This debug method causes the token to dump its content
- *  to the given stream, formated as text.
- *  
- *  @update gess 3/25/98
- *  @param  ostream -- output stream to accept output data
- */
-void CToken::debugDumpSource(ostream& anOutputStream) {
-  anOutputStream << PromiseFlatCString(mTextValue).get() << endl;
-}
-
 /**
  * setter method that changes the string value of this token
  * @update	gess5/11/98

@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <iostream.h>
-#include <fstream.h>
 #include "nsString.h"
 #include "prio.h"
 #include "plstr.h"
@@ -47,6 +45,9 @@
 #include "tokens.h"
 #include "CToken.h"
 #include "stdlib.h"
+#include "nsIFile.h"
+#include "nsILocalFile.h"
+#include "nsISimpleEnumerator.h"
 
 //*******************************************************************************
 // Global variables...
@@ -60,7 +61,7 @@ const char *gRootDir;
 
 class IPattern {
 public:
-  virtual CToken* scan(CCPPTokenizer& aTokenizer,int anIndex,ostream& anOutput)=0;
+  virtual CToken* scan(CCPPTokenizer& aTokenizer,int anIndex)=0;
 };
 
 
@@ -530,7 +531,7 @@ public:
     }//while
   }
 
-  void OutputMozillaFilename(ostream& anOutput) {
+  void OutputMozillaFilename() {
     mFilename.ReplaceChar('\\','/');
     PRInt32 pos=mFilename.RFind("/") + 1;
     nsCAutoString entries,repository;
@@ -549,21 +550,26 @@ public:
     bool found = false;
     {
       fstream cvsrecord (entries.get(),ios::in);
-      while (!cvsrecord.eof()) {
-        cvsrecord.get(prefix);
-        if (prefix=='/') {
-          cvsrecord.getline(cvsfilename,sizeof cvsfilename, '/');
-          if (found = !strcmp(filename.get(), cvsfilename))
-            break;
+      if (cvsrecord.is_open()) {
+        while (!cvsrecord.eof()) {
+          cvsrecord.get(prefix);
+          if (prefix=='/') {
+           cvsrecord.getline(cvsfilename,sizeof cvsfilename, '/');
+            if (found = !strcmp(filename.get(), cvsfilename))
+              break;
+          }
+          cvsrecord.ignore(256,'\n');
         }
-        cvsrecord.ignore(256,'\n');
+        if (found)
+          cvsrecord.getline(version,sizeof version, '/');
       }
-      if (found)
-        cvsrecord.getline(version,sizeof version, '/');
     }
     {
       fstream cvsrecord (repository.get(),ios::in);
-      cvsrecord.getline(cvspath,sizeof cvspath);
+      if (cvsrecord.is_open())
+        cvsrecord.getline(cvspath,sizeof cvspath);
+      else
+        cvspath[0]=0;
       if (cvspath[0])
         filename =
           NS_LITERAL_CSTRING("/") +
@@ -579,37 +585,36 @@ public:
     if(-1<pos) {
       buf+=pos+(found?0:8);
 
-      if(gEmitHTML) {
-        anOutput << "<br><a href=\"" ;
-        if (found)
-          anOutput
-            << "http://bonsai.mozilla.org/cvsblame.cgi?file="
-            << buf
-            << "&rev="
-            << version
-            << "&mark="
-            << mLineNumber
-            << "#"
-            << mLineNumber - 5;
-        else
-          anOutput
-            << "http://lxr.mozilla.org/mozilla/source/"
-            << buf
-            << "#"
-            << mLineNumber;
-
-        cout << "\">";  
-      }
-
-      cout << buf << ":" << mLineNumber;
-
-      if(gEmitHTML) {
-        cout << "</a>";
-      }
-
+      if(gEmitHTML)
+        fprintf(stdout, "<br><a href=\"");
+      if (found)
+        fprintf(stdout,
+                "http://bonsai.mozilla.org/cvsblame.cgi?file=%s"
+                "&rev=%s"
+                "&mark=%d"
+                "#%d",
+                buf,
+                version,
+                mLineNumber,
+                mLineNumber - 5);
+      else if (gEmitHTML)
+        fprintf(stdout,
+                "http://lxr.mozilla.org/mozilla/source/%s#%d",
+                buf,
+                mLineNumber);
+      else
+        fprintf(stdout,
+                "%s:%d",
+                buf,
+                mLineNumber);
+      if (gEmitHTML)
+        fprintf(stdout,
+                "\">%s:%d</a>",
+                buf,
+                mLineNumber);
     }
     else {
-      anOutput << buf;
+      fprintf(stdout, "%s", buf);
     }
   }
 
@@ -622,7 +627,7 @@ public:
     When we find one, we look it up in mSafeNames. If it's not there, we have
     a potential deref error.
    ***************************************************************************/
-  void scan(CCPPTokenizer& aTokenizer,ostream& anOutput){
+  void scan(CCPPTokenizer& aTokenizer){
     int     theMax=aTokenizer.getCount();
     int     theIDCount=mNames.GetSize();
     int     theSafeIDCount=mSafeNames.GetSize();
@@ -639,7 +644,7 @@ public:
             switch(theChar){
               case '{':
                 mIndex++;
-                scan(aTokenizer,anOutput);
+                scan(aTokenizer);
                 break;
               case '}':
                 //before returning, let's remove the new identifiers...
@@ -718,11 +723,11 @@ public:
                   }
                   //dump the name out in LXR format
 
-                  OutputMozillaFilename(anOutput);
+                  OutputMozillaFilename();
 
-                  anOutput << "   Deref-error: \""
-                           << PromiseFlatCString(theString).get()
-                           << "\"" << endl;
+                  fprintf(stdout,
+                          "   Deref-error: \"%s\"\n",
+                          theString.get());
                   mErrCount++;
                 }
               }
@@ -744,45 +749,51 @@ public:
   nsCString   mFilename;
 };
 
-void ScanFile(const nsAFlatCString& aFilename,ostream& anOutput,int& aLineCount,int& anErrCount) {
-  nsCAutoString theCStr(aFilename);
- 
-  fstream input(PromiseFlatCString(theCStr).get(),ios::in);
+void ScanFile(nsIFile *aFilename,int& aLineCount,int& anErrCount) {
+  nsCAutoString theCStr;
+  if (NS_FAILED(aFilename->GetNativePath(theCStr)) || theCStr.IsEmpty())
+    return;
+  fstream input(theCStr.get(),ios::in);
   CScanner theScanner(input);
   CCPPTokenizer theTokenizer;
   theTokenizer.tokenize(theScanner);
 
-  CPattern thePattern(aFilename);
-  thePattern.scan(theTokenizer,anOutput);
+  CPattern thePattern(theCStr);
+  thePattern.scan(theTokenizer);
   aLineCount+=thePattern.mLineNumber;
   anErrCount+=thePattern.mErrCount;
 }
 
 
-void IteratePath(const char *aPath, ostream& anOutput,
-  int& aFilecount,int& aLinecount,int& anErrcount) {
-  PRFileInfo eInfo;
-  if (PR_SUCCESS == PR_GetFileInfo(aPath, &eInfo)) {
-    if (eInfo.type == PR_FILE_DIRECTORY) {
-      if (PRDir *aDir = PR_OpenDir(aPath)) {
-        while (PRDirEntry *anEntry = PR_ReadDir(aDir, PR_SKIP_BOTH)) {
-          nsCAutoString path(
-            nsDependentCString(aPath) +
-            NS_LITERAL_CSTRING("/") +
-            nsDependentCString(anEntry->name)
-          );
-          if (0 != PL_strcasecmp(anEntry->name, "CVS"))
-            IteratePath(path.get(), anOutput, aFilecount, aLinecount, anErrcount);
+void IteratePath(nsIFile *aPath,
+  int& aFilecount,int& aLinecount,int& anErrcount)
+{
+  PRBool is = PR_FALSE;
+  nsXPIDLCString name;
+  if (NS_FAILED(aPath->GetNativeLeafName(name)) ||
+      name.IsEmpty())
+    return;
+  if (NS_FAILED(aPath->IsSymlink(&is)) || is ||
+      NS_FAILED(aPath->IsSpecial(&is)) || is) {
+    fprintf(stderr, "Skipping: %s\n", name.get());
+  } else if (NS_SUCCEEDED(aPath->IsDirectory(&is)) && is &&
+             !name.Equals(NS_LITERAL_CSTRING("CVS"))) {
+    nsCOMPtr<nsISimpleEnumerator> dirList;
+    if (NS_SUCCEEDED(aPath->GetDirectoryEntries(getter_AddRefs(dirList)))) {
+      while (NS_SUCCEEDED(dirList->HasMoreElements(&is)) && is) {
+        nsCOMPtr<nsISupports> thing;
+        nsCOMPtr<nsIFile> path;
+        if (NS_SUCCEEDED(dirList->GetNext(getter_AddRefs(thing))) &&
+            (path = do_QueryInterface(thing))) {
+          IteratePath(path, aFilecount, aLinecount, anErrcount);
         }
       }
-    }
-    else if (eInfo.type == PR_FILE_FILE) {
-      const char *ext = PL_strcaserstr(aPath, ".cpp");
-      if (ext && (ext[4] == 0)) {
-        aFilecount++;
-        ScanFile(nsDependentCString(aPath),anOutput,aLinecount,anErrcount);
-      }
-    }
+    }  
+  } else if (NS_SUCCEEDED(aPath->IsFile(&is)) && is &&
+             (StringEndsWith(name, NS_LITERAL_CSTRING(".cpp")) ||
+              StringEndsWith(name, NS_LITERAL_CSTRING(".c")))) {
+    aFilecount++;
+    ScanFile(aPath,aLinecount,anErrcount);
   }
 }
  
@@ -810,10 +821,11 @@ void ConsumeArguments(int argc, char* argv[]) {
             break;
 
           default:
-            cout << "Usage: dreftool [-h] [-d sourcepath]" << endl;
-            cout << "-d path to root of source tree" << endl;
-            cout << "-s sloppy mode no warnings if member variables are used unsafe" <<endl;
-            cout << "-h emit as HTML" << endl;
+            fprintf(stderr,
+                    "Usage: dreftool [-h] [-d sourcepath]\n"
+                    "-d path to root of source tree\n"
+                    "-s sloppy mode no warnings if member variables are used unsafe\n"
+                    "-h emit as HTML\n");
             exit(1);
         }
         break;
@@ -834,34 +846,46 @@ int main(int argc, char* argv[]){
 
 #if 0
   nsCAutoString temp("test3.cpp");
-  ScanFile(temp,cout,lineCount,errCount);
+  ScanFile(temp,lineCount,errCount);
   fileCount++;
 #endif
 
 #if 1
   if(gEmitHTML) {
-    cout << "<html><body>" << endl;
+    fprintf(stdout, "<html><body>\n");
   }
 
-  IteratePath(gRootDir,cout,fileCount,lineCount,errCount);
+  {
+    nsCOMPtr<nsIFile> root;
+    nsCOMPtr<nsILocalFile> localroot;
+    if (NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(gRootDir), PR_TRUE, getter_AddRefs(localroot))) &&
+        (root = do_QueryInterface(localroot)) &&
+        NS_SUCCEEDED(root->Normalize()))
+      IteratePath(root,fileCount,lineCount,errCount);
+    else
+      fprintf(stderr, "Could not find path: %s\n", gRootDir);
+  }
 #endif
 
   if(gEmitHTML) {
-    cout << "<PRE>" <<endl;
+    fprintf(stdout, "<PRE>\n");
   }
 
-  cout << endl << "Summary";
+  fprintf(stdout, "\nSummary");
   if (gRootDir[0]!='.' || gRootDir[1])
-    cout << " for " << gRootDir;
-  cout << ": " << endl;
-  cout << "===============================" << endl;
-  cout<< "Files:  " << fileCount << endl;
-  cout<< "Lines:  " << lineCount<< endl;
-  cout<< "Errors: " << errCount<< endl;
+    fprintf(stdout, " for %s", gRootDir);
+  fprintf(stdout,
+          ": \n"
+          "===============================\n"
+          "Files:  %d\n"
+          "Lines:  %d\n"
+          "Errors: %d\n",
+          fileCount,
+          lineCount,
+          errCount);
 
   if(gEmitHTML) {
-    cout << "</PRE>" <<endl;
-    cout << "</body></html>" << endl;
+    fprintf(stdout, "</PRE>\n</body></html>\n");
   }
 
 

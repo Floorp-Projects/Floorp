@@ -105,7 +105,6 @@ int32 CCPPTokenizer::tokenize(CScanner& aScanner){
     CToken* theToken=0;
     result=consumeToken(aScanner,&theToken);
     if(theToken) {
-      //theToken->debugDumpSource(cout);
       mTokens.Push(theToken);
     }
   }

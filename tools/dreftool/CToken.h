@@ -58,7 +58,6 @@
 
 #include "SharedTypes.h"
 #include "nsString.h"
-#include <iostream.h>
 #include "CScanner.h"
 
 
@@ -182,20 +181,6 @@ class  CToken {
      * @return  error code (0 means ok)
      */
     virtual int consume(char aChar,CScanner& aScanner);
-
-    /**
-     * Causes token to dump itself in debug form to given output stream
-     * @update	gess5/11/98
-     * @param   out is the output stream where token should write itself
-     */
-    virtual void debugDumpToken(ostream& out);
-
-    /**
-     * Causes token to dump itself in source form to given output stream
-     * @update	gess5/11/98
-     * @param   out is the output stream where token should write itself
-     */
-    virtual void debugDumpSource(ostream& out);
 
     /**
      * getter which retrieves type of token
