@@ -127,7 +127,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
 
       // Now kick off the image load
       nsCOMPtr<imgIRequest> req;
-      il->LoadImage(url, nsnull, nsnull, nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull, getter_AddRefs(req));
+      il->LoadImage(url, nsnull, nsnull, nsnull, nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull, getter_AddRefs(req));
     }
     else if (curr->mType == nsXBLAtoms::stylesheet) {
       if (!cssLoader) {

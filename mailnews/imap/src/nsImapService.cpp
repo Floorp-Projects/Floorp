@@ -845,7 +845,7 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
           loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
         }
         
-        rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+        rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
       }
       else
       {
@@ -1234,7 +1234,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
   if (NS_SUCCEEDED(rv) && docShell)
   {      
-    rv = docShell->LoadURI(url, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
+    rv = docShell->LoadURI(url, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
   }
   else
   {

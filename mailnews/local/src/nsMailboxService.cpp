@@ -215,7 +215,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
         docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
         loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
       }
-	    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+	    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
     }
     else
       rv = RunMailboxUrl(url, aDisplayConsumer); 

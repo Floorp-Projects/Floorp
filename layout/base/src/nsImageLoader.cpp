@@ -117,7 +117,7 @@ nsImageLoader::Load(nsIURI *aURI)
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
-  return il->LoadImage(aURI, loadGroup, NS_STATIC_CAST(imgIDecoderObserver *, this), 
+  return il->LoadImage(aURI, nsnull, loadGroup, NS_STATIC_CAST(imgIDecoderObserver *, this), 
                        nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull, getter_AddRefs(mRequest));
 }
 

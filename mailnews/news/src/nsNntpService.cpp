@@ -311,7 +311,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
 			loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
 		}
 	    
-	    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+	    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
 	  }
 	  else 
     {
@@ -434,7 +434,7 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
 		  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
 			docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
 			loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
-	    return docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+	    return docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
     }
     else
       return RunNewsUrl(url, aMsgWindow, aDisplayConsumer);

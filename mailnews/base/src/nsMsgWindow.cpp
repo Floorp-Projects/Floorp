@@ -585,7 +585,7 @@ nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *b
     GetMessageWindowDocShell(getter_AddRefs(docShell));
     if (!docShell) return NS_ERROR_UNEXPECTED;
 
-    rv = docShell->LoadURI(uri,nsnull,nsIWebNavigation::LOAD_FLAGS_NONE);
+    rv = docShell->LoadURI(uri,nsnull,nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
     NS_ENSURE_SUCCESS(rv,rv);
 
     return NS_OK;

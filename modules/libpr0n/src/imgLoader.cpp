@@ -107,8 +107,18 @@ inline int merge_flags(const nsLoadFlags& inFlags, nsLoadFlags& outFlags)
   return 1;
 }
 
-/* imgIRequest loadImage (in nsIURI aURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
-NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *aCX, nsLoadFlags aLoadFlags, nsISupports *cacheKey, imgIRequest *aRequest, imgIRequest **_retval)
+/* imgIRequest loadImage (in nsIURI aURI, in nsIURI parentURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
+
+NS_IMETHODIMP imgLoader::LoadImage(
+  nsIURI *aURI,
+  nsIURI *parentURI,
+  nsILoadGroup *aLoadGroup,
+  imgIDecoderObserver *aObserver,
+  nsISupports *aCX,
+  nsLoadFlags aLoadFlags,
+  nsISupports *cacheKey,
+  imgIRequest *aRequest,
+  imgIRequest **_retval)
 {
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
@@ -288,6 +298,11 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     nsCOMPtr<nsIChannel> newChannel;
     ioserv->NewChannelFromURI(aURI, getter_AddRefs(newChannel));
     if (!newChannel) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(newChannel);
+    if (newHttpChannel) {
+      newHttpChannel->SetDocumentURI(parentURI);
+    }
 
     if (aLoadGroup) {
       PRUint32 flags;
