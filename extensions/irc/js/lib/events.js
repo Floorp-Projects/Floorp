@@ -182,14 +182,18 @@ function ep_routeevent (e)
         switch (typeof destObject[e.destMethod])
         {
             case "function":
-                try
-                {
+                if (0)
+                    try
+                    {
+                        destObject[e.destMethod] (e);
+                    }
+                    catch (ex)
+                    {
+                        dd ("Error routing event: " + ex + " in " +
+                            e.destMethod);
+                    }
+                else
                     destObject[e.destMethod] (e);
-                }
-                catch (ex)
-                {
-                    dd ("Error routing event: " + ex + " in " + e.destMethod);
-                }
 
                 if (count++ > this.MAX_EVENT_DEPTH)
                     throw "Too many events in chain";

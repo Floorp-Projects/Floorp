@@ -74,7 +74,10 @@ function readIRCPrefs (rootNode)
     CIRCNetwork.prototype.INITIAL_CHANNEL =
         getCharPref (pref, rootNode + "channel",
                      CIRCNetwork.prototype.INITIAL_CHANNEL);
-
+    client.startupNetwork =
+        getCharPref (pref, rootNode + "network",
+                     CIRCNetwork.prototype.INITIAL_CHANNEL);
+    
     client.DEFAULT_STYLE =
         getCharPref (pref, rootNode + "style.default", "output-default.css");
 

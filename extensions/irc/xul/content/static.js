@@ -26,6 +26,8 @@
 
 var client = new Object();
 
+client.defaultNick = "IRCMonkey";
+
 client.IMAGEDIR = "chrome://chatzilla/skin/images/";
 client.CSSDIR = "chrome://chatzilla/skin/";
 //client.IMAGEDIR = "resource:///chrome/chatzilla/skin/default/images/";
@@ -56,7 +58,7 @@ client.lastHistoryReferenced = -1;
 client.incompleteLine = "";
 client.isPermanent = true;
 
-CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
+CIRCNetwork.prototype.INITIAL_NICK = client.defaultNick;
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
 CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
 CIRCNetwork.prototype.INITIAL_CHANNEL = "";
@@ -83,7 +85,7 @@ function initStatic()
     var obj;
     
     obj = document.getElementById("input");
-    obj.onkeyup = onInputKeyUp;
+    obj.addEventListener("keyup", onInputKeyUp, false);
 
         //obj = document.getElementById("tb[*client*]");
     client.quickList = new CListBox(document.getElementById("quickList"));
@@ -342,6 +344,8 @@ function setClientOutput(doc)
     client.output = doc.getElementById("output");
     /* continue processing now: */
     initStatic();
+    if (client.startupNetwork)
+        client.onInputAttach ({inputData: client.startupNetwork});
 
 }
 
@@ -672,13 +676,13 @@ function getTBForObject (source, create)
 
     if (!tb && create) /* not found, create one */
     {
-        var views = document.getElementById ("views-tbar");
-        var tbi = document.createElement ("toolbaritem");
+        var views = document.getElementById ("views-tbar-inner");
+        //var tbi = document.createElement ("toolbaritem");
         //tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
-	tbi.addEventListener("click", onTBIClickTempHandler, false);
+        tb = document.createElement ("menubutton");
+	tb.addEventListener("click", onTBIClickTempHandler, false);
 
-        tb = document.createElement ("titledbutton");
-        tb.setAttribute ("class", "activity-button");
+        tb.setAttribute ("class", "menubutton-dual");
         tb.setAttribute ("id", id);
         client.viewsArray.push ({source: source, tb: tb});
         tb.setAttribute ("viewKey", client.viewsArray.length - 1);
@@ -686,8 +690,8 @@ function getTBForObject (source, create)
             tb.setAttribute ("value", name + "<" + matches + ">");
         else
             tb.setAttribute ("value", name);
-        tbi.appendChild (tb);
-        views.appendChild (tbi);
+        //tbi.appendChild (tb);
+        views.appendChild (tb);
     }
 
     return tb;
@@ -700,10 +704,10 @@ function getTBForObject (source, create)
 function onTBIClickTempHandler (e)
 { 
   
-    var tbid = "tb[" + e.target.value + "]";
+    var id = "tb[" + e.target.value + "]";
 
-    var tbi = document.getElementById (tbid);
-    var view = client.viewsArray[tbi.getAttribute("viewKey")];
+    var tb = document.getElementById (id);
+    var view = client.viewsArray[tb.getAttribute("viewKey")];
    
     setCurrentObject (view.source);
 
@@ -859,25 +863,34 @@ function usr_decoratednick()
     if (!this.decoNick)
     {
         var pfx;
-        var el = newInlineText();
+        var el = document.createElement ("html:span");
+        el.setAttribute ("align", "horizontal");
         
         if (this.TYPE == "IRCChanUser")
         {
-            var img = document.createElement ("html:img", "option-graphic");
+            /*
+            var img = document.createElement ("menubutton");
+            img.setAttribute ("class", "menubutton-icon");
             img.setAttribute ("src", this.isOp ? client.OP1_IMG :
                               client.OP0_IMG);
             el.appendChild (img);
             
-            img = document.createElement ("html:img", "option-graphic");
+            img = document.createElement ("menubutton");
+            img.setAttribute ("class", "menubutton-icon");
             img.setAttribute ("src", this.isVoice ? client.V1_IMG :
                               client.V0_IMG);
+                              
             el.appendChild (img);
+            */
         }
         
-        el.appendChild (newInlineText (this.properNick, "option-text"));
+        el.appendChild (newInlineText (this.properNick, "option-text",
+                                       "label"));
 
         this.decoNick = el;
     }
+
+    dd ("** gdn: returning " + this.decoNick);
     
     return this.decoNick;
 

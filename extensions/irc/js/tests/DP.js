@@ -488,7 +488,11 @@ function PLL_addLink (link, weight)
     if (typeof existingLink == "undefined")
         this.list[link] = new CPhraseLink (link, weight);
     else
-        existingLink.adjust (weight);
+        if (!(typeof existingLink.adjust == "function"))
+            dd("existingLink.adjust is a '" + existingLink.adjust + "' " +
+               "not a function! link is '" + link +"'");
+        else
+            existingLink.adjust (weight);
 
 }
 

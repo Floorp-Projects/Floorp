@@ -29,7 +29,8 @@
 body {
 
     margin: 0px 0px 0px 0px;
-    background: url(chrome://chatzilla/skin/images/blue_rock.gif);
+/*    background: url(chrome://chatzilla/skin/images/blue_rock.gif);*/
+    background: black;
 
 }
 

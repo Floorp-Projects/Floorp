@@ -29,6 +29,7 @@
 
 <?xml-stylesheet href="chrome://chatzilla/skin" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -63,7 +64,7 @@
 </popupset>
 
 <toolbox>
-  <menubar>
+  <menubar id="main-menubar">
     <menu value="Options">
       <menupopup>
         <menuitem id="menu-dmessages" value="Debug Messages"
@@ -103,18 +104,20 @@
                   oncommand="onNotImplemented();"/>
       </menupopup>
     </menu>
+    <menu id="tasksMenu"/>
   </menubar>
 </toolbox>
 
 <toolbox id="views-tbox">
-  <toolbar id="views-tbar">
+  <toolbar id="views-tbar" class="toolbar-primary chromeclass-toolbar">
+    <box id="views-tbar-inner"/>
   </toolbar>
 </toolbox>
 
 <box id="outer-box" align="vertical" flex="1">
   <box id="inner-box" align="horizontal" flex="1">	
     <box id="quickList" class="quick-list" align="vertical"
-	flex="0" width-hidden="150px" context="userlistPopup" />
+	flex="0" width="150px" context="userlistPopup" />
     <splitter id="main-splitter" align="vertical" collapse="before"/>
     <box align="vertical" flex="1">
       <html:iframe id="it-doesnt-matter-anyway" class="output-container"
@@ -122,69 +125,73 @@
     <!--
       <html:textarea id="input" class="input-window"/>
     -->
-      <html:input type="text" id="input" class="input-window"/>
+      <textfield id="input" class="input-window"/>
     </box>
   </box>
 </box>
 
 <toolbox>
-  <toolbar id="status-bar">
-    <html:table class="status-table">
-      <html:tr>
-        <html:td class="status-label">Network</html:td>
-        <html:td class="status-data">
-         <html:a id="net-name">(none)</html:a> 
-        </html:td>
-        <html:td class="status-label">Server</html:td>
-        <html:td class="status-data">
-          <html:a id="server-name">(none)</html:a>
-        </html:td>
-        <html:td class="status-label">Nickname</html:td>
-        <html:td class="status-data">
-          <html:a id="server-nick">(unknown)</html:a>
-        </html:td>
-        <html:td class="status-label">Lag</html:td>
-        <html:td class="status-data">
-          <html:a id="server-lag">-1</html:a>
-        </html:td>
-        <html:td class="status-label">Last Ping</html:td>
-        <html:td class="status-data">
-          <html:a id="last-ping">(never)</html:a>
-        </html:td>
-      </html:tr>
-      <html:tr>
-        <html:td class="status-label">Channel</html:td>
-        <html:td class="status-data">
-          <html:a id="channel-name">(none)</html:a>
-        </html:td>
-        <html:td class="status-label">Mode</html:td>
-        <html:td class="status-data">
-          <html:a id="channel-mode">(none)</html:a>
-        </html:td>
-        <html:td class="status-label">Users</html:td>
-        <html:td class="status-data">
-          <html:a id="channel-users">(none)</html:a>
-        </html:td>
-        <html:td class="status-label">Limit</html:td>
-        <html:td class="status-data">
-          <html:a id="channel-limit">(none)</html:a>
-        </html:td>
-        <html:td class="status-label">Key</html:td>
-        <html:td class="status-data">
-          <html:a id="channel-key">(none)</html:a>
-        </html:td>
-      </html:tr>
-      <html:tr>
-        <html:td class="status-label">Topic By</html:td>
-        <html:td class="status-data">
-          <html:a id="channel-topicby">(nobody)</html:a>
-        </html:td>
-        <html:td class="status-label">Topic</html:td>
-        <html:td class="status-data" colspan="7">
-          <html:a id="channel-topic">(none)</html:a>
-        </html:td>
-      </html:tr>
-    </html:table>
+  <toolbar id="status-bar" class="chromeclass-status">
+    <box class="status-table" align="horizontal" flex="20%">
+      <box class="status-label" align="vertical">
+        <label>Network</label>
+        <label>Channel</label>
+        <label>Topic By</label>
+      </box>
+      <box class="status-data" align="vertical">
+         <label id="net-name">(none)</label> 
+         <label id="channel-name">(none)</label>
+         <label id="channel-topicby">(nobody)</label>
+      </box>
+      <spring flex="20%"/>
+      <box align="vertical" flex="80%">
+        <box align="horizontal" flex="1">
+          <box class="status-label" align="vertical">
+            <label>Server</label>
+            <label>Mode</label>
+          </box>
+          <box class="status-data" align="vertical">
+            <label id="server-name">(none)</label>
+            <label id="channel-mode">(none)</label>
+          </box>
+          <spring flex="100%"/>
+          <box class="status-label" align="vertical">
+            <label>Nickname</label>
+            <label>Users</label>
+          </box>
+          <box class="status-data" align="vertical">
+            <label id="server-nick">(unknown)</label>
+            <label id="channel-users">(none)</label>
+          </box>
+          <spring flex="100%"/>
+          <box class="status-label" align="vertical">
+            <label>Lag</label>
+            <label>Limit</label>
+          </box>
+          <box class="status-data" align="vertical">
+            <label id="server-lag">-1</label>
+            <label id="channel-limit">(none)</label>
+          </box>
+          <spring flex="100%"/>
+          <box class="status-label" align="vertical">
+            <label>Last Ping</label>
+            <label>Key</label>
+          </box>
+          <box class="status-data" align="vertical">
+            <label id="last-ping">(never)</label>
+          <label id="channel-key">(none)</label>
+          </box>
+        </box>
+        <box align="horizontal" flex="1">
+          <box class="status-label" align="vertical">
+            <label class="status-label">Topic</label>
+          </box>
+          <box class="status-data" align="vertical" flex="1">
+            <label id="channel-topic">(none)</label>
+          </box>
+        </box>
+      </box>
+    </box>
   </toolbar>
 </toolbox>
 </window>

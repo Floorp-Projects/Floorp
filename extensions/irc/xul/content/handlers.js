@@ -474,6 +474,10 @@ function cli_iattach (e)
         client.lastNetwork = net;
     }
 
+    if (CIRCNetwork.prototype.INITIAL_NICK == client.defaultNick)
+        CIRCNetwork.prototype.INITIAL_NICK =
+            prompt ("Please select a nickname", client.defaultNick);
+    
     net.connect();
     net.display ("Connecting...", "INFO");
     setCurrentObject(net);

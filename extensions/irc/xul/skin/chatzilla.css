@@ -26,22 +26,13 @@
  *
  */
 
-@import url(chrome://global/skin/global.css);
+@import url(chrome://communicator/skin/);
+/*@import url(chrome://global/skin/global.css);*/
 
 window {
 
-    font-size: 12px;
-    background: url(chrome://chatzilla/skin/images/xtal.jpg);
-/*
     width: 640px;
     height: 480px;
-*/
-
-}
-
-menubar, menu, menuitem, menupopup {
-
-    background: silver;
 
 }
 
@@ -52,33 +43,6 @@ menubar, menu, menuitem, menupopup {
 }
 
 #main-splitter {
-
-    border: thin silver outset;
-    margin-left: 2px;
-    margin-right: 2px;
-    background: silver;
-
-}
-
-.status-table {
-
-    width: 100%;
-    font-weight: bold;
-
-}
-
-#status-bar {
-
-    border: thin silver double;
-    background: #dddddd;
-
-}
-
-toolbar {
-
-    background: #dddddd;
-    border: silver double;
-
 }
 
 .activity-button {
@@ -118,6 +82,7 @@ toolbar {
 .status-label {
     
     text-align: right;
+    margin-left: 10px;
 
 }
 
@@ -125,6 +90,7 @@ toolbar {
 
     text-align: left;
     color: darkslategrey;
+    margin-left: 5px;
 
 }
 
@@ -134,16 +100,6 @@ toolbar {
     font-weight: bold;
 
 }
-
-/* input textbox */
-/*
-.input-window {
-
-    overflow: clip;
-    width: 100%;
-
-}
-*/
 
 .output-container {
 
@@ -156,7 +112,7 @@ toolbar {
 
 .quick-list {
 
-/*	border: thin silver inset;*/
+	border: thin silver inset;
 	background: #dddddd;
 	overflow: auto;
 
@@ -172,9 +128,9 @@ toolbar {
 
 /* JG: Selection colors, in accord with standard mozilla chrome colors */
 .list-option[selected="true"] {
-        background: rgb(51,102,153);
-        font-weight: bold;
-        color: white;
+    background: rgb(51,102,153);
+    font-weight: bold;
+    color: white;
 } 
 
 /* text in the quicklist */

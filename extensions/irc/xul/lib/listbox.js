@@ -27,8 +27,9 @@
 function CListBox ()
 {
 
-    this.listContainer = document.createElement ("html:div");
+    this.listContainer = document.createElement ("box");
     this.listContainer.setAttribute ("class", "list");
+    this.listContainer.setAttribute ("align", "vertical");
 
 }
 
@@ -102,8 +103,9 @@ function lbox_add (stuff, tag)
     /* NOTE: JG using a div here makes the item span the full 
        length and looks better when selected */
     
-    var option = document.createElement ("html:div");
+    var option = document.createElement ("box");
     option.setAttribute ("class", "list-option");
+    option.setAttribute ("align", "horizontal");
     option.appendChild (stuff);
     option.onclick = this.clickHandler;
     option.listManager = this;
@@ -124,8 +126,8 @@ function lbox_prepend (stuff, oldstuff, tag)
     if (!nextOption)
         return false;
     
-    var option = document.createElement ("html:div");
-    option.setAttribute ("class", "list-option");
+    var option = document.createElement ("box");
+    option.setAttribute ("align", "horizontal");
 
     option.appendChild (stuff);
     option.onclick = this.clickHandler;
