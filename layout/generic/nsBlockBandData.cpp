@@ -52,6 +52,7 @@ nsBlockBandData::Init(nsISpaceManager* aSpaceManager,
   aSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
 
   mSpace = aSpace;
+  mFloaters = 0;
   return NS_OK;
 }
 
