@@ -38,7 +38,7 @@
 
 pushd .
 
-cd ../../obj-minimo/embedding/config/
+cd $MOZ_OBJDIR/embedding/config/
 
 make
 make merge_xpt
