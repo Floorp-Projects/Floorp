@@ -84,7 +84,7 @@ void initialize_bookmark(GtkWidget *embed)
 /* verify if there is a bookmark file */
 void open_bookmark()
 {
-  FILE* file = g_strconcat(g_get_home_dir(),"/.Minimo/bookmarks",NULL);
+  gchar* file = g_strconcat(g_get_home_dir(),"/.Minimo/bookmarks",NULL);
   
   if (!(g_file_test(file,G_FILE_TEST_EXISTS)))
   {
@@ -547,6 +547,8 @@ void on_bookmark_remove_button_clicked(GtkWidget *button,BookmarkWindow *bwin)
 /* write bookmarks on file */
 void print_bookmarks ()
 {
+  char* file = g_strconcat(g_get_home_dir(),"/.Minimo/bookmarks",NULL);
+  
   fclose(bookmark_file);
   bookmark_file = fopen(file,"w");
   
