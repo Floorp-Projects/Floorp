@@ -505,10 +505,10 @@ void nsRenderingContextGTK::UpdateGC()
     mClipRegion->GetNativeRegion((void*&)rgn);
   }
 
-  mGC = gcCache.GetClipGC(mSurface->GetDrawable(), 
-                          &values,
-                          valuesMask,
-                          rgn);
+  mGC = gcCache.GetGC(mSurface->GetDrawable(), 
+                      &values,
+                      valuesMask,
+                      rgn);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,

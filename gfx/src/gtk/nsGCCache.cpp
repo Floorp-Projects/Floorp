@@ -119,7 +119,7 @@ void nsGCCache::Flush(unsigned long flags)
   }
 }
 
-GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion)
+GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion)
 {
 
   PRCList *iter;

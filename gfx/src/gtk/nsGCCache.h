@@ -55,16 +55,8 @@ class nsGCCache
 
   void Flush(unsigned long flags);
 
-  GdkGC *GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion);
+  GdkGC *GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion);
   
-  GdkGC *GetClipGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion) {
-    return GetGCFromDW(window, gcv, flags, clipRegion);
-  }
-  
-  GdkGC *GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags) {
-    return GetGCFromDW(window, gcv, flags, NULL);
-  }
-
 private:
   PRCList GCCache;
   PRCList GCFreeList;
