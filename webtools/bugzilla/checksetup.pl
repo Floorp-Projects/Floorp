@@ -3887,7 +3887,7 @@ if ($sth->rows == 0) {
         if(! $pass1 ) {
           print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
         } elsif ( $pass1 !~ /^.{3,16}$/ ) {
-          print "The password must be 3-16 characters in length.";
+          print "\n\nThe password must be 3-16 characters in length.\n";
         }
       }
       print "\nPlease retype the password to verify: ";
