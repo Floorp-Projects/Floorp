@@ -75,6 +75,12 @@ SEC_LookupCrls(CERTCertDBHandle *handle, CERTCrlHeadNode **nodes, int type);
 SECStatus 
 SEC_DestroyCrl(CERTSignedCrl *crl);
 
+SECStatus
+CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
+		       CERTCertTrust *trust);
+
+SECStatus SEC_DeletePermCertificate(CERTCertificate *cert);
+
 #ifdef notdef
 /*
 ** Add a DER encoded certificate to the permanent database.
@@ -96,7 +102,6 @@ SECStatus SEC_OpenPermCertDB(PCERTCertDBHandle *handle,
 			     PCERTDBNameFunc namecb,
 			     void *cbarg);
 
-SECStatus SEC_DeletePermCertificate(PCERTCertificate *cert);
 
 typedef SECStatus (PR_CALLBACK * PermCertCallback)(PCERTCertificate *cert,
                                                    SECItem *k, void *pdata);

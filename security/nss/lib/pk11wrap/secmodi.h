@@ -54,8 +54,6 @@
 SEC_BEGIN_PROTOS
 
 /* proto-types */
-SECMODModule * SECMOD_CreateModule(char *lib, char *name, char *param, 
-								char *nss);
 extern SECStatus SECMOD_DeletePermDB(SECMODModule *module);
 extern SECStatus SECMOD_AddPermDB(SECMODModule *module);
 
@@ -77,7 +75,6 @@ extern SECMODModuleList *SECMOD_NewModuleListElement(void);
 extern SECMODModuleList *SECMOD_DestroyModuleListElement(SECMODModuleList *);
 extern void SECMOD_DestroyModuleList(SECMODModuleList *);
 extern SECStatus SECMOD_AddModule(SECMODModule *newModule);
-extern PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name);
 
 extern unsigned long SECMOD_PubCipherFlagstoInternal(unsigned long publicFlags);
 extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);

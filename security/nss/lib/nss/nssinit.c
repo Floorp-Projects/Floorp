@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.27 2001/11/16 02:30:35 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.28 2001/11/19 19:04:50 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -194,6 +194,29 @@ PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
     return;
 }
 
+static char *
+nss_addEscape(char *string, char quote)
+{
+    int len = PORT_Strlen(string);
+    char *newString = PORT_ZAlloc(2*len+1); /* worst case */
+    char *src,*dest;
+
+    if (newString == NULL) {
+	return NULL;
+    }
+
+    for (src=string, dest=newString; *src; src++,dest++) {
+	if ((*src == '\\') || (*src == quote)) {
+	    *dest++ = '\\';
+	}
+	*dest = *src;
+    }
+
+    return newString;
+}
+
+
+
 /*
  * OK there are now lots of options here, lets go through them all:
  *
@@ -225,11 +248,27 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 						pk11_password_required);
     if (flags == NULL) return rv;
 
-    moduleSpec = PR_smprintf("name=\"%s\" parameters=\"configdir=%s certPrefix=%s keyPrefix=%s secmod=%s flags=%s %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
+    /*
+     * configdir is double nested, and Windows uses the same character
+     * for file seps as we use for escapes! (sigh).
+     */
+    if (configdir) {
+	char *esc_configdir;
+	esc_configdir = nss_addEscape(configdir,'\'');
+	if (esc_configdir) {
+	    configdir = nss_addEscape(esc_configdir,'"');
+	    PORT_Free(esc_configdir);
+	}
+    }
+
+    moduleSpec = PR_smprintf("name=\"%s\" parameters=\"configdir='%s' certPrefix=%s keyPrefix=%s secmod=%s flags=%s %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
 		pk11_config_name ? pk11_config_name : NSS_DEFAULT_MOD_NAME,
 		configdir,certPrefix,keyPrefix,secmodName,flags,
 		pk11_config_strings ? pk11_config_strings : "");
     PORT_Free(flags);
+    if (configdir) {
+	PORT_Free(configdir);
+    }
 
     if (moduleSpec) {
 	SECMODModule *module = SECMOD_LoadModule(moduleSpec,NULL,PR_TRUE);

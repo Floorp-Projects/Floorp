@@ -333,9 +333,9 @@ struct secmodSlotDataStr {
 };
 
 #define SECMOD_DB_VERSION_MAJOR 0
-#define SECMOD_DB_VERSION_MINOR 5
+#define SECMOD_DB_VERSION_MINOR 6
 #define SECMOD_DB_EXT1_VERSION_MAJOR 0
-#define SECMOD_DB_EXT1_VERSION_MINOR 5
+#define SECMOD_DB_EXT1_VERSION_MINOR 6
 #define SECMOD_DB_NOUI_VERSION_MAJOR 0
 #define SECMOD_DB_NOUI_VERSION_MINOR 4
 
@@ -581,7 +581,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	}
     }
     if (internal) {
-	parameters = PORT_ArenaStrdup(arena,defParams);
+	parameters = pk11_formatValue(arena,defParams,'"');
     }
 
     /* decode SSL cipher enable flags */

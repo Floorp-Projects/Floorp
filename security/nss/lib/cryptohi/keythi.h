@@ -50,6 +50,8 @@ typedef enum {
 /*
 ** Template Definitions
 **/
+
+SEC_BEGIN_PROTOS
 extern const SEC_ASN1Template SECKEY_RSAPublicKeyTemplate[];
 extern const SEC_ASN1Template SECKEY_DSAPublicKeyTemplate[];
 extern const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[];
@@ -60,6 +62,7 @@ extern const SEC_ASN1Template SECKEY_DSAPrivateKeyExportTemplate[];
 /* Windows DLL accessor functions */
 extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_DSAPublicKeyTemplate;
 extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_RSAPublicKeyTemplate;
+SEC_END_PROTOS
 
 
 /*
