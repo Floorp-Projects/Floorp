@@ -114,9 +114,15 @@
       color                 : #777777;
     }    
     
-  html
+  html, description
     {
       margin              : 1px 5px 4px 5px;
+      cursor              : default;
+    }
+
+  label
+    {
+      margin              : 0px 5px 0px 5px;
       cursor              : default;
     }
 

@@ -131,9 +131,15 @@
       color                 : GrayText;
     }    
     
-  html
+  html, description
     {
       margin              : 1px 5px 4px 5px;
+      cursor              : default;
+    }
+
+  label
+    {
+      margin              : 1px 5px 2px 6px;
       cursor              : default;
     }
 
