@@ -72,6 +72,7 @@
 #ifndef _FILESTREAM_H_
 #define _FILESTREAM_H_
 
+#include "nscore.h"
 
 #ifdef XP_MAC
 #include "pprio.h" // To get PR_ImportFile
@@ -144,7 +145,7 @@ NS_NAMESPACE nsFileStreamHelpers
 // need the template args (charT, traits).
 //========================================================================================
 {
-	NS_NAMESPACE_PROTOTYPE PRFileDesc* open(
+	NS_NAMESPACE_PROTOTYPE NS_BASE PRFileDesc* open(
 		const nsFilePath& inFile,
 	    IOS_BASE::openmode mode,
 	    PRIntn accessMode);
