@@ -1020,7 +1020,7 @@ UserAutoComplete::UserAutoComplete(const nsAString& aSearchString)
 
 UserAutoComplete::~UserAutoComplete()
 {
-  for (PRUint32 i  = 0; i < mArray.Count(); ++i)
+  for (PRInt32 i  = 0; i < mArray.Count(); ++i)
     nsMemory::Free(mArray.ElementAt(i));
 }
 
