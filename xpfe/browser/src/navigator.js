@@ -423,7 +423,7 @@
         }
     }
     if ( core ) {
-        core.ShowWindowWithArgs( "chrome://editor/content", window, "chrome://editor/content/EditorInitPage.html" );
+        core.ShowWindowWithArgs( "chrome://editor/content", window, "about:blank" );
     } else {
         dump("Error; can't create toolkitCore\n");
     }
