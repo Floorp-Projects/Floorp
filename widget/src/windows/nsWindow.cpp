@@ -141,6 +141,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #endif
 
   mNativeDragTarget = nsnull;
+  mIsTopWidgetWindow = PR_FALSE;
 }
 
 
@@ -401,6 +402,45 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   return NS_OK;
 }
 
+PRBool 
+nsWindow::EventIsInsideWindow(nsWindow* aWindow) 
+{
+  RECT r;
+  ::GetWindowRect(aWindow->mWnd, &r);
+  DWORD pos = ::GetMessagePos();
+  POINT mp;
+  mp.x = LOWORD(pos);
+  mp.y = HIWORD(pos);
+  // now make sure that it wasn't one of our children
+  if (mp.x < r.left || mp.x > r.right ||
+      mp.y < r.top || mp.y > r.bottom) {
+    return PR_FALSE;
+  } 
+
+  return PR_TRUE;
+}
+
+
+PRBool
+nsWindow::IsScrollbar(HWND aWnd) {
+
+   // Make sure this is one of our windows by comparing the window procedures
+  LONG proc = ::GetWindowLong(aWnd, GWL_WNDPROC);
+  if (proc == (LONG)&nsWindow::WindowProc) {
+    // It is a one of our windows.
+    nsWindow *someWindow = (nsWindow*)::GetWindowLong(aWnd, GWL_USERDATA);
+      //This is inefficient, but this method is only called when
+      //a popup window has been displayed, and your clicking within it.
+      //The default window class begins with Netscape so comparing with the initial
+      //S in SCROLLBAR will cause strcmp to immediately return.
+    if (strcmp(someWindow->WindowClass(),"SCROLLBAR") == 0) {
+      return PR_TRUE;
+    }
+  } 
+
+  return PR_FALSE;
+}
+
 //-------------------------------------------------------------------------
 //
 // the nsWindow procedure for all nsWindows in this toolkit
@@ -408,22 +448,26 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  // check to see if we have a rollup listener registered
-  if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-    if (msg == WM_ACTIVATE || msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN ||
-      msg == WM_NCMBUTTONDOWN || msg == WM_NCRBUTTONDOWN) {
-      // check to see if the window the event happened
-      // in is not the rollup window
-      RECT r;
-      ::GetWindowRect(((nsWindow *)gRollupWidget)->mWnd, &r);
-      DWORD pos = ::GetMessagePos();
-      POINT mp;
-      mp.x = LOWORD(pos);
-      mp.y = HIWORD(pos);
-      // now make sure that it wasn't one of our children
-      if (mp.x < r.left || mp.x > r.right ||
-          mp.y < r.top || mp.y > r.bottom) {
+ 
+     // check to see if we have a rollup listener registered
+    if (nsnull != gRollupListener && nsnull != gRollupWidget) {
+  
+       // All mouse wheel events cause the popup to rollup.
+       // XXX: Need something more reliable then WM_MOUSEWHEEL.
+       // This event is not always generated. The mouse wheel
+       // is plugged into the scrollbar scrolling in odd ways
+       // which make it difficult to find a message which will
+       // reliably be generated when the mouse wheel changes position
+      if (msg == WM_MOUSEWHEEL) {
         gRollupListener->Rollup();
+        return TRUE;
+      }
+      
+      if (msg == WM_ACTIVATE || msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN ||
+        msg == WM_NCMBUTTONDOWN || msg == WM_NCRBUTTONDOWN) {
+        // Rollup if the event is outside the popup
+        if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
+          gRollupListener->Rollup();
         // return TRUE tells Windows that the event is consumed, 
         // false allows the event to be dispacthed
         //
@@ -434,9 +478,23 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         } else {
           return TRUE;
         }
+        } 
+      }
+
+      if ((msg == WM_MOUSEACTIVATE) && (nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget))) {
+        // Prevent the click inside the popup from causing a change in window
+        // activation. Since the popup and shown non-activated, we need to eat 
+        // any requests to activate the window while it is displayed. Windows 
+        // will automatically activate the popup on the mousedown otherwise.
+        // We have to special case native scrollbars since they need to get the event otherwise
+        // they will not scroll.
+        if (nsWindow::IsScrollbar(hWnd)) {
+          return MA_NOACTIVATE;
+        } else {
+          return MA_NOACTIVATEANDEAT;   
+        }
       }
     }
-  }
 
     // Get the window which caused the event and ask it to process the message
     nsWindow *someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
@@ -496,6 +554,9 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                  (aInitData->mWindowType == eWindowType_dialog ||
                   aInitData->mWindowType == eWindowType_toplevel) ?
                   nsnull : aParent;
+
+    mIsTopWidgetWindow = (nsnull == baseParent);
+
     BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, 
        aAppShell, aToolkit, aInitData);
 
@@ -561,10 +622,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         extendedStyle = WS_EX_TOPMOST;
         style = WS_POPUP;
         mBorderlessParent = parent;
-         // Get the top most level window to use as the parent
-        while (::GetParent(parent)) {
-          parent = ::GetParent(parent);
-        } 
+         // Don't set the parent of a popup window. 
+        parent = NULL;
       }
 
       if (aInitData->mBorderStyle == eBorderStyle_default) {
@@ -732,7 +791,15 @@ NS_METHOD nsWindow::Destroy()
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
-    nsWindow* widget = NULL;
+    if (mIsTopWidgetWindow) {
+       // Must use a flag instead of mWindowType to tell if the window is the 
+       // owned by the topmost widget, because a child window can be embedded inside
+       // a HWND which is not associated with a nsIWidget.
+      return nsnull;
+    }
+
+
+    nsWindow* widget = nsnull;
     if (mWnd) {
         HWND parent = ::GetParent(mWnd);
         if (parent) {
@@ -741,7 +808,7 @@ nsIWidget* nsWindow::GetParent(void)
               // If the widget is in the process of being destroyed then
               // do NOT return it
               if (widget->mIsDestroying) {
-                widget = NULL;
+                widget = nsnull;
               } else {
                 NS_ADDREF(widget);
               }

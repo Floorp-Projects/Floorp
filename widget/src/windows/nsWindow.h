@@ -145,6 +145,8 @@ public:
 
 protected:
 
+    static  PRBool          IsScrollbar(HWND aWnd);
+    static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
     virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
     virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
     nsresult                MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
@@ -208,6 +210,7 @@ private:
 
 protected:
     static      nsWindow* gCurrentWindow;
+    PRBool      mIsTopWidgetWindow;
     nsPoint     mLastPoint;
     HWND        mWnd;
     HPALETTE    mPalette;
