@@ -50,6 +50,9 @@ bin\jsj3250.dll
 bin\mozilla.exe
 bin\mozctl.dll
 bin\regxpcom.exe
+bin\psm.exe
+bin\nssckbi.dll
+bin\psmdata\*
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
