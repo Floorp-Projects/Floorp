@@ -167,6 +167,7 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
     virtual void ShowConsole(WindowData* aWindata);
     virtual void CloseConsole();
     virtual void DoDebugRobot(WindowData* aWindata);
+    virtual void DoSiteWalker(WindowData* aWindata);
     virtual void CopySelection(WindowData* aWindata);
     virtual nsresult Run();
     virtual void Destroy(WindowData* wd);

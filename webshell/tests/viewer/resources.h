@@ -37,6 +37,7 @@
 #define VIEWER_DEMO8            40019
 #define VIEWER_DEMO9            40020
 
+
 #define VIEWER_VISUAL_DEBUGGING     40021
 #define VIEWER_REFLOW_TEST          40022
 #define VIEWER_DUMP_CONTENT         40023
@@ -64,6 +65,7 @@
 #define VIEWER_EDIT_SELECTALL   40204
 #define VIEWER_EDIT_FINDINPAGE  40205
 
+#define VIEWER_TOP100           40300
 /* Debug Robot dialog setup */
 
 #define IDD_DEBUGROBOT          101
@@ -71,5 +73,11 @@
 #define IDC_VERIFICATION_DIRECTORY 40302
 #define IDC_PAGE_LOADS          40303
 #define IDC_STATIC              -1
+
+#define IDD_SITEWALKER          200
+#define ID_SITE_PREVIOUS        40400
+#define ID_SITE_NEXT            40401
+#define IDC_SITE_NAME           40402
+#define ID_EXIT                 40404
 
 #endif /* resources_h___ */

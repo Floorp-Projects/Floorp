@@ -41,6 +41,7 @@ static BOOL gVisualDebug = TRUE;
 
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 
+extern "C" BOOL CreateSiteWalkerDialog(HWND hParent, WindowData * aWinData);
 // DebugRobot call
 extern "C" NS_EXPORT int DebugRobot(
    nsVoidArray * workList, nsIWebWidget * ww, int imax, char * verify_dir, void (*yieldProc)(const char *));
@@ -60,6 +61,7 @@ class nsWin32Viewer : public nsViewer {
     virtual void AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview);
     virtual void ShowConsole(WindowData* aWindata);
     virtual void DoDebugRobot(WindowData* aWindata);
+    virtual void DoSiteWalker(WindowData* aWindata);
     virtual void CopySelection(WindowData* aWindata);
     virtual void Destroy(WindowData* wd);
     virtual void CloseConsole();
@@ -230,6 +232,15 @@ void nsWin32Viewer::CloseConsole()
   DestroyConsole();
 }
 
+void nsWin32Viewer::DoSiteWalker(WindowData* aWinData)
+{
+    if ((nsnull != aWinData) && (nsnull != aWinData->observer)) {
+        HWND hWnd = aWinData->windowWidget->GetNativeData(NS_NATIVE_WIDGET);
+        CreateSiteWalkerDialog(hWnd, aWinData);
+    }
+   
+}
+
 void nsWin32Viewer::DoDebugRobot(WindowData* aWindata)
 {
  if ((nsnull != aWindata) && (nsnull != aWindata->observer)) {
@@ -366,6 +377,206 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
   return(RunViewer(instance, prevInstance, cmdParam, nCmdShow, viewer));
 }
 
+static WindowData * gWinData;
+static int gTop100Pointer = 0;
+static char * gTop100List[] = {
+   "http://www.yahoo.com",
+   "http://www.netscape.com",
+   "http://www.microsoft.com",
+   "http://www.excite.com",
+   "http://www.mckinley.com",
+   "http://www.city.net",
+   "http://www.webcrawler.com",
+   "http://www.mirabilis.com",
+   "http://www.infoseek.com",
+   "http://www.pathfinder.com",
+   "http://www.warnerbros.com",
+   "http://www.cnn.com",
+   "http://www.altavista.digital.com",
+   "http://www.altavista.com",
+   "http://www.usatoday.com",
+   "http://www.disney.com",
+   "http://www.starwave.com",
+   "http://www.hotwired.com",
+   "http://www.hotbot.com",
+   "http://www.lycos.com",
+   "http://www.pointcom.com",
+   "http://www.cnet.com",
+   "http://www.search.com",
+   "http://www.news.com",
+   "http://www.download.com",
+   "http://www.geocities.com",
+   "http://www.aol.com",
+   "http://members.aol.com",
+   "http://www.imdb.com",
+   "http://uk.imdb.com",
+   "http://macromedia.com",
+   "http://www.infobeat.com",
+   "http://www.fxweb.com",
+   "http://www.whowhere.com",
+   "http://www.real.com",
+   "http://www.sportsline.com",
+   "http://www.dejanews.com",
+   "http://www.the-park.com",
+   "http://www.cmpnet.com",
+   "http://www.go2net.com",
+   "http://www.metacrawler.com",
+   "http://www.playsite.com",
+   "http://www.stocksite.com",
+   "http://www.sony.com",
+   "http://www.music.sony.com",
+   "http://www.station.sony.com",
+   "http://www.scea.sony.com",
+   "http://www.infospace.com",
+   "http://www.zdnet.com",
+   "http://www.hotfiles.com",
+   "http://www.chathouse.com",
+   "http://www.looksmart.com",
+   "http://www.iamginegames.com",
+   "http://www.macaddict.com",
+   "http://www.rsac.org",
+   "http://www.apple.com",
+   "http://www.beseen.com",
+   "http://www.dogpile.com",
+   "http://www.xoom.com",
+   "http://www.tucows.com",
+   "http://www.freethemes.com",
+   "http://www.winfiles.com",
+   "http://www.vservers.com",
+   "http://www.mtv.com",
+   "http://www.the-xfiles.com",
+   "http://www.datek.com",
+   "http://www.cyberthrill.com",
+   "http://www.surplusdirect.com",
+   "http://www.tomshardware.com",
+   "http://www.bigyellow.com",
+   "http://www.100hot.com",
+   "http://www.messagemates.com",
+   "http://www.onelist.com",
+   "http://www.bluemountain.com",
+   "http://www.ea.com",
+   "http://www.bullfrog.co.uk",
+   "http://www.travelocity.com",
+   "http://www.ibm.com",
+   "http://www.bigcharts.com",
+   "http://www.davesclassics.com",
+   "http://www.goto.com",
+   "http://www.weather.com",
+   "http://www.gamespot.com",
+   "http://www.bloomberg.com",
+   "http://www.winzip.com",
+   "http://www.filez.com",
+   "http://www.westwood.com",
+   "http://www.internet.com",
+   "http://www.cardmaster.com",
+   "http://www.creaf.com",
+   "http://netaddress.usa.net",
+   "http://www.occ.com",
+   "http://www.as.org",
+   "http://www.amazon.com",
+   "http://www.drudgereport.com",
+   "http://www.hardradio.com",
+   "http://www.intel.com",
+   "http://www.mp3.com",
+   "http://www.ebay.com",
+   "http://www.msn.com",
+   "http://www.fifa.com",
+   "http://www.attitude.com",
+   "http://www.happypuppy.com",
+   "http://www.gamesdomain.com",
+   "http://www.onsale.com",
+   "http://www.tm.com",
+   "http://www.xlnc1.com",
+   "http://www.greatsports.com",
+   "http://www.discovery.com",
+   "http://www.nai.com",
+   "http://www.nasa.gov",
+   "http://www.ogr.com",
+   "http://www.warzone.com",
+   "http://www.gamestats.com",
+   "http://www.winamp.com",
+   "http://java.sun.com",
+   "http://www.hp.com",
+   "http://www.cdnow.com",
+   "http://www.nytimes.com",
+   "http://www.majorleaguebaseball.com",
+   "http://www.washingtonpost.com",
+   "http://www.planetquake.com",
+   "http://www.wsj.com",
+   "http://www.slashdot.org",
+   "http://www.adobe.com",
+   "http://www.quicken.com",
+   "http://www.talkcity.com",
+   "http://www.developer.com",
+   "http://www.mapquest.com",
+   0
+   };
 
+
+
+BOOL CALLBACK SiteWalkerDlgProc(HWND hDlg, UINT msg, WPARAM wParam,LPARAM lParam)
+{
+   BOOL translated = FALSE;
+   switch (msg)
+   {
+      case WM_INITDIALOG:
+         {
+            SetDlgItemText(hDlg,IDC_SITE_NAME, gTop100List[gTop100Pointer]);
+            EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
+            if (gWinData && gWinData->mViewer)
+               gWinData->mViewer->GoTo(gTop100List[gTop100Pointer]);
+         }
+         return FALSE;
+      case WM_COMMAND:
+         switch (LOWORD(wParam))
+         {
+            case ID_SITE_NEXT:
+               {
+                  char * p = gTop100List[++gTop100Pointer];
+                  if (p) {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),TRUE);
+                     SetDlgItemText(hDlg,IDC_SITE_NAME, p);
+                     if (gWinData && gWinData->mViewer)
+                        gWinData->mViewer->GoTo(gTop100List[gTop100Pointer]);
+                  }
+                  else  {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),FALSE);
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
+                     SetDlgItemText(hDlg,IDC_SITE_NAME, "[END OF LIST]");
+                  }
+               }
+               break;
+            case ID_SITE_PREVIOUS:
+               {
+                  if (gTop100Pointer > 0) {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
+                     SetDlgItemText(hDlg,IDC_SITE_NAME, gTop100List[--gTop100Pointer]);
+                     if (gWinData && gWinData->mViewer)
+                        gWinData->mViewer->GoTo(gTop100List[gTop100Pointer]);
+                  }
+                  else  {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),FALSE);
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),TRUE);
+                  }
+               }
+               break;
+            case ID_EXIT:
+               EndDialog(hDlg,IDCANCEL);
+               break;
+         }
+         break;
+      default:
+         return FALSE;
+   }
+   return TRUE;
+}
+
+
+BOOL CreateSiteWalkerDialog(HWND hParent, WindowData * aWinData)
+{
+   gWinData = aWinData;
+   BOOL result = (DialogBox(gInstance,MAKEINTRESOURCE(IDD_SITEWALKER),hParent,(DLGPROC)SiteWalkerDlgProc) == IDOK);
+   return result;
+}
 
 

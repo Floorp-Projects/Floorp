@@ -1188,8 +1188,8 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       }
       break;
 
-    case VIEWER_DEBUGROBOT:
-      DoDebugRobot(wd);
+    case VIEWER_TOP100:
+      DoSiteWalker(wd);
       break;
 
     case VIEWER_SHOW_CONTENT_SIZE:
@@ -1580,6 +1580,11 @@ void nsViewer::CloseConsole()
 void nsViewer::DoDebugRobot(WindowData* aWinData)
 {
   printf("DebugRobot not implemented\n");
+}
+
+void nsViewer::DoSiteWalker(WindowData* aWinData)
+{
+  printf("Site Walker not implemented\n");
 }
 
 void nsViewer::CopySelection(WindowData* aWindata)
