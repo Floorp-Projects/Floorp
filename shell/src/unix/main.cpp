@@ -19,8 +19,13 @@
 #include "nsRepository.h"
 #include "nsShellInstance.h"
 #include "nsApplicationManager.h"
+#include "nsGfxCIID.h"
 
-#include <Xm/Xm.h>
+#include "Xm/Xm.h"
+#include "Xm/MainW.h"
+#include "Xm/Frame.h"
+#include "Xm/XmStrDefs.h"
+#include "Xm/DrawingA.h"
 
 #define SHELL_DLL "libshell.so"
 
@@ -42,6 +47,8 @@ void main(int argc, char **argv)
   XtSetLanguageProc(NULL, NULL, NULL);
 
   topLevel = XtVaAppInitialize(&app_context, "Shell", NULL, 0, &argc, argv, NULL, NULL);
+
+
 
   // Let get a ShellInstance for this Application instance
   NSRepository::RegisterFactory(kCShellInstanceIID, SHELL_DLL, PR_FALSE, PR_FALSE);
