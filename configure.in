@@ -1254,6 +1254,7 @@ xpcom/libxpt/Makefile
 xpcom/libxpt/public/Makefile
 xpcom/libxpt/src/Makefile
 xpcom/libxpt/tests/Makefile
+xpcom/libxpt/tools/Makefile
 silentdl/Makefile
 xpfe/Makefile
 xpfe/browser/Makefile
