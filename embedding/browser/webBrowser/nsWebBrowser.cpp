@@ -433,105 +433,54 @@ NS_IMETHODIMP nsWebBrowser::GetSessionHistory(nsISHistory** aSessionHistory)
 //*****************************************************************************
 
 NS_IMETHODIMP nsWebBrowser::AddProgressListener(nsIWebProgressListener* aListener, 
-   PRInt32* cookie)
+   PRInt32* aCookie)
 {
-   //XXXTAB First Check
-	/*
-	Registers a listener to be notified of Progress Events
-
-	@param listener - The listener interface to be called when a progress event
-			occurs.
-
-	@param cookie - This is an optional parameter to receieve a cookie to use
-			to unregister rather than the original interface pointer.  This may
-			be nsnull.
-
-	@return	NS_OK - Listener was registered successfully.
-				NS_INVALID_ARG - The listener passed in was either nsnull, 
-						or was already registered with this progress interface.
-	 */
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+   
+   return mDocShellAsProgress->AddProgressListener(aListener, aCookie);
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIWebProgressListener* listener, 
-   PRInt32 cookie)
+NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIWebProgressListener* aListener, 
+   PRInt32 aCookie)
 {
-   //XXXTAB First Check
-   //XXX First Check
-	/* 
-	Removes a previously registered listener of Progress Events
-		
-	@param listener - The listener interface previously registered with 
-			AddListener() this may be nsnull if a valid cookie is provided.
+   NS_ENSURE_STATE(mDocShell);
 
-	@param cookie - A cookie that was returned from a previously called
-		AddListener() call.  This may be nsnull if a valid listener interface
-		is passed in.
-
-	@return	NS_OK - Listener was successfully unregistered.
-				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
-					to a previously registered listener.
-	*/
-   return NS_ERROR_FAILURE;
+   return mDocShellAsProgress->RemoveProgressListener(aListener, aCookie);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetProgressStatusFlags(PRInt32* aProgressStatusFlags)
 {
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	Current connection Status of the browser.  This will be one of the enumerated
-	connection progress steps.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsProgress->GetProgressStatusFlags(aProgressStatusFlags);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetCurSelfProgress(PRInt32* curSelfProgress)
+NS_IMETHODIMP nsWebBrowser::GetCurSelfProgress(PRInt32* aCurSelfProgress)
 {
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The current position of progress.  This is between 0 and maxSelfProgress.
-	This is the position of only this progress object.  It doesn not include
-	the progress of all children.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsProgress->GetCurSelfProgress(aCurSelfProgress);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetMaxSelfProgress(PRInt32* maxSelfProgress)
+NS_IMETHODIMP nsWebBrowser::GetMaxSelfProgress(PRInt32* aMaxSelfProgress)
 {
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The maximum position that progress will go to.  This sets a relative
-	position point for the current progress to relate to.  This is the max
-	position of only this progress object.  It does not include the progress of
-	all the children.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsProgress->GetMaxSelfProgress(aMaxSelfProgress);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetCurTotalProgress(PRInt32* curTotalProgress)
+NS_IMETHODIMP nsWebBrowser::GetCurTotalProgress(PRInt32* aCurTotalProgress)
 {
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The current position of progress for this object and all children added
-	together.  This is between 0 and maxTotalProgress.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsProgress->GetCurTotalProgress(aCurTotalProgress);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetMaxTotalProgress(PRInt32* maxTotalProgress)
+NS_IMETHODIMP nsWebBrowser::GetMaxTotalProgress(PRInt32* aMaxTotalProgress)
 {
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The maximum position that progress will go to for the max of this progress
-	object and all children.  This sets the relative position point for the
-	current progress to relate to.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsProgress->GetMaxTotalProgress(aMaxTotalProgress);
 }
 
 //*****************************************************************************
@@ -1017,16 +966,18 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
       nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
       nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aDocShell));
       nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
+      nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(aDocShell));
       nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
       nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
-      NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll,
-         NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll &&
+         progress, NS_ERROR_FAILURE);
 
       mDocShell = aDocShell;
       mDocShellAsReq = req;
       mDocShellAsWin = baseWin;
       mDocShellAsItem = item;
       mDocShellAsNav = nav;
+      mDocShellAsProgress = progress;
       mDocShellAsScrollable = scrollable;
       mDocShellAsTextScroll = textScroll;
       }
@@ -1039,6 +990,7 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
       mDocShellAsWin = nsnull;
       mDocShellAsItem = nsnull;
       mDocShellAsNav = nsnull;
+      mDocShellAsProgress = nsnull;
       mDocShellAsScrollable = nsnull;
       mDocShellAsTextScroll = nsnull;
       }
