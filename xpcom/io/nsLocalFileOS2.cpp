@@ -1184,29 +1184,53 @@ nsLocalFile::Spawn(const char **args, PRUint32 count)
     // make sure that when we allocate we have 1 greater than the
     // count since we need to null terminate the list for the argv to
     // pass into PR_CreateProcessDetached
-    char **my_argv = NULL;
+//    char **my_argv = NULL;
     
-    my_argv = (char **)malloc(sizeof(char *) * (count + 2) );
-    if (!my_argv) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+//    my_argv = (char **)nsMemory::Alloc(sizeof(char *) * (count + 2) );
+//    if (!my_argv) {
+//        return NS_ERROR_OUT_OF_MEMORY;
+//    }
 
     // copy the args
     PRUint32 i;
+    ULONG paramLen = 0;
     for (i=0; i < count; i++) {
-        my_argv[i+1] = (char *)args[i];
+//        my_argv[i+1] = (char *)args[i];
+        paramLen += strlen((char *)args[i]) + 1;
     }
     // we need to set argv[0] to the program name.
-    my_argv[0] = mResolvedPath;
+//    my_argv[0] = mResolvedPath;
+
+    // Build a single string with all of the parameters
+    char *pszInputs = NULL;
+    pszInputs = (char *)nsMemory::Alloc( paramLen );
+
+    strcpy(pszInputs, (char *)args[0]);
+    for (i=1; i < count; i++) {
+        strcat(pszInputs, " ");
+        strcat(pszInputs, (char *)args[i]);
+    }
     
     // null terminate the array
-    my_argv[count+1] = NULL;
-    rv = PR_CreateProcessDetached(mResolvedPath, my_argv, NULL, NULL);
+//    my_argv[count+1] = NULL;
+
+// Need to use DosStartSession to launch a program of another type
+//    rv = PR_CreateProcessDetached(mResolvedPath, my_argv, NULL, NULL);
+    STARTDATA sd;
+    ULONG sid;
+    PID pid;
+    memset(&sd, 0, sizeof(STARTDATA));
+    sd.Length = 24;
+    sd.PgmName = mResolvedPath;
+    sd.PgmInputs = pszInputs;
+    APIRET rc = DosStartSession(&sd, &sid, &pid);
 
      // free up our argv
-     nsMemory::Free(my_argv);
+//     nsMemory::Free(my_argv);
+     nsMemory::Free(pszInputs);
 
-     if (PR_SUCCESS == rv)
+//     if (PR_SUCCESS == rv)
+     if (rc == NO_ERROR || rc == ERROR_SMG_START_IN_BACKGROUND)
          return NS_OK;
      else
          return NS_ERROR_FILE_EXECUTION_FAILED;
@@ -2235,9 +2259,9 @@ CreateDirectoryA( PSZ resolvedPath, PEAOP2 ppEABuf)
 static int isleadbyte(int c)
 {
   static BOOL bDBCSFilled=FALSE;
-  static CHAR DBCSInfo[12] = { 0 };  /* According to the Control Program Guide&Ref,
+  static BYTE DBCSInfo[12] = { 0 };  /* According to the Control Program Guide&Ref,
                                              12 bytes is sufficient */
-  CHAR *curr;
+  BYTE *curr;
   BOOL retval = FALSE;
 
   if( !bDBCSFilled ) {
