@@ -156,16 +156,16 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
     NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
 
     if ( [itemIdent isEqual:CancelToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Cancel"];
-        [toolbarItem setPaletteLabel:@"Cancel Download"];
-        [toolbarItem setToolTip:@"Cancel this file download"];
+        [toolbarItem setLabel:NSLocalizedString(@"Cancel",@"Cancel")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"CancelPaletteLabel",@"Cancel Download")];
+        [toolbarItem setToolTip:NSLocalizedString(@"CancelToolTip",@"Cancel this file download")];
         [toolbarItem setImage:[NSImage imageNamed:@"saveCancel"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(cancel)];
     } else if ( [itemIdent isEqual:PauseResumeToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Pause"];
-        [toolbarItem setPaletteLabel:@"Pause Download"];
-        [toolbarItem setToolTip:@"Pause this FTP file download"];
+        [toolbarItem setLabel:NSLocalizedString(@"Pause",@"Pause")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"PausePaletteLabel",@"Pause Download")];
+        [toolbarItem setToolTip:NSLocalizedString(@"PauseToolTip",@"Pause this FTP file download")];
         [toolbarItem setImage:[NSImage imageNamed:@"savePause"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(pauseAndResumeDownload)];
@@ -173,31 +173,31 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
             pauseResumeToggleToolbarItem = toolbarItem; //establish reference
         }
     } else if ( [itemIdent isEqual:ShowFileToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Show File"];
-        [toolbarItem setPaletteLabel:@"Show File"];
-        [toolbarItem setToolTip:@"Show the saved file in the Finder"];
+        [toolbarItem setLabel:NSLocalizedString(@"Show File",@"Show File")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Show File",@"Show File")];
+        [toolbarItem setToolTip:NSLocalizedString(@"ShowToolTip",@"Show the saved file in the Finder")];
         [toolbarItem setImage:[NSImage imageNamed:@"saveShowFile"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(showFile)];
     } else if ( [itemIdent isEqual:OpenFileToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Open File"];
-        [toolbarItem setPaletteLabel:@"Open File"];
-        [toolbarItem setToolTip:@"Open the saved file in its default application."];
+        [toolbarItem setLabel:NSLocalizedString(@"Open File",@"Open File")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Open File",@"Open File")];
+        [toolbarItem setToolTip:NSLocalizedString(@"OpenToolTip",@"Open the saved file in its default application.")];
         [toolbarItem setImage:[NSImage imageNamed:@"saveOpenFile"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(openFile)];
     } else if ( [itemIdent isEqual:LeaveOpenToolbarItemIdentifier] ) {
         if ( mSaveFileDialogShouldStayOpen ) {
-            [toolbarItem setLabel:@"Leave Open"];
-            [toolbarItem setPaletteLabel:@"Toggle Close Behavior"];
-            [toolbarItem setToolTip:@"Window will stay open when download finishes."];
+            [toolbarItem setLabel:NSLocalizedString(@"Leave Open",@"Leave Open")];
+            [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
+            [toolbarItem setToolTip:NSLocalizedString(@"LeaveOpenToolTip",@"Window will stay open when download finishes.")];
             [toolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenYES"]];
             [toolbarItem setTarget:self];
             [toolbarItem setAction:@selector(toggleLeaveOpen)];
         } else {
-            [toolbarItem setLabel:@"Close When Done"];
-            [toolbarItem setPaletteLabel:@"Toggle Close Behavior"];
-            [toolbarItem setToolTip:@"Window will close automatically when download finishes."];
+            [toolbarItem setLabel:NSLocalizedString(@"Close When Done",@"Close When Done")];
+            [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
+            [toolbarItem setToolTip:NSLocalizedString(@"CloseWhenDoneToolTip",@"Window will close automatically when download finishes.")];
             [toolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenNO"]];
             [toolbarItem setTarget:self];
             [toolbarItem setAction:@selector(toggleLeaveOpen)];
@@ -238,9 +238,9 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   if ( !mDownloadIsPaused )
   {
     mDownloadIsPaused = YES;
-    [pauseResumeToggleToolbarItem setLabel:@"Resume"];
-    [pauseResumeToggleToolbarItem setPaletteLabel:@"Resume Download"];
-    [pauseResumeToggleToolbarItem setToolTip:@"Resume the paused FTP download"];
+    [pauseResumeToggleToolbarItem setLabel:NSLocalizedString(@"Resume",@"Resume")];
+    [pauseResumeToggleToolbarItem setPaletteLabel:NSLocalizedString(@"ResumePaletteLabel",@"Resume Download")];
+    [pauseResumeToggleToolbarItem setToolTip:NSLocalizedString(@"ResumeToolTip",@"Resume the paused FTP download")];
     [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"saveResume"]];
     [self killDownloadTimer];
 
@@ -250,9 +250,9 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   else
   {
     mDownloadIsPaused = NO;
-    [pauseResumeToggleToolbarItem setLabel:@"Pause"];
-    [pauseResumeToggleToolbarItem setPaletteLabel:@"Pause Download"];
-    [pauseResumeToggleToolbarItem setToolTip:@"Pause this FTP file download"];
+    [pauseResumeToggleToolbarItem setLabel:NSLocalizedString(@"Pause",@"Pause")];
+    [pauseResumeToggleToolbarItem setPaletteLabel:NSLocalizedString(@"PausePaletteLabel",@"Pause Download")];
+    [pauseResumeToggleToolbarItem setToolTip:NSLocalizedString(@"PauseToolTip",@"Pause this FTP file download")];
     [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"savePause"]];
     [self setupDownloadTimer];
 
@@ -285,15 +285,15 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 {
     if ( ! mSaveFileDialogShouldStayOpen ) {
         mSaveFileDialogShouldStayOpen = YES;
-        [leaveOpenToggleToolbarItem setLabel:@"Leave Open"];
-        [leaveOpenToggleToolbarItem setPaletteLabel:@"Toggle Close Behavior"];
-        [leaveOpenToggleToolbarItem setToolTip:@"Window will stay open when download finishes."];
+        [leaveOpenToggleToolbarItem setLabel:NSLocalizedString(@"Leave Open",@"Leave Open")];
+        [leaveOpenToggleToolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
+        [leaveOpenToggleToolbarItem setToolTip:NSLocalizedString(@"LeaveOpenToolTip",@"Window will stay open when download finishes.")];
         [leaveOpenToggleToolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenYES"]];
     } else {
         mSaveFileDialogShouldStayOpen = NO;
-        [leaveOpenToggleToolbarItem setLabel:@"Close When Done"];
-        [leaveOpenToggleToolbarItem setPaletteLabel:@"Toggle Close Behavior"];
-        [leaveOpenToggleToolbarItem setToolTip:@"Window will close automatically when download finishes."];
+        [leaveOpenToggleToolbarItem setLabel:NSLocalizedString(@"Close When Done",@"Close When Done")];
+        [leaveOpenToggleToolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
+        [leaveOpenToggleToolbarItem setToolTip:NSLocalizedString(@"CloseWhenDoneToolTip",@"Window will close automatically when download finishes.")];
         [leaveOpenToggleToolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenNO"]];
     }
     
@@ -363,24 +363,24 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   // check for seconds first
   if (seconds < 60) {
     if (seconds < 7)
-      return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"UnderSec" value:@"Under %d seconds" table:@"ProgressDialog"],5] autorelease];
+      return [[[NSString alloc] initWithFormat:NSLocalizedString(@"UnderSec",@"Under %d seconds"),5] autorelease];
     if (seconds < 13)
-      return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"UnderSec" value:@"Under %d seconds" table:@"ProgressDialog"],10] autorelease];
-    return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"UnderMin" value:@"Under a minute" table:@"ProgressDialog"]] autorelease];
+      return [[[NSString alloc] initWithFormat:NSLocalizedString(@"UnderSec",@"Under %d seconds"),10] autorelease];
+    return [[[NSString alloc] initWithString:NSLocalizedString(@"UnderMin",@"Under a minute")] autorelease];
   }    
   // seconds becomes minutes and we keep checking.  
   seconds = seconds/60;
   if (seconds < 60) {
     if (seconds < 2)
-      return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"AboutMin" value:@"About a minute" table:@"ProgressDialog"]] autorelease];
+       return [[[NSString alloc] initWithString:NSLocalizedString(@"AboutMin",@"About a minute")] autorelease];
     // OK, tell the good people how much time we have left.
-    return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"AboutMins" value:@"About %d minutes" table:@"ProgressDialog"],seconds] autorelease];
+    return [[[NSString alloc] initWithFormat:NSLocalizedString(@"AboutMins",@"About %d minutes"),seconds] autorelease];
   }
   //this download will never seemingly never end. now seconds become hours.
   seconds = seconds/60;
   if (seconds < 2)
-    return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"AboutHour" value:@"Over an hour" table:@"ProgressDialog"]] autorelease];
-  return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"AboutHours" value:@"Over %d hours" table:@"ProgressDialog"],seconds] autorelease];
+    return [[[NSString alloc] initWithString:NSLocalizedString(@"AboutHour",@"Over an hour")] autorelease];
+  return [[[NSString alloc] initWithFormat:NSLocalizedString(@"AboutHours",@"Over %d hours"),seconds] autorelease];
 }
 
 
@@ -430,10 +430,8 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   // OK - if downloadTimer is nil, we're done - fix maxBytes value for status report.
   if (!downloadTimer)
     maxBytes = mCurrentProgress;
-  // update status field 
-  NSString *labelString = [[NSBundle mainBundle] localizedStringForKey:@"LabelString"
-                                                                 value:@"%@ of %@ total (at %@/sec)"
-                                                                 table:@"ProgressDialog"];
+  // update status field
+  NSString *labelString = NSLocalizedString(@"LabelString",@"%@ of %@ total (at %@/sec)");
   [mStatusLabel setStringValue: [NSString stringWithFormat:labelString, [self formatBytes:mCurrentProgress], [self formatBytes:maxBytes], [self formatBytes:byteSec]]];
   // updating estimated time left field
   // if maxBytes < 0, can't calc time left.
