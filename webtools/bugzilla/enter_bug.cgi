@@ -108,6 +108,7 @@ sub pickplatform {
             /Mozilla.*\(Windows/ && do {return "PC";};
             /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
             /Mozilla.*\(Win/ && do {return "PC";};
+	    /Mozilla.*Windows NT/ && do {return "PC";};
             /Mozilla.*Linux.*86/ && do {return "PC";};
             /Mozilla.*Linux.*alpha/ && do {return "DEC";};
             /Mozilla.*OSF/ && do {return "DEC";};
@@ -177,6 +178,8 @@ sub pickos {
             /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
             /Mozilla.*\(Win98.*\)/          && do {return "Windows 98";};
             /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
+            /Mozilla.*\(Windows.*NT/        && do {return "Windows NT";};
+            /Mozilla.*Windows NT 5.*\)/     && do {return "Windows 2000";};
         }
     }
     # default
