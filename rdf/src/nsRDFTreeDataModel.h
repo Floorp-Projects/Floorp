@@ -74,8 +74,12 @@ public:
     NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeDMItem* pItem, nsITreeColumn* pColumn) const;
 
     ////////////////////////////////////////////////////////////////////////
+    // Implemantation methods
 
     void AddColumn(const nsString& name, RDF_Resource property);
+
+    virtual NS_METHOD
+    CreateItem(RDF_Resource r, nsRDFDataModelItem*& result);
 
 private:
     nsVector       mColumns;

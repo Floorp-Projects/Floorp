@@ -61,6 +61,11 @@ public:
     // nsIToolbarDataModel interface
 
 
+    ////////////////////////////////////////////////////////////////////////
+    // Implementation methods
+
+    virtual NS_METHOD
+    CreateItem(RDF_Resource r, nsRDFDataModelItem*& result);
 
 private:
 };

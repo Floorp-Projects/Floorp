@@ -34,7 +34,13 @@ private:
     PRBool              mOpen;
     nsVector            mChildren;
     nsRDFDataModelItem* mParent;
-    mutable PRUint32    mCachedSubtreeSize;
+
+    /**
+     * A cached value for the size of this item's subtree. Zero means "invalid"
+     * or "unknown", and the next call to GetSubtreeSize() will force it to be
+     * recomputed.
+     */
+    mutable PRUint32 mCachedSubtreeSize;
 
     PRUint32 GetSubtreeSize(void) const;
     void InvalidateCachedSubtreeSize(void);
@@ -63,6 +69,7 @@ public:
     NS_IMETHOD GetParent(nsIDMItem*& pItem) const;
 
     // Setters
+    NS_IMETHOD SetOpenState(PRBool state); // XXX not there yet...
 
     // Methods to query the data model for a specific item displayed within the widget.
     NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) const;
@@ -82,9 +89,8 @@ public:
         return mOpen;
     }
 
-    void SetOpenState(PRBool open) {
-        mOpen = open;
-    }
+    void Open(void);
+    void Close(void);
 
     nsRDFDataModelItem* ChildAt(PRUint32 index) const {
         return static_cast<nsRDFDataModelItem*>(mChildren[index]);

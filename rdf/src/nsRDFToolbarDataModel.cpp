@@ -17,6 +17,7 @@
  */
 
 #include "nsRDFToolbarDataModel.h"
+#include "nsRDFToolbarDataModelItem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
@@ -112,3 +113,18 @@ nsRDFToolbarDataModel::GetIntPropertyValue(PRInt32& value, const nsString& prope
 ////////////////////////////////////////////////////////////////////////
 // nsIToolbarDataModel interface
 
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation methods
+
+NS_METHOD
+nsRDFToolbarDataModel::CreateItem(RDF_Resource r, nsRDFDataModelItem*& result)
+{
+    result = new nsRDFToolbarDataModelItem(*this, r);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+}
