@@ -485,7 +485,16 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 //        may become an incorrect assumption. Stay tuned.
                 PRUint32 allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
-                  *aLen = nsCRT::strlen(NS_REINTERPRET_CAST(PRUnichar*, *aData)) * 2;
+                  if ( fe.cfFormat == CF_HTML ) {
+                    // CF_HTML is actually UTF8, not unicode, so disregard the assumption
+                    // above. We have to keep the null termination because of bugs in
+                    // nsDependentCString (141866). The string will be stripped of its null by
+                    // conversion to unicode in GetDataFromDataObject(), so it'll all
+                    // end up well.
+                    *aLen = strlen ( NS_REINTERPRET_CAST(char*, *aData) ) + sizeof(char);
+                  }
+                  else
+                    *aLen = nsCRT::strlen(NS_REINTERPRET_CAST(PRUnichar*, *aData)) * sizeof(PRUnichar);
                   result = NS_OK;
                 }
               }
