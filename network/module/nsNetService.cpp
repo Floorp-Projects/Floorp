@@ -452,7 +452,7 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
 
     NET_SetCookieString(stubContext, (char *)spec, cookie);
 
-    PR_FREEIF(cookie);
+    delete []cookie;
     free_stub_context(stubContext);
     return NS_OK;
 }
