@@ -251,8 +251,7 @@
 (defparameter *type-level* (make-partial-order))
 (def-partial-order-element *type-level* %%primary%%)                              ;id, tuple, (type)
 (def-partial-order-element *type-level* %%suffix%% %%primary%%)                   ;type[], type{}
-(def-partial-order-element *type-level* %%function%% %%suffix%%)                  ;type x type -> type
-(def-partial-order-element *type-level* %%type%% %%function%%)                    ;type U type, type - type
+(def-partial-order-element *type-level* %%type%% %%suffix%%)                      ;type x type -> type, type U type, type - type
 
 
 ; Emit markup for the name of a type, which must be a symbol.
@@ -309,7 +308,7 @@
 ; (-> (<arg-type1> ... <arg-typen>) <result-type>)
 ;   "<arg-type1> x ... x <arg-typen> -> <result-type>"
 (defun depict--> (markup-stream world level arg-type-exprs result-type-expr)
-  (depict-type-parentheses (markup-stream level %%function%%)
+  (depict-type-parentheses (markup-stream level %%type%%)
     (depict-list markup-stream
                  #'(lambda (markup-stream arg-type-expr)
                      (depict-type-expr markup-stream world arg-type-expr %%suffix%%))
@@ -364,7 +363,7 @@
    (t (depict-type-parentheses (markup-stream level %%type%%)
         (depict-list markup-stream
                      #'(lambda (markup-stream type-expr)
-                         (depict-type-expr markup-stream world type-expr %%function%%))
+                         (depict-type-expr markup-stream world type-expr %%suffix%%))
                      type-exprs
                      :indent 0
                      :separator '(" " :union-10)
@@ -376,11 +375,11 @@
 (defun depict-type-diff (markup-stream world level type-expr1 type-expr2)
   (depict-type-parentheses (markup-stream level %%type%%)
     (depict-logical-block (markup-stream 0)
-      (depict-type-expr markup-stream world type-expr1 %%function%%)
+      (depict-type-expr markup-stream world type-expr1 %%suffix%%)
       (depict-space markup-stream)
       (depict markup-stream :minus)
       (depict-break markup-stream 1)
-      (depict-type-expr markup-stream world type-expr2 %%function%%))))
+      (depict-type-expr markup-stream world type-expr2 %%suffix%%))))
 
 
 ; (writable-cell <element-type>)
@@ -583,6 +582,14 @@
       (depict markup-stream "-")
       (depict-hex markup-stream world level (- n) length))
     (depict markup-stream (format nil "0x~V,'0X" length n))))
+
+
+; (/*/ <value-expr> . <styled-text>)
+(defun depict-/*/ (markup-stream world level &rest text)
+  (declare (ignore world))
+  (depict-expr-parentheses (markup-stream level %factor%)
+    (depict-char-style (markup-stream :wrap)
+      (depict-styled-text markup-stream text))))
 
 
 ; (expt <base> <exponent>)
@@ -1136,14 +1143,14 @@
 (defun depict-// (markup-stream world semicolon last-paragraph-style &rest text)
   (declare (ignore world semicolon))
   (depict-division-style (markup-stream :wrap)
-    (depict-text-paragraph markup-stream last-paragraph-style text)))
+    (depict-text-statement markup-stream last-paragraph-style text)))
 
 
 ; (note . <styled-text>)
 (defun depict-note (markup-stream world semicolon last-paragraph-style &rest text)
   (declare (ignore world semicolon))
   (depict-division-style (markup-stream :wrap)
-    (depict-text-paragraph markup-stream last-paragraph-style (list* '(:keyword note) " " text))))
+    (depict-text-paragraph markup-stream last-paragraph-style (list* '(:keyword note) :tab2 text))))
 
 
 ; (*/)
@@ -1157,7 +1164,9 @@
 (defun depict-bottom (markup-stream world semicolon last-paragraph-style &rest text)
   (declare (ignore world semicolon))
   (depict-division-style (markup-stream :wrap)
-    (depict-text-paragraph markup-stream last-paragraph-style (or text (list :bottom-10)))))
+    (if text
+      (depict-text-statement markup-stream last-paragraph-style text)
+      (depict-text-paragraph markup-stream last-paragraph-style (list :bottom-10)))))
 
 
 (defvar *assertion-depictor*)
@@ -1165,10 +1174,8 @@
 ; (assert <condition-expr> . <styled-text>)
 ; <styled-text> can contain the entry (:assertion) to depict <condition-expr>.
 (defun depict-assert (markup-stream world semicolon last-paragraph-style condition-annotated-expr &rest text)
-  (declare (ignore semicolon))
   (let ((*assertion-depictor* #'(lambda (markup-stream) (depict-expression markup-stream world condition-annotated-expr %expr%))))
-    (depict-division-style (markup-stream :wrap)
-      (depict-text-paragraph markup-stream last-paragraph-style (list* '(:keyword note) " " text)))))
+    (apply #'depict-note markup-stream world semicolon last-paragraph-style text)))
 
 ; (:assertion)
 (defun depict-assertion (markup-stream)
@@ -1318,13 +1325,23 @@
       (depict-semicolon markup-stream semicolon))))
 
 
-; (throw <value-expr>)
-(defun depict-throw (markup-stream world semicolon last-paragraph-style value-annotated-expr)
-  (depict-paragraph (markup-stream last-paragraph-style)
-    (depict-logical-block (markup-stream 4)
-      (depict-semantic-keyword markup-stream 'throw :after)
-      (depict-expression markup-stream world value-annotated-expr %expr%)
-      (depict-semicolon markup-stream semicolon))))
+; (throw <value-expr> . <styled-text>)
+; If present, <styled-text> is depicted after the throw statement, separated by an em-dash.
+(defun depict-throw (markup-stream world semicolon last-paragraph-style value-annotated-expr &rest text)
+  (if text
+    (depict-division-style (markup-stream :wrap)
+      (depict-paragraph (markup-stream last-paragraph-style)
+        (depict-logical-block (markup-stream 4)
+          (depict-semantic-keyword markup-stream 'throw :after)
+          (depict-expression markup-stream world value-annotated-expr %expr%)
+          (depict markup-stream " " :m-dash " ")
+          (depict-styled-text markup-stream text)
+          (depict-semicolon markup-stream semicolon))))
+    (depict-paragraph (markup-stream last-paragraph-style)
+      (depict-logical-block (markup-stream 4)
+        (depict-semantic-keyword markup-stream 'throw :after)
+        (depict-expression markup-stream world value-annotated-expr %expr%)
+        (depict-semicolon markup-stream semicolon)))))
 
 
 ; (catch <body-statements> (<var> [:unused]) . <handler-statements>)
@@ -1488,6 +1505,12 @@
 (defun depict-text-paragraph (markup-stream paragraph-style text)
   (depict-paragraph (markup-stream paragraph-style)
     (depict-styled-text markup-stream text)))
+
+
+(defun depict-text-statement (markup-stream paragraph-style text)
+  (let ((new-style (cdr (assert-non-null (assoc paragraph-style '((:statement . :text-statement) (:statement-last . :text-statement-last)))))))
+    (depict-paragraph (markup-stream new-style)
+      (depict-styled-text markup-stream text))))
 
 
 ; (%heading <level> . <styled-text>)
