@@ -30,7 +30,8 @@
 //***    nsCBaseBreathLoop: Object Management
 //*****************************************************************************
 
-nsCBaseBreathLoop::nsCBaseBreathLoop() : nsCBaseLoop(nsEventLoopTypes::AppBreathLoop)
+nsCBaseBreathLoop::nsCBaseBreathLoop() : 
+	nsCPlatformBaseLoop(nsEventLoopTypes::AppBreathLoop)
 {
 }
 

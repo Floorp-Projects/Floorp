@@ -30,7 +30,7 @@
 //***    nsCBaseAppLoop: Object Management
 //*****************************************************************************
 
-nsCBaseAppLoop::nsCBaseAppLoop() : nsCBaseLoop(nsEventLoopTypes::MainAppLoop)
+nsCBaseAppLoop::nsCBaseAppLoop() : nsCPlatformBaseLoop(nsEventLoopTypes::MainAppLoop)
 {
 }
 

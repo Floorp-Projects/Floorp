@@ -39,20 +39,8 @@ protected:
 	// Internal Platform Implementations of nsIEventLoop 
 	// (Error checking is ensured above)
 	nsresult PlatformExit(PRInt32 exitCode);
-	nsresult PlatformGetNextEvent(void* platformFilterData, void* platformEventData);
-	nsresult PlatformPeekNextEvent(void* FilterData, void* platformEventData, 
-		PRBool fRemoveElement);
-	nsresult PlatformTranslateEvent(void* platformEventData);
-	nsresult PlatformDispatchEvent(void* platformEventData);
-	nsresult PlatformSendLoopEvent(void* platformEventData, PRInt32* result);
-	nsresult PlatformPostLoopEvent(void* platformEventData);
-	
-	nsNativeEventDataType PlatformGetEventType();
-	nsNativeFilterDataType PlatformGetFilterType();
+
 	PRInt32 PlatformGetReturnCode(void* platformEventData);
-	
-protected:
-	DWORD m_WinThreadId;  
 };
 
 #endif /* nsCBreathLoop_h__ */

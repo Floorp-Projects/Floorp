@@ -29,7 +29,6 @@
 
 nsCThreadLoop::nsCThreadLoop() : nsCBaseThreadLoop()
 {
-	m_WinThreadId = ::GetCurrentThreadId();
 }
 
 nsCThreadLoop::~nsCThreadLoop()
@@ -61,83 +60,3 @@ nsresult nsCThreadLoop::PlatformExit(PRInt32 exitCode)
 	::PostThreadMessage(m_WinThreadId, WM_QUIT, 0, 0);
 	return NS_OK;
 }
-
-nsresult nsCThreadLoop::PlatformGetNextEvent(void* platformFilterData, 
-	void* platformEventData)
-{
-	nsCWinFilter* filter=(nsCWinFilter*)platformFilterData;
-	MSG* pMsg=(MSG*)platformEventData;
-	if(::GetMessage(pMsg, filter->hWnd, filter->wMsgFilterMin, 
-		filter->wMsgFilterMax))
-		return NS_OK;
-	return  NS_COMFALSE; 
-}
-
-nsresult nsCThreadLoop::PlatformPeekNextEvent(void* platformFilterData, 
-	void* platformEventData, PRBool fRemoveEvent)
-{
-	nsCWinFilter* filter=(nsCWinFilter*)platformFilterData;
-	MSG* pMsg=(MSG*)platformEventData;
-	
-	if(fRemoveEvent)
-		filter->wRemoveFlags|= PM_REMOVE;
-	else
-		filter->wRemoveFlags&= ~PM_REMOVE;
-	if(::PeekMessage(pMsg, filter->hWnd, filter->wMsgFilterMin, 
-		filter->wMsgFilterMax, filter->wRemoveFlags))
-		return NS_OK;
-	return NS_COMFALSE;
-}
-
-nsresult nsCThreadLoop::PlatformTranslateEvent(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	::TranslateMessage(pMsg);
-	return NS_OK;
-}
-
-nsresult nsCThreadLoop::PlatformDispatchEvent(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	::DispatchMessage(pMsg);
-	return NS_OK;
-}
-
-nsresult nsCThreadLoop::PlatformSendLoopEvent(void* platformEventData, PRInt32* result)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	*result = ::SendMessage(pMsg->hwnd, pMsg->message, pMsg->wParam,pMsg->lParam);
-	return NS_OK;
-}
-
-nsresult nsCThreadLoop::PlatformPostLoopEvent(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	if(!pMsg->hwnd)
-		{
-		if(!::PostThreadMessage(m_WinThreadId, pMsg->message, pMsg->wParam,
-			pMsg->lParam))
-			return NS_ERROR_FAILURE;
-		}
-	else if(!::PostMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam))
-		return NS_ERROR_FAILURE;
-	return NS_OK;
-}
-
-nsNativeEventDataType nsCThreadLoop::PlatformGetEventType()
-{
-	return nsNativeEventDataTypes::WinMsgStruct;
-}
-
-nsNativeEventDataType nsCThreadLoop::PlatformGetFilterType()
-{
-	return nsNativeFilterDataTypes::WinFilter;
-}
-
-PRInt32 nsCThreadLoop::PlatformGetReturnCode(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	return pMsg->wParam;
-}
-
-

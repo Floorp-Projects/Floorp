@@ -23,9 +23,9 @@
 #ifndef nsCBaseAppLoop_h__
 #define nsCBaseAppLoop_h__
 
-#include "nsCBaseLoop.h"
+#include "nsCPlatformBaseLoop.h"
 
-class nsCBaseAppLoop : public nsCBaseLoop
+class nsCBaseAppLoop : public nsCPlatformBaseLoop
 {
 public:
 
