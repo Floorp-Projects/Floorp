@@ -26,6 +26,13 @@
 #------------------------------------------------------------------------
 
 DEPTH=..\..\..\..
+
+// temporary, until we land:
+!ifndef NECKO
+include <$(DEPTH)/config/config.mak>
+PUBLIC = $(DEPTH)\netwerk\dist\include
+!endif
+
 MODULE=netwerk
 
 IS_COMPONENT=1
@@ -59,11 +66,10 @@ INCLUDES = $(LOCAL_INCLUDES)
 
 REQUIRES= netwerk 
 
-LINCS= \
-    -I..\public \
-    -I$(PUBLIC)\netwerk \
-    -I$(PUBLIC)\xpcom \
-    $(NULL)
+INCS = $(INCS)                  \
+        -I$(DEPTH)\dist\include \
+        -I..\public \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
 

@@ -17,7 +17,11 @@
 
 DEPTH=..\..
 
-IGNORE_MANIFEST=1
+// temporary, until we land:
+!ifndef NECKO
+include <$(DEPTH)/config/config.mak>
+PUBLIC = $(DEPTH)\netwerk\dist\include
+!endif
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestFileInput.exe
@@ -31,11 +35,8 @@ LCFLAGS=-DUSE_NSREG -GX
 
 REQUIRES=libreg
 
-LINCS =                     \
-        -I$(PUBLIC)\xpcom   \
-        -I$(PUBLIC)\raptor  \
-        -I$(PUBLIC)\netwerk \
-        -I$(PUBLIC)\plughttp \
+INCS = $(INCS)                  \
+        -I$(DEPTH)\dist\include \
         $(NULL)
 
 LLIBS=					\

@@ -17,6 +17,12 @@ MODULE = netwerk
 
 DEPTH = ..\..\..
 
+// temporary, until we land:
+!ifndef NECKO
+include <$(DEPTH)/config/config.mak>
+PUBLIC = $(DEPTH)\netwerk\dist\include
+!endif
+
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 LIBRARY_NAME=netwerkbase_s
@@ -35,13 +41,14 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsNetModRegEntry.obj           \
         $(NULL)
 
-LINCS =                     \
-        -I$(PUBLIC)\xpcom   \
-        -I$(PUBLIC)\raptor  \
-        -I$(PUBLIC)\netwerk \
+INCS = $(INCS)                  \
+        -I$(DEPTH)\dist\include \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+foo::
+        echo $(INCS)
 
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib

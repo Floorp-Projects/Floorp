@@ -18,6 +18,12 @@
 DEPTH=..\..
 MODULE=netwerk
 
+// temporary, until we land:
+!ifndef NECKO
+include <$(DEPTH)/config/config.mak>
+PUBLIC = $(DEPTH)\netwerk\dist\include
+!endif
+
 MAKE_OBJ_TYPE=DLL
 DLLNAME=netwerk
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -34,10 +40,9 @@ LLIBS=                                \
 
 MISCDEP=$(LLIBS)
 
-LINCS=  -I$(PUBLIC)\netwerk \
-        -I$(PUBLIC)\xpcom   \
-        -I$(PUBLIC)\raptor  \
-        -I..\base\src       \
+INCS = $(INCS)                      \
+        -I$(DEPTH)\dist\include     \
+        -I$(DEPTH)\netwerk\base\src \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
