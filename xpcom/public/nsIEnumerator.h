@@ -29,7 +29,8 @@
 
 class nsIEnumerator : public nsISupports {
 public:
-public:
+
+  static const nsIID& IID() { static nsIID iid = NS_IENUMERATOR_IID; return iid; }
 
   /** First will reset the list. will return NS_FAILED if no items
    */
