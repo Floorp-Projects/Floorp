@@ -33,7 +33,7 @@ use vars qw(
 );
 
 use Bugzilla;
-
+use Bugzilla::Constants;
 require "CGI.pl";
 
 Bugzilla->login();
@@ -88,7 +88,7 @@ my @collist;
 if (defined $cgi->param('rememberedquery')) {
     my $splitheader = 0;
     if (defined $cgi->param('resetit')) {
-        @collist = @::default_column_list;
+        @collist = DEFAULT_COLUMN_LIST;
     } else {
         foreach my $i (@masterlist) {
             if (defined $cgi->param("column_$i")) {
@@ -133,7 +133,7 @@ if (defined $cgi->param('rememberedquery')) {
 if (defined $cgi->cookie('COLUMNLIST')) {
     @collist = split(/ /, $cgi->cookie('COLUMNLIST'));
 } else {
-    @collist = @::default_column_list;
+    @collist = DEFAULT_COLUMN_LIST;
 }
 
 $vars->{'collist'} = \@collist;

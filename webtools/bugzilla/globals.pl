@@ -110,10 +110,6 @@ $::unconfirmedstate = "UNCONFIRMED";
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
 
-@::default_column_list = ("bug_severity", "priority", "rep_platform", 
-                          "assigned_to", "bug_status", "resolution",
-                          "short_short_desc");
-
 sub AppendComment {
     my ($bugid, $who, $comment, $isprivate, $timestamp, $work_time) = @_;
     $work_time ||= 0;

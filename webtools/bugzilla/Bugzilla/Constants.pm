@@ -61,6 +61,8 @@ use base qw(Exporter);
     GROUP_MEMBERSHIP
     GROUP_BLESS
     GROUP_VISIBLE
+
+    DEFAULT_COLUMN_LIST
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -198,5 +200,11 @@ use constant GRANT_REGEXP => 2;
 use constant GROUP_MEMBERSHIP => 0;
 use constant GROUP_BLESS => 1;
 use constant GROUP_VISIBLE => 2;
+
+# The default list of columns for buglist.cgi
+use constant DEFAULT_COLUMN_LIST => (
+    "bug_severity", "priority", "rep_platform","assigned_to",
+    "bug_status", "resolution", "short_short_desc"
+);
 
 1;

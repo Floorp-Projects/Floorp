@@ -44,7 +44,6 @@ require "CGI.pl";
 
 use vars qw($db_name
             @components
-            @default_column_list
             $defaultqueryname
             @legal_keywords
             @legal_platform
@@ -513,7 +512,7 @@ elsif (defined $cgi->cookie('COLUMNLIST')) {
 }
 else {
     # Use the default list of columns.
-    @displaycolumns = @::default_column_list;
+    @displaycolumns = DEFAULT_COLUMN_LIST;
 }
 
 # Weed out columns that don't actually exist to prevent the user 
