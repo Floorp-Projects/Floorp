@@ -310,25 +310,27 @@ function SetPixelOrPercentByID(elementID, percentString)
   }
 }
 
+// USE onkeyup!
 // forceInteger by petejc (pete@postpagan.com)
+
+var sysBeep = Components.classes["component://netscape/sound"].createInstance();
+sysBeep     = sysBeep.QueryInterface(Components.interfaces.nsISound);
 function forceInteger(elementID)
 {
-  return;
-  // THIS DOESN'T WORK IN WINDOWS 
-  // with native editbox. 
-  // Wait until we are using GFX (i.e., ender) for editbox
-/*
   editfield = document.getElementById( elementID );
   if ( !editfield )
     return;
   
   var stringIn = editfield.value;
   var pat = /\D/g;
-  // THIS DOESN'T WORK ON WINDOWS WITH NATIVE WIDGET
-  // It causes the caret to reposition to the beginning,
-  //  so characters are inserted backwards!
-  editfield.value = stringIn.replace(pat, "");
-*/
+  
+  result = stringIn.match(pat, "");
+  if (result) {
+    editfield.value = stringIn.replace(pat,"");
+    // hopefully we can remove the following line for blur() once xp widgets land
+    editfield.blur();
+    sysBeep.Beep();
+  }
 }
 
 // All dialogs share this simple method
