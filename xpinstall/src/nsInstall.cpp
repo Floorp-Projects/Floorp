@@ -2128,7 +2128,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     extractHereSpec->Delete(PR_FALSE);
 
     nsresult rv = mJarFileData->Extract( nsAutoCString(aJarfile), nsNSPRPath( *extractHereSpec ), &result );
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) 
     {
         if (extractHereSpec != nsnull)
             delete extractHereSpec;

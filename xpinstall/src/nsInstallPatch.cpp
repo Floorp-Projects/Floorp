@@ -351,8 +351,8 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 	PRInt32		status		= GDIFF_ERR_MEM;
 	char 		*tmpurl		= NULL;
 	char 		*realfile	= PL_strdup(nsNSPRPath(sourceFile)); // needs to be sourceFile!!!
-	nsFileSpec  *outFileSpec = new nsFileSpec;
-    nsFileSpec  *tempSrcFile = new nsFileSpec;
+	nsFileSpec  *outFileSpec = new nsFileSpec; 
+    nsFileSpec  *tempSrcFile = new nsFileSpec;   // TODO: do you need to free?
     
     if (!outFileSpec) {
         status = GDIFF_ERR_MEM;
@@ -504,8 +504,8 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 	if ( dd->bMacAppleSingle && status == GDIFF_OK ) 
 	{
         // create another file, so that we can decode somewhere
-        nsFileSpec *anotherName = outFileSpec;
-        anotherName->MakeUnique();
+        nsFileSpec anotherName = *outFileSpec;
+        anotherName.MakeUnique();
         
 		// Close the out file so that we can read it 		
 		PR_Close( dd->fOut );
@@ -513,7 +513,12 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 		
 		
 		FSSpec outSpec = outFileSpec->GetFSSpec();
-		FSSpec anotherSpec = anotherName->GetFSSpec();
+		FSSpec anotherSpec = anotherName.GetFSSpec();
+		
+		if ( outFileSpec->Exists() )
+		{
+			printf("filesize: %d\n", outFileSpec->GetFileSize());
+		}
 		
 			
         status =  PAS_DecodeFile(&outSpec, &anotherSpec);
@@ -527,9 +532,11 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
         outFileSpec->GetParent(parent);
         
         outFileSpec->Delete(PR_FALSE);
-        anotherName->Copy(parent);
+        anotherName.Copy(parent);
         
-        *newFile = anotherName;
+        *outFileSpec = anotherName;
+        
+        *newFile = outFileSpec;
 	}
 	
 #endif 
