@@ -2,14 +2,14 @@
 #include "prlog.h"
 #include "javaDOMGlobals.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsIServiceManager.h"
 #include "nsCURILoader.h"
 
 #include "nsIJavaDOM.h"
 #include "org_mozilla_dom_DOMAccessor.h"
 
-static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
 
 /*
@@ -24,23 +24,33 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
     JavaDOMGlobals::Initialize(env);
   }
   nsresult rv = NS_OK; 
-  NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
+  nsCOMPtr<nsIDocumentLoader> docLoaderService = 
+    do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
+  nsCOMPtr<nsIWebProgress> webProgressService;
+  
   if (NS_FAILED(rv) || !docLoaderService) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
 	    rv));
   } else {
-    NS_WITH_SERVICE(nsIDocumentLoaderObserver, javaDOM, kJavaDOMCID, &rv);
+    NS_WITH_SERVICE(nsIWebProgressListener, javaDOM, kJavaDOMCID, &rv);
     if (NS_FAILED(rv) || !javaDOM) {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	     ("DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
 	      rv));
     } else {
-      rv = docLoaderService->AddObserver((nsIDocumentLoaderObserver*)javaDOM);
-      if (NS_FAILED(rv)) {
+      webProgressService = do_QueryInterface(docLoaderService, &rv);
+      if (NS_FAILED(rv) || !webProgressService) {
 	PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	       ("DOMAccessor::register: AddObserver(JavaDOM) failed x\n", 
+	       ("DOMAccessor::register: QueryInterface(nsIWebProgressService) failed: %x\n", 
 		rv));
+      } else {
+	rv = webProgressService->AddProgressListener((nsIWebProgressListener*)javaDOM);
+	if (NS_FAILED(rv)) {
+	  PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+		 ("DOMAccessor::register: AddObserver(JavaDOM) failed x\n", 
+		  rv));
+	}
       }
     }
   }
@@ -58,23 +68,33 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_unregister
 	 ("DOMAccessor::unregister: unregistering %x\n", jthis));
 
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
+  nsCOMPtr<nsIDocumentLoader> docLoaderService = 
+    do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
+  nsCOMPtr<nsIWebProgress> webProgressService;
+  
   if (NS_FAILED(rv) || !docLoaderService) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DOMAccessor::unregister: GetService(DocLoaderService) failed %x\n", 
 	    rv));
   } else {
-    NS_WITH_SERVICE(nsIDocumentLoaderObserver, javaDOM, kJavaDOMCID, &rv);
+    NS_WITH_SERVICE(nsIWebProgressListener, javaDOM, kJavaDOMCID, &rv);
     if (NS_FAILED(rv) || !javaDOM) {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	     ("DOMAccessor::unregister: GetService(JavaDOM) failed %x\n", 
 	      rv));
     } else {
-      rv = docLoaderService->RemoveObserver((nsIDocumentLoaderObserver*)javaDOM);
-      if (NS_FAILED(rv)) {
+      webProgressService = do_QueryInterface(docLoaderService, &rv);
+      if (NS_FAILED(rv) || !webProgressService) {
 	PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	       ("DOMAccessor::unregister: RemoveObserver(JavaDOM) failed x\n", 
+	       ("DOMAccessor::unregister: QueryInterface(nsIWebProgressService) failed: %x\n", 
 		rv));
+      } else {
+	rv = webProgressService->RemoveProgressListener((nsIWebProgressListener*)javaDOM);
+	if (NS_FAILED(rv)) {
+	  PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+		 ("DOMAccessor::unregister: RemoveObserver(JavaDOM) failed x\n", 
+		  rv));
+	}
       }
     }
   }

@@ -25,14 +25,18 @@
 #include "nsIChannel.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsJavaDOMImpl.h"
 
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+
+#include "nsXPIDLString.h"
 
 #if defined(DEBUG)
 #include <stdio.h>
@@ -62,7 +66,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIWebProgressListenerIID, NS_IWEBPROGRESSLISTENER_IID);
 
 NS_IMPL_ADDREF(nsJavaDOMImpl);
 NS_IMPL_RELEASE(nsJavaDOMImpl);
@@ -105,8 +109,8 @@ NS_IMETHODIMP nsJavaDOMImpl::QueryInterface(REFNSIID aIID, void** aInstance)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
-    *aInstance = (void*) ((nsIDocumentLoaderObserver*)this);
+  if (aIID.Equals(kIWebProgressListenerIID)) {
+    *aInstance = (void*) ((nsIWebProgressListener*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -253,33 +257,181 @@ nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
   return NULL;
 }
 
-NS_IMETHODIMP nsJavaDOMImpl::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-						 nsIURI* aURL, 
-						 const char* aCommand)
+//
+// nsIWebProgressListener implementation
+//
+
+NS_IMETHODIMP nsJavaDOMImpl::OnStateChange(nsIWebProgress *aWebProgress, 
+					   nsIRequest *aRequest, 
+					   PRInt32 aStateFlags, 
+					   PRUint32 aStatus)
+{
+  nsXPIDLString name;
+  nsresult rv;
+  
+  
+  if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_DOCUMENT)) {
+    if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+      return rv;
+    }
+    doStartDocumentLoad(name.get());
+  }
+  if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT)) {
+    doEndDocumentLoad(aWebProgress, aRequest, aStatus);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsJavaDOMImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                                  nsIRequest *aRequest, 
+                                                  PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void onProgressChange (in nsIChannel channel, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
+NS_IMETHODIMP nsJavaDOMImpl::OnProgressChange(nsIWebProgress *aWebProgress, 
+					      nsIRequest *request, 
+					      PRInt32 aCurSelfProgress, 
+					      PRInt32 aMaxSelfProgress, 
+					      PRInt32 curTotalProgress, 
+					      PRInt32 maxTotalProgress)
+{
+    nsCOMPtr<nsIDOMWindow> domWin;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    nsresult rv;
+    
+    if (nsnull != aWebProgress) {
+	if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
+	    && domWin) {
+	    if (NS_FAILED(rv = domWin->GetDocument(getter_AddRefs(domDoc)))) {
+		return rv;
+	    }
+	}
+    }
+
+    JNIEnv* env = NULL;
+    if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+    
+    char* urlSpec = (char*) "";
+    nsIURI* url = nsnull;
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
+	url->GetSpec(&urlSpec);
+    jstring jURL = env->NewStringUTF(urlSpec);
+    if (!jURL) return NS_ERROR_FAILURE;
+    // PENDING(edburns): this leaks.
+    
+    env->CallStaticVoidMethod(domAccessorClass,
+			      progressURLLoadMID,
+			      jURL,
+			      (jint) curTotalProgress,
+			      (jint) maxTotalProgress,
+			      (jlong)domDoc.get());
+    if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+/* void onStatusChange (in nsIChannel channel, in long progressStatusFlags); */
+NS_IMETHODIMP nsJavaDOMImpl::OnStatusChange(nsIWebProgress *aWebProgress, 
+                                                nsIRequest *request, 
+                                                nsresult aStatus, 
+                                                const PRUnichar *cMsg)
+{
+    nsCOMPtr<nsIDOMWindow> domWin;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    nsresult rv;
+    
+    if (nsnull != aWebProgress) {
+	if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
+	    && domWin) {
+	    if (NS_FAILED(rv = domWin->GetDocument(getter_AddRefs(domDoc)))) {
+		return rv;
+	    }
+	}
+    }
+    
+    JNIEnv* env = NULL;
+    if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+    
+    char* urlSpec = (char*) "";
+    nsIURI* url = nsnull; 
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
+	url->GetSpec(&urlSpec);
+    jstring jURL = env->NewStringUTF(urlSpec);
+    if (!jURL) return NS_ERROR_FAILURE;
+    // PENDING(edburns): this leaks
+
+    jstring jMessage = env->NewString(cMsg, nsCRT::strlen(cMsg));
+    if (!jMessage) return NS_ERROR_FAILURE;
+    
+    env->CallStaticVoidMethod(domAccessorClass,
+			      statusURLLoadMID,
+			      jURL,
+			      jMessage,
+			      (jlong)domDoc.get());
+    if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+/* void onLocationChange (in nsIURI location); */
+NS_IMETHODIMP nsJavaDOMImpl::OnLocationChange(nsIWebProgress *aWebProgress, 
+                                                  nsIRequest *aRequest, 
+                                                  nsIURI *location)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//
+// helper methods for nsIWebProgressListener 
+//
+
+NS_IMETHODIMP nsJavaDOMImpl::doStartDocumentLoad(const PRUnichar *documentName)
 {
   JNIEnv* env = NULL;
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
-
-  char* urlSpec = (char*) "";
-  if (aURL)
-    aURL->GetSpec(&urlSpec);
-  jstring jURL = env->NewStringUTF(urlSpec);
+  
+  if (!documentName) {
+    return NS_ERROR_FAILURE;
+  }
+  jstring jURL = env->NewString(documentName, nsCRT::strlen(documentName));
   if (!jURL) return NS_ERROR_FAILURE;
-
+  
   env->CallStaticVoidMethod(domAccessorClass,
 			    startDocumentLoadMID,
 			    jURL);
+  // PENDING(edburns): this leaks jURL.  A bug?
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
-					       nsIRequest* request, 
-					       nsresult aStatus)
+NS_IMETHODIMP nsJavaDOMImpl::doStartUrlLoad(const PRUnichar *documentName)
 {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsJavaDOMImpl::doEndDocumentLoad(nsIWebProgress *aWebProgress,
+					       nsIRequest *request, 
+					       PRUint32 aStatus)
+{
+  nsCOMPtr<nsIDOMWindow> domWin;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsresult rv;
+  
+  if (nsnull != aWebProgress) {
+    if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
+	&& domWin) {
+      if (NS_FAILED(rv = domWin->GetDocument(getter_AddRefs(domDoc)))) {
+	return rv;
+      }
+    }
+  }
+
   JNIEnv* env = NULL;
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
-
+  
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -287,17 +439,17 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
     url->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
-
-  nsIDOMDocument* domDoc = GetDocument(loader);
+  
   env->CallStaticVoidMethod(domAccessorClass,
 			    endDocumentLoadMID,
 			    jURL,
 			    (jint) aStatus,
-			    (jlong)domDoc);
+			    (jlong)domDoc.get());
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
 					    nsIRequest* request)
 {
@@ -330,62 +482,6 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
-					       nsIRequest* request, 
-					       PRUint32 aProgress, 
-					       PRUint32 aProgressMax)
-{
-  JNIEnv* env = NULL;
-  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
-
-  char* urlSpec = (char*) "";
-  nsIURI* url = nsnull;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
-    url->GetSpec(&urlSpec);
-  jstring jURL = env->NewStringUTF(urlSpec);
-  if (!jURL) return NS_ERROR_FAILURE;
-
-  nsIDOMDocument* domDoc = GetDocument(loader);
-  env->CallStaticVoidMethod(domAccessorClass,
-			    progressURLLoadMID,
-			    jURL,
-			    (jint) aProgress,
-			    (jint) aProgressMax,
-			    (jlong)domDoc);
-  if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader, 
-					     nsIRequest* request, 
-					     nsString& aMsg)
-{
-  JNIEnv* env = NULL;
-  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
-
-  char* urlSpec = (char*) "";
-  nsIURI* url = nsnull; 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
-    url->GetSpec(&urlSpec);
-  jstring jURL = env->NewStringUTF(urlSpec);
-  if (!jURL) return NS_ERROR_FAILURE;
-
-  const PRUnichar* cMsg = aMsg.GetUnicode();
-  jstring jMessage = env->NewString(cMsg, aMsg.Length());
-  if (!jMessage) return NS_ERROR_FAILURE;
-
-  nsIDOMDocument* domDoc = GetDocument(loader);
-  env->CallStaticVoidMethod(domAccessorClass,
-			    statusURLLoadMID,
-			    jURL,
-			    jMessage,
-			    (jlong)domDoc);
-  if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader, 
 					  nsIRequest* request, 
 					  nsresult aStatus)
@@ -413,6 +509,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsJavaDOMImpl::HandleUnknownContentType(nsIDocumentLoader* loader,
 						      nsIChannel* channel, 

@@ -19,35 +19,25 @@ class nsJavaDOMImpl : public nsIJavaDOM {
   nsJavaDOMImpl();
   virtual ~nsJavaDOMImpl();
 
-  /* nsIDocumentLoaderObserver methods */
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-				 nsIURI* aURL, 
-				 const char* aCommand);
-
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-			       nsIRequest* request, 
-			       nsresult aStatus);
-
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-			    nsIRequest* channel); 
-
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-			       nsIRequest* request, 
-			       PRUint32 aProgress, 
-                               PRUint32 aProgressMax);
-
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-			     nsIRequest* request, 
-			     nsString& aMsg);
-
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-			  nsIRequest* request, 
-			  nsresult aStatus);
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
 				      nsIChannel* channel, 
 				      const char *aContentType,
 				      const char *aCommand);
+
+ protected:
+
+ /**
+
+  * Called from our nsIWebProgressListener.OnStateChanged()
+  
+  */ 
+  
+  NS_IMETHOD doStartDocumentLoad(const PRUnichar *documentName);
+  NS_IMETHOD doStartUrlLoad(const PRUnichar *documentName);
+  NS_IMETHOD doEndDocumentLoad(nsIWebProgress *aWebProgress, 
+			       nsIRequest *aRequest, PRUint32 aStatus);
 
  private:
 #ifdef JAVA_DOM_OJI_ENABLE

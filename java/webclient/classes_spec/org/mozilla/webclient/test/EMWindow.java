@@ -57,7 +57,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.26 2001/05/08 04:50:27 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.27 2001/05/08 20:34:27 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -663,12 +663,12 @@ public void eventDispatched(WebclientEvent event)
             forwardMenuItem.setEnabled(history.canForward());
             populateHistoryMenu();
             statusLabel.setText("Done.");
-            //            currentDocument = currentPage.getDOM();
+            currentDocument = currentPage.getDOM();
             // add the new document to the domViewer
-            //            if (null != currentDocument && null != domViewer) {
-            //                domViewer.setDocument(currentDocument);
-            //            }
-
+            if (null != currentDocument && null != domViewer) {
+                domViewer.setDocument(currentDocument);
+            }
+            
             break;
         case ((int) DocumentLoadEvent.PROGRESS_URL_LOAD_EVENT_MASK):
             status = "Status: " + (String) event.getEventData();

@@ -72,7 +72,7 @@ public CurrentPageImpl(WrapperFactory yourFactory,
     super(yourFactory, yourBrowserControl);
     // force the class to be loaded, thus loading the JNI library
     if (!domInitialized) {
-        //        DOMAccessor.initialize();
+        DOMAccessor.initialize();
     }
 }
 
@@ -268,7 +268,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.13 2001/05/08 16:58:36 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.14 2001/05/08 20:34:31 edburns%acm.org Exp $");
     
 }
 

@@ -24,7 +24,7 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
 #include "jni.h"
 
 class nsIURI;
@@ -38,34 +38,28 @@ class nsIURI;
   {0xd6b2e820, 0x9113, 0x11d3, \
     { 0x9c, 0x11, 0x0, 0x10, 0x5a , 0xe3, 0x80 , 0x1e }}
 
-class nsIJavaDOM : public nsIDocumentLoaderObserver {
+class nsIJavaDOM : public nsIWebProgressListener {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJAVADOM_IID)
 
-  /* nsIDocumentLoaderObserver methods */
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-				 nsIURI* aURL, 
-				 const char* aCommand) = 0;
+  NS_IMETHOD OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
+			   PRInt32 aStateFlags, PRUint32 aStatus) = 0;
 
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-			       nsIRequest* request, 
-			       nsresult aStatus) = 0;
+  NS_IMETHOD OnProgressChange(nsIWebProgress *aWebProgress, 
+			      nsIRequest *aRequest, PRInt32 aCurSelfProgress, 
+			      PRInt32 aMaxSelfProgress, 
+			      PRInt32 aCurTotalProgress, 
+			      PRInt32 aMaxTotalProgress) = 0;
 
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-			    nsIRequest* request) = 0;
+  NS_IMETHOD OnLocationChange(nsIWebProgress *aWebProgress, 
+			      nsIRequest *aRequest, nsIURI *location) = 0;
 
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-			       nsIRequest* request, 
-			       PRUint32 aProgress, 
-                               PRUint32 aProgressMax) = 0;
+  NS_IMETHOD OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest,
+			    nsresult aStatus, const PRUnichar *aMessage) = 0;
 
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-			     nsIRequest* request, 
-			     nsString& aMsg) = 0;
+  NS_IMETHOD OnSecurityChange(nsIWebProgress *aWebProgress, 
+			      nsIRequest *aRequest, PRInt32 state) = 0;
 
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-			  nsIRequest* request, 
-			  nsresult aStatus) = 0;
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
 				      nsIChannel* channel, 
