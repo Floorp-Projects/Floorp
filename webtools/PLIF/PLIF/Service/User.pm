@@ -330,6 +330,7 @@ sub DESTROY {
     if ($self->{'_DIRTY'}->{'groups'}) {
         $self->writeGroups();
     }
+    $self->SUPER::DESTROY(@_);
 }
 
 sub writeProperties {
