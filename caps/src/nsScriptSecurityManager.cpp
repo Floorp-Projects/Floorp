@@ -431,38 +431,39 @@ NS_IMPL_ISUPPORTS3(nsScriptSecurityManager,
 
 ///////////////// Security Checks /////////////////
 JSBool JS_DLL_CALLBACK
-nsScriptSecurityManager::CheckJSFunctionCallerAccess(JSContext *cx, JSObject *obj,
-                                                     jsval id, JSAccessMode mode,
-                                                     jsval *vp)
+nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
+                                           jsval id, JSAccessMode mode,
+                                           jsval *vp)
 {
-    // Currently, this function will be called only when function.caller
-    // is accessed. If that changes, we will need to change this function.
-    NS_ASSERTION(nsCRT::strcmp(NS_REINTERPRET_CAST(PRUnichar*,
-                                                   JS_GetStringChars(JSVAL_TO_STRING(id))),
-                               NS_LITERAL_STRING("caller").get()) == 0,
-                 "CheckJSFunctionCallerAccess called for a property other than \'caller\'");
     // Get the security manager
-
     nsScriptSecurityManager *ssm =
         nsScriptSecurityManager::GetScriptSecurityManager();
 
+    NS_ASSERTION(ssm, "Failed to get security manager service");
     if (!ssm)
-    {
-        NS_ERROR("Failed to get security manager service");
         return JS_FALSE;
-    }
 
-    // Get the caller function object
-    NS_ASSERTION(JSVAL_IS_OBJECT(*vp), "*vp is not an object");
-    JSObject* target = JSVAL_TO_OBJECT(*vp);
+    // Get the object being accessed.  We protect these cases:
+    // 1. The Function.prototype.caller property's value, which might lead
+    //    an attacker up a call-stack to a function or another object from
+    //    a different trust domain.
+    // 2. A user-defined getter or setter function accessible on another
+    //    trust domain's window or document object.
+    // If *vp is not a primitive, some new JS engine call to this hook was
+    // added, but we can handle that case too -- if a primitive value in a
+    // property of obj is being accessed, we should use obj as the target
+    // object.
+    NS_ASSERTION(!JSVAL_IS_PRIMITIVE(*vp), "unexpected target property value");
+    JSObject* target = JSVAL_IS_PRIMITIVE(*vp) ? obj : JSVAL_TO_OBJECT(*vp);
 
-    // Do the same-origin check - this sets a JS exception if the check fails
+    // Do the same-origin check -- this sets a JS exception if the check fails.
+    // Pass the target object's class name, as we have no class-info for it.
     nsresult rv =
-        ssm->CheckPropertyAccess(cx, target, "Function", sCallerID,
+        ssm->CheckPropertyAccess(cx, target, JS_GetClass(cx, target)->name, id,
                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv))
-        return JS_FALSE; // Security check failed
+        return JS_FALSE; // Security check failed (XXX was an error reported?)
 
     return JS_TRUE;
 }
@@ -2538,10 +2539,10 @@ nsresult nsScriptSecurityManager::Init()
     JSContext* cx = GetSafeJSContext();
     if (!cx) return NS_ERROR_FAILURE;   // this can happen of xpt loading fails
     
-    if (sCallerID == JSVAL_VOID)
-        sCallerID = STRING_TO_JSVAL(::JS_InternString(cx, "caller"));
+    ::JS_BeginRequest(cx);
     if (sEnabledID == JSVAL_VOID)
         sEnabledID = STRING_TO_JSVAL(::JS_InternString(cx, "enabled"));
+    ::JS_EndRequest(cx);
 
     nsresult rv = InitPrefs();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2559,7 +2560,7 @@ nsresult nsScriptSecurityManager::Init()
 #ifdef DEBUG
     JSCheckAccessOp oldCallback =
 #endif
-        JS_SetCheckObjectAccessCallback(rt, CheckJSFunctionCallerAccess);
+        JS_SetCheckObjectAccessCallback(rt, CheckObjectAccess);
 
     // For now, assert that no callback was set previously
     NS_ASSERTION(!oldCallback, "Someone already set a JS CheckObjectAccess callback");
@@ -2568,7 +2569,6 @@ nsresult nsScriptSecurityManager::Init()
 
 static nsScriptSecurityManager *gScriptSecMan = nsnull;
 
-jsval nsScriptSecurityManager::sCallerID   = JSVAL_VOID;
 jsval nsScriptSecurityManager::sEnabledID   = JSVAL_VOID;
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
@@ -2584,7 +2584,6 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
 void
 nsScriptSecurityManager::Shutdown()
 {
-    sCallerID = JSVAL_VOID;
     sEnabledID = JSVAL_VOID;
 }
 
