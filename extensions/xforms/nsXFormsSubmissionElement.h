@@ -39,7 +39,7 @@
 #ifndef nsXFormsSubmissionElement_h_
 #define nsXFormsSubmissionElement_h_
 
-#include "nsIXTFGenericElement.h"
+#include "nsXFormsStubElement.h"
 #include "nsIRequestObserver.h"
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
@@ -54,18 +54,21 @@ class nsString;
 
 class SubmissionAttachmentArray;
 
-class nsXFormsSubmissionElement : public nsIXTFGenericElement,
+class nsXFormsSubmissionElement : public nsXFormsStubElement,
                                   public nsIRequestObserver
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXTFELEMENT
-  NS_DECL_NSIXTFGENERICELEMENT
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
 
   nsXFormsSubmissionElement()
     : mElement(nsnull)
   {}
+
+  // nsIXTFGenericElement overrides
+  NS_IMETHOD OnDestroyed();
+  NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
+  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
   NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
 

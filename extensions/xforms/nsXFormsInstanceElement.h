@@ -45,7 +45,7 @@
 #ifndef nsXFormsInstanceElement_h_
 #define nsXFormsInstanceElement_h_
 
-#include "nsIXTFGenericElement.h"
+#include "nsXFormsStubElement.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMLoadListener.h"
@@ -54,15 +54,20 @@
 
 class nsIDOMElement;
 
-class nsXFormsInstanceElement : public nsIXTFGenericElement,
+class nsXFormsInstanceElement : public nsXFormsStubElement,
                                 public nsIInstanceElementPrivate,
                                 public nsIDOMLoadListener
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXTFELEMENT
-  NS_DECL_NSIXTFGENERICELEMENT
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIINSTANCEELEMENTPRIVATE
+
+  // nsIXTFGenericElement overrides
+  NS_IMETHOD OnDestroyed();
+  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aNewValue);
+  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
+  NS_IMETHOD DoneAddingChildren();
+  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);

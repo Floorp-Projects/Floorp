@@ -49,23 +49,11 @@
 #include "nsIXTFGenericElementWrapper.h"
 #include "nsXFormsUtils.h"
 
-static const nsIID sScriptingIIDs[] = {
-  NS_IDOMELEMENT_IID,
-  NS_IDOMEVENTTARGET_IID,
-  NS_IDOM3NODE_IID
-};
-
-NS_IMPL_ADDREF(nsXFormsInstanceElement)
-NS_IMPL_RELEASE(nsXFormsInstanceElement)
-
-NS_INTERFACE_MAP_BEGIN(nsXFormsInstanceElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFGenericElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFElement)
-  NS_INTERFACE_MAP_ENTRY(nsIInstanceElementPrivate)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXTFGenericElement)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInstanceElement,
+                             nsXFormsStubElement,
+                             nsIInstanceElementPrivate,
+                             nsIDOMLoadListener,
+                             nsIDOMEventListener)
 
 nsXFormsInstanceElement::nsXFormsInstanceElement()
   : mElement(nsnull)
@@ -83,96 +71,6 @@ nsXFormsInstanceElement::OnDestroyed()
 }
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::GetElementType(PRUint32 *aElementType)
-{
-  *aElementType = nsIXTFElement::ELEMENT_TYPE_GENERIC_ELEMENT;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::GetIsAttributeHandler(PRBool *aIsAttributeHandler)
-{
-  *aIsAttributeHandler = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::GetScriptingInterfaces(PRUint32 *aCount,
-                                                nsIID ***aArray)
-{
-  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
-                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
-                                                 aCount, aArray);
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::WillChangeDocument(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::DocumentChanged(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::WillChangeParent(nsIDOMElement *aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::ParentChanged(nsIDOMElement *aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::WillInsertChild(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::WillAppendChild(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::ChildAppended(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::WillRemoveChild(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::ChildRemoved(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::WillSetAttribute(nsIAtom *aName,
-                                          const nsAString &aNewValue)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsInstanceElement::AttributeSet(nsIAtom *aName,
                                       const nsAString &aNewValue)
 {
@@ -185,12 +83,6 @@ nsXFormsInstanceElement::AttributeSet(nsIAtom *aName,
     LoadExternalInstance(aNewValue);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::WillRemoveAttribute(nsIAtom *aName)
-{
   return NS_OK;
 }
 
@@ -223,13 +115,6 @@ nsXFormsInstanceElement::DoneAddingChildren()
     LoadExternalInstance(src);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
-{
-  *aHandled = PR_FALSE;
   return NS_OK;
 }
 

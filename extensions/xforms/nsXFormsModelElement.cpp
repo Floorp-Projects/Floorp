@@ -116,20 +116,14 @@ nsXFormsModelElement::nsXFormsModelElement()
 {
 }
 
-NS_IMPL_ADDREF(nsXFormsModelElement)
-NS_IMPL_RELEASE(nsXFormsModelElement)
-
-NS_INTERFACE_MAP_BEGIN(nsXFormsModelElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFGenericElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXFormsModelElement)
-  NS_INTERFACE_MAP_ENTRY(nsIModelElementPrivate)
-  NS_INTERFACE_MAP_ENTRY(nsISchemaLoadListener)
-  NS_INTERFACE_MAP_ENTRY(nsIWebServiceErrorHandler)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXTFElement)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED6(nsXFormsModelElement,
+                             nsXFormsStubElement,
+                             nsIXFormsModelElement,
+                             nsIModelElementPrivate,
+                             nsISchemaLoadListener,
+                             nsIWebServiceErrorHandler,
+                             nsIDOMLoadListener,
+                             nsIDOMEventListener)
 
 NS_IMETHODIMP
 nsXFormsModelElement::OnDestroyed()
@@ -170,20 +164,6 @@ nsXFormsModelElement::RemoveModelFromDocument()
       models->RemoveElement(this);
     }
   }
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::GetElementType(PRUint32 *aType)
-{
-  *aType = ELEMENT_TYPE_GENERIC_ELEMENT;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::GetIsAttributeHandler(PRBool *aIsHandler)
-{
-  *aIsHandler = PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -238,79 +218,6 @@ nsXFormsModelElement::DocumentChanged(nsIDOMDocument* aNewDocument)
 
   models->AppendElement(this);
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::WillChangeParent(nsIDOMElement* aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::ParentChanged(nsIDOMElement* aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::WillInsertChild(nsIDOMNode* aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::ChildInserted(nsIDOMNode* aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::WillAppendChild(nsIDOMNode* aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::ChildAppended(nsIDOMNode* aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::WillRemoveChild(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::ChildRemoved(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::WillSetAttribute(nsIAtom *aName,
-                                       const nsAString &aNewValue)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::AttributeSet(nsIAtom *aName, const nsAString &aNewValue)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::WillRemoveAttribute(nsIAtom *aName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::AttributeRemoved(nsIAtom *aName)
-{
   return NS_OK;
 }
 

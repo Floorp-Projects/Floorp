@@ -85,11 +85,11 @@
 #include "nsNetUtil.h"
 #include "nsXFormsUtils.h"
 
-static const nsIID sScriptingIIDs[] = {
-  NS_IDOMELEMENT_IID,
-  NS_IDOMEVENTTARGET_IID,
-  NS_IDOM3NODE_IID
-};
+// namespace literals
+#define NAMESPACE_XML_SCHEMA \
+        NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema")
+#define NAMESPACE_XML_SCHEMA_INSTANCE \
+        NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema-instance")
 
 // submission methods
 #define METHOD_GET                    0x01
@@ -230,10 +230,9 @@ public:
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS3(nsXFormsSubmissionElement,
-                   nsIXTFElement,
-                   nsIXTFGenericElement,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSubmissionElement,
+                             nsXFormsStubElement,
+                             nsIRequestObserver)
 
 // nsIXTFElement
 
@@ -241,119 +240,6 @@ NS_IMETHODIMP
 nsXFormsSubmissionElement::OnDestroyed()
 {
   mElement = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::GetElementType(PRUint32 *aElementType)
-{
-  *aElementType = nsIXTFElement::ELEMENT_TYPE_GENERIC_ELEMENT;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::GetIsAttributeHandler(PRBool *aIsAttributeHandler)
-{
-  *aIsAttributeHandler = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
-{
-  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
-                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
-                                                 aCount, aArray);
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::WillChangeDocument(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::DocumentChanged(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::WillChangeParent(nsIDOMElement *aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::ParentChanged(nsIDOMElement *aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::WillInsertChild(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::WillAppendChild(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::ChildAppended(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::WillRemoveChild(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::ChildRemoved(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::WillSetAttribute(nsIAtom *aName,
-                                            const nsAString &aNewValue)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::AttributeSet(nsIAtom *aName, const nsAString &aNewValue)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::WillRemoveAttribute(nsIAtom *aName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::AttributeRemoved(nsIAtom *aName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::DoneAddingChildren()
-{
   return NS_OK;
 }
 

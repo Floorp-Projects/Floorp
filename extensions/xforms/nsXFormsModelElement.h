@@ -39,7 +39,7 @@
 #ifndef nsXFormsModelElement_h_
 #define nsXFormsModelElement_h_
 
-#include "nsIXTFGenericElement.h"
+#include "nsXFormsStubElement.h"
 #include "nsIModelElementPrivate.h"
 #include "nsISchema.h"
 #include "nsCOMArray.h"
@@ -73,7 +73,7 @@ enum nsXFormsModelEvent {
   eEvent_ComputeException
 };
 
-class nsXFormsModelElement : public nsIXTFGenericElement,
+class nsXFormsModelElement : public nsXFormsStubElement,
                              public nsIModelElementPrivate,
                              public nsISchemaLoadListener,
                              public nsIDOMLoadListener
@@ -81,14 +81,21 @@ class nsXFormsModelElement : public nsIXTFGenericElement,
 public:
   nsXFormsModelElement() NS_HIDDEN;
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXTFELEMENT
-  NS_DECL_NSIXTFGENERICELEMENT
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXFORMSMODELELEMENT
   NS_DECL_NSIMODELELEMENTPRIVATE
   NS_DECL_NSISCHEMALOADLISTENER
   NS_DECL_NSIWEBSERVICEERRORHANDLER
   NS_DECL_NSIDOMEVENTLISTENER
+
+  // nsIXTFGenericElement overrides
+  NS_IMETHOD OnDestroyed();
+  NS_IMETHOD GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray);
+  NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument);
+  NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewDocument);
+  NS_IMETHOD DoneAddingChildren();
+  NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
+  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
   // nsIDOMLoadListener
   NS_IMETHOD Load(nsIDOMEvent* aEvent);
