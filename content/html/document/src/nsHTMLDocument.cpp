@@ -380,13 +380,7 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mLoadFlags = nsIRequest::LOAD_NORMAL;
 
   nsDocument::ResetToURI(aURI, aLoadGroup);
-  BaseResetToURI(aURI);
-}
 
-
-void
-nsHTMLDocument::BaseResetToURI(nsIURI *aURI)
-{
   nsresult rv = NS_OK;
 
   InvalidateHashTables();
@@ -403,37 +397,10 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURI)
   mImageMaps.Clear();
   mForms = nsnull;
 
-  if (aURI) {
-    if (!mAttrStyleSheet) {
-      rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURI, this);
-    }
-    else {
-      rv = mAttrStyleSheet->Reset(aURI);
-    }
-    if (NS_SUCCEEDED(rv)) {
-      // tell the world about our new style sheet
-      AddStyleSheet(mAttrStyleSheet, 0);
-
-      if (!mStyleAttrStyleSheet) {
-        rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet),
-                                     aURI, this);
-      }
-      else {
-        rv = mStyleAttrStyleSheet->Reset(aURI);
-      }
-      if (NS_SUCCEEDED(rv)) {
-        // tell the world about our new style sheet
-        AddStyleSheet(mStyleAttrStyleSheet, 0);
-      }
-    }
-  }
-
   NS_ASSERTION(!mWyciwygChannel,
                "nsHTMLDocument::Reset() - Wyciwyg Channel  still exists!");
 
   mWyciwygChannel = nsnull;
-
-  mBaseTarget.Truncate();
 
   // Make the content type default to "text/html", we are a HTML
   // document, after all. Once we start getting data, this may be
@@ -1231,18 +1198,6 @@ nsHTMLDocument::InternalGetNumberOfStyleSheets() const
   --count; // for the attr sheet
   NS_ASSERTION(count >= 0, "Why did we end up with a negative count?");
   return count;
-}
-
-void
-nsHTMLDocument::GetBaseTarget(nsAString& aTarget) const
-{
-  aTarget.Assign(mBaseTarget);
-}
-
-void
-nsHTMLDocument::SetBaseTarget(const nsAString& aTarget)
-{
-  mBaseTarget = aTarget;
 }
 
 NS_IMETHODIMP

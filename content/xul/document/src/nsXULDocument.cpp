@@ -525,42 +525,6 @@ nsXULDocument::SetContentType(const nsAString& aContentType)
     // application/vnd.mozilla.xul+xml
 }
 
-NS_IMETHODIMP
-nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
-{
-    nsresult rv;
-
-    // XXXbz this is similar to code in nsHTMLDocument and
-    // nsXMLDocument; move up to nsDocument?
-    // Delete references to style sheets - this should be done in superclass...
-    PRInt32 i = mStyleSheets.Count();
-    while (--i >= 0) {
-        mStyleSheets.ObjectAt(i)->SetOwningDocument(nsnull);
-    }
-    mStyleSheets.Clear();
-
-    // Create an HTML style sheet for the HTML content.
-    rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), anURL, this);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("unable to add HTML style sheet");
-        return rv;
-    }
-
-    AddStyleSheet(mAttrStyleSheet, 0);
-
-    // Create an inline style sheet for inline content that contains a style
-    // attribute.
-    rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet), anURL, this);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("unable to add inline style sheet");
-        return rv;
-    }
-
-    AddStyleSheet(mStyleAttrStyleSheet, 0);
-
-    return NS_OK;
-}
-
 nsresult
 nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
@@ -575,7 +539,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURI));
     if (NS_FAILED(rv)) return rv;
 
-    rv = PrepareStyleSheets(mDocumentURI);
+    rv = ResetStylesheetsToURI(mDocumentURI);
     if (NS_FAILED(rv)) return rv;
 
     RetrieveRelevantHeaders(aChannel);

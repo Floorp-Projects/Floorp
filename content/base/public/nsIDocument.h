@@ -535,6 +535,9 @@ public:
   }
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
+  /**
+   * Reset this document to aURI and aLoadGroup.  aURI must not be null.
+   */
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup) = 0;
 
   virtual void AddReference(void *aKey, nsISupports *aReference) = 0;

@@ -226,16 +226,6 @@ void
 nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsDocument::Reset(aChannel, aLoadGroup);
-  nsCOMPtr<nsIURI> url;
-  if (aChannel) {
-    nsresult result = aChannel->GetURI(getter_AddRefs(url));
-    if (NS_FAILED(result))
-      return;
-  }
-
-  SetDefaultStylesheets(url);
-
-  mBaseTarget.Truncate();
 
   mScriptContext = nsnull;
 }
@@ -1025,48 +1015,6 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   }
 
   return CallQueryInterface(content, aReturn);
-}
-
-nsresult
-nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
-{
-  if (!aUrl) {
-    return NS_OK;
-  }
-
-  // XXXbz this code is very similar to the HTMLDocument code; should merge!
-  if (mAttrStyleSheet) {
-    mAttrStyleSheet->SetOwningDocument(nsnull);
-  }
-  if (mStyleAttrStyleSheet) {
-    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
-  }
-
-  nsresult rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aUrl,
-                                     this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet), aUrl,
-                               this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // tell the world about our new style sheets
-  AddStyleSheet(mAttrStyleSheet, 0);
-  AddStyleSheet(mStyleAttrStyleSheet, 0);
-
-  return rv;
-}
-
-void
-nsXMLDocument::SetBaseTarget(const nsAString &aBaseTarget)
-{
-  mBaseTarget.Assign(aBaseTarget);
-}
-
-void
-nsXMLDocument::GetBaseTarget(nsAString &aBaseTarget) const
-{
-  aBaseTarget.Assign(mBaseTarget);
 }
 
 nsICSSLoader*

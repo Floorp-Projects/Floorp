@@ -124,11 +124,6 @@ public:
   NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument) = 0;
 
   /**
-   * Load inline and attribute style sheets
-   */
-  NS_IMETHOD PrepareStyleSheets(nsIURI* aURI) = 0;
-
-  /**
    * Notify the XUL document that a subtree has been added
    */
   NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement) = 0;

@@ -113,9 +113,6 @@ public:
 
   virtual nsICSSLoader* GetCSSLoader();
 
-  virtual void GetBaseTarget(nsAString& aTarget) const;
-  virtual void SetBaseTarget(const nsAString& aTarget);
-
   NS_IMETHOD SetReferrer(const nsAString& aReferrer);
 
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
@@ -259,11 +256,8 @@ protected:
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
 
-  void BaseResetToURI(nsIURI* aURI);
-
   virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
-  nsString mBaseTarget;
   nsString mReferrer;
 
   nsCOMPtr<nsIChannel>     mChannel;

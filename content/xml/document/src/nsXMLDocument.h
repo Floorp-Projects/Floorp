@@ -78,9 +78,6 @@ public:
 
   virtual void EndLoad();
 
-  virtual void GetBaseTarget(nsAString &aBaseTarget) const;
-  virtual void SetBaseTarget(const nsAString &aBaseTarget);
-
   // nsIDOMNode interface
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
@@ -127,13 +124,10 @@ protected:
 
   virtual nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
 
-  nsresult SetDefaultStylesheets(nsIURI* aUrl);
-
   // For additional catalog sheets (if any) needed to layout the XML vocabulary
   // of the document. Catalog sheets are kept at the beginning of our array of
   // style sheets and this counter is used as an offset to distinguish them
   PRInt32 mCatalogSheetCount;
-  nsString mBaseTarget;
 
   nsCOMPtr<nsIEventQueueService> mEventQService;
 
