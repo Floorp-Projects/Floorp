@@ -130,7 +130,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
         nsIStyleContext* parentContext;
         parentFrame->GetStyleContext(nsnull, parentContext);
         if (nsnull != parentContext) {
-          nsStyleSpacing* parentSpacing = (nsStyleSpacing*)parentContext->GetData(eStyleStruct_Spacing);
+          const nsStyleSpacing* parentSpacing = (const nsStyleSpacing*)parentContext->GetStyleData(eStyleStruct_Spacing);
           nsMargin  parentMargin;
           switch (aSpacing) {
             case NS_SPACING_MARGIN:   parentSpacing->CalcMarginFor(parentFrame, parentMargin);  
@@ -553,8 +553,10 @@ public:
 
   virtual void RemapStyle(nsIPresContext* aPresContext);
 
-  virtual nsStyleStruct* GetData(nsStyleStructID aSID);
+  virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
+  virtual nsStyleStruct* GetMutableStyleData(nsStyleStructID aSID);
 
+  virtual void ForceUnique(void);
   virtual void RecalcAutomaticData(nsIPresContext* aPresContext);
 
   virtual void  List(FILE* out, PRInt32 aIndent);
@@ -570,6 +572,7 @@ protected:
   PRUint32          mHashValid: 1;
   PRUint32          mHashValue: 31;
   nsISupportsArray* mRules;
+  PRInt32           mDataCode;
 
   // the style data...
   StyleFontImpl     mFont;
@@ -586,6 +589,8 @@ protected:
 #endif
 };
 
+static PRInt32 gLastDataCode;
+
 #ifdef DEBUG_REFS
 static PRInt32 gInstanceCount;
 static PRInt32 gInstrument = 6;
@@ -597,6 +602,7 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   : mParent((StyleContextImpl*)aParent), // weak ref
     mChild(nsnull),
     mRules(aRules),
+    mDataCode(-1),
     mFont(aPresContext->GetDefaultFont()),
     mColor(),
     mSpacing(),
@@ -721,7 +727,8 @@ nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
     StyleContextImpl* child = mChild;
     PRInt32 ruleCount = aRules->Count();
     do {
-      if (child->GetStyleRuleCount() == ruleCount) {
+      if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
+          (child->GetStyleRuleCount() == ruleCount)) {
         if (child->mRules->Equals(aRules)) {
           result = child;
           NS_ADDREF(result);
@@ -742,6 +749,9 @@ PRBool StyleContextImpl::Equals(const nsIStyleContext* aOther) const
 
   if (other != this) {
     if (mParent != other->mParent) {
+      result = PR_FALSE;
+    }
+    else if (mDataCode != other->mDataCode) {
       result = PR_FALSE;
     }
     else {
@@ -775,7 +785,7 @@ PRUint32 StyleContextImpl::HashValue(void) const
 }
 
 
-nsStyleStruct* StyleContextImpl::GetData(nsStyleStructID aSID)
+const nsStyleStruct* StyleContextImpl::GetStyleData(nsStyleStructID aSID)
 {
   nsStyleStruct*  result = nsnull;
 
@@ -819,6 +829,55 @@ nsStyleStruct* StyleContextImpl::GetData(nsStyleStructID aSID)
   return result;
 }
 
+nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
+{
+  nsStyleStruct*  result = nsnull;
+
+  switch (aSID) {
+    case eStyleStruct_Font:
+      result = &mFont;
+      break;
+    case eStyleStruct_Color:
+      result = &mColor;
+      break;
+    case eStyleStruct_Spacing:
+      result = &mSpacing;
+      break;
+    case eStyleStruct_List:
+      result = &mList;
+      break;
+    case eStyleStruct_Position:
+      result = &mPosition;
+      break;
+    case eStyleStruct_Text:
+      result = &mText;
+      break;
+    case eStyleStruct_Display:
+      result = &mDisplay;
+      break;
+    case eStyleStruct_Table:  // this one gets created lazily
+      if (nsnull == mTable) {
+        mTable = new StyleTableImpl();
+        if (nsnull != mParent) {
+          if (nsnull != mParent->mTable) {
+            mTable->ResetFrom(mParent->mTable, nsnull);
+          }
+        }
+      }
+      result = mTable;
+      break;
+    default:
+      NS_ERROR("Invalid style struct id");
+      break;
+  }
+  if (nsnull != result) {
+    if (0 == mDataCode) {
+      mDataCode = ++gLastDataCode;
+    }
+  }
+  return result;
+}
+
 struct MapStyleData {
   MapStyleData(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext)
   {
@@ -839,6 +898,7 @@ PRBool MapStyleRule(nsISupports* aRule, void* aData)
 
 void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
 {
+  mDataCode = -1;
   if (nsnull != mParent) {
     mFont.ResetFrom(&(mParent->mFont), aPresContext);
     mColor.ResetFrom(&(mParent->mColor), aPresContext);
@@ -861,6 +921,16 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   if ((nsnull != mRules) && (0 < mRules->Count())) {
     MapStyleData  data(this, aPresContext);
     mRules->EnumerateBackwards(MapStyleRule, &data);
+  }
+  if (-1 == mDataCode) {
+    mDataCode = 0;
+  }
+}
+
+void StyleContextImpl::ForceUnique(void)
+{
+  if (mDataCode <= 0) {
+    mDataCode = ++gLastDataCode;
   }
 }
 
