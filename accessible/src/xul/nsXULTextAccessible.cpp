@@ -60,3 +60,11 @@ NS_IMETHODIMP nsXULTextAccessible::GetAccName(nsAString& _retval)
   }
   return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP nsXULTextAccessible::GetAccState(PRUint32 *_retval)
+{
+  // Labels and description can only have read only state
+  // They are not focusable or selectable
+  *_retval = STATE_READONLY;
+  return NS_OK;
+}
