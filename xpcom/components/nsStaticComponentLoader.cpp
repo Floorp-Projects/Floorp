@@ -210,7 +210,7 @@ nsStaticComponentLoader::GetFactory(const nsCID &aCID, const char *aLocation,
 nsresult
 NS_NewStaticComponentLoader(nsIComponentLoader **retval)
 {
-    *retval = NS_STATIC_CAST(nsIComponentLoader *, 
-                             new nsStaticComponentLoader);
+    NS_IF_ADDREF(*retval = NS_STATIC_CAST(nsIComponentLoader *, 
+                                          new nsStaticComponentLoader));
     return *retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

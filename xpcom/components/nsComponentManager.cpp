@@ -327,18 +327,17 @@ nsresult nsComponentManagerImpl::Init(void)
     mNLoaderData++;
 
 #ifdef ENABLE_STATIC_COMPONENT_LOADER
-    mLoaderData[mNLoaderData].type = PL_strdup(staticComponentType);
-    mLoaderData[mNLoaderData].loader = mStaticComponentLoader;
-    NS_ADDREF(mLoaderData[mNLoaderData].loader);
-    mNLoaderData++;
-
     if (mStaticComponentLoader == nsnull) {
         extern nsresult NS_NewStaticComponentLoader(nsIComponentLoader **);
         NS_NewStaticComponentLoader(&mStaticComponentLoader);
         if (!mStaticComponentLoader)
             return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(mStaticComponentLoader);
     }
+
+    mLoaderData[mNLoaderData].type = PL_strdup(staticComponentType);
+    mLoaderData[mNLoaderData].loader = mStaticComponentLoader;
+    NS_ADDREF(mLoaderData[mNLoaderData].loader);
+    mNLoaderData++;
 #endif
 
 #ifdef USE_REGISTRY
