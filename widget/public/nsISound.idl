@@ -29,5 +29,9 @@ interface nsIURL;
 interface nsISound : nsISupports
 {
   void play(in nsIURL aURL);
+  /**
+   * for playing system sounds
+   */
+  void playSystemSound(in string soundAlias);  
   void beep();
 };

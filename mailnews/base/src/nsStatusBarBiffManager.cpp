@@ -130,45 +130,11 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
         if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
           nsCOMPtr<nsISound> sound = do_CreateInstance("@mozilla.org/sound;1");
           if (sound) {
-              PRBool playDefaultSound = PR_TRUE;
-              rv = pref->GetBoolPref(PREF_PLAY_DEFAULT_SOUND, &playDefaultSound);
-              if (NS_SUCCEEDED(rv) && !playDefaultSound) {
-                nsCOMPtr<nsILocalFile> soundFile;
-                rv = pref->GetFileXPref(PREF_USER_SPECIFIED_SOUND_FILE, getter_AddRefs(soundFile));
-                if (NS_SUCCEEDED(rv) && soundFile) {
-                  nsCOMPtr <nsIFile> file = do_QueryInterface(soundFile);
-                  if (file) {
-                    rv = NS_NewFileURI(getter_AddRefs(uri), file);
-                    if (NS_FAILED(rv))
-                        return rv;
-                  }
-                  else {
-                    rv = NS_ERROR_FAILURE;
-                  }
-                }
-              }
-
-              if ((NS_FAILED(rv) || playDefaultSound) && nsCRT::strlen(mDefaultSoundURL.get())) {
-                rv = NS_NewURI(getter_AddRefs(uri), mDefaultSoundURL.get());
-              }
-            }
-
-            nsXPIDLCString soundURLSpec;
-            if (uri)
-              rv = uri->GetSpec(getter_Copies(soundURLSpec));
-            else
-              rv = NS_ERROR_FAILURE;
-
-            nsCOMPtr<nsIURL> soundURL(do_QueryInterface(uri));
-            if (NS_SUCCEEDED(rv) && soundURL && nsCRT::strlen(soundURLSpec.get())) {
-              sound->Play(soundURL);
-            }
-            else {
-              sound->Beep();
-            }
+            rv = sound->PlaySystemSound("Mailbeep");
           } 
         }
       }
+    }
     
 	nsCOMPtr<nsIWindowMediator> windowMediator = 
 	         do_GetService(kWindowMediatorCID, &rv);

@@ -92,7 +92,7 @@ void nsSound::PurgeLastSound() {
   }
 }
 
-NS_METHOD nsSound::Beep()
+NS_IMETHODIMP nsSound::Beep()
 {
   ::MessageBeep(0);
 
@@ -140,7 +140,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(nsIURL *aURL)
+NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 {
   nsresult rv;
 
@@ -154,5 +154,15 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
   rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);
 
   return rv;
+}
+
+
+NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
+{
+  PurgeLastSound();
+
+  ::PlaySound(aSoundAlias, nsnull, SND_ALIAS | SND_ASYNC);
+
+  return NS_OK;
 }
 

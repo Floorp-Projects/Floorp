@@ -109,3 +109,8 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
   return rv;
 }
 
+NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
+{
+  return Beep();
+}
+
