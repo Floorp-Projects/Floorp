@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <!-- Target Application this extension can install into, 
+        with minimum and maximum supported versions. --> 
+    <em:targetApplication>
+      <Description>
+        <!-- thunderbird -->
+        <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+        <em:minVersion>0.6</em:minVersion>
+        <em:maxVersion>1.0+</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:id>{e2fda1a4-762b-4020-b5ad-a41df1933103}</em:id>
+    <em:name>Lightning</em:name>
+    <em:version>0.0.1+</em:version>
+
+    <em:description>An experimental calendar extension for Thunderbird</em:description>
+    <em:creator>Mozilla Foundation Calendar Squad</em:creator>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:lightning.jar">
+        <em:package>content/lightning/</em:package>
+      </Description>
+      <Description about="urn:mozilla:extension:file:en-US.jar">
+        <em:locale>locale/en-US/lightning/</em:locale>
+      </Description>
+    </em:file>
+  </Description>
+</RDF>

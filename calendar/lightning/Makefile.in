@@ -1,0 +1,13 @@
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= lightning
+export XPI_NAME	= lightning
+XPI_PKGNAME	= lightning
+DIRS		= $(topsrcdir)/calendar/libical $(topsrcdir)/calendar/base
+
+include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,7 @@
+lightning.jar:
+* content/lightning/contents.rdf				(content/contents.rdf)
+  content/lightning/tools-overlay.xul				(content/tools-overlay.xul)
+
+en-US.jar:
+  locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
+* locale/en-US/lightning/contents.rdf				(locale/contents.rdf)
