@@ -585,6 +585,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
         loader->SupportImageWithMimeType(content_type, &isReg);
         if (isReg)
           clazz = (MimeObjectClass *)&mimeInlineImageClass;
+        else
+          clazz = (MimeObjectClass *)&mimeExternalObjectClass;
     }
     
 #ifdef ENABLE_SMIME
