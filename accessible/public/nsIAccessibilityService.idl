@@ -38,6 +38,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsISupports aPresShell);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
+  nsIAccessible createXULCheckboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
