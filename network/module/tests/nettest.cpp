@@ -42,7 +42,6 @@ NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
 
 /* XXX: Don't include net.h... */
 extern "C" {
-extern int  NET_PollSockets();
 extern void NET_ToggleTrace();
 };
 
@@ -236,8 +235,6 @@ int main(int argc, char **argv)
                 DispatchMessage(&msg);
             }
 #endif
-            
-            (void) NET_PollSockets();
         }
         
         pURL->Release();
