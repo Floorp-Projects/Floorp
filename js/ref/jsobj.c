@@ -1750,7 +1750,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     pval = LOCKED_OBJ_GET_SLOT(obj, slot);
 
     /* Evil overloaded operator assign() hack. */
-    if (JSVAL_IS_OBJECT(pval)) {
+    if ((!JSVERSION_IS_ECMA(cx->version)) && (JSVAL_IS_OBJECT(pval))) {
 	assignobj = JSVAL_TO_OBJECT(pval);
 	if (assignobj) {
 	    older = JS_SetErrorReporter(cx, NULL);
