@@ -44,6 +44,7 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\base                  \
       -I$(PUBLIC)\dom                   \
       -I$(PUBLIC)\js                    \
+      -I$(PUBLIC)\pref                  \
       -I$(PUBLIC)\appcores              \
       -I$(PUBLIC)\netlib
 
