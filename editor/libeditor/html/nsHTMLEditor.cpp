@@ -149,12 +149,6 @@ static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
-#if defined(NS_DEBUG) && defined(DEBUG_buster)
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
-
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
@@ -909,8 +903,6 @@ nsHTMLEditor::GetBlockSection(nsIDOMNode *aChild,
     result = (*aRightNode)->GetNextSibling(getter_AddRefs(sibling)); 
   }
   NS_ADDREF((*aRightNode));
-  if (gNoisy) { printf("GetBlockSection returning %p %p\n", 
-                       (void*)(*aLeftNode), (void*)(*aRightNode)); }
 
   return result;
 }
@@ -966,7 +958,6 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
             result = GetBlockSection(currentNode,
                                      getter_AddRefs(leftNode),
                                      getter_AddRefs(rightNode));
-            if (gNoisy) {printf("currentNode %p has block content (%p,%p)\n", (void*)currentNode.get(), (void*)leftNode.get(), (void*)rightNode.get());}
             if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
             {
               // add range to the list if it doesn't overlap with the previous range
@@ -979,12 +970,10 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
                 blockParentOfLastStartNode = do_QueryInterface(GetBlockNodeParent(lastStartNode));
                 if (blockParentOfLastStartNode)
                 {
-                  if (gNoisy) {printf("lastStartNode %p has block parent %p\n", (void*)lastStartNode.get(), (void*)blockParentOfLastStartNode.get());}
                   nsCOMPtr<nsIDOMElement> blockParentOfLeftNode;
                   blockParentOfLeftNode = do_QueryInterface(GetBlockNodeParent(leftNode));
                   if (blockParentOfLeftNode)
                   {
-                    if (gNoisy) {printf("leftNode %p has block parent %p\n", (void*)leftNode.get(), (void*)blockParentOfLeftNode.get());}
                     if (blockParentOfLastStartNode==blockParentOfLeftNode) {
                       addRange = PR_FALSE;
                     }
@@ -993,7 +982,6 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
               }
               if (PR_TRUE==addRange) 
               {
-                if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", (void*)leftNode.get());}
                 nsCOMPtr<nsIDOMRange> range;
                 result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
                                                             NS_GET_IID(nsIDOMRange), getter_AddRefs(range));
@@ -4834,7 +4822,6 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 
 void nsHTMLEditor::HandleEventListenerError()
 {
-  if (gNoisy) { printf("failed to add event listener\n"); }
   // null out the nsCOMPtrs
   mKeyListenerP = nsnull;
   mMouseListenerP = nsnull;

@@ -66,12 +66,6 @@
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
-#if defined(NS_DEBUG) && defined(DEBUG_buster)
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
-
 // Add the CSS style corresponding to the HTML inline style defined
 // by aProperty aAttribute and aValue to the selection
 NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty, 
@@ -926,16 +920,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
-/*
-  if (gNoisy) 
-  { 
-    nsAutoString propString;
-    aProperty->ToString(propString);
-    char *propCString = ToNewCString(propString);
-    if (gNoisy) { printf("nsTextEditor::GetTextProperty %s\n", propCString); }
-    nsCRT::free(propCString);
-  }
-*/
+
   nsresult result;
   *aAny=PR_FALSE;
   *aAll=PR_TRUE;
@@ -1023,7 +1008,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       if (node && nsTextEditUtils::IsBody(node))
         break;
 
-      //if (gNoisy) { printf("  checking node %p\n", content.get()); }
       nsCOMPtr<nsIDOMCharacterData>text;
       text = do_QueryInterface(content);
       
@@ -1045,7 +1029,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           text->GetLength(&count);
           if (startOffset==(PRInt32)count) 
           {
-            //if (gNoisy) { printf("  skipping node %p\n", content.get()); }
             skipNode = PR_TRUE;
           }
         }
@@ -1060,11 +1043,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         content->CanContainChildren(canContainChildren);
         if (canContainChildren)
         {
-          //if (gNoisy) { printf("  skipping non-leaf node %p\n", content.get()); }
           skipNode = PR_TRUE;
-        }
-        else {
-          //if (gNoisy) { printf("  testing non-text leaf node %p\n", content.get()); }
         }
       }
       if (!skipNode)
@@ -1129,7 +1108,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   { // make sure that if none of the selection is set, we don't report all is set
     *aAll = PR_FALSE;
   }
-  //if (gNoisy) { printf("  returning first=%d any=%d all=%d\n", *aFirst, *aAny, *aAll); }
   return result;
 }
 

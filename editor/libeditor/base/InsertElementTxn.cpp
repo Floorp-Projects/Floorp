@@ -44,8 +44,6 @@
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 
@@ -79,6 +77,7 @@ InsertElementTxn::~InsertElementTxn()
 
 NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) 
   { 
     nsCOMPtr<nsIContent>nodeAsContent = do_QueryInterface(mNode);
@@ -91,6 +90,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
            parentAsContent.get(), mOffset); 
     nsMemory::Free(nodename);
   }
+#endif
 
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
@@ -138,8 +138,11 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP InsertElementTxn::UndoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("%p Undo Insert Element of %p into parent %p at offset %d\n", 
                        this, mNode.get(), mParent.get(), mOffset); }
+#endif
+
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNode> resultNode;

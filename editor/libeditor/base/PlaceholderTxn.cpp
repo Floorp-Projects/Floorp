@@ -43,13 +43,6 @@
 #include "nsIPresShell.h"
 #include "IMETextTxn.h"
 
-#if defined(NS_DEBUG) && defined(DEBUG_buster)
-static PRBool gNoisy = PR_TRUE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
-
-
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
                                     mAbsorb(PR_TRUE), 
                                     mForwarding(nsnull),
@@ -100,7 +93,6 @@ NS_IMETHODIMP PlaceholderTxn::Init(nsIAtom *aName, nsSelectionState *aSelState, 
 
 NS_IMETHODIMP PlaceholderTxn::DoTransaction(void)
 {
-  if (gNoisy) { printf("PlaceholderTxn Do\n"); }
   return NS_OK;
 }
 
@@ -205,7 +197,6 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
 //  efficiency hack: no need to remember selection here, as we haven't yet 
 //  finished the inital batch and we know we will be told when the batch ends.
 //  we can remeber the selection then.
-    if (gNoisy) { printf("Placeholder txn assimilated %p\n", (void*)aTransaction); }
   }
   else
   { // merge typing or IME or deletion transactions if the selection matches
