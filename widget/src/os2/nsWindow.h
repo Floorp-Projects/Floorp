@@ -42,7 +42,6 @@
 #include "nsSwitchToUIThread.h"
 
 class nsIMenuBar;
-//class nsContextMenu;
 
 // Base widget class.
 // This is abstract.  Controls (labels, radio buttons, listboxen) derive
@@ -161,7 +160,6 @@ class nsWindow : public nsBaseWidget,
    void   NS2PM_PARENT( POINTL &ptl);
    void   NS2PM( POINTL &ptl);
    void   NS2PM( RECTL &rcl);
-//   void   SetContextMenu( nsContextMenu *aMenu);
 
 protected:
     static  BOOL            DealWithPopups ( ULONG inMsg, MRESULT* outResult ) ;
@@ -246,7 +244,6 @@ protected:
    nsToolkit     *mOS2Toolkit;
    nsFont        *mFont;
    nsIMenuBar    *mMenuBar;
-//   nsContextMenu *mActiveMenu; // record this so we can send it events
 
    // State of the window, used to emulate windows better...
    enum nsWindowState

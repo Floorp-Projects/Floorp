@@ -60,7 +60,6 @@
 #include "nsHashtable.h"
 //#include "nsMenu.h"
 #include "nsDragService.h"
-//#include "nsContextMenu.h"
 
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
