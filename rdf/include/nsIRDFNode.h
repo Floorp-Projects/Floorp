@@ -44,6 +44,8 @@
  *  }
  *
  */
+
+// Guha : would be very useful to declare an Equals method on this
 class nsIRDFNode : public nsISupports {
 public:
 };
