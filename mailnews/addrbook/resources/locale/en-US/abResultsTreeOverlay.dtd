@@ -23,5 +23,13 @@ Rights Reserved.
 	<!ENTITY emailColumn.label "Email">
 	<!ENTITY workPhoneColumn.label "Work Phone">
 	<!ENTITY organizationColumn.label "Organization">
-        <!ENTITY composeEmail.label "Compose E-mail To...">
-        <!ENTITY composeEmail.accesskey "E">
+  <!ENTITY composeEmail.label "Compose Email To...">
+  <!ENTITY composeEmail.accesskey "C">
+  <!ENTITY deleteAddrBookCard.label "Delete">
+  <!ENTITY deleteAddrBookCard.accesskey "D">
+  <!ENTITY newAddrBookCard.label "New Card...">
+  <!ENTITY newAddrBookCard.accesskey "N">
+  <!ENTITY newAddrBookMailingList.label "New Mailing List...">
+  <!ENTITY newAddrBookMailingList.accesskey "M">
+  <!ENTITY addrBookCardProperties.label "Card Properties...">
+  <!ENTITY addrBookCardProperties.accesskey "P">

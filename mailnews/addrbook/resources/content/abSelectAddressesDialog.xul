@@ -100,7 +100,7 @@ Rights Reserved.
     <vbox id="rightColumnButtonBox">
       <vbox flex="50%">
         <spacer class="third-column-spacer"/>
-        <button id="new" label="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard()"/> 
+        <button id="new" label="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
         <spacer class="third-column-spacer"/>
         <button id="edit" label="&editButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
         <spacer flex="100%"/>

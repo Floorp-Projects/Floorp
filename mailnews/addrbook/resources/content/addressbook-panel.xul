@@ -50,6 +50,12 @@
   </script>
   <popup id="composeMail">
     <menuitem label="&composeEmail.label;" accesskey="&composeEmail.accesskey;" oncommand="AbNewMessage();" default="true"/>
+    <menuitem label="&deleteAddrBookCard.label;" accesskey="&deleteAddrBookCard.accesskey;" oncommand="AbDelete();"/>
+    <menuseparator/>
+    <menuitem label="&newAddrBookCard.label;" accesskey="&newAddrBookCard.accesskey;" oncommand="AbNewCard('addressbookList');"/>
+    <menuitem label="&newAddrBookMailingList.label;" accesskey="&newAddrBookMailingList.accesskey;" oncommand="AbNewList('addressbookList');"/>
+    <menuseparator/>
+    <menuitem label="&addrBookCardProperties.label;" accesskey="&addrBookCardProperties.accesskey;" oncommand="AbEditCard();"/>
   </popup>
   <vbox id="results_box" flex="1">
     <hbox id="panel-bar" class="toolbar">

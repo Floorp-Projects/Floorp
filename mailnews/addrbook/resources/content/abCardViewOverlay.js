@@ -127,15 +127,28 @@ function DisplayCardViewPane(abNode)
 	var separator = "";
 	if ( card.lastName && card.firstName )
 	{
-		if ( cvPrefs.displayLastNameFirst )
-		 	separator = cvPrefs.lastFirstSeparator;
-		else
+    // get seperator for display format "First Last"
+    if ( cvPrefs.nameColumn == kFirstNameFirst ) {
 		 	separator = cvPrefs.firstLastSeparator;
 	}
-	if ( cvPrefs.displayLastNameFirst )
-		name = card.lastName + separator + card.firstName;
-	else
+    // for seperator all other display formats
+    else {
+      separator = cvPrefs.lastFirstSeparator;
+    }
+  }
+
+  switch (cvPrefs.nameColumn) { 
+    case kFirstNameFirst:
 		name = card.firstName + separator + card.lastName;
+      break;
+    case kLastNameFirst: 
+      name = card.lastName + separator + card.firstName;
+      break;
+    case kDisplayName:
+    default:
+      name = card.displayName;
+      break;
+  }
 
 	var cardTitle = card.name;
 	var nameHeader = name;

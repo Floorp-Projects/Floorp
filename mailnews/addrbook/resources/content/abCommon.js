@@ -144,12 +144,23 @@ function SetupCommandUpdateHandlers()
     resultsTree.controllers.appendController(ResultsPaneController);
 }
 
-
-function AbNewCard()
+function AbDelete()
 {
-  var selectedAB = 0;
-  if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
-    selectedAB = dirTree.selectedItems[0].getAttribute("id");
+  var resultsTree = document.getElementById('resultsTree');
+  if ( resultsTree )
+  {
+    //get the selected elements
+    var cardList = resultsTree.selectedItems;
+    // get AB service
+    addressbook = Components.classes["@mozilla.org/addressbook;1"].getService(Components.interfaces.nsIAddressBook);
+    // delete selected cards
+    addressbook.deleteCards(resultsTree, resultsTree, cardList);
+  }
+}
+
+function AbNewCard(abListItem)
+{
+  var selectedAB = GetSelectedAddressBookDirID(abListItem);
 
   goNewCardDialog(selectedAB);
 }
@@ -495,18 +506,32 @@ function UpdateSortIndicator(column,sortDirection)
   }
 }
 
-function AbNewList()
+function AbNewList(abListItem)
 {
-  var selectedAB = 0;
-  if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
-    selectedAB = dirTree.selectedItems[0].getAttribute("id");
+  var selectedAB = GetSelectedAddressBookDirID(abListItem);
 
   window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
                     "",
-                    "chrome,titlebar,resizeable=no",
+                    "chrome,titlebar,centerscreen,resizeable=no",
                     {selectedAB:selectedAB});
 }
 
+function GetSelectedAddressBookDirID(abListItem)
+{
+  var selectedAB = 0;
+  var abDirEntries = document.getElementById(abListItem);
+
+  if (abDirEntries && abDirEntries.selectedItems && (abDirEntries.selectedItems.length == 1))
+    selectedAB = abDirEntries.selectedItems[0].getAttribute("id");
+
+  // request could be coming from the context menu of addressbook panel in sidebar
+  // addressbook dirs are listed as menu item. So, get the selected item id.
+  if (!selectedAB && abDirEntries && abDirEntries.selectedItem) {
+    selectedAB = abDirEntries.selectedItem.getAttribute("id");
+  }
+
+  return selectedAB;
+}
 
 function goEditListDialog(abURI, listURI)
 {
@@ -514,4 +539,20 @@ function goEditListDialog(abURI, listURI)
                     "",
                     "chrome,titlebar,resizeable=no",
                     {abURI:abURI, listURI:listURI});
+}
+
+function goNewCardDialog(selectedAB)
+{
+  window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+                    "",
+                    "chrome,resizeable=no,titlebar,modal,centerscreen",
+                    {selectedAB:selectedAB});
+}
+
+function goEditCardDialog(abURI, card, okCallback, abCardURI)
+{
+  window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
+					  "",
+					  "chrome,resizeable=no,modal,titlebar,centerscreen",
+					  {abURI:abURI, card:card, okCallback:okCallback, abCardURI:abCardURI});
 }

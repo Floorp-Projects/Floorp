@@ -5,6 +5,12 @@ var gAddressBookBundle;
 
 var gTotalCardsElement = null;
 
+// Constants that correspond to choices
+// in Address Book->View -->Show Name as
+const kDisplayName = 0;
+const kLastNameFirst = 1;
+const kFirstNameFirst = 2;
+
 var addressBookObserver = {
   onAssert: function(aDataSource, aSource, aProperty, aTarget)
   {
@@ -119,13 +125,13 @@ function GetCurrentPrefs()
 	var menuitemID;
 	switch ( cvPrefs.nameColumn )
 	{
-		case 2:
+		case kFirstNameFirst:
 			menuitemID = 'firstLastCmd';
 			break;
-		case 1:
+		case kLastNameFirst:
 			menuitemID = 'lastFirstCmd';
 			break;
-		case 0:
+		case kDisplayName:
 		default:
 			menuitemID = 'displayNameCmd';
 			break;
@@ -143,13 +149,13 @@ function SetNameColumn(cmd)
 	switch ( cmd )
 	{
 		case 'firstLastCmd':
-			prefValue = 2;
+			prefValue = kFirstNameFirst;
 			break;
 		case 'lastFirstCmd':
-			prefValue = 1;
+			prefValue = kLastNameFirst;
 			break;
 		case 'displayNameCmd':
-			prefValue = 0;
+			prefValue = kDisplayName;
 			break;
 	}
 	

@@ -118,10 +118,10 @@ Rights Reserved.
 	<menubar id="ab-menubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
 		<menu id="menu_File">
 			<menupopup id="menu_FilePopup">
-        <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
+        <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard('dirTree')"/>
 				<menu id="menu_New">
 					<menupopup id="menu_NewPopup">
-            <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList()"/>
+            <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList('dirTree')"/>
             <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
 						<menuseparator/>
 						<menuitem id="menu_newNavigator"/>
@@ -220,8 +220,8 @@ Rights Reserved.
 	<!-- toolbar -->
 		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&addressbookToolbar.tooltip;">
 			<hbox id="toolbar_button_box">
-        <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
             	<toolbarseparator class="toolbarseparator-primary"/>
         <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
         <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>

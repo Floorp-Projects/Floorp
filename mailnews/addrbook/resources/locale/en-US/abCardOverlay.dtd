@@ -37,7 +37,7 @@ Rights Reserved.
 		<!ENTITY HomePhone.label		"Home:"> 
 		<!ENTITY FaxNumber.label		"Fax:"> 
 		<!ENTITY PagerNumber.label		"Pager:"> 
-		<!ENTITY CellularNumber.label	"Cellular:"> 
+		<!ENTITY CellularNumber.label	"Mobile:"> 
 	
 <!ENTITY Address.tab			"Address"> 
 	<!ENTITY Home.box				"Home"> 
