@@ -25,15 +25,20 @@ bool XMLTag::getValue(const String &name, String &value)
 XMLLexer::XMLLexer(const char *filename)
 {
     FILE *f = fopen(filename, "r");
-    fseek(f, 0, SEEK_END);
-    uint32 length = ftell(f);
-    base = new char[length + 1];
-    fseek(f, 0, SEEK_SET);
-    fread(base, 1, length, f);
-    fclose(f);
-    base[length] = '\0';
-    p = base;
-    end = base + length;
+    if (f) {
+        fseek(f, 0, SEEK_END);
+        long position = ftell(f);
+        if (position > 0) {
+            uint32 length = uint32(position);
+            base = new char[length + 1];
+            fseek(f, 0, SEEK_SET);
+            fread(base, 1, length, f);
+            fclose(f);
+            base[length] = '\0';
+            p = base;
+            end = base + length;
+        }
+    }
 }
 
 void XMLLexer::beginRecording(String &s)
@@ -51,7 +56,7 @@ void XMLLexer::recordChar(char c)
 			recordPos++;
 			return;
 		} else {
-			insertChars(*recordString, 0, recordBase, recordPos - recordBase);
+			insertChars(*recordString, 0, recordBase, uint32(recordPos - recordBase));
 			recordPos = NULL;
 		}
 	}
@@ -63,7 +68,7 @@ String &XMLLexer::endRecording()
 	String *rs = recordString;
 	ASSERT(rs);
 	if (recordPos)
-		insertChars(*rs, 0, recordBase, recordPos - recordBase);
+		insertChars(*rs, 0, recordBase, uint32(recordPos - recordBase));
 	recordString = NULL;
 	return *rs;
 }
