@@ -18,7 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
-# 
+#
 
 #################
 #Bugzilla Test 4#
