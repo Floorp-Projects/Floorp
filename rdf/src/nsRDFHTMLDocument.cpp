@@ -43,9 +43,9 @@ public:
     virtual ~RDFHTMLDocumentImpl();
 
 protected:
-    virtual nsresult CreateChild(nsIRDFNode* property,
-                                 nsIRDFNode* value,
-                                 nsIRDFContent*& result);
+    virtual nsresult AddChild(nsIRDFContent* parent,
+                              nsIRDFNode* property,
+                              nsIRDFNode* value);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -59,9 +59,9 @@ RDFHTMLDocumentImpl::~RDFHTMLDocumentImpl(void)
 }
 
 nsresult
-RDFHTMLDocumentImpl::CreateChild(nsIRDFNode* property,
-                                 nsIRDFNode* value,
-                                 nsIRDFContent*& result)
+RDFHTMLDocumentImpl::AddChild(nsIRDFContent* parent,
+                              nsIRDFNode* property,
+                              nsIRDFNode* value)
 {
     nsresult rv;
     nsIRDFContent* child = nsnull;
@@ -96,9 +96,6 @@ RDFHTMLDocumentImpl::CreateChild(nsIRDFNode* property,
 
         if (NS_FAILED(rv = child->SetAttribute("ID", s, PR_FALSE)))
             goto done;
-
-        result = child;
-        NS_ADDREF(result);
     }
     else {
         // Otherwise, it's not a tree property. So we'll just create a
@@ -115,10 +112,9 @@ RDFHTMLDocumentImpl::CreateChild(nsIRDFNode* property,
 
         if (NS_FAILED(rv = AttachTextNode(child, value)))
             goto done;
-
-        result = child;
-        NS_ADDREF(result);
     }
+
+    rv = parent->AppendChildTo(child, PR_TRUE);
 
 done:
     NS_IF_RELEASE(child);

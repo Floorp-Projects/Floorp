@@ -57,7 +57,7 @@ public:
    * "content children," that is, a set of nsIRDFContent elements that
    * should appear as the node's children in the content model.
    */
-  NS_IMETHOD CreateChildren(nsIRDFContent* element, nsISupportsArray* children) = 0;
+  NS_IMETHOD CreateChildren(nsIRDFContent* element) = 0;
 
   // XXX these should probably be strings so you can mess with them
   // via the DOM.
