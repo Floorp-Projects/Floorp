@@ -33,7 +33,6 @@ class nsIEditorCallback;
 class nsISupportsArray;
 class nsStringArray;
 class nsIAtom;
-class nsIInputStream;
 class nsIOutputStream;
 
 /**
@@ -84,8 +83,12 @@ public:
   NS_IMETHOD Paste()=0;
 
   NS_IMETHOD Insert(nsString &aInputString)=0;
+
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
   NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
+
+  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
+  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
 
 // Miscellaneous Methods
   /*

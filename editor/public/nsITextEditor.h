@@ -30,8 +30,7 @@
 class nsIEditorCallback;
 class nsISupportsArray;
 class nsIAtom;
-class nsIInputStream;
-//class nsIOutputStream;
+class nsIOutputStream;
 class nsString;
 
 /**
@@ -271,8 +270,12 @@ public:
 // Input/Output
   // nsString will be a stream, as soon as I can figure out what kind of stream we should be using
   NS_IMETHOD Insert(nsString& aInputString)=0;
+
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
   NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
+  
+  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
+  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
 
 // Miscellaneous Methods
   /*
