@@ -107,7 +107,7 @@
 
     <menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
       <menupopup id="formatMenuPopup">
-        <menuitem id="objectProperties" hidden="true"/>
+        <menuitem id="objectProperties"/>
         <menuitem id="colorsAndBackground"/>
         <menuitem id="pageProperties"/>
       </menupopup>
