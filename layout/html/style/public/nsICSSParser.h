@@ -26,6 +26,7 @@ class nsIUnicharInputStream;
 class nsIURL;
 class nsString;
 class nsICSSDeclaration;
+class nsICSSLoader;
 
 #define NS_ICSS_PARSER_IID    \
 { 0xcc9c0610, 0x968c, 0x11d1, \
@@ -44,6 +45,9 @@ public:
 
   // Set whether or not tags & classes are case sensitive or uppercased
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
+
+  // Set loader to use for child sheets
+  NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader) = 0;
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURL*                aInputURL,
