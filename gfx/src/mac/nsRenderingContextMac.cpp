@@ -1291,12 +1291,61 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32
 	return rv;
 }
 
+//------------------------------------------------------------------------
 
+NS_IMETHODIMP
+nsRenderingContextMac::GetTextDimensions(const char* aString, PRUint32 aLength,
+                                        nsTextDimensions& aDimensions)
+{
+  if (mGS->mFontMetrics) {
+    mGS->mFontMetrics->GetMaxAscent(aDimensions.ascent);
+    mGS->mFontMetrics->GetMaxDescent(aDimensions.descent);
+  }
+  return GetWidth(aString, aLength, aDimensions.width, aFontID);
+}
+
+NS_IMETHODIMP
+nsRenderingContextMac::GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
+                                         nsTextDimensions& aDimensions, PRInt32* aFontID)
+{
+  //XXX temporary - bug 96609
+  //XXX need to have nsUnicodeRenderingToolkit::GetTextDimensions()
+  if (mGS->mFontMetrics) {
+    mGS->mFontMetrics->GetMaxAscent(aDimensions.ascent);
+    mGS->mFontMetrics->GetMaxDescent(aDimensions.descent);
+  }
+  return GetWidth(aString, aLength, aDimensions.width, aFontID);
+}
+
+NS_IMETHODIMP
+nsRenderingContextMac::DrawString(const char *aString, PRUint32 aLength,
+                                  nscoord aX, nscoord aY,
+                                  const nscoord* aSpacing)
+{
+  nscoord y = 0;
+  if (mGS->mFontMetrics) {
+    mGS->mFontMetrics->GetMaxAscent(y);
+  }
+  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
+}
+
+NS_IMETHODIMP
+nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                  nscoord aX, nscoord aY,
+                                  PRInt32 aFontID,
+                                  const nscoord* aSpacing)
+{
+  nscoord y = 0;
+  if (mGS->mFontMetrics) {
+    mGS->mFontMetrics->GetMaxAscent(y);
+  }
+  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
+}
 
 #pragma mark -
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextMac::DrawString2(const char *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY,
                                          const nscoord* aSpacing)
 {
@@ -1308,11 +1357,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aL
 	if (mGS->mFontMetrics) {
 		// set native font and attributes
 		SetPortTextState();
-
-		// substract ascent since drawing specifies baseline
-		nscoord ascent = 0;
-		mGS->mFontMetrics->GetMaxAscent(ascent);
-		y += ascent;
 	}
 
 	mGS->mTMatrix.TransformCoord(&x,&y);
@@ -1348,7 +1392,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aL
 
 
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextMac::DrawString2(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {

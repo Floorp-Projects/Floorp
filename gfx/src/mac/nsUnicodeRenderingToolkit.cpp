@@ -1156,12 +1156,7 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
   nsUnicodeFontMappingMac* fontmap = metrics->GetUnicodeFontMapping();
 
   PRInt32 x = aX;
-
-  // offset to baseline
-  nscoord ascent = 0;
-  mGS->mFontMetrics->GetMaxAscent(ascent);    // ascent is twips
-
-  PRInt32 transformedY = aY + ascent;
+  PRInt32 transformedY = aY;
   mGS->mTMatrix.TransformCoord(&x, &transformedY);
 
   PRUint32 i;
