@@ -49,6 +49,10 @@ REQUIRES	= xpcom \
 		  locale \
 		  $(NULL)
 
+ifdef MOZ_PHOENIX
+REQUIRES	+= history toolkitcomps
+endif
+
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS         = \
