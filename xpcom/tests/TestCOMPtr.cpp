@@ -297,6 +297,8 @@ main()
   {
     cout << ">>main()" << endl;
 
+		cout << "sizeof(nsCOMPtr<IFoo>) --> " << sizeof(nsCOMPtr<IFoo>) << endl;
+
 
     {
       cout << endl << "### Test  1: will a |nsCOMPtr| call |AddRef| on a pointer assigned into it?" << endl;
@@ -480,8 +482,21 @@ main()
     cout << "### End Test 24" << endl;
 
 
+		{
+			cout << endl << "### setup for Test 25" << endl;
+			nsCOMPtr<IFoo> fooP( new IFoo );
+			nsCOMPtr<IBar> barP;
+			
+			cout << "### Test 25: will an assignment fail when the interface is not supported, is the error available?" << endl;
+			barP = fooP;
+			cout << "barP.assignment_error() --> " << barP.assignment_error() << endl;
+			cout << "### cleanup for Test 25" << endl;
+		}
+		cout << "### End Test 25" << endl;
 
-    cout << endl << "### Test 25: will a static |nsCOMPtr| |Release| before program termination?" << endl;
+
+
+    cout << endl << "### Test 26: will a static |nsCOMPtr| |Release| before program termination?" << endl;
     gFoop = new IFoo;
     
     cout << "<<main()" << endl;

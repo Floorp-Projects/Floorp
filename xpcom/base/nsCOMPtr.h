@@ -33,6 +33,16 @@
 #endif
 
 
+/*
+	TO DO...
+	
+    + Factor out some base behavior to reduce possible bloating
+    + Find an alternative to the current illegal and non-functioning comparison operators
+    + Improve internal documentation
+      + mention *&
+*/
+
+
 
 /* USER MANUAL
 
@@ -436,31 +446,31 @@ class nsCOMPtr
 
 			explicit
       nsCOMPtr( nsISupports* aRawPtr = 0 )
-      		: mRawPtr(0),
-      			mIsAwaitingAddRef(0)
 					/*
 						...it's unfortunate, but negligable, that this does a |QueryInterface| even
 						when constructed from a |T*| but we can't tell the difference between a |T*|
 						and a pointer to some object derived from |class T|.
 					*/
       	{
-      		if ( aRawPtr )
-	      		if ( !NS_SUCCEEDED(aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &mRawPtr))) )
-	      			mRawPtr = 0;	// ...in case they wrote |QueryInterface| wrong, and it returns an error _and_ a pointer
+      		nsresult status = NS_OK;
+      		if ( !aRawPtr || !NS_SUCCEEDED( status = aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &mRawPtr)) ) )
+	      		mRawPtr = 0;	// ...in case they wrote |QueryInterface| wrong, and it returns an error _and_ a pointer
 
 	      		// ...and |QueryInterface| does the |AddRef| for us (if it returned a pointer)
+
+	      	mImplicitQueryInterfaceResult = status;
       	}
 
       nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
           : mRawPtr(aSmartPtr.mRawPtr),
-            mIsAwaitingAddRef(0)
+            mImplicitQueryInterfaceResult(NS_OK)
         {
           // nothing else to do here
         }
 
 			nsCOMPtr( const nsDontQueryInterface<T>& aSmartPtr )
 					: mRawPtr(aSmartPtr.mRawPtr),
-						mIsAwaitingAddRef(0)
+						mImplicitQueryInterfaceResult(NS_OK)
 				{
 					if ( mRawPtr )
 						{
@@ -470,7 +480,7 @@ class nsCOMPtr
 
       nsCOMPtr( const nsCOMPtr<T>& aSmartPtr )
           : mRawPtr(aSmartPtr.mRawPtr),
-            mIsAwaitingAddRef(0)
+						mImplicitQueryInterfaceResult(NS_OK)
         {
           if ( mRawPtr )
           	{
@@ -489,32 +499,30 @@ class nsCOMPtr
 			nsCOMPtr&
 			operator=( nsISupports* rhs )
 				{
-      		T* rawPtr = 0;
-      		if ( rhs )
-      			if ( !NS_SUCCEEDED(rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &rawPtr))) )
-      				rawPtr = 0;
+      		T* rawPtr;
+      		nsresult status = NS_OK;
+      		if ( !rhs || !NS_SUCCEEDED( status = rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
+      			rawPtr = 0;
 
-					if ( mIsAwaitingAddRef )
-						mIsAwaitingAddRef = 0;
-					else if ( mRawPtr )
+					if ( mRawPtr && !mIsAwaitingAddRef )
 						{
 							NSCAP_RELEASE(mRawPtr);
-      			}
+						}
 
       		mRawPtr = rawPtr;
+					mImplicitQueryInterfaceResult = status;
       		return *this;
 				}
 
       nsCOMPtr&
       operator=( const nsDontAddRef<T>& rhs )
         {
-        	if ( mIsAwaitingAddRef )
-         	 mIsAwaitingAddRef = 0;
-          else if ( mRawPtr )
-          	{
-            	NSCAP_RELEASE(mRawPtr);
-            }
+					if ( mRawPtr && !mIsAwaitingAddRef )
+						{
+							NSCAP_RELEASE(mRawPtr);
+						}
           mRawPtr = rhs.mRawPtr;
+					mImplicitQueryInterfaceResult = NS_OK;
           return *this;
         }
 
@@ -528,14 +536,13 @@ class nsCOMPtr
 							NSCAP_ADDREF(rawPtr);
 						}
 
-					if ( mIsAwaitingAddRef )
-						mIsAwaitingAddRef = 0;
-					else if ( mRawPtr )
+					if ( mRawPtr && !mIsAwaitingAddRef )
 						{
 							NSCAP_RELEASE(mRawPtr);
 						}
 
 					mRawPtr = rawPtr;
+					mImplicitQueryInterfaceResult = NS_OK;
 					return *this;
 				}
 
@@ -549,14 +556,13 @@ class nsCOMPtr
 							NSCAP_ADDREF(rawPtr);
 						}
 
-					if ( mIsAwaitingAddRef )
-						mIsAwaitingAddRef = 0;
-					else if ( mRawPtr )
+					if ( mRawPtr && !mIsAwaitingAddRef )
 						{
 							NSCAP_RELEASE(mRawPtr);
 						}
 
 					mRawPtr = rawPtr;
+					mImplicitQueryInterfaceResult = NS_OK;
 					return *this;
 				}
 
@@ -587,6 +593,12 @@ class nsCOMPtr
         {
           return NSCAP_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
         }
+
+			nsresult
+			assignment_error() const
+				{
+					return mRawPtr ? NS_OK : mImplicitQueryInterfaceResult;
+				}
 
 #if 0
     private:
@@ -620,16 +632,21 @@ class nsCOMPtr
       void
       FinishAssignment()
         {
-          if ( mIsAwaitingAddRef )
+          if ( mRawPtr && mIsAwaitingAddRef )
             {
               NSCAP_ADDREF(mRawPtr);
-              mIsAwaitingAddRef = 0;
             }
+         mImplicitQueryInterfaceResult = NS_OK;
         }
 
     private:
       T* mRawPtr;
-      NSCAP_BOOL mIsAwaitingAddRef;
+
+			union
+				{
+          NSCAP_BOOL mIsAwaitingAddRef;
+          nsresult   mImplicitQueryInterfaceResult;
+      	};
   };
 
 
