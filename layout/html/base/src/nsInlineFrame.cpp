@@ -291,6 +291,30 @@ nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInlineFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
+{
+  // The inline container frame does not handle the reflow
+  // request.  It passes it up to its parent container.  
+
+  // If you don't already have dirty children,
+  if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {
+    if (mParent) {
+      // Record that you are dirty and have dirty children    
+      mState |= NS_FRAME_IS_DIRTY;
+      mState |= NS_FRAME_HAS_DIRTY_CHILDREN;      
+
+      // Pass the reflow request up to the parent    
+      mParent->ReflowDirtyChild(aPresShell, (nsIFrame*) this);
+    }
+    else {
+      NS_ASSERTION(0, "No parent to pass the reflow request up to.");
+    }
+  }
+
+  return NS_OK;
+}
+
 void
 nsInlineFrame::DrainOverflow(nsIPresContext* aPresContext)
 {

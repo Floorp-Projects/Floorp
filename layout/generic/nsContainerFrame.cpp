@@ -344,22 +344,13 @@ nsContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
-  // The container frame does not handle the reflow
-  // request.  It passes it up to its parent container.  
+  // The container frame always generates a reflow command
+  // targeted at its child
+  if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {    
+    mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
 
-  // If you don't already have dirty children,
-  if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {
-    if (mParent) {
-      // Record that you are dirty and have dirty children    
-      mState |= NS_FRAME_IS_DIRTY;
-      mState |= NS_FRAME_HAS_DIRTY_CHILDREN;      
-
-      // Pass the reflow request up to the parent    
-      mParent->ReflowDirtyChild(aPresShell, (nsIFrame*) this);
-    }
-    else {
-      NS_ASSERTION(0, "No parent to pass the reflow request up to.");
-    }
+    nsFrame::CreateAndPostReflowCommand(aPresShell, aChild, 
+      nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
   }
 
   return NS_OK;

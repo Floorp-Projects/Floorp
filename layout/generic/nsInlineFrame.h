@@ -66,6 +66,8 @@ public:
                           nsIAtom* aListName,
                           nsIFrame* aOldFrame,
                           nsIFrame* aNewFrame);
+  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
