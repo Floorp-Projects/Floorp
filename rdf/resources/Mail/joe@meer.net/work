@@ -1,0 +1,81 @@
+From - Tue May 26 18:56:44 1998
+Return-Path: <danda@netscape.com>
+Received: from netscape.com ([207.1.147.163]) by dredd.mcom.com
+          (Netscape Messaging Server 3.52)  with ESMTP id AAA382D;
+          Tue, 26 May 1998 15:51:51 -0700
+Message-ID: <356B4831.B3BB6205@netscape.com>
+Date: Tue, 26 May 1998 15:54:41 -0700
+From: danda@netscape.com (Dan Libby)
+Organization: Netscape Communications
+X-Mailer: Mozilla 4.05 [en] (WinNT; I)
+MIME-Version: 1.0
+To: guha@netscape.com, eckart@netscape.com, emiller@oclc.org
+CC: danda@netscape.com
+Subject: Latest version of Site Preview Spec.
+Content-Type: multipart/mixed; boundary="------------4EBE28F76286894DDA731E21"
+X-Mozilla-Status: 0001
+Content-Length: 12723
+
+This is a multi-part message in MIME format.
+--------------4EBE28F76286894DDA731E21
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+Comments are welcome.
+
+-dan
+
+--------------4EBE28F76286894DDA731E21
+Content-Type: text/plain; charset=us-ascii; name="spec.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline; filename="spec.txt"
+
+RDF Site Preview Introduction and Specification.
+
+--------------4EBE28F76286894DDA731E21
+Content-Type: text/x-vcard; charset=us-ascii; name="vcard.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Description: Card for Dan Libby
+Content-Disposition: attachment; filename="vcard.vcf"
+
+begin:          vcard
+fn:             Dan Libby
+n:              Libby;Dan
+org:            Netscape Communications
+adr:            501 E. Middlefield Road, MV-102;;;Mountain View;CA;94043;USA
+email;internet: danda@netscape.com
+tel;work:       650-937-2276
+tel;home:       650-964-5913
+x-mozilla-cpt:  ;0
+x-mozilla-html: TRUE
+version:        2.1
+end:            vcard
+
+
+--------------4EBE28F76286894DDA731E21--
+
+From - Thu Jul 09 18:40:17 1998
+Return-Path: <jg@netscape.com>
+Received: from netscape.com ([206.222.244.176]) by dredd.mcom.com
+          (Netscape Messaging Server 3.52)  with ESMTP id AAA5B82
+          for <guha@netscape.com>; Thu, 9 Jul 1998 16:45:54 -0700
+Message-ID: <35A5565B.5D100F6C@netscape.com>
+Date: Thu, 09 Jul 1998 16:46:35 -0700
+From: jg@netscape.com (John Giannandrea)
+X-Mailer: Mozilla 4.06 [en] (WinNT; U)
+MIME-Version: 1.0
+To: guha@netscape.com
+Subject: Re: quick question
+References: <35A42B84.5D23@netscape.com> <35A4EA15.6C848319@netscape.com> <35A50605.65EA@netscape.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Mozilla-Status: 0011
+Content-Length: 125
+
+Ramanathan Guha wrote:
+> What should be the value of CVS_ROOT?
+
+cvs with CVS_RSH set to ssh should get you a passwd prompt.
+
+if that doesnt work, updated them on uruk and send me
+a pointer and Ill do it.

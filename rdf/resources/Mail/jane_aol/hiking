@@ -1,0 +1,102 @@
+From - Tue Mar 03 14:14:13 1998
+Return-Path: <neumann@netscape.com>
+Received: from netscape.com ([207.1.142.184]) by dredd.mcom.com
+          (Netscape Messaging Server 3.5)  with ESMTP id AAA28E8;
+          Tue, 3 Mar 1998 13:33:54 -0800
+Message-ID: <34FC773F.62AEA20D@netscape.com>
+Date: Tue, 03 Mar 1998 13:33:51 -0800
+From: neumann@netscape.com (Lori Neumann)
+Organization: Netscape Communications
+X-Mailer: Mozilla 4.04 [en] (Win95; I)
+MIME-Version: 1.0
+To: jane@aol.com
+CC: Irene Au <irene@netscape.com>, german@netscape.com,
+	 Valerie Hunter <valh@netscape.com>, kenh@netscape.com,
+	 pinkerton@netscape.com, blythe@netscape.com,
+	 hyatt@netscape.com, slamm@netscape.com, ramiro@netscape.com,
+	 Don Melton <don@netscape.com>, jg@netscape.com,
+	 "guha@netscape.com" <guha@netscape.com>, tgoldman@netscape.com
+Subject: Re: Toward resolution of UI for hiking
+References: <34FC40A9.A1F22D04@netscape.com> <34FC6EE8.6FA41408@netscape.com>
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Mozilla-Status: 0011
+Content-Length: 7613
+
+<HTML>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#534A86" VLINK="#8080C0" ALINK="#FF0000">
+John, Thanks for the summary.
+</BODY>
+</HTML>
+
+From - Tue Mar 03 14:14:13 1998
+Return-Path: <neumann@netscape.com>
+Received: from netscape.com ([207.1.142.184]) by dredd.mcom.com
+          (Netscape Messaging Server 3.5)  with ESMTP id AAA54DC;
+          Tue, 3 Mar 1998 14:11:00 -0800
+Message-ID: <34FC7FF1.88AAD459@netscape.com>
+Date: Tue, 03 Mar 1998 14:10:57 -0800
+From: neumann@netscape.com (Lori Neumann)
+Organization: Netscape Communications
+X-Mailer: Mozilla 4.04 [en] (Win95; I)
+MIME-Version: 1.0
+To: David Hyatt <hyatt@netscape.com>
+CC: John Gable <johng@netscape.com>, Irene Au <irene@netscape.com>
+	, german@netscape.com, Valerie Hunter <valh@netscape.com>
+	, kenh@netscape.com, pinkerton@netscape.com,
+	 blythe@netscape.com, slamm@netscape.com, ramiro@netscape.com,
+	 Don Melton <don@netscape.com>, jg@netscape.com,
+	 "guha@netscape.com" <guha@netscape.com>, tgoldman@netscape.com
+Subject: Re: Toward resolution of hiking UI
+References: <34FC40A9.A1F22D04@netscape.com> <34FC6EE8.6FA41408@netscape.com> <34FC773F.62AEA20D@netscape.com> <34FC7A47.4AEC3D6F@netscape.com>
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Mozilla-Status: 0011
+Content-Length: 284
+
+<HTML>
+David, I completely agree. But unless we have a clear design model for
+how hiking works, we're going to get asked to put random buttons on Yosemite.
+We've been there. I just want to make sure we get the requirements met
+while designing a predictable UI.
+
+<P>--Lori</HTML>
+
+From - Tue Mar 03 16:12:53 1998
+Return-Path: <neumann@netscape.com>
+Received: from netscape.com ([207.1.142.184]) by dredd.mcom.com
+          (Netscape Messaging Server 3.5)  with ESMTP id AAA6102;
+          Tue, 3 Mar 1998 14:20:50 -0800
+Message-ID: <34FC823F.F214C16B@netscape.com>
+Date: Tue, 03 Mar 1998 14:20:47 -0800
+From: neumann@netscape.com (Lori Neumann)
+Organization: Netscape Communications
+X-Mailer: Mozilla 4.04 [en] (Win95; I)
+MIME-Version: 1.0
+To: pinkerton@netscape.com
+CC: John Gable <johng@netscape.com>, Irene Au <irene@netscape.com>
+	, german@netscape.com, Valerie Hunter <valh@netscape.com>
+	, kenh@netscape.com, blythe@netscape.com, hyatt@netscape.com,
+	 slamm@netscape.com, ramiro@netscape.com,
+	 Don Melton <don@netscape.com>, jg@netscape.com,
+	 "guha@netscape.com" <guha@netscape.com>, tgoldman@netscape.com
+Subject: Wither hiking?
+References: <34FC40A9.A1F22D04@netscape.com> <34FC6EE8.6FA41408@netscape.com> <34FC773F.62AEA20D@netscape.com> <34FC7E10.A47976A8@netscape.com>
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Mozilla-Status: 0011
+Content-Length: 584
+
+<HTML>
+Mike, I agree that the features shouldn't interfere with the UI. And the
+last thing I want the UI to have to do is be contorted to accommodate Yellowstone!
+
+<P>However, we do need a design that is more scalable than what we currently
+have and helps drives traffic and membership to Yellowstone without impacting
+the user experience. 
+
+<P>This is why it is important to get a requirements document distributed
+and approved.
+
+<P>--Lori</HTML>
+
