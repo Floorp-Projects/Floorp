@@ -37,6 +37,7 @@ var gGlobalHistory;
 var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
+var gHistoryStatus;
 
 function HistoryInit() {
 
@@ -44,6 +45,7 @@ function HistoryInit() {
     gDeleteByHostname = document.getElementById("menu_deleteByHostname");
     gDeleteByDomain =   document.getElementById("menu_deleteByDomain");
     gHistoryBundle =    document.getElementById("historyBundle");
+    gHistoryStatus =    document.getElementById("statusbar-display");
 
     var treeController = new nsTreeController(gHistoryTree);
     var historyController = new nsHistoryController;
@@ -80,6 +82,10 @@ function historyOnSelect(event)
 
         if (match && match.length>1)
             gLastHostname = match[1];
+        
+        gHistoryStatus.label = url;
+    } else {
+        gHistoryStatus.label = "";
     }
 
     if (gLastHostname) {
@@ -191,7 +197,7 @@ function OpenURL(event, node, root)
         return false;
 
     var url = node.id;
-    if (event.metaKey)
+    if (event.ctrlKey)
         // if metaKey is down, open in a new browser window
         window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id );
     else
