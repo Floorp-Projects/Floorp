@@ -590,7 +590,7 @@ if [ "$MOZ_L10N" ]; then
 	#
 	l10n/Makefile
 	#
-	END_L10N_MAKEFILES
+END_L10N_MAKEFILES
 	#
 	if [ "$MOZ_L10N_LANG" ]; then
 		add_makefiles <<END_L10N_LANG_MAKEFILES
@@ -624,7 +624,7 @@ if [ "$MOZ_L10N" ]; then
 		l10n/lang/related/locale/Makefile
 		l10n/lang/sidebar/locale/Makefile
 		#
-		END_L10N_LANG_MAKEFILES
+END_L10N_LANG_MAKEFILES
 		#
 	fi
 fi
