@@ -5,7 +5,7 @@
   <li>It has a couple of:
   <ul>
       <li>Images: <IMG SRC="http://zabadubop/layers/tests/mzcolor.gif" ID="foo"> and
-          <IMG SRC="http://peoplestage.netscape.com/kipp/nerdly_int.gif">.
+          <IMG SRC="http://peoplestage.netscape.com/kipp/nerdly_int.gif" NAME="kipp">.
       <li>Links to <a href="http://home.netscape.com">Netscape</a> and
           <A HREF="http://peoplestage.netscape.com/kipp">Kippy's Home Page</A>.
       <li>and Anchors to <a NAME="anchor1">here</A> and 
@@ -60,6 +60,8 @@ for (x=0; x < lis.length; x++) {
   dump(lis[x].tagName + "\n");
 }
 
+dump("Named elements:\n");
+dump(document.kipp.tagName + " with NAME=" + document.kipp.getDOMAttribute("NAME") + "\n");
 
 </script>
 </body>

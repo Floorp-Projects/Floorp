@@ -6,4 +6,14 @@
      attribute wstring         enctype;
      attribute wstring         method;
      attribute wstring         target;
+
+     void reset();
+     void submit();
+   };
+
+   interface NSHTMLFormElement {
+     readonly attribute wstring encoding;
+     readonly attribute unsigned long length;
+
+     Element namedItem(in wstring name);
    };

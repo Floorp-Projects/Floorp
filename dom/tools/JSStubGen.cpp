@@ -261,6 +261,29 @@ static const char *kPropFuncDefaultItemStr =
 "    }\n"
 "  }\n";
 
+static const char *kPropFuncDefaultItemNonPrimaryStr = 
+"      default:\n"
+"      {\n"
+"        %s prop;\n"
+"        nsIDOM%s* b;\n"
+"        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
+"          if (NS_OK == b->Item(JSVAL_TO_INT(id), %sprop)) {\n"
+"%s"
+"            NS_RELEASE(b);\n"
+"          }\n"
+"          else {\n"
+"            NS_RELEASE(b);\n"
+"            return JS_FALSE;\n"
+"          }\n"
+"        }\n"
+"        else {\n"
+"          JS_ReportError(cx, \"Object must be of type %s\");\n"
+"          return JS_FALSE;\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n";
+
 static const char *kPropFuncEndStr = 
 "  else {\n"
 "    nsIJSScriptObject *object;\n"
@@ -289,9 +312,43 @@ static const char *kPropFuncNamedItemStr =
 "    }\n"
 "\n"
 "    if (NS_OK == a->NamedItem(name, %sprop)) {\n"
+"      if (NULL != prop) {\n"
 "%s"
+"      }\n"
 "    }\n"
 "    else {\n"
+"      return JS_FALSE;\n"
+"    }\n"
+"  }\n";
+
+static const char *kPropFuncNamedItemNonPrimaryStr =
+"  else if (JSVAL_IS_STRING(id)) {\n"
+"    %s prop;\n"
+"    nsIDOM%s* b;\n"
+"    nsAutoString name;\n"
+"\n"
+"    JSString *jsstring = JS_ValueToString(cx, id);\n"
+"    if (nsnull != jsstring) {\n"
+"      name.SetString(JS_GetStringChars(jsstring));\n"
+"    }\n"
+"    else {\n"
+"      name.SetString(\"\");\n"
+"    }\n"
+"\n"
+"    if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
+"      if (NS_OK == b->NamedItem(name, %sprop)) {\n"
+"        if (NULL != prop) {\n"
+"%s"
+"        }\n"
+"        NS_RELEASE(b);\n"
+"      }\n"
+"      else {\n"
+"        NS_RELEASE(b);\n"
+"        return JS_FALSE;\n"
+"      }\n"
+"    }\n"
+"    else {\n"
+"      JS_ReportError(cx, \"Object must be of type %s\");\n"
 "      return JS_FALSE;\n"
 "    }\n"
 "  }\n";
@@ -371,22 +428,33 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
 
   IdlFunction *item_func = NULL;
   IdlFunction *named_item_func = NULL;
-  int m, mcount = primary_iface->FunctionCount();
-  for (m = 0; m < mcount; m++) {
-    IdlFunction *func = primary_iface->GetFunctionAt(m);
-    
-    if (strcmp(func->GetName(), "item") == 0) {
-      item_func = func;
-    }
-    else if (strcmp(func->GetName(), "namedItem") == 0) {
-      named_item_func = func;
+  IdlInterface *item_iface = NULL;
+  IdlInterface *named_item_iface = NULL;
+  
+  for (i = 0; i < icount; i++) {
+    IdlInterface *iface = aSpec.GetInterfaceAt(i);
+
+    int m, mcount = iface->FunctionCount();
+    for (m = 0; m < mcount; m++) {
+      IdlFunction *func = iface->GetFunctionAt(m);
+      
+      if (strcmp(func->GetName(), "item") == 0) {
+        item_func = func;
+        item_iface = iface;
+      }
+      else if (strcmp(func->GetName(), "namedItem") == 0) {
+        named_item_func = func;
+        named_item_iface = iface;
+      }
     }
   }
     
   if (aIsGetter) {
     if (NULL != item_func) {
       IdlVariable *rval = item_func->GetReturnValue();
-      GeneratePropGetter(file, *primary_iface, *rval, JSSTUBGEN_DEFAULT);
+      GeneratePropGetter(file, *item_iface, *rval, 
+                         item_iface == primary_iface ? 
+                         JSSTUBGEN_DEFAULT : JSSTUBGEN_DEFAULT_NONPRIMARY);
     }
     else {
       JSGEN_GENERATE_PROPFUNCDEFAULT(buf, aIsGetter ? "Get" : "Set");
@@ -400,7 +468,9 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
 
   if (aIsGetter && (NULL != named_item_func)) {
     IdlVariable *rval = named_item_func->GetReturnValue();
-    GeneratePropGetter(file, *primary_iface, *rval, JSSTUBGEN_NAMED_ITEM);    
+    GeneratePropGetter(file, *named_item_iface, *rval, 
+                       named_item_iface == primary_iface ? 
+                       JSSTUBGEN_NAMED_ITEM : JSSTUBGEN_NAMED_ITEM_NONPRIMARY);
   }
 
   JSGEN_GENERATE_PROPFUNCEND(buf, aIsGetter ? "Get" : "Set");
@@ -471,7 +541,7 @@ JSStubGen::GeneratePropGetter(ofstream *file,
                               IdlVariable &aAttribute,
                               PRInt32 aType)
 {
-  char buf[1024];
+  char buf[2048];
   char attr_type[128];
   char attr_name[128];
   const char *case_str;
@@ -522,10 +592,22 @@ JSStubGen::GeneratePropGetter(ofstream *file,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str);
   }
-  else {
+  else if (JSSTUBGEN_DEFAULT_NONPRIMARY == aType) {
+    sprintf(buf, kPropFuncDefaultItemStr, attr_type,
+            aInterface.GetName(), aInterface.GetName(),
+            aAttribute.GetType() == TYPE_STRING ? "" : "&",
+            case_str, aInterface.GetName());
+  }
+  else if (JSSTUBGEN_NAMED_ITEM == aType) {
     sprintf(buf, kPropFuncNamedItemStr, attr_type,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str);
+  }
+  else if (JSSTUBGEN_NAMED_ITEM_NONPRIMARY == aType) {
+    sprintf(buf, kPropFuncNamedItemNonPrimaryStr, attr_type,
+            aInterface.GetName(), aInterface.GetName(),
+            aAttribute.GetType() == TYPE_STRING ? "" : "&",
+            case_str, aInterface.GetName());
   }
 
   *file << buf;
@@ -784,6 +866,22 @@ static const char *kMethodBeginStr = "\n\n"
 "  nsIDOM%s *nativeThis = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
 "  JSBool rBool = JS_FALSE;\n";
 
+static const char *kMethodBeginNonPrimaryStr = "\n\n"
+"//\n"
+"// Native method %s\n"
+"//\n"
+"PR_STATIC_CALLBACK(JSBool)\n"
+"%s%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
+"{\n"
+"  nsIDOM%s *privateThis = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
+"  nsIDOM%s *nativeThis;\n"
+"  if (NS_OK != privateThis->QueryInterface(kI%sIID, (void **)nativeThis)) {\n"
+"    JS_ReportError(cx, \"Object must be of type %s\");\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n"
+"  JSBool rBool = JS_FALSE;\n";
+
 static const char *kMethodReturnStr = 
 "  %s nativeRet;\n";
 
@@ -921,6 +1019,7 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
 {
   char buf[1024];
   ofstream *file = GetFile();
+  IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
 
   int i, icount = aSpec.InterfaceCount();
   for (i = 0; i < icount; i++) {
@@ -936,8 +1035,15 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
 
       GetCapitalizedName(method_name, *func);
       GetVariableTypeForLocal(return_type, *rval);
-      sprintf(buf, kMethodBeginStr, method_name, iface->GetName(),
-              method_name, iface->GetName(), iface->GetName());
+      if (i == 0) {
+        sprintf(buf, kMethodBeginStr, method_name, iface->GetName(),
+                method_name, iface->GetName(), iface->GetName());
+      }
+      else {
+        sprintf(buf, kMethodBeginNonPrimaryStr, method_name, iface->GetName(),
+                method_name, primary_iface->GetName(), primary_iface->GetName(),
+                iface->GetName(), iface->GetName(), iface->GetName());
+      }
       *file << buf;
       if (rval->GetType() != TYPE_VOID) {
         sprintf(buf, kMethodReturnStr, return_type);

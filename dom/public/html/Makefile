@@ -38,6 +38,7 @@ EXPORTS =               \
 	nsIDOMHTMLElement.h \
 	nsIDOMHTMLFontElement.h \
 	nsIDOMHTMLFormElement.h \
+	nsIDOMNSHTMLFormElement.h \
 	nsIDOMHTMLFrameElement.h \
 	nsIDOMHTMLFrameSetElement.h \
 	nsIDOMHTMLHRElement.h \
@@ -79,6 +80,7 @@ EXPORTS =               \
 	nsIDOMHTMLTheadElement.h \
 	nsIDOMHTMLTitleElement.h \
 	nsIDOMHTMLUListElement.h \
+	nsIDOMNSHTMLDocument.h \
         $(NULL)
 
 MODULE = dom

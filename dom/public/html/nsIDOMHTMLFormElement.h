@@ -52,6 +52,10 @@ public:
 
   NS_IMETHOD    GetTarget(nsString& aTarget)=0;
   NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
+
+  NS_IMETHOD    Reset()=0;
+
+  NS_IMETHOD    Submit()=0;
 };
 
 
@@ -68,6 +72,8 @@ public:
   NS_IMETHOD    SetMethod(const nsString& aMethod);  \
   NS_IMETHOD    GetTarget(nsString& aTarget);  \
   NS_IMETHOD    SetTarget(const nsString& aTarget);  \
+  NS_IMETHOD    Reset();  \
+  NS_IMETHOD    Submit();  \
 
 
 
@@ -84,6 +90,8 @@ public:
   NS_IMETHOD    SetMethod(const nsString& aMethod) { return superClass::SetMethod(aMethod); } \
   NS_IMETHOD    GetTarget(nsString& aTarget) { return superClass::GetTarget(aTarget); } \
   NS_IMETHOD    SetTarget(const nsString& aTarget) { return superClass::SetTarget(aTarget); } \
+  NS_IMETHOD    Reset() { return superClass::Reset(); }  \
+  NS_IMETHOD    Submit() { return superClass::Submit(); }  \
 
 
 extern nsresult NS_InitHTMLFormElementClass(nsIScriptContext *aContext, void **aPrototype);

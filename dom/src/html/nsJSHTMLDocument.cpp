@@ -28,6 +28,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 
@@ -38,12 +39,14 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kINSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMHTMLElement);
 NS_DEF_PTR(nsIDOMHTMLDocument);
+NS_DEF_PTR(nsIDOMNSHTMLDocument);
 NS_DEF_PTR(nsIDOMHTMLCollection);
 NS_DEF_PTR(nsIDOMNodeList);
 
@@ -65,7 +68,16 @@ enum HTMLDocument_slots {
   HTMLDOCUMENT_LINKS = -112,
   HTMLDOCUMENT_FORMS = -113,
   HTMLDOCUMENT_ANCHORS = -114,
-  HTMLDOCUMENT_COOKIE = -115
+  HTMLDOCUMENT_COOKIE = -115,
+  NSHTMLDOCUMENT_ALINKCOLOR = -21,
+  NSHTMLDOCUMENT_LINKCOLOR = -22,
+  NSHTMLDOCUMENT_VLINKCOLOR = -23,
+  NSHTMLDOCUMENT_BGCOLOR = -24,
+  NSHTMLDOCUMENT_FGCOLOR = -25,
+  NSHTMLDOCUMENT_LASTMODIFIED = -26,
+  NSHTMLDOCUMENT_EMBEDS = -27,
+  NSHTMLDOCUMENT_LAYERS = -28,
+  NSHTMLDOCUMENT_PLUGINS = -29
 };
 
 /***********************************************************************/
@@ -363,6 +375,246 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NSHTMLDOCUMENT_ALINKCOLOR:
+      {
+        nsAutoString prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetAlinkColor(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_LINKCOLOR:
+      {
+        nsAutoString prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetLinkColor(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_VLINKCOLOR:
+      {
+        nsAutoString prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetVlinkColor(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_BGCOLOR:
+      {
+        nsAutoString prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetBgColor(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_FGCOLOR:
+      {
+        nsAutoString prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetFgColor(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_LASTMODIFIED:
+      {
+        nsAutoString prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetLastModified(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_EMBEDS:
+      {
+        nsIDOMHTMLCollection* prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetEmbeds(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_LAYERS:
+      {
+        nsIDOMHTMLCollection* prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetLayers(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_PLUGINS:
+      {
+        nsIDOMHTMLCollection* prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetPlugins(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -373,6 +625,52 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return rval;
         }
       }
+    }
+  }
+  else if (JSVAL_IS_STRING(id)) {
+    nsIDOMElement* prop;
+    nsIDOMNSHTMLDocument* b;
+    nsAutoString name;
+
+    JSString *jsstring = JS_ValueToString(cx, id);
+    if (nsnull != jsstring) {
+      name.SetString(JS_GetStringChars(jsstring));
+    }
+    else {
+      name.SetString("");
+    }
+
+    if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+      if (NS_OK == b->NamedItem(name, &prop)) {
+        if (NULL != prop) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        NS_RELEASE(b);
+      }
+      else {
+        NS_RELEASE(b);
+        return JS_FALSE;
+      }
+    }
+    else {
+      JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+      return JS_FALSE;
     }
   }
   else {
@@ -454,6 +752,126 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetCookie(prop);
+        
+        break;
+      }
+      case NSHTMLDOCUMENT_ALINKCOLOR:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        nsIDOMNSHTMLDocument *b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          b->SetAlinkColor(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+           return JS_FALSE;
+        }
+        
+        break;
+      }
+      case NSHTMLDOCUMENT_LINKCOLOR:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        nsIDOMNSHTMLDocument *b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          b->SetLinkColor(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+           return JS_FALSE;
+        }
+        
+        break;
+      }
+      case NSHTMLDOCUMENT_VLINKCOLOR:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        nsIDOMNSHTMLDocument *b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          b->SetVlinkColor(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+           return JS_FALSE;
+        }
+        
+        break;
+      }
+      case NSHTMLDOCUMENT_BGCOLOR:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        nsIDOMNSHTMLDocument *b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          b->SetBgColor(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+           return JS_FALSE;
+        }
+        
+        break;
+      }
+      case NSHTMLDOCUMENT_FGCOLOR:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        nsIDOMNSHTMLDocument *b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          b->SetFgColor(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+           return JS_FALSE;
+        }
         
         break;
       }
@@ -792,6 +1210,112 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 }
 
 
+//
+// Native method GetSelection
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMNSHTMLDocument *nativeThis;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetSelection(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
+    // set the return value
+    *rval = STRING_TO_JSVAL(jsstring);
+  }
+  else {
+    JS_ReportError(cx, "Function getSelection requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method NamedItem
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMNSHTMLDocument *nativeThis;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsIDOMElement* nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->NamedItem(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    JS_ReportError(cx, "Function namedItem requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for HTMLDocument
@@ -830,6 +1354,15 @@ static JSPropertySpec HTMLDocumentProperties[] =
   {"forms",    HTMLDOCUMENT_FORMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"anchors",    HTMLDOCUMENT_ANCHORS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cookie",    HTMLDOCUMENT_COOKIE,    JSPROP_ENUMERATE},
+  {"alinkColor",    NSHTMLDOCUMENT_ALINKCOLOR,    JSPROP_ENUMERATE},
+  {"linkColor",    NSHTMLDOCUMENT_LINKCOLOR,    JSPROP_ENUMERATE},
+  {"vlinkColor",    NSHTMLDOCUMENT_VLINKCOLOR,    JSPROP_ENUMERATE},
+  {"bgColor",    NSHTMLDOCUMENT_BGCOLOR,    JSPROP_ENUMERATE},
+  {"fgColor",    NSHTMLDOCUMENT_FGCOLOR,    JSPROP_ENUMERATE},
+  {"lastModified",    NSHTMLDOCUMENT_LASTMODIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"embeds",    NSHTMLDOCUMENT_EMBEDS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"layers",    NSHTMLDOCUMENT_LAYERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"plugins",    NSHTMLDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -845,6 +1378,8 @@ static JSFunctionSpec HTMLDocumentMethods[] =
   {"writeln",          HTMLDocumentWriteln,     0},
   {"getElementById",          HTMLDocumentGetElementById,     1},
   {"getElementsByName",          HTMLDocumentGetElementsByName,     1},
+  {"getSelection",          NSHTMLDocumentGetSelection,     0},
+  {"namedItem",          NSHTMLDocumentNamedItem,     1},
   {0}
 };
 

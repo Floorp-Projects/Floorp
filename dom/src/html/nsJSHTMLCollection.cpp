@@ -113,6 +113,7 @@ GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
     if (NS_OK == a->NamedItem(name, &prop)) {
+      if (NULL != prop) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -130,6 +131,7 @@ GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           else {
             *vp = JSVAL_NULL;
           }
+      }
     }
     else {
       return JS_FALSE;

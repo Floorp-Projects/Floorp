@@ -41,7 +41,6 @@ public:
   NS_IMETHOD    SetDefaultChecked(PRBool aDefaultChecked)=0;
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm)=0;
 
   NS_IMETHOD    GetAccept(nsString& aAccept)=0;
   NS_IMETHOD    SetAccept(const nsString& aAccept)=0;
@@ -80,7 +79,6 @@ public:
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex)=0;
 
   NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
 
   NS_IMETHOD    GetUseMap(nsString& aUseMap)=0;
   NS_IMETHOD    SetUseMap(const nsString& aUseMap)=0;
@@ -104,7 +102,6 @@ public:
   NS_IMETHOD    GetDefaultChecked(PRBool* aDefaultChecked);  \
   NS_IMETHOD    SetDefaultChecked(PRBool aDefaultChecked);  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
   NS_IMETHOD    GetAccept(nsString& aAccept);  \
   NS_IMETHOD    SetAccept(const nsString& aAccept);  \
   NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
@@ -130,7 +127,6 @@ public:
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex);  \
   NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
   NS_IMETHOD    GetUseMap(nsString& aUseMap);  \
   NS_IMETHOD    SetUseMap(const nsString& aUseMap);  \
   NS_IMETHOD    GetValue(nsString& aValue);  \
@@ -148,7 +144,6 @@ public:
   NS_IMETHOD    GetDefaultChecked(PRBool* aDefaultChecked) { return superClass::GetDefaultChecked(aDefaultChecked); } \
   NS_IMETHOD    SetDefaultChecked(PRBool aDefaultChecked) { return superClass::SetDefaultChecked(aDefaultChecked); } \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
   NS_IMETHOD    GetAccept(nsString& aAccept) { return superClass::GetAccept(aAccept); } \
   NS_IMETHOD    SetAccept(const nsString& aAccept) { return superClass::SetAccept(aAccept); } \
   NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return superClass::GetAccessKey(aAccessKey); } \
@@ -174,7 +169,6 @@ public:
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return superClass::GetTabIndex(aTabIndex); } \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return superClass::SetTabIndex(aTabIndex); } \
   NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
   NS_IMETHOD    GetUseMap(nsString& aUseMap) { return superClass::GetUseMap(aUseMap); } \
   NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return superClass::SetUseMap(aUseMap); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return superClass::GetValue(aValue); } \

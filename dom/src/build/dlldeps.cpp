@@ -22,6 +22,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIScriptEventListener.h"
 
 // Force references to all of the symbols that we want exported from
@@ -37,4 +38,5 @@ void XXXDomNeverCalled()
   NS_NewScriptEventListener(0, 0, 0);
   NS_NewScriptHTMLImageElement(0, 0, 0, 0);
   NS_NewScriptHTMLFormElement(0, 0, 0, 0);
+  NS_NewScriptHTMLInputElement(0, 0, 0, 0);
 }
