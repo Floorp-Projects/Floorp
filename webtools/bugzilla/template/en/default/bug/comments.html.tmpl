@@ -68,6 +68,7 @@
                  value="[% comment.isprivate %]">
           <input type="hidden" name="when-[% count %]" value="[% comment.when %]">
           <input type="checkbox" name="isprivate-[% count %]" value="1"
+                 id="isprivate-[% count %]"
           [% " checked=\"checked\"" IF comment.isprivate %]> Private
         </i>
       [% END %]

@@ -52,6 +52,12 @@
 
     replytext = "(In reply to comment #" + id + ")\n" + replytext + "\n";
 
+    [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+      if (document.getElementById('isprivate-'+id).checked) {
+          document.getElementById('newcommentprivacy').checked = 'checked';
+      }
+    [% END %]
+
     /* <textarea id="comment"> */
     var textarea = document.getElementById('comment');
     textarea.value += replytext;
@@ -462,7 +468,8 @@
   <br>
   <b>Additional <u>C</u>omments:</b>
   [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
-    <input type="checkbox" name="commentprivacy" value="1"> Private
+    <input type="checkbox" name="commentprivacy" value="1"
+           id="newcommentprivacy"> Private
   [% END %]
   <br>
   <a name="add_comment"></a>
