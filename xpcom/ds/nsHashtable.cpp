@@ -382,7 +382,7 @@ nsCStringKey::nsCStringKey(const nsCString& str)
     MOZ_COUNT_CTOR(nsCStringKey);
 }
 
-nsCStringKey::nsCStringKey(const char* str, PRUint32 strLen, PRBool ownsStr)
+nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, PRBool ownsStr)
     : mStr((char*)str), mStrLen(strLen), mOwnsStr(ownsStr)
 {
     NS_ASSERTION(mStr, "null string key");
@@ -441,7 +441,7 @@ nsStringKey::nsStringKey(const nsString& str)
     MOZ_COUNT_CTOR(nsStringKey);
 }
 
-nsStringKey::nsStringKey(const PRUnichar* str, PRUint32 strLen, PRBool ownsStr)
+nsStringKey::nsStringKey(const PRUnichar* str, PRInt32 strLen, PRBool ownsStr)
     : mStr((PRUnichar*)str), mStrLen(strLen), mOwnsStr(ownsStr)
 {
     NS_ASSERTION(mStr, "null string key");

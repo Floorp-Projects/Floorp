@@ -60,7 +60,7 @@ public:
     VoidKey,
     IDKey,
     CStringKey,
-    StringKey,
+    StringKey
   };
   nsHashKeyType GetKeyType() const { return mKeyType; }
 protected:
@@ -270,7 +270,7 @@ public:
   // If strLen is not passed, and defaults to -1, the assumption here is that str
   // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
   // length. If ownsString is true, destroying the string key will destroy str:
-  nsCStringKey(const char* str, PRUint32 strLen = -1, PRBool ownsStr = PR_FALSE);
+  nsCStringKey(const char* str, PRInt32 strLen = -1, PRBool ownsStr = PR_FALSE);
   nsCStringKey(const nsCString& str);
   ~nsCStringKey(void);
 
@@ -294,7 +294,7 @@ public:
   // If strLen is not passed, and defaults to -1, the assumption here is that str
   // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
   // length. If ownsString is true, destroying the string key will destroy str:
-  nsStringKey(const PRUnichar* str, PRUint32 strLen = -1, PRBool ownsStr = PR_FALSE);
+  nsStringKey(const PRUnichar* str, PRInt32 strLen = -1, PRBool ownsStr = PR_FALSE);
   nsStringKey(const nsString& str);
   ~nsStringKey(void);
 
