@@ -62,7 +62,7 @@ protected:
   nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 
   static nsrefcnt gInstanceCount;
-  static nsCOMPtr<nsIStringBundle> mBundle;
+  nsCOMPtr<nsIStringBundle> mBundle;
 };
 
 #endif // _nsMsgStatusFeedback_h

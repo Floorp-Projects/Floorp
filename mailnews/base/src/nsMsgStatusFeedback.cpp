@@ -43,7 +43,6 @@
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 nsrefcnt nsMsgStatusFeedback::gInstanceCount = 0;
-nsCOMPtr<nsIStringBundle> nsMsgStatusFeedback::mBundle;
 
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
   m_lastPercent(0)
@@ -110,6 +109,8 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
                                    nsresult aStatus)
 {
   nsresult rv;
+
+  NS_ENSURE_TRUE(mBundle, NS_ERROR_NULL_POINTER);
   if (aProgressStateFlags & STATE_IS_NETWORK)
   {
     if (aProgressStateFlags & STATE_START)
