@@ -3,3 +3,4 @@
 #
 
 nsBlockBandData.h
+nsILineIterator.h
