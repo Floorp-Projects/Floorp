@@ -1545,7 +1545,7 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                      nsIFrame*       aFrame)
 {
   if (mFrameManager) {
-    return mFrameManager->CantRenderReplacedElement(aPresContext, aFrame);
+    // return mFrameManager->CantRenderReplacedElement(aPresContext, aFrame);
   }
 
   return NS_OK;
