@@ -30,9 +30,6 @@
 #include "nsISupports.h"
 #include "nsCtlCIID.h"
 
-#include "pango-types.h"
-#include "pango-glyph.h"
-
 /*
  * nsILE Interface declaration 
  */
@@ -41,13 +38,16 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILE_IID)
   
-  NS_IMETHOD GetPresentationForm(const PRUnichar*, PRUint32, PangoAnalysis*,
-                                 PangoGlyphString*) = 0;
-
   NS_IMETHOD GetPresentationForm(const PRUnichar*, PRUint32,
                                  const char*, char*, PRSize*) = 0;
 
-  NS_IMETHOD GetPresentationForm(const PRUnichar*, PRUint32,
-                                 const char*, PRUint32*, PRSize*) = 0;
+  NS_IMETHOD PrevCluster(const PRUnichar*, PRUint32, 
+                         const PRInt32, PRInt32*) = 0;
+
+  NS_IMETHOD NextCluster(const PRUnichar*, PRUint32,
+                         const PRInt32, PRInt32*) = 0;
+
+  NS_IMETHOD GetRangeOfCluster(const PRUnichar*, PRUint32,
+                               const PRInt32, PRInt32*, PRInt32*) = 0;
 };
 #endif // nsILE_h

@@ -22,19 +22,24 @@
  * 
  * Contributor(s): 
  */
-#include <stdio.h>
-#include <ctype.h> /* isspace */
 
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsILanguageAtomService.h"
 #include "nsCtlCIID.h"
 #include "nsILE.h"
+#include "nsULE.h"
 #include "nsUnicodeToTIS620.h"
+
+static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 // XPCOM stuff
 NS_IMPL_ADDREF(nsUnicodeToTIS620);
 NS_IMPL_RELEASE(nsUnicodeToTIS620);
 
-int 
+PRInt32
 nsUnicodeToTIS620::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList) 
 {
   int            ct = 0, start = 0;
@@ -78,14 +83,13 @@ nsUnicodeToTIS620::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunLis
     
     tmpChunk->length = ct - start;
   }
-  return (int)aRunList->numRuns;
+  return (PRInt32)aRunList->numRuns;
 }
 
 nsresult nsUnicodeToTIS620::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (NULL == aInstancePtr)
     return NS_ERROR_NULL_POINTER;
-  }
 
   *aInstancePtr = NULL;
   
@@ -123,11 +127,28 @@ NS_IMETHODIMP nsUnicodeToTIS620::SetOutputErrorBehavior(PRInt32 aBehavior,
 
 nsUnicodeToTIS620::nsUnicodeToTIS620()
 {
+  static   NS_DEFINE_CID(kLECID, NS_ULE_CID);
+  nsresult rv;
+
   NS_INIT_REFCNT();
+
+  mCtlObj = do_CreateInstance(kLECID, &rv);
+  if (NS_FAILED(rv)) {
+#ifdef DEBUG_prabhat
+    // No other error handling needed here since we 
+    // handle absence of mCtlObj in Convert
+    printf("ERROR: Cannot create instance of component " NS_ULE_PROGID " [%x].\n", 
+           rv);
+#endif
+    NS_WARNING("Thai Text Layout Will Not Be Supported\n");
+    mCtlObj = nsnull;
+  }
 }
 
 nsUnicodeToTIS620::~nsUnicodeToTIS620()
 {
+  // Maybe convert nsILE to a service
+  // No NS_IF_RELEASE(mCtlObj) of nsCOMPtr;
 }
 
 /*
@@ -135,44 +156,74 @@ nsUnicodeToTIS620::~nsUnicodeToTIS620()
  * Note: ConversionBufferFullException is not handled
  *       since this class is only used for character display.
  */
-NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar * input, 
-                                         PRInt32 * aSrcLength,
-                                         char * output, PRInt32 * aDestLength)
+NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
+                                         PRInt32*         aSrcLength,
+                                         char*            output,
+                                         PRInt32*         aDestLength)
 {
-  int             i = 0;
-  nsCOMPtr<nsILE> mCtlObj;
-  static          NS_DEFINE_CID(kLECID, NS_ULE_CID);
-  nsresult        rv;
-  textRunList     txtRuns;
-  textRun         *aPtr, *aTmpPtr;
+  textRunList txtRuns;
+  textRun     *aPtr, *aTmpPtr;
+  
+#ifdef DEBUG_prabhath_no_shaper
+  printf("Debug/Test Case of No thai pango shaper Object\n");
+  // Comment out mCtlObj == nsnull for test purposes
+#endif
+  
+  if (mCtlObj == nsnull) {
+    nsICharsetConverterManager2* gCharSetManager = nsnull;
+    nsIUnicodeEncoder*           gDefaultTISConverter = nsnull;
+    nsresult                     res;
+    nsServiceManager::GetService(kCharSetManagerCID,
+      NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
 
-  // No question of starting the conversion from an offset
-  charOff = byteOff = 0;
+#ifdef DEBUG_prabhath
+    printf("ERROR: No CTL IMPLEMENTATION - Default Thai Conversion");
+    // CP874 is the default converter for thai ; 
+    // In case mCtlObj is absent (no CTL support), use it to convert.
+#endif
 
-  mCtlObj = do_CreateInstance(kLECID, &rv);
-  if (NS_FAILED(rv)) {
-    printf("ERROR: Cannot create instance of component " NS_ULE_PROGID " [%x].\n", 
-           rv);
-    printf("Thai Text Layout Will Not Be Supported\n");
+    if (!gCharSetManager)
+      return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIAtom> charset = getter_AddRefs(NS_NewAtom("TIS-620"));   
+    if (charset)
+      res = gCharSetManager->GetUnicodeEncoder(charset, &gDefaultTISConverter);
+    else {
+      NS_IF_RELEASE(gCharSetManager);
+      return NS_ERROR_FAILURE;
+    }
+    
+    if (!gDefaultTISConverter) {
+      NS_WARNING("cannot get default converter for tis-620");
+      NS_IF_RELEASE(gCharSetManager);
+      return NS_ERROR_FAILURE;
+    }
+    
+    gDefaultTISConverter->Convert(input, aSrcLength, output, aDestLength);
+    NS_IF_RELEASE(gCharSetManager);
+    NS_IF_RELEASE(gDefaultTISConverter);
+    return NS_OK;    
   }
 
-  txtRuns.numRuns = 0;  
+  // CTLized shaping conversion starts here
+  // No question of starting the conversion from an offset
+  mCharOff = mByteOff = 0;
+
+  txtRuns.numRuns = 0;
   Itemize(input, *aSrcLength, &txtRuns);
 
   aPtr = txtRuns.head;
-  for (i = 0; i < txtRuns.numRuns; i++) {   
-    // char    *tmpDestBuf = output + byteOff;
-    // PRInt32 tmpDestLen = *aDestLength - byteOff;
+  for (int i = 0; i < txtRuns.numRuns; i++) {
     PRInt32 tmpSrcLen = aPtr->length;
     
     if (aPtr->isOther) {
       // PangoThaiShaper does not handle ASCII + thai in same shaper
-      for (i = 0; i < tmpSrcLen; i++)
-        output[i + byteOff] = (char)(*(aPtr->start + i));
-      byteOff += tmpSrcLen;
+      for (int j = 0; j < tmpSrcLen; j++)
+        output[j + mByteOff] = (char)(*(aPtr->start + j));
+      mByteOff += tmpSrcLen;
     }
     else {
-      PRSize outLen = *aDestLength;
+      PRSize outLen = *aDestLength - mByteOff;
       // Charset tis620-0, tis620.2533-1, tis620.2529-1 & iso8859-11
       // are equivalent and have the same presentation forms
 
@@ -180,24 +231,21 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar * input,
       // in Windows-Stye as it is the current defacto-standard for the
       // presentation of thai content
       mCtlObj->GetPresentationForm(aPtr->start, tmpSrcLen, "tis620-2",
-                                   output, &outLen);
-      byteOff += outLen;
+                                   &output[mByteOff], &outLen);
+      mByteOff += outLen;
     }
     aPtr = aPtr->next;
   }
   
-  // Check for free nsILE or convert nsILE to a service
-  // NS_IF_RELEASE(mCtlObj);
-
   // Cleanup Run Info;
   aPtr = txtRuns.head;
-  for (i = 0; i < txtRuns.numRuns; i++) {
+  for (int i = 0; i < txtRuns.numRuns; i++) {
     aTmpPtr = aPtr;
     aPtr = aPtr->next;
     delete aTmpPtr;
   }
 
-  *aDestLength = byteOff;
+  *aDestLength = mByteOff;
   return NS_OK;
 }
 
@@ -205,14 +253,14 @@ NS_IMETHODIMP nsUnicodeToTIS620::Finish(char * output, PRInt32 * aDestLength)
 {
   // Finish does'nt have to do much as Convert already flushes
   // to output buffer
-  byteOff = charOff = 0;
+  mByteOff = mCharOff = 0;
   return NS_OK;
 }
 
 //================================================================
 NS_IMETHODIMP nsUnicodeToTIS620::Reset()
 {
-  byteOff = charOff = 0;
+  mByteOff = mCharOff = 0;
   return NS_OK;
 }
 

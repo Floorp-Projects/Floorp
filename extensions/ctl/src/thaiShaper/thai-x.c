@@ -48,7 +48,7 @@
 #define G_N_ELEMENTS(arr)     (sizeof (arr) / sizeof ((arr)[0]))
 
 #define ucs2tis(wc)	(unsigned int)((unsigned int)(wc) - 0x0E00 + 0xA0)
-#define tis2uni(c)	((gunichar)(c) - 0xA0 + 0x0E00)
+#define tis2uni(c)	((gunichar2)(c) - 0xA0 + 0x0E00)
 
 #define MAX_CLUSTER_CHRS	256
 #define MAX_GLYPHS		    256
@@ -418,7 +418,7 @@ add_glyph(ThaiFontInfo     *font_info,
 
 static gint
 get_adjusted_glyphs_list(ThaiFontInfo *font_info,
-                         gunichar     *cluster,
+                         gunichar2     *cluster,
                          gint         num_chrs,
                          PangoGlyph   *glyph_lists,
                          const ThaiShapeTable *shaping_table)
@@ -582,7 +582,7 @@ get_adjusted_glyphs_list(ThaiFontInfo *font_info,
 
 static gint
 get_glyphs_list(ThaiFontInfo *font_info,
-                gunichar	   *cluster,
+                gunichar2	   *cluster,
                 gint		     num_chrs,
                 PangoGlyph	 *glyph_lists)
 {
@@ -647,7 +647,7 @@ static void
 add_cluster (ThaiFontInfo	    *font_info,
              PangoGlyphString	*glyphs,
              gint		          cluster_start,
-             gunichar		      *cluster,
+             gunichar2		      *cluster,
              gint		          num_chrs)
 	     
 {
@@ -661,7 +661,7 @@ add_cluster (ThaiFontInfo	    *font_info,
 }
 
 static gboolean
-is_wtt_composible (gunichar cur_wc, gunichar nxt_wc)
+is_wtt_composible (gunichar2 cur_wc, gunichar2 nxt_wc)
 {
   switch (TAC_compose_and_input_check_type_table[char_class(ucs2tis(cur_wc))]
           [char_class(ucs2tis(nxt_wc))]) {
@@ -679,21 +679,21 @@ is_wtt_composible (gunichar cur_wc, gunichar nxt_wc)
   return FALSE;
 }
 
-static const char *
-get_next_cluster(const char *text,
-                 gint       length,
-                 gunichar   *cluster,
-                 gint       *num_chrs)
+static const gunichar2 *
+get_next_cluster(const gunichar2 *text,
+                 gint           length,
+                 gunichar2       *cluster,
+                 gint           *num_chrs)
 {
-  const char *p;
-  gint n_chars = 0;
+  const gunichar2 *p;
+  gint  n_chars = 0;
   
   p = text;
   while (p < text + length && n_chars < 3) {
-    gunichar current = g_utf8_get_char (p);
+    gunichar2 current = *p;
     
     if (n_chars == 0 ||
-        is_wtt_composible ((gunichar)(cluster[n_chars - 1]), current) ||
+        is_wtt_composible ((gunichar2)(cluster[n_chars - 1]), current) ||
         (n_chars == 1 &&
          is_char_type (cluster[0], Cons) &&
          is_char_type (current, SaraAm)) ||
@@ -702,7 +702,7 @@ get_next_cluster(const char *text,
          is_char_type (cluster[1], Tone) &&
          is_char_type (current, SaraAm))) {
       cluster[n_chars++] = current;
-      p = g_utf8_next_char(p);
+  p++;
     }
     else
       break;
@@ -714,16 +714,16 @@ get_next_cluster(const char *text,
 
 static void 
 thai_engine_shape(const char       *fontCharset,
-                  const char       *text,
+                  const gunichar2   *text,
                   gint             length,
                   PangoAnalysis    *analysis,
                   PangoGlyphString *glyphs)
 {
-  ThaiFontInfo *font_info;
-  const char   *p;
-  const char   *log_cluster;
-  gunichar     cluster[MAX_CLUSTER_CHRS];
-  gint         num_chrs;
+  ThaiFontInfo   *font_info;
+  const gunichar2 *p;
+  const gunichar2 *log_cluster;
+  gunichar2       cluster[MAX_CLUSTER_CHRS];
+  gint           num_chrs;
 
   pango_glyph_string_set_size(glyphs, 0);
   
@@ -745,7 +745,7 @@ thai_engine_get_coverage(const char *fontCharset,
   ThaiFontInfo *font_info = get_font_info(fontCharset);
   
   if (font_info->type != THAI_FONT_NONE) {
-    gunichar wc;
+    gunichar2 wc;
     
     for (wc = 0xe01; wc <= 0xe3a; wc++)
       pango_coverage_set(result, wc, PANGO_COVERAGE_EXACT);

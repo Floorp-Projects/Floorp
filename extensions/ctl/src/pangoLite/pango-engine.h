@@ -80,7 +80,7 @@ struct _PangoEngineShape
 {
   PangoEngine engine;
   void (*script_shape) (const char       *fontCharset, 
-                        const char       *text, 
+                        const gunichar2  *text, 
                         int              length, 
                         PangoAnalysis    *analysis, 
                         PangoGlyphString *glyphs);

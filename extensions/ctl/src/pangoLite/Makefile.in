@@ -68,4 +68,6 @@ CXXFLAGS  += $(GLIB_CFLAGS)
 CFLAGS    += $(GLIB_CFLAGS)
 EXTRA_DSO_LDOPTS += $(GLIB_LIBS) -lgmodule
 
-#DEFINES += -DSYSCONFDIR=\"$(sysconfdir)\"
+# Install pango.modules file for Shaping Modules.
+install::
+	$(INSTALL) $(srcdir)/pango.modules $(DIST)/bin
