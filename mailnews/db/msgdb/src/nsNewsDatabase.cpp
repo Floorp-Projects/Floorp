@@ -39,8 +39,6 @@ nsNewsDatabase::nsNewsDatabase()
 
 nsNewsDatabase::~nsNewsDatabase()
 {
-  // todo:  figure out where to delete m_newsgroupSpec
-
     if (m_readSet) {
         delete m_readSet;
         m_readSet = nsnull;
@@ -114,7 +112,6 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  newsDB->m_newsgroupSpec = new nsFileSpec(newsgroupName);
   newsDB->AddRef();
 
   err = newsDB->OpenMDB((const char *) summarySpec, create);

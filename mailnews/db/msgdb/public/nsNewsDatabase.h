@@ -88,7 +88,6 @@ public:
 protected:
   virtual PRBool	    ThreadBySubjectWithoutRe() ;
 
-  nsFileSpec            *m_newsgroupSpec;
   char                  *m_groupURL;
   //	MSG_FilterList*		m_filterList;
   
