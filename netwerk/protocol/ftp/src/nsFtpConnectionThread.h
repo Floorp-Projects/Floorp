@@ -116,7 +116,8 @@ public:
 	// nsIRunnable method
 	NS_IMETHOD Run();
 
-    nsresult Init(nsIThread* aThread);
+    nsresult Init(nsIThread* aThread,
+                  nsIUrl* aUrl);
 
 	// user level setup
     nsresult SetAction(FTP_ACTION aAction);

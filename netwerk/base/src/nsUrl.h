@@ -31,7 +31,7 @@
     {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
 }
 
-class nsUrl : public nsIUrl
+class nsUrl : public nsIUrl, public nsITypicalUrl
 {
 public:
     NS_DECL_AGGREGATED

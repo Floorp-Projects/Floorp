@@ -57,14 +57,18 @@ nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
 }
 
 nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamListener* aListener) {
-	mEventQueue = aEventQ; // whoever creates us must provide an event queue
+	NS_INIT_REFCNT();
+    
+    mEventQueue = aEventQ; // whoever creates us must provide an event queue
                            // so we can post events back to them.
     mListener = aListener;
-    NS_ADDREF(mListener);
+    NS_IF_ADDREF(mListener);
     mAction = GET;
+    mUsePasv = PR_TRUE;
     mState = FTP_S_USER;
     mAscii = PR_TRUE;
     mLength = 0;
+    mConnected = PR_FALSE;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
@@ -1243,7 +1247,7 @@ nsFtpConnectionThread::Run() {
 }
 
 nsresult
-nsFtpConnectionThread::Init(nsIThread* aThread) {
+nsFtpConnectionThread::Init(nsIThread* aThread, nsIUrl* aUrl) {
 /*    mThread = aThread;
     NS_ADDREF(mThread);
 
@@ -1255,6 +1259,8 @@ nsFtpConnectionThread::Init(nsIThread* aThread) {
     PR_CNotify(this);
     PR_CExitMonitor(this);
 */
+    mUrl = aUrl;
+    NS_ADDREF(mUrl);
     return NS_OK;
 }
 

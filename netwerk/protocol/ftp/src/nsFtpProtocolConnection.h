@@ -32,7 +32,7 @@
 #include "plevent.h"
 
 class nsFtpProtocolConnection : public nsIFtpProtocolConnection
-                                /*,public nsIStreamListener*/ {
+                                ,public nsIStreamListener {
 public:
     NS_DECL_ISUPPORTS
 
@@ -50,7 +50,7 @@ public:
     // nsIFtpProtocolConnection methods:
     NS_IMETHOD Get(void);
     NS_IMETHOD Put(void);
-/*
+
     // nsIStreamObserver methods:
     NS_IMETHOD OnStartBinding(nsISupports* context);
     NS_IMETHOD OnStopBinding(nsISupports* context,
@@ -62,7 +62,7 @@ public:
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
-*/
+
     // nsFtpProtocolConnection methods:
     NS_IMETHOD SetStreamListener(nsIStreamListener* aListener);
 
