@@ -1755,7 +1755,7 @@ cookie_LoadPermissions() {
     }
     int hostIndex, permissionIndex;
     hostIndex = 0;
-    if ((permissionIndex=buffer->Find('\t', hostIndex)+1) == 0) {
+    if ((permissionIndex=buffer->FindChar('\t', PR_FALSE,hostIndex)+1) == 0) {
       delete buffer;
       continue;      
     }
@@ -1924,12 +1924,12 @@ cookie_LoadCookies() {
     }
     int hostIndex, isDomainIndex, pathIndex, xxxIndex, expiresIndex, nameIndex, cookieIndex;
     hostIndex = 0;
-    if ((isDomainIndex=buffer->Find('\t', hostIndex)+1) == 0 ||
-        (pathIndex=buffer->Find('\t', isDomainIndex)+1) == 0 ||
-        (xxxIndex=buffer->Find('\t', pathIndex)+1) == 0 ||
-        (expiresIndex=buffer->Find('\t', xxxIndex)+1) == 0 ||
-        (nameIndex=buffer->Find('\t', expiresIndex)+1) == 0 ||
-        (cookieIndex=buffer->Find('\t', nameIndex)+1) == 0 ) {
+    if ((isDomainIndex=buffer->FindChar('\t', PR_FALSE,hostIndex)+1) == 0 ||
+        (pathIndex=buffer->FindChar('\t', PR_FALSE,isDomainIndex)+1) == 0 ||
+        (xxxIndex=buffer->FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
+        (expiresIndex=buffer->FindChar('\t', PR_FALSE,xxxIndex)+1) == 0 ||
+        (nameIndex=buffer->FindChar('\t', PR_FALSE,expiresIndex)+1) == 0 ||
+        (cookieIndex=buffer->FindChar('\t', PR_FALSE,nameIndex)+1) == 0 ) {
       delete buffer;
       continue;
     }
@@ -2158,7 +2158,7 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
     return nsAutoString("").ToNewCString();
   }
   start += PL_strlen(name); /* get passed the |name| part */
-  length = results.Find('|', start) - start;
+  length = results.FindChar('|', PR_FALSE,start) - start;
   results.Mid(value, start, length);
   return value.ToNewCString();
 }

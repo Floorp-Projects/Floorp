@@ -3390,7 +3390,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
         hostStr.SetString(host);
         nsAllocator::Free(host);
         PRInt32 dotLoc = -1;
-        dotLoc = hostStr.Find('.');
+        dotLoc = hostStr.FindChar('.');
         PRBool retry = PR_FALSE;
         if (-1 == dotLoc) {
             hostStr.Insert("www.", 0, 4);

@@ -937,12 +937,12 @@ nsFtpConnectionThread::R_pwd() {
         PRInt32 start;
 
         if (path.First() != '/') {
-            start = path.Find('/');
+            start = path.FindChar('/');
             if (start > -1) {
                 path.Right(ptr, start);
             } else {
                 // if we couldn't find a slash, check for back slashes and switch them out.
-                PRInt32 start = path.Find("\\");
+                PRInt32 start = path.FindChar('\\');
                 if (start > -1) {
                     path.ReplaceChar("\\", '/');
                 }
