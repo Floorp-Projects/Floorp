@@ -33,23 +33,15 @@
  */
 
 #include "plstr.h"
+#include <string.h>
 
 PR_IMPLEMENT(char *)
 PL_strstr(const char *big, const char *little)
 {
-    PRUint32 ll;
-
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    ll = PL_strlen(little);
-
-    for( ; *big; big++ )
-        if( *little == *big )
-            if( 0 == PL_strncmp(big, little, ll) )
-                return (char *)big;
-
-    return (char *)0;
+    return strstr(big, little);
 }
 
 PR_IMPLEMENT(char *)

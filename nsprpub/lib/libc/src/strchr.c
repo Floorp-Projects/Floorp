@@ -33,36 +33,22 @@
  */
 
 #include "plstr.h"
+#include <string.h>
 
 PR_IMPLEMENT(char *)
 PL_strchr(const char *s, char c)
 {
     if( (const char *)0 == s ) return (char *)0;
 
-    for( ; *s; s++ )
-        if( *s == c )
-            return (char *)s;
-
-    if( (char)0 == c ) return (char *)s;
-
-    return (char *)0;
+    return strchr(s, c);
 }
 
 PR_IMPLEMENT(char *)
 PL_strrchr(const char *s, char c)
 {
-    const char *p;
-
     if( (const char *)0 == s ) return (char *)0;
 
-    for( p = s; *p; p++ )
-        ;
-
-    for( ; p >= s; p-- )
-        if( *p == c )
-            return (char *)p;
-
-    return (char *)0;
+    return strrchr(s, c);
 }
 
 PR_IMPLEMENT(char *)

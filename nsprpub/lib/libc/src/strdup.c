@@ -57,7 +57,7 @@ PL_strdup(const char *s)
 PR_IMPLEMENT(void)
 PL_strfree(char *s)
 {
-	free(s);
+    free(s);
 }
 
 PR_IMPLEMENT(char *)

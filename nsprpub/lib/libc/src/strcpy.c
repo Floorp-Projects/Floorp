@@ -33,38 +33,22 @@
  */
 
 #include "plstr.h"
+#include <string.h>
 
 PR_IMPLEMENT(char *)
 PL_strcpy(char *dest, const char *src)
 {
-    char *rv;
-    
-    if( (char *)0 == dest ) return (char *)0;
-    if( (const char *)0 == src ) return (char *)0;
+    if( ((char *)0 == dest) || ((const char *)0 == src) ) return (char *)0;
 
-    for( rv = dest; ((*dest = *src) != 0); dest++, src++ )
-        ;
-
-    return rv;
+    return strcpy(dest, src);
 }
 
 PR_IMPLEMENT(char *)
 PL_strncpy(char *dest, const char *src, PRUint32 max)
 {
-    char *rv;
-    
-    if( (char *)0 == dest ) return (char *)0;
-    if( (const char *)0 == src ) return (char *)0;
+    if( ((char *)0 == dest) || ((const char *)0 == src) ) return (char *)0;
 
-    for( rv = dest; max && ((*dest = *src) != 0); dest++, src++, max-- )
-        ;
-
-#ifdef JLRU
-    while( --max )
-        *++dest = '\0';
-#endif /* JLRU */
-
-    return rv;
+    return strncpy(dest, src, (size_t)max);
 }
 
 PR_IMPLEMENT(char *)

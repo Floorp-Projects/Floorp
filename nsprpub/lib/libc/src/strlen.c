@@ -35,22 +35,24 @@
 #include "plstr.h"
 #include "prtypes.h"
 #include "prlog.h"
+#include <string.h>
 
 PR_IMPLEMENT(PRUint32)
 PL_strlen(const char *str)
 {
-    register const char *s;
+    size_t l;
 
     if( (const char *)0 == str ) return 0;
-    for( s = str; *s; s++ )
-        ;
-/* error checking in case we have a 64-bit platform -- make sure we dont
- * have ultra long strings that overflow a int32
- */ 
-    if (sizeof(PRUint32) < sizeof(PRUptrdiff))
-        PR_ASSERT((s-str) < 2147483647);
 
-    return (PRUint32)(s - str);
+    l = strlen(str);
+
+    /* error checking in case we have a 64-bit platform -- make sure
+     * we don't have ultra long strings that overflow an int32
+     */ 
+    if( sizeof(PRUint32) < sizeof(size_t) )
+        PR_ASSERT(l < 2147483647);
+
+    return (PRUint32)l;
 }
 
 PR_IMPLEMENT(PRUint32)
