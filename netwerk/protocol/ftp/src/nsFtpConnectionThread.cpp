@@ -59,7 +59,9 @@ static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kFTPHandlerCID, NS_FTPPROTOCOLHANDLER_CID);
-#define FTP_CRLF "\r\n" 
+
+#define FTP_CRLF "\r\n"
+#define FTP_DEFAULT_PORT 21
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -87,7 +89,6 @@ NS_IMETHODIMP_(nsrefcnt) nsFtpConnectionThread::Release(void)
   return mRefCnt;                                            
 }
 NS_IMPL_QUERY_INTERFACE2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
-//NS_IMPL_ISUPPORTS2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
 
 nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
@@ -1631,12 +1632,6 @@ nsFtpConnectionThread::Run() {
     /////////////////////////
     // COMMAND CHANNEL SETUP
     /////////////////////////
-    nsXPIDLCString host;
-    rv = mURL->GetHost(getter_Copies(host));
-    if (NS_FAILED(rv)) return rv;
-    PRInt32 port;
-    rv = mURL->GetPort(&port);
-    if (NS_FAILED(rv)) return rv;
 
     // use a cached connection if there is one.
     rv = mConnCache->RemoveConn(mCacheKey.GetBuffer(), &mConn);
@@ -1654,6 +1649,16 @@ nsFtpConnectionThread::Run() {
         mCwd        = mConn->mCwd;
         mList       = mConn->mList;
     } else {
+        nsXPIDLCString host;
+        rv = mURL->GetHost(getter_Copies(host));
+        if (NS_FAILED(rv)) return rv;
+        PRInt32 port;
+        rv = mURL->GetPort(&port);
+        if (NS_FAILED(rv)) return rv;
+
+        if (port < 0)
+            port = FTP_DEFAULT_PORT;
+
         // build our own
         rv = mSTS->CreateTransport(host, port, mEventSinkGetter, host, getter_AddRefs(mCPipe)); // the command channel
         if (NS_FAILED(rv)) return rv;
@@ -1888,6 +1893,9 @@ nsFtpConnectionThread::Init(nsIURI* aUrl,
     PRInt32 port;
     rv = mURL->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
+
+    if (port < 0)
+        port = FTP_DEFAULT_PORT;
 
     mCacheKey.SetString(host);
     mCacheKey.Append(port);

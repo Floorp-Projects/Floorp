@@ -150,9 +150,6 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     nsresult rv;
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("FTP attempt at %s ", aSpec));
 
-    // Ftp URLs (currently) have no additional structure beyond that provided by standard
-    // URLs, so there is no "outer" given to CreateInstance 
-
     nsIURI* url;
     if (aBaseURI) {
         rv = aBaseURI->Clone(&url);
@@ -166,15 +163,6 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
     }
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
-        return rv;
-    }
-
-    // XXX this is the default port for ftp. we need to strip out the actual
-    // XXX requested port.
-    rv = url->SetPort(21);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
