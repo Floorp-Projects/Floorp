@@ -450,12 +450,13 @@ protected:
  * Also resizes itself to fit the width of the title
  ****************************************************************************/
 
-class CGAFormPushButton : public LGAPushButton, public LFormElement, public CLayerClickCallbackMixin {
+class CGAFormPushButton : public LGAPushButton, public LFormElement, public CLayerClickCallbackMixin
+ {
+private:
+	typedef LGAPushButton super;
 
 public:
 	enum { class_ID = 'Gfpb' };
-
-	typedef LGAPushButton super;
 	
 // ее Constructors/destructors
 
@@ -556,11 +557,11 @@ protected:
  ****************************************************************************/
 class CGAFormRadio: public LGARadioButton, public LFormElement, public CLayerClickCallbackMixin
 {
-public:
-	enum { class_ID = 'Gfrb' };
-	
+private:
 	typedef LGARadioButton super;
 
+public:
+	enum { class_ID = 'Gfrb' };
 	
 					CGAFormRadio(LStream* inStream);
 
@@ -618,11 +619,12 @@ protected:
  ****************************************************************************/
 class CGAFormCheckbox: public LGACheckbox, public LFormElement, public CLayerClickCallbackMixin
 {
+private:
+	typedef LGACheckbox super;
+
 public:
 	enum { class_ID = 'Gfcb' };
-	
-	typedef LGACheckbox super;
-	
+		
 					CGAFormCheckbox(LStream* inStream);
 
 	virtual Boolean TrackHotSpot(

@@ -1175,9 +1175,18 @@ void CFormList::DrawElement (const short lMessage,
    				break ;
 
    case lHiliteMsg :
-   			LMSetHiliteMode( 0 );
-   			::InvertRect (lRect) ;
-   			break ;
+   			if (fContext->type != MWContextPrint)
+   			{
+				LMSetHiliteMode( 0 );
+   				::InvertRect (lRect);
+   			}
+   			else
+   			{
+   				Rect	cellRect = *lRect;
+   				cellRect.bottom ++;
+				::FrameRect(&cellRect);		// InvertRect does not seem to work when printing
+			}
+   			break;
   }
 }
 
