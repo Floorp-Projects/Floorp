@@ -9,4 +9,3 @@ nsIURILoader.idl
 nsIDocumentLoader.idl
 nsIWebProgress.idl
 nsIWebProgressListener.idl
-nsIDownload.idl
