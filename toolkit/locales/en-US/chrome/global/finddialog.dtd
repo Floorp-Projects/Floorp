@@ -14,6 +14,7 @@
 <!ENTITY findButton.label "Find Next">
 <!ENTITY findButton.accesskey "F">
 <!ENTITY cancelButton.label "Cancel">
+<!ENTITY closeButton.label "Close">
 <!ENTITY up.label "Up">
 <!ENTITY up.accesskey "U">
 <!ENTITY down.label "Down">

@@ -60,7 +60,7 @@
       <radio id="alwaysAsk" label="&alwaysAsk.label;" value="false"/>
       <hbox flex="1">
         <radio id="neverAsk" label="&neverAsk.label;" value="true"/>
-        <button id="showFolder" label="&showFolder.label;" oncommand="showFolder();"/>
+        <button id="showFolder" label="&showFolder.label;" oncommand="showFolder();" icon="open"/>
       </hbox>
     </radiogroup>
   </groupbox>
@@ -155,13 +155,13 @@
       <separator class="thin"/>
       <hbox>
         <button label="&editFileHandler.label;" accesskey="&editFileHandler.accesskey;"
-                id="editFileHandler" oncommand="editFileHandler();"/>
+                id="editFileHandler" oncommand="editFileHandler();" icon="properties"/>
         <button label="&removeFileHandler.label;" accesskey="&removeFileHandler.accesskey;"              
-                id="removeFileHandler" oncommand="removeFileHandler();"/>
+                id="removeFileHandler" oncommand="removeFileHandler();" icon="remove"/>
 #ifdef MOZ_PHOENIX
         <spring flex="1"/>
         <button label="&plugins.label;" accesskey="&plugins.accesskey;"
-                id="plugins" oncommand="showPlugins();"/>
+                id="plugins" oncommand="showPlugins();" icon="properties"/>
 #endif
       </hbox>
     </vbox>

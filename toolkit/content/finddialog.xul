@@ -83,8 +83,12 @@
     </vbox>
     <vbox flex="1">
       <button id="btnFind" label="&findButton.label;" accesskey="&findButton.accesskey;"
-              dlgtype="accept"/>
-      <button label="&cancelButton.label;" dlgtype="cancel"/>
+              dlgtype="accept" icon="find"/>
+#ifdef XP_UNIX
+      <button label="&closeButton.label;" icon="close" dlgtype="cancel"/>
+#else
+      <button label="&cancelButton.label;" icon="cancel" dlgtype="cancel"/>
+#endif
     </vbox>
   </hbox>
 </dialog>

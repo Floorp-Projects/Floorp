@@ -72,7 +72,7 @@
       
       <hbox align="center">
         <button id="add_button" oncommand="AddAvailableCharset();"
-                label="&add.label;" disabled="true"/>
+                label="&add.label;" icon="add" disabled="true"/>
       </hbox>
     </vbox>
     
@@ -87,7 +87,7 @@
       <separator class="thin"/>
       <hbox align="center">
         <button id="remove_button" oncommand="RemoveActiveCharset();"
-                disabled="true"
+                disabled="true" icon="remove"
                 label="&remove.label;"/>
       </hbox>
     </vbox> 

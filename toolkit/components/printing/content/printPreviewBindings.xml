@@ -53,7 +53,7 @@
 
     <content>
       <xul:button label="&print.label;" accesskey="&print.accesskey;"
-        oncommand="PrintUtils.print();"/>
+        oncommand="PrintUtils.print();" icon="print"/>
 
       <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
         oncommand="this.parentNode.doPageSetup();"/>
@@ -118,7 +118,7 @@
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
       <xul:button label="&close.label;" accesskey="&close.accesskey;"
-        oncommand="PrintUtils.exitPrintPreview();"/>
+        oncommand="PrintUtils.exitPrintPreview();" icon="close"/>
       <xul:data value="&customPrompt.title;"/>
     </content>
 
