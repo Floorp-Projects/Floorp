@@ -18,6 +18,7 @@
  */
 
 #include "nsISupports.idl"
+#include "domstubs.idl"
 
 %{C++
 #include "nscore.h"
@@ -29,10 +30,13 @@ interface nsIURI;
 interface nsIXULWindowCallbacks;
 interface nsICmdLineService;
 
+[ptr] native JSContext(JSContext);
+
 %{C++
 /* Forward declarations... */
 struct PRThread;
 class nsIFactory;
+struct JSContext;
 
 #define NS_SIZETOCONTENT -1
 
@@ -152,6 +156,17 @@ interface nsIAppShellService : nsISupports
    *                Do not taunt hidden window.
    */
   void GetHiddenWindow(out nsIWebShellWindow aResult);
+
+  /**
+   * Return the (singleton) application hidden window as an nsIDOMWindow,
+   * and, the corresponding JavaScript context pointer.  This is useful
+   * if you'd like to subsequently call OpenDialog on the hidden window.
+   * @aHiddenDOMWindow the hidden window QI'd to type nsIDOMWindow
+   * @aJSContext       the corresponding JavaScript context
+   */
+  [noscript]
+  void GetHiddenWindowAndJSContext(out nsIDOMWindow aHiddenDOMWindow,
+                                   out JSContext aJSContext);
 
   /**
    * Add a window to the application's registry of windows.  These windows

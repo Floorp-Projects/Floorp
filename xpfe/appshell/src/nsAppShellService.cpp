@@ -70,6 +70,10 @@ static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
 #include "nsXMLEncodingCID.h"
 #include "nsIXMLEncodingService.h"
 
+/* For implementing GetHiddenWindowAndJSContext */
+#include "nsIScriptGlobalObject.h"
+#include "jsapi.h"
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -629,6 +633,57 @@ nsAppShellService::GetHiddenWindow(nsIWebShellWindow **aWindow)
   NS_IF_ADDREF(rv);
   *aWindow = rv;
   return rv ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
+                                               JSContext    **aJSContext)
+{
+    nsresult rv = NS_OK;
+    if ( aWindow && aJSContext ) {
+        *aWindow    = nsnull;
+        *aJSContext = nsnull;
+
+        if ( mHiddenWindow ) {
+            // Convert hidden window to nsIDOMWindow and extract its JSContext.
+            do {
+                // 1. Get webshell for hidden window.
+                nsCOMPtr<nsIWebShell> webShell;
+                rv = mHiddenWindow->GetWebShell( *getter_AddRefs( webShell ) );
+                if (NS_FAILED(rv)) break;
+
+                // 2. Convert that to an nsIDOMWindow.
+                nsCOMPtr<nsIDOMWindow> hiddenDOMWindow;
+                rv = mHiddenWindow->ConvertWebShellToDOMWindow( webShell,
+                                                                getter_AddRefs( hiddenDOMWindow ) );
+                if (NS_FAILED(rv)) break;
+
+                // 3. Get script global object for the window.
+                nsCOMPtr<nsIScriptGlobalObject> sgo;
+                sgo = do_QueryInterface( hiddenDOMWindow );
+                if (!sgo) { rv = NS_ERROR_FAILURE; break; }
+
+                // 4. Get script context from that.
+                nsCOMPtr<nsIScriptContext> scriptContext;
+                sgo->GetContext( getter_AddRefs( scriptContext ) );
+                if (!scriptContext) { rv = NS_ERROR_FAILURE; break; }
+
+                // 5. Get JSContext from the script context.
+                JSContext *jsContext = (JSContext*)scriptContext->GetNativeContext();
+                if (!jsContext) { rv = NS_ERROR_FAILURE; break; }
+
+                // Now, give results to caller.
+                *aWindow    = hiddenDOMWindow.get();
+                NS_IF_ADDREF( *aWindow );
+                *aJSContext = jsContext;
+            } while (0);
+        } else {
+            rv = NS_ERROR_FAILURE;
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
 }
 
 /* Create a Window, run it modally, and destroy it.  To make initial control
