@@ -72,7 +72,13 @@ EXPORTS =               \
 	nsIPopUpMenu.h \
 	nsIMenuButton.h \
 	nsIImageButtonListener.h \
-        $(NULL)
+	nsIDataModel.h \
+	nsITreeDataModel.h \
+	nsIDMWidget.h \
+	nsITreeColumn \
+	nsITreeItem \
+	nsIDMItem \
+    $(NULL)
 
 MODULE = raptor
 
