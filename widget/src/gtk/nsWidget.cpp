@@ -1181,6 +1181,12 @@ PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
   return ConvertStatus(status);
 }
 
+PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aEventStatus)
+{
+  DispatchEvent(event, aEventStatus);
+  return ConvertStatus(aEventStatus);
+}
+
 //-------------------------------------------------------------------------
 //
 // Dispatch standard event

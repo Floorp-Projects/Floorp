@@ -653,6 +653,7 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
 PRBool nsWindow::OnExpose(nsPaintEvent &event)
 {
   nsresult result ;
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
   // call the event callback
   if (mEventCallback) 
@@ -703,7 +704,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
       event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
                                             nsClipCombine_kReplace, rv);
 
-      result = DispatchWindowEvent(&event);
+      result = DispatchWindowEvent(&event, eventStatus);
       NS_RELEASE(event.renderingContext);
       //      NS_RELEASE(mUpdateArea);
     }
@@ -712,7 +713,8 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
 #ifdef NS_DEBUG
-    if (WANT_PAINT_FLASHING)
+
+    if (WANT_PAINT_FLASHING && nsEventStatus_eIgnore != eventStatus)
     {
       GdkWindow *    gw = GetRenderWindow(mWidget);
       
