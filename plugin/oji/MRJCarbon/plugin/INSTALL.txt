@@ -1,4 +1,4 @@
-MRJPluginCarbon v1.0 Install Notes
+MRJPluginCarbon v1.0.1 Install Notes
 
 This short document explains how to install the MRJ Plugin for Mac OS X. The process for installing the plugin has been greatly simplified from previous releases. Simply drag the file MRJPluginCarbon into the folder
 
