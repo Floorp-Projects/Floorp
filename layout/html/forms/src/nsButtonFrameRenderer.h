@@ -61,22 +61,21 @@ public:
       virtual ~nsButtonFrameRenderer();
 
 
+   // These three functions all assume a "background" layer within the
+   // button, which is itself in the foreground layer.
 	 virtual void PaintButton(nsIPresContext* aPresContext,
 							  nsIRenderingContext& aRenderingContext,
 							  const nsRect& aDirtyRect,
-							  nsFramePaintLayer aWhichLayer,
 							  const nsRect& aRect);
 
 	 virtual void PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
 						  nsIRenderingContext& aRenderingContext,
 						  const nsRect& aDirtyRect,
-						  nsFramePaintLayer aWhichLayer,
 						  const nsRect& aRect);
 
 	 virtual void PaintBorderAndBackground(nsIPresContext* aPresContext,
 						  nsIRenderingContext& aRenderingContext,
 						  const nsRect& aDirtyRect,
-						  nsFramePaintLayer aWhichLayer,
 						  const nsRect& aRect);
 
 	virtual void SetNameSpace(PRInt32 aNameSpace);

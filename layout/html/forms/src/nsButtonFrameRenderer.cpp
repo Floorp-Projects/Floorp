@@ -126,23 +126,21 @@ void
 nsButtonFrameRenderer::PaintButton     (nsIPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
-          nsFramePaintLayer aWhichLayer,
           const nsRect& aRect)
 {
   //printf("painted width='%d' height='%d'\n",aRect.width, aRect.height);
 
   // draw the border and background inside the focus and outline borders
-  PaintBorderAndBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
+  PaintBorderAndBackground(aPresContext, aRenderingContext, aDirtyRect, aRect);
 
   // draw the focus and outline borders
-  PaintOutlineAndFocusBorders(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
+  PaintOutlineAndFocusBorders(aPresContext, aRenderingContext, aDirtyRect, aRect);
 }
 
 void
 nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
-          nsFramePaintLayer aWhichLayer,
           const nsRect& aRect)
 {
   // once we have all that let draw the focus if we have it. We will need to draw 2 focuses.
@@ -152,31 +150,27 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
 
   nsRect rect;
 
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) 
-  {
-    if (mOuterFocusStyle) {
-      // ---------- paint the outer focus border -------------
+  if (mOuterFocusStyle) {
+    // ---------- paint the outer focus border -------------
 
-      GetButtonOuterFocusRect(aRect, rect);
+    GetButtonOuterFocusRect(aRect, rect);
 
-      const nsStyleBorder* border = (const nsStyleBorder*)mOuterFocusStyle ->GetStyleData(eStyleStruct_Border);
-
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-                                  aDirtyRect, rect, *border, mOuterFocusStyle, 0);
-    }
-
-    // ---------- paint the inner focus border -------------
-    if (mInnerFocusStyle) { 
-
-      GetButtonInnerFocusRect(aRect, rect);
-
-      const nsStyleBorder* border = (const nsStyleBorder*)mInnerFocusStyle ->GetStyleData(eStyleStruct_Border);
-
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-                                  aDirtyRect, rect, *border, mInnerFocusStyle, 0);
-    }
+    const nsStyleBorder* border;
+    ::GetStyleData(mOuterFocusStyle, &border);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
+                                aDirtyRect, rect, *border, mOuterFocusStyle, 0);
   }
 
+  if (mInnerFocusStyle) { 
+    // ---------- paint the inner focus border -------------
+
+    GetButtonInnerFocusRect(aRect, rect);
+
+    const nsStyleBorder* border;
+    ::GetStyleData(mInnerFocusStyle, &border);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
+                                aDirtyRect, rect, *border, mInnerFocusStyle, 0);
+  }
 }
 
 
@@ -184,14 +178,9 @@ void
 nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
-          nsFramePaintLayer aWhichLayer,
           const nsRect& aRect)
 
 {
-
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND != aWhichLayer) 
-    return;
-
   // get the button rect this is inside the focus and outline rects
   nsRect buttonRect;
   GetButtonRect(aRect, buttonRect);

@@ -361,7 +361,8 @@ nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                            nsFramePaintLayer aWhichLayer,
                                            nsIFrame** aFrame)
 {
-  if (mRect.Contains(aPoint)) {
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
+      mRect.Contains(aPoint)) {
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       
@@ -417,15 +418,18 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
                                 PRUint32             aFlags)
 {
   PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND ||
+      (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible)) {
     return NS_OK;
   }
 
   nsRect rect(0, 0, mRect.width, mRect.height);
-  mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
+  mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, rect);
 
 #if 0 // old way
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATERS);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
 
 #else // temporary
     // XXX This is temporary
@@ -445,7 +449,9 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
 
   aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipEmpty);
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATERS);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
 
   aRenderingContext.PopState(clipEmpty);
 
