@@ -300,42 +300,42 @@ nsNativeComponentLoader::RegisterComponentsInDir(PRInt32 when,
     rv = dirIterator->Exists(&more);
     if (NS_FAILED(rv)) return rv;
     while (more == PR_TRUE)
+    {
+        rv = dirIterator->GetCurrentSpec(&dirEntry);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = dirEntry->IsDirectory(&isDir);
+        if (NS_FAILED(rv)) return rv;
+        if (isDir == PR_TRUE)
         {
-            rv = dirIterator->GetCurrentSpec(&dirEntry);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = dirEntry->IsDirectory(&isDir);
-            if (NS_FAILED(rv)) return rv;
-            if (isDir == PR_TRUE)
-                {
-                    // This is a directory. Grovel for components into the directory.
-                    rv = RegisterComponentsInDir(when, dirEntry);
-                }
-            else
-                {
-                    PRBool registered;
-                    // This is a file. Try to register it.
-                    rv = AutoRegisterComponent(when, dirEntry, &registered);
-                }
-            if (NS_FAILED(rv))
-                {
-                    // This means either of AutoRegisterComponent or
-                    // SyncComponentsInDir failed. It could be because
-                    // the file isn't a component like initpref.js
-                    // So dont break on these errors.
-
-                    // Update: actually, we return NS_OK for the wrong file
-                    // types, but we should never fail hard because just one
-                    // component didn't work.
-                }
-                    
-            NS_RELEASE(dirEntry);
-        
-            rv = dirIterator->Next();
-            if (NS_FAILED(rv)) return rv;
-            rv = dirIterator->Exists(&more);
-            if (NS_FAILED(rv)) return rv;
+            // This is a directory. Grovel for components into the directory.
+            rv = RegisterComponentsInDir(when, dirEntry);
         }
+        else
+        {
+            PRBool registered;
+            // This is a file. Try to register it.
+            rv = AutoRegisterComponent(when, dirEntry, &registered);
+        }
+        if (NS_FAILED(rv))
+        {
+            // This means either of AutoRegisterComponent or
+            // SyncComponentsInDir failed. It could be because
+            // the file isn't a component like initpref.js
+            // So dont break on these errors.
+                
+            // Update: actually, we return NS_OK for the wrong file
+            // types, but we should never fail hard because just one
+            // component didn't work.
+        }
+                    
+        NS_RELEASE(dirEntry);
+        
+        rv = dirIterator->Next();
+        if (NS_FAILED(rv)) return rv;
+        rv = dirIterator->Exists(&more);
+        if (NS_FAILED(rv)) return rv;
+    }
     
     return rv;
 }
@@ -346,9 +346,9 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     nsresult rv = NS_ERROR_FAILURE;
 
     if (!dll || dll->IsLoaded() == PR_FALSE)
-        {
-            return NS_ERROR_INVALID_ARG;
-        }
+    {
+        return NS_ERROR_INVALID_ARG;
+    }
 
     // Get if the dll was marked for unload in an earlier round
     PRBool dllMarkedForUnload = dll->IsMarkedForUnload();
@@ -365,27 +365,27 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     rv = dll->GetModule(NS_STATIC_CAST(nsIComponentManager*, nsComponentManagerImpl::gComponentManager),
                         getter_AddRefs(mobj));
     if (NS_SUCCEEDED(rv))
-        {
-            rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
-        }
+    {
+        rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
+    }
 #ifndef OBSOLETE_MODULE_LOADING
     else
+    {
+        // Try the old method of module unloading
+        nsCanUnloadProc proc = (nsCanUnloadProc)dll->FindSymbol("NSCanUnload");
+        if (proc)
         {
-            // Try the old method of module unloading
-            nsCanUnloadProc proc = (nsCanUnloadProc)dll->FindSymbol("NSCanUnload");
-            if (proc)
-                {
-                    canUnload = proc(serviceMgr);
-                    rv = NS_OK;	// No error status returned by call.
-                }
-            else
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                           ("nsComponentManager: Unload cant get nsIModule or CanUnload for %s",
-                            dll->GetNativePath()));
-                    return rv;
-                }
+            canUnload = proc(serviceMgr);
+            rv = NS_OK;	// No error status returned by call.
         }
+        else
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsComponentManager: Unload cant get nsIModule or CanUnload for %s",
+                    dll->GetNativePath()));
+            return rv;
+        }
+    }
 #endif /* OBSOLETE_MODULE_LOADING */
 
     mobj = nsnull; // Release our reference to the module object
@@ -393,43 +393,43 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     // When shutting down, whether we can unload the dll or not,
     // we will shutdown the dll to release any memory it has got
     if (when == nsIComponentManager::NS_Shutdown)
-        {
-            dll->Shutdown();
-        }
+    {
+        dll->Shutdown();
+    }
         
     // Check error status on CanUnload() call
     if (NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: nsIModule::CanUnload() returned error for %s.",
-                    dll->GetNativePath()));
-            return rv;
-        }
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+               ("nsComponentManager: nsIModule::CanUnload() returned error for %s.",
+                dll->GetNativePath()));
+        return rv;
+    }
 
     if (canUnload)
-        {
-            if (dllMarkedForUnload)
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                           ("nsComponentManager: + Unloading \"%s\".", dll->GetNativePath()));
-#if 0
-                    // XXX dlls aren't counting their outstanding instances correctly
-                    // XXX hence, dont unload until this gets enforced.
-                    rv = dll->Unload();
-#endif /* 0 */
-                }
-            else
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                           ("nsComponentManager: Ready for unload \"%s\".", dll->GetNativePath()));
-                }
-        }
-    else
+    {
+        if (dllMarkedForUnload)
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: + NOT Unloading %s", dll->GetNativePath()));
-            rv = NS_ERROR_FAILURE;
+                   ("nsComponentManager: + Unloading \"%s\".", dll->GetNativePath()));
+#if 0
+            // XXX dlls aren't counting their outstanding instances correctly
+            // XXX hence, dont unload until this gets enforced.
+            rv = dll->Unload();
+#endif /* 0 */
         }
+        else
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                   ("nsComponentManager: Ready for unload \"%s\".", dll->GetNativePath()));
+        }
+    }
+    else
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+               ("nsComponentManager: + NOT Unloading %s", dll->GetNativePath()));
+        rv = NS_ERROR_FAILURE;
+    }
     return rv;
 }
 
@@ -468,16 +468,16 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
     if (NS_FAILED(res)) return res;
 
     if (dll->Load() == PR_FALSE)
-        {
-            // Cannot load. Probably not a dll.
-            char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
-            if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
-                PR_GetErrorText(errorMsg);
+    {
+        // Cannot load. Probably not a dll.
+        char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
+        if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
+            PR_GetErrorText(errorMsg);
 
-            DumpLoadError(dll, "SelfRegisterDll", errorMsg);
+        DumpLoadError(dll, "SelfRegisterDll", errorMsg);
 
-            return NS_ERROR_FAILURE;
-        }
+        return NS_ERROR_FAILURE;
+    }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
            ("nsNativeComponentLoader: + Loaded \"%s\".", dll->GetNativePath()));
@@ -486,37 +486,39 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
     nsCOMPtr<nsIModule> mobj;
     res = dll->GetModule(mCompMgr, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(res))
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+               ("nsNativeComponentLoader: %s using nsIModule to register self.",
+                dll->GetNativePath()));
+        nsCOMPtr<nsIFileSpec> fs;
+        res = dll->GetDllSpec(getter_AddRefs(fs));
+        if (NS_SUCCEEDED(res))
+            res = mobj->RegisterSelf(mCompMgr, fs, registryLocation,
+                                     nativeComponentType);
+        else
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-                   ("nsNativeComponentLoader: %s using nsIModule to register self.", dll->GetNativePath()));
-            nsCOMPtr<nsIFileSpec> fs;
-            res = dll->GetDllSpec(getter_AddRefs(fs));
-            if (NS_SUCCEEDED(res))
-                res = mobj->RegisterSelf(mCompMgr, fs, registryLocation,
-                                         nativeComponentType);
-            else
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-                           ("nsNativeComponentLoader: dll->GetDllSpec() on %s FAILED.", dll->GetNativePath()));
-                }
-            mobj = NULL;    // Force a release of the Module object before unload()
+                   ("nsNativeComponentLoader: dll->GetDllSpec() on %s FAILED.",
+                    dll->GetNativePath()));
         }
+        mobj = NULL;    // Force a release of the Module object before unload()
+    }
 #ifndef OBSOLETE_MODULE_LOADING
     else
+    {
+        res = NS_ERROR_NO_INTERFACE;
+        nsRegisterProc regproc = (nsRegisterProc)dll->FindSymbol("NSRegisterSelf");
+        if (regproc)
         {
-            res = NS_ERROR_NO_INTERFACE;
-            nsRegisterProc regproc = (nsRegisterProc)dll->FindSymbol("NSRegisterSelf");
-            if (regproc)
-                {
-                    // Call the NSRegisterSelfProc to enable dll registration
-                    res = regproc(serviceMgr, registryLocation);
-                    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
-                           ("NSRegisterSelf(%s, %s) %s",
-                            serviceMgr ? "serviceMgr" : "(null)",
-                            registryLocation,
-                            NS_FAILED(res) ? "FAILED" : "succeeded"));
-                }
+            // Call the NSRegisterSelfProc to enable dll registration
+            res = regproc(serviceMgr, registryLocation);
+            PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+                   ("NSRegisterSelf(%s, %s) %s",
+                    serviceMgr ? "serviceMgr" : "(null)",
+                    registryLocation,
+                    NS_FAILED(res) ? "FAILED" : "succeeded"));
         }
+    }
 #endif /* OBSOLETE_MODULE_LOADING */
 
     // Update the timestamp and size of the dll in registry
@@ -619,41 +621,41 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
     if (NS_FAILED(res)) return res;
 
     if (dll->Load() == PR_FALSE)
-        {
-            // Cannot load. Probably not a dll.
-            return(NS_ERROR_FAILURE);
-        }
+    {
+        // Cannot load. Probably not a dll.
+        return(NS_ERROR_FAILURE);
+    }
         
     // Tell the module to self register
     nsCOMPtr<nsIModule> mobj;
     res = dll->GetModule(mCompMgr, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(res))
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+               ("nsNativeComponentLoader: %s using nsIModule to unregister self.", dll->GetNativePath()));
+        nsCOMPtr<nsIFileSpec> fs;
+        res = dll->GetDllSpec(getter_AddRefs(fs));
+        if (NS_SUCCEEDED(res))
+            res = mobj->UnregisterSelf(mCompMgr, fs, /* XXX location */ "");
+        else
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-                   ("nsNativeComponentLoader: %s using nsIModule to unregister self.", dll->GetNativePath()));
-            nsCOMPtr<nsIFileSpec> fs;
-            res = dll->GetDllSpec(getter_AddRefs(fs));
-            if (NS_SUCCEEDED(res))
-                res = mobj->UnregisterSelf(mCompMgr, fs, /* XXX location */ "");
-            else
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-                           ("nsNativeComponentLoader: dll->GetDllSpec() on %s FAILED.", dll->GetNativePath()));
-                }
-            mobj = NULL;    // Force a release of the Module object before unload()
+                   ("nsNativeComponentLoader: dll->GetDllSpec() on %s FAILED.", dll->GetNativePath()));
         }
+        mobj = NULL;    // Force a release of the Module object before unload()
+    }
 #ifndef OBSOLETE_MODULE_LOADING
     else
+    {
+        res = NS_ERROR_NO_INTERFACE;
+        nsUnregisterProc unregproc =
+            (nsUnregisterProc) dll->FindSymbol("NSUnregisterSelf");
+        if (unregproc)
         {
-            res = NS_ERROR_NO_INTERFACE;
-            nsUnregisterProc unregproc =
-                (nsUnregisterProc) dll->FindSymbol("NSUnregisterSelf");
-            if (unregproc)
-                {
-                    // Call the NSUnregisterSelfProc to enable dll de-registration
-                    res = unregproc(serviceMgr, dll->GetPersistentDescriptorString());
-                }
+            // Call the NSUnregisterSelfProc to enable dll de-registration
+            res = unregproc(serviceMgr, dll->GetPersistentDescriptorString());
         }
+    }
 #endif /* OBSOLETE_MODULE_LOADING */
     dll->Unload();
     return res;
@@ -711,34 +713,34 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     CInfoPBRec  catInfo;
     OSErr       err = fs.GetCatInfo(catInfo);
     if (!err)
+    {
+        // on Mac, Mozilla shared libraries are of type 'shlb'
+        // Note: we don't check the creator (which for Mozilla is 'MOZZ')
+        // so that 3rd party shared libraries will be noticed!
+        if ((catInfo.hFileInfo.ioFlFndrInfo.fdType == 'shlb')
+            /* && (catInfo.hFileInfo.ioFlFndrInfo.fdCreator == 'MOZZ') */ )
         {
-            // on Mac, Mozilla shared libraries are of type 'shlb'
-            // Note: we don't check the creator (which for Mozilla is 'MOZZ')
-            // so that 3rd party shared libraries will be noticed!
-            if ((catInfo.hFileInfo.ioFlFndrInfo.fdType == 'shlb')
-                /* && (catInfo.hFileInfo.ioFlFndrInfo.fdCreator == 'MOZZ') */ )
-                {
-                    validExtension = PR_TRUE;
-                }
+            validExtension = PR_TRUE;
         }
+    }
 #else
     char *leafName = NULL;
     rv = component->GetLeafName(&leafName);
     if (NS_FAILED(rv)) return rv;
     int flen = PL_strlen(leafName);
     for (int i=0; ValidDllExtensions[i] != NULL; i++)
-        {
-            int extlen = PL_strlen(ValidDllExtensions[i]);
+    {
+        int extlen = PL_strlen(ValidDllExtensions[i]);
             
-            // Does fullname end with this extension
-            if (flen >= extlen &&
-                !PL_strcasecmp(&(leafName[flen - extlen]), ValidDllExtensions[i])
-                )
-                {
-                    validExtension = PR_TRUE;
-                    break;
-                }
+        // Does fullname end with this extension
+        if (flen >= extlen &&
+            !PL_strcasecmp(&(leafName[flen - extlen]), ValidDllExtensions[i])
+            )
+        {
+            validExtension = PR_TRUE;
+            break;
         }
+    }
     if (leafName) nsCRT::free(leafName);
 #endif
         
@@ -770,80 +772,80 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         return rv;
 
     if (dll != NULL)
+    {
+        // Make sure the dll is OK
+        if (dll->GetStatus() != NS_OK)
         {
-            // Make sure the dll is OK
-            if (dll->GetStatus() != NS_OK)
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                           ("nsNativeComponentLoader: + nsDll not NS_OK \"%s\". Skipping...",
-                            dll->GetNativePath()));
-                    return NS_ERROR_FAILURE;
-                }
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsNativeComponentLoader: + nsDll not NS_OK \"%s\". Skipping...",
+                    dll->GetNativePath()));
+            return NS_ERROR_FAILURE;
+        }
             
-            // We already have seen this dll. Check if this dll changed
-            if (!dll->HasChanged())
-                {
-                    // Dll hasn't changed. Skip.
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                           ("nsComponentManager: + nsDll not changed \"%s\". Skipping...",
-                            dll->GetNativePath()));
-                    return NS_OK;
-                }
+        // We already have seen this dll. Check if this dll changed
+        if (!dll->HasChanged())
+        {
+            // Dll hasn't changed. Skip.
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsComponentManager: + nsDll not changed \"%s\". Skipping...",
+                    dll->GetNativePath()));
+            return NS_OK;
+        }
 
-            // Aagh! the dll has changed since the last time we saw it.
-            // re-register dll
-            if (dll->IsLoaded())
-                {
-                    // We loaded the old version of the dll and now we find that the
-                    // on-disk copy if newer. Try to unload the dll.
-                    nsIServiceManager *serviceMgr = NULL;
-                    nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-                    rv = nsFreeLibrary(dll, serviceMgr, when);
-                    if (NS_FAILED(rv))
-                        {
-                            // THIS IS THE WORST SITUATION TO BE IN.
-                            // Dll doesn't want to be unloaded. Cannot re-register
-                            // this dll.
-                            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                                   ("nsNativeComponentLoader: *** Dll already loaded. "
-                                    "Cannot unload either. Hence cannot re-register "
-                                    "\"%s\". Skipping...", dll->GetNativePath()));
-                            return rv;
-                        }
-                    else {
+        // Aagh! the dll has changed since the last time we saw it.
+        // re-register dll
+        if (dll->IsLoaded())
+        {
+            // We loaded the old version of the dll and now we find that the
+            // on-disk copy if newer. Try to unload the dll.
+            nsIServiceManager *serviceMgr = NULL;
+            nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+            rv = nsFreeLibrary(dll, serviceMgr, when);
+            if (NS_FAILED(rv))
+            {
+                // THIS IS THE WORST SITUATION TO BE IN.
+                // Dll doesn't want to be unloaded. Cannot re-register
+                // this dll.
+                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                       ("nsNativeComponentLoader: *** Dll already loaded. "
+                        "Cannot unload either. Hence cannot re-register "
+                        "\"%s\". Skipping...", dll->GetNativePath()));
+                return rv;
+            }
+            else {
                                 // dll doesn't have a CanUnload proc. Guess it is
                                 // ok to unload it.
-                        dll->Unload();
-                        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                               ("nsNativeComponentLoader: + Unloading \"%s\". (no CanUnloadProc).",
-                                dll->GetNativePath()));
-                    }
+                dll->Unload();
+                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                       ("nsNativeComponentLoader: + Unloading \"%s\". (no CanUnloadProc).",
+                        dll->GetNativePath()));
+            }
                 
-                } // dll isloaded
+        } // dll isloaded
             
-            // Sanity.
-            if (dll->IsLoaded())
-                {
-                    // We went through all the above to make sure the dll
-                    // is unloaded. And here we are with the dll still
-                    // loaded. Whoever taught dp programming...
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                           ("nsNativeComponentLoader: Dll still loaded. Cannot re-register "
-                            "\"%s\". Skipping...", dll->GetNativePath()));
-                    return NS_ERROR_FAILURE;
-                }
-        } // dll != NULL
-    else
+        // Sanity.
+        if (dll->IsLoaded())
         {
-            // Create and add the dll to the mDllStore
-            // It is ok to do this even if the creation of nsDll
-            // didnt succeed. That way we wont do this again
-            // when we encounter the same dll.
-            dll = new nsDll(persistentDescriptor);
-            if (dll == NULL)
-                return NS_ERROR_OUT_OF_MEMORY;
-            mDllStore->Put(&key, (void *) dll);
-        } // dll == NULL
+            // We went through all the above to make sure the dll
+            // is unloaded. And here we are with the dll still
+            // loaded. Whoever taught dp programming...
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                   ("nsNativeComponentLoader: Dll still loaded. Cannot re-register "
+                    "\"%s\". Skipping...", dll->GetNativePath()));
+            return NS_ERROR_FAILURE;
+        }
+    } // dll != NULL
+    else
+    {
+        // Create and add the dll to the mDllStore
+        // It is ok to do this even if the creation of nsDll
+        // didnt succeed. That way we wont do this again
+        // when we encounter the same dll.
+        dll = new nsDll(persistentDescriptor);
+        if (dll == NULL)
+            return NS_ERROR_OUT_OF_MEMORY;
+        mDllStore->Put(&key, (void *) dll);
+    } // dll == NULL
         
     // Either we are seeing the dll for the first time or the dll has
     // changed since we last saw it and it is unloaded successfully.
@@ -852,26 +854,26 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     nsresult res = SelfRegisterDll(dll, persistentDescriptor);
     nsresult ret = NS_OK;
     if (NS_FAILED(res))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsNativeComponentLoader: Autoregistration FAILED for "
-                    "\"%s\". Skipping...", dll->GetNativePath()));
-            // Mark dll as not xpcom dll along with modified time and size in
-            // the registry so that we wont need to load the dll again every
-            // session until the dll changes.
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsNativeComponentLoader: Autoregistration FAILED for "
+                "\"%s\". Skipping...", dll->GetNativePath()));
+        // Mark dll as not xpcom dll along with modified time and size in
+        // the registry so that we wont need to load the dll again every
+        // session until the dll changes.
 #ifdef USE_REGISTRY
 #endif /* USE_REGISTRY */
-            ret = NS_ERROR_FAILURE;
-        }
+        ret = NS_ERROR_FAILURE;
+    }
     else
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsNativeComponentLoader: Autoregistration Passed for "
-                    "\"%s\".", dll->GetNativePath()));
-            // Marking dll along with modified time and size in the
-            // registry happens at PlatformRegister(). No need to do it
-            // here again.
-        }
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsNativeComponentLoader: Autoregistration Passed for "
+                "\"%s\".", dll->GetNativePath()));
+        // Marking dll along with modified time and size in the
+        // registry happens at PlatformRegister(). No need to do it
+        // here again.
+    }
     return ret;
 }
 
@@ -977,37 +979,37 @@ nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec, const char *aLocation,
     nsStringKey key(aLocation);
     dll = (nsDll *)mDllStore->Get(&key);
     if (dll)
-        {
-            *aDll = dll;
-            return NS_OK;
-        }
+    {
+        *aDll = dll;
+        return NS_OK;
+    }
 
     if (!aSpec)
-        {
-            if (!nsCRT::strncmp(aLocation, XPCOM_LIB_PREFIX, 4)) {
-                dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
-                if (!dll) return NS_ERROR_OUT_OF_MEMORY;
-            } else {
-                rv = mCompMgr->SpecForRegistryLocation(aLocation,
-                                                       getter_AddRefs(spec));
-                if (NS_FAILED(rv))
-                    return rv;
-            }
+    {
+        if (!nsCRT::strncmp(aLocation, XPCOM_LIB_PREFIX, 4)) {
+            dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
+            if (!dll) return NS_ERROR_OUT_OF_MEMORY;
+        } else {
+            rv = mCompMgr->SpecForRegistryLocation(aLocation,
+                                                   getter_AddRefs(spec));
+            if (NS_FAILED(rv))
+                return rv;
         }
+    }
     else
-        {
-            spec = aSpec;
-        }
+    {
+        spec = aSpec;
+    }
 
     if (!dll)
+    {
+        if (modificationTime == 0 && fileSize == 0)
         {
-            if (modificationTime == 0 && fileSize == 0)
-                {
-                    // Get the modtime and filesize from the registry
-                    rv = GetRegistryDllInfo(aLocation, &modificationTime, &fileSize);
-                }
-            dll = new nsDll(spec, aLocation, modificationTime, fileSize);
+            // Get the modtime and filesize from the registry
+            rv = GetRegistryDllInfo(aLocation, &modificationTime, &fileSize);
         }
+        dll = new nsDll(spec, aLocation, modificationTime, fileSize);
+    }
 
     if (!dll)
         return NS_ERROR_OUT_OF_MEMORY;
