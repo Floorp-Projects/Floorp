@@ -521,3 +521,59 @@ NS_IMETHODIMP nsDeviceContextUnix :: LoadIconImage(nsIRenderingContext& aContext
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const char * aFontName)
+{
+  char        **fnames = nsnull;
+  PRInt32     namelen = strlen(aFontName) + 1;
+  char        *wildstring = (char *)PR_Malloc(namelen + 200);
+  PRInt32     dpi = NSToIntRound(GetTwipsToDevUnits() * 1440);
+  Display     *dpy = XtDisplay((Widget)GetNativeWidget());
+  int         numnames = 0;
+  XFontStruct *fonts;
+  nsresult    rv = NS_ERROR_FAILURE;
+
+  if (nsnull == wildstring)
+    return NS_ERROR_UNEXPECTED;
+
+  if (abs(dpi - 75) < abs(dpi - 100))
+    dpi = 75;
+  else
+    dpi = 100;
+
+  PR_snprintf(wildstring, namelen + 200,
+             "*-%s-*-*-normal--*-*-%d-%d-*-*-*",
+             aFontName, dpi, dpi);
+
+  fnames = ::XListFontsWithInfo(dpy, wildstring, 1, &numnames, &fonts);
+
+  if (numnames > 0)
+  {
+    ::XFreeFontInfo(fnames, fonts, numnames);
+    rv = NS_OK;
+  }
+
+  PR_Free(wildstring);
+
+  return rv;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
