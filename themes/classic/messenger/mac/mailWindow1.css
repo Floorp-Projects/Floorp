@@ -76,12 +76,12 @@ splitter
 #folderTree:focus > treechildren,
 #threadOutliner:focus > outlinerrows > .outliner-bodybox
  {
-   border-color          : #000000;
+   border-color          : -moz-mac-focusring;
  }
 
 #messagepanebox[focusring="true"]
   {
-    border-color          : #000000;
+    border-color          : -moz-mac-focusring;
   }
 
 #messagepanebox
