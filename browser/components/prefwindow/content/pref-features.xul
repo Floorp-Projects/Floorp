@@ -89,7 +89,7 @@
     <hbox>
       <checkbox id="enableJavaScript" label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
                 prefstring="javascript.enabled"
-                oncommand="javascriptEnabledChange(!this.checked);"/>
+                oncommand="javascriptEnabledChange();"/>
       <spring flex="1"/>
       
       <checkbox id="allowWindowMoveResize"    prefstring="dom.disable_window_move_resize"         hidden="true"/>

@@ -51,6 +51,7 @@ function Startup()
   var imagesEnabled = document.getElementById("enableImages").checked;
   var imageBroadcaster = document.getElementById("imageBroadcaster");
   imageBroadcaster.setAttribute("disabled", !imagesEnabled);
+  javascriptEnabledChange()
 }
 
 function viewImages() 
@@ -65,10 +66,11 @@ function advancedJavaScript()
              "chrome,modal");
 }
 
-function javascriptEnabledChange(aEnable){
-  var label = document.getElementById("allowScripts");
+function javascriptEnabledChange()
+{
+  var isEnabled = document.getElementById("enableJavaScript").checked;
   var advancedButton = document.getElementById("advancedJavascript");
-  advancedButton.disabled = aEnable;
+  advancedButton.disabled = !isEnabled;
 }
 
 function togglePermissionEnabling() 
