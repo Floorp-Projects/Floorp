@@ -124,8 +124,8 @@
 
          <!-- glossary panel -->
          <button id="help-glossary-btn" class="box-texttab texttab-sidebar"
-            label="&glossarytab.label;" oncommand="showPanel('help-glossary-tree')"/>
-         <tree id="help-glossary-tree" flex="1" hidecolumnpicker="true" hidden="true"
+            label="&glossarytab.label;" oncommand="showPanel('help-glossary')"/>
+         <tree id="help-glossary-panel" flex="1" hidecolumnpicker="true" hidden="true"
                datasources="rdf:null"
                containment="http://home.netscape.com/NC-rdf#subheadings"
                ref="urn:root"
@@ -171,9 +171,9 @@
 
 	 <!-- index panel -->
          <button id="help-index-btn" class="box-texttab texttab-sidebar"
-            label="&indextab.label;"  oncommand="showPanel('help-index-tree');displayIndex();"/>
+            label="&indextab.label;"  oncommand="showPanel('help-index');displayIndex();"/>
 
-         <tree id="help-index-tree" flex="1"
+         <tree id="help-index-panel" flex="1"
                datasources="rdf:null" hidecolumnpicker="true" hidden="true"
                containment="http://home.netscape.com/NC-rdf#subheadings"
                ref="urn:root"
@@ -222,7 +222,7 @@
 
      <!-- search panel -->
      <button id="help-search-btn" class="box-texttab texttab-sidebar"
-             label="&searchtab.label;" oncommand="showPanel('help-search-panel')"/>
+             label="&searchtab.label;" oncommand="showPanel('help-search')"/>
 
              <vbox id="help-search-panel" hidden="true" flex="1">
                 <hbox align="center">
@@ -281,8 +281,8 @@
 
        <!-- table of contents panel -->
        <button id="help-toc-btn" class="box-texttab texttab-sidebar"
-          label="&toctab.label;" oncommand="showPanel('help-toc-tree')"/>
-          <tree id="help-toc-tree" flex="1"  hidecolumnpicker="true"
+          label="&toctab.label;" oncommand="showPanel('help-toc')"/>
+          <tree id="help-toc-panel" flex="1"  hidecolumnpicker="true"
                 datasources="rdf:null"
                 containment="http://home.netscape.com/NC-rdf#subheadings"
                 ref="urn:root"

@@ -82,7 +82,7 @@ function displayTopic(topic) {
     topic = defaultTopic;
   var uri = getLink(topic);
   if (!uri) // Topic not found - revert to default.
-      uri = getLink(defaultTopic); 
+      uri = getLink(defaultTopic);
   loadURI(uri);
 }
 
@@ -91,9 +91,9 @@ function init() {
   //cache panel references.
   helpWindow = document.getElementById("help");
   helpSearchPanel = document.getElementById("help-search-panel");
-  helpTocPanel = document.getElementById("help-toc-tree");
-  helpIndexPanel = document.getElementById("help-index-tree");
-  helpGlossaryPanel = document.getElementById("help-glossary-tree");
+  helpTocPanel = document.getElementById("help-toc-panel");
+  helpIndexPanel = document.getElementById("help-index-panel");
+  helpGlossaryPanel = document.getElementById("help-glossary-panel");
   helpBrowser = document.getElementById("help-content");
 
   var helpTopic = defaultTopic;
@@ -121,6 +121,9 @@ function init() {
   var interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
   webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+
+  //Always show the Table of Contents sidebar at startup.
+  showPanel('help-toc');
 }
 
 function loadHelpRDF() {
@@ -157,7 +160,7 @@ function loadHelpRDF() {
         }  
 
         // cache toc datasources for use by ID lookup.
-        var tree = document.getElementById("help-" + panelID + "-tree");
+        var tree = document.getElementById("help-" + panelID + "-panel");
         tree.setAttribute("datasources", datasources);
         //if (panelID == "toc") {
           if (tree.database) {
@@ -211,7 +214,7 @@ function getLink(ID) {
   // Note resources are stored in fileURL#ID format.
   // We have one possible source for an ID for each datasource in the composite datasource.
   // The first ID which matches is returned.
-  var tocTree = document.getElementById("help-toc-tree");
+  var tocTree = document.getElementById("help-toc-panel");
   var tocDS = tocTree.database;
     if (tocDS == null)
       return null;
@@ -456,12 +459,23 @@ function BrowserViewSourceOfURL(url, charset)
 
 //Show the selected sidebar panel
 function showPanel(panelId) {
+  //hide other sidebar panels and show the panel name taken in from panelID.
   helpSearchPanel.setAttribute("hidden", "true");
   helpTocPanel.setAttribute("hidden", "true");
   helpIndexPanel.setAttribute("hidden", "true");
   helpGlossaryPanel.setAttribute("hidden", "true");
-  var thePanel = document.getElementById(panelId);
+  var thePanel = document.getElementById(panelId + "-panel");
   thePanel.setAttribute("hidden","false");
+
+  //remove the selected style from the previous panel selected.
+  document.getElementById("help-glossary-btn").removeAttribute("selected");
+  document.getElementById("help-index-btn").removeAttribute("selected");
+  document.getElementById("help-search-btn").removeAttribute("selected");
+  document.getElementById("help-toc-btn").removeAttribute("selected");
+
+  //add the selected style to the correct panel.
+  var theButton = document.getElementById(panelId + "-btn");
+  theButton.setAttribute("selected", "true");
 }
 
 function onselect_loadURI(tree, columnName) {
@@ -510,7 +524,7 @@ function doFind() {
  emptySearch = true;
   // search TOC
   var resultsDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].createInstance(Components.interfaces.nsIRDFDataSource);
-  var tree = document.getElementById("help-toc-tree");
+  var tree = document.getElementById("help-toc-panel");
   var sourceDS = tree.database;
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
@@ -522,7 +536,7 @@ function doFind() {
   }
 
   // search index.
-  tree = document.getElementById("help-index-tree");
+  tree = document.getElementById("help-index-panel");
   sourceDS = tree.database;
   if (!sourceDS) // If the index has never been displayed this will be null.
     sourceDS = loadCompositeDS(tree.datasources);
