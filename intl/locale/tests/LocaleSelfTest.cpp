@@ -26,8 +26,10 @@
 
 #ifdef XP_MAC
 #define LOCALE_DLL_NAME "LOCALE_DLL"
-#else
+#elif defined(NP_WIN)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
+#else
+#define LOCALE_DLL_NAME "libnslocale.so"
 #endif
 
 
