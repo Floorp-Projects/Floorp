@@ -27,7 +27,6 @@
 #include "nsViewsCID.h"
 #include "nsPluginsCID.h"
 
-#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 
