@@ -509,8 +509,14 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
   if (focusAccessible && focusNode && gLastFocusedNode != focusNode) {
     mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, focusAccessible, nsnull);
     NS_IF_RELEASE(gLastFocusedNode);
-    gLastFocusedNode = focusNode;
-    NS_ADDREF(gLastFocusedNode);
+    PRUint32 role = ROLE_NOTHING;
+    focusAccessible->GetAccRole(&role);
+    if (role == ROLE_MENUITEM || role == ROLE_LISTITEM)
+      gLastFocusedNode = nsnull; // This makes it report all focus events on menu and list items
+    else {
+      gLastFocusedNode = focusNode;
+      NS_IF_ADDREF(gLastFocusedNode);
+    }
     if (mCaretAccessible)
       mCaretAccessible->AttachNewSelectionListener(focusNode);
   }
