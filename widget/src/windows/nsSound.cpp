@@ -38,6 +38,7 @@ NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
 nsSound::nsSound()
 {
   NS_INIT_REFCNT();
+  mInited = PR_FALSE;
 }
 
 nsSound::~nsSound()
@@ -46,33 +47,50 @@ nsSound::~nsSound()
 		PR_Free( mPlayBuf );
 	if (mBuffer)
 		PR_Free( mBuffer );
+	mInited = PR_FALSE;
 }
 
 nsresult NS_NewSound(nsISound** aSound)
 {
   NS_PRECONDITION(aSound != nsnull, "null ptr");
-  if (! aSound)
+  if (!aSound)
     return NS_ERROR_NULL_POINTER;
 
-  nsSound** mySound;
-  
-  *aSound = new nsSound();
-  if (! *aSound)
+  nsSound* mySound = nsnull;
+  NS_NEWXPCOM(mySound, nsSound);
+  if (!mySound)
     return NS_ERROR_OUT_OF_MEMORY;
-  mySound = (nsSound **) aSound;
-  (*mySound)->mBufferSize = 4098;
-  (*mySound)->mBuffer = (char *) PR_Malloc( (*mySound)->mBufferSize );
-  if ( (*mySound)->mBuffer == (char *) NULL )
-	return NS_ERROR_OUT_OF_MEMORY;
-  (*mySound)->mPlayBuf = (char *) NULL;
-  NS_ADDREF(*aSound);
-  return NS_OK;
+
+  nsresult rv = mySound->Init();
+  if (NS_FAILED(rv)) {
+    delete mySound;
+    return rv;
+  }
+
+  // QI does the addref
+  return mySound->QueryInterface(NS_GET_IID(nsISound), (void**)aSound);
+
 }
 
-
-NS_METHOD nsSound::Init(void)
+nsresult nsSound::Init() 
 {
-  return NS_OK;
+	return NS_OK;
+}
+
+nsresult nsSound::AllocateBuffers()
+{
+  nsresult rv = NS_OK;
+  if ( mInited == PR_TRUE )      
+        return( rv );
+  mBufferSize = 4098;
+  mBuffer = (char *) PR_Malloc( mBufferSize );
+  if ( mBuffer == (char *) NULL ) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        return( rv );
+  }
+  mPlayBuf = (char *) NULL;
+  mInited = PR_TRUE;
+  return rv;
 }
 
 
@@ -86,16 +104,19 @@ NS_METHOD nsSound::Beep()
 NS_METHOD nsSound::Play(nsIURI *aURI)
 {
   nsresult rv;
-  nsIInputStream *inputStream;
+  nsCOMPtr <nsIInputStream>inputStream;
   PRUint32 totalLen = 0;
   PRUint32 len;
-  
+ 
+  if ( !mInited && NS_FAILED((rv = AllocateBuffers())) )
+        return rv;
+ 
   if ( mPlayBuf ) {
 	  ::PlaySound(nsnull, nsnull, 0);	// stop what might be playing so we can free 
 	  PR_Free( this->mPlayBuf );
 	  this->mPlayBuf = (char *) NULL;
   }
-  rv = NS_OpenURI(&inputStream, aURI);
+  rv = NS_OpenURI(getter_AddRefs(inputStream), aURI);
   if (NS_FAILED(rv)) 
 	  return rv;
   do {
@@ -105,7 +126,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
 		if ( this->mPlayBuf == (char *) NULL ) {
 			this->mPlayBuf = (char *) PR_Malloc( len );
 			if ( this->mPlayBuf == (char *) NULL ) {
-					NS_IF_RELEASE( inputStream );
 					return NS_ERROR_OUT_OF_MEMORY;
 			}
 			memcpy( this->mPlayBuf, this->mBuffer, len );
@@ -113,7 +133,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
 		else {
 			this->mPlayBuf = (char *) PR_Realloc( this->mPlayBuf, totalLen );
 			if ( this->mPlayBuf == (char *) NULL ) {
-					NS_IF_RELEASE( inputStream );
 					return NS_ERROR_OUT_OF_MEMORY;
 			}
 			memcpy( this->mPlayBuf + (totalLen - len), this->mBuffer, len );
@@ -122,7 +141,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
   } while (len > 0);
   if ( this->mPlayBuf != (char *) NULL )
 	::PlaySound(this->mPlayBuf, nsnull, SND_MEMORY | SND_NODEFAULT | SND_ASYNC);
-  NS_IF_RELEASE( inputStream );
   return NS_OK;
 }
 
