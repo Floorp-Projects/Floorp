@@ -138,6 +138,7 @@ private:
 #define NS_MAX_FILENAME_LEN	1024
 
   static nsHashtable *factories;
+  static nsHashtable *progIDs;
   static PRMonitor *monitor;
 
   static nsresult checkInitialized(void);
