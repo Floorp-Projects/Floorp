@@ -94,10 +94,10 @@ uptime
 
 if [ -f $db_dir/update.log ]
   then
-  ERROR=`grep "server aborted" $db_dir/update.log` 2>&1
+  ERROR=`grep "server aborted" $db_dir/update.log | grep -v grep`
   if [ "$ERROR"  != "" ]
     then
-    echo $ERROR | /usr/bin/mail -s "lxr: $1 aborted" root
+    echo $ERROR | /usr/ucb/Mail -s "lxr: $1 aborted" root
     exit
     fi
   fi
