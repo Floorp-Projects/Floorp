@@ -258,10 +258,15 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 
     PR_CEnterMonitor(this);
 
-    PRInt32 maxConnections = 2; // default to be two
+    PRInt32 maxConnections = 5; // default to be five
     rv = GetMaximumConnectionsNumber(&maxConnections);
-    if (NS_FAILED(rv) || maxConnections < 2)
+    if (NS_FAILED(rv) || maxConnections == 0)
     {
+        maxConnections = 5;
+        rv = SetMaximumConnectionsNumber(maxConnections);
+    }
+    else if (maxConnections < 2)
+    {   // forced to use at least 2
         maxConnections = 2;
         rv = SetMaximumConnectionsNumber(maxConnections);
     }
