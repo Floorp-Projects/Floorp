@@ -29,7 +29,7 @@
 #include "nsIPref.h"
 
 #include <errno.h>
-#include <strings.h>
+#include <string.h>
 static int gGotAllFontNames = 0;
 
 // XXX many of these statics need to be freed at shutdown time
