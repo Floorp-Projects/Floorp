@@ -32,21 +32,22 @@ MAKE_OBJ_TYPE=DLL
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 EXPORTS = \
-		nsCacheService.h    \
+		nsCacheService.h \
 		$(NULL)
 
 CPP_OBJS = \
-	.\$(OBJDIR)\nsCache.obj                         \
+	.\$(OBJDIR)\nsCache.obj                 \
 	.\$(OBJDIR)\nsCacheEntry.obj			\
-	.\$(OBJDIR)\nsCacheEntryDescriptor.obj          \
+	.\$(OBJDIR)\nsCacheEntryDescriptor.obj  \
 	.\$(OBJDIR)\nsCacheMetaData.obj			\
 	.\$(OBJDIR)\nsCacheModule.obj			\
 	.\$(OBJDIR)\nsCacheService.obj			\
 	.\$(OBJDIR)\nsCacheSession.obj			\
+	.\$(OBJDIR)\nsDiskCacheBinding.obj		\
+	.\$(OBJDIR)\nsDiskCacheBlockFile.obj	\
 	.\$(OBJDIR)\nsDiskCacheDevice.obj		\
 	.\$(OBJDIR)\nsDiskCacheEntry.obj		\
 	.\$(OBJDIR)\nsDiskCacheMap.obj			\
-	.\$(OBJDIR)\nsANSIFileStreams.obj		\
 	.\$(OBJDIR)\nsMemoryCacheDevice.obj		\
 	$(NULL)
 

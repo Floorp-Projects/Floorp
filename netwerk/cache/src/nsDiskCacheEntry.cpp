@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is nsMemoryCacheDevice.cpp, released February 22, 2001.
+ * The Original Code is nsDiskCacheEntry.cpp, released May 10, 2001.
  * 
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
@@ -18,196 +18,194 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *    Gordon Sheridan  <gordon@netscape.com>
  *    Patrick C. Beard <beard@netscape.com>
  */
 
-#include <limits.h>
-
+#include "nsDiskCache.h"
 #include "nsDiskCacheEntry.h"
+#include "nsDiskCacheBinding.h"
+#include "nsDiskCacheMap.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheEntry);
+#include "nsCache.h"
 
-PLDHashNumber
-nsDiskCacheEntry::Hash(const char* key)
-{
-    PLDHashNumber h = 0;
-    for (const PRUint8* s = (PRUint8*) key; *s != '\0'; ++s)
-        h = (h >> (PL_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
-    return (h == 0 ? ULONG_MAX : h);
-}
 
 /******************************************************************************
- *  nsCacheEntryHashTable
+ *  nsDiskCacheEntry
  *****************************************************************************/
 
-PLDHashTableOps nsDiskCacheEntryHashTable::ops =
+/**
+ *  CreateCacheEntry()
+ *
+ *  Creates an nsCacheEntry and sets all fields except for the binding.
+ */
+nsCacheEntry *
+nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
 {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    GetKey,
-    HashKey,
-    MatchEntry,
-    MoveEntry,
-    ClearEntry,
-    Finalize
-};
-
-nsDiskCacheEntryHashTable::nsDiskCacheEntryHashTable()
-    : initialized(PR_FALSE)
-{
-}
-
-
-nsDiskCacheEntryHashTable::~nsDiskCacheEntryHashTable()
-{
-    if (initialized)
-        PL_DHashTableFinish(&table);
-}
-
-
-nsresult
-nsDiskCacheEntryHashTable::Init()
-{
-    nsresult rv = NS_OK;
-    initialized = PL_DHashTableInit(&table, &ops, nsnull,
-                                    sizeof(HashTableEntry), 512);
-
-    if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
+    nsCacheEntry * entry = nsnull;
+    nsresult       rv = nsCacheEntry::Create(mKeyStart,
+                                             nsICache::STREAM_BASED,
+                                             nsICache::STORE_ON_DISK,
+                                             device,
+                                             &entry);
+    if (NS_FAILED(rv) || !entry) return nsnull;
     
-    return rv;
-}
-
-
-nsDiskCacheEntry *
-nsDiskCacheEntryHashTable::GetEntry(const char * key)
-{
-    return GetEntry(nsDiskCacheEntry::Hash(key));
-}
-
-
-nsDiskCacheEntry *
-nsDiskCacheEntryHashTable::GetEntry(PLDHashNumber key)
-{
-    nsDiskCacheEntry * result = nsnull;
-    NS_ASSERTION(initialized, "nsDiskCacheEntryHashTable not initialized");
-    HashTableEntry * hashEntry;
-    hashEntry = (HashTableEntry*) PL_DHashTableOperate(&table, (void*) key, PL_DHASH_LOOKUP);
-    if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
-        result = hashEntry->mDiskCacheEntry;
+    entry->SetFetchCount(mFetchCount);
+    entry->SetLastFetched(mLastFetched);
+    entry->SetLastModified(mLastModified);
+    entry->SetExpirationTime(mExpirationTime);
+    entry->SetCacheDevice(device);
+    // XXX why does nsCacheService have to fill out device in BindEntry()?
+    entry->SetDataSize(mDataSize);
+    
+    rv = entry->UnflattenMetaData(&mKeyStart[mKeySize], mMetaDataSize);
+    if (NS_FAILED(rv)) {
+        delete entry;
+        return nsnull;
     }
-    return result;
+    
+    return entry;                      
 }
 
 
-nsresult
-nsDiskCacheEntryHashTable::AddEntry(nsDiskCacheEntry * entry)
+/**
+ *  CheckConsistency()
+ *
+ *  Perform a few simple checks to verify the data looks reasonable.
+ */
+PRBool
+nsDiskCacheEntry::CheckConsistency(PRUint32  size)
 {
-    NS_ENSURE_ARG_POINTER(entry);
-    NS_ASSERTION(initialized, "nsDiskCacheEntryHashTable not initialized");
-
-    HashTableEntry * hashEntry;
-    hashEntry = (HashTableEntry *) PL_DHashTableOperate(&table,
-                                                        (void*) entry->getHashNumber(),
-                                                        PL_DHASH_ADD);
-    if (!hashEntry) return NS_ERROR_OUT_OF_MEMORY;
+    if ((mHeaderVersion != nsDiskCache::kCurrentVersion) ||
+        (Size() > size) ||
+        (mKeySize == 0) ||
+        (mKeyStart[mKeySize - 1] != 0)) // key is null terminated
+        return PR_FALSE;
     
-    NS_ADDREF(hashEntry->mDiskCacheEntry = entry);
+    return PR_TRUE;
+}
 
+
+/**
+ *  CreateDiskCacheEntry(nsCacheEntry * entry)
+ *
+ *  Prepare an nsCacheEntry for writing to disk
+ */
+nsDiskCacheEntry *
+CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
+{
+    nsCacheEntry * entry = binding->mCacheEntry;
+    if (!entry)  return nsnull;
+    
+    PRUint32  keySize = entry->Key()->Length() + 1;
+    PRUint32  size = sizeof(nsDiskCacheEntry) +
+                     keySize + entry->MetaDataSize();
+    
+    // pad size so we can write to block files without overrunning buffer
+    PRInt32 pad = size;
+    if      (pad <  1024) pad =  1024;
+    else if (pad <  4096) pad =  4096;
+    else if (pad < 16384) pad = 16384;
+    // XXX be more precise
+    
+    nsDiskCacheEntry * diskEntry = (nsDiskCacheEntry *)new char[pad];
+    if (!diskEntry)  return nsnull;
+    
+    diskEntry->mHeaderVersion   = nsDiskCache::kCurrentVersion;
+    diskEntry->mMetaLocation    = binding->mRecord.MetaLocation();
+    diskEntry->mFetchCount      = entry->FetchCount();
+    diskEntry->mLastFetched     = entry->LastFetched();
+    diskEntry->mLastModified    = entry->LastModified();
+    diskEntry->mExpirationTime  = entry->ExpirationTime();
+    diskEntry->mDataSize        = entry->DataSize();
+    diskEntry->mKeySize         = keySize;
+    diskEntry->mMetaDataSize    = entry->MetaDataSize();
+    
+    nsCRT::memcpy(diskEntry->mKeyStart, entry->Key()->get(),keySize);
+    
+    // XXX FIXME FlattenMetaData should not allocate a buffer
+    char *    metaData = nsnull;
+    PRUint32  metaSize = 0;
+    nsresult rv = entry->FlattenMetaData(&metaData, &metaSize);
+    if (NS_FAILED(rv)) {
+        delete diskEntry;
+        return nsnull;
+    }
+    
+    diskEntry->mMetaDataSize    = metaSize;
+    if (metaSize)
+        nsCRT::memcpy(&diskEntry->mKeyStart[keySize], metaData, metaSize);
+    
+    delete metaData;
+    return  diskEntry;
+}
+
+
+/******************************************************************************
+ *  nsDiskCacheEntryInfo
+ *****************************************************************************/
+
+NS_IMPL_ISUPPORTS1(nsDiskCacheEntryInfo, nsICacheEntryInfo);
+
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetClientID(char ** clientID)
+{
+    NS_ENSURE_ARG_POINTER(clientID);
+    return ClientIDFromCacheKey(nsLiteralCString(mDiskEntry->mKeyStart), clientID);
+}
+
+extern const char DISK_CACHE_DEVICE_ID[];
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
+{
+    NS_ENSURE_ARG_POINTER(deviceID);
+    *deviceID = nsCRT::strdup(mDeviceID);
+    return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetKey(char ** clientKey)
+{
+    NS_ENSURE_ARG_POINTER(clientKey);
+    return ClientKeyFromCacheKey(nsLiteralCString(mDiskEntry->mKeyStart), clientKey);
+}
+
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)
+{
+    NS_ENSURE_ARG_POINTER(aFetchCount);
+    *aFetchCount = mDiskEntry->mFetchCount;
     return NS_OK;
 }
 
-
-void
-nsDiskCacheEntryHashTable::RemoveEntry(nsDiskCacheEntry * entry)
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetLastFetched(PRUint32 *aLastFetched)
 {
-    NS_ASSERTION(initialized, "nsDiskCacheEntryHashTable not initialized");
-    NS_ASSERTION(entry, "### cacheEntry == nsnull");
-
-    (void) PL_DHashTableOperate(&table, (void*) entry->getHashNumber(), PL_DHASH_REMOVE);
+    NS_ENSURE_ARG_POINTER(aLastFetched);
+    *aLastFetched = mDiskEntry->mLastFetched;
+    return NS_OK;
 }
 
-
-void
-nsDiskCacheEntryHashTable::VisitEntries(Visitor *visitor)
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetLastModified(PRUint32 *aLastModified)
 {
-    PL_DHashTableEnumerate(&table, VisitEntry, visitor);
+    NS_ENSURE_ARG_POINTER(aLastModified);
+    *aLastModified = mDiskEntry->mLastModified;
+    return NS_OK;
 }
 
-
-PLDHashOperator PR_CALLBACK
-nsDiskCacheEntryHashTable::VisitEntry(PLDHashTable *        table,
-                                      PLDHashEntryHdr *     header,
-                                      PRUint32              number,
-                                      void *                arg)
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetExpirationTime(PRUint32 *aExpirationTime)
 {
-    HashTableEntry* hashEntry = (HashTableEntry *) header;
-    Visitor *visitor = (Visitor*) arg;
-    return (visitor->VisitEntry(hashEntry->mDiskCacheEntry) ? PL_DHASH_NEXT : PL_DHASH_STOP);
+    NS_ENSURE_ARG_POINTER(aExpirationTime);
+    *aExpirationTime = mDiskEntry->mExpirationTime;
+    return NS_OK;
 }
 
-/**
- *  hash table operation callback functions
- */
-const void * PR_CALLBACK
-nsDiskCacheEntryHashTable::GetKey(PLDHashTable * /*table*/, PLDHashEntryHdr * header)
+NS_IMETHODIMP nsDiskCacheEntryInfo::IsStreamBased(PRBool *aStreamBased)
 {
-    HashTableEntry * hashEntry = (HashTableEntry *) header;
-    return (void*) hashEntry->mDiskCacheEntry->getHashNumber();
+    NS_ENSURE_ARG_POINTER(aStreamBased);
+    *aStreamBased = PR_TRUE;
+    return NS_OK;
 }
 
-
-PLDHashNumber PR_CALLBACK
-nsDiskCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
 {
-    return (PLDHashNumber) key;
-}
-
-PRBool PR_CALLBACK
-nsDiskCacheEntryHashTable::MatchEntry(PLDHashTable *             /* table */,
-                                      const PLDHashEntryHdr *       header,
-                                      const void *                  key)
-{
-    HashTableEntry * hashEntry = (HashTableEntry *) header;
-    return (hashEntry->mDiskCacheEntry->getHashNumber() == (PLDHashNumber) key);
-}
-
-void PR_CALLBACK
-nsDiskCacheEntryHashTable::MoveEntry(PLDHashTable *              /* table */,
-                                 const PLDHashEntryHdr *            fromHeader,
-                                 PLDHashEntryHdr       *            toHeader)
-{
-    HashTableEntry * fromEntry = (HashTableEntry *) fromHeader;
-    HashTableEntry * toEntry = (HashTableEntry *) toHeader;
-    toEntry->keyHash = fromEntry->keyHash;
-    toEntry->mDiskCacheEntry = fromEntry->mDiskCacheEntry;
-    fromEntry->mDiskCacheEntry = nsnull;
-}
-
-
-void PR_CALLBACK
-nsDiskCacheEntryHashTable::ClearEntry(PLDHashTable *             /* table */,
-                                      PLDHashEntryHdr *             header)
-{
-    HashTableEntry* hashEntry = (HashTableEntry *) header;
-    hashEntry->keyHash = 0;
-    NS_IF_RELEASE(hashEntry->mDiskCacheEntry);
-}
-
-
-void PR_CALLBACK
-nsDiskCacheEntryHashTable::Finalize(PLDHashTable * table)
-{
-    (void) PL_DHashTableEnumerate(table, FreeCacheEntries, nsnull);
-}
-
-
-PLDHashOperator PR_CALLBACK
-nsDiskCacheEntryHashTable::FreeCacheEntries(PLDHashTable *             /* table */,
-                                            PLDHashEntryHdr *             header,
-                                            PRUint32                      number,
-                                            void *                        arg)
-{
-    HashTableEntry *entry = (HashTableEntry *) header;
-    NS_IF_RELEASE(entry->mDiskCacheEntry);
-    return PL_DHASH_NEXT;
+    NS_ENSURE_ARG_POINTER(aDataSize);
+    *aDataSize = mDiskEntry->mDataSize;
+    return NS_OK;
 }

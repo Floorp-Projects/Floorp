@@ -35,19 +35,14 @@
 nsresult
 nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
 {
-    // create the stream
+    PRStatus  err = PR_SUCCESS;
+    PRInt32   fileSize;
+
     mBlockSize = blockSize;
-    mStream = new nsANSIFileStream;
-    if (!mStream)  return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mStream);
     
-    // open the stream
-    nsresult rv = mStream->Open(blockFile);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(mStream);
-        mStream = nsnull;
-        return rv;
-    }
+    // open the file
+    nsresult rv = blockFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00666, &mFD);
+    if (NS_FAILED(rv))  return rv;  // unable to open or create file
     
     // allocate bit map buffer
     mBitMap = new PRUint8[kBitMapBytes];
@@ -57,17 +52,18 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
     }
     
     // check if we just creating the file
-    rv = mStream->Available(&mEndOfFile);
+    fileSize = PR_Available(mFD);
+    if (fileSize < 0) {
+        // XXX an error occurred. We could call PR_GetError(), but how would that help?
+        rv = NS_ERROR_UNEXPECTED;
+        goto error_exit;
+    }
+    mEndOfFile = fileSize;
     if (mEndOfFile == 0) {
         // initialize bit map and write it
         nsCRT::zero(mBitMap, kBitMapBytes);
-        PRUint32 bytesWritten = 0;
-        rv = mStream->Write((char *)mBitMap, kBitMapBytes, &bytesWritten);
-        if (NS_FAILED(rv))  goto error_exit;
-        if (kBitMapBytes != bytesWritten) {
-            rv = NS_ERROR_UNEXPECTED;
-            goto error_exit;
-        }
+        PRInt32 bytesWritten = PR_Write(mFD, mBitMap, kBitMapBytes);
+        if (bytesWritten < kBitMapBytes) goto error_exit;
         mEndOfFile = kBitMapBytes;
         
     } else if (mEndOfFile < kBitMapBytes) {
@@ -76,10 +72,8 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
         
     } else {
         // read the bit map
-        PRUint32 bytesRead = 0;
-        rv = mStream->Read((char *)mBitMap, kBitMapBytes, &bytesRead);
-        if (NS_FAILED(rv))  goto error_exit;
-        if (kBitMapBytes != bytesRead) {
+        PRInt32 bytesRead = PR_Read(mFD, mBitMap, kBitMapBytes);
+        if (bytesRead < kBitMapBytes) {
             rv = NS_ERROR_UNEXPECTED;
             goto error_exit;
         }
@@ -92,9 +86,9 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
     return NS_OK;
 
 error_exit:
-    if (mStream) {
-        (void) mStream->Close();
-        mStream = nsnull;
+    if (mFD) {
+        (void) PR_Close(mFD);
+        mFD = nsnull;
     }
     
     if (mBitMap) {
@@ -111,19 +105,21 @@ error_exit:
 nsresult
 nsDiskCacheBlockFile::Close()
 {
-    if (!mStream)  return NS_OK;
+    if (!mFD)  return NS_OK;
     
-    nsresult rv = FlushBitMap();
-    
-    nsresult rv2 = mStream->Close();
-    NS_RELEASE(mStream);
-    mStream = nsnull;
+    nsresult rv  = FlushBitMap();
+    PRStatus err = PR_Close(mFD);
+    mFD = nsnull;
     
     if (mBitMap) {
         delete [] mBitMap;
         mBitMap = nsnull;
     }
-    return rv ? rv : rv2;
+    
+    if (NS_SUCCEEDED(rv) && (err != PR_SUCCESS))
+        rv = NS_ERROR_UNEXPECTED;
+        
+    return rv;
 }
 
 
@@ -152,7 +148,7 @@ nsDiskCacheBlockFile::Trim()
 PRInt32
 nsDiskCacheBlockFile::AllocateBlocks(PRInt32 numBlocks)
 {
-    if (!mStream)  return -1;  // NS_ERROR_NOT_AVAILABLE;
+    if (!mFD)  return -1;  // NS_ERROR_NOT_AVAILABLE;
     // return -1 if unable to allocate blocks
     // PRUint8  mask = (0x01 << numBlocks) - 1;    
     int     i = 0;
@@ -232,7 +228,7 @@ nsDiskCacheBlockFile::AllocateBlocks(PRInt32 numBlocks)
 nsresult
 nsDiskCacheBlockFile::DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks)
 {
-    if (!mStream)  return NS_ERROR_NOT_AVAILABLE;
+    if (!mFD)  return NS_ERROR_NOT_AVAILABLE;
     if ((startBlock < 0) || (startBlock > kBitMapBytes * 8 - 1) ||
         (numBlocks < 1)  || (numBlocks > 4))
        return NS_ERROR_ILLEGAL_VALUE;
@@ -260,32 +256,30 @@ nsDiskCacheBlockFile::DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks)
  *  WriteBlocks
  *****************************************************************************/
 nsresult
-nsDiskCacheBlockFile::WriteBlocks( char *   buffer,
+nsDiskCacheBlockFile::WriteBlocks( void *   buffer,
                                    PRInt32  startBlock,
                                    PRInt32  numBlocks)
 {
     // presume buffer != nsnull
-    if (!mStream)  return NS_ERROR_NOT_AVAILABLE;
+    if (!mFD)  return NS_ERROR_NOT_AVAILABLE;
     nsresult rv = VerifyAllocation(startBlock, numBlocks);
     if (NS_FAILED(rv))  return rv;
     
     // seek to block position
     PRInt32 blockPos = kBitMapBytes + startBlock * mBlockSize;
-    rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, blockPos);
-    if (NS_FAILED(rv))  return rv;
+    PRInt32 filePos = PR_Seek(mFD, blockPos, PR_SEEK_SET);
+    if (filePos != blockPos)  return NS_ERROR_UNEXPECTED;
     
     if (mEndOfFile < (blockPos + numBlocks * mBlockSize))
         mEndOfFile = (blockPos + numBlocks * mBlockSize);
     
     // write the blocks
-    PRUint32 bytesToWrite = numBlocks * mBlockSize;
-    PRUint32 bytesWritten = 0;
-    rv = mStream->Write(buffer, bytesToWrite, &bytesWritten);
-    if (NS_FAILED(rv))  return rv;
-    if (bytesWritten != bytesToWrite)  return NS_ERROR_UNEXPECTED;
+    PRInt32 bytesToWrite = numBlocks * mBlockSize;
+    PRInt32 bytesWritten = PR_Write(mFD, buffer, bytesToWrite);
+    if (bytesWritten < bytesToWrite)  return NS_ERROR_UNEXPECTED;
     
     // write the bit map and flush the file
-    rv = FlushBitMap();
+    // XXX rv = FlushBitMap();
     return rv;
 }
 
@@ -294,26 +288,24 @@ nsDiskCacheBlockFile::WriteBlocks( char *   buffer,
  *  ReadBlocks
  *****************************************************************************/
 nsresult
-nsDiskCacheBlockFile::ReadBlocks(  char *    buffer,
+nsDiskCacheBlockFile::ReadBlocks(  void *    buffer,
                                    PRInt32   startBlock,
                                    PRInt32   numBlocks)
 {
     // presume buffer != nsnull
-    if (!mStream)  return NS_ERROR_NOT_AVAILABLE;
+    if (!mFD)  return NS_ERROR_NOT_AVAILABLE;
     nsresult rv = VerifyAllocation(startBlock, numBlocks);
     if (NS_FAILED(rv))  return rv;
     
     // seek to block position
     PRInt32 blockPos = kBitMapBytes + startBlock * mBlockSize;
-    rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, blockPos);
-    if (NS_FAILED(rv))  return rv;
+    PRInt32 filePos = PR_Seek(mFD, blockPos, PR_SEEK_SET);
+    if (filePos != blockPos)  return NS_ERROR_UNEXPECTED;
 
     // read the blocks
-    PRUint32 bytesToRead = numBlocks * mBlockSize;
-    PRUint32 bytesRead = 0;
-    rv = mStream->Read(buffer, bytesToRead, &bytesRead);
-    if (NS_FAILED(rv))  return rv;
-    if (bytesRead != bytesToRead)  return NS_ERROR_UNEXPECTED;
+    PRInt32 bytesToRead = numBlocks * mBlockSize;
+    PRInt32 bytesRead = PR_Read(mFD, buffer, bytesToRead);
+    if (bytesRead < bytesToRead)  return NS_ERROR_UNEXPECTED;
     
     return rv;
 }
@@ -328,19 +320,15 @@ nsDiskCacheBlockFile::FlushBitMap()
     if (!mBitMapDirty)  return NS_OK;
 
     // seek to bitmap
-    nsresult rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    if (NS_FAILED(rv))  return rv;
+    PRInt32 filePos = PR_Seek(mFD, 0, PR_SEEK_SET);
+    if (filePos != 0)  return NS_ERROR_UNEXPECTED;
     
     // write bitmap
-    PRUint32 bytesWritten = 0;
-    rv = mStream->Write((char *)mBitMap, kBitMapBytes, &bytesWritten);
-    if (NS_FAILED(rv)) return rv;
-    if (kBitMapBytes != bytesWritten) {
-        return NS_ERROR_UNEXPECTED;
-    }
-    
-    rv = mStream->Flush();
-    if (NS_FAILED(rv)) return rv;
+    PRInt32 bytesWritten = PR_Write(mFD, mBitMap, kBitMapBytes);
+    if (bytesWritten < kBitMapBytes)  return NS_ERROR_UNEXPECTED;
+
+    PRStatus err = PR_Sync(mFD);
+    if (err != PR_SUCCESS)  return NS_ERROR_UNEXPECTED;
 
     mBitMapDirty = PR_FALSE;
     return NS_OK;
@@ -356,20 +344,17 @@ nsDiskCacheBlockFile::FlushBitMap()
 nsresult
 nsDiskCacheBlockFile::ValidateFile()
 {
-    PRUint32 estimatedSize = kBitMapBytes;
+    PRInt32  estimatedSize = kBitMapBytes;
     PRInt32  lastBlock = LastBlock();
     if (lastBlock >= 0)
         estimatedSize += (lastBlock + 1) * mBlockSize;
-    
-    PRUint32 fileSize = 0;
-    
+        
     // seek to beginning
-    nsresult rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    if (NS_FAILED(rv))  return rv;
+    PRInt32 filePos = PR_Seek(mFD, 0, PR_SEEK_SET);
+    if (filePos != 0)  return NS_ERROR_UNEXPECTED;
     
-    rv = mStream->Available(&fileSize);
-    if (NS_FAILED(rv))  return rv;
-    
+    PRInt32 fileSize = PR_Available(mFD);
+
     if (estimatedSize > fileSize)
         return NS_ERROR_UNEXPECTED;
 
