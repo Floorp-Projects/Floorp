@@ -5,7 +5,7 @@
 
 <!ENTITY convertibleDefault.label "">
 <!ENTITY convertibleYes.label "Your message can be converted to plain text without losing information.">
-<!ENTITY convertibleAltering.label "Your message can be converted to plain text without losing important information. However, the plaintext version might look different from what you saw in the composer.">
+<!ENTITY convertibleAltering.label "Your message can be converted to plain text without losing important information. However, the plain text version might look different from what you saw in the composer.">
 <!ENTITY convertibleNo.label "However, you used formatting (e.g. colors) that will not be converted to plain text.">
 
 <!ENTITY question.label "Would you like to convert the message to plain text or send it in HTML anyway?">
@@ -14,7 +14,7 @@
 <!ENTITY plainTextOnly.label "Send in Plain Text Only">
 <!ENTITY htmlOnly.label "Send in HTML Only">
 
-<!ENTITY plainTextAndHtmlRecommended.label "Send in Plaintext and HTML (recommended)">
+<!ENTITY plainTextAndHtmlRecommended.label "Send in Plain Text and HTML (recommended)">
 <!ENTITY plainTextOnlyRecommended.label "Send in Plain Text Only (recommended)">
 <!ENTITY htmlOnlyRecommended.label "Send in HTML Only (recommended)">
 <!ENTITY recommended.label "(recommended)">
