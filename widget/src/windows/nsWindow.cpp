@@ -1581,9 +1581,14 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
     return result;
   }
 
- // nsMouseEvent event;
-  nsGUIEvent event;
+  nsMouseEvent event;
   InitEvent(event, aEventType);
+
+  event.isShift   = GetKeyState(VK_LSHIFT) < 0   || GetKeyState(VK_RSHIFT) < 0;
+  event.isControl = GetKeyState(VK_LCONTROL) < 0 || GetKeyState(VK_RCONTROL) < 0;
+  event.isAlt     = GetKeyState(VK_LMENU) < 0    || GetKeyState(VK_RMENU) < 0;
+  event.clickCount = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
+                      aEventType == NS_MOUSE_LEFT_DOUBLECLICK)? 2:1;
 
   // call the event callback 
   if (nsnull != mEventCallback) {
