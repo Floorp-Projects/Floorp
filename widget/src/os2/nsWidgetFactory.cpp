@@ -284,12 +284,12 @@ static const nsModuleComponentInfo components[] =
   { "OS/2 HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/os2;1",
-    nsHTMLFormatConverterConstructor }
+    nsHTMLFormatConverterConstructor },
 #ifdef ACCESSIBILITY
   { "AccessibilityService", 
     NS_ACCESSIBILITY_SERVICE_CID,
     "@mozilla.org/accessibilityService;1", 
-    nsAccessibilityServiceConstructor },
+    nsAccessibilityServiceConstructor }
 #endif
 };
 
