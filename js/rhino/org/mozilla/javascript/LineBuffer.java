@@ -74,8 +74,8 @@ final class LineBuffer {
 			    return -1;
 
 			// Do only a bitmask + branch per character, at the cost of
-			// three branches per low-bits-only character.
-			if ((buffer[offset] & '\ufff0') == 0) {
+			// three branches per low-bits-only (or 2028/9) character.
+            if ((buffer[offset] & '\udfd0') == 0) {
 			    if (buffer[offset] == '\r') {
 			        // if the next character is a newline, skip past it.
 			        if ((offset + 1) < end) {
@@ -87,14 +87,19 @@ final class LineBuffer {
 			            lastWasCR = true;
 			        }
 			    }
-			    else if (buffer[offset] != '\n') {
+                else { 
+                    if ((buffer[offset] == '\n') 
+                            || (buffer[offset] == Character.LINE_SEPARATOR) // 2028
+                            || (buffer[offset] == Character.PARAGRAPH_SEPARATOR)) // 2029
+                    {
+			            offset++;
+			            prevStart = lineStart;
+			            lineStart = offset;
+			            lineno++;
+			            return '\n';
+			        }
 			        return (int) buffer[offset++];
-			    }
-			    offset++;
-			    prevStart = lineStart;
-			    lineStart = offset;
-			    lineno++;
-			    return '\n';
+                }
 			}
 			if ((buffer[offset] >= 128) 
 				&& Character.getType(buffer[offset]) == Character.FORMAT) {
