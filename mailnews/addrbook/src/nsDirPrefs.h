@@ -178,7 +178,9 @@ typedef enum
 	idReplDataVersion,
 	idReplSyncURL,
 	idReplExcludedAttributes,
-	idReplExcludedAttributesCount
+	idReplExcludedAttributesCount,
+	idPalmCategory,
+	idPalmSyncTimeStamp
 } DIR_PrefId;
 
 
@@ -265,6 +267,10 @@ typedef struct DIR_Server
 
 	/* VLV fields */
 	char *searchPairList;
+
+	/* fields for palm Sync */
+	PRInt32 PalmCategoryId;
+	PRUint32 PalmSyncTimeStamp;
 } DIR_Server;
 
 /* We are developing a new model for managing DIR_Servers. In the 4.0x world, the FEs managed each list. 

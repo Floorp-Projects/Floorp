@@ -67,10 +67,12 @@
 #include "nsAddressBook.h" // for the map
 
 #define ID_PAB_TABLE            1
+#define ID_DELETEDCARDS_TABLE           2
 
 const PRInt32 kAddressBookDBVersion = 1;
 
 const char *kPabTableKind = "ns:addrbk:db:table:kind:pab";
+const char *kDeletedCardsTableKind = "ns:addrbk:db:table:kind:deleted"; // this table is used to keep the deleted cards
 
 const char *kCardRowScope = "ns:addrbk:db:row:scope:card:all";
 const char *kListRowScope = "ns:addrbk:db:row:scope:list:all";
@@ -79,6 +81,10 @@ const char *kDataRowScope = "ns:addrbk:db:row:scope:data:all";
 #define DATAROW_ROWID 1
 
 #define COLUMN_STR_MAX 16
+
+#define SIX_MONTHS_IN_SEC  182*24*60*60
+
+#define PURGE_CUTOFF_COUNT 50
 
 const char *kRecordKeyColumn = "RecordKey";
 const char *kLowerPriEmailColumn = "LowercasePrimaryEmail";
@@ -97,9 +103,11 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 nsAddrDatabase::nsAddrDatabase()
     : m_mdbEnv(nsnull), m_mdbStore(nsnull),
       m_mdbPabTable(nsnull), 
+      m_mdbDeletedCardsTable(nsnull),
       m_dbName(""), m_mdbTokensInitialized(PR_FALSE), 
       m_ChangeListeners(nsnull),
       m_PabTableKind(0),
+      m_DeletedCardsTableKind(0),
       m_MailListTableKind(0),
       m_CardRowScopeToken(0),
       m_FirstNameColumnToken(0),
@@ -188,6 +196,8 @@ NS_IMETHODIMP_(nsrefcnt) nsAddrDatabase::Release(void)
     // clean up after ourself!
     if (m_mdbPabTable)
       m_mdbPabTable->Release();
+    if (m_mdbDeletedCardsTable)
+      m_mdbDeletedCardsTable->Release();
     if (m_mdbStore)
       m_mdbStore->Release();
     if (m_mdbEnv)
@@ -801,6 +811,86 @@ nsresult nsAddrDatabase::InitNewDB()
     return err;
 }
 
+nsresult nsAddrDatabase::AddRowToDeletedCardsTable(nsIAbCard *card, nsIMdbRow **pCardRow)
+{
+   nsresult err=NS_OK;
+   if (!m_mdbDeletedCardsTable)
+     err = InitDeletedCardsTable(PR_TRUE);
+   if (NS_SUCCEEDED(err)) {
+     // lets first purge old records if there are more than PURGE_CUTOFF_COUNT records
+     PurgeDeletedCardTable();
+     nsCOMPtr<nsIMdbRow> cardRow;
+     err  = GetNewRow(getter_AddRefs(cardRow));
+     if (NS_SUCCEEDED(err) && cardRow) {
+       mdb_err merror = m_mdbDeletedCardsTable->AddRow(GetEnv(), cardRow);
+       if (merror != NS_OK) return NS_ERROR_FAILURE;
+       nsXPIDLString unicodeStr;
+       card->GetFirstName(getter_Copies(unicodeStr));
+       AddFirstName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    
+       card->GetLastName(getter_Copies(unicodeStr));
+       AddLastName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    
+       card->GetDisplayName(getter_Copies(unicodeStr));
+       AddDisplayName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+
+       card->GetPrimaryEmail(getter_Copies(unicodeStr));
+       if (unicodeStr)
+         AddUnicodeToColumn(cardRow, m_PriEmailColumnToken, unicodeStr);
+
+       PRUint32 nowInSeconds;
+       PRTime now = PR_Now();
+       PRTime2Seconds(now, &nowInSeconds);
+       AddIntColumn(cardRow, m_LastModDateColumnToken, nowInSeconds);
+
+       nsXPIDLString value;
+       GetCardValue(card, CARD_ATTRIB_PALMID, getter_Copies(value));
+       if (value) {
+         nsCOMPtr<nsIAbCard>    addedCard;
+         err = CreateCardFromDeletedCardsTable(cardRow, 0, getter_AddRefs(addedCard));
+         if (NS_SUCCEEDED(err))
+           SetCardValue(addedCard, CARD_ATTRIB_PALMID, value, PR_FALSE);
+         }
+         NS_IF_ADDREF(*pCardRow = cardRow);
+     }
+     Commit(nsAddrDBCommitType::kLargeCommit);
+   }
+   return err;
+}
+
+nsresult nsAddrDatabase::DeleteRowFromDeletedCardsTable(nsIMdbRow *pCardRow)
+{
+    mdb_err merror = NS_OK;
+    if (m_mdbDeletedCardsTable) {
+      pCardRow->CutAllColumns(GetEnv());
+      merror = m_mdbDeletedCardsTable->CutRow(GetEnv(), pCardRow);
+    }
+    return merror;
+}
+
+
+nsresult nsAddrDatabase::InitDeletedCardsTable(PRBool aCreate)
+{
+    mdb_err mdberr = NS_OK;
+    if (!m_mdbDeletedCardsTable) {
+        struct mdbOid deletedCardsTableOID;
+        deletedCardsTableOID.mOid_Scope = m_CardRowScopeToken;
+        deletedCardsTableOID.mOid_Id = ID_DELETEDCARDS_TABLE;
+        nsIMdbStore *store = GetStore();
+        if(store) {
+            store->GetTable(GetEnv(), &deletedCardsTableOID, &m_mdbDeletedCardsTable);
+            // if deletedCardsTable doesnot exist and bCreate is set, create a new one
+            if(!m_mdbDeletedCardsTable && aCreate) 
+                mdberr = (nsresult) store->NewTableWithOid(GetEnv(), &deletedCardsTableOID, 
+                                                                m_DeletedCardsTableKind, 
+                                                                PR_TRUE, (const mdbOid*)nsnull, 
+                                                                &m_mdbDeletedCardsTable);
+        }
+    }
+
+    return mdberr;
+}
+
 nsresult nsAddrDatabase::InitPabTable()
 {
     nsIMdbStore *store = GetStore();
@@ -1131,6 +1221,7 @@ nsresult nsAddrDatabase::InitMDBInfo()
             GetStore()->StringToToken(GetEnv(),  kMailListDescription, &m_ListDescriptionColumnToken);
             GetStore()->StringToToken(GetEnv(),  kMailListTotalAddresses, &m_ListTotalColumnToken);
             GetStore()->StringToToken(GetEnv(),  kLowerListNameColumn, &m_LowerListNameColumnToken);
+            GetStore()->StringToToken(GetEnv(),  kDeletedCardsTableKind, &m_DeletedCardsTableKind);
         }
     }
     return err;
@@ -1331,6 +1422,10 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
     
     card->GetNotes(getter_Copies(unicodeStr)); 
     AddNotes(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+      
+    PRUint32 lastModDate = 0;
+    card->GetLastModifiedDate(&lastModDate);
+    AddIntColumn(cardRow, m_LastModDateColumnToken, lastModDate);
       
   }
   return NS_OK;
@@ -1753,6 +1848,9 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
   if (!pCardRow)
     return NS_OK;
 
+  // Add the deleted card to the deletedcards table
+  nsCOMPtr <nsIMdbRow> cardRow;
+  AddRowToDeletedCardsTable(card, getter_AddRefs(cardRow));
   err = DeleteRow(m_mdbPabTable, pCardRow);
   
   //delete the person card from all mailing list
@@ -1763,6 +1861,9 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
     if (notify) 
       NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
   }
+  else
+    DeleteRowFromDeletedCardsTable(cardRow);
+
   NS_RELEASE(pCardRow);
     return NS_OK;
 }
@@ -1925,6 +2026,97 @@ NS_IMETHODIMP nsAddrDatabase::GetCardValue(nsIAbCard *card, const char *name, PR
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAddrDatabase::GetDeletedCardList(PRUint32 *aCount, nsISupportsArray **aDeletedList)
+{
+  nsCOMPtr<nsISupportsArray> resultCardArray;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(resultCardArray));
+  if (NS_FAILED(rv)) return rv;
+  *aCount = 0;
+  // make sure the member is set properly
+  InitDeletedCardsTable();
+  if (m_mdbDeletedCardsTable)
+  {
+    nsCOMPtr<nsIMdbTableRowCursor>      rowCursor;
+    mdb_pos                             rowPos;
+    PRBool                              done = PR_FALSE;
+    nsCOMPtr<nsIMdbRow>                 currentRow;
+
+    m_mdbDeletedCardsTable->GetTableRowCursor(GetEnv(), -1, getter_AddRefs(rowCursor));
+    if (!rowCursor)
+        return NS_ERROR_FAILURE;
+    while (!done)
+    {
+      nsresult rv = rowCursor->NextRow(GetEnv(), getter_AddRefs(currentRow), &rowPos);
+      if (currentRow && NS_SUCCEEDED(rv))
+      {
+        mdbOid rowOid;
+        if (currentRow->GetOid(GetEnv(), &rowOid) == NS_OK)
+        {
+          nsCOMPtr<nsIAbCard>    card;
+          rv = CreateCardFromDeletedCardsTable(currentRow, 0, getter_AddRefs(card));
+          if (NS_SUCCEEDED(rv)) {
+            (*aCount) += 1;
+            resultCardArray->AppendElement(card);
+          }
+        }
+      }
+      else
+          done = PR_TRUE;
+    }
+    if (*aCount > 0)
+      NS_IF_ADDREF(*aDeletedList = resultCardArray);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAddrDatabase::GetDeletedCardCount(PRUint32 *count)
+{
+    // initialize count first
+    *count=0;
+    InitDeletedCardsTable();
+    if (m_mdbDeletedCardsTable)
+      return m_mdbDeletedCardsTable->GetCount(m_mdbEnv, count);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAddrDatabase::PurgeDeletedCardTable()
+{
+    if (m_mdbDeletedCardsTable) {
+        mdb_count cardCount=0;
+        // if not too many cards let it be
+        m_mdbDeletedCardsTable->GetCount(m_mdbEnv, &cardCount);
+        if(cardCount < PURGE_CUTOFF_COUNT)
+            return NS_OK;
+        PRUint32 purgeTimeInSec;
+        PRTime2Seconds(PR_Now(), &purgeTimeInSec);
+        purgeTimeInSec -= SIX_MONTHS_IN_SEC;
+        nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
+        nsresult rv = m_mdbDeletedCardsTable->GetTableRowCursor(GetEnv(), -1, getter_AddRefs(rowCursor));
+        while(NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIMdbRow> currentRow;
+            mdb_pos rowPos;
+            rv = rowCursor->NextRow(GetEnv(), getter_AddRefs(currentRow), &rowPos);
+            if(currentRow) {
+                PRUint32 deletedTimeStamp = 0;
+                GetIntColumn(currentRow, m_LastModDateColumnToken, &deletedTimeStamp, 0);
+                // if record was deleted more than six months earlier, purge it
+                if(deletedTimeStamp && (deletedTimeStamp < purgeTimeInSec)) {
+                    if(NS_SUCCEEDED(currentRow->CutAllColumns(GetEnv())))
+                        m_mdbDeletedCardsTable->CutRow(GetEnv(), currentRow);
+                }
+                else
+                    // since the ordering in Mork is maintained and thus
+                    // the cards added later appear on the top when retrieved
+                    break;
+            }
+            else
+                break; // no more row
+        }
+    }
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsAddrDatabase::EditCard(nsIAbCard *card, PRBool notify)
 {
   // XXX make sure this isn't getting called when we're just editing one or two well known fields
@@ -1937,6 +2129,10 @@ NS_IMETHODIMP nsAddrDatabase::EditCard(nsIAbCard *card, PRBool notify)
   mdbOid rowOid;
   rowOid.mOid_Scope = m_CardRowScopeToken;
   
+  PRUint32 nowInSeconds;
+  PRTime now = PR_Now();
+  PRTime2Seconds(now, &nowInSeconds);
+  card->SetLastModifiedDate(nowInSeconds);
   nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &err));
   NS_ENSURE_SUCCESS(err, err);
   dbcard->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
@@ -2671,6 +2867,11 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
     {
         newCard->SetNotes(tempString.get());
     }
+    PRUint32 lastModDate = 0;
+    err = GetIntColumn(cardRow, m_LastModDateColumnToken, &lastModDate, 0);
+    if (NS_SUCCEEDED(err))
+      newCard->SetLastModifiedDate(lastModDate);
+
     PRUint32 key = 0;
     err = GetIntColumn(cardRow, m_RecordKeyColumnToken, &key, 0);
     if (NS_SUCCEEDED(err))
@@ -3000,6 +3201,16 @@ NS_IMETHODIMP nsListAddressEnumerator::IsDone(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void nsAddrDatabase::PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
+{
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2UI((*seconds), intermediateResult);
+}
+
+
 NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
 {
     nsAddrDBEnumerator* e = new nsAddrDBEnumerator(this);
@@ -3068,6 +3279,41 @@ NS_IMETHODIMP nsAddrDatabase::EnumerateListAddresses(nsIAbDirectory *directory, 
     NS_ADDREF(e);
     *result = e;
     }
+    return rv;
+}
+
+nsresult nsAddrDatabase::CreateCardFromDeletedCardsTable(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result)
+{
+    nsresult rv = NS_OK; 
+
+    mdbOid outOid;
+    mdb_id rowID=0;
+
+    if (cardRow->GetOid(GetEnv(), &outOid) == NS_OK)
+        rowID = outOid.mOid_Id;
+
+    if(NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIAbCard> personCard;
+        personCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        nsCOMPtr<nsIAbMDBCard> dbpersonCard (do_QueryInterface(personCard, &rv));
+
+        if (NS_SUCCEEDED(rv) && dbpersonCard)
+        {
+            GetCardFromDB(personCard, cardRow);
+            mdbOid tableOid;
+            m_mdbDeletedCardsTable->GetOid(GetEnv(), &tableOid);
+
+            dbpersonCard->SetDbTableID(tableOid.mOid_Id);
+            dbpersonCard->SetDbRowID(rowID);
+            dbpersonCard->SetAbDatabase(this);
+        }
+
+        NS_IF_ADDREF(*result = personCard);
+    }
+
     return rv;
 }
 

@@ -236,6 +236,9 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
     void setCardValue(in nsIAbCard card, in string name, in wstring value, in boolean notify);
     wstring getCardValue(in nsIAbCard card, in string name);
 
+    void getDeletedCardList(out unsigned long aCount, out nsISupportsArray aDeletedList); 
+    void getDeletedCardCount(out unsigned long count); 
+
     /**
      * used for adding a string attributes to a row.
      * used during LDIF and addressbook import.

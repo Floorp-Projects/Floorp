@@ -529,6 +529,8 @@ nsresult DIR_InitServer (DIR_Server *server)
 		server->csid = CS_UTF8;
 		server->locale = nsnull;
         server->uri = nsnull;
+        // initialize the palm category
+        server->PalmCategoryId = -1;
 	}
 	return NS_OK;
 }
@@ -1695,6 +1697,16 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 
 	case 'v': /* vlvDisabled */
 		rc = idVLVDisabled;
+		break;
+	case 'P':
+		switch (prefname[4]) {
+			case 'C': /* PalmCategoryId */
+				rc = idPalmCategory;
+				break;
+			case 'S': /* PalmSyncTimeStamp */
+				rc = idPalmSyncTimeStamp;
+				break;
+		}
 		break;
 	}
 
@@ -3075,6 +3087,9 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	 */
 	dir_GetReplicationInfo (prefstring, server, tempstring);
 
+	server->PalmCategoryId = DIR_GetIntPref (prefstring, "PalmCategoryId", tempstring, -1);
+	server->PalmSyncTimeStamp = DIR_GetIntPref (prefstring, "PalmSyncTimeStamp", tempstring, 0);
+
 	/* Get authentication prefs */
 	server->enableAuth = DIR_GetBoolPref (prefstring, "auth.enabled", tempstring, kDefaultEnableAuth);
 	server->authDn = DIR_GetStringPref (prefstring, "auth.dn", tempstring, nsnull);
@@ -3925,6 +3940,9 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
 	DIR_SaveCustomFilters (prefstring, tempstring, server);
 
 	dir_SaveReplicationInfo (prefstring, tempstring, server);
+	
+	DIR_SetIntPref (prefstring, "PalmCategoryId", tempstring, server->PalmCategoryId, -1);
+	DIR_SetIntPref (prefstring, "PalmSyncTimeStamp", tempstring, server->PalmSyncTimeStamp, 0);
 
 	DIR_SetStringPref (prefstring, "customDisplayUrl", tempstring, server->customDisplayUrl, "");
 

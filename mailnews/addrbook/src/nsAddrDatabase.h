@@ -48,6 +48,8 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
+#define  CARD_ATTRIB_PALMID "PalmRecId"
+
 typedef enum 
 {
 	AB_NotifyInserted,
@@ -103,6 +105,10 @@ public:
 	NS_IMETHOD GetNewListRow(nsIMdbRow * *newRow); 
 	NS_IMETHOD AddCardRowToDB(nsIMdbRow *newRow);
 	NS_IMETHOD AddLdifListMember(nsIMdbRow* row, const char * value);
+
+   	NS_IMETHOD GetDeletedCardList(PRUint32 *aCount, nsISupportsArray **aDeletedList);
+	NS_IMETHOD GetDeletedCardCount(PRUint32 *count);
+    NS_IMETHOD PurgeDeletedCardTable();
 
 	NS_IMETHOD AddFirstName(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_FirstNameColumnToken, value); }
@@ -309,6 +315,8 @@ public:
 	PRUint32 GetListAddressTotal(nsIMdbRow* listRow);
 	nsresult GetAddressRowByPos(nsIMdbRow* listRow, PRUint16 pos, nsIMdbRow** cardRow);
 
+        static void PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
+
 protected:
 
     static void		AddToCache(nsAddrDatabase* pAddrDB) 
@@ -343,6 +351,7 @@ protected:
 	nsresult AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow);
 	nsresult FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row);
 	nsresult CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
+	nsresult CreateCardFromDeletedCardsTable(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
 	nsresult SetListAddressTotal(nsIMdbRow* listRow, PRUint32 total);
 	nsresult DeleteCardFromListRow(nsIMdbRow* pListRow, mdb_id cardRowID);
 	void DeleteCardFromAllMailLists(mdb_id cardRowID);
@@ -350,6 +359,7 @@ protected:
 
 	nsresult AddLowercaseColumn(nsIMdbRow * row, mdb_token columnToken, const char* utf8String);
   nsresult GetRowFromAttribute(const char *aName, const char *aUTF8Value, PRBool aCaseInsensitive, nsIMdbRow	**aCardRow);
+
 
 	static nsVoidArray/*<nsAddrDatabase>*/ * GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/ * m_dbCache;
@@ -359,6 +369,9 @@ protected:
 	nsresult			InitNewDB();
 	nsresult			InitMDBInfo();
 	nsresult			InitPabTable();
+    	nsresult            		InitDeletedCardsTable(PRBool bCreate=PR_FALSE);
+	nsresult			AddRowToDeletedCardsTable(nsIAbCard *card, nsIMdbRow **pCardRow);
+       nsresult			DeleteRowFromDeletedCardsTable(nsIMdbRow *pCardRow);
 
 	nsresult			InitLastRecorKey();
 	nsresult			GetDataRow(nsIMdbRow **pDataRow);
@@ -379,12 +392,14 @@ protected:
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbPabTable;
+	nsIMdbTable                 *m_mdbDeletedCardsTable;
 	nsFileSpec		    m_dbName;
 	PRBool				m_mdbTokensInitialized;
     nsVoidArray /*<nsIAddrDBListener>*/ *m_ChangeListeners;
 
 	mdb_kind			m_PabTableKind;
 	mdb_kind			m_MailListTableKind;
+	mdb_kind			m_DeletedCardsTableKind;
 
 	mdb_scope			m_CardRowScopeToken;
 	mdb_scope			m_ListRowScopeToken;
