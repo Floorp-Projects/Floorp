@@ -68,7 +68,6 @@
                     onkeypress="forceInteger('width')" />
               </td>
               <td>
-<!-- EXPOSE THIS TO SHOW POPUP MENU IN A DIALOG
                 <xul:menu>
                   <xul:titledbutton class="popup" id="pixelOrPercentButton" align="right" value="&percentPopup.value;"/>
                     <xul:menupopup id="PixelOrPercentMenu">
@@ -76,7 +75,6 @@
                       <xul:menuitem value="&percentPopup.value;" oncommand="SetPixelOrPercentByID('pixelOrPercentButton', '%')"/>
                     </xul:menupopup>
                 </xul:menu>
--->
               </td>
             </tr>
           </table>
@@ -86,9 +84,9 @@
     <tr>
       <td colspan="2">
         <fieldset><legend align="left">&alignmentFieldset.label;</legend>
-          <label><input type="radio" name="HRuleAlign" id="leftAlign"/>&leftPopup.value;</label>
-          <label><input type="radio" name="HRuleAlign" id="centerAlign"/>&centerPopup.value;</label>
-          <label><input type="radio" name="HRuleAlign" id="rightAlign"/>&rightPopup.value;</label>
+          <label><input type="radio" name="Align" id="leftAlign"/>&leftPopup.value;</label>
+          <label><input type="radio" name="Align" id="centerAlign"/>&centerPopup.value;</label>
+          <label><input type="radio" name="Align" id="rightAlign"/>&rightPopup.value;</label>
         </fieldset>
       </td>
     </tr>

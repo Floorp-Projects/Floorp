@@ -63,6 +63,7 @@ function StringExists(string)
 
 function ClearList(list)
 {
+  list.selectedIndex = -1;
   for( i = (list.length-1); i >= 0; i-- ) {
     list.remove(i);
   }
@@ -99,8 +100,14 @@ function ReplaceStringInList(list, index, string)
   }
 }
 
+function AppendStringToListByID(list, stringID)
+{
+  AppendStringToList(list, editorShell.GetString(stringID));
+}
+
 function AppendStringToList(list, string)
 {
+  dump("**** Append String = "+string+"\n");
   
   // THIS DOESN'T WORK! Result is a XULElement -- namespace problem
   //optionNode1         = document.createElement("option");
@@ -116,6 +123,11 @@ function AppendStringToList(list, string)
     dump("Failed to create OPTION node. String content="+string+"\n");
   }
 }
+
+/*
+  It would be better to add method to Select object, but what is its name?
+  SELECT and HTMLSELECT don't work!
+*/
 
 // "value" may be a number or string type
 
@@ -133,7 +145,7 @@ function ValidateNumberString(value, minValue, maxValue)
       return number + "";
     }
   }
-  message = GetString("ValidateNumber1")+number+GetString("ValidateNumber2")+" "+minValue+" "+GetString("ValidateNumber3")+" "+maxValue;
+  message = editorShell.GetString("ValidateNumber1")+number+editorShell.GetString("ValidateNumber2")+" "+minValue+" "+editorShell.GetString("ValidateNumber3")+" "+maxValue;
   ShowInputErrorMessage(message);
 
   // Return an empty string to indicate error
@@ -143,7 +155,8 @@ function ValidateNumberString(value, minValue, maxValue)
 
 function ShowInputErrorMessage(message)
 {
-  window.openDialog("chrome://editor/content/EdMessage.xul", "MsgDlg", "chrome,close,titlebar,modal", "", message, "Input Error");
+  dump("ShowInputErrorMessage:"+message+"[end]\n");
+  window.openDialog("chrome://editor/content/EdMessage.xul", "_blank", "chrome,close,titlebar,modal", "", message, "Input Error");
 }
 
 function GetString(name)
@@ -174,12 +187,9 @@ String.prototype.trimString = function() {
   return this.replace(/(^\s+)|(\s+$)/g, '')
 }
 
-function IsWhitespace(character)
+function IsWhitespace(string)
 {
-  var result = character.match(/\s/);
-  if (result == null)
-    return false;
-  return true;
+  return /^\s/.test(string);
 }
 
 function TruncateStringAtWordEnd(string, maxLength, addEllipses)

@@ -28,8 +28,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
-<!-- dialog containing a control requiring initial setup -->
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorListProperties.dtd">
 <xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
@@ -37,31 +36,35 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdListProps.js">
-  </script>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdListProps.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
-  <xul:menu>
-  <fieldset><legend align="left">&listStyle.label;</legend>
-    <xul:menu>
-      <!-- text on this button is set in JavaScript ->
-      <xul:titledbutton class="popup" id="ListStyleButton" align="right"/>
-        <xul:menupopup id="PixelOrPercentMenu">
-          <xul:menuitem value="&numberedList.value;" oncommand="SetListStyle('pixelOrPercentButton', '')"/>
 
-        </xul:menupopup>
-    </xul:menu>
-  </fieldset>
-  <fieldset><legend align="left">&alignmentFieldset.label;</legend>
-    <label><input type="radio" name="HRuleAlign" id="leftAlign"/>&leftPopup.value;</label>
-    <label><input type="radio" name="HRuleAlign" id="centerAlign"/>&centerPopup.value;</label>
-    <label><input type="radio" name="HRuleAlign" id="rightAlign"/>&rightPopup.value;</label>
-  </fieldset>
+  <label for="ListStyle">&listStyle.label;</label>
+  <select class="ComboBox" id="ListStyle" onchange="SelectListStyle()">
+    <option>&none.value;</option>
+    <option>&bulletList.value;</option>
+    <option>&numberList.value;</option>
+    <option>&definitionList.value;</option>
+  </select>
+  <xul:spring class="spacer"/>
 
+  <!-- message text and list items are set in JS 
+       bulletStyle.label should be identical to string with id=BulletStyle in editor.properties -->
+  <div id="BulletStyleLabel">&bulletStyle.label;</div>
+  <select class="ComboBox" id="BulletStyle" style="min-width: 10em"/>
+  <xul:spring class="spacer"/>
+
+  <xul:box align="horizontal">
+    <label id="StartingNumberLabel" for="StartingNumber">&startingNumber.label;</label>
+    <xul:spring class="spacer"/>
+    <input type="text" id="StartingNumber" size="3"/>
+    <xul:spring/>
+  </xul:box>
   <xul:broadcaster id="args" value=""/>
   <!-- from EdDialogOverlay -->
   <xul:box id="advancedEditButton"/>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
+
 </xul:window>

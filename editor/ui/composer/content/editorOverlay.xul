@@ -148,7 +148,7 @@
       <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()"/>
     
       <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"   disabled="false"  oncommand="EditorInsertLink()"/>
-      <broadcaster id="Editor:InsertTarget" value="&insertTargetCmd.label;" disabled="false"  oncommand="_EditorNotImplemented()"/>
+      <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;" disabled="false"  oncommand="EditorInsertNamedAnchor()"/>
       <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"  disabled="false"  oncommand="EditorInsertImage()"/>
       <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"  disabled="false"  oncommand="EditorInsertHLine()"/>
       <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"  disabled="false"  oncommand="EditorInsertTable()"/>
@@ -193,7 +193,7 @@
       <menuitem accesskey="&editfind.accesskey;"            key="findkb"         observes="Editor:Find"/>
       <menuitem accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="Editor:FindNext"/>
       <menuseparator />
-      <menuitem accesskey="&toolspellcheck.accesskey;"      key="checkspellingkb" observes="Editor:CheckSpelling"/>
+      <menuitem accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="Editor:CheckSpelling"/>
     </menupopup>
     </menu>
 
@@ -357,7 +357,7 @@
     <menu id="insertMenu" value="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
     <menupopup>
       <menuitem accesskey="&insertlink.accesskey;"                               observes="Editor:InsertLink"/>
-      <menuitem accesskey="&inserttarget.accesskey;"                             observes="Editor:InsertTarget"/>
+      <menuitem accesskey="&insertanchor.accesskey;"                             observes="Editor:InsertAnchor"/>
       <menuitem accesskey="&insertimage.accesskey;"                              observes="Editor:InsertImage"/>
       <menuitem accesskey="&inserthline.accesskey;"                              observes="Editor:InsertHLine"/>
       <menuitem accesskey="&inserttable.accesskey;"                              observes="Editor:InsertTable"/>
@@ -473,21 +473,23 @@
     </menupopup>
     </menu>
 
-    <!-- List Style submenu -->
+    <!-- List Style (opens dialog)  -->
+    <menuitem id="listProps" value="&listProps.label;"  accesskey="&formatlistmenu.accesskey;"      oncommand="EditorListProperties()"/>
+
+<!--  We used a menu in 4.x, but we had list stuff in Paragraph Properties
+      Since we killed that, make list item bring up new List Properties dialog
     <menu id="listMenu" value="&listMenu.label;"        accesskey="&formatlistmenu.accesskey;">
     <menupopup>
-      <menuitem value="&listNoneCmd.label;"             accesskey="&listnone.accesskey;"            oncommand="EditorSetParagraphFormat('ol')"/>
-      <menuitem value="&listBullettedCmd.label;"        accesskey="&listbulletted.accesskey;"       oncommand="EditorSetParagraphFormat('')"/>
-      <menuitem value="&listNumberedCmd.label;"         accesskey="&listnumbered.accesskey;"        oncommand="EditorSetParagraphFormat('normal')"/>
-      <menuitem value="&listDefinitionCmd.label;"       accesskey="&listdefinition.accesskey;"      oncommand="EditorSetParagraphFormat('normal')"/>
+      <menuitem value="&listNoneCmd.label;"             accesskey="&listnone.accesskey;"            oncommand="EditorSetListStyle('')"/>
+      <menuitem value="&listBullettedCmd.label;"        accesskey="&listbulletted.accesskey;"       oncommand="EditorSetListStyle('ul')"/>
+      <menuitem value="&listNumberedCmd.label;"         accesskey="&listnumbered.accesskey;"        oncommand="EditorSetListStyle('ol')"/>
+      <menuitem value="&listDefinitionCmd.label;"       accesskey="&listdefinition.accesskey;"      oncommand="EditorSetListStyle('dl')"/>
     </menupopup>
     </menu>
-
+-->
     <!-- Stylesheet submenu -->
     <menu id="stylesheetMenu" value="&stylesheetMenu.label;" accesskey="&formatstylesheetmenu.accesskey;">
     <menupopup>
-      <menuitem value="EditorContent Sheet"                accesskey="&sseditorcontent.accesskey;"   oncommand="EditorApplyStyleSheet('chrome://editor/content/EditorContent.css')"/>
-      <menuseparator />
       <menuitem value="&stylesheetEditorOneCmd.label;"     accesskey="&sseditor1.accesskey;"     oncommand="EditorApplyStyleSheet('chrome://editor/content/EditorStyles1.css')"/>
       <menuseparator />
       <menuitem value="&stylesheetOldstyleCmd.label;"      accesskey="&ssoldstyle.accesskey;"    oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
@@ -501,15 +503,16 @@
 
     <!-- Random table menu items -->
     <menuitem id="tableJoinCellsMenuitem" value="&tableJoinCells.label;" accesskey="&tablejoin.accesskey;"         oncommand="EditorJoinTableCells()"/>
-    <menuitem id="tablePropertiesMenuitem" value="&properties.label;"     accesskey="&tableproperties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
+    <menuitem id="tablePropertiesMenuitem" value="&properties.label;"     accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
 
     <!-- Table insert submenu -->
     <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
     <menupopup>
-        <menuitem value="&tableTable.label;"   accesskey="&tabletable.accesskey;"   oncommand="EditorInsertTable()"/>
-        <menuitem value="&tableRow.label;"     accesskey="&tablerow.accesskey;"     oncommand="EditorInsertTableRow()"/>
-        <menuitem value="&tableColumn.label;"  accesskey="&tablecolumn.accesskey;"  oncommand="EditorInsertTableColumn()"/>
-        <menuitem value="&tableCell.label;"    accesskey="&tablecell.accesskey;"    oncommand="EditorInsertTableCell(false)"/>
+        <menuitem value="&tableTable.label;"      accesskey="&tabletable.accesskey;"     oncommand="EditorInsertTable()"/>
+        <menuitem value="&tableRow.label;"        accesskey="&tablerow.accesskey;"       oncommand="EditorInsertTableRow()"/>
+        <menuitem value="&tableColumn.label;"     accesskey="&tablecolumn.accesskey;"    oncommand="EditorInsertTableColumn()"/>
+        <menuitem value="&tableCellBefore.label;" accesskey="&tablecell.accesskey;"      oncommand="EditorInsertTableCell(false)"/>
+        <menuitem value="&tableCellAfter.label;"  accesskey="&tablecellafter.accesskey;" oncommand="EditorInsertTableCell(true)"/>
     </menupopup>
     </menu>
 

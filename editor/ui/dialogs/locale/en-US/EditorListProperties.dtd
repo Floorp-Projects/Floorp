@@ -25,9 +25,9 @@
 <!ENTITY windowTitle.label "List Properties">
 
 <!ENTITY listStyle.label "List Style">
+<!ENTITY bulletStyle.label "Bullet Style:">
 <!ENTITY startingNumber.label "Starting number:">
-<!ENTITY alignmentFieldset.label "Alignment">
-<!-- MOVE TO OVERLAY TO SHARE WITH HLINE AND TABLE PROPS -->
-<!ENTITY leftPopup.value "Left">
-<!ENTITY centerPopup.value "Center">
-<!ENTITY rightPopup.value "Right">
+<!ENTITY none.value "None (normal paragraph)">
+<!ENTITY bulletList.value "Bullet (Unnumbered) List">
+<!ENTITY numberList.value "Numbered List">
+<!ENTITY definitionList.value "Definition List">

@@ -402,6 +402,12 @@ function EditorSetParagraphFormat(paraFormat)
   contentWindow.focus();
 }
 
+function EditorListProperties()
+{
+  window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
+  contentWindow.focus();
+}
+
 function EditorSetListStyle(listType)
 {
   // Write me! Replace EditorInsertList when working?
@@ -638,7 +644,7 @@ function EditorInsertHLine()
           dump("failed to get HLine prefs\n");
         }
       }
-      editorShell.InsertElement(hLine, false);
+      editorShell.InsertElement(hLine, true);
     }
   }
   contentWindow.focus();
@@ -652,7 +658,7 @@ function EditorInsertNamedAnchor()
 
 function EditorIndent(indent)
 {
-  dump("indenting\n");
+  dump(indent+"\n");
   editorShell.Indent(indent);
   contentWindow.focus();
 }

@@ -1206,10 +1206,6 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   if (!aElement)
     return NS_ERROR_NULL_POINTER;
   
-  nsAutoEditBatch beginBatching(this);
-  // For most elements, set caret after inserting
-  //PRBool setCaretAfterElement = PR_TRUE;
-
   nsCOMPtr<nsIDOMSelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res) || !selection)
@@ -1222,48 +1218,33 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if (cancel || (NS_FAILED(res))) return res;
 
-  // Clear current selection.
-  // Should put caret at anchor point?
+  nsAutoEditBatch beginBatching(this);
+
+  if (aDeleteSelection)
+  {
+    nsCOMPtr<nsIDOMNode> tempNode;
+    PRInt32 tempOffset;
+    nsresult result = DeleteSelectionAndPrepareToCreateNode(tempNode,tempOffset);
+    if (!NS_SUCCEEDED(result))
+      return result;
+  }
+
+  // If deleting, selection will be collapsed.
+  // so if not, we collapse it
   if (!aDeleteSelection)
   {
-    PRBool collapseAfter = PR_TRUE;
     // Named Anchor is a special case,
     // We collapse to insert element BEFORE the selection
     // For all other tags, we insert AFTER the selection
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
     if (IsNamedAnchorNode(node))
-      collapseAfter = PR_FALSE;
-
-    if (collapseAfter)
     {
-      // Default behavior is to collapse to the end of the selection
-      selection->ClearSelection();
+      selection->CollapseToStart();
     } else {
-      // Collapse to the start of the selection,
-      // We must explore the first range and find
-      //   its parent and starting offset of selection
-      // TODO: Move this logic to a new method nsIDOMSelection::CollapseToStart()???
-      nsCOMPtr<nsIDOMRange> firstRange;
-      res = selection->GetRangeAt(0, getter_AddRefs(firstRange));
-			// XXX: ERROR_HANDLING can firstRange legally be null?
-      if (NS_SUCCEEDED(res) && firstRange)
-      {
-        nsCOMPtr<nsIDOMNode> parent;
-				// XXX: ERROR_HANDLING bad XPCOM usage, should check for null parent separately
-        res = firstRange->GetCommonParent(getter_AddRefs(parent));
-        if (NS_SUCCEEDED(res) && parent)
-        {
-          PRInt32 startOffset;
-          firstRange->GetStartOffset(&startOffset);
-          selection->Collapse(parent, startOffset);
-        } else {
-          // Very unlikely, but collapse to the end if we failed above
-          selection->ClearSelection();
-        }
-      }
+      selection->CollapseToEnd();
     }
   }
-  
+
   nsCOMPtr<nsIDOMNode> parentSelectedNode;
   PRInt32 offsetForInsert;
   res = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));

@@ -194,12 +194,11 @@ function ValidateData()
 
 function onOK()
 {
-  // Since we only edit existing HLines, 
-  //  ValidateData will set the new attributes
-  //   so there's nothing else to do
-  var res = ValidateData();
-  // Copy attributes from the globalElement to the document element
-  if (res)
+  if (ValidateData())
+  {
+    // Copy attributes from the globalElement to the document element
     editorShell.CloneAttributes(hLineElement, globalElement);
-  return (ValidateData(true));
+    return true;
+  }
+  return false;
 }

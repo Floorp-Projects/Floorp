@@ -40,12 +40,15 @@ function Startup()
   if (messageText != "") {
     var messageFragment;
 
-    // Let the caller use "\n" to cause breaks
-    // Translate these into <br> tags
+    // Let the caller use '\n' character or strings "\n" or "<br>" 
+    // to cause line breaks so first convert all to '\n'
+    // Note: Stringbundle's get string turns "\n" into "n", so use "\\n" or "<br>"
+    messageText = messageText.replace(/\\n/g,'\n').replace(/<br>/g,'\n');
+    // Then translate these into <br> tags
 
     done = false;
     while (!done) {
-      breakIndex =   messageText.indexOf('\n');
+      breakIndex =   messageText.indexOf("\n");
       if (breakIndex == 0) {
         // Ignore break at the first character
         messageText = messageText.slice(1);

@@ -183,24 +183,23 @@ titledbutton.MsgButton {
     margin:                     5px;
 }
 
-
+/* What is this for!
 menupopup {
-
     font:                       inherit;
     visibility:                 hidden;
     background-color:           #CCCCDD;
+    background-color:           inherit;
     color:                      inherit;
     border:                     1px white outset;
 }
+*/
 
-select.combobox {
-
-    font-family:                Sans-Serif;
-    font-size:                  8pt;
-    border-top:                 2px;
-    border-left:                4px;
-    border-right:               2px;
+select.ComboBox {
+/*
+EXPERIMENTAL: This ADDS an outset border,
+but doesn't affect inset border of item and trigger button!
     border-style:               outset;
+*/
 }
 
 select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
