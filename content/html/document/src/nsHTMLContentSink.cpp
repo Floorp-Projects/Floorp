@@ -50,7 +50,6 @@
 #include "nsIParser.h"
 #include "nsParserUtils.h"
 #include "nsIScriptLoader.h"
-#include "nsIScriptLoaderObserver.h"
 #include "nsIHTMLContent.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -233,7 +232,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSISCRIPTLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -401,7 +399,6 @@ protected:
 
   void StartLayout();
 
-  void ScrollToRef(PRBool aReallyScroll);
   void TryToScrollToRef();
 
   /**
@@ -431,8 +428,8 @@ protected:
   nsresult ResumeParsing();
 
   // nsContentSink overrides
-  void PreEvaluateScript();
-  void PostEvaluateScript();
+  virtual void PreEvaluateScript();
+  virtual void PostEvaluateScript();
 
   void UpdateAllContexts();
   void NotifyAppend(nsIContent* aContent,
@@ -2162,11 +2159,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   service->GetTopicObservers(NS_LITERAL_STRING("text/html"),
                              getter_AddRefs(mObservers));
 
-  nsCOMPtr<nsIScriptLoader> loader;
-  rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
-  NS_ENSURE_SUCCESS(rv, rv);
-  loader->AddObserver(this);
-
   NS_WARN_IF_FALSE(mDocShell, "oops no docshell!");
 
   // Find out if subframes are enabled
@@ -2417,7 +2409,9 @@ HTMLContentSink::DidBuildModel(void)
     PRUint32 LoadType = 0;
     mDocShell->GetLoadType(&LoadType);
 
-    ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY));
+    if (ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY))) {
+      mScrolledToRefAlready = PR_TRUE;
+    }
   }
 
   nsCOMPtr<nsIScriptLoader> loader;
@@ -3901,72 +3895,8 @@ HTMLContentSink::TryToScrollToRef()
     return;
   }
 
-  ScrollToRef(PR_TRUE);
-}
-
-nsresult
-CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
-               nsString& aRefInUnicode);
-
-void
-HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
-{
-  // XXX Duplicate code in nsXMLContentSink.
-  // XXX Be sure to change both places if you make changes here.
-  if (mRef.IsEmpty()) {
-    return;
-  }
-
-  char* tmpstr = ToNewCString(mRef);
-  if (!tmpstr) {
-    return;
-  }
-
-  nsUnescape(tmpstr);
-  nsCAutoString unescapedRef;
-  unescapedRef.Assign(tmpstr);
-  nsMemory::Free(tmpstr);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  // We assume that the bytes are in UTF-8, as it says in the spec:
-  // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-  nsAutoString ref;
-  CopyUTF8toUTF16(unescapedRef, ref);
-
-  PRUint32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell *shell = mDocument->GetShellAt(i);
-
-    // Scroll to the anchor
-    if (aReallyScroll) {
-      shell->FlushPendingNotifications(PR_FALSE);
-    }
-
-    // Check an empty string which might be caused by the UTF-8 conversion
-    if (!ref.IsEmpty()) {
-      rv = shell->GoToAnchor(ref, aReallyScroll);
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
-
-    // If UTF-8 URL failed then try to assume the string as a
-    // document's charset.
-
-    if (NS_FAILED(rv)) {
-      nsCAutoString docCharset;
-      rv = mDocument->GetDocumentCharacterSet(docCharset);
-
-      if (NS_SUCCEEDED(rv)) {
-        rv = CharsetConvRef(docCharset, unescapedRef, ref);
-
-        if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-          rv = shell->GoToAnchor(ref, aReallyScroll);
-      }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-      mScrolledToRefAlready = PR_TRUE;
-    }
+  if (ScrollToRef(PR_TRUE)) {
+    mScrolledToRefAlready = PR_TRUE;
   }
 }
 
@@ -4494,79 +4424,6 @@ HTMLContentSink::PostEvaluateScript()
 {
   mCurrentContext->SetPreAppend(PR_FALSE);
 }
-
-NS_IMETHODIMP
-HTMLContentSink::ScriptAvailable(nsresult aResult,
-                                 nsIDOMHTMLScriptElement *aElement,
-                                 PRBool aIsInline,
-                                 PRBool aWasPending,
-                                 nsIURI *aURI,
-                                 PRInt32 aLineNo,
-                                 const nsAString& aScript)
-{
-  // Check if this is the element we were waiting for
-  PRUint32 count = mScriptElements.Count();
-
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = mScriptElements[count - 1];
-  if (aElement != scriptElement) {
-    return NS_OK;
-  }
-
-  if (mParser && !mParser->IsParserEnabled()) {
-    // make sure to unblock the parser before evaluating the script,
-    // we must unblock the parser even if loading the script failed or
-    // if the script was empty, if we don't, the parser will never be
-    // unblocked.
-    mParser->UnblockParser();
-  }
-
-  // Mark the current script as loaded
-  mNeedToBlockParser = PR_FALSE;
-
-  if (NS_SUCCEEDED(aResult) && aResult != NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
-    PreEvaluateScript();
-  } else {
-    mScriptElements.RemoveObjectAt(count - 1);
-
-    if (mParser && aWasPending) {
-      // Loading external script failed!. So, resume
-      // parsing since the parser got blocked when loading
-      // external script. - Ref. Bug: 94903
-      mParser->ContinueParsing();
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::ScriptEvaluated(nsresult aResult,
-                                 nsIDOMHTMLScriptElement *aElement,
-                                 PRBool aIsInline,
-                                 PRBool aWasPending)
-{
-  // Check if this is the element we were waiting for
-  PRUint32 count = mScriptElements.Count();
-
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = mScriptElements[count - 1];
-  if (aElement != scriptElement) {
-    return NS_OK;
-  }
-
-  // Pop the script element stack
-  mScriptElements.RemoveObjectAt(count - 1);
-
-  if (NS_SUCCEEDED(aResult)) {
-    PostEvaluateScript();
-  }
-
-  if (mParser && mParser->IsParserEnabled() && aWasPending) {
-    mParser->ContinueParsing();
-  }
-
-  return NS_OK;
-}
-
 
 nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
