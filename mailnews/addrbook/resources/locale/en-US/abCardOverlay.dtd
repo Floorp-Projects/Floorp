@@ -81,7 +81,7 @@ Rights Reserved.
 <!ENTITY HomeAddress2.label             ""> 
 <!ENTITY HomeCity.label                 "City:"> 
 <!ENTITY HomeState.label                "State/Province:"> 
-<!ENTITY HomeZipCode.label              "Zip/Postal Code:"> 
+<!ENTITY HomeZipCode.label              "ZIP/Postal Code:"> 
 <!ENTITY HomeCountry.label              "Country:">
 <!ENTITY HomeWebPage.label              "Web Page:"> 
 <!ENTITY Work.box                       "Work"> 
@@ -92,7 +92,7 @@ Rights Reserved.
 <!ENTITY WorkAddress2.label             ""> 
 <!ENTITY WorkCity.label                 "City:"> 
 <!ENTITY WorkState.label                "State/Province:"> 
-<!ENTITY WorkZipCode.label              "Zip/Postal Code:"> 
+<!ENTITY WorkZipCode.label              "ZIP/Postal Code:"> 
 <!ENTITY WorkCountry.label              "Country:">
 <!ENTITY WorkWebPage.label              "Web Page:"> 
 
