@@ -63,6 +63,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/message-icon.gif \
 		$(srcdir)/question-icon.gif \
 		$(srcdir)/return.gif \
+		$(srcdir)/stop.gif \
+		$(srcdir)/print.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
