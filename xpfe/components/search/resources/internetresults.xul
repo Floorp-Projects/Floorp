@@ -56,15 +56,15 @@
                                 <treechildren>
 				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
 					<treerow>
-						<treecell class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
 						<treecell>
-							<progressmeter value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="horizontal" mode="normal" />
-							<titledbutton crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="left" style="list-style-image: none;" />
+							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
+							<titledbutton align="left" crop="right" flex="1" value="rdf:http://home.netscape.com/NC-rdf#Relevance" style="list-style-image: none;" />
 						</treecell>
 						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
 						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
 						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
-						<treecell class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
+						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
 					</treerow>
 				</treeitem>
                                 </treechildren>
@@ -82,11 +82,11 @@
 					resource="http://home.netscape.com/NC-rdf#Relevance"
 					onclick="return doSort('RelevanceColumn');" />
 				<treecell id="PriceCell"
-					value="Price" observes="PriceColumn"
+					value="&price.column.label;" observes="PriceColumn"
 					resource="http://home.netscape.com/NC-rdf#Price"
 					onclick="return doSort('PriceColumn');" />
 				<treecell id="AvailabilityCell"
-					value="Availability" observes="AvailabilityColumn"
+					value="&availability.column.label;" observes="AvailabilityColumn"
 					resource="http://home.netscape.com/NC-rdf#Availability"
 					onclick="return doSort('AvailabilityColumn');" />
 				<treecell id="SiteCell"
