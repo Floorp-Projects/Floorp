@@ -462,7 +462,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_PRINT:
     DoPrint();
     break;
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MAC)
   case VIEWER_TREEVIEW:
 	// Instantiate a tree widget
 	DoTreeView();
