@@ -17,33 +17,37 @@
  */
 
 /*
- * jsIErrorReporter.h -- the XPCOM interface to JS error and warning reporters.
+ * jsRuntime.cpp -- implementation of the jsIContext interface for the JSAPI.
  */
 
-#ifndef JS_IERRORREPORTER_H
-#define JS_IERRORREPORTER_H
+#include "jsRuntime.h"
 
-#include "nsISupports.h"
-extern "C" {
-#include <jsapi.h>
+static NS_DEFINE_IID(kIRuntime, JS_IRUNTIME_IID);
+
+static int jsRuntime::runtimeCount = 0;
+
+jsRuntime::jsRuntime(uint32 maxbytes)
+{
+    rt = JS_NewRuntime(maxbytes);
+    if (rt)
+	runtimeCount++;
+    /* and what if it _doesn't_ work? */
 }
 
-class jsIErrorReporter: public nsISupports {
- public:
-    jsIErrorReporter();
-    virtual ~jsIErrorReporter() = 0;
-    /**
-     * Report a warning.
-     */
-    NS_IMETHOD reportWarning(JSString *message,
-			     JSErrorReport *report) = 0;
+jsRuntime::~jsRuntime()
+{
+    JS_DestroyRuntime(rt);
+    if (!--runtimeCount) {
+	JS_ShutDown();
+    }
+}
 
-    /**
-     * Report an error.
-     */
-    NS_IMETHOD reportError(JSString *message,
-			   JSErrorReport *report) = 0;
+NS_IMPL_ISUPPORTS(jsRuntime, kIRuntime);
 
-};
-
-#endif /* JS_IERRORREPORTER_H */
+jsIContext *jsRuntime::newContext(size_t stacksize)
+{
+    jsContext *cx = new jsContext(rt, stacksize);
+    if (cx->cx)
+	return cx;
+    return NULL;
+}

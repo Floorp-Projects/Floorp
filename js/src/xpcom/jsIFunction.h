@@ -28,7 +28,7 @@
 
 class jsIFunction: public nsISupports {
  public:
-    virtual jsIFunction() = 0;
+    jsIFunction();
     virtual ~jsIFunction() = 0;
 };
 

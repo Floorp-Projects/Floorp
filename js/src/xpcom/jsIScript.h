@@ -17,33 +17,24 @@
  */
 
 /*
- * jsIErrorReporter.h -- the XPCOM interface to JS error and warning reporters.
+ * jsIScript.h --- the XPCOM interface to the core JS engine functionality.
  */
 
-#ifndef JS_IERRORREPORTER_H
-#define JS_IERRORREPORTER_H
+#ifndef JS_ISCRIPT_H
+#define JS_ISCRIPT_H
 
-#include "nsISupports.h"
-extern "C" {
-#include <jsapi.h>
-}
+#define JS_ISCRIPT_IID \
+    { 0, 0, 0, \
+	{0, 0, 0, 0, 0, 0, 0, 0}}
 
-class jsIErrorReporter: public nsISupports {
+/**
+ * jsIScript interface declaration
+ */
+
+class jsIScript: public nsISupports {
  public:
-    jsIErrorReporter();
-    virtual ~jsIErrorReporter() = 0;
-    /**
-     * Report a warning.
-     */
-    NS_IMETHOD reportWarning(JSString *message,
-			     JSErrorReport *report) = 0;
-
-    /**
-     * Report an error.
-     */
-    NS_IMETHOD reportError(JSString *message,
-			   JSErrorReport *report) = 0;
-
+    jsIScript();
+    virtual ~jsIScript() = 0;
 };
 
-#endif /* JS_IERRORREPORTER_H */
+#endif
