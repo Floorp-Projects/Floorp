@@ -3,18 +3,19 @@ interface EditorAppCore : BaseAppCore
 /* IID: { 0x9afff72b, 0xca9a, 0x11d2, \
     {0x96, 0xc9, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}} */
 
-  readonly attribute wstring contentsAsText;
-  readonly attribute wstring contentsAsHTML;
-  readonly attribute Document editorDocument;
+  readonly attribute DOMString contentsAsText;
+  readonly attribute DOMString contentsAsHTML;
+
+	readonly attribute Document editorDocument;
 	readonly attribute Selection editorSelection;
 	
 	void EditorAppCore();
 	
-	void setEditorType(in wstring editorType);
-	void setTextProperty(in wstring prop, in DOMString attr, in DOMString value);
-	void removeTextProperty(in wstring prop, in DOMString attr);
+	void setEditorType(in DOMString editorType);
+	void setTextProperty(in DOMString prop, in DOMString attr, in DOMString value);
+	void removeTextProperty(in DOMString prop, in DOMString attr);
 	
-	void getTextProperty(in wstring prop, in DOMString attr, in DOMString value, out boolean firstHas, out boolean anyHas, out boolean allHas);
+	void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out boolean firstHas, out boolean anyHas, out boolean allHas);
 	
 	void undo();
 	void redo();
@@ -25,18 +26,20 @@ interface EditorAppCore : BaseAppCore
 	
 	void selectAll();
 	
+	void find(in DOMString searchTerm, in boolean matchCase, in boolean searchDown);
+	
 	void beginBatchChanges();
 	void endBatchChanges();
 	
 	void showClipboard();
 	
-	void insertText(in wstring textToInsert);
+	void insertText(in DOMString textToInsert);
 
 	void insertLink();
 	void insertImage();
 
-  Element getSelectedElement(in wstring tagName);
-  Element createElementWithDefaults(in wstring tagName);
+  Element getSelectedElement(in DOMString tagName);
+  Element createElementWithDefaults(in DOMString tagName);
   Element insertElement(in Element element, in boolean deleteSelection);
 	
 	void exit();
