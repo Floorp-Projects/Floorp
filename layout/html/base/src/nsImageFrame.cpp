@@ -145,7 +145,8 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
     // No URI was specified for the src. Indicate we're unable to load the
     // image and notify the pres shell
     mLoadImageFailed = PR_TRUE;
-    nsIPresShell* presShell = aPresContext->GetShell();
+    nsIPresShell* presShell;
+    aPresContext->GetShell(&presShell);
     presShell->CantRenderReplacedElement(aPresContext, aForFrame);
     NS_RELEASE(presShell);
     return NS_OK;
