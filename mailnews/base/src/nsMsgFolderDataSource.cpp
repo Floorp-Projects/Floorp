@@ -74,6 +74,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeSimpleName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameSort= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameCollationSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateFoldersOnServer = nsnull;
@@ -136,6 +137,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_FOLDERTREESIMPLENAME,    &kNC_FolderTreeSimpleName);
     rdf->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
     rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
+    rdf->GetResource(NC_RDF_FOLDERTREENAME_COLLATION_SORT,    &kNC_FolderTreeNameCollationSort);
     rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
     rdf->GetResource(NC_RDF_CANCREATEFOLDERSONSERVER, &kNC_CanCreateFoldersOnServer);
@@ -202,6 +204,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_FolderTreeSimpleName, refcnt);
 		NS_RELEASE2(kNC_NameSort, refcnt);
 		NS_RELEASE2(kNC_FolderTreeNameSort, refcnt);
+        NS_RELEASE2(kNC_FolderTreeNameCollationSort, refcnt);
 		NS_RELEASE2(kNC_SpecialFolder, refcnt);
 		NS_RELEASE2(kNC_ServerType, refcnt);
 		NS_RELEASE2(kNC_CanCreateFoldersOnServer, refcnt);
@@ -987,6 +990,20 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
     rv = createFolderNameNode(folder, target, PR_TRUE);
   else if(kNC_FolderTreeNameSort == property)
     rv = createFolderNameNode(folder, target, PR_TRUE);
+  else if(kNC_FolderTreeNameCollationSort == property)
+  {
+    PRBool isServer;
+    rv = folder->GetIsServer(&isServer);
+    if (NS_SUCCEEDED(rv))
+    {
+      if (!isServer)
+        rv = createFolderNameNode(folder, target, PR_TRUE);
+      else
+        return NS_RDF_NO_VALUE;  
+      //for servers we want to use ?sort=true rather than ?collation=true
+      // when ?collation=true fails ?sort=true will be used. 
+    }
+  }
   else if (kNC_Name == property)
     rv = createFolderNameNode(folder, target, PR_FALSE);
   else if(kNC_Open == property)
@@ -1051,16 +1068,18 @@ nsresult
 nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
                                             nsIRDFNode **target, PRBool sort)
 {
-  nsXPIDLString name;
-  nsresult rv = folder->GetName(getter_Copies(name));
-  if (NS_FAILED(rv)) return rv;
-
-  if (sort) {
+  if (sort) 
+  {
     nsXPIDLString sortKey;
     folder->GetSortKey(getter_Copies(sortKey));
     createNode(sortKey.get(), target, getRDFService());
   }
-  else {
+  else 
+  {
+    nsXPIDLString name;
+    nsresult rv = folder->GetName(getter_Copies(name));
+    if (NS_FAILED(rv)) 
+      return rv;
     createNode(name.get(), target, getRDFService());
   }
     
