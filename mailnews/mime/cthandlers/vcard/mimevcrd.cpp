@@ -15,6 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#define NS_IMPL_IDS
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+
 #include "msgCore.h"
 #include "prlog.h"
 #include "prtypes.h"
@@ -27,7 +31,7 @@
 #include "mimexpcom.h"
 #include "mimevcrd.h"
 #include "nsEscape.h"
-#include "comi18n.h"
+
 #include "nsIEventQueueService.h"
 #include "nsIStringBundle.h"
 #include "nsINetService.h"
@@ -173,11 +177,88 @@ MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+                                   const char* inBuffer, const PRInt32 inLength,
+                                   char** outBuffer, PRInt32* outLength)
+{
+  char *dstPtr = nsnull;
+  PRInt32 dstLength = 0;
+  nsresult res;
+
+  // invalid input
+  if (nsnull == from_charset || nsnull == to_charset || 
+      '\0' == *from_charset || '\0' == *to_charset || nsnull == inBuffer) 
+    return -1;
+
+  // from to identical
+  if (!PL_strcasecmp(from_charset, to_charset))
+    return -1;
+
+  // us-ascii is a subset of utf-8
+  if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
+      (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii")))
+    return -1;
+
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsString aCharset(from_charset);
+    nsIUnicodeDecoder* decoder = nsnull;
+    PRUnichar *unichars;
+    PRInt32 unicharLength;
+
+    // convert to unicode
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+      PRInt32 srcLen = inLength;
+      res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
+      // temporary buffer to hold unicode string
+      unichars = new PRUnichar[unicharLength];
+      if (unichars == nsnull) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else {
+        res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
+
+        // convert from unicode
+        nsIUnicodeEncoder* encoder = nsnull;
+        aCharset.SetString(to_charset);
+        res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+        if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
+          res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+          // allocale an output buffer
+          dstPtr = (char *) PR_Malloc(dstLength + 1);
+          if (dstPtr == nsnull) {
+            res = NS_ERROR_OUT_OF_MEMORY;
+          }
+          else {
+            res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+          }
+          NS_IF_RELEASE(encoder);
+        }
+        delete [] unichars;
+      }
+      NS_IF_RELEASE(decoder);
+    }
+  }
+
+  // set the outputs
+  if (NS_SUCCEEDED(res) && nsnull != dstPtr) {
+    dstPtr[dstLength] = '\0';
+    *outBuffer = dstPtr;
+    *outLength = dstLength;
+  }
+
+  return NS_SUCCEEDED(res) ? 0 : -1;
+}
+////////////////////////////////////////////////////////////////////////////////
 static int
 MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
 {
     int status = 0;
 	MimeInlineTextVCardClass *clazz = ((MimeInlineTextVCardClass *) obj->clazz);
+
 	VObject *t, *v;
 
     if (obj->closed_p) return 0;
@@ -934,7 +1015,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_COMPLETE_VCARD);
 
 		// convert from the resource charset. 
-    res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
@@ -945,7 +1026,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	else 
 	{
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_CONDENSED_VCARD);
-    res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
@@ -965,7 +1046,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
 	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
 
-  res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+  res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                             &converted, &converted_length);
   if ( (res != 0) || (converted == NULL) )
 		converted = rsrcString;
@@ -1700,7 +1781,7 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
   PRInt32 res;
 
   // convert from the resource charset. 
-  res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", line, PL_strlen(line), 
+  res = INTL_ConvertCharset(charset, "UTF-8", line, PL_strlen(line), 
                             &converted, &converted_length);
   if ( (res != 0) || (converted == NULL) )
     converted = (char *)line;

@@ -33,7 +33,6 @@ CPPSRCS = \
 		mimexpcom.cpp 	\
 		nsVCard.cpp		\
 		nsVCardObj.cpp	\
-		comi18n.cpp		\
     		nsVCardFactory.cpp	\
 		nsMimeContentTypeHandler.cpp	\
 		$(NULL)

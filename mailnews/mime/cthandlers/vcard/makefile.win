@@ -56,7 +56,6 @@ OBJS=						\
 		.\$(OBJDIR)\mimexpcom.obj 	\
 		.\$(OBJDIR)\nsVCard.obj		\
 		.\$(OBJDIR)\nsVCardObj.obj	\
-		.\$(OBJDIR)\comi18n.obj		\
 		.\$(OBJDIR)\nsVCardFactory.obj	\
 		.\$(OBJDIR)\nsMimeContentTypeHandler.obj	\
 		$(NULL)
