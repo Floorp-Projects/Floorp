@@ -85,7 +85,7 @@ nsSocketProviderService::GetSocketProvider(const char *aSocketType, nsISocketPro
 
   char buf[MAX_SOCKET_TYPE_PROGID_LENGTH];
 
-  nsAutoString2 progID(NS_NETWORK_SOCKET_PROGID_PREFIX);
+  nsAutoString progID(NS_NETWORK_SOCKET_PROGID_PREFIX);
 
   progID += aSocketType;
   progID.ToCString(buf, MAX_SOCKET_TYPE_PROGID_LENGTH);

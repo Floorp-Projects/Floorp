@@ -24,7 +24,7 @@
 
 #include "nsIMIMEInfo.h"
 #include "nsIAtom.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 
