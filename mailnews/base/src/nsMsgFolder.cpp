@@ -27,6 +27,11 @@
 #include "nsMsgDatabase.h"
 #endif
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 nsMsgFolder::nsMsgFolder(const char* uri)
   : nsRDFResource(PL_strdup(uri))
 {
@@ -89,7 +94,7 @@ nsMsgFolder::QueryInterface(REFNSIID iid, void** result)
 
 	*result = nsnull;
   if(iid.Equals(nsIMsgFolder::IID()) ||
-     iid.Equals(::nsISupports::IID())) {
+     iid.Equals(kISupportsIID)) {
 		*result = NS_STATIC_CAST(nsIMsgFolder*, this);
 		AddRef();
 		return NS_OK;
@@ -447,7 +452,8 @@ NS_IMETHODIMP nsMsgFolder::AddSubFolder(const nsIMsgFolder *folder)
 {
 	nsISupports * supports;
 
-	if(NS_SUCCEEDED(((nsISupports*)folder)->QueryInterface(::nsISupports::IID(), (void**)&supports)))
+	if(NS_SUCCEEDED(((nsISupports*)folder)->QueryInterface(kISupportsIID,
+                                                         (void**)&supports)))
 	{
 		mSubFolders->AppendElement(supports);
 		NS_RELEASE(supports);
@@ -469,7 +475,8 @@ NS_IMETHODIMP nsMsgFolder::RemoveSubFolder (const nsIMsgFolder *which)
 {
 	nsISupports * supports;
 
-	if(NS_SUCCEEDED(((nsISupports*)which)->QueryInterface(::nsISupports::IID(), (void**)&supports)))
+	if(NS_SUCCEEDED(((nsISupports*)which)->QueryInterface(kISupportsIID,
+                                                        (void**)&supports)))
 	{
 		mSubFolders->RemoveElement(supports, 0);
 		//make sure it's really been removed and no others exist.
