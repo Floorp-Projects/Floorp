@@ -1425,7 +1425,8 @@ static REGERR nr_Find(REGFILE *reg, REGOFF offParent, char *pPath,
 static REGERR nr_FindAtLevel(REGFILE *reg, REGOFF offFirst, char *pName,
     REGDESC *pDesc, REGOFF *pOffPrev);
 
-static REGERR nr_CreateSubKey(REGFILE *reg, REGDESC *pParent, char *name);
+static REGERR nr_CreateSubKey(REGFILE *reg, REGOFF parent, REGDESC *pDesc,
+                              char *name);
 static REGERR nr_CreateEntryString(REGFILE *reg, REGDESC *pParent, 
     char *name, char *value);
 static REGERR nr_CreateEntry(REGFILE *reg, REGDESC *pParent, char *name,
@@ -1515,8 +1516,12 @@ static REGERR nr_Find(REGFILE *reg,
  *                   If pDesc and pOffPrev are valid pointers *AND* the name is
  *                   found then pDesc will point at the REGDESC of the node and
  *                   pOffPrev will be the offset of the desc for the previous
- *                   node at the same level.  These values aren't touched
- *                   if the node is not found.
+ *                   node at the same level.  
+ *
+ *                   If the node is *NOT* found (REGERR_NOFIND is returned)
+ *                   pDesc will point at the REGDESC of the last found node
+ *                   (as will pOffPrev). If some other error is returned then
+ *                   THese values must not be used.
  */
 static REGERR nr_FindAtLevel(REGFILE *reg,
                              REGOFF offset,
@@ -1548,14 +1553,8 @@ static REGERR nr_FindAtLevel(REGFILE *reg,
 
         /* check to see if it's the one we want */
         if (XP_STRCMP(namebuf, pName) == 0) {
-            /* Found it! */
-            if ( pDesc != NULL ) {
-                COPYDESC( pDesc, &desc );
-            }
-            if ( pOffPrev != NULL ) {
-                *pOffPrev = prev;
-            }
-            return REGERR_OK;
+            /* Found it! Signaled by non-zero offset */
+            break;
         }
 
         /* advance to the next node */
@@ -1563,12 +1562,26 @@ static REGERR nr_FindAtLevel(REGFILE *reg,
         offset = desc.left;
     }
 
-    return REGERR_NOFIND;
+    if ( pDesc != NULL && (prev || offset)) {
+        /* prev and offset BOTH null means we never loaded a desc */
+        COPYDESC( pDesc, &desc );
+    }
+    if ( pOffPrev != NULL ) {
+        *pOffPrev = prev;
+    }
+
+    if ( offset != 0 ) /* if we found one */
+        return REGERR_OK;
+    else
+        return REGERR_NOFIND;
 }   /* FindAtLevel */
 
 
 
-static REGERR nr_CreateSubKey(REGFILE *reg, REGDESC *pParent, char *name)
+static REGERR nr_CreateSubKey(REGFILE *reg,
+                              REGOFF parent,
+                              REGDESC *pDesc,
+                              char *name)
 {
     /* nr_CreateSubKey does NO error checking--callers *MUST*
      * ensure that there are no duplicates
@@ -1577,7 +1590,7 @@ static REGERR nr_CreateSubKey(REGFILE *reg, REGDESC *pParent, char *name)
     REGERR err;
 
     XP_ASSERT(reg);
-    XP_ASSERT(pParent);
+    XP_ASSERT(pDesc);
     XP_ASSERT(name);
 
     err = nr_AppendName(reg, name, &desc);
@@ -1585,21 +1598,28 @@ static REGERR nr_CreateSubKey(REGFILE *reg, REGDESC *pParent, char *name)
         return err;
 
     desc.type = REGTYPE_KEY;
-    desc.left = pParent->down;
+    desc.left = 0;
     desc.down = 0;
     desc.value = 0;
     desc.valuelen = 0;
     desc.valuebuf = 0;
-    desc.parent   = pParent->location;
+    desc.parent   = parent;
 
-    err = nr_AppendDesc(reg, &desc, &pParent->down);
+    if ( parent == pDesc->location ) {
+        /* It's a parent desc, so no siblings */
+        err = nr_AppendDesc(reg, &desc, &pDesc->down);
+    }
+    else {
+        /* It's a sibling desc */
+        XP_ASSERT( pDesc->left == 0 ); /* not the end of chain! */
+        err = nr_AppendDesc(reg, &desc, &pDesc->left);
+    }
     if (err != REGERR_OK)
         return err;
 
-    /* printf("nr_CreateSubKey: %s @0x%lx\n", name, pParent->down); */
-
-    err = nr_WriteDesc(reg, pParent);
-    COPYDESC(pParent, &desc);
+    /* write out the fixed up parent/sibling desc */
+    err = nr_WriteDesc(reg, pDesc);
+    COPYDESC(pDesc, &desc);
 
     return err;
 
@@ -1843,6 +1863,7 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, XP
     REGERR      err;
     REGDESC     desc;
     REGOFF      start;
+    REGOFF      parent;
     char        namebuf[MAXREGNAMELEN];
     char        *p;
 
@@ -1863,12 +1884,13 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, XP
     if (raw == TRUE) {
         if ( err == REGERR_OK) {
             /* look for name at next level down */
+            parent = desc.location;
             err = nr_FindAtLevel(reg, desc.down, path, &desc, 0);
 
             /* if key is not found */
             if ( err == REGERR_NOFIND ) {
                 /* add it as a sub-key to the last found key */
-                err = nr_CreateSubKey(reg, &desc, path);
+                err = nr_CreateSubKey(reg, parent, &desc, path);
             }
         }
     }
@@ -1880,14 +1902,14 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, XP
             /* get next name on the path */
             err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
             if ( err == REGERR_OK ) {
-
                 /* look for name at next level down */
+                parent = desc.location;
                 err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, 0);
 
                 /* if key is not found */
                 if ( err == REGERR_NOFIND ) {
                     /* add it as a sub-key to the last found key */
-                    err = nr_CreateSubKey(reg, &desc, namebuf);
+                    err = nr_CreateSubKey(reg, parent, &desc, namebuf);
                 }
             }
         }
