@@ -130,7 +130,7 @@ endif
 endif #!USE_AUTOCONF
 
 ifdef RESOLVE_LINK_SYMBOLS
-EXTRA_LIBS := -L$(DIST)/lib -lnspr$(MOD_VERSION)
+EXTRA_LIBS := -L$(DIST)/lib -lnspr$(MOD_VERSION) $(OS_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk
