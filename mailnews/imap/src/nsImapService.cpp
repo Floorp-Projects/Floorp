@@ -906,6 +906,11 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
     rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
     if (NS_FAILED(rv)) return rv;
     
+    PRBool hasMsgOffline = PR_FALSE;
+
+    if (folder)
+      folder->HasMsgOffline(atoi(msgKey), &hasMsgOffline);
+
     nsCAutoString urlSpec;
   	PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
     rv = CreateStartOfImapUrl(aMessageURI, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
@@ -919,10 +924,14 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
         msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
         msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
 
+        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(msgUrl);
+        if (mailnewsUrl)
+          mailnewsUrl->SetMsgIsInLocalCache(hasMsgOffline);
+
         return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aMsgWindow, aURL, nsnull, msgKey, PR_TRUE);
     }
 
-	return rv;
+  return rv;
 }
 
 /* fetching RFC822 messages */
@@ -948,7 +957,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
   if (!aImapUrl || !aImapMailFolder || !aImapMessage)
       return NS_ERROR_NULL_POINTER;
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsXPIDLCString currentSpec;
   nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
   if (WeAreOffline())
@@ -963,8 +972,9 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
         nsCOMPtr<nsIMsgIncomingServer> server;
 
         rv = aImapMailFolder->GetServer(getter_AddRefs(server));
-        if (server)
-          return server->DisplayOfflineMsg(aMsgWindow);
+        if (server && aDisplayConsumer)
+          rv = server->DisplayOfflineMsg(aMsgWindow);
+        return rv;
       }
     }
   }
@@ -1031,17 +1041,16 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
   else
   {
     nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
+    if (aMsgWindow && mailnewsUrl)
+      mailnewsUrl->SetMsgWindow(aMsgWindow);
     if (NS_SUCCEEDED(rv) && aStreamListener)
     {
       nsCOMPtr<nsIChannel> aChannel;
       nsCOMPtr<nsILoadGroup> aLoadGroup;
-      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
       if (NS_SUCCEEDED(rv) && mailnewsUrl)
-      {
-        if (aMsgWindow)
-          mailnewsUrl->SetMsgWindow(aMsgWindow);
         mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
-      }
+
       rv = NewChannel(url, getter_AddRefs(aChannel));
       if (NS_FAILED(rv)) return rv;
 
@@ -2082,7 +2091,7 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
     // ### TODO - need to look at msg copy, save attachment, etc. when we
     // have offline message bodies.
     aImapUrl->GetImapAction(&imapAction);
-    if (imapAction != nsIImapUrl::nsImapMsgFetch)
+    if (imapAction != nsIImapUrl::nsImapMsgFetch && imapAction != nsIImapUrl::nsImapSaveMessageToDisk)
       return NS_MSG_ERROR_OFFLINE;
   }
 
@@ -3416,10 +3425,8 @@ nsImapService::DownloadMessagesForOffline(const char *messageIds, nsIMsgFolder *
         nsCOMPtr <nsIURI> runningURI;
         // need to pass in stream listener in order to get the channel created correctly
         nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(aFolder, &rv));
-        nsCOMPtr<nsIStreamListener> folderStreamListener(do_QueryInterface(aFolder, &rv));
-        // ### need to use peek to fetch messages, because FetchMessage is marking them read.
         rv = FetchMessage(imapUrl, nsImapUrl::nsImapMsgDownloadForOffline,aFolder, imapMessageSink, 
-                            aMsgWindow, getter_AddRefs(runningURI), folderStreamListener, messageIds, PR_TRUE);
+                            aMsgWindow, getter_AddRefs(runningURI), nsnull, messageIds, PR_TRUE);
         if (runningURI && aUrlListener)
         {
           nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(runningURI));

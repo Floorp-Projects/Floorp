@@ -44,7 +44,6 @@
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapServerSink.h"
-#include "nsIStreamListener.h"
 class nsImapMoveCoalescer;
 
 
@@ -100,8 +99,7 @@ class nsImapMailFolder : public nsMsgDBFolder,
                          public nsIImapExtensionSink,
                          public nsIImapMiscellaneousSink,
                          public nsICopyMessageListener,
-						             public nsIMsgFilterHitNotify,
-                         public nsIStreamListener
+                         public nsIMsgFilterHitNotify
 {
 public:
 	nsImapMailFolder();
@@ -205,7 +203,6 @@ public:
 
 	NS_DECL_NSIREQUESTOBSERVER
 
-	NS_DECL_NSISTREAMLISTENER
     // nsIUrlListener methods
 	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
 	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);

@@ -2520,6 +2520,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
             char *formatString = "";
             PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
             
+            GetServerStateParser().SetFetchingEverythingRFC822(PR_TRUE);
             if (server_capabilityFlags & kIMAP4rev1Capability)
             {
               // use body[].peek since rfc822.peek is not in IMAP4rev1

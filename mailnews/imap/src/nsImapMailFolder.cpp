@@ -210,7 +210,6 @@ NS_IMPL_QUERY_HEAD(nsImapMailFolder)
     NS_IMPL_QUERY_BODY(nsIImapMiscellaneousSink)
     NS_IMPL_QUERY_BODY(nsIUrlListener)
     NS_IMPL_QUERY_BODY(nsIMsgFilterHitNotify)
-    NS_IMPL_QUERY_BODY(nsIStreamListener)
 NS_IMPL_QUERY_TAIL_INHERITING(nsMsgDBFolder)
 
 
@@ -2076,7 +2075,10 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
       nsCOMPtr<nsIMsgFolder> inbox;
       rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
       if (inbox)
+      {
+        inbox->SetGettingNewMessages(PR_TRUE);
         rv = inbox->UpdateFolder(aWindow);
+      }
 
     }
     
@@ -2105,8 +2107,8 @@ nsresult nsImapMailFolder::GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDow
     {
       PRBool hasMore;
 
-	    while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
-	    {
+      while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+      {
         nsCOMPtr <nsIMsgDBHdr> pHeader;
         rv = enumerator->GetNext(getter_AddRefs(pHeader));
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
@@ -3080,6 +3082,7 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
 
       imapMessageFlagsType flags;
       flagState->GetMessageFlags(flagIndex, &flags);
+      NS_ASSERTION(uidOfMessage != nsMsgKey_None, "got invalid msg key");
       if (uidOfMessage != nsMsgKey_None && (showDeletedMessages || ! (flags & kImapMsgDeletedFlag)))
       {
         keysToFetch.Add(uidOfMessage);
@@ -3740,16 +3743,6 @@ NS_IMETHODIMP
 nsImapMailFolder::SetContentModified(nsIImapUrl *aImapUrl, nsImapContentModifiedType modified)
 {
   return aImapUrl->SetContentModified(modified);
-}
-
-// we provide this interface (nsIStreamListener) because the nsImapProtocol wants us to, in order
-// to hook up the mock channel and other stuff when downloading messages for offline use.
-// But we don't really need to do anything with these notifications because we use 
-// the nsIImapMesageSink interfaces ParseAdoptedMessageLine and NormalEndMsgWriteStream
-NS_IMETHODIMP nsImapMailFolder::OnDataAvailable(nsIRequest * /* request */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
-{
-  nsresult rv = NS_OK;
-  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
