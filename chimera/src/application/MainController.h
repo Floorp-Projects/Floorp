@@ -94,6 +94,7 @@ class BookmarksService;
 // Edit menu actions.
 -(IBAction) findInPage:(id)aSender;
 -(IBAction) findAgain:(id)aSender;
+-(IBAction) getInfo:(id)aSender;
 
 // Go menu actions.
 -(IBAction) goBack:(id)aSender;

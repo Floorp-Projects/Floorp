@@ -79,11 +79,12 @@ class BookmarksService;
 
 -(NSString*)resolveKeyword:(NSString*)aKeyword;
 
--(IBAction)openBookmarkInNewTab:(id)aSender;
--(IBAction)openBookmarkInNewWindow:(id)aSender;
+- (IBAction)openBookmarkInNewTab:(id)aSender;
+- (IBAction)openBookmarkInNewWindow:(id)aSender;
 
--(void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder;
--(IBAction)showBookmarkInfo:(id)aSender;
+- (void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder;
+- (IBAction)showBookmarkInfo:(id)aSender;
+- (BOOL)haveSelectedRow;
 
 // Datasource methods.
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
