@@ -57,8 +57,6 @@ require 'CGI.pl';
 require 'cvsblame.pl';
 use SourceChecker;
 
-$| = 1;
-
 # Cope with the cookie and print the header, first thing.  That way, if
 # any errors result, they will show up for the user.
 
@@ -438,6 +436,8 @@ sub print_top {
     $title_text .= ")";
     $title_text =~ s/\(\)//;
 
+    $| = 1;
+
     print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
 
     print <<__TOP__ if $use_layers;
@@ -636,13 +636,22 @@ __BOTTOM__
 
 sub print_raw_data {
   my %revs_seen = ();
+  my $prev_rev = $::revision_map[0];
+  my $count = 0;
   for my $rev (@::revision_map) {
-    print "$rev\n";
-    $revs_seen{$rev} = 1;
+    if ($prev_rev eq $rev) {
+      $count++;
+    } else {
+      print "$prev_rev:$count\n";
+      $count = 1;
+      $prev_rev = $rev;
+      $revs_seen{$rev} = 1;
+    }
   }
+  print "$prev_rev:$count\n";
   print "REVISION DETAILS\n";
   for my $rev (sort keys %revs_seen) {
-    print "$rev|$::revision_ctime{$rev}|$::revision_author{$rev}|$::revision_log{$rev}";
+    print "$rev|$::revision_ctime{$rev}|$::revision_author{$rev}|$::revision_log{$rev}.\n";
   }
 }
 
