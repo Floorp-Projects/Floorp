@@ -59,7 +59,11 @@ void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersiz
 	strncpy(unmangled_name, mangled_name, buffersize);
 }
 
-void GC_trace_object(void* object);
-void GC_trace_object(void* object) {}
+// TODO:  move these to gc.h.
+void GC_mark_object(GC_PTR object, GC_word mark);
+void GC_trace_object(GC_PTR object, int verbose);
+
+void GC_mark_object(GC_PTR object, GC_word mark) {}
+void GC_trace_object(GC_PTR object, int verbose) {}
 
 #endif
