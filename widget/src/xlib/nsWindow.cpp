@@ -20,6 +20,8 @@
 
 #include "xlibrgb.h"
 
+#include "nsFileSpec.h" // for nsAutoCString
+
 nsWindow::nsWindow() : nsWidget()
 {
   NS_INIT_REFCNT();
@@ -166,7 +168,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
           nsISupports* child;
           if (NS_SUCCEEDED(children->CurrentItem(&child)))
             {
-              nsWindow* childWindow = static_cast<nsWindow*>(child);
+              nsWindow* childWindow = NS_STATIC_CAST(nsWindow*,child);
               NS_RELEASE(child);
               
               nsRect bounds;
@@ -191,9 +193,8 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   if(!mBaseWindow)
     return NS_ERROR_FAILURE;
 
-  const char *text = aTitle.ToNewCString();
-  XStoreName(mDisplay, mBaseWindow, text);
-  delete [] text;
+  XStoreName(mDisplay, mBaseWindow, (const char *) nsAutoCString(aTitle));
+
   return NS_OK;
 }
 
