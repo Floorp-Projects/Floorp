@@ -237,21 +237,31 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
         pnsUconvInfo->mCodePage = CodePage;
         UniChar codepage[20];
         int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
-        ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
-        ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
-                              NULL, NULL, NULL);
-        attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
-        attr.subchar_len=1;
-        attr.subchar[0]='?';
-        ::UniSetUconvObject(pnsUconvInfo->mConverter, &attr);
-        pConverter = &(pnsUconvInfo->mConverter);
-        pnsUconvInfo->pNext = NULL;
-        if (gUconvInfoList) {
-           prevUconvInfoList->pNext = pnsUconvInfo;
-        } else {
-           gUconvInfoList = pnsUconvInfo;
-        } /* endif */
-     } /* endif */
+        if (unirc == ULS_SUCCESS) {
+           ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
+           if (unirc == ULS_SUCCESS) {
+              ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
+                                    NULL, NULL, NULL);
+              attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
+              attr.subchar_len=1;
+              attr.subchar[0]='?';
+              ::UniSetUconvObject(pnsUconvInfo->mConverter, &attr);
+              pConverter = &(pnsUconvInfo->mConverter);
+              pnsUconvInfo->pNext = NULL;
+              if (gUconvInfoList) {
+                 prevUconvInfoList->pNext = pnsUconvInfo;
+              } else {
+                 gUconvInfoList = pnsUconvInfo;
+              }
+           }
+        }
+     }
+  }
+  
+  /* We didn't get a converter, just use default */
+  if (!pConverter) {
+     if (gUconvInfoList)
+        pConverter = &(gUconvInfoList->mConverter);
   } /* endif */
 
   UniChar *ucsString = (UniChar*) pText;
@@ -305,21 +315,31 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
         pnsUconvInfo->mCodePage = CodePage;
         UniChar codepage[20];
         int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
-        ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
-        ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
-                              NULL, NULL, NULL);
-        attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
-        attr.subchar_len=1;
-        attr.subchar[0]='?';
-        ::UniSetUconvObject(pnsUconvInfo->mConverter, &attr);
-        pConverter = &(pnsUconvInfo->mConverter);
-        pnsUconvInfo->pNext = NULL;
-        if (gUconvInfoList) {
-           prevUconvInfoList->pNext = pnsUconvInfo;
-        } else {
-           gUconvInfoList = pnsUconvInfo;
-        } /* endif */
-     } /* endif */
+        if (unirc == ULS_SUCCESS) {
+           int unirc = ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
+           if (unirc == ULS_SUCCESS) {
+              ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
+                                    NULL, NULL, NULL);
+              attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
+              attr.subchar_len=1;
+              attr.subchar[0]='?';
+              ::UniSetUconvObject(pnsUconvInfo->mConverter, &attr);
+              pConverter = &(pnsUconvInfo->mConverter);
+              pnsUconvInfo->pNext = NULL;
+              if (gUconvInfoList) {
+                 prevUconvInfoList->pNext = pnsUconvInfo;
+              } else {
+                 gUconvInfoList = pnsUconvInfo;
+              }
+           }
+        }
+     }
+  } 
+
+  /* We didn't get a converter, just use default */
+  if (!pConverter) {
+     if (gUconvInfoList)
+        pConverter = &(gUconvInfoList->mConverter);
   } /* endif */
 
   char *ucsString = (char*) pText;

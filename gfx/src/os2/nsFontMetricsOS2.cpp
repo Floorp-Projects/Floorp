@@ -114,7 +114,7 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
   { "ARABIC",      FM_DEFN_ARABIC,   864, "ar" },
   { "BALTIC",      0,                1257, "x-baltic" },
   { "THAI",        FM_DEFN_THAI,     874,  "th" },
-  { "SHIFTJIS",    FM_DEFN_KANA,     943,  "ja" },
+  { "SHIFTJIS",    FM_DEFN_KANA,     932,  "ja" },
   { "GB2312",      FM_DEFN_KANA,     1381, "zh-CN" },
   { "HANGEUL",     FM_DEFN_KANA,     949,  "ko" },
   { "CHINESEBIG5", FM_DEFN_KANA,     950,  "zh-TW" },
@@ -195,13 +195,31 @@ InitGlobals(void)
   }
 
   ULONG numCP = ::WinQueryCpList((HAB)0, 0, NULL);
+  UniChar codepage[20];
   if (numCP > 0) {
      ULONG * pCPList = (ULONG*)malloc(numCP*sizeof(ULONG));
      if (::WinQueryCpList( (HAB)0, numCP, pCPList)) {
         for (int i = 0;i<numCP ;i++ ) {
            if (pCPList[i] == 1386) {
-              gCharSetInfo[11].mCodePage = 1386;
-              break;
+              int unirc = ::UniMapCpToUcsCp( 1386, codepage, 20);
+              if (unirc == ULS_SUCCESS) {
+                 UconvObject Converter = 0;
+                 int unirc = ::UniCreateUconvObject( codepage, &Converter);
+                 if (unirc == ULS_SUCCESS) {
+                    gCharSetInfo[11].mCodePage = 1386;
+                   ::UniFreeUconvObject(Converter);
+                 }
+              }
+           } else if (pCPList[i] == 943) {
+              int unirc = ::UniMapCpToUcsCp( 943, codepage, 20);
+              if (unirc == ULS_SUCCESS) {
+                 UconvObject Converter = 0;
+                 int unirc = ::UniCreateUconvObject( codepage, &Converter);
+                 if (unirc == ULS_SUCCESS) {
+                    gCharSetInfo[11].mCodePage = 943;
+                   ::UniFreeUconvObject(Converter);
+                 }
+              }
            }
         }
      }
