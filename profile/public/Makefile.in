@@ -28,7 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profile
 
-XPIDLSRCS	= nsIProfile.idl
+XPIDLSRCS	= \
+                  nsIProfile.idl \
+                  nsIProfileStartupListener.idl \
+                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -1,1 +1,2 @@
 nsIProfile.idl
+nsIProfileStartupListener.idl
