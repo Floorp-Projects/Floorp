@@ -14,17 +14,16 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-
 ################################################################################
 #
 # We now use a 3-pass build system.  This needs to be re-thought....
 #
 # Pass 1. export  - Create generated headers and stubs.  Publish public headers
-#                   to dist/<arch>/include.
+#                   to dist/include.
 #
-# Pass 2. libs    - Create libraries.  Publish libraries to dist/<arch>/lib.
+# Pass 2. libs    - Create libraries.  Publish libraries to dist/lib.
 #
-# Pass 3. install - Create programs.  Publish them to dist/<arch>/bin.
+# Pass 3. install - Create programs.  Publish them to dist/bin.
 #
 # 'gmake' will build each of these properly, but 'gmake -jN' will break (need
 # to do each pass explicitly when using -j).
@@ -67,7 +66,7 @@
 #
 ################################################################################
 ifndef topsrcdir
-topsrcdir = $(DEPTH)
+topsrcdir		= $(DEPTH)
 endif
 
 #
@@ -79,12 +78,12 @@ endif
 
 ifdef INTERNAL_TOOLS
 ifdef CROSS_COMPILE
-CC=$(HOST_CC)
-CXX=$(HOST_CXX)
-CFLAGS=$(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
-CXXFLAGS=$(HOST_CXXFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
-RANLIB=$(HOST_RANLIB)
-AR=$(HOST_AR)
+CC			= $(HOST_CC)
+CXX			= $(HOST_CXX)
+CFLAGS			= $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
+CXXFLAGS		= $(HOST_CXXFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
+RANLIB			= $(HOST_RANLIB)
+AR			= $(HOST_AR)
 endif
 endif
 
@@ -97,15 +96,15 @@ endif
 ifndef LIBRARY
 ifdef LIBRARY_NAME
 LIBRARY			:= lib$(LIBRARY_NAME).$(LIB_SUFFIX)
-endif # LIBRARY_NAME
-endif # LIBRARY
+endif
+endif
 
 ifdef LIBRARY
 ifeq ($(OS_ARCH),OS2)
 ifndef DEF_FILE
 DEF_FILE		:= $(LIBRARY:.lib=.def)
-endif # DEF_FILE
-endif # LIBRARY
+endif
+endif
 
 ifndef NO_SHARED_LIB
 ifdef MKSHLIB
@@ -249,22 +248,54 @@ endif
 
 # SUBMAKEFILES: List of Makefiles for next level down.
 #   This is used to update or create the Makefiles before invoking them.
-ifneq '$(DIRS)' ''
-SUBMAKEFILES := $(addsuffix /Makefile, \
-                           $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
+ifneq ($(DIRS),)
+SUBMAKEFILES		:= $(addsuffix /Makefile, $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
 endif
 
 # MAKE_DIRS: List of directories to build while looping over directories.
-MAKE_DIRS =
+MAKE_DIRS		=
 
 ifdef COMPILER_DEPEND
 ifdef OBJS
-MAKE_DIRS += $(MDDEPDIR)
+MAKE_DIRS		+= $(MDDEPDIR)
 endif
 endif
 
-ifneq '$(XPIDLSRCS)' ''
-MAKE_DIRS += $(XPIDL_GEN_DIR)
+ifneq ($(XPIDLSRCS),)
+MAKE_DIRS		+= $(XPIDL_GEN_DIR)
+endif
+
+#
+# Tags: emacs (etags), vi (ctags)
+# TAG_PROGRAM := ctags -L -
+#
+TAG_PROGRAM		= xargs etags -a
+
+#
+# Turn on C++ linking if we have any .cpp files
+# (moved this from config.mk so that config.mk can be included 
+#  before the CPPSRCS are defined)
+#
+ifdef CPPSRCS
+CPP_PROG_LINK		= 1
+endif
+
+#
+# BeOS specific section: link against dependent shared libs
+#
+ifeq ($(OS_ARCH),BeOS)
+ifdef SHARED_LIBRARY
+BEOS_LIB_LIST		= $(shell cat $(topsrcdir)/dependencies.beos/$(LIBRARY_NAME).dependencies)
+BEOS_LINK_LIBS		= $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(DIST)/bin $(lib)))
+LDFLAGS			+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
+EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
+endif
+endif
+
+ifdef MOZ_STRIP_NOT_EXPORTED
+ifndef INHIBIT_STRIP_NOT_EXPORTED
+EXTRA_DSO_LDOPTS	+= -Wl,--version-exports-section -Wl,Mozilla
+endif
 endif
 
 ################################################################################
@@ -424,36 +455,9 @@ distclean:: $(SUBMAKEFILES)
 	Makefile config.log config.cache depend.mk .md .deps .HSancillary _xpidlgen
 	+$(LOOP_OVER_DIRS)
 
-#
-# Tags: emacs (etags), vi (ctags)
-# TAG_PROGRAM := ctags -L -
-#
-TAG_PROGRAM := xargs etags -a
-
 alltags:
 	rm -f TAGS
 	find $(topsrcdir) -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' -o -name '*.idl' \) -print | $(TAG_PROGRAM)
-
-#
-# Turn on C++ linking if we have any .cpp files
-# (moved this from config.mk so that config.mk can be included 
-#  before the CPPSRCS are defined)
-#
-ifdef CPPSRCS
-CPP_PROG_LINK = 1
-endif
-
-ifeq ($(OS_ARCH),BeOS)
-ifdef SHARED_LIBRARY
-#
-# BeOS specific section: link against dependant shared libs
-#
-BEOS_LIB_LIST = $(shell cat $(topsrcdir)/dependencies.beos/$(LIBRARY_NAME).dependencies)
-BEOS_LINK_LIBS = $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(DIST)/bin $(lib)))
-LDFLAGS += -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
-endif
-endif
 
 #
 # PROGRAM = Foo
@@ -494,7 +498,6 @@ endif
 # SIMPLE_PROGRAMS = Foo Bar
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
-#
 $(SIMPLE_PROGRAMS):%: %.o $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
@@ -526,7 +529,6 @@ endif
 	$(INSTALL) -m 555 $^.quantify $(DIST)/bin
 
 ifneq ($(OS_ARCH),OS2)
-
 #
 # This allows us to create static versions of the shared libraries
 # that are built using other static libraries.  Confused...?
@@ -561,12 +563,6 @@ $(LIBRARY): $(OBJS)
 	rm -f $@
 	$(AR) $(AR_FLAGS) $(LIBOBJS),,
 	$(RANLIB) $@
-endif
-endif
-
-ifdef MOZ_STRIP_NOT_EXPORTED
-ifndef INHIBIT_STRIP_NOT_EXPORTED
-EXTRA_DSO_LDOPTS += -Wl,--version-exports-section -Wl,Mozilla
 endif
 endif
 
@@ -971,7 +967,7 @@ endif
 ifneq ($(XPIDLSRCS),)
 
 ifndef XPIDL_MODULE
-XPIDL_MODULE = $(MODULE)
+XPIDL_MODULE		= $(MODULE)
 endif
 
 ifeq ($(XPIDL_MODULE),) # we need $(XPIDL_MODULE) to make $(XPIDL_MODULE).xpt
@@ -1020,7 +1016,7 @@ install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 
 endif
 
-GARBAGE += $(XPIDL_GEN_DIR) # add $(XPIDL_GEN_DIR) to clobber candidates
+GARBAGE			+= $(XPIDL_GEN_DIR)
 endif
 endif
 
@@ -1066,7 +1062,7 @@ ifneq ($(CHROME_CONTENT),)
 
 # Content goes to CHROME_DIR unless specified otherwise.
 ifeq ($(CHROME_CONTENT_DIR),)
-CHROME_CONTENT_DIR=.
+CHROME_CONTENT_DIR	= .
 endif
 
 # Export content files by copying to dist.
@@ -1091,7 +1087,7 @@ ifneq ($(CHROME_SKIN),)
 
 # Skin goes to CHROME_DIR unless specified otherwise.
 ifeq ($(CHROME_SKIN_DIR),)
-CHROME_SKIN_DIR=.
+CHROME_SKIN_DIR		= .
 endif
 
 # Export content files by copying to dist.
@@ -1116,7 +1112,7 @@ ifneq ($(CHROME_L10N),)
 
 # L10n goes to CHROME_DIR unless specified otherwise.
 ifeq ($(CHROME_L10N_DIR),)
-CHROME_L10N_DIR=.
+CHROME_L10N_DIR		= .
 endif
 
 # Export l10n files by copying to dist.
@@ -1207,9 +1203,9 @@ $(MKDEPEND):
 endif
 
 ifndef MOZ_NATIVE_MAKEDEPEND
-MKDEPEND_BUILTIN = $(MKDEPEND) 
+MKDEPEND_BUILTIN	= $(MKDEPEND)
 else
-MKDEPEND_BUILTIN =
+MKDEPEND_BUILTIN	=
 endif
 
 ifdef OBJS
@@ -1237,10 +1233,10 @@ ifdef OBJS
 #   processes could simultaneously try to create the same directory.
 #
 $(MDDEPDIR):
-	@if test ! -d $@; then \
-	  echo Creating $@; rm -rf $@; mkdir $@; \
-	else true; fi
-MDDEPEND_FILES := $(wildcard $(MDDEPDIR)/*.pp)
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
+
+MDDEPEND_FILES		:= $(wildcard $(MDDEPDIR)/*.pp)
+
 ifdef MDDEPEND_FILES
 ifdef PERL
 # The script mddepend.pl checks the dependencies and writes to stdout
