@@ -19,6 +19,7 @@
  * All Rights Reserved.
  *
  * Contributor(s):
+ *	Netscape Communications Corporation
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-/* $Id: mpi-config.h,v 1.1 2000/07/14 00:44:20 nelsonb%netscape.com Exp $ */
+/* $Id: mpi-config.h,v 1.2 2000/07/17 22:22:28 nelsonb%netscape.com Exp $ */
 
 #ifndef MPI_CONFIG_H_
 #define MPI_CONFIG_H_
@@ -71,7 +72,7 @@
 #endif
 
 #ifndef MP_CRYPTO
-#define MP_CRYPTO     0  /* erase memory on free?               */
+#define MP_CRYPTO     1  /* erase memory on free?               */
 #endif
 
 #ifndef MP_ARGCHK
@@ -88,7 +89,7 @@
 #endif
 
 #ifndef MP_DEFPREC
-#define MP_DEFPREC    16 /* default precision, in digits        */
+#define MP_DEFPREC    32 /* default precision, in digits        */
 #endif
 
 #ifndef MP_MACRO
