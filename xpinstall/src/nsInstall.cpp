@@ -62,6 +62,7 @@
 #include "nsRegisterItem.h"
 #include "nsNetUtil.h"
 #include "ScheduledTasks.h"
+#include "nsIPersistentProperties2.h"
 
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
@@ -1236,24 +1237,20 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         if (!propElem)
             continue;
 
-        nsXPIDLString pKey;
-        nsXPIDLString pVal;
-
-        ret = propElem->GetKey(getter_Copies(pKey));
+        nsAutoString pVal;
+        nsCAutoString pKey;
+        ret = propElem->GetKey(pKey);
         if (NS_FAILED(ret))
             goto cleanup;
-        ret = propElem->GetValue(getter_Copies(pVal));
+        ret = propElem->GetValue(pVal);
         if (NS_FAILED(ret))
             goto cleanup;
 
-        nsXPIDLCString keyCStr;
-        keyCStr.Adopt(ToNewCString(pKey));
-
-        if (keyCStr.get() && pVal.get())
+        if (!pKey.IsEmpty() && !pKey.IsEmpty())
         {
             JSString* propValJSStr = JS_NewUCStringCopyZ(cx, NS_REINTERPRET_CAST(const jschar*, pVal.get()));
             jsval propValJSVal = STRING_TO_JSVAL(propValJSStr);
-            JS_SetProperty(cx, res, keyCStr.get(), &propValJSVal);
+            JS_SetProperty(cx, res, pKey.get(), &propValJSVal);
         }
     }
 

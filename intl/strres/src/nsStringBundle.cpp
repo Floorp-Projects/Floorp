@@ -82,6 +82,7 @@
 #include "prenv.h"
 
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
+static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
@@ -296,7 +297,7 @@ nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
 {  
   nsAutoCMonitor(this);
-  nsAutoString name;
+  nsCAutoString name;
   name.AppendInt(aID, 10);
   nsresult rv = mProps->GetStringProperty(name, aResult);
 
@@ -316,7 +317,7 @@ nsStringBundle::GetStringFromName(const nsAString& aName,
 {
   nsresult rv;
 
-  rv = mProps->GetStringProperty(aName, aResult);
+  rv = mProps->GetStringProperty(NS_ConvertUCS2toUTF8(aName), aResult);
 #ifdef DEBUG_tao_
   char *s = ToNewCString(aResult),
        *ss = ToNewCString(aName);
@@ -411,7 +412,7 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
   
-  return mProps->SimpleEnumerateProperties(elements);
+  return mProps->Enumerate(elements);
 }
 
 nsresult

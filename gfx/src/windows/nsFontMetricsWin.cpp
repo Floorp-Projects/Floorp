@@ -1149,10 +1149,7 @@ GetEncoding(const char* aFontName, nsString& aValue)
        (!strcmp(aFontName, mspgothic )) )
     return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
-  nsAutoString name;
-  name.Assign(NS_LITERAL_STRING("encoding."));
-  name.AppendWithConversion(aFontName);
-  name.Append(NS_LITERAL_STRING(".ttf"));
+  nsCAutoString name(NS_LITERAL_CSTRING("encoding.") + nsDependentCString(aFontName) + NS_LITERAL_CSTRING(".ttf"));
   name.StripWhitespace();
   ToLowerCase(name);
 

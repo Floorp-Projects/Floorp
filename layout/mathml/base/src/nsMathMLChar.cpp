@@ -304,7 +304,7 @@ public:
             nsRect*              aClipRect = nsnull);
 
 private:
-  PRUnichar   GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition);
+  char   GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition);
   nsGlyphCode ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUint32 aPosition);
 
   // The type is either NS_TABLE_TYPE_UNICODE or NS_TABLE_TYPE_GLYPH_INDEX
@@ -341,7 +341,7 @@ private:
   PRUnichar mCharCache;
 };
 
-PRUnichar
+char
 nsGlyphTable::GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition)
 {
   NS_ASSERTION(aChar->mDirection == NS_STRETCH_DIRECTION_VERTICAL ||
@@ -353,9 +353,9 @@ nsGlyphTable::GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition)
     // return an ASCII digit for the size=0,1,2,...
     return PRUnichar('0' + aPosition - 4);
   }
-  return (aChar->mDirection == NS_STRETCH_DIRECTION_VERTICAL)
-    ? PRUnichar(kVertical[aPosition])
-    : PRUnichar(kHorizontal[aPosition]);
+  return (aChar->mDirection == NS_STRETCH_DIRECTION_VERTICAL) ?
+      kVertical[aPosition] :
+      kHorizontal[aPosition];
 }
 
 nsGlyphCode
@@ -385,9 +385,10 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     mState = NS_TABLE_STATE_READY;
 
     // see if there are external fonts needed for certain chars in this table
-    nsAutoString key, value;
+    nsCAutoString key;
+    nsAutoString value;
     for (PRInt32 i = 1; ; i++) {
-      key.Assign(NS_LITERAL_STRING("external."));
+      key.Assign(NS_LITERAL_CSTRING("external."));
       key.AppendInt(i, 10);
       rv = mGlyphProperties->GetStringProperty(key, value);
       if (NS_FAILED(rv)) break;
@@ -403,9 +404,12 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
   // Update our cache if it is not associated to this character
   PRUnichar uchar = aChar->mData[0];
   if (mCharCache != uchar) {
-    // The key in the property file is interpreted as ASCII and kept as such ...
+    // The key in the property file is interpreted as ASCII and kept
+    // as such ...
     char cbuf[10]; PR_snprintf(cbuf, sizeof(cbuf), "\\u%04X", uchar);
-    nsAutoString key, value; key.AssignWithConversion(cbuf);
+    nsDependentCString key(cbuf);
+    
+    nsAutoString value;
     nsresult rv = mGlyphProperties->GetStringProperty(key, value);
     if (NS_FAILED(rv)) return kNullGlyph;
     Clean(value);
@@ -415,7 +419,8 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     // as combined pairs of 'code@font', excluding the '@' separator. This means that
     // mGlyphCache[2*k] will later be rendered with mFontName[mGlyphCache[2*k+1]-'0']
     // Note: font identifier is internally an ASCII digit to avoid the null char issue
-    nsAutoString buffer, puaKey, puaValue;
+    nsAutoString buffer, puaValue;
+    nsCAutoString puaKey;
     PRInt32 length = value.Length();
     for (PRInt32 i = 0, j = 0; i < length; i++, j++) {
       PRUnichar code = value[i];
@@ -429,7 +434,7 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
       // the PUA, and lookup "key.[TLMBRG1-9]" in the PUA
       else if (code == PRUnichar(0xF8FF)) {
         puaKey.Assign(key);
-        puaKey.Append(PRUnichar('.'));
+        puaKey.Append('.');
         puaKey.Append(GetAnnotation(aChar, j));
         rv = gPUAProperties->GetStringProperty(puaKey, puaValue);
         if (NS_FAILED(rv) || !puaValue.Length()) return kNullGlyph;
@@ -440,9 +445,9 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
       else if ((i+2 < length) && (value[i+1] == PRUnichar('.'))) {
         i += 2;
         PR_snprintf(cbuf, sizeof(cbuf), "\\u%04X", code);
-        puaKey.AssignWithConversion(cbuf);
-        puaKey.Append(PRUnichar('.'));
-        puaKey.Append(value[i]);
+        puaKey.Assign(cbuf);
+        puaKey.Append('.');
+        puaKey.Append(char(value[i])); // safe cast, it's ascii
         rv = gPUAProperties->GetStringProperty(puaKey, puaValue);
         if (NS_FAILED(rv) || !puaValue.Length()) return kNullGlyph;
         code = puaValue[0];
@@ -1022,12 +1027,12 @@ PreferredFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 
 // Store the list of preferred extension fonts for this char
 static void
-SetPreferredTableList(PRUnichar aChar, nsString& aExtension, nsString& aFamilyList)
+SetPreferredTableList(PRUnichar aChar, nsACString& aExtension, nsString& aFamilyList)
 {
   PRBool isFontForParts;
-  if (aExtension.Equals(NS_LITERAL_STRING(".parts")))
+  if (aExtension.Equals(NS_LITERAL_CSTRING(".parts")))
     isFontForParts = PR_TRUE;
-  else if (aExtension.Equals(NS_LITERAL_STRING(".variants")))
+  else if (aExtension.Equals(NS_LITERAL_CSTRING(".variants")))
     isFontForParts = PR_FALSE;
   else return; // input is not applicable
 
@@ -1120,7 +1125,8 @@ InitGlobals(nsIPresContext* aPresContext)
     It will be deleted at shutdown, even if a failure happens below.
   */
 
-  nsAutoString key, value;
+  nsCAutoString key;
+  nsAutoString value;
   nsCOMPtr<nsIPersistentProperties> mathfontProp;
 
   // Add the math fonts in the gGlyphTableList in order of preference ...
@@ -1148,7 +1154,8 @@ InitGlobals(nsIPresContext* aPresContext)
   }
   if (familyList.IsEmpty()) {
     // fallback to the default list
-    rv = mathfontProp->GetStringProperty(NS_LITERAL_STRING("mathfont-family"), value);
+    rv = mathfontProp->GetStringProperty(NS_LITERAL_CSTRING("mathfont-family"),
+                                         value);
     if (NS_FAILED(rv)) return rv;
     font.name.Assign(value);
   }
@@ -1170,15 +1177,13 @@ InitGlobals(nsIPresContext* aPresContext)
 
   // Let the particular characters have their preferred extension tables
   nsCOMPtr<nsISimpleEnumerator> iterator;
-  if (NS_SUCCEEDED(mathfontProp->SimpleEnumerateProperties(getter_AddRefs(iterator)))) {
+  if (NS_SUCCEEDED(mathfontProp->Enumerate(getter_AddRefs(iterator)))) {
     PRBool more;
     while ((NS_SUCCEEDED(iterator->HasMoreElements(&more))) && more) {
       nsCOMPtr<nsIPropertyElement> element;
       if (NS_SUCCEEDED(iterator->GetNext(getter_AddRefs(element)))) {
-        nsXPIDLString xkey, xvalue;
-        if (NS_SUCCEEDED(element->GetKey(getter_Copies(xkey))) &&
-            NS_SUCCEEDED(element->GetValue(getter_Copies(xvalue)))) {
-          key.Assign(xkey);
+        if (NS_SUCCEEDED(element->GetKey(key)) &&
+            NS_SUCCEEDED(element->GetValue(value))) {
           // expected key: "mathfont-family.\uNNNN.parts" or
           // "mathfont-family.\uNNNN.variants"
           if ((22 <= key.Length()) && (0 == key.Find("mathfont-family.\\u"))) {
@@ -1187,7 +1192,6 @@ InitGlobals(nsIPresContext* aPresContext)
             PRUnichar uchar = key.ToInteger(&error, 16);
             if (error) continue;
             key.Cut(0, 4); // the digits of the unicode point ("NNNN")
-            value.Assign(xvalue);
             Clean(value);
             SetPreferredTableList(uchar, key, value);
           }

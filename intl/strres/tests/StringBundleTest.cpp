@@ -38,7 +38,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nsIEventQueueService.h"
 #include <iostream.h>

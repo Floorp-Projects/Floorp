@@ -53,6 +53,7 @@
 #include "nsSpecialSystemDirectory.h"
 
 #define TEST_URL "resource:/res/test.properties"
+static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
@@ -110,7 +111,7 @@ main(int argc, char* argv[])
     name[0] = 0;
     sprintf(name, "%d", i);
     nsAutoString v;
-    ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
+    ret = props->GetStringProperty(nsDependentCString(name), v);
     if (NS_FAILED(ret) || (!v.Length())) {
       break;
     }
@@ -125,56 +126,45 @@ main(int argc, char* argv[])
     i++;
   }
 
-  nsIBidirectionalEnumerator* propEnum = nsnull;
-  ret = props->EnumerateProperties(&propEnum);
+  nsCOMPtr<nsISimpleEnumerator> propEnum;
+  ret = props->Enumerate(getter_AddRefs(propEnum));
+
   if (NS_FAILED(ret)) {
-	printf("cannot enumerate properties\n");
-	return 1;
+    printf("cannot enumerate properties\n");
+    return 1;
   }
-  ret = propEnum->First();
-  if (NS_FAILED(ret))
-  {
-	printf("enumerator is empty\n");
-	return 1;
-  }
+  
 
   cout << endl << "Key" << "\t" << "Value" << endl;
   cout <<		  "---" << "\t" << "-----" << endl;
-  while (NS_SUCCEEDED(ret))
-  {
-	  nsIPropertyElement* propElem = nsnull;
-	  ret = propEnum->CurrentItem((nsISupports**)&propElem);
+  
+  PRBool hasMore;
+  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) &&
+         hasMore) {
+    nsCOMPtr<nsISupports> sup;
+    ret = propEnum->GetNext(getter_AddRefs(sup));
+    
+    nsCOMPtr<nsIPropertyElement> propElem = do_QueryInterface(sup, &ret);
 	  if (NS_FAILED(ret)) {
-		printf("failed to get current item\n");
-		return 1;
+      printf("failed to get current item\n");
+      return 1;
 	  }
 
-    PRUnichar *pKey = nsnull;
-    PRUnichar *pVal = nsnull;
+    nsCAutoString key;
+    nsAutoString value;
 
-	  ret = propElem->GetKey(&pKey);
+    ret = propElem->GetKey(key);
 	  if (NS_FAILED(ret)) {
 		  printf("failed to get current element's key\n");
 		  return 1;
 	  }
-	  ret = propElem->GetValue(&pVal);
+    ret = propElem->GetValue(value);
 	  if (NS_FAILED(ret)) {
 		  printf("failed to get current element's value\n");
 		  return 1;
 	  }
 
-    nsAutoString keyAdjustedLengthBuff(pKey);
-    nsAutoString valAdjustedLengthBuff(pVal);
-
-	  char* keyCStr = ToNewCString(keyAdjustedLengthBuff);
-	  char* valCStr = ToNewCString(valAdjustedLengthBuff);
-	  if (keyCStr && valCStr) 
-		cout << keyCStr << "\t" << valCStr << endl;
-	  delete[] keyCStr;
-	  delete[] valCStr;
-    delete[] pKey;
-    delete[] pVal;
-	  ret = propEnum->Next();
+    cout << key.get() << "\t" << value.get() << endl;
   }
   return 0;
 }

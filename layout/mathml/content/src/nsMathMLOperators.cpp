@@ -169,8 +169,8 @@ SetProperty(OperatorData* aOperatorData,
 PRBool
 SetOperator(OperatorData*   aOperatorData,
             nsOperatorFlags aForm,
-            nsString        aOperator,
-            nsString        aAttributes)
+            const nsCString& aOperator,
+            nsString&        aAttributes)
 
 {
   // aOperator is in the expanded format \uNNNN\uNNNN ...
@@ -298,9 +298,9 @@ InitOperators(void)
 
   // Get the list of invariant chars
   for (PRInt32 i = 0; i < nsMathMLOperators::eMATHVARIANT_COUNT; ++i) {
-    nsAutoString key, value;
-    key.Assign(NS_LITERAL_STRING("mathvariant."));
-    key.AppendWithConversion(kMathVariant_name[i]);
+    nsCAutoString key(NS_LITERAL_CSTRING("mathvariant."));
+    key.Append(kMathVariant_name[i]);
+    nsAutoString value;
     mathfontProp->GetStringProperty(key, value);
     gInvariantCharArray->AppendString(value); // i.e., gInvariantCharArray[i] holds this list
   }
@@ -312,18 +312,16 @@ InitOperators(void)
     OperatorData dummyData;
     OperatorData* operatorData = &dummyData;
     nsCOMPtr<nsISimpleEnumerator> iterator;
-    if (NS_SUCCEEDED(mathfontProp->SimpleEnumerateProperties(getter_AddRefs(iterator)))) {
+    if (NS_SUCCEEDED(mathfontProp->Enumerate(getter_AddRefs(iterator)))) {
       PRBool more;
       PRInt32 index = 0;
-      nsAutoString name, attributes;
+      nsCAutoString name;
+      nsAutoString attributes;
       while ((NS_SUCCEEDED(iterator->HasMoreElements(&more))) && more) {
         nsCOMPtr<nsIPropertyElement> element;
         if (NS_SUCCEEDED(iterator->GetNext(getter_AddRefs(element)))) {
-          nsXPIDLString xkey, xvalue;
-          if (NS_SUCCEEDED(element->GetKey(getter_Copies(xkey))) &&
-              NS_SUCCEEDED(element->GetValue(getter_Copies(xvalue)))) {
-            name.Assign(xkey);
-            attributes.Assign(xvalue);
+          if (NS_SUCCEEDED(element->GetKey(name)) &&
+              NS_SUCCEEDED(element->GetValue(attributes))) {
             // expected key: operator.\uNNNN.{infix,postfix,prefix}
             if ((21 <= name.Length()) && (0 == name.Find("operator.\\u"))) {
               name.Cut(0, 9); // 9 is the length of "operator.";
