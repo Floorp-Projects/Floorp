@@ -1136,8 +1136,6 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsBoxFrame* aOuter)
     mOuter(aOuter),
     mMaxElementWidth(0),
     mLastDir(-1),
-    mNeverHasVerticalScrollbar(PR_FALSE),
-    mNeverHasHorizontalScrollbar(PR_FALSE),
     mHasVerticalScrollbar(PR_FALSE), 
     mHasHorizontalScrollbar(PR_FALSE),
     mFirstPass(PR_FALSE),
@@ -1264,7 +1262,6 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
     if (!parent || parent->GetType() != nsLayoutAtoms::viewportFrame) {
-      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
       return;
     }
   }
@@ -1556,7 +1553,7 @@ PRBool
 nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnTop, PRBool aHorizontal, PRBool aAdd)
 {
   if (aHorizontal) {
-     if (mNeverHasHorizontalScrollbar || !mHScrollbarBox)
+     if (!mHScrollbarBox)
        return PR_FALSE;
 
      nsSize hSize;
@@ -1573,7 +1570,7 @@ nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScr
 
      return fit;
   } else {
-     if (mNeverHasVerticalScrollbar || !mVScrollbarBox)
+     if (!mVScrollbarBox)
        return PR_FALSE;
 
      nsSize vSize;

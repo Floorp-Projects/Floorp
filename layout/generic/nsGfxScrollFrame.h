@@ -143,9 +143,6 @@ public:
   // value that indicates "not set")
   PRInt16     mLastDir;
   
-  PRPackedBool mNeverHasVerticalScrollbar;   
-  PRPackedBool mNeverHasHorizontalScrollbar; 
-
   PRPackedBool mHasVerticalScrollbar;
   PRPackedBool mHasHorizontalScrollbar;
   PRPackedBool mFirstPass;
