@@ -61,8 +61,9 @@ function onSave() {
   for (var accountid in accountArray) {
     var account = getAccountFromServerId(accountid);
     var accountValues = accountArray[accountid];
-    
-    saveAccount(accountValues, account);
+
+    if (account)
+      saveAccount(accountValues, account);
   }
 }
 
@@ -295,8 +296,10 @@ function restorePage(serverId, pageId) {
         var slot = vals[1];
 
         var account = getAccountFromServerId(serverId);
-        var value = getAccountValue(account, accountValues, type, slot);
-        setFormElementValue(pageElements[i], value);
+        if (account) {
+          var value = getAccountValue(account, accountValues, type, slot);
+          setFormElementValue(pageElements[i], value);
+        }
       }
   }
 
@@ -379,9 +382,12 @@ function fillAccountValues(accountValues, account, fields) {
 function getAccountFromServerId(serverId) {
   // get the account by dipping into RDF and then into the acount manager
   var serverResource = RDF.GetResource(serverId);
+  try {
   var serverFolder =
     serverResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-
+  } catch (ex) {
+    return;
+  }
   var incomingServer = serverFolder.server;
 
   var account = accountManager.FindAccountForServer(incomingServer);
