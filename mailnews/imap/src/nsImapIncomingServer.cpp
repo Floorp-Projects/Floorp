@@ -3851,7 +3851,9 @@ nsImapIncomingServer::CramMD5Hash(const char *decodedChallenge, const char *key,
   nsresult rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), 
         key, strlen(key), resultDigest);
   NS_ENSURE_SUCCESS(rv, rv);
-  *result = strdup((const char *) resultDigest);
+  *result = (char *) malloc(DIGEST_LENGTH);
+  if (*result)
+    memcpy(*result, resultDigest, DIGEST_LENGTH);
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

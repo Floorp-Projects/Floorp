@@ -980,10 +980,9 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
       if (NS_SUCCEEDED(rv) && digest)
       {
         nsCAutoString encodedDigest;
-        PRUint32 digestLength = strlen((const char *) digest);
         char hexVal[8];
         
-        for (PRUint32 j=0; j<digestLength; j++) 
+        for (PRUint32 j=0; j<16; j++) 
         {
           PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
           encodedDigest.Append(hexVal); 

@@ -4823,7 +4823,6 @@ void nsImapProtocol::EscapeUserNamePasswordString(const char *strToEscape, nsCSt
 
 void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
 {
-
   ProgressEventFunctionUsingId (IMAP_STATUS_SENDING_LOGIN);
   IncrementCommandTagNumber();
   nsCString command (GetServerCommandTag());
@@ -4856,8 +4855,8 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
 
   if (flag & kHasCRAMCapability)
   {
-    nsresult rv;
-    nsXPIDLCString digest;
+      nsresult rv;
+      char *digest;
       // inform the server that we want to begin a CRAM authentication procedure...
       nsCAutoString command (GetServerCommandTag());
       command.Append(" authenticate CRAM-MD5" CRLF);
@@ -4865,36 +4864,36 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
       ParseIMAPandCheckForNewMail();
       if (GetServerStateParser().LastCommandSuccessful()) 
       {
-          char * decodedChallenge = PL_Base64Decode(GetServerStateParser().fCRAMDigest, 
-                                                    nsCRT::strlen(GetServerStateParser().fCRAMDigest), nsnull);
+        char *cramDigest = GetServerStateParser().fCRAMDigest;
+        char * decodedChallenge = PL_Base64Decode(cramDigest, 
+                                                  strlen(cramDigest), nsnull);
+        if (m_imapServerSink)
+          rv = m_imapServerSink->CramMD5Hash(decodedChallenge, password, &digest);
 
-          if (m_imapServerSink)
-            rv = m_imapServerSink->CramMD5Hash(decodedChallenge, password, getter_Copies(digest));
+        PR_Free(decodedChallenge);
+        if (NS_SUCCEEDED(rv) && digest)
+        {
+          nsCAutoString encodedDigest;
+          char hexVal[8];
 
-          PR_Free(decodedChallenge);
-          if (NS_SUCCEEDED(rv) && digest)
+          for (PRUint32 j=0; j<16; j++) 
           {
-            nsCAutoString encodedDigest;
-            PRUint32 digestLength = digest.Length();
-            char hexVal[8];
-
-            for (PRUint32 j=0; j<digestLength; j++) 
-            {
-              PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)(digest.get()[j]));
-              encodedDigest.Append(hexVal); 
-            }
-
-            PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s %s", userName, encodedDigest.get());
-            char *base64Str = PL_Base64Encode(m_dataOutputBuf, nsCRT::strlen(m_dataOutputBuf), nsnull);
-            PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
-            PR_Free(base64Str);
-            rv = SendData(m_dataOutputBuf);
-            if (NS_SUCCEEDED(rv))
-              ParseIMAPandCheckForNewMail(command.get());
-            if (GetServerStateParser().LastCommandSuccessful())
-              return;
+            PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)(digest[j]));
+            encodedDigest.Append(hexVal); 
           }
-  }
+
+          PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s %s", userName, encodedDigest.get());
+          char *base64Str = PL_Base64Encode(m_dataOutputBuf, nsCRT::strlen(m_dataOutputBuf), nsnull);
+          PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
+          PR_Free(base64Str);
+          rv = SendData(m_dataOutputBuf);
+          if (NS_SUCCEEDED(rv))
+            ParseIMAPandCheckForNewMail(command.get());
+          if (GetServerStateParser().LastCommandSuccessful())
+            return;
+          PR_Free(digest);
+        }
+    }
   } // if CRAM response was received
   else 
   if (flag & kHasAuthPlainCapability)
@@ -4970,7 +4969,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
 
   // fall back to use InsecureLogin()
   InsecureLogin(userName, password);
-  PR_FREEIF(currentCommand);
+  PR_Free(currentCommand);
 }
 
 void nsImapProtocol::OnLSubFolders()

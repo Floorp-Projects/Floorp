@@ -93,8 +93,8 @@ NS_MSG_BASE nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult);
    */
 NS_MSG_BASE nsresult GetOrCreateFolder(const nsACString & aURI, nsIUrlListener *aListener);
 
-// digest needs to be a pointer to a 17 byte buffer
-#define DIGEST_LENGTH 17
+// digest needs to be a pointer to a 16 byte buffer
+#define DIGEST_LENGTH 16
 
 NS_MSG_BASE nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32 key_len, unsigned char *digest);
 #endif
