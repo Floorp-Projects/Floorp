@@ -67,8 +67,8 @@ if [ -z "$O_INIT" ] # header is global, some including scripts may not
 then                # want the init to run, the others don't need to bother
     O_INIT=ON
 fi
-if [ -z "$O_PARAM" ]# header is global, some including scripts may not
-then                # require parameters, the others don't need to bother
+if [ -z "$O_PARAM" ] # header is global, some including scripts may not
+then                 # require parameters, the others don't need to bother
     O_PARAM=ON
 fi
 if [ -z "$O_OPTIONS" ]    # header is global, some including scripts may not
