@@ -11,16 +11,16 @@
 
   <box id="okCancelButtons" align="horizontal">
     <spring flex="1"/>
-    <button class="exit-dialog" id="Button3" value="" hidden="true" oncommand="doButton3();"/>
-    <button class="exit-dialog" id="Button2" value="" hidden="true" oncommand="doButton2();"/>
+    <button class="exit-dialog" id="Button3" value="" collapsed="true" oncommand="doButton3();"/>
+    <button class="exit-dialog" id="Button2" value="" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="cancel" value="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="right exit-dialog" id="ok" default="true" value="&okButton.label;" oncommand="doOKButton();"/>
   </box>
 
   <box id="okCancelButtonsRight" align="horizontal">
     <spring flex="1"/>
-    <button class="exit-dialog" id="Button3" value="" hidden="true" oncommand="doButton3();"/>
-    <button class="exit-dialog" id="Button2" value="" hidden="true" oncommand="doButton2();"/>
+    <button class="exit-dialog" id="Button3" value="" collapsed="true" oncommand="doButton3();"/>
+    <button class="exit-dialog" id="Button2" value="" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="cancel" value="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="right exit-dialog" id="ok" default="true" value="&okButton.label;" oncommand="doOKButton();"/>
   </box>
