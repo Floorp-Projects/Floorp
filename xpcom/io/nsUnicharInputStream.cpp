@@ -273,51 +273,28 @@ PRInt32
 UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRInt32 aMaxBytes)
 {
   const char *c = aBuffer;
-  const char *lastchar = aBuffer;
+  const char *end = aBuffer + aMaxBytes;
   
-  PRInt32 bytes = 0;
-  while (*c && bytes < aMaxBytes) {
-    lastchar = c;
-    if (UTF8traits::isASCII(*c)) {
+  while (c < end && *c) {
+    if (UTF8traits::isASCII(*c))
       c++;
-      bytes++;
-    }
-    
-    else if (UTF8traits::is2byte(*c)) {
+    else if (UTF8traits::is2byte(*c))
       c += 2;
-      bytes += 2;
-    }
-      
-    else if (UTF8traits::is3byte(*c)) {
+    else if (UTF8traits::is3byte(*c))
       c += 3;
-      bytes += 3;
-    }
-    
-    else if (UTF8traits::is4byte(*c)) {
+    else if (UTF8traits::is4byte(*c))
       c += 4;
-      bytes += 4;
-    }
-    
-    else if (UTF8traits::is5byte(*c)) {
+    else if (UTF8traits::is5byte(*c))
       c += 5;
-      bytes += 5;
-    }
-    else if (UTF8traits::is6byte(*c)) {
-      c+=6;
-      bytes +=6;
-    }
-    
-    else
+    else if (UTF8traits::is6byte(*c))
+      c += 6;
+    else {
       NS_WARNING("Unrecognized UTF8 string in UTF8InputStream::CountValidUTF8Bytes()");
+      break; // Otherwise we go into an infinite loop.  But what happens now?
+    }
   }
 
-  // if we skipped pas the end of the buffer, back up to the last character
-  if (bytes > aMaxBytes) {
-    c = lastchar;
-    bytes = (c-aBuffer);
-  }
-  
-  return bytes;
+  return c - aBuffer;
 }
 
 NS_COM nsresult
