@@ -50,6 +50,9 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 
+#include "nsFont.h"
+#include "nsIFontMetrics.h"
+
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTerminal.h"
@@ -439,6 +442,23 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   mPresShell = presShell;      // no addref
   mDOMDocument = domDocument;  // no addref
 
+  // Show caret
+  ShowCaret();
+
+  // Determine current screen dimensions
+  PRInt32 nRows, nCols, xPixels, yPixels;
+  result = ScreenSize(nRows, nCols, xPixels, yPixels);
+  if (NS_FAILED(result))
+    return result;
+
+  // The above call does not return the correct screen dimensions.
+  // (because rendering is still in progress?)
+  // As a workaround, explicitly set screen dimensions
+  nRows = 24;
+  nCols = 80;
+  xPixels = 0;
+  yPixels = 0;
+
   // Instantiate and initialize XMLTermSession object
   mXMLTermSession = new mozXMLTermSession();
 
@@ -446,17 +466,15 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  result = mXMLTermSession->Init(this, mPresShell, mDOMDocument);
+  result = mXMLTermSession->Init(this, mPresShell, mDOMDocument, nRows, nCols);
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to initialize XMLTermSession\n");
     return NS_ERROR_FAILURE;
   }
 
-  // Show caret
-  ShowCaret();
-
   // Instantiate LineTerm  
-  XMLT_LOG(mozXMLTerminal::Activate,22,("instantiating lineterm\n"));
+  XMLT_LOG(mozXMLTerminal::Activate,22,
+           ("instantiating lineterm, nRows=%d, nCols=%d\n", nRows, nCols));
   result = NS_NewLineTermAux(getter_AddRefs(mLineTermAux));
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to instantiate LineTermAux\n");
@@ -477,6 +495,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
                                  mInitInput.GetUnicode(),
                                  mPromptExpr.GetUnicode(),
                                  options, LTERM_DETERMINE_PROCESS,
+                                 nRows, nCols, xPixels, yPixels,
                                  mDOMDocument, anObserver, cookie);
 
   if (NS_FAILED(result)) {
@@ -488,7 +507,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   // Save cookie
   mCookie = cookie;
 
-  // Resize XMLterm
+  // Resize XMLterm (before displaying any output)
   result = Resize();
   if (NS_FAILED(result))
     return result;
@@ -567,6 +586,80 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 }
 
 
+/** Returns current screen size in rows/cols and in pixels
+ * @param (output) rows
+ * @param (output) cols
+ * @param (output) xPixels
+ * @param (output) yPixels
+ */
+NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32& rows, PRInt32& cols,
+                                         PRInt32& xPixels, PRInt32& yPixels)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTerminal::ScreenSize,70,("\n"));
+
+  // Get presentation context
+  nsCOMPtr<nsIPresContext> presContext;
+  result = mPresShell->GetPresContext( getter_AddRefs(presContext) );
+  if (NS_FAILED(result))
+    return result;
+
+  // Get the default fixed pitch font
+  nsFont defaultFixedFont("dummyfont", NS_FONT_STYLE_NORMAL,
+                          NS_FONT_VARIANT_NORMAL,
+                          NS_FONT_WEIGHT_NORMAL,
+                          NS_FONT_DECORATION_NONE, 16);
+
+  result = presContext->GetDefaultFixedFont(defaultFixedFont);
+  if (NS_FAILED(result))
+    return result;
+
+  // Get metrics for fixed font
+  nsCOMPtr<nsIFontMetrics> fontMetrics;
+  result = presContext->GetMetricsFor(defaultFixedFont,
+                                      getter_AddRefs(fontMetrics));
+  if (NS_FAILED(result) || !fontMetrics)
+    return result;
+
+  // Get font height (includes leading?)
+  nscoord fontHeight, fontWidth;
+  result = fontMetrics->GetHeight(fontHeight);
+  result = fontMetrics->GetMaxAdvance(fontWidth);
+
+  // Determine docshell size in twips
+  nsRect shellArea;
+  result = presContext->GetVisibleArea(shellArea);
+  if (NS_FAILED(result))
+    return result;
+
+  // Determine twips to pixels conversion factor
+  float pixelScale;
+  presContext->GetTwipsToPixels(&pixelScale);
+
+  // Convert dimensions to pixels
+  float xdel, ydel;
+  xdel = pixelScale * fontWidth;
+  ydel = pixelScale * fontHeight + 2;
+
+  xPixels = (int) (pixelScale * shellArea.height);
+  yPixels = (int) (pixelScale * shellArea.width);
+
+  // Determine number of rows/columns
+  rows = (int) ((xPixels-44) / ydel);
+  cols = (int) ((yPixels-20) / xdel);
+
+  if (rows < 1) rows = 1;
+  if (cols < 1) cols = 1;
+
+  XMLT_LOG(mozXMLTerminal::ScreenSize,72,
+           ("rows=%d, cols=%d, xPixels=%d, yPixels=%d\n",
+            rows, cols, xPixels, yPixels));
+
+  return NS_OK;
+}
+
+
 // Transmit string to LineTerm (use saved cookie)
 NS_IMETHODIMP mozXMLTerminal::SendTextAux(const nsString& aString)
 {
@@ -592,8 +685,9 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   if (!consumed) {
     result = mLineTermAux->Write(sendStr.GetUnicode(), aCookie);
     if (NS_FAILED(result)) {
-      // Close LineTerm
-      mLineTermAux->Close(aCookie);
+      // Abort XMLterm session
+      nsAutoString abortCode = "SendText";
+      mXMLTermSession->Abort(mLineTermAux, abortCode);
       return NS_ERROR_FAILURE;
     }
   }
@@ -813,6 +907,7 @@ NS_IMETHODIMP mozXMLTerminal::Resize(void)
   if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
 
+  // Delay resizing until next command output display
   result = mXMLTermSession->NeedsResizing();
   if (NS_FAILED(result))
     return result;

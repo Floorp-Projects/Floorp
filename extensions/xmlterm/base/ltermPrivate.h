@@ -499,6 +499,8 @@ struct lterms {
 
   int nRows;                       /* Number of rows */
   int nCols;                       /* Number of columns */
+  int xPixels;                     /* Number of X pixels in screen */
+  int yPixels;                     /* Number of Y pixels in screen */
 
   UNICHAR promptRegexp[MAXPROMPT]; /* prompt regular expression
                                       JUST A LIST OF DELIMITERS AT PRESENT */

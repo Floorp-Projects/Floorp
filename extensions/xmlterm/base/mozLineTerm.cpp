@@ -297,8 +297,9 @@ NS_IMETHODIMP mozLineTerm::Open(const PRUnichar *command,
 
   nsAutoString aCookie;
   return OpenAux(command, initInput, promptRegexp,
-                 options, processType, domDoc,
-                 nsnull, aCookie);
+                 options, processType,
+                 24, 80, 0, 0,
+                 domDoc, nsnull, aCookie);
 }
 
 
@@ -308,6 +309,8 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
                                    const PRUnichar *initInput,
                                    const PRUnichar *promptRegexp,
                                    PRInt32 options, PRInt32 processType,
+                                   PRInt32 nRows, PRInt32 nCols,
+                                   PRInt32 xPixels, PRInt32 yPixels,
                                    nsIDOMDocument *domDoc,
                                    nsIObserver* anObserver,
                                    nsString& aCookie)
@@ -389,12 +392,14 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
 
   if (anObserver != nsnull) {
     result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
-                        prompt_regexp, options,
-                        processType, mozLineTerm::Callback, (void *) this);
+                        prompt_regexp, options, processType,
+                        nRows, nCols, xPixels, yPixels,
+                        mozLineTerm::Callback, (void *) this);
   } else {
     result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
-                        prompt_regexp, options,
-                        processType, NULL, NULL);
+                        prompt_regexp, options, processType,
+                        nRows, nCols, xPixels, yPixels,
+                        NULL, NULL);
   }
 
   // Free cookie CString

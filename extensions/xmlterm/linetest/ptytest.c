@@ -128,7 +128,8 @@ void ptyTest(int argc, char *argv[])
   char temstr[3] = "^@";
 
   /* Create a PTY */
-  if (pty_create(&ptyStruc,argv,-1,0,0,0,1) == -1) {
+  if (pty_create(&ptyStruc,argv,24,80,0,0,
+                 -1,0,0,0,1) == -1) {
     fprintf(stderr, "PTY creation failed\n");
     exit(-1);
   }
@@ -153,7 +154,10 @@ void ptyTest(int argc, char *argv[])
       ch = getchar();
 
       /* Exit poll loop if a Control-] character is read */
-      if (ch == 0x1D) break;
+      if (ch == 0x1D) {
+        fprintf(stderr, "EXIT ptytest\n");
+        break;
+      }
 
       if (write(ptyFD, &ch, 1) != 1) {
         fprintf(stderr, "Error in writing to child STDIN\n");

@@ -100,6 +100,7 @@ static void pty_error(const char *errmsg, const char *errmsg2);
 
 /* creates a new pseudo-TTY */
 int pty_create(struct ptys *ptyp, char *const argv[],
+               int rows, int cols, int x_pixels, int y_pixels,
                int errfd, int noblock, int noecho, int noexport, int debug)
 {
   pid_t child_pid;
@@ -124,7 +125,7 @@ int pty_create(struct ptys *ptyp, char *const argv[],
 
 #ifndef BSDFAMILY
   /* Set default TTY size */
-  if (pty_resize(ptyp, 24, 80, 0, 0) != 0)
+  if (pty_resize(ptyp, rows, cols, x_pixels, y_pixels) != 0)
     return -1;
 #endif
 
@@ -170,7 +171,7 @@ int pty_create(struct ptys *ptyp, char *const argv[],
 
 #ifdef BSDFAMILY
     /* Set default TTY size */
-    if (pty_resize(NULL, 24, 80, 0, 0) != 0)
+    if (pty_resize(NULL, rows, cols, x_pixels, y_pixels) != 0)
       return -1;
 #endif
 

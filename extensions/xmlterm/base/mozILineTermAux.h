@@ -71,6 +71,10 @@ class mozILineTermAux : public mozILineTerm {
    * @param options LineTerm option bits (usually 0; see lineterm.h)
    * @param processType command shell type; if set to -1, type is determined
    *        from the command name
+   * @param nRows no. of screen rows
+   * @param nCols no. of screen columns
+   * @param xPixels screen width in pixels (or 0 if unknown)
+   * @param yPixels screen height in pixels (or 0 if unknown)
    * @param domDoc DOM document object associated with the LineTerm
    *        (document.cookie will be defined for this document on return)
    * @param aCookie (output) cookie associated with LineTerm
@@ -79,6 +83,8 @@ class mozILineTermAux : public mozILineTerm {
                      const PRUnichar *initInput,
                      const PRUnichar *promptRegexp,
                      PRInt32 options, PRInt32 processType,
+                     PRInt32 nRows, PRInt32 nCols,
+                     PRInt32 xPixels, PRInt32 yPixels,
                      nsIDOMDocument *domDoc,
                      nsIObserver* anObserver,
                      nsString& aCookie) = 0;

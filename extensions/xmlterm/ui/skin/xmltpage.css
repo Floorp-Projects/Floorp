@@ -13,6 +13,9 @@ PRE { font-family: monaco;
 SPAN.prompt      { color: blue }
 SPAN.command     { color: blue }
 
+/* Error messages */
+DIV.errmsg       { color: red }
+
 /* Explicit hyperlinks (underlined) */
 DIV.textlink     { font-family: monaco; color: blue; cursor: hand;
                     text-decoration: underline }

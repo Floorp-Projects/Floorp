@@ -50,9 +50,6 @@
 
 #include "nsIHTMLContent.h"
 
-#include "nsFont.h"
-#include "nsIFontMetrics.h"
-
 #include "mozXMLT.h"
 #include "mozILineTermAux.h"
 #include "mozIXMLTerminal.h"
@@ -152,9 +149,9 @@ mozXMLTermSession::mozXMLTermSession() :
   mPreTextDisplayed(""),
 
   mScreenNode(nsnull),
-  mScreenRows(24),
-  mScreenCols(80),
-  mTopScrollRow(23),
+  mScreenRows(0),
+  mScreenCols(0),
+  mTopScrollRow(0),
   mBotScrollRow(0),
 
   mRestoreInputEcho(false),
@@ -179,7 +176,8 @@ mozXMLTermSession::~mozXMLTermSession()
 // Initialize XMLTermSession
 NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
                                       nsIPresShell* aPresShell,
-                                      nsIDOMDocument* aDOMDocument)
+                                      nsIDOMDocument* aDOMDocument,
+                                      PRInt32 nRows, PRInt32 nCols)
 {
   XMLT_LOG(mozXMLTermSession::Init,30,("\n"));
 
@@ -192,6 +190,11 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
   mXMLTerminal = aXMLTerminal;    // containing XMLTerminal; no addref
   mPresShell = aPresShell;        // presentation shell; no addref
   mDOMDocument = aDOMDocument;    // DOM document; no addref
+
+  mScreenRows = nRows;
+  mScreenCols = nCols;
+  mTopScrollRow = mScreenRows - 1;
+  mBotScrollRow = 0;
 
   nsresult result = NS_OK;
 
@@ -300,64 +303,26 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
 {
   nsresult result;
 
-  // Get presentation context
-  nsCOMPtr<nsIPresContext> presContext;
-  result = mPresShell->GetPresContext( getter_AddRefs(presContext) );
+  XMLT_LOG(mozXMLTermSession::Resize,70,("\n"));
+
+  // Determine current screen dimensions
+  PRInt32 nRows, nCols, xPixels, yPixels;
+  result = mXMLTerminal->ScreenSize(nRows, nCols, xPixels, yPixels);
   if (NS_FAILED(result))
     return result;
 
-  // Get the default fixed pitch font
-  nsFont defaultFixedFont("dummyfont", NS_FONT_STYLE_NORMAL,
-                          NS_FONT_VARIANT_NORMAL,
-                          NS_FONT_WEIGHT_NORMAL,
-                          NS_FONT_DECORATION_NONE, 16);
+  // If dimensions haven't changed, do nothing
+  if ((nRows == mScreenRows) && (nCols == mScreenCols))
+    return NS_OK;
 
-  result = presContext->GetDefaultFixedFont(defaultFixedFont);
-  if (NS_FAILED(result))
-    return result;
-
-  // Get metrics for fixed font
-  nsCOMPtr<nsIFontMetrics> fontMetrics;
-  result = presContext->GetMetricsFor(defaultFixedFont,
-                                      getter_AddRefs(fontMetrics));
-  if (NS_FAILED(result) || !fontMetrics)
-    return result;
-
-  // Get font height (includes leading?)
-  nscoord fontHeight, fontWidth;
-  result = fontMetrics->GetHeight(fontHeight);
-  result = fontMetrics->GetMaxAdvance(fontWidth);
-
-  // Determine docshell size in twips
-  nsRect shellArea;
-  result = presContext->GetVisibleArea(shellArea);
-  if (NS_FAILED(result))
-    return result;
-
-  // Determine twips to pixels conversion factor
-  float pixelScale, frameHeight, frameWidth, xdel, ydel;
-  presContext->GetTwipsToPixels(&pixelScale);
-
-  // Convert dimensions to pixels
-  frameHeight = pixelScale * shellArea.height;
-  frameWidth = pixelScale * shellArea.width;
-
-  xdel = pixelScale * fontWidth;
-  ydel = pixelScale * fontHeight + 2;
-
-  // Determine number of rows/columns
-  mScreenRows = (int) ((frameHeight-44) / ydel);
-  mScreenCols = (int) ((frameWidth-20) / xdel);
-
-  if (mScreenRows < 1) mScreenRows = 1;
-  if (mScreenCols < 1) mScreenCols = 1;
+  mScreenRows = nRows;
+  mScreenCols = nCols;
 
   mTopScrollRow = mScreenRows - 1;
   mBotScrollRow = 0;
 
   XMLT_LOG(mozXMLTermSession::Resize,0,
-       ("Resizing XMLterm, xdel=%e, ydel=%e, rows=%d, cols=%d\n",
-        xdel, ydel, mScreenRows, mScreenCols));
+       ("Resizing XMLterm, nRows=%d, nCols=%d\n", mScreenRows, mScreenCols));
 
   if (lineTermAux) {
     // Resize associated LineTerm
@@ -377,6 +342,8 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
 NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
                                             PRBool& consumed)
 {
+
+  XMLT_LOG(mozXMLTermSession::Preprocess,70,("\n"));
 
   consumed = false;
 
@@ -451,6 +418,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
   PRUnichar *buf_str, *buf_style;
   PRBool newline, errorFlag, streamData, screenData;
   nsAutoString bufString, bufStyle;
+  nsAutoString abortCode = "";
 
   XMLT_LOG(mozXMLTermSession::ReadAll,60,("\n"));
 
@@ -464,13 +432,18 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
   PRBool metaNextCommand = false;
 
+  // NOTE: Do not execute return statements within this loop ;
+  //       always break out of the loop after setting result to an error value,
+  //       allowing cleanup processing on error
   for (;;) {
     // NOTE: Remember to de-allocate buf_str and buf_style
     //       using nsAllocator::Free, if opcodes != 0
     result = lineTermAux->ReadAux(&opcodes, &opvals, &buf_row, &buf_col,
                                   &buf_str, &buf_style);
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
+      abortCode = "lineTermReadAux";
       break;
+    }
 
     XMLT_LOG(mozXMLTermSession::ReadAll,62,
            ("opcodes=0x%x,mOutputType=%d,mEntryHasOutput=%d\n",
@@ -1085,23 +1058,23 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
   }
 
   if (NS_FAILED(result)) {
-    // Close LineTerm
+    // Error processing; close LineTerm
     XMLT_LOG(mozXMLTermSession::ReadAll,62,
-             ("Closing LineTerm, result=%d\n", result));
+             ("Aborting on error, result=0x%x\n", result));
 
-    lineTermAux->CloseAux();
+    Abort(lineTermAux, abortCode);
     return result;
   }
 
   if (flushOutput) {
     // Flush output, splitting off incomplete line
-    result = FlushOutput(SPLIT_INCOMPLETE_FLUSH);
+    FlushOutput(SPLIT_INCOMPLETE_FLUSH);
 
     if (mEntryHasOutput)
       PositionOutputCursor(lineTermAux);
 
-    result = mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL,
-                                                 SELECTION_FOCUS_REGION);
+    mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL,
+                                        SELECTION_FOCUS_REGION);
   }
 
   // Show caret
@@ -1109,6 +1082,51 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
   // Scroll frame (ignore result)
   ScrollToBottomLeft();
+
+  return NS_OK;
+}
+
+
+/** Aborts session by closing LineTerm and displays an error message
+ * @param lineTermAux LineTermAux object to be closed
+ * @param abortCode abort code string to dbe displayed
+ */
+NS_IMETHODIMP mozXMLTermSession::Abort(mozILineTermAux* lineTermAux,
+                                       nsString& abortCode)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::Abort,70,
+           ("Aborting session; closing LineTerm\n"));
+
+  // Close LineTerm
+  lineTermAux->CloseAux();
+
+  // Display error message using DIV node
+  nsCOMPtr<nsIDOMNode> divNode, textNode;
+  nsAutoString tagName = "div";
+  nsAutoString elementName = "errmsg";
+  result = NewElementWithText(tagName, elementName, -1,
+                              mSessionNode, divNode, textNode);
+
+  if (NS_SUCCEEDED(result) && divNode && textNode) {
+    nsAutoString errMsg = "Error in XMLterm (code ";
+    errMsg.Append(abortCode);
+    errMsg.Append("); session closed.");
+    SetDOMText(textNode, errMsg);
+
+    // Collapse selection and position cursor
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mPresShell->GetSelection(SELECTION_NORMAL,
+                                      getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result) && selection) {
+      selection->Collapse(textNode, errMsg.Length());
+      if (NS_SUCCEEDED(result)) {
+        mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL,
+                                            SELECTION_FOCUS_REGION);
+      }
+    }
+  }
 
   return NS_OK;
 }
