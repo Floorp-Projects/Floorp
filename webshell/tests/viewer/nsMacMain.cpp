@@ -16,12 +16,13 @@
  * Reserved.
  */
 
+#include <stdlib.h>
+
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsIImageManager.h"
 #include "nsIWidget.h"
 #include "nsIServiceManager.h"
-#include <stdlib.h>
 #include "resources.h"
 
 #include <ToolUtils.h>			// MacOS includes
@@ -33,7 +34,7 @@
 
 #include <PP_Messages.h>		// for PP standard menu commands
 #include "nsMacMessagePump.h"	// for the windowless menu event handler
-
+#include "nsILeakDetector.h"
 
 #include "macstdlibextras.h"
 
@@ -91,8 +92,6 @@ enum
 	cmd_TableInspector,
 	cmd_ImageInspector
 };
-
-extern "C" void GC_gcollect(void);
 
 static nsNativeViewerApp* gTheApp;
 
@@ -321,7 +320,12 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 					::CheckItem(GetMenuHandle(menu_Debug), item_NativeWidgetMode, true);
 					break;
 				case cmd_DumpLeaks:
-					::GC_gcollect();
+					{
+						nsresult rv;
+						NS_WITH_SERVICE(nsILeakDetector, leakDetector, "component://netscape/xpcom/leakdetector", &rv)
+						if (NS_SUCCEEDED(rv))
+							leakDetector->DumpLeaks();
+					}
 					break;
 			}
 			break;
