@@ -35,19 +35,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "MainController.h"
-#import "BrowserWindowController.h"
-#include "BookmarksService.h"
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsCocoaBrowserService.h"
-#include "nsIPrefBranch.h"
-#include "nsEmbedAPI.h"
-#include "nsIChromeRegistry.h"
-#import	"CHAboutBox.h"
 #include <Foundation/NSUserDefaults.h>
 #include <mach-o/dyld.h>
+
+#import "MainController.h"
+#import "BrowserWindowController.h"
+#import "BookmarksService.h"
+#import "nsCocoaBrowserService.h"
+#import "CHAboutBox.h"
+
+#include "nsCOMPtr.h"
+#include "nsEmbedAPI.h"
+
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsIPref.h"
+#include "nsIChromeRegistry.h"
+
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -106,37 +110,41 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     printf("Main controller died.\n");
 }
 
--(void)awakeFromNib
+-(void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 #ifdef _BUILD_STATIC_BIN
-    [self updatePrebinding];
+  [self updatePrebinding];
 #endif
+  // initialize if we haven't already.
+  [self preferenceManager];
 
-    mPreferenceManager = [[CHPreferenceManager sharedInstance] retain];
-
+  // don't open a new browser window if we already have one
+  // (for example, from an GetURL Apple Event)
+  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+  if (!browserWindow)
     [self newWindow: self];
-    
-    [mSplashScreen close];
+  
+  [mSplashScreen close];
 
-    [mBookmarksMenu setAutoenablesItems: NO];
-    mMenuBookmarks = new BookmarksService((BookmarksDataSource*)nil);
-    mMenuBookmarks->AddObserver();
-    mMenuBookmarks->ConstructBookmarksMenu(mBookmarksMenu, nsnull);
-    BookmarksService::gMainController = self;
+  [mBookmarksMenu setAutoenablesItems: NO];
+  mMenuBookmarks = new BookmarksService((BookmarksDataSource*)nil);
+  mMenuBookmarks->AddObserver();
+  mMenuBookmarks->ConstructBookmarksMenu(mBookmarksMenu, nsnull);
+  BookmarksService::gMainController = self;
     
-    // Initialize offline mode.
-    mOffline = NO;
-    nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));
-    if (!ioService)
-        return;
-    PRBool offline = PR_FALSE;
-    ioService->GetOffline(&offline);
-    mOffline = offline;
+  // Initialize offline mode.
+  mOffline = NO;
+  nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));
+  if (!ioService)
+    return;
+  PRBool offline = PR_FALSE;
+  ioService->GetOffline(&offline);
+  mOffline = offline;
     
-    // Set the menu item's text to "Go Online" if we're currently
-    // offline.
-    if (mOffline)
-        [mOfflineMenuItem setTitle: @"Go Online"];
+  // Set the menu item's text to "Go Online" if we're currently
+  // offline.
+  if (mOffline)
+    [mOfflineMenuItem setTitle: @"Go Online"];	// XXX localize me
 }
 
 -(IBAction)newWindow:(id)aSender
@@ -316,6 +324,29 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [[[mApplication mainWindow] windowController] home: aSender];
 }
 
+-(NSWindow*)getFrontmostBrowserWindow
+{
+  // for some reason, [NSApp mainWindow] doesn't always work, so we have to
+  // do this manually
+  NSArray		*windowList   = [NSApp orderedWindows];
+  NSWindow	*foundWindow 	= NULL;
+
+  for (unsigned int i = 0; i < [windowList count]; i ++)
+  {
+    NSWindow*	thisWindow = [windowList objectAtIndex:i];
+    
+    if ([[thisWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
+       ([[thisWindow windowController] chromeMask] == 0))		// only get windows with full chrome
+    {
+      foundWindow = thisWindow;
+      break;
+    }
+  }
+  
+  return foundWindow;
+}
+
+// open a new URL. This method always makes a new browser window
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL
 {
 	BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
@@ -323,6 +354,40 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [browser showWindow: self];
   return browser;
 }
+
+// open a new URL, observing the prefs on how to behave
+- (void)openNewWindowOrTabWithURL:(NSString*)inURLString
+{
+  // make sure we're initted
+  [self preferenceManager];
+  
+  PRBool reuseWindow = PR_FALSE;
+  PRBool loadInBackground = PR_FALSE;
+  
+  nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+  if ( prefService ) {
+    prefService->GetBoolPref("browser.always_reuse_window", &reuseWindow);
+    prefService->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+  }
+  
+  // reuse the main window if there is one. The user may have closed all of 
+  // them or we may get this event at startup before we've had time to load
+  // our window.
+  BrowserWindowController* controller = NULL;
+  
+  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+  if (reuseWindow && browserWindow) {
+    controller = [browserWindow windowController];
+    [controller openNewTabWithURL:inURLString loadInBackground:loadInBackground];
+  }
+  else {
+    controller = [self openBrowserWindowWithURL: inURLString];
+  }
+  
+  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
+
+}
+
 
 -(void)applicationWillTerminate: (NSNotification*)aNotification
 {
@@ -410,6 +475,13 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [[mainWindow windowController] manageBookmarks: aSender];
 }
 
+- (CHPreferenceManager *)preferenceManager
+{
+  if (!mPreferenceManager)
+    mPreferenceManager = [[CHPreferenceManager sharedInstance] retain];
+  return mPreferenceManager;
+}
+
 - (MVPreferencesController *)preferencesController
 {
     if (!preferencesController) {
@@ -430,16 +502,23 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-    NSWindow* mainWindow = [mApplication mainWindow];
+/*
+  // On the off chance that we're getting this message off a launch,
+  // we may not have initialized our embedded mozilla.  So check here,
+  // and if it's not initialized, do it now.
+  [self preferenceManager];
 
-    if (mainWindow) {
-        [[mainWindow windowController] loadURL:[[NSURL fileURLWithPath:filename] absoluteString]];
-    } else {
-        [self openBrowserWindowWithURL:[[NSURL fileURLWithPath:filename] absoluteString]];
-    }
-    
-    return YES;
-    
+  // Make sure it's a browser window b/c "about box" can also become main window.
+  if ([self isMainWindowABrowserWindow]) {
+    [[[mApplication mainWindow] windowController] loadURL:[[NSURL fileURLWithPath:filename] absoluteString]];
+  }
+  else {
+    [self openBrowserWindowWithURL:[[NSURL fileURLWithPath:filename] absoluteString]];
+  }
+*/
+  [self openNewWindowOrTabWithURL:[[NSURL fileURLWithPath:filename] absoluteString]];
+  
+  return YES;    
 }
 
 - (IBAction)biggerTextSize:(id)aSender
@@ -462,6 +541,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(BOOL)isMainWindowABrowserWindow
 {
+  // see also getFrontmostBrowserWindow
   return [[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]];
 }
 
