@@ -272,7 +272,7 @@ all:: export libs install
 alldep:: export depend libs install
 
 # Do everything from scratch
-everything:: clobber_all alldep
+everything:: realclean alldep
 
 #
 # Rules to make OBJDIR and MDDEPDIR (for --enable-md).
@@ -728,7 +728,7 @@ export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 
 all:: export
 
-clobber::
+clean clobber::
 	rm -f $(XPDIST)/classes/$(PACKAGE)/*.class
 
 endif
