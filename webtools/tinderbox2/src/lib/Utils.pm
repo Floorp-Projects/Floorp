@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.31 $ 
-# $Date: 2002/05/03 20:28:24 $ 
+# $Revision: 1.32 $ 
+# $Date: 2002/05/07 20:03:22 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -304,8 +304,25 @@ sub round {
                     $number);
  return $out;
 }
+
  
- 
+sub clean_times {
+    my (@in) = @_;
+
+    # Round all times to nearest minute, so that we do not get two times
+    # appearing in the time column which display as the same string.
+    # We do however want times which are odd numbers of minutes.
+    
+    @out = map { ( $_ - ($_%60) ) } @in;
+    @out = main::uniq(@out);
+    
+    # sort numerically descending
+    @out = sort {$b <=> $a} @out ;
+    
+    return @out;
+}
+
+
 # make a directory (and all of its parents if need be).
 
 # You can optionally specify the permssions for all the directories
