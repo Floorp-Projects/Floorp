@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
-#include "nsISupports.h"
+#include "nsIFormControlFrame.h"
 
 class nsIEditor;
 class nsIDocShell;
@@ -46,10 +46,11 @@ class nsISelectionController;
 0xa744cfc9, 0x2da8, 0x416d, \
 { 0xa0, 0x58, 0xad, 0xb1, 0xd4, 0xb3, 0xb5, 0x34 } }
 
-class nsIGfxTextControlFrame2 : public nsISupports
+class nsIGfxTextControlFrame2 : public nsIFormControlFrame
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IGFXTEXTCONTROLFRAME2_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGFXTEXTCONTROLFRAME2_IID)
+
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
 
   NS_IMETHOD    OwnsValue(PRBool* aOwnsValue) = 0;

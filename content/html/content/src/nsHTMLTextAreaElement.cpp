@@ -113,7 +113,7 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // nsITextControlElement
-  NS_IMETHOD SetValueGuaranteed(const nsAReadableString& aValue);
+  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
@@ -424,23 +424,19 @@ nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
 
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SetValueGuaranteed(const nsAReadableString& aValue)
+nsHTMLTextAreaElement::SetValueGuaranteed(const nsAString& aValue,
+                                          nsIGfxTextControlFrame2* aFrame)
 {
-  return SetValue(aValue);
-}
+  nsIGfxTextControlFrame2* textControlFrame = aFrame;
+  nsIFormControlFrame* formControlFrame = textControlFrame;
+  if (!textControlFrame) {
+    // No need to flush here, if there is no frame for this yet forcing
+    // creation of one will not do us any good
+    GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
-NS_IMETHODIMP 
-nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
-{
-  nsIFormControlFrame* formControlFrame = nsnull;
-
-  // No need to flush here, if there is no frame for this yet forcing
-  // creation of one will not do us any good
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
-
-  nsIGfxTextControlFrame2* textControlFrame = nsnull;
-  if (formControlFrame) {
-    CallQueryInterface(formControlFrame, &textControlFrame);
+    if (formControlFrame) {
+      CallQueryInterface(formControlFrame, &textControlFrame);
+    }
   }
 
   PRBool frameOwnsValue = PR_FALSE;
@@ -463,6 +459,12 @@ nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
                                              PR_FALSE);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
+{
+  return SetValueGuaranteed(aValue, nsnull);
 }
 
 

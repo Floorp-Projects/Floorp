@@ -40,6 +40,8 @@
 #define nsITextControlElement_h___
 
 #include "nsISupports.h"
+class nsAString;
+class nsIGfxTextControlFrame2;
 
 // IID for the nsITextControl interface
 #define NS_ITEXTCONTROLELEMENT_IID    \
@@ -58,7 +60,7 @@ public:
   /**
    * Set the control's value without security checks
    */
-  NS_IMETHOD SetValueGuaranteed(const nsAReadableString& aValue) = 0;
+  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame) = 0;
 
   /**
    * Tell the control that value has been deliberately changed (or not).

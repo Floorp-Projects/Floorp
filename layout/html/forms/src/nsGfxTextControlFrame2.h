@@ -69,7 +69,6 @@ class nsIAccessible;
 
 class nsGfxTextControlFrame2 : public nsStackFrame,
                                public nsIAnonymousContentCreator,
-                               public nsIFormControlFrame,
                                public nsIGfxTextControlFrame2,
                                public nsIStatefulFrame,
                                public nsIScrollableViewProvider
