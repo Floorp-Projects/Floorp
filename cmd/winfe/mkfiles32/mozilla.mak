@@ -98,9 +98,17 @@ NULL=nul
 
 CPP= \
 !if "$(MOZ_BCPRO)" == ""
+!if defined(VERBOSE)
     cl.exe
 !else
+	@cl.exe /nologo
+!endif
+!else
+!if defined(VERBOSE)
     bcompile.exe
+!else
+    @bcompile.exe /nologo
+!endif
 !endif
 LINK= \
 !if "$(MOZ_BITS)"=="32"
@@ -224,12 +232,15 @@ MOZ_STACK=33679
 !if defined(MOZ_DEBUG)
 VERSTR=Dbg
 !if "$(MOZ_BITS)"=="32"
-CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon /DJS_THREADSAFE \
+CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon /DJS_THREADSAFE \
 !ifdef MOZ_TRANSACTION_RECEIPTS
 /DTRANSACTION_RECEIPTS \
 !endif
 !else
-CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
+CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
+!endif
+!if defined(VERBOSE)
+	/Bd \
 !endif
 !ifdef NU_CACHE
 	/DNU_CACHE	\
@@ -2911,16 +2922,14 @@ $(OUTDIR)\mozilla.tlb : $(PRECOMPILED_TLB)
 
 
 #nuke all the output directories
+MOZ_NUKEOUT=\
+	$(MOZ_OUT)\x86Dbg \
+	$(MOZ_OUT)\x86Rel \
+	$(MOZ_OUT)\NavDbg \
+	$(MOZ_OUT)\NavRel
+
 clobber_all:
-    -rd /s /q $(MOZ_OUT)\x86Dbg
-    -rd /s /q $(MOZ_OUT)\x86Rel
-    -rd /s /q $(MOZ_OUT)\16x86Dbg
-    -rd /s /q $(MOZ_OUT)\16x86Rel
-    -rd /s /q $(MOZ_OUT)\NavDbg
-    -rd /s /q $(MOZ_OUT)\NavRel
-    -rd /s /q $(MOZ_OUT)\16NavDbg
-    -rd /s /q $(MOZ_OUT)\16NavRel
-    -rd /s /q _gen
+    $(RM_R) $(MOZ_NUKEOUT) _gen
 
 dist:
     @set SAVE_SRC=%%MOZ_SRC%%
@@ -2943,7 +2952,7 @@ cleandist:
     @$(MOZ_SRC)
     @cd \ns
     nmake /f makefile.win clobber
-    rm -fr $(DIST)
+    $(RM_R) $(DIST)
     @set MOZ_SRC=%%SAVE_SRC%%
     @set SAVE_SRC=
     @set MSVC4=%%SAVE_MSVC4%%
