@@ -261,7 +261,9 @@ endif
 ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser
 else
+ifdef MOZ_XPFE_COMPONENTS
 tier_99_dirs	+= xpfe/bootstrap
+endif
 endif
 
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
