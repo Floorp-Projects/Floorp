@@ -220,17 +220,17 @@ a:link img {
 }
 a:visited img {
   display: inline;
-  border: 2px solid purple;
+  border: 2px solid;
   text-decoration: none;
 }
 a:active img {
   display: inline;
-  border: 2px solid lime;
+  border: 2px solid;
   text-decoration: none;
 }
 a:out-of-date img {
   display: inline;
-  border: 2px solid red;
+  border: 2px solid;
   text-decoration: none;
 }
 b, strong {
