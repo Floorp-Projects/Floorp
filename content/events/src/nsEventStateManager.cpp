@@ -174,6 +174,7 @@ nsEventStateManager::nsEventStateManager()
   mHoverContent = nsnull;
   mDragOverContent = nsnull;
   mCurrentFocus = nsnull;
+  mLastFocusedWith = eEventFocusedByUnknown;
   mDocument = nsnull;
   mPresContext = nsnull;
   mCurrentTabIndex = 0;
@@ -878,7 +879,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             } else { // otherwise, it must be HTML
               // It's hard to say what HTML4 wants us to do in all cases.
               // So for now we'll settle for A) Set focus
-              ChangeFocus(content);
+              ChangeFocus(content, eEventFocusedByKey);
 
               nsresult rv = getPrefService();
               PRBool activate = PR_TRUE;
@@ -1651,7 +1652,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         }
 
         if (newFocus && currFrame)
-          ChangeFocus(newFocus);
+          ChangeFocus(newFocus, eEventFocusedByMouse);
         else if (!suppressBlur) {
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
         }
@@ -2646,11 +2647,13 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsEventStateManager::ChangeFocus(nsIContent* aFocusContent)
+nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, PRInt32 aFocusedWith)
 {
   aFocusContent->SetFocus(mPresContext);
-  MoveCaretToFocus();
+  if (aFocusedWith != eEventFocusedByMouse)
+    MoveCaretToFocus();
 
+  mLastFocusedWith = aFocusedWith;
   return PR_FALSE;
 }
 
@@ -2773,7 +2776,8 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   nsCOMPtr<nsIDocShellTreeItem> shellItem(do_QueryInterface(docShell));
   shellItem->GetItemType(&itemType);
   
-  if (itemType != nsIDocShellTreeItem::typeChrome) {   // If not content, forget selection - just use mCurrentFocus
+  if (itemType != nsIDocShellTreeItem::typeChrome && mLastFocusedWith != eEventFocusedByMouse) {  
+    // If not content or focused gained via mouse click, forget selection - just use mCurrentFocus
     // we're going to tab from the selection position 
     nsCOMPtr<nsIDOMHTMLAreaElement> areaElement(do_QueryInterface(mCurrentFocus));
     if (!areaElement) {
@@ -2845,7 +2849,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
       printf("focusing next focusable content: %p\n", nextFocus.get());
 #endif
       presShell->GetPrimaryFrameFor(nextFocus, &mCurrentTarget);
-      ChangeFocus(nextFocus);
+      ChangeFocus(nextFocus, eEventFocusedByKey);
       
       NS_IF_RELEASE(mCurrentFocus);
       mCurrentFocus = nextFocus;
@@ -4777,13 +4781,11 @@ nsEventStateManager::GetNextDocShell(nsIDocShellTreeNode* aNode,
     nsCOMPtr<nsIDocShellTreeNode> parentNode = do_QueryInterface(parentItem);
     numChildren = 0;
     parentNode->GetChildCount(&numChildren);
-    if (childOffset+1 >= numChildren) {
-      *aResult = nsnull;
-      return;
+    if (childOffset+1 < numChildren) {
+      parentNode->GetChildAt(childOffset+1, aResult);
+      if (*aResult)
+        return;
     }
-    parentNode->GetChildAt(childOffset+1, aResult);
-    if (*aResult)
-      return;
     
     curNode = do_QueryInterface(parentItem);
   }

@@ -127,4 +127,12 @@ public:
 #define NS_EVENT_STATE_HOVER        0x0004 // mouse is hovering over content
 #define NS_EVENT_STATE_DRAGOVER     0x0008 // drag  is hovering over content
 
+enum EFocusedWithType {
+  eEventFocusedByUnknown,     // focus gained via unknown method
+  eEventFocusedByMouse,       // focus gained via mouse
+  eEventFocusedByKey,         // focus gained via key press (like tab)
+  eEventFocusedByContextMenu, // focus gained via context menu
+  eEventFocusedByApplication  // focus gained via Application (like script)
+};
+
 #endif // nsIEventStateManager_h__
