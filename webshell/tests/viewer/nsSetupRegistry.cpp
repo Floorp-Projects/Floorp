@@ -52,7 +52,6 @@
 
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-#include "nsIProfile.h"
 #include "nsIAllocator.h"
 #include "nsIEventQueue.h"
 #include "nsIGenericFactory.h"
@@ -83,7 +82,6 @@
     #define STRRES_DLL   "strres.dll"
     #define UNICHARUTIL_DLL   "unicharutil.dll"
     #define BASE_DLL   "raptorbase.dll"
-    #define PROFILE_DLL "xpprofile32.dll"
 #elif defined(XP_MAC)
     #define XPCOM_DLL   "XPCOM_DLL"
     #define WIDGET_DLL    "WIDGET_DLL"
@@ -107,7 +105,6 @@
     #define STRRES_DLL   "STRRES_DLL"
     #define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
     #define BASE_DLL   "base.shlb"
-    #define PROFILE_DLL "PROFILE_DLL"
 #else
     #define XPCOM_DLL  "libxpcom.so"
     /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
@@ -139,7 +136,6 @@
     #define STRRES_DLL   "libstrres.so"
     #define UNICHARUTIL_DLL   "libunicharutil.so"
     #define BASE_DLL     "libraptorbase.so"
-    #define PROFILE_DLL "libprofile.so"
 #endif
 
 // Class ID's
@@ -188,10 +184,6 @@ static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
-
-#if defined(NS_USING_PROFILES)
-static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
-#endif
 
 static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
@@ -265,10 +257,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kObserverServiceCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kObserverCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
-
-#if defined(NS_USING_PROFILES)
-  nsComponentManager::RegisterComponent(kProfileCID, NULL, NULL, PROFILE_DLL, PR_FALSE, PR_FALSE);
-#endif
 
   nsComponentManager::RegisterComponent(kClipboardCID,            NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCTransferableCID,        NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
