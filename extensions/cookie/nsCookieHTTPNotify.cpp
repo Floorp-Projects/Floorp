@@ -26,10 +26,13 @@
 #include "nsIHTTPChannel.h"
 #include "nsCookie.h"
 #include "nsIURL.h"
-#include "nsCOMPtr.h"
-#include "nsIAtom.h"
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
+#include "nsIServiceManager.h"
+#include "nsIAllocator.h"
+#include "nsINetModuleMgr.h" 
+
+static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
 
 ///////////////////////////////////
 // nsISupports
@@ -60,11 +63,33 @@ nsCookieHTTPNotify::Init()
     if (!mSetCookieHeader) return NS_ERROR_OUT_OF_MEMORY;
     mExpiresHeader = NS_NewAtom("date");
     if (!mExpiresHeader) return NS_ERROR_OUT_OF_MEMORY;
+
+    // Register to handing http requests and responses
+    nsresult rv;
+    nsCOMPtr<nsINetModuleMgr> pNetModuleMgr = do_GetService(kINetModuleMgrCID, &rv); 
+    if (NS_FAILED(rv)) return rv;
+    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID,
+                                       (nsIHTTPNotify *)this);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID,
+                                       (nsIHTTPNotify *)this);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
 }
 
 nsCookieHTTPNotify::~nsCookieHTTPNotify()
 {
+}
+
+NS_IMETHODIMP
+nsCookieHTTPNotify::SetupCookieService()
+{
+    nsresult rv = NS_OK;
+    if (!mCookieService)
+        mCookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+    return rv;
 }
 
 ///////////////////////////////////
@@ -74,7 +99,8 @@ NS_IMETHODIMP
 nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
 {
     nsresult rv;
-    if (!aContext) return NS_ERROR_NULL_POINTER;
+    // Preconditions
+    NS_ENSURE_ARG_POINTER(aContext);
 
     nsCOMPtr<nsIHTTPChannel> pHTTPConnection = do_QueryInterface(aContext, &rv);
     if (NS_FAILED(rv)) return rv; 
@@ -83,54 +109,57 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     rv = pHTTPConnection->GetURI(getter_AddRefs(pURL));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString url;
-    rv = pURL->GetSpec(getter_Copies(url));
-    if (NS_FAILED(rv)) return rv;
-    if (url == nsnull) return NS_ERROR_FAILURE;
-
-    const char* cookie = ::COOKIE_GetCookie((char*)(const char*)url);
-    if (cookie == nsnull) return rv;
-
-    rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookie);
+    // Ensure that the cookie service exists
+    rv = SetupCookieService();
     if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+    nsString cookie;
+    rv = mCookieService->GetCookieString(pURL, cookie);
+    if (NS_FAILED(rv)) return rv;
+
+    // Set the cookie into the request headers
+    // XXX useless convertion from nsString to char * again
+    const char *cookieRaw = cookie.ToNewCString();
+    if (!cookieRaw) return NS_ERROR_OUT_OF_MEMORY;
+    rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookieRaw);
+    nsAllocator::Free((void *)cookieRaw);
+
+    return rv;
 }
 
 NS_IMETHODIMP
 nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
 {
     nsresult rv;
+    // Preconditions
     NS_ENSURE_ARG_POINTER(aContext);
 
     nsCOMPtr<nsIHTTPChannel> pHTTPConnection = do_QueryInterface(aContext);
     if (NS_FAILED(rv)) return rv;
 
     // Get the Cookie header
-    nsXPIDLCString cookie;
-    rv = pHTTPConnection->GetResponseHeader(mSetCookieHeader, getter_Copies(cookie));
+    nsXPIDLCString cookieHeader;
+    rv = pHTTPConnection->GetResponseHeader(mSetCookieHeader, getter_Copies(cookieHeader));
     if (NS_FAILED(rv)) return rv;
-    if (!cookie) return NS_ERROR_OUT_OF_MEMORY;
+    if (!cookieHeader) return NS_ERROR_OUT_OF_MEMORY;
 
-    // Get the url string
+    // Get the url
     nsCOMPtr<nsIURI> pURL;
-    nsXPIDLCString url;
     rv = pHTTPConnection->GetURI(getter_AddRefs(pURL));
     if (NS_FAILED(rv)) return rv;
-    rv = pURL->GetSpec(getter_Copies(url));
-    if (NS_FAILED(rv)) return rv;
-    if (url == nsnull) return NS_ERROR_FAILURE;
-    
+
     // Get the expires
-    nsXPIDLCString pDate;
-    rv = pHTTPConnection->GetResponseHeader(mExpiresHeader, getter_Copies(pDate));
+    nsXPIDLCString expiresHeader;
+    rv = pHTTPConnection->GetResponseHeader(mExpiresHeader, getter_Copies(expiresHeader));
+    if (NS_FAILED(rv)) return rv;
+
+    // Ensure that we have the cookie service
+    rv = SetupCookieService();
     if (NS_FAILED(rv)) return rv;
 
     // Save the cookie
-    COOKIE_SetCookieStringFromHttp((char*)(const char*)url,
-                                   (char *)(const char *)cookie,
-                                   (char *)(const char *)pDate);
+    rv = mCookieService->SetCookieStringFromHttp(pURL, cookieHeader, expiresHeader);
 
-    return NS_OK;
+    return rv;
 }
 

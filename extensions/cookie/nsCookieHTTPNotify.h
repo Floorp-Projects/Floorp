@@ -26,6 +26,7 @@
 #include "nsIHttpNotify.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsICookieService.h"
 
 // {6BC1F522-1F45-11d3-8AD4-00105A1B8860}
 #define NS_COOKIEHTTPNOTIFY_CID \
@@ -53,6 +54,9 @@ private:
     nsCOMPtr<nsIAtom> mCookieHeader;
     nsCOMPtr<nsIAtom> mSetCookieHeader;
     nsCOMPtr<nsIAtom> mExpiresHeader;
+    nsCOMPtr<nsICookieService> mCookieService;
+
+    NS_IMETHOD SetupCookieService();
 };
 
 extern NS_EXPORT nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify);
