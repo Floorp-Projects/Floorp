@@ -3531,38 +3531,6 @@ nsEditor::IsBlockNode(nsIDOMNode *aNode)
 }
 
 PRBool 
-nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
-{
-  nsCOMPtr<nsIDOMElement>element = do_QueryInterface(aNode);
-  if (element)
-  {
-    nsAutoString tag;
-    element->GetTagName(tag);
-    const char *tagStr;
-    aTag->GetUTF8String(&tagStr);
-    if (tag.EqualsIgnoreCase(tagStr))
-    {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-PRBool 
-nsEditor::NodeIsType(nsIDOMNode *aNode, const nsAString &aTagStr)
-{
-  nsCOMPtr<nsIDOMElement>element = do_QueryInterface(aNode);
-  if (element)
-  {
-    nsAutoString tag, tagStr(aTagStr);
-    element->GetTagName(tag);
-    if (tag.Equals(tagStr, nsCaseInsensitiveStringComparator()))
-      return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-PRBool 
 nsEditor::CanContainTag(nsIDOMNode* aParent, const nsAString &aChildTag)
 {
   nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(aParent);

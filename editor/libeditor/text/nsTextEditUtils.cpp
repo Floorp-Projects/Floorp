@@ -40,28 +40,10 @@
 
 #include "nsEditor.h"
 #include "nsPlaintextEditor.h"
+#include "nsEditProperty.h"
 
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-
-/********************************************************
- *  helper methods from nsTextEditRules
- ********************************************************/
- 
-PRBool
-nsTextEditUtils::NodeIsType(nsIDOMNode *aNode, const nsAString& aTag)
-{
-  NS_PRECONDITION(aNode, "null node passed to nsHTMLEditUtils::NodeIsType");
-  if (aNode)
-  {
-    nsAutoString tag;
-    nsEditor::GetTagString(aNode,tag);
-    ToLowerCase(tag);
-    if (tag.Equals(aTag))
-      return PR_TRUE;
-  }
-  return PR_FALSE;
-}
 
 /********************************************************
  *  helper methods from nsTextEditRules
@@ -73,7 +55,7 @@ nsTextEditUtils::NodeIsType(nsIDOMNode *aNode, const nsAString& aTag)
 PRBool 
 nsTextEditUtils::IsBody(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("body"));
+  return nsEditor::NodeIsType(node, nsEditProperty::body);
 }
 
 
@@ -83,7 +65,7 @@ nsTextEditUtils::IsBody(nsIDOMNode *node)
 PRBool 
 nsTextEditUtils::IsBreak(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("br"));
+  return nsEditor::NodeIsType(node, nsEditProperty::br);
 }
 
 

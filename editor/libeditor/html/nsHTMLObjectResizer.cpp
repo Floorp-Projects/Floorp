@@ -231,7 +231,7 @@ nsHTMLEditor::CreateShadow(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode,
 {
   // let's create an image through the element factory
   nsAutoString name;
-  if (NodeIsType(aOriginalObject, NS_LITERAL_STRING("img")))
+  if (nsHTMLEditUtils::IsImage(aOriginalObject))
     name = NS_LITERAL_STRING("img");
   else
     name = NS_LITERAL_STRING("span");
@@ -531,7 +531,7 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
   mActivatedHandle->SetAttribute(NS_LITERAL_STRING("_moz_activated"), NS_LITERAL_STRING("true"));
 
   // do we want to preserve ratio or not?
-  PRBool preserveRatio = NodeIsType(mResizedObject, NS_LITERAL_STRING("img"));
+  PRBool preserveRatio = nsHTMLEditUtils::IsImage(mResizedObject);
   nsresult result;
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
@@ -804,7 +804,7 @@ nsHTMLEditor::SetShadowPosition(nsIDOMElement * aShadow,
 {
   SetAnonymousElementPosition(aOriginalObjectX, aOriginalObjectY, aShadow);
 
-  if(NodeIsType(aOriginalObject, NS_LITERAL_STRING("img"))) {
+  if (nsHTMLEditUtils::IsImage(aOriginalObject)) {
     nsAutoString imageSource;
     nsresult res = aOriginalObject->GetAttribute(NS_LITERAL_STRING("src"),
                                                 imageSource);

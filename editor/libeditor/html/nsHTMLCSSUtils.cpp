@@ -638,7 +638,7 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
   nsresult res = RemoveCSSProperty(elem, aProperty, aPropertyValue, PR_FALSE);
   if (NS_FAILED(res)) return res;
 
-  if (mHTMLEditor->NodeIsType(aNode, nsEditProperty::span)) {
+  if (nsEditor::NodeIsType(aNode, nsEditProperty::span)) {
     PRInt32 attrCount;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     res = content->GetAttrCount(attrCount);

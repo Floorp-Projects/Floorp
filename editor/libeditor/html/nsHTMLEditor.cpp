@@ -5932,7 +5932,7 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
   nsCOMPtr<nsIAtom> atom2 = GetTag(aNode2);
   
   if (atom1.get() == atom2.get()) {
-    if (useCSS && NodeIsType(aNode1, NS_LITERAL_STRING("span"))) {
+    if (useCSS && atom1 == nsEditProperty::span) {
       if (mHTMLCSSUtils->ElementsSameStyle(aNode1, aNode2)) {
         return PR_TRUE;
       }
@@ -6009,19 +6009,19 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
   }
   nsCOMPtr<nsIDOMNode> newStyles = nsnull, deepestStyle = nsnull;
   while (child && (child != aPreviousBlock)) {
-    if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("b"))      ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("i"))      ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("u"))      ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("tt"))     ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("s"))      ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("strike")) ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("big"))    ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("small"))  ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("blink"))  ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("sub"))    ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("sup"))    ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("font"))   ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("span"))) {
+    if (nsEditor::NodeIsType(child, nsEditProperty::b)      ||
+        nsEditor::NodeIsType(child, nsEditProperty::i)      ||
+        nsEditor::NodeIsType(child, nsEditProperty::u)      ||
+        nsEditor::NodeIsType(child, nsEditProperty::tt)     ||
+        nsEditor::NodeIsType(child, nsEditProperty::s)      ||
+        nsEditor::NodeIsType(child, nsEditProperty::strike) ||
+        nsHTMLEditUtils::IsBig(child)                       ||
+        nsHTMLEditUtils::IsSmall(child)                     ||
+        nsEditor::NodeIsType(child, nsEditProperty::blink)  ||
+        nsEditor::NodeIsType(child, nsEditProperty::sub)    ||
+        nsEditor::NodeIsType(child, nsEditProperty::sup)    ||
+        nsEditor::NodeIsType(child, nsEditProperty::font)   ||
+        nsEditor::NodeIsType(child, nsEditProperty::span)) {
       nsAutoString domTagName;
       child->GetNodeName(domTagName);
       ToLowerCase(domTagName);
@@ -6073,7 +6073,7 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   pcontext->GetTwipsToPixels(&t2p);
 
 
-  if (NodeIsType(aElement, NS_LITERAL_STRING("hr"))) {
+  if (nsHTMLEditUtils::IsHR(aElement)) {
     nsIFrame* childFrame;
     //frame->FirstChild(pcontext, nsnull, &childFrame);
     frame->GetNextSibling(&childFrame);
