@@ -1804,10 +1804,14 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
   }
 
   nsCAutoString hostName;
-  if (NS_FAILED(uri->GetHost(hostName)))
-    return NS_ERROR_FAILURE;
 
-  CopyUTF8toUTF16(hostName, aDomain);
+  if (NS_SUCCEEDED(uri->GetHost(hostName))) {
+    CopyUTF8toUTF16(hostName, aDomain);
+  } else {
+    // If we can't get the host from the URI (e.g. about:, javascript:,
+    // etc), just return an null string.
+    SetDOMStringToNull(aDomain);
+  }
 
   return NS_OK;
 }
