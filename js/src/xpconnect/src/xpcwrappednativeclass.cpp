@@ -1006,7 +1006,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
         if(param.IsRetval())
         {
-            if(vp)
+            if(vp && !ccdata.retvalSet)
                 *vp = v;
         }
         else
