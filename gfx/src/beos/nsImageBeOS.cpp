@@ -271,35 +271,34 @@ nsImageBeOS::Draw(nsIRenderingContext &aContext,
                  PRInt32 aX, PRInt32 aY,
                  PRInt32 aWidth, PRInt32 aHeight)
 {
-	// XXX kipp: this is temporary code until we eliminate the
-	// width/height arguments from the draw method.
-	if((aWidth != mWidth) || (aHeight != mHeight))
-	{
-		aWidth = mWidth;
-		aHeight = mHeight;
-	}
+  // XXX kipp: this is temporary code until we eliminate the
+  // width/height arguments from the draw method.
+  aWidth = PR_MIN(aWidth, mWidth);
+  aHeight = PR_MIN(aHeight, mHeight);
 	
-	nsDrawingSurfaceBeOS	*beosdrawing = (nsDrawingSurfaceBeOS *) aSurface;
-	BView	*view;
+  nsDrawingSurfaceBeOS	*beosdrawing = (nsDrawingSurfaceBeOS *) aSurface;
+  BView	*view;
        
   beosdrawing->AcquireView(&view); 
 
-	if((PR_FALSE == mStaticImage) || (NULL == mImage))
-		BuildImage(aSurface);
+  if((PR_FALSE == mStaticImage) || (NULL == mImage))
+    BuildImage(aSurface);
 
-	if(NULL == mImage)
-		return PR_FALSE;
+  if(NULL == mImage)
+    return PR_FALSE;
 
-	if(view && view->LockLooper())
-	{
-		view->SetDrawingMode(B_OP_ALPHA);
-		view->DrawBitmapAsync(mImage, BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
-		view->SetDrawingMode(B_OP_COPY);
-		view->UnlockLooper();
-	}
-	beosdrawing->ReleaseView();
+  if(view && view->LockLooper())
+  {
+    view->SetDrawingMode(B_OP_ALPHA);
+    view->DrawBitmapAsync(mImage,
+                          BRect(0, 0, aWidth - 1, aHeight - 1),
+                          BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
+    view->SetDrawingMode(B_OP_COPY);
+    view->UnlockLooper();
+  }
+  beosdrawing->ReleaseView();
 
-	return NS_OK;
+  return NS_OK;
 }
 
 /** 
