@@ -147,7 +147,7 @@ NS_IMETHODIMP RemoteURILoadManager::OnStreamComplete(nsIStreamLoader *loader, ns
 
     // remove the stream loader from the hash table
     nsStringKey	uriKey(loaderContext->GetURI());
-    PRBool removed = mStreamLoaderHash.Remove(&uriKey);
+    mStreamLoaderHash.Remove(&uriKey);
   }
   
   return NS_OK;

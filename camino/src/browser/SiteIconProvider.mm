@@ -231,7 +231,7 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
 {
   if (mMissedIconsCacheHelper)
   {
-    nsresult rv = mMissedIconsCacheHelper->PutInCache(NS_ConvertUCS2toUTF8(inURI), inExpSeconds);
+    mMissedIconsCacheHelper->PutInCache(NS_ConvertUCS2toUTF8(inURI), inExpSeconds);
   }
 
 }
