@@ -125,9 +125,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
    NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
 
-#ifndef XP_OS2
   virtual nsFontOS2* FindGlobalFont(HPS aPS, PRUnichar aChar);
-#endif
   virtual nsFontOS2* FindGenericFont(HPS aPS, PRUnichar aChar);
   virtual nsFontOS2* FindLocalFont(HPS aPS, PRUnichar aChar);
   virtual nsFontOS2* FindUserDefinedFont(HPS aPS, PRUnichar aChar);
