@@ -76,10 +76,6 @@
 #include <Path.h>
 #endif
 
-// Logging of debug output
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#endif
 #include "prlog.h"
 
 PRLogModuleInfo* nsComponentManagerLog = nsnull;
@@ -1848,17 +1844,20 @@ nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
 }
 
 #ifdef XPCOM_CHECK_PENDING_CIDS
+
+// This method must be called from within the mMon monitor
 nsresult
 nsComponentManagerImpl::AddPendingCID(const nsCID &aClass)
 {
-    nsAutoMonitor mon(mMon);
     int max = mPendingCIDs.Count();
     for (int index = 0; index < max; index++)
     {
         nsCID *cidp = (nsCID*) mPendingCIDs.ElementAt(index);
         NS_ASSERTION(cidp, "Bad CID in pending list");
         if (cidp->Equals(aClass)) {
-            NS_WARNING("Creation in progress (Reentrant CI - see bug 194568)");
+            // Note that you may this this assertion by near-simultaneous
+            // calls to GetService on multiple threads.
+            NS_WARNING("Creation in progress (Reentrant GS - see bug 194568)");
             return NS_ERROR_NOT_AVAILABLE;
         }
     }
@@ -1866,10 +1865,10 @@ nsComponentManagerImpl::AddPendingCID(const nsCID &aClass)
     return NS_OK;
 }
 
+// This method must be called from within the mMon monitor
 void 
 nsComponentManagerImpl::RemovePendingCID(const nsCID &aClass)
 {
-    nsAutoMonitor mon(mMon);
     mPendingCIDs.RemoveElement((void*)&aClass);
 }
 #endif
@@ -1922,17 +1921,8 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
 
     if (NS_SUCCEEDED(rv))
     {
-#ifdef XPCOM_CHECK_PENDING_CIDS
-        rv = AddPendingCID(aClass);
-        if (NS_FAILED(rv))
-            return rv;
-#endif
         rv = factory->CreateInstance(aDelegate, aIID, aResult);
         NS_RELEASE(factory);
-
-#ifdef XPCOM_CHECK_PENDING_CIDS
-        RemovePendingCID(aClass);
-#endif
     }
     else
     {
@@ -2004,17 +1994,9 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
 
     if (NS_SUCCEEDED(rv))
     {
-#ifdef XPCOM_CHECK_PENDING_CIDS  
-        rv = AddPendingCID(entry->cid);
-        if (NS_FAILED(rv))
-            return rv;
-#endif
+
         rv = factory->CreateInstance(aDelegate, aIID, aResult);
         NS_RELEASE(factory);
-
-#ifdef XPCOM_CHECK_PENDING_CIDS 
-        RemovePendingCID(entry->cid);
-#endif
     }
     else
     {
@@ -2122,6 +2104,11 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
          return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
+#ifdef XPCOM_CHECK_PENDING_CIDS
+    rv = AddPendingCID(aClass);
+    if (NS_FAILED(rv))
+        return rv;
+#endif
     nsCOMPtr<nsISupports> service;
     // We need to not be holding the service manager's monitor while calling 
     // CreateInstance, because it invokes user code which could try to re-enter
@@ -2131,6 +2118,10 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     rv = CreateInstance(aClass, nsnull, aIID, getter_AddRefs(service));
 
     mon.Enter();
+
+#ifdef XPCOM_CHECK_PENDING_CIDS
+    RemovePendingCID(aClass);
+#endif
 
     if (NS_FAILED(rv))
         return rv;
@@ -2411,6 +2402,11 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
+#ifdef XPCOM_CHECK_PENDING_CIDS  
+    rv = AddPendingCID(entry->cid);
+    if (NS_FAILED(rv))
+        return rv;
+#endif
     nsCOMPtr<nsISupports> service;
     // We need to not be holding the service manager's monitor while calling 
     // CreateInstance, because it invokes user code which could try to re-enter
@@ -2420,6 +2416,10 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     rv = CreateInstanceByContractID(aContractID, nsnull, aIID, getter_AddRefs(service));
 
     mon.Enter();
+
+#ifdef XPCOM_CHECK_PENDING_CIDS 
+    RemovePendingCID(entry->cid);
+#endif
 
     if (NS_FAILED(rv))
         return rv;
