@@ -2881,16 +2881,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         return NS_ERROR_UNEXPECTED;    
     
     // Notify observers of xpcom autoregistration start
-    nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_FAILED(rv))
-    {
-        // NO COMPtr as we dont release the service manager
-        nsIServiceManager *mgr = NS_STATIC_CAST(nsIServiceManager*, this);
-        (void) observerService->NotifyObservers(mgr,
-                                                NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
-                                                NS_ConvertASCIItoUCS2("Starting component registration").get());
-    }
+    NS_CreateServicesFromCategory(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, nsnull,
+                                  "start");
 
     /* do the native loader first, so we can find other loaders */
     rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
@@ -2957,12 +2949,11 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
             }
         } while (NS_SUCCEEDED(rv) && registered);
     }
+
+    // Notify observers of xpcom autoregistration completion
+    NS_CreateServicesFromCategory(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, nsnull,
+                                  "end");
     
-    // NO COMPtr as we dont release the service manager
-    nsIServiceManager *mgr = NS_STATIC_CAST(nsIServiceManager*, this);
-    (void) observerService->NotifyObservers(mgr,
-                                            NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
-                                            NS_ConvertASCIItoUCS2("Component registration finished").get());
     return rv;
 }
 
