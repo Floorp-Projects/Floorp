@@ -11,6 +11,8 @@
     onload="parent.onPanelLoaded('am-smtp.xul');"
 	align="vertical">
 
+  <script language="javascript" src="am-smtp.js"/>
+
   <box class="header" align="horizontal">
     <titledbutton class="left-header-text" value="&smtpServer.label;"/>
     <spring class="header-spring" flex="1"/>
@@ -62,6 +64,6 @@
 
   <box align="horizontal">
     <spring flex="100%"/>
-    <button value="&advanced.label;" onclick="window.openDialog('chrome://messenger/content/SmtpServerList.xul', 'smtp', 'modal,chrome');"/>
+    <button value="&advanced.label;" oncommand="onAdvanced(event);"/>
   </box>
 </window>
