@@ -932,7 +932,13 @@ sub insert
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'mailrecipients'} =  { 'changer' => $::COOKIE{'Bugzilla_login'},
                                  'owner'   => $owner };
-  $vars->{'bugid'} = $::FORM{'bugid'};
+  my $bugid = $::FORM{'bugid'};
+  detaint_natural($bugid); # don't bother with error condition, we know it'll work
+                           # because of ValidateBugID above.  This is only needed
+                           # for Perl 5.6.0.  If we ever require Perl 5.6.1 or
+                           # newer, or detaint something other than $::FORM{'bugid'}
+                           # in ValidateBugID above, then this can go away.
+  $vars->{'bugid'} = $bugid;
   $vars->{'attachid'} = $attachid;
   $vars->{'description'} = $description;
   $vars->{'contenttypemethod'} = $::FORM{'contenttypemethod'};
