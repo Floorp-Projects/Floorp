@@ -5499,8 +5499,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     // box is first because it is created the most.
       // BOX CONSTRUCTION
     if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || 
-        aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol ||
-        aTag == nsXULAtoms::radiogroup 
+        aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol
 #ifdef XULTREE
         || aTag == nsXULAtoms::treecell  
 #endif
@@ -5968,15 +5967,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       rv = NS_NewProgressMeterFrame(aPresShell, &newFrame);
     }
     // End of PROGRESS METER CONSTRUCTION logic
-
-    // XULCHECKBOX CONSTRUCTION
-    else if (aTag == nsXULAtoms::checkbox ||
-             aTag == nsXULAtoms::radio) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewCheckBoxFrame(aPresShell, &newFrame);
-    }
-    // End of XULCHECKBOX CONSTRUCTION logic
 
     // STACK CONSTRUCTION
     else if (aTag == nsXULAtoms::stack) {
