@@ -306,6 +306,10 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                          GTK_SIGNAL_FUNC(handle_delete_event),
                          this);
     }
+  case eBorderStyle_none:
+  case eBorderStyle_3DChildWindow:
+  default:
+    break;
   }
 
   // Initialize this window instance as a drag target.
@@ -864,6 +868,9 @@ nsWindow::InitDrawEvent(GdkRectangle * aArea,
   aPaintEvent.widget  = (nsWidget *) this;
 
   aPaintEvent.eventStructType = NS_PAINT_EVENT;
+  aPaintEvent.point.x = 0;
+  aPaintEvent.point.y = 0;
+  aPaintEvent.time = 0;
 
   if (aArea != NULL) 
   {
