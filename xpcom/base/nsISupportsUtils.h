@@ -102,7 +102,7 @@ public:
    * @param aInstancePtr [out] A pointer to an interface pointer to
    * receive the result.
    * @return <b>NS_OK</b> if the interface is supported by the associated
-   * instance, <b>NS_NOINTERFACE</b> if it is not. 
+   * instance, <b>NS_NOINTERFACE</b> if it is not.
    * <b>NS_ERROR_INVALID_POINTER</b> if <i>aInstancePtr</i> is <b>NULL</b>.
    */
   NS_IMETHOD QueryInterface(REFNSIID aIID,
@@ -220,11 +220,11 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)         \
  * Some convenience macros for implementing QueryInterface
  */
 
-/** 
+/**
  * This implements query interface with two assumptions: First, the
- * class in question implements nsISupports and it's own interface and
+ * class in question implements nsISupports and its own interface and
  * nothing else. Second, the implementation of the class's primary
- * inheritance chain leads to it's own interface.
+ * inheritance chain leads to its own interface.
  *
  * @param _class The name of the class implementing the method
  * @param _classiiddef The name of the #define symbol that defines the IID
@@ -304,11 +304,11 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 /**
  * Declare that you're going to inherit from something that already
  * implements nsISupports, but also implements an additional interface, thus
- * causing an ambiguity. In this case you don't need another mRefCnt, you 
+ * causing an ambiguity. In this case you don't need another mRefCnt, you
  * just need to forward the definitions to the appropriate superclass. E.g.
  *
  * class Bar : public Foo, public nsIBar {  // both provide nsISupports
- * public: 
+ * public:
  *   NS_DECL_ISUPPORTS_INHERITED
  *   ...other nsIBar and Bar methods...
  * };
@@ -323,7 +323,7 @@ public:                                                                     \
 /**
  * These macros can be used in conjunction with NS_DECL_ISUPPORTS_INHERITED
  * to implement the nsISupports methods, forwarding the invocations to a
- * superclass that already implements nsISupports. 
+ * superclass that already implements nsISupports.
  *
  * Note that I didn't make these inlined because they're virtual methods.
  */
@@ -420,11 +420,11 @@ nsrefcnt _class::Release(void)                         \
  * Some convenience macros for implementing QueryInterface
  */
 
-/** 
+/**
  * This implements query interface with two assumptions: First, the
- * class in question implements nsISupports and it's own interface and
+ * class in question implements nsISupports and its own interface and
  * nothing else. Second, the implementation of the class's primary
- * inheritance chain leads to it's own interface.
+ * inheritance chain leads to its own interface.
  *
  * @param _class The name of the class implementing the method
  * @param _classiiddef The name of the #define symbol that defines the IID
@@ -675,17 +675,19 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #ifdef MOZ_TRACE_XPCOM_REFCNT
 #define NS_IF_RELEASE(_ptr)                                         \
   PR_BEGIN_MACRO                                                    \
-    ((0 != (_ptr))                                                  \
-    ? ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
-                                          __FILE__, __LINE__))      \
-    : 0);                                                           \
-    (_ptr) = 0;                                                     \
+    if (_ptr) {                                                     \
+      (nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(),  \
+                                        __FILE__, __LINE__);        \
+      (_ptr) = 0;                                                   \
+    }                                                               \
   PR_END_MACRO
 #else
-#define NS_IF_RELEASE(_ptr)                   \
-  PR_BEGIN_MACRO                              \
-    ((0 != (_ptr)) ? (_ptr)->Release() : 0);  \
-    (_ptr) = 0;                               \
+#define NS_IF_RELEASE(_ptr)                                         \
+  PR_BEGIN_MACRO                                                    \
+    if (_ptr) {                                                     \
+      (_ptr)->Release();                                            \
+      (_ptr) = 0;                                                   \
+    }                                                               \
   PR_END_MACRO
 #endif
 
