@@ -418,6 +418,18 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
     {
 #ifdef XPTI_HAS_ZIP_SUPPORT
         zipItem = &aWorkingSet->GetZipItemAt(aTypelibRecord.GetZipItemIndex());
+        
+        // See the big comment below in the 'non-zip' case...
+        if(zipItem->GetGuts())
+        {
+            NS_ERROR("Trying to load an xpt file from a zip twice");    
+            
+            // Force an autoreg on next run
+            (void) xptiManifest::Delete(this);
+
+            return PR_FALSE;
+        }
+        
         LOG_LOAD(("# loading zip item %s::%s\n", fileRecord->GetName(), zipItem->GetName()));
         header = xptiZipLoader::ReadXPTFileFromZip(file, zipItem->GetName(), aWorkingSet);
 #else
@@ -426,6 +438,37 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
     } 
     else
     {
+        // The file would only have guts already if we previously failed to 
+        // find an interface info in a file where the manifest claimed it was 
+        // going to be. 
+        //
+        // Normally, when the file gets loaded (and the guts set) then all 
+        // interfaces would also be resolved. So, if we are here again for
+        // the same file then there must have been some interface that was 
+        // expected but not present. Now we are explicitly trying to find it
+        // and it isn't going to be there this time either.
+        //
+        // This is an assertion style error in a DEBUG build because it shows 
+        // that we failed to detect this in autoreg. For release builds (where
+        // autoreg is not run on every startup) it is just bad. But by returning
+        // PR_FALSE we mark this interface as RESOLVE_FAILED and get on with 
+        // things without crashing or anything.
+        //
+        // We don't want to do an autoreg here because this is too much of an 
+        // edge case (and in that odd case it might autoreg multiple times if
+        // many interfaces had been removed). But, by deleting the manifest we 
+        // force the system to get it right on the next run.
+        
+        if(fileRecord->GetGuts())
+        {
+            NS_ERROR("Trying to load an xpt file twice");    
+            
+            // Force an autoreg on next run
+            (void) xptiManifest::Delete(this);
+
+            return PR_FALSE;
+        }
+
         LOG_LOAD(("^ loading file %s\n", fileRecord->GetName()));
         header = ReadXPTFile(file, aWorkingSet);
     } 
