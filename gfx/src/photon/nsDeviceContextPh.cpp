@@ -76,6 +76,7 @@ nsDeviceContextPh :: nsDeviceContextPh( )
 
   mSpec = nsnull;
   mDC = nsnull;
+	mGC = nsnull;
 
 	mIsPrintingStart = 0;
 	}
@@ -85,6 +86,8 @@ nsDeviceContextPh :: ~nsDeviceContextPh( ) {
 
   NS_IF_RELEASE(surf);    //this clears the surf pointer...
   mSurface = nsnull;
+
+	if( mGC ) PgDestroyGC( mGC ); /* we are always the owners of this gc */
 
 	if( mFontLoadCache ) { 
 #ifdef DEBUG_Adrian
@@ -239,7 +242,8 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *
 
 	  surf = new nsDrawingSurfacePh();
 	  if( nsnull != surf ) {
-			rv = surf->Init( NULL );
+			mGC = PgCreateGC( 0 );
+			rv = surf->Init( mGC );
 			if( NS_OK == rv ) rv = pContext->Init(this, surf);
 			else rv = NS_ERROR_OUT_OF_MEMORY;
 			}
@@ -346,22 +350,22 @@ void nsDeviceContextPh :: DefaultSystemFonts( ) const
 {
 	FaceMessageFont = "MessageFont";
 	SizeMessageFont = 9;
-	StyleMessageFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	StyleMessageFont = NS_FONT_STYLE_NORMAL;
 	WeightMessageFont = NS_FONT_WEIGHT_NORMAL;
 
 	FaceMenuFont = "MenuFont";
 	SizeMenuFont = 9;
-	StyleMenuFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	StyleMenuFont = NS_FONT_STYLE_NORMAL;
 	WeightMenuFont = NS_FONT_WEIGHT_NORMAL;
 
 	FaceBalloonFont = "BalloonFont";
 	SizeBalloonFont = 9;
-	StyleBalloonFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	StyleBalloonFont = NS_FONT_STYLE_NORMAL;
 	WeightBalloonFont = NS_FONT_WEIGHT_NORMAL;
 
 	FaceGeneralFont = "TextFont";
 	SizeGeneralFont = 9;
-	StyleGeneralFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	StyleGeneralFont = NS_FONT_STYLE_NORMAL;
 	WeightGeneralFont = NS_FONT_WEIGHT_NORMAL;
 }
 
@@ -576,11 +580,9 @@ NS_IMETHODIMP nsDeviceContextPh :: AbortDocument( void ) {
 NS_IMETHODIMP nsDeviceContextPh :: BeginPage( void ) {
 	if( mSpec ) {
 		PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
-		if( mIsPrintingStart ) {
-			PpPrintNewPage( pc );
-			mIsPrintingStart = 0;
-			}
 		PpContinueJob( pc );
+		if( !mIsPrintingStart ) PpPrintNewPage( pc );
+		mIsPrintingStart = 0;
 		}
 	return NS_OK;
 	}
