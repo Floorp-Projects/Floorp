@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.28 $ ';
+$Version = '$Revision: 1.29 $ ';
 
 
 sub PrintUsage {
@@ -386,7 +386,7 @@ sub BuildIt {
     $StartTime = time;
     
     if ($UseTimeStamp) {
-      $BuildStart = `date '+%D %H:%M'`;
+      $BuildStart = `date '+%m/%d/%Y %H:%M'`;
       chomp($BuildStart);
       $CVSCO .= " -D '$BuildStart'";
     }
