@@ -30,6 +30,7 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsITextContent.h"
 
 static NS_DEFINE_IID(kIDOMHTMLScriptElementIID, NS_IDOMHTMLSCRIPTELEMENT_IID);
 
@@ -80,7 +81,6 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
-  nsString mText;
 };
 
 nsresult
@@ -139,17 +139,65 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLScriptElement::GetText(nsString& aValue)
 {
-  // XXX out of memory errors
-  aValue = mText;
+  PRInt32 i, count = 0;
+  nsresult rv = NS_OK;
+
+  aValue.Truncate();
+
+  ChildCount(count);
+
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+
+    rv = ChildAt(i, *getter_AddRefs(child));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(child));
+
+    if (node) {
+      nsAutoString tmp;
+      node->GetNodeValue(tmp);
+
+      aValue.Append(tmp);
+    }
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLScriptElement::SetText(const nsString& aValue)
 {
-  // XXX out of memory errors
-  mText = aValue;
-  return NS_OK;
+  nsCOMPtr<nsIContent> content;
+  PRInt32 i, count = 0;
+  nsresult rv = NS_OK;
+
+  ChildCount(count);
+
+  if (count) {
+    for (i = count-1; i > 1; i--) {
+      RemoveChildAt(i, PR_FALSE);
+    }
+
+    rv = ChildAt(0, *getter_AddRefs(content));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    rv = NS_NewTextNode(getter_AddRefs(content));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = InsertChildAt(content, 0, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (content) {
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+
+    if (node) {
+      rv = node->SetNodeValue(aValue);
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -251,12 +299,7 @@ nsHTMLScriptElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
 #ifdef DEBUG
-  PRUint32 sum;
-  mInner.SizeOf(aSizer, &sum, sizeof(*this));
-  PRUint32 ssize;
-  mText.SizeOf(aSizer, &ssize);
-  sum = sum - sizeof(mText) + ssize;
-  *aResult = sum;
+  mInner.SizeOf(aSizer, aResult, sizeof(*this));
 #endif
   return NS_OK;
 }
