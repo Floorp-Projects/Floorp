@@ -326,22 +326,12 @@ Contributor(s): ______________________________________. -->
   </toolbar>
 
   <toolbar id="nav-bar" class="decorated main-bar" chromeclass="toolbar" persist="collapsed">
-	<box align="horizontal" flex="100%" style="overflow: hidden">
-      <titledbutton id="back-button" class="button32" crop="right" align="top" observes="canGoBack" />  
-
-      <titledbutton id="forward-button" class="button32" crop="right" align="top" observes="canGoForward" />
-    
-      <!-- Right now only regular reload is supported.  When the
-      functionality is available, look for 'Shift' key pressed state
-      and pass on appropriate reload type. (The shift functionality
-      is available.  There's a shiftDown field in the event object.)
-      -->
-      <titledbutton id="reload-button" class="button32" crop="right" align="top" observes="canReload"/>
-   
-      <titledbutton id="stop-button" class="button32" crop="right" align="top" onclick="BrowserStop()">
-        <observes element="canStop" attribute="disabled"
-                  onbroadcast="BrowserCanStop()"/>
-      </titledbutton>
+      <button class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack" />  
+      <button class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward" />
+      <button class="large-toolbar left" id="reload-button" crop="right" orient="vertical" observes="canReload"/>
+      <button class="large-toolbar left" id="stop-button" crop="right" orient="vertical" onclick="BrowserStop()">
+        <observes element="canStop" attribute="disabled" onbroadcast="BrowserCanStop()"/>
+      </button>
 
           <!-- changed : the url field is now grouped with search -->
           <box align="vertical" flex="100%">
