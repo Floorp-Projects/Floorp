@@ -284,6 +284,7 @@ pref("imageblocker.enabled",                false);
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
+pref("intl.collationKeyAsCodePoint",        false);
 
 pref("intl.charsetmenu.browser.static",    "iso-8859-1");
 pref("intl.charsetmenu.mailedit",          "iso-8859-1, iso-8859-2, iso-8859-3, iso-8859-4, iso-8859-9, iso-8859-10, iso-8859-14, iso-8859-15, iso-2022-jp, big5, gb2312, euc-kr, utf-8, koi8-r, windows-1251, koi8-u, iso-8859-7, viscii, tis-620, armscii-8");
