@@ -112,6 +112,7 @@
       <outlinercol id="folderNameCol"
                    flex="5"
                    label="&nameColumn.label;"
+                   crop="center"
                    persist="width"
                    ignoreincolumnpicker="true"
                    primary="true"
