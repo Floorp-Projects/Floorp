@@ -5035,7 +5035,7 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
   } else {
     // this means there were no printers
     // XXX the ifdefs are temporary until they correctly implement Available Printers
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     rv = NS_OK;
 #else
     ShowPrintErrorDialog(aErrorCode, aIsPrinting);
