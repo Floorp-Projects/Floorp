@@ -48,6 +48,8 @@ class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsIFormControlFrame;
+class nsIFormControl;
+class nsIForm;
 
 class nsGenericHTMLElement : public nsGenericElement {
 public:
@@ -102,6 +104,13 @@ public:
                               nsIAtom*& aName) const;
   nsresult GetAttributeCount(PRInt32& aResult) const;
   nsresult List(FILE* out, PRInt32 aIndent) const;
+  nsresult SetParentForFormControls(nsIContent* aParent,
+                                    nsIFormControl* aControl,
+                                    nsIForm* aForm);
+  nsresult SetDocumentForFormControls(nsIDocument* aDocument,
+                                      PRBool aDeep,
+                                      nsIFormControl* aControl,
+                                      nsIForm* aForm);
 
   // Implementation for nsIHTMLContent
   nsresult Compact();

@@ -73,6 +73,9 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsIFormControlFrame.h"  
+#include "nsIForm.h"
+#include "nsIFormControl.h"
+#include "nsIDOMHTMLFormElement.h"
 
 // XXX todo: add in missing out-of-memory checks
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
@@ -90,6 +93,7 @@ static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -421,6 +425,99 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   }
 
   NS_RELEASE(htmlContent);
+  return result;
+}
+
+static nsresult
+FindFormParent(nsIContent* aParent,
+               nsIFormControl* aControl)
+{
+  nsresult result = NS_OK;
+  nsIContent* parent = aParent;
+  nsIDOMHTMLFormElement* form;
+    
+  // Will be released below
+  NS_IF_ADDREF(parent);
+  while (nsnull != parent) {
+    nsIAtom* tag;
+    PRInt32 nameSpaceID;
+    nsIContent* tmp;
+    
+    parent->GetTag(tag);
+    parent->GetNameSpaceID(nameSpaceID);
+      
+    // If the current ancestor is a form, set it as our form
+    if ((tag == nsHTMLAtoms::form) && (kNameSpaceID_HTML == nameSpaceID)) {
+      result = parent->QueryInterface(kIDOMHTMLFormElementIID, 
+                                      (void**)&form);
+      if (NS_SUCCEEDED(result)) {
+        result = aControl->SetForm(form);
+        NS_RELEASE(form);
+      }
+      NS_IF_RELEASE(tag);
+      NS_RELEASE(parent);
+      break;
+    }
+    NS_IF_RELEASE(tag);
+      
+    tmp = parent;
+    parent->GetParent(parent);
+    NS_RELEASE(tmp);
+  }
+
+  return result;
+}
+
+
+nsresult
+nsGenericHTMLElement::SetParentForFormControls(nsIContent* aParent,
+                                               nsIFormControl* aControl,
+                                               nsIForm* aForm)
+{
+  nsresult result = NS_OK;
+
+  if ((nsnull == aParent) && (nsnull != aForm)) {
+    result = aControl->SetForm(nsnull);
+  }
+  // If we have a new parent and either we had an old parent or we
+  // don't have a form, search for a containing form.  If we didn't
+  // have an old parent, but we do have a form, we shouldn't do the
+  // search. In this case, someone (possibly the content sink) has
+  // already set the form for us.
+  else if ((nsnull != mDocument) && (nsnull != aParent) && 
+           ((nsnull != mParent) || (nsnull == aForm))) {
+    result = FindFormParent(aParent, aControl);
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    result = SetParent(aParent);
+  }
+   
+  return result;
+}
+
+nsresult 
+nsGenericHTMLElement::SetDocumentForFormControls(nsIDocument* aDocument,
+                                                 PRBool aDeep,
+                                                 nsIFormControl* aControl,
+                                                 nsIForm* aForm)
+{
+  nsresult result = NS_OK;
+  if ((nsnull != aDocument) && (nsnull != mParent) && (nsnull == aForm)) {
+    // XXX Do this check since anonymous frame content was also being
+    // added to the form. To make sure that the form control isn't
+    // anonymous, we ask the parent if it knows about it.
+    PRInt32 index;
+    mParent->IndexOf(mContent, index);
+    if (-1 != index) {
+      result = FindFormParent(mParent, aControl);
+    }
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    result = SetDocument(aDocument, aDeep);
+  }
+
   return result;
 }
 
