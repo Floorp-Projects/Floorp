@@ -32,6 +32,17 @@ DEPTH=..\..\..\..
 #//
 #//------------------------------------------------------------------------
 MODULE  = smime
+REQUIRES = \
+	xpcom \
+	string \
+	mime \
+	msgbase \
+	pref \
+	necko \
+	uconv \
+	intl \
+	$(NULL)
+
 #EXPORTS =
 # Exported headers here!!!               	
 #	          $(NULL)
