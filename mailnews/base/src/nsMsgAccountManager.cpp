@@ -198,7 +198,7 @@ private:
 
   // add identities if they don't alreadby exist in the given nsISupportsArray
   static PRBool addIdentityIfUnique(nsISupports *element, void *aData);
-  
+
   //
   // server enumerators
   // ("element" is always a server)
@@ -222,6 +222,8 @@ private:
   PRInt32 MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum);
 
+  static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
+  
   nsresult getPrefService();
   nsIPref *m_prefs;
 };
@@ -271,7 +273,8 @@ nsMsgAccountManager::~nsMsgAccountManager()
 }
 
 nsresult
-nsMsgAccountManager::getPrefService() {
+nsMsgAccountManager::getPrefService()
+{
 
   // get the prefs service
   nsresult rv = NS_OK;
@@ -285,6 +288,24 @@ nsMsgAccountManager::getPrefService() {
 
   /* m_prefs is good now */
   return NS_OK;
+}
+
+char *
+nsMsgAccountManager::getUniqueKey(const char* prefix, nsHashtable *hashTable)
+{
+  PRInt32 i=1;
+  char key[10];
+  PRBool unique=PR_FALSE;
+
+  do {
+    PR_snprintf(key, 10, "%s%d",prefix, i++);
+    nsStringKey hashKey(key);
+    void* hashElement = hashTable->Get(&hashKey);
+    
+    if (!hashElement) unique=PR_TRUE;
+  } while (!unique);
+
+  return nsCRT::strdup(key);
 }
 
 /* called if the prefs service goes offline */
@@ -304,8 +325,7 @@ nsMsgAccountManager::CreateIdentity(nsIMsgIdentity **_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
 
-  /* XXX create an identity key that is unique within m_identities */
-  const char *key="xxxx";
+  char *key = getUniqueKey("id", &m_identities);
 
   return createKeyedIdentity(key, _retval);
 }
@@ -372,9 +392,7 @@ nsMsgAccountManager::CreateIncomingServer(const char* type,
 {
 
   if (!_retval) return NS_ERROR_NULL_POINTER;
-  /* XXX todo - create a key that is unique among m_incomingServers */
-  const char *key = "xxxx";
-
+  const char *key = getUniqueKey("server", &m_incomingServers);
   return createKeyedServer(key, type, _retval);
 
 }
