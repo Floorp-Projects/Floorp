@@ -122,7 +122,32 @@ print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
 system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific");
 system("$inDistPath\\nszip.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
 
-print " done!\n";
+print " done!\n\n";
+
+if((!(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll")) ||
+   (!(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcirt.dll")))
+{
+  print "***\n";
+  print "**\n";
+  print "**  The following required Microsoft redistributable system files were not found\n";
+  print "**  in $ENV{MOZ_SRC}\\redist\\microsoft\\system:\n";
+  print "**\n";
+  if(!(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll"))
+  {
+    print "**    msvcrt.dll\n";
+  }
+  if(!(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcirt.dll"))
+  {
+    print "**    msvcirt.dll\n";
+  }
+  print "**\n";
+  print "**  The above files are required by the installer and the browser.  If you attempt\n";
+  print "**  to run the installer, you may encounter the following bug:\n";
+  print "**\n";
+  print "**    http://bugzilla.mozilla.org/show_bug.cgi?id=27601\n";
+  print "**\n";
+  print "***\n\n";
+}
 
 # end of script
 exit(0);
