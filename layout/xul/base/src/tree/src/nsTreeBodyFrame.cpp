@@ -329,6 +329,16 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+static void 
+AdjustForBorderPadding(nsIStyleContext* aContext, nsRect& aRect)
+{
+  nsMargin m(0,0,0,0);
+  nsStyleBorderPadding  bPad;
+  aContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  bPad.GetBorderPadding(m);
+  aRect.Deflate(m);
+}
+
 NS_IMETHODIMP nsOutlinerBodyFrame::GetView(nsIOutlinerView * *aView)
 {
   *aView = mView;
@@ -547,7 +557,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, PRUnichar** aColID)
+NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, PRUnichar** aColID,
+                                             PRUnichar** aChildElt)
 {
   // Ensure we have a row height.
   if (mRowHeight == 0)
@@ -591,18 +602,155 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
   nscoord currX = mInnerBox.x;
   for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
        currCol = currCol->GetNext()) {
-    nsRect colRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
-    PRInt32 overflow = colRect.x+colRect.width-(mInnerBox.x+mInnerBox.width);
+    nsRect cellRect(currX, mInnerBox.y+mRowHeight*(*aRow-mTopRowIndex), currCol->GetWidth(), mRowHeight);
+    PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
     if (overflow > 0)
-      colRect.width -= overflow;
+      cellRect.width -= overflow;
 
-    if (x >= colRect.x && x < colRect.x + colRect.width)
+    if (x >= cellRect.x && x < cellRect.x + cellRect.width) {
+      // We know the column hit now.
       *aColID = nsXPIDLString::Copy(currCol->GetID());
 
-    currX += colRect.width;
+      if (currCol->IsCycler()) {
+        // Cyclers contain only images.  Fill this in immediately and return.
+        nsAutoString image; image.AssignWithConversion("image");
+        *aChildElt = nsXPIDLString::Copy(image.GetUnicode());
+      }
+      else
+        GetItemWithinCellAt(x, cellRect, *aRow, currCol, aChildElt);
+      break;
+    }
+
+    currX += cellRect.width;
   }
+
   return NS_OK;
 }
+
+nsresult
+nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, 
+                                         PRInt32 aRowIndex,
+                                         nsOutlinerColumn* aColumn, PRUnichar** aChildElt)
+{
+  // Obtain the properties for our cell.
+  PrefillPropertyArray(aRowIndex, aColumn);
+  mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
+
+  // Resolve style for the cell.
+  nsCOMPtr<nsIStyleContext> cellContext;
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
+
+  // Obtain the margins for the cell and then deflate our rect by that 
+  // amount.  The cell is assumed to be contained within the deflated rect.
+  nsRect cellRect(aCellRect);
+  const nsStyleMargin* cellMarginData = (const nsStyleMargin*)cellContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin cellMargin;
+  cellMarginData->GetMargin(cellMargin);
+  cellRect.Deflate(cellMargin);
+
+  // Adjust the rect for its border and padding.
+  AdjustForBorderPadding(cellContext, cellRect);
+
+  if (aX < cellRect.x || aX >= cellRect.x + cellRect.width) {
+    // The user clicked within the cell's margins/borders/padding.  This constitutes a click on the cell.
+    nsAutoString cell; cell.AssignWithConversion("cell");
+    *aChildElt = nsXPIDLString::Copy(cell.GetUnicode());
+    return NS_OK;
+  }
+
+  nscoord currX = cellRect.x;
+  nscoord remainingWidth = cellRect.width;
+
+  // XXX Handle right alignment hit testing.
+
+  if (aColumn->IsPrimary()) {
+    // If we're the primary column, we have indentation and a twisty.
+    PRInt32 level;
+    mView->GetLevel(aRowIndex, &level);
+
+    currX += mIndentation*level;
+    remainingWidth -= mIndentation*level;
+
+    if (aX < currX) {
+      // The user clicked within the indentation.
+      nsAutoString cell; cell.AssignWithConversion("cell");
+      *aChildElt = nsXPIDLString::Copy(cell.GetUnicode());
+      return NS_OK;
+    }
+
+    // Always leave space for the twisty.
+    nsRect twistyRect(currX, cellRect.y, remainingWidth, cellRect.height);
+    PRBool hasTwisty = PR_FALSE;
+    PRBool isContainer = PR_FALSE;
+    mView->IsContainer(aRowIndex, &isContainer);
+    if (isContainer) {
+      PRBool isContainerEmpty = PR_FALSE;
+      mView->IsContainerEmpty(aRowIndex, &isContainerEmpty);
+      if (!isContainerEmpty)
+        hasTwisty = PR_TRUE;
+    }
+
+    // Resolve style for the twisty.
+    nsCOMPtr<nsIStyleContext> twistyContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
+
+    // We will treat a click as hitting the twisty if it happens on the margins, borders, padding,
+    // or content of the twisty object.  By allowing a "slop" into the margin, we make it a little
+    // bit easier for a user to hit the twisty.  (We don't want to be too picky here.)
+    nsRect imageSize = GetImageSize(twistyContext);
+    const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
+    nsMargin twistyMargin;
+    twistyMarginData->GetMargin(twistyMargin);
+    imageSize.Inflate(twistyMargin);
+    twistyRect.width = imageSize.width;
+
+    // Now we test to see if aX is actually within the twistyRect.  If it is, and if the item should
+    // have a twisty, then we return "twisty".  If it is within the rect but we shouldn't have a twisty,
+    // then we return "cell".
+    if (aX >= twistyRect.x && aX < twistyRect.x + twistyRect.width) {
+      if (hasTwisty) {
+        nsAutoString twisty; twisty.AssignWithConversion("twisty");
+        *aChildElt = nsXPIDLString::Copy(twisty.GetUnicode());
+      }
+      else {
+        nsAutoString cell; cell.AssignWithConversion("cell");
+        *aChildElt = nsXPIDLString::Copy(cell.GetUnicode());
+      }
+      return NS_OK;
+    }
+
+    currX += twistyRect.width;
+    remainingWidth -= twistyRect.width;    
+  }
+  
+  // Now test to see if the user hit the icon for the cell.
+  nsRect iconRect(currX, cellRect.y, remainingWidth, cellRect.height);
+  
+  // Resolve style for the image.
+  nsCOMPtr<nsIStyleContext> imageContext;
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
+
+  nsRect iconSize = GetImageSize(imageContext);
+  const nsStyleMargin* imageMarginData = (const nsStyleMargin*)imageContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin imageMargin;
+  imageMarginData->GetMargin(imageMargin);
+  iconSize.Inflate(imageMargin);
+  iconRect.width = iconSize.width;
+
+  if (aX >= iconRect.x && aX < iconRect.x + iconRect.width) {
+    // The user clicked on the image.
+    nsAutoString image; image.AssignWithConversion("image");
+    *aChildElt = nsXPIDLString::Copy(image.GetUnicode());
+    return NS_OK;
+  }
+
+  // Just assume "text".
+  // XXX For marquee selection, we'll have to make this more precise and do text measurement.
+  nsAutoString text; text.AssignWithConversion("text");
+  *aChildElt = nsXPIDLString::Copy(text.GetUnicode());
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 {
@@ -854,7 +1002,7 @@ PRInt32 nsOutlinerBodyFrame::GetRowHeight()
   // + the specified margins.
   nsCOMPtr<nsIStyleContext> rowContext;
   mScratchArray->Clear();
-  GetPseudoStyleContext(mPresContext, nsXULAtoms::mozoutlinerrow, getter_AddRefs(rowContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinerrow, getter_AddRefs(rowContext));
   if (rowContext) {
     const nsStylePosition* myPosition = (const nsStylePosition*)
           rowContext->GetStyleData(eStyleStruct_Position);
@@ -881,7 +1029,7 @@ PRInt32 nsOutlinerBodyFrame::GetIndentation()
   // Look up the correct indentation.  It is equal to the specified indentation width.
   nsCOMPtr<nsIStyleContext> indentContext;
   mScratchArray->Clear();
-  GetPseudoStyleContext(mPresContext, nsXULAtoms::mozoutlinerindentation, getter_AddRefs(indentContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinerindentation, getter_AddRefs(indentContext));
   if (indentContext) {
     const nsStylePosition* myPosition = (const nsStylePosition*)
           indentContext->GetStyleData(eStyleStruct_Position);
@@ -902,16 +1050,6 @@ nsRect nsOutlinerBodyFrame::GetInnerBox()
   bPad.GetBorderPadding(m);
   r.Deflate(m);
   return r;
-}
-
-static void 
-AdjustForBorderPadding(nsIStyleContext* aContext, nsRect& aRect)
-{
-  nsMargin m(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  aContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
-  bPad.GetBorderPadding(m);
-  aRect.Deflate(m);
 }
 
 // Painting routines
@@ -1019,7 +1157,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
   // Resolve style for the column.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> colContext;
-  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinercolumn, getter_AddRefs(colContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinercolumn, getter_AddRefs(colContext));
 
   // Obtain the margins for the cell and then deflate our rect by that 
   // amount.  The cell is assumed to be contained within the deflated rect.
@@ -1055,7 +1193,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
   // Resolve style for the row.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> rowContext;
-  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerrow, getter_AddRefs(rowContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinerrow, getter_AddRefs(rowContext));
 
   // Obtain the margins for the row and then deflate our rect by that 
   // amount.  The row is assumed to be contained within the deflated rect.
@@ -1110,7 +1248,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
   // Resolve style for the cell.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> cellContext;
-  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
 
   // Obtain the margins for the cell and then deflate our rect by that 
   // amount.  The cell is assumed to be contained within the deflated rect.
@@ -1148,7 +1286,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
 
     // Resolve the style to use for the connecting lines.
     nsCOMPtr<nsIStyleContext> lineContext;
-    GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
     const nsStyleDisplay* displayStyle = (const nsStyleDisplay*)lineContext->GetStyleData(eStyleStruct_Display);
     
     if (displayStyle->IsVisibleOrCollapsed() && level && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
@@ -1244,7 +1382,7 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
 
   // Resolve style for the twisty.
   nsCOMPtr<nsIStyleContext> twistyContext;
-  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
 
   // Obtain the margins for the twisty and then deflate our rect by that 
   // amount.  The twisty is assumed to be contained within the deflated rect.
@@ -1316,7 +1454,7 @@ nsOutlinerBodyFrame::PaintImage(int                  aRowIndex,
 {
   // Resolve style for the image.
   nsCOMPtr<nsIStyleContext> imageContext;
-  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
 
   // Obtain the margins for the twisty and then deflate our rect by that 
   // amount.  The twisty is assumed to be contained within the deflated rect.
@@ -1401,7 +1539,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
   // Resolve style for the text.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> textContext;
-  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinercelltext, getter_AddRefs(textContext));
+  GetPseudoStyleContext(nsXULAtoms::mozoutlinercelltext, getter_AddRefs(textContext));
 
   // Obtain the margins for the text and then deflate our rect by that 
   // amount.  The text is assumed to be contained within the deflated rect.
@@ -1697,10 +1835,10 @@ nsOutlinerBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 
 // The style cache.
 nsresult 
-nsOutlinerBodyFrame::GetPseudoStyleContext(nsIPresContext* aPresContext, nsIAtom* aPseudoElement, 
+nsOutlinerBodyFrame::GetPseudoStyleContext(nsIAtom* aPseudoElement, 
                                            nsIStyleContext** aResult)
 {
-  return mStyleCache.GetStyleContext(this, aPresContext, mContent, mStyleContext, aPseudoElement,
+  return mStyleCache.GetStyleContext(this, mPresContext, mContent, mStyleContext, aPseudoElement,
                                      mScratchArray, aResult);
 }
 

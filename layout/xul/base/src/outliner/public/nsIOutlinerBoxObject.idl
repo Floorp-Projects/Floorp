@@ -78,8 +78,10 @@ interface nsIOutlinerBoxObject : nsISupports
   void invalidateRange(in long startIndex, in long endIndex);
   void invalidateScrollbar();
 
-  // A hit test that can tell you what cell the mouse is over.
-  void getCellAt(in long x, in long y, out long row, out wstring colID);
+  // A hit test that can tell you what cell the mouse is over.  Row is the row index
+  // hit.  ColID is the column hit.  ChildElt is the pseudoelement hit: this can have
+  // values of "cell", "twisty", "image", and "text".
+  void getCellAt(in long x, in long y, out long row, out wstring colID, out wstring childElt);
 
   // The view is responsible for calling these notification methods when
   // rows are added or removed.  Index is the position at which the new
