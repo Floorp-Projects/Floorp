@@ -83,9 +83,9 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
   /* do gif init stuff */
   /* Always decode to 24 bit pixdepth */
   
-  PRBool created = gif_create(&mGIFStruct);
-  NS_ASSERTION(created, "gif_create failed");
-  if (!created)
+  mGIFStruct = (gif_struct *)PR_CALLOC(sizeof(gif_struct));
+  NS_ASSERTION(mGIFStruct, "gif_create failed");
+  if (!mGIFStruct)
     return NS_ERROR_FAILURE;
 
   // Call GIF decoder init routine

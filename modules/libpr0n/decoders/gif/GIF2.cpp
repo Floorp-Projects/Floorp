@@ -428,18 +428,6 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
   return 0;
 }
 
-PRBool gif_create(gif_struct **gs)
-{
-  gif_struct *ret = PR_NEWZAP(gif_struct);
-
-  if (!ret)
-    return PR_FALSE;
-
-  *gs = ret;
-
-  return PR_TRUE;
-}
-
 static inline void *gif_calloc(size_t n, size_t s)
 {
   if (!gGifAllocator)
@@ -930,11 +918,9 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         gs->local_colormap_size = num_colors;
 
         /* Switch to the new local palette after it loads */
-        gs->is_local_colormap_defined = PR_TRUE;
         GETN(gs->local_colormap_size * 3, gif_image_colormap);
       } else {
         /* Switch back to the global palette */
-        gs->is_local_colormap_defined = PR_FALSE;
         GETN(1, gif_lzw_start);
       }
     }
