@@ -282,14 +282,15 @@ nsPresContext::LoadImage(const nsString& aURL,
   if (NS_OK != rv) {
     return rv;
   }
-  rv = loader->Init(this, mImageGroup, aURL, aTargetFrame, aNeedSizeUpdate);
-  if (NS_OK != rv) {
-    return rv;
-  }
   mImageLoaders.AppendElement(loader);
 
   // Return new loader
   NS_ADDREF(loader);
+
+  rv = loader->Init(this, mImageGroup, aURL, aTargetFrame, aNeedSizeUpdate);
+  if (NS_OK != rv) {
+    return rv;
+  }
   aLoaderResult = loader;
   return NS_OK;
 }
