@@ -55,8 +55,6 @@
 #include "nsIScrollableView.h"
 #include "nsIDocShell.h"
 #include "nsICanvasFrame.h"
-#include "nsIPref.h"
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #ifdef DEBUG_rods
 //#define DEBUG_CANVAS_FOCUS
@@ -157,16 +155,11 @@ protected:
   PRPackedBool             mDoPaintFocus;
   nsCOMPtr<nsIPresContext> mPresContext;
 
-  // static members
-  static PRBool       mShowFocusPrefOn;
-
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
-
-PRBool CanvasFrame::mShowFocusPrefOn   = PR_TRUE;
 
 
 //----------------------------------------------------------------------
@@ -231,13 +224,6 @@ CanvasFrame::Init(nsIPresContext*  aPresContext,
 
   if (scrollingView) {
     scrollingView->AddScrollPositionListener((nsIScrollPositionListener *)this);
-  }
-
-  // Get the prefs service
-  nsresult result;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
-  if (NS_SUCCEEDED(result)) {
-    prefs->GetBoolPref("layout.reflow.showframecounts", &mShowFocusPrefOn);
   }
 
   return rv;
