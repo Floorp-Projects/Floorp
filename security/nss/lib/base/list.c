@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.1 $ $Date: 2001/09/19 20:20:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.2 $ $Date: 2001/09/20 20:33:27 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -97,16 +97,36 @@ nsslist_get_matching_element(nssList *list, void *data)
 }
 
 NSS_IMPLEMENT nssList *
-nssList_Create(PRBool threadSafe)
+nssList_Create
+(
+  NSSArena *arenaOpt,
+  PRBool threadSafe
+)
 {
     NSSArena *arena;
     nssList *list;
-    arena = nssArena_Create();
+    arena = (arenaOpt) ? arenaOpt : nssArena_Create();
+    if (!arena) {
+	return (nssList *)NULL;
+    }
     list = nss_ZNEW(arena, nssList);
+    if (!list) {
+	return (nssList *)NULL;
+    }
     if (threadSafe) {
 	list->lock = PZ_NewLock(nssILockOther);
+	if (!list->lock) {
+	    if (arenaOpt) {
+		nss_ZFreeIf(list);
+	    } else {
+		NSSArena_Destroy(arena);
+	    }
+	    return (nssList *)NULL;
+	}
     }
-    list->arena = arena;
+    if (!arenaOpt) {
+	list->arena = arena;
+    }
     list->compareFunc = pointer_compare;
     return list;
 }
@@ -125,26 +145,29 @@ nssList_SetCompareFunction(nssList *list, nssListCompareFunc compareFunc)
     list->compareFunc = compareFunc;
 }
 
-#if 0
-typedef void (* nssListElementDestructorFunc)(void *el);
+NSS_IMPLEMENT nssListCompareFunc
+nssList_GetCompareFunction(nssList *list)
+{
+    return list->compareFunc;
+}
 
 NSS_IMPLEMENT PRStatus
-nssList_DestroyAll(nssList *list, nssListElementDestructorFunc destructor)
+nssList_DestroyElements(nssList *list, nssListElementDestructorFunc destructor)
 {
     PRCList *link;
     nssListElement *node;
     NSSLIST_LOCK_IF(list);
     node = list->head;
-    while (node) {
+    while (node && list->count > 0) {
 	(*destructor)(node->data);
 	link = &node->link;
-	if (link == PR_LIST_TAIL(&list->head->link)) break;
 	node = (nssListElement *)PR_NEXT_LINK(link);
+	PR_REMOVE_LINK(link);
+	--list->count;
     }
     NSSLIST_UNLOCK_IF(list);
     return nssList_Destroy(list);
 }
-#endif
 
 static PRStatus
 nsslist_add_element(nssList *list, void *data)
@@ -217,7 +240,7 @@ nssList_GetElement(nssList *list, void *data)
 }
 
 NSS_IMPLEMENT PRUint32
-nssList_GetNumElements(nssList *list)
+nssList_Count(nssList *list)
 {
     return list->count;
 }
@@ -244,7 +267,7 @@ NSS_IMPLEMENT nssListIterator *
 nssList_CreateIterator(nssList *list)
 {
     nssListIterator *rvIterator;
-    rvIterator = nss_ZNEW(NULL, nssListIterator);
+    rvIterator = nss_ZNEW(list->arena, nssListIterator);
     rvIterator->list = list;
     rvIterator->current = list->head;
     return rvIterator;
@@ -269,7 +292,7 @@ nssListIterator_Next(nssListIterator *iter)
 {
     nssListElement *node;
     PRCList *link;
-    if (iter->current == NULL) {
+    if (iter->list->count == 1 || iter->current == NULL) {
 	/* Reached the end of the list.  Don't change the state, force to
 	 * user to call nssList_Finish to clean up.
 	 */

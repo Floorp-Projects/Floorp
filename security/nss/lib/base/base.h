@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.5 $ $Date: 2001/09/20 00:28:36 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.6 $ $Date: 2001/09/20 20:33:26 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -785,6 +785,7 @@ nssUTF8_Equal
 NSS_EXTERN nssList *
 nssList_Create
 (
+  NSSArena *arenaOpt,
   PRBool threadSafe
 );
 
@@ -795,6 +796,13 @@ NSS_EXTERN PRStatus
 nssList_Destroy
 (
   nssList *list
+);
+
+NSS_EXTERN PRStatus
+nssList_DestroyElements
+(
+  nssList *list, 
+  nssListElementDestructorFunc destructor
 );
 
 /*
@@ -856,10 +864,10 @@ nssList_GetElement
 );
 
 /*
- * nssList_GetNumElements
+ * nssList_Count
  */
 NSS_EXTERN PRUint32
-nssList_GetNumElements
+nssList_Count
 (
   nssList *list
 );
