@@ -289,12 +289,13 @@ sub actual_time {
 
     return $self->{'actual_time'} if exists $self->{'actual_time'};
 
-    if (&::UserInGroup(Param("timetrackinggroup"))) {
-        &::SendSQL("SELECT SUM(work_time)
-               FROM longdescs WHERE longdescs.bug_id=$self->{bug_id}");
-        $self->{'actual_time'} = &::FetchSQLData();
-    }
+    return undef unless Bugzilla->user->in_group(Param("timetrackinggroup"));
 
+    my $sth = Bugzilla->dbh->prepare("SELECT SUM(work_time)
+                                      FROM longdescs 
+                                      WHERE longdescs.bug_id=?");
+    $sth->execute($self->{bug_id});
+    $self->{'actual_time'} = $sth->fetchrow_array();
     return $self->{'actual_time'};
 }
 
