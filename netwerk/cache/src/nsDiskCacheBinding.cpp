@@ -267,30 +267,6 @@ nsDiskCacheBindery::FindActiveBinding(PRUint32  hashNumber)
 
 
 /**
- *  FindBinding :  to identify whether a record is 'in use' so we don't evict it
- */
-nsDiskCacheBinding *
-nsDiskCacheBindery::FindBinding(nsDiskCacheRecord * record)
-{    
-    NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
-    // find hash entry for key
-    HashTableEntry * hashEntry;
-    hashEntry = (HashTableEntry *) PL_DHashTableOperate(&table, (void*) record->HashNumber(), PL_DHASH_LOOKUP);
-    if (PL_DHASH_ENTRY_IS_FREE(hashEntry)) return nsnull;
-
-    // walk list looking for matching record (match on MetaLocation)
-    NS_ASSERTION(hashEntry->mBinding, "hash entry left with no binding");
-    nsDiskCacheBinding * binding = hashEntry->mBinding;    
-    while (binding->mRecord.MetaLocation() != record->MetaLocation()) {
-        binding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
-        if (binding == hashEntry->mBinding)  return nsnull;
-    }
-    return binding;
-}
-
-
-
-/**
  *  AddBinding
  *
  *  Called from FindEntry() if we read an entry off of disk

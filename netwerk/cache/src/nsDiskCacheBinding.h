@@ -125,17 +125,15 @@ public:
     nsresult                Init();
     void                    Reset();
 
-    nsDiskCacheBinding *   CreateBinding(nsCacheEntry *       entry,
-                                         nsDiskCacheRecord *  record);
+    nsDiskCacheBinding *    CreateBinding(nsCacheEntry *       entry,
+                                          nsDiskCacheRecord *  record);
 
     nsDiskCacheBinding *    FindActiveBinding(PRUint32  hashNumber);
-    nsDiskCacheBinding *    FindBinding(nsDiskCacheRecord * record);
-    nsresult                AddBinding(nsDiskCacheBinding * binding);
     void                    RemoveBinding(nsDiskCacheBinding * binding);
     PRBool                  ActiveBindings();
-
     
 private:
+    nsresult                AddBinding(nsDiskCacheBinding * binding);
 
     // member variables
     static PLDHashTableOps ops;
