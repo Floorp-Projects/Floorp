@@ -45,8 +45,6 @@ REQUIRES	= xpcom \
 
 DIRS        = shared
 
-DIRS        += freetype
-
 ifdef MOZ_ENABLE_POSTSCRIPT
 DIRS        += ps
 endif
