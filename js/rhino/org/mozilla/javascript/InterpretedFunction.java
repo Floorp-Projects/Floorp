@@ -71,17 +71,13 @@ class InterpretedFunction extends NativeFunction {
                        Object[] args)
         throws JavaScriptException
     {            
-        itsData.itsCX = cx;
         if (itsClosure != null)
         	scope = itsClosure;
         else if (!itsData.itsUseDynamicScope)
             scope = getParentScope();
         if (itsData.itsNeedsActivation)
             scope = ScriptRuntime.initVarObj(cx, scope, this, thisObj, args);
-        itsData.itsScope = scope;
-        itsData.itsThisObj = thisObj;
-        itsData.itsInArgs = args;
-        return Interpreter.interpret(itsData);
+        return Interpreter.interpret(cx, scope, thisObj, args, itsData);
     }
     
     InterpreterData itsData;

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -95,9 +96,4 @@ class InterpreterData {
     int itsMaxTryDepth;
 
     Object securityDomain;
-    
-    Context itsCX;
-    Scriptable itsScope;
-    Scriptable itsThisObj;
-    Object[] itsInArgs;
 }

@@ -60,11 +60,7 @@ public class InterpretedScript extends NativeScript {
     {
         scope = ScriptRuntime.initScript(cx, scope, this, thisObj, 
                                          itsData.itsFromEvalCode);
-        itsData.itsCX = cx;
-        itsData.itsScope = scope;
-        itsData.itsThisObj = thisObj;
-        itsData.itsInArgs = args;
-        return Interpreter.interpret(itsData);    
+        return Interpreter.interpret(cx, scope, thisObj, args, itsData);    
     }
 
     InterpreterData itsData;
