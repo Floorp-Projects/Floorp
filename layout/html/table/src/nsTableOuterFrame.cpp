@@ -1356,7 +1356,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   UpdateReflowMetrics(captionSide, aOuterMet, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto);
   nsSize desSize(aOuterMet.width, aOuterMet.height);
-  InvalidateDamage(aPresContext, captionSide, desSize, PR_FALSE, captionMoved);
+  InvalidateDamage(aPresContext, captionSide, desSize, (innerSize.width != priorInnerRect.width), captionMoved);
 
   return rv;
 }
