@@ -119,6 +119,7 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
   mRecordTrailingContent=PR_FALSE;
   mParserCommand=aCommand;
   mTokenAllocator=nsnull;
+  mTokenScanPos=0;
 }
 
 
@@ -237,6 +238,8 @@ CToken* nsHTMLTokenizer::GetTokenAt(PRInt32 anIndex){
 nsresult nsHTMLTokenizer::WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)
 {
   mTokenAllocator=aTokenAllocator;
+  mIsFinalChunk=aIsFinalChunk;
+  mTokenScanPos=mTokenDeque.GetSize()+1; //cause scanDocStructure to search from here for new tokens...
   return NS_OK;
 }
 
@@ -260,9 +263,160 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
 
 }
 
-nsresult nsHTMLTokenizer::DidTokenize(PRBool aIsFinalChunk)
-{
-  return NS_OK;
+static nsDeque& GetTempStack() {
+  static nsDeque theTempStack(0);
+  return theTempStack;
+}
+
+
+/**
+ * This is a utilty method for ScanDocStructure, which finds a given
+ * tag in the stack.
+ *
+ * @update	gess 08/30/00
+ * @param   aTag -- the ID of the tag we're seeking
+ * @param   aTagStack -- the stack to be searched
+ * @return  index pos of tag in stack if found, otherwise kNotFound
+ */
+static PRInt32 FindLastIndexOfTag(eHTMLTags aTag,nsDeque &aTagStack) {
+  PRInt32 theCount=aTagStack.GetSize();
+  
+  while(0<theCount) {
+    CHTMLToken *theToken=(CHTMLToken*)aTagStack.ObjectAt(--theCount);  
+    if(theToken) {
+      eHTMLTags  theTag=(eHTMLTags)theToken->GetTypeID();
+      if(theTag==aTag) {
+        return theCount;
+      }
+    }
+  }
+
+  return kNotFound;
+}
+
+/**
+ * This method scans the sequence of tokens to determine the 
+ * well formedness of each tag structure. This is used to 
+ * disable residual-style handling in well formed cases.
+ *
+ * @update	gess 1Sep2000
+ * @param 
+ * @return
+ */
+nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
+  nsresult result=NS_OK;
+
+
+  CHTMLToken  *theRootToken=0;
+
+    //*** start by finding the first start tag that hasn't been reviewed.
+
+  while(mTokenScanPos>0) {
+    theRootToken=(CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos);
+    if(theRootToken) {
+      eHTMLTokenTypes theType=eHTMLTokenTypes(theRootToken->GetTokenType());  
+      if(eToken_start==theType) {
+        if(eFormUnknown==theRootToken->GetContainerInfo()) {
+          break;
+        }
+      }      
+    }
+    mTokenScanPos--;
+  }
+
+  /*----------------------------------------------------------------------
+   *  Now that we know where to start, let's walk through the
+   *  tokens to see which are well-formed. Stop when you run out
+   *  of fresh tokens.
+   *---------------------------------------------------------------------*/
+
+  theRootToken=(CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos); //init to root
+
+  nsDeque       &theStack=GetTempStack();
+  eHTMLTags     theRootTag=eHTMLTag_unknown;
+  CHTMLToken    *theToken=theRootToken; //init to root
+  PRInt32       theStackDepth=0;    
+
+  static  const PRInt32 theMaxStackDepth=200;   //dont bother if we get ridiculously deep.
+
+  while(theToken && (theStackDepth<theMaxStackDepth)) {
+
+    eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
+    eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
+    PRBool          theTagIsBlock=gHTMLElements[theTag].IsMemberOf(kBlockEntity);
+    PRBool          theTagIsInline= (theTagIsBlock) ? PR_FALSE : gHTMLElements[theTag].IsMemberOf(kInlineEntity);
+
+    if(theTagIsBlock || theTagIsInline || (eHTMLTag_table==theTag)) {
+
+      switch(theType) {
+
+        case eToken_start:
+          if(0==theStack.GetSize()) {
+              //track the tag on the top of the stack...
+            theRootToken=theToken;
+            theRootTag=theTag;
+          }
+          theStack.Push(theToken);
+          theStackDepth++;
+          break;
+
+        case eToken_end: 
+          {
+            CHTMLToken *theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
+            if(theLastToken) {
+              if(theTag==theLastToken->GetTypeID()) {
+                theStack.Pop(); //yank it for real 
+                theStackDepth--;
+                theLastToken->SetContainerInfo(eWellFormed);
+
+                //in addition, let's look above this container to see if we can find 
+                //any tags that are already marked malformed. If so, pop them too!
+
+                theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
+                while(theLastToken) {
+                  if(eMalformed==theRootToken->GetContainerInfo()) {
+                    theStack.Pop(); //yank the malformed token for real.
+                    theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
+                    continue;
+                  }
+                  break;
+                }
+              }
+              else {
+                //the topmost token isn't what we expected, so that container must
+                //be malformed. If the tag is a block, we don't really care (but we'll
+                //mark it anyway). If it's an inline we DO care, especially if the 
+                //inline tried to contain a block (that's when RS handling kicks in).
+                if(theTagIsInline) {
+                  PRInt32 theIndex=FindLastIndexOfTag(theTag,theStack);
+                  if(kNotFound!=theIndex) {
+                    theToken=(CHTMLToken*)theStack.ObjectAt(theIndex);                        
+                    theToken->SetContainerInfo(eMalformed);
+                  }
+                  //otherwise we ignore an out-of-place end tag.
+                }
+                else {
+                }
+              }
+            }
+          } 
+          break;
+
+        default:
+          break; 
+      } //switch
+
+    }
+
+    theToken=(CHTMLToken*)mTokenDeque.ObjectAt(++mTokenScanPos);
+  }
+
+  theStack.Empty();
+  return result;
+}
+
+nsresult nsHTMLTokenizer::DidTokenize(PRBool aFinalChunk) {
+  return ScanDocStructure(aFinalChunk);
 }
 
 /**
@@ -475,6 +629,12 @@ nsresult nsHTMLTokenizer::ConsumeScriptContent(nsScanner& aScanner,CToken*& aTok
   return result;
 }
 
+nsString& GetScratchString(void) {
+  static nsString gScratchString;
+  gScratchString.Truncate(0);
+  return gScratchString;
+}
+
 /**
  * 
  * @update	gess12/28/98
@@ -500,10 +660,10 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
 
        //Good. Now, let's see if the next char is ">". 
        //If so, we have a complete tag, otherwise, we have attributes.
-      mScratch.Truncate(0);
+      nsString &theScratchStr=GetScratchString();
       PRBool theTagHasAttributes=PR_FALSE;
       if(NS_OK==result) { 
-        result=(eViewSource==mParserCommand) ? aScanner.ReadWhitespace(mScratch) : aScanner.SkipWhitespace();
+        result=(eViewSource==mParserCommand) ? aScanner.ReadWhitespace(theScratchStr) : aScanner.SkipWhitespace();
         aToken->mNewlineCount += aScanner.GetNewlinesSkipped();
         if(NS_OK==result) {
           result=aScanner.GetChar(aChar);
@@ -518,7 +678,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       }
       
       if(theTagHasAttributes) {
-        result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner,mScratch);
+        result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner,theScratchStr);
       }
 
       /*  Now that that's over with, we have one more problem to solve.
@@ -528,7 +688,8 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       if(NS_SUCCEEDED(result)) {
         
         //XXX - Find a better soution to record content
-        if((theTag==eHTMLTag_textarea || theTag==eHTMLTag_xmp) && !mRecordTrailingContent) {
+        //Added _plaintext to fix bug 46054.
+        if((eHTMLTag_textarea==theTag || eHTMLTag_xmp==theTag || eHTMLTag_plaintext==theTag) && !mRecordTrailingContent) {
           mRecordTrailingContent=PR_TRUE;
         }
           
@@ -633,6 +794,10 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
         aToken=theToken;
       }
 #endif
+
+      if(mIsFinalChunk && (kEOF==result)) {
+        result=NS_OK; //use as much of the entity as you can get.
+      }
       AddToken(aToken,result,&mTokenDeque,theAllocator);
     }
   }//if

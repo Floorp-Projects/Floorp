@@ -40,7 +40,7 @@
 class nsTagHandler : public nsITagHandler {
 
 public:
-  nsAutoString  mTheTagName;
+  nsAutoString  mTheTagName;  //ok as autostring; VERY few if any get used.
 
 public:
 

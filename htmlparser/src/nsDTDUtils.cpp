@@ -367,13 +367,9 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
   mResidualStyleCount=0;
   mContextTopIndex=0;
   mTableStates=0;
-  mHadBody=PR_FALSE; 
-  mHadFrameset=PR_TRUE;
-  mTransitional=PR_FALSE;
-  ResetCounters();
-  mHadDocTypeDecl=PR_FALSE;
-  mHasOpenHead=PR_FALSE;
+  mCounters=0;
   mTokenAllocator=0;
+  mAllBits=0;
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));
@@ -408,6 +404,10 @@ nsDTDContext::~nsDTDContext() {
 
   CEntityDeallocator theDeallocator;
   mEntities.ForEach(theDeallocator);
+  if(mCounters) {
+    delete [] mCounters;
+    mCounters = 0;
+  }
 }
 
 
@@ -761,8 +761,21 @@ protected:
  * 
  * @update	gess 11May2000
  */
+void nsDTDContext::AllocateCounters(void) {
+  if(!mCounters) {
+    mCounters = new PRInt32 [NS_HTML_TAG_MAX]; //in addition to reseting, you may need to allocate.
+    ResetCounters();
+  }
+}
+
+/**
+ * 
+ * @update	gess 11May2000
+ */
 void nsDTDContext::ResetCounters(void) {
-  memset(mCounters,0,sizeof(mCounters));
+  if(mCounters) {
+    memset(mCounters,0,NS_HTML_TAG_MAX*sizeof(PRInt32));
+  }
 }
 
 /**********************************************************
@@ -824,8 +837,13 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsStr
       PRInt32 err=0;
       theNewValue=theValue.ToInteger(&err);
       if(!err) {
+
         theIncrValue=0;
-        mCounters[aTag]=theNewValue;
+
+        AllocateCounters();
+        if(mCounters) {
+          mCounters[aTag]=theNewValue;
+        }
       }
       else theNewValue=-1;
     }
@@ -834,7 +852,13 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsStr
   if(theEntity && (eHTMLTag_userdefined==aTag)) {
     result=theEntity->mOrdinal+=theIncrValue;
   }
-  else result=mCounters[aTag]+=theIncrValue;
+  else {
+    AllocateCounters();
+    if(mCounters) {
+      result=mCounters[aTag]+=theIncrValue;
+    }
+    else result=0;
+  }
   CAbacus::GetFormattedString(theNumFormat,result,aResult,0,0,0);
 
   return result;

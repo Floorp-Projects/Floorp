@@ -513,7 +513,7 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
-    nsTokenAllocator*    mTokenAllocator;
+    nsTokenAllocator*   mTokenAllocator;
     CNodeRecycler*      mNodeRecycler;
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;
@@ -528,11 +528,11 @@ protected:
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
-    nsAutoString        mScratch;  //used for various purposes; non-persistent
+    nsString            mScratch;  //used for various purposes; non-persistent
     PRBool              mStyleHandlingEnabled;
     PRBool              mRequestedHead;
     PRBool              mIsFormContainer;
-    nsAutoString        mMimeType;  
+    nsAutoString        mMimeType;  //ok as an autostring; these are short.
 
 };
 

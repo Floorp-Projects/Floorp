@@ -109,8 +109,17 @@ public:
     NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
     mDTDDeque.Push(theDTD);
 
-    NS_NewOtherHTMLDTD(&mOtherDTD);  //do this as the default DTD for strict documents...
-    mDTDDeque.Push(mOtherDTD);
+      
+#if 1   //to fix bug 50070.
+    const char* theStrictDTDEnabled="true";
+#else
+    const char* theStrictDTDEnabled=PR_GetEnv("ENABLE_STRICT");  //always false (except rickg's machine)
+#endif
+
+    if(theStrictDTDEnabled) { 
+      NS_NewOtherHTMLDTD(&mOtherDTD);  //do this as the default DTD for strict documents...
+      mDTDDeque.Push(mOtherDTD);
+    }
 
     mHasViewSourceDTD=PR_FALSE;
     mHasRTFDTD=mHasXMLDTD=PR_FALSE;
@@ -673,16 +682,17 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
   //now let's see if we have HTML or XHTML...
 
+  PRInt32 theLTPos=aBuffer.FindChar(kLessThan);  
   PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan);
-  
-  if(kNotFound!=theGTPos) {
+
+  if((kNotFound!=theGTPos) && (kNotFound!=theLTPos)) {
 
     const PRUnichar*  theBuffer=aBuffer.GetUnicode();
-    CWordTokenizer theTokenizer(aBuffer,1,theGTPos);
+    CWordTokenizer theTokenizer(aBuffer,theLTPos,theGTPos);
     PRInt32 theOffset=theTokenizer.GetNextWord();  //try to find ?xml, !doctype, etc...
 
     if((kNotFound!=theOffset) && 
-       (0==nsCRT::strncasecmp(theBuffer+theOffset,"DOCTYPE",theTokenizer.mLength))) {             
+       (0==nsCRT::strncasecmp(theBuffer+theOffset,"!DOCTYPE",theTokenizer.mLength))) {             
       
       //Ok -- so assume it's (X)HTML; now figure out the flavor...
         
@@ -2285,15 +2295,17 @@ theContext->mTransferBufferSize;
           } 
     #endif 
 
-          theContext->mScanner->Append(theContext->mTransferBuffer,theNumRead); 
-
-#if 0
+#if 1
           static int dump=0;
           if(dump) {
             theContext->mTransferBuffer[theNumRead]=0;
-            printf("\n-----------------\n%s",theContext->mTransferBuffer);
+            printf("\n\n-----------------------------------------------------%s\n",theContext->mTransferBuffer);
           }
 #endif
+
+
+          theContext->mScanner->Append(theContext->mTransferBuffer,theNumRead); 
+
 
     #ifdef rickgdebug 
           theContext->mTransferBuffer[theNumRead]=0; 

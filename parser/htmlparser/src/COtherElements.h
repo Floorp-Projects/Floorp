@@ -159,17 +159,6 @@ public:
     anElement.mContainsGroups.mAllBits=aContainsGroups.mAllBits;
   }
 
-  static PRBool HasOptionalEndTag(CElement* anElement) {
-    static eHTMLTags gContainersWithOptionalEndTag[]={eHTMLTag_body,eHTMLTag_colgroup,eHTMLTag_dd,eHTMLTag_dt,
-                                                      eHTMLTag_head,eHTMLTag_li,eHTMLTag_option,
-                                                      eHTMLTag_p,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_tfoot,
-                                                      eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr,eHTMLTag_unknown};
-    if(anElement) {
-      return ListContainsTag(gContainersWithOptionalEndTag,anElement->mTag);  
-    }
-    return PR_FALSE;
-  }
-
   inline CElement*  GetDelegate(void);
   inline CElement*  GetDefaultContainerFor(CElement* anElement);
 
@@ -236,7 +225,7 @@ public:
     PRInt32 result=-1;
 
     if(mTag!=aTag) {
-      if(HasOptionalEndTag(this) && (0<anIndex)) {
+      if(HasOptionalEndTag(mTag) && (0<anIndex)) {
         eHTMLTags theGrandParentTag=aContext->TagAt(--anIndex);
         CElement *theGrandParent=GetElement(theGrandParentTag);
         if(theGrandParent) {
@@ -340,7 +329,7 @@ public:
   /**********************************************************
     this gets called to close a tag in the sink and in the context
    **********************************************************/
-  virtual nsresult CloseContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) { 
+  virtual nsresult CloseContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
     nsresult result=NS_OK;
     if(mTag!=aTag) {
       CElement *theElement=GetElement(aTag);
@@ -600,7 +589,7 @@ public:
 
   virtual PRBool CanContain(CElement* anElement,nsDTDContext* aContext) {
     PRBool result=CElement::CanContain(anElement,aContext);
-    if((!result) && (aContext->mTransitional)) {
+    if((!result) && (aContext->mFlags.mTransitional)) {
 
       //If we're in transitional mode, then also allow inline elements...
         
@@ -1209,9 +1198,9 @@ public:
 
     nsresult result=NS_OK;
     if(aSink && aContext) {
-      if(aContext->mHasOpenHead==PR_FALSE) {
+      if(aContext->mFlags.mHasOpenHead==PR_FALSE) {
         result=aSink->OpenHead(*aNode);
-        aContext->mHasOpenHead=PR_TRUE;
+        aContext->mFlags.mHasOpenHead=PR_TRUE;
       }
     }
     return result;
@@ -1222,9 +1211,9 @@ public:
 
     nsresult result=NS_OK;
     if(aSink && aContext) {
-      if(aContext->mHasOpenHead==PR_TRUE) {
+      if(aContext->mFlags.mHasOpenHead==PR_TRUE) {
         result=aSink->CloseHead(*aNode);
-        aContext->mHasOpenHead=PR_FALSE;
+        aContext->mFlags.mHasOpenHead=PR_FALSE;
       }
     }
     return result;
@@ -1809,7 +1798,7 @@ public:
       case eHTMLTag_frameset:
         result=aSink->OpenFrameset(*aNode); 
         result=OpenContext(aNode,aTag,aContext,aSink);
-        aContext->mHadFrameset=PR_TRUE;
+        aContext->mFlags.mHadFrameset=PR_TRUE;
         break;
 
       case eHTMLTag_base: //nothing to do for these empty tags...      
@@ -1943,7 +1932,7 @@ public:
 
   virtual PRBool CanContain(CElement* anElement,nsDTDContext* aContext) {
     PRBool result=CElement::CanContain(anElement,aContext);
-    if((!result) && (aContext->mTransitional)) {
+    if((!result) && (aContext->mFlags.mTransitional)) {
       //let's try so additions that are specific to the body tag,
       //and only work in transitional mode...
         
@@ -1979,9 +1968,9 @@ public:
     // If that's the case then make sure that we don't open up multiple contexts, however,
     // don't forget to inform the sink because it needs to account for the BODY attributes.
     if(aContext) {
-      if(!aContext->mHadBody) {
+      if(!aContext->mFlags.mHadBody) {
         result=OpenContext(aNode,aTag,aContext,aSink);
-        aContext->mHadBody=PR_TRUE;
+        aContext->mFlags.mHadBody=PR_TRUE;
       }
     }
     return (NS_SUCCEEDED(result))? OpenContainer(aNode,aTag,aContext,aSink):result;
@@ -2596,7 +2585,7 @@ PRInt32 CElement::FindAutoCloseIndexForStartTag(CElement* anElement,PRInt32 aPar
       CElement* theParent=gElementTable->mElements[theParentTag];
 
       if(!theParent->CanContain(anElement,aContext)) {
-        if(HasOptionalEndTag(theParent)) {
+        if(HasOptionalEndTag(theParentTag)) {
 
           if(ListContainsTag(theParent->mAutoClose,anElement->mTag)) {
             result=theParent->FindAutoCloseIndexForStartTag(anElement,aParentIndex-1,aContext);
@@ -2636,7 +2625,7 @@ PRBool CElement::CanBeClosedByEndTag(CElement* anElement,nsDTDContext* aContext)
     else {
       eHTMLTags theTag=aContext->Last();
       CElement* theElement=gElementTable->mElements[theTag];
-      if(HasOptionalEndTag(theElement)) {
+      if(HasOptionalEndTag(theTag)) {
         if(anElement->CanContain(theElement,aContext)){
           result=PR_TRUE;
         }
@@ -2678,7 +2667,7 @@ PRBool CElement::CanContain(CElement* anElement,nsDTDContext* aContext) {
         this table, and to override CanContain() there.
        ***************************************************/
     
-    if((!result) && (aContext->mTransitional)) {
+    if((!result) && (aContext->mFlags.mTransitional)) {
       switch(mTag) {
         case eHTMLTag_address:
           if(eHTMLTag_p==anElement->mTag)
@@ -2750,7 +2739,7 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
 
         //Ok, so we have a start token that is misplaced. Before handing this off
         //to a default container (parent), let's check the autoclose condition.
-        if(HasOptionalEndTag(this)) {
+        if(HasOptionalEndTag(mTag)) {
 
           //aha! We have a case where this tag is autoclosed by anElement.
           //Let's close this container, then try to open theElement.

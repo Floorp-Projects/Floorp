@@ -72,6 +72,10 @@
 #define NS_IHTML_CONTENT_SINK_IID \
  { 0xa6cf9051, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+
+#define MAX_REFLOW_DEPTH  200
+
+
 class nsIHTMLContentSink : public nsIContentSink {
 public:
 

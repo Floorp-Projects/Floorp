@@ -49,6 +49,14 @@
 
 class nsScanner;
 
+
+enum eContainerInfo {
+  eWellFormed,
+  eMalformed,
+  eFormUnknown
+};
+
+
 /**
  *  Token objects represent sequences of characters as they
  *  are consumed from the input stream (URL). While they're
@@ -241,6 +249,17 @@ class CToken {
      * @return  const char* containing class name
      */
     virtual const char* GetClassName(void);
+
+
+    /**
+     * For tokens who care, this can tell us whether the token is 
+     * well formed or not.
+     *
+     * @update	gess 8/30/00
+     * @return  PR_FALSE; subclasses MUST override if they care.
+     */
+    virtual PRBool IsWellFormed(void) const {return PR_FALSE;}
+
 
     /**
      * perform self test.

@@ -115,7 +115,7 @@ public:
   virtual   nsresult  Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
 
   eRTFTags  mTag;
-  nsAutoString mArgument;
+  nsString  mArgument;
 };
 
 

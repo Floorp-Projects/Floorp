@@ -68,10 +68,10 @@ public:
 
   virtual CToken*           PushTokenFront(CToken* theToken);
   virtual CToken*           PushToken(CToken* theToken);
-	virtual CToken*           PopToken(void);
-	virtual CToken*           PeekToken(void);
-	virtual CToken*           GetTokenAt(PRInt32 anIndex);
-	virtual PRInt32           GetCount(void);
+  virtual CToken*           PopToken(void);
+  virtual CToken*           PeekToken(void);
+  virtual CToken*           GetTokenAt(PRInt32 anIndex);
+  virtual PRInt32           GetCount(void);
 
   virtual void              PrependTokens(nsDeque& aDeque);
 
@@ -89,7 +89,9 @@ protected:
   virtual nsresult ConsumeText(const nsString& aString,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  
+
+          nsresult ScanDocStructure(PRBool aIsFinalChunk);
+
   virtual void     RecordTrailingContent(CStartToken* aStartToken,nsScanner& aScanner);
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
@@ -100,8 +102,9 @@ protected:
   eParserDocType     mDocType;
   PRBool             mRecordTrailingContent;
   eParserCommands    mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
-  nsAutoString       mScratch;
   nsTokenAllocator*  mTokenAllocator;
+  PRInt32            mTokenScanPos;
+  PRBool             mIsFinalChunk;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(  nsITokenizer** aInstancePtrResult,

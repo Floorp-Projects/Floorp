@@ -89,18 +89,22 @@ const char*   GetTagName(PRInt32 aTag);
 //PRInt32     FindEntityIndex(nsString& aString,PRInt32 aCount=-1);
 
 
+
 /**
  *  This declares the basic token type used in the HTML DTD's.
  *  @update  gess 3/25/98
  */
 class CHTMLToken : public CToken {
 public:
+    virtual             ~CHTMLToken();
 
                         CHTMLToken(eHTMLTags aTag);
                         CHTMLToken(const nsString& aString,eHTMLTags aTag=eHTMLTag_unknown);
     virtual void        SetCStringValue(const char* name);
     virtual nsString&   GetStringValueXXX(void);
-    virtual             ~CHTMLToken();
+
+    virtual eContainerInfo GetContainerInfo(void) const {return eFormUnknown;}
+    virtual void           SetContainerInfo(eContainerInfo aInfo) { }
 
 protected:
 };
@@ -129,6 +133,12 @@ class CStartToken: public CHTMLToken {
     virtual void          DebugDumpSource(nsOutputStream& out);
     virtual void          GetSource(nsString& anOutputString);
     virtual void          AppendSource(nsString& anOutputString);
+
+      //the following info is used to set well-formedness state on start tags...
+    virtual eContainerInfo GetContainerInfo(void) const {return mContainerInfo;}
+    virtual void           SetContainerInfo(eContainerInfo aContainerInfo) {mContainerInfo=aContainerInfo;}
+    virtual PRBool         IsWellFormed(void) const {return PRBool(eWellFormed==mContainerInfo);}
+
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
 
     /*
@@ -140,11 +150,13 @@ class CStartToken: public CHTMLToken {
     virtual nsresult      GetIDAttributeAtom(nsIAtom** aResult);
     virtual nsresult      SetIDAttributeAtom(nsIAtom* aID);
   
-            nsString      mTrailingContent;
-            PRInt32       mOrigin;
+            nsString          mTrailingContent;
+            PRInt32           mOrigin;
   protected:
-            PRBool        mAttributed;      
-            PRBool        mEmpty;     
+            PRBool            mAttributed;      
+
+            PRBool            mEmpty;      
+            eContainerInfo    mContainerInfo;
             nsCOMPtr<nsIAtom>      mIDAttributeAtom;
 };
 

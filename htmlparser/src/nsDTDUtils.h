@@ -206,9 +206,9 @@ public:
 
   }
 
-  nsAutoString mName;
-  nsAutoString mValue;
-  PRInt32      mOrdinal;
+  nsString mName;   
+  nsString mValue;  
+  PRInt32  mOrdinal;
 };
 
 /************************************************************************
@@ -304,6 +304,7 @@ public:
   CNamedEntity*   GetEntity(const nsString& aName)const;
 
   void            ResetCounters(void);
+  void            AllocateCounters(void);
   PRInt32         IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsString& aResult);
 
   void            SetTokenAllocator(nsTokenAllocator* aTokenAllocator) { mTokenAllocator=aTokenAllocator; }
@@ -311,19 +312,29 @@ public:
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
   PRInt32         mContextTopIndex;
-  PRBool          mHadBody;
-  PRBool          mHadFrameset;
-  PRBool          mHasOpenHead;
-  PRBool          mTransitional;
-  PRBool          mHadDocTypeDecl;
+
+    //break this struct out seperately so that lame compilers don't gack.
+    //By using these bits instead of bools, we have a bit-o-memory.
+  struct CFlags {
+    PRUint8  mHadBody:1;
+    PRUint8  mHadFrameset:1;
+    PRUint8  mHasOpenHead:1;
+    PRUint8  mTransitional:1;
+    PRUint8  mHadDocTypeDecl:1;
+  };
+
+  union {
+    PRUint32  mAllBits;
+    CFlags    mFlags;
+  };
+
 
   static          CNodeRecycler   *gNodeRecycler;
   
-  nsTokenAllocator *mTokenAllocator;
-  CTableState     *mTableStates;
-  PRInt32         mCounters[NS_HTML_TAG_MAX];
-  nsString        mDefaultEntity;
-  nsDeque         mEntities;
+  nsTokenAllocator  *mTokenAllocator;
+  CTableState       *mTableStates;
+  PRInt32           *mCounters;
+  nsDeque           mEntities;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
@@ -587,6 +598,21 @@ inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTag
     }
   }
   return kNotFound;
+}
+
+
+/**
+ * Call this to find out whether the DTD thinks the tag requires an END tag </xxx>
+ * @update	gess 01/04/99
+ * @param   id of tag
+ * @return  TRUE of the element's end tag is optional
+ */
+static PRBool HasOptionalEndTag(eHTMLTags aTag) {
+  static eHTMLTags gHasOptionalEndTags[]={eHTMLTag_body,eHTMLTag_colgroup,eHTMLTag_dd,eHTMLTag_dt,
+                                                    eHTMLTag_head,eHTMLTag_li,eHTMLTag_option,
+                                                    eHTMLTag_p,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_tfoot,
+                                                    eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr,eHTMLTag_unknown};
+  return FindTagInSet(aTag,gHasOptionalEndTags,sizeof(gHasOptionalEndTags)/sizeof(eHTMLTag_body));
 }
 
 #endif

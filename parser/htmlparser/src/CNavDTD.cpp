@@ -26,9 +26,6 @@
 
 #define ENABLE_RESIDUALSTYLE  
 
-#ifdef  RICKG_DEBUG
-#include  <fstream.h>  
-#endif
      
 #include "nsDebug.h" 
 #include "nsIDTDDebug.h"  
@@ -183,7 +180,7 @@ CNavDTD::CNavDTD() : nsIDTD(),
 
 void CNavDTD::ReleaseTable(void) {
   if(gHTMLElements) {
-    delete gHTMLElements;
+    delete [] gHTMLElements;  //fixed bug 49564
     gHTMLElements=0;
   }
 }
@@ -540,7 +537,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
               result=HandleToken(theEndToken,mParser);
             }
           }
-          if(!mBodyContext->mHadDocTypeDecl) {
+          if(!mBodyContext->mFlags.mHadDocTypeDecl) {
             CToken* theDocTypeToken=mTokenAllocator->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_markupDecl);
             if(theDocTypeToken) {
               nsAutoString theDocTypeStr;
@@ -1003,7 +1000,7 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
   return result;
 }
 
-enum eProcessRule {eIgnore,eTest};
+enum eProcessRule {eNormalOp,eLetInlineContainBlock};
 
 /** 
  *  This method gets called when a start token has been 
@@ -1039,9 +1036,24 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       return result;
     }
 
-    eProcessRule theRule=eTest; 
+    eProcessRule theRule=eNormalOp; 
+
+    if((!theParentContains) &&
+       (nsHTMLElement::IsResidualStyleTag(theParentTag)) &&
+       (IsBlockElement(aChildTag,theParentTag))) {
+
+      if(eHTMLTag_table!=aChildTag) {
+        nsCParserNode* theParentNode= NS_STATIC_CAST(nsCParserNode*, mBodyContext->PeekNode());
+        if(theParentNode->mToken->IsWellFormed()) {
+          theRule=eLetInlineContainBlock;
+        }
+      }
+    }
+
     switch(theRule){
-      case eTest:        
+
+      case eNormalOp:        
+
         theChildAgrees=PR_TRUE;
         if(theParentContains) {
 
@@ -1115,7 +1127,11 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
           }
         }//if
         break;
-      case eIgnore:
+
+      case eLetInlineContainBlock:
+        theParentContains=theChildAgrees=PR_TRUE; //cause us to fall out of loop and open the block.
+        break;
+
       default:
         break;
 
@@ -1171,6 +1187,19 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     }
   }
 
+    /**************************************************************************************
+     *
+     * Now a little code to deal with bug #49687 (crash when layout stack gets too deep)
+     *
+     **************************************************************************************/
+
+  if(MAX_REFLOW_DEPTH<mBodyContext->GetCount()) {
+    if(gHTMLElements[aTag].IsMemberOf(kInlineEntity)) {
+      if(!gHTMLElements[aTag].IsMemberOf(kFormControl)) {
+        return kHierarchyTooDeep;
+      }
+    }
+  }
 
   STOP_TIMER()
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
@@ -1546,6 +1575,12 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         DidHandleStartTag(*theNode,theChildTag);
     }//if
   } //if
+
+  if(kHierarchyTooDeep==result) {
+    //reset this error to ok; all that happens here is that given inline tag
+    //gets dropped because the stack is too deep. Don't terminate parsing.
+    result=NS_OK;
+  }
 
   mNodeRecycler->RecycleNode(theNode);
   return result;
@@ -1929,8 +1964,12 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
       //if you're here we have a bogus entity.
       //convert it into a text token.
       theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,NS_ConvertToString("&"));
+      if(theToken) {
+        nsString &theTokenStr=theToken->GetStringValueXXX();
+        theTokenStr.Append(theStr); //should append the entity name; fix bug 51161.
+      }
     }
-    return HandleToken(theToken,mParser);
+    return HandleToken(theToken,mParser); //theToken should get recycled automagically...
   }
 
   eHTMLTags theParentTag=mBodyContext->Last();
@@ -2086,7 +2125,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   nsresult result=NS_OK;
 
   if(mBodyContext) {
-    mBodyContext->mHadDocTypeDecl=PR_TRUE; 
+    mBodyContext->mFlags.mHadDocTypeDecl=PR_TRUE; 
   }
 
   #ifdef  RICKG_DEBUG
@@ -2182,7 +2221,8 @@ nsresult CNavDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 
 /**
  * Causes the next skipped-content token (if any) to
  * be consumed by this node.
- * @update  gess5/11/98
+ *
+ * @update  gess 4Sep2000
  * @param   node to consume skipped-content
  * @param   holds the number of skipped content elements encountered
  * @return  Error condition.
@@ -2199,7 +2239,7 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
   PRBool aMustConvertLinebreaks = PR_FALSE;
 
   mScratch.Truncate();
-  aNode.SetSkippedContent(mScratch);
+  aNode.SetSkippedContent(mScratch);  //this guarantees us some skipped content storage.
 
   for(aIndex=0;aIndex<aMax;aIndex++){
     CHTMLToken* theNextToken=(CHTMLToken*)mSkippedContent.PopFront();
@@ -2210,8 +2250,8 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
     // the start token as mTrailing content and will get appended in 
     // start token's GetSource();
     if(eToken_attribute!=theTokenType) {
-      if (eToken_entity==theTokenType) {
-        if((eHTMLTag_textarea==theNodeTag) || (eHTMLTag_title==theNodeTag)) {
+      if ((eToken_entity==theTokenType) &&
+         ((eHTMLTag_textarea==theNodeTag) || (eHTMLTag_title==theNodeTag))) {
           mScratch.Truncate();
           ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
           // since this is an entity, we know that it's only one character.
@@ -2222,10 +2262,10 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
             aNode.mSkippedContent->Append(mScratch);
           }
         }
-      }
-      else {
-        theNextToken->AppendSource(*aNode.mSkippedContent);
-      }
+      else theNextToken->AppendSource(*aNode.mSkippedContent);
+    }
+    else {
+      theNextToken->AppendSource(*aNode.mSkippedContent);
     }
     IF_FREE(theNextToken);
   }
