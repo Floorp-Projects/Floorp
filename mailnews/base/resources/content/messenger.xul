@@ -93,6 +93,8 @@ Rights Reserved.
       </menu>
       <menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
       <menuitem value="&openAttachmentCmd.label;" oncommand="MsgOpenAttachment();"/>
+      <menuseparator/>
+      <menuitem id="menu_close"/>
       <menu value="&saveAsMenu.label;">
         <menupopup>
 		<menuitem value="&saveAsFileCmd.label;" oncommand="MsgSaveAsFile();"/>
@@ -124,7 +126,6 @@ Rights Reserved.
       <menuitem value="&printPreviewCmd.label;" oncommand="PrintPreview();"/>
       <menuitem value="&printCmd.label;" oncommand="Print();"/>
       <menuseparator/>
-      <menuitem id="menu_close"/>
 	  </menupopup>
     </menu>
 	

@@ -75,30 +75,31 @@ Rights Reserved.
 </keyset>
 
 
-  <toolbox>
-  <menubar>
+<toolbox>
+	<menubar>
 		<menu id="menu_File">
-		  <menupopup id="menu_FilePopup">
-			<menu value="&newMenu.label;">
-				<menupopup>
-				<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>
-				<menuitem value="&newMessageCmd.label;" oncommand="AbNewMessage();"/>
-				</menupopup>
-			</menu>
-			<menuitem value="&newCardCmd.label;" oncommand="AbNewCard()"/>
-			<menuitem value="&newListCmd.label;" oncommand="AbNewList()"/>
-			<menuitem value="&newAddressBookCmd.label;" oncommand="AbNewAddressBook()"/>
-			<menuitem value="&newDirectoryCmd.label;" oncommand="AbNewDirectoryt()"/>
-			<menuseparator/>
-			<menuitem value="&importCmd.label;" oncommand="AbImport()"/>
-			<menuitem value="&exportCmd.label;" oncommand="AbExport()"/>
-			<menuseparator/>
-			<menuitem id="menu_pageSetup"/>
-			<menuitem value="&printPreviewCmd.label;" oncommand="AbPrintPreview()"/>
-			<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
-			<menuitem value="&printAddressBook.label;" oncommand="AbPrintAddressBook()"/>
-			<menuseparator/>
-			<menuitem id="menu_close"/>
+			<menupopup id="menu_FilePopup">
+				<menu value="&newMenu.label;">
+					<menupopup>
+					<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>
+					<menuitem value="&newMessageCmd.label;" oncommand="AbNewMessage();"/>
+					</menupopup>
+				</menu>
+				<menuitem value="&newCardCmd.label;" oncommand="AbNewCard()"/>
+				<menuitem value="&newListCmd.label;" oncommand="AbNewList()"/>
+				<menuitem value="&newAddressBookCmd.label;" oncommand="AbNewAddressBook()"/>
+				<menuitem value="&newDirectoryCmd.label;" oncommand="AbNewDirectoryt()"/>
+				<menuseparator/>
+				<menuitem id="menu_close"/>
+				<menuseparator/>
+				<menuitem value="&importCmd.label;" oncommand="AbImport()"/>
+				<menuitem value="&exportCmd.label;" oncommand="AbExport()"/>
+				<menuseparator/>
+				<menuitem id="menu_pageSetup"/>
+				<menuitem value="&printPreviewCmd.label;" oncommand="AbPrintPreview()"/>
+				<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
+				<menuitem value="&printAddressBook.label;" oncommand="AbPrintAddressBook()"/>
+				<menuseparator/>
 			</menupopup>
 		</menu>
 		
