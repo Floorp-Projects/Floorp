@@ -23,10 +23,10 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-#include "nsIEnumerator.h"//BAD CHANGEIDL LATER
 
 class nsIDOMNode;
 class nsIDOMSelectionListener;
+class nsIEnumerator;
 class nsIDOMRange;
 
 #define NS_IDOMSELECTION_IID \
@@ -57,7 +57,7 @@ public:
 
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)=0;
 
-  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes)=0;
+  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn)=0;
 
   NS_IMETHOD    DeleteFromDocument()=0;
 
@@ -70,8 +70,8 @@ public:
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener)=0;
 
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove)=0;
-  //BAD CHANGE IDL LATER
-  NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator)=0;
+
+  NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn)=0;
 };
 
 
@@ -86,13 +86,14 @@ public:
   NS_IMETHOD    ClearSelection();  \
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);  \
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);  \
-  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes);  \
+  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn);  \
   NS_IMETHOD    DeleteFromDocument();  \
   NS_IMETHOD    AddRange(nsIDOMRange* aRange);  \
   NS_IMETHOD    StartBatchChanges();  \
   NS_IMETHOD    EndBatchChanges();  \
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);  \
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);  \
+  NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn);  \
 
 
 
@@ -107,13 +108,14 @@ public:
   NS_IMETHOD    ClearSelection() { return _to ClearSelection(); }  \
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to Collapse(aParentNode, aOffset); }  \
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to Extend(aParentNode, aOffset); }  \
-  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes) { return _to ContainsNode(aNode, aRecursive, aAYes); }  \
+  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn) { return _to ContainsNode(aNode, aRecursive, aReturn); }  \
   NS_IMETHOD    DeleteFromDocument() { return _to DeleteFromDocument(); }  \
   NS_IMETHOD    AddRange(nsIDOMRange* aRange) { return _to AddRange(aRange); }  \
   NS_IMETHOD    StartBatchChanges() { return _to StartBatchChanges(); }  \
   NS_IMETHOD    EndBatchChanges() { return _to EndBatchChanges(); }  \
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener) { return _to AddSelectionListener(aNewListener); }  \
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove) { return _to RemoveSelectionListener(aListenerToRemove); }  \
+  NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn) { return _to GetEnumerator(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionClass(nsIScriptContext *aContext, void **aPrototype);
