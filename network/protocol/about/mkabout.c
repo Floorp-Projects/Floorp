@@ -471,6 +471,11 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 			cur_entry->URL_s->window_chrome->allow_close = TRUE;
 		  }
 
+        /* You can't edit "about:document"! */
+        if ( FO_CACHE_AND_EDIT == cur_entry->format_out ) {
+            cur_entry->format_out = FO_CACHE_AND_PRESENT;
+        }
+
 		/* don't let people really view the source of this... */
 		if(FO_PRESENT != CLEAR_CACHE_BIT(cur_entry->format_out))        
 		  {
