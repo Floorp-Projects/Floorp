@@ -48,6 +48,11 @@
 #include "nsIPref.h" // XX Need to convert Handler code to new pref stuff
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID); // XXX need to convert to contract id
 
+#define INCL_DOSMISC
+#define INCL_DOSERRORS
+#define INCL_WINSHELLDATA
+#include <os2.h>
+
 #define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(mLog, PR_LOG_DEBUG)
 
@@ -1159,113 +1164,135 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   prefName = NS_LITERAL_CSTRING("applications.") + uProtocol;
   nsXPIDLCString prefString;
 
-  rv = thePrefsService->CopyCharPref(prefName.get(), getter_Copies(prefString));
-  if (NS_FAILED(rv) || prefString.IsEmpty()) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsCAutoString parameters;
   nsCAutoString applicationName;
 
-  /* Put application name in parameters */
-  applicationName.Append(prefString);
+  rv = thePrefsService->CopyCharPref(prefName.get(), getter_Copies(prefString));
+  if (NS_FAILED(rv) || prefString.IsEmpty()) {
+    /* Special case http, https, and ftp - if we get here, pass them to the shell */
+    if ((uProtocol == NS_LITERAL_CSTRING("http")) ||
+        (uProtocol == NS_LITERAL_CSTRING("https")) ||
+        (uProtocol == NS_LITERAL_CSTRING("ftp"))) {
+      char szBrowser[CCHMAXPATH];
 
-  nsCAutoString uPort;
-  PRInt32 iPort;
-  uri->GetPort(&iPort);
-  /* GetPort returns -1 if there is no port in the URI */
-  if (iPort != -1)
-    uPort.AppendInt(iPort);
-
-  nsCAutoString uUsername;
-  uri->GetUsername(uUsername);
-  NS_UnescapeURL(uUsername);
-
-  nsCAutoString uPassword;
-  uri->GetPassword(uPassword);
-  NS_UnescapeURL(uPassword);
-
-  nsCAutoString uHost;
-  uri->GetAsciiHost(uHost);
-
-  prefName.Append(".");
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
-  if (NS_SUCCEEDED(rv) && prefBranch) {
-    rv = prefBranch->GetCharPref("parameters", getter_Copies(prefString));
-    /* If parameters have been specified, use them instead of the separate entities */
-    if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-      parameters.Append(" ");
-      parameters.Append(prefString);
-
-      NS_NAMED_LITERAL_CSTRING(url, "%url%");
-
-      PRInt32 pos = parameters.Find(url.get());
-      if (pos != kNotFound) {
-        nsCAutoString uURL;
-        aURL->GetSpec(uURL);
-        NS_UnescapeURL(uURL);
-        uURL.Cut(0, uProtocol.Length()+1);
-        parameters.Replace(pos, url.Length(), uURL);
+      PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultBrowserExe",
+                          "",
+                          szBrowser,
+                          sizeof(szBrowser)) ;
+      if (szBrowser[0]) {
+        applicationName = szBrowser;
+        parameters = urlSpec;
+      } else {
+        return NS_ERROR_FAILURE;
       }
     } else {
-      /* port */
-      if (!uPort.IsEmpty()) {
-        rv = prefBranch->GetCharPref("port", getter_Copies(prefString));
-        if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-          parameters.Append(" ");
-          parameters.Append(prefString);
-        }
-      }
-      /* username */
-      if (!uUsername.IsEmpty()) {
-        rv = prefBranch->GetCharPref("username", getter_Copies(prefString));
-        if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-          parameters.Append(" ");
-          parameters.Append(prefString);
-        }
-      }
-      /* password */
-      if (!uPassword.IsEmpty()) {
-        rv = prefBranch->GetCharPref("password", getter_Copies(prefString));
-        if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-          parameters.Append(" ");
-          parameters.Append(prefString);
-        }
-      }
-      /* host */
-      if (!uHost.IsEmpty()) {
-        rv = prefBranch->GetCharPref("host", getter_Copies(prefString));
-        if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-          parameters.Append(" ");
-          parameters.Append(prefString);
-        }
-      }
+      return NS_ERROR_FAILURE;
     }
   }
 
-  PRInt32 pos;
-
-  NS_NAMED_LITERAL_CSTRING(port, "%port%");
-  NS_NAMED_LITERAL_CSTRING(username, "%username%");
-  NS_NAMED_LITERAL_CSTRING(password, "%password%");
-  NS_NAMED_LITERAL_CSTRING(host, "%host%");
-
-  pos = parameters.Find(port.get());
-  if (pos != kNotFound) {
-    parameters.Replace(pos, port.Length(), uPort);
-  }
-  pos = parameters.Find(username.get());
-  if (pos != kNotFound) {
-    parameters.Replace(pos, username.Length(), uUsername);
-  }
-  pos = parameters.Find(password.get());
-  if (pos != kNotFound) {
-    parameters.Replace(pos, password.Length(), uPassword);
-  }
-  pos = parameters.Find(host.get());
-  if (pos != kNotFound) {
-    parameters.Replace(pos, host.Length(), uHost);
+  if (applicationName.IsEmpty() && parameters.IsEmpty()) {
+    /* Put application name in parameters */
+    applicationName.Append(prefString);
+  
+    nsCAutoString uPort;
+    PRInt32 iPort;
+    uri->GetPort(&iPort);
+    /* GetPort returns -1 if there is no port in the URI */
+    if (iPort != -1)
+      uPort.AppendInt(iPort);
+  
+    nsCAutoString uUsername;
+    uri->GetUsername(uUsername);
+    NS_UnescapeURL(uUsername);
+  
+    nsCAutoString uPassword;
+    uri->GetPassword(uPassword);
+    NS_UnescapeURL(uPassword);
+  
+    nsCAutoString uHost;
+    uri->GetAsciiHost(uHost);
+  
+    prefName.Append(".");
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
+    if (NS_SUCCEEDED(rv) && prefBranch) {
+      rv = prefBranch->GetCharPref("parameters", getter_Copies(prefString));
+      /* If parameters have been specified, use them instead of the separate entities */
+      if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+        parameters.Append(" ");
+        parameters.Append(prefString);
+  
+        NS_NAMED_LITERAL_CSTRING(url, "%url%");
+  
+        PRInt32 pos = parameters.Find(url.get());
+        if (pos != kNotFound) {
+          nsCAutoString uURL;
+          aURL->GetSpec(uURL);
+          NS_UnescapeURL(uURL);
+          uURL.Cut(0, uProtocol.Length()+1);
+          parameters.Replace(pos, url.Length(), uURL);
+        }
+      } else {
+        /* port */
+        if (!uPort.IsEmpty()) {
+          rv = prefBranch->GetCharPref("port", getter_Copies(prefString));
+          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+            parameters.Append(" ");
+            parameters.Append(prefString);
+          }
+        }
+        /* username */
+        if (!uUsername.IsEmpty()) {
+          rv = prefBranch->GetCharPref("username", getter_Copies(prefString));
+          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+            parameters.Append(" ");
+            parameters.Append(prefString);
+          }
+        }
+        /* password */
+        if (!uPassword.IsEmpty()) {
+          rv = prefBranch->GetCharPref("password", getter_Copies(prefString));
+          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+            parameters.Append(" ");
+            parameters.Append(prefString);
+          }
+        }
+        /* host */
+        if (!uHost.IsEmpty()) {
+          rv = prefBranch->GetCharPref("host", getter_Copies(prefString));
+          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+            parameters.Append(" ");
+            parameters.Append(prefString);
+          }
+        }
+      }
+    }
+  
+    PRInt32 pos;
+  
+    NS_NAMED_LITERAL_CSTRING(port, "%port%");
+    NS_NAMED_LITERAL_CSTRING(username, "%username%");
+    NS_NAMED_LITERAL_CSTRING(password, "%password%");
+    NS_NAMED_LITERAL_CSTRING(host, "%host%");
+  
+    pos = parameters.Find(port.get());
+    if (pos != kNotFound) {
+      parameters.Replace(pos, port.Length(), uPort);
+    }
+    pos = parameters.Find(username.get());
+    if (pos != kNotFound) {
+      parameters.Replace(pos, username.Length(), uUsername);
+    }
+    pos = parameters.Find(password.get());
+    if (pos != kNotFound) {
+      parameters.Replace(pos, password.Length(), uPassword);
+    }
+    pos = parameters.Find(host.get());
+    if (pos != kNotFound) {
+      parameters.Replace(pos, host.Length(), uHost);
+    }
   }
 
   const char *params[3];
@@ -1275,16 +1302,27 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   nsCOMPtr<nsILocalFile> application;
   rv = NS_NewNativeLocalFile(nsDependentCString(applicationName.get()), PR_FALSE, getter_AddRefs(application));
   if (NS_FAILED(rv)) {
-     /* Maybe they didn't qualify the name - use COMSPEC */
-     rv = NS_NewNativeLocalFile(nsDependentCString(getenv("COMSPEC")), PR_FALSE, getter_AddRefs(application));
-     if (NS_FAILED(rv)) {
-       return rv;
+     /* Maybe they didn't qualify the name - search path */
+     char szAppPath[CCHMAXPATH];
+     APIRET rc = DosSearchPath(SEARCH_IGNORENETERRS | SEARCH_ENVIRONMENT,
+                               "PATH", applicationName.get(),
+                               szAppPath, sizeof(szAppPath));
+     if (rc == NO_ERROR) {
+       rv = NS_NewNativeLocalFile(nsDependentCString(szAppPath), PR_FALSE, getter_AddRefs(application));
+     }
+     if (NS_FAILED(rv) || (rc != NO_ERROR)) {
+       /* Try just launching it with COMSPEC */
+       rv = NS_NewNativeLocalFile(nsDependentCString(getenv("COMSPEC")), PR_FALSE, getter_AddRefs(application));
+       if (NS_FAILED(rv)) {
+         return rv;
+       }
+  
+       params[0] = "/c";
+       params[1] = applicationName.get();
+       params[2] = parameters.get();
+       numParams = 3;
      }
 
-     params[0] = "/c";
-     params[1] = applicationName.get();
-     params[2] = parameters.get();
-     numParams = 3;
   }
 
   nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
