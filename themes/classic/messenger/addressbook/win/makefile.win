@@ -25,8 +25,3 @@ THEME_ROOT_DEPTH = ..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-clobber::
-	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\addressbook\*.*
-
-install:: 
-	$(MAKE_INSTALL) addressbook.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
