@@ -557,7 +557,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     temp.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
     rpos=theRight.RFind('<');   //now scan for the '<'
     if(-1<rpos)
-      rpos=theRight.RFind(aTerminalString,PR_TRUE,rpos);
+      rpos=theRight.RFind(aTerminalString,PR_TRUE);
     done=PRBool(-1<rpos); 
   }  //while
   int len=temp.Length(); 
