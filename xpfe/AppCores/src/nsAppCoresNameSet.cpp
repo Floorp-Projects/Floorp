@@ -27,6 +27,7 @@
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMToolkitCore.h"
 #include "nsIDOMMailCore.h"
+#include "nsIDOMPrefsCore.h"
 #include "nsIDOMRDFCore.h"
 #include "nsIDOMToolbarCore.h"
 #include "nsIDOMBrowserAppCore.h"
@@ -38,6 +39,7 @@ static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 static NS_DEFINE_IID(kAppCoresCID,           NS_APPCORESMANAGER_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kMailCoreCID,           NS_MAILCORE_CID);
+static NS_DEFINE_IID(kPrefsCoreCID,          NS_PREFSCORE_CID);
 static NS_DEFINE_IID(kRDFCoreCID,            NS_RDFCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,        NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,     NS_BROWSERAPPCORE_CID);
@@ -66,6 +68,7 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     if (NS_OK != result) return result;
 
     result = NS_InitMailCoreClass(aScriptContext, nsnull);
+    result = NS_InitPrefsCoreClass(aScriptContext, nsnull);
     result = NS_InitToolbarCoreClass(aScriptContext, nsnull);
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
     result = NS_InitEditorAppCoreClass(aScriptContext, nsnull);
@@ -89,6 +92,12 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     {
         result = manager->RegisterGlobalName("MailCore", 
                                              kMailCoreCID, 
+                                             PR_TRUE);
+
+        if (NS_OK != result) return result;
+
+        result = manager->RegisterGlobalName("PrefsCore", 
+                                             kPrefsCoreCID, 
                                              PR_TRUE);
 
         if (NS_OK != result) return result;
