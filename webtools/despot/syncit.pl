@@ -296,6 +296,7 @@ while (@reprow = $repquery->fetchrow()) {
                 if (@peers > 0) {
                     $maillist .= "?cc=" . join(',', @peers);
                 }
+                $maillist =~ s/\@/&#64;/g;
 
                 print OWNERS "<A name='$name'>
 <TABLE border width='100%' bgcolor='#EEEEEE'>
@@ -338,6 +339,7 @@ Newsgroup:</TH><TD>";
 Peers:</TH><TD>";
                 my @peerlist;
                 foreach $i (@peers) {
+                    $i =~ s/\@/&#64;/g;
                     push @peerlist, "<a href='mailto:$i'>" . shift(@peernames) . "</a>";
                 }
                 print OWNERS join(', ', @peerlist);
