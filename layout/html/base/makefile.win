@@ -16,8 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
 
 DIRS=src 
 
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\layout\config\rules.mak>

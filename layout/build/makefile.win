@@ -16,7 +16,6 @@
 # Reserved.
 
 DEPTH=..\..
-IGNORE_MANIFEST=1
 
 DEFINES=-D_IMPL_NS_HTML 
 
@@ -72,7 +71,7 @@ LLIBS=					\
  $(DIST)\lib\libplc21.lib		\
  $(LIBNSPR)
 
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\layout\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
