@@ -58,8 +58,10 @@ ifndef MAKE
 MAKE		:= gmake
 endif
 
-# Check for some file in the tree.
-ifeq (,$(wildcard $(TOPSRCDIR)/config/Makefile.in))
+CONFIG_GUESS  := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
+ifdef CONFIG_GUESS
+  CONFIG_GUESS := $(shell $(CONFIG_GUESS))
+else
   _IS_FIRST_CHECKOUT := 1
 endif
 
@@ -101,7 +103,7 @@ CVSCO_LOGFILE := $(ROOTDIR)/cvsco.log
 MOZCONFIG2DEFS := mozilla/build/autoconf/mozconfig2defs.sh
 run_for_side_effects := \
   $(shell cd $(ROOTDIR); \
-          if test ! -f $(MOZCONFIG2DEFS); then \
+          if test "$(_IS_FIRST_CHECKOUT)"; then \
 	    $(CVSCO) mozilla/build/autoconf/find-mozconfig.sh; \
 	    $(CVSCO) $(MOZCONFIG2DEFS); \
 	  else true; \
@@ -172,13 +174,8 @@ WEBCONFIG_FILE  := $(HOME)/.mozconfig
 
 MOZCONFIG2URL := build/autoconf/mozconfig2url.sh
 webconfig:
-	@url=$(WEBCONFIG_URL); \
 	cd $(TOPSRCDIR); \
-	if test ! -f $(MOZCONFIG2URL); then \
-	  (cd ..; $(CVSCO) mozilla/$(MOZCONFIG2URL);) \
-	else true; \
-	fi; \
-	url=$$url`$(MOZCONFIG2URL)`; \
+	@url=$(WEBCONFIG_URL)`$(MOZCONFIG2URL)`; \
 	echo Running netscape with the following url: ;\
 	echo ;\
 	echo $$url ;\
@@ -227,7 +224,7 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-$(OBJDIR)/Makefile: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
+$(OBJDIR)/Makefile $(OBJDIR)/config.status $(OBJDIR)/config.cache: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR); 
 	@echo ../configure
@@ -255,7 +252,7 @@ depend:
 ####################################
 # Build it
 
-build:  nspr $(OBJDIR)/Makefile 
+build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status $(OBJDIR)/config.cache
 	cd $(OBJDIR); $(MAKE);
 
 ####################################
@@ -269,5 +266,5 @@ clean realclean:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout nspr depend build clean realclean
+.PHONY: checkout depend build clean realclean
 
