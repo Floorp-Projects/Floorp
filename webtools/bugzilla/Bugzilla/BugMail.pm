@@ -35,8 +35,6 @@ use base qw(Exporter);
     PerformSubsts
 );
 
-use Bugzilla::RelationSet;
-
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Util;
 
@@ -181,9 +179,13 @@ sub ProcessOneBug($) {
     trick_taint($start);
     trick_taint($end);
 
-    my $ccSet = new Bugzilla::RelationSet();
-    $ccSet->mergeFromDB("SELECT who FROM cc WHERE bug_id = $id");
-    $values{'cc'} = $ccSet->toString();
+    my $cc_ref = Bugzilla->dbh->selectcol_arrayref(
+        q{SELECT profiles.login_name FROM cc, profiles
+           WHERE bug_id = ?
+             AND cc.who = profiles.userid
+        ORDER BY profiles.login_name},
+        undef, $id);
+    $values{'cc'} = join(',', @$cc_ref); 
     
     my @voterList;
     SendSQL("SELECT profiles.login_name FROM votes, profiles " .
