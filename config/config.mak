@@ -238,6 +238,11 @@ PERL = $(MOZ_TOOLS)\perl5\perl.exe
 PERL = perl.exe
 !endif
 
+#if MOZILLA_OFFICIAL is set, then define splitsym
+!if defined (MOZILLA_OFFICIAL)
+SPLITSYM = $(MOZ_TOOLS)\bin\splitsym
+!endif
+
 # use find
 FIND = $(MOZ_TOOLS)\bin\find.exe
 
