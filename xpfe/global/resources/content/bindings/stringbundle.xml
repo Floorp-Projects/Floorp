@@ -77,7 +77,7 @@
         </getter>
       </property>
 
-      <property name="_bundle">null</property>
+      <field name="_bundle">null</field>
 
     </implementation>
   </binding>

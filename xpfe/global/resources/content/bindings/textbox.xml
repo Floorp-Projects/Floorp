@@ -44,7 +44,7 @@
     </content>
     
     <implementation>
-      <property name="inputField" readonly="true">
+      <field name="inputField" readonly="true">
        <![CDATA[
         var v = document.getAnonymousNodes(this);
         var input = null;
@@ -59,7 +59,7 @@
         }
         input;
       ]]>
-      </property>
+      </field>
       <property name="value"      onset="this.inputField.value = val; return val;"
                                   onget="return this.inputField.value;"/>
       <property name="type"       onset="this.inputField.type = val; return val;"
@@ -112,9 +112,9 @@
       <property name="selectionEnd"   onset="this.inputField.selectionEnd = val; return val;"
                                       onget="return this.inputField.selectionEnd;"/>
      
-      <property name="suppressFocusBlur">
+      <field name="suppressFocusBlur">
         false
-      </property>
+      </field>
 
       <method name="setSelectionRange">
         <parameter name="aSelectionStart"/>
@@ -187,7 +187,7 @@
       </xul:popupset>
     </content>
     <implementation>
-      <property name="inputField" readonly="true">
+      <field name="inputField" readonly="true">
        <![CDATA[
         var v = document.getAnonymousNodes(this);
         var input = null;
@@ -202,7 +202,7 @@
         }
         input;
       ]]>
-      </property>
+      </field>
     </implementation>
   </binding>
 

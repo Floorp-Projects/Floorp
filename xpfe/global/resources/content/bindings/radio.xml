@@ -121,7 +121,7 @@
         ]]>
         </body>
       </method>
-      <property name="mRadioChildren">[]</property>
+      <field name="mRadioChildren">[]</field>
       <method name="_getRadioChildren">
         <parameter name="aNode">this</parameter>
         <body>

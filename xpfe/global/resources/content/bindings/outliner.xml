@@ -29,12 +29,12 @@
       <property name="currentIndex"
                 onget="return this.outlinerBoxObject.selection.currentIndex;"
                 onset="return this.outlinerBoxObject.selection.currentIndex=val;"/>
-      <property name="selectionHead">
+      <field name="selectionHead">
         -1
-      </property>
-      <property name="selectionTail">
+      </field>
+      <field name="selectionTail">
         -1
-      </property>
+      </field>
       <property name="singleSelection"
                 onget="return this.getAttribute('seltype') == 'single'"
                 readonly="true"/>
@@ -553,9 +553,9 @@
           this.parentNode._ensureColumnOrder();
       </constructor>
 
-      <property name="_lastSelectedRow">
+      <field name="_lastSelectedRow">
         -1
-      </property>
+      </field>
     </implementation>
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not

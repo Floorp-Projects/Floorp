@@ -27,7 +27,7 @@
         svc.getBranch(null);
       </field>
 
-      <property name="mPrefObserver"><![CDATA[
+      <field name="mPrefObserver"><![CDATA[
         ({
           urlbar: this,
           
@@ -36,7 +36,7 @@
               this.urlbar.updatePref(aPref);
           }
         });
-      ]]></property>
+      ]]></field>
 
       <method name="updatePref">
         <parameter name="aPref"/>
@@ -115,9 +115,9 @@
                 onget="return this.textbox.getAttribute('defaultSearchEngine') == 'true';"
                 onset="this.textbox.setAttribute('defaultSearchEngine', val); return val;"/>
 
-      <property name="mSearchBox">
+      <field name="mSearchBox">
          document.getAnonymousElementByAttribute(this, "role", "search-box");
-      </property>
+      </field>
 
       <field name="mPrefs">
         var svc = Components.classes["@mozilla.org/preferences-service;1"]
@@ -125,7 +125,7 @@
         svc.getBranch(null);
       </field>
 
-      <property name="mPrefObserver"><![CDATA[
+      <field name="mPrefObserver"><![CDATA[
         ({
           resultsPopup: this,
           
@@ -136,25 +136,25 @@
               this.resultsPopup.updatePref(aPref);
           }
         });
-      ]]></property>
+      ]]></field>
 
-      <property name="mInputListener"><![CDATA[
+      <field name="mInputListener"><![CDATA[
         (function(aEvent) {
           // "this" is the textbox, not the popup
           if (this.mSearchInputTO)
             window.clearTimeout(this.mSearchInputTO);
           this.mSearchInputTO = window.setTimeout(this.resultsPopup.mInputTimeout, this.timeout, this);
         });
-      ]]></property>
+      ]]></field>
 
-      <property name="mInputTimeout"><![CDATA[
+      <field name="mInputTimeout"><![CDATA[
         (function(me) {
           me.resultsPopup.mSearchBox.searchValue = me.value;
           me.mSearchInputTO = 0;
         });
-      ]]></property>
+      ]]></field>
 
-      <property name="mEnginesReady">false</property>
+      <field name="mEnginesReady">false</field>
       
       <method name="getOverrideValue">
         <body><![CDATA[
@@ -333,21 +333,21 @@
         this.mSelectedIndex = null;
       ]]></constructor>
       
-      <property name="parentMouseoverListener">
+      <field name="parentMouseoverListener">
         // ensure that if a result menuitem is moused-over, any
         // search selection is cleared
         (function(aEvent) {
           if (aEvent.target.nodeName == "menuitem")
             this.mSearchBox.selectedIndex = null;
          })
-      </property>
+      </field>
       
-      <property name="parentDestroyListener">
+      <field name="parentDestroyListener">
         // ensure that if the popup closes, any search selection is cleared
         (function(aEvent) {
            this.mSearchBox.selectedIndex = null;
          })
-      </property>
+      </field>
       
       <property name="activeChild" 
                 onget="return this.childNodes[this.mSelectedIndex]"/>

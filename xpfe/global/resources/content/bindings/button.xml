@@ -183,7 +183,7 @@
         </setter>
       </property>
       
-      <property name="_pendingActive">false</property>
+      <field name="_pendingActive">false</field>
 
       <method name="_captureMouseUp">
         <body>
