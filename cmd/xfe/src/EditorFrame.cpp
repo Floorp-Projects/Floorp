@@ -938,7 +938,6 @@ XFE_EditorFrame::isCommandSelected(CommandType cmd,
 
     else if (cmd == xfeCmdSetAlignmentStyleCenter)
     {
-      printf("Checking for center alignment\n");
       return (EDT_GetParagraphAlign(getContext()) == ED_ALIGN_CENTER);
     }
 
@@ -1268,10 +1267,8 @@ fe_editor_find_context(char* address, int type)
 			//    "/dir/file.html" == "file:/dir/file.html"
 			//    "/dir/file.html" == "file:///dir/file.html"
 			//
-			if (hist_address != NULL && 
-				(XP_STRCMP(hist_address, address) == 0 /* exact */
-
-				 )
+			if (hist_address != NULL && address != NULL && 
+                EDT_IsSameURL(hist_address, address,0,0)
 				)
 				return context;
 		}
