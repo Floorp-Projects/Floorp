@@ -271,6 +271,99 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsBrowserAppCore::NewWindow()
+{  
+  nsresult rv;
+  nsString controllerCID;
+
+  char *  urlstr=nsnull;
+  char *   progname = nsnull;
+  char *   width=nsnull, *height=nsnull;
+  char *  iconic_state=nsnull;
+
+  nsIAppShellService* appShell = nsnull;
+
+  // Default URL if one was not provided in the cmdline
+  if (nsnull == urlstr)
+      urlstr = "resource:/res/samples/appshell.html";
+  else
+      fprintf(stderr, "URL to load is %s\n", urlstr);
+
+  /*
+   * Create the Application Shell instance...
+   */
+  rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                    (nsISupports**)&appShell);
+  if (!NS_SUCCEEDED(rv)) {
+    goto done;
+  }
+
+  /*
+   * Post an event to the shell instance to load the AppShell 
+   * initialization routines...  
+   * 
+   * This allows the application to enter its event loop before having to 
+   * deal with GUI initialization...
+   */
+  ///write me...
+  nsIURL* url;
+  nsIWidget* newWindow;
+  
+  rv = NS_NewURL(&url, urlstr);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  /*
+   * XXX: Currently, the CID for the "controller" is passed in as an argument 
+   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
+   *      components this will be specified in the XUL description...
+   */
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+  appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull);
+  NS_RELEASE(url);
+  
+done:
+  /* Release the shell... */
+  if (nsnull != appShell) {
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::PrintPreview()
+{  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::Close()
+{  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::Exit()
+{  
+  nsIAppShellService* appShell = nsnull;
+
+  /*
+   * Create the Application Shell instance...
+   */
+  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                             kIAppShellServiceIID,
+                                             (nsISupports**)&appShell);
+  if (NS_SUCCEEDED(rv)) {
+    appShell->Shutdown();
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  } 
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP    
 nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)

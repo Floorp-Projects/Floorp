@@ -13,6 +13,12 @@ interface BrowserAppCore : BaseAppCore
 	void setContentWindow(in Window win);
 	void setWebShellWindow(in Window win);
 
+	void newWindow();
+	void printPreview();
+	void close();
+	void exit();
+
+
 	void setDisableCallback(in wstring script);
 	void setEnableCallback(in wstring script);
 
