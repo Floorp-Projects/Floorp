@@ -377,14 +377,15 @@ function stringTrim (s)
     
 }
 
-function formatDateOffset (seconds, format)
+/* the offset should be in seconds, it will be rounded to 2 decimal places */
+function formatDateOffset (offset, format)
 {
-    seconds = parseInt(seconds);
-    var minutes = parseInt(seconds / 60);
-    seconds = seconds % 60;
-    var hours   = parseInt(minutes / 60);
+    offset = roundTo(offset, 2);
+    var seconds = offset % 60;
+    var minutes = parseInt(offset / 60);
+    var hours = parseInt(minutes / 60);
     minutes = minutes % 60;
-    var days    = parseInt(hours / 24);
+    var days = parseInt(hours / 24);
     hours = hours % 24;
 
     if (!format)
@@ -396,7 +397,7 @@ function formatDateOffset (seconds, format)
             ary.push (hours + " hours");
         if (minutes > 0)
             ary.push (minutes + " minutes");
-        if (seconds > 0)
+        if (seconds > 0 || offset == 0)
             ary.push (seconds + " seconds");
 
         format = ary.join(", ");
