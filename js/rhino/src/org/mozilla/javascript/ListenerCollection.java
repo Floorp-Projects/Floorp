@@ -1,10 +1,4 @@
-/**
- * $Id: ListenerCollection.java,v 1.2 1999/05/19 23:58:37 norris%netscape.com Exp $
- *
- * This class provides a series of methods for accessing event listeners.
- *
- *      To get in touch with the Java Mozilla team, check out:
- *       news://news.mozilla.org/netscape.public.mozilla.java
+/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "MozPL"); you may not use this file except in
@@ -20,52 +14,9 @@
  * Portions created by Ian D. Stewart are Copyright (C) 1998, 1999 
  * Ian D. Stewart.
  * All Rights Reserved.
- *
- * Revision history:
- * $Log: ListenerCollection.java,v $
- * Revision 1.2  1999/05/19 23:58:37  norris%netscape.com
- * Remove Java 2 dependency.
- *
- * Revision 1.1  1999/05/18 22:32:25  norris%netscape.com
- * Add submission:
- * Subject:
- *             Re: Modified Context.java
- *        Date:
- *             Sat, 15 May 1999 08:01:37 +0000
- *       From:
- *             "Ian D. Stewart" <idstewart@softhome.net>
- *         To:
- *             Norris Boyd <norris@netscape.com>
- *  References:
- *             1 , 2 , 3 , 4 , 5
- *
- *
- *
- *
- * Ian D. Stewart wrote:
- *
- *   Norris Boyd wrote:
- *
- *
- *
- *
- *     Can I help with EventListener collector?
- *
- *   Actually, I have a working implementation complete (attatched), but by all means, feel free to add any functionality you feel
- *   may be missing, or to tweak the code .
- *
- * Norris,
- *
- * After I sent I my last e-mail, I noticed some potential issues using Object[] in ListenerCollection.getListeners(Class iface).
- * I'm attatching a new version, which uses a Vector object.  This should resolve those issues.
- *
- *
- * Ian
- *
- * 
- *    KNOWN BUGS/FRUSTRATIONS:
- *      - None, currently.
  */
+
+/* This class provides a series of methods for accessing event listeners. */
 
 package org.mozilla.javascript;
 
