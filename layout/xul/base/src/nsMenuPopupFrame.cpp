@@ -228,8 +228,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
                         eContentTypeUI);
 #else
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  ourView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
-                        eContentTypeUI);
+  ourView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE);
 #endif   
 
   MoveToAttributePosition();

@@ -154,7 +154,7 @@ protected:
   PRBool IsInline() { return mIsInline; }
   nsresult ReloadURL();
   nsresult ShowDocShell();
-  nsresult CreateViewAndWidget();
+  nsresult CreateViewAndWidget(nsContentType aContentType);
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -275,7 +275,7 @@ nsSubDocumentFrame::Init(nsIPresContext* aPresContext,
     do_QueryInterface(aPresContext);
 
   if (thePrintPreviewContext) {
-    rv = CreateViewAndWidget();
+    rv = CreateViewAndWidget(eContentTypeContent);
     NS_ENSURE_SUCCESS(rv,rv);
 
     // we are in PrintPreview
@@ -682,7 +682,13 @@ nsSubDocumentFrame::ShowDocShell()
                                        scrollY);
   }
 
-  rv = CreateViewAndWidget();
+  PRInt32 itemType = nsIDocShellTreeItem::typeContent;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docShell));
+  if (treeItem) {
+    treeItem->GetItemType(&itemType);
+  }
+  rv = CreateViewAndWidget(itemType == nsIDocShellTreeItem::typeChrome ?
+                                       eContentTypeUI : eContentTypeContent);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -705,7 +711,7 @@ nsSubDocumentFrame::ShowDocShell()
 }
 
 nsresult
-nsSubDocumentFrame::CreateViewAndWidget()
+nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
 {
   // create, init, set the parent of the view
   nsIView* innerView;
@@ -730,7 +736,8 @@ nsSubDocumentFrame::CreateViewAndWidget()
   initData.clipChildren = PR_TRUE;
   initData.clipSiblings = PR_TRUE;
 
-  return innerView->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE);
+  return innerView->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
+                                 aContentType);
 }
 
 // load a new url
