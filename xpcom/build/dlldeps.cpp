@@ -104,7 +104,7 @@ void XXXNeverCalled()
     nsArrayEnumerator(NULL);
     NS_NewIntersectionEnumerator(NULL, NULL, NULL);
     NS_QuickSort(NULL, 0, 0, NULL, NULL);
-    nsString2();
+    nsString();
     nsProxyObject(NULL, 0, NULL);
     XPT_DoString(NULL, NULL);
     XPT_DoHeader(NULL, NULL);
