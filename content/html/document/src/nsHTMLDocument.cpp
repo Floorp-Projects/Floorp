@@ -1967,19 +1967,16 @@ nsHTMLDocument::GetCookie(nsAWritableString& aCookie)
 {
   nsresult result = NS_OK;
   nsAutoString str;
-  NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
-  char * cookie;
-  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
-    result = service->GetCookieString(mDocumentURL, &cookie);
+
+  aCookie.Truncate(); // clear current cookie in case service fails; no cookie isn't an error condition.
+
+  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &result);
+  if (NS_SUCCEEDED(result) && service && mDocumentURL) {
+    nsXPIDLCString cookie;
+    result = service->GetCookieString(mDocumentURL, getter_Copies(cookie));
+    if (NS_SUCCEEDED(result) && cookie)
+      CopyASCIItoUCS2(nsDependentCString(cookie), aCookie);
   }
-  if (nsnull != cookie) {
-    str.AssignWithConversion(cookie);
-    nsCRT::free(cookie);
-  } else {
-    // No Cookie isn't an error condition.
-    aCookie.Truncate();
-  }
-  aCookie.Assign(str);
   return result;
 }
 
@@ -1987,9 +1984,8 @@ NS_IMETHODIMP
 nsHTMLDocument::SetCookie(const nsAReadableString& aCookie)
 {
   nsresult result = NS_OK;
-  NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
-  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
-    char *cookie = nsString(aCookie).ToNewCString();
+  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &result);
+  if (NS_SUCCEEDED(result) && service && mDocumentURL) {
     nsCOMPtr<nsIScriptGlobalObject> globalObj;
     nsCOMPtr<nsIPrompt> prompt;
     this->GetScriptGlobalObject(getter_AddRefs(globalObj));
@@ -1999,8 +1995,12 @@ nsHTMLDocument::SetCookie(const nsAReadableString& aCookie)
         window->GetPrompter(getter_AddRefs(prompt));
       }
     }
-    result = service->SetCookieString(mDocumentURL, prompt, cookie);
-    nsCRT::free(cookie);
+    result = NS_ERROR_OUT_OF_MEMORY;
+    char* cookie = ToNewCString(aCookie);
+    if (cookie) {
+      result = service->SetCookieString(mDocumentURL, prompt, cookie);
+      nsCRT::free(cookie);
+    }
   }
   return result;
 }
