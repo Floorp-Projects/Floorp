@@ -49,7 +49,7 @@ if ( err == SUCCESS ) {
    err = performInstall();
   
    if ( err == SUCCESS || err == 999 ) {
-      alert("The Mozilla Calendar has been succesfully installed. \n"
+      alert("The Mozilla Calendar has been successfully installed. \n"
       +"Please restart your application to continue.");
    } else { 
     alert("performInstall() failed. \n"
