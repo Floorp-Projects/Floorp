@@ -4293,6 +4293,17 @@ nsBookmarksService::SaveToBackup()
     nsCOMPtr<nsIFile> backupFile, parentFolder;
     bookmarksFile->GetParent(getter_AddRefs(parentFolder));
     if (parentFolder) {
+        rv = parentFolder->Clone(getter_AddRefs(backupFile));
+        if (NS_FAILED(rv))
+            return;
+
+        rv = backupFile->Append(NS_LITERAL_STRING("bookmarks.bak"));
+        if (NS_FAILED(rv))
+            return;
+
+        rv = backupFile->Remove(PR_FALSE);
+        /* ignore error */
+
         rv = bookmarksFile->CopyTo(parentFolder, NS_LITERAL_STRING("bookmarks.bak"));
         if (NS_SUCCEEDED(rv))
             mNeedBackupUpdate = PR_FALSE;
