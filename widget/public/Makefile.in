@@ -50,7 +50,6 @@ EXPORTS		= \
 		nsIScrollbar.h \
 		nsGUIEvent.h \
 		nsEvent.h \
-		nsIRadioButton.h \
 		nsIMouseListener.h \
 		nsIEventListener.h \
 		nsIMenuListener.h \

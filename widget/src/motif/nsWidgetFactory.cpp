@@ -33,7 +33,6 @@
 #include "nsButton.h"
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
-#include "nsRadioButton.h"
 #include "nsTextWidget.h"
 #include "nsTextAreaWidget.h"
 #include "nsFileWidget.h"
@@ -63,7 +62,6 @@ static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
@@ -177,9 +175,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsIWidget *)new nsCheckButton();
-    }
-    else if (mClassID.Equals(kCRadioButton)) {
-        inst = (nsISupports*)(nsIWidget *)new nsRadioButton();
     }
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)(nsIWidget *)new nsFileWidget();

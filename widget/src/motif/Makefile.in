@@ -45,7 +45,6 @@ CPPSRCS		= \
 		nsMenuBar.cpp \
 		nsMenuItem.cpp \
 		nsPopUpMenu.cpp \
-		nsRadioButton.cpp \
 		nsScrollbar.cpp \
 		nsTextAreaWidget.cpp \
 		nsTextHelper.cpp \
