@@ -36,21 +36,21 @@
 
 <!-- Select addresses for mail message dialog -->
 <!ENTITY ab-selectAddressesDialog.title "Dialogue de l'application web - Sélection d'adresses">
-<!ENTITY ab-selectAddressesDialogHeader.label "Selectionner les adresses">
+<!ENTITY ab-selectAddressesDialogHeader.label "Sélectionner les adresses">
 <!ENTITY ab-selectAddressesDialogLookIn.label "Chercher dans : ">
 <!ENTITY ab-selectAddressesDialogNameColumn.label "Nom">
-<!ENTITY ab-selectAddressesDialogEmailColumn.label "Adresse e-mail">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "Adresse électronique">
 <!ENTITY ab-selectAddressesDialogFor.label " : ">
 <!ENTITY ab-selectAddressesDialogClearButton.label "Effacer">
 <!ENTITY ab-selectAddressesDialogToButton.label "À ">
 <!ENTITY ab-selectAddressesDialogCcButton.label "Cc ">
 <!ENTITY ab-selectAddressesDialogBccButton.label "Bcc ">
-<!ENTITY ab-selectAddressesDialogRemoveButton.label "Oter">
+<!ENTITY ab-selectAddressesDialogRemoveButton.label "Ôter">
 <!ENTITY ab-selectAddressesDialogAddressTo.label "Adresser le message à:">
-<!ENTITY ab-selectAddressesDialogPrefixTo.label "À: ">
-<!ENTITY ab-selectAddressesDialogPrefixCc.label "CC: ">
-<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
-<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Pas d'adresse e-mail">
+<!ENTITY ab-selectAddressesDialogPrefixTo.label "À : ">
+<!ENTITY ab-selectAddressesDialogPrefixCc.label "CC : ">
+<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc : ">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Pas d'adresse électronique">
 <!ENTITY ab-selectAddressesDialogInvite.label "Inviter">
 <!ENTITY ab-selectAddressesDialogUninvite.label "désinviter">
 <!ENTITY ab-selectAddressesDialogInviteList.label "Liste d'invitation :">
