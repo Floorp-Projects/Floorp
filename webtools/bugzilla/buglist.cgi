@@ -485,8 +485,9 @@ if (!UserInGroup(Param("timetrackinggroup"))) {
 
 # Generate the list of columns that will be selected in the SQL query.
 
-# The bug ID is always selected because bug IDs are always displayed 
-my @selectcolumns = ("bug_id");
+# The bug ID is always selected because bug IDs are always displayed.
+# Severity and Priority are required for buglist CSS classes.
+my @selectcolumns = ("bug_id", "bug_severity", "priority");
 
 # remaining and actual_time are required for precentage_complete calculation:
 if (lsearch(\@displaycolumns, "percentage_complete") >= 0) {
