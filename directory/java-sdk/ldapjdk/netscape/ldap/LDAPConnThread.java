@@ -361,7 +361,7 @@ class LDAPConnThread extends Thread {
                     c.deregisterConnection();
                 }
             }
-            m_registered.clear();
+            m_registered.removeAllElements();
             m_registered = null;
             m_messages = null;
             m_requests.clear();
