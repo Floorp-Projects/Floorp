@@ -81,7 +81,6 @@ nsBrowserStatusHandler.prototype =
   jsStatus : "",
   jsDefaultStatus : "",
   overLink : "",
-  startTime : 0,
 
   statusTimeoutInEffect : false,
 
@@ -215,9 +214,6 @@ nsBrowserStatusHandler.prototype =
     var ctype;
     if (aStateFlags & nsIWebProgressListener.STATE_START) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-        // Remember when loading commenced.
-        this.startTime = (new Date()).getTime();
-
         if (aRequest && aWebProgress.DOMWindow == content)
           this.startDocumentLoad(aRequest);
 
@@ -251,15 +247,9 @@ nsBrowserStatusHandler.prototype =
             this.endDocumentLoad(aRequest, aStatus);
 
           var location = aRequest.QueryInterface(nsIChannel).URI.spec;
-          var msg = "";
-          if (location != "about:blank") {
-            // Record page loading time.
-            var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
-            msg = gNavigatorBundle.getString("nv_done");
-            msg = msg.replace(/%elapsed%/, elapsed);
-          }
           this.status = "";
-          this.setDefaultStatus(msg);
+          if (location != "about:blank")
+            this.setDefaultStatus(gNavigatorBundle.getString("nv_done"));
           try {
             ctype = aRequest.QueryInterface(nsIChannel).contentType;
             if (this.mimeTypeIsTextBased(ctype)) 
