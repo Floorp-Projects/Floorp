@@ -383,6 +383,19 @@ EmbedWindow::SetVisibility(PRBool aVisibility)
 
 // nsITooltipListener
 
+static gint
+tooltips_paint_window(GtkWidget *window)
+{
+  // draw tooltip style border around the text
+  gtk_paint_flat_box(window->style, window->window,
+                     GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                     NULL, window, "tooltip",
+                     0, 0,
+                     window->allocation.width, window->allocation.height);
+
+  return FALSE;
+}
+                                     
 NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 			   const PRUnichar *aTipText)
@@ -433,25 +446,21 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   // realize the widget
   gtk_widget_realize(sTipWindow);
 
+  gtk_signal_connect(GTK_OBJECT(sTipWindow), "expose_event",
+                     GTK_SIGNAL_FUNC(tooltips_paint_window), NULL);
+
   // set up the label for the tooltip
   GtkWidget *label = gtk_label_new(tipString);
   // wrap automatically
   gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
   gtk_container_add(GTK_CONTAINER(sTipWindow), label);
-  gtk_container_set_border_width(GTK_CONTAINER(sTipWindow), 3);
+  gtk_container_set_border_width(GTK_CONTAINER(sTipWindow), 4);
   // set the coords for the widget
   gtk_widget_set_uposition(sTipWindow, aXCoords + root_x,
 			   aYCoords + root_y);
 
   // and show it.
   gtk_widget_show_all(sTipWindow);
-
-  // draw tooltip style border around the text
-  gtk_paint_flat_box(sTipWindow->style, sTipWindow->window,
-           GTK_STATE_NORMAL, GTK_SHADOW_OUT, 
-           NULL, GTK_WIDGET(sTipWindow), "tooltip",
-           0, 0,
-           sTipWindow->allocation.width, sTipWindow->allocation.height);
 
 #ifdef MOZ_WIDGET_GTK
   gtk_widget_popup(sTipWindow, aXCoords + root_x, aYCoords + root_y);
