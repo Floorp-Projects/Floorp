@@ -786,7 +786,7 @@ ifdef NO_LD_ARCHIVE_FLAGS
 SUB_SHLOBJS = $(SUB_LOBJS)
 endif
 
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
 ifneq ($(OS_ARCH),OS2)
 ifneq ($(OS_ARCH),OpenVMS)
