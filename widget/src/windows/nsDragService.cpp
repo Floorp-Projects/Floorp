@@ -21,12 +21,19 @@
 #include "nsITransferable.h"
 #include "nsDragSource.h"
 #include "nsDataObj.h"
-//#include "nsTransferable.h"
+#include "nsTransferable.h"
+
+#include "nsIServiceManager.h"
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsClipboard.h"
 
 #include "OLEIDL.h"
 #include "OLE2.h"
 
 static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
+static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
 
 NS_IMPL_ADDREF(nsDragService)
 NS_IMPL_RELEASE(nsDragService)
@@ -79,26 +86,32 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 
 NS_IMETHODIMP nsDragService::StartDragSession (nsIDragSource * aDragSrc, 
-                                           nsPoint       * aStartLocation, 
-                                           nsPoint       * aImageOffset, 
-                                           nsIImage      * aImage, 
-                                           PRBool          aDoFlyback)
+                                               nsPoint       * aStartLocation, 
+                                               nsPoint       * aImageOffset, 
+                                               nsIImage      * aImage, 
+                                               PRBool          aDoFlyback)
 
 {
- /* NS_IF_RELEASE(mDragSource);
+  NS_IF_RELEASE(mDragSource);
   mDragSource = aDragSrc;
   NS_ADDREF(mDragSource);
 
-  nsITransferable * trans;
-  mDragSource->GetTransferable(&trans);
-  nsDataObj * dataObj = ((nsTransferable *)trans)->GetDataObj();
+  nsIClipboard* clipboard;
+  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                             kIClipboardIID,
+                                             (nsISupports **)&clipboard);
+  if (NS_OK == rv) {
+    nsITransferable * trans;
+    mDragSource->GetTransferable(&trans);
+    IDataObject * dataObj;
+    ((nsClipboard *)clipboard)->CreateNativeDataObject(trans, &dataObj);
         
-  DWORD dropRes;
-  HRESULT res = 0;
-  res = ::DoDragDrop((IDataObject*)dataObj,
-                     (IDropSource *)((nsDragSource *)mDragSource)->GetNativeDragSrc(), 
-                     DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_SCROLL, &dropRes);
-                     */
+    DWORD dropRes;
+    HRESULT res = 0;
+    res = ::DoDragDrop(dataObj,
+                       (IDropSource *)((nsDragSource *)mDragSource)->GetNativeDragSrc(), 
+                       DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_SCROLL, &dropRes);
+  }
   return NS_OK;
 }
 

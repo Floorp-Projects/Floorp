@@ -18,7 +18,7 @@
 
 #include "nsDragSource.h"
 #include "nsITransferable.h"
-//#include "DROPSRC.h"
+#include "nsNativeDragSource.h"
 
 
 static NS_DEFINE_IID(kIDragSourceIID,   NS_IDRAGSOURCE_IID);
@@ -35,8 +35,10 @@ nsDragSource::nsDragSource()
 {
   NS_INIT_REFCNT();
 
-  //mNativeDragSrc = new CfDropSource(this);
-  //mNativeDragSrc->AddRef();
+  mNativeDragSrc = (IDropSource *)new nsNativeDragSource();
+  if (mNativeDragSrc) {
+    mNativeDragSrc->AddRef();
+  }
 
   mTransferable = nsnull;
 
@@ -49,7 +51,9 @@ nsDragSource::nsDragSource()
 //-------------------------------------------------------------------------
 nsDragSource::~nsDragSource()
 {
-  //mNativeDragSrc->Release();
+  if (mNativeDragSrc) {
+    mNativeDragSrc->Release();
+  }
 }
 
 /**
