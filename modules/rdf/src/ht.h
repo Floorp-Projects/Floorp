@@ -284,7 +284,7 @@ HT_PaneStruct *			HT_GetHTPaneList ();
 HT_PaneStruct *			HT_GetNextHTPane (HT_PaneStruct* pane);
 void				htSetWorkspaceOrder(RDF_Resource src, RDF_Resource dest, PRBool afterDestFlag);
 HT_View				HT_NewView (RDF_Resource topNode, HT_Pane pane, PRBool useColumns, void *feData, PRBool autoOpen);
-void				sendNotification (HT_Resource node, HT_Event whatHappened);
+void				sendNotification (HT_Resource node, HT_Event whatHappened, RDF_Resource s, HT_ColumnType type);
 void				deleteHTNode(HT_Resource node);
 void				destroyViewInt (HT_Resource r, PRBool saveOpenState);
 void				htDeletePane(HT_Pane pane, PRBool saveWorkspaceOrder);

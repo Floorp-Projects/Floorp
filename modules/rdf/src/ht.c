@@ -366,7 +366,8 @@ updateViewItem(HT_Resource node)
 		{
 			/* new node, add */
 			child->flags &= (~HT_DIRTY_FLAG);
-			sendNotification(child,  HT_EVENT_NODE_ADDED);
+			sendNotification(child,  HT_EVENT_NODE_ADDED,
+				NULL, HT_COLUMN_UNKNOWN);
 			foundFlag = PR_TRUE;
 		}
 		child = child->next;
@@ -376,7 +377,8 @@ updateViewItem(HT_Resource node)
 
 	if (foundFlag == PR_TRUE)
 	{
-		sendNotification(node->view->top,  HT_EVENT_VIEW_REFRESH);
+		sendNotification(node->view->top,  HT_EVENT_VIEW_REFRESH,
+			NULL, HT_COLUMN_UNKNOWN);
 	}
 }
 
@@ -602,7 +604,9 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 			while (htr != NULL)
 			{
 				resynchItem(htr, aev->s, aev->v, aev->tv);
-				sendNotification(htr, theEvent);
+				sendNotification(htr, theEvent, aev->s,
+					(aev->type == RDF_STRING_TYPE) ?
+					HT_COLUMN_STRING : HT_COLUMN_UNKNOWN);
 				htr = htr->nextItem;
 			}
 		}
@@ -643,7 +647,9 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 			while (htr != NULL)
 			{
 				resynchItem(htr, uev->s, uev->v, PR_FALSE);
-				sendNotification(htr, theEvent);
+				sendNotification(htr, theEvent, uev->s,
+					(uev->type == RDF_STRING_TYPE) ?
+					HT_COLUMN_STRING : HT_COLUMN_UNKNOWN);
 				htr = htr->nextItem;
 			}      
 		}
@@ -708,7 +714,9 @@ bmkNotifFunc (RDF_Event ns, void* pdata)
 			while (htr != NULL)
 			{
 				resynchItem(htr, aev->s, aev->v, aev->tv);
-				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED);
+				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED, aev->s,
+					(aev->type == RDF_STRING_TYPE) ?
+					HT_COLUMN_STRING : HT_COLUMN_UNKNOWN);
 				htr = htr->nextItem;
 			}
 		}
@@ -734,7 +742,9 @@ bmkNotifFunc (RDF_Event ns, void* pdata)
 			while (htr != NULL)
 			{
 				resynchItem(htr, uev->s, uev->v, PR_FALSE);
-				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED);
+				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED, uev->s,
+					(uev->type == RDF_STRING_TYPE) ?
+					HT_COLUMN_STRING : HT_COLUMN_UNKNOWN);
 				htr = htr->nextItem;
 			}
 		}
@@ -1100,7 +1110,7 @@ refreshItemList (HT_Resource node, HT_Event whatHappened)
 		node->view->inited = PR_TRUE;
 		if ((gHTEventsEnabled == PR_TRUE) && whatHappened)
 		{
-			sendNotification(node,  whatHappened);
+			sendNotification(node, whatHappened, NULL, HT_COLUMN_UNKNOWN);
 		}
 	}
 }
@@ -2002,7 +2012,8 @@ htSetWorkspaceOrder(RDF_Resource src, RDF_Resource dest, PRBool afterDestFlag)
 			}
 
 			saveWorkspaceOrder(paneList);
-			sendNotification(srcView->top, HT_EVENT_VIEW_WORKSPACE_REFRESH);
+			sendNotification(srcView->top, HT_EVENT_VIEW_WORKSPACE_REFRESH,
+				NULL, HT_COLUMN_UNKNOWN);
 		}
 		paneList = paneList->next;
 	}
@@ -2191,7 +2202,7 @@ HT_NewView (RDF_Resource topNode, HT_Pane pane, PRBool useColumns, void *feData,
 		}
 		++(pane->viewListCount);
 
-		sendNotification(view->top, HT_EVENT_VIEW_ADDED);
+		sendNotification(view->top, HT_EVENT_VIEW_ADDED, NULL, HT_COLUMN_UNKNOWN);
 
 		if (pane->special == false)
 		{
@@ -2234,7 +2245,7 @@ HT_NewView (RDF_Resource topNode, HT_Pane pane, PRBool useColumns, void *feData,
 
 
 void
-sendNotification (HT_Resource node, HT_Event whatHappened)
+sendNotification (HT_Resource node, HT_Event whatHappened, RDF_Resource s, HT_ColumnType type)
 {
 	HT_Pane			pane;
 	HT_Notification		ns;
@@ -2250,7 +2261,7 @@ sendNotification (HT_Resource node, HT_Event whatHappened)
   
 	if (pane->mask & whatHappened) 
 	{
-		(*ns->notifyProc)(ns, node, whatHappened, NULL, 0L);
+		(*ns->notifyProc)(ns, node, whatHappened, s, type);
 	}
 	pane->dirty = TRUE;
 }
@@ -2272,7 +2283,8 @@ deleteHTNode(HT_Resource node)
 	/* HT_SetSelectedState(node, false); */
 
 	sendNotification(node, (node->feData != NULL) ?
-		HT_EVENT_NODE_DELETED_DATA : HT_EVENT_NODE_DELETED_NODATA);
+		HT_EVENT_NODE_DELETED_DATA : HT_EVENT_NODE_DELETED_NODATA,
+		NULL, HT_COLUMN_UNKNOWN);
 
 	itemListIndex = node->itemListIndex;
 
@@ -2478,10 +2490,11 @@ HT_DeleteView (HT_View view)
 		viewList = &((*viewList)->next);
 	}
 
-	sendNotification(view->top, HT_EVENT_VIEW_DELETED);
+	sendNotification(view->top, HT_EVENT_VIEW_DELETED, NULL, HT_COLUMN_UNKNOWN);
 	if (gPaneDeletionMode != true)
 	{
-		sendNotification(view->top, HT_EVENT_VIEW_WORKSPACE_REFRESH);
+		sendNotification(view->top, HT_EVENT_VIEW_WORKSPACE_REFRESH,
+			NULL, HT_COLUMN_UNKNOWN);
 	}
 	
 	if (view->top != NULL)
@@ -2766,8 +2779,8 @@ resynchContainer (HT_Resource container)
 		{
 			gAutoEditNewNode = false;
 			HT_SetSelection (nc);
-			sendNotification(nc, HT_EVENT_NODE_SCROLLTO);
-			sendNotification(nc, HT_EVENT_NODE_EDIT);
+			sendNotification(nc, HT_EVENT_NODE_SCROLLTO, NULL, HT_COLUMN_UNKNOWN);
+			sendNotification(nc, HT_EVENT_NODE_EDIT, NULL, HT_COLUMN_UNKNOWN);
 		}
 		if ((gAutoOpenPane != NULL) && (gAutoOpenPane == nc->view->pane))
 		{
@@ -2900,8 +2913,8 @@ addContainerItem (HT_Resource container, RDF_Resource item)
 		{
 			gAutoEditNewNode = false;
 			HT_SetSelection (nc);
-			sendNotification(nc, HT_EVENT_NODE_SCROLLTO);
-			sendNotification(nc, HT_EVENT_NODE_EDIT);
+			sendNotification(nc, HT_EVENT_NODE_SCROLLTO, NULL, HT_COLUMN_UNKNOWN);
+			sendNotification(nc, HT_EVENT_NODE_EDIT, NULL, HT_COLUMN_UNKNOWN);
 		}
 		if ((gAutoOpenPane != NULL) && (gAutoOpenPane == nc->view->pane))
 		{
@@ -4464,7 +4477,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 		case	HT_CMD_RENAME_WORKSPACE:
 		if (view == NULL)	break;
 		if ((topNode = HT_TopNode(view)) == NULL)	break;
-		sendNotification(topNode, HT_EVENT_WORKSPACE_EDIT);
+		sendNotification(topNode, HT_EVENT_WORKSPACE_EDIT, NULL, HT_COLUMN_UNKNOWN);
 		break;
 
 		case	HT_CMD_DELETE_WORKSPACE:
@@ -4780,8 +4793,10 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 
 				case	HT_CMD_RENAME:
 				if (node == NULL)	break;
-				sendNotification(node, HT_EVENT_NODE_SCROLLTO);
-				sendNotification(node, HT_EVENT_NODE_EDIT);
+				sendNotification(node, HT_EVENT_NODE_SCROLLTO,
+					NULL, HT_COLUMN_UNKNOWN);
+				sendNotification(node, HT_EVENT_NODE_EDIT,
+					NULL, HT_COLUMN_UNKNOWN);
 				break;
 
 			        case   HT_CMD_PRINT_FILE:
@@ -5738,11 +5753,15 @@ HT_SetTreeStateForButton(HT_Resource node, int state)
 	return HT_NoErr;
 }
 
+
+
 PR_PUBLIC_API(int)
 HT_GetWindowType(HT_Pane pane)
 {
 	return pane->windowType;
 }
+
+
 
 PR_PUBLIC_API(HT_Error)
 HT_SetWindowType(HT_Pane pane, int windowType)
@@ -5751,9 +5770,12 @@ HT_SetWindowType(HT_Pane pane, int windowType)
 	XP_ASSERT(pane->selectedView != NULL);
 
 	pane->windowType = windowType;
-	sendNotification(HT_TopNode(pane->selectedView),  HT_EVENT_VIEW_MODECHANGED);
+	sendNotification(HT_TopNode(pane->selectedView), HT_EVENT_VIEW_MODECHANGED,
+		NULL, HT_COLUMN_UNKNOWN);
 	return HT_NoErr;
 }
+
+
 
 /* XXX HT_NodeDisplayString is obsolete! Don't use. */
 
@@ -7407,7 +7429,8 @@ HT_SetAutoFlushOpenState (HT_Resource containerNode, PRBool isOpen)
 {
 	XP_ASSERT(containerNode != NULL);
 
-	sendNotification(containerNode,  HT_EVENT_NODE_OPENCLOSE_CHANGING);
+	sendNotification(containerNode,  HT_EVENT_NODE_OPENCLOSE_CHANGING,
+		NULL, HT_COLUMN_UNKNOWN);
 	if (isOpen)
 	{
 		containerNode->flags |= HT_AUTOFLUSH_OPEN_FLAG;
@@ -7463,7 +7486,8 @@ HT_SetOpenState (HT_Resource containerNode, PRBool isOpen)
 			}
 		}
 
-		sendNotification(containerNode,  HT_EVENT_NODE_OPENCLOSE_CHANGING);
+		sendNotification(containerNode,  HT_EVENT_NODE_OPENCLOSE_CHANGING,
+			NULL, HT_COLUMN_UNKNOWN);
 		if (isOpen)
 		{
 			containerNode->flags |= HT_OPEN_FLAG;
@@ -7505,7 +7529,7 @@ HT_SetEnabledState(HT_Resource node, PRBool isEnabled)
 			node->flags &= (~HT_ENABLED_FLAG);
 			theEvent = HT_EVENT_NODE_DISABLE;
 		}
-		sendNotification(node,  theEvent);
+		sendNotification(node, theEvent, NULL, HT_COLUMN_UNKNOWN);
 	}
 	return (HT_NoErr);
 }
@@ -7528,7 +7552,8 @@ HT_SetSelectedState (HT_Resource node, PRBool isSelected)
 		{
 			node->flags &= (~HT_SELECTED_FLAG);
 		}
-		sendNotification(node,  HT_EVENT_NODE_SELECTION_CHANGED);
+		sendNotification(node,  HT_EVENT_NODE_SELECTION_CHANGED,
+			NULL, HT_COLUMN_UNKNOWN);
 	}
 	return (HT_NoErr);
 }
@@ -7958,7 +7983,8 @@ htOpenTo(HT_View view, RDF_Resource u, PRBool selectView)
 				if (htr->view == view)
 				{
 					HT_SetSelection (htr);
-					sendNotification(htr, HT_EVENT_NODE_SCROLLTO);
+					sendNotification(htr, HT_EVENT_NODE_SCROLLTO,
+						NULL, HT_COLUMN_UNKNOWN);
 					break;
 				}
 				htr = htr->nextItem;
@@ -8745,7 +8771,8 @@ HT_SetSelectedView (HT_Pane pane, HT_View view)
 				}
 #endif
 			} 
-			sendNotification(view->top, HT_EVENT_VIEW_SELECTED);
+			sendNotification(view->top, HT_EVENT_VIEW_SELECTED,
+				NULL, HT_COLUMN_UNKNOWN);
 		}
 		else
 		{
@@ -8884,7 +8911,8 @@ HT_TypeTo(HT_Pane pane, char *typed)
 			if (compareStrings(typed, name) >= 0)
 			{
 				HT_SetSelection(node);
-				sendNotification(node, HT_EVENT_NODE_SCROLLTO);
+				sendNotification(node, HT_EVENT_NODE_SCROLLTO,
+					NULL, HT_COLUMN_UNKNOWN);
 				break;
 			}
 		}
