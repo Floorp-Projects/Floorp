@@ -877,7 +877,7 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
   do {
     if (data->mParentData) {
       if (0 == --(data->mParentData->mPendingChildren)) {  // all children are done, handle parent
-        NS_ASSERTION(data->mParentSheet, "bug");
+        NS_ASSERTION(data->mParentSheet, "Parent load data exists, but parent sheet does not");
         if (! data->mSyncLoad) {
           SheetComplete(data->mParentSheet, data->mParentData);
         }
@@ -977,7 +977,16 @@ CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
     if (data->mParentSheet) { // is child sheet
       InsertChildSheet(aSheet, data->mParentSheet, data->mSheetIndex);
       if (data->mParentRule) { // we have the @import rule that loaded this sheet
-        data->mParentRule->SetSheet(aSheet);        
+        data->mParentRule->SetSheet(aSheet);
+        if (!data->mParentData) {
+          // No parent load data; this must be an @import rule being
+          // inserted via the DOM.  Let the parent sheet know that
+          // it's done.
+          nsCOMPtr<nsICSSLoaderObserver> loaderObserver(do_QueryInterface(data->mParentSheet));
+          if (loaderObserver) {
+            loaderObserver->StyleSheetLoaded(aSheet, PR_TRUE);
+          }
+        }
       }
     }
     else if (data->mIsAgent) {  // is agent sheet
@@ -1628,8 +1637,8 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
     }
 
     if (sheet) {  // already have one loaded and unmodified
-      nsICSSStyleSheet* clone = nsnull;
-      result = sheet->Clone(clone);
+      nsCOMPtr<nsICSSStyleSheet> clone;
+      result = sheet->Clone(*getter_AddRefs(clone));
       if (NS_SUCCEEDED(result)) {
         result = SetMedia(clone, aMedia);
         if (NS_SUCCEEDED(result)) {
@@ -1638,7 +1647,6 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
             aParentRule->SetSheet(clone);
           }
         }
-        NS_RELEASE(clone);
       }
     }
     else {

@@ -80,6 +80,7 @@
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSRuleList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
@@ -87,6 +88,7 @@
 #include "nsIPresShell.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
+#include "nsICSSLoaderObserver.h"
 #include "nsRuleWalker.h"
 #include "nsCSSAtoms.h"
 #include "nsINameSpaceManager.h"
@@ -815,7 +817,8 @@ class CSSRuleListImpl;
 class DOMMediaListImpl;
 
 class CSSStyleSheetImpl : public nsICSSStyleSheet, 
-                          public nsIDOMCSSStyleSheet
+                          public nsIDOMCSSStyleSheet,
+                          public nsICSSLoaderObserver
 {
 public:
   void* operator new(size_t size) CPP_THROW_NEW;
@@ -850,6 +853,7 @@ public:
   NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument);
   NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
+  NS_IMETHOD SetOwnerRule(nsICSSImportRule* aOwnerRule);
 
   NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
                                    nsIStyleRuleProcessor* aPrevProcessor);
@@ -888,6 +892,8 @@ public:
   NS_IMETHOD IsModified(PRBool* aSheetModified) const;
   NS_IMETHOD SetModified(PRBool aModified);
 
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
+  
   nsresult  EnsureUniqueInner(void);
 
 #ifdef DEBUG
@@ -924,12 +930,13 @@ protected:
   DOMMediaListImpl*     mMedia;
   CSSStyleSheetImpl*    mFirstChild;
   CSSStyleSheetImpl*    mNext;
-  nsICSSStyleSheet*     mParent;
+  nsICSSStyleSheet*     mParent;    // weak ref
+  nsICSSImportRule*     mOwnerRule; // weak ref
 
   CSSImportsCollectionImpl* mImportsCollection;
   CSSRuleListImpl*      mRuleCollection;
   nsIDocument*          mDocument;
-  nsIDOMNode*           mOwningNode;
+  nsIDOMNode*           mOwningNode; // weak ref
   PRBool                mDisabled;
   PRBool                mDirty; // has been modified 
 
@@ -1765,6 +1772,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mFirstChild(nsnull), 
     mNext(nsnull),
     mParent(nsnull),
+    mOwnerRule(nsnull),
     mImportsCollection(nsnull),
     mRuleCollection(nsnull),
     mDocument(nsnull),
@@ -1785,6 +1793,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mFirstChild(nsnull), 
     mNext(nsnull),
     mParent(aCopy.mParent),
+    mOwnerRule(aCopy.mOwnerRule),
     mImportsCollection(nsnull), // re-created lazily
     mRuleCollection(nsnull), // re-created lazily
     mDocument(aCopy.mDocument),
@@ -1866,6 +1875,7 @@ NS_INTERFACE_MAP_BEGIN(CSSStyleSheetImpl)
   NS_INTERFACE_MAP_ENTRY(nsIStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSStyleSheet)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSStyleSheet)
 NS_INTERFACE_MAP_END
@@ -2106,6 +2116,13 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::SetOwningNode(nsIDOMNode* aOwningNode)
 { // not ref counted
   mOwningNode = aOwningNode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::SetOwnerRule(nsICSSImportRule* aOwnerRule)
+{ // not ref counted
+  mOwnerRule = aOwnerRule;
   return NS_OK;
 }
 
@@ -2767,13 +2784,12 @@ CSSStyleSheetImpl::GetMedia(nsIDOMMediaList** aMedia)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 {
-  NS_ENSURE_ARG_POINTER(aOwnerRule);
+  if (mOwnerRule) {
+    return CallQueryInterface(mOwnerRule, aOwnerRule);
+  }
+
   *aOwnerRule = nsnull;
-
-  // TBI: This should return the owner rule once the style system knows about
-  // owning rules...
-
-  return NS_OK;
+  return NS_OK;    
 }
 
 NS_IMETHODIMP    
@@ -2976,8 +2992,20 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
     else {
       CheckRuleForAttributes(cssRule);
     }
-    
-    if (mDocument) {
+
+    // We don't notify immediately for @import rules, but rather when
+    // the sheet the rule is importing is loaded
+    PRBool notify = PR_TRUE;
+    if (type == nsICSSRule::IMPORT_RULE) {
+      nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(cssRule));
+      NS_ASSERTION(importRule, "Rule which has type IMPORT_RULE and does not implement nsIDOMCSSImportRule!");
+      nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
+      importRule->GetStyleSheet(getter_AddRefs(childSheet));
+      if (!childSheet) {
+        notify = PR_FALSE;
+      }
+    }
+    if (mDocument && notify) {
       result = mDocument->StyleRuleAdded(this, cssRule);
       NS_ENSURE_SUCCESS(result, result);
     }
@@ -3165,6 +3193,43 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
   }
 
   *_retval = aIndex;
+  return NS_OK;
+}
+
+// nsICSSLoaderObserver implementation
+NS_IMETHODIMP
+CSSStyleSheetImpl::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
+{
+#ifdef DEBUG
+  nsCOMPtr<nsIStyleSheet> styleSheet(do_QueryInterface(aSheet));
+  NS_ASSERTION(styleSheet, "Sheet not implementing nsIStyleSheet!\n");
+  nsCOMPtr<nsIStyleSheet> parentSheet;
+  aSheet->GetParentSheet(*getter_AddRefs(parentSheet));
+  nsCOMPtr<nsIStyleSheet> thisSheet;
+  QueryInterface(NS_GET_IID(nsIStyleSheet), getter_AddRefs(thisSheet));
+  NS_ASSERTION(thisSheet == parentSheet, "We are being notified of a sheet load for a sheet that is not our child!\n");
+#endif
+  
+  if (mDocument && aNotify) {
+    nsCOMPtr<nsIDOMCSSStyleSheet> domSheet(do_QueryInterface(aSheet));
+    NS_ENSURE_TRUE(domSheet, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIDOMCSSRule> ownerRule;
+    domSheet->GetOwnerRule(getter_AddRefs(ownerRule));
+    NS_ENSURE_TRUE(ownerRule, NS_ERROR_UNEXPECTED);
+    
+    nsresult rv = mDocument->BeginUpdate();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStyleRule> styleRule(do_QueryInterface(ownerRule));
+    
+    rv = mDocument->StyleRuleAdded(this, styleRule);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDocument->EndUpdate();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
