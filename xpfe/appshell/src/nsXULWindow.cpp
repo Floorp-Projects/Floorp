@@ -296,7 +296,17 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   if (appShellService)
       appShellService->TopLevelWindowIsModal(
                          NS_STATIC_CAST(nsIXULWindow*, this), PR_FALSE);
-  EnableParent(PR_TRUE);
+  /*   Note there's no EnableParent(PR_TRUE) here to match the PR_FALSE one
+     above. That's done in ExitModalLoop. It's important that the parent
+     be re-enabled before this window is made invisible; to do otherwise
+     causes bizarre z-ordering problems. At this point, the window is
+     already invisible.
+       No known current implementation of Enable would have a problem with
+     re-enabling the parent twice, so we could do it again here without
+     breaking any current implementation. But that's unnecessary if the
+     modal loop is always exited using ExitModalLoop (the other way would be
+     to change the protected member variable directly.)
+  */
   appShell->Spindown();
 
   return mModalStatus;
@@ -1469,6 +1479,8 @@ NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
 
 NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus)
 {
+  if (mContinueModalLoop)
+    EnableParent(PR_TRUE);
   mContinueModalLoop = PR_FALSE;
   mModalStatus = aStatus;
   return NS_OK;
