@@ -333,7 +333,7 @@ public class Codegen extends Interpreter {
                               + "Ljava/lang/Object;",
                               flags);
 
-        int argCount = fnCurrent.getParameterCount();
+        int argCount = fnCurrent.getParamCount();
         int firstLocal = (4 + argCount * 3) + 1;
 
         aload((short)0); // this
@@ -429,7 +429,7 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.ALOAD_1);
                 addByteCode(ByteCode.ALOAD_2);
                 addByteCode(ByteCode.ALOAD_3);
-                for (int i = 0; i < scriptOrFn.getParameterCount(); i++) {
+                for (int i = 0; i < scriptOrFn.getParamCount(); i++) {
                     push(i);
                     addByteCode(ByteCode.ALOAD, 4);
                     addByteCode(ByteCode.ARRAYLENGTH);
@@ -465,7 +465,7 @@ public class Codegen extends Interpreter {
                 if (!fnCurrent.getParameterNumberContext()) {
                     // make sure that all parameters are objects
                     itsForcedObjectParameters = true;
-                    for (int i = 0; i < fnCurrent.getParameterCount(); i++) {
+                    for (int i = 0; i < fnCurrent.getParamCount(); i++) {
                         OptLocalVariable lVar = fnCurrent.getVar(i);
                         aload(lVar.getJRegister());
                         classFile.add(ByteCode.GETSTATIC,
@@ -482,7 +482,7 @@ public class Codegen extends Interpreter {
                         markLabel(isObjectLabel);
                     }
                 }
-                generatePrologue(cx, true, scriptOrFn.getParameterCount());
+                generatePrologue(cx, true, scriptOrFn.getParamCount());
             } else {
                 startNewMethod("call",
                                "(Lorg/mozilla/javascript/Context;" +
@@ -544,7 +544,7 @@ public class Codegen extends Interpreter {
         // 2 is reserved for parentScope
         // 3 is reserved for script 'this'
         short jReg = 4;
-        int parameterCount = fnCurrent.getParameterCount();
+        int parameterCount = fnCurrent.getParamCount();
         for (int i = 0; i < parameterCount; i++) {
             OptLocalVariable lVar = fnCurrent.getVar(i);
             lVar.assignJRegister(jReg);
@@ -1145,7 +1145,7 @@ public class Codegen extends Interpreter {
                           "functionName", "Ljava/lang/String;");
         }
 
-        int N = scriptOrFn.getParameterAndVarCount();
+        int N = scriptOrFn.getParamAndVarCount();
         if (N != 0) {
             setNonTrivialInit(methodName);
             push(N);
@@ -1153,7 +1153,7 @@ public class Codegen extends Interpreter {
             for (int i = 0; i != N; i++) {
                 addByteCode(ByteCode.DUP);
                 push(i);
-                push(scriptOrFn.getParameterOrVarName(i));
+                push(scriptOrFn.getParamOrVarName(i));
                 addByteCode(ByteCode.AASTORE);
             }
             addByteCode(ByteCode.ALOAD_0);
@@ -1163,7 +1163,7 @@ public class Codegen extends Interpreter {
                           "argNames", "[Ljava/lang/String;");
         }
 
-        int parmCount = scriptOrFn.getParameterCount();
+        int parmCount = scriptOrFn.getParamCount();
         if (parmCount != 0) {
             setNonTrivialInit(methodName);
             addByteCode(ByteCode.ALOAD_0);
@@ -1373,7 +1373,7 @@ public class Codegen extends Interpreter {
                         !((OptFunctionNode)scriptOrFn).requiresActivation();
         if (hasVarsInRegs) {
             // No need to create activation. Pad arguments if need be.
-            int parmCount = scriptOrFn.getParameterCount();
+            int parmCount = scriptOrFn.getParamCount();
             if (inFunction && parmCount > 0 && directParameterCount < 0) {
                 // Set up args array
                 // check length of arguments, pad if need be

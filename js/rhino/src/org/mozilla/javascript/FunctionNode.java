@@ -107,7 +107,7 @@ public class FunctionNode extends ScriptOrFnNode {
                 if (fn.getFunctionType() == FUNCTION_EXPRESSION_STATEMENT) {
                     String name = fn.getFunctionName();
                     if (name != null && name.length() != 0) {
-                        removeParameterOrVar(name);
+                        removeParamOrVar(name);
                     }
                 }
             }
@@ -119,7 +119,7 @@ public class FunctionNode extends ScriptOrFnNode {
         Node stmts = getLastChild();
         if (getFunctionType() == FUNCTION_EXPRESSION) {
             String name = getFunctionName();
-            if (name != null && name.length() != 0 && !hasParameterOrVar(name))
+            if (name != null && name.length() != 0 && !hasParamOrVar(name))
             {
                 // A function expression needs to have its name as a
                 // variable (if it isn't already allocated as a variable).

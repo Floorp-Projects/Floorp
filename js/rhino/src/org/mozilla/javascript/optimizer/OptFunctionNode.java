@@ -48,17 +48,17 @@ class OptFunctionNode extends FunctionNode {
 
     protected void finishParsing(IRFactory irFactory) {
         super.finishParsing(irFactory);
-        int N = getParameterAndVarCount();
-        int parameterCount = getParameterCount();
+        int N = getParamAndVarCount();
+        int parameterCount = getParamCount();
         optVars = new OptLocalVariable[N];
         for (int i = 0; i != N; ++i) {
-            String name = getParameterOrVarName(i);
+            String name = getParamOrVarName(i);
             optVars[i] = new OptLocalVariable(name, i < parameterCount);
         }
     }
 
     String getDirectCallParameterSignature() {
-        int pCount = getParameterCount();
+        int pCount = getParamCount();
         switch (pCount) {
             case 0: return ZERO_PARAM_SIG;
             case 1: return ONE_PARAM_SIG;
@@ -129,7 +129,7 @@ class OptFunctionNode extends FunctionNode {
     }
 
     OptLocalVariable getVar(String name) {
-        int index = getParameterOrVarIndex(name);
+        int index = getParamOrVarIndex(name);
         if (index < 0) { return null; }
         return optVars[index];
     }

@@ -117,48 +117,65 @@ public class ScriptOrFnNode extends Node {
         return regexps.size() / 2 - 1;
     }
 
-    public final boolean hasParameterOrVar(String name) {
-        if (variableTable == null) { return false; }
-        return variableTable.hasVariable(name);
+    public final boolean hasParamOrVar(String name) {
+        return itsVariableNames.has(name);
     }
 
-    public final int getParameterOrVarIndex(String name) {
-        if (variableTable == null) { return -1; }
-        return variableTable.getOrdinal(name);
+    public final int getParamOrVarIndex(String name) {
+        return itsVariableNames.get(name, -1);
     }
 
-    public final String getParameterOrVarName(int index) {
-        return variableTable.getVariable(index);
+    public final String getParamOrVarName(int index) {
+        return (String)itsVariables.get(index);
     }
 
-    public final int getParameterCount() {
-        if (variableTable == null) { return 0; }
-        return variableTable.getParameterCount();
+    public final int getParamCount() {
+        return varStart;
     }
 
-    public final int getParameterAndVarCount() {
-        if (variableTable == null) { return 0; }
-        return variableTable.size();
+    public final int getParamAndVarCount() {
+        return itsVariables.size();
     }
 
-    public final String[] getParameterAndVarNames() {
-        if (variableTable == null) { return new String[0]; }
-        return variableTable.getAllVariables();
+    public final String[] getParamAndVarNames() {
+        String[] array = new String[itsVariables.size()];
+        itsVariables.toArray(array);
+        return array;
     }
 
-    public final void addParameter(String name) {
-        if (variableTable == null) { variableTable = new VariableTable(); }
-        variableTable.addParameter(name);
+    public final void addParam(String name) {
+        // Check addparam is not called after addLocal
+        if (varStart != itsVariables.size()) Context.codeBug();
+        // Allow non-unique parameter names: use the last occurrence
+        int index = varStart++;
+        itsVariables.add(name);
+        itsVariableNames.put(name, index);
     }
 
     public final void addVar(String name) {
-        if (variableTable == null) { variableTable = new VariableTable(); }
-        variableTable.addLocal(name);
+        int vIndex = itsVariableNames.get(name, -1);
+        if (vIndex != -1) {
+            // There's already a variable or parameter with this name.
+            return;
+        }
+        int index = itsVariables.size();
+        itsVariables.add(name);
+        itsVariableNames.put(name, index);
     }
 
-    public final void removeParameterOrVar(String name) {
-        if (variableTable == null) { return; }
-        variableTable.removeLocal(name);
+    public final void removeParamOrVar(String name) {
+        int i = itsVariableNames.get(name, -1);
+        if (i != -1) {
+            itsVariables.remove(i);
+            itsVariableNames.remove(name);
+            ObjToIntMap.Iterator iter = itsVariableNames.newIterator();
+            for (iter.start(); !iter.done(); iter.next()) {
+                int v = iter.getValue();
+                if (v > i) {
+                    iter.setValue(v - 1);
+                }
+            }
+        }
     }
 
     public final int getLocalCount() { return localCount; }
@@ -174,9 +191,19 @@ public class ScriptOrFnNode extends Node {
     private String sourceName;
     private int baseLineno = -1;
     private int endLineno = -1;
+
     private ObjArray functions;
+
     private ObjArray regexps;
-    private VariableTable variableTable;
+
+    // a list of the formal parameters and local variables
+    private ObjArray itsVariables = new ObjArray();
+
+    // mapping from name to index in list
+    private ObjToIntMap itsVariableNames = new ObjToIntMap(11);
+
+    private int varStart;               // index in list of first variable
+
     private int localCount;
 
 }

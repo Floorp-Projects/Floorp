@@ -129,7 +129,7 @@ class OptTransformer extends NodeTransformer {
         OptFunctionNode theFunction
                     = (OptFunctionNode)theFnClassNameList.get(targetName);
         if (theFunction != null) {
-            int N = theFunction.getParameterCount();
+            int N = theFunction.getParamCount();
             // Refuse to directCall any function with more
             // than 32 parameters - prevent code explosion
             // for wacky test cases

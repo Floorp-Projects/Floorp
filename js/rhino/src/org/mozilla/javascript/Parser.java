@@ -261,11 +261,11 @@ class Parser {
                     first = false;
                     mustMatchToken(ts, ts.NAME, "msg.no.parm");
                     String s = ts.getString();
-                    if (fnNode.hasParameterOrVar(s)) {
+                    if (fnNode.hasParamOrVar(s)) {
                         Object[] msgArgs = { s };
                         ts.reportCurrentLineWarning("msg.dup.parms", msgArgs);
                     }
-                    fnNode.addParameter(s);
+                    fnNode.addParam(s);
                     sourceAddString(ts.NAME, s);
                 } while (ts.matchToken(ts.COMMA));
 

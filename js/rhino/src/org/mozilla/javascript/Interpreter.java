@@ -218,7 +218,7 @@ public class Interpreter {
             itsData.itsDoubleTable = tmp;
         }
 
-        itsData.itsMaxVars = scriptOrFn.getParameterAndVarCount();
+        itsData.itsMaxVars = scriptOrFn.getParamAndVarCount();
         // itsMaxFrameArray: interpret method needs this amount for its
         // stack and sDbl arrays
         itsData.itsMaxFrameArray = itsData.itsMaxVars
@@ -226,8 +226,8 @@ public class Interpreter {
                                    + itsData.itsMaxTryDepth
                                    + itsData.itsMaxStack;
 
-        itsData.argNames = scriptOrFn.getParameterAndVarNames();
-        itsData.argCount = scriptOrFn.getParameterCount();
+        itsData.argNames = scriptOrFn.getParamAndVarNames();
+        itsData.argCount = scriptOrFn.getParamCount();
     }
 
     private int updateLineNumber(Node node, int iCodeTop) {
@@ -674,7 +674,7 @@ public class Interpreter {
                 // use typeofname if an activation frame exists
                 // since the vars all exist there instead of in jregs
                 if (itsInFunctionFlag && !itsData.itsNeedsActivation)
-                    index = scriptOrFn.getParameterOrVarIndex(name);
+                    index = scriptOrFn.getParamOrVarIndex(name);
                 if (index == -1) {
                     iCodeTop = addByte(TokenStream.TYPEOFNAME, iCodeTop);
                     iCodeTop = addString(name, iCodeTop);
@@ -724,7 +724,7 @@ public class Interpreter {
                                                iCodeTop);
                             itsStackDepth--;
                         } else {
-                            int i = scriptOrFn.getParameterOrVarIndex(name);
+                            int i = scriptOrFn.getParamOrVarIndex(name);
                             iCodeTop = addByte(type == TokenStream.INC
                                                ? TokenStream.VARINC
                                                : TokenStream.VARDEC,
@@ -930,7 +930,7 @@ public class Interpreter {
                     iCodeTop = addByte(TokenStream.GETPROP, iCodeTop);
                     itsStackDepth--;
                 } else {
-                    int index = scriptOrFn.getParameterOrVarIndex(name);
+                    int index = scriptOrFn.getParamOrVarIndex(name);
                     iCodeTop = addByte(TokenStream.GETVAR, iCodeTop);
                     iCodeTop = addByte(index, iCodeTop);
                     itsStackDepth++;
@@ -949,7 +949,7 @@ public class Interpreter {
                     String name = child.getString();
                     child = child.getNext();
                     iCodeTop = generateICode(child, iCodeTop);
-                    int index = scriptOrFn.getParameterOrVarIndex(name);
+                    int index = scriptOrFn.getParamOrVarIndex(name);
                     iCodeTop = addByte(TokenStream.SETVAR, iCodeTop);
                     iCodeTop = addByte(index, iCodeTop);
                 }

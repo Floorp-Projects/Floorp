@@ -376,7 +376,7 @@ public class NodeTransformer {
                     // use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
-                if (tree.hasParameterOrVar(name)) {
+                if (tree.hasParamOrVar(name)) {
                     if (type == TokenStream.SETNAME) {
                         node.setType(TokenStream.SETVAR);
                         bind.setType(TokenStream.STRING);
@@ -416,7 +416,7 @@ public class NodeTransformer {
                     // Use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
-                if (tree.hasParameterOrVar(name)) {
+                if (tree.hasParamOrVar(name)) {
                     node.setType(TokenStream.GETVAR);
                 }
                 break;
@@ -458,7 +458,7 @@ public class NodeTransformer {
         boolean addGetThis = false;
         if (left.getType() == TokenStream.NAME) {
             String name = left.getString();
-            if (inFunction && tree.hasParameterOrVar(name)
+            if (inFunction && tree.hasParamOrVar(name)
                 && !inWithStatement())
             {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
