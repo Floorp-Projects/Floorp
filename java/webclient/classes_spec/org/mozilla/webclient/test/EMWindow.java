@@ -52,7 +52,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.10 2000/06/04 22:16:04 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.11 2000/06/05 17:54:58 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -68,6 +68,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 	private BrowserControl	browserControl;
     private BrowserControlCanvas browserCanvas;
 
+    private Navigation navigation = null;
 	private CurrentPage	    currentPage;
 	private Bookmarks	    bookmarks;
     private BookmarksFrame bookmarksFrame = null;
@@ -84,6 +85,11 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 
   private EmbeddedMozilla creator;
   private boolean viewMode = true;
+
+    private Component forwardButton;
+    private Component backButton;
+    private Component stopButton;
+    private Component refreshButton;
 
   public static void main(String [] arg)
     {
@@ -143,10 +149,10 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
         buttonsPanel.setLayout(new GridBagLayout());
 
 		// Add the buttons
-		makeItem(buttonsPanel, "Back",    0, 0, 1, 1, 0.0, 0.0);
-		makeItem(buttonsPanel, "Forward", 1, 0, 1, 1, 0.0, 0.0);
-		makeItem(buttonsPanel, "Stop",    2, 0, 1, 1, 0.0, 0.0);
-		makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
+		backButton = makeItem(buttonsPanel, "Back",    0, 0, 1, 1, 0.0, 0.0);
+		forwardButton = makeItem(buttonsPanel, "Forward", 1, 0, 1, 1, 0.0, 0.0);
+		stopButton = makeItem(buttonsPanel, "Stop",    2, 0, 1, 1, 0.0, 0.0);
+		refreshButton = makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
 		makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
 		makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
 
@@ -206,8 +212,6 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		show();
 		toFront();
 
-        Navigation navigation = null;
-	
 		try {
             navigation = (Navigation)
                 browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
@@ -317,8 +321,6 @@ public void actionPerformed (ActionEvent evt)
     String command = evt.getActionCommand();
     
     try {
-        Navigation navigation = (Navigation)
-            browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
         CurrentPage currentPage = (CurrentPage)
             browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
         History history = (History)
@@ -375,7 +377,8 @@ public void actionPerformed (ActionEvent evt)
             }
             
             if (null == bookmarksFrame) {
-                bookmarksFrame = new BookmarksFrame(bookmarksTree);
+                bookmarksFrame = new BookmarksFrame(bookmarksTree, 
+                                                    browserControl);
                 bookmarksFrame.setSize(new Dimension(320,480));
                 bookmarksFrame.setLocation(defaultWidth + 5, 0);
             }
@@ -463,28 +466,30 @@ public void dialogCancelled(Dialog d) {
 
 
 
-    private void makeItem (Panel p, Object arg, int x, int y, int w, int h, double weightx, double weighty) {
-        GridBagLayout gbl = (GridBagLayout) p.getLayout();
-        GridBagConstraints c = new GridBagConstraints();
-        Component comp;
-
-        c.fill = GridBagConstraints.BOTH;
-        c.gridx = x;
-        c.gridy = y;
-        c.gridwidth = w;
-        c.gridheight = h;
-        c.weightx = weightx;
-        c.weighty = weighty;
-        if (arg instanceof String) {
-        	Button b;
-        	
-            comp = b = new Button((String) arg);
-	        b.addActionListener(this);
-
-		    p.add(comp);
-		    gbl.setConstraints(comp, c);
-        }
-    } // makeItem()
+private Component makeItem (Panel p, Object arg, int x, int y, int w, int h, double weightx, double weighty)
+{
+     GridBagLayout gbl = (GridBagLayout) p.getLayout();
+     GridBagConstraints c = new GridBagConstraints();
+     Component comp = null;
+     
+     c.fill = GridBagConstraints.BOTH;
+     c.gridx = x;
+     c.gridy = y;
+     c.gridwidth = w;
+     c.gridheight = h;
+     c.weightx = weightx;
+     c.weighty = weighty;
+     if (arg instanceof String) {
+         Button b;
+         
+         comp = b = new Button((String) arg);
+         b.addActionListener(this);
+         
+         p.add(comp);
+         gbl.setConstraints(comp, c);
+     }
+     return comp;
+} // makeItem()
 
 
 //
@@ -563,6 +568,15 @@ public void mousePressed(java.awt.event.MouseEvent e)
 public void mouseReleased(java.awt.event.MouseEvent e)
 {
     System.out.println("mouseReleased");
+}
+
+//
+// Package methods
+//
+
+Navigation getNavigation()
+{
+    return navigation;
 }
 
 }
