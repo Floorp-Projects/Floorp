@@ -346,10 +346,10 @@ nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface()
 
 
 
-NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const char * aFontName)
+NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontName)
 {
   char        **fnames = nsnull;
-  PRInt32     namelen = strlen(aFontName) + 1;
+  PRInt32     namelen = aFontName.Length() + 1;
   char        *wildstring = (char *)PR_Malloc(namelen + 200);
   PRInt32     dpi = NSToIntRound(GetTwipsToDevUnits() * 1440);
   Display     *dpy = XtDisplay((Widget)GetNativeWidget());
@@ -365,9 +365,11 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const char * aFontName)
   else
     dpi = 100;
 
+  char* fontName = aFontName.ToNewCString();
   PR_snprintf(wildstring, namelen + 200,
              "*-%s-*-*-normal--*-*-%d-%d-*-*-*",
-             aFontName, dpi, dpi);
+             fontName, dpi, dpi);
+  delete [] fontName;
 
   fnames = ::XListFontsWithInfo(dpy, wildstring, 1, &numnames, &fonts);
 

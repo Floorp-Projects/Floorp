@@ -84,13 +84,15 @@ int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
   return 0;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const char * aFontName)
+NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName)
 {
   HWND    hwnd = (HWND)GetNativeWidget();
   HDC     hdc = ::GetDC(hwnd);
   PRBool  isthere = PR_FALSE;
 
-  ::EnumFontFamilies(hdc, aFontName, (FONTENUMPROC)fontcallback, (LPARAM)&isthere);
+  char    fontName[LF_FACESIZE];
+  aFontName.ToCString(fontName, LF_FACESIZE);
+  ::EnumFontFamilies(hdc, fontName, (FONTENUMPROC)fontcallback, (LPARAM)&isthere);
 
   ::ReleaseDC(hwnd, hdc);
 

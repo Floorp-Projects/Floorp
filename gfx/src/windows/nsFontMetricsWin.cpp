@@ -95,46 +95,61 @@ nsresult nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContex
   return NS_OK;
 }
 
-// XXX this function is a hack; the only logical font names we should
-// support are the one used by css.
-const char* nsFontMetricsWin::MapFamilyToFont(const nsString& aLogicalFontName)
+static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsIDeviceContext* aDC,
+                                   nsString& aFontFace)
 {
-  if (aLogicalFontName.EqualsIgnoreCase("Times Roman")) {
-    return "Times New Roman";
+  // the CSS generic names (conversions from Nav for now)
+  // XXX this  need to check availability with the dc
+  PRBool  aliased;
+  if (aGenericFamily.EqualsIgnoreCase("serif")) {
+    aDC->GetLocalFontName("Times New Roman", aFontFace, aliased);
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Times")) {
-    return "Times New Roman";
+  else if (aGenericFamily.EqualsIgnoreCase("sans-serif")) {
+    aDC->GetLocalFontName("Arial", aFontFace, aliased);
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Unicode")) {
-    return "Bitstream Cyberbit";
+  else if (aGenericFamily.EqualsIgnoreCase("cursive")) {
+    aDC->GetLocalFontName("Script", aFontFace, aliased);
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Courier")) {
-    return "Courier New";
+  else if (aGenericFamily.EqualsIgnoreCase("fantasy")) {
+    aDC->GetLocalFontName("Arial", aFontFace, aliased);
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Courier New")) {
-    return "Courier New";
+  else if (aGenericFamily.EqualsIgnoreCase("monospace")) {
+    aDC->GetLocalFontName("Courier New", aFontFace, aliased);
   }
+  else {
+    aFontFace.Truncate();
+  }
+}
 
-  // the CSS generic names
-  if (aLogicalFontName.EqualsIgnoreCase("serif")) {
-    return "Times New Roman";
+struct FontEnumData {
+  FontEnumData(nsIDeviceContext* aContext, TCHAR* aFaceName)
+  {
+    mContext = aContext;
+    mFaceName = aFaceName;
   }
-  if (aLogicalFontName.EqualsIgnoreCase("sans-serif")) {
-    return "Arial";
+  nsIDeviceContext* mContext;
+  TCHAR* mFaceName;
+};
+
+static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  FontEnumData* data = (FontEnumData*)aData;
+  if (aGeneric) {
+    nsAutoString realFace;
+    MapGenericFamilyToFont(aFamily, data->mContext, realFace);
+    realFace.ToCString(data->mFaceName, LF_FACESIZE);
+    return PR_FALSE;  // stop
   }
-  if (aLogicalFontName.EqualsIgnoreCase("cursive")) {
-//    return "XXX";
+  else {
+    nsAutoString realFace;
+    PRBool  aliased;
+    data->mContext->GetLocalFontName(aFamily, realFace, aliased);
+    if (aliased || (NS_OK == data->mContext->CheckFontExistence(realFace))) {
+      realFace.ToCString(data->mFaceName, LF_FACESIZE);
+      return PR_FALSE;  // stop
+    }
   }
-  if (aLogicalFontName.EqualsIgnoreCase("fantasy")) {
-//    return "XXX";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("monospace")) {
-    return "Courier New";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("desdemona")) {
-    return "Desdemona";
-  }
-  return "Arial";/* XXX for now */
+  return PR_TRUE;
 }
 
 void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
@@ -166,9 +181,9 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
     // round font size off to floor point size to be windows compatible
 //  logFont.lfHeight = - NSToIntRound(rounded * app2dev);  // this is proper (windows) rounding
   logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
-  strncpy(logFont.lfFaceName,
-          MapFamilyToFont(mFont->name),
-          LF_FACESIZE);
+
+  logFont.lfFaceName[0] = '\0';
+  mFont->EnumerateFamilies(FontEnumCallback, &FontEnumData(aContext, logFont.lfFaceName)); 
 
   // Create font handle from font spec
   mFontHandle = ::CreateFontIndirect(&logFont);

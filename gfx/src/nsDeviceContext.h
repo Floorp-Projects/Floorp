@@ -23,6 +23,7 @@
 #include "libimg.h"
 
 class nsIImageRequest;
+class nsHashtable;
 
 class DeviceContextImpl : public nsIDeviceContext
 {
@@ -62,6 +63,11 @@ public:
 
   NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
 
+  NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
+
+  NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
+                              PRBool& aAliased);
+
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
   NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
@@ -72,6 +78,9 @@ protected:
   nsresult CreateFontCache();
   void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
   nsresult CreateIconILGroupContext();
+  virtual nsresult CreateFontAliasTable();
+  nsresult AliasFont(const nsString& aFont, 
+                     const nsString& aAlias, const nsString& aAltAlias);
 
   float             mTwipsToPixels;
   float             mPixelsToTwips;
@@ -84,6 +93,7 @@ protected:
   nsNativeWidget    mWidget;
   IL_GroupContext*  mIconImageGroup;
   nsIImageRequest*  mIcons[NS_NUMBER_OF_ICONS];
+  nsHashtable*      mFontAliasTable;
 };
 
 #endif /* nsDeviceContext_h___ */

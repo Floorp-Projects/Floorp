@@ -78,3 +78,93 @@ nsFont& nsFont::operator=(const nsFont& aOther)
   size = aOther.size;
   return *this;
 }
+
+
+static PRBool IsGenericFontFamily(const nsString& aFamily)
+{
+  return PRBool(aFamily.EqualsIgnoreCase("serif") ||
+                aFamily.EqualsIgnoreCase("sans-serif") ||
+                aFamily.EqualsIgnoreCase("cursive") ||
+                aFamily.EqualsIgnoreCase("fantasy") ||
+                aFamily.EqualsIgnoreCase("monospace"));
+}
+
+const PRUnichar kNullCh       = PRUnichar('\0');
+const PRUnichar kSingleQuote  = PRUnichar('\'');
+const PRUnichar kDoubleQuote  = PRUnichar('\"');
+const PRUnichar kComma        = PRUnichar(',');
+
+PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
+{
+  PRBool    running = PR_TRUE;
+
+  nsAutoString  familyList(name); // copy to work buffer
+  nsAutoString  familyStr;
+
+  familyList.Append(kNullCh);  // put an extra null at the end
+
+  PRUnichar* start = (PRUnichar*)familyList;
+  PRUnichar* end   = start;
+
+  while (running && (kNullCh != *start)) {
+    PRBool  quoted = PR_FALSE;
+    PRBool  generic = PR_FALSE;
+
+    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+      start++;
+    }
+
+    if ((kSingleQuote == *start) || (kDoubleQuote == *start)) { // quoted string
+      PRUnichar quote = *start++;
+
+      end = start;
+      while (kNullCh != *end) {
+        if (quote == *end) {  // found closing quote
+          *end++ = kNullCh;     // end string here
+          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
+            end++;
+          }
+          break;
+        }
+        end++;
+      }
+    }
+    else {  // non-quoted string or ended
+      end = start;
+
+      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
+        end++;
+      }
+      *end = kNullCh; // end string here
+    }
+
+    familyStr = start;
+
+    if (PR_FALSE == quoted) {
+      familyStr.CompressWhitespace(PR_FALSE, PR_TRUE);
+      if (0 < familyStr.Length()) {
+        generic = IsGenericFontFamily(familyStr);
+      }
+    }
+
+    if (0 < familyStr.Length()) {
+      running = (*aFunc)(familyStr, generic, aData);
+    }
+
+    start = ++end;
+  }
+
+  return running;
+}
+
+static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  *((nsString*)aData) = aFamily;
+  return PR_FALSE;
+}
+
+void nsFont::GetFirstFamily(nsString& aFamily) const
+{
+  EnumerateFamilies(FontEnumCallback, &aFamily);
+}
+

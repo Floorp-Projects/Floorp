@@ -60,7 +60,6 @@ public:
 
 protected:
   void RealizeFont();
-  static const char* MapFamilyToFont(const nsString& aLogicalFontName);
 
 protected:
   void QueryFont();

@@ -117,7 +117,11 @@ public:
    * @param aFontName character string of font face name
    * @return NS_OK if font is available, else font is unavailable
    */
-  NS_IMETHOD CheckFontExistence(const char * aFontName) = 0;
+  NS_IMETHOD CheckFontExistence(const nsString& aFaceName) = 0;
+  NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName) = 0;
+
+  NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
+                              PRBool& aAliased) = 0;
 
   /**
    * Return the bit depth of the device.

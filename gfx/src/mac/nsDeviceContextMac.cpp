@@ -432,7 +432,7 @@ nsresult nsDeviceContextMac :: LoadIconImage(PRInt32 aId, nsIImage*& aImage)
   return nsnull;
 }
 
-nsresult nsDeviceContextMac :: CheckFontExistence(const char * aFontName)
+nsresult nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName)
 {
   return NS_OK;
 }
