@@ -188,6 +188,7 @@ interface nsIImapUrl : nsISupports
   const long nsImapDeleteFolderAndMsgs = 0x10000033;
   const long nsImapUserDefinedMsgCommand = 0x10000034;
   const long nsImapUserDefinedFetchAttribute = 0x10000035;
+  const long nsImapMsgFetchPeek = 0x10000036;
 };
 
 %{C++

@@ -516,7 +516,8 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
     ParseUidChoice();
     PR_FREEIF(m_sourceCanonicalFolderPathSubString);
     ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-    ParseListOfMessageIds();
+    ParseListOfMessageIds(); 
+    // if fetched by spam filter, the action will be changed to nsImapMsgFetchPeek
   }
   else /* if (fInternal) no concept of internal - not sure there will be one */
   {
@@ -1524,20 +1525,23 @@ void nsImapUrl::ParseMsgFlags()
 
 void nsImapUrl::ParseListOfMessageIds()
 {
-	m_listOfMessageIds = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
-	if (!m_listOfMessageIds)
-		m_validUrl = PR_FALSE;
-	else
-	{
+  m_listOfMessageIds = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+  if (!m_listOfMessageIds)
+    m_validUrl = PR_FALSE;
+  else
+  {
     m_listOfMessageIds = nsCRT::strdup(m_listOfMessageIds);
-		m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0 || PL_strstr(m_listOfMessageIds, "?part=") != 0;
-
+    m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0 || PL_strstr(m_listOfMessageIds, "?part=") != 0;
+    
     // if we're asking for just the body, don't download the whole message. see
     // nsMsgQuote::QuoteMessage() for the "header=" settings when replying to msgs.
     if (!m_fetchPartsOnDemand)
       m_fetchPartsOnDemand = (PL_strstr(m_listOfMessageIds, "?header=quotebody") != 0 || 
-                              PL_strstr(m_listOfMessageIds, "?header=only") != 0);
-	}
+      PL_strstr(m_listOfMessageIds, "?header=only") != 0);
+    // if it's a spam filter trying to fetch the msg, don't let it get marked read.
+    if (PL_strstr(m_listOfMessageIds,"?header=filter") != 0)
+      m_imapAction = nsImapMsgFetchPeek;
+  }
 }
 
 void nsImapUrl::ParseCustomMsgFetchAttribute()
