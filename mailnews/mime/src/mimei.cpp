@@ -50,10 +50,6 @@
 #include "mimetenr.h"	/*   |     |     |     |--- MimeInlineTextEnriched	*/
 /* SUPPORTED VIA PLUGIN    |     |     |--------- MimeInlineTextCalendar  */
 
-#ifdef RICHIE_VCARD
-#include "mimevcrd.h" /*   |     |     |--------- MimeInlineTextVCard		*/
-#endif
-
 #include "prefapi.h"
 #include "mimeiimg.h"	/*   |     |--- MimeInlineImage						*/
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
@@ -68,8 +64,12 @@
 #include "nsIPref.h"
 #include "nsCRT.h"
 #include "mimemoz2.h"
+#include "nsIMimeContentTypeHandler.h"
+#include "nsIComponentManager.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kIMimeContentTypeHandlerIID, NS_IMIME_CONTENT_TYPE_HANDLER_IID);
 
 /* ==========================================================================
    Allocation and destruction
@@ -82,229 +82,80 @@ static int mime_classinit(MimeObjectClass *clazz);
  * content type handlers in external plugins.
  */
 typedef struct {
-  char        *content_type;
+  char        content_type[128];
   PRBool      force_inline_display;
-  char        *file_name;
-  PRLibrary   *ct_handler;
 } cthandler_struct;
 
-cthandler_struct    *cthandler_list = NULL;
-PRInt32             plugin_count = -1;
+nsVoidArray         *ctHandlerList = NULL;
+PRBool              foundIt = PR_FALSE; 
+PRBool              force_display = PR_FALSE;
 
-/* 
- * This will find the directory for content type handler plugins.
- */
-PRBool
-find_plugin_directory(char *path, PRInt32 size)
+PRBool 
+EnumFunction(void* aElement, void *aData)
 {
-#ifdef XP_PC
-  char  *ptr;
+  cthandler_struct    *ptr = (cthandler_struct *) aElement;
+  char                *ctPtr = (char *)aData;
 
-  if (!GetModuleFileName(NULL, path, size))
+  if ( (!aElement) || (!aData) )
+    return PR_TRUE;
+
+  if (PL_strcasecmp(ctPtr, ptr->content_type) == 0)
+  {
+    foundIt = PR_TRUE;
+    force_display = ptr->force_inline_display;
     return PR_FALSE;
-  ptr = PL_strrchr(path, '\\');
-  if (ptr)
-    *ptr = '\0';
-  PL_strcat(path, "\\");
-  PL_strcat(path, MIME_PLUGIN_DIR);
-  return PR_TRUE;
-#else
-  // First, find the home directory from the env.
-  char *homedir = PR_GetEnv("MOZILLA_FIVE_HOME");
-  if (homedir)
-  {
-    PL_strcat(path, homedir);
-    PR_FREEIF(homedir);
-  }
-  else
-    PL_strcat(path, ".");
-
-  PL_strcat(path, "/components");
-  return PR_TRUE;
-#endif
-}
-
-PRBool
-create_file_name(const char *path, const char *name, char *fullName)
-{
-  if ((!path) || (!name))
-    return PR_FALSE;
-
-#ifdef XP_PC
-  PL_strcpy(fullName, path);
-  PL_strcat(fullName, "\\");
-  PL_strcat(fullName, name);
-  return PR_TRUE;
-#else
-  PL_strcpy(fullName, path);
-  PL_strcat(fullName, "/");
-  PL_strcat(fullName, name);
-  return PR_TRUE;
-#endif
-}
-
-/* 
- * This will locate the number of content type handler plugins.
- */
-PRInt32 
-get_plugin_count(void)
-{
-  PRDirEntry        *dirEntry;
-  PRInt32           count = 0;
-  PRDir             *dir;
-  char              path[1024] = "";
-
-  if (!find_plugin_directory(path, sizeof(path)))
-    return 0;
-
-  dir = PR_OpenDir(path);
-  if (!dir)
-    return count;
-
-  do
-  {
-    dirEntry = PR_ReadDir(dir, PR_SKIP_BOTH);
-    if (!dirEntry)
-      break;
-
-    if (PL_strncasecmp(MIME_PLUGIN_PREFIX, dirEntry->name, PL_strlen(MIME_PLUGIN_PREFIX)) == 0)
-      ++count;
-  } while (dirEntry != NULL);
-
-  PR_CloseDir(dir);
-  return count;
-}
-
-char *
-get_content_type(cthandler_struct *ct)
-{
-  mime_get_ct_fn_type     getct_fn;
-
-  if (!ct)
-    return NULL;
-
-  getct_fn = (mime_get_ct_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_GetContentType"); 
-  if (!getct_fn)
-    return NULL;
-
-  return ( (getct_fn) () );
-}
-
-MimeObjectClass * 
-create_content_type_handler_class(cthandler_struct *ct)
-{
-  contentTypeHandlerInitStruct    ctHandlerInfo;
-  mime_create_class_fn_type       class_fn;
-  MimeObjectClass                 *retClass = NULL;
-
-  if (!ct)
-    return NULL;
-
-  class_fn = (mime_create_class_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
-  if (class_fn)
-  {
-    retClass = (class_fn)(ct->content_type, &ctHandlerInfo);
-    ct->force_inline_display = ctHandlerInfo.force_inline_display;
   }
 
-  return retClass;
+  return PR_TRUE;
 }
 
 /*
- * We need to initialize a table of external modules and
- * the content type that it will process. What we will do is check
- * the directory "mimeplugins" under the location where this DLL is
- * running. Any DLL in that directory will have the naming convention:
- * 
- * mimect-mycontenttype.dll - where mycontenttype is the content type being
- *                            processed.
- *
- * This DLL will have specifically defined entry points to be used by
- * libmime for processing the data stream.
+ * This will return TRUE if the content_type is found in the
+ * list, FALSE if it is not found. 
  */
-PRInt32 
-do_plugin_discovery(void)
+PRBool
+find_content_type_attribs(const char *content_type, 
+                          PRBool     *force_inline_display)
 {
-  PRDirEntry        *dirEntry;
-  PRInt32           count = 0;
-  PRDir             *dir;
-  char              path[1024] = "";
-  char              full_name[1024] = "";
+  *force_inline_display = PR_FALSE;
+  if (!ctHandlerList)
+    return PR_FALSE;
 
-  if (!find_plugin_directory(path, sizeof(path)))
-    return 0;
+  foundIt = PR_FALSE;
+  force_display = PR_FALSE;
+  ctHandlerList->EnumerateForwards(EnumFunction, (void *)content_type);
+  if (foundIt)
+    *force_inline_display = force_display;
 
-  count = get_plugin_count();
-  if (count <= 0)
-    return 0;
-
-  cthandler_list = (cthandler_struct *) PR_MALLOC(count * sizeof(cthandler_struct));
-  if (!cthandler_list)
-    return 0;
-  XP_MEMSET(cthandler_list, 0, (count * sizeof(cthandler_struct)));
-
-  dir = PR_OpenDir(path);
-  if (!dir)
-    return 0;
-
-  count = 0;
-  do
-  {
-    dirEntry = PR_ReadDir(dir, PR_SKIP_BOTH );
-    if (!dirEntry)
-      break;
-
-    if (PL_strncasecmp(MIME_PLUGIN_PREFIX, dirEntry->name, PL_strlen(MIME_PLUGIN_PREFIX)) == 0)
-    {
-      if (!create_file_name(path, dirEntry->name, full_name))
-        continue;
-      
-      cthandler_list[count].ct_handler = PR_LoadLibrary(full_name);
-      if (!cthandler_list[count].ct_handler)
-        continue;
-
-      cthandler_list[count].file_name = PL_strdup(full_name);
-      if (!cthandler_list[count].file_name)
-      {
-        PR_UnloadLibrary(cthandler_list[count].ct_handler);
-        continue;
-      }
-
-      cthandler_list[count].content_type = PL_strdup(get_content_type(&(cthandler_list[count])));
-      if (!cthandler_list[count].content_type)
-      {
-        PR_UnloadLibrary(cthandler_list[count].ct_handler);
-        PR_FREEIF(cthandler_list[count].file_name);
-        continue;
-      }
-
-      ++count;
-    }
-  } while (dirEntry != NULL);
-
-  PR_CloseDir(dir);
-  return count;
+  return (foundIt);
 }
 
-/* 
- * This routine will find all content type handler for a specifc content
- * type (if it exists)
- */
-MimeObjectClass *
-mime_locate_external_content_handler(const char *content_type)
+void
+add_content_type_attribs(const char *content_type, 
+                         contentTypeHandlerInitStruct  *ctHandlerInfo)
 {
-  PRInt32           i;
+  cthandler_struct    *ptr = NULL;
+  PRBool              force_inline_display;
 
-  if (plugin_count < 0)
-    plugin_count = do_plugin_discovery();
+  if (find_content_type_attribs(content_type, &force_inline_display))
+    return;
 
-  for (i=0; i<plugin_count; i++)
-  {
-    if (PL_strcasecmp(content_type, cthandler_list[i].content_type) == 0)
-      return( create_content_type_handler_class((&cthandler_list[i])) );
-  }
+  if ( (!content_type) || (!ctHandlerInfo) )
+    return;
 
-  return NULL;
+  if (!ctHandlerList)
+    ctHandlerList = new nsVoidArray();
+
+  if (!ctHandlerList)
+    return;
+
+  ptr = (cthandler_struct *) PR_MALLOC(sizeof(cthandler_struct));
+  if (!ptr)
+    return;
+
+  PL_strncpy(ptr->content_type, content_type, sizeof(ptr->content_type));
+  ptr->force_inline_display = ctHandlerInfo->force_inline_display;
+  ctHandlerList->AppendElement(ptr);
 }
 
 /* 
@@ -314,17 +165,40 @@ mime_locate_external_content_handler(const char *content_type)
 PRBool
 force_inline_display(const char *content_type)
 {
-  PRInt32           i;
+  PRBool     force_inline_display;
 
-  for (i=0; i<plugin_count; i++)
-  {
-    if (PL_strcasecmp(content_type, cthandler_list[i].content_type) == 0)
-      return( cthandler_list[i].force_inline_display );
-  }
-
-  return PR_FALSE;
+  find_content_type_attribs(content_type, &force_inline_display);
+  return (force_inline_display);
 }
 
+/* 
+ * This routine will find all content type handler for a specifc content
+ * type (if it exists) and is defined to the nsRegistry
+ */
+MimeObjectClass *
+mime_locate_external_content_handler(const char *content_type,   
+                                     contentTypeHandlerInitStruct  *ctHandlerInfo)
+{
+  MimeObjectClass               *newObj = NULL;
+	nsCID                         classID = {0};
+  char                          lookupID[256];
+  nsIMimeContentTypeHandler     *ctHandler = NULL;
+
+  PR_snprintf(lookupID, sizeof(lookupID), "mimecth:%s", content_type);
+	if (nsComponentManager::ProgIDToCLSID(lookupID, &classID) != NS_OK)
+    return NULL;
+  
+  nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kIMimeContentTypeHandlerIID, 
+                                     (void **)&ctHandler);
+  if (ctHandler == NULL)
+    return NULL;
+  
+  if (NS_OK != ctHandler->CreateContentTypeHandlerClass(content_type, ctHandlerInfo, &newObj))
+    return NULL;
+
+  add_content_type_attribs(content_type, ctHandlerInfo);
+  return newObj;
+}
 
 /* This is necessary to expose the MimeObject method outside of this DLL */
 int
@@ -399,13 +273,13 @@ mime_free (MimeObject *object)
   PR_Free(object);
 }
 
-
 MimeObjectClass *
 mime_find_class (const char *content_type, MimeHeaders *hdrs,
 				 MimeDisplayOptions *opts, PRBool exact_match_p)
 {
   MimeObjectClass *clazz = 0;
   MimeObjectClass *tempClass = 0;
+  contentTypeHandlerInitStruct  ctHandlerInfo;
 
   /* 
   * What we do first is check for an external content handler plugin. 
@@ -414,7 +288,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   * for specific content types. If one is not found, we will drop back
   * to the default handler.
   */
-  if ((tempClass = mime_locate_external_content_handler(content_type)) != NULL)
+  if ((tempClass = mime_locate_external_content_handler(content_type, &ctHandlerInfo)) != NULL)
   {
     clazz = (MimeObjectClass *)tempClass;
   }
@@ -436,12 +310,6 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
         clazz = (MimeObjectClass *)&mimeInlineTextRichtextClass;
       else if (!PL_strcasecmp(content_type+5,		"plain"))
         clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
-      
-#ifdef RICHIE_VCARD
-      else if (!PL_strcasecmp(content_type+5,		"x-vcard"))
-        clazz = (MimeObjectClass *)&mimeInlineTextVCardClass;
-#endif
-      
       else if (!exact_match_p)
         clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
     }
@@ -701,14 +569,6 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 
   else
   {
-	/* change content-Disposition for vcards to be inline so */
-	/* we can see a nice html display */
-#ifdef RICHIE_VCARD
-    if (mime_subclass_p(clazz,(MimeObjectClass *)&mimeInlineTextVCardClass))
-  		mime_SACopy(&content_disposition, "inline");
-	  else
-#endif
-
     /* Check to see if the plugin should override the content disposition
        to make it appear inline. One example is a vcard which has a content
        disposition of an "attachment;" */
@@ -848,7 +708,7 @@ mime_part_address(MimeObject *obj)
 		  return 0;
 		}
 
-	  XP_SPRINTF(buf, "%ld", j);
+	  PR_snprintf(buf, sizeof(buf), "%ld", j);
 	  if (obj->parent->parent)
 		{
 		  higher = mime_part_address(obj->parent);

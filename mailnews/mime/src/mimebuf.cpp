@@ -30,7 +30,7 @@ extern "C" int
 mime_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
 				char **buffer, PRInt32 *size)
 {
-  if (*size <= desired_size)
+  if ((PRUint32) *size <= desired_size)
 	{
 	  char *new_buf;
 	  PRUint32 increment = desired_size - *size;
@@ -66,7 +66,7 @@ mime_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 {
   int status = 0;
 
-  if (desired_buffer_size >= (*buffer_sizeP))
+  if (desired_buffer_size >= (PRUint32) (*buffer_sizeP))
 	{
 	  status = mime_GrowBuffer (desired_buffer_size, sizeof(char), 1024,
 							   bufferP, buffer_sizeP);
@@ -161,8 +161,8 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 	  net_buffer_size > 0 && net_buffer[0] != LF) {
 	/* The last buffer ended with a CR.  The new buffer does not start
 	   with a LF.  This old buffer should be shipped out and discarded. */
-	PR_ASSERT(*buffer_sizeP > *buffer_fpP);
-	if (*buffer_sizeP <= *buffer_fpP) return -1;
+	PR_ASSERT((PRUint32) *buffer_sizeP > *buffer_fpP);
+	if ((PRUint32) *buffer_sizeP <= *buffer_fpP) return -1;
 	status = convert_and_send_buffer(*bufferP, *buffer_fpP,
 										 convert_newlines_p,
 										 per_line_fn, closure);
@@ -211,7 +211,7 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 		const char *end = (newline ? newline : net_buffer_end);
 		PRUint32 desired_size = (end - net_buffer) + (*buffer_fpP) + 1;
 
-		if (desired_size >= (*buffer_sizeP))
+		if (desired_size >= (PRUint32) (*buffer_sizeP))
 		  {
 			status = mime_GrowBuffer (desired_size, sizeof(char), 1024,
 									 bufferP, buffer_sizeP);

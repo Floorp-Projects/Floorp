@@ -221,8 +221,10 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
+#ifdef DEBUG
   printf("*** The NEW and Improved Mime being registered\n");
-  
+#endif
+
   // Content type handler object class access interface
   rv = compMgr->RegisterComponent(kCMimeMimeObjectClassAccessCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);

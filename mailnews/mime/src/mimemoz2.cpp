@@ -198,8 +198,20 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
 
   if (converted)
     {
-      *output_ret = converted;
-      *output_size_ret = PL_strlen(converted);
+      char  *convertedString = NULL; 
+
+      PRInt32 res = MIME_ConvertString(charset, "UTF-8", converted, &convertedString); 
+      if ( (res != 0) || (!convertedString) )
+      {
+        *output_ret = converted;
+        *output_size_ret = PL_strlen(converted);
+      }
+      else
+      {
+        PR_Free(converted); 
+        *output_ret = convertedString;
+        *output_size_ret = PL_strlen(converted);
+      }
     }
   else
     {
@@ -973,16 +985,6 @@ extern int MIME_HasAttachments(MWContext *context)
 	return (context->mime_data && context->mime_data->last_parsed_object->showAttachmentIcon);
 }
 
-/* RICHIE
- * HOW WILL THIS BE HANDLED GOING FORWARD????
- */
-PRBool 
-ValidateDocData(MWContext *window_id) 
-{ 
-  printf("ValidateDocData not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
-  return PR_TRUE; 
-}
-
 /**************************************************************
  **************************************************************
  **************************************************************
@@ -1155,8 +1157,8 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   msd->options->headers = MimeHeadersAll;
   
   // Get the libmime prefs...
-  MIME_NoInlineAttachments = PR_TRUE;  // false - no attachment display
-                                        // true - attachment display
+  MIME_NoInlineAttachments = PR_TRUE;   // false - display as links 
+                                        // true - display attachment
   if (msd->prefs)
     msd->prefs->GetBoolPref("mail.inline_attachments", &MIME_NoInlineAttachments);
   MIME_NoInlineAttachments = !MIME_NoInlineAttachments;
@@ -1266,7 +1268,28 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   msd->options->image_write_buffer    = mime_image_write_buffer;
   
   msd->options->variable_width_plaintext_p = MIME_VariableWidthPlaintext;
-  
+
+  // 
+  // Charset overrides takes place here
+  //
+  // We have a bool pref (mail.override_charset) to deal with incorrectly labeled mails. 
+  // 1) If false and the part header is specified then use the charset in the header. 
+  // 2) If false and the part header has no charset the use the charset in the pref. 
+  //    We may also apply the charset detection. 
+  // 3) If false then only use the charset in pref and ignore all other information. 
+  //
+  PRBool  overrideCharset = FALSE;
+
+  msd->prefs->GetBoolPref("mail.force_charset", &overrideCharset);
+  if (overrideCharset)
+  {
+    char    charset[256];
+    int     length = sizeof(charset);
+
+    msd->prefs->GetCharPref("mail.charset", charset, &length); 
+    msd->options->override_charset = PL_strdup(charset);
+  }
+
   /* ### mwelch We want FO_EDT_SAVE_IMAGE to behave like *_SAVE_AS here
   because we're spooling untranslated raw data. */
   if (format_out == FO_SAVE_AS ||

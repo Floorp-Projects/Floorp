@@ -36,6 +36,7 @@
 #include "nsMimeAddress.h"
 #include "comi18n.h"
 #include "nsMailHeaders.h"
+#include "msgCore.h"
 
 extern "C" int MK_OUT_OF_MEMORY;
 extern "C" int MK_MSG_NO_HEADERS;
@@ -432,7 +433,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 
 	  /* Back up over whitespace before the colon. */
 	  ocolon = colon;
-	  for (; colon > head && XP_IS_SPACE(colon[-1]); colon--)
+	  for (; colon > head && IS_SPACE(colon[-1]); colon--)
 		;
 
 	  /* If the strings aren't the same length, it doesn't match. */
@@ -449,7 +450,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		char *s;
 
 		/* Skip over whitespace after colon. */
-		while (contents <= end && XP_IS_SPACE(*contents))
+		while (contents <= end && IS_SPACE(*contents))
 		  contents++;
 
 		/* If we're supposed to strip at the frist token, pull `end' back to
@@ -458,7 +459,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		if (strip_p)
 		  {
 			for (s = contents;
-				 s <= end && *s != ';' && *s != ',' && !XP_IS_SPACE(*s);
+				 s <= end && *s != ';' && *s != ',' && !IS_SPACE(*s);
 				 s++)
 			  ;
 			end = s;
@@ -501,7 +502,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		  }
 
 		/* Take off trailing whitespace... */
-		while (end > contents && XP_IS_SPACE(end[-1]))
+		while (end > contents && IS_SPACE(end[-1]))
 		  end--;
 
 		if (end > contents)
@@ -556,7 +557,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
   if (*str)
 	str++;
   /* Skip over following whitespace */
-  for (; *str && XP_IS_SPACE(*str); str++)
+  for (; *str && IS_SPACE(*str); str++)
 	;
   if (!*str)
 	return 0;
@@ -568,24 +569,24 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 	  const char *value_start = str;
 	  const char *value_end = 0;
 
-	  PR_ASSERT(!XP_IS_SPACE(*str)); /* should be after whitespace already */
+	  PR_ASSERT(!IS_SPACE(*str)); /* should be after whitespace already */
 
 	  /* Skip forward to the end of this token. */
-	  for (; *str && !XP_IS_SPACE(*str) && *str != '=' && *str != ';'; str++)
+	  for (; *str && !IS_SPACE(*str) && *str != '=' && *str != ';'; str++)
 		;
 	  token_end = str;
 
 	  /* Skip over whitespace, '=', and whitespace */
-	  while (XP_IS_SPACE (*str)) str++;
+	  while (IS_SPACE (*str)) str++;
 	  if (*str == '=') str++;
-	  while (XP_IS_SPACE (*str)) str++;
+	  while (IS_SPACE (*str)) str++;
 
 	  if (*str != '"')
 		{
 		  /* The value is a token, not a quoted string. */
 		  value_start = str;
 		  for (value_end = str;
-			   *value_end && !XP_IS_SPACE (*value_end) && *value_end != ';';
+			   *value_end && !IS_SPACE (*value_end) && *value_end != ';';
 			   value_end++)
 			;
 		  str = value_end;
@@ -711,9 +712,9 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 
 	  /* str now points after the end of the value.
 		 skip over whitespace, ';', whitespace. */
-	  while (XP_IS_SPACE (*str)) str++;
+	  while (IS_SPACE (*str)) str++;
 	  if (*str == ';') str++;
-	  while (XP_IS_SPACE (*str)) str++;
+	  while (IS_SPACE (*str)) str++;
 	}
   return s;
 }
@@ -1199,7 +1200,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
     
     /* Skip over whitespace and commas. */
     while (this_start < data_end &&
-			   (XP_IS_SPACE (*this_start) || *this_start == ','))
+			   (IS_SPACE (*this_start) || *this_start == ','))
          this_start++;
     
     this_end = this_start;
@@ -1522,7 +1523,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 	while (this_end < data_end)
 	  {
 		/* Skip over whitespace. */
-		while (this_start < data_end && XP_IS_SPACE (*this_start))
+		while (this_start < data_end && IS_SPACE (*this_start))
 		  this_start++;
 
 		this_end = this_start;
@@ -1616,7 +1617,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 			else
 			  {
 				char buf[50];
-				XP_SPRINTF(buf, "%d", ++id_count);
+				PR_snprintf(buf, sizeof(buf), "%d", ++id_count);
 				s = PL_strdup(buf);
 				if (!s)
 				  {
@@ -1942,18 +1943,18 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
         
         /* Back up over whitespace before the colon. */
         ocolon = colon;
-        for (; colon > head && XP_IS_SPACE(colon[-1]); colon--)
+        for (; colon > head && IS_SPACE(colon[-1]); colon--)
           ;
         
         contents = ocolon + 1;
     }
     
     /* Skip over whitespace after colon. */
-    while (contents <= end && XP_IS_SPACE(*contents))
+    while (contents <= end && IS_SPACE(*contents))
       contents++;
     
     /* Take off trailing whitespace... */
-    while (end > contents && XP_IS_SPACE(end[-1]))
+    while (end > contents && IS_SPACE(end[-1]))
       end--;
     
     name = (char *)PR_MALLOC(colon - head + 1);
@@ -2078,7 +2079,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 
   out = hdrs->obuffer;
 
-  XP_SPRINTF(out, "\
+  PR_snprintf(out, sizeof(out), "\
 <TR><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" ALIGN=RIGHT><B>%s: </B></TD>\
 <TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" width=100%%>\
 <table border=0 cellspacing=0 cellpadding=0 width=100%%><tr>\
@@ -2229,9 +2230,9 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   }
 
   if (id)
-	XP_SPRINTF(hdrs->obuffer, fmt, id, name);
+	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), fmt, id, name);
   else
-	XP_SPRINTF(hdrs->obuffer, fmt, name);
+	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), fmt, name);
 
   status = MimeHeaders_convert_rfc1522(opt, hdrs->obuffer,
 									   PL_strlen(hdrs->obuffer),
@@ -2414,7 +2415,7 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBo
                    64 +    /* 64 counts for two long number*/
                    412);   /* 412 counts for the following constant 
                               string. It is less than 412  */
-        XP_SPRINTF(hdrs->obuffer + PL_strlen(hdrs->obuffer),
+        PR_snprintf(hdrs->obuffer + PL_strlen(hdrs->obuffer), ( sizeof(hdrs->obuffer) - PL_strlen(hdrs->obuffer)),
           /* We set a CLIP=0,0,30,30 so that the attachment icon's layer cannot*/
           /* be exploited for header spoofing.  This means that if the attachment */
           /* icon changes size, then we have to change this size too */
@@ -2449,7 +2450,7 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBo
       if (status >= 0) {
 #define MHTML_TITLE              "<TITLE>%s</TITLE>\n"
 
-        XP_SPRINTF(hdrs->obuffer, MHTML_TITLE, t2);
+        PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), MHTML_TITLE, t2);
         status = MimeHeaders_write(opt, hdrs->obuffer,
           PL_strlen(hdrs->obuffer));
       }
@@ -2521,7 +2522,7 @@ MIME_StripContinuations(char *original)
 			{
 				p2++;
 			}
-			while((*p2 == CR) || (*p2 == LF) || XP_IS_SPACE(*p2));
+			while((*p2 == CR) || (*p2 == LF) || IS_SPACE(*p2));
 
 			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
 		}

@@ -93,24 +93,7 @@
       |--- MimeExternalBody
  */
 
-/*
- * These are used by libmime to locate the plugins. It uses
- * a directory under the bin directory for libmime to contain
- * the plugins. This directory is defined by MIME_PLUGIN_DIR and
- * mime content handler plugins have a name prefixed by the 
- * MIME_PLUGIN_PREFIX.
- */
-#ifdef XP_WIN
-#define   MIME_PLUGIN_PREFIX      "mimect-"
-#else
-#define   MIME_PLUGIN_PREFIX      "libmimect-"
-#endif 
-
-#define   MIME_PLUGIN_DIR         "mimeplugins"
-
-typedef struct {
-  PRBool      force_inline_display;
-} contentTypeHandlerInitStruct;
+#include "nsIMimeContentTypeHandler.h"
 
 /*
  * These functions are exposed by libmime to be used by content type
