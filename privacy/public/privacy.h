@@ -45,8 +45,15 @@ PRVCY_GetCurrentPrivacyPolicyURL(MWContext * ctxt);
 extern Bool 
 PRVCY_PrivacyPolicyConfirmSubmit(MWContext *ctxt, 
                                  LO_FormElementStruct *form_element);
+
 extern char *
 PRVCY_TutorialURL();
+
+extern void
+PRVCY_ToggleAnonymous();
+
+extern Bool
+PRVCY_IsAnonymous();
 
 XP_END_PROTOS
 

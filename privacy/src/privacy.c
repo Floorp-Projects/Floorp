@@ -161,10 +161,33 @@ PRVCY_PrivacyPolicyConfirmSubmit(MWContext *ctxt,
 }
 
 /*
-  Return the URL of the privacy tutorial
+  Returns the URL of the privacy tutorial
 */
 PUBLIC char *
 PRVCY_TutorialURL()
 {
   return "http://people.netscape.com/morse/privacy/index.html";
+}
+
+PRIVATE Bool anonymous = FALSE;
+
+/*
+  Toggles the anonymous state
+*/
+PUBLIC void
+PRVCY_ToggleAnonymous() {
+    if (anonymous) {
+	 NET_UnanonymizeCookies();
+    } else {
+	 NET_AnonymizeCookies();
+    }
+    anonymous = !anonymous;
+}
+
+/*
+  Returns the anonymous state
+*/
+PUBLIC Bool
+PRVCY_IsAnonymous() {
+    return anonymous;
 }
