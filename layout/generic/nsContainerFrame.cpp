@@ -807,7 +807,20 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
 
   // Take the next-in-flow out of the parent's child list
   PRBool  result = parent->mFrames.RemoveFrame(nextInFlow);
-  NS_ASSERTION(result, "failed to remove frame");
+  if (!result) {
+    // We didn't find the child in the parent's principal child list.
+    // Maybe it's on the overflow list?
+    nsFrameList overflowFrames(parent->GetOverflowFrames(aPresContext, PR_TRUE));
+
+    if (overflowFrames.IsEmpty() || !overflowFrames.RemoveFrame(nextInFlow)) {
+      NS_ASSERTION(result, "failed to remove frame");
+    }
+
+    // Set the overflow property again
+    if (overflowFrames.NotEmpty()) {
+      parent->SetOverflowFrames(aPresContext, overflowFrames.FirstChild());
+    }
+  }
 
   // Delete the next-in-flow frame
   nextInFlow->Destroy(aPresContext);
