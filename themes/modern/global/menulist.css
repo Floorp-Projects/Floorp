@@ -11,34 +11,34 @@
     {
       -moz-binding		  : url(chrome://global/skin/globalBindings.xml#menulist);
       padding             : 0px;
-      margin			  : 3px 3px 4px 5px;
+      margin			  : 2px 3px 2px 5px;
       font-size 		  : 10px;
       font-family		  : geneva, arial;
     }
 
   .menulist-text-box
     {
-   	  margin-top		  : 1px;
+   	  margin-top		  : 2px;
    	  margin-right		  : 2px;
     }
 
   .menulist-spring-left 
   	{
   	  background		  : url(chrome://global/skin/menulist-leftcap.gif) no-repeat;	
-	  height			  : 16px;
+	  height			  : 18px;
 	  width				  : 8px;
   	}
 
   .menulist-box-middle
     {
       background		  : url(chrome://global/skin/menulist-middle.gif) repeat-x;
-      height			  : 16px;
+      height			  : 18px;
     }
   
   .menulist-dropmarker-right
     {
       background		  : url(chrome://global/skin/menulist-rightcap.gif) no-repeat;
-      height			  : 16px;
+      height			  : 18px;
       width				  : 22px;
     }
 
@@ -165,7 +165,7 @@
  menulist:focus
    {
       border              : 2px solid #F2C34F;
-      margin			  : 1px 1px 2px 3px;
+      margin			  : 0px 1px 0px 3px;
       -moz-border-radius  : 8px 7px 11px 9px;
    }
   

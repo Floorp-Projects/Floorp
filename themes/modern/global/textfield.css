@@ -14,7 +14,7 @@
       margin              : 2px 4px 2px 4px;
       background-color    : #FFFFFF;
       -moz-border-radius  : 4px 4px 3px 6px;
-      border              : 1px inset #B4C3D4;
+      border              : 2px inset #B4C3D4;
       cursor              : text;
     }
 
@@ -26,7 +26,7 @@
   textfield[focused="true"]
     {
       border              : 2px solid #F2C34F;
-      margin              : 0px 2px 0px 2px;
+      margin              : 2px 4px 2px 4px;
       -moz-border-radius  : 7px 7px 4px 6px;
     }
    

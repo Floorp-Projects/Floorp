@@ -1,45 +1,176 @@
-tabcontrol {
-  margin: 1px 5px 2px 5px;
+
+/*** TAB: TOP <tab> ***/
+
+tab { 
+  -moz-binding		: url(chrome://global/skin/globalBindings.xml#tab);
+  padding			: 0px;
+  color				: #1C1D1F;
 }
 
-/********** Tab widget *********/
-tab { 
-  border-top: 1px solid white;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-  color: black; 
-  padding: 3px 5px 3px 5px;
+.tab-image-left {
+  background		: url(chrome://global/skin/tab-unselect-left.gif) no-repeat bottom;
+  width				: 11px;
+  height			: 21px;
 }
+
+.tab-image-middle {
+  background		: url(chrome://global/skin/tab-unselect-middle.gif) repeat-x bottom;
+}
+
+.tab-image-right {
+  background		: url(chrome://global/skin/tab-unselect-right.gif) no-repeat bottom;
+  width				: 11px;
+  height			: 21px;
+}
+
+.tab-text {
+  padding			: 5px 0px 3px 0px;
+  font-size			: 12px;
+  font-family		: charcoal, ms sans serif;
+}
+
+tab:hover:active {
+  color				: #FEFEFE;
+}
+
+tab:hover:active > .tab-image-left { 
+  background		: url(chrome://global/skin/tab-clicked-left.gif) no-repeat bottom;
+}
+
+tab:hover:active > .tab-image-middle { 
+  background		: url(chrome://global/skin/tab-clicked-middle.gif) repeat-x bottom;
+}
+
+tab:hover:active > .tab-image-right { 
+  background		: url(chrome://global/skin/tab-clicked-right.gif) no-repeat bottom;
+}
+
 
 /* when a tab is selected this is how it should look */
-tab[selected="true"] {
-	font-weight: bold;
+tab[selected="true"], tab:hover:active[selected="true"],
+tab[selected="1"], tab:hover:active[selected="1"]{
+	color			: #1C1D1F;
 }
 
-tab:hover { 
-  color: #003366;
-  text-decoration: underline;
+tab[selected="true"] > .tab-image-left,
+tab:hover:active[selected="true"] > .tab-image-left { 
+  background		: url(chrome://global/skin/tab-select-left.gif) no-repeat bottom;
 }
 
-tab:hover:active { 
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-  text-decoration: none;
+tab[selected="true"] > .tab-image-middle,
+tab:hover:active[selected="true"] > .tab-image-middle { 
+  background		: url(chrome://global/skin/tab-select-middle.gif) repeat-x bottom;
+}
+
+tab[selected="true"] > .tab-image-right,
+tab:hover:active[selected="true"] > .tab-image-right { 
+  background		: url(chrome://global/skin/tab-select-right.gif) no-repeat bottom;
+}
+
+.tab-border-top-left, .tab-border-top-right {
+  background		: url(chrome://global/skin/tab-top-border.gif) repeat-x bottom;
+  height			: 2px;
+}
+
+.tab-border-top-left-cap {
+  background		: url(chrome://global/skin/tab-top-border-leftcap.gif) no-repeat bottom;
+  width				: 2px;
+  height			: 2px;
+}
+
+.tab-border-top-right-cap {
+  background		: url(chrome://global/skin/tab-top-border-rightcap.gif) no-repeat bottom;
+  width				: 2px;
+  height			: 2px;
 }
 
 tabbox {
-  padding: 0px 2px 0px 2px;
+  -moz-binding		: url(chrome://global/skin/globalBindings.xml#tabbox);
+  padding			: 0px;
 }
 
     /* top tabs */
 tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
-  border-bottom: none;
-  -moz-border-radius: 8px 8px 0px 0px;
-  padding-bottom: 1px;
-  margin: 1px 2px 1px 2px;
+  padding: 0px; 
+  margin: 0px;
+}
+
+/*** TAB: BOTTOM <tab class="tab-bottom"> ***/
+/* Found in editor.xul & editorOverlay.xul 
+ * SMALL TABS FOR NOW */
+
+.tab-bottom:hover:active > .tab-image-middle > .tab-text {
+		
+}
+
+.tab-bottom > .tab-image-left {
+  background		: url(chrome://global/skin/tab-bot-unselect-left.gif) no-repeat;
+  width				: 11px;
+  height			: 19px;
+}
+
+.tab-bottom > .tab-image-middle {
+  background		: url(chrome://global/skin/tab-bot-unselect-middle.gif) repeat-x;
+}
+
+.tab-bottom > .tab-image-middle > .tab-left {
+  padding			: 4px 0px;
+}
+
+.tab-bottom > .tab-image-right {
+  background		: url(chrome://global/skin/tab-bot-unselect-right.gif) no-repeat;
+  width				: 11px;
+  height			: 19px;
+}
+
+.tab-bottom > .tab-image-middle > .tab-text {
+  padding			: 4px 0px 5px 0px;
+}
+
+.tab-bottom:hover:active > .tab-image-left { 
+  background		: url(chrome://global/skin/tab-bot-clicked-left.gif) no-repeat;
+}
+
+.tab-bottom:hover:active > .tab-image-middle { 
+  background		: url(chrome://global/skin/tab-bot-clicked-middle.gif) repeat-x;
+}
+
+.tab-bottom:hover:active > .tab-image-right { 
+  background		: url(chrome://global/skin/tab-bot-clicked-right.gif) no-repeat;
+}
+
+/* when a tab is selected this is how it should look */
+
+.tab-bottom[selected="1"] > .tab-image-left,
+.tab-bottom:hover:active[selected="1"] > .tab-image-left { 
+  background		: url(chrome://global/skin/tab-bot-select-left.gif) no-repeat;
+}
+
+.tab-bottom[selected="1"] > .tab-image-middle,
+.tab-bottom:hover:active[selected="1"] > .tab-image-middle { 
+  background		: url(chrome://global/skin/tab-bot-select-middle.gif) repeat-x;
+}
+
+.tab-bottom[selected="1"] > .tab-image-right,
+.tab-bottom:hover:active[selected="1"] > .tab-image-right { 
+  background		: url(chrome://global/skin/tab-bot-select-right.gif) no-repeat;
+}
+
+.tabbox-bottom > .tab-border-top-left, .tabbox-bottom > .tab-border-top-right {
+  background		: url(chrome://global/skin/tab-bot-border.gif) repeat-x top;
+  width				: 2px;
+}
+
+.tabbox-bottom > .tab-border-top-left-cap {
+  background		: url(chrome://global/skin/tab-bot-border-leftcap.gif) no-repeat top;
+  width				: 2px;
+  height			: 2px;
+}
+
+.tabbox-bottom > .tab-border-top-right-cap {
+  background		: url(chrome://global/skin/tab-bot-border-rightcap.gif) no-repeat top;
+  width				: 2px;
+  height			: 2px;
 }
 
 	/* bottom tabs */
@@ -84,7 +215,15 @@ tabpanel.light {
 }
 
 tabpanel {
-  border	 		: 1px outset #FFFFFF;
+  border-top		: 0px;
+  background-color	: #C2D0D0;
+  border-left		: 1px solid #313948;
+  border-right		: 1px solid #313948;
+  border-bottom		: 1px solid #313948;
   padding			: 5px;
 }
 
+/* This is horrible CSS style, but is necessary to handle this case */
+tabpanel title {
+  background-color	: #C2D0D0;
+}
