@@ -1816,7 +1816,7 @@ foreach my $id (@idlist) {
 
     $vars->{'mailrecipients'} = { 'cc' => \@ccRemoved,
                                   'owner' => $origOwner,
-                                  'qa' => $origQaContact,
+                                  'qacontact' => $origQaContact,
                                   'changer' => Bugzilla->user->login };
 
     $vars->{'id'} = $id;
