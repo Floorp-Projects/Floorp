@@ -22,7 +22,6 @@
 
 <window id="escrowWarnDialog" title="&escrowWarn.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  height="280"
   width="400"
   onload="onLoad();">
 

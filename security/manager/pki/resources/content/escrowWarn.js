@@ -45,6 +45,14 @@ function onLoad()
   var msg = bundle.formatStringFromName("escrowFinalMessage",
                                         [dispName], 1);
   setText("message1",msg);
+
+  var wdth = window.innerWidth; // THIS IS NEEDED,
+  window.sizeToContent();
+  windowReference.setAttribute("width",window.innerWidth + 30);
+  var hght = window.innerHeight; // THIS IS NEEDED,
+  window.sizeToContent();
+  windowReference.setAttribute("height",window.innerHeight + 30);
+
 }
 
 function doOK()
