@@ -1366,7 +1366,6 @@ char *nsImapProtocol::GetServerCommandTag()
 void nsImapProtocol::ProcessSelectedStateURL()
 {
     char *mailboxName = nsnull;
-	nsIImapUrl::nsImapAction imapAction; 
 	PRBool					bMessageIdsAreUids = PR_TRUE;
 	imapMessageFlagsType	msgFlags = 0;
 	const char					*hostName = GetImapHostName();
@@ -1374,7 +1373,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
 	// this can't fail, can it?
 	nsresult res;
-    res = m_runningUrl->GetImapAction(&imapAction);
+    res = m_runningUrl->GetImapAction(&m_imapAction);
 	m_runningUrl->MessageIdsAreUids(&bMessageIdsAreUids);
 	m_runningUrl->GetMsgFlags(&msgFlags);
 
@@ -1435,7 +1434,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
         
         PRBool uidValidityOk = PR_TRUE;
         if (GetServerStateParser().LastCommandSuccessful() && selectIssued && 
-           (imapAction != nsIImapUrl::nsImapSelectFolder) && (imapAction != nsIImapUrl::nsImapLiteSelectFolder))
+           (m_imapAction != nsIImapUrl::nsImapSelectFolder) && (m_imapAction != nsIImapUrl::nsImapLiteSelectFolder))
         {
         	uid_validity_info *uidStruct = (uid_validity_info *) PR_Malloc(sizeof(uid_validity_info));
         	if (uidStruct)
@@ -1464,10 +1463,10 @@ void nsImapProtocol::ProcessSelectedStateURL()
         		HandleMemoryFailure();
         }
             
-        if (GetServerStateParser().LastCommandSuccessful() && !DeathSignalReceived() && (uidValidityOk || imapAction == nsIImapUrl::nsImapDeleteAllMsgs))
+        if (GetServerStateParser().LastCommandSuccessful() && !DeathSignalReceived() && (uidValidityOk || m_imapAction == nsIImapUrl::nsImapDeleteAllMsgs))
         {
 
-			switch (imapAction)
+			switch (m_imapAction)
 			{
 			case nsIImapUrl::nsImapLiteSelectFolder:
 				if (GetServerStateParser().LastCommandSuccessful() && m_imapMiscellaneousSink)
@@ -1479,6 +1478,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 					ProcessMailboxUpdate(PR_FALSE);	// handle uidvalidity change
 				}
 				break;
+            case nsIImapUrl::nsImapSaveMessageToDisk:
             case nsIImapUrl::nsImapMsgFetch:
             {
                 nsCString messageIdString;
@@ -1768,7 +1768,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
                 if (destinationMailbox)
                 {
-					if (imapAction == nsIImapUrl::nsImapOnlineMove) 
+					if (m_imapAction == nsIImapUrl::nsImapOnlineMove) 
 					{
 						if (HandlingMultipleMessages(messageIdString))
 							ProgressEventFunctionUsingIdWithString (IMAP_MOVING_MESSAGES_TO, destinationMailbox);
@@ -1794,7 +1794,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 						m_imapMessageSink->OnlineCopyReport(copyState);
                     
                     if (GetServerStateParser().LastCommandSuccessful() &&
-                        (imapAction == nsIImapUrl::nsImapOnlineMove))
+                        (m_imapAction == nsIImapUrl::nsImapOnlineMove))
                     {
                         Store(messageIdString, "+FLAGS (\\Deleted)",
                               bMessageIdsAreUids); 
@@ -1942,9 +1942,20 @@ void nsImapProtocol::BeginMessageDownLoad(
 	           // is consuming the message display
 	            nsresult rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
             }
-			else if (m_imapMessageSink) 
+            // else, if we are saving the message to disk!
+            else if (m_imapMessageSink /* && m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk */) 
             {
-                m_imapMessageSink->SetupMsgWriteStream();
+                nsCOMPtr<nsIFileSpec> fileSpec;
+                PRBool addDummyEnvelope = PR_TRUE;
+                nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
+                msgurl->GetMessageFile(getter_AddRefs(fileSpec));
+                msgurl->GetAddDummyEnvelope(&addDummyEnvelope);
+
+//                m_imapMessageSink->SetupMsgWriteStream(fileSpec, addDummyEnvelope);
+                nsXPIDLCString nativePath;
+                fileSpec->GetNativePath(getter_Copies(nativePath));
+                m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
+
 			}
             PL_strfree(si->content_type);
         }
@@ -2678,12 +2689,16 @@ void nsImapProtocol::NormalMessageEndDownload()
 		if (m_imapMailFolderSink)
 			m_imapMailFolderSink->NormalEndHeaderParseStream(this);
 	}
-    else if (m_channelListener)
+    else 
     {
-        PRUint32 inlength = 0;
-		m_channelInputStream->Available(&inlength);
-		if (inlength > 0) // broadcast our batched up ODA changes
-			m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
+        if (m_channelListener)
+        {
+            PRUint32 inlength = 0;
+		    m_channelInputStream->Available(&inlength);
+		    if (inlength > 0) // broadcast our batched up ODA changes
+			    m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
+        }
+
 		// need to know if we're downloading for display or not.
 		if (m_imapMessageSink)
 			m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID());

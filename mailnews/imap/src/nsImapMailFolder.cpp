@@ -92,8 +92,6 @@ nsImapMailFolder::nsImapMailFolder() :
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
                                             getter_AddRefs(m_eventQueue));
 	m_moveCoalescer = nsnull;
-	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-	m_tempMsgFileSpec += "tempMessage.eml";
 
 }
 
@@ -2219,16 +2217,17 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
 }    
 
 NS_IMETHODIMP
-nsImapMailFolder::SetupMsgWriteStream()
+//nsImapMailFolder::SetupMsgWriteStream(nsIFileSpec * aFileSpec, PRBool addDummyEnvelope)
+nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDummyEnvelope)
 {
-	// create a temp file to write the message into. We need to do this because
-	// we don't have pluggable converters yet. We want to let mkfile do the work of 
-	// converting the message from RFC-822 to HTML before displaying it...
-	m_tempMsgFileSpec.Delete(PR_FALSE);
-	nsISupports * supports;
-	NS_NewIOFileStream(&supports, m_tempMsgFileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+//    if (!aFileSpec)
+//        return NS_ERROR_NULL_POINTER;
+    nsFileSpec fileSpec (aNativeString);
+//    aFileSpec->GetFileSpec(&fileSpec);
+	fileSpec.Delete(PR_FALSE);
+	nsCOMPtr<nsISupports>  supports;
+	NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
 	m_tempMessageStream = do_QueryInterface(supports);
-	NS_IF_RELEASE(supports);
     return NS_OK;
 }
 
@@ -2250,11 +2249,8 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage)
 {
 	nsresult res = NS_OK;
 	if (m_tempMessageStream)
-	{
-        nsCOMPtr<nsISupports> aSupport;
 		m_tempMessageStream->Close();
 
-	}
 	nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
 	m_curMsgUid = uidOfMessage;

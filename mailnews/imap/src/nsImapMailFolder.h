@@ -326,7 +326,6 @@ protected:
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
 	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
-	nsFileSpec m_tempMsgFileSpec;
 
     // *** jt - undo move/copy trasaction support
     nsCOMPtr<nsITransactionManager> m_transactionManager;
