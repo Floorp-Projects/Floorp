@@ -54,7 +54,7 @@ interface nsIBookmarksService : nsISupports
     
     wstring GetLastCharset(in string aURI);
 
-    nsIRDFResource GetAnonymousResource();
+    nsIRDFResource GetAnonymousResource();  
 
 };
 
