@@ -124,8 +124,20 @@ class JSSKeyGeneratorSpi extends javax.crypto.KeyGeneratorSpi {
             super(KeyGenAlgorithm.RC4);
         }
     }
+
+    /**
+     * @deprecated This class name is misleading. This algorithm
+     * is used for generating Password-Based Authentication keys
+     * for use with HmacSHA1. Use PBAHmacSHA1 instead.
+     */
     public static class HmacSHA1 extends JSSKeyGeneratorSpi {
         public HmacSHA1() {
+            super(KeyGenAlgorithm.PBA_SHA1_HMAC);
+        }
+    }
+
+    public static class PBAHmacSHA1 extends JSSKeyGeneratorSpi {
+        public PBAHmacSHA1() {
             super(KeyGenAlgorithm.PBA_SHA1_HMAC);
         }
     }
