@@ -115,7 +115,6 @@ static NS_DEFINE_IID(kCGlobalHistoryCID,       NS_GLOBALHISTORY_CID);
 static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSION_HISTORY_CID);
 
 /* Define Interface IDs */
-static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
@@ -1240,7 +1239,7 @@ nsBrowserAppCore::LoadInitialPage(void)
   }
 
   rv = nsServiceManager::GetService(kCmdLineServiceCID,
-                                    kICmdLineServiceIID,
+                                    NS_GET_IID(nsICmdLineService),
                                     (nsISupports **)&cmdLineArgs);
   if (NS_FAILED(rv)) {
     if (APP_DEBUG) fprintf(stderr, "Could not obtain CmdLine processing service\n");
