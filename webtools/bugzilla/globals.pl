@@ -1186,21 +1186,8 @@ sub SqlQuote {
     return "'$str'";
 }
 
-
-
 sub UserInGroup {
-    my ($groupname) = (@_);
-    if ($::usergroupset eq "0") {
-        return 0;
-    }
-    PushGlobalSQLState();
-    SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn();
-    PopGlobalSQLState();
-    if ($bit) {
-        return 1;
-    }
-    return 0;
+    return $::vars->{'user'}{'groups'}{$_[0]};
 }
 
 sub BugInGroup {
