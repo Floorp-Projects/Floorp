@@ -295,7 +295,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
         //  A result is selected, so fill in its value
         nsAutoString value;
         if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value)))
-          CompleteValue(value);
+          CompleteValue(value, PR_FALSE);
       } else {
         // Nothing is selected, so fill in the last typed value
         mInput->SetTextValue(mSearchString);
@@ -379,7 +379,7 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
     // Complete to the new current value.
     nsAutoString value;
     if (NS_SUCCEEDED(GetResultValueAt(index, PR_TRUE, value))) {
-      CompleteValue(value);
+      CompleteValue(value, PR_FALSE);
 
       // Make sure we cancel the event that triggerd this call.
       *_retval = PR_TRUE;
@@ -1020,7 +1020,7 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 
   nsAutoString resultValue;
   result->GetValueAt(defaultIndex, resultValue);
-  CompleteValue(resultValue);
+  CompleteValue(resultValue, PR_TRUE);
   
   mDefaultIndexCompleted = PR_TRUE;
 
@@ -1028,9 +1028,11 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 }
 
 nsresult
-nsAutoCompleteController::CompleteValue(nsString &aValue)
+nsAutoCompleteController::CompleteValue(nsString &aValue, PRBool selectDifference)
 {
   nsString::const_iterator start, end, iter;
+  PRInt32 startSelect, endSelect;
+
   aValue.BeginReading(start);
   aValue.EndReading(end);
   iter = start;
@@ -1043,12 +1045,16 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
     // or the default value is empty, so we can just append the latter
     // portion
     mInput->SetTextValue(aValue);
-    mInput->SelectTextRange(mSearchString.Length(), aValue.Length());
+
+    startSelect = mSearchString.Length();
+    endSelect = aValue.Length();
   } else {
     PRInt32 findIndex = iter.get() - start.get();
 
     mInput->SetTextValue(mSearchString + Substring(aValue, mSearchString.Length()+findIndex, aValue.Length()));
-    mInput->SelectTextRange(mSearchString.Length(), aValue.Length() - findIndex);
+
+    startSelect = mSearchString.Length();
+    endSelect = aValue.Length() - findIndex;
 
     // XXX There might be a pref someday for doing it this way instead.
     // The textbox value does not match the beginning of the default value, so we
@@ -1056,6 +1062,11 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
     // mInput->SetTextValue(mSearchString + NS_ConvertUTF8toUCS2(kCompleteConcatSeparator) + aValue);
     // mInput->SelectTextRange(mSearchString.Length(), -1);
   }
+
+  if (selectDifference == PR_TRUE)
+    mInput->SelectTextRange(startSelect, endSelect);
+  else
+    mInput->SelectTextRange(endSelect, endSelect);
   
   return NS_OK;
 }
