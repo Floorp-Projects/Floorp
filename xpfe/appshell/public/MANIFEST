@@ -12,3 +12,4 @@ nsFileLocations.h
 nsIXULWindowCallbacks.h
 nsIDOMXPConnectFactory.h
 nsIGlobalHistory.h
+nsINetSupportDialogService.h
