@@ -23,7 +23,6 @@
  * Keith Visco 
  *    -- finished implementation
  *
- * $Id: XMLParser.h,v 1.11 2001/06/10 13:50:56 axel%pike.org Exp $
  */
 
 #ifndef MITRE_XMLPARSER_H
@@ -33,7 +32,7 @@
 #ifndef XML_UNICODE
 #define XML_UNICODE
 #endif
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 #include "xmlparse.h"
 #include "URIUtils.h"
 #endif
@@ -49,11 +48,11 @@ typedef struct  {
  * parsing is provided by EXPAT.
  * @author <a href="tomk@mitre.org">Tom Kneeland</a>
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.11 $ $Date: 2001/06/10 13:50:56 $
+ * @version $Revision: 1.12 $ $Date: 2001/06/10 16:43:13 $
 **/
 class XMLParser
 {
-#ifndef MOZ_XSL
+#ifdef TX_EXE
   /*-----------------6/18/99 12:43PM------------------
    * Sax related methods for XML parsers
    * --------------------------------------------------*/
@@ -71,7 +70,7 @@ class XMLParser
    ~XMLParser();
 
     Document* getDocumentFromURI(const String& href, const String& baseUri, String& errMsg);
-#ifndef MOZ_XSL
+#ifdef TX_EXE
     Document* parse(istream& inputStream, const String& uri);
     const String& getErrorString();
 
@@ -84,7 +83,7 @@ class XMLParser
 #endif
 };
 
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 /*-----------------6/18/99 12:43PM------------------
  * Sax related methods for XML parsers
  * --------------------------------------------------*/

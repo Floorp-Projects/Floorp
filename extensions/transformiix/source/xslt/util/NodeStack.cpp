@@ -24,17 +24,16 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *  -- moved initialization of DEFAULT_SIZE from NodeStack.h to here
  *
- * $Id: NodeStack.cpp,v 1.4 2001/06/10 12:55:01 axel%pike.org Exp $
  */
 
 #include "NodeStack.h"
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 #include <iostream.h>
 #endif
 
 /**
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/06/10 12:55:01 $
+ * @version $Revision: 1.5 $ $Date: 2001/06/10 16:45:36 $
 **/
 
 

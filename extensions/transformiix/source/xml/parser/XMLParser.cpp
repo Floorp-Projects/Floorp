@@ -34,11 +34,10 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.17 2001/06/10 13:50:55 axel%pike.org Exp $
  */
 
 #include "XMLParser.h"
-#ifdef MOZ_XSL
+#ifndef TX_EXE
 #include "nsSyncLoader.h"
 #include "URIUtils.h"
 #include "nsIIOService.h"
@@ -69,7 +68,7 @@
 **/
 XMLParser::XMLParser()
 {
-#ifndef MOZ_XSL
+#ifdef TX_EXE
   errorState = MB_FALSE;
 #endif
 } //-- XMLParser
@@ -87,7 +86,7 @@ Document* XMLParser::getDocumentFromURI
     String documentURL;
     URIUtils::resolveHref(href, baseUri, documentURL);
 
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     nsresult rv = NS_OK;
     nsCOMPtr<nsIURI> documentURI;
     nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID,
@@ -123,7 +122,7 @@ Document* XMLParser::getDocumentFromURI
 
 }
 
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 /**
  *  Parses the given input stream and returns a DOM Document.
  *  A NULL pointer will be returned if errors occurred

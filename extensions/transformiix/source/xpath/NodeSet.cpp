@@ -27,12 +27,11 @@
  * Olivier Gerardin, ogerardin@vo.lu
  *    -- fixed numberValue()
  *
- * $Id: NodeSet.cpp,v 1.8 2001/06/10 13:50:59 axel%pike.org Exp $
  */
 
 #include "NodeSet.h"
 #include "XMLDOMUtils.h"
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 #include <iostream.h>
 #endif
 
@@ -40,7 +39,7 @@
  * NodeSet <BR />
  * This class was ported from XSL:P. <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.8 $ $Date: 2001/06/10 13:50:59 $
+ * @version $Revision: 1.9 $ $Date: 2001/06/10 16:44:10 $
 **/
 
 

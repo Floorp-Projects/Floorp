@@ -22,9 +22,7 @@
 DEPTH=..\..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-!ifdef MOZ_XSL
-DEFINES=$(DEFINES) -DMOZ_XSL
-
+!ifndef TX_EXE
 CPPSRCS= 			\
 	nsSyncLoader.cpp	\
 	XMLParser.cpp	\
@@ -35,6 +33,8 @@ CPP_OBJS= 					\
 	.\$(OBJDIR)\XMLParser.obj	\
 	$(NULL)
 !else
+DEFINES=$(DEFINES) -DTX_EXE
+
 CPPSRCS= 			\
 	XMLParser.cpp	\
 	$(NULL)
@@ -48,7 +48,7 @@ EXPORTS =	\
 	$(NULL)
 
 LINCS=-I..\..\base -I..\dom -I..\..\net
-!ifdef MOZ_XSL
+!ifndef TX_EXE
 LINCS=$(LINCS) -I$(PUBLIC)\expat
 !else
 LINCS=$(LINCS) -Ixmlparse

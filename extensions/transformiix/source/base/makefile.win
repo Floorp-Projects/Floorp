@@ -22,8 +22,8 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-!if defined(MOZ_XSL)
-DEFINES= $(DEFINES) -DMOZ_XSL
+!if defined(TX_EXE)
+DEFINES= $(DEFINES) -DTX_EXE
 !endif
 
 CPPSRCS=				\
@@ -41,7 +41,7 @@ CPPSRCS=				\
 	StringList.cpp			\
 	Tokenizer.cpp			
 
-!ifdef MOZ_XSL
+!ifndef TX_EXE
 CPPSRCS = $(CPPSRCS)			\
 	MozillaString.cpp		\
 	$(NULL)
@@ -67,7 +67,7 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\StringList.obj		\
 	.\$(OBJDIR)\Tokenizer.obj		
 
-!ifdef MOZ_XSL
+!ifndef TX_EXE
 CPP_OBJS = $(CPP_OBJS)			\
 	.\$(OBJDIR)\MozillaString.obj	\
 	$(NULL)

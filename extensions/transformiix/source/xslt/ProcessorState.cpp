@@ -25,13 +25,12 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.28 2001/06/10 12:54:58 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.28 $ $Date: 2001/06/10 12:54:58 $
+ * @version $Revision: 1.29 $ $Date: 2001/06/10 16:41:35 $
 **/
 
 #include "ProcessorState.h"
@@ -44,7 +43,7 @@
 #include "VariableBinding.h"
 #include "ExprResult.h"
 #include "Names.h"
-#ifdef MOZ_XSL
+#ifndef TX_EXE
 //  #include "nslog.h"
 //  #define PRINTF NS_LOG_PRINTF(XPATH)
 //  #define FLUSH  NS_LOG_FLUSH(XPATH)
@@ -208,7 +207,7 @@ void ProcessorState::addTemplate(Element* xslTemplate) {
 MBool ProcessorState::addToResultTree(Node* node) {
 
     Node* current = resultNodeStack->peek();
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     String nameSpaceURI, name, localName;
 #endif
 
@@ -219,7 +218,7 @@ MBool ProcessorState::addToResultTree(Node* node) {
             if (current->getNodeType() != Node::ELEMENT_NODE) return MB_FALSE;
             Element* element = (Element*)current;
             Attr* attr = (Attr*)node;
-#ifdef MOZ_XSL
+#ifndef TX_EXE
             name = attr->getName();
             getResultNameSpaceURI(name, nameSpaceURI);
             // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
@@ -246,7 +245,7 @@ MBool ProcessorState::addToResultTree(Node* node) {
                     current->appendChild(wrapper);
                     current = wrapper;
                 }
-#ifdef MOZ_XSL
+#ifndef TX_EXE
                 else {
                     // Checking if we should set the output method to HTML
                     name = node->getNodeName();
