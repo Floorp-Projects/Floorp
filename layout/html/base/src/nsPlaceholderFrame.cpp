@@ -25,6 +25,7 @@
 #include "nsIView.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
+#include "nsCSSLineLayout.h"
 
 nsresult
 nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
@@ -53,11 +54,34 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::Reflow(nsIPresContext&      aPresContext,
-                           nsReflowMetrics&     aDesiredSize,
-                           const nsReflowState& aReflowState,
-                           nsReflowStatus&      aStatus)
+nsPlaceholderFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 {
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIInlineReflowIID)) {
+    nsIInlineReflow* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    return NS_OK;
+  }
+  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
+}
+
+NS_IMETHODIMP
+nsPlaceholderFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                                 nsIReflowCommand* aReflowCommand)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlaceholderFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
+                                 nsReflowMetrics&     aDesiredSize,
+                                 const nsReflowState& aReflowState)
+{
+  nsIPresContext& presContext = *aLineLayout.mPresContext;
+
   // Get the floater container in which we're inserted
   nsIFrame*             containingBlock;
   nsIFloaterContainer*  container = nsnull;
@@ -101,11 +125,11 @@ nsPlaceholderFrame::Reflow(nsIPresContext&      aPresContext,
       nsBodyFrame::NewFrame(&mAnchoredItem, mContent, this);
 
       // Use our style context for the pseudo-frame
-      mAnchoredItem->SetStyleContext(&aPresContext, mStyleContext);
+      mAnchoredItem->SetStyleContext(&presContext, mStyleContext);
     } else {
       // Create the anchored item
-      nsIContentDelegate* delegate = mContent->GetDelegate(&aPresContext);
-      nsresult rv = delegate->CreateFrame(&aPresContext, mContent,
+      nsIContentDelegate* delegate = mContent->GetDelegate(&presContext);
+      nsresult rv = delegate->CreateFrame(&presContext, mContent,
                                           mGeometricParent, mStyleContext,
                                           mAnchoredItem);
       NS_RELEASE(delegate);
@@ -115,11 +139,11 @@ nsPlaceholderFrame::Reflow(nsIPresContext&      aPresContext,
     }
 
     // Notify our containing block that there's a new floater
-    container->AddFloater(&aPresContext, aReflowState, mAnchoredItem, this);
+    container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
   }
 
   if (nsIFrame::GetShowFrameBorders()) {
-    float p2t = aPresContext.GetPixelsToTwips();
+    float p2t = presContext.GetPixelsToTwips();
     aDesiredSize.width = nscoord(p2t * 5);
     aDesiredSize.height = aDesiredSize.width;
   }
@@ -133,8 +157,7 @@ nsPlaceholderFrame::Reflow(nsIPresContext&      aPresContext,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
+  return NS_FRAME_COMPLETE;
 }
 
 NS_IMETHODIMP
