@@ -49,7 +49,6 @@ LINCS=                                  \
 LCFLAGS =                               \
 	$(LCFLAGS)                      \
 	-D_IMPL_NS_WIDGET               \
-	-DNS_DLLNAME=$(DLLNAME).dll     \
 	$(NULL)
 
 LLIBS=                                  \

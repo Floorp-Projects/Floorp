@@ -921,16 +921,12 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 //
 //-------------------------------------------------------------------------
 
-#define DLLQUOTE(x) #x
-#define DLLNAME(x) DLLQUOTE(x)
-
 NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
  
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
     HCURSOR newCursor = NULL;
-    HMODULE hm ;
 
     switch(aCursor) {
     case eCursor_select:
@@ -942,8 +938,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       break;
 
     case eCursor_hyperlink: {
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_SELECTANCHOR));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_SELECTANCHOR));
       break;
     }
 
@@ -960,43 +955,35 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       break;
 
     case eCursor_arrow_north:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWNORTH));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWNORTH));
       break;
 
     case eCursor_arrow_north_plus:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWNORTHPLUS));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWNORTHPLUS));
       break;
 
     case eCursor_arrow_south:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWSOUTH));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWSOUTH));
       break;
 
     case eCursor_arrow_south_plus:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWSOUTHPLUS));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWSOUTHPLUS));
       break;
 
     case eCursor_arrow_east:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWEAST));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWEAST));
       break;
 
     case eCursor_arrow_east_plus:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWEASTPLUS));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWEASTPLUS));
       break;
 
     case eCursor_arrow_west:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWWEST));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWWEST));
       break;
 
     case eCursor_arrow_west_plus:
-      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
-      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWWESTPLUS));
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWWESTPLUS));
       break;
 
     default:
