@@ -206,7 +206,7 @@ sub pickos {
             /Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
             /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
             /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
-            /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+            /Mozilla.*\(.*;.*; HP-UX.*\)/   && do {return "HP-UX";};
             /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
             /Mozilla.*\(.*;.*; FreeBSD.*\)/ && do {return "FreeBSD";};
             /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
