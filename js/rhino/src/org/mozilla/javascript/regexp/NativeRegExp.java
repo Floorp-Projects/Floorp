@@ -715,6 +715,7 @@ System.out.println();
         state.result = new RENode(REOP_FLAT);
         state.result.chr = c;
         state.result.length = 1;
+        state.result.flatIndex = -1;
         state.progLength += 3;
     }
 
@@ -1014,6 +1015,14 @@ System.out.println();
             state.result = new RENode(REOP_DOT);
             state.progLength++;
             break;
+        case '*':
+        case '+':
+        case '{':
+        case '}':
+        case '?':        
+            reportError("msg.bad.quant", 
+                        String.valueOf(src[state.cp - 1]), state);
+            return false;
         default:
             state.result = new RENode(REOP_FLAT);
             state.result.chr = c;
@@ -1205,7 +1214,7 @@ System.out.println();
                 /*
                  * Consecutize FLAT's if possible.
                  */
-                if (t.kid != null) {
+                if (t.flatIndex != -1) {
                     while ((t.next != null) && (t.next.op == REOP_FLAT)
                             && ((t.flatIndex + t.length)
                                             == t.next.flatIndex)) {
@@ -1213,7 +1222,7 @@ System.out.println();
                         t.next = t.next.next;
                     }
                 }
-                if ((t.kid != null) && (t.length > 1)) {
+                if ((t.flatIndex != -1) && (t.length > 1)) {
                     if ((state.flags & JSREG_FOLD) != 0)
                         program[pc - 1] = REOP_FLATi;
                     else
@@ -2845,7 +2854,7 @@ class RENode {
                                 /* or a literal sequence */
     char            chr;        /* of one character */
     int             length;     /* or many (via the index) */
-    int             flatIndex;
+    int             flatIndex;  /* which is -1 if not sourced */
 
 };
 
