@@ -132,8 +132,6 @@ insert into components (value, program, initialowner, initialqacontact, descript
 
 
 
-insert into components (value, program, initialowner, initialqacontact) values ("Platform: Rhapsody", "Mozilla", "mcafee@netscape.com", "");
-
 
 insert into components (value, program, initialowner, initialqacontact, description) values ("ActiveX Wrapper", "NGLayout", "locka@iol.ie", "cpratt@netscape.com", "This is the active-x wrapper that is used when people want to embed gecko in their application on windows. This is an external developer's code to wrap gecko up as an activeX control to replace IE as the embedded HTML control.");
 insert into components (value, program, initialowner, initialqacontact, description) values ("Cookies", "NGLayout", "morse@netscape.com", "paulmac@netscape.com", "A general mechanism which server side connections (such as CGI scripts) can use to both store and retrieve information on the client side of the connection. This refers to HTML cookies; little blobs of data we store and share with sites");
