@@ -60,6 +60,7 @@ PRBool bLoadAsync;
 // Define CIDs...
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 // Define IIDs...
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -200,6 +201,7 @@ int main(int argc, char **argv)
     }
 
     nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // Create the Event Queue for this thread...
@@ -288,11 +290,20 @@ int main(int argc, char **argv)
             urlLoaded = 1;
         }
 #else
+
+		nsresult rv;
+		nsIEventQueue* eventQ = nsnull;
+		NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+		if (NS_SUCCEEDED(rv)) {
+		  rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+		}
+		if (NS_FAILED(rv)) return rv;
+
         // Start the URL load...
         nsIProtocolConnection* protoConn = nsnull;
         result = NS_NewConnection(pURL, 
             // nsISupports* eventSink,
-            nsnull,
+            eventQ,
             // nsIConnectionGroup* group,
             nsnull,
             // nsIProtocolConnection* *result
