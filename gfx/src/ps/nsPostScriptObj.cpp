@@ -118,38 +118,38 @@ FreeLangGroups(nsHashKey * aKey, void *aData, void *aClosure)
 }
 
 static void
-PrintAsDSCTextline(XP_File f, char *text, int maxlen)
+PrintAsDSCTextline(FILE *f, char *text, int maxlen)
 {
   NS_ASSERTION(maxlen > 1, "bad max length");
 
   if (*text != '(') {
     // Format as DSC textline type
-    XP_FilePrintf(f, "%.*s", maxlen, text);
+    fprintf(f, "%.*s", maxlen, text);
     return;
   }
 
   // Fallback: Format as DSC text type
-  XP_FilePrintf(f, "(");
+  fprintf(f, "(");
 
   int len = maxlen - 2;
   while (*text && len > 0) {
     if (!isprint(*text)) {
       if (len < 4) break;
-      XP_FilePrintf(f, "\\%03o", *text);
+      fprintf(f, "\\%03o", *text);
       len -= 4;
     }
     else if (*text == '(' || *text == ')' || *text == '\\') {
       if (len < 2) break;
-      XP_FilePrintf(f, "\\%c", *text);
+      fprintf(f, "\\%c", *text);
       len -= 2;
     }
     else {
-      XP_FilePrintf(f, "%c", *text);
+      fprintf(f, "%c", *text);
       len--;
     }
     text++;
   }
-  XP_FilePrintf(f, ")");
+  fprintf(f, ")");
 }
 
 /** ---------------------------------------------------
@@ -439,73 +439,73 @@ void
 nsPostScriptObj::begin_document()
 {
 int i;
-XP_File f;
+FILE *f;
 
   f = mPrintContext->prSetup->out;
-  XP_FilePrintf(f, "%%!PS-Adobe-3.0\n");
-  XP_FilePrintf(f, "%%%%BoundingBox: %d %d %d %d\n",
+  fprintf(f, "%%!PS-Adobe-3.0\n");
+  fprintf(f, "%%%%BoundingBox: %d %d %d %d\n",
               PAGE_TO_POINT_I(mPrintContext->prSetup->left),
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->top),
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->width-mPrintContext->prSetup->right),
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->height-(mPrintContext->prSetup->bottom + mPrintContext->prSetup->top)));
-  XP_FilePrintf(f, "%%%%Creator: Mozilla (NetScape) HTML->PS\n");
-  XP_FilePrintf(f, "%%%%DocumentData: Clean8Bit\n");
-  XP_FilePrintf(f, "%%%%DocumentPaperSizes: %s\n",
+  fprintf(f, "%%%%Creator: Mozilla (NetScape) HTML->PS\n");
+  fprintf(f, "%%%%DocumentData: Clean8Bit\n");
+  fprintf(f, "%%%%DocumentPaperSizes: %s\n",
 	            paper_string[mPrintContext->prSetup->paper_size]);
-  XP_FilePrintf(f, "%%%%Orientation: %s\n",
+  fprintf(f, "%%%%Orientation: %s\n",
               (mPrintContext->prSetup->width < mPrintContext->prSetup->height) ? "Portrait" : "Landscape");
 
   // hmm, n_pages is always zero so don't use it
 #if 0
-  XP_FilePrintf(f, "%%%%Pages: %d\n", (int) mPrintContext->prInfo->n_pages);
+  fprintf(f, "%%%%Pages: %d\n", (int) mPrintContext->prInfo->n_pages);
 #else
-  XP_FilePrintf(f, "%%%%Pages: (atend)\n");
+  fprintf(f, "%%%%Pages: (atend)\n");
 #endif
 
   if (mPrintContext->prSetup->reverse)
-	  XP_FilePrintf(f, "%%%%PageOrder: Descend\n");
+	  fprintf(f, "%%%%PageOrder: Descend\n");
   else
-	  XP_FilePrintf(f, "%%%%PageOrder: Ascend\n");
+	  fprintf(f, "%%%%PageOrder: Ascend\n");
 
   if (nsnull != mPrintContext->prInfo->doc_title) {
     // DSC spec: max line length is 255 characters
-    XP_FilePrintf(f, "%%%%Title: ");
+    fprintf(f, "%%%%Title: ");
     PrintAsDSCTextline(f, mPrintContext->prInfo->doc_title, 230);
-    XP_FilePrintf(f, "\n");
+    fprintf(f, "\n");
   }
 
 #ifdef NOTYET
-  XP_FilePrintf(f, "%%%%For: %n", user_name_stuff);
+  fprintf(f, "%%%%For: %n", user_name_stuff);
 #endif
-  XP_FilePrintf(f, "%%%%EndComments\n");
+  fprintf(f, "%%%%EndComments\n");
 
   // general comments: Mozilla-specific 
 #ifdef NOTYET
-  XP_FilePrintf(f, "\n%% MozillaURL: %s\n", mPrintContext->prSetup->url->address);
+  fprintf(f, "\n%% MozillaURL: %s\n", mPrintContext->prSetup->url->address);
 #endif
-  XP_FilePrintf(f, "%% MozillaCharsetName: iso-8859-1\n\n");
+  fprintf(f, "%% MozillaCharsetName: iso-8859-1\n\n");
     
     // now begin prolog 
-  XP_FilePrintf(f, "%%%%BeginProlog\n");
-  XP_FilePrintf(f, "[");
+  fprintf(f, "%%%%BeginProlog\n");
+  fprintf(f, "[");
   for (i = 0; i < 256; i++){
 	  if (*isotab[i] == '\0'){
-      XP_FilePrintf(f, " /.notdef");
+      fprintf(f, " /.notdef");
     }else{
-	    XP_FilePrintf(f, " /%s", isotab[i]);
+	    fprintf(f, " /%s", isotab[i]);
     }
 
     if (( i % 6) == 5){
-      XP_FilePrintf(f, "\n");
+      fprintf(f, "\n");
     }
   }
 
-  XP_FilePrintf(f, "] /isolatin1encoding exch def\n");
+  fprintf(f, "] /isolatin1encoding exch def\n");
 
 #ifdef OLDFONTS
   // output the fonts supported here    
   for (i = 0; i < N_FONTS; i++){
-    XP_FilePrintf(f, 
+    fprintf(f, 
 	          "/F%d\n"
 	          "    /%s findfont\n"
 	          "    dup length dict begin\n"
@@ -519,15 +519,15 @@ XP_File f;
 
   for (i = 0; i < N_FONTS; i++){
     if (mPrintContext->prSetup->otherFontName[i]) {
-	    XP_FilePrintf(f, 
+	    fprintf(f, 
 	          "/of%d { /%s findfont exch scalefont setfont } bind def\n",
 		        i, mPrintContext->prSetup->otherFontName[i]);
-            //XP_FilePrintf(f, "/of /of1;\n", mPrintContext->prSetup->otherFontName); 
+            //fprintf(f, "/of /of1;\n", mPrintContext->prSetup->otherFontName); 
     }
   }
 #else
   for(i=0;i<NUM_AFM_FONTS;i++){
-    XP_FilePrintf(f, 
+    fprintf(f, 
 	          "/F%d\n"
 	          "    /%s findfont\n"
 	          "    dup length dict begin\n"
@@ -546,260 +546,260 @@ XP_File f;
 
 
 
-  XP_FilePrintf(f, "/rhc {\n");
-  XP_FilePrintf(f, "    {\n");
-  XP_FilePrintf(f, "        currentfile read {\n");
-  XP_FilePrintf(f, "	    dup 97 ge\n");
-  XP_FilePrintf(f, "		{ 87 sub true exit }\n");
-  XP_FilePrintf(f, "		{ dup 48 ge { 48 sub true exit } { pop } ifelse }\n");
-  XP_FilePrintf(f, "	    ifelse\n");
-  XP_FilePrintf(f, "	} {\n");
-  XP_FilePrintf(f, "	    false\n");
-  XP_FilePrintf(f, "	    exit\n");
-  XP_FilePrintf(f, "	} ifelse\n");
-  XP_FilePrintf(f, "    } loop\n");
-  XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, "/cvgray { %% xtra_char npix cvgray - (string npix long)\n");
-  XP_FilePrintf(f, "    dup string\n");
-  XP_FilePrintf(f, "    0\n");
-  XP_FilePrintf(f, "    {\n");
-  XP_FilePrintf(f, "	rhc { cvr 4.784 mul } { exit } ifelse\n");
-  XP_FilePrintf(f, "	rhc { cvr 9.392 mul } { exit } ifelse\n");
-  XP_FilePrintf(f, "	rhc { cvr 1.824 mul } { exit } ifelse\n");
-  XP_FilePrintf(f, "	add add cvi 3 copy put pop\n");
-  XP_FilePrintf(f, "	1 add\n");
-  XP_FilePrintf(f, "	dup 3 index ge { exit } if\n");
-  XP_FilePrintf(f, "    } loop\n");
-  XP_FilePrintf(f, "    pop\n");
-  XP_FilePrintf(f, "    3 -1 roll 0 ne { rhc { pop } if } if\n");
-  XP_FilePrintf(f, "    exch pop\n");
-  XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, "/smartimage12rgb { %% w h b [matrix] smartimage12rgb -\n");
-  XP_FilePrintf(f, "    /colorimage where {\n");
-  XP_FilePrintf(f, "	pop\n");
-  XP_FilePrintf(f, "	{ currentfile rowdata readhexstring pop }\n");
-  XP_FilePrintf(f, "	false 3\n");
-  XP_FilePrintf(f, "	colorimage\n");
-  XP_FilePrintf(f, "    } {\n");
-  XP_FilePrintf(f, "	exch pop 8 exch\n");
-  XP_FilePrintf(f, "	3 index 12 mul 8 mod 0 ne { 1 } { 0 } ifelse\n");
-  XP_FilePrintf(f, "	4 index\n");
-  XP_FilePrintf(f, "	6 2 roll\n");
-  XP_FilePrintf(f, "	{ 2 copy cvgray }\n");
-  XP_FilePrintf(f, "	image\n");
-  XP_FilePrintf(f, "	pop pop\n");
-  XP_FilePrintf(f, "    } ifelse\n");
-  XP_FilePrintf(f, "} def\n");
-  XP_FilePrintf(f,"/cshow { dup stringwidth pop 2 div neg 0 rmoveto show } bind def\n");  
-  XP_FilePrintf(f,"/rshow { dup stringwidth pop neg 0 rmoveto show } bind def\n");
-  XP_FilePrintf(f, "/BeginEPSF {\n");
-  XP_FilePrintf(f, "  /b4_Inc_state save def\n");
-  XP_FilePrintf(f, "  /dict_count countdictstack def\n");
-  XP_FilePrintf(f, "  /op_count count 1 sub def\n");
-  XP_FilePrintf(f, "  userdict begin\n");
-  XP_FilePrintf(f, "  /showpage {} def\n");
-  XP_FilePrintf(f, "  0 setgray 0 setlinecap 1 setlinewidth 0 setlinejoin\n");
-  XP_FilePrintf(f, "  10 setmiterlimit [] 0 setdash newpath\n");
-  XP_FilePrintf(f, "  /languagelevel where\n");
-  XP_FilePrintf(f, "  { pop languagelevel 1 ne\n");
-  XP_FilePrintf(f, "    { false setstrokeadjust false setoverprint } if\n");
-  XP_FilePrintf(f, "  } if\n");
-  XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "/EndEPSF {\n");
-  XP_FilePrintf(f, "  count op_count sub {pop} repeat\n");
-  XP_FilePrintf(f, "  countdictstack dict_count sub {end} repeat\n");
-  XP_FilePrintf(f, "  b4_Inc_state restore\n");
-  XP_FilePrintf(f, "} bind def\n");
+  fprintf(f, "/rhc {\n");
+  fprintf(f, "    {\n");
+  fprintf(f, "        currentfile read {\n");
+  fprintf(f, "	    dup 97 ge\n");
+  fprintf(f, "		{ 87 sub true exit }\n");
+  fprintf(f, "		{ dup 48 ge { 48 sub true exit } { pop } ifelse }\n");
+  fprintf(f, "	    ifelse\n");
+  fprintf(f, "	} {\n");
+  fprintf(f, "	    false\n");
+  fprintf(f, "	    exit\n");
+  fprintf(f, "	} ifelse\n");
+  fprintf(f, "    } loop\n");
+  fprintf(f, "} bind def\n");
+  fprintf(f, "\n");
+  fprintf(f, "/cvgray { %% xtra_char npix cvgray - (string npix long)\n");
+  fprintf(f, "    dup string\n");
+  fprintf(f, "    0\n");
+  fprintf(f, "    {\n");
+  fprintf(f, "	rhc { cvr 4.784 mul } { exit } ifelse\n");
+  fprintf(f, "	rhc { cvr 9.392 mul } { exit } ifelse\n");
+  fprintf(f, "	rhc { cvr 1.824 mul } { exit } ifelse\n");
+  fprintf(f, "	add add cvi 3 copy put pop\n");
+  fprintf(f, "	1 add\n");
+  fprintf(f, "	dup 3 index ge { exit } if\n");
+  fprintf(f, "    } loop\n");
+  fprintf(f, "    pop\n");
+  fprintf(f, "    3 -1 roll 0 ne { rhc { pop } if } if\n");
+  fprintf(f, "    exch pop\n");
+  fprintf(f, "} bind def\n");
+  fprintf(f, "\n");
+  fprintf(f, "/smartimage12rgb { %% w h b [matrix] smartimage12rgb -\n");
+  fprintf(f, "    /colorimage where {\n");
+  fprintf(f, "	pop\n");
+  fprintf(f, "	{ currentfile rowdata readhexstring pop }\n");
+  fprintf(f, "	false 3\n");
+  fprintf(f, "	colorimage\n");
+  fprintf(f, "    } {\n");
+  fprintf(f, "	exch pop 8 exch\n");
+  fprintf(f, "	3 index 12 mul 8 mod 0 ne { 1 } { 0 } ifelse\n");
+  fprintf(f, "	4 index\n");
+  fprintf(f, "	6 2 roll\n");
+  fprintf(f, "	{ 2 copy cvgray }\n");
+  fprintf(f, "	image\n");
+  fprintf(f, "	pop pop\n");
+  fprintf(f, "    } ifelse\n");
+  fprintf(f, "} def\n");
+  fprintf(f,"/cshow { dup stringwidth pop 2 div neg 0 rmoveto show } bind def\n");  
+  fprintf(f,"/rshow { dup stringwidth pop neg 0 rmoveto show } bind def\n");
+  fprintf(f, "/BeginEPSF {\n");
+  fprintf(f, "  /b4_Inc_state save def\n");
+  fprintf(f, "  /dict_count countdictstack def\n");
+  fprintf(f, "  /op_count count 1 sub def\n");
+  fprintf(f, "  userdict begin\n");
+  fprintf(f, "  /showpage {} def\n");
+  fprintf(f, "  0 setgray 0 setlinecap 1 setlinewidth 0 setlinejoin\n");
+  fprintf(f, "  10 setmiterlimit [] 0 setdash newpath\n");
+  fprintf(f, "  /languagelevel where\n");
+  fprintf(f, "  { pop languagelevel 1 ne\n");
+  fprintf(f, "    { false setstrokeadjust false setoverprint } if\n");
+  fprintf(f, "  } if\n");
+  fprintf(f, "} bind def\n");
+  fprintf(f, "/EndEPSF {\n");
+  fprintf(f, "  count op_count sub {pop} repeat\n");
+  fprintf(f, "  countdictstack dict_count sub {end} repeat\n");
+  fprintf(f, "  b4_Inc_state restore\n");
+  fprintf(f, "} bind def\n");
 
-  XP_FilePrintf(f, "\n");
+  fprintf(f, "\n");
 
 
-  XP_FilePrintf(f, "10 dict dup begin\n");
-  XP_FilePrintf(f, "  /FontType 3 def\n");
-  XP_FilePrintf(f, "  /FontMatrix [.001 0 0 .001 0 0 ] def\n");
-  XP_FilePrintf(f, "  /FontBBox [0 0 100 100] def\n");
-  XP_FilePrintf(f, "  /Encoding 256 array def\n");
-  XP_FilePrintf(f, "  0 1 255 {Encoding exch /.notdef put} for\n");
-  XP_FilePrintf(f, "  Encoding 97 /openbox put\n");
-  XP_FilePrintf(f, "  /CharProcs 2 dict def\n");
-  XP_FilePrintf(f, "  CharProcs begin\n");
-  XP_FilePrintf(f, "    /.notdef { } def\n");
-  XP_FilePrintf(f, "    /openbox\n");
-  XP_FilePrintf(f, "      { newpath\n");
-  XP_FilePrintf(f, "          90 30 moveto  90 670 lineto\n");
-  XP_FilePrintf(f, "          730 670 lineto  730 30 lineto\n");
-  XP_FilePrintf(f, "        closepath\n");
-  XP_FilePrintf(f, "        60 setlinewidth\n");
-  XP_FilePrintf(f, "        stroke } def\n");
-  XP_FilePrintf(f, "  end\n");
-  XP_FilePrintf(f, "  /BuildChar\n");
-  XP_FilePrintf(f, "    { 1000 0 0\n");
-  XP_FilePrintf(f, "	0 750 750\n");
-  XP_FilePrintf(f, "        setcachedevice\n");
-  XP_FilePrintf(f, "	exch begin\n");
-  XP_FilePrintf(f, "        Encoding exch get\n");
-  XP_FilePrintf(f, "        CharProcs exch get\n");
-  XP_FilePrintf(f, "	end\n");
-  XP_FilePrintf(f, "	exec\n");
-  XP_FilePrintf(f, "    } def\n");
-  XP_FilePrintf(f, "end\n");
-  XP_FilePrintf(f, "/NoglyphFont exch definefont pop\n");
-  XP_FilePrintf(f, "\n");
+  fprintf(f, "10 dict dup begin\n");
+  fprintf(f, "  /FontType 3 def\n");
+  fprintf(f, "  /FontMatrix [.001 0 0 .001 0 0 ] def\n");
+  fprintf(f, "  /FontBBox [0 0 100 100] def\n");
+  fprintf(f, "  /Encoding 256 array def\n");
+  fprintf(f, "  0 1 255 {Encoding exch /.notdef put} for\n");
+  fprintf(f, "  Encoding 97 /openbox put\n");
+  fprintf(f, "  /CharProcs 2 dict def\n");
+  fprintf(f, "  CharProcs begin\n");
+  fprintf(f, "    /.notdef { } def\n");
+  fprintf(f, "    /openbox\n");
+  fprintf(f, "      { newpath\n");
+  fprintf(f, "          90 30 moveto  90 670 lineto\n");
+  fprintf(f, "          730 670 lineto  730 30 lineto\n");
+  fprintf(f, "        closepath\n");
+  fprintf(f, "        60 setlinewidth\n");
+  fprintf(f, "        stroke } def\n");
+  fprintf(f, "  end\n");
+  fprintf(f, "  /BuildChar\n");
+  fprintf(f, "    { 1000 0 0\n");
+  fprintf(f, "	0 750 750\n");
+  fprintf(f, "        setcachedevice\n");
+  fprintf(f, "	exch begin\n");
+  fprintf(f, "        Encoding exch get\n");
+  fprintf(f, "        CharProcs exch get\n");
+  fprintf(f, "	end\n");
+  fprintf(f, "	exec\n");
+  fprintf(f, "    } def\n");
+  fprintf(f, "end\n");
+  fprintf(f, "/NoglyphFont exch definefont pop\n");
+  fprintf(f, "\n");
 
-  XP_FilePrintf(f, "/mbshow {                       %% num\n");
-  XP_FilePrintf(f, "    8 array                     %% num array\n");
-  XP_FilePrintf(f, "    -1                          %% num array counter\n");
-  XP_FilePrintf(f, "    {\n");
-  XP_FilePrintf(f, "        dup 7 ge { exit } if\n");
-  XP_FilePrintf(f, "        1 add                   %% num array counter\n");
-  XP_FilePrintf(f, "        2 index 16#100 mod      %% num array counter mod\n");
-  XP_FilePrintf(f, "        3 copy put pop          %% num array counter\n");
-  XP_FilePrintf(f, "        2 index 16#100 idiv     %% num array counter num\n");
-  XP_FilePrintf(f, "        dup 0 le\n");
-  XP_FilePrintf(f, "        {\n");
-  XP_FilePrintf(f, "            pop exit\n");
-  XP_FilePrintf(f, "        } if\n");
-  XP_FilePrintf(f, "        4 -1 roll pop\n");
-  XP_FilePrintf(f, "        3 1 roll\n");
-  XP_FilePrintf(f, "    } loop                      %% num array counter\n");
-  XP_FilePrintf(f, "    3 -1 roll pop               %% array counter\n");
-  XP_FilePrintf(f, "    dup 1 add string            %% array counter string\n");
-  XP_FilePrintf(f, "    0 1 3 index\n");
-  XP_FilePrintf(f, "    {                           %% array counter string index\n");
-  XP_FilePrintf(f, "        2 index 1 index sub     %% array counter string index sid\n");
-  XP_FilePrintf(f, "        4 index 3 2 roll get    %% array counter string sid byte\n");
-  XP_FilePrintf(f, "        2 index 3 1 roll put    %% array counter string\n");
-  XP_FilePrintf(f, "    } for\n");
-  XP_FilePrintf(f, "    show pop pop\n");
-  XP_FilePrintf(f, "} def\n");
+  fprintf(f, "/mbshow {                       %% num\n");
+  fprintf(f, "    8 array                     %% num array\n");
+  fprintf(f, "    -1                          %% num array counter\n");
+  fprintf(f, "    {\n");
+  fprintf(f, "        dup 7 ge { exit } if\n");
+  fprintf(f, "        1 add                   %% num array counter\n");
+  fprintf(f, "        2 index 16#100 mod      %% num array counter mod\n");
+  fprintf(f, "        3 copy put pop          %% num array counter\n");
+  fprintf(f, "        2 index 16#100 idiv     %% num array counter num\n");
+  fprintf(f, "        dup 0 le\n");
+  fprintf(f, "        {\n");
+  fprintf(f, "            pop exit\n");
+  fprintf(f, "        } if\n");
+  fprintf(f, "        4 -1 roll pop\n");
+  fprintf(f, "        3 1 roll\n");
+  fprintf(f, "    } loop                      %% num array counter\n");
+  fprintf(f, "    3 -1 roll pop               %% array counter\n");
+  fprintf(f, "    dup 1 add string            %% array counter string\n");
+  fprintf(f, "    0 1 3 index\n");
+  fprintf(f, "    {                           %% array counter string index\n");
+  fprintf(f, "        2 index 1 index sub     %% array counter string index sid\n");
+  fprintf(f, "        4 index 3 2 roll get    %% array counter string sid byte\n");
+  fprintf(f, "        2 index 3 1 roll put    %% array counter string\n");
+  fprintf(f, "    } for\n");
+  fprintf(f, "    show pop pop\n");
+  fprintf(f, "} def\n");
 
-  XP_FilePrintf(f, "/draw_undefined_char\n");
-  XP_FilePrintf(f, "{\n");
-  XP_FilePrintf(f, "  /NoglyphFont findfont csize scalefont setfont (a) show\n");
-  XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, "/real_unicodeshow\n");
-  XP_FilePrintf(f, "{\n");
-  XP_FilePrintf(f, "  /ccode exch def\n");
-  XP_FilePrintf(f, "  /Unicodedict where {\n");
-  XP_FilePrintf(f, "    pop\n");
-  XP_FilePrintf(f, "    Unicodedict ccode known {\n");
-  XP_FilePrintf(f, "      /cwidth {currentfont /ScaleMatrix get 0 get} def \n");
-  XP_FilePrintf(f, "      /cheight cwidth def \n");
-  XP_FilePrintf(f, "      gsave\n");
-  XP_FilePrintf(f, "      currentpoint translate\n");
-  XP_FilePrintf(f, "      cwidth 1056 div cheight 1056 div scale\n");
-  XP_FilePrintf(f, "      2 -2 translate\n");
-  XP_FilePrintf(f, "      ccode Unicodedict exch get\n");
-  XP_FilePrintf(f, "      cvx exec\n");
-  XP_FilePrintf(f, "      grestore\n");
-  XP_FilePrintf(f, "      currentpoint exch cwidth add exch moveto\n");
-  XP_FilePrintf(f, "      true\n");
-  XP_FilePrintf(f, "    } {\n");
-  XP_FilePrintf(f, "      false\n");
-  XP_FilePrintf(f, "    } ifelse\n");
-  XP_FilePrintf(f, "  } {\n");
-  XP_FilePrintf(f, "    false\n");
-  XP_FilePrintf(f, "  } ifelse\n");
-  XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, "/real_unicodeshow_native\n");
-  XP_FilePrintf(f, "{\n");
-  XP_FilePrintf(f, "  /ccode exch def\n");
-  XP_FilePrintf(f, "  /NativeFont where {\n");
-  XP_FilePrintf(f, "    pop\n");
-  XP_FilePrintf(f, "    NativeFont findfont /FontName get /Courier eq {\n");
-  XP_FilePrintf(f, "      false\n");
-  XP_FilePrintf(f, "    } {\n");
-  XP_FilePrintf(f, "      NativeFont findfont csize scalefont setfont\n");
-  XP_FilePrintf(f, "      /Unicode2NativeDict where {\n");
-  XP_FilePrintf(f, "        pop\n");
-  XP_FilePrintf(f, "        Unicode2NativeDict ccode known {\n");
-  XP_FilePrintf(f, "          Unicode2NativeDict ccode get show\n");
-  XP_FilePrintf(f, "          true\n");
-  XP_FilePrintf(f, "        } {\n");
-  XP_FilePrintf(f, "          false\n");
-  XP_FilePrintf(f, "        } ifelse\n");
-  XP_FilePrintf(f, "      } {\n");
-  XP_FilePrintf(f, "	  false\n");
-  XP_FilePrintf(f, "      } ifelse\n");
-  XP_FilePrintf(f, "    } ifelse\n");
-  XP_FilePrintf(f, "  } {\n");
-  XP_FilePrintf(f, "    false\n");
-  XP_FilePrintf(f, "  } ifelse\n");
-  XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, "/real_unicodeshow_cid\n");
-  XP_FilePrintf(f, "{\n");
-  XP_FilePrintf(f, "  /ccode exch def\n");
-  XP_FilePrintf(f, "  /UCS2Font where {\n");
-  XP_FilePrintf(f, "    pop\n");
-  XP_FilePrintf(f, "    UCS2Font findfont /FontName get /Courier eq {\n");
-  XP_FilePrintf(f, "      false\n");
-  XP_FilePrintf(f, "    } {\n");
-  XP_FilePrintf(f, "      UCS2Font findfont csize scalefont setfont\n");
-  XP_FilePrintf(f, "      ccode mbshow\n");
-  XP_FilePrintf(f, "      true\n");
-  XP_FilePrintf(f, "    } ifelse\n");
-  XP_FilePrintf(f, "  } {\n");
-  XP_FilePrintf(f, "    false\n");
-  XP_FilePrintf(f, "  } ifelse\n");
-  XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, "/unicodeshow \n");
-  XP_FilePrintf(f, "{\n");
-  XP_FilePrintf(f, "  /cfont currentfont def\n");
-  XP_FilePrintf(f, "  /str exch def\n");
-  XP_FilePrintf(f, "  /i 0 def\n");
-  XP_FilePrintf(f, "  str length /ls exch def\n");
-  XP_FilePrintf(f, "  {\n");
-  XP_FilePrintf(f, "    i 1 add ls ge {exit} if\n");
-  XP_FilePrintf(f, "    str i get /c1 exch def\n");
-  XP_FilePrintf(f, "    str i 1 add get /c2 exch def\n");
-  XP_FilePrintf(f, "    /c c2 256 mul c1 add def\n");
-  XP_FilePrintf(f, "    c2 1 ge \n");
-  XP_FilePrintf(f, "    {\n");
-  XP_FilePrintf(f, "      c unicodeshow1\n");
-  XP_FilePrintf(f, "      {\n");
-  XP_FilePrintf(f, "        %% do nothing\n");
-  XP_FilePrintf(f, "      } {\n");
-  XP_FilePrintf(f, "        c real_unicodeshow_cid	%% try CID \n");
-  XP_FilePrintf(f, "        {\n");
-  XP_FilePrintf(f, "          %% do nothing\n");
-  XP_FilePrintf(f, "        } {\n");
-  XP_FilePrintf(f, "          c unicodeshow2\n");
-  XP_FilePrintf(f, "          {\n");
-  XP_FilePrintf(f, "            %% do nothing\n");
-  XP_FilePrintf(f, "          } {\n");
-  XP_FilePrintf(f, "            draw_undefined_char\n");
-  XP_FilePrintf(f, "          } ifelse\n");
-  XP_FilePrintf(f, "        } ifelse\n");
-  XP_FilePrintf(f, "      } ifelse\n");
-  XP_FilePrintf(f, "    } {\n");
-  XP_FilePrintf(f, "      %% ascii\n");
-  XP_FilePrintf(f, "      cfont setfont\n");
-  XP_FilePrintf(f, "      str i 1 getinterval show\n");
-  XP_FilePrintf(f, "    } ifelse\n");
-  XP_FilePrintf(f, "    /i i 2 add def\n");
-  XP_FilePrintf(f, "  } loop\n");
-  XP_FilePrintf(f, "}  bind def\n");
-  XP_FilePrintf(f, "\n");
+  fprintf(f, "/draw_undefined_char\n");
+  fprintf(f, "{\n");
+  fprintf(f, "  /NoglyphFont findfont csize scalefont setfont (a) show\n");
+  fprintf(f, "} bind def\n");
+  fprintf(f, "\n");
+  fprintf(f, "/real_unicodeshow\n");
+  fprintf(f, "{\n");
+  fprintf(f, "  /ccode exch def\n");
+  fprintf(f, "  /Unicodedict where {\n");
+  fprintf(f, "    pop\n");
+  fprintf(f, "    Unicodedict ccode known {\n");
+  fprintf(f, "      /cwidth {currentfont /ScaleMatrix get 0 get} def \n");
+  fprintf(f, "      /cheight cwidth def \n");
+  fprintf(f, "      gsave\n");
+  fprintf(f, "      currentpoint translate\n");
+  fprintf(f, "      cwidth 1056 div cheight 1056 div scale\n");
+  fprintf(f, "      2 -2 translate\n");
+  fprintf(f, "      ccode Unicodedict exch get\n");
+  fprintf(f, "      cvx exec\n");
+  fprintf(f, "      grestore\n");
+  fprintf(f, "      currentpoint exch cwidth add exch moveto\n");
+  fprintf(f, "      true\n");
+  fprintf(f, "    } {\n");
+  fprintf(f, "      false\n");
+  fprintf(f, "    } ifelse\n");
+  fprintf(f, "  } {\n");
+  fprintf(f, "    false\n");
+  fprintf(f, "  } ifelse\n");
+  fprintf(f, "} bind def\n");
+  fprintf(f, "\n");
+  fprintf(f, "/real_unicodeshow_native\n");
+  fprintf(f, "{\n");
+  fprintf(f, "  /ccode exch def\n");
+  fprintf(f, "  /NativeFont where {\n");
+  fprintf(f, "    pop\n");
+  fprintf(f, "    NativeFont findfont /FontName get /Courier eq {\n");
+  fprintf(f, "      false\n");
+  fprintf(f, "    } {\n");
+  fprintf(f, "      NativeFont findfont csize scalefont setfont\n");
+  fprintf(f, "      /Unicode2NativeDict where {\n");
+  fprintf(f, "        pop\n");
+  fprintf(f, "        Unicode2NativeDict ccode known {\n");
+  fprintf(f, "          Unicode2NativeDict ccode get show\n");
+  fprintf(f, "          true\n");
+  fprintf(f, "        } {\n");
+  fprintf(f, "          false\n");
+  fprintf(f, "        } ifelse\n");
+  fprintf(f, "      } {\n");
+  fprintf(f, "	  false\n");
+  fprintf(f, "      } ifelse\n");
+  fprintf(f, "    } ifelse\n");
+  fprintf(f, "  } {\n");
+  fprintf(f, "    false\n");
+  fprintf(f, "  } ifelse\n");
+  fprintf(f, "} bind def\n");
+  fprintf(f, "\n");
+  fprintf(f, "/real_unicodeshow_cid\n");
+  fprintf(f, "{\n");
+  fprintf(f, "  /ccode exch def\n");
+  fprintf(f, "  /UCS2Font where {\n");
+  fprintf(f, "    pop\n");
+  fprintf(f, "    UCS2Font findfont /FontName get /Courier eq {\n");
+  fprintf(f, "      false\n");
+  fprintf(f, "    } {\n");
+  fprintf(f, "      UCS2Font findfont csize scalefont setfont\n");
+  fprintf(f, "      ccode mbshow\n");
+  fprintf(f, "      true\n");
+  fprintf(f, "    } ifelse\n");
+  fprintf(f, "  } {\n");
+  fprintf(f, "    false\n");
+  fprintf(f, "  } ifelse\n");
+  fprintf(f, "} bind def\n");
+  fprintf(f, "\n");
+  fprintf(f, "/unicodeshow \n");
+  fprintf(f, "{\n");
+  fprintf(f, "  /cfont currentfont def\n");
+  fprintf(f, "  /str exch def\n");
+  fprintf(f, "  /i 0 def\n");
+  fprintf(f, "  str length /ls exch def\n");
+  fprintf(f, "  {\n");
+  fprintf(f, "    i 1 add ls ge {exit} if\n");
+  fprintf(f, "    str i get /c1 exch def\n");
+  fprintf(f, "    str i 1 add get /c2 exch def\n");
+  fprintf(f, "    /c c2 256 mul c1 add def\n");
+  fprintf(f, "    c2 1 ge \n");
+  fprintf(f, "    {\n");
+  fprintf(f, "      c unicodeshow1\n");
+  fprintf(f, "      {\n");
+  fprintf(f, "        %% do nothing\n");
+  fprintf(f, "      } {\n");
+  fprintf(f, "        c real_unicodeshow_cid	%% try CID \n");
+  fprintf(f, "        {\n");
+  fprintf(f, "          %% do nothing\n");
+  fprintf(f, "        } {\n");
+  fprintf(f, "          c unicodeshow2\n");
+  fprintf(f, "          {\n");
+  fprintf(f, "            %% do nothing\n");
+  fprintf(f, "          } {\n");
+  fprintf(f, "            draw_undefined_char\n");
+  fprintf(f, "          } ifelse\n");
+  fprintf(f, "        } ifelse\n");
+  fprintf(f, "      } ifelse\n");
+  fprintf(f, "    } {\n");
+  fprintf(f, "      %% ascii\n");
+  fprintf(f, "      cfont setfont\n");
+  fprintf(f, "      str i 1 getinterval show\n");
+  fprintf(f, "    } ifelse\n");
+  fprintf(f, "    /i i 2 add def\n");
+  fprintf(f, "  } loop\n");
+  fprintf(f, "}  bind def\n");
+  fprintf(f, "\n");
 
-  XP_FilePrintf(f, "/u2nadd {Unicode2NativeDict 3 1 roll put} bind def\n");
-  XP_FilePrintf(f, "\n");
+  fprintf(f, "/u2nadd {Unicode2NativeDict 3 1 roll put} bind def\n");
+  fprintf(f, "\n");
 
-  XP_FilePrintf(f, "/Unicode2NativeDictdef 0 dict def\n");
-  XP_FilePrintf(f, "/default_ls {\n");
-  XP_FilePrintf(f, "  /Unicode2NativeDict Unicode2NativeDictdef def\n");
-  XP_FilePrintf(f, "  /UCS2Font   /Courier def\n");
-  XP_FilePrintf(f, "  /NativeFont /Courier def\n");
-  XP_FilePrintf(f, "  /unicodeshow1 { real_unicodeshow } bind def\n");
-  XP_FilePrintf(f, "  /unicodeshow2 { real_unicodeshow_native } bind def\n");
-  XP_FilePrintf(f, "} bind def\n");
+  fprintf(f, "/Unicode2NativeDictdef 0 dict def\n");
+  fprintf(f, "/default_ls {\n");
+  fprintf(f, "  /Unicode2NativeDict Unicode2NativeDictdef def\n");
+  fprintf(f, "  /UCS2Font   /Courier def\n");
+  fprintf(f, "  /NativeFont /Courier def\n");
+  fprintf(f, "  /unicodeshow1 { real_unicodeshow } bind def\n");
+  fprintf(f, "  /unicodeshow2 { real_unicodeshow_native } bind def\n");
+  fprintf(f, "} bind def\n");
 
-  XP_FilePrintf(f, "\n");
+  fprintf(f, "\n");
 
   // read the printer properties file
   InitUnixPrinterProps();
@@ -807,7 +807,7 @@ XP_File f;
   // setup prolog for each langgroup
   initlanggroup();
 
-  XP_FilePrintf(f, "%%%%EndProlog\n");
+  fprintf(f, "%%%%EndProlog\n");
 }
 
 /** ---------------------------------------------------
@@ -817,26 +817,26 @@ XP_File f;
 void 
 nsPostScriptObj::begin_page()
 {
-XP_File f;
+FILE *f;
 
   f = mPrintContext->prSetup->out;
-  XP_FilePrintf(f, "%%%%Page: %d %d\n", mPageNumber, mPageNumber);
-  XP_FilePrintf(f, "%%%%BeginPageSetup\n/pagelevel save def\n");
+  fprintf(f, "%%%%Page: %d %d\n", mPageNumber, mPageNumber);
+  fprintf(f, "%%%%BeginPageSetup\n/pagelevel save def\n");
   if (mPrintContext->prSetup->landscape){
-    XP_FilePrintf(f, "%d 0 translate 90 rotate\n",PAGE_TO_POINT_I(mPrintContext->prSetup->height));
+    fprintf(f, "%d 0 translate 90 rotate\n",PAGE_TO_POINT_I(mPrintContext->prSetup->height));
   }
-  XP_FilePrintf(f, "%d 0 translate\n", PAGE_TO_POINT_I(mPrintContext->prSetup->left));
-  XP_FilePrintf(f, "0 %d translate\n", -PAGE_TO_POINT_I(mPrintContext->prSetup->top));
-  XP_FilePrintf(f, "%%%%EndPageSetup\n");
+  fprintf(f, "%d 0 translate\n", PAGE_TO_POINT_I(mPrintContext->prSetup->left));
+  fprintf(f, "0 %d translate\n", -PAGE_TO_POINT_I(mPrintContext->prSetup->top));
+  fprintf(f, "%%%%EndPageSetup\n");
 #if 0
   annotate_page( mPrintContext->prSetup->header, 0, -1, pn);
 #endif
-  XP_FilePrintf(f, "newpath 0 %d moveto ", PAGE_TO_POINT_I(mPrintContext->prSetup->top));
-  XP_FilePrintf(f, "%d 0 rlineto 0 %d rlineto -%d 0 rlineto ",
+  fprintf(f, "newpath 0 %d moveto ", PAGE_TO_POINT_I(mPrintContext->prSetup->top));
+  fprintf(f, "%d 0 rlineto 0 %d rlineto -%d 0 rlineto ",
 			PAGE_TO_POINT_I(mPrintContext->prInfo->page_width),
 			PAGE_TO_POINT_I(mPrintContext->prInfo->page_height),
 			PAGE_TO_POINT_I(mPrintContext->prInfo->page_width));
-  XP_FilePrintf(f, " closepath clip newpath\n");
+  fprintf(f, " closepath clip newpath\n");
 
   // need to reset all U2Ntable
   gLangGroups->Enumerate(ResetU2Ntable, nsnull);
@@ -853,15 +853,15 @@ nsPostScriptObj::end_page()
   annotate_page( mPrintContext->prSetup->footer,
 		   mPrintContext->prSetup->height-mPrintContext->prSetup->bottom-mPrintContext->prSetup->top,
 		   1, pn);
-  XP_FilePrintf(mPrintContext->prSetup->out, "pagelevel restore\nshowpage\n");
+  fprintf(mPrintContext->prSetup->out, "pagelevel restore\nshowpage\n");
 #endif
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "pagelevel restore\n");
+  fprintf(mPrintContext->prSetup->out, "pagelevel restore\n");
   annotate_page(mPrintContext->prSetup->header, mPrintContext->prSetup->top/2, -1, mPageNumber);
   annotate_page( mPrintContext->prSetup->footer,
 				   mPrintContext->prSetup->height - mPrintContext->prSetup->bottom/2,
 				   1, mPageNumber);
-  XP_FilePrintf(mPrintContext->prSetup->out, "showpage\n");
+  fprintf(mPrintContext->prSetup->out, "showpage\n");
   mPageNumber++;
 }
 
@@ -872,13 +872,13 @@ nsPostScriptObj::end_page()
 void 
 nsPostScriptObj::end_document()
 {
-  XP_File f;
+  FILE *f;
 
   f = mPrintContext->prSetup->out;
   // n_pages is zero so use mPageNumber
-  XP_FilePrintf(f, "%%%%Trailer\n");
-  XP_FilePrintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
-  XP_FilePrintf(f, "%%%%EOF\n");
+  fprintf(f, "%%%%Trailer\n");
+  fprintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
+  fprintf(f, "%%%%EOF\n");
 }
 
 /** ---------------------------------------------------
@@ -898,25 +898,25 @@ nsPostScriptObj::annotate_page(char *aTemplate, int y, int delta_dir, int pn)
 void 
 nsPostScriptObj::show(const char* txt, int len, char *align)
 {
-XP_File f;
+FILE *f;
 
   f = mPrintContext->prSetup->out;
-  XP_FilePrintf(f, "(");
+  fprintf(f, "(");
 
   while (len-- > 0) {
     switch (*txt) {
 	    case '(':
 	    case ')':
 	    case '\\':
-        XP_FilePrintf(f, "\\%c", *txt);
+        fprintf(f, "\\%c", *txt);
 		    break;
 	    default:
-            XP_FilePrintf(f, "%c", *txt);     
+            fprintf(f, "%c", *txt);     
 		    break;
 	  }
 	  txt++;
   }
-  XP_FilePrintf(f, ") %sshow\n", align);
+  fprintf(f, ") %sshow\n", align);
 }
 
 /** ---------------------------------------------------
@@ -926,7 +926,7 @@ XP_File f;
 void 
 nsPostScriptObj::preshow(const PRUnichar* txt, int len)
 {
-  XP_File f = mPrintContext->prSetup->out;
+  FILE *f = mPrintContext->prSetup->out;
   unsigned char highbyte;
   PRUnichar uch;
 
@@ -964,7 +964,7 @@ nsPostScriptObj::preshow(const PRUnichar* txt, int len)
 	      ncode = new PRInt32;
 	      *ncode = code;
 	      gU2Ntable->Put(&key, ncode);
-	      XP_FilePrintf(f, "%d <%x> u2nadd\n", uch, code);
+	      fprintf(f, "%d <%x> u2nadd\n", uch, code);
             }
 	  }
 	}
@@ -981,22 +981,22 @@ nsPostScriptObj::preshow(const PRUnichar* txt, int len)
 void 
 nsPostScriptObj::show(const PRUnichar* txt, int len, char *align)
 {
- XP_File f = mPrintContext->prSetup->out;
+ FILE *f = mPrintContext->prSetup->out;
  unsigned char highbyte, lowbyte;
  PRUnichar uch;
 
-  XP_FilePrintf(f, "(");
+  fprintf(f, "(");
 
   while (len-- > 0) {
     switch (*txt) {
         case 0x0028:     // '('
-            XP_FilePrintf(f, "\\050\\000");
+            fprintf(f, "\\050\\000");
 		    break;
         case 0x0029:     // ')' 
-            XP_FilePrintf(f, "\\051\\000");
+            fprintf(f, "\\051\\000");
 		    break;
         case 0x005c:     // '\\'
-            XP_FilePrintf(f, "\\134\\000");
+            fprintf(f, "\\134\\000");
 		    break;
 	    default:
           uch = *txt;
@@ -1006,24 +1006,24 @@ nsPostScriptObj::show(const PRUnichar* txt, int len, char *align)
           // we output all unicode chars in the 2x3 digits oct format for easier post-processing
           // Our 'show' command will always treat the second 3 digit oct as high 8-bits of unicode, independent of Endians
           if ( lowbyte < 8 )
-		      XP_FilePrintf(f, "\\00%o", lowbyte  & 0xff);
+		      fprintf(f, "\\00%o", lowbyte  & 0xff);
           else if ( lowbyte < 64  && lowbyte >= 8)
-            XP_FilePrintf(f, "\\0%o", lowbyte & 0xff);
+            fprintf(f, "\\0%o", lowbyte & 0xff);
           else
-             XP_FilePrintf(f, "\\%o", lowbyte & 0xff);      
+             fprintf(f, "\\%o", lowbyte & 0xff);      
 
           if ( highbyte < 8  )
-		      XP_FilePrintf(f, "\\00%o", highbyte & 0xff);
+		      fprintf(f, "\\00%o", highbyte & 0xff);
           else if ( highbyte < 64  && highbyte >= 8)
-            XP_FilePrintf(f, "\\0%o", highbyte & 0xff);
+            fprintf(f, "\\0%o", highbyte & 0xff);
           else
-             XP_FilePrintf(f, "\\%o", highbyte & 0xff);      
+             fprintf(f, "\\%o", highbyte & 0xff);      
          
 		break;
 	  }
 	  txt++;
   }
-  XP_FilePrintf(f, ") %sunicodeshow\n", align);
+  fprintf(f, ") %sunicodeshow\n", align);
 }
 
 
@@ -1044,7 +1044,7 @@ nsPostScriptObj::moveto(int x, int y)
 
   y = (mPrintContext->prInfo->page_height - y - 1);
   
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g moveto\n",
+  fprintf(mPrintContext->prSetup->out, "%g %g moveto\n",
 		PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
   XL_RESTORE_NUMERIC_LOCALE();
 }
@@ -1063,7 +1063,7 @@ nsPostScriptObj::moveto_loc(int x, int y)
   // invert y
   y = (mPrintContext->prSetup->height - y - 1);
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g moveto\n",
+  fprintf(mPrintContext->prSetup->out, "%g %g moveto\n",
 		PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
   XL_RESTORE_NUMERIC_LOCALE();
 }
@@ -1082,7 +1082,7 @@ nsPostScriptObj::lineto( int aX1, int aY1)
   //aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
   aY1 = (mPrintContext->prInfo->page_height - aY1 - 1)  ;
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g lineto\n",
+  fprintf(mPrintContext->prSetup->out, "%g %g lineto\n",
 		PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1));
 
   XL_RESTORE_NUMERIC_LOCALE();
@@ -1098,10 +1098,10 @@ nsPostScriptObj::ellipse( int aWidth, int aHeight)
   XL_SET_NUMERIC_LOCALE();
 
   // Ellipse definition
-  XP_FilePrintf(mPrintContext->prSetup->out,"%g %g ",PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
-  XP_FilePrintf(mPrintContext->prSetup->out, 
+  fprintf(mPrintContext->prSetup->out,"%g %g ",PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
+  fprintf(mPrintContext->prSetup->out, 
                 " matrix currentmatrix currentpoint translate\n");
-  XP_FilePrintf(mPrintContext->prSetup->out, 
+  fprintf(mPrintContext->prSetup->out, 
           "     3 1 roll scale newpath 0 0 1 0 360 arc setmatrix  \n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
@@ -1116,10 +1116,10 @@ nsPostScriptObj::arc( int aWidth, int aHeight,float aStartAngle,float aEndAngle)
 
   XL_SET_NUMERIC_LOCALE();
   // Arc definition
-  XP_FilePrintf(mPrintContext->prSetup->out,"%g %g ",PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
-  XP_FilePrintf(mPrintContext->prSetup->out, 
+  fprintf(mPrintContext->prSetup->out,"%g %g ",PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
+  fprintf(mPrintContext->prSetup->out, 
                 " matrix currentmatrix currentpoint translate\n");
-  XP_FilePrintf(mPrintContext->prSetup->out, 
+  fprintf(mPrintContext->prSetup->out, 
           "     3 1 roll scale newpath 0 0 1 %g %g arc setmatrix  \n",aStartAngle,aEndAngle);
 
   XL_RESTORE_NUMERIC_LOCALE();
@@ -1136,7 +1136,7 @@ void
 nsPostScriptObj::box( int aW, int aH)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g 0 rlineto 0 %g rlineto %g 0 rlineto ",
+  fprintf(mPrintContext->prSetup->out, "%g 0 rlineto 0 %g rlineto %g 0 rlineto ",
           PAGE_TO_POINT_F(aW), -PAGE_TO_POINT_F(aH), -PAGE_TO_POINT_F(aW));
   XL_RESTORE_NUMERIC_LOCALE();
 }
@@ -1149,7 +1149,7 @@ void
 nsPostScriptObj::box_subtract( int aW, int aH)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(mPrintContext->prSetup->out,"0 %g rlineto %g 0 rlineto 0 %g rlineto  ",
+  fprintf(mPrintContext->prSetup->out,"0 %g rlineto %g 0 rlineto 0 %g rlineto  ",
           PAGE_TO_POINT_F(-aH), PAGE_TO_POINT_F(aW), PAGE_TO_POINT_F(aH));
   XL_RESTORE_NUMERIC_LOCALE();
 }
@@ -1161,7 +1161,7 @@ nsPostScriptObj::box_subtract( int aW, int aH)
 void 
 nsPostScriptObj::clip()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " clip \n");
+  fprintf(mPrintContext->prSetup->out, " clip \n");
 }
 
 /** ---------------------------------------------------
@@ -1171,7 +1171,7 @@ nsPostScriptObj::clip()
 void 
 nsPostScriptObj::eoclip()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " eoclip \n");
+  fprintf(mPrintContext->prSetup->out, " eoclip \n");
 }
 
 /** ---------------------------------------------------
@@ -1181,7 +1181,7 @@ nsPostScriptObj::eoclip()
 void 
 nsPostScriptObj::clippath()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " clippath \n");
+  fprintf(mPrintContext->prSetup->out, " clippath \n");
 }
 
 /** ---------------------------------------------------
@@ -1191,7 +1191,7 @@ nsPostScriptObj::clippath()
 void 
 nsPostScriptObj::newpath()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " newpath \n");
+  fprintf(mPrintContext->prSetup->out, " newpath \n");
 }
 
 /** ---------------------------------------------------
@@ -1201,7 +1201,7 @@ nsPostScriptObj::newpath()
 void 
 nsPostScriptObj::closepath()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " closepath \n");
+  fprintf(mPrintContext->prSetup->out, " closepath \n");
 }
 
 /** ---------------------------------------------------
@@ -1211,7 +1211,7 @@ nsPostScriptObj::closepath()
 void 
 nsPostScriptObj::initclip()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " initclip \n");
+  fprintf(mPrintContext->prSetup->out, " initclip \n");
 }
 
 /** ---------------------------------------------------
@@ -1222,7 +1222,7 @@ void
 nsPostScriptObj::line( int aX1, int aY1, int aX2, int aY2, int aThick)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(mPrintContext->prSetup->out, "gsave %g setlinewidth\n ",PAGE_TO_POINT_F(aThick));
+  fprintf(mPrintContext->prSetup->out, "gsave %g setlinewidth\n ",PAGE_TO_POINT_F(aThick));
 
   aY1 -= mPrintContext->prInfo->page_topy;
  // aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
@@ -1231,12 +1231,12 @@ nsPostScriptObj::line( int aX1, int aY1, int aX2, int aY2, int aThick)
  // aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) + mPrintContext->prSetup->bottom;
   aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) ;
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g moveto %g %g lineto\n",
+  fprintf(mPrintContext->prSetup->out, "%g %g moveto %g %g lineto\n",
 		    PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1),
 		    PAGE_TO_POINT_F(aX2), PAGE_TO_POINT_F(aY2));
   stroke();
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "grestore\n");
+  fprintf(mPrintContext->prSetup->out, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
@@ -1247,7 +1247,7 @@ nsPostScriptObj::line( int aX1, int aY1, int aX2, int aY2, int aThick)
 void
 nsPostScriptObj::stroke()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " stroke \n");
+  fprintf(mPrintContext->prSetup->out, " stroke \n");
 }
 
 /** ---------------------------------------------------
@@ -1257,7 +1257,7 @@ nsPostScriptObj::stroke()
 void
 nsPostScriptObj::fill()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " fill \n");
+  fprintf(mPrintContext->prSetup->out, " fill \n");
 }
 
 /** ---------------------------------------------------
@@ -1267,7 +1267,7 @@ nsPostScriptObj::fill()
 void
 nsPostScriptObj::graphics_save()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " gsave \n");
+  fprintf(mPrintContext->prSetup->out, " gsave \n");
 }
 
 /** ---------------------------------------------------
@@ -1277,7 +1277,7 @@ nsPostScriptObj::graphics_save()
 void
 nsPostScriptObj::graphics_restore()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, " grestore \n");
+  fprintf(mPrintContext->prSetup->out, " grestore \n");
 }
 
 /** ---------------------------------------------------
@@ -1293,7 +1293,7 @@ nsPostScriptObj::translate(int x, int y)
     //y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
     y = (mPrintContext->prInfo->page_height - y - 1) ;
 
-    XP_FilePrintf(mPrintContext->prSetup->out, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
+    fprintf(mPrintContext->prSetup->out, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
     XL_RESTORE_NUMERIC_LOCALE();
 }
 
@@ -1324,16 +1324,16 @@ PRInt32 sRow, eRow, rStep;
   bytewidth = 3*width;
   cbits = 8;
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "gsave\n");
-  XP_FilePrintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth/3);
+  fprintf(mPrintContext->prSetup->out, "gsave\n");
+  fprintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth/3);
   translate(aX, aY + aHeight);
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g scale\n", PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
-  XP_FilePrintf(mPrintContext->prSetup->out, "%d %d ", width, height);
-  XP_FilePrintf(mPrintContext->prSetup->out, "%d ", cbits);
-  //XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 %d]\n", width,-height, height);
-  XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 0]\n", width,height);
-  XP_FilePrintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
-  XP_FilePrintf(mPrintContext->prSetup->out, " image\n");
+  fprintf(mPrintContext->prSetup->out, "%g %g scale\n", PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
+  fprintf(mPrintContext->prSetup->out, "%d %d ", width, height);
+  fprintf(mPrintContext->prSetup->out, "%d ", cbits);
+  //fprintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 %d]\n", width,-height, height);
+  fprintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 0]\n", width,height);
+  fprintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
+  fprintf(mPrintContext->prSetup->out, " image\n");
 
   theBits = aImage->GetBits();
   n = 0;
@@ -1352,10 +1352,10 @@ PRInt32 sRow, eRow, rStep;
     curline = theBits + (y*rowData);
     for(x=0;x<bytewidth;x+=3){
       if (n > 71) {
-          XP_FilePrintf(mPrintContext->prSetup->out,"\n");
+          fprintf(mPrintContext->prSetup->out,"\n");
           n = 0;
       }
-      XP_FilePrintf(mPrintContext->prSetup->out, "%02x", (int) (0xff & *curline));
+      fprintf(mPrintContext->prSetup->out, "%02x", (int) (0xff & *curline));
       curline+=3; 
       n += 2;
     }
@@ -1364,7 +1364,7 @@ PRInt32 sRow, eRow, rStep;
     if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
   }
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "\ngrestore\n");
+  fprintf(mPrintContext->prSetup->out, "\ngrestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 
 }
@@ -1401,16 +1401,16 @@ PRInt32 sRow, eRow, rStep;
   bytewidth = 3*width;
   cbits = 8;
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "gsave\n");
-  XP_FilePrintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth);
+  fprintf(mPrintContext->prSetup->out, "gsave\n");
+  fprintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth);
   translate(aX, aY + aHeight);
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g scale\n", PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
-  XP_FilePrintf(mPrintContext->prSetup->out, "%d %d ", width, height);
-  XP_FilePrintf(mPrintContext->prSetup->out, "%d ", cbits);
-  //XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 %d]\n", width,-height, height);
-  XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 0]\n", width,height);
-  XP_FilePrintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
-  XP_FilePrintf(mPrintContext->prSetup->out, " false 3 colorimage\n");
+  fprintf(mPrintContext->prSetup->out, "%g %g scale\n", PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
+  fprintf(mPrintContext->prSetup->out, "%d %d ", width, height);
+  fprintf(mPrintContext->prSetup->out, "%d ", cbits);
+  //fprintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 %d]\n", width,-height, height);
+  fprintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 0]\n", width,height);
+  fprintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
+  fprintf(mPrintContext->prSetup->out, " false 3 colorimage\n");
 
   theBits = aImage->GetBits();
   n = 0;
@@ -1429,10 +1429,10 @@ PRInt32 sRow, eRow, rStep;
     curline = theBits + (y*rowData);
     for(x=0;x<bytewidth;x++){
       if (n > 71) {
-          XP_FilePrintf(mPrintContext->prSetup->out,"\n");
+          fprintf(mPrintContext->prSetup->out,"\n");
           n = 0;
       }
-      XP_FilePrintf(mPrintContext->prSetup->out, "%02x", (int) (0xff & *curline++));
+      fprintf(mPrintContext->prSetup->out, "%02x", (int) (0xff & *curline++));
       n += 2;
     }
     y += rStep;
@@ -1440,7 +1440,7 @@ PRInt32 sRow, eRow, rStep;
     if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
   }
 
-  XP_FilePrintf(mPrintContext->prSetup->out, "\ngrestore\n");
+  fprintf(mPrintContext->prSetup->out, "\ngrestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 
 }
@@ -1463,10 +1463,10 @@ float greyBrightness;
 
   if(mPrintSetup->color == PR_FALSE ) {
     greyBrightness=(NS_PS_RED(aColor)+NS_PS_GREEN(aColor)+NS_PS_BLUE(aColor))/3;
-    XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n",
+    fprintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n",
     greyBrightness,greyBrightness,greyBrightness);
   } else {
-    XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n",
+    fprintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n",
     NS_PS_RED(aColor), NS_PS_GREEN(aColor), NS_PS_BLUE(aColor));
   }
 
@@ -1485,9 +1485,9 @@ nsPostScriptObj::setscriptfont(PRInt16 aFontIndex,const nsString &aFamily,nscoor
 int postscriptFont = 0;
 
 
-//    XP_FilePrintf(mPrintContext->prSetup->out, "%% aFontIndex = %d, Family = %s, aStyle = %d, 
+//    fprintf(mPrintContext->prSetup->out, "%% aFontIndex = %d, Family = %s, aStyle = %d, 
 //        aWeight=%d, postscriptfont = %d\n", aFontIndex, &aFamily, aStyle, aWeight, postscriptFont);
-  XP_FilePrintf(mPrintContext->prSetup->out,"%d",NS_TWIPS_TO_POINTS(aHeight));
+  fprintf(mPrintContext->prSetup->out,"%d",NS_TWIPS_TO_POINTS(aHeight));
 	
   
   if( aFontIndex >= 0) {
@@ -1526,7 +1526,7 @@ int postscriptFont = 0;
 	}
     //#endif
 
-	 XP_FilePrintf(mPrintContext->prSetup->out, " f%d\n", postscriptFont);
+	 fprintf(mPrintContext->prSetup->out, " f%d\n", postscriptFont);
 
 
 #if 0
@@ -1557,7 +1557,7 @@ void
 nsPostScriptObj::comment(char *aTheComment)
 {
 
-  XP_FilePrintf(mPrintContext->prSetup->out,"%%%s\n", aTheComment);
+  fprintf(mPrintContext->prSetup->out,"%%%s\n", aTheComment);
 
 }
 
@@ -1568,13 +1568,13 @@ nsPostScriptObj::comment(char *aTheComment)
 void
 nsPostScriptObj::setlanggroup(nsIAtom * aLangGroup)
 {
-  XP_File f = mPrintContext->prSetup->out;
+  FILE *f = mPrintContext->prSetup->out;
 
   gEncoder = nsnull;
   gU2Ntable = nsnull;
 
   if (aLangGroup == nsnull) {
-    XP_FilePrintf(f, "default_ls\n");
+    fprintf(f, "default_ls\n");
     return;
   }
   nsAutoString langstr;
@@ -1586,12 +1586,12 @@ nsPostScriptObj::setlanggroup(nsIAtom * aLangGroup)
 
   if (linfo) {
     nsCAutoString str; str.AssignWithConversion(langstr);
-    XP_FilePrintf(f, "%s_ls\n", (const char*) str);
+    fprintf(f, "%s_ls\n", (const char*) str);
     gEncoder = linfo->mEncoder;
     gU2Ntable = linfo->mU2Ntable;
     return;
   } else {
-    XP_FilePrintf(f, "default_ls\n");
+    fprintf(f, "default_ls\n");
   }
 }
 
@@ -1659,7 +1659,7 @@ GetUnixPrinterFallbackSetting(const nsCAutoString& aKey, char** aVal)
   return PR_FALSE;
 }
 
-XP_File nsPostScriptObj::GetPrintFile()
+FILE * nsPostScriptObj::GetPrintFile()
 {
   return(mPrintContext->prSetup->out);
 }
@@ -1668,7 +1668,7 @@ XP_File nsPostScriptObj::GetPrintFile()
 static void PrefEnumCallback(const char *aName, void *aClosure)
 {
   nsPostScriptObj *psObj = (nsPostScriptObj*)aClosure;
-  XP_File f = psObj->GetPrintFile();
+  FILE *f = psObj->GetPrintFile();
 
   nsAutoString lang; lang.AssignWithConversion(aName);
 
@@ -1788,28 +1788,28 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
     nsCAutoString langstrC; langstrC.AssignWithConversion(lang);
     if (psnativefont && linfo->mEncoder) {
-      XP_FilePrintf(f, "/Unicode2NativeDict%s 0 dict def\n", (const char *) langstrC);
+      fprintf(f, "/Unicode2NativeDict%s 0 dict def\n", (const char *) langstrC);
     }
 
-    XP_FilePrintf(f, "/%s_ls {\n", (const char *) langstrC);
-    XP_FilePrintf(f, "  /NativeFont /%s def\n",
+    fprintf(f, "/%s_ls {\n", (const char *) langstrC);
+    fprintf(f, "  /NativeFont /%s def\n",
       (psnativefont && linfo->mEncoder) ? psnativefont.get() : "Courier");
-    XP_FilePrintf(f, "  /UCS2Font /%s def\n",
+    fprintf(f, "  /UCS2Font /%s def\n",
 		  psunicodefont ? psunicodefont.get() : "Courier");
     if (psnativefont && linfo->mEncoder) {
-      XP_FilePrintf(f, "  /Unicode2NativeDict Unicode2NativeDict%s def\n",
+      fprintf(f, "  /Unicode2NativeDict Unicode2NativeDict%s def\n",
 		    (const char *) langstrC);
     }
 
     if (psfontorder) {
-      XP_FilePrintf(f, "  /unicodeshow1 { real_unicodeshow_native } bind def\n");
-      XP_FilePrintf(f, "  /unicodeshow2 { real_unicodeshow } bind def\n");
+      fprintf(f, "  /unicodeshow1 { real_unicodeshow_native } bind def\n");
+      fprintf(f, "  /unicodeshow2 { real_unicodeshow } bind def\n");
     } else {
-      XP_FilePrintf(f, "  /unicodeshow1 { real_unicodeshow } bind def\n");
-      XP_FilePrintf(f, "  /unicodeshow2 { real_unicodeshow_native } bind def\n");
+      fprintf(f, "  /unicodeshow1 { real_unicodeshow } bind def\n");
+      fprintf(f, "  /unicodeshow2 { real_unicodeshow_native } bind def\n");
     }
 
-    XP_FilePrintf(f, "} bind def\n");
+    fprintf(f, "} bind def\n");
 
     if (linfo->mEncoder) {
       linfo->mEncoder->SetOutputErrorBehavior(
