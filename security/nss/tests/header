@@ -161,8 +161,10 @@ then                # want the init to wait forever for directories to
 fi
 
 if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
-then
-    BC_MASTER="20010212.1.nss32_rtm"
+then                      # a linux compiler bug prevents us from doing the 
+                          # testing against a rtm - so we rebuild the branch
+    #BC_MASTER="20010212.1.nss32_rtm"
+    BC_MASTER="nss32/builds/20010420-nss-3.2-ref"
 fi
 
 EARLY_EXIT=TRUE     #before the report file has been created, causes Exit to 
@@ -249,7 +251,6 @@ tbx_dirs()
 {
     TBX_D2=`cd ../../../../..;pwd`
     D1="${TBX_D2}/../.." 
-    BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
     set_d2
     UX_MASTERDIR=`cd ../../../..;pwd`
     NT_MASTERDIR=$UX_MASTERDIR
@@ -287,7 +288,8 @@ init_dirs()
     set_d2
 
     if [ -z "${BCDIST}" ] ; then
-        BCDIST=${D1}/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+        BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+        #BCDIST=${D1}/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
     fi
 
     UX_MASTERDIR=${D2}/${UX_MASTERBUILD}
