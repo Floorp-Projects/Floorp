@@ -5004,7 +5004,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         //
         if (mDisallowPopupWindows) {
             PRBool bIsChromeOrResource = PR_FALSE;
-            mCurrentURI->SchemeIs("chrome", &bIsChromeOrResource);
+            if (mCurrentURI)
+                mCurrentURI->SchemeIs("chrome", &bIsChromeOrResource);
             if (!bIsChromeOrResource) {
                 aURI->SchemeIs("chrome", &bIsChromeOrResource);
                 if (!bIsChromeOrResource) {
