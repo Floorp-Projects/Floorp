@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.2 $ $Date: 2001/12/06 18:21:35 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.3 $ $Date: 2001/12/06 23:43:12 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -753,18 +753,20 @@ nssToken_FindCertificateByEncodedCertificate
 }
 
 static void
-sha1_hash(NSSToken *token, NSSItem *input, NSSItem *output)
+sha1_hash(NSSItem *input, NSSItem *output)
 {
     NSSAlgorithmAndParameters *ap;
+    NSSToken *token = STAN_GetDefaultCryptoToken();
     ap = NSSAlgorithmAndParameters_CreateSHA1Digest(NULL);
     (void)nssToken_Digest(token, NULL, ap, input, output, NULL);
     nss_ZFreeIf(ap);
 }
 
 static void
-md5_hash(NSSToken *token, NSSItem *input, NSSItem *output)
+md5_hash(NSSItem *input, NSSItem *output)
 {
     NSSAlgorithmAndParameters *ap;
+    NSSToken *token = STAN_GetDefaultCryptoToken();
     ap = NSSAlgorithmAndParameters_CreateMD5Digest(NULL);
     (void)nssToken_Digest(token, NULL, ap, input, output, NULL);
     nss_ZFreeIf(ap);
@@ -802,8 +804,8 @@ nssToken_ImportTrust
     NSSCertificate *c = trust->certificate;
     sha1_result.data = sha1; sha1_result.size = sizeof sha1;
     md5_result.data = md5; md5_result.size = sizeof md5;
-    sha1_hash(tok, &c->encoding, &sha1_result);
-    md5_hash(tok, &c->encoding, &md5_result);
+    sha1_hash(&c->encoding, &sha1_result);
+    md5_hash(&c->encoding, &md5_result);
     if (trustDomain) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(trust_tmpl, 0, &g_ck_true);
     } else {
@@ -849,7 +851,7 @@ get_cert_trust_handle
     PRUint8 sha1[20]; /* this is cheating... */
     NSSItem sha1_result;
     sha1_result.data = sha1; sha1_result.size = sizeof sha1;
-    sha1_hash(token, &c->encoding, &sha1_result);
+    sha1_hash(&c->encoding, &sha1_result);
     NSS_CK_SET_ATTRIBUTE_VAR( tobj_template, 0, tobjc);
     NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 1, &sha1_result);
     NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 2, &c->issuer);
