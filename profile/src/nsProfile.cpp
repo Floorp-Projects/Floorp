@@ -1058,6 +1058,13 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* profileName, const char* n
 	}
     else {
         dirSpec = nativeProfileDir;
+
+	// this prevents people from choosing there profile directory
+	// or another directory, and remove it when they delete the profile
+	//
+	// append profile name
+        dirSpec += profileName;
+        dirSpec.MakeUnique();
     }
 
 #if defined(DEBUG_profile)
