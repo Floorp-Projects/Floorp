@@ -19,7 +19,7 @@
 ## 
 ## Usage:
 ##
-## $ run-mozilla.sh [program]
+## $ run-mozilla.sh [options] [program] [program arguments]
 ##
 ## This script is meant to run a mozilla program from the mozilla
 ## source tree.  This is mostly useful to folks hacking on mozilla.
@@ -71,6 +71,44 @@ MOZ_PROGRAM=""
 ##
 ## Functions
 ##
+##########################################################################
+moz_usage()
+{
+    cat << EOF
+
+Usage:  ${cmdname) [options] [program]
+
+  options:
+
+    -g                   Run in debugger.
+    --debug
+
+    -d debugger          Debugger to use.
+    --debugger debugger
+
+  Examples:
+
+  Run the viewer
+
+    ${cmdname) viewer
+
+  Run the apprunner
+
+    ${cmdname) apprunner
+
+  Debug the viewer in a debbuger
+
+    ${cmdname) -g viewer
+
+  Debug the apprunner in gdb
+
+    ${cmdname) -g viewer -d gdb
+
+EOF
+
+	return 0
+}
+##########################################################################
 moz_bail()
 {
 	message=$1
@@ -81,7 +119,7 @@ moz_bail()
 
 	exit 1
 }
-
+##########################################################################
 moz_test_binary()
 {
 	binary=$1
@@ -96,6 +134,167 @@ moz_test_binary()
 
 	return 0
 }
+##########################################################################
+moz_get_debugger()
+{
+	debuggers="ddd gdb dbx"
+
+	debugger="notfound"
+
+	done="no"
+
+	for d in $debuggers
+	do
+		dpath=`which ddd`
+	
+		if [ -x $dpath ]
+		then
+			debugger=$dpath
+			break
+		fi
+	done
+
+	echo $debugger
+
+	return 0
+}
+##########################################################################
+moz_run_program()
+{
+	prog=$MOZ_PROGRAM
+
+	##
+	## Make sure the program is executable
+	##
+	if [ ! -x $prog ]
+	then
+		moz_bail "Cannot execute $prog."
+	fi
+
+	##
+	## Use md5sum to crc a core file.  If md5sum is not found on the system,
+	## then dont debug core files.
+	##
+	crc_prog=`which md5sum`
+
+	if [ -x $crc_prog ]
+	then
+		DEBUG_CORE_FILES=1
+	fi
+
+	if [ "$DEBUG_CORE_FILES" ]
+	then
+		crc_old=
+
+		if [ -f core ]
+		then
+			crc_old=`$crc_prog core | awk '{print $1;}' `
+		fi
+	fi
+
+	##
+	## Run the program
+	##
+	$prog ${1+"$@"}
+
+	if [ "$DEBUG_CORE_FILES" ]
+	then
+		if [ -f core ]
+		then
+			crc_new=`$crc_prog core | awk '{print $1;}' `
+		fi
+	fi
+
+	if [ "$crc_old" != "$crc_new" ]
+	then
+		printf "\n\nOh no!  %s just dumped a core file.\n\n" $prog
+		printf "Do you want to debug this ? [y/n] "
+
+		read ans
+
+		if [ "$ans" = "y" ]
+		then
+			debugger=`moz_get_debugger`
+
+			if [ -x $debugger ]
+			then
+				echo "$debugger $prog core"
+				$debugger $prog core
+			else
+				echo "Could not find a debugger on your system."
+			fi
+		fi
+	fi
+}
+##########################################################################
+moz_debug_program()
+{
+	prog=$MOZ_PROGRAM
+
+	##
+	## Make sure the program is executable
+	##
+	if [ ! -x $prog ]
+	then
+		moz_bail "Cannot execute $prog."
+	fi
+
+	if [ -n "$moz_debugger" ]
+	then
+		debugger=`which $moz_debugger`
+	else
+		debugger=`moz_get_debugger`
+	fi
+
+	if [ -x $debugger ]
+	then
+		echo "$debugger $prog ${1+"$@"}"
+		$debugger $prog ${1+"$@"}
+	else
+		echo "Could not find a debugger on your system."
+	fi
+}
+##########################################################################
+
+
+##
+## Command line arg defaults
+##
+moz_debug=0
+moz_debugger=""
+
+##
+## Parse the command line
+##
+while [ -n "$(echo $1 | grep '^-')" ]
+do
+	case $1 in
+		# help
+		-h | --help)
+			moz_usage
+
+			exit 0
+			;;
+
+		# debug
+		-g | --debug)
+			moz_debug=1
+			;;
+
+		-d | --debugger)
+			moz_debugger=$2;
+
+			shift
+
+			;;
+
+		*)
+			ARGS_SAVE="$ARGS_SAVE $1"
+			;;
+	esac
+
+	shift
+done
 
 ##
 ## Program name given in $1
@@ -207,58 +406,14 @@ fi
 echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
 echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 echo "      MOZ_PROGRAM=$MOZ_PROGRAM"
+echo "        moz_debug=$moz_debug"
+echo "     moz_debugger=$moz_debugger"
 
 export MOZILLA_FIVE_HOME LD_LIBRARY_PATH
 
-crc_prog=`which md5sum`
-
-if [ -x $crc_prog ]
+if [ "$moz_debug" = "1" ]
 then
-	DEBUG_CORE_FILES=1
-fi
-
-if [ "$DEBUG_CORE_FILES" ]
-then
-	crc_old=
-
-	if [ -f core ]
-	then
-		crc_old=`$crc_prog core | awk '{print $1;}' `
-	fi
-fi
-
-./$MOZ_PROGRAM ${1+"$@"}
-
-if [ "$DEBUG_CORE_FILES" ]
-then
-	if [ -f core ]
-	then
-		crc_new=`$crc_prog core | awk '{print $1;}' `
-	fi
-fi
-
-if [ "$crc_old" != "$crc_new" ]
-then
-	printf "\n\nOh no!  %s just dumped a core file.\n\n" $MOZ_PROGRAM
-	printf "Do you want to debug this ? [y/n] "
-
-	read ans
-
-	if [ "$ans" = "y" ]
-	then
-		debugger=`which ddd`
-
-		if [ ! -x $debugger ]
-		then
-			debugger=gdb
-		fi
-
-		if [ ! -x $debugger ]
-		then
-			printf "\n\nCouldnt find a debugger on your system.  sorry.\n\n"
-			exit
-		fi
-
-		$debugger $MOZ_PROGRAM core
-	fi
+	moz_debug_program ${1+"$@"}
+else
+	moz_run_program $ARGS_SAVE ${1+"$@"}
 fi

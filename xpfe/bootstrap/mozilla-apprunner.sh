@@ -42,4 +42,26 @@ else
 	fi
 fi
 
-$dist_bin/run-mozilla.sh apprunner ${1+"$@"}
+script_args=""
+
+while [ -n "$(echo $1 | grep '^-')" ]
+do
+	case $1 in
+		-h | --help)
+			script_args="$script_args -h"
+			;;
+
+		-g | --debug)
+			script_args="$script_args -g"
+			;;
+
+		-d | --debugger)
+			script_args="$script_args -d $2"
+
+			shift
+			;;
+	esac
+	shift
+done
+
+$dist_bin/run-mozilla.sh $script_args ./apprunner ${1+"$@"}
