@@ -50,7 +50,7 @@ NS_IMETHODIMP EditAggregateTxn::Do(void)
     mChildren->Count(&count);
     for (i=0; i<((PRInt32)count); i++)
     {
-      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Do();
@@ -72,7 +72,7 @@ NS_IMETHODIMP EditAggregateTxn::Undo(void)
     // undo goes through children backwards
     for (i=count-1; i>=0; i--)
     {
-      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Undo();
@@ -93,7 +93,7 @@ NS_IMETHODIMP EditAggregateTxn::Redo(void)
     mChildren->Count(&count);
     for (i=0; i<((PRInt32)count); i++)
     {
-      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Redo();
@@ -124,7 +124,7 @@ NS_IMETHODIMP EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransa
     NS_ASSERTION(count>0, "bad count");
     if (0<count)
     {
-      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Merge(aDidMerge, aTransaction);
@@ -198,7 +198,7 @@ NS_IMETHODIMP EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
   if (0>aIndex || ((PRInt32)txnCount)<=aIndex) {
     return NS_ERROR_UNEXPECTED;
   }
-  nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(aIndex));
+  nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(aIndex));
   // ugh, this is all wrong - what a mess we have with editor transaction interfaces
   isupports->QueryInterface(EditTxn::GetCID(), (void**)aTxn);
   if (!*aTxn)
