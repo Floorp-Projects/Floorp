@@ -130,20 +130,6 @@ nsHTMLScrollFrame::ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRU
    return s->ScrollTo(aX, aY, aFlags);
 }
 
-/**
- * Query whether scroll bars should be displayed all the time, never or
- * only when necessary.
- * @return current scrollbar selection
- * XXX roc only 'Auto' is really tested for. This API should be simplified or
- * eliminated.
- */
-NS_IMETHODIMP
-nsHTMLScrollFrame::GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const
-{
-  *aScrollPreference = mInner.GetScrollPreference();
-  return NS_OK;
-}
-
 nsGfxScrollFrameInner::ScrollbarStyles
 nsHTMLScrollFrame::GetScrollbarStyles() const {
   return mInner.GetScrollbarStylesFromFrame();
@@ -688,20 +674,6 @@ nsXULScrollFrame::ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUi
    return s->ScrollTo(aX, aY, aFlags);
 }
 
-/**
- * Query whether scroll bars should be displayed all the time, never or
- * only when necessary.
- * @return current scrollbar selection
- * XXX roc only 'Auto' is really tested for. This API should be simplified or
- * eliminated.
- */
-NS_IMETHODIMP
-nsXULScrollFrame::GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const
-{
-  *aScrollPreference = mInner.GetScrollPreference();
-  return NS_OK;
-}
-
 nsGfxScrollFrameInner::ScrollbarStyles
 nsXULScrollFrame::GetScrollbarStyles() const {
   return mInner.GetScrollbarStylesFromFrame();
@@ -1242,28 +1214,6 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
   default:
     NS_NOTREACHED("invalid overflow value");
     return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
-  }
-}
-
-nsIScrollableFrame::nsScrollPref
-nsGfxScrollFrameInner::GetScrollPreference() const
-{
-  nsCOMPtr<nsIScrollableFrame> scrollable =
-    do_QueryInterface(NS_STATIC_CAST(nsIFrame*, mOuter));
-  ScrollbarStyles styles = scrollable->GetScrollbarStyles();
-
-  if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL &&
-      styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
-    return nsIScrollableFrame::AlwaysScroll;
-  } else if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
-    return nsIScrollableFrame::AlwaysScrollHorizontal;
-  } else if (styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
-    return nsIScrollableFrame::AlwaysScrollVertical;
-  } else if (styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO ||
-             styles.mVertical == NS_STYLE_OVERFLOW_AUTO) {
-    return nsIScrollableFrame::Auto;
-  } else {
-    return nsIScrollableFrame::NeverScroll;
   }
 }
 

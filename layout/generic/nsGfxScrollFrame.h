@@ -63,8 +63,6 @@ public:
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
   ScrollbarStyles GetScrollbarStylesFromFrame() const;
 
-  nsIScrollableFrame::nsScrollPref GetScrollPreference() const;
-
   // If a child frame was added or removed on the scrollframe,
   // reload our child frame list.
   // We need this if a scrollbar frame is recreated.
@@ -256,8 +254,6 @@ public:
                                     nsIContent* aChild,
                                     PRInt32 aModType);
 
-  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
-
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();
   }
@@ -390,8 +386,6 @@ public:
   NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
                                     nsIContent* aChild,
                                     PRInt32 aModType);
-
-  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();
