@@ -81,24 +81,17 @@ CMMF_DestroyCertRepContent(CMMFCertRepContent *inCertRepContent)
 
     PORT_Assert(inCertRepContent != NULL);
     if (inCertRepContent != NULL && inCertRepContent->poolp != NULL) {
-	if (!inCertRepContent->isDecoded) {
-	  if (inCertRepContent->response != NULL) {
-	    for (i=0; inCertRepContent->response[i] != NULL; i++) {
-	        certKeyPair = inCertRepContent->response[i]->certifiedKeyPair;
-		if (certKeyPair != NULL                    &&
-		    certKeyPair->certOrEncCert.choice == cmmfCertificate &&
-		    certKeyPair->certOrEncCert.cert.certificate != NULL) {
-		    CERT_DestroyCertificate
-		                 (certKeyPair->certOrEncCert.cert.certificate);
-		}
-	    }
-	  }
-	  if (inCertRepContent->caPubs != NULL) {
-	    for (i=0; inCertRepContent->caPubs[i] != NULL; i++) {
-	        CERT_DestroyCertificate(inCertRepContent->caPubs[i]);
-	    }
-	  }
-	}
+        if (inCertRepContent->response != NULL) {
+            for (i=0; inCertRepContent->response[i] != NULL; i++) {
+                certKeyPair = inCertRepContent->response[i]->certifiedKeyPair;
+                if (certKeyPair != NULL                    &&
+                    certKeyPair->certOrEncCert.choice == cmmfCertificate &&
+                    certKeyPair->certOrEncCert.cert.certificate != NULL) {
+                    CERT_DestroyCertificate
+                                 (certKeyPair->certOrEncCert.cert.certificate);
+                }
+            }
+        }
         PORT_FreeArena(inCertRepContent->poolp, PR_TRUE);
     }
     return SECSuccess;
