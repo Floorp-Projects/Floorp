@@ -273,11 +273,16 @@ function SubscribeOKCallback(serverURI, changeTable)
 	
 	for (var name in changeTable) {
 		dump(name + " = " + changeTable[name] + "\n");
-		if (changeTable[name] == 1) {
+		if (changeTable[name] == true) {
+			dump("subscribe to " + name +"\n");
+			// should this be SubscribeFolder()?
 			NewFolder(name,serverURI);
 		}
-		else if (changeTable[name] == -1) {
-			dump("unsuscribe\n");
+		else if (changeTable[name] == false) {
+			dump("unsubscribe to " + name +"\n");
+		}
+		else {
+			dump("no change to " + name + "\n");
 		}
 	}
 }

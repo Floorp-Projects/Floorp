@@ -1,11 +1,9 @@
 var gSubscribeTree = null;
-var gCurrentServer = null;
 var okCallback = null;
 var gChangeTable = {};
 var gServerURI = null;
 var RDF = null;
-var SubscribeDS = null;
-var gCurrentServerURI = null;
+var gSubscribeDS = null;
 
 function Stop()
 {
@@ -13,23 +11,45 @@ function Stop()
 	dump("we need to stop the news url that is running.\n");
 }
 
+function onServerClick(event)
+{
+	var item = event.target;
+	gServerURI = item.id;
+
+	SetUpTree();
+}
+
+function SetUpServerMenu()
+{
+	dump("SetUpServerMenu()\n");
+
+    var serverMenu = document.getElementById("serverMenu");
+    var menuitems = serverMenu.getElementsByAttribute("id", gServerURI);
+    
+    serverMenu.selectedItem = menuitems[0];
+}
+
 function SetUpTree()
 {
 	dump("SetUpTree()\n");
+	
+	var folder = GetMsgFolderFromUri(gServerURI);
+	var server = folder.server;
+
+	/* todo:  this should be server.buildSubscribeDatasource() which does the right thing with its server.  for imap */
 	var nntpService = Components.classes['component://netscape/messenger/nntpservice'].getService(Components.interfaces.nsINntpService);
 	nntpService = nntpService.QueryInterface(Components.interfaces.nsINntpService);
-	nntpService.buildSubscribeDatasource(gCurrentServer);
+	nntpService.buildSubscribeDatasource(server);
 
-	gCurrentServerURI = "news://" + gCurrentServer.hostName;
-	dump("root subscribe tree at: "+gCurrentServerURI+"\n");
-	gSubscribeTree.setAttribute('ref',gCurrentServerURI);
+	dump("root subscribe tree at: "+ gServerURI +"\n");
+	gSubscribeTree.setAttribute('ref',gServerURI);
 }
 
 function SubscribeOnLoad()
 {
 	dump("SubscribeOnLoad()\n");
 	
-    	gSubscribeTree = document.getElementById('subscribetree');
+   	gSubscribeTree = document.getElementById('subscribetree');
 
 	doSetOKCancel(subscribeOK,subscribeCancel);
 
@@ -45,21 +65,25 @@ function SubscribeOnLoad()
 	}
 	
 	if (window.arguments[0].preselectedURI) {
-		gServerURI = window.arguments[0].preselectedURI;
-		dump("subscribe: got a uri," + gServerURI + "\n");
-		folder = GetMsgFolderFromUri(window.arguments[0].preselectedURI);
-		gCurrentServer = folder.server;
-
-		SetUpTree();
-
-		RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-		
-		SubscribeDS = RDF.GetDataSource("rdf:subscribe");
+		var uri = window.arguments[0].preselectedURI;
+		dump("subscribe: got a uri," + uri + "\n");
+		folder = GetMsgFolderFromUri(uri);
+		gServerURI = folder.server.serverURI;
 	}
 	else {
 		dump("subscribe: no uri\n");
+		var serverMenu = document.getElementById("serverMenu");
+		var menuitems = serverMenu.getElementsByTagName("menuitem");
+		gServerURI = menuitems[1].id;
 	}
+
+	SetUpServerMenu();
+	SetUpTree();
+
+	RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+		
+	gSubscribeDS = RDF.GetDataSource("rdf:subscribe");
 }
 
 function subscribeOK()
@@ -78,24 +102,23 @@ function subscribeCancel()
 	return true;
 }
 
-function SetState(uri, state)
+function SetState(uri,state,stateStr)
 {
-	dump("SetState(" + uri +"," + state + ")\n");
-	if (!uri || !state) return;
+	dump("SetState(" + uri +"," + state + "," + stateStr + ")\n");
+	if (!uri || !stateStr) return;
 
 	try {
 		var src = RDF.GetResource(uri, true);
 		var prop = RDF.GetResource("http://home.netscape.com/NC-rdf#Subscribed", true);
-		var oldLiteral = SubscribeDS.GetTarget(src, prop, true);
-		var newLiteral = RDF.GetLiteral(state);
+		var oldLiteral = gSubscribeDS.GetTarget(src, prop, true);
 		dump("oldLiteral="+oldLiteral+"\n");
 
-		if (oldLiteral) {
-			dump("oldLiteral.Value="+oldLiteral.Value+"\n");
-			SubscribeDS.Change(src, prop, oldLiteral, newLiteral);
-		}
-		else {
-			SubscribeDS.Assert(src,prop, newLiteral, true);
+		oldValue = oldLiteral.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+		dump("oldLiteral.Value="+oldValue+"\n");
+		if (oldValue != stateStr) {
+			var newLiteral = RDF.GetLiteral(stateStr);
+			gSubscribeDS.Change(src, prop, oldLiteral, newLiteral);
+			StateChanged(name,state);
 		}
 	}
 	catch (ex) {
@@ -106,26 +129,38 @@ function SetState(uri, state)
 function StateChanged(name,state)
 {
 	dump("StateChanged(" + name + "," + state + ")\n");
-	if (!gChangeTable[name]) {
-		gChangeTable[name] = 0;
-	}
+	dump("start val=" +gChangeTable[name] + "\n");
 
-	if (state == 'true') {
-		gChangeTable[name] = gChangeTable[name] + 1;
+	if (gChangeTable[name] == undefined) {
+		dump(name+" not in table yet\n");
+		gChangeTable[name] = state;
 	}
 	else {
-		gChangeTable[name] = gChangeTable[name] - 1;
+		var oldValue = gChangeTable[name];
+		dump(name+" already in table\n");
+		if (oldValue != state) {
+			gChangeTable[name] = undefined;
+		}
 	}
-	dump(gChangeTable[name] + "\n");
+
+	dump("end val=" +gChangeTable[name] + "\n");
 }
 
 function SetSubscribeState(state)
 {
   dump("SetSubscribedState()\n");
+ 
+  var stateStr;
+  if (state) {
+  	stateStr = 'true';
+  }
+  else {
+	stateStr = 'false';
+  }
 
   try {
 	dump("subscribe button clicked\n");
-
+	
 	var groupList = gSubscribeTree.selectedItems;
 	for (i=0;i<groupList.length;i++) {
 		group = groupList[i];
@@ -133,8 +168,7 @@ function SetSubscribeState(state)
 		dump(uri + "\n");
 		name = group.getAttribute('name');
 		dump(name + "\n");
-		SetState(uri, state);
-		StateChanged(name,state);
+		SetState(uri,state,stateStr);
 	}
   }
   catch (ex) {
@@ -142,10 +176,17 @@ function SetSubscribeState(state)
   }
 }
 
+function ReverseState(uri)
+{
+	dump("ReverseState("+uri+")\n");
+}
+
 function SubscribeOnClick(event)
 {
-	dump("subscribe tree clicked\n");
-	dump(event.target.parentNode.parentNode.getAttribute("id") + "\n");
+	if (event.clickCount == 2) {
+		var uri = event.target.parentNode.parentNode.getAttribute("id");
+		ReverseState(uri);
+	}
 }
 
 function RefreshList()

@@ -45,24 +45,18 @@ Rights Reserved.
 
 	<box orient="horizontal" flex="100%">
 		<box orient="vertical" flex="100%">
-			<box orient="horizontal" flex="100%">
-				<text class="label" value="&server.label;" for="currentserver"/>
-				<menulist id="currentserver" value="...">
-					<menupopup>
-						<menuitem value="news.mozilla.org" uri="news://news.mozilla.org" />
-						<menuitem value="news.fresmeat.net" uri="news://news.freshmeat.net" />
-						<menuitem value="news.mcom.com" uri="news://news.mcom.com" />
-<!--
-					<menupopup datasources="rdf:msgaccountmanager" ref="msgaccounts:/">
-						<template>
-							<rule>
-								<menuitem value="..."/>
-							</rule>
-						</template>
--->
-					</menupopup>
-				</menulist>
-			</box>
+			<box orient="horizontal">
+				<text value="&server.label;"/>
+    			<menulist oncommand="onServerClick(event);" id="serverMenu">
+      				<menupopup rdf:datasources="rdf:msgaccountmanager"
+                 		rdf:containment="http://home.netscape.com/NC-rdf#child"
+                 		ref="msgaccounts:/">
+        				<template>
+          					<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+        				</template>
+      				</menupopup>
+    			</menulist>
+ 			</box>
 			<box orient="horizontal" flex="100%">
 				<text class="label" value="&folders.label;" for="name"/>
 				<textfield id="name"/>
@@ -109,8 +103,8 @@ Rights Reserved.
 		</box>
 		<box orient="vertical" flex="20%">
 			<spring flex="100%"/>
-			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState('true')"/>
-			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState('false')"/>
+			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState(true)"/>
+			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState(false)"/>
 			<titledbutton id="refresh" class="push" value="&refreshButton.label;" onclick="RefreshList()"/>
 			<titledbutton id="stop" class="push" value="&stopButton.label;" onclick="Stop()"/>
 			<spring flex="100%"/>
