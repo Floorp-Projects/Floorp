@@ -47,6 +47,57 @@ static time_t sCurrStartTime;  /* start of download of current file */
 
 ConstStr255Param kDLMarker = "\pCurrent Download";
 
+#include <Math64.h>
+
+/* VersGreaterThan4 - utility function to test if it's >4.x running */
+static Boolean VersGreaterThan4(FSSpec *fSpec)
+{
+	Boolean result = false;
+	short	fRefNum = 0;
+	
+	SetResLoad(false);
+	fRefNum = FSpOpenResFile(fSpec, fsRdPerm);
+	SetResLoad(true);
+	if (fRefNum != -1)
+	{
+		Handle	h;
+		h = Get1Resource('vers', 2);
+		if (h && **(unsigned short**)h >= 0x0500)
+			result = true;
+		CloseResFile(fRefNum);
+	}
+		
+	return result;
+}
+
+/* Variant of FindRunningAppBySignature that looks from a specified PSN */
+static OSErr FindNextRunningAppBySignature (OSType sig, FSSpec *fSpec, ProcessSerialNumber *psn)
+{
+	OSErr 			err = noErr;
+	ProcessInfoRec 	info;
+	FSSpec			tempFSSpec;
+	
+	while (true)
+	{
+		err = GetNextProcess(psn);
+		if (err != noErr) return err;
+		info.processInfoLength = sizeof(ProcessInfoRec);
+		info.processName = nil;
+		info.processAppSpec = &tempFSSpec;
+		err = GetProcessInformation(psn, &info);
+		if (err != noErr) return err;
+		
+		if (info.processSignature == sig)
+		{
+			if (fSpec != nil)
+				*fSpec = tempFSSpec;
+			return noErr;
+		}
+	}
+	
+	return procNotFound;
+}
+
 pascal void* Install(void* unused)
 {	
 	short			vRefNum, srcVRefNum;
@@ -63,6 +114,10 @@ pascal void* Install(void* unused)
 	THz				ourHZ = NULL;
 	Boolean 		isDir = false, bCoreExists = false;
 	GrafPtr			oldPort = NULL;
+	
+	ProcessSerialNumber thePSN;
+	FSSpec				theSpec;
+	DialogPtr pDlg = nil;
 
 #ifndef MIW_DEBUG
 	/* get "Temporary Items" folder path */
@@ -105,15 +160,13 @@ pascal void* Install(void* unused)
 	GetDirectoryID(srcVRefNum, srcDirID, pModulesDir, &modulesDirID, &isDir);
 	srcDirID = modulesDirID;
 	
+	GetPort(&oldPort);
+  ourHZ = GetZone();
 	if (!isDir || !ExistArchives(srcVRefNum, srcDirID))
 	{	
 		bXPIsExisted = false;
 		GetIndString(pIDIfname, rStringList, sTempIDIName);
 	
-		/* preparing to download */
-		ourHZ = GetZone();
-		GetPort(&oldPort);
-
 	    /* otherwise if site selector exists, replace global URL with selected site */
         if (gControls->cfg->numSites > 0)
         {
@@ -136,16 +189,99 @@ pascal void* Install(void* unused)
         {
             return (void *) nil;
         }
-		if (dlErr != 0)
-		{
-		    ErrorHandler(dlErr, nil);
-			return (void*) nil;
-		}
-        ClearDLProgControls(false);
-        DisableNavButtons();
-        
-		SetPort(oldPort);
+		    if (dlErr != 0)
+		    {
+		      ErrorHandler(dlErr, nil);
+			    return (void*) nil;
+		    }
+    }
+ 	  else
+		  bCoreExists = true;
 	
+    /* Short term fix for #58928 - prevent install if Mozilla or Netscape running. syd 3/18/2002 */
+	  while (FindRunningAppBySignature('MOSS', &theSpec, &thePSN) == noErr ||
+		  FindRunningAppBySignature('MOZZ', &theSpec, &thePSN) == noErr)
+	  {
+			  Str255 itemText;
+			  SInt16 itemHit;
+			  short itemType;
+			  Handle item;
+        Rect itemBox, iconRect, windRect;
+        CIconHandle cicn;
+ 
+        if ( pDlg == nil ) {
+          pDlg = GetNewDialog(151, NULL, (WindowPtr) -1);
+        
+          ShowWindow(pDlg);
+          SelectWindow(pDlg);
+        
+          GetDialogItem(pDlg, 3, &itemType, &item, &itemBox);
+          GetResourcedString(itemText, rInstList, sExecuting);
+          SetDialogItemText( item, itemText );
+
+          GetDialogItem(pDlg, 2, &itemType, &item, &itemBox);
+          GetResourcedString(itemText, rInstList, sNextBtn);
+          SetControlTitle((ControlRecord **)item, itemText);
+        
+          GetDialogItem(pDlg, 1, &itemType, &item, &itemBox);
+          GetResourcedString(itemText, rInstList, sQuitBtn);
+          SetControlTitle((ControlRecord **)item, itemText);
+
+#if 1        
+          GetDialogItem(pDlg, 4, &itemType, &item, &itemBox);
+          cicn = GetCIcon( 129 );
+          windRect = pDlg->portRect;
+          LocalToGlobal((Point *) &windRect.top);
+          LocalToGlobal((Point *) &windRect.bottom);
+          SetRect(&iconRect, 
+            windRect.left + itemBox.left, 
+            windRect.top + itemBox.top, 
+            windRect.left + itemBox.left + itemBox.right,
+            windRect.top + itemBox.top + itemBox.bottom );
+        
+          if ( cicn != nil ) 
+            PlotCIcon( &iconRect, cicn );
+          SysBeep( 20L );
+#endif               
+        }
+        do
+        {
+          EventRecord evt;
+          
+          if(WaitNextEvent(everyEvent, &evt, 1, nil))
+          {
+            if ( IsDialogEvent( &evt ) == false ) 
+            {
+              // let someone else handle it
+              HandleNextEvent(&evt); // XXX
+            } 
+            else 
+            {
+              // find out what was clicked
+              DialogPtr tDlg;
+              DialogSelect( &evt, &tDlg, &itemHit );
+            }
+          }
+        } while(itemHit != 1 && itemHit != 2);
+
+        if ( itemHit == 1 ) {
+          DisposeDialog(pDlg);    
+          gDone = true;
+          return (void*) nil;
+        } 
+        else {
+          itemHit = 0;
+          SysBeep( 20L );
+        }
+    }
+	  
+	  if (pDlg != nil )
+	    DisposeDialog(pDlg);
+
+    SetPort(oldPort);       	
+    /* otherwise core exists in cwd:Installer Modules, different from extraction location */
+    ClearDLProgControls(false);
+    DisableNavButtons();
 		if (gWPtr)
 		{
 			GetPort(&oldPort);
@@ -160,10 +296,6 @@ pascal void* Install(void* unused)
 			SetPort(oldPort);
 		}
 		SetZone(ourHZ);
-    }
-	else
-		bCoreExists = true;
-    /* otherwise core exists in cwd:Installer Modules, different from extraction location */
 
 
 	/* check if coreFile was downloaded */
