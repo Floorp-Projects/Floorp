@@ -1247,14 +1247,14 @@ out:
 typedef struct LastIndexEntry {
     JSDHashEntryHdr     hdr;
     jsword              thread;
-    double              index;
+    jsdouble            index;
 } LastIndexEntry;
 #endif
 
 /*
  * NB: Get and SetLastIndex must be called with re's owning object locked.
  */
-static double
+static jsdouble
 GetLastIndex(JSContext *cx, JSRegExp *re)
 {
 #ifdef JS_THREADSAFE
@@ -1279,7 +1279,7 @@ GetLastIndex(JSContext *cx, JSRegExp *re)
 }
 
 static JSBool
-SetLastIndex(JSContext *cx, JSRegExp *re, double lastIndex)
+SetLastIndex(JSContext *cx, JSRegExp *re, jsdouble lastIndex)
 {
 #ifdef JS_THREADSAFE
     if (!re->owningThread) {
@@ -1725,11 +1725,11 @@ static JSBool buildBitmap(MatchState *state, RENode *ren)
 		ocp = cp;
 		c = *cp++;
 		if (JS7_ISHEX(c)) {
-		    n = JS7_UNHEX(c);
+		    n = JS7_UNHEX((char) c);
 		    c = *cp++;
 		    if (JS7_ISHEX(c)) {
 			n <<= 4;
-			n += JS7_UNHEX(c);
+			n += JS7_UNHEX((char) c);
 		    }
 		} else {
 		    cp = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
@@ -2171,7 +2171,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
      */
     state.context = cx;
     state.anchoring = JS_FALSE;
-    state.flags = re->flags;
+    state.flags = (uint8) re->flags;
 
     /*
      * It's safe to load from cp because JSStrings have a zero at the end,
@@ -2388,7 +2388,7 @@ static JSBool
 regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     jsint slot;
-    double lastIndex;
+    jsdouble lastIndex;
     JSRegExp *re;
 
     if (!JSVAL_IS_INT(id))
@@ -2637,7 +2637,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 	if (!re)
 	    return JS_FALSE;
 	source = re->source;
-	flags = re->flags;
+	flags = (uint8) re->flags;
     }
     if (!JS_XDRString(xdr, &source) ||
 	!JS_XDRUint8(xdr, &flags)) {
@@ -2815,6 +2815,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSBool ok;
     JSRegExp *re;
+    jsdouble lastIndex;
     JSString *str;
     size_t i;
 
@@ -2830,7 +2831,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* NB: we must reach out: after this paragraph, in order to drop re. */
     HOLD_REGEXP(cx, re);
-    i = (re->flags & JSREG_GLOB) ? GetLastIndex(cx, re) : 0;
+    lastIndex = (re->flags & JSREG_GLOB) ? GetLastIndex(cx, re) : 0;
     JS_UNLOCK_OBJ(cx, obj);
 
     /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
@@ -2852,11 +2853,19 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	argv[0] = STRING_TO_JSVAL(str);
     }
 
-    ok = js_ExecuteRegExp(cx, re, str, &i, test, rval);
-    JS_LOCK_OBJ(cx, obj);
-    if (ok && (re->flags & JSREG_GLOB))
-	ok = SetLastIndex(cx, re, (*rval == JSVAL_NULL) ? 0 : i);
-    JS_UNLOCK_OBJ(cx, obj);
+    if (lastIndex < 0 || JSSTRING_LENGTH(str) < lastIndex) {
+        JS_LOCK_OBJ(cx, obj);
+        ok = SetLastIndex(cx, re, 0);
+        JS_UNLOCK_OBJ(cx, obj);
+        *rval = JSVAL_NULL;
+    } else {
+        i = (size_t) lastIndex;
+        ok = js_ExecuteRegExp(cx, re, str, &i, test, rval);
+        JS_LOCK_OBJ(cx, obj);
+        if (ok && (re->flags & JSREG_GLOB))
+            ok = SetLastIndex(cx, re, (*rval == JSVAL_NULL) ? 0 : i);
+        JS_UNLOCK_OBJ(cx, obj);
+    }
 
 out:
     DROP_REGEXP(cx, re);
