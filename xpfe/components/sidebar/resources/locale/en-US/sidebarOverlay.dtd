@@ -20,8 +20,8 @@
   --> 
 
 <!ENTITY sidebar.panels.label        "My Sidebar">
-<!ENTITY sidebar.reload.label        "reload">
+<!ENTITY sidebar.reload.label        "Reload">
 <!ENTITY sidebar.picker.label        "Add">
-<!ENTITY sidebar.customize.label     "customize...">
+<!ENTITY sidebar.customize.label     "Customize...">
 <!ENTITY sidebarCmd.label            "Sidebar">
-<!ENTITY sidebar.loading.label       "loading...">
+<!ENTITY sidebar.loading.label       "Loading...">
