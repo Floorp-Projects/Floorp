@@ -260,11 +260,12 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
 	nsresult			RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 	// all headers currently instantiated, doesn't hold refs
 	// these get added when msg hdrs get constructed, and removed when they get destroyed.
-	nsresult			GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result);
-	nsresult			AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key); 
-	nsresult			ClearUseHdrCache();
-	nsresult			RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
+	nsresult      GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result);
+	nsresult      AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key); 
+	nsresult      ClearUseHdrCache();
+	nsresult      RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 
+        void          ClearCachedObjects();
 	// all instantiated headers, but doesn't hold refs. 
   PLDHashTable  *m_headersInUse;
   static const void* PR_CALLBACK GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
@@ -281,7 +282,9 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
     nsIMsgDBHdr     *mHdr;
   };
   PLDHashTable  *m_cachedHeaders;
-	PRBool				m_bCacheHeaders;
+  PRBool				m_bCacheHeaders;
+  nsMsgKey  m_cachedThreadId;
+  nsCOMPtr <nsIMsgThread> m_cachedThread;
 
 private:
   PRUint32 m_cacheSize;

@@ -188,6 +188,21 @@ NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
   return ClearHdrCache(PR_FALSE); // don't re-init, hope db gets closed.
 }
 
+void nsMsgDatabase::ClearCachedObjects()
+{
+  ClearHdrCache(PR_FALSE);
+#ifdef DEBUG_bienvenu
+  if (m_headersInUse && m_headersInUse->entryCount > 0)
+  {
+        NS_ASSERTION(PR_FALSE, "leaking headers");
+    printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
+  }
+#endif
+  ClearUseHdrCache();
+  m_cachedThread = nsnull;
+  m_cachedThreadId = nsMsgKey_None;
+}
+
 nsresult nsMsgDatabase::ClearHdrCache(PRBool reInit)
 {
 	if (m_cachedHeaders)
@@ -686,7 +701,8 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_headersInUse(nsnull),
 	  m_cachedHeaders(nsnull),
 	  m_bCacheHeaders(PR_TRUE),
-    m_cacheSize(kMaxHdrsInCache)
+    m_cacheSize(kMaxHdrsInCache),
+    m_cachedThreadId(nsMsgKey_None)
 
 {
 	NS_INIT_REFCNT();
@@ -695,14 +711,9 @@ nsMsgDatabase::nsMsgDatabase()
 nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
-	ClearHdrCache(PR_FALSE);
-#ifdef DEBUG_bienvenu1
-  NS_ASSERTION(!m_headersInUse || m_headersInUse->Count() == 0, "leaking headers");
-#endif
-	ClearUseHdrCache();
-	delete m_cachedHeaders;
-	delete m_headersInUse;
-
+  ClearCachedObjects();
+  delete m_cachedHeaders;
+  delete m_headersInUse;
 	RemoveFromCache(this);
 #ifdef DEBUG_bienvenu1
 	if (GetNumInCache() != 0)
@@ -1019,15 +1030,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
   NS_IF_RELEASE(m_dbFolderInfo);
   
   err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
-  ClearHdrCache(PR_FALSE);
-#ifdef DEBUG_bienvenu
-  if (m_headersInUse && m_headersInUse->entryCount > 0)
-  {
-        NS_ASSERTION(PR_FALSE, "leaking headers");
-    printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
-  }
-#endif
-  ClearUseHdrCache();
+  ClearCachedObjects();
   if (m_mdbAllMsgHeadersTable)
   {
     m_mdbAllMsgHeadersTable->Release();
@@ -3461,25 +3464,35 @@ nsresult nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **resul
 // caller needs to unrefer.
 nsIMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
 {
-
-	nsMsgThread		*pThread = nsnull;
-	if (m_mdbStore)
-	{
-		mdbOid tableId;
-		tableId.mOid_Id = threadId;
-		tableId.mOid_Scope = m_hdrRowScopeToken;
-
-		nsIMdbTable *threadTable;
-		mdb_err res = m_mdbStore->GetTable(GetEnv(), &tableId, &threadTable);
-		
-		if (NS_SUCCEEDED(res) && threadTable)
-		{
-			pThread = new nsMsgThread(this, threadTable);
-			if(pThread)
-				NS_ADDREF(pThread);
-		}
-	}
-	return pThread;
+  
+  if (threadId == m_cachedThreadId && m_cachedThread)
+  {
+    nsIMsgThread *retThread = m_cachedThread;
+    NS_ADDREF(retThread);
+    return retThread;
+  }
+  nsMsgThread *pThread = nsnull;
+  if (m_mdbStore)
+  {
+    mdbOid tableId;
+    tableId.mOid_Id = threadId;
+    tableId.mOid_Scope = m_hdrRowScopeToken;
+    
+    nsIMdbTable *threadTable;
+    mdb_err res = m_mdbStore->GetTable(GetEnv(), &tableId, &threadTable);
+    
+    if (NS_SUCCEEDED(res) && threadTable)
+    {
+      pThread = new nsMsgThread(this, threadTable);
+      if(pThread)
+      {
+        NS_ADDREF(pThread);
+        m_cachedThread = pThread;
+        m_cachedThreadId = threadId;
+      }
+    }
+  }
+  return pThread;
 }
 
 // make the passed in header a thread header
