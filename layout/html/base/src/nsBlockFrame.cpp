@@ -61,7 +61,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMHTMLTableCellElement.h"
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
@@ -6568,9 +6567,12 @@ nsBlockFrame::IsTDTableCellBlock(nsIFrame& aFrame)
     if (nsLayoutAtoms::tableCellFrame == frameType) {
       nsCOMPtr<nsIContent> content;
       aFrame.GetContent(getter_AddRefs(content));
-      nsCOMPtr<nsIDOMHTMLTableCellElement> cellContent(do_QueryInterface(content));
-      if (cellContent) {
-        return PR_TRUE;
+      if (content && content->IsContentOfType(nsIContent::eHTML)) {
+        nsCOMPtr<nsIAtom> tag;
+        content->GetTag(*getter_AddRefs(tag));
+        if (tag == nsHTMLAtoms::td) {
+          return PR_TRUE;
+        }
       }
     }
   }
