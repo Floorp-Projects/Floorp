@@ -55,7 +55,10 @@ var MAX_STR_LEN = 100;  /* max string length to display before changing to
                          * change it later. */
 const MAX_WORD_LEN = 20; /* number of characters to display before forcing a 
                           * potential word break point (in the console.) */
+
 var console = new Object();
+
+console.version = "0.6.1";
 
 /* |this|less functions */
 
@@ -124,6 +127,18 @@ function setStopState(state)
         console.jsds.interruptHook = null;
         tb.removeAttribute("checked");
     }
+}
+
+function enableReloadCommand()
+{
+    var cmd = document.getElementById("cmd_reload");
+    cmd.removeAttribute ("disabled");
+}
+
+function disableReloadCommand()
+{
+    var cmd = document.getElementById("cmd_reload");
+    cmd.setAttribute ("disabled", "true");
 }
 
 function enableDebugCommands()
@@ -268,7 +283,7 @@ function evalInTargetScope (script)
     if (!console.frames)
     {
         display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
+        return null;
     }
     
     try
@@ -366,7 +381,7 @@ function init()
     
     disableDebugCommands();
     
-    window._content = console._outputDocument = 
+    console._outputDocument = 
         document.getElementById("output-iframe").contentDocument;
 
     console._outputElement = 
@@ -390,6 +405,7 @@ function init()
     initDebugger(); /* debugger may need display() to init */
 
     display(MSG_HELLO, MT_HELLO);
+    display(getMsg(MSN_VERSION, console.version), MT_HELLO);
     displayCommands();
     
     startupTests();
@@ -530,4 +546,3 @@ function con_scrolldn ()
 {
     window.frames[0].scrollTo(0, window.frames[0].document.height);
 }
-
