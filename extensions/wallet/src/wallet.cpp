@@ -3793,6 +3793,28 @@ wallet_IsFromCartman(nsIURI* aURL) {
   return retval;
 }
 
+#ifdef AutoCapture
+PRIVATE PRBool
+wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
+  if (valueOnForm.EqualsWithConversion("")) {
+    return PR_FALSE;
+  }
+  nsIDOMHTMLInputElement* inputElement;
+  nsIDOMHTMLSelectElement* selectElement;
+  nsAutoString schema;
+  nsAutoString valueSaved;
+  PRInt32 selectIndex = 0;
+  PRInt32 index = 0;
+  while (NS_SUCCEEDED(wallet_GetPrefills
+      (elementNode, inputElement, selectElement, schema, valueSaved, selectIndex, index))) {
+    if (valueOnForm.Equals(valueSaved)) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+#endif
+
 PUBLIC void
 WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
@@ -3855,12 +3877,28 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
           PRBool OKToPrompt = PR_FALSE;
           PRInt32 passwordcount = 0;
           PRInt32 hits = 0;
+          wallet_Initialize(PR_FALSE);
+          wallet_InitializeCurrentURL(doc);
           wallet_InitializeStateTesting();
+          PRBool newValueFound = PR_FALSE;
 #endif
           for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
             nsCOMPtr<nsIDOMNode> elementNode;
             elements->Item(elementX, getter_AddRefs(elementNode));
             if (nsnull != elementNode) {
+              nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(elementNode));
+              if ((NS_SUCCEEDED(rv)) && (nsnull != selectElement)) {
+                if (passwordcount == 0 && !newValueFound && !OKToPrompt) {
+                  nsAutoString valueOnForm;
+                  rv = selectElement->GetValue(valueOnForm);
+                  if (NS_SUCCEEDED(rv) && wallet_IsNewValue (elementNode, valueOnForm)) {
+                    newValueFound = PR_TRUE;
+                    if (hits > 1) {
+                      OKToPrompt = PR_TRUE;
+                    }
+                  }
+                }
+              }
               nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
               if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
                 nsAutoString type;
@@ -3888,6 +3926,18 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                   if (isPassword) {
                     passwordcount++;
                     OKToPrompt = PR_FALSE;
+                  }
+                  if (isText) {
+                    if (passwordcount == 0 && !newValueFound && !OKToPrompt) {
+                      nsAutoString valueOnForm;
+                      rv = inputElement->GetValue(valueOnForm);
+                      if (NS_SUCCEEDED(rv) && wallet_IsNewValue (elementNode, valueOnForm)) {
+                        newValueFound = PR_TRUE;
+                        if (hits > 1) {
+                          OKToPrompt = PR_TRUE;
+                        }
+                      }
+                    }
                   }
 #else
                   if (isText) {
@@ -3925,8 +3975,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 #ifdef AutoCapture
                         if (passwordcount == 0 && !OKToPrompt) {
                           /* get schema from field */
-                          wallet_Initialize(PR_FALSE);
-                          wallet_InitializeCurrentURL(doc);
                           nsAutoString schema;
                           nsVoidArray* dummy;
                           nsString stripField;
@@ -3954,7 +4002,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                                 (wallet_MapElement*, wallet_DistinguishedSchema_list->ElementAt(i));
                               if (mapElementPtr->item1.EqualsIgnoreCase(schema) && value.Length() > 0) {
                                 hits++;
-                                if (hits > 1) {
+                                if (hits > 1 && newValueFound) {
                                   OKToPrompt = PR_TRUE;
                                   break;
                                 }
@@ -4008,7 +4056,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
             Wallet_GiveCaveat(window, nsnull);
   
             /* conditions all met, now save it */
-            wallet_InitializeStateTesting();
             for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
               nsIDOMNode* elementNode = nsnull;
               elements->Item(elementY, &elementNode);
