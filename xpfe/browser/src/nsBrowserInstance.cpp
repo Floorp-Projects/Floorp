@@ -94,6 +94,7 @@
 
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsNetUtil.h"
 #include "nsICmdLineService.h"
@@ -172,8 +173,14 @@ public:
   nsresult Init(const char* nativePath) {
     nsresult rv;
     if (!mFile) {
-      rv = NS_NewNativeLocalFile(nsDependentCString(nativePath),
-                                 PR_TRUE, getter_AddRefs(mFile));
+      nsCOMPtr<nsIFile> aFile;
+      rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                  getter_AddRefs(aFile));
+      if (NS_FAILED(rv)) return rv;
+
+      mFile = do_QueryInterface(aFile);
+      NS_ASSERTION(mFile, "QI to nsILocalFile should not fail");
+      rv = mFile->AppendRelativeNativePath(nsDependentCString(nativePath));
       if (NS_FAILED(rv)) return rv;
     }
 
