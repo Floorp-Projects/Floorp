@@ -693,7 +693,7 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          else if (!Components.isSuccessCode(loader.request.status)) {
            // XXX this should be made human-readable.
            promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
-                               calendarStringBundle.formatStringFromName('otherError',[cloader.request.status.toString(16)],1));
+                               calendarStringBundle.formatStringFromName('otherError',[loader.request.status.toString(16)],1));
          }
 
          //check to make sure its actually a calendar file, if not return.
