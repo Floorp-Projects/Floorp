@@ -67,7 +67,7 @@
 
 #include "prefapi_private_data.h"
 
-#if defined(DEBUG_mcafee) || defined(DEBUG_seth) || defined (DEBUG_sspitzer)
+#if defined(DEBUG_mcafee)
 #define DEBUG_prefs
 #endif
 
