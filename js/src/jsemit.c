@@ -1773,6 +1773,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     top = CG_OFFSET(cg);
     if (pn->pn_arity == PN_LIST) {
         /* Left-associative operator chain to avoid too much recursion. */
+        JS_ASSERT(pn->pn_op == JSOP_GETELEM);
         JS_ASSERT(pn->pn_count >= 3);
         left = pn->pn_head;
         right = PN_LAST(pn);
