@@ -51,16 +51,32 @@ public:
   virtual ~nsPPMDecoder();
 
 private:
+  NS_METHOD checkSendRow();
+
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
   nsCOMPtr<imgILoad> mImageLoad;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 
-  PRUint32 mDataReceived;
-  PRUint32 mDataWritten;
+  char *mBuffer;
+  PRUint32 mBufferSize;
 
-  PRUint32 mDataLeft;
-  char *mPrevData;
+  PRUint32 mState;
+  PRUint32 mSkip;
+  PRUint32 mOldSkip;
+  char mDigits[5];
+  PRUint32 mDigitCount;
+
+  PRUint32 mType;
+  nscoord mWidth;
+  nscoord mHeight;
+  PRUint32 mMaxValue;
+
+  PRUint32 mRow;
+  PRUint32 mBytesPerRow;
+  PRUint32 mFrameBytesPerRow;
+  PRUint8 *mRowData;
+  PRUint32 mRowDataFill;
 };
 
 #endif // nsPPMDecoder_h__
