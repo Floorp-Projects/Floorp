@@ -134,7 +134,7 @@ function ValidateNumber(inputWidget, listWidget, minVal, maxVal, element, attNam
   var isPercent = false;
 
   var numString = TrimString(inputWidget.value);
-  if (numString)
+  if (numString || mustHaveValue)
   {
     if (listWidget)
       isPercent = (listWidget.selectedIndex == 1);

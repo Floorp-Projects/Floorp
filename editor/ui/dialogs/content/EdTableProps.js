@@ -789,10 +789,10 @@ function SetAlign(listID, defaultValue, element, attName)
 function ValidateTableData()
 {
   validatePanel = TablePanel;
-  newRowCount = Number(ValidateNumber(gDialog.TableRowsInput, null, 1, maxRows, null, null, true));
+  newRowCount = Number(ValidateNumber(gDialog.TableRowsInput, null, 1, maxRows, null, true, true));
   if (gValidationError) return false;
 
-  newColCount = Number(ValidateNumber(gDialog.TableColumnsInput, null, 1, maxColumns, null, null, true));
+  newColCount = Number(ValidateNumber(gDialog.TableColumnsInput, null, 1, maxColumns, null, true, true));
   if (gValidationError) return false;
 
   // If user is deleting any cells, get confirmation
