@@ -29,10 +29,9 @@
       
       <template>
         <treechildren flex="1">
-          <treeitem id="treechildren">
+          <treeitem id="treechildren" uri="...">
             <treerow>
-              <treecell uri="..."
-                        value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+              <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                         data="rdf:http://www.mozilla.org/rdf/chrome#name"/>
             </treerow>
           </treeitem>
