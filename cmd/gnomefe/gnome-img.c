@@ -164,7 +164,98 @@ JMC_PUBLIC_API(void)
 _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
 		    jint x_offset, jint y_offset, jint width, jint height)
 {
+  uint32 widthBytes;
+  MWContext *context = (MWContext *)dpy_cx; /* XXX This should be the FE's
+                                                 display context. */
+  MozHTMLView *view = 0;
+  Display *dpy;
+  Visual *visual = 0;
+  Window window;
+  unsigned int visual_depth;
+  unsigned int visual_pixmap_depth; /* Pixmap depth supported by visual. */
+  unsigned int pixmap_depth;  /* Depth of the IL_Pixmap. */
+  Pixmap x_pixmap;
+  fe_PixmapClientData *pixmap_client_data;
+  XImage *x_image;
+  IL_ColorSpace *color_space = pixmap->header.color_space;
+  char *bits;
+  GC gc;
+  XGCValues gcv;
+  GdkVisual *gdk_visual;
+
   printf ("_IMGCB_UpdatePixmap\n");
+
+  if (!context)
+    return;
+
+  /* try to get the required display parameters from the html view */
+  view = find_html_view(context);
+  XP_ASSERT(view);
+  visual_pixmap_depth = visual_depth = gdk_visual_get_best_depth();
+  window = GDK_WINDOW_XWINDOW(view->scrolled_window->window);
+  dpy = GDK_WINDOW_XDISPLAY(view->scrolled_window->window);
+  gdk_visual = gdk_window_get_visual(view->scrolled_window->window);
+  visual = GDK_VISUAL_XVISUAL(gdk_visual);
+  
+  
+  /* Check for zero dimensions. */
+  if (width == 0 || height == 0)
+    return;
+  
+  /* Get the depth of the IL_Pixmap.  This should be the same as the
+     visual_pixmap_depth if the IL_Pixmap is an image, or 1 if the
+     IL_Pixmap is a mask. */
+  pixmap_depth = color_space->pixmap_depth;
+
+  widthBytes = pixmap->header.widthBytes;
+  bits = (unsigned char *)pixmap->bits + widthBytes * y_offset;
+
+  x_image = XCreateImage(dpy, visual,
+                         (pixmap_depth == 1 ? 1 : visual_depth),
+                         (pixmap_depth == 1 ? XYPixmap : ZPixmap),
+                         x_offset,                   /* offset */
+                         bits,
+                         width,
+                         height,
+                         8,                          /* bitmap_pad */
+                         widthBytes);                /* bytes_per_line */
+
+  if (pixmap_depth == 1) {
+    /* Image library always places pixels left-to-right MSB to LSB */
+    x_image->bitmap_bit_order = MSBFirst;
+    
+    /* This definition doesn't depend on client byte ordering
+       because the image library ensures that the bytes in
+       bitmask data are arranged left to right on the screen,
+       low to high address in memory. */
+    x_image->byte_order = MSBFirst;
+  }
+  else {
+#if defined(IS_LITTLE_ENDIAN)
+    x_image->byte_order = LSBFirst;
+#elif defined (IS_BIG_ENDIAN)
+    x_image->byte_order = MSBFirst;
+#else
+    ERROR! Endianness is unknown;
+#endif
+  }
+  
+  pixmap_client_data = (fe_PixmapClientData *)pixmap->client_data;
+  x_pixmap = pixmap_client_data->pixmap;
+  
+  memset(&gcv, ~0, sizeof(XGCValues));
+  gcv.function = GXcopy;
+  
+  /* The pixmap_depth does not correspond to that of the GCs in the
+     cache, so create a new GC. */
+  gc = XCreateGC(dpy, x_pixmap, GCFunction, &gcv);
+  
+  XPutImage(dpy, x_pixmap, gc, x_image, x_offset, 0, x_offset,
+            y_offset, width, height);
+  
+  XFreeGC(dpy, gc);
+  x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
+  XDestroyImage(x_image);
 }
 
 JMC_PUBLIC_API(void)
