@@ -523,7 +523,6 @@ widget/src/mac/Makefile
 widget/src/cocoa/Makefile
 widget/src/xlib/Makefile
 widget/src/os2/Makefile
-widget/src/os2/res/Makefile
 widget/src/os2/tests/Makefile
 widget/src/qt/Makefile
 widget/src/windows/Makefile
