@@ -24,7 +24,6 @@
 
 struct nsPresentationData;
 struct nsEmbellishData;
-struct nsStretchMetrics;
 typedef PRInt32 nsStretchDirection;
 
 #define NS_STRETCH_DIRECTION_UNSUPPORTED  -1
@@ -94,7 +93,7 @@ public:
   NS_IMETHOD
   GetDesiredStretchSize(nsIPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
-                        nsStretchMetrics&    aDesiredStretchSize) = 0;
+                        nsBoundingMetrics&   aDesiredStretchSize) = 0;
 #endif
  /* Place :
   * This method is used before returning from Reflow(), or when a MathML frame

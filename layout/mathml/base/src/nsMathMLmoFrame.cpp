@@ -472,11 +472,12 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   mStyleContext->GetStyle(eStyleStruct_Font, font);
   float em = float(font.mFont.size);
 
-  // lspace = number h-unit
+  // lspace = number h-unit | namedspace
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::lspace_, value)) {
     nsCSSValue cssValue;
-    if (ParseNumericValue(value, cssValue))
+    if (ParseNumericValue(value, cssValue) ||
+        ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue))
     {
       if ((eCSSUnit_Number == cssValue.GetUnit()) &&
           (0.0f == cssValue.GetFloatValue()))
@@ -489,11 +490,12 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     mLeftSpace = 0.0f;
   }
 
-  // rspace = number h-unit
+  // rspace = number h-unit | namedspace
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::rspace_, value)) {
     nsCSSValue cssValue;
-    if (ParseNumericValue(value, cssValue))
+    if (ParseNumericValue(value, cssValue) ||
+        ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue))
     {
       if ((eCSSUnit_Number == cssValue.GetUnit()) &&
           (0.0f == cssValue.GetFloatValue()))
@@ -506,11 +508,13 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     mRightSpace = 0.0f;
   }
 
-  // minsize = number [ v-unit | h-unit ]
+  // minsize = number [ v-unit | h-unit ] | namedspace
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::minsize_, value)) {
     nsCSSValue cssValue;
-    if (ParseNumericValue(value, cssValue)) {
+    if (ParseNumericValue(value, cssValue) ||
+        ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue))
+    {
       nsCSSUnit unit = cssValue.GetUnit();
       if (eCSSUnit_Number == unit)
         mMinSize = cssValue.GetFloatValue();
@@ -536,11 +540,13 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     }
   }
 
-  // maxsize = number [ v-unit | h-unit ] | infinity
+  // maxsize = number [ v-unit | h-unit ] | namedspace | infinity
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::maxsize_, value)) {
     nsCSSValue cssValue;
-    if (ParseNumericValue(value, cssValue)) {
+    if (ParseNumericValue(value, cssValue) ||
+        ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue))
+    {
       nsCSSUnit unit = cssValue.GetUnit();
       if (eCSSUnit_Number == unit)
         mMaxSize = cssValue.GetFloatValue();
