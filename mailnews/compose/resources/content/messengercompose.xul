@@ -313,7 +313,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 		</box>
 	</toolbar>
 
-	<toolbar id="MsgHeadersToolbar">
+	<toolbar id="MsgHeadersToolbar" persist="collapsed">
 		<box align="horizontal" flex="100%">
 			<spring style="width:0.5em"/>
 			<box align="vertical" flex="60%">
@@ -361,8 +361,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	</toolbar>
 
     <!-- These toolbar items get filled out from the editorOverlay -->
-	<toolbar id="FormatToolbar">
-      <html:div class="toolbar-middle">
+    <toolbar id="FormatToolbar" persist="collapsed">
+      <html:div>
         <!-- items are filled out from editorOverlay -->
         <html:select id="ParagraphSelect"/>
         <html:select id="FontFaceSelect"/>
@@ -372,14 +372,11 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
       
       <titledbutton id="DecreaseFontSizeButton"/>
       <titledbutton id="IncreaseFontSizeButton"/>
-
       <titledbutton id="boldButton"/>
       <titledbutton id="italicButton"/>
       <titledbutton id="underlineButton"/>
-
       <titledbutton id="ulButton"/>
       <titledbutton id="olButton"/>
-
       <titledbutton id="outdentButton"/>
       <titledbutton id="indentButton"/>
 
@@ -388,9 +385,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
         <menupopup id="AlignmentPopup"/>
       </menu>
 
-      <!-- TODO: Put Insert Object Popup here -->
+      <menu>
+        <titledbutton id="InsertPopupButton"/>
+	    <menupopup id="InsertPopup"/>
+      </menu>
       <spring flex="100%"/>
-  </toolbar>
+    </toolbar>
 </toolbox>
 
     <!-- The main mail three pane frame -->
