@@ -19,20 +19,18 @@
 #define _ZIP_ARCHIVE_H_
 
 #include "Fundamentals.h"
-#include "zlib.h"
-
 #include "prio.h"
 
 /*
  * Central zip directory entry
  */
 typedef struct {
-  char *fn;		/* file name */
-  Uint32 len;	        /* file size */
-  Uint32 size;	        /* file compressed size */
-  Int32 method;		/* Compression method */
-  Int32 mod;		/* file modification time */
-  Int32 off;		/* local file header offset */
+  char *fn;                     /* file name */
+  Uint32 len;                   /* file size */
+  Uint32 size;                  /* file compressed size */
+  Int32 method;                 /* Compression method */
+  Int32 mod;                    /* file modification time */
+  Int32 off;                    /* file contents offset */
 } DirectoryEntry;
 
 /* An object that represents a zip archive */
@@ -93,7 +91,7 @@ public:
    * pool passed into the constructor and is destroyed when the
    * pool is destroyed.
    */
-  Uint32 listElements(const char *fileNameSuffix, char **buf);
+  Uint32 listElements(const char *fileNameSuffix, char **&buf);
 
 
 private:
@@ -101,9 +99,6 @@ private:
 
   /* File descriptor */
   PRFileDesc *fp;
-
-  /* Zip file stream */
-  z_stream *strm;
 
   DirectoryEntry *dir;	/* zip file directory */
   Uint32 nel;		/* number of directory entries */
@@ -113,17 +108,8 @@ private:
   bool initReader();
   bool findEnd();
   bool readFully(void *buf, Int32 len);
-  bool inflateFully(Uint32 size, void *buf, Uint32 len, char **msg);
+  bool inflateFully(Uint32 size, void *buf, Uint32 len);
 };		      
 
 
 #endif /* _ZIP_ARCHIVE_H_ */
-
-
-
-
-
-
-
-
-
