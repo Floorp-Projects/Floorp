@@ -249,6 +249,52 @@ void _PR_LogCleanup(void)
 
 #endif /* PR_LOGGING */
 
+static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
+{
+#ifdef PR_LOGGING
+    char *ev;
+
+    ev = PR_GetEnv("NSPR_LOG_MODULES");
+    if (ev && ev[0]) {
+        char module[64];
+        PRBool isSync = PR_FALSE;
+        PRIntn evlen = strlen(ev), pos = 0;
+        PRInt32 bufSize = DEFAULT_BUF_SIZE;
+        while (pos < evlen) {
+            PRIntn level = 1, count = 0, delta = 0;
+            PRLogModuleInfo *lm = logModules;
+            PRBool skip_modcheck;
+
+            count = sscanf(&ev[pos], "%64[A-Za-z0-9]%n:%d%n",
+                           module, &delta, &level, &delta);
+            pos += delta;
+            if (count == 0) break;
+
+            /*
+            ** If count == 2, then we got module and level. If count
+            ** == 1, then level defaults to 1 (module enabled).
+            */
+            skip_modcheck = (0 == strcasecmp (module, "all")) ? PR_TRUE : PR_FALSE;
+            while (lm != NULL) 
+            {
+                if (skip_modcheck) 
+                    lm->level = (PRLogModuleLevel)level;
+                else if (strcasecmp(module, lm->name) == 0) 
+                {
+                    lm->level = level;
+                    break;
+                }
+                lm = lm->next;
+            }
+            /*found:*/
+            count = sscanf(&ev[pos], " , %n", &delta);
+            pos += delta;
+            if (count == -1) break;
+        }
+    }
+#endif /* PR_LOGGING */
+} /* end _PR_SetLogModuleLevel() */
+
 PR_IMPLEMENT(PRLogModuleInfo*) PR_NewLogModule(const char *name)
 {
     PRLogModuleInfo *lm;
@@ -262,6 +308,7 @@ PR_IMPLEMENT(PRLogModuleInfo*) PR_NewLogModule(const char *name)
         lm->next = logModules;
         logModules = lm;
     }
+    _PR_SetLogModuleLevel(lm);
     return lm;
 }
 

@@ -24,30 +24,91 @@
 PR_BEGIN_EXTERN_C
 
 /*
+** prlog.h -- Declare interfaces to NSPR's Logging service
 **
-** Define in your environment a NSPR_LOG_MODULES variable. The value of
-** this variable has the form:
+** NSPR provides a logging service that is used by NSPR itself and is
+** available to client programs.
+**
+** To use the service from a client program, you should create a
+** PRLogModuleInfo structure by calling PR_NewLogModule(). After
+** creating the LogModule, you can write to the log using the PR_LOG()
+** macro.
+**
+** Initialization of the log service is handled by NSPR initialization.
+**
+** At execution time, you must enable the log service. To enable the
+** log service, set the environment variable: NSPR_LOG_MODULES
+** variable.
+**
+** NSPR_LOG_MODULES variable has the form:
 **
 **     <moduleName>:<value>[, <moduleName>:<value>]*
 **
-** where moduleName is one of named modules that support debugging (see
-** the header file for a particular module for more specific
-** information).  Value is one of the enum PRLogModuleLevel's legal
-** values.
+** Where:
+**  <moduleName> is the name passed to PR_NewLogModule().
+**  <value> is a numeric constant, e.g. 5. This value is the maximum
+** value of a log event, enumerated by PRLogModuleLevel, that you want
+** written to the log.
+** 
+** For example: to record all events of greater value than or equal to
+** PR_LOG_ERROR for a LogModule names "gizmo", say:
+** 
+** set NSPR_LOG_MODULES=gizmo:2
+** 
+** Note that you must specify the numeric value of PR_LOG_ERROR.
+** 
+** Special LogModule names are provided for controlling NSPR's log
+** service at execution time. These controls should be set in the
+** NSPR_LOG_MODULES environment variable at execution time to affect
+** NSPR's log service for your application.
+** 
+** The special LogModule "all" enables all LogModules. To enable all
+** LogModule calls to PR_LOG(), say:
+** 
+** set NSPR_LOG_MODULES=all:5
+** 
+** The special LogModule name "sync" tells the NSPR log service to do
+** unbuffered logging.
+** 
+** The special LogModule name "buffsize:<size>" tells NSPR to set the
+** log buffer to <size>.
 **
-** Special modules exist for controlling the logging facility:
-**    sync        -- do unbuffered logging
-**    bufsize:size    -- use a buffer of "size" bytes
-**
-** Define in your environment NSPR_LOG_FILE to specify the log file to
-** use unless the default of "stderr" is acceptable.
+** The environment variable NSPR_LOG_FILE specifies the log file to use
+** unless the default of "stderr" is acceptable.
 **
 ** To put log messages in your programs, use the PR_LOG macro:
 **
 **     PR_LOG(<module>, <level>, (<printfString>, <args>*));
 **
 ** Where <module> is the address of a PRLogModuleInfo structure, and
-** <level> is one of the following levels:
+** <level> is one of the levels defined by the enumeration:
+** PRLogModuleLevel. <args> is a printf() style of argument list. That
+** is: (fmtstring, ...).
+**
+** Example:
+** 
+** main() {
+**    PRIntn one = 1;
+**    PRLogModuleInfo * myLm = PR_NewLogModule("gizmo");
+**    PR_LOG( myLm, PR_LOG_ALWAYS, ("Log this! %d\n", one)); 
+**    return; 
+** }
+** 
+** Note the use of printf() style arguments as the third agrument(s) to
+** PR_LOG().
+** 
+** After compiling and linking you application, set the environment:
+** 
+** SET NSPR_LOGMODULES=gizmo:5
+** SET NSPR_LOG_FILE=logfile.txt
+** 
+** When you execute your application, the string "Log this! 1" will be
+** written to the file "logfile.txt".
+** 
+** Note to NSPR engineers: a number of PRLogModuleInfo structures are
+** defined and initialized in prinit.c. See this module for ideas on
+** what to log where.
+** 
 */
 
 typedef enum PRLogModuleLevel {

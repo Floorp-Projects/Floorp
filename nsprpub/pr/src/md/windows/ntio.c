@@ -45,7 +45,13 @@ static struct _MDLock        _pr_recycle_lock;
 static PRInt32               _pr_recycle_array[RECYCLE_SIZE];
 static PRInt32               _pr_recycle_tail = 0; 
 
+#ifdef _PR_USE_STATIC_TLS
 __declspec(thread) PRThread *_pr_io_restarted_io = NULL;
+#else
+DWORD _pr_io_restartedIOIndex;  /* The thread local storage slot for each
+                                 * thread is initialized to NULL. */
+#endif
+
 PRBool                       _nt_version_gets_lockfile_completion;
 
 struct _MDLock               _pr_ioq_lock;
@@ -471,7 +477,11 @@ _NT_ResumeIO(PRThread *thread, PRIntervalTime ticks)
     PRBool fWait = PR_TRUE;
 
     if (!_PR_IS_NATIVE_THREAD(thread)) {
+#ifdef _PR_USE_STATIC_TLS
         _pr_io_restarted_io = thread;
+#else
+        TlsSetValue(_pr_io_restartedIOIndex, thread);
+#endif
     } else {
         _PR_THREAD_LOCK(thread);
         if (!thread->io_pending)

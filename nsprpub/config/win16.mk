@@ -85,7 +85,7 @@ DLL := $(addprefix $(OBJDIR)/, $(DLL))
 endif
 
 
-CPU_ARCH = x386
+CPU_ARCH = x86
 OS_CFLAGS = -ml -3 -bd -zc -zu -bt=windows -d_X86_ -dWIN16 -d_WINDLL
 OS_EXE_CFLAGS = -ml -3 -bt=windows -d_X86_ -dWIN16
 OS_LIB_FLAGS = -c -iro -n

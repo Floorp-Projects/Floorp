@@ -464,6 +464,17 @@ extern PRStatus _MD_MemUnmap(void *addr, PRUint32 size);
 extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define _MD_CLOSE_FILE_MAP _MD_CloseFileMap
 
+/*
+ * The standard (XPG4) gettimeofday() (from BSD) takes two arguments.
+ * On some SVR4 derivatives, gettimeofday() takes only one argument.
+ * The GETTIMEOFDAY macro is intended to hide this difference.
+ */
+#ifdef HAVE_SVID_GETTOD
+#define GETTIMEOFDAY(tp) gettimeofday(tp)
+#else
+#define GETTIMEOFDAY(tp) gettimeofday((tp), NULL)
+#endif
+
 #if defined(LINUX) && defined(_PR_PTHREADS) && !(__GLIBC__ >= 2)
 #define _PR_NEED_FAKE_POLL
 #endif

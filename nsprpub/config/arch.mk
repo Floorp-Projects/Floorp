@@ -144,7 +144,7 @@ endif
 ifeq ($(OS_ARCH), WINNT)
 	CPU_ARCH := $(shell uname -p)
 	ifeq ($(CPU_ARCH),I386)
-		CPU_ARCH = x386
+		CPU_ARCH = x86
 	endif
 else
 #
@@ -167,7 +167,7 @@ ifeq ($(OS_ARCH), Windows_NT)
 	# MKS's uname -m returns "586" on a Pentium machine.
 	#
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
-		CPU_ARCH = x386
+		CPU_ARCH = x86
 	endif
 else
 #
@@ -181,7 +181,7 @@ ifeq ($(OS_ARCH), CYGWIN32_NT)
 	# GNU-Win32's uname -m returns "i686" on a Pentium Pro machine.
 	#
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
-		CPU_ARCH = x386
+		CPU_ARCH = x86
 	endif
 endif
 endif

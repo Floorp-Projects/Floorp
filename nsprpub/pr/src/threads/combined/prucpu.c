@@ -18,7 +18,7 @@
 
 #include "primpl.h"
 
-_PRCPU *_pr_primordialCPU;
+_PRCPU *_pr_primordialCPU = NULL;
 
 PRInt32 _pr_md_idle_cpus;       /* number of idle cpus */
 /*

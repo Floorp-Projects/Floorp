@@ -25,10 +25,10 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#if defined(SOLARIS)
+#if defined(HAVE_SVID_GETTOD)
 #define GTOD(_a) gettimeofday(_a)
 #else
-#define GTOD(_a) gettimeofday(_a, NULL)
+#define GTOD(_a) gettimeofday((_a), NULL)
 #endif
 
 static PRIntn rv = 0;

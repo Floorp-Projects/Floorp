@@ -29,6 +29,22 @@ ifdef PR_CLIENT_BUILD_WINDOWS
 SHELL = $(MOZ_TOOLS_FLIPPED)/bin/shmsdos.exe
 endif
 
+#
+# On NT, we use static thread local storage by default because it
+# gives us better performance.  However, we can't use static TLS
+# on Alpha NT because the Alpha version of MSVC does not seem to
+# support the -GT flag, which is necessary to make static TLS safe
+# for fibers.
+#
+# On Win95, we use the TlsXXX() functions by default because that
+# allows us to load the NSPR DLL at run time using LoadLibrary().
+#
+ifeq ($(OS_TARGET),WINNT)
+ifneq ($(CPU_ARCH),ALPHA)
+USE_STATIC_TLS = 1
+endif
+endif
+
 CC = cl
 CCC = cl
 LINK = link
@@ -96,17 +112,31 @@ endif
 endif
 
 DEFINES += -DWIN32
+ifeq ($(USE_STATIC_TLS),1)
+DEFINES += -D_PR_USE_STATIC_TLS
+endif
+
+#
+# NSPR uses fibers on NT.  Therefore, if we use static local
+# storage (i.e., __declspec(thread) variables), we need the -GT
+# flag to turn off certain compiler optimizations so that fibers
+# can use static TLS safely.
+#
+# Also, we optimize for Pentium (-G5) on NT.
+#
 ifeq ($(OS_TARGET),WINNT)
-#
-# Win NT needs -GT so that fibers can work
-#
+ifeq ($(USE_STATIC_TLS),1)
 OS_CFLAGS += -GT
+endif
+ifeq ($(CPU_ARCH),x86)
+OS_CFLAGS += -G5
+endif
 DEFINES += -DWINNT
 else
 DEFINES += -DWIN95 -D_PR_GLOBAL_THREADS_ONLY
 endif
 
-ifeq ($(CPU_ARCH),x386)
+ifeq ($(CPU_ARCH),x86)
 DEFINES += -D_X86_
 else
 ifeq ($(CPU_ARCH),MIPS)
@@ -122,7 +152,7 @@ endif
 
 # Name of the binary code directories
 
-ifeq ($(CPU_ARCH),x386)
+ifeq ($(CPU_ARCH),x86)
 CPU_ARCH_TAG =
 else
 CPU_ARCH_TAG = $(CPU_ARCH)

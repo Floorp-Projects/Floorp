@@ -59,6 +59,12 @@ struct PRCListStr {
 #define PR_NEXT_LINK(_e)	 \
     	((_e)->next)
 /*
+** Return the element preceding element "_e"
+*/
+#define PR_PREV_LINK(_e)	 \
+    	((_e)->prev)
+
+/*
 ** Append an element "_e" to the end of the list "_l"
 */
 #define PR_APPEND_LINK(_e,_l) PR_INSERT_BEFORE(_e,_l)

@@ -49,6 +49,7 @@ CSRCS =             \
 	cvar2.c			\
 	dceemu.c		\
 	dlltest.c		\
+	dtoa.c			\
 	exit.c  		\
 	fileio.c		\
 	forktest.c	    \
@@ -73,6 +74,7 @@ CSRCS =             \
 	multiwait.c		\
 	many_cv.c		\
 	nbconn.c		\
+	nblayer.c		\
 	nonblock.c		\
 	op_2long.c      \
 	op_filnf.c		\
@@ -97,6 +99,7 @@ CSRCS =             \
 	servr_kk.c		\
 	servr_ku.c		\
 	servr_uk.c		\
+	short_thread.c	\
 	sigpipe.c		\
 	socket.c		\
 	sockopt.c		\
@@ -108,6 +111,7 @@ CSRCS =             \
 	suspend.c		\
 	switch.c		\
 	system.c		\
+	testbit.c    	\
 	testfile.c    	\
 	threads.c 	  	\
 	thruput.c 	  	\
@@ -409,6 +413,10 @@ LOGFILE = /dev/null
 endif
 endif
 
+ifeq ($(OS_TARGET),Linux)
+ECHO = /bin/echo
+endif
+
 ALWAYS:
 
 runtests:: $(PROGS) ALWAYS
@@ -423,6 +431,6 @@ runtests:: $(PROGS) ALWAYS
 		$(ECHO) "\t\t\tPassed";								\
 	else													\
 		$(ECHO) "\t\t\tFAILED";								\
-	fi														\
+	fi;														\
 	done
 	@$(ECHO) "\nEND\t\t`date`\n"
