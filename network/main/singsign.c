@@ -1503,7 +1503,7 @@ SI_RestoreOldSignonData
 
     /* get the data from previous time this URL was visited */
 
-    if ((si_TagCount == 1) || url->firsttime_chosing_user) {
+    if ((si_TagCount == 1) || (url && url->firsttime_chosing_user)) {
 	user = si_GetUser(context, URLName, FALSE);
     } else {
 	if (url) {
