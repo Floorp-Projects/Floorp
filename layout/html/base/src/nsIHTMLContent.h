@@ -91,6 +91,16 @@ public:
   NS_IMETHOD ToHTMLString(nsString& aResult) const = 0;
 
   NS_IMETHOD ToHTML(FILE* out) const = 0;
+
+  /** NRA ***
+   * Get a hint that tells the style system what to do when 
+   * an attribute on this node changes.
+   */
+  NS_IMETHOD GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const = 0;
+
 };
 
 #endif /* nsIHTMLContent_h___ */
