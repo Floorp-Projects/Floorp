@@ -160,6 +160,8 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsSMTPService();
   } else if (mClassID.Equals(kCMIMEServiceCID)) {
     inst = (nsISupports *)new nsMIMEService();
+  } else if (mClassID.Equals(kCMessageCID)) {
+    inst = (nsISupports *)new nsMessage();
   }
 
   if (inst == NULL) {  
