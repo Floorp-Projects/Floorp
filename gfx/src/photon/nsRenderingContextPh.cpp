@@ -782,7 +782,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont(nsIFontMetrics *aFontMetrics)
   //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetFont with nsIFontMetrics mFontMetrics=<%p> aFontMetrics=<%p>\n", mFontMetrics, aFontMetrics));
 	  
   nsFontHandle  fontHandle;			/* really a nsString */
-  nsString      *pFontHandle;
+  char      *pFontHandle;
 
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = aFontMetrics;
@@ -792,20 +792,20 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont(nsIFontMetrics *aFontMetrics)
     return NS_OK;
 
   mFontMetrics->GetFontHandle(fontHandle);
-  pFontHandle = (nsString *) fontHandle;
+  pFontHandle = (char *) fontHandle;
     
   if (pFontHandle)
   {  
     if( mPhotonFontName )
-      delete [] mPhotonFontName;
+      free(mPhotonFontName);
 
-    mPhotonFontName = pFontHandle->ToNewCString();
+    mPhotonFontName = strdup(pFontHandle);
     if (mPhotonFontName)
-	{
+   	{
   	  /* Cache the Font metrics locally, costs ~1400 bytes per font */
       PfLoadMetrics( mPhotonFontName );
 
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetFont with nsIFontMetrics Photon Font Name is <%s>\n", mPhotonFontName));
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetFont with nsIFontMetrics Photon Font Name is <%s> <%s>\n", mPhotonFontName, pFontHandle));
 
       PgSetFont( mPhotonFontName );
     }

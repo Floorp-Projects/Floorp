@@ -436,7 +436,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
 
   if( fontName )
   {
-    int         MAX_FONTDETAIL = 30;
+    int         MAX_FONTDETAIL = 90;
     FontDetails fDetails[MAX_FONTDETAIL];
     int         fontcount;
   

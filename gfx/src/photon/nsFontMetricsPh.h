@@ -77,7 +77,7 @@ protected:
 
   nsDeviceContextPh   *mDeviceContext;
   nsFont              *mFont;
-  nsString			  mFontHandle;		/* Photon Fonts are just a string */
+  char                *mFontHandle;		/* Photon Fonts are just a string */
   nscoord             mHeight;
   nscoord             mAscent;
   nscoord             mDescent;

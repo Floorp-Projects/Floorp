@@ -141,7 +141,7 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
   
 	char NSFontName[64];	/* Local buffer to keep the fontname in */
 	char NSFontSuffix[5];
-	char NSFullFontName[64];
+	char NSFullFontName[MAX_FONT_TAG];
     	
 	NSFontSuffix[0] = nsnull;
 
@@ -181,7 +181,8 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	  float f;
 		mDeviceContext->GetDevUnitsToAppUnits(f);
 		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: Internal Name <%s> f=<%f>\n",fontInfo.font, f));
-		mFontHandle = nsString( (const PRUnichar *) NSFullFontName, strlen(NSFullFontName));
+  //mFontHandle = nsString( (const PRUnichar *) NSFullFontName, strlen(NSFullFontName));
+  mFontHandle = strdup(NSFullFontName); /* memory leak */
 
 		/* These are in pixels and need to be converted! */
 		float height;
@@ -317,6 +318,7 @@ NS_IMETHODIMP
 nsFontMetricsPh ::GetNormalLineHeight(nscoord &aHeight)
 {
   aHeight = mEmHeight + mLeading;
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetNormalLineHeight aHeight=<%d>\n", aHeight));
   return NS_OK;
 }
 
@@ -379,7 +381,7 @@ nsFontMetricsPh :: GetMaxAdvance(nscoord &aAdvance)
 NS_IMETHODIMP
 nsFontMetricsPh :: GetFont(const nsFont *&aFont)
 {
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetFont\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetFont\n"));
   aFont = mFont;
   return NS_OK;
 }
@@ -401,9 +403,8 @@ NS_IMETHODIMP  nsFontMetricsPh::GetLangGroup(nsIAtom** aLangGroup)
 NS_IMETHODIMP
 nsFontMetricsPh::GetFontHandle(nsFontHandle &aHandle)
 {
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetFontHandle\n"));
-
-  aHandle = (nsFontHandle) &mFontHandle;
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetFontHandle mFontHandle=<%s>\n", mFontHandle));
+  aHandle = (nsFontHandle) mFontHandle;
   return NS_OK;
 }
 
