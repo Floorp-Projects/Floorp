@@ -18,6 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<!-- LOCALIZATION NOTE pref-receipts.dtd UI for Mail/News Return Receipts prefs -->
 <!ENTITY window.title "Return Receipts">
 <!ENTITY pane.title "Return Receipts">
 <!ENTITY requestReceipt.label " If I request a receipt when sending a message, I want">
@@ -26,6 +27,7 @@ Rights Reserved.
 <!ENTITY both.label "Both types of receipt">
 <!ENTITY receiptArrive.label " When a receipt arrives">
 <!ENTITY leaveIt.label "Leave it in my Inbox">
+<!-- LOCALIZATION NOTE moveToSent.label Translate 'Sent Mail' according to Netscape glossary -->
 <!ENTITY moveToSent.label "Move it to my Sent Mail folder">
 <!ENTITY requestMDN.label " When I receive a message and the sender requested a receipt (MDN)">
 <!ENTITY returnSome.label "Return receipts for some messages">

@@ -18,18 +18,24 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<!-- LOCALIZATION NOTE pref-diskspace.dtd UI for Mail/News Disk Space prefs -->
 <!ENTITY window.title "Disk Space">
 <!ENTITY pane.title "Disk Space">
 <!ENTITY allMsg.label "All Messages">
+<!-- LOCALIZATION NOTE storeMsgLimit.label This string is followed by a number, then by kb.label -->
 <!ENTITY storeMsgLimit.label "Do not store messages locally that are larger than">
+<!-- LOCALIZATION NOTE autoCompact.label This string is followed by a number, then by kb.label -->
 <!ENTITY autoCompact.label "Automatically compact folders when it will save over">
 <!ENTITY kb.label " kB">
 <!ENTITY newgroupMsgOnly.label " Newsgroup Messages Only">
 <!ENTITY whenToClean.label "When it's time to clean up messages:">
+<!-- LOCALIZATION NOTE keepMsgs.label This string is followed by a number, then by days.label -->
 <!ENTITY keepMsgs.label "Keep messages which have arrived within the past">
 <!ENTITY days.label "days">
 <!ENTITY keepAllMsg.label "Keep all messages">
+<!-- LOCALIZATION NOTE keepTheNewest.label This string is followed by a number, then by messages.label -->
 <!ENTITY keepTheNewest.label "Keep the newest">
 <!ENTITY messages.label "messages">
 <!ENTITY keepUnread.label "Keep only unread messages">
+<!-- LOCALIZATION NOTE removeMsg.label This string is followed by a number, then by days.label -->
 <!ENTITY removeMsg.label "Remove message bodies only older than">

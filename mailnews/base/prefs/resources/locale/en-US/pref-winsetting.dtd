@@ -18,8 +18,10 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<!-- LOCALIZATION NOTE pref-winsetting.dtd UI for Mail & News Window Settings prefs -->
 <!ENTITY window.title "Window Setting">
 <!ENTITY pane.title "Window Setting">
+<!-- LOCALIZATION NOTE chooseLayout.label Never translate the product name "Messenger" -->
 <!ENTITY chooseLayout.label "Choose which layout you prefer for the Messenger window:">
 <!ENTITY chooseExp.label "If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.">
 <!ENTITY reuseThread.label "Double-clicking a folder or a newsgroup opens it in a new windowr">

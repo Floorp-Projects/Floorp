@@ -18,6 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<!-- LOCALIZATION NOTE pref-mailnews.dtd UI for Mail/News prefs -->
 <!ENTITY window.title "Mail &amp; Newsgroups">
 <!ENTITY pane.title "Mail &amp; Newsgroups">
 <!ENTITY textBegin.label "Plain quoted text beginning with is displayed with">
