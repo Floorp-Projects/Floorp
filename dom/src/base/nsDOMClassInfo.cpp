@@ -5253,7 +5253,7 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // here.
 
       *_retval = PR_FALSE;
-
+      
       return NS_OK;
     }
   }
