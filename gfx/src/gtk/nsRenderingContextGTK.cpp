@@ -2002,15 +2002,20 @@ nsRenderingContextGTK::my_gdk_draw_text (GdkDrawable *drawable,
     // gdk does this... we don't need it..
     //    XSetFont(drawable_private->xdisplay, gc_private->xgc, xfont->fid);
 
+    // We clamp the sizes down to 32768 which is the maximum width of
+    // a window.  Even if a font was 1 pixel high and started at the
+    // left, the maximum size of a draw request could only be 32k.
+
     if ((xfont->min_byte1 == 0) && (xfont->max_byte1 == 0))
     {
       XDrawString (drawable_private->xdisplay, drawable_private->xwindow,
-                   gc_private->xgc, x, y, text, text_length);
+                   gc_private->xgc, x, y, text, MIN(text_length, 32768));
     }
     else
     {
       XDrawString16 (drawable_private->xdisplay, drawable_private->xwindow,
-                     gc_private->xgc, x, y, (XChar2b *) text, text_length / 2);
+                     gc_private->xgc, x, y, (XChar2b *) text, 
+                     MIN((text_length / 2), 32768));
     }
   }
   else if (font->type == GDK_FONT_FONTSET)
