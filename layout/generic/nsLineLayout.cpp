@@ -2278,6 +2278,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         // [1] BR's on empty lines stop working
         // [2] May not honor css2's notion of handling empty elements
         // [3] blank lines in a pre-section ("\n") (handled with preMode)
+
+        // XXX Are there other problems with this?
 #ifdef NOISY_VERTICAL_ALIGN
         printf("  [span]==> zapping min/maxY: currentValues: %d,%d newValues: 0,0\n",
                minY, maxY);
@@ -2293,6 +2295,13 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   }
 
   if ((psd != mRootSpan) && (psd->mZeroEffectiveSpanBox)) {
+#ifdef NOISY_VERTICAL_ALIGN
+    printf("   [span]adjusting for zeroEffectiveSpanBox\n");
+    printf("     Original: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
+           minY, maxY, spanFramePFD->mBounds.height,
+           spanFramePFD->mAscent, spanFramePFD->mDescent,
+           psd->mLogicalHeight, psd->mTopLeading, psd->mBottomLeading);
+#endif
     nscoord goodMinY = spanFramePFD->mBorderPadding.top - psd->mTopLeading;
     nscoord goodMaxY = goodMinY + psd->mLogicalHeight;
     if (minY > goodMinY) {
@@ -2314,7 +2323,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // move everything else up.
       spanFramePFD->mAscent -= minY; // move the baseline up
       spanFramePFD->mBounds.height -= minY; // move the bottom up
-      //spanFrame->SetRect(mPresContext, spanFramePFD->mBounds);
       psd->mTopLeading += minY;
 
       pfd = psd->mFirstFrame;
@@ -2326,13 +2334,18 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       maxY -= minY; // since minY is in the frame's own coordinate system
       minY = 0;
     }
-    if ((maxY - minY) < spanFramePFD->mBounds.height) {
-      nscoord adjust = spanFramePFD->mBounds.height - maxY + minY;
+    if (maxY < spanFramePFD->mBounds.height) {
+      nscoord adjust = spanFramePFD->mBounds.height - maxY;
       spanFramePFD->mBounds.height -= adjust; // move the bottom up
-      //spanFrame->SetRect(mPresContext, spanFramePFD->mBounds);
       spanFramePFD->mDescent -= adjust;
       psd->mBottomLeading += adjust;
     }
+#ifdef NOISY_VERTICAL_ALIGN
+    printf("     New: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
+           minY, maxY, spanFramePFD->mBounds.height,
+           spanFramePFD->mAscent, spanFramePFD->mDescent,
+           psd->mLogicalHeight, psd->mTopLeading, psd->mBottomLeading);
+#endif
   }
 
   psd->mMinY = minY;
