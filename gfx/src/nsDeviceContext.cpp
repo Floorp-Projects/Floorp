@@ -393,8 +393,8 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
   sprintf(url, "resource:/res/gfx/icon_%d.gif", aId);
 
   // Use a sync net context
-  ilINetContext* netContext;
-  result = NS_NewImageNetContextSync(&netContext);
+  nsCOMPtr<ilINetContext> netContext;
+  result = NS_NewImageNetContextSync(getter_AddRefs(netContext));
   if (NS_FAILED(result)) {
     return result;
   }
@@ -418,7 +418,6 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
     mIcons[aId] = imageReq;
   }
   
-  NS_RELEASE(netContext);
   return result;
 }
 
