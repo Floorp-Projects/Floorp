@@ -536,7 +536,7 @@ Contributor(s): ______________________________________. -->
  
 
 
-  <box align="horizontal" id="status-bar">
+  <box align="horizontal" id="status-bar" chromeclass="status">
  
     <titledbutton value="&notifCom.label;" onclick="doTests()"/>
 
