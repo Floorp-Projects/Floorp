@@ -456,7 +456,21 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   // (1) get an hIcon for the file
   PSZ pszFileName = (PSZ)filePath.get();
   HPOINTER hIcon = WinLoadFileIcon(pszFileName, FALSE);
-  if (hIcon == NULL)
+  if (hIcon == NULLHANDLE) && (pszFileName[0] == '.')) {
+    /* Just trying to get an icon for an extension */
+    /* Create a temporary file to try to get an icon */
+    char* tmpdir = getenv("TMP");
+    if (tmpdir) {
+      char tmpfile[CCHMAXPATH];
+      strcpy(tmpfile, tmpdir);
+      strcat(tmpfile, pszFileName);
+      FILE* fp = fopen(tmpfile, "wb+");
+      fclose(fp);
+      hIcon = WinLoadFileIcon(tmpfile, FALSE);
+      remove(tmpfile);
+    }
+  }
+  if (hIcon == NULLHANDLE)
     return NS_ERROR_FAILURE;
   // we got a handle to an icon. Now we want to get a bitmap for the icon using GetIconInfo....
   POINTERINFO IconInfo;
