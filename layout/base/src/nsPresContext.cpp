@@ -59,6 +59,8 @@ static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
+MOZ_DECL_CTOR(nsPresContext);
+
 nsPresContext::nsPresContext()
   : mDefaultFont("Times", NS_FONT_STYLE_NORMAL,
                  NS_FONT_VARIANT_NORMAL,
@@ -71,8 +73,8 @@ nsPresContext::nsPresContext()
                       0,
                       NSIntPointsToTwips(10))
 {
+  MOZ_CTOR(nsPresContext);
   NS_INIT_REFCNT();
-  nsLayoutAtoms::AddRefAtoms();
   mCompatibilityMode = eCompatibility_Standard;
   mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
@@ -94,6 +96,7 @@ nsPresContext::nsPresContext()
 
 nsPresContext::~nsPresContext()
 {
+  MOZ_DTOR(nsPresContext);
   mShell = nsnull;
 
   Stop();
@@ -114,7 +117,6 @@ nsPresContext::~nsPresContext()
     mPrefs->UnregisterCallback("browser.", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
   }
-  nsLayoutAtoms::ReleaseAtoms();
 }
 
 nsrefcnt
