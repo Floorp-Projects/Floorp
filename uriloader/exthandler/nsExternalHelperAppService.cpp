@@ -115,6 +115,15 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   else
     mTempFile->Append("test.tmp"); // WARNING THIS IS TEMPORARY CODE!!!
 
+  nsCOMPtr<nsIFileChannel> mFileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
+  if (mFileChannel)
+  {
+    mFileChannel->Init(mTempFile, nsIFileChannel::NS_WRONLY || nsIFileChannel::NS_TRUNCATE, 0);
+    nsCOMPtr<nsIOutputStream> outStream;
+    mFileChannel->OpenOutputStream(getter_AddRefs(outStream));
+    mbufferOutStream = do_QueryInterface(outStream);
+  }
+
   return NS_OK;
 }
 
@@ -122,6 +131,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIChannel * aChannel, nsISu
                                                   nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   // read the data out of the stream and write it to the temp file.
+  PRUint32 numBytesRead = 0;
+  if (mbufferOutStream)
+    mbufferOutStream->WriteFrom(inStr, count, &numBytesRead);
   return NS_OK;
 }
 
@@ -132,6 +144,16 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
   // this may involve us calling back into the OS external app service to make the call
   // for actually launching the helper app. It'd be great if nsIFile::spawn could be made to work
   // on the mac...right now the mac implementation ignores all arguments passed in.
+
+  // close the stream...
+  if (mbufferOutStream)
+    mbufferOutStream->Close();
+
   return NS_OK;
 }
 
+nsresult nsExternalAppHandler::Init(nsIFile * aExternalApplication)
+{
+  mExternalApplication = aExternalApplication;
+  return NS_OK;
+}
