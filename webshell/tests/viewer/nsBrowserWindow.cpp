@@ -232,7 +232,23 @@ HandleLocationEvent(nsGUIEvent *aEvent)
   case NS_KEY_UP:
     if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
       nsAutoString text;
+      PRInt32 colon, fSlash;
+      PRUnichar port;
       bw->mLocation->GetText(text, 1000);
+
+      fSlash=text.Find('/');
+
+      // if no scheme (protocol) is found, assume http.
+      if ( ((colon=text.Find(':')) == -1) // no colon at all
+          || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
+          || ( (colon < text.Length()-1) // the first char after the first colon is a digit (i.e. a port)
+                && ((port=text.CharAt(colon+1)) < '9')
+                && (port > '0') )
+          ) {
+        nsString httpDef("http://");
+        text.Insert(httpDef, 0, 7);
+      }
+
       bw->GoTo(text);
     }
     break;
