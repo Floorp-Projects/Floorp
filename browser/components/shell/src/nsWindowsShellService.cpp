@@ -152,6 +152,12 @@ typedef struct {
   PREFIX MID SUFFIX
 
 static SETTING gSettings[] = {
+  // Extension Manager Keys
+  { MAKE_KEY_NAME1(CLS, "MIME\\Database\\Content Type\\application/x-xpinstall;app=firefox"),
+    "Extension",
+    ".xpi",
+    NO_SUBSTITUTION | NON_ESSENTIAL },
+
   // File Extension Aliases
   { MAKE_KEY_NAME1(CLS, ".htm"),    "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(CLS, ".html"),   "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
