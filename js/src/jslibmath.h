@@ -93,6 +93,7 @@
  * Use math routines in fdlibm.
  */
 
+#undef __P
 #ifdef __STDC__
 #define __P(p)  p
 #else
