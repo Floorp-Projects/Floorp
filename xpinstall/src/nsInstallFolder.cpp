@@ -143,7 +143,7 @@ nsInstallFolder::nsInstallFolder(nsInstallFolder& inFolder, const nsString& subS
     {
         *mFileSpec = *inFolder.mFileSpec;
 
-        if (subString != "")
+        if (!subString.IsEmpty())
             *mFileSpec += subString;
     }
 }

@@ -258,7 +258,7 @@ nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString
     if (!enabled)
         return NS_OK;
 
-    if (aURL == "" || aVersion == nsnull)
+    if (aURL.IsEmpty() || aVersion == nsnull)
     {
         needJar = PR_TRUE;
     }

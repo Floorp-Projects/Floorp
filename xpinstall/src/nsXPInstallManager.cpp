@@ -473,7 +473,7 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
         triggerItem = mTriggers->Get(i);
     
         //Check to see if this trigger item has a pretty name
-        if((moduleName = triggerItem->mName) != "")
+        if(!(moduleName = triggerItem->mName).IsEmpty())
         {
             ioParamBlock->SetString(paramIndex, moduleName.ToNewUnicode());
             paramIndex++;
