@@ -2,7 +2,7 @@
 <HEAD>
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=koi8-r">
    <META NAME="Author" CONTENT="Vladimir Livshits">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en]C-NSCP  (WinNT; U) [Netscape]">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (WinNT; I) [Netscape]">
    <TITLE>PerlConnect Documentation</TITLE>
 <STYLE>
         A:link      {text-decoration: none}
@@ -42,14 +42,14 @@ P<FONT SIZE=-1>ERL</FONT>C<FONT SIZE=-1>ONNECT AND</FONT><FONT SIZE=+0>
 
 <H4>
 <A NAME="Overview"></A>Overview</H4>
-PerlConnect and JS.pm provide glue for the developer between JavaScript
-and Perl languages. It currently consists of two parts, PerlConnect implemented
-in C and JS.pm (<I>tentative name</I>), a Perl module written using XSUBs.
-PerlConnect and JS.pm allow calling Perl from JS and JS from Perl, respectively.
-Whenever possible, it is attempted to archieve the maximum level of transparency
+PerlConnect provides glue for the developer between JavaScript and Perl.
+It currently consists of two parts, PerlConnect implemented in C and JS.pm
+(<I>tentative name</I>), a Perl module written using XSUBs. PerlConnect
+and JS.pm allow calling Perl from JS and JS from Perl, respectively. Whenever
+possible, it is attempted to archieve the maximum level of transparency
 for calling one language from the other. This is done by converting values
 between the two languages, creating wrappers around objects, and emulating
-the standard syntax.
+the standard language syntax.
 <H4>
 <A NAME="Features"></A>PerlConnect Features</H4>
 PerlConnect allows running a Perl interpreter concurrently with your JavaScript
@@ -240,8 +240,8 @@ will always be the last context created. <I>Currently, this is where JS
 API function that require contexts get it.</I>
 <H4>
 <A NAME="Installation"></A>PerlConnect Installation</H4>
-PerlConnect requires <TT>js/ref</TT> and the Perl libraries and headers.
-The only <TT>js/ref</TT> file that must be included in <TT>jsapi.h</TT>.
+PerlConnect requires <TT>js/src</TT> and the Perl libraries and headers.
+The only <TT>js/src</TT> file that must be included in <TT>jsapi.h</TT>.
 You need to compile it together with Perl libraries. Referer to the <TT>perlembed</TT>
 man page for more details.
 <BR><B>On WINNT:</B>
@@ -254,10 +254,10 @@ and compiled Perl sources.
 <BR><B>On UNIX:</B>
 <BR>Currently, you can use PerlConnect with the <TT>js.c</TT> shell. To
 compile it on UNIX, you need to set the PERLCONNECT environment variable.
-Then you can use the Makefile in <TT>js/ref</TT> directory. The makefile
-should read the variable from the current environment. Id this doesn't
-happent, you can try using <TT>gmake PERLCONNECT=1</TT>. This will compile
-PerlConnect into <TT>js</TT>.
+Then you can use the <TT>Makefile.ref</TT> in <TT>js/src</TT> directory.
+The makefile should read the variable from the current environment. If
+this doesn't happent, you can try using <TT>gmake PERLCONNECT=1</TT>. This
+will compile PerlConnect into <TT>js</TT>.
 <H4>
 JS.pm Installation</H4>
 The following source files are distributed: <TT>JS.pm</TT>, <TT>JS.xs</TT>,
