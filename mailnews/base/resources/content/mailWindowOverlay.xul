@@ -60,8 +60,7 @@ Rights Reserved.
 	<broadcaster id="cmd_selectAll"/>
 	<broadcaster id="cmd_preferences"/>
 
-	<broadcaster id="Messenger:Throbber" busy="false"/>
-	<broadcaster id="Messenger:Status"/>
+	<broadcaster id="Messenger:Throbber"/>
 	<broadcaster id="Messenger:LoadingProgress"/>
 	
 	<broadcaster id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
