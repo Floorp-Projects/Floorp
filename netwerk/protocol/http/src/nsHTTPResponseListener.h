@@ -122,6 +122,7 @@ protected:
 
     PRBool                      mCompressHeaderChecked;
     PRBool                      mChunkHeaderChecked;
+    PRBool                      mChunkHeaderEOF;
     nsHTTPPipelinedRequest*     mPipelinedRequest;
 };
 

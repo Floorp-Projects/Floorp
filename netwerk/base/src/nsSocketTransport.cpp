@@ -1459,31 +1459,33 @@ nsSocketTransport::Resume(void)
 NS_IMETHODIMP 
 nsSocketTransport::OnFull(nsIPipe* aPipe) 
 { 
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("nsSocketTransport::OnFull() [%s:%d %x] nsIPipe=%x.\n", 
-          mHostName, mPort, this, aPipe));
-
-  // 
-  // The socket transport has filled up the pipe.  Remove the 
-  // transport from the select list until the consumer can 
-  // make room... 
-  // 
-  nsCOMPtr<nsIBufferInputStream> in;
-  nsresult rv = aPipe->GetInputStream(getter_AddRefs(in));
-  if (NS_SUCCEEDED(rv) && in == mReadPipeIn) {
-    // Enter the socket transport lock...
-    nsAutoMonitor mon(mMonitor);
-
-    NS_ASSERTION(!GetFlag(eSocketRead_Wait), "Already waiting!"); 
-
-    SetFlag(eSocketRead_Wait);
-    mSelectFlags &= (~PR_POLL_READ);
-    return NS_OK;
-  }
-
-  // Else, since we might get an OnFull without an intervening OnWrite
-  // try the OnWrite case to see if we need to resume the blocking write operation:
-  return OnWrite(aPipe, 0);
+    PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+        ("nsSocketTransport::OnFull() [%s:%d %x] nsIPipe=%x.\n", 
+        mHostName, mPort, this, aPipe));
+    
+    // 
+    // The socket transport has filled up the pipe.  Remove the 
+    // transport from the select list until the consumer can 
+    // make room... 
+    // 
+    nsCOMPtr<nsIBufferInputStream> in;
+    nsresult rv = aPipe->GetInputStream(getter_AddRefs(in));
+    if (NS_SUCCEEDED(rv) && in == mReadPipeIn) 
+    {
+        // Enter the socket transport lock...
+        nsAutoMonitor mon(mMonitor);
+        
+        if (!GetFlag(eSocketRead_Wait))
+        {
+            SetFlag(eSocketRead_Wait);
+            mSelectFlags &= (~PR_POLL_READ);
+        }
+        return NS_OK;
+    }
+    
+    // Else, since we might get an OnFull without an intervening OnWrite
+    // try the OnWrite case to see if we need to resume the blocking write operation:
+    return OnWrite(aPipe, 0);
 }
 
 
@@ -1826,6 +1828,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 
     // Create a marshalling stream observer to receive notifications...
     if (aObserver) {
+      mWriteObserver = null_nsCOMPtr();
       rv = NS_NewAsyncStreamObserver(getter_AddRefs(mWriteObserver),
                                      aObserver, NS_CURRENT_EVENTQ);
     }

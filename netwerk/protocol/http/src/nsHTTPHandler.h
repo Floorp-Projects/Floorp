@@ -107,7 +107,8 @@ public:
     PRUint32 ReferrerLevel(void) { return mReferrerLevel; } ;
 
     nsresult    AddPipelinedRequest (nsHTTPPipelinedRequest *pReq);
-    nsresult    GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req, PRBool checkExists = PR_FALSE);
+    nsresult    GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req);
+    nsresult    ReleasePipelinedRequest (nsHTTPPipelinedRequest *pReq);
 
 protected:
     virtual ~nsHTTPHandler();

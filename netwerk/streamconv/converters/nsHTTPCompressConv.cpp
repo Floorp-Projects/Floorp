@@ -143,7 +143,7 @@ nsHTTPCompressConv::OnDataAvailable (
                 mInpBuffer = (unsigned char *) nsAllocator::Realloc (mInpBuffer, mInpBufferLen = streamLen);
                
                 if (mOutBufferLen < streamLen * 2)
-                    mInpBuffer = (unsigned char *) nsAllocator::Realloc (mOutBuffer, mInpBufferLen = streamLen * 3);
+                    mOutBuffer = (unsigned char *) nsAllocator::Realloc (mOutBuffer, mOutBufferLen = streamLen * 3);
 
                 if (mInpBuffer == NULL || mOutBuffer == NULL)
                     return NS_ERROR_OUT_OF_MEMORY;

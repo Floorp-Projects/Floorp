@@ -317,19 +317,22 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
             mResponse -> GetStatus (&statusCode);
             if (statusCode == 304)  // no content
             {
-                nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
-
-                // XXX/ruslan: will be replace with the new Cancel (code)
-                if (NS_SUCCEEDED (rv))
+                rv = mPipelinedRequest -> AdvanceToNextRequest ();
+                if (NS_FAILED (rv))
                 {
-                    PRUint32 count = 0;
-                    mPipelinedRequest -> GetRequestCount (&count);
+                    mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
+                    mPipelinedRequest = nsnull;
 
-                    if (count == 1)
-		                trans -> SetBytesExpected (0);
-                    else
-                        OnStopRequest (nsnull, context, NS_OK, nsnull);
-                }
+                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
+
+                    // XXX/ruslan: will be replaced with the new Cancel (code)
+                    if (NS_SUCCEEDED (rv))
+                        trans -> SetBytesExpected (0);
+               }
+               else
+               {
+                   OnStartRequest (nsnull, nsnull);
+               }
             }
         }
     }
@@ -392,6 +395,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                 if (!mChunkHeaderChecked)
                 {
                     mChunkHeaderChecked = PR_TRUE;
+                    mChunkHeaderEOF     = PR_FALSE;
                     
                     nsXPIDLCString chunkHeader;
                     rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
@@ -410,48 +414,53 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                                 fromStr.GetUnicode(), 
                                 toStr.GetUnicode(), 
                                 mResponseDataListener, 
-                                channel, 
+                                (nsISupports *) &mChunkHeaderEOF,   // XXX/ruslan: hack for now - FIX ME
                                 getter_AddRefs (converterListener));
 					    if (NS_FAILED(rv)) return rv;
 					    mResponseDataListener = converterListener;
                     }
 				}
 
-                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-                       ("\tOnDataAvailable [this=%x]. Calling consumer "
-                        "OnDataAvailable.\tlength:%d\n", this, i_Length));
-
-                rv = mResponseDataListener->OnDataAvailable(mChannel, 
-                        mChannel->mResponseContext,
-                        i_pStream, 0, i_Length);
-                if (NS_FAILED(rv)) {
-                  PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-                         ("\tOnDataAvailable [this=%x]. Consumer failed!"
-                          "Status: %x\n", this, rv));
-                }
-
                 PRInt32 cl = -1;
 				mResponse -> GetContentLength (&cl);
 
                 mBodyBytesReceived += i_Length;
 
-                if (cl != -1 && cl - mBodyBytesReceived == 0)
+                if (cl != -1 && cl - mBodyBytesReceived == 0 || mChunkHeaderEOF)
                 {
-                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
-
-                    // XXX/ruslan: will be replaced with the new Cancel (code)
-                    if (NS_SUCCEEDED (rv))
+                    rv = mPipelinedRequest -> AdvanceToNextRequest ();
+                    if (NS_FAILED (rv))
                     {
-                        PRUint32 count = 0;
-                        mPipelinedRequest -> GetRequestCount (&count);
+                        mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
+                        mPipelinedRequest = nsnull;
 
-                        if (count == 1)
-					        trans -> SetBytesExpected (0);
-                        else
-                            OnStopRequest (nsnull, context, NS_OK, nsnull);
+                        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
+
+                        // XXX/ruslan: will be replaced with the new Cancel (code)
+                        if (NS_SUCCEEDED (rv))
+			    		    trans -> SetBytesExpected (0);
+
+                        rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
+                    }
+                    else
+                    {
+                        rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
+
+                        PRUint32 status = 0;
+                        if (mResponse)
+                            mResponse -> GetStatus(&status);
+
+                        if (status != 304 || !mChannel -> mCachedResponse)
+                        {
+                            mChannel -> ResponseCompleted (mResponseDataListener, NS_OK, nsnull);
+                            mChannel -> mHTTPServerListener = 0;
+                        }
+
+                        OnStartRequest (nsnull, nsnull);
                     }
 				}
-
+                else
+                    rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
             }
         } 
     } // end !mChannel->mOpenObserver
@@ -473,6 +482,7 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
     mChunkHeaderChecked    = PR_FALSE;
     mBytesReceived     = 0;
     mBodyBytesReceived = 0;
+    mHeaderBuffer.Truncate ();
 
     NS_IF_RELEASE (mResponse);
     NS_IF_RELEASE ( mChannel);
@@ -528,7 +538,6 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
     if (mChannel)
     {
         PRUint32 status = 0;
-
         if (mResponse)
             mResponse -> GetStatus(&status);
 
@@ -536,28 +545,6 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         {
             mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
             mChannel -> mHTTPServerListener = 0;
-        }
-
-        for ( ; ; )
-        {
-            rv = mPipelinedRequest -> AdvanceToNextRequest ();
-            if (NS_SUCCEEDED (rv))
-            {
-                OnStartRequest (nsnull, nsnull);
-                if (!channel)
-                    return NS_OK;
-
-                if (mResponse)
-                    FinishedResponseHeaders ();
-
-                if (status != 304 || !mChannel -> mCachedResponse)
-                {
-                    mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
-                    mChannel -> mHTTPServerListener = 0;
-                }
-            }
-            else
-                break;
         }
 
         PRUint32 capabilities = 0;
@@ -594,6 +581,19 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
                         capabilities = (usingProxy ? NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE) : NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_KEEPALIVE));
                 }
             }
+        }
+
+        if (mPipelinedRequest)
+        {
+            while (NS_SUCCEEDED (mPipelinedRequest -> AdvanceToNextRequest ()))
+            {
+                OnStartRequest (nsnull, nsnull);
+                mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
+                mChannel -> mHTTPServerListener = 0;
+            }
+
+            mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
+            mPipelinedRequest = nsnull;
         }
 
         if (channel)
