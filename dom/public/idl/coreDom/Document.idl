@@ -79,6 +79,8 @@ interface DocumentXBL {
   NodeList getAnonymousNodes(in Element elt);
   void addBinding(in Element elt, in DOMString bindingURL);
   void removeBinding(in Element elt, in DOMString bindingURL);
+
+  void loadBindingDocument(in DOMString documentURL);
 };
 
 interface NSDocument {

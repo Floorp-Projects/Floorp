@@ -165,6 +165,7 @@ public:
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsString& aURL);
   NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL);
+  NS_IMETHOD LoadBindingDocument(const nsString& aURL);
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
   NS_IMETHOD ClearAttachedQueue();
@@ -366,6 +367,25 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsString& aUR
     binding = nextBinding;
   }
 */
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::LoadBindingDocument(const nsString& aURL)
+{
+  // First we need to load our binding.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  if (!xblService)
+    return rv;
+
+  // Load the binding doc.
+  nsCString url; url.AssignWithConversion(aURL);
+  nsCOMPtr<nsIXBLDocumentInfo> info;
+  xblService->LoadBindingDocumentInfo(nsnull, url, "", PR_TRUE, getter_AddRefs(info));
+  if (!info)
+    return NS_ERROR_FAILURE;
+
   return NS_OK;
 }
 

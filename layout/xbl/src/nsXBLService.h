@@ -71,18 +71,20 @@ class nsXBLService : public nsIXBLService, public nsIMemoryPressureObserver
 
   NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);
 
+  // This method checks the hashtable and then calls FetchBindingDocument on a miss.
+  NS_IMETHOD LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString& aURI, const nsCString& aRef,
+                                     PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult);
+
   NS_DECL_NSIMEMORYPRESSUREOBSERVER
 
 public:
   nsXBLService();
   virtual ~nsXBLService();
 
-  // This method checks the hashtable and then calls FetchBindingDocument on a miss.
-  NS_IMETHOD GetBindingDocumentInfo(nsIContent* aBoundElement, const nsCString& aURI, const nsCString& aRef,
-                                    nsIXBLDocumentInfo** aResult);
-
+  
   // This method synchronously loads and parses an XBL file.
-  NS_IMETHOD FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, nsIDocument** aResult);
+  NS_IMETHOD FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, 
+                                  PRBool aForceSyncLoad, nsIDocument** aResult);
 
   // This method loads a binding doc and then builds the specific binding required.  It
   // can also peek without building.

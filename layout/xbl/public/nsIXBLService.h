@@ -72,6 +72,10 @@ public:
 
   NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult)=0;
 
+  // This method checks the hashtable and then calls FetchBindingDocument on a miss.
+  NS_IMETHOD LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString& aURI, const nsCString& aRef,
+                                     PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult) = 0;
+
 };
 
 #endif // nsIXBLService_h__
