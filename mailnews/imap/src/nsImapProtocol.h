@@ -93,8 +93,8 @@ public:
                                             PRBool idIsUid,
 											char *part,
 											PRUint32 downloadSize);
-	virtual void PipelinedFetchMessageParts(const char *uid,
-											nsIMAPMessagePartIDArray *parts);
+	virtual void PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts);
+
 	// used when streaming a message fetch
     virtual void BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body
                                       const char *contentType);     // some downloads are header only
@@ -119,9 +119,33 @@ public:
 
 	// Sets whether or not the content referenced by the current ActiveEntry has been modified.
 	// Used for MIME parts on demand.
-	void	SetContentModified(XP_Bool modified);
-	XP_Bool	GetShouldFetchAllParts();
+	void	SetContentModified(PRBool modified);
+	PRBool	GetShouldFetchAllParts();
 
+	// Generic accessors required by the imap parser
+	char * CreateNewLineFromSocket() { return nsnull; }
+	PRUint32 GetConnectionStatus() { return NS_OK;} // mscott - could we make this an nsresult and subclass imap error values?
+	const char * GetHostName() { return nsnull;} // return the host name from the url for the current connection
+	
+	// state set by the imap parser...
+	void NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key) {}
+	void NotifySearchHit(const char * hitLine) {}
+
+	// Event handlers for the imap parser. 
+	void DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec) {} // mscott: need mailbox_spec type..
+	void AlertUserEventUsingId(PRUint32 aMessageId) {}
+	void AlertUserEvent(char * message) {} // mscott --> can this be a const char * ? 
+	void AlertUserEventFromServer(char * aServerEvent) {} // mscott --> const????
+	void ShowProgress() {}
+	void ProgressEventFunctionUsingId(PRUint32 aMsgId) {}
+	void ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const char * aExtraInfo) {}
+
+	// utility function calls made by the server
+	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool aConvertToUtf7Imap) { return nsnull;}
+
+	// imap commands issued by the parser
+	void Store(const char * aMessageList, const char * aMessageData, PRBool aIdsAreUid) {}
+	void Expunge() {}
 
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
@@ -183,8 +207,7 @@ private:
     char m_currentServerCommandTag[10];   // enough for a billion
     int  m_currentServerCommandTagNumber;
     void IncrementCommandTagNumber();
-    char *GetServerCommandTag();
-    
+    char *GetServerCommandTag();  
 
 };
 
