@@ -127,7 +127,7 @@ PRBool nsFileWidget::Show()
   }
   
   // Remember what filter type the user selected
-  mSelectedType = ofn.nFilterIndex;
+  mSelectedType = (PRInt16)ofn.nFilterIndex;
 
    // Store the current directory in mDisplayDirectory
   char* newCurrentDirectory = new char[MAX_PATH+1];
