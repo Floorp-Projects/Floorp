@@ -231,10 +231,7 @@ void LO_RelayoutOnResize(MWContext *context, int32 width, int32 height, int32 le
                              state->top_state->resize_reload);
 
 	/* Reset state for force loading images. */
-	LO_SetForceLoadImage(NULL, FALSE);
-
-	/* position the document */
-	FE_SetDocPosition ( context, FE_VIEW, 0, docY );
+	LO_SetForceLoadImage(NULL, FALSE);	
 
 	/* update the final document dimensions */
 	state->y += state->win_bottom;
@@ -270,6 +267,9 @@ void LO_RelayoutOnResize(MWContext *context, int32 width, int32 height, int32 le
 		CL_CompositeNow(compositor);
 		CL_SetCompositorOffscreenDrawing(compositor, save_offscreen_mode);
 	}
+
+	/* position the document */
+	FE_SetDocPosition ( context, FE_VIEW, 0, docY );
 
 	lo_rl_DestroyRelayoutState(relay_state);
 
