@@ -53,21 +53,14 @@ class Optimizer {
         this.irFactory = irFactory;
     }
 
-    void optimize(Node tree, int optLevel)
+    void optimize(ScriptOrFnNode scriptOrFn, int optLevel)
     {
         itsOptLevel = optLevel;
         //  run on one function at a time for now
-        PreorderNodeIterator iter = new PreorderNodeIterator();
-        for (iter.start(tree); !iter.done(); iter.next()) {
-            // should be able to do this more cheaply ?
-            // - run through initial block children ?
-            Node node = iter.getCurrent();
-            if (node.getType() == TokenStream.FUNCTION) {
-                OptFunctionNode theFunction = (OptFunctionNode)
-                    node.getProp(Node.FUNCTION_PROP);
-                if (theFunction != null)
-                    optimizeFunction(theFunction);
-            }
+        int functionCount = scriptOrFn.getFunctionCount();
+        for (int i = 0; i != functionCount; ++i) {
+            OptFunctionNode f = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+            optimizeFunction(f);
         }
     }
 

@@ -59,16 +59,15 @@ class OptTransformer extends NodeTransformer {
         return new OptTransformer(irFactory, listCopy);
     }
 
-    public ScriptOrFnNode transform(ScriptOrFnNode tree) {
+    public ScriptOrFnNode transform(ScriptOrFnNode scriptOrFn) {
 
         // Collect all of the script contained functions into a hashtable
         // so that the call optimizer can access the class name & parameter
         // count for any call it encounters
-        if (tree.getType() == TokenStream.SCRIPT) {
-            collectContainedFunctions(tree.getFirstChild());
+        if (scriptOrFn.getType() == TokenStream.SCRIPT) {
+            collectContainedFunctions(scriptOrFn);
         }
-
-        return super.transform(tree);
+        return super.transform(scriptOrFn);
     }
 
     private int detectDirectCall(Node node, ScriptOrFnNode tree)
@@ -151,21 +150,14 @@ class OptTransformer extends NodeTransformer {
      * so that the call optimizer can access the class name & parameter
      * count for any call it encounters
      */
-    private void collectContainedFunctions(Node node) {
-        for (Node tNode=node; tNode != null; tNode = tNode.getNext()) {
-            if (tNode.getType() == TokenStream.FUNCTION) {
-                FunctionNode
-                    fnNode = (FunctionNode)tNode.getProp(Node.FUNCTION_PROP);
-                if (fnNode.getType() == FunctionNode.FUNCTION_STATEMENT) {
-                    String name = fnNode.getFunctionName();
-                    if (name.length() != 0) {
-                        Object oldFn = theFnClassNameList.get(name);
-                        if (oldFn == fnNode) {
-                            // already processed this list of functions
-                            return;
-                        }
-                        theFnClassNameList.put(name, fnNode);
-                    }
+    private void collectContainedFunctions(ScriptOrFnNode scriptOrFn) {
+        int functionCount = scriptOrFn.getFunctionCount();
+        for (int i = 0; i != functionCount; ++i) {
+            OptFunctionNode f = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+            if (f.getType() == FunctionNode.FUNCTION_STATEMENT) {
+                String name = f.getFunctionName();
+                if (name.length() != 0) {
+                    theFnClassNameList.put(name, f);
                 }
             }
         }

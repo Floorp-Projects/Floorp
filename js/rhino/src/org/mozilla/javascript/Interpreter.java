@@ -81,32 +81,30 @@ public class Interpreter {
     compile(Context cx, Scriptable scope, ScriptOrFnNode tree,
             SecurityController securityController, Object securityDomain)
     {
+        scriptOrFn = tree;
         version = cx.getLanguageVersion();
         itsData = new InterpreterData(securityDomain);
         if (tree instanceof FunctionNode) {
-            FunctionNode f = (FunctionNode) tree;
-            itsData.itsFunctionType = f.getFunctionType();
-            generateFunctionICode(cx, scope, f);
+            generateFunctionICode(cx, scope);
             return createFunction(cx, scope, itsData, false);
         } else {
-            generateScriptICode(cx, scope, tree);
+            generateScriptICode(cx, scope);
             return new InterpretedScript(cx, itsData);
         }
     }
 
-    private void
-    generateScriptICode(Context cx, Scriptable scope, ScriptOrFnNode tree)
+    private void generateScriptICode(Context cx, Scriptable scope)
     {
-        itsSourceFile = tree.getSourceName();
+        itsSourceFile = scriptOrFn.getSourceName();
         itsData.itsSourceFile = itsSourceFile;
-        debugSource = tree.getOriginalSource();
+        debugSource = scriptOrFn.getOriginalSource();
 
-        generateNestedFunctions(cx, scope, tree);
+        generateNestedFunctions(cx, scope);
 
-        generateRegExpLiterals(cx, scope, tree);
+        generateRegExpLiterals(cx, scope);
 
-        itsVariableTable = tree.getVariableTable();
-        generateICodeFromTree(tree);
+        itsVariableTable = scriptOrFn.getVariableTable();
+        generateICodeFromTree(scriptOrFn);
         if (Context.printICode) dumpICode(itsData);
 
         if (cx.debugger != null) {
@@ -114,9 +112,10 @@ public class Interpreter {
         }
     }
 
-    private void generateFunctionICode(Context cx, Scriptable scope,
-                                       FunctionNode theFunction)
+    private void generateFunctionICode(Context cx, Scriptable scope)
     {
+        FunctionNode theFunction = (FunctionNode)scriptOrFn;
+        itsData.itsFunctionType = theFunction.getFunctionType();
         // check if function has own source, which is the case
         // with Function(...)
         String savedSource = debugSource;
@@ -124,9 +123,9 @@ public class Interpreter {
         if (debugSource == null) {
             debugSource = savedSource;
         }
-        generateNestedFunctions(cx, scope, theFunction);
+        generateNestedFunctions(cx, scope);
 
-        generateRegExpLiterals(cx, scope, theFunction);
+        generateRegExpLiterals(cx, scope);
 
         itsData.itsNeedsActivation = theFunction.requiresActivation();
 
@@ -144,34 +143,30 @@ public class Interpreter {
         debugSource = savedSource;
     }
 
-    private void generateNestedFunctions(Context cx, Scriptable scope,
-                                         ScriptOrFnNode tree)
+    private void generateNestedFunctions(Context cx, Scriptable scope)
     {
-        int functionCount = tree.getFunctionCount();
+        int functionCount = scriptOrFn.getFunctionCount();
         if (functionCount == 0) return;
 
         InterpreterData[] array = new InterpreterData[functionCount];
         for (int i = 0; i != functionCount; i++) {
-            FunctionNode def = tree.getFunctionNode(i);
+            FunctionNode def = scriptOrFn.getFunctionNode(i);
             Interpreter jsi = new Interpreter();
+            jsi.scriptOrFn = def;
             jsi.itsSourceFile = itsSourceFile;
             jsi.itsData = new InterpreterData(itsData.securityDomain);
             jsi.itsData.itsCheckThis = def.getCheckThis();
-            jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
             jsi.debugSource = debugSource;
-            jsi.generateFunctionICode(cx, scope, def);
+            jsi.generateFunctionICode(cx, scope);
             array[i] = jsi.itsData;
-            def.putIntProp(Node.FUNCTION_PROP, i);
         }
         itsData.itsNestedFunctions = array;
     }
 
-    private void generateRegExpLiterals(Context cx,
-                                        Scriptable scope,
-                                        ScriptOrFnNode tree)
+    private void generateRegExpLiterals(Context cx, Scriptable scope)
     {
-        int N = tree.getRegexpCount();
+        int N = scriptOrFn.getRegexpCount();
         if (N == 0) return;
 
         RegExpProxy rep = cx.getRegExpProxy();
@@ -180,8 +175,8 @@ public class Interpreter {
         }
         Object[] array = new Object[N];
         for (int i = 0; i != N; i++) {
-            String string = tree.getRegexpString(i);
-            String flags = tree.getRegexpFlags(i);
+            String string = scriptOrFn.getRegexpString(i);
+            String flags = scriptOrFn.getRegexpFlags(i);
             array[i] = rep.newRegExp(cx, scope, string, flags, false);
         }
         itsData.itsRegExpLiterals = array;
@@ -265,16 +260,15 @@ public class Interpreter {
         switch (type) {
 
             case TokenStream.FUNCTION : {
-                FunctionNode fn
-                    = (FunctionNode) node.getProp(Node.FUNCTION_PROP);
+                int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
+                FunctionNode fn = scriptOrFn.getFunctionNode(fnIndex);
                 if (fn.itsFunctionType != FunctionNode.FUNCTION_STATEMENT) {
                     // Only function expressions or function expression
                     // statements needs closure code creating new function
                     // object on stack as function statements are initialized
                     // at script/function start
-                    int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
                     iCodeTop = addByte(TokenStream.CLOSURE, iCodeTop);
-                    iCodeTop = addIndex(index, iCodeTop);
+                    iCodeTop = addIndex(fnIndex, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
@@ -2891,6 +2885,7 @@ public class Interpreter {
     private boolean itsInFunctionFlag;
 
     private InterpreterData itsData;
+    private ScriptOrFnNode scriptOrFn;
     private VariableTable itsVariableTable;
     private int itsTryDepth = 0;
     private int itsStackDepth = 0;

@@ -41,7 +41,10 @@ public class ScriptOrFnNode extends Node {
         super(nodeType);
     }
 
-    public final VariableTable getVariableTable() { return variableTable; }
+    public final VariableTable getVariableTable() {
+        if (variableTable == null) { variableTable = new VariableTable(); }
+        return variableTable; 
+    }
 
     public final String getSourceName() { return sourceName; }
 
@@ -95,7 +98,7 @@ public class ScriptOrFnNode extends Node {
         if (fnNode == null) Context.codeBug();
         if (functions == null) { functions = new ObjArray(); }
         functions.add(fnNode);
-        return functions.size();
+        return functions.size() - 1;
     }
 
     public final int getRegexpCount() {
@@ -116,7 +119,27 @@ public class ScriptOrFnNode extends Node {
         if (regexps == null) { regexps = new ObjArray(); }
         regexps.add(string);
         regexps.add(flags);
-        return (regexps.size() - 2) / 2;
+        return regexps.size() / 2 - 1;
+    }
+    
+    public final boolean hasParameterOrVar(String name) {
+        if (variableTable == null) { return false; }
+        return variableTable.hasVariable(name);
+    }
+
+    public final void addParameter(String name) {
+        if (variableTable == null) { variableTable = new VariableTable(); }
+        variableTable.addParameter(name);
+    }
+
+    public final void addVar(String name) {
+        if (variableTable == null) { variableTable = new VariableTable(); }
+        variableTable.addLocal(name);
+    }
+
+    public final void removeParameterOrVar(String name) {
+        if (variableTable == null) { return; }
+        variableTable.removeLocal(name);
     }
 
     public final int getLocalCount() { return localCount; }
@@ -125,7 +148,6 @@ public class ScriptOrFnNode extends Node {
         ++localCount;
     }
 
-    VariableTable variableTable;
     private String encodedSource;
     private String originalSource;
     private String sourceName;
@@ -133,6 +155,7 @@ public class ScriptOrFnNode extends Node {
     private int endLineno = -1;
     private ObjArray functions;
     private ObjArray regexps;
+    private VariableTable variableTable;
     private int localCount;
 
 }

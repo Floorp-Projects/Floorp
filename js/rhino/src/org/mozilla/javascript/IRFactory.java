@@ -48,24 +48,25 @@ public class IRFactory {
         this.compiler = compiler;
         this.ts = ts;
     }
+    
+    public ScriptOrFnNode createScript() {
+        return new ScriptOrFnNode(TokenStream.SCRIPT);
+    }
 
     /**
      * Script (for associating file/url names with toplevel scripts.)
      */
-    public ScriptOrFnNode
-    createScript(Object body, VariableTable vars, String sourceName,
-                 int baseLineno, int endLineno, String source)
+    public void
+    initScript(ScriptOrFnNode scriptNode, Object body,
+               String sourceName, int baseLineno, int endLineno, String source)
     {
-        ScriptOrFnNode result = new ScriptOrFnNode(TokenStream.SCRIPT);
-        result.variableTable = vars;
-        result.setEncodedSource(source);
-        result.setSourceName(sourceName);
-        result.setBaseLineno(baseLineno);
-        result.setEndLineno(endLineno);
+        scriptNode.setEncodedSource(source);
+        scriptNode.setSourceName(sourceName);
+        scriptNode.setBaseLineno(baseLineno);
+        scriptNode.setEndLineno(endLineno);
 
         Node children = ((Node) body).getFirstChild();
-        if (children != null) { result.addChildrenToBack(children); }
-        return result;
+        if (children != null) { scriptNode.addChildrenToBack(children); }
     }
 
     /**
@@ -202,25 +203,26 @@ public class IRFactory {
         return new Node(TokenStream.BLOCK, lineno);
     }
 
-    public Object createFunction(String name, VariableTable vars,
-                                 Object statements,
-                                 String sourceName, int baseLineno,
-                                 int endLineno, String source,
-                                 int functionType)
+    public FunctionNode createFunction(String name) {
+        return compiler.createFunctionNode(this, name);
+    }
+
+    public Object initFunction(FunctionNode fnNode, int functionIndex, 
+                               Object statements,
+                               String sourceName, int baseLineno,
+                               int endLineno, String source,
+                               int functionType)
     {
-        if (name == null) {
-            name = "";
-        }
-        FunctionNode f = compiler.createFunctionNode(this, name);
-        f.variableTable = vars;
-        f.setEncodedSource(source);
-        f.setSourceName(sourceName);
-        f.setBaseLineno(baseLineno);
-        f.setEndLineno(endLineno);
-        f.setFunctionType(functionType);
-        f.addChildToBack((Node)statements);
-        Node result = Node.newString(TokenStream.FUNCTION, name);
-        result.putProp(Node.FUNCTION_PROP, f);
+        fnNode.setEncodedSource(source);
+        fnNode.setSourceName(sourceName);
+        fnNode.setBaseLineno(baseLineno);
+        fnNode.setEndLineno(endLineno);
+        fnNode.setFunctionType(functionType);
+        fnNode.addChildToBack((Node)statements);
+        
+        Node result = Node.newString(TokenStream.FUNCTION,
+                                     fnNode.getFunctionName());
+        result.putIntProp(Node.FUNCTION_PROP, functionIndex);
         return result;
     }
 

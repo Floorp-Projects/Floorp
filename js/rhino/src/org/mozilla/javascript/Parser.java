@@ -98,10 +98,10 @@ class Parser {
     public ScriptOrFnNode parse(TokenStream ts)
         throws IOException
     {
+        currentScriptOrFn = nf.createScript();
+        
         this.ok = true;
         fn_sourceTop = 0;
-        fn_functionNumber = 0;
-        fn_vars = new VariableTable();
         fn_funcExprStmNames = null;
 
         int tt;          // last token from getToken();
@@ -145,8 +145,10 @@ class Parser {
 
         String source = sourceToString(0);
         sourceBuffer = null; // To help GC
-        return nf.createScript(pn, fn_vars, ts.getSourceName(),
-                               baseLineno, ts.getLineno(), source);
+        
+        nf.initScript(currentScriptOrFn, pn, ts.getSourceName(),
+                      baseLineno, ts.getLineno(), source);
+        return currentScriptOrFn;
     }
 
     /*
@@ -203,16 +205,16 @@ class Parser {
                     // by '(', assume <name> starts memberExpr
                     sourceAddString(ts.NAME, name);
                     Object memberExprHead = nf.createName(name);
-                    name = null;
+                    name = "";
                     memberExprNode = memberExprTail(ts, false, memberExprHead);
                 }
                 mustMatchToken(ts, ts.LP, "msg.no.paren.parms");
             }
         } else if (ts.matchToken(ts.LP)) {
             // Anonymous function
-            name = null;
+            name = "";
         } else {
-            name = null;
+            name = "";
             if (allowMemberExprAsFunctionName) {
                 // Note that memberExpr can not start with '(' like
                 // in function (1+2).toString(), because 'function (' already
@@ -229,29 +231,28 @@ class Parser {
             sourceAdd((char)ts.NOP);
         }
 
+        FunctionNode fnNode = nf.createFunction(name);
+        int functionIndex = currentScriptOrFn.addFunction(fnNode);
+
         // save a reference to the function in the enclosing source.
         sourceAdd((char) ts.FUNCTION);
-        sourceAdd((char)fn_functionNumber);
-        ++fn_functionNumber;
+        sourceAdd((char)functionIndex);
 
         // Save current source top to restore it on exit not to include
         // function to parent source
         int saved_sourceTop = fn_sourceTop;
-        int saved_functionNumber = fn_functionNumber;
-        VariableTable saved_vars = fn_vars;
-        VariableTable new_vars = new VariableTable();
         ObjArray saved_funcExprStmNames = fn_funcExprStmNames;
+        
+        ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
+        currentScriptOrFn = fnNode;
 
         Object body;
         String source;
         try {
-            fn_functionNumber = 0;
-            fn_vars = new_vars;
-
             // FUNCTION as the first token in a Source means it's a function
             // definition, and not a reference.
             sourceAdd((char) ts.FUNCTION);
-            if (name != null) { sourceAddString(ts.NAME, name); }
+            if (name.length() != 0) { sourceAddString(ts.NAME, name); }
             sourceAdd((char) ts.LP);
 
             if (!ts.matchToken(ts.RP)) {
@@ -262,11 +263,11 @@ class Parser {
                     first = false;
                     mustMatchToken(ts, ts.NAME, "msg.no.parm");
                     String s = ts.getString();
-                    if (new_vars.hasVariable(s)) {
+                    if (fnNode.hasParameterOrVar(s)) {
                         Object[] msgArgs = { s };
                         ts.reportCurrentLineWarning("msg.dup.parms", msgArgs);
                     }
-                    new_vars.addParameter(s);
+                    fnNode.addParameter(s);
                     sourceAddString(ts.NAME, s);
                 } while (ts.matchToken(ts.COMMA));
 
@@ -286,26 +287,25 @@ class Parser {
             source = sourceToString(saved_sourceTop);
 
             // Remove name clashes for nested functions
-            checkVariables(new_vars, fn_funcExprStmNames);
+            checkVariables(fnNode, fn_funcExprStmNames);
         }
         finally {
             fn_sourceTop = saved_sourceTop;
-            fn_functionNumber = saved_functionNumber;
-            fn_vars = saved_vars;
             fn_funcExprStmNames = saved_funcExprStmNames;
+            currentScriptOrFn = savedScriptOrFn;
         }
 
         Object pn;
         if (memberExprNode == null) {
-            pn = nf.createFunction(name, new_vars, body,
-                                   ts.getSourceName(),
-                                   baseLineno, ts.getLineno(),
-                                   source,
-                                   functionType);
+            pn = nf.initFunction(fnNode, functionIndex, body,
+                                 ts.getSourceName(),
+                                 baseLineno, ts.getLineno(),
+                                 source,
+                                 functionType);
             if (functionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
                 // Record the name to check for possible var and
                 // function expression statement name clashes
-                if (name != null && name.length()!= 0) {
+                if (name.length()!= 0) {
                     if (fn_funcExprStmNames == null) {
                         fn_funcExprStmNames = new ObjArray();
                     }
@@ -323,11 +323,11 @@ class Parser {
                 checkWellTerminatedFunction(ts);
             }
         } else {
-            pn = nf.createFunction(name, new_vars, body,
-                                   ts.getSourceName(),
-                                   baseLineno, ts.getLineno(),
-                                   source,
-                                   FunctionNode.FUNCTION_EXPRESSION);
+            pn = nf.initFunction(fnNode, functionIndex, body,
+                                 ts.getSourceName(),
+                                 baseLineno, ts.getLineno(),
+                                 source,
+                                 FunctionNode.FUNCTION_EXPRESSION);
             pn = nf.createBinary(ts.ASSIGN, ts.NOP, memberExprNode, pn);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
                 pn = nf.createExprStatement(pn, baseLineno);
@@ -342,14 +342,14 @@ class Parser {
     }
 
     private static void
-    checkVariables(VariableTable vars, ObjArray funcExprStmNames)
+    checkVariables(ScriptOrFnNode scriptOrFn, ObjArray funcExprStmNames)
     {
 // Remove all variables corresponding to function expression statements
         if (funcExprStmNames != null) {
             int N = funcExprStmNames.size();
             for (int i = 0; i != N; ++i) {
                 String name = (String)funcExprStmNames.get(i);
-                vars.removeLocal(name);
+                scriptOrFn.removeParameterOrVar(name);
             }
         }
     }
@@ -909,7 +909,7 @@ class Parser {
             first = false;
 
             sourceAddString(ts.NAME, s);
-            fn_vars.addLocal(s);
+            currentScriptOrFn.addVar(s);
             name = nf.createName(s);
 
             // omitted check for argument hiding
@@ -1810,15 +1810,15 @@ class Parser {
                  */
 
                 ++i;
-                int functionNumber = source.charAt(i);
+                int functionIndex = source.charAt(i);
                 if (childNodes == null
-                    || functionNumber + 1 > childNodes.length)
+                    || functionIndex + 1 > childNodes.length)
                 {
                     throw Context.reportRuntimeError(Context.getMessage1
                         ("msg.no.function.ref.found",
-                         new Integer(functionNumber)));
+                         new Integer(functionIndex)));
                 }
-                decompile_r(childNodes[functionNumber + 1], version,
+                decompile_r(childNodes[functionIndex + 1], version,
                             indent, NESTED_FUNCTION, false, srcData, result);
                 break;
             }
@@ -2307,12 +2307,9 @@ class Parser {
     private int fn_sourceTop;
 
 // Nested function number
-    private int fn_functionNumber;
-
-// Nested function number
     private ObjArray fn_funcExprStmNames;
 
-    private VariableTable fn_vars;
+    private ScriptOrFnNode currentScriptOrFn;
 
     private static final int TOP_LEVEL_SCRIPT_OR_FUNCTION = 0;
     private static final int CONSTRUCTED_FUNCTION = 1;

@@ -109,8 +109,8 @@ public class NodeTransformer {
 
               case TokenStream.FUNCTION:
                 if (node != tree) {
-                    FunctionNode
-                        fnNode = (FunctionNode)node.getProp(Node.FUNCTION_PROP);
+                    int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
+                    FunctionNode fnNode = tree.getFunctionNode(fnIndex);
                     if (inFunction) {
                         // Functions containing other functions require
                         //  activation objects
@@ -123,8 +123,7 @@ public class NodeTransformer {
                     }
                     NodeTransformer inner = newInstance();
                     fnNode = (FunctionNode)inner.transform(fnNode);
-                    node.putProp(Node.FUNCTION_PROP, fnNode);
-                    tree.addFunction(fnNode);
+                    tree.replaceFunctionNode(fnIndex, fnNode);
                 }
                 break;
 

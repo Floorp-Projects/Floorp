@@ -2011,12 +2011,10 @@ public class Context {
         if (printTrees) { System.out.println(tree.toStringTree()); }
 
         if (returnFunction) {
-            Node first = tree.getFirstChild();
-            if (first == null)
+            int functionCount = tree.getFunctionCount();
+            if (functionCount == 0)
                 return null;
-            tree = (ScriptOrFnNode)first.getProp(Node.FUNCTION_PROP);
-            if (tree == null)
-                return null;
+            tree = tree.getFunctionNode(0);
         }
 
         if (debugger != null) {
