@@ -1745,7 +1745,7 @@ JS_GetContextThread(JSContext *cx);
 extern JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx);
 
-extern JS_PUBLIC_API(intN)
+extern JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx);
 
 #endif /* JS_THREADSAFE */

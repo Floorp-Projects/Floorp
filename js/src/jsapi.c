@@ -4173,15 +4173,15 @@ JS_GetContextThread(JSContext *cx)
 JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx)
 {
-    intN old = cx->thread;
+    jsword old = cx->thread;
     cx->thread = js_CurrentThreadId();
     return old;
 }
 
-JS_PUBLIC_API(intN)
+JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx)
 {
-    intN old = cx->thread;
+    jsword old = cx->thread;
     cx->thread = 0;
     return old;
 }
