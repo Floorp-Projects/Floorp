@@ -102,10 +102,7 @@ nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
     if (!(ctrl || shift || meta)) {
       // The ALT key just went down by itself. This means kill
       // the menu.
-      PRBool handled = PR_FALSE;
-      mMenuParent->Escape(handled);
-      if (!handled)
-        mMenuParent->DismissChain();
+      mMenuParent->DismissChain();
     }
   }
 #endif
