@@ -355,8 +355,6 @@ To use the wonders of bugzilla, you can use the following:
     print SENDMAIL $msg;
     close SENDMAIL;
 
-    print "Content-type: text/html\n\n";
-    PutHeader("Password mailed");
     print "The password for the e-mail address\n";
     print "$login has been e-mailed to that address.\n";
     print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
@@ -389,6 +387,8 @@ sub confirm_login {
 			SqlQuote($enteredlogin));
 		$realpwd = FetchOneColumn();
             }
+	    print "Content-type: text/html\n\n";
+	    PutHeader("<H1>Password has been emailed");
             MailPassword($enteredlogin, $realpwd);
             exit;
         }

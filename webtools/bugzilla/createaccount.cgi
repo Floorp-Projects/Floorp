@@ -41,19 +41,20 @@ Content-type: text/html
 
 ";
 
-PutHeader("Create a new bugzilla account");
 
 my $login = $::FORM{'login'};
 my $realname = $::FORM{'realname'};
 if (defined $login) {
     CheckEmailSyntax($login);
     if (DBname_to_id($login) != 0) {
+	PutHeader("Account exists");
 	print "A bugzilla account for the name <tt>$login</tt> already\n";
 	print "exists.  If you have forgotten the password for it, then\n";
 	print "<a href=query.cgi?GoAheadAndLogIn>click here</a> and use\n";
 	print "the <b>E-mail me a password</b> button.\n";
 	exit;
     }
+    PutHeader("Account created");
     my $password = InsertNewUser($login, $realname);
     MailPassword($login, $password);
     print "A bugzilla account for <tt>$login</tt> has been created.  The\n";
@@ -64,6 +65,7 @@ if (defined $login) {
     exit;
 }
 
+PutHeader("Create a new bugzilla account");
 print q{
 To create a bugzilla account, all that you need to do is to enter a
 legitimate e-mail address.  The account will be created, and its
