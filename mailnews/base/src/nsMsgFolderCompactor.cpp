@@ -158,6 +158,7 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
 NS_IMETHODIMP nsFolderCompactState::CompactAll(nsISupportsArray *aArrayOfFoldersToCompact, nsIMsgWindow *aMsgWindow, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray)
 {
   nsresult rv = NS_OK;
+  m_window = aMsgWindow;
   if (aArrayOfFoldersToCompact)  
     m_folderArray =do_QueryInterface(aArrayOfFoldersToCompact, &rv);
   else if (aOfflineFolderArray)

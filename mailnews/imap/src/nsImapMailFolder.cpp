@@ -1129,7 +1129,9 @@ NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow 
 {
   nsresult rv;
   // compact offline store, if folder configured for offline use.
- if (mFlags & MSG_FOLDER_FLAG_OFFLINE)
+  // for now, check aMsgWindow because not having aMsgWindow means
+  // we're doing a compact at shut-down. TEMPORARY HACK
+ if (aMsgWindow && mFlags & MSG_FOLDER_FLAG_OFFLINE)
     CompactOfflineStore(aMsgWindow);
 
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
