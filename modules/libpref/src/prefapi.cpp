@@ -248,13 +248,14 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
     const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
     PRBool skipFirstLine)
 {
-    NS_ASSERTION(bCallbacks, "no support for disabling callbacks");
+    gCallbacksEnabled = bCallbacks;
 
     PrefParseState ps;
     PREF_InitParseState(&ps, pref_ReaderCallback, NULL);
     PREF_ParseBuf(&ps, js_buffer, length); 
     PREF_FinalizeParseState(&ps);
 
+    gCallbacksEnabled = PR_TRUE;
     return PR_TRUE;
 }
 
