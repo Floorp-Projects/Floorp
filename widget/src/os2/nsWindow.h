@@ -41,7 +41,7 @@
 #include "nsToolkit.h"
 #include "nsSwitchToUIThread.h"
 
-class nsIMenuBar;
+//#define DEBUG_FOCUS
 
 // Base widget class.
 // This is abstract.  Controls (labels, radio buttons, listboxen) derive
@@ -99,8 +99,6 @@ class nsWindow : public nsBaseWidget,
    virtual nsIWidget *GetParent();
 
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
-    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
-    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
 
    // Physical properties
    NS_IMETHOD Show( PRBool bState);
@@ -143,6 +141,8 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetCursor( nsCursor aCursor);
    NS_IMETHOD             HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsString& aTitle); 
+   NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
+   NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsRect & aRect, PRBool aIsSynchronous);
    NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
@@ -229,6 +229,7 @@ protected:
 
    // PM data members
    HWND      mWnd;            // window handle
+   HWND      mFrameWnd;       // frame window handle
    PFNWP     mPrevWndProc;    // previous window procedure
    nsWindow *mParent;         // parent widget
    ULONG     mNextID;         // next child window id
@@ -294,6 +295,9 @@ protected:
    };
    friend MRESULT EXPENTRY fnwpNSWindow( HWND, ULONG, MPARAM, MPARAM);
    friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
+#ifdef DEBUG_FOCUS
+   int mWindowIdentifier;
+#endif
 };
 
 #define PM2NS_PARENT NS2PM_PARENT
