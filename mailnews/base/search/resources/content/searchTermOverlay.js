@@ -27,6 +27,7 @@ var gSearchTerms = new Array;
 var gSearchRemovedTerms = new Array;
 var gSearchScope;
 var gSearchLessButton;
+var gSearchBooleanRadiogroup;
 
 //
 function searchTermContainer() {}
@@ -362,8 +363,8 @@ function getBooleanAnd()
 //               via XPCOM)
 function saveSearchTerms(searchTerms, termOwner)
 {
-    
-    for (var i = 0; i<gSearchTerms.length; i++) {
+    var i;
+    for (i = 0; i<gSearchTerms.length; i++) {
         try {
             dump("Saving search element " + i + "\n");
             var searchTerm = gSearchTerms[i].searchTerm;
@@ -383,7 +384,7 @@ function saveSearchTerms(searchTerms, termOwner)
     }
 
     // now remove the queued elements
-    for (var i=0; i<gSearchRemovedTerms.length; i++) {
+    for (i=0; i<gSearchRemovedTerms.length; i++) {
         // this is so nasty, we have to iterate through
         // because GetIndexOf is acting funny
         var searchTermSupports =
