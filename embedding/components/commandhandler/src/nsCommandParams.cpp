@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <new.h>    // for placement new
+#include NEW_H    // for placement new
 #include "nscore.h"
 #include "nsCRT.h"
 

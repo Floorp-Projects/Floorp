@@ -33,7 +33,7 @@
 #include "nsStringTraits.h"
 #endif
 
-#include <new.h>
+#include NEW_H
   // for placement |new|
 
 

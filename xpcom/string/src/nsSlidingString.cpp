@@ -28,7 +28,7 @@
 #include "nsBufferHandleUtils.h"
 #endif
 
-#include <new.h>
+#include NEW_H
 
 
 

@@ -57,7 +57,7 @@
 nsRecyclingAllocator *gZlibAllocator = NULL;
 
 // For placement new used for arena allocations of zip file list
-#include <new.h>
+#include NEW_H
 
 #else /* STANDALONE */
 
