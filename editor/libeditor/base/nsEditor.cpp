@@ -41,7 +41,9 @@
 #include "nsVoidArray.h"
 #include "nsICaret.h"
 
-#include "nsIContent.h"           // for method GetLayoutObject
+#include "nsIContent.h"
+#include "nsIContentIterator.h"
+#include "nsLayoutCID.h"
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
@@ -75,6 +77,8 @@ static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,        NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,        NS_HTMLEDITOR_CID);
+static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
+static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 // transaction manager
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
@@ -102,7 +106,7 @@ static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 #endif
 #endif
 
-
+#define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 
 
 /* ----- TEST METHODS DECLARATIONS ----- */
@@ -515,16 +519,8 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
 }
 
 NS_IMETHODIMP
-nsEditor::InsertBreak(PRBool aCtrlKey)
+nsEditor::InsertBreak()
 {
-  if (aCtrlKey)
-  {
-//    nsSelectionRange range;
-    //mSelectionP->GetRange(&range);
-  }
-  else
-  {
-  }
   return NS_OK;
 }
  
@@ -742,41 +738,49 @@ nsEditor::EndTransaction()
 
 NS_IMETHODIMP nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
-  return NS_OK; //mjudge we should depricate this method
-/*  nsresult result;
-  if (mPresShell)
+  return NS_OK;
+}
+
+// XXX: the rule system should tell us which node to select all on (ie, the root, or the body)
+NS_IMETHODIMP nsEditor::SelectAll()
+{
+  if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(result) && selection)
   {
-    nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(result) && selection)
+    nsCOMPtr<nsIDOMNodeList>nodeList;
+    nsString bodyTag = "body";
+    nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    if ((NS_SUCCEEDED(result)) && nodeList)
     {
-      // get the content of the start of the selection
-      nsCOMPtr<nsIDOMNode>startNode;
-      PRInt32 offset;
-      result = selection->GetAnchorNodeAndOffset(getter_AddRefs(startNode), &offset);
-      if (NS_SUCCEEDED(result) && startNode)
-      { // get the content from the node
-        nsCOMPtr<nsIContent>startContent;
-        result = startNode->QueryInterface(kIContentIID, getter_AddRefs(startContent));
-        if (NS_SUCCEEDED(result) && startContent)
-        { // get its frame
-          nsIFrame *frame=nsnull;
-          result = mPresShell->GetPrimaryFrameFor(startContent, &frame);
-          if (NS_SUCCEEDED(result) && frame)
-          { // scroll that frame into view
-            result = mPresShell->ScrollFrameIntoView(frame, 
-                                            0, NS_PRESSHELL_SCROLL_TOP |NS_PRESSHELL_SCROLL_ANYWHERE,
-                                            0, NS_PRESSHELL_SCROLL_LEFT|NS_PRESSHELL_SCROLL_ANYWHERE);
-          }
+      PRUint32 count;
+      nodeList->GetLength(&count);
+      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+      nsCOMPtr<nsIDOMNode>bodyNode;
+      result = nodeList->Item(0, getter_AddRefs(bodyNode));
+      if ((NS_SUCCEEDED(result)) && bodyNode)
+      {
+        selection->Collapse(bodyNode, 0);
+        PRInt32 numBodyChildren=0;
+        nsCOMPtr<nsIDOMNode>lastChild;
+        result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
+        if ((NS_SUCCEEDED(result)) && lastChild)
+        {
+          GetChildOffset(lastChild, bodyNode, numBodyChildren);
+          selection->Extend(bodyNode, numBodyChildren+1);
         }
       }
     }
   }
-  else {
-    result = NS_ERROR_NOT_INITIALIZED;
-  }
   return result;
-  */
+}
+
+nsString & nsIEditor::GetTextNodeTag()
+{
+  static nsString gTextNodeTag("special text node tag");
+  return gTextNodeTag;
 }
 
 
@@ -913,62 +917,146 @@ nsEditor::InsertText(const nsString& aStringToInsert)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   InsertTextTxn *txn;
-  result = CreateTxnForInsertText(aStringToInsert, &txn);
+  result = CreateTxnForInsertText(aStringToInsert, nsnull, &txn); // insert at the current selection
   if ((NS_SUCCEEDED(result)) && txn)  {
     aggTxn->AppendChild(txn);
     result = Do(aggTxn);  
+  }
+  else if (NS_ERROR_EDITOR_NO_SELECTION==result)  {
+    result = DoInitialInsert(aStringToInsert);
   }
   return result;
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
+                                               nsIDOMCharacterData *aTextNode,
                                                InsertTextTxn ** aTxn)
 {
   nsresult result;
-  nsCOMPtr<nsIDOMSelection> selection;
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
-  if ((NS_SUCCEEDED(result)) && selection)
+  PRInt32 offset;
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText;
+
+  if (aTextNode) {
+    nodeAsText = do_QueryInterface(aTextNode);
+    offset = 0;
+  }
+  else
   {
-    result = NS_ERROR_UNEXPECTED; 
-    nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = do_QueryInterface(selection,&result);
-    if (enumerator)
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    if ((NS_SUCCEEDED(result)) && selection)
     {
-      enumerator->First(); 
-      nsISupports *currentItem;
-      result = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      result = NS_ERROR_UNEXPECTED; 
+      nsCOMPtr<nsIEnumerator> enumerator;
+      enumerator = do_QueryInterface(selection,&result);
+      if (enumerator)
       {
-        result = NS_ERROR_UNEXPECTED; 
-        // XXX: we'll want to deleteRange if the selection isn't just an insertion point
-        // for now, just insert text after the start of the first node
-        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        if (range)
+        enumerator->First(); 
+        nsISupports *currentItem;
+        result = enumerator->CurrentItem(&currentItem);
+        if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
         {
-          nsCOMPtr<nsIDOMNode> node;
-          result = range->GetStartParent(getter_AddRefs(node));
-          if ((NS_SUCCEEDED(result)) && (node))
+          result = NS_ERROR_UNEXPECTED; 
+          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+          if (range)
           {
-            result = NS_ERROR_UNEXPECTED; 
-            nsCOMPtr<nsIDOMCharacterData> nodeAsText;
-            nodeAsText = do_QueryInterface(node,&result);
-            if (nodeAsText)
+            nsCOMPtr<nsIDOMNode> node;
+            result = range->GetStartParent(getter_AddRefs(node));
+            if ((NS_SUCCEEDED(result)) && (node))
             {
-              PRInt32 offset;
+              result = NS_ERROR_UNEXPECTED; 
+              nodeAsText = do_QueryInterface(node,&result);
               range->GetStartOffset(&offset);
-              result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)aTxn);
-              if (nsnull!=*aTxn) {
-                result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert, mPresShell);
+            }
+          }
+        }
+        else
+        { 
+          result = NS_ERROR_EDITOR_NO_SELECTION;
+        }
+      }
+    }
+  }
+  if (NS_SUCCEEDED(result) && nodeAsText)
+  {
+    result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)aTxn);
+    if (nsnull!=*aTxn) {
+      result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert, mPresShell);
+    }
+    else {
+      result = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  return result;
+}
+
+// we're in the special situation where there is no selection.  Insert the text
+// at the beginning of the document.
+// XXX: this is all logic that must be moved to the rule system
+//      for HTML, we create a text node on the body.  That's what is done below
+//      for XML, we would create a text node on the root element.
+//      The rule system should be telling us which of these (or any other variant) to do.
+/* this method should look something like
+   BeginTransaction()
+   mRule->GetNodeForInitialInsert(parentNode)
+   mRule->CreateInitialDocumentFragment(childNode)
+   InsertElement(childNode, parentNode)
+   find the first text node in childNode
+   insert the text there
+*/
+
+NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
+{
+  if (!mDoc) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  
+  BeginTransaction();
+
+  nsCOMPtr<nsIDOMNodeList>nodeList;
+  nsString bodyTag = "body";
+  nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  if ((NS_SUCCEEDED(result)) && nodeList)
+  {
+    PRUint32 count;
+    nodeList->GetLength(&count);
+    NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+    nsCOMPtr<nsIDOMNode>node;
+    result = nodeList->Item(0, getter_AddRefs(node));
+    if ((NS_SUCCEEDED(result)) && node)
+    { // now we've got the body tag.
+      // create transaction to insert the text node, 
+      // and create a transaction to insert the text
+      CreateElementTxn *txn;
+      result = CreateTxnForCreateElement(GetTextNodeTag(), node, 0, &txn);
+      if ((NS_SUCCEEDED(result)) && txn)
+      {
+        result = Do(txn);
+        if (NS_SUCCEEDED(result))
+        {
+          nsCOMPtr<nsIDOMNode>newNode;
+          txn->GetNewNode(getter_AddRefs(newNode));
+          if ((NS_SUCCEEDED(result)) && newNode)
+          {
+            nsCOMPtr<nsIDOMCharacterData>newTextNode;
+            newTextNode = do_QueryInterface(newNode);
+            if (newTextNode)
+            {
+              InsertTextTxn *insertTxn;
+              result = CreateTxnForInsertText(aStringToInsert, newTextNode, &insertTxn);
+              if (NS_SUCCEEDED(result)) {
+                result = Do(insertTxn);
               }
-              else
-                result = NS_ERROR_OUT_OF_MEMORY;
+            }
+            else {
+              result = NS_ERROR_UNEXPECTED;
             }
           }
         }
       }
     }
   }
-
+  EndTransaction();
   return result;
 }
 
@@ -986,9 +1074,9 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
 
 
 NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
-                                          PRUint32             aOffset,
-                                          PRUint32             aLength,
-                                          DeleteTextTxn      **aTxn)
+                                               PRUint32             aOffset,
+                                               PRUint32             aLength,
+                                               DeleteTextTxn      **aTxn)
 {
   nsresult result=NS_ERROR_NULL_POINTER;
   if (nsnull != aElement)
@@ -1001,83 +1089,6 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
   return result;
 }
 
-// operates on selection
-// deletes the selection (if not collapsed) and splits the current element
-// or an ancestor of the current element
-/* context-dependent behaviors
-   SELECTION       ACTION
-   text node       split text node (or a parent)
-   block element   insert a <BR>
-   H1-H6           if at end, create a <P> following the header
-*/
-#if 0   // THIS CODE WILL BE REMOVED.  WE ARE GOING TO IMPLEMENT
-        // A GENERIC HANDLER SYSTEM.
-NS_IMETHODIMP nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
-{
-  // allocate the out-param transaction
-  nsresult result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
-  if (NS_FAILED(result))
-  {
-    return result;
-  }
-  nsCOMPtr<nsIDOMSelection> selection;
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
-  if ((NS_SUCCEEDED(result)) && selection)
-  {
-    nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = selection;
-    if (enumerator)
-    {
-      // XXX: need to handle mutliple ranges here, probably by
-      // disallowing the operation
-      for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
-      {
-        nsISupports *currentItem=nsnull;
-        result = enumerator->CurrentItem(&currentItem);
-        if ((NS_SUCCEEDED(result)) && (currentItem))
-        {
-          nsCOMPtr<nsIDOMRange> range(currentItem);
-          PRBool isCollapsed;
-          range->GetIsCollapsed(&isCollapsed);
-          if(PR_FALSE==isCollapsed)
-          {
-            EditAggregateTxn *delSelTxn;
-            result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
-            if ((NS_SUCCEEDED(result)) && (delSelTtxn)) {
-              (*aTxn)->AppendChild(delSelTtxn); 
-            }
-          }
-          // at this point, we have a collapsed selection
-          if (NS_SUCCEEDED(result))
-          {
-            nsCOMPtr<nsIDOMNode> node;
-            result = range->GetStartParent(getter_AddRefs(node));
-            if (NS_SUCCEEDED(result))
-            {
-              nsVoidArray parentFrameList;
-              result = GetParentFrameList(node, &parentFrameList);
-              if (NS_SUCCEEDED(result))
-              {
-                EditAggregateTxn *enterKeyTxn;
-                result = CreateTxnForEnterKeyAtInsertionPoint(range, &enterKeyTxn));
-                if ((NS_SUCCEEDED(result)) && (enterKeyTxn)) {
-                  (*aTxn)->AppendChild(enterKeyTxn); 
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // if anything along the way failed, delete the out-param transaction
-  if (NS_FAILED(result)) {
-    NS_IF_RELEASE(*aTxn);
-  }
-  return result;
-}
-#endif
 
 NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)
 {
@@ -1091,36 +1102,87 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDO
     if (NS_SUCCEEDED(result) && !collapsed) 
     {
       result = DeleteSelection(nsIEditor::eLTR);
+      if (NS_FAILED(result)) {
+        return result;
+      }
       // get the new selection
       result = GetSelection(getter_AddRefs(selection));
+      if (NS_FAILED(result)) {
+        return result;
+      }
 #ifdef NS_DEBUG
       PRBool testCollapsed;
-      result = selection->IsCollapsed(&testCollapsed);
-      NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");
+      nsresult debugResult = selection->IsCollapsed(&testCollapsed);
+      NS_ASSERTION((NS_SUCCEEDED(result)), "couldn't get a selection after deletion");
+      NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");;
 #endif
     }
     // split the text node
-    nsCOMPtr<nsIDOMNode> node;
-    PRInt32 offset;
-    result = selection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
-    if ((NS_SUCCEEDED(result)) && node)
+    nsCOMPtr<nsIDOMNode> parentSelectedNode;
+    PRInt32 offsetOfSelectedNode;
+    result = selection->GetAnchorNodeAndOffset(getter_AddRefs(parentSelectedNode), &offsetOfSelectedNode);
+    if ((NS_SUCCEEDED(result)) && parentSelectedNode)
     {
-      nsCOMPtr<nsIDOMNode> parentNode;
-      result = node->GetParentNode(getter_AddRefs(parentNode));
-      if ((NS_SUCCEEDED(result)) && parentNode)
+      nsCOMPtr<nsIDOMNode> selectedNode;
+      PRUint32 selectedNodeContentCount=0;
+      nsCOMPtr<nsIDOMCharacterData>selectedParentNodeAsText;
+      selectedParentNodeAsText = do_QueryInterface(parentSelectedNode);
+      if (selectedParentNodeAsText)
       {
-        nsCOMPtr<nsIDOMNode> newNode;
-        result = SplitNode(node, offset, getter_AddRefs(newNode));
-        if (NS_SUCCEEDED(result))
-        { // now get the node's offset in it's parent, and insert the new tag there
-          result = nsIEditorSupport::GetChildOffset(node, parentNode, offset);
-          if (NS_SUCCEEDED(result))
+        selectedNode = do_QueryInterface(parentSelectedNode);
+        selectedNode->GetParentNode(getter_AddRefs(parentSelectedNode));
+        selectedParentNodeAsText->GetLength(&selectedNodeContentCount);
+      }
+      else
+      {
+        nsCOMPtr<nsIDOMNodeList>parentChildList;
+        parentSelectedNode->GetChildNodes(getter_AddRefs(parentChildList));
+        if ((NS_SUCCEEDED(result)) && parentChildList)
+        {
+          result = parentChildList->Item(offsetOfSelectedNode, getter_AddRefs(selectedNode));
+          if ((NS_SUCCEEDED(result)) && selectedNode)
           {
-            result = CreateNode(aTag, parentNode, offset, getter_AddRefs(newNode));
-            selection->Collapse(parentNode, offset);
-            *aNewNode = newNode;
+            nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
+            selectedNodeAsText = do_QueryInterface(selectedNode);
+            if (selectedNodeAsText) {
+              selectedNodeAsText->GetLength(&selectedNodeContentCount);
+            }
+            else
+            {
+              nsCOMPtr<nsIDOMNodeList>childList;
+              selectedNode->GetChildNodes(getter_AddRefs(childList));
+              if ((NS_SUCCEEDED(result)) && childList) {
+                childList->GetLength(&selectedNodeContentCount);
+              }
+              else {
+                return NS_ERROR_NULL_POINTER;
+              }
+            }
           }
         }
+      }
+
+      // we only get here if result indicates a success
+      PRInt32 offsetOfNewNode;
+      if ((offsetOfSelectedNode!=0) && (((PRUint32)offsetOfSelectedNode)!=selectedNodeContentCount))
+      {
+        nsCOMPtr<nsIDOMNode> newSiblingNode;
+        result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
+        // now get the node's offset in it's parent, and insert the new tag there
+        if (NS_SUCCEEDED(result)) {
+          result = nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+        }
+      }
+      else {
+        offsetOfNewNode = selectedNodeContentCount;
+      }
+
+      if (NS_SUCCEEDED(result))
+      { 
+        nsCOMPtr<nsIDOMNode> newNode;
+        result = CreateNode(aTag, parentSelectedNode, offsetOfNewNode, getter_AddRefs(newNode));
+        selection->Collapse(parentSelectedNode, offsetOfNewNode);
+        *aNewNode = newNode;
       }
     }
   }
@@ -1257,8 +1319,11 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     else
       isLast = PR_TRUE;
   }
+// XXX: if isFirst && isLast, then we'll need to delete the node 
+  //    as well as the 1 child
 
   // build a transaction for deleting the appropriate data
+  // XXX: this has to come from rule section
   if ((nsIEditor::eRTL==aDir) && (PR_TRUE==isFirst))
   { // we're backspacing from the beginning of the node.  Delete the first thing to our left
     nsCOMPtr<nsIDOMNode> priorNode;
