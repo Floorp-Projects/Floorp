@@ -473,10 +473,10 @@ tbx_dirs()
         RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
         if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" -o ${DOMSUF} = "nscp.aoltw.net" ] ; then
             URL="sbs-rel.nscp.aoltw.net"
-            RESULTDIRURL="http://${URL}${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
         else
-            RESULTDIRURL=${RESULTDIR} 
+            URL="cindercone.red.iplanet.com"
         fi
+            RESULTDIRURL="<a href="http://${URL}${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}">RESULTDIRURL</a><br>"
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
     NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
