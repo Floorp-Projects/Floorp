@@ -496,6 +496,8 @@ public:
                               nsIContent*     aContainer) = 0;
 #endif
 
+  // XXX CONSTRUCTION
+#if 0
   /**
    * This call is invoked when content is inserted in the content
    * tree.
@@ -516,6 +518,7 @@ public:
                               nsIContent*     aContainer,
                               nsIContent*     aChild,
                               PRInt32         aIndexInParent) = 0;
+#endif
 
   /**
    * This call is invoked when content is replaced in the content

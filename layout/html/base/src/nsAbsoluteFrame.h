@@ -48,12 +48,12 @@ public:
   NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer);
-#endif
   NS_IMETHOD  ContentInserted(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer,
                               nsIContent*     aChild,
                               PRInt32         aIndexInParent);
+#endif
   NS_IMETHOD  ContentReplaced(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer,

@@ -137,7 +137,6 @@ struct nsGenericDOMDataNode {
   nsresult GetAttribute(const nsString& aName, nsString& aResult) const {
     return NS_CONTENT_ATTR_NOT_THERE;
   }
-  nsIContentDelegate* GetDelegate(nsIPresContext* aCX);
   nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult HandleDOMEvent(nsIPresContext& aPresContext,
                           nsEvent* aEvent,
@@ -429,9 +428,6 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetAttribute(const nsString& aName,                           \
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aName, aResult);                                \
-  }                                                                        \
-  virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {           \
-    return _g.GetDelegate(aCX);                                            \
   }                                                                        \
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \
   NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \

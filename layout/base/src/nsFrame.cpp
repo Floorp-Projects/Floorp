@@ -1190,7 +1190,6 @@ NS_METHOD nsFrame::ContentAppended(nsIPresShell*   aShell,
 {
   return NS_OK;
 }
-#endif
 
 NS_METHOD nsFrame::ContentInserted(nsIPresShell*   aShell,
                                    nsIPresContext* aPresContext,
@@ -1200,6 +1199,7 @@ NS_METHOD nsFrame::ContentInserted(nsIPresShell*   aShell,
 {
   return NS_OK;
 }
+#endif
 
 NS_METHOD nsFrame::ContentReplaced(nsIPresShell*   aShell,
                                    nsIPresContext* aPresContext,

@@ -66,6 +66,8 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
       mFrame->SetStyleContext(&aPresContext, mStyleContext);
 
     } else {
+      // XXX CONSTRUCTION
+#if 0
       // Ask the content delegate to create the frame
       nsIContentDelegate* delegate = mContent->GetDelegate(&aPresContext);
   
@@ -75,6 +77,7 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
       if (NS_OK != rv) {
         return rv;
       }
+#endif
     }
 
     // Get the containing block
@@ -97,21 +100,6 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
 
 // XXX CONSTRUCTION
 #if 0
-NS_IMETHODIMP nsAbsoluteFrame::ContentAppended(nsIPresShell*   aShell,
-                                               nsIPresContext* aPresContext,
-                                               nsIContent*     aContainer)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-appended target");
-
-  // Forward the notification to the absolutely positioned frame
-  if (nsnull != mFrame) {
-    return mFrame->ContentAppended(aShell, aPresContext, aContainer);
-  }
-
-  return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP nsAbsoluteFrame::ContentInserted(nsIPresShell*   aShell,
                                                nsIPresContext* aPresContext,
                                                nsIContent*     aContainer,
@@ -128,6 +116,7 @@ NS_IMETHODIMP nsAbsoluteFrame::ContentInserted(nsIPresShell*   aShell,
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsAbsoluteFrame::ContentReplaced(nsIPresShell*   aShell,
                                                nsIPresContext* aPresContext,

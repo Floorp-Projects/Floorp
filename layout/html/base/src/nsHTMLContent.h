@@ -139,8 +139,6 @@ public:
 
   NS_IMETHOD ToHTML(FILE* out) const;
 
-  virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX);
-
   static void QuoteForHTML(const nsString& aValue, nsString& aResult);
 
   NS_IMETHOD SetScriptObject(void *aScriptObject);

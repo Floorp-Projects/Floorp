@@ -335,6 +335,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
+// XXX CONSTRUCTION
+#if 0
 NS_METHOD nsBodyFrame::ContentInserted(nsIPresShell*   aShell,
                                        nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -347,6 +349,7 @@ NS_METHOD nsBodyFrame::ContentInserted(nsIPresShell*   aShell,
   return mFirstChild->ContentInserted(aShell, aPresContext, aContainer,
                                       aChild, aIndexInParent);
 }
+#endif
 
 NS_METHOD nsBodyFrame::ContentDeleted(nsIPresShell*   aShell,
                                       nsIPresContext* aPresContext,

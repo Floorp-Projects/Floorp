@@ -35,6 +35,15 @@ public:
                       ReflowType aReflowType,
                       nsIFrame*  aChildFrame = nsnull);
 
+  /**
+   * Construct an HTML reflow command of type FrameInserted, with target
+   * frame aTargetFrame, and with the specified child and previous sibling
+   * frames.
+   */
+  nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
+                      nsIFrame*  aChildFrame,
+                      nsIFrame*  aPrevSiblingFrame);
+
   virtual ~nsHTMLReflowCommand();
 
   // nsISupports
@@ -49,6 +58,7 @@ public:
   NS_IMETHOD SetTarget(nsIFrame* aTargetFrame);
   NS_IMETHOD GetType(ReflowType& aReflowType) const;
   NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const;
+  NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
 
 protected:
   void      BuildPath();
@@ -58,6 +68,7 @@ private:
   ReflowType      mType;
   nsIFrame*       mTargetFrame;
   nsIFrame*       mChildFrame;
+  nsIFrame*       mPrevSiblingFrame;
   nsVoidArray     mPath;
 };
 

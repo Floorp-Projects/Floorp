@@ -118,9 +118,6 @@ public:
   NS_IMETHOD GetAttribute(const nsString& aName, nsString& aRet) const {
     return NS_CONTENT_ATTR_NOT_THERE;
   }
-  nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {
-    return nsnull;
-  }
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const {
     return NS_OK;
   }

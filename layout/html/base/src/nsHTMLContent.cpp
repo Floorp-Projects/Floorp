@@ -41,68 +41,6 @@ static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 
-static nsIContentDelegate* gContentDelegate;
-
-/**
- * THE html content delegate. There is exactly one instance of this
- * class and it's used for all html content. It just turns around
- * and asks the content object to create the frame.
- */
-class ContentDelegate : public nsIContentDelegate {
-public:
-  ContentDelegate();
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIContent* aContent,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
-protected:
-  ~ContentDelegate();
-};
-
-ContentDelegate::ContentDelegate()
-{
-  NS_INIT_REFCNT();
-}
-
-NS_IMPL_ISUPPORTS(ContentDelegate, kIContentDelegateIID);
-
-ContentDelegate::~ContentDelegate()
-{
-}
-
-NS_METHOD
-ContentDelegate::CreateFrame(nsIPresContext* aPresContext,
-                             nsIContent* aContent,
-                             nsIFrame* aParentFrame,
-                             nsIStyleContext* aStyleContext,
-                             nsIFrame*& aResult)
-{
-  NS_PRECONDITION(nsnull != aContent, "null ptr");
-
-  // Make sure the content is html content
-  nsIHTMLContent* hc;
-  nsIFrame* frame = nsnull;
-  nsresult rv = aContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (NS_OK != rv) {
-    // This means that *somehow* somebody which is not an html
-    // content object got ahold of this delegate and tried to
-    // create a frame with it. Give them back an nsFrame.
-    rv = nsFrame::NewFrame(&frame, aContent, aParentFrame);
-    if (NS_OK == rv) {
-      frame->SetStyleContext(aPresContext, aStyleContext);
-    }
-  }
-  else {
-    // Ask the content object to create the frame
-    rv = hc->CreateFrame(aPresContext, aParentFrame, aStyleContext, frame);
-    NS_RELEASE(hc);
-  }
-  aResult = frame;
-  return rv;
-}
-
 //----------------------------------------------------------------------
 
 void* nsHTMLContent::operator new(size_t size)
@@ -133,30 +71,11 @@ void nsHTMLContent::operator delete(void* ptr)
 
 nsHTMLContent::nsHTMLContent()
 {
-  // Create shared content delegate if this is the first html content
-  // object being created.
-  if (nsnull == gContentDelegate) {
-    gContentDelegate = new ContentDelegate();
-  }
-
   mListenerManager = nsnull;
-
-  // Add a reference to the shared content delegate object
-  NS_ADDREF(gContentDelegate);
 }
 
 nsHTMLContent::~nsHTMLContent()
 {
-  NS_PRECONDITION(nsnull != gContentDelegate, "null content delegate");
-  if (nsnull != gContentDelegate) {
-    // Remove our reference to the shared content delegate object.  If
-    // the last reference just went away, null out gContentDelegate.
-    nsrefcnt rc = gContentDelegate->Release();
-    if (0 == rc) {
-      gContentDelegate = nsnull;
-    }
-  }
-
   NS_IF_RELEASE(mListenerManager);
 }
 
@@ -497,12 +416,6 @@ nsHTMLContent::ToHTML(FILE* out) const
   ToHTMLString(tmp);
   fputs(tmp, out);
   return NS_OK;
-}
-
-nsIContentDelegate* nsHTMLContent::GetDelegate(nsIPresContext* aCX)
-{
-  gContentDelegate->AddRef();
-  return gContentDelegate;
 }
 
 nsresult nsHTMLContent::SetScriptObject(void *aScriptObject)

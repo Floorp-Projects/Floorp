@@ -45,13 +45,42 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
   return cmd->QueryInterface(kIReflowCommandIID, (void**)aInstancePtrResult);
 }
 
+nsresult
+NS_NewHTMLReflowCommand(nsIReflowCommand** aInstancePtrResult,
+                        nsIFrame*          aTargetFrame,
+                        nsIFrame*          aChildFrame,
+                        nsIFrame*          aPrevSiblingFrame)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsHTMLReflowCommand* cmd = new nsHTMLReflowCommand(aTargetFrame, aChildFrame,
+                                                     aPrevSiblingFrame);
+  if (nsnull == cmd) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return cmd->QueryInterface(kIReflowCommandIID, (void**)aInstancePtrResult);
+}
 
 // Construct a reflow command given a target frame, reflow command type,
 // and optional child frame
 nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
                                          ReflowType aReflowType,
                                          nsIFrame*  aChildFrame)
-  : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame)
+  : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
+    mPrevSiblingFrame(nsnull)
+{
+  NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
+  NS_INIT_REFCNT();
+}
+
+nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
+                                         nsIFrame*  aChildFrame,
+                                         nsIFrame*  aPrevSiblingFrame)
+  : mType(FrameInserted), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
+    mPrevSiblingFrame(aPrevSiblingFrame)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   NS_INIT_REFCNT();
@@ -166,6 +195,12 @@ NS_IMETHODIMP nsHTMLReflowCommand::GetType(ReflowType& aReflowType) const
 NS_IMETHODIMP nsHTMLReflowCommand::GetChildFrame(nsIFrame*& aChildFrame) const
 {
   aChildFrame = mChildFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLReflowCommand::GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const
+{
+  aSiblingFrame = mPrevSiblingFrame;
   return NS_OK;
 }
 
