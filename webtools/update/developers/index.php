@@ -46,6 +46,14 @@ include"$page_header";
 </TR>
 </FORM>
 </TABLE>
+<a href="passwordreset.php">Forgot your password?</a>
+
+<h3>Create an Account</h3>
+<P>You need an account to access the features of the Developer Control Panel and add your extension or themes to Mozilla Update.</P>
+
+<a href="createaccount.php">Join Mozilla Update!</a>
+
+
 
 </div>
 

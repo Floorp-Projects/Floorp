@@ -1,9 +1,10 @@
 <?php
 require"core/sessionconfig.php";
-$function = $_GET["function"];
+require"../core/config.php";
 
+$function = $_GET["function"];
 //Access Level: "user" code, to keep user from altering other profiles but their own.
-if ($_SESSION["level"] !=="admin") {
+if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
 //Kill access to add user.
 if ($function=="adduser" or $function=="postnewuser") {unset($function);}
 
@@ -15,36 +16,40 @@ $userid=$_SESSION["uid"];
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <HTML>
 <HEAD>
-<?php
-require"../core/config.php";
-
-//Define Breadcrumbs for Header Navigation
-$breadcrumbs[]['name'] = "Manage Users";
-$breadcrumbs[]['url']  = "/admin/users.php";
-
-if ($function=="edituser") {
-$breadcrumbs[]['name'] = "Edit User";
-$breadcrumbs[]['url']  = "/admin/users.php?function=edituser&userid=$_GET[userid]";
-if ($_POST[submit]=="Update") { $breadcrumbs[]['name'] = "Update User";
-} else if ($_POST[submit]=="Delete User") { $breadcrumbs[]['name'] = "Delete User"; }
-
-} else if ($function=="adduser") {
-$breadcrumbs[]['name'] = "Add User";
-$breadcrumbs[]['url']  = "/admin/users.php?function=adduser";
-
-} else if ($function=="changepassword") {
-$breadcrumbs[]['name'] = "Change Password";
-$breadcrumbs[]['url']  = "/admin/users.php?function=changepassword&userid=$_GET[userid]";
-}
-?>
-<LINK REL="STYLESHEET" TYPE="text/css" HREF="/admin/core/mozupdates.css">
-<TITLE>MozUpdates :: Manage Users</TITLE>
-</HEAD>
-<BODY>
+<TITLE>Mozilla Update :: Developer Control Panel :: </TITLE>
 <?php
 include"$page_header";
+include"inc_sidebar.php";
 ?>
-
+<?php
+//Security Check for EditUser/ChangePassword function.
+if ($function=="edituser" or $function=="changepassword") {
+$postuid = $_GET["userid"]; 
+$userid = $_SESSION["uid"];
+  if ($_SESSION["level"] !=="admin" and $postuid != $userid) {
+  //This user isn't an admin, verify the id of the record they're working with is ok.
+   $sql = "SELECT `UserID` from `t_userprofiles` WHERE ";
+  if ($_SESSION["level"]=="user") { $sql .="`UserID` = '$userid'";
+  } else if ($_SESSION["level"]=="editor") {$sql .="`UserMode`='U' and `UserID`='$postuid'";
+  } else { $sql .=" 0"; }
+   $sql .=" LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    if (mysql_num_rows($sql_result)=="0") {
+    echo"<h1>Error Accessing Record</h1>\n";
+    echo"You do not appear to have permission to edit this record.<br>\n";
+    echo"<a href=\"?function=\">&#171;&#171; Go Back</a>\n";
+    include"$page_footer";
+    echo"</body>\n<html>\n";
+    exit;
+    } else {
+    $row = mysql_fetch_array($sql_result);
+    $userid = $row["UserID"];
+    }
+  } else {
+  $userid = $_GET["userid"];
+  }
+}
+?>
 <?php
 if (!$function) {
 ?>
@@ -52,7 +57,7 @@ if (!$function) {
 <?php
 if ($_POST["submit"] && $_GET["action"]=="update") {
 ?>
-<div style="width: 80%; border: 1px dotted #AAA; margin: auto; margin-bottom: 10px; font-size: 10pt; font-weight: bold">
+<h1>Updating User List...</h1>
 <?php
 
 //Process Post Data, Make Changes to User Table.
@@ -77,43 +82,85 @@ $sql = "UPDATE `t_userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$truste
 }
 unset($i);
 
-echo"<SPAN STYLE=\"font-size:14pt\">Your changes to the User List have been succesfully completed</SPAN><BR>";
+echo"Your changes to the User List have been succesfully completed<BR>\n";
 
 //Do Special Disable, Delete, Enable Account Operations
 if ($_POST["selected"] AND $_POST["submit"] !=="Update") {
-//$selected = $_POST["selected"];
+$selecteduser = $_POST["selected"];
 
 if ($_POST["submit"]=="Disable Selected") {
-$sql = "UPDATE `t_userprofiles` SET `UserMode`= 'D' WHERE `UserID`='$_POST[selected]'";
+$sql = "UPDATE `t_userprofiles` SET `UserMode`= 'D' WHERE `UserID`='$selecteduser'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-echo"User Account for User Number $_POST[selected] Disabled<br>\n";
+    if ($sql_result) {
+    echo"User Account for User Number $selecteduser Disabled<br>\n";
+    }
+
+  //Disabling an author, check their extension list and disable any item they're the solo author of.
+    $sql = "SELECT TM.ID, TM.Name from `t_main` TM INNER JOIN `t_authorxref` TAX ON TM.ID=TAX.ID WHERE TAX.UserID = '$selecteduser'";
+      $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+      while ($row = mysql_fetch_array($sql_result)) {
+      $id = $row["ID"];
+      $name = $row["Name"];
+        $sql2 = "SELECT `ID` from `t_authorxref` WHERE `ID` = '$id'";
+          $sql_result2 = mysql_query($sql2, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+          if (mysql_num_rows($sql_result2)<="1") {
+           $sql3 = "UPDATE `t_version` SET `approved`='DISABLED' WHERE `ID`='$id' and `approved` !='NO' ";
+             $sql_result3 = mysql_query($sql3, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+             if ($sql_result3) {
+             echo"$name disabled from public viewing...<br>\n";
+             }
+          }
+      }
 
 } else if ($_POST["submit"]=="Delete Selected") {
-$sql = "DELETE FROM `t_userprofiles` WHERE `UserID`='$_POST[selected]' LIMIT 1";
+$sql = "DELETE FROM `t_userprofiles` WHERE `UserID`='$selecteduser' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-echo"User Account for User Number $_POST[selected] Deleted<br>\n";
+    if ($sql_result) {
+    echo"User Account for User Number $selecteduser Deleted<br>\n";
+    }
 
 } else if ($_POST["submit"]=="Enable Selected") {
-$sql = "UPDATE `t_userprofiles` SET `UserMode`= 'U' WHERE `UserID`='$_POST[selected]'";
+$sql = "UPDATE `t_userprofiles` SET `UserMode`= 'U' WHERE `UserID`='$selecteduser'";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-echo"User Account for User Number $_POST[selected] Enabled, User Mode set to User<br>\n";
-}
+  if ($sql_result) {
+  echo"User Account for User Number $selecteduser Enabled, User Mode set to User<br>\n";
+  }
+
+  //Disabling an author, check their extension list and disable any item they're the solo author of.
+    $sql = "SELECT TM.ID, TM.Name from `t_main` TM INNER JOIN `t_authorxref` TAX ON TM.ID=TAX.ID WHERE TAX.UserID = '$selecteduser'";
+      $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+      while ($row = mysql_fetch_array($sql_result)) {
+      $id = $row["ID"];
+      $name = $row["Name"];
+        $sql2 = "SELECT `ID` from `t_authorxref` WHERE `ID` = '$id'";
+          $sql_result2 = mysql_query($sql2, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+          if (mysql_num_rows($sql_result2)<="1") {
+           $sql3 = "UPDATE `t_version` SET `approved`='?' WHERE `ID`='$id' and `approved` !='NO'";
+             $sql_result3 = mysql_query($sql3, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+             if ($sql_result3) {
+             echo"$name restored to public view pending approval...<br>\n";
+             }
+          }
+      }
+
+
 
 }
 
-echo"</DIV>\n";
+}
+
 }
 ?>
-<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: solid 1px #000000; width: 95%" class="listing">
-<TR><TD COLSPAN=5 STYLE="background-color: #FFFFFF; font-size:14pt; font-weight: bold;">Manage User List:</TD></TR>
-<tr>
-<td class="hline" colspan="5"></td>
-</tr>
-<TR>
+<h1>Manage User list</h1>
+<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%" class="listing">
+<TR style="font-weight: bold">
 <TH></TH>
-<TH><B>Name</B></TH>
-<TH><B>E-Mail Address</B></TH>
-<TH><B>S  E  A  T</B></TH>
+<TH>Name</TH>
+<TH>E-Mail Address</TH>
+<TH>S</TH>
+<TH>E</TH>
+<TH>A</TH>
+<TH>T</TH>
 </TR>
 <FORM NAME="updateusers" METHOD="POST" ACTION="?function=&action=update">
 <?php
@@ -138,12 +185,11 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
     echo"<TD CLASS=\"tablehighlight\" ALIGN=CENTER><B>$i</B></TD>\n";
     echo"<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"?function=edituser&userid=$userid\">$username</A></B></TD>\n";
     echo"<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"mailto:$useremail\">$useremail</A></B></TD>\n";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"selected\" TYPE=\"RADIO\" VALUE=\"$userid\" TITLE=\"Selected User\">";
-    echo"<INPUT NAME=\"editor$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($a=="TRUE" or $d=="TRUE" ) {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Editor\">";
-    echo"<INPUT NAME=\"admin$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" ) {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Administrator\">";
-    echo"<INPUT NAME=\"trusted$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($t=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" ) {echo" DISABLED=\"DISABLED\"";}echo" TITLE=\"Trusted User\">";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"selected\" TYPE=\"RADIO\" VALUE=\"$userid\" TITLE=\"Selected User\""; if (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo"></TD>";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"editor$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED=\"CHECKED\""; } if (($a=="TRUE" or $d=="TRUE") or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Editor\"></TD>";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"admin$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Administrator\"></TD>";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"trusted$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($t=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor" )) {echo" DISABLED=\"DISABLED\"";}echo" TITLE=\"Trusted User\"></TD>";
     if ($d=="TRUE") {echo"<INPUT NAME=\"disabled$userid\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; }
-    echo"</TD>\n";
     echo"</TR>\n";
 
   unset($a,$e,$t);
@@ -162,14 +208,15 @@ echo"<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 </TR>
 </FORM>
 </TABLE>
-<div style="width: 580px; border: 1px dotted #AAA; margin-top: 2px; margin-left: 50px; font-size: 10pt; font-weight: bold">
+<h2><a href="?function=adduser">Add New User</A></h2>
+<div style="width: 580px; border: 0px dotted #AAA; margin-top: 1px; margin-left: 50px; margin-bottom: 5px; font-size: 10pt; font-weight: bold">
 
 <form name="adduser" method="post" action="?function=adduser">
-<a href="?function=adduser">New User</A>
-  E-Mail: <input name="email" type="text" size="20" maxlength="150" value="">
+  E-Mail: <input name="email" type="text" size="30" maxlength="150" value="">
 <input name="submit" type="submit" value="Add User"></SPAN>
 </form>
 </div>
+
 
 <?php
 } else if ($function=="edituser") {
@@ -195,15 +242,31 @@ if ($usermode=="D") {$mode="D"; $trusted="FALSE";}
 
 if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
-  $sql = "UPDATE `t_userprofiles` SET `UserName`= '$_POST[username]', `UserEmail`='$_POST[useremail]', `UserWebsite`='$_POST[userwebsite]', `UserMode`='$mode', `UserTrusted`='$trusted', `UserEmailHide`='$_POST[useremailhide]' WHERE `UserID`='$_POST[userid]'";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-    echo"<DIV style=\"width: 550px; font-size: 14pt; font-weight: bold; text-align:center; margin: auto\">Your update to $_POST[username], has been submitted successfully...</DIV>";
+$userid = $_POST["userid"];
+$username = $_POST["username"];
+$useremail = $_POST["useremail"];
+$userwebsite = $_POST["userwebsite"];
+$useremailhide = $_POST["useremailhide"];
 
+  $sql = "UPDATE `t_userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$mode', `UserTrusted`='$trusted', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    if ($sql_result) {
+    echo"<h1>Updating User Profile...</h1>\n";
+    echo"The User Profile for $username, has been successfully updated...<br>\n";
+    }
 } else if ($_POST["submit"] == "Delete User") {
 if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
-  $sql = "DELETE FROM `t_userprofiles` WHERE `UserID`='$_POST[userid]'";
+$userid = $_POST["userid"];
+$username = $_POST["username"];
+  $sql = "DELETE FROM `t_userprofiles` WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-    echo"<DIV style=\"width: 550px; font-size: 14pt; font-weight: bold; text-align:center; margin: auto\">You've successfully deleted $_POST[username]...</DIV>";
+    if ($sql_result) {
+    echo"<h1>Deleting User... Please wait...</h1>\n";
+    echo"You've successfully deleted the user profile for $username...<br>\n";
+    include"$page_footer";
+    echo"</body>\n</html>\n";
+    exit;
+    }
 }
 
 if (!$userid) {$userid=$_POST["userid"];}
@@ -220,10 +283,12 @@ if (!$userid) {$userid=$_POST["userid"];}
     $usermode = $row["UserMode"];
     $trusted = $row["UserTrusted"];
     $useremailhide = $row["UserEmailHide"];
+    $userlastlogin = date("l, F, d, Y, g:i:sa", strtotime($row["UserLastLogin"]));
 ?>
 
-<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 1px #000000; width: 500px">
-    <TR><TD COLSPAN=2 STYLE="font-size:14pt; font-weight: bold; border-bottom: solid 1px #000000">Edit Profile for <?php echo"$username"; ?>:</TD></TR>
+<h1>Edit User Profile for <?php echo"$username"; ?></h1>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
+<TR><TD COLSPAN=2>Last login: <?php echo"$userlastlogin"; ?></TD></TR>
 <FORM NAME="edituser" METHOD="POST" ACTION="?function=edituser">
 <?php
     echo"<INPUT NAME=\"userid\" TYPE=\"HIDDEN\" VALUE=\"$userid\">\n";
@@ -268,9 +333,9 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
     }
     echo"</TD></TR>\n";
 ?>
-<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete User" ONCLICK="return confirm('Are you sure?');"></TD></TR>
+<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete User" ONCLICK="return confirm('Are you sure you want to delete the profile for <?php echo"$username"; ?>?');"></TD></TR>
 </FORM>
-<?php if ($_SESSION["level"]=="user" or $_SESSION["level"]=="editor") {} else { ?>
+<?php if ($_SESSION["level"]=="user") {} else { ?>
 <TR><TD COLSPAN="2"><A HREF="?function=">&#171;&#171; Return to User Manager</A></TD></TR>
 <?php } ?>
 </TABLE>
@@ -279,12 +344,13 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
 } else if ($function=="adduser") {
 
 if ($_POST["submit"]=="Create User") {
+echo"<h1>Adding User...</h1>\n";
  //Verify Users Password and md5 encode it for storage...
  if ($_POST[userpass]==$_POST[userpassconfirm]) {
  $_POST[userpass]=md5($_POST[userpass]);
  } else {
  $errors="true";
- echo"<B>Your two passwords did not match, go back and try again...</B>";
+ echo"<B>Your two passwords did not match, go back and try again...</B><br>\n";
  }
 
  //Add User to MySQL Table
@@ -304,26 +370,33 @@ if ($admin=="TRUE") { $mode="A";
 
 if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
-
-   	$sql = "INSERT INTO `t_userprofiles` (`UserName`, `UserEmail`, `UserWebsite`, `UserPass`, `UserMode`, `UserTrusted`, `UserEmailHide`) VALUES ('$_POST[username]', '$_POST[useremail]', '$_POST[userwebsite]', '$_POST[userpass]', '$mode', '$trusted', '$_POST[useremailhide]');";
-    $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-    //include"mail_sendaccountdetails.php"; 
-    echo"<DIV style=\"width: 550px; font-size: 14pt; font-weight: bold; text-align:center; margin: auto\">The user $_POST[username] has been Successfully Added...</DIV>";
+$username = $_POST[username];
+$useremail = $_POST[useremail];
+$userwebsite = $_POST[userwebsite];
+$userpass = $_POST[userpass];
+$useremailhide = $_POST[useremailhide];
+   	$sql = "INSERT INTO `t_userprofiles` (`UserName`, `UserEmail`, `UserWebsite`, `UserPass`, `UserMode`, `UserTrusted`, `UserEmailHide`) VALUES ('$username', '$useremail', '$userwebsite', '$userpass', '$mode', '$trusted', '$useremailhide');";
+    $sql_result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    if ($sql_result) {
+      include"mail_newaccount.php"; 
+      echo"The user $username has been added successfully...<br>\n";
+      echo"An E-Mail has been sent to the e-mail address specified with the login info they need to log in to their new account.<br>\n";
+    }
 }
 
 }
 ?>
 
-<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 1px #000000; width: 450px">
-    <TR><TD COLSPAN=2 STYLE="font-size:14pt; font-weight: bold; border-bottom: solid 1px #000000">Add New User:</TD></TR>
+<h1>Add New User</h1>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
 <FORM NAME="adduser" METHOD="POST" ACTION="?function=adduser">
     <TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME="useremail" TYPE="TEXT" VALUE="<?php echo"$_POST[email]"; ?>" SIZE=30 MAXLENGTH=100></TD></TR>
+    <TR><TD ALIGN=RIGHT><B>Show E-Mail:<B></TD><TD>Hidden: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="1" CHECKED> Visible: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="0"></TD></TR>
     <TR><TD STYLE="width: 150px"><B>Name:</B></TD><TD><INPUT NAME="username" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
     <TR><TD><B>Website:</B></TD><TD><INPUT NAME="userwebsite" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
     <TR><TD><B>Password:</B></TD><TD><INPUT NAME="userpass" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
     <TR><TD ALIGN=RIGHT><FONT STYLE="font-size: 10pt"><B>Confirm:</B></FONT>&nbsp;&nbsp;</TD><TD><INPUT NAME="userpassconfirm" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
     <TR><TD><B>Permissions:</B></TD><TD>Editor: <INPUT NAME="editor" TYPE="CHECKBOX" VALUE="TRUE"> Admin: <INPUT NAME="admin" TYPE="CHECKBOX" VALUE="TRUE"> Trusted: <INPUT NAME="trusted" TYPE="CHECKBOX" VALUE="TRUE"></TD></TR>
-    <TR><TD><B>E-Mail Public:<B></TD><TD>Hidden: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="1" CHECKED> Visible: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="0"></TD></TR>
 <TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Create User">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form"></TD></TR>
 </FORM>
 <TR><TD COLSPAN="2"><A HREF="?function=">&#171;&#171; Return to User Manager</A></TD></TR>
@@ -335,34 +408,57 @@ if (!$userid) {$userid = $_GET["userid"]; }
 
 //Set Password Change if this is a POST.
 if ($_POST["submit"]=="Change Password") {
-   echo"<DIV style=\"width: 500px; font-size: 14pt; font-weight: bold; text-align:center; margin: auto\">";
- $sql = "SELECT `UserPass` FROM `t_userprofiles` WHERE `UserID` = '$_POST[userid]' LIMIT 1";
+   echo"<h1>Changing Password, please wait...</h1>\n";
+ $userid = $_POST["userid"];
+ $sql = "SELECT `UserPass`, `UserEmail` FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
     $userpass = $row["UserPass"];
+    $email = $row["UserEmail"];
     $oldpass = md5($_POST[oldpass]);
 
-if ($_SESSION["level"]=="admin") {$oldpass=$userpass; } //Bypass Old Password check for Admins only
     if ($userpass==$oldpass) {
 
     if ($_POST[newpass]==$_POST[newpass2]) {
-     $userpass = md5($_POST["newpass"]);
-     $sql = "UPDATE `t_userprofiles` SET `UserPass`='$userpass' WHERE `UserID`='$_POST[userid]'";
-     //echo"$sql\n<br>";
+     $newpassword = $_POST["newpass"];
+     $password_plain = $newpassword;
+     $userpass = md5($newpassword);
+
+     $sql = "UPDATE `t_userprofiles` SET `UserPass`='$userpass' WHERE `UserID`='$userid'";
        $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-       echo"The password has been successfully reset.<br>";
-
+       if ($sql_result) {
+       include"mail_newpassword.php";
+       echo"The password has been successfully changed, an e-mail has been sent confirming this action.<br>\n";
+       }
     } else {
-     echo"The two passwords did not match, please go back and try again.</FONT>";
+     echo"The two passwords did not match, please go back and try again.<BR>\n";
     }
 
 
     } else {
-     echo"Your Old password did not match the password on file, please try again.</FONT>";
+     echo"Your Old password did not match the password on file, please try again.<br>\n";
 
     }
-    echo"</DIV>\n";
 
+} else if ($_POST["submit"]=="Generate New Password") {
+   echo"<h1>Generating New Password, please wait...</h1>\n";
+   $newpassword = substr(md5(mt_rand()),0,14);
+   $password_plain = $newpassword;
+   $userpass = md5($newpassword);
+   $userid = $_POST["userid"];
+
+     $sql = "SELECT `UserEmail` FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
+       $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+       $row = mysql_fetch_array($sql_result);
+         $email = $row["UserEmail"];
+
+     $sql = "UPDATE `t_userprofiles` SET `UserPass`='$userpass' WHERE `UserID`='$userid'";
+       $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+       if ($sql_result) {
+       include"mail_newpassword.php";
+       echo"The password has been successfully reset. The user has been sent an e-mail notifying them of their new password.<br>\n";
+       }
+   
 }
 
 if (!$userid) { $userid = $_POST["userid"]; }
@@ -372,16 +468,18 @@ if (!$userid) { $userid = $_POST["userid"]; }
    $row = mysql_fetch_array($sql_result);
     $username = $row["UserName"];
 ?>
-<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 1px #000000; width: 500px">
-    <TR><TD COLSPAN=2 STYLE="font-size:14pt; font-weight: bold; border-bottom: solid 1px #000000">Change password for <?php echo"$username"; ?>:</TD></TR>
-<FORM NAME="adduser" METHOD="POST" ACTION="?function=changepassword">
+<h1>Change password for <?php echo"$username"; ?></h1>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
+<FORM NAME="adduser" METHOD="POST" ACTION="?function=changepassword&userid=<?php echo"$userid"; ?>">
     <INPUT NAME="userid" TYPE="HIDDEN" VALUE="<?php echo"$userid"; ?>">
-<?php if ($_SESSION["level"] !=="admin") { ?>
+<?php if (($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") and $userid != $_SESSION["uid"]) { ?>
+    <TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Generate New Password"></TD></TR>
+<?php } else { ?>
     <TR><TD><B>Old Password:</B></TD><TD><INPUT NAME="oldpass" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
-<?php } ?>
-    <TR><TD><B>New Password:</B></TD><TD><INPUT NAME="newpass" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
+    <TR><TD style="width: 190px"><B>New Password:</B></TD><TD><INPUT NAME="newpass" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
     <TR><TD><B>Retype New Password:</B>&nbsp;&nbsp;&nbsp;</TD><TD><INPUT NAME="newpass2" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
-<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Change Password">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form"></TD></TR>
+    <TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Change Password">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form"></TD></TR>
+<?php } ?>
 </FORM>
 <TR><TD COLSPAN="2"><A HREF="?function=">&#171;&#171; Return to User Manager</A></TD></TR>
 </TABLE>
