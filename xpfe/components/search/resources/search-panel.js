@@ -875,8 +875,21 @@ function OpenSearch( aSearchStr, engineURIs )
                     debug("No engines, default to '" + searchEngineURI + "'\n");
                 }
 
+		if ((!searchEngineURI) || (searchEngineURI == ""))
+		{
+			searchEngineURI = bundle.GetStringFromName("defaultSearchURL");
+		}
+
                 // look up the correct search URL format for the given engine
-                var	searchURL = searchDS.GetInternetSearchURL( searchEngineURI, escapedSearchStr );
+		try
+		{
+			var	searchURL = searchDS.GetInternetSearchURL( searchEngineURI, escapedSearchStr );
+		}
+		catch(ex)
+		{
+			searchURL = "";
+		}
+
                 if (searchURL)
                 {
                     defaultSearchURL = searchURL;
