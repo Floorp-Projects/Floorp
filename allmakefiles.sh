@@ -561,6 +561,11 @@ xpfe/components/bookmarks/public/Makefile
 xpfe/components/bookmarks/src/Makefile
 xpfe/components/bookmarks/resources/Makefile
 xpfe/components/directory/Makefile
+#xpfe/components/timebomb/Makefile
+#xpfe/components/timebomb/resources/Makefile
+#xpfe/components/timebomb/resources/content/Makefile
+#xpfe/components/timebomb/resources/locale/Makefile
+#xpfe/components/timebomb/resources/locale/en-US/Makefile
 xpfe/components/regviewer/Makefile
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
