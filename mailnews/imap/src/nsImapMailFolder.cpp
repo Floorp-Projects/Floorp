@@ -1292,7 +1292,6 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
             rv = aEnumerator->First();
             while(NS_SUCCEEDED(rv))
             {
-                PRBool confirmed = PR_TRUE;
                 PRInt32 dlgResult  = -1;
                 rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
                 if (confirmDeletion)
@@ -1350,8 +1349,6 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
             rv = aEnumerator->First();
             while(NS_SUCCEEDED(rv))
             {
-                PRBool confirmed = PR_TRUE;
-                PRInt32 dlgResult  = -1;
                 rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
                       aSupportsArray->AppendElement(aSupport);
                   rv = aEnumerator->Next();

@@ -930,8 +930,6 @@ NS_IMETHODIMP nsMsgDatabase::OpenFolderDB(nsIMsgFolder *folder, PRBool create, P
   if (NS_SUCCEEDED(rv))
   {
     mdb_count numHdrsInTable = 0;
-    PRInt32 numUnread = 0;
-    PRInt32 numHdrs = 0;
 
     if (m_mdbAllMsgHeadersTable)
     {
@@ -2263,7 +2261,6 @@ NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
   nsresult err = NS_OK;
   if (notify && m_newSet.GetSize() > 0)	// need to update view
   {
-    PRInt32 firstMember;
     nsMsgKeyArray saveNewSet;
     saveNewSet.CopyArray(m_newSet);
     // clear m_newSet so that the code that's listening to the key change
