@@ -321,16 +321,30 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     rv = profile->GetCurrentProfileDir(&spec);
     if (NS_FAILED(rv)) return rv;
 
+    // Make sure the profile directory _really exists_ before we try
+    // to create file in it.
+    if (! spec.Exists())
+        return NS_ERROR_UNEXPECTED;
+
     spec += "localstore.rdf";
 
 	if (! spec.Exists())
 	{
-		nsOutputFileStream	os(spec);
-		os << "<?xml version=\"1.0\"?>" << nsEndl;
-		os << "<RDF:RDF xmlns:RDF=\"" << RDF_NAMESPACE_URI << "\"" << nsEndl;
-		os << "         xmlns:NC=\""  << NC_NAMESPACE_URI  << "\">" << nsEndl;
-		os << "  <!-- Empty -->" << nsEndl;
-		os << "</RDF:RDF>" << nsEndl;
+        {
+            nsOutputFileStream os(spec);
+
+            os << "<?xml version=\"1.0\"?>" << nsEndl;
+            os << "<RDF:RDF xmlns:RDF=\"" << RDF_NAMESPACE_URI << "\"" << nsEndl;
+            os << "         xmlns:NC=\""  << NC_NAMESPACE_URI  << "\">" << nsEndl;
+            os << "  <!-- Empty -->" << nsEndl;
+            os << "</RDF:RDF>" << nsEndl;
+        }
+
+        // Okay, now see if the file exists _for real_. If it's still
+        // not there, it could be that the profile service gave us
+        // back a read-only directory. Whatever.
+        if (! spec.Exists())
+            return NS_ERROR_UNEXPECTED;
 	}
 
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
