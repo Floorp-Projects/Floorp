@@ -325,7 +325,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
 
   if (NS_SUCCEEDED(result) &&
       (cookieStr.Length() > cookiePrefix.Length()) &&
-      (cookieStr.Find(cookiePrefix) == 0)) {
+      (Substring(cookieStr, 0, cookiePrefix.Length()) == cookiePrefix)) {
     // Cookie value already defined for document; simply copy it
     mCookie = cookieStr;
 
