@@ -98,6 +98,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\MailToolbar.xml       $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\EditorAppShell.xul    $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\EditorInitPage.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\EditorInitPagePlain.html   $(DIST)\bin\res\samples
 
 	$(MAKE_INSTALL) ..\xul\resources\Mail_SendMsg.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_GetMsg.gif  $(DIST)\bin\res\toolbar
