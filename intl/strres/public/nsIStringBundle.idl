@@ -91,9 +91,9 @@ interface nsIStringBundle : nsISupports
 [scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
 interface nsIStringBundleService : nsISupports
 {
-  nsIStringBundle CreateBundle([const] in string aURLSpec);
-  nsIStringBundle CreateAsyncBundle([const] in string aURLSpec);
-  nsIStringBundle CreateExtensibleBundle([const] in string aRegistryKey);
+  nsIStringBundle createBundle([const] in string aURLSpec);
+  nsIStringBundle createAsyncBundle([const] in string aURLSpec);
+  nsIStringBundle createExtensibleBundle([const] in string aRegistryKey);
 
   /**
    * Formats a message string from a status code and status arguments.
