@@ -2875,7 +2875,7 @@ fi
 
 echo $ac_n "checking for minimum required perl version >= $PERL_VERSION""... $ac_c" 1>&6
 echo "configure:2878: checking for minimum required perl version >= $PERL_VERSION" >&5
-_perl_version=`$PERL -e 'print "$]"; if ($] >= $PERL_VERSION) { exit(0); } else { exit(1); }' 2>&5`
+_perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
 _perl_res=$?
 echo "$ac_t""$_perl_version" 1>&6
 
