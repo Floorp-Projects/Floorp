@@ -1,28 +1,22 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://xpinstall/locale/progress.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onload="OnLoad()"
     title="&downloadWindow.title;"
 	class="dialog"
     width="425"
     height="225">
 
+    <html:script language="javascript" src="progress.js"/>
+
     <data>
         <broadcaster id="data.canceled" type="string" value="false"/>
     </data>
 
-    <html:script>
- 
-         function cancelInstall() 
-         {
-            var cancelData = document.getElementById("data.canceled");
-            cancelData.setAttribute( "value", "true");
-         }
-
-    </html:script>
 
 <html:center>
   <html:table style="width:100%;">

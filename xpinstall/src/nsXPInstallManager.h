@@ -44,9 +44,9 @@
 
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
-#include "nsIXULWindowCallbacks.h"    
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsPIXPIManagerCallbacks.h"
 
 #include "nsIDialogParamBlock.h"
 
@@ -55,7 +55,7 @@ class nsXPInstallManager : public nsIXPINotifier,
                            public nsIStreamListener,
                            public nsIProgressEventSink,
                            public nsIInterfaceRequestor,
-                           public nsIXULWindowCallbacks
+                           public nsPIXPIManagerCallbacks
 {
     public:
         nsXPInstallManager();
@@ -80,12 +80,11 @@ class nsXPInstallManager : public nsIXPINotifier,
         // nsIInterfaceRequestor
         NS_DECL_NSIINTERFACEREQUESTOR
 
-        // IXULWindowCallbacks methods
-        NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
-        NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell);
+        //nsPIXPIMANAGERCALLBACKS
+        NS_DECL_NSPIXPIMANAGERCALLBACKS
+
 
     private:
-        nsresult DownloadNext();
         void     Shutdown();
         void     LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
         

@@ -25,8 +25,6 @@ DEPTH=..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-  $(MAKE_INSTALL) progress.xul  $(DIST)\bin\chrome\xpinstall\content\default
-  $(MAKE_INSTALL) progress.html $(DIST)\bin\chrome\xpinstall\content\default
   $(MAKE_INSTALL) xpistatus.xul $(DIST)\bin\chrome\xpinstall\content\default
   $(MAKE_INSTALL) xpistatus.js  $(DIST)\bin\chrome\xpinstall\content\default
   $(MAKE_INSTALL) institems.xul $(DIST)\bin\chrome\xpinstall\content\default
@@ -34,8 +32,6 @@ install:: $(DLL)
 
 
 clobber::
-  rm -f $(DIST)\bin\chrome\xpinstall\content\default\progress.xul
-  rm -f $(DIST)\bin\chrome\xpinstall\content\default\progress.html
   rm -f $(DIST)\bin\chrome\xpinstall\content\default\xpistatus.xul
   rm -f $(DIST)\bin\chrome\xpinstall\content\default\xpistatus.js
   rm -f $(DIST)\bin\chrome\xpinstall\content\default\institems.xul

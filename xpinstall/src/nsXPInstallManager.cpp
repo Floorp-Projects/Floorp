@@ -108,8 +108,8 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIXPINotifier*,this);
   else if (aIID.Equals(nsIStreamListener::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*,this);
-  else if (aIID.Equals(nsIXULWindowCallbacks::GetIID()))
-    *aInstancePtr = NS_STATIC_CAST(nsIXULWindowCallbacks*,this);
+  else if (aIID.Equals(nsPIXPIManagerCallbacks::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsPIXPIManagerCallbacks*,this);
   else if (aIID.Equals(nsIProgressEventSink::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIProgressEventSink*,this);
   else if (aIID.Equals(nsIInterfaceRequestor::GetIID()))
@@ -182,6 +182,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
                                           "chrome,modal",
                                           (const nsIID*)(&nsIDialogParamBlock::GetIID()),
                                           (nsISupports*)ioParamBlock);
+
           if (argv)
           {
             nsCOMPtr<nsIDOMWindow> newWindow;
@@ -231,7 +232,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
                 
                 if (NS_SUCCEEDED(rv))
                 {        
-                    rv = mDlg->Open();
+                    rv = mDlg->Open(ioParamBlock);
                 }
             }
         }
@@ -261,8 +262,16 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     return rv;
 }
 
+NS_IMETHODIMP nsXPInstallManager::DialogOpened(nsISupports* aWindow)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aWindow, &rv);
+  DownloadNext();
+  return rv;
+}
 
-nsresult nsXPInstallManager::DownloadNext()
+
+NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 {
     nsresult rv;
     if ( mNextItem < mTriggers->Size() )
@@ -380,6 +389,13 @@ nsresult nsXPInstallManager::DownloadNext()
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsXPInstallManager::CancelInstall()
+{
+  nsresult rv = NS_OK;
+  return rv;
 }
 
 void nsXPInstallManager::Shutdown()
@@ -621,16 +637,3 @@ nsXPInstallManager::LogComment(const PRUnichar* comment)
     return NS_OK;
 }
 
-// nsIXULWindowCallbacks
-
-NS_IMETHODIMP
-nsXPInstallManager::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::ConstructAfterJavaScript(nsIWebShell *aWebShell)
-{
-    return DownloadNext();
-}

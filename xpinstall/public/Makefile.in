@@ -35,6 +35,7 @@ XPIDLSRCS	= \
 		nsIXPINotifier.idl \
 		nsIXPIProgressDlg.idl \
 		nsPIXPIStubHook.idl \
+		nsPIXPIManagerCallbacks.idl \
 		$(NULL)
 
 EXPORTS		= \
