@@ -399,7 +399,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       
       // See if there's an attribute:
       // note that we copy here, because we're going to have to trim quotes.
-      nsString value (aNode.GetValueAt(i));
+      nsAutoString value (aNode.GetValueAt(i));
 
       // strip double quotes from beginning and end
       value.Trim("\"", PR_TRUE, PR_TRUE);
@@ -424,7 +424,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       else
         key.ToUpperCase();
 
-      EnsureBufferSize(key.Length());
+      EnsureBufferSize(key.Length() + 1);
       key.ToCString(mBuffer,mBufferSize);
 
         // send to ouput " [KEY]="
@@ -590,7 +590,7 @@ PRBool nsHTMLContentSinkStream::IsDirty(const nsIParserNode& aNode)
 
 void nsHTMLContentSinkStream::AddIndent()
 {
-  nsString padding; padding.AssignWithConversion("  ");
+  nsAutoString padding; padding.AssignWithConversion("  ");
   for (PRInt32 i = mIndent; --i >= 0; ) 
   {
     Write(padding);
@@ -604,7 +604,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   PRBool            isDirty = IsDirty(aNode);
 
   const nsString&   name = aNode.GetText();
-  nsString          tagName;
+  nsAutoString      tagName;
 
   if (tag == eHTMLTag_body)
     mInBody = PR_TRUE;
@@ -660,7 +660,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if ((mDoFormat || isDirty) && !mInPre && mColPos == 0)
     AddIndent();
 
-  EnsureBufferSize(tagName.Length());
+  EnsureBufferSize(tagName.Length() + 1);
   tagName.ToCString(mBuffer,mBufferSize);
 
   Write(kLessThan);
@@ -779,7 +779,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if ((mDoFormat || isDirty) && !mInPre && mColPos == 0)
     AddIndent();
 
-  EnsureBufferSize(tagName.Length());
+  EnsureBufferSize(tagName.Length() + 1);
   tagName.ToCString(mBuffer,mBufferSize);
 
   if (tag != eHTMLTag_comment)
