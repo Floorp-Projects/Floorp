@@ -39,97 +39,57 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCookies.h"
+#include "nsCookieService.h"
 #include "nsPermissions.h"
-#include "nsUtils.h"
-#include "nsVoidArray.h"
+#include "nsIIOService.h"
 #include "prprf.h"
-#include "prmem.h"
 #include "nsReadableUtils.h"
-#include "nsIPref.h"
-#include "nsAppDirectoryServiceDefs.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsICookieConsent.h"
 #include "nsIURL.h"
-#include "nsIHttpChannel.h"
 #include "prnetdb.h"
 #include "nsComObsolete.h"
-#include <time.h>
-
-#include "nsCRT.h"
+#include "nsILineInputStream.h"
 #include "nsNetUtil.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsCRT.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
 
-#ifdef MOZ_LOGGING
-// in order to do logging, the following environment variables need to be set:
-//
-//    set NSPR_LOG_MODULES=cookie:3 -- shows rejected cookies
-//    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
-//    set NSPR_LOG_FILE=c:\cookie.log
-//
-// this next define has to appear before the include of prolog.h
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#include "prlog.h"
-#endif
+/******************************************************************************
+ * gCookiePrefObserver
+ * This is instanced as a global variable in nsCookieService.cpp.
+ *****************************************************************************/
 
-#if defined(PR_LOGGING)
-PRLogModuleInfo* gCookieLog = nsnull;
-#endif /* PR_LOGGING */
+// gCookiePrefObserver class - defined as |extern| in nsCookieService.h
+nsCookiePrefObserver *gCookiePrefObserver;
 
-#define MAX_NUMBER_OF_COOKIES 300
-#define MAX_COOKIES_PER_SERVER 20
-#define MAX_BYTES_PER_COOKIE 4096  /* must be at least 1 */
-
+// pref string constants
 #ifdef MOZ_PHOENIX
-#define cookie_enabled "network.cookie.enable"
-#define cookie_enabled_for_website_only "network.cookie.enableForOriginatingWebsiteOnly"
-#define cookie_lifetimeBehaviorPref "network.cookie.enableForCurrentSessionOnly"
+static const char kCookiesEnabled[] = "network.cookie.enable";
+static const char kCookiesForDomainOnly[] = "network.cookie.enableForOriginatingWebsiteOnly";
+static const char kCookiesLifetimeCurrentSession[] = "network.cookie.enableForCurrentSessionOnly";
 #else
-#define cookie_disableCookieForMailNewsPref "network.cookie.disableCookieForMailNews"
-#define cookie_lifetimePref "network.cookie.lifetimeOption"
-#define cookie_lifetimeValue "network.cookie.lifetimeLimit"
-#define cookie_behaviorPref "network.cookie.cookieBehavior"
-#define cookie_lifetimeEnabledPref "network.cookie.lifetime.enabled"
-#define cookie_lifetimeBehaviorPref "network.cookie.lifetime.behavior"
-#define cookie_lifetimeDaysPref "network.cookie.lifetime.days"
-#define cookie_p3pPref "network.cookie.p3p"
+static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
+static const char kCookiesDisabledForMailNews[] = "network.cookie.disableCookieForMailNews";
+static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
+static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
+static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
+static const char kCookiesP3PString[] = "network.cookie.p3p";
+NS_NAMED_LITERAL_CSTRING(kCookiesP3PString_Default, "drdraaaa");
 #endif
-#define cookie_warningPref "network.cookie.warnAboutCookies"
-#define cookie_strictDomainsPref "network.cookie.strictDomains"
-// mac, windows, and unix use signed integers for time_t
-#if defined(XP_MAC) || defined(XP_WIN) || defined(XP_UNIX)
-#define MAX_EXPIRE (((unsigned) (~0) << 1) >> 1)
-#else
-#define MAX_EXPIRE 0
-#endif
+static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
+static const char kCookiesStrictDomains[] = "network.cookie.strictDomains";
 
-static const char kCookiesFileName[] = "cookies.txt";
-
-MODULE_PRIVATE nsresult
-cookie_ParseDate(const nsAFlatCString &date_string, time_t & date);
-
-typedef enum {
-  COOKIE_Normal,
-  COOKIE_Discard,
-  COOKIE_Trim,
-  COOKIE_Ask
-} COOKIE_LifetimeEnum;
-
-PRIVATE PRBool cookie_changed = PR_FALSE;
-PRIVATE PERMISSION_BehaviorEnum cookie_behavior = PERMISSION_Accept;
-PRIVATE PRBool cookie_disableCookieForMailNews = PR_TRUE; //default -- disable is true
-PRIVATE PRBool cookie_warning = PR_FALSE;
-PRIVATE COOKIE_LifetimeEnum cookie_lifetimeOpt = COOKIE_Normal;
-PRIVATE time_t cookie_lifetimeLimit = 90*24*60*60;
-PRIVATE time_t cookie_lifetimeDays;
-PRIVATE PRBool cookie_lifetimeCurrentSession;
-
-PRIVATE char* cookie_P3P = nsnull;
-
-/* cookie_P3P (above) consists of 8 characters having the following interpretation:
+// P3P constants
+/* mCookiesP3PString (below) consists of 8 characters having the following interpretation:
  *   [0]: behavior for first-party cookies when site has no privacy policy
  *   [1]: behavior for third-party cookies when site has no privacy policy
  *   [2]: behavior for first-party cookies when site uses PII with no user consent
@@ -148,7 +108,7 @@ PRIVATE char* cookie_P3P = nsnull;
  *
  * The following defines are used to refer to these character positions and values
  */
-
+// do we need P3P_UnknownPolicy? can't we default to P3P_NoPolicy?
 #define P3P_UnknownPolicy   -1
 #define P3P_NoPolicy         0
 #define P3P_NoConsent        2
@@ -162,875 +122,774 @@ PRIVATE char* cookie_P3P = nsnull;
 #define P3P_Reject     'r'
 #define P3P_Flag       'f'
 
-#define cookie_P3P_Default    "drdraaaa"
+nsCookiePrefObserver::nsCookiePrefObserver()
+{
+  nsresult rv;
 
-PRIVATE nsVoidArray * cookie_list=0;
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal;
 
-static
-time_t
-get_current_time()
-    /*
-      We call this routine instead of |time()| because the latter returns
-      different values on the Mac than on all other platforms (i.e., based on
-      the Mac's 1900 epoch, vs all others 1970).  We can't call |PR_Now|
-      directly, since the value is 64bits and too hard to manipulate.
-      Hence, this cross-platform convenience routine.
-    */
-  {
-    PRInt64 usecPerSec;
-    LL_I2L(usecPerSec, 1000000L);
-
-    PRTime now_useconds = PR_Now();
-
-    PRInt64 now_seconds;
-    LL_DIV(now_seconds, now_useconds, usecPerSec);
-
-    time_t current_time_in_seconds;
-    LL_L2I(current_time_in_seconds, now_seconds);
-
-    return current_time_in_seconds;
+  // install and cache the preferences observer
+  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    prefInternal = do_QueryInterface(mPrefBranch, &rv);
   }
 
-// Cookie logging macros for when PR_LOGGING is switched on
-#define SET_COOKIE PR_TRUE
-#define GET_COOKIE PR_FALSE
+  // add observers
+  if (NS_SUCCEEDED(rv)) {
+#ifdef MOZ_PHOENIX
+    prefInternal->AddObserver(kCookiesEnabled, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesForDomainOnly, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
+#else
+    prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesDisabledForMailNews, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesLifetimeEnabled, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesLifetimeDays, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
+#endif
+    prefInternal->AddObserver(kCookiesAskPermission, this, PR_TRUE);
+    prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
+
+    // initialize prefs
+    rv = ReadPrefs();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Error occured reading cookie preferences");
+    }
+  }
+}
+
+nsCookiePrefObserver::~nsCookiePrefObserver()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsCookiePrefObserver, nsIObserver)
+
+NS_IMETHODIMP
+nsCookiePrefObserver::Observe(nsISupports *aSubject,
+                              const char *aTopic,
+                              const PRUnichar *aData)
+{
+  nsresult rv;
+
+  // check the topic, and the cached prefservice
+  if (!mPrefBranch ||
+      nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // which pref changed?
+  NS_ConvertUCS2toUTF8 pref(aData);
+  PRInt32 tempPrefValue;
+#ifdef MOZ_PHOENIX
+  PRBool computePermissions = PR_FALSE;
+
+  if (pref.Equals(kCookiesEnabled)) {
+    rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &mCookiesEnabled_temp);
+    if (NS_FAILED(rv)) {
+      mCookiesEnabled_temp = PR_FALSE;
+    }
+    // set flag so we know to update the enumerated permissions
+    computePermissions = PR_TRUE;
+
+  } else if (pref.Equals(kCookiesForDomainOnly)) {
+    rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &mCookiesForDomainOnly_temp);
+    if (NS_FAILED(rv)) {
+      mCookiesForDomainOnly_temp = PR_FALSE;
+    }
+    // set flag so we know to update the enumerated permissions
+    computePermissions = PR_TRUE;
+
+  } else if (pref.Equals(kCookiesLifetimeCurrentSession)) {
+    rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &mCookiesLifetimeCurrentSession);
+    if (NS_FAILED(rv)) {
+      mCookiesLifetimeCurrentSession = PR_FALSE;
+    }
+    // Phoenix hack to reduce ifdefs in code
+    mCookiesLifetimeEnabled = mCookiesLifetimeCurrentSession;
+
+#else
+  if (pref.Equals(kCookiesPermissions)) {
+    rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
+    if (NS_FAILED(rv) || tempPrefValue < 0 || tempPrefValue > 3) {
+      tempPrefValue = PERMISSION_DontUse;
+    }
+    mCookiesPermissions = (PERMISSION_BehaviorEnum) tempPrefValue;
+
+  } else if (pref.Equals(kCookiesDisabledForMailNews)) {
+    rv = mPrefBranch->GetBoolPref(kCookiesDisabledForMailNews, &tempPrefValue);
+    if (NS_FAILED(rv)) {
+      tempPrefValue = PR_TRUE;
+    }
+    mCookiesDisabledForMailNews = tempPrefValue;
+
+  } else if (pref.Equals(kCookiesLifetimeEnabled)) {
+    rv = mPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &tempPrefValue);
+    if (NS_FAILED(rv)) {
+      tempPrefValue = PR_FALSE;
+    }
+    mCookiesLifetimeEnabled = tempPrefValue;
+
+  } else if (pref.Equals(kCookiesLifetimeDays)) {
+    rv = mPrefBranch->GetIntPref(kCookiesLifetimeDays, &mCookiesLifetimeSec);
+    if (NS_FAILED(rv)) {
+      mCookiesLifetimeEnabled = PR_FALSE; // disable lifetime limit...
+      mCookiesLifetimeSec = 0;
+    }
+    // save cookie lifetime in seconds instead of days
+    mCookiesLifetimeSec *= 24*60*60;
+
+  } else if (pref.Equals(kCookiesLifetimeCurrentSession)) {
+    rv = mPrefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
+    if (NS_FAILED(rv)) {
+      tempPrefValue = 1; // disable currentSession limit
+    }
+    mCookiesLifetimeCurrentSession = (tempPrefValue == 0);
+
+  // P3P prefs
+  } else if (pref.Equals(kCookiesP3PString)) {
+    rv = mPrefBranch->GetCharPref(kCookiesP3PString, getter_Copies(mCookiesP3PString));
+    // check for a malformed string
+    if (NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
+      // reassign to default string
+      mCookiesP3PString = kCookiesP3PString_Default;
+    }
+
+#endif
+  // common prefs between Phoenix & Mozilla
+  } else if (pref.Equals(kCookiesAskPermission)) {
+    rv = mPrefBranch->GetBoolPref(kCookiesAskPermission, &tempPrefValue);
+    if (NS_FAILED(rv)) {
+      tempPrefValue = PR_FALSE;
+    }
+    mCookiesAskPermission = tempPrefValue;
+
+  } else if (pref.Equals(kCookiesStrictDomains)) {
+    rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &mCookiesStrictDomains);
+    if (NS_FAILED(rv)) {
+      mCookiesStrictDomains = PR_FALSE;
+    }
+  }
+
+#ifdef MOZ_PHOENIX
+  // collapse two boolean prefs into enumerated permissions
+  // note: PERMISSION_P3P is not used in Phoenix, so we won't reach any P3P code.
+  if (computePermissions) {
+    if (mCookiesEnabled_temp) {
+      // check if user wants cookies only for site domain
+      if (mCookiesForDomainOnly_temp) {
+        mCookiesPermissions = PERMISSION_DontAcceptForeign;
+      } else {
+        mCookiesPermissions = PERMISSION_Accept;
+      }
+    } else {
+      mCookiesPermissions = PERMISSION_DontUse;
+    }
+  }
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsCookiePrefObserver::ReadPrefs()
+{
+  nsresult rv, rv2 = NS_OK;
+
+  // check the prefservice is cached
+  if (!mPrefBranch) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 tempPrefValue;
+#ifdef MOZ_PHOENIX
+  rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &mCookiesEnabled_temp);
+  if (NS_FAILED(rv)) {
+    mCookiesEnabled_temp = PR_FALSE;
+    rv2 = rv;
+  }
+
+  rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &mCookiesForDomainOnly_temp);
+  if (NS_FAILED(rv)) {
+    mCookiesForDomainOnly_temp = PR_FALSE;
+    rv2 = rv;
+  }
+
+  // collapse two boolean prefs into enumerated permissions
+  // note: PERMISSION_P3P is not used in Phoenix
+  if (mCookiesEnabled_temp) {
+    // check if user wants cookies only for site domain
+    if (mCookiesForDomainOnly_temp) {
+      mCookiesPermissions = PERMISSION_DontAcceptForeign;
+    } else {
+      mCookiesPermissions = PERMISSION_Accept;
+    }
+  } else {
+    mCookiesPermissions = PERMISSION_DontUse;
+  }
+
+  rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &mCookiesLifetimeCurrentSession);
+  if (NS_FAILED(rv)) {
+    mCookiesLifetimeCurrentSession = PR_FALSE;
+    rv2 = rv;
+  }
+  // Phoenix hacks to reduce ifdefs in code
+  mCookiesLifetimeEnabled = mCookiesLifetimeCurrentSession;
+  mCookiesDisabledForMailNews = PR_FALSE;
+
+#else
+  rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
+  if (NS_FAILED(rv)) {
+    tempPrefValue = PERMISSION_DontUse;
+    rv2 = rv;
+  }
+  mCookiesPermissions = (PERMISSION_BehaviorEnum) tempPrefValue;
+
+  rv = mPrefBranch->GetBoolPref(kCookiesDisabledForMailNews, &tempPrefValue);
+  if (NS_FAILED(rv)) {
+    tempPrefValue = PR_TRUE;
+    rv2 = rv;
+  }
+  mCookiesDisabledForMailNews = tempPrefValue;
+
+  rv = mPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &tempPrefValue);
+  if (NS_FAILED(rv)) {
+    tempPrefValue = PR_FALSE;
+    rv2 = rv;
+  }
+  mCookiesLifetimeEnabled = tempPrefValue;
+
+  rv = mPrefBranch->GetIntPref(kCookiesLifetimeDays, &mCookiesLifetimeSec);
+  if (NS_FAILED(rv)) {
+    mCookiesLifetimeEnabled = PR_FALSE; // disable lifetime limit...
+    mCookiesLifetimeSec = 0;
+    rv2 = rv;
+  }
+  // save cookie lifetime in seconds instead of days
+  mCookiesLifetimeSec *= 24*60*60;
+
+  rv = mPrefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
+  if (NS_FAILED(rv)) {
+    tempPrefValue = 1; // disable currentSession limit
+    rv2 = rv;
+  }
+  mCookiesLifetimeCurrentSession = (tempPrefValue == 0);
+
+  // P3P prefs
+  rv = mPrefBranch->GetCharPref(kCookiesP3PString, getter_Copies(mCookiesP3PString));
+  // check for a malformed string
+  if (NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
+    // reassign to default string
+    mCookiesP3PString = kCookiesP3PString_Default;
+    rv2 = rv;
+  }
+
+#endif
+  // common prefs between Phoenix & Mozilla
+  rv = mPrefBranch->GetBoolPref(kCookiesAskPermission, &tempPrefValue);
+  if (NS_FAILED(rv)) {
+    tempPrefValue = PR_FALSE;
+    rv2 = rv;
+  }
+  mCookiesAskPermission = tempPrefValue;
+
+  rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &mCookiesStrictDomains);
+  if (NS_FAILED(rv)) {
+    mCookiesStrictDomains = PR_FALSE;
+    rv2 = rv;
+  }
+
+  return rv2;
+}
+
+/******************************************************************************
+ * nsCookies impl: #defines and constants
+ *****************************************************************************/
+
+nsVoidArray *sCookieList;
+static const char kCookieFileName[] = "cookies.txt";
+
+// cookie constants
+#define MAX_NUMBER_OF_COOKIES 300
+#define MAX_COOKIES_PER_SERVER 20
+#define MAX_BYTES_PER_COOKIE 4096  /* must be at least 1 */
 
 #ifdef PR_LOGGING
-#define COOKIE_LOGFAILURE(a, b, c, d) cookie_LogFailure(a, b, c, d)
-#define COOKIE_LOGSUCCESS(a, b, c, d) cookie_LogSuccess(a, b, c, d)
+PRIVATE PRLogModuleInfo *gCookieLog = PR_NewLogModule("cookie");
 
-PRIVATE void
-cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const char *cookieString, const char *reason) {
-  if (!gCookieLog) {
-    gCookieLog = PR_NewLogModule("cookie");
-  }
+void
+cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason) {
   nsCAutoString spec;
-  if (curURL)
-    curURL->GetSpec(spec);
+  if (aHostURI)
+    aHostURI->GetAsciiSpec(spec);
 
   PR_LOG(gCookieLog, PR_LOG_WARNING,
-    ("%s%s%s\n", "===== ", set_cookie ? "COOKIE NOT ACCEPTED" : "COOKIE NOT SENT", " ====="));
+    ("%s%s%s\n", "===== ", aSetCookie ? "COOKIE NOT ACCEPTED" : "COOKIE NOT SENT", " ====="));
   PR_LOG(gCookieLog, PR_LOG_WARNING,("request URL: %s\n", spec.get()));
-  if (set_cookie) {
-    PR_LOG(gCookieLog, PR_LOG_WARNING,("cookie string: %s\n", cookieString));
+  if (aSetCookie) {
+    PR_LOG(gCookieLog, PR_LOG_WARNING,("cookie string: %s\n", aCookieString));
   }
-  time_t curTime = get_current_time();
-  PR_LOG(gCookieLog, PR_LOG_WARNING,("current time (gmt): %s", asctime(gmtime(&curTime))));
-  PR_LOG(gCookieLog, PR_LOG_WARNING,("rejected because %s\n", reason));
+
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(PR_Now(), PR_GMTParameters, &explodedTime);
+  char timeString[40];
+  PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
+
+  PR_LOG(gCookieLog, PR_LOG_WARNING,("current time: %s", timeString));
+  PR_LOG(gCookieLog, PR_LOG_WARNING,("rejected because %s\n", aReason));
   PR_LOG(gCookieLog, PR_LOG_WARNING,("\n"));
 }
 
-PRIVATE void
-cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const char *cookieString, cookie_CookieStruct * cookie) {
-  if (!gCookieLog) {
-    gCookieLog = PR_NewLogModule("cookie");
-  }
+void
+cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, cookie_CookieStruct *aCookie) {
   nsCAutoString spec;
-  curURL->GetSpec(spec);
+  aHostURI->GetAsciiSpec(spec);
 
   PR_LOG(gCookieLog, PR_LOG_DEBUG,
-    ("%s%s%s\n", "===== ", set_cookie ? "COOKIE ACCEPTED" : "COOKIE SENT", " ====="));
+    ("%s%s%s\n", "===== ", aSetCookie ? "COOKIE ACCEPTED" : "COOKIE SENT", " ====="));
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
-  PR_LOG(gCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", cookieString));
-  time_t curTime = get_current_time();
-  PR_LOG(gCookieLog, PR_LOG_DEBUG,("current time (gmt): %s", asctime(gmtime(&curTime))));
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", aCookieString));
 
-  if (set_cookie) {
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(PR_Now(), PR_GMTParameters, &explodedTime);
+  char timeString[40];
+  PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
+
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("current time: %s", timeString));
+
+  if (aSetCookie) {
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("----------------\n"));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("name: %s\n", cookie->name.get()));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("value: %s\n", cookie->cookie.get()));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("%s: %s\n", cookie->isDomain ? "domain" : "host", cookie->host.get()));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("path: %s\n", cookie->path.get()));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("expires (gmt): %s",
-           cookie->expires ? asctime(gmtime(&cookie->expires)) : "at end of session"));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("is secure: %s\n", cookie->isSecure ? "true" : "false"));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("name: %s\n", aCookie->name.get()));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("value: %s\n", aCookie->cookie.get()));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("%s: %s\n", aCookie->isDomain ? "domain" : "host", aCookie->host.get()));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("path: %s\n", aCookie->path.get()));
+
+    PR_ExplodeTime(nsInt64(aCookie->expires) * nsInt64((PRInt64) PR_USEC_PER_SEC), PR_GMTParameters, &explodedTime);
+    PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
+
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("expires: %s",
+           aCookie->isSession ? "at end of session" : timeString));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("is secure: %s\n", aCookie->isSecure ? "true" : "false"));
   }
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("\n"));
 }
 
 // inline wrappers to make passing in nsAStrings easier
-PRIVATE inline void
-cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, const char *reason) {
-  cookie_LogFailure(set_cookie, curURL, cookieString.get(), reason);
+inline void
+cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, const char *aReason) {
+  cookie_LogFailure(aSetCookie, aHostURI, aCookieString.get(), aReason);
 }
 
-PRIVATE inline void
-cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, cookie_CookieStruct * cookie) {
-  cookie_LogSuccess(set_cookie, curURL, cookieString.get(), cookie);
+inline void
+cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, cookie_CookieStruct *aCookie) {
+  cookie_LogSuccess(aSetCookie, aHostURI, aCookieString.get(), aCookie);
 }
-#else
-#define COOKIE_LOGFAILURE(a, b, c, d) /* nothing */
-#define COOKIE_LOGSUCCESS(a, b, c, d) /* nothing */
 #endif
 
-PR_STATIC_CALLBACK(PRBool) deleteCookie(void *aElement, void *aData) {
-  cookie_CookieStruct *cookie = (cookie_CookieStruct*)aElement;
-  delete cookie;
-  return PR_TRUE;
-}
+/******************************************************************************
+ * nsCookies impl: some function prototypes
+ *****************************************************************************/
+
+PRIVATE PRBool cookie_IsInDomain(const nsACString &domain, const nsACString &host, PRBool aIsDomain = PR_TRUE);
+
+/******************************************************************************
+ * nsCookies impl: cookie list management functions
+ *****************************************************************************/
+
+// cookie list management
+PRIVATE PRBool sCookieChanged = PR_FALSE;
 
 PUBLIC void
 COOKIE_RemoveAll()
 {
-  if (cookie_list) {
-    cookie_list->EnumerateBackwards(deleteCookie, nsnull);
-    cookie_changed = PR_TRUE;
-    delete cookie_list;
-    cookie_list = nsnull;
-    if (cookie_P3P) {
-      Recycle(cookie_P3P);
-      cookie_P3P = nsnull;
-    }
+  cookie_CookieStruct *cookieInList;
+  for (PRInt32 i = sCookieList->Count() - 1; i >= 0; --i) {
+    cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
+    NS_ASSERTION(cookieInList, "corrupt cookie list");
+    delete cookieInList;
   }
+  sCookieList->SizeTo(0);
+  sCookieChanged = PR_TRUE;
 }
 
+// removes any expired cookies from memory, and finds the oldest cookie in the list
 PUBLIC void
-COOKIE_DeletePersistentUserData(void)
+COOKIE_RemoveExpiredCookies(nsInt64 aCurrentTime,
+                            PRInt32 &aOldestPosition)
 {
-  nsresult res;
-  
-  nsCOMPtr<nsIFile> cookiesFile;
-  res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookiesFile));
-  if (NS_SUCCEEDED(res)) {
-    res = cookiesFile->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
-    if (NS_SUCCEEDED(res))
-        (void) cookiesFile->Remove(PR_FALSE);
-  }
-}
+  aOldestPosition = -1;
 
-PRIVATE void
-cookie_RemoveOldestCookie(void) {
-  cookie_CookieStruct * cookie_s;
-  cookie_CookieStruct * oldest_cookie;
+  cookie_CookieStruct *cookieInList;
+  nsInt64 oldestTime = LL_MININT;
 
-  if (cookie_list == nsnull) {
-    return;
-  }
-   
-  PRInt32 count = cookie_list->Count();
-  if (count == 0) {
-    return;
-  }
-  oldest_cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(0));
-  PRInt32 oldestLoc = 0;
-  for (PRInt32 i = 1; i < count; ++i) {
-    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie_s, "cookie list is corrupt");
-    if(cookie_s->lastAccessed < oldest_cookie->lastAccessed) {
-      oldest_cookie = cookie_s;
-      oldestLoc = i;
+  for (PRInt32 i = sCookieList->Count() - 1; i >= 0; --i) {
+    cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
+    NS_ASSERTION(cookieInList, "corrupt cookie list");
+
+    if (cookieInList->isSession) {
+      continue;
+    }
+
+    if (nsInt64(cookieInList->expires) < aCurrentTime) {
+      sCookieList->RemoveElementAt(i);
+      delete cookieInList;
+      sCookieChanged = PR_TRUE;
+      --aOldestPosition;
+      continue;
+    }
+
+    if (oldestTime > nsInt64(cookieInList->lastAccessed)) {
+      oldestTime = cookieInList->lastAccessed;
+      aOldestPosition = i;
     }
   }
-  if(oldest_cookie) {
-    cookie_list->RemoveElementAt(oldestLoc);
-    delete oldest_cookie;
-    cookie_changed = PR_TRUE;
-  }
-
 }
 
-/* Remove any expired cookies from memory */
-PRIVATE void
-cookie_RemoveExpiredCookies() {
-  cookie_CookieStruct * cookie_s;
-  time_t cur_time = get_current_time();
-  
-  if (cookie_list == nsnull) {
-    return;
-  }
-  
-  for (PRInt32 i = cookie_list->Count(); i > 0;) {
-    i--;
-    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie_s, "corrupt cookie list");
-      /* Don't get rid of expire time 0 because these need to last for 
-       * the entire session. They'll get cleared on exit. */
-      if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
-        cookie_list->RemoveElementAt(i);
-        delete cookie_s;
-        cookie_changed = PR_TRUE;
-      }
-  }
-}
+// count the number of cookies from this host, and find whether a previous cookie
+// has been set, for prompting purposes. 
+PRIVATE PRBool
+cookie_FindCookiesFromHost(cookie_CookieStruct *aCookie,
+                           PRUint32            &aCountFromHost,
+                           nsInt64             aCurrentTime)
+{
+  aCountFromHost = 0;
+  PRBool foundCookie = PR_FALSE;
 
-/* Remove any session cookies from memory */
-PUBLIC void
-COOKIE_RemoveSessionCookies() {
-  cookie_CookieStruct * cookie_s;
-  if (cookie_list == nsnull) {
-    return;
-  }
-  
-  for (PRInt32 i = cookie_list->Count(); i > 0;) {
-    i--;
-    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie_s, "corrupt cookie list");
-      if(!cookie_s->expires) {
-        cookie_list->RemoveElementAt(i);
-        delete cookie_s;
-      }
-  }
-}
+  cookie_CookieStruct *cookieInList;
+  const nsAFlatCString &host = aCookie->host;
+  const nsAFlatCString &path = aCookie->path;
+  const nsAFlatCString &name = aCookie->name;
 
-/* checks to see if the maximum number of cookies per host
- * is being exceeded and deletes the oldest one in that
- * case
- */
-PRIVATE void
-cookie_CheckForMaxCookiesFromHost(const nsACString &cur_host) {
-  cookie_CookieStruct * cookie_s;
-  cookie_CookieStruct * oldest_cookie = 0;
-  int cookie_count = 0;
-  
-  if (cookie_list == nsnull) {
-    return;
-  }
-  
-  PRInt32 count = cookie_list->Count();
-  PRInt32 oldestLoc = -1;
+  PRInt32 count = sCookieList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie_s, "corrupt cookie list");
-    if(cur_host.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator())) {
-      cookie_count++;
-      if(!oldest_cookie || oldest_cookie->lastAccessed > cookie_s->lastAccessed) {
-        oldest_cookie = cookie_s;
-        oldestLoc = i;
+    cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
+    NS_ASSERTION(cookieInList, "corrupt cookie list");
+
+    // only count non-expired cookies
+    if (cookie_IsInDomain(cookieInList->host, host, cookieInList->isDomain) &&
+        !cookieInList->isSession && (nsInt64(cookieInList->expires) > aCurrentTime)) {
+      ++aCountFromHost;
+
+      // check if we've found the previous cookie
+      if (path.Equals(cookieInList->path) &&
+          host.Equals(cookieInList->host) &&
+          name.Equals(cookieInList->name)) {
+        foundCookie = PR_TRUE;
       }
     }
   }
-  if(cookie_count >= MAX_COOKIES_PER_SERVER && oldest_cookie) {
-    NS_ASSERTION(oldestLoc > -1, "oldestLoc got out of sync with oldest_cookie");
-    cookie_list->RemoveElementAt(oldestLoc);
-    delete oldest_cookie;
-    cookie_changed = PR_TRUE;
-  }
+
+  return foundCookie;
 }
 
-/* search for previous exact match */
-PRIVATE cookie_CookieStruct *
-cookie_CheckForPrevCookie(const nsACString &path, const nsACString &hostname, const nsACString &name) {
-  cookie_CookieStruct * cookie_s;
-  if (!cookie_list) {
-    return nsnull;
-  }
-  
-  PRInt32 count = cookie_list->Count();
+// find a position to store a cookie (either replacing an existing cookie, or adding
+// to end of list), and a cookie to delete (if maximum number of cookies has been
+// exceeded). also performs list maintenance by removing expired cookies.
+// returns whether a previous cookie already exists,
+// aInsertPosition is the position to insert the new cookie;
+// aDeletePosition is the position to delete (-1 if not required).
+PRIVATE PRBool
+cookie_FindPosition(cookie_CookieStruct *aCookie,
+                    PRInt32             &aInsertPosition,
+                    PRInt32             &aDeletePosition,
+                    nsInt64             aCurrentTime)
+{
+  aDeletePosition = -1;
+  aInsertPosition = -1;
+  PRBool foundCookie = PR_FALSE;
+
+  // list maintenance: remove expired cookies, and find the position of the
+  // oldest cookie while we're at it - required if we have MAX_NUMBER_OF_COOKIES
+  // and need to remove one.
+  PRInt32 oldestPosition;
+  COOKIE_RemoveExpiredCookies(aCurrentTime, oldestPosition);
+
+  cookie_CookieStruct *cookieInList;
+  nsInt64 oldestTimeFromHost = LL_MININT;
+  PRInt32 oldestPositionFromHost;
+  PRInt32 countFromHost = 0;
+  const nsAFlatCString &host = aCookie->host;
+  const nsAFlatCString &path = aCookie->path;
+  const nsAFlatCString &name = aCookie->name;
+
+  PRInt32 count = sCookieList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie_s, "corrupt cookie list");
-    if(name.Equals(cookie_s->name) && path.Equals(cookie_s->path)
-       && hostname.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator())) {
-      return(cookie_s);
+    cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
+    NS_ASSERTION(cookieInList, "corrupt cookie list");
+
+    if (cookie_IsInDomain(cookieInList->host, host, cookieInList->isDomain)) {
+      ++countFromHost;
+
+      if (oldestTimeFromHost > nsInt64(cookieInList->lastAccessed)) {
+        oldestTimeFromHost = cookieInList->lastAccessed;
+        oldestPositionFromHost = i;
+      }
+
+      // if we've found a position to insert the cookie at (either replacing a 
+      // previous cookie, or inserting at a new position), we don't need to keep looking.
+      if (aInsertPosition != -1) {
+        continue;
+      }
+
+      // check if we've passed the location where we might find a previous cookie.
+      // sCookieList is sorted in order of descending path length,
+      // so since we're enumerating forwards, we look for aCookie path length
+      // to become greater than cookieInList path length.
+      if (aCookie->path.Length() > cookieInList->path.Length()) {
+        aInsertPosition = i;
+      
+      // check if we've found the previous cookie
+      } else if (path.Equals(cookieInList->path) &&
+                 host.Equals(cookieInList->host) &&
+                 name.Equals(cookieInList->name)) {
+        aInsertPosition = i;
+        foundCookie = PR_TRUE;
+      }
     }
   }
-  return(nsnull);
-}
 
-/* cookie utility functions */
-PRIVATE void
-cookie_SetBehaviorPref(PERMISSION_BehaviorEnum x, nsIPref* prefs) {
-  cookie_behavior = x;
-}
-
-PRIVATE void
-cookie_SetDisableCookieForMailNewsPref(PRBool x) {
-  cookie_disableCookieForMailNews = x;
-}
-
-PRIVATE void
-cookie_SetWarningPref(PRBool x) {
-  cookie_warning = x;
-}
-
-PRIVATE void
-cookie_SetLifetimePref(COOKIE_LifetimeEnum x) {
-  cookie_lifetimeOpt = x;
-}
-
-PRIVATE void
-cookie_SetLifetimeLimit(PRInt32 x) {
-  // save limit as seconds instead of days
-  cookie_lifetimeLimit = x*24*60*60;
-}
-
-PRIVATE PERMISSION_BehaviorEnum
-cookie_GetBehaviorPref() {
-  return cookie_behavior;
-}
-
-PRIVATE PRBool
-cookie_GetDisableCookieForMailNewsPref() {
-  return cookie_disableCookieForMailNews;
-}
-
-PRIVATE PRBool
-cookie_GetWarningPref() {
-  return cookie_warning;
-}
-
-PRIVATE COOKIE_LifetimeEnum
-cookie_GetLifetimePref() {
-  return cookie_lifetimeOpt;
-}
-
-PRIVATE time_t
-cookie_GetLifetimeTime() {
-  // return time after which lifetime is excessive
-  return get_current_time() + cookie_lifetimeLimit;
-}
-
-#if 0
-PRIVATE PRBool
-cookie_GetLifetimeAsk(time_t expireTime) {
-  // return true if we should ask about this cookie
-  return (cookie_GetLifetimePref() == COOKIE_Ask)
-    && (cookie_GetLifetimeTime() < expireTime);
-}
-#endif
-
-PRIVATE time_t
-cookie_TrimLifetime(time_t expires) {
-  // return potentially-trimmed lifetime
-  if (cookie_GetLifetimePref() == COOKIE_Trim) {
-    // a limit of zero means expire cookies at end of session
-    //    however we need to test for case of cookie being intentionally set to a time
-    //    in the past (trick that servers use to delete cookies) and not turn that into
-    //    a cookie that exires at end of current session.
-    if ((cookie_lifetimeLimit == 0) &&
-        ((unsigned)expires > (unsigned)get_current_time())) {
-      return 0;
-    }
-    time_t limit = cookie_GetLifetimeTime();
-    if ((unsigned)expires > (unsigned)limit) {
-      return limit;
-    }
+  // if we didn't find a position to insert at, put it at the end of the list
+  if (aInsertPosition == -1) {
+    aInsertPosition = count;
   }
-  return expires;
-}
 
-MODULE_PRIVATE int PR_CALLBACK
-cookie_BehaviorPrefChanged(const char * newpref, void * data) {
-  PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-#ifdef MOZ_PHOENIX
-  if (cookie_GetBehaviorPref() != PERMISSION_Accept && cookie_GetBehaviorPref() != PERMISSION_DontUse)
-    return 0;
-  PRBool cookiesEnabled;
-  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_enabled, &cookiesEnabled)) || cookiesEnabled) {
-    n = PERMISSION_Accept;
+  // choose which cookie to delete (oldest cookie, or oldest cookie from this host),
+  // if we have to.
+  if (countFromHost >= MAX_COOKIES_PER_SERVER) {
+    aDeletePosition = oldestPositionFromHost;
+  } else if (count >= MAX_NUMBER_OF_COOKIES) {
+    aDeletePosition = oldestPosition;
   }
-  else {
-    n = PERMISSION_DontUse;
-  }
-  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
-#else
-  if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
-    n = PERMISSION_Accept;
-  }
-  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
-#endif    
-  return 0;
-}
 
-#ifdef MOZ_PHOENIX
-MODULE_PRIVATE int PR_CALLBACK
-cookie_EnabledForOriginalOnlyPrefChanged(const char * newpref, void * data) {
-  PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  PRBool cookiesForWebsiteOnly = PR_FALSE;
-  prefs->GetBoolPref(cookie_enabled_for_website_only, &cookiesForWebsiteOnly);
-  if (cookiesForWebsiteOnly)
-    n = PERMISSION_DontAcceptForeign;
-  else if (cookie_GetBehaviorPref() != PERMISSION_DontUse)
-    n = PERMISSION_Accept;
-  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
-  return 0;
+  return foundCookie;
 }
-#endif
-
-#ifndef MOZ_PHOENIX
-MODULE_PRIVATE int PR_CALLBACK
-cookie_DisableCookieForMailNewsPrefChanged(const char * newpref, void * data) {
-  PRBool x;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_disableCookieForMailNewsPref, &x))) {
-    x = PR_TRUE;
-  }
-  cookie_SetDisableCookieForMailNewsPref(x);
-  return 0;
-}
-#endif
-
-MODULE_PRIVATE int PR_CALLBACK
-cookie_WarningPrefChanged(const char * newpref, void * data) {
-  PRBool x;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
-    x = PR_FALSE;
-  }
-  cookie_SetWarningPref(x);
-  return 0;
-}
-
-#ifndef MOZ_PHOENIX
-MODULE_PRIVATE int PR_CALLBACK
-cookie_LifetimeOptPrefChanged(const char * newpref, void * data) {
-  PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
-    n = COOKIE_Normal;
-  }
-  cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
-  return 0;
-}
-
-MODULE_PRIVATE int PR_CALLBACK
-cookie_LifetimeLimitPrefChanged(const char * newpref, void * data) {
-  PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
-    cookie_SetLifetimeLimit(n);
-  }
-  return 0;
-}
-
-MODULE_PRIVATE int PR_CALLBACK
-cookie_LifetimeEnabledPrefChanged(const char * newpref, void * data) {
-  PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_lifetimeEnabledPref, &n))) {
-    n = PR_FALSE;
-  }
-  cookie_SetLifetimePref(n ? COOKIE_Trim : COOKIE_Normal);
-  return 0;
-}
-#endif
-
-MODULE_PRIVATE int PR_CALLBACK
-cookie_LifetimeBehaviorPrefChanged(const char * newpref, void * data) {
-nsresult rv;
-nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-#ifdef MOZ_PHOENIX
-  PRBool currentSessionOnly;
-  prefs->GetBoolPref(cookie_lifetimeBehaviorPref, &currentSessionOnly);
-  cookie_SetLifetimeLimit(currentSessionOnly ? 0 : cookie_lifetimeDays);
-  cookie_SetLifetimePref(currentSessionOnly ? COOKIE_Trim : COOKIE_Normal);
-  cookie_lifetimeCurrentSession = currentSessionOnly;
-#else
-  PRInt32 n;
-  if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_lifetimeBehaviorPref, &n))) {
-    n = 0;
-  }
-  cookie_SetLifetimeLimit((n==0) ? 0 : cookie_lifetimeDays);
-  cookie_lifetimeCurrentSession = (n==0);
-#endif
-  return 0;
-}
-
-#ifndef MOZ_PHOENIX
-MODULE_PRIVATE int PR_CALLBACK
-cookie_LifetimeDaysPrefChanged(const char * newpref, void * data) {
-  PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs || NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
-    cookie_lifetimeDays = n;
-    if (!cookie_lifetimeCurrentSession) {
-      cookie_SetLifetimeLimit(n);
-    }
-  }
-  return 0;
-}
-
-MODULE_PRIVATE int PR_CALLBACK
-cookie_P3PPrefChanged(const char * newpref, void * data) {
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs || NS_FAILED(prefs->CopyCharPref(cookie_p3pPref, &cookie_P3P))) {
-    cookie_P3P = PL_strdup(cookie_P3P_Default);
-  }
-  return 0;
-}
-#endif
-
-PRIVATE PRBool
-cookie_SameDomain(const nsAFlatCString &currentHost, const nsAFlatCString &firstHost);
 
 PUBLIC void
-COOKIE_RegisterPrefCallbacks(void) {
-  PRInt32 n;
-  PRBool x;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs) {
-    return;
-  }
+COOKIE_Remove(const nsACString &host,
+              const nsACString &name,
+              const nsACString &path,
+              PRBool           blocked)
+{
+  cookie_CookieStruct *cookieInList;
 
-#ifdef MOZ_PHOENIX
-  // Initialize for cookie_behaviorPref
-  if (NS_FAILED(prefs->GetBoolPref(cookie_enabled, &n))) {
-    n = PERMISSION_Accept;
-  }
-  n = n ? PERMISSION_Accept : PERMISSION_DontUse;
-  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
-  prefs->RegisterCallback(cookie_enabled, cookie_BehaviorPrefChanged, nsnull);
-  
-  if (NS_FAILED(prefs->GetBoolPref(cookie_enabled_for_website_only, &n))) {
-    n = PERMISSION_Accept;
-  }
-  if (cookie_behavior != PERMISSION_DontUse)
-    cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
-  prefs->RegisterCallback(cookie_enabled_for_website_only, cookie_EnabledForOriginalOnlyPrefChanged, nsnull);
-#else
-  // Initialize for cookie_behaviorPref
-  if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
-    n = PERMISSION_Accept;
-  }
-  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
-  prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, nsnull);
+  // step through all cookies, searching for indicated one
+  PRInt32 count = sCookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
+    NS_ASSERTION(cookieInList, "corrupt cookie list");
 
-  // Initialize  cookie_disableCookieForMailNewsPref
-  if (NS_FAILED(prefs->GetBoolPref(cookie_disableCookieForMailNewsPref, &x))) {
-    x = PR_TRUE; //default --> disable is true
-  }
-  cookie_SetDisableCookieForMailNewsPref(x);
-  prefs->RegisterCallback(cookie_disableCookieForMailNewsPref, cookie_DisableCookieForMailNewsPrefChanged, nsnull);
+    if (cookieInList->path.Equals(path) &&
+        cookieInList->host.Equals(host) &&
+        cookieInList->name.Equals(name)) {
+      // check if we need to add the host to the permissions blacklist
+      if (blocked && NS_SUCCEEDED(PERMISSION_Read())) {
+        // remove leading dot from host
+        // we need this trickery since Permission_AddHost wants an nsAFlatCString
+        // (and we want to avoid PromiseFlatCString()).
+        // we should push this portion into the UI, it shouldn't live here in the backend.
+        nsDependentCString hostWithoutDot(cookieInList->host.get(), cookieInList->host.Length());
+        if (!cookieInList->host.IsEmpty() && cookieInList->host.First() == '.') {
+          hostWithoutDot.Rebind(cookieInList->host.get() + 1, cookieInList->host.Length() - 1);
+        }
+         
+        Permission_AddHost(hostWithoutDot, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+      }
 
-#endif
-
-  // Initialize for cookie_warningPref
-  if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
-    x = PR_FALSE;
+      sCookieList->RemoveElementAt(i);
+      delete cookieInList;
+      sCookieChanged = PR_TRUE;
+      COOKIE_Write(); // might want to eventually push this into the UI, to write once on cookiemanager close
+      break;
+    }
   }
-  cookie_SetWarningPref(x);
-  prefs->RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, nsnull);
-
-  // Initialize for cookie_lifetime
-  cookie_SetLifetimePref(COOKIE_Normal);
-  cookie_lifetimeDays = 90;
-  cookie_lifetimeCurrentSession = PR_FALSE;
-
-#ifdef MOZ_PHOENIX
-  PRBool forCurrentSession;
-  if (NS_SUCCEEDED(prefs->GetBoolPref(cookie_lifetimeBehaviorPref, &forCurrentSession))) {
-    cookie_lifetimeCurrentSession = forCurrentSession;
-    cookie_SetLifetimeLimit(forCurrentSession ? 0 : cookie_lifetimeDays);
-    cookie_SetLifetimePref(forCurrentSession ? COOKIE_Trim : COOKIE_Normal);
-  }
-#else
-  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
-    cookie_lifetimeDays = n;
-  }
-  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeBehaviorPref, &n))) {
-    cookie_lifetimeCurrentSession = (n==0);
-    cookie_SetLifetimeLimit((n==0) ? 0 : cookie_lifetimeDays);
-  }
-  if (NS_SUCCEEDED(prefs->GetBoolPref(cookie_lifetimeEnabledPref, &n))) {
-    cookie_SetLifetimePref(n ? COOKIE_Trim : COOKIE_Normal);
-  } 
-  prefs->RegisterCallback(cookie_lifetimeEnabledPref, cookie_LifetimeEnabledPrefChanged, nsnull);
-  prefs->RegisterCallback(cookie_lifetimeDaysPref, cookie_LifetimeDaysPrefChanged, nsnull);
-
-  // Override cookie_lifetime initialization if the older prefs (with no UI) are used
-  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
-    cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
-  }
-  prefs->RegisterCallback(cookie_lifetimePref, cookie_LifetimeOptPrefChanged, nsnull);
-
-  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
-    cookie_SetLifetimeLimit(n);
-  }
-  prefs->RegisterCallback(cookie_lifetimeValue, cookie_LifetimeLimitPrefChanged, nsnull);
-
-  // Initialize for P3P prefs
-  if (NS_FAILED(prefs->CopyCharPref(cookie_p3pPref, &cookie_P3P))) {
-    cookie_P3P = PL_strdup(cookie_P3P_Default);
-  }
-  prefs->RegisterCallback(cookie_p3pPref, cookie_P3PPrefChanged, nsnull);
-#endif
-  prefs->RegisterCallback(cookie_lifetimeBehaviorPref, cookie_LifetimeBehaviorPrefChanged, nsnull);
 }
 
-static PRBool
-cookie_IsIPAddress(const nsAFlatCString &name) {
-  // determine if name is an IP address
+// this is a backend function for adding a cookie to the list, via COOKIE_SetCookie.
+// also used in the cookie manager, for profile migration from IE.
+// returns NS_OK if aCookie was added to the list; NS_FAILED if it can be free'd by
+// the caller.
+PUBLIC nsresult
+COOKIE_Add(cookie_CookieStruct *aCookie,
+           nsInt64             aCurrentTime,
+           nsIURI              *aHostURI,
+           const char          *aCookieHeader)
+{
+  // find a position to insert the cookie at (and delete a cookie from, if necessary).
+  // also removes expired cookies from the list, for maintenance purposes.
+  PRInt32 insertPosition, deletePosition;
+  PRBool foundCookie = cookie_FindPosition(aCookie, insertPosition, deletePosition, aCurrentTime);
+
+  // store the cookie
+  if (foundCookie) {
+    cookie_CookieStruct *prevCookie;
+    prevCookie = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(insertPosition));
+    NS_ASSERTION(prevCookie, "corrupt cookie list");
+    delete prevCookie;
+
+    // check if the server wants to delete the cookie
+    if (!aCookie->isSession && nsInt64(aCookie->expires) < aCurrentTime) {
+      // delete previous cookie
+      sCookieList->RemoveElementAt(insertPosition);
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
+      sCookieChanged = PR_TRUE;
+      return NS_ERROR_FAILURE;
+
+    } else {
+      // replace previous cookie
+      sCookieList->ReplaceElementAt(aCookie, insertPosition);
+    }
+
+  } else {
+    // check if cookie has already expired
+    if (!aCookie->isSession && nsInt64(aCookie->expires) < aCurrentTime) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
+      return NS_ERROR_FAILURE;
+    }
+
+    // add the cookie, which means we might have to delete an old cookie
+    if (deletePosition != -1) {
+      cookie_CookieStruct *deleteCookie;
+      deleteCookie = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(deletePosition));
+      NS_ASSERTION(deleteCookie, "corrupt cookie list");
+
+      sCookieList->RemoveElementAt(deletePosition);
+      delete deleteCookie;
+      // adjust insertPosition if we removed a cookie before it
+      if (insertPosition > deletePosition) {
+        --insertPosition;
+      }
+    }
+
+    sCookieList->InsertElementAt(aCookie, insertPosition);
+  }
+
+  sCookieChanged = PR_TRUE;
+  return NS_OK;
+}
+
+/******************************************************************************
+ * nsCookies impl: domain & permission related functions
+ *****************************************************************************/
+
+// returns PR_TRUE if hostname is an IP address
+PRIVATE inline PRBool
+cookie_IsIPAddress(const nsAFlatCString &aHost)
+{
   PRNetAddr addr;
-  return PR_StringToNetAddr(name.get(), &addr) == PR_SUCCESS;
+  return (PR_StringToNetAddr(aHost.get(), &addr) == PR_SUCCESS);
 }
 
-PRBool
-cookie_IsInDomain(const nsAFlatCString &domain, const nsAFlatCString &host) {
-  /* special case for domainName being identical to hostName
-   *   This probably buys some efficiency.
-   *   But, more important, it allows a site that has an IP address to set a domain
-   *      cookie for that same domain.  This should be illegal (domain cookies for
-   *      IP addresses make no sense) and will be trapped by the very next test.  However
-   *      that test was actually preventing hotmail attachments from working.  See bug
-   *      105917 for details.  So we will allow IP-address sites to set domain cookies in
-   *      this one special case -- where the domain name is identically equal to the host
-   *      name.
-   */
-  if (domain.Equals(host)) {
-    return PR_TRUE;
+// returns PR_TRUE if URI scheme is from mailnews
+PRIVATE inline PRBool
+cookie_IsFromMailNews(const nsAFlatCString &aScheme)
+{
+  return (aScheme.Equals(NS_LITERAL_CSTRING("imap"))  || 
+          aScheme.Equals(NS_LITERAL_CSTRING("news"))  ||
+          aScheme.Equals(NS_LITERAL_CSTRING("snews")) ||
+          aScheme.Equals(NS_LITERAL_CSTRING("mailbox")));
+}
+
+PRIVATE PRBool
+cookie_IsInDomain(const nsACString &domain,
+                  const nsACString &host,
+                  PRBool           aIsDomain)
+{
+  // if we have a non-domain cookie, require an exact match between domain and host.
+  // RFC2109 specifies this behavior; it allows a site to prevent its subdomains
+  // from accessing a cookie, for whatever reason.
+  if (!aIsDomain) {
+    return domain.Equals(host);
   }
 
-  /*
-   * test for domain name being an IP address (e.g., 105.217.180.21) and reject if so
-   */
-  if (cookie_IsIPAddress(domain)) {
-    return PR_FALSE;
-  }
-
-  /*
-   * special case for domainName = .hostName
-   *    e.g., hostName = netscape.com
-   *          domainName = .netscape.com
-   */
-  if (domain.Equals(NS_LITERAL_CSTRING(".") + host, nsCaseInsensitiveCStringComparator())) {
-    return PR_TRUE;
-  }
-
+  // we have a domain cookie; test the following two cases:
   /*
    * normal case for hostName = x<domainName>
    *    e.g., hostName = home.netscape.com
    *          domainName = .netscape.com
+   *
+   * special case for domainName = .hostName
+   *    e.g., hostName = netscape.com
+   *          domainName = .netscape.com
    */
-  /* this is the final test - if failed, not in domain */
-  const nsACString &hostSubstring = Substring(host, host.Length() - domain.Length(), domain.Length());
-  return domain.Equals(hostSubstring, nsCaseInsensitiveCStringComparator());
+  // the lengthDifference tests are for efficiency, so we do only one .Equals()
+  PRUint32 domainLength = domain.Length();
+  PRInt32 lengthDifference = host.Length() - domainLength;
+  // normal case
+  if (lengthDifference > 0) {
+    return domain.Equals(Substring(host, lengthDifference, domainLength));
+  }
+  // special case
+  if (lengthDifference == -1) {
+    return Substring(domain, 1, domainLength - 1).Equals(host);
+  }
+  // no match
+  return PR_FALSE;
 }
 
-/* returns PR_TRUE if authorization is required
-** 
-**
-** IMPORTANT:  Now that this routine is multi-threaded it is up
-**             to the caller to free any returned string
-*/
-PUBLIC char *
-COOKIE_GetCookie(nsIURI * address) {
-  cookie_CookieStruct * cookie_s;
-  PRBool isSecure = PR_TRUE;
-  time_t cur_time = get_current_time();
-
-  // initialize string for return data
-  nsCAutoString cookieData;
-  NS_NAMED_LITERAL_CSTRING(equals, "=");
-
-  /* disable cookies if the user's prefs say so */
-  if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
-    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "cookies are disabled");
-    return nsnull;
-  }
-
-  /* Is this an https "secure" cookie? */
-  if NS_FAILED(address->SchemeIs("https", &isSecure))
-      isSecure = PR_TRUE;
-
-  /* Don't let ftp sites read cookies (could be a security issue) */
-  PRBool isFtp;
-  if (NS_FAILED(address->SchemeIs("ftp", &isFtp)) || isFtp) {
-    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "ftp sites cannot read cookies");
-    return nsnull;
-  }
-  /* search for all cookies */
-  if (cookie_list == nsnull) {
-    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "cookie list is empty");
-    return nsnull;
-  }
-  nsCAutoString host, path;
-  // Get host and path
-  nsresult result = address->GetHost(host);
-  if (NS_FAILED(result)) {
-    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "GetHost failed");
-    return nsnull;
-  }
-  if ((host.RFindChar(' ') != kNotFound) || (host.RFindChar('\t') != kNotFound)) {
-    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "host has embedded space character");
-    return nsnull;
-  }
-  result = address->GetPath(path);
-  if (NS_FAILED(result)) {
-    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "GetPath failed");
-    return nsnull;
-  }
-
-  for (PRInt32 i = 0; i <cookie_list->Count(); i++) {
-    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie_s, "corrupt cookie list");
-
-    /* check the host or domain first */
-    if(cookie_s->isDomain) {
-      if(!cookie_IsInDomain(cookie_s->host, host)) {
-        continue;
-      }
-    } else if(!host.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator())) {
-      /* hostname matchup failed. FAIL */
-      continue;
-    }
-
-    /* shorter strings always come last so there can be no ambiquity */
-    PRUint32 cookiePathLen = cookie_s->path.Length();
-    if (cookiePathLen > 0 && cookie_s->path.Last() == '/') {
-      cookiePathLen--;
-    }
-
-    if (Substring(path, 0, cookiePathLen).Equals(Substring(cookie_s->path, 0, cookiePathLen))) {
-      char pathLastChar = path.CharAt(cookiePathLen);
-      if (path.Length() > cookiePathLen &&
-          pathLastChar != '/' && pathLastChar != '?' && pathLastChar != '#' && pathLastChar != ';') {
-        /*
-         * note that the '?' test above allows a site at host/abc?def to receive a cookie that
-         * has a path attribute of abc.  This seems strange but at least one major site
-         * (citibank, bug 156725) depends on it.  The test for # and ; are put in to proactively
-         * avoid problems with other sites.
-         */
-        continue;
-      }
-
-      /* if the cookie is secure and the path isn't, dont send it */
-      if (cookie_s->isSecure & !isSecure) {
-        continue; /* back to top of while */
-      }
-
-      /* check for expired cookies */
-      if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
-        /* expire and remove the cookie */
-        cookie_list->RemoveElementAt(i--); /* decr i so next cookie isn't skipped */
-        delete cookie_s;
-        cookie_changed = PR_TRUE;
-        continue;
-      }
-
-      /* if we've already added a cookie to the return list, append a "; " so
-       * subsequent cookies are delimited in the final list. */
-      if (!cookieData.IsEmpty()) cookieData.Append("; ");
-
-      if (!cookie_s->name.IsEmpty()) {
-        cookie_s->lastAccessed = cur_time;
-        const nsACString &nameString = cookie_s->name + equals;
-
-#ifdef PREVENT_DUPLICATE_NAMES
-        /* make sure we don't have a previous name mapping already in the string */
-        if (cookieData.Find(nameString) == kNotFound) {
-          cookieData.Append(nameString);
-          cookieData.Append(cookie_s->cookie);
-        }
-#else
-        cookieData.Append(nameString);
-        cookieData.Append(cookie_s->cookie);
-#endif /* PREVENT_DUPLICATE_NAMES */
-      } else {
-        cookieData.Append(cookie_s->cookie);
-      }
-    }
-  }
-
-  /* may be nsnull */
-  COOKIE_LOGSUCCESS(GET_COOKIE, address, cookieData, nsnull);
-  return cookieData.IsEmpty() ? nsnull : ToNewCString(cookieData);
-}
-
-/* Determines whether the inlineHost is in the same domain as the currentHost.
- * For use with rfc 2109 compliance/non-compliance.
- */
 PRIVATE PRBool
-cookie_SameDomain(const nsAFlatCString &currentHost, const nsAFlatCString &firstHost) {
-  /* case insensitive compare */
-  if (currentHost.Equals(firstHost, nsCaseInsensitiveCStringComparator())) {
-    return PR_TRUE;
-  }
-
-  /* check for at least two dots before continuing, if there are
-   * not two dots we don't have enough information to determine
-   * whether or not the currentHost is within the firstHost
-   */
-  PRInt32 currentHostDot = currentHost.FindChar('.');
-  PRInt32 firstHostDot = firstHost.FindChar('.');
-  if (currentHostDot == kNotFound || firstHostDot == kNotFound) {
-    return PR_FALSE;
-  }
-  PRInt32 dot = firstHost.FindChar('.', firstHostDot + 1);
-  /* |dot + 1 == length| handles .com. case */
-  if (dot == kNotFound || dot + 1 == (PRInt32) firstHost.Length()) {
+cookie_IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI) {
+  // if aFirstURI is null, default to not foreign
+  if (!aFirstURI) {
     return PR_FALSE;
   }
 
-  // we use PL_strcasecmp here, because to do this with string fu is an ugly overkill
-  return !PL_strcasecmp(currentHost.get() + currentHostDot, firstHost.get() + firstHostDot);
-}
-
-PRBool
-cookie_isFromMailNews(nsIURI *firstURL) {
-  
-  if (!firstURL) 
-    return PR_FALSE;
-
-  nsCAutoString schemeString;
-  nsresult rv = firstURL->GetScheme(schemeString);
-  if (NS_FAILED(rv))  //malformed uri
-    return PR_FALSE; 
-  
-  return (schemeString.Equals(NS_LITERAL_CSTRING("imap")) || 
-          schemeString.Equals(NS_LITERAL_CSTRING("news")) ||
-          schemeString.Equals(NS_LITERAL_CSTRING("snews")) ||
-          schemeString.Equals(NS_LITERAL_CSTRING("mailbox")));
-}
-
-
-PRBool
-cookie_isForeign (nsIURI * curURL, nsIURI * firstURL) {
-  if (!firstURL) {
-    return PR_FALSE;
-  }
+  // chrome URLs are never foreign (otherwise sidebar cookies won't work).
+  // eventually we want to have a protocol whitelist here,
+  // _or_ do something smart with nsIProtocolHandler::protocolFlags.
   PRBool isChrome = PR_FALSE;
-  nsresult rv = firstURL->SchemeIs("chrome", &isChrome);
+  nsresult rv = aFirstURI->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && isChrome) {
-     return PR_FALSE; // chrome URLs are never foreign (otherwise sidebar cookies won't work)
+    return PR_FALSE;
   }
-  nsCAutoString curHost, firstHost;
 
   // Get hosts
-  rv = curURL->GetHost(curHost);
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
+  nsCAutoString currentHost, firstHost;
+  if (NS_FAILED(aHostURI->GetAsciiHost(currentHost)) ||
+      NS_FAILED(aFirstURI->GetAsciiHost(firstHost))) {
+    return PR_TRUE;
+  }
+  // trim trailing dots
+  currentHost.Trim(".");
+  firstHost.Trim(".");
+  ToLowerCase(currentHost);
+  ToLowerCase(firstHost);
+
+  // determine if it's foreign. we have a new algorithm for doing this,
+  // since the old behavior was broken:
+
+  // first ensure we're not dealing with IP addresses; if we are, require an
+  // exact match. we can't avoid this, otherwise the algo below will allow two
+  // IP's such as 128.12.96.5 and 213.12.96.5 to match. if we decide this is
+  // unlikely or doesn't matter, this can be removed (which will remove the
+  // dependency on prnetdb.h -> codesize).
+  if (cookie_IsIPAddress(firstHost)) {
+    return cookie_IsInDomain(firstHost, currentHost, PR_FALSE);
   }
 
-  rv = firstURL->GetHost(firstHost);
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
+  // next, allow a one-subdomain-level "fuzz" in the comparison. first, we need
+  // to find how many subdomain levels each host has; we only do the looser
+  // comparison if they have the same number of levels. e.g.
+  //  firstHost = weather.yahoo.com, currentHost = cookies.yahoo.com -> match
+  //  firstHost =     a.b.yahoo.com, currentHost =       b.yahoo.com -> no match
+  //  firstHost =         yahoo.com, currentHost = weather.yahoo.com -> no match
+  //  (since the normal test (next) will catch this case and give a match.)
+  // also, we can only do this if they have >=2 subdomain levels, to avoid
+  // matching yahoo.com with netscape.com (yes, this breaks for .co.nz etc...)
+  PRUint32 dotsInFirstHost = firstHost.CountChar('.');
+  if (dotsInFirstHost == currentHost.CountChar('.') &&
+      dotsInFirstHost >= 2) {
+    // we have enough dots - check IsInDomain(choppedFirstHost, currentHost)
+    PRInt32 dot1 = firstHost.FindChar('.');
+    return !cookie_IsInDomain(Substring(firstHost, dot1, firstHost.Length() - dot1), currentHost);
   }
 
-  /* determine if it's foreign */
-  return !cookie_SameDomain(curHost, firstHost);
+  // don't have enough dots to chop firstHost, or the subdomain levels differ;
+  // so we just do the plain old check, IsInDomain(firstHost, currentHost).
+  return !cookie_IsInDomain(NS_LITERAL_CSTRING(".") + firstHost, currentHost);
 }
 
-nsCookieStatus
-cookie_GetStatus(char decision) {
-  switch (decision) {
-    case ' ':
-      return nsICookie::STATUS_UNKNOWN;
-    case 'a':
-      return nsICookie::STATUS_ACCEPTED;
-    case 'd':
-      return nsICookie::STATUS_DOWNGRADED;
-    case 'f':
-      return nsICookie::STATUS_FLAGGED;
-    case 'r':
-      return nsICookie::STATUS_REJECTED;
-  }
-  return nsICookie::STATUS_UNKNOWN;
-}
-
-nsCookiePolicy
-cookie_GetPolicy(int policy) {
+PRIVATE inline nsCookiePolicy
+cookie_GetPolicy(PRInt32 policy) {
   switch (policy) {
     case P3P_NoPolicy:
       return nsICookie::POLICY_NONE;
@@ -1042,329 +901,76 @@ cookie_GetPolicy(int policy) {
       return nsICookie::POLICY_EXPLICIT_CONSENT;
     case P3P_NoIdentInfo:
       return nsICookie::POLICY_NO_II;
+    default:
+      return nsICookie::POLICY_UNKNOWN;
   }
-  return nsICookie::POLICY_UNKNOWN;
 }
 
 /*
  * returns P3P_NoPolicy, P3P_NoConsent, P3P_ImplicitConsent,
  * P3P_ExplicitConsent, or P3P_NoIdentInfo based on site
  */
-int
-P3P_SitePolicy(nsIURI * curURL, nsIHttpChannel* aHttpChannel) {
-  int consent = P3P_UnknownPolicy;
-  if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
-    nsCOMPtr<nsICookieConsent> p3p(do_GetService(NS_COOKIECONSENT_CONTRACTID));
-    if (p3p) {
-      nsCAutoString curURLSpec;
-      if (NS_FAILED(curURL->GetSpec(curURLSpec)))
-          return consent;
-      p3p->GetConsent(curURLSpec.get(),aHttpChannel,&consent);
+PRInt32
+P3P_SitePolicy(nsIURI *aCurrentURI, nsIHttpChannel *aHttpChannel)
+{
+  // default to P3P_NoPolicy if anything fails
+  PRInt32 consent = P3P_NoPolicy;
+
+  nsCOMPtr<nsICookieConsent> p3p(do_GetService(NS_COOKIECONSENT_CONTRACTID));
+  if (p3p && aHttpChannel) {
+    nsCAutoString currentURISpec;
+    if (NS_FAILED(aCurrentURI->GetAsciiSpec(currentURISpec))) {
+      return consent;
     }
+    p3p->GetConsent(currentURISpec.get(), aHttpChannel, &consent);
   }
   return consent;
 }
 
-/*
- * returns P3P_Accept, P3P_Downgrade, P3P_Flag, or P3P_Reject based on user's preferences
- */
-int
-cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
-  NS_ASSERTION(policy == P3P_UnknownPolicy ||
-               policy == P3P_NoPolicy ||
-               policy == P3P_NoConsent ||
-               policy == P3P_ImplicitConsent ||
-               policy == P3P_ExplicitConsent ||
-               policy == P3P_NoIdentInfo,
-               "invalid value for p3p policy");
+PRIVATE nsCookieStatus
+cookie_P3PDecision(nsIURI *aHostURI, nsIURI *aFirstURI, nsIHttpChannel *aHttpChannel)
+{
+  // get the site policy from aHttpChannel
+  PRInt32 policy = P3P_SitePolicy(aHostURI, aHttpChannel);
+  // check if the cookie is foreign; if aFirstURI is null, default to foreign
+  PRInt32 isForeign = cookie_IsForeign(aHostURI, aFirstURI) == PR_TRUE;
+  
+  // if site does not collect identifiable info, then treat it as if it did and
+  // asked for explicit consent. this check is required, since there is no entry
+  // in mCookiesP3PString for it.
   if (policy == P3P_NoIdentInfo) {
-    /* if site does not collect identifiable info, then treat it as if it did and
-     * asked for explicit consent */
     policy = P3P_ExplicitConsent;
   }
-  // note: P3P_UnknownPolicy means that the p3p module was not installed
-  if (cookie_P3P && PL_strlen(cookie_P3P) == 8 && policy != P3P_UnknownPolicy) {
-    return (foreign ? cookie_P3P[policy+1] : cookie_P3P[policy]);
-  } else {
-    return P3P_Accept;
+
+  // decide P3P_Accept, P3P_Downgrade, P3P_Flag, or P3P_Reject based on user's
+  // preferences.
+    // note: mCookiesP3PString can't be empty here, since we only execute this
+    // path if PERMISSION_P3P is set; this in turn can only occur
+    // if the p3p pref has been read (which is set to a default if the read
+    // fails). if cookie is foreign, [policy + 1] points to the appropriate
+    // pref; if cookie isn't foreign, [policy] points.
+  PRInt32 decision = gCookiePrefObserver->mCookiesP3PString.CharAt(policy + isForeign);
+
+  switch (decision) {
+    case P3P_Unknown:
+      return nsICookie::STATUS_UNKNOWN;
+    case P3P_Accept:
+      return nsICookie::STATUS_ACCEPTED;
+    case P3P_Downgrade:
+      return nsICookie::STATUS_DOWNGRADED;
+    case P3P_Flag:
+      return nsICookie::STATUS_FLAGGED;
+    case P3P_Reject:
+      return nsICookie::STATUS_REJECTED;
   }
+  return nsICookie::STATUS_UNKNOWN;
 }
 
-/*
- * returns STATUS_ACCEPT, STATUS_DOWNGRADE, STATUS_FLAG, or STATUS_REJECT based on user's preferences
- */
-nsCookieStatus
-cookie_P3PDecision (nsIURI * curURL, nsIURI * firstURL, nsIHttpChannel* aHttpChannel) {
-  return cookie_GetStatus(
-           cookie_P3PUserPref(
-             P3P_SitePolicy(curURL, aHttpChannel),
-             cookie_isForeign(curURL, firstURL)));
-}
-
-/* returns PR_TRUE if authorization is required
-** 
-**
-** IMPORTANT:  Now that this routine is multi-threaded it is up
-**             to the caller to free any returned string
-*/
-PUBLIC char *
-COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress) {
-  if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
-      (!firstAddress || cookie_isForeign(address, firstAddress))) {
-
-    /*
-     * WARNING!!! This is a different behavior than 4.x.  In 4.x we used this pref to
-     * control the setting of cookies only.  Here we are also blocking the getting of
-     * cookies if the pref is set.  It may be that we need a separate pref to block the
-     * getting of cookies.  But for now we are putting both under one pref since that
-     * is cleaner.  If it turns out that this breaks some important websites, we may
-     * have to resort to two prefs
-     */
-
-    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "Originating server test failed");
-    return nsnull;
-  }
-  return COOKIE_GetCookie(address);
-}
-
-MODULE_PRIVATE PRBool
-cookie_IsFromHost(cookie_CookieStruct *cookie_s, const nsAFlatCString &host) {
-  if (!cookie_s) {
-    return PR_FALSE;
-  }
-  if (cookie_s->isDomain) {
-    /* compare the tail end of host to cook_s->host */
-    return cookie_IsInDomain(cookie_s->host, host);
-  } else {
-    return host.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator());
-  }
-}
-
-/* find out how many cookies this host has already set */
-PRIVATE PRInt32
-cookie_Count(const nsAFlatCString &host) {
-  PRInt32 count = 0;
-  cookie_CookieStruct * cookie;
-  if (!cookie_list || host.IsEmpty()) return 0;
-
-  for (PRInt32 i = cookie_list->Count(); i > 0;) {
-    i--;
-    cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie, "corrupt cookie list");
-    if (cookie_IsFromHost(cookie, host)) count++;
-  }
-  return count;
-}
-
-/* Java script is calling COOKIE_SetCookieString, netlib is calling 
- * this via COOKIE_SetCookieStringFromHttp.
- */
-PRIVATE void
-cookie_SetCookieString(nsIURI *curURL, nsIPrompt *aPrompter, const char *setCookieHeader,
-                       cookie_CookieStruct *aCookie, time_t timeToExpire, nsIHttpChannel *aHttpChannel,
-                       nsCookieStatus status)
-{
-  // reject cookie if it's over the size limit, per RFC2109
-  if ((aCookie->name.Length() + aCookie->cookie.Length()) > MAX_BYTES_PER_COOKIE) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookie too big (> 4kb)");
-    return;
-  }
-
-  nsCAutoString cur_host, cur_path;
-  nsresult rv;
-  rv = curURL->GetHost(cur_host);
-  if (NS_FAILED(rv)) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "GetHost failed");
-    return;
-  }
-
-  /* Don't let ftp sites set cookies (could be a security issue) */
-  PRBool isFtp;
-  if (NS_FAILED(curURL->SchemeIs("ftp", &isFtp)) || isFtp) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "ftp sites cannot set cookies");
-    return;
-  }
-
-  rv = curURL->GetPath(cur_path);
-  if (NS_FAILED(rv)) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "GetPath failed");
-    return;
-  }
-
-  PRBool pref_scd = PR_FALSE;
-
-  if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookies are disabled");
-    return;
-  }
-
-  if(cookie_GetLifetimePref() == COOKIE_Discard) {
-    if(cookie_GetLifetimeTime() < timeToExpire) {
-      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookie lifetime test failed");
-      return;
-    }
-  }
-
-  // process domain attribute
-  if (!aCookie->host.IsEmpty()) {
-    if (aCookie->host.First() != '.' && !cookie_IsIPAddress(cur_host)) {
-      // if host is not an IP address, force domain name to start with a dot
-      aCookie->host.Insert(NS_LITERAL_CSTRING("."), 0);
-    }
-
-    /*
-     * verify that this host has the authority to set for this domain.   We do
-     * this by making sure that the host is in the domain.  We also require
-     * that a domain have at least two periods to prevent domains of the form
-     * ".com" and ".edu"
-     *
-     * Also make sure that there is more stuff after the second dot to prevent ".com."
-     */
-    PRInt32 dot = aCookie->host.FindChar('.');
-    dot = aCookie->host.FindChar('.', ++dot);
-    if (dot == kNotFound || ++dot == (PRInt32) aCookie->host.Length()) {
-      /* did not pass two dot test. FAIL */
-      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "failed the two-dot test");
-      return;
-    }
-
-    /* check to see if the host is in the domain */
-    if (!cookie_IsInDomain(aCookie->host, cur_host)) {
-      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "host is not in the domain");
-      return;
-    }
-
-    /*
-     * check that portion of host not in domain does not contain a dot
-     *    This satisfies the fourth requirement in section 4.3.2 of the cookie
-     *    spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
-     *    It prevents a host of the form x.y.co.nz from setting cookies in the
-     *    entire .co.nz domain.  Note that this doesn't really solve the problem,
-     *    it justs makes it more unlikely.  Sites such as y.co.nz can still set
-     *    cookies for the entire .co.nz domain.
-     *
-     *  Although this is the right thing to do(tm), it breaks too many sites.  
-     *  So only do it if the restrictCookieDomains pref is PR_TRUE.
-     *
-     */
-    nsresult rv;
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    if (NS_FAILED(rv) || !prefs || NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
-      pref_scd = PR_FALSE;
-    }
-    if ( pref_scd == PR_TRUE ) {
-      dot = cur_host.FindChar('.', 0, cur_host.Length() - aCookie->host.Length());
-      if (dot != kNotFound) {
-        COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "host minus domain failed the no-dot test");
-        return;
-      }
-    }
-
-    /* all tests passed, set isDomain flag */
-    aCookie->isDomain = PR_TRUE;
-
-  } else {
-    aCookie->host = cur_host;
-    aCookie->isDomain = PR_FALSE;
-  }
-
-  /* set path if none found in header, else verify that host has authority for indicated path */
-  if (aCookie->path.IsEmpty()) {
-    /* Strip down everything after the last slash to get the path,
-     * ignoring slashes in the query string part.
-     */
-    nsCOMPtr<nsIURL> url = do_QueryInterface(curURL);
-    if (url) {
-      url->GetDirectory(aCookie->path);
-    }
-#if 0
-  } else {
-    /*
-     * The following test is part of the RFC2109 spec.  Loosely speaking, it says that a site
-     * cannot set a cookie for a path that it is not on.  See bug 155083.  However this patch
-     * broke several sites -- nordea (bug 155768) and citibank (bug 156725).  So this test is being
-     * bracketed by an if statement to allow it to be disabled in the event that we cannot
-     * evangelize these sites.
-     */
-    if (cur_path.Find(path_from_header, PR_FALSE, 0, aCookie->path.Length())) {
-      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "failed the path test");
-      return;
-    }
-#endif
-  }
-
-  // put the remaining cookie information into the struct.
-  aCookie->expires = cookie_TrimLifetime(timeToExpire);
-  aCookie->lastAccessed = get_current_time();
-  aCookie->status = status;
-  aCookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
-
-  // check permissions from site permission list, or ask the user,
-  // to determine if we can set the cookie
-  PRBool permission = PR_TRUE;
-  if (NS_SUCCEEDED(PERMISSION_Read())) {
-    // get the number of previous cookies from host, and whether the same cookie
-    // has been previously set; to pass to the permission checker
-    PRInt32 count = cookie_Count(aCookie->host);
-    PRBool modify = cookie_CheckForPrevCookie(aCookie->path, aCookie->host, aCookie->name) != nsnull;
-
-    // put the cookie information into the cookie structure.
-    nsCOMPtr<nsICookie> thisCookie = 
-      new nsCookie(aCookie->name,
-                   aCookie->cookie,
-                   aCookie->isDomain,
-                   aCookie->host,
-                   aCookie->path,
-                   aCookie->isSecure,
-                   cookie_TrimLifetime(timeToExpire),
-                   status,
-                   cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel)));
-
-    // We need to think about adding logic to ask the user about cookies that have
-    // excessive lifetimes, but it shouldn't be done until generalized per-site preferences
-    // are available. cookie_GetLifetimeAsk() is part of this.
-    permission = Permission_Check(aPrompter, aCookie->host.get(), COOKIEPERMISSION,
-                                  cookie_GetWarningPref(), // || cookie_GetLifetimeAsk(timeToExpire)
-                                  thisCookie, count, modify);
-  }
-  if (!permission) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookies blocked for this site");
-    return;
-  }
-
-  rv = COOKIE_AddCookie(aCookie->host, aCookie->path,
-                        aCookie->name, aCookie->cookie,
-                        aCookie->isSecure, aCookie->isDomain, aCookie->expires,
-                        aCookie->status, aCookie->policy);
-  if (NS_FAILED(rv)) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "couldn't add cookie to list");
-  } else {
-    COOKIE_LOGSUCCESS(SET_COOKIE, curURL, setCookieHeader, aCookie);
-  }
-}
-
-PUBLIC void
-COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIHttpChannel* aHttpChannel) {
-  nsCOMPtr<nsIURI> pFirstURL;
-  nsresult rv;
-
-  if (aHttpChannel) {
-    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
-    if (!httpInternal) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aURL, setCookieHeader, "unable to QueryInterface httpInternal");
-      return;
-    }
-    rv = httpInternal->GetDocumentURI(getter_AddRefs(pFirstURL));
-    if (NS_FAILED(rv)) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aURL, setCookieHeader, "unable to determine first URL");
-      return;
-    }
-  }
-  COOKIE_SetCookieStringFromHttp(aURL, pFirstURL, aPrompter, setCookieHeader, 0, aHttpChannel);
-}
+/******************************************************************************
+ * nsCookies impl: cookie header parsing functions
+ *****************************************************************************/
 
 // The following comment block elucidates the function of cookie_ParseAttributes.
-
 /******************************************************************************
  ** Augmented BNF, modified from RFC2109 Section 4.2.2 and RFC2616 Section 2.1
  ** please note: this BNF deviates from both specifications, and reflects this
@@ -1399,8 +1005,8 @@ COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCook
     value         = token-value | quoted-string
     token-value   = 1*<any allowed-chars except value-sep>
     quoted-string = ( <"> *( qdtext | quoted-pair ) <"> )
-    qdtext        = <any OCTET except <"> or NUL>        ; CR | LF allowed here
-    quoted-pair   = "\" <any OCTET except NUL>           ; CR | LF allowed here
+    qdtext        = <any allowed-chars except <">>             ; CR | LF removed by necko
+    quoted-pair   = "\" <any OCTET except NUL or cookie-sep>   ; CR | LF removed by necko
     separators    = ";" | "=" | LWS
     value-sep     = ";"
     cookie-sep    = CR | LF
@@ -1432,10 +1038,11 @@ COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCook
 ******************************************************************************/
 
 // helper functions for cookie_GetTokenValue
-PRIVATE inline PRBool iswhitespace    (char c) { return c == ' '  || c == '\t'; }
-PRIVATE inline PRBool isterminator    (char c) { return c == '\n' || c == '\r'; }
-PRIVATE inline PRBool isvalueseparator(char c) { return isterminator(c) || c == ';'; }
-PRIVATE inline PRBool istokenseparator(char c) { return isvalueseparator(c) || iswhitespace(c) || c == '='; }
+PRIVATE inline PRBool iswhitespace     (char c) { return c == ' '  || c == '\t'; }
+PRIVATE inline PRBool isterminator     (char c) { return c == '\n' || c == '\r'; }
+PRIVATE inline PRBool isquoteterminator(char c) { return isterminator(c) || c == '"'; }
+PRIVATE inline PRBool isvalueseparator (char c) { return isterminator(c) || c == ';'; }
+PRIVATE inline PRBool istokenseparator (char c) { return isvalueseparator(c) || iswhitespace(c) || c == '='; }
 
 // Parse a single token/value pair.
 // Returns PR_TRUE if a cookie terminator is found, so caller can parse new cookie.
@@ -1469,17 +1076,19 @@ cookie_GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter,
 
     if (*aIter == '"') {
       // process <quoted-string>
-      // (note: cookie terminators, CR | LF, allowed)
+      // (note: cookie terminators, CR | LF, can't happen:
+      // they're removed by necko before the header gets here)
       // assume value mangled if no terminating '"', return
-      while (++aIter != aEndIter && *aIter != '"') {
+      while (++aIter != aEndIter && !isquoteterminator(*aIter)) {
         // if <qdtext> (backwhacked char), skip over it. this allows '\"' in <quoted-string>.
         // we increment once over the backwhack, nullcheck, then continue to the 'while',
-        // which increments over the backwhacked char.
-        if (*aIter == '\\' && ++aIter == aEndIter)
+        // which increments over the backwhacked char. one exception - we don't allow
+        // CR | LF here either (see above about necko)
+        if (*aIter == '\\' && (++aIter == aEndIter || isterminator(*aIter)))
           break;
       }
 
-      if (aIter != aEndIter) {
+      if (aIter != aEndIter && !isterminator(*aIter)) {
         // include terminating quote in attribute string
         aTokenValue.Rebind(start, ++aIter);
         // skip to next ';'
@@ -1580,569 +1189,884 @@ cookie_ParseAttributes(nsDependentCString  &aCookieHeader,
   return newCookie;
 }
 
-/* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
- * determining whether or not a cookie is inline (we need the URL struct, 
- * and outputFormat to do so).  this is called from NET_ParseMimeHeaders 
- * in mkhttp.c
- * This routine does not need to worry about the cookie lock since all of
- *   the work is handled by sub-routines
-*/
+/******************************************************************************
+ * nsCookies impl: main Get() and Set() functions
+ *****************************************************************************/
 
-PUBLIC void
-COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aPrompter,  const char * setCookieHeader, char * server_date, nsIHttpChannel* aHttpChannel) {
-  // switch to a nice string type now
-  nsDependentCString cookieHeader(setCookieHeader);
+PRIVATE nsCookieStatus
+cookie_CheckPrefs(nsIURI         *aHostURI,
+                  nsIURI         *aFirstURI,
+                  nsIHttpChannel *aHttpChannel,
+                  const char     *aCookieHeader)
+{
+  // pref tree:
+  // 0) get the scheme strings from the two URI's
+  // 1) disallow ftp
+  // 2) disallow mailnews, if pref set
+  // 3) go thru enumerated permissions to see which one we have:
+  // -> cookies disabled: return
+  // -> dontacceptforeign: check if cookie is foreign
+  // -> p3p: check p3p cookie data
 
-  /* If the outputFormat is not PRESENT (the url is not going to the screen), and not
-   *  SAVE AS (shift-click) then 
-   *  the cookie being set is defined as inline so we need to do what the user wants us
-   *  to based on his preference to deal with foreign cookies. If it's not inline, just set
-   *  the cookie.
-   */
-  time_t gmtCookieExpires=0, expires=0, sDate;
+  // we've extended the "nsCookieStatus" type to be used for all cases now
+  // (used to be only for p3p), so beware that its interpretation is not p3p-
+  // specific anymore.
 
-  /* check to see if P3P pref is satisfied */
-  nsCookieStatus status = nsICookie::STATUS_UNKNOWN;
-  if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
-    status = cookie_P3PDecision(curURL, firstURL, aHttpChannel);
-    if (status == nsICookie::STATUS_REJECTED) {
-      nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-      if (os)
-        os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
-      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "P3P test failed");
-      return;
+  // first, get the URI scheme for further use
+  // if GetScheme fails on aHostURI, reject; aFirstURI is optional, so failing is ok
+  nsCAutoString currentURIScheme, firstURIScheme;
+  nsresult rv, rv2 = NS_OK;
+  rv = aHostURI->GetScheme(currentURIScheme);
+  if (aFirstURI) {
+    rv2 = aFirstURI->GetScheme(firstURIScheme);
+  }
+  if (NS_FAILED(rv) || NS_FAILED(rv2)) {
+    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "couldn't get scheme of host URI");
+    return nsICookie::STATUS_REJECTED;
+  }
+
+  // don't let ftp sites get/set cookies (could be a security issue)
+  if (currentURIScheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
+    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "ftp sites cannot read cookies");
+    return nsICookie::STATUS_REJECTED;
+  }
+
+  // disable cookies in mailnews if user's prefs say so.
+  // we perform a fairly strict test here:
+  // if firstURI is null, we can't tell if it's from mailnews - reject
+  // otherwise, we test both firstURI and currentURI.
+  // this needs to be revisited when we get firstURI behaving correctly
+  // in all cases.
+  if (gCookiePrefObserver->mCookiesDisabledForMailNews &&
+      (!aFirstURI ||
+       cookie_IsFromMailNews(firstURIScheme) ||
+       cookie_IsFromMailNews(currentURIScheme))) {
+    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "cookies disabled for mailnews");
+    return nsICookie::STATUS_REJECTED;
+  }
+
+  // check default prefs - go thru enumerated permissions
+  if (gCookiePrefObserver->mCookiesPermissions == PERMISSION_DontUse) {
+    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "cookies are disabled");
+    return nsICookie::STATUS_REJECTED;
+
+  } else if (gCookiePrefObserver->mCookiesPermissions == PERMISSION_DontAcceptForeign) {
+    // check if cookie is foreign.
+    // if aFirstURI is null, deny by default
+
+    // note: this can be circumvented if we have http redirects within html,
+    // since the documentURI attribute isn't always correctly
+    // passed to the redirected channels. (or isn't correctly set in the first place)
+    if (cookie_IsForeign(aHostURI, aFirstURI)) {
+      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "originating server test failed");
+      return nsICookie::STATUS_REJECTED;
     }
-  }
- 
-  /* check for foreign cookie if pref says to reject such */
-  if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
-      cookie_isForeign(curURL, firstURL)) {
-    /* it's a foreign cookie so don't set the cookie */
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "originating server test failed");
-    return;
-  }
 
-  /* check if a Mail/News message is setting the cookie */
-  if (cookie_GetDisableCookieForMailNewsPref() && cookie_isFromMailNews(firstURL)) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookies disabled for mailnews");
-    return;
-  }
+  } else if (gCookiePrefObserver->mCookiesPermissions == PERMISSION_P3P) {
+    // check to see if P3P conditions are satisfied.
+    // nsCookieStatus is an enumerated type, defined in nsCookie.idl (frozen interface):
+    // STATUS_UNKNOWN -- cookie collected in a previous session and this info no longer available
+    // STATUS_ACCEPTED -- cookie was accepted
+    // STATUS_DOWNGRADED -- cookie was accepted but downgraded to a session cookie
+    // STATUS_FLAGGED -- cookie was accepted with a warning being issued to the user
+    // STATUS_REJECTED
 
-  // initialize structs and strings, and parse attributes from cookie header.
-  // cookieAttributes stores all the attributes parsed from the cookie;
-  // expires and maxage are separate, because we have to process them to find the expiry.
-  nsCAutoString expiresAttribute, maxageAttribute;
-  cookie_CookieStruct *cookieAttributes = new cookie_CookieStruct;
-  if (!cookieAttributes) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "unable to allocate memory for new cookie");
-    delete cookieAttributes;
-    return;
+    // to do this, at the moment, we need an httpChannel, but we can live without
+    // the two URI's (as long as no foreign checks are required).
+    // if the channel is null, we can fall back on "no p3p policy" prefs.
+    nsCookieStatus p3pStatus = cookie_P3PDecision(aHostURI, aFirstURI, aHttpChannel);
+    if (p3pStatus == nsICookie::STATUS_REJECTED) {
+      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "P3P test failed");
+    }
+    return p3pStatus;
   }
 
-  // newCookie says whether there are multiple cookies in the header; so we can handle them separately.
-  // we don't need the cookieHeader string for processing this cookie anymore;
-  // so this function uses it as an outparam to point to the next cookie, if there is one.
-  PRBool newCookie = cookie_ParseAttributes(cookieHeader, cookieAttributes, expiresAttribute, maxageAttribute);
+  // if nothing has complained, accept cookie
+  return nsICookie::STATUS_ACCEPTED;
+}
 
+PUBLIC char *
+COOKIE_GetCookie(nsIURI *aHostURI,
+                 nsIURI *aFirstURI)
+{
+  if (!aHostURI) {
+    COOKIE_LOGFAILURE(GET_COOKIE, nsnull, "", "host URI is null");
+    return nsnull;
+  }
+
+  // check default prefs
+  nsCookieStatus cookieStatus = cookie_CheckPrefs(aHostURI, aFirstURI, nsnull, nsnull);
+  // for GetCookie(), we don't update the UI icon if cookie was rejected.
+  if (cookieStatus == nsICookie::STATUS_REJECTED) {
+    return nsnull;
+  }
+
+  // get host and path from the nsIURI
+  // note: there was a "check if host has embedded whitespace" here.
+  // it was removed since this check was added into the nsIURI impl (bug 146094).
+  nsCAutoString hostFromURI, pathFromURI;
+  if (NS_FAILED(aHostURI->GetAsciiHost(hostFromURI)) ||
+      NS_FAILED(aHostURI->GetPath(pathFromURI))) {
+    COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, "", "couldn't get host/path from URI");
+    return nsnull;
+  }
+  // trim trailing dots
+  hostFromURI.Trim(".");
+  ToLowerCase(hostFromURI);
+
+  // initialize variables used in the list traversal
+  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  cookie_CookieStruct *cookieInList;
+  // initialize string for return data
+  nsCAutoString cookieData;
+
+  // check if aHostURI is using an https secure protocol.
+  // if it isn't, then we can't send a secure cookie over the connection.
+  // if SchemeIs fails, assume an insecure connection, to be on the safe side
+  PRBool isSecure;
+  if NS_FAILED(aHostURI->SchemeIs("https", &isSecure)) {
+    isSecure = PR_FALSE;
+  }
+
+  // begin sCookieList traversal
+  PRInt32 count = sCookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
+    NS_ASSERTION(cookieInList, "corrupt cookie list");
+
+    // if the cookie is secure and the host scheme isn't, we can't send it
+    if (cookieInList->isSecure & !isSecure) {
+      continue;
+    }
+
+    // check if the host is in the cookie's domain
+    // (taking into account whether it's a domain cookie)
+    if (!cookie_IsInDomain(cookieInList->host, hostFromURI, cookieInList->isDomain)) {
+      continue;
+    }
+
+    // calculate cookie path length, excluding trailing '/'
+    PRUint32 cookiePathLen = cookieInList->path.Length();
+    if (cookiePathLen > 0 && cookieInList->path.Last() == '/') {
+      --cookiePathLen;
+    }
+
+    // the cookie list is in order of path length; longest to shortest.
+    // if the nsIURI path is shorter than the cookie path, then we know the path
+    // isn't on the cookie path.
+    if (!Substring(pathFromURI, 0, cookiePathLen).Equals(Substring(cookieInList->path, 0, cookiePathLen))) {
+      continue;
+    }
+
+    char pathLastChar = pathFromURI.CharAt(cookiePathLen);
+    if (pathFromURI.Length() > cookiePathLen &&
+        pathLastChar != '/' && pathLastChar != '?' && pathLastChar != '#' && pathLastChar != ';') {
+      /*
+       * note that the '?' test above allows a site at host/abc?def to receive a cookie that
+       * has a path attribute of abc.  This seems strange but at least one major site
+       * (citibank, bug 156725) depends on it.  The test for # and ; are put in to proactively
+       * avoid problems with other sites - these are the only other chars allowed in the path.
+       */
+      continue;
+    }
+
+    // check if the cookie has expired, and remove if so.
+    // note that we do this *after* previous tests passed - so we're only removing
+    // the ones that are relevant to this particular search.
+    if (!cookieInList->isSession && nsInt64(cookieInList->expires) < currentTime) {
+      sCookieList->RemoveElementAt(i--); // decrement i so next cookie isn't skipped
+      --count; // update the count
+      delete cookieInList;
+      sCookieChanged = PR_TRUE;
+      continue;
+    }
+
+    // all checks passed - update lastAccessed stamp of cookie
+    cookieInList->lastAccessed = currentTime;
+
+    if (!cookieInList->name.IsEmpty()) {
+      // if we've already added a cookie to the return list, append a "; " so
+      // that subsequent cookies are delimited in the final list.
+      if (!cookieData.IsEmpty()) {
+        cookieData += NS_LITERAL_CSTRING("; ");
+      }
+
+      // NOTE: we used to have an #ifdef PREVENT_DUPLICATE_NAMES here,
+      // which would prevent multiple cookies with the same name being sent (i.e.
+      // only the first instance is sent). This wasn't invoked in our previous code,
+      // and RFC2109 implicitly allows duplicate names, so I've removed it.
+
+      // if we have just a cookie->name, don't write the last portion.
+      if (cookieInList->cookie.IsEmpty()) {
+        cookieData += cookieInList->name;
+      } else {
+        cookieData += cookieInList->name + NS_LITERAL_CSTRING("=") + cookieInList->cookie;
+      }
+    }
+  } // for()
+
+  // it's wasteful to alloc a new string; but we have no other choice, until we
+  // fix the callers to use nsACStrings.
+  if (!cookieData.IsEmpty()) {
+    COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, cookieData, nsnull);
+    return ToNewCString(cookieData);
+  }
+
+  return nsnull;
+}
+
+// processes domain attribute, and returns PR_TRUE if host has permission to set for this domain.
+PRIVATE inline PRBool
+cookie_CheckDomain(cookie_CookieStruct *aCookie,
+                   nsIURI              *aHostURI)
+{
+  // get host from aHostURI
+  nsCAutoString hostFromURI;
+  if (NS_FAILED(aHostURI->GetAsciiHost(hostFromURI))) {
+    return PR_FALSE;
+  }
+  // trim trailing dots
+  hostFromURI.Trim(".");
+  ToLowerCase(hostFromURI);
+
+  // if a domain is given, check the host has permission
+  if (!aCookie->host.IsEmpty()) {
+    // switch to lowercase now, to avoid case-insensitive compares everywhere
+    ToLowerCase(aCookie->host);
+
+    // check whether the host is an IP address, and override isDomain to
+    // make the cookie a non-domain one. this will require an exact host
+    // match for the cookie, so we eliminate any chance of IP address
+    // funkiness (e.g. the alias 127.1 domain-matching 99.54.127.1).
+    // bug 105917 originally noted the requirement to deal with IP addresses.
+    if (cookie_IsIPAddress(aCookie->host)) {
+      aCookie->isDomain = PR_FALSE;
+      return cookie_IsInDomain(aCookie->host, hostFromURI, PR_FALSE);
+    }
+
+    /*
+     * verify that this host has the authority to set for this domain.   We do
+     * this by making sure that the host is in the domain.  We also require
+     * that a domain have at least one embedded period to prevent domains of the form
+     * ".com" and ".edu"
+     */
+    aCookie->host.Trim(".");
+    PRInt32 dot = aCookie->host.FindChar('.');
+    if (dot == kNotFound) {
+      // fail dot test
+      return PR_FALSE;
+    }
+
+    // prepend a dot, and check if the host is in the domain
+    aCookie->isDomain = PR_TRUE;
+    aCookie->host.Insert(NS_LITERAL_CSTRING("."), 0);
+    if (!cookie_IsInDomain(aCookie->host, hostFromURI)) {
+      return PR_FALSE;
+    }
+
+    /*
+     * check that portion of host not in domain does not contain a dot
+     *    This satisfies the fourth requirement in section 4.3.2 of the cookie
+     *    spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
+     *    It prevents host of the form x.y.co.nz from setting cookies in the
+     *    entire .co.nz domain.  Note that this doesn't really solve the problem,
+     *    it justs makes it more unlikely.  Sites such as y.co.nz can still set
+     *    cookies for the entire .co.nz domain.
+     *
+     *  Although this is the right thing to do(tm), it breaks too many sites.  
+     *  So only do it if the "network.cookie.strictDomains" pref is PR_TRUE.
+     *
+     */
+    if (gCookiePrefObserver->mCookiesStrictDomains) {
+      dot = hostFromURI.FindChar('.', 0, hostFromURI.Length() - aCookie->host.Length());
+      if (dot != kNotFound) {
+        return PR_FALSE;
+      }
+    }
+
+  // no domain specified, use hostFromURI
+  } else {
+    aCookie->isDomain = PR_FALSE;
+    aCookie->host = hostFromURI;
+  }
+
+  return PR_TRUE;
+}
+
+PRIVATE inline PRBool
+cookie_CheckPath(cookie_CookieStruct *aCookie,
+                 nsIURI              *aHostURI)
+{
+  // if a path is given, check the host has permission
+  if (aCookie->path.IsEmpty()) {
+    // strip down everything after the last slash to get the path,
+    // ignoring slashes in the query string part.
+    // if we can QI to nsIURL, that'll take care of the query string portion.
+    // otherwise, it's not an nsIURL and can't have a query string, so just find the last slash.
+    nsCOMPtr<nsIURL> hostURL = do_QueryInterface(aHostURI);
+    if (hostURL) {
+      hostURL->GetDirectory(aCookie->path);
+    } else {
+      PRInt32 slash = aCookie->path.RFindChar('/');
+      if (slash != kNotFound) {
+        aCookie->path.Truncate(slash + 1);
+      }
+    }
+
+#if 0
+  } else {
+    /**
+     * The following test is part of the RFC2109 spec.  Loosely speaking, it says that a site
+     * cannot set a cookie for a path that it is not on.  See bug 155083.  However this patch
+     * broke several sites -- nordea (bug 155768) and citibank (bug 156725).  So this test has
+     * been disabled, unless we can evangelize these sites.
+     */
+    // get path from aHostURI
+    nsCAutoString pathFromURI;
+    if (NS_FAILED(aHostURI->GetPath(pathFromURI)) ||
+        !Substring(pathFromURI, 0, aCookie->path.Length()).Equals(aCookie->path)) {
+      return PR_FALSE;
+    }
+#endif
+  }
+
+  return PR_TRUE;
+}
+
+PRIVATE inline PRBool
+cookie_GetExpiry(const nsAFlatCString &maxageAttribute,
+                 const nsAFlatCString &expiresAttribute,
+                 nsInt64              serverTime,
+                 nsInt64              &expiryTime,
+                 nsInt64              currentTime,
+                 nsCookieStatus       aStatus)
+{
   /* Determine when the cookie should expire. This is done by taking the difference between 
    * the server time and the time the server wants the cookie to expire, and adding that 
    * difference to the client time. This localizes the client time regardless of whether or
    * not the TZ environment variable was set on the client.
+   *
+   * Note: We need to consider accounting for network lag here, per RFC.
    */
+  nsInt64 delta;
 
   // check for max-age attribute first; this overrides expires attribute
   if (!maxageAttribute.IsEmpty()) {
-    PRInt32 errorCode;
-    time_t delta = maxageAttribute.ToInteger(&errorCode, 10); // obtain numeric value of argument
-    if (delta <= 0) {  // negative max-age is not allowed; but this is more robust
-      gmtCookieExpires = 1; // force cookie to expire immediately
-    } else {
-      gmtCookieExpires = get_current_time() + delta;
+    // obtain numeric value of maxageAttribute
+    PRInt64 maxage;
+    PRInt32 numInts = PR_sscanf(maxageAttribute.get(), "%lld", &maxage);
+
+    // default to session cookie if the conversion failed
+    if (numInts != 1) {
+      goto session_cookie;
     }
+
+    delta = nsInt64(maxage);
 
   // check for expires attribute
   } else if (!expiresAttribute.IsEmpty()) {
-    if (NS_SUCCEEDED(cookie_ParseDate(expiresAttribute, expires)) &&
-        expires == 0) {
-      expires = 1; // force immediate expiry
-    }
+    nsInt64 expires;
+    PRTime tempExpires;
 
-    if (server_date && *server_date) {
-      cookie_ParseDate(nsDependentCString(server_date), sDate);
+    // parse expiry time
+    if (PR_ParseTimeString(expiresAttribute.get(), PR_TRUE, &tempExpires) == PR_SUCCESS) {
+      expires = nsTime(tempExpires) / PR_USEC_PER_SEC;
     } else {
-      sDate = get_current_time();
+      goto session_cookie;
     }
 
-    if (sDate && expires) {
-      if (expires < sDate) {
-        gmtCookieExpires = 1; // force immediate expiry
-      } else {
-        gmtCookieExpires = expires - sDate + get_current_time();
-        // if overflow 
-        if( gmtCookieExpires < get_current_time()) {
-          gmtCookieExpires = MAX_EXPIRE; // max int
-        }
-      }
+    delta = expires - serverTime;
+
+  // default to session cookie if no attributes found
+  } else {
+    goto session_cookie;
+  }
+
+  if (delta <= nsInt64(0)) {
+    goto expire_cookie;
+  }
+
+  // check cookie lifetime pref, and limit lifetime if required
+  if (gCookiePrefObserver->mCookiesLifetimeEnabled) {
+    if (gCookiePrefObserver->mCookiesLifetimeCurrentSession) {
+      // limit lifetime to session
+      goto session_cookie;
+    } else if (delta > nsInt64(gCookiePrefObserver->mCookiesLifetimeSec)) {
+      // limit lifetime to specified time
+      delta = gCookiePrefObserver->mCookiesLifetimeSec;
     }
   }
 
-  // call the main cookie processing function
-  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, cookieAttributes,
-                         gmtCookieExpires, aHttpChannel, status);
-
-  // we're finished with attributes - data has been copied, if required
-  delete cookieAttributes;
-
-  // finally, if we have multiple cookies to process, recurse.
-  if (newCookie) {
-    COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, cookieHeader.get(),
-                                   server_date, aHttpChannel);
+  // if overflow, set to session cookie... not ideal, but it'll work.
+  expiryTime = currentTime + delta;
+  if (expiryTime < currentTime) {
+    goto session_cookie;
   }
+
+  // default case (proper expiry time).
+  // the cookie may have been previously downgraded by p3p prefs,
+  // so we take that into account here.
+  return (aStatus == nsICookie::STATUS_DOWNGRADED);
+
+  session_cookie:
+    return PR_TRUE;
+
+  expire_cookie:
+    // make sure the cookie is marked appropriately, for expiry.
+    // we can't just return now, because we might need to delete a previous cookie
+    expiryTime = currentTime - nsInt64(1);
+    return PR_FALSE;
 }
 
-/* saves out the HTTP cookies to disk */
+// helper function to copy data from a cookie_CookieStruct into an nsICookie.
+// also takes care of altering the expiry time, which has different interpretation
+// between the two formats.
+PUBLIC already_AddRefed<nsICookie>
+COOKIE_ChangeFormat(cookie_CookieStruct *aCookie)
+{
+  // note that we must provide compatibility with the "old" method of
+  // denoting session cookies, where expiryTime = 0.
+  // note that we need to cast from PRInt64 to PRUint64...
+  PRUint64 expiryTimeCompat;
+  if (aCookie->isSession) {
+    expiryTimeCompat = 0;
+  } else {
+    expiryTimeCompat = nsInt64(aCookie->expires) > nsInt64(0) ? aCookie->expires : 1;
+  }
+
+  // copy the information into the nsICookie
+  nsICookie *cookie = new nsCookie(aCookie->name,
+                                   aCookie->cookie,
+                                   aCookie->isDomain,
+                                   aCookie->host,
+                                   aCookie->path,
+                                   aCookie->isSecure,
+                                   expiryTimeCompat,
+                                   aCookie->status,
+                                   aCookie->policy);
+
+  NS_IF_ADDREF(cookie);
+  return cookie;
+}
+
+// processes a single cookie, and returns PR_TRUE if there are more cookies
+// to be processed
+PRIVATE PRBool
+cookie_SetCookieInternal(nsIURI             *aHostURI,
+                         nsIPrompt          *aPrompt,
+                         nsDependentCString &aCookieHeader,
+                         nsInt64            aServerTime,
+                         nsCookieStatus     aStatus,
+                         nsCookiePolicy     aPolicy)
+{
+  // keep a |const char*| version of the unmodified aCookieHeader,
+  // for logging purposes
+  const char *cookieHeader = aCookieHeader.get();
+
+  nsInt64 expiryTime, currentTime = nsTime() / PR_USEC_PER_SEC;
+  PRBool isSession, foundCookie;
+
+  // cookie stores all the attributes parsed from the cookie;
+  // expires and maxage are separate, because we have to process them to find the expiry.
+  // create a new cookie to store the attributes
+  cookie_CookieStruct *cookie = new cookie_CookieStruct;
+  if (!cookie) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "unable to allocate memory for new cookie");
+    // if we fail here, abort all processing of subsequent cookies by SetCookie()
+    return PR_FALSE;
+  }
+  nsCAutoString expiresAttribute, maxageAttribute;
+
+  // newCookie says whether there are multiple cookies in the header; so we can handle them separately.
+  // after this function, we don't need the cookieHeader string for processing this cookie anymore;
+  // so this function uses it as an outparam to point to the next cookie, if there is one.
+  PRBool newCookie = cookie_ParseAttributes(aCookieHeader, cookie, expiresAttribute, maxageAttribute);
+
+  // reject cookie if it's over the size limit, per RFC2109
+  if ((cookie->name.Length() + cookie->cookie.Length()) > MAX_BYTES_PER_COOKIE) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie too big (> 4kb)");
+    goto failure;
+  }
+
+  // calculate expiry time of cookie. we need to pass in cookieStatus, since
+  // the cookie may have been downgraded to a session cookie by p3p.
+  isSession = cookie_GetExpiry(maxageAttribute, expiresAttribute, aServerTime,
+                               expiryTime, currentTime, aStatus);
+
+  // put remaining information into cookieStruct
+  cookie->expires = expiryTime;
+  cookie->lastAccessed = currentTime;
+  cookie->isSession = isSession;
+  cookie->status = aStatus;
+  cookie->policy = aPolicy;
+
+  // domain & path checks
+  if (!cookie_CheckDomain(cookie, aHostURI)) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "failed the domain tests");
+    goto failure;
+  }
+  if (!cookie_CheckPath(cookie, aHostURI)) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "failed the path tests");
+    goto failure;
+  }
+
+  // count the number of cookies from this host, and find whether a previous cookie
+  // has been set, for prompting purposes
+  PRUint32 countFromHost;
+  foundCookie = cookie_FindCookiesFromHost(cookie, countFromHost, currentTime);
+
+  // check if the cookie we're trying to set is already expired, and return.
+  // but we need to check there's no previous cookie first, because servers use
+  // this as a trick for deleting previous cookies.
+  if (!foundCookie && !cookie->isSession && nsInt64(cookie->expires) < currentTime) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie has already expired");
+    goto failure;
+  }
+
+  // check permissions from site permission list, or ask the user,
+  // to determine if we can set the cookie
+  if (NS_SUCCEEDED(PERMISSION_Read())) {
+    // create a new nsICookie and copy the cookie data
+    nsCOMPtr<nsICookie> thisCookie = COOKIE_ChangeFormat(cookie);
+
+    if (!thisCookie ||
+        !Permission_Check(aPrompt, cookie->host.get(), COOKIEPERMISSION,
+                          gCookiePrefObserver->mCookiesAskPermission,
+                          thisCookie, countFromHost, foundCookie)) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookies are blocked for this site");
+      goto failure;
+    }
+  }
+
+  // add the cookie to the list
+  nsresult rv;
+  rv = COOKIE_Add(cookie, nsTime() / PR_USEC_PER_SEC, aHostURI, cookieHeader);
+  if (NS_FAILED(rv)) {
+    // no need to log a failure here, Add() does it for us
+    goto failure;
+  }
+
+  // notify observers if the cookie was downgraded or flagged (only for p3p
+  // at this point). this occurs only if the cookie was set successfully.
+  if (aStatus == nsICookie::STATUS_DOWNGRADED ||
+      aStatus == nsICookie::STATUS_FLAGGED) {
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os) {
+      os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
+    }
+  }
+
+  COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, cookieHeader, cookie);
+  return newCookie;
+
+  // something failed - free the cookie
+  failure:
+    delete cookie;
+    return newCookie;
+}
+
+// performs functions common to all cookies (checking user prefs and processing
+// the time string from the server), and processes each cookie in the header.
+PUBLIC void
+COOKIE_SetCookie(nsIURI         *aHostURI,
+                 nsIURI         *aFirstURI,
+                 nsIPrompt      *aPrompt,
+                 const char     *aCookieHeader,
+                 const char     *aServerTime,
+                 nsIHttpChannel *aHttpChannel)
+{
+  if (!aHostURI) {
+    COOKIE_LOGFAILURE(SET_COOKIE, nsnull, aCookieHeader, "host URI is null");
+    return;
+  }
+
+  // check default prefs
+  nsCookieStatus cookieStatus = cookie_CheckPrefs(aHostURI, aFirstURI, aHttpChannel, aCookieHeader);
+  // update UI icon, and return, if cookie was rejected.
+  // should we be doing this just for p3p?
+  if (cookieStatus == nsICookie::STATUS_REJECTED) {
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os) {
+      os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
+    }
+    return;
+  }
+  // get the site's p3p policy now (common to all cookies)
+  nsCookiePolicy cookiePolicy = cookie_GetPolicy(P3P_SitePolicy(aHostURI, aHttpChannel));
+
+  // parse server local time. this is not just done here for efficiency
+  // reasons - if there's an error parsing it, and we need to default it
+  // to the current time, we must do it here since the current time in
+  // SetCookieInternal() will change for each cookie processed (e.g. if the
+  // user is prompted).
+  nsInt64 serverTime;
+  PRTime tempServerTime;
+  if (aServerTime && PR_ParseTimeString(aServerTime, PR_TRUE, &tempServerTime) == PR_SUCCESS) {
+    serverTime = nsTime(tempServerTime) / PR_USEC_PER_SEC;
+  } else {
+    serverTime = nsTime() / PR_USEC_PER_SEC;
+  }
+
+  // switch to a nice string type now, and process each cookie in the header
+  nsDependentCString cookieHeader(aCookieHeader);
+  while (cookie_SetCookieInternal(aHostURI, aPrompt,
+                                  cookieHeader, serverTime,
+                                  cookieStatus, cookiePolicy));
+}
+
+/******************************************************************************
+ * nsCookies impl: file I/O functions
+ *****************************************************************************/
+
+// comparison function for sorting cookies by lastAccessed time:
+// returns <0 if the first element was used more recently than the second element,
+//          0 if they both have the same last-use time,
+//         >0 if the second element was used more recently than the first element.
+PR_STATIC_CALLBACK(int) compareCookiesByLRU(const void *aElement1, const void *aElement2, void *aData)
+{
+  const cookie_CookieStruct *cookie1 = NS_STATIC_CAST(const cookie_CookieStruct*, aElement1);
+  const cookie_CookieStruct *cookie2 = NS_STATIC_CAST(const cookie_CookieStruct*, aElement2);
+  NS_ASSERTION(cookie1 && cookie2, "corrupt cookie list");
+
+  // we may have overflow problems returning the result directly, so we need branches
+  nsInt64 difference = nsInt64(cookie2->lastAccessed) - nsInt64(cookie1->lastAccessed);
+  return (difference > nsInt64(0)) ? 1 : (difference < nsInt64(0)) ? -1 : 0;
+}
+
+// comparison function for sorting cookies by path length:
+// returns <0 if the first element has a greater path length than the second element,
+//          0 if they both have the same path length,
+//         >0 if the second element has a greater path length than the first element.
+PR_STATIC_CALLBACK(int) compareCookiesByPath(const void *aElement1, const void *aElement2, void *aData)
+{
+  const cookie_CookieStruct *cookie1 = NS_STATIC_CAST(const cookie_CookieStruct*, aElement1);
+  const cookie_CookieStruct *cookie2 = NS_STATIC_CAST(const cookie_CookieStruct*, aElement2);
+  NS_ASSERTION(cookie1 && cookie2, "corrupt cookie list");
+
+  return cookie2->path.Length() - cookie1->path.Length();
+}
+
+// writes cookies to the cookie file
 PUBLIC nsresult
-COOKIE_Write() {
-  if (!cookie_changed) {
+COOKIE_Write()
+{
+  if (!sCookieChanged) {
     return NS_OK;
   }
-  cookie_CookieStruct * cookie_s;
-  time_t cur_date = get_current_time();
-  char date_string[36];
-
-  nsCOMPtr<nsIFile> dirSpec;
 
   nsresult rv;
-  rv = CKutil_ProfileDirectory(getter_AddRefs(dirSpec));
+  nsCOMPtr<nsIFile> file;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  if (NS_SUCCEEDED(rv)) {
+    rv = file->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  dirSpec->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
-
-  nsCOMPtr<nsIOutputStream> strm;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(strm),
-                                   dirSpec);
+  nsCOMPtr<nsIOutputStream> fileOutputStream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), file);
   if (NS_FAILED(rv)) {
-    NS_ERROR("failed to open cookies.txt for writing");
     return rv;
   }
 
-#define COOKIEFILE_LINE1 "# HTTP Cookie File\n"
-#define COOKIEFILE_LINE2 "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
-#define COOKIEFILE_LINE3 "# This is a generated file!  Do not edit.\n"
-#define COOKIEFILE_LINE4 "# To delete cookies, use the Cookie Manager.\n\n"
+  // get a buffered output stream 4096 bytes big, to optimize writes
+  nsCOMPtr<nsIOutputStream> bufferedOutputStream;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), fileOutputStream, 4096);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  PRUint32 ignore;
-  strm->Write(COOKIEFILE_LINE1, sizeof(COOKIEFILE_LINE1)-1, &ignore);
-  strm->Write(COOKIEFILE_LINE2, sizeof(COOKIEFILE_LINE2)-1, &ignore);
-  strm->Write(COOKIEFILE_LINE3, sizeof(COOKIEFILE_LINE3)-1, &ignore);
-  strm->Write(COOKIEFILE_LINE4, sizeof(COOKIEFILE_LINE4)-1, &ignore);
+  static const char kHeader[] =
+      "# HTTP Cookie File\n"
+      "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
+      "# This is a generated file!  Do not edit.\n"
+      "# To delete cookies, use the Cookie Manager.\n\n";
+  // note: kTrue and kFalse have leading/trailing tabs already added
+  static const char kTrue[] = "\tTRUE\t";
+  static const char kFalse[] = "\tFALSE\t";
+  static const char kTab[] = "\t";
+  static const char kNew[] = "\n";
 
-  /* format shall be:
+  // create a new nsVoidArray to hold the cookie list, and sort it
+  // such that least-recently-used cookies come last
+  nsVoidArray sortedCookieList;
+  sortedCookieList = *sCookieList;
+  sortedCookieList.Sort(compareCookiesByLRU, nsnull);
+
+  bufferedOutputStream->Write(kHeader, sizeof(kHeader) - 1, &rv);
+
+  /* file format is:
    *
    * host \t isDomain \t path \t secure \t expires \t name \t cookie
    *
-   * isDomain is PR_TRUE or PR_FALSE
-   * secure is PR_TRUE or PR_FALSE
-   * expires is a time_t integer
-   * cookie can have tabs
+   * isDomain is "TRUE" or "FALSE"
+   * isSecure is "TRUE" or "FALSE"
+   * expires is a PRInt64 integer
+   * note 1: cookie can contain tabs.
+   * note 2: cookies are written in order of lastAccessed time:
+   *         most-recently used come first; least-recently-used come last.
    */
-  PRInt32 count = cookie_list ? cookie_list->Count() : 0;
+  cookie_CookieStruct *cookieInList;
+  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  PRInt32 count = sortedCookieList.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-    NS_ASSERTION(cookie_s, "corrupt cookie list");
-     if (cookie_s->expires < cur_date || cookie_s->status == nsICookie::STATUS_DOWNGRADED) {
-       /* don't write entry if cookie has expired, has no expiratio date, or has been downgraded */
-        continue;
-      }
+    cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sortedCookieList.ElementAt(i));
+    NS_ASSERTION(cookieInList, "corrupt cookie list");
 
-      strm->Write(cookie_s->host.get(), cookie_s->host.Length(), &ignore);
+    // don't write entry if cookie has expired, or is a session cookie
+    if (cookieInList->isSession || nsInt64(cookieInList->expires) < currentTime) {
+      continue;
+    }
 
-      if (cookie_s->isDomain) {
-        strm->Write("\tTRUE\t", 6, &ignore);
-      } else {
-        strm->Write("\tFALSE\t", 7, &ignore);
-      }
-
-      strm->Write(cookie_s->path.get(), cookie_s->path.Length(), &ignore);
-
-      if (cookie_s->isSecure) {
-        strm->Write("\tTRUE\t", 6, &ignore);
-      } else {
-        strm->Write("\tFALSE\t", 7, &ignore);
-      }
-
-      PR_snprintf(date_string, sizeof(date_string), "%lu", NS_STATIC_CAST(unsigned long, cookie_s->expires));
-
-      strm->Write(date_string, strlen(date_string), &ignore);
-      strm->Write("\t", 1, &ignore);
-      strm->Write(cookie_s->name.get(), cookie_s->name.Length(), &ignore);
-      strm->Write("\t", 1, &ignore);
-      strm->Write(cookie_s->cookie.get(), cookie_s->cookie.Length(), &ignore);
-      strm->Write("\n", 1, &ignore);
+    bufferedOutputStream->Write(cookieInList->host.get(), cookieInList->host.Length(), &rv);
+    if (cookieInList->isDomain) {
+      bufferedOutputStream->Write(kTrue, sizeof(kTrue) - 1, &rv);
+    } else {
+      bufferedOutputStream->Write(kFalse, sizeof(kFalse) - 1, &rv);
+    }
+    bufferedOutputStream->Write(cookieInList->path.get(), cookieInList->path.Length(), &rv);
+    if (cookieInList->isSecure) {
+      bufferedOutputStream->Write(kTrue, sizeof(kTrue) - 1, &rv);
+    } else {
+      bufferedOutputStream->Write(kFalse, sizeof(kFalse) - 1, &rv);
+    }
+    char dateString[22];
+    PRUint32 dateLen = PR_snprintf(dateString, sizeof(dateString), "%lld", cookieInList->expires);
+    bufferedOutputStream->Write(dateString, dateLen, &rv);
+    bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &rv);
+    bufferedOutputStream->Write(cookieInList->name.get(), cookieInList->name.Length(), &rv);
+    bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &rv);
+    bufferedOutputStream->Write(cookieInList->cookie.get(), cookieInList->cookie.Length(), &rv);
+    bufferedOutputStream->Write(kNew, sizeof(kNew) - 1, &rv);
   }
 
-  cookie_changed = PR_FALSE;
+  sCookieChanged = PR_FALSE;
   return NS_OK;
 }
 
-/* Notify cookie manager dialog to update its display */
+// reads cookies from the cookie file
 PUBLIC nsresult
-COOKIE_Notify() {
-  nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-  if (os) {
-    os->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
-  }
-  return NS_OK;
-}
-
-/* reads HTTP cookies from disk */
-PUBLIC nsresult
-COOKIE_Read() {
-  if (cookie_list) {
-    return NS_OK;
-  }
-  cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
-  nsCAutoString buffer;
-  PRBool added_to_list;
-
-  PRBool exists = PR_FALSE;
-  nsCOMPtr<nsIFile> dirSpec;
-  nsresult rv = CKutil_ProfileDirectory(getter_AddRefs(dirSpec));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  dirSpec->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
-  if (NS_FAILED(dirSpec->Exists(&exists)) || !exists) {
-    /* file doesn't exist -- that's not an error */
+COOKIE_Read()
+{
+  // if sCookieList is non-empty, we've already read. we can remove this check
+  // once we're sure this function gets called in only the appropriate places
+  if (sCookieList->Count() > 0) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIInputStream> strm;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(strm),
-                                  dirSpec);
+  nsresult rv;
+  nsCOMPtr<nsIFile> file;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  if (NS_SUCCEEDED(rv)) {
+    rv = file->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  /* format is:
+  nsCOMPtr<nsIInputStream> fileInputStream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), file);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  static NS_NAMED_LITERAL_CSTRING(kTrue, "TRUE");
+
+  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  // we use lastAccessedCounter to keep cookies in recently-used order,
+  // so we start by initializing to currentTime (somewhat arbitrary)
+  nsInt64 lastAccessedCounter = currentTime;
+  PRInt64 expires;
+  cookie_CookieStruct *newCookie;
+  nsAutoString bufferUnicode;
+  nsCAutoString buffer, expiresString;
+  PRBool isMore = PR_TRUE;
+  PRInt32 hostIndex = 0, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
+
+  /* file format is:
    *
    * host \t isDomain \t path \t secure \t expires \t name \t cookie
    *
    * if this format isn't respected we move onto the next line in the file.
-   * isDomain is PR_TRUE or PR_FALSE -- defaulting to PR_FALSE
-   * secure is PR_TRUE or PR_FALSE   -- should default to PR_TRUE
-   * expires is a time_t integer
-   * cookie can have tabs
+   * isDomain is "TRUE" or "FALSE" (default to "FALSE")
+   * isSecure is "TRUE" or "FALSE" (default to "TRUE")
+   * expires is a PRInt64 integer
+   * note 1: cookie can contain tabs.
+   * note 2: cookies are written in order of lastAccessed time:
+   *         most-recently used come first; least-recently-used come last.
    */
 
-#define BUFSIZE 4096
-  char readbuffer[BUFSIZE];
-  PRInt32 next = BUFSIZE, count = BUFSIZE;
-  while (CKutil_GetLine(strm, readbuffer, BUFSIZE, next, count, buffer) != -1){
-    added_to_list = PR_FALSE;
+  while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
+    // downconvert to ASCII. eventually, we want to fix nsILineInputStream
+    // to operate on a CString buffer...
+    CopyUCS2toASCII(bufferUnicode, buffer);
 
-    if (!buffer.IsEmpty()) {
-      char bufferFirstChar = buffer.First();
-      if (bufferFirstChar == '#' || bufferFirstChar == '\n' || bufferFirstChar == '\r') {
-        continue;
-      }
-    }
-    int hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
-    hostIndex = 0;
-    if ((isDomainIndex=buffer.FindChar('\t', hostIndex)+1) == 0 ||
-        (pathIndex=buffer.FindChar('\t', isDomainIndex)+1) == 0 ||
-        (secureIndex=buffer.FindChar('\t', pathIndex)+1) == 0 ||
-        (expiresIndex=buffer.FindChar('\t', secureIndex)+1) == 0 ||
-        (nameIndex=buffer.FindChar('\t', expiresIndex)+1) == 0 ||
-        (cookieIndex=buffer.FindChar('\t', nameIndex)+1) == 0 ) {
+    if (buffer.IsEmpty() || buffer.First() == '#') {
       continue;
     }
-    nsCAutoString host, isDomain, path, isSecure, expires, name, cookie;
-    buffer.Mid(host, hostIndex, isDomainIndex-hostIndex-1);
-    buffer.Mid(isDomain, isDomainIndex, pathIndex-isDomainIndex-1);
-    buffer.Mid(path, pathIndex, secureIndex-pathIndex-1);
-    buffer.Mid(isSecure, secureIndex, expiresIndex-secureIndex-1);
-    buffer.Mid(expires, expiresIndex, nameIndex-expiresIndex-1);
-    buffer.Mid(name, nameIndex, cookieIndex-nameIndex-1);
-    buffer.Mid(cookie, cookieIndex, buffer.Length()-cookieIndex);
 
-    /* create a new cookie_struct and fill it in */
-    new_cookie = new cookie_CookieStruct;
-    if (!new_cookie) {
+    // this is a cheap, cheesy way of parsing a tab-delimited line into
+    // string indexes, which can be lopped off into substrings. just for
+    // purposes of obfuscation, it also checks that each token was found.
+    // todo: use iterators?
+    if ((isDomainIndex = buffer.FindChar('\t', hostIndex)     + 1) == 0 ||
+        (pathIndex     = buffer.FindChar('\t', isDomainIndex) + 1) == 0 ||
+        (secureIndex   = buffer.FindChar('\t', pathIndex)     + 1) == 0 ||
+        (expiresIndex  = buffer.FindChar('\t', secureIndex)   + 1) == 0 ||
+        (nameIndex     = buffer.FindChar('\t', expiresIndex)  + 1) == 0 ||
+        (cookieIndex   = buffer.FindChar('\t', nameIndex)     + 1) == 0) {
+      continue;
+    }
+
+    // check the expirytime first - if it's expired, ignore
+    expiresString = Substring(buffer, expiresIndex, nameIndex - expiresIndex - 1);
+    PRInt32 numInts = PR_sscanf(expiresString.get(), "%lld", &expires);
+    if (numInts != 1 || nsInt64(expires) < currentTime) {
+      continue;
+    }
+
+    // create a new cookieStruct and assign the data
+    newCookie = new cookie_CookieStruct;
+    if (!newCookie) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    new_cookie->name = name;
-    new_cookie->cookie = cookie;
-    new_cookie->host = host;
-    new_cookie->path = path;
-    if (isDomain.Equals(NS_LITERAL_CSTRING("TRUE"))) {
-      new_cookie->isDomain = PR_TRUE;
-    } else {
-      new_cookie->isDomain = PR_FALSE;
-    }
-    if (isSecure.Equals(NS_LITERAL_CSTRING("TRUE"))) {
-      new_cookie->isSecure = PR_TRUE;
-    } else {
-      new_cookie->isSecure = PR_FALSE;
-    }
-    PRInt32 errorCode;
-    new_cookie->expires = expires.ToInteger(&errorCode, 10);
 
-    new_cookie->status = nsICookie::STATUS_UNKNOWN;
-    new_cookie->policy = nsICookie::POLICY_UNKNOWN;
+    newCookie->host     = Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
+    newCookie->isDomain = Substring(buffer, isDomainIndex, pathIndex - isDomainIndex - 1).Equals(kTrue);
+    newCookie->path     = Substring(buffer, pathIndex, secureIndex - pathIndex - 1);
+    newCookie->isSecure = Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).Equals(kTrue);
+    newCookie->name     = Substring(buffer, nameIndex, cookieIndex - nameIndex - 1);
+    newCookie->cookie   = Substring(buffer, cookieIndex, buffer.Length() - cookieIndex);
+    newCookie->isSession = PR_FALSE;
+    newCookie->status = nsICookie::STATUS_UNKNOWN;
+    newCookie->policy = nsICookie::POLICY_UNKNOWN;
+    newCookie->expires = expires;
+    // trick: keep the cookies in most-recently-used order,
+    // by successively decrementing the lastAccessed time
+    newCookie->lastAccessed = lastAccessedCounter;
+    lastAccessedCounter -= nsInt64(1);
 
-    /* check for bad legacy cookies (domain not starting with a dot) */
-    if (new_cookie->isDomain && !new_cookie->host.IsEmpty() && new_cookie->host.First() != '.') {
-      /* bad cookie, discard it */
-      delete new_cookie;
+    // check for bad legacy cookies (domain not starting with a dot, or containing a port),
+    // and discard
+    if (newCookie->isDomain && !newCookie->host.IsEmpty() && newCookie->host.First() != '.' ||
+        newCookie->host.FindChar(':') != kNotFound) {
+      delete newCookie;
       continue;
     }
 
-    /* check for bad legacy cookies (domain containing a port) */
-    if (new_cookie->host.FindChar(':') != kNotFound) {
-      /* bad cookie, discard it */
-      delete new_cookie;
-      continue;
-    }
-  
-    /* start new cookie list if one does not already exist */
-    if (!cookie_list) {
-      cookie_list = new nsVoidArray();
-      if (!cookie_list) {
-        deleteCookie((void*)new_cookie, nsnull);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-
-    /* add new cookie to the list so that it is before any strings of smaller length */
-    for (PRInt32 i = cookie_list->Count(); i > 0;) {
-      i--;
-      tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-      NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
-      if (new_cookie->path.Length() <= tmp_cookie_ptr->path.Length()) {
-        cookie_list->InsertElementAt(new_cookie, i);
-        added_to_list = PR_TRUE;
-        break;
-      }
-    }
-
-    /* no shorter strings found in list so add new cookie at end */
-    if (!added_to_list) {
-      cookie_list->AppendElement(new_cookie);
-    }
+    // add new cookie to the list
+    sCookieList->AppendElement(newCookie);
   }
 
-  cookie_changed = PR_FALSE;
+  // sort sCookieList in order of descending path length
+  sCookieList->Sort(compareCookiesByPath, nsnull);
+
+  sCookieChanged = PR_FALSE;
   return NS_OK;
-}
-
-PUBLIC PRInt32
-COOKIE_Count() {
-  if (!cookie_list) {
-    return 0;
-  }
-  /* Get rid of any expired cookies now so user doesn't
-   * think/see that we're keeping cookies in memory.
-   */
-  cookie_RemoveExpiredCookies();
-
-  return cookie_list->Count();
-}
-
-/*
- * return a string that has each " of the argument string
- * replaced with \" so it can be used inside a quoted string
- */
-PRIVATE void
-cookie_FixQuoted(const nsACString &inStr, nsACString &outStr) {
-  outStr = inStr;
-
-  PRInt32 pos = 0;
-  while (pos < (PRInt32) outStr.Length() && (pos = outStr.FindChar('"', pos)) != kNotFound) {
-    outStr.Insert('\\', pos);
-    ++pos;
-    ++pos;
-   }
- }
-
-PUBLIC nsresult
-COOKIE_Enumerate (PRInt32 count, nsACString &name, nsACString &value, PRBool &isDomain,
-                  nsACString &host, nsACString &path, PRBool &isSecure, PRUint64 &expires,
-                  nsCookieStatus &status, nsCookiePolicy &policy)
-{
-  if (!cookie_list) {
-    return NS_ERROR_FAILURE;
-  }
-  cookie_CookieStruct *cookie;
-  if (count < 0 || count >= cookie_list->Count()) {
-    NS_ERROR("bad cookie index");
-    return NS_ERROR_UNEXPECTED;
-  }
-  cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));
-  NS_ASSERTION(cookie, "corrupt cookie list");
-
-  cookie_FixQuoted(cookie->name, name);
-  cookie_FixQuoted(cookie->cookie, value);
-  cookie_FixQuoted(cookie->host, host);
-  cookie_FixQuoted(cookie->path, path);
-  isDomain = cookie->isDomain;
-  isSecure = cookie->isSecure;
-  // *expires = cookie->expires; -- no good on mac, using next line instead
-  LL_UI2L(expires, cookie->expires);
-  status = cookie->status;
-  policy = cookie->policy;
-
-  return NS_OK;
-}
-
-PUBLIC void
-COOKIE_Remove
-    (const nsACString &host, const nsACString &name, const nsACString &path, const PRBool blocked) {
-  cookie_CookieStruct * cookie;
-  PRInt32 count = 0;
-
-  /* step through all cookies searching for indicated one */
-  if (cookie_list) {
-    count = cookie_list->Count();
-    while (count>0) {
-      count--;
-      cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));
-      NS_ASSERTION(cookie, "corrupt cookie list");
-      if (cookie->host.Equals(host) &&
-          cookie->name.Equals(name) &&
-          cookie->path.Equals(path)) {
-        if (blocked) {
-          PRInt32 pos = 0;
-          while (cookie->host.CharAt(pos) == '.') {
-            ++pos;
-          }
-          if (NS_SUCCEEDED(PERMISSION_Read())) {
-            const nsACString &hostSubstring = Substring(cookie->host, pos, cookie->host.Length() - pos);
-            Permission_AddHost(PromiseFlatCString(hostSubstring), PR_FALSE, COOKIEPERMISSION, PR_TRUE);
-          }
-        }
-        cookie_list->RemoveElementAt(count);
-        delete cookie;
-        cookie_changed = PR_TRUE;
-        COOKIE_Write();
-        break;
-      }
-    }
-  }
-}
-
-// this is a backdoor. normally use COOKIE_SetCookieString.
-// caller does NOT hand off ownership of strings to us.
-PUBLIC nsresult
-COOKIE_AddCookie(const nsACString &aDomain, const nsACString &aPath,
-                 const nsACString &aName, const nsACString &aValue,
-                 PRBool aSecure, PRBool aIsDomain,
-                 time_t aExpires,
-                 nsCookieStatus aStatus, nsCookiePolicy aPolicy)
-{
-  PRBool cookieAdded = PR_FALSE;
-  cookie_CookieStruct *prev_cookie;
-
-  /* limit the number of cookies */
-  cookie_CheckForMaxCookiesFromHost(aDomain);
-  if (cookie_list && cookie_list->Count() >= MAX_NUMBER_OF_COOKIES)
-    cookie_RemoveOldestCookie();
-
-  aExpires = cookie_TrimLifetime(aExpires);
-
-  prev_cookie = cookie_CheckForPrevCookie (aPath, aDomain, aName);
-  if(prev_cookie) {
-    prev_cookie->path = aPath;
-    prev_cookie->host = aDomain;
-    prev_cookie->name = aName;
-    prev_cookie->cookie = aValue;
-    prev_cookie->expires = aExpires;
-    prev_cookie->lastAccessed = get_current_time();
-    prev_cookie->isSecure = aSecure;
-    prev_cookie->isDomain = aIsDomain;
-    prev_cookie->status = aStatus;
-    prev_cookie->policy = aPolicy;
-    cookieAdded = PR_TRUE;
-  } else {
-    // construct a new cookie_struct
-    if (!cookie_list)
-      cookie_list = new nsVoidArray();
-
-    prev_cookie = new cookie_CookieStruct;
-    if (prev_cookie) {
-      prev_cookie->path = aPath;
-      prev_cookie->host = aDomain;
-      prev_cookie->name = aName;
-      prev_cookie->cookie = aValue;
-      prev_cookie->expires = aExpires;
-      prev_cookie->lastAccessed = get_current_time();
-      prev_cookie->isSecure = aSecure;
-      prev_cookie->isDomain = aIsDomain;
-      prev_cookie->status = aStatus;
-      prev_cookie->policy = aPolicy;
-    }
-
-    if (prev_cookie && cookie_list) {
-      // add it to the list so that it is before any strings of smaller length
-      for (PRInt32 i = cookie_list->Count(); i > 0;) {
-        i--;
-        cookie_CookieStruct *tmp_cookie_ptr =
-              NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-        NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
-        if (prev_cookie->path.Length() <= tmp_cookie_ptr->path.Length()) {
-          cookie_list->InsertElementAt(prev_cookie, i + 1);
-          cookieAdded = PR_TRUE;
-          break;
-        }
-      }
-      if (!cookieAdded ) {
-        /* no shorter strings found in list */
-        cookie_list->InsertElementAt(prev_cookie, 0);
-        cookieAdded = PR_TRUE;
-      }
-    } else {
-      delete prev_cookie;
-    }
-  }
-
-  if (cookieAdded) {
-    // Make a note to write the cookies to file
-    cookie_changed = PR_TRUE;
-
-    // Notify statusbar if we need to turn on the cookie icon
-    if (prev_cookie->status == nsICookie::STATUS_DOWNGRADED ||
-        prev_cookie->status == nsICookie::STATUS_FLAGGED) {
-      nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-      if (os)
-        os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
-    }
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-MODULE_PRIVATE nsresult
-cookie_ParseDate(const nsAFlatCString &date_string, time_t & date) {
-
-  PRTime prdate;
-  date = 0;
-  // TRACEMSG(("Parsing date string: %s\n",date_string));
-
-  if(PR_ParseTimeString(date_string.get(), PR_TRUE, &prdate) == PR_SUCCESS) {
-    if (LL_CMP(prdate, <, LL_Zero())) { // prdate < 0
-      return NS_OK; // date = 0 from above
-    }
-    PRInt64 r, u;
-    LL_I2L(u, PR_USEC_PER_SEC);
-    LL_DIV(r, prdate, u);
-    LL_L2I(date, r);
-    if (date < 0) {
-      date = MAX_EXPIRE;
-    }
-    // TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));    // TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
-    return NS_OK;
-  } 
-  return NS_ERROR_FAILURE;
 }

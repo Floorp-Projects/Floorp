@@ -47,19 +47,21 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
+#include "nsIObserver.h"
 #include "nsIDocumentLoader.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
 #include "nsNetCID.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
 static const PRUint32 kLazyWriteLoadingTimeout = 10000; //msec
 static const PRUint32 kLazyWriteFinishedTimeout = 1000; //msec
-
-////////////////////////////////////////////////////////////////////////////////
-
+// sadly, we need this multiple definition until everything is in one file
+static const char kCookieFileName2[] = "cookies.txt";
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookieService Implementation
@@ -70,44 +72,69 @@ NS_IMPL_ISUPPORTS4(nsCookieService, nsICookieService,
 PRBool gCookieIconVisible = PR_FALSE;
 
 nsCookieService::nsCookieService() :
+  mCookieFile(nsnull),
+  mObserverService(nsnull),
   mLoadCount(0),
   mWritePending(PR_FALSE)
 {
+  gCookiePrefObserver = nsnull;
+  sCookieList = nsnull;
 }
 
-nsCookieService::~nsCookieService(void)
+nsCookieService::~nsCookieService()
 {
   if (mWriteTimer)
     mWriteTimer->Cancel();
+
+  // clean up memory
   COOKIE_RemoveAll();
+
+  if (gCookiePrefObserver) {
+    delete gCookiePrefObserver;
+  }
+  if (sCookieList) {
+    delete sCookieList;
+  }
 }
 
 nsresult nsCookieService::Init()
 {
-  COOKIE_RegisterPrefCallbacks();
+  // install the main cookie pref observer (defined in nsCookieService.h)
+  // this will be integrated into nsCookieService when nsCookies is removed.
+  gCookiePrefObserver = new nsCookiePrefObserver();
+  // create sCookieList
+  sCookieList = new nsVoidArray();
+  // if we can't create them, return an error so do_GetService() fails
+  if (!gCookiePrefObserver || !sCookieList) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // cache mCookieFile
   nsresult rv;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
+  if (NS_SUCCEEDED(rv)) {
+    rv = mCookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName2));
+  }
 
   COOKIE_Read();
 
-  nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (observerService) {
-    observerService->AddObserver(this, "profile-before-change", PR_TRUE);
-    observerService->AddObserver(this, "profile-do-change", PR_TRUE);
-    observerService->AddObserver(this, "cookieIcon", PR_FALSE);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (mObserverService) {
+    mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
+    mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
+    mObserverService->AddObserver(this, "cookieIcon", PR_TRUE);
   }
 
   // Register as an observer for the document loader  
-  nsCOMPtr<nsIDocumentLoader> docLoaderService = 
-           do_GetService(kDocLoaderServiceCID, &rv);
+  nsCOMPtr<nsIDocumentLoader> docLoaderService = do_GetService(kDocLoaderServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && docLoaderService) {
     nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService));
     if (progress)
         (void) progress->AddProgressListener((nsIWebProgressListener*)this,
-                            nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                            nsIWebProgress::NOTIFY_STATE_NETWORK);
+                                             nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                                             nsIWebProgress::NOTIFY_STATE_NETWORK);
   } else {
-    NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
+    NS_ERROR("Couldn't get nsIDocumentLoader");
   }
 
   return NS_OK;
@@ -152,8 +179,8 @@ nsCookieService::OnProgressChange(nsIWebProgress *aProgress,
                                   PRInt32 curTotalProgress, 
                                   PRInt32 maxTotalProgress)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -166,16 +193,18 @@ nsCookieService::OnStateChange(nsIWebProgress* aWebProgress,
     if (progressStateFlags & STATE_START)
       ++mLoadCount;
     if (progressStateFlags & STATE_STOP) {
-      if (mLoadCount > 0) // in case we missed STATE_START
+      if (mLoadCount > 0) // needed because at startup we may miss initial STATE_START
         --mLoadCount;
       if (mLoadCount == 0)
         LazyWrite(PR_FALSE);
     }
   }
 
-  if ((progressStateFlags & STATE_IS_DOCUMENT) &&
-      (progressStateFlags & STATE_STOP))
-    COOKIE_Notify();
+  if (mObserverService &&
+      (progressStateFlags & STATE_IS_DOCUMENT) &&
+      (progressStateFlags & STATE_STOP)) {
+    mObserverService->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
+  }
 
   return NS_OK;
 }
@@ -186,64 +215,74 @@ NS_IMETHODIMP nsCookieService::OnLocationChange(nsIWebProgress* aWebProgress,
                                                      nsIRequest* aRequest,
                                                      nsIURI *location)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsCookieService::OnStatusChange(nsIWebProgress* aWebProgress,
-                                     nsIRequest* aRequest,
-                                     nsresult aStatus,
-                                     const PRUnichar* aMessage)
+                                nsIRequest* aRequest,
+                                nsresult aStatus,
+                                const PRUnichar* aMessage)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsCookieService::OnSecurityChange(nsIWebProgress *aWebProgress, 
-                                       nsIRequest *aRequest, 
-                                       PRUint32 state)
+                                  nsIRequest *aRequest, 
+                                  PRUint32 state)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) {
-  *aCookie = COOKIE_GetCookie(aURL);
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::GetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, char ** aCookie) {
-  if (!aURL) {
-    return NS_ERROR_FAILURE;
+nsCookieService::GetCookieString(nsIURI *aHostURI, char ** aCookie) {
+  *aCookie = COOKIE_GetCookie(aHostURI, nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::GetCookieStringFromHttp(nsIURI *aHostURI, nsIURI *aFirstURI, char ** aCookie) {
+  *aCookie = COOKIE_GetCookie(aHostURI, aFirstURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::SetCookieString(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, nsIHttpChannel *aHttpChannel)
+{
+  nsCOMPtr<nsIURI> firstURI;
+  nsresult rv;
+
+  if (aHttpChannel) {
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
+    if (!httpInternal) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "unable to QueryInterface httpInternal");
+      return rv;
+    }
+    rv = httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
+    if (NS_FAILED(rv)) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "unable to determine first URL");
+      return rv;
+    }
   }
 
-  *aCookie = COOKIE_GetCookieFromHttp(aURL, aFirstURL);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * aCookie, nsIHttpChannel* aHttpChannel) {
-
-  COOKIE_SetCookieString(aURL, aPrompt, aCookie, aHttpChannel);
+  COOKIE_SetCookie(aHostURI, firstURI, aPrompt, aCookieHeader, nsnull, aHttpChannel);
   LazyWrite(PR_TRUE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPrompt *aPrompter, const char *aCookie, const char *aExpires, nsIHttpChannel* aHttpChannel) 
+nsCookieService::SetCookieStringFromHttp(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIHttpChannel* aHttpChannel) 
 {
-  nsCOMPtr<nsIURI> firstURL = aFirstURL;
-  if (!firstURL) {
-    firstURL = aURL;
+  nsCOMPtr<nsIURI> firstURI = aFirstURI;
+  if (!firstURI) {
+    firstURI = aHostURI;
   }
 
-  COOKIE_SetCookieStringFromHttp(
-    aURL, firstURL, aPrompter, aCookie, (char *)aExpires, aHttpChannel);
+  COOKIE_SetCookie(aHostURI, firstURI, aPrompt, aCookieHeader, aServerTime, aHttpChannel);
   LazyWrite(PR_TRUE);
   return NS_OK;
 }
@@ -254,27 +293,39 @@ nsCookieService::GetCookieIconIsVisible(PRBool *aIsVisible) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-  nsresult rv = NS_OK;
-
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
     if (mWriteTimer)
       mWriteTimer->Cancel();
-    COOKIE_Write();
-    COOKIE_RemoveAll();
 
-    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
-      COOKIE_DeletePersistentUserData();
+    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+      COOKIE_RemoveAll();
+      // delete the cookie file
+      if (mCookieFile) {
+        mCookieFile->Remove(PR_FALSE);
+      }
+    } else {
+      COOKIE_Write();
+      COOKIE_RemoveAll();
+    }
   } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
-    // The profile has aleady changed.    
+    // The profile has already changed.    
     // Now just read them from the new profile location.
+    // we also need to update the cached cookie file location
+    nsresult rv;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
+    if (NS_SUCCEEDED(rv)) {
+      rv = mCookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName2));
+    }
     COOKIE_Read();
   } else if (!nsCRT::strcmp(aTopic, "cookieIcon")) {
-    gCookieIconVisible = (!nsCRT::strcmp(someData, NS_LITERAL_STRING("on").get()));
+    // this is an evil trick to avoid the blatant inefficiency of
+    // (!nsCRT::strcmp(aData, NS_LITERAL_STRING("on").get()))
+    gCookieIconVisible = (aData[0] == 'o' && aData[1] == 'n' && aData[2] == '\0');
   }
 
-  return rv;
+  return NS_OK;
 }

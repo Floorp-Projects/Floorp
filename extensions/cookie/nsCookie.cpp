@@ -38,8 +38,6 @@
 
 #include "nsCookie.h"
 #include "nsString.h"
-#include "nsCRT.h"
-#include "prmem.h"
 
 // nsCookie Implementation
 
@@ -96,15 +94,11 @@ NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain) {
 }
 
 NS_IMETHODIMP nsCookie::GetHost(nsACString& aHost) {
-//NS_IMETHODIMP nsCookie::GetHost(nsAUTF8String& aHost) {
-// using nsACString above instead of nsAUTF8String because the latter doesn't exist yet
   aHost = cookieHost;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsCookie::GetPath(nsACString& aPath) {
-//NS_IMETHODIMP nsCookie::GetPath(nsAUTF8String& aPath) {
-// using nsACString above instead of nsAUTF8String because the latter doesn't exist yet
   aPath = cookiePath;
   return NS_OK;
 }

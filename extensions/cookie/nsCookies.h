@@ -39,61 +39,71 @@
 #ifndef COOKIES_H
 #define COOKIES_H
 
-#include "nsString.h"
 #include "nsCookie.h"
-
-#include "nsIIOService.h"
+#include "nsString.h"
+#include "nsTime.h"
+#include "nsVoidArray.h"
 #include "nsIURI.h"
+#include "nsIHttpChannel.h"
+#include "nsIDOMWindowInternal.h"
 
-#include <time.h>
-
-class nsIPrompt;
-class nsIHttpChannel;
-
-extern nsresult COOKIE_Read();
-extern nsresult COOKIE_Write();
-extern nsresult COOKIE_Notify();
-//XXX these should operate on |const char*|
-extern char * COOKIE_GetCookie(nsIURI * address);
-extern char * COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress);
-extern void COOKIE_SetCookieString(nsIURI * cur_url, nsIPrompt * aPrompter, const char * set_cookie_header, nsIHttpChannel* aHttpChannel);
-extern void COOKIE_SetCookieStringFromHttp(nsIURI * cur_url, nsIURI * first_url, nsIPrompt *aPrompter, const char * set_cookie_header, char * server_date, nsIHttpChannel* aHttpChannel);
-extern void COOKIE_RegisterPrefCallbacks(void);
-
-extern void COOKIE_RemoveSessionCookies();
-extern void COOKIE_RemoveAll(void);
-extern void COOKIE_DeletePersistentUserData(void);
-extern PRInt32 COOKIE_Count();
-extern nsresult COOKIE_Enumerate
-    (PRInt32 count,
-     nsACString &name,
-     nsACString &value,
-     PRBool &isDomain,
-     nsACString &host,
-     nsACString &path,
-     PRBool &isSecure,
-     PRUint64 &expires,
-     nsCookieStatus &status,
-     nsCookiePolicy &policy);
-extern void COOKIE_Remove
-  (const nsACString &host, const nsACString &name, const nsACString &path, const PRBool blocked);
-extern nsresult COOKIE_AddCookie(const nsACString &aDomain, const nsACString &aPath,
-                  const nsACString &aName, const nsACString &aValue,
-                  PRBool aSecure, PRBool aIsDomain,
-                  time_t aExpires,
-                  nsCookieStatus aStatus, nsCookiePolicy aPolicy);
-
+// main cookie storage struct
 typedef struct _cookie_CookieStruct {
   nsCString path;
   nsCString host;
   nsCString name;
   nsCString cookie;
-  time_t expires;
-  time_t lastAccessed;
-  PRBool isSecure;
-  PRBool isDomain;   /* is it a domain instead of an absolute host? */
+  PRInt64 expires;
+  PRInt64 lastAccessed;
+  PRPackedBool isSession;
+  PRPackedBool isSecure;
+  PRPackedBool isDomain;
   nsCookieStatus status;
   nsCookiePolicy policy;
 } cookie_CookieStruct;
+
+// define logging macros for convenience
+#define SET_COOKIE PR_TRUE
+#define GET_COOKIE PR_FALSE
+
+// logging handlers
+#ifdef MOZ_LOGGING
+// in order to do logging, the following environment variables need to be set:
+//
+//    set NSPR_LOG_MODULES=cookie:3 -- shows rejected cookies
+//    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
+//    set NSPR_LOG_FILE=c:\cookie.log
+//
+// this next define has to appear before the include of prlog.h
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#include "prlog.h"
+#endif
+
+#ifdef PR_LOGGING
+#define COOKIE_LOGFAILURE(a, b, c, d) cookie_LogFailure(a, b, c, d)
+#define COOKIE_LOGSUCCESS(a, b, c, d) cookie_LogSuccess(a, b, c, d)
+
+extern void cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason);
+extern void cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, cookie_CookieStruct *aCookie);
+extern inline void cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, const char *aReason);
+extern inline void cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, cookie_CookieStruct *aCookie);
+#else
+#define COOKIE_LOGFAILURE(a, b, c, d) /* nothing */
+#define COOKIE_LOGSUCCESS(a, b, c, d) /* nothing */
+#endif
+
+// function prototypes
+extern nsresult COOKIE_Read();
+extern nsresult COOKIE_Write();
+extern void COOKIE_RemoveExpiredCookies(nsInt64 aCurrentTime, PRInt32 &aOldestPosition);
+extern char * COOKIE_GetCookie(nsIURI *aHostURI, nsIURI *aFirstURI);
+extern void COOKIE_SetCookie(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIHttpChannel *aHttpChannel);
+extern void COOKIE_RemoveAll();
+extern void COOKIE_Remove(const nsACString &host, const nsACString &name, const nsACString &path, PRBool blocked);
+extern nsresult COOKIE_Add(cookie_CookieStruct *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
+extern already_AddRefed<nsICookie> COOKIE_ChangeFormat(cookie_CookieStruct *aCookie);
+
+// constants & variables
+extern nsVoidArray *sCookieList;
 
 #endif /* COOKIES_H */

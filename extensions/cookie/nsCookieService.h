@@ -44,10 +44,56 @@
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIIOService.h"
+#include "nsIFile.h"
 #include "nsITimer.h"
+#include "nsIObserverService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsPermissions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsCookiePrefObserver
 
+class nsCookiePrefObserver : public nsIObserver
+                           , public nsSupportsWeakReference
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
+    nsCookiePrefObserver();
+    virtual ~nsCookiePrefObserver();
+    nsresult Init();
+    nsresult Install();
+    nsresult ReadPrefs();
+    nsresult Remove();
+
+    // member variables for caching prefs
+#ifdef MOZ_PHOENIX
+    // unfortunately, we require this #ifdef for now, since Phoenix uses different
+    // (more optimized) prefs to Mozilla. This will be fixed shortly.
+    // the following variables are Phoenix hacks to reduce ifdefs in the code.
+    PRPackedBool                mCookiesEnabled_temp,               // These two prefs are collapsed
+                                mCookiesForDomainOnly_temp,         // into mCookiesPermissions.
+                                mCookiesDisabledForMailNews;        // Disable cookies in mailnews
+#else
+    PRInt32                     mCookiesLifetimeSec;                // Lifetime limit specified in seconds
+    PRPackedBool                mCookiesDisabledForMailNews;        // Disable cookies in mailnews
+#endif
+    PRPackedBool                mCookiesAskPermission, // Ask user permission before storing cookie
+                                mCookiesLifetimeEnabled,            // Cookie lifetime limit enabled
+                                mCookiesLifetimeCurrentSession;     // Limit cookie lifetime to current session
+    PRBool                      mCookiesStrictDomains; // Optional pref to apply stricter domain checks
+    PERMISSION_BehaviorEnum     mCookiesPermissions;   // PERMISSION_{Accept, DontAcceptForeign, DontUse, P3P}
+    nsXPIDLCString              mCookiesP3PString;                  // P3P settings
+
+  private:
+    nsCOMPtr<nsIPrefBranch> mPrefBranch;
+};
+
+extern nsCookiePrefObserver *gCookiePrefObserver;
+
+// nsCookieService
 class nsCookieService : public nsICookieService,
                         public nsIObserver,
                         public nsIWebProgressListener,
@@ -65,6 +111,10 @@ public:
   nsresult Init();
 
 protected:
+  // cached things
+  nsCOMPtr<nsIFile> mCookieFile;
+  nsCOMPtr<nsIObserverService> mObserverService;
+
   // Use LazyWrite to save the cookies file on a timer. It will write
   // the file only once if repeatedly hammered quickly.
   void LazyWrite(PRBool aForce);
