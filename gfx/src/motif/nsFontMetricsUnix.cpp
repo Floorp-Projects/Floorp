@@ -58,8 +58,13 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
+  nsAutoString  firstFace;
+  if (NS_OK != aCX->FirstExistingFont(aFont, firstFace)) {
+    aFont.GetFirstFamily(firstFace);
+  }
+
   char        **fnames = nsnull;
-  PRInt32     namelen = aFont.name.Length() + 1;
+  PRInt32     namelen = firstFace.Length() + 1;
   char	      *wildstring = (char *)PR_Malloc((namelen << 1) + 200);
   int         numnames = 0;
   char        altitalicization = 0;
@@ -74,7 +79,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   mContext = aCX;
   mFontHandle = nsnull;
 
-  aFont.name.ToCString(wildstring, namelen);
+  firstFace.ToCString(wildstring, namelen);
 
   if (abs(dpi - 75) < abs(dpi - 100))
     dpi = 75;
@@ -116,11 +121,12 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
     fnames = ::XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
   }
 
+
   if (numnames <= 0)
   {
     //we were not able to match the font name at all...
 
-    const char *newname = MapFamilyToFont(aFont.name);
+    const char *newname = firstFace.ToNewCString();
 
     PR_snprintf(&wildstring[namelen + 1], namelen + 200,
                "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
@@ -141,6 +147,8 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 
       fnames = ::XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
     }
+
+    delete [] newname;
   }
 
   if (numnames > 0)
@@ -355,43 +363,30 @@ nsFontHandle nsFontMetricsUnix :: GetFontHandle()
 }
 
 
-// XXX this function is a hack; the only logical font names we should
-// support are the one used by css.
-const char* nsFontMetricsUnix::MapFamilyToFont(const nsString& aLogicalFontName)
+static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsIDeviceContext* aDC,
+                                   nsString& aFontFace)
 {
-  if (aLogicalFontName.EqualsIgnoreCase("Times Roman")) {
-    return "times";
+  // the CSS generic names (conversions from Nav for now)
+  // XXX this  need to check availability with the dc
+  PRBool  aliased;
+  if (aGenericFamily.EqualsIgnoreCase("serif")) {
+    aDC->GetLocalFontName("times", aFontFace, aliased);
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Times New Roman")) {
-    return "times";
+  else if (aGenericFamily.EqualsIgnoreCase("sans-serif")) {
+    aDC->GetLocalFontName("helvetica", aFontFace, aliased);
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Unicode")) {
-    return "Bitstream Cyberbit";
+  else if (aGenericFamily.EqualsIgnoreCase("cursive")) {
+    aDC->GetLocalFontName("script", aFontFace, aliased);  // XXX ???
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Courier New")) {
-    return "courier";
+  else if (aGenericFamily.EqualsIgnoreCase("fantasy")) {
+    aDC->GetLocalFontName("helvetica", aFontFace, aliased);
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Arial")) {
-    return "helvetica";
+  else if (aGenericFamily.EqualsIgnoreCase("monospace")) {
+    aDC->GetLocalFontName("fixed", aFontFace, aliased);
   }
-
-  // the CSS generic names
-  if (aLogicalFontName.EqualsIgnoreCase("serif")) {
-    return "times";
+  else {
+    aFontFace.Truncate();
   }
-  if (aLogicalFontName.EqualsIgnoreCase("sans-serif")) {
-    return "helvetica";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("cursive")) {
-//    return "XXX";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("fantasy")) {
-//    return "XXX";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("monospace")) {
-    return "fixed";
-  }
-  return "helvetica";/* XXX for now */
 }
 
 

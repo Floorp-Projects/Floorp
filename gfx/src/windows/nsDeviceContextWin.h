@@ -38,7 +38,7 @@ public:
   //in the device context for re-use.
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 
-  NS_IMETHOD CheckFontExistence(const char * aFontName);
+  NS_IMETHOD CheckFontExistence(const nsString& aFontName);
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 

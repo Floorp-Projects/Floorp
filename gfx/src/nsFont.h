@@ -26,6 +26,9 @@
 // XXX we need a method to enumerate all of the possible fonts on the
 // system across family, weight, style, size, etc. But not here!
 
+// Enumerator callback function. Return PR_FALSE to stop
+typedef PRBool (*nsFontFamilyEnumFunc)(const nsString& aFamily, PRBool aGeneric, void *aData);
+
 // Font structure.
 struct NS_GFX nsFont {
   // The family name of the font
@@ -67,6 +70,13 @@ struct NS_GFX nsFont {
   PRBool Equals(const nsFont& aOther) const ;
 
   nsFont& operator=(const nsFont& aOther);
+
+  // Utility method to interpret name string
+  // enumerates all families specified by this font only
+  // returns PR_TRUE if completed, PF_FALSE if stopped
+  // enclosing quotes will be removed, and whitespace compressed (as needed)
+  PRBool EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const;
+  void GetFirstFamily(nsString& aFamily) const;
 };
 
 #define NS_FONT_STYLE_NORMAL              0

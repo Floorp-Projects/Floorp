@@ -61,7 +61,6 @@ public:
 
 protected:
   void RealizeFont(nsIDeviceContext *aContext);
-  static const char* MapFamilyToFont(const nsString& aLogicalFontName);
 
   nsFont            *mFont;
   nscoord           mCharWidths[256];

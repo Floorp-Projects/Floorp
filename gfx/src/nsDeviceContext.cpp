@@ -18,6 +18,7 @@
 
 #include "nsDeviceContext.h"
 #include "nsIFontCache.h"
+#include "nsFont.h"
 #include "nsIView.h"
 #include "nsGfxCIID.h"
 #include "nsImageNet.h"
@@ -45,7 +46,15 @@ DeviceContextImpl :: DeviceContextImpl()
   for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
     mIcons[i] = nsnull;
   }
+  mFontAliasTable = nsnull;
 }
+
+static PRBool DeleteValue(nsHashKey* aKey, void* aValue)
+{
+  delete ((nsString*)aValue);
+  return PR_TRUE;
+}
+
 
 DeviceContextImpl :: ~DeviceContextImpl()
 {
@@ -61,6 +70,11 @@ DeviceContextImpl :: ~DeviceContextImpl()
 
   for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
     NS_IF_RELEASE(mIcons[i]);
+  }
+
+  if (nsnull != mFontAliasTable) {
+    mFontAliasTable->Enumerate(DeleteValue);
+    delete mFontAliasTable;
   }
 }
 
@@ -318,6 +332,161 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
   netContext->Release();
   return result;
 }
+
+struct FontEnumData {
+  FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName)
+    : mDC(aDC), mFaceName(aFaceName)
+  {}
+  nsIDeviceContext* mDC;
+  nsString&         mFaceName;
+};
+
+static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  FontEnumData* data = (FontEnumData*)aData;
+  // XXX for now, all generic fonts are presumed to exist
+  //     we may want to actually check if there's an installed conversion
+  if (aGeneric) {
+    data->mFaceName = aFamily;
+    return PR_FALSE; // found one, stop.
+  }
+  else {
+    nsAutoString  local;
+    PRBool        aliased;
+    data->mDC->GetLocalFontName(aFamily, local, aliased);
+    if (aliased || (NS_OK == data->mDC->CheckFontExistence(local))) {
+      data->mFaceName = local;
+      return PR_FALSE; // found one, stop.
+    }
+  }
+  return PR_TRUE; // didn't exist, continue looking
+}
+
+NS_IMETHODIMP DeviceContextImpl::FirstExistingFont(const nsFont& aFont, nsString& aFaceName)
+{
+  if (aFont.EnumerateFamilies(FontEnumCallback, &FontEnumData(this, aFaceName))) {
+    return NS_ERROR_FAILURE;  // ran out
+  }
+  return NS_OK;
+}
+
+class StringKey: public nsHashKey 
+{
+public:
+  StringKey(const nsString& aString)
+    : mString(aString)
+  {}
+
+  virtual PRUint32 HashValue(void) const;
+  virtual PRBool Equals(const nsHashKey *aKey) const;
+  virtual nsHashKey *Clone(void) const;
+
+  nsAutoString  mString;
+};
+
+PRUint32 StringKey::HashValue(void) const
+{
+  PRUint32 hash = 0;
+  PRUnichar*  string = mString;
+  PRUnichar ch;
+  while ((ch = *string++) != 0) {
+    // FYI: hash = hash*37 + ch
+    ch = nsCRT::ToUpper(ch);
+    hash = ((hash << 5) + (hash << 2) + hash) + ch;
+  }
+  return hash;
+}
+
+PRBool StringKey::Equals(const nsHashKey *aKey) const
+{
+  return mString.EqualsIgnoreCase(((StringKey*)aKey)->mString);
+}
+
+nsHashKey* StringKey::Clone(void) const
+{
+  return new StringKey(mString);
+}
+
+
+nsresult DeviceContextImpl::CreateFontAliasTable()
+{
+  nsresult result = NS_OK;
+
+  if (nsnull == mFontAliasTable) {
+    mFontAliasTable = new nsHashtable();
+    if (nsnull != mFontAliasTable) {
+      AliasFont("Times", "Times New Roman", "Times Roman");
+      AliasFont("Times Roman", "Times New Roman", "Times");
+      AliasFont("Times New Roman", "Times Roman", "Times");
+      AliasFont("Arial", "Helvetica", "");
+      AliasFont("Helvetica", "Arial", "");
+      AliasFont("Courier", "Courier New", "");
+      AliasFont("Courier New", "Courier", "");
+      AliasFont("Unicode", "Bitstream Cyberbit", ""); // XXX ????
+    }
+    else {
+      result = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  return result;
+}
+
+nsresult DeviceContextImpl::AliasFont(const nsString& aFont, 
+                            const nsString& aAlias, const nsString& aAltAlias)
+{
+  nsresult result = NS_OK;
+
+  if (nsnull != mFontAliasTable) {
+    if (NS_OK != CheckFontExistence(aFont)) {
+      if (NS_OK == CheckFontExistence(aAlias)) {
+        nsString* entry = aAlias.ToNewString();
+        if (nsnull != entry) {
+          mFontAliasTable->Put(&StringKey(aFont), entry);
+        }
+        else {
+          result = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      else if ((aAltAlias.Length() > 0) && (NS_OK == CheckFontExistence(aAltAlias))) {
+        nsString* entry = aAltAlias.ToNewString();
+        if (nsnull != entry) {
+          mFontAliasTable->Put(&StringKey(aFont), entry);
+        }
+        else {
+          result = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+    }
+  }
+  else {
+    result = NS_ERROR_FAILURE;
+  }
+  return result;
+}
+
+NS_IMETHODIMP DeviceContextImpl::GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
+                                                  PRBool& aAliased)
+{
+  nsresult result = NS_OK;
+
+  if (nsnull == mFontAliasTable) {
+    result = CreateFontAliasTable();
+  }
+
+  if (nsnull != mFontAliasTable) {
+    const nsString* alias = (const nsString*)mFontAliasTable->Get(&StringKey(aFaceName));
+    if (nsnull != alias) {
+      aLocalName = *alias;
+      aAliased = PR_TRUE;
+    }
+    else {
+      aLocalName = aFaceName;
+      aAliased = PR_FALSE;
+    }
+  }
+  return result;
+}
+
 
 NS_IMETHODIMP DeviceContextImpl::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 {
