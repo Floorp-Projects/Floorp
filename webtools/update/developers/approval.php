@@ -125,6 +125,7 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
  $num_results = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
    $i++;
+   $id = $row["ID"];
    $type = $row["Type"];
    $uri = $row["URI"];
    $authors = ""; $j="";
@@ -136,8 +137,17 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
    $categories = ""; $j="";
    $sql2 = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID = TC.CategoryID WHERE TCX.ID='$row[ID]' ORDER BY `CatName` ASC";
      $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+     if (mysql_num_rows($sql_result2)=="1") {$categories = "Category: "; } else { $categories = "Categories: "; }
      while ($row2 = mysql_fetch_array($sql_result2)) { $j++;
       $categories .="$row2[CatName]"; if (mysql_num_rows($sql_result2) > $j) { $categories .=", "; } 
+     }
+
+    $sql2 = "SELECT `PreviewID` FROM `previews` WHERE `ID`='$id' AND `preview`='YES' LIMIT 1";
+     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+     if (mysql_num_rows($sql_result2)=="1") {
+        $listpreview="(<span class=\"tooltip\" TITLE=\"Item has a preview for the List Page\"><a href=\"previews.php?id=$id\">View Previews</a></span>)";
+     } else {
+        $listpreview="(<span class=\"tooltip\" TITLE=\"Previews/Screenshots are required for Themes, recommended for Extensions.\">No Previews</span>)";
      }
 
    $sql2 = "SELECT `UserName`,`UserEmail`,`date` FROM `approvallog` TA INNER JOIN `userprofiles` TU ON TA.UserID = TU.UserID WHERE `ID`='$row[ID]' AND `vID`='$row[vID]' and `action`='Approval?' ORDER BY `date` DESC LIMIT 1";
@@ -165,7 +175,7 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
   echo"</TD>\n";
   echo"</TR>\n";
 
-  echo"<TR><TD style=\"font-size: 8pt;\">".nl2br($row[Description])." ($categories)</TD></TR>\n";
+  echo"<TR><TD style=\"font-size: 8pt;\">".nl2br($row[Description])." ($categories) $listpreview</TD></TR>\n";
 
   echo"<TR>\n";
   if ($row2[UserName]) {
@@ -211,6 +221,8 @@ if ($type=="E") {
 echo"<input name=\"maxvid\" type=\"hidden\" value=\"$i\">\n";
 ?>
 <?php if ($num_results > "0") { ?>
+<TR><TD COLSPAN=4 style="height: 8px"></td></tr>
+<TR><TD COLSPAN=4><img src="/images/faq_small.png" border=0 height=16 width=16 alt=""> Before pressing submit, please make sure all the information you entered above is complete and correct. For themes, a preview screenshot is required for approval. A preview image is recommended for extensions.</TD></TR>
 <TR><TD COLSPAN=4 ALIGN=CENTER><input name="submit" type="submit" value="Submit">&nbsp;&nbsp;<input name="reset" type="reset" value="Reset"></TD></TR>
 <?php } else { ?>
 <TR><TD COLSPAN=4 ALIGN=CENTER>No items are pending approval at this time</TD></TR>
