@@ -628,6 +628,7 @@ class ConvertToUpperCase
         }
   };
 
+#ifdef MOZ_V1_STRING_ABI
 NS_COM
 void
 ToUpperCase( nsACString& aCString )
@@ -636,6 +637,7 @@ ToUpperCase( nsACString& aCString )
     ConvertToUpperCase converter;
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
+#endif
 
 NS_COM
 void
@@ -716,6 +718,7 @@ class ConvertToLowerCase
         }
   };
 
+#ifdef MOZ_V1_STRING_ABI
 NS_COM
 void
 ToLowerCase( nsACString& aCString )
@@ -724,6 +727,7 @@ ToLowerCase( nsACString& aCString )
     ConvertToLowerCase converter;
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
+#endif
 
 NS_COM
 void

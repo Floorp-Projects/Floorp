@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_V1_STRING_ABI
 void
 nsTDependentSubstring_CharT::Rebind( const abstract_string_type& readable, PRUint32 startPos, PRUint32 length )
   {
@@ -52,6 +53,7 @@ nsTDependentSubstring_CharT::Rebind( const abstract_string_type& readable, PRUin
 
     SetDataFlags(F_NONE);
   }
+#endif
 
 void
 nsTDependentSubstring_CharT::Rebind( const substring_type& str, PRUint32 startPos, PRUint32 length )

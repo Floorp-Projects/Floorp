@@ -123,6 +123,7 @@ class nsTAString_CharT
       typedef PRUint32                               size_type;
       typedef PRUint32                               index_type;
 
+#ifdef MOZ_V1_STRING_ABI
     public:
 
         // this acts like a virtual destructor
@@ -574,45 +575,5 @@ class nsTAString_CharT
       void operator+=    ( incompatible_char_type );
       void Append        ( incompatible_char_type );
       void Insert        ( incompatible_char_type, index_type );
+#endif
   };
-
-
-NS_COM
-int NS_FASTCALL Compare( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs, const nsTStringComparator_CharT& = nsTDefaultStringComparator_CharT() );
-
-
-inline
-PRBool operator!=( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs )
-  {
-    return !lhs.Equals(rhs);
-  }
-
-inline
-PRBool operator< ( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs )
-  {
-    return Compare(lhs, rhs)< 0;
-  }
-
-inline
-PRBool operator<=( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs )
-  {
-    return Compare(lhs, rhs)<=0;
-  }
-
-inline
-PRBool operator==( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs )
-  {
-    return lhs.Equals(rhs);
-  }
-
-inline
-PRBool operator>=( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs )
-  {
-    return Compare(lhs, rhs)>=0;
-  }
-
-inline
-PRBool operator> ( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs )
-  {
-    return Compare(lhs, rhs)> 0;
-  }

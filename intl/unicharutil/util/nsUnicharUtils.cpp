@@ -112,6 +112,7 @@ public:
     }
 };
 
+#ifdef MOZ_V1_STRING_ABI
 void
 ToLowerCase( nsAString& aString )
   {
@@ -119,6 +120,7 @@ ToLowerCase( nsAString& aString )
     ConvertToLowerCase converter;
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
   }
+#endif
 
 void
 ToLowerCase( nsASingleFragmentString& aString )
@@ -196,6 +198,7 @@ public:
     }
 };
 
+#ifdef MOZ_V1_STRING_ABI
 void
 ToUpperCase( nsAString& aString )
   {
@@ -203,6 +206,7 @@ ToUpperCase( nsAString& aString )
     ConvertToUpperCase converter;
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
   }
+#endif
 
 void
 ToUpperCase( nsASingleFragmentString& aString )

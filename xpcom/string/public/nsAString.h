@@ -47,8 +47,10 @@
 #include "nsStringIterator.h"
 #endif
 
+#ifdef MOZ_V1_STRING_ABI
 #ifndef nsObsoleteAString_h___
 #include "nsObsoleteAString.h"
+#endif
 #endif
 
 // If some platform(s) can't handle our template that matches literal strings,
