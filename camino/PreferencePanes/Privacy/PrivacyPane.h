@@ -2,6 +2,7 @@
 #import <PreferencePanes/NSPreferencePane.h>
 #import "PreferencePaneBase.h"
 #include "nsCOMArray.h"
+#import "ExtendedTableView.h"
 
 class nsIPref;
 class nsIPermissionManager;
@@ -19,7 +20,7 @@ class nsIPermission;
   IBOutlet NSButton* mStorePasswords;
   IBOutlet NSButton* mAutoFillPasswords;
   
-  IBOutlet NSTableView* mSiteTable;
+  IBOutlet ExtendedTableView* mSiteTable;
   nsIPermissionManager* mManager;         // STRONG (should be nsCOMPtr)  
   nsCOMArray<nsIPermission>* mCachedPermissions;	// parallel list of permissions for speed
 }

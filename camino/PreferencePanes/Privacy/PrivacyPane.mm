@@ -194,8 +194,11 @@ PR_STATIC_CALLBACK(int) compareCapabilities(nsIPermission* aPerm1, nsIPermission
   // ensure a row is selected (cocoa doesn't do this for us, but will keep
   // us from unselecting a row once one is set; go figure).
   [mSiteTable selectRow:0 byExtendingSelection:NO];
+  [[mSiteTable window] makeFirstResponder:mSiteTable];
 
   [mSiteTable setHighlightedTableColumn:[mSiteTable tableColumnWithIdentifier:@"Website"]];
+  [mSiteTable setDeleteAction:@selector(removeCookieSite:)];
+  [mSiteTable setTarget:self];
   
   // we shouldn't need to do this, but the scrollbar won't enable unless we
   // force the table to reload its data. Oddly it gets the number of rows correct,
