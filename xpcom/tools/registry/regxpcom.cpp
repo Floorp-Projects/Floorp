@@ -49,7 +49,6 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
-#include "nsIEventQueueService.h"
 
 static PRBool gUnreg = PR_FALSE, gSilent = PR_FALSE, gQuiet = PR_FALSE;
 
@@ -193,12 +192,6 @@ int main(int argc, char *argv[])
     
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
     NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-
-    nsCOMPtr<nsIEventQueueService> eventQService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      // XXX: What if this fails?
-      rv = eventQService->CreateThreadEventQueue();
-    }
  
     /* With no arguments, RegFactory will autoregister */
     if (argc <= 1)
@@ -210,7 +203,6 @@ int main(int argc, char *argv[])
     {
       ret = ProcessArgs(registrar, argc, argv);
     }
-    eventQService = 0;
 
     NS_ShutdownXPCOM(NULL);
     return ret;
