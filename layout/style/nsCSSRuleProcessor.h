@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:tabstop=2:expandtab:shiftwidth=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,36 +36,57 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsICSSStyleRuleProcessor_h___
-#define nsICSSStyleRuleProcessor_h___
+
+#ifndef nsCSSRuleProcessor_h_
+#define nsCSSRuleProcessor_h_
 
 #include "nsIStyleRuleProcessor.h"
 
+struct RuleCascadeData;
 class nsICSSStyleSheet;
 
-// IID for the nsICSSStyleRuleProcessor interface {98bf169c-7b7c-11d3-ba05-001083023c2b}
-#define NS_ICSS_STYLE_RULE_PROCESSOR_IID     \
-{0x98bf169c, 0x7b7c, 0x11d3, {0xba, 0x05, 0x00, 0x10, 0x83, 0x02, 0x3c, 0x2b}}
-
-/* The CSS style rule processor provides a mechanism for sibling style sheets
- * to combine their rule processing in order to allow proper cascading to happen.
+/**
+ * The CSS style rule processor provides a mechanism for sibling style
+ * sheets to combine their rule processing in order to allow proper
+ * cascading to happen.
  *
- * When queried for a rule processor, a CSS style sheet will append itself to 
- * the previous CSS processor if present, and return nsnull. Otherwise it will
- * create a new processor for itself.
- *
- * CSS style rule processors keep a live reference on all style sheets bound to them
- * The CSS style sheets keep a weak reference on all the processors that they are
- * bound to (many to many). The CSS style sheet is told when the rule processor is 
- * going away (via DropRuleProcessorReference).
+ * CSS style rule processors keep a live reference on all style sheets
+ * bound to them.  The CSS style sheets keep a weak reference to all the
+ * processors that they are bound to (many to many).  The CSS style sheet
+ * is told when the rule processor is going away (via DropRuleProcessor).
  */
-class nsICSSStyleRuleProcessor: public nsIStyleRuleProcessor {
+
+class nsCSSRuleProcessor: public nsIStyleRuleProcessor {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_RULE_PROCESSOR_IID)
+  nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets);
+  virtual ~nsCSSRuleProcessor();
 
-  NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  ClearRuleCascades(void) = 0;
+public:
+  nsresult ClearRuleCascades();
+
+  // nsIStyleRuleProcessor
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
+                           nsIAtom* aMedium);
+
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
+                           nsIAtom* aMedium);
+
+  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
+                                    nsIAtom* aMedium,
+                                    nsReStyleHint* aResult);
+
+  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                        nsIAtom* aMedium,
+                                        nsReStyleHint* aResult);
+
+protected:
+  RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
+
+  nsCOMArray<nsICSSStyleSheet> mSheets;
+
+  RuleCascadeData*  mRuleCascades;
 };
 
-#endif /* nsICSSStyleRuleProcessor_h___ */
+#endif /* nsCSSRuleProcessor_h_ */

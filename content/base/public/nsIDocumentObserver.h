@@ -227,9 +227,12 @@ public:
    *
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has been added
+   * @param aDocumentSheet True if sheet is in document's style sheet list,
+   *                       false if sheet is not (i.e., UA or user sheet)
    */
   virtual void StyleSheetAdded(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet) = 0;
+                               nsIStyleSheet* aStyleSheet,
+                               PRBool aDocumentSheet) = 0;
 
   /**
    * A StyleSheet has just been removed from the document.  This
@@ -239,9 +242,12 @@ public:
    *
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has been removed
+   * @param aDocumentSheet True if sheet is in document's style sheet list,
+   *                       false if sheet is not (i.e., UA or user sheet)
    */
   virtual void StyleSheetRemoved(nsIDocument *aDocument,
-                                 nsIStyleSheet* aStyleSheet) = 0;
+                                 nsIStyleSheet* aStyleSheet,
+                                 PRBool aDocumentSheet) = 0;
   
   /**
    * A StyleSheet has just changed its applicable state.
@@ -360,9 +366,11 @@ public:
                                 nsIContent* aChild,                          \
                                 PRInt32 aIndexInContainer);                  \
     virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
-                                 nsIStyleSheet* aStyleSheet);                \
+                                 nsIStyleSheet* aStyleSheet,                 \
+                                 PRBool aDocumentSheet);                     \
     virtual void StyleSheetRemoved(nsIDocument* aDocument,                   \
-                                   nsIStyleSheet* aStyleSheet);              \
+                                   nsIStyleSheet* aStyleSheet,               \
+                                   PRBool aDocumentSheet);                   \
     virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,    \
                                                   nsIStyleSheet* aStyleSheet,\
                                                   PRBool aApplicable);       \
@@ -463,12 +471,14 @@ _class::ContentRemoved(nsIDocument* aDocument,                            \
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(_class)                    \
 void                                                                      \
 _class::StyleSheetAdded(nsIDocument* aDocument,                           \
-                        nsIStyleSheet* aStyleSheet)                       \
+                        nsIStyleSheet* aStyleSheet,                       \
+                        PRBool aDocumentSheet)                            \
 {                                                                         \
 }                                                                         \
 void                                                                      \
 _class::StyleSheetRemoved(nsIDocument* aDocument,                         \
-                          nsIStyleSheet* aStyleSheet)                     \
+                          nsIStyleSheet* aStyleSheet,                     \
+                          PRBool aDocumentSheet)                          \
 {                                                                         \
 }                                                                         \
 void                                                                      \

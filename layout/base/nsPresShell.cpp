@@ -1281,9 +1281,11 @@ public:
   virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
                               nsIContent* aChild, PRInt32 aIndexInContainer);
   virtual void StyleSheetAdded(nsIDocument* aDocument,
-                               nsIStyleSheet* aStyleSheet);
+                               nsIStyleSheet* aStyleSheet,
+                               PRBool aDocumentSheet);
   virtual void StyleSheetRemoved(nsIDocument* aDocument,
-                                 nsIStyleSheet* aStyleSheet);
+                                 nsIStyleSheet* aStyleSheet,
+                                 PRBool aDocumentSheet);
   virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,
                                                 nsIStyleSheet* aStyleSheet,
                                                 PRBool aApplicable);
@@ -2075,11 +2077,11 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 {
   if (mDocument && mStyleSet) {
     mStyleSet->BeginUpdate();
-    PRInt32 count = mDocument->GetNumberOfStyleSheets(PR_FALSE);
+    PRInt32 count = mDocument->GetNumberOfStyleSheets();
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index, PR_FALSE);
+      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index);
       PRBool complete;
       sheet->GetComplete(complete);
       if (complete) {
@@ -2111,11 +2113,11 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
 {
   // XXX should this be returning incomplete sheets?  Probably.
   if (mDocument) {
-    PRInt32 count = mDocument->GetNumberOfStyleSheets(PR_FALSE);
+    PRInt32 count = mDocument->GetNumberOfStyleSheets();
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index, PR_FALSE);
+      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index);
       if (sheet) {
         nsAutoString type;
         sheet->GetType(type);
@@ -5268,7 +5270,8 @@ PresShell::ReconstructStyleData()
 
 void
 PresShell::StyleSheetAdded(nsIDocument *aDocument,
-                           nsIStyleSheet* aStyleSheet)
+                           nsIStyleSheet* aStyleSheet,
+                           PRBool aDocumentSheet)
 {
   // We only care when enabled sheets are added
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
@@ -5282,7 +5285,8 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
 
 void 
 PresShell::StyleSheetRemoved(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet)
+                             nsIStyleSheet* aStyleSheet,
+                             PRBool aDocumentSheet)
 {
   // We only care when enabled sheets are removed
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
@@ -6100,7 +6104,7 @@ PresShell::SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets)
 nsresult
 PresShell::AddOverrideStyleSheet(nsIStyleSheet *aSheet)
 {
-  return mStyleSet->AppendStyleSheet(nsStyleSet::eOverrideSheet, aSheet);
+  return mStyleSet->PrependStyleSheet(nsStyleSet::eOverrideSheet, aSheet);
 }
 
 nsresult

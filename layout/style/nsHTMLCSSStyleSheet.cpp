@@ -367,9 +367,6 @@ public:
   NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument);
 
-  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                   nsIStyleRuleProcessor* aPrevProcessor);
-
   // nsIStyleRuleProcessor api
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
                            nsIAtom* aMedium);
@@ -433,15 +430,6 @@ NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
                    nsIHTMLCSSStyleSheet,
                    nsIStyleSheet,
                    nsIStyleRuleProcessor)
-
-NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                             nsIStyleRuleProcessor* /*aPrevProcessor*/)
-{
-  aProcessor = this;
-  NS_ADDREF(aProcessor);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,

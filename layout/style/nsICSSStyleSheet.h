@@ -43,14 +43,15 @@
 class nsICSSRule;
 class nsIDOMNode;
 class nsINameSpace;
-class nsICSSStyleRuleProcessor;
+class nsCSSRuleProcessor;
 class nsIMediaList;
 class nsICSSGroupRule;
 class nsICSSImportRule;
 
-// IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
+// IID for the nsICSSStyleSheet interface
+// d148e93e-7f1d-4f95-853f-ac356eba3d70
 #define NS_ICSS_STYLE_SHEET_IID     \
-{0x8f83b0f0, 0xb21a, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+{0xd148e93e, 0x7f1d, 0x4f95, {0x85, 0x3f, 0xac, 0x35, 0x6e, 0xba, 0x3d, 0x70}}
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
@@ -101,7 +102,8 @@ public:
   NS_IMETHOD  IsModified(PRBool* aModified) const = 0; // returns the mDirty status of the sheet
   NS_IMETHOD  SetModified(PRBool aModified) = 0;
 
-  NS_IMETHOD  DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor) = 0;
+  NS_IMETHOD  AddRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
+  NS_IMETHOD  DropRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
 };
 
 // XXX for backwards compatibility and convenience

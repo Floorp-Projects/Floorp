@@ -117,7 +117,7 @@ public:
 
   void SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent);
 
-  nsCOMArray<nsIStyleRuleProcessor>* GetRuleProcessors();
+  nsIStyleRuleProcessor* GetRuleProcessor();
   nsCOMArray<nsICSSStyleSheet>* GetStyleSheets();
 
   PRBool HasInsertionPoints() { return mInsertionPointTable != nsnull; }

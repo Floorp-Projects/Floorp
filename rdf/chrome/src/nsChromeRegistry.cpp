@@ -1449,13 +1449,13 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   nsCOMArray<nsIStyleSheet> oldSheets;
   nsCOMArray<nsIStyleSheet> newSheets;
 
-  PRInt32 count = document->GetNumberOfStyleSheets(PR_FALSE);
+  PRInt32 count = document->GetNumberOfStyleSheets();
 
   // Iterate over the style sheets.
   PRInt32 i;
   for (i = 0; i < count; i++) {
     // Get the style sheet
-    nsIStyleSheet *styleSheet = document->GetStyleSheetAt(i, PR_FALSE);
+    nsIStyleSheet *styleSheet = document->GetStyleSheetAt(i);
     
     if (!oldSheets.AppendObject(styleSheet)) {
       return NS_ERROR_OUT_OF_MEMORY;

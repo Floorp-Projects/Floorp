@@ -88,9 +88,10 @@ class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
+// c59c70e5-28d1-494b-9f8e-c18368d09ebc
 #define NS_IDOCUMENT_IID      \
-{ 0x6a462127, 0x6382, 0x4b33, \
-  { 0x89, 0x34, 0x51, 0x47, 0x2a, 0xd6, 0x21, 0xa7 } }
+{ 0xc59c70e5, 0x28d1, 0x494b, \
+  { 0x9f, 0x8e, 0xc1, 0x83, 0x68, 0xd0, 0x9e, 0xbc } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -362,25 +363,18 @@ public:
   /**
    * Get the number of stylesheets
    *
-   * @param aIncludeSpecialSheets if this is set to true, all sheets
-   *   that are document sheets (including "special" sheets like
-   *   attribute sheets and inline style sheets) will be returned.  If
-   *   false, only "normal" stylesheets will be returned   
    * @return the number of stylesheets
    * @throws no exceptions
    */
-  virtual PRInt32 GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets) const = 0;
+  virtual PRInt32 GetNumberOfStyleSheets() const = 0;
   
   /**
    * Get a particular stylesheet
    * @param aIndex the index the stylesheet lives at.  This is zero-based
-   * @param aIncludeSpecialSheets see GetNumberOfStyleSheets.  If this
-   *   is false, not all sheets will be returnable
    * @return the stylesheet at aIndex.  Null if aIndex is out of range.
    * @throws no exceptions
    */
-  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex,
-                                         PRBool aIncludeSpecialSheets) const = 0;
+  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) const = 0;
   
   /**
    * Insert a sheet at a particular spot in the stylesheet list (zero-based)
@@ -413,7 +407,7 @@ public:
   /**
    * Add a stylesheet to the document
    */
-  virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags) = 0;
+  virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
 
   /**
    * Remove a stylesheet from the document
@@ -426,6 +420,14 @@ public:
    */
   virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                             PRBool aApplicable) = 0;  
+
+  /**
+   * Just like the style sheet API, but for "catalog" sheets,
+   * extra sheets inserted at the UA level.
+   */
+  virtual PRInt32 GetNumberOfCatalogStyleSheets() const = 0;
+  virtual nsIStyleSheet* GetCatalogStyleSheetAt(PRInt32 aIndex) const = 0;
+  virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet) = 0;
 
   /**
    * Get this document's CSSLoader.  May return null in error

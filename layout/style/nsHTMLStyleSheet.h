@@ -68,8 +68,6 @@ public:
   NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const;  // will be null
   NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocumemt);
-  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                   nsIStyleRuleProcessor* aPrevProcessor);
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif

@@ -200,12 +200,12 @@ nsDOMStyleSheetList::GetLength(PRUint32* aLength)
     // observer notification to figure out if new ones have
     // been added or removed.
     if (-1 == mLength) {
-      mLength = mDocument->GetNumberOfStyleSheets(PR_FALSE);
+      mLength = mDocument->GetNumberOfStyleSheets();
 
 #ifdef DEBUG
       PRInt32 i;
       for (i = 0; i < mLength; i++) {
-        nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i, PR_FALSE);
+        nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i);
         nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
         NS_ASSERTION(domss, "All \"normal\" sheets implement nsIDOMStyleSheet");
       }
@@ -225,9 +225,9 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
 {
   *aReturn = nsnull;
   if (mDocument) {
-    PRInt32 count = mDocument->GetNumberOfStyleSheets(PR_FALSE);
+    PRInt32 count = mDocument->GetNumberOfStyleSheets();
     if (aIndex < (PRUint32)count) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(aIndex, PR_FALSE);
+      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(aIndex);
       NS_ASSERTION(sheet, "Must have a sheet");
       return CallQueryInterface(sheet, aReturn);
     }
@@ -247,9 +247,10 @@ nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 
 void
 nsDOMStyleSheetList::StyleSheetAdded(nsIDocument *aDocument,
-                                     nsIStyleSheet* aStyleSheet)
+                                     nsIStyleSheet* aStyleSheet,
+                                     PRBool aDocumentSheet)
 {
-  if (-1 != mLength) {
+  if (aDocumentSheet && -1 != mLength) {
     nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(aStyleSheet));
     if (domss) {
       mLength++;
@@ -259,9 +260,10 @@ nsDOMStyleSheetList::StyleSheetAdded(nsIDocument *aDocument,
 
 void
 nsDOMStyleSheetList::StyleSheetRemoved(nsIDocument *aDocument,
-                                       nsIStyleSheet* aStyleSheet)
+                                       nsIStyleSheet* aStyleSheet,
+                                       PRBool aDocumentSheet)
 {
-  if (-1 != mLength) {
+  if (aDocumentSheet && -1 != mLength) {
     nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(aStyleSheet));
     if (domss) {
       mLength--;
@@ -572,6 +574,14 @@ nsDocument::~nsDocument()
   while (--indx >= 0) {
     mStyleSheets[indx]->SetOwningDocument(nsnull);
   }
+  indx = mCatalogSheets.Count();
+  while (--indx >= 0) {
+    mCatalogSheets[indx]->SetOwningDocument(nsnull);
+  }
+  if (mAttrStyleSheet)
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+  if (mStyleAttrStyleSheet)
+    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
 
   if (mChildNodes) {
     mChildNodes->DropReference();
@@ -798,12 +808,31 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     // XXX Tell observers?
   }
 
+  indx = mCatalogSheets.Count();
+  while (--indx >= 0) {
+    nsIStyleSheet* sheet = mCatalogSheets[indx];
+    sheet->SetOwningDocument(nsnull);
+
+    PRBool applicable;
+    sheet->GetApplicable(applicable);
+    if (applicable) {
+      for (PRInt32 i = 0, i_end = mPresShells.Count(); i < i_end; ++i) {
+        NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(i))->StyleSet()->
+          RemoveStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      }
+    }
+
+    // XXX Tell observers?
+  }
+
+
   // Release all the sheets
   mStyleSheets.Clear();
+  // NOTE:  We don't release the catalog sheets.  It doesn't really matter
+  // now, but it could in the future -- in which case not releasing them
+  // is probably the right thing to do.
 
-  // Now reset our inline style and attribute sheets.  Note that we
-  // already set their owning document to null in the loop above, but
-  // we'll reset it when we call AddStyleSheet on them.
+  // Now reset our inline style and attribute sheets.
   nsresult rv;
   nsStyleSet::sheetType attrSheetType = GetAttrSheetType();
   if (mAttrStyleSheet) {
@@ -821,10 +850,15 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   // Don't use AddStyleSheet, since it'll put the sheet into style
   // sets in the document level, which is not desirable here.
-  InternalAddStyleSheet(mAttrStyleSheet, 0);
   mAttrStyleSheet->SetOwningDocument(this);
   
   if (mStyleAttrStyleSheet) {
+    // Remove this sheet from all style sets
+    PRInt32 count = mPresShells.Count();
+    for (indx = 0; indx < count; ++indx) {
+      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+        RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
+    }
     rv = mStyleAttrStyleSheet->Reset(aURI);
   } else {
     rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet), aURI,
@@ -834,7 +868,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   // The loop over style sets below will handle putting this sheet
   // into style sets as needed.
-  InternalAddStyleSheet(mStyleAttrStyleSheet, 0);
   mStyleAttrStyleSheet->SetOwningDocument(this);
 
   // Now set up our style sets
@@ -863,25 +896,32 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
                   "Style set already has a HTML preshint sheet?");
   NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eDocSheet) == 0,
                   "Style set already has document sheets?");
+  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eStyleAttrSheet) == 0,
+                  "Style set already has style attr sheets?");
   NS_PRECONDITION(mStyleAttrStyleSheet, "No style attr stylesheet?");
   NS_PRECONDITION(mAttrStyleSheet, "No attr stylesheet?");
-  NS_PRECONDITION(mAttrStyleSheet == GetStyleSheetAt(0, PR_TRUE),
-                  "Unexpected first sheet");
   
-  // First, place the attribute style sheet in the style set.  Prepend it,
-  // since it should be the most significant sheet in its level.
-  aStyleSet->PrependStyleSheet(GetAttrSheetType(), mAttrStyleSheet);
+  aStyleSet->AppendStyleSheet(GetAttrSheetType(), mAttrStyleSheet);
 
-  // Now that we've handled the attribute sheet, do the other sheets.  The
-  // attribute sheet should be at position 0, hence the loop termination
-  // condition.
-  PRInt32 index;
-  PRBool sheetApplicable;
-  for (index = GetNumberOfStyleSheets(PR_TRUE) - 1; index > 0; --index) {
-    nsIStyleSheet* sheet = GetStyleSheetAt(index, PR_TRUE);
+  aStyleSet->AppendStyleSheet(nsStyleSet::eStyleAttrSheet,
+                              mStyleAttrStyleSheet);
+
+  PRInt32 i;
+  for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
+    nsIStyleSheet* sheet = mStyleSheets[i];
+    PRBool sheetApplicable;
     sheet->GetApplicable(sheetApplicable);
     if (sheetApplicable) {
       aStyleSet->AddDocStyleSheet(sheet, this);
+    }
+  }
+
+  for (i = mCatalogSheets.Count() - 1; i >= 0; --i) {
+    nsIStyleSheet* sheet = mCatalogSheets[i];
+    PRBool sheetApplicable;
+    sheet->GetApplicable(sheetApplicable);
+    if (sheetApplicable) {
+      aStyleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
   }
 }
@@ -1172,6 +1212,8 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
   
   if (aHeaderField == nsHTMLAtoms::headerDefaultStyle) {
     // switch alternate style sheets based on default
+    // XXXldb What if we don't have all the sheets yet?  Should this use
+    // the DOM API for preferred stylesheet set that's "coming soon"?
     nsAutoString type;
     nsAutoString title;
     PRInt32 index;
@@ -1463,54 +1505,22 @@ nsDocument::GetChildCount() const
 }
 
 PRInt32
-nsDocument::InternalGetNumberOfStyleSheets() const
+nsDocument::GetNumberOfStyleSheets() const
 {
   return mStyleSheets.Count();
 }
 
-PRInt32
-nsDocument::GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets) const
-{
-  if (aIncludeSpecialSheets) {
-    return mStyleSheets.Count();
-  }
-
-  return InternalGetNumberOfStyleSheets();
-}
-
 nsIStyleSheet*
-nsDocument::InternalGetStyleSheetAt(PRInt32 aIndex) const
+nsDocument::GetStyleSheetAt(PRInt32 aIndex) const
 {
-  NS_ASSERTION(aIndex >= 0 && aIndex < mStyleSheets.Count(), "Invalid index");
+  NS_ENSURE_TRUE(0 <= aIndex && aIndex < mStyleSheets.Count(), nsnull);
   return mStyleSheets[aIndex];
-}
-
-nsIStyleSheet*
-nsDocument::GetStyleSheetAt(PRInt32 aIndex, PRBool aIncludeSpecialSheets) const
-{
-  if (aIncludeSpecialSheets) {
-    if (aIndex < 0 || aIndex >= mStyleSheets.Count()) {
-      NS_ERROR("Index out of range");
-      return nsnull;
-    }
-
-    return mStyleSheets[aIndex];
-  }
-
-  return InternalGetStyleSheetAt(aIndex);
 }
 
 PRInt32
 nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const
 {
   return mStyleSheets.IndexOf(aSheet);
-}
-
-// subclass hooks for sheet ordering
-void
-nsDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
-{
-  mStyleSheets.AppendObject(aSheet);
 }
 
 void
@@ -1525,10 +1535,10 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 }
 
 void
-nsDocument::AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
+nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  InternalAddStyleSheet(aSheet, aFlags);
+  mStyleSheets.AppendObject(aSheet);
   aSheet->SetOwningDocument(this);
 
   PRBool applicable;
@@ -1544,19 +1554,16 @@ nsDocument::AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
     nsIDocumentObserver* observer =
       NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
 
-    observer->StyleSheetAdded(this, aSheet);
+    observer->StyleSheetAdded(this, aSheet, PR_TRUE);
   }
 }
 
 void
 nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
 {
-  PRInt32 count = mPresShells.Count();
-  PRInt32 indx;
-  for (indx = 0; indx < count; ++indx) {
-    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+  for (PRInt32 i = 0, i_end = mPresShells.Count(); i < i_end; ++i)
+    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(i))->StyleSet()->
       RemoveStyleSheet(nsStyleSet::eDocSheet, aSheet);
-  }
 }
 
 void
@@ -1584,7 +1591,7 @@ nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
       nsIDocumentObserver *observer =
         NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(indx));
 
-      observer->StyleSheetRemoved(this, aSheet);
+      observer->StyleSheetRemoved(this, aSheet, PR_TRUE);
     }
   }
 
@@ -1635,7 +1642,7 @@ nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
         nsIDocumentObserver *observer =
           NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(obsIndx));
         
-        observer->StyleSheetAdded(this, newSheet);
+        observer->StyleSheetAdded(this, newSheet, PR_TRUE);
       }
     }
   }
@@ -1648,19 +1655,11 @@ nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
   }
 }
 
-
-void
-nsDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
-{
-  // subclass hook for sheet ordering
-  mStyleSheets.InsertObjectAt(aSheet, aIndex);
-}
-
 void
 nsDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 {
   NS_PRECONDITION(aSheet, "null ptr");
-  InternalInsertStyleSheetAt(aSheet, aIndex);
+  mStyleSheets.InsertObjectAt(aSheet, aIndex);
 
   aSheet->SetOwningDocument(this);
 
@@ -1678,7 +1677,7 @@ nsDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
     nsIDocumentObserver *observer =
       NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
 
-    observer->StyleSheetAdded(this, aSheet);
+    observer->StyleSheetAdded(this, aSheet, PR_TRUE);
   }
 }
 
@@ -1708,6 +1707,48 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
     nsIDocumentObserver* observer =
       (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->StyleSheetApplicableStateChanged(this, aSheet, aApplicable);
+  }
+}
+
+// These three functions are a lot like the implementation of the
+// corresponding API for regular stylesheets.
+
+PRInt32
+nsDocument::GetNumberOfCatalogStyleSheets() const
+{
+  return mCatalogSheets.Count();
+}
+
+nsIStyleSheet*
+nsDocument::GetCatalogStyleSheetAt(PRInt32 aIndex) const
+{
+  NS_ENSURE_TRUE(0 <= aIndex && aIndex < mCatalogSheets.Count(), nsnull);
+  return mCatalogSheets[aIndex];
+}
+
+void
+nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
+{
+  mCatalogSheets.AppendObject(aSheet);
+  aSheet->SetOwningDocument(this);
+
+  PRBool applicable;
+  aSheet->GetApplicable(applicable);
+                                                                                
+  if (applicable) {
+    // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
+    for (PRInt32 i = 0, i_end = mPresShells.Count(); i < i_end; ++i)
+      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(i))->StyleSet()->
+        AppendStyleSheet(nsStyleSet::eAgentSheet, aSheet);
+  }
+                                                                                
+  // if an observer removes itself, we're ok (not if it removes others though)
+  PRInt32 i;
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
+    nsIDocumentObserver* observer =
+      NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
+                                                                                
+    observer->StyleSheetAdded(this, aSheet, PR_FALSE);
   }
 }
 

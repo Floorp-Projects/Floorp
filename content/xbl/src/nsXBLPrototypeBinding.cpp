@@ -912,11 +912,11 @@ nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIConten
   }
 }
 
-nsCOMArray<nsIStyleRuleProcessor>*
-nsXBLPrototypeBinding::GetRuleProcessors()
+nsIStyleRuleProcessor*
+nsXBLPrototypeBinding::GetRuleProcessor()
 {
   if (mResources) {
-    return &mResources->mRuleProcessors;
+    return mResources->mRuleProcessor;
   }
   
   return nsnull;

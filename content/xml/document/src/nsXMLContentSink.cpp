@@ -871,9 +871,9 @@ NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
     PRBool enabled;
     if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
       PRBool alreadyLoaded = PR_FALSE;
-      PRInt32 sheetCount = doc->GetNumberOfStyleSheets(PR_TRUE);
+      PRInt32 sheetCount = doc->GetNumberOfCatalogStyleSheets();
       for (PRInt32 i = 0; i < sheetCount; i++) {
-        nsIStyleSheet* sheet = doc->GetStyleSheetAt(i, PR_TRUE);
+        nsIStyleSheet* sheet = doc->GetCatalogStyleSheetAt(i);
         NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
         if (sheet) {
           nsCOMPtr<nsIURI> uri;
@@ -900,7 +900,7 @@ NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
 #endif
           if (sheet) {
             doc->BeginUpdate(UPDATE_STYLE);
-            doc->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
+            doc->AddCatalogStyleSheet(sheet);
             doc->EndUpdate(UPDATE_STYLE);
           }
         }
@@ -1157,7 +1157,7 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
 #endif
       if (sheet) {
         mDocument->BeginUpdate(UPDATE_STYLE);
-        mDocument->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
+        mDocument->AddCatalogStyleSheet(sheet);
         mDocument->EndUpdate(UPDATE_STYLE);
       }
     }

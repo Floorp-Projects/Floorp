@@ -50,10 +50,19 @@ class nsIContent;
 class nsIDocument;
 class nsIStyleRuleProcessor;
 
-// IID for the nsIStyleSheet interface {8c4a80a0-ad6a-11d1-8031-006008159b5a}
+// IID for the nsIStyleSheet interface
+// 6fbfb2cb-a1c0-4576-9354-a4af4e0029ad
 #define NS_ISTYLE_SHEET_IID     \
-{0x8c4a80a0, 0xad6a, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+{0x6fbfb2cb, 0xa1c0, 0x4576, {0x93, 0x54, 0xa4, 0xaf, 0x4e, 0x00, 0x29, 0xad}}
 
+/**
+ * A style sheet is a thing associated with a document that has style
+ * rules.  Those style rules can be reached in one of two ways, depending
+ * on which level of the nsStyleSet it is in:
+ *   1) It can be |QueryInterface|d to nsIStyleRuleProcessor
+ *   2) It can be |QueryInterface|d to nsICSSStyleSheet, with which the
+ *      |nsStyleSet| uses an |nsCSSRuleProcessor| to access the rules.
+ */
 class nsIStyleSheet : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_SHEET_IID)
@@ -92,10 +101,6 @@ public:
   NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const = 0;  // may be null
   NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const = 0; // may be null
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument) = 0;
-
-  // style rule processor access
-  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                   nsIStyleRuleProcessor* aPrevProcessor) = 0;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;

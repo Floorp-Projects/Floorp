@@ -56,6 +56,7 @@
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsXBLPrototypeBinding.h"
+#include "nsCSSRuleProcessor.h"
 
 NS_IMPL_ISUPPORTS1(nsXBLResourceLoader, nsICSSLoaderObserver)
 
@@ -185,19 +186,8 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
   
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.  
-    nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;
-    mResources->mRuleProcessors.Clear();
-    PRInt32 count = mResources->mStyleSheetList.Count();
-    for (PRInt32 i = 0; i < count; i++) {
-      nsICSSStyleSheet* sheet = mResources->mStyleSheetList[i];
-
-      nsCOMPtr<nsIStyleRuleProcessor> processor;
-      sheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
-      if (processor != prevProcessor) {
-        mResources->mRuleProcessors.AppendObject(processor);
-        prevProcessor = processor;
-      }
-    }
+    mResources->mRuleProcessor =
+      new nsCSSRuleProcessor(mResources->mStyleSheetList);
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)

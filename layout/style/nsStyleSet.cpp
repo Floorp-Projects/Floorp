@@ -45,6 +45,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCSSRuleProcessor.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 
@@ -90,42 +91,33 @@ nsStyleSet::Init(nsIPresContext *aPresContext)
   return NS_OK;
 }
 
-struct RuleProcessorEnumData {
-  RuleProcessorEnumData(nsCOMArray<nsIStyleRuleProcessor> *aRuleProcessors) 
-    : mRuleProcessors(aRuleProcessors),
-      mPrevProcessor(nsnull)
-  {}
-
-  nsCOMArray<nsIStyleRuleProcessor>* mRuleProcessors;
-  nsIStyleRuleProcessor*  mPrevProcessor;
-};
-
-static PRBool
-EnumRuleProcessor(nsIStyleSheet *aSheet, void* aData)
-{
-  RuleProcessorEnumData* data = (RuleProcessorEnumData*)aData;
-
-  nsCOMPtr<nsIStyleRuleProcessor> processor;
-  nsresult result = aSheet->GetStyleRuleProcessor(*getter_AddRefs(processor),
-                                                  data->mPrevProcessor);
-  if (NS_SUCCEEDED(result) && processor) {
-    if (processor != data->mPrevProcessor) {
-      if (!data->mRuleProcessors->AppendObject(processor))
-        return PR_FALSE;
-      data->mPrevProcessor = processor; // ref is held by array
-    }
-  }
-  return PR_TRUE;
-}
-
 nsresult
-nsStyleSet::GatherRuleProcessors(PRInt32 aType)
+nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
-  mRuleProcessors[aType].Clear();
+  mRuleProcessors[aType] = nsnull;
   if (mSheets[aType].Count()) {
-    RuleProcessorEnumData data(&mRuleProcessors[aType]);
-    if (!mSheets[aType].EnumerateBackwards(EnumRuleProcessor, &data))
-      return NS_ERROR_OUT_OF_MEMORY;
+    switch (aType) {
+      case eAgentSheet:
+      case eUserSheet:
+      case eDocSheet:
+      case eOverrideSheet: {
+        // levels containing CSS stylesheets
+        nsCOMArray<nsIStyleSheet>& sheets = mSheets[aType];
+        nsCOMArray<nsICSSStyleSheet> cssSheets(sheets.Count());
+        for (PRInt32 i = 0, i_end = sheets.Count(); i < i_end; ++i) {
+          nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(sheets[i]);
+          NS_ASSERTION(cssSheet, "not a CSS sheet");
+          cssSheets.AppendObject(cssSheet);
+        }
+        mRuleProcessors[aType] = new nsCSSRuleProcessor(cssSheets);
+      } break;
+
+      default:
+        // levels containing non-CSS stylesheets
+        NS_ASSERTION(mSheets[aType].Count() == 1, "only one sheet per level");
+        mRuleProcessors[aType] = do_QueryInterface(mSheets[aType][0]);
+        break;
+    }
   }
 
   return NS_OK;
@@ -217,23 +209,18 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
   nsCOMArray<nsIStyleSheet>& docSheets = mSheets[eDocSheet];
 
   docSheets.RemoveObject(aSheet);
-  // lowest index last
+  // lowest index first
   PRInt32 newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
   PRInt32 count = docSheets.Count();
-  for (PRInt32 index = 0; index < count; index++) {
+  PRInt32 index;
+  for (index = 0; index < count; index++) {
     nsIStyleSheet* sheet = docSheets.ObjectAt(index);
     PRInt32 sheetDocIndex = aDocument->GetIndexOfStyleSheet(sheet);
-    if (sheetDocIndex < newDocIndex) {
-      if (!docSheets.InsertObjectAt(aSheet, index))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      index = count; // break loop
-    }
+    if (sheetDocIndex > newDocIndex)
+      break;
   }
-  if (docSheets.Count() == count) { // didn't insert it
-    if (!docSheets.AppendObject(aSheet))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
+  if (!docSheets.InsertObjectAt(aSheet, index))
+    return NS_ERROR_OUT_OF_MEMORY;
   if (!mBatching)
     return GatherRuleProcessors(eDocSheet);
 
@@ -261,7 +248,7 @@ nsStyleSet::EndUpdate()
 
   for (int i = 0; i < eSheetTypeCount; ++i) {
     if (mDirty & (1 << i)) {
-      nsresult rv = GatherRuleProcessors(i);
+      nsresult rv = GatherRuleProcessors(sheetType(i));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -302,12 +289,11 @@ nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
   NS_ASSERTION(mQuirkStyleSheet, "no quirk stylesheet");
   if (mQuirkStyleSheet) {
 #ifdef DEBUG_dbaron_off // XXX Make this |DEBUG| once it stops firing.
-    PRInt32 count = mRuleProcessors[eAgentSheet].Count()
     PRBool applicableNow;
     mQuirkStyleSheet->GetApplicable(applicableNow);
-    NS_ASSERTION(count == 0 || aEnable == applicableNow,
+    NS_ASSERTION(!mRuleProcessors[eAgentSheet] || aEnable == applicableNow,
                  "enabling/disabling quirk stylesheet too late or incomplete quirk stylesheet");
-    if (count != 0 && aEnable == applicableNow)
+    if (mRuleProcessors[eAgentSheet] && aEnable == applicableNow)
       printf("WARNING: We set the quirks mode too many times.\n"); // we do!
 #endif
     mQuirkStyleSheet->SetEnabled(aEnable);
@@ -442,47 +428,36 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                   SheetCount(eHTMLPresHintSheet) == 0,
                   "Can't have both types of preshint sheets at once!");
   
-  nsRuleNode* lastAgentRN = nsnull;
-  if (mRuleProcessors[eAgentSheet].Count()) {
-    mRuleProcessors[eAgentSheet].EnumerateForwards(aCollectorFunc, aData);
-    lastAgentRN = mRuleWalker->GetCurrentNode();
-  }
+  if (mRuleProcessors[eAgentSheet])
+    (*aCollectorFunc)(mRuleProcessors[eAgentSheet], aData);
+  nsRuleNode* lastAgentRN = mRuleWalker->GetCurrentNode();
 
-  nsRuleNode* lastPresHintRN = lastAgentRN;
-  if (mRuleProcessors[ePresHintSheet].Count()) {
-    mRuleProcessors[ePresHintSheet].EnumerateForwards(aCollectorFunc, aData);
-    lastPresHintRN = mRuleWalker->GetCurrentNode();
-  }
+  if (mRuleProcessors[ePresHintSheet])
+    (*aCollectorFunc)(mRuleProcessors[ePresHintSheet], aData);
+  nsRuleNode* lastPresHintRN = mRuleWalker->GetCurrentNode();
   
-  nsRuleNode* lastUserRN = lastPresHintRN;
-  if (mRuleProcessors[eUserSheet].Count()) {
-    mRuleProcessors[eUserSheet].EnumerateForwards(aCollectorFunc, aData);
-    lastUserRN = mRuleWalker->GetCurrentNode();
-  }
+  if (mRuleProcessors[eUserSheet])
+    (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
+  nsRuleNode* lastUserRN = mRuleWalker->GetCurrentNode();
 
-  nsRuleNode* lastHTMLPresHintRN = lastUserRN;
-  if (mRuleProcessors[eHTMLPresHintSheet].Count()) {
-    mRuleProcessors[eHTMLPresHintSheet].EnumerateForwards(aCollectorFunc, aData);
-    lastHTMLPresHintRN = mRuleWalker->GetCurrentNode();
-  }
+  if (mRuleProcessors[eHTMLPresHintSheet])
+    (*aCollectorFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
+  nsRuleNode* lastHTMLPresHintRN = mRuleWalker->GetCurrentNode();
   
-  nsRuleNode* lastDocRN = lastHTMLPresHintRN;
   PRBool useRuleProcessors = PR_TRUE;
   if (mStyleRuleSupplier) {
     // We can supply additional document-level sheets that should be walked.
     mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData);
     mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
   }
-  if (useRuleProcessors && mRuleProcessors[eDocSheet].Count()) {
-    mRuleProcessors[eDocSheet].EnumerateForwards(aCollectorFunc, aData);
-  }
-  lastDocRN = mRuleWalker->GetCurrentNode();
+  if (useRuleProcessors && mRuleProcessors[eDocSheet]) // NOTE: different
+    (*aCollectorFunc)(mRuleProcessors[eDocSheet], aData);
+  if (mRuleProcessors[eStyleAttrSheet])
+    (*aCollectorFunc)(mRuleProcessors[eStyleAttrSheet], aData);
 
-  nsRuleNode* lastOvrRN = lastDocRN;
-  if (mRuleProcessors[eOverrideSheet].Count()) {
-    mRuleProcessors[eOverrideSheet].EnumerateForwards(aCollectorFunc, aData);
-    lastOvrRN = mRuleWalker->GetCurrentNode();
-  }
+  if (mRuleProcessors[eOverrideSheet])
+    (*aCollectorFunc)(mRuleProcessors[eOverrideSheet], aData);
+  nsRuleNode* lastOvrRN = mRuleWalker->GetCurrentNode();
 
   // There should be no important rules in the preshint or HTMLpreshint level
   AddImportantRules(lastOvrRN, lastHTMLPresHintRN);  // doc and override
@@ -509,17 +484,14 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
                   SheetCount(eHTMLPresHintSheet) == 0,
                   "Can't have both types of preshint sheets at once!");
   
-  // Walk the agent rules first.
-  mRuleProcessors[eAgentSheet].EnumerateForwards(aFunc, aData);
-
-  // Walk preshint rules.
-  mRuleProcessors[ePresHintSheet].EnumerateForwards(aFunc, aData);
-  
-  // Walk the user rules next.
-  mRuleProcessors[eUserSheet].EnumerateForwards(aFunc, aData);
-
-  // Walk HTML preshint rules.
-  mRuleProcessors[eHTMLPresHintSheet].EnumerateForwards(aFunc, aData);
+  if (mRuleProcessors[eAgentSheet])
+    (*aFunc)(mRuleProcessors[eAgentSheet], aData);
+  if (mRuleProcessors[ePresHintSheet])
+    (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
+  if (mRuleProcessors[eUserSheet])
+    (*aFunc)(mRuleProcessors[eUserSheet], aData);
+  if (mRuleProcessors[eHTMLPresHintSheet])
+    (*aFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
   
   PRBool useRuleProcessors = PR_TRUE;
   if (mStyleRuleSupplier) {
@@ -527,13 +499,12 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
     mStyleRuleSupplier->WalkRules(this, aFunc, aData);
     mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
   }
-
-  // Now walk the doc rules.
-  if (useRuleProcessors)
-    mRuleProcessors[eDocSheet].EnumerateForwards(aFunc, aData);
-  
-  // Walk the override rules last.
-  mRuleProcessors[eOverrideSheet].EnumerateForwards(aFunc, aData);
+  if (useRuleProcessors && mRuleProcessors[eDocSheet]) // NOTE: different
+    (*aFunc)(mRuleProcessors[eDocSheet], aData);
+  if (mRuleProcessors[eStyleAttrSheet])
+    (*aFunc)(mRuleProcessors[eStyleAttrSheet], aData);
+  if (mRuleProcessors[eOverrideSheet])
+    (*aFunc)(mRuleProcessors[eOverrideSheet], aData);
 }
 
 PRBool nsStyleSet::BuildDefaultStyleData(nsIPresContext* aPresContext)
@@ -581,12 +552,13 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
                "content must be element");
 
   if (aContent && presContext) {
-    if (mRuleProcessors[eAgentSheet].Count()        ||
-        mRuleProcessors[ePresHintSheet].Count()     ||
-        mRuleProcessors[eUserSheet].Count()         ||
-        mRuleProcessors[eHTMLPresHintSheet].Count() ||
-        mRuleProcessors[eDocSheet].Count()          ||
-        mRuleProcessors[eOverrideSheet].Count()) {
+    if (mRuleProcessors[eAgentSheet]        ||
+        mRuleProcessors[ePresHintSheet]     ||
+        mRuleProcessors[eUserSheet]         ||
+        mRuleProcessors[eHTMLPresHintSheet] ||
+        mRuleProcessors[eDocSheet]          ||
+        mRuleProcessors[eStyleAttrSheet]    ||
+        mRuleProcessors[eOverrideSheet]) {
       RulesMatchingData data(presContext, aContent, mRuleWalker);
       FileRules(EnumRulesMatching, &data);
       result = GetContext(presContext, aParentContext, nsnull).get();
@@ -606,12 +578,13 @@ nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
   nsIPresContext *presContext = PresContext();
 
   if (presContext) {
-    if (mRuleProcessors[eAgentSheet].Count()        ||
-        mRuleProcessors[ePresHintSheet].Count()     ||
-        mRuleProcessors[eUserSheet].Count()         ||
-        mRuleProcessors[eHTMLPresHintSheet].Count() ||
-        mRuleProcessors[eDocSheet].Count()          ||
-        mRuleProcessors[eOverrideSheet].Count()) {
+    if (mRuleProcessors[eAgentSheet]        ||
+        mRuleProcessors[ePresHintSheet]     ||
+        mRuleProcessors[eUserSheet]         ||
+        mRuleProcessors[eHTMLPresHintSheet] ||
+        mRuleProcessors[eDocSheet]          ||
+        mRuleProcessors[eStyleAttrSheet]    ||
+        mRuleProcessors[eOverrideSheet]) {
       result = GetContext(presContext, aParentContext,
                           nsCSSAnonBoxes::mozNonElement).get();
       NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
@@ -660,12 +633,13 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
                "content (if non-null) must be element");
 
   if (aPseudoTag && presContext) {
-    if (mRuleProcessors[eAgentSheet].Count()        ||
-        mRuleProcessors[ePresHintSheet].Count()     ||
-        mRuleProcessors[eUserSheet].Count()         ||
-        mRuleProcessors[eHTMLPresHintSheet].Count() ||
-        mRuleProcessors[eDocSheet].Count()          ||
-        mRuleProcessors[eOverrideSheet].Count()) {
+    if (mRuleProcessors[eAgentSheet]        ||
+        mRuleProcessors[ePresHintSheet]     ||
+        mRuleProcessors[eUserSheet]         ||
+        mRuleProcessors[eHTMLPresHintSheet] ||
+        mRuleProcessors[eDocSheet]          ||
+        mRuleProcessors[eStyleAttrSheet]    ||
+        mRuleProcessors[eOverrideSheet]) {
       PseudoRulesMatchingData data(presContext, aParentContent, aPseudoTag,
                                    aComparator, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
@@ -694,12 +668,13 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
                "content (if non-null) must be element");
 
   if (aPseudoTag && presContext) {
-    if (mRuleProcessors[eAgentSheet].Count()        ||
-        mRuleProcessors[ePresHintSheet].Count()     ||
-        mRuleProcessors[eUserSheet].Count()         ||
-        mRuleProcessors[eHTMLPresHintSheet].Count() ||
-        mRuleProcessors[eDocSheet].Count()          ||
-        mRuleProcessors[eOverrideSheet].Count()) {
+    if (mRuleProcessors[eAgentSheet]        ||
+        mRuleProcessors[ePresHintSheet]     ||
+        mRuleProcessors[eUserSheet]         ||
+        mRuleProcessors[eHTMLPresHintSheet] ||
+        mRuleProcessors[eDocSheet]          ||
+        mRuleProcessors[eStyleAttrSheet]    ||
+        mRuleProcessors[eOverrideSheet]) {
       PseudoRulesMatchingData data(presContext, aParentContent, aPseudoTag,
                                    nsnull, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
@@ -853,12 +828,13 @@ nsStyleSet::HasStateDependentStyle(nsIPresContext* aPresContext,
   nsReStyleHint result = nsReStyleHint(0);
 
   if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-      (mRuleProcessors[eAgentSheet].Count()        ||
-       mRuleProcessors[ePresHintSheet].Count()     ||
-       mRuleProcessors[eUserSheet].Count()         ||
-       mRuleProcessors[eHTMLPresHintSheet].Count() ||
-       mRuleProcessors[eDocSheet].Count()          ||
-       mRuleProcessors[eOverrideSheet].Count())) {  
+      (mRuleProcessors[eAgentSheet]        ||
+       mRuleProcessors[ePresHintSheet]     ||
+       mRuleProcessors[eUserSheet]         ||
+       mRuleProcessors[eHTMLPresHintSheet] ||
+       mRuleProcessors[eDocSheet]          ||
+       mRuleProcessors[eStyleAttrSheet]    ||
+       mRuleProcessors[eOverrideSheet])) {
     StatefulData data(aPresContext, aContent, aStateMask);
     WalkRuleProcessors(SheetHasStatefulStyle, &data);
     result = data.mHint;
@@ -898,12 +874,13 @@ nsStyleSet::HasAttributeDependentStyle(nsIPresContext* aPresContext,
   nsReStyleHint result = nsReStyleHint(0);
 
   if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-      (mRuleProcessors[eAgentSheet].Count()         ||
-       mRuleProcessors[ePresHintSheet].Count()      ||
-       mRuleProcessors[eUserSheet].Count()          ||
-       mRuleProcessors[eHTMLPresHintSheet].Count()  ||
-       mRuleProcessors[eDocSheet].Count()           ||
-       mRuleProcessors[eOverrideSheet].Count())) {  
+      (mRuleProcessors[eAgentSheet]        ||
+       mRuleProcessors[ePresHintSheet]     ||
+       mRuleProcessors[eUserSheet]         ||
+       mRuleProcessors[eHTMLPresHintSheet] ||
+       mRuleProcessors[eDocSheet]          ||
+       mRuleProcessors[eStyleAttrSheet]    ||
+       mRuleProcessors[eOverrideSheet])) {
     AttributeData data(aPresContext, aContent, aAttribute, aModType);
     WalkRuleProcessors(SheetHasAttributeStyle, &data);
     result = data.mHint;

@@ -153,13 +153,16 @@ class nsStyleSet
   // APIs to manipulate the style sheet lists.
   // All sheet types are ordered most-significant-first.
   enum sheetType {
-    eAgentSheet,
+    eAgentSheet, // CSS
     ePresHintSheet,
-    eUserSheet,
+    eUserSheet, // CSS
     eHTMLPresHintSheet,
-    eDocSheet,
-    eOverrideSheet,
+    eDocSheet, // CSS
+    eStyleAttrSheet,
+    eOverrideSheet, // CSS
     eSheetTypeCount
+    // be sure to keep the number of bits in |mDirty| below updated when
+    // changing the number of sheet types
   };
 
   nsresult AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
@@ -190,7 +193,7 @@ class nsStyleSet
   PRBool BuildDefaultStyleData(nsIPresContext* aPresContext);
 
   // Update the rule processor list after a change to the style sheet list.
-  nsresult GatherRuleProcessors(PRInt32 aType);
+  nsresult GatherRuleProcessors(sheetType aType);
 
   void AddImportantRules(nsRuleNode* aCurrLevelNode,
                          nsRuleNode* aLastPrevLevelNode);
@@ -229,7 +232,7 @@ class nsStyleSet
 
   nsCOMArray<nsIStyleSheet> mSheets[eSheetTypeCount];
 
-  nsCOMArray<nsIStyleRuleProcessor> mRuleProcessors[eSheetTypeCount];
+  nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessors[eSheetTypeCount];
 
   // cached instance for enabling/disabling
   nsCOMPtr<nsIStyleSheet> mQuirkStyleSheet;

@@ -1149,7 +1149,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
 
   // XXX Need to cancel pending sheet loads for this element, if any
 
-  PRInt32 sheetCount = aDocument->GetNumberOfStyleSheets(PR_FALSE);
+  PRInt32 sheetCount = aDocument->GetNumberOfStyleSheets();
 
   /*
    * Start the walk at the _end_ of the list, since in the typical
@@ -1161,8 +1161,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
    */
   PRInt32 insertionPoint;
   for (insertionPoint = sheetCount - 1; insertionPoint >= 0; --insertionPoint) {
-    nsIStyleSheet *curSheet = aDocument->GetStyleSheetAt(insertionPoint,
-                                                         PR_FALSE);
+    nsIStyleSheet *curSheet = aDocument->GetStyleSheetAt(insertionPoint);
     NS_ASSERTION(curSheet, "There must be a sheet here!");
     nsCOMPtr<nsIDOMStyleSheet> domSheet = do_QueryInterface(curSheet);
     NS_ASSERTION(domSheet, "All the \"normal\" sheets implement nsIDOMStyleSheet");

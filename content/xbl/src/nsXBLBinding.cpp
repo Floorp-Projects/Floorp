@@ -1068,9 +1068,9 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
       return rv;
   }
 
-  nsCOMArray<nsIStyleRuleProcessor> *rules = mPrototypeBinding->GetRuleProcessors();
+  nsIStyleRuleProcessor *rules = mPrototypeBinding->GetRuleProcessor();
   if (rules)
-    rules->EnumerateForwards(aFunc, aData);
+    (*aFunc)(rules, aData);
   
   return rv;
 }

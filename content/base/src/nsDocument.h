@@ -158,9 +158,11 @@ public:
   // nsIDocumentObserver
   virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
   virtual void StyleSheetAdded(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet);
+                               nsIStyleSheet* aStyleSheet,
+                               PRBool aDocumentSheet);
   virtual void StyleSheetRemoved(nsIDocument *aDocument,
-                                 nsIStyleSheet* aStyleSheet);
+                                 nsIStyleSheet* aStyleSheet,
+                                 PRBool aDocumentSheet);
 
 protected:
   PRInt32       mLength;
@@ -304,11 +306,10 @@ public:
    * Get the style sheets owned by this document.
    * These are ordered, highest priority last
    */
-  virtual PRInt32 GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets) const;
-  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex,
-                                         PRBool aIncludeSpecialSheets) const;
+  virtual PRInt32 GetNumberOfStyleSheets() const;
+  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) const;
   virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const;
-  virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
+  virtual void AddStyleSheet(nsIStyleSheet* aSheet);
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
 
   virtual void UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
@@ -319,6 +320,11 @@ public:
   virtual void InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
   virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                             PRBool aApplicable);
+
+  virtual PRInt32 GetNumberOfCatalogStyleSheets() const;
+  virtual nsIStyleSheet* GetCatalogStyleSheetAt(PRInt32 aIndex) const;
+  virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet);
+
 
   /**
    * Get this document's attribute stylesheet.  May return null if
@@ -503,13 +509,6 @@ public:
                               nsIContent **aResult);
 
 protected:
-  // subclass hooks for sheet ordering
-  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet,
-                                     PRUint32 aFlags);
-  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
-                                          PRInt32 aIndex);
-  virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
-  virtual PRInt32 InternalGetNumberOfStyleSheets() const;
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
@@ -551,6 +550,7 @@ protected:
   nsCOMArray<nsIContent> mChildren;
 
   nsCOMArray<nsIStyleSheet> mStyleSheets;
+  nsCOMArray<nsIStyleSheet> mCatalogSheets;
 
   // Basically always has at least 1 entry
   nsAutoVoidArray mObservers;
