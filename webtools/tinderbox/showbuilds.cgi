@@ -194,14 +194,20 @@ sub print_page_head {
   if ($nowdate eq $maxdate) {
     unless ($form{norules}) {
       do "$::tree/rules.pl";
-      print "<a NAME=\"rules\"></a>$rules_message<br>";  # from $::tree/rules.pl
+      print "<a NAME=\"rules\"></a>$rules_message";  # from $::tree/rules.pl
     }
     
     do "$::tree/sheriff.pl";
-    print "<a NAME=\"sheriff\"></a>$current_sheriff<br>";  # from $::tree/sheriff.pl
+    $current_sheriff =~ s:^\s*|\s*$::gs;
+    if ($current_sheriff and length($current_sheriff) gt 0) {
+      print "<a NAME=\"sheriff\"></a>$current_sheriff";  # from $::tree/sheriff.pl
+    }
     
     do "$::tree/status.pl";
-    print "<a NAME=\"status\"></a>$status_message<br>";  # from $::tree/status.pl
+    $status_message =~ s:^\s*|\s*$::gs;
+    if ($status_message and length($status_message) gt 0) {
+      print "<a NAME=\"status\"></a>$status_message";  # from $::tree/status.pl
+    }
 
     # keeps the main table from clearing the IFRAME
     print "<br clear=\"all\">\n";
@@ -316,8 +322,14 @@ BEGIN {
     #
     print '<td>';
     for $who (sort keys %{$who_list->[$tt]} ){
-      my $qr = &who_menu($td, $build_time_times->[$tt],
-                         $build_time_times->[$tt-1],$who);
+      my $qr;
+      if ($tt eq 0) {
+        $qr = &who_menu($td, $build_time_times->[$tt],
+                        undef,$who);
+      } else {
+        $qr = &who_menu($td, $build_time_times->[$tt],
+                        $build_time_times->[$tt-1],$who);
+      }
       $who =~ s/%.*$//;
       print "  $qr$who</a>\n";
     }
@@ -360,12 +372,57 @@ BEGIN {
       # Uncomment this line to print logfile names in build rectangle.
       # print "$logfile<br>";
       
-      print qq|
+      if ( 1 ) {
+          # Add build start, end, and elapsed time where possible.
+          my($start, $end, $elapsed);
+
+          # Treat buildtime as the build's start and mailtime as the build's
+          # end.  We should add in explicit setting of endtime in the client
+          # scripts if they don't already have it and then use that here.
+          my $start_timet = $br->{buildtime};
+          my $end_timet = $br->{mailtime};
+
+          # If either of the times aren't today, we need to qualify both with
+          # the month and day-of-month.
+          my $need_to_qualify;
+          if ( both_are_today($start_timet, $end_timet) ) {
+              $need_to_qualify = 0;
+          } else {
+              $need_to_qualify = 1;
+          }
+
+          # Grab the human-readable start time.
+          $start = get_local_hms($start_timet, $need_to_qualify);
+
+          # If we're still building, the mailtime only reflects the opening
+          # mail that the build has started, not the time at which the build
+          # ended.  In that case, don't use it.  Use the current time, instead.
+          my $time_info = "";
+          if ($br->{buildstatus} eq 'building') {
+            $elapsed = get_time_difference(time(), $start_timet);
+
+            $time_info = "Started $start, still building..";
+          } else {
+            $end = get_local_hms($end_timet, $need_to_qualify);
+            $elapsed = get_time_difference($end_timet, $start_timet);
+
+            $time_info = "Started $start, finished $end";
+          }
+
+          print qq|
+<A HREF="$logurl"
+ onclick="return log(event,$build_index,'$logfile','$time_info','$elapsed');"
+ title="$titlemap{$br->{buildstatus}}">
+$textmap{$br->{buildstatus}}</a>
+|;
+      } else {
+          print qq|
 <A HREF="$logurl"
  onclick="return log(event,$build_index,'$logfile');"
  title="$titlemap{$br->{buildstatus}}">
 $textmap{$br->{buildstatus}}</a>
 |;
+      }
  
       # What Changed
       #
@@ -521,7 +578,9 @@ sub who_menu {
   $treeflag .= '%26branchtype%3Dregexp' if $treeflag =~ /\+|\?|\*/;
 
   my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
-      . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate|$maxdate";
+      . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate";
+
+  $qr = $qr . "|$maxdate" if defined($maxdate);
 
   return "<a href='$qr' onclick=\"return who(event);\">";
 }
@@ -680,6 +739,39 @@ sub print_javascript {
       }
       return false;
     }
+
+    function convert_timet_to_gmtdate(timet) {
+      var timeconv = new Date();
+      timeconv.setTime( (timet * 1000) + \
+        (timeconv.getTimezoneOffset() * 60 * 1000) );
+      return timeconv.toLocaleString();
+    }
+
+    function convert_timet_to_localdate(timet) {
+      var timeconv = new Date();
+      timeconv.setTime(timet * 1000);
+      return timeconv.toLocaleString();
+    }
+
+    function convert_timet_to_localhms(timet) {
+      var timeconv = new Date();
+      timeconv.setTime(timet * 1000);
+
+      hours = timeconv.getHours();
+      if (hours < 10)
+        hours = "0" + hours;
+
+      mins = timeconv.getMinutes();
+      if (mins < 10)
+        mins = "0" + mins;
+
+      secs = timeconv.getSeconds();
+      if (secs < 10)
+        secs = "0" + secs;
+
+      return hours + ":" + mins;
+    }
+
     function log_url(logfile) {
       return "${rel_path}showlog.cgi?log=" + buildtree + "/" + logfile;
     }
@@ -716,15 +808,33 @@ sub print_javascript {
       }
       return false;
     }
-    function log(e,buildindex,logfile)
+    function log(e,buildindex,logfile,time_info,elapsed)
     {
       var logurl = log_url(logfile);
       var commenturl = "${rel_path}addnote.cgi?log=" + buildtree + "/" + logfile;
-
       if (noDHTML) {
         document.location = logurl;
         return false;
       }
+
+      var blurb = "<B>" + builds[buildindex] + "</B><BR>";
+
+      // If time_info is set, it will contain either the start time of the
+      // build or both the start and end time.
+      if (time_info) {
+          blurb = blurb + time_info + "<BR>"
+      }
+
+      // elapsed tracks the time the build started to either its end time or
+      // now.
+      if (elapsed) {
+          blurb = blurb + elapsed + " elapsed<BR>"
+      }
+
+      blurb = blurb + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
+          + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
+          + "<A HREF=" + commenturl + ">Add a Comment</A>";
+
       if (typeof document.layers != 'undefined') {
         var q = document.layers["logpopup"];
         q.top = e.target.y - 6;
@@ -736,11 +846,7 @@ sub print_javascript {
         }
         q.left = yy;
         q.visibility="show"; 
-        q.document.write("<TABLE BORDER=1><TR><TD><B>"
-          + builds[buildindex] + "</B><BR>"
-          + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
-          + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
-          + "<A HREF=" + commenturl + ">Add a Comment</A>"
+        q.document.write("<TABLE BORDER=1><TR><TD>" + blurb
           + "</TD></TR></TABLE>");
         q.document.close();
       } else {
@@ -750,10 +856,7 @@ sub print_javascript {
         }
         closepopup();
         var l = document.createElement("div");
-        nodewrite(l,"<B>" + builds[buildindex] + "</B><BR>"
-          + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
-          + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
-          + "<A HREF=" + commenturl + ">Add a Comment</A><BR>");
+        nodewrite(l,blurb + "<BR>");
         l.setAttribute("id", "popup");
         l.className = "log";
         t.parentNode.appendChild(l);
