@@ -77,7 +77,9 @@
 #include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsIWebNavigation.h"
-#include "nsIDragDropOverride.h"
+#include "nsIClipboardDragDropHooks.h"
+#include "nsIClipboardDragDropHookList.h"
+#include "nsIDocShell.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIXMLContent.h"
@@ -114,7 +116,7 @@ NS_INTERFACE_MAP_END
 // nsContentAreaDragDrop ctor
 //
 nsContentAreaDragDrop::nsContentAreaDragDrop ( ) 
-  : mListenerInstalled(PR_FALSE), mNavigator(nsnull), mOverrideDrag(nsnull), mOverrideDrop(nsnull)
+  : mListenerInstalled(PR_FALSE), mNavigator(nsnull)
 {
 } // ctor
 
@@ -130,17 +132,13 @@ nsContentAreaDragDrop::~nsContentAreaDragDrop ( )
 
 
 NS_IMETHODIMP
-nsContentAreaDragDrop::HookupTo(nsIDOMEventTarget *inAttachPoint, nsIWebNavigation* inNavigator,
-                                  nsIOverrideDragSource* inOverrideDrag, nsIOverrideDropSite* inOverrideDrop)
+nsContentAreaDragDrop::HookupTo(nsIDOMEventTarget *inAttachPoint, nsIWebNavigation* inNavigator)
 {
   NS_ASSERTION(inAttachPoint, "Can't hookup Drag Listeners to NULL receiver");
   mEventReceiver = do_QueryInterface(inAttachPoint);
   NS_ASSERTION(mEventReceiver, "Target doesn't implement nsIDOMEventReceiver as needed");
   mNavigator = inNavigator;
-  
-  mOverrideDrag = inOverrideDrag;
-  mOverrideDrop = inOverrideDrop;
-  
+
   return AddDragListener();
 }
 
@@ -245,12 +243,30 @@ nsContentAreaDragDrop::DragOver(nsIDOMEvent* inEvent)
     // the drop is allowed. If it allows it, we should still protect against
     // dropping w/in the same document.
     PRBool dropAllowed = PR_TRUE;
-    if ( mOverrideDrop )
-      mOverrideDrop->AllowDrop(inEvent, session, &dropAllowed);    
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    GetHookEnumeratorFromEvent(inEvent, getter_AddRefs(enumerator));
+    if (enumerator) {
+      PRBool hasMoreHooks = PR_FALSE;
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
+             && hasMoreHooks) {
+        nsCOMPtr<nsISupports> isupp;
+        if (NS_FAILED(enumerator->GetNext(getter_AddRefs(isupp))))
+          break;
+        nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
+        if (override) {
+          nsresult hookResult = override->AllowDrop(inEvent, session, &dropAllowed);
+          NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in AllowDrop");    
+          if (!dropAllowed)
+            break;
+        }
+      }
+    }
+
     nsCOMPtr<nsIDOMDocument> sourceDoc;
     session->GetSourceDocument(getter_AddRefs(sourceDoc));
     nsCOMPtr<nsIDOMDocument> eventDoc;
     GetEventDocument(inEvent, getter_AddRefs(eventDoc));
+    if ( sourceDoc == eventDoc ) printf("we're in content area dragdrop and about to disallow\n");
     if ( sourceDoc == eventDoc )
       dropAllowed = PR_FALSE;
     session->SetCanDrop(dropAllowed);
@@ -369,12 +385,26 @@ nsContentAreaDragDrop::DragDrop(nsIDOMEvent* inMouseEvent)
   if ( NS_SUCCEEDED(rv) ) {
     // if the client has provided an override callback, call it. It may
     // still return that we should continue processing.
-    if ( mOverrideDrop ) {
-      PRBool actionHandled = PR_FALSE;
-      if ( NS_SUCCEEDED(mOverrideDrop->DropAction(inMouseEvent, trans, &actionHandled)) )
-        if ( actionHandled )
-          return NS_OK;
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    GetHookEnumeratorFromEvent(inMouseEvent, getter_AddRefs(enumerator));
+    if (enumerator) {
+      PRBool actionCanceled = PR_TRUE;
+      PRBool hasMoreHooks = PR_FALSE;
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
+             && hasMoreHooks) {
+        nsCOMPtr<nsISupports> isupp;
+        if (NS_FAILED(enumerator->GetNext(getter_AddRefs(isupp))))
+          break;
+        nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
+        if (override) {
+          nsresult hookResult = override->OnPasteOrDrop(inMouseEvent, trans, &actionCanceled);
+          NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnPasteOrDrop");
+          if (!actionCanceled)
+            return NS_OK;
+        }
+      }
     }
+
     nsXPIDLCString flavor;
     nsCOMPtr<nsISupports> dataWrapper;
     PRUint32 dataLen = 0;
@@ -985,6 +1015,32 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   return NS_OK;
 }
 
+nsresult
+nsContentAreaDragDrop::GetHookEnumeratorFromEvent(nsIDOMEvent* inEvent,
+                                          nsISimpleEnumerator **outEnumerator)
+{
+  *outEnumerator = nsnull;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetEventDocument(inEvent, getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISupports> isupp;
+  doc->GetContainer(getter_AddRefs(isupp));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIClipboardDragDropHookList> hookList = do_GetInterface(docShell);
+  NS_ENSURE_TRUE(hookList, NS_ERROR_FAILURE);
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  hookList->GetHookEnumerator(getter_AddRefs(enumerator));
+  NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
+
+  *outEnumerator = enumerator;
+  NS_ADDREF(*outEnumerator);
+  return NS_OK;
+}
 
 //
 // DragGesture
@@ -1005,13 +1061,26 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
 
   // if the client has provided an override callback, check if we
   // should continue
-  if ( mOverrideDrag ) {
-    PRBool allow = PR_FALSE;
-    if ( NS_SUCCEEDED(mOverrideDrag->AllowStart(inMouseEvent, &allow)) )
-      if ( !allow )
-        return NS_OK;
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  GetHookEnumeratorFromEvent(inMouseEvent, getter_AddRefs(enumerator));
+  if (enumerator) {
+    PRBool allow = PR_TRUE;
+    PRBool hasMoreHooks = PR_FALSE;
+    while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
+           && hasMoreHooks) {
+      nsCOMPtr<nsISupports> isupp;
+      if (NS_FAILED(enumerator->GetNext(getter_AddRefs(isupp))))
+        break;
+      nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
+      if (override) {
+        nsresult hookResult = override->AllowStartDrag(inMouseEvent, &allow);
+        NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in AllowStartDrag");
+        if (!allow)
+          return NS_OK;
+      }
+    }
   }
-  
+
   nsAutoString urlString, imageSourceString, titleString, htmlString;
   PRBool isAnchor = PR_FALSE;
   nsCOMPtr<nsIImage> image;
@@ -1022,12 +1091,32 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
   if ( startDrag ) {
     // build up the transferable with all this data.
     nsCOMPtr<nsITransferable> trans;
-    nsresult rv = CreateTransferable(urlString, titleString, htmlString, imageSourceString, image, isAnchor, getter_AddRefs(trans));
+    CreateTransferable(urlString, titleString, htmlString, imageSourceString, image, isAnchor, getter_AddRefs(trans));
     if ( trans ) {
       // if the client has provided an override callback, let them manipulate
       // the flavors or drag data
-      if ( mOverrideDrag )
-        mOverrideDrag->Modify(trans);
+      nsCOMPtr<nsISimpleEnumerator> enumerator;
+      GetHookEnumeratorFromEvent(inMouseEvent, getter_AddRefs(enumerator));
+      if (enumerator)
+      {
+        PRBool hasMoreHooks = PR_FALSE;
+        PRBool doContinueDrag = PR_TRUE;
+        while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
+               && hasMoreHooks)
+        {
+          nsCOMPtr<nsISupports> isupp;
+          if (NS_FAILED(enumerator->GetNext(getter_AddRefs(isupp))))
+            break;
+          nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
+          if (override)
+          {
+            nsresult hookResult = override->OnCopyOrDrag(trans, &doContinueDrag);
+            NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnCopyOrDrag");
+            if (!doContinueDrag)
+              return NS_OK;
+          }
+        }
+      }
 
       nsCOMPtr<nsISupportsArray> transArray(do_CreateInstance("@mozilla.org/supports-array;1"));
       if ( !transArray )
