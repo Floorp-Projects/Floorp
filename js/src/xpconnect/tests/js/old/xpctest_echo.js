@@ -241,7 +241,7 @@ print("EchoIn2OutOneDOMString of empty string - "+(
        ? "passed" : "failed"));
 
 print("EchoIn2OutOneDOMString of null - "+(
-       echo.EchoIn2OutOneDOMString(null) == "null"
+       echo.EchoIn2OutOneDOMString(null) == null
        ? "passed" : "failed"));
 
 print("EchoIn2OutOneDOMString of undefined - "+(
