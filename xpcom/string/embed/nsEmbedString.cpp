@@ -452,3 +452,49 @@ nsEmbedCString::GrowCapacity(size_type aNewCapacity)
 
   return result;
 }
+
+
+// Copies of Distance() function (and things that it depends on) from
+// ../src/nsReadableUtils.cpp. This is needed to make the non-inline
+// constructors of nsDependentSubstring work in embed builds.
+// See bug 196506
+
+template <class CharT> class CalculateLength
+  {
+    public:
+      typedef CharT value_type;
+
+      CalculateLength() : mDistance(0) { }
+      size_t GetDistance() const       { return mDistance; }
+
+      PRUint32 write( const CharT*, PRUint32 N )
+                                       { mDistance += N; return N; }
+    private:
+      size_t mDistance;
+  };
+
+template <class CharT>
+inline
+size_t
+Distance_Impl( const nsReadingIterator<CharT>& aStart,
+          const nsReadingIterator<CharT>& aEnd )
+  {
+    CalculateLength<CharT> sink;
+    nsReadingIterator<CharT> fromBegin(aStart);
+    copy_string(fromBegin, aEnd, sink);
+    return sink.GetDistance();
+  }
+
+NS_COM
+size_t
+Distance( const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
+  {
+    return Distance_Impl(aStart, aEnd);
+  }
+
+NS_COM
+size_t
+Distance( const nsACString::const_iterator& aStart, const nsACString::const_iterator& aEnd )
+  {
+    return Distance_Impl(aStart, aEnd);
+  }

@@ -61,22 +61,8 @@ class NS_COM nsDependentSubstring
       virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
 
     public:
-      nsDependentSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
-          : mString(aString),
-            mStartPos( NS_MIN(aStartPos, aString.Length()) ),
-            mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
-        {
-          // nothing else to do here
-        }
-
-      nsDependentSubstring( const const_iterator& aStart, const const_iterator& aEnd )
-          : mString(aStart.string())
-        {
-          const_iterator zeroPoint;
-          mString.BeginReading(zeroPoint);
-          mStartPos = Distance(zeroPoint, aStart);
-          mLength = Distance(aStart, aEnd);
-        }
+      nsDependentSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength );
+      nsDependentSubstring( const const_iterator& aStart, const const_iterator& aEnd );
 
       // nsDependentSubstring( const self_type& ); // auto-generated copy-constructor should be OK
       // ~nsDependentSubstring();                           // auto-generated destructor OK
@@ -113,22 +99,8 @@ class NS_COM nsDependentCSubstring
       virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
 
     public:
-      nsDependentCSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
-          : mString(aString),
-            mStartPos( NS_MIN(aStartPos, aString.Length()) ),
-            mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
-        {
-          // nothing else to do here
-        }
-
-      nsDependentCSubstring( const const_iterator& aStart, const const_iterator& aEnd )
-          : mString(aStart.string())
-        {
-          const_iterator zeroPoint;
-          mString.BeginReading(zeroPoint);
-          mStartPos = Distance(zeroPoint, aStart);
-          mLength = Distance(aStart, aEnd);
-        }
+      nsDependentCSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength );
+      nsDependentCSubstring( const const_iterator& aStart, const const_iterator& aEnd );
 
       // nsDependentCSubstring( const self_type& ); // auto-generated copy-constructor should be OK
       // ~nsDependentCSubstring();                            // auto-generated destructor OK
@@ -155,20 +127,10 @@ class NS_COM nsDependentSingleFragmentSubstring
       typedef nsASingleFragmentString   abstract_single_fragment_type;
 
       void
-      Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
-        {
-          NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentSingleFragmentString must wrap a non-NULL buffer");
-          mHandle.DataStart(aStartPtr);
-          mHandle.DataEnd(aEndPtr);
-        }
+      Rebind( const char_type* aStartPtr, const char_type* aEndPtr );
 
       void
-      Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength )
-        {
-          const_char_iterator iter;
-          mHandle.DataStart(aString.BeginReading(iter) + NS_MIN(aStartPos, aString.Length()));
-          mHandle.DataEnd( NS_MIN(mHandle.DataStart() + aLength, aString.EndReading(iter)) );
-        }
+      Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength );
 
       nsDependentSingleFragmentSubstring( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
       nsDependentSingleFragmentSubstring( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength ) { Rebind(aString, aStartPos, aLength); }
@@ -196,20 +158,10 @@ class NS_COM nsDependentSingleFragmentCSubstring
       typedef nsASingleFragmentCString  abstract_single_fragment_type;
 
       void
-      Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
-        {
-          NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentSingleFragmentCString must wrap a non-NULL buffer");
-          mHandle.DataStart(aStartPtr);
-          mHandle.DataEnd(aEndPtr);
-        }
+      Rebind( const char_type* aStartPtr, const char_type* aEndPtr );
 
       void
-      Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength )
-        {
-          const_char_iterator iter;
-          mHandle.DataStart(aString.BeginReading(iter) + NS_MIN(aStartPos, aString.Length()));
-          mHandle.DataEnd( NS_MIN(mHandle.DataStart() + aLength, aString.EndReading(iter)) );
-        }
+      Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength );
 
       nsDependentSingleFragmentCSubstring( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
       nsDependentSingleFragmentCSubstring( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength ) { Rebind(aString, aStartPos, aLength); }
