@@ -81,18 +81,20 @@ static eHTMLTags gWhitespaceTags[]={
 #include "nsElementTable.h"
 
 
-
 #ifdef RAPTOR_PERF_METRICS
 #  define START_TIMER()                    \
-    if(mParser) mParser->mParseTime.Start(PR_FALSE);
+    if(mParser) mParser->mParseTime.Start(PR_FALSE); \
+    if(mParser) mParser->mDTDTime.Start(PR_FALSE); 
 
 #  define STOP_TIMER()                     \
-    if(mParser) mParser->mParseTime.Stop();
+    if(mParser) mParser->mParseTime.Stop(); \
+    if(mParser) mParser->mDTDTime.Stop(); 
 
 #else
 #  define STOP_TIMER() 
 #  define START_TIMER()
 #endif
+
 
 
 /***************************************************************
