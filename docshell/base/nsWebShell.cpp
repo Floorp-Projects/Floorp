@@ -801,6 +801,21 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
             doCreateAlternate = PR_FALSE;
           }
         }
+        // Skip fixup for anything except a normal document load operation
+        if (mLoadType != LOAD_NORMAL)
+        {
+          doCreateAlternate = PR_FALSE;
+        }
+        else
+        {
+          // Skip fixup for frames & iframes
+          nsCOMPtr<nsIDocShellTreeItem> targetParentTreeItem;
+          rv = GetSameTypeParent(getter_AddRefs(targetParentTreeItem));
+          if (NS_SUCCEEDED(rv) && targetParentTreeItem) 
+          {
+            doCreateAlternate = PR_FALSE;
+          }
+        }
         if (doCreateAlternate)
         {
           newURI = nsnull;
