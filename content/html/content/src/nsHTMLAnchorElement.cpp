@@ -184,7 +184,6 @@ nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Charset, charset)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Coords, coords)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Hreflang, hreflang)
@@ -196,6 +195,34 @@ NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 
 
+NS_IMETHODIMP
+nsHTMLAnchorElement::GetAccessKey(nsAWritableString& aValue)
+{
+  NS_STATIC_CAST(nsIHTMLContent *, this)->GetAttribute(kNameSpaceID_None,
+                                                       nsHTMLAtoms::accesskey,
+                                                       aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetAccessKey(const nsAReadableString& aValue)
+{
+  RegUnRegAccessKey(PR_FALSE);
+
+  nsresult rv = NS_STATIC_CAST(nsIHTMLContent *,
+                               this)->SetAttribute(kNameSpaceID_None,
+                                                   nsHTMLAtoms::accesskey,
+                                                   aValue,
+                                                   PR_TRUE);
+
+  if (!aValue.IsEmpty()) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+
 // This goes and gets the proper PresContext in order
 // for it to get the EventStateManager so it can register 
 // the access key
@@ -203,11 +230,9 @@ nsresult nsHTMLAnchorElement::RegUnRegAccessKey(PRBool aDoReg)
 {
   // first check to see if it even has an acess key
   nsAutoString accessKey;
-  PRInt32 nameSpaceID;
-  GetNameSpaceID(nameSpaceID);
   nsresult rv;
 
-  rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nameSpaceID,
+  rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_None,
                                                         nsHTMLAtoms::accesskey,
                                                         accessKey);
 
