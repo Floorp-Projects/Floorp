@@ -481,6 +481,7 @@ nsCachedNetData::Deserialize(PRBool aDeserializeFlags)
 
         CacheMetaData *annotation;
         annotation = new CacheMetaData(tag);
+        nsAllocator::Free(tag);
         if (!annotation)
             return NS_ERROR_OUT_OF_MEMORY;
 
