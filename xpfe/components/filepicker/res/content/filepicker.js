@@ -58,8 +58,9 @@ function onLoad() {
     retvals = o.retvals; /* set this to a global var so we can set return values */
     const title = o.title;
     filePickerMode = o.mode;
-    if (o.displayDirectory)
+    if (o.displayDirectory) {
       const directory = o.displayDirectory.path;
+    }
     const initialText = o.defaultString;
     const filterTitles = o.filters.titles;
     const filterTypes = o.filters.types;
@@ -126,8 +127,9 @@ function onLoad() {
   var persistent = new Object();
   homeDir = dirServiceProvider.getFile("Home", persistent);
 
-  if (directory)
+  if (directory) {
     sfile.initWithPath(directory);
+  }
   if (!directory || !(sfile.exists() && sfile.isDirectory())) {
     // Start in the user's home directory
     sfile.initWithPath(homeDir.path);
@@ -152,6 +154,7 @@ function applyFilter()
   /* This is where we manipulate the DOM to create new <rule>s */
   var splitFilters = currentFilter.split("; ");
   var matchAllFiles = false;
+  var ruleNode;
 
   /* get just the extensions for each of the filters */
   var extensions = new Array(splitFilters.length);
@@ -165,8 +168,8 @@ function applyFilter()
   }
 
   /* delete all rules except the first one */
-  for (var j = 1;; j++) {
-    var ruleNode = document.getElementById("matchRule."+j);
+  for (j = 1;; j++) {
+    ruleNode = document.getElementById("matchRule."+j);
     if (ruleNode) {
       ruleNode.parentNode.removeChild(ruleNode);
     } else {
@@ -187,7 +190,7 @@ function applyFilter()
   rule0.setAttributeNS(NC_NAMESPACE_URI, "extension" , extensions[0]);
 
   /* iterate through the remaining extensions, creating new rules */
-  var ruleNode = document.getElementById("fileFilter");
+  ruleNode = document.getElementById("fileFilter");
 
   for (var k=1; k < extensions.length; k++) {
     var newRule = rule0.cloneNode(true);
@@ -397,10 +400,10 @@ function addToHistory(directoryName) {
   var menu = document.getElementById("lookInMenu");
 
   var children = menu.childNodes;
-  for (var i=0; i < children.length; i++)
+  for (i=0; i < children.length; i++)
     menu.removeChild(children[i]);
 
-  for (var i=0; i < dirHistory.length; i++) {
+  for (i=0; i < dirHistory.length; i++) {
     var menuItem = document.createElement("menuitem");
     menuItem.setAttribute("value", dirHistory[i]);
     menu.appendChild(menuItem);

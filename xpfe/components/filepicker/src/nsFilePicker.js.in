@@ -35,11 +35,15 @@
  */
 
 
-const DEBUG = true; /* set to false to suppress debug messages */
+const DEBUG = false; /* set to true to enable debug messages */
+
 const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
 const FILEPICKER_CID        = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
-
+const LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const APPSHELL_SERV_CONTRACTID  = "@mozilla.org/appshell/appShellService;1";
+const LOCALE_SERV_CONTRACTID = "@mozilla.org/intl/nslocaleservice;1";
+const STRBUNDLE_SERV_CONTRACTID = "@mozilla.org/intl/stringbundle;1";
+
 const nsIAppShellService    = Components.interfaces.nsIAppShellService;
 const nsILocalFile          = Components.interfaces.nsILocalFile;
 const nsIFileURL            = Components.interfaces.nsIFileURL;
@@ -48,15 +52,22 @@ const nsIFactory            = Components.interfaces.nsIFactory;
 const nsIFilePicker         = Components.interfaces.nsIFilePicker;
 const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor
 const nsIDOMWindow          = Components.interfaces.nsIDOMWindow;
+const nsILocaleService      = Components.interfaces.nsILocaleService;
+const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 
 const bundle                = srGetStrBundle("chrome://global/locale/filepicker.properties");
-var   lastDirectory         = "/";
+var   lastDirectory         = null;
 
 function nsFilePicker()
 {
   /* attributes */
   this.mDefaultString = "";
-  this.mDisplayDirectory = lastDirectory;
+  if (lastDirectory) {
+    this.mDisplayDirectory = Components.classes[LOCAL_FILE_CONTRACTID].createInstance(nsILocalFile);
+    this.mDisplayDirectory.initWithPath(lastDirectory);
+  } else {
+    this.mDisplayDirectory = null;
+  }
   this.mFilterTitles = new Array();
   this.mFilters = new Array();
 }
@@ -142,8 +153,6 @@ nsFilePicker.prototype = {
     o.filters.types = this.mFilters;
     o.retvals = new Object();
 
-    dump("@mozilla.org/js/xpc/ID;1OMWindow id value = " + nsIDOMWindow.id + "\n");
-
     var parent;
     try {
       if (this.mParentWindow) {
@@ -155,11 +164,11 @@ nsFilePicker.prototype = {
           var appShellService = Components.classes[APPSHELL_SERV_CONTRACTID].getService(nsIAppShellService);
           parent = appShellService.getHiddenDOMWindow();
         } catch(ex) {
-          dump("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
-          dump(ex + "\n");
+          debug("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
+          debug(ex + "\n");
         }
       }
-    } catch(ex) { dump("fuck\n"); }
+    } catch(ex) { debug("fuck\n"); }
 
     try {
       parent.openDialog("chrome://global/content/filepicker.xul",
@@ -229,29 +238,24 @@ function NSGetModule(compMgr, fileSpec) {
 
 
 
-
-
-
 /* crap from strres.js that I want to use for string bundles since I can't include another .js file.... */
 
 var strBundleService = null;
+var localeService = null;
 
 function srGetAppLocale()
 {
-  var localeService = null;
   var applicationLocale = null;
 
-  localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].createInstance();
   if (!localeService) {
-    dump("\n--** localeService createInstance 1 failed **--\n");
-	return null;
+    try {
+      localeService = Components.classes[LOCALE_SERV_CONTRACTID].getService(nsILocaleService);
+    } catch (ex) {
+      dump("\n--** localeService failed: " + ex + "\n");
+      return null;
+    }
   }
 
-  localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
-  if (!localeService) {
-    dump("\n--** localeService createInstance 2 failed **--\n");
-	return null;
-  }
   applicationLocale = localeService.GetApplicationLocale();
   if (!applicationLocale) {
     dump("\n--** localeService.GetApplicationLocale failed **--\n");
@@ -263,21 +267,14 @@ function srGetStrBundleWithLocale(path, locale)
 {
   var strBundle = null;
 
-  strBundleService =
-    Components.classes["@mozilla.org/intl/stringbundle;1"].createInstance(); 
-
   if (!strBundleService) {
-    dump("\n--** strBundleService createInstance 1 failed **--\n");
-	return null;
+    try {
+      strBundleService = Components.classes[STRBUNDLE_SERV_CONTRACTID].getService(nsIStringBundleService);
+    } catch (ex) {
+      dump("\n--** strBundleService createInstance failed **--\n");
+      return null;
+    }
   }
-
-  strBundleService = 
-  	strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-
-  if (!strBundleService) {
-	dump("\n--** strBundleService createInstance 2 failed **--\n");
-	return null;
-  }	
 
   strBundle = strBundleService.CreateBundle(path, locale); 
   if (!strBundle) {
@@ -292,108 +289,3 @@ function srGetStrBundle(path)
   return srGetStrBundleWithLocale(path, appLocale);
 }
 
-
-function localeSwitching(winType, baseDirectory, providerName)
-{
-  dump("\n ** Enter localeSwitching() ** \n");
-  dump("\n ** winType=" +  winType + " ** \n");
-  dump("\n ** baseDirectory=" +  baseDirectory + " ** \n");
-  dump("\n ** providerName=" +  providerName + " ** \n");
-
-  //
-  var rdf;
-  if(document.rdf) {
-    rdf = document.rdf;
-    dump("\n ** rdf = document.rdf ** \n");
-  }
-  else if(Components) {
-    var isupports = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
-    rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
-    dump("\n ** rdf = Components... ** \n");
-  }
-  else {
-    dump("can't find nuthin: no document.rdf, no Components. \n");
-  }
-  //
-
-  var ds = rdf.GetDataSource("rdf:chrome");
-
-  // For M4 builds, use this line instead.
-  // var ds = rdf.GetDataSource("resource:/chrome/registry.rdf");
-  var srcURL = "chrome://";
-  srcURL += winType + "/locale/";
-  dump("\n** srcURL=" + srcURL + " **\n");
-  var sourceNode = rdf.GetResource(srcURL);
-  var baseArc = rdf.GetResource("http://chrome.mozilla.org/rdf#base");
-  var nameArc = rdf.GetResource("http://chrome.mozilla.org/rdf#name");
-                      
-  // Get the old targets
-  var oldBaseTarget = ds.GetTarget(sourceNode, baseArc, true);
-  dump("\n** oldBaseTarget=" + oldBaseTarget + "**\n");
-  var oldNameTarget = ds.GetTarget(sourceNode, nameArc, true);
-  dump("\n** oldNameTarget=" + oldNameTarget + "**\n");
-
-  // Get the new targets 
-  // file:/u/tao/gila/mozilla-org/html/projects/intl/chrome/
-  // da-DK
-  if (baseDirectory == "") {
-	baseDirectory =  "resource:/chrome/";
-  }
-
-  var finalBase = baseDirectory;
-  if (baseDirectory != "") {
-	finalBase += winType + "/locale/" + providerName + "/";
-  }
-  dump("\n** finalBase=" + finalBase + "**\n");
-
-  var newBaseTarget = rdf.GetLiteral(finalBase);
-  var newNameTarget = rdf.GetLiteral(providerName);
-  
-  // Unassert the old relationships
-  if (baseDirectory != "") {
-  	ds.Unassert(sourceNode, baseArc, oldBaseTarget);
-  }
-
-  ds.Unassert(sourceNode, nameArc, oldNameTarget);
-  
-  // Assert the new relationships (note that we want a reassert rather than
-  // an unassert followed by an assert, once reassert is implemented)
-  if (baseDirectory != "") {
-  	ds.Assert(sourceNode, baseArc, newBaseTarget, true);
-  }
-  ds.Assert(sourceNode, nameArc, newNameTarget, true);
-  
-  // Flush the modified data source to disk
-  // (Note: crashes in M4 builds, so don't use Flush() until fix checked in)
-  ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
-
-  // Open up a new window to see your new chrome, since changes aren't yet dynamically
-  // applied to the current window
-
-  // BrowserOpenWindow('chrome://addressbook/content');
-  dump("\n ** Leave localeSwitching() ** \n");
-}
-
-function localeTo(baseDirectory, localeName)
-{
-  dump("\n ** Enter localeTo() ** \n");
-
-  localeSwitching("addressbook", baseDirectory, localeName); 
-  localeSwitching("bookmarks", baseDirectory, localeName); 
-  localeSwitching("directory", baseDirectory, localeName); 
-  localeSwitching("editor", baseDirectory, localeName); 
-  localeSwitching("global", baseDirectory, localeName); 
-  localeSwitching("history", baseDirectory, localeName); 
-  localeSwitching("messenger", baseDirectory, localeName); 
-  localeSwitching("messengercompose", baseDirectory, localeName); 
-  localeSwitching("navigator", baseDirectory, localeName); 
-  localeSwitching("pref", baseDirectory, localeName); 
-  localeSwitching("profile", baseDirectory, localeName); 
-  localeSwitching("regviewer", baseDirectory, localeName); 
-  localeSwitching("related", baseDirectory, localeName); 
-  localeSwitching("sidebar", baseDirectory, localeName); 
-  localeSwitching("wallet", baseDirectory, localeName); 
-  localeSwitching("xpinstall", baseDirectory, localeName); 
-  
-  dump("\n ** Leave localeTo() ** \n");
-}
