@@ -148,7 +148,7 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     if (action == nsEditor::kOpIgnore) return NS_OK;
     
     nsCOMPtr<nsIDOMSelection>selection;
-    nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+    res = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     
     if (mDocChangeRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
@@ -242,12 +242,8 @@ NS_IMETHODIMP
 nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
                              nsRulesInfo *aInfo, nsresult aResult)
 {
-  // my kingdom for dynamic cast
-  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
-  nsresult res;
-    
   // pass thru to nsTextEditRules:
-  res = nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
+  nsresult res = nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
   return res;
 }
   
@@ -4070,10 +4066,10 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
       // last thing inside of the listitem wasn't a block node.
       // insert a BR to preserve the illusion of block boundaries
       nsCOMPtr<nsIDOMNode> node, brNode;
-      PRInt32 offset;
-      res = nsEditor::GetNodeLocation(lastChild, &node, &offset);
+      PRInt32 theOffset;
+      res = nsEditor::GetNodeLocation(lastChild, &node, &theOffset);
       if (NS_FAILED(res)) return res;
-      res = mEditor->CreateBR(node, offset+1, &brNode);
+      res = mEditor->CreateBR(node, theOffset+1, &brNode);
       if (NS_FAILED(res)) return res;
     }
     *aOutOfList = PR_TRUE;
