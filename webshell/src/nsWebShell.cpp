@@ -636,7 +636,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
                             mPrefs,
                             bounds,
                             mScrollPref);
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED(rv)) {
     mContentViewer->Show();
   }
 
@@ -664,7 +664,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                     kIEventQueueServiceIID,
                                     (nsISupports **)&eventService);
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED(rv)) {
     // XXX: What if this fails?
     rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
                                            &mThreadEventQueue);
@@ -697,8 +697,8 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     nsIDocumentLoader* parentLoader;
 
     // Create a child document loader...
-    mParent->GetDocumentLoader(parentLoader);
-    if (NS_OK == rv) {
+    rv = mParent->GetDocumentLoader(parentLoader);
+    if (NS_SUCCEEDED(rv)) {
       rv = parentLoader->CreateDocumentLoader(&mDocLoader);
       NS_RELEASE(parentLoader);
     }
@@ -708,7 +708,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
                                       kIDocumentLoaderIID,
                                       (void**)&mDocLoader);
   }
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     goto done;
   }
   //Register ourselves as an observer for the new doc loader
@@ -718,7 +718,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   rv = nsRepository::CreateInstance(kDeviceContextCID, nsnull,
                                     kIDeviceContextIID,
                                     (void **)&mDeviceContext);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     goto done;
   }
   mDeviceContext->Init(aNativeParent);
@@ -733,7 +733,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
 
   // Create a Native window for the shell container...
   rv = nsRepository::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     goto done;
   }
 
@@ -1074,7 +1074,7 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
 
       // See if child contains the shell with the given name
       nsresult rv = child->FindChildWithName(aName, aResult);
-      if (NS_OK != rv) {
+      if (NS_FAILED(rv)) {
         return rv;
       }
       if (nsnull != aResult) {
@@ -1212,7 +1212,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
     rv = mContainer->WillLoadURL(this, urlSpec, nsLoadURL);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
       return rv;
     }
   }
@@ -1249,7 +1249,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // Tell web-shell-container we are loading a new url
   if (nsnull != mContainer) {
     rv = mContainer->BeginLoadURL(this, urlSpec);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
       return rv;
     }
   }
@@ -1341,7 +1341,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     nsAutoString urlSpec(*s);
     if (nsnull != mContainer) {
       rv = mContainer->WillLoadURL(this, urlSpec, nsLoadHistory);
-      if (NS_OK != rv) {
+      if (NS_FAILED(rv)) {
         return rv;
       }
     }
@@ -1357,7 +1357,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     // Tell web-shell-container we are loading a new url
     if (nsnull != mContainer) {
       rv = mContainer->BeginLoadURL(this, urlSpec);
-      if (NS_OK != rv) {
+      if (NS_FAILED(rv)) {
         return rv;
       }
     }
@@ -1803,7 +1803,7 @@ nsWebShell::CreateScriptEnvironment()
 
   if (nsnull == mScriptGlobal) {
     res = NS_NewScriptGlobalObject(&mScriptGlobal);
-    if (NS_OK != res) {
+    if (NS_FAILED(res)) {
       return res;
     }
     mScriptGlobal->SetWebShell(this);
@@ -1824,7 +1824,7 @@ nsWebShell::GetScriptContext(nsIScriptContext** aContext)
 
   res = CreateScriptEnvironment();
 
-  if (NS_OK == res) {
+  if (NS_SUCCEEDED(res)) {
     *aContext = mScriptContext;
     NS_ADDREF(mScriptContext);
   }
@@ -1840,7 +1840,7 @@ nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
 
   res = CreateScriptEnvironment();
 
-  if (NS_OK == res) {
+  if (NS_SUCCEEDED(res)) {
     *aGlobal = mScriptGlobal;
     NS_IF_ADDREF(mScriptGlobal);
   }
@@ -1898,7 +1898,7 @@ nsWebShell::OnConnectionsComplete()
           rv = url->GetSpec(&spec);
 
           /* XXX: The load status needs to be passed in... */
-          if (rv == NS_OK) {
+          if (NS_SUCCEEDED(rv)) {
             urlString = spec;
             rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
           }
