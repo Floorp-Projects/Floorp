@@ -757,15 +757,14 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           }
           break;
 
+        case eHTMLTag_link:
         case eHTMLTag_base:
         case eHTMLTag_meta:
-        case eHTMLTag_link:
           {
             result=OpenHead(attrNode);
             if(NS_OK==result)
               result=AddLeaf(attrNode);
-            if(NS_OK==result)
-              result=CloseHead(attrNode);
+            result=CloseHead(attrNode);
           }
           break;
 
@@ -2628,7 +2627,7 @@ nsresult CNavDTD::CloseTopmostContainer(){
  * 2nd, pass this message on to the sink.
  * @update  gess4/6/98
  * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
+ * @return  error code; 0 means OK
  */
 nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
   nsresult result=mSink->AddLeaf(aNode); 
