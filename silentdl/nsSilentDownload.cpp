@@ -1361,7 +1361,7 @@ nsSilentDownloadListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
     
     do 
     {
-        err = pIStream->Read(buffer, 0, 80, &len);
+        err = pIStream->Read(buffer, 80, &len);
         if (err == NS_OK) 
         {
             mSilentDownloadTask->GetNextByte(&nextByte);
