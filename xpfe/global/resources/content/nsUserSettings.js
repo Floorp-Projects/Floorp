@@ -77,4 +77,17 @@ var nsPreferences = {
           return aDefVal != undefined ? aDefVal : null;
         }
     },
+
+  getLocalizedUnicharPref: function (aPrefName, aDefVal)
+    {
+      try
+        {
+          return this.mPrefService.getLocalizedUnicharPref(aPrefName);
+        }
+      catch(e)
+        {
+          return aDefVal != undefined ? aDefVal : null;
+        }
+    },
 };
+
