@@ -981,23 +981,32 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetTwipsToPixels(&t2p);
   aPresContext->GetPixelsToTwips(&p2t);
-  
+
    // Add in frame's offset from it it's containing view
   nsIView *containingView = nsnull;
   nsPoint offset;
   rv = aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
+
   if (NS_SUCCEEDED(rv) && (nsnull != containingView)) {
     aAbsoluteTwipsRect.x += offset.x;
     aAbsoluteTwipsRect.y += offset.y;
 
     nsPoint viewOffset;
     containingView->GetPosition(&viewOffset.x, &viewOffset.y);
+
     nsIView * parent;
     containingView->GetParent(parent);
 
     // if we don't have a parent view then 
     // check to see if we have a widget and adjust our offset for the widget
     if (parent == nsnull) {
+      // account for space above and to the left of the containingView origin.
+      // the widget is aligned with containingView's bounds, not its origin
+      nsRect bounds;
+      containingView->GetBounds(bounds);
+      aAbsoluteTwipsRect.x += viewOffset.x - bounds.x;
+      aAbsoluteTwipsRect.y += viewOffset.y - bounds.y;
+
       nsIWidget * widget;
       containingView->GetWidget(widget);
       if (nsnull != widget) {
@@ -1012,7 +1021,6 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
       }
       rv = NS_OK;
     } else {
-
       while (nsnull != parent) {
         nsPoint po;
         parent->GetPosition(&po.x, &po.y);
@@ -1029,6 +1037,13 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
         nsIWidget * widget;
         parent->GetWidget(widget);
         if (nsnull != widget) {
+          // account for space above and to the left of the containingView origin.
+          // the widget is aligned with containingView's bounds, not its origin
+          nsRect bounds;
+          parent->GetBounds(bounds);
+          aAbsoluteTwipsRect.x += po.x - bounds.x;
+          aAbsoluteTwipsRect.y += po.y - bounds.y;
+
           // Add in the absolute offset of the widget.
           nsRect absBounds;
           nsRect lc;

@@ -1083,6 +1083,8 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          nsIDeviceContext* aDeviceContext,
                          const nsRect& aBounds)
 {
+  NS_ASSERTION(aParentWidget != nsnull, "Null aParentWidget");
+
 #ifdef NS_PRINT_PREVIEW
   mParentWidget = aParentWidget; // not ref counted
 #endif
@@ -3309,7 +3311,11 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
         nsIView* view = nsnull;
         frame->GetView(aPO->mParent->mPresContext, &view);
         if (view != nsnull) {
-          view->GetWidget(*getter_AddRefs(widget));
+          nsCOMPtr<nsIWidget> w2;
+          view->GetWidget(*getter_AddRefs(w2));
+          if (nsnull != w2) {
+            widget = w2;
+          }
           canCreateScrollbars = PR_FALSE;
         }
       }
@@ -4551,14 +4557,64 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   rv = CallCreateInstance(kViewCID, &mView);
   if (NS_FAILED(rv))
     return rv;
-  rv = mView->Init(mViewManager, tbounds, nsnull);
+
+  // if aParentWidget has a view, we'll hook our view manager up to its view tree
+  void* clientData;
+  nsIView* containerView = nsnull;
+  if (NS_SUCCEEDED(aParentWidget->GetClientData(clientData))) {
+    nsISupports* data = (nsISupports*)clientData;
+    
+    if (nsnull != data) {
+      data->QueryInterface(NS_GET_IID(nsIView), (void **)&containerView);
+    }
+  }
+
+  if (nsnull != containerView) {
+    // see if the containerView has already been hooked into a foreign view manager hierarchy
+    // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
+    nsCOMPtr<nsIViewManager> containerVM;
+    containerView->GetViewManager(*getter_AddRefs(containerVM));
+    nsCOMPtr<nsIViewManager> checkVM;
+    nsIView* pView = containerView;
+    do {
+      pView->GetParent(pView);
+    } while (pView != nsnull
+             && NS_SUCCEEDED(pView->GetViewManager(*getter_AddRefs(checkVM))) && checkVM == containerVM);
+
+    if (nsnull == pView) {
+      // OK, so the container is not already hooked up into a foreign view manager hierarchy.
+      // That means we can choose not to hook ourselves up.
+      //
+      // If the parent container is a chrome shell, or a frameset, then we won't hook into its view
+      // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
+      // but is really just for peace of mind. This check can be removed if we want to support fancy 
+      // chrome effects like transparent controls floating over content, transparent Web browsers, and
+      // things like that, and the perf bugs are fixed.
+      nsCOMPtr<nsIDocShellTreeItem> container(do_QueryInterface(mContainer));
+      nsCOMPtr<nsIDocShellTreeItem> parentContainer;
+      PRInt32 itemType;
+      if (nsnull == container
+          || NS_FAILED(container->GetParent(getter_AddRefs(parentContainer)))
+          || nsnull == parentContainer
+          || NS_FAILED(parentContainer->GetItemType(&itemType))
+          || itemType != nsIDocShellTreeItem::typeContent) {
+        containerView = nsnull;
+      } else {
+        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(parentContainer));
+        if (nsnull == webShell || IsWebShellAFrameSet(webShell)) {
+          containerView = nsnull;
+        }
+      }
+    }
+  }
+
+  rv = mView->Init(mViewManager, tbounds, containerView);
   if (NS_FAILED(rv))
     return rv;
 
   rv = mView->CreateWidget(kWidgetCID, nsnull,
                            aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
                            PR_TRUE, PR_FALSE);
-
   if (rv != NS_OK)
     return rv;
 

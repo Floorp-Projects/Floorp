@@ -2555,18 +2555,26 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     return;
   }
 
-  // Ensure that we always paint a color for the root (in case there's
-  // no background at all or a partly transparent image).
   nsStyleBackground canvasColor(*color);
-  if (canvasColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
-    canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    aPresContext->GetDefaultBackgroundColor(&canvasColor.mBackgroundColor);
-  }
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIViewManager> vm;
   shell->GetViewManager(getter_AddRefs(vm));
+
+  if (canvasColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
+    nsIView* rootView;
+    vm->GetRootView(rootView);
+    nsIView* rootParent;
+    rootView->GetParent(rootParent);
+    if (nsnull == rootParent) {
+      // Ensure that we always paint a color for the root (in case there's
+      // no background at all or a partly transparent image).
+      canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+      aPresContext->GetDefaultBackgroundColor(&canvasColor.mBackgroundColor);
+    }
+  }
+
   vm->SetDefaultBackgroundColor(canvasColor.mBackgroundColor);
 
   // Since nsHTMLContainerFrame::CreateViewForFrame might have created

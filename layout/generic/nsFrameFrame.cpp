@@ -326,17 +326,24 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
+  // nsHTMLFrameInnerFrame is going to create a view for its frame
+  // right away, in the call to Init().  If we need a view for the
+  // OuterFrame but we wait for the normal view creation path in
+  // nsCSSFrameConstructor, then we will lose because the InnerFrame's
+  // view's parent will already have been set to some outer view
+  // (e.g., the canvas) when it really needs to have the OuterFrame's
+  // view as its parent. So, create the OuterFrame's view right away
+  // if we need it, and the InnerFrame's view will get it as the parent.
+  nsIView* view = nsnull;
+  GetView(aPresContext, &view);
+  if (!view) {
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
+    GetView(aPresContext, &view);
+  }
+
   const nsStyleDisplay* disp;
   aParent->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
   if (disp->mDisplay == NS_STYLE_DISPLAY_DECK) {
-    nsIView* view = nsnull;
-    GetView(aPresContext, &view);
-
-    if (!view) {
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
-      GetView(aPresContext, &view);
-    }
-
     nsCOMPtr<nsIWidget> widget;
     view->GetWidget(*getter_AddRefs(widget));
 
@@ -1239,6 +1246,7 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   nsIView* view;
   nsresult rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, NS_GET_IID(nsIView),
                                         (void **)&view);
+
   if (NS_OK != rv) {
     NS_ASSERTION(0, "Could not create view for nsHTMLFrame");
     return rv;

@@ -83,7 +83,7 @@ public:
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.
-   * One of following must be true:
+   * At least one of following must be true:
    * a) the aWidget parameter is an nsIWidget instance to render into 
    *    that is not owned by any view and aView has no widget, or
    * b) aView has a nsIWidget instance and aWidget is null, or

@@ -103,7 +103,13 @@ nsView::~nsView()
 
   while (GetFirstChild() != nsnull)
   {
-    GetFirstChild()->Destroy();
+    nsView* child = GetFirstChild();
+    if (child->GetViewManager() == mViewManager) {
+      child->Destroy();
+    } else {
+      // just unhook it. Someone else will want to destroy this.
+      RemoveChild(child);
+    }
   }
 
   if (nsnull != mViewManager)
@@ -112,24 +118,23 @@ nsView::~nsView()
     
     if (nsnull != rootView)
     {
+      // Root views can have parents!
+      if (nsnull != mParent)
+      {
+        mViewManager->RemoveChild(this);
+      }
+
       if (rootView == this)
       {
         // Inform the view manager that the root view has gone away...
         mViewManager->SetRootView(nsnull);
       }
-      else
-      {
-        if (nsnull != mParent)
-        {
-          mViewManager->RemoveChild(this);
-        }
-      }
-    } 
+    }
     else if (nsnull != mParent)
     {
       mParent->RemoveChild(this);
     }
-
+    
     nsView* grabbingView = mViewManager->GetMouseEventGrabber(); //check to see if we are capturing!!!
     if (grabbingView == this)
     {
