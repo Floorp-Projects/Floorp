@@ -131,6 +131,8 @@
               <menuitem label="&tableCaptionNone.label;"  value=""/>
               <menuitem label="&tableCaptionAbove.label;" value="top"/>
               <menuitem label="&tableCaptionBelow.label;" value="bottom"/>
+              <menuitem label="&tableCaptionLeft.label;"  value="left"/>
+              <menuitem label="&tableCaptionRight.label;" value="right"/>
             </menupopup>
           </menulist>
         </hbox>
