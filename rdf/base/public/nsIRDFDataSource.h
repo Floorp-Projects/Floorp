@@ -27,6 +27,7 @@
 #define nsIRDFDataSource_h__
 
 #include "nsISupports.h"
+#include "nsISupportsArray.h"
 
 // {0F78DA58-8321-11d2-8EAC-00805F29F370}
 #define NS_IRDFDATASOURCE_IID \
@@ -187,15 +188,12 @@ public:
     NS_IMETHOD Flush(void) = 0;
 
     /**
-     * Determine whether the specified command is enabled for the
-     * resource.
-     *
-     * XXX We will probably need to make this interface much more intricate
-     * to handle arbitrary arguments and selection sets.
+     * Returns the intersection of enabled commands for the set of targets
+     * specified. 
      */
-    NS_IMETHOD IsCommandEnabled(const char* aCommand,
-                                nsIRDFResource* aCommandTarget,
-                                PRBool* aResult) = 0;
+    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
+                                  nsISupportsArray* aArguments,
+                                  nsIEnumerator**   aResult) = 0;
 
     /**
      * Perform the specified command on the resource.
@@ -203,8 +201,9 @@ public:
      * XXX We will probably need to make this interface much more intricate
      * to handle arbitrary arguments and selection sets.
      */
-    NS_IMETHOD DoCommand(const char* aCommand,
-                         nsIRDFResource* aCommandTarget) = 0;
+    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+                         nsIRDFResource*   aCommand,
+                         nsISupportsArray* aArguments) = 0;
 };
 
 #endif /* nsIRDFDataSource_h__ */

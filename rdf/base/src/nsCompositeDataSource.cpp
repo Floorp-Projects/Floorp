@@ -45,6 +45,8 @@
 #include "nsIRDFObserver.h"
 #include "nsIComponentManager.h"
 #include "nsVoidArray.h"
+#include "nsCOMPtr.h"
+#include "nsIEnumerator.h"
 #ifdef NS_DEBUG
 #include "prlog.h"
 #include "prprf.h"
@@ -130,13 +132,13 @@ public:
 
     NS_IMETHOD Flush();
 
-    NS_IMETHOD IsCommandEnabled(const char* aCommand,
-                                nsIRDFResource* aCommandTarget,
-                                PRBool* aResult);
+    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
+                                  nsISupportsArray* aArguments,
+                                  nsIEnumerator**   aResult);
 
-    NS_IMETHOD DoCommand(const char* aCommand,
-                         nsIRDFResource* aCommandTarget);
-
+    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+                         nsIRDFResource*   aCommand,
+                         nsISupportsArray* aArguments);
 
     // nsIRDFCompositeDataSource interface
     NS_IMETHOD AddDataSource(nsIRDFDataSource* source);
@@ -866,20 +868,43 @@ CompositeDataSourceImpl::Flush()
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::IsCommandEnabled(const char* aCommand,
-                                          nsIRDFResource* aCommandTarget,
-                                          PRBool* aResult)
+CompositeDataSourceImpl::GetEnabledCommands(nsISupportsArray* aSources,
+                                            nsISupportsArray* aArguments,
+                                            nsIEnumerator**   aResult)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCOMPtr<nsIEnumerator> commands;        // union of enabled commands
+    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        nsIEnumerator* dsCmds;
+        nsresult rv = ds->GetEnabledCommands(aSources, aArguments, &dsCmds);
+        if (NS_SUCCEEDED(rv)) {
+            if (commands == nsnull) {
+                commands = dont_QueryInterface(dsCmds);
+            }
+            else {
+                nsIEnumerator* unionCmds;
+                rv = NS_NewUnionEnumerator(commands, dsCmds, &unionCmds);
+                if (NS_FAILED(rv)) return rv;
+                NS_RELEASE(dsCmds);
+                commands = dont_QueryInterface(unionCmds);
+            }
+        }
+    }
+    *aResult = commands;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::DoCommand(const char* aCommand,
-                                   nsIRDFResource* aCommandTarget)
+CompositeDataSourceImpl::DoCommand(nsISupportsArray* aSources,
+                                   nsIRDFResource*   aCommand,
+                                   nsISupportsArray* aArguments)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        nsresult rv = ds->DoCommand(aSources, aCommand, aArguments);
+        if (NS_FAILED(rv)) return rv;   // all datasources must succeed
+    }
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -93,7 +93,7 @@ nsRDFResource::Init(const char* uri)
         return NS_ERROR_OUT_OF_MEMORY;
 
     // don't replace an existing resource with the same URI automatically
-    return gRDFService->RegisterResource(this, PR_FALSE);
+    return gRDFService->RegisterResource(this, PR_TRUE);
 }
 
 NS_IMETHODIMP
