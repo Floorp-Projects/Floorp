@@ -167,6 +167,19 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     JS_UNLOCK_GC(rt);
 
     if (last) {
+        /*
+         * If cx is not in a request already, begin one now so that we wait
+         * for any racing GC started on a not-last context to finish, before
+         * we plow ahead and unpin atoms.  Note that even though we begin a
+         * request here if necessary, we end all requests on cx below before
+         * forcing a final GC.  This lets any not-last context destruction
+         * racing in another thread try to force or maybe run the GC, but by
+         * that point, rt->state will not be JSRTS_UP, and that GC attempt
+         * will return early.
+         */
+        if (cx->requestDepth == 0)
+            JS_BeginRequest(cx);
+
         /* Unpin all pinned atoms before final GC. */
         js_UnpinPinnedAtoms(&rt->atomState);
 
