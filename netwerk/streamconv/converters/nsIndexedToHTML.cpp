@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Bradley Baetz <bbaetz@cs.mcgill.ca>
+ *                 Christopher A. Aillon <christopher@aillon.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -102,7 +103,7 @@ nsIndexedToHTML::AsyncConvertData(const PRUnichar *aFromType,
     return Init(aListener);
 }
 
-static NS_NAMED_LITERAL_STRING(tableHeading,"<table border=\"0\" cellpadding=\"2\">\n");
+static NS_NAMED_LITERAL_STRING(tableHeading,"<table>\n");
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
@@ -178,15 +179,25 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     }
 
     nsString buffer;
-    buffer.Assign(NS_LITERAL_STRING("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n"));    
-    
+    buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0"));
+
+    nsXPIDLCString encoding;
+    rv = mParser->GetEncoding(getter_Copies(encoding));
+    if (NS_SUCCEEDED(rv) && !encoding.IsEmpty()) {
+        buffer.Append(NS_LITERAL_STRING("\" encoding=\""));
+        buffer.AppendWithConversion(encoding);
+    }
+    buffer.Append(NS_LITERAL_STRING("\"?>\n") +
+                  NS_LITERAL_STRING("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" ") +
+                  NS_LITERAL_STRING("\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"));
+
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
 
     char* spec = nsCRT::strdup(baseUri.get());
     nsUnescape(spec);
-    
-    buffer.Append(NS_LITERAL_STRING("<html>\n<head><title>"));
+
+    buffer.Append(NS_LITERAL_STRING("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>"));
 
     nsXPIDLString title;
     nsAutoString uniSpec; uniSpec.AssignWithConversion(spec);
@@ -204,16 +215,16 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     buffer.Append(NS_LITERAL_STRING("</title><base href=\""));
     buffer.Append(NS_ConvertASCIItoUCS2(baseUri));
-    buffer.Append(NS_LITERAL_STRING("\">\n"));
-    
-    nsXPIDLCString encoding;
-    rv = mParser->GetEncoding(getter_Copies(encoding));
-    if (NS_SUCCEEDED(rv) && !encoding.IsEmpty()) {
-        buffer.Append(NS_LITERAL_STRING("<meta http-equiv=\"Content-Type\" content=\"text/html; charset="));
-        buffer.AppendWithConversion(encoding);
-        buffer.Append(NS_LITERAL_STRING("\">\n"));
-    }
-    
+    buffer.Append(NS_LITERAL_STRING("\"/>\n"));
+
+    buffer.Append(NS_LITERAL_STRING("<style type=\"text/css\">\n") +
+                  NS_LITERAL_STRING("img { border: 0; padding: 0 2px; vertical-align: text-bottom; }\n") +
+                  NS_LITERAL_STRING("td  { font-family: monospace; padding: 2px 3px; text-align: right; vertical-align: bottom; }\n") +
+                  NS_LITERAL_STRING("td:first-child { text-align: left; padding: 2px 10px 2px 3px; }\n") +
+                  NS_LITERAL_STRING("table { border: 0; }\n") +
+                  NS_LITERAL_STRING("a.symlink { font-style: italic; }\n") +
+                  NS_LITERAL_STRING("</style>\n"));
+
     buffer.Append(NS_LITERAL_STRING("</head>\n<body>\n<h1>"));
     
     char* escaped = nsEscapeHTML(spec);
@@ -230,7 +241,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
     
     buffer.Append(title);
-    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr>") + tableHeading);
+    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr/>") + tableHeading);
 
     //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
 
@@ -267,8 +278,8 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus) {
     nsresult rv = NS_OK;
     nsString buffer;
-    buffer.Assign(NS_LITERAL_STRING("</table><hr></body></html>\n"));
-    
+    buffer.Assign(NS_LITERAL_STRING("</table><hr/></body></html>\n"));
+
     nsCOMPtr<nsIInputStream> inputData;
     
     rv = NS_NewStringInputStream(getter_AddRefs(inputData), buffer);
@@ -307,33 +318,34 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         return NS_ERROR_NULL_POINTER;
 
     nsString pushBuffer;
-   
-    pushBuffer.Append(NS_LITERAL_STRING("<tr valign=\"bottom\">\n <td><a href=\""));
+    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td><a"));
+
+    PRUint32 type;
+    aIndex->GetType(&type);
+    if (type == nsIDirIndex::TYPE_SYMLINK) {
+        pushBuffer.Append(NS_LITERAL_STRING(" class=\"symlink\""));
+    }
+
+    pushBuffer.Append(NS_LITERAL_STRING(" href=\""));
 
     nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
     
     pushBuffer.AppendWithConversion(loc);
 
-    pushBuffer.Append(NS_LITERAL_STRING("\"> <img border=\"0\" align=\"absbottom\" hspace=\"2\" src=\""));
+    pushBuffer.Append(NS_LITERAL_STRING("\"><img src=\""));
 
-    PRUint32 type;
-    aIndex->GetType(&type);
     switch (type) {
     case nsIDirIndex::TYPE_DIRECTORY:
     case nsIDirIndex::TYPE_SYMLINK:
-        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-menu\" alt=\"Directory"));
+        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-menu\" alt=\"Directory: "));
         break;
     case nsIDirIndex::TYPE_FILE:
     case nsIDirIndex::TYPE_UNKNOWN:
-        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-unknown\" alt=\"File"));
+        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-unknown\" alt=\"File: "));
         break;
     }
-    pushBuffer.Append(NS_LITERAL_STRING("\"><tt>"));
-
-    
-    if (type == nsIDirIndex::TYPE_SYMLINK)
-        pushBuffer.Append(NS_LITERAL_STRING("<i>"));
+    pushBuffer.Append(NS_LITERAL_STRING("\"/>"));
 
     nsXPIDLString tmp;
     aIndex->GetDescription(getter_Copies(tmp));
@@ -341,11 +353,8 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     pushBuffer.Append(escaped);
     nsMemory::Free(escaped);
 
-    if (type == nsIDirIndex::TYPE_SYMLINK)
-        pushBuffer.Append(NS_LITERAL_STRING("</i>"));
+    pushBuffer.Append(NS_LITERAL_STRING("</a></td>\n <td>"));
 
-    pushBuffer.Append(NS_LITERAL_STRING("</tt></a></td>\n<td align=\"right\"><tt>"));
-    
     PRUint32 size;
     aIndex->GetSize(&size);
     
@@ -355,18 +364,15 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         nsAutoString  sizeString;
         FormatSizeString(size, sizeString);
         pushBuffer.Append(sizeString);
-        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));   // for a little extra space
-    } else {
-        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));
     }
 
-    pushBuffer.Append(NS_LITERAL_STRING("</tt></td>\n <td align=\"right\"><tt>"));
+    pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
 
     PRTime t;
     aIndex->GetLastModified(&t);
 
     if (t == -1) {
-        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;</tt></td>\n <td><tt>&nbsp;"));
+        pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
     } else {
         nsAutoString formatted;
         mDateTime->FormatPRTime(nsnull,
@@ -375,7 +381,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                                 t,
                                 formatted);
         pushBuffer.Append(formatted);
-        pushBuffer.Append(NS_LITERAL_STRING("</tt></td>\n <td align=\"right\"><tt>"));
+        pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
         mDateTime->FormatPRTime(nsnull,
                                 kDateFormatNone,
                                 kTimeFormatSeconds,
@@ -384,7 +390,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.Append(formatted);
     }
 
-    pushBuffer.Append(NS_LITERAL_STRING("</tt></td>\n</tr>\n"));
+    pushBuffer.Append(NS_LITERAL_STRING("</td>\n</tr>\n"));
 
     // Split this up to avoid slow layout performance with large tables
     // - bug 85381
@@ -413,9 +419,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 void nsIndexedToHTML::FormatSizeString(PRUint32 inSize, nsString& outSizeString)
 {
     outSizeString.Truncate();
-    if (inSize == 0) {
-        outSizeString.Append(NS_LITERAL_STRING("&nbsp;"));
-    } else {
+    if (inSize > 0) {
         // round up to the nearest Kilobyte
         PRUint32  upperSize = (inSize + 1023) / 1024;
         outSizeString.AppendInt(upperSize);
