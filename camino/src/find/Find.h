@@ -38,8 +38,8 @@
 
 
 // Same as above, but use most recent values for search string,
-// case sensitivity, wrap-around, and backwards search.
-- (BOOL)findInPage;
+// case sensitivity, and wrap-around.
+- (BOOL)findInPage:(BOOL)inBackwards;
 
 // Get the most recent search string.
 - (NSString*)lastFindText;

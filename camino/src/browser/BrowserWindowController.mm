@@ -1460,9 +1460,9 @@ static NSArray* sToolbarDefaults = nil;
     wrap:inWrap backwards:inBackwards];
 }
 
-- (BOOL)findInPage
+- (BOOL)findInPage:(BOOL)inBackwards
 {
-  return [[mBrowserView getBrowserView] findInPage];
+  return [[mBrowserView getBrowserView] findInPage:inBackwards];
 }
 
 - (NSString*)lastFindText

@@ -107,6 +107,7 @@
 -(IBAction) findInPage:(id)aSender;
 -(IBAction) findAgain:(id)aSender;
 -(IBAction) getInfo:(id)aSender;
+-(IBAction) findPrevious:(id)aSender;
 
 // Go menu actions.
 -(IBAction) goBack:(id)aSender;

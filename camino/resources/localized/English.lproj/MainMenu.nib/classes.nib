@@ -25,6 +25,7 @@
                 feedbackLink = id; 
                 findAgain = id; 
                 findInPage = id; 
+                findPrevious = id; 
                 getInfo = id; 
                 goBack = id; 
                 goForward = id; 

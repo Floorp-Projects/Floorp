@@ -514,7 +514,17 @@ const int kReuseWindowOnAE = 2;
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController findInPage];
+    [browserController findInPage:NO];
+  else
+    NSBeep();
+}
+
+// Called in response to "Find Previous" in edit menu.  
+-(IBAction) findPrevious:(id)aSender
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController findInPage:YES];
   else
     NSBeep();
 }

@@ -175,7 +175,7 @@ enum {
 - (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
             wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;
 
-- (BOOL)findInPage;
+- (BOOL)findInPage:(BOOL)inBackwards;
 - (NSString*)lastFindText;
 
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem;

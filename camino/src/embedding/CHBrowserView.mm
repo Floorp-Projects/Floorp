@@ -578,14 +578,17 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     return found;
 }
 
-- (BOOL)findInPage
+- (BOOL)findInPage:(BOOL)inBackwards
 {
   nsCOMPtr<nsIWebBrowserFind> webFind = do_GetInterface(_webBrowser);
   if (!webFind)
     return NO;
 
+  webFind->SetFindBackwards(inBackwards);
+
   PRBool found;
   webFind->FindNext(&found);
+
   return (BOOL)found;
 }
 
