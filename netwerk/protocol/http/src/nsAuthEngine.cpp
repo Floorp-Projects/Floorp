@@ -23,6 +23,7 @@
 #include "nsAuthEngine.h"
 #include "nsAuth.h"
 #include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsCRT.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
@@ -78,6 +79,8 @@ nsAuthEngine::Logout()
 nsresult
 nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
 {
+    nsCOMPtr<nsIURL> url;
+
     nsresult rv = NS_OK;
     if (!i_URI || !o_AuthString)
         return NS_ERROR_NULL_POINTER;
@@ -93,8 +96,13 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
     PRInt32 port;
     rv = i_URI->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
+
     nsXPIDLCString dir;
-    rv = i_URI->GetPath(getter_Copies(dir));
+    url = do_QueryInterface(i_URI);
+    if (url)
+        rv = url->GetDirectory(getter_Copies(dir));
+    else
+        rv = i_URI->GetPath(getter_Copies(dir));
     if (NS_FAILED(rv)) return rv;
 
     // just in case there is a prehost in the URL...
@@ -124,7 +132,12 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
 
         (void)auth->uri->GetHost(getter_Copies(authHost));
         (void)auth->uri->GetPort(&authPort);
-        (void)auth->uri->GetPath(getter_Copies(authDir));
+
+        url = do_QueryInterface(auth->uri);
+        if (url)
+            (void)url->GetDirectory(getter_Copies(authDir));
+        else
+            (void)auth->uri->GetPath(getter_Copies(authDir));
 
 #if 0 // turn on later...
         // if a prehost was provided compare the usernames (which should) 
