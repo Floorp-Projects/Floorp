@@ -379,7 +379,7 @@ public class ClassFileWriter {
 
         itsExceptionTable = null;
         itsExceptionTableTop = 0;
-        itsLineNumberTable = null;
+        itsLineNumberTableTop = 0;
         itsCodeBufferTop = 0;
         itsCurrentMethod = null;
         itsMaxStack = 0;
