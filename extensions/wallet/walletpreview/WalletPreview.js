@@ -47,45 +47,19 @@
       for (i=1; !(i>=prefillList.length-2); i+=3) {
         if(prefillList[i] != 0) {
           count = prefillList[i];
-
-/* the right way to do it
- *        top.frames[list_frame].document.write(
- *              "<tr>" +
- *                "<td>" + prefillList[i+1] + ":  </td>" +
- *                "<td>" +
- *                  "<select>" 
- *        )
- *        count--;
- *      }
- *      top.frames[list_frame].document.write(
- *                    "<option VALUE='"+prefillList[i+1]+"'>" +
- *                      prefillList[i+2] +
- *                    "</option>" 
- *      )
- *
- * but because of bug 18479 we have to hack things by putting the
- * <select> and the first <option> into a single write statement as follows:
- */
-
           top.frames[list_frame].document.write(
                 "<tr>" +
                   "<td>" + prefillList[i+1] + ":  </td>" +
                   "<td>" +
-                    "<select>" +
-                      "<option VALUE='"+prefillList[i+1]+"'>" +
-                        prefillList[i+2] +
-                      "</option>" 
+                    "<select>" 
           )
           count--;
-        } else {
-          top.frames[list_frame].document.write(
+        }
+        top.frames[list_frame].document.write(
                       "<option VALUE='"+prefillList[i+1]+"'>" +
                         prefillList[i+2] +
                       "</option>" 
-          )
-/* end of hack */
-
-        }
+        )
         if(count == 0) {
           top.frames[list_frame].document.write(
                       "<option VALUE='"+prefillList[i+1]+"'>&lt;do not prefill&gt;</option>" +
