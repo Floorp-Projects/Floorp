@@ -104,7 +104,6 @@
 				F6BD641C01B3156701A962F7,
 				0FA8EF9A0423B1F500A80166,
 				F6BD644F01B315FA01A962F7,
-				F6BD645001B315FA01A962F7,
 				F53A902202C1127A01A967F3,
 				A708E74103FB9041003C038B,
 				A708E74303FB90AB003C038B,
@@ -1509,7 +1508,6 @@
 				3F44AC7C05BDFB9E00CB4B08,
 				3F44AC7D05BDFB9E00CB4B08,
 				3F44AC7E05BDFB9E00CB4B08,
-				3F44AC7F05BDFB9E00CB4B08,
 				3F44AFED05BDFBA100CB4B08,
 				3FE9A81B05E28BFA00B86211,
 				3FE9A81C05E28BFA00B86211,
@@ -1963,12 +1961,6 @@
 		};
 		3F44AC7E05BDFB9E00CB4B08 = {
 			fileRef = 3FC7EBFA05AA1D1C00C557AA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AC7F05BDFB9E00CB4B08 = {
-			fileRef = 3F7C6CC505B5B42E002FFFD3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -2621,7 +2613,6 @@
 				3F44AD2205BDFB9F00CB4B08,
 				3F44AD2305BDFB9F00CB4B08,
 				3F44AD2405BDFB9F00CB4B08,
-				3F44AD2505BDFB9F00CB4B08,
 				3F44AD2605BDFB9F00CB4B08,
 				3F44AD2705BDFB9F00CB4B08,
 				3F44AD2805BDFB9F00CB4B08,
@@ -3127,12 +3118,6 @@
 		};
 		3F44AD2405BDFB9F00CB4B08 = {
 			fileRef = F517941F027F3F2901A967DF;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AD2505BDFB9F00CB4B08 = {
-			fileRef = F6BD645001B315FA01A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5450,7 +5435,6 @@
 				3F44AEB505BDFBA000CB4B08,
 				3F44AEB605BDFBA000CB4B08,
 				3F44AEB705BDFBA000CB4B08,
-				3F44AEB805BDFBA000CB4B08,
 				3F44AFF305BDFBA100CB4B08,
 				3FE9A81D05E28BFA00B86211,
 				3FE9A81E05E28BFA00B86211,
@@ -5904,12 +5888,6 @@
 		};
 		3F44AEB705BDFBA000CB4B08 = {
 			fileRef = 3FC7EBFA05AA1D1C00C557AA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AEB805BDFBA000CB4B08 = {
-			fileRef = 3F7C6CC505B5B42E002FFFD3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7472,7 +7450,6 @@
 				3F44AFA405BDFBA000CB4B08,
 				3F44AFA505BDFBA000CB4B08,
 				3F44AFA605BDFBA000CB4B08,
-				3F44AFA705BDFBA000CB4B08,
 				3F44AFA805BDFBA000CB4B08,
 				3F44AFAA05BDFBA000CB4B08,
 				3F44AFAB05BDFBA000CB4B08,
@@ -7609,12 +7586,6 @@
 		};
 		3F44AFA605BDFBA000CB4B08 = {
 			fileRef = F56F246502AC723001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFA705BDFBA000CB4B08 = {
-			fileRef = F56F246902AC723001A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -10699,7 +10670,6 @@
 				F56F246202AC723001A967F3,
 				F56F246402AC723001A967F3,
 				F56F246502AC723001A967F3,
-				F56F246902AC723001A967F3,
 				F56F246B02AC723001A967F3,
 				F56F247002AC723001A967F3,
 				F56F247302AC723001A967F3,
@@ -10850,14 +10820,6 @@
 			lastKnownFileType = archive.ar;
 			name = libgkplugin.a;
 			path = ../modules/plugin/base/src/libgkplugin.a;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F56F246902AC723001A967F3 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libjsdom.a;
-			path = ../dom/src/build/libjsdom.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -12709,14 +12671,6 @@
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libgkplugin.dylib;
 			path = ../modules/plugin/base/src/libgkplugin.dylib;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F6BD645001B315FA01A962F7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.bundle";
-			name = libjsdom.dylib;
-			path = ../dist/Embed/components/libjsdom.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
