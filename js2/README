@@ -1,3 +1,53 @@
+Build instructions from pschwartau@netscape.com as of 2 Dec 2001 ...
+
+Building JS2 on WINNT:
+---------------------------------------------------------------------------------------------
+[/d/JS_2] cvs -z3 co mozilla/js2
+          cvs -z3 co mozilla/js/src/fdlibm
+
+In Visual C++:
+
+Workspace:    D:\JS_2\mozilla\js2\src\winbuild\dikdik.dsw
+
+Project Files:   D:\JS_2\mozilla\js2\src\winbuild\DikDik.dsp
+                 D:\JS_2\mozilla\js2\tests\cpp\winbuild\DikDik_shell.dsp  <---------- active project
+                 D:\JS_2\mozilla\js2\src\winbuild\fdlibm.dsp
+
+
+RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
+(Note the 3 underbars between "shell" and "Win32" in "DikDik_shell___Win32_Debug")                      [/d/JS_2/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug] ./DikDik_shell.exe
+
+
+
+Building JS2 on LINUX:
+---------------------------------------------------------------------------------------------
+[/d/JS_2] cvs -z3 co mozilla/js2
+               cvs -z3 co mozilla/js/src/fdlibm
+
+[/d/JS_2] cd mozilla/js2
+
+[/d/JS_2/mozilla/js2] automake    <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] autoconf      <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] ./configure --enable-debug     <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] make
+
+
+
+Building JS2 on MAC 9.1
+---------------------------------------------------------------------------------------------
+Get updated CodeWarrior Pro 7 tools !
+
+Open (path to):mozilla:js2:tests:cpp:macbuild:js2_shell.mcp and build it.
+There is also (path to ):mozilla:js2:tests:cpp:macbuild:parser_test.mcp, if you just want to try out the full parser
+without getting complaints about unimplemented features from the back end.
+
+
+
+
+/***************************************************************************/
+// The stuff below looks pretty out of date to me.
+// I wonder if it shouldn't just be removed
+
 parse functions
     parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers,
     parseParenthesesAndIdentifierQualifiers(const Token &tParen,
