@@ -34,7 +34,8 @@ extern Bool NET_AskForAuthString(MWContext * context,
                      				URL_Struct *URL_s,
                      				char * authenticate,
                      				char * prot_template,
-									Bool already_sent_auth);
+									Bool already_sent_auth,
+                                    void * closure);
 
 /* returns a authorization string if one is required, otherwise
  * returns NULL
@@ -58,7 +59,8 @@ PUBLIC PRBool
 NET_AskForProxyAuth(MWContext * context,
 		    char *   proxy_addr,
 		    char *   pauth_params,
-		    PRBool  already_sent_auth);
+		    PRBool  already_sent_auth,
+            void *   closure);
 
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieBehaviorPrefChanged(const char * newpref, void * data);

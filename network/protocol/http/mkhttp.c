@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -128,7 +129,6 @@ PRIVATE XP_List * http_connection_list=0;
 PRIVATE IdentifyMeEnum http_identification_method = DoNotIdentifyMe;
 PRIVATE Bool sendRefererHeader=TRUE;
 
-
 PUBLIC const HTTP_Version DEFAULT_VERSION = ONE_POINT_ONE;
 PRIVATE const char *VERSION_STRING_ONE_ONE  = "HTTP/1.1";
 PRIVATE const char *VERSION_STRING_ONE_ZERO = "HTTP/1.0";
@@ -139,6 +139,8 @@ PRIVATE const char *VERSION_STRING_ONE_ZERO = "HTTP/1.0";
 typedef enum {
     HTTP_START_CONNECT,
     HTTP_FINISH_CONNECT,
+    HTTP_WAIT_FOR_AUTH,
+    HTTP_RESUME_WITH_AUTH,
     HTTP_SEND_PROXY_TUNNEL_REQUEST,
     HTTP_BEGIN_UPLOAD_FILE,
     HTTP_SEND_REQUEST,
@@ -2409,7 +2411,10 @@ net_revert_post_data(ActiveEntry * ce)
     }
   }
 }
-    
+   
+/* forward declaration */
+PRIVATE int net_finish_setup_http_stream(ActiveEntry * ce);
+
 /* sets up the stream and performs special actions like redirect and
  * retry on authorization
  *
@@ -2418,10 +2423,10 @@ net_revert_post_data(ActiveEntry * ce)
 PRIVATE int
 net_setup_http_stream(ActiveEntry * ce) {
     HTTPConData * cd = (HTTPConData *)ce->con_data;
+    NET_AuthClosure * auth_closure;
     XP_Bool need_to_do_again = FALSE;
-    MWContext * stream_context;
 
-    TRACEMSG(("NET_ProcessHTTP: setting up stream"));
+    TRACEMSG(("NET_ProcessHTTP: setting up stream: %s", ce->URL_s->address));
 
     /* save this since it can be changed in lots
      * of places.  This will be used for graph progress
@@ -2487,24 +2492,43 @@ net_setup_http_stream(ActiveEntry * ce) {
     if(cd->authorization_required) {
         /* clear to prevent tight loop */
         int status;
+
         NET_ClearReadSelect(ce->window_id, cd->connection->sock);
 
 #if defined(SMOOTH_PROGRESS)
         PM_Suspend(ce->window_id, ce->URL_s);
 #endif
 
+        /* tuck the ce away for the auth callback */
+        /* set up the auth closure struct for the password dialog */
+		auth_closure = PR_NEWZAP(NET_AuthClosure);
+        if (!auth_closure) {
+          return(MK_INTERRUPTED);
+        }
+        
+        auth_closure->_private = (void *) ce;
+        auth_closure->msg = NULL;
+        auth_closure->user = NULL;
+        auth_closure->pass = NULL;
+
         status = NET_AskForAuthString(ce->window_id, 
                     ce->URL_s, 
                     ce->URL_s->authenticate,
                     ce->URL_s->protection_template,
-                    cd->sent_authorization);
+                    cd->sent_authorization,
+                    (void *) auth_closure);
 
 #if defined(SMOOTH_PROGRESS)
         PM_Resume(ce->window_id, ce->URL_s);
 #endif
 
-        if(status == NET_RETRY_WITH_AUTH)
+        if (status == NET_RETRY_WITH_AUTH) {
             need_to_do_again = TRUE;
+        } else if (status == NET_WAIT_FOR_AUTH) {
+          if (!ce->URL_s->password)
+            cd->next_state = HTTP_WAIT_FOR_AUTH;
+          return(0);
+        }
         else
             ce->URL_s->dont_cache = TRUE;
 
@@ -2554,12 +2578,26 @@ net_setup_http_stream(ActiveEntry * ce) {
         PM_Suspend(ce->window_id, ce->URL_s);
 #endif
 
-        if(NET_AskForProxyAuth(ce->window_id,
-            proxyServer,
-            ce->URL_s->proxy_authenticate,
-            cd->sent_proxy_auth))
+        /* tuck the ce away for the auth callback */
+        /* set up the auth closure struct for the password dialog */
+		auth_closure = PR_NEWZAP(NET_AuthClosure);
+        if (!auth_closure) {
+          return(MK_INTERRUPTED);
+        }
+        
+        auth_closure->_private = (void *) ce;
+        auth_closure->msg = NULL;
+        auth_closure->user = NULL;
+        auth_closure->pass = NULL;
+
+        if(NET_AskForProxyAuth(ce->window_id, 
+                               proxyServer,
+                               ce->URL_s->proxy_authenticate,
+                               cd->sent_proxy_auth,
+                               (void *) auth_closure)) {
             need_to_do_again = TRUE;
-        else
+            TRACEMSG(("NET_AskForProxyAuth(): need_to_do_again: %s", ce->URL_s->address));
+        } else
             ce->URL_s->dont_cache = TRUE;
 
 #if defined(SMOOTH_PROGRESS)
@@ -2599,7 +2637,35 @@ net_setup_http_stream(ActiveEntry * ce) {
 
         return(0); /* continue */
 
-    } else if (cd->doing_redirect && ce->URL_s->redirecting_url &&
+    }
+
+    /* Now finish stream setup. Setup needs to be broken in half
+       'cuz in the case of modal dialogs, we need to wait for username
+       and password, then return to finish */
+    return (ce->status = net_finish_setup_http_stream(ce));
+}
+
+PUBLIC void
+NET_ResumeHTTP(ActiveEntry * ce, PRBool resume)
+{
+    HTTPConData * cd = (HTTPConData *) ce->con_data;
+
+    TRACEMSG (("NET_ResumeHTTP: %s", ce->URL_s->address));
+    if (resume)
+      cd->next_state = HTTP_SETUP_STREAM;
+    else
+      cd->next_state = HTTP_DONE;
+      
+    return;
+}
+
+PRIVATE int
+net_finish_setup_http_stream(ActiveEntry * ce)
+{
+    HTTPConData * cd = (HTTPConData *)ce->con_data;
+    MWContext * stream_context;
+
+    if (cd->doing_redirect && ce->URL_s->redirecting_url &&
                /* try and prevent a circular loop. wont work for dual doc loop */
                PL_strcmp(ce->URL_s->redirecting_url, ce->URL_s->address)) 
     {
@@ -3438,6 +3504,14 @@ net_ProcessHTTP (ActiveEntry *ce)
 	
         switch(cd->next_state) {
 
+        case HTTP_WAIT_FOR_AUTH:
+            TRACEMSG (("HTTP_WAIT_FOR_AUTH: %s", ce->URL_s->address));
+            cd->pause_for_read = TRUE;
+            break;
+        case HTTP_RESUME_WITH_AUTH:
+            TRACEMSG (("HTTP_RESUME_WITH_AUTH: %s", ce->URL_s->address));
+            ce->status = net_finish_setup_http_stream(ce);
+            break;
         case HTTP_START_CONNECT:
             ce->status = net_start_http_connect(ce);
             break;
