@@ -146,7 +146,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 XP_DIST_DEP_LIBS    := $(patsubst -l%,$(DIST)/lib/%.lib,$(XP_DIST_LIBS))
 else
 XP_DIST_DEP_LIBS	:= $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
-XP_DIST_DEP_LIBS	:= $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a)))
+XP_DIST_DEP_LIBS	:= $(wildcard $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s)))*)
 endif
 
 EXTRA_DEPS		= \
