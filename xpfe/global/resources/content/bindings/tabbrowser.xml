@@ -160,8 +160,8 @@
             mIcon: "", 
 
             onProgressChange : function (aWebProgress, aRequest,
-                      aCurSelfProgress, aMaxSelfProgress,
-                      aCurTotalProgress, aMaxTotalProgress) {
+                                         aCurSelfProgress, aMaxSelfProgress,
+                                         aCurTotalProgress, aMaxTotalProgress) {
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
@@ -253,7 +253,7 @@
             },
 
             onSecurityChange : function(aWebProgress, aRequest, aState) { 
-              if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
@@ -375,11 +375,14 @@
               loc = ({ spec: "" });
 
             var webProgress = this.mCurrentBrowser.webProgress;
+            var securityUI = this.mCurrentBrowser.securityUI;
             var i, p;
             for (i = 0; i < this.mProgressListeners.length; i++) {
               p = this.mProgressListeners[i];
               if (p) {
                 p.onLocationChange(webProgress, null, loc);
+                if (securityUI)
+                  p.onSecurityChange(webProgress, null, securityUI.state);
                 var listener = this.mTabListeners[this.mPanelContainer.selectedIndex];
                 if (listener.mIcon)
                   p.onLinkIconAvailable(listener.mIcon);
@@ -1067,6 +1070,10 @@
 
       <property name="contentDocument"
                 onget="return this.mCurrentBrowser.contentDocument;"
+                readonly="true"/>
+
+      <property name="securityUI"
+                onget="return this.mCurrentBrowser.securityUI;"
                 readonly="true"/>
 
       <constructor>

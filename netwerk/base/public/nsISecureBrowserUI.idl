@@ -30,8 +30,10 @@ interface nsIDOMElement;
 [scriptable, uuid(081e31e0-a144-11d3-8c7c-00609792278c)]
 interface nsISecureBrowserUI : nsISupports
 {
-    void init(in nsIDOMWindow window, in nsIDOMElement button);
-    void displayPageInfoUI();
+    void init(in nsIDOMWindow window);
+
+    readonly attribute long state;
+    readonly attribute AString tooltipText;
 };
 
 %{C++

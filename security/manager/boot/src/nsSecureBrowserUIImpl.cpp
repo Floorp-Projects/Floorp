@@ -68,9 +68,6 @@
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
-static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static const char *kNSSDialogsContractId = NS_NSSDIALOGS_CONTRACTID;
-
 #define IS_SECURE(state) ((state & 0xFFFF) == STATE_IS_SECURE)
 
 #if defined(PR_LOGGING)
@@ -121,20 +118,21 @@ NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
 
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindow *window,
-                            nsIDOMElement *button)
+nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
 {
   nsresult rv = NS_OK;
-  mSecurityButton = button;  /* may be null */
   mWindow = window;
 
-  nsCOMPtr<nsIStringBundleService> service(do_GetService(kCStringBundleServiceCID, &rv));
+  nsCOMPtr<nsIStringBundleService> service(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
   
   rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL,
                              getter_AddRefs(mStringBundle));
   if (NS_FAILED(rv)) return rv;
   
+  GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
+                  mTooltipText);
+
   // hook up to the form post notifications:
   nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (NS_SUCCEEDED(rv)) {
@@ -160,22 +158,17 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window,
 }
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::DisplayPageInfoUI()
+nsSecureBrowserUIImpl::GetState(PRInt32* aState)
 {
-#if 0
-  nsresult res = NS_OK;
-  nsCOMPtr<nsISecurityManagerComponent> psm(do_GetService(PSM_COMPONENT_CONTRACTID,
-                                                          &res));
-  if (NS_FAILED(res))
-    return res;
-  
-  nsXPIDLCString host;
-  if (mCurrentURI)
-    mCurrentURI->GetHost(getter_Copies(host));
-  
-  //    return psm->DisplayPSMAdvisor(mLastPSMStatus, host);
-#endif
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aState = mSecurityState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::GetTooltipText(nsAString& aText)
+{
+  aText = mTooltipText;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -389,29 +382,21 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
     }
 
-    if (eventSink)
-      eventSink->OnSecurityChange(aRequest, mSecurityState);
-          
-    if (!mSecurityButton)
-      return res;
-          
-    /* TNH - need event for changing the tooltip */
-
-    // Do we really need to look at res here? What happens if there's an error?
-    // We should still set the certificate authority display.
-
-    nsXPIDLString tooltip;
+    // update the tooltip text so it can be read
+    // when we do the security change notification
     if (info) {
+      nsXPIDLString tooltip;
       nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
       if (secInfo &&
           NS_SUCCEEDED(secInfo->GetShortSecurityDescription(getter_Copies(tooltip))) &&
           tooltip) {
-
-        res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("tooltiptext"),
-                                                nsString(tooltip));
-              
+        mTooltipText = tooltip;
       }
     }
+
+    if (eventSink)
+      eventSink->OnSecurityChange(aRequest, mSecurityState);
+
   }
 
   return res;
@@ -454,20 +439,6 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
   aURI->GetSpec(temp);
   printf("OnSecurityChange: (%x) %s\n", state, temp.get());
 #endif
-  /* Deprecated support for mSecurityButton */
-  if (mSecurityButton) {
-    NS_NAMED_LITERAL_STRING(level, "level");
-
-    if (state == (STATE_IS_SECURE|STATE_SECURE_HIGH)) {
-      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("high"));
-    } else if (state == (STATE_IS_SECURE|STATE_SECURE_LOW)) {
-      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("low"));
-    } else if (state == STATE_IS_BROKEN) {
-      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("broken"));
-    } else {
-      res = mSecurityButton->RemoveAttribute(level);
-    }
-  }
 
   return res;
 }
@@ -639,7 +610,11 @@ nsSecureBrowserUIImpl::SetBrokenLockIcon(nsISecurityEventSink *eventSink,
                                          nsIRequest* aRequest,
                                          PRBool removeValue)
 {
-  nsresult rv = NS_OK;
+  // update the tooltip text so it can be read
+  // when we do the security change notification
+  GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
+                  mTooltipText);
+
   if (removeValue) {
     if (eventSink)
       (void) eventSink->OnSecurityChange(aRequest, STATE_IS_INSECURE);
@@ -648,15 +623,7 @@ nsSecureBrowserUIImpl::SetBrokenLockIcon(nsISecurityEventSink *eventSink,
       (void) eventSink->OnSecurityChange(aRequest, (STATE_IS_BROKEN));
   }
   
-  nsAutoString tooltiptext;
-  GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
-                  tooltiptext);
-
-  /* TNH - need tooltip notification here */
-  if (mSecurityButton)
-    rv = mSecurityButton->SetAttribute(NS_LITERAL_STRING("tooltiptext"),
-                                       tooltiptext);
-  return rv;
+  return NS_OK;
 }
 
 //
@@ -712,7 +679,7 @@ nsresult nsSecureBrowserUIImpl::
 GetNSSDialogs(nsISecurityWarningDialogs **result)
 {
   nsresult rv;
-  nsCOMPtr<nsISecurityWarningDialogs> my_result(do_GetService(kNSSDialogsContractId, &rv));
+  nsCOMPtr<nsISecurityWarningDialogs> my_result(do_GetService(NS_NSSDIALOGS_CONTRACTID, &rv));
 
   if (NS_FAILED(rv)) 
     return rv;
