@@ -22,8 +22,8 @@
 * Functionality common to RegExp testing -
 */
 //-------------------------------------------------------------------------------------------------
-var MSG_PAT = '\nregexp = ';
-var MSG_STR = '\nstring = ';
+var MSG_PATTERN = '\nregexp = ';
+var MSG_STRING = '\nstring = ';
 var MSG_EXPECT = '\nExpect: ';
 var MSG_ACTUAL = '\nActual: ';
 var ERR_LENGTH = '\nERROR !!! match arrays have different lengths:';
@@ -86,7 +86,6 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
                         MSG_ACTUAL + formatArray(actualmatch) +
                         CHAR_NL
                        );
-          continue;
         }
 
       }
@@ -98,7 +97,6 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
                       MSG_ACTUAL + formatArray(actualmatch) +
                       CHAR_NL
                      );
-        continue;
       }
 
     }
@@ -112,13 +110,11 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
                       MSG_ACTUAL + actualmatch +
                       CHAR_NL
                      );
-        continue;
       }
       else // we did not expect a match
       {
         // Being ultra-cautious. Presumably expectedmatch===actualmatch===null
         reportCompare (expectedmatch, actualmatch, state);
-        continue;
       }
     }
   }
@@ -145,7 +141,7 @@ function getState(status, pattern, string)
   string = string.replace(/\v/g, '\\v');
   string = string.replace(/\f/g, '\\f');
 
-  return (status + MSG_PAT + pattern + MSG_STR + quote(string));
+  return (status + MSG_PATTERN + pattern + MSG_STRING + quote(string));
 }
 
 
