@@ -188,8 +188,10 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
         }
 
         nsIURI *uri = nsnull;
-        const char *uriStr = urlString.GetBuffer();
+        char *uriStr = urlString.ToNewCString();
+        if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
         rv = service->NewURI(urlString, nsnull, &uri);
+        nsCRT::free(uriStr);
         if (NS_FAILED(rv)) {
             DEBUG_PRINTF(PR_STDOUT, "cannot get uri\n");
             return NS_OK;

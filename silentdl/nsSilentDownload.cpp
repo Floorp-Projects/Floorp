@@ -856,8 +856,10 @@ nsSilentDownloadTask::DownloadSelf(PRInt32 range)
     if (NS_FAILED(result)) return result;
 
     nsIURI *uri = nsnull;
-    const char *uriStr = mUrl.GetBuffer();
+    char *uriStr = mUrl.ToNewCString();
+    if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
     result = service->NewURI(uriStr, nsnull, &uri);
+    nsCRT::free(uriStr);
     if (NS_FAILED(result)) return result;
 
     result = uri->QueryInterface(nsIURI::GetIID(), (void**)&pURL);
