@@ -82,6 +82,7 @@ nsPrefService::nsPrefService()
 nsPrefService::~nsPrefService()
 {
   PREF_Cleanup();
+  NS_IF_RELEASE(mCurrentFile);
 }
 
 
@@ -205,10 +206,19 @@ NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_r
 {
   nsresult rv;
 
-  // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
-  nsPrefBranch* prefBranch = new nsPrefBranch(aPrefRoot, PR_FALSE);
+  if ((nsnull != aPrefRoot) && (aPrefRoot != "")) {
+    // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
+    nsPrefBranch* prefBranch = new nsPrefBranch(aPrefRoot, PR_FALSE);
 
-  rv = prefBranch->QueryInterface(NS_GET_IID(nsIPrefBranch), (void **)_retval);
+    rv = prefBranch->QueryInterface(NS_GET_IID(nsIPrefBranch), (void **)_retval);
+  } else {
+    // special case caching the default root
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mRootBranch, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      *_retval = prefBranch;
+      NS_ADDREF(*_retval);
+    }
+  }
   return rv;
 }
 
