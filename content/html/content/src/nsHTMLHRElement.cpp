@@ -215,10 +215,23 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     nsHTMLValue value;
     // align: enum
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
-      text->mTextAlign = value.GetIntValue();
+    if (eHTMLUnit_Enumerated == value.GetUnit()) {
+      // Map align attribute into auto side margins
+      nsStyleSpacing* spacing = (nsStyleSpacing*)
+        aContext->GetMutableStyleData(eStyleStruct_Spacing);
+      nsStyleCoord c(eStyleUnit_Auto);
+      switch (value.GetIntValue()) {
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        spacing->mMargin.SetRight(c);
+        break;
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        spacing->mMargin.SetLeft(c);
+        break;
+      case NS_STYLE_TEXT_ALIGN_CENTER:
+        spacing->mMargin.SetLeft(c);
+        spacing->mMargin.SetRight(c);
+        break;
+      }
     }
 
     // width: pixel, percent
@@ -227,15 +240,23 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
+    if (eHTMLUnit_Pixel == value.GetUnit()) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       pos->mWidth.SetCoordValue(twips);
     }
-    else if (value.GetUnit() == eHTMLUnit_Percent) {
+    else if (eHTMLUnit_Percent == value.GetUnit()) {
       pos->mWidth.SetPercentValue(value.GetPercentValue());
     }
+
+    // size: pixel
+    aAttributes->GetAttribute(nsHTMLAtoms::size, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      pos->mHeight.SetCoordValue(twips);
+    }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
