@@ -3742,8 +3742,10 @@
   (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
     (let* ((var (scan-name world var-source))
            (local-type-env (type-env-add-binding type-env var element-type :const)))
-      (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world local-type-env value-expr)
-        (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
+      (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                           (scan-condition world local-type-env condition-expr)
+        (declare (ignore false-type-env))
+        (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world true-type-env value-expr)
           (let* ((source-is-vector (member collection-kind '(:string :vector)))
                  (source-is-string (eq collection-kind :string))
                  (destination-is-string (and source-is-vector (eq value-type (world-character-type world))))
@@ -3764,7 +3766,6 @@
                result-type
                (nbutlast result-annotated-expr)))
              ((eq value-expr var-source)
-              (assert-true (eq value-type element-type))
               (values
                `(remove-if-not #'(lambda (,var) ,condition-code) ,collection-code)
                result-type
@@ -4941,7 +4942,7 @@
      ;;Tuples and Records
      (new scan-new depict-new)
      (& scan-& depict-&)
-     (set-field scan-set-field depict-set-field)
+     #|(set-field scan-set-field depict-set-field)|#
      
      ;;Unions
      (in scan-in depict-in)
