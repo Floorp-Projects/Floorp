@@ -1742,6 +1742,44 @@ CString GetBrowser(void)
 	return retflag;
 }
 
+CString SubstituteValues(CString inLine)
+// Replace tokens in script template with appropriate locale values
+{
+	CString newValue, oldValue, strTemp;
+	int tokenStartPos, tokenEndPos,
+		searchPos=0, count=0;
+	int inLineLength = inLine.GetLength();
+	while (count < inLineLength)
+	{
+		tokenStartPos = inLine.Find('%', searchPos);
+		if (tokenStartPos != -1)
+		{
+			tokenEndPos = inLine.Find('%', tokenStartPos+1);
+			tokenEndPos += 1;
+			strTemp = inLine.Left(tokenEndPos);
+			oldValue = strTemp.Right(tokenEndPos-tokenStartPos);
+
+			WIDGET *w = findWidget(oldValue);
+			if (w)
+			{
+				 newValue = GetGlobal(oldValue);
+				 searchPos = 0;
+			}
+			else
+			{
+				newValue = oldValue;
+				searchPos = tokenEndPos;
+			}
+
+			inLine.Replace(oldValue, newValue);
+			count = tokenEndPos;
+		}
+		else
+			count = inLineLength;
+	}
+	return inLine;
+}
+
 void CreateLinuxInstaller()
 {
 	char currentdir[_MAX_PATH];
@@ -1909,27 +1947,40 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	char *fgetsrv;
 	int rv = TRUE;
 	char	olddir[1024];
-	componentOrder =0;
-	rootPath	= GetModulePath();
+	CString curVersion, curLanguage, localePath,
+		strLang, strRegion, strREGION;
+
+	componentOrder = 0;
+	rootPath = GetModulePath();
 	SetGlobal("Root", rootPath);
-	configName	= GetGlobal("_NewConfigName");
+	configName = GetGlobal("_NewConfigName");
 	SetGlobal("CustomizationList", configName); 
-	CString curVersion  = GetGlobal("Version");
-	curPlatform         = GetGlobal("lPlatform");
-	platformPath        = rootPath+"Version\\"+curVersion+"\\"+curPlatform;
-	CString curLanguage = GetGlobal("Language");
-	CString localePath  = rootPath+"Version\\"+curVersion+"\\"+curPlatform+"\\"+curLanguage;
-	configPath    = rootPath + "Configs\\" + configName;
-	outputPath    = configPath + "\\Output";
-	cdPath        = configPath + "\\Output\\Core";
-	cdshellPath   = configPath + "\\Output\\Shell";
-  remoteAdminFile = outputPath + "\\autoconfig.jsc";
-	networkPath   = configPath + "\\Network";
-	tempPath      = configPath + "\\Temp";
-	iniDstPath    = cdPath + "\\config.ini";
-	scriptPath    = localePath + "\\script.ib";
-	workspacePath = configPath + "\\Workspace";
-	xpiDstPath    = cdPath;
+
+	curVersion      = GetGlobal("Version");
+	curPlatform     = GetGlobal("lPlatform");
+	platformPath    = rootPath+"Version\\"+curVersion+"\\"+curPlatform;
+	curLanguage     = GetGlobal("Language");
+	localePath      = rootPath+"Version\\"+curVersion+"\\"+curPlatform+"\\"+curLanguage;
+	configPath      = rootPath + "Configs\\" + configName;
+	outputPath      = configPath + "\\Output";
+	cdPath          = configPath + "\\Output\\Core";
+	cdshellPath     = configPath + "\\Output\\Shell";
+	remoteAdminFile = outputPath + "\\autoconfig.jsc";
+	networkPath     = configPath + "\\Network";
+	tempPath        = configPath + "\\Temp";
+	iniDstPath      = cdPath + "\\config.ini";
+	scriptPath      = rootPath + "script_" + curPlatform + ".ib";
+	workspacePath   = configPath + "\\Workspace";
+	xpiDstPath      = cdPath;
+
+	// variables for language-region information
+	strLang        = curLanguage.Left(2);
+	strRegion      = curLanguage.Right(2);
+	strREGION      = strRegion;
+	strREGION.MakeUpper();
+	SetGlobal("%lang%", strLang);
+	SetGlobal("%region%", strRegion);
+	SetGlobal("%REGION%", strREGION);
 
 	// initializing variables for CCK linux build
 	templinuxPath  = tempPath + "\\templinux\\netscape-installer";
@@ -2136,6 +2187,8 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 				}
 
 				buffer[strlen(buffer)] = '\0';  // Eliminate the trailing newline
+				CString strTempBuffer = buffer;
+				strcpy(buffer, SubstituteValues(strTempBuffer));
 
 				if (!interpret(buffer))
 				{
