@@ -463,13 +463,11 @@ typedef short PROSFD;
 // Errors not found in the Mac StdCLib
 #define EACCES  		13      	// Permission denied
 #define ENOENT			-43			// No such file or directory
-#define	EMFILE			24			// Too many open files
 #define _OS_INVALID_FD_VALUE -1
 
 #define	STDERR_FILENO	2
 
 #if !defined(MAC_NSPR_STANDALONE)
-#define MAC_PATH_SEPARATOR 				':'
 #define PATH_SEPARATOR 					':'
 #define PATH_SEPARATOR_STR		        ":"
 #define DIRECTORY_SEPARATOR				'/'
@@ -478,10 +476,6 @@ typedef short PROSFD;
 
 #define UNIX_THIS_DIRECTORY_STR			"./"
 #define UNIX_PARENT_DIRECTORY_STR		"../"
-
-#define MAX_PATH 			512
-#define MAX_MAC_FILENAME	31
-#define MAXPATHLEN			MAX_PATH
 
 
 // Alias a few names
@@ -533,10 +527,6 @@ extern void dprintf(const char *format, ...);
 #if defined(MAC_NSPR_STANDALONE)
 extern PRUint8 CallCacheFlushers(size_t blockSize);
 #endif
-
-enum {
-	kPrivateNSPREventType = 13
-};
 
 #if defined(MAC_NSPR_STANDALONE)
 extern void* reallocSmaller(void* block, size_t newSize);
