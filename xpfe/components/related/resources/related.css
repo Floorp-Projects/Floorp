@@ -26,19 +26,48 @@
 
 */
 
-@import url(chrome://global/skin/global.css);
-
-treeitem[container="true"][open="true"] > treerow > .tree-icon
+treeitem[container="true"][open="true"][loading="true"] > treerow > .treecell-indent
 {
-    list-style-image: url("resource:/res/rdf/folder-open.gif");
+    list-style-image      : url("chrome://global/skin/loading.gif") ! important ;
 }
 
-treeitem[container="true"] > treerow > .tree-icon
-{
-    list-style-image: url("resource:/res/rdf/folder-closed.gif");
-}
+treeitem[container="true"][open="true"] > treerow > .treecell-indent 
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+  }
 
-.tree-icon
-{
-    list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-}
+treeitem[container="true"][open="true"][selected="true"] > treerow > .treecell-indent 
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open-sel.gif");
+  }
+
+treeitem[container="true"] > treerow > .treecell-indent 
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
+  }
+
+treeitem[container="true"][selected="true"] > treerow > .treecell-indent 
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed-sel.gif");
+  }
+
+treeitem[container="true"][id="NC:SiteMapRoot"] > treerow > .treecell-indent 
+  {
+    list-style-image      : url("chrome://communicator/skin/related/sitemap.gif");
+  }
+
+treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow > .treecell-indent 
+  {
+    list-style-image      : url("chrome://communicator/skin/related/sitemap.gif");
+  }
+
+.treecell-indent 
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+  }
+
+.tree-cell-twisty
+  {
+    display               : none;
+  }
+  
