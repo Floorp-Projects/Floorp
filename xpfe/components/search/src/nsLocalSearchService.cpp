@@ -102,14 +102,21 @@ LocalSearchDataSource::LocalSearchDataSource(void)
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		gRDFService->GetResource(NC_NAMESPACE_URI "child",       &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Name",        &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI "URL",         &kNC_URL);
-		gRDFService->GetResource(NC_NAMESPACE_URI "FindObject",  &kNC_FindObject);
-		gRDFService->GetResource(NC_NAMESPACE_URI "pulse",       &kNC_pulse);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                             &kNC_Child);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),
+                             &kNC_Name);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),
+                             &kNC_URL);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "FindObject"),
+                             &kNC_FindObject);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "pulse"),
+                             &kNC_pulse);
 
-		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_InstanceOf);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
+                             &kRDF_InstanceOf);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                             &kRDF_type);
 
 		gLocalSearchDataSource = this;
 	}
@@ -573,7 +580,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
       continue;
 
     nsCOMPtr<nsIRDFResource> property;
-    rv = gRDFService->GetUnicodeResource(tokens[1].value.get(),
+    rv = gRDFService->GetUnicodeResource(tokens[1].value,
     getter_AddRefs(property));
 
     if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !property)

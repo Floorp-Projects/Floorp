@@ -315,7 +315,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     uri->GetSpec(entryuriC);
 
     nsCOMPtr<nsIRDFResource> entry;
-    rv = mDirRDF->GetResource(entryuriC.get(), getter_AddRefs(entry));
+    rv = mDirRDF->GetResource(entryuriC, getter_AddRefs(entry));
     
     NS_ConvertUTF8toUCS2 uriUnicode(entryuriC);
 
@@ -439,7 +439,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
   }
 
   nsCOMPtr<nsIRDFResource> entry;
-  rv = mDirRDF->GetResource(entryuriC.get(), getter_AddRefs(entry));
+  rv = mDirRDF->GetResource(entryuriC, getter_AddRefs(entry));
 
   // At this point, we'll (hopefully) have found the filename and
   // constructed a resource for it, stored in entry. So now take a
@@ -603,17 +603,26 @@ nsHTTPIndex::CommonInit()
     if (NS_FAILED(rv))
       return rv;
 
-    mDirRDF->GetResource(NC_NAMESPACE_URI "child",   getter_AddRefs(kNC_Child));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "loading", getter_AddRefs(kNC_Loading));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "Comment", getter_AddRefs(kNC_Comment));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "URL", getter_AddRefs(kNC_URL));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "Name", getter_AddRefs(kNC_Description));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "Content-Length", getter_AddRefs(kNC_ContentLength));
-    mDirRDF->GetResource("http://home.netscape.com/WEB-rdf#LastModifiedDate",
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                         getter_AddRefs(kNC_Child));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "loading"),
+                         getter_AddRefs(kNC_Loading));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Comment"),
+                         getter_AddRefs(kNC_Comment));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),
+                         getter_AddRefs(kNC_URL));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),
+                         getter_AddRefs(kNC_Description));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Content-Length"),
+                         getter_AddRefs(kNC_ContentLength));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastModifiedDate"),
                          getter_AddRefs(kNC_LastModified));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "Content-Type", getter_AddRefs(kNC_ContentType));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "File-Type", getter_AddRefs(kNC_FileType));
-    mDirRDF->GetResource(NC_NAMESPACE_URI "IsContainer", getter_AddRefs(kNC_IsContainer));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Content-Type"),
+                         getter_AddRefs(kNC_ContentType));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "File-Type"),
+                         getter_AddRefs(kNC_FileType));
+    mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IsContainer"),
+                         getter_AddRefs(kNC_IsContainer));
 
     rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral));
     if (NS_FAILED(rv)) return(rv);
@@ -667,7 +676,7 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
   
   // Mark the base url as a container
   nsCOMPtr<nsIRDFResource> baseRes;
-  mDirRDF->GetResource(mBaseURL.get(), getter_AddRefs(baseRes));
+  mDirRDF->GetResource(mBaseURL, getter_AddRefs(baseRes));
   Assert(baseRes, kNC_IsContainer, kTrueLiteral, PR_TRUE);
 
   return NS_OK;

@@ -93,7 +93,7 @@ protected:
   nsresult GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, PRBool aCreateDS, nsIRDFDataSource **aResult);
   nsresult GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
 
-  nsresult GetResource(const nsCString& aChromeType, nsIRDFResource** aResult);
+  nsresult GetResource(const nsACString& aChromeType, nsIRDFResource** aResult);
   
   nsresult UpdateDynamicDataSource(nsIRDFDataSource *aDataSource,
                                    nsIRDFResource *aResource,

@@ -234,15 +234,24 @@ nsresult nsExternalHelperAppService::InitDataSource()
   // initialize our resources if we haven't done so already...
   if (!kNC_Description)
   {
-    rdf->GetResource(NC_RDF_DESCRIPTION,   getter_AddRefs(kNC_Description));
-    rdf->GetResource(NC_RDF_VALUE,         getter_AddRefs(kNC_Value));
-    rdf->GetResource(NC_RDF_FILEEXTENSIONS,getter_AddRefs(kNC_FileExtensions));
-    rdf->GetResource(NC_RDF_PATH,          getter_AddRefs(kNC_Path));
-    rdf->GetResource(NC_RDF_SAVETODISK,    getter_AddRefs(kNC_SaveToDisk));
-    rdf->GetResource(NC_RDF_USESYSTEMDEFAULT,getter_AddRefs(kNC_UseSystemDefault));
-    rdf->GetResource(NC_RDF_HANDLEINTERNAL,getter_AddRefs(kNC_HandleInternal));
-    rdf->GetResource(NC_RDF_ALWAYSASK,     getter_AddRefs(kNC_AlwaysAsk));  
-    rdf->GetResource(NC_RDF_PRETTYNAME,    getter_AddRefs(kNC_PrettyName));  
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DESCRIPTION),
+                     getter_AddRefs(kNC_Description));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_VALUE),
+                     getter_AddRefs(kNC_Value));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_FILEEXTENSIONS),
+                     getter_AddRefs(kNC_FileExtensions));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_PATH),
+                     getter_AddRefs(kNC_Path));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_SAVETODISK),
+                     getter_AddRefs(kNC_SaveToDisk));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_USESYSTEMDEFAULT),
+                     getter_AddRefs(kNC_UseSystemDefault));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_HANDLEINTERNAL),
+                     getter_AddRefs(kNC_HandleInternal));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ALWAYSASK),
+                     getter_AddRefs(kNC_AlwaysAsk));  
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_PRETTYNAME),
+                     getter_AddRefs(kNC_PrettyName));  
   }
   
   mDataSourceInitialized = PR_TRUE;
@@ -527,7 +536,7 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   contentTypeHandlerNodeName.Append(aContentType);
 
   nsCOMPtr<nsIRDFResource> contentTypeHandlerNodeResource;
-  aRDFService->GetResource(contentTypeHandlerNodeName.get(), getter_AddRefs(contentTypeHandlerNodeResource));
+  aRDFService->GetResource(contentTypeHandlerNodeName, getter_AddRefs(contentTypeHandlerNodeResource));
   NS_ENSURE_TRUE(contentTypeHandlerNodeResource, NS_ERROR_FAILURE); // that's not good! we have an error in the rdf file
 
   // now process the application handler information
@@ -562,7 +571,7 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   nsCAutoString externalAppNodeName (NC_CONTENT_NODE_EXTERNALAPP_PREFIX);
   externalAppNodeName.Append(aContentType);
   nsCOMPtr<nsIRDFResource> externalAppNodeResource;
-  aRDFService->GetResource(externalAppNodeName.get(), getter_AddRefs(externalAppNodeResource));
+  aRDFService->GetResource(externalAppNodeName, getter_AddRefs(externalAppNodeResource));
 
   if (externalAppNodeResource)
   {
@@ -602,7 +611,7 @@ PRBool nsExternalHelperAppService::MIMETypeIsInDataSource(const char * aContentT
     
     // Get the mime type resource.
     nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
-    rv = rdf->GetResource(contentTypeNodeName.get(), getter_AddRefs(contentTypeNodeResource));
+    rv = rdf->GetResource(contentTypeNodeName, getter_AddRefs(contentTypeNodeResource));
     if (NS_FAILED(rv)) return PR_FALSE;
     
     // Test that there's a #value arc from the mimetype resource to the mimetype literal string.
@@ -644,7 +653,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
 
     // Get the mime type resource.
     nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
-    rv = rdf->GetResource(contentTypeNodeName.get(), getter_AddRefs(contentTypeNodeResource));
+    rv = rdf->GetResource(contentTypeNodeName, getter_AddRefs(contentTypeNodeResource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // we need a way to determine if this content type resource is really in the graph or not...

@@ -49,13 +49,13 @@ interface nsIRDFService : nsISupports {
     // caches resources that are in-use, so multiple calls to <tt>GetResource()</tt>
     // for the same <tt>uri</tt> will return identical pointers. FindResource
     // is used to find out whether there already exists a resource corresponding to that url.
-    nsIRDFResource GetResource(in string aURI);
+    nsIRDFResource GetResource(in AUTF8String aURI);
 
     // Construct an RDF resource from a Unicode URI. This is provided
     // as a convenience method, allowing automatic, in-line C++
     // conversion from <tt>nsString</tt> objects. The <tt>uri</tt> will
     // be converted to a single-byte representation internally.
-    nsIRDFResource GetUnicodeResource(in wstring aURI);
+    nsIRDFResource GetUnicodeResource(in AString aURI);
 
     nsIRDFResource GetAnonymousResource();
 

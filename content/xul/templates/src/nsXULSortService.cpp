@@ -808,7 +808,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
       if (NS_SUCCEEDED(rv = node1->GetAttr(kNameSpaceID_None, nsXULAtoms::id, htmlID)) 
           && (rv == NS_CONTENT_ATTR_HAS_VALUE))
       {
-        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID.get(), getter_AddRefs(res1))))
+        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID, getter_AddRefs(res1))))
           res1 = nsnull;
       }
     }
@@ -886,7 +886,7 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
       if (NS_SUCCEEDED(rv = node1->GetAttr(kNameSpaceID_None, nsXULAtoms::id, htmlID))
         && (rv == NS_CONTENT_ATTR_HAS_VALUE))
       {
-        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID.get(), getter_AddRefs(res1))))
+        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID, getter_AddRefs(res1))))
           res1 = nsnull;
         info1->resource = res1;
       }
@@ -1333,38 +1333,38 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
       sortState->sortPropertySort = nsnull;
       sortState->sortPropertySort2 = nsnull;
 
-      rv = gRDFService->GetUnicodeResource(sortResource.get(), getter_AddRefs(sortInfo.sortProperty));
+      rv = gRDFService->GetUnicodeResource(sortResource, getter_AddRefs(sortInfo.sortProperty));
       if (NS_FAILED(rv)) return rv;
       sortState->sortResource = sortResource;
       sortState->sortProperty = sortInfo.sortProperty;
       
       nsAutoString resourceUrl = sortResource;
       resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
-      rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertyColl));
+      rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl));
       if (NS_FAILED(rv)) return rv;
       sortState->sortPropertyColl = sortInfo.sortPropertyColl;
 
       resourceUrl = sortResource;
       resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
-      rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertySort));
+      rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort));
       if (NS_FAILED(rv)) return rv;
       sortState->sortPropertySort = sortInfo.sortPropertySort;
 
       if (!sortResource2.IsEmpty()) {
-        rv = gRDFService->GetUnicodeResource(sortResource2.get(), getter_AddRefs(sortInfo.sortProperty2));
+        rv = gRDFService->GetUnicodeResource(sortResource2, getter_AddRefs(sortInfo.sortProperty2));
         if (NS_FAILED(rv)) return rv;
         sortState->sortResource2 = sortResource2;
         sortState->sortProperty2 = sortInfo.sortProperty2;
 
         resourceUrl = sortResource2;
         resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
-        rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertyColl2));
+        rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl2));
         if (NS_FAILED(rv)) return rv;
         sortState->sortPropertyColl2 = sortInfo.sortPropertyColl2;
 
         resourceUrl = sortResource2;
         resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
-        rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertySort2));
+        rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort2));
         if (NS_FAILED(rv)) return rv;
         sortState->sortPropertySort2 = sortInfo.sortPropertySort2;
       }
@@ -1625,33 +1625,33 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
   GetSortColumnInfo(contentNode, unused, unused, sortResource2, sortInfo.inbetweenSeparatorSort);
 
   // build resource url for first sort resource
-  rv = gRDFService->GetUnicodeResource(PromiseFlatString(sortResource).get(), getter_AddRefs(sortInfo.sortProperty));
+  rv = gRDFService->GetUnicodeResource(sortResource, getter_AddRefs(sortInfo.sortProperty));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString resourceUrl;
   resourceUrl.Assign(sortResource);
   resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
-  rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertyColl));
+  rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl));
   if (NS_FAILED(rv)) return rv;
 
   resourceUrl.Assign(sortResource);
   resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
-  rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertySort));
+  rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort));
   if (NS_FAILED(rv)) return rv;
 
   // build resource url for second sort resource
   if (!sortResource2.IsEmpty()) {
-    rv = gRDFService->GetUnicodeResource(sortResource2.get(), getter_AddRefs(sortInfo.sortProperty2));
+    rv = gRDFService->GetUnicodeResource(sortResource2, getter_AddRefs(sortInfo.sortProperty2));
     if (NS_FAILED(rv)) return rv;
 
     resourceUrl = sortResource2;
     resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
-    rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertyColl2));
+    rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl2));
     if (NS_FAILED(rv)) return rv;
 
     resourceUrl = sortResource2;
     resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
-    rv = gRDFService->GetUnicodeResource(resourceUrl.get(), getter_AddRefs(sortInfo.sortPropertySort2));
+    rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort2));
     if (NS_FAILED(rv)) return rv;
   }
 

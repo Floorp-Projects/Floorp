@@ -72,9 +72,9 @@ nsWindowDataSource::Init()
         rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
         if (NS_FAILED(rv)) return rv;
 
-        gRDFService->GetResource(kURINC_WindowRoot, &kNC_WindowRoot);
-        gRDFService->GetResource(kURINC_Name,       &kNC_Name);
-        gRDFService->GetResource(kURINC_KeyIndex,   &kNC_KeyIndex);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_WindowRoot), &kNC_WindowRoot);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_Name),       &kNC_Name);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_KeyIndex),   &kNC_KeyIndex);
     }
 
     mInner = do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource", &rv);
@@ -225,7 +225,7 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
     windowId.AppendInt(windowCount++, 10);
 
     nsCOMPtr<nsIRDFResource> windowResource;
-    gRDFService->GetResource(windowId.get(), getter_AddRefs(windowResource));
+    gRDFService->GetResource(windowId, getter_AddRefs(windowResource));
 
     nsVoidKey key(window);
     mWindowResources.Put(&key, windowResource);
@@ -355,7 +355,8 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
                                          nsIDOMWindowInternal** aResult)
 {
     nsCOMPtr<nsIRDFResource> windowResource;
-    gRDFService->GetResource(aResourceString, getter_AddRefs(windowResource));
+    gRDFService->GetResource(nsDependentCString(aResourceString),
+                             getter_AddRefs(windowResource));
 
     // now reverse-lookup in the hashtable
     findWindowClosure closure = { windowResource.get(), nsnull };

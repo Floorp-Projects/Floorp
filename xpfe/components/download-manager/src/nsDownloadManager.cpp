@@ -136,15 +136,15 @@ nsDownloadManager::Init()
   rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
 
-  gRDFService->GetResource("NC:DownloadsRoot", &gNC_DownloadsRoot);
-  gRDFService->GetResource(NC_NAMESPACE_URI "File", &gNC_File);
-  gRDFService->GetResource(NC_NAMESPACE_URI "URL", &gNC_URL);
-  gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
-  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressMode", &gNC_ProgressMode);
-  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressPercent", &gNC_ProgressPercent);
-  gRDFService->GetResource(NC_NAMESPACE_URI "Transferred", &gNC_Transferred);
-  gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", &gNC_DownloadState);
-  gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", &gNC_StatusText);
+  gRDFService->GetResource(NS_LITERAL_CSTRING("NC:DownloadsRoot"), &gNC_DownloadsRoot);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "File"), &gNC_File);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"), &gNC_URL);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"), &gNC_Name);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ProgressMode"), &gNC_ProgressMode);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ProgressPercent"), &gNC_ProgressPercent);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Transferred"), &gNC_Transferred);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "DownloadState"), &gNC_DownloadState);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "StatusText"), &gNC_StatusText);
 
   nsCAutoString downloadsDB;
   rv = GetProfileDownloadsFileURL(downloadsDB);
@@ -287,7 +287,7 @@ nsDownloadManager::AssertProgressInfoFor(const nsACString& aTargetPath)
   nsCOMPtr<nsIRDFResource> res;
   nsCOMPtr<nsIRDFLiteral> literal;
 
-  gRDFService->GetResource(PromiseFlatCString(aTargetPath).get(), getter_AddRefs(res));
+  gRDFService->GetResource(aTargetPath, getter_AddRefs(res));
 
   DownloadState state;
   internalDownload->GetDownloadState(&state);
@@ -434,7 +434,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   NS_ConvertUCS2toUTF8 utf8Path(path);
   
   nsCOMPtr<nsIRDFResource> downloadRes;
-  gRDFService->GetResource(utf8Path.get(), getter_AddRefs(downloadRes));
+  gRDFService->GetResource(utf8Path, getter_AddRefs(downloadRes));
 
   nsCOMPtr<nsIRDFNode> node;
 
@@ -443,7 +443,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   aSource->GetSpec(spec);
 
   nsCOMPtr<nsIRDFResource> urlResource;
-  gRDFService->GetResource(spec.get(), getter_AddRefs(urlResource));
+  gRDFService->GetResource(spec, getter_AddRefs(urlResource));
   mDataSource->GetTarget(downloadRes, gNC_URL, PR_TRUE, getter_AddRefs(node));
   if (node)
     rv = mDataSource->Change(downloadRes, gNC_URL, node, urlResource);
@@ -472,7 +472,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
 
   // Assert file information
   nsCOMPtr<nsIRDFResource> fileResource;
-  gRDFService->GetResource(utf8Path.get(), getter_AddRefs(fileResource));
+  gRDFService->GetResource(utf8Path, getter_AddRefs(fileResource));
   rv = mDataSource->Assert(downloadRes, gNC_File, fileResource, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
   
@@ -605,7 +605,7 @@ nsDownloadManager::RemoveDownload(const nsACString & aTargetPath)
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIRDFResource> res;
-  gRDFService->GetResource(PromiseFlatCString(aTargetPath).get(), getter_AddRefs(res));
+  gRDFService->GetResource(aTargetPath, getter_AddRefs(res));
 
   // remove all the arcs for this resource, and then remove it from the Seq
   nsCOMPtr<nsISimpleEnumerator> arcs;
@@ -1241,7 +1241,7 @@ nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
   nsresult rv = mTarget->GetPath(path);
   if (NS_FAILED(rv)) return rv;
 
-  gRDFService->GetResource(NS_ConvertUCS2toUTF8(path).get(), getter_AddRefs(res));
+  gRDFService->GetUnicodeResource(path, getter_AddRefs(res));
   
   gRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
   ds->Assert(res, gNC_Name, nameLiteral, PR_TRUE);

@@ -421,7 +421,8 @@ RDFContainerImpl::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal", &kRDF_nextVal);
+        rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
+                                      &kRDF_nextVal);
         if (NS_FAILED(rv)) return rv;
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
@@ -739,7 +740,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     nextValStr.Append("_");
     nextValStr.AppendInt(nextVal, 10);
 
-    rv = gRDFService->GetResource(nextValStr.get(), aResult);
+    rv = gRDFService->GetResource(nextValStr, aResult);
     if (NS_FAILED(rv)) return rv;
 
     // Now increment the RDF:nextVal property.

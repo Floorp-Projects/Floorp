@@ -638,7 +638,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
   
   // For notifying observers, later...
   nsCOMPtr<nsIRDFResource> url;
-  rv = gRDFService->GetResource(aURL, getter_AddRefs(url));
+  rv = gRDFService->GetResource(nsDependentCString(aURL, len), getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFDate> date;
@@ -978,7 +978,7 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 
   // ...and update observers
   nsCOMPtr<nsIRDFResource> url;
-  rv = gRDFService->GetResource(aURL, getter_AddRefs(url));
+  rv = gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFLiteral> name;
@@ -1018,7 +1018,7 @@ nsGlobalHistory::RemovePage(const char *aURL)
   if (!mBatchesInProgress) {
     // get the resource so we can do the notification
     nsCOMPtr<nsIRDFResource> oldRowResource;
-    gRDFService->GetResource(aURL, getter_AddRefs(oldRowResource));
+    gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(oldRowResource));
     NotifyFindUnassertions(oldRowResource, row);
   }
 
@@ -1139,7 +1139,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
       
       const char* startPtr = (const char*) yarn.mYarn_Buf;
       nsCAutoString uri(Substring(startPtr, startPtr+yarn.mYarn_Fill));
-      rv = gRDFService->GetResource(uri.get(), getter_AddRefs(resource));
+      rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv))
         continue;
@@ -1244,7 +1244,7 @@ nsGlobalHistory::HidePage(const char *aURL)
   // HasAssertion() correctly checks the Hidden column to show that
   // the row is hidden
   nsCOMPtr<nsIRDFResource> urlResource;
-  rv = gRDFService->GetResource(aURL, getter_AddRefs(urlResource));
+  rv = gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(urlResource));
   if (NS_FAILED(rv)) return rv;
   return NotifyFindUnassertions(urlResource, row);
 }
@@ -1675,7 +1675,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       if (NS_FAILED(rv)) return rv;
       
       nsCOMPtr<nsIRDFResource> resource;
-      rv = gRDFService->GetResource(str.get(),
+      rv = gRDFService->GetResource(str,
                                     getter_AddRefs(resource));
       if (NS_FAILED(rv)) return rv;
 
@@ -2313,20 +2313,32 @@ nsGlobalHistory::Init()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
     if (NS_FAILED(rv)) return rv;
 
-    gRDFService->GetResource(NC_NAMESPACE_URI "Page",        &kNC_Page);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Date",        &kNC_Date);
-    gRDFService->GetResource(NC_NAMESPACE_URI "FirstVisitDate",
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Page"),
+                             &kNC_Page);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Date"),
+                             &kNC_Date);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "FirstVisitDate"),
                              &kNC_FirstVisitDate);
-    gRDFService->GetResource(NC_NAMESPACE_URI "VisitCount",  &kNC_VisitCount);
-    gRDFService->GetResource(NC_NAMESPACE_URI "AgeInDays",  &kNC_AgeInDays);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Name",        &kNC_Name);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Name?sort=true", &kNC_NameSort);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Hostname",    &kNC_Hostname);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Referrer",    &kNC_Referrer);
-    gRDFService->GetResource(NC_NAMESPACE_URI "child",       &kNC_child);
-    gRDFService->GetResource(NC_NAMESPACE_URI "URL",         &kNC_URL);
-    gRDFService->GetResource("NC:HistoryRoot",               &kNC_HistoryRoot);
-    gRDFService->GetResource("NC:HistoryByDate",           &kNC_HistoryByDate);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "VisitCount"),
+                             &kNC_VisitCount);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "AgeInDays"),
+                             &kNC_AgeInDays);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),
+                             &kNC_Name);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name?sort=true"),
+                             &kNC_NameSort);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Hostname"),
+                             &kNC_Hostname);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Referrer"),
+                             &kNC_Referrer);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                             &kNC_child);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),
+                             &kNC_URL);
+    gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryRoot"),
+                             &kNC_HistoryRoot);
+    gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryByDate"),
+                             &kNC_HistoryByDate);
   }
 
   // register this as a named data source with the RDF service
@@ -2961,7 +2973,7 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
     uri = prefix;
     uri.AppendInt(i);
     uri.Append("&groupby=Hostname");
-    rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
+    rv = gRDFService->GetResource(uri, getter_AddRefs(finduri));
     if (NS_FAILED(rv)) continue;
     rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
     if (NS_FAILED(rv)) continue;
@@ -2973,7 +2985,7 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
   uri = FIND_BY_AGEINDAYS_PREFIX "isgreater" "&text=";
   uri.AppendInt(i-1);
   uri.Append("&groupby=Hostname");
-  rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
+  rv = gRDFService->GetResource(uri, getter_AddRefs(finduri));
   if (NS_SUCCEEDED(rv)) {
     rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
     if (NS_SUCCEEDED(rv)) {
@@ -3241,7 +3253,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&ageterm);
 
   GetFindUriPrefix(query, PR_TRUE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   NotifyAssert(kNC_HistoryByDate, kNC_child, childFindResource);
   
   query.terms.Clear();
@@ -3256,7 +3268,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   
   GetFindUriPrefix(query, PR_FALSE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   NotifyAssert(parentFindResource, kNC_child, childFindResource);
   
   query.terms.Clear();
@@ -3269,13 +3281,13 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.groupBy = kToken_HostnameColumn; // create groupby=Hostname
   
   GetFindUriPrefix(query, PR_TRUE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(parentFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(parentFindResource));
 
   query.groupBy = 0;            // create Hostname=<host>
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   findUri.Append(hostname);     // append <host>
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   
   NotifyAssert(parentFindResource, kNC_child, childFindResource);
 
@@ -3334,7 +3346,7 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(findResource));
   
   NotifyUnassert(findResource, kNC_child, aSource);
 
@@ -3344,7 +3356,7 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(findResource));
   NotifyUnassert(findResource, kNC_child, aSource);
 
   return NS_OK;
@@ -3516,7 +3528,7 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
   nsCOMPtr<nsIRDFResource> resource;
   const char* startPtr = (const char*) yarn.mYarn_Buf;
   rv = gRDFService->GetResource(
-            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
+            Substring(startPtr, startPtr+yarn.mYarn_Fill),
             getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
 
@@ -3815,7 +3827,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
     
     const char* startPtr = (const char*)yarn.mYarn_Buf;
     rv = gRDFService->GetResource(
-            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
+            Substring(startPtr, startPtr+yarn.mYarn_Fill),
             getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
 
@@ -3839,7 +3851,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
   findUri.Append(Substring(startPtr, startPtr+groupByValue.mYarn_Fill));
   findUri.Append('\0');
 
-  rv = gRDFService->GetResource(findUri.get(), getter_AddRefs(resource));
+  rv = gRDFService->GetResource(findUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
 
   *aResult = resource;
@@ -3980,6 +3992,465 @@ nsGlobalHistory::OnStopLookup()
   return NS_OK;
 }
 
+<<<<<<< nsGlobalHistory.cpp
+
+/**
+ *
+ * The input features into the autocomplete perceptron are as follows:
+ *
+ *   Features 1  = Frequency and recency metric for page in history 
+ *                 (domain = positive real numbers)
+ *                 Value decays fast with age of page
+ *                 Uses HISTORY_FAST_DECAY_CONSTANT
+ *   Features 2 = Frequency and recency metric for page in history 
+ *                 (high for newer, more accessed pages)
+ *                 Value decays slowly with age of page
+ *                 Uses HISTORY_SLOW_DECAY_CONSTANT
+ *   Features 3 = Was the url typed by the user?
+ *                 (domain = 0 or 1)
+ *   Features 4 = Recency metric for page in bookmarks
+ *                 (domain = real number between 0 and 1)
+ *                 Value decays fast with age of bookmark
+ *                 Uses BOOKMARKS_FAST_DECAY_CONSTANT
+ *   Features 5 = Recency metric for page in bookmarks
+ *                 (domain = real number between 0 and 1)
+ *                 Value decays slowly with age of bookmark
+ *                 Uses BOOKMARKS_SLOW_DECAY_CONSTANT
+ *
+ *  Features 1 and Feature 2 details:
+ *
+ *  As an example, say a page was first seen on Day 1 and accessed from then
+ *  until today (Day 4) with the following schedule:
+ *
+ *  (Day 1, D times), (Day 2, C times), (Day 3, B times), (Day 4, A times)
+ *
+ *  Then, the frequency+recency metric calculation for the page will be:
+ *
+ *  FRMetric = A + (B * G) + (C * G^2) + (D * G^3)
+ *
+ *    where G is the decay constant that takes values between 0 and 1.
+ *    Values close to 1 lead to slow decay with age.
+ *    Values close to 0 lead to fast decay with age.
+ *
+ *  Feature 4 and Feature 5 only care about recency not frequency.
+ *
+ *  So, if a bookmark was added X days earlier,
+ *
+ *  Bookmark Feature Value = G^X.
+ *
+ *  where G is the decay constant that takes values between 0 and 1.
+ *    Values close to 1 lead to slow decay with age.
+ *    Values close to 0 lead to fast decay with age.
+ *
+ *  The rest of the url related features:
+ *
+ *  Feature 6: Whether url ends in .htm or .html
+ *  Feature 7: Is it a .com URL?
+ *  Feature 8: Is it a .edu URL?
+ *  Feature 9: Is it a .org URL?
+ *  Feature 10: Is it a .net URL?
+ *  Feature 11: Is it a .gov URL?
+ *  Feature 12: Does the URL contain a ~ ?
+ *  Feature 13: Does the URL start with http:* ?
+ *  Feature 14: Does the URL start with ftp:// ?
+ *  Feature 15: Does the URL start with file:// ?
+ *  Feature 16: Does the URL start with gopher:// ?
+ *  Feature 17: Does the URL start with https:// ?
+ *  Feature 18: Does the host name end in a two letter country code?
+ *  Feature 19: Number of /s in the URL.
+ *  Feature 20: Number of ?s in the URL.
+ *  Feature 21: Number of &s in the URL.
+ *  Feature 22: Number of =s in the URL.
+ *  Feature 23: Number of #s in the URL.
+ *  Feature 24: Number of +s in the URL.
+ *  Feature 25: Number of .s in the URL.
+ *  Feature 26: Number of numerical [0-9] characters in the URL
+ *  Feature 27: Number of alphabetical [a-zA-Z] characters in the URL
+ *  Feature 28: Number of non-alphanumeric, non-[/?&=#+.] characters in the URL
+ *  Feature 29: Number of .s in the hostname
+ *  Feature 30: Number of numerical [0-9] characters in the hostname
+ *  Feature 31: Number of alphabetical [a-zA-Z] characters in the hostname
+ *  Feature 32: Number of non-alphanumeric, non-[/?&=#+.] characters in the hostname
+ *  Feature 33: Number of .s in the hostname if we omit initial "www." or "ftp." (if any)
+ *  Feature 34: Number of .s in the hostname if we omit ending ".XX" country code (if any)
+ *  Feature 35: Number of .s in the hostname if we omit initial "www." or "ftp"
+ *              and ending ".XX" country code (if any)
+ *  Feature 36: Number of characters in URL
+ *  Feature 37: Number of characters in hostname
+ *  Feature 38: Number of characters in hostname excluding initial "www." or "ftp."
+ *  Feature 39: Number of characters in URL excluding hostname
+ *  Feature 40: Number of characters in web page title
+ *  Feature 41: Is this a google search url?
+ *  Feature 42: Is this a netscape search url?
+ *  Feature 43: Is this a yahoo search url?
+ *  Feature 44: Dummy input hardcoded to 1
+ */
+
+nsresult
+nsGlobalHistory::FillInputFeatures(nsAString &aUrl,
+                                   PRFloat64 *aFeatures)
+{
+  nsCOMPtr<nsIMdbRow> row;
+  nsresult rv = NS_OK;
+  PRInt32 ageInDays;
+  PRInt64 lastDate;  
+  static nsCOMPtr<nsIBookmarksService> bs = 
+      do_GetService(NS_BOOKMARKS_SERVICE_CONTRACTID, &rv);
+
+  nsCOMPtr<nsIURI> uri;
+  nsCAutoString curl, chost, cpath;
+  rv = NS_NewURI(getter_AddRefs(uri), aUrl);
+  if (NS_SUCCEEDED(rv) && uri) {
+    uri->GetSpec(curl);
+    uri->GetHost(chost);
+    uri->GetPath(cpath);
+  }
+  nsAutoString url(NS_ConvertUTF8toUCS2(curl).get());
+  nsAutoString path(NS_ConvertUTF8toUCS2(cpath).get());
+  nsAutoString host(NS_ConvertUTF8toUCS2(chost).get());
+  ToLowerCase(url);  
+  ToLowerCase(host);
+  ToLowerCase(path);  
+
+  // Calculate the input features for this training example.
+  rv = FindRow(kToken_URLColumn, curl.get(), 
+               getter_AddRefs(row));
+  if (NS_FAILED(rv)) return rv;
+
+  // First, get the page in history related input features
+  rv = GetRowValue(row, kToken_FRFastDecayColumn, &aFeatures[0]);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastDate);
+  if (NS_FAILED(rv)) return rv;
+
+  ageInDays = GetAgeInDays(NormalizeTime(GetNow()), lastDate);
+
+  aFeatures[0] *= pow(HISTORY_FAST_DECAY_CONSTANT, (PRFloat64) ageInDays);
+
+  rv = GetRowValue(row, kToken_FRSlowDecayColumn, &aFeatures[1]);
+  if (NS_FAILED(rv)) return rv;
+
+  aFeatures[1] *= pow(HISTORY_SLOW_DECAY_CONSTANT, (PRFloat64) ageInDays);
+
+  aFeatures[2] = HasCell(mEnv, row, kToken_TypedColumn);
+  
+  // Second, calculate the bookmark related input features.
+  aFeatures[3] = aFeatures[4] = 0;
+  if (bs) {
+    PRBool bookmarked;
+    rv = bs->IsBookmarked(curl.get(), &bookmarked);
+    if (NS_SUCCEEDED(rv) && bookmarked) {
+      // Get the date when the bookmark was added.
+      PRInt64 addDate;
+      nsCOMPtr<nsIRDFResource> rdfRes;
+      
+      if (NS_SUCCEEDED(rv = gRDFService->GetResource(curl, 
+        getter_AddRefs(rdfRes)))) {
+        nsCOMPtr<nsIRDFDataSource> bookmarkDS = do_QueryInterface(bs, &rv);
+        if (NS_SUCCEEDED(rv) && bookmarkDS) {
+          nsCOMPtr<nsIRDFNode> nodeType;
+          rv = bookmarkDS->GetTarget(rdfRes, kRDF_Type, PR_TRUE, 
+            getter_AddRefs(nodeType));
+          if (NS_SUCCEEDED(rv)) {
+            if (nodeType == kNC_Bookmark) {
+              nsCOMPtr<nsIRDFNode> node;
+              rv = bookmarkDS->GetTarget(rdfRes, kNC_BookmarkAddDate, PR_TRUE,
+                getter_AddRefs(node));
+              if (rv != NS_RDF_NO_VALUE && node) {
+                nsCOMPtr<nsIRDFDate> rdfDate = do_QueryInterface(node, &rv);
+                if (NS_SUCCEEDED(rv) && rdfDate) {
+                  rv = rdfDate->GetValue(&addDate);
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      if (NS_SUCCEEDED(rv)) {
+        ageInDays = GetAgeInDays(NormalizeTime(GetNow()), addDate);
+        aFeatures[3] = pow(BOOKMARK_FAST_DECAY_CONSTANT, ageInDays);
+        aFeatures[4] = pow(BOOKMARK_SLOW_DECAY_CONSTANT, ageInDays);
+      }
+    }
+  }
+    
+  // Feature 6: Whether url ends in .htm or .html
+  nsAString::const_iterator start, end;
+
+  path.BeginReading(start);
+  path.EndReading(end);
+  aFeatures[5] = FindInReadable(NS_LITERAL_STRING(".htm"), start, end);
+  
+  // Feature 7: Is it a .com URL?
+  host.BeginReading(start);
+  host.EndReading(end);
+  aFeatures[6] = FindInReadable(NS_LITERAL_STRING(".com"), start, end);
+
+  // Feature 8: Is it a .edu URL?
+  host.BeginReading(start);
+  host.EndReading(end);
+  aFeatures[7] = FindInReadable(NS_LITERAL_STRING(".edu"), start, end);
+
+  // Feature 9: Is it a .org URL?
+  host.BeginReading(start);
+  host.EndReading(end);
+  aFeatures[8] = FindInReadable(NS_LITERAL_STRING(".org"), start, end);
+
+  // Feature 10: Is it a .net URL?
+  host.BeginReading(start);
+  host.EndReading(end);
+  aFeatures[9] = FindInReadable(NS_LITERAL_STRING(".net"), start, end);
+    
+  // Feature 11: Is it a .gov URL?
+  host.BeginReading(start);
+  host.EndReading(end);
+  aFeatures[10] = FindInReadable(NS_LITERAL_STRING(".gov"), start, end);
+  
+  // Feature 12: Does the URL contain a ~ ?
+  path.BeginReading(start);
+  path.EndReading(end);
+  aFeatures[11] = FindInReadable(NS_LITERAL_STRING("~"), start, end);
+  
+  // Feature 13: Does the URL start with http:// ?
+  PRBool isScheme;
+  aFeatures[12] = aFeatures[13] = aFeatures[14] = aFeatures[15] = aFeatures[16] = 0;
+  if (NS_SUCCEEDED(uri->SchemeIs("http", &isScheme))) {
+    aFeatures[12] = isScheme;
+  }
+  // Feature 14: Does the URL start with ftp:// ?
+  else if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme))) {    
+    aFeatures[13] = isScheme;
+  }
+  // Feature 15: Does the URL start with file:// ?
+  else if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme))) {
+    aFeatures[14] = isScheme;
+  }  
+  // Feature 16: Does the URL start with gopher:// ?
+  else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme))) {    
+    aFeatures[15] = isScheme;
+  }
+  // Feature 17: Does the URL start with https:// ?
+  else if (NS_SUCCEEDED(uri->SchemeIs("https", &isScheme))) {
+    aFeatures[16] = isScheme;
+  }
+
+  // Feature 18: Does the host name end in a two letter country code?
+  PRInt32 hostLength = host.Length();
+  if (host[hostLength - 1] == '.') {
+    // Skip trailing dots in hostname if it exists.  This will catch cases like
+    // http://www.state.ca.us./state/portal/myca_homepage.jsp
+    aFeatures[17] = (host.RFindChar('.', hostLength - 2) == (hostLength - 4));
+  }
+  else {
+    aFeatures[17] = (host.RFindChar('.') == ((hostLength - 1) - 2));
+  }
+
+  // Feature 19: Number of /s in the URL.
+  aFeatures[18] = 0;
+  // Feature 20: Number of ?s in the URL.
+  aFeatures[19] = 0;
+  // Feature 21: Number of &s in the URL.
+  aFeatures[20] = 0;
+  // Feature 22: Number of =s in the URL.
+  aFeatures[21] = 0;
+  // Feature 23: Number of #s in the URL.
+  aFeatures[22] = 0;
+  // Feature 24: Number of +s in the URL.
+  aFeatures[23] = 0;
+  // Feature 25: Number of .s in the URL.
+  aFeatures[24] = 0;
+  // Feature 26: Number of numerical [0-9] characters in the URL
+  aFeatures[25] = 0;
+  // Feature 27: Number of alphabetical [a-zA-Z] characters in the URL
+  aFeatures[26] = 0;
+  // Feature 28: Number of non-alphanumeric, non-[/?&=#+.] characters in the URL
+  aFeatures[27] = 0;
+
+  url.BeginReading(start);
+  url.EndReading(end);
+
+  PRUint32 size, i;
+  for ( ; start != end; start.advance(size)) {
+    const PRUnichar* buf = start.get();
+    size = start.size_forward();
+
+    // fragment at 'buf' is 'size' characters long
+    for (i = 0; i < size; *buf++, i++) {
+      switch (*buf) { 
+      case '/':
+        ++aFeatures[18];
+        break;
+
+      case '?':
+        ++aFeatures[19];
+        break;
+
+      case '&':
+        ++aFeatures[20];
+        break;
+
+      case '=':
+        ++aFeatures[21];
+        break;
+
+      case '#':
+        ++aFeatures[22];
+        break;
+
+      case '+':
+        ++aFeatures[23];
+        break;
+
+      case '.':
+        ++aFeatures[24];
+        break;
+
+      case '0': case '1': case '2': case '3': case '4': 
+      case '5': case '6': case '7': case '8': case '9':
+        ++aFeatures[25];
+        break;
+
+      default:
+        if (isalpha(*buf))        
+          ++aFeatures[26];
+        else
+          ++aFeatures[27];        
+      }
+    }
+  }
+
+  // Calculate a bunch of hostname related features.  
+
+  // Feature 29: Number of .s in the hostname
+  aFeatures[28] = 0;
+  // Feature 30: Number of numerical [0-9] characters in the hostname
+  aFeatures[29] = 0;
+  // Feature 31: Number of alphabetical [a-zA-Z] characters in the hostname
+  aFeatures[30] = 0;
+  // Feature 32: Number of non-alphanumeric, non-[.] characters in the hostname
+  aFeatures[31] = 0;
+
+  size = chost.Length();  
+  for (i = 0; i < size; i++) {
+    switch (chost[i]) {
+    case '.':
+      ++aFeatures[28];
+      break;
+
+    case '0': case '1': case '2': case '3': case '4': 
+    case '5': case '6': case '7': case '8': case '9':
+      ++aFeatures[29];
+      break;
+
+    default:
+      if (isalpha(chost[i]))       
+        ++aFeatures[30];
+      else
+        ++aFeatures[31];
+    }
+  }
+
+  // Feature 33: Number of .s in the hostname if we omit initial "www." or "ftp." (if any)
+  aFeatures[32] = aFeatures[28];
+  // Feature 34: Number of .s in the hostname if we omit ending ".XX" country code (if any)
+  aFeatures[33] = aFeatures[28];
+  // Feature 35: Number of .s in the hostname if we omit initial "www." or "ftp"
+  //             and ending ".XX" country code (if any)
+  aFeatures[34] = aFeatures[28];
+  // Feature 36: Number of characters in hostname
+  aFeatures[35] = chost.Length();
+  // Feature 37: Number of characters in hostname excluding initial "www." or "ftp."
+  aFeatures[36] = aFeatures[35];
+
+  if (chost.Find("www.") == 0 || chost.Find("ftp.") == 0) {
+    --aFeatures[32];
+    --aFeatures[34];
+    aFeatures[36] -= 4;
+  }
+
+  if (aFeatures[17]) {
+    --aFeatures[33];
+    --aFeatures[34];
+  }
+
+  // Feature 38: Number of characters in URL
+  aFeatures[37] = url.Length();
+
+  // Feature 39: Number of characters in URL excluding hostname
+  aFeatures[38] = aFeatures[37] - aFeatures[35];
+
+  // Feature 40: Number of characters in web page title
+  nsAutoString title;
+  rv = GetRowValue(row, kToken_NameColumn, title);
+  if (NS_FAILED(rv)) return rv;
+  aFeatures[39] = title.Length();
+
+  // Feature 41: Is this a google search url?
+  url.BeginReading(start);
+  url.EndReading(end);
+  aFeatures[40] = FindInReadable(NS_LITERAL_STRING("http://www.google.com/search"), start, end);
+  
+  // Feature 42: Is this a netscape search url?
+  url.BeginReading(start);
+  url.EndReading(end);
+  aFeatures[41] = FindInReadable(NS_LITERAL_STRING("http://search.netscape.com/nscp_results.adp"), start, end);
+
+  // Feature 43: Is this a yahoo search url?
+  url.BeginReading(start);
+  url.EndReading(end);
+  aFeatures[42] = FindInReadable(NS_LITERAL_STRING("http://search.yahoo.com/bin/search"), start, end);
+  
+  //  Feature 44: This is a dummy input hardcoded to 1.  It allows
+  //  the perceptron to represent functions that do not pass through the
+  //  origin.
+  aFeatures[43] = 1;
+
+  return rv;
+}
+
+nsresult
+nsGlobalHistory::WriteURLData(nsAString& aURL, PRFloat64* aURLFeatures)
+{
+  nsCOMPtr<nsIMdbRow> row;
+  nsresult rv = NS_OK;
+  nsCAutoString dateStr, IDStr;
+  PRInt64 rowID;
+
+  if (!mURLDataFile || !aURLFeatures)
+    return NS_ERROR_FAILURE;
+
+  // Calculate the input features for this training example.
+  rv = FindRowAndID(kToken_URLColumn, NS_ConvertUCS2toUTF8(aURL).get(),
+                    getter_AddRefs(row), &rowID);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (!rowID) {
+    AssignUniqueURLID(row, &rowID);
+  }
+
+  PRInt64ToChars(rowID, IDStr);
+  
+  fprintf(mURLDataFile, "<url id='%s'", IDStr.get());
+  if (mDataCaptureMode == URLDATACAPTURE_WITH_URL_INFO) {
+    fprintf(mURLDataFile, " path='%s'", NS_ConvertUCS2toUTF8(aURL).get());
+  }
+  PRInt64ToChars(PR_Now(), dateStr);
+  fprintf(mURLDataFile, " time='%s'>\n", dateStr.get());
+
+  PRInt32 i; 
+  for (i = 0; i < AC_NUM_URL_FEATURES - 1; i++) {
+    fprintf(mURLDataFile, "%.2f, ", aURLFeatures[i]);
+  }
+
+  fprintf(mURLDataFile, "%.2f\n</url>\n", aURLFeatures[i]);
+
+  return NS_OK;
+}
+
+=======
+>>>>>>> 1.173
 NS_IMETHODIMP
 nsGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
                                 nsIAutoCompleteResults *previousSearchResult,

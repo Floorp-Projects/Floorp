@@ -228,14 +228,22 @@ RelatedLinksStreamListener::Init()
 			NS_RELEASE(charsetConv);
 		}
 
-		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Name",  &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI "URL",   &kNC_URL);
-		gRDFService->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
-		gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator", &kNC_BookmarkSeparator);
-		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksTopic", &kNC_RelatedLinksTopic);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
-		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                             &kNC_Child);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),
+                             &kNC_Name);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),
+                             &kNC_URL);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "loading"),
+                             &kNC_loading);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkSeparator"),
+                             &kNC_BookmarkSeparator);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "RelatedLinksTopic"),
+                             &kNC_RelatedLinksTopic);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                             &kRDF_type);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_RelatedLinksRoot),
+                             &kNC_RelatedLinksRoot);
 	 }
 
 	 mParentArray.AppendElement(kNC_RelatedLinksRoot);
@@ -624,10 +632,14 @@ RelatedLinksHandlerImpl::Init()
                                                   (nsISupports**) &gRDFService);
 		if (NS_FAILED(rv)) return rv;
 
-		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
-		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksTopic", &kNC_RelatedLinksTopic);
-		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_RelatedLinksRoot),
+                             &kNC_RelatedLinksRoot);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                             &kRDF_type);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "RelatedLinksTopic"),
+                             &kNC_RelatedLinksTopic);
+		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                             &kNC_Child);
 
 		nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
 		mRLServerURL = new nsString();

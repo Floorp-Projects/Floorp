@@ -194,56 +194,98 @@ bm_AddRefGlobals()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get charset alias service");
 		if (NS_FAILED(rv)) return rv;
 
-		gRDF->GetResource(kURINC_BookmarksRoot,                   &kNC_BookmarksRoot);
-		gRDF->GetResource(kURINC_IEFavoritesRoot,                 &kNC_IEFavoritesRoot);
-    gRDF->GetResource(kURINC_SystemBookmarksStaticRoot,       &kNC_SystemBookmarksStaticRoot);
-		gRDF->GetResource(kURINC_NewBookmarkFolder,               &kNC_NewBookmarkFolder);
-		gRDF->GetResource(kURINC_PersonalToolbarFolder,           &kNC_PersonalToolbarFolder);
-		gRDF->GetResource(kURINC_NewSearchFolder,                 &kNC_NewSearchFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_BookmarksRoot),
+                      &kNC_BookmarksRoot);
+		gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_IEFavoritesRoot),
+                      &kNC_IEFavoritesRoot);
+    gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_SystemBookmarksStaticRoot),
+                      &kNC_SystemBookmarksStaticRoot);
+		gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_NewBookmarkFolder),
+                      &kNC_NewBookmarkFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_PersonalToolbarFolder),
+                      &kNC_PersonalToolbarFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_NewSearchFolder),
+                      &kNC_NewSearchFolder);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "Bookmark",            &kNC_Bookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "BookmarkSeparator",   &kNC_BookmarkSeparator);
-		gRDF->GetResource(NC_NAMESPACE_URI "BookmarkAddDate",     &kNC_BookmarkAddDate);
-		gRDF->GetResource(NC_NAMESPACE_URI "Description",         &kNC_Description);
-		gRDF->GetResource(NC_NAMESPACE_URI "Folder",              &kNC_Folder);
-		gRDF->GetResource(NC_NAMESPACE_URI "FolderType",          &kNC_FolderType);
-    gRDF->GetResource(NC_NAMESPACE_URI "FolderGroup",         &kNC_FolderGroup);
-		gRDF->GetResource(NC_NAMESPACE_URI "IEFavorite",          &kNC_IEFavorite);
-		gRDF->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder",    &kNC_IEFavoriteFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
-		gRDF->GetResource(NC_NAMESPACE_URI "Icon",                &kNC_Icon);
-		gRDF->GetResource(NC_NAMESPACE_URI "ShortcutURL",         &kNC_ShortcutURL);
-		gRDF->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
-		gRDF->GetResource(RDF_NAMESPACE_URI "type",               &kRDF_type);
-		gRDF->GetResource(RDF_NAMESPACE_URI "nextVal",            &kRDF_nextVal);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Bookmark"),
+                      &kNC_Bookmark);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkSeparator"),
+                      &kNC_BookmarkSeparator);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkAddDate"),
+                      &kNC_BookmarkAddDate);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Description"),
+                      &kNC_Description);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Folder"),
+                      &kNC_Folder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "FolderType"),
+                      &kNC_FolderType);
+    gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "FolderGroup"),
+                      &kNC_FolderGroup);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavorite"),
+                      &kNC_IEFavorite);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavoriteFolder"),
+                      &kNC_IEFavoriteFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),
+                      &kNC_Name);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Icon"),
+                      &kNC_Icon);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ShortcutURL"),
+                      &kNC_ShortcutURL);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),
+                      &kNC_URL);
+		gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                      &kRDF_type);
+		gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
+                      &kRDF_nextVal);
 
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastModifiedDate",   &kWEB_LastModifiedDate);
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastVisitDate",      &kWEB_LastVisitDate);
-    gRDF->GetResource(WEB_NAMESPACE_URI "LastCharset",        &kWEB_LastCharset);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastModifiedDate"),
+                      &kWEB_LastModifiedDate);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastVisitDate"),
+                      &kWEB_LastVisitDate);
+    gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastCharset"),
+                      &kWEB_LastCharset);
 
-		gRDF->GetResource(WEB_NAMESPACE_URI "Schedule",           &kWEB_Schedule);
-		gRDF->GetResource(WEB_NAMESPACE_URI "ScheduleFlag",       &kWEB_ScheduleActive);
-		gRDF->GetResource(WEB_NAMESPACE_URI "status",             &kWEB_Status);
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingDate",       &kWEB_LastPingDate);
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingETag",       &kWEB_LastPingETag);
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingModDate",    &kWEB_LastPingModDate);
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingContentLen", &kWEB_LastPingContentLen);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "Schedule"),
+                      &kWEB_Schedule);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "ScheduleFlag"),
+                      &kWEB_ScheduleActive);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "status"),
+                      &kWEB_Status);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastPingDate"),
+                      &kWEB_LastPingDate);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastPingETag"),
+                      &kWEB_LastPingETag);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastPingModDate"),
+                      &kWEB_LastPingModDate);
+		gRDF->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastPingContentLen"),
+                      &kWEB_LastPingContentLen);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "parent",              &kNC_Parent);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "parent"), &kNC_Parent);
 
     gRDF->GetLiteral(NS_LITERAL_STRING("true").get(),         &kTrueLiteral);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newbookmark",             &kNC_BookmarkCommand_NewBookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newfolder",               &kNC_BookmarkCommand_NewFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newseparator",            &kNC_BookmarkCommand_NewSeparator);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=deletebookmark",          &kNC_BookmarkCommand_DeleteBookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=deletebookmarkfolder",    &kNC_BookmarkCommand_DeleteBookmarkFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=deletebookmarkseparator", &kNC_BookmarkCommand_DeleteBookmarkSeparator);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setnewbookmarkfolder",    &kNC_BookmarkCommand_SetNewBookmarkFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setpersonaltoolbarfolder",&kNC_BookmarkCommand_SetPersonalToolbarFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setnewsearchfolder",      &kNC_BookmarkCommand_SetNewSearchFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=import",                  &kNC_BookmarkCommand_Import);
-		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=export",                  &kNC_BookmarkCommand_Export);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=newbookmark"),
+                      &kNC_BookmarkCommand_NewBookmark);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=newfolder"),
+                      &kNC_BookmarkCommand_NewFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=newseparator"),
+                      &kNC_BookmarkCommand_NewSeparator);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=deletebookmark"),
+                      &kNC_BookmarkCommand_DeleteBookmark);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=deletebookmarkfolder"),
+                      &kNC_BookmarkCommand_DeleteBookmarkFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=deletebookmarkseparator"),
+                      &kNC_BookmarkCommand_DeleteBookmarkSeparator);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=setnewbookmarkfolder"),
+                      &kNC_BookmarkCommand_SetNewBookmarkFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=setpersonaltoolbarfolder"),
+                      &kNC_BookmarkCommand_SetPersonalToolbarFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=setnewsearchfolder"),
+                      &kNC_BookmarkCommand_SetNewSearchFolder);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=import"),
+                      &kNC_BookmarkCommand_Import);
+		gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=export"),
+                      &kNC_BookmarkCommand_Export);
 	}
 	return NS_OK;
 }
@@ -580,13 +622,13 @@ BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource,
     for (field = gBookmarkFieldTable; field->mName; ++field)
     {
         str = field->mPropertyName;
-        rv = gRDF->GetResource(str.get(), &field->mProperty);
+        rv = gRDF->GetResource(str, &field->mProperty);
         if (NS_FAILED(rv))  return(rv);
     }
     for (field = gBookmarkHeaderFieldTable; field->mName; ++field)
     {
         str = field->mPropertyName;
-        rv = gRDF->GetResource(str.get(), &field->mProperty);
+        rv = gRDF->GetResource(str, &field->mProperty);
         if (NS_FAILED(rv))  return(rv);
     }
 
@@ -964,7 +1006,7 @@ BookmarkParser::CreateAnonymousResource(nsIRDFResource** aResult)
   nsCAutoString    uri(URINC_BOOKMARKS_ROOT_STRING "#$");   // let the compiler concat literals
 	uri.AppendInt(++gNext, 16);
 
-	return gRDF->GetResource(uri.get(), aResult);
+	return gRDF->GetResource(uri, aResult);
 }
 
 
@@ -1336,7 +1378,7 @@ BookmarkParser::ParseResource(nsIRDFResource *arc, nsString& url, nsIRDFNode** a
 
     nsresult                    rv;
     nsCOMPtr<nsIRDFResource>    result;
-    rv = gRDF->GetUnicodeResource(url.get(), getter_AddRefs(result));
+    rv = gRDF->GetUnicodeResource(url, getter_AddRefs(result));
     if (NS_FAILED(rv)) return rv;
     return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
 }
@@ -1471,7 +1513,7 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	}
 
 	nsCOMPtr<nsIRDFResource> bookmark;
-	if (NS_FAILED(rv = gRDF->GetResource(fullurlC.get(), getter_AddRefs(bookmark) )))
+	if (NS_FAILED(rv = gRDF->GetResource(fullurlC, getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return(rv);
@@ -2712,7 +2754,7 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName, const char* aURL,
 
   // Resource: Bookmark ID
   nsCOMPtr<nsIRDFResource> bookmarkResource;
-  rv = gRDF->GetResource(aURL, getter_AddRefs(bookmarkResource));
+  rv = gRDF->GetResource(nsDependentCString(aURL), getter_AddRefs(bookmarkResource));
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -2892,7 +2934,7 @@ nsBookmarksService::IsBookmarked(const char *aURI, PRBool *isBookmarkedFlag)
 
 	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	bookmark;
-	if (NS_FAILED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark))))
+	if (NS_FAILED(rv = gRDF->GetResource(nsDependentCString(aURI), getter_AddRefs(bookmark))))
 		return(rv);
 
 	rv = IsBookmarkedInternal(bookmark, isBookmarkedFlag);
@@ -2911,7 +2953,7 @@ nsBookmarksService::GetLastCharset(const char *aURI,  PRUnichar **aLastCharset)
   nsCOMPtr<nsIRDFResource>	bookmark;
 	nsresult			rv = nsnull;
 
-	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark) )))
+	if (NS_SUCCEEDED(rv = gRDF->GetResource(nsDependentCString(aURI), getter_AddRefs(bookmark) )))
 	{
 		// Note: always use mInner!! Otherwise, could get into an infinite loop
 		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
@@ -2947,7 +2989,7 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *iconUR
 {
     nsresult rv;
 	nsCOMPtr<nsIRDFResource> bookmark;
-	if (NS_FAILED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
+	if (NS_FAILED(rv = gRDF->GetResource(nsDependentCString(aURL), getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return(rv);
@@ -2972,7 +3014,7 @@ nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *iconUR
 {
     nsresult rv;
 	nsCOMPtr<nsIRDFResource> bookmark;
-	if (NS_FAILED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
+	if (NS_FAILED(rv = gRDF->GetResource(nsDependentCString(aURL), getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return(rv);
@@ -2998,7 +3040,7 @@ nsBookmarksService::UpdateLastVisitedDate(const char *aURL, const PRUnichar *aCh
 	nsCOMPtr<nsIRDFResource>	bookmark;
 	nsresult			rv;
 
-	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
+	if (NS_SUCCEEDED(rv = gRDF->GetResource(nsDependentCString(aURL), getter_AddRefs(bookmark) )))
 	{
 		// Note: always use mInner!! Otherwise, could get into an infinite loop
 		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
@@ -3720,7 +3762,7 @@ nsBookmarksService::getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource 
 	{
 		return(NS_ERROR_NULL_POINTER);
 	}
-	rv = gRDF->GetUnicodeResource(newURL, res);
+	rv = gRDF->GetUnicodeResource(nsDependentString(newURL), res);
 	return(rv);
 }
 
@@ -4203,7 +4245,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *aRelativeNode,
       const PRUnichar* uURL = nsnull;
       bookmarkURILiteral->GetValueConst(&uURL);
       if (uURL) {
-          rv = gRDF->GetUnicodeResource(uURL, getter_AddRefs(newResource));
+          rv = gRDF->GetUnicodeResource(nsDependentString(uURL), getter_AddRefs(newResource));
           if (NS_FAILED(rv)) return rv;
       }
     }
@@ -4940,9 +4982,11 @@ nsBookmarksService::LoadBookmarks()
 
       nsCOMPtr<nsIRDFResource> systemFolderResource;
 #if defined(XP_WIN)
-      rv = gRDF->GetResource(systemBookmarksURL, getter_AddRefs(systemFolderResource));
+      rv = gRDF->GetResource(nsDependentCString(systemBookmarksURL),
+                             getter_AddRefs(systemFolderResource));
 #elif defined(XP_MAC)
-      rv = gRDF->GetResource(kURINC_IEFavoritesRoot, getter_AddRefs(systemFolderResource));
+      rv = gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_IEFavoritesRoot),
+                             getter_AddRefs(systemFolderResource));
 #endif
       
       rv = container->RemoveElement(systemFolderResource, PR_TRUE);
@@ -4976,7 +5020,8 @@ nsBookmarksService::LoadBookmarks()
     }
 #elif defined(XP_WIN) || defined(XP_BEOS)
     nsCOMPtr<nsIRDFResource> systemFolderResource;
-    rv = gRDF->GetResource(systemBookmarksURL, getter_AddRefs(systemFolderResource));
+    rv = gRDF->GetResource(nsDependentCString(systemBookmarksURL),
+                           getter_AddRefs(systemFolderResource));
     if (NS_SUCCEEDED(rv))
     {
       nsAutoString systemBookmarksFolderTitle;
