@@ -62,7 +62,6 @@ public:
   }
 #endif
 
-
   // nsIFrame overrides
   NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,

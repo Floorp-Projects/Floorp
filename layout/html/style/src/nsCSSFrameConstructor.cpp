@@ -110,9 +110,9 @@
 #include "nsLayoutErrors.h"
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
-#include "nsScrollPortFrame.h"
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
+#include "nsScrollBoxFrame.h"
 #include "nsIBoxLayout.h"
 #ifdef MOZ_ENABLE_CAIRO
 #include "nsCanvasFrame.h"
@@ -356,9 +356,6 @@ NS_NewResizerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 
 #endif
-
-nsresult
-NS_NewScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewHTMLScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
@@ -3825,11 +3822,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 ---------------Gfx Scrollbars ------
 
 
-     GfxScrollFrame
+     ScrollFrame
 
          ^
          |
-     ScrollPort
+     ScrollBox
 
          ^
          |
@@ -3846,11 +3843,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   // Gfx scrollframes were created in the root frame but the primary frame map may have been destroyed if a 
   // new style sheet was loaded so lets reattach the frames to their content.
   if (mGfxScrollFrame) {
-    nsIFrame* scrollPort = mGfxScrollFrame->GetFirstChild(nsnull);
+    nsIFrame* scrollBox = mGfxScrollFrame->GetFirstChild(nsnull);
 
     nsIFrame* gfxScrollbarFrame1 = nsnull;
     nsIFrame* gfxScrollbarFrame2 = nsnull;
-    gfxScrollbarFrame1 = scrollPort->GetNextSibling();
+    gfxScrollbarFrame1 = scrollBox->GetNextSibling();
     if (gfxScrollbarFrame1) {
       // XXX This works, but why?
       aState.mFrameManager->
@@ -4076,11 +4073,11 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
          ^
          |
-     GfxScrollFrame
+     ScrollFrame
 
          ^
          |
-     ScrollPort <--- RootScrollableView
+     ScrollBox <--- RootScrollableView
 
          ^
          |
@@ -4319,7 +4316,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
       // create scrollframe
       nsIFrame* scrollFrame = nsnull;
-      NS_NewScrollPortFrame(aPresShell, &scrollFrame);
+      NS_NewScrollBoxFrame(aPresShell, &scrollFrame);
       NS_ENSURE_TRUE(scrollFrame, NS_ERROR_FAILURE);
 
       scrollFrame->Init(aPresContext, nsnull, parentFrame, scrollPseudoStyle, nsnull);
@@ -6155,24 +6152,15 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsPresContext*      aPresContex
  
 
 /**
- * Called to wrap a scrollframe or gfx scrollframe around a frame. The hierarchy will look like this
+ * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like this
  *
- *  ------ for native scrollbars -----
+ * ------- for gfx scrollbars ------
  *
  *
  *            ScrollFrame
  *                 ^
  *                 |
- *               Frame (scrolled frame you passed in)
- *
- *
- * ------- for gfx scrollbars ------
- *
- *
- *            GfxScrollFrame
- *                 ^
- *                 |
- *              ScrollPort
+ *              ScrollBox
  *                 ^
  *                 |
  *               Frame (scrolled frame you passed in)
@@ -6181,17 +6169,9 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsPresContext*      aPresContex
  *-----------------------------------
  * LEGEND:
  * 
- * ScrollFrame: This is a frame that has a view that manages native scrollbars. It implements
- *              nsIScrollableView. It also manages clipping and scrolling of native widgets by 
- *              having a native scrolling window.
- *
  * GfxScrollFrame: This is a frame that manages gfx cross platform frame based scrollbars.
  *
- * ScrollPort: This is similar to the ScrollFrame above in that is clips and scrolls its children
- *             with a native scrolling window. But because it is contained in a GfxScrollFrame
- *             it does not have any code to do scrollbars so it is much simpler. Infact it only has
- *             1 view attached to it. Where the ScrollFrame above has 5! 
- *             
+ * ScrollBox: This clips and scrolls its children with a native scrolling window.
  *
  * @param aContent the content node of the child to wrap.
  * @param aScrolledFrame The frame of the content to wrap. This should not be
@@ -6290,10 +6270,10 @@ nsCSSFrameConstructor::InitGfxScrollFrame(nsIPresShell*            aPresShell,
                                           nsIFrame*&               aNewFrame,
                                           nsFrameItems&            aAnonymousFrames)
 {
-  nsIFrame* scrollPort;
-  NS_NewScrollPortFrame(aPresShell, &scrollPort);
+  nsIFrame* scrollBox;
+  NS_NewScrollBoxFrame(aPresShell, &scrollBox);
 
-  aAnonymousFrames.AddChild(scrollPort);
+  aAnonymousFrames.AddChild(scrollBox);
 
   // if there are any anonymous children for the scroll frame, create frames for them.
   CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, aDocument, aNewFrame,
@@ -7686,17 +7666,16 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsPresContext* aPresContex
         // far, see bugs 70258 and 93558) are:
         //
         // (HTML)
-        //    ScrollBoxFrame(html)<
-        //     ScrollPortFrame(html)<
+        //    nsHTMLScrollFrame(html)<
+        //     nsScrollBoxFrame(html)<
         //      Canvas(-1)<
         //       Area(html)<
         //        (etc.)
         //
         // (XUL #1)
         //    RootBoxFrame(window)<
-        //     GfxScroll<
-        //      ScrollBoxFrame(window)<
-        //       ScrollPortFrame(window)<
+        //     nsXULScrollFrame<
+        //      nsScrollBoxFrame(window)<
         //        (etc.)
         //
         // (XUL #2)

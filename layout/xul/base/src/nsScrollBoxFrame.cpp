@@ -53,6 +53,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollbarMediator.h"
+#include "nsIFormControlFrame.h"
+#include "nsGfxScrollFrame.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
@@ -84,10 +86,36 @@ nsScrollBoxFrame::nsScrollBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell), mVe
 {
 }
 
-
 PRBool
 nsScrollBoxFrame::NeedsClipWidget()
 {
+  // Scrollports contained in form controls (e.g., listboxes) don't get
+  // widgets.
+  for (nsIFrame* parentFrame = GetParent(); parentFrame;
+       parentFrame = parentFrame->GetParent()) {
+    nsIFormControlFrame* fcFrame;
+    if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
+      return PR_FALSE;
+    }
+  }
+
+  // Scrollports that don't ever show associated scrollbars don't get
+  // widgets, because they will seldom actually be scrolled.
+  nsIFrame* parent = GetParent();
+  if (!parent)
+    return nsnull;
+  nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(parent);
+  if (scrollFrame) {
+    nsGfxScrollFrameInner::ScrollbarStyles scrollbars
+      = scrollFrame->GetScrollbarStyles();
+    if ((scrollbars.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN
+         || scrollbars.mHorizontal == NS_STYLE_OVERFLOW_VISIBLE)
+        && (scrollbars.mVertical == NS_STYLE_OVERFLOW_HIDDEN
+            || scrollbars.mVertical == NS_STYLE_OVERFLOW_VISIBLE)) {
+      return PR_FALSE;
+    }
+  }
+ 
   return PR_TRUE;
 }
 
