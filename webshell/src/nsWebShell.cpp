@@ -207,6 +207,7 @@ public:
   NS_IMETHOD Forward(void);
   NS_IMETHOD CanForward(void);
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
+  NS_IMETHOD GetHistoryLength(PRInt32& aResult);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
   NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar** aURLResult);
 
@@ -1453,6 +1454,13 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
 }
 
 NS_IMETHODIMP
+nsWebShell::GetHistoryLength(PRInt32& aResult)
+{
+  aResult = mHistory.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::GetHistoryIndex(PRInt32& aResult)
 {
   aResult = mHistoryIndex;
@@ -1839,12 +1847,6 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
   }
   else if (URLSpec.Equals("http://out-of-date/")) {
     aState = eLinkState_OutOfDate;
-  }
-  else if (URLSpec.Equals("http://active/")) {
-    aState = eLinkState_Active;
-  }
-  else if (URLSpec.Equals("http://hover/")) {
-    aState = eLinkState_Hover;
   }
 #endif
   return NS_OK;

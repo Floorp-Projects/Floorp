@@ -298,6 +298,7 @@ public:
   NS_IMETHOD Forward() = 0;
   NS_IMETHOD CanForward() = 0;
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
+  NS_IMETHOD GetHistoryLength(PRInt32& aResult) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
   NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar **aURLResult) = 0;
 
