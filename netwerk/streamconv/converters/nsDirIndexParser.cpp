@@ -331,7 +331,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
         if (status == 1)
           aIdx->SetSize(len);
         else
-          aIdx->SetSize(LL_INIT(0, -1)); // -1 means unknown
+          aIdx->SetSize(LL_MAXUINT); // LL_MAXUINT means unknown
       }
       break;
     case FIELD_LASTMODIFIED:

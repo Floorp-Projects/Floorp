@@ -45,7 +45,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDirIndex,
                               nsIDirIndex)
 
 nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
-                           mSize(LL_INIT(0, -1)),
+                           mSize(LL_MAXUINT),
                            mLastModified(-1) {
 }
 
