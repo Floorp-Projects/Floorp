@@ -45,10 +45,10 @@
 #if defined(IRIX) || defined(HPUX) || defined(OSF1) || defined(SOLARIS) \
     || defined(AIX4_1) || defined(LINUX) || defined(SONY) \
     || defined(BSDI) || defined(SCO) || defined(NEC) || defined(SNI) \
-    || defined(SUNOS4) || defined(NCR)
+    || defined(SUNOS4) || defined(NCR) || defined(RHAPSODY)
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \
-    || defined(UNIXWARE) || defined(RHAPSODY)
+    || defined(UNIXWARE)
 #define _PRSockLen_t size_t
 #else
 #error "Cannot determine architecture"
