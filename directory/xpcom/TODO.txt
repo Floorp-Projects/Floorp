@@ -7,7 +7,7 @@ housecleaning for first 0.x release
   (bug 13423), but that's not done yet).  This also requires some 
   threadsafety work related to the data and interfaces touched by 
   nsLDAPChannel::Cancel, since these are used in the connection
-  callbacks, and we also need to be able to cancel from the connection
+  callbacks, and we also need to be able to cancel from the connection 
   callbacks themselves. 
 
 * audit for and fix leaks / bloat
