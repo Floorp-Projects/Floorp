@@ -156,6 +156,6 @@ include $(topsrcdir)/config/rules.mk
 avoid_arglist_probs: FORCE
 	rm -f core nsU*.o
 
-clean realclean distclean: avoid_arglist_probs
+clean realclean distclean:: avoid_arglist_probs
 
 .PHONY: avoid_arglist_probs
