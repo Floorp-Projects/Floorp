@@ -170,7 +170,6 @@ nsTextEditor::~nsTextEditor()
   nsEditor::GetDocument(getter_AddRefs(doc));
   if (doc)
   {
-    nsresult result;
     nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(doc, &result);
     if (NS_SUCCEEDED(result) && erP) 
     {
@@ -2706,8 +2705,8 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     if (gNoisy) 
     { 
       printf("created range [(%p,%d), (%p,%d)]\n", 
-              startNode, rangeStartOffset,
-              endNode, rangeEndOffset);
+              startNode.get(), rangeStartOffset,
+              endNode.get(), rangeEndOffset);
     }
 
     nsVoidArray nodeList;
