@@ -27,8 +27,8 @@
 #include "nsApplicationManager.h"
 #include "nsString.h"
 
-nsHashtable * NSApplicationManager::applications = NULL;
-PRMonitor *NSApplicationManager::monitor = NULL;
+nsHashtable * nsApplicationManager::applications = NULL;
+PRMonitor *nsApplicationManager::monitor = NULL;
 
 class ApplicationEntry {
 public:
@@ -68,7 +68,7 @@ public:
 
 
 
-nsresult NSApplicationManager::GetShellInstance(nsIApplicationShell * aApplicationShell,
+nsresult nsApplicationManager::GetShellInstance(nsIApplicationShell * aApplicationShell,
                                              nsIShellInstance **aShellInstance) 
 {
   checkInitialized();
@@ -95,7 +95,7 @@ nsresult NSApplicationManager::GetShellInstance(nsIApplicationShell * aApplicati
   return res;
 }
 
-nsresult NSApplicationManager::checkInitialized() 
+nsresult nsApplicationManager::checkInitialized() 
 {
   nsresult res = NS_OK;
   if (applications == NULL) {
@@ -104,7 +104,7 @@ nsresult NSApplicationManager::checkInitialized()
   return res;
 }
 
-nsresult NSApplicationManager::Initialize() 
+nsresult nsApplicationManager::Initialize() 
 {
   if (applications == NULL) {
     applications = new nsHashtable();
@@ -117,7 +117,7 @@ nsresult NSApplicationManager::Initialize()
 }
 
 
-nsresult NSApplicationManager::SetShellAssociation(nsIApplicationShell * aApplicationShell,
+nsresult nsApplicationManager::SetShellAssociation(nsIApplicationShell * aApplicationShell,
                                                    nsIShellInstance *aShellInstance)
 {
   checkInitialized();
@@ -140,7 +140,7 @@ nsresult NSApplicationManager::SetShellAssociation(nsIApplicationShell * aApplic
   return NS_OK;
 }
 
-nsresult NSApplicationManager::DeleteShellAssociation(nsIApplicationShell * aApplicationShell,
+nsresult nsApplicationManager::DeleteShellAssociation(nsIApplicationShell * aApplicationShell,
                                                       nsIShellInstance *aShellInstance)
 {
   checkInitialized();
@@ -167,7 +167,7 @@ nsresult NSApplicationManager::DeleteShellAssociation(nsIApplicationShell * aApp
   return res;
 }
 
-nsresult NSApplicationManager::ModalMessage(const nsString &aMessage, 
+nsresult nsApplicationManager::ModalMessage(const nsString &aMessage, 
                                             const nsString &aTitle, 
                                             nsModalMessageType aModalMessageType)
 {
