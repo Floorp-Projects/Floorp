@@ -63,6 +63,38 @@ function MsgDeleteMessage()
   }
 }
 
+function MsgDeleteFolder()
+{
+	var appCore = FindMsgAppCore();
+	if (appCore != null) {
+		appCore.SetWindow(window);
+		//get the selected elements
+		var tree = frames[0].frames[0].document.getElementById('folderTree');
+		var folderList = tree.getElementsByAttribute("selected", "true");
+		var i;
+		var folder, parent;
+		for(i = 0; i < folderList.length; i++)
+		{
+			folder = folderList[i];
+		    folderuri = folder.getAttribute('id');
+			dump(folderuri);
+
+			parent = folder.parentNode.parentNode;	
+		    var parenturi = parent.getAttribute('id');
+			if(parenturi)
+				dump(parenturi);
+			else
+				dump("No parenturi");
+			dump("folder = " + folder.nodeName + "\n"); 
+			dump("parent = " + parent.nodeName + "\n"); 
+
+			appCore.DeleteFolders(tree.database, parent, folder);
+		}
+	}
+
+
+}
+
 function MsgReplyMessage()
 {
   ComposeMessageWithType(0);
@@ -307,7 +339,21 @@ function MsgGoForward() {}
 function MsgEditMessageAsNew() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
-function MsgMarkMsgAsRead() {}
+
+function MsgMarkMsgAsRead()
+{
+  dump("\MsgMarkMsgAsRead from XUL\n");
+  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  var appCore = FindMsgAppCore();
+  if (appCore != null) {
+    appCore.SetWindow(window);
+	//get the selected elements
+    var messageList = tree.getElementsByAttribute("selected", "true");
+    appCore.MarkMessagesRead(tree.database, messageList, true);
+  }
+
+}
+
 function MsgMarkThreadAsRead() {}
 function MsgMarkByDate() {}
 function MsgMarkAllRead() {}
