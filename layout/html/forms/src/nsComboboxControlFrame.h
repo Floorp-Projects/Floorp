@@ -196,6 +196,7 @@ protected:
   nsIFrame* GetDropdownFrame();
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
   NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
+  PRBool ShouldScrollFrameIntoView(nsIPresShell * aShell, nsIPresContext * aPresContext, nsIFrame *aFrame);
 
   nsFrameList mPopupFrames;                       // additional named child list
   nsIPresContext*       mPresContext;             // XXX: Remove the need to cache the pres context.
