@@ -92,10 +92,6 @@ typedef ULONG   HKEY;
                                 KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY
 #define ERROR_SUCCESS           0L
 
-LONG _System RegOpenKeyEx(HKEY, const char*, ULONG, ULONG, HKEY* );
-LONG _System RegQueryValueEx(HKEY, const char*, ULONG*, ULONG*, UCHAR*,
-                             ULONG*);
-
 static PRBool
 UseFTFunctions()
 {
@@ -111,21 +107,45 @@ UseFTFunctions()
       return PR_FALSE;
     }
 
+    // Test for availability of registry functions and query their addresses
+    APIRET rc;
+    HMODULE hmod = NULLHANDLE;
+    char LoadError[CCHMAXPATH];
+    rc = DosLoadModule(LoadError, CCHMAXPATH, "REGISTRY", &hmod);
+    if (rc != NO_ERROR) {
+      NS_WARNING("REGISTRY.DLL could not be loaded");
+      return PR_FALSE;
+    }
+    LONG _System (*APIENTRY RegOpenKeyEx)(HKEY, const char*, ULONG, ULONG,
+                                           HKEY* );
+    LONG _System (*APIENTRY RegQueryValueEx)(HKEY, const char*, ULONG*, ULONG*,
+                                              UCHAR*, ULONG*);
+
+    rc = DosQueryProcAddr(hmod, 0L, "RegOpenKeyExA", (PFN*)&RegOpenKeyEx);
+    rc += DosQueryProcAddr(hmod, 0L, "RegQueryValueExA", (PFN*)&RegQueryValueEx);
+    if (rc != NO_ERROR) {
+      NS_WARNING("Registry function(s) were not found in REGISTRY.DLL");
+      DosFreeModule(hmod);
+      return PR_FALSE;
+    }
+
     // Is FT2LIB enabled?
     HKEY key;
-    LONG result = ::RegOpenKeyEx(HKEY_CURRENT_USER,
-                                 "Software\\Innotek\\InnoTek Font Engine", 0,
-                                 KEY_READ, &key);
+    LONG result = RegOpenKeyEx(HKEY_CURRENT_USER,
+                               "Software\\Innotek\\InnoTek Font Engine", 0,
+                               KEY_READ, &key);
     if (result != ERROR_SUCCESS) {
+      DosFreeModule(hmod);
       return PR_FALSE;
     }
 
     ULONG value;
     ULONG length = sizeof(value);
-    result = ::RegQueryValueEx(key, "Enabled", NULL, NULL, (UCHAR*)&value,
-                               &length);
+    result = RegQueryValueEx(key, "Enabled", NULL, NULL, (UCHAR*)&value,
+                             &length);
     if (result != ERROR_SUCCESS || value == 0) {
       // check if "Innotek Font Engine" is disabled (value == 0)
+      DosFreeModule(hmod);
       return PR_FALSE;
     }
 
@@ -139,20 +159,24 @@ UseFTFunctions()
     strcpy(keystr, "Software\\Innotek\\InnoTek Font Engine\\Applications\\");
     strcat(keystr, name);
     strcat(keystr, ext);
-    result = ::RegOpenKeyEx(HKEY_CURRENT_USER, keystr, 0, KEY_READ, &key);
+    result = RegOpenKeyEx(HKEY_CURRENT_USER, keystr, 0, KEY_READ, &key);
     if (result != ERROR_SUCCESS) {
+      DosFreeModule(hmod);
       return PR_FALSE;
     }
-    result = ::RegQueryValueEx(key, "Enabled", NULL, NULL, (UCHAR*)&value,
-                               &length);
+    result = RegQueryValueEx(key, "Enabled", NULL, NULL, (UCHAR*)&value,
+                             &length);
     if (result != ERROR_SUCCESS || value == 0) {
       // check if FT2LIB is disabled for our application (value == 0)
+      DosFreeModule(hmod);
       return PR_FALSE;
     }
 
+    // REGISTRY.DLL use ends here
+    DosFreeModule(hmod);
+
     // Load lib and functions
-    HMODULE hmod = 0;
-    int rc = DosLoadModule(NULL, 0, "FT2LIB", &hmod);
+    rc = DosLoadModule(LoadError, 0, "FT2LIB", &hmod);
     if (rc == NO_ERROR) {
       rc = DosQueryProcAddr(hmod, 0, "Ft2EnableFontEngine",
                             (PFN*)&nsFontMetricsOS2FT::pfnFt2EnableFontEngine);

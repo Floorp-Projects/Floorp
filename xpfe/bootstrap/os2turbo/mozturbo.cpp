@@ -90,7 +90,7 @@ char *compdir[] = {
  "DOCSHELL.DLL",
  "EDITOR.DLL",
  "EMBEDCMP.DLL",
-// "GFX_OS2.DLL", Can't load GFX_OS2.DLL because it loads PMWINX.DLL which horks SHUTDOWN */
+ "GFX_OS2.DLL",
  "GKLAYOUT.DLL",
  "GKPARSER.DLL",
  "GKPLUGIN.DLL",
