@@ -93,6 +93,13 @@ EX_LIBS += \
 	$(NULL)
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+EX_LIBS += \
+	$(DIST)/bin/libpwcac.so \
+	$(DIST)/bin/libdbm.so \
+	$(NULL)
+endif
+
 PROGS = main
 
 TARGETS = $(PROGS)
@@ -104,7 +111,11 @@ $(PROGS): $(OBJS) $(EX_LIBS)
 ifeq ($(OS_ARCH),Linux)
 	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
+ifeq ($(OS_ARCH),IRIX)
 	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+else
+	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+endif
 endif
 
 export::
