@@ -1,0 +1,112 @@
+<?xml version="1.0"?> 
+
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+
+<?xml-stylesheet href="chrome://messenger/skin/addressingWidget.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/cardDialog.css" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        title="&mailListWindow.title;"
+        ondialogaccept="return MailListOKButton();"
+        onload="OnLoadNewMailList();"
+        ondragover="DragOverAddressListTree(event);"
+        ondragdrop="DropOnAddressListTree(event);">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+  </stringbundleset>
+
+  <!-- move needed functions into a single js file -->
+  <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
+
+  <hbox align="center">
+    <label control="abPopup" value="&addToAddressBook.label;" accesskey="&addToAddressBook.accesskey;"/>
+    <menulist id="abPopup">
+      <menupopup id="abPopup-menupopup" 
+                 ref="moz-abdirectory://" 
+                 datasources="rdf:addressdirectory"
+                 sortActive="true"
+                 sortDirection="ascending"
+                 sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+        <template> 
+        <rule nc:IsWriteable="false"/> 
+        <rule nc:IsMailList="false">
+          <menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+        </rule>
+        </template> 
+      </menupopup>
+    </menulist>
+  </hbox>
+
+  <spacer style="height:1em"/>
+
+  <vbox id="editlist">
+    <hbox>
+      <spacer flex="1"/>
+      <label control="ListName" value="&ListName.label;" accesskey="&ListName.accesskey;" class="CardEditLabel"/>
+      <hbox class="CardEditWidth">
+        <textbox id="ListName" flex="1"/>
+      </hbox>
+    </hbox>
+    <hbox>
+      <spacer flex="1"/>
+      <label control="ListNickName" value="&ListNickName.label;" accesskey="&ListNickName.accesskey;" class="CardEditLabel"/>
+      <hbox class="CardEditWidth">
+        <textbox id="ListNickName" flex="1"/>
+      </hbox>
+    </hbox>
+    <hbox>
+      <spacer flex="1"/>
+      <label control="ListDescription" value="&ListDescription.label;" accesskey="&ListDescription.accesskey;" class="CardEditLabel"/>
+      <hbox class="CardEditWidth">
+        <textbox id="ListDescription" flex="1"/>
+      </hbox>
+    </hbox>
+
+    <spacer style="height:1em"/>
+    <label value="&AddressTitle.label;"/>
+    <spacer style="height:0.1em"/>
+
+    <listbox id="addressingWidget" style="height: 15em;" onclick="awClickEmptySpace(event.target, true)">
+      <listitem class="addressingWidgetItem">
+        <listcell class="addressingWidgetCell">
+          <textbox id="addressCol1#1" class="plain textbox-addressingWidget"
+                   type="autocomplete" allowevents="true" flex="1"
+                   searchSessions="addrbook" timeout="300" maxrows="4" 
+                   autoFill="true" autoFillAfterMatch="true" forceComplete="true"
+                   minResultsForPopup="3"
+                   ontextcommand="awRecipientTextCommand(eventParam, this)"
+                   onkeypress="handleKeyPress(this, event);"
+                   onkeydown="awRecipientKeyDown(event, this);"
+                   onclick="awNotAnEmptyArea(event);">
+            <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
+          </textbox>
+        </listcell>            
+      </listitem>
+    </listbox>
+  </vbox>
+</dialog>
