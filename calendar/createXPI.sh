@@ -1,0 +1,1 @@
+cd linux; zip -r calendar_linux.xpi components/ install.js resources/; mv calendar_linux.xpi ../; cd ../windows; zip -r calendar_windows.xpi components/ bin/ install.js resources/; mv calendar_windows.xpi ../; cd ..
