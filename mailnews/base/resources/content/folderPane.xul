@@ -97,6 +97,9 @@
                    predicate="http://home.netscape.com/NC-rdf#TotalMessages"
                    object="?totalCount" />
           <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderSize"
+                   object="?folderSize" />
+          <binding subject="?member"
                    predicate="http://home.netscape.com/NC-rdf#PageTitleFakeAccount"
                    object="?fakeAccount" />
         </bindings>
@@ -112,6 +115,7 @@
                               properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
                 <treecell label="?totalCount"
                               properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
+                <treecell label="?folderSize"/>
               </treerow>
             </treeitem>
           </treechildren>
@@ -139,6 +143,11 @@
                    persist="hidden width"
                    flex="1"
                    label="&totalColumn.label;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="folderSizeCol"
+                   persist="hidden width"
+                   flex="1"
+                   label="&folderSizeColumn.label;"/>
     </treecols>
   </tree>
 </overlay>
