@@ -46,7 +46,7 @@
 #include "nsIPrompt.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIWebProgressListener.h"
-#include "nsIDOMFormListener.h"
+#include "nsIDOMFocusListener.h"
 
 /* 360565c4-2ef3-4f6a-bab9-94cca891b2a7 */
 #define NS_PASSWORDMANAGER_CID \
@@ -71,7 +71,7 @@ class nsPasswordManager : public nsIPasswordManager,
                           public nsIObserver,
                           public nsIFormSubmitObserver,
                           public nsIWebProgressListener,
-                          public nsIDOMFormListener,
+                          public nsIDOMFocusListener,
                           public nsSupportsWeakReference
 {
 public:
@@ -118,12 +118,9 @@ public:
                     nsIURI* aActionURL,
                     PRBool* aCancelSubmit);
 
-  // nsIDOMFormListener
-  NS_IMETHOD Submit(nsIDOMEvent* aEvent);
-  NS_IMETHOD Reset(nsIDOMEvent* aEvent);
-  NS_IMETHOD Change(nsIDOMEvent* aEvent);
-  NS_IMETHOD Select(nsIDOMEvent* aEvent);
-  NS_IMETHOD Input(nsIDOMEvent* aEvent);
+  // nsIDOMFocusListener
+  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
+  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -140,6 +137,8 @@ protected:
                                      const nsAString&  aUserField,
                                      SignonDataEntry** aResult);
 
+
+  nsresult FillPassword(nsIDOMEvent* aEvent);
 
   static PLDHashOperator PR_CALLBACK FindEntryEnumerator(const nsACString& aKey,
                                                          SignonHashEntry* aEntry,

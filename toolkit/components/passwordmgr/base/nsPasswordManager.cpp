@@ -179,7 +179,7 @@ NS_INTERFACE_MAP_BEGIN(nsPasswordManager)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPasswordManager)
@@ -586,7 +586,8 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
 
   // We can auto-prefill the username and password if there is only
   // one stored login that matches the username and password field names
-  // on the form in question.
+  // on the form in question.  Note that we only need to worry about a
+  // single login per form.
 
   for (PRUint32 i = 0; i < formCount; ++i) {
     nsCOMPtr<nsIDOMNode> formNode;
@@ -613,12 +614,13 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
 
       if (firstMatch) {
         // We've found more than one possible signon for this form.
-        // Attach an onchange handler to the username field so that we can
-        // attempt to prefill the password after the user has
+        // Listen for blur and autocomplete events on the username field so
+        // that we can attempt to prefill the password after the user has
         // entered the username.
 
         nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(userField);
-        targ->AddEventListener(NS_LITERAL_STRING("change"), this, PR_FALSE);
+        targ->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
+        targ->AddEventListener(NS_LITERAL_STRING("DOMAutoComplete"), this, PR_FALSE);
         firstMatch = nsnull;
         break;   // on to the next form
       } else {
@@ -634,6 +636,10 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
 
       DecryptData(firstMatch->passValue, buffer);
       passField->SetValue(buffer);
+
+      nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(userField);
+      targ->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
+      targ->AddEventListener(NS_LITERAL_STRING("DOMAutoComplete"), this, PR_FALSE);
     }
   }
 
@@ -897,7 +903,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
 
               if (confirm && selection >= 0) {
                 changeEntry = entry;
-                for (PRInt32 m = 1; m < selection; ++m)
+                for (PRInt32 m = 0; m < selection; ++m)
                   changeEntry = changeEntry->next;
               }
 
@@ -942,97 +948,25 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   return NS_OK;
 }
 
-// nsIDOMFormListener implementation
+// nsIDOMFocusListener implementation
 
 NS_IMETHODIMP
-nsPasswordManager::Submit(nsIDOMEvent* aEvent)
-{
-  // Note, form submission is not handled here (to do so would mean
-  // hooking up an event listener to each form as it's created).
-  // See ::Notify().
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPasswordManager::Reset(nsIDOMEvent* aEvent)
+nsPasswordManager::Focus(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPasswordManager::Change(nsIDOMEvent* aEvent)
+nsPasswordManager::Blur(nsIDOMEvent* aEvent)
 {
-  // Try to prefill the password for the just-changed username.
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
-
-  nsCOMPtr<nsIDOMHTMLInputElement> userField = do_QueryInterface(target);
-  if (!userField)
-    return NS_OK;
-
-  nsCOMPtr<nsIContent> fieldContent = do_QueryInterface(userField);
-  nsIDocument* doc = fieldContent->GetDocument();
-
-  nsCOMPtr<nsIURI> documentURL;
-  doc->GetDocumentURL(getter_AddRefs(documentURL));
-
-  nsCAutoString realm;
-  documentURL->GetPrePath(realm);
-
-  nsAutoString userValue;
-  userField->GetValue(userValue);
-
-  nsAutoString fieldName;
-  userField->GetName(fieldName);
-
-  SignonHashEntry* hashEnt;
-  if (!mSignonTable.Get(realm, &hashEnt))
-    return NS_OK;
-
-  SignonDataEntry* foundEntry;
-  FindPasswordEntryInternal(hashEnt->head, userValue, nsString(),
-                            fieldName, &foundEntry);
-
-  if (!foundEntry)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMHTMLFormElement> formEl;
-  userField->GetForm(getter_AddRefs(formEl));
-  if (!formEl)
-    return NS_OK;
-
-  nsCOMPtr<nsIForm> form = do_QueryInterface(formEl);
-  nsCOMPtr<nsISupports> foundNode;
-  form->ResolveName(foundEntry->passField, getter_AddRefs(foundNode));
-  nsCOMPtr<nsIDOMHTMLInputElement> passField = do_QueryInterface(foundNode);
-  if (!passField)
-    return NS_OK;
-
-  nsAutoString passValue;
-  DecryptData(foundEntry->passValue, passValue);
-  passField->SetValue(passValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPasswordManager::Select(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPasswordManager::Input(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
+  return FillPassword(aEvent);
 }
 
 NS_IMETHODIMP
 nsPasswordManager::HandleEvent(nsIDOMEvent* aEvent)
 {
-  return NS_OK;
+  return FillPassword(aEvent);
 }
-
 
 // internal methods
 
@@ -1109,13 +1043,15 @@ nsPasswordManager::ReadSignonFile()
       break;
 
     case STATE_USERFIELD:
+
+      // Commit any completed entry
+      if (entry)
+        AddSignonData(realm, entry);
+
       // If the line is a ., we've reached the end of this realm's entries.
       if (buffer.Equals(NS_LITERAL_STRING("."))) {
-        if (entry) {
-          AddSignonData(realm, entry);
-          entry = nsnull;
-          state = STATE_REALM;
-        }
+        entry = nsnull;
+        state = STATE_REALM;
       } else {
         entry = new SignonDataEntry();
         entry->userField.Assign(buffer);
@@ -1373,6 +1309,65 @@ nsPasswordManager::FindPasswordEntryInternal(const SignonDataEntry* aEntry,
 
   *aResult = nsnull;
   return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
+{
+  // Try to prefill the password for the just-changed username.
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+
+  nsCOMPtr<nsIDOMHTMLInputElement> userField = do_QueryInterface(target);
+  if (!userField)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> fieldContent = do_QueryInterface(userField);
+  nsIDocument* doc = fieldContent->GetDocument();
+
+  nsCOMPtr<nsIURI> documentURL;
+  doc->GetDocumentURL(getter_AddRefs(documentURL));
+
+  nsCAutoString realm;
+  documentURL->GetPrePath(realm);
+
+  nsAutoString userValue;
+  userField->GetValue(userValue);
+
+  if (userValue.IsEmpty())
+    return NS_OK;
+
+  nsAutoString fieldName;
+  userField->GetName(fieldName);
+
+  SignonHashEntry* hashEnt;
+  if (!mSignonTable.Get(realm, &hashEnt))
+    return NS_OK;
+
+  SignonDataEntry* foundEntry;
+  FindPasswordEntryInternal(hashEnt->head, userValue, nsString(),
+                            fieldName, &foundEntry);
+
+  if (!foundEntry)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMHTMLFormElement> formEl;
+  userField->GetForm(getter_AddRefs(formEl));
+  if (!formEl)
+    return NS_OK;
+
+  nsCOMPtr<nsIForm> form = do_QueryInterface(formEl);
+  nsCOMPtr<nsISupports> foundNode;
+  form->ResolveName(foundEntry->passField, getter_AddRefs(foundNode));
+  nsCOMPtr<nsIDOMHTMLInputElement> passField = do_QueryInterface(foundNode);
+  if (!passField)
+    return NS_OK;
+
+  nsAutoString passValue;
+  DecryptData(foundEntry->passValue, passValue);
+  passField->SetValue(passValue);
+
+  return NS_OK;
 }
 
 //////////////////////////////////////
