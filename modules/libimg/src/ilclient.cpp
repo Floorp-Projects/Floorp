@@ -545,6 +545,7 @@ il_get_container(IL_GroupContext *img_cx,
           IL_ReleaseColorSpace(ic->src_header->color_space);
           IL_ReleaseColorSpace(ic->image->header.color_space);
           PR_FREEIF(ic->src_header);
+          nsCRT::free(ic->url_address);
           PR_FREEIF(ic);
           return NULL;
         }
@@ -556,6 +557,7 @@ il_get_container(IL_GroupContext *img_cx,
           IL_ReleaseColorSpace(ic->src_header->color_space);
           IL_ReleaseColorSpace(ic->image->header.color_space);
           PR_FREEIF(ic->src_header);
+          nsCRT::free(ic->url_address);
           PR_FREEIF(ic);
           return NULL;
         }
