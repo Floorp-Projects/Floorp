@@ -59,9 +59,16 @@ public:
   NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull) = 0;
 
   /**
-   * Compute the size of the scrolled container.
+   * Compute the values for the scroll bars and adjust the position
+   * of the scrolled view as necessary.
+   * @param aAdjustWidgets if any widgets that are children of the
+   *        scrolled view should be repositioned after rethinking
+   *        the scroll parameters, set this ot PR_TRUE. in general
+   *        this should be true unless you intended to vists the
+   *        child widgets manually.
+   * @return error status
    */
-  NS_IMETHOD  ComputeContainerSize(void) = 0;
+  NS_IMETHOD  ComputeScrollOffsets(PRBool aAdjustWidgets = PR_TRUE) = 0;
 
   /**
    * Get the dimensions of the container

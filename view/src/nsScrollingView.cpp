@@ -191,7 +191,7 @@ NS_IMETHODIMP CornerView :: ShowQuality(PRBool aShow)
       nsIScrollableView *par;
 
       if (NS_OK == mParent->QueryInterface(kIScrollableViewIID, (void **)&par))
-        par->ComputeContainerSize();
+        par->ComputeScrollOffsets(PR_TRUE);
     }
 
     mViewManager->UpdateView(this, nsnull, NS_VMREFRESH_IMMEDIATE);
@@ -227,7 +227,7 @@ void CornerView :: Show(PRBool aShow, PRBool aRethink)
       nsIScrollableView *par;
 
       if (NS_OK == mParent->QueryInterface(kIScrollableViewIID, (void **)&par))
-        par->ComputeContainerSize();
+        par->ComputeScrollOffsets(PR_TRUE);
     }
   }
 }
@@ -460,7 +460,7 @@ NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PR
   //all resize operations happen through the viewmanager, this is not
   //an issue. we'll see. MMP
 
-  ComputeContainerSize();
+  ComputeScrollOffsets();
 #endif
 
   // Determine how much space is actually taken up by the scrollbars
@@ -496,6 +496,7 @@ NS_IMETHODIMP nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
     nsIWidget         *thiswin;
     GetWidget(thiswin);
     float             t2p;
+    nsIView           *scrolledView;
   
     if (nsnull == thiswin)
       GetOffsetFromWidget(nsnull, nsnull, thiswin);
@@ -507,9 +508,14 @@ NS_IMETHODIMP nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
   
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
+
+    GetScrolledView(scrolledView);
   
-    // Adjust the positions of the scrollbars and clip view's widget
-    AdjustChildWidgets(this, this, 0, 0, t2p);
+    if (scrolledView)
+    {
+      // Adjust the positions of the scrollbars and clip view's widget
+      AdjustChildWidgets(this, scrolledView, 0, 0, t2p);
+    }
   
     if (nsnull != thiswin)
     {
@@ -1013,7 +1019,7 @@ NS_IMETHODIMP nsScrollingView :: SetWidget(nsIWidget *aWidget)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
+NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
 {
   nsIView       *scrolledView;
   GetScrolledView(scrolledView);
@@ -1243,8 +1249,8 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 
     NS_IF_RELEASE(scrollv);
 
-//    if ((dx != 0) || (dy != 0))
-//      AdjustChildWidgets(this, this, 0, 0, px->GetTwipsToPixels());
+    if ((dx != 0) || (dy != 0) && aAdjustWidgets)
+      AdjustChildWidgets(this, scrolledView, 0, 0, scale);
 
     NS_RELEASE(px);
   }
@@ -1317,7 +1323,7 @@ NS_IMETHODIMP nsScrollingView :: SetQuality(nsContentQuality aQuality)
 NS_IMETHODIMP nsScrollingView :: SetScrollPreference(nsScrollPreference aPref)
 {
   mScrollPref = aPref;
-  ComputeContainerSize();
+  ComputeScrollOffsets(PR_TRUE);
   return NS_OK;
 }
 
