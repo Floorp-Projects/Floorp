@@ -233,6 +233,7 @@ addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v,
    if (f == NULL || u == NULL || s == NULL || v == NULL)	return;
    if (s == gCoreVocab->RDF_child) {
      RDF_Resource temp = (RDF_Resource)v;
+     if (type != RDF_RESOURCE_TYPE) return;
      s = gCoreVocab->RDF_parent;
      v = u;
      u = temp;
