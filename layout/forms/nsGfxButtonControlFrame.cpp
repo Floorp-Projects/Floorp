@@ -56,8 +56,6 @@
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
 
-// Saving PresState
-#include "nsIPresState.h"
 #include "nsNodeInfoManager.h"
 
 const nscoord kSuggestedNotSet = -1;

@@ -88,7 +88,7 @@
 #include "nsIScriptContext.h"
 #include "nsRuleData.h"
 
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsILayoutHistoryState.h"
 
 #include "nsHTMLParts.h"
@@ -139,7 +139,6 @@
 #include "nsCOMArray.h"
 #include "nsNodeInfoManager.h"
 
-static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
 
 //----------------------------------------------------------------------
@@ -2253,9 +2252,9 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
   return nsnull;
 }
 
-nsresult
+/* static */ nsresult
 nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
-                                          nsIPresState** aPresState)
+                                          nsPresState** aPresState)
 {
   NS_ENSURE_ARG_POINTER(aPresState);
   *aPresState = nsnull;
@@ -2270,7 +2269,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
     // Get the pres state for this key, if it doesn't exist, create one
     result = history->GetState(key, aPresState);
     if (!*aPresState) {
-      result = CallCreateInstance(kPresStateCID, aPresState);
+      result = NS_NewPresState(aPresState);
       if (NS_SUCCEEDED(result)) {
         result = history->AddState(key, *aPresState);
       }
@@ -2338,12 +2337,13 @@ nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIPresState> state;
+  nsPresState *state;
   // Get the pres state for this key
-  rv = history->GetState(key, getter_AddRefs(state));
+  rv = history->GetState(key, &state);
   if (state) {
+    PRBool result = aControl->RestoreState(state);
     history->RemoveState(key);
-    return aControl->RestoreState(state);
+    return result;
   }
 
   return PR_FALSE;

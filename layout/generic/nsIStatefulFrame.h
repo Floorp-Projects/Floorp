@@ -4,13 +4,11 @@
 #include "nsISupports.h"
 
 class nsPresContext;
-class nsIPresState;
-
-#define NS_ISTATEFULFRAME_IID_STR "306c8ca0-5f0c-11d3-a9fb-000064657374"
+class nsPresState;
 
 #define NS_ISTATEFULFRAME_IID \
-{0x306c8ca0, 0x5f0c, 0x11d3, \
-{0xa9, 0xfb, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
+{0x26254ab7, 0xdea3, 0x4375, \
+{0xb0, 0x1d, 0xbd, 0x11, 0xa1, 0x4b, 0x54, 0xbc}}
 
 class nsIStatefulFrame : public nsISupports {
  public: 
@@ -24,8 +22,8 @@ class nsIStatefulFrame : public nsISupports {
   // offset NS_CONTENT_ID_COUNTER_BASE
   enum SpecialStateID {eNoID=0, eDocumentScrollState};
 
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState) = 0;
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState) = 0;
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) = 0;
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState) = 0;
 };
 
 #endif /* _nsIStatefulFrame_h */

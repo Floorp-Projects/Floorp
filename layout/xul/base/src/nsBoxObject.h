@@ -38,8 +38,9 @@
 #include "nsCOMPtr.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsPoint.h"
+#include "nsAutoPtr.h"
 
 class nsIBoxLayoutManager;
 class nsIBoxPaintManager;
@@ -73,7 +74,7 @@ protected:
 // MEMBER VARIABLES
   nsCOMPtr<nsIBoxLayoutManager> mLayoutManager; // [OWNER]
   nsCOMPtr<nsIBoxPaintManager> mPaintManager; // [OWNER]
-  nsCOMPtr<nsIPresState> mPresState; // [OWNER]
+  nsAutoPtr<nsPresState> mPresState; // [OWNER]
 
   nsIContent* mContent; // [WEAK]
   nsIPresShell* mPresShell; // [WEAK]

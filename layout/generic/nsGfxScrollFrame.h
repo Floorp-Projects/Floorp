@@ -42,7 +42,6 @@
 #include "nsBoxFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollPositionListener.h"
-#include "nsIPresState.h"
 #include "nsIStatefulFrame.h"
 
 class nsISupportsArray;
@@ -53,6 +52,7 @@ class nsIContent;
 class nsIAtom;
 class nsIDocument;
 class nsIScrollFrameInternal;
+class nsPresState;
 
 class nsGfxScrollFrameInner : public nsIScrollPositionListener {
 public:
@@ -113,8 +113,8 @@ public:
 
   void ScrollToRestoredPosition();
 
-  already_AddRefed<nsIPresState> SaveState();
-  void RestoreState(nsIPresState* aState);
+  nsPresState* SaveState();
+  void RestoreState(nsPresState* aState);
 
   nsIFrame* GetScrolledFrame() const {
     nsIFrame* childBox;
@@ -254,12 +254,12 @@ public:
   virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
   // nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState) {
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) {
     NS_ENSURE_ARG_POINTER(aState);
-    *aState = mInner.SaveState().get();
+    *aState = mInner.SaveState();
     return NS_OK;
   }
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState) {
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState) {
     NS_ENSURE_ARG_POINTER(aState);
     mInner.RestoreState(aState);
     return NS_OK;
@@ -400,12 +400,12 @@ public:
   virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
   // nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState) {
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) {
     NS_ENSURE_ARG_POINTER(aState);
-    *aState = mInner.SaveState().get();
+    *aState = mInner.SaveState();
     return NS_OK;
   }
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState) {
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState) {
     NS_ENSURE_ARG_POINTER(aState);
     mInner.RestoreState(aState);
     return NS_OK;

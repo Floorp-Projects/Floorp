@@ -72,6 +72,8 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresShell.h"
+#include "nsAutoPtr.h"
+#include "nsPresState.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -2176,7 +2178,7 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 
     return defaultValue;
 }
 
-already_AddRefed<nsIPresState>
+nsPresState*
 nsGfxScrollFrameInner::SaveState()
 {
   nsCOMPtr<nsIScrollbarMediator> mediator;
@@ -2202,8 +2204,8 @@ nsGfxScrollFrameInner::SaveState()
   }
 
   nsRect childRect = child->GetBounds();
-  nsCOMPtr<nsIPresState> state;
-  nsresult rv = NS_NewPresState(getter_AddRefs(state));
+  nsAutoPtr<nsPresState> state;
+  nsresult rv = NS_NewPresState(getter_Transfers(state));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   nsCOMPtr<nsISupportsPRInt32> xoffset = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
@@ -2233,13 +2235,11 @@ nsGfxScrollFrameInner::SaveState()
     NS_ENSURE_SUCCESS(rv, nsnull);
     state->SetStatePropertyAsSupports(NS_LITERAL_STRING("height"), height);
   }
-  nsIPresState* result = state;
-  NS_ADDREF(result);
-  return result;
+  return state.forget();
 }
 
 void
-nsGfxScrollFrameInner::RestoreState(nsIPresState* aState)
+nsGfxScrollFrameInner::RestoreState(nsPresState* aState)
 {
   nsCOMPtr<nsISupportsPRInt32> xoffset;
   nsCOMPtr<nsISupportsPRInt32> yoffset;

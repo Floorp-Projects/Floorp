@@ -73,7 +73,7 @@
 #include "nsIEditor.h"
 #include "nsGUIEvent.h"
 
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsLayoutErrors.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
@@ -169,7 +169,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  virtual PRBool RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsPresState* aState);
   virtual PRBool AllowDrop();
 
   // nsIContent
@@ -2338,7 +2338,7 @@ nsHTMLInputElement::SaveState()
 {
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIPresState> state;
+  nsPresState *state = nsnull;
   switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
@@ -2351,7 +2351,7 @@ nsHTMLInputElement::SaveState()
         // (always save if it's a radio button so that the checked
         // state of all radio buttons is restored)
         if (mType == NS_FORM_INPUT_RADIO || checked != defaultChecked) {
-          rv = GetPrimaryPresState(this, getter_AddRefs(state));
+          rv = GetPrimaryPresState(this, &state);
           if (state) {
             if (checked) {
               rv = state->SetStateProperty(NS_LITERAL_STRING("checked"),
@@ -2374,7 +2374,7 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_HIDDEN:
       {
         if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
-          rv = GetPrimaryPresState(this, getter_AddRefs(state));
+          rv = GetPrimaryPresState(this, &state);
           if (state) {
             nsAutoString value;
             GetValue(value);
@@ -2392,7 +2392,7 @@ nsHTMLInputElement::SaveState()
   }
   
   if (GET_BOOLBIT(mBitField, BF_DISABLED_CHANGED)) {
-    rv |= GetPrimaryPresState(this, getter_AddRefs(state));
+    rv |= GetPrimaryPresState(this, &state);
     if (state) {
       PRBool disabled;
       GetDisabled(&disabled);
@@ -2452,7 +2452,7 @@ nsHTMLInputElement::DoneCreatingElement()
 }
 
 PRBool
-nsHTMLInputElement::RestoreState(nsIPresState* aState)
+nsHTMLInputElement::RestoreState(nsPresState* aState)
 {
   PRBool restoredCheckedState = PR_FALSE;
 

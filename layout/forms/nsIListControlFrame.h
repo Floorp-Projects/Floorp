@@ -43,7 +43,6 @@
 class nsPresContext;
 class nsAString;
 class nsIContent;
-class nsIPresState;
 
 // IID for the nsIListControlFrame class
 #define NS_ILISTCONTROLFRAME_IID    \

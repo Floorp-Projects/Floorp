@@ -102,13 +102,13 @@ EXPORTS		= \
 		nsILayoutHistoryState.h \
 		nsIPercentHeightObserver.h  \
 		nsIPresShell.h \
-		nsIPresState.h \
 		nsIReflowCallback.h \
 		nsLayoutAtomList.h \
 		nsLayoutAtoms.h \
 		nsLayoutErrors.h \
 		nsLayoutUtils.h \
 		nsPresContext.h \
+		nsPresState.h \
 		nsStyleChangeList.h \
 		nsStyleConsts.h \
 		$(NULL)

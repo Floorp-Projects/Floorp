@@ -412,7 +412,7 @@ NS_IMETHODIMP
 nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* aValue)
 {
   if (!mPresState)
-    NS_NewPresState(getter_AddRefs(mPresState));
+    NS_NewPresState(getter_Transfers(mPresState));
 
   nsDependentString propertyName(aPropertyName);
   return mPresState->SetStatePropertyAsSupports(propertyName, aValue);
@@ -439,7 +439,7 @@ NS_IMETHODIMP
 nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPropertyValue)
 {
   if (!mPresState)
-    NS_NewPresState(getter_AddRefs(mPresState));
+    NS_NewPresState(getter_Transfers(mPresState));
 
   nsDependentString propertyName(aPropertyName);
   nsDependentString propertyValue(aPropertyValue);

@@ -40,7 +40,7 @@
 #include "nsISupports.h"
 class nsIDOMHTMLFormElement;
 class nsPresContext;
-class nsIPresState;
+class nsPresState;
 class nsIContent;
 class nsString;
 class nsIFormProcessor;
@@ -69,8 +69,8 @@ class nsIFormSubmission;
 #define NS_FORM_OBJECT         21
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x282ff440, 0xcd7e, 0x11d1, \
-  {0x89, 0xad, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
+{ 0xfcf27549, 0xbd77, 0x455a, \
+  {0x8c, 0x3e, 0xbb, 0x20, 0xc5, 0xaf, 0x7b, 0x86} }
 
 
 /**
@@ -138,7 +138,7 @@ public:
    * @return PR_TRUE if the form control was a checkbox and its
    *         checked state was restored, PR_FALSE otherwise.
    */
-  virtual PRBool RestoreState(nsIPresState* aState) = 0;
+  virtual PRBool RestoreState(nsPresState* aState) = 0;
 
   virtual PRBool AllowDrop() = 0;
 };

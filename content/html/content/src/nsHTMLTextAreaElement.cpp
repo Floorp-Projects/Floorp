@@ -63,7 +63,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsLinebreakConverter.h"
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsIDOMText.h"
 #include "nsReadableUtils.h"
 #include "nsITextContent.h"
@@ -104,7 +104,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  virtual PRBool RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsPresState* aState);
 
   // nsITextControlElemet
   NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
@@ -817,8 +817,8 @@ nsHTMLTextAreaElement::SaveState()
 
   // Only save if value != defaultValue (bug 62713)
   if (mValueChanged) {
-    nsCOMPtr<nsIPresState> state;
-    rv = GetPrimaryPresState(this, getter_AddRefs(state));
+    nsPresState *state = nsnull;
+    rv = GetPrimaryPresState(this, &state);
     if (state) {
       nsAutoString value;
       GetValueInternal(value, PR_TRUE);
@@ -837,7 +837,7 @@ nsHTMLTextAreaElement::SaveState()
 }
 
 PRBool
-nsHTMLTextAreaElement::RestoreState(nsIPresState* aState)
+nsHTMLTextAreaElement::RestoreState(nsPresState* aState)
 {
   nsAutoString value;
 #ifdef DEBUG

@@ -49,7 +49,6 @@
 #include "nsFormControlHelper.h"
 typedef   nsTextControlFrame nsNewFrame;
 
-class nsIPresState;
 class nsISupportsArray;
 
 class nsIsIndexFrame : public nsAreaFrame,
@@ -130,8 +129,8 @@ public:
   NS_IMETHOD OnSubmit(nsPresContext* aPresContext);
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState);
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState);
 
 protected:
   nsCOMPtr<nsITextContent> mTextContent;
