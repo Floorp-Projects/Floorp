@@ -197,6 +197,8 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   {
     case WM_INITDIALOG:
       SetWindowText(hDlg, diLicense.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diLicense.szMessage0);
+      SetDlgItemText(hDlg, IDC_MESSAGE1, diLicense.szMessage1);
 
       lstrcpy(szBuf, szSetupDir);
       lstrcat(szBuf, "\\");
