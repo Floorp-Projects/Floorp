@@ -32,15 +32,17 @@
 #include "nsCRT.h"
 #include "prprf.h"
 #include "nsIDeviceContext.h"
+#include "nsIToolbarItem.h"
 
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIFactoryIID,       NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
+static NS_DEFINE_IID(kIToolbarItemIID,   NS_ITOOLBARITEM_IID);
+static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIThrobberIID,      NS_ITHROBBER_IID);
 
 
 #define THROB_NUM 14
@@ -52,7 +54,8 @@ static nsVoidArray gThrobbers;
   ((nsThrobber*)((char*)this - offsetof(nsThrobber, mInner)))
 
 class nsThrobber : public nsIThrobber,
-                   public nsIImageRequestObserver {
+                   public nsIImageRequestObserver,
+                   public nsIToolbarItem {
 public:
   nsThrobber(nsISupports* aOuter);
 
@@ -66,12 +69,32 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIThrobber
+  NS_IMETHOD Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFileNameMask, PRInt32 aNumImages);
   NS_IMETHOD Init(nsIWidget* aParent, const nsRect& aBounds);
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Start();
   NS_IMETHOD Stop();
+
+  // nsIToolbarItem
+
+  NS_IMETHOD Repaint(PRBool aIsSynchronous);
+  NS_IMETHOD GetBounds(nsRect &aRect);
+  NS_IMETHOD SetVisible(PRBool aState);
+  NS_IMETHOD IsVisible(PRBool & aState);
+  NS_IMETHOD SetLocation(PRUint32 aX, PRUint32 aY);
+  NS_IMETHOD SetBounds(PRUint32 aWidth,
+                      PRUint32 aHeight,
+                      PRBool   aRepaint);
+  NS_IMETHOD SetBounds(PRUint32 aX,
+                       PRUint32 aY,
+                       PRUint32 aWidth,
+                       PRUint32 aHeight,
+                       PRBool   aRepaint);
+  NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+  NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+
 
   // nsIImageRequestObserver
   virtual void Notify(nsIImageRequest *aImageRequest,
@@ -87,23 +110,30 @@ public:
   
   virtual ~nsThrobber();
 
-  nsresult LoadThrobberImages();
+  nsresult LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages);
 
   void DestroyThrobberImages();
 
-  PRInt32 mWidth;
-  PRInt32 mHeight;
-  nsIWidget* mWidget;
-  nsISupports* mInnerWidget;
-  nsVoidArray* mImages;
-  PRInt32 mIndex;
+
+  PRInt32        mWidth;
+  PRInt32        mHeight;
+  nsIWidget*     mWidget;
+  nsISupports*   mInnerWidget;
+  nsVoidArray*   mImages;
+  PRInt32        mNumImages;
+  PRInt32        mIndex;
   nsIImageGroup* mImageGroup;
-  nsITimer* mTimer;
-  PRBool mRunning;
-  PRUint32 mCompletedImages ;
+  nsITimer*      mTimer;
+  PRBool         mRunning;
+  PRUint32       mCompletedImages ;
+
+  PRInt32        mPreferredWidth;
+  PRInt32        mPreferredHeight;
+
 
   nsISupports *mOuter;
 
+//-----------------------------------------------
   nsrefcnt AddRefObject() {
     return ++mRefCnt;
   }
@@ -123,6 +153,12 @@ public:
     }
     if (aIID.Equals(kIThrobberIID)) {
       *aInstancePtr = (void*)(nsIThrobber*)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+    }
+    if (aIID.Equals(kIToolbarItemIID)) {
+      *aInstancePtr = (void*)(nsIToolbarItem*)this;
+      AddRef();
       NS_ADDREF_THIS();
       return NS_OK;
     }
@@ -286,6 +322,9 @@ nsThrobber::nsThrobber(nsISupports* aOuter)
   mCompletedImages = 0;
 
   AddThrobber(this);
+
+  mPreferredWidth  = 0;
+  mPreferredHeight = 0;
 }
 
 nsThrobber::~nsThrobber()
@@ -316,8 +355,17 @@ nsThrobber::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds)
 {
-  mWidth = aBounds.width;
-  mHeight = aBounds.height;
+  nsString mask(THROBBER_AT);
+
+  return Init(aParent, aBounds, mask, THROB_NUM);
+}
+
+NS_IMETHODIMP
+nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFileNameMask, PRInt32 aNumImages)
+{
+  mWidth     = aBounds.width;
+  mHeight    = aBounds.height;
+  mNumImages = aNumImages;
 
   // Create widget
   nsresult rv = nsRepository::CreateInstance(kChildCID,
@@ -338,7 +386,7 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds)
     mWidget->Create(aParent, aBounds, HandleThrobberEvent, NULL);
   }
 
-  return LoadThrobberImages();
+  return LoadThrobberImages(aFileNameMask, aNumImages);
 }
 
 NS_IMETHODIMP
@@ -406,14 +454,12 @@ static void throb_timer_callback(nsITimer *aTimer, void *aClosure)
 void
 nsThrobber::Tick()
 {
-  if (mRunning)
-  {
+  if (mRunning) {
     mIndex++;
-    if (mIndex >= THROB_NUM)
+    if (mIndex >= mNumImages)
       mIndex = 0;
     mWidget->Invalidate(PR_TRUE);
-  } else if (mCompletedImages == THROB_NUM)
-  {
+  } else if (mCompletedImages == (PRUint32)mNumImages) {
     mWidget->Invalidate(PR_TRUE);
     mCompletedImages = 0;
   }
@@ -427,12 +473,12 @@ nsThrobber::Tick()
 }
 
 nsresult
-nsThrobber::LoadThrobberImages()
+nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages)
 {
   nsresult rv;
   char url[2000];
 
-  mImages = new nsVoidArray(THROB_NUM);
+  mImages = new nsVoidArray(mNumImages);
   if (nsnull == mImages) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -451,8 +497,10 @@ nsThrobber::LoadThrobberImages()
   }
   mTimer->Init(throb_timer_callback, this, 33);
   
-  for (PRInt32 cnt = 0; cnt < THROB_NUM; cnt++) {
-    PR_snprintf(url, sizeof(url), THROBBER_AT, cnt);
+  char * mask = aFileNameMask.ToNewCString();
+  for (PRInt32 cnt = 0; cnt < mNumImages; cnt++) {
+    
+    PR_snprintf(url, sizeof(url), mask, cnt);
     nscolor bgcolor = NS_RGB(0, 0, 0);
     mImages->InsertElementAt(mImageGroup->GetImage(url,
                                                    (nsIImageRequestObserver *)this,
@@ -463,6 +511,7 @@ nsThrobber::LoadThrobberImages()
     // Note: the throbber observer was created with a ref count of 0
     // which is why we don't have to release a reference to it
   }
+  mWidget->Invalidate(PR_TRUE);
 
   return rv;
 }
@@ -479,7 +528,7 @@ nsThrobber::DestroyThrobberImages()
     }
 
     mImageGroup->Interrupt();
-    for (PRInt32 cnt = 0; cnt < THROB_NUM; cnt++)
+    for (PRInt32 cnt = 0; cnt < mNumImages; cnt++)
     {
       nsIImageRequest *imgreq;
       imgreq = (nsIImageRequest *)mImages->ElementAt(cnt);
@@ -493,6 +542,96 @@ nsThrobber::DestroyThrobberImages()
     NS_RELEASE(mImageGroup);
   }
 }
+
+//-------------------------------------------------------------------------
+NS_METHOD nsThrobber::Repaint(PRBool aIsSynchronous)
+
+{
+  if (nsnull != mWidget) {
+    mWidget->Invalidate(aIsSynchronous);
+  }
+  return NS_OK;
+}
+    
+//--------------------------------------------------------------------
+NS_METHOD nsThrobber::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+{
+  if (nsnull != mWidget) {
+    return mWidget->GetPreferredSize(aWidth, aHeight);
+  }
+  return NS_OK;
+}
+//--------------------------------------------------------------------
+NS_METHOD nsThrobber::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+{
+  if (nsnull != mWidget) {
+    return mWidget->SetPreferredSize(aWidth, aHeight);
+  }
+  return NS_OK;
+}
+
+//--------------------------------------------------------------------
+NS_METHOD nsThrobber::GetBounds(nsRect & aRect)
+{
+  if (nsnull != mWidget) {
+    return mWidget->GetBounds(aRect);
+  }
+  return NS_OK;
+}
+
+//--------------------------------------------------------------------
+NS_METHOD nsThrobber::SetBounds(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+  if (nsnull != mWidget) {
+    mWidget->Resize(aWidth, aHeight, aRepaint);
+  }
+  return NS_OK;
+}
+
+    
+//-------------------------------------------------------------------------
+NS_METHOD nsThrobber::SetBounds(PRUint32 aX,
+                                          PRUint32 aY,
+                                          PRUint32 aWidth,
+                                          PRUint32 aHeight,
+                                          PRBool   aRepaint)
+{
+  if (nsnull != mWidget) {
+    mWidget->Resize(aX, aY, aWidth, aHeight, aRepaint);
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsThrobber::SetVisible(PRBool aState) 
+{
+  if (nsnull != mWidget) {
+    mWidget->Show(aState);
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsThrobber::IsVisible(PRBool & aState)
+{
+  if (nsnull != mWidget) {
+    return mWidget->IsVisible(aState);
+  }
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+NS_METHOD nsThrobber::SetLocation(PRUint32 aX, PRUint32 aY) 
+{
+  if (nsnull != mWidget) {
+    mWidget->Move(aX, aY);
+  }
+  return NS_OK;
+}
+
+
+
 
 //----------------------------------------------------------------------
 
@@ -618,3 +757,5 @@ NS_NewThrobberFactory(nsIFactory** aFactory)
   *aFactory = inst;
   return rv;
 }
+
+
