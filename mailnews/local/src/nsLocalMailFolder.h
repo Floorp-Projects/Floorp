@@ -232,7 +232,7 @@ protected:
   PRInt32 mNumFilterClassifyRequests;
   nsMsgKeyArray mSpamKeysToMove;
   nsCString mSpamFolderURI;
-  nsresult setSubfolderFlag(const char *aFolderName, PRUint32 flags);
+  nsresult setSubfolderFlag(const PRUnichar *aFolderName, PRUint32 flags);
 };
 
 #endif // nsMsgLocalMailFolder_h__

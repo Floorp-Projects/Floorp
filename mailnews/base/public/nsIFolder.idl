@@ -56,7 +56,7 @@ interface nsIFolder : nsICollection {
 
 	void AddFolderListener(in nsIFolderListener listener);
 	void RemoveFolderListener(in nsIFolderListener listener);
-	nsIFolder FindSubFolder(in string subFolderName);
+	nsIFolder FindSubFolder(in string escapedSubFolderName);
 
   void NotifyPropertyChanged(in nsIAtom property,
                              in string oldValue,

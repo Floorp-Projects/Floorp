@@ -1920,7 +1920,7 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWind
   nsXPIDLString folderName;
   srcFolder->GetName(getter_Copies(folderName));
 	
-  rv = CreateSubfolder(folderName,msgWindow);
+  rv = CreateSubfolder(folderName, msgWindow);
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString escapedFolderName;
@@ -3285,54 +3285,54 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::SetFlagsOnDefaultMailboxes(PRUint32 flags)
 {
   if (flags & MSG_FOLDER_FLAG_INBOX)
-    setSubfolderFlag("Inbox", MSG_FOLDER_FLAG_INBOX);
+    setSubfolderFlag(NS_LITERAL_STRING("Inbox").get(), MSG_FOLDER_FLAG_INBOX);
 
   if (flags & MSG_FOLDER_FLAG_SENTMAIL)
-    setSubfolderFlag("Sent", MSG_FOLDER_FLAG_SENTMAIL);
+    setSubfolderFlag(NS_LITERAL_STRING("Sent").get(), MSG_FOLDER_FLAG_SENTMAIL);
   
   if (flags & MSG_FOLDER_FLAG_DRAFTS)
-    setSubfolderFlag("Drafts", MSG_FOLDER_FLAG_DRAFTS);
+    setSubfolderFlag(NS_LITERAL_STRING("Drafts").get(), MSG_FOLDER_FLAG_DRAFTS);
 
   if (flags & MSG_FOLDER_FLAG_TEMPLATES)
-    setSubfolderFlag("Templates", MSG_FOLDER_FLAG_TEMPLATES);
+    setSubfolderFlag(NS_LITERAL_STRING("Templates").get(), MSG_FOLDER_FLAG_TEMPLATES);
   
   if (flags & MSG_FOLDER_FLAG_TRASH)
-    setSubfolderFlag("Trash", MSG_FOLDER_FLAG_TRASH);
+    setSubfolderFlag(NS_LITERAL_STRING("Trash").get(), MSG_FOLDER_FLAG_TRASH);
 
   if (flags & MSG_FOLDER_FLAG_QUEUE)
-    setSubfolderFlag("Unsent Messages", MSG_FOLDER_FLAG_QUEUE);
+    setSubfolderFlag(NS_LITERAL_STRING("Unsent Messages").get(), MSG_FOLDER_FLAG_QUEUE);
 	
   // what about the Junk folder?
 	return NS_OK;
 }
 
 nsresult
-nsMsgLocalMailFolder::setSubfolderFlag(const char *aFolderName,
+nsMsgLocalMailFolder::setSubfolderFlag(const PRUnichar *aFolderName,
                                        PRUint32 flags)
 {
-
-  nsresult rv;
-
+  // FindSubFolder() expects the folder name to be escaped
+  // see bug #192043
+  nsXPIDLCString escapedFolderName;
+  nsresult rv = NS_MsgEscapeEncodeURLPath(aFolderName, getter_Copies(escapedFolderName));
+  NS_ENSURE_SUCCESS(rv,rv);
   nsCOMPtr<nsIFolder> folder;
-	rv = FindSubFolder(aFolderName, getter_AddRefs(folder));
+  rv = FindSubFolder(escapedFolderName, getter_AddRefs(folder));
   
-	if (NS_FAILED(rv)) 
+  if (NS_FAILED(rv)) 
     return rv;
-	if (!folder) 
+  if (!folder) 
     return NS_ERROR_FAILURE;
   
  	nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) 
+  if (!msgFolder) 
     return NS_ERROR_FAILURE;
-    
-	rv = msgFolder->SetFlag(flags);
-	if (NS_FAILED(rv)) 
+  
+  rv = msgFolder->SetFlag(flags);
+  if (NS_FAILED(rv)) 
     return rv;
-
-  nsAutoString unicodeFolderName;
-  unicodeFolderName.AssignWithConversion(aFolderName);
-  msgFolder->SetPrettyName(unicodeFolderName.get());
-
+  
+  msgFolder->SetPrettyName(aFolderName);
+  
   return NS_OK;
 }
 
