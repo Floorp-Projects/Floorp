@@ -2536,7 +2536,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 }
 
-static JSParseNode *
+static JSBool
 ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              JSParseNode *listNode)
 {
@@ -2549,13 +2549,13 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         do {
             JSParseNode *argNode = AssignExpr(cx, ts, tc);
             if (!argNode)
-                return NULL;
+                return JS_FALSE;
             PN_APPEND(listNode, argNode);
         } while (js_MatchToken(cx, ts, TOK_COMMA));
 
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_ARGS);
     }
-    return listNode;
+    return JS_TRUE;
 }
 
 static JSParseNode *
@@ -2580,12 +2580,10 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             return NULL;
         pn->pn_op = JSOP_NEW;
         PN_INIT_LIST_1(pn, pn2);
+        pn->pn_pos.begin = pn2->pn_pos.begin;
 
-        if (js_MatchToken(cx, ts, TOK_LP)) {
-            pn = ArgumentList(cx, ts, tc, pn);
-            if (!pn)
-                return NULL;
-        }
+        if (js_MatchToken(cx, ts, TOK_LP) && !ArgumentList(cx, ts, tc, pn))
+            return NULL;
         if (pn->pn_count - 1 >= ARGC_LIMIT) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_TOO_MANY_CON_ARGS);
@@ -2647,9 +2645,9 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             }
 
             PN_INIT_LIST_1(pn2, pn);
+            pn2->pn_pos.begin = pn->pn_pos.begin;
 
-            pn2 = ArgumentList(cx, ts, tc, pn2);
-            if (!pn2)
+            if (!ArgumentList(cx, ts, tc, pn2))
                 return NULL;
             if (pn2->pn_count - 1 >= ARGC_LIMIT) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
