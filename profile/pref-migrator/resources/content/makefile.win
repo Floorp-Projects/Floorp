@@ -27,6 +27,8 @@ include <$(DEPTH)\config\rules.mak>
 FILES=\
 	profileMigrationProgress.js	\
 	profileMigrationProgress.xul	\
+    no_space.xul                 \
+    no_space.js                  \
         $(NULL)
 
 install::
