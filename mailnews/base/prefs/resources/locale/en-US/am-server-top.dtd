@@ -34,7 +34,7 @@
 <!-- LOCALIZATION NOTE (expungeOnExit.label) : do not translate two of "&quot;" in below line -->
 <!ENTITY expungeOnExit.label "Clean up (&quot;Expunge&quot;) Inbox on Exit">
 <!ENTITY emptyTrashOnExit.label "Empty Trash on Exit">
-<!ENTITY loginAtStartup.label "Log into this account at startup"> 
+<!ENTITY loginAtStartup.label "Log onto this account at startup of Mail"> 
 <!-- LOCALIZATION NOTE (maxMessagesStart.label) : translate below 2 lines with grammar dependency 
     maxMessengerStart.label will be followed by maxMessagesEnd.label with the number
 	 of messages between them
