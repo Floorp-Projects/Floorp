@@ -6,7 +6,6 @@ nsEnumeratorUtils.h
 nsHashtable.h
 nsHashtableEnumerator.h
 nsIArena.h
-nsIBuffer.h
 nsIByteBuffer.h
 nsIObserverList.h
 nsIProperties.h
