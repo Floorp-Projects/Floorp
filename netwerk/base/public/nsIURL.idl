@@ -71,7 +71,7 @@ interface nsIURL : nsIURI
     attribute string Ref;
 
 	 /**
-	  * Returns the Directory + "/" + Filename. Just a convenience function
+	  * Returns the Directory + Filename. Just a convenience function
 	  */
 	 void DirFile(out string o_DirFile);
 };
