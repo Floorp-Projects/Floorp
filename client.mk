@@ -418,9 +418,9 @@ ifdef RUN_AUTOCONF_LOCALLY
 		mozilla/directory/c-sdk/configure
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
-	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
+	@echo '$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk mozilla/build/unix/modules.mk'; \
         cd $(ROOTDIR) && \
-	$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk
+	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk mozilla/build/unix/modules.mk
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk real_checkout
 
 real_checkout:
