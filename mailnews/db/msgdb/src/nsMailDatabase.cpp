@@ -376,7 +376,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
       (void)mailHdr->GetMessageOffset(&msgOffset);
       PRUint32 statusPos = offset + msgOffset;
       PR_ASSERT(offset < 10000);
-      fileStream->seek(statusPos);
+      fileStream->seek(PR_SEEK_SET, statusPos);
       buf[0] = '\0';
       if (fileStream->readline(buf, sizeof(buf))) 
       {
@@ -410,7 +410,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
           PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT,
             flags & 0x0000FFFF);
           PRInt32 lineLen = PL_strlen(buf);
-          PRInt32 status2Pos = statusPos + lineLen + MSG_LINEBREAK_LEN;
+          PRUint32 status2Pos = statusPos + lineLen + MSG_LINEBREAK_LEN;
           fileStream->write(buf, lineLen);
           
           // time to upate x-mozilla-status2
@@ -822,7 +822,6 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
   }
   
   {
- 
     pMessageDB->m_folderSpec = folderName;
     nsFileSpec::TimeStamp actualFolderTimeStamp = pMessageDB->GetMailboxModDate();
     pMessageDB->m_dbFolderInfo->SetFolderSize(folderName->GetFileSize());

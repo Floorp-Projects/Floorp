@@ -718,7 +718,7 @@ nsMsgDatabase::nsMsgDatabase()
         m_nextPseudoMsgKey(kFirstPseudoKey),
         m_mdbEnv(nsnull), m_mdbStore(nsnull),
         m_mdbAllMsgHeadersTable(nsnull), m_mdbAllThreadsTable(nsnull),
-        m_dbName(""), m_newSet(nsnull),
+        m_dbName(""), 
         m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
         m_hdrRowScopeToken(0),
         m_hdrTableKindToken(0),
@@ -804,22 +804,6 @@ nsMsgDatabase::~nsMsgDatabase()
     m_ChangeListeners->Count(&count);
     NS_ASSERTION(count == 0, "shouldn't have any listeners");
     m_ChangeListeners = nsnull;
-  }
-  
-  if (m_newSet) 
-  {
-#ifdef DEBUG_MSGKEYSET
-    char *str = nsnull;
-    nsresult rv = m_newSet->Output(&str);
-    if (NS_SUCCEEDED(rv) && str) 
-    {
-      printf("setStr = %s on destroy\n",str);
-      nsMemory::Free(str);
-      str = nsnull;
-    }
-#endif
-    delete m_newSet;
-    m_newSet = nsnull;
   }
 }
 
@@ -1617,8 +1601,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
   // only need to do this for mail - will this speed up news expiration? 
   SetHdrFlag(msg, PR_TRUE, MSG_FLAG_EXPUNGED);	// tell mailbox (mail)
   
-  if (m_newSet)	// if it's in the new set, better get rid of it.
-    m_newSet->Remove(key);
+  m_newSet.RemoveElement(key);
   
   if (m_dbFolderInfo != NULL)
   {
@@ -1727,7 +1710,7 @@ PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
   
   nsMsgKey key;
   (void)msgHdr->GetMessageKey(&key);
-  if (m_newSet && m_newSet->IsMember(key))
+  if (m_newSet.IndexOf(key) != kNotFound)
     statusFlags |= MSG_FLAG_NEW;
   else
     statusFlags &= ~MSG_FLAG_NEW;
@@ -1813,8 +1796,7 @@ nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
   (void)msgHdr->GetMessageKey(&key);
   msgHdr->GetFlags(&oldFlags);
   
-  if (m_newSet)
-    m_newSet->Remove(key);
+  m_newSet.RemoveElement(key);
   (void) ContainsKey(key, &hdrInDB);
   if (hdrInDB && m_dbFolderInfo)
   {
@@ -2267,52 +2249,40 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, n
 
 NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
-  if (!m_newSet)
-  {
-    m_newSet = nsMsgKeySet::Create("" /* , this */);
-    if (!m_newSet) return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return m_newSet->Add(key);
+  return m_newSet.Add(key);
 }
 
 
 NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
 {
   nsresult			err = NS_OK;
-  if (m_newSet)
+  if (notify)	// need to update view
   {
-    if (notify)	// need to update view
+    PRInt32 firstMember;
+    nsMsgKeyArray saveNewSet;
+    saveNewSet.CopyArray(m_newSet);
+    // clear m_newSet so that the code that's listening to the key change
+    // doesn't think we have new messages and send notifications all over
+    // that we have new messages.
+    m_newSet.RemoveAll();
+    for (PRUint32 elementIndex = saveNewSet.GetSize() - 1; ; elementIndex--)
     {
-      PRInt32 firstMember;
-      nsMsgKeySet *saveNewSet = m_newSet;
-      // set m_newSet to null so that the code that's listening to the key change
-      // doesn't think we have new messages and send notifications all over
-      // that we have new messages.
-      m_newSet = nsnull;
-      while ((firstMember = saveNewSet->GetFirstMember()) != 0)
+      nsMsgKey lastNewKey = saveNewSet.ElementAt(elementIndex);
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      err = GetMsgHdrForKey(lastNewKey, getter_AddRefs(msgHdr));
+      if (NS_SUCCEEDED(err))
       {
-        saveNewSet->Remove(firstMember);	// this bites, since this will cause us to regen new list many times.
-        nsCOMPtr <nsIMsgDBHdr> msgHdr;
-        err = GetMsgHdrForKey(firstMember, getter_AddRefs(msgHdr));
-        if (NS_SUCCEEDED(err))
-        {
-          nsMsgKey key;
-          (void)msgHdr->GetMessageKey(&key);
-          PRUint32 flags;
-          (void)msgHdr->GetFlags(&flags);
-          
-          if ((flags | MSG_FLAG_NEW) != flags)
-            NotifyKeyChangeAll(key, flags | MSG_FLAG_NEW, flags, nsnull);
-        }
+        nsMsgKey key;
+        (void)msgHdr->GetMessageKey(&key);
+        PRUint32 flags;
+        (void)msgHdr->GetFlags(&flags);
+        
+        if ((flags | MSG_FLAG_NEW) != flags)
+          NotifyKeyChangeAll(key, flags | MSG_FLAG_NEW, flags, nsnull);
       }
-      m_newSet = saveNewSet;
+      if (elementIndex == 0)
+        break;
     }
-    delete m_newSet;
-    m_newSet = NULL;
-  }
-  else {
-    NS_ASSERTION(0, "no set!\n");
   }
   return err;
 }
@@ -2321,7 +2291,7 @@ NS_IMETHODIMP nsMsgDatabase::HasNew(PRBool *_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
 
-  *_retval = (m_newSet && m_newSet->getLength() > 0);
+  *_retval = (m_newSet.GetSize() > 0);
   return NS_OK;
 }
 
@@ -2330,7 +2300,7 @@ NS_IMETHODIMP nsMsgDatabase::GetFirstNew(nsMsgKey *result)
   PRBool hasnew;
   nsresult rv = HasNew(&hasnew);
   if (NS_FAILED(rv)) return rv;
-  *result = (hasnew) ? m_newSet->GetFirstMember() : nsMsgKey_None;
+  *result = (hasnew) ? m_newSet.ElementAt(0) : nsMsgKey_None;
   return NS_OK;
 }
 
@@ -4492,9 +4462,14 @@ nsMsgDatabase::GetNewList(nsMsgKeyArray * *aNewList)
 {
     NS_ENSURE_ARG_POINTER(aNewList);
 
-    if (m_newSet) 
-        return m_newSet->ToMsgKeyArray(aNewList);
-
+    if (m_newSet.GetSize() > 0)
+    {
+      *aNewList = new nsMsgKeyArray;
+      if (!*aNewList)
+        return NS_ERROR_OUT_OF_MEMORY;
+      (*aNewList)->CopyArray(m_newSet);
+      return NS_OK;
+    }
     // if there were no new messages, signal this by returning a null pointer
     //
     *aNewList = 0;

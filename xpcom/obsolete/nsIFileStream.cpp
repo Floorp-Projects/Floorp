@@ -43,6 +43,7 @@
 #include "prerror.h"
 
 #include "nsSegmentedBuffer.h"
+#include "nsInt64.h"
 
 #ifdef XP_MAC
 #include "pprio.h" // To get PR_ImportFile
@@ -318,7 +319,7 @@ NS_IMETHODIMP FileImpl::GetIsOpen(PRBool* outOpen)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt32 offset)
+NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt64 offset)
 //----------------------------------------------------------------------------------------
 {
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || !mFileDesc) 
@@ -329,17 +330,18 @@ NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt32 offset)
     // To avoid corruption, we flush during a seek. see bug number 18949
     InternalFlush(PR_FALSE);
 
-    PRInt32 position = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
-    PRInt32 available = PR_Available(mFileDesc);
-    PRInt32 fileSize = position + available;
-    PRInt32 newPosition = 0;
+    nsInt64 position = PR_Seek64(mFileDesc, 0, PR_SEEK_CUR);
+    nsInt64 available = PR_Available64(mFileDesc);
+    nsInt64 fileSize = position + available;
+    nsInt64 newPosition = offset;
     switch (whence)
     {
-        case NS_SEEK_CUR: newPosition = position + offset; break;
-        case NS_SEEK_SET: newPosition = offset; break;
-        case NS_SEEK_END: newPosition = fileSize + offset; break;
+        case NS_SEEK_CUR: newPosition += position; break;
+        case NS_SEEK_SET: ; break;
+        case NS_SEEK_END: newPosition += fileSize; break;
     }
-    if (newPosition < 0)
+    const nsInt64 zero = 0;
+    if (newPosition < zero)
     {
         newPosition = 0;
         mFailed = PR_TRUE;
@@ -349,7 +351,7 @@ NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt32 offset)
         newPosition = fileSize;
         mEOF = PR_TRUE;
     }
-    if (PR_Seek(mFileDesc, newPosition, PR_SEEK_SET) < 0)
+    if (PR_Seek64(mFileDesc, newPosition, PR_SEEK_SET) < 0)
         mFailed = PR_TRUE;
     return NS_OK;
 } // FileImpl::Seek
@@ -492,12 +494,12 @@ FileImpl::IsNonBlocking(PRBool *aNonBlocking)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP FileImpl::Tell(PRUint32* outWhere)
+NS_IMETHODIMP FileImpl::Tell(PRInt64* outWhere)
 //----------------------------------------------------------------------------------------
 {
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || !mFileDesc) 
        return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
-    *outWhere = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
+    *outWhere = PR_Seek64(mFileDesc, 0, PR_SEEK_CUR);
     return NS_OK;
 } // FileImpl::Tell
 

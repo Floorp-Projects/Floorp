@@ -70,7 +70,7 @@ protected:
     nsresult ReleaseFolderLock();
 
     PRBool m_authed;
-    PRInt32 m_msgOffset;
+    PRInt64 m_msgOffset;
     char* m_accountUrl;
     PRUint32 m_biffState;
     PRInt32 m_numNewMessages;

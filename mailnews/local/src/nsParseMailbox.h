@@ -202,19 +202,19 @@ protected:
   void                FreeBuffers();
 
   // data
-  nsXPIDLString        m_folderName;
-  nsXPIDLCString		m_inboxUri;
-  nsByteArray		m_inputStream;
-  PRInt32			m_obuffer_size;
-  char			*m_obuffer;
-  PRInt32			m_graph_progress_total;
-  PRInt32			m_graph_progress_received;
-  PRBool			m_parsingDone;
-  nsTime			m_startTime;
+  nsXPIDLString   m_folderName;
+  nsXPIDLCString  m_inboxUri;
+  nsByteArray     m_inputStream;
+  PRInt32         m_obuffer_size;
+  char            *m_obuffer;
+  PRUint32        m_graph_progress_total;
+  PRUint32        m_graph_progress_received;
+  PRBool          m_parsingDone;
+  nsTime          m_startTime;
 private:
   // the following flag is used to determine when a url is currently being run. It is cleared on calls
   // to ::StopBinding and it is set whenever we call Load on a url
-  PRBool	m_urlInProgress;
+  PRBool    m_urlInProgress;
   nsWeakPtr m_folder; 
   void Init();
   void ReleaseFolderLock();

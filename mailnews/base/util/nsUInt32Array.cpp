@@ -269,6 +269,18 @@ PRBool nsUInt32Array:: RemoveElement(PRUint32 element)
 }
 
 
+PRUint32 nsUInt32Array::IndexOf(PRUint32 element)
+{
+  for (PRUint32 i = 0; i < GetSize(); i++)
+  {
+    if ((PRUint32)(m_pData[i]) == element)
+    {
+      return i;
+    }
+  }
+  return (PRUint32) kNotFound;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 void nsUInt32Array::CopyArray(nsUInt32Array *oldA)

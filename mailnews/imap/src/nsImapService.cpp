@@ -100,6 +100,7 @@
 #include "nsImapProtocol.h"
 #include "nsIMsgMailSession.h"
 #include "nsIStreamConverterService.h"
+#include "nsInt64.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"            // old - for backward compatibility only
 #define PREF_MAIL_ROOT_IMAP_REL "mail.root.imap-rel"
@@ -2091,7 +2092,7 @@ nsresult nsImapService::OfflineAppendFromFile(nsIFileSpec* aFileSpec,
 
       if (NS_SUCCEEDED(rv) && offlineStore)
       {
-        PRUint32 curOfflineStorePos = 0;
+        PRInt64 curOfflineStorePos = 0;
         nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(offlineStore);
         if (seekable)
           seekable->Tell(&curOfflineStorePos);
@@ -2145,7 +2146,8 @@ nsresult nsImapService::OfflineAppendFromFile(nsIFileSpec* aFileSpec,
             if (NS_SUCCEEDED(rv) && fakeHdr)
             {
               PRUint32 resultFlags;
-              fakeHdr->SetMessageOffset(curOfflineStorePos);
+              nsInt64 tellPos = curOfflineStorePos;
+              fakeHdr->SetMessageOffset((PRUint32) tellPos);
               fakeHdr->OrFlags(MSG_FLAG_OFFLINE | MSG_FLAG_READ, &resultFlags);
               fakeHdr->SetOfflineMessageSize(fileSize);
               destDB->AddNewHdrToDB(fakeHdr, PR_TRUE /* notify */);

@@ -75,6 +75,7 @@
 #include "nsTextFormatter.h"
 #include "nsCPasswordManager.h"
 #include "nsMsgDBCID.h"
+#include "nsInt64.h"
 
 #include <time.h>
 
@@ -1363,23 +1364,28 @@ nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
   result += MSG_LINEBREAK;
   
   nsCOMPtr <nsISeekableStream> seekable;
-  PRUint32 curStorePos;
+  nsInt64 curStorePos;
 
   if (m_offlineHeader)
     seekable = do_QueryInterface(m_tempMessageStream);
 
   if (seekable)
   {
-    seekable->Tell(&curStorePos);
-    m_offlineHeader->SetMessageOffset(curStorePos);
+    PRInt64 tellPos;
+    seekable->Tell(&tellPos);
+    curStorePos = tellPos;
+    // ### todo - need to convert this to 64 bits
+    m_offlineHeader->SetMessageOffset((PRUint32) curStorePos);
   }
   m_tempMessageStream->Write(result.get(), result.Length(),
                              &writeCount);
   if (seekable)
   {
+    PRInt64 tellPos;
     seekable->Seek(PR_SEEK_CUR, 0); // seeking causes a flush, w/o syncing
-    seekable->Tell(&curStorePos);
-    m_offlineHeader->SetStatusOffset(curStorePos);
+    seekable->Tell(&tellPos);
+    curStorePos = tellPos;
+    m_offlineHeader->SetStatusOffset((PRUint32) curStorePos);
   }
 
   result = "X-Mozilla-Status: 0001";
@@ -1416,7 +1422,7 @@ nsresult nsMsgDBFolder::StartNewOfflineMessage()
 nsresult nsMsgDBFolder::EndNewOfflineMessage()
 {
   nsCOMPtr <nsIRandomAccessStore> seekable;
-  PRUint32 curStorePos;
+  nsInt64 curStorePos;
   PRUint32 messageOffset;
   nsMsgKey messageKey;
 
@@ -1431,9 +1437,13 @@ nsresult nsMsgDBFolder::EndNewOfflineMessage()
   if (seekable)
   {
     seekable->Seek(PR_SEEK_CUR, 0); // seeking causes a flush, w/o syncing
-    seekable->Tell(&curStorePos);
+    PRInt64 tellPos;
+    seekable->Tell(&tellPos);
+    curStorePos = tellPos;
+    
     m_offlineHeader->GetMessageOffset(&messageOffset);
-    m_offlineHeader->SetOfflineMessageSize(curStorePos - messageOffset);
+    curStorePos -= messageOffset;
+    m_offlineHeader->SetOfflineMessageSize(curStorePos);
     m_offlineHeader->SetLineCount(m_numOfflineMsgLines);
   }
   m_offlineHeader = nsnull;

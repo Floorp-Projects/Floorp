@@ -142,7 +142,7 @@ nsBufferedStream::Close()
 }
 
 NS_IMETHODIMP
-nsBufferedStream::Seek(PRInt32 whence, PRInt32 offset)
+nsBufferedStream::Seek(PRInt32 whence, PRInt64 offset)
 {
     if (mStream == nsnull)
         return NS_BASE_STREAM_CLOSED;
@@ -155,13 +155,15 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt32 offset)
     nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mStream, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    PRInt32 absPos;
+    nsInt64 absPos;
     switch (whence) {
       case nsISeekableStream::NS_SEEK_SET:
         absPos = offset;
         break;
       case nsISeekableStream::NS_SEEK_CUR:
-        absPos = mBufferStartOffset + mCursor + offset;
+        absPos = mBufferStartOffset;
+        absPos += mCursor;
+        absPos += offset;
         break;
       case nsISeekableStream::NS_SEEK_END:
         absPos = -1;
@@ -194,9 +196,12 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt32 offset)
     METER(if (bufstats.mBigSeekIndex < MAX_BIG_SEEKS)
               bufstats.mBigSeek[bufstats.mBigSeekIndex].mOldOffset =
                   mBufferStartOffset + mCursor);
-    if (absPos == -1) {
+    const nsInt64 minus1 = -1;
+    if (absPos == minus1) {
         // then we had the SEEK_END case, above
-        rv = ras->Tell(&mBufferStartOffset);
+        PRInt64 tellPos;
+        rv = ras->Tell(&tellPos);
+        mBufferStartOffset = tellPos;
         if (NS_FAILED(rv)) return rv;
     }
     else {
@@ -211,12 +216,14 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt32 offset)
 }
 
 NS_IMETHODIMP
-nsBufferedStream::Tell(PRUint32 *result)
+nsBufferedStream::Tell(PRInt64 *result)
 {
     if (mStream == nsnull)
         return NS_BASE_STREAM_CLOSED;
     
-    *result = mBufferStartOffset + mCursor;
+    nsInt64 result64 = mBufferStartOffset;
+    result64 += mCursor;
+    *result = result64;
     return NS_OK;
 }
 

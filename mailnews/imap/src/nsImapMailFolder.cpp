@@ -107,6 +107,7 @@
 #include "nsIMimeHeaders.h"
 #include "nsIMsgMdnGenerator.h"
 #include "nsISpamSettings.h"
+#include "nsInt64.h"
 #include <time.h>
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -6061,19 +6062,21 @@ nsresult nsImapMailFolder::CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBH
   nsCOMPtr<nsIOutputStream> outputStream;
   nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(outputStream));
   nsCOMPtr <nsISeekableStream> seekable;
-  PRUint32 curStorePos;
 
   seekable = do_QueryInterface(outputStream);
 
   if (seekable)
   {
+
     nsMsgKey messageOffset;
     PRUint32 messageSize;
     origHdr->GetMessageOffset(&messageOffset);
     origHdr->GetOfflineMessageSize(&messageSize);
 
-    seekable->Tell(&curStorePos);
-    destHdr->SetMessageOffset(curStorePos);
+    PRInt64 tellPos;
+    seekable->Tell(&tellPos);
+    nsInt64 curStorePos = tellPos;
+    destHdr->SetMessageOffset((PRUint32) curStorePos);
     nsCOMPtr <nsIInputStream> offlineStoreInputStream;
     rv = srcFolder->GetOfflineStoreInputStream(getter_AddRefs(offlineStoreInputStream));
     if (NS_SUCCEEDED(rv) && offlineStoreInputStream)

@@ -220,7 +220,7 @@ protected:
   nsIMdbTable   *m_mdbAllMsgHeadersTable;
   nsIMdbTable   *m_mdbAllThreadsTable;
   nsFileSpec    m_dbName;
-  nsMsgKeySet   *m_newSet;	// new messages since last open.
+  nsMsgKeyArray m_newSet;	// new messages since last open.
   PRBool        m_mdbTokensInitialized;
   nsCOMPtr <nsISupportsArray>  m_ChangeListeners;
   mdb_token     m_hdrRowScopeToken;

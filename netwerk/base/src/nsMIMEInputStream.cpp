@@ -207,11 +207,11 @@ if (!mStartedReading) {     \
 
 // Reset mStartedReading when Seek-ing to start
 NS_IMETHODIMP
-nsMIMEInputStream::Seek(PRInt32 whence, PRInt32 offset)
+nsMIMEInputStream::Seek(PRInt32 whence, PRInt64 offset)
 {
     nsresult rv;
     nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStream);
-    if (whence == NS_SEEK_SET && offset == 0) {
+    if (whence == NS_SEEK_SET && LL_EQ(offset, LL_Zero())) {
         rv = stream->Seek(whence, offset);
         if (NS_SUCCEEDED(rv))
             mStartedReading = PR_FALSE;
@@ -263,7 +263,7 @@ NS_IMETHODIMP nsMIMEInputStream::Read(char * buf, PRUint32 count, PRUint32 *_ret
 NS_IMETHODIMP nsMIMEInputStream::IsNonBlocking(PRBool *aNonBlocking) { INITSTREAMS; return mStream->IsNonBlocking(aNonBlocking); }
 
 // nsISeekableStream
-NS_IMETHODIMP nsMIMEInputStream::Tell(PRUint32 *_retval)
+NS_IMETHODIMP nsMIMEInputStream::Tell(PRInt64 *_retval)
 {
     INITSTREAMS;
     nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStream);

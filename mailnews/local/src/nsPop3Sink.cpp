@@ -182,7 +182,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     if (!m_outFileStream)
         return NS_ERROR_OUT_OF_MEMORY;
  
-    m_outFileStream->seek(fileSpec.GetFileSize());
+    m_outFileStream->seek(PR_SEEK_END, 0);
  
     if (!m_outFileStream->is_open())
         return NS_ERROR_FAILURE;

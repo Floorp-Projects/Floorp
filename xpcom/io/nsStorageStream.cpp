@@ -36,7 +36,7 @@
 #include "nsIInputStream.h"
 #include "nsISeekableStream.h"
 #include "prlog.h"
-
+#include "nsInt64.h"
 #if defined(PR_LOGGING)
 //
 // Log module for StorageStream logging...
@@ -473,35 +473,34 @@ nsStorageInputStream::IsNonBlocking(PRBool *aNonBlocking)
 }
 
 NS_IMETHODIMP
-nsStorageInputStream::Seek(PRInt32 aWhence, PRInt32 aOffset)
+nsStorageInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
-    PRUint32 pos;
+    nsInt64 pos = aOffset;
 
     switch (aWhence) {
     case NS_SEEK_SET:
-        pos = aOffset;
         break;
     case NS_SEEK_CUR:
-        pos = mLogicalCursor + aOffset;
+        pos += mLogicalCursor;
         break;
     case NS_SEEK_END:
-        pos = mStorageStream->mLogicalLength + aOffset;
+        pos += mStorageStream->mLogicalLength;
         break;
     default:
         NS_NOTREACHED("unexpected whence value");
         return NS_ERROR_UNEXPECTED;
     }
-
-    if (pos == mLogicalCursor)
+    nsInt64 logicalCursor(mLogicalCursor);
+    if (pos == logicalCursor)
         return NS_OK;
 
     return Seek(pos);
 }
 
 NS_IMETHODIMP
-nsStorageInputStream::Tell(PRUint32 *aResult)
+nsStorageInputStream::Tell(PRInt64 *aResult)
 {
-    *aResult = mLogicalCursor;
+    LL_UI2L(*aResult, mLogicalCursor);
     return NS_OK;
 }
 

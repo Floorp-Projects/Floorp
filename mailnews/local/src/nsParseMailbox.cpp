@@ -276,7 +276,10 @@ void nsMsgMailboxParser::UpdateProgressPercent ()
 {
 	if (m_statusFeedback && m_graph_progress_total != 0)
 	{
-		m_statusFeedback->ShowProgress((100 *(m_graph_progress_received))  / m_graph_progress_total);	
+          // prevent overflow by dividing both by 100
+          PRUint32 progressTotal = m_graph_progress_total / 100;
+          PRUint32 progressReceived = m_graph_progress_received / 100;
+		m_statusFeedback->ShowProgress((100 *(progressReceived))  / progressTotal);	
 	}
 }
 
