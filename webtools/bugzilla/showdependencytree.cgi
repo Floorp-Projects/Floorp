@@ -37,6 +37,10 @@ ConnectToDatabase();
 
 quietly_check_login();
 
+# Connect to the shadow database if this installation is using one to improve
+# performance.
+Bugzilla->instance->switch_to_shadow_db();
+
 # More warning suppression silliness.
 $::userid = $::userid;
 
