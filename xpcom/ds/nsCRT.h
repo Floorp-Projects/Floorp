@@ -104,18 +104,22 @@ public:
     @param aCount the number of bytes to copy
     */
   static void memcpy(void* aDest, const void* aSrc, PRUint32 aCount) {
+    NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
     ::memcpy(aDest, aSrc, (size_t)aCount);
   }
 
   static void memmove(void* aDest, const void* aSrc, PRUint32 aCount) {
+    NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
     ::memmove(aDest, aSrc, (size_t)aCount);
   }
 
   static void memset(void* aDest, PRUint8 aByte, PRUint32 aCount) {
+    NS_ASSERTION((aDest != NULL) || (aCount == 0), "Invalid NULL argument");
     ::memset(aDest, aByte, aCount);
   }
 
   static void zero(void* aDest, PRUint32 aCount) {
+    NS_ASSERTION((aDest != NULL) || (aCount == 0), "Invalid NULL argument");
     ::memset(aDest, 0, (size_t)aCount);
   }
 

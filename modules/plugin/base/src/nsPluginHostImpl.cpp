@@ -230,16 +230,25 @@ nsPluginTag::~nsPluginTag()
   }
 
   if (nsnull != mMimeTypeArray) {
+		for (int i = 0; i < mVariants; i++)
+			delete[] mMimeTypeArray[i];
+
     delete[] (mMimeTypeArray);
     mMimeTypeArray = nsnull;
   }
 
   if (nsnull != mMimeDescriptionArray) {
+		for (int i = 0; i < mVariants; i++)
+			delete[] mMimeDescriptionArray[i];
+
     delete[] (mMimeDescriptionArray);
     mMimeDescriptionArray = nsnull;
   }
 
   if (nsnull != mExtensionsArray) {
+		for (int i = 0; i < mVariants; i++)
+			delete[] mExtensionsArray[i];
+
     delete[] (mExtensionsArray);
     mExtensionsArray = nsnull;
   }
