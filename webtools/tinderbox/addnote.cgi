@@ -116,8 +116,7 @@ Go back to the Error Log</a>
   <td align=right>
      Comment:
   </td><td>
-     <TEXTAREA NAME=note ROWS=10 COLS=30 WRAP=HARD>
-     </textarea>
+     <TEXTAREA NAME=note ROWS=10 COLS=30 WRAP=HARD></textarea>
   </td>
 </tr>
 </table>
