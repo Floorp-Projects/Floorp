@@ -1055,7 +1055,7 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
               // system of aRootView (maybe it's not a descendant
               // view of aRootView?); if so, don't use it
               if (viewParent) {
-                aRgn.Or(aRgn, nsRectFast(bounds));
+                aRgn.Or(aRgn, bounds);
               }
             }
           }
@@ -3585,7 +3585,7 @@ nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect, nsRect& a
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
     if (element->mFlags & VIEW_RENDERED) {
       nsRegion tmpRgn;
-      tmpRgn.Copy(nsRectFast(element->mBounds));
+      tmpRgn.Copy(element->mBounds);
       tmpRgn.Sub(tmpRgn, aOpaqueRegion);
 
       if (tmpRgn.IsEmpty()) {
@@ -3595,14 +3595,14 @@ nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect, nsRect& a
 
         // a view is opaque if it is neither transparent nor transluscent
         if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))) {
-          aOpaqueRegion.Or(aOpaqueRegion, nsRectFast(element->mBounds));
+          aOpaqueRegion.Or(aOpaqueRegion, element->mBounds);
         }
       }
     }
   }
 
   nsRegion tmpRgn;
-  tmpRgn.Copy(nsRectFast(aDamageRect));
+  tmpRgn.Copy(aDamageRect);
   tmpRgn.Sub(tmpRgn, aOpaqueRegion);
   tmpRgn.GetBoundRect(aFinalTransparentRect);
 
