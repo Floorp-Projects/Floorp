@@ -282,9 +282,9 @@ Message=Preparing SmartUpdate, please wait...
 ;Fail If Exists=
 
 ;Create DirectoryX sections
-;[Create Directory0]
-;Timing=post download
-;Destination=[TEMP]\Test
+[Create Directory0]
+Timing=post download
+Destination=[SETUP PATH]\Plugins
 
 ;[Create Directory1]
 ;Timing=post download
