@@ -314,3 +314,13 @@ NS_IMETHODIMP nsImageFrame::SetBits(const PRUint8 *data, PRUint32 length, PRInt3
 
   return NS_OK;
 }
+
+/* attribute long timeout; */
+NS_IMETHODIMP nsImageFrame::GetTimeout(PRInt32 *aTimeout)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP nsImageFrame::SetTimeout(PRInt32 aTimeout)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

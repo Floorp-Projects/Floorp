@@ -79,4 +79,15 @@ interface nsIImageContainer : nsISupports
 
   void clear();
 
+
+  /* animation stuff */
+
+  /**
+   * number of times to loop the image.
+   * @note -1 means forever.
+   */
+  attribute long loopCount;
+
+
+
 };

@@ -117,3 +117,13 @@ NS_IMETHODIMP nsImageContainer::Clear()
 {
   return mFrames.Clear();
 }
+
+/* attribute long loopCount; */
+NS_IMETHODIMP nsImageContainer::GetLoopCount(PRInt32 *aLoopCount)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP nsImageContainer::SetLoopCount(PRInt32 aLoopCount)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
