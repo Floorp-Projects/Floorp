@@ -607,7 +607,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
         /* proto bootstrap bit from JS_InitClass omitted. */
         nameString = JS_NewStringCopyZ(cx, exceptions[i].name);
-        if (nameString == NULL)
+        if (!nameString)
             return NULL;
 
         /* Add the name property to the prototype. */
@@ -712,9 +712,13 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
      * js_ConstructObject seems to require a frame.
      */
     errObject = js_NewObject(cx, &ExceptionClass, errProto, NULL);
+    if (!errObject)
+        return JS_FALSE;
 
     /* Store 'message' as a javascript-visible value. */
     msgstr = JS_NewStringCopyZ(cx, message);
+    if (!msgstr)
+        return JS_FALSE;
     if (!JS_DefineProperty(cx, errObject, js_message_str,
                            STRING_TO_JSVAL(msgstr), NULL, NULL,
                            JSPROP_ENUMERATE)) {
@@ -724,6 +728,8 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     if (reportp) {
         if (reportp->filename) {
             fnamestr = JS_NewStringCopyZ(cx, reportp->filename);
+            if (!fnamestr)
+                return JS_FALSE;
             /* Store 'filename' as a javascript-visible value. */
             if (!JS_DefineProperty(cx, errObject, js_filename_str,
                                    STRING_TO_JSVAL(fnamestr), NULL, NULL,
