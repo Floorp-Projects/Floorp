@@ -920,6 +920,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
             PR_WaitCondVar(pt_book.cv, PR_INTERVAL_NO_TIMEOUT);
         PR_Unlock(pt_book.ml);
 
+        _PR_CleanupMW();
         _PR_CleanupDtoa();
         _PR_CleanupCallOnce();
         _PR_ShutdownLinker();
