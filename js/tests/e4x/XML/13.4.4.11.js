@@ -50,7 +50,7 @@ correct =
 
 x = emps.employee[0].copy();
 
-TEST(2, undefined, x.parent());
+TEST(2, null, x.parent());
 TEST(3, correct, x);
  
 // Make sure we're getting a copy, not a ref to orig.

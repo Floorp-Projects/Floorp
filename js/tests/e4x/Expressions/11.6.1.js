@@ -147,7 +147,7 @@ order =
 </order>;
 
 order.@allids = order.item.@id;    
-TEST_XML(3, 1234, order.@allids);
+TEST_XML(3, "1 2 3 4", order.@allids);
 
 // Replace first child of the order element with an XML value
 order = 
@@ -311,7 +311,7 @@ correct =
         <description>Big Screen Television</description>
         <price>1299.99</price>
     </item>
-    <item>A Text Node</item>
+    <item id="2">A Text Node</item>
     <item id="3">
         <description>CD Player</description>
         <price>199.99</price>

@@ -51,6 +51,6 @@ y = x.bravo;
 
 TEST(2, x, y.parent());
 
-TEST(3, undefined, x.parent());
+TEST(3, null, x.parent());
 
 END();
