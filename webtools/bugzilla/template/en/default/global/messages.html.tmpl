@@ -67,19 +67,19 @@
   [% ELSIF message_tag == "emailold_change_cancelled" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for your account to
-    [% new_email FILTER html %] has been cancelled.
+    [%+ new_email FILTER html %] has been cancelled.
 
   [% ELSIF message_tag == "email_change_cancelled" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for the
-    [% old_email FILTER html %] account to
-    [% new_email FILTER html %] has been cancelled.
+    account [%+ old_email FILTER html %] to
+    [%+ new_email FILTER html %] has been cancelled.
 
   [% ELSIF message_tag == "email_change_cancelled_reinstated" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for the
-    [% old_email FILTER html %] account to 
-    [% new_email FILTER html %] has been cancelled.
+    account [%+ old_email FILTER html %] to 
+    [%+ new_email FILTER html %] has been cancelled.
    Your old account settings have been reinstated.
 
   [% ELSIF message_tag == "logged_out" %]
@@ -152,7 +152,7 @@
       [%+ series.subcategory FILTER html %] / 
       [%+ series.name FILTER html %]</em>
       has been created. Note that you may need to wait up to 
-      [% series.frequency * 2 %] days before there will be enough data for a
+      [%+ series.frequency * 2 %] days before there will be enough data for a
       chart of this series to be produced.
       <br><br>
       Go back or 
