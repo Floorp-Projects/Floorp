@@ -49,6 +49,7 @@
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIAtom.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsGUIEvent.h"
 
@@ -80,320 +81,6 @@ static gnsAccessibles = 0;
 
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
-/*
- * This class is used to get the bounds of a DOM node.
- * This is harder that it looks. Many frames point to
- * the same DOM node. Some good examples are links and wrapping text.
- */
-class nsFrameTreeWalker {
-public:
-  nsFrameTreeWalker(nsIPresContext* aPresContext, nsIDOMNode* aNode);
-  PRBool GetNextSibling();
-  PRBool GetParent();
-  PRBool GetFirstChild();
-  void GetBounds(nsRect& aBounds, nsIFrame** aParent);
-  void GetCommonParent(nsIFrame* aStartParent, nsIFrame* aChild, nsIFrame** aCommonParent);
-
-  PRBool IsSameContent();
-
-  void SetNode(nsIDOMNode* node);
-  void InitDepth();
-  nsIFrame* mFrame;
-
-private:
-  nsCOMPtr<nsIDOMNode> mDOMNode;
-  nsCOMPtr<nsIDOMNode> mNodeToFind;
-  nsCOMPtr<nsIPresContext> mPresContext;
-  PRInt32 mDepth;
-  PRInt32 mDepthToFind;
-};
-
-/**
- * This class uses a nsFrameTreeWalker to get the frames of a DOM node
- * and then unions them all together into 1 rect.
- */
-class nsDOMNodeBoundsFinder
-{
-public:
-  nsDOMNodeBoundsFinder(nsIPresContext* aPresContext, nsIDOMNode* aNode);
-  virtual void GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame);
-
-private:
-  nsCOMPtr<nsIDOMNode> mDOMNode;
-  nsFrameTreeWalker mWalker;
-};
-
-//------ nsAccessibleBoundsFinder -----
-
-nsDOMNodeBoundsFinder::nsDOMNodeBoundsFinder(nsIPresContext* aPresContext, nsIDOMNode* aNode)
-:mWalker(aPresContext, aNode), mDOMNode(aNode)
-{
-};
-
-void nsDOMNodeBoundsFinder::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
-{
-/*
- * This method is used to determine the bounds of a content node.
- * Because HTML wraps and links are not always rectangular, this
- * method uses the following algorithm:
- *
- * 1) get the primary from for the DOM node.
- * 2) Get its depth in the frame tree.
- * 3) Find the next frame at the same depth.
- * 4) If that frame has the same DOM node union it with the old bounds and continue.
- * 5) If not stop.
- */
-
-  nsCOMPtr<nsIDOMNode> node(mDOMNode);
- 
-  mWalker.SetNode(mDOMNode);
-  mWalker.mFrame->GetParent(aRelativeFrame);  
-
-  mWalker.GetBounds(aBounds, aRelativeFrame);
-
-
-  while(mWalker.GetNextSibling()) 
-  {
-     nsRect rect;
-     mWalker.GetBounds(rect, aRelativeFrame);
-     aBounds.UnionRect(aBounds,rect);
-  }
-}
-
-nsFrameTreeWalker::nsFrameTreeWalker(nsIPresContext* aPresContext, nsIDOMNode* aNode)
-{
-  mPresContext = aPresContext;
-  mDOMNode = aNode;
-
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-  nsIFrame* frame = nsnull;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  shell->GetPrimaryFrameFor(content, &mFrame);
-
-  InitDepth();
-}
-
-void nsFrameTreeWalker::SetNode(nsIDOMNode* aNode)
-{
-  mDOMNode = aNode;
-  mNodeToFind = aNode;
-  mDepthToFind = mDepth;
-}
-
-void nsFrameTreeWalker::InitDepth()
-{
-  if (!mFrame)
-    return;
-
-  nsIFrame* parent = nsnull;
-  mFrame->GetParent(&parent);
-  mDepth = 0;
-
-  while(parent)
-  {
-    parent->GetParent(&parent);
-    mDepth++;
-  }
-}
-
-void nsFrameTreeWalker::GetCommonParent(nsIFrame* aStartParent, nsIFrame* aChild, nsIFrame** aCommonParent)
-{
-  // go up our parent chain until we hit the common parent
-  nsIFrame* parent = nsnull;
-  aChild->GetParent(&parent);
-  while(parent)
-  {
-    // if we find one return.
-    if (parent == aStartParent) {
-      *aCommonParent = aStartParent;
-      return;
-    }
-
-    parent->GetParent(&parent);
-  }
-
-  // if we don't find a common parent recursively call this with 
-  // the starts parent.
-  aStartParent->GetParent(&aStartParent);
-
-  if (aStartParent) 
-    GetCommonParent(aStartParent, aChild, aCommonParent);
-  else
-    aCommonParent = nsnull;
-}
-
-void nsFrameTreeWalker::GetBounds(nsRect& aBounds, nsIFrame** aParent)
-{
-  GetCommonParent(*aParent, mFrame, aParent);
-
-  nsIFrame* parent = nsnull;
-  mFrame->GetParent(&parent);  
-
-  mFrame->GetRect(aBounds);
-  nsRect rect;
-
-  while(parent)
-  {
-    parent->GetRect(rect);
-    aBounds.x += rect.x;
-    aBounds.y += rect.y;
-    if (parent == *aParent)
-      return;
-
-    parent->GetParent(&parent);
-  }
-}
-
-PRBool nsFrameTreeWalker::GetParent()
-{
-  //printf("Get parent\n");
-
-  if (!mFrame)
-    return PR_FALSE;
-
-  nsIFrame* parent = nsnull;
-  mFrame->GetParent(&parent);
-
-  // if no parent then we hit the root
-  // just return that top frame
-  if (!parent) {
-    mFrame = nsnull;
-    return PR_FALSE;
-  }
-
-  mFrame = parent;
-  mDepth--;
-  
-  return GetParent();
-}
-
-
-PRBool nsFrameTreeWalker::GetNextSibling()
-{
-  //printf("Get next\n");
-
-  if (!mFrame)
-    return PR_FALSE;
-
-  // get next sibling
-  nsIFrame* next = nsnull;
-  mFrame->GetNextSibling(&next);
-  
-  // if failed
-  if (!next)
-  {
-    // if parent has content
-    nsIFrame* parent = nsnull;
-    mFrame->GetParent(&parent);
-    
-    // if no parent fail
-    if (!parent) {
-      mFrame = nsnull;
-      return PR_FALSE;
-    }
-
-    // fail if we reach a parent that is accessible
-    mFrame = parent;
-    mDepth--;
-
-    if (mDepth == mDepthToFind)
-    {
-      if (IsSameContent())
-        return PR_TRUE;
-      else {
-        mFrame = nsnull;
-        return PR_FALSE;
-      }
-    } else {
-      // next on parent
-      mFrame = parent;
-      return GetNextSibling();
-    }
-  }
-
-  mFrame = next;
-
-  // if next has content
-  if (mDepth == mDepthToFind)
-  {
-    if (IsSameContent())
-      return PR_TRUE;
-    else {
-      mFrame = nsnull;
-      return PR_FALSE;
-    }
-  }
-  
-  // if next doesn't have node
-
-  // call first on next
-  mFrame = next;
-  if (GetFirstChild())
-     return PR_TRUE;
-
-  // call next on next
-  mFrame = next;
-  return GetNextSibling();
-}
-
-PRBool nsFrameTreeWalker::GetFirstChild()
-{
-  //printf("Get first\n");
-  if (!mFrame)
-    return PR_FALSE;
-
-  // get first child
-  nsIFrame* child = nsnull;
-  mFrame->FirstChild(mPresContext, nsnull, &child);
-
-  while(child)
-  { 
-    mFrame = child;
-
-    mDepth++;
-
-    // if the child has a content node done
-    if (mDepth == mDepthToFind)
-    {
-      if (IsSameContent())
-        return PR_TRUE;
-      else {
-        mFrame = nsnull;
-        return PR_FALSE;
-      }
-    } else if (GetFirstChild()) // otherwise try first child
-      return PR_TRUE;
-
-    mDepth--;
-
-    // get next sibling
-    nsIFrame* next = nsnull;
-    child->GetNextSibling(&next);
-
-    child = next;
-  }
-
-  // fail
-  mFrame = nsnull;
-  mDepth = -1;
-  return PR_FALSE;
-}
-
-PRBool nsFrameTreeWalker::IsSameContent()
-{
-  nsCOMPtr<nsIContent> c;
-  mFrame->GetContent(getter_AddRefs(c));
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(c));
-  if (node == mNodeToFind)
-    return PR_TRUE;
-  else
-    return PR_FALSE;
-
-}
-
-//--------------
-
 /** This class is used to walk the DOM tree. It skips
   * everything but nodes that either implement nsIAccessible
   * or have primary frames that implement "GetAccessible"
@@ -408,8 +95,6 @@ public:
   PRBool GetLastChild();
   PRBool GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
   PRInt32 GetCount();
-  nsRect GetBounds();
-  nsIFrame* GetPrimaryFrame();
 
   PRBool GetAccessible();
 
@@ -419,6 +104,7 @@ public:
   nsCOMPtr<nsIAccessibilityService> mAccService;
 };
 
+
 nsDOMTreeWalker::nsDOMTreeWalker(nsIWeakReference* aPresShell, nsIDOMNode* aNode)
 {
   mDOMNode = aNode;
@@ -427,32 +113,9 @@ nsDOMTreeWalker::nsDOMTreeWalker(nsIWeakReference* aPresShell, nsIDOMNode* aNode
   mAccService = do_GetService("@mozilla.org/accessibilityService;1");
 }
 
-nsRect nsDOMTreeWalker::GetBounds()
-{
-  nsRect r(0,0,0,0);
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame)
-    frame->GetRect(r);
-
-  return r;
-}
-
-nsIFrame* nsDOMTreeWalker::GetPrimaryFrame()
-{
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  if (!shell)
-    return nsnull;
-
-  nsIFrame* frame = nsnull;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  shell->GetPrimaryFrameFor(content, &frame);
-  return frame;
-}
 
 PRBool nsDOMTreeWalker::GetParent()
 {
-  //printf("Get parent\n");
-
   if (!mDOMNode)
   {
     mAccessible = nsnull;
@@ -607,6 +270,7 @@ PRBool nsDOMTreeWalker::GetNextSibling()
   return GetNextSibling();
 }
 
+
 PRBool nsDOMTreeWalker::GetFirstChild()
 {
 
@@ -627,8 +291,6 @@ PRBool nsDOMTreeWalker::GetFirstChild()
       return PR_TRUE;
     }
   }
-
-  //printf("Get first\n");
 
   // get first child
   nsCOMPtr<nsIDOMNode> child;
@@ -655,6 +317,7 @@ PRBool nsDOMTreeWalker::GetFirstChild()
   mDOMNode = nsnull;
   return PR_FALSE;
 }
+
 
 PRBool nsDOMTreeWalker::GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild)
 {
@@ -698,8 +361,6 @@ PRBool nsDOMTreeWalker::GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild)
 
 PRBool nsDOMTreeWalker::GetPreviousSibling()
 {
-  //printf("Get previous\n");
-
   nsCOMPtr<nsIDOMNode> child(mDOMNode);
   GetParent();
   
@@ -708,15 +369,12 @@ PRBool nsDOMTreeWalker::GetPreviousSibling()
 
 PRBool nsDOMTreeWalker::GetLastChild()
 {
-  //printf("Get last\n");
-
   return GetChildBefore(mDOMNode, nsnull);
 }
 
+
 PRInt32 nsDOMTreeWalker::GetCount()
 {
-
-  //printf("Get count\n");
 
   nsCOMPtr<nsIDOMNode> node(mDOMNode);
   nsCOMPtr<nsIAccessible> a(mAccessible);
@@ -740,6 +398,7 @@ PRInt32 nsDOMTreeWalker::GetCount()
  * If the DOM node's frame has and accessible or the DOMNode
  * itself implements nsIAccessible return it.
  */
+
 PRBool nsDOMTreeWalker::GetAccessible()
 {
   mAccessible = nsnull;
@@ -754,7 +413,6 @@ PRBool nsDOMTreeWalker::GetAccessible()
 
   return PR_FALSE;
 }
-
 
 /*
  * Class nsAccessible
@@ -1319,13 +977,99 @@ nsAccessible::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
 }
 
 
-void nsAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeParent)
+void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
 {
+/*
+ * This method is used to determine the bounds of a content node.
+ * Because HTML wraps and links are not always rectangular, this
+ * method uses the following algorithm:
+ *
+ * 1) Start with an empty rectangle
+ * 2) Add the rect for the primary frame from for the DOM node.
+ * 3) For each next frame at the same depth with the same DOM node, add that rect to total
+ * 4) If that frame is an inline frame, search deeper at that point in the tree, adding all rects
+ */
+
+  // Initialization area
+  nsIFrame *firstFrame = GetBoundsFrame();
+  if (!firstFrame)
+    return;
+
+  // Find common relative parent
+  // This is an ancestor frame that will incompass all frames for this content node.
+  // We need the relative parent so we can get absolute screen coordinates
+  nsIFrame *ancestorFrame = firstFrame;
+  while (ancestorFrame) {  
+    *aBoundingFrame = ancestorFrame;
+    if (IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::blockFrame) || 
+        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::areaFrame)) {
+      break;
+    }
+    ancestorFrame->GetParent(&ancestorFrame); 
+  }
+
+  // Get ready for loop
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(presContext);
 
-  nsDOMNodeBoundsFinder finder(presContext, mDOMNode);
-  finder.GetBounds(aBounds, aRelativeParent);
+  nsIFrame *iterFrame = firstFrame;
+  nsCOMPtr<nsIContent> firstContent(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> iterContent(firstContent);
+  nsRect currFrameBounds;
+  PRInt32 depth = 0;
+
+  // Look only at frames below this depth, or at this depth (if we're still on the content node we started with)
+  while (iterContent == firstContent || depth > 0) {
+    // Coordinates will come back relative to parent frame
+    nsIFrame *parentFrame = iterFrame;
+    iterFrame->GetRect(currFrameBounds);
+
+    // Make this frame's bounds relative to common parent frame
+    while (parentFrame != *aBoundingFrame) {  
+      parentFrame->GetParent(&parentFrame);
+      if (!parentFrame) 
+        break;
+      nsRect parentFrameBounds;
+      parentFrame->GetRect(parentFrameBounds);
+      // Add this frame's bounds to our total rectangle
+      currFrameBounds.x += parentFrameBounds.x;
+      currFrameBounds.y += parentFrameBounds.y;
+    }
+
+    // Add this frame's bounds to total
+    aTotalBounds.UnionRect(aTotalBounds, currFrameBounds);
+
+    nsIFrame *iterNextFrame = nsnull;
+
+    if (IsCorrectFrameType(iterFrame, nsLayoutAtoms::inlineFrame)) {
+      // Only do deeper bounds search if we're on an inline frame
+      // Inline frames can contain larger frames inside of them
+      iterFrame->FirstChild(presContext, nsnull, &iterNextFrame);
+    }
+
+    if (iterNextFrame) 
+      ++depth;  // Child was found in code above this: We are going deeper in this iteration of the loop
+    else {  
+      // Use next sibling if it exists, or go back up the tree to get the first next-in-flow or next-sibling 
+      // within our search
+      while (iterFrame) {
+        iterFrame->GetNextInFlow(&iterNextFrame);
+        if (!iterNextFrame)
+          iterFrame->GetNextSibling(&iterNextFrame);
+        if (iterNextFrame || --depth < 0) 
+          break;
+        iterFrame->GetParent(&iterFrame);
+      }
+    }
+
+    // Get ready for the next round of our loop
+    iterFrame = iterNextFrame;
+    if (iterFrame == nsnull)
+      break;
+    iterContent = nsnull;
+    if (depth == 0)
+      iterFrame->GetContent(getter_AddRefs(iterContent));
+  }
 }
 
 
@@ -1362,11 +1106,10 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 
   if (presContext) {
-    nsIFrame* frame = GetBoundsFrame();   // Get our primary frame
     nsRect orgRectTwips, frameRectTwips, orgRectPixels;
 
     // Get the offset of this frame in screen coordinates
-    if (frame && NS_SUCCEEDED(GetAbsoluteFramePosition(presContext, aRelativeFrame, orgRectTwips, orgRectPixels))) {
+    if (NS_SUCCEEDED(GetAbsoluteFramePosition(presContext, aRelativeFrame, orgRectTwips, orgRectPixels))) {
       aRelativeFrame->GetRect(frameRectTwips);   // Usually just the primary frame, but can be the choice list frame for an nsSelectAccessible
       // Add in the absolute coorinates.
       // Since these absolute coordinates are for the primary frame, 
@@ -1381,6 +1124,24 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
 
 
 // helpers
+
+
+/**
+  * Static
+  * Helper method to help sub classes make sure they have the proper
+  *     frame when walking the frame tree to get at children and such
+  */
+PRBool nsAccessible::IsCorrectFrameType( nsIFrame* aFrame, nsIAtom* aAtom ) 
+{
+  NS_ASSERTION(aFrame != nsnull, "aFrame is null in call to IsCorrectFrameType!");
+  NS_ASSERTION(aAtom != nsnull, "aAtom is null in call to IsCorrectFrameType!");
+
+  nsCOMPtr<nsIAtom> frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+
+  return (frameType.get() == aAtom);
+}
+
 
 nsIFrame* nsAccessible::GetBoundsFrame()
 {
