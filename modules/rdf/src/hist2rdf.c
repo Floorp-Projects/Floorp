@@ -48,6 +48,7 @@ RDFT grdf = NULL;
 RDFT gHistoryStore = 0;
 PRBool ByDateOpened = 0;
 PRBool historyInitialized = 0;
+static int saveCount = 0;
 
 
 char    *prefixList[] = {
@@ -369,7 +370,11 @@ hostUnitOfDate (RDFT r, RDF_Resource u, time_t lastAccessDate)
 	return (node);
 }
 
-void saveHistory () {
+
+
+void
+saveHistory ()
+{
   char* escapedPath = unescapeURL(gGlobalHistoryURL);
   char* path = WH_FilePlatformName(convertFileURLToNSPRCopaceticPath(escapedPath));
   PRFileDesc* file = PR_Open(path,  PR_WRONLY | PR_CREATE_FILE, 00200);
@@ -385,7 +390,7 @@ void saveHistory () {
   PR_Close(file);
 }
 
-static int saveCount = 0;
+
 
 PR_PUBLIC_API(void)
 updateNewHistItem (DBT *key, DBT *data)

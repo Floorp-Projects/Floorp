@@ -77,6 +77,7 @@ void		collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t las
 RDF_Resource	hostUnitOfURL (RDFT r, RDF_Resource top, RDF_Resource nu, char* title);
 void		hourRange(char *buffer, struct tm *theTm);
 RDF_Resource	hostUnitOfDate (RDFT r, RDF_Resource u, time_t lastAccessDate);
+void		saveHistory();
 void		deleteCurrentSitemaps (char *address);
 void		addRelatedLinks (char* address);
 PRBool		displayHistoryItem (char* url);

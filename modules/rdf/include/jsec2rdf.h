@@ -32,6 +32,9 @@ typedef RDF_Resource JSec_Target;
 
 NSPR_BEGIN_EXTERN_C
 
+char *             RDFJSec_GetPrincipalURLString(char *principalID);
+const char *       RDFJSec_PrincipalUseID(JSec_PrincipalUse prUse);
+
 JSec_Error         RDFJSec_InitPrivilegeDB(); /* just use gNCDB */
 JSec_Error         RDFJSec_SavePrivilegeDB(); 
 JSec_Error         RDFJSec_ClosePrivilegeDB();

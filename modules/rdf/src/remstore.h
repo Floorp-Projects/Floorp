@@ -32,6 +32,14 @@
 
 /* remstore.c data structures and defines */
 
+struct RDFTOutStruct {
+	char		*buffer;
+	int32		bufferSize;
+	int32		bufferPos;
+	char		*temp;
+	RDFT		store;
+};
+typedef struct RDFTOutStruct	*RDFTOut;
 
 
 
@@ -66,6 +74,8 @@ void		RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBoo
 void		possiblyRefreshRDFFiles ();
 void		SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 RDFT		MakeSCookDB (char* url);
+void		addToRDFTOut (RDFTOut out);
+PRIntn		RDFSerializerEnumerator (PLHashEntry *he, PRIntn i, void *arg);
 
 static PRBool	fileReadp (RDFT rdf, char* url, PRBool mark);
 static void	possiblyAccessFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool inversep);

@@ -340,7 +340,7 @@ JSec_Target
 RDFJSec_NewTarget(char* targetName, JSec_Principal pr)
 {
   RDF_Resource tr;
-  RDF_Resource prResource;
+  /* RDF_Resource prResource; */
   char *principalID = RDFJSec_PrincipalID(pr);
   char *targetID = getMem(strlen(targetName) + strlen(principalID) + 2);
   if (targetID == NULL) {

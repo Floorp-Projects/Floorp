@@ -684,17 +684,11 @@ MakeSCookDB (char* url)
   } else return NULL;
 }
 
-struct RDFTOutStruct {
-  char* buffer;
-  int32 bufferSize;
-  int32 bufferPos;
-  char* temp;
-  RDFT store;
-};
 
-typedef struct RDFTOutStruct* RDFTOut;
 
-void addToRDFTOut (RDFTOut out) {
+void
+addToRDFTOut (RDFTOut out)
+{
   int32 len = strlen(out->temp);
   if (len + out->bufferPos < out->bufferSize) {
     PL_strcat(out->buffer, out->temp);
