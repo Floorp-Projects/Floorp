@@ -31,6 +31,8 @@
 
 nsresult NS_NewMenuPopupFrame(nsIFrame** aResult) ;
 
+class nsIViewManager;
+class nsIView;
 
 class nsMenuPopupFrame : public nsBoxFrame
 {
@@ -42,6 +44,12 @@ public:
                        nsIFrame*        aParent,
                        nsIStyleContext* aContext,
                        nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                       nsDidReflowStatus aStatus);
+
+  void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
+  nsresult SyncViewWithFrame(PRBool aOnMenuBar);
 
 protected:
 

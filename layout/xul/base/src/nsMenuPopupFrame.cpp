@@ -109,3 +109,71 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
 
   return rv;
 }
+
+void
+nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView, 
+  nsPoint& aPoint)
+{
+  aPoint.x = 0;
+  aPoint.y = 0;
+ 
+  nsIView *parent;
+  nsRect bounds;
+
+  parent = aView;
+  while (nsnull != parent) {
+    parent->GetBounds(bounds);
+    aPoint.x += bounds.x;
+    aPoint.y += bounds.y;
+    parent->GetParent(parent);
+  }
+}
+
+nsresult 
+nsMenuPopupFrame::SyncViewWithFrame(PRBool aOnMenuBar)
+{
+  nsPoint parentPos;
+  nsCOMPtr<nsIViewManager> viewManager;
+
+     //Get parent frame
+  nsIFrame* parent;
+  GetParentWithView(&parent);
+  NS_ASSERTION(parent, "GetParentWithView failed");
+
+  // Get parent view
+  nsIView* parentView = nsnull;
+  parent->GetView(&parentView);
+
+  parentView->GetViewManager(*getter_AddRefs(viewManager));
+  GetViewOffset(viewManager, parentView, parentPos);
+  nsIView* view = nsnull;
+  GetView(&view);
+
+  nsIView* containingView = nsnull;
+  nsPoint offset;
+  GetOffsetFromView(offset, &containingView);
+  nsSize size;
+  GetSize(size);
+  
+  nsIFrame* parentFrame;
+  GetParent(&parentFrame);
+  
+  nsRect parentRect;
+  parentFrame->GetRect(parentRect);
+
+  viewManager->ResizeView(view, mRect.width, mRect.height);
+  if (aOnMenuBar)
+    viewManager->MoveViewTo(view, parentPos.x + offset.x, parentPos.y + parentRect.height + offset.y );
+  else viewManager->MoveViewTo(view, parentPos.x + parentRect.width + offset.x, parentPos.y + offset.y );
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
+                            nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
+  //SyncViewWithFrame();
+  return rv;
+}

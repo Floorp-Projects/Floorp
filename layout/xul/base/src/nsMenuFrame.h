@@ -54,8 +54,26 @@ public:
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
 
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  // Reflow methods
+  NS_IMETHOD Reflow(nsIPresContext&   aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
+  void ToggleMenuState();
+
+protected:
+  void GetMenuChildrenElement(nsIContent** aResult);
+
 protected:
   nsFrameList mPopupFrames;
+  PRBool mMenuOpen;
+  PRBool mOnMenuBar;
+
 }; // class nsMenuFrame
 
 #endif
