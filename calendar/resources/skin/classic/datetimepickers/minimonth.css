@@ -51,6 +51,8 @@
   font-weight: bold;
   color: #000000;
   text-align: center;
+  padding: 1px;
+  border: 1px solid #EEEEEE;
 }
 
 .minimonth-year-name {
@@ -60,6 +62,13 @@
   color: #000000;
   text-align: center;
   margin-left: 6px;
+  padding: 1px;
+  border: 1px solid #EEEEEE;
+}
+
+.minimonth-month-name:hover,
+.minimonth-year-name:hover {
+  border: 1px solid #d2d2d2;
 }
 
 .minimonth-navbtn {

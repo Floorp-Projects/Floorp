@@ -100,7 +100,7 @@
                 <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
           </xul:vbox>
-          <xul:menupopup id="month-list">
+          <xul:menupopup id="month-list" position="after_start">
             <xul:menuitem class="minimonth-list"/>
             <xul:menuitem class="minimonth-list"/>
             <xul:menuitem class="minimonth-list"/>
@@ -114,7 +114,7 @@
             <xul:menuitem class="minimonth-list"/>
             <xul:menuitem class="minimonth-list"/>
           </xul:menupopup>
-          <xul:menupopup id="year-list">
+          <xul:menupopup id="year-list" position="after_start">
             <xul:menuitem class="minimonth-list"/>
             <xul:menuitem class="minimonth-list"/>
             <xul:menuitem class="minimonth-list"/>
