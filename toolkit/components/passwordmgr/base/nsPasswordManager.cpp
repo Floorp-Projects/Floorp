@@ -1212,10 +1212,15 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                                  formatArgs,
                                  1);
 
-              PRBool confirm;
-              prompt->Confirm(dialogTitle.get(), dialogText.get(), &confirm);
+              PRInt32 selection;
+              prompt->ConfirmEx(dialogTitle.get(),
+                                dialogText.get(),
+                                (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                                (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                                nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+                                &selection);
 
-              if (confirm)
+              if (selection == 0)
                 changeEntry = entry;
             }
           }
