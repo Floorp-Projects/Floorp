@@ -698,100 +698,64 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 }
 
 void
-nsHTMLContainerFrame::CheckInvalidateBorder(nsIPresContext* aPresContext,
-                                            nsHTMLReflowMetrics& aDesiredSize,
-                                            const nsHTMLReflowState& aReflowState)
+nsHTMLContainerFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
+                                                nsHTMLReflowMetrics& aDesiredSize,
+                                                const nsHTMLReflowState& aReflowState)
 {
-  // XXX This method ought to deal with padding as well
-  // If this is a style change reflow targeted at this frame, we must repaint
-  // everything (well, we really just have to repaint the borders but we're
-  // a bunch of lazybones).
-  if (aReflowState.reason == eReflowReason_Incremental) {
-    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
-    if (command) {
-      nsReflowType type;
-      command->GetType(type);
-      if (type == eReflowType_StyleChanged) {
+  if (aDesiredSize.width == mRect.width
+      && aDesiredSize.height == mRect.height)
+    return;
 
-#ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 1 (%d, %d, %d, %d)\n",
-               this, 0, 0, mRect.width, mRect.height);
-#endif
+  // Below, we invalidate the old frame area (or, in the case of
+  // outline, combined area) if the outline, border or background
+  // settings indicate that something other than the difference
+  // between the old and new areas needs to be painted. We are
+  // assuming that the difference between the old and new areas will
+  // be invalidated by some other means. That also means invalidating
+  // the old frame area is the same as invalidating the new frame area
+  // (since in either case the UNION of old and new areas will be
+  // invalidated)
 
-        // Lots of things could have changed so damage our entire bounds
-        nsRect damageRect(0, 0, mRect.width, mRect.height);
-        if (!damageRect.IsEmpty()) {
-          Invalidate(aPresContext,damageRect);
-        }
+  // Invalidate the entire old frame+outline if the frame has an outline
 
-        return;
-      }
+  // This assumes 'outline' is painted outside the element, as CSS2 requires.
+  // Currently we actually paint 'outline' inside the element so this code
+  // isn't strictly necessary. But we're trying to get ready to switch to
+  // CSS2 compliance.
+  const nsStyleOutline* outline;
+  ::GetStyleData(this, &outline);
+  PRUint8 outlineStyle = outline->GetOutlineStyle();
+  if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE
+      && outlineStyle != NS_STYLE_BORDER_STYLE_HIDDEN) {
+    nscoord width;
+    outline->GetOutlineWidth(width);
+    if (width > 0) {
+      nsRect r(0, 0, mRect.width, mRect.height);
+      r.Inflate(width, width);
+      Invalidate(aPresContext, r);
+      return;
     }
   }
 
-  // If we changed size, we must invalidate the parts of us that have changed
-  // to make the border show up.
-  if ((aReflowState.reason == eReflowReason_Incremental ||
-       aReflowState.reason == eReflowReason_Dirty)) {
-    nsMargin border = aReflowState.mComputedBorderPadding -
-                      aReflowState.mComputedPadding;
+  // Invalidate the old frame if the frame has borders. Those borders
+  // may be moving.
+  const nsStyleBorder* border;
+  ::GetStyleData(this, &border);
+  if (border->IsBorderSideVisible(NS_SIDE_LEFT)
+      || border->IsBorderSideVisible(NS_SIDE_RIGHT)
+      || border->IsBorderSideVisible(NS_SIDE_TOP)
+      || border->IsBorderSideVisible(NS_SIDE_BOTTOM)) {
+    Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+    return;
+  }
 
-    // See if our width changed
-    if ((aDesiredSize.width != mRect.width) && (border.right > 0)) {
-      nsRect damageRect;
-
-      if (aDesiredSize.width < mRect.width) {
-        // Our new width is smaller, so we need to make sure that
-        // we paint our border in its new position
-        damageRect.x = aDesiredSize.width - border.right;
-        damageRect.width = border.right;
-        damageRect.y = 0;
-        damageRect.height = aDesiredSize.height;
-      } else {
-        // Our new width is larger, so we need to erase our border in its
-        // old position
-        damageRect.x = mRect.width - border.right;
-        damageRect.width = border.right;
-        damageRect.y = 0;
-        damageRect.height = mRect.height;
-      }
-
-#ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate 2 (%d, %d, %d, %d)\n",
-             this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
-#endif
-      if (!damageRect.IsEmpty()) {
-        Invalidate(aPresContext, damageRect);
-      }
-    }
-
-    // See if our height changed
-    if ((aDesiredSize.height != mRect.height) && (border.bottom > 0)) {
-      nsRect  damageRect;
-
-      if (aDesiredSize.height < mRect.height) {
-        // Our new height is smaller, so we need to make sure that
-        // we paint our border in its new position
-        damageRect.x = 0;
-        damageRect.width = aDesiredSize.width;
-        damageRect.y = aDesiredSize.height - border.bottom;
-        damageRect.height = border.bottom;
-
-      } else {
-        // Our new height is larger, so we need to erase our border in its
-        // old position
-        damageRect.x = 0;
-        damageRect.width = mRect.width;
-        damageRect.y = mRect.height - border.bottom;
-        damageRect.height = border.bottom;
-      }
-#ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate 3 (%d, %d, %d, %d)\n",
-             this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
-#endif
-      if (!damageRect.IsEmpty()) {
-        Invalidate(aPresContext, damageRect);
-      }
-    }
+  // Invalidate the old frame if the frame has a background
+  // whose position depends on the size of the frame
+  const nsStyleBackground* background;
+  ::GetStyleData(this, &background);
+  if (background->mBackgroundFlags &
+      (NS_STYLE_BG_X_POSITION_PERCENT | NS_STYLE_BG_Y_POSITION_PERCENT)) {
+    Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+    return;
   }
 }
