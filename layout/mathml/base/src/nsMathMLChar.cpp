@@ -708,7 +708,7 @@ static PRBool gInitialized = PR_FALSE;
 // XPCOM shutdown observer
 NS_IMETHODIMP
 nsGlyphTableList::Observe(nsISupports*     aSubject,
-                          const PRUnichar* aTopic,
+                          const char* aTopic,
                           const PRUnichar* someData)
 {
   Finalize();
@@ -739,8 +739,7 @@ nsGlyphTableList::Finalize()
   nsCOMPtr<nsIObserverService> obs = 
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    rv = obs->RemoveObserver(this, topic.get());
+    rv = obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
   // delete the glyph tables
   for (PRInt32 i = 0; i < Count(); i++) {
