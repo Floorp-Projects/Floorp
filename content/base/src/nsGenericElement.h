@@ -951,10 +951,4 @@ public:
   }                                                                           \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
-#define NS_INTERFACE_MAP_ENTRY_TEAROFF(_iid, _tearoff)                        \
-  if (aIID.Equals(NS_GET_IID(_iid))) {                                        \
-    foundInterface = new _tearoff;                                            \
-    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
-  } else
-
 #endif /* nsGenericElement_h___ */

@@ -773,6 +773,16 @@ IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent)
   return PR_TRUE;
 }
 
+
+NS_IMPL_ADDREF(nsSelectionIterator)
+NS_IMPL_RELEASE(nsSelectionIterator)
+
+NS_INTERFACE_MAP_BEGIN(nsSelectionIterator)
+  NS_INTERFACE_MAP_ENTRY(nsIEnumerator)
+  NS_INTERFACE_MAP_ENTRY(nsIBidirectionalEnumerator)
+NS_INTERFACE_MAP_END_AGGREGATED(mDomSelection)
+
+
 ///////////BEGIN nsSelectionIterator methods
 
 nsSelectionIterator::nsSelectionIterator(nsTypedSelection *aList)
@@ -859,9 +869,6 @@ nsSelectionIterator::CurrentItem(nsISupports **aItem)
                             aItem);
 }
 
-NS_IMPL_ADDREF(nsSelectionIterator)
-
-NS_IMPL_RELEASE(nsSelectionIterator)
 
 NS_IMETHODIMP 
 nsSelectionIterator::CurrentItem(nsIDOMRange **aItem)
@@ -888,31 +895,6 @@ nsSelectionIterator::IsDone()
   }
   return NS_OK;
 }
-
-
-
-NS_IMETHODIMP
-nsSelectionIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEnumerator))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIBidirectionalEnumerator))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return mDomSelection->QueryInterface(aIID, aInstancePtr);
-}
-
-
-
-
 
 
 ////////////END nsIFrameSelectionIterator methods
@@ -988,38 +970,7 @@ nsSelection::~nsSelection()
 }
 
 
-NS_IMPL_ADDREF(nsSelection)
-
-NS_IMPL_RELEASE(nsSelection)
-
-
-NS_IMETHODIMP
-nsSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIFrameSelection))) {
-    nsIFrameSelection* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    // use *first* base class for ISupports
-    nsIFrameSelection* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  NS_ASSERTION(PR_FALSE,"bad query interface in FrameSelection");
-  return NS_NOINTERFACE;
-}
-
-
-
-
+NS_IMPL_ISUPPORTS1(nsSelection, nsIFrameSelection)
 
 
 nsresult

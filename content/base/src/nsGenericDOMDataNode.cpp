@@ -91,20 +91,15 @@ NS_IMPL_RELEASE(nsGenericDOMDataNode)
 
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver)) ||
-      aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-    foundInterface = NS_STATIC_CAST(nsIDOMEventReceiver *,
-                                    nsDOMEventRTTearoff::Create(this));
-    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);
-  } else
-  if (aIID.Equals(NS_GET_IID(nsIDOM3EventTarget))) {
-    foundInterface = NS_STATIC_CAST(nsIDOM3EventTarget *,
-                                    nsDOMEventRTTearoff::Create(this));
-    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);
-  } else
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
+                                 nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
+                                 nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
+                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   // No nsITextContent since all subclasses might not want that.
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
 NS_INTERFACE_MAP_END
 
 

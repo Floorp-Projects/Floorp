@@ -340,11 +340,19 @@ private:
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
     foundInterface =                                                          \
       nsContentUtils::GetClassInfoInstance(eDOMClassInfo_##_class##_id);      \
-    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
-                                                                              \
-    *aInstancePtr = foundInterface;                                           \
-                                                                              \
-    return NS_OK;                                                             \
+    if (!foundInterface) {                                                    \
+      *aInstancePtr = nsnull;                                                 \
+      return NS_ERROR_OUT_OF_MEMORY;                                          \
+    }                                                                         \
+  } else
+
+#define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
+  if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
+    foundInterface = NS_STATIC_CAST(_interface *, _allocator);                \
+    if (!foundInterface) {                                                    \
+      *aInstancePtr = nsnull;                                                 \
+      return NS_ERROR_OUT_OF_MEMORY;                                          \
+    }                                                                         \
   } else
 
 #endif /* nsContentUtils_h___ */

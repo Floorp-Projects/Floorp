@@ -164,26 +164,12 @@ nsChildContentList::DropReference()
   mContent = nsnull;
 }
 
-NS_IMETHODIMP
-nsNode3Tearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
-    nsISupports *inst = this;
-
-    NS_ADDREF(inst);
-
-    *aInstancePtr = inst;
-
-    return NS_OK;
-  }
-
-  return mContent->QueryInterface(aIID, aInstancePtr);
-}
-
+NS_INTERFACE_MAP_BEGIN(nsNode3Tearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
+NS_INTERFACE_MAP_END_AGGREGATED(mContent)
 
 NS_IMPL_ADDREF(nsNode3Tearoff)
 NS_IMPL_RELEASE(nsNode3Tearoff)
-
 
 NS_IMETHODIMP
 nsNode3Tearoff::GetBaseURI(nsAString& aURI)
@@ -519,30 +505,11 @@ nsDOMEventRTTearoff::~nsDOMEventRTTearoff()
 {
 }
 
-
-NS_IMETHODIMP
-nsDOMEventRTTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  nsISupports *inst;
-
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventTarget)) ||
-      aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
-    inst = NS_STATIC_CAST(nsIDOMEventReceiver *, this);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIDOM3EventTarget))) {
-    inst = NS_STATIC_CAST(nsIDOM3EventTarget *, this);
-  } else {
-    // Not one of our interfaces, delegate to the real content object.
-
-    return mContent->QueryInterface(aIID, aInstancePtr);
-  }
-
-  *aInstancePtr = inst;
-  NS_ADDREF(inst);
-
-  return NS_OK;
-}
-
+NS_INTERFACE_MAP_BEGIN(nsDOMEventRTTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
+NS_INTERFACE_MAP_END_AGGREGATED(mContent)
 
 NS_IMPL_ADDREF(nsDOMEventRTTearoff)
 NS_IMPL_RELEASE_WITH_DESTROY(nsDOMEventRTTearoff, LastRelease())
@@ -3096,38 +3063,18 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 
 // nsISupports implementation
 
-NS_IMETHODIMP
-nsGenericElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  nsISupports *inst = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    inst = NS_STATIC_CAST(nsIContent *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIContent))) {
-    inst = NS_STATIC_CAST(nsIContent *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIStyledContent))) {
-    inst = NS_STATIC_CAST(nsIStyledContent *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
-    inst = new nsNode3Tearoff(this);
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver)) ||
-             aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-    inst = NS_STATIC_CAST(nsIDOMEventReceiver *,
-                          nsDOMEventRTTearoff::Create(this));
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOM3EventTarget))) {
-    inst = NS_STATIC_CAST(nsIDOM3EventTarget *,
-                          nsDOMEventRTTearoff::Create(this));
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF(inst);
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN(nsGenericElement)
+  NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
+                                 nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
+                                 nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
+                                 nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsGenericElement)
 NS_IMPL_RELEASE(nsGenericElement)
