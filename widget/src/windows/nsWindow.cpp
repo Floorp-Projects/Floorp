@@ -656,16 +656,10 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
       if ((msg == WM_MOUSEACTIVATE) && (nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget))) {
         // Prevent the click inside the popup from causing a change in window
-        // activation. Since the popup and shown non-activated, we need to eat 
+        // activation. Since the popup is shown non-activated, we need to eat 
         // any requests to activate the window while it is displayed. Windows 
         // will automatically activate the popup on the mousedown otherwise.
-        // We have to special case native scrollbars since they need to get the event otherwise
-        // they will not scroll.
-        if (nsWindow::IsScrollbar(hWnd)) {
-          return MA_NOACTIVATE;
-        } else {
-          return MA_NOACTIVATEANDEAT;   
-        }
+        return MA_NOACTIVATE;
       }
     }
 
