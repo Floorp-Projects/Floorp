@@ -150,7 +150,7 @@ protected:
       NS_IMETHOD IsDone();
 
     private:
-      PRInt32       mCurrentPosition;
+      PRUint32       mCurrentPosition;
       nsBaseWidget& mParent;
     };
     friend class Enumerator;
