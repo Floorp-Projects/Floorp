@@ -251,6 +251,6 @@
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999070614">
+<!ENTITY  buildId.label "Build ID: 1999082316">
 <!ENTITY  security-button.label "Secure Conn">
 
