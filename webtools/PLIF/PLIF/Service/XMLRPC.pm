@@ -69,7 +69,7 @@ sub decodeXMLRPC {
     if (@$values == 1 and $values->[0]->type eq 'struct') {
         $arguments = $values->[0]->value;
     } else {
-        my $index = 0;
+        my $index = 1;
         $arguments = {};
         foreach my $argument (@$values) {
             $arguments->{$index++} = $argument->value;
@@ -115,10 +115,20 @@ sub methodMissing {
     }
     if (@arguments > 1) {
         $response = RPC::XML::response->new(RPC::XML::array->new(@arguments));
-    } else {
+    } elsif (@arguments) {
         $response = RPC::XML::response->new(@arguments);
+    } else {
+        $response = RPC::XML::response->new(RPC::XML::boolean->new(1)); # XXX
     }
     $self->output->XMLRPC($response->as_string);
+}
+
+# disable implied property access so that all method calls are routed
+# through methodMissing() above.
+sub propertyImpliedAccessAllowed {
+    my $self = shift;
+    my($name) = @_;
+    return ($name eq 'output');
 }
 
 # This is commented out because the default generic output module
