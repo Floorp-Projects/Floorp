@@ -193,7 +193,7 @@
       <!-- Note slightly different menu item text (value) used here DOESN'T WORK IN MENUS! -->
   		<menuitem id="menu_newEditor" observes="cmd_newEditor" value="&newBlankPage.label;"/>
 			<menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;">
-				<menupopup>
+				<menupopup id="menu_NewPopup">
 	        <!-- From globalOverlay.xul -->
 					<menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>
 					<menuitem id="menu_newEditorDraft"     observes="cmd_newEditorDraft"/>

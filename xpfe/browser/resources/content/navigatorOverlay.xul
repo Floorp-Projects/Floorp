@@ -120,7 +120,7 @@ Contributor(s): ______________________________________. -->
 	    <menupopup id="menu_FilePopup">
 			<menuitem value="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
 			<menu id="menu_New">
-				<menupopup>
+				<menupopup id="menu_NewPopup">
 					<!-- From globalOverlay.xul -->
 					<menuitem id="menu_newEditor"          observes="cmd_newEditor"/>
 					<menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>

@@ -102,7 +102,7 @@ Rights Reserved.
 			<menupopup id="menu_FilePopup">
 				<menuitem value="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
 				<menu id="menu_New">
-					<menupopup>
+					<menupopup id="menu_NewPopup">
 						<menuitem value="&newListCmd.label;" accesskey="&newListCmd.accesskey;" disabled="true" oncommand="AbNewList()"/>
 						<menuitem value="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
 						<menuitem value="&newDirectoryCmd.label;" accesskey="&newDirectoryCmd.accesskey;" disabled="true" oncommand="AbNewDirectoryt()"/>

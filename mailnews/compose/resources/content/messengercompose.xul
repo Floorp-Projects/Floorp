@@ -139,7 +139,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
       <menupopup id="menu_FilePopup">
         <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
         <menu id="menu_New">
-          <menupopup>
+          <menupopup id="menu_NewPopup">
             <menuitem id="menu_newNavigator"/>
             <menuitem id="menu_newMessage"/>
             <menuitem id="cmd_newCard"/>

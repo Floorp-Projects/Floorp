@@ -335,7 +335,7 @@ Rights Reserved.
                         key="key_newMessage"
                         observes="cmd_newMessage"/>
               <menu id="menu_New">
-                <menupopup>
+                <menupopup id="menu_NewPopup">
                   <menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
                   <menuitem value="&newAccountCmd.label;" oncommand="MsgAccountWizard();"/>
                   <menuseparator/>
