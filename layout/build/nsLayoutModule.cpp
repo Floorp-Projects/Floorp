@@ -68,6 +68,7 @@
 #include "nsIServiceManager.h"
 
 #include "nsTextTransformer.h"
+#include "nsRange.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "gbdate.h"
 #include "nsContentPolicyUtils.h"
@@ -275,6 +276,8 @@ nsLayoutModule::Shutdown()
 #endif
 
   nsTextTransformer::Shutdown();
+
+  nsRange::Shutdown();
 
   NS_IF_RELEASE(gRegistry);
   NS_IF_RELEASE(gUAStyleSheet);
