@@ -16,13 +16,20 @@ var MSVCRT_SIZE    = 400;
 var MSSTL_FILE     = "msvcp60.dll";
 var MSSTL_SIZE     = 300;
 
-var PLID           = "@mozilla.org/ActivexPlugin"; // ,version=1.0.0.3";
+var PLID_BASE      = "@mozilla.org/ActiveXPlugin";
+var PLID           = PLID_BASE + ",version=" + VERSION;
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
 // Invoke initInstall to start the installation
 err = initInstall(SOFTWARE_NAME, PLID, VERSION);
+if (err == -200)
+{
+    // HACK: Mozilla 1.1 has a busted PLID parser which doesn't like the equals sign
+    PLID = PLID_BASE;
+    err = initInstall(SOFTWARE_NAME, PLID, VERSION);
+}
 if (err != 0)
 {
     logComment("Install failed at initInstall level with " + err);
