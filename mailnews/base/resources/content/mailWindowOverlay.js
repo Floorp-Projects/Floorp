@@ -1573,7 +1573,7 @@ function IsGetNextNMessagesEnabled()
     var serverType = server.type;
 
     var menuItem = document.getElementById("menu_getnextnmsg");
-    if((serverType == "nntp")) {
+    if ((serverType == "nntp") && !folder.isServer) {
         var newsServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
         var menuLabel = gMessengerBundle.getFormattedString("getNextNMessages",
                                                             [ newsServer.maxArticles ]);
@@ -1581,10 +1581,9 @@ function IsGetNextNMessagesEnabled()
         menuItem.removeAttribute("hidden");
         return true;
     }
-    else {
-        menuItem.setAttribute("hidden","true");
-        return false;
-    }
+
+    menuItem.setAttribute("hidden","true");
+    return false;
 }
 
 function IsEmptyTrashEnabled()
