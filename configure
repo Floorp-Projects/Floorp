@@ -7516,6 +7516,7 @@ network/protocol/js/Makefile
 network/protocol/ldap/Makefile
 network/protocol/marimba/Makefile
 network/protocol/remote/Makefile
+network/protocol/sockstub/Makefile
 network/util/Makefile
 rdf/Makefile
 rdf/base/Makefile
