@@ -1776,7 +1776,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(mPresContext, aEvent, getter_AddRefs(newFocus));
           const nsStyleUserInterface* ui;
-          mCurrentTarget->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+          ::GetStyleData(mCurrentTarget, &ui);
           suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
         }
 
@@ -1787,8 +1787,17 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 
         // Look for the nearest enclosing focusable frame.
         while (currFrame) {
+          // If the mousedown happened inside a popup, don't
+          // try to set focus on one of its containing elements
+          const nsStyleDisplay* display;
+          ::GetStyleData(currFrame, &display);
+          if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
+            newFocus = nsnull;
+            break;
+          }
+
           const nsStyleUserInterface* ui;
-          currFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+          ::GetStyleData(currFrame, &ui);
           if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
               (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) {
             currFrame->GetContent(getter_AddRefs(newFocus));
