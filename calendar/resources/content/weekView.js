@@ -157,7 +157,7 @@ WeekView.prototype.refreshEvents = function()
 
     dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
 
-    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT,
+    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
                       0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
 
     return;
@@ -318,16 +318,19 @@ WeekView.prototype.refreshEvents = function()
 *
 *   This creates an event box for the week view
 */
-WeekView.prototype.createEventBox = function ( calItem )
-{
-    var eventText = calItem.title;
+WeekView.prototype.createEventBox = function ( itemOccurrence )
+{    
+    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+
+    var startDate = itemOccurrence.occurrenceStartDate;
+    var endDate = itemOccurrence.occurrenceEndDate;
     
-    var calEvent = calItem.QueryInterface(Components.interfaces.calIEvent);
+    var startHour = startDate.jsDate.getHours();
+    var startMinutes = startDate.minute;
+    var eventDuration = (endDate.jsDate - startDate.jsDate) / (60 * 60 * 1000);
 
-    var startHour = calEvent.startDate.jsDate.getHours();
-    var startMinutes = calEvent.startDate.minute;
-    var eventDuration = (calEvent.endDate.jsDate - calEvent.startDate.jsDate) / (60 * 60 * 1000);
 
+    var eventText = calEvent.title;
 
 
     var eventBox = document.createElement("vbox");
@@ -353,8 +356,8 @@ WeekView.prototype.createEventBox = function ( calItem )
 
     // figure out what column we need to put this on
     var dayIndex = new Date(gHeaderDateItemArray[1].getAttribute("date"));
-    var index = calEvent.startDate.jsDate.getDay() - dayIndex.getDay();
-    dump("index is:" + index + "(" + calEvent.startDate.jsDate.getDay() + " - " + dayIndex.getDay() + ")\n");
+    var index = startDate.jsDate.getDay() - dayIndex.getDay();
+    dump("index is:" + index + "(" + startDate.jsDate.getDay() + " - " + dayIndex.getDay() + ")\n");
 
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
@@ -373,9 +376,9 @@ WeekView.prototype.createEventBox = function ( calItem )
     eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
     eventBox.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
     eventBox.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
-    eventBox.setAttribute("id", "week-view-event-box-" + calItem.id);
-    eventBox.setAttribute("name", "week-view-event-box-" + calItem.id);
-    eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( null, calItem )");
+    eventBox.setAttribute("id", "week-view-event-box-" + calEvent.id);
+    eventBox.setAttribute("name", "week-view-event-box-" + calEvent.id);
+    eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( null, calEvent )");
     eventBox.setAttribute("tooltip", "eventTooltip");
 
     // The event description. This doesn't go multi line, but does crop properly.
