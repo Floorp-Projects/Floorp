@@ -28,69 +28,320 @@ native nsCID(nsCID);
 [scriptable, uuid(8458a740-d5dc-11d2-92fb-00e09805570f)]
 interface nsIComponentManager : nsISupports
 {
-    nsIFactory findFactory(in nsCIDRef aClass);
-    [noscript] voidStar   getClassObject(in nsCIDRef aClass, in nsIIDRef aIID);
-
-    [noscript] void      progIDToClassID(in string aProgID, out nsCID aClass);
-    string     CLSIDToProgID(in nsCIDRef aClass, out string aClassName);
-
-    [noscript] voidStar   createInstance(in nsCIDRef aClass,
-                                         in nsISupports aDelegate,
-                                         in nsIIDRef aIID);
-    [noscript] voidStar   createInstanceByProgID(in string aProgID,
-                                                 in nsISupports aDelegate,
-                                                 in nsIIDRef IID);
     /**
-     * Produce a rel: or abs: registry location for a given spec.
+     * findFactory
+     *
+     * Returns the factory object that can be used to create instances of
+     * CID aClass
+     *
+     * @param aClass The classid of the factory that is being requested
      */
-    string     registryLocationForSpec(in nsIFile aSpec);
+    nsIFactory findFactory(in nsCIDRef aClass);
 
     /**
-     * Create a full FileSpec for the rel:/abs: location provided.
+     * getClassObject
+     *
+     * @param aClass : CID of the class whose class object is requested
+     * @param aIID : IID of an interface that the class object is known to
+     *               to implement. nsISupports and nsIFactory are known to
+     *               be implemented by the class object.
+     */
+    [noscript] voidStar getClassObject(in nsCIDRef aClass, in nsIIDRef aIID);
+
+    /**
+     * progIDToClassID
+     *
+     * Get the ClassID for a given ProgID. Many ClassIDs may implement a
+     * ProgID. In such a situation, this returns the preferred ClassID, which
+     * happens to be the last registered ClassID.
+     * 
+     * @param aProgID : Progid for which ClassID is requested
+     * @return aClass : ClassID return
+     */
+    [noscript] void progIDToClassID(in string aProgID, out nsCID aClass);
+
+    /**
+     * classIDToProgid
+     *
+     * Get the ProgID for a given ClassID. A ClassIDs may implement multiple
+     * ProgIDs. This function return the last registered ProgID.
+     *
+     * @param aClass : ClassID for which ProgID is requested.
+     * @return aClassName : returns class name asssociated with aClass
+     * @return : ProgID last registered for aClass
+     */
+    string CLSIDToProgID(in nsCIDRef aClass, out string aClassName);
+
+    /**
+     * createInstance
+     *
+     * Create an instance of the CID aClass and return the interface aIID.
+     *
+     * @param aClass : ClassID of object instance requested
+     * @param aDelegate : Used for aggregation
+     * @param aIID : IID of interface requested
+     */
+    [noscript] voidStar createInstance(in nsCIDRef aClass,
+                                       in nsISupports aDelegate,
+                                       in nsIIDRef aIID);
+
+    /**
+     * createInstanceByProgID
+     *
+     * Create an instance of the CID that implements aProgID and return the
+     * interface aIID. This is a convenience function that effectively does
+     * ProgIDToClassID() followed by CreateInstance().
+     *
+     * @param aProgID : aProgID of object instance requested
+     * @param aDelegate : Used for aggregation
+     * @param aIID : IID of interface requested
+     */
+    [noscript] voidStar createInstanceByProgID(in string aProgID,
+                                               in nsISupports aDelegate,
+                                               in nsIIDRef IID);
+    /**
+     * registryLocationForSpec
+     *
+     * Given a file specification, return the registry representation of
+     * the filename. Files that are found relative to the components
+     * directory will have a registry representation
+     * "rel:<relative-native-path>" while filenames that are not, will have
+     * "abs:<full-native-path>".
+     */
+    string registryLocationForSpec(in nsIFile aSpec);
+
+    /**
+     * specForRegistyLocation
+     *
+     * Create a file specification for the registry representation (rel:/abs:)
+     * got via registryLocationForSpec.
      */
     nsIFile specForRegistryLocation(in string aLocation);
     
-    void       registerFactory(in nsCIDRef aClass, in string aClassName,
-                               in string aProgID, in nsIFactory aFactory,
-                               in boolean aReplace);
-    void       registerComponentLoader(in string aType, in string aProgID,
-                                       in boolean aReplace);
-    void       registerComponent(in nsCIDRef aClass, in string aClassName,
-                                 in string aProgID, in string aLocation,
-                                 in boolean aReplace, in boolean aPersist);
-    void       registerComponentWithType(in nsCIDRef aClass,
-                                         in string aClassName,
-                                         in string aProgID,
-                                         in nsIFile aSpec,
-                                         in string aLocation,
-                                         in boolean aReplace,
-                                         in boolean aPersist,
-                                         in string aType);
-    void       registerComponentSpec(in nsCIDRef aClass, in string aClassName,
-                                     in string aProgID, in nsIFile aLibrary,
-                                     in boolean aReplace, in boolean aPersist);
-    void       registerComponentLib(in nsCIDRef aClass, in string aClassName,
-                                    in string aProgID, in string adllName,
-                                    in boolean aReplace, in boolean aPersist);
-    
-    void       unregisterFactory(in nsCIDRef aClass, in nsIFactory aFactory);
-    void       unregisterComponent(in nsCIDRef aClass, in string aLibrary);
-    void       unregisterComponentSpec(in nsCIDRef aClass,
-                                       in nsIFile aLibrarySpec);
+    /**
+     * registerFactory
+     *
+     * Register a factory and ProgID associated with CID aClass
+     *
+     * @param aClass : CID of object
+     * @param aClassName : Class Name of CID
+     * @param aProgID : ProgID associated with CID aClass
+     * @param aFactory : Factory that will be registered for CID aClass
+     * @param aReplace : Boolean that indicates whether to replace a previous
+     *                   registration for the CID aClass.
+     */
+    void registerFactory(in nsCIDRef aClass, in string aClassName,
+                         in string aProgID, in nsIFactory aFactory,
+                         in boolean aReplace);
 
-    void       freeLibraries();
+    /**
+     * registerComponentLoader
+     *
+     * Register a ProgID whose CID will be the loader for component type
+     * aType. When creating instances of this component type, module loading
+     * and factory creation is delegated to the component loader.
+     *
+     * @param aType : Component Type for which the loader progid is being
+     *                registered.
+     * @param aProgID : ProgID of object that will be the loader for aType
+     * @param aReplace : Boolean that indicates whether to replace a previous
+     *                   loader registration for aType.
+     */
+    void registerComponentLoader(in string aType, in string aProgID,
+                                 in boolean aReplace);
+
+    /**
+     * registerComponent
+     *
+     * Register a native dll module via its registry representation as returned
+     * by registryLocationForSpec() as the container of CID implemenation
+     * aClass and associate aProgID and aClassName to the CID aClass. Native
+     * dll component type is assumed.
+     *
+     * @param aClass : CID implemenation contained in module
+     * @param aClassName : Class name associated with CID aClass
+     * @param aProgID : ProgID associated with CID aClass
+     * @param aLocation : Location of module (dll). Format of this is the
+     *                    registry representation as returned by
+     *                    registryLocationForSpec()
+     * @param aReplace : Boolean that indicates whether to replace a previous
+     *                   module registration for aClass.
+     * @param aPersist : Remember this registration across sessions.
+     */
+    void registerComponent(in nsCIDRef aClass, in string aClassName,
+                           in string aProgID, in string aLocation,
+                           in boolean aReplace, in boolean aPersist);
+
+    /**
+     * registerComponentWithType
+     *
+     * Register a module's location via its registry representation
+     * as returned by registryLocationForSpec() as the container of CID implemenation
+     * aClass of type aType and associate aProgID and aClassName to the CID aClass.
+     *
+     * @param aClass : CID implemenation contained in module
+     * @param aClassName : Class name associated with CID aClass
+     * @param aProgID : ProgID associated with CID aClass
+     * @param aSpec : Filename spec for module's location.
+     * @param aLocation : Location of module of type aType. Format of this string
+     *                    is the registry representation as returned by
+     *                    registryLocationForSpec()
+     * @param aReplace : Boolean that indicates whether to replace a previous
+     *                   loader registration for aClass.
+     * @param aPersist : Remember this registration across sessions.
+     * @param aType : Component Type of CID aClass.
+     */
+    void registerComponentWithType(in nsCIDRef aClass, in string aClassName,
+                                   in string aProgID, in nsIFile aSpec,
+                                   in string aLocation, in boolean aReplace,
+                                   in boolean aPersist, in string aType);
+
+    /**
+     * registerComponentSpec
+     *
+     * Register a native dll module via its file specification as the container
+     * of CID implemenation aClass and associate aProgID and aClassName to the
+     * CID aClass. Native dll component type is assumed.
+     *
+     * @param aClass : CID implemenation contained in module
+     * @param aClassName : Class name associated with CID aClass
+     * @param aProgID : ProgID associated with CID aClass
+     * @param aLibrary : File specification Location of module (dll).
+     * @param aReplace : Boolean that indicates whether to replace a previous
+     *                   module registration for aClass.
+     * @param aPersist : Remember this registration across sessions.
+     */
+    void registerComponentSpec(in nsCIDRef aClass, in string aClassName,
+                               in string aProgID, in nsIFile aLibrary,
+                               in boolean aReplace, in boolean aPersist);
+
+    /**
+     * registerComponentLib
+     *
+     * Register a native dll module via its dll name (not full path) as the
+     * container of CID implemenation aClass and associate aProgID and aClassName
+     * to the CID aClass. Native dll component type is assumed and the system
+     * services will be used to load this dll.
+     *
+     * @param aClass : CID implemenation contained in module
+     * @param aClassName : Class name associated with CID aClass
+     * @param aProgID : ProgID associated with CID aClass
+     * @param aDllNameLocation : Dll name of module.
+     * @param aReplace : Boolean that indicates whether to replace a previous
+     *                   module registration for aClass.
+     * @param aPersist : Remember this registration across sessions.
+     */
+    void registerComponentLib(in nsCIDRef aClass, in string aClassName,
+                              in string aProgID, in string aDllName,
+                              in boolean aReplace, in boolean aPersist);
+
+    /**
+     * unregisterFactory
+     *
+     * Unregister a factory associated with CID aClass.
+     *
+     * @param aClass : ClassID being unregistered
+     * @param aFactory : Factory previously registered to create instances of
+     *                   ClassID aClass.
+     */    
+    void unregisterFactory(in nsCIDRef aClass, in nsIFactory aFactory);
+
+    /**
+     * unregisterComponent
+     *
+     * Disassociate module aLocation represented as registry location as returned
+     * by registryLocationForSpec() as containing ClassID aClass.
+     *
+     * @param aClass : ClassID being unregistered
+     * @param aLocation : Location of module. Format of this is the registry
+     *                    representation as returned by registryLocationForSpec().
+     *                    Components of any type will be unregistered.
+     */
+    void unregisterComponent(in nsCIDRef aClass, in string aLocation);
+
+    /**
+     * unregisterComponentSpec
+     *
+     * Disassociate module references by file specification aLibrarySpec as
+     * containing ClassID aClass.
+     */
+    void unregisterComponentSpec(in nsCIDRef aClass, in nsIFile aLibrarySpec);
+
+    /**
+     * freeLibraries
+     *
+     * Enumerates all loaded modules and unloads unused modules.
+     */
+    void freeLibraries();
+
+    /**
+     * ID values for 'when'
+     */
     const long NS_Startup = 0;
     const long NS_Script = 1;
     const long NS_Timer = 2;
     const long NS_Shutdown = 3;
 
-    void       autoRegister(in long when, in nsIFile directory);
-    void       autoRegisterComponent(in long when, in nsIFile component);
-    void       autoUnregisterComponent(in long when, in nsIFile component);
+    /**
+     * autoRegister
+     *
+     * Enumerates directory looking for modules of all types and registers
+     * modules who have changed (modtime or size) since the last time
+     * autoRegister() was invoked.
+     *
+     * @param when : ID values of when the call is being made.
+     * @param directory : Directory the will be enumerated.
+     */
+    void autoRegister(in long when, in nsIFile directory);
 
-    boolean    isRegistered(in nsCIDRef aClass);
-    nsIEnumerator	enumerateCLSIDs();
-    nsIEnumerator	enumerateProgIDs();
+    /**
+     * autoRegisterComponent
+     *
+     * Loads module using appropriate loader and gives it an opportunity to
+     * register its CIDs if module's modtime or size changed since the last
+     * time this was called.
+     *
+     * @param when : ID values of when the call is being made.
+     * @param aFileLocation : File specification of module.
+     */
+    void autoRegisterComponent(in long when, in nsIFile aFileLocation);
+
+    /**
+     * autoUnregisterComponent
+     *
+     * Loads module using approriate loader and gives it an opportunity to
+     * unregister its CIDs
+     */
+    void autoUnregisterComponent(in long when, in nsIFile aFileLocation);
+
+    /**
+     * isRegistered
+     *
+     * Returns true if a factory or module is registered for CID aClass.
+     *
+     * @param aClass : ClassID queried for registeration
+     * @return : true if a factory or module is registered for CID aClass.
+     *           false otherwise.
+     */
+    boolean isRegistered(in nsCIDRef aClass);
+
+    /**
+     * enumerateCLSIDs
+     *
+     * Enumerate the list of all registered ClassIDs.
+     *
+     * @return : enumerator for ClassIDs.
+     */
+    nsIEnumerator enumerateCLSIDs();
+
+    /**
+     * enumerateProgIDs
+     *
+     * Enumerate the list of all registered ProgIDs.
+     *
+     * @return : enumerator for ProgIDs.
+     */
+    nsIEnumerator enumerateProgIDs();
 
 };
 
