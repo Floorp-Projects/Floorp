@@ -108,7 +108,7 @@ private:
 
 #  define MOZ_TIMER_PRINT(name)
  
-#  define MOZ_TIMER_LOG(msg)    \ 
+#  define MOZ_TIMER_LOG(msg)    \
 do {                            \
   char* str = __mysprintf msg;  \
   QuantifyAddAnnotation(str);   \
