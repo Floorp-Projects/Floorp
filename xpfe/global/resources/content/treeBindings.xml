@@ -114,6 +114,12 @@
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
+      <property name="isUpSelection">
+        0
+      </property>
+      <property name="isDownSelection">
+        0
+      </property>
       <method name="getNextItem">
         <parameter name="startItem"/>
         <parameter name="delta"/>
@@ -212,89 +218,135 @@
       </handler>
       <handler event="keypress" keycode="vk_up">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length != 1)
+         if (event.target != this || this.selectedItems.length < 1)
            return;
-         var n = this.getPreviousItem(this.selectedItems[0], 1);
+         this.isUpSelection=0;
+         this.isDownSelection=0;
+         var n = this.getPreviousItem(this.selectedItems[this.selectedItems.length-1], 1);
          if (n) {
-           this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])-1);
+           this.ensureIndexIsVisible(this.getIndexOfItem(n));
            this.timedSelect(n, 500);
          }
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_down">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length != 1)
+         if (event.target != this || this.selectedItems.length < 1)
            return;
-         var n = this.getNextItem(this.selectedItems[0], 1);
+         this.isUpSelection=0;
+         this.isDownSelection=0;
+         var n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
          if (n) {
-           this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])+1);
+           this.ensureIndexIsVisible(this.getIndexOfItem(n));
            this.timedSelect(n, 500);
+         }
+        ]]>
+      </handler>
+      <handler event="keypress" modifiers="shift" keycode="vk_up">
+        <![CDATA[
+         var l=this.selectedItems.length;
+         if (event.target != this || l < 1 || this.getAttribute("multiple") != "true")
+           return;
+         var n = this.getPreviousItem(this.selectedItems[l-1], 1);
+         if (n) {
+           this.ensureElementIsVisible(n);
+           if ( this.isDownSelection) {
+             if ( l > 1 )
+               this.removeItemFromSelection(this.selectedItems[l-1]);
+             if ( l <= 2 )
+               this.isDownSelection=0;
+	   }
+           else {
+             this.addItemToSelection(n);
+             this.isUpSelection=1;
+           }
+         }
+        ]]>
+      </handler>
+      <handler event="keypress" modifiers="shift" keycode="vk_down">
+        <![CDATA[
+         var l=this.selectedItems.length;
+         if (event.target != this || l < 1 || this.getAttribute("multiple") != "true")
+           return;
+         var n = this.getNextItem(this.selectedItems[l-1], 1);
+         if (n) {
+           this.ensureElementIsVisible(n);
+           if ( this.isUpSelection) {
+             if ( l > 1 )
+	       this.removeItemFromSelection(this.selectedItems[l-1]);
+             if ( l <= 2 )
+               this.isUpSelection=0;
+           }
+           else {
+             this.addItemToSelection(n);
+             this.isDownSelection=1;
+           }
          }
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length != 1)
+         var l = this.selectedItems.length;
+         if (event.target != this || l < 1)
            return;
+         this.isUpSelection=0;
+         this.isDownSelection=0;
          var i = this.getIndexOfFirstVisibleRow();
-         var v = this.getNumberOfVisibleRows() - 1;
-         var n = this.getPreviousItem(this.selectedItems[0], v);
-         if (n) {
-           var newIndex = this.getIndexOfItem(n);
-           i = i - v;
-           if (newIndex < v) // within first v rows
-             this.scrollToIndex(0);
-           else
-             if (newIndex < i || i+v < newIndex) // selected outside new view
-               this.scrollToIndex(newIndex);
-             else
-               this.scrollToIndex(i);
-           this.selectItem(n);
-         }
+         if ( i == 0 )
+           var n=this.getItemAtIndex(0);
          else {
-           this.scrollToIndex(0);
-           this.selectItem(this.getItemAtIndex(0));
+           var v = this.getNumberOfVisibleRows();
+           n = this.getPreviousItem(this.selectedItems[l-1], v);
+           var newIndex = i - v;
+           if ( ! n || newIndex < 0 ) {
+             newIndex=0;
+             n=this.getItemAtIndex(this.getIndexOfItem(this.selectedItems[l-1]) - i);
+           }
+           this.scrollToIndex(newIndex);
          }
+         this.timedSelect(n, 500);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length != 1)
+         var l = this.selectedItems.length;
+         if (event.target != this || l < 1)
            return;
+         this.isUpSelection=0;
+         this.isDownSelection=0;
          var i = this.getIndexOfFirstVisibleRow();
-         var v = this.getNumberOfVisibleRows() - 1;
+         var v = this.getNumberOfVisibleRows();
          var count = this.getRowCount();
-         var n = this.getNextItem(this.selectedItems[0], v);
-         if (n) {
-           var newIndex = this.getIndexOfItem(n);
-           i = i + v;
-           if (newIndex > count-1-v) // within last v rows
-             this.scrollToIndex(count-1-v);
-           else
-             if (newIndex < i || i+v < newIndex) // selected outside new view
-               this.scrollToIndex(newIndex);
-             else
-               this.scrollToIndex(i);
-           this.selectItem(n);
-         }
+         if ( i >= count - v )
+           var n=this.getItemAtIndex(count - 1);
          else {
-           this.scrollToIndex(count-1-v);
-           this.selectItem(this.getItemAtIndex(count-1));
+           n = this.getNextItem(this.selectedItems[l-1], v);
+           var newIndex = i + v;
+           if ( ! n || newIndex > count - v ) {
+             newIndex = count - v;
+             n = this.getItemAtIndex(newIndex + this.getIndexOfItem(this.selectedItems[l-1]) - i);
+           }
+           this.scrollToIndex(newIndex);
          }
+         this.timedSelect(n, 500);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length != 1)
+         if (event.target != this || this.selectedItems.length < 1)
            return;
+         this.isUpSelection=0;
+         this.isDownSelection=0;
          this.scrollToIndex(0);
          this.selectItem(this.getItemAtIndex(0));
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_end">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length != 1)
+         if (event.target != this || this.selectedItems.length < 1)
            return;
+         this.isUpSelection=0;
+         this.isDownSelection=0;
          var count = this.getRowCount();
          this.ensureIndexIsVisible(count-1);
          this.selectItem(this.getItemAtIndex(count-1));
