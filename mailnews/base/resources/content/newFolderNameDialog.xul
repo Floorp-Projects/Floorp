@@ -19,19 +19,20 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/newFolderNameDialog.dtd">
 
-
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns:nc="http://home.netscape.com/NC-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
-        onload="newFolderNameOnLoad()"
+        onload="newFolderNameOnLoad('msgNewFolderPicker');"
         style="padding:10px"> 
-        
+
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>       
 <html:script language="JavaScript" src="chrome://messenger/content/newFolderNameDialog.js"/>
 
 	<keyset id="keyset"/>
@@ -41,27 +42,13 @@ Rights Reserved.
 		<spring flex="100%"/>
 
 		<html:div style="margin-bottom:.3em">&name.label;</html:div>
-		
 		<html:input tabindex="0" type="text" id="name" style="width:100%"/>
-
-		<html:select id="selectedparentfolder" 
-          datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-          ref="msgaccounts:/">
-	<html:div flex="100%"/>
-          <template>
-		<rule nc:ServerType="pop3">
-		      <html:option uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-		</rule>
-		<rule nc:ServerType="none">
-		      <html:option uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-		</rule>
-		<rule nc:ServerType="imap">
-		      <html:option uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-		</rule>
-          </template>
-        </html:select>
+	
+		<box align="horizontal">
+			<menu id="msgNewFolderPicker"/>
+        		<spring flex="100%"/>
+        	</box>
 		<spring flex="100%"/>
-		
 		<box id="okCancelButtons"/>
 		
 	</box>

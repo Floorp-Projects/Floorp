@@ -67,11 +67,11 @@ interface nsIMessenger : nsISupports {
 	void MarkMessageFlagged(in nsIRDFCompositeDataSource database, in nsIDOMXULElement message,
 						  in boolean markFlagged);
 
-	void NewFolder(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
+	void NewFolder(in nsIRDFCompositeDataSource database, in nsIRDFResource parentFolder,
 				   in string name);
 
     void RenameFolder(in nsIRDFCompositeDataSource db, 
-                      in nsIDOMXULElement folder, in string name);
+                      in nsIRDFResource folder, in string name);
     void CompactFolder(in nsIRDFCompositeDataSource db, in nsIDOMXULElement folder);
     void EmptyTrash(in nsIRDFCompositeDataSource db, in nsIDOMXULElement folder);
 

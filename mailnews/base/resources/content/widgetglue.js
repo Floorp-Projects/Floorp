@@ -445,8 +445,9 @@ function MsgSubscribe()
 	MsgNewSubfolder("chrome://messenger/content/subscribeDialog.xul", windowTitle);
 }
 
-function MsgNewSubfolder(chromeWindowURL,windowTitle)
+function GetSelectedFolderURI()
 {
+	var uri = null;
 	var selectedFolder = null;
 	try {
 		var folderTree = GetFolderTree(); 
@@ -457,39 +458,51 @@ function MsgNewSubfolder(chromeWindowURL,windowTitle)
 			selectedFolder = selectedFolderList[0];
 		}
 		else {
-			// dump("number of selected folder was " + selectedFolderList.length + "\n");
+			//dump("number of selected folder was " + selectedFolderList.length + "\n");
 		}
 	}
 	catch (ex) {
 		// dump("failed to get the selected folder\n");
+		uri = null;
 	}
 
 	try {
-		var preselectedURI = null;
-
        		if (selectedFolder) {
-			preselectedURI = selectedFolder.getAttribute('id');
+			uri = selectedFolder.getAttribute('id');
 			// dump("folder to preselect: " + preselectedURI + "\n");
 		}
-		var dialog = window.openDialog(
-				chromeWindowURL,
-				"",
-				"chrome",
-				{preselectedURI:preselectedURI, title:windowTitle,
-				okCallback:NewFolder});
 	}
 	catch (ex) {
-		// dump("failed to open the new folder dialog\n");
+		uri = null;
 	}
+
+	return uri;
 }
 
-function NewFolder(name)
+function MsgNewSubfolder(chromeWindowURL,windowTitle)
 {
-	var folderTree = GetFolderTree(); 
-	var selectedFolderList = folderTree.selectedItems;
-	var selectedFolder = selectedFolderList[0];
+	var preselectedURI = GetSelectedFolderURI();
+	dump("preselectedURI = " + preselectedURI + "\n");
+	var dialog = window.openDialog(
+				chromeWindowURL,
+				"",
+				"chrome,modal",
+				{preselectedURI:preselectedURI, title:windowTitle,
+				okCallback:NewFolder});
+}
 
-	messenger.NewFolder(folderTree.database, selectedFolder, name);
+function NewFolder(name,uri)
+{
+    	var tree = GetFolderTree();
+	dump("uri,name = " + uri + "," + name + "\n");
+	if (uri && (uri != "") && name && (name != "")) {
+		var selectedFolder = GetResourceFromUri(uri);
+		dump("selectedFolder = " + selectedFolder + "\n");
+		messenger.NewFolder(tree.database, selectedFolder, name);
+	}
+	else {
+		dump("no name or nothing selected\n");
+	}
 }
 
 
@@ -589,41 +602,34 @@ function MsgUpdateMsgCount() {}
 
 function MsgRenameFolder() 
 {
-    var tree = GetFolderTree();
-    if (tree)
-    {
-        var folderList = tree.selectedItems;
-        if (folderList && folderList.length == 1)
-        {
-            var folder = folderList[0];
-            if (folder)
-            {
-                var dialog = window.openDialog(
-                    "chrome://messenger/content/newFolderNameDialog.xul",
+	var preselectedURI = GetSelectedFolderURI();
+	dump("preselectedURI = " + preselectedURI + "\n");
+	var windowTitle = Bundle.GetStringFromName("renameFolderDialogTitle");
+	var dialog = window.openDialog(
+                    "chrome://messenger/content/renameFolderNameDialog.xul",
                     "newFolder",
                     "chrome,modal",
-                    {title:"Rename Folder",
-                              okCallback:RenameFolder});
-            }
-        }
-    }
+	            {preselectedURI:preselectedURI, title:windowTitle,
+                    okCallback:RenameFolder});
 }
 
-function RenameFolder(name)
+function RenameFolder(name,uri)
 {
+    dump("uri,name = " + uri + "," + name + "\n");
     var tree = GetFolderTree();
     if (tree)
     {
-        var folderList = tree.selectedItems;
-        if (folderList && folderList.length == 1)
-        {
-            var folder = folderList[0];
-            if (folder)
-            {
+	if (uri && (uri != "") && name && (name != "")) {
+                var selectedFolder = GetResourceFromUri(uri);
                 tree.clearItemSelection();
-                messenger.RenameFolder(tree.database, folder, name);
-            }
+                messenger.RenameFolder(tree.database, selectedFolder, name);
         }
+        else {
+                dump("no name or nothing selected\n");
+        }   
+    }
+    else {
+	dump("no tree\n");
     }
 }
 
@@ -812,7 +818,7 @@ function MsgMarkThreadAsRead() {}
 function MsgMarkByDate() {}
 function MsgMarkAllRead()
 {
-	var folderTree = GetFolderTree();; 
+	var folderTree = GetFolderTree();
 	var selectedFolderList = folderTree.selectedItems;
 	if(selectedFolderList.length > 0)
 	{
@@ -900,3 +906,20 @@ var gMeterObserver;
             dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
             dump( "meter value=" + meter.getAttribute("value") + "\n" );
         }
+
+
+function GetMsgFolderFromUri(uri)
+{
+	var resource = GetResourceFromUri(uri);
+        var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+        return msgfolder;
+}
+
+function GetResourceFromUri(uri)
+{
+	var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+        var resource = RDF.GetResource(uri);
+
+	return resource;
+}  

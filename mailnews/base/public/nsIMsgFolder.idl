@@ -92,6 +92,10 @@ interface nsIMsgFolder : nsIFolder {
    * is this folder the "phantom" server folder?
    */
   readonly attribute boolean isServer;
+  readonly attribute boolean canSubscribe;
+  readonly attribute boolean canFileMessages;
+  readonly attribute boolean canCreateSubfolders;
+  readonly attribute boolean canRename;
 
   /**
    * the phantom server folder

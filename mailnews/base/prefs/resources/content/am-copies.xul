@@ -9,7 +9,7 @@
 <html:script src="chrome://messenger/content/am-copies.js"/>
 <html:input type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
 <html:input type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
-<html:input type="hidden" name="identity.stationaryFolder" id="identity.stationaryFolder"/>
+<html:input type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
 <html:input type="hidden" name="identity.junkMailFolder" id="identity.junkMailFolder"/>
 <html:input type="hidden" name="identity.email" id="identity.email"/>
 
@@ -76,7 +76,7 @@
     <html:select flex="66%"
          onchange="dump('value=' + event.target.value + '\n')"
          datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
-         name="identity.stationaryFolder"
+         name="identity.stationeryFolder"
          ref="msgaccounts:/">
     <template>
       <rule iscontainer="true" isempty="false">

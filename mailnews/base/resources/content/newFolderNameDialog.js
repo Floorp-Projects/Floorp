@@ -1,8 +1,11 @@
 var okCallback = 0;
+var pickerID = null;
 
-function newFolderNameOnLoad()
+function newFolderNameOnLoad(pickerDOMID)
 {
-	doSetOKCancel(newFolderNameOKButton, 0);
+	pickerID = pickerDOMID;
+
+	doSetOKCancel(newFolderNameOKButtonCallback, 0);
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0])
@@ -18,39 +21,30 @@ function newFolderNameOnLoad()
 			top.okCallback = window.arguments[0].okCallback;
 	}
 	
-	// pre select the option, based on what they selected in the folder pane
-	var selectedParentFolder = document.getElementById('selectedparentfolder');
-	// dump("selectedParentFolder = " + selectedParentFolder + "\n");
-
+	// pre select the folderPicker, based on what they selected in the folder pane
 	if (window.arguments[0].preselectedURI) {
 		try {
-			options = selectedParentFolder.options;
-			for (i=1;i<options.length;i++) {
-				var uri = options[i].getAttribute('uri');
-				// dump(uri + " vs " + window.arguments[0].preselectedURI + "\n");
-				if (uri == window.arguments[0].preselectedURI) {
-					// dump("preselect: " + uri + " index = " + i + "\n");
-					selectedParentFolder.selectedIndex = i;
-					break;
-				}
-			}
+			dump("pick this one: " + window.arguments[0].preselectedURI + "\n");
 		}
 		catch (ex) {
-			// dump("failed to preflight the select thing.\n");
+			dump("failed to preflight the folderPicker thing.\n");
 		}
 	}
 	else {
-		// dump("passed null for preselectedURI, do nothing\n");
+		dump("passed null for preselectedURI, do nothing\n");
 	}
+	MsgFolderPickerOnLoad(pickerID);
 }
 
-function newFolderNameOKButton()
+function newFolderNameOKButtonCallback()
 {
 	if ( top.okCallback )
 	{
-		var name = document.getElementById('name').value;
-	
-		top.okCallback(name);
+		var name = document.getElementById("name").value;
+		var picker = document.getElementById(pickerID);
+		var uri = picker.getAttribute("uri");
+		dump("uri,name in callback = " + uri + "," + name + "\n");
+		top.okCallback(name, uri);
 	}
 	
 	return true;

@@ -31,7 +31,8 @@ sidebar-messenger.xul
 sidebar-messenger.rdf
 newFolderNameDialog.xul
 newFolderNameDialog.js
+renameFolderNameDialog.xul
 msgViewNavigation.js
 msgMail3PaneWindow.js
-
-
+msgFolderPickerOverlay.xul
+msgFolderPickerOverlay.js

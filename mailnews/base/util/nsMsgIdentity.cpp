@@ -393,7 +393,7 @@ NS_IMPL_IDPREF_BOOL(BccOthers, "bcc_other");
 NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");
 
 NS_IMPL_IDPREF_STR (DraftFolder, "draft_folder");
-NS_IMPL_IDPREF_STR (StationaryFolder, "stationary_folder");
+NS_IMPL_IDPREF_STR (StationeryFolder, "stationery_folder");
 NS_IMPL_IDPREF_STR (JunkMailFolder, "spam_folder");
 
 

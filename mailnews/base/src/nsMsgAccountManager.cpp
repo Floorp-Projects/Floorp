@@ -61,7 +61,7 @@
 
 #define BUF_STR_LEN 1024
 
-#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
@@ -1394,8 +1394,8 @@ nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
   CONVERT_4X_URI(identity,DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
     
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_TEMPLATES,identity,SetStationaryFolder)
-  CONVERT_4X_URI(identity,DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationaryFolder,SetStationaryFolder)
+  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_TEMPLATES,identity,SetStationeryFolder)
+  CONVERT_4X_URI(identity,DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
     
   // what about the new 5.0 spam folder pref?
   return NS_OK;
@@ -2169,7 +2169,7 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
         COPY_IDENTITY_WSTR_VALUE(srcIdentity,destIdentity,GetFullName,SetFullName)
         COPY_IDENTITY_WSTR_VALUE(srcIdentity,destIdentity,GetOrganization,SetOrganization)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetDraftFolder,SetDraftFolder)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetStationaryFolder,SetStationaryFolder)
+        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetStationeryFolder,SetStationeryFolder)
 
 	return NS_OK;
 }
@@ -2834,10 +2834,15 @@ nsMsgAccountManager::findIdentitiesForServer(nsISupports* element, void *aData)
   nsCOMPtr<nsIMsgIncomingServer> thisServer;
   rv = account->GetIncomingServer(getter_AddRefs(thisServer));
   if (NS_FAILED(rv)) return PR_TRUE;
-  
   nsXPIDLCString serverKey;
-  entry->server->GetKey(getter_Copies(serverKey));
+	
+  NS_ASSERTION(thisServer, "thisServer is null");
+  NS_ASSERTION(entry, "entry is null");
+  NS_ASSERTION(entry->server, "entry->server is null");
+  // if this happens, bail.
+  if (!thisServer || !entry || !(entry->server)) return PR_TRUE;
 
+  entry->server->GetKey(getter_Copies(serverKey));
   nsXPIDLCString thisServerKey;
   thisServer->GetKey(getter_Copies(thisServerKey));
   if (PL_strcmp(serverKey, thisServerKey)==0) {

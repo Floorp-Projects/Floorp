@@ -19,4 +19,11 @@ Rights Reserved.
 --> 
 
 <!-- Labels -->
-<!ENTITY name.label			"New Folder Name">
+<!ENTITY subscribechoosethis.label			"choose this news server">
+<!ENTITY subscribeclickhere.label			"click here to choose a news server">
+<!ENTITY newfolderchoosethis.label			"choose this for the parent">
+<!ENTITY newfolderclickhere.label			"click here to choose a parent">
+<!ENTITY renamefolderchoosethis.label			"choose this folder">
+<!ENTITY renamefolderclickhere.label			"click here to choose a folder">
+<!ENTITY filemessageschoosethis.label			"choose this folder">
+<!ENTITY filemessagesclickhere.label			"click here to choose a folder">

@@ -650,7 +650,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
               if (aListener)
               {
                 if (identity)
-                  rv = identity->GetStationaryFolder(
+                  rv = identity->GetStationeryFolder(
                     getter_Copies(aListener->m_templateUri));
                 if (NS_FAILED(rv)) return rv;
                 needDummyHeader =
@@ -1090,19 +1090,14 @@ nsMessenger::DoMarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsISuppo
 }
 
 NS_IMETHODIMP
-nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
+nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIRDFResource *parentFolderResource,
 						const char *name)
 {
 	nsresult rv;
-	nsCOMPtr<nsIRDFResource> folderResource;
 	nsCOMPtr<nsISupportsArray> nameArray, folderArray;
 
-	if(!parentFolderElement || !name)
+	if(!parentFolderResource || !name)
 		return NS_ERROR_NULL_POINTER;
-
-	rv = parentFolderElement->GetResource(getter_AddRefs(folderResource));
-	if(NS_FAILED(rv))
-		return rv;
 
 	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
 	if(NS_FAILED(rv))
@@ -1114,7 +1109,7 @@ nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *pa
 	if(NS_FAILED(rv))
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	folderArray->AppendElement(folderResource);
+	folderArray->AppendElement(parentFolderResource);
 
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if(NS_SUCCEEDED(rv))
@@ -1131,29 +1126,25 @@ nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *pa
 
 NS_IMETHODIMP
 nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
-                          nsIDOMXULElement* folder,
+                          nsIRDFResource* folderResource,
                           const char* name)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
-  if (!db || !folder || !name || !*name) return rv;
+  if (!db || !folderResource || !name || !*name) return rv;
   nsCOMPtr<nsISupports> streamSupport;
   rv = NS_NewCharInputStream(getter_AddRefs(streamSupport), name);
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsISupportsArray> folderArray;
     nsCOMPtr<nsISupportsArray> argsArray;
-    nsCOMPtr<nsIRDFResource> folderResource;
-    rv = folder->GetResource(getter_AddRefs(folderResource));
-    if (NS_SUCCEEDED(rv))
-    {
-      rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
-      if (NS_FAILED(rv)) return rv;
-      folderArray->AppendElement(folderResource);
-      rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
-      if (NS_FAILED(rv)) return rv;
-      argsArray->AppendElement(streamSupport);
-      rv = DoCommand(db, NC_RDF_RENAME, folderArray, argsArray);
-    }
+
+    rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+    if (NS_FAILED(rv)) return rv;
+    folderArray->AppendElement(folderResource);
+    rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
+    if (NS_FAILED(rv)) return rv;
+    argsArray->AppendElement(streamSupport);
+    rv = DoCommand(db, NC_RDF_RENAME, folderArray, argsArray);
   }
   return rv;
 }

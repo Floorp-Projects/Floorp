@@ -389,6 +389,49 @@ nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
 }
 
 NS_IMETHODIMP
+nsMsgNewsFolder::GetCanSubscribe(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+
+  PRBool isNewsServer = PR_FALSE;
+  nsresult rv = GetIsServer(&isNewsServer);
+  if (NS_FAILED(rv)) return rv;
+ 
+  // you can only subscribe to news servers, not news groups
+  *aResult = isNewsServer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgNewsFolder::GetCanFileMessages(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  // you can't file messages into a news server or news group
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgNewsFolder::GetCanCreateSubfolders(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  // you can't create subfolders on a news server or a news group
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgNewsFolder::GetCanRename(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  // you can't rename a news server or a news group
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsISimpleEnumerator* *result)
 {
 #ifdef DEBUG_NEWS

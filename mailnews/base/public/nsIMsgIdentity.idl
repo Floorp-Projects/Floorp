@@ -83,7 +83,7 @@ interface nsIMsgIdentity : nsISupports {
   attribute string bccList;
 
   attribute string draftFolder;
-  attribute string stationaryFolder;
+  attribute string stationeryFolder;
   attribute string junkMailFolder;
   
   wstring toString();

@@ -42,6 +42,9 @@ EXPORT_RESOURCE_SAMPLES = \
 		newFolderNameDialog.js \
 		msgViewNavigation.js \
 		msgMail3PaneWindow.js \
+		msgFolderPickerOverlay.js	\
+		msgFolderPickerOverlay.xul	\
+		renameFolderNameDialog.xul	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

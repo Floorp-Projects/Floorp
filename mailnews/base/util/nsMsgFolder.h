@@ -75,6 +75,10 @@ public:
   NS_IMETHOD GetShowDeletedMessages(PRBool *aShowDeletedMessages);
   NS_IMETHOD GetServer(nsIMsgIncomingServer * *aServer);
   NS_IMETHOD GetIsServer(PRBool *aIsServer);
+  NS_IMETHOD GetCanSubscribe(PRBool *aCanSubscribe);
+  NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
+  NS_IMETHOD GetCanCreateSubfolders(PRBool *aCanCreateSubfolders);
+  NS_IMETHOD GetCanRename(PRBool *aCanRename);
   NS_IMETHOD OnCloseFolder(void);
   NS_IMETHOD Delete(void);
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
@@ -103,7 +107,7 @@ public:
   NS_IMETHOD GetKnowsSearchNntpExtension(PRBool *aKnowsSearchNntpExtension);
   NS_IMETHOD GetAllowsPosting(PRBool *aAllowsPosting);
   NS_IMETHOD GetDisplayRecipients(PRBool *aDisplayRecipients);
-   NS_IMETHOD GetRelativePathName(char * *aRelativePathName);
+  NS_IMETHOD GetRelativePathName(char * *aRelativePathName);
   NS_IMETHOD GetSizeOnDisk(PRUint32 *aSizeOnDisk);
   NS_IMETHOD RememberPassword(const char *password);
   NS_IMETHOD GetRememberedPassword(char * *aRememberedPassword);

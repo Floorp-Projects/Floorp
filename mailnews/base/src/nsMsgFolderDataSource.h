@@ -120,6 +120,14 @@ protected:
                                       nsIRDFNode **target);
   nsresult createFolderIsServerNode(nsIMsgFolder *folder,
                                       nsIRDFNode **target);
+  nsresult createFolderCanSubscribeNode(nsIMsgFolder *folder,
+                                      nsIRDFNode **target);
+  nsresult createFolderCanFileMessagesNode(nsIMsgFolder *folder,
+                                      nsIRDFNode **target);
+  nsresult createFolderCanCreateSubfoldersNode(nsIMsgFolder *folder,
+                                      nsIRDFNode **target);
+  nsresult createFolderCanRenameNode(nsIMsgFolder *folder,
+                                      nsIRDFNode **target);
 	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -178,6 +186,10 @@ protected:
   static nsIRDFResource* kNC_SpecialFolder;
   static nsIRDFResource* kNC_ServerType;
   static nsIRDFResource* kNC_IsServer;
+  static nsIRDFResource* kNC_CanSubscribe;
+  static nsIRDFResource* kNC_CanFileMessages;
+  static nsIRDFResource* kNC_CanCreateSubfolders;
+  static nsIRDFResource* kNC_CanRename;
   static nsIRDFResource* kNC_TotalMessages;
   static nsIRDFResource* kNC_TotalUnreadMessages;
   static nsIRDFResource* kNC_Charset;

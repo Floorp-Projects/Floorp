@@ -62,6 +62,10 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsServer = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CanSubscribe = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CanFileMessages = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateSubfolders = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CanRename = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
@@ -111,6 +115,10 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_SpecialFolder, refcnt);
 		NS_RELEASE2(kNC_ServerType, refcnt);
 		NS_RELEASE2(kNC_IsServer, refcnt);
+		NS_RELEASE2(kNC_CanSubscribe, refcnt);
+		NS_RELEASE2(kNC_CanFileMessages, refcnt);
+		NS_RELEASE2(kNC_CanCreateSubfolders, refcnt);
+		NS_RELEASE2(kNC_CanRename, refcnt);
 		NS_RELEASE2(kNC_TotalMessages, refcnt);
 		NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
 		NS_RELEASE2(kNC_Charset, refcnt);
@@ -156,6 +164,10 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
     rdf->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
+    rdf->GetResource(NC_RDF_CANSUBSCRIBE, &kNC_CanSubscribe);
+    rdf->GetResource(NC_RDF_CANFILEMESSAGES, &kNC_CanFileMessages);
+    rdf->GetResource(NC_RDF_CANCREATESUBFOLDERS, &kNC_CanCreateSubfolders);
+    rdf->GetResource(NC_RDF_CANRENAME, &kNC_CanRename);
     rdf->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
     rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
     rdf->GetResource(NC_RDF_CHARSET, &kNC_Charset);
@@ -380,6 +392,10 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 		     (kNC_FolderTreeName == property) ||
              (kNC_SpecialFolder == property) ||
              (kNC_IsServer == property) ||
+             (kNC_CanSubscribe == property) ||
+             (kNC_CanFileMessages == property) ||
+             (kNC_CanCreateSubfolders == property) ||
+             (kNC_CanRename == property) ||
              (kNC_ServerType == property))
     {
       nsSingletonEnumerator* cursor =
@@ -495,6 +511,10 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_SpecialFolder);
   (*arcs)->AppendElement(kNC_ServerType);
   (*arcs)->AppendElement(kNC_IsServer);
+  (*arcs)->AppendElement(kNC_CanSubscribe);
+  (*arcs)->AppendElement(kNC_CanFileMessages);
+  (*arcs)->AppendElement(kNC_CanCreateSubfolders);
+  (*arcs)->AppendElement(kNC_CanRename);
   (*arcs)->AppendElement(kNC_TotalMessages);
   (*arcs)->AppendElement(kNC_TotalUnreadMessages);
   (*arcs)->AppendElement(kNC_Charset);
@@ -820,6 +840,14 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
     rv = createFolderServerTypeNode(folder, target);
   else if ((kNC_IsServer == property))
     rv = createFolderIsServerNode(folder, target);
+  else if ((kNC_CanSubscribe == property))
+    rv = createFolderCanSubscribeNode(folder, target);
+  else if ((kNC_CanFileMessages == property))
+    rv = createFolderCanFileMessagesNode(folder, target);
+  else if ((kNC_CanCreateSubfolders == property))
+    rv = createFolderCanCreateSubfoldersNode(folder, target);
+  else if ((kNC_CanRename == property))
+    rv = createFolderCanRenameNode(folder, target);
 	else if ((kNC_TotalMessages == property))
 		rv = createTotalMessagesNode(folder, target);
 	else if ((kNC_TotalUnreadMessages == property))
@@ -875,7 +903,6 @@ nsresult nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
 	{
 		PRInt32 unreadMessages;
 
-		nsresult rv;
 		rv = folder->GetNumUnread(PR_FALSE, &unreadMessages);
 		if(NS_SUCCEEDED(rv)) 
 		{
@@ -978,6 +1005,83 @@ nsMsgFolderDataSource::createFolderIsServerNode(nsIMsgFolder* folder,
   NS_IF_ADDREF(*target);
   return NS_OK;
 }
+
+nsresult
+nsMsgFolderDataSource::createFolderCanSubscribeNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool canSubscribe;
+  rv = folder->GetCanSubscribe(&canSubscribe);
+  if (NS_FAILED(rv)) return rv;
+
+  *target = nsnull;
+
+  if (canSubscribe)
+        *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderCanFileMessagesNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool canFileMessages;
+  rv = folder->GetCanFileMessages(&canFileMessages);
+  if (NS_FAILED(rv)) return rv;
+
+  *target = nsnull;
+
+  if (canFileMessages)
+        *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderCanCreateSubfoldersNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool canCreateSubfolders;
+  rv = folder->GetCanCreateSubfolders(&canCreateSubfolders);
+  if (NS_FAILED(rv)) return rv;
+
+  *target = nsnull;
+
+  if (canCreateSubfolders)
+        *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderCanRenameNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool canRename;
+  rv = folder->GetCanRename(&canRename);
+  if (NS_FAILED(rv)) return rv;
+
+  *target = nsnull;
+
+  if (canRename)
+        *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
 
 nsresult
 nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
@@ -1412,6 +1516,10 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_SpecialFolder == property) ||
            (kNC_ServerType == property) ||
            (kNC_IsServer == property) ||
+           (kNC_CanSubscribe == property) ||
+           (kNC_CanFileMessages == property) ||
+           (kNC_CanCreateSubfolders == property) ||
+           (kNC_CanRename == property) ||
            (kNC_TotalMessages == property) ||
            (kNC_TotalUnreadMessages == property) ||
            (kNC_Charset == property) ||

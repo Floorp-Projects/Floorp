@@ -134,7 +134,9 @@ public:
 	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
     
 	NS_IMETHOD GetSizeOnDisk(PRUint32 * size);
-    
+        
+        NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
+
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);

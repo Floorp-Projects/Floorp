@@ -857,6 +857,16 @@ NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 * size)
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::GetCanCreateSubfolders(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  // if it's the Inbox, then you can't create a subfolder.
+  // yes, I know this isn't true for all IMAP servers, but it works for now
+  *aResult = !(mFlags & MSG_FOLDER_FLAG_INBOX);
+  return NS_OK;
+}
+
 nsresult nsImapMailFolder::GetServerKey(char **serverKey)
 {
 	// look for matching imap folders, then pop folders

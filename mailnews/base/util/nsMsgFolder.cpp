@@ -462,6 +462,58 @@ nsMsgFolder::GetIsServer(PRBool *aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgFolder::GetCanSubscribe(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  // by default, you can't subscribe. 
+  // if otherwise, override it.
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetCanFileMessages(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  
+  PRBool isServer = PR_FALSE;
+  nsresult rv = GetIsServer(&isServer);
+  if (NS_FAILED(rv)) return rv;
+  
+  // by default, you can't file messages into servers, only to folders
+  // if otherwise, override it.
+  *aResult = !isServer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetCanCreateSubfolders(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  // by default, you can create subfolders on server and folders
+  // if otherwise, override it.
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetCanRename(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  PRBool isServer = PR_FALSE;
+  nsresult rv = GetIsServer(&isServer);
+  if (NS_FAILED(rv)) return rv;
+  
+  // by default, you can't rename servers, only folders
+  // if otherwise, override it.
+  *aResult = !isServer;
+  return NS_OK;
+}
+
+
+
 NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
 {
 	if (!name)
@@ -1565,20 +1617,21 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
 
 NS_IMETHODIMP nsMsgFolder::GetRootFolder(nsIMsgFolder * *aRootFolder)
 {
-	if(!aRootFolder)
-		return NS_ERROR_NULL_POINTER;
+	if (!aRootFolder) return NS_ERROR_NULL_POINTER;
 
 	nsresult rv;
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	rv = GetServer(getter_AddRefs(server));
-	if(NS_FAILED(rv))
-		return rv;
+	if (NS_FAILED(rv)) return rv;
+	NS_ASSERTION(server, "server is null");
+	// if this happens, bail.
+	if (!server) return NS_ERROR_NULL_POINTER;
 
 	nsCOMPtr<nsIFolder> aRoot;
 	rv = server->GetRootFolder(getter_AddRefs(aRoot));
 
-	if(NS_FAILED(rv) || !aRoot)
-		return rv;
+	if (NS_FAILED(rv)) return rv;
+	if (!aRoot) return NS_ERROR_NULL_POINTER;
 
 	return aRoot->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), (void**)aRootFolder);
 }

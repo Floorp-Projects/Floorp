@@ -94,6 +94,10 @@ public:
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
   NS_IMETHOD GetPath(nsIFileSpec** aPathName);
+	NS_IMETHOD GetCanSubscribe(PRBool *aResult);
+	NS_IMETHOD GetCanFileMessages(PRBool *aResult);
+	NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
+	NS_IMETHOD GetCanRename(PRBool *aResult);
 
 protected:
 	nsresult AddNewsgroupToNewsrcFile(const char *newsgroupname);

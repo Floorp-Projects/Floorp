@@ -2082,7 +2082,7 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
   }
   else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
-    rv = identity->GetStationaryFolder(&uri);
+    rv = identity->GetStationeryFolder(&uri);
   }
   else 
   {

@@ -23,7 +23,7 @@ var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(
 function onInit() {
     initFolderDisplay("identity.fccFolder", "fccFolderVerbose");
     initFolderDisplay("identity.draftFolder", "draftFolderVerbose");
-    initFolderDisplay("identity.stationaryFolder", "stationaryFolderVerbose");
+    initFolderDisplay("identity.stationeryFolder", "stationeryFolderVerbose");
     initFolderDisplay("identity.junkMailFolder", "junkMailFolderVerbose");
     initBccSelf();
     dump("document is " + document + "\n");

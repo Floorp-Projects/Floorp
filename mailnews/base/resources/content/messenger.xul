@@ -31,6 +31,7 @@ Rights Reserved.
 <window id="messengerWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:nc="http://home.netscape.com/NC-rdf#"
 		title="&messengerWindow.title;"
         titlemodifier="&titleModifier.label;"
         titlemenuseparator="&titleSeperator.label;"
@@ -400,7 +401,7 @@ Rights Reserved.
       <menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
 		<template> 
-          <rule iscontainer="true" isempty="false">
+          <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
             <menupopup>
               <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
@@ -419,7 +420,21 @@ Rights Reserved.
               </menu>
             </menupopup>
           </rule>
-          <rule>
+	  <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+                <!-- don't show nntp servers in the file and copies menus -->
+          </rule>
+	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+            <!-- note, there is no "file here" -->
+            <menupopup>
+              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              </menu>
+            </menupopup>
+	  </rule>
+          <rule nc:CanFileMessages="true">
             <menupopup>
 			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
@@ -433,7 +448,7 @@ Rights Reserved.
       <menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null"  rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
 		<template>
-          <rule iscontainer="true" isempty="false">
+          <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
             <menupopup>
               <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
@@ -441,7 +456,7 @@ Rights Reserved.
 				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." value="&fileHereMenu.label;" 
+                <menuitem uri="..." value="&copyHereMenu.label;" 
 				oncommand="MsgCopyMessage(event.target)"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -450,11 +465,26 @@ Rights Reserved.
                 <menuseparator/>
               </menupopup>
             </menu>
-			</menupopup>
-		  </rule>
-          <rule>
+	   </menupopup>
+	  </rule>
+          <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+                <!-- don't show nntp servers in the file and copies menus -->
+          </rule>
+          <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+            <!-- note, there is no "file here" -->
             <menupopup>
-			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgCopyMessage(event.target)" 
+              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              </menu>
+            </menupopup>
+          </rule>
+          <rule nc:CanFileMessages="true">
+            <menupopup>
+			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+				oncommand="MsgCopyMessage(event.target)" 
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
 				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"

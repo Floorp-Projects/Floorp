@@ -197,11 +197,9 @@ iframe {
     list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
 }
 
-
-.folderMenuItem[IsServer="true"][ServerType="nntp"] {
-  display: none; 
+.folderMenuItem[IsServer="true"][ServerType="nntp"] > .menu-left {
+    list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
-
 
 #button_getmsg {
 	list-style-image:url("chrome://messenger/skin/getmsg.gif");

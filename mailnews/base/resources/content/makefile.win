@@ -37,6 +37,9 @@ install::
 	$(MAKE_INSTALL) newFolderNameDialog.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) msgViewNavigation.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) msgMail3PaneWindow.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) msgFolderPickerOverlay.js		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) msgFolderPickerOverlay.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL)	renameFolderNameDialog.xul $(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\messenger.xul
@@ -52,4 +55,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\newFolderNameDialog.js
 	rm -f $(DIST)\chrome\messenger\content\default\msgViewNavigation.js
 	rm -f $(DIST)\chrome\messenger\content\default\msgMail3PaneWindow.js
+	rm -f $(DIST)\chrome\messenger\content\default\msgFolderPickerOverlay.js
+	rm -f $(DIST)\chrome\messenger\content\default\msgFolderPickerOverlay.xul
+	rm -f $(DIST)\chrome\messenger\content\default\renameFolderNameDialog.xul
 
