@@ -32,7 +32,7 @@
 
 
 #ifdef DEBUG_bienvenu
-#define DOING_FILTERS
+//#define DOING_FILTERS
 #endif
 
 #ifdef DOING_FILTERS
@@ -272,6 +272,8 @@ public:
 #endif // DOING_FILTERS
 protected:
 	virtual PRInt32	PublishMsgHeader();
+	char				*m_tmpdbName;				// Temporary filename of new database
+	PRBool				m_usingTempDB;
 #ifdef DOING_FILTERS
 	virtual void	ApplyFilters(PRBool *pMoved);
 	virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
@@ -287,8 +289,6 @@ protected:
 	nsIOFileStream		*m_inboxFileStream;
 	nsFileSpec			m_inboxFileSpec;
 #endif // DOING_FILTERS
-	char				*m_tmpdbName;				// Temporary filename of new database
-	PRBool				m_usingTempDB;
 	PRBool				m_disableFilters;
 	PRBool				m_msgMovedByFilter;
 };

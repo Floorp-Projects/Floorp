@@ -1335,12 +1335,10 @@ int nsParseMailMessageState::FinalizeHeaders()
 
 nsParseNewMailState::nsParseNewMailState()
     : m_tmpdbName(nsnull), m_usingTempDB(PR_FALSE), m_disableFilters(PR_FALSE)
-#ifdef DOING_FILTERS
-    , m_logFile(nsnull)
-#endif
 {
 #ifdef DOING_FILTERS
 	m_inboxFileStream = nsnull;
+	m_logFile = nsnull;
 #endif
 }
 
@@ -1519,7 +1517,8 @@ PRInt32 nsParseNewMailState::PublishMsgHeader()
 	{
 		FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
 #ifdef DOING_FILTERS
-		if (!m_disableFilters) {
+		if (!m_disableFilters)
+		{
 			ApplyFilters(&moved);
 		}
 #endif // DOING_FILTERS
@@ -1587,8 +1586,6 @@ nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 
 void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 {
-	PRBool		msgMoved = FALSE;
-
 	m_msgMovedByFilter = PR_FALSE;
 
 	nsIMsgDBHdr	*msgHdr = m_newMsgHdr;
@@ -1642,7 +1639,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 		{
 			nsCOMPtr <nsIMsgFolder> trash;
 			// set value to trash folder
-			nsresult rv = GetTrashFolder(getter_AddRefs(trash));
+			rv = GetTrashFolder(getter_AddRefs(trash));
 			if (NS_SUCCEEDED(rv) && trash)
 			{
 				// this sucks - but we need value to live past this scope
@@ -1661,7 +1658,6 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 			// if moving to a different file, do it.
 			if (value && PL_strcasecmp(m_mailboxName, (char *) value))
 			{
-				PRUint32 msgFlags;
 				msgHdr->GetFlags(&msgFlags);
 
 				if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED &&
@@ -1840,7 +1836,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 			break;
 		
 		// we must monitor the number of bytes actually written to the file. (mscott)
-		if (destFile->write(m_ibuffer, nRead) != nRead) 
+		if (destFile->write(m_ibuffer, nRead) != (PRInt32) nRead) 
 		{
 			destFile->close();     
 
