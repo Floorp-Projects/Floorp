@@ -57,6 +57,12 @@
 #include "nsDrawingSurfacePh.h"
 #include "nsRegionPh.h"
 
+// Macro for converting from nscolor to PtColor_t
+// Photon RGB values are stored as 00 RR GG BB
+// nscolor RGB values are 00 BB GG RR
+#define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+#define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
 class nsRenderingContextPh : public nsRenderingContextImpl
 {
 public:
@@ -68,86 +74,208 @@ public:
    NS_DECL_ISUPPORTS
 	   
    NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
-   NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
+
+	 inline
+   NS_IMETHODIMP Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
+		{
+		mContext = aContext;
+		NS_IF_ADDREF(mContext);
+
+		mSurface = (nsDrawingSurfacePh *) aSurface;
+		NS_ADDREF(mSurface);
+
+		mGC = mSurface->GetGC();
+		mOwner = PR_FALSE;
+
+		return CommonInit();
+		}
    
    inline NS_IMETHODIMP Reset(void) { return NS_OK; }
    
-   NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
+	 inline
+   NS_IMETHODIMP GetDeviceContext(nsIDeviceContext *&aContext)
+		{ NS_IF_ADDREF( mContext );
+			aContext = mContext;
+			return NS_OK;
+		}
    
-   NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
+	 inline
+   NS_IMETHODIMP LockDrawingSurface(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
 								 void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
-								 PRUint32 aFlags);
-   NS_IMETHOD UnlockDrawingSurface(void);
+								 PRUint32 aFlags)
+		{
+		PushState();
+		return mSurface->Lock( aX, aY, aWidth, aHeight, aBits, aStride, aWidthBytes, aFlags );
+		}
+
+	 inline
+   NS_IMETHODIMP UnlockDrawingSurface(void)
+		{ PRBool  clipstate;
+			PopState( clipstate );
+			mSurface->Unlock();
+			return NS_OK;
+		}
    
-   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
-   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
-   NS_IMETHOD GetHints(PRUint32& aResult);
+	 inline
+   NS_IMETHODIMP SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+		{ mSurface = nsnull==aSurface ? mOffscreenSurface : (nsDrawingSurfacePh *) aSurface;
+			mSurface->Select( );
+			return NS_OK;
+		}
+
+	 inline
+   NS_IMETHODIMP GetDrawingSurface(nsDrawingSurface *aSurface) { *aSurface = (void *) mSurface; return NS_OK; }
+
+	 inline
+   NS_IMETHODIMP GetHints(PRUint32& aResult)
+		{ /* this flag indicates that the system prefers 8bit chars over wide chars */
+			/* It may or may not be faster under photon... */
+			aResult = NS_RENDERING_HINT_FAST_8BIT_TEXT;
+			return NS_OK;
+		}
    
    NS_IMETHOD PushState(void);
    NS_IMETHOD PopState(PRBool &aClipState);
    
-   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aClipState);
+	 inline
+   NS_IMETHODIMP IsVisibleRect( const nsRect& aRect, PRBool &aVisible )
+		{ aVisible = PR_TRUE;
+			return NS_OK;
+		}
    
    NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aCilpState);
    NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipState);
    NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState);
-   NS_IMETHOD CopyClipRegion(nsIRegion &aRegion);
+
+	 inline
+   NS_IMETHODIMP CopyClipRegion(nsIRegion &aRegion)
+		{ if( !mClipRegion ) return NS_ERROR_FAILURE;
+			aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+			return NS_OK;
+		}
+
    NS_IMETHOD GetClipRegion(nsIRegion **aRegion);
    
    NS_IMETHOD SetLineStyle(nsLineStyle aLineStyle);
-   NS_IMETHOD GetLineStyle(nsLineStyle &aLineStyle);
+	 inline
+   NS_IMETHODIMP GetLineStyle(nsLineStyle &aLineStyle)
+		{ aLineStyle = mCurrentLineStyle;
+			return NS_OK;
+		}
    
-   NS_IMETHOD SetColor(nscolor aColor);
-   NS_IMETHOD GetColor(nscolor &aColor) const;
+   inline
+	 NS_IMETHODIMP SetColor(nscolor aColor) { mCurrentColor = aColor; return NS_OK; }
+	 inline
+   NS_IMETHODIMP GetColor(nscolor &aColor) const { aColor = mCurrentColor; return NS_OK; }
    
-	 NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup);
+	 inline
+	 NS_IMETHODIMP SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
+		{ nsIFontMetrics* newMetrics;
+			nsresult rv = mContext->GetMetricsFor( aFont, aLangGroup, newMetrics );
+			if( NS_SUCCEEDED( rv ) ) {
+			  rv = SetFont( newMetrics );
+			  NS_RELEASE( newMetrics );
+				}
+			return rv;
+		}
+
    NS_IMETHOD SetFont(nsIFontMetrics *aFontMetrics);
    
-   NS_IMETHOD GetFontMetrics(nsIFontMetrics *&aFontMetrics);
+	 inline	
+   NS_IMETHODIMP GetFontMetrics(nsIFontMetrics *&aFontMetrics)
+		{ NS_IF_ADDREF(mFontMetrics);
+			aFontMetrics = mFontMetrics;
+			return NS_OK;
+		}
    
-   NS_IMETHOD Translate(nscoord aX, nscoord aY);
-   NS_IMETHOD Scale(float aSx, float aSy);
-   NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
+	 inline
+   NS_IMETHODIMP Translate(nscoord aX, nscoord aY) { mTranMatrix->AddTranslation((float)aX,(float)aY); return NS_OK; }
+
+	 inline
+   NS_IMETHODIMP Scale(float aSx, float aSy) { mTranMatrix->AddScale(aSx, aSy); return NS_OK; }
+
+	 inline
+   NS_IMETHODIMP GetCurrentTransform(nsTransform2D *&aTransform) { aTransform = mTranMatrix; return NS_OK; }
+
    
    NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
-   NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
+
+	 inline
+   NS_IMETHODIMP DestroyDrawingSurface(nsDrawingSurface aDS)
+		{ nsDrawingSurfacePh *surf = (nsDrawingSurfacePh *) aDS;
+			NS_IF_RELEASE(surf);
+			return NS_OK;
+		}
    
    NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
    NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-   NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
+
+	 inline
+   NS_IMETHODIMP DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints) { return DrawPolygon( aPoints, aNumPoints ); }
    
-   NS_IMETHOD DrawRect(const nsRect& aRect);
+	 inline
+   NS_IMETHODIMP DrawRect(const nsRect& aRect) { return DrawRect( aRect.x, aRect.y, aRect.width, aRect.height ); }
+
    NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
    
-   NS_IMETHOD FillRect(const nsRect& aRect);
+	 inline
+   NS_IMETHODIMP FillRect(const nsRect& aRect) { return FillRect( aRect.x, aRect.y, aRect.width, aRect.height ); }
+
    NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
    
-   NS_IMETHOD InvertRect(const nsRect& aRect);
+	 inline
+   NS_IMETHODIMP InvertRect(const nsRect& aRect) {  return InvertRect( aRect.x, aRect.y, aRect.width, aRect.height ); }
+
    NS_IMETHOD InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
    
    NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
    NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
    
-   NS_IMETHOD DrawEllipse(const nsRect& aRect);
+	 inline
+   NS_IMETHODIMP DrawEllipse(const nsRect& aRect) { return DrawEllipse( aRect.x, aRect.y, aRect.width, aRect.height ); }
+
    NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-   NS_IMETHOD FillEllipse(const nsRect& aRect);
+
+	 inline
+   NS_IMETHODIMP FillEllipse(const nsRect& aRect) { return FillEllipse( aRect.x, aRect.y, aRect.width, aRect.height ); }
+
    NS_IMETHOD FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
    
-   NS_IMETHOD DrawArc(const nsRect& aRect,
-					  float aStartAngle, float aEndAngle);
+	 inline
+   NS_IMETHODIMP DrawArc(const nsRect& aRect, float aStartAngle, float aEndAngle) { return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle); }
+
    NS_IMETHOD DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
 					  float aStartAngle, float aEndAngle);
-   NS_IMETHOD FillArc(const nsRect& aRect,
-					  float aStartAngle, float aEndAngle);
+
+	 inline
+   NS_IMETHODIMP FillArc(const nsRect& aRect, float aStartAngle, float aEndAngle) { return FillArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle); }
+
    NS_IMETHOD FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
 					  float aStartAngle, float aEndAngle);
 
-   NS_IMETHOD GetWidth(char aC, nscoord& aWidth);
-   NS_IMETHOD GetWidth(PRUnichar aC, nscoord& aWidth,
-					   PRInt32 *aFontID);
-   NS_IMETHOD GetWidth(const nsString& aString, nscoord& aWidth,
-					   PRInt32 *aFontID);
-   NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth);
+	 inline
+   NS_IMETHODIMP GetWidth(char aC, nscoord& aWidth)
+		{ // Check for the very common case of trying to get the width of a single space
+			if(aC == ' ' && nsnull != mFontMetrics )
+			  return mFontMetrics->GetSpaceWidth(aWidth);
+			return GetWidth( &aC, 1, aWidth );
+		}
+
+	 inline
+   NS_IMETHODIMP GetWidth(PRUnichar aC, nscoord& aWidth, PRInt32 *aFontID)
+		{ /* turn it into a string */
+		PRUnichar buf[2];
+		buf[0] = aC;
+		buf[1] = nsnull;
+		return GetWidth( buf, 1, aWidth, aFontID );
+		}
+
+	 inline
+   NS_IMETHODIMP GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID) { return GetWidth( aString.get(), aString.Length(), aWidth, aFontID ); }
+
+	 inline
+   NS_IMETHODIMP GetWidth(const char* aString, nscoord& aWidth) { return GetWidth( aString, strlen( aString ), aWidth ); }
+
    NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
    NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
 					   nscoord& aWidth, PRInt32 *aFontID);
@@ -155,22 +283,63 @@ public:
    NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
 						 nscoord aX, nscoord aY,
 						 const nscoord* aSpacing);
-   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
+
+	 inline
+   NS_IMETHODIMP DrawString(const PRUnichar *aString, PRUint32 aLength,
 						 nscoord aX, nscoord aY,
 						 PRInt32 aFontID,
-						 const nscoord* aSpacing);
-   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
-						 PRInt32 aFontID,
-						 const nscoord* aSpacing);
-   NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
-								nsTextDimensions& aDimensions);
+						 const nscoord* aSpacing)
+		{
+		NS_ConvertUCS2toUTF8 theUnicodeString( aString, aLength );
+		const char *p = theUnicodeString.get( );
+		return DrawString( p, strlen( p ), aX, aY, aSpacing );
+		}
+
+	 inline
+   NS_IMETHODIMP DrawString(const nsString& aString, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing)
+		{
+		NS_ConvertUCS2toUTF8 theUnicodeString( aString.get(), aString.Length() );
+		const char *p = theUnicodeString.get();
+		return DrawString( p, strlen( p ), aX, aY, aSpacing );
+		}
+
+	 inline
+   NS_IMETHODIMP GetTextDimensions(const char* aString, PRUint32 aLength, nsTextDimensions& aDimensions)
+		{
+		aDimensions.Clear();
+		mFontMetrics->GetMaxAscent(aDimensions.ascent);
+		mFontMetrics->GetMaxDescent(aDimensions.descent);
+		return GetWidth(aString, aLength, aDimensions.width);
+		}
+
    NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
 								nsTextDimensions& aDimensions, PRInt32 *aFontID);
    
-   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
-   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-						nscoord aWidth, nscoord aHeight); 
-   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
+	 inline
+   NS_IMETHODIMP DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
+		{
+  	// we have to do this here because we are doing a transform below
+  	return DrawImage( aImage, aX, aY,
+  	                  NSToCoordRound(mP2T * aImage->GetWidth()),
+  	                  NSToCoordRound(mP2T * aImage->GetHeight())
+  	                );
+		}
+
+	 inline
+   NS_IMETHODIMP DrawImage(nsIImage *aImage, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+		{
+		nscoord x, y, w, h;
+		x = aX;
+		y = aY;
+		w = aWidth;
+		h = aHeight;
+		mTranMatrix->TransformCoord(&x, &y, &w, &h);
+		return (aImage->Draw(*this, mSurface, x, y, w, h));
+		}
+
+	 inline
+   NS_IMETHODIMP DrawImage(nsIImage *aImage, const nsRect& aRect) { return DrawImage( aImage, aRect.x, aRect.y, aRect.width, aRect.height ); }
+
    NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
    NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
 					   nscoord aWidth,nscoord aHeight);
@@ -179,7 +348,13 @@ public:
    
    NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
 								const nsRect &aDestBounds, PRUint32 aCopyFlags);
-   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
+
+	 inline
+   NS_IMETHODIMP RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+		{
+		if( ngd != nsnull ) *ngd = nsnull;
+		return NS_OK;
+		}
 
 #ifdef MOZ_MATHML
   /**
@@ -202,10 +377,28 @@ public:
    
    
 private:
-	NS_IMETHOD CommonInit();
+	inline NS_IMETHODIMP CommonInit()
+		{
+		if( mContext && mTranMatrix ) {
+		  mContext->GetDevUnitsToAppUnits(mP2T);
+		  float app2dev;
+		  mContext->GetAppUnitsToDevUnits(app2dev);
+		  mTranMatrix->AddScale(app2dev, app2dev);
+		  }
+		return NS_OK;
+		}
+
 	void ApplyClipping( PhGC_t * );
 	void CreateClipRegion( );
-  void UpdateGC( );
+  inline void UpdateGC( )
+		{
+		PgSetGC( mGC ); /* new */
+		PgSetStrokeColor( NS_TO_PH_RGB( mCurrentColor ) );
+		PgSetTextColor( NS_TO_PH_RGB( mCurrentColor ) );
+		PgSetFillColor( NS_TO_PH_RGB( mCurrentColor ) );
+		PgSetStrokeDash( mLineStyle, strlen((char *)mLineStyle), 0x10000 );
+		ApplyClipping( mGC );
+		}
 
    PhGC_t             *mGC;
    nscolor            mCurrentColor;

@@ -251,29 +251,128 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *
 	return rv;
 	}
 
-NS_IMETHODIMP nsDeviceContextPh :: SupportsNativeWidgets( PRBool &aSupportsWidgets ) {
-/* REVISIT: These needs to return FALSE if we are printing! */
-  if( nsnull == mDC ) aSupportsWidgets = PR_TRUE;
-	else aSupportsWidgets = PR_FALSE;		/* while printing! */
-  return NS_OK;
-	}
 
-NS_IMETHODIMP nsDeviceContextPh :: GetScrollBarDimensions( float &aWidth, float &aHeight ) const {
-  /* Revisit: the scroll bar sizes is a gross guess based on Phab */
-  float scale;
-  GetCanonicalPixelScale(scale);
-  aWidth = mScrollbarWidth * mPixelsToTwips * scale;
-  aHeight = mScrollbarHeight * mPixelsToTwips * scale;
-  return NS_OK;
-	}
+static char *FaceMessageFont, *FaceMenuFont, *FaceBalloonFont, *FaceGeneralFont;
+static int SizeMessageFont, SizeMenuFont, SizeBalloonFont, SizeGeneralFont;
+static short StyleMessageFont, StyleMenuFont, StyleBalloonFont, StyleGeneralFont;
+static short WeightMessageFont, WeightMenuFont, WeightBalloonFont, WeightGeneralFont;
+static int InitSystemFonts;
+
+/* load the file /usr/share/mozilla/system_fonts */
+int nsDeviceContextPh :: ReadSystemFonts( ) const
+{
+	FILE *fp;
+	char buffer[512];
+
+	fp = fopen( "/usr/share/mozilla/system_fonts", "r" );
+	if( !fp ) return -1;
+
+	while ( fgets( buffer, 512, fp ) != NULL ) {
+		int len, code;
+		char *p, **face;
+		int *size;
+		short *style, *weight;
+
+		/* skip comments and blank lines */
+		if( buffer[0] == '#' || buffer[0] == ' ' || buffer[0] == '\n' ) continue;
+		len = strlen( buffer );
+		if( len<3 ) continue;
+
+		if( buffer[len-1] == '\n' ) buffer[ len-1 ] = 0;
+
+		code = buffer[0] << 8 | buffer[1];
+		p = &buffer[2];
+		switch( code ) {
+			case 'h=':
+				if( !strcmp( p, "General" ) ) {
+					style = &StyleGeneralFont;
+					face = &FaceGeneralFont;
+					weight = &WeightGeneralFont;
+					size = &SizeGeneralFont;
+					}
+				else if( !strcmp( p, "Message" ) ) {
+					style = &StyleMessageFont;
+					face = &FaceMessageFont;
+					weight = &WeightMessageFont;
+					size = &SizeMessageFont;
+					}
+				else if( !strcmp( p, "Menu" ) ) {
+					style = &StyleMenuFont;
+					face = &FaceMenuFont;
+					weight = &WeightMenuFont;
+					size = &SizeMenuFont;
+					}
+				else if( !strcmp( p, "Balloon" ) ) {
+					style = &StyleBalloonFont;
+					face = &FaceBalloonFont;
+					weight = &WeightBalloonFont;
+					size = &SizeBalloonFont;
+					}
+				break;
+			case 'f=':
+				*face = strdup( p );
+				break;
+			case 's=':
+				*size = atoi( p );
+				break;
+			case 'w=':
+				*weight = 0;
+				if( strstr( p, "bold" ) )
+					*weight = NS_FONT_WEIGHT_BOLD;
+				else
+					*weight = NS_FONT_WEIGHT_NORMAL;
+				break;
+			case 'S=':
+				*style = 0;
+				if( strstr( p, "italic" ) )
+					*style = NS_FONT_STYLE_ITALIC;
+				else
+					*style = NS_FONT_STYLE_NORMAL;
+				if( strstr( p, "antialias" ) )
+					*style |= NS_FONT_STYLE_ANTIALIAS;
+
+				break;
+			}
+		}
+
+	fclose( fp );
+
+	return 0;
+}
+
+void nsDeviceContextPh :: DefaultSystemFonts( ) const
+{
+	FaceMessageFont = "MessageFont";
+	SizeMessageFont = 9;
+	StyleMessageFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	WeightMessageFont = NS_FONT_WEIGHT_NORMAL;
+
+	FaceMenuFont = "MenuFont";
+	SizeMenuFont = 9;
+	StyleMenuFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	WeightMenuFont = NS_FONT_WEIGHT_NORMAL;
+
+	FaceBalloonFont = "BalloonFont";
+	SizeBalloonFont = 9;
+	StyleBalloonFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	WeightBalloonFont = NS_FONT_WEIGHT_NORMAL;
+
+	FaceGeneralFont = "TextFont";
+	SizeGeneralFont = 9;
+	StyleGeneralFont = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	WeightGeneralFont = NS_FONT_WEIGHT_NORMAL;
+}
 
 NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aFont) const
 {
 
-	aFont->style       = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
-	aFont->weight      = NS_FONT_WEIGHT_NORMAL;
+	if( !InitSystemFonts ) {
+		InitSystemFonts = 1;
+		DefaultSystemFonts( );
+		ReadSystemFonts( );
+		}
+
 	aFont->decorations = NS_FONT_DECORATION_NONE;
-	aFont->size = NSIntPointsToTwips(9/*8*/);
 
   switch (aID) {
     case eSystemFont_Caption:      // css2
@@ -291,28 +390,34 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aF
 		case eSystemFont_List:
 		case eSystemFont_Field:
 		case eSystemFont_Widget:
-	  	aFont->name.Assign(NS_LITERAL_STRING("TextFont"));
+	  	aFont->name.AssignWithConversion( FaceGeneralFont );
+			aFont->style = StyleGeneralFont;
+			aFont->weight = WeightGeneralFont;
+			aFont->size = NSIntPointsToTwips( SizeGeneralFont );
 			break;
 		case eSystemFont_MessageBox:
-			aFont->name.Assign(NS_LITERAL_STRING("MessageFont"));
+			aFont->name.AssignWithConversion( FaceMessageFont );
+			aFont->style = StyleMessageFont;
+			aFont->weight = WeightMessageFont;
+			aFont->size = NSIntPointsToTwips( SizeMessageFont );
 			break;
 		case eSystemFont_Tooltips:     // moz
-			aFont->name.Assign(NS_LITERAL_STRING("BalloonFont"));
+			aFont->name.AssignWithConversion( FaceBalloonFont );
+			aFont->style = StyleBalloonFont;
+			aFont->weight = WeightBalloonFont;
+			aFont->size = NSIntPointsToTwips( SizeBalloonFont );
 			break;
 		case eSystemFont_Menu:
-			aFont->name.Assign(NS_LITERAL_STRING("MenuFont"));
+			aFont->name.AssignWithConversion( FaceMenuFont );
+			aFont->style = StyleMenuFont;
+			aFont->weight = WeightMenuFont;
+			aFont->size = NSIntPointsToTwips( SizeMenuFont );
 			break;
   	}
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface ) {
-	nsRect aRect;
-	GetClientRect( aRect );
-  aContext.CreateDrawingSurface(aRect, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-	}
 
 NS_IMETHODIMP nsDeviceContextPh :: GetClientRect( nsRect &aRect ) {
 	nsresult rv = NS_OK;
@@ -378,16 +483,6 @@ printf( "\t\t Not Found in cache\n" );
 	return NS_ERROR_FAILURE;
 	}
 
-NS_IMETHODIMP nsDeviceContextPh::GetDepth( PRUint32& aDepth ) {
-  aDepth = mDepth; // 24;
-  return NS_OK;
-	}
-
-
-NS_IMETHODIMP nsDeviceContextPh :: ConvertPixel( nscolor aColor, PRUint32 & aPixel ) {
-  aPixel = NS_TO_PH_RGB(aColor);
-  return NS_OK;
-	}
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt32 &aHeight ) {
 	if( mIsPrinting ) { //(mSpec)

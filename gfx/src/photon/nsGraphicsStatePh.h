@@ -64,27 +64,59 @@ public:
 #endif
 
 private:
-  nsGraphicsState();
-  ~nsGraphicsState();
+  inline nsGraphicsState()
+		{
+		mMatrix = nsnull;
+		mClipRegion = nsnull;
+		mColor = NS_RGB(0, 0, 0);
+		mLineStyle = nsLineStyle_kSolid;
+		mFontMetrics = nsnull;
+		}
+
+	inline
+  ~nsGraphicsState()
+		{
+		NS_IF_RELEASE(mFontMetrics);
+		}
 };
 
 class nsGraphicsStatePool
 {
 public:
 
-  static nsGraphicsState * GetNewGS();
-  static void              ReleaseGS(nsGraphicsState* aGS);
+  static
+	inline nsGraphicsState * GetNewGS()
+		{
+  	nsGraphicsStatePool * thePool = PrivateGetPool();
+  	return thePool->PrivateGetNewGS();
+		}
+
+  static inline void ReleaseGS(nsGraphicsState* aGS)
+		{
+  	nsGraphicsStatePool * thePool = PrivateGetPool();
+  	thePool->PrivateReleaseGS(aGS);
+		}
   
   
-  nsGraphicsStatePool();
-  ~nsGraphicsStatePool();
+	inline
+  nsGraphicsStatePool() { mFreeList = nsnull; }
+
+  inline ~nsGraphicsStatePool()
+		{
+  	nsGraphicsState* gs = mFreeList;
+  	while (gs != nsnull) {
+    	nsGraphicsState* next = gs->mNext;
+    	delete gs;
+    	gs = next;
+  		}
+		}
   
 private:
   nsGraphicsState*	mFreeList;
   
-  static nsGraphicsStatePool * PrivateGetPool();
-  nsGraphicsState *            PrivateGetNewGS();
-  void                         PrivateReleaseGS(nsGraphicsState* aGS);
+  inline static nsGraphicsStatePool * PrivateGetPool();
+  inline nsGraphicsState *            PrivateGetNewGS();
+  inline void                  			  PrivateReleaseGS(nsGraphicsState* aGS);
   
   static nsGraphicsStatePool * gsThePool;
 };

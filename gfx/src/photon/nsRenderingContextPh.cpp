@@ -55,11 +55,6 @@ static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
 static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
-// Macro for converting from nscolor to PtColor_t
-// Photon RGB values are stored as 00 RR GG BB
-// nscolor RGB values are 00 BB GG RR
-#define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
-#define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
 #include <prlog.h>
 PRLogModuleInfo *PhGfxLog = PR_NewLogModule("PhGfxLog");
@@ -88,8 +83,6 @@ nsRenderingContextPh :: nsRenderingContextPh()
 	
 	PushState();
 }
-
-static int xxx;
 
 nsRenderingContextPh :: ~nsRenderingContextPh() 
 {
@@ -176,91 +169,6 @@ NS_IMETHODIMP nsRenderingContextPh :: Init( nsIDeviceContext* aContext, nsIWidge
 	return CommonInit();
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: Init( nsIDeviceContext* aContext, nsDrawingSurface aSurface ) 
-{
-	mContext = aContext;
-	NS_IF_ADDREF(mContext);
-	
-	mSurface = (nsDrawingSurfacePh *) aSurface;
-	NS_ADDREF(mSurface);
-	
-	mGC = mSurface->GetGC();
-	mOwner = PR_FALSE;
-
-	return CommonInit();
-}
-
-NS_IMETHODIMP nsRenderingContextPh::CommonInit() 
-{
-	if( mContext && mTranMatrix ) {
-		mContext->GetDevUnitsToAppUnits(mP2T);
-		float app2dev;
-		mContext->GetAppUnitsToDevUnits(app2dev);
-		mTranMatrix->AddScale(app2dev, app2dev);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: GetHints( PRUint32& aResult ) 
-{
-	PRUint32 result = 0;
-	
-	// Most X servers implement 8 bit text rendering alot faster than
-	// XChar2b rendering. In addition, we can avoid the PRUnichar to
-	// XChar2b conversion. So we set this bit...
-	result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
-	
-	/* this flag indicates that the system prefers 8bit chars over wide chars */
-	/* It may or may not be faster under photon... */
-	aResult = result;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: LockDrawingSurface( PRInt32 aX, PRInt32 aY,
-                                                          PRUint32 aWidth, PRUint32 aHeight,
-                                                          void **aBits, PRInt32 *aStride,
-                                                          PRInt32 *aWidthBytes, PRUint32 aFlags ) 
-{
-	PushState();
-	return mSurface->Lock( aX, aY, aWidth, aHeight, aBits, aStride, aWidthBytes, aFlags );
-}
-
-NS_IMETHODIMP nsRenderingContextPh::UnlockDrawingSurface( void ) 
-{
-	PRBool  clipstate;
-	PopState( clipstate );
-	
-	mSurface->Unlock();
-	
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface( nsDrawingSurface aSurface ) 
-{
-	
-	if( nsnull==aSurface ) 
-		mSurface = mOffscreenSurface;
-	else 
-		mSurface = (nsDrawingSurfacePh *) aSurface;
-	
-	mSurface->Select( );
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: GetDrawingSurface( nsDrawingSurface *aSurface ) 
-{
-	*aSurface = (void *) mSurface;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: GetDeviceContext( nsIDeviceContext *&aContext ) 
-{
-	NS_IF_ADDREF( mContext );
-	aContext = mContext;
-	return NS_OK;
-}
-
-
 NS_IMETHODIMP nsRenderingContextPh :: PushState( void ) 
 {
 	//  Get a new GS
@@ -342,12 +250,6 @@ NS_IMETHODIMP nsRenderingContextPh :: PopState( PRBool &aClipEmpty )
 	return NS_OK;
 }
 
-
-NS_IMETHODIMP nsRenderingContextPh :: IsVisibleRect( const nsRect& aRect, PRBool &aVisible ) 
-{
-	aVisible = PR_TRUE;
-	return NS_OK;
-}
 
 NS_IMETHODIMP nsRenderingContextPh :: GetClipRect( nsRect &aRect, PRBool &aClipValid ) 
 {
@@ -457,13 +359,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion( const nsIRegion& aRegion, n
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: CopyClipRegion( nsIRegion &aRegion ) 
-{
-	if( !mClipRegion ) return NS_ERROR_FAILURE;
-	aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion( nsIRegion **aRegion ) 
 {
 	nsresult rv = NS_ERROR_FAILURE;
@@ -489,20 +384,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion( nsIRegion **aRegion )
 	return rv;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: SetColor( nscolor aColor ) 
-{
-// ATENTIE if( nsnull == mContext ) return NS_ERROR_FAILURE; 
-	mCurrentColor = aColor;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsRenderingContextPh :: GetColor( nscolor &aColor ) const 
-{
-	aColor = mCurrentColor;
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextPh :: SetLineStyle( nsLineStyle aLineStyle ) 
 {
 	mCurrentLineStyle = aLineStyle;
@@ -525,25 +406,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SetLineStyle( nsLineStyle aLineStyle )
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: GetLineStyle( nsLineStyle &aLineStyle ) 
-{
-	aLineStyle = mCurrentLineStyle;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsRenderingContextPh :: SetFont( const nsFont& aFont, nsIAtom* aLangGroup )
-{
-	nsIFontMetrics* newMetrics;
-	nsresult rv = mContext->GetMetricsFor( aFont, aLangGroup, newMetrics );
-	if( NS_SUCCEEDED( rv ) ) {
-		rv = SetFont( newMetrics );
-		NS_RELEASE( newMetrics );
-	}
-	return rv;
-}
-
-
 NS_IMETHODIMP nsRenderingContextPh :: SetFont( nsIFontMetrics *aFontMetrics ) 
 {
 	if( mFontMetrics == aFontMetrics ) return NS_OK;
@@ -563,35 +425,8 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont( nsIFontMetrics *aFontMetrics )
 	if( pFontHandle ) {
 		if( mPhotonFontName ) free( mPhotonFontName );
 		mPhotonFontName = strdup( pFontHandle );
-	}
+		}
 	
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: GetFontMetrics( nsIFontMetrics *&aFontMetrics ) 
-{
-	NS_IF_ADDREF(mFontMetrics);
-	aFontMetrics = mFontMetrics;
-	return NS_OK;
-}
-
-// add the passed in translation to the current translation
-NS_IMETHODIMP nsRenderingContextPh :: Translate( nscoord aX, nscoord aY ) 
-{
-	mTranMatrix->AddTranslation((float)aX,(float)aY);
-	return NS_OK;
-}
-
-// add the passed in scale to the current scale
-NS_IMETHODIMP nsRenderingContextPh :: Scale( float aSx, float aSy ) 
-{
-	mTranMatrix->AddScale(aSx, aSy);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: GetCurrentTransform( nsTransform2D *&aTransform ) 
-{
-	aTransform = mTranMatrix;
 	return NS_OK;
 }
 
@@ -605,21 +440,13 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( const nsRect &aBound
 	nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
 	if( surf ) {
 		NS_ADDREF(surf);
-		surf->Init( NULL, aBounds.width, aBounds.height, aSurfFlags ); /* we pass NULL as aGC here / it means use the default photon gc */
+		surf->Init( aBounds.width, aBounds.height, aSurfFlags ); /* we pass NULL as aGC here / it means use the default photon gc */
 	}
 	else 
 		return NS_ERROR_FAILURE;
 	
 	aSurface = (nsDrawingSurface) surf;
 	
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsRenderingContextPh :: DestroyDrawingSurface( nsDrawingSurface aDS ) 
-{
-	nsDrawingSurfacePh *surf = (nsDrawingSurfacePh *) aDS;
-	NS_IF_RELEASE(surf);
 	return NS_OK;
 }
 
@@ -650,16 +477,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawStdLine( nscoord aX0, nscoord aY0, nsc
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline( const nsPoint aPoints[], PRInt32 aNumPoints ) 
-{
-	return DrawPolygon( aPoints, aNumPoints );
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: DrawRect( const nsRect& aRect ) 
-{
-	return DrawRect( aRect.x, aRect.y, aRect.width, aRect.height );
-}
-
 NS_IMETHODIMP nsRenderingContextPh :: DrawRect( nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) 
 {
 	nscoord x,y,w,h;
@@ -675,11 +492,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawRect( nscoord aX, nscoord aY, nscoord 
 	if( w && h )
 		PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_STROKE );
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: FillRect( const nsRect& aRect ) 
-{
-	return FillRect( aRect.x, aRect.y, aRect.width, aRect.height );
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: FillRect( nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) 
@@ -703,11 +515,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect( nscoord aX, nscoord aY, nscoord 
 		PgDrawIRect( x, y, x + w - 1, y2, Pg_DRAW_FILL );
 	}
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: InvertRect( const nsRect& aRect ) 
-{
-	return InvertRect( aRect.x, aRect.y, aRect.width, aRect.height );
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: InvertRect( nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) 
@@ -784,12 +591,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillPolygon( const nsPoint aPoints[], PRIn
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse( const nsRect& aRect ) 
-{
-	DrawEllipse( aRect.x, aRect.y, aRect.width, aRect.height );
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse( nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) 
 {
 	nscoord x,y,w,h;
@@ -808,13 +609,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse( nscoord aX, nscoord aY, nscoo
 	radii.y = y+h-1;
 	UpdateGC();
 	PgDrawEllipse( &center, &radii, Pg_EXTENT_BASED | Pg_DRAW_STROKE );
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsRenderingContextPh :: FillEllipse( const nsRect& aRect ) 
-{
-	FillEllipse( aRect.x, aRect.y, aRect.width, aRect.height );
 	return NS_OK;
 }
 
@@ -840,13 +634,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillEllipse( nscoord aX, nscoord aY, nscoo
 	return NS_OK;
 }
 
-
-NS_IMETHODIMP nsRenderingContextPh :: DrawArc( const nsRect& aRect, float aStartAngle, float aEndAngle ) 
-{
-	return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
-}
-
-
 NS_IMETHODIMP nsRenderingContextPh :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, float aStartAngle, float aEndAngle ) 
 {
 	nscoord x,y,w,h;
@@ -868,11 +655,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawArc(nscoord aX, nscoord aY, nscoord aW
 	UpdateGC();
 	PgDrawArc( &center, &radii, (unsigned int)aStartAngle, (unsigned int)aEndAngle, Pg_EXTENT_BASED | Pg_DRAW_STROKE );
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: FillArc( const nsRect& aRect, float aStartAngle, float aEndAngle ) 
-{
-	return FillArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: FillArc( nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, float aStartAngle, float aEndAngle ) 
@@ -897,31 +679,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillArc( nscoord aX, nscoord aY, nscoord a
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: GetWidth( char ch, nscoord& aWidth ) 
-{
-	// Check for the very common case of trying to get the width of a single
-	// space.
-	if(ch == ' ' && nsnull != mFontMetrics ) {
-		return mFontMetrics->GetSpaceWidth(aWidth);
-	}
-	return GetWidth( &ch, 1, aWidth );
-}
-
-
-NS_IMETHODIMP nsRenderingContextPh :: GetWidth( PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID ) 
-{
-	PRUnichar buf[2];
-	
-	/* turn it into a string */
-	buf[0] = ch;
-	buf[1] = nsnull;
-	return GetWidth( buf, 1, aWidth, aFontID );
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const char* aString, nscoord& aWidth ) 
-{
-	return GetWidth( aString, strlen( aString ), aWidth );
-}
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth ) 
 {
@@ -944,12 +701,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLe
 	return ret_code;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const nsString& aString, nscoord& aWidth, PRInt32 *aFontID ) 
-{
-	return GetWidth( aString.get(), aString.Length(), aWidth, aFontID );  
-}
-
-
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID ) 
 {
 	nsresult ret_code = NS_ERROR_FAILURE;
@@ -962,14 +713,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const PRUnichar *aString, PRUint
 	if( nsnull != aFontID ) 
 		*aFontID = 0;
 	return ret_code;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::GetTextDimensions(const char* aString, PRUint32 aLength, nsTextDimensions& aDimensions)
-{
-	aDimensions.Clear();
-	mFontMetrics->GetMaxAscent(aDimensions.ascent);
-	mFontMetrics->GetMaxDescent(aDimensions.descent);
-	return GetWidth(aString, aLength, aDimensions.width);
 }
 
 NS_IMETHODIMP nsRenderingContextPh::GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
@@ -988,13 +731,6 @@ NS_IMETHODIMP nsRenderingContextPh::GetTextDimensions(const PRUnichar* aString, 
 	if (nsnull != aFontID)
 		*aFontID = 0;
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: DrawString( const nsString& aString, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) 
-{
-	NS_ConvertUCS2toUTF8 theUnicodeString( aString.get(), aString.Length() );
-	const char *p = theUnicodeString.get();
-	return DrawString( p, strlen( p ), aX, aY, aSpacing );
 }
 
 NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLength,
@@ -1029,44 +765,6 @@ NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLe
 		}
 	}
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::DrawString(const PRUnichar* aString, PRUint32 aLength,
-												 nscoord aX, nscoord aY,
-												 PRInt32 aFontID,
-												const nscoord* aSpacing)
-{
-	NS_ConvertUCS2toUTF8 theUnicodeString( aString, aLength );
-	const char *p = theUnicodeString.get( );
-	return DrawString( p, strlen( p ), aX, aY, aSpacing );
-}
-
-NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY ) 
-{
-	nscoord width, height;
-	
-	// we have to do this here because we are doing a transform below
-	width = NSToCoordRound(mP2T * aImage->GetWidth());
-	height = NSToCoordRound(mP2T * aImage->GetHeight());
-	
-	return DrawImage( aImage, aX, aY, width, height );
-}
-
-NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& aRect ) 
-{
-	return DrawImage( aImage, aRect.x, aRect.y, aRect.width, aRect.height );
-}
-
-NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) 
-{
-	nscoord x, y, w, h;
-	
-	x = aX;
-	y = aY;
-	w = aWidth;
-	h = aHeight;
-	mTranMatrix->TransformCoord(&x, &y, &w, &h);
-	return (aImage->Draw(*this, mSurface, x, y, w, h));
 }
 
 NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect ) 
@@ -1155,13 +853,6 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSu
 	darea.size.h = sarea.size.h;
 	PgContextBlitArea( (PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &sarea,  
 					   (PdOffscreenContext_t *) ((nsDrawingSurfacePh *)destsurf)->GetDC(), &darea );
-// ATENTIE	PgFlush();
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::RetrieveCurrentNativeGraphicData( PRUint32 * ngd ) 
-{
-	if( ngd != nsnull ) *ngd = nsnull;
 	return NS_OK;
 }
 
@@ -1189,16 +880,6 @@ NS_IMETHODIMP nsRenderingContextPh::GetBoundingMetrics(const PRUnichar*   aStrin
 
 #endif /* MOZ_MATHML */
 
-
-void nsRenderingContextPh::UpdateGC()
-{
-	PgSetGC( mGC );	/* new */
-	PgSetStrokeColor( NS_TO_PH_RGB( mCurrentColor ) );
-	PgSetTextColor( NS_TO_PH_RGB( mCurrentColor ) );
-	PgSetFillColor( NS_TO_PH_RGB( mCurrentColor ) );
-	PgSetStrokeDash( mLineStyle, strlen((char *)mLineStyle), 0x10000 );
-	ApplyClipping( mGC );
-}
 
 void nsRenderingContextPh::ApplyClipping( PhGC_t *gc ) 
 {

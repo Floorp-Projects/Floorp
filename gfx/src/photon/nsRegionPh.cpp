@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsRegionPh.h"
-#include "prmem.h"
 
 /* Turn debug off to limit all the output to PhGfxLog */
 #undef DEBUG
@@ -57,68 +56,7 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 #define clrx c->rect.lr.x
 #define clry c->rect.lr.y
 
-nsRegionPh :: nsRegionPh( ) {
-	NS_INIT_ISUPPORTS();
-  mRegion = NULL;
-  mRegionType = eRegionComplexity_empty;
-	}
-
-nsRegionPh :: nsRegionPh( PhTile_t *tiles ) {
-	NS_INIT_ISUPPORTS();
-  mRegion = tiles; /* assume ownership */
-  mRegionType = (mRegion == NULL) ? eRegionComplexity_empty : eRegionComplexity_complex;
-	}
-
-
-nsRegionPh :: ~nsRegionPh( ) {
-	if( mRegion ) PhFreeTiles( mRegion );
-	mRegion = nsnull;
-	}
-
 NS_IMPL_ISUPPORTS1(nsRegionPh, nsIRegion)
-
-nsresult nsRegionPh :: Init( void ) {
-  SetRegionEmpty();
-  return NS_OK;
-	}
-
-void nsRegionPh :: SetTo( const nsIRegion &aRegion ) {
-  PhTile_t *tiles;
-  aRegion.GetNativeRegion( ( void*& ) tiles );
-  SetRegionEmpty( );
-  mRegion = PhCopyTiles( tiles );
-	}
-
-
-void nsRegionPh :: SetTo( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight ) {
-
-  SetRegionEmpty( );
-
-  if ( aWidth > 0 && aHeight > 0 ) {
-    /* Create a temporary tile to  assign to mRegion */
-    PhTile_t *tile = PhGetTile( );
-    tile->rect.ul.x = aX;
-    tile->rect.ul.y = aY;
-    tile->rect.lr.x = (aX+aWidth-1);
-    tile->rect.lr.y = (aY+aHeight-1);
-    tile->next = NULL;
-    mRegion = tile;
-  	}
-	}
-
-
-void nsRegionPh :: Intersect( const nsIRegion &aRegion ) 
-{
-	PhTile_t *original = mRegion;
-	PhTile_t *tiles;
-	aRegion.GetNativeRegion( ( void*& ) tiles );
-	mRegion = PhIntersectTilings( original, tiles, NULL);
-	if( mRegion ) 
-		mRegion = PhCoalesceTiles( PhMergeTiles( PhSortTiles( mRegion )));  
-	PhFreeTiles( original );
-	if ( mRegion == NULL )
-		SetTo(0, 0, 1, 1);
-}
 
 
 void nsRegionPh :: Intersect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight ) 
@@ -142,60 +80,6 @@ void nsRegionPh :: Intersect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aH
 		SetRegionEmpty();
 }
 
-
-void nsRegionPh :: Union( const nsIRegion &aRegion ) {
-  PhTile_t *tiles;
-  aRegion.GetNativeRegion( ( void*& ) tiles );
-  mRegion = PhAddMergeTiles( mRegion, PhCopyTiles( tiles ), NULL );
-	}
-
-
-void nsRegionPh :: Union( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight ) {
-  if( aWidth > 0 && aHeight > 0 ) {
-    /* Create a temporary tile to  assign to mRegion */
-    PhTile_t *tile = PhGetTile();
-    tile->rect.ul.x = aX;
-    tile->rect.ul.y = aY;
-    tile->rect.lr.x = (aX+aWidth-1);
-    tile->rect.lr.y = (aY+aHeight-1);
-    tile->next = NULL;
-
-    mRegion = PhAddMergeTiles( mRegion, tile, NULL );
-  	}
-	}
-
-
-void nsRegionPh :: Subtract( const nsIRegion &aRegion ) {
-  PhTile_t *tiles;
-  aRegion.GetNativeRegion((void*&)tiles);
-  mRegion = PhClipTilings( mRegion, tiles, NULL );
-	}
-
-
-void nsRegionPh :: Subtract( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight ) {
-  if( aWidth > 0 && aHeight > 0 ) {
-    /* Create a temporary tile to  assign to mRegion */
-    PhTile_t tile;
-    tile.rect.ul.x = aX;
-    tile.rect.ul.y = aY;
-    tile.rect.lr.x = aX + aWidth - 1;
-    tile.rect.lr.y = aY + aHeight - 1;
-    tile.next = NULL;
-
-    mRegion = PhClipTilings( mRegion, &tile, NULL );
-	}
-	}
-
-
-PRBool nsRegionPh :: IsEmpty( void ) 
-{ 
-	if ( !mRegion )
-		return PR_TRUE;
-	if ( mRegion->rect.ul.x == 0 && mRegion->rect.ul.y == 0 &&
-		mRegion->rect.lr.x == 0 && mRegion->rect.lr.y == 0 )
-		return PR_TRUE;
-	return PR_FALSE;
-}
 
 PRBool nsRegionPh :: IsEqual( const nsIRegion &aRegion ) {
   PRBool result = PR_TRUE;
@@ -250,17 +134,6 @@ void nsRegionPh :: GetBoundingBox( PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PR
 
 	*aWidth =  bX - *aX + 1;
 	*aHeight = bY - *aY + 1;
-	}
-
-
-void nsRegionPh :: Offset( PRInt32 aXOffset, PRInt32 aYOffset ) {
-	if( ( aXOffset || aYOffset ) && mRegion ) {
-		PhPoint_t p = { aXOffset, aYOffset };
-
-		/* 99.99% there is only one tile - so simplify things, while allow the general case to work as well */
-		if( !mRegion->next ) PtTranslateRect( &mRegion->rect, &p );
-		else PhTranslateTiles( mRegion, &p );
-		}
 	}
 
 
@@ -343,31 +216,4 @@ NS_IMETHODIMP nsRegionPh :: GetRects( nsRegionRectSet **aRects ) {
  
   *aRects = rects;
   return NS_OK;
-	}
-
-
-
-
-NS_IMETHODIMP nsRegionPh :: FreeRects( nsRegionRectSet *aRects ) {
-  if( nsnull != aRects ) PR_Free( ( void * )aRects );
-  return NS_OK;
-	}
-
-
-NS_IMETHODIMP nsRegionPh :: GetNativeRegion(void *&aRegion) const {
-  aRegion = (void *) mRegion;
-  return NS_OK;
-	}
-
-
-NS_IMETHODIMP nsRegionPh :: GetRegionComplexity(nsRegionComplexity &aComplexity) const {
-  aComplexity = mRegionType;
-  return NS_OK;
-	}
-
-
-void nsRegionPh :: SetRegionEmpty( void ) {
-  if( mRegion ) PhFreeTiles( mRegion );
-  mRegion = NULL;
-  mRegionType = eRegionComplexity_empty;
 	}
