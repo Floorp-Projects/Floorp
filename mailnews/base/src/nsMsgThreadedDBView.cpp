@@ -639,11 +639,8 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
   return rv;
 }
 
-nsMsgViewIndex nsMsgThreadedDBView::GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex threadIndex, PRInt32 targetLevel)
+nsMsgViewIndex nsMsgThreadedDBView::GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex parentIndex, PRInt32 targetLevel)
 {
-  nsMsgKey threadParent;
-  newHdr->GetThreadParent(&threadParent);
-  nsMsgViewIndex parentIndex = m_keys.FindIndex(threadParent, threadIndex);
   PRInt32 viewSize = GetSize();
   nsMsgViewIndex insertIndex = parentIndex + 1;
   if (parentIndex != nsMsgViewIndex_None)
