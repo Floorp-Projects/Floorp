@@ -25,9 +25,22 @@
 #include "nsIFontMetrics.h"
 #include <gdk/gdkx.h>
 
+#define NSRECT_TO_GDKRECT(ns,gdk) \
+  PR_BEGIN_MACRO \
+  gdk.x = ns.x; \
+  gdk.y = ns.y; \
+  gdk.width = ns.width; \
+  gdk.height = ns.height; \
+  PR_END_MACRO
+
+// BGR, not RGB
+#define NSCOLOR_TO_GDKCOLOR(g,n) \
+  g.red=NS_GET_B(n); \
+  g.green=NS_GET_G(n); \
+  g.blue=NS_GET_R(n);
+
 // Taken from nsRenderingContextGTK.cpp
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
-
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
@@ -535,10 +548,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
   if ( aIsSynchronous) {
       GdkRectangle nRect;
-      nRect.width = aRect.width;
-      nRect.height = aRect.height;
-      nRect.x = aRect.x;
-      nRect.y = aRect.y;
+      NSRECT_TO_GDKRECT(aRect, nRect);
       ::gtk_widget_draw(mWidget, &nRect);
   } else {
       mUpdateArea.UnionRect(mUpdateArea, aRect);
@@ -563,10 +573,7 @@ NS_METHOD nsWidget::Update(void)
   if (mUpdateArea.width && mUpdateArea.height) {
     if (!mIsDestroying) {
       GdkRectangle nRect;
-      nRect.width = mUpdateArea.width;
-      nRect.height = mUpdateArea.height;
-      nRect.x = mUpdateArea.x;
-      nRect.y = mUpdateArea.y;
+      NSRECT_TO_GDKRECT(mUpdateArea,nRect);
 #ifdef DEBUG_pavlov
       g_print("nsWidget::Update(this=%p): update {%i,%i,%i,%i}\n",
               this, mUpdateArea.x, mUpdateArea.y,
