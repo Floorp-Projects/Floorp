@@ -66,9 +66,6 @@
 
 #ifdef _IMPL_NS_COM
 
-/* Define if compiling for a 64-bit operating system */
-#undef HAVE_64BIT_OS
-
 /* Define if getpagesize() is available */
 #undef HAVE_GETPAGESIZE
 
