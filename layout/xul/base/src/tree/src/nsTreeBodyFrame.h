@@ -88,9 +88,8 @@ public:
   NS_IMETHOD Init(nsPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
-  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
-                       nsPoint& aPoint,
-                       PRInt32& aCursor);
+  NS_IMETHOD GetCursor(const nsPoint& aPoint,
+                       nsIFrame::Cursor& aCursor);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsGUIEvent* aEvent,

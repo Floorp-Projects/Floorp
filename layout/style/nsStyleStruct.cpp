@@ -1697,7 +1697,8 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) 
   mUserInput(aSource.mUserInput),
   mUserModify(aSource.mUserModify),
   mUserFocus(aSource.mUserFocus),
-  mCursor(aSource.mCursor)
+  mCursor(aSource.mCursor),
+  mCursorArray(aSource.mCursorArray)
 { 
 }
 
@@ -1709,6 +1710,11 @@ nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aO
 {
   nsChangeHint hint = nsChangeHint(0);
   if (mCursor != aOther.mCursor)
+    NS_UpdateHint(hint, nsChangeHint_UpdateCursor);
+
+  // We could do better. But it wouldn't be worth it, URL-specified cursors are
+  // rare.
+  if (mCursorArray.Count() > 0 || aOther.mCursorArray.Count() > 0)
     NS_UpdateHint(hint, nsChangeHint_UpdateCursor);
 
   if (mUserModify != aOther.mUserModify)

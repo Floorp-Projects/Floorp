@@ -267,11 +267,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
 NS_IMETHODIMP
-nsSplitterFrame::GetCursor(nsPresContext* aPresContext,
-                                     nsPoint&        aPoint,
-                                     PRInt32&        aCursor)
+nsSplitterFrame::GetCursor(const nsPoint&    aPoint,
+                           nsIFrame::Cursor& aCursor)
 {
-  return nsBoxFrame::GetCursor(aPresContext, aPoint, aCursor);
+  return nsBoxFrame::GetCursor(aPoint, aCursor);
 
   /*
     if (IsHorizontal())

@@ -96,6 +96,7 @@ public:
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
   virtual nsCursor        GetCursor();
   NS_IMETHOD              SetCursor(nsCursor aCursor);
+  NS_IMETHOD              SetCursor(imgIContainer* aCursor);
   NS_IMETHOD              GetWindowType(nsWindowType& aWindowType);
   NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
   NS_IMETHOD              SetWindowTranslucency(PRBool aTranslucent);

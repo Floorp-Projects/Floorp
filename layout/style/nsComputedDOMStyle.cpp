@@ -2012,13 +2012,32 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)ui, aFrame);
 
   if (ui) {
-    if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {
-      val->SetIdent(nsLayoutAtoms::autoAtom);
-    } else {
-      const nsAFlatCString& cursor =
-        nsCSSProps::ValueToKeyword(ui->mCursor,
-                                   nsCSSProps::kCursorKTable);
-      val->SetIdent(cursor);
+    PRBool found = PR_FALSE;
+    PRInt32 count = ui->mCursorArray.Count();
+    for (PRInt32 i = 0; i < count; i++) {
+      PRUint32 status;
+      nsresult rv = ui->mCursorArray[i]->GetImageStatus(&status);
+      if (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_FRAME_COMPLETE)) {
+        // This is the one we want
+        nsCOMPtr<nsIURI> uri;
+        ui->mCursorArray[i]->GetURI(getter_AddRefs(uri));
+        if (uri) {
+          val->SetURI(uri);
+          found = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!found) {
+      if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {
+        val->SetIdent(nsLayoutAtoms::autoAtom);
+      } else {
+        const nsAFlatCString& cursor =
+          nsCSSProps::ValueToKeyword(ui->mCursor,
+                                     nsCSSProps::kCursorKTable);
+        val->SetIdent(cursor);
+      }
     }
   }
 

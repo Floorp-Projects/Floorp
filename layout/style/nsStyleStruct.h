@@ -49,6 +49,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsIAtom.h"
 #include "nsIURI.h"
 
@@ -1142,6 +1143,12 @@ struct nsStyleUserInterface: public nsStyleStruct {
   PRUint8   mUserFocus;       // [inherited] (auto-select)
   
   PRUint8   mCursor;          // [inherited] See nsStyleConsts.h
+  nsCOMArray<imgIRequest> mCursorArray; // [inherited] The specified URL values. Takes precedence over mCursor.
+  // NOTE: Using nsCOMArray here means that copying this struct is slower (and
+  // takes more memory) than it could be if we used nsISupportsArray, because
+  // we have to append all objects to the new array. However, since these
+  // properties are rarely set, they are usually cached, and thus this is not
+  // much of a problem.
 };
 
 struct nsStyleXUL : public nsStyleStruct {

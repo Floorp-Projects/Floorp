@@ -1735,26 +1735,26 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
 //XXX This will need to be rewritten once we have content for areas
 //XXXbz We have content for areas now.... 
 NS_METHOD
-nsImageFrame::GetCursor(nsPresContext* aPresContext,
-                        nsPoint& aPoint,
-                        PRInt32& aCursor)
+nsImageFrame::GetCursor(const nsPoint& aPoint,
+                        nsIFrame::Cursor& aCursor)
 {
-  nsImageMap* map = GetImageMap(aPresContext);
+  nsPresContext* context = GetPresContext();
+  nsImageMap* map = GetImageMap(context);
   if (nsnull != map) {
     nsPoint p;
     TranslateEventCoords(aPoint, p);
-    aCursor = NS_STYLE_CURSOR_DEFAULT;
+    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
     if (map->IsInside(p.x, p.y)) {
       // Use style defined cursor if one is provided, otherwise when
       // the cursor style is "auto" we use the pointer cursor.
-      aCursor = GetStyleUserInterface()->mCursor;
-      if (NS_STYLE_CURSOR_AUTO == aCursor) {
-        aCursor = NS_STYLE_CURSOR_POINTER;
+      FillCursorInformationFromStyle(GetStyleUserInterface(), aCursor);
+      if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
+        aCursor.mCursor = NS_STYLE_CURSOR_POINTER;
       }
     }
     return NS_OK;
   }
-  return nsFrame::GetCursor(aPresContext, aPoint, aCursor);
+  return nsFrame::GetCursor(aPoint, aCursor);
 }
 
 NS_IMETHODIMP

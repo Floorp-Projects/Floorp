@@ -1872,9 +1872,8 @@ nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
 
 
 NS_IMETHODIMP
-nsBoxFrame::GetCursor(nsPresContext* aPresContext,
-                      nsPoint&        aPoint,
-                      PRInt32&        aCursor)
+nsBoxFrame::GetCursor(const nsPoint&    aPoint,
+                      nsIFrame::Cursor& aCursor)
 {
   /*
     #ifdef NS_DEBUG
@@ -1885,21 +1884,23 @@ nsBoxFrame::GetCursor(nsPresContext* aPresContext,
     #endif
  */
 
+#ifdef DEBUG_LAYOUT
     nsPoint newPoint;
     TranslateEventCoords(aPoint, newPoint);
     
-#ifdef DEBUG_LAYOUT
     // if we are in debug and we are in the debug area
     // return our own cursor and dump the debug information.
     if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
     {
-          nsresult rv = DisplayDebugInfoFor(this, aPresContext, newPoint, aCursor);
+          // XXX aCursor is not yet inited??
+          nsresult rv = DisplayDebugInfoFor(this, GetPresContext(), newPoint,
+              aCursor.mCursor);
           if (rv == NS_OK)
              return rv;
     }
 #endif
 
-    nsresult rv = nsContainerFrame::GetCursor(aPresContext, aPoint, aCursor);
+    nsresult rv = nsContainerFrame::GetCursor(aPoint, aCursor);
 
     return rv;
 }

@@ -489,6 +489,11 @@ NS_METHOD nsBaseWidget::SetCursor(nsCursor aCursor)
   mCursor = aCursor; 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsBaseWidget::SetCursor(imgIContainer* aCursor)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
     
 //-------------------------------------------------------------------------
 //

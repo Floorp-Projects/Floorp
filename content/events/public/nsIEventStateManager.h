@@ -48,6 +48,7 @@ class nsIDOMEvent;
 class nsIFrame;
 class nsIView;
 class nsIWidget;
+class imgIContainer;
 
 /*
  * Event state manager interface.
@@ -122,7 +123,7 @@ public:
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
 
-  NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor) = 0;
+  NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer, nsIWidget* aWidget, PRBool aLockCursor) = 0;
 
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool* aPreventDefault) = 0;
