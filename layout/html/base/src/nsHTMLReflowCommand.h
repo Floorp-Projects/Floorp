@@ -66,6 +66,9 @@ public:
   NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
   NS_IMETHOD List(FILE* out) const;
 
+  NS_IMETHOD GetFlags(PRInt32* aFlags);
+  NS_IMETHOD SetFlags(PRInt32 aFlags);
+
 protected:
   void      BuildPath();
   nsIFrame* GetContainingBlock(nsIFrame* aFloater) const;
@@ -78,6 +81,7 @@ private:
   nsIAtom*        mAttribute;
   nsIAtom*        mListName;
   nsVoidArray     mPath;
+  PRInt32         mFlags;
 };
 
 #endif /* nsHTMLReflowCommand_h___ */

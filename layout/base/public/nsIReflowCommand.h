@@ -37,6 +37,9 @@ struct nsSize;
 { 0xc3658e40, 0xff20, 0x11d1, \
   {0x85, 0xbc, 0x0, 0xa0, 0x24, 0x68, 0xfa, 0xb6}}
 
+// Reflow command flags
+#define NS_RC_CREATED_DURING_DOCUMENT_LOAD 0x0001
+
 /**
  * A reflow command is an object that is generated in response to a content
  * model change notification. The reflow command is given to a presentation
@@ -162,6 +165,12 @@ public:
    * Dump out the reflow-command to out
    */
   NS_IMETHOD List(FILE* out) const = 0;
+
+  /**
+   * Get/set reflow command flags
+   */
+  NS_IMETHOD GetFlags(PRInt32* aFlags) = 0;
+  NS_IMETHOD SetFlags(PRInt32 aFlags) = 0;
 };
 
 #endif /* nsIReflowCommand_h___ */

@@ -62,7 +62,8 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
   : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
     mPrevSiblingFrame(nsnull),
     mAttribute(aAttribute),
-    mListName(nsnull)
+    mListName(nsnull),
+    mFlags(0)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   if (nsnull!=mAttribute)
@@ -285,5 +286,19 @@ NS_IMETHODIMP nsHTMLReflowCommand::List(FILE* out) const
     }
   }
 #endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLReflowCommand::GetFlags(PRInt32* aFlags)
+{
+  *aFlags = mFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLReflowCommand::SetFlags(PRInt32 aFlags)
+{
+  mFlags = aFlags;
   return NS_OK;
 }
