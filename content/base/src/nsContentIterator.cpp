@@ -262,7 +262,7 @@ nsresult nsContentIterator::QueryInterface(const nsIID& aIID,
 
 nsContentIterator::nsContentIterator() :
   // don't need to explicitly initialize |nsCOMPtr|s, they will automatically be NULL
-  mIsDone(PR_FALSE), mPre(PR_FALSE)
+  mCachedIndex(0), mIsDone(PR_FALSE), mPre(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -402,7 +402,9 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
   }
   else
   {
-    endCon->ChildAt(--endIndx,*getter_AddRefs(cChild));
+    if (endIndx)
+      endCon->ChildAt(--endIndx,*getter_AddRefs(cChild));
+
     if (!cChild)  // offset after last child, last child is last node
     {
       endCon->ChildCount(endIndx);
@@ -712,6 +714,19 @@ nsresult nsContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode, nsVoidArr
     }
     else indx = mCachedIndex;
 
+    // reverify that the index of the current node hasn't changed.
+    // not super cheap, but a lot cheaper than IndexOf(), and still O(1).
+    // ignore result this time - the index may now be out of range.
+    if (indx >= 0)
+      (void) parent->ChildAt(indx, *getter_AddRefs(cSibling));
+    if (cSibling != cN)
+    {
+      // someone changed our index - find the new index the painful way
+      if (NS_FAILED(parent->IndexOf(cN,indx)))
+        return NS_ERROR_FAILURE;
+    }
+
+    // indx is now canonically correct
     if (NS_SUCCEEDED(parent->ChildAt(++indx,*getter_AddRefs(cSibling))) && cSibling)
     {
       // update cache
@@ -769,6 +784,19 @@ nsresult nsContentIterator::PrevNode(nsCOMPtr<nsIContent> *ioNextNode, nsVoidArr
     }
     else indx = mCachedIndex;
 
+    // reverify that the index of the current node hasn't changed.
+    // not super cheap, but a lot cheaper than IndexOf(), and still O(1).
+    // ignore result this time - the index may now be out of range.
+    if (indx >= 0)
+      (void) parent->ChildAt(indx, *getter_AddRefs(cSibling));
+    if (cSibling != cN)
+    {
+      // someone changed our index - find the new index the painful way
+      if (NS_FAILED(parent->IndexOf(cN,indx)))
+        return NS_ERROR_FAILURE;
+    }
+
+    // indx is now canonically correct
     if (indx && NS_SUCCEEDED(parent->ChildAt(--indx,*getter_AddRefs(cSibling))) && cSibling)
     {
       // update cache
