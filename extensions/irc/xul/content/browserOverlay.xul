@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://chatzilla/locale/browserOverlay.dtd" >
+
+<!-- This is the overlay that adds a "Chatzilla" button to the toolbar palette. -->
+
+<?xml-stylesheet href="chrome://chatzilla/skin/browserOverlay.css" type="text/css"?> 
+
+<overlay id="ChatzillaBrowserToolbar"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="chrome://chatzilla/content/chatzillaOverlay.js"/>
+
+<toolbarpalette id="BrowserToolbarPalette">
+  <toolbarbutton id="tb-chatzilla-open" oncommand="toIRC()" tooltiptext="&czButton.label;"/>
+</toolbarpalette>
+
+</overlay>
