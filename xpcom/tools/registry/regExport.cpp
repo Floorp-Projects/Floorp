@@ -147,13 +147,13 @@ void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
                     // Test result.
                     if ( rv == NS_OK ) {
                         // Build complete name.
-                        char *fullName = new char[ PL_strlen(rootName) + PL_strlen(name) + 2 ];
+                        char *fullName = new char[ PL_strlen(rootName) + PL_strlen(name) + 5 ];
                         PL_strcpy( fullName, rootName );
-                        PL_strcat( fullName, "/" );
+                        PL_strcat( fullName, " -  " );
                         PL_strcat( fullName, name );
                         // Display contents under this subkey.
                         nsIRegistry::Key key;
-                        rv = reg->GetSubtree( root, name, &key );
+                        rv = reg->GetSubtreeRaw( root, name, &key );
                         if ( rv == NS_OK ) {
                             display( reg, key, fullName );
                             printf( "\n" );
@@ -240,7 +240,16 @@ static void displayValues( nsIRegistry *reg, nsIRegistry::Key root ) {
                                     break;
 
                                 case nsIRegistry::Int32:
-                                    printf( "\t= Int32" );
+                                    {
+                                        int32 val = 0;
+                                        rv = reg->GetInt( root, name, &val );
+                                        if (NS_SUCCEEDED(rv)) {
+                                            printf( "\t= Int32 [%d, 0x%x]", val, val);
+                                        }
+                                        else {
+                                            printf( "\t Error getting int32 value, rv=%08X", (int)rv);
+                                        }
+                                    }
                                     break;
 
                                 case nsIRegistry::Bytes:
