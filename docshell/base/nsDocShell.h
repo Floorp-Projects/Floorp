@@ -51,9 +51,11 @@
 #include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 
 // Interfaces Needed
+#include "nsISupportsArray.h"
 #include "nsISHistory.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 
 
 class nsDocShellInitInfo
@@ -193,6 +195,7 @@ protected:
    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
    nsCOMPtr<nsIScriptContext> mScriptContext;
    nsCOMPtr<nsISHistory>      mSessionHistory;
+   nsCOMPtr<nsISupportsArray> mWebProgressListenerList;
    nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
    PRInt32                    mMarginWidth;
    PRInt32                    mMarginHeight;
