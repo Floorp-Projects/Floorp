@@ -46,7 +46,7 @@ updateitem {
 }
 
 .updateItemChecked {
-  margin: 0px 0px 3px 0px;
+  margin: 20px 0px 3px 0px;
   padding: 0px;
 }
 
@@ -77,16 +77,3 @@ updateitem {
 .updateIcon[severity="2"] {
   background-color: #FF0000;
 }
-
-.infoPopup {
-  border: 1px solid ThreeDDarkShadow;
-  background-color: InfoBackground;
-  width: 200px;
-  height: 85px;  
-  padding: 5px;
-}
-
-.infoPopupTitle {
-  font-weight: bold;
-}
-

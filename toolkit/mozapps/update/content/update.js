@@ -95,26 +95,29 @@ var gUpdateWizard = {
     }
   },
   
+  _setUpButton: function (aButtonID, aButtonKey, aDisabled)
+  {
+    var strings = document.getElementById("updateStrings");
+    var button = document.documentElement.getButton(aButtonID);
+    if (aButtonKey) {
+      button.label = strings.getString(aButtonKey);
+      try {
+        button.accesskey = strings.getString(aButtonKey + "Accesskey");
+      }
+      catch (e) {
+      }
+    }
+    button.disabled = aDisabled;
+  },
+  
   setButtonLabels: function (aBackButton, aBackButtonIsDisabled, 
                              aNextButton, aNextButtonIsDisabled,
                              aCancelButton, aCancelButtonIsDisabled)
   {
-    var strings = document.getElementById("updateStrings");
     
-    var back = document.documentElement.getButton("back");
-    if (aBackButton)
-      back.label = strings.getString(aBackButton);
-    back.disabled = aBackButtonIsDisabled;
-
-    var next = document.documentElement.getButton("next");
-    if (aNextButton)
-      next.label = strings.getString(aNextButton);
-    next.disabled = aNextButtonIsDisabled;
-    
-    var cancel = document.documentElement.getButton("cancel");
-    if (aCancelButton)
-      cancel.label = strings.getString(aCancelButton);
-    cancel.disabled = aCancelButtonIsDisabled;
+    this._setUpButton("back", aBackButton, aBackButtonIsDisabled);
+    this._setUpButton("next", aNextButton, aNextButtonIsDisabled);
+    this._setUpButton("cancel", aCancelButton, aCancelButtonIsDisabled);
   }
 };
 
@@ -227,7 +230,7 @@ var gUpdatePage = {
         item.init(appID, updates.appUpdateVersion,
                   brandShortName, -1, updates.appUpdateURL, 
                   "chrome://mozapps/skin/update/icon32.png", 
-                  Components.interfaces.nsIUpdateItem.TYPE_APP);
+                  nsIUpdateItem.TYPE_APP);
         gUpdateWizard.itemsToUpdate.splice(0, 0, item);
       }
       break;
@@ -242,6 +245,10 @@ var gUpdatePage = {
 };
 
 var gFoundPage = {
+  _appUpdateExists: false,
+  _appSelected: false, 
+  _appItem: null,
+  _nonAppItems: [],
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, 
@@ -257,9 +264,50 @@ var gFoundPage = {
       var item = gUpdateWizard.itemsToUpdate[i];
       updateitem.name = item.name + " " + item.version;
       updateitem.url = item.updateURL;
-      updateitem.checked = true;
+
+      // If we have an App entry in the list, check it and uncheck
+      // the others since the two are mutually exclusive installs.
+      updateitem.type = item.type;
+      if (item.type == nsIUpdateItem.TYPE_APP) {
+        updateitem.checked = true;
+        this._appUpdateExists = true;
+        this._appSelected = true;
+        this._appItem = updateitem;
+      }
+      else  {
+        updateitem.checked = !this._appUpdateExists;
+        this._nonAppItems.push(updateitem);
+      }
+
       if (item.iconURL != "")
         updateitem.icon = item.iconURL;
+    }
+  },
+  
+  onCommand: function (aEvent)
+  {
+    var i;
+    if (this._appUpdateExists) {
+      if (aEvent.target.type == nsIUpdateItem.TYPE_APP) {
+        for (i = 0; i < this._nonAppItems.length; ++i) {
+          var nonAppItem = this._nonAppItems[i];
+          nonAppItem.checked = !aEvent.target.checked;
+        }
+      }
+      else {
+        this._appItem.checked = false;
+      }
+    }
+    
+    var next = document.documentElement.getButton("next");
+    next.disabled = true;
+    var foundList = document.getElementById("foundList");
+    for (i = 0; i < foundList.childNodes.length; ++i) {
+      var listitem = foundList.childNodes[i];
+      if (listitem.checked) {
+        next.disabled = false;
+        break;
+      }
     }
   }
 };
@@ -307,7 +355,7 @@ var gFinishedPage = {
       fEC.hidden = true;
     }
     
-    if (gUpdater.updateType == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
+    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
       document.getElementById("finishedMismatch").hidden = false;
       document.getElementById("incompatibleAlert").hidden = false;
     }

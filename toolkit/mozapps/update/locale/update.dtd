@@ -48,5 +48,4 @@
 <!ENTITY  finished.enableChecking.label   "Allow &brandShortName; to check for updates.">
 <!ENTITY  finished.mismatch.label         "Click Finish to continue starting &brandShortName;.">
 
-<!ENTITY  updatesAvailable.title          "Updates Are Available">
-
+<!ENTITY  appInfo.label                   "This update must be installed separately from any others.">
