@@ -828,7 +828,6 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-
 #ifdef NECKO
   if (aIID.Equals(nsIPrompt::GetIID())) {
     *aInstancePtr = (void*) ((nsIPrompt*)this);
@@ -1879,6 +1878,16 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 
 
 {
+  // Ugh. It sucks that we have to hack webshell like this. Forgive me, Father.
+  do {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
+    if (NS_FAILED(rv)) break;
+
+    rv = history->AddPage(nsCAutoString(aUrlSpec), nsnull /* referrer */, PR_Now());
+    if (NS_FAILED(rv)) break;
+  } while (0);
+
 
   // If it's a normal reload that uses the cache, look at the destination anchor
   // and see if it's an element within the current document
@@ -2426,6 +2435,17 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
     if (nsnull != browserWindow) {
       browserWindow->SetTitle(aTitle);
       NS_RELEASE(browserWindow);
+
+      // Oh this hack sucks. But there isn't any other way that I can
+      // reliably get the title text. Sorry.
+      do {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
+        if (NS_FAILED(rv)) break;
+
+        rv = history->SetPageTitle(nsCAutoString(mURL), aTitle);
+        if (NS_FAILED(rv)) break;
+      } while (0);
     }
   } else {
     NS_RELEASE(parent);
