@@ -156,10 +156,13 @@ if ($syncall) {
     }
     Verbose("Locking entire database");
     SendSQL($query);
-    my $tablelist = join(' ', @tables);
     my $tempfile = "data/tmpsyncshadow.$$";
     Verbose("Dumping database to a temp file ($tempfile).");
-    system("mysqldump -l -e $db_name $tablelist > $tempfile");
+    open SAVEOUT, ">&STDOUT";     # stash the original output stream
+    open STDOUT, ">$tempfile";    # redirect to file
+    select STDOUT; $| = 1;        # disable buffering
+    system("mysqldump","-l","-e",$db_name,@tables);
+    open STDOUT, ">&SAVEOUT";     # redirect back to original stream
     Verbose("Restoring from tempfile into shadowdb");
     my $extra = "";
     if ($verbose) {

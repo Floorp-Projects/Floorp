@@ -993,7 +993,7 @@ The changes made were:
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
 
-    my @ARGLIST = ("./processmail");
+    my @ARGLIST = ();
     if ( $removedCcString ne "" ) {
         push @ARGLIST, ("-forcecc", $removedCcString);
     }
@@ -1004,7 +1004,7 @@ The changes made were:
         push @ARGLIST, ( "-forceqacontact", $origQaContact);
     }
     push @ARGLIST, ($id, $::FORM{'who'});
-    system @ARGLIST;
+    system ("./processmail",@ARGLIST);
 
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 

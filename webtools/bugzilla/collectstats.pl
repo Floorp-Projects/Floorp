@@ -131,8 +131,8 @@ sub calculate_dupes {
     # Save % count here in a date-named file
     # so we can read it back in to do changed counters
     # First, delete it if it exists, so we don't add to the contents of an old file
-    if (<data/duplicates/dupes$today*>) {
-        system("rm -f data/duplicates/dupes$today*");
+    if (my @files = <data/duplicates/dupes$today*>) {
+        unlink @files;
     }
    
     dbmopen(%count, "data/duplicates/dupes$today", 0644) || die "Can't open DBM dupes file: $!";

@@ -1233,7 +1233,7 @@ CheckEnumField('bugs', 'rep_platform', @my_platforms);
 #  that login, if it doesn't exist already, and make it a member of all groups.
 
 sub bailout {   # this is just in case we get interrupted while getting passwd
-    system("stty echo"); # re-enable input echoing
+    system("stty","echo"); # re-enable input echoing
     exit 1;
 }
 
@@ -1313,7 +1313,7 @@ _End_Of_SQL_
     $SIG{QUIT} = \&bailout;
     $SIG{TERM} = \&bailout;
 
-    system("stty -echo");  # disable input echoing
+    system("stty","-echo");  # disable input echoing
 
     while( $pass1 ne $pass2 ) {
       while( $pass1 eq "" ) {
@@ -1334,7 +1334,7 @@ _End_Of_SQL_
       }
     }
 
-    system("stty echo"); # re-enable input echoing
+    system("stty","echo"); # re-enable input echoing
     $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
     $SIG{INT}  = 'DEFAULT';
     $SIG{QUIT} = 'DEFAULT';

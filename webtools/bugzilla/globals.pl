@@ -109,8 +109,27 @@ sub ReconnectToShadowDatabase {
 my $shadowchanges = 0;
 sub SyncAnyPendingShadowChanges {
     if ($shadowchanges) {
-        system("./syncshadowdb &");
-        $shadowchanges = 0;
+        my $pid;
+        FORK: {
+            if ($pid = fork) { # create a fork
+                # parent code runs here
+                $shadowchanges = 0;
+                return;
+            } elsif (defined $pid) {
+                # child process code runs here
+                exec("./syncshadowdb",[]) or die "Unable to exec syncshadowdb: $!";
+                # passing the empty list as a second parameter tricks it into
+                # using execvp instead of running a shell, but still doesn't
+                # pass any parameters to syncshadowdb
+            } elsif ($! =~ /No more process/) {
+                # recoverable fork error, try again in 5 seconds
+                sleep 5;
+                redo FORK;
+            } else {
+                # something weird went wrong
+                die "Can't create background process to run syncshadowdb: $!";
+            }
+        }
     }
 }
 
