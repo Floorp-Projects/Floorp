@@ -677,9 +677,6 @@ xpfe/components/sidebar/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/src/Makefile
-xpfe/components/urlbarhistory/Makefile
-xpfe/components/urlbarhistory/public/Makefile
-xpfe/components/urlbarhistory/src/Makefile
 xpfe/components/urlwidget/Makefile
 xpfe/components/winhooks/Makefile
 xpfe/components/alerts/Makefile
