@@ -37,6 +37,9 @@ CPP_OBJS=									\
 			.\$(OBJDIR)\nsMsgFactory.obj    \
 			$(NULL)
 
+LINCS=  -I$(DEPTH)\mailnews\base\src         \
+        $(NULL)
+
 LLIBS=										\
 			$(DIST)\lib\xpcom.lib			\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib \
