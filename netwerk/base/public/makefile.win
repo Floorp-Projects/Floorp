@@ -72,6 +72,7 @@ XPIDLSRCS =                             \
 	.\nsISecureBrowserUI.idl	\
 	.\nsISecurityManagerComponent.idl	\
     .\nsICachingChannel.idl             \
+    .\nsIByteRangeRequest.idl           \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
