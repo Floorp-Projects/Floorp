@@ -39,9 +39,13 @@ public:
 
   NS_DECL_NSICMDLINEHANDLER
   CMDLINEHANDLER_REGISTERPROC_DECLS 
+  nsresult Init();
+
+
+private:
+  PRBool mLogComposePerformance;
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
-private:
   PRIntervalTime            mStartTime;
   PRIntervalTime            mPreviousTime;
 #endif

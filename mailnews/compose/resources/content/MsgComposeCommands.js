@@ -40,6 +40,9 @@ var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
+// We are storing the value of the bool logComposePerformance inorder to avoid logging unnecessarily.
+var gLogComposePerformance = msgComposeService.logComposePerformance;
+
 var gPromptService = null;
 
 //This migrates the LDAPServer Preferences from 4.x to mozilla format.
@@ -65,8 +68,6 @@ var gAutocompleteSession = null;
 var gSetupLdapAutocomplete = false;
 var gLDAPSession = null;
 var gComposeMsgsBundle;
-
-const DEBUG = false;
 
 var other_header = "";
 var sendFormat = msgCompSendFormat.AskUser;
@@ -1151,7 +1152,7 @@ function ComposeLoad()
   AddMessageComposeOfflineObserver();
   AddDirectoryServerObserver(true);
 
-  if (DEBUG && msgComposeService)
+  if (gLogComposePerformance)
     msgComposeService.TimeStamp("Start Initializing the compose window (ComposeLoad)", false);
   gComposeMsgsBundle = document.getElementById("bundle_composeMsgs");
 
@@ -1191,7 +1192,7 @@ function ComposeLoad()
     return;
   }
   window.tryToClose=ComposeCanClose;
-  if (DEBUG && msgComposeService)
+  if (gLogComposePerformance)
     msgComposeService.TimeStamp("Done with the initialization (ComposeLoad). Waiting on editor to load about::blank", false);
 }
 

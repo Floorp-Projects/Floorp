@@ -83,7 +83,9 @@ nsMsgComposeService::nsMsgComposeService()
   NS_ASSERTION(!_just_to_be_sure_we_create_only_on_compose_service_, "You cannot create several message compose service!");
   _just_to_be_sure_we_create_only_on_compose_service_ = PR_TRUE;
 #endif
-
+  
+// Defaulting the value of mLogComposePerformance to FALSE to prevent logging.
+  mLogComposePerformance = PR_FALSE;
 #ifdef MSGCOMP_TRACE_PERFORMANCE
   if (!MsgComposeLogModule)
       MsgComposeLogModule = PR_NewLogModule("msgcompose");
@@ -100,6 +102,19 @@ NS_IMPL_ISUPPORTS2(nsMsgComposeService, nsIMsgComposeService, nsICmdLineHandler)
 nsMsgComposeService::~nsMsgComposeService()
 {
 }
+
+/* the following Init is to initialize the mLogComposePerformance variable */
+
+nsresult nsMsgComposeService::Init()
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs)
+    return NS_ERROR_FAILURE;
+  rv = prefs->GetBoolPref("mailnews.logComposePerformance", &mLogComposePerformance);
+  return rv;
+}
+
 
 // Utility function to open a message compose window and pass an nsIMsgComposeParams parameter to it.
 static nsresult openWindow( const char *chrome, nsIMsgComposeParams *params )
@@ -193,14 +208,17 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
         
       pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
+      if(mLogComposePerformance)
+      {
 #ifdef MSGCOMP_TRACE_PERFORMANCE
-      // ducarroz, properly fix this in the case of new message (not a reply)
-      if (type != nsIMsgCompType::NewsPost) {
-        char buff[256];
-        sprintf(buff, "Start opening the window, message size = %d", GetMessageSizeFromURI(originalMsgURI));
-        TimeStamp(buff, PR_TRUE);
-      }
+        // ducarroz, properly fix this in the case of new message (not a reply)
+        if (type != nsIMsgCompType::NewsPost) {
+          char buff[256];
+          sprintf(buff, "Start opening the window, message size = %d", GetMessageSizeFromURI(originalMsgURI));
+          TimeStamp(buff, PR_TRUE);
+        }
 #endif
+      }//end if(mLogComposePerformance)
       rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
     }
   }
@@ -302,9 +320,12 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const char *msgCom
       pMsgComposeParams->SetIdentity(identity);
       pMsgComposeParams->SetComposeFields(compFields);    
 
+      if(mLogComposePerformance)
+      {
 #ifdef MSGCOMP_TRACE_PERFORMANCE
-      TimeStamp("Start opening the window", PR_TRUE);
+        TimeStamp("Start opening the window", PR_TRUE);
 #endif
+      }//end -if (mLogComposePerformance)
       rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
   }
 
@@ -315,10 +336,12 @@ nsresult nsMsgComposeService::OpenComposeWindowWithParams(const char *msgCompose
 														  nsIMsgComposeParams *params)
 {
   NS_ENSURE_ARG_POINTER(params);
-
+  if(mLogComposePerformance)
+  {
 #ifdef MSGCOMP_TRACE_PERFORMANCE
-  TimeStamp("Start opening the window", PR_TRUE);
+    TimeStamp("Start opening the window", PR_TRUE);
 #endif
+  }//end - if(mLogComposePerformance)
   return openWindow(msgComposeWindowURL, params);
 }
 
@@ -341,8 +364,18 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 	return rv;
 }
 
+/* readonly attribute boolean logComposePerformance; */
+NS_IMETHODIMP nsMsgComposeService::GetLogComposePerformance(PRBool *aLogComposePerformance)
+{
+  *aLogComposePerformance = mLogComposePerformance;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgComposeService::TimeStamp(const char * label, PRBool resetTime)
 {
+  if (!mLogComposePerformance)
+    return NS_OK;
+  
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 
   PRIntervalTime now;
