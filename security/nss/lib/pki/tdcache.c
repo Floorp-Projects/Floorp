@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.16 $ $Date: 2001/12/10 20:08:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.17 $ $Date: 2001/12/14 17:32:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -139,33 +139,6 @@ new_cache_entry(NSSArena *arena, void *value)
     return ce;
 }
 
-static PLHashNumber
-nss_certificate_hash
-(
-  const void *key
-)
-{
-    int i;
-    PLHashNumber h;
-    NSSCertificate *c = (NSSCertificate *)key;
-    h = 0;
-    for (i=0; i<c->issuer.size; i++)
-	h = (h >> 28) ^ (h << 4) ^ ((unsigned char *)c->issuer.data)[i];
-    for (i=0; i<c->serial.size; i++)
-	h = (h >> 28) ^ (h << 4) ^ ((unsigned char *)c->serial.data)[i];
-    return h;
-}
-
-static int
-nss_compare_certs(const void *v1, const void *v2)
-{
-    PRStatus ignore;
-    NSSCertificate *c1 = (NSSCertificate *)v1;
-    NSSCertificate *c2 = (NSSCertificate *)v2;
-    return (int)(nssItem_Equal(&c1->issuer, &c2->issuer, &ignore) &&
-                 nssItem_Equal(&c1->serial, &c2->serial, &ignore));
-}
-
 /* sort the subject list from newest to oldest */
 static PRIntn subject_list_sort(void *v1, void *v2)
 {
@@ -211,12 +184,8 @@ nssTrustDomain_InitializeCache
 	nssArena_Destroy(arena);
 	return PR_FAILURE;
     }
-    PZ_Lock(cache->lock);
     /* Create the issuer and serial DER --> certificate hash */
-    cache->issuerAndSN = nssHash_Create(arena, cacheSize, 
-                                        nss_certificate_hash, 
-                                        nss_compare_certs, 
-                                        PL_CompareValues);
+    cache->issuerAndSN = nssHash_CreateCertificate(arena, cacheSize);
     if (!cache->issuerAndSN) {
 	goto loser;
     }
@@ -236,14 +205,12 @@ nssTrustDomain_InitializeCache
 	goto loser;
     }
     cache->arena = arena;
-    PZ_Unlock(cache->lock);
     td->cache = cache;
 #ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("Cache initialized."));
 #endif
     return PR_SUCCESS;
 loser:
-    PZ_Unlock(cache->lock);
     PZ_DestroyLock(cache->lock);
     nssArena_Destroy(arena);
     td->cache = NULL;

@@ -1142,13 +1142,14 @@ get_newest_cert(NSSCertificate *c, void *arg)
     nssDecodedCert *dc, *founddc;
     NSSCertificate **cfound = (NSSCertificate **)arg;
     if (!*cfound) {
-	*cfound = c;
+	*cfound = nssCertificate_AddRef(c);
 	return PR_SUCCESS;
     }
     dc = nssCertificate_GetDecoding(c);
     founddc = nssCertificate_GetDecoding(*cfound);
     if (!founddc->isNewerThan(founddc, dc)) {
-	*cfound = c;
+	NSSCertificate_Destroy(*cfound);
+	*cfound = nssCertificate_AddRef(c);
     }
     return PR_SUCCESS;
 }

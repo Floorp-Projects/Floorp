@@ -35,7 +35,7 @@
 #define NSSPKI_H
 
 #ifdef DEBUG
-static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.6 $ $Date: 2001/10/17 15:48:08 $ $Name:  $";
+static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.7 $ $Date: 2001/12/14 17:32:19 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -2335,7 +2335,7 @@ NSS_EXTERN NSSCertificate *
 NSSCryptoContext_FindBestCertificateBySubject
 (
   NSSCryptoContext *cc,
-  NSSUTF8 *subject,
+  NSSDER /*NSSUTF8*/ *subject,
   NSSTime *timeOpt,
   NSSUsage *usage,
   NSSPolicies *policiesOpt
@@ -2351,7 +2351,7 @@ NSS_EXTERN NSSCertificate **
 NSSCryptoContext_FindCertificatesBySubject
 (
   NSSCryptoContext *cc,
-  NSSUTF8 *subject,
+  NSSDER /*NSSUTF8*/ *subject,
   NSSCertificate *rvOpt[],
   PRUint32 maximumOpt, /* 0 for no max */
   NSSArena *arenaOpt
@@ -2415,7 +2415,10 @@ NSS_EXTERN NSSCertificate *
 NSSCryptoContext_FindBestCertificateByEmail
 (
   NSSCryptoContext *cc,
-  NSSASCII7 *email
+  NSSASCII7 *email,
+  NSSTime *timeOpt,
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt
 );
 
 /*
@@ -2423,7 +2426,7 @@ NSSCryptoContext_FindBestCertificateByEmail
  *
  */
 
-NSS_EXTERN NSSCertificate *
+NSS_EXTERN NSSCertificate **
 NSSCryptoContext_FindCertificatesByEmail
 (
   NSSCryptoContext *cc,

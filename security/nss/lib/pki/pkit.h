@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.8 $ $Date: 2001/12/11 20:28:38 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.9 $ $Date: 2001/12/14 17:32:21 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -72,6 +72,11 @@ static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.8 $ $D
 PR_BEGIN_EXTERN_C
 
 typedef struct nssDecodedCertStr nssDecodedCert;
+
+typedef struct nssCertificateStoreStr nssCertificateStore;
+
+/* How wide is the scope of this? */
+typedef struct nssSMIMEProfileStr nssSMIMEProfile;
 
 /*
  * A note on ephemeral certs
@@ -113,6 +118,16 @@ struct NSSTrustStr
     nssTrustLevel clientAuth;
     nssTrustLevel emailProtection;
     nssTrustLevel codeSigning;
+};
+
+struct nssSMIMEProfileStr
+{
+    struct nssPKIObjectBaseStr object;
+    NSSCertificate *certificate;
+    NSSASCII7 *email;
+    NSSDER *subject;
+    NSSItem *profileTime;
+    NSSItem *profileData;
 };
 
 struct NSSCertificateStr
@@ -157,6 +172,7 @@ struct NSSCryptoContextStr
     NSSTrustDomain *td;
     NSSToken *token;
     nssSession *session;
+    nssCertificateStore *certStore;
 };
 
 struct NSSTimeStr;

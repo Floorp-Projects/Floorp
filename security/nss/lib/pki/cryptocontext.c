@@ -32,12 +32,16 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.7 $ $Date: 2001/12/11 20:28:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.8 $ $Date: 2001/12/14 17:32:18 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
+
+#ifndef PKIM_H
+#include "pkim.h"
+#endif /* PKIM_H */
 
 #ifndef PKIT_H
 #include "pkit.h"
@@ -46,6 +50,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.7 
 #ifndef DEV_H
 #include "dev.h"
 #endif /* DEV_H */
+
+#ifndef PKISTORE_H
+#include "pkistore.h"
+#endif /* PKISTORE_H */
 
 #ifdef NSS_3_4_CODE
 #include "pk11func.h"
@@ -104,28 +112,18 @@ NSSCryptoContext_ImportCertificate
   NSSCertificate *c
 )
 {
-    NSSToken *token;
-    nssSession *session = NULL;
-#ifdef NSS_3_4_CODE
-    /* XXX hack alert - what this needs to do is find the preferred
-     * token for cert storage
-     */
-    if (PR_TRUE) {
-	PK11SlotInfo *slot = PK11_GetInternalSlot();
-	token = PK11Slot_GetNSSToken(slot);
+    PRStatus nssrv;
+    if (!cc->certStore) {
+	cc->certStore = nssCertificateStore_Create(cc->arena);
+	if (!cc->certStore) {
+	    return PR_FAILURE;
+	}
     }
-#endif
-    /*
-     * question - are there multiple available tokens for the crypto context?
-     * in that case, it needs to store a session for each one
-     */
-#ifdef nodef
-    session = get_token_session(cc, tok);
-    if (!session) {
-	return PR_FAILURE;
+    nssrv = nssCertificateStore_Add(cc->certStore, c);
+    if (nssrv == PR_SUCCESS) {
+	c->object.cryptoContext = cc;
     }
-#endif
-    return nssToken_ImportCertificate(token, session, c, PR_FALSE);
+    return nssrv;
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -161,6 +159,48 @@ NSSCryptoContext_ImportEncodedPKIXCertificateChain
     return PR_FAILURE;
 }
 
+NSS_IMPLEMENT PRStatus
+nssCryptoContext_ImportTrust
+(
+  NSSCryptoContext *cc,
+  NSSTrust *trust
+)
+{
+    PRStatus nssrv;
+    if (!cc->certStore) {
+	cc->certStore = nssCertificateStore_Create(cc->arena);
+	if (!cc->certStore) {
+	    return PR_FAILURE;
+	}
+    }
+    nssrv = nssCertificateStore_AddTrust(cc->certStore, trust);
+    if (nssrv == PR_SUCCESS) {
+	trust->object.cryptoContext = cc;
+    }
+    return nssrv;
+}
+
+NSS_IMPLEMENT PRStatus
+nssCryptoContext_ImportSMIMEProfile
+(
+  NSSCryptoContext *cc,
+  nssSMIMEProfile *profile
+)
+{
+    PRStatus nssrv;
+    if (!cc->certStore) {
+	cc->certStore = nssCertificateStore_Create(cc->arena);
+	if (!cc->certStore) {
+	    return PR_FAILURE;
+	}
+    }
+    nssrv = nssCertificateStore_AddSMIMEProfile(cc->certStore, profile);
+    if (nssrv == PR_SUCCESS) {
+	profile->object.cryptoContext = cc;
+    }
+    return nssrv;
+}
+
 NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestCertificateByNickname
 (
@@ -171,8 +211,36 @@ NSSCryptoContext_FindBestCertificateByNickname
   NSSPolicies *policiesOpt /* NULL for none */
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    PRIntn i;
+    NSSCertificate *c;
+    NSSCertificate **nickCerts;
+    nssBestCertificateCB best;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
+    /* This could be improved by querying the store with a callback */
+    nickCerts = nssCertificateStore_FindCertificatesByNickname(cc->certStore,
+                                                               name,
+                                                               NULL,
+                                                               0,
+                                                               NULL);
+    if (nickCerts) {
+	PRStatus nssrv;
+	for (i=0, c = *nickCerts; c != NULL; c = nickCerts[++i]) {
+	    nssrv = nssBestCertificate_Callback(c, &best);
+	    NSSCertificate_Destroy(c);
+	    if (nssrv != PR_SUCCESS) {
+		if (best.cert) {
+		    NSSCertificate_Destroy(best.cert);
+		    best.cert = NULL;
+		}
+		break;
+	    }
+	}
+	nss_ZFreeIf(nickCerts);
+    }
+    return best.cert;
 }
 
 NSS_IMPLEMENT NSSCertificate **
@@ -185,8 +253,16 @@ NSSCryptoContext_FindCertificatesByNickname
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    NSSCertificate **rvCerts;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    rvCerts = nssCertificateStore_FindCertificatesByNickname(cc->certStore,
+                                                             name,
+                                                             rvOpt,
+                                                             maximumOpt,
+                                                             arenaOpt);
+    return rvCerts;
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -197,36 +273,76 @@ NSSCryptoContext_FindCertificateByIssuerAndSerialNumber
   NSSDER *serialNumber
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    return nssCertificateStore_FindCertificateByIssuerAndSerialNumber(
+                                                               cc->certStore,
+                                                               issuer,
+                                                               serialNumber);
 }
 
 NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestCertificateBySubject
 (
   NSSCryptoContext *cc,
-  NSSUTF8 *subject,
+  NSSDER *subject,
   NSSTime *timeOpt,
   NSSUsage *usage,
   NSSPolicies *policiesOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    PRIntn i;
+    NSSCertificate *c;
+    NSSCertificate **subjectCerts;
+    nssBestCertificateCB best;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
+    subjectCerts = nssCertificateStore_FindCertificatesBySubject(cc->certStore,
+                                                                 subject,
+                                                                 NULL,
+                                                                 0,
+                                                                 NULL);
+    if (subjectCerts) {
+	PRStatus nssrv;
+	for (i=0, c = *subjectCerts; c != NULL; c = subjectCerts[++i]) {
+	    nssrv = nssBestCertificate_Callback(c, &best);
+	    NSSCertificate_Destroy(c);
+	    if (nssrv != PR_SUCCESS) {
+		if (best.cert) {
+		    NSSCertificate_Destroy(best.cert);
+		    best.cert = NULL;
+		}
+		break;
+	    }
+	}
+	nss_ZFreeIf(subjectCerts);
+    }
+    return best.cert;
 }
 
 NSS_IMPLEMENT NSSCertificate **
 NSSCryptoContext_FindCertificatesBySubject
 (
   NSSCryptoContext *cc,
-  NSSUTF8 *subject,
+  NSSDER *subject,
   NSSCertificate *rvOpt[],
   PRUint32 maximumOpt, /* 0 for no max */
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    NSSCertificate **rvCerts;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    rvCerts = nssCertificateStore_FindCertificatesBySubject(cc->certStore,
+                                                            subject,
+                                                            rvOpt,
+                                                            maximumOpt,
+                                                            arenaOpt);
+    return rvCerts;
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -264,22 +380,56 @@ NSSCryptoContext_FindCertificateByEncodedCertificate
   NSSBER *encodedCertificate
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    return nssCertificateStore_FindCertificateByEncodedCertificate(
+                                                           cc->certStore,
+                                                           encodedCertificate);
 }
 
 NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestCertificateByEmail
 (
   NSSCryptoContext *cc,
-  NSSASCII7 *email
+  NSSASCII7 *email,
+  NSSTime *timeOpt,
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    PRIntn i;
+    NSSCertificate *c;
+    NSSCertificate **emailCerts;
+    nssBestCertificateCB best;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
+    emailCerts = nssCertificateStore_FindCertificatesByEmail(cc->certStore,
+                                                             email,
+                                                             NULL,
+                                                             0,
+                                                             NULL);
+    if (emailCerts) {
+	PRStatus nssrv;
+	for (i=0, c = *emailCerts; c != NULL; c = emailCerts[++i]) {
+	    nssrv = nssBestCertificate_Callback(c, &best);
+	    NSSCertificate_Destroy(c);
+	    if (nssrv != PR_SUCCESS) {
+		if (best.cert) {
+		    NSSCertificate_Destroy(best.cert);
+		    best.cert = NULL;
+		}
+		break;
+	    }
+	}
+	nss_ZFreeIf(emailCerts);
+    }
+    return best.cert;
 }
 
-NSS_IMPLEMENT NSSCertificate *
+NSS_IMPLEMENT NSSCertificate **
 NSSCryptoContext_FindCertificatesByEmail
 (
   NSSCryptoContext *cc,
@@ -289,8 +439,16 @@ NSSCryptoContext_FindCertificatesByEmail
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    NSSCertificate **rvCerts;
+    if (!cc->certStore) {
+	return NULL;
+    }
+    rvCerts = nssCertificateStore_FindCertificatesByEmail(cc->certStore,
+                                                          email,
+                                                          rvOpt,
+                                                          maximumOpt,
+                                                          arenaOpt);
+    return rvCerts;
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -397,6 +555,33 @@ NSSCryptoContext_FindUserCertificatesForEmailSigning
 {
     nss_SetError(NSS_ERROR_NOT_FOUND);
     return NULL;
+}
+
+NSS_IMPLEMENT NSSTrust *
+nssCryptoContext_FindTrustForCertificate
+(
+  NSSCryptoContext *cc,
+  NSSCertificate *cert
+)
+{
+    if (!cc->certStore) {
+	return NULL;
+    }
+    return nssCertificateStore_FindTrustForCertificate(cc->certStore, cert);
+}
+
+NSS_IMPLEMENT nssSMIMEProfile *
+nssCryptoContext_FindSMIMEProfileForCertificate
+(
+  NSSCryptoContext *cc,
+  NSSCertificate *cert
+)
+{
+    if (!cc->certStore) {
+	return NULL;
+    }
+    return nssCertificateStore_FindSMIMEProfileForCertificate(cc->certStore, 
+                                                              cert);
 }
 
 NSS_IMPLEMENT PRStatus
