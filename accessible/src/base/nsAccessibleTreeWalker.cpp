@@ -203,7 +203,7 @@ void nsAccessibleTreeWalker::GetNextDOMNode()
     if (mState.frame) {
       mState.domNode = do_QueryInterface(mState.frame->GetContent());
     } else {
-      mState = nsnull;
+      mState.domNode = nsnull;
     }
   }
   else { 
