@@ -735,7 +735,7 @@ si_GetURL(const char * passwordRealm) {
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save) {
+si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, PRBool first = PR_FALSE) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -756,9 +756,9 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save) 
   }
 
   /* free the data in each node of the specified user node for this URL */
-  if (userName.Length() == 0) {
+  if (first) {
 
-    /* no user specified so remove the first one */
+    /* remove the first user */
     user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
 
   } else {
@@ -1136,7 +1136,7 @@ PUBLIC void
 SI_RemoveAllSignonData() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -1155,7 +1155,7 @@ PUBLIC void
 SI_DeleteAll() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
