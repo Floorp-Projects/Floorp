@@ -1,8 +1,8 @@
-#################################################################################
-# $Id: Makefile,v 1.1 2000/01/12 06:15:42 leif%netscape.com Exp $
+###############################################################################
+# $Id: Makefile,v 1.2 2000/01/12 06:26:59 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #
@@ -22,10 +22,10 @@
 # DESCRIPTION:
 #    Simple Makefile for the DS-3 (and later) plugins.
 #
-#################################################################################
+###############################################################################
 
 
-#################################################################################
+###############################################################################
 # Build configuration is done here!
 #
 DS		= /opt/suitespot/plugins/slapd/slapi
@@ -35,14 +35,14 @@ ETAGS		= etags
 #ETAGS		= true
 
 
-#################################################################################
+###############################################################################
 # Common configurations
 #
 CC		= gcc
 SH_OPTS		= -fpic
 
 
-#################################################################################
+###############################################################################
 # Configuration specific for solaris-2.x.
 #
 CC		= gcc
@@ -59,7 +59,7 @@ OPT		= -O6 -mcpu=ultrasparc -Wall -DNDEBUG
 OPT		= -g -Wall -DDEBUG
 
 
-#################################################################################
+###############################################################################
 # You shouldn't have to touch anything below here.
 #
 INCLUDE		= -I. -I$(DS)/include
@@ -73,7 +73,7 @@ CFILES		= rex_filt.c url_filt.c lulu.c quick_auth.c uid_auth.c
 MISCFILES	= Makefile
 
 
-#################################################################################
+###############################################################################
 # Main targets.
 #
 all:		$(TARGETS) TAGS
@@ -97,7 +97,7 @@ uid_auth.so:	uid_auth.o lulu.o lulu.h
 	$(LD) $(LDFLAGS) -o $@ uid_auth.o lulu.o
 
 
-#################################################################################
+###############################################################################
 # Misc targets
 #
 TAGS:	$(CFILES) $(INCFILES) Makefile
@@ -105,7 +105,7 @@ TAGS:	$(CFILES) $(INCFILES) Makefile
 	@touch TAGS
 
 
-#################################################################################
+###############################################################################
 # "clean" and distribution targets.
 #
 realclean: 	distclean

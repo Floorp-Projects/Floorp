@@ -1,5 +1,38 @@
 /*  -*- Mode: C; eval: (c-set-style "GNU") -*-
  */
+ ******************************************************************************
+ * $Id: rex_filt.c,v 1.2 2000/01/12 06:27:00 leif%netscape.com Exp $
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is Netscape DS Plugins. The Initial Developer of the
+ * Original Code is Leif Hedstrom and Netscape Communications Corp.
+ * Portions created by Netscape are Copyright (C) Netscape Communications
+ * Corp. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * DESCRIPTION:
+ *   Apply regular expressions to MOD/ADD operations, if the rule is a match
+ *   deny/allow the modification. You can use this plugin any number of times
+ *   from the slapd.conf file, it will extend the filter rules accordingly.
+ *
+ * USAGE:
+ *    plugin preoperation rex_filt.so rexPlugInit attr1,2 0/1 regexp1
+ *    plugin preoperation rex_filt.so rexPlugInit attr3,4 0/1 regexp2
+ *
+ * TODO:
+ *    * Support the /.../i  syntax, for case insensitive regexps.
+ *
+ *****************************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

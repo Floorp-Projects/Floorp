@@ -1,9 +1,9 @@
 /*  -*- Mode: C; eval: (c-set-style "GNU") -*-
- *******************************************************************************
- * $Id: lulu.h,v 1.1 2000/01/12 06:15:44 leif%netscape.com Exp $
+ ******************************************************************************
+ * $Id: lulu.h,v 1.2 2000/01/12 06:27:00 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
+ * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
@@ -22,7 +22,7 @@
  * DESCRIPTION:
  *    Lots of Useful Little Utilities, defines and stuff.
  *
- *******************************************************************************/
+ *****************************************************************************/
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -31,14 +31,14 @@
 #include <slapi-plugin.h>
 
 
-/********************************************************************************
+/******************************************************************************
  *  Configurations, you might want to look at these...
  */
 #define LOG_FACILITY	SLAPI_LOG_PLUGIN
 #define THE_AUTHOR	"IS-Architorture"
 
 
-/********************************************************************************
+/******************************************************************************
  *  Error strings.
  */
 #define ERR_ARGS	"Can't locate plugin arguments, Panic!\n"
@@ -51,7 +51,7 @@
 #define ERR_NOSET	"Failed to set DN and auth method.\n"
 
 
-/********************************************************************************
+/******************************************************************************
  *  Misc. defines etc., don't touch anything below this.
  */
 #define PRIVATE static
@@ -63,7 +63,7 @@
 #define ATTR_SEPARATOR	","
 
 
-/********************************************************************************
+/******************************************************************************
  *  Try to get "inlined" defined, if possible. Currently only supports GCC.
  */
 #ifdef __GNUC__
@@ -73,7 +73,7 @@
 #endif  /* __GNUC__     */
 
 
-/********************************************************************************
+/******************************************************************************
  *  Typedefs and structures.
  */
 typedef int BOOL;
@@ -91,7 +91,7 @@ typedef struct _PluginAttrs
 typedef struct berval BerVal;
 
 
-/********************************************************************************
+/******************************************************************************
  *  Public functions.
  */
 PUBLIC PluginAttrs *parseAttributes(char *);

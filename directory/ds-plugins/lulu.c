@@ -1,9 +1,9 @@
 /*  -*- Mode: C; eval: (c-set-style "GNU") -*-
- *******************************************************************************
- * $Id: lulu.c,v 1.1 2000/01/12 06:15:43 leif%netscape.com Exp $
+ ******************************************************************************
+ * $Id: lulu.c,v 1.2 2000/01/12 06:26:59 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
+ * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
@@ -22,12 +22,12 @@
  * DESCRIPTION:
  *   Lots of Useful Little Utilities
  *
- *******************************************************************************/
+ *****************************************************************************/
 #include <stdio.h>
 #include "lulu.h"
 
 
-/********************************************************************************
+/******************************************************************************
  *  Free the list of attributes, in case something went south...
  */
 PUBLIC BOOL
@@ -52,7 +52,7 @@ freeAttributes(PluginAttrs *attrs)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Create a list of attributes, from the string argument. This is a comma
  *  separated list of attributes, without white spaces! For instance:
  *
@@ -108,7 +108,7 @@ parseAttributes(char *str)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Check if a particular attribute type is in a Plugin Attribute list. This
  *  can be used to decide if a plugin/filter should be applied for instance.
  */
@@ -135,7 +135,7 @@ listHasAttribute(PluginAttrs *attrs, char *type)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Send a constraint violation error back to the client, with a more
  *  descriptive error message.
  */
@@ -149,7 +149,7 @@ sendConstraintErr(Slapi_PBlock *pb, char *str)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Send a constraint violation error back to the client, with a more
  *  descriptive error message.
  */
@@ -163,7 +163,7 @@ sendOperationsErr(Slapi_PBlock *pb, char *str)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Get the ADD entry, and if it fails we send an error, and return FALSE. As
  *  a side effect the "entry" argument (a handle) is set to the structure.
  */
@@ -186,7 +186,7 @@ getAddEntry(Slapi_PBlock *pb, Slapi_Entry **entry, char *name)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Get the MODS for the current operation, and if it fails we send and error,
  *  and return FALSE. As a side effect, we set the "mods" argument (a handle)
  *  to the modifications structure.
@@ -210,7 +210,7 @@ getModifyMods(Slapi_PBlock *pb, LDAPMod ***mods, char *name)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Get the "command line arguments", and return TRUE if successful.
  */
 PUBLIC BOOL
@@ -229,7 +229,7 @@ getSlapiArgs(Slapi_PBlock *pb, int *argc, char ***argv, int exp, char *name)
 }
 
 
-/********************************************************************************
+/******************************************************************************
  *  Set the DN and authtype return values, making sure the pblock_set() did
  *  actually work.
  */
