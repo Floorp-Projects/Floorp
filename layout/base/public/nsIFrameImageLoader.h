@@ -102,6 +102,7 @@ public:
   // Return the intrinsic (or natural) size of the image, in twips.
   // Returns 0,0 if the dimensions are unknown
   NS_IMETHOD GetIntrinsicSize(nsSize& aResult) = 0;
+  NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, PRUint32 *naturalHeight) = 0;
 };
 
 // Image load status bit values
