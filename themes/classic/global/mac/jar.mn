@@ -160,10 +160,10 @@ classic.jar:
     skin/classic/global/scroll-right-active.gif
     skin/classic/global/scroll-right-disabled.gif
     skin/classic/global/scroll-right.gif
-    skin/classic/global/scroll-thumb-horiz-active.gif
-    skin/classic/global/scroll-thumb-horiz.gif
-    skin/classic/global/scroll-thumb-vert-active.gif
-    skin/classic/global/scroll-thumb-vert.gif
+    skin/classic/global/scroll-thumb-horiz-active.png
+    skin/classic/global/scroll-thumb-horiz.png
+    skin/classic/global/scroll-thumb-vert-active.png
+    skin/classic/global/scroll-thumb-vert.png
     skin/classic/global/scroll-up-active.gif
     skin/classic/global/scroll-up-disabled.gif
     skin/classic/global/scroll-up.gif
