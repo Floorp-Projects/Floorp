@@ -278,9 +278,12 @@ nsAsyncStreamObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
                                      nsresult aStatus,
                                      const PRUnichar* aMsg)
 {
-    nsresult rv = GetStatus();
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
 
+    //
+    // Fire the OnStopRequest(...) regardless of what the current
+    // Status is...
+    //
     nsOnStopRequestEvent* event = 
         new nsOnStopRequestEvent(this, context, channel);
     if (event == nsnull)
