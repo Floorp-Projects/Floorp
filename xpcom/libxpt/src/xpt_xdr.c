@@ -57,14 +57,14 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
   ((cursor)->state->data_offset &&                                            \
    ((cursor)->offset - 1 + (space) > (cursor)->state->data_offset))           \
   ? (DBG(("no space left in HEADER %d + %d > %d\n", (cursor)->offset,         \
-          (space), (cursor)->state->data_offset)), PR_FALSE)                  \
+          (space), (cursor)->state->data_offset)) && PR_FALSE)                \
   : PR_TRUE) :                                                                \
  /* if we're in the data area and we're about to exceed the allocation */     \
  (CURS_POOL_OFFSET(cursor) + (space) > (cursor)->state->pool->allocated ?     \
   /* then grow if we're in ENCODE mode */                                     \
-  (ENCODING(cursor) ? GrowPool((cursor)->state->pool)                     \
+  (ENCODING(cursor) ? GrowPool((cursor)->state->pool)                         \
    /* and fail if we're in DECODE mode */                                     \
-   : (DBG(("can't extend in DECODE")), PR_FALSE))                             \
+   : (DBG(("can't extend in DECODE")) && PR_FALSE))                           \
   /* otherwise we're OK */                                                    \
   : PR_TRUE))
 
