@@ -118,7 +118,7 @@ sub multipart_init {
     my($self,@p) = @_;
     my($boundary,$nph,@other) = rearrange(['BOUNDARY','NPH'],@p);
     $boundary = $boundary || '------- =_aaaaaaaaaa0';
-    $self->{'separator'} = "\r\n--$boundary$\r\n";
+    $self->{'separator'} = "\r\n--$boundary\r\n";
     $self->{'final_separator'} = "\r\n--$boundary--\r\n";
     my $type = SERVER_PUSH($boundary);
     return $self->header(
