@@ -944,8 +944,6 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
     {
       if(!PL_strncasecmp(line, "+OK", 3))
         m_commandResponse = line + 4;
-//      else if(PL_strncasecmp(m_commandResponse.get(), "Invalid login", 13))
-//        m_commandResponse = "+";
       else  // challenge answer to AUTH CRAM-MD5 and LOGIN username/password
         m_commandResponse = line + 2;
     }
@@ -960,11 +958,19 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
     else
       m_commandResponse  = line;
 
-    // search for the response codes (RFC 2449, chapter 8)
-    if(m_commandResponse.Find("[LOGIN-DELAY", PR_TRUE) >= 0 ||
-       m_commandResponse.Find("[IN-USE", PR_TRUE) >= 0)
+    // search for the response codes (RFC 2449, chapter 8 and RFC 3206)
+    if(TestCapFlag(POP3_HAS_RESP_CODES | POP3_HAS_AUTH_RESP_CODE))
     {
+        // code for authentication failure due to the user's credentials
+        if(m_commandResponse.Find("[AUTH", PR_TRUE) >= 0)
+          SetFlag(POP3_AUTH_FAILURE);
+
+        // codes for failures due to other reasons
+        if(m_commandResponse.Find("[LOGIN-DELAY", PR_TRUE) >= 0 ||
+           m_commandResponse.Find("[IN-USE", PR_TRUE) >= 0 ||
+           m_commandResponse.Find("[SYS", PR_TRUE) >= 0)
       SetFlag(POP3_STOPLOGIN);
+
       // remove the codes from the response string presented to the user
       PRInt32 i = m_commandResponse.FindChar(']');
       if(i >= 0)
@@ -1088,7 +1094,7 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
          */
         m_pop3ConData->command_succeeded = PR_TRUE;
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
-        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+        m_pop3ConData->next_state = POP3_SEND_CAPA;
         return 0;
     }
     
@@ -1107,7 +1113,7 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
     if (!PL_strcmp(line, ".")) 
     {
         // now that we've read all the AUTH responses, go for it
-        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+        m_pop3ConData->next_state = POP3_SEND_CAPA;
         m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
     }
     else
@@ -1116,8 +1122,10 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
         nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
         // this checks if psm is installed...
         if (NS_SUCCEEDED(rv))
+        {
             SetCapFlag(POP3_HAS_AUTH_CRAM_MD5);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    }
     }
     else
     if (!PL_strcasecmp (line, "PLAIN")) 
@@ -1133,6 +1141,73 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
     }
 
 	PR_Free(line);
+    return 0;
+}
+
+/*
+ * POP3 CAPA extention, see RFC 2449, chapter 5
+ */
+
+PRInt32 nsPop3Protocol::SendCapa()
+{
+    if(!m_pop3ConData->command_succeeded)
+        return(Error(POP3_SERVER_ERROR));
+
+    nsCAutoString command("CAPA" CRLF);
+
+    m_pop3ConData->next_state_after_response = POP3_CAPA_RESPONSE;
+    return SendData(m_url, command.get());
+}
+
+PRInt32 nsPop3Protocol::CapaResponse(nsIInputStream* inputStream, 
+                             PRUint32 length)
+{
+    char * line;
+    PRUint32 ln = 0;
+
+    if (!m_pop3ConData->command_succeeded) 
+    {
+        /* CAPA command not implemented */
+        m_pop3ConData->command_succeeded = PR_TRUE;
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+        return 0;
+    }
+
+    PRBool pauseForMoreData = PR_FALSE;
+    line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
+
+    if(pauseForMoreData || !line) 
+    {
+        m_pop3ConData->pause_for_read = PR_TRUE; /* pause */
+        PR_Free(line);
+        return(0);
+    }
+    
+    PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
+
+    if (!PL_strcmp(line, ".")) 
+    {
+        // now that we've read all the CAPA responses, go for it
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+    }
+    else
+    // see RFC 2449, chapter 6.4
+    if (!PL_strcasecmp(line, "RESP-CODES")) 
+    {
+        SetCapFlag(POP3_HAS_RESP_CODES);
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    }
+    else
+    // see RFC 3206, chapter 6
+    if (!PL_strcasecmp(line, "AUTH-RESP-CODE")) 
+    {
+        SetCapFlag(POP3_HAS_AUTH_RESP_CODE);
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    }
+
+    PR_Free(line);
     return 0;
 }
 
@@ -1173,9 +1248,10 @@ PRInt32 nsPop3Protocol::AuthFallback()
         m_pop3ConData->next_state = POP3_SEND_PASSWORD;
     else
     {
-        // response code received, login failed
-        // not because of wrong username
-        if(TestFlag(POP3_STOPLOGIN))
+        // response code received,
+        // login failed not because of wrong password
+        if(TestFlag(POP3_STOPLOGIN) ||
+           TestCapFlag(POP3_HAS_AUTH_RESP_CODE) && !TestFlag(POP3_AUTH_FAILURE))
             return(Error(POP3_USERNAME_FAILURE));
 
         // If one authentication failed, we're going to
@@ -1418,9 +1494,10 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
   /* check password response */
   if(!m_pop3ConData->command_succeeded)
   {
-    // response code received, login failed
-    // not because of wrong password
-    if(TestFlag(POP3_STOPLOGIN))
+    // response code received,
+    // login failed not because of wrong password
+    if(TestFlag(POP3_STOPLOGIN) ||
+       TestCapFlag(POP3_HAS_AUTH_RESP_CODE) && !TestFlag(POP3_AUTH_FAILURE))
       return(Error(POP3_PASSWORD_FAILURE));
     
     if(!TestCapFlag(POP3_HAS_AUTH_CRAM_MD5) &&
@@ -3057,7 +3134,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             if (TestCapFlag(POP3_AUTH_MECH_UNDEFINED))
               m_pop3ConData->next_state = POP3_SEND_AUTH;
             else
-              m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+              m_pop3ConData->next_state = POP3_SEND_CAPA;
           }
           else
             m_pop3ConData->next_state = POP3_SEND_USERNAME;;
@@ -3098,7 +3175,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             if (TestCapFlag(POP3_AUTH_MECH_UNDEFINED))
               m_pop3ConData->next_state = POP3_SEND_AUTH;
             else
-              m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+              m_pop3ConData->next_state = POP3_SEND_CAPA;
           }
           else
             m_pop3ConData->next_state = POP3_SEND_USERNAME;;
@@ -3113,6 +3190,14 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       
     case POP3_AUTH_RESPONSE:
       status = AuthResponse(aInputStream, aLength);
+      break;
+      
+   case POP3_SEND_CAPA:
+      status = SendCapa();
+      break;
+      
+    case POP3_CAPA_RESPONSE:
+      status = CapaResponse(aInputStream, aLength);
       break;
       
     case POP3_PROCESS_AUTH:

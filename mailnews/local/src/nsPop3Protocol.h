@@ -103,7 +103,9 @@ enum Pop3CapabilityEnum {
     POP3_HAS_AUTH_USER          = 0x00001000,
     POP3_HAS_AUTH_CRAM_MD5      = 0x00002000,
     POP3_HAS_AUTH_APOP          = 0x00004000,
-    POP3_HAS_AUTH_PLAIN         = 0x00008000
+    POP3_HAS_AUTH_PLAIN         = 0x00008000,
+    POP3_HAS_RESP_CODES         = 0x00010000,
+    POP3_HAS_AUTH_RESP_CODE     = 0x00020000
 };
 
 enum Pop3StatesEnum {
@@ -145,19 +147,20 @@ enum Pop3StatesEnum {
     POP3_GET_FAKE_UIDL_TOP,                     // 28
     POP3_SEND_AUTH,                             // 29
     POP3_AUTH_RESPONSE,                         // 30
-    POP3_PROCESS_AUTH,                          // 31
-    POP3_AUTH_FALLBACK,                         // 32
+    POP3_SEND_CAPA,                             // 31
+    POP3_CAPA_RESPONSE,                         // 32
+    POP3_PROCESS_AUTH,                          // 33
+    POP3_AUTH_FALLBACK,                         // 34
 
-    POP3_AUTH_LOGIN,                            // 33
-    POP3_AUTH_LOGIN_RESPONSE,                   // 34
-    POP3_SEND_XSENDER,                          // 35
-    POP3_XSENDER_RESPONSE,                      // 36
-    POP3_SEND_GURL,                             // 37
+    POP3_AUTH_LOGIN,                            // 35
+    POP3_AUTH_LOGIN_RESPONSE,                   // 36
+    POP3_SEND_XSENDER,                          // 37
+    POP3_XSENDER_RESPONSE,                      // 38
+    POP3_SEND_GURL,                             // 39
 
-    POP3_GURL_RESPONSE,                         // 38
-    POP3_QUIT_RESPONSE,
-    POP3_INTERRUPTED,
-    POP3_STOPLOGIN
+    POP3_GURL_RESPONSE,                         // 40
+    POP3_QUIT_RESPONSE,                         // 41
+    POP3_INTERRUPTED                            // 42
 };
 
 
@@ -260,6 +263,8 @@ typedef struct _Pop3ConData {
 // commands, etc. I do not intend it to refer to protocol state)
 #define POP3_PAUSE_FOR_READ			0x00000001  /* should we pause for the next read */
 #define POP3_PASSWORD_FAILED		0x00000002
+#define POP3_STOPLOGIN              0x00000004  /* error loging in, so stop here */
+#define POP3_AUTH_FAILURE           0x00000008  /* extended code said authentication failed */
 
 
 class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer
@@ -332,6 +337,8 @@ private:
     PRInt32 Error(PRInt32 err_code);
     PRInt32 SendAuth();
     PRInt32 AuthResponse(nsIInputStream* inputStream, PRUint32 length);
+    PRInt32 SendCapa();
+    PRInt32 CapaResponse(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 ProcessAuth();
     PRInt32 AuthFallback();
     PRInt32 AuthLogin();
