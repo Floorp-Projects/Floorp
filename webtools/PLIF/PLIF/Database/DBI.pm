@@ -113,6 +113,12 @@ sub execute {
     $self->createResultsFrame($statement, 1, @values); # note: @values might be empty
 }
 
+sub attempt {
+    my $self = shift;
+    my($statement, @values) = @_;
+    $self->createResultsFrame($statement, 0, @values); # note: @values might be empty
+}
+
 sub createResultsFrame {
     my $self = shift;
     my($statement, $execute, @values) = @_;
@@ -129,6 +135,8 @@ sub createResultsFrame {
     my $handle = $self->handle->prepare($statement);
     if ($handle and ((not defined($execute)) or $handle->execute(@values))) {
         return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute);
+    } elsif (not $execute) {
+        return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute);        
     } else {
         $self->error(1, $handle->errstr);
     }
