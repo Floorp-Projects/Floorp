@@ -62,6 +62,7 @@ class ostream;
 
 class nsIParserNode;
 class nsIOutputStream;
+class nsIDTD;
 
 class nsIHTMLContentSinkStream : public nsIHTMLContentSink {
   public:
@@ -102,7 +103,6 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSinkStream
                         const nsAReadableString* aCharsetOverride,
                         PRUint32 aFlags);
 
- 
   /*******************************************************************
    * The following methods are inherited from nsIContentSink.
    * Please see that file for details.
@@ -147,6 +147,13 @@ public:
 
 protected:
 
+    PRBool IsBlockLevel(eHTMLTags aTag);
+    PRInt32 BreakBeforeOpen(eHTMLTags aTag);
+    PRInt32 BreakAfterOpen(eHTMLTags aTag);
+    PRInt32 BreakBeforeClose(eHTMLTags aTag);
+    PRInt32 BreakAfterClose(eHTMLTags aTag);
+    PRBool IndentChildren(eHTMLTags aTag);
+
     void WriteAttributes(const nsIParserNode& aNode);
     void AddStartTag(const nsIParserNode& aNode);
     void AddEndTag(const nsIParserNode& aNode);
@@ -169,6 +176,8 @@ protected:
 protected:
     nsIOutputStream* mStream;
     nsAWritableString* mString;
+
+    nsIDTD*   mDTD;
 
     int       mTabLevel;
     char*     mBuffer;

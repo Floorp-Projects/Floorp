@@ -1475,7 +1475,6 @@ nsHTMLDocument::CreateEntityReference(const nsAReadableString& aName,
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
-
 NS_IMETHODIMP    
 nsHTMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 {
@@ -3163,53 +3162,6 @@ nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 }
 
 //----------------------------
-static PRBool IsInline(eHTMLTags aTag)
-{
-  PRBool  result = PR_FALSE;
-
-  switch (aTag)
-  {
-    case  eHTMLTag_a:
-    case  eHTMLTag_address:
-    case  eHTMLTag_big:
-    case  eHTMLTag_blink:
-    case  eHTMLTag_b:
-    case  eHTMLTag_br:
-    case  eHTMLTag_cite:
-    case  eHTMLTag_code:
-    case  eHTMLTag_dfn:
-    case  eHTMLTag_em:
-    case  eHTMLTag_font:
-    case  eHTMLTag_img:
-    case  eHTMLTag_i:
-    case  eHTMLTag_kbd:
-    case  eHTMLTag_keygen:
-    case  eHTMLTag_nobr:
-    case  eHTMLTag_samp:
-    case  eHTMLTag_small:
-    case  eHTMLTag_spacer:
-    case  eHTMLTag_span:      
-    case  eHTMLTag_strike:
-    case  eHTMLTag_strong:
-    case  eHTMLTag_sub:
-    case  eHTMLTag_sup:
-    case  eHTMLTag_textarea:
-    case  eHTMLTag_tt:
-    case  eHTMLTag_u:
-    case  eHTMLTag_var:
-    case  eHTMLTag_wbr:
-           
-      result = PR_TRUE;
-      break;
-
-    default:
-      break;
-
-  }
-  return result;
-}
-
-//----------------------------
 class SubText {
 public:
   nsIDOMNode * mContentNode;
@@ -3427,22 +3379,11 @@ PRBool nsHTMLDocument::SearchBlock(BlockText  & aBlockText,
   return found;
 }
 
-///////////////////////////////////////////////////////
-// Check to see if a Content node is a block tag.
-// We need to treat pre nodes as inline for selection
-// purposes even though they're really block nodes.
-///////////////////////////////////////////////////////
-PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode * aNode, PRBool aPreIsBlock) const
+////////////////////////////////////////////////////////////////
+// Methods to see if a Content node is a block or an inline tag.
+////////////////////////////////////////////////////////////////
+PRInt32 nsHTMLDocument::GetTagID(nsString& aName) const
 {
-  nsIDOMElement* domElement;
-  nsresult rv = aNode->QueryInterface(kIDOMElementIID,(void **)&domElement);
-  if (NS_FAILED(rv))
-    return PR_FALSE;
-
-  nsAutoString tagName;
-  domElement->GetTagName(tagName);
-  NS_RELEASE(domElement);
-
   if (!mParserService)
   {
     nsIParserService* parserService;
@@ -3457,12 +3398,35 @@ PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode * aNode, PRBool aPreIsBlock) const
   }
 
   PRInt32 id;
-  mParserService->HTMLStringTagToId(tagName, &id);
+  mParserService->HTMLStringTagToId(aName, &id);
+  return id;
+}
 
-  if (id == eHTMLTag_pre)
-    return aPreIsBlock;
+PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode* aNode) const
+{
+  if (!aNode)
+    return NS_ERROR_INVALID_ARG;
 
-  return !IsInline(nsHTMLTag(id));
+  // Get the id of the tag itself:
+  nsAutoString tagName;
+  aNode->GetNodeName(tagName);
+  PRInt32 ID = GetTagID(tagName);
+
+  // Get the parent
+  nsCOMPtr<nsIDOMNode> parentNode;
+  nsresult rv = aNode->GetParentNode(getter_AddRefs(parentNode));
+  if (NS_FAILED(rv)) return rv;
+
+  // and the parent's id
+  parentNode->GetNodeName(tagName);
+  PRInt32 parentID = GetTagID(tagName);
+
+  // Now we can get the inline status from the DTD:
+  nsCOMPtr<nsIDTD> dtd;
+  rv = GetDTD(getter_AddRefs(dtd));
+  if (NS_FAILED(rv) || !dtd)
+    return PR_FALSE;
+  return dtd->IsBlockElement(ID, parentID);
 }
 
 /////////////////////////////////////////////
@@ -4180,26 +4144,33 @@ nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
                               const nsIContent* aContent) const
 {
   // HTML document has to include body in the selection,
-  // so that output can see style nodes on the body.
-#if 0 //this was here to pass the wrap col around. this is NOT necessary any more
+  // so that output can see style nodes on the body
+  // in case the caller doesn't know to specify wrap column
+  // or preformatted or similar styles.
   nsIAtom* tag;
   nsresult rv = aContent->GetTag(tag);
   PRBool retval = (NS_SUCCEEDED(rv) && tag == nsHTMLAtoms::body);
-  NS_IF_RELEASE(tag);
   if (retval)
-    return retval;
-#endif
+  {
+    NS_IF_RELEASE(tag);
+    return PR_TRUE;
+  }
 
   // If it's a block node, return true if the node itself
   // is in the selection.  If it's inline, return true if
   // the node or any of its children is in the selection.
-  PRBool retval;
   nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent*)aContent));
-  if (NodeIsBlock(node, PR_FALSE))
-    aSelection->ContainsNode(node, PR_FALSE, &retval);
-  else
-    aSelection->ContainsNode(node, PR_TRUE, &retval);
+  PRBool nodeIsBlock = (tag != nsHTMLAtoms::pre
+                        && tag != nsHTMLAtoms::h1
+                        && tag != nsHTMLAtoms::h2
+                        && tag != nsHTMLAtoms::h3
+                        && tag != nsHTMLAtoms::h4
+                        && tag != nsHTMLAtoms::h5
+                        && tag != nsHTMLAtoms::h6
+                        && NodeIsBlock(node));
 
+  aSelection->ContainsNode(node, !nodeIsBlock, &retval);
+  NS_IF_RELEASE(tag);
   return retval;
 }
 

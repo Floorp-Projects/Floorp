@@ -46,6 +46,9 @@
 #include "nsHTMLTags.h"
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
+#include "nsHTMLTokens.h"  // for eHTMLTags
+
+class nsIDTD;
 
 #define NS_IHTMLTOTEXTSINKSTREAM_IID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
@@ -157,6 +160,7 @@ protected:
   PRBool DoOutput();
   PRBool MayWrap();
   
+  PRBool IsBlockLevel(eHTMLTags aTag);
 
 protected:
   nsIOutputStream* mStream; 
@@ -165,6 +169,8 @@ protected:
   // class are restricted to single function scope.
   nsAWritableString* mString;
   nsString         mCurrentLine;
+
+  nsIDTD*          mDTD;
 
   PRInt32          mIndent;
   // mInIndentString keeps a header that has to be written in the indent.

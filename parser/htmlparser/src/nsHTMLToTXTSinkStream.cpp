@@ -56,6 +56,8 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kLWBrkCID,                   NS_LWBRK_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 #define PREF_STRUCTS "converter.html2txt.structs"
 #define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
@@ -73,8 +75,6 @@ const  PRInt32 gIndentSizeList = (gTabSize > gOLNumberWidth+3) ? gTabSize: gOLNu
                                // Indention of non-first lines of ul and ol
 const  PRInt32 gIndentSizeDD = gTabSize;  // Indention of <dd>
 
-static PRBool IsInline(eHTMLTags aTag);
-static PRBool IsBlockLevel(eHTMLTags aTag);
 static PRInt32 HeaderLevel(eHTMLTags aTag);
 static PRInt32 unicharwidth(PRUnichar ucs);
 static PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n);
@@ -186,6 +186,7 @@ static const PRUint32 OLStackSize = 100;
 nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
 {
   NS_INIT_REFCNT();
+  mDTD = 0;
   mColPos = 0;
   mIndent = 0;
   mCiteQuoteLevel = 0;
@@ -236,6 +237,7 @@ nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
     delete[] mBuffer;
   delete[] mTagStack;
   delete[] mOLStack;
+  NS_IF_RELEASE(mDTD);
   NS_IF_RELEASE(mUnicodeEncoder);
   NS_IF_RELEASE(mLineBreaker);
 }
@@ -416,6 +418,7 @@ nsHTMLToTXTSinkStream::AddProcessingInstruction(const nsIParserNode& aNode){
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
+  // Should probably set DTD
   return NS_OK;
 }
 
@@ -1603,62 +1606,31 @@ nsHTMLToTXTSinkStream::NotifyError(const nsParserError* aError)
   return NS_OK;
 }
 
-PRBool IsInline(eHTMLTags aTag)
+PRBool nsHTMLToTXTSinkStream::IsBlockLevel(eHTMLTags aTag)
 {
-  PRBool  result = PR_FALSE;
-
-  switch (aTag)
+  if (!mDTD)
   {
-    case  eHTMLTag_a:
-    case  eHTMLTag_address:
-    case  eHTMLTag_b:
-    case  eHTMLTag_big:
-    case  eHTMLTag_blink:
-    case  eHTMLTag_br:
-    case  eHTMLTag_cite:
-    case  eHTMLTag_code:
-    case  eHTMLTag_dfn:
-    case  eHTMLTag_del:
-    case  eHTMLTag_em:
-    case  eHTMLTag_font:
-    case  eHTMLTag_i:
-    case  eHTMLTag_img:
-    case  eHTMLTag_ins:
-    case  eHTMLTag_kbd:
-    case  eHTMLTag_keygen:
-    case  eHTMLTag_nobr:
-    case  eHTMLTag_q:
-    case  eHTMLTag_samp:
-    case  eHTMLTag_small:
-    case  eHTMLTag_spacer:
-    case  eHTMLTag_span:      
-    case  eHTMLTag_strike:
-    case  eHTMLTag_strong:
-    case  eHTMLTag_sub:
-    case  eHTMLTag_sup:
-    case  eHTMLTag_td:
-    case  eHTMLTag_textarea:
-    case  eHTMLTag_th:
-    case  eHTMLTag_tt:
-    case  eHTMLTag_u:
-    case  eHTMLTag_var:
-    case  eHTMLTag_wbr:
-      result = PR_TRUE;
-      break;
+    nsCOMPtr<nsIParser> parser;
+    nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                                     nsnull, 
+                                                     kCParserIID, 
+                                                     (void **)&parser);
+    if (NS_FAILED(rv)) return rv;
+    if (!parser) return NS_ERROR_FAILURE;
 
-    default:
-      break;
-  }
-  return result;
-}
-
-PRBool IsBlockLevel(eHTMLTags aTag) 
-{
-  return !IsInline(aTag);
+    nsAutoString htmlmime (NS_LITERAL_STRING("text/html"));
+    rv = parser->CreateCompatibleDTD(&mDTD, 0, eViewNormal,
+                                     &htmlmime, eDTDMode_transitional);
   /* XXX Note: We output linebreaks for blocks.
      I.e. we output linebreaks for "unknown" inline tags.
      I just hunted such a bug for <q>, same for <ins>, <col> etc..
      Better fallback to inline. /BenB */
+    if (NS_FAILED(rv) || !mDTD)
+      return PR_FALSE;
+  }
+
+  // Now we can get the inline status from the DTD:
+  return mDTD->IsBlockElement(aTag, eHTMLTag_unknown);
 }
 
 /*
