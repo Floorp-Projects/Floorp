@@ -24,9 +24,12 @@
 #include "nsINetService.h"
 #include "nsRepository.h"
 #include "nsDocLoader.h"
-#include "JSConsole.h"
 #include "prprf.h"
 #include "plstr.h"
+
+#ifdef XP_PC
+#include "JSConsole.h"
+#endif
 
 #ifdef VIEWER_PLUGINS
 static nsIPluginManager *gPluginManager = nsnull;
