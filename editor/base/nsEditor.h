@@ -216,7 +216,7 @@ public:
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
   NS_IMETHOD GetDocumentCharacterSet(PRUnichar** characterSet);
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
-  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, nsIDiskDocument::ESaveFileType aSaveFileType);
+  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, const nsString& aFormat);
 
   // these are pure virtual in this base class
   NS_IMETHOD Cut() = 0;

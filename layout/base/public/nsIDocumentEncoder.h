@@ -65,11 +65,13 @@ public:
    * have access to the symbols, not just the constants.
    */
   enum {
-    // Output only the selection.
+    // Output only the selection (as opposed to the whole document).
     OutputSelectionOnly = 1,
 
-    // Convert html to plaintext that looks like the html.
+    // Plaintext output: Convert html to plaintext that looks like the html.
     // Implies wrap (except inside <pre>), since html wraps.
+    // HTML output: always do prettyprinting, ignoring existing formatting.
+    // (Probably not well tested for HTML output.)
     OutputFormatted     = 2,
 
     // Don't output the html doctype and gecko output system comment headers

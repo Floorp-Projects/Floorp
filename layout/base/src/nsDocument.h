@@ -366,11 +366,12 @@ public:
 
   // nsIDiskDocument inteface
   NS_IMETHOD  InitDiskDocument(nsFileSpec *aFileSpec);
-  NS_IMETHOD  SaveFile(     nsFileSpec*     aFileSpec,
-                            PRBool          aReplaceExisting,
-                            PRBool          aSaveCopy,
-                            ESaveFileType   aSaveFileType,
-                            const nsString& aSaveCharset);
+  NS_IMETHOD  SaveFile(nsFileSpec*     aFileSpec,
+                       PRBool          aReplaceExisting,
+                       PRBool          aSaveCopy,
+                       const nsString& aSaveFileType,
+                       const nsString& aSaveCharset,
+                       PRUint32        aFlags);
 
   NS_IMETHOD  GetFileSpec(nsFileSpec& aFileSpec);
   NS_IMETHOD  GetModCount(PRInt32 *outModCount);
@@ -411,35 +412,11 @@ public:
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
-  /**
-    * Methods to output the document contents as Text or HTML, outputting into
-    * the given output stream. If charset is not an empty string, the contents
-    * will be converted into the given charset.
-    *
-    * If the selection is passed in is not null, only the selected content
-    * will be output. Note that the selection is stored on a per-presentation
-    * shell basis, not per document, hence it is a parameter here.
-    * These should be exposed in an interface, but aren't yet.
-    */
-
-  virtual nsresult  OutputDocumentAsText(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset);
-  virtual nsresult  OutputDocumentAsHTML(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset);
-
 protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
-
-	// this enum is temporary; there should be no knowledge of HTML in
-	// nsDocument. That will be fixed when content sink stream factories
-	// are available.
-  enum EOutputFormat {
-    eOutputText,
-    eOutputHTML
-  };
-
-	virtual nsresult  OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selection, EOutputFormat aOutputFormat, const nsString& aCharset);
 
   nsresult GetPixelDimensions(nsIPresShell* aShell,
                               PRInt32* aWidth,

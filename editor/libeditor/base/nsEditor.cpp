@@ -71,6 +71,7 @@
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
+#include "nsIDocumentEncoder.h"
 #include "nsLayoutCID.h"
 
 // transactions the editor knows how to build
@@ -107,6 +108,7 @@
 static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
 static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCDOMRangeCID,         NS_RANGE_CID);
+static NS_DEFINE_CID(kPrefServiceCID,       NS_PREF_CID);
 
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
@@ -1434,41 +1436,52 @@ nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
   if (NS_SUCCEEDED(rv))
   {
     presShell->GetDocument(getter_AddRefs(doc));
-    if (doc ) {
-    return doc->SetDocumentCharacterSet(character_set);
-  }
+    if (doc) {
+      return doc->SetDocumentCharacterSet(character_set);
+    }
   }
 
   return rv;
 }
 
 NS_IMETHODIMP 
-nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, nsIDiskDocument::ESaveFileType aSaveFileType)
+nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting,
+                   PRBool aSaveCopy, const nsString& aFormat)
 {
   if (!aFileSpec)
     return NS_ERROR_NULL_POINTER;
   
   ForceCompositionEnd();
-  
 
   // get the document
   nsCOMPtr<nsIDOMDocument> doc;
-  nsresult res = GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(res)) return res;
+  nsresult rv = GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(rv)) return rv;
   if (!doc) return NS_ERROR_NULL_POINTER;
   
   nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(doc);
   if (!diskDoc)
     return NS_ERROR_NO_INTERFACE;
 
+  // Should we prettyprint?
+  PRUint32 flags = 0;
+  NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && prefService)
+  {
+    PRBool prettyprint = PR_FALSE;;
+    rv = prefService->GetBoolPref("editor.prettyprint", &prettyprint);
+    if (NS_SUCCEEDED(rv) && prettyprint)
+      flags |= nsIDocumentEncoder::OutputFormatted;
+  }
+
   nsAutoString useDocCharset;
 
-  res = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
-                          aSaveFileType, useDocCharset);
-  if (NS_SUCCEEDED(res))
+  rv = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
+                          aFormat, useDocCharset, flags);
+  if (NS_SUCCEEDED(rv))
     DoAfterDocumentSave();
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP 

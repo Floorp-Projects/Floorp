@@ -1510,7 +1510,9 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         // TODO: Get the file type (from the extension?) the user set for the file
         // How do we do this in an XP way??? 
         // For now, just save as HTML type
-        res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML);
+        nsString format;
+        format.AssignWithConversion("text/html");
+        res = editor->SaveFile(&docFileSpec, replacing, saveCopy, format);
         if (NS_FAILED(res))
         {
           nsAutoString saveDocStr, failedStr;

@@ -496,7 +496,7 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv) && prefService)
     {
-      PRInt32 doMiddleMousePaste = PR_FALSE;;
+      PRBool doMiddleMousePaste = PR_FALSE;;
       rv = prefService->GetBoolPref("middlemouse.paste", &doMiddleMousePaste);
       if (NS_SUCCEEDED(rv) && doMiddleMousePaste)
       {

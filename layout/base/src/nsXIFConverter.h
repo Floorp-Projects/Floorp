@@ -47,6 +47,10 @@ private:
   nsString mSelector;
   nsString mRule;
   nsString mSheet;
+
+  // We need to remember when we're inside a script,
+  // and not encode entities in that case:
+  PRBool mInScript;
    
   nsString mNULL;
   nsString mSpacing;

@@ -4811,10 +4811,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
 
     nsCRT::free(progid);
     if (NS_FAILED(rv))
-    {
-      printf("Couldn't get progid %s\n", progid);
       return rv;
-    }
 
     nsCOMPtr<nsIDOMDocument> domdoc;
     rv = GetDocument(getter_AddRefs(domdoc));

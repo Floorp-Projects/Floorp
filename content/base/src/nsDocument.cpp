@@ -56,11 +56,12 @@
 #include "nsICSSStyleSheet.h"
 
 #include "nsITextContent.h"
-#include "nsXIFConverter.h"
+#include "nsIDocumentEncoder.h"
+//#include "nsXIFConverter.h"
 #include "nsIHTMLContentSink.h"
-#include "nsHTMLContentSinkStream.h"
-#include "nsHTMLToTXTSinkStream.h"
-#include "nsXIFDTD.h"
+//#include "nsHTMLContentSinkStream.h"
+//#include "nsHTMLToTXTSinkStream.h"
+//#include "nsXIFDTD.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsFileSpec.h"
@@ -3070,9 +3071,13 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-
+#if 0
 nsresult
-nsDocument::OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selection, EOutputFormat aOutputFormat, const nsString& aCharset)
+nsDocument::OutputDocumentAs(nsIOutputStream* aStream,
+                             nsIDOMSelection* selection,
+                             EOutputFormat aOutputFormat,
+                             const nsString& aCharset,
+                             PRUint32 aFlags)
 {
   nsresult  rv = NS_OK;
   
@@ -3126,19 +3131,7 @@ nsDocument::OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selectio
   }
   return rv;
 }
-
-nsresult
-nsDocument::OutputDocumentAsHTML(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset)
-{
- return OutputDocumentAs(aStream, selection, eOutputHTML, aCharset);
-}
-
-nsresult
-nsDocument::OutputDocumentAsText(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset)
-{
- return OutputDocumentAs(aStream, selection, eOutputText, aCharset);
-}
-
+#endif
 
 NS_IMETHODIMP
 nsDocument::InitDiskDocument(nsFileSpec* aFileSpec)
@@ -3159,13 +3152,13 @@ nsDocument::InitDiskDocument(nsFileSpec* aFileSpec)
 
 
 NS_IMETHODIMP
-nsDocument::SaveFile(     nsFileSpec*     aFileSpec,
-                          PRBool          aReplaceExisting,
-                          PRBool          aSaveCopy,
-                          ESaveFileType   aSaveFileType,
-                          const nsString& aSaveCharset)
+nsDocument::SaveFile(nsFileSpec*     aFileSpec,
+                     PRBool          aReplaceExisting,
+                     PRBool          aSaveCopy,
+                     const nsString& aFormatType,
+                     const nsString& aSaveCharset,
+                     PRUint32        aFlags)
 {
-
   if (!aFileSpec)
     return NS_ERROR_NULL_POINTER;
     
@@ -3180,16 +3173,41 @@ nsDocument::SaveFile(     nsFileSpec*     aFileSpec,
   // if the stream didn't open, something went wrong
   if (!stream.is_open())
     return NS_BASE_STREAM_CLOSED;
-  
-  // convert to our internal enum. Shame we have to do this.
-  EOutputFormat  outputFormat = eOutputHTML;
-  switch (aSaveFileType)
+
+  // Get a document encoder instance:
+  nsCOMPtr<nsIDocumentEncoder> encoder;
+  char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE)
+                                            + aFormatType.Length() + 1);
+  if (! progid)
+    return NS_ERROR_OUT_OF_MEMORY;
+  strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
+  char* type = aFormatType.ToNewCString();
+  strcat(progid, type);
+  nsCRT::free(type);
+  rv = nsComponentManager::CreateInstance(progid,
+                                          nsnull,
+                                          NS_GET_IID(nsIDocumentEncoder),
+                                          getter_AddRefs(encoder));
+  nsCRT::free(progid);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = encoder->Init(this, aFormatType, aFlags);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsAutoString charsetStr = aSaveCharset;
+  if (charsetStr.Length() == 0)
   {
-    case eSaveFileText:    outputFormat = eOutputText;  break;
-    case eSaveFileHTML:    outputFormat = eOutputHTML;  break;
+	  rv = GetDocumentCharacterSet(charsetStr);
+	  if(NS_FAILED(rv)) {
+	     charsetStr.AssignWithConversion("ISO-8859-1"); 
+	  }
   }
-  
-  rv = OutputDocumentAs(stream.GetIStream(), nsnull, outputFormat, aSaveCharset);
+  encoder->SetCharset(aSaveCharset);
+
+  rv = encoder->EncodeToStream(stream.GetIStream());
+
   if (NS_SUCCEEDED(rv))
   {
     // if everything went OK and we're not just saving off a copy,
