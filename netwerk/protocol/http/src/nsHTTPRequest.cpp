@@ -22,8 +22,8 @@
 
 #include "nspr.h"
 #include "nsIURL.h"
-#include "nsHTTPRequest.h"
 #include "nsIHTTPProtocolHandler.h"
+#include "nsHTTPRequest.h"
 #include "nsHTTPAtoms.h"
 #include "nsHTTPEnums.h"
 #include "nsIPipe.h"
@@ -562,7 +562,7 @@ nsHTTPPipelinedRequest::WriteRequest ()
     if (mAttempts > 2)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsHTTPRequest> req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+    nsHTTPRequest * req = (nsHTTPRequest *) mRequests -> ElementAt (0);
 
     if (!mTransport)
     {
@@ -573,6 +573,8 @@ nsHTTPPipelinedRequest::WriteRequest ()
         if (NS_FAILED (rv))
             return rv;
     }
+    
+    NS_RELEASE (req);
 
     if (NS_FAILED (rv))
         return rv;
@@ -581,8 +583,9 @@ nsHTTPPipelinedRequest::WriteRequest ()
     {
         for (index = 0; index < count; index++)
         {
-            req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (index));
+            req = (nsHTTPRequest *) mRequests -> ElementAt (index);
             req -> formHeaders (mCapabilities);
+            NS_RELEASE (req);
         }
     }
 
@@ -590,10 +593,12 @@ nsHTTPPipelinedRequest::WriteRequest ()
 
     for (index = 0; index < count; index++)
     {
-        req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (index));
+        req = (nsHTTPRequest *) mRequests -> ElementAt (index);
         req -> formBuffer (&mRequestBuffer);
         if (index == 0)
             mTransport -> SetNotificationCallbacks (req -> mConnection);
+
+        NS_RELEASE (req);
     }
 
     //
@@ -624,9 +629,10 @@ nsHTTPPipelinedRequest::WriteRequest ()
     rv = mTransport->SetTransferCount(mRequestBuffer.Length());
     
     if (NS_FAILED(rv)) return rv;
-    req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+    req = (nsHTTPRequest *) mRequests -> ElementAt (0);
 
     rv = mTransport->AsyncWrite(stream, this, (nsISupports*)(nsIRequest*)req -> mConnection);
+    NS_RELEASE (req);
     return rv;
 }
 
@@ -650,7 +656,7 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
     nsresult rv;
     nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (mTransport, &rv);
     
-    nsCOMPtr<nsHTTPRequest> req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+    nsHTTPRequest * req = (nsHTTPRequest *) mRequests -> ElementAt (0);
     
     rv = iStatus;
 
@@ -725,7 +731,10 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
             rv = WriteRequest ();
             
             if (NS_SUCCEEDED (rv))
+            {
+                NS_IF_RELEASE (req);
                 return rv;
+            }
         }
 
         // Notify the HTTPChannel that the request has finished
@@ -878,20 +887,21 @@ nsresult
 nsHTTPPipelinedRequest::AdvanceToNextRequest ()
 {
     PRUint32 count = 0;
-    nsCOMPtr<nsHTTPRequest> req;
+    nsHTTPRequest *req;
 
     mRequests -> Count (&count);
 
     if (count == 0)
         return NS_ERROR_FAILURE;
 
-    req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+    req = (nsHTTPRequest *) mRequests -> ElementAt (0);
     if (req)
     {
         mTransport -> SetNotificationCallbacks (nsnull);
         req -> mPipelinedRequest = nsnull;
 
         mRequests -> RemoveElement  (req);
+        NS_RELEASE (req);
     }
 
     mRequests -> Count (&count);
@@ -899,10 +909,13 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest ()
     if (count == 0)
         return NS_ERROR_FAILURE;
 
-    req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+    req = (nsHTTPRequest *) mRequests -> ElementAt (0);
 
     if (req)
+    {
         mTransport -> SetNotificationCallbacks (req -> mConnection);
+        NS_RELEASE (req);
+    }
 
     return NS_OK;
 }

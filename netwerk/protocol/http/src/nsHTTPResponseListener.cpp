@@ -481,8 +481,8 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
     mChannel  = nsnull;
     mResponseDataListener = null_nsCOMPtr ();
 
-    nsCOMPtr<nsHTTPRequest> req;
-    mPipelinedRequest -> GetCurrentRequest (getter_AddRefs (req));
+    nsHTTPRequest * req;
+    mPipelinedRequest -> GetCurrentRequest (&req);
     
     if (req)
     {
@@ -492,6 +492,7 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
             mChannel -> mHTTPServerListener = this;
             NS_ADDREF (mChannel);
         }
+        NS_RELEASE (req);
     }
 
     return NS_OK;
