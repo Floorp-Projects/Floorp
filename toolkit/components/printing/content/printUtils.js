@@ -198,7 +198,7 @@ var PrintUtils = {
 
     // show the toolbar after we go into print preview mode so
     // that we can initialize the toolbar with total num pages
-    var printPreviewTB = document.createElementNS(XUL_NS, "toolbar");
+    printPreviewTB = document.createElementNS(XUL_NS, "toolbar");
     printPreviewTB.setAttribute("printpreview", true);
     printPreviewTB.setAttribute("id", "print-preview-toolbar");
     getBrowser().parentNode.insertBefore(printPreviewTB, getBrowser());
