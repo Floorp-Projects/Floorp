@@ -516,7 +516,7 @@ do_const_dcl(TreeState *state)
 {
     struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
     const char *name = IDL_IDENT(dcl->ident).str;
-    gboolean success;
+    gboolean success, is_signed, is_long;
 
     /* const -> list -> interface */
     if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
@@ -532,16 +532,25 @@ do_const_dcl(TreeState *state)
     if(success) {
         switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
         case IDL_INTEGER_TYPE_SHORT:
+            is_long = FALSE;
+            break;
         case IDL_INTEGER_TYPE_LONG:
+            is_long = TRUE;
             break;
         default:
             success = FALSE;
         }
+        is_signed = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
     }
 
     if(success) {
-        fprintf(state->file, "\n  enum { %s = %d };\n",
-                             name, (int) IDL_INTEGER(dcl->const_exp).value);
+        const char *const_format =
+            is_long ? (is_signed ? "%ld" : "%lu")
+                    : (is_signed ? "%d" : "%u");
+        fprintf(state->file, "\n  enum { %s = ", name);
+        fprintf(state->file, const_format,
+                (int)IDL_INTEGER(dcl->const_exp).value);
+        fprintf(state->file, " };\n");
     } else {
         IDL_tree_error(state->tree,
                        "const declaration \'%s\' must be of type short or long",
