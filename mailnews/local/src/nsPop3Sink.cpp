@@ -464,10 +464,9 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
     if (m_newMailParser)
       m_newMailParser->PublishMsgHeader(msgWindow);
 
-	// do not take out this printf as it is used by QA 
-    // as part of the smoketest process!. They depend on seeing
-	// this string printed out to the screen.
+#ifdef DEBUG
 	printf("Incorporate message complete.\n");
+#endif
     return NS_OK;
 }
 
@@ -523,8 +522,7 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
 		m_folder->SetNumNewMessages(numNewMessages);
 	}
 
-	// do not take out these printfs!!! They are used by QA 
-	// as part of the smoketest process.
+#ifdef DEBUG
     switch (aBiffState)
     {
     case nsIMsgFolder::nsMsgBiffState_Unknown:
@@ -538,6 +536,7 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
         printf("You have no mail.\n");
         break;
     }
+#endif 
     return NS_OK;
 }
 
