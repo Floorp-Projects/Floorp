@@ -33,6 +33,9 @@ short		gCurrWin = 0;
 InstWiz		*gControls = NULL;
 InstINIRes  *gStrings = NULL;
 Boolean     gInstallStarted = false;
+ErrTableEnt *gErrTable = NULL;
+short gErrTableSize = 0;
+
 
 
 /*-----------------------------------------------------------*
@@ -69,7 +72,7 @@ VerifyEnv(void)
 	if (err != noErr)
 	{
 		// errors already!  we are bailing
-		ErrorHandler(err);
+        ErrorHandler(err, nil);
 		bEnvOK = false;
 	}
 	
@@ -156,7 +159,7 @@ InitOptObject(void)
 
 	if (!gControls->opt)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return;
 	}
 	
@@ -165,7 +168,7 @@ InitOptObject(void)
 	gControls->opt->folder = (unsigned char *)NewPtrClear(64*sizeof(unsigned char));
 	if (!gControls->opt->folder)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return;
 	}
 	
@@ -186,7 +189,7 @@ InitControlsObject(void)
 	gControls 		= (InstWiz *) 		NewPtrClear(sizeof(InstWiz));
 	if (!gControls)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return;
 	}
 	
@@ -200,7 +203,7 @@ InitControlsObject(void)
 	if (!gControls->lw || !gControls->ww || !gControls->stw || 
 		!gControls->cw || !gControls->tw)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 	}
 	
 	gControls->state = eInstallNotStarted;
@@ -358,7 +361,7 @@ void MakeMenus(void)
 	
 	if ( !(mbarHdl = GetNewMBar( rMBar)) )
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return;
 	}
 	
@@ -369,7 +372,7 @@ void MakeMenus(void)
 		AppendResMenu(menuHdl, 'DRVR');
 	}
 	else
-		ErrorHandler(eMenuHdl); 
+        ErrorHandler(eMenuHdl, nil); 
 
 	ERR_CHECK(HMGetHelpMenuHandle(&menuHdl));
 	DisableItem(menuHdl, 1);
@@ -432,13 +435,13 @@ void  MainEventLoopPass()
 	}
 }
  
-void ErrorHandler(short errCode)
+void ErrorHandler(short errCode, Str255 msg)
 {
 // TO DO
 //		* handle a "fatality" parameter for recovery
 
     Str255      pErrorStr;
-    Str255      pMessage;
+    Str255      pMessage, errMsg;
     char        *cErrNo = 0;
     StringPtr   pErrNo = 0;
     AlertStdAlertParamRec *alertdlg;
@@ -477,7 +480,14 @@ void ErrorHandler(short errCode)
     else
     {
         GetResourcedString(pMessage, rErrorList, eErr3);
-        pstrcat(pMessage, pErrNo);
+        if ( LookupErrorMsg( errCode, errMsg ) == true )
+          pstrcat(pMessage, errMsg);
+        else 
+          pstrcat(pMessage, pErrNo);
+        if ( msg[0] != 0 ) {
+          pstrcat(pMessage, "\p : ");
+          pstrcat(pMessage, msg);
+        }
     }  
         
     alertdlg = (AlertStdAlertParamRec *)NewPtrClear(sizeof(AlertStdAlertParamRec));
@@ -485,7 +495,7 @@ void ErrorHandler(short errCode)
     alertdlg->defaultText = (ConstStringPtr)NewPtrClear(kKeyMaxLen);
     GetResourcedString((unsigned char *)alertdlg->defaultText, rInstList, sOKBtn);
     StandardAlert(kAlertStopAlert, pMessage, nil, alertdlg, 0);
-	SysBeep(10);
+	  SysBeep(10);
 	
     if (cErrNo)
         free(cErrNo);
@@ -493,6 +503,23 @@ void ErrorHandler(short errCode)
         DisposePtr((Ptr) pErrNo); 
         
 	gDone = true;
+}
+
+Boolean
+LookupErrorMsg( short code, Str255 msg )
+{
+    int i;
+    Boolean retval = false;
+    msg[0] = 1; msg[1] = ' ';
+    
+    for ( i = 0; i < gErrTableSize; i++ ) {
+      if ( gErrTable[i].num == code ) {
+          pstrcat( msg, gErrTable[i].msg );
+          retval = true;
+          break;
+        }   
+    }
+    return( retval );
 }
 
 void Shutdown(void)

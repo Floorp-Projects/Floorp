@@ -66,7 +66,7 @@ ShowLicenseWin(void)
 	}
 	else
 	{
-		ErrorHandler(eParam);
+		ErrorHandler(eParam, nil);
 		return;
 	}
 	InitLicTxt();
@@ -120,7 +120,7 @@ InitLicTxt(void)
 	{
 		if (!(text = NewHandle(dataSize)))
 		{
-			ErrorHandler(eMem);
+			ErrorHandler(eMem, nil);
 			return;
 		}
 		ERR_CHECK(FSRead(dataRef, &dataSize, *text));
@@ -226,7 +226,7 @@ ShowLogo(Boolean bEraseRect)
     ControlHandle imgWellH = GetNewControl(rLogoImgWell, gWPtr);
     if (!imgWellH)
     {
-        ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
         return;
 	}
 
@@ -265,7 +265,7 @@ ShowLogo(Boolean bEraseRect)
 	}
 	
 	if (reserr != noErr)
-		ErrorHandler(reserr);
+		ErrorHandler(reserr, nil);
 }
 
 void
@@ -389,7 +389,7 @@ InitScrollBar(ControlHandle sb)
 			currTE = gControls->lw->licTxt;
 			break;
 		default:
-			ErrorHandler(eUnknownDlgID);
+			ErrorHandler(eUnknownDlgID, nil);
 			break;
 	}
 	
@@ -417,7 +417,7 @@ DoScrollProc(ControlHandle theControl, short part)
 				te = *(gControls->lw->licTxt);
 				break;
 			default:
-				ErrorHandler(eUnknownDlgID);
+				ErrorHandler(eUnknownDlgID, nil);
 				break;
 		}
 		

@@ -37,13 +37,13 @@ ParseConfig(void)
 
 	if(!gControls->cfg)
 	{
-	    ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return;
 	}
 	
 	if (!ReadINIFile(sConfigFName, &cfgText))
 	{
-	    ErrorHandler(eCfgRead);
+        ErrorHandler(eCfgRead, nil);
 	    return;
 	}
 	
@@ -72,17 +72,19 @@ ParseInstall(void)
 
     if(!gStrings)
     {
-        ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
     	return;
     }
     
     if (!ReadINIFile(sInstallFName, &instText))
     {
-        ErrorHandler(eInstRead);
+        ErrorHandler(eInstRead, nil);
         return;
     }
     
     ERR_CHECK(PopulateInstallKeys(instText));
+    
+    ERR_CHECK(ReadSystemErrors(instText));
     
     if (instText)
         DisposePtr(instText);
@@ -123,7 +125,7 @@ ReadINIFile(int sINIFName, char **text)
 		*text = (char*) NewPtrClear(dataSize + 1);		// ensure null termination
 		if (!(*text))
 		{
-			ErrorHandler(eMem);
+            ErrorHandler(eMem, nil);
 			return false;
 		}
 			
@@ -150,7 +152,7 @@ PopulateInstallKeys(char *instText)
     tmp = NewHandleClear(kValueMaxLen);
     if (!tmp)
     {
-   	    ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
        	return eParseFailed;
     }
 
@@ -176,6 +178,71 @@ PopulateInstallKeys(char *instText)
     return err;
 }
 
+#define kSystemErrors "System Errors"
+
+OSErr
+ReadSystemErrors(const char *cfg)
+{
+  char  *sectionName, *section, *key, *cfgPtr[1], *sectionPtr[1];
+  char      *value, *outValue;
+  extern short gErrTableSize;
+  unsigned char *pStr255;
+  extern ErrTableEnt *gErrTable;  
+  OSErr ret = noErr;  
+
+  *cfgPtr = (char*) cfg;
+    
+  value = (char*) calloc(kValueMaxLen, sizeof( char ) );
+  outValue = (char*) calloc(kValueMaxLen, sizeof( char ) );
+  sectionName =     (char *) calloc( kSNameMaxLen, sizeof( char ) );
+  section =         (char *) calloc( kSectionMaxLen, sizeof( char ) ); 
+  key =             (char *) calloc( kKeyMaxLen, sizeof( char ) );
+  if (!sectionName || !section || !key || !value || !outValue)
+  {
+    ErrorHandler(eMem, nil);
+    ret = eParseFailed;
+  } 
+  else {
+    
+    /* find next section   [cfgPtr moved past next section per iteration] */
+    
+    while(GetNextSection(cfgPtr, sectionName, section))
+    { 
+      if (strncmp(sectionName, kSystemErrors, strlen(kSystemErrors)) == 0)    
+      {
+        *sectionPtr = section;
+            
+      /* find next key   [sectionPtr moved past next key per iteration] */
+        while(GetNextKeyVal(sectionPtr, key, outValue))
+        {             
+          gErrTable = (ErrTableEnt *) realloc( gErrTable, (gErrTableSize + 1) * sizeof( ErrTableEnt ) );
+          if ( gErrTable != NULL ) {
+            gErrTable[gErrTableSize].num = atoi(key);
+            pStr255 = CToPascal(outValue);
+            if ( pStr255 ) {
+              BlockMoveData(&pStr255[0], &gErrTable[gErrTableSize++].msg[0], pStr255[0] + 1);
+              DisposePtr((char *) pStr255);
+            }
+          }                      
+        }
+      }
+    }
+  }
+  
+  if(key) 
+    free(key);
+  if(sectionName) 
+    free(sectionName);
+  if(section) 
+    free(section);
+  if(value) 
+    free(value);
+  if(outValue) 
+    free(outValue);
+    
+  return ret; 
+}
+
 OSErr
 PopulateGeneralKeys(char *cfgText)
 {
@@ -188,7 +255,7 @@ PopulateGeneralKeys(char *cfgText)
     gControls->cfg->targetSubfolder = NewHandleClear(kValueMaxLen);
     if (!gControls->cfg->targetSubfolder)
     {
-        ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
         return eParseFailed;
     }
     
@@ -206,7 +273,7 @@ PopulateGeneralKeys(char *cfgText)
         gControls->cfg->globalURL[i] = NewHandleClear(kValueMaxLen);
         if (!gControls->cfg->globalURL[i])
         {
-            ErrorHandler(eMem);
+            ErrorHandler(eMem, nil);
             return eParseFailed;
         }
 
@@ -230,7 +297,7 @@ PopulateLicWinKeys(char *cfgText)
 	gControls->cfg->licFileName = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->licFileName)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return eParseFailed;
 	}
 	
@@ -249,20 +316,20 @@ PopulateWelcWinKeys(char *cfgText)
 	gControls->cfg->welcMsg[0] = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->welcMsg[0])
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return eParseFailed;
 	}
 		
 	if (!FillKeyValueUsingResID(sWelcDlg, sMsg0, gControls->cfg->welcMsg[0], cfgText))
 	{
-		ErrorHandler(eParseFailed);
+        ErrorHandler(eParseFailed, nil);
 		return eParseFailed;
 	}
 		
 	gControls->cfg->welcMsg[1] = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->welcMsg[1])
 	{
-		ErrorHandler(eParseFailed);
+        ErrorHandler(eParseFailed, nil);
 		return eParseFailed;
 	}	
 
@@ -271,7 +338,7 @@ PopulateWelcWinKeys(char *cfgText)
 	gControls->cfg->welcMsg[2] = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->welcMsg[2])
 	{
-		ErrorHandler(eParseFailed);
+        ErrorHandler(eParseFailed, nil);
 		return eParseFailed;
 	}
 
@@ -287,7 +354,7 @@ PopulateWelcWinKeys(char *cfgText)
 	gControls->cfg->readmeFile = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->readmeFile)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return eParseFailed;
 	}
 	if (FillKeyValueUsingResID(sWelcDlg, sReadmeFilename, gControls->cfg->readmeFile, cfgText))
@@ -300,13 +367,13 @@ PopulateWelcWinKeys(char *cfgText)
 		gControls->cfg->readmeApp = NewHandleClear(kValueMaxLen);
 		if (!gControls->cfg->readmeApp)
 		{
-			ErrorHandler(eMem);
+            ErrorHandler(eMem, nil);
 			return eParseFailed;
 		}
 		
 		if (!FillKeyValueUsingResID(sWelcDlg, sReadmeApp, gControls->cfg->readmeApp, cfgText))
 		{
-			ErrorHandler(eMem);
+            ErrorHandler(eMem, nil);
 			return eParseFailed;
 		}
 	}
@@ -1062,7 +1129,7 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 	value = (char*) NewPtrClear(kValueMaxLen);
 	if (!value)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return false;
 	}
 			
@@ -1075,7 +1142,7 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 		err = MemError();
 		if (err != noErr)
 		{
-			ErrorHandler(err);
+            ErrorHandler(err, nil);
 			return false;
 		}
 		
@@ -1103,7 +1170,7 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 	key = 			(char *) NewPtrClear( kKeyMaxLen );
 	if (!sectionName || !section || !key)
 	{
-		ErrorHandler(eMem);
+        ErrorHandler(eMem, nil);
 		return false;
 	}	
     
@@ -1139,6 +1206,7 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 	
 	return false; 
 }
+
 
 Boolean
 GetNextSection(char **ioTxt, char *outSectionName, char *outSection)
@@ -1311,7 +1379,6 @@ GetNextKeyVal(char **inSection, char *outKey, char *outVal)
  */
 unsigned char *CToPascal(char *str)
 {
-	register char *p,*q;
 	long len;
 	char* cpy;
 
@@ -1319,12 +1386,11 @@ unsigned char *CToPascal(char *str)
 	cpy = (char*)NewPtrClear(len+1);
 	if (!cpy)
 		return 0;
-	strncpy(cpy, str, len);
-	if (len > 255) len = 255;
-	p = cpy + len;
-	q = p-1;
-	while (p != cpy) *p-- = *q--;
-	*cpy = len;
+    strncpy(&cpy[1], str, len);
+    if (len > 255) 
+        cpy[0] = 255;
+    else
+        cpy[0] = len;
 	return((unsigned char *)cpy);
 }
 

@@ -39,7 +39,7 @@ OSErr		LoadXPIStub(XPI_InitProc* pfnInit,
 						XPI_InstallProc* pfnInstall, 
 						XPI_ExitProc* pfnExit, 
 						CFragConnectionID* connID,
-						FSSpec& aTargetDir);
+						FSSpec& aTargetDir, Str255 msg);
 Boolean		UnloadXPIStub(CFragConnectionID* connID);
 OSErr		RunXPI(FSSpec&, XPI_InstallProc*);
 int			CountSelectedXPIs();
@@ -54,7 +54,7 @@ void	 	xpicbProgress(const char* msg, PRInt32 val, PRInt32 max);
 rv = _call;						\
 if (NS_FAILED(rv))				\
 {								\
-	ErrorHandler(rv);			\
+	ErrorHandler(rv, nil);			\
 	return rv;					\
 }
 
@@ -223,7 +223,7 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	StringPtr			pcurrArchive;
 	int					i, len, compsDone = 0, numXPIs, currXPICount = 0, instChoice = gControls->opt->instChoice-1;
 	Boolean				isCurrXPI = false, indeterminateFlag = false;
-	Str255				installingStr;
+	Str255				installingStr, msg;
 	StringPtr           pTargetSubfolder = "\p"; /* subfolder is optional so init empty */
 	long                dummyDirID = 0;
 	
@@ -242,11 +242,11 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	    
 	if (err != noErr)
     {
-        ErrorHandler(err);
+        ErrorHandler(err, nil);
         return err;
     }
 
-	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
+	ERR_CHECK_MSG(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec, msg), err, msg);
 	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, NULL, xpicbProgress ));
 	    
 	// init overall xpi indicator
@@ -388,13 +388,12 @@ CountSelectedXPIs()
  *-------------------------------------------------------------------*/
 OSErr
 LoadXPIStub(XPI_InitProc* pfnInit, XPI_InstallProc* pfnInstall, XPI_ExitProc* pfnExit, 
-			CFragConnectionID* connID, FSSpec& aTargetDir)
+			CFragConnectionID* connID, FSSpec& aTargetDir, Str255 errName)
 {
 	OSErr				err;
 	FSSpec				fslib;
 	Str63 				fragName = XPISTUB_DLL;
 	Ptr					mainAddr, symAddr;
-	Str255				errName;	
 	CFragSymbolClass	symClass;
 	long				tgtDirID;
 	Boolean 			isDir;
