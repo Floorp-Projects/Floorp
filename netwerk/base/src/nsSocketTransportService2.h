@@ -177,6 +177,8 @@ private:
         struct SocketEvent    *mNext;
     };
 
+    struct SocketEventQ;
+    friend struct SocketEventQ;
     struct SocketEventQ
     {
         SocketEventQ() : mHead(nsnull), mTail(nsnull) {}
