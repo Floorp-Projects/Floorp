@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsHTMLFrame.h"
+#include "nsHTMLBase.h"
 #include "nsFrame.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -24,7 +24,7 @@
 #include "nsIViewManager.h"
 
 nsresult
-nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
+nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
                                 nsIFrame*        aFrame,
                                 nsIStyleContext* aStyleContext,
                                 PRBool           aForce)
@@ -55,7 +55,7 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
         // If the opacities are different then I need a view
         if (myColor->mOpacity != parentColor->mOpacity) {
           NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-            ("nsHTMLFrame::CreateViewForFrame: frame=%p opacity=%g parentOpacity=%g",
+            ("nsHTMLBase::CreateViewForFrame: frame=%p opacity=%g parentOpacity=%g",
              aFrame, myColor->mOpacity, parentColor->mOpacity));
           aForce = PR_TRUE;
         }
@@ -69,7 +69,7 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
         aStyleContext->GetStyleData(eStyleStruct_Position);
       if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-          ("nsHTMLFrame::CreateViewForFrame: frame=%p relatively positioned",
+          ("nsHTMLBase::CreateViewForFrame: frame=%p relatively positioned",
            aFrame));
         aForce = PR_TRUE;
       }
@@ -116,7 +116,7 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
       NS_RELEASE(parView);
 
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-        ("nsHTMLFrame::CreateViewForFrame: frame=%p view=%p",
+        ("nsHTMLBase::CreateViewForFrame: frame=%p view=%p",
          aFrame));
       return result;
     }

@@ -40,6 +40,8 @@
 
 #include "nsRepository.h"
 
+extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
+                                 nsIAtom* aTag);  // XXX move
 // XXX attribute values have entities in them - use the parsers expander!
 
 // XXX Go through a factory for this one
@@ -173,6 +175,8 @@ protected:
   nsresult ProcessCloseOPTIONTag(const nsIParserNode& aNode);
   nsresult ProcessOPTIONTagContent(const nsIParserNode& aNode);
 
+  nsresult ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
+                            const nsIParserNode& aNode);
   //----------------------------------------------------------------------
 
   void GetAttributeValueAt(const nsIParserNode& aNode,
@@ -555,6 +559,10 @@ PRInt32 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
     case eHTMLTag_option:
       rv = ProcessOpenOPTIONTag(&container, aNode);
+      break;
+
+    case eHTMLTag_iframe:
+      rv = ProcessIFRAMETag(&container, aNode);
       break;
 
     default:
@@ -1304,6 +1312,20 @@ HTMLContentSink::ProcessOPTIONTagContent(const nsIParserNode& aNode)
     }
   }
   return NS_OK;
+}
+
+nsresult
+HTMLContentSink::ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
+                                      const nsIParserNode& aNode)
+{
+  nsAutoString tmp(aNode.GetText());
+  tmp.ToUpperCase();
+  nsIAtom* atom = NS_NewAtom(tmp);
+
+  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom);
+
+  NS_RELEASE(atom);
+  return rv;
 }
 
 nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,

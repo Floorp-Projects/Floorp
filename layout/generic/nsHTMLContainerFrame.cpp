@@ -36,7 +36,7 @@
 #include "nsIContentDelegate.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLFrame.h"
+#include "nsHTMLBase.h"
 #include "nsScrollFrame.h"
 #include "nsIView.h"
 #include "nsIReflowCommand.h"
@@ -256,7 +256,7 @@ nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
   }
   if (NS_OK == rv) {
     // Wrap the frame in a view if necessary
-    rv = nsHTMLFrame::CreateViewForFrame(aPresContext, frame, aStyleContext,
+    rv = nsHTMLBase::CreateViewForFrame(aPresContext, frame, aStyleContext,
                                          PR_FALSE);
   }
   aResult = frame;

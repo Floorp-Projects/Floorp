@@ -37,7 +37,7 @@
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
 #include "nsCSSLayout.h"
-#include "nsHTMLFrame.h"
+#include "nsHTMLBase.h"
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
 
@@ -372,7 +372,7 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
                            nsReflowMetrics& aDesiredSize)
 {
-  nsHTMLFrame::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
+  nsHTMLBase::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
 
   // Setup url before starting the image load
   nsAutoString src;

@@ -29,11 +29,11 @@ CPPSRCS =				\
 	nsGlobalVariables.cpp		\
 	nsHRPart.cpp			\
 	nsHTMLAtoms.cpp			\
+	nsHTMLBase.cpp			\
 	nsHTMLBullet.cpp		\
 	nsHTMLContainer.cpp		\
 	nsHTMLContainerFrame.cpp	\
 	nsHTMLContent.cpp		\
-	nsHTMLFrame.cpp			\
 	nsHTMLHead.cpp			\
 	nsHTMLIIDs.cpp			\
 	nsHTMLImage.cpp			\

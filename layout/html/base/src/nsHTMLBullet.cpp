@@ -29,7 +29,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLImage.h"
 #include "prprf.h"
-#include "nsHTMLFrame.h"
+#include "nsHTMLBase.h"
 #include "nsIView.h"
 
 class Bullet : public nsHTMLTagContent {
@@ -526,7 +526,7 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     mImageLoader.SetURL(myList->mListStyleImage);
     mImageLoader.GetDesiredSize(aCX, aReflowState, aDesiredSize);
     if (!mImageLoader.GetLoadImageFailed()) {
-      nsHTMLFrame::CreateViewForFrame(aCX, this, mStyleContext, PR_FALSE);
+      nsHTMLBase::CreateViewForFrame(aCX, this, mStyleContext, PR_FALSE);
       aDesiredSize.ascent = aDesiredSize.height;
       aDesiredSize.descent = 0;
       return;
