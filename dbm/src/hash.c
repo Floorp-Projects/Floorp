@@ -144,7 +144,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 
 	if ((flags & O_ACCMODE) == O_WRONLY) {
 		errno = EINVAL;
-		RETURN_ERROR(ENOMEM, error0);
+		return NULL;
 	}
 
 	/* zero the statbuffer so that
@@ -153,8 +153,10 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 	 */
 	memset(&statbuf, 0, sizeof(struct stat));
 
-	if (!(hashp = (HTAB *)calloc(1, sizeof(HTAB))))
-		RETURN_ERROR(ENOMEM, error0);
+	if (!(hashp = (HTAB *)calloc(1, sizeof(HTAB)))) {
+		errno = ENOMEM;
+		return NULL;
+	}
 	hashp->fp = NO_FILE;
 	if(file)
 		hashp->filename = strdup(file);
@@ -184,29 +186,13 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 	hashp->file_size = statbuf.st_size;
 
 	if (file) {				 
-
 #if defined(_WIN32) || defined(_WINDOWS) || defined (macintosh)  || defined(XP_OS2)
 		if ((hashp->fp = DBFILE_OPEN(file, flags | O_BINARY, mode)) == -1)
-			RETURN_ERROR(errno, error0);
+			RETURN_ERROR(errno, error1);
 #else
- 	if ((hashp->fp = open(file, flags, mode)) == -1)
-		RETURN_ERROR(errno, error0);
-	(void)fcntl(hashp->fp, F_SETFD, 1);
-/* We can't use fcntl because of NFS bugs. SIGH */
-#if 0
-    {
-	struct flock fl;
-	memset(&fl, 0, sizeof(fl));
-	fl.l_type = F_WRLCK;
-	if (fcntl(hashp->fp, F_SETLK, &fl) < 0) {
-#ifdef DEBUG
-	    fprintf(stderr, "unable to open %s because it's locked (flags=0x%x)\n", file, flags);
-#endif
-	    RETURN_ERROR(EACCES, error1);
-	}
-    }
-#endif
-
+		if ((hashp->fp = open(file, flags, mode)) == -1)
+			RETURN_ERROR(errno, error1);
+		(void)fcntl(hashp->fp, F_SETFD, 1);
 #endif
 	}
 	if (new_table) {
@@ -220,13 +206,13 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 			hashp->hash = __default_hash;
 
 		hdrsize = read(hashp->fp, (char *)&hashp->hdr, sizeof(HASHHDR));
-#if BYTE_ORDER == LITTLE_ENDIAN
-		swap_header(hashp);
-#endif
 		if (hdrsize == -1)
 			RETURN_ERROR(errno, error1);
 		if (hdrsize != sizeof(HASHHDR))
 			RETURN_ERROR(EFTYPE, error1);
+#if BYTE_ORDER == LITTLE_ENDIAN
+		swap_header(hashp);
+#endif
 		/* Verify file type, versions and hash function */
 		if (hashp->MAGIC != HASHMAGIC)
 			RETURN_ERROR(EFTYPE, error1);
@@ -236,28 +222,8 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 			RETURN_ERROR(EFTYPE, error1);
 		if (hashp->hash(CHARKEY, sizeof(CHARKEY)) != hashp->H_CHARKEY)
 			RETURN_ERROR(EFTYPE, error1);
-		if (hashp->NKEYS < 0) {
-		    /*
-		    ** OOPS. Old bad database from previously busted
-		    ** code. Blow it away.
-		    */
-		    close(hashp->fp);
-		    if (remove(file) < 0) {
-#if defined(DEBUG) && defined(XP_UNIX)
-			fprintf(stderr,
-				"WARNING: You have an old bad cache.db file"
-				" '%s', and I couldn't remove it!\n", file);
-#endif
-		    } else {
-#if defined(DEBUG) && defined(XP_UNIX)
-			fprintf(stderr,
-				"WARNING: I blew away your %s file because"
-				" it was bad due to a recently fixed bug\n",
-				file);
-#endif
-		    }
-		    RETURN_ERROR(ENOENT, error0);
-		}
+		if (hashp->NKEYS < 0) /* Old bad database. */
+			RETURN_ERROR(EFTYPE, error1);
 
 		/*
 		 * Figure out how many segments we need.  Max_Bucket is the
@@ -268,11 +234,8 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 			 hashp->SGSIZE;
 		hashp->nsegs = 0;
 		if (alloc_segs(hashp, nsegs))
-			/*
-			 * If alloc_segs fails, table will have been destroyed
-			 * and errno will have been set.
-			 */
-			RETURN_ERROR(ENOMEM, error0);
+			/* If alloc_segs fails, errno will have been set.  */
+			RETURN_ERROR(errno, error1);
 		/* Read in bitmaps */
 		bpages = (hashp->SPARES[hashp->OVFL_POINT] +
 		    (hashp->BSIZE << BYTE_SHIFT) - 1) >>
@@ -296,10 +259,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 #endif
 	hashp->cbucket = -1;
 	if (!(dbp = (DB *)malloc(sizeof(DB)))) {
-		save_errno = errno;
-		hdestroy(hashp);
-		errno = save_errno;
-		RETURN_ERROR(ENOMEM, error0);
+		RETURN_ERROR(ENOMEM, error1);
 	}
 	dbp->internal = hashp;
 	dbp->close = hash_close;
@@ -311,43 +271,13 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 	dbp->sync = hash_sync;
 	dbp->type = DB_HASH;
 
-#if 0
-#if defined(DEBUG) && !defined(_WINDOWS)
-{
-extern int MKLib_trace_flag;
-
-  if(MKLib_trace_flag)
-	(void)fprintf(stderr,
-"%s\n%s%lx\n%s%d\n%s%d\n%s%d\n%s%d\n%s%d\n%s%d\n%s%d\n%s%d\n%s%d\n%s%x\n%s%x\n%s%d\n%s%d\n",
-	    "init_htab:",
-	    "TABLE POINTER   ", (unsigned long) hashp,
-	    "BUCKET SIZE     ", hashp->BSIZE,
-	    "BUCKET SHIFT    ", hashp->BSHIFT,
-	    "DIRECTORY SIZE  ", hashp->DSIZE,
-	    "SEGMENT SIZE    ", hashp->SGSIZE,
-	    "SEGMENT SHIFT   ", hashp->SSHIFT,
-	    "FILL FACTOR     ", hashp->FFACTOR,
-	    "MAX BUCKET      ", hashp->MAX_BUCKET,
-	    "OVFL POINT	     ", hashp->OVFL_POINT,
-	    "LAST FREED      ", hashp->LAST_FREED,
-	    "HIGH MASK       ", hashp->HIGH_MASK,
-	    "LOW  MASK       ", hashp->LOW_MASK,
-	    "NSEGS           ", hashp->nsegs,
-	    "NKEYS           ", hashp->NKEYS);
-}
-#endif
-#endif /* 0 */
 #ifdef HASH_STATISTICS
 	hash_overflows = hash_accesses = hash_collisions = hash_expansions = 0;
 #endif
 	return (dbp);
 
 error1:
-	if (hashp != NULL)
-		(void)close(hashp->fp);
-
-error0:
-	free(hashp);
+	hdestroy(hashp);
 	errno = save_errno;
 	return (NULL);
 }
@@ -420,11 +350,11 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
 		hashp->BSIZE = statbuf.st_blksize;
 #endif
 
-       	/* new code added by Lou to reduce block
-       	 * size down below MAX_BSIZE
-       	 */
-       	if (hashp->BSIZE > MAX_BSIZE)
-       		hashp->BSIZE = MAX_BSIZE;
+		/* new code added by Lou to reduce block
+		 * size down below MAX_BSIZE
+		 */
+		if (hashp->BSIZE > MAX_BSIZE)
+			hashp->BSIZE = MAX_BSIZE;
 #endif
 		hashp->BSHIFT = __log2((uint32)hashp->BSIZE);
 	}
@@ -454,15 +384,15 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
 			hashp->LORDER = info->lorder;
 		}
 	}
-	/* init_htab should destroy the table and set errno if it fails */
+	/* init_htab sets errno if it fails */
 	if (init_htab(hashp, nelem))
 		return (NULL);
 	else
 		return (hashp);
 }
 /*
- * This calls alloc_segs which may run out of memory.  Alloc_segs will destroy
- * the table and set errno, so we just pass the error information along.
+ * This calls alloc_segs which may run out of memory.  Alloc_segs will 
+ * set errno, so we just pass the error information along.
  *
  * Returns 0 on No Error
  */
@@ -1155,7 +1085,7 @@ __call_hash(HTAB *hashp, char *k, size_t len)
 }
 
 /*
- * Allocate segment table.  On error, destroy the table and set errno.
+ * Allocate segment table.  On error, set errno.
  *
  * Returns 0 on success
  */
@@ -1167,21 +1097,15 @@ alloc_segs(
 	register int i;
 	register SEGMENT store;
 
-	int save_errno;
-
 	if ((hashp->dir =
 	    (SEGMENT *)calloc((size_t)hashp->DSIZE, sizeof(SEGMENT *))) == NULL) {
-		save_errno = errno;
-		(void)hdestroy(hashp);
-		errno = save_errno;
+		errno = ENOMEM;
 		return (-1);
 	}
 	/* Allocate segments */
 	if ((store =
 	    (SEGMENT)calloc((size_t)nsegs << hashp->SSHIFT, sizeof(SEGMENT))) == NULL) {
-		save_errno = errno;
-		(void)hdestroy(hashp);
-		errno = save_errno;
+		errno = ENOMEM;
 		return (-1);
 	}
 	for (i = 0; i < nsegs; i++, hashp->nsegs++)
