@@ -87,6 +87,8 @@ public:
   NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
   NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
                               PRBool& aAliased);
+  
+  NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
 
 protected:
