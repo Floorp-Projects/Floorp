@@ -38,6 +38,7 @@
 #include "nsOS2Locale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
+#include "nsReadableUtils.h"
 
 /* nsOS2Locale ISupports */
 NS_IMPL_ISUPPORTS1(nsOS2Locale,nsIOS2Locale)
