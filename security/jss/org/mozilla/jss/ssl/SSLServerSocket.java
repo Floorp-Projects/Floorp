@@ -172,8 +172,8 @@ public class SSLServerSocket extends java.net.ServerSocket {
         return base.getTimeout();
     }
 
-    protected native void setReuseAddress(boolean reuse) throws SocketException;
-    protected native boolean getReuseAddress() throws SocketException;
+    public native void setReuseAddress(boolean reuse) throws SocketException;
+    public native boolean getReuseAddress() throws SocketException;
 
     private native byte[] socketAccept(SSLSocket s, int timeout,
         boolean handshakeAsClient) throws SocketException;

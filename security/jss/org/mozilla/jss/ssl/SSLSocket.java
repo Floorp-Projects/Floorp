@@ -750,5 +750,20 @@ public class SSLSocket extends java.net.Socket {
     public final static int TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA  = 0x0065;
     public final static int TLS_DHE_DSS_WITH_RC4_128_SHA            = 0x0066;
 
+// New TLS cipher suites in NSS 3.4 
+    public final static int TLS_RSA_WITH_AES_128_CBC_SHA          =  0x002F;
+    public final static int TLS_DH_DSS_WITH_AES_128_CBC_SHA       =  0x0030;
+    public final static int TLS_DH_RSA_WITH_AES_128_CBC_SHA       =  0x0031;
+    public final static int TLS_DHE_DSS_WITH_AES_128_CBC_SHA      =  0x0032;
+    public final static int TLS_DHE_RSA_WITH_AES_128_CBC_SHA      =  0x0033;
+    public final static int TLS_DH_ANON_WITH_AES_128_CBC_SHA      =  0x0034;
+
+    public final static int TLS_RSA_WITH_AES_256_CBC_SHA          =  0x0035;
+    public final static int TLS_DH_DSS_WITH_AES_256_CBC_SHA       =  0x0036;
+    public final static int TLS_DH_RSA_WITH_AES_256_CBC_SHA       =  0x0037;
+    public final static int TLS_DHE_DSS_WITH_AES_256_CBC_SHA      =  0x0038;
+    public final static int TLS_DHE_RSA_WITH_AES_256_CBC_SHA      =  0x0039;
+    public final static int TLS_DH_ANON_WITH_AES_256_CBC_SHA      =  0x003A;
+
 }
 
