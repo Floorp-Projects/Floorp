@@ -368,7 +368,19 @@ public class BaseFunction extends IdScriptable implements Function {
     {
         int arglen = args.length;
         StringBuffer sourceBuf = new StringBuffer();
-        sourceBuf.append("function (");
+
+        sourceBuf.append("function ");
+        /* version != 1.2 Function constructor behavior -
+         * print 'anonymous' as the function name if the
+         * version (under which the function was compiled) is
+         * less than 1.2... or if it's greater than 1.2, because
+         * we need to be closer to ECMA.
+         */
+        if (cx.getLanguageVersion() != Context.VERSION_1_2) {
+            sourceBuf.append("anonymous");
+        }
+        sourceBuf.append('(');
+
         // Append arguments as coma separated strings
         for (int i = 0; i < arglen - 1; i++) {
             if (i > 0) {
@@ -409,7 +421,6 @@ public class BaseFunction extends IdScriptable implements Function {
         }
         finally { cx.setOptimizationLevel(oldOptLevel); }
 
-        fn.fromFunctionConstructor = true;
         ScriptRuntime.setFunctionProtoAndParent(global, fn);
 
         return fn;

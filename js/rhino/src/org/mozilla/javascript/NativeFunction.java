@@ -61,8 +61,7 @@ public class NativeFunction extends BaseFunction {
         if (sourcesTree == null) {
             return super.decompile(cx, indent, justbody);
         } else {
-            return Parser.decompile(sourcesTree, fromFunctionConstructor,
-                                    version, indent, justbody);
+            return Parser.decompile(sourcesTree, indent, justbody);
         }
     }
 
@@ -80,15 +79,8 @@ public class NativeFunction extends BaseFunction {
         return argCount;
     }
 
-    public String getFunctionName() {
-        if (fromFunctionConstructor) {
-            return (version == Context.VERSION_1_2) ? "" : "anonymous";
-        }
-        return super.getFunctionName();
-    }
-
     /**
-     * @deprecated Use {@link #getFunctionName()} instead.
+     * @deprecated Use {@link BaseFunction#getFunctionName()} instead.
      * For backwards compatibility keep an old method name used by
      * Batik and possibly others.
      */
@@ -128,11 +120,5 @@ public class NativeFunction extends BaseFunction {
     protected String[] argNames;
     protected short argCount;
     protected short version;
-
-    /**
-     * True if this represents function constructed via Function()
-     * constructor
-     */
-    boolean fromFunctionConstructor;
 }
 
