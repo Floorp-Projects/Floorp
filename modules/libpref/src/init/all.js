@@ -111,6 +111,7 @@ pref("browser.urlbar.clickSelectsAll", true);
 
 pref("browser.history.last_page_visited", "");
 pref("browser.history_expire_days", 9);
+pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
 
 // Translation service
