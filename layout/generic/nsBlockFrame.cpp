@@ -2144,6 +2144,26 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       aState.mPrevChild->SetNextSibling(line->mFirstChild);
     }
 
+    // If line contains floaters, remove them from aState.mNextInFlow's
+    // floater list. They will be pushed onto this blockframe's floater
+    // list, via BuildFloaterList(), when we are done reflowing dirty lines.
+    //
+    // XXX: If the call to BuildFloaterList() is removed from
+    //      nsBlockFrame::Reflow(), we'll probably need to manually
+    //      append the floaters to |this|'s floater list.
+
+    if (line->HasFloaters()) {
+      nsFloaterCache* fc = line->GetFirstFloater();
+      while (fc) {
+        if (fc->mPlaceholder) {
+          nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
+          if (floater)
+            aState.mNextInFlow->mFloaters.RemoveFrame(floater);
+        }
+        fc = fc->Next();
+      }
+    }
+
     // Now reflow it and any lines that it makes during it's reflow
     // (we have to loop here because reflowing the line may case a new
     // line to be created; see SplitLine's callers for examples of
