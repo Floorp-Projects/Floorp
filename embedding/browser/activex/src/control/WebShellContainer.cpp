@@ -130,22 +130,23 @@ NS_IMETHODIMP
 CWebShellContainer::FindItemWithName(const PRUnichar* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
 {
-	NS_ERROR("Haven't Implemented this yet");
-	return NS_ERROR_FAILURE;
+	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(m_pOwner->m_pIWebBrowser));
+	NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+	return docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aFoundItem);
 }
 
 NS_IMETHODIMP
 CWebShellContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
-	NS_ERROR("Haven't Implemented this yet");
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 CWebShellContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
 	NS_ERROR("Haven't Implemented this yet");
+	*aShell = nsnull;
 	return NS_ERROR_FAILURE;
 }
 
@@ -153,21 +154,22 @@ NS_IMETHODIMP
 CWebShellContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
    PRInt32 aCX, PRInt32 aCY)
 {
-	NS_ERROR("Haven't Implemented this yet");
-	return NS_ERROR_FAILURE;
+	// Ignore request to be resized
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 CWebShellContainer::ShowModal()
 {
-	NS_ERROR("Haven't Implemented this yet");
-	return NS_ERROR_FAILURE;
+	// Ignore request to be shown modally
+	return NS_OK;
 }
 
 NS_IMETHODIMP CWebShellContainer::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
 	NS_ERROR("Haven't Implemented this yet");
+	*aDocShellTreeItem = nsnull;
 	return NS_ERROR_FAILURE;
 }
 
