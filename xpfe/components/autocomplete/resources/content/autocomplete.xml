@@ -20,8 +20,8 @@
 
     <interface>
         <property name="value"
-            onset="return this.anonymousContent[0].firstChild.value = val;"
-            onget="this.privatefunc.cleanupInputField(this); return this.anonymousContent[0].firstChild.value;"
+            onset="return document.getAnonymousNodes(this)[0].firstChild.value = val;"
+            onget="this.privatefunc.cleanupInputField(this); return document.getAnonymousNodes(this)[0].firstChild.value;"
 		/>
 
         <property name="timeout"
@@ -88,7 +88,7 @@
                 if (result.defaultItemIndex > result.items.Count())
                     result.defaultItemIndex = 0;
                 
-                var inputElement = me.anonymousContent[0].firstChild;
+                var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                 
                 //Time to build the new edit field value
                 //First, check if the search string correspond to the current value of the field, else ignore it
@@ -123,7 +123,7 @@
 				if (me.displayMenu == "false")
 					return;
 
-                popupset = me.anonymousContent[0].childNodes[1];
+                popupset = document.getAnonymousNodes(me)[0].childNodes[1];
                 popupElement = popupset.firstChild.cloneNode(false);
                 for (i = 0; i < result.items.Count(); i ++)
                 {
@@ -145,7 +145,7 @@
 				if (result.defaultItemIndex != 0 || result.items.Count() != 1)
 				{
 					me.privatefunc.closePopupMenu(me); //Close it first as openPopup seems to work as a toggle!
-					popupset.firstChild.openPopup(me.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
+					popupset.firstChild.openPopup(document.getAnonymousNodes(me)[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
 				}
             },
 
@@ -158,7 +158,7 @@
         <![CDATA[
         ({
 			imeInProgress: function(me) {
-				var inputElement = me.anonymousContent[0].firstChild;
+				var inputElement = document.getAnonymousNodes(me)[0].firstChild;
 				//I hope ime will set an attribute on the input field when it's currently building a sequence
 				//like that we can now when we can or not autocomplete.
 				//Q: How can I know when ime is done? I need to kick the autocomplete timer?
@@ -170,7 +170,7 @@
 			},
 
             onMenuCommand: function(me, popupSetElem) {
-				var inputElement = me.anonymousContent[0].firstChild;
+				var inputElement = document.getAnonymousNodes(me)[0].firstChild;
 				var popupElem = popupSetElem.firstChild;
 				for (var i = 0; i < popupElem.childNodes.length; i ++)
 				{
@@ -178,7 +178,7 @@
 					if (menuitem.getAttribute("menuactive") == "true")
 					{
 						inputElement.value = menuitem.getAttribute("value");
-						var inputElement = me.anonymousContent[0].firstChild;
+						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
 						needToAutocomplete = false;
 						me.privatefunc.selectedItemIndex = i;
@@ -192,7 +192,7 @@
                     case 'startLookup':
                         if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
                             return;
-						var inputElement = me.anonymousContent[0].firstChild;
+						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         if (!me.lastResults || inputElement.value != me.lastResults.searchString)
                             me.autoCompleteSession.onStartLookup(inputElement.value, me.lastResults, me.autoCompleteListener);
                         break;
@@ -210,7 +210,7 @@
                         me.needToAutocomplete = false;
                         if (this.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
                             return;
-						var inputElement = me.anonymousContent[0].firstChild;
+						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         me.autoCompleteSession.onAutoComplete(inputElement.value, me.lastResults, me.autoCompleteListener);
                         break;
                 }
@@ -221,7 +221,7 @@
                if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
                     return;
 
-                var inputElement = me.anonymousContent[0].firstChild;
+                var inputElement = document.getAnonymousNodes(me)[0].firstChild;
 				var value = inputElement.value;
                 var entry = value.substring(0, inputElement.selectionStart) + value.substring(inputElement.selectionEnd, value.length);
 
@@ -241,7 +241,7 @@
 			},
 
 			closePopupMenu: function(me) {
-				popup = me.anonymousContent[0].childNodes[1].firstChild;
+				popup = document.getAnonymousNodes(me)[0].childNodes[1].firstChild;
 				if (popup && me.menuOpen == "true")
 					popup.closePopup();
 			},
@@ -249,7 +249,7 @@
 			cleanupInputField: function(me) {
 				if (me.noDirectMatch)
 				{
-					var inputElement = me.anonymousContent[0].firstChild;
+					var inputElement = document.getAnonymousNodes(me)[0].firstChild;
 					var value = inputElement.value;
 					var index = value.indexOf(">> ");
 					if (index >= 0)
@@ -261,7 +261,7 @@
 			},
 
 			keyNavigation: function(me, event, popup) {
-				var inputElement = me.anonymousContent[0].firstChild;
+				var inputElement = document.getAnonymousNodes(me)[0].firstChild;
 				if (event.keyCode == 38 || event.keyCode == 40)
 				{
 					if (event.keyCode == 38)
@@ -305,7 +305,7 @@
 				if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
 					return;
 
-				var popup = me.anonymousContent[0].childNodes[1].firstChild;
+				var popup = document.getAnonymousNodes(me)[0].childNodes[1].firstChild;
  				if (popup && me.menuOpen != "true")
 					popup = null;
 
