@@ -42,8 +42,8 @@ struct DataStruct {
     : mFlavor(aString), mData(nsnull), mDataLen(0), mCacheFileName(nsnull) { }
   ~DataStruct();
   
-  void SetData( char* aData, size_t aDataLen );
-  void GetData( char** aData, size_t *aDataLen );
+  void SetData( char* aData, PRUint32 aDataLen );
+  void GetData( char** aData, PRUint32 *aDataLen );
   nsIFileSpec * GetFileSpec(const char * aFileName);
   PRBool IsDataAvilable() { return (nsnull != mData && mDataLen > 0) || (nsnull == mData && nsnull != mCacheFileName); }
   nsString   mFlavor;
@@ -73,7 +73,7 @@ DataStruct::~DataStruct()
 }
 
 //-------------------------------------------------------------------------
-void DataStruct::SetData ( char* aData, size_t aDataLen )
+void DataStruct::SetData ( char* aData, PRUint32 aDataLen )
 {
   // check to see if we already have data and then delete it
   if ( mData ) {
@@ -97,7 +97,7 @@ void DataStruct::SetData ( char* aData, size_t aDataLen )
 }
 
 //-------------------------------------------------------------------------
-void DataStruct::GetData ( char** aData, size_t *aDataLen )
+void DataStruct::GetData ( char** aData, PRUint32 *aDataLen )
 {
   // check here to see if the data is cached on disk
   if (nsnull == mData && nsnull != mCacheFileName) {
