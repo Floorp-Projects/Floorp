@@ -26,27 +26,27 @@
 
 
 static char* tagTable[] = {
-  "A", "ABBR", "ACRONYM", "ADDRESS", "APPLET", "AREA", 
-  "B", "BASE", "BASEFONT", "BDO", "BGSOUND", "BIG", "BLINK", "BLOCKQUOTE", "BODY", "BR", "BUTTON", 
-  "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", 
-  "DD", "DEL", "DFN", "DIR", "DIV", "DL", "DT", 
-  "EM", "EMBED", 
-  "FIELDSET", "FONT", "FORM", "FRAME", "FRAMESET", 
-  "H1", "H2", "H3", "H4", "H5", "H6", "HEAD", "HR", "HTML", 
-  "I", "IFRAME", "ILAYER", "IMG", "INPUT", "INS", "ISINDEX", 
-  "KBD", "KEYGEN", 
-  "LABEL", "LAYER", "LEGEND", "LI", "LINK", "LISTING", 
-  "MAP", "MENU", "META", "MULTICOL", 
-  "NOBR", "NOEMBED", "NOFRAMES", "NOLAYER", "NOSCRIPT", 
-  "OBJECT", "OL", "OPTGROUP", "OPTION", 
-  "P", "PARAM", "PLAINTEXT", "PRE", 
-  "Q", 
-  "S","SAMP","SCRIPT","SELECT","SERVER","SMALL","SOUND","SPACER","SPAN","STRIKE","STRONG","STYLE","SUB","SUP", 
-  "TABLE", "TBODY", "TD", "TEXTAREA", "TFOOT", "TH", "THEAD", "TITLE", "TR", "TT", 
-  "U", "UL", 
-  "VAR", 
-  "WBR", 
-  "XMP",
+  "a", "abbr", "acronym", "address", "applet", "area", 
+  "b", "base", "basefont", "bdo", "bgsound", "big", "blink", "blockquote", "body", "br", "button", 
+  "caption", "center", "cite", "code", "col", "colgroup", 
+  "dd", "del", "dfn", "dir", "div", "dl", "dt", 
+  "em", "embed", 
+  "fieldset", "font", "form", "frame", "frameset", 
+  "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", "html", 
+  "i", "iframe", "ilayer", "img", "input", "ins", "isindex", 
+  "kbd", "keygen", 
+  "label", "layer", "legend", "li", "link", "listing", 
+  "map", "menu", "meta", "multicol", 
+  "nobr", "noembed", "noframes", "nolayer", "noscript", 
+  "object", "ol", "optgroup", "option", 
+  "p", "param", "plaintext", "pre", 
+  "q", 
+  "s","samp","script","select","server","small","sound","spacer","span","strike","strong","style","sub","sup", 
+  "table", "tbody", "td", "textarea", "tfoot", "th", "thead", "title", "tr", "tt", 
+  "u", "ul", 
+  "var", 
+  "wbr", 
+  "xmp",
   0
 };
 static char gCWD[1025];
@@ -83,15 +83,15 @@ int findTag(const char* aTagName) {
 int findNearestTag(char* aTag){
   int result=-1;
   if(aTag){
-    char  theChar=toupper(aTag[0]);
+    char  theChar=tolower(aTag[0]);
     int theIndex=-1;
     while(tagTable[++theIndex]){
-      if(toupper(tagTable[theIndex][0])==theChar) {
+      if(tolower(tagTable[theIndex][0])==theChar) {
         return theIndex;
       }
     }
   }
-  if(toupper(aTag[0])<'A')
+  if(tolower(aTag[0])<'a')
     result=0;
   else result=107;
   return result;

@@ -205,8 +205,8 @@ NS_IMETHODIMP RobotSink::CloseFrameset(const nsIParserNode& aNode)
 NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
-  if (tmp.Equals("A")) {
+  tmp.ToLowerCase();
+  if (tmp.Equals("a")) {
     nsAutoString k, v;
     PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
@@ -214,8 +214,8 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
       const nsString& key = aNode.GetKeyAt(i);
       k.Truncate();
       k.Append(key);
-      k.ToUpperCase();
-      if (k.Equals("HREF")) {
+      k.ToLowerCase();
+      if (k.Equals("href")) {
         // Get value and remove mandatory quotes
         v.Truncate();
         v.Append(aNode.GetValueAt(i));
