@@ -48,7 +48,7 @@ public:
 protected:
 
 #ifdef INTEL_CHANGE
-  NS_IMETHODIMP ConvertNoBuff(const PRUnichar * aSrc, 
+  NS_IMETHOD ConvertNoBuff(const PRUnichar * aSrc, 
                             PRInt32 * aSrcLength, 
                             char * aDest, 
                             PRInt32 * aDestLength);
