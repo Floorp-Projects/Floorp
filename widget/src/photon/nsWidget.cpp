@@ -54,7 +54,9 @@
 #include "nsIRollupListener.h"
 #include "nsIServiceManager.h"
 #include "nsWindow.h"
+#ifdef PHOTON_DND
 #include "nsDragService.h"
+#endif
 #include "nsReadableUtils.h"
 
 #include "nsIPref.h"
@@ -81,7 +83,9 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 // Keep track of the last widget being "dragged"
 //
 nsILookAndFeel     *nsWidget::sLookAndFeel = nsnull;
+#ifdef PHOTON_DND
 nsIDragService     *nsWidget::sDragService = nsnull;
+#endif
 PRUint32            nsWidget::sWidgetCount = 0;
 PRBool              nsWidget::sJustGotActivated = PR_FALSE;
 PRBool              nsWidget::sJustGotDeactivated = PR_FALSE;
@@ -100,6 +104,7 @@ nsWidget::nsWidget()
   if( sLookAndFeel )
     sLookAndFeel->GetColor( nsILookAndFeel::eColor_WindowBackground, mBackground );
 
+#ifdef PHOTON_DND
 	if( !sDragService ) {
 		nsresult rv;
 		nsCOMPtr<nsIDragService> s;
@@ -107,6 +112,7 @@ nsWidget::nsWidget()
 		sDragService = ( nsIDragService * ) s;
 		if( NS_FAILED( rv ) ) sDragService = 0;
 		}
+#endif
 
   mWidget = nsnull;
   mParent = nsnull;
@@ -624,7 +630,9 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     PtAddCallback( mWidget, Pt_CB_GOT_FOCUS, GotFocusCallback, this );
     PtAddCallback( mWidget, Pt_CB_LOST_FOCUS, LostFocusCallback, this );
     PtAddCallback( mWidget, Pt_CB_IS_DESTROYED, DestroyedCallback, this );
-//    PtAddCallback( mWidget, Pt_CB_DND, DndCallback, this );
+#ifdef PHOTON_DND
+    PtAddCallback( mWidget, Pt_CB_DND, DndCallback, this );
+#endif
   	}
 
   DispatchStandardEvent(NS_CREATE);
@@ -1029,12 +1037,14 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
 
 					if( ptrev->flags & Ph_PTR_FLAG_Z_ONLY ) break; // sometimes z presses come out of nowhere */
 
+#ifdef PHOTON_DND
 					if( sDragService ) {
 						nsDragService *d;
 						nsIDragService *s = sDragService;
 						d = ( nsDragService * )s;
 						d->SetNativeDndData( widget, event );
 						}
+#endif
 
           ScreenToWidgetPos( ptrev->pos );
  	      	InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MOVE );
@@ -1066,13 +1076,14 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
       		    PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
       		    ScreenToWidgetPos( ptrev2->pos );
 
+#ifdef PHOTON_DND
 							if( sDragService ) {
 								nsDragService *d;
 								nsIDragService *s = sDragService;
 								d = ( nsDragService * )s;
 								d->SetNativeDndData( widget, event );
 								}
-
+#endif
   	  		    InitMouseEvent(ptrev2, this, theMouseEvent, NS_MOUSE_MOVE );
       		    result = DispatchMouseEvent(theMouseEvent);
 							}
@@ -1176,6 +1187,7 @@ int nsWidget::DestroyedCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
   return Pt_CONTINUE;
 	}
 
+#ifdef PHOTON_DND
 void nsWidget::ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *pos ) {
 	nsCOMPtr<nsIDragSession> currSession;
 	sDragService->GetCurrentSession ( getter_AddRefs(currSession) );
@@ -1270,3 +1282,4 @@ int nsWidget::DndCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbi
 
 	return Pt_CONTINUE;
 	}
+#endif /* PHOTON_DND */
