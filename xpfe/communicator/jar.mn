@@ -27,7 +27,6 @@ comm.jar:
     content/communicator/findUtils.js                    (resources/content/findUtils.js)
     content/communicator/printPreviewBindings.xml        (resources/content/printPreviewBindings.xml)
     content/communicator/printing.js                     (resources/content/printing.js)
-    content/communicator/plugins.html                    (resources/content/plugins.html)
     content/communicator/popupManager.js                 (resources/content/popupManager.js)
     content/communicator/popupManager.xul                (resources/content/popupManager.xul)
     content/communicator/aboutPopups.xul                 (resources/content/aboutPopups.xul)
@@ -49,7 +48,6 @@ en-US.jar:
     locale/en-US/communicator/popupManager.dtd                  (resources/locale/en-US/popupManager.dtd)
     locale/en-US/communicator/popupManager.properties           (resources/locale/en-US/popupManager.properties)
     locale/en-US/communicator/aboutPopups.dtd                   (resources/locale/en-US/aboutPopups.dtd)
-    locale/en-US/communicator/plugins.properties                (resources/locale/en-US/plugins.properties)
 
 US.jar:
 *   locale/US/communicator-region/contents.rdf   	      (resources/locale/en-US/contents-region.rdf)

@@ -4,7 +4,8 @@ classic.jar:
         skin/classic/communicator/profile/profileManager.css                  (../../../themes/classic/communicator/profile/profileManager.css)
         skin/classic/communicator/profile/profileicon-large.gif               (../../../themes/classic/communicator/profile/profileicon-large.gif)
         skin/classic/communicator/communicator.css
-*       skin/classic/communicator/contents.rdf                                 (../../../themes/classic/communicator/contents.rdf)
+*       skin/classic/communicator/contents.rdf                                (../../../themes/classic/communicator/contents.rdf)
+        skin/classic/global/plugins.css                                       (../../../themes/classic/global/plugins.css)
 
 comm.jar:
 *       content/communicator/contents.rdf                                     (../../../xpfe/communicator/resources/content/contents.rdf)
@@ -12,4 +13,7 @@ comm.jar:
 en-US.jar:
 *       locale/en-US/communicator/contents.rdf                                (../../../xpfe/communicator/resources/locale/en-US/contents.rdf)
         locale/en-US/communicator/xpinstall/xpinstall.properties              (../../../xpinstall/res/locale/en-US/xpinstall.properties)
+        locale/en-US/global/plugins.properties                                (../../../xpfe/global/resources/locale/en-US/plugins.properties)
         
+toolkit.jar:
+        content/global/plugins.html                                           (../../../xpfe/global/resources/content/plugins.html)

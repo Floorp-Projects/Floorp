@@ -82,7 +82,7 @@ ChannelRow ChannelTable[] = {
 	{"about:mozilla",   ""},
 	{"javascript:document.write('hi')", ""},
 	{"data:text/plain;charset=iso-8859-7,%be%fg%be", ""},
-	{"jar:resource:///chrome/comm.jar!/content/communicator/plugins.html",  ""},
+	{"jar:resource:///chrome/toolkit.jar!/content/global/plugins.html",  ""},
 }; 
 
 /////////////////////////////////////////////////////////////////////////////

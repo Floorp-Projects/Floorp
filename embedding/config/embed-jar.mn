@@ -14,7 +14,7 @@ content/global/bindings, toolkit/content/global/bindings
 content/global-platform, toolkit/content/global-platform
 content/global-region, toolkit/content/global-region
 content/communicator/contents.rdf, comm/content/communicator/contents.rdf
-content/communicator/plugins.html, comm/content/communicator/plugins.html
+content/global/plugins.html, comm/content/global/plugins.html
 skin/classic/forms, classic/skin/classic/forms
 skin/classic/global, classic/skin/classic/global
 skin/classic/global/arrow, classic/skin/classic/global/arrow
