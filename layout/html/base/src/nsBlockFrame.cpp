@@ -171,6 +171,13 @@ nsBlockFrame::~nsBlockFrame()
 
 void nsBlockFrame::DestroyLines()
 {
+  nsLineData* line = mLines;
+  while (nsnull != line) {
+    nsLineData* next = line->mNextLine;
+    delete line;
+    line = next;
+  }
+  mLines = nsnull;
 }
 
 NS_METHOD
