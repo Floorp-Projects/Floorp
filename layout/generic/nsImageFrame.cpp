@@ -534,7 +534,7 @@ DestroyImagePLEvent(PLEvent* aEvent)
 // can't decide if it wants to call it's observer methods
 // synchronously or asynchronously. If an image is loaded from the
 // cache the notifications come back synchronously, but if the image
-// is loaded from the netswork the notifications come back
+// is loaded from the network the notifications come back
 // asynchronously.
 
 void
