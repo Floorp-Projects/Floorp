@@ -82,9 +82,9 @@
   
   <separator class="thin"/>
   
-  <box autostretch="never">
+  <hbox autostretch="never">
     <checkbox id="outgoingDefault" label="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
-  </box>
+  </hbox>
   
   <separator/>
   
