@@ -854,15 +854,19 @@ PRInt32 _MD_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     PRThread *me = _PR_MD_CURRENT_THREAD();
+#if defined(SOLARIS)
+	PRInt32 tmp_amount = amount;
+#endif
 
-    /*
+
      * On pre-2.6 Solaris, send() is much slower than write().
      * On 2.6 and beyond, with in-kernel sockets, send() and
      * write() are fairly equivalent in performance.
      */
 #if defined(SOLARIS)
+retry:
     PR_ASSERT(0 == flags);
-    while ((rv = write(osfd,buf,amount)) == -1) {
+    while ((rv = write(osfd,buf,tmp_amount)) == -1) {
 #else
     while ((rv = send(osfd,buf,amount,flags)) == -1) {
 #endif
@@ -881,6 +885,19 @@ PRInt32 _MD_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
         } else if ((err == EINTR) && (!_PR_PENDING_INTERRUPT(me))){
             continue;
         } else {
+#if defined(SOLARIS)
+			/*
+			 * The write system call has been reported to return the ERANGE
+			 * error on occasion. Try to write in smaller chunks to workaround
+			 * this bug.
+			 */
+			if (err == ERANGE) {
+				if (tmp_amount > 1) {
+					tmp_amount = tmp_amount/2;	/* half the bytes */
+					goto retry;
+				}
+			}
+#endif
             break;
         }
     }
