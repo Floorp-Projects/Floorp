@@ -28,13 +28,15 @@ LIBRARY_NAME = raptorbasewidget_s
 #MODULES=widget
 #LCFLAGS=-D_IMPL_NS_WIDGET 
 
-CPPSRCS=				\
-    nsBaseWidget.cpp    \
-	nsMenuButton.cpp    \
-	nsImageButton.cpp   \
-	nsDataFlavor.cpp    \
-	nsTransferable.cpp  \
-	nsBaseClipboard.cpp \
+#	nsXIFFormatConverter.cpp
+CPPSRCS= \
+    nsBaseWidget.cpp         \
+	nsMenuButton.cpp         \
+	nsImageButton.cpp        \
+	nsDataFlavor.cpp         \
+	nsTransferable.cpp       \
+	nsBaseClipboard.cpp      \
+	nsXIFFormatConverter.cpp \
 	$(NULL)
 
 LOCAL_INCLUDES := \
@@ -53,4 +55,3 @@ override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
-
