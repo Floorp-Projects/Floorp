@@ -62,7 +62,7 @@
 
 #msgcomposeWindow #signing-status {
   list-style-image: none;
-  visibility: collapsed;
+  visibility: collapse;
 }
 
 #msgcomposeWindow[signing="ok"] #signing-status {
@@ -78,7 +78,7 @@
 
 #msgcomposeWindow #encryption-status {
   list-style-image: none;
-  visibility: collapsed;
+  visibility: collapse;
 }
 
 #msgcomposeWindow[crypto="ok"] #encryption-status {
