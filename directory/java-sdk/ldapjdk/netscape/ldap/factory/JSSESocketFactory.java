@@ -37,16 +37,23 @@ import netscape.ldap.*;
  * @see LDAPSocketFactory
  * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSocketFactory)
  */
-public class JSSESocketFactory
-             implements LDAPSocketFactory, java.io.Serializable {
+public class JSSESocketFactory implements LDAPTLSSocketFactory,
+                                          java.io.Serializable {
 
-    static final long serialVersionUID = 6834205777733266609L;
+    static final long serialVersionUID = 6834205777733266610L;
 
     // Optional explicit cipher suites to use
-    private String[] suites;
+    protected String[] suites;
     // The socket factory
-    private SSLSocketFactory factory;
+    protected SSLSocketFactory factory;
 
+    /**
+     * Default factory constructor
+     */
+    public JSSESocketFactory() {
+        this(null, null);
+    }
+  
     /**
      * Factory constructor that uses the default JSSE SSLSocketFactory
      *
@@ -73,7 +80,7 @@ public class JSSESocketFactory
     }
 
     /**
-     * Creates an SSL socket
+     * Creates an SSL socket.
      *
      * @param host Host name or IP address of SSL server
      * @param port Port numbers of SSL server
@@ -98,13 +105,46 @@ public class JSSESocketFactory
             sock.startHandshake();
 
         } catch (UnknownHostException e) {
-            throw new LDAPException("SSL connection to " + host +
-                                    ":" + port + ", " + e.getMessage(),
+            throw new LDAPException("JSSESocketFactory.makeSocket - Unknown host: " + host,
                                     LDAPException.CONNECT_ERROR);
         } catch (IOException f) {
-            throw new LDAPException("SSL connection to " + host +
-                                    ":" + port + ", " + f.getMessage(),
+            throw new LDAPException("JSSESocketFactory.makeSocket " +
+                                    host + ":" + port + ", " + f.getMessage(),
                                     LDAPException.CONNECT_ERROR);
+        }
+
+        return sock;
+    }
+
+    /**
+     * Creates an SSL socket layered over an existing socket.
+     * 
+     * Used for the startTLS implementation (RFC2830).
+     *
+     * @param s An existing non-SSL socket
+     * @return A SSL socket layered over the input socket
+     * @exception LDAPException on error creating socket
+     * @since LDAPJDK 4.17
+     */
+    public Socket makeSocket(Socket s)
+        throws LDAPException { 
+  
+        SSLSocket sock = null;
+        String host = s.getInetAddress().getHostName();
+        int port = s.getPort();
+
+        try {
+            sock = (SSLSocket)factory.createSocket(s, host, port, /*autoClose=*/ true);
+
+            if (suites != null) {
+                sock.setEnabledCipherSuites(suites);
+            }
+            
+            sock.startHandshake();
+
+        } catch (IOException f) {
+            throw new LDAPException("JSSESocketFactory - start TLS, " + f.getMessage(),
+                                    LDAPException.TLS_NOT_SUPPORTED);
         }
 
         return sock;

@@ -38,12 +38,12 @@ import java.net.*;
  * When a connection is successfully created, a socket is opened. The socket 
  * is passed to the LDAPConnThread. The LDAPConnThread must call
  * invalidateConnection() if the connection is lost due to a network or 
- * server error, or disconnect() if the connection is deliberately terminated
+ * server error, or closeConnection() if the connection is deliberately terminated
  * by the user.
  */
-class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
+class LDAPConnSetupMgr implements java.io.Serializable {
 
-    static final long serialVersionUID = 1519402748245755306L;
+    static final long serialVersionUID = 1519402748245755307L;
     /**
      * Policy for opening a connection when multiple servers are used
      */
@@ -65,28 +65,32 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
      * Representation for a server in the server list.
      */
     class ServerEntry {
-        String host;
-        int    port;
+        LDAPUrl url;
         int    connSetupStatus;
         Thread connSetupThread;
 
-        ServerEntry(String host, int port, int status) {
-            this.host = host;
-            this.port = port;
+        ServerEntry(LDAPUrl url, int status) {
+            this.url = url;
             connSetupStatus = status;
             connSetupThread = null;
-        }
-    
+        }    
         public String toString() {
-            return "{" +host+":"+port + " status="+connSetupStatus+"}";
+            return "{" + url + " status="+connSetupStatus+"}";
         }
     }
+    
 
     /**
      * Socket to the connected server
      */
     private Socket m_socket = null;
     
+    /**
+     * Original, underlying socket to the server, see layerSocket()
+     */
+    private Socket m_origSocket = null;
+    
+
     /**
      * Last exception occured during connection setup
      */
@@ -129,24 +133,49 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
     private transient int m_attemptCnt = 0;
 
     /**
-     * Connection IDs for ldap trace messages
-     */
-    private static int m_nextId;
-    private int m_id;
-    
-    /**
      * Constructor
      * @param host list of host names to which to connect
      * @param port list of port numbers corresponding to the host list
      * @param factory socket factory for SSL connections     
      */
-    LDAPConnSetupMgr(String[] hosts, int[] ports, LDAPSocketFactory factory) {
+    LDAPConnSetupMgr(String[] hosts, int[] ports, LDAPSocketFactory factory)  throws LDAPException{
         m_dsList = new ServerEntry[hosts.length];
+        boolean secure = (factory != null);
         for (int i=0; i < hosts.length; i++) {
-            m_dsList[i] = new ServerEntry(hosts[i], ports[i], NEVER_USED);
+            String url = secure ? "ldaps://" : "ldap://";            
+            url += hosts[i] + ":" + ports[i];
+            try { 
+                m_dsList[i] = new ServerEntry(new LDAPUrl(url), NEVER_USED);
+            }
+            catch (MalformedURLException ex) {
+                throw new LDAPException("Invalid host:port " + hosts[i]+":"+ports[i],
+                                         LDAPException.PARAM_ERROR);                
+            }
         }
         m_factory = factory;
-        m_id = m_nextId++;
+    }
+
+    LDAPConnSetupMgr(String[] urls, LDAPSocketFactory factory) throws LDAPException{
+        m_dsList = new ServerEntry[urls.length];
+        for (int i=0; i < urls.length; i++) {
+            try {
+                LDAPUrl url = new LDAPUrl(urls[i]);
+                m_dsList[i] = new ServerEntry(url, NEVER_USED);
+            }
+            catch (MalformedURLException ex) {
+                throw new LDAPException("Malformed LDAP URL " + urls[i],
+                                         LDAPException.PARAM_ERROR);
+            }
+        }
+        m_factory = factory;
+    }
+
+    LDAPConnSetupMgr(LDAPUrl[] urls, LDAPSocketFactory factory) throws LDAPException{
+        m_dsList = new ServerEntry[urls.length];
+        for (int i=0; i < urls.length; i++) {
+            m_dsList[i] = new ServerEntry(urls[i], NEVER_USED);
+        }
+        m_factory = factory;
     }
 
     /**
@@ -204,7 +233,7 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
             th.interrupt();
             cleanup();
             throw new LDAPException(
-                "connect timeout, " + getServerList() + " might be unreachable",
+                "Connect timeout, " + getServerList() + " might be unreachable",
                 LDAPException.CONNECT_ERROR);
         }
 
@@ -213,12 +242,13 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
         }
 
         throw new LDAPException(
-            "failed to connect to server " + getServerList(),
+            "Failed to connect to server " + getServerList(),
             LDAPException.CONNECT_ERROR);
     }
 
     private void reset() {
         m_socket = null;
+        m_origSocket = null;
         m_connException = null;
         m_attemptCnt = 0;
                 
@@ -231,9 +261,9 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
         StringBuffer sb = new StringBuffer();
         for (int i=0; i < m_dsList.length; i++) {
             sb.append(i==0 ? "" : " ");
-            sb.append(m_dsList[i].host);
+            sb.append(m_dsList[i].url.getHost());
             sb.append(":");
-            sb.append(m_dsList[i].port);
+            sb.append(m_dsList[i].url.getPort());
         }
         return sb.toString();
    }
@@ -268,9 +298,25 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
             newDsList[j] = m_dsList[m_dsIdx];
             m_dsList = newDsList;
             m_dsIdx = j;
+            
+            try {
+                m_socket.close();
+            } catch (Exception e) {
+            } finally {
+                m_socket = null;
+            }
+            
         }
-    
-        m_socket = null;
+
+        if (m_origSocket != null) {
+
+            try {
+                m_origSocket.close();
+            } catch (Exception e) {
+            } finally {
+                m_origSocket = null;
+            }
+        }        
     }
     
     /**
@@ -278,30 +324,69 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
      * Mark the connected server status as DISCONNECTED. This will
      * put it at top of the server list for the next connect attempt.
      */
-    void disconnect() {
+    void closeConnection() {
         if (m_socket != null) {
+
             m_dsList[m_dsIdx].connSetupStatus =  DISCONNECTED;
+            
+            try {
+                m_socket.close();
+            } catch (Exception e) {
+            } finally {
+                m_socket = null;
+            }
         }
-    
-        m_socket = null;
+
+        if (m_origSocket != null) {
+
+            try {
+                m_origSocket.close();
+            } catch (Exception e) {
+            } finally {
+                m_origSocket = null;
+            }
+        }
     }
 
     Socket getSocket() {
         return m_socket;
     }
+
+    /**
+     * Layer a new socket over the existing one (used by startTLS)
+     */
+    void layerSocket(LDAPTLSSocketFactory factory) throws LDAPException{
+        Socket s = factory.makeSocket(m_socket);
+        m_origSocket = m_socket;
+        m_socket = s;
+    }
     
     String getHost() {
         if (m_dsIdx >= 0) {
-            return m_dsList[m_dsIdx].host;
+            return m_dsList[m_dsIdx].url.getHost();
         }
-        return m_dsList[0].host;
+        return m_dsList[0].url.getHost();
     }
     
     int getPort() {
         if (m_dsIdx >= 0) {
-            return m_dsList[m_dsIdx].port;
+            return m_dsList[m_dsIdx].url.getPort();
         }
-        return m_dsList[0].port;
+        return m_dsList[0].url.getPort();
+    }
+
+    boolean isSecure() {
+        if (m_dsIdx >= 0) {
+            return m_dsList[m_dsIdx].url.isSecure();
+        }
+        return m_dsList[0].url.isSecure();
+    }
+
+    LDAPUrl getLDAPUrl() {
+        if (m_dsIdx >= 0) {
+            return m_dsList[m_dsIdx].url;
+        }
+        return m_dsList[0].url;
     }
 
     int  getConnSetupDelay() {
@@ -363,8 +448,7 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
         
             //Create a Thread to execute connectSetver()
             final int dsIdx = i;
-            String threadName = "ConnSetupMgr " +
-                m_dsList[dsIdx].host + ":" + m_dsList[dsIdx].port;
+            String threadName = "ConnSetupMgr " + m_dsList[dsIdx].url;
             Thread t = new Thread(new Runnable() {
                 public void run() {
                     connectServer(dsIdx);
@@ -407,20 +491,29 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
         Thread currThread = Thread.currentThread();
         Socket sock = null;
         LDAPException conex = null;
-    
+
         try {
             /* If we are to create a socket ourselves, make sure it has
                sufficient privileges to connect to the desired host */
-            if (m_factory == null) {
-                sock = new Socket (entry.host, entry.port);
-                //s.setSoLinger( false, -1 );
+            if (!entry.url.isSecure()) {
+                sock = new Socket (entry.url.getHost(), entry.url.getPort());
             } else {
-                sock = m_factory.makeSocket(entry.host, entry.port);
+                LDAPSocketFactory factory = m_factory;
+                if (factory == null) {
+                    factory = entry.url.getSocketFactory();
+                }
+                if (factory == null) {
+                    throw new LDAPException("Can not connect, no socket factory " + entry.url,
+                                            LDAPException.OTHER);
+                }
+                sock = factory.makeSocket(entry.url.getHost(), entry.url.getPort());
             }
+
+            sock.setTcpNoDelay( true );
         }
         catch (IOException e) {    
             conex = new LDAPException("failed to connect to server " 
-            + entry.host+":"+entry.port, LDAPException.CONNECT_ERROR);
+            + entry.url, LDAPException.CONNECT_ERROR);
         }
         catch (LDAPException e) {    
             conex = e;
@@ -514,29 +607,5 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
             str += m_dsList[i]+ " ";
         }
         return str;
-    }    
-
-    int getID() {
-        return m_id;
     }
-    
-    String getLDAPUrl() {
-        return ((m_factory == null) ? "ldap" : "ldaps")  +
-               "://" + getHost() + ":" + getPort();
-    }
-    
-    public Object clone() {
-        try {
-            LDAPConnSetupMgr cloneMgr = (LDAPConnSetupMgr) super.clone();
-            cloneMgr.m_dsList = new ServerEntry[m_dsList.length];
-            for (int i=0; i<m_dsList.length; i++) {
-                ServerEntry e = m_dsList[i];
-                cloneMgr.m_dsList[i] = new ServerEntry(e.host, e.port, e.connSetupStatus);
-            }
-            return  cloneMgr;
-        }
-        catch (CloneNotSupportedException ex) {
-            return null;
-        }
-    }    
 }

@@ -360,30 +360,31 @@ public class LDAPConstraints implements Cloneable, java.io.Serializable {
 
     /**
      * Makes a copy of an existing set of constraints.
-     * @returns a copy of an existing set of constraints
+     * @return a copy of an existing set of constraints
      */
     public Object clone() {
-        LDAPConstraints o = new LDAPConstraints();
+        try {         
+            LDAPConstraints o = (LDAPConstraints) super.clone();
 
-        o.m_time_limit = this.m_time_limit;
-        o.referrals = this.referrals;
-        o.m_bind_proc = this.m_bind_proc;
-        o.m_rebind_proc = this.m_rebind_proc;
-        o.m_hop_limit = this.m_hop_limit;
-        if ( (this.m_clientControls != null) &&
-             (this.m_clientControls.length > 0) ) {
-            o.m_clientControls = new LDAPControl[this.m_clientControls.length];
-            for( int i = 0; i < this.m_clientControls.length; i++ )
-                o.m_clientControls[i] = 
-                    (LDAPControl)this.m_clientControls[i].clone();
+            if ( (this.m_clientControls != null) &&
+                 (this.m_clientControls.length > 0) ) {
+                o.m_clientControls = new LDAPControl[this.m_clientControls.length];
+                for( int i = 0; i < this.m_clientControls.length; i++ )
+                    o.m_clientControls[i] = 
+                        (LDAPControl)this.m_clientControls[i].clone();
+            }
+            if ( (this.m_serverControls != null) && 
+                 (this.m_serverControls.length > 0) ) {
+                o.m_serverControls = new LDAPControl[this.m_serverControls.length];
+                for( int i = 0; i < this.m_serverControls.length; i++ )
+                    o.m_serverControls[i] = 
+                        (LDAPControl)this.m_serverControls[i].clone();
+            }
+            return o;
         }
-        if ( (this.m_serverControls != null) && 
-             (this.m_serverControls.length > 0) ) {
-            o.m_serverControls = new LDAPControl[this.m_serverControls.length];
-            for( int i = 0; i < this.m_serverControls.length; i++ )
-                o.m_serverControls[i] = 
-                    (LDAPControl)this.m_serverControls[i].clone();
+        catch (CloneNotSupportedException ex) {
+            // shold never happen, the class is Cloneable
+            return null;
         }
-        return o;
     }
 }

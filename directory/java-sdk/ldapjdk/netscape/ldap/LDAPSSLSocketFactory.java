@@ -178,7 +178,7 @@ public class LDAPSSLSocketFactory
 
 
     /**
-     * <B>This method is currently not implemented.</B>
+     * <B>This method is currently not implemented</B>.
      * Enables client authentication for an application that uses
      * an external (file-based) certificate database.
      * Call this method before you call <CODE>makeSocket</CODE>.

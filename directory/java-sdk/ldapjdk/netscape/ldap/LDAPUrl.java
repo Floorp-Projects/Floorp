@@ -24,7 +24,6 @@ package netscape.ldap;
 import java.util.*;
 import java.io.*;
 import java.net.MalformedURLException;
-import netscape.ldap.factory.*;
 
 /**
  * Represents an LDAP URL. The complete specification for LDAP URLs is in
@@ -81,7 +80,7 @@ import netscape.ldap.factory.*;
  */
 public class LDAPUrl implements java.io.Serializable {
 
-    static final long serialVersionUID = -3245440798565713640L;
+    static final long serialVersionUID = -3245440798565713641L;
     public static String defaultFilter = "(objectClass=*)";
 
     private String m_hostName;
@@ -371,7 +370,7 @@ public class LDAPUrl implements java.io.Serializable {
         } else
             m_attributes = null;
 
-        StringBuffer url = new StringBuffer (secure ? "LDAPS://" :"LDAP://");
+        StringBuffer url = new StringBuffer (secure ? "ldaps://" :"ldap://");
 
         if (host != null) {
             url.append (host);
@@ -442,6 +441,15 @@ public class LDAPUrl implements java.io.Serializable {
      */
     public String getDN () {
         return m_DN;
+    }
+
+    /**
+     * Return the server part of the ldap url, ldap://host:port
+     * @return server url.
+     */
+    String getServerUrl() {
+        return (m_secure ? "ldaps://" : "ldap://") +
+                m_hostName + ":" + m_portNumber;
     }
 
     /**
@@ -545,10 +553,10 @@ public class LDAPUrl implements java.io.Serializable {
 
         if (m_factory == null) {
 
-            // No factory explicity set, try to determine
+            // No factory explicitly set, try to determine
             // the default one.
             try {
-                //  First try iPlanet JSSSocketFactory
+                //  First try Mozilla JSSSocketFactory
                 Class c = Class.forName("netscape.ldap.factory.JSSSocketFactory");
                 m_factory = (LDAPSocketFactory) c.newInstance();
             }
@@ -561,7 +569,8 @@ public class LDAPUrl implements java.io.Serializable {
 
             try {
                 // then try Sun JSSESocketFactory
-                m_factory = new JSSESocketFactory(null);
+                Class c = Class.forName("netscape.ldap.factory.JSSESocketFactory");
+                m_factory = (LDAPSocketFactory) c.newInstance();
             }
             catch (Throwable e) {
             }

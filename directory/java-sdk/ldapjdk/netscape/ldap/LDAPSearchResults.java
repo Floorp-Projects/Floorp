@@ -549,7 +549,7 @@ public class LDAPSearchResults implements Enumeration, java.io.Serializable {
                                                 currBase, currScope, currFilter,
                                                 currAttrs, currAttrsOnly);
                   } catch (LDAPException e) {
-                      System.err.println("LDAPSearchResults.fetchResult: "+e);
+                      add(e);
                   } finally {
                       currConn.releaseSearchListener(resultSource);
                   }
@@ -567,7 +567,7 @@ public class LDAPSearchResults implements Enumeration, java.io.Serializable {
                         currConn.checkSearchMsg(this, msg, currCons,
                           currBase, currScope, currFilter, currAttrs, currAttrsOnly);
                     } catch (LDAPException e) {
-                        System.err.println("Exception: "+e);
+                        add(e);
                     }
                 }
             }

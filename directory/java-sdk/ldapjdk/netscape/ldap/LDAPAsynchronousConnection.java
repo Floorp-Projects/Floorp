@@ -168,9 +168,9 @@ public interface LDAPAsynchronousConnection {
 
     
     /**
-     * Makes a single change to an existing entry in the directory (for
-     * example, changes the value of an attribute, adds a new attribute
-     * value, or removes an existing attribute value).<BR>
+     * Makes a single change to an existing entry in the directory.
+     * For example, changes the value of an attribute, adds a new attribute
+     * value, or removes an existing attribute value.<BR>
      * The LDAPModification object specifies both the change to be made and
      * the LDAPAttribute value to be changed.
      * 
@@ -190,9 +190,9 @@ public interface LDAPAsynchronousConnection {
                                        throws LDAPException;   
     
     /**
-     * Makes a single change to an existing entry in the directory (for
-     * example, changes the value of an attribute, adds a new attribute
-     * value, or removes an existing attribute value).<BR>
+     * Makes a single change to an existing entry in the directory.
+     * For example, changes the value of an attribute, adds a new attribute
+     * value, or removes an existing attribute value.<BR>
      * The LDAPModification object specifies both the change to be made and
      * the LDAPAttribute value to be changed.
      * 
@@ -215,9 +215,9 @@ public interface LDAPAsynchronousConnection {
                                        throws LDAPException;    
 
     /**
-     * Makes a set of changes to an existing entry in the directory (for
-     * example, changes attribute values, adds new attribute values, or
-     * removes existing attribute values).
+     * Makes a set of changes to an existing entry in the directory.
+     * For example, changes attribute values, adds new attribute values, or
+     * removes existing attribute values.
      * <P>
      * @param dn distinguished name of the entry to modify
      * @param mods a set of modifications to make to the entry
@@ -235,9 +235,9 @@ public interface LDAPAsynchronousConnection {
                                        throws LDAPException;   
     
     /**
-     * Makes a set of changes to an existing entry in the directory (for
-     * example, changes attribute values, adds new attribute values, or
-     * removes existing attribute values).
+     * Makes a set of changes to an existing entry in the directory.
+     * For example, changes attribute values, adds new attribute values, or
+     * removes existing attribute values.
      * 
      * @param dn distinguished name of the entry to modify
      * @param mods a set of modifications to make to the entry

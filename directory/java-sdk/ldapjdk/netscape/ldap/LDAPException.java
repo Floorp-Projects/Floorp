@@ -123,6 +123,7 @@ import java.io.*;
  *  95     <A HREF="#MORE_RESULTS_TO_RETURN">MORE_RESULTS_TO_RETURN</A>
  *  96     <A HREF="#CLIENT_LOOP">CLIENT_LOOP</A>
  *  97     <A HREF="#REFERRAL_LIMIT_EXCEEDED">REFERRAL_LIMIT_EXCEEDED</A>
+ * 112     <A HREF="#TLS_NOT_SUPPORTED">TLS_NOT_SUPPORTED</A> (LDAP v3) 
  * </PRE>
  * <P>
  *
@@ -132,7 +133,7 @@ import java.io.*;
 public class LDAPException extends java.lang.Exception
                            implements java.io.Serializable {
 
-    static final long serialVersionUID = -9215007872184847924L;
+    static final long serialVersionUID = -9215007872184847925L;
 
     /**
      * (0) The operation completed successfully.
@@ -557,10 +558,20 @@ public class LDAPException extends java.lang.Exception
     public final static int REFERRAL_LIMIT_EXCEEDED      = 0x61;
 
     /**
+     * (112) The socket factory of the connection is not capable
+     * of initiating a TLS session.
+     * <P>
+     *
+     * @see netscape.ldap.LDAPConnection#startTLS
+     */
+    public final static int TLS_NOT_SUPPORTED      = 0x70;
+
+    /**
      * Internal variables
      */
     private int resultCode = -1;
     private String errorMessage = null;
+    private String extraMessage = null;
     private String matchedDN = null;
     private Locale m_locale = Locale.getDefault();
     private static Hashtable cacheResource = new Hashtable();
@@ -733,17 +744,32 @@ public class LDAPException extends java.lang.Exception
     public String getLDAPErrorMessage () {
         return errorMessage;
     }
+   
+
+    /**
+     * Adds additional explanation to the error message
+     */
+    void setExtraMessage (String msg) {
+        if (extraMessage == null) {
+            extraMessage = msg;
+        }
+        else {
+            extraMessage += "; " + msg;
+        }
+    }
 
     /**
      * Returns the maximal subset of a DN which could be matched by the
-     * server, if the server returned one of the following errors:
+     * server.
+     * 
+     * The method should be used if the server returned one of the
+     * following errors:
      * <UL>
      * <LI><CODE>NO_SUCH_OBJECT</CODE>
      * <LI><CODE>ALIAS_PROBLEM</CODE>
      * <LI><CODE>INVALID_DN_SYNTAX</CODE>
      * <LI><CODE>ALIAS_DEREFERENCING_PROBLEM</CODE>
      * </UL>
-     * </PRE>
      * For example, if the DN <CODE>cn=Babs Jensen, o=People, c=Airius.com</CODE>
      * could not be found by the DN <CODE>o=People, c=Airius.com</CODE>
      * could be found, the matched DN is
@@ -791,14 +817,19 @@ public class LDAPException extends java.lang.Exception
      */
     public String toString() {
         String str = super.toString() + " (" + resultCode + ")" ;
-        if ( (errorMessage != null) && (errorMessage.length() > 0) )
+        if ( (errorMessage != null) && (errorMessage.length() > 0) ) {
             str += "; " + errorMessage;
-        if ( (matchedDN != null) && (matchedDN.length() > 0) )
+        }
+        if ( (matchedDN != null) && (matchedDN.length() > 0) ) {
             str += "; matchedDN = " + matchedDN;
-            String errorStr = null;
-            if (((errorStr = errorCodeToString(m_locale)) != null) &&
-              (errorStr.length() > 0))
-                str += "; " + errorStr;
+        }
+        String  errorStr = errorCodeToString(m_locale);
+        if ((errorStr != null) && (errorStr.length() > 0)) {
+            str += "; " + errorStr;
+        }
+        if (extraMessage != null) {
+            str += "; " + extraMessage;
+        }
         return str;
     }
 

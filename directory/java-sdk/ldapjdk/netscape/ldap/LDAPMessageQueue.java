@@ -35,7 +35,7 @@ import java.util.Vector;
  */
 class LDAPMessageQueue implements java.io.Serializable {
 
-    static final long serialVersionUID = -7163312406176592277L;
+    static final long serialVersionUID = -7163312406176592278L;
 
     /**
      * Request entry encapsulates request parameters
@@ -88,6 +88,27 @@ class LDAPMessageQueue implements java.io.Serializable {
         return m_asynchOp;
     }
 
+    /**
+     * Blocks until a response is available.
+     * Used by LDAPConnection.sendRequest (synch ops) to test if the server
+     * is really available after a request had been sent.
+     * @exception LDAPException Network error exception
+     * @exception LDAPInterruptedException The invoking thread was interrupted
+     */
+    synchronized void waitFirstMessage () throws LDAPException {
+        
+        while(m_requestList.size() != 0 && m_exception == null && m_messageQueue.size() == 0) {
+            waitForMessage();
+        }
+        
+        // Network exception occurred ?
+        if (m_exception != null) {
+            LDAPException ex = m_exception;
+            m_exception = null;
+            throw ex;
+        }        
+    }
+    
     /**
      * Blocks until a response is available or until all operations
      * associated with the object have completed or been canceled.
@@ -287,7 +308,7 @@ class LDAPMessageQueue implements java.io.Serializable {
         // Mark conn as bound for asych bind operations
         if (isAsynchOp() && msg.getType() == msg.BIND_RESPONSE) {
             if (((LDAPResponse) msg).getResultCode() == 0) {
-                getConnection(msg.getMessageID()).markConnAsBound();
+                getConnection(msg.getMessageID()).setBound(true);
             }                
         }
                 

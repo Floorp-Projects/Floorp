@@ -225,7 +225,7 @@ public class LDAPSaslBind implements LDAPBind, java.io.Serializable {
                         _saslClient,
                         className, "getOutputStream", args, argNames);
                 ldc.setOutputStream(os);
-                ldc.markConnAsBound();
+                ldc.setBound(true);
             } catch (LDAPException e) {
                 throw e;
             } catch (Exception e) {

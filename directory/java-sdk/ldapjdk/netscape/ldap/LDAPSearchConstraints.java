@@ -34,11 +34,25 @@ package netscape.ldap;
 public class LDAPSearchConstraints extends LDAPConstraints 
                                    implements Cloneable {
 
+
+    // Constants for behavior when a search continuation reference cannot
+    // be followed
+    /**
+     * Continue processing if there is an error following a search continuation
+     * reference
+     */
+    public static final int REFERRAL_ERROR_CONTINUE = 0;
+    /**
+     * Throw exception if there is an error following a search continuation
+     * reference
+     */
+    public static final int REFERRAL_ERROR_EXCEPTION = 1;
     private int deref;
     private int maxRes;
     private int batch;
     private int serverTimeLimit;
     private int maxBacklog = 100;
+    private int referralErrors = REFERRAL_ERROR_CONTINUE;
 
     /**
      * Constructs an <CODE>LDAPSearchConstraints</CODE> object that specifies
@@ -81,8 +95,10 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * @param hop_limit maximum number of referrals to follow in a
      * sequence when attempting to resolve a request
      * @see netscape.ldap.LDAPConnection#setOption(int, java.lang.Object)
-     * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl, netscape.ldap.LDAPSearchConstraints)
-     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl,
+netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String,
+java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
      */
     public LDAPSearchConstraints( int msLimit, int dereference,
         int maxResults, boolean doReferrals, int batchSize,
@@ -125,8 +141,10 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * @param hop_limit maximum number of referrals to follow in a
      * sequence when attempting to resolve a request
      * @see netscape.ldap.LDAPConnection#setOption(int, java.lang.Object)
-     * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl, netscape.ldap.LDAPSearchConstraints)
-     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl,
+netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String,
+java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
      */
     public LDAPSearchConstraints( int msLimit, int timeLimit,
                                   int dereference,
@@ -171,8 +189,10 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * @param hop_limit maximum number of referrals to follow in a
      * sequence when attempting to resolve a request
      * @see netscape.ldap.LDAPConnection#setOption(int, java.lang.Object)
-     * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl, netscape.ldap.LDAPSearchConstraints)
-     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl,
+netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String,
+java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
      */
     public LDAPSearchConstraints( int msLimit, int timeLimit,
                                   int dereference,
@@ -297,50 +317,100 @@ public class LDAPSearchConstraints extends LDAPConstraints
     }
 
     /**
+     * Reports if errors when following search continuation references are
+     * to cause processing of the remaining results to be aborted.
+     * <p>
+     * If an LDAP server does not contain an entry at the base DN for a search,
+     * it may be configured to return a referral. If it contains an entry at
+     * the base DN of a subtree search, one or more of the child entries may
+     * contain search continuation references. The search continuation
+     * references are returned to the client, which may follow them by issuing
+     * a search request to the host indicated in the search reference.
+     * <p>
+     * If the <CODE>LDAPConnection</CODE> object has been configured to follow
+     * referrals automatically, it may fail when issuing a search request to
+     * the host indicated in a search reference, e.g. because there is no
+     * entry there, because it does not have credentials, because it does not
+     * have sufficient permissions, etc. If the client aborts evaluation of the
+     * search results (obtained through <CODE>LDAPSearchResults</CODE>) when a
+     * search reference cannot be followed, any remaining results are discarded.
+     * <p>
+     * Up to version 4.17 of the Java LDAP SDK, the SDK printed an error
+     * message but continued to process the remaining search results and search
+     * continuation references.
+     * <p>
+     * As of SDK version 4.17, the default behavior is still to continue
+     * processing any remaining search results and search continuation
+     * references if there is an error following a referral, but the behavior
+     * may be changed with <CODE>setReferralErrors</CODE> to throw an exception
+     * instead.
+     * 
+     * @return <CODE>REFERRAL_ERROR_CONTINUE</CODE> if remaining results are
+     * to be processed when there is an error following a search continuation
+     * reference, <CODE>REFERRAL_ERROR_EXCEPTION</CODE> if such an error is to
+     * cause an <CODE>LDAPException</CODE>.
+     * 
+     * @see netscape.ldap.LDAPConstraints#setReferrals
+     * @since LDAPJDK 4.17
+     */
+    public int getReferralErrors() {
+        return referralErrors;
+    }
+    
+    /**
+     * Specifies if errors when following search continuation references are
+     * to cause processing of the remaining results to be aborted.
+     * <p>
+     * If an LDAP server does not contain an entry at the base DN for a search,
+     * it may be configured to return a referral. If it contains an entry at
+     * the base DN of a subtree search, one or more of the child entries may
+     * contain search continuation references. The search continuation
+     * references are returned to the client, which may follow them by issuing
+     * a search request to the host indicated in the search reference.
+     * <p>
+     * If the <CODE>LDAPConnection</CODE> object has been configured to follow
+     * referrals automatically, it may fail when issuing a search request to
+     * the host indicated in a search reference, e.g. because there is no
+     * entry there, because it does not have credentials, because it does not
+     * have sufficient permissions, etc. If the client aborts evaluation of the
+     * search results (obtained through <CODE>LDAPSearchResults</CODE>) when a
+     * search reference cannot be followed, any remaining results are discarded.
+     * <p>
+     * Up to version 4.17 of the Java LDAP SDK, the SDK printed an error
+     * message but continued to process the remaining search results and search
+     * continuation references.
+     * <p>
+     * As of SDK version 4.17, the default behavior is still to continue
+     * processing any remaining search results and search continuation
+     * references if there is an error following a referral, but the behavior
+     * may be changed with <CODE>setReferralErrors</CODE> to throw an exception
+     * instead.
+     * 
+     * @param errorBehavior Either <CODE>REFERRAL_ERROR_CONTINUE</CODE> if
+     * remaining results are to be processed when there is an error following a
+     * search continuation reference or <CODE>REFERRAL_ERROR_EXCEPTION</CODE>
+     * if such an error is to cause an <CODE>LDAPException</CODE>.
+     * 
+     * @see netscape.ldap.LDAPSearchConstraints#getReferralErrors
+     * @see netscape.ldap.LDAPSearchResults#next
+     * @see netscape.ldap.LDAPSearchResults#nextElement
+     * @since LDAPJDK 4.17
+     */
+    public void setReferralErrors(int errorBehavior) {
+        if ( (errorBehavior != REFERRAL_ERROR_CONTINUE) &&
+             (errorBehavior != REFERRAL_ERROR_EXCEPTION) ) {
+            throw new IllegalArgumentException( "Invalid error behavior: " +
+                                                errorBehavior );
+        }
+        referralErrors = errorBehavior;
+    }
+
+    /**
      * Makes a copy of an existing set of search constraints.
      * @return a copy of an existing set of search constraints.
      */
     public Object clone() {
-        LDAPSearchConstraints o = new LDAPSearchConstraints();
-
-        o.serverTimeLimit = this.serverTimeLimit;
-        o.deref = this.deref;
-        o.maxRes = this.maxRes;
-        o.batch = this.batch;
-        o.maxBacklog = this.maxBacklog;
-        
-        o.setHopLimit(this.getHopLimit());
-        o.setReferrals(this.getReferrals());
-        o.setTimeLimit(this.getTimeLimit());
-        
-        if (this.getBindProc() != null) {
-            o.setBindProc(this.getBindProc());
-        } else {
-            o.setRebindProc(this.getRebindProc());
-        }
-        
-        LDAPControl[] tClientControls = this.getClientControls();
-        LDAPControl[] oClientControls;
-
-        if ( (tClientControls != null) &&
-             (tClientControls.length > 0) ) {
-            oClientControls = new LDAPControl[tClientControls.length]; 
-            for( int i = 0; i < tClientControls.length; i++ )
-                oClientControls[i] = (LDAPControl)tClientControls[i].clone();
-            o.setClientControls(oClientControls);
-        }
-
-        LDAPControl[] tServerControls = this.getServerControls();
-        LDAPControl[] oServerControls;
-
-        if ( (tServerControls != null) && 
-             (tServerControls.length > 0) ) {
-            oServerControls = new LDAPControl[tServerControls.length];
-            for( int i = 0; i < tServerControls.length; i++ )
-                oServerControls[i] = (LDAPControl)tServerControls[i].clone();
-            o.setServerControls(oServerControls);
-        }
-
+        LDAPSearchConstraints o = (LDAPSearchConstraints) super.clone();
         return o;
     }
 
@@ -356,7 +426,8 @@ public class LDAPSearchConstraints extends LDAPConstraints
         sb.append("server time limit " + serverTimeLimit + ", ");
         sb.append("aliases " + deref + ", ");
         sb.append("batch size " + batch + ", ");
-        sb.append("max backlog " + maxBacklog);
+        sb.append("max backlog " + maxBacklog + ", ");
+        sb.append("referralErrors " + referralErrors);
         sb.append('}');
 
         return sb.toString();
