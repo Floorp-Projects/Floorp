@@ -199,10 +199,8 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   
   nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
   nsresult rv = it->Init(aDoc, aURL, aWebShell, aChannel);
-  if (NS_OK != rv) {
-    delete it;
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   return CallQueryInterface(it, aResult);
 }
 
