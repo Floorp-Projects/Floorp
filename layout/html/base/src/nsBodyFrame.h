@@ -64,6 +64,15 @@ public:
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
+                         const nsPoint&  aPoint,
+                         nsIFrame**      aFrame,
+                         nsIContent**    aContent,
+                         PRInt32&        aCursor);
 
   // nsIAnchoredItems
   virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
