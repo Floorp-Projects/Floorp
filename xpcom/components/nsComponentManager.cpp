@@ -62,6 +62,25 @@ NS_RegistryGetFactory(nsISupports* servMgr, nsIFactory** aFactory);
 PRLogModuleInfo* nsComponentManagerLog = NULL;
 #endif
 
+// Common Key Names 
+const char xpcomBaseName[]="XPCOM";
+const char xpcomKeyName[] ="Software/Netscape/XPCOM";
+const char netscapeKeyName[]="Software/Netscape";
+const char classesKeyName[]="Classes";
+const char classIDKeyName[]="CLSID";
+const char classesClassIDKeyName[]="Classes/CLSID";
+
+
+// Common Value Names
+const char classIDValueName[]="CLSID";
+const char versionValueName[]="VersionString";
+const char lastModValueName[]="LastModTimeStamp";
+const char fileSizeValueName[]="FileSize";
+const char componentCountValueName[]="ComponentsCount";
+const char progIDValueName[]="ProgID";
+const char classNameValueName[]="ClassName";
+const char inprocServerValueName[]="InprocServer";
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsFactoryEntry
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +332,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
     nsIRegistry::Key xpcomKey;
 
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Software/Netscape/XPCOM", &xpcomKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
     		
     if (NS_FAILED(rv))
     {        
@@ -321,7 +340,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
     }
     	
     char *buf;
-    nsresult err = mRegistry->GetString(xpcomKey, "VersionString", &buf);
+    nsresult err = mRegistry->GetString(xpcomKey, versionValueName, &buf);
     autoFree bufAutoFree(buf);
 
     // If there is a version mismatch or no version string, we got an old registry.
@@ -335,62 +354,62 @@ nsComponentManagerImpl::PlatformVersionCheck()
         // Delete the XPCOM and CLSID hierarchy
         nsIRegistry::Key netscapeKey;
 
-        rv = mRegistry->GetSubtree(nsIRegistry::Common,"Software/Netscape", &netscapeKey);
+        rv = mRegistry->GetSubtree(nsIRegistry::Common,netscapeKeyName, &netscapeKey);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Get Subtree (Software/Netscape)"));
+                   ("nsComponentManager: Failed To Get Subtree (%s)",netscapeKeyName));
             return rv;
         }
 
-        rv = mRegistry->RemoveSubtreeRaw(netscapeKey, "XPCOM");
+        rv = mRegistry->RemoveSubtreeRaw(netscapeKey, xpcomBaseName);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Nuke Subtree (Software/Netscape/XPCOM)"));
+                   ("nsComponentManager: Failed To Nuke Subtree (%s)",xpcomKeyName));
             return rv;
         }
 
-        rv = mRegistry->GetSubtree(nsIRegistry::Common,"Classes", &netscapeKey);
+        rv = mRegistry->GetSubtree(nsIRegistry::Common,classesKeyName, &netscapeKey);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Get Subtree (Classes)"));
+                   ("nsComponentManager: Failed To Get Subtree (%s)",classesKeyName));
             return rv;
         }
 
-        rv = mRegistry->RemoveSubtreeRaw(netscapeKey, "CLSID");
+        rv = mRegistry->RemoveSubtreeRaw(netscapeKey, classIDKeyName);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Nuke Subtree (Classes/CLSID)"));
+                   ("nsComponentManager: Failed To Nuke Subtree (%s/%s)",classesKeyName,classIDKeyName));
             return rv;
         }
         
         // Recreate XPCOM and CLSID keys
-        rv = mRegistry->AddSubtree(nsIRegistry::Common,"Software/Netscape/XPCOM", &xpcomKey);
+        rv = mRegistry->AddSubtree(nsIRegistry::Common,xpcomKeyName, &xpcomKey);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Add Subtree (Software/Netscape/XPCOM)"));
+                   ("nsComponentManager: Failed To Add Subtree (%s)",xpcomKeyName));
             return rv;
 
         }
 
-        rv = mRegistry->AddSubtree(nsIRegistry::Common,"Classes/CLSID", NULL);
+        rv = mRegistry->AddSubtree(nsIRegistry::Common,classesClassIDKeyName, NULL);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Add Subtree (Classes/CLSID)"));
+                   ("nsComponentManager: Failed To Add Subtree (%s)",classesClassIDKeyName));
             return rv;
 
         }
 
-        rv = mRegistry->SetString(xpcomKey,"VersionString", NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING);
+        rv = mRegistry->SetString(xpcomKey,versionValueName, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Set String (Version) Under (Software/Netscape/XPCOM)"));
+                   ("nsComponentManager: Failed To Set String (Version) Under (%s)",xpcomKeyName));
             return rv;
         }
 
@@ -414,7 +433,7 @@ nsComponentManagerImpl::PlatformGetFileInfo(nsIRegistry::Key key,PRTime *lastMod
     nsresult rv;
     PRTime *lastModPtr;
     uint32 n = sizeof(PRTime);
-    rv = mRegistry->GetBytes(key, "LastModTimeStamp", (void **)&lastModPtr, &n);
+    rv = mRegistry->GetBytes(key, lastModValueName, (void **)&lastModPtr, &n);
     if(NS_SUCCEEDED(rv))
     {
         *lastModifiedTime = *lastModPtr;
@@ -422,7 +441,7 @@ nsComponentManagerImpl::PlatformGetFileInfo(nsIRegistry::Key key,PRTime *lastMod
     }
     	
     int32 fsize = 0;
-    rv = mRegistry->GetInt(key, "FileSize", &fsize);
+    rv = mRegistry->GetInt(key, fileSizeValueName, &fsize);
     if (NS_SUCCEEDED(rv))
     {
         *fileSize = fsize;
@@ -444,7 +463,7 @@ nsComponentManagerImpl::PlatformCreateDll(const char *fullname, nsDll* *result)
 
     nsIRegistry::Key xpcomKey;
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Software/Netscape/XPCOM", &xpcomKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
     if (NS_FAILED(rv))
     {        
         return rv;
@@ -492,7 +511,7 @@ nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)
 
     nsIRegistry::Key xpcomKey;
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Software/Netscape/XPCOM", &xpcomKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
     if (NS_FAILED(rv))
     {        
         return rv;
@@ -509,9 +528,9 @@ nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)
     PRUint32 fileSize = dll->GetSize();
     int32 nComponents = 0;
 
-    rv = mRegistry->SetBytes(dllPathKey,"LastModTimeStamp",&lastModTime, sizeof(lastModTime));
-    rv = mRegistry->SetInt(dllPathKey,"FileSize",fileSize);
-    rv = mRegistry->SetInt(dllPathKey, "ComponentsCount", nComponents);
+    rv = mRegistry->SetBytes(dllPathKey,lastModValueName,&lastModTime, sizeof(lastModTime));
+    rv = mRegistry->SetInt(dllPathKey,fileSizeValueName,fileSize);
+    rv = mRegistry->SetInt(dllPathKey, componentCountValueName, nComponents);
       
     return rv;
 }
@@ -527,14 +546,14 @@ nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
 
     nsIRegistry::Key classesKey;
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Classes", &classesKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &classesKey);
     if (NS_FAILED(rv))
     {        
         return rv;
     }
 
     nsIRegistry::Key clsIDkey;
-    rv = mRegistry->AddSubtree(classesKey, "CLSID", &clsIDkey);
+    rv = mRegistry->AddSubtree(classesKey, classIDKeyName, &clsIDkey);
     if (NS_FAILED(rv)) return (rv);
 
     nsIRegistry::Key IDkey;
@@ -542,25 +561,25 @@ nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
     if (NS_FAILED(rv)) return (rv);
 
 
-    rv = mRegistry->SetString(IDkey,"ClassName", (char *)regd->className);
+    rv = mRegistry->SetString(IDkey,classNameValueName, (char *)regd->className);
     if (regd->progID)
     {
-        rv = mRegistry->SetString(IDkey,"ProgID", (char *)(regd->progID));        
+        rv = mRegistry->SetString(IDkey,progIDValueName, (char *)(regd->progID));        
     }
-    rv = mRegistry->SetString(IDkey, "InprocServer", (char *)dll->GetFullPath());
+    rv = mRegistry->SetString(IDkey, inprocServerValueName, (char *)dll->GetFullPath());
     
     if (regd->progID)
     {
         nsIRegistry::Key progIDKey;
         rv = mRegistry->AddSubtreeRaw(classesKey, (char *)regd->progID, &progIDKey);
-        rv = mRegistry->SetString(progIDKey, "CLSID", (char *)regd->CIDString);
+        rv = mRegistry->SetString(progIDKey, classIDValueName, (char *)regd->CIDString);
     }
 
     // XXX Gross. LongLongs dont have a serialization format. This makes
     // XXX the registry non-xp. Someone beat on the nspr people to get
     // XXX a longlong serialization function please!
     nsIRegistry::Key xpcomKey;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Software/Netscape/XPCOM", &xpcomKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
     if(NS_FAILED(rv))
     {
         // This aint a fatal error. It causes autoregistration to fail
@@ -575,13 +594,13 @@ nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
     PRTime lastModTime = dll->GetLastModifiedTime();
     int32 fileSize = dll->GetSize();
 
-    rv = mRegistry->SetBytes(dllPathKey,"LastModTimeStamp",&lastModTime, sizeof(lastModTime));
-    rv = mRegistry->SetInt(dllPathKey,"FileSize", fileSize);
+    rv = mRegistry->SetBytes(dllPathKey,lastModValueName,&lastModTime, sizeof(lastModTime));
+    rv = mRegistry->SetInt(dllPathKey,fileSizeValueName, fileSize);
 
     int32 nComponents = 0;
-    rv = mRegistry->GetInt(dllPathKey, "ComponentsCount", &nComponents);
+    rv = mRegistry->GetInt(dllPathKey, componentCountValueName, &nComponents);
     nComponents++;
-    rv = mRegistry->SetInt(dllPathKey,"ComponentsCount", nComponents);
+    rv = mRegistry->SetInt(dllPathKey,componentCountValueName, nComponents);
 
     return rv;
 }
@@ -593,21 +612,21 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
 
     nsIRegistry::Key classesKey;
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Classes", &classesKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &classesKey);
     if (NS_FAILED(rv))
     {        
         return rv;
     }
 
     nsIRegistry::Key clsIDKey;
-    rv = mRegistry->AddSubtree(classesKey, "CLSID", &clsIDKey);
+    rv = mRegistry->AddSubtree(classesKey, classIDKeyName, &clsIDKey);
     if(NS_FAILED(rv)) return rv;
     	
     nsIRegistry::Key cidKey;
     rv = mRegistry->AddSubtreeRaw(clsIDKey,(char *)regd->CIDString, &cidKey);
 
     char *progID = NULL;
-    rv = mRegistry->GetString(cidKey, "ProgID", &progID);
+    rv = mRegistry->GetString(cidKey, progIDValueName, &progID);
     if(NS_SUCCEEDED(rv))
     {
         // XXX RemoveSubtreeRaw
@@ -618,7 +637,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     mRegistry->RemoveSubtree(clsIDKey, (char *)regd->CIDString);
     	
     nsIRegistry::Key xpcomKey;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common,"Software/Netscape/XPCOM", &xpcomKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common,xpcomKeyName, &xpcomKey);
     if(NS_FAILED(rv)) return rv;
 
     nsIRegistry::Key libKey;
@@ -628,7 +647,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     // We need to reduce the ComponentCount by 1.
     // If the ComponentCount hits 0, delete the entire key.
     int32 nComponents = 0;
-    rv = mRegistry->GetInt(libKey, "ComponentsCount", &nComponents);
+    rv = mRegistry->GetInt(libKey, componentCountValueName, &nComponents);
     if(NS_FAILED(rv)) return rv;
     nComponents--;
     
@@ -639,7 +658,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     }
     else
     {
-        rv = mRegistry->SetInt(libKey, "ComponentsCount", nComponents);
+        rv = mRegistry->SetInt(libKey, componentCountValueName, nComponents);
     }
 
     return rv;
@@ -652,11 +671,11 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 
     nsIRegistry::Key classesKey;
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Classes", &classesKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &classesKey);
     if (NS_FAILED(rv)) return rv;
 
     nsIRegistry::Key clsIDKey;
-    rv = mRegistry->AddSubtree(classesKey, "CLSID", &clsIDKey);
+    rv = mRegistry->AddSubtree(classesKey, classIDKeyName, &clsIDKey);
     if (NS_FAILED(rv)) return rv;
 
     char *cidString = aCID.ToString();
@@ -667,7 +686,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     if (NS_FAILED(rv)) return rv;
     
     char *library = NULL;
-    rv = mRegistry->GetString(cidKey, "InprocServer", &library);
+    rv = mRegistry->GetString(cidKey, inprocServerValueName, &library);
     if (NS_FAILED(rv))
     {
         // Registry inconsistent. No File name for CLSID.
@@ -679,7 +698,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     // XXX the registry non-xp. Someone beat on the nspr people to get
     // XXX a longlong serialization function please!
     nsIRegistry::Key xpcomKey;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Software/Netscape/XPCOM", &xpcomKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
 
     // Get the library name, modifiedtime and size
     PRTime lastModTime = LL_ZERO;
@@ -712,7 +731,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
 
     nsIRegistry::Key classesKey;
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Classes", &classesKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &classesKey);
     if (NS_FAILED(rv)) return rv;
     	
     nsIRegistry::Key progIDKey;
@@ -720,7 +739,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
     if (NS_FAILED(rv)) return rv;
 
     char *cidString;
-    rv = mRegistry->GetString(progIDKey, "CLSID", &cidString);
+    rv = mRegistry->GetString(progIDKey, classIDValueName, &cidString);
     if(NS_FAILED(rv)) return rv;
     autoFree cidAutoFree(cidString);
 
@@ -742,7 +761,7 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(nsCID *aClass,
 
     nsIRegistry::Key classesKey;
     nsresult rv;
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, "Classes", &classesKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &classesKey);
     if (NS_FAILED(rv)) return rv;
 
     char* cidStr = aClass->ToString();
@@ -752,12 +771,12 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(nsCID *aClass,
     PR_FREEIF(cidStr);
 
     char* classnameString;
-    rv = mRegistry->GetString(cidKey, "ClassName", &classnameString);
+    rv = mRegistry->GetString(cidKey, classNameValueName, &classnameString);
     if(NS_FAILED(rv)) return rv;
     *aClassName = classnameString;
 
     char* progidString;
-    rv = mRegistry->GetString(cidKey,"ProgID",&progidString);
+    rv = mRegistry->GetString(cidKey,progIDValueName,&progidString);
     if (NS_FAILED(rv)) return rv;
     *aProgID = progidString;
 
