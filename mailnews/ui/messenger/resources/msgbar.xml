@@ -17,14 +17,36 @@
   <xul:menubar>
     <xul:menu name="File">
       <xul:menuitem name="New Message" cmd="nsCmd:NewMessage"/>
+      <separator/>
       <xul:menuitem name="Get New Message" cmd="nsCmd:GetMessage"/>
+      <xul:menuitem name="Subscribe" cmd="nsCmd:Subscribe"/>
+      <separator/>
+      <xul:menuitem name="Rename Folder.." cmd="nsCmd:RenameFolder"/>
+      <xul:menuitem name="Empty Trash" cmd="nsCmd:EmptyTrash"/>
+      <separator/>
+      <xul:menuitem name="Print" cmd="nsCmd:Print"/>
+      <separator/>
+      <xul:menuitem name="Close" cmd="nsCmd:Close"/>
+      <xul:menuitem name="Exit" cmd="nsCmd:Exit"/>
     </xul:menu>
     <xul:menu name="Edit">
       <xul:menuitem name="Delete Message" cmd="nsCmd:DeleteMessage"/>
     </xul:menu>
+    <xul:menu name="View">
+      <xul:menuitem name="View Attachments Inline" cmd="nsCmd:ViewAttachInline"/>
+      <xul:menuitem name="Wrap Long Lines" cmd="nsCmd:WrapLongLines"/>
+      <separator/>
+      <xul:menuitem name="Page Source" cmd="nsCmd:ViewPageSource"/>
+      <xul:menuitem name="Page Info" cmd="nsCmd:ViewPageInfo"/>
+    </xul:menu>
+    <xul:menu name="Go">
+      <xul:menuitem name="Next Message" cmd="nsCmd:NextMessage"/>
+      <xul:menuitem name="Next Unread Message" cmd="nsCmd:NextUnreadMessage"/>
+    </xul:menu>
     <xul:menu name="Message">
+      <xul:menuitem name="New Message" cmd="nsCmd:NewMessage">
       <xul:menuitem name="Reply" cmd="nsCmd:ReplyMessage"/>
-      <xul:menuitem name="Forward" cmd="nsCmd:ForwardMessage" />
+      <xul:menuitem name="Forward" cmd="nsCmd:ForwardMessage"/>
      </xul:menu>
 
   </xul:menubar>
