@@ -58,6 +58,8 @@ static PK11SymKey *pk11_DeriveWithTemplate(PK11SymKey *baseKey,
 	CK_MECHANISM_TYPE derive, SECItem *param, CK_MECHANISM_TYPE target, 
 	CK_ATTRIBUTE_TYPE operation, int keySize, CK_ATTRIBUTE *userAttr, 
 	unsigned int numAttrs);
+static PRBool pk11_FindAttrInTemplate(CK_ATTRIBUTE * attr, 
+	unsigned int numAttrs, CK_ATTRIBUTE_TYPE target);
 
 
 /*
@@ -388,6 +390,11 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     }
 
     symKey->size = key->len;
+    if (!pk11_FindAttrInTemplate(keyTemplate, templateCount, CKA_VALUE)) {
+        CK_ATTRIBUTE *attrs = keyTemplate + templateCount;
+        PK11_SETATTRS(attrs, CKA_VALUE, key->data, key->len); 
+        templateCount++;
+    }
 
     if (SECITEM_CopyItem(NULL,&symKey->data,key) != SECSuccess) {
 	PK11_FreeSymKey(symKey);
@@ -2664,12 +2671,6 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     }
 
     outKey.len = (key_size == 0) ? len : key_size;
-    if (outKey.len > 0 &&
-          !pk11_FindAttrInTemplate(keyTemplate, templateCount, CKA_VALUE)) {
-        CK_ATTRIBUTE *attrs = keyTemplate + templateCount;
-        PK11_SETATTRS(attrs, CKA_VALUE, outKey.data, outKey.len); 
-        templateCount++;
-    }
 
     if (PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_ImportSymKeyWithTempl(slot, target, PK11_OriginUnwrap, 
