@@ -281,9 +281,9 @@ function FillListboxes()
   for (var j = 1; j <= 6; j++)
   {
     var headingList = editorShell.editorDocument.getElementsByTagName("h"+String(j));
-    if (headingList.length > 0)
+    for (var k = 0; k < headingList.length; k++)
     {
-      var heading = headingList.item(0);
+      var heading = headingList.item(k);
 
       // Skip headings that already have a named anchor as their first child
       //  (this may miss nearby anchors, but at least we don't insert another
