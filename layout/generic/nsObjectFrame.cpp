@@ -3185,81 +3185,71 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 /*=============== nsIDOMDragListener ======================*/
 nsresult nsPluginInstanceOwner::DragEnter(nsIDOMEvent* aMouseEvent)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
   if (mInstance) {
-    // If this event is going to the plugin, we want to kill it.
-    // Not actually sending drag events to the plugin, since we didn't before.
+    // Let the plugin handle drag events.
     aMouseEvent->PreventDefault();
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
     if (nsevent) {
       nsevent->PreventBubble();
     }
   }
-#endif
+
   return NS_OK;
 }
 
 nsresult nsPluginInstanceOwner::DragOver(nsIDOMEvent* aMouseEvent)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
   if (mInstance) {
-    // If this event is going to the plugin, we want to kill it.
-    // Not actually sending drag events to the plugin, since we didn't before.
+    // Let the plugin handle drag events.
     aMouseEvent->PreventDefault();
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
     if (nsevent) {
       nsevent->PreventBubble();
     }
   }
-#endif
+
   return NS_OK;
 }
 
 nsresult nsPluginInstanceOwner::DragExit(nsIDOMEvent* aMouseEvent)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
   if (mInstance) {
-    // If this event is going to the plugin, we want to kill it.
-    // Not actually sending drag events to the plugin, since we didn't before.
+    // Let the plugin handle drag events.
     aMouseEvent->PreventDefault();
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
     if (nsevent) {
       nsevent->PreventBubble();
     }
   }
-#endif
+
   return NS_OK;
 }
 
 nsresult nsPluginInstanceOwner::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
   if (mInstance) {
-    // If this event is going to the plugin, we want to kill it.
-    // Not actually sending drag events to the plugin, since we didn't before.
+    // Let the plugin handle drag events.
     aMouseEvent->PreventDefault();
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
     if (nsevent) {
       nsevent->PreventBubble();
     }
   }
-#endif
+
   return NS_OK;
 }
 
 nsresult nsPluginInstanceOwner::DragGesture(nsIDOMEvent* aMouseEvent)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
   if (mInstance) {
-    // If this event is going to the plugin, we want to kill it.
-    // Not actually sending drag events to the plugin, since we didn't before.
+    // Let the plugin handle drag events.
     aMouseEvent->PreventDefault();
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
     if (nsevent) {
       nsevent->PreventBubble();
     }
   }
-#endif
+
   return NS_OK;
 }
 
