@@ -2508,8 +2508,30 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 [  --disable-pedantic      Issue all warnings demanded by strict ANSI C ],
   _PEDANTIC= )
 if test "$_PEDANTIC"; then
-  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
-  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+    AC_LANG_CPLUSPLUS
+    _SAVE_CXXFLAGS=$CXXFLAGS
+    CXXFLAGS="$CXXFLAGS ${_WARNING_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+    AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
+    AC_TRY_RUN([ int main () {
+                if (sizeof(long long) != 8) { return 1; } 
+                    return 0; } ],
+        result="no", result="yes", result="maybe" )
+    AC_MSG_RESULT([$result])
+    CXXFLAGS="$_SAVE_CXXFLAGS"
+    AC_LANG_C
+
+    case "$result" in
+    no)
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+        ;;
+    yes)
+        AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
+        ;;
+    maybe)
+        AC_MSG_WARN([Cannot test -pedantic long long bug when cross-compiling.])
+        ;;
+    esac
 fi
 
 dnl pass -Wno-long-long to the compiler
