@@ -2698,7 +2698,7 @@ PRBool CSSParserImpl::ParseHSLColor(PRInt32& aErrorCode, nscolor& aColor,
   h = mToken.mNumber;
   h /= 360.0f;
   // hue values are wraparound
-  h = h - floorf(h);
+  h = h - floor(h);
   
   if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ',' but found"));
