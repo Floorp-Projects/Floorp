@@ -1296,8 +1296,7 @@ NS_IMETHODIMP
 nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint) const
 {
-  if ((aAttribute == nsHTMLAtoms::align) || 
-      (aAttribute == nsHTMLAtoms::layout) ||
+  if ((aAttribute == nsHTMLAtoms::layout) ||
       (aAttribute == nsHTMLAtoms::cellpadding) ||
       (aAttribute == nsHTMLAtoms::cellspacing) ||
       (aAttribute == nsHTMLAtoms::cols) ||
@@ -1312,6 +1311,9 @@ nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::bordercolor) {
     aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {

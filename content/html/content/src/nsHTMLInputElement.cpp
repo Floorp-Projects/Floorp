@@ -1225,10 +1225,10 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint) const
 {
-  if ((aAttribute == nsHTMLAtoms::align) || (aAttribute == nsHTMLAtoms::value)) {
+  if (aAttribute == nsHTMLAtoms::value) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if ((aAttribute == nsHTMLAtoms::type)) {
+  else if ((aAttribute == nsHTMLAtoms::align) || (aAttribute == nsHTMLAtoms::type)) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {

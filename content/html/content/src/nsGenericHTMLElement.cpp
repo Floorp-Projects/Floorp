@@ -2989,7 +2989,7 @@ nsGenericHTMLElement::GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
                                                    PRInt32& aHint)
 {
   if ((nsHTMLAtoms::align == aAttribute)) {
-    aHint = NS_STYLE_HINT_REFLOW;
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
     return PR_TRUE;
   }
   return PR_FALSE;

@@ -541,11 +541,9 @@ nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::usemap) ||
-      (aAttribute == nsHTMLAtoms::ismap)) {
+      (aAttribute == nsHTMLAtoms::ismap)  ||
+      (aAttribute == nsHTMLAtoms::align)) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
