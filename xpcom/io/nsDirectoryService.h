@@ -104,6 +104,9 @@ private:
     static nsIAtom *sHomeDirectory;
     static nsIAtom *sDefaultDownloadDirectory;
     static nsIAtom *sUserLibDirectory;
+#elif defined (XP_MACOSX)
+    static nsIAtom *sHomeDirectory;
+    static nsIAtom *sDefaultDownloadDirectory;
 #elif defined (XP_WIN) 
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sWindowsDirectory;
@@ -131,7 +134,7 @@ private:
     static nsIAtom *sCommon_Desktopdirectory;
     static nsIAtom *sAppdata;
     static nsIAtom *sPrinthood;
-#elif defined (XP_UNIX) || defined(XP_MACOSX)
+#elif defined (XP_UNIX)
     static nsIAtom *sLocalDirectory;
     static nsIAtom *sLibDirectory;
     static nsIAtom *sHomeDirectory;

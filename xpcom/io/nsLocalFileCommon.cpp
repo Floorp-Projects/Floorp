@@ -56,7 +56,7 @@ void NS_ShutdownLocalFile()
     nsLocalFile::GlobalShutdown();
 }
 
-#if !defined(XP_MAC)
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
 NS_IMETHODIMP
 nsLocalFile::InitWithFile(nsILocalFile *aFile)
 {
@@ -70,8 +70,11 @@ nsLocalFile::InitWithFile(nsILocalFile *aFile)
 }
 #endif
 
-// should work on Macintosh, Unix, and Win32.
-#define kMaxFilenameLength 31  
+#if defined(XP_MAC)
+#define kMaxFilenameLength 31
+#else
+#define kMaxFilenameLength 255
+#endif  
 
 NS_IMETHODIMP
 nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
@@ -95,8 +98,7 @@ nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
         leafName.SetLength(lastDot - leafName.get()); // strip suffix and dot.
     }
 
-    // 27 should work on Macintosh, Unix, and Win32. 
-    const int maxRootLength = 27 - strlen(suffix) - 1;
+    const int maxRootLength = (kMaxFilenameLength - 4) - strlen(suffix) - 1;
 
     if ((int)leafName.Length() > (int)maxRootLength)
         leafName.SetLength(maxRootLength);

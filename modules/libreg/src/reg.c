@@ -74,8 +74,10 @@
 #include "reg.h"
 #include "NSReg.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC)
 #define MAX_PATH 512
+#elif defined(XP_MACOSX)
+#define MAX_PATH PATH_MAX
 #elif defined(XP_UNIX)
 #ifndef MAX_PATH
 #define MAX_PATH 1024
@@ -150,7 +152,74 @@ char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
 #include <TextUtils.h>
 #include <Memory.h>
 #include <Folders.h>
-#include "FullPath.h"
+
+#ifdef XP_MACOSX
+  #include "MoreFilesX.h"
+#else
+  #include "FullPath.h"
+#endif
+
+static void copyCStringToPascal(Str255 dest, const char *src)
+{
+    size_t copyLen = strlen(src);
+    if (copyLen > 255)
+        copyLen = 255;
+    BlockMoveData(src, &dest[1], copyLen);
+    dest[0] = copyLen;
+}
+
+#ifdef XP_MACOSX
+static OSErr isFileInTrash(FSRef *fsRef, PRBool *inTrash)
+{
+    OSErr err;
+    FSCatalogInfo catalogInfo;
+
+    if (fsRef == NULL || inTrash == NULL)
+        return paramErr;
+    *inTrash = PR_FALSE;
+
+    err = FSGetCatalogInfo(fsRef, kFSCatInfoVolume, &catalogInfo, NULL, NULL, NULL);
+    if (err == noErr)
+    {
+        FSRef trashFSRef, currFSRef, parentFSRef;
+        err = FSFindFolder(catalogInfo.volume, kTrashFolderType, false, &trashFSRef);
+        if (err == noErr)
+        {
+            /* FSRefGetParentRef returns noErr and a zeroed FSRef when it reaches the top */
+            for (currFSRef = *fsRef;
+                 (FSGetParentRef(&currFSRef, &parentFSRef) == noErr && FSRefValid(&parentFSRef));
+                 currFSRef = parentFSRef)
+            {
+                if (FSCompareFSRefs(&parentFSRef, &trashFSRef) == noErr)
+                {
+                    *inTrash = PR_TRUE;
+                    break;
+                }
+            }
+        }
+    }
+    return err;
+}
+#else
+static OSErr isFileInTrash(FSSpec *fileSpec, PRBool *inTrash)
+{
+    OSErr err;
+    short vRefNum;
+    long dirID;
+    
+    if (fileSpec == NULL || inTrash == NULL)
+        return paramErr;
+    *inTrash = PR_FALSE;
+    
+    /* XXX - Only works if the file is in the top level of the trash dir */
+    err = FindFolder(fileSpec->vRefNum, kTrashFolderType, false, &vRefNum, &dirID);
+    if (err == noErr)
+        if (dirID == fileSpec->parID)  /* File is inside the trash */
+            *inTrash = PR_TRUE;
+    
+    return err;
+}
+#endif
 
 /* returns an alias as a malloc'd pointer.
  * On failure, *alias is NULL
@@ -158,16 +227,26 @@ char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
 void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length)
 {
     OSErr err;
+    Str255 pascalName;
+    FSRef fsRef;
     FSSpec fs;
     AliasHandle macAlias;
     *alias = NULL;
     *length = 0;
-    c2pstr((char*)fileName);
-    err = FSMakeFSSpec(0, 0, (unsigned char *)fileName, &fs);
-    p2cstr((unsigned char *)fileName);
+    
+#ifdef XP_MACOSX
+    err = FSPathMakeRef((const UInt8*)fileName, &fsRef, NULL);
+    if ( err != noErr )
+        return;
+    err = FSNewAlias(NULL, &fsRef, &macAlias);
+#else
+    copyCStringToPascal(pascalName, fileName);
+    err = FSMakeFSSpec(0, 0, pascalName, &fs);
     if ( err != noErr )
         return;
     err = NewAlias(NULL, &fs, &macAlias);
+#endif
+    
     if ( (err != noErr) || ( macAlias == NULL ))
         return;
     *length = GetHandleSize( (Handle) macAlias );
@@ -190,14 +269,16 @@ void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length)
 char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength)
 {
     OSErr           err;
-    short           vRefNum;
-    long            dirID;
     AliasHandle     h           = NULL;
     Handle          fullPath    = NULL;
     short           fullPathLength;
     char *          cpath       = NULL;
+    PRBool          inTrash;
+    FSRef           fsRef;
+    FSCatalogInfo   catalogInfo;
+    UInt8           pathBuf[MAX_PATH];
     FSSpec          fs;
-    Boolean         ignore; /* Change flag, it would be nice to change the alias on disk 
+    Boolean         wasChanged; /* Change flag, it would be nice to change the alias on disk 
                         if the file location changed */
     
     
@@ -214,17 +295,32 @@ char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength)
     XP_MEMCPY( *h, alias, aliasLength );
     HUnlock( (Handle) h);
     
-    
-    err = ResolveAlias(NULL, h, &fs, &ignore);
+#ifdef XP_MACOSX
+    err = FSResolveAlias(NULL, h, &fsRef, &wasChanged);
+    if (err != noErr)
+        goto fail;
+
+    /* if the alias has changed and the file is now in the trash,
+       assume that user has deleted it and that we do not want to look at it */
+    if (wasChanged && (isFileInTrash(&fsRef, &inTrash) == noErr) && inTrash)
+        goto fail;
+    err = FSRefMakePath(&fsRef, pathBuf, sizeof(pathBuf));
+    if (err != noErr)
+        goto fail;
+    fullPathLength = XP_STRLEN(pathBuf);
+    cpath = (char*) XP_ALLOC(fullPathLength + 1);
+    if ( cpath == NULL)
+        goto fail;
+    XP_MEMCPY(cpath, pathBuf, fullPathLength + 1);
+#else    
+    err = ResolveAlias(NULL, h, &fs, &wasChanged);
     if (err != noErr)
         goto fail;
     
-    /* if the file is inside the trash, assume that user has deleted
-        it and that we do not want to look at it */
-    err = FindFolder(fs.vRefNum, kTrashFolderType, false, &vRefNum, &dirID);
-    if (err == noErr)
-        if (dirID == fs.parID)  /* File is inside the trash */
-            goto fail;
+    /* if the alias has changed and the file is now in the trash,
+       assume that user has deleted it and that we do not want to look at it */
+    if (wasChanged && (isFileInTrash(&fs, &inTrash) == noErr) && inTrash)
+        goto fail;
     
     /* Get the full path and create a char * out of it */
 
@@ -240,7 +336,7 @@ char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength)
     XP_MEMCPY(cpath, *fullPath, fullPathLength);
     cpath[fullPathLength] = 0;
     HUnlock( fullPath );
-    
+#endif    
     /* Drop through */
 fail:
     if (h != NULL)

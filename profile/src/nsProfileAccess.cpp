@@ -1022,7 +1022,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
     rv = GetPlatformCharset(charSet);
     if (NS_FAILED(rv)) return rv;
 
-#if defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_PC) || defined(XP_MAC) || defined(XP_MACOSX)
     NS_ASSERTION(registryName, "Invalid registryName");
 
     nsCOMPtr<nsILocalFile> registryFile;
@@ -1069,7 +1069,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
         // There is some problem I guess in sending a space as itself
         // NOTE: This needs to be done BEFORE the test for existence.
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
         // 4.x profiles coming from japanese machine are already in unicode.
         // So, there is no need to decode into unicode further.
         NS_ConvertUCS2toUTF8 temp(profile);
@@ -1361,7 +1361,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         if (NS_FAILED(rv)) return rv;
         regLocationData = profLoc;
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
         // 4.x profiles coming from japanese machine are already in unicode.
         // So, there is no need to decode into unicode further.
 
@@ -1395,7 +1395,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         if (NS_FAILED(rv)) return rv;
         regLocationData = regData;
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         // For a brief time, this was a unicode path
         PRInt32 firstColon = regLocationData.FindChar(PRUnichar(':'));
         if (firstColon == -1)
@@ -1427,7 +1427,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
     {
         nsAutoString regData;
 
-#if XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         PRBool leafCreated;
         nsCAutoString descBuf;
 
@@ -1476,7 +1476,7 @@ nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
                                   getter_Copies(regData));
     if (NS_SUCCEEDED(rv))
     {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         rv = NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv))
         {
@@ -1501,7 +1501,7 @@ nsresult ProfileStruct::ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
 
     if (migratedFrom)
     {
-#if XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         rv = migratedFrom->GetPersistentDescriptor(regData);
 #else
         nsAutoString path;

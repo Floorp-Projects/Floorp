@@ -462,7 +462,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
             break;
 #endif
 
-#ifdef XP_UNIX                
+#if defined(XP_UNIX) && !defined(XP_MACOSX)                
         case 400: ///////////////////////////////////////////////////////////  Unix Local
           {  
                 nsCOMPtr<nsIProperties> directoryService = 
