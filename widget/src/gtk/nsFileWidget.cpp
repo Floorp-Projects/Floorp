@@ -184,6 +184,11 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
 
   mWidget = gtk_file_selection_new(title);
 
+  // Hide the file column for the folder case.
+  if(aMode == eMode_getfolder) {
+    	gtk_widget_hide( (((GtkFileSelection *) mWidget)->file_list)->parent );
+  }
+
   delete[] title;
 
   return NS_OK;
