@@ -624,7 +624,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       PhFreeTiles( offset_tiles );
       PhFreeTiles( clipped_tiles );
       PhFreeTiles( sib_tiles );
-      PtFlush();
+      PtFlush();   /* This is really needed! */
     }
     else
     {
@@ -676,7 +676,6 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::BeginResizingChildren.\n"));
-  /* PtHold() */
   return NS_OK;
 }
 
@@ -1486,10 +1485,10 @@ void nsWindow::ResizeHoldOff()
     if ( (mResizeProcID = PtAppAddWorkProc( nsnull, ResizeWorkProc, top )) != nsnull )
     {
       int Global_Widget_Hold_Count;
-      Global_Widget_Hold_Count =  PtHold();
-      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeHoldOff PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
+        Global_Widget_Hold_Count =  PtHold();
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeHoldOff PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
 
-      mResizeQueueInited = PR_TRUE;
+        mResizeQueueInited = PR_TRUE;
     }
     else
     {
@@ -1603,10 +1602,10 @@ int nsWindow::ResizeWorkProc( void *data )
     nsWindow::mResizeQueueInited = PR_FALSE;
 
     int Global_Widget_Hold_Count;
-    Global_Widget_Hold_Count =  PtRelease();
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeWorkProc PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, NULL));
-
+      Global_Widget_Hold_Count =  PtRelease();
+      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeWorkProc PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, NULL));
   }
+
   return Pt_END;
 }
 

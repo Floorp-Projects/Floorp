@@ -383,21 +383,13 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move (%p) to (%ld,%ld)\n", this, aX, aY ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move (%p) from (%ld,%ld) to (%ld,%ld)\n", this, mBounds.x, mBounds.y, aX, aY ));
 
   if(( mBounds.x == aX ) && ( mBounds.y == aY ))
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  already there.\n" ));
     return NS_OK;
   }
-
-#if 0
-  if(( 10 == aX ) && ( 10 == aY ))
-  {
-	printf("HACK: ignore move to 10 10\n");
-    return NS_OK;
-  }
-#endif
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  was at (%i,%i)\n", mBounds.x, mBounds.y ));
 
@@ -1226,6 +1218,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     SetInstance(mWidget, this);
     PtAddCallback( mWidget, Pt_CB_GOT_FOCUS, GotFocusCallback, this );
     PtAddCallback( mWidget, Pt_CB_LOST_FOCUS, LostFocusCallback, this );
+    PtAddCallback( mWidget, Pt_CB_IS_DESTROYED, DestroyedCallback, this );
   }
 
   DispatchStandardEvent(NS_CREATE);
@@ -1407,6 +1400,7 @@ void nsWidget::InitMouseEvent(PhPointerEvent_t *aPhButtonEvent,
     anEvent.isShift =   ( aPhButtonEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhButtonEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
     anEvent.isAlt =     ( aPhButtonEvent->key_mods & Pk_KM_Alt )   ? PR_TRUE : PR_FALSE;
+	anEvent.isMeta =	PR_FALSE;
     anEvent.point.x =   aPhButtonEvent->pos.x; 
     anEvent.point.y =   aPhButtonEvent->pos.y;
     anEvent.clickCount = aPhButtonEvent->click_count;
@@ -1498,6 +1492,7 @@ PRBool nsWidget::DispatchMouseEvent( PhPoint_t &aPos, PRUint32 aEvent )
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
   event.clickCount = 0;       /* hack  makes the mouse not work */
   
   // call the event callback
@@ -1688,12 +1683,21 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
     anEvent.keyCode =  (keysym  & 0x00FF);
 
+    anEvent.time =      PR_IntervalNow();
+    anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt =     ( aPhKeyEvent->key_mods & Pk_KM_Alt )   ? PR_TRUE : PR_FALSE;
+    anEvent.isMeta =    PR_FALSE;
+    anEvent.point.x = 0; 
+    anEvent.point.y = 0;
+
     if (aEventType == NS_KEY_PRESS)
 	{
       if (IsChar == PR_TRUE)
       {
-        //anEvent.keyCode =  0;  /* I think the spec says this should be 0 */
+        anEvent.keyCode =  0;  /* I think the spec says this should be 0 */
 	    anEvent.charCode = aPhKeyEvent->key_sym;
+		anEvent.isShift = PR_FALSE;
 	  }
 	  else
 	  {
@@ -1701,16 +1705,17 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 	  }
     }
 	else
+    {
       anEvent.charCode = 0; 
+    }
+	
 
-    anEvent.time =      PR_IntervalNow();
-    anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
-    anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
-    anEvent.isAlt =     ( aPhKeyEvent->key_mods & Pk_KM_Alt )   ? PR_TRUE : PR_FALSE;
-    anEvent.point.x = 0; 
-    anEvent.point.y = 0;
+
+  printf("nsWidget::InitKeyEvent Modifiers Valid=<%d,%d,%d> Shift=<%d> Control=<%d> Alt=<%d> Meta=<%d>\n", 
+    (aPhKeyEvent->key_flags & Pk_KF_Scan_Valid), (aPhKeyEvent->key_flags & Pk_KF_Sym_Valid), (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid), anEvent.isShift, anEvent.isControl, anEvent.isAlt, anEvent.isMeta);
   }
 }
+
 
 PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 {
@@ -1721,18 +1726,26 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
   nsKeyEvent keyEvent;
   PRBool result = PR_FALSE;
    
+
   if ( (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid) == 0)
   {
-     printf("nsWidget::DispatchKeyEvent throwing away invalid key\n");
+     printf("nsWidget::DispatchKeyEvent throwing away invalid key: Modifiers Valid=<%d,%d,%d> this=<%p>\n",
+	     (aPhKeyEvent->key_flags & Pk_KF_Scan_Valid), (aPhKeyEvent->key_flags & Pk_KF_Sym_Valid), (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid), this );
+
      return PR_TRUE;
   }
 
-  if ( ( aPhKeyEvent->key_cap == Pk_Shift_L ) ||
-       ( aPhKeyEvent->key_cap == Pk_Shift_R ) ||	  
-       ( aPhKeyEvent->key_cap == Pk_Control_L ) ||	  
-       ( aPhKeyEvent->key_cap == Pk_Control_R ) ||	  
-       ( aPhKeyEvent->key_cap == Pk_Alt_L ) ||	  
-       ( aPhKeyEvent->key_cap == Pk_Alt_R )	  
+
+  if ( PtIsFocused(mWidget) != 2)
+  {
+     printf("nsWidget::DispatchKeyEvent Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(mWidget));
+     return PR_FALSE;
+  }
+  
+  if ( ( aPhKeyEvent->key_cap == Pk_Shift_L )
+       || ( aPhKeyEvent->key_cap == Pk_Shift_R )
+       || ( aPhKeyEvent->key_cap == Pk_Control_L )
+       || ( aPhKeyEvent->key_cap == Pk_Control_R )
      )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DispatchKeyEvent Ignoring SHIFT, CONTROL and ALT keypress\n"));
@@ -1741,29 +1754,28 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 
   nsWindow *w = (nsWindow *) this;
   
-printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d>\n",
-	this, aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan);
+printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d> Focused=<%d>\n",
+	this, aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan, PtIsFocused(mWidget));
 	
 
-  if (PkIsFirstDown(aPhKeyEvent->key_flags))
+  w->AddRef();
+  
+  if (aPhKeyEvent->key_flags & Pk_KF_Key_Down)
   {
     printf("nsWidget::DispatchKeyEvent Before Key Down \n");
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_DOWN);
     result = w->OnKey(keyEvent); 
+    printf("nsWidget::DispatchKeyEvent after Key_Down event result=<%d>\n", result);
 
-#if 1
-    /* hack  try not sending key_press event if event is not a real char */
-    /* This is what GTK does... */
-    PRBool IsChar;
-    unsigned long keysym;
-	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
-    if (IsChar == PR_TRUE)
-#endif
-    {
+    printf("nsWidget::DispatchKeyEvent Before Key Press\n");
+    InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
+    result = w->OnKey(keyEvent); 
+  }
+  else if (aPhKeyEvent->key_flags & Pk_KF_Key_Repeat)
+  {
      printf("nsWidget::DispatchKeyEvent Before Key Press\n");
      InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
-     result = w->OnKey(keyEvent); 
-    }
+     result = w->OnKey(keyEvent);   
   }
   else if (PkIsKeyDown(aPhKeyEvent->key_flags) == 0)
   {
@@ -1771,6 +1783,8 @@ printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_UP);
     result = w->OnKey(keyEvent); 
   }
+
+  w->Release();
 
   printf("nsWidget::DispatchKeyEvent after events result=<%d>\n", result);
  
@@ -2059,8 +2073,9 @@ void nsWidget::InitDamageQueue()
   mWorkProcID = PtAppAddWorkProc( nsnull, WorkProc, &mDmgQueue );
   if( mWorkProcID )
   {
+    mDmgQueueInited = PR_TRUE;
+
     int Global_Widget_Hold_Count;
-      mDmgQueueInited = PR_TRUE;
       Global_Widget_Hold_Count =  PtHold();
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::InitDamageQueue PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
   }
@@ -2220,10 +2235,12 @@ void nsWidget::RemoveDamagedWidget(PtWidget_t *aWidget)
         dqe = dqe->next;
       }
 
+	  /* If removing the item empties the queue */
       if( nsnull == mDmgQueue )
       {
         mDmgQueueInited = PR_FALSE;
 
+        /* The matching PtHold is in nsWidget::InitDamageQueue */
         int Global_Widget_Hold_Count;
           Global_Widget_Hold_Count =  PtRelease();
           PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
@@ -2296,11 +2313,14 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%
     *dq = nsnull;
     mDmgQueueInited = PR_FALSE;
 
+	/* The matching PtHold is in nsWidget::InitDamageQueue */
     int Global_Widget_Hold_Count;
       Global_Widget_Hold_Count =  PtRelease();
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc end, PtHold/PtRelease Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
 
-    PtFlush();  /* this may not be necessary  since after PtRelease */
+//    Global_Widget_Hold_Count = PtFlush();  /* this may not be necessary  since after PtRelease */
+//    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc  PtFlush Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
+
   }
 
   return Pt_END;
@@ -2311,8 +2331,9 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 {
   nsWidget *pWidget = (nsWidget *) data;
 
-  pWidget->DispatchStandardEvent(NS_GOTFOCUS);
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GetFocusCallback pWidget=<%p>\n", pWidget));
 
+  pWidget->DispatchStandardEvent(NS_GOTFOCUS);
   return Pt_CONTINUE;
 }
 
@@ -2321,8 +2342,23 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
 {
   nsWidget *pWidget = (nsWidget *) data;
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::LostFocusCallback pWidget=<%p>\n", pWidget));
   pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
 
+  return Pt_CONTINUE;
+}
+
+int nsWidget::DestroyedCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
+{
+  nsWidget *pWidget = (nsWidget *) data;
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DestroyedCallback pWidget=<%p> mWidget=<%p> mIsDestroying=<%d>\n", pWidget, pWidget->mWidget, pWidget->mIsDestroying));
+  if (!pWidget->mIsDestroying)
+  {
+    pWidget->OnDestroy();
+    pWidget->RemoveDamagedWidget(pWidget->mWidget);
+  }
+   
   return Pt_CONTINUE;
 }
 
