@@ -41,6 +41,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/newlist.gif \
 	$(srcdir)/property.gif \
 	$(srcdir)/abnewmsg.gif \
+	$(srcdir)/editcard.xul \
+	$(srcdir)/addressbook.js \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
