@@ -117,6 +117,11 @@
               <textbox readonly="true" crop="right" id="sizetext"/>
             </row>
             <row>
+              <label value="&generalReferrer;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="refertext"/>
+            </row>
+            <row>
               <separator class="thin"/>
             </row>
             <row>

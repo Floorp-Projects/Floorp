@@ -48,6 +48,7 @@
 <!ENTITY  generalMode           "Render Mode:">
 <!ENTITY  generalType           "Type:">
 <!ENTITY  generalSize           "Size:">
+<!ENTITY  generalReferrer       "Referring URL:">
 <!ENTITY  generalSource         "Source:">
 <!ENTITY  generalSent           "Sent:">
 <!ENTITY  generalModified       "Modified:">
