@@ -44,7 +44,6 @@
   <html:script language="javascript" src="chrome://profile/content/profileSelection.js"/>
   <html:script language="javascript" src="chrome://profile/content/profileManager.js"/>
 
-
   <keyset id="keyset">
     <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
   </keyset>
@@ -58,8 +57,7 @@
     </box>
     <spring flex="100%"/>
   </toolbar>
-  <spring style="height: 4px;"/>
-  <box align="horizontal" flex="100%">
+  <box id="contentarea" align="horizontal" flex="100%">
     <spring style="width: 7px;"/>
 
     <!-- instructions -->
@@ -127,7 +125,6 @@
     </box>
     <spring style="width: 7px;"/>
   </box>
-  <html:div class="separator" align="horizontal"/>
   <box class="selection" align="horizontal">
     <spring style="width: 5px;"/>
     <titledbutton class="dialog push padded" id="manage" value="&manage.label;" onclick="SwitchProfileManagerMode();"/>
