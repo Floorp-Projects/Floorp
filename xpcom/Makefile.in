@@ -48,6 +48,7 @@ endif
 
 ifdef ENABLE_TESTS
 DIRS		+= \
+	tests \
 	sample \
 	typelib/xpt/tests \
 	reflect/xptinfo/tests \

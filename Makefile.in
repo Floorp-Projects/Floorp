@@ -226,10 +226,6 @@ ifdef MOZ_LEAKY
 tier_9_dirs        += tools/leaky
 endif
 
-ifdef ENABLE_TESTS
-tier_9_dirs	+= xpcom/tests
-endif
-
 ifdef NS_TRACE_MALLOC
 tier_9_dirs	+= tools/trace-malloc
 endif
