@@ -18,9 +18,10 @@
 
 #include "modmimee.h"
 #include "mimeleaf.h"
-
+#include "nsMimeTypes.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prlog.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeLeaf, MimeLeafClass, mimeLeafClass, &MIME_SUPERCLASS);

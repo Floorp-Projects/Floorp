@@ -48,13 +48,14 @@ CPPSRCS = \
 		nsMimeFactory.cpp	\
 		nsMimeObjectClassAccess.cpp		\
 		nsMimeConverter.cpp		\
+		nsMimeAddress.cpp \
 		plugin_inst.cpp	\
 		mimecont.cpp	\
 		mimeebod.cpp	\
-		mimeenc.cpp	\
+		mimeenc.cpp		\
 		mimeeobj.cpp	\
 		mimehdrs.cpp	\
-		mimei.cpp	\
+		mimei.cpp		\
 		mimeiimg.cpp	\
 		mimeleaf.cpp	\
 		mimemalt.cpp	\
@@ -63,43 +64,36 @@ CPPSRCS = \
 		mimemmix.cpp	\
 		mimempar.cpp	\
 		mimemrel.cpp	\
-		mimemsg.cpp	\
+		mimemsg.cpp		\
 		mimemsig.cpp	\
 		mimemult.cpp	\
-		mimeobj.cpp	\
+		mimeobj.cpp		\
 		mimepbuf.cpp	\
-		mimesun.cpp	\
+		mimesun.cpp		\
 		mimetenr.cpp	\
 		mimetext.cpp	\
 		mimethtm.cpp	\
 		mimetpla.cpp	\
 		mimetric.cpp	\
 		mimeunty.cpp	\
+		mimecth.cpp		\
+		mimebuf.cpp		\
+		mimecom.cpp		\
 		mimemoz2.cpp	\
-		mimecth.cpp	\
-		mimebuf.cpp	\
-		mimecom.cpp	\
-		comi18n.cpp	\
-		commsg.cpp	\
-		oldfile.cpp	\
+		comi18n.cpp		\
+		nsMimeTransition.cpp \
 		$(NULL)
 
 CSRCS = \
-		oldnet.c	\
 		oldi18n.c	\
-		oldmaddr.c	\
-		oldxp.c		\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
 	$(NSPR_LIBS)	\
 	-lmozjs			\
-	-lmimetype		\
 	-lraptorbase	\
-	-lpref			\
 	-lsecfree		\
-	-lxp			\
 	-lxpcom			\
 	-lreg			\
 	$(NULL)

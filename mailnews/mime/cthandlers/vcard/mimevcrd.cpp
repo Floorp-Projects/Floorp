@@ -16,9 +16,9 @@
  * Reserved.
  */
 #include "mimevcrd.h"
-#include "xpgetstr.h"
 #include "xp_core.h"
 #include "xp_mem.h"
+#include "xpgetstr.h"
 #include "vcc.h"
 #include "vobject.h"
 #include "libi18n.h"

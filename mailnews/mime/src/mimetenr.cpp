@@ -17,6 +17,7 @@
  */
 
 #include "mimetenr.h"
+#include "prlog.h"
 
 /* All the magic for this class is in mimetric.c; since text/enriched and
    text/richtext are so similar, it was easiest to implement them in the

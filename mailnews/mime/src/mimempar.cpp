@@ -17,6 +17,7 @@
  */
 
 #include "mimempar.h"
+#include "prlog.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartParallel, MimeMultipartParallelClass,

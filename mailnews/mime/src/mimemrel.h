@@ -20,8 +20,8 @@
 #define _MIMEMREL_H_
 
 #include "mimemult.h"
-#include "xp_hash.h"
-
+#include "plhash.h"
+#include "prio.h"
 
 /* The MimeMultipartRelated class implements the multipart/related MIME 
    container, which allows `sibling' sub-parts to refer to each other.
@@ -57,7 +57,7 @@ struct MimeMultipartRelated {
 								   part. */
 	MimeObject* headobj;		/* The actual text/html head object. */
 
-	XP_HashTable hash;			/* Conversion between URLs and part URLs. */
+	PLHashTable		*hash;
 
 	int (*real_output_fn) (char *buf, PRInt32 size, void *stream_closure);
 	void* real_output_closure;

@@ -15,12 +15,15 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "mimeebod.h"
-#include "xpgetstr.h"
-
 #include "prmem.h"
+#include "nsCRT.h"
 #include "plstr.h"
+#include "prio.h"
+#include "nsFileSpec.h"
+#include "nsEscape.h"
+#include "msgCore.h"
+#include "nsMimeTransition.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeExternalBody, MimeExternalBodyClass,
@@ -42,7 +45,7 @@ static PRBool MimeExternalBody_displayable_inline_p (MimeObjectClass *clazz,
 
 #if 0
 #if defined(DEBUG) && defined(XP_UNIX)
-static int MimeExternalBody_debug_print (MimeObject *, FILE *, PRInt32);
+static int MimeExternalBody_debug_print (MimeObject *, PRFileDesc *, PRInt32);
 #endif
 #endif /* 0 */
 
@@ -115,7 +118,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  char *new_str = (char *)PR_Realloc(bod->body, L + length + 1);
 	  if (!new_str) return MK_OUT_OF_MEMORY;
 	  bod->body = new_str;
-	  XP_MEMCPY(bod->body + L, line, length);
+	  nsCRT::memcpy(bod->body + L, line, length);
 	  bod->body[L + length] = 0;
 	  return 0;
 	}
@@ -182,9 +185,10 @@ MimeExternalBody_make_url(const char *ct,
 #ifdef XP_UNIX
 	  if (!PL_strcasecmp(at, "afs"))   /* only if there is a /afs/ directory */
 		{
-		  XP_StatStruct st;
-		  if (stat("/afs/.", &st))
-			return 0;
+      nsFileSpec    fs("/afs/.");
+      
+      if  (!fs.Exists())
+        return 0;
 		}
 #else  /* !XP_UNIX */
 	  return 0;						/* never, if not Unix. */
@@ -194,7 +198,7 @@ MimeExternalBody_make_url(const char *ct,
 	  if (!s) return 0;
 	  PL_strcpy(s, "file:");
 
-	  s2 = NET_Escape(name, URL_PATH);
+	  s2 = nsEscape(name, url_Path);
 	  if (s2) PL_strcat(s, s2);
 	  PR_FREEIF(s2);
 	  return s;
@@ -210,20 +214,20 @@ MimeExternalBody_make_url(const char *ct,
 	  if (!s) return 0;
 	  PL_strcpy(s, "mailto:");
 
-	  s2 = NET_Escape(svr, URL_XALPHAS);
+	  s2 = nsEscape(svr, url_XAlphas);
 	  if (s2) PL_strcat(s, s2);
 	  PR_FREEIF(s2);
 
 	  if (subj)
 		{
-		  s2 = NET_Escape(subj, URL_XALPHAS);
+		  s2 = nsEscape(subj, url_XAlphas);
 		  PL_strcat(s, "?subject=");
 		  if (s2) PL_strcat(s, s2);
 		  PR_FREEIF(s2);
 		}
 	  if (body)
 		{
-		  s2 = NET_Escape(body, URL_XALPHAS);
+		  s2 = nsEscape(body, url_XAlphas);
 		  PL_strcat(s, (subj ? "&body=" : "?body="));
 		  if (s2) PL_strcat(s, s2);
 		  PR_FREEIF(s2);
@@ -327,7 +331,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 		{
 		  char *in, *out;
 		  for (in = url, out = url; *in; in++)
-			if (!XP_IS_SPACE(*in))
+			if (!IS_SPACE(*in))
 			  *out++ = *in;
 		  *out = 0;
 		}
@@ -382,16 +386,16 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  if (bod->body && all_headers_p)
 		{
 		  char *s = bod->body;
-		  while (XP_IS_SPACE(*s)) s++;
+		  while (IS_SPACE(*s)) s++;
 		  if (*s)
 			{
 			  char *s2;
 			  const char *pre = "<P><PRE>";
 			  const char *suf = "</PRE>";
 			  PRInt32 i;
-			  for(i = PL_strlen(s)-1; i >= 0 && XP_IS_SPACE(s[i]); i--)
+			  for(i = PL_strlen(s)-1; i >= 0 && IS_SPACE(s[i]); i--)
 				s[i] = 0;
-			  s2 = NET_EscapeHTML(s);
+ 			  s2 = nsEscapeHTML(s);
 			  if (!s2) goto FAIL;
 			  body = (char *) PR_MALLOC(PL_strlen(pre) + PL_strlen(s2) +
 									   PL_strlen(suf) + 1);
@@ -462,7 +466,7 @@ done:
 #if 0
 #if defined(DEBUG) && defined(XP_UNIX)
 static int
-MimeExternalBody_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
+MimeExternalBody_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 {
   MimeExternalBody *bod = (MimeExternalBody *) obj;
   int i;
@@ -475,7 +479,8 @@ MimeExternalBody_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
 	ct2 = MimeHeaders_get (bod->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
 
   for (i=0; i < depth; i++)
-	fprintf(stream, "  ");
+	PR_Write(stream, "  ", 2);
+/***
   fprintf(stream,
 		  "<%s %s\n"
 		  "\tcontent-type: %s\n"
@@ -487,6 +492,7 @@ MimeExternalBody_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
 		  ct2 ? ct2 : "<none>",
 		  bod->body ? bod->body : "<none>",
 		  (PRUint32) obj);
+***/
   PR_FREEIF(addr);
   PR_FREEIF(ct);
   PR_FREEIF(ct2);
@@ -514,9 +520,11 @@ MimeExternalBody_displayable_inline_p (MimeObjectClass *clazz,
 #ifdef XP_UNIX
   else if (!PL_strcasecmp(at, "afs"))   /* only if there is a /afs/ directory */
 	{
-	  XP_StatStruct st;
-	  if (!stat("/afs/.", &st))
-		inline_p = PR_TRUE;
+    nsFileSpec    fs("/afs/.");
+    if  (!fs.Exists())
+      return 0;
+
+    inline_p = PR_TRUE;
 	}
 #endif /* XP_UNIX */
 

@@ -17,6 +17,8 @@
  */
 
 #include "mimemdig.h"
+#include "prlog.h"
+#include "nsMimeTypes.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartDigest, MimeMultipartDigestClass,

@@ -17,9 +17,12 @@
  */
 
 #include "mimeunty.h"
-
 #include "prmem.h"
 #include "plstr.h"
+#include "nsCRT.h"
+#include "prlog.h"
+#include "nsMimeTypes.h"
+#include "msgCore.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeUntypedText, MimeUntypedTextClass,
@@ -388,12 +391,12 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
 	  if (*s != ' ') return PR_FALSE;
 	}
 
-  while (XP_IS_SPACE(*s))
+  while (IS_SPACE(*s))
 	s++;
 
   name = (char *) PR_MALLOC(((line+length)-s) + 1);
   if (!name) return PR_FALSE; /* grr... */
-  XP_MEMCPY(name, s, (line+length)-s);
+  nsCRT::memcpy(name, s, (line+length)-s);
   name[(line+length)-s] = 0;
 
   /* take off newline. */
@@ -428,7 +431,7 @@ MimeUntypedText_uu_end_line_p(const char *line, PRInt32 length)
   return (line[0] == 'e' &&
 		  line[1] == 'n' &&
 		  line[2] == 'd' &&
-		  (line[3] == 0 || XP_IS_SPACE(line[3])));
+		  (line[3] == 0 || IS_SPACE(line[3])));
 #else
   /* ...but, why don't we accept any line that begins with the three
 	 letters "END" in any case: I've seen lots of partial messages
@@ -463,7 +466,7 @@ MimeUntypedText_binhex_begin_line_p(const char *line, PRInt32 length,
   if (length <= BINHEX_MAGIC_LEN)
 	return PR_FALSE;
 
-  while(length > 0 && XP_IS_SPACE(line[length-1]))
+  while(length > 0 && IS_SPACE(line[length-1]))
 	length--;
 
   if (length != BINHEX_MAGIC_LEN)

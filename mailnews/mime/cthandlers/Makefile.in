@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = calendar vcard
+DIRS = vcard
 
 include $(topsrcdir)/config/config.mk
 

@@ -18,9 +18,11 @@
 /* 
  * mimebuf.c -  libmsg like buffer handling routines for libmime
  */
-#include "xp.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prlog.h"
+#include "nsCRT.h"
+#include "msgCore.h"
 
 extern "C" int MK_OUT_OF_MEMORY;
 
@@ -78,7 +80,7 @@ mime_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 		size = net_buffer_size;
 	  if (size > 0)
 		{
-		  XP_MEMCPY ((*bufferP) + (*buffer_fpP), net_buffer, size);
+      nsCRT::memcpy ((*bufferP) + (*buffer_fpP), net_buffer, size);
 		  (*buffer_fpP) += size;
 		  net_buffer += size;
 		  net_buffer_size -= size;
@@ -215,7 +217,7 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 									 bufferP, buffer_sizeP);
 			if (status < 0) return status;
 		  }
-		XP_MEMCPY ((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
+		nsCRT::memcpy ((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
 		(*buffer_fpP) += (end - net_buffer);
 	  }
 
@@ -238,4 +240,57 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 	  (*buffer_fpP) = 0;
 	}
   return 0;
+}
+
+/*	Very similar to strdup except it free's too
+ */
+extern "C" char * 
+mime_SACopy (char **destination, const char *source)
+{
+  if(*destination)
+  {
+    PR_Free(*destination);
+    *destination = 0;
+  }
+  if (! source)
+  {
+    *destination = NULL;
+  }
+  else 
+  {
+    *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+    if (*destination == NULL) 
+      return(NULL);
+    
+    PL_strcpy (*destination, source);
+  }
+  return *destination;
+}
+
+/*  Again like strdup but it concatinates and free's and uses Realloc
+*/
+extern "C"  char *
+mime_SACat (char **destination, const char *source)
+{
+  if (source && *source)
+  {
+    if (*destination)
+    {
+      int length = PL_strlen (*destination);
+      *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+      if (*destination == NULL)
+        return(NULL);
+      
+      PL_strcpy (*destination + length, source);
+    }
+    else
+    {
+      *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+      if (*destination == NULL)
+        return(NULL);
+      
+      PL_strcpy (*destination, source);
+    }
+  }
+  return *destination;
 }

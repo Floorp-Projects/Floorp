@@ -16,23 +16,24 @@
  * Reserved.
  */
 
-#include "nsMsgMessageFlags.h"
 #include "mimerosetta.h"
 #include "mimei.h"
-#include "xpgetstr.h"
 #include "libi18n.h"
 #include "modmime.h"
-
 #include "prmem.h"
 #include "plstr.h"
-#include "msgcom.h"
 #include "imap.h"
 #include "prefapi.h"
 #include "mimebuf.h"
 #include "plugin_inst.h"
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
+#include "nsCRT.h"
 #include "nsIPref.h"
+#include "nsEscape.h"
+#include "nsMimeTransition.h"
+#include "nsMsgMessageFlags.h"
+#include "nsMimeAddress.h"
 
 extern "C" int MK_OUT_OF_MEMORY;
 extern "C" int MK_MSG_NO_HEADERS;
@@ -147,7 +148,7 @@ MimeHeaders_copy (MimeHeaders *hdrs)
 		  PR_Free(hdrs2);
 		  return 0;
 		}
-	  XP_MEMCPY(hdrs2->all_headers, hdrs->all_headers, hdrs->all_headers_fp);
+	  nsCRT::memcpy(hdrs2->all_headers, hdrs->all_headers, hdrs->all_headers_fp);
 
 	  hdrs2->all_headers_fp   = hdrs->all_headers_fp;
 	  hdrs2->all_headers_size = hdrs->all_headers_fp;
@@ -225,7 +226,7 @@ MimeHeaders_parse_line (const char *buffer, PRInt32 size, MimeHeaders *hdrs)
 							   &hdrs->all_headers, &hdrs->all_headers_size);
 	  if (status < 0) return status;
 	}
-  XP_MEMCPY(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
+  nsCRT::memcpy(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
   hdrs->all_headers_fp += size;
 
   return 0;
@@ -479,7 +480,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		  {
 		    /* Now copy the header's contents in...
 		     */
-		    XP_MEMCPY(s, contents, end - contents);
+		    nsCRT::memcpy(s, contents, end - contents);
 		    s[end - contents] = 0;
 		  }
 		else
@@ -584,7 +585,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 		{
 		  s = (char *) PR_MALLOC ((value_end - value_start) + 1);
 		  if (! s) return 0;  /* MK_OUT_OF_MEMORY */
-		  XP_MEMCPY (s, value_start, value_end - value_start);
+		  nsCRT::memcpy (s, value_start, value_end - value_start);
 		  s [value_end - value_start] = 0;
 		  /* if the parameter spans across multiple lines we have to strip out the
 			 line continuatio -- jht 4/29/98 */
@@ -617,7 +618,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  *charset = (char *) PR_MALLOC(s_quote1-value_start+1);
 				  if (*charset)
 				  {
-					  XP_MEMCPY(*charset, value_start, s_quote1-value_start);
+					  nsCRT::memcpy(*charset, value_start, s_quote1-value_start);
 					  *(*charset+(s_quote1-value_start)) = 0;
 				  }
 			  }
@@ -627,7 +628,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  *language = (char *) PR_MALLOC(s_quote2-(s_quote1+1)+1);
 				  if (*language)
 				  {
-					  XP_MEMCPY(*language, s_quote1+1, s_quote2-(s_quote1+1));
+					  nsCRT::memcpy(*language, s_quote1+1, s_quote2-(s_quote1+1));
 					  *(*language+(s_quote2-(s_quote1+1))) = 0;
 				  }
 			  }
@@ -637,11 +638,11 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  s = (char *) PR_MALLOC(value_end-(s_quote2+1)+1);
 				  if (s)
 				  {
-					  XP_MEMCPY(s, s_quote2+1, value_end-(s_quote2+1));
+					  nsCRT::memcpy(s, s_quote2+1, value_end-(s_quote2+1));
 					  *(s+(value_end-(s_quote2+1))) = 0;
 					  if (needUnescape)
 					  {
-						  NET_UnEscape(s);
+						  nsUnescape(s);
 						  if (token_end-token_start == parm_len+1)
 							  return s; /* we done; this is the simple case of
 										   encoding charset and language info
@@ -672,10 +673,10 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 			  /* else {} something is really wrong; out of memory */
 			  if (s)
 			  {
-				  XP_MEMCPY(s+len, value_start, value_end-value_start);
+				  nsCRT::memcpy(s+len, value_start, value_end-value_start);
 				  *(s+len+(value_end-value_start)) = 0;
 				  if (needUnescape)
-					  NET_UnEscape(s+len);
+					  nsUnescape(s+len);
 			  }
 		  }
 	  }
@@ -700,7 +701,7 @@ MimeHeaders_default_news_link_generator (const char *dest, void *closure,
   /* This works as both the generate_news_url_fn and as the
 	 generate_reference_url_fn. */
   char *prefix = "news:";
-  char *new_dest = NET_Escape (dest, URL_XALPHAS);
+  char *new_dest = nsEscape(dest, url_XAlphas);
   char *result = (char *) PR_MALLOC (PL_strlen (new_dest) +
 									PL_strlen (prefix) + 1);
   if (result)
@@ -757,7 +758,7 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
   char* tmp2;
   char* mouseOverText = NULL;
   int j;
-  int num = MSG_ParseRFC822Addresses(dest, &names, &addresses);
+  int num = ParseRFC822Addresses(dest, &names, &addresses);
   char charsetName[128];
   charsetName[0] = 0;
   PR_ASSERT(num >= 1);
@@ -773,11 +774,11 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 
 	unquotedName = NULL;
 	unquotedAddr = NULL;
-	MSG_UnquotePhraseOrAddr (addr, &unquotedAddr);
+	UnquotePhraseOrAddr (addr, &unquotedAddr);
 	if (!unquotedAddr) 
 		continue;
 	if (name)
-		MSG_UnquotePhraseOrAddr (name, &unquotedName);
+		UnquotePhraseOrAddr (name, &unquotedName);
 
 	winCharSetID = INTL_DefaultWinCharSetID(0);
 	converted = MIME_DecodeMimePartIIStr((const char *) unquotedName, charsetName);
@@ -831,7 +832,7 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 	PR_FREEIF(charset);
 
 	if (!tmp) break;
-	tmp2 = NET_Escape(tmp, URL_XALPHAS);
+	tmp2 = nsEscape(tmp, url_XAlphas);
 	PR_Free(tmp);
 	if (!tmp2) break;
 	result = PR_smprintf("addbook:add?vcard=%s", tmp2);
@@ -955,7 +956,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
      JavaScript (if we have to) */
   if (name)
   {
-    cleanName = NET_EscapeHTML(name);
+    cleanName = nsEscapeHTML(name);
     if (!cleanName)
       return MK_OUT_OF_MEMORY;
     else
@@ -1012,8 +1013,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 		 Note: this function does no charset conversion; that has
 		 already been done.
 	   */
-	  status = NET_ScanForURLs (
-								NULL,
+	  status = nsScanForURLs (
 								contents, contents_length, out,
 								hdrs->obuffer_size - (out - hdrs->obuffer) -10,
 								PR_TRUE);
@@ -1026,7 +1026,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
   else
 	{
 	  /* The non-fancy version (no tables): for converting to plain text. */
-	  char *s = NET_EscapeHTML (contents);
+	  char *s = nsEscapeHTML (contents);
 	  if (s)
 		{
 		  char *start, *end, *data_end;
@@ -1041,7 +1041,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 			for (end = start; end < data_end; end++)
 			  if (*end == CR || *end == LF)
 				{
-				  XP_MEMCPY (out, start, end - start); out += (end - start);
+				  nsCRT::memcpy (out, start, end - start); out += (end - start);
 				  PL_strcpy (out, "<BR>&nbsp;&nbsp;&nbsp;&nbsp;");
 				  out += PL_strlen (out);
 				  if (*end == CR && end < data_end && end[1] == LF)
@@ -1050,7 +1050,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 				}
 		  if (start < end)
 			{
-			  XP_MEMCPY (out, start, end - start); out += (end - start);
+			  nsCRT::memcpy (out, start, end - start); out += (end - start);
 			}
 		  PL_strcpy (out, "</NOBR><BR>"); out += PL_strlen (out);
 		  PR_Free (s);
@@ -1213,9 +1213,9 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
         PL_strlen(hdrs->obuffer));
       if (status < 0) goto FAIL;
       
-      XP_MEMCPY (hdrs->obuffer, last_end, this_start - last_end);
+      nsCRT::memcpy (hdrs->obuffer, last_end, this_start - last_end);
       hdrs->obuffer [this_start - last_end] = 0;
-      s = NET_EscapeHTML (hdrs->obuffer);
+      s = nsEscapeHTML (hdrs->obuffer);
       if (!s)
       {
         status = MK_OUT_OF_MEMORY;
@@ -1243,9 +1243,9 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
       PRBool mail_p;
       char *extraAnchorText = NULL;
       
-      XP_MEMCPY (hdrs->obuffer, this_start, this_end - this_start);
+      nsCRT::memcpy (hdrs->obuffer, this_start, this_end - this_start);
       hdrs->obuffer [this_end - this_start] = 0;
-      s = NET_EscapeHTML (hdrs->obuffer);
+      s = nsEscapeHTML (hdrs->obuffer);
       if (!s)
       {
         status = MK_OUT_OF_MEMORY;
@@ -1282,7 +1282,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
       else
         link = 0;
       
-      link2 = (link ? NET_EscapeHTML (link) : 0);
+      link2 = (link ? nsEscapeHTML (link) : 0);
       PR_FREEIF (link);
       link = link2;
       
@@ -1527,9 +1527,9 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 		if (last_end && last_end != this_start)
 		  {
 			char *s;
-			XP_MEMCPY (hdrs->obuffer, last_end, this_start - last_end);
+			nsCRT::memcpy (hdrs->obuffer, last_end, this_start - last_end);
 			hdrs->obuffer [this_start - last_end] = 0;
-			s = NET_EscapeHTML (hdrs->obuffer);
+			s = nsEscapeHTML (hdrs->obuffer);
 			if (!s)
 			  {
 				status = MK_OUT_OF_MEMORY;
@@ -1562,7 +1562,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 			  PRInt32 size = this_end - this_start;
 			  if (*id == '<')
 				id++, size--;
-			  XP_MEMCPY (hdrs->obuffer, id, size);
+			  nsCRT::memcpy (hdrs->obuffer, id, size);
 			  hdrs->obuffer [size] = 0;
 			  if (hdrs->obuffer [size-1] == '>')
 				hdrs->obuffer [size-1] = 0;
@@ -1570,7 +1570,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 			  link = fn (hdrs->obuffer, arg, hdrs);
 			  if (link)
 				{
-				  link2 = NET_EscapeHTML(link);
+				  link2 = nsEscapeHTML(link);
 				  PR_Free(link);
 				}
 			  link = link2;
@@ -1578,9 +1578,9 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 
 			if (show_ids)
 			  {
-				XP_MEMCPY (hdrs->obuffer, this_start, this_end - this_start);
+				nsCRT::memcpy (hdrs->obuffer, this_start, this_end - this_start);
 				hdrs->obuffer [this_end - this_start] = 0;
-				s = NET_EscapeHTML (hdrs->obuffer);
+				s = nsEscapeHTML (hdrs->obuffer);
 				if (!s)
 				  {
 					status = MK_OUT_OF_MEMORY;
@@ -1795,10 +1795,10 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 			{
 			  char *from = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_FALSE);
 			  char *froma = (from
-							 ? MSG_ExtractRFC822AddressMailboxes(from)
+							 ? ExtractRFC822AddressMailboxes(from)
 							 : 0);
 			  char *repa  = ((reply_to && froma)
-							 ? MSG_ExtractRFC822AddressMailboxes(reply_to)
+							 ? ExtractRFC822AddressMailboxes(reply_to)
 							 : 0);
 
 			  PR_FREEIF(reply_to);
@@ -1930,7 +1930,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     
     name = (char *)PR_MALLOC(colon - head + 1);
     if (!name) return MK_OUT_OF_MEMORY;
-    XP_MEMCPY(name, head, colon - head);
+    nsCRT::memcpy(name, head, colon - head);
     name[colon - head] = 0;
     
     c2 = (char *)PR_MALLOC(end - contents + 1);
@@ -1939,7 +1939,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
       PR_Free(name);
       return MK_OUT_OF_MEMORY;
     }
-    XP_MEMCPY(c2, contents, end - contents);
+    nsCRT::memcpy(c2, contents, end - contents);
     c2[end - contents] = 0;
     
     /*****************************************
@@ -2081,8 +2081,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   PL_strcpy(out, ": </B></TD><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\">");
   out += PL_strlen(out);
   if (subj) {
-	  status = NET_ScanForURLs(
-							   NULL,
+	  status = nsScanForURLs(
 							   subj, PL_strlen(subj), out,
 							   hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							   PR_TRUE);
@@ -2167,7 +2166,7 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   id = MimeHeaders_get(hdrs, HEADER_MESSAGE_ID, PR_FALSE, PR_FALSE);
 #endif
 
-  name = MSG_ExtractRFC822AddressNames (from);
+  name = ExtractRFC822AddressNames (from);
   if (!name)
 	{
 	  name = from;
@@ -2414,7 +2413,7 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBo
   status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
   if (status < 0) goto FAIL;
   if (hdrs->munged_subject) {
-    char* t2 = NET_EscapeHTML(hdrs->munged_subject);
+    char* t2 = nsEscapeHTML(hdrs->munged_subject);
     PR_FREEIF(hdrs->munged_subject);
     if (t2) {
       status = MimeHeaders_grow_obuffer(hdrs, PL_strlen(t2) + 20);

@@ -17,10 +17,9 @@
  */
 
 #include "mimemapl.h"
-#include "xpgetstr.h"
-
 #include "prmem.h"
 #include "plstr.h"
+#include "nsMimeTransition.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAppleDouble, MimeMultipartAppleDoubleClass,

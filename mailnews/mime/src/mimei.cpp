@@ -63,12 +63,13 @@
 #include "plstr.h"
 #include "prlink.h"
 #include "mimecth.h"
-
+#include "mimebuf.h"
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
+#include "nsCRT.h"
 #include "mimemoz2.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /* ==========================================================================
    Allocation and destruction
@@ -633,11 +634,12 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 
   if (!got_lookup_pref)
   {
-     nsIPref *pref = GetPrefServiceManager(opts);   // Pref service manager
- 
+     nsIPref *pref = GetPrefServiceManager(opts);   // Pref service manager 
      if (pref)
-         pref->GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
-         got_lookup_pref = PR_TRUE;
+     {
+       pref->GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
+       got_lookup_pref = PR_TRUE;
+     }
   }
 
 
@@ -703,7 +705,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 	/* we can see a nice html display */
 #ifdef RICHIE_VCARD
     if (mime_subclass_p(clazz,(MimeObjectClass *)&mimeInlineTextVCardClass))
-  		StrAllocCopy(content_disposition, "inline");
+  		mime_SACopy(&content_disposition, "inline");
 	  else
 #endif
 
@@ -711,7 +713,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
        to make it appear inline. One example is a vcard which has a content
        disposition of an "attachment;" */
     if (force_inline_display(content_type))
-  		StrAllocCopy(content_disposition, "inline");
+  		mime_SACopy(&content_disposition, "inline");
     else
   		content_disposition = (hdrs
 							   ? MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, PR_TRUE, PR_FALSE)
@@ -937,13 +939,13 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
 	{
 	  if (append_p)
 		{
-		  XP_MEMCPY(result, url, part_end - url);
+		  nsCRT::memcpy(result, url, part_end - url);
 		  result [part_end - url]     = '.';
 		  result [part_end - url + 1] = 0;
 		}
 	  else
 		{
-		  XP_MEMCPY(result, url, part_begin - url);
+		  nsCRT::memcpy(result, url, part_begin - url);
 		  result [part_begin - url] = 0;
 		}
 	}
@@ -1220,7 +1222,7 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 			  options->part_to_load = (char *) PR_MALLOC(end - value + 1);
 			  if (!options->part_to_load)
 				return MK_OUT_OF_MEMORY;
-			  XP_MEMCPY(options->part_to_load, value, end-value);
+			  nsCRT::memcpy(options->part_to_load, value, end-value);
 			  options->part_to_load[end-value] = 0;
 			}
 		}

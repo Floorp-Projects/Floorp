@@ -21,7 +21,11 @@
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
 #include "prmem.h"
+#include "prio.h"
 #include "plstr.h"
+#include "nsCRT.h"
+#include "msgCore.h"
+#include "prlog.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,
@@ -45,7 +49,7 @@ extern void MimeHeaders_do_unix_display_hook_hack(MimeHeaders *);
 #endif /* XP_UNIX */
 
 #if defined(DEBUG) && defined(XP_UNIX)
-static int MimeMessage_debug_print (MimeObject *, FILE *, PRInt32 depth);
+static int MimeMessage_debug_print (MimeObject *, PRFileDesc *, PRInt32 depth);
 #endif
 
 extern MimeObjectClass mimeMultipartClass;
@@ -165,7 +169,7 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		  /* Hack a newline onto the end. */
 		  char *s = (char *)PR_MALLOC(length + LINEBREAK_LEN + 1);
 		  if (!s) return MK_OUT_OF_MEMORY;
-		  XP_MEMCPY(s, line, length);
+		  nsCRT::memcpy(s, line, length);
 		  PL_strcpy(s + length, LINEBREAK);
 		  status = kid->clazz->parse_buffer (s, length + LINEBREAK_LEN, kid);
 		  PR_Free(s);
@@ -634,18 +638,20 @@ MimeMessage_write_headers_html (MimeObject *obj)
 
 #if defined(DEBUG) && defined(XP_UNIX)
 static int
-MimeMessage_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
+MimeMessage_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 {
   MimeMessage *msg = (MimeMessage *) obj;
   char *addr = mime_part_address(obj);
   int i;
   for (i=0; i < depth; i++)
-	fprintf(stream, "  ");
+	PR_Write(stream, "  ", 2);
+/*
   fprintf(stream, "<%s %s%s 0x%08X>\n",
 		  obj->clazz->class_name,
 		  addr ? addr : "???",
 		  (msg->container.nchildren == 0 ? " (no body)" : ""),
 		  (PRUint32) msg);
+*/
   PR_FREEIF(addr);
 
 #if 0
@@ -657,9 +663,13 @@ MimeMessage_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
 
 # define DUMP(HEADER) \
 	  for (i=0; i < depth; i++)												\
-        fprintf(stream, "  ");												\
-	  s = MimeHeaders_get (msg->hdrs, HEADER, PR_FALSE, PR_TRUE);					\
-	  fprintf(stream, HEADER ": %s\n", s ? s : "");							\
+        PR_Write(stream, "  ", 2);												\
+	  s = MimeHeaders_get (msg->hdrs, HEADER, PR_FALSE, PR_TRUE);
+/**
+    \
+	  PR_Write(stream, HEADER ": %s\n", s ? s : "");							\
+**/
+
 	  PR_FREEIF(s)
 
       DUMP(HEADER_SUBJECT);
@@ -671,7 +681,7 @@ MimeMessage_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
       DUMP(HEADER_MESSAGE_ID);
 # undef DUMP
 
-	  fprintf(stream, "\n");
+	  PR_Write(stream, "\n", 1);
 	}
 #endif
 

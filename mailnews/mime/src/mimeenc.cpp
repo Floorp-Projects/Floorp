@@ -15,12 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "stdio.h"
 #include "modmimee.h"
 #include "mimei.h"
-
+#include "nsCRT.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prlog.h"
 
 typedef enum mime_encoding {
   mime_Base64, mime_QuotedPrintable, mime_uuencode
@@ -91,7 +92,7 @@ mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, PRInt32 length
 			 If it might be a token, unread it.
 			 Otherwise, just dump it.
 			 */
-		  XP_MEMCPY (data->token, token, i);
+		  nsCRT::memcpy (data->token, token, i);
 		  data->token_size = i;
 		  i = 0;
 		  length = 0;
@@ -255,7 +256,7 @@ mime_decode_base64_buffer (MimeDecoderData *data,
 	  if (i < 4)
 		{
 		  /* Didn't get enough for a complete token. */
-		  XP_MEMCPY (data->token, token, i);
+		  nsCRT::memcpy (data->token, token, i);
 		  data->token_size = i;
 		  length = 0;
 		  break;
@@ -691,7 +692,7 @@ mime_uuencode_buffer(MimeEncoderData *data,
 	if (!(data->uue_wrote_begin))
 	{
 		char firstLine[256];
-		XP_SPRINTF(firstLine, "begin 644 %s\015\012", data->filename ? data->filename : "");
+		sprintf(firstLine, "begin 644 %s\015\012", data->filename ? data->filename : "");
 		data->write_buffer(firstLine, PL_strlen(firstLine), data->closure);
 		data->uue_wrote_begin = PR_TRUE;
 		data->current_column = 1; /* initialization unique to uuencode */

@@ -17,6 +17,7 @@
  */
 
 #include "mimemmix.h"
+#include "prlog.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartMixed, MimeMultipartMixedClass,

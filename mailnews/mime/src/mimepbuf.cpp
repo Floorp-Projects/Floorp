@@ -15,13 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "mimepbuf.h"
-#include "xp_file.h"
-
+#include "mimemoz2.h"
 #include "prmem.h"
 #include "plstr.h"
-
+#include "nsCRT.h"
 
 /* See mimepbuf.h for a description of the mission of this file.
 
@@ -59,12 +57,11 @@ extern "C" int MK_UNABLE_TO_OPEN_TMP_FILE;
 
 struct MimePartBufferData
 {
-  char *part_buffer;				/* Buffer used for part-lookahead. */
-  PRInt32 part_buffer_fp;				/* Active length. */
-  PRInt32 part_buffer_size;			/* How big it is. */
+  char        *part_buffer;				  /* Buffer used for part-lookahead. */
+  PRInt32     part_buffer_fp;				/* Active length. */
+  PRInt32     part_buffer_size;			/* How big it is. */
 
-  char *file_buffer_name;			/* The name of a temp file used when we
-									   run out of room in the part_buffer. */
+  char *file_buffer_name;			/* The name of a temp file used when we run out of room in the part_buffer. */
   PRFileDesc *file_stream;			/* A stream to it. */
 };
 
@@ -106,6 +103,7 @@ MimePartBufferReset (MimePartBufferData *data)
 	  PR_Close(data->file_stream);
 	  data->file_stream = 0;
 	}
+
   if (data->file_buffer_name)
 	{
 	  PR_Delete(data->file_buffer_name);
@@ -160,17 +158,16 @@ MimePartBufferWrite (MimePartBufferData *data,
 
   /* Ok, if at this point we still don't have either kind of buffer, try and
 	 make a file buffer. */
-  if (!data->part_buffer &&
-	  !data->file_buffer_name)
+  if (!data->part_buffer && !data->file_buffer_name)
 	{
-	  data->file_buffer_name = WH_TempName(xpTemporary, "nsma");
+	  data->file_buffer_name = GetOSTempFile("nsma");
 	  if (!data->file_buffer_name) return MK_OUT_OF_MEMORY;
 
 	  data->file_stream = PR_Open(data->file_buffer_name, PR_RDWR | PR_CREATE_FILE, 493);
 	  if (!data->file_stream)
 		return MK_UNABLE_TO_OPEN_TMP_FILE;
-	}
-  
+  }
+
   PR_ASSERT(data->part_buffer || data->file_stream);
 
 
@@ -179,7 +176,7 @@ MimePartBufferWrite (MimePartBufferData *data,
   if (data->part_buffer &&
 	  data->part_buffer_fp + size < data->part_buffer_size)
 	{
-	  XP_MEMCPY(data->part_buffer + data->part_buffer_fp,
+	  nsCRT::memcpy(data->part_buffer + data->part_buffer_fp,
 				buf, size);
 	  data->part_buffer_fp += size;
 	}
@@ -192,8 +189,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 	  if (!data->file_stream)
 		{
 		  if (!data->file_buffer_name)
-			data->file_buffer_name =
-			  WH_TempName (xpTemporary, "nsma");
+			data->file_buffer_name = GetOSTempFile("nsma");
 		  if (!data->file_buffer_name) return MK_OUT_OF_MEMORY;
 
 		  data->file_stream = PR_Open(data->file_buffer_name, PR_RDWR | PR_CREATE_FILE, 493);

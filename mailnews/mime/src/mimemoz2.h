@@ -92,7 +92,8 @@ struct _nsMIMESession {
 struct mime_stream_data {           /* This struct is the state we pass around
                                        amongst the various stream functions
                                        used by MIME_MessageConverter(). */
-  URL_Struct          *url;         /* The URL this is all coming from. */
+// RICHIE_URL  URL_Struct          *url;         /* The URL this is all coming from. */
+  char                *url_name;
   int                 format_out;
   MWContext           *context;     /* Must REMOVE this entry. */
   void                *pluginObj;   /* The new XP-COM stream converter object */
@@ -130,6 +131,9 @@ extern "C" nsIMimeEmitter   *GetMimeEmitter(MimeDisplayOptions *opt);
 
 /* To Get the connnection to prefs service manager */
 extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);
+
+extern "C" char             *GetOSTempFile(const char *name);
+
 
 #ifdef __cplusplus
 }

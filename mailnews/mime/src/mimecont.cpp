@@ -17,7 +17,9 @@
  */
 #include "prmem.h"
 #include "plstr.h"
-
+#include "prlog.h"
+#include "nsCRT.h"
+#include "prio.h"
 #include "mimecont.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
@@ -33,7 +35,7 @@ static PRBool MimeContainer_displayable_inline_p (MimeObjectClass *clazz,
 												   MimeHeaders *hdrs);
 
 #if defined(DEBUG) && defined(XP_UNIX)
-static int MimeContainer_debug_print (MimeObject *, FILE *, PRInt32 depth);
+static int MimeContainer_debug_print (MimeObject *, PRFileDesc *, PRInt32 depth);
 #endif
 
 static int
@@ -168,7 +170,7 @@ MimeContainer_add_child (MimeObject *parent, MimeObject *child)
   if (!new_kids) return MK_OUT_OF_MEMORY;
   
   if (cont->nchildren > 0)
-	XP_MEMCPY(new_kids, old_kids, sizeof(MimeObject *) * cont->nchildren);
+    nsCRT::memcpy(new_kids, old_kids, sizeof(MimeObject *) * cont->nchildren);
   new_kids[cont->nchildren] = child;
   PR_Free(old_kids);
   cont->children = new_kids;
@@ -191,18 +193,20 @@ MimeContainer_displayable_inline_p (MimeObjectClass *clazz, MimeHeaders *hdrs)
 
 #if defined(DEBUG) && defined(XP_UNIX)
 static int
-MimeContainer_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
+MimeContainer_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 {
   MimeContainer *cont = (MimeContainer *) obj;
   int i;
   char *addr = mime_part_address(obj);
   for (i=0; i < depth; i++)
-	fprintf(stream, "  ");
-  fprintf(stream, "<%s %s (%d kid%s) 0x%08X>\n",
+  PR_Write(stream, "  ", 2);
+  /*
+  PR_Write(stream, "<%s %s (%d kid%s) 0x%08X>\n",
 		  obj->clazz->class_name,
 		  addr ? addr : "???",
 		  cont->nchildren, (cont->nchildren == 1 ? "" : "s"),
 		  (PRUint32) cont);
+  */
   PR_FREEIF(addr);
 
 /*

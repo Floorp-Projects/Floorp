@@ -24,6 +24,8 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prerror.h"
+#include "nsMimeTypes.h"
+#include "msgCore.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartSigned, MimeMultipartSignedClass,

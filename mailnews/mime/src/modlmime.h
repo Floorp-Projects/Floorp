@@ -23,7 +23,6 @@
 #undef Bool
 #endif
 
-#include "xp.h"
 #include "prtypes.h"
 #include "nsMailHeaders.h"
 

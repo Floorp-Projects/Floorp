@@ -18,6 +18,6 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DIRS=calendar vcard
+DIRS=vcard
 
 include <$(DEPTH)\config\rules.mak>

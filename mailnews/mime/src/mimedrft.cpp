@@ -16,15 +16,13 @@
  * Reserved.
  */
 
-#include "xp.h"
-#include "xpgetstr.h"
 #include "libi18n.h"
-#include "xp_time.h"
 #include "msgcom.h"
 #include "mimeobj.h"
 #include "mimemsg.h"
 #include "mimeenc.h" /* jrm - needed to make it build 97/02/21 */
 #include "prefapi.h"
+#include "mimebuf.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -184,28 +182,28 @@ mime_draft_process_attachments ( struct mime_draft_data *mdd,
   for ( i=0; i < mdd->attachments_count; i++, tmp++, tmpFile++ ) {
 	if (tmpFile->type) {
 		if (PL_strcasecmp ( tmpFile->type, "text/x-vcard") == 0)
-			StrAllocCopy (tmp->real_name, tmpFile->description);
+			mime_SACopy (&(tmp->real_name), tmpFile->description);
 	}
 	if ( tmpFile->orig_url ) {
-	  StrAllocCopy ( tmp->url, tmpFile->orig_url );
+	  mime_SACopy ( &(tmp->url), tmpFile->orig_url );
 	  if (!tmp->real_name)
-	  StrAllocCopy ( tmp->real_name, tmpFile->orig_url );
+	  mime_SACopy ( &(tmp->real_name), tmpFile->orig_url );
 	}
 	if ( tmpFile->type ) {
-	  StrAllocCopy ( tmp->desired_type, tmpFile->type );
-	  StrAllocCopy ( tmp->real_type, tmpFile->type );
+	  mime_SACopy ( &(tmp->desired_type), tmpFile->type );
+	  mime_SACopy ( &(tmp->real_type), tmpFile->type );
 	}
 	if ( tmpFile->encoding ) {
-	  StrAllocCopy ( tmp->real_encoding, tmpFile->encoding );
+	  mime_SACopy ( &(tmp->real_encoding), tmpFile->encoding );
 	}
 	if ( tmpFile->description ) {
-	  StrAllocCopy ( tmp->description, tmpFile->description );
+	  mime_SACopy ( &(tmp->description), tmpFile->description );
 	}
 	if ( tmpFile->x_mac_type ) {
-	  StrAllocCopy ( tmp->x_mac_type, tmpFile->x_mac_type );
+	  mime_SACopy ( &(tmp->x_mac_type), tmpFile->x_mac_type );
 	}
 	if ( tmpFile->x_mac_creator ) {
-	  StrAllocCopy ( tmp->x_mac_creator, tmpFile->x_mac_creator );
+	  mime_SACopy ( &(tmp->x_mac_creator), tmpFile->x_mac_creator );
 	}
   }
 
@@ -271,26 +269,26 @@ static void mime_intl_insert_message_header_1(char **body, char **hdr_value,
 	mime_intl_mimepart_2_str(hdr_value, mailcsid);
 	if (htmlEdit)
 	{
-		StrAllocCat(*body, HEADER_START_JUNK);
-		/* StrAllocCat(*body, LINEBREAK "<BR><B>"); */
+		mime_SACat(*body, HEADER_START_JUNK);
+		/* mime_SACat(*body, LINEBREAK "<BR><B>"); */
 	}
 	else
 	{
-		StrAllocCat(*body, LINEBREAK);
+		mime_SACat(*body, LINEBREAK);
 	}
 	if (!html_hdr_str)
 		html_hdr_str = hdr_str;
-	StrAllocCat(*body, html_hdr_str);
+	mime_SACat(*body, html_hdr_str);
 	if (htmlEdit)
 	{
-		StrAllocCat(*body, HEADER_MIDDLE_JUNK);
-		/* StrAllocCat(*body, ":</B> "); */
+		mime_SACat(*body, HEADER_MIDDLE_JUNK);
+		/* mime_SACat(*body, ":</B> "); */
 	}
 	else
-		StrAllocCat(*body, ": ");
-	StrAllocCat(*body, *hdr_value);
+		mime_SACat(*body, ": ");
+	mime_SACat(*body, *hdr_value);
 	if (htmlEdit)
-		StrAllocCat(*body, HEADER_END_JUNK);
+		mime_SACat(*body, HEADER_END_JUNK);
 }
 
 static void mime_intl_insert_message_header(char **body, char**hdr_value,
@@ -326,21 +324,21 @@ static void mime_insert_all_headers(char **body,
 		if (html_tag)
 		{
 			*html_tag = 0;
-			StrAllocCopy(newBody, *body);
+			mime_SACopy(&(newBody), *body);
 			*html_tag = '<';
-			StrAllocCat(newBody, 
+			mime_SACat(newBody, 
 					 "<HTML> <BR><BR>-------- Original Message --------");
 		}
 		else
 		{
-			StrAllocCopy(newBody, 
+			mime_SACopy(&(newBody), 
 					 "<HTML> <BR><BR>-------- Original Message --------");
 		}
-		StrAllocCat(newBody, MIME_HEADER_TABLE);
+		mime_SACat(newBody, MIME_HEADER_TABLE);
 	}
 	else
 	{
-		StrAllocCopy(newBody, 
+		mime_SACopy(&(newBody), 
 					 LINEBREAK LINEBREAK "-------- Original Message --------");
 	}
 
@@ -387,7 +385,7 @@ static void mime_insert_all_headers(char **body,
 
 	  name = PR_MALLOC(colon - head + 1);
 	  if (!name) return /* MK_OUT_OF_MEMORY */;
-	  XP_MEMCPY(name, head, colon - head);
+	  nsCRT::memcpy(name, head, colon - head);
 	  name[colon - head] = 0;
 
 	  c2 = PR_MALLOC(end - contents + 1);
@@ -396,7 +394,7 @@ static void mime_insert_all_headers(char **body,
 		  PR_Free(name);
 		  return /* MK_OUT_OF_MEMORY */;
 		}
-	  XP_MEMCPY(c2, contents, end - contents);
+	  nsCRT::memcpy(c2, contents, end - contents);
 	  c2[end - contents] = 0;
 	  
 	  if (htmlEdit) mime_fix_up_html_address(&c2);
@@ -409,17 +407,17 @@ static void mime_insert_all_headers(char **body,
 
 	if (htmlEdit)
 	{
-		StrAllocCat(newBody, "</TABLE>");
-		StrAllocCat(newBody, LINEBREAK "<BR><BR>");
+		mime_SACat(newBody, "</TABLE>");
+		mime_SACat(newBody, LINEBREAK "<BR><BR>");
 		if (html_tag)
-			StrAllocCat(newBody, html_tag+6);
+			mime_SACat(newBody, html_tag+6);
 		else
-			StrAllocCat(newBody, *body);
+			mime_SACat(newBody, *body);
 	}
 	else
 	{
-		StrAllocCat(newBody, LINEBREAK LINEBREAK);
-		StrAllocCat(newBody, *body);
+		mime_SACat(newBody, LINEBREAK LINEBREAK);
+		mime_SACat(newBody, *body);
 	}
 
 	if (newBody)
@@ -468,13 +466,13 @@ static void mime_insert_normal_headers(char **body,
 	
 	if (htmlEdit)
 	{
-		StrAllocCopy(newBody, 
+		mime_SACopy(&(newBody), 
 					 "<HTML> <BR><BR>-------- Original Message --------");
-		StrAllocCat(newBody, MIME_HEADER_TABLE);
+		mime_SACat(newBody, MIME_HEADER_TABLE);
 	}
 	else
 	{
-		StrAllocCopy(newBody, 
+		mime_SACopy(&(newBody), 
 					 LINEBREAK LINEBREAK "-------- Original Message --------");
 	}
 	if (subject)
@@ -581,17 +579,17 @@ static void mime_insert_normal_headers(char **body,
 	}
 	if (htmlEdit)
 	{
-		StrAllocCat(newBody, "</TABLE>");
-		StrAllocCat(newBody, LINEBREAK "<BR><BR>");
+		mime_SACat(newBody, "</TABLE>");
+		mime_SACat(newBody, LINEBREAK "<BR><BR>");
 		if (html_tag)
-			StrAllocCat(newBody, html_tag+6);
+			mime_SACat(newBody, html_tag+6);
 		else
-			StrAllocCat(newBody, *body);
+			mime_SACat(newBody, *body);
 	}
 	else
 	{
-		StrAllocCat(newBody, LINEBREAK LINEBREAK);
-		StrAllocCat(newBody, *body);
+		mime_SACat(newBody, LINEBREAK LINEBREAK);
+		mime_SACat(newBody, *body);
 	}
 	if (newBody)
 	{
@@ -645,13 +643,13 @@ static void mime_insert_micro_headers(char **body,
 	
 	if (htmlEdit)
 	{
-		StrAllocCopy(newBody, 
+		mime_SACopy(&(newBody), 
 					 "<HTML> <BR><BR>-------- Original Message --------");
-	    StrAllocCat(newBody, MIME_HEADER_TABLE);
+	    mime_SACat(newBody, MIME_HEADER_TABLE);
 	}
 	else
 	{
-		StrAllocCopy(newBody, 
+		mime_SACopy(&(newBody), 
 					 LINEBREAK LINEBREAK "-------- Original Message --------");
 	}
 	if (from)
@@ -706,17 +704,17 @@ static void mime_insert_micro_headers(char **body,
 										mailcsid, htmlEdit);
 	if (htmlEdit)
 	{
-		StrAllocCat(newBody, "</TABLE>");
-		StrAllocCat(newBody, LINEBREAK "<BR><BR>");
+		mime_SACat(newBody, "</TABLE>");
+		mime_SACat(newBody, LINEBREAK "<BR><BR>");
 		if (html_tag)
-			StrAllocCat(newBody, html_tag+6);
+			mime_SACat(newBody, html_tag+6);
 		else
-			StrAllocCat(newBody, *body);
+			mime_SACat(newBody, *body);
 	}
 	else
 	{
-		StrAllocCat(newBody, LINEBREAK LINEBREAK);
-		StrAllocCat(newBody, *body);
+		mime_SACat(newBody, LINEBREAK LINEBREAK);
+		mime_SACat(newBody, *body);
 	}
 	if (newBody)
 	{
@@ -1162,7 +1160,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 	  if (mdd->curAttachment) {
   		char *ct = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
 		if (ct)
-			StrAllocCopy(mdd->curAttachment->type, ct);
+			mime_SACopy(&(mdd->curAttachment->type), ct);
 		PR_FREEIF(ct);
 	  }
 	  return 0;
@@ -1184,7 +1182,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 		PR_FREEIF(contentType);
 	}
 
-	mdd->messageBody = XP_NEW_ZAP (MSG_AttachedFile);
+	mdd->messageBody = PR_NEWZAP (MSG_AttachedFile);
 	PR_ASSERT (mdd->messageBody);
 	if (!mdd->messageBody) 
 	  return MK_OUT_OF_MEMORY;
@@ -1225,13 +1223,13 @@ mime_decompose_file_init_fn ( void *stream_closure,
 	parm_value = MimeHeaders_get( headers, HEADER_CONTENT_BASE, PR_FALSE, PR_FALSE );
 	if (parm_value) {
 	  char *cp = NULL, *cp1=NULL ;
-	  NET_UnEscape(parm_value);
+	  nsUnescape(parm_value);
 	  /* strip '"' */
 	  cp = parm_value;
 	  while (*cp == '"') cp++;
 	  if ((cp1 = PL_strchr(cp, '"')))
 		*cp1 = 0;
-	  StrAllocCopy(newAttachment->orig_url, cp);
+	  mime_SACopy(&(newAttachment->orig_url), cp);
 	  PR_FREEIF(parm_value);
 	}
   }
@@ -1252,7 +1250,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 	  if (boundary)
 		  tmp_value = PR_smprintf("; boundary=\"%s\"", boundary);
 	  if (tmp_value)
-		  StrAllocCat(newAttachment->type, tmp_value);
+		  mime_SACat(newAttachment->type, tmp_value);
 	  newAttachment->x_mac_type = 
 		  MimeHeaders_get_parameter(parm_value, "x-mac-type", NULL, NULL);
 	  newAttachment->x_mac_creator = 
@@ -1267,12 +1265,12 @@ mime_decompose_file_init_fn ( void *stream_closure,
   newAttachment->description = MimeHeaders_get( headers, 
 												HEADER_CONTENT_DESCRIPTION,
 												PR_FALSE, PR_FALSE );
-  mdd->tmp_file_name = WH_TempName (xpFileToPost, "nsmail");
+  mdd->tmp_file_name = GetOSTempFile("nsmail");
 
   if (!mdd->tmp_file_name)
 	return MK_OUT_OF_MEMORY;
 
-  StrAllocCopy (newAttachment->file_name, mdd->tmp_file_name);
+  mime_SACopy (&(newAttachment->file_name), mdd->tmp_file_name);
   mdd->tmp_file = PR_Open ( mdd->tmp_file_name, PR_RDWR | PR_CREATE_FILE, 493 );
   if (!mdd->tmp_file)
 	return MK_UNABLE_TO_OPEN_TMP_FILE;
@@ -1389,14 +1387,14 @@ MIME_ToDraftConverter ( int format_out,
 
   if ( !url || !context ) return NULL;
 
-  mdd = XP_NEW_ZAP (struct mime_draft_data);
+  mdd = PR_NEWZAP (struct mime_draft_data);
   if (!mdd) return 0;
 
   mdd->url = url;
   mdd->context = context;
   mdd->format_out = format_out;
 
-  mdd->options = XP_NEW_ZAP ( MimeDisplayOptions );
+  mdd->options = PR_NEWZAP  ( MimeDisplayOptions );
   if ( !mdd->options ) {
     PR_Free (mdd);
     return 0;
@@ -1432,7 +1430,7 @@ MIME_ToDraftConverter ( int format_out,
   obj->options = mdd->options;
   mdd->obj = obj;
 
-  stream = XP_NEW_ZAP ( nsMIMESession );
+  stream = PR_NEWZAP ( nsMIMESession );
   if ( !stream ) {
     PR_FREEIF( mdd->options->part_to_load );
     PR_Free ( mdd->options );

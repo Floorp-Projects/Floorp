@@ -20,6 +20,7 @@
 #include "mimebuf.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsMimeTransition.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
@@ -124,8 +125,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	 been done.
    */
   *obj->obuffer = 0;
-  status = NET_ScanForURLs (
-							NULL,
+  status = nsScanForURLs (
 							line, length, obj->obuffer, obj->obuffer_size - 10,
 							(obj->options ?
 							 obj->options->dont_touch_citations_p : PR_FALSE));

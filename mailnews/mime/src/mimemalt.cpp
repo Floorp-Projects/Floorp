@@ -17,9 +17,10 @@
  */
 
 #include "mimemalt.h"
-
 #include "prmem.h"
 #include "plstr.h"
+#include "prlog.h"
+#include "nsMimeTypes.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAlternative, MimeMultipartAlternativeClass,

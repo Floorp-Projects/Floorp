@@ -19,6 +19,9 @@
 #include "mimebuf.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsCRT.h"
+#include "prlog.h"
+#include "msgCore.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextRichtext, MimeInlineTextRichtextClass,
@@ -90,7 +93,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
   if (enriched_p)
 	{
 	  for (this_start = line; this_start < line + length; this_start++)
-		if (!XP_IS_SPACE (*this_start)) break;
+		if (!IS_SPACE (*this_start)) break;
 	  if (this_start >= line + length) /* blank line */
 		{
 		  PL_strcpy (*obufferP, "<BR>");
@@ -120,7 +123,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		{
 		  this_end++;
 		  while (this_end < data_end &&
-				 !XP_IS_SPACE (*this_end) &&
+				 !IS_SPACE (*this_end) &&
 				 *this_end != '<' && *this_end != '>' &&
 				 *this_end != '&')
 			this_end++;
@@ -131,7 +134,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 	  /* Push out the text preceeding the tag. */
 	  if (last_end && last_end != this_start)
 		{
-		  XP_MEMCPY (out, last_end, this_start - last_end);
+		  nsCRT::memcpy (out, last_end, this_start - last_end);
 		  out += this_start - last_end;
 		  *out = 0;
 		}

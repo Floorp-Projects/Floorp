@@ -19,7 +19,11 @@
 #include "mimeobj.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prio.h"
 #include "mimebuf.h"
+#include "prlog.h"
+#include "nsMimeTypes.h"
+#include "nsCRT.h"
 
 /* Way to destroy any notions of modularity or class hierarchy, Terry! */
 # include "mimetpla.h"
@@ -39,7 +43,7 @@ static PRBool MimeObject_displayable_inline_p (MimeObjectClass *clazz,
 												MimeHeaders *hdrs);
 
 #if defined(DEBUG) && defined(XP_UNIX)
-static int MimeObject_debug_print (MimeObject *, FILE *, PRInt32 depth);
+static int MimeObject_debug_print (MimeObject *, PRFileDesc *, PRInt32 depth);
 #endif
 
 static int
@@ -166,7 +170,7 @@ MimeObject_parse_begin (MimeObject *obj)
 
 	  obj->options->state = PR_NEW(MimeParseStateObject);
 	  if (!obj->options->state) return MK_OUT_OF_MEMORY;
-	  memset(obj->options->state, 0, sizeof(*obj->options->state));
+    nsCRT::memset(obj->options->state, 0, sizeof(*obj->options->state));
 	  obj->options->state->root = obj;
 	  obj->options->state->separator_suppressed_p = PR_TRUE; /* no first sep */
 	}
@@ -289,10 +293,12 @@ MimeObject_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
   int i;
   char *addr = mime_part_address(obj);
   for (i=0; i < depth; i++)
-	fprintf(stream, "  ");
+	PR_Write(stream, "  ", 2);
+/*
   fprintf(stream, "<%s %s 0x%08X>\n", obj->clazz->class_name,
 		  addr ? addr : "???",
 		  (PRUint32) obj);
+*/
   PR_FREEIF(addr);
   return 0;
 }

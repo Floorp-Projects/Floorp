@@ -17,10 +17,10 @@
  */
 
 #include "mimeeobj.h"
-#include "xpgetstr.h"
-
 #include "prmem.h"
 #include "plstr.h"
+#include "prlog.h"
+#include "nsMimeTransition.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeExternalObject, MimeExternalObjectClass,

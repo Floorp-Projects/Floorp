@@ -100,13 +100,17 @@
 
    = free all the cached data
  */
-
-
-
 #include "mimemrel.h"
-
 #include "prmem.h"
+#include "prprf.h"
 #include "plstr.h"
+#include "mimemoz2.h"
+#include "nsMimeTransition.h"
+#include "nsString.h"
+#include "nsIURL.h"
+#include "nsCRT.h"
+#include "msgCore.h"
+#include "nsCOMPtr.h"
 
 extern "C" int MK_UNABLE_TO_OPEN_TMP_FILE;
 
@@ -151,19 +155,24 @@ MimeMultipartRelated_initialize(MimeObject* obj)
 	   generates to adjust tags to point into the other parts.  This probably
 	   works out to something reasonable in most cases. */
 
-	relobj->hash = XP_HashTableNew(20, XP_StringHash,
-								   (XP_HashCompFunction) PL_strcmp);
+  relobj->hash = PL_NewHashTable(20, PL_HashString, PL_CompareStrings, PL_CompareValues,
+                                (PLHashAllocOps *)NULL, NULL);
+
 	if (!relobj->hash) return MK_OUT_OF_MEMORY;
 
 	return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
 
-XP_Bool mime_multipart_related_nukehash(XP_HashTable table, const void* key,
-                                       void* value, void* closure)
+static PR_CALLBACK 
+PRIntn mime_multipart_related_nukehash(PLHashEntry *table, 
+          				       						   PRIntn index, void *arg)                             
 {
-	PR_Free((char*) key);
-	PR_Free((char*) value);
-	return PR_TRUE;
+  if (table->key)
+    PR_Free((char*) table->key);
+
+  if (table->value)
+    PR_Free((char*) table->value);
+	return HT_ENUMERATE_NEXT;		/* XP_Maphash will continue traversing the hash */
 }
 
 static void
@@ -173,8 +182,8 @@ MimeMultipartRelated_finalize (MimeObject *obj)
 	PR_FREEIF(relobj->base_url);
 	PR_FREEIF(relobj->curtag);
 	if (relobj->hash) {
-		XP_MapRemhash(relobj->hash, mime_multipart_related_nukehash, NULL);
-		XP_HashTableDestroy(relobj->hash);
+    PL_HashTableEnumerateEntries(relobj->hash, mime_multipart_related_nukehash, NULL);
+    PL_HashTableDestroy(relobj->hash);
 		relobj->hash = NULL;
 	}
 	if (relobj->file_stream) {
@@ -189,7 +198,44 @@ MimeMultipartRelated_finalize (MimeObject *obj)
 	((MimeObjectClass*)&MIME_SUPERCLASS)->finalize(obj);
 }
 
-extern "C" char * escape_unescaped_percents(const char *incomingURL);
+#define ISHEX(c) ( ((c) >= '0' && (c) <= '9') || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F') )
+#define NONHEX(c) (!ISHEX(c))
+
+extern "C" char * 
+escape_unescaped_percents(const char *incomingURL)
+{
+	const char *inC;
+	char *outC;
+	char *result = (char *) PR_Malloc(PL_strlen(incomingURL)*3+1);
+
+	if (result)
+	{
+		for(inC = incomingURL, outC = result; *inC != '\0'; inC++)
+		{
+			if (*inC == '%')
+			{
+				/* Check if either of the next two characters are non-hex. */
+				if ( !*(inC+1) || NONHEX(*(inC+1)) || !*(inC+2) || NONHEX(*(inC+2)) )
+				{
+					/* Hex characters don't follow, escape the 
+					   percent char */
+					*outC++ = '%'; *outC++ = '2'; *outC++ = '5';
+				}
+				else
+				{
+					/* Hex characters follow, so assume the percent 
+					   is escaping something else */
+					*outC++ = *inC;
+				}
+			}
+			else
+				*outC++ = *inC;
+		}
+		*outC = '\0';
+	}
+
+	return result;
+}
 
 /* This routine is only necessary because the mailbox URL fed to us 
    by the winfe can contain spaces and '>'s in it. It's a hack. */
@@ -294,6 +340,47 @@ MimeThisIsStartPart(MimeObject *obj, MimeObject* child)
 }
 /* rhp - gotta support the "start" parameter */
 
+PUBLIC char *
+MakeAbsoluteURL(char * absolute_url, char * relative_url)
+{
+  return nsMakeAbsoluteURL(absolute_url, relative_url);
+
+  /***
+
+  nsString  aBaseURL(absolute_url);
+  nsString  aSpec(relative_url);
+  nsString  aResult;
+  nsIURL    *url = nsnull;
+  char      *retVal;
+
+  nsCOMPtr<nsIURL> tmpURL;
+  nsresult rv = NS_NewURL(getter_AddRefs(tmpURL), aBaseURL);
+  if (NS_FAILED(rv))
+    return NULL;
+
+  rv = NS_MakeAbsoluteURL(tmpURL, aBaseURL, aSpec, aResult);
+
+  if (rv != NS_OK)
+    return NULL;
+  else
+    return (aResult.ToNewCString());
+
+  nsresult err = NS_NewURL(&url, aSpec, aBaseURL);
+  if (err != NS_OK) 
+    return NULL;
+
+  if (NS_OK != url->GetSpec(&retVal))
+    return NULL;
+
+  return retVal;
+
+  if (NS_OK != NS_MakeAbsoluteURL(nsnull, aBaseURL, aSpec, aResult))
+    return NULL;
+  else
+    return (aResult.ToNewCString());
+*/
+}
+
 static PRBool
 MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 {
@@ -340,7 +427,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
       }
       /* rhp: need this for supporting Content-Location */
 
-      absolute = NET_MakeAbsoluteURL(base_url ? base_url : relobj->base_url, location);
+      absolute = MakeAbsoluteURL(base_url ? base_url : relobj->base_url, location);
 
 			PR_FREEIF(base_url);
 			PR_Free(location);
@@ -356,7 +443,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 					    char *temp = part;
 					    if (PL_strchr(part, ' ') || PL_strchr(part, '>') || PL_strchr(part, '%'))
 						  temp = escape_for_mrel_subst(part);
-						XP_Puthash(relobj->hash, absolute, temp);
+            PL_HashTableAdd(relobj->hash, absolute, temp);
 
             /* rhp - If this part ALSO has a Content-ID we need to put that into
                      the hash table and this is what this code does
@@ -382,7 +469,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
                 PR_Free(tmp);
                 if (tloc)
                 {
-                  XP_Puthash(relobj->hash, tloc, PL_strdup(temp));
+                  PL_HashTableAdd(relobj->hash, tloc, PL_strdup(temp));
                 }
               }
             }
@@ -489,7 +576,7 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 	/* Ok, if at this point we still don't have either kind of buffer, try and
 	   make a file buffer. */
 	if (!relobj->head_buffer && !relobj->file_buffer_name) {
-		relobj->file_buffer_name = WH_TempName(xpTemporary, "nsma");
+		relobj->file_buffer_name = GetOSTempFile("nsma");
 		if (!relobj->file_buffer_name) return MK_OUT_OF_MEMORY;
 
 		relobj->file_stream = PR_Open(relobj->file_buffer_name, 
@@ -507,7 +594,7 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 	 */
 	if (relobj->head_buffer &&
 	    relobj->head_buffer_fp + length < relobj->head_buffer_size) {
-		XP_MEMCPY(relobj->head_buffer + relobj->head_buffer_fp, line, length);
+		nsCRT::memcpy(relobj->head_buffer + relobj->head_buffer_fp, line, length);
 		relobj->head_buffer_fp += length;
 	} else {
 		/* Otherwise it won't fit; write it to the file instead. */
@@ -516,7 +603,7 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 		   to it. */
 		if (!relobj->file_stream) {
 			if (!relobj->file_buffer_name) {
-				relobj->file_buffer_name = WH_TempName (xpTemporary, "nsma");
+				relobj->file_buffer_name = GetOSTempFile("nsma");
 			}
 			if (!relobj->file_buffer_name) return MK_OUT_OF_MEMORY;
 
@@ -590,7 +677,7 @@ push_tag(MimeMultipartRelated* relobj, const char* buf, PRInt32 size)
 		}
 		if (!relobj->curtag) return MK_OUT_OF_MEMORY;
 	}
-	XP_MEMCPY(relobj->curtag + relobj->curtag_length, buf, size);
+	nsCRT::memcpy(relobj->curtag + relobj->curtag_length, buf, size);
 	relobj->curtag_length += size;
 	return 0;
 }
@@ -622,7 +709,7 @@ flush_tag(MimeMultipartRelated* relobj)
 				isquote = PR_TRUE;
 				/* Take up the double quote and leading space here as well. */
 				/* Safe because there's a '>' at the end */
-				do {ptr++;} while (XP_IS_SPACE(*ptr));
+				do {ptr++;} while (IS_SPACE(*ptr));
 			}
 		}
 		status = real_write(relobj, buf, ptr - buf);
@@ -634,7 +721,7 @@ flush_tag(MimeMultipartRelated* relobj)
 			ptr = mime_strnchr(buf, '"', length - (buf - relobj->curtag));
 		} else {
 			for (ptr = buf; *ptr ; ptr++) {
-				if (*ptr == '>' || XP_IS_SPACE(*ptr)) break;
+				if (*ptr == '>' || IS_SPACE(*ptr)) break;
 			}
 			PR_ASSERT(*ptr);
 		}
@@ -647,7 +734,7 @@ flush_tag(MimeMultipartRelated* relobj)
 							substitute the appropriate mailbox part URL in
 							its place. */
 			ptr2=buf; /* walk from the left end rightward */
-			while((ptr2<ptr) && (!XP_IS_SPACE(*ptr2)))
+			while((ptr2<ptr) && (!IS_SPACE(*ptr2)))
 				ptr2++;
 			/* Compare the beginning of the word with "cid:". Yuck. */
 			if (((ptr2 - buf) > 4) && 
@@ -658,12 +745,16 @@ flush_tag(MimeMultipartRelated* relobj)
 				*ptr2 = '\0';
 				
 				/* Construct a URL out of the word. */
-        absolute = NET_MakeAbsoluteURL(relobj->base_url, buf);
+        absolute = MakeAbsoluteURL(relobj->base_url, buf);
 
 				/* See if we have a mailbox part URL
 				   corresponding to this cid. */
-				part_url = (char *) (absolute ? XP_Gethash(relobj->hash, buf, NULL) : NULL);
-				PR_FREEIF(absolute);
+        part_url = NULL;
+        if (absolute)
+        {
+          part_url = (char *)PL_HashTableLookup(relobj->hash, buf);
+				  PR_FREEIF(absolute);
+        }
 				
 				/*If we found a mailbox part URL, write that out instead.*/
 				if (part_url)
@@ -685,14 +776,15 @@ flush_tag(MimeMultipartRelated* relobj)
         *ptr2 = '\0';
     
         /* Construct a URL out of the word. */
-				absolute = NET_MakeAbsoluteURL(relobj->base_url, buf);
+				absolute = MakeAbsoluteURL(relobj->base_url, buf);
 
         /* See if we have a mailbox part URL
 				   corresponding to this cid. */
         if (absolute)
-				  realout = (char *)XP_Gethash(relobj->hash, absolute, NULL);
+				  realout = (char *)PL_HashTableLookup(relobj->hash, absolute);
         else
-          realout = (char *)XP_Gethash(relobj->hash, buf, NULL);
+          realout = (char *)PL_HashTableLookup(relobj->hash, buf);
+
 
         *ptr2 = holder;
         PR_FREEIF(absolute);
@@ -708,7 +800,7 @@ flush_tag(MimeMultipartRelated* relobj)
 
 			/* Advance to the beginning of the next word, or to
 			   the end of the value string. */
-			while((ptr2<ptr) && (XP_IS_SPACE(*ptr2)))
+			while((ptr2<ptr) && (IS_SPACE(*ptr2)))
 				ptr2++;
 
 			/* Write whatever original text remains after

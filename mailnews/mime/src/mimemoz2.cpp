@@ -17,7 +17,7 @@
  */
 #include "modlmime.h"
 #include "libi18n.h"
-#include "xp_time.h"
+#include "nsCRT.h"
 #include "msgcom.h"
 #include "mimeobj.h"
 #include "mimemsg.h"
@@ -26,7 +26,6 @@
 #include "mimemsig.h"
 #include "mimemrel.h"
 #include "mimemalt.h"
-#include "xpgetstr.h"
 #include "mimebuf.h"
 #include "edt.h"
 #include "mimerosetta.h"
@@ -42,6 +41,8 @@
 #include "mimemoz2.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsFileSpec.h"
+#include "nsMimeTransition.h"
 
 #ifdef MOZ_SECURITY
 #include HG01944
@@ -74,22 +75,27 @@ static PRBool MIME_NoInlineAttachments;
 static PRBool MIME_WrapLongLines;
 static PRBool MIME_VariableWidthPlaintext;
 
+extern "C" char *
+GetOSTempFile(const char *name)
+{
+char  *retName; 
+
+  nsFileSpec  *fs = new nsFileSpec();
+  if (!fs)
+    return NULL;
+  
+  fs->MakeUnique(name);
+  retName = (char *)PL_strdup(fs->GetCString());
+  delete fs;
+  return retName;
+}
+  
 static char *
 mime_reformat_date(const char *date, void *stream_closure)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  MWContext *context = msd->context;
-  const char *s;
-  time_t t;
-  PR_ASSERT(date);
-  if (!date) return 0;
-  t = XP_ParseTimeString(date, PR_FALSE);
-  if (t <= 0) return 0;
-  s = MSG_FormatDateFromContext(context, t);
-  if (!s) return 0;
-  return PL_strdup(s);
+  return PL_strdup(date);
 }
-
 
 static char *
 mime_file_type (const char *filename, void *stream_closure)
@@ -178,7 +184,7 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
     {
       line = (char *) PR_MALLOC(input_length+1);
       if (!line) return MK_OUT_OF_MEMORY;
-      XP_MEMCPY(line, input_line, input_length);
+      nsCRT::memcpy(line, input_line, input_length);
       line[input_length] = 0;
     }
 
@@ -326,9 +332,10 @@ mime_display_stream_complete (nsMIMESession *stream)
     !msd->context->mime_data->previous_locked_url)
   {
     /* Save a copy of this URL so that we can unlock it next time. */
-    msd->context->mime_data->previous_locked_url =
-      PL_strdup(msd->url->address);
-    
+    // RICHIE_URL msd->context->mime_data->previous_locked_url = PL_strdup(msd->url->address);
+
+    msd->context->mime_data->previous_locked_url = PL_strdup(msd->url_name);
+
 #ifdef RICHIE
     /* Lock this URL in the cache. */
     if (msd->context->mime_data->previous_locked_url)
@@ -524,8 +531,9 @@ static int    mime_image_write_buffer(char *buf, PRInt32 size, void *image_closu
  */
 struct mime_image_stream_data {
   struct mime_stream_data *msd;
-  URL_Struct *url_struct;
-  nsMIMESession *istream;
+  // RICHIE_URL URL_Struct *url_struct;
+  char                    *url;
+  nsMIMESession           *istream;
 };
 
 static void *
@@ -559,21 +567,28 @@ mime_image_begin(const char *image_url, const char *content_type,
          image viewer. */
       return mid;
 
-  mid->url_struct = NET_CreateURLStruct (image_url, NET_DONT_RELOAD);
-  if (!mid->url_struct)
-    {
-      PR_Free(mid);
-      return 0;
-    }
+  mid->url = (char *) PL_strdup(image_url);
+  if (!mid->url)
+  {
+    PR_Free(mid);
+    return 0;
+  }
 
-  mid->url_struct->content_encoding = 0;
-  mid->url_struct->content_type = PL_strdup(content_type);
-  if (!mid->url_struct->content_type)
-    {
-      NET_FreeURLStruct (mid->url_struct);
-      PR_Free(mid);
-      return 0;
-    }
+  // RICHIE_URL mid->url_struct = NET_CreateURLStruct (image_url, NET_DONT_RELOAD);
+  // RICHIE_URL if (!mid->url_struct)
+  // RICHIE_URL   {
+  // RICHIE_URL     PR_Free(mid);
+  // RICHIE_URL     return 0;
+  // RICHIE_URL   }
+
+  // RICHIE_URL mid->url_struct->content_encoding = 0;
+  // RICHIE_URL mid->url_struct->content_type = PL_strdup(content_type);
+  // RICHIE_URL if (!mid->url_struct->content_type)
+  // RICHIE_URL   {
+  // RICHIE_URL     NET_FreeURLStruct (mid->url_struct);
+  // RICHIE_URL     PR_Free(mid);
+  // RICHIE_URL     return 0;
+  // RICHIE_URL   }
 
   mid->istream = (nsMIMESession *) msd->pluginObj;
   return mid;
@@ -601,8 +616,11 @@ mime_image_end(void *image_closure, int status)
     */
   }
 
-  if (mid->url_struct)
-    NET_FreeURLStruct (mid->url_struct);
+  // RICHIE_URL if (mid->url_struct)
+  // RICHIE_URL   NET_FreeURLStruct (mid->url_struct);
+
+  PR_FREEIF(mid->url);
+
   PR_Free(mid);
 }
 
@@ -624,9 +642,17 @@ mime_image_make_image_html(void *image_closure)
   if (!mid->istream)
     return PL_strdup("<P><CENTER><IMG SRC=\"resource:/res/network/gopher-image.gif\" ALT=\"[Image]\"></CENTER><P>");
 
+  /* RICHIE_URL
   url = ((mid->url_struct && mid->url_struct->address)
          ? mid->url_struct->address
          : "");
+  *** RICHIE_URL ***/
+
+  if ( (!mid->url) || (!(*mid->url)) )
+    url = "";
+  else
+    url = mid->url;
+
   buf = (char *) PR_MALLOC (PL_strlen (prefix) + PL_strlen (suffix) +
                            PL_strlen (url) + 20);
   if (!buf) return 0;
@@ -783,7 +809,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
   cobj = (MimeContainer*) obj;
   n = cobj->nchildren;          /* This is often too big, but that's OK. */
   if (n <= 0) return n;
-  *data = (MSG_AttachmentData *) XP_CALLOC(n + 1, sizeof(MSG_AttachmentData));
+  *data = (MSG_AttachmentData *) PR_Calloc(n + 1, sizeof(MSG_AttachmentData));
   if (!*data) return MK_OUT_OF_MEMORY;
   tmp = *data;
   c = '?';
@@ -865,7 +891,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
     if (tmp->real_type && !PL_strcasecmp(tmp->real_type, MESSAGE_RFC822) &&
         (!tmp->real_name || *tmp->real_name == 0))
     {
-        StrAllocCopy(tmp->real_name, XP_GetString(XP_FORWARDED_MESSAGE_ATTACHMENT));
+        mime_SACopy(&(tmp->real_name), XP_GetString(XP_FORWARDED_MESSAGE_ATTACHMENT));
     }
   }
   return 0;
@@ -1030,13 +1056,16 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   msd = PR_NEWZAP(struct mime_stream_data);
   if (!msd) 
     return NULL;
-  
+
+
+  /* RICHIE_URL
   msd->url = PR_NEWZAP( URL_Struct );
   if (!msd->url)
   {
     PR_FREEIF(msd);
     return NULL;
   }
+  *****/
 
   /***
   nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(msd->prefs));
@@ -1051,11 +1080,13 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   // Assign the new mime emitter - will handle output operations
   msd->output_emitter = newEmitter;
   
-  (msd->url)->address = PL_strdup(urlString);
-  if (!((msd->url)->address))
+  // RICHIE_URL (msd->url)->address = PL_strdup(urlString);
+  
+  msd->url_name = PL_strdup(urlString);
+  if (!(msd->url_name))
   {
     delete msd->output_emitter;
-    PR_FREEIF(msd->url);
+    // RICHIE_URL PR_FREEIF(msd->url);
     PR_FREEIF(msd);
     return NULL;
   }
@@ -1099,7 +1130,7 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
     msd->options->attachment_icon_layer_id = 0; /* Sigh... */
   }
 #endif
-  
+   
   /* Set the defaults, based on the context, and the output-type.
   */
   if (format_out == FO_NGLAYOUT ||
@@ -1146,7 +1177,8 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   
   // We need to have the URL to be able to support the various 
   // arguments
-  status = mime_parse_url_options(msd->url->address, msd->options);
+  // RICHIE_URL status = mime_parse_url_options(msd->url->address, msd->options);
+  status = mime_parse_url_options(msd->url_name, msd->options);
   if (status < 0)
   {
     PR_FREEIF(msd->options->part_to_load);
@@ -1154,10 +1186,16 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
     PR_Free(msd);
     return 0;
   }
-  
+ 
+  /** RICHIE_URL 
   if (msd->options->headers == MimeHeadersMicro &&
     (msd->url->address == NULL || (PL_strncmp(msd->url->address, "news:", 5) != 0 &&
     PL_strncmp(msd->url->address, "snews:", 6) != 0))
+    )
+    **RICHIE_URL **/
+  if (msd->options->headers == MimeHeadersMicro &&
+    (msd->url_name == NULL || (PL_strncmp(msd->url_name, "news:", 5) != 0 &&
+    PL_strncmp(msd->url_name, "snews:", 6) != 0))
     )
     msd->options->headers = MimeHeadersMicroPlus;
   
@@ -1191,7 +1229,8 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
     msd->options->write_html_p == PR_FALSE)
     msd->options->dexlate_p = PR_TRUE;
   
-  msd->options->url                   = msd->url->address;
+  // RICHIE_URL msd->options->url                   = msd->url->address;
+  msd->options->url = msd->url_name;
   msd->options->write_html_p          = PR_TRUE;
   msd->options->output_init_fn        = mime_output_init_fn;
   

@@ -19,6 +19,14 @@
 #ifndef _MIMEBUF_H_
 #define _MIMEBUF_H_
 
+/*	Very similar to strdup except it free's too
+ */
+extern "C" char * 
+mime_SACopy (char **destination, const char *source);
+
+extern "C"  char *
+mime_SACat (char **destination, const char *source);
+
 extern "C" int mime_GrowBuffer (PRUint32 desired_size,
 						   PRUint32 element_size, PRUint32 quantum,
 						   char **buffer, PRInt32 *size);

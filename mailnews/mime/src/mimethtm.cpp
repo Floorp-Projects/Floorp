@@ -17,9 +17,10 @@
  */
 
 #include "mimethtm.h"
-
 #include "prmem.h"
 #include "plstr.h"
+#include "prlog.h"
+#include "msgCore.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextHTML, MimeInlineTextHTMLClass,
@@ -100,7 +101,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 
 		  for (in = base_hdr; *in; in++)
 			/* ignore whitespace and quotes */
-			if (!XP_IS_SPACE(*in) && *in != '"')
+			if (!IS_SPACE(*in) && *in != '"')
 			  *out++ = *in;
 
 		  /* Close the tag and argument. */

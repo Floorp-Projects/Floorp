@@ -207,8 +207,6 @@ nsMimeEmitter::WriteXMLTag(const char *tagName, const char *value)
   UtilityWrite(tagName);
   UtilityWrite(">");
 
-  UtilityWrite(tagName);
-  UtilityWrite(": ");
   UtilityWrite(newValue);
 
   UtilityWrite("</");

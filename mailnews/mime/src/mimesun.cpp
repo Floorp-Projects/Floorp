@@ -17,10 +17,11 @@
  */
 
 #include "mimesun.h"
-
 #include "prmem.h"
 #include "plstr.h"
-
+#include "prlog.h"
+#include "nsMimeTypes.h"
+#include "msgCore.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeSunAttachment, MimeSunAttachmentClass,
@@ -238,7 +239,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
   if (sun_enc_info && !PL_strncasecmp (sun_enc_info, "adpcm-compress", 14))
 	{
 	  sun_enc_info += 14;
-	  while (XP_IS_SPACE(*sun_enc_info) || *sun_enc_info == ',')
+	  while (IS_SPACE(*sun_enc_info) || *sun_enc_info == ',')
 		sun_enc_info++;
 	}
 
@@ -253,7 +254,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 		{
 		  const char *start = sun_enc_info;
 		  sun_enc_info = end + 1;
-		  while (XP_IS_SPACE(*sun_enc_info))
+		  while (IS_SPACE(*sun_enc_info))
 			sun_enc_info++;
 		  for (prev = end-1; prev > start && *prev != ','; prev--)
 			;

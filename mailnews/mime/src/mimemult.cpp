@@ -21,6 +21,7 @@
 
 #include "prmem.h"
 #include "plstr.h"
+#include "prio.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMultipart, MimeMultipartClass,
@@ -46,7 +47,7 @@ extern "C" MimeObjectClass mimeMultipartSignedClass;
 extern "C" MimeObjectClass mimeInlineTextVCardClass;
 
 #if defined(DEBUG) && defined(XP_UNIX)
-static int MimeMultipart_debug_print (MimeObject *, FILE *, PRInt32);
+static int MimeMultipart_debug_print (MimeObject *, PRFileDesc *, PRInt32);
 #endif
 
 static int
@@ -581,20 +582,22 @@ MimeMultipart_parse_eof (MimeObject *obj, PRBool abort_p)
 
 #if defined(DEBUG) && defined(XP_UNIX)
 static int
-MimeMultipart_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
+MimeMultipart_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 {
   MimeMultipart *mult = (MimeMultipart *) obj;
   MimeContainer *cont = (MimeContainer *) obj;
   char *addr = mime_part_address(obj);
   int i;
   for (i=0; i < depth; i++)
-	fprintf(stream, "  ");
+	PR_Write(stream, "  ", 2);
+/**
   fprintf(stream, "<%s %s (%d kid%s) boundary=%s 0x%08X>\n",
 		  obj->clazz->class_name,
 		  addr ? addr : "???",
 		  cont->nchildren, (cont->nchildren == 1 ? "" : "s"),
 		  (mult->boundary ? mult->boundary : "(none)"),
 		  (PRUint32) mult);
+**/
   PR_FREEIF(addr);
 
 /*
