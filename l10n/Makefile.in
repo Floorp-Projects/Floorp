@@ -22,6 +22,12 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= lang
+ifdef MOZ_L10N_TOOLS
+DIRS	+= tools
+endif
+
+ifdef MOZ_L10N_LANG
+DIRS	+= lang
+endif
 
 include $(topsrcdir)/config/rules.mk
