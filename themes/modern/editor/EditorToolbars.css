@@ -26,13 +26,6 @@
   min-width: 1px;
 }
 
-#FormatToolbar {
-  border-top: 1px solid #B6CADF;
-  border-bottom: 1px solid #000000;
-  border-left: 1px solid #48607E;
-  border-right: 2px solid #4D6685;
-}
-
 #FormatToolbar > toolbargrippy {
   margin-left: 0px;
 }
@@ -590,33 +583,37 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
-/************ These styles don't work yet.  I'm not sure why (nbhatla, 9/14/00)**************/
-
-#AlignPopupButton:hover, #AlignPopupButton[toggled="true"]:hover:active {
+menu:hover > #AlignPopupButton, 
+menu:hover:active > #AlignPopupButton[toggled="true"] {
 	list-style-image:url("chrome://editor/skin/images/align_hover.gif");
 }
 
-#AlignPopupButton[toggled="true"], #AlignPopupButton:hover:active {
+menu:hover:active > #AlignPopupButton,
+menu:hover > #AlignPopupButton[toggled="true"] {
 	list-style-image:url("chrome://editor/skin/images/align_active.gif");
 }
 
-#AlignPopupButton[disabled="true"], #AlignPopupButton[disabled="true"]:hover:active {
+#AlignPopupButton[disabled="true"], 
+menu:hover > #AlignPopupButton[disabled="true"], 
+menu:hover:active > #AlignPopupButton[disabled="true"] {
 	list-style-image:url("chrome://editor/skin/images/align_disabled.gif");
 }
 
-#InsertPopupButton:hover, #InsertPopupButton[toggled="true"]:hover:active {
+menu:hover > #InsertPopupButton,
+menu:hover:active > #InsertPopupButton[toggled="true"] {
 	list-style-image:url("chrome://editor/skin/images/object-popup_hover.gif");
 }
 
-#InsertPopupButton[toggled="true"], #InsertPopupButton:hover:active {
+menu:hover:active > #InsertPopupButton,
+menu:hover > #InsertPopupButton[toggled="true"] {
 	list-style-image:url("chrome://editor/skin/images/object-popup_active.gif");
 }
 
-#InsertPopupButton[disabled="true"], #InsertPopupButton[disabled="true"]:hover:active {
+#InsertPopupButton[disabled="true"],
+menu:hover > #InsertPopupButton[disabled="true"], 
+menu:hover:active > #InsertPopupButton[disabled="true"] {
 	list-style-image:url("chrome://editor/skin/images/object-popup_disabled.gif");
 }
-
-///////////////////////////////////////////////////
 
 #text-align-left,
 #align-left-button
