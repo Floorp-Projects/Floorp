@@ -97,6 +97,27 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
   }
 }
 
+#ifdef MOZ_MATHML
+// 'old' is old cached cell's desired size
+// 'raw' is new cell's size without including style constraints from CalculateCellActualSize()
+// 'new' is new cell's size including style constraints
+static PRBool
+TallestCellGotShorter(nscoord aOld,
+                      nscoord aRaw,
+                      nscoord aNew,
+                      nscoord aTallest)
+{
+  // see if the cell got shorter and it may have been the tallest
+  PRBool tallestCellGotShorter = PR_FALSE;
+  if (aRaw < aOld) {
+    if ((aRaw == aTallest) && (aNew < aTallest)) {
+      tallestCellGotShorter = PR_TRUE;
+    }
+  }
+  return tallestCellGotShorter;
+}
+#endif
+
 /* ----------- nsTableRowpFrame ---------- */
 
 nsTableRowFrame::nsTableRowFrame()
@@ -346,7 +367,11 @@ nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
         //     But some content crashes when this reflow is issued, to be investigated
         //XXX nsReflowStatus status;
         //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
+#ifndef MOZ_MATHML
         ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(aPresContext, aReflowState);
+#else
+        ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
+#endif
         /* if we're collapsing borders, notify the cell that the border edge length has changed */
         if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
           ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
@@ -365,6 +390,24 @@ nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
   // Let our base class do the usual work
 }
 
+#ifdef MOZ_MATHML
+// returns max-ascent amongst all cells that have 'vertical-align: baseline'
+// including cells with rowspans
+nscoord nsTableRowFrame::GetMaxCellAscent() const
+{
+  return mMaxCellAscent;
+}
+
+#if 0 // nobody uses this
+// returns max-descent amongst all cells that have 'vertical-align: baseline'
+// does *not* include cells with rowspans
+nscoord nsTableRowFrame::GetMaxCellDescent() const
+{
+  return mMaxCellDescent;
+}
+#endif
+#endif
+
 /** returns the height of the tallest child in this row (ignoring any cell with rowspans) */
 nscoord nsTableRowFrame::GetTallestCell() const
 {
@@ -375,13 +418,22 @@ void
 nsTableRowFrame::ResetTallestCell()
 {
   mTallestCell = 0;
+#ifdef MOZ_MATHML
+  mMaxCellAscent = 0;
+  mMaxCellDescent = 0;
+#endif
 }
 
 void
 nsTableRowFrame::SetTallestCell(nscoord           aHeight,
+#ifdef MOZ_MATHML
+                                nscoord           aAscent,
+                                nscoord           aDescent,
+#endif
                                 nsTableFrame*     aTableFrame,
                                 nsTableCellFrame* aCellFrame)
 {
+#ifndef MOZ_MATHML
   NS_ASSERTION((aTableFrame && aCellFrame) || (!aTableFrame && !aCellFrame), "invalid call");
 
   if ((aHeight != NS_UNCONSTRAINEDSIZE) &&
@@ -391,6 +443,37 @@ nsTableRowFrame::SetTallestCell(nscoord           aHeight,
       mTallestCell = aHeight;
     }
   }
+#else
+  NS_ASSERTION((aTableFrame && aCellFrame) , "invalid call");
+  if (aHeight != NS_UNCONSTRAINEDSIZE) {
+    if (!(aCellFrame->HasVerticalAlignBaseline())) { // only the cell's height matters
+      if (mTallestCell < aHeight) {
+        PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(*aCellFrame);
+        if (rowSpan == 1) {
+          mTallestCell = aHeight;
+        }
+      }
+    }
+    else { // the alignment on the baseline can change the height
+      NS_ASSERTION((aAscent != NS_UNCONSTRAINEDSIZE) && (aDescent != NS_UNCONSTRAINEDSIZE), "invalid call");
+      // see if this is a long ascender
+      if (mMaxCellAscent < aAscent) {
+        mMaxCellAscent = aAscent;
+      }
+      // see if this is a long descender and without rowspan
+      if (mMaxCellDescent < aDescent) {
+        PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(*aCellFrame);
+        if (rowSpan == 1) {
+          mMaxCellDescent = aDescent;
+        }
+      }
+      // keep the tallest height in sync
+      if (mTallestCell < mMaxCellAscent + mMaxCellDescent) {
+        mTallestCell = mMaxCellAscent + mMaxCellDescent;
+      }
+    }
+  }
+#endif
 }
 
 void 
@@ -401,12 +484,17 @@ nsTableRowFrame::CalcTallestCell()
   if (NS_FAILED(rv)) return;
 
   nscoord cellSpacingX = tableFrame->GetCellSpacingX();
+#ifndef MOZ_MATHML
   mTallestCell = 0;
+#else
+  ResetTallestCell();
+#endif
 
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     nsCOMPtr<nsIAtom> frameType;
     kidFrame->GetFrameType(getter_AddRefs(frameType));
     if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
+#ifndef MOZ_MATHML
       PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*kidFrame);
       if (rowSpan == 1) {
         nscoord availWidth = ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth();
@@ -414,6 +502,15 @@ nsTableRowFrame::CalcTallestCell()
         CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
         SetTallestCell(desSize.height);
       }
+#else
+      nscoord availWidth = ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth();
+      nsSize desSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
+      CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
+      // height may have changed, adjust descent to absorb any excess difference
+      nscoord ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
+      nscoord descent = desSize.height - ascent;
+      SetTallestCell(desSize.height, ascent, descent, tableFrame, (nsTableCellFrame*)kidFrame);
+#endif
     }
   }
 }
@@ -945,8 +1042,15 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
         // logic needed for backwards compatibility
         CalculateCellActualSize(kidFrame, desiredSize.width, 
                                 desiredSize.height, availWidth);
+#ifndef MOZ_MATHML
         SetTallestCell(desiredSize.height, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
-  
+#else
+        // height may have changed, adjust descent to absorb any excess difference
+        nscoord ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
+        nscoord descent = desiredSize.height - ascent;
+        SetTallestCell(desiredSize.height, ascent, descent, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
+#endif
+
         // Place the child
         PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize,
                    aReflowState.x, 0,
@@ -1067,8 +1171,11 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
       // XXX do we need to call CalculateCellActualSize?
       PlaceChild(aPresContext, aReflowState, kidFrame, kidSize, x, 0,
                  aDesiredSize.maxElementSize, &kidMaxElementSize);
+#ifndef MOZ_MATHML
       SetTallestCell(aDesiredSize.height, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
-
+#else
+      SetTallestCell(aDesiredSize.height, aDesiredSize.ascent, aDesiredSize.descent, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
+#endif
       x += kidSize.width + cellSpacingX;
     }
     else
@@ -1094,8 +1201,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
 // to be reflowed
 //
 // The things in the RowReflowState object we need to restore are:
-// - maxCellHeight
-// - maxVertCellSpace
+// - max-element size
 // - x
 NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
                                         RowReflowState& aReflowState,
@@ -1116,15 +1222,13 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
       frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
 
       if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
-        // Update maxCellHeight and maxVertCellSpace. When determining this we
-        // don't include cells that span rows
-        PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*frame);
-
-        // Recover the max element size if requested
+        // Recover the max element size if requested,
+        // ignoring the height of cells that span rows
         if (aMaxElementSize) {
           nsSize  kidMaxElementSize = ((nsTableCellFrame *)frame)->GetPass1MaxElementSize();
-
           aMaxElementSize->width += kidMaxElementSize.width;
+
+          PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*frame);
           if (1 == rowSpan) {
             aMaxElementSize->height = PR_MAX(aMaxElementSize->height, kidMaxElementSize.height);
           }
@@ -1272,6 +1376,10 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     nsSize  oldCellMinSize      = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
     nscoord oldCellMaximumWidth = ((nsTableCellFrame*)aNextFrame)->GetMaximumWidth();
     nsSize  oldCellDesSize      = ((nsTableCellFrame*)aNextFrame)->GetDesiredSize();
+#ifdef MOZ_MATHML
+    nscoord oldCellDesAscent    = ((nsTableCellFrame*)aNextFrame)->GetDesiredAscent();
+    nscoord oldCellDesDescent   = oldCellDesSize.height - oldCellDesAscent;
+#endif
     
     // Reflow the cell passing it the incremental reflow command. We can't pass
     // in a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
@@ -1279,6 +1387,10 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     rv = ReflowChild(aNextFrame, aPresContext, cellMet, kidRS,
                      aReflowState.x, 0, 0, aStatus);
     nsSize initCellDesSize(cellMet.width, cellMet.height);
+#ifdef MOZ_MATHML
+    nscoord initCellDesAscent = cellMet.ascent;
+    nscoord initCellDesDescent = cellMet.descent;
+#endif
     
     // Update the cell layout data.. If the cell's maximum width changed,
     // then inform the table that its maximum width needs to be recomputed
@@ -1316,9 +1428,14 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // takes into account the specified height (in the style), and any special
     // logic needed for backwards compatibility
     CalculateCellActualSize(aNextFrame, cellMet.width, cellMet.height, cellAvailWidth);
+#ifdef MOZ_MATHML
+    // height may have changed, adjust descent to absorb any excess difference
+    cellMet.descent = cellMet.height - cellMet.ascent;
+#endif
 
     // if the cell got shorter and it may have been the tallest, recalc the tallest cell
     PRBool tallestCellGotShorter = PR_FALSE;
+#ifndef MOZ_MATHML
     if (initCellDesSize.height < oldCellDesSize.height) {
       nscoord width  = initCellDesSize.width;
       nscoord height = initCellDesSize.height;
@@ -1334,9 +1451,40 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     else {
       SetTallestCell(cellMet.height, aReflowState.tableFrame, (nsTableCellFrame*)aNextFrame);
     }
+#else
+    PRBool hasVerticalAlignBaseline = ((nsTableCellFrame*)aNextFrame)->HasVerticalAlignBaseline();
+    if (!hasVerticalAlignBaseline) { 
+      // only the height matters
+      tallestCellGotShorter = 
+        TallestCellGotShorter(oldCellDesSize.height, initCellDesSize.height, 
+          cellMet.height, mTallestCell);
+    }
+    else {
+      // the ascent matters
+      tallestCellGotShorter = 
+        TallestCellGotShorter(oldCellDesAscent, initCellDesAscent, 
+          cellMet.ascent, mMaxCellAscent);
+      // the descent of cells without rowspan also matters
+      if (!tallestCellGotShorter) {
+        PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aNextFrame);
+        if (rowSpan == 1) {
+         tallestCellGotShorter = 
+           TallestCellGotShorter(oldCellDesAscent, initCellDesDescent, 
+             cellMet.descent, mMaxCellDescent);
+        }
+      }
+    }
+    if (tallestCellGotShorter) {
+      CalcTallestCell();
+    }
+    else {
+      SetTallestCell(cellMet.height, cellMet.ascent, cellMet.descent, aReflowState.tableFrame, (nsTableCellFrame*)aNextFrame);
+    }
+#endif
 
     // if the cell's desired size didn't changed, our height is unchanged
     aDesiredSize.mNothingChanged = PR_FALSE;
+#ifndef MOZ_MATHML
     if ((initCellDesSize.width  == oldCellDesSize.width) && 
         (initCellDesSize.height == oldCellDesSize.height)) {
       aDesiredSize.height = mRect.height;
@@ -1347,6 +1495,25 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     }
     PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aNextFrame);
     cellMet.height = (rowSpan == 1) ? aDesiredSize.height : PR_MAX(aDesiredSize.height, cellMet.height);
+#else
+    PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aNextFrame);
+    if (initCellDesSize.width == oldCellDesSize.width) {
+      if (!hasVerticalAlignBaseline) { // only the cell's height matters
+        if (initCellDesSize.height == oldCellDesSize.height) {
+          aDesiredSize.mNothingChanged = PR_TRUE;
+        }
+      }
+      else { // cell's ascent and cell's descent matter
+        if (initCellDesAscent == oldCellDesAscent) {
+          if ((rowSpan == 1) && (initCellDesDescent == oldCellDesDescent)) {
+            aDesiredSize.mNothingChanged = PR_TRUE;
+          }
+        }
+      }
+    }
+    aDesiredSize.height = (aDesiredSize.mNothingChanged) ? mRect.height : GetTallestCell();
+    cellMet.height = (rowSpan == 1) ? aDesiredSize.height : PR_MAX(aDesiredSize.height, cellMet.height);
+#endif
     // Now place the child
     PlaceChild(aPresContext, aReflowState, aNextFrame, cellMet, aReflowState.x,
                0, aDesiredSize.maxElementSize, &kidMaxElementSize);
@@ -1357,7 +1524,11 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     aDesiredSize.width  = aReflowState.availSize.width;
     if (!aDesiredSize.mNothingChanged) {
       if (aDesiredSize.height == mRect.height) { // our height didn't change
+#ifndef MOZ_MATHML
         ((nsTableCellFrame *)aNextFrame)->VerticallyAlignChild(aPresContext, aReflowState.reflowState);
+#else
+        ((nsTableCellFrame *)aNextFrame)->VerticallyAlignChild(aPresContext, aReflowState.reflowState, mMaxCellAscent);
+#endif
         nsRect dirtyRect;
         aNextFrame->GetRect(dirtyRect);
         dirtyRect.height = mRect.height;
@@ -1516,7 +1687,13 @@ void nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   aCellFrame->SizeTo(aPresContext, cellSize.width, aAvailableHeight);
+#ifndef MOZ_MATHML
   aCellFrame->VerticallyAlignChild(aPresContext, aReflowState);
+#else
+  // XXX What happens if this cell has 'vertical-align: baseline' ?
+  // XXX Why is it assumed that the cell's ascent hasn't changed ?
+  aCellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
+#endif
   aCellFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 
