@@ -36,12 +36,13 @@ CPPSRCS=				\
 	BooleanResult.cpp		\
 	ElementExpr.cpp			\
 	ErrorFunctionCall.cpp		\
+	Expr.cpp			\
 	ExprLexer.cpp			\
+	ExprLexerChars.cpp		\
 	ExprParser.cpp			\
 	ExtensionFunctionCall.cpp	\
 	FilterExpr.cpp			\
 	FunctionCall.cpp		\
-	IdentityExpr.cpp		\
 	LocationStep.cpp		\
 	MultiplicativeExpr.cpp		\
 	NodeSet.cpp			\
@@ -49,7 +50,6 @@ CPPSRCS=				\
 	NumberExpr.cpp			\
 	NumberFunctionCall.cpp		\
 	NumberResult.cpp		\
-	ParentExpr.cpp			\
 	PathExpr.cpp			\
 	PredicateList.cpp		\
 	RelationalExpr.cpp		\
@@ -59,6 +59,7 @@ CPPSRCS=				\
 	StringResult.cpp		\
 	TextExpr.cpp			\
 	UnionExpr.cpp			\
+	UnaryExpr.cpp			\
 	VariableRefExpr.cpp		\
 	XPathNames.cpp			\
 !if !defined(TX_EXE)
@@ -77,12 +78,13 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\BooleanResult.obj			\
 	.\$(OBJDIR)\ElementExpr.obj			\
 	.\$(OBJDIR)\ErrorFunctionCall.obj		\
+	.\$(OBJDIR)\Expr.obj				\
 	.\$(OBJDIR)\ExprLexer.obj			\
+	.\$(OBJDIR)\ExprLexerChars.obj			\
 	.\$(OBJDIR)\ExprParser.obj			\
 	.\$(OBJDIR)\ExtensionFunctionCall.obj		\
 	.\$(OBJDIR)\FilterExpr.obj			\
 	.\$(OBJDIR)\FunctionCall.obj			\
-	.\$(OBJDIR)\IdentityExpr.obj			\
 	.\$(OBJDIR)\LocationStep.obj			\
 	.\$(OBJDIR)\MultiplicativeExpr.obj		\
 	.\$(OBJDIR)\NodeSet.obj				\
@@ -90,7 +92,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\NumberExpr.obj			\
 	.\$(OBJDIR)\NumberFunctionCall.obj		\
 	.\$(OBJDIR)\NumberResult.obj			\
-	.\$(OBJDIR)\ParentExpr.obj			\
 	.\$(OBJDIR)\PathExpr.obj			\
 	.\$(OBJDIR)\PredicateList.obj			\
 	.\$(OBJDIR)\RelationalExpr.obj			\
@@ -100,6 +101,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\StringResult.obj			\
 	.\$(OBJDIR)\TextExpr.obj			\
 	.\$(OBJDIR)\UnionExpr.obj			\
+	.\$(OBJDIR)\UnaryExpr.obj			\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
 	.\$(OBJDIR)\XPathNames.obj			\
 !if !defined(TX_EXE)

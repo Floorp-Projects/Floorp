@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: BasicNodeExpr.cpp,v 1.4 2001/05/14 14:22:46 axel%pike.org Exp $
+ * $Id: BasicNodeExpr.cpp,v 1.5 2001/06/30 13:54:26 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/05/14 14:22:46 $
+ * @version $Revision: 1.5 $ $Date: 2001/06/30 13:54:26 $
 **/
 
 //- Constructors -/
@@ -38,6 +38,7 @@
 **/
 BasicNodeExpr::BasicNodeExpr() {
     this->type = NodeExpr::NODE_EXPR;
+    nodeNameSet = MB_FALSE;
 } //-- BasicNodeExpr
 
 /**
@@ -45,6 +46,7 @@ BasicNodeExpr::BasicNodeExpr() {
 **/
 BasicNodeExpr::BasicNodeExpr(NodeExpr::NodeExprType nodeExprType) {
     this->type = nodeExprType;
+    nodeNameSet = MB_FALSE;
 } //-- BasicNodeExpr
 
 /**
@@ -56,6 +58,15 @@ BasicNodeExpr::~BasicNodeExpr() {};
  //- Public Methods -/
 //------------------/
 
+void BasicNodeExpr::setNodeName(const String& name) {
+    this->nodeName = name;
+    nodeNameSet = MB_TRUE;
+}
+
+  //-----------------------------/
+ //- Methods from NodeExpr.cpp -/
+//-----------------------------/
+
 /**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
@@ -65,7 +76,8 @@ BasicNodeExpr::~BasicNodeExpr() {};
 **/
 ExprResult* BasicNodeExpr::evaluate(Node* context, ContextState* cs) {
     NodeSet* nodeSet = new NodeSet();
-    if ( !context ) return nodeSet;
+    if (!context)
+        return nodeSet;
     Node* node = context->getFirstChild();
     while (node) {
         if (matches(node, context, cs))
@@ -75,17 +87,14 @@ ExprResult* BasicNodeExpr::evaluate(Node* context, ContextState* cs) {
     return nodeSet;
 } //-- evaluate
 
-  //-----------------------------/
- //- Methods from NodeExpr.cpp -/
-//-----------------------------/
-
 /**
- * Returns the default priority of this Pattern based on the given Node,
+ * Returns the default priority of this Expr based on the given Node,
  * context Node, and ContextState.
- * If this pattern does not match the given Node under the current context Node and
- * ContextState then Negative Infinity is returned.
 **/
-double BasicNodeExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
+double BasicNodeExpr::getDefaultPriority(Node* node, Node* context,
+                                         ContextState* cs) {
+    if (nodeNameSet)
+        return 0;
     return -0.5;
 } //-- getDefaultPriority
 
@@ -102,20 +111,21 @@ short BasicNodeExpr::getType() {
  * the given context
 **/
 MBool BasicNodeExpr::matches(Node* node, Node* context, ContextState* cs) {
-    if ( !node ) return MB_FALSE;
-    switch ( type ) {
+    if (!node)
+        return MB_FALSE;
+    switch (type) {
         case NodeExpr::COMMENT_EXPR:
-            return (MBool) (node->getNodeType() == Node::COMMENT_NODE);
+            return (MBool)(node->getNodeType() == Node::COMMENT_NODE);
         case NodeExpr::PI_EXPR :
-            return (MBool) (node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE);
+            return (MBool)(node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE &&
+                            !nodeNameSet || nodeName.isEqual(node->getNodeName()));
         default: //-- node()
-            if(node->getNodeType() == Node::TEXT_NODE)
+            if (node->getNodeType() == Node::TEXT_NODE)
                 return !cs->isStripSpaceAllowed(node);
             return MB_TRUE;
             break;
     }
     return MB_TRUE;
-
 } //-- matches
 
 
@@ -128,12 +138,18 @@ MBool BasicNodeExpr::matches(Node* node, Node* context, ContextState* cs) {
  * @return the String representation of this NodeExpr.
 **/
 void BasicNodeExpr::toString(String& dest) {
-    switch ( type ) {
+    switch (type) {
         case NodeExpr::COMMENT_EXPR:
             dest.append("comment()");
             break;
         case NodeExpr::PI_EXPR :
-            dest.append("processing-instruction()");
+            dest.append("processing-instruction(");
+            if (nodeNameSet) {
+                dest.append('\'');
+                dest.append(nodeName);
+                dest.append('\'');
+            }
+            dest.append(')');
             break;
         default: //-- node()
             dest.append("node()");
