@@ -208,9 +208,6 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
         aEvent->PreventDefault();
       }
     }
-  } else if (eventString.Equals(NS_LITERAL_STRING("onsubmit"))) {
-    // Don't submit any data if the event handler failed
-    aEvent->PreventDefault();
   }
 
   return rv;
