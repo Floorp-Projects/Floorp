@@ -104,7 +104,7 @@ GlobalWindowImpl::GlobalWindowImpl() : mScriptObject(nsnull),
    mLocation(nsnull), mFrames(nsnull), 
    mGlobalObjectOwner(nsnull), mTimeouts(nsnull),
    mTimeoutInsertionPoint(nsnull), mRunningTimeout(nsnull),
-   mTimeoutPublicIdCounter(1), 
+   mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
    mFirstDocumentLoad(PR_TRUE), mChromeEventHandler(nsnull), mDocShell(nsnull)
 {
    NS_INIT_REFCNT();
@@ -2905,196 +2905,232 @@ NS_IMETHODIMP GlobalWindowImpl::SetTimeoutOrInterval(JSContext* cx, jsval* argv,
 
 PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 {
-   nsTimeoutImpl *next, *timeout;
-   nsTimeoutImpl *last_expired_timeout;
-   nsTimeoutImpl dummy_timeout;
-   JSContext *cx;
-   PRInt64 now;
-   nsITimer *timer;
-   nsresult rv;
+  nsTimeoutImpl *next, *prev, *timeout;
+  nsTimeoutImpl *last_expired_timeout, **last_insertion_point;
+  nsTimeoutImpl dummy_timeout;
+  JSContext *cx;
+  PRInt64 now;
+  nsITimer *timer;
+  nsresult rv;
+  PRUint32 firingDepth = mTimeoutFiringDepth+1;
 
-   /* Make sure that the window or the script context don't go away as 
-      a result of running timeouts */
-   GlobalWindowImpl* temp = this;
-   NS_ADDREF(temp);
-   nsIScriptContext* tempContext = mContext;
-   NS_ADDREF(tempContext);
+  /* Make sure that the window or the script context don't go away as 
+     a result of running timeouts */
+  GlobalWindowImpl* temp = this;
+  NS_ADDREF(temp);
+  nsIScriptContext* tempContext = mContext;
+  NS_ADDREF(tempContext);
+  
+  timer = aTimeout->timer;
+  cx = (JSContext *)mContext->GetNativeContext();
+  
+  /* A native timer has gone off.  See which of our timeouts need
+     servicing */
+  LL_I2L(now, PR_IntervalNow());
+  
+  /* The timeout list is kept in deadline order.  Discover the
+     latest timeout whose deadline has expired. On some platforms,
+     native timeout events fire "early", so we need to test the
+     timer as well as the deadline. */
+  last_expired_timeout = nsnull;
+  for(timeout = mTimeouts; timeout; timeout = timeout->next) {
+    if(((timeout == aTimeout) || !LL_CMP(timeout->when, >, now)) &&
+       (0 == timeout->firingDepth)) {
+      /*
+       * Mark any timeouts that are on the list to be fired with the
+       * firing depth so that we can reentrantly run timeouts
+       */
+      timeout->firingDepth = firingDepth;
+      last_expired_timeout = timeout;
+    }
+  }
 
-   timer = aTimeout->timer;
-   cx = (JSContext *)mContext->GetNativeContext();
+  /* Maybe the timeout that the event was fired for has been deleted
+     and there are no others timeouts with deadlines that make them
+     eligible for execution yet.  Go away. */
+  if(!last_expired_timeout) {
+    NS_RELEASE(temp);
+    NS_RELEASE(tempContext);
+    return PR_TRUE;
+  }
 
-   /* A native timer has gone off.  See which of our timeouts need
-      servicing */
-   LL_I2L(now, PR_IntervalNow());
+  /* Insert a dummy timeout into the list of timeouts between the portion
+     of the list that we are about to process now and those timeouts that
+     will be processed in a future call to win_run_timeout().  This dummy
+     timeout serves as the head of the list for any timeouts inserted as
+     a result of running a timeout. */
+  dummy_timeout.timer = NULL;
+  dummy_timeout.public_id = 0;
+  dummy_timeout.firingDepth = firingDepth;
+  dummy_timeout.next = last_expired_timeout->next;
+  last_expired_timeout->next = &dummy_timeout;
+  
+  /* Don't let ClearWindowTimeouts throw away our stack-allocated
+     dummy timeout. */
+  dummy_timeout.ref_count = 2;
+  
+  last_insertion_point = mTimeoutInsertionPoint;
+  mTimeoutInsertionPoint = &dummy_timeout.next;
 
-   /* The timeout list is kept in deadline order.  Discover the
-      latest timeout whose deadline has expired. On some platforms,
-      native timeout events fire "early", so we need to test the
-      timer as well as the deadline. */
-   last_expired_timeout = nsnull;
-   for(timeout = mTimeouts; timeout; timeout = timeout->next)
-      {
-      if((timeout == aTimeout) || !LL_CMP(timeout->when, >, now))
-         last_expired_timeout = timeout;
-      }
+  prev = nsnull;
+  for(timeout = mTimeouts; timeout != &dummy_timeout; timeout = next) {
+    next = timeout->next;
+    
+    /* 
+     * Check to see if it should fire at this depth. If it shouldn't, we'll 
+     * ignore it 
+     */
+    if (timeout->firingDepth == firingDepth) {
+      nsTimeoutImpl* last_running_timeout;
 
-   /* Maybe the timeout that the event was fired for has been deleted
-      and there are no others timeouts with deadlines that make them
-      eligible for execution yet.  Go away. */
-   if(!last_expired_timeout)
-      {
-      NS_RELEASE(temp);
-      NS_RELEASE(tempContext);
-      return PR_TRUE;
-      }
-
-   /* Insert a dummy timeout into the list of timeouts between the portion
-      of the list that we are about to process now and those timeouts that
-      will be processed in a future call to win_run_timeout().  This dummy
-      timeout serves as the head of the list for any timeouts inserted as
-      a result of running a timeout. */
-   dummy_timeout.timer = NULL;
-   dummy_timeout.public_id = 0;
-   dummy_timeout.next = last_expired_timeout->next;
-   last_expired_timeout->next = &dummy_timeout;
-
-   /* Don't let ClearWindowTimeouts throw away our stack-allocated
-      dummy timeout. */
-   dummy_timeout.ref_count = 2;
-   
-   mTimeoutInsertionPoint = &dummy_timeout.next;
-   
-   for(timeout = mTimeouts; timeout != &dummy_timeout; timeout = next)
-      {
-      next = timeout->next;
       /* Hold the timeout in case expr or funobj releases its doc. */
       HoldTimeout(timeout);
+      last_running_timeout = mRunningTimeout;
       mRunningTimeout = timeout;
+      ++mTimeoutFiringDepth;
 
-      if(timeout->expr)
-         {
-         /* Evaluate the timeout expression. */
-         nsAutoString script = JS_GetStringChars(timeout->expr);
-         nsAutoString blank = "";
-         PRBool isUndefined;
-         rv = mContext->EvaluateString(script,
-                                     mScriptObject,
-                                     timeout->principal,
-                                     timeout->filename,
-                                     timeout->lineno,
-                                     timeout->version,
-                                     blank,
-                                     &isUndefined);
-         } 
-      else 
-         {
-         PRInt64 lateness64;
-         PRInt32 lateness;
+      if(timeout->expr) {
+        /* Evaluate the timeout expression. */
+        nsAutoString script = JS_GetStringChars(timeout->expr);
+        nsAutoString blank = "";
+        PRBool isUndefined;
+        rv = mContext->EvaluateString(script,
+                                      mScriptObject,
+                                      timeout->principal,
+                                      timeout->filename,
+                                      timeout->lineno,
+                                      timeout->version,
+                                      blank,
+                                      &isUndefined);
+      } 
+      else  {
+        PRInt64 lateness64;
+        PRInt32 lateness;
+        
+        /* Add "secret" final argument that indicates timeout
+           lateness in milliseconds */
+        LL_SUB(lateness64, now, timeout->when);
+        LL_L2I(lateness, lateness64);
+        lateness = PR_IntervalToMilliseconds(lateness);
+        timeout->argv[timeout->argc] = INT_TO_JSVAL((jsint)lateness);
+        PRBool aBoolResult;
+        rv = mContext->CallEventHandler(mScriptObject, timeout->funobj,
+                                        timeout->argc + 1, timeout->argv,
+                                        &aBoolResult);
+      }
+      
+      --mTimeoutFiringDepth;
+      mRunningTimeout = last_running_timeout;
 
-         /* Add "secret" final argument that indicates timeout
-            lateness in milliseconds */
-         LL_SUB(lateness64, now, timeout->when);
-         LL_L2I(lateness, lateness64);
-         lateness = PR_IntervalToMilliseconds(lateness);
-         timeout->argv[timeout->argc] = INT_TO_JSVAL((jsint)lateness);
-         PRBool aBoolResult;
-         rv = mContext->CallEventHandler(mScriptObject, timeout->funobj,
-                                       timeout->argc + 1, timeout->argv,
-                                       &aBoolResult);
-         }
-      if(NS_FAILED(rv))
-         {
-         NS_RELEASE(temp);
-         NS_RELEASE(tempContext);
-         return PR_TRUE;
-         }
-
-      mRunningTimeout = nsnull;
+      if(NS_FAILED(rv)) {
+        mTimeoutInsertionPoint = last_insertion_point;
+        NS_RELEASE(temp);
+        NS_RELEASE(tempContext);
+        return PR_TRUE;
+      }
+    
       /* If the temporary reference is the only one that is keeping
          the timeout around, the document was released and we should
          restart this function. */
-      if(timeout->ref_count == 1)
-         {
-         DropTimeout(timeout, tempContext);
-         NS_RELEASE(temp);
-         NS_RELEASE(tempContext);
-         return PR_FALSE;
-         }
+      if(timeout->ref_count == 1) {
+        mTimeoutInsertionPoint = last_insertion_point;
+        DropTimeout(timeout, tempContext);
+        NS_RELEASE(temp);
+        NS_RELEASE(tempContext);
+        return PR_FALSE;
+      }
       DropTimeout(timeout, tempContext);
 
       /* If we have a regular interval timer, we re-fire the
        *  timeout, accounting for clock drift.
        */
-      if(timeout->interval)
-         {
-         /* Compute time to next timeout for interval timer. */
-         PRInt32 delay32;
-         PRInt64 interval, delay;
-         LL_I2L(interval, PR_MillisecondsToInterval(timeout->interval));
-         LL_ADD(timeout->when, timeout->when, interval);
-         LL_I2L(now, PR_IntervalNow());
-         LL_SUB(delay, timeout->when, now);
-         LL_L2I(delay32, delay);
+      if(timeout->interval) {
+        /* Compute time to next timeout for interval timer. */
+        PRInt32 delay32;
+        PRInt64 interval, delay;
+        LL_I2L(interval, PR_MillisecondsToInterval(timeout->interval));
+        LL_ADD(timeout->when, timeout->when, interval);
+        LL_I2L(now, PR_IntervalNow());
+        LL_SUB(delay, timeout->when, now);
+        LL_L2I(delay32, delay);
+        
+        /* If the next interval timeout is already supposed to
+         *  have happened then run the timeout immediately.
+         */
+        if(delay32 < 0)
+          delay32 = 0;
+        delay32 = PR_IntervalToMilliseconds(delay32);
 
-         /* If the next interval timeout is already supposed to
-          *  have happened then run the timeout immediately.
-          */
-         if(delay32 < 0)
-            delay32 = 0;
-         delay32 = PR_IntervalToMilliseconds(delay32);
-
-         NS_IF_RELEASE(timeout->timer);
-
-         /* Reschedule timeout.  Account for possible error return in
-            code below that checks for zero toid. */
-         nsresult err = NS_NewTimer(&timeout->timer);
-         if(NS_OK != err)
-            {
-            NS_RELEASE(temp);
-            NS_RELEASE(tempContext);
-            return PR_TRUE;
-            } 
+        NS_IF_RELEASE(timeout->timer);
+        
+        /* Reschedule timeout.  Account for possible error return in
+           code below that checks for zero toid. */
+        nsresult err = NS_NewTimer(&timeout->timer);
+        if(NS_OK != err) {
+          mTimeoutInsertionPoint = last_insertion_point;
+          NS_RELEASE(temp);
+          NS_RELEASE(tempContext);
+          return PR_TRUE;
+        } 
        
-         err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
-                                  delay32, NS_PRIORITY_LOWEST);
-         if(NS_OK != err)
-            {
-            NS_RELEASE(temp);
-            NS_RELEASE(tempContext);
-            return PR_TRUE;
-            } 
-         // Increment ref_count to indicate that this timer is holding
-         // on to the timeout struct.
-         HoldTimeout(timeout);
-         }
+        err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
+                                   delay32, NS_PRIORITY_LOWEST);
+        if(NS_OK != err) {
+          NS_RELEASE(temp);
+          NS_RELEASE(tempContext);
+          return PR_TRUE;
+        } 
+        // Increment ref_count to indicate that this timer is holding
+        // on to the timeout struct.
+        HoldTimeout(timeout);
+      }
 
       /* Running a timeout can cause another timeout to be deleted,
          so we need to reset the pointer to the following timeout. */
       next = timeout->next;
-      mTimeouts = next;
+      if (nsnull == prev) {
+        mTimeouts = next;
+      }
+      else {
+        prev->next = next;
+      }
       // Drop timeout struct since it's out of the list
       DropTimeout(timeout, tempContext);
-
+      
       /* Free the timeout if this is not a repeating interval
        *  timeout (or if it was an interval timeout, but we were
        *  unsuccessful at rescheduling it.)
        */
-      if(timeout->interval && timeout->timer)
-         {
-         /* Reschedule an interval timeout */
-         /* Insert interval timeout onto list sorted in deadline order. */
-         InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
-         }
+      if(timeout->interval && timeout->timer) {
+        /* Reschedule an interval timeout */
+        /* Insert interval timeout onto list sorted in deadline order. */
+        InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
       }
-   /* Take the dummy timeout off the head of the list */
-   mTimeouts = dummy_timeout.next;
-   mTimeoutInsertionPoint = nsnull;
+    }
+    else {
+      /* 
+       * We skip the timeout since it's on the list to run at another
+       * depth.
+       */
+      prev = timeout;
+    }
+  }
 
-   /* Get rid of our temporary reference to ourselves and the 
-      script context */
-   NS_RELEASE(temp);
-   NS_RELEASE(tempContext);
-   return PR_TRUE;
+  /* Take the dummy timeout off the head of the list */
+  if (nsnull == prev) {
+    mTimeouts = dummy_timeout.next;
+  }
+  else {
+    prev->next = dummy_timeout.next;
+  }
+   
+  mTimeoutInsertionPoint = last_insertion_point;
+
+  /* Get rid of our temporary reference to ourselves and the 
+     script context */
+  NS_RELEASE(temp);
+  NS_RELEASE(tempContext);
+  return PR_TRUE;
 }
 
 void GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
@@ -3214,6 +3250,7 @@ void GlobalWindowImpl::InsertTimeoutIntoList(nsTimeoutImpl **aList,
          break;
       aList = &to->next;
       }
+   aTimeout->firingDepth = 0;
    aTimeout->next = to;
    *aList = aTimeout;
    // Increment the ref_count since we're in the list
