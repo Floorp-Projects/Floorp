@@ -373,15 +373,23 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 
 				}
 		}
-		else
+    else
 		{
 			if (!curWidget->action.onCommand.IsEmpty())
 			{
 				// Save any screen changes to affected widgets
 				w = findWidget(curWidget->target);
+
 				if (w)
 					w->value = GetScreenValue(w);
-				curWidget->value = GetScreenValue(curWidget);
+
+				if (curWidget->type == "DropBox" || curWidget->type == "ComboBox")
+				{
+					if (wNotifyCode != CBN_SELENDCANCEL && wNotifyCode !=CBN_CLOSEUP)
+					  curWidget->value = GetScreenValue(curWidget);
+				}
+				else
+				  curWidget->value = GetScreenValue(curWidget);
 
 				// Evaluate new state
 				theInterpreter->interpret(curWidget->action.onCommand, curWidget);
