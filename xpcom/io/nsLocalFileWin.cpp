@@ -995,6 +995,26 @@ nsLocalFile::Spawn(const char *args)
 }
 
 NS_IMETHODIMP  
+nsLocalFile::Load(PRLibrary * *_retval);
+{
+    PRBool isFile;
+    nsresult rv = IsFile(&isFile);
+
+    if (NS_FAILED(rv))
+        return rv;
+    
+    if (! isFile)
+        return NS_ERROR_FILE_IS_DIRECTORY;
+
+    *_retval =  PR_LoadLibrary(mResolvedPath);
+    
+    if (*_retval)
+        return NS_OK;
+
+    return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP  
 nsLocalFile::Delete(PRBool recursive)
 {
     MakeDirty();
