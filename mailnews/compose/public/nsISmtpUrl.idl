@@ -36,16 +36,6 @@ interface nsISmtpUrl : nsISupports {
 	// SMTP Parse specific getters --> retrieves portions from the url spec...
 	///////////////////////////////////////////////////////////////////////////////
 	
-	// mscott: I used to have individual getters for ALL of these fields but it was
-	// getting way out of hand...besides in the actual protocol, we want all of these
-	// fields anyway so why go through the extra step of making the protocol call
-	// 12 get functions...
-	void GetMessageContents(out string aToPart, out string aCcPart, out string aBccPart, 
-		out string aFromPart, out string aFollowUpToPart, out string aOrganizationPart, 
-		out string aReplyToPart, out string aSubjectPart, out string aBodyPart, out string aHtmlPart, 
-		out string aReferencePart, out string aAttachmentPart, out string aPriorityPart, 
-		out string aNewsgroupPart, out string aNewsHostPart, out boolean aforcePlainText);
-
 	// Caller must call PR_FREE on list when it is done with it. This list is a list of all
 	// recipients to send the email to. each name is NULL terminated...
 	void GetAllRecipients(out string aRecipientsList);
@@ -72,4 +62,25 @@ interface nsISmtpUrl : nsISupports {
 	// NOTE:  the SMTP username and SMTP server are in the mailto url
 	// mailto://sspitzer@tintin/...
 	attribute nsIMsgIdentity senderIdentity;
+};
+
+[scriptable, uuid(5EE2AFF7-9C6F-11d3-98A3-001083010E9B)]
+interface nsIMailtoUrl : nsISupports {
+	/////////////////////////////////////////////////////////////////////////////// 
+	// Mailto parse specific getters
+	///////////////////////////////////////////////////////////////////////////////
+
+	// mscott: I used to have individual getters for ALL of these fields but it was
+	// getting way out of hand...besides in the actual protocol, we want all of these
+	// fields anyway so why go through the extra step of making the protocol call
+	// 12 get functions...
+
+	// All of these fields are things we can effectively extract from a
+	// mailto url if it contains all of these values
+	void GetMessageContents(out string aToPart, out string aCcPart, out string aBccPart, 
+		out string aFromPart, out string aFollowUpToPart, out string aOrganizationPart, 
+		out string aReplyToPart, out string aSubjectPart, out string aBodyPart, out string aHtmlPart, 
+		out string aReferencePart, out string aAttachmentPart, out string aPriorityPart, 
+		out string aNewsgroupPart, out string aNewsHostPart, out boolean aforcePlainText);
+
 };
