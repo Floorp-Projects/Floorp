@@ -3061,7 +3061,7 @@ if (GetFieldDef("namedqueries", "watchfordiffs")) {
     DropField("namedqueries", "watchfordiffs");
 }
 
-# 2002-08-?? jake@acutex.net/bbaetz@student.usyd.edu.au - bug 43600
+# 2002-08-12 jake@acutex.net/bbaetz@student.usyd.edu.au - bug 43600
 # Use integer IDs for products and components.
 if (GetFieldDef("products", "product")) {
     print "Updating database to use product IDs.\n";
