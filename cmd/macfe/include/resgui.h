@@ -1059,6 +1059,15 @@
 
 #define ABOUT_MOZILLA_FLAME		158
 
+// Selector Bar icons in Aurora
+#define ABOUT_HISTORYGIF_TANG	159
+#define ABOUT_PERSONALGIF_TANG	160
+#define ABOUT_SEARCHGIF_TANG	161
+#define ABOUT_SITEMAPGIF_TANG	162
+#define ABOUT_FILESGIF_TANG		163
+#define ABOUT_GUIDEGIF_TANG		164
+
+
 // Alerts for the help system
 // where the hell am I suppose to define these?
 
