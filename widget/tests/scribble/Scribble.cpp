@@ -218,7 +218,8 @@ nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
         {
             if (scribbleData.isDrawing) {
                 nsIRenderingContext *drawCtx = aEvent->widget->GetRenderingContext();
-                drawCtx->SetColor(aEvent->widget->GetForegroundColor());
+                //drawCtx->SetColor(aEvent->widget->GetForegroundColor());
+                drawCtx->SetColor(NS_RGB(255, 0, 0));
                 drawCtx->DrawLine(scribbleData.mousePos.x, 
                                   scribbleData.mousePos.y,
                                   ((nsGUIEvent*)aEvent)->point.x,
@@ -482,6 +483,7 @@ nsresult CreateApplication(int * argc, char ** argv)
                                     NULL,
                                     appShell);
     //scribbleData.mainWindow->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    scribbleData.mainWindow->SetBackgroundColor(NS_RGB(255,255,255));
     scribbleData.mainWindow->SetTitle("Scribble");
 
     //
@@ -492,6 +494,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&controlPane);
     controlPane->Create(scribbleData.mainWindow, rect, HandleEventControlPane, NULL);
     //controlPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    controlPane->SetBackgroundColor(NS_RGB(0,0,255));
     controlPane->Show(PR_TRUE);
 
 #ifdef NOTNOW
@@ -605,6 +608,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&scribbleData.drawPane);
     scribbleData.drawPane->Create(scribbleData.mainWindow, rect, HandleEventGraphicPane, NULL);
     //scribbleData.drawPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    scribbleData.drawPane->SetBackgroundColor(NS_RGB(255,250,250));
     scribbleData.drawPane->Show(PR_TRUE);
 
     //
