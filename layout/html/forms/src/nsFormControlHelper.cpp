@@ -299,12 +299,15 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
 
-  // only add in padding if we are not Gfx
+  // only add in padding if we are not Gfx, or if we're a Gfx text widget
   PRBool requiresWidget = PR_FALSE;
-
   aFrame->RequiresWidget(requiresWidget);
+  PRInt32 type;
+  aFrame->GetType(&type);
 
-  if (PR_TRUE == requiresWidget || eWidgetRendering_Gfx != mode) {
+  if (PR_TRUE == requiresWidget || eWidgetRendering_Gfx != mode ||
+      type==NS_FORM_INPUT_TEXT || type==NS_FORM_TEXTAREA || type==NS_FORM_INPUT_PASSWORD) 
+  {
     if (!aWidthExplicit) {
       PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
       aDesiredSize.width += hPadding;
@@ -340,14 +343,20 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
   nsWidgetRendering m;
   aPresContext->GetWidgetRenderingMode(&m);
 
-    // only add in padding if we are not Gfx
+  // only add in padding if we are not Gfx, excluding the text widgets
   PRBool requiresWidget = PR_FALSE;
-
   aFormFrame->RequiresWidget(requiresWidget);
 
-  if (PR_TRUE != requiresWidget && eWidgetRendering_Gfx == m) {
-    aFont = styleFont->mFont;
-    return;
+  PRInt32 type;
+  aFormFrame->GetType(&type);
+
+  if (type!=NS_FORM_INPUT_TEXT &&
+      type!=NS_FORM_TEXTAREA   &&
+      type!=NS_FORM_INPUT_PASSWORD) {
+    if (PR_TRUE != requiresWidget && eWidgetRendering_Gfx == m) {
+      aFont = styleFont->mFont;
+      return;
+    }
   }
 
   nsCompatibility mode;
@@ -358,8 +367,6 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
     return;
   }
 
-  PRInt32 type;
-  aFormFrame->GetType(&type);
   switch (type) {
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_TEXTAREA:

@@ -33,7 +33,9 @@ CPPSRCS= \
   nsCheckboxControlFrame.cpp \
   nsFileControlFrame.cpp \
   nsRadioControlFrame.cpp \
-  nsTextControlFrame.cpp \
+  nsTextControlFrame.cpp  	\
+  nsGfxTextControlFrame.cpp \
+  nsTextControlFrame.cpp  	\
   nsSelectControlFrame.cpp \
   nsFieldSetFrame.cpp \
   nsLegendFrame.cpp \
@@ -53,6 +55,8 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsFileControlFrame.obj \
   .\$(OBJDIR)\nsRadioControlFrame.obj \
   .\$(OBJDIR)\nsTextControlFrame.obj \
+  .\$(OBJDIR)\nsGfxTextControlFrame.obj \
+  .\$(OBJDIR)\nsNativeTextControlFrame.obj \
   .\$(OBJDIR)\nsSelectControlFrame.obj \
   .\$(OBJDIR)\nsFieldSetFrame.obj \
   .\$(OBJDIR)\nsLegendFrame.obj \
@@ -61,12 +65,23 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsButtonFrameRenderer.obj \
   .\$(OBJDIR)\nsImageControlFrame.obj
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
-  -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib				\
-  -I$(PUBLIC)\wallet						\
-  -I..\..\base\src -I..\..\style\src				\
-  -I..\..\..\base\src -I..\..\content\src -I$(PUBLIC)\uconv \
-  -I$(PUBLIC)\rdf
+
+LINCS= -I$(PUBLIC)\xpcom  \
+       -I$(PUBLIC)\raptor \
+       -I$(PUBLIC)\js	    \
+       -I$(PUBLIC)\dom    \
+       -I$(PUBLIC)\pref   \
+       -I$(PUBLIC)\editor \
+       -I$(PUBLIC)\netlib	\
+       -I$(PUBLIC)\wallet \
+       -I$(PUBLIC)\uconv  \
+       -I$(PUBLIC)\rdf    \
+       -I..\..\base\src   \
+       -I..\..\style\src	\
+       -I..\..\..\base\src \
+       -I..\..\content\src \
+       -I$(PUBLIC)\uconv
+
 
 LCFLAGS = \
         $(LCFLAGS) \
