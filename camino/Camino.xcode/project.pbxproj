@@ -611,6 +611,20 @@
 //3F2
 //3F3
 //3F4
+		3F12FC56072E8ECB00995ED9 = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.dylib";
+			name = libxpcom_core.dylib;
+			path = ../dist/Embed/libxpcom_core.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3F12FC57072E8ECB00995ED9 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		3F22CC1303DF42A200026DCE = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.xml;
@@ -982,7 +996,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lmozz -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lmozz -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
@@ -3691,6 +3705,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 6;
 			files = (
+				3F12FC57072E8ECB00995ED9,
 				3FE5BA0D068A1A6F0001CECD,
 				3F44AD6105BDFB9F00CB4B08,
 				3F44AD6205BDFB9F00CB4B08,
@@ -3975,7 +3990,7 @@
 				INFOPLIST_FILE = "Info-AppearancePrefPane__Upgraded_.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Appearance;
 				SECTORDER_FLAGS = "";
@@ -4154,7 +4169,7 @@
 				INFOPLIST_FILE = "Info-NavigationPrefPane__Upgraded_.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Navigation;
 				SECTORDER_FLAGS = "";
@@ -4327,7 +4342,7 @@
 				INFOPLIST_FILE = "Info-PrivacyPrefPane__Upgraded_.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../string/obsolete ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Privacy;
 				SECTORDER_FLAGS = "";
@@ -4521,7 +4536,7 @@
 				INFOPLIST_FILE = "Info-SecurityPrefPane__Upgraded_.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../string/obsolete ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Security;
 				SECTORDER_FLAGS = "";
@@ -4709,7 +4724,7 @@
 				INFOPLIST_FILE = "Info-WebFeaturesPrefPane__Upgraded_.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../string/obsolete ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = WebFeatures;
 				SECTORDER_FLAGS = "";
@@ -13092,6 +13107,7 @@
 				F51D9B1402094BB501A80166,
 				F57F0F470209DF5301A967DF,
 				0FA8EF970423B1A500A80166,
+				3F12FC56072E8ECB00995ED9,
 				F6BD637F01B30EA301A962F7,
 				F50DCB4302C2856001A967F3,
 				F6BD638001B30EA301A962F7,
