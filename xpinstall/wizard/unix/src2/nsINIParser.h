@@ -83,7 +83,7 @@ public:
      * GetError
      *
      * Exposes the last error on this instance. Useful for checking
-     * teh state of the object after construtcion since the INI file 
+     * the state of the object after construction since the INI file 
      * is parsed once at object-allocation time.
      *
      * @return mError       last error on ops on this object
