@@ -1373,18 +1373,20 @@ NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
   nsresult rv = NS_OK;
   nsString nameStr(aName);
 
+  // first, a special case
+  if (nameStr.EqualsIgnoreCase("_content"))
+    return GetContentWebShell(&aResult);
+
   // Zero result (in case we fail).
   aResult = nsnull;
 
   // look for open windows with the given name
-  /*   Note: this would more or less work if the window mediator were
-     functional and hooked up, of which it's neither at time of writing.
-     By "more or less," I mean the code in this function works as you'd
-     expect, but the end effect is wrong.
-       The webshell that catches the name given from a JavaScript window.open
-     call is the content, not the chrome, so it's the content that's replaced
-     in a new window.open.  Also, there's a visual problem where the window
-     position is reset.
+  /*   Note: this function arguably works as expected, but the end effect
+     is wrong.  The webshell that catches the name given from a JavaScript
+     window.open call is the content, not the chrome, so a window whose
+     location is redirected will have its content replaced, not its chrome.
+     That may be the right choice; maybe not.  Also, there's a visual problem
+     where the window position is reset.
        So when two or three bad things get cleared up, this next bit will be
      helpful.  As it is, it's not too. */
 
@@ -1425,7 +1427,7 @@ NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
       }
     }
   } else
-    // someday, the window mediator will be hooked up and this will be redundant
+    // should be redundant, but left in for now
     if (mWebShell)
       rv = mWebShell->FindChildWithName(aName, aResult);
 

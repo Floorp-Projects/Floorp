@@ -2328,8 +2328,17 @@ nsWebShell::GetTarget(const PRUnichar* aName)
   else if (name.EqualsIgnoreCase("_top")) {
     GetRootWebShell(target);		// this addrefs, which is OK
   }
+  else if (name.EqualsIgnoreCase("_content")) {
+    // a kind of special case: only the window can answer this question
+    NS_ASSERTION(mContainer, "null container in WebShell::GetTarget");
+    if (nsnull != mContainer)
+      mContainer->FindWebShellWithName(aName, target);
+      // (and don't SetName())
+    // else target remains nsnull, which would be bad
+  }
   else {
     // Look from the top of the tree downward
+    NS_ASSERTION(mContainer, "null container in WebShell::GetTarget");
     if (nsnull != mContainer) {
       mContainer->FindWebShellWithName(aName, target);
       if (nsnull == target) {
