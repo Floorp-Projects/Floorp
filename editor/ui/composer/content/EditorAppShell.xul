@@ -111,7 +111,7 @@
     <!-- end DEBUG only -->
   
     <!-- help menu filled from globalOverlay -->
-    <menu id="helpMenu" accesskey="h"/>
+    <menu id="menu_Help" accesskey="h"/>
 
     <spring flex="100%"/>
   </menubar>
