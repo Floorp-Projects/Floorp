@@ -270,9 +270,6 @@ Contributor(s): ______________________________________. -->
 		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" oncommand="BrowserForward();" />
 		  <menuitem value="&goHomeCmd.label;" oncommand="BrowserHome();"/>
 		  <menuseparator />
-		  <menuitem value="&goPrev1Cmd.label;" oncommand="BrowserBack();"/>
-		  <menuitem value="&goPrev2Cmd.label;" oncommand="BrowserBack();"/>
-		  <menuitem value="&goPrevnCmd.label;" oncommand="BrowserBack();"/>
 	  </menupopup>
     </menu>
     <menu accesskey="b" value="&bookmarksMenu.label;"
