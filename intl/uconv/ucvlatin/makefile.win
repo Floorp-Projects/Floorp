@@ -28,7 +28,6 @@ LIBRARY_NAME=ucvlatin
 MODULE_NAME=nsUCvLatinModule
 REQUIRES	= xpcom \
 		  string \
-		  uconv \
 		  $(NULL)
 
 CPPSRCS =				\
