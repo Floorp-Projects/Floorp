@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS(ByteBufferImpl,kByteBufferIID)
 ByteBufferImpl::~ByteBufferImpl()
 {
   if (nsnull != mBuffer) {
-    delete mBuffer;
+    delete[] mBuffer;
     mBuffer = nsnull;
   }
   mLength = 0;
@@ -87,7 +87,7 @@ PRBool ByteBufferImpl::Grow(PRUint32 aNewSize)
     if (0 != mLength) {
       nsCRT::memcpy(newbuf, mBuffer, mLength);
     }
-    delete mBuffer;
+    delete[] mBuffer;
     mBuffer = newbuf;
     return PR_TRUE;
   }

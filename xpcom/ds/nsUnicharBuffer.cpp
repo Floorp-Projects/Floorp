@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS(UnicharBufferImpl,kUnicharBufferIID)
 UnicharBufferImpl::~UnicharBufferImpl()
 {
   if (nsnull != mBuffer) {
-    delete mBuffer;
+    delete[] mBuffer;
     mBuffer = nsnull;
   }
   mLength = 0;
@@ -87,7 +87,7 @@ PRBool UnicharBufferImpl::Grow(PRInt32 aNewSize)
     if (0 != mLength) {
       nsCRT::memcpy(newbuf, mBuffer, mLength * sizeof(PRUnichar));
     }
-    delete mBuffer;
+    delete[] mBuffer;
     mBuffer = newbuf;
     return PR_TRUE;
   }
