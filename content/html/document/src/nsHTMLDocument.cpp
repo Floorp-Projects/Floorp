@@ -50,6 +50,7 @@
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
+#include "nsIDOMHTMLBodyElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsGenericDOMNodeList.h"
 
@@ -84,6 +85,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 
 // ==================================================================
 // =
@@ -1401,71 +1403,201 @@ nsHTMLDocument::GetElementsByName(const nsString& aElementName, nsIDOMNodeList**
 NS_IMETHODIMP    
 nsHTMLDocument::GetAlinkColor(nsString& aAlinkColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->GetALink(aAlinkColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::SetAlinkColor(const nsString& aAlinkColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->SetALink(aAlinkColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetLinkColor(nsString& aLinkColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->GetLink(aLinkColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::SetLinkColor(const nsString& aLinkColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->SetLink(aLinkColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetVlinkColor(nsString& aVlinkColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->GetVLink(aVlinkColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::SetVlinkColor(const nsString& aVlinkColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->SetVLink(aVlinkColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetBgColor(nsString& aBgColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->GetBgColor(aBgColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::SetBgColor(const nsString& aBgColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->SetBgColor(aBgColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetFgColor(nsString& aFgColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->GetText(aFgColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::SetFgColor(const nsString& aFgColor)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsresult result = NS_OK;
+  nsIDOMHTMLBodyElement* body;
+
+  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                        (void**)&body);
+  if (NS_OK == result) {
+    result = body->SetText(aFgColor);
+    NS_RELEASE(body);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
