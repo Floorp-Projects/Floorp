@@ -400,7 +400,26 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       NS_RELEASE(presShell);
     }
 
-    // marginwidth/height get set by a special style rule
+    // marginwidth/marginheight
+    // XXX: see ua.css for related code in the BODY rule
+    float p2t;
+    p2t = aPresContext->GetPixelsToTwips();
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
+    aAttributes->GetAttribute(nsHTMLAtoms::marginwidth, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) {
+      nscoord v = NSToCoordFloor(value.GetPixelValue() * p2t);
+      nsStyleCoord c(v);
+      spacing->mPadding.SetLeft(c);
+      spacing->mPadding.SetRight(c);
+    }
+    aAttributes->GetAttribute(nsHTMLAtoms::marginheight, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) {
+      nscoord v = NSToCoordFloor(value.GetPixelValue() * p2t);
+      nsStyleCoord c(v);
+      spacing->mPadding.SetTop(c);
+      spacing->mPadding.SetBottom(c);
+    }
 
     // set up the basefont (defaults to 3)
     nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
