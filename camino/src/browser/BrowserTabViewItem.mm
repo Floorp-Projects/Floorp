@@ -46,6 +46,9 @@
 #import "MainController.h"
 #import "BrowserWindowController.h"
 
+// we cannot use the spinner before 10.2, so don't allow it. This is the
+// version of appkit in 10.2 (taken from the 10.3 SDK headers which we cannot use).
+const double kJaguarAppKitVersion = 663;
 
 @interface BrowserTabViewItem(Private)
 - (void)setTag:(int)tag;
@@ -64,6 +67,7 @@
   float           mImagePadding;
   float           mImageSpace;
   float           mImageAlpha;
+  float           mRightGutter;           // leave space for an icon on the right
 }
 
 - (id)initTextCell:(NSString*)aString;
@@ -72,6 +76,7 @@
 - (void)setImagePadding:(float)padding;
 - (void)setImageSpace:(float)space;
 - (void)setImageAlpha:(float)alpha;
+- (void)setRightGutter:(float)rightPadding;
 
 - (void)setImage:(NSImage *)anImage;
 - (NSImage *)image;
@@ -87,6 +92,7 @@
     mLabelStringWidth = -1;
     mImagePadding = 0;
     mImageSpace = 2;
+    mRightGutter = 0.0;
   }
   return self;
 }
@@ -104,6 +110,7 @@
     cell->mImage = [mImage retain];
     cell->mTruncLabelString = nil;
     cell->mLabelStringWidth = -1;
+    cell->mRightGutter = mRightGutter;
     return cell;
 }
 
@@ -128,7 +135,7 @@
   // remove image space
   NSDivideRect(textRect, &imageRect, &textRect, mImageSpace, NSMinXEdge);
 
-  int          cellWidth       = (int)NSWidth(textRect);
+  int cellWidth = (int)NSWidth(textRect) - (int)mRightGutter;
   NSDictionary *cellAttributes = [[self attributedStringValue] attributesAtIndex:0 effectiveRange:nil];
 
   if (mLabelStringWidth != cellWidth || !mTruncLabelString)
@@ -191,6 +198,11 @@
   mImageAlpha = alpha;
 }
 
+- (void)setRightGutter:(float)rightPadding
+{
+  mRightGutter = rightPadding;
+}
+
 @end
 
 #pragma mark -
@@ -219,13 +231,16 @@
 {
   if ( (self = [super initWithFrame:frameRect]) )
   {
+    const float kCloseButtonWidth = 16.0;       // width of spinner/close button to right of text
+    
     mTabViewItem = tabViewItem;
 
     mLabelCell = [[NSTruncatingTextAndImageCell alloc] init];
     [mLabelCell setControlSize:NSSmallControlSize];		// doesn't work?
     [mLabelCell setImagePadding:0.0];
     [mLabelCell setImageSpace:2.0];
-
+    [mLabelCell setRightGutter:kCloseButtonWidth];
+    
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
         @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
   }
@@ -444,6 +459,34 @@
 
     mTabContentsView = [[BrowserTabItemContainerView alloc]
                             initWithFrame:NSMakeRect(0, 0, 100, 16) andTabItem:self];
+
+    // create progress wheel. keep a strong ref as view goes in and out of view hierarchy. We
+    // cannot use |NSProgressIndicatorSpinningStyle| on 10.1, so don't bother even creating it
+    // and let all the calls to it be no-ops elsewhere in this class (prevents clutter, imho).
+    if (NSAppKitVersionNumber >= kJaguarAppKitVersion) {
+      mProgressWheel = [[NSProgressIndicator alloc] initWithFrame:NSMakeRect(0, 0, 16, 16)];
+      [mProgressWheel setStyle:NSProgressIndicatorSpinningStyle];
+      [mProgressWheel setUsesThreadedAnimation:YES];
+      [mProgressWheel setDisplayedWhenStopped:NO];
+      [mProgressWheel setAutoresizingMask:NSViewMinXMargin];
+    }
+    else
+      mProgressWheel = nil;
+
+    // create close button. keep a strong ref as view goes in and out of view hierarchy
+    mCloseButton = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 16, 16)];
+    [mCloseButton setImage:[BrowserTabViewItem closeIcon]];
+    [mCloseButton setAlternateImage:[BrowserTabViewItem closeIconPressed]];
+    [mCloseButton setImagePosition:NSImageOnly];
+    [mCloseButton setBezelStyle:NSShadowlessSquareBezelStyle];
+    [mCloseButton setBordered:NO];
+    [mCloseButton setButtonType:NSMomentaryChangeButton];
+    [mCloseButton setTarget:self];
+    [mCloseButton setAction:@selector(closeTab)];
+    [mCloseButton setAutoresizingMask:NSViewMinXMargin];
+
+    [[self tabView] setAutoresizesSubviews:YES];
+
     mDraggable = NO;
   }
   return self;
@@ -461,6 +504,8 @@
   // removed all its subviews.
   [mTabContentsView removeFromSuperview];   // may be noop
   [mTabContentsView release];               // balance our init
+  [mProgressWheel release];
+  [mCloseButton release];
   [super dealloc];
 }
 
@@ -477,6 +522,14 @@
 - (int)tag
 {
   return mTag;
+}
+
+- (void)closeTab
+{
+	[[self view] windowClosed];
+	[mCloseButton removeFromSuperview];
+	[mProgressWheel removeFromSuperview];
+	[[self tabView] removeTabViewItem:self];
 }
 
 - (void)updateTabVisibility:(BOOL)nowVisible
@@ -496,6 +549,8 @@
 - (void)relocateTabContents:(NSRect)inRect
 {
   [mTabContentsView setFrame:inRect];
+  [mProgressWheel setFrame:NSMakeRect(inRect.size.width - 16, 0, 16, 16)];
+  [mCloseButton setFrame:NSMakeRect(inRect.size.width - 16, 0, 16, 16)];
 }
 
 - (BOOL)draggable
@@ -507,11 +562,6 @@
 {
   [self relocateTabContents:tabRect];
   mLastDrawRect = tabRect;
-}
-
-- (NSSize)sizeOfLabel:(BOOL)shouldTruncateLabel
-{
-  return [super sizeOfLabel:shouldTruncateLabel];
 }
 
 - (void)setLabel:(NSString *)label
@@ -538,6 +588,46 @@
   [self setTabIcon:newIcon];
   mDraggable = draggable;
   [[mTabContentsView labelCell] setImageAlpha:(draggable ? 1.0 : 0.6)];  
+}
+
+#pragma mark -
+
+- (void)startLoadAnimation
+{
+  // remove close from tab view
+  [mCloseButton removeFromSuperview];
+
+  // add spinner to tab view and start animation
+  [mTabContentsView addSubview:mProgressWheel];
+  [mProgressWheel startAnimation:self];
+}
+
+- (void)stopLoadAnimation
+{
+  // stop animation and remove spinner from tab view
+  [mProgressWheel stopAnimation:self];
+  [mProgressWheel removeFromSuperview];
+
+  // add close button to tab view
+  [mTabContentsView addSubview:mCloseButton];
+}
+
+#pragma mark -
+
++ (NSImage*)closeIcon
+{
+  static NSImage* sCloseIcon = nil;
+  if ( !sCloseIcon )
+    sCloseIcon = [[NSImage imageNamed:@"tab_close"] retain];
+  return sCloseIcon;
+}
+
++ (NSImage*)closeIconPressed
+{
+  static NSImage* sCloseIconPressed = nil;
+  if ( !sCloseIconPressed )
+    sCloseIconPressed = [[NSImage imageNamed:@"tab_close_pressed"] retain];
+  return sCloseIconPressed;
 }
 
 #define NO_TOOLTIPS_ON_TABS 1

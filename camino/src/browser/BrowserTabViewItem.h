@@ -47,6 +47,8 @@
 {
   NSRect                       mLastDrawRect;  // cached draw rect, used for dragging location
   BrowserTabItemContainerView* mTabContentsView;
+  NSProgressIndicator*         mProgressWheel;     // STRONG ref
+  NSButton*                    mCloseButton;       // STRING ref
   BOOL                         mDraggable;
   int                          mTag;
 }
@@ -55,5 +57,12 @@
 - (NSView*)tabItemContentsView;
 - (int)tag;
 - (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable;
+
+// call to start and stop the progress animation on this tab
+- (void)startLoadAnimation;
+- (void)stopLoadAnimation;
+
++ (NSImage*)closeIcon;
++ (NSImage*)closeIconPressed;
 
 @end

@@ -340,6 +340,8 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   [mLoadingStatusString autorelease];
   mLoadingStatusString = [NSLocalizedString(@"TabLoading", @"") retain];
   [mStatus setStringValue:mLoadingStatusString];
+  
+  [(BrowserTabViewItem*)mTabItem startLoadAnimation];
 
   NS_IF_RELEASE(mBlockedSites);
   [mWindowController showPopupBlocked:NO];
@@ -383,6 +385,8 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   else {
     [mStatus setStringValue:mLoadingStatusString];
   }
+  
+  [(BrowserTabViewItem*)mTabItem stopLoadAnimation];
 
   mProgress = 1.0;
   mIsBusy = NO;
