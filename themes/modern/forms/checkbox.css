@@ -5,10 +5,8 @@ input[type="checkbox"] {
   -moz-box-align: center;
   margin: 0px 2px;
   border: 2px solid transparent;
-  padding: 1px 2px 1px 4px;
-
-  width: 13px;
-  height: 13px;
+  width: 17px;
+  height: 17px;
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 

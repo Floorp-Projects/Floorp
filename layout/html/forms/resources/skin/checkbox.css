@@ -39,8 +39,8 @@ input[type="checkbox"] {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  width: 7px;  /* this is the content box size, not the border box size */
-  height: 7px;
+  min-width: 13px;
+  min-height: 13px;
   background: -moz-Field no-repeat 50% 50%;
 }
 
