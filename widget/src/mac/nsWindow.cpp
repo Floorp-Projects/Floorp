@@ -241,6 +241,13 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
   //Widget mainWindow = 0, frame = 0;
   mBounds = aRect;
   mAppShell = aAppShell;
+  Rect		bounds;
+
+	bounds.top = aRect.x;
+	bounds.left = aRect.y;
+	bounds.bottom = aRect.y+aRect.height;
+	bounds.right = aRect.x+aRect.width;
+	mWindowPtr = NewCWindow(0,&bounds,"\p",TRUE,0,(GrafPort*)-1,TRUE,0);
 
   //InitToolkit(aToolkit, aWidgetParent);
   
@@ -308,7 +315,6 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
 
-  CreateGC();
 }
 
 //-------------------------------------------------------------------------
