@@ -70,9 +70,7 @@ void main(int argc, char **argv)
 
     // Tell the application manager to store away the association so the
     // Application can look up its State
-#ifdef NS_WIN32
-    NSApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
-#endif
+    nsApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
 
     // Initialize the system
     pShellInstance->Init();
@@ -82,9 +80,7 @@ void main(int argc, char **argv)
 	result = pApplicationShell->Run();
 
     // We're done, clean up
-#ifdef NS_WIN32
-    NSApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
-#endif
+    nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
 
     // book out of here
 	return ;
