@@ -274,13 +274,23 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
   if (info) {
     double connectTime;
     double readTime;
+    PRUint32 httpStatus;
+    PRBool bHTTPURL = PR_FALSE;
 
     info->mTotalTime = PR_Now() - info->mTotalTime;
 
     connectTime = (info->mConnectTime/1000.0)/1000.0;
     readTime    = ((info->mTotalTime-info->mConnectTime)/1000.0)/1000.0;
 
+    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(channel));
+    if (pHTTPCon) {
+        pHTTPCon->GetResponseStatus(&httpStatus);
+        bHTTPURL = PR_TRUE;
+    }
+
     printf("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus);
+    if (bHTTPURL)
+        printf("\tHTTP Status: %u\n", httpStatus);
     printf("\tRead: %d bytes.\n", info->mBytesRead);
     printf("\tTime to connect: %.3f seconds\n", connectTime);
     printf("\tTime to read: %.3f seconds.\n", readTime);
