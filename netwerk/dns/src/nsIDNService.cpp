@@ -441,8 +441,12 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out)
   else {
     nsAutoString strPrep;
     rv = stringPrep(in, strPrep);
-    if (NS_SUCCEEDED(rv))
-      rv = encodeToACE(strPrep, out);
+    if (NS_SUCCEEDED(rv)) {
+      if (IsASCII(strPrep))
+        CopyUCS2toASCII(strPrep, out);
+      else
+        rv = encodeToACE(strPrep, out);
+    }
   }
 
   if (out.Length() > kMaxDNSNodeLen) {
