@@ -103,21 +103,21 @@ void DumpStackToFile(FILE* aStream)
   // Stack walking code courtesy Kipp's "leaky".
 
   // Get the frame pointer out of the jmp_buf
+  void **bp = (void**)
 #if defined(__i386) 
-  unsigned long* bp = (unsigned long*) (jb[0].__jmpbuf[JB_BP]);
+    (jb[0].__jmpbuf[JB_BP]);
 #elif defined(PPC)
-  unsigned long* bp = (unsigned long*) (jb[0].__jmpbuf[JB_GPR1]);
+    (jb[0].__jmpbuf[JB_GPR1]);
 #endif
 
   int skip = 2;
-  for (unsigned long *nextbp = (unsigned long*) *bp++, pc = *bp;
-       pc >= 0x08000000 && pc < 0x7fffffff && nextbp > bp;
-       bp = nextbp, nextbp = (unsigned long*) *bp++, pc = *bp) {
+  for ( ; (void**)*bp > bp; bp = (void**)*bp) {
+    void *pc = *(bp+1);
     if (--skip <= 0) {
       Dl_info info;
-      int ok = dladdr((void*) pc, &info);
+      int ok = dladdr(pc, &info);
       if (!ok) {
-        fprintf(aStream, "UNKNOWN %p\n", (void *)pc);
+        fprintf(aStream, "UNKNOWN %p\n", pc);
         continue;
       }
 
