@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.29 $ $Date: 2002/01/24 00:34:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.30 $ $Date: 2002/01/24 15:45:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -57,6 +57,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.29 $
 
 #ifdef NSS_3_4_CODE
 #include "cert.h"
+#include "pki3hack.h"
 #endif
 
 extern const NSSError NSS_ERROR_NOT_FOUND;
@@ -866,7 +867,7 @@ NSSTrustDomain_FindUserCertificatesForEmailSigning
     return NULL;
 }
 
-static struct traverse_arg 
+struct traverse_arg 
 {
   PRStatus (*callback)(NSSCertificate *c, void *arg);
   nssList *cached;
