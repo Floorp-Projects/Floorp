@@ -300,7 +300,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
     printf("  nsTableCellFrame::ResizeReflow calling ReflowChild with availSize=%d,%d\n",
            availSize.width, availSize.height);
   nsReflowMetrics kidSize(pMaxElementSize);
-  nsReflowState kidReflowState(aReflowState, availSize);
+  nsReflowState kidReflowState(mFirstChild, aReflowState, availSize);
   mFirstChild->WillReflow(*aPresContext);
   aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState);
 

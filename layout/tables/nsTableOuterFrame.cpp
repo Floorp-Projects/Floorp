@@ -53,6 +53,9 @@ struct OuterTableReflowState {
   // The presentation context
   nsIPresContext *pc;
 
+  // Our reflow state
+  const nsReflowState& reflowState;
+
   // The total available size (computed from the parent)
   nsSize availSize;
   // The available size for the inner table frame
@@ -73,17 +76,18 @@ struct OuterTableReflowState {
   PRBool firstRowGroup;
   PRBool processingCaption;
 
-  OuterTableReflowState(nsIPresContext*  aPresContext,
-                        const nsSize&    aMaxSize)
+  OuterTableReflowState(nsIPresContext*      aPresContext,
+                        const nsReflowState& aReflowState)
+    : reflowState(aReflowState)
   {
     pc = aPresContext;
-    availSize.width = aMaxSize.width;
-    availSize.height = aMaxSize.height;
+    availSize.width = reflowState.maxSize.width;
+    availSize.height = reflowState.maxSize.height;
     prevMaxPosBottomMargin = 0;
     prevMaxNegBottomMargin = 0;
     y=0;  // border/padding/margin???
-    unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
-    unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
+    unconstrainedWidth = PRBool(aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
+    unconstrainedHeight = PRBool(aReflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
     firstRowGroup = PR_TRUE;
     processingCaption = PR_FALSE;
   }
@@ -206,13 +210,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     return NS_OK;
   }
   
-  OuterTableReflowState state(aPresContext, aReflowState.maxSize);
+  OuterTableReflowState state(aPresContext, aReflowState);
 
   // lay out captions pass 1, if necessary
   if (PR_FALSE==IsFirstPassValid())
   {
     mFirstPassValid = PR_TRUE;
-    aStatus = ResizeReflowCaptionsPass1(aPresContext);
+    aStatus = ResizeReflowCaptionsPass1(aPresContext, state);
 
   }
 
@@ -222,7 +226,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
    // we treat the table as if we've never seen the layout data before
  
     mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_FIRST);
-    aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState.maxSize, 
+    nsReflowState innerTableReflowState(mInnerTableFrame, aReflowState, aReflowState.maxSize);
+    aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize,
+                                                  innerTableReflowState,
                                                   &innerTableMaxElementSize);
   
     mInnerTableFrame->RecalcLayoutData();
@@ -897,20 +903,21 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
       if (PR_TRUE==gsDebug) printf("reflowChild called with a bottom caption\n");
       status = ResizeReflowBottomCaptionsPass2(aPresContext, aDesiredSize,
                                                aMaxSize, aMaxElementSize,
-                                               aState.y);
+                                               aState.y, aState);
     }
     else
     {
       if (PR_TRUE==gsDebug) printf("reflowChild called with a top caption\n");
       status = ResizeReflowTopCaptionsPass2(aPresContext, aDesiredSize,
-                                            aMaxSize, aMaxElementSize);
+                                            aMaxSize, aMaxElementSize, aState);
     }
   }
   else
   {
     if (PR_TRUE==gsDebug) printf("reflowChild called with a table body\n");
-    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, aState.innerTableMaxSize, 
-                                                           aMaxElementSize,
+    nsReflowState kidReflowState(aKidFrame, aState.reflowState, aState.innerTableMaxSize);
+    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize,
+                                                           kidReflowState, aMaxElementSize,
                                                            mMinCaptionWidth, mMaxCaptionWidth);
   }
   if (PR_TRUE==gsDebug)
@@ -1015,7 +1022,8 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 
 
 nsReflowStatus
-nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext)
+nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
+                                             OuterTableReflowState& aState)
 {
   if (nsnull!=mCaptionFrames)
   {
@@ -1027,7 +1035,7 @@ nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext)
       nsReflowMetrics desiredSize(&maxElementSize);
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
       nsReflowStatus  status;
-      nsReflowState   reflowState(eReflowReason_Resize, maxSize);
+      nsReflowState   reflowState(captionFrame, aState.reflowState, maxSize, eReflowReason_Resize);
       captionFrame->WillReflow(*aPresContext);
       captionFrame->Reflow(aPresContext, desiredSize, reflowState, status);
       if (mMinCaptionWidth<maxElementSize.width)
@@ -1042,10 +1050,11 @@ nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext)
 }
 
 nsReflowStatus
-nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
-                                                nsReflowMetrics& aDesiredSize,
-                                                const nsSize&    aMaxSize,
-                                                nsSize*          aMaxElementSize)
+nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*        aPresContext,
+                                                nsReflowMetrics&       aDesiredSize,
+                                                const nsSize&          aMaxSize,
+                                                nsSize*                aMaxElementSize,
+                                                OuterTableReflowState& aState)
 {
   nsReflowStatus result = NS_FRAME_COMPLETE;
   nscoord topCaptionY = 0;
@@ -1076,7 +1085,7 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
         if (NS_FRAME_IS_COMPLETE(result))
         {
           nsReflowMetrics desiredSize(nsnull);
-          nsReflowState   reflowState(eReflowReason_Resize, aMaxSize);
+          nsReflowState   reflowState(captionFrame, aState.reflowState, aMaxSize, eReflowReason_Resize);
           captionFrame->WillReflow(*aPresContext);
           result = nsContainerFrame::ReflowChild(captionFrame, aPresContext, desiredSize, reflowState);
           // place the caption
@@ -1114,7 +1123,8 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
                                                    nsReflowMetrics& aDesiredSize,
                                                    const nsSize&    aMaxSize,
                                                    nsSize*          aMaxElementSize,
-                                                   nscoord          aYOffset)
+                                                   nscoord          aYOffset,
+                                                   OuterTableReflowState& aState)
 {
   nsReflowStatus result = NS_FRAME_COMPLETE;
   nscoord bottomCaptionY = aYOffset;
@@ -1137,7 +1147,7 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
 */
       // reflow the caption
       nsReflowMetrics desiredSize(nsnull);
-      nsReflowState   reflowState(eReflowReason_Resize, aMaxSize);
+      nsReflowState   reflowState(captionFrame, aState.reflowState, aMaxSize, eReflowReason_Resize);
       captionFrame->WillReflow(*aPresContext);
       result = nsContainerFrame::ReflowChild(captionFrame, aPresContext, desiredSize, reflowState);
 

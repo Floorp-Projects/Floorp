@@ -125,7 +125,8 @@ protected:
 
   /** reflow the captions in an infinite space, caching the min/max sizes for each
     */
-  virtual nsReflowStatus ResizeReflowCaptionsPass1(nsIPresContext* aPresContext);
+  virtual nsReflowStatus ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
+                                                   OuterTableReflowState& aState);
 
   /** reflow the top captions in a space constrained by the computed table width
     * and the heigth given to us by our parent.  Top captions are laid down
@@ -134,7 +135,8 @@ protected:
   virtual nsReflowStatus ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
                                                     nsReflowMetrics& aDesiredSize,
                                                     const nsSize&    aMaxSize,
-                                                    nsSize*          aMaxElementSize);
+                                                    nsSize*          aMaxElementSize,
+                                                    OuterTableReflowState& aState);
 
   /** reflow the bottom captions in a space constrained by the computed table width
     * and the heigth given to us by our parent.  Bottom captions are laid down
@@ -144,7 +146,8 @@ protected:
                                                          nsReflowMetrics& aDesiredSize,
                                                          const nsSize&    aMaxSize,
                                                          nsSize*          aMaxElementSize,
-                                                         nscoord          aYOffset);
+                                                         nscoord          aYOffset,
+                                                         OuterTableReflowState& aState);
 
   nscoord       GetTopMarginFor(nsIPresContext* aCX,
                                 OuterTableReflowState& aState,

@@ -101,7 +101,7 @@ nsBlockReflowState::~nsBlockReflowState()
 nsresult
 nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
                                nsISpaceManager* aSpaceManager,
-                               const nsSize& aMaxSize,
+                               const nsReflowState& aReflowState,
                                nsSize* aMaxElementSize,
                                nsBlockFrame* aBlock)
 {
@@ -114,10 +114,11 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
   mListPositionOutside = PR_FALSE;
   mCurrentLine = nsnull;
   mPrevKidFrame = nsnull;
+  reflowState = &aReflowState;
 
   mX = 0;
   mY = 0;
-  mAvailSize = aMaxSize;
+  mAvailSize = reflowState->maxSize;
   mUnconstrainedWidth = PRBool(mAvailSize.width == NS_UNCONSTRAINEDSIZE);
   mUnconstrainedHeight = PRBool(mAvailSize.height == NS_UNCONSTRAINEDSIZE);
   mMaxElementSizePointer = aMaxElementSize;
@@ -447,7 +448,7 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
                                nsIPresContext*      aPresContext,
                                nsISpaceManager*     aSpaceManager,
                                nsReflowMetrics&     aDesiredSize,
-                               const nsReflowState& aReflowState,
+                               nsReflowState&       aReflowState,
                                nsRect&              aDesiredRect,
                                nsReflowStatus&      aStatus)
 {
@@ -955,15 +956,15 @@ done:
 }
 
 nsresult
-nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
-                              nsISpaceManager*    aSpaceManager,
-                              const nsSize&       aMaxSize,
-                              nsSize*             aMaxElementSize,
-                              nsBlockReflowState& aState)
+nsBlockFrame::InitializeState(nsIPresContext*      aPresContext,
+                              nsISpaceManager*     aSpaceManager,
+                              const nsReflowState& aReflowState,
+                              nsSize*              aMaxElementSize,
+                              nsBlockReflowState&  aState)
 {
   nsresult rv;
   rv = aState.Initialize(aPresContext, aSpaceManager,
-                         aMaxSize, aMaxElementSize, this);
+                         aReflowState, aMaxElementSize, this);
 
   // Apply border and padding adjustments for regular frames only
   if (!aState.mBlockIsPseudo) {
@@ -1173,7 +1174,7 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
   }
 
   aStatus = NS_FRAME_COMPLETE;
-  rv = InitializeState(aPresContext, aSpaceManager, aReflowState.maxSize,
+  rv = InitializeState(aPresContext, aSpaceManager, aReflowState,
                        aDesiredSize.maxElementSize, state);
 
   NS_FRAME_TRACE_MSG(("enter nsBlockFrame::Reflow: reason=%d deltaWidth=%d",

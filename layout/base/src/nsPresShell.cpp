@@ -414,7 +414,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsSize          maxSize(bounds.width, bounds.height);
     nsReflowMetrics desiredSize(nsnull);
     nsReflowStatus  status;
-    nsReflowState   reflowState(reflowReason, maxSize);
+    nsReflowState   reflowState(mRootFrame, reflowReason, maxSize);
 
     mRootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     mRootFrame->SizeTo(desiredSize.width, desiredSize.height);

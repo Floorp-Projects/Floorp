@@ -677,7 +677,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
     }
   }
 
-  nsReflowState   kidReflowState(kidReason, kidAvailSize);
+  nsReflowState   kidReflowState(kidFrame, *mBlockReflowState.reflowState,
+                                 kidAvailSize, kidReason);
   kidReflowState.reflowCommand = aReflowCommand;
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
   nscoord dx = mState.mX + kidMargin.left;

@@ -448,6 +448,7 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
 {
   nsReflowStatus status;
                                                   
+  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
 #ifdef NS_DEBUG
   nsFrameState  kidFrameState;
 
@@ -482,16 +483,17 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
  * used to reflow the child; otherwise interface nsIFrame is used. If the
  * child is splittable then  runaround is done using continuing frames.
  */
-nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
-                                             nsIPresContext*      aPresContext,
-                                             nsISpaceManager*     aSpaceManager,
-                                             nsReflowMetrics&     aDesiredSize,
-                                             const nsReflowState& aReflowState,
-                                             nsRect&              aDesiredRect)
+nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
+                                             nsIPresContext*  aPresContext,
+                                             nsISpaceManager* aSpaceManager,
+                                             nsReflowMetrics& aDesiredSize,
+                                             nsReflowState&   aReflowState,
+                                             nsRect&          aDesiredRect)
 {
   nsIRunaround*   reflowRunaround;
   nsReflowStatus  status;
 
+  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
 #ifdef NS_DEBUG
   nsFrameState  kidFrameState;
 
@@ -509,7 +511,6 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
   nsBandTrapezoid   trapezoids[12];
   nsBandTrapezoid*  trapezoid = trapezoids;
   nsRect            availBand;
-  nsSize            availSize = aReflowState.maxSize;
 
   bandData.trapezoids = trapezoids;
   bandData.size = 12;
@@ -561,15 +562,14 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
                                          (void**)&reflowRunaround)) {
     // Yes, the child frame wants to interact directly with the space
     // manager.
-    nsReflowState reflowState(aReflowState, availSize);
-    reflowRunaround->Reflow(aPresContext, aSpaceManager, aDesiredSize, reflowState,
+    reflowRunaround->Reflow(aPresContext, aSpaceManager, aDesiredSize, aReflowState,
                             aDesiredRect, status);
   } else {
     // No, use interface nsIFrame instead.
     if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
       if ((availBand.x > 0) || (availBand.XMost() < aReflowState.maxSize.width)) {
         // There are left/right floaters.
-        availSize.width = availBand.width;
+        aReflowState.maxSize.width = availBand.width;
       }
     }
 

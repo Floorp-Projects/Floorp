@@ -237,12 +237,12 @@ protected:
    *
    * @see nsIRunaround
    */
-  nsReflowStatus ReflowChild(nsIFrame*            aKidFrame,
-                             nsIPresContext*      aPresContext,
-                             nsISpaceManager*     aSpaceManager,
-                             nsReflowMetrics&     aDesiredSize,
-                             const nsReflowState& aReflowState,
-                             nsRect&              aDesiredRect);
+  nsReflowStatus ReflowChild(nsIFrame*        aKidFrame,
+                             nsIPresContext*  aPresContext,
+                             nsISpaceManager* aSpaceManager,
+                             nsReflowMetrics& aDesiredSize,
+                             nsReflowState&   aReflowState,
+                             nsRect&          aDesiredRect);
 
  /**
   * Moves any frames on both the prev-in-flow's overflow list and the receiver's

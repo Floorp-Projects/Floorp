@@ -59,7 +59,7 @@ struct nsBlockReflowState {
 
   nsresult Initialize(nsIPresContext* aPresContext,
                       nsISpaceManager* aSpaceManager,
-                      const nsSize& aMaxSize,
+                      const nsReflowState& aReflowState,
                       nsSize* aMaxElementSize,
                       nsBlockFrame* aBlock);
 
@@ -86,6 +86,7 @@ struct nsBlockReflowState {
   PRPackedBool mUnconstrainedHeight;
   nsSize* mMaxElementSizePointer;
   nscoord mKidXMost;
+  const nsReflowState* reflowState;
 
   // Change in width since last reflow
   nscoord mDeltaWidth;
@@ -216,7 +217,7 @@ public:
                             nsIPresContext*      aPresContext,
                             nsISpaceManager*     aSpaceManager,
                             nsReflowMetrics&     aDesiredSize,
-                            const nsReflowState& aReflowState,
+                            nsReflowState&       aReflowState,
                             nsRect&              aDesiredRect,
                             nsReflowStatus&      aStatus);
 
@@ -234,11 +235,11 @@ protected:
 
   virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
 
-  nsresult InitializeState(nsIPresContext*     aPresContext,
-                           nsISpaceManager*    aSpaceManager,
-                           const nsSize&       aMaxSize,
-                           nsSize*             aMaxElementSize,
-                           nsBlockReflowState& aState);
+  nsresult InitializeState(nsIPresContext*      aPresContext,
+                           nsISpaceManager*     aSpaceManager,
+                           const nsReflowState& aReflowState,
+                           nsSize*              aMaxElementSize,
+                           nsBlockReflowState&  aState);
 
   void ComputeDesiredRect(nsBlockReflowState& aState,
                           const nsSize&       aMaxSize,

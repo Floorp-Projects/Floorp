@@ -76,7 +76,7 @@ void nsReflowCommand::Dispatch(nsReflowMetrics& aDesiredSize,
   if (nsnull != root) {
     mPath.RemoveElementAt(mPath.Count() - 1);
 
-    nsReflowState   reflowState(this, aMaxSize);
+    nsReflowState   reflowState(root, *this, aMaxSize);
     nsReflowStatus  status;
     root->Reflow(mPresContext, aDesiredSize, reflowState, status);
   }

@@ -181,7 +181,7 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext*      aCX,
   aDesiredSize.height = 0;
   childFrame = mFirstChild;
   while (nsnull != childFrame) {
-    nsReflowState   reflowState(aReflowState, maxSize);
+    nsReflowState   reflowState(childFrame, aReflowState, maxSize);
     nsresult result = childFrame->Reflow(aCX, desiredSize, reflowState, aStatus);
     // XXX check aStatus ??
     if (NS_OK != result) {

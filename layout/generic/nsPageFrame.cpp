@@ -78,9 +78,9 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*      aPresContext,
     // Dispatch the reflow command to our content child. Allow it to be as high
     // as it wants
     nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-    nsReflowState reflowState(aReflowState.reflowCommand, maxSize);
+    nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
   
-    aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState);
+    aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState);
   
     // Place and size the child. Make sure the child is at least as
     // tall as our max size (the containing window)
@@ -119,9 +119,11 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*      aPresContext,
     // Resize our frame allowing it only to be as big as we are
     // XXX Pay attention to the page's border and padding...
     if (nsnull != mFirstChild) {
+      nsReflowState kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
+
       // Get the child's desired size
       mFirstChild->WillReflow(*aPresContext);
-      aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, aReflowState);
+      aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState);
       mLastContentIsComplete = NS_FRAME_IS_COMPLETE(aStatus);
   
       // Make sure the child is at least as tall as our max size (the containing window)

@@ -53,31 +53,33 @@ NS_DEF_PTR(nsIContentDelegate);
 class nsInlineState
 {
 public:
-  nsStyleFont*      font;           // style font
-  nsMargin          borderPadding;  // inner margin
-  nsSize            mStyleSize;
-  PRIntn            mStyleSizeFlags;
-  nsSize            availSize;      // available space in which to reflow (starts as max size minus insets)
-  nsSize*           maxElementSize; // maximum element size (may be null)
-  nscoord           x;              // running x-offset (starts at left inner edge)
-  const nscoord     y;              // y-offset (top inner edge)
-  nscoord           maxAscent;      // max child ascent
-  nscoord           maxDescent;     // max child descent
-  nscoord*          ascents;        // ascent information for each child
-  PRBool            unconstrainedWidth;
-  PRBool            unconstrainedHeight;
-  nsLineLayout*     lineLayout;
-  PRBool            atBreakPoint;
+  nsStyleFont*         font;           // style font
+  nsMargin             borderPadding;  // inner margin
+  nsSize               mStyleSize;
+  PRIntn               mStyleSizeFlags;
+  nsSize               availSize;      // available space in which to reflow (starts as max size minus insets)
+  nsSize*              maxElementSize; // maximum element size (may be null)
+  nscoord              x;              // running x-offset (starts at left inner edge)
+  const nscoord        y;              // y-offset (top inner edge)
+  nscoord              maxAscent;      // max child ascent
+  nscoord              maxDescent;     // max child descent
+  nscoord*             ascents;        // ascent information for each child
+  PRBool               unconstrainedWidth;
+  PRBool               unconstrainedHeight;
+  nsLineLayout*        lineLayout;
+  PRBool               atBreakPoint;
+  const nsReflowState& reflowState;
 
   // Constructor
-  nsInlineState(nsIPresContext*  aPresContext,
-                nsIFrame*        aInlineFrame,
-                nsStyleFont*     aStyleFont,
-                const nsMargin&  aBorderPadding,
-                const nsSize&    aMaxSize,
-                nsSize*          aMaxElementSize)
+  nsInlineState(nsIPresContext*      aPresContext,
+                nsIFrame*            aInlineFrame,
+                nsStyleFont*         aStyleFont,
+                const nsMargin&      aBorderPadding,
+                const nsReflowState& aReflowState,
+                nsSize*              aMaxElementSize)
     : x(aBorderPadding.left),  // determined by inner edge
-      y(aBorderPadding.top)    // determined by inner edge
+      y(aBorderPadding.top),   // determined by inner edge
+      reflowState(aReflowState)
   {
     nsBlockReflowState* brs =
       nsBlockFrame::FindBlockReflowState(aPresContext, aInlineFrame);
@@ -87,16 +89,16 @@ public:
     font = aStyleFont;
     borderPadding = aBorderPadding;
 
-    unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
-    unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
+    unconstrainedWidth = PRBool(reflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
+    unconstrainedHeight = PRBool(reflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
 
     // If we're constrained adjust the available size so it excludes space
     // needed for border/padding
-    availSize.width = aMaxSize.width;
+    availSize.width = reflowState.maxSize.width;
     if (PR_FALSE == unconstrainedWidth) {
       availSize.width -= aBorderPadding.left + aBorderPadding.right;
     }
-    availSize.height = aMaxSize.height;
+    availSize.height = reflowState.maxSize.height;
     if (PR_FALSE == unconstrainedHeight) {
       availSize.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
@@ -276,7 +278,8 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
 
   for (nsIFrame* kidFrame = aChildFrame; nsnull != kidFrame; ) {
     nsReflowMetrics kidSize(pKidMaxElementSize);
-    nsReflowState   kidReflowState(eReflowReason_Resize, aState.availSize);
+    nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                   eReflowReason_Resize);
     nsReflowStatus  status;
 
     // Reflow the child into the available space
@@ -462,7 +465,8 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     }
 #endif
 
-    nsReflowState kidReflowState(eReflowReason_Resize, aState.availSize);
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                 eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
@@ -716,7 +720,8 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize(pKidMaxElementSize);
-    nsReflowState   kidReflowState(eReflowReason_Resize, aState.availSize);
+    nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                   eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
     nsReflowStatus  status = ReflowChild(kidFrame, aPresContext, kidSize,
                                          kidReflowState);
@@ -828,7 +833,7 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   nsMargin borderPadding;
   styleSpacing->CalcBorderPaddingFor(this, borderPadding);
   nsInlineState state(aPresContext, this, styleFont, borderPadding,
-                      aReflowState.maxSize, aDesiredSize.maxElementSize);
+                      aReflowState, aDesiredSize.maxElementSize);
   InitializeState(aPresContext, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
@@ -851,7 +856,7 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
       // The command is passing through us. Get the next frame in the reflow chain
       nsIFrame*       kidFrame = aReflowState.reflowCommand->GetNext();
       nsReflowMetrics kidSize(aDesiredSize.maxElementSize);
-      nsReflowState   kidReflowState(aReflowState.reflowCommand, state.availSize);
+      nsReflowState   kidReflowState(kidFrame, aReflowState, state.availSize);
   
       // Restore our state as if nextFrame is the next frame to reflow
       PRInt32 kidIndex = RecoverState(aPresContext, state, kidFrame);
