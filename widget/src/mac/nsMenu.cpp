@@ -474,7 +474,7 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 {
-  NS_ASSERTION(0, "Not implemented");
+  NS_WARNING("Not implemented");
   return NS_OK;
 }
 
@@ -1486,7 +1486,7 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
     domElement->GetAttribute(NS_LITERAL_STRING("value"), mLabel);
 
     if((mMacMenuID <= 5) && (mMacMenuID >= 2)) 
-      return;
+      return NS_OK;
     
     ::DeleteMenu(mMacMenuID);
     
