@@ -43,6 +43,8 @@ extern "C" void NS_SetupRegistry();
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
 static const std::string c_szDefaultPage   = "resource:/res/MozillaControl.html";
 
+static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
+
 #define MOZ_CONTROL_REG_KEY                  _T("Software\\Mozilla\\")
 #define MOZ_CONTROL_REG_VALUE_DIR            _T("Dir")
 #define MOZ_CONTROL_REG_VALUE_COMPONENT_PATH _T("ComponentPath")
@@ -71,6 +73,7 @@ CMozillaBrowser::CMozillaBrowser()
 	// Initialize layout interfaces
     m_pIWebShell = nsnull;
 	m_pIPref = nsnull;
+    m_pIServiceManager = nsnull;
 
 	// Ready state of control
 	m_nBrowserReadyState = READYSTATE_UNINITIALIZED;
@@ -313,19 +316,23 @@ LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 {
 	nsresult res;
 	
-	nsIPresShell* presShell = nsnull;
-	res=GetPresShell(&presShell);		//Get the presentation shell for the document
-	if ( NS_FAILED(res) ) return NS_ERROR_NOT_INITIALIZED;
+	nsIPresShell* pIPresShell = nsnull;
+	res = GetPresShell(&pIPresShell);		//Get the presentation shell for the document
+	if (NS_FAILED(res) || pIPresShell == nsnull)
+	{
+		return NS_ERROR_NOT_INITIALIZED;
+	}
 
 	nsCOMPtr<nsIDOMSelection> selection;						//Get a pointer to the DOM selection
-	res = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+	res = pIPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 	if ( NS_FAILED(res) ) return res;
 	
-	res = presShell->DoCopy();									//Copy the selection to the clipboard
+	res = pIPresShell->DoCopy();									//Copy the selection to the clipboard
 	if ( NS_SUCCEEDED(res) )
 	{
 		res = selection->DeleteFromDocument();					//Delete the selection from the document
-	}			
+	}
+	NS_RELEASE(pIPresShell);
 
 	return res;
 }
@@ -334,12 +341,16 @@ LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 {
 	nsresult res;
 	
-	nsIPresShell* presShell = nsnull;
-	res=GetPresShell(&presShell);		//Get the presentation shell for the document
-	if ( NS_FAILED(res) ) return NS_ERROR_NOT_INITIALIZED;
+	nsIPresShell* pIPresShell = nsnull;
+	res = GetPresShell(&pIPresShell);		//Get the presentation shell for the document
+	if (NS_FAILED(res) || pIPresShell == nsnull)
+	{
+		return NS_ERROR_NOT_INITIALIZED;
+	}
 
-	res = presShell->DoCopy();
-	
+	res = pIPresShell->DoCopy();
+	NS_RELEASE(pIPresShell);
+
 	return res;
 }
 
@@ -436,7 +447,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 HRESULT CMozillaBrowser::InitWebShell()
 {
 	// Initialise XPCOM
-    nsIServiceManager *pIServiceManager = nsnull;
 	TCHAR szComponentPath[MAX_PATH];
 	TCHAR szComponentFile[MAX_PATH];
 	DWORD dwComponentPath = sizeof(szComponentPath) / sizeof(szComponentPath[0]);
@@ -452,11 +462,11 @@ HRESULT CMozillaBrowser::InitWebShell()
 		m_pComponentPath = new nsFileSpec(T2A(szComponentPath));
 		m_pComponentFile = new nsFileSpec(T2A(szComponentFile));
 
-		NS_InitXPCOM(&pIServiceManager, m_pComponentFile, m_pComponentPath);
+		NS_InitXPCOM(&m_pIServiceManager, m_pComponentFile, m_pComponentPath);
 	}
 	else
 	{
-		NS_InitXPCOM(&pIServiceManager, nsnull, nsnull);
+		NS_InitXPCOM(&m_pIServiceManager, nsnull, nsnull);
 	}
 
 	// Register components
@@ -488,8 +498,22 @@ HRESULT CMozillaBrowser::InitWebShell()
 HRESULT CMozillaBrowser::TermWebShell()
 {
 	// XXX: Do not call DestroyThreadEventQueue(...) for now...
-	// TODO terminate XPCOM
-	// TODO delete m_pComponentFile && m_pComponentPath
+	
+	// Terminate XPCOM & cleanup
+	NS_ShutdownXPCOM(m_pIServiceManager);
+	m_pIServiceManager = nsnull;
+
+	if (m_pComponentPath)
+	{
+		delete m_pComponentPath;
+		m_pComponentPath = NULL;
+	}
+	if (m_pComponentFile)
+	{
+		delete m_pComponentFile;
+		m_pComponentFile = NULL;
+	}
+
 	return S_OK;
 }
 
@@ -786,8 +810,6 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	return res;
 }
 
-
-static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
 
 // Load any browser helpers
 HRESULT CMozillaBrowser::LoadBrowserHelpers()
@@ -2623,12 +2645,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 ///////////////////////////////////////////////////////////////////////////////
 // Ole Command Handlers
 
+
 HRESULT _stdcall CMozillaBrowser::EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
 	BOOL bEditorMode = (nCmdID == IDM_EDITMODE) ? TRUE : FALSE;
 	pThis->SetEditorMode(bEditorMode);
 	return S_OK;
 }
+
 
 HRESULT _stdcall CMozillaBrowser::EditCommandHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {

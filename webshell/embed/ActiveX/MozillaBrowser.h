@@ -162,7 +162,6 @@ BEGIN_OLECOMMAND_TABLE()
 	OLECOMMAND_MESSAGE(OLECMDID_PASTE, NULL, ID_PASTE, L"Paste", L"Paste as selection")
 	OLECOMMAND_MESSAGE(OLECMDID_SELECTALL, NULL, ID_SELECTALL, L"SelectAll", L"Select all")
 	OLECOMMAND_MESSAGE(OLECMDID_PROPERTIES, NULL, ID_PROPERTIES, L"Properties", L"Show page properties")
-
 	// Unsupported IE 4.x command group
 	OLECOMMAND_MESSAGE(HTMLID_FIND, &CGID_IWebBrowser, 0, L"Find", L"Find")
 	OLECOMMAND_MESSAGE(HTMLID_VIEWSOURCE, &CGID_IWebBrowser, 0, L"ViewSource", L"View Source")
@@ -302,6 +301,7 @@ protected:
     nsIWebShell			*	m_pIWebShell;
 	nsIPref             *   m_pIPref;
 	nsIEditor			*	m_pEditor;
+    nsIServiceManager   *   m_pIServiceManager;
 
 	// System registry key for various control settings
 	CRegKey                 m_SystemKey;
