@@ -1535,15 +1535,27 @@ var BookmarksUtils = {
 
   getBrowserTargetFromEvent: function (aEvent)
   {
-    if (aEvent.button == 2)
+    // note: modifier keys are ignored in menuitems (bug 126189)
+    var button = aEvent.type == "command"? 0:aEvent.button;
+    if (button == 2)
       return "";
-    if (aEvent.metaKey || aEvent.ctrlKey || aEvent.button == 1)
+    if (aEvent.metaKey || aEvent.ctrlKey || button == 1)
       if (aEvent.shiftKey)
         return "window";
       else
         return "tab";
     else
       return "current";
+  },
+
+  loadBookmarkBrowserMiddleClick: function (aEvent, aDS)
+  {
+    if (aEvent.button != 1)
+      return;
+    // unlike for command events, we have to close the menus manually
+    personalToolbarDNDObserver.mCurrentDragOverTarget = null;
+    personalToolbarDNDObserver.onDragCloseTarget();
+    this.loadBookmarkBrowser(aEvent, aDS);
   },
 
   loadBookmarkBrowser: function (aEvent, aDS)
