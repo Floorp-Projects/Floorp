@@ -219,10 +219,6 @@ typedef struct PTDebug
     PRUintn cvars_notified, delayed_cv_deletes;
 } PTDebug;
 
-#else
-
-typedef PRUintn PTDebug;
-
 #endif /* defined(DEBUG) */
 
 NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
