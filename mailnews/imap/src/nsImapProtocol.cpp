@@ -5301,18 +5301,13 @@ void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
 
 void nsImapProtocol::RefreshFolderACLView(const char *mailboxName, nsIMAPNamespace *nsForMailbox)
 {
-  char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
   nsXPIDLCString canonicalMailboxName;
-  if (nonUTF7ConvertedName)
-    mailboxName = nonUTF7ConvertedName;
   
   if (nsForMailbox)
     m_runningUrl->AllocateCanonicalPath(mailboxName, nsForMailbox->GetDelimiter(), getter_Copies(canonicalMailboxName));
   else
     m_runningUrl->AllocateCanonicalPath(mailboxName, kOnlineHierarchySeparatorUnknown, getter_Copies(canonicalMailboxName));
   
-
-  PR_Free(nonUTF7ConvertedName);
   if (m_imapServerSink)
     m_imapServerSink->RefreshFolderRights(canonicalMailboxName);
 }
