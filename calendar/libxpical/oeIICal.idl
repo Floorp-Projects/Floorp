@@ -219,7 +219,7 @@ interface oeIICal : nsISupports
 
     attribute boolean batchMode;
     readonly attribute oeIICalTodo filter;
-    attribute string server;
+    attribute AUTF8String server;
     attribute boolean suppressAlarms;
 
     void addObserver( in oeIICalObserver observer );
@@ -286,16 +286,16 @@ interface oeIICalContainer : nsISupports
      *          oeIICal.
      *          When empty, @mozilla.org/ical;1 will be used
      */
-    void addCalendar( in string server, in string type );
+    void addCalendar( in AUTF8String server, in string type );
 
-	void removeCalendar( in string server );
-    oeIICal getCalendar( in string server );
-	void addCalendars( in unsigned long serverCount, [array, size_is(serverCount)] in string servers );
+    void removeCalendar( in AUTF8String server );
+    oeIICal getCalendar( in AUTF8String server );
+    void addCalendars( in unsigned long serverCount, [array, size_is(serverCount)] in wstring servers );
     void addObserver( in oeIICalObserver observer );
     void removeObserver( in oeIICalObserver observer );
     void addTodoObserver( in oeIICalTodoObserver observer );
     void removeTodoObserver( in oeIICalTodoObserver observer );
-	string addEvent( in oeIICalEvent icalevent, in string server );
+    string addEvent( in oeIICalEvent icalevent, in AUTF8String server );
 	string modifyEvent( in oeIICalEvent icalevent );
 	void deleteEvent( in string id );
 	oeIICalEvent fetchEvent( in string id );
@@ -320,7 +320,7 @@ interface oeIICalContainer : nsISupports
      */
     nsISimpleEnumerator getFirstEventsForRange( in PRTime begindate, in PRTime enddate );
 
-	string addTodo( in oeIICalTodo icaltodo, in string server );
+	string addTodo( in oeIICalTodo icaltodo, in AUTF8String server );
 	string modifyTodo( in oeIICalTodo icaltodo );
 	void deleteTodo( in string id );
 	oeIICalTodo fetchTodo( in string id );

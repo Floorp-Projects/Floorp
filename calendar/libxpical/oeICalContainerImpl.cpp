@@ -286,15 +286,15 @@ oeICalContainerImpl::~oeICalContainerImpl()
 NS_IMPL_ISUPPORTS1(oeICalContainerImpl, oeIICalContainer)
 
 NS_IMETHODIMP
-oeICalContainerImpl::AddCalendar( const char *server, const char *type ) {
+oeICalContainerImpl::AddCalendar( const nsACString &aServer, const char *type ) {
 #ifdef ICAL_DEBUG
-    printf( "oeICalContainerImpl::AddCalendar(%s, %s)\n", server, type );
+    printf( "oeICalContainerImpl::AddCalendar(%s, %s)\n", PromiseFlatCString(aServer).get(), type?type:"" );
 #endif
 
     nsresult rv;
 
     nsCOMPtr<oeIICal> calendar;
-    GetCalendar( server , getter_AddRefs(calendar) );
+    GetCalendar( aServer , getter_AddRefs(calendar) );
     if( calendar ) {
         #ifdef ICAL_DEBUG_ALL
         printf( "oeICalContainerImpl::AddCalendar()-Warning: Calendar already exists\n" );
@@ -335,13 +335,13 @@ oeICalContainerImpl::AddCalendar( const char *server, const char *type ) {
 
     calendar->SetSuppressAlarms( m_suppressAlarmsByDefault );
 
-    calendar->SetServer( server );
+    calendar->SetServer( aServer );
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::GetCalendar( const char *server, oeIICal **calendar ) {
+oeICalContainerImpl::GetCalendar( const nsACString &aServer, oeIICal **calendar ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetCalendar(%s)\n", server );
 #endif
@@ -353,23 +353,21 @@ oeICalContainerImpl::GetCalendar( const char *server, oeIICal **calendar ) {
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> tmpcalendar;
-        char *tmpserver;
+        nsCAutoString tmpserver;
         m_calendarArray->GetElementAt( i, getter_AddRefs( tmpcalendar ) );
-        tmpcalendar->GetServer( &tmpserver );
-        if( strcmp( tmpserver, server ) == 0 ) {
+        tmpcalendar->GetServer( tmpserver );
+        if( tmpserver.Equals(aServer) ) {
             *calendar = tmpcalendar;
             NS_ADDREF( *calendar );
-            nsMemory::Free( tmpserver );
             return NS_OK;
         }
-        nsMemory::Free( tmpserver );
     }
     *calendar = nsnull;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::RemoveCalendar( const char *server ) {
+oeICalContainerImpl::RemoveCalendar( const nsACString &aServer ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::RemoveCalendar(%s)\n", server );
 #endif
@@ -380,27 +378,25 @@ oeICalContainerImpl::RemoveCalendar( const char *server ) {
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> tmpcalendar;
-        char *tmpserver;
+        nsCAutoString tmpserver;
         m_calendarArray->GetElementAt( i, getter_AddRefs( tmpcalendar ) );
-        tmpcalendar->GetServer( &tmpserver );
-        if( strcmp( tmpserver, server ) == 0 ) {
-            nsMemory::Free( tmpserver );
+        tmpcalendar->GetServer( tmpserver );
+        if( tmpserver.Equals(aServer) ) {
             m_calendarArray->RemoveElementAt( i );
             return NS_OK;
         }
-        nsMemory::Free( tmpserver );
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::AddCalendars( PRUint32 serverCount, const char **servers ) {
+oeICalContainerImpl::AddCalendars( PRUint32 serverCount, const PRUnichar **servers ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::AddCalendars( %d, [Array] )\n", serverCount );
 #endif
     nsresult rv=NS_OK;
     for( unsigned int i=0; i<serverCount; i++ ) {
-        rv = AddCalendar( servers[i], "" );
+        rv = AddCalendar( NS_ConvertUTF16toUTF8(servers[i]), "" );
         if( NS_FAILED( rv ) )
             break;
     }
@@ -498,17 +494,17 @@ NS_IMETHODIMP oeICalContainerImpl::SetSuppressAlarmsByDefault(PRBool aNewVal)
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalContainerImpl::AddEvent( oeIICalEvent *icalevent, const char *server, char **retid )
+NS_IMETHODIMP oeICalContainerImpl::AddEvent( oeIICalEvent *icalevent, const nsACString &aServer, char **retid )
 {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::AddEvent()\n" );
 #endif
     nsresult rv;
     nsCOMPtr<oeIICal> calendar;
-    GetCalendar( server , getter_AddRefs(calendar) );
+    GetCalendar( aServer , getter_AddRefs(calendar) );
     if( !calendar ) {
-        AddCalendar( server, "" );
-        GetCalendar( server , getter_AddRefs(calendar) );
+        AddCalendar( aServer, "" );
+        GetCalendar( aServer , getter_AddRefs(calendar) );
         if( !calendar ) {
             #ifdef ICAL_DEBUG
             printf( "oeICalContainerImpl::AddEvent()-Error cannot find or create calendar\n" );
@@ -516,7 +512,7 @@ NS_IMETHODIMP oeICalContainerImpl::AddEvent( oeIICalEvent *icalevent, const char
             return NS_ERROR_FAILURE;
         } else {
             rv = calendar->AddEvent( icalevent, retid );
-            RemoveCalendar( server );
+            RemoveCalendar( aServer );
         }
     } else {
         rv = calendar->AddEvent( icalevent, retid );
@@ -945,17 +941,17 @@ oeICalContainerImpl::RemoveTodoObserver(oeIICalTodoObserver *observer)
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalContainerImpl::AddTodo(oeIICalTodo *icaltodo, const char *server, char **retid)
+NS_IMETHODIMP oeICalContainerImpl::AddTodo(oeIICalTodo *icaltodo, const nsACString &aServer, char **retid)
 {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::AddTodo()\n" );
 #endif
     nsresult rv;
     nsCOMPtr<oeIICal> calendar;
-    GetCalendar( server , getter_AddRefs(calendar) );
+    GetCalendar( aServer , getter_AddRefs(calendar) );
     if( !calendar ) {
-        AddCalendar( server, "" );
-        GetCalendar( server , getter_AddRefs(calendar) );
+        AddCalendar( aServer, "" );
+        GetCalendar( aServer , getter_AddRefs(calendar) );
         if( !calendar ) {
             #ifdef ICAL_DEBUG
             printf( "oeICalContainerImpl::AddTodo()-Error cannot find or create calendar\n" );
@@ -963,7 +959,7 @@ NS_IMETHODIMP oeICalContainerImpl::AddTodo(oeIICalTodo *icaltodo, const char *se
             return NS_ERROR_FAILURE;
         } else {
             rv = calendar->AddTodo( icaltodo, retid );
-            RemoveCalendar( server );
+            RemoveCalendar( aServer );
         }
     } else {
         rv = calendar->AddTodo( icaltodo, retid );
@@ -1753,4 +1749,3 @@ NS_IMETHODIMP oeFilterDateTime::SetTimeInTimezone( PRTime ms, const char *tzid )
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-

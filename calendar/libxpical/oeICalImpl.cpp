@@ -422,10 +422,10 @@ END:VEVENT\n\
 END:VCALENDAR\n\
 ";
     
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::Test() failed: Cannot open stream: %s!\n", serveraddr );
+        printf( "oeICalImpl::Test() failed: Cannot open stream: %s!\n", m_serveraddr.get() );
         #endif
         return NS_ERROR_FAILURE;
     }
@@ -755,21 +755,20 @@ END:VCALENDAR\n\
 }
 
 NS_IMETHODIMP
-oeICalImpl::SetServer( const char *str ) {
+oeICalImpl::SetServer( const nsACString &aServer ) {
 #ifdef ICAL_DEBUG
-    printf( "oeICalImpl::SetServer(%s)\n", str );
+    printf( "oeICalImpl::SetServer(%s)\n", PromiseFlatCString(aServer).get() );
 #endif
 
-    if( strncmp( str, "file:///", strlen( "file:///" ) ) == 0 ) {
+    if( StringBeginsWith(aServer, NS_LITERAL_CSTRING("file:///") ) ) {
         nsCOMPtr<nsIURL> url( do_CreateInstance(NS_STANDARDURL_CONTRACTID) );
         nsCString filePath;
-        filePath = str;
-        url->SetSpec( filePath );
+        url->SetSpec( aServer );
         url->GetFilePath( filePath );
-        strcpy( serveraddr, filePath.get() );
-        NS_UnescapeURL( serveraddr );
+        m_serveraddr = filePath;
+        NS_UnescapeURL( m_serveraddr );
     } else
-	    strcpy( serveraddr, str );
+        m_serveraddr = aServer;
 
     icalset *stream;
     
@@ -778,10 +777,10 @@ oeICalImpl::SetServer( const char *str ) {
     if( dummy )
         stat(NULL,NULL);
 
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::SetServer() failed: Cannot open stream: %s!\n", serveraddr );
+        printf( "oeICalImpl::SetServer() failed: Cannot open stream: %s!\n", m_serveraddr.get() );
         #endif
         return NS_OK;
     }
@@ -860,13 +859,11 @@ oeICalImpl::SetServer( const char *str ) {
 }
 
 NS_IMETHODIMP
-oeICalImpl::GetServer( char **server ) {
+oeICalImpl::GetServer( nsACString &aServer ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::GetServer()\n" );
 #endif
-    *server= (char*) nsMemory::Clone( serveraddr, strlen(serveraddr)+1);
-    if( *server == nsnull )
-        return  NS_ERROR_OUT_OF_MEMORY;
+    aServer = m_serveraddr;
     return NS_OK;
 }
 
@@ -994,7 +991,7 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     icalset *stream;
     icalcomponent *vcalendar;
 
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::AddEvent() failed: Cannot open stream: %s!\n", serveraddr );
@@ -1072,7 +1069,7 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
         return ModifyTodo( icaltodo, retid );
     }
 
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::ModifyEvent() failed: Cannot open stream: %s!\n", serveraddr );
@@ -1222,7 +1219,7 @@ oeICalImpl::DeleteEvent( const char *id )
 #endif
     icalset *stream;
     
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::DeleteEvent() failed: Cannot open stream: %s!\n", serveraddr );
@@ -2024,7 +2021,7 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
     icalset *stream;
     icalcomponent *vcalendar;
 
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::AddTodo() failed: Cannot open stream: %s!\n", serveraddr );
@@ -2083,7 +2080,7 @@ oeICalImpl::DeleteTodo( const char *id )
 #endif
     icalset *stream;
     
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::DeleteTodo() failed: Cannot open stream: %s!\n", serveraddr );
@@ -2188,7 +2185,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     icalset *stream;
     icalcomponent *vcalendar;
 
-    stream = icalfileset_new(serveraddr);
+    stream = icalfileset_new(m_serveraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::ModifyTodo() failed: Cannot open stream: %s!\n", serveraddr );
@@ -2833,4 +2830,3 @@ NS_IMETHODIMP oeICalFilter::SetParameter( const char *name, const char *value ) 
 NS_IMETHODIMP oeICalFilter::GetParameter( const char *name, char **value ) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-

@@ -37,6 +37,7 @@
 
 #include <oeIICal.h>
 #include <nsIServiceManager.h>
+#include "nsString.h"
 #include "nsIComponentRegistrar.h"
 
 #include "stdio.h"
@@ -68,7 +69,7 @@ main(PRInt32 argc, char *argv[])
         return -2;
     }
 
-    mysample->SetServer( "/tmp/.oecalendar" );
+    mysample->SetServer( NS_LITERAL_CSTRING("/tmp/.oecalendar") );
     rv = mysample->Test();
 
     if ( NS_FAILED(rv) )

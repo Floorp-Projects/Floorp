@@ -188,7 +188,7 @@ private:
     nsVoidArray m_eventlist;
     TodoList m_todolist;
     nsITimer *m_alarmtimer;
-    char serveraddr[200];
+    nsCString m_serveraddr;
     oeICalFilter *m_filter;
     bool SatisfiesFilter( oeIICalTodo *comp );
     void ChopAndAddEventToEnum( struct icaltimetype startdate,
