@@ -291,7 +291,7 @@ SetupDevModeFromSettings(LPDEVMODE aDevMode, nsIPrintSettings* aPrintSettings)
 
 //----------------------------------------------------------------------------------
 // Helper Function - Free and reallocate the string
-nsresult 
+static nsresult 
 SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
                             LPDEVMODE         aDevMode)
 {
@@ -511,7 +511,7 @@ static void GetLocalRect(HWND aWnd, RECT& aRect, HWND aParent)
 
 //--------------------------------------------------------
 // Show or Hide the control
-void Show(HWND aWnd, PRBool bState)
+static void Show(HWND aWnd, PRBool bState)
 {
   if (aWnd) {
     ::ShowWindow(aWnd, bState?SW_SHOW:SW_HIDE);
@@ -575,7 +575,7 @@ static HWND CreateGroupBox(HINSTANCE        aHInst,
 
 //--------------------------------------------------------
 // Localizes and initializes the radio buttons and group
-void InitializeExtendedDialog(HWND hdlg, PRInt16 aHowToEnableFrameUI) 
+static void InitializeExtendedDialog(HWND hdlg, PRInt16 aHowToEnableFrameUI) 
 {
   // Localize the new controls in the print dialog
   nsCOMPtr<nsIStringBundle> strBundle;
@@ -617,7 +617,7 @@ void InitializeExtendedDialog(HWND hdlg, PRInt16 aHowToEnableFrameUI)
 
 //--------------------------------------------------------
 // Special Hook Procedure for handling the print dialog messages
-UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam) 
+static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam) 
 {
 
   if (uiMsg == WM_COMMAND) {
@@ -1057,7 +1057,7 @@ ShowNativePrintDialog(HWND              aHWnd,
 #ifdef MOZ_REQUIRE_CURRENT_SDK
 //------------------------------------------------------------------
 // Callback for Property Sheet
-BOOL APIENTRY PropSheetCallBack(HWND hdlg, UINT uiMsg, UINT wParam, LONG lParam)
+static BOOL APIENTRY PropSheetCallBack(HWND hdlg, UINT uiMsg, UINT wParam, LONG lParam)
 {
   if (uiMsg == WM_COMMAND) {
     UINT id = LOWORD(wParam);
