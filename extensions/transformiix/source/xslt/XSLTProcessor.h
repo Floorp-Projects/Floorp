@@ -252,18 +252,6 @@ private:
      */
     Expr* mNodeExpr;
 
-    /*
-     * Processes the xsl:with-param child elements of the given xsl action.
-     * @param aAction  the action node that takes parameters (xsl:call-template
-     *                 or xsl:apply-templates
-     * @param aContext the current context node
-     * @param aMap     map to place parsed variables in
-     * @param aPs      the current ProcessorState
-     * @return         errorcode
-     */
-    nsresult processParameters(Element* aAction, Node* aContext,
-                               txVariableMap* aMap, ProcessorState* aPs);
-
 #ifdef TX_EXE
     /**
      * Parses the contents of data, and returns the type and href psuedo attributes
@@ -274,6 +262,11 @@ private:
     void process(Node* node,
                  const String& mode,
                  ProcessorState* ps);
+
+    /*
+     * Copy a node. For document nodes, copy the children.
+     */
+    void copyNode(Node* aNode, ProcessorState* aPs);
 
     void processAction(Node* aNode, Node* aXsltAction, ProcessorState* aPs);
 
@@ -295,24 +288,12 @@ private:
                          Element* aXslElement,
                          ProcessorState* aPs);
 
-    /*
-     * Processes the specified template using the given context,
-     * ProcessorState, and parameters.
-     * @param aContext  the current context node
-     * @param aTemplate the node in the xslt document that contains the
-     *                  template
-     * @param aParams   map with parameters to the template
-     * @param aPs       the current ProcessorState
-     */
-    void processTemplate(Node* aContext, Node* aTemplate,
-                         txVariableMap* aParams, ProcessorState* aPs);
+    void processChildrenAsValue(Node* aNode, 
+                                Element* aElement,
+                                ProcessorState* aPs,
+                                MBool aOnlyText,
+                                String& aValue);
 
-    void processMatchedTemplate(Node* aXslTemplate,
-                                Node* aNode,
-                                txVariableMap* aParams,
-                                const txExpandedName& aMode,
-                                ProcessorState::ImportFrame* aFrame,
-                                ProcessorState* aPs);
     /**
      * Invokes the default template for the specified node
      * @param node  context node
@@ -322,16 +303,6 @@ private:
     void processDefaultTemplate(Node* node,
                                 ProcessorState* ps,
                                 const txExpandedName& mode);
-
-    void processStylesheet(Document* aSource,
-                           Document* aStylesheet,
-                           txListIterator* aImportFrame,
-                           ProcessorState* aPs);
-
-    void processTopLevel(Document* aSource,
-                         Element* aStylesheet,
-                         txListIterator* importFrame,
-                         ProcessorState* aPs);
 
     /*
      * Processes an include or import stylesheet
@@ -344,6 +315,47 @@ private:
                         Document* aSource,
                         txListIterator* aImportFrame,
                         ProcessorState* aPs);
+
+    void processMatchedTemplate(Node* aXslTemplate,
+                                Node* aNode,
+                                txVariableMap* aParams,
+                                const txExpandedName& aMode,
+                                ProcessorState::ImportFrame* aFrame,
+                                ProcessorState* aPs);
+
+    /*
+     * Processes the xsl:with-param child elements of the given xsl action.
+     * @param aAction  the action node that takes parameters (xsl:call-template
+     *                 or xsl:apply-templates
+     * @param aContext the current context node
+     * @param aMap     map to place parsed variables in
+     * @param aPs      the current ProcessorState
+     * @return         errorcode
+     */
+    nsresult processParameters(Element* aAction, Node* aContext,
+                               txVariableMap* aMap, ProcessorState* aPs);
+
+    void processStylesheet(Document* aSource,
+                           Document* aStylesheet,
+                           txListIterator* aImportFrame,
+                           ProcessorState* aPs);
+
+    /*
+     * Processes the specified template using the given context,
+     * ProcessorState, and parameters.
+     * @param aContext  the current context node
+     * @param aTemplate the node in the xslt document that contains the
+     *                  template
+     * @param aParams   map with parameters to the template
+     * @param aPs       the current ProcessorState
+     */
+    void processTemplate(Node* aContext, Node* aTemplate,
+                         txVariableMap* aParams, ProcessorState* aPs);
+
+    void processTopLevel(Document* aSource,
+                         Element* aStylesheet,
+                         txListIterator* importFrame,
+                         ProcessorState* aPs);
 
     ExprResult* processVariable(Node* node, Element* xslVariable, ProcessorState* ps);
 
@@ -361,18 +373,7 @@ private:
      */
     void xslCopyOf(ExprResult* aExprResult, ProcessorState* aPs);
 
-    /*
-     * Copy a node. For document nodes, copy the children.
-     */
-    void copyNode(Node* aNode, ProcessorState* aPs);
-
     void startElement(ProcessorState* aPs, const String& aName, const PRInt32 aNsID);
-
-    void processChildrenAsValue(Node* aNode, 
-                                Element* aElement,
-                                ProcessorState* aPs,
-                                MBool aOnlyText,
-                                String& aValue);
 
 #ifdef TX_EXE
     txStreamXMLEventHandler* mOutputHandler;

@@ -50,7 +50,7 @@ public:
     
     ~txExpandedNameMap();
     
-    /*
+    /**
      * Adds an item, if an item with this key already exists an error is
      * returned
      * @param  aKey   key for item to add
@@ -59,7 +59,7 @@ public:
      */
     nsresult add(const txExpandedName& aKey, TxObject* aValue);
 
-    /*
+    /**
      * Sets an item, if an item with this key already exists it is overwritten
      * with the new value
      * @param  aKey   key for item to set
@@ -68,12 +68,25 @@ public:
      */
     nsresult set(const txExpandedName& aKey, TxObject* aValue);
 
-    /*
+    /**
      * Gets an item
      * @param  aKey  key for item to get
      * @return item with specified key, or null if no such item exists
      */
     TxObject* get(const txExpandedName& aKey);
+
+    /**
+     * Removes an item, deleting it if the map owns the values
+     * @param  aKey  key for item to remove
+     * @return item with specified key, or null if it has been deleted
+     *         or no such item exists
+     */
+    TxObject* remove(const txExpandedName& aKey);
+
+    /**
+     * Clears the items
+     */
+    void clear();
 
     class iterator {
     public:
@@ -117,7 +130,7 @@ private:
     };
     
     MapItem* mItems;
-    int mItemCount;
+    int mItemCount, mBufferCount;
     MBool mOwnsValues;
 };
 
