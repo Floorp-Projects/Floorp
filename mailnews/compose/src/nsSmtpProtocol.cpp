@@ -323,7 +323,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
         smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
 
     if (m_prefTrySSL != PREF_SSL_NEVER) {
-        rv = OpenNetworkSocket(aURL, "starttls", callbacks);
+        rv = OpenNetworkSocket(aURL, "starttls", callbacks);  
         if (NS_FAILED(rv) && m_prefTrySSL == PREF_SSL_TRY) {
             m_prefTrySSL = PREF_SSL_NEVER;
             rv = OpenNetworkSocket(aURL, nsnull, callbacks);
@@ -1783,7 +1783,6 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
 
   // now that we have a host and port to connect to, 
   // open up the channel...
-  // pass in "ssl" for the last arg if you want this to be over SSL
   nsCAutoString hostCStr; hostCStr.AssignWithConversion(aHost);
   PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", hostCStr.get(), aPort));
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
@@ -1795,7 +1794,8 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   rv = NS_ExamineForProxy("mailto", hostCStr.get(), aPort, getter_AddRefs(proxyInfo));
   if (NS_FAILED(rv)) proxyInfo = nsnull;
 
-  rv = OpenNetworkSocketWithInfo(hostCStr.get(), aPort, nsnull, proxyInfo, callbacks);
+  // pass in "ssl" for connectionType if you want this to be over SSL
+  rv = OpenNetworkSocketWithInfo(hostCStr.get(), aPort, nsnull /* connectionType */, proxyInfo, callbacks);
 
   // we are no longer waiting for a logon redirection reply
   ClearFlag(SMTP_WAIT_FOR_REDIRECTION);
