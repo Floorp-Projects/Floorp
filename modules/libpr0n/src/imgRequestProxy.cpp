@@ -254,10 +254,25 @@ NS_IMETHODIMP imgRequestProxy::GetDecoderObserver(imgIDecoderObserver **aDecoder
   return NS_OK;
 }
 
+/* readonly attribute string mimeType; */
+NS_IMETHODIMP imgRequestProxy::GetMimeType(char **aMimeType)
+{
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
+  const char *type = mOwner->GetMimeType();
+  if (!type)
+    return NS_ERROR_FAILURE;
+
+  *aMimeType = nsCRT::strdup(type);
+
+  return NS_OK;
+}
+
 
 /** imgIContainerObserver methods **/
 
-void imgRequestProxy::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
+void imgRequestProxy::FrameChanged(imgIContainer *container, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
 
@@ -267,7 +282,7 @@ void imgRequestProxy::FrameChanged(imgIContainer *container, nsISupports *cx, gf
 
 /** imgIDecoderObserver methods **/
 
-void imgRequestProxy::OnStartDecode(nsISupports *cx)
+void imgRequestProxy::OnStartDecode()
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartDecode");
 
@@ -275,7 +290,7 @@ void imgRequestProxy::OnStartDecode(nsISupports *cx)
     mListener->OnStartDecode(this, mContext);
 }
 
-void imgRequestProxy::OnStartContainer(nsISupports *cx, imgIContainer *image)
+void imgRequestProxy::OnStartContainer(imgIContainer *image)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartContainer");
 
@@ -283,7 +298,7 @@ void imgRequestProxy::OnStartContainer(nsISupports *cx, imgIContainer *image)
     mListener->OnStartContainer(this, mContext, image);
 }
 
-void imgRequestProxy::OnStartFrame(nsISupports *cx, gfxIImageFrame *frame)
+void imgRequestProxy::OnStartFrame(gfxIImageFrame *frame)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartFrame");
 
@@ -291,7 +306,7 @@ void imgRequestProxy::OnStartFrame(nsISupports *cx, gfxIImageFrame *frame)
     mListener->OnStartFrame(this, mContext, frame);
 }
 
-void imgRequestProxy::OnDataAvailable(nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
+void imgRequestProxy::OnDataAvailable(gfxIImageFrame *frame, const nsRect * rect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
 
@@ -299,7 +314,7 @@ void imgRequestProxy::OnDataAvailable(nsISupports *cx, gfxIImageFrame *frame, co
     mListener->OnDataAvailable(this, mContext, frame, rect);
 }
 
-void imgRequestProxy::OnStopFrame(nsISupports *cx, gfxIImageFrame *frame)
+void imgRequestProxy::OnStopFrame(gfxIImageFrame *frame)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopFrame");
 
@@ -307,7 +322,7 @@ void imgRequestProxy::OnStopFrame(nsISupports *cx, gfxIImageFrame *frame)
     mListener->OnStopFrame(this, mContext, frame);
 }
 
-void imgRequestProxy::OnStopContainer(nsISupports *cx, imgIContainer *image)
+void imgRequestProxy::OnStopContainer(imgIContainer *image)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopContainer");
 
@@ -315,7 +330,7 @@ void imgRequestProxy::OnStopContainer(nsISupports *cx, imgIContainer *image)
     mListener->OnStopContainer(this, mContext, image);
 }
 
-void imgRequestProxy::OnStopDecode(nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopDecode");
 

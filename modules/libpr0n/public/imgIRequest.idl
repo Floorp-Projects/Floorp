@@ -66,5 +66,7 @@ interface imgIRequest : nsIRequest
   readonly attribute nsIURI URI;
 
   readonly attribute imgIDecoderObserver decoderObserver;
+
+  readonly attribute string mimeType;
 };
 
