@@ -74,6 +74,8 @@ public:
   NS_IMETHOD MoveFocus(PRBool aForward, nsIDOMElement* aElt);
   NS_IMETHOD RewindFocusState();
 
+  NS_IMETHOD ResetElementFocus();
+
   // nsIDOMFocusListener
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);
