@@ -1,8 +1,6 @@
 comm.jar:
         content/necko/contents.rdf  (content/contents.rdf)
         content/necko/redirect_loop.xul  (content/redirect_loop.xul)
-        content/communicator/securityOverlay.xul  (content/securityOverlay.xul)
-        content/communicator/securityUI.js  (content/securityUI.js)
 
 en-US.jar:
         locale/en-US/necko/contents.rdf   (locale/en-US/contents.rdf)

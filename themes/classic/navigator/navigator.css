@@ -322,6 +322,22 @@
   border-top: none;
 }
 
+#security-button {
+  list-style-image: url("chrome://communicator/skin/icons/lock-insecure.gif");
+}
+
+#security-button[level="high"] {
+  list-style-image: url("chrome://communicator/skin/icons/lock-secure.gif");
+}
+
+#security-button[level="low"] {
+  list-style-image: url("chrome://communicator/skin/icons/lock-secure.gif");
+}
+
+#security-button[level="broken"] {
+  list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
+}
+
 /* ::::: personal toolbar ::::: */
 
 #home-button {

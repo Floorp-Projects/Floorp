@@ -3,7 +3,6 @@ classic.jar:
   skin/classic/communicator/tasksOverlay.css                            (communicator/tasksOverlay.css)
   skin/classic/communicator/button.css                                  (communicator/button.css)
   skin/classic/communicator/brand.css                                   (communicator/brand.css)
-  skin/classic/communicator/securityOverlay.css                         (communicator/securityOverlay.css)
   skin/classic/communicator/dialogs.css                                 (communicator/dialogs.css)
   skin/classic/communicator/printing.css                                (communicator/printing.css)
   skin/classic/communicator/communicator.css                            (communicator/communicator.css)
