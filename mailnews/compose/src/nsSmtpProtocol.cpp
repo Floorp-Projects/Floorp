@@ -286,6 +286,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     m_originalContentLength = 0;
     m_totalAmountRead = 0;
 
+    m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
     // ** may want to consider caching the server capability to save lots of
     // round trip communication between the client and server
     nsCOMPtr<nsISmtpServer> smtpServer;
@@ -322,8 +323,6 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
         rv = OpenNetworkSocket(aURL, nsnull, callbacks);
     }
     
-    m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
-
     if (NS_FAILED(rv))
         return;
 }
@@ -415,7 +414,10 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
   PRUint32 ln = 0;
   PRBool pauseForMoreData = PR_FALSE;
 
-  line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
+	if (!m_lineStreamBuffer)
+		return -1; // this will force an error and at least we won't crash
+
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
   if(pauseForMoreData || !line)
   {
