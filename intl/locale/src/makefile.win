@@ -39,6 +39,7 @@ CPPSRCS		=	nsLocale.cpp				\
 				nsLocaleFactory.cpp			\
 				nsLocaleService.cpp			\
 				nsFontPackageService.cpp		\
+				nsFontPackageHandler.cpp		\
 				nsLanguageAtomService.cpp		\
 				nsScriptableDateFormat.cpp			\
 				nsCollation.cpp
@@ -48,6 +49,7 @@ CPP_OBJS	=	.\$(OBJDIR)\nsLocale.obj			\
 				.\$(OBJDIR)\nsLocaleFactory.obj		\
 				.\$(OBJDIR)\nsLocaleService.obj		\
 				.\$(OBJDIR)\nsFontPackageService.obj	\
+				.\$(OBJDIR)\nsFontPackageHandler.obj	\
 				.\$(OBJDIR)\nsLanguageAtomService.obj	\
 				.\$(OBJDIR)\nsScriptableDateFormat.obj		\
 				.\$(OBJDIR)\nsCollation.obj

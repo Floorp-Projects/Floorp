@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsLocaleFactory.cpp \
 		nsLocaleService.cpp \
 		nsFontPackageService.cpp \
+		nsFontPackageHandler.cpp \
 		$(NULL)
 
 EXPORTS		= \
