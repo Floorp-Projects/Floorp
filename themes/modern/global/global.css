@@ -249,6 +249,7 @@ html|iframe {
 
   progressmeter 
     {
+      min-width           : 100px;
       margin              : 0px 4px 0px 4px;
       border              : 1px inset #CCCCCC;
       max-height          : 1.5em;
