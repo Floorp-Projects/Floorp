@@ -1385,16 +1385,16 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                     kIEventQueueServiceIID,
                                     (nsISupports **)&eventService);
   if (NS_SUCCEEDED(rv)) {
-    PLEventQueue* eventQueue;
+    nsCOMPtr<nsIEventQueue> eventQueue;
     rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
-                                           &eventQueue);
+                                           getter_AddRefs(eventQueue));
     nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 
-    if (NS_SUCCEEDED(rv) && (nsnull != eventQueue)) {
+    if (NS_SUCCEEDED(rv) && eventQueue) {
       CantRenderReplacedElementEvent* ev;
 
       ev = new CantRenderReplacedElementEvent(this, aFrame);
-      PL_PostEvent(eventQueue, ev);
+      eventQueue->PostEvent(ev);
     }
   }
   return rv;

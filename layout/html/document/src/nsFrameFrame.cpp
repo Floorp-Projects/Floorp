@@ -671,37 +671,13 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsIContent* content;
   GetParentContent(content);
 
-  mWebShell = nsnull;
-
-#ifdef INCLUDE_XUL
-  nsCOMPtr<nsISupports> presContainer;
-  aPresContext.GetContainer(getter_AddRefs(presContainer));
-  if (presContainer) {
-    nsCOMPtr<nsIWebShell> parentShell;
-    parentShell = do_QueryInterface(presContainer);
-    if (parentShell) {
-      nsWebShellType shellType;
-      parentShell->GetWebShellType(shellType);
-      if (shellType == nsWebShellChrome) {
-        nsCOMPtr<nsIWebShellContainer> parentContainer;
-        parentContainer = do_QueryInterface(presContainer);
-        if (parentContainer) {
-          parentContainer->ChildShellAdded(&mWebShell, content);
-        }
-      }
-    }
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
+                                    (void**)&mWebShell);
+  if (NS_OK != rv) {
+    NS_ASSERTION(0, "could not create web widget");
+    return rv;
   }
-#endif // INCLUDE_XUL
-
-  if (mWebShell == nsnull) {
-    rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
-                                      (void**)&mWebShell);
-    if (NS_OK != rv) {
-      NS_ASSERTION(0, "could not create web widget");
-      return rv;
-    }
-  }
-
+  
   // pass along marginwidth, marginheight, scrolling so sub document can use it
   mWebShell->SetMarginWidth(GetMarginWidth(&aPresContext, content));
   mWebShell->SetMarginHeight(GetMarginHeight(&aPresContext, content));
@@ -743,7 +719,9 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 	    if (value.EqualsIgnoreCase("content")) {
 		    // The web shell's type is content.
 		    mWebShell->SetWebShellType(nsWebShellContent);
-        //mWebShell->SetName(value.GetUnicode());
+        nsCOMPtr<nsIWebShellContainer> shellAsContainer;
+				shellAsContainer = do_QueryInterface(mWebShell);
+				shellAsContainer->ContentShellAdded(mWebShell, content);
       }
       else {
         // Inherit our type from our parent webshell.  If it is
