@@ -165,20 +165,20 @@ $ops{"SET_SLOT"} =
 $ops{"GET_STATIC"} =
   {
    super  => "Instruction_3",
-   rem    => "dest, class, name",
-   params => [ ("TypedRegister", "JSClass*", "const StringAtom*") ]
+   rem    => "dest, class, index",
+   params => [ ("TypedRegister", "JSClass*", "uint32") ]
   };
 $ops{"SET_STATIC"} =
   {
    super  => "Instruction_3",
-   rem    => "class, name, source",
-   params => [ ("JSClass*", "const StringAtom*", "TypedRegister") ]
+   rem    => "class, index, source",
+   params => [ ("JSClass*", "uint32", "TypedRegister") ]
   };
 $ops{"STATIC_XCR"} =
   {
    super  => "Instruction_4",
-   rem    => "dest, class, name, value",
-   params => [ ("TypedRegister", "JSClass*", "const StringAtom*", "double") ]
+   rem    => "dest, class, index, value",
+   params => [ ("TypedRegister", "JSClass*", "uint32", "double") ]
   };
 $ops{"SLOT_XCR"} =
   {
