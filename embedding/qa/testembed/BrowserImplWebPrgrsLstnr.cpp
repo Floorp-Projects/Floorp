@@ -108,6 +108,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 
 	if (progressStateFlags & STATE_IS_DOCUMENT)		// DOCUMENT
 	{
+		displayMode = 1;
 		strcpy(theDocType, "DOCUMENT");
 		if (progressStateFlags & STATE_START)
 		{ 
@@ -117,10 +118,6 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 
 			if(m_pBrowserFrameGlue)
 				m_pBrowserFrameGlue->UpdateBusyState(PR_TRUE);
-
-			CString strMsg;
-			strMsg.Format("OnStateChange:: status = %d", status); 
-			AfxMessageBox(strMsg);
 		}
 
 		else if (progressStateFlags & STATE_REDIRECTING)
@@ -154,6 +151,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 	}		// end STATE_IS_DOCUMENT
 	if (progressStateFlags & STATE_IS_REQUEST)		// REQUEST
 	{
+		displayMode = 1;
 		strcpy(theDocType, "REQUEST");
 		if (progressStateFlags & STATE_START)
 		{
@@ -166,11 +164,13 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 			CTests::SuspendReqTest(request);	
 			CQaUtils::QAOutput("Between Suspend and Resume.");
 			CTests::ResumeReqTest(request);	
+/*
 //			CTests::CancelReqTest(request);	
 
 			nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
 //			CTests::SetLoadGroupTest(request, theLoadGroup);	// getting a crash. investigate!
 //			CTests::GetLoadGroupTest(request);
+*/
 		}
 		else if (progressStateFlags & STATE_REDIRECTING)
 			strcpy(theStateType, "STATE_REDIRECTING");
@@ -187,6 +187,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 
 	if (progressStateFlags & STATE_IS_NETWORK)		// NETWORK
 	{
+		displayMode = 1;
 		strcpy(theDocType, "NETWORK");
 		if (progressStateFlags & STATE_START)
 			strcpy(theStateType, "STATE_START");
@@ -204,6 +205,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 	}
 	if (progressStateFlags & STATE_IS_WINDOW)		// WINDOW
 	{
+		displayMode = 1;
 		strcpy(theDocType, "WINDOW");
 		if (progressStateFlags & STATE_START)
 			strcpy(theStateType, "STATE_START");

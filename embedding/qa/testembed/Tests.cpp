@@ -181,9 +181,7 @@ void CTests::OnTestsGlobalHistory()
 		// see if url is already in the GH file (pre-AddPage() test)
 		rv = myHistory->IsVisited(theUrl, &theRetVal);
 	    CQaUtils::RvTestResult(rv, "rv IsVisited() test", 1);
-
-		strMsg.Format("The IsVisited() return value = %d", theRetVal); 
-		AfxMessageBox(strMsg);
+		CQaUtils::FormatAndPrintOutput("The IsVisited() boolean return value = ", theRetVal, 1); 
 
 		if (theRetVal)
 			CQaUtils::QAOutput("URL has been visited. Won't execute AddPage().", 2);
@@ -563,9 +561,8 @@ void CTests::OnInterfacesNsishistory()
 
 			    // getEntryAtIndex() tests
 		for (theIndex = 0; theIndex < numEntries; theIndex++)
-		{
-			strMsg.Format("the index = %d", theIndex); 
-			AfxMessageBox(strMsg); 
+		{ 
+			CQaUtils::FormatAndPrintOutput("the index = ", theIndex, 2); 
 
 //			GetEntryAtIndexTest(theSessionHistory, theHistoryEntry, theIndex);
 			theSessionHistory->GetEntryAtIndex(theIndex, PR_FALSE, getter_AddRefs(theHistoryEntry));
@@ -693,8 +690,7 @@ void CTests::GetIsSubFrameTest(nsIHistoryEntry* theHistoryEntry)
 		CQaUtils::QAOutput("isSubFrame for GetIsSubFrame() invalid. Test failed.", 1);
 	else
 		CQaUtils::RvTestResult(rv, "GetIsSubFrame() (isSubFrame attribute) test", 1);
-	strMsg.Format("The subFrame value = %d", isSubFrame); 
-	AfxMessageBox(strMsg);
+	CQaUtils::FormatAndPrintOutput("The subFrame boolean value = ", isSubFrame, 2);
 }
 
 /*
@@ -774,7 +770,7 @@ void CTests::OnInterfacesNsiwebnav()
    ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
 
    LoadUriTest("http://www.cisco.com/", nsIWebNavigation::LOAD_FLAGS_MASK);
-   ReloadTest(nsIWebNavigation::LOAD_FLAGS_MASK);
+ // ReloadTest(nsIWebNavigation::LOAD_FLAGS_MASK);
 
    LoadUriTest("http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK);
    LoadUriTest("http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY);
@@ -803,8 +799,7 @@ void CTests::CanGoBackTest()
 	  CQaUtils::QAOutput("canGoBack for GetCanGoBack() invalid. Test failed.", 1);
    else
       CQaUtils::RvTestResult(rv, "GetCanGoBack() attribute test", 2);
-   strMsg.Format("canGoBack value = %d", canGoBack); 
-   AfxMessageBox(strMsg); 
+   CQaUtils::FormatAndPrintOutput("canGoBack value = ", canGoBack, 2);
 }
 
 void CTests::GoBackTest()
@@ -821,8 +816,7 @@ void CTests::CanGoForwardTest()
 	  CQaUtils::QAOutput("canGoForward for GetCanGoForward() invalid. Test failed.", 1);
    else
    CQaUtils::RvTestResult(rv, "GetCanGoForward() attribute test", 2);
-   strMsg.Format("canGoForward value = %d", canGoForward); 
-   AfxMessageBox(strMsg); 
+   CQaUtils::FormatAndPrintOutput("canGoForward value = ", canGoForward, 2); 
 }
 
 void CTests::GoForwardTest()
@@ -972,9 +966,8 @@ void CTests::GetSHTest()
 
    rv = theSessionHistory->GetCount(&numOfElements);
    CQaUtils::RvTestResult(rv, "nsISHistory::GetCount() for nsIWebNav test", 1);
-
-   strMsg.Format("the sHist entry count = %d", numOfElements); 
-   AfxMessageBox(strMsg); 
+ 
+  CQaUtils::FormatAndPrintOutput("the sHist entry count = ", numOfElements, 2);
 }
 
 // ***********************************************************************
@@ -1002,7 +995,7 @@ void CTests::OnInterfacesNsirequest()
 						  nsIWebNavigation::LOAD_FLAGS_NONE);
 	}
 
-	// note: individual nsIRequest tests are found in BrowserImplWebProgLstner.cpp, OnStateChange().
+	// note: individual nsIRequest tests are called in BrowserImplWebProgLstner.cpp, OnStateChange().
 	
 }
 
