@@ -59,16 +59,7 @@ else
 DIRS    += skin/win 
 endif
 
-CHROME_DEPS = locale/build.dtd
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE += locale/build.dtd
-
-locale/build.dtd: locale/build.dtd.in $(DEPTH)/config/build_number
-	@$(RM) -f $@
-	@if test ! -d locale; then mkdir locale; fi
-	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $(srcdir)/locale/build.dtd.in
 
 distclean::
 	$(RM) -f content/buildconfig.html
