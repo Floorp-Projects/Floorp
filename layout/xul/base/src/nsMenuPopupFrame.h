@@ -117,8 +117,6 @@ public:
                              const nsString& aPopupAlign,
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
-  NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
-
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
   NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
   

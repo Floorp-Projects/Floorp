@@ -914,35 +914,6 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMenuPopupFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
-{
-  // get its view
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
-  nsCOMPtr<nsIViewManager> viewMan;
-  PRBool result;
-
-  nsCOMPtr<nsIWidget> widget;
-
-  if (view) {
-    view->GetViewManager(*getter_AddRefs(viewMan));
-    if (viewMan) {
-      view->GetWidget(*getter_AddRefs(widget));
-      if (aGrabMouseEvents) {
-        viewMan->GrabMouseEvents(view,result);
-        mIsCapturingMouseEvents = PR_TRUE;
-        //widget->CaptureMouse(PR_TRUE);
-      } else {
-        viewMan->GrabMouseEvents(nsnull,result);
-        mIsCapturingMouseEvents = PR_FALSE;
-        //widget->CaptureMouse(PR_FALSE);
-      }
-    }
-  }
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
