@@ -34,7 +34,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
-#include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
@@ -45,6 +44,11 @@
 #include "nsIHttpEventSink.h" 
 #include "nsIEventSinkGetter.h" 
 #include "nsIDNSService.h" 
+
+#include "nsISimpleEnumerator.h"
+#include "nsIHTTPHeader.h"
+#include "nsXPIDLString.h"
+
 
 #ifdef NECKO
 // this test app handles cookies.
@@ -139,6 +143,68 @@ TestHTTPEventSink::OnAwaitingInput(nsISupports* context)
 NS_IMETHODIMP
 TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 {
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
+    PRBool bMoreHeaders;
+
+    if (pHTTPCon) {
+        pHTTPCon->GetRequestHeaderEnumerator(getter_AddRefs(enumerator));
+
+        printf("Request headers:\n");
+        enumerator->HasMoreElements(&bMoreHeaders);
+        while (bMoreHeaders) {
+            nsCOMPtr<nsISupports> item;
+            nsCOMPtr<nsIHTTPHeader> header;
+
+            enumerator->GetNext(getter_AddRefs(item));
+            header = do_QueryInterface(item);
+
+            if (header) {
+                nsCOMPtr<nsIAtom> key;
+                nsAutoString field(eOneByte);
+                nsXPIDLCString value;
+
+                header->GetField(getter_AddRefs(key));
+                key->ToString(field);
+                printf("\t%s: ", field.GetBuffer());
+
+                header->GetValue(getter_Copies(value));
+                printf("%s\n", (const char*)value);
+            }
+    
+            enumerator->HasMoreElements(&bMoreHeaders);
+        }
+
+        pHTTPCon->GetResponseHeaderEnumerator(getter_AddRefs(enumerator));
+
+        printf("Response headers:\n");
+        enumerator->HasMoreElements(&bMoreHeaders);
+        while (bMoreHeaders) {
+            nsCOMPtr<nsISupports> item;
+            nsCOMPtr<nsIHTTPHeader> header;
+
+            enumerator->GetNext(getter_AddRefs(item));
+            header = do_QueryInterface(item);
+
+            if (header) {
+                nsCOMPtr<nsIAtom> key;
+                nsAutoString field(eOneByte);
+                nsXPIDLCString value;
+
+                header->GetField(getter_AddRefs(key));
+                key->ToString(field);
+                printf("\t%s: ", field.GetBuffer());
+
+                header->GetValue(getter_Copies(value));
+                printf("%s\n", (const char*)value);
+            }
+    
+            enumerator->HasMoreElements(&bMoreHeaders);
+        }
+
+    }
+
+
     if (gVerbose) {
         printf("\n+++ TestHTTPEventSink::OnHeadersAvailable +++\n");
         nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
@@ -400,7 +466,10 @@ nsresult StartLoadingURL(const char* aUrlString)
 
         if (pHTTPCon) {
             // Setting a sample user agent string.
-            rv = pHTTPCon->SetRequestHeader("User-Agent", "Mozilla/5.0 [en] (Win98; U)");
+            nsCOMPtr<nsIAtom> userAgent;
+
+            userAgent = NS_NewAtom("user-agent");
+            rv = pHTTPCon->SetRequestHeader(userAgent, "Mozilla/5.0 [en] (Win98; U)");
             if (NS_FAILED(rv)) return rv;
         }
             
