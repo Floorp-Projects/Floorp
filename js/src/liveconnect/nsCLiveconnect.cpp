@@ -37,7 +37,7 @@ PR_BEGIN_EXTERN_C
                                TODO - get rid of private header */
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
-
+#include "nsISecurityContext.h"
 
 /* A captured JavaScript error, created when JS_ReportError() is called while
    running JavaScript code that is itself called from Java. */
@@ -52,6 +52,7 @@ PR_END_EXTERN_C
 #include "nsCLiveconnect.h"
 
 static NS_DEFINE_IID(kILiveconnectIID, NS_ILIVECONNECT_IID);
+static NS_DEFINE_IID(kISecureLiveconnectIID, NS_ISECURELIVECONNECT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
@@ -70,8 +71,15 @@ nsCLiveconnect::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
       AddRef();
       return NS_OK;
     }
-    if (aIID.Equals(kILiveconnectIID)) {
-        *aInstancePtr = this;
+    if (aIID.Equals(kILiveconnectIID)) 
+    {
+        *aInstancePtr = (nsILiveconnect *)this;
+        AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(kISecureLiveconnectIID)) 
+    {
+        *aInstancePtr = (nsISecureLiveconnect *)this;
         AddRef();
         return NS_OK;
     }
@@ -100,9 +108,8 @@ nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
     JSObject          *js_obj         = (JSObject *)obj;
-    nsresult           err            = NS_OK;
     jobject            member         = NULL;
-    jsval              js_val         = NULL;
+    jsval              js_val;
     int                dummy_cost     = 0;
     JSBool             dummy_bool     = PR_FALSE;
     JavaToJSSavedState saved_state    = {NULL,NULL};
@@ -153,9 +160,8 @@ nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject *pjobj)
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
     JSObject          *js_obj         = (JSObject *)obj;
-    nsresult           err            = NS_OK;
     jobject            member         = NULL;
-    jsval              js_val         = NULL;
+    jsval              js_val;
     int                dummy_cost     = 0;
     JSBool             dummy_bool     = PR_FALSE;
     JavaToJSSavedState saved_state    = {NULL,NULL};
@@ -200,9 +206,7 @@ nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
     JSObject          *js_obj         = (JSObject *)obj;
-    nsresult           err            = NS_OK;
-    jobject            member         = NULL;
-    jsval              js_val         = NULL;
+    jsval              js_val;
     JavaToJSSavedState saved_state    = {NULL,NULL};
 
     if(jEnv == NULL)
@@ -246,8 +250,7 @@ nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj)
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
     JSObject          *js_obj         = (JSObject *)obj;
-    nsresult           err            = NS_OK;
-    jsval              js_val         = NULL;
+    jsval              js_val;
     JavaToJSSavedState saved_state    = {NULL,NULL};
 
     if(jEnv == NULL)
@@ -281,8 +284,7 @@ nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsiz
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
     JSObject          *js_obj         = (JSObject *)obj;
-    nsresult           err            = NS_OK;
-    jsval              js_val         = NULL;
+    jsval              js_val;
     JavaToJSSavedState saved_state    = {NULL,NULL};
 
     if(jEnv == NULL)
@@ -324,10 +326,8 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
     JSObject          *js_obj         = (JSObject *)obj;
-    nsresult           err            = NS_OK;
-    jobject            member         = NULL;
-    jsval              js_val         = NULL;
-    jsval              function_val   = NULL;
+    jsval              js_val;
+    jsval              function_val   = 0;
     int                dummy_cost     = 0;
     JSBool             dummy_bool     = PR_FALSE;
     JavaToJSSavedState saved_state    = {NULL,NULL};
@@ -405,61 +405,11 @@ done:
  * @param pjobj              - return value.
  */
 NS_METHOD	
-nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, jobject *pjobj)
+nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const char* codebase, const jchar *script, jsize length, jobject *pjobj)
 {
-    JSContext         *cx             = NULL;
-    JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
-    nsresult           err            = NS_OK;
-    jobject            member         = NULL;
-    jsval              js_val         = NULL;
-    jsval              function_val   = NULL;
-    int                dummy_cost     = 0;
-    JSBool             dummy_bool     = PR_FALSE;
-    JavaToJSSavedState saved_state    = {NULL,NULL};
-    jobject            result         = NULL;
-	   const char		      *codebase       = NULL;
-    JSPrincipals      *principals     = NULL;
-    JSBool             eval_succeeded = PR_FALSE;
-
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
-    if (!jsj_env)
-        return NULL;
-    
-    result = NULL;
-    if (!script) {
-        JS_ReportError(cx, "illegal null string eval argument");
-        goto done;
-    }
-
-    
-    /* Set up security stuff */
-    principals = NULL;
-    if (JSJ_callbacks->get_JSPrincipals_from_java_caller)
-        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx);
-    codebase = principals ? principals->codebase : NULL;
-
-    /* Have the JS engine evaluate the unicode string */
-    eval_succeeded = JS_EvaluateUCScriptForPrincipals(cx, js_obj, principals,
-                                                      script, length,
-                                                      codebase, 0, &js_val);
-    if (!eval_succeeded)
-        goto done;
-
-    /* Convert result to a subclass of java.lang.Object */
-    jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, jsj_get_jlObject_descriptor(cx, jEnv),
-                                   &dummy_cost, &result, &dummy_bool);
-
-done:
-    if (!jsj_exit_js(cx, jsj_env, &saved_state))
-        return NULL;
-    
-    *pjobj = result;
-    return NS_OK;
+  // sudu: codebase needs to be converted to a nsIPrincipal. Will do this later.
+  return Eval(jEnv, obj, script, length, NULL, 0, NULL, pjobj);
+ //return NS_OK;
 }
 
 
@@ -479,9 +429,6 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject, jsobject *pobj)
     char              *err_msg        = NULL;
     JSContext         *cx             = NULL;
     JSObject          *js_obj         = NULL;
-    jsval              js_val         = NULL;
-    int                dummy_cost     = 0;
-    JSBool             dummy_bool     = PR_FALSE;
     JavaToJSSavedState saved_state    = {NULL,NULL};
     jobject            java_obj         = NULL;
     JSJavaThreadState *jsj_env        = NULL;
@@ -492,7 +439,7 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject, jsobject *pobj)
     }
     jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
     if (!jsj_env)
-        return NULL;
+       return NS_ERROR_FAILURE;
     
     err_msg = NULL;
     java_obj = NULL;
@@ -511,7 +458,7 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject, jsobject *pobj)
 #endif
 done:
     if (!jsj_exit_js(cx, jsj_env, &saved_state))
-        return NULL;
+       return NS_ERROR_FAILURE;
     
     //*pjobj = java_obj;
     *pobj = (jint)js_obj;
@@ -527,26 +474,74 @@ done:
 NS_METHOD	
 nsCLiveconnect::FinalizeJSObject(JNIEnv *jEnv, jsobject obj)
 {
+    JSObjectHandle    *handle         = (JSObjectHandle *)obj;
+    JSContext         *cx             = handle->cx;
+    
+    if(jEnv == NULL)
+       return NS_ERROR_FAILURE;
+    if (!handle)
+        return NS_ERROR_NULL_POINTER;
+    JS_RemoveRoot(cx, &handle->js_obj);
+    JS_free(cx, handle);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// from nsISecureLiveconnect:
+NS_METHOD	
+nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void **pNSIPrincipaArray, 
+                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
+{
     JSContext         *cx             = NULL;
-    JavaToJSSavedState saved_state    = {NULL,NULL};
     JSJavaThreadState *jsj_env        = NULL;
     JSObject          *js_obj         = (JSObject *)obj;
-    
+    jsval              js_val;
+    int                dummy_cost     = 0;
+    JSBool             dummy_bool     = PR_FALSE;
+    JavaToJSSavedState saved_state    = {NULL,NULL};
+    jobject            result         = NULL;
+	   const char		      *codebase       = NULL;
+    JSPrincipals      *principals     = NULL;
+    JSBool             eval_succeeded = PR_FALSE;
+
     if(jEnv == NULL)
     {
        return NS_ERROR_FAILURE;
     }
     jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
-    if (!jsj_env)   /* Note: memory leak if we exit here */
-        return NS_ERROR_FAILURE;
-#ifdef PRESERVE_JSOBJECT_IDENTITY
-    jsj_remove_js_obj_reflection_from_hashtable(cx, js_obj);
-#endif  /* PRESERVE_JSOBJECT_IDENTITY */
-    jsj_exit_js(cx, jsj_env, &saved_state);
+    if (!jsj_env)
+       return NS_ERROR_FAILURE;
+    
+    result = NULL;
+    if (!script) {
+        JS_ReportError(cx, "illegal null string eval argument");
+        goto done;
+    }
+
+    /* Set up security stuff */
+    principals = NULL;
+    if (JSJ_callbacks->get_JSPrincipals_from_java_caller)
+        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, pNSIPrincipaArray, numPrincipals, pNSISecurityContext);
+    codebase = principals ? (const char *)principals->codebase : NULL;
+
+    /* Have the JS engine evaluate the unicode string */
+    eval_succeeded = JS_EvaluateUCScriptForPrincipals(cx, js_obj, principals,
+                                                      script, length,
+                                                      codebase, 0, &js_val);
+    if (!eval_succeeded)
+        goto done;
+
+    /* Convert result to a subclass of java.lang.Object */
+    jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, jsj_get_jlObject_descriptor(cx, jEnv),
+                                   &dummy_cost, &result, &dummy_bool);
+
+done:
+    if (!jsj_exit_js(cx, jsj_env, &saved_state))
+       return NS_ERROR_FAILURE;
+    
+    *pjobj = result;
     return NS_OK;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsCLiveconnect:
@@ -554,10 +549,29 @@ nsCLiveconnect::FinalizeJSObject(JNIEnv *jEnv, jsobject obj)
 nsCLiveconnect::nsCLiveconnect(nsISupports *aOuter)
 {
     NS_INIT_AGGREGATED(aOuter);
+#ifdef PRESERVE_JSOBJECT_IDENTITY
     jsj_init_js_obj_reflections_table();
+#endif
 }
 
 nsCLiveconnect::~nsCLiveconnect()
 {
 }
 
+
+PR_BEGIN_EXTERN_C
+
+
+PR_IMPLEMENT(PRBool)
+JSJ_NSISecurityContextImplies(void *pNSISecurityContextIN, const char* target, const char* action)
+{
+    nsISecurityContext *pNSISecurityContext = (nsISecurityContext *)pNSISecurityContextIN;
+    PRBool bAllowedAccess = PR_FALSE;
+    if (pNSISecurityContext != NULL)
+    {
+       pNSISecurityContext->Implies(target, action, &bAllowedAccess);
+    }
+    return bAllowedAccess;
+}
+
+PR_END_EXTERN_C

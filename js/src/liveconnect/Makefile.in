@@ -34,7 +34,10 @@ endif
 MODULE		= java
 LIBRARY_NAME	= jsj
 
-REQUIRES	= java js applet nspr img util layer xpcom caps oji plugin
+REQUIRES	= java js applet nspr img util layer
+ifdef MOZ_OJI
+REQUIRES	+= xpcom
+endif
 
 CSRCS = jsj.c		  \
 	jsj_JSObject.c	  \
@@ -51,10 +54,15 @@ CSRCS = jsj.c		  \
 	jsj_method.c	  \
 	jsj_utils.c
 
-CPPSRCS = \
- nsCLiveconnect.cpp          \
- nsCLiveconnectFactory.cpp
+ifdef MOZ_OJI
+CPPSRCS		=	        \
+ nsCLiveconnect.cpp  \
+	nsCLiveconnectFactory.cpp
+endif
 
+ifdef MOZ_OJI
+LLIBS += $(DIST)/lib/xpcom32.lib	
+endif
 
 ifdef NSJVM
 JNI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
@@ -64,6 +72,12 @@ EXPORTS		= $(srcdir)/jsjava.h \
 		  $(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSObject.h \
 		  $(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSException.h \
 		  $(NULL)
+ifdef MOZ_OJI
+EXPORTS		+=  nsILiveconnect.h \
+    nsISecureLiveconnect.h \
+    nsISecurityContext.h \
+		  $(NULL)
+endif
 
 
 

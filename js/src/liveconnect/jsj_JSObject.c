@@ -222,12 +222,6 @@ jsj_remove_js_obj_reflection_from_hashtable(JSContext *cx, JSObject *js_obj)
 
 #else /* !PRESERVE_JSOBJECT_IDENTITY */
 
-/* This object provides is the "anchor" by which netscape.javscript.JSObject
-   objects hold a reference to native JSObjects. */
-typedef struct JSObjectRoot {
-    JSObject *js_obj;
-    JSContext *cx;      /* Creating context, needed for finalization */
-} JSObjectHandle;
 
 /*
  * The caller must call DeleteLocalRef() on the returned object when no more
@@ -254,7 +248,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
         (*jEnv)->NewObject(jEnv, njJSObject, njJSObject_JSObject, (jint)handle);
 #else
     if (JSJ_callbacks->get_java_wrapper != NULL) {
-        java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)js_obj);
+        java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)handle);
     }
 #endif /*! OJI */
     if (!java_wrapper_obj) {
@@ -1087,7 +1081,7 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
     /* Set up security stuff */
     principals = NULL;
     if (JSJ_callbacks->get_JSPrincipals_from_java_caller)
-        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx);
+        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, NULL, 0, NULL);
     codebase = principals ? principals->codebase : NULL;
 
     /* Have the JS engine evaluate the unicode string */

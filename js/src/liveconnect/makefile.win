@@ -54,7 +54,10 @@ DEFFILE		= $(DLLNAME).def
 !endif
 
 LLIBS=$(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
- $(DIST)\lib\xpcom32.lib	
+!ifdef MOZ_OJI
+ $(DIST)\lib\xpcom32.lib	\
+!endif
+    $(NULL)
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
@@ -80,8 +83,10 @@ OBJS=                                       \
     .\$(OBJDIR)\jsj_hash.obj                \
     .\$(OBJDIR)\jsj_method.obj              \
     .\$(OBJDIR)\jsj_utils.obj               \
+!ifdef MOZ_OJI
     .\$(OBJDIR)\nsCLiveconnect.obj          \
     .\$(OBJDIR)\nsCLiveconnectFactory.obj   \
+!endif
 !if "$(MOZ_BITS)" == "16"
     .\$(OBJDIR)\jsj_nodl.obj                \
 !endif
@@ -94,8 +99,13 @@ OBJS=                                       \
 #//------------------------------------------------------------------------
 INSTALL_DIR=$(PUBLIC)\js
 INSTALL_FILE_LIST=	\
-	jsjava.h nsILiveconnect.h
-
+	jsjava.h \
+!ifdef MOZ_OJI
+ nsILiveconnect.h \
+ nsISecureLiveconnect.h \
+ nsISecurityContext.h \
+!endif
+  $(NULL)
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
@@ -128,7 +138,9 @@ EXPORTS =				       \
 LINCS=$(LINCS) -I$(JNI_GEN_DIR) \
                -I$(PUBLIC)\js \
                -I$(PUBLIC)\java \
+!ifdef MOZ_OJI
                -I$(PUBLIC)\xpcom \
+!endif
 	$(NULL)
 
 

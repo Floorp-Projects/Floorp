@@ -94,7 +94,7 @@ typedef struct JSJCallbacks {
         
     /* An interim callback function until the LiveConnect security story is
        straightened out.  This function pointer can be set to NULL. */
-    JSPrincipals *      (*get_JSPrincipals_from_java_caller)(JNIEnv *jEnv, JSContext *pJSContext);
+    JSPrincipals *      (*get_JSPrincipals_from_java_caller)(JNIEnv *jEnv, JSContext *pJSContext, void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext);
     
     /* The following two callbacks sandwich any JS evaluation performed
        from Java.   They may be used to implement concurrency constraints, e.g.
@@ -259,6 +259,12 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *);
  */
 PR_IMPLEMENT(JSBool)
 JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp);
+
+
+#ifdef OJI
+PR_IMPLEMENT(PRBool)
+JSJ_NSISecurityContextImplies(void *pNSISecurityContextIN, const char* target, const char* action);
+#endif
 
 PR_END_EXTERN_C
 #endif  /* _JSJAVA_H */

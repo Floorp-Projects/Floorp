@@ -34,6 +34,7 @@
 #define nsCLiveconnect_h___
 
 #include "nsILiveconnect.h"
+#include "nsISecureLiveconnect.h"
 #include "nsAgg.h"
 
 
@@ -41,7 +42,8 @@
  * nsCLiveconnect implements nsILiveconnect interface for navigator.
  * This is used by a JVM to implement netscape.javascript.JSObject functionality.
  */
-class nsCLiveconnect :public nsILiveconnect {
+class nsCLiveconnect :public nsILiveconnect
+                     ,public nsISecureLiveconnect{
 public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsISupports and AggregatedQueryInterface:
@@ -129,8 +131,7 @@ public:
      * @param pjobj              - return value.
      */
     NS_IMETHOD	
-    //Eval(JNIEnv *jEnv, jsobject obj, nsIPrincipal **pNSIPrincipaArray, PRInt32 numPrincipals, const char *script, jobject *pjobj);
-    Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jint length, jobject *pjobj);
+    Eval(JNIEnv *jEnv, jsobject jsobj, const char* codebase, const jchar* script, jsize length, jobject *pjobj);
 
     /**
      * Get the window object for a plugin instance.
@@ -153,6 +154,11 @@ public:
     NS_IMETHOD	
     FinalizeJSObject(JNIEnv *jEnv, jsobject obj);
 
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsISecureLiveconnect:
+    NS_IMETHOD	
+    Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void **pNSIPrincipaArray, 
+         int numPrincipals, void *pNSISecurityContext, jobject *pjobj);
    
     ////////////////////////////////////////////////////////////////////////////
     // from nsCLiveconnect:
