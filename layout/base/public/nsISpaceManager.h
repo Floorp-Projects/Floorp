@@ -56,7 +56,7 @@ struct nsBandTrapezoid {
   nscoord GetHeight() {return yBottom - yTop;}
 
   // Get the bouding rect of the trapezoid
-  void    GetRect(nsRect& aRect);
+  void    GetRect(nsRect& aRect) const;
 
   // Set the trapezoid from a rectangle
   void operator=(const nsRect& aRect);
@@ -183,7 +183,7 @@ public:
   virtual void ClearRegions() = 0;
 };
 
-void inline nsBandTrapezoid::GetRect(nsRect& aRect)
+void inline nsBandTrapezoid::GetRect(nsRect& aRect) const
 {
   aRect.x = PR_MIN(xTopLeft, xBottomLeft);
   aRect.y = yTop;
