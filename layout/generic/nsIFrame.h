@@ -91,23 +91,27 @@ typedef PRUint32 nsFrameState;
 // cleared.
 #define NS_FRAME_FIRST_REFLOW 0x00000002
 
-// If this bit is is set then the view position and size should be
+// If this bit is is set, then the view position and size should be
 // kept in sync with the frame position and size. If the bit is not
 // set then it's the responsibility of the frame itself (or whoever
 // created the view) to position and size its associated view
 #define NS_FRAME_SYNC_FRAME_AND_VIEW 0x00000004
 
-// If this bit is set then there is a child frame in the frame that
+// If this bit is set, then there is a child frame in the frame that
 // extends outside this frame's bounding box. The implication is that
 // the frames rect does not completely cover its children and
 // therefore operations like rendering and hit testing (for example)
 // must operate differently.
 #define NS_FRAME_OUTSIDE_CHILDREN 0x00000008
 
-// If this bit is set then a reference to the frame is being held
+// If this bit is set, then a reference to the frame is being held
 // elsewhere.  The frame may want to send a notification when it is
 // destroyed to allow these references to be cleared.
 #define NS_FRAME_EXTERNAL_REFERENCE 0x00000010
+
+// If this bit is set, then the frame is a replaced element. For example,
+// a frame displaying an image
+#define NS_FRAME_REPLACED_ELEMENT 0x00000020
 
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
