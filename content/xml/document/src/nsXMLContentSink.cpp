@@ -427,82 +427,94 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 {
   NS_ASSERTION(aNodeInfo, "can't create element without nodeinfo");
 
+  *aResult = nsnull;
   *aAppendContent = PR_TRUE;
   nsresult rv = NS_OK;
 
-  PRInt32 nameSpaceID = aNodeInfo->NamespaceID();
+  nsCOMPtr<nsIContent> content;
 
   // XHTML needs some special attention
-  if (nameSpaceID != kNameSpaceID_XHTML) {
+  if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+    mPrettyPrintHasFactoredElements = PR_TRUE;
+    nsIHTMLContent* htmlContent = nsnull;
+    rv = NS_CreateHTMLElement(&htmlContent, aNodeInfo, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsIContent* tmp = htmlContent;
+    content.swap(tmp);
+  }
+  else {
     // The first step here is to see if someone has provided their
     // own content element implementation (e.g., XUL or MathML).  
     // This is done based off a contractid/namespace scheme. 
     nsCOMPtr<nsIElementFactory> elementFactory;
     rv = nsContentUtils::GetNSManagerWeakRef()->
-      GetElementFactory(nameSpaceID, getter_AddRefs(elementFactory));
+      GetElementFactory(aNodeInfo->NamespaceID(),
+                        getter_AddRefs(elementFactory));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    elementFactory->CreateInstanceByTag(aNodeInfo, aResult);
+    rv = elementFactory->CreateInstanceByTag(aNodeInfo,
+                                             getter_AddRefs(content));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // If we care, find out if we just used a special factory.
     if (!mPrettyPrintHasFactoredElements && !mPrettyPrintHasSpecialRoot &&
         mPrettyPrintXML) {
       PRBool hasFactory = PR_FALSE;
-      rv = nsContentUtils::GetNSManagerWeakRef()->HasRegisteredFactory(nameSpaceID, &hasFactory);
+      rv = nsContentUtils::GetNSManagerWeakRef()->
+        HasRegisteredFactory(aNodeInfo->NamespaceID(), &hasFactory);
       NS_ENSURE_SUCCESS(rv, rv);
 
       mPrettyPrintHasFactoredElements = hasFactory;
     }
 
-    return NS_OK;
+    if (!aNodeInfo->NamespaceEquals(kNameSpaceID_SVG)) {
+      content.swap(*aResult);
+
+      return NS_OK;
+    }
   }
 
-  mPrettyPrintHasFactoredElements = PR_TRUE;
-  nsCOMPtr<nsIHTMLContent> htmlContent;
-  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aNodeInfo, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CallQueryInterface(htmlContent, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIAtom *tagAtom = aNodeInfo->NameAtom();
-  if (tagAtom == nsHTMLAtoms::script) {
+  if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)) {
     // Don't append the content to the tree until we're all
     // done collecting its contents
     mConstrainSize = PR_FALSE;
     mScriptLineNo = aLineNumber;
     *aAppendContent = PR_FALSE;
   }
-  else if (tagAtom == nsHTMLAtoms::title) {
+  else if (aNodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)) {
     if (mTitleText.IsEmpty()) {
       mInTitle = PR_TRUE; // The first title wins
     }
   }
-  else if (tagAtom == nsHTMLAtoms::link || tagAtom == nsHTMLAtoms::style) {
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(htmlContent));
-
+  else if (aNodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML) ||
+           aNodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_XHTML) ||
+           aNodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_SVG)) {
+    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
     if (ssle) {
       ssle->InitStyleLinkElement(mParser, PR_FALSE);
       ssle->SetEnableUpdates(PR_FALSE);
     }
-  } else if (tagAtom == nsHTMLAtoms::img ||
-             tagAtom == nsHTMLAtoms::input ||
-             tagAtom == nsHTMLAtoms::object ||
-             tagAtom == nsHTMLAtoms::applet) {
+  } 
+  else if (aNodeInfo->Equals(nsHTMLAtoms::img, kNameSpaceID_XHTML) ||
+           aNodeInfo->Equals(nsHTMLAtoms::input, kNameSpaceID_XHTML) ||
+           aNodeInfo->Equals(nsHTMLAtoms::object, kNameSpaceID_XHTML) ||
+           aNodeInfo->Equals(nsHTMLAtoms::applet, kNameSpaceID_XHTML)) {
     nsAutoString cmd;
     if (mParser) {
       mParser->GetCommand(cmd);
     }
     if (cmd.EqualsWithConversion(kLoadAsData)) {
-      // XXXbz Should this be in HandleStartElement so it applies to all
-      // elements, not just XHTML ones?  We don't have any non-XHTML
-      // image loading things yet, but....
-      nsCOMPtr<nsIImageLoadingContent> imgLoader(do_QueryInterface(htmlContent));
+      // XXXbz Should this be done to all elements, not just XHTML ones?
+      // We don't have any non-XHTML image loading things yet, but....
+      nsCOMPtr<nsIImageLoadingContent> imgLoader(do_QueryInterface(content));
       if (imgLoader) {
         imgLoader->SetLoadingEnabled(PR_FALSE);
       }
     }
   }
+
+  content.swap(*aResult);
 
   return NS_OK;
 }
@@ -514,19 +526,22 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
   NS_ASSERTION(aContent, "missing element to close");
 
   *aAppendContent = PR_FALSE;
-  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+
+  nsINodeInfo* nodeInfo = aContent->GetNodeInfo();
+
+  if (!nodeInfo->NamespaceEquals(kNameSpaceID_XHTML) &&
+      !nodeInfo->NamespaceEquals(kNameSpaceID_SVG)) {
     return NS_OK;
   }
 
-  nsIAtom *tagAtom = aContent->Tag();
-
   nsresult rv = NS_OK;
 
-  if (tagAtom == nsHTMLAtoms::script) {
+  if (nodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)) {
     rv = ProcessEndSCRIPTTag(aContent);
     *aAppendContent = PR_TRUE;
   }
-  else if (tagAtom == nsHTMLAtoms::title && mInTitle) {
+  else if (nodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML) &&
+           mInTitle) {
     // The first title wins
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
     if (dom_doc) {
@@ -535,17 +550,19 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
     }
     mInTitle = PR_FALSE;
   }
-  else if (tagAtom == nsHTMLAtoms::base && !mHasProcessedBase) {
+  else if (nodeInfo->Equals(nsHTMLAtoms::base, kNameSpaceID_XHTML) &&
+           !mHasProcessedBase) {
     // The first base wins
     rv = ProcessBASETag(aContent);
     mHasProcessedBase = PR_TRUE;
   }
-  else if (tagAtom == nsHTMLAtoms::meta) {
+  else if (nodeInfo->Equals(nsHTMLAtoms::meta, kNameSpaceID_XHTML)) {
     rv = ProcessMETATag(aContent);
   }
-  else if (tagAtom == nsHTMLAtoms::link || tagAtom == nsHTMLAtoms::style) {
+  else if (nodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML) ||
+           nodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_XHTML) ||
+           nodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_SVG)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aContent));
-
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
       rv = ssle->UpdateStyleSheet(nsnull, nsnull);
