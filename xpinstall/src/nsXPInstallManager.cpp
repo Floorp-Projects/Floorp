@@ -72,10 +72,14 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
+#define PROGRESS_BAR   'n'
+#define BARBER_POLE    'u'
+#define UPDATE_DLG(x)  (((x) - mLastUpdate) > 250000)
+
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), 
     mFinalizing(PR_FALSE), mCancelled(PR_FALSE), mChromeType(0),
-    mSelectChrome(PR_TRUE), mContentLength(0)
+    mSelectChrome(PR_TRUE), mContentLength(0), mLastUpdate(0)
 {
     NS_INIT_ISUPPORTS();
 
@@ -792,29 +796,34 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
 NS_IMETHODIMP 
 nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
 {
-    if (!mCancelled)
+    nsresult rv = NS_OK;
+    
+    PRTime now = PR_Now();
+    if (!mCancelled && UPDATE_DLG(now))
     {
-        nsresult rv = NS_OK;
-        char mode = 'n';     // downloads use a "normal" progress bar
-
         if (mContentLength < 1) {
             NS_ASSERTION(channel, "should have a channel");
             rv = channel->GetContentLength(&mContentLength);
             if (NS_FAILED(rv)) return rv;
         }
-        return mDlg->SetProgress(aProgress, mContentLength, mode);
+	mLastUpdate = now;
+        rv = mDlg->SetProgress(aProgress, mContentLength, PROGRESS_BAR);
     }
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg)
 {
-    if (!mCancelled)
+    PRTime now = PR_Now();
+    if (!mCancelled && UPDATE_DLG(now))
+    {
+	mLastUpdate = now;
         return mDlg->SetActionText(aMsg);
-
-    return NS_OK;
+    }
+    else
+        return NS_OK;
 }
 
 // nsIInterfaceRequestor method
@@ -832,7 +841,7 @@ nsXPInstallManager::BeforeJavascriptEvaluation(const PRUnichar *URL)
     nsresult rv = NS_OK;
 
     mFinalizing = PR_FALSE;
-    mDlg->SetProgress( 0, 0, 'u' ); // turn on the barber pole
+    mDlg->SetProgress( 0, 0, BARBER_POLE ); // turn on the barber pole
 
     PRUnichar tmp[] = { '\0' };
     mDlg->SetActionText(tmp);
@@ -860,12 +869,21 @@ nsXPInstallManager::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPack
 NS_IMETHODIMP 
 nsXPInstallManager::ItemScheduled(const PRUnichar *message)
 {
-    return mDlg->SetActionText( nsString(message).GetUnicode() );
+    PRTime now = PR_Now();
+    if (UPDATE_DLG(now))
+    {
+        mLastUpdate = now;
+        return mDlg->SetActionText( nsString(message).GetUnicode() );
+    }
+    else
+        return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum)
 {
+    nsresult rv = NS_OK;
+
     if (!mFinalizing)
     {
         mFinalizing = PR_TRUE;
@@ -874,15 +892,23 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
             nsString rsrcName; rsrcName.AssignWithConversion("FinishingInstallMsg");
             const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
             PRUnichar* ucRsrcVal = nsnull;
-            nsresult rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
+            rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
             if (NS_SUCCEEDED(rv) && ucRsrcVal)
             {
-                mDlg->SetActionText( ucRsrcVal );
+                rv = mDlg->SetActionText( ucRsrcVal );
                 nsCRT::free(ucRsrcVal);
             }
         }
     }
-    return mDlg->SetProgress( itemNum, totNum, 'n' );
+
+    PRTime now = PR_Now();
+    if (UPDATE_DLG(now))
+    {
+        mLastUpdate = now;
+	rv = mDlg->SetProgress( itemNum, totNum, PROGRESS_BAR );
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP 
