@@ -155,7 +155,7 @@ sub print_page_head {
 
   print "Content-type: text/html",
         ($nowdate eq $maxdate ? "\nRefresh: 900" : ''),
-        "\n\n<HTML>\n";
+        "\n\n<HTML>\n" unless $form{static};
 
   # Get the message of the day only on the first pageful
   do "$tree/mod.pl" if $nowdate eq $maxdate;
