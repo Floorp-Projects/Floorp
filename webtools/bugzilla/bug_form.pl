@@ -355,7 +355,7 @@ print "
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
 
-if ($::usergroupset ne '0' and Param('usebuggroups')) {
+if ($::usergroupset ne '0') {
     SendSQL("select bit, description, (bit & $bug{'groupset'} != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
     while (MoreSQLData()) {
         my ($bit, $description, $ison) = (FetchSQLData());

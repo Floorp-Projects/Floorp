@@ -250,17 +250,15 @@ PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugz
 # Modified, -JMR, 2/24,00
 # If the usebuggroupsentry parameter is set, we need to check and make sure
 # that the user has permission to enter a bug against this product.
-# Modified, -DDM, 3/11/00
-# added GroupExists check so we don't choke on a groupless product
-if(Param("usebuggroupsentry")
-   && GroupExists($product)
-   && !UserInGroup($product)) {
-  print "<H1>Permission denied.</H1>\n";
-  print "Sorry; you do not have the permissions necessary to enter\n";
-  print "a bug against this product.\n";
-  print "<P>\n";
-  PutFooter();
-  exit;
+if(Param("usebuggroupsentry")) {
+  if(!UserInGroup($product)) {
+    print "<H1>Permission denied.</H1>\n";
+    print "Sorry; you do not have the permissions necessary to enter\n";
+    print "a bug against this product.\n";
+    print "<P>\n";
+    PutFooter();
+    exit;
+  }
 }
 
 # Modified, -JMR, 2/18/00
@@ -273,17 +271,14 @@ if(Param("usebuggroupsentry")
 # the database, (2) insert the select box in the giant print statements below,
 # and (3) update post_bug.cgi to process the additional input field.
 
-# Modified, -DDM, 3/11/00
-# Only need the bit here, and not the description.  Description is gotten
-# when the select boxes for all the groups this user has access to are read
-# in later on.
 # First we get the bit and description for the group.
 my $group_bit=0;
+my $group_desc;
 if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("select bit from groups ".
+    SendSQL("select bit, description from groups ".
             "where name = ".SqlQuote($product)." ".
             "and isbuggroup != 0");
-    ($group_bit) = FetchSQLData();
+    ($group_bit, $group_desc) = FetchSQLData();
 }
 
 print "
@@ -393,6 +388,33 @@ print "
     value_quote(formvalue('comment')) .
     "</TEXTAREA><BR></td>
   </tr>";
+# In between the Description field and the Submit buttons, we'll put in the
+# select box for the bug group, if necessary.
+# Rather than waste time with another Param check and another database access,
+# $group_bit will only have a non-zero value if we're using bug groups and have
+# one for this product, so I'll check on that instead here.  -JMR, 2/18/00
+if($group_bit) {
+  # In addition, we need to handle the possibility that we're coming from
+  # a bookmark template.  We'll simply check if we've got a parameter called
+  # groupset passed with a value other than the current bit.  If so, then we're
+  # coming from a template, and we don't have group_bit set, so turn it off.
+  my $check0 = (formvalue("groupset",$group_bit) == $group_bit) ? "" : " SELECTED";
+  my $check1 = ($check0 eq "") ? " SELECTED" : "";
+  print "
+  <tr>
+    <td align=right><B>Access:</td>
+    <td colspan=5>
+      <select name=\"groupset\">
+        <option value=0$check0>
+          People not in the \"$group_desc\" group can see this bug
+        </option>
+        <option value=$group_bit$check1>
+          Only people in the \"$group_desc\" group can see this bug
+        </option>
+      </select>
+    </td>
+  </tr>"
+}
 
 print "
   <tr>
@@ -402,31 +424,15 @@ print "
 if ($::usergroupset ne '0') {
     SendSQL("SELECT bit, description FROM groups " .
             "WHERE bit & $::usergroupset != 0 " .
-            "  AND isbuggroup != 0 ORDER BY description");
+            "  AND isbuggroup != 0 ORDER BY bit");
      while (MoreSQLData()) {
         my ($bit, $description) = (FetchSQLData());
-        # Rather than waste time with another Param check and another database
-        # access, $group_bit will only have a non-zero value if we're using
-        # bug groups and have  one for this product, so I'll check on that
-        # instead here.  -JMR, 2/18/00
-        # Moved this check to this location to fix conflict with existing
-        # select-box patch.  Also, if $group_bit is 0, it won't match the
-        # current group, either, so I'll compare it to the current bit
-        # instead of checking for non-zero. -DDM, 3/11/00
-        my $check = 0; # default selection
-        if($group_bit == $bit) {
-            # In addition, we need to handle the possibility that we're coming
-            # from a bookmark template.  We'll simply check if we've got a
-            # parameter called bit-# passed.  If so, then we're coming from a
-            # template, and we'll use the template value.
-            $check = formvalue("bit-$bit","1");
-        }
         print BuildPulldown("bit-$bit",
                             [["0",
                              "People not in the \"$description\" group can see this bug"],
                              ["1",
                               "Only people in the \"$description\" group can see this bug"]],
-                            $check);
+                            0);
         print "<BR>\n";
     }
 }
