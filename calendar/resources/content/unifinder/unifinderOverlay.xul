@@ -56,44 +56,36 @@
 
 
 
-   <unifinder id="calendar-unifinder-overlay">
+   <unifinder id="calendar-unifinder-overlay" flex="1">
    
         <unifinder-button id="unifinder-remove-button" class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" label="&calendar.delete.label;" oncommand="unifinderRemoveCommand()" />
         <unifinder-button id="unifinder-modify-button" class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" label="&calendar.modify.label;" oncommand="unifinderModifyCommand()" />
  
         <box flex="1">
-            <tabbox   class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >
-                <tabs  class="unifinder-tab" orient="horizontal" >
+            <tabbox class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >
+                <tabs class="unifinder-tab">
                     <tab label="&calendar.main.tab.label;" />
                     <tab label="&unifinder.tab.search.label;" />
                 </tabs>
                 
-                <spacer class="unifinder-tabs-spacer" />
-                
-                <tabpanels  flex="1">
-                    <vbox id="unifinder-categories-box"  >
+                <tabpanels orient="horizontal" flex="1">
+                    <vbox id="unifinder-categories-box" flex="1">
                        <vbox id="unifinder-categories-content-box" flex="1"  >
-                           
                            <tree id="unifinder-categories-tree" class="unifinder-tree-class"  flex="1" >
                                <treechildren id="unifinder-categories-tree-children" flex="1"/>
                            </tree>
                        
                        </vbox>
-                   </vbox>
-            
-                    
-    
-                    <vbox  flex="1"  >
-                        <unifinder-search-controls keypressfunction="unifinderSearchKeyPress( this, event )" />
-                        <tree id="unifinder-search-results-tree" class="unifinder-tree-class"   >
-                           <treecols>
-                                 <treecol flex="1" />
-                             </treecols>
-                             <treechildren id="unifinder-search-results-tree-children" flex="1"/>
-                         </tree>
-
-    
                     </vbox>
+            
+                    <vbox flex="1">
+                        <unifinder-search-controls keypressfunction="unifinderSearchKeyPress( this, event )" />
+                        
+                        <tree id="unifinder-search-results-tree" class="unifinder-tree-class"  flex="1" >
+                           <treechildren id="unifinder-search-results-tree-children" flex="1"/>
+                        </tree>
+                    </vbox>
+                    
                 </tabpanels>
             </tabbox>
         </box>
