@@ -19,10 +19,9 @@
 #ifndef COOKIES_H
 #define COOKIES_H
 
-#include "mkgeturl.h"
-
 #include "nscore.h"
 #include "nsError.h"
+#include "nsString.h"
 
 #ifdef _IMPL_NS_COOKIE
 #define NS_COOKIE NS_EXPORT
@@ -30,23 +29,16 @@
 #define NS_COOKIE NS_IMPORT
 #endif
 
-PR_BEGIN_EXTERN_C
 
 /* removes all cookies structs from the cookie list */
 extern void
 NET_RemoveAllCookies(void);
 
-/*
-extern char *
-NET_GetCookie(MWContext * context, char * address);
-*/
-
 extern char *
 NET_GetCookie(char * address);
 
 extern void
-NET_SetCookieString(MWContext * context,
-                     char * cur_url,
+NET_SetCookieString(char * cur_url,
                      char * set_cookie_header);
 
 /* saves out the HTTP cookies to disk
@@ -70,13 +62,22 @@ extern int NET_ReadCookies(char * filename);
 /* wrapper of NET_SetCookieString for netlib use. We need outformat and url_struct to determine
  * whether we're dealing with inline cookies 
  */
-extern void
-NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
-                                URL_Struct * URL_s,
-                                MWContext * context,
-                                char * cur_url,
-                                char * set_cookie_header);
 
-PR_END_EXTERN_C
+extern void
+NET_SetCookieStringFromHttp(char * cur_url,
+                            char * set_cookie_header, char * server_date);
+
+extern void
+COOKIE_DisplayCookieInfoAsHTML();
+
+extern void
+COOKIE_GetCookieListForViewer (nsString& aCookieList);
+
+extern void
+COOKIE_GetPermissionListForViewer (nsString& aPermissionList);
+
+extern void
+COOKIE_CookieViewerReturn(nsAutoString results);
+
 
 #endif /* COOKIES_H */

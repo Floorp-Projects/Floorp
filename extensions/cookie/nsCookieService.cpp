@@ -24,6 +24,8 @@
 #include "nsCookieHTTPNotify.h"
 #include "nsINetModuleMgr.h" 
 #include "nsIEventQueueService.h"
+#include "nsCRT.h"
+#include "nsCookie.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
@@ -44,7 +46,15 @@ public:
 
     // nsICookieService
     static nsresult GetCookieService(nsICookieService** aCookieService);
-    NS_IMETHOD Init();
+    
+    
+    NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
+    NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
+
+    NS_IMETHOD Cookie_DisplayCookieInfoAsHTML();
+    NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
+    NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
+    NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList);
 
     nsCookieService();
     virtual ~nsCookieService(void);
@@ -54,6 +64,7 @@ protected:
 private:
     nsIHTTPNotify *mCookieHTTPNotify;
 
+    nsresult Init();
 
 };
 
@@ -146,9 +157,70 @@ nsCookieService::Init()
     rv = pNetModuleMgr->RegisterModule("http-response", eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
     if (NS_FAILED(rv))
         return rv; 
-    
+     
 	return rv;
 }
+
+
+NS_IMETHODIMP
+nsCookieService::GetCookieString(nsIURI *aURL, nsString& aCookie)
+{
+        
+    char *spec = NULL;
+    nsresult result = aURL->GetSpec(&spec);
+    NS_ASSERTION(result == NS_OK, "deal with this");
+    char *cookie = NET_GetCookie((char *)spec);
+
+    if (nsnull != cookie) {
+        aCookie.SetString(cookie);
+        nsCRT::free(cookie);
+    }
+    else {
+        aCookie.SetString("");
+    }
+    nsCRT::free(spec);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::SetCookieString(nsIURI *aURL, const nsString& aCookie)
+{
+    char *spec = NULL;
+    nsresult result = aURL->GetSpec(&spec);
+    NS_ASSERTION(result == NS_OK, "deal with this");
+    char *cookie = aCookie.ToNewCString();
+
+    NET_SetCookieString((char *)spec, cookie);
+
+    nsCRT::free(spec);
+    delete []cookie;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCookieService::Cookie_DisplayCookieInfoAsHTML(){
+    ::COOKIE_DisplayCookieInfoAsHTML();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieService::Cookie_CookieViewerReturn(nsAutoString results){
+    ::COOKIE_CookieViewerReturn(results);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieService::Cookie_GetCookieListForViewer(nsString& aCookieList){
+    ::COOKIE_GetCookieListForViewer(aCookieList);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer(nsString& aPermissionList){
+    ::COOKIE_GetPermissionListForViewer(aPermissionList);
+    return NS_OK;
+}
+
+
 
 
 
