@@ -33,6 +33,8 @@ FILES		= \
         renameProfile.xul			\
 	newProfile1_1.xul			\
         newProfile1_2.xul			\
+	newProfile1_1.js			\
+	newProfile1_2.js			\
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

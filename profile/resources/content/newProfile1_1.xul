@@ -1,4 +1,5 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?> 
+<!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public License
@@ -18,29 +19,28 @@
 
 -->
 
-<?xml-stylesheet href="chrome://profile/skin/profileManager.css" type="text/css"?>
+<!-- this is PAGE ONE of the Profile Creation Wizard -->
+
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://profile/skin/pwiz_panels.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_1.dtd" >
 <window 
-xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
-		width="500" height="500"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
 		onload="parent.wizardPageLoaded('newProfile1_1');"> 
 
-<html:div flex="100%" style="width: 100%; height: 100%;">
-<html:div style="width: 300px;">&heading;</html:div>
-<html:br/>
-
-<html:div>&title;</html:div> 
-<html:div>&para.one;</html:div> 
-<html:br/>
-
-<html:div>&para.two;</html:div>
-<html:br/>
-
-<html:div>&para.three;</html:div>
-<html:br/>
-<html:div>&para.four;</html:div>
-</html:div>
+  <html:script language="JavaScript" src="newProfile1_1.js"/>
+    
+  <box flex="100%" align="vertical">
+    <html:div>&pnl1.p1.text;</html:div> 
+    <spring flex="50%"/>
+    <html:div>&pnl1.p2.text;</html:div>
+    <spring flex="50%"/>
+    <html:div>&pnl1.p3.text;</html:div>
+    <spring flex="50%"/>
+    <html:div>&pnl1.p4.text;</html:div>
+    <spring flex="50%"/>
+  </box>
 
 </window>

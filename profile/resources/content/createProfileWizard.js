@@ -1,3 +1,7 @@
+
+
+// The WIZARD of GORE
+
 var wizardMap = ["newProfile1_1.xul"];
 var content;
 var wizardHash = new Array;
@@ -15,15 +19,11 @@ var currentPageTag;
 var profName = "";
 var profDir = "";
 
-function wizardPageLoaded(tag) {
-	//dump("**********wizardPageLoaded\n");
-
-	if (firstTime) {
+function wizardPageLoaded(tag) 
+{
+	if (firstTime)
 		Startup();
-	}
-
 	currentPageTag = tag;
-	//dump("currentPageTag: "+currentPageTag+"\n");
 	SetButtons();
 	populatePage();
 }
@@ -34,64 +34,47 @@ var finishButton = null;
 
 function loadPage(thePage)
 {
-	if (!firstTime) {
+	if (!firstTime)
 		saveData();
-	}
-
-	//dump("**********loadPage\n");
-	//dump("thePage: "+thePage+"\n");
 	displayPage(thePage);
-
 	firstTime = false;
 	return(true);
 }
 
 function SetButtons()
 {
-	if (!currentPageTag) return;
-
-	if (!backButton) {
+	if (!currentPageTag) 
+    return;
+	if (!backButton)
 		backButton = document.getElementById("back"); 
-	}
-	if (!nextButton) {
+	if (!nextButton)
 		nextButton = document.getElementById("next"); 
-	}
-	if (!finishButton) {
-		finishButton = document.getElementById("finish"); 
-	}
 
-	//dump("currentPageTag == " + currentPageTag + "\n");
 	nextTag = testMap[currentPageTag].next;
-	//dump("nextTag == " + nextTag + "\n");
 	if (nextTag) {
-		//dump("next on, finish off\n");
-		nextButton.setAttribute("disabled", "false");
-		finishButton.setAttribute("disabled", "true");
+    var nextLabel = bundle.GetStringFromName("nextButtonLabel");
+    nextButton.setAttribute("value",nextLabel);
+    nextButton.setAttribute("onclick","onNext()");
 	}
 	else {
-		//dump("next off, finish on\n");
-		nextButton.setAttribute("disabled", "true");
-		finishButton.setAttribute("disabled", "false");
+    var finishLabel = bundle.GetStringFromName("finishButtonLabel");
+    nextButton.setAttribute("value",finishLabel);
+    nextButton.setAttribute("onclick","Finish(opener)");
 	}
 
 	prevTag = testMap[currentPageTag].previous;
-	//dump("prevTag == " + prevTag + "\n");
-	if (prevTag) {
-		//dump("back on\n");
+	if (prevTag)
 		backButton.setAttribute("disabled", "false");
-	}
-	else {
-		//dump("back off\n");
+	else
 		backButton.setAttribute("disabled", "true"); 
-	}
 }
 
 function onNext()
 {
+  //dump("in onnext\n");
 	if (nextButton.getAttribute("disabled") == "true") {
 		 return;
 	}
-
 	saveData();
 	var nextPageTag = testMap[currentPageTag].next;
 	var url = getUrlFromTag(nextPageTag);
@@ -100,9 +83,9 @@ function onNext()
 
 function onBack()
 {
-	if (backButton.getAttribute("disabled") == "true")  {
+  //dump("in onback\n");
+	if (backButton.getAttribute("disabled") == "true")
 		return;
-	}
 
 	saveData();
 	previousPageTag = testMap[currentPageTag].previous;
@@ -112,66 +95,45 @@ function onBack()
 
 function displayPage(content)
 {
-	//dump(content + "\n");
-	//dump("********INSIDE DISPLAYPAGE\n\n");
-
 	if (content != "")
 	{
 		var	contentFrame = document.getElementById("content");
 		if (contentFrame)
-		{
 			contentFrame.setAttribute("src", content);
-		}
 	}
 }
 
 
 function populatePage() 
 {
-    //dump("************initializePage\n");
 	var contentWindow = window.frames["content"];
 	var doc = contentWindow.document;
-
-    for (var i in wizardHash) {
-        var formElement=doc.getElementById(i);
-		//dump("formElement: "+formElement+"\n");
-
-        if (formElement) {
-            formElement.value = wizardHash[i];
-			//dump("wizardHash["+"i]: "+wizardHash[i]+"\n");
-        }
-    }
+  for (var i in wizardHash) 
+  {
+    var element = doc.getElementById(i);
+    if (element)
+      contentWindow.SetFields(element,wizardHash[i]);
+  }
 }
 
 function saveData()
 {
-	//dump("************ SAVE DATA\n");
-
 	var contentWindow = window.frames["content"];
-	var doc = contentWindow.document;
-
-	var inputs = doc.getElementsByTagName("FORM")[0].elements;
-
-	//dump("There are " + inputs.length + " input tags\n");
-	for (var i=0 ; i<inputs.length; i++) {
-        //dump("Saving: ");
-	//dump("ID=" + inputs[i].id + " Value=" + inputs[i].value + "..");
-		wizardHash[inputs[i].id] = inputs[i].value;
-	}
-    //dump("done.\n");
+  var data = contentWindow.GetFields();
+  if(data != undefined)  {
+    for(var i = 0; i < data.length; i++) 
+      wizardHash[data[i][0]] = data[i][1];
+  }
 }
 
 function onCancel()
 {
-	//dump("************** ON CANCEL\n");
-	saveData();
-	var i;
-    for (i in wizardHash) {
-		//dump("element: "+i+"\n");
-        //dump("value: "+wizardHash[i]+"\n");
-    }
+  // we came from the profile manager window...
+  if (top.window.opener)
+    window.close();
+  else
+    ExitApp()
 }
-
 
 // utility functions
 function getUrlFromTag(title) 
@@ -186,16 +148,12 @@ function Startup()
 
 function Finish(opener)
 {
-	if (finishButton.getAttribute("disabled") == "true") {
-                 return;
-        }
-  
-	//dump("******FINISH ROUTINE\n");
-
+  // lets check if we're at final stage using null
+  if(testMap[currentPageTag].next)
+    return null;
 	try {
 		saveData();
 		processCreateProfileData();
-
 		if (opener) {
 			opener.CreateProfile();
 		}
@@ -208,34 +166,22 @@ function Finish(opener)
 function processCreateProfileData()
 {
 	//Process Create Profile Data
-
-	//dump("******processCreateProfileData ROUTINE\n");
-
 	var i;
-	var data = "";
 
     for (i in wizardHash) {
-		//dump("element: "+i+"\n");
-        //dump("value: "+wizardHash[i]+"\n");
-		
-		if (i == "ProfileName") {
-			profName = wizardHash[i];
-			data = data+i+"="+profName+"%";
-		}
-
-		if (i == "ProfileDir") {
-			profDir = wizardHash[i];
-			data = data+i+"="+profDir+"%";
-		}
+  		if (i == "ProfileName") {
+	  		profName = wizardHash[i];
+  		}
+  		if (i == "ProfileDir") {
+	  		profDir = wizardHash[i];
+  		}
     }
 
-	//dump("data: "+data+"\n");
 	var profile = Components.classes["component://netscape/profile/manager"].createInstance();
 	profile = profile.QueryInterface(Components.interfaces.nsIProfile);
-	//dump("profile = " + profile + "\n");  
-	//dump("********DATA: "+data+"\n\n");
 	try {
-		profile.createNewProfile(data);
+		//dump("name,dir = " + profName + "," + profDir + "\n");
+		profile.createNewProfile(profName, profDir);
 		profile.startCommunicator(profName);
 	}
 	catch (ex) {
@@ -247,19 +193,10 @@ function processCreateProfileData()
 
 function ExitApp()
 {
-        // Need to call this to stop the event loop
-        var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
-        appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
-        appShell.Quit();
+  // Need to call this to stop the event loop
+  var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
+  appShell.Quit();
 }
 
-function onCancel()
-{
-        if (top.window.opener) {
-                // we came from the profile manager window...
-                window.close();
-        }
-        else {
-                ExitApp()
-        }
-}
+var bundle = srGetStrBundle("chrome://profile/locale/createProfileWizard.properties");

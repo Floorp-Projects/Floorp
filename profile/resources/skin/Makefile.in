@@ -24,9 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 
 FILES		= \
-	profile.css				\
-	createProfileWizard.css	\
+	profile.css			\
+	createProfileWizard.css		\
 	profileManager.css		\
+	pwiz_panels.css			\
+	header.gif			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

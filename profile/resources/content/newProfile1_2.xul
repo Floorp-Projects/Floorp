@@ -18,62 +18,47 @@
 
 -->
 
-<?xml-stylesheet href="chrome://profile/skin/profileManager.css" type="text/css"?>
+<!-- this is PAGE TWO of the Profile Creation Wizard -->
+
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://profile/skin/pwiz_panels.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_2.dtd" >
 <window 
-xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
-		width="500" height="500"
-		onload="parent.wizardPageLoaded('newProfile1_2');"> 
-      	    
-<html:script>
-function foo()
-{
-	// what the hell is this?
-}
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+	width="500" height="500"
+	onload="parent.wizardPageLoaded('newProfile1_2');"> 
 
-function InitializeValues()
-{
-	element = document.getElementById("ProfileName");
-	element.value = parent.profName;
-	
-	element = document.getElementById("ProfileDir");
-	element.value = parent.profDir;
-}
+	<html:script language="javascript" src="chrome://global/content/strres.js" />
+  <html:script language="JavaScript" src="newProfile1_2.js"/>
 
-function commit()
-{
-	var element;
-
-	element = document.getElementById("ProfileName");
-	parent.SetValue(element.id, element.value);
-	parent.profName = element.value;
-
-	element = document.getElementById("ProfileDir");
-	data += "ProfileDir="+element.value+"%";
-	parent.SetValue(element.id, element.value);
-	parent.profDir = element.value;
-}
-
-setTimeout("foo()", 0);
-</html:script>
-
-<html:div flex="100%" style="width: 100%; height: 100%;">
-
-<html:div>&intro;</html:div> 
-<html:br/>
-<html:div>&profile.name;</html:div> 
-<html:input type="text" id="ProfileName" value="mozProfile" size="30"/>
-<html:br/>
-<html:br/>
-
-<html:div>&profile.dir;</html:div> 
-<html:input type="text" id="ProfileDir" size="30"/>
-
-<html:br/>
-<html:br/>
-<html:div>&para;</html:div> 
-</html:div>
+  <box flex="100%" align="vertical">
+    <html:div>&pnl2.intro.text;</html:div> 
+    <spring flex="50%"/>
+    <html:div>&pnl2.pname.label;</html:div> 
+    <html:div class="input1">
+      <html:input type="text" id="ProfileName" value="mozProfile" style="width: 95%"/>
+      <spring flex="5%"/>
+    </html:div>
+    <html:div style="padding-bottom: 0px;">
+      &pnl2.pdir.label;
+      <html:span id="deffoldername">&pnl2.deffldr.label;</html:span>
+    </html:div> 
+    <box align="horizontal" id="dirbox">
+      <html:div class="dirLabel" flex="100%">
+        <!-- replace this button with an input field when they start responding
+             to css styles properly as the cropping is a problem. -->
+        <titledbutton id="ProfileDir" value="" crop="right"/>
+      </html:div>
+      <spring flex="100%"/>
+      <box align="vertical" id="folderbuttons">
+        <titledbutton value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
+      </box>
+      <spring flex="5%"/>
+    </box>
+    <html:div>&pnl2.finish.text;</html:div> 
+    <spring flex="50%"/>
+  </box>
 
 </window>
