@@ -1863,6 +1863,11 @@ else
   AC_MSG_RESULT(no)
 fi
 
+dnl On the gcc trunk (as of 2001-02-09) _GNU_SOURCE, and thus __USE_GNU,
+dnl are defined when compiling C++ but not C.  Since the result of this
+dnl test is used only in C++, do it in C++.
+AC_LANG_CPLUSPLUS
+
 AC_MSG_CHECKING(for uname.domainname)
 AC_CACHE_VAL(ac_cv_have_uname_domainname_field,
     [AC_TRY_COMPILE([#include <sys/utsname.h>],
@@ -1892,6 +1897,8 @@ if test "$ac_cv_have_uname_us_domainname_field" = "true"; then
 else
     AC_MSG_RESULT(no)
 fi
+
+AC_LANG_C
 
 AC_MSG_CHECKING(for 64-bit OS)
 AC_TRY_RUN([ int main () {
