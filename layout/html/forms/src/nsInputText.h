@@ -53,6 +53,8 @@ public:
   
   nsInputTextType GetTextType() const;
 
+  PRInt32 GetMaxLength() const { return mMaxLength; }
+
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 

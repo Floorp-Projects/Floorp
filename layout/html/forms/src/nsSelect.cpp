@@ -38,6 +38,7 @@
 #include "nsIListBox.h"
 #include "nsInput.h"
 #include "nsHTMLForms.h"
+#include "nsFont.h"
 
 static NS_DEFINE_IID(kListWidgetIID, NS_ILISTWIDGET_IID);
 static NS_DEFINE_IID(kComboBoxIID, NS_ICOMBOBOX_IID);
@@ -313,7 +314,9 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     return;
   }
 
-  list->SetFont(GetFont(aPresContext));
+  nsFont font("foo", 0, 0, 0, 0, 0);
+  GetFont(aPresContext, font);
+  list->SetFont(font);
 
   PRInt32 numChildren = select->ChildCount();
   for (int i = 0; i < numChildren; i++) {

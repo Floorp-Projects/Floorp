@@ -220,7 +220,7 @@ nsInputButton::GetDefaultLabel(nsString& aString)
   } else if (kButton_Submit == mType) {
     aString = "Submit Query";
   } else if (kButton_Browse == mType) {
-    aString = "Browse...";
+    aString = "   Browse...   ";
   } else {
     aString = " ";
   }
@@ -544,15 +544,13 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
-printf("-------------nsInputButtonFrame::PostCreateWidget-----------\n");
   nsIButton* button;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&button)) {
-printf("Before setting font\n");
-    button->SetFont(GetFont(aPresContext));
-printf("After setting font\n");
+    nsFont font("foo", 0, 0, 0, 0, 0);
+    GetFont(aPresContext, font);
+    button->SetFont(font);
   } 
   else {
-printf("Button is NULL\n");
     NS_ASSERTION(0, "no widget in button control");
   }
 
@@ -561,9 +559,7 @@ printf("Button is NULL\n");
   nsString value;
   nsContentAttr status = content->GetAttribute(nsHTMLAtoms::value, value);
   if (eContentAttr_HasValue == status) {  
-printf("Before setting SetLabel [%s]\n", value.ToNewCString());
     button->SetLabel(value);
-printf("After setting SetLabel\n");
   } 
   else {
     nsAutoString label;

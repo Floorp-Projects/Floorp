@@ -46,6 +46,9 @@ FRAMESET {
   color: black;
   display: block;
 }
+IFRAME {
+  border: 1px solid black;
+}
 
 // XXX Used when PagePreview'ing
 PAGE {
@@ -133,12 +136,22 @@ BR {
 
 INPUT {
   vertical-align: bottom;
+	font-family: "HACK";
+	font-size: 100pt;
 }
 SELECT {
   vertical-align: bottom;
+	font-family: "Times New Roman";
+	font-size: 10pt;
+}
+OPTION {
+	font-family: "Times New Roman";
+	font-size: 10pt;
 }
 TEXTAREA {
   vertical-align: bottom;
+	font-family: "HACK";
+	font-size: 100pt;
 }
 
 // Block tags

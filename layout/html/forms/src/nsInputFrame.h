@@ -206,7 +206,7 @@ protected:
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
-  const nsFont& GetFont(nsIPresContext* aPresContext);
+  const void GetFont(nsIPresContext* aPresContext, nsFont& aFont);
 
    /**
     * Get the width and height of this control based on CSS 

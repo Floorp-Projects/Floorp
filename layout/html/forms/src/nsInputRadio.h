@@ -61,7 +61,10 @@ protected:
 
   virtual void GetType(nsString& aResult) const;
 
-  PRBool mChecked;
+  PRBool mInitialChecked;
+  PRBool mForcedChecked;   
+
+  friend class nsInputRadioFrame;
 };
 
 class nsInputRadioGroup
