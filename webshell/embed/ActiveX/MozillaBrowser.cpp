@@ -7,10 +7,11 @@
 #define NS_DEFAULT_PREFS			"prefs.js"
 #define NS_DEFAULT_PREFS_HOMEPAGE	"browser.startup.homepage"
 
+extern "C" void NS_SetupRegistry();
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
-
-extern "C" void NS_SetupRegistry();
 
 CMozillaBrowser::CMozillaBrowser()
 {
@@ -68,7 +69,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    /* Destroy layout... */
+    // Destroy layout...
     if (m_pIWebShell != nsnull)
 	{
 		m_pIWebShell->Destroy();
@@ -95,7 +96,7 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    /* Pass resize information down to the WebShell... */
+    // Pass resize information down to the WebShell...
     if (m_pIWebShell)
 	{
 		m_pIWebShell->SetBounds(0, 0, LOWORD(lParam), HIWORD(lParam));
@@ -106,12 +107,7 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 BOOL CMozillaBrowser::IsValid()
 {
-	if (m_pIWebShell == nsnull)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
+	return (m_pIWebShell == nsnull) ? FALSE : TRUE;
 }
 
 
@@ -134,6 +130,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 {
 	if (m_pIWebShell != nsnull)
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -142,8 +139,8 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	nsresult rv;
 
-	// Load preferences
 #ifdef USE_NGPREF
+	// Load preferences
 	rv = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID, (void **) &m_pIPref);
 	if (NS_OK != rv) {
 		return E_FAIL;
@@ -151,13 +148,17 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pIPref->Startup(NS_DEFAULT_PREFS);
 #endif
 	
+	// Create the web shell object
 	rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
 									kIWebShellIID,
 									(void**)&m_pIWebShell);
 	if (NS_OK != rv)
 	{
+		NG_ASSERT(0);
 		return E_FAIL;
 	}
+
+	// Initialise the web shell, making it fit the control dimensions
 
 	nsRect r;
 	r.x = 0;
@@ -165,7 +166,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	r.width  = rcLocation.right  - rcLocation.left;
 	r.height = rcLocation.bottom - rcLocation.top;
 
-	PRBool aAllowPlugins = PR_FALSE;
+	PRBool aAllowPlugins = PR_FALSE; // For the moment
 
 	rv = m_pIWebShell->Init(m_hWnd, 
 					r.x, r.y,
@@ -193,6 +194,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -209,6 +211,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoForward(void)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -225,14 +228,15 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
 	USES_CONVERSION;
 
-	// Find the home page stored in prefs
 	TCHAR * sUrl = _T("http://home.netscape.com");
 #ifdef USE_NGPREF
+	// Find the home page stored in prefs
 	if (m_pIPref)
 	{
 		char szBuffer[512];
@@ -256,6 +260,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoSearch(void)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -275,6 +280,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -282,6 +288,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	nsString sUrl;
 	if (URL == NULL)
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
 	else
@@ -297,6 +304,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		CComVariant vFlags;
 		if (VariantChangeType(Flags, &vFlags, 0, VT_I4) != S_OK)
 		{
+			NG_ASSERT(0);
 			return E_INVALIDARG;
 		}
 		lFlags = vFlags.lVal;
@@ -312,13 +320,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	}
 
 	// Extract the post data parameter
-	nsString sPostData;
+	nsIPostData *pIPostData = nsnull;
 	if (PostData && PostData->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
-		sPostData = nsString(OLE2A(PostData->bstrVal));
+		char *szPostData = OLE2A(PostData->bstrVal);
+#if 0
+		// Create post data from string
+		NS_NewPostData(PR_FALSE, szPostData, &pIPostData);
+#endif
 	}
-
 
 	// TODO Extract the headers parameter
 	PRBool bModifyHistory = PR_TRUE;
@@ -326,7 +337,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	// Check the navigation flags
 	if (lFlags & navOpenInNewWindow)
 	{
-		// TODO open in new window?
+		// Open in new window is a no no
+		return E_NOTIMPL;
 	}
 	if (lFlags & navNoHistory)
 	{
@@ -342,10 +354,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		// TODO disable write to cache
 	}
 
-	// Create post data from string
-	nsIPostData *pIPostData = nsnull;
-//	NS_NewPostData(PR_FALSE, sPostData, &pIPostData);
-
 	// TODO find the correct target frame
 
 	// Load the URL
@@ -359,6 +367,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh(void)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -372,12 +381,45 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
-	// TODO check specified type
+	NG_ASSERT_NULL_OR_POINTER(Level, VARIANT);
 
+	// Check the requested refresh type
+	OLECMDID_REFRESHFLAG iRefreshLevel = OLECMDIDF_REFRESH_NORMAL;
+	if (Level)
+	{
+		CComVariant vLevelAsInt;
+		if (vLevelAsInt.ChangeType(VT_I4, Level) != S_OK)
+		{
+			NG_ASSERT(0);
+			return E_INVALIDARG;
+		}
+		iRefreshLevel = (OLECMDID_REFRESHFLAG) vLevelAsInt.iVal;
+	}
+
+	// Turn the IE refresh type into the nearest NG equivalent
 	nsReloadType type = nsReload;
+	switch (iRefreshLevel & OLECMDIDF_REFRESH_LEVELMASK)
+	{
+	case OLECMDIDF_REFRESH_NORMAL:
+	case OLECMDIDF_REFRESH_IFEXPIRED:
+	case OLECMDIDF_REFRESH_CONTINUE:
+	case OLECMDIDF_REFRESH_NO_CACHE:
+	case OLECMDIDF_REFRESH_RELOAD:
+		type = nsReload;
+		break;
+	case OLECMDIDF_REFRESH_COMPLETELY:
+		type = nsReloadBypassCacheAndProxy;
+		break;
+	default:
+		// No idea what refresh type this is supposed to be
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
 	m_pIWebShell->Reload(type);
 	
 	return S_OK;
@@ -388,6 +430,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -401,11 +444,20 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Application(IDispatch __RPC_FAR *
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	// Return a pointer to this controls dispatch interface
+	*ppDisp = (IDispatch *) this;
+	(*ppDisp)->AddRef();
+	return S_OK;
 }
 
 
@@ -413,11 +465,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Parent(IDispatch __RPC_FAR *__RPC
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	// Attempt to get the parent object of this control
+	HRESULT hr = E_FAIL;
+	if (m_spClientSite)
+	{
+		hr = m_spClientSite->QueryInterface(IID_IDispatch, (void **) ppDisp);
+	}
+
+	return (SUCCEEDED(hr)) ? S_OK : E_NOINTERFACE;
 }
 
 
@@ -425,11 +490,18 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Container(IDispatch __RPC_FAR *__
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*ppDisp = NULL;
+	return E_NOINTERFACE;
 }
 
 
@@ -437,22 +509,36 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*ppDisp = NULL;
+	return E_NOINTERFACE;
 }
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TopLevelContainer(VARIANT_BOOL __RPC_FAR *pBool)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (!NgIsValidAddress(pBool, sizeof(VARIANT_BOOL)))
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pBool = VARIANT_TRUE;
+	return S_OK;
 }
 
 
@@ -460,11 +546,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Type(BSTR __RPC_FAR *Type)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
-
-	// TODO
-	return E_NOTIMPL;
+	return E_FAIL;
 }
 
 
@@ -472,14 +557,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Left(long __RPC_FAR *pl)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
 	if (pl == NULL)
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
-	*pl = 0; // TODO
+	*pl = 0;
 	return S_OK;
 }
 
@@ -488,10 +575,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Left(long Left)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
-
-	// TODO
 	return S_OK;
 }
 
@@ -500,14 +586,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Top(long __RPC_FAR *pl)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
 	if (pl == NULL)
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
-	*pl = 0; // TODO
+	*pl = 0;
 	return E_NOTIMPL;
 }
 
@@ -516,10 +604,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Top(long Top)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
-
-	// TODO
 	return S_OK;
 }
 
@@ -528,14 +615,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Width(long __RPC_FAR *pl)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
 	if (pl == NULL)
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
-	*pl = 0; // TODO
+	*pl = 0;
 	return S_OK;
 }
 
@@ -544,10 +633,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Width(long Width)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
-
-	// TODO
 	return S_OK;
 }
 
@@ -563,7 +651,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Height(long __RPC_FAR *pl)
 	{
 		return E_INVALIDARG;
 	}
-	*pl = 0; // TODO
+	*pl = 0;
 	return S_OK;
 }
 
@@ -572,10 +660,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Height(long Height)
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
-
-	// TODO
 	return S_OK;
 }
 
@@ -584,6 +671,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
@@ -613,11 +701,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
 	if (LocationURL == NULL)
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
 
@@ -642,11 +732,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Busy(VARIANT_BOOL __RPC_FAR *pBoo
 {
     if (!IsValid())
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
 	if (!NgIsValidAddress(pBool, sizeof(*pBool)))
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
 
