@@ -42,7 +42,7 @@ typedef NS_CALLBACK(nsReadSegmentFun)(void* closure,
                                       PRUint32 *readCount);
 %}
 
-native nsReadSegmentFun(nsReadSegmentFun);
+// native nsReadSegmentFun(nsReadSegmentFun);
 
 [scriptable, uuid(d2aaae66-1ab0-11d3-8ccd-0060b0fc14a3)]
 interface nsIBufferOutputStream : nsIOutputStream

@@ -42,7 +42,7 @@ typedef NS_CALLBACK(nsWriteSegmentFun)(void* closure,
                                        PRUint32 *writeCount);
 %}
 
-native nsWriteSegmentFun(nsWriteSegmentFun);
+// native nsWriteSegmentFun(nsWriteSegmentFun);
 
 [scriptable, uuid(93e9a230-1955-11d3-933b-000064657374)]
 interface nsIBufferInputStream : nsIInputStream
