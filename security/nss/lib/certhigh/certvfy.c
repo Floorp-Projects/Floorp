@@ -831,7 +831,7 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    /* no basic constraints found, if we're fortezza, CA bit is already
 	     * verified (isca = PR_TRUE). otherwise, we aren't (yet) a ca
 	     * isca = PR_FALSE */
-	    isca = isFortezzaV1;
+	    isca = isFortezzaV1 || issuerCert->isRoot;
 	} else  {
 	    if ( basicConstraint.isCA == PR_FALSE ) {
 		PORT_SetError (SEC_ERROR_CA_CERT_INVALID);
