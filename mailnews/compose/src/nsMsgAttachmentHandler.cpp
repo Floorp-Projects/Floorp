@@ -889,10 +889,11 @@ nsMsgAttachmentHandler::Abort()
   if (mRequest)
     return mRequest->Cancel(NS_ERROR_ABORT);
   else
-  {
-    m_mime_delivery_state->SetStatus(NS_ERROR_ABORT);
-	  m_mime_delivery_state->NotifyListenerOnStopSending(nsnull, NS_ERROR_ABORT, 0, nsnull);
-  }
+    if (m_mime_delivery_state)
+    {
+      m_mime_delivery_state->SetStatus(NS_ERROR_ABORT);
+	    m_mime_delivery_state->NotifyListenerOnStopSending(nsnull, NS_ERROR_ABORT, 0, nsnull);
+    }
 
   return NS_OK;
 

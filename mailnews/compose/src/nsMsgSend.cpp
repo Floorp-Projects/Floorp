@@ -1563,6 +1563,20 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     j++;
     domSaveArray[j].node = node;
     
+
+    // Check if the object has an moz-do-not-send attribute set. If it's the case,
+    // we must ignore it and just continue with the next one
+    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(node);
+    if (domElement)
+    {
+      nsAutoString attributeValue;
+      if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
+      {
+        if (attributeValue.EqualsWithConversion("true", PR_TRUE))
+          continue;
+      }
+    }
+
     // Now, we know the types of objects this node can be, so we will do
     // our query interface here and see what we come up with 
     nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(node));
@@ -1766,8 +1780,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       }
       else if (link)
       {
-        anchor->GetHref(domURL);
-        anchor->SetHref(newSpec);
+        link->GetHref(domURL);
+        link->SetHref(newSpec);
       }
       else if (image)
       {
@@ -1802,7 +1816,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     if (anchor)
       anchor->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
     else if (link)
-      anchor->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
+      link->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
     else if (image)
       image->SetSrc(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
 

@@ -64,6 +64,11 @@ private:
   nsresult                      SetQuotingToFollow(PRBool aVal);
   nsresult                      ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData);
+  PRBool                        IsEmbeddedObjectSafe(const char * originalScheme,
+                                                     const char * originalHost,
+                                                     const char * originalPath,
+                                                     nsIDOMNode * object);
+  nsresult                      TagEmbeddedObjects(nsIEditorShell *aEditorShell);
 
   nsCString                     mQuoteURI;
   nsCString                     mOriginalMsgURI; // used so we can mark message disposition flags after we send the message

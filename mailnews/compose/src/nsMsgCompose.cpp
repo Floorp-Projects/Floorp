@@ -30,6 +30,9 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsISelection.h"
@@ -88,6 +91,7 @@
 #include "nsIMsgImapMailFolder.h"
 #include "nsImapCore.h"
 #include "nsReadableUtils.h"
+#include "nsNetUtil.h"
 
 // Defines....
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -286,6 +290,141 @@ GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *o
   return result;
 }
 
+PRBool nsMsgCompose::IsEmbeddedObjectSafe(const char * originalScheme,
+                                          const char * originalHost,
+                                          const char * originalPath,
+                                          nsIDOMNode * object)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMHTMLImageElement> image;
+  nsCOMPtr<nsIDOMHTMLLinkElement> link;
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor;
+  nsAutoString objURL;
+
+  if (!object || !originalScheme || !originalPath) //having a null host is ok...
+    return PR_FALSE;
+
+  if ((image = do_QueryInterface(object)))
+  {
+    if (NS_FAILED(image->GetSrc(objURL)))
+      return PR_FALSE;
+  }
+  else if ((link = do_QueryInterface(object)))
+  {
+    if (NS_FAILED(link->GetHref(objURL)))
+      return PR_FALSE;
+  }
+  else if ((anchor = do_QueryInterface(object)))
+  {
+    if (NS_FAILED(anchor->GetHref(objURL)))
+      return PR_FALSE;
+  }
+  else
+    return PR_FALSE;
+
+  if (!objURL.IsEmpty())
+  {
+    nsCOMPtr<nsIURI> uri;
+    nsCString objCUrl;
+    CopyUCS2toASCII(objURL, objCUrl);
+    rv = NS_NewURI(getter_AddRefs(uri), objCUrl.get());
+    if (NS_SUCCEEDED(rv) && uri)
+    {
+      nsXPIDLCString scheme;
+      rv = uri->GetScheme(getter_Copies(scheme));
+      if (NS_SUCCEEDED(rv) && (nsCRT::strcasecmp(scheme, originalScheme) == 0))
+      {
+        nsXPIDLCString host;
+        rv = uri->GetHost(getter_Copies(host));
+        // mailbox url don't have a host therefore don't be too strict.
+        if (NS_SUCCEEDED(rv) && (!host || originalHost || (nsCRT::strcasecmp(host, originalHost) == 0)))
+        {
+          nsXPIDLCString path;
+          rv = uri->GetPath(getter_Copies(path));
+          if (NS_SUCCEEDED(rv))
+          {
+            char * query = PL_strrchr((const char *)path, '?');
+            if (query && nsCRT::strncasecmp(path, originalPath, query - (const char *)path) == 0)
+              return PR_TRUE; //This object is a part of the original message, we can send it safely.
+          }
+        }
+      }
+    }
+  }
+  
+  return PR_FALSE;
+}
+
+/* The purpose of this function is to mark any embedded object that wasn't a RFC822 part
+   of the original message as moz-do-not-send.
+   That will prevent us to attach data not specified by the user or not present in the
+   original message.
+*/
+nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISupportsArray> aNodeList;
+  PRUint32 count;
+  PRUint32 i;
+
+  if (!aEditorShell)
+    return NS_ERROR_FAILURE;
+
+  rv = aEditorShell->GetEmbeddedObjects(getter_AddRefs(aNodeList));
+  if ((NS_FAILED(rv) || (!aNodeList)))
+    return NS_ERROR_FAILURE;
+
+  if (NS_FAILED(aNodeList->Count(&count)))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupports> isupp;
+  nsCOMPtr<nsIDOMNode> node;
+
+  nsCOMPtr<nsIURI> originalUrl;
+  nsXPIDLCString originalScheme;
+  nsXPIDLCString originalHost;
+  nsXPIDLCString originalPath;
+
+  // first, convert the rdf orinigal msg uri into a url that represents the message...
+  nsIMsgMessageService * msgService = nsnull;
+  rv = GetMessageServiceFromURI(mQuoteURI, &msgService);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = msgService->GetUrlForUri(mQuoteURI, getter_AddRefs(originalUrl), nsnull);
+    if (NS_SUCCEEDED(rv) && originalUrl)
+    {
+      originalUrl->GetScheme(getter_Copies(originalScheme));
+      originalUrl->GetHost(getter_Copies(originalHost));
+      originalUrl->GetPath(getter_Copies(originalPath));
+    }
+    ReleaseMessageServiceFromURI(mQuoteURI, msgService);
+  }
+
+  // Then compare the url of each embedded objects with the original message.
+  // If they a not coming from the original message, they should not be sent
+  // with the message.
+  nsCOMPtr<nsIDOMElement> domElement;
+  for (i = 0; i < count; i ++)
+  {
+    isupp = getter_AddRefs(aNodeList->ElementAt(i));
+    if (!isupp)
+      continue;
+
+    node = do_QueryInterface(isupp);
+    if (IsEmbeddedObjectSafe((const char *)originalScheme, (const char *)originalHost,
+                             (const char *)originalPath, node))
+      continue; //Don't need to tag this object, it safe to send it.
+    
+    //The source of this object should not be sent with the message 
+    domElement = do_QueryInterface(isupp);
+    if (domElement)
+      domElement->SetAttribute(NS_LITERAL_STRING("moz-do-not-send"), NS_LITERAL_STRING("true"));
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf,
                                                   nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor)
 {
@@ -331,6 +470,8 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
         aEditorShell->InsertAsQuotation(aBuf.get(),
                                         getter_AddRefs(nodeInserted));
     }
+
+    (void)TagEmbeddedObjects(aEditorShell);
 
     if (!aSignature.IsEmpty())
     {
