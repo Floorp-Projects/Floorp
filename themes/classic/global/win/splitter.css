@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /******* Splitters *******/
 
 /** 
@@ -10,8 +12,9 @@
     {
       cursor                : e-resize;
       background-color      : -moz-Dialog;
+      min-width: 5px;
     }
-  
+    
   grippy, grippy[collapse="before"]
     {
       border                : 1px solid ThreeDShadow;
@@ -30,12 +33,14 @@
   	  list-style-image      : url("chrome://global/skin/grippy-horizontal-after.gif");
     }  
     
+
+    
   .grippy-box
     {
       border-top            : 1px solid ThreeDHighlight;
       border-left           : 1px solid ThreeDHighlight;
-      border-right          : 1px solid ThreeDFace;
-      border-bottom         : 1px solid ThreeDFace;
+      border-right          : 1px solid ThreeDLightShadow;
+      border-bottom         : 1px solid ThreeDLightShadow;
     }  
     
   .grippy-image
@@ -58,7 +63,7 @@
   splitter[orient="vertical"]
     {
       cursor              : n-resize;
-      border-top          : 1px solid ThreeDHighlight;
+      min-height: 5px; 
     }
     
 /* Grippy alignment */

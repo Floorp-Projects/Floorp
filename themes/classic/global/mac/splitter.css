@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /******* Splitters *******/
 
 splitter 
@@ -5,8 +7,9 @@ splitter
     cursor                : e-resize;
     background-color      : #DDDDDD;
     border-right          : 1px solid #000000;
+    min-width: 5px;
   }
-
+  
 grippy, grippy[collapse="before"]
   {
 	margin                : 0px;
@@ -61,9 +64,9 @@ splitter:hover:active
       cursor              : n-resize;
       border-right		  : 0px;
       border-top		  : 2px groove #000000;
-      /* border-bottom       : 1px solid #000000; */
+      min-height: 5px;
     }
-
+    
 /**** NOTE *****/
 /* The images below are correct, even though their names are switched. */
 
