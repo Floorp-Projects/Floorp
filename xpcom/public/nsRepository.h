@@ -53,7 +53,10 @@ extern "C" NS_EXPORT PRBool   NSCanUnload(nsISupports* serviceMgr);
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *fullpath);
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *fullpath);
 
-/* Quick Registration
+/*
+ *** Quick Registration NOT FOR PUBLIC CONSUMPTION YET ***
+ *
+ * Quick Registration
  *
  * For quick registration, dlls can define
  *		NSQuickRegisterClassData g_NSQuickRegisterData[];
