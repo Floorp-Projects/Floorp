@@ -25,6 +25,7 @@
 
 #include "nsUCvCnSupport.h"
 #include "gbku.h"
+#include "nsGBKToUnicode.h"
 //----------------------------------------------------------------------
 // Class nsGB2312ToUnicodeV2 [declaration]
 
@@ -34,7 +35,7 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsGB2312ToUnicodeV2 : public nsBufferDecoderSupport
+class nsGB2312ToUnicodeV2 : public nsGB18030ToUnicode
 {
 public:
 		  
@@ -42,21 +43,6 @@ public:
    * Class constructor.
    */
   nsGB2312ToUnicodeV2(){};
-
-protected:
-
-  NS_IMETHOD ConvertNoBuff(const char* aSrc,
-		   PRInt32 * aSrcLength,
-		   PRUnichar *aDest,
-		   PRInt32 * aDestLength);
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-
-  nsGBKConvUtil mUtil;
 };
   
 

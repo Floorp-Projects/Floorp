@@ -36,6 +36,7 @@
 // 09/28/1999 - changed to use the same table and code as GBKToUnicode converter
 // ======================================================================================
 
+#if 0
 #include "nsGB2312ToUnicodeV2.h"
 #include "nsUCvCnDll.h"
 #include "gbku.h"
@@ -103,3 +104,4 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
   *aDestLength = iDestlen;
   return rv;
 }
+#endif
