@@ -153,7 +153,7 @@ nsGlobalHistory2Adapter::AddPage(const char* aURI)
   rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURI));
 
   if (NS_SUCCEEDED(rv)) {
-    rv = mHistory->AddURI(uri, PR_FALSE, PR_FALSE);
+    rv = mHistory->AddURI(uri, PR_FALSE, PR_FALSE, nsnull);
   }
 
   return rv;

@@ -4272,11 +4272,16 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
             if (channel) {
                 // Get the uri from the channel
                 nsCOMPtr<nsIURI> uri;
+                nsCOMPtr<nsIURI> referrer;
                 channel->GetURI(getter_AddRefs(uri));
+                // Get the referrer uri from the channel
+                nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aRequest));
+                if (httpchannel)
+                    httpchannel->GetReferrer(getter_AddRefs(referrer));
                 // Add the original url to global History so that
                 // visited url color changes happen.
                 if (uri)
-                    AddToGlobalHistory(uri, PR_TRUE);
+                    AddToGlobalHistory(uri, PR_TRUE, referrer);
             }                   // channel
         }                       // aProgress
     }
@@ -6138,7 +6143,12 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
 
         // Update Global history
-        AddToGlobalHistory(aURI, PR_FALSE);
+        // Get the referrer uri from the channel
+        nsCOMPtr<nsIURI> referrer;
+        nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
+        if (httpchannel)
+            httpchannel->GetReferrer(getter_AddRefs(referrer));
+        AddToGlobalHistory(aURI, PR_FALSE, referrer);
     }
 
     // If this was a history load, update the index in 
@@ -6637,7 +6647,7 @@ NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
 }
 
 nsresult
-nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect)
+nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferrer)
 {
     if (mItemType != typeContent)
         return NS_OK;
@@ -6645,7 +6655,7 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect)
     if (!mGlobalHistory)
         return NS_OK;
 
-    return mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame());
+    return mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame(), aReferrer);
 }
 
 //*****************************************************************************
