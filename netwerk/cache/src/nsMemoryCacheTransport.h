@@ -37,6 +37,7 @@
 #define NS_MEMORY_CACHE_SEGMENT_SIZE  1024
 #define NS_MEMORY_CACHE_BUFFER_SIZE   1024 * 1024
 
+class nsCacheEntry;
 class nsMemoryCacheReadRequest;
 class nsMemoryCacheIS;  // non-blocking input stream
 class nsMemoryCacheBS;  // blocking stream base class
@@ -58,6 +59,8 @@ public:
     virtual ~nsMemoryCacheTransport();
 
     nsresult Init(PRUint32 aBufSegmentSize, PRUint32 aBufMaxSize);
+
+    void SetCacheEntry(nsCacheEntry *e) { mCacheEntry = e; }
 
     /* private */
 
@@ -93,6 +96,8 @@ private:
     nsSegment *GetNthSegment(PRUint32 aIndex);
 
 private:
+    nsCacheEntry      *mCacheEntry;
+
     nsMemoryCacheBOS  *mOutputStream; // weak ref
     PRCList            mInputStreams; // weak ref to objects
     PRCList            mReadRequests; // weak ref to objects

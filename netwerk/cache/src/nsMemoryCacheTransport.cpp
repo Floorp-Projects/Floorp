@@ -22,6 +22,7 @@
  */
 
 #include "nsMemoryCacheTransport.h"
+#include "nsCacheEntry.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
@@ -81,7 +82,8 @@ nsReadFromInputStream(nsIOutputStream *aOutput,
 //----------------------------------------------------------------------------
 
 nsMemoryCacheTransport::nsMemoryCacheTransport()
-    : mOutputStream(nsnull)
+    : mCacheEntry(nsnull)
+    , mOutputStream(nsnull)
     , mSegmentSize(NS_MEMORY_CACHE_SEGMENT_SIZE)
     , mMaxSize(NS_MEMORY_CACHE_BUFFER_SIZE)
     , mSegments(nsnull)
@@ -166,6 +168,10 @@ nsMemoryCacheTransport::AddToBytesWritten(PRUint32 aCount)
             req->Process();
     }
 
+    // update the data size recorded in the cache entry
+    if (mCacheEntry)
+        mCacheEntry->SetDataSize(mWriteCursor);
+
     return NS_OK;
 }
 
@@ -185,7 +191,7 @@ nsresult
 nsMemoryCacheTransport::ReadRequestCompleted(nsMemoryCacheReadRequest *aReader)
 {
     // remove the reader from the list of readers
-    PR_REMOVE_LINK(aReader);
+    PR_REMOVE_AND_INIT_LINK(aReader);
     aReader->SetTransport(nsnull);
     return NS_OK;
 }
