@@ -22,6 +22,7 @@
 
 #include "nsPrefMigrationCIDs.h"
 #include "nsIFactory.h"
+#include "nsIPrefMigration.h"
 
 class nsPrefMigrationFactory : public nsIFactory 
 {
@@ -37,7 +38,6 @@ class nsPrefMigrationFactory : public nsIFactory
                                     void **aResult);
 
     NS_IMETHOD LockFactory(PRBool aLock);
-
 };
 
 #endif

@@ -22,8 +22,10 @@ include <$(DEPTH)/config/config.mak>
 
 MODULE=nsprefm
 DLL=.\$(OBJDIR)\$(MODULE).dll
-EXPORTS=nsPrefMigration.h	\
-	nsPrefMigrationFactory.h	\
+EXPORTS=nsPrefMigration.h	 \
+	nsPrefMigrationFactory.h \
+	nsPMProgessDlgFactory.h  \
+	nsPMProgressDialog.h     \
 	$(NULL)
 
 DEFINES=-D_IMPL_NS_DOM 
@@ -58,13 +60,15 @@ LLIBS =                      \
 !else
     $(DIST)\lib\neckoutil_s.lib \
 !endif
+    $(DIST)\lib\js3250.lib        \
+    $(DIST)\lib\jsdombase_s.lib   \
+    $(DIST)\lib\jsdomevents_s.lib   \
     $(LIBNSPR)               \
     $(NULL)
 
 OBJS = \
     .\$(OBJDIR)\nsPrefMigration.obj        \
     .\$(OBJDIR)\nsPrefMigrationFactory.obj \
-      .\$(OBJDIR)\nsPMProgressDlg.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
@@ -76,4 +80,7 @@ install:: $(DLL)
 clobber::
         rm -f $(DIST)\lib\$(MODULE).lib
         rm -f $(DIST)\bin\$(MODULE).dll
+		rm -f $(OBJDIR)\nsPrefMigration.obj
+		rm -f $(OBJDIR)\nsPrefMigrationFactory.obj
+		rm -f $(OBJDIR)\nsPMProgressDlg.obj
 
