@@ -4019,8 +4019,9 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
     }
   }
   
-  // Get the post data
+  // Get the post data & referrer
   nsCOMPtr<nsIInputStream> inputStream;
+  nsCOMPtr<nsIURI> referrerURI;
   nsCOMPtr<nsISupports> cacheKey;
   if (aChannel) {
     nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aChannel));
@@ -4034,6 +4035,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
 
     if(httpChannel) {
       httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+      httpChannel->GetReferrer(getter_AddRefs(referrerURI));
     }
   }
 
@@ -4044,6 +4046,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
                 inputStream,    // Post data stream
                 nsnull,         // LayoutHistory state
                 cacheKey);      // CacheKey
+  entry->SetReferrerURI(referrerURI);
 
 
   // If no Session History component is available in the parent DocShell
@@ -4077,6 +4080,8 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
 {
    nsCOMPtr<nsIURI> uri;
    nsCOMPtr<nsIInputStream> postData;
+   nsCOMPtr<nsIURI> referrerURI;
+
    PRBool repost = PR_TRUE;
 
    NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
@@ -4084,6 +4089,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
    NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(hEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aEntry->GetReferrerURI(getter_AddRefs(referrerURI)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
       NS_ERROR_FAILURE);
 
@@ -4113,7 +4119,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
     }
 #endif  /* 0 */    
 
-   NS_ENSURE_SUCCESS(InternalLoad(uri, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
+   NS_ENSURE_SUCCESS(InternalLoad(uri, referrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
       NS_ERROR_FAILURE);
    return NS_OK;
@@ -4164,6 +4170,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
   nsCOMPtr<nsIURI> uri;
 	nsCOMPtr<nsIInputStream> postdata;
 	nsCOMPtr<nsILayoutHistoryState> LHS;
+	nsCOMPtr<nsIURI> referrerURI;
 	PRUnichar * title=nsnull;
 	nsCOMPtr<nsISHEntry> parent;
     PRUint32 id;
@@ -4173,6 +4180,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
       return result;
 
 	srcHE->GetURI(getter_AddRefs(uri));
+    src->GetReferrerURI(getter_AddRefs(referrerURI));
 	src->GetPostData(getter_AddRefs(postdata));
 	srcHE->GetTitle(&title);
 	src->GetLayoutHistoryState(getter_AddRefs(LHS));
@@ -4182,6 +4190,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 
 	// XXX do we care much about valid values for these uri, title etc....
 	dest->SetURI(uri);
+	dest->SetReferrerURI(referrerURI);
 	dest->SetPostData(postdata);
 	dest->SetLayoutHistoryState(LHS);
 	dest->SetTitle(title);
