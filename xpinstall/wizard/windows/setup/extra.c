@@ -291,12 +291,10 @@ BOOL VerifyRestrictedAccess(void)
 
 void SetInstallFilesVar(LPSTR szProdDir)
 {
-  // MCP - Eventually we should make this check for a representative file 
-  //       instead of settling for the existence of the folder.  That is why
-  //       I left this as a function even though it is essentially a one-liner
-  //       at the moment.
+  char szProgramPath[MAX_BUF];
 
-  if(FileExists(szProdDir))
+  wsprintf(szProgramPath, "%s%s", szProdDir, sgProduct.szProgramName);
+  if(FileExists(szProgramPath))
     sgProduct.bInstallFiles = FALSE;
 }
 
