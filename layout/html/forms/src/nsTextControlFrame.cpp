@@ -298,7 +298,19 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   PRUint32 ignore;
   
   nsAutoString value;
-  GetText(&value);
+  // XXX Workaround for "text" input elements not initializing their widget
+  // to the initial value. See http://www.cnet.com
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    // Use the default value, because the widget has just been created and
+    // we're setting its initial value
+    nsIDOMHTMLInputElement* textElem = nsnull;
+    if (NS_SUCCEEDED(mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem))) {
+      textElem->GetDefaultValue(value);
+      NS_RELEASE(textElem);
+    }
+  } else {
+    GetText(&value);
+  }
 
   nsITextAreaWidget* textArea = nsnull;
   nsITextWidget* text = nsnull;
