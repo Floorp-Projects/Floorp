@@ -909,16 +909,23 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
   }
   NS_IF_RELEASE(frameContent);
 
-  aFrame->FirstChild(nsnull, aFrame);
-  while (aFrame) {
-    nsIFrame* result = FindFrameWithContent(aFrame, aContent);
-
-    if (result) {
-      return result;
+  // Search for the frame in each child list that aFrame supports
+  nsIAtom* listName = nsnull;
+  PRInt32 listIndex = 0;
+  do {
+    nsIFrame* kid;
+    aFrame->FirstChild(listName, kid);
+    while (nsnull != kid) {
+      nsIFrame* result = FindFrameWithContent(kid, aContent);
+      if (nsnull != result) {
+        NS_IF_RELEASE(listName);
+        return result;
+      }
+      kid->GetNextSibling(kid);
     }
-
-    aFrame->GetNextSibling(aFrame);
-  }
+    NS_IF_RELEASE(listName);
+    aFrame->GetAdditionalChildListName(listIndex++, listName);
+  } while(nsnull != listName);
 
   return nsnull;
 }
