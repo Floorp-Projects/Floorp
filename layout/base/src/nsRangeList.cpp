@@ -598,19 +598,19 @@ NS_METHOD nsRangeList::GetFocusOffset(PRInt32* aFocusOffset)
 }
 
 
-void nsRangeList::setAnchorFocusRange(PRInt32 index)
+void nsRangeList::setAnchorFocusRange(PRInt32 indx)
 {
   PRUint32 cnt;
   nsresult rv = mRangeArray->Count(&cnt);
   if (NS_FAILED(rv)) return;    // XXX error?
-  if (((PRUint32)index) >= cnt )
+  if (((PRUint32)indx) >= cnt )
     return;
-  if (index < 0) //release all
+  if (indx < 0) //release all
   {
     mAnchorFocusRange = nsCOMPtr<nsIDOMRange>();
   }
   else{
-    nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(index));
+    nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(indx));
     mAnchorFocusRange = do_QueryInterface(indexIsupports);
   }
 }
@@ -1120,7 +1120,7 @@ void nsRangeList::printSelection()
   PRUint32 cnt;
   (void)mRangeArray->Count(&cnt);
   printf("nsRangeList 0x%lx: %d items\n", (unsigned long)this,
-         mRangeArray ? cnt : -99);
+         mRangeArray ? (int)cnt : -99);
 
   // Get an iterator
   nsRangeListIterator iter(this);
@@ -1172,7 +1172,6 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
     // get the frame for the content, and from it the style context
     // ask the style context about the property
     nsCOMPtr<nsIContent> content;
-    PRBool drawWholeContent = PR_FALSE;
     nsIFrame *frame;
 //we must call first one explicitly
     content = do_QueryInterface(FetchStartParent(aRange), &result);
@@ -1511,6 +1510,9 @@ nsRangeList::AddRange(nsIDOMRange* aRange)
 NS_IMETHODIMP
 nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
+  if (!aParentNode)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult result;
   InvalidateDesiredX();
   // Delete all of the current ranges
@@ -1722,7 +1724,6 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
   nsCOMPtr<nsIDOMNode> tempNode2;
   PRBool cellMode = PR_FALSE;
   PRBool dirty = PR_FALSE;
-  PRBool fixupState = PR_FALSE;
   if (startNode != endNode)
   {
     if (parent != startNode)
@@ -1763,7 +1764,7 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
         return result;
       while (tempNode != parent)
       {
-        nsCOMPtr<nsIAtom> atom = GetTag(tempNode);
+        atom = GetTag(tempNode);
         if (atom.get() == sTableAtom) //select whole table  if in cell mode, wait for cell
         {
           if (!cellMode)
@@ -1912,9 +1913,12 @@ a  2  1 deselect from 2 to 1
 NS_IMETHODIMP
 nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
+  if (!aParentNode)
+    return NS_ERROR_INVALID_ARG;
+
   // First, find the range containing the old focus point:
-  if (!mRangeArray)
-    return NS_ERROR_FAILURE;
+  if (!mRangeArray || !mAnchorFocusRange)
+    return NS_ERROR_NOT_INITIALIZED;
   InvalidateDesiredX();
   nsCOMPtr<nsIDOMRange> difRange;
   nsresult res;
