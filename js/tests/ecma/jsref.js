@@ -2,12 +2,18 @@ var completed = false;
 var testcases;
 var tc = 0;
 
-SECTION = "";
-VERSION = "";
-BUGNUMBER = "";
-EXCLUDE = "";
-BUGNUMBER = "";
+SECTION	= "";
+VERSION	= "";
+BUGNUMBER =	"";
+TITLE  = "";
 
+/*
+ * constant strings
+ */
+var	GLOBAL = "[object global]";
+var PASSED = " PASSED!"
+var FAILED = " FAILED! expected: ";
+var	DEBUG =	false;
 
 TZ_DIFF = -8;
 
@@ -29,6 +35,7 @@ var DEBUG = false;
 
 var PASSED = " PASSED!"
 var FAILED = " FAILED! expected: ";
+
 function test() {
     for ( tc=0; tc < testcases.length; tc++ ) {
         testcases[tc].passed = writeTestCaseResult(
@@ -41,6 +48,13 @@ function test() {
     }
     stopTest();
     return ( testcases );
+}
+/* wrapper for test cas constructor that doesn't require the SECTION
+ * argument.
+ */
+
+function AddTestCase( description, expect, actual ) {
+    testcases[tc++] = new TestCase( SECTION, description, expect, actual );
 }
 
 function TestCase( n, d, e, a ) {
@@ -57,27 +71,54 @@ function TestCase( n, d, e, a ) {
         writeLineToLog( "added " + this.description );
     }
 }
+
+/*
+ * Set up test environment.
+ *
+ */
 function startTest() {
-    //  JavaScript 1.3 is supposed to be compliant ecma version 1.0
-    if ( VERSION == "ECMA_1" ) {
-        version ( "130" );
+    if ( version ) {
+    	//	JavaScript 1.3 is supposed to be compliant ecma	version	1.0
+	    if ( VERSION ==	"ECMA_1" ) {
+		    version	( "130"	);
+    	}
+	    if ( VERSION ==	"JS_1.3" ) {
+		    version	( "130"	);
+    	}
+	    if ( VERSION ==	"JS_1.2" ) {
+		    version	( "120"	);
+    	}
+	    if ( VERSION  == "JS_1.1" )	{
+		    version	( "110"	);
+    	}
+	    // for ecma	version	2.0, we	will leave the javascript version to
+    	// the default ( for now ).
     }
-    if ( VERSION == "JS_13" ) {
-        version ( "130" );
+
+    // print out bugnumber
+
+    if ( BUGNUMBER ) {
+            writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
     }
-    if ( VERSION == "JS_12" ) {
-        version ( "120" );
-    }
-    if ( VERSION  == "JS_11" ) {
-        version ( "110" );
-    }
-    // for ecma version 2.0, we will leave the javascript version to
-    // the default ( for now ).
-    writeHeaderToLog( SECTION + " "+ TITLE);
+
     testcases = new Array();
     tc = 0;
-
 }
+
+
+function test() {
+    for ( tc=0; tc < testcases.length; tc++ ) {
+        testcases[tc].passed = writeTestCaseResult(
+                            testcases[tc].expect,
+                            testcases[tc].actual,
+                            testcases[tc].description +" = "+ testcases[tc].actual );
+        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
+    }
+    stopTest();
+    return ( testcases );
+}
+
+
 function getTestCaseResult( expect, actual ) {
     //  because ( NaN == NaN ) always returns false, need to do
     //  a special compare to see if we got the right result.
@@ -584,6 +625,7 @@ function Enumerate ( o ) {
 function AddTestCase( description, expect, actual ) {
     testcases[tc++] = new TestCase( SECTION, description, expect, actual );
 }
+
 function getFailedCases() {
   for ( var i = 0; i < testcases.length; i++ ) {
      if ( ! testcases[i].passed ) {
