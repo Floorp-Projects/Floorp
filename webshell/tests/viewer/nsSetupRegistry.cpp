@@ -59,6 +59,7 @@
 #ifdef XP_PC
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
+#include "nsIProfile.h"
 #endif
 
 #include "nsIAllocator.h"
@@ -94,6 +95,7 @@
 #define BASE_DLL   "raptorbase.dll"
 #define NSLOCALE_DLL "nslocale.dll"
 #define LWBRK_DLL "lwbrk.dll"
+#define PROFILE_DLL "xpprofile32.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL   "XPCOM_DLL"
@@ -210,6 +212,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #ifdef XP_PC
 static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
+static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
 #endif
 
 //#define NEW_CLIPBOARD_SUPPORT
@@ -361,6 +364,7 @@ NS_SetupRegistry()
 #ifdef XP_PC
   nsComponentManager::RegisterComponent(kObserverServiceCID, "ObserverService", NS_OBSERVERSERVICE_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kObserverCID, "Observer", NS_OBSERVER_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kProfileCID, NULL, NULL, PROFILE_DLL, PR_FALSE, PR_FALSE);
 #endif
 
 #if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out

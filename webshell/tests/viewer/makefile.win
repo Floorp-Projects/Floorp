@@ -70,6 +70,7 @@ LINCS=  \
   -I$(PUBLIC)\rdf \
   -I$(PUBLIC)\silentdl \
   -I$(PUBLIC)\wallet \
+  -I$(PUBLIC)\profile \
 !if defined(NGPREFS)
   -I$(PUBLIC)\ngprefs \
 !endif
