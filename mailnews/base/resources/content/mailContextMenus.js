@@ -182,6 +182,7 @@ function fillFolderPaneContextMenu()
     var isNewsgroup = !isServer && serverType == 'nntp';
   var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
+  EnableMenuItem("folderPaneContext-properties", !isServer);
   ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) && canGetMessages);
   EnableMenuItem("folderPaneContext-getMessages", true);
 

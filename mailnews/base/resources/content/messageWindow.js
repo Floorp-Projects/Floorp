@@ -214,6 +214,9 @@ function OnLoadMessageWindow()
   setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;", 0);
 
   SetupCommandUpdateHandlers();
+  var messagePaneFrame = top.frames['messagepane'];
+  if(messagePaneFrame)
+	messagePaneFrame.focus();
 }
 
 function extractMsgKeyFromURI()
@@ -263,6 +266,10 @@ function HideMenus()
 	var emptryTrashMenu = document.getElementById('menu_emptyTrash');
 	if(emptryTrashMenu)
 		emptryTrashMenu.setAttribute("hidden", "true");
+
+	var menuProperties = document.getElementById('menu_properties');
+	if(menuProperties)
+		menuProperties.setAttribute("hidden", "true");
 
 	var compactFolderMenu = document.getElementById('menu_compactFolder');
 	if(compactFolderMenu)

@@ -221,6 +221,7 @@ var DefaultController =
 			case "cmd_print":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
+            case "cmd_properties":
 			case "cmd_viewPageSource":
 			case "cmd_setFolderCharset":
 			case "cmd_reload":
@@ -376,6 +377,8 @@ var DefaultController =
         return IsRenameFolderEnabled();
       case "button_getNewMessages":
       case "cmd_getNewMessages":
+      case "cmd_properties":
+        return IsPropertiesEnabled();
       case "cmd_getMsgsForAuthAccounts":
         return IsGetNewMessagesEnabled();
       case "cmd_getNextNMessages":
@@ -543,6 +546,9 @@ var DefaultController =
 			case "cmd_findAgain":
 				MsgFindAgain();
 				return;
+            case "cmd_properties":
+                MsgFolderProperties();
+                return;
       case "button_mark":
 			case "cmd_markAsRead":
 				MsgMarkMsgAsRead(null);
@@ -816,6 +822,11 @@ function IsFolderCharsetEnabled()
   return IsFolderSelected();
 }
 
+function IsPropertiesEnabled()
+{
+  return IsFolderSelected();
+}
+
 function IsViewNavigationItemEnabled()
 {
 	return IsFolderSelected();
@@ -823,7 +834,7 @@ function IsViewNavigationItemEnabled()
 
 function IsFolderSelected()
 {
-	var tree = GetFolderTree();
+  	var tree = GetFolderTree();
 	var folderList = tree.selectedItems;
 
 	if(folderList.length == 1)
