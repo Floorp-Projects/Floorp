@@ -99,6 +99,9 @@
 #include "nsIUBidiUtils.h"
 #endif
 
+#include "nsIFrame.h"
+#include "nsIStyleContext.h"
+
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
@@ -3019,13 +3022,33 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
     }
   }
 
-  // Stop any activity that may be happening in the old document before
-  // releasing it...
-  if (mContentViewer) {
-    mContentViewer->Stop();
-  }
+    nscolor bgcolor = NS_RGBA(0, 0, 0, 0);
+    PRBool bgSet = PR_FALSE;
 
     if (mContentViewer) {
+  // Stop any activity that may be happening in the old document before
+  // releasing it...
+    mContentViewer->Stop();
+
+        // Try to extract the default background color from the old
+        // view manager, so we can use it for the next document.
+        nsCOMPtr<nsIDocumentViewer> docviewer = do_QueryInterface(mContentViewer);
+
+        if (docviewer) {
+            nsCOMPtr<nsIPresShell> shell;
+            docviewer->GetPresShell(*getter_AddRefs(shell));
+
+            if (shell) {
+                nsCOMPtr<nsIViewManager> vm;
+                shell->GetViewManager(getter_AddRefs(vm));
+
+                if (vm) {
+                    vm->GetDefaultBackgroundColor(&bgcolor);
+                    bgSet = PR_TRUE;
+                }
+            }
+  }
+
         mContentViewer->Destroy();
         mContentViewer = nsnull;
     }
@@ -3055,6 +3078,26 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
       NS_ERROR("ContentViewer Initialization failed");
       return NS_ERROR_FAILURE;
       }
+
+   if (bgSet) {
+       // Stuff the bgcolor from the last view manager into the new
+       // view manager. This improves page load continuity.
+       nsCOMPtr<nsIDocumentViewer> docviewer = do_QueryInterface(mContentViewer);
+
+       if (docviewer) {
+           nsCOMPtr<nsIPresShell> shell;
+           docviewer->GetPresShell(*getter_AddRefs(shell));
+
+           if (shell) {
+               nsCOMPtr<nsIViewManager> vm;
+               shell->GetViewManager(getter_AddRefs(vm));
+
+               if (vm) {
+                   vm->SetDefaultBackgroundColor(bgcolor);
+               }
+           }
+       }
+   }
 
 #ifdef IBMBIDI
    if (newViewer) {
