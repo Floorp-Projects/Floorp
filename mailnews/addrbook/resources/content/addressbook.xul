@@ -109,9 +109,9 @@ Rights Reserved.
 				<menuseparator/>
 				<menuitem id="menu_close"/>
 				<menuseparator/>
-				<menuitem value="&importCmd.label;" oncommand="toImport()"/>
+				<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
 				<menuseparator/>
-				<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
+				<menuitem value="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" observes="cmd_PrintCard"/>
 				<menuseparator/>
 			</menupopup>
 		</menu>
@@ -162,23 +162,27 @@ Rights Reserved.
 								  oncommand="SetNameColumn('displayNameCmd')"/>
 					</menupopup>
 				</menu>
-				<menu value="&sortMenu.label;">
+				<menu value="&sortMenu.label;" accesskey="&sortMenu.accesskey;">
 				    <menupopup>
 						<menuitem value="&sortByNameCmd.label;"
 								  id="cmd_SortByName"
 								  disabled="true"
+								  accesskey="&SortByName.accesskey;"
 								  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')" name="sortas" type="radio" checked="true"/>
 						<menuitem value="&sortByEmailCmd.label;"
 								  id="cmd_SortByEmail"
 								  disabled="true"
+								  accesskey="&SortByEmail.accesskey;"
 								  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')" name="sortas" type="radio"/>
 						<menuitem value="&sortByWorkPhoneCmd.label;"
 								  id="cmd_SortByWorkPhone"
 								  disabled="true"
+								  accesskey="&SortByWorkPhone.accesskey;"
 								  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')" name="sortas" type="radio"/>
 						<menuitem value="&sortByOrganizationCmd.label;"
 								  id="cmd_SortByOrganization"
 								  disabled="true"
+								  accesskey="&SortByOrganization.accesskey;"
 								  oncommand="top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company')" name="sortas" type="radio"/>
 					</menupopup>
 				</menu>
@@ -195,7 +199,7 @@ Rights Reserved.
 			<box id="toolbar_button_box">
 				<button class="button-toolbar-2 top" orient="vertical" id="button-newcard" value="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" onclick="AbNewCard()"/>
 				<button class="button-toolbar-2 top" orient="vertical" id="button-newlist" value="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" onclick="AbNewList()"/>
-            	<toolbarseparator/>
+            	<toolbarseparator class="toolbarseparator-primary"/>
 				<button class="button-toolbar-2 top" orient="vertical" id="button-editcard" value="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" onclick="AbEditCard()"/>
 				<button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" value="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" onclick="AbNewMessage()"/>
 				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" value="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" onclick="goDoCommand('button_delete')"/>

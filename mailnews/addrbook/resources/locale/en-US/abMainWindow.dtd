@@ -37,9 +37,11 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (newDirectoryCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newDirectoryCmd.accesskey			"d">  
 <!ENTITY importCmd.label					"Import..."> 
+<!ENTITY importCmd.accesskey				"i"> 
 <!ENTITY exportCmd.label					".Export...">  
 <!ENTITY printPreviewCmd.label				".Print Preview">  
 <!ENTITY printCardViewCmd.label				"Print Card...">
+<!ENTITY printCardViewCmd.accesskey			"p">
 <!-- LOCALIZATION NOTE (printCardViewCmd.key) : DONT_TRANSLATE -->  
 <!ENTITY printCardViewCmd.key				"P">
 <!ENTITY printAddressBook.label				".Print Address Book...">  
@@ -66,10 +68,15 @@ Rights Reserved.
 <!ENTITY displayNameCmd.label				"Display Name">  
 <!ENTITY displayNameCmd.accesskey			"d"> 
 <!ENTITY sortMenu.label						"Sort by"> 
+<!ENTITY sortMenu.accesskey					"s"> 
 <!ENTITY sortByNameCmd.label					"Name">  
+<!ENTITY SortByName.accesskey					"n">  
 <!ENTITY sortByEmailCmd.label					"Email">  
+<!ENTITY SortByEmail.accesskey					"e">  
 <!ENTITY sortByWorkPhoneCmd.label				"Work Phone">  
+<!ENTITY SortByWorkPhone.accesskey				"w">  
 <!ENTITY sortByOrganizationCmd.label			"Organization">  
+<!ENTITY SortByOrganization.accesskey			"o">  
 <!ENTITY stopSearchingCmd.label				".Stop Searching"> 
 
 <!-- Toolbar items -->  
