@@ -130,6 +130,11 @@ MOZ_PROFILESHARING = @MOZ_PROFILESHARING@
 MOZ_PROFILELOCKING = @MOZ_PROFILELOCKING@
 MOZ_STORAGE = @MOZ_STORAGE@
 
+# The MOZ_UI_LOCALE var is used to build a particular locale. Do *not*
+# use the var to change any binary files. Do *not* use this var unless you
+# write rules for the "clean-locale" and "locale" targets.
+MOZ_UI_LOCALE = @MOZ_UI_LOCALE@
+
 MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS = @MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS@
 MOZ_COMPONENT_NSPR_LIBS=@MOZ_COMPONENT_NSPR_LIBS@
 MOZ_COMPONENT_XPCOM_LIBS=@MOZ_COMPONENT_XPCOM_LIBS@
