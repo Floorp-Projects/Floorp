@@ -1,38 +1,36 @@
 #ifndef nsSilentDownload_h___
 #define nsSilentDownload_h___
 
-/* need to generate real CIDs! */
-
 #define NS_SilentDownload_CID                        \
-{ /* 5196e6a0-938b-11d2-b0dd-00805f8a8851 */         \
-    0x5196e6a0,                                      \
-    0x938b,                                          \
+{ /* 18c2f982-b09f-11d2-bcde-00805f0e1353 */         \
+    0x18c2f982,                                      \
+    0xb09f,                                          \
     0x11d2,                                          \
-    {0xb0, 0xdd, 0x00, 0x80, 0x5f, 0x8a, 0x88, 0x51} \
-};
+    {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53} \
+  };
 
 #define NS_SilentDownloadTask_CID                    \
-{ /* 5196e6a0-938b-11d2-b0dd-00805f8a8851 */         \
-    0x5196e6a0,                                      \
-    0x938b,                                          \
+{ /* 18c2f983-b09f-11d2-bcde-00805f0e1353 */         \
+    0x18c2f983,                                      \
+    0xb09f,                                          \
     0x11d2,                                          \
-    {0xb0, 0xdd, 0x00, 0x80, 0x5f, 0x8a, 0x88, 0x52} \
-};
+    {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53} \
+  };
 
 #define NS_SilentDownloadFactory_CID                 \
-{ /* 5196e6a0-938b-11d2-b0dd-00805f8a8851 */         \
-    0x5196e6a0,                                      \
-    0x938b,                                          \
+{ /* 18c2f984-b09f-11d2-bcde-00805f0e1353 */         \
+    0x18c2f984,                                      \
+    0xb09f,                                          \
     0x11d2,                                          \
-    {0xb0, 0xdd, 0x00, 0x80, 0x5f, 0x8a, 0x88, 0x53} \
-};
+    {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53} \
+  };
 
 #define NS_SilentDownloadTaskFactory_CID             \
-{ /* 5196e6a0-938b-11d2-b0dd-00805f8a8851 */         \
-    0x5196e6a0,                                      \
-    0x938b,                                          \
+{ /* 18c2f985-b09f-11d2-bcde-00805f0e1353 */         \
+    0x18c2f985,                                      \
+    0xb09f,                                          \
     0x11d2,                                          \
-    {0xb0, 0xdd, 0x00, 0x80, 0x5f, 0x8a, 0x88, 0x54} \
-};
+    {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53} \
+  };
 
 #endif /* nsSilentDownload_h___ */
