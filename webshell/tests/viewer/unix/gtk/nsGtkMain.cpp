@@ -180,6 +180,11 @@ int main(int argc, char **argv)
   signal(SIGABRT, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
 
+#ifdef MOZ_WIDGET_GTK
+  gtk_set_locale();
+#endif
+  gtk_init(&argc, &argv);
+
   // Initialize XPCOM
   nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
