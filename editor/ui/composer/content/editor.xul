@@ -220,18 +220,18 @@
       <stack>
         <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"/>
       </stack>
-      <textfield class="source-editor" id="content-source" multiline="true" rows="1"
+      <textfield class="source-editor plain" id="content-source" multiline="true" rows="1"
                  flex="1" style="width:1em; height:1em;"/>
     </deck>
 
-    <toolbar id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">
-      <tabbox id="EditModeTabbox" class="tabbox-bottom" orient="horizontal" flex="1">
+    <box id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">
+      <tabbox id="EditModeTabbox" class="tabbox-bottom" flex="1">
      	<tab id="NormalModeButton"/>
       	<tab id="TagModeButton"/>
       	<tab id="SourceModeButton"/>
       	<tab id="PreviewModeButton"/>
 	  </tabbox>
-    </toolbar>
+    </box>
 
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar id="status-bar">
