@@ -16,6 +16,9 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+
+#define NS_IMPL_IDS
+
 #include "nsRepository.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
