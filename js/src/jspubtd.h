@@ -275,11 +275,16 @@ typedef JSBool
                                     JSBool *bp);
 
 /*
- * Function type for JSClass.mark and JSObjectOps.mark, called from the GC
- * to scan live GC-things reachable from obj's private data.  For each such
- * private thing, an implementation must call js_MarkGCThing(cx, thing, arg).
- * The trailing arg is used for GC_MARK_DEBUG-mode heap dumping and ref-path
- * tracing.
+ * Function type for JSClass.mark and JSObjectOps.mark, called from the GC to
+ * scan live GC-things reachable from obj's private data structure.  For each
+ * such thing, a mark implementation must call
+ *
+ *    JS_MarkGCThing(cx, thing, name, arg);
+ *
+ * The trailing name and arg parameters are used for GC_MARK_DEBUG-mode heap
+ * dumping and ref-path tracing.  The mark function should pass a (typically
+ * literal) string naming the private data member for name, and it must pass
+ * the opaque arg parameter through from its caller.
  *
  * For the JSObjectOps.mark hook, the return value is the number of slots at
  * obj->slots to scan.  For JSClass.mark, the return value is ignored.

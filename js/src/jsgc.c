@@ -201,8 +201,8 @@ gc_new_arena(JSArenaPool *pool)
     return thing;
 }
 
-static uint8 *
-gc_find_flags(void *thing)
+uint8 *
+js_GetGCThingFlags(void *thing)
 {
     JSGCPageInfo *pi;
     uint8 *flagp;
@@ -214,9 +214,11 @@ gc_find_flags(void *thing)
     return flagp;
 }
 
-JSBool js_IsAboutToBeFinalized(JSContext *cx, void *thing)
+JSBool
+js_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
-    uint8 flags = *gc_find_flags(thing);
+    uint8 flags = *js_GetGCThingFlags(thing);
+
     return !(flags & (GCF_MARK | GCF_LOCKMASK | GCF_FINAL));
 }
 
@@ -518,7 +520,7 @@ retry:
         }
 
         /* Find the flags pointer given thing's address. */
-        flagp = gc_find_flags(thing);
+        flagp = js_GetGCThingFlags(thing);
     }
     *flagp = (uint8)flags;
     rt->gcBytes += sizeof(JSGCThing) + sizeof(uint8);
@@ -544,7 +546,7 @@ js_LockGCThing(JSContext *cx, void *thing)
 
     if (!thing)
 	return JS_TRUE;
-    flagp = gc_find_flags(thing);
+    flagp = js_GetGCThingFlags(thing);
     flags = *flagp;
 
     ok = JS_TRUE;
@@ -616,7 +618,7 @@ js_UnlockGCThing(JSContext *cx, void *thing)
 
     if (!thing)
 	return JS_TRUE;
-    flagp = gc_find_flags(thing);
+    flagp = js_GetGCThingFlags(thing);
     flags = *flagp;
 
     rt = cx->runtime;
@@ -668,7 +670,7 @@ JS_EXPORT_DATA(void *) js_LiveThingToFind;
 static const char *
 gc_object_class_name(void* thing)
 {
-    uint8 *flagp = gc_find_flags(thing);
+    uint8 *flagp = js_GetGCThingFlags(thing);
     const char *className = "";
 
     if (flagp && ((*flagp & GCF_TYPEMASK) == GCX_OBJECT)) {
@@ -788,7 +790,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
     if (!thing)
 	return;
 
-    flagp = gc_find_flags(thing);
+    flagp = js_GetGCThingFlags(thing);
     flags = *flagp;
     JS_ASSERT(flags != GCF_FINAL);
 #ifdef GC_MARK_DEBUG

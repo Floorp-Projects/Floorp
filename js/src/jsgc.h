@@ -59,6 +59,9 @@ JS_BEGIN_EXTERN_C
 #define GCF_LOCKMASK    (JS_BITMASK(8 - GCF_LOCKSHIFT) << GCF_LOCKSHIFT)
 #define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
 
+extern uint8 *
+js_GetGCThingFlags(void *thing);
+
 /* These are compatible with JSDHashEntryStub. */
 struct JSGCRootHashEntry {
     JSDHashEntryHdr hdr;
