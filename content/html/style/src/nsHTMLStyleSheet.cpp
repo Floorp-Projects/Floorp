@@ -491,35 +491,9 @@ protected:
                              nsIStyleContext* aStyleContext,
                              nsAbsoluteItems& aAbsoluteItems,
                              nsFrameItems&    aFrameItems,
-<<<<<<< nsHTMLStyleSheet.cpp
-               PRBool&      haltProcessing);
-=======
                              nsAbsoluteItems& aFixedItems,
-                             PRBool&          haltProcessing);
->>>>>>> 3.141
+                             PRBool&          aHaltProcessing);
 
-<<<<<<< nsHTMLStyleSheet.cpp
-  nsresult ConstructTreeFrame(nsIPresContext*   aPresContext,
-                               nsIContent*      aContent,
-                               nsIFrame*        aParent,
-                               nsIStyleContext* aStyleContext,
-                               nsAbsoluteItems& aAboluteItems,
-                               nsIFrame*&       aNewFrame);
-
-  nsresult ConstructTreeBodyFrame(nsIPresContext*       aPresContext,
-                                       nsIContent*      aContent,
-                                       nsIFrame*        aParent,
-                                       nsIStyleContext* aStyleContext,
-                                       nsIFrame*&       aNewScrollFrame,
-                                       nsIFrame*&       aNewFrame);
-
-  nsresult ConstructTreeCellFrame(nsIPresContext*   aPresContext,
-                                   nsIContent*      aContent,
-                                   nsIFrame*        aParentFrame,
-                                   nsIStyleContext* aStyleContext,
-                                   nsAbsoluteItems& aAbsoluteItems,
-                                   nsIFrame*&       aNewFrame);
-=======
   nsresult ConstructTreeFrame(nsIPresContext*  aPresContext,
                               nsIContent*      aContent,
                               nsIFrame*        aParent,
