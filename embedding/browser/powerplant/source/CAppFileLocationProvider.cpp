@@ -36,19 +36,15 @@
 #include <Processes.h>
 #include "nsILocalFileMac.h"
 
-#include "ApplIDs.h"
-
-static nsACString& GetResCString(PRInt32 stringIndex, nsACString& outStr);
-  
+#include "ApplIDs.h"  
 
 //*****************************************************************************
 // CAppFileLocationProvider::Constructor/Destructor
 //*****************************************************************************   
 
-CAppFileLocationProvider::CAppFileLocationProvider(const char* productDirName)
+CAppFileLocationProvider::CAppFileLocationProvider(const nsAString& aAppDataDirName) :
+    mAppDataDirName(aAppDataDirName)
 {
-    strncpy(mProductDirName, productDirName, sizeof(mProductDirName) - 1);
-    mProductDirName[sizeof(mProductDirName) - 1] = '\0';
 }
 
 CAppFileLocationProvider::~CAppFileLocationProvider()
@@ -69,131 +65,52 @@ NS_IMPL_ISUPPORTS1(CAppFileLocationProvider, nsIDirectoryServiceProvider)
 NS_IMETHODIMP
 CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
 {    
-	nsCOMPtr<nsILocalFile>  localFile;
-	nsresult rv = NS_ERROR_FAILURE;
-	nsCAutoString strBuf;
+    nsCOMPtr<nsILocalFile>  localFile;
+    nsresult rv = NS_ERROR_FAILURE;
 
-	*_retval = nsnull;
-	*persistant = PR_TRUE;
+    *_retval = nsnull;
+    *persistant = PR_TRUE;
 	
-    if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+    if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
-        rv = GetProductDirectory(getter_AddRefs(localFile));
+        rv = GetAppDataDirectory(getter_AddRefs(localFile));
     }
-    else if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
+    else if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
     {
-        rv = GetProductDirectory(getter_AddRefs(localFile));
+        rv = GetAppDataDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendNative(GetResCString(str_AppRegistryName, strBuf));
+            rv = localFile->AppendNative(nsDependentCString("Application Registry"));
     }
-    else if (nsCRT::strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
+    else if (strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
     {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativeNativePath(GetResCString(str_DefaultsDirName, strBuf));
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativeNativePath(GetResCString(str_DefaultsDirName, strBuf));
-            if (NS_SUCCEEDED(rv))
-                rv = localFile->AppendRelativeNativePath(GetResCString(str_PrefDefaultsDirName, strBuf));
-        }
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
-             nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativeNativePath(GetResCString(str_DefaultsDirName, strBuf));
-            if (NS_SUCCEEDED(rv))
-                rv = localFile->AppendRelativeNativePath(GetResCString(str_ProfileDefaultsDirName, strBuf));
-        }
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
-    {
-        rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile));   
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_RES_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativeNativePath(GetResCString(str_ResDirName, strBuf));
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_CHROME_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativeNativePath(GetResCString(str_ChromeDirName, strBuf));
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativeNativePath(GetResCString(str_PlugInsDirName, strBuf));
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativeNativePath(GetResCString(str_SearchPlugInsDirName, strBuf));
-    }
-    
-	if (localFile && NS_SUCCEEDED(rv))
-		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
-		
-	return rv;
-}
-
-
-NS_METHOD CAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalFile)
-{
-    NS_ENSURE_ARG_POINTER(aLocalFile);
-    nsresult rv;
-    
-    if (!mMozBinDirectory)
-    {        
-        // Get the mozilla bin directory
-        // 1. Check the directory service first for NS_XPCOM_CURRENT_PROCESS_DIR
-        //    This will be set if a directory was passed to NS_InitXPCOM
-        // 2. If that doesn't work, set it to be the current process directory
-        
-        nsCOMPtr<nsIProperties> directoryService = 
-                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        rv = GetAppDataDirectory(getter_AddRefs(localFile));
         if (NS_FAILED(rv))
-            return rv;
-        
-        rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
-        if (NS_FAILED(rv)) {
-            rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
-            if (NS_FAILED(rv))
-                return rv;
-        }
+          return rv;
+        rv = localFile->AppendNative(nsDependentCString("Profiles"));
+        if (NS_FAILED(rv))
+          return rv;
+          
+        PRBool exists;
+        rv = localFile->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && !exists)
+          rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
+        if (NS_FAILED(rv))
+          return rv;
     }
     
-    nsCOMPtr<nsIFile> aFile;
-    rv = mMozBinDirectory->Clone(getter_AddRefs(aFile));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsILocalFile> lfile = do_QueryInterface (aFile);
-    if (!lfile)
-        return NS_ERROR_FAILURE;
-    
-    NS_IF_ADDREF(*aLocalFile = lfile);
-    return NS_OK;
+    if (localFile && NS_SUCCEEDED(rv))
+      rv = localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+		
+    return rv;
 }
 
-
 //----------------------------------------------------------------------------------------
-// GetProductDirectory - Gets the directory which contains the application data folder
-//
-// Mac    : :Documents:Mozilla:
+// GetAppDataDirectory - Gets the directory which contains the application data folder
 //----------------------------------------------------------------------------------------
-NS_METHOD CAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFile)
+NS_METHOD CAppFileLocationProvider::GetAppDataDirectory(nsILocalFile **aLocalFile)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
+    NS_ENSURE_TRUE(!mAppDataDirName.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
     
     nsresult rv;
     PRBool exists;
@@ -207,7 +124,7 @@ NS_METHOD CAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFil
  
 #if defined(XP_MACOSX)
     FSRef fsRef;
-    err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &fsRef);
+    err = ::FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &fsRef);
     if (err) return NS_ERROR_FAILURE;
     NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localDir));
     if (!localDir) return NS_ERROR_FAILURE;
@@ -222,61 +139,17 @@ NS_METHOD CAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFil
     if (NS_FAILED(rv)) return rv;   
 #endif
 
-    rv = localDir->AppendRelativeNativePath(nsDependentCString(mProductDirName));
-    if (NS_FAILED(rv)) return rv;
+    rv = localDir->Append(mAppDataDirName);
+    if (NS_FAILED(rv))
+        return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
         rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     *aLocalFile = localDir;
     NS_ADDREF(*aLocalFile);
 
     return rv; 
-}
-
-
-//----------------------------------------------------------------------------------------
-// GetDefaultUserProfileRoot - Gets the directory which contains each user profile dir
-//
-// Mac    : :Documents:Mozilla:Profiles:
-//----------------------------------------------------------------------------------------
-NS_METHOD CAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
-{
-    NS_ENSURE_ARG_POINTER(aLocalFile);
-    
-    nsresult rv;
-    PRBool exists;
-    nsCOMPtr<nsILocalFile> localDir;
-    nsCAutoString strBuf;
-   
-    rv = GetProductDirectory(getter_AddRefs(localDir));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = localDir->AppendRelativeNativePath(GetResCString(str_ProfilesRootDirName, strBuf));
-    if (NS_FAILED(rv)) return rv;
-    rv = localDir->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists)
-        rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;
-
-    *aLocalFile = localDir;
-    NS_ADDREF(*aLocalFile);
-
-    return rv; 
-}
-
-//****************************************************************************************
-// Static Routines
-//****************************************************************************************
-
-static nsACString& GetResCString(PRInt32 stringIndex, nsACString& outStr)
-{
-    Str255 pString;
-    GetIndString(pString, STRx_FileLocProviderStrings, stringIndex);
-    if (!pString[0])
-        NS_ASSERTION(PR_FALSE, "Directory name resource is missing.");
-
-    outStr.Assign((char*)&pString[1], pString[0]);
-    return outStr;   
 }

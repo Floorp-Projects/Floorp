@@ -19,11 +19,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *     Conrad Carlen <conrad@ingress.com>
+ *     Conrad Carlen <ccarlen@netscape.com>
  */
 
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
+#include "nsString2.h"
 
 class nsIFile;
 
@@ -34,7 +35,7 @@ class nsIFile;
 class CAppFileLocationProvider : public nsIDirectoryServiceProvider
 {
 public:
-                        CAppFileLocationProvider(const char* productDirName);
+                        CAppFileLocationProvider(const nsAString& aAppDataDirName);
 
    NS_DECL_ISUPPORTS
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
@@ -42,10 +43,7 @@ public:
 protected:
    virtual              ~CAppFileLocationProvider();
 
-   NS_METHOD            CloneMozBinDirectory(nsILocalFile **aLocalFile);   
-   NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
-   NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
+   NS_METHOD            GetAppDataDirectory(nsILocalFile **aLocalFile);
      
-   char                 mProductDirName[256];
-   nsCOMPtr<nsILocalFile> mMozBinDirectory;
+   nsString             mAppDataDirName;
 };

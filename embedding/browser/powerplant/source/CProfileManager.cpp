@@ -34,6 +34,8 @@
 #include <LTableSingleSelector.h>
 #include <LCheckBox.h>
 
+// Carbon
+#include <CFPreferences.h>
 
 // Mozilla
 #include "nsIProfile.h"
@@ -42,7 +44,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
 #include "nsXPIDLString.h"
-#include "nsIRegistry.h"
 #include "nsCRT.h"
 
 // ANSI
@@ -54,8 +55,7 @@ const MessageT    msg_OnNewProfile 	        = 2000;
 const MessageT    msg_OnDeleteProfile 	    = 2001;
 const MessageT    msg_OnRenameProfile 	    = 2002;
 
-#define kRegistryGlobalPrefsSubtreeString (NS_LITERAL_STRING("global-prefs"))
-#define kRegistryShowProfilesAtStartup "start-show-dialog"
+#define kPrefShowProfilesAtStartup "start-show-dialog"
 
 //*****************************************************************************
 //***    CProfileManager
@@ -353,86 +353,35 @@ void CProfileManager::DoLogout()
 
 nsresult CProfileManager::GetShowDialogOnStart(PRBool* showIt)
 {
-    nsresult rv = NS_OK;
-        
     *showIt = PR_TRUE;
-                
-    nsCOMPtr<nsIRegistry> registry;    
-    rv = OpenAppRegistry(getter_AddRefs(registry));
-    if (NS_FAILED(rv)) return rv;
 
-    nsRegistryKey profilesTreeKey;
+    CFStringRef showDialogKey = CFSTR(kPrefShowProfilesAtStartup);
+    Boolean keyExistsAndIsValid, value;
     
-    rv = registry->GetKey(nsIRegistry::Common, 
-                          kRegistryGlobalPrefsSubtreeString.get(), 
-                          &profilesTreeKey);
-
-    if (NS_SUCCEEDED(rv)) 
-    {
-        PRInt32 flagValue;
-        rv = registry->GetInt(profilesTreeKey, 
-                              kRegistryShowProfilesAtStartup, 
-                              &flagValue);
-         
-        if (NS_SUCCEEDED(rv))
-            *showIt = (flagValue != 0);
-    }
-    return rv;        
+    value = CFPreferencesGetAppBooleanValue(showDialogKey,
+                kCFPreferencesCurrentApplication,
+                &keyExistsAndIsValid);
+            
+    if (!keyExistsAndIsValid)
+      return NS_ERROR_FAILURE;
+    *showIt = value;
+    
+    return NS_OK;
 }
 
 nsresult CProfileManager::SetShowDialogOnStart(PRBool showIt)
 {
-
-    nsresult rv = NS_OK;
-                        
-    nsCOMPtr<nsIRegistry> registry;    
-    rv = OpenAppRegistry(getter_AddRefs(registry));
-    if (NS_FAILED(rv)) return rv;
-
-    nsRegistryKey profilesTreeKey;
+    CFStringRef showDialogKey = CFSTR(kPrefShowProfilesAtStartup);
     
-    rv = registry->GetKey(nsIRegistry::Common, 
-                          kRegistryGlobalPrefsSubtreeString.get(), 
-                          &profilesTreeKey);
-
-    if (NS_FAILED(rv)) 
-    {
-        rv = registry->AddKey(nsIRegistry::Common, 
-                              kRegistryGlobalPrefsSubtreeString.get(), 
-                              &profilesTreeKey);
-    }
-    if (NS_SUCCEEDED(rv))
-    {
+    CFPreferencesSetAppValue(showDialogKey,
+      showIt ? kCFBooleanTrue : kCFBooleanFalse,
+      kCFPreferencesCurrentApplication);
     
-        rv = registry->SetInt(profilesTreeKey, 
-                              kRegistryShowProfilesAtStartup, 
-                              showIt);
-    }
+    // Write out the preference data - this is our 1 and only use of it.
+    CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
     
-    return rv;        
-}
-
-
-nsresult CProfileManager::OpenAppRegistry(nsIRegistry **aRegistry)
-{
-    NS_ENSURE_ARG_POINTER(aRegistry);
-    
-    nsresult rv;
-    nsCOMPtr<nsIFile> regFile;
-            
-    rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_FILE, getter_AddRefs(regFile));
-    if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    rv = registry->Open(regFile);
-    if (NS_FAILED(rv)) return rv;
-    
-    *aRegistry = registry;
-    NS_IF_ADDREF(*aRegistry);
     return NS_OK;
 }
-
 
 //*****************************************************************************
 //***    CProfileManager::LAttachment
