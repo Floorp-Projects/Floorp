@@ -128,6 +128,11 @@ typedef unsigned long HMTX;
 #include "nsIDocument.h"
 #include "nsITextToSubURI.h"
 
+#ifdef MOZ_THUNDERBIRD
+#include "nsIExternalProtocolService.h"
+#include "nsCExternalHandlerService.h"
+#endif
+
 #ifdef NS_DEBUG
 /**
  * Note: the log module is created during initialization which
@@ -576,6 +581,48 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest)
 {
+#ifdef MOZ_THUNDERBIRD
+  // XXX ugly thunderbird hack to force all url clicks to go to the system default app
+  // I promise this will be removed once we figure out a better way. 
+  nsCAutoString scheme;
+  aURI->GetScheme(scheme);
+                                          
+  static const char kMailToURI[] = "mailto";                                    
+  static const char kNewsURI[] = "news";                                        
+  static const char kSnewsURI[] = "snews";                                      
+  static const char kNntpURI[] = "nntp";                                        
+  static const char kImapURI[] = "imap"; 
+  if (scheme.EqualsIgnoreCase(kMailToURI)) 
+  {
+    // the scheme is mailto, we can handle it
+  } 
+  else if (scheme.EqualsIgnoreCase(kNewsURI)) 
+  {
+    // the scheme is news, we can handle it
+  } 
+  else if (scheme.EqualsIgnoreCase(kSnewsURI)) 
+  {
+     // the scheme is snews, we can handle it
+  } 
+  else if (scheme.EqualsIgnoreCase(kNntpURI)) 
+  {
+     // the scheme is nntp, we can handle it 
+  } else if (scheme.EqualsIgnoreCase(kImapURI)) 
+  {
+      // the scheme is imap, we can handle it
+  }
+  else 
+  {
+      // we don't handle this type, the the registered handler take it 
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      rv = extProtService->LoadUrl(aURI);
+      NS_ENSURE_SUCCESS(rv,rv);
+      return rv;                                                                  
+  }                                                                               
+#endif
+
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
