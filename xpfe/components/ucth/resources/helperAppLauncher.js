@@ -49,20 +49,10 @@ nsHelperAppLauncherDialog.prototype= {
     initDialog : function () {
         // "Always ask me" is always set (or else we wouldn't have got here!).
         document.getElementById( "alwaysAskMe" ).checked = true;
-        document.getElementById( "alwaysAskMe" ).setAttribute( "disabled", "true" );
-
+        document.getElementById( "alwaysAskMe" ).setAttribute("disabled", "true");
+  
         // Pre-select the choice the user made last time.
         this.chosenApp = this.appLauncher.MIMEInfo.preferredApplicationHandler;
-        if ( this.chosenApp && this.appLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) {
-            // Run app.
-            document.getElementById( "runApp" ).checked = true;            
-        } else {
-            // Save to disk.
-            document.getElementById( "saveToDisk" ).checked = true;
-            // Disable choose app button.
-            document.getElementById( "chooseApp" ).setAttribute( "disabled", "true" );
-        }
-
         var applicationDescription = this.appLauncher.MIMEInfo.applicationDescription;
         if (applicationDescription != "")
            document.getElementById( "appName" ).value = applicationDescription;
@@ -70,6 +60,15 @@ nsHelperAppLauncherDialog.prototype= {
         {
           // If a user-chosen application, show its path.
           document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
+        }
+
+        if ( applicationDescription  && this.appLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) {
+            document.getElementById( "runApp" ).checked = true;         
+        } else {
+            // Save to disk.
+            document.getElementById( "saveToDisk" ).checked = true;
+            // Disable choose app button.
+            document.getElementById( "chooseApp" ).setAttribute( "disabled", "true" );
         }
 
         // Put content type into dialog text.
@@ -102,6 +101,8 @@ nsHelperAppLauncherDialog.prototype= {
     onOK : function () {
         // Get boolean switch from checkbox.
         var dontAskNextTime = !document.getElementById( "alwaysAskMe" ).checked;
+
+        // this.appLauncher.MIMEInfo.alwaysAskBeforeHandling = document.getElementById( "alwaysAskMe" ).checked;
     
         if ( document.getElementById( "runApp" ).checked ) {
             // Update preferred action if the user chose an app.
