@@ -55,7 +55,6 @@ var   lastDirectory         = "/";
 function nsFilePicker()
 {
   /* attributes */
-  this.mSelectedFilter = 0;
   this.mDefaultString = "";
   this.mDisplayDirectory = lastDirectory;
   this.mFilterTitles = new Array();
@@ -83,8 +82,8 @@ nsFilePicker.prototype = {
   },
 
   /* attribute wstring defaultString; */
-  set defaultString(a) { this.mSelectedFilter = a; },
-  get defaultString()  { return this.mSelectedFilter; },
+  set defaultString(a) { this.mDefaultString = a; },
+  get defaultString()  { return this.mDefaultString; },
 
   /* methods */
   init: function(parent, title, mode) {
