@@ -29,6 +29,14 @@ struct nsGUIEvent;
 { 0x52bd1e30, 0xce3f, 0x11d1, \
   {0x93, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
+enum nsLinkState {
+  eLinkState_Unvisited  = 0,
+  eLinkState_Visited    = 1, 
+  eLinkState_OutOfDate  = 2,  // visited, but the cache is stale
+  eLinkState_Active     = 3,  // mouse is down on link
+  eLinkState_Hover      = 4   // mouse is hovering over link
+};
+
 /**
  * Interface used for handling clicks on links
  */
@@ -46,6 +54,11 @@ public:
    */
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, const nsString& aURLSpec,
                          const nsString& aTargetSpec) = 0;
+
+  /**
+   * Get the state of a link to a given absolute URL
+   */
+  NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState) = 0;
 };
 
 // Standard link handler that does what you would expect (XXX doc...)
