@@ -101,8 +101,6 @@
 #include "nsIEditor.h"
 //these defines are for use with the experimental autopointers. 
 //they WILL NOT be permanent
-#define NOT_PRODUCTION_CODE
-#define USE_EXPERIMENTAL_SMART_POINTERS
 #include "COM_auto_ptr.h"
 #endif //NGEDITOR
 
@@ -185,6 +183,7 @@ static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuButtonIID, NS_IMENUBUTTON_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
@@ -2823,24 +2822,23 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
   if (nsnull != aWebShell) 
   {
     COM_auto_ptr<nsIContentViewer> cViewer;
-    aWebShell->GetContentViewer(*func_AddRefs(cViewer));//returns an addreffed viewer  dereference it because it accepts a reference to a * not a **
+    aWebShell->GetContentViewer(*getter_AddRefs(cViewer));//returns an addreffed viewer  dereference it because it accepts a reference to a * not a **
     if (cViewer) 
     {
       COM_auto_ptr<nsIDocumentViewer>  dViewer;
-      if (NS_SUCCEEDED(cViewer->QueryInterface(kIDocumentViewerIID, func_AddRefs(dViewer)))) 
+      if (NS_SUCCEEDED(cViewer->QueryInterface(kIDocumentViewerIID, getter_AddRefs(dViewer)))) 
       { //returns an addreffed document viewer
         COM_auto_ptr<nsIDocument>  doc;
-        dViewer->GetDocument(*func_AddRefs(doc)); //returns an addreffed document
+        dViewer->GetDocument(*getter_AddRefs(doc)); //returns an addreffed document
         if (doc) 
         {
           COM_auto_ptr<nsIDOMDocument> domDoc;
-          if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, func_AddRefs(domDoc))))
+          if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, getter_AddRefs(domDoc))))
           { //returns an addreffed domdocument
             COM_auto_ptr<nsIEditor>  editor;
-            if (NS_SUCCEEDED(NS_InitEditor(func_AddRefs(editor), domDoc.get())))  //how do we translate from a COM_auto_ptr to a *? we use get
-            {
-              AddEditor(editor.get()); //new call to set the editor interface this will addref
-            }
+            nsRepository::CreateInstance(kIEditorIID, nsnull, kIEditorIID, (void **)getter_AddRefs(editor));
+            editor->Init(domDoc);
+            AddEditor(editor); //new call to set the editor interface this will addref
           }
         }
       }
@@ -2848,7 +2846,7 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
     aWebShell->GetChildCount(n);
     for (i = 0; i < n; i++) {
       COM_auto_ptr<nsIWebShell>  child;
-      aWebShell->ChildAt(i, *func_AddRefs(child));
+      aWebShell->ChildAt(i, *getter_AddRefs(child));
       DoEditorMode(child); //doesnt addref
     }
   }
