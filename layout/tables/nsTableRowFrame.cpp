@@ -863,6 +863,24 @@ GetComputedWidth(const nsHTMLReflowState& aReflowState,
   return computedWidth;
 }
 
+// subtract the heights of aRow's prev in flows from the unpaginated height
+static
+nscoord CalcHeightFromUnpaginatedHeight(nsIPresContext*  aPresContext,
+                                        nsTableRowFrame& aRow)
+{
+  nscoord height = 0;
+  nsTableRowFrame* firstInFlow = (nsTableRowFrame*)aRow.GetFirstInFlow(); if (!firstInFlow) ABORT1(0);
+  if (firstInFlow->HasUnpaginatedHeight()) {
+    height = firstInFlow->GetUnpaginatedHeight(aPresContext);
+    for (nsIFrame* prevInFlow = aRow.GetPrevInFlow(); prevInFlow; prevInFlow->GetPrevInFlow(&prevInFlow)) {
+      nsRect rect;
+      prevInFlow->GetRect(rect);
+      height -= rect.height;
+    }
+  }
+  return PR_MAX(height, 0);
+}
+
 // Called for a dirty or resize reflow. Reflows all the existing table cell 
 // frames unless aDirtyOnly is PR_TRUE in which case only reflow the dirty frames
 
@@ -1063,22 +1081,23 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           nsTableFrame::RePositionViews(aPresContext, kidFrame);
         }
         
-        if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !mPrevInFlow) {
-          // Calculate the cell's actual size given its pass2 size. This function
-          // takes into account the specified height (in the style), and any special
-          // logic needed for backwards compatibility
-          CalculateCellActualSize(kidFrame, desiredSize.width, 
-                                  desiredSize.height, availCellWidth);
-
+        if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+          if (!mPrevInFlow) {
+            // Calculate the cell's actual size given its pass2 size. This function
+            // takes into account the specified height (in the style), and any special
+            // logic needed for backwards compatibility
+            CalculateCellActualSize(kidFrame, desiredSize.width, 
+                                    desiredSize.height, availCellWidth);
+          }
           // height may have changed, adjust descent to absorb any excess difference
           nscoord ascent = cellFrame->GetDesiredAscent();
           nscoord descent = desiredSize.height - ascent;
           UpdateHeight(desiredSize.height, ascent, descent, &aTableFrame, cellFrame);
         }
         else {
+          paginatedHeight = PR_MAX(paginatedHeight, desiredSize.height);
           PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame);
-          if ((1 == rowSpan) && (desiredSize.height > paginatedHeight)) {
-            paginatedHeight = desiredSize.height;
+          if (1 == rowSpan) {
             SetContentHeight(paginatedHeight);
           }
         }
@@ -1117,8 +1136,32 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
 
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
-  aDesiredSize.height = (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) 
-                        ? CalcHeight(aReflowState) : paginatedHeight; 
+
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+    aDesiredSize.height = CalcHeight(aReflowState);
+    if (mPrevInFlow) {
+      nscoord height = CalcHeightFromUnpaginatedHeight(aPresContext, *this);
+      aDesiredSize.height = PR_MAX(aDesiredSize.height, height);
+    }
+    else {
+      if (isPaginated && HasStyleHeight()) {
+        // set the unpaginated height so next in flows can try to honor it
+        SetHasUnpaginatedHeight(PR_TRUE);
+        SetUnpaginatedHeight(aPresContext, aDesiredSize.height);
+      }
+      if (isPaginated && HasUnpaginatedHeight()) {
+        aDesiredSize.height = PR_MAX(aDesiredSize.height, GetUnpaginatedHeight(aPresContext));
+      }
+    }
+  }
+  else { // constrained height, paginated
+    aDesiredSize.height = paginatedHeight;
+    if (aDesiredSize.height <= aReflowState.availableHeight) {
+      nscoord height = CalcHeightFromUnpaginatedHeight(aPresContext, *this);
+      aDesiredSize.height = PR_MAX(aDesiredSize.height, height);
+      aDesiredSize.height = PR_MIN(aDesiredSize.height, aReflowState.availableHeight);
+    }
+  }
 
   return rv;
 }
@@ -1585,6 +1628,7 @@ void
 nsTableRowFrame::SetUnpaginatedHeight(nsIPresContext* aPresContext,
                                       nscoord         aValue)
 {
+  NS_ASSERTION(!mPrevInFlow, "program error");
   // Get the property 
   nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
   if (value) {
@@ -1596,7 +1640,7 @@ nscoord
 nsTableRowFrame::GetUnpaginatedHeight(nsIPresContext* aPresContext)
 {
   // See if the property is set
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::rowUnpaginatedHeightProperty);
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, GetFirstInFlow(), nsLayoutAtoms::rowUnpaginatedHeightProperty);
   if (value) 
     return *value;
   else 

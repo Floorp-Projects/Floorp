@@ -334,13 +334,13 @@ protected:
                          nsTableFrame*            aTableFrame,
                          nsReflowStatus&          aStatus);
 
-  nscoord SplitSpanningCells(nsIPresContext&          aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsIStyleSet&             aStyleSet,
-                             nsTableFrame&            aTableFrame,
-                             nsTableRowFrame&         aRowFrame,
-                             nscoord                  aRowEndY,
-                             nsTableRowFrame*         aContRowFrame);
+  void SplitSpanningCells(nsIPresContext&          aPresContext,
+                          const nsHTMLReflowState& aReflowState,
+                          nsIStyleSet&             aStyleSet,
+                          nsTableFrame&            aTableFrame,
+                          nsTableRowFrame&         aRowFrame,
+                          nscoord                  aRowEndY,
+                          nsTableRowFrame*         aContRowFrame);
 
   void CreateContinuingRowFrame(nsIPresContext& aPresContext,
                                 nsIStyleSet&    aStyleSet,

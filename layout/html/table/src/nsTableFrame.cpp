@@ -2112,6 +2112,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
+
   return rv;
 }
 
@@ -3297,6 +3298,10 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
         // XXX fix up bad mComputedWidth for scroll frame
         kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth, 0);
   
+        // If this isn't the first row group, then we can't be at the top of the page
+        if (childX > 0) {
+          kidReflowState.mFlags.mIsTopOfPage = PR_FALSE;
+        }
         aReflowState.y += cellSpacingY;
         
         // record the next in flow in case it gets destroyed and the row group array

@@ -1011,6 +1011,15 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
     }
   }
 
+  // see if we need to reset top of page due to a caption
+  if (mCaptionFrame) {
+    PRUint8 captionSide = GetCaptionSide();
+    if (((NS_SIDE_BOTTOM == captionSide) && (mCaptionFrame == aChildFrame)) || 
+        ((NS_SIDE_TOP == captionSide) && (mInnerTableFrame == aChildFrame))) {
+      childRS.mFlags.mIsTopOfPage = PR_FALSE;
+    }
+  }
+
   // use the current position as a best guess for placement
   nsRect childRect;
   aChildFrame->GetRect(childRect);
