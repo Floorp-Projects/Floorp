@@ -596,7 +596,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
         while (0 < index--) {
             nsIStyleSheet* sheet = aDocument->GetStyleSheetAt(index);
-            (*aStyleSet)->AppendDocStyleSheet(sheet);
+            (*aStyleSet)->AddDocStyleSheet(sheet, aDocument);
             NS_RELEASE(sheet);
         }
         if (nsnull != mUAStyleSheet) {
