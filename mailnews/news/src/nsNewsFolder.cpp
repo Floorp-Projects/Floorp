@@ -484,7 +484,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
             rv = NS_MSG_CANT_CREATE_FOLDER;
         }
 	}
-	if(rv == NS_OK && child)
+	if(NS_SUCCEEDED(rv) && child)
 	{
 		nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(child, &rv));
 

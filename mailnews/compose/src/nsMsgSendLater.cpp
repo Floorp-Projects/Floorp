@@ -85,7 +85,7 @@ nsMsgSendLater::nsMsgSendLater()
   mEnumerator = nsnull;
   mTotalSentSuccessfully = 0;
   mTotalSendCount = 0;
-  mMessageFolder = nsnull;
+  mMessageFolder = null_nsCOMPtr();
   mMessage = nsnull;
   mLeftoverBuffer = nsnull;
 
@@ -653,16 +653,16 @@ nsMsgSendLater::StartNextMailFileSend()
   return NS_OK;
 }
 
-nsIMsgFolder *
-nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
+nsresult 
+nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  nsIMsgFolder    *retFolder = nsnull;
   char            *uri = nsnull;
+  nsresult rv;
 
   uri = GetFolderURIFromUserPrefs(nsMsgQueueForLater, userIdentity);
-  retFolder = LocateMessageFolder(userIdentity, nsMsgQueueForLater, uri);
+  rv = LocateMessageFolder(userIdentity, nsMsgQueueForLater, uri, folder);
   PR_FREEIF(uri);
-  return retFolder;
+  return rv;
 }
 
 //
@@ -692,6 +692,8 @@ nsresult
 nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
                                    nsIMsgSendLaterListener          **listenerArray)
 {
+  nsresult rv;
+
   if (!identity)
     return NS_ERROR_INVALID_ARG;
 
@@ -702,8 +704,8 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
   if (listenerArray)
     SetListenerArray(listenerArray);
 
-  mMessageFolder = GetUnsentMessagesFolder(mIdentity);
-  if (!mMessageFolder)
+  rv = GetUnsentMessagesFolder(mIdentity, getter_AddRefs(mMessageFolder));
+  if (NS_FAILED(rv) || !mMessageFolder)
   {
     NS_RELEASE(mIdentity);
     mIdentity = nsnull;

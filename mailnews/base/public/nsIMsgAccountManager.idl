@@ -88,9 +88,6 @@ interface nsIMsgAccountManager : nsISupports {
   nsIMsgIncomingServer
       FindServer(in string userName, in string hostname, in string type);
 
-  nsIMsgIncomingServer
-	FindServerUsingURI(in string uri);
-
   /**
    * find the index of this server in the (ordered) list of accounts
    */

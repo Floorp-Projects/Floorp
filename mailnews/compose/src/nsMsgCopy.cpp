@@ -29,23 +29,18 @@
 #include "nsISupportsArray.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsISupports.h"
-#ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
-#include "nsIURI.h"
-#include "nsIIOService.h" 
-#else
+#include "nsIRDFService.h"
+#include "nsIRDFResource.h"
+#include "nsRDFCID.h"
 #include "nsIURL.h"
-#endif /* MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP */
 #include "nsMsgComposeStringBundle.h"
 
 #define ANY_SERVER "anyfolder://"
 
-#ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#else
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-#endif /* MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP */
 static NS_DEFINE_CID(kMsgCopyServiceCID,NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for the copy operation. We have to create this class 
@@ -171,6 +166,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 {
   nsCOMPtr<nsIMsgFolder>  dstFolder;
   PRBool                  isDraft = PR_FALSE;
+  nsresult			rv;
 
   if (!aMsgSendObj)
     return NS_ERROR_INVALID_ARG;
@@ -184,39 +180,39 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   //
   if (aMode == nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
-    dstFolder = GetUnsentMessagesFolder(aUserIdentity);
+    rv = GetUnsentMessagesFolder(aUserIdentity, getter_AddRefs(dstFolder));
     isDraft = PR_FALSE;
-    if (!dstFolder) {
+    if (!dstFolder || NS_FAILED(rv)) {
         return NS_MSG_UNABLE_TO_SEND_LATER;
     } 
   }
   else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
-    dstFolder = GetDraftsFolder(aUserIdentity);
+    rv = GetDraftsFolder(aUserIdentity, getter_AddRefs(dstFolder));
     isDraft = PR_TRUE;
-    if (!dstFolder) {
+    if (!dstFolder || NS_FAILED(rv)) {
 	return NS_MSG_UNABLE_TO_SAVE_DRAFT;
     } 
   }
   else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
-    dstFolder = GetTemplatesFolder(aUserIdentity);
+    rv = GetTemplatesFolder(aUserIdentity, getter_AddRefs(dstFolder));
     isDraft = PR_FALSE;
-    if (!dstFolder) {
+    if (!dstFolder || NS_FAILED(rv)) {
 	return NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
     } 
   }
   else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
   {
-    dstFolder = GetSentFolder(aUserIdentity);
+    rv = GetSentFolder(aUserIdentity, getter_AddRefs(dstFolder));
     isDraft = PR_FALSE;
-    if (!dstFolder) {
+    if (!dstFolder || NS_FAILED(rv)) {
 	return NS_MSG_COULDNT_OPEN_FCC_FOLDER;
     }
   }
 
   mMode = aMode;
-  nsresult rv = DoCopy(aFileSpec, dstFolder, aMsgToReplace, isDraft, nsnull, aMsgSendObj);
+  rv = DoCopy(aFileSpec, dstFolder, aMsgToReplace, isDraft, nsnull, aMsgSendObj);
   return rv;
 }
 
@@ -240,8 +236,8 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     if (!tPtr)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    mCopyListener = do_QueryInterface(tPtr);
-    if (!mCopyListener)
+    mCopyListener = do_QueryInterface(tPtr, &rv);
+    if (NS_FAILED(rv) || !mCopyListener)
       return NS_ERROR_OUT_OF_MEMORY;
 
     mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
@@ -252,85 +248,75 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 	return rv;
 }
 
-nsIMsgFolder *
-nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity)
+nsresult
+nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, mSavePref);
+  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, mSavePref, folder);
 }
  
-nsIMsgFolder *
-nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity)
+nsresult 
+nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft, mSavePref);
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft, mSavePref, folder);
 }
 
-nsIMsgFolder *
-nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity)
+nsresult 
+nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate, mSavePref);
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate, mSavePref, folder);
 }
 
-nsIMsgFolder * 
-nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity)
+nsresult 
+nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgDeliverNow, mSavePref);
+  return LocateMessageFolder(userIdentity, nsMsgDeliverNow, mSavePref, folder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Utility Functions for MsgFolders
 ////////////////////////////////////////////////////////////////////////////////////
-nsIMsgFolder *
+nsresult
 LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
                     nsMsgDeliverMode aFolderType,
-                    const char       *aFolderURI)
+                    const char       *aFolderURI,
+		    nsIMsgFolder     **msgFolder)
 {
   nsresult                  rv = NS_OK;
-  nsIMsgFolder              *msgFolder = nsnull;
+
+  if (!msgFolder) return NS_ERROR_NULL_POINTER;
 
   if (!userIdentity || !aFolderURI || (PL_strlen(aFolderURI) == 0)) {
-    return nsnull;
+    return NS_ERROR_INVALID_ARG;
   }
   
-  //
   // get the current mail session....
-  //
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
-  if (NS_FAILED(rv)) 
-    return nsnull;
+  if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIMsgAccountManager> accountManager;
   rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) 
-    return nsnull;
+  if (NS_FAILED(rv)) return rv;
 
   // as long as it doesn't start with anyfolder://
   if (PL_strncasecmp(ANY_SERVER, aFolderURI, PL_strlen(aFolderURI)) != 0) {
-    nsCOMPtr<nsIMsgIncomingServer> incomingServer;
-    rv = accountManager->FindServerUsingURI(aFolderURI, getter_AddRefs(incomingServer));
-    if (NS_FAILED(rv))
-      return nsnull;
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr <nsIFolder> aFolder;
-    rv = incomingServer->GetRootFolder(getter_AddRefs(aFolder));
-    if (NS_FAILED(rv) || (!aFolder))
-      return nsnull;
-        
-    nsCOMPtr<nsIMsgFolder> rootFolder;
-    rootFolder = do_QueryInterface(aFolder, &rv);
-    
-    if(NS_FAILED(rv) || (!rootFolder))
-      return nsnull;
+    // get the corresponding RDF resource
+    // RDF will create the folder resource if it doesn't already exist
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = rdf->GetResource(aFolderURI, getter_AddRefs(resource));
+    if (NS_FAILED(rv)) return rv;
 
-    rv = rootFolder->GetChildWithURI(aFolderURI, PR_TRUE /* deep */, &msgFolder);
-    if (NS_SUCCEEDED(rv) && (msgFolder)) 
-      return msgFolder;
-    
-    /* we failed to find the folder, so we create it in the datasource so
-       we have something to return to pass into DoCopy()
-       see bug #14591  */
-    rv = rootFolder->CreateFolderInDatasource(aFolderURI, &msgFolder);
-    if (NS_SUCCEEDED(rv) && (msgFolder)) {
-      return msgFolder;
+    nsCOMPtr <nsIMsgFolder> folderResource;
+    folderResource = do_QueryInterface(resource, &rv);
+    if (NS_SUCCEEDED(rv) && folderResource) {
+	*msgFolder = folderResource;
+	NS_ADDREF(*msgFolder);
+	return NS_OK;
+    }
+    else {
+	return NS_ERROR_FAILURE;
     }
   }
   else {
@@ -340,15 +326,12 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     // if anyfolder will do, go look for one.
     nsCOMPtr<nsISupportsArray> retval; 
     accountManager->GetServersForIdentity(userIdentity, getter_AddRefs(retval)); 
-    if (!retval) 
-      return nsnull; 
+    if (!retval) return NS_ERROR_FAILURE;
     
     // Ok, we have to look through the servers and try to find the server that
     // has a valid folder of the type that interests us...
     rv = retval->Count(&cnt);
-    if (NS_FAILED(rv))
-      return nsnull;
-    
+    if (NS_FAILED(rv)) return rv;
     
     for (i=0; i<cnt; i++) {
       // Now that we have the server...we need to get the named message folder
@@ -381,39 +364,38 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
         continue;
       
       nsCOMPtr<nsIMsgFolder> rootFolder;
-      rootFolder = do_QueryInterface(folder);
+      rootFolder = do_QueryInterface(folder, &rv);
       
       if(NS_FAILED(rv) || (!rootFolder))
         continue;
       
       PRUint32 numFolders = 0;
-      msgFolder = nsnull;
       
       // use the defaults by getting the folder by flags
       if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, msgFolder, 1, &numFolders);
         }
       else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, msgFolder, 1, &numFolders);
         }
       else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, msgFolder, 1, &numFolders);
         }
       else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, msgFolder, 1, &numFolders);
         }
 
-      if (NS_SUCCEEDED(rv) && msgFolder) {
-        return msgFolder;
+      if (NS_SUCCEEDED(rv) && *msgFolder) {
+	return NS_OK;
       }
     }
   }
   
-  return nsnull;
+  return NS_ERROR_FAILURE;
 }
 
 //
@@ -431,18 +413,6 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
 
   if (!aFolderURI) return NS_ERROR_NULL_POINTER;
 
-  /* nsImapService::NewURI() isn't implemented yet... */
-#ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
-  nsCOMPtr <nsIURI> uri;
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv); 
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = pNetService->NewURI(aFolderURI, nsnull, getter_AddRefs(uri));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->GetScheme(getter_Copies(scheme));
-  if (NS_FAILED(rv)) return rv;
-#else
   nsCOMPtr <nsIURL> url;
   rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
@@ -452,7 +422,7 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
  
   rv = url->GetScheme(getter_Copies(scheme));
   if (NS_FAILED(rv)) return rv;
-#endif
+
   /* mailbox:/ means its local (on disk) */
   if (PL_strcmp("mailbox", (const char *)scheme) == 0) {
 	*aResult = PR_TRUE;

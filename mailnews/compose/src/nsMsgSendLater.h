@@ -84,7 +84,7 @@ public:
                                                nsIMsgSendLaterListener          **listenerArray);
 
   // Methods needed for implementing interface...
-  nsIMsgFolder              *GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity);
+  nsresult		    GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder);
   nsresult                  StartNextMailFileSend();
   nsresult                  CompleteMailFileSend();
 

@@ -95,10 +95,10 @@ public:
                                nsITransactionManager *txnMgr,
                                nsMsgComposeAndSend   *aMsgSendObj);
 
-  nsIMsgFolder          *GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity);
-  nsIMsgFolder          *GetDraftsFolder(nsIMsgIdentity *userIdentity);
-  nsIMsgFolder          *GetTemplatesFolder(nsIMsgIdentity *userIdentity);
-  nsIMsgFolder          *GetSentFolder(nsIMsgIdentity *userIdentity);
+  nsresult	GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder);
+  nsresult	GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder);
+  nsresult	GetTemplatesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder);
+  nsresult	GetSentFolder(nsIMsgIdentity *userIdentity,  nsIMsgFolder **msgFolder);
 
   
   //
@@ -111,9 +111,10 @@ public:
 };
 
 // Useful function for the back end...
-nsIMsgFolder      *LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
+nsresult	LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
                                        nsMsgDeliverMode aFolderType,
-                                       const char       *aSaveURI);
+                                       const char       *aSaveURI,
+				       nsIMsgFolder **msgFolder);
 
 nsresult	MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
                                        nsMsgDeliverMode aFolderType,

@@ -486,8 +486,9 @@ NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriority *result)
 	    return NS_ERROR_NULL_POINTER;
 
 	PRUint32 priority = 0;
-	nsresult res = GetUInt32Column(m_mdb->m_priorityColumnToken, &priority);
-
+	nsresult rv = GetUInt32Column(m_mdb->m_priorityColumnToken, &priority);
+    if (NS_FAILED(rv)) return rv;
+    
 	*result = (nsMsgPriority) priority;
 	return NS_OK;
 }

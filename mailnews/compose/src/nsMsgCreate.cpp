@@ -423,9 +423,10 @@ HackUpAURIToPlayWith(void)
   // 
   // Now, get the drafts folder...
   //
-  nsIMsgFolder *folder = LocateMessageFolder(identity, nsMsgSaveAsDraft, folderURI);
+  nsCOMPtr <nsIMsgFolder> folder;
+  rv = LocateMessageFolder(identity, nsMsgSaveAsDraft, folderURI, getter_AddRefs(folder));
   PR_FREEIF(folderURI);
-  if (!folder)
+  if (NS_FAILED(rv) || !folder)
     return nsnull;
 
   nsCOMPtr <nsISimpleEnumerator> enumerator;
