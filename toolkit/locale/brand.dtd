@@ -1,7 +1,6 @@
-<!-- XXXBlake This should be in mozilla/browser -->
+<!-- Don't modify this file. Use it as a template for your application -->
 
-<!ENTITY  lang.version          "1.3a">
-<!ENTITY  brandShortName        "Firebird&#8482;  Browser">
-<!ENTITY  version               "0.6">
-<!ENTITY  vendorShortName       "Firebird&#8482;  Browser">
-<!ENTITY  releaseURL            "http://www.mozilla.org/projects/phoenix/phoenix-release-notes.html">
+<!ENTITY  lang.version          "0.0">
+<!ENTITY  brandShortName        "Mozilla Application">
+<!ENTITY  version               "0.0">
+<!ENTITY  vendorShortName       "Mozilla Application">

@@ -45,7 +45,7 @@ en-US.jar:
 +        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)
 +        locale/en-US/global/finddialog.properties          (locale/finddialog.properties)
 +        locale/en-US/global/brand.dtd                      (locale/brand.dtd)
-+        locale/en-US/global/brand.properties               (locale/brand.properties)
+*+       locale/en-US/global/brand.properties               (locale/brand.properties)
 +        locale/en-US/global/about.xhtml                    (locale/about.xhtml)
 +        locale/en-US/global/customizeToolbar.dtd           (locale/customizeToolbar.dtd)
 +        locale/en-US/global/customizeToolbar.properties    (locale/customizeToolbar.properties)
