@@ -164,7 +164,7 @@ nsNetlibService::nsNetlibService()
      */
     XP_AppLanguage = PL_strdup("en");
 #ifdef XP_WIN
-    XP_AppPlatform = PL_strdup("Win32s");
+    XP_AppPlatform = PL_strdup("Win95");
 #elif defined(XP_MAC)
     XP_AppPlatform = PL_strdup("MacPPC");
 #elif defined(XP_UNIX)
