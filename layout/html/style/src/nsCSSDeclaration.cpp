@@ -26,6 +26,7 @@
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
+static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
 static NS_DEFINE_IID(kCSSTextSID, NS_CSS_TEXT_SID);
 static NS_DEFINE_IID(kCSSMarginSID, NS_CSS_MARGIN_SID);
 static NS_DEFINE_IID(kCSSPositionSID, NS_CSS_POSITION_SID);
@@ -325,6 +326,8 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
   mBackPositionX.AppendToString(buffer, PROP_BACKGROUND_X_POSITION);
   mBackPositionY.AppendToString(buffer, PROP_BACKGROUND_Y_POSITION);
   mBackFilter.AppendToString(buffer, PROP_BACKGROUND_FILTER);
+  mCursor.AppendToString(buffer, PROP_CURSOR);
+  mCursorImage.AppendToString(buffer, PROP_CURSOR_IMAGE);
   fputs(buffer, out);
 }
 
@@ -344,10 +347,28 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   mDecoration.AppendToString(buffer, PROP_TEXT_DECORATION);
   mVertAlign.AppendToString(buffer, PROP_VERTICAL_ALIGN);
   mTransform.AppendToString(buffer, PROP_TEXT_TRANSFORM);
-  mHorzAlign.AppendToString(buffer, PROP_TEXT_ALIGN);
+  mTextAlign.AppendToString(buffer, PROP_TEXT_ALIGN);
   mIndent.AppendToString(buffer, PROP_TEXT_INDENT);
   mLineHeight.AppendToString(buffer, PROP_LINE_HEIGHT);
   mWhiteSpace.AppendToString(buffer, PROP_WHITE_SPACE);
+  fputs(buffer, out);
+}
+
+const nsID& nsCSSDisplay::GetID(void)
+{
+  return kCSSDisplaySID;
+}
+
+void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  mDirection.AppendToString(buffer, PROP_DIRECTION);
+  mDisplay.AppendToString(buffer, PROP_DISPLAY);
+  mFloat.AppendToString(buffer, PROP_FLOAT);
+  mClear.AppendToString(buffer, PROP_CLEAR);
   fputs(buffer, out);
 }
 
@@ -455,9 +476,6 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
   mOverflow.AppendToString(buffer, PROP_OVERFLOW);
   mZIndex.AppendToString(buffer, PROP_OVERFLOW);
   mVisibility.AppendToString(buffer, PROP_VISIBILITY);
-  mFloat.AppendToString(buffer, PROP_FLOAT);
-  mClear.AppendToString(buffer, PROP_CLEAR);
-  mDisplay.AppendToString(buffer, PROP_DISPLAY);
   mFilter.AppendToString(buffer, PROP_FILTER);
   fputs(buffer, out);
 }
@@ -512,6 +530,7 @@ protected:
   nsCSSMargin*    mMargin;
   nsCSSPosition*  mPosition;
   nsCSSList*      mList;
+  nsCSSDisplay*   mDisplay;
 };
 
 #ifdef DEBUG_REFS
@@ -556,6 +575,9 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
   if (nsnull != mList) {
     delete mList;
   }
+  if (nsnull != mDisplay) {
+    delete mDisplay;
+  }
 #ifdef DEBUG_REFS
   --gInstanceCount;
   fprintf(stdout, "%d - CSSDeclaration\n", gInstanceCount);
@@ -575,6 +597,9 @@ nsresult CSSDeclarationImpl::GetData(const nsID& aSID, nsCSSStruct** aDataPtr)
   }
   else if (aSID.Equals(kCSSColorSID)) {
     *aDataPtr = mColor;
+  }
+  else if (aSID.Equals(kCSSDisplaySID)) {
+    *aDataPtr = mDisplay;
   }
   else if (aSID.Equals(kCSSTextSID)) {
     *aDataPtr = mText;
@@ -609,6 +634,12 @@ nsresult CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr
   else if (aSID.Equals(kCSSColorSID)) {
     if (nsnull == mColor) {
       mColor = new nsCSSColor();
+    }
+    *aDataPtr = mColor;
+  }
+  else if (aSID.Equals(kCSSDisplaySID)) {
+    if (nsnull == mDisplay) {
+      mDisplay = new nsCSSDisplay();
     }
     *aDataPtr = mColor;
   }
@@ -687,6 +718,8 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
     case PROP_BACKGROUND_X_POSITION:
     case PROP_BACKGROUND_Y_POSITION:
     case PROP_BACKGROUND_FILTER:
+    case PROP_CURSOR:
+    case PROP_CURSOR_IMAGE:
       if (nsnull == mColor) {
         mColor = new nsCSSColor();
       }
@@ -700,6 +733,8 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_BACKGROUND_X_POSITION:  mColor->mBackPositionX = aValue;   break;
           case PROP_BACKGROUND_Y_POSITION:  mColor->mBackPositionY = aValue;   break;
           case PROP_BACKGROUND_FILTER:      mColor->mBackFilter = aValue;      break;
+          case PROP_CURSOR:                 mColor->mCursor = aValue;          break;
+          case PROP_CURSOR_IMAGE:           mColor->mCursorImage = aValue;     break;
         }
       }
       else {
@@ -727,7 +762,7 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_TEXT_DECORATION:  mText->mDecoration = aValue;     break;
           case PROP_VERTICAL_ALIGN:   mText->mVertAlign = aValue;      break;
           case PROP_TEXT_TRANSFORM:   mText->mTransform = aValue;      break;
-          case PROP_TEXT_ALIGN:       mText->mHorzAlign = aValue;      break;
+          case PROP_TEXT_ALIGN:       mText->mTextAlign = aValue;      break;
           case PROP_TEXT_INDENT:      mText->mIndent = aValue;         break;
           case PROP_LINE_HEIGHT:      mText->mLineHeight = aValue;     break;
           case PROP_WHITE_SPACE:      mText->mWhiteSpace = aValue;     break;
@@ -888,9 +923,6 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
     case PROP_OVERFLOW:
     case PROP_Z_INDEX:
     case PROP_VISIBILITY:
-    case PROP_FLOAT:
-    case PROP_CLEAR:
-    case PROP_DISPLAY:
     case PROP_FILTER:
       if (nsnull == mPosition) {
         mPosition = new nsCSSPosition();
@@ -905,9 +937,6 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_OVERFLOW:   mPosition->mOverflow = aValue;   break;
           case PROP_Z_INDEX:    mPosition->mZIndex = aValue;     break;
           case PROP_VISIBILITY: mPosition->mVisibility = aValue; break;
-          case PROP_FLOAT:      mPosition->mFloat = aValue;      break;
-          case PROP_CLEAR:      mPosition->mClear = aValue;      break;
-          case PROP_DISPLAY:    mPosition->mDisplay = aValue;    break;
           case PROP_FILTER:     mPosition->mFilter = aValue;     break;
         }
       }
@@ -956,6 +985,27 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_LIST_STYLE_TYPE:      mList->mType = aValue;     break;
           case PROP_LIST_STYLE_IMAGE:     mList->mImage = aValue;    break;
           case PROP_LIST_STYLE_POSITION:  mList->mPosition = aValue; break;
+        }
+      }
+      else {
+        result = NS_ERROR_OUT_OF_MEMORY;
+      }
+      break;
+
+      // nsCSSDisplay
+    case PROP_FLOAT:
+    case PROP_CLEAR:
+    case PROP_DISPLAY:
+    case PROP_DIRECTION:
+      if (nsnull == mDisplay) {
+        mDisplay = new nsCSSDisplay();
+      }
+      if (nsnull != mDisplay) {
+        switch (aProperty) {
+          case PROP_FLOAT:      mDisplay->mFloat = aValue;      break;
+          case PROP_CLEAR:      mDisplay->mClear = aValue;      break;
+          case PROP_DISPLAY:    mDisplay->mDisplay = aValue;    break;
+          case PROP_DIRECTION:  mDisplay->mDirection = aValue;    break;
         }
       }
       else {
@@ -1025,6 +1075,8 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_BACKGROUND_X_POSITION:
     case PROP_BACKGROUND_Y_POSITION:
     case PROP_BACKGROUND_FILTER:
+    case PROP_CURSOR:
+    case PROP_CURSOR_IMAGE:
       if (nsnull != mColor) {
         switch (aProperty) {
           case PROP_COLOR:                  aValue = mColor->mColor;           break;
@@ -1035,6 +1087,8 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_BACKGROUND_X_POSITION:  aValue = mColor->mBackPositionX;   break;
           case PROP_BACKGROUND_Y_POSITION:  aValue = mColor->mBackPositionY;   break;
           case PROP_BACKGROUND_FILTER:      aValue = mColor->mBackFilter;      break;
+          case PROP_CURSOR:                 aValue = mColor->mCursor;          break;
+          case PROP_CURSOR_IMAGE:           aValue = mColor->mCursorImage;     break;
         }
       }
       else {
@@ -1059,7 +1113,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_TEXT_DECORATION:  aValue = mText->mDecoration;     break;
           case PROP_VERTICAL_ALIGN:   aValue = mText->mVertAlign;      break;
           case PROP_TEXT_TRANSFORM:   aValue = mText->mTransform;      break;
-          case PROP_TEXT_ALIGN:       aValue = mText->mHorzAlign;      break;
+          case PROP_TEXT_ALIGN:       aValue = mText->mTextAlign;      break;
           case PROP_TEXT_INDENT:      aValue = mText->mIndent;         break;
           case PROP_LINE_HEIGHT:      aValue = mText->mLineHeight;     break;
           case PROP_WHITE_SPACE:      aValue = mText->mWhiteSpace;     break;
@@ -1165,9 +1219,6 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_OVERFLOW:
     case PROP_Z_INDEX:
     case PROP_VISIBILITY:
-    case PROP_FLOAT:
-    case PROP_CLEAR:
-    case PROP_DISPLAY:
     case PROP_FILTER:
       if (nsnull != mPosition) {
         switch (aProperty) {
@@ -1179,9 +1230,6 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_OVERFLOW:   aValue = mPosition->mOverflow;   break;
           case PROP_Z_INDEX:    aValue = mPosition->mZIndex;     break;
           case PROP_VISIBILITY: aValue = mPosition->mVisibility; break;
-          case PROP_FLOAT:      aValue = mPosition->mFloat;      break;
-          case PROP_CLEAR:      aValue = mPosition->mClear;      break;
-          case PROP_DISPLAY:    aValue = mPosition->mDisplay;    break;
           case PROP_FILTER:     aValue = mPosition->mFilter;     break;
         }
       }
@@ -1216,6 +1264,24 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_LIST_STYLE_TYPE:      aValue = mList->mType;     break;
           case PROP_LIST_STYLE_IMAGE:     aValue = mList->mImage;    break;
           case PROP_LIST_STYLE_POSITION:  aValue = mList->mPosition; break;
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+
+      // nsCSSDisplay
+    case PROP_FLOAT:
+    case PROP_CLEAR:
+    case PROP_DISPLAY:
+    case PROP_DIRECTION:
+      if (nsnull != mDisplay) {
+        switch (aProperty) {
+          case PROP_FLOAT:      aValue = mDisplay->mFloat;      break;
+          case PROP_CLEAR:      aValue = mDisplay->mClear;      break;
+          case PROP_DISPLAY:    aValue = mDisplay->mDisplay;    break;
+          case PROP_DIRECTION:  aValue = mDisplay->mDirection;  break;
         }
       }
       else {
@@ -1270,6 +1336,9 @@ void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mList) {
     mList->List(out);
   }
+  if (nsnull != mDisplay) {
+    mDisplay->List(out);
+  }
 
   fputs("}", out);
 }
@@ -1294,24 +1363,23 @@ NS_HTML nsresult
 /*
 font 
 ===========
-
-'font-family', string (list)
-'font-style', enum
-'font-variant' enum (ie: small caps)
-'font-weight' enum
-'font-size' abs, pct, enum, +-1
+font-family: string (list)
+font-style: enum
+font-variant: enum (ie: small caps)
+font-weight: enum
+font-size: abs, pct, enum, +-1
 
 
 color/background
 =============
-
 color: color
 background-color: color
 background-image: url(string)
 background-repeat: enum 
 background-attachment: enum
 background-position-x -y: abs, pct, enum (left/top center right/bottom (pct?))
-
+cursor: enum
+cursor-image: url(string)
 
 
 text
@@ -1346,9 +1414,11 @@ overflow: enum
 z-index: int, auto
 visibity: enum
 
+display
+=======
 float: enum
 clear: enum
-
+direction: enum
 display: enum
 
 filter: string
