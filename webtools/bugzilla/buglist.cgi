@@ -465,7 +465,7 @@ sub GenerateSQL {
          ",anyexact" => sub {
              my @list;
              foreach my $w (split(/,/, $v)) {
-                 if ($w eq "---") {
+                 if ($w eq "---" && $f !~ /milestone/) {
                      $w = "";
                  }
                  push(@list, "$f = " . SqlQuote($w));
