@@ -269,3 +269,5 @@
 <!ENTITY historyCmd.commandkey "H">
 
 <!ENTITY location.label "Location:">
+<!ENTITY location.accesskey "L">
+<!ENTITY openCmd2.commandkey "d">
