@@ -1615,7 +1615,7 @@ nsRenderingContextGTK::GetBoundingMetrics(const char*        aString,
                                           nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (0 < aLength) {
+  if (aString && 0 < aLength) {
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
     gdk_text_extents (mCurrentFont, aString, aLength,
                       &aBoundingMetrics.leftBearing, 
@@ -1623,8 +1623,6 @@ nsRenderingContextGTK::GetBoundingMetrics(const char*        aString,
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent);
-    // flip sign of descent for cross-platform compatibility
-    aBoundingMetrics.descent = -aBoundingMetrics.descent;
 
     aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
     aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);

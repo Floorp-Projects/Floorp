@@ -1425,9 +1425,7 @@ nsRenderingContextXlib::GetBoundingMetrics(const char*        aString,
                                            nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (0 < aLength) {
-    if (!aString)
-      return NS_ERROR_FAILURE;
+  if (aString && 0 < aLength) {
 
     XCharStruct overall;
     int direction, font_ascent, font_descent;
@@ -1445,7 +1443,7 @@ nsRenderingContextXlib::GetBoundingMetrics(const char*        aString,
     aBoundingMetrics.rightBearing =  overall.rbearing;
     aBoundingMetrics.width        =  overall.width;
     aBoundingMetrics.ascent       =  overall.ascent;
-    aBoundingMetrics.descent      = -overall.descent;
+    aBoundingMetrics.descent      =  overall.descent;
 
     aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
     aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
@@ -1464,9 +1462,7 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
                                            PRInt32*           aFontID)
 {
   aBoundingMetrics.Clear(); 
-  if (0 < aLength) {
-    if (!aString)
-      return NS_ERROR_FAILURE;
+  if (aString && 0 < aLength) {
 
     nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) mFontMetrics;
     nsFontXlib* prevFont = nsnull;

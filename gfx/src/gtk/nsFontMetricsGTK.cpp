@@ -2398,7 +2398,7 @@ nsFontMetricsGTK::GetBoundingMetrics (nsFontGTK*         aFont,
 {
   aBoundingMetrics.Clear();               
 
-  if (0 < aLength) {
+  if (aString && 0 < aLength) {
     XChar2b buf[512]; // XXX watch buffer length !!!
     gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
                                             (char*) buf, sizeof(buf));
@@ -2408,8 +2408,6 @@ nsFontMetricsGTK::GetBoundingMetrics (nsFontGTK*         aFont,
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent); 
-    // flip sign of descent for cross-platform compatibility
-    aBoundingMetrics.descent = -aBoundingMetrics.descent;
     // get italic correction
     XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (aFont->mFont);
     unsigned long pr = 0;
