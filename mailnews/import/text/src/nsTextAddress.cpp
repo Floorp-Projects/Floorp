@@ -1017,7 +1017,8 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
   nsCAutoString colType(typeSlot);
   nsCAutoString column(valueSlot);
 
-  // 4.x exports attributes like "givenname", mozilla does "givenName" to be compliant with RFC 2798
+  // 4.x exports attributes like "givenname", 
+  // mozilla does "givenName" to be compliant with RFC 2798
   ToLowerCase(colType);
 
     mdb_u1 firstByte = (mdb_u1)(colType.get())[0];
@@ -1123,10 +1124,23 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
       if (colType.Equals("mail") )
         m_database->AddPrimaryEmail(newRow, column.get());
       else if ( colType.Equals("mobile") )
-    m_database->AddCellularNumber(newRow, column.get());
+        m_database->AddCellularNumber(newRow, column.get());
       else if (colType.Equals("member") && bIsList )
         m_database->AddLdifListMember(newRow, column.get());
-
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "secondemail"))
+        m_database->Add2ndEmail(newRow, column.get());
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "postaladdress2"))
+        m_database->AddWorkAddress2(newRow, column.get());
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homepostaladdress2"))
+        m_database->AddHomeAddress2(newRow, column.get());
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homelocalityname"))
+        m_database->AddHomeCity(newRow, column.get());
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homestreet"))
+        m_database->AddHomeState(newRow, column.get());
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homepostalcode"))
+        m_database->AddHomeZipCode(newRow, column.get());
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homecountryname"))
+        m_database->AddHomeCountry(newRow, column.get());
       break; // 'm'
 
     case 'n':

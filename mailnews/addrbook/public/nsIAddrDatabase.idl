@@ -50,6 +50,12 @@
 [ptr] native nsIMdbRow(nsIMdbRow);
 
 %{C++
+// this is the prefix we for attributes that are specific
+// to the mozilla addressbook, and weren't in 4.x and aren't specified in
+// RFC 2789.  used when exporting and import LDIF
+// see nsTextAddress.cpp, nsAddressBook.cpp
+#define MOZ_AB_LDIF_PREFIX "mozilla"
+
 // note, GeneratedName is not a real column
 // if you change any of this, make sure to change 
 // Get / Set CardValue in nsAbCardProperty.cpp
