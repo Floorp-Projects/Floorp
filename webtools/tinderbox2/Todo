@@ -1,14 +1,11 @@
-The VC_Bonsai implementation does not work.  It is included only
-because they will become important.  I do not understand the
-interfaces well enought to finish the work and I have no means to test
-them.
-
 I did not code a warnings system with all the warning pages (see
 tinderbox1). I am not sure this belongs in Tinderbox proper.  I think
 that a separate webscript running a version of "lint" would be a
-better choice.  IF we need to put it in Tinderbox we should create a
-special library which is called every time the error parser detects a
-warning.
+better choice.  This web script would be a tinderbox "build".  This
+would totally decouple the warning system from the tinderbox error
+parser and provide more robust warnings then a traditional
+compiler. IF we need to put it in Tinderbox we should create a special
+library which is called every time the error parser detects a warning.
 
 I did not code shownote.cgi to allow people who deploy the notice
 board but do not have popup windows to see the notices.
