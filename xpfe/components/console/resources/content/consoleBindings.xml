@@ -6,32 +6,438 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="errormsg">
-    <content>
+  <binding id="console-box" extends="xul:box">
+    <content>  
+      <xul:stringbundle src="chrome://global/locale/console.properties" role="string-bundle"/>
+      <xul:box class="console-box-internal" flex="1">
+        <xul:box class="console-rows" orient="vertical" flex="1" role="console-rows"/>
+      </xul:box>
+    </content>
+  
+    <implementation>
+    
+      <property name="count">
+        <getter>return this.mCount</getter>
+      </property>
+    
+      <property name="mode">
+        <getter>return this.mMode;</getter>
+        <setter><![CDATA[
+          this.mMode = val ? val : "All";
+          this.setAttribute("mode", this.mMode);
+        ]]></setter>
+      </property>
+    
+      <property name="sortOrder">
+        <getter>return this.mSort</getter>
+        <setter><![CDATA[
+          if (this.mSort != val) {
+            this.mSort = val == -1 ? -1 : 1;
+            this.setAttribute("sortOrder", this.mSort);
+            this.reverseRows();
+          }
+        ]]></setter>
+      </property>
+    
+      <property name="selectedItem">
+        <getter>return this.mSelectedItem</getter>
+        <setter><![CDATA[
+          if (this.mSelectedItem)
+            this.mSelectedItem.removeAttribute("selected");
+          
+          this.mSelectedItem = val;
+          val.setAttribute("selected", "true");
+        ]]></setter>
+      </property>
+    
+      <method name="init">
+        <body><![CDATA[
+          this.mCount = 0;
+          
+          this.mConsoleListener = {
+            console: this, 
+            observe : function(aObject) { this.console.appendItem(aObject); }
+          };
+          
+          this.mConsoleRowBox = this.getAnonElByAttr("role", "console-rows");
+          this.mStrBundle = this.getAnonElByAttr("role", "string-bundle");
+          
+          try {
+            var isupports = Components.classes['@mozilla.org/consoleservice;1'].getService();
+            this.mCService = isupports.QueryInterface(Components.interfaces.nsIConsoleService);
+            this.mCService.registerListener(this.mConsoleListener);
+          } catch (ex) {
+            appendItem(
+              "Unable to display errors - couldn't get Console Service component. " +
+              "(Missing @mozilla.org/consoleservice;1)");
+            return;
+          }          
+                    
+          // initialize properties from attributes
+          this.mSort = this.getAttribute("sortOrder") == -1 ? -1 : 1;
+          
+          if (this.hasAttribute("mode"))
+            this.mMode = this.getAttribute("mode");
+          else
+            this.mMode = "All";
 
-      <xul:box flex="1">
-        <xul:box autostretch="never" valign="top" class="error-icon-box">
-          <xul:image class="error-icon" inherits="src,type"/>
+          this.appendInitialItems();
+        ]]></body>
+      </method>
+    
+      <method name="destroy">
+        <body><![CDATA[
+          this.mCService.unregisterListener(this.mConsoleListener);
+        ]]></body>
+      </method>
+    
+      <method name="appendInitialItems">
+        <body><![CDATA[
+          var out = {}; // Throwaway references to support 'out' parameters.
+          this.mCService.getMessageArray(out, {});
+          var messages = out.value;
+      
+          // In case getMessageArray returns 0-length array as null
+          if (!messages)
+            messages = [];
+      
+          var i;
+          var cleared = 0;
+        
+          // Checks if console ever been cleared
+          for (i = messages.length-1; i >=0 ; --i) { 
+            if (messages[i].message == "__CLEAR__") {
+              cleared = i + 1;
+              break;
+            }
+          }
+        
+          // Populates tree with error messages after latest "clear"
+          for (i = cleared; i < messages.length; ++i)
+            this.appendItem(messages[i]);
+        ]]></body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="aObject"/>
+        <body><![CDATA[
+          if (aObject.message == "__CLEAR__") return;
+
+          try {
+            // Try to QI it to a script error to get more info
+            var scriptError = aObject.QueryInterface(Components.interfaces.nsIScriptError);
+            this.appendError(scriptError);
+          } catch (ex) {
+            try {
+              // Try to QI it to a console message
+              var msg = aObject.QueryInterface(Components.interfaces.nsIConsoleMessage);
+              this.appendMessage(msg.message);
+            } catch (ex2) {
+              // Give up and append the object itself as a string
+              this.appendMessage(aObject);
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="appendError">
+        <parameter name="aObject"/>
+        <body><![CDATA[
+          var row = this.createConsoleRow();
+          var nsIScriptError = Components.interfaces.nsIScriptError;
+          
+          // Is this error actually just a non-fatal warning?
+          var warning = aObject.flags & nsIScriptError.warningFlag != 0;
+  
+          var typetext = warning ? "typeWarning" : "typeError";
+          row.setAttribute("typetext", this.mStrBundle.getString(typetext));
+          row.setAttribute("type", warning ? "warning" : "error");
+          row.setAttribute("msg", aObject.message);
+          if (aObject.lineNumber || aObject.sourceName) {
+            row.setAttribute("url", aObject.sourceName);
+            row.setAttribute("line", aObject.lineNumber);
+          } else {
+            row.setAttribute("hideSource", "true");
+          }
+          if (aObject.sourceLine) {
+            row.setAttribute("code", aObject.sourceLine.replace("\n", "", "g"));
+            if (aObject.columnNumber) {
+              row.setAttribute("col", aObject.columnNumber);
+              row.setAttribute("errorDots", this.repeatChar(" ", aObject.columnNumber));
+              row.setAttribute("errorCaret", " ");
+            } else {
+              row.setAttribute("hideCaret", "true");
+            }
+          } else {
+            row.setAttribute("hideCode", "true");
+          }
+          this.appendConsoleRow(row);
+        ]]></body>
+      </method>
+            
+      <method name="appendMessage">
+        <parameter name="aMessage"/>
+        <parameter name="aType"/>
+        <body><![CDATA[
+          var row = this.createConsoleRow();
+          row.setAttribute("type", aType ? aType : "message");
+          row.setAttribute("msg", aMessage);
+          this.appendConsoleRow(row);
+        ]]></body>
+      </method>
+      
+      <method name="clear">
+        <body><![CDATA[
+          this.mCService.logStringMessage("__CLEAR__");
+          this.mCount = 0;
+          
+          var newRows = this.createConsoleRowBox();
+          this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
+          this.mConsoleRowBox = newRows;
+        ]]></body>
+      </method>
+            
+      <method name="copySelectedItem">
+        <body><![CDATA[
+          if (this.mSelectedItem)
+            this.copyString(this.mSelectedItem.toString());
+        ]]></body>
+      </method>
+
+      <method name="createConsoleRowBox">
+        <body><![CDATA[
+          var box = document.createElement("box");
+          box.setAttribute("class", "console-rows");
+          box.setAttribute("orient", "vertical");
+          box.setAttribute("flex", "1");
+          return box;
+        ]]></body>
+      </method>
+                  
+      <method name="createConsoleRow">
+        <body><![CDATA[
+          var row = document.createElement("box");
+          row.setAttribute("class", "console-row");
+          row._IsConsoleRow = true;
+          row._ConsoleBox = this;
+          return row;
+        ]]></body>
+      </method>
+            
+      <method name="appendConsoleRow">
+        <parameter name="aRow"/>
+        <body><![CDATA[
+          if (this.mSort == 1) {
+            this.mConsoleRowBox.appendChild(aRow);
+          } else if (this.mSort == -1) {
+            if (this.mConsoleRowBox.childNodes.length == 0)
+              this.mConsoleRowBox.appendChild(aRow);
+            else
+              this.mConsoleRowBox.insertBefore(aRow, this.mConsoleRowBox.firstChild);
+          }
+                    
+          ++this.mCount;
+          if (this.mCount > 250) this.deleteFirst();
+        ]]></body>
+      </method>
+            
+      <method name="deleteFirst">
+        <body><![CDATA[
+          var node = this.mConsoleRowBox.firstChild;
+          this.mConsoleRowBox.removeChild(node);
+          --this.mCount;
+        ]]></body>
+      </method>
+            
+      <method name="reverseRows">
+        <body><![CDATA[
+          var box = this.mConsoleRowBox;
+          var row;
+          for (var i = 0; i < box.childNodes.length; ++i) {
+            row = box.firstChild;
+            box.removeChild(row);
+            if (i == 0)
+              box.appendChild(row);
+            else
+              box.insertBefore(row, box.childNodes[box.childNodes.length - i]);
+          }
+        ]]></body>
+      </method>
+      
+      <!-- UTILITY FUNCTIONS -->
+      
+      <!-- We need this method only because document.getAnonymousElementByAttribute 
+          is crashing (as of 2/26/2001) -->
+      <method name="getAnonElByAttr">
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          var kids = document.getAnonymousNodes(this);
+          for (var i = 0; i < kids.length; ++i) {
+            if (kids[i].getAttribute(aAttr) == aVal)
+              return kids[i];
+            var kids2 = kids[i].getElementsByAttribute(aAttr, aVal);
+            if (kids2.length > 0)
+              return kids2[0];
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <method name="repeatChar">
+        <parameter name="aChar"/>
+        <parameter name="aCol"/>
+        <body><![CDATA[
+          var str = "";
+          if (aCol)
+            for (var i = 1; i < aCol; ++i)
+              str += aChar;
+          
+          return str;
+        ]]></body>
+      </method>
+          
+      <method name="copyString">
+        <parameter name="aString"/>
+        <body><![CDATA[
+          try {
+            const clipURI = "@mozilla.org/widget/clipboard;1";
+            const clipI = Components.interfaces.nsIClipboard;
+            var clipboard = Components.classes[clipURI].getService(clipI);
+          
+            const transURI = "@mozilla.org/widget/transferable;1";
+            var transferable = Components.classes[transURI].createInstance(Components.interfaces.nsITransferable);
+          
+            transferable.addDataFlavor("text/unicode");
+            
+            const strURI = "@mozilla.org/supports-wstring;1";
+            var wstring = Components.classes[strURI].createInstance(Components.interfaces.nsISupportsWString);
+            
+            wstring.data = aString;
+            transferable.setTransferData("text/unicode", wstring, aString.length * 2);
+            clipboard.setData(transferable, null, clipI.kGlobalClipboard);
+          } catch (ex) {
+            // Unable to copy anything, die quietly
+          }
+        ]]></body>
+      </method>
+      
+    </implementation>
+    
+    <handlers>
+      <handler event="bindingattached"> this.init(); </handler>
+
+      <handler event="bindingdetached"> this.destroy(); </handler>
+
+      <handler event="mousedown"><![CDATA[
+        if (event.button == 0 || event.button == 2) {
+          var target = event.originalTarget;
+  
+          while (target && !("_IsConsoleRow" in target))
+            target = target.parentNode;
+
+          if (target)
+            this.selectedItem = target;
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="error" extends="xul:box">
+    <content>
+      <xul:box class="console-row-internal-box" flex="1">
+        <xul:box class="console-row-icon" autostretch="never" inherits="selected">
+          <xul:image class="console-icon" inherits="src,type"/>
         </xul:box>
-        <xul:box orient="vertical" flex="1">
-          <xul:box autostretch="never" valign="top">
+        <xul:box class="console-row-content" inherits="selected" orient="vertical" flex="1">
+          <xul:box class="console-row-msg" autostretch="never" valign="top">
             <xul:text class="label" inherits="value=typetext"/>
-            <xul:html inherits="value=msg" flex="1"/>
+            <xul:html class="console-error-msg" inherits="value=msg" flex="1"/>
           </xul:box>
-          <xul:box>
-            <xul:text class="label" value="&url.label;"/>
-            <xul:text class="label" inherits="value=url" crop="right"/>
-          </xul:box>
-          <xul:box>
-            <xul:text class="label" value="&line.label;"/>
+          <xul:box class="console-row-file" inherits="hidden=hideSource">
+            <xul:text class="label" value="&errFile.label;"/>
+            <xul:box class="console-error-source" inherits="url"/>
+            <spring flex="1"/>
+            <xul:text class="label" value="&errLine.label;"/>
             <xul:text class="label" inherits="value=line" flex="1"/>
-            <xul:text class="label" value="&col.label;"/>
-            <xul:text class="label" inherits="value=col" flex="1"/>
           </xul:box>
-          <xul:html inherits="value=error"/>
+          <xul:box class="console-row-code" inherits="selected,hidden=hideCode" orient="vertical">
+            <xul:text class="monospace console-code" inherits="value=code"/>
+            <xul:box inherits="hidden=hideCaret">
+              <xul:text class="monospace console-dots" inherits="value=errorDots"/>
+              <xul:text class="monospace console-caret" inherits="value=errorCaret"/>
+              <xul:spring flex="1"/>
+            </xul:box>
+          </xul:box>
         </xul:box>
       </xul:box>
     </content>
+
+    <implementation>
+      
+      <method name="toString">
+        <body><![CDATA[
+          var msg = this.getAttribute("typetext") + " " + this.getAttribute("msg");
+          
+          var strBundle = this._ConsoleBox.mStrBundle;
+          
+          if (this.hasAttribute("line") && this.hasAttribute("url")) {
+            msg += "\n" + strBundle.getFormattedString("errFile", 
+                                        [this.getAttribute("url")]) + "\n";
+            if (this.hasAttribute("col")) {
+              msg += strBundle.getFormattedString("errLineCol",
+                         [this.getAttribute("line"), this.getAttribute("col")]);
+            } else
+              msg += strBundle.getFormattedString("errLine", [this.getAttribute("line")]);
+          }
+          
+          if (this.hasAttribute("code"))
+            msg += "\n" + strBundle.getString("errCode") + "\n" + this.getAttribute("code");
+          
+          return msg;
+        ]]></body>
+      </method>
+      
+    </implementation>
+    
+  </binding>
+  
+  <binding id="message" extends="xul:box">
+    <content>
+      <xul:box class="console-internal-box" flex="1">
+        <xul:box class="console-row-icon" autostretch="never">
+          <xul:image class="console-icon" inherits="src,type"/>
+        </xul:box>
+        <xul:box class="console-row-content" inherits="selected" orient="vertical" flex="1">
+          <xul:box class="console-row-msg" orient="vertical" flex="1">
+            <xul:html class="console-msg-text" inherits="value=msg" flex="1"/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+    </content>
+
+    <implementation>
+      <method name="toString">
+        <body><![CDATA[
+          return this.getAttribute("msg");
+        ]]></body>
+      </method>
+    </implementation>
   </binding>
 
-</bindings>          
+  <binding id="console-error-source" extends="xul:box">
+    <content>
+      <xul:text class="text-link" inherits="value=url" crop="right"/>
+    </content>
+
+    <handlers>
+      <handler event="click"><![CDATA[
+          window.openDialog(
+            "chrome://navigator/content/viewSource.xul", "_blank", 
+            "scrollbars,resizable,chrome,dialog=no", this.getAttribute("url"));
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>
+
