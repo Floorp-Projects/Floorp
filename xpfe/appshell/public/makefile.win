@@ -24,6 +24,7 @@ MODULE=raptor
 EXPORTS =                         \
         nsAppShellCIDs.h          \
         nsIAppShellService.h      \
+        nsICmdLineService.h	  \
         nsIWidgetController.h     \
         $(NULL)
 
