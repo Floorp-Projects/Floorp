@@ -100,6 +100,8 @@ public:
 
   void GetMenuParent(nsIMenuParent** aResult) { NS_IF_ADDREF(mMenuParent); *aResult = mMenuParent; };
  
+  PRBool IsDisabled();
+
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 

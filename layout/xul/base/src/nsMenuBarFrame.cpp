@@ -29,6 +29,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsMenuFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -165,10 +166,7 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       // Get the shortcut attribute.
       nsString shortcutKey = "";
       current->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
@@ -269,10 +267,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
 
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -287,10 +282,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -319,10 +311,7 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
 
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -337,10 +326,7 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -434,4 +420,28 @@ nsMenuBarFrame::DismissChain()
   SetCurrentMenuItem(nsnull);
   SetActive(PR_FALSE);
   return NS_OK;
+}
+
+
+PRBool 
+nsMenuBarFrame::IsValidItem(nsIContent* aContent)
+{
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+  if (tag && (tag.get() == nsXULAtoms::xpmenu ||
+              tag.get() == nsXULAtoms::xpmenuitem) &&
+      !IsDisabled(aContent))
+      return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+PRBool 
+nsMenuBarFrame::IsDisabled(nsIContent* aContent)
+{
+  nsString disabled = "";
+  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  if (disabled == "true")
+    return PR_TRUE;
+  return PR_FALSE;
 }

@@ -74,6 +74,9 @@ public:
   void Escape(PRBool& aHandledFlag);
   void Enter();
 
+  PRBool IsValidItem(nsIContent* aContent);
+  PRBool IsDisabled(nsIContent* aContent);
+
 protected:
   nsIFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.

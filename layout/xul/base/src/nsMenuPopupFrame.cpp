@@ -233,10 +233,7 @@ nsMenuPopupFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
 
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -251,10 +248,7 @@ nsMenuPopupFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -283,10 +277,7 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
 
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -301,10 +292,7 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -411,10 +399,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu ||
-        tag.get() == nsXULAtoms::xpmenuitem) {
+    if (IsValidItem(current)) {
       // Get the shortcut attribute.
       nsString shortcutKey = "";
       current->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
@@ -527,4 +512,27 @@ nsMenuPopupFrame::DismissChain()
   }
 
   return NS_OK;
+}
+
+PRBool 
+nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
+{
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+  if (tag && (tag.get() == nsXULAtoms::xpmenu ||
+              tag.get() == nsXULAtoms::xpmenuitem) &&
+      !IsDisabled(aContent))
+      return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+PRBool 
+nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
+{
+  nsString disabled = "";
+  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  if (disabled == "true")
+    return PR_TRUE;
+  return PR_FALSE;
 }
