@@ -229,7 +229,7 @@ MimeFreeAttachmentList(nsMsgAttachmentData *data)
     for (tmp = data ; tmp->url ; tmp++) 
     {
       /* Can't do PR_FREEIF on `const' values... */
-      if (tmp->url) delete (tmp->url);
+      NS_IF_RELEASE(tmp->url);
       if (tmp->real_type) PR_Free((char *) tmp->real_type);
       if (tmp->real_encoding) PR_Free((char *) tmp->real_encoding);
       if (tmp->real_name) PR_Free((char *) tmp->real_name);
