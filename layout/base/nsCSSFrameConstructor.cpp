@@ -5235,6 +5235,27 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
   return rv;
 }
 
+// a helper routine that automatically navigates placeholders.
+static nsIFrame* GetRealFrame(nsIFrame* aFrame)
+{
+  nsIFrame* result = aFrame;
+
+  // We may be a placeholder.  If we are, go to the real frame.
+  nsCOMPtr<nsIAtom>  frameType;
+  
+  // See if it's a placeholder frame for a floater.
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  PRBool isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType.get());
+  if (isPlaceholder) {
+    // Get the out-of-flow frame that the placeholder points to.
+    // This is the real floater that we should examine.
+    result = NS_STATIC_CAST(nsPlaceholderFrame*,aFrame)->GetOutOfFlowFrame();
+    NS_ASSERTION(result, "No out of flow frame found for placeholder!\n");
+  }
+  
+  return result;
+}
+
 // after the node has been constructed and initialized create any
 // anonymous content a node needs.
 static void LocateAnonymousFrame(nsIPresContext* aPresContext,
@@ -5242,6 +5263,9 @@ static void LocateAnonymousFrame(nsIPresContext* aPresContext,
                                  nsIContent*     aTargetContent,
                                  nsIFrame**      aResult)
 {
+  // We may be a placeholder.  If we are, go to the real frame.
+  aParentFrame = GetRealFrame(aParentFrame);
+
   // Check ourselves.
   *aResult = nsnull;
   nsCOMPtr<nsIContent> content;
@@ -5359,7 +5383,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
           frame->GetStyleContext(getter_AddRefs(styleContext));
           nsIFrame* walkit = explicitItems.childList;
           while (walkit) {
-            aPresContext->ReParentStyleContext(walkit, styleContext);
+            nsIFrame* realFrame = GetRealFrame(walkit);
+            aPresContext->ReParentStyleContext(realFrame, styleContext);
             walkit->GetNextSibling(&walkit);
           }
         }
@@ -5411,7 +5436,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
             frameManager->AppendFrames(aPresContext, *aPresShell, frame,
                                        nsnull, currFrame);
             frame->GetStyleContext(getter_AddRefs(styleContext));
-            aPresContext->ReParentStyleContext(currFrame, styleContext);
+
+            nsIFrame* realFrame = GetRealFrame(currFrame);
+            aPresContext->ReParentStyleContext(realFrame, styleContext);
           }
        
           currFrame = nextFrame;
@@ -8250,12 +8277,13 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
   
+          treeRowGroup->ClearRowGroupInfo();
+          
           nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
           if (innerGroup) {
             nsBoxLayoutState state(aPresContext);
             innerGroup->MarkDirtyChildren(state);
           }
-          treeRowGroup->ClearRowGroupInfo();
           shell->FlushPendingNotifications();
 
           return NS_OK;
@@ -8557,11 +8585,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
   
-          nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
-          treeRowGroup->ClearRowGroupInfo();
-          nsBoxLayoutState state(aPresContext);
-          treeRowGroup->MarkDirtyChildren(state);
-   
           // See if there's a previous sibling.
           nsIFrame* prevSibling = FindPreviousSibling(shell,
                                                        aContainer,
@@ -8592,16 +8615,20 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
               state.mFrameManager->SetUndisplayedContent(aChild, styleContext);
               return NS_OK;
             }
+  
+            nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
+            nsBoxLayoutState state(aPresContext);
             
             if (innerGroup) {
-              //nsBoxLayoutState state(aPresContext);
-              //innerGroup->MarkDirtyChildren(state);
-
               // Good call.  Make sure a full reflow happens.
               nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
               if (nextSibling)
                 innerGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
+              else innerGroup->MarkDirtyChildren(state);
             }
+
+            treeRowGroup->ClearRowGroupInfo();
+            treeRowGroup->MarkDirtyChildren(state);
           }
 
           shell->FlushPendingNotifications();
