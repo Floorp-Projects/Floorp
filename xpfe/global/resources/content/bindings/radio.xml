@@ -185,23 +185,27 @@
         ]]>
         </body>
       </method>
-      <field name="mRadioChildren">[]</field>
+      <field name="mRadioChildren">null</field>
       <method name="_getRadioChildren">
-        <parameter name="aNode">this</parameter>
+        <parameter name="aNode" />
         <body>
         <![CDATA[
-          if (aNode) {
-            if (aNode == this && this.mRadioChildren)
+          if (!aNode)
+            aNode = this;
+          if (aNode == this) {
+            if (this.mRadioChildren)
               return this.mRadioChildren;
-            else if (aNode.localName == "radio") {
-              this.mRadioChildren[this.mRadioChildren.length++] = aNode;
-              return this.mRadioChildren;
-            }
-            else if (aNode.localName == "radiogroup" && aNode != this)
-              return this.mRadioChildren;
-            for (var i = 0; i < aNode.childNodes.length; ++i)
-              this._getRadioChildren(aNode.childNodes[i]);
+            else
+              this.mRadioChildren = new Array();
           }
+          else if (aNode.localName == "radio") {
+            this.mRadioChildren[this.mRadioChildren.length++] = aNode;
+            return this.mRadioChildren;
+          }
+          else if (aNode.localName == "radiogroup" && aNode != this)
+            return this.mRadioChildren;
+          for (var i = 0; i < aNode.childNodes.length; ++i)
+            this._getRadioChildren(aNode.childNodes[i]);
           return this.mRadioChildren;
         ]]>
         </body>
@@ -343,16 +347,18 @@
     <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
       <constructor>
         <![CDATA[
-          var parent = this.radioGroup;
-          parent.mRadioChildren[parent.mRadioChildren.length++] = this;
+          // Just clear out the parent's cached list of radio children
+          this.radioGroup.mRadioChildren = null;
         ]]>
       </constructor>
       <destructor>
         <![CDATA[
-          var parent = this.radioGroup;
-          for (var i = 0; i < parent.mRadioChildren.length; ++i) {
-            if (parent.mRadioChildren[i] == this) {
-              parent.mRadioChildren.slice(i, i);
+          var radioList = this.radioGroup.mRadioChildren;
+          if (!radioList)
+            return;
+          for (var i = 0; i < radioList.length; ++i) {
+            if (radioList[i] == this) {
+              radioList.splice(i, 1);
               return;
             }
           }
