@@ -1402,7 +1402,7 @@ int nsParseMailMessageState::FinalizeHeaders()
               }
             }
           }
-          substring = PL_strstr(content_type->value, "multipart/mixed");
+          substring = PL_strcasestr(content_type->value, "multipart/mixed");
           if (substring)
           {
             PRUint32 newFlags;
