@@ -470,7 +470,7 @@ void CRtfDTD::SetVerification(PRBool aEnabled){
  *  @param   aChild -- int tag of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool CRtfDTD::CanContain(PRInt32 aParent,PRInt32 aChild){
+PRBool CRtfDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const{
   PRBool result=PR_FALSE;
   return result;
 }

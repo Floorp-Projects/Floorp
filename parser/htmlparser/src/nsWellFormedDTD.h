@@ -199,7 +199,7 @@ class CWellFormedDTD : public nsIDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild);
+    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
      * Retrieve a ptr to the global token recycler...

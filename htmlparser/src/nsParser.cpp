@@ -244,17 +244,30 @@ void nsParser::RegisterDTD(nsIDTD* aDTD){
 }
 
 /**
- *  
+ *  Retrieve scanner from topmost parsecontext
  *  
  *  @update  gess 6/9/98
- *  @param   
- *  @return  
+ *  @return  ptr to internal scanner
  */
 CScanner* nsParser::GetScanner(void){
   if(mParserContext)
     return mParserContext->mScanner;
   return 0;
 }
+
+
+/**
+ *  Retrieve parsemode from topmost parser context
+ *  
+ *  @update  gess 6/9/98
+ *  @return  parsemode
+ */
+eParseMode nsParser::GetParseMode(void){
+  if(mParserContext)
+    return mParserContext->mParseMode;
+  return eParseMode_unknown;
+}
+
 
 /**
  *  
@@ -473,9 +486,7 @@ PRInt32 nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
   //ok, time to create our tokenizer and begin the process
   CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
   PushContext(*pc);
-
   pc->mSourceType="text/html";
-
   mParserContext->mScanner->Eof();
   if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
                                          mParserContext->mSourceType)) {

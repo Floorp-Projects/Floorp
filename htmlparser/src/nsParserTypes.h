@@ -34,14 +34,6 @@
 #include "prtypes.h"
 #include "nsError.h"
 
-enum  eParseMode {
-  
-  eParseMode_unknown=0,
-  eParseMode_navigator,
-  eParseMode_other,
-  eParseMode_autodetect
-};
-
 
 const PRInt32   kEOF              = 10000;
 const PRInt32   kUnknownError     = 10001;

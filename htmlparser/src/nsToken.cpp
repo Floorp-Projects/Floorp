@@ -20,6 +20,9 @@
 #include "nsScanner.h"
 
 static int TokenCount=0;
+static int DelTokenCount=0;
+
+int CToken::GetTokenCount(){return TokenCount-DelTokenCount;}
 
 
 /**************************************************************
@@ -67,6 +70,7 @@ CToken::CToken(const char* aName) : mTextValue(aName) {
  *  @update gess 3/25/98
  */
 CToken::~CToken() {
+  DelTokenCount++;
 }
 
 
@@ -115,7 +119,7 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
   for(i=0;i<mTextValue.Length();i++){
     anOutputStream << char(mTextValue[i]);
   }
-  anOutputStream << ": " << mTypeID << endl;
+  anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << endl;
 }
 
 /**

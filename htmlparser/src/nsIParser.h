@@ -47,6 +47,16 @@ class nsIStreamObserver;
 class nsString;
 class nsIURL;
 
+
+enum  eParseMode {
+  
+  eParseMode_unknown=0,
+  eParseMode_navigator,
+  eParseMode_noquirks,
+  eParseMode_other,
+  eParseMode_autodetect
+};
+
 /**
  *  This class defines the iparser interface. This XPCOM
  *  inteface is all that parser clients ever need to see.
@@ -103,6 +113,16 @@ class nsIParser : public nsISupports {
      * @return  error code -- 0 if model building went well .
      */
     virtual PRInt32 BuildModel(void)=0;
+
+
+    /**
+     *  Retrieve the parse mode from the parser...
+     *  
+     *  @update  gess 6/9/98
+     *  @return  ptr to scanner
+     */
+    virtual eParseMode GetParseMode(void)=0;
+
 
 };
 

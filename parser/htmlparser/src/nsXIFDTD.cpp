@@ -812,7 +812,7 @@ nsIContentSink* nsXIFDTD::SetContentSink(nsIContentSink* aSink) {
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool nsXIFDTD::CanContain(eXIFTags aParent,eXIFTags aChild) const {
+PRBool nsXIFDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
   PRBool result=PR_FALSE;
   
@@ -1824,12 +1824,6 @@ PRBool nsXIFDTD::Verify(nsString& aURLRef){
   return result;
 }
 
-
-
-PRBool nsXIFDTD::CanContain(PRInt32 aParent,PRInt32 aChild) 
-{
-  return PR_TRUE;
-}
 
 void nsXIFDTD::SetURLRef(char * aURLRef)
 {

@@ -184,6 +184,8 @@ class CToken {
      */
     virtual void SelfTest(void);
 
+    static int GetTokenCount();
+
 protected:
     PRInt32				mTypeID;
     PRInt16				mAttrCount;

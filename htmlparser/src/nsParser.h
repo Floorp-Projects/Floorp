@@ -104,11 +104,18 @@ friend class CTokenHandler;
     virtual void RegisterDTD(nsIDTD* aDTD);
 
     /**
-     *  
+     *  Retrieve the scanner from the topmost parser context
      *  
      *  @update  gess 6/9/98
-     *  @param   
-     *  @return  
+     *  @return  ptr to scanner
+     */
+    virtual eParseMode GetParseMode(void);
+
+    /**
+     *  Retrieve the scanner from the topmost parser context
+     *  
+     *  @update  gess 6/9/98
+     *  @return  ptr to scanner
      */
     virtual CScanner* GetScanner(void);
 

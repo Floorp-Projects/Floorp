@@ -174,7 +174,7 @@ class nsIDTD : public nsISupports {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild)=0;
+    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const =0;
 
     /**
      * Called by the parser to initiate dtd verification of the
