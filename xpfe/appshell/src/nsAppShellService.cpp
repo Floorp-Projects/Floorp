@@ -475,7 +475,6 @@ nsAppShellService::Shutdown(void)
   // Shutdown all components.
   EnumerateComponents( &nsAppShellService::ShutdownComponent );
 
-  mAppShell->Exit();
 #else
   while (mWindowList->Count() > 0) {
     nsISupports * winSupports = mWindowList->ElementAt(0);
