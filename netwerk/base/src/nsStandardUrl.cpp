@@ -62,6 +62,7 @@ nsStandardURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
     if (aIID.Equals(kThisStandardUrlImplementationCID) ||        // used by Equals
+        aIID.Equals(nsIURL::GetIID()) ||
         aIID.Equals(nsIURI::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
