@@ -32,23 +32,21 @@
 #include "nsCOMPtr.h"
 #include "nsIVariant.h"
 
-class nsSOAPMessage : public nsISOAPMessage
-{
+class nsSOAPMessage:public nsISOAPMessage {
 public:
   nsSOAPMessage();
-  virtual ~nsSOAPMessage();
+  virtual ~ nsSOAPMessage();
 
   NS_DECL_ISUPPORTS
-
-  // nsISOAPMessage
-  NS_DECL_NSISOAPMESSAGE
-
-protected:
+      // nsISOAPMessage
+NS_DECL_NSISOAPMESSAGE protected:
 
   PRUint16 GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope);
-  nsresult GetEncodingWithVersion(nsIDOMElement *aFirst, PRUint16 *aVersion, nsISOAPEncoding **aEncoding);
-  nsCOMPtr<nsIDOMDocument> mMessage;
-  nsCOMPtr<nsISOAPEncoding> mEncoding;
+  nsresult GetEncodingWithVersion(nsIDOMElement * aFirst,
+				  PRUint16 * aVersion,
+				  nsISOAPEncoding ** aEncoding);
+   nsCOMPtr < nsIDOMDocument > mMessage;
+   nsCOMPtr < nsISOAPEncoding > mEncoding;
   nsString mActionURI;
 };
 

@@ -34,10 +34,10 @@ interface nsISchemaType;
  */
 
 [scriptable, uuid(99ec6690-535f-11d4-9a58-000064657374)]
-interface nsISOAPParameter : nsISOAPBlock {
+interface nsISOAPParameter:nsISOAPBlock {
 };
 
-%{ C++
+%{C++
 #define NS_SOAPPARAMETER_CID                        \
 { /* 87d21ec2-539d-11d4-9a59-00104bdf5339 */        \
   0x87d21ec2, 0x539d, 0x11d4,                       \

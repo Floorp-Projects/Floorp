@@ -31,7 +31,7 @@ interface nsIDOMElement;
  */
 
 [scriptable, uuid(99ec6694-535f-11d4-9a58-000064657374)]
-interface nsISOAPFault : nsISupports {
+interface nsISOAPFault:nsISupports {
   /**
    * The DOM element representing the fault in the response SOAP message.
    * This must be set for the rest of the interface to function correctly.
@@ -47,7 +47,7 @@ interface nsISOAPFault : nsISupports {
    * The fault string
    */
   readonly attribute AString faultString;
-  
+
   /**
    * The fault actor if one was specified.
    */
@@ -59,7 +59,7 @@ interface nsISOAPFault : nsISupports {
   readonly attribute nsIDOMElement detail;
 };
 
-%{ C++
+%{C++
 #define NS_SOAPFAULT_CID                            \
 { /* 87d21ec1-539d-11d4-9a59-00104bdf5339 */        \
   0x87d21ec1, 0x539d, 0x11d4,                       \

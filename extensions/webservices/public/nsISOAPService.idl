@@ -33,7 +33,7 @@ interface nsISOAPResponseListener;
  *   if it is not.  Services may be chained.
  */
 [scriptable, uuid(9927fa40-1dd1-11b2-a8d1-857ad21b872c)]
-interface nsISOAPService : nsISupports {
+interface nsISOAPService:nsISupports {
 /**
  * Configuration object that may contain more info on the service
  */
@@ -51,11 +51,11 @@ interface nsISOAPService : nsISupports {
  *   In case of failure, a more detailed status will be
  *   recorded in the message.
  */
-  boolean process(in nsISOAPMessage aMessage, 
-    in nsISOAPResponseListener aListener);
+  boolean process(in nsISOAPMessage aMessage,
+		  in nsISOAPResponseListener aListener);
 };
 
-%{ C++
+%{C++
 #define NS_SOAPJSSERVICE_CID                            \
 { /* 26a41df2-1dd2-11b2-9f29-909e637afa0e */        \
   0x26a41df2, 0x1dd2, 0x11b2,                       \

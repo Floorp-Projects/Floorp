@@ -38,46 +38,49 @@ nsSOAPResponse::~nsSOAPResponse()
   /* destructor code */
 }
 
-NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPResponse, nsISOAPMessage, nsISOAPResponse)
-NS_IMPL_ADDREF_INHERITED(nsSOAPResponse, nsSOAPMessage)
-NS_IMPL_RELEASE_INHERITED(nsSOAPResponse, nsSOAPMessage)
-
-NS_INTERFACE_MAP_BEGIN(nsSOAPResponse)
-NS_INTERFACE_MAP_ENTRY(nsISOAPResponse)
-NS_IMPL_QUERY_CLASSINFO(nsSOAPResponse)
-NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
-
-
+NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPResponse, nsISOAPMessage,
+			     nsISOAPResponse)
+    NS_IMPL_ADDREF_INHERITED(nsSOAPResponse, nsSOAPMessage)
+    NS_IMPL_RELEASE_INHERITED(nsSOAPResponse, nsSOAPMessage)
+    NS_INTERFACE_MAP_BEGIN(nsSOAPResponse)
+    NS_INTERFACE_MAP_ENTRY(nsISOAPResponse)
+    NS_IMPL_QUERY_CLASSINFO(nsSOAPResponse)
+    NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
 /* readonly attribute nsISOAPFault fault; */
 NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
 {
   NS_ENSURE_ARG_POINTER(aFault);
-  nsCOMPtr<nsIDOMElement> body;
+  nsCOMPtr < nsIDOMElement > body;
 
   *aFault = nsnull;
   nsresult rc = GetBody(getter_AddRefs(body));
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   if (body) {
     PRUint16 version;
     rc = GetVersion(&version);
-    if (NS_FAILED(rc)) return rc;
+    if (NS_FAILED(rc))
+      return rc;
     if (rc != nsSOAPMessage::VERSION_UNKNOWN) {
-      nsCOMPtr<nsIDOMElement> fault;
-      nsSOAPUtils::GetSpecificChildElement(body, 
-        *nsSOAPUtils::kSOAPEnvURI[version], nsSOAPUtils::kFaultTagName, 
-        getter_AddRefs(fault));
+      nsCOMPtr < nsIDOMElement > fault;
+      nsSOAPUtils::GetSpecificChildElement(body,
+					   *nsSOAPUtils::
+					   kSOAPEnvURI[version],
+					   nsSOAPUtils::kFaultTagName,
+					   getter_AddRefs(fault));
       if (fault) {
-	nsCOMPtr<nsISOAPFault> f = do_CreateInstance(NS_SOAPFAULT_CONTRACTID);
-        if (!f)
-          return NS_ERROR_OUT_OF_MEMORY;
+	nsCOMPtr < nsISOAPFault > f =
+	    do_CreateInstance(NS_SOAPFAULT_CONTRACTID);
+	if (!f)
+	  return NS_ERROR_OUT_OF_MEMORY;
 	rc = f->SetElement(fault);
-        if (NS_FAILED(rc)) return rc;
+	if (NS_FAILED(rc))
+	  return rc;
 	*aFault = f;
-        NS_ADDREF(*aFault);
+	NS_ADDREF(*aFault);
       }
     }
-  }
-  else {
+  } else {
     *aFault = nsnull;
   }
   return NS_OK;

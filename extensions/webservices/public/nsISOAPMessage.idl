@@ -41,11 +41,11 @@ interface nsIVariant;
  */
 
 [scriptable, uuid(3970815e-1dd2-11b2-a475-db4dac6826f1)]
-interface nsISOAPMessage : nsISupports {
+interface nsISOAPMessage:nsISupports {
 
-  const unsigned short      VERSION_1_1              = 0;
-  const unsigned short      VERSION_1_2              = 1;
-  const unsigned short      VERSION_UNKNOWN          = 32767;
+  const unsigned short VERSION_1_1 = 0;
+  const unsigned short VERSION_1_2 = 1;
+  const unsigned short VERSION_UNKNOWN = 32767;
 
   /**
    * The document which captures the message, if any.  A simple 
@@ -113,7 +113,7 @@ interface nsISOAPMessage : nsISupports {
    * specification makes it difficult to tell which way a
    * message was encoded.
    */
-  readonly attribute AString methodName;   
+  readonly attribute AString methodName;
 
   /**
    * The target object on which the method is being invoked. This URI
@@ -152,13 +152,15 @@ interface nsISOAPMessage : nsISupports {
    * @param aParameters An array of parameters to be 
    *   encoded, which may null if there are no parameters.
    */
-  void encode(
-    in unsigned short aVersion,
-    in AString aMethodName, in AString aTargetObjectURI,
-    in PRUint32 aHeaderBlockCount, 
-    [array, size_is(aHeaderBlockCount)] in nsISOAPHeaderBlock aHeaderBlocks,
-    in PRUint32 aParameterCount, 
-    [array, size_is(aParameterCount)] in nsISOAPParameter aParameters);
+  void encode(in unsigned short aVersion,
+	      in AString aMethodName, in AString aTargetObjectURI,
+	      in PRUint32 aHeaderBlockCount,
+	      [array,
+	       size_is(aHeaderBlockCount)] in nsISOAPHeaderBlock
+	      aHeaderBlocks, in PRUint32 aParameterCount,[array,
+							  size_is
+							  (aParameterCount)]
+	      in nsISOAPParameter aParameters);
 
   /**
    * Gathers the header blocks of a message so that they can be
@@ -170,7 +172,8 @@ interface nsISOAPMessage : nsISupports {
    * @return Array of header blocks found in the message.
    */
   void getHeaderBlocks(out PRUint32 aCount,
-    [array, size_is(aCount), retval] out nsISOAPHeaderBlock aHeaderBlocks);
+		       [array, size_is(aCount),
+			retval] out nsISOAPHeaderBlock aHeaderBlocks);
 
   /**
    * Gathers the parameters of a message so that they can be
@@ -187,8 +190,9 @@ interface nsISOAPMessage : nsISupports {
    * @return Array of parameters found in the message.
    */
   void getParameters(in boolean aDocumentStyle,
-    out PRUint32 aCount, 
-    [array, size_is(aCount), retval] out nsISOAPParameter aParameters);
+		     out PRUint32 aCount,
+		     [array, size_is(aCount),
+		      retval] out nsISOAPParameter aParameters);
 
   /**
    * The primary encoding of the message, which is established

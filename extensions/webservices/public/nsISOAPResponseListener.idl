@@ -31,8 +31,9 @@ interface nsISOAPResponse;
  * responses are expected.
  */
 
-[scriptable, function, uuid(99ec6692-535f-11d4-9a58-000064657374)]
-interface nsISOAPResponseListener : nsISupports {
+[scriptable, function,
+ uuid(99ec6692-535f-11d4-9a58-000064657374)]
+interface nsISOAPResponseListener:nsISupports {
   /**
    * This method is invoked when we receive an asynchronous response to 
    * a SOAP message. The listener is registered as part of the original
@@ -55,7 +56,8 @@ interface nsISOAPResponseListener : nsISupports {
    *   should return true upon receiving that response to avoid
    *   possibly recieving another callback with a null response
    *   indicating that the last response was already sent.
-   */ 
-  boolean handleResponse(in nsISOAPResponse aResponse, 
-    in nsISOAPCall aCall, in nsresult status, in boolean aLast);
+   */
+  boolean handleResponse(in nsISOAPResponse aResponse,
+			 in nsISOAPCall aCall, in nsresult status,
+			 in boolean aLast);
 };

@@ -42,7 +42,6 @@ nsHTTPSOAPTransport::~nsHTTPSOAPTransport()
 }
 
 NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
-
 #ifdef DEBUG
 #define DEBUG_DUMP_DOCUMENT(message,doc) \
   { \
@@ -55,95 +54,104 @@ NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
 	  nsAutoString result(serial);\
 	  printf(message ":\n%s\n", NS_ConvertUCS2toUTF8(result).get());\
   }
-
 //  Availble from the debugger...
-
-nsresult DebugPrintDOM(nsIDOMNode* node)
+nsresult DebugPrintDOM(nsIDOMNode * node)
 {
-	DEBUG_DUMP_DOCUMENT("DOM", node)
-	return NS_OK;
+  DEBUG_DUMP_DOCUMENT("DOM", node) return NS_OK;
 }
 #else
 #define DEBUG_DUMP_DOCUMENT(message,doc)
 #endif
-
 /* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
-NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse *aResponse)
+NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall,
+					    nsISOAPResponse * aResponse)
 {
   NS_ENSURE_ARG(aCall);
 
   nsresult rv;
-  nsCOMPtr<nsIXMLHttpRequest> request;
+  nsCOMPtr < nsIXMLHttpRequest > request;
 
-  nsCOMPtr<nsIDOMDocument> messageDocument;
+  nsCOMPtr < nsIDOMDocument > messageDocument;
   rv = aCall->GetMessage(getter_AddRefs(messageDocument));
-  if (NS_FAILED(rv)) return rv;
-  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!messageDocument)
+    return NS_ERROR_NOT_INITIALIZED;
 
   DEBUG_DUMP_DOCUMENT("Synchronous Request", messageDocument)
-
-  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+      request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsAutoString uri;
   rv = aCall->GetTransportURI(uri);
-  if (NS_FAILED(rv)) return rv;
-  if (AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
+  if (NS_FAILED(rv))
+    return rv;
+  if (AStringIsNull(uri))
+    return NS_ERROR_NOT_INITIALIZED;
 
-  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_FALSE, nsnull, nsnull);
-  if (NS_FAILED(rv)) return rv;
-			    
+  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
+			    PR_FALSE, nsnull, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsAutoString action;
   rv = aCall->GetActionURI(action);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
   if (!AStringIsNull(action)) {
-    rv = request->SetRequestHeader("SOAPAction", NS_ConvertUCS2toUTF8(action).get());
-    if (NS_FAILED(rv)) return rv;
+    rv = request->SetRequestHeader("SOAPAction",
+				   NS_ConvertUCS2toUTF8(action).get());
+    if (NS_FAILED(rv))
+      return rv;
   }
 
-  nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr < nsIWritableVariant > variant =
+      do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
-  rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument), messageDocument);
-  if (NS_FAILED(rv)) return rv;
+  rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument),
+			       messageDocument);
+  if (NS_FAILED(rv))
+    return rv;
 
 
   rv = request->Send(variant);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   PRUint32 status;
   rv = request->GetStatus(&status);
-  if (NS_SUCCEEDED(rv)
-    && (status < 200
-    || status >= 300)) rv = NS_ERROR_FAILURE;
-  if (NS_FAILED(rv)) return rv;
+  if (NS_SUCCEEDED(rv) && (status < 200 || status >= 300))
+    rv = NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
 
   if (aResponse) {
-    nsCOMPtr<nsIDOMDocument> response;
+    nsCOMPtr < nsIDOMDocument > response;
     rv = request->GetResponseXML(getter_AddRefs(response));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
     if (response) {
-        DEBUG_DUMP_DOCUMENT("Asynchronous Response", response)
-    }
+    DEBUG_DUMP_DOCUMENT("Asynchronous Response", response)}
     rv = aResponse->SetMessage(response);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2_CI(nsHTTPSOAPTransportCompletion, nsIDOMEventListener, nsISOAPCallCompletion)
-
-nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion()
+NS_IMPL_ISUPPORTS2_CI(nsHTTPSOAPTransportCompletion, nsIDOMEventListener,
+		      nsISOAPCallCompletion)
+    nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion()
 {
   NS_INIT_ISUPPORTS();
 }
-nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(
-		nsISOAPCall *call, 
-		nsISOAPResponse *response, 
-		nsIXMLHttpRequest *request, 
-		nsISOAPResponseListener *listener):
-                  mCall(call), mResponse(response), mRequest(request), mListener(listener)
+
+nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(nsISOAPCall * call, nsISOAPResponse * response, nsIXMLHttpRequest * request, nsISOAPResponseListener * listener):
+mCall(call), mResponse(response), mRequest(request), mListener(listener)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -151,6 +159,7 @@ nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(
 nsHTTPSOAPTransportCompletion::~nsHTTPSOAPTransportCompletion()
 {
 }
+
 /* readonly attribute nsISOAPCall call; */
 NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetCall(nsISOAPCall * *aCall)
 {
@@ -160,15 +169,20 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetCall(nsISOAPCall * *aCall)
 }
 
 /* readonly attribute nsISOAPResponse response; */
-NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetResponse(nsISOAPResponse * *aResponse)
+NS_IMETHODIMP
+    nsHTTPSOAPTransportCompletion::GetResponse(nsISOAPResponse *
+					       *aResponse)
 {
-  *aResponse = mRequest ? (nsCOMPtr<nsISOAPResponse>)nsnull : mResponse;
+  *aResponse =
+      mRequest ? (nsCOMPtr < nsISOAPResponse >) nsnull : mResponse;
   NS_IF_ADDREF(*aResponse);
   return NS_OK;
 }
 
 /* readonly attribute nsISOAPResponseListener listener; */
-NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetListener(nsISOAPResponseListener * *aListener)
+NS_IMETHODIMP
+    nsHTTPSOAPTransportCompletion::GetListener(nsISOAPResponseListener *
+					       *aListener)
 {
   *aListener = mListener;
   NS_IF_ADDREF(*aListener);
@@ -176,14 +190,15 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetListener(nsISOAPResponseListener
 }
 
 /* readonly attribute boolean isComplete; */
-NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetIsComplete(PRBool *aIsComplete)
+NS_IMETHODIMP
+    nsHTTPSOAPTransportCompletion::GetIsComplete(PRBool * aIsComplete)
 {
   *aIsComplete = mRequest == nsnull;
   return NS_OK;
 }
 
 /* boolean abort (); */
-NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool *_retval)
+NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool * _retval)
 {
   if (mRequest) {
     if (NS_SUCCEEDED(mRequest->Abort())) {
@@ -195,96 +210,120 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool *_retval)
   *_retval = PR_FALSE;
   return NS_OK;
 }
+
 NS_IMETHODIMP
-nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent* aEvent)
+    nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent * aEvent)
 {
   PRUint32 status;
   nsresult rv;
-  if (mRequest) {  //  Avoid if it has been aborted.
+  if (mRequest) {		//  Avoid if it has been aborted.
     rv = mRequest->GetStatus(&status);
-    if (NS_SUCCEEDED(rv)
-      && (status < 200
-      || status >= 300)) rv = NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(rv) && (status < 200 || status >= 300))
+      rv = NS_ERROR_FAILURE;
     if (mResponse && NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMDocument> document;
+      nsCOMPtr < nsIDOMDocument > document;
       rv = mRequest->GetResponseXML(getter_AddRefs(document));
       if (NS_SUCCEEDED(rv) && document) {
-        rv = mResponse->SetMessage(document);
-        DEBUG_DUMP_DOCUMENT("Asynchronous Response", document)
+	rv = mResponse->SetMessage(document);
+      DEBUG_DUMP_DOCUMENT("Asynchronous Response", document)} else {
+	mResponse = nsnull;
       }
-      else {
-        mResponse = nsnull;
-      }
-    }
-    else {
+    } else {
       mResponse = nsnull;
     }
-    nsCOMPtr<nsISOAPCallCompletion> kungFuDeathGrip = this;
-    mRequest = nsnull;	//  Break cycle of references by releas.
-    PRBool c;  //  In other transports, this may signal to stop returning if multiple returns
+    nsCOMPtr < nsISOAPCallCompletion > kungFuDeathGrip = this;
+    mRequest = nsnull;		//  Break cycle of references by releas.
+    PRBool c;			//  In other transports, this may signal to stop returning if multiple returns
     mListener->HandleResponse(mResponse, mCall, rv, PR_TRUE, &c);
   }
   return NS_OK;
 }
 
 /* void asyncCall (in nsISOAPCall aCall, in nsISOAPResponseListener aListener, in nsISOAPResponse aResponse); */
-NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponseListener *aListener, nsISOAPResponse *aResponse,
-		nsISOAPCallCompletion** aCompletion)
+NS_IMETHODIMP
+    nsHTTPSOAPTransport::AsyncCall(nsISOAPCall * aCall,
+				   nsISOAPResponseListener * aListener,
+				   nsISOAPResponse * aResponse,
+				   nsISOAPCallCompletion ** aCompletion)
 {
   NS_ENSURE_ARG(aCall);
 
   nsresult rv;
-  nsCOMPtr<nsIXMLHttpRequest> request;
+  nsCOMPtr < nsIXMLHttpRequest > request;
 
-  nsCOMPtr<nsIDOMDocument> messageDocument;
+  nsCOMPtr < nsIDOMDocument > messageDocument;
   rv = aCall->GetMessage(getter_AddRefs(messageDocument));
-  if (NS_FAILED(rv)) return rv;
-  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!messageDocument)
+    return NS_ERROR_NOT_INITIALIZED;
 
   DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
+      request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
-  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(request, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr < nsIDOMEventTarget > eventTarget =
+      do_QueryInterface(request, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsAutoString uri;
   rv = aCall->GetTransportURI(uri);
-  if (NS_FAILED(rv)) return rv;
-  if (AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
+  if (NS_FAILED(rv))
+    return rv;
+  if (AStringIsNull(uri))
+    return NS_ERROR_NOT_INITIALIZED;
 
-  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_TRUE, nsnull, nsnull);
-  if (NS_FAILED(rv)) return rv;
-			    
+  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
+			    PR_TRUE, nsnull, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsAutoString action;
   rv = aCall->GetActionURI(action);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
   if (!AStringIsNull(action)) {
-    rv = request->SetRequestHeader("SOAPAction", NS_ConvertUCS2toUTF8(action).get());
-    if (NS_FAILED(rv)) return rv;
+    rv = request->SetRequestHeader("SOAPAction",
+				   NS_ConvertUCS2toUTF8(action).get());
+    if (NS_FAILED(rv))
+      return rv;
   }
 
-  nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr < nsIWritableVariant > variant =
+      do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
-  rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument), messageDocument);
-  if (NS_FAILED(rv)) return rv;
+  rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument),
+			       messageDocument);
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsCOMPtr<nsISOAPCallCompletion> completion;
+  nsCOMPtr < nsISOAPCallCompletion > completion;
 
   if (aListener) {
-    completion = new nsHTTPSOAPTransportCompletion(aCall, aResponse, request, aListener);
-    if (!completion) return NS_ERROR_OUT_OF_MEMORY;
+    completion =
+	new nsHTTPSOAPTransportCompletion(aCall, aResponse, request,
+					  aListener);
+    if (!completion)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(completion);
-    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr < nsIDOMEventListener > listener =
+	do_QueryInterface(completion);
+    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener,
+				       PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
+    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("error"),
+				       listener, PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
   }
   rv = request->Send(variant);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   *aCompletion = completion;
   NS_IF_ADDREF(*aCompletion);
@@ -293,15 +332,19 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
 }
 
 /* void addListener (in nsISOAPTransportListener aListener, in boolean aCapture); */
-NS_IMETHODIMP nsHTTPSOAPTransport::AddListener(nsISOAPTransportListener *aListener, PRBool aCapture)
+NS_IMETHODIMP
+    nsHTTPSOAPTransport::AddListener(nsISOAPTransportListener * aListener,
+				     PRBool aCapture)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void removeListener (in nsISOAPTransportListener aListener, in boolean aCapture); */
-NS_IMETHODIMP nsHTTPSOAPTransport::RemoveListener(nsISOAPTransportListener *aListener, PRBool aCapture)
+NS_IMETHODIMP
+    nsHTTPSOAPTransport::RemoveListener(nsISOAPTransportListener *
+					aListener, PRBool aCapture)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsHTTPSSOAPTransport::nsHTTPSSOAPTransport()

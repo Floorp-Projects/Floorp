@@ -46,6 +46,7 @@ OBJS=	\
 	.\$(OBJDIR)\nsSOAPHeaderBlock.obj    \
 	.\$(OBJDIR)\nsSOAPMessage.obj        \
 	.\$(OBJDIR)\nsSOAPParameter.obj      \
+	.\$(OBJDIR)\nsSOAPPropertyBag.obj      \
 	.\$(OBJDIR)\nsSOAPResponse.obj       \
 	.\$(OBJDIR)\nsSOAPUtils.obj          \
 	$(NULL)

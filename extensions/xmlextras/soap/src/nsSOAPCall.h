@@ -30,25 +30,19 @@
 #include "nsISOAPResponseListener.h"
 #include "nsCOMPtr.h"
 
-class nsSOAPCall : public nsSOAPMessage,
-                   public nsISOAPCall
-{
+class nsSOAPCall:public nsSOAPMessage, public nsISOAPCall {
 public:
   nsSOAPCall();
-  virtual ~nsSOAPCall();
+  virtual ~ nsSOAPCall();
 
   NS_DECL_ISUPPORTS
-
-  // nsISOAPCall
+      // nsISOAPCall
   NS_FORWARD_NSISOAPMESSAGE(nsSOAPMessage::)
+      // nsISOAPCall
+NS_DECL_NSISOAPCALL protected:
 
-  // nsISOAPCall
-  NS_DECL_NSISOAPCALL
-
-protected:
-
-  nsString mTransportURI;
-  nsresult GetTransport(nsISOAPTransport** aTransport);
+   nsString mTransportURI;
+  nsresult GetTransport(nsISOAPTransport ** aTransport);
 };
 
 #endif

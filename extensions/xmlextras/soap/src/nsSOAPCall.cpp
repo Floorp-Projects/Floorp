@@ -43,14 +43,12 @@ nsSOAPCall::~nsSOAPCall()
 }
 
 NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPCall, nsISOAPMessage, nsISOAPCall)
-NS_IMPL_ADDREF_INHERITED(nsSOAPCall, nsSOAPMessage)
-NS_IMPL_RELEASE_INHERITED(nsSOAPCall, nsSOAPMessage)
-
-NS_INTERFACE_MAP_BEGIN(nsSOAPCall)
-NS_INTERFACE_MAP_ENTRY(nsISOAPCall)
-NS_IMPL_QUERY_CLASSINFO(nsSOAPCall)
-NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
-
+    NS_IMPL_ADDREF_INHERITED(nsSOAPCall, nsSOAPMessage)
+    NS_IMPL_RELEASE_INHERITED(nsSOAPCall, nsSOAPMessage)
+    NS_INTERFACE_MAP_BEGIN(nsSOAPCall)
+    NS_INTERFACE_MAP_ENTRY(nsISOAPCall)
+    NS_IMPL_QUERY_CLASSINFO(nsSOAPCall)
+    NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
 /* attribute DOMString transportURI; */
 NS_IMETHODIMP nsSOAPCall::GetTransportURI(nsAString & aTransportURI)
 {
@@ -58,32 +56,35 @@ NS_IMETHODIMP nsSOAPCall::GetTransportURI(nsAString & aTransportURI)
   aTransportURI.Assign(mTransportURI);
   return NS_OK;
 }
+
 NS_IMETHODIMP nsSOAPCall::SetTransportURI(const nsAString & aTransportURI)
 {
   mTransportURI.Assign(aTransportURI);
   return NS_OK;
 }
 
-nsresult
-nsSOAPCall::GetTransport(nsISOAPTransport** aTransport)
+nsresult nsSOAPCall::GetTransport(nsISOAPTransport ** aTransport)
 {
   NS_ENSURE_ARG_POINTER(aTransport);
   nsresult rv;
-  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr < nsIURI > uri;
   nsXPIDLCString protocol;
   nsCString transportURI(ToNewCString(mTransportURI));
 
   rv = NS_NewURI(getter_AddRefs(uri), transportURI.get());
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   uri->GetScheme(getter_Copies(protocol));
-  
+
   nsCAutoString transportContractid;
   transportContractid.Assign(NS_SOAPTRANSPORT_CONTRACTID_PREFIX);
   transportContractid.Append(protocol);
 
-  nsCOMPtr<nsISOAPTransport> transport = do_GetService(transportContractid.get(), &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr < nsISOAPTransport > transport =
+      do_GetService(transportContractid.get(), &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   *aTransport = transport.get();
   NS_ADDREF(*aTransport);
@@ -92,55 +93,68 @@ nsSOAPCall::GetTransport(nsISOAPTransport** aTransport)
 }
 
 /* nsISOAPResponse invoke (); */
-NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse **_retval)
+NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   nsresult rv;
-  nsCOMPtr<nsISOAPTransport> transport;
+  nsCOMPtr < nsISOAPTransport > transport;
 
   if (mTransportURI.Length() == 0) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   rv = GetTransport(getter_AddRefs(transport));
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsISOAPResponse> response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr < nsISOAPResponse >
+      response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
   rv = response->SetEncoding(mEncoding);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   rv = transport->SyncCall(this, response);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsCOMPtr<nsIDOMDocument> document;
-  rv = response->GetMessage(getter_AddRefs(document));  //  No XML response.
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr < nsIDOMDocument > document;
+  rv = response->GetMessage(getter_AddRefs(document));	//  No XML response.
+  if (NS_FAILED(rv))
+    return rv;
   if (!document) {
     *_retval = nsnull;
     return NS_OK;
   }
-  
-  return response->QueryInterface(NS_GET_IID(nsISOAPResponse), (void**)_retval);
+
+  return response->QueryInterface(NS_GET_IID(nsISOAPResponse),
+				  (void **) _retval);
 }
 
 /* void asyncInvoke (in nsISOAPResponseListener listener); */
-NS_IMETHODIMP nsSOAPCall::AsyncInvoke(nsISOAPResponseListener *listener, nsISOAPCallCompletion ** aCompletion)
+NS_IMETHODIMP
+    nsSOAPCall::AsyncInvoke(nsISOAPResponseListener * listener,
+			    nsISOAPCallCompletion ** aCompletion)
 {
   nsresult rv;
-  nsCOMPtr<nsISOAPTransport> transport;
+  nsCOMPtr < nsISOAPTransport > transport;
 
   if (mTransportURI.Length() == 0) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   rv = GetTransport(getter_AddRefs(transport));
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsISOAPResponse> response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr < nsISOAPResponse >
+      response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
   rv = response->SetEncoding(mEncoding);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   rv = transport->AsyncCall(this, listener, response, aCompletion);
   return rv;

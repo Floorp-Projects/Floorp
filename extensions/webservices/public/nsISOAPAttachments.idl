@@ -27,7 +27,7 @@
  */
 
 [scriptable, uuid(6192dcbe-1dd2-11b2-81ad-a4597614c4ae)]
-interface nsISOAPAttachments : nsISupports {
+interface nsISOAPAttachments:nsISupports {
 
 /**
  * Get the attachment associated with a particular identifier.
@@ -36,7 +36,7 @@ interface nsISOAPAttachments : nsISupports {
  *
  * Appropriate return(s) must be identified.
  */
-void getAttachment(in AString aIdentifier);
+  void getAttachment(in AString aIdentifier);
 
 /**
  * Attach an attachment to the message.
@@ -45,6 +45,6 @@ void getAttachment(in AString aIdentifier);
  *
  * @return The identifier of the attachment, to be referenced in SOAP encoding
  */
-AString attach();
+  AString attach();
 
 };

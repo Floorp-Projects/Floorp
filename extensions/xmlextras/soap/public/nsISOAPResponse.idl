@@ -34,7 +34,7 @@ interface nsISOAPFault;
  */
 
 [scriptable, uuid(99ec6691-535f-11d4-9a58-000064657374)]
-interface nsISOAPResponse : nsISOAPMessage {
+interface nsISOAPResponse:nsISOAPMessage {
   /**
    * The fault returned in the response, if one was generated. NULL
    * if there was no fault.  This does not rely on the response
@@ -43,7 +43,7 @@ interface nsISOAPResponse : nsISOAPMessage {
   readonly attribute nsISOAPFault fault;
 };
 
-%{ C++
+%{C++
 #define NS_SOAPRESPONSE_CID                         \
 { /* 87d21ec3-539d-11d4-9a59-00104bdf5339 */        \
   0x87d21ec3, 0x539d, 0x11d4,                       \

@@ -33,16 +33,15 @@ nsSOAPHeaderBlock::nsSOAPHeaderBlock()
   NS_INIT_ISUPPORTS();
 }
 
-NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPHeaderBlock, nsISOAPBlock, nsISOAPHeaderBlock)
-NS_IMPL_ADDREF_INHERITED(nsSOAPHeaderBlock, nsSOAPBlock)
-NS_IMPL_RELEASE_INHERITED(nsSOAPHeaderBlock, nsSOAPBlock)
-
-NS_INTERFACE_MAP_BEGIN(nsSOAPHeaderBlock)
-NS_INTERFACE_MAP_ENTRY(nsISOAPHeaderBlock)
-NS_IMPL_QUERY_CLASSINFO(nsSOAPHeaderBlock)
-NS_INTERFACE_MAP_END_INHERITING(nsSOAPBlock)
-
-nsSOAPHeaderBlock::~nsSOAPHeaderBlock()
+NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPHeaderBlock, nsISOAPBlock,
+			     nsISOAPHeaderBlock)
+    NS_IMPL_ADDREF_INHERITED(nsSOAPHeaderBlock, nsSOAPBlock)
+    NS_IMPL_RELEASE_INHERITED(nsSOAPHeaderBlock, nsSOAPBlock)
+    NS_INTERFACE_MAP_BEGIN(nsSOAPHeaderBlock)
+    NS_INTERFACE_MAP_ENTRY(nsISOAPHeaderBlock)
+    NS_IMPL_QUERY_CLASSINFO(nsSOAPHeaderBlock)
+    NS_INTERFACE_MAP_END_INHERITING(nsSOAPBlock) nsSOAPHeaderBlock::
+    ~nsSOAPHeaderBlock()
 {
 }
 
@@ -51,46 +50,64 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAString & aActorURI)
 {
   NS_ENSURE_ARG_POINTER(&aActorURI);
   if (mElement) {
-    if (mVersion == nsISOAPMessage::VERSION_UNKNOWN) return NS_ERROR_NOT_AVAILABLE;
-    return mElement->GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],nsSOAPUtils::kActorAttribute,aActorURI);
-  }
-  else {
+    if (mVersion == nsISOAPMessage::VERSION_UNKNOWN)
+      return NS_ERROR_NOT_AVAILABLE;
+    return mElement->GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],
+				    nsSOAPUtils::kActorAttribute,
+				    aActorURI);
+  } else {
     aActorURI.Assign(mActorURI);
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP nsSOAPHeaderBlock::SetActorURI(const nsAString & aActorURI)
 {
   nsresult rc = SetElement(nsnull);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   mActorURI.Assign(aActorURI);
   return NS_OK;
 }
 
 /* attribute AString mustUnderstand; */
-NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool * aMustUnderstand)
+NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool *
+						   aMustUnderstand)
 {
   NS_ENSURE_ARG_POINTER(&aMustUnderstand);
   if (mElement) {
-    if (mVersion == nsISOAPMessage::VERSION_UNKNOWN) return NS_ERROR_NOT_AVAILABLE;
+    if (mVersion == nsISOAPMessage::VERSION_UNKNOWN)
+      return NS_ERROR_NOT_AVAILABLE;
     nsAutoString m;
-    nsresult rc = mElement->GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],nsSOAPUtils::kMustUnderstandAttribute,m);
-    if (NS_FAILED(rc)) return rc;
-    if (m.Length() == 0) *aMustUnderstand = PR_FALSE;
-    else if (m.Equals(nsSOAPUtils::kTrue) || m.Equals(nsSOAPUtils::kTrueA)) *aMustUnderstand = PR_TRUE;
-    else if (m.Equals(nsSOAPUtils::kFalse) || m.Equals(nsSOAPUtils::kFalseA)) *aMustUnderstand = PR_FALSE;
-    else return NS_ERROR_ILLEGAL_VALUE;
+    nsresult
+	rc =
+	mElement->
+	GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],
+		       nsSOAPUtils::kMustUnderstandAttribute, m);
+    if (NS_FAILED(rc))
+      return rc;
+    if (m.Length() == 0)
+      *aMustUnderstand = PR_FALSE;
+    else if (m.Equals(nsSOAPUtils::kTrue)
+	     || m.Equals(nsSOAPUtils::kTrueA))
+      *aMustUnderstand = PR_TRUE;
+    else if (m.Equals(nsSOAPUtils::kFalse)
+	     || m.Equals(nsSOAPUtils::kFalseA))
+      *aMustUnderstand = PR_FALSE;
+    else
+      return NS_ERROR_ILLEGAL_VALUE;
     return NS_OK;
-  }
-  else {
+  } else {
     *aMustUnderstand = mMustUnderstand;
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP nsSOAPHeaderBlock::SetMustUnderstand(PRBool aMustUnderstand)
 {
   nsresult rc = SetElement(nsnull);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   mMustUnderstand = aMustUnderstand;
   return NS_OK;
 }

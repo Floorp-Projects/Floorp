@@ -29,7 +29,7 @@ interface nsISOAPResponseListener;
 interface nsISOAPCallCompletion;
 
 [scriptable, uuid(99ec6695-535f-11d4-9a58-000064657374)]
-interface nsISOAPTransport : nsISupports {
+interface nsISOAPTransport:nsISupports {
 
 /**
  * Send the specified message to the specified destination.
@@ -42,8 +42,7 @@ interface nsISOAPTransport : nsISupports {
  * @param aResponse Message to be recieved.  Calling synchronously assumes that 
  *   exactly one response is expected.
  */
-  void syncCall( in nsISOAPCall aCall,
-                 in nsISOAPResponse aResponse);
+  void syncCall(in nsISOAPCall aCall, in nsISOAPResponse aResponse);
 
 /**
  * Send the specified message to the specified destination synchronously waiting 
@@ -61,8 +60,8 @@ interface nsISOAPTransport : nsISupports {
  *   null if listener is null.
  */
   nsISOAPCallCompletion asyncCall(in nsISOAPCall aCall,
-                 in nsISOAPResponseListener aListener,
-                 in nsISOAPResponse aResponse);
+				  in nsISOAPResponseListener aListener,
+				  in nsISOAPResponse aResponse);
 
 /**
  * Add listener for unsolicited messages arriving on the transport.  Listeners
@@ -79,7 +78,8 @@ interface nsISOAPTransport : nsISupports {
  * @param aCapture True if the listener should capture the message before
  *   later-declared services.
  */
-  void addListener(in nsISOAPTransportListener aListener, in boolean aCapture);
+  void addListener(in nsISOAPTransportListener aListener,
+		   in boolean aCapture);
 
 /**
  * Remove listener for unsolicited messages arriving on the transport.  This
@@ -93,10 +93,11 @@ interface nsISOAPTransport : nsISupports {
  *   later-declared services (must be specified to remove, since a listener
  *   may be registered as both).
  */
-  void removeListener(in nsISOAPTransportListener aListener, in boolean aCapture);
+  void removeListener(in nsISOAPTransportListener aListener,
+		      in boolean aCapture);
 };
 
-%{ C++
+%{C++
 #define NS_SOAPTRANSPORT_CONTRACTID  \
 "@mozilla.org/xmlextras/soap/transport;1"
 #define NS_SOAPTRANSPORT_CONTRACTID_PREFIX   NS_SOAPTRANSPORT_CONTRACTID "?protocol="

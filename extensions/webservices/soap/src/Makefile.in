@@ -40,6 +40,7 @@ CPPSRCS	= 				\
 		nsSOAPHeaderBlock.cpp	\
 		nsSOAPMessage.cpp	\
 		nsSOAPParameter.cpp	\
+		nsSOAPPropertyBag.cpp	\
 		nsSOAPResponse.cpp	\
 		nsSOAPUtils.cpp		\
 		$(NULL)

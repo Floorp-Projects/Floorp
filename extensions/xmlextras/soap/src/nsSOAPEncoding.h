@@ -35,39 +35,33 @@
 class nsSOAPEncoding;
 
 /* Header file */
-class nsSOAPEncodingRegistry : public nsISOAPEncoding
-{
+class nsSOAPEncodingRegistry:public nsISOAPEncoding {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISOAPENCODING
-  nsSOAPEncodingRegistry() {}
-  nsSOAPEncodingRegistry(nsISOAPEncoding* aEncoding);
-  virtual ~nsSOAPEncodingRegistry();
+  NS_DECL_ISUPPORTS NS_DECL_NSISOAPENCODING nsSOAPEncodingRegistry() {
+  } nsSOAPEncodingRegistry(nsISOAPEncoding * aEncoding);
+  virtual ~ nsSOAPEncodingRegistry();
 protected:
-  nsSupportsHashtable* mEncodings;
-  nsCOMPtr<nsISchemaCollection> mSchemaCollection;
+  nsSupportsHashtable * mEncodings;
+  nsCOMPtr < nsISchemaCollection > mSchemaCollection;
 };
 
-class nsSOAPEncoding : public nsISOAPEncoding
-{
+class nsSOAPEncoding:public nsISOAPEncoding {
 public:
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSISOAPENCODING
-
-  nsSOAPEncoding();
+  NS_DECL_ISUPPORTS NS_DECL_NSISOAPENCODING nsSOAPEncoding();
   nsSOAPEncoding(PRUint16 aVersion);
-  nsSOAPEncoding(const nsAString& aStyleURI, nsSOAPEncodingRegistry * aRegistry, nsISOAPEncoding* aDefaultEncoding);
-  virtual ~nsSOAPEncoding();
+  nsSOAPEncoding(const nsAString & aStyleURI,
+		 nsSOAPEncodingRegistry * aRegistry,
+		 nsISOAPEncoding * aDefaultEncoding);
+  virtual ~ nsSOAPEncoding();
   /* additional members */
 
 protected:
   nsString mStyleURI;
-  nsSupportsHashtable* mEncoders;
-  nsSupportsHashtable* mDecoders;
-  nsCOMPtr<nsISOAPEncoding> mRegistry;
-  nsCOMPtr<nsISOAPEncoding> mDefaultEncoding;
-  nsCOMPtr<nsISOAPEncoder> mDefaultEncoder;
-  nsCOMPtr<nsISOAPDecoder> mDefaultDecoder;
+  nsSupportsHashtable *mEncoders;
+  nsSupportsHashtable *mDecoders;
+   nsCOMPtr < nsISOAPEncoding > mRegistry;
+   nsCOMPtr < nsISOAPEncoding > mDefaultEncoding;
+   nsCOMPtr < nsISOAPEncoder > mDefaultEncoder;
+   nsCOMPtr < nsISOAPDecoder > mDefaultDecoder;
 };
 #endif

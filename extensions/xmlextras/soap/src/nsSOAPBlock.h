@@ -33,30 +33,26 @@
 #include "nsISOAPAttachments.h"
 #include "nsCOMPtr.h"
 
-class nsSOAPBlock : public nsISOAPBlock,
-                        public nsIJSNativeInitializer
-{
+class nsSOAPBlock:public nsISOAPBlock, public nsIJSNativeInitializer {
 public:
   nsSOAPBlock();
-  virtual ~nsSOAPBlock();
+  virtual ~ nsSOAPBlock();
 
   NS_DECL_ISUPPORTS
-
-  // nsISOAPBlock
+      // nsISOAPBlock
   NS_DECL_NSISOAPBLOCK
-
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(JSContext *cx, JSObject *obj, 
-                        PRUint32 argc, jsval *argv);
+      // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(JSContext * cx, JSObject * obj,
+			PRUint32 argc, jsval * argv);
 
 protected:
   nsString mNamespaceURI;
   nsString mName;
-  nsCOMPtr<nsISOAPEncoding> mEncoding;
-  nsCOMPtr<nsISchemaType> mSchemaType;
-  nsCOMPtr<nsISOAPAttachments> mAttachments;
-  nsCOMPtr<nsIDOMElement> mElement;
-  nsCOMPtr<nsIVariant> mValue;
+   nsCOMPtr < nsISOAPEncoding > mEncoding;
+   nsCOMPtr < nsISchemaType > mSchemaType;
+   nsCOMPtr < nsISOAPAttachments > mAttachments;
+   nsCOMPtr < nsIDOMElement > mElement;
+   nsCOMPtr < nsIVariant > mValue;
   nsresult mStatus;
   PRBool mComputeValue;
   PRBool mVersion;

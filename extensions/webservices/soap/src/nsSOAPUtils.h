@@ -28,79 +28,77 @@
 
 class nsSOAPUtils {
 public:
-  static void GetSpecificChildElement(nsIDOMElement *aParent, 
-                                      const nsAString& aNamespace, 
-                                      const nsAString& aType, 
-                                      nsIDOMElement * *aElement);
-  static void GetSpecificSiblingElement(nsIDOMElement *aSibling, 
-                                        const nsAString& aNamespace, 
-                                        const nsAString& aType, 
-                                        nsIDOMElement * *aElement);
-  static void GetFirstChildElement(nsIDOMElement* aParent, 
-                                   nsIDOMElement** aElement);
-  static void GetNextSiblingElement(nsIDOMElement* aStart, 
-                                    nsIDOMElement** aElement);
-  static nsresult GetElementTextContent(nsIDOMElement* aElement, 
-                                    nsAString& aText);
-  static PRBool HasChildElements(nsIDOMElement* aElement);
+  static void GetSpecificChildElement(nsIDOMElement * aParent,
+				      const nsAString & aNamespace,
+				      const nsAString & aType,
+				      nsIDOMElement * *aElement);
+  static void GetSpecificSiblingElement(nsIDOMElement * aSibling,
+					const nsAString & aNamespace,
+					const nsAString & aType,
+					nsIDOMElement * *aElement);
+  static void GetFirstChildElement(nsIDOMElement * aParent,
+				   nsIDOMElement ** aElement);
+  static void GetNextSiblingElement(nsIDOMElement * aStart,
+				    nsIDOMElement ** aElement);
+  static nsresult GetElementTextContent(nsIDOMElement * aElement,
+					nsAString & aText);
+  static PRBool HasChildElements(nsIDOMElement * aElement);
 
-  static void GetNextSibling(nsIDOMNode* aSibling, 
-                             nsIDOMNode **aNext);
-  static nsresult MakeNamespacePrefix(nsIDOMElement* aElement,
-                                     const nsAString & aURI,
-                                     nsAString & aPrefix);
-  static nsresult GetNamespaceURI(nsIDOMElement* aElement,
-                                  const nsAString & aQName, 
-                                  nsAString & aURI);
-  static nsresult GetLocalName(const nsAString & aQName, 
-                                  nsAString & aLocalName);
+  static void GetNextSibling(nsIDOMNode * aSibling, nsIDOMNode ** aNext);
+  static nsresult MakeNamespacePrefix(nsIDOMElement * aElement,
+				      const nsAString & aURI,
+				      nsAString & aPrefix);
+  static nsresult GetNamespaceURI(nsIDOMElement * aElement,
+				  const nsAString & aQName,
+				  nsAString & aURI);
+  static nsresult GetLocalName(const nsAString & aQName,
+			       nsAString & aLocalName);
 
 // All those missing string functions have to come from somewhere...
 
-  static PRBool StartsWith(nsAString& aSuper,
-		           nsAString& aSub);
-  
-  static const nsAString* kSOAPEnvURI[];
-  static const nsAString* kSOAPEncURI[];
-  static const nsAString* kXSIURI[];
-  static const nsAString* kXSURI[];
+  static PRBool StartsWith(nsAString & aSuper, nsAString & aSub);
 
-  static const nsAString& kSOAPEnvPrefix;
-  static const nsAString& kSOAPEncPrefix;
-  static const nsAString& kXSIPrefix;
-  static const nsAString& kXSITypeAttribute;
-  static const nsAString& kXSPrefix;
-  static const nsAString& kEncodingStyleAttribute;
-  static const nsAString& kActorAttribute;
-  static const nsAString& kMustUnderstandAttribute;
-  static const nsAString& kEnvelopeTagName;
-  static const nsAString& kHeaderTagName;
-  static const nsAString& kBodyTagName;
-  static const nsAString& kFaultTagName;
-  static const nsAString& kFaultCodeTagName;
-  static const nsAString& kFaultStringTagName;
-  static const nsAString& kFaultActorTagName;
-  static const nsAString& kFaultDetailTagName;
-  static const nsAString& kEncodingSeparator;
-  static const nsAString& kQualifiedSeparator;
-  static const nsAString& kXMLNamespaceNamespaceURI;
-  static const nsAString& kXMLNamespaceURI;
-  static const nsAString& kXMLNamespacePrefix;
-  static const nsAString& kXMLPrefix;
-  static const nsAString& kTrue;
-  static const nsAString& kTrueA;
-  static const nsAString& kFalse;
-  static const nsAString& kFalseA;
-} ;
+  static const nsAString *kSOAPEnvURI[];
+  static const nsAString *kSOAPEncURI[];
+  static const nsAString *kXSIURI[];
+  static const nsAString *kXSURI[];
+
+  static const nsAString & kSOAPEnvPrefix;
+  static const nsAString & kSOAPEncPrefix;
+  static const nsAString & kXSIPrefix;
+  static const nsAString & kXSITypeAttribute;
+  static const nsAString & kXSPrefix;
+  static const nsAString & kEncodingStyleAttribute;
+  static const nsAString & kActorAttribute;
+  static const nsAString & kMustUnderstandAttribute;
+  static const nsAString & kEnvelopeTagName;
+  static const nsAString & kHeaderTagName;
+  static const nsAString & kBodyTagName;
+  static const nsAString & kFaultTagName;
+  static const nsAString & kFaultCodeTagName;
+  static const nsAString & kFaultStringTagName;
+  static const nsAString & kFaultActorTagName;
+  static const nsAString & kFaultDetailTagName;
+  static const nsAString & kEncodingSeparator;
+  static const nsAString & kQualifiedSeparator;
+  static const nsAString & kXMLNamespaceNamespaceURI;
+  static const nsAString & kXMLNamespaceURI;
+  static const nsAString & kXMLNamespacePrefix;
+  static const nsAString & kXMLPrefix;
+  static const nsAString & kTrue;
+  static const nsAString & kTrueA;
+  static const nsAString & kFalse;
+  static const nsAString & kFalseA;
+};
 
 //  Used to support null strings.
 
-inline PRBool AStringIsNull(const nsAString& aString)
+inline PRBool AStringIsNull(const nsAString & aString)
 {
-  return aString.IsVoid() || aString.IsEmpty(); // Get rid of empty hack when string implementations support.
+  return aString.IsVoid() || aString.IsEmpty();	// Get rid of empty hack when string implementations support.
 }
 
-inline void SetAStringToNull(nsAString& aString)
+inline void SetAStringToNull(nsAString & aString)
 {
   aString.Truncate();
   aString.SetIsVoid(PR_TRUE);
@@ -109,7 +107,9 @@ inline void SetAStringToNull(nsAString& aString)
 #define NS_SOAP_ENSURE_ARG_STRING(arg) \
 NS_ENSURE_FALSE(AStringIsNull(arg), NS_ERROR_INVALID_ARG)
 
-inline void SOAPEncodingKey(const nsAString& aURI, const  nsAString& aType, nsAString& result)
+inline void
+SOAPEncodingKey(const nsAString & aURI, const nsAString & aType,
+		nsAString & result)
 {
   result.Assign(aURI);
   result.Append(nsSOAPUtils::kEncodingSeparator);

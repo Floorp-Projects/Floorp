@@ -47,7 +47,7 @@ interface nsISchemaCollection;
  */
 
 [scriptable, uuid(9ae49600-1dd1-11b2-877f-e62f620c5e92)]
-interface nsISOAPEncoding : nsISupports {
+interface nsISOAPEncoding:nsISupports {
 
 /**
  * The name of the encoding as it is known to SOAP.
@@ -71,9 +71,8 @@ interface nsISOAPEncoding : nsISupports {
  *   specified styleURI, or null if the spefied alternative encoding
  *   does not exist and it was not requested that it be created.
  */
-  nsISOAPEncoding getAssociatedEncoding(
-    in AString aStyleURI,
-    in boolean aCreateIf);
+  nsISOAPEncoding getAssociatedEncoding(in AString aStyleURI,
+					in boolean aCreateIf);
 
 /**
   * Set an encoder in the encoding.
@@ -155,13 +154,12 @@ interface nsISOAPEncoding : nsISupports {
  *
  * @return The element which was inserted and encoded.
  */
-  nsIDOMElement encode(
-      in nsIVariant aSource, 
-      in AString aNamespaceURI,
-      in AString aName,
-      in nsISchemaType aSchemaType,
-      in nsISOAPAttachments aAttachments,
-      in nsIDOMElement aDestination);
+  nsIDOMElement encode(in nsIVariant aSource,
+		       in AString aNamespaceURI,
+		       in AString aName,
+		       in nsISchemaType aSchemaType,
+		       in nsISOAPAttachments aAttachments,
+		       in nsIDOMElement aDestination);
 
 /**
  * Decode the source DOM node
@@ -179,13 +177,12 @@ interface nsISOAPEncoding : nsISupports {
  * @return The decoded variant, soon to become a variant, which is null if 
  *   the operation failed or did not return a result.
  */
-  nsIVariant decode(
-      in nsIDOMElement aSource, 
-      in nsISchemaType aSchemaType,
-      in nsISOAPAttachments aAttachments);
+  nsIVariant decode(in nsIDOMElement aSource,
+		    in nsISchemaType aSchemaType,
+		    in nsISOAPAttachments aAttachments);
 };
 
-%{ C++
+%{C++
 #define NS_SOAPENCODING_CID                            \
 { /* db612ec6-1dd1-11b2-a8bc-e6777bf70a30 */        \
   0xdb612ec6, 0x1dd1, 0x11b2,                       \

@@ -28,19 +28,15 @@
 #include "nsIDOMElement.h"
 #include "nsCOMPtr.h"
 
-class nsSOAPFault : public nsISOAPFault
-{
+class nsSOAPFault:public nsISOAPFault {
 public:
   nsSOAPFault();
-  virtual ~nsSOAPFault();
+  virtual ~ nsSOAPFault();
 
   NS_DECL_ISUPPORTS
-
-  // nsISOAPFault
-  NS_DECL_NSISOAPFAULT
-
-protected:
-  nsCOMPtr<nsIDOMElement> mFaultElement;
+      // nsISOAPFault
+NS_DECL_NSISOAPFAULT protected:
+  nsCOMPtr < nsIDOMElement > mFaultElement;
   PRUint16 mVersion;
 };
 #endif

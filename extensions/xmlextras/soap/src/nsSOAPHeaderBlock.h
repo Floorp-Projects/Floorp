@@ -34,22 +34,15 @@
 #include "nsCOMPtr.h"
 #include "nsSOAPBlock.h"
 
-class nsSOAPHeaderBlock : public nsSOAPBlock,
-                        public nsISOAPHeaderBlock
-{
+class nsSOAPHeaderBlock:public nsSOAPBlock, public nsISOAPHeaderBlock {
 public:
   nsSOAPHeaderBlock();
-  virtual ~nsSOAPHeaderBlock();
+  virtual ~ nsSOAPHeaderBlock();
 
-  NS_DECL_ISUPPORTS
-
-  NS_FORWARD_NSISOAPBLOCK(nsSOAPBlock::)
-
-  // nsISOAPHeaderBlock
-  NS_DECL_NSISOAPHEADERBLOCK
-
-protected:
-  nsString mActorURI;
+  NS_DECL_ISUPPORTS NS_FORWARD_NSISOAPBLOCK(nsSOAPBlock::)
+      // nsISOAPHeaderBlock
+NS_DECL_NSISOAPHEADERBLOCK protected:
+   nsString mActorURI;
   PRBool mMustUnderstand;
 };
 

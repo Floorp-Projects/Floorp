@@ -77,7 +77,7 @@ interface nsISOAPServiceRegistry {
   attribute nsISOAPEncodingRegistry encodings;
 };
 
-%{ C++
+%{C++
 #define NS_SOAPSERVICEREGISTRY_CID                            \
 { /* 3869184e-1dd2-11b2-aa36-d8333498043a */        \
   0x3869184e, 0x1dd2, 0x11b2,                       \

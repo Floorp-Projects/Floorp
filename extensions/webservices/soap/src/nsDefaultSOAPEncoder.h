@@ -25,14 +25,12 @@
 
 #include "nsSOAPEncoding.h"
 
-class nsDefaultSOAPEncoder_1_1 : public nsSOAPEncoding
-{
+class nsDefaultSOAPEncoder_1_1:public nsSOAPEncoding {
 public:
   nsDefaultSOAPEncoder_1_1();
 };
 
-class nsDefaultSOAPEncoder_1_2 : public nsSOAPEncoding
-{
+class nsDefaultSOAPEncoder_1_2:public nsSOAPEncoding {
 public:
   nsDefaultSOAPEncoder_1_2();
 };

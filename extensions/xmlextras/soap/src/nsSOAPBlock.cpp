@@ -37,13 +37,12 @@ nsSOAPBlock::~nsSOAPBlock()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsSOAPBlock, 
-                      nsISOAPBlock, 
-                      nsIJSNativeInitializer)
-
-NS_IMETHODIMP nsSOAPBlock::Init(nsISOAPAttachments* aAttachments, PRUint16 aVersion) {
+NS_IMPL_ISUPPORTS2(nsSOAPBlock, nsISOAPBlock, nsIJSNativeInitializer)
+NS_IMETHODIMP nsSOAPBlock::Init(nsISOAPAttachments * aAttachments,
+				PRUint16 aVersion)
+{
   if (aVersion == nsISOAPMessage::VERSION_1_1
-    ||aVersion == nsISOAPMessage::VERSION_1_2) {
+      || aVersion == nsISOAPMessage::VERSION_1_2) {
     mAttachments = aAttachments;
     mVersion = aVersion;
     return NS_OK;
@@ -57,16 +56,17 @@ NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAString & aNamespaceURI)
   NS_ENSURE_ARG_POINTER(&aNamespaceURI);
   if (mElement) {
     return mElement->GetNamespaceURI(aNamespaceURI);
-  }
-  else {
+  } else {
     aNamespaceURI.Assign(mNamespaceURI);
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP nsSOAPBlock::SetNamespaceURI(const nsAString & aNamespaceURI)
 {
   nsresult rc = SetElement(nsnull);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   mNamespaceURI.Assign(aNamespaceURI);
   return NS_OK;
 }
@@ -77,29 +77,31 @@ NS_IMETHODIMP nsSOAPBlock::GetName(nsAString & aName)
   NS_ENSURE_ARG_POINTER(&aName);
   if (mElement) {
     return mElement->GetLocalName(aName);
-  }
-  else {
+  } else {
     aName.Assign(mName);
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP nsSOAPBlock::SetName(const nsAString & aName)
 {
   nsresult rc = SetElement(nsnull);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   mName.Assign(aName);
   return NS_OK;
 }
 
 /* attribute nsISOAPEncoding encoding; */
-NS_IMETHODIMP nsSOAPBlock::GetEncoding(nsISOAPEncoding* * aEncoding)
+NS_IMETHODIMP nsSOAPBlock::GetEncoding(nsISOAPEncoding * *aEncoding)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
   *aEncoding = mEncoding;
   NS_IF_ADDREF(*aEncoding);
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPBlock::SetEncoding(nsISOAPEncoding* aEncoding)
+
+NS_IMETHODIMP nsSOAPBlock::SetEncoding(nsISOAPEncoding * aEncoding)
 {
   mEncoding = aEncoding;
   mComputeValue = PR_TRUE;
@@ -107,14 +109,15 @@ NS_IMETHODIMP nsSOAPBlock::SetEncoding(nsISOAPEncoding* aEncoding)
 }
 
 /* attribute nsISchemaType schemaType; */
-NS_IMETHODIMP nsSOAPBlock::GetSchemaType(nsISchemaType* * aSchemaType)
+NS_IMETHODIMP nsSOAPBlock::GetSchemaType(nsISchemaType * *aSchemaType)
 {
   NS_ENSURE_ARG_POINTER(aSchemaType);
   *aSchemaType = mSchemaType;
   NS_IF_ADDREF(*aSchemaType);
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPBlock::SetSchemaType(nsISchemaType* aSchemaType)
+
+NS_IMETHODIMP nsSOAPBlock::SetSchemaType(nsISchemaType * aSchemaType)
 {
   mSchemaType = aSchemaType;
   mComputeValue = PR_TRUE;
@@ -122,14 +125,15 @@ NS_IMETHODIMP nsSOAPBlock::SetSchemaType(nsISchemaType* aSchemaType)
 }
 
 /* attribute nsIDOMElement element; */
-NS_IMETHODIMP nsSOAPBlock::GetElement(nsIDOMElement* * aElement)
+NS_IMETHODIMP nsSOAPBlock::GetElement(nsIDOMElement * *aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   *aElement = mElement;
   NS_IF_ADDREF(*aElement);
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPBlock::SetElement(nsIDOMElement* aElement)
+
+NS_IMETHODIMP nsSOAPBlock::SetElement(nsIDOMElement * aElement)
 {
   mElement = aElement;
   mComputeValue = PR_TRUE;
@@ -137,16 +141,17 @@ NS_IMETHODIMP nsSOAPBlock::SetElement(nsIDOMElement* aElement)
 }
 
 /* attribute nsIVariant value; */
-NS_IMETHODIMP nsSOAPBlock::GetValue(nsIVariant* * aValue)
+NS_IMETHODIMP nsSOAPBlock::GetValue(nsIVariant * *aValue)
 {
   NS_ENSURE_ARG_POINTER(aValue);
-  if (mElement) {    //  Check for auto-computation
+  if (mElement) {		//  Check for auto-computation
     if (mComputeValue) {
       mComputeValue = PR_FALSE;
       if (mEncoding) {
-        mStatus = mEncoding->Decode(mElement, mSchemaType, mAttachments, getter_AddRefs(mValue));
-      }
-      else {
+	mStatus =
+	    mEncoding->Decode(mElement, mSchemaType, mAttachments,
+			      getter_AddRefs(mValue));
+      } else {
 	mStatus = NS_ERROR_NOT_INITIALIZED;
       }
     }
@@ -156,51 +161,60 @@ NS_IMETHODIMP nsSOAPBlock::GetValue(nsIVariant* * aValue)
   return mElement ? mStatus : NS_OK;
 }
 
-NS_IMETHODIMP nsSOAPBlock::SetValue(nsIVariant* aValue)
+NS_IMETHODIMP nsSOAPBlock::SetValue(nsIVariant * aValue)
 {
   nsresult rc = SetElement(nsnull);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   mValue = aValue;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsSOAPBlock::Initialize(JSContext *cx, JSObject *obj, 
-                            PRUint32 argc, jsval *argv)
+NS_IMETHODIMP
+    nsSOAPBlock::Initialize(JSContext * cx, JSObject * obj,
+			    PRUint32 argc, jsval * argv)
 {
 
 //  Get the arguments.
 
-  nsCOMPtr<nsIVariant>  value;
-  nsAutoString          name;
-  nsAutoString          namespaceURI;
-  nsCOMPtr<nsISupports> schemaType;
-  nsCOMPtr<nsISupports> encoding;
+  nsCOMPtr < nsIVariant > value;
+  nsAutoString name;
+  nsAutoString namespaceURI;
+  nsCOMPtr < nsISupports > schemaType;
+  nsCOMPtr < nsISupports > encoding;
 
-  if (!JS_ConvertArguments(cx, argc, argv, "/%iv %is %is %ip %ip", 
-    getter_AddRefs(value), 
-    NS_STATIC_CAST(nsAString*, &name), 
-    NS_STATIC_CAST(nsAString*, &namespaceURI), 
-    getter_AddRefs(schemaType),
-    getter_AddRefs(encoding))) return NS_ERROR_ILLEGAL_VALUE;
+  if (!JS_ConvertArguments(cx, argc, argv, "/%iv %is %is %ip %ip",
+			   getter_AddRefs(value),
+			   NS_STATIC_CAST(nsAString *, &name),
+			   NS_STATIC_CAST(nsAString *, &namespaceURI),
+			   getter_AddRefs(schemaType),
+			   getter_AddRefs(encoding)))
+    return NS_ERROR_ILLEGAL_VALUE;
 
   nsresult rc = SetValue(value);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   rc = SetName(name);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   rc = SetNamespaceURI(namespaceURI);
-  if (NS_FAILED(rc)) return rc;
+  if (NS_FAILED(rc))
+    return rc;
   if (schemaType) {
-    nsCOMPtr<nsISchemaType> v = do_QueryInterface(schemaType, &rc);
-    if (NS_FAILED(rc)) return rc;
+    nsCOMPtr < nsISchemaType > v = do_QueryInterface(schemaType, &rc);
+    if (NS_FAILED(rc))
+      return rc;
     rc = SetSchemaType(v);
-    if (NS_FAILED(rc)) return rc;
+    if (NS_FAILED(rc))
+      return rc;
   }
   if (encoding) {
-    nsCOMPtr<nsISOAPEncoding> v = do_QueryInterface(encoding, &rc);
-    if (NS_FAILED(rc)) return rc;
+    nsCOMPtr < nsISOAPEncoding > v = do_QueryInterface(encoding, &rc);
+    if (NS_FAILED(rc))
+      return rc;
     rc = SetEncoding(v);
-    if (NS_FAILED(rc)) return rc;
+    if (NS_FAILED(rc))
+      return rc;
   }
 
   return NS_OK;

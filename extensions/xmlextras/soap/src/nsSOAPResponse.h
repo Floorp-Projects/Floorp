@@ -30,20 +30,14 @@
 #include "nsIDOMElement.h"
 #include "nsCOMPtr.h"
 
-class nsSOAPResponse : public nsSOAPMessage,
-                       public nsISOAPResponse
-{
+class nsSOAPResponse:public nsSOAPMessage, public nsISOAPResponse {
 public:
   NS_DECL_ISUPPORTS
-
-  // nsISOAPResponse
+      // nsISOAPResponse
   NS_FORWARD_NSISOAPMESSAGE(nsSOAPMessage::)
-
-  // nsISOAPResponse
-  NS_DECL_NSISOAPRESPONSE
-
-  nsSOAPResponse();
-  virtual ~nsSOAPResponse();
+      // nsISOAPResponse
+  NS_DECL_NSISOAPRESPONSE nsSOAPResponse();
+   virtual ~ nsSOAPResponse();
 
 protected:
 };

@@ -37,7 +37,7 @@ interface nsISOAPCallCompletion;
  */
 
 [scriptable, uuid(a8fefe40-52bc-11d4-9a57-000064657374)]
-interface nsISOAPCall : nsISOAPMessage {
+interface nsISOAPCall:nsISOAPMessage {
 
   /**
    * The URI to which the message will be sent, identifying the
@@ -59,9 +59,9 @@ interface nsISOAPCall : nsISOAPMessage {
    * If not, an error is returned in the status of the response.
    *
    * @returns The SOAP response
-   */ 
+   */
   nsISOAPResponse invoke();
-  
+
   /**
    * Asynchronously invoke the call. At this point, the document
    * rooted by the Envelope element is encoded to form the body
@@ -81,7 +81,7 @@ interface nsISOAPCall : nsISOAPMessage {
   nsISOAPCallCompletion asyncInvoke(in nsISOAPResponseListener aListener);
 };
 
-%{ C++
+%{C++
 #define NS_SOAPCALL_CID                             \
 { /* 87d21ec0-539d-11d4-9a59-00104bdf5339 */        \
   0x87d21ec0, 0x539d, 0x11d4,                       \

@@ -35,7 +35,7 @@ interface nsISchemaType;
  */
 
 [scriptable, uuid(063d4a4e-1dd2-11b2-a365-cbaf1651f140)]
-interface nsISOAPHeaderBlock : nsISOAPBlock {
+interface nsISOAPHeaderBlock:nsISOAPBlock {
   /**
    * The actor URI of the header block.  If element is set,
    *   then this is a computed value.  If this is modified,
@@ -54,7 +54,7 @@ interface nsISOAPHeaderBlock : nsISOAPBlock {
   attribute boolean mustUnderstand;
 };
 
-%{ C++
+%{C++
 #define NS_SOAPHEADERBLOCK_CID                        \
 { /* 5ad0eace-1dd2-11b2-a260-ff42edcaedb3 */        \
   0x5ad0eace, 0x1dd2, 0x11b2,                       \

@@ -59,6 +59,7 @@
 #include "nsSOAPFault.h"
 #include "nsDefaultSOAPEncoder.h"
 #include "nsHTTPSOAPTransport.h"
+#include "nsSOAPPropertyBag.h"
 #include "nsSchemaLoader.h"
 #include "nsSchemaPrivate.h"
 #include "nsWSDLLoader.h"
@@ -89,6 +90,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder_1_1)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder_1_2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSSOAPTransport)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPPropertyBagMutator)
 NS_DECL_CLASSINFO(nsSOAPCall)
 NS_DECL_CLASSINFO(nsSOAPResponse)
 NS_DECL_CLASSINFO(nsSOAPEncoding)
@@ -98,6 +100,10 @@ NS_DECL_CLASSINFO(nsSOAPParameter)
 NS_DECL_CLASSINFO(nsHTTPSOAPTransport)
 NS_DECL_CLASSINFO(nsHTTPSOAPTransportCompletion)
 NS_DECL_CLASSINFO(nsHTTPSSOAPTransport)
+NS_DECL_CLASSINFO(nsSOAPPropertyBagMutator)
+NS_DECL_CLASSINFO(nsSOAPProperty)
+NS_DECL_CLASSINFO(nsSOAPPropertyBag)
+NS_DECL_CLASSINFO(nsSOAPPropertyBagEnumerator)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchemaLoader)
@@ -267,6 +273,12 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SOAPPropertyBagMutator",
+                                NS_SOAPPROPERTYBAGMUTATOR_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "SchemaLoader",
                                 NS_SCHEMALOADER_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
@@ -349,6 +361,30 @@ static nsModuleComponentInfo components[] = {
     nsHTTPSSOAPTransportConstructor, nsnull, nsnull, nsnull,
     NS_CI_INTERFACE_GETTER_NAME(nsHTTPSSOAPTransport), 
     nsnull, &NS_CLASSINFO_NAME(nsHTTPSSOAPTransport), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SOAP Property Bag Mutator", NS_SOAPPROPERTYBAGMUTATOR_CID,
+    NS_SOAPPROPERTYBAGMUTATOR_CONTRACTID, 
+    nsSOAPPropertyBagMutatorConstructor, nsnull, nsnull, nsnull,
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPPropertyBagMutator), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPPropertyBagMutator), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SOAP Property", NS_SOAPPROPERTY_CID,
+    NS_SOAPPROPERTY_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPProperty), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPProperty), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SOAP Property Bag", NS_SOAPPROPERTYBAG_CID,
+    NS_SOAPPROPERTYBAG_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPPropertyBag), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPPropertyBag), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SOAP Property Bag Enumerator", NS_SOAPPROPERTYBAGENUMERATOR_CID,
+    NS_SOAPPROPERTYBAGENUMERATOR_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPPropertyBagEnumerator), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPPropertyBagEnumerator), 
     nsIClassInfo::DOM_OBJECT },
   { "SchemaLoader", NS_SCHEMALOADER_CID, NS_SCHEMALOADER_CONTRACTID,
     nsSchemaLoaderConstructor, nsnull, nsnull, nsnull, 

@@ -1,0 +1,60 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIPropertyBag;
+interface nsIVariant;
+
+/**
+ * This permits construction by native or
+ * script code a property bag that is also
+ * usable by other xpconnect systems.
+ */
+
+[scriptable, uuid(f34cb3c8-1dd1-11b2-8a18-a93a99d92c08)]
+interface nsISOAPPropertyBagMutator:nsISupports {
+  /**
+   * The property bag that is being constructed.
+   * After the mutator is destroyed, this is
+   * read-only.  This will never be null.
+   */
+  readonly attribute nsIPropertyBag propertyBag;
+  /**
+   * Add or replace a property to the 
+   * newly-constructed property bag.
+   *
+   * @param aName The name of the property.
+   *
+   * @param aValue The value of the property.
+   */
+  void addProperty(in AString aName, in nsIVariant aValue);
+};
+
+%{C++
+#define NS_SOAPPROPERTYBAGMUTATOR_CID               \
+{ /* c63d2762-1dd1-11b2-b028-8f244edaa8a1 */        \
+  0xc63d2762, 0x1dd1, 0x11b2,                       \
+ {0xb0, 0x28, 0x8f, 0x24, 0x4e, 0xda, 0xa8, 0xa1} }
+#define NS_SOAPPROPERTYBAGMUTATOR_CONTRACTID \
+"@mozilla.org/xmlextras/soap/propertybagmutator;1"
+%}
