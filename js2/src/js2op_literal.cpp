@@ -120,14 +120,15 @@
             for (uint16 i = 0; i < argCount; i++) {
                 a = pop();
                 ASSERT(JS2VAL_IS_STRING(a));
-                String *name = JS2VAL_TO_STRING(a);
-                const StringAtom &nameAtom = meta->world.identifiers[*name];
+                astr = JS2VAL_TO_STRING(a);
+                const StringAtom &nameAtom = meta->world.identifiers[*astr];
                 b = pop();
                 DynamicPropertyBinding *dpb = new DynamicPropertyBinding(nameAtom, DynamicPropertyValue(b, DynamicPropertyValue::ENUMERATE));
                 pInst->dynamicProperties.insert(dpb->name, dpb); 
             }
             push(baseVal);
             baseVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
 

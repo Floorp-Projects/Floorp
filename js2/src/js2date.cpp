@@ -871,7 +871,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val 
 {
     js2val thatValue = OBJECT_TO_JS2VAL(new DateInstance(meta, meta->dateClass->prototype, meta->dateClass));
     DateInstance *thisInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    JS2Object::RootIterator ri = JS2Object::addRoot(&thisInst);
+    RootKeeper rk(&thisInst);
 
     /* Date called as constructor */
     if (argc == 0) {
@@ -911,7 +911,6 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val 
                        and return */
                     if (!JSDOUBLE_IS_FINITE(double_arg)) {
                         thisInst->ms = nan;
-                        JS2Object::removeRoot(ri);
                         return thatValue;
                     }
                     array[loop] = JS2Engine::float64toInt32(double_arg);
@@ -934,7 +933,6 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val 
             thisInst->ms = TIMECLIP(msec_time);
         }
     }
-    JS2Object::removeRoot(ri);
     return thatValue;
 }
 

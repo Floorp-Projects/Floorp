@@ -57,11 +57,9 @@ namespace MetaData {
 
 js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
-    // XXX GC might happen after the new StringInstance, but before the
-    // object gets rooted somewhere - this is a general problem...
     js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta, meta->stringClass->prototype, meta->stringClass));
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    JS2Object::RootIterator ri = JS2Object::addRoot(&strInst);
+    RootKeeper rk(&strInst);
     if (argc > 0)
         strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
     else
@@ -71,7 +69,6 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
                                                         DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), 
                                                         DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT));
     strInst->dynamicProperties.insert(dpb->name, dpb); 
-    JS2Object::removeRoot(ri);
     return thatValue;
 }
 

@@ -324,7 +324,7 @@ namespace MetaData {
 
                 CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                JS2Object::RootIterator ri = JS2Object::addRoot(&runtimeFrame);
+                RootKeeper rk(&runtimeFrame);
                 runtimeFrame->instantiate(env);
                 runtimeFrame->thisObject = thisValue;
                 runtimeFrame->assignArguments(this, fnObj, argv, argc);
@@ -339,13 +339,11 @@ namespace MetaData {
                     engine->pc = savePC;
                     restoreCompilationUnit(oldData);
                     env->setTopFrame(oldTopFrame);
-                    JS2Object::removeRoot(ri);
                     throw x;
                 }
                 engine->pc = savePC;
                 restoreCompilationUnit(oldData);
                 env->setTopFrame(oldTopFrame);
-                JS2Object::removeRoot(ri);
             }
         }
         return result;

@@ -103,7 +103,7 @@ namespace MetaData {
             result = sInst;
         }
 
-        JS2Object::RootIterator ri = JS2Object::addRoot(&result);
+        RootKeeper rk(&result);
         Frame *curTopFrame = env->getTopFrame();
         CompilationData *oldData = startCompilationUnit(fnDef->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
         try {
@@ -137,11 +137,9 @@ namespace MetaData {
         catch (Exception x) {
             restoreCompilationUnit(oldData);
             env->setTopFrame(curTopFrame);
-            JS2Object::removeRoot(ri);
             throw x;
         }
         restoreCompilationUnit(oldData);
-        JS2Object::removeRoot(ri);
         return result;
     }
 
@@ -151,7 +149,7 @@ namespace MetaData {
     void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p) 
     {
         CompoundAttribute *a = NULL;
-        JS2Object::RootIterator ri = JS2Object::addRoot(&a);
+        RootKeeper rk(&a);
         Frame *curTopFrame = env->getTopFrame();
 
         try {
@@ -650,10 +648,8 @@ namespace MetaData {
         }
         catch (Exception x) {
             env->setTopFrame(curTopFrame);
-            JS2Object::removeRoot(ri);
             throw x;
         }
-        JS2Object::removeRoot(ri);
     }
 
 
@@ -4609,13 +4605,15 @@ deleteClassProperty:
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        PrototypeInstance *argsObj = new PrototypeInstance(meta, meta->objectClass->prototype, meta->objectClass);
+        PrototypeInstance *argsObj = NULL;
+        RootKeeper rk(&argsObj);
+        argsObj = new PrototypeInstance(meta, meta->objectClass->prototype, meta->objectClass);
 
         // Add the 'arguments' property
-        LocalBinding *sb = new LocalBinding(ReadAccess, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true));
         String *name = &meta->world.identifiers["arguments"];
         ASSERT(localBindings[*name] == NULL);
         LocalBindingEntry *lbe = new LocalBindingEntry(*name);
+        LocalBinding *sb = new LocalBinding(ReadAccess, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true));
         lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
 
         uint32 i;

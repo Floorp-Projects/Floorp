@@ -142,12 +142,13 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = pop();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             if (!meta->readProperty(&b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
 
@@ -156,14 +157,15 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = pop();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             bool result;
             if (!meta->deleteProperty(b, &mn, &lookup, RunPhase, &result))
                 push(JS2VAL_FALSE);
             else
                 push(BOOLEAN_TO_JS2VAL(result));
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
 
@@ -175,11 +177,12 @@
             a = pop();
             indexVal = pop();
             b = pop();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             meta->writeProperty(b, &mn, &lookup, true, a, RunPhase);
             push(a);
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
 
@@ -189,12 +192,13 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = top();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             if (!meta->readProperty(&b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
     
@@ -204,13 +208,14 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = top();
-            const String *indexStr = meta->toString(indexVal);
-            push(STRING_TO_JS2VAL(indexStr));
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            push(STRING_TO_JS2VAL(astr));
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             if (!meta->readProperty(&b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
 

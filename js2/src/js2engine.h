@@ -239,7 +239,8 @@ private:
 
 	ParameterFrame *pFrame;
 
-
+    const String *astr;
+    const String *bstr;
 public:
 
 

@@ -185,7 +185,7 @@ namespace MetaData {
         // XXX Change constructors to take js2val pointer for the result (which would be an already
         // rooted pointer).
         RegExpInstance *thisInst = new RegExpInstance(meta->regexpClass);
-        JS2Object::RootIterator ri = JS2Object::addRoot(&thisInst);
+        RootKeeper rk(&thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
         REuint32 flags = 0;
 
@@ -223,7 +223,6 @@ namespace MetaData {
         }
         else
             meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), "/" + *regexpStr + "/" + *flagStr);  // XXX what about the RE parser error message?
-        JS2Object::removeRoot(ri);
         return thatValue;
     }
 

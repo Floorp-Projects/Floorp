@@ -340,7 +340,7 @@ js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
     if (argc) {
         // Save off the current top frame and root it.
         Environment *curEnv = meta->env;
-        JS2Object::RootIterator ri = JS2Object::addRoot(&curEnv);
+        RootKeeper rk(&curEnv);
         // Set the environment to global object and system frame so that the
         // load happens into the top frame.
         meta->env = new Environment(curEnv->getSystemFrame(), curEnv->getPackageOrGlobalFrame());
@@ -351,11 +351,9 @@ js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
         }
         catch (Exception x) {
             meta->env = curEnv;
-            JS2Object::removeRoot(ri);
             throw x;
         }
         meta->env = curEnv;
-        JS2Object::removeRoot(ri);
         return result;
     }
     else
@@ -376,7 +374,7 @@ int main(int argc, char **argv)
     stdOut << "Welcome to Epimetheus.\n";
 #endif
 
-	JS2Object::addRoot(&metadata);
+	RootKeeper rk(&metadata);
 
     metadata = new MetaData::JS2Metadata(world);
 

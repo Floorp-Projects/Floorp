@@ -110,7 +110,7 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
 {
     js2val thatValue = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    JS2Object::RootIterator ri = JS2Object::addRoot(&arrInst);
+    RootKeeper rk(&arrInst);
     if (argc > 0) {
         if (argc == 1) {
             if (JS2VAL_IS_NUMBER(argv[0])) {
@@ -134,7 +134,6 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
             setLength(meta, arrInst, i);
         }
     }
-    JS2Object::removeRoot(ri);
     return thatValue;
 }
 

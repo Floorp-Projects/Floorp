@@ -332,8 +332,8 @@
             a = meta->toPrimitive(a, NumberHint);
             b = meta->toPrimitive(b, NumberHint);
             if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-                const String *astr = meta->toString(a);
-                const String *bstr = meta->toString(b);
+                astr = meta->toString(a);
+                bstr = meta->toString(b);
                 push(STRING_TO_JS2VAL(concatStrings(astr, bstr)));
             }
             else {
@@ -1007,8 +1007,8 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
@@ -1016,6 +1016,7 @@
             pushNumber(num);
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
     case eBracketPostDec:
@@ -1023,8 +1024,8 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
@@ -1032,6 +1033,7 @@
             pushNumber(num);
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
     case eBracketPreInc:
@@ -1039,8 +1041,8 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
@@ -1048,6 +1050,7 @@
             meta->writeProperty(baseVal, &mn, &lookup, true, a, RunPhase);
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
     case eBracketPreDec:
@@ -1055,8 +1058,8 @@
             LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            const String *indexStr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            astr = meta->toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
@@ -1064,6 +1067,7 @@
             meta->writeProperty(baseVal, &mn, &lookup, true, a, RunPhase);
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
+            astr = NULL;
         }
         break;
 
