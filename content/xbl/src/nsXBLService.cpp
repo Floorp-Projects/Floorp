@@ -327,6 +327,20 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     NS_WARNING("XBL load did not complete until after document went away! Modal dialog bug?\n");
   }
   else {
+    // We have to do a flush prior to notification of the document load.
+    // This has to happen since the HTML content sink can be holding on
+    // to notifications related to our children (e.g., if you bind to the
+    // <body> tag) that result in duplication of content.  
+    // We need to get the sink's notifications flushed and then make the binding
+    // ready.
+    if (count > 0) {
+      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(0);
+      nsCOMPtr<nsIDocument> document;
+      req->mBoundElement->GetDocument(*getter_AddRefs(document));
+      if (document)
+        document->FlushPendingNotifications();
+    }
+
     // Remove ourselves from the set of pending docs.
     nsCOMPtr<nsIBindingManager> bindingManager;
     doc->GetBindingManager(getter_AddRefs(bindingManager));
