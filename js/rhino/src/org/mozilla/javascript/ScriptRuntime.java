@@ -599,18 +599,17 @@ public class ScriptRuntime {
     }
 
     public static int toInt32(double d) {
+        int id = (int)d;
+        if (id == d) {
+            // This covers -0.0 as well
+            return id;
+        }
 
         if (d != d
             || d == Double.POSITIVE_INFINITY
             || d == Double.NEGATIVE_INFINITY)
         {
             return 0;
-        }
-
-        int id = (int)d;
-        if (id == d) {
-            // This covers -0.0 as well
-            return id;
         }
 
         d = (d >= 0) ? Math.floor(d) : Math.ceil(d);
@@ -632,26 +631,26 @@ public class ScriptRuntime {
 
     // must return long to hold an _unsigned_ int
     public static long toUint32(double d) {
+        long l = (long)d;
+        if (l == d) {
+            // This covers -0.0 as well
+            return l & 0xffffffffL;
+        }
+
+        if (d != d
+            || d == Double.POSITIVE_INFINITY
+            || d == Double.NEGATIVE_INFINITY)
+        {
+            return 0;
+        }
+
+        d = (d >= 0) ? Math.floor(d) : Math.ceil(d);
+
         // 0x100000000 gives me a numeric overflow...
         double two32 = 4294967296.0;
+        l = (long)Math.IEEEremainder(d, two32);
 
-        if (d != d || d == 0.0 ||
-            d == Double.POSITIVE_INFINITY ||
-            d == Double.NEGATIVE_INFINITY)
-            return 0;
-
-        if (d > 0.0)
-            d = Math.floor(d);
-        else
-            d = Math.ceil(d);
-
-    d = Math.IEEEremainder(d, two32);
-
-    d = d >= 0
-            ? d
-            : d + two32;
-
-        return (long) Math.floor(d);
+        return l & 0xffffffffL;
     }
 
     public static long toUint32(Object val) {
@@ -663,23 +662,26 @@ public class ScriptRuntime {
      * See ECMA 9.7.
      */
     public static char toUint16(Object val) {
-    long int16 = 0x10000;
+        double d = toNumber(val);
 
-    double d = toNumber(val);
-    if (d != d || d == 0.0 ||
-        d == Double.POSITIVE_INFINITY ||
-        d == Double.NEGATIVE_INFINITY)
-    {
-        return 0;
-    }
+        int i = (int)d;
+        if (i == d) {
+            return (char)i;
+        }
 
-    d = Math.IEEEremainder(d, int16);
+        if (d != d
+            || d == Double.POSITIVE_INFINITY
+            || d == Double.NEGATIVE_INFINITY)
+        {
+            return 0;
+        }
 
-    d = d >= 0
-            ? d
-        : d + int16;
+        d = (d >= 0) ? Math.floor(d) : Math.ceil(d);
 
-    return (char) Math.floor(d);
+        int int16 = 0x10000;
+        i = (int)Math.IEEEremainder(d, int16);
+
+        return (char)i;
     }
 
     /**
