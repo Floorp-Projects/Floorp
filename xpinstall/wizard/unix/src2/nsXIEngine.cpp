@@ -43,6 +43,8 @@ nsXIEngine::nsXIEngine() :
 {
 }
 
+#define RM_PREFIX "rm -rf "
+
 nsXIEngine::~nsXIEngine()   
 {
     DUMP("~nsXIEngine");
@@ -50,7 +52,20 @@ nsXIEngine::~nsXIEngine()
     // reset back to original directory
     chdir(mOriginalDir);
 
-    XI_IF_FREE(mTmp);
+    if ( mTmp != (char *) NULL ) {
+
+      // blow away the temp dir 
+
+      char *buf;
+      buf = (char *) malloc( strlen(RM_PREFIX) + strlen( mTmp ) + 1 );
+      if ( buf != (char *) NULL ) {
+        strcpy( buf, RM_PREFIX );
+        strcat( buf, mTmp );
+        system( buf ); 
+        XI_IF_FREE(mTmp);
+        free( buf );
+      }
+    }
     XI_IF_FREE(mOriginalDir);
 }
 
@@ -406,7 +421,7 @@ nsXIEngine::CheckConn( char *URL, int type, CONN *myConn, PRBool force )
 
 	if ( myConn->type == TYPE_UNDEF )
 		retval = PR_TRUE;					// first time
-	else if ( ( myConn->type != type || strcmp( URL, myConn->URL ) || force == PR_TRUE ) /* && gControls->state != ePaused */) {
+	else if ( ( myConn->type != type || myConn->URL == (char *) NULL || strcmp( URL, myConn->URL ) || force == PR_TRUE ) /* && gControls->state != ePaused */) {
 		retval = PR_TRUE;
 		switch ( myConn->type ) {
 		case TYPE_HTTP:
@@ -416,14 +431,19 @@ nsXIEngine::CheckConn( char *URL, int type, CONN *myConn, PRBool force )
 			break;
 		case TYPE_FTP:
 			fconn = (nsFTPConn *) myConn->conn;
-			fconn->Close();
-      XI_IF_DELETE(fconn);
+      if ( fconn != (nsFTPConn *) NULL ) {
+        fconn->Close();
+        XI_IF_DELETE(fconn);
+        myConn->conn = NULL;
+      }
 			break;
 		}
 	}
 	
-	if ( retval == PR_TRUE && myConn->URL != (char *) NULL )
+	if ( retval == PR_TRUE && myConn->URL != (char *) NULL ) {
     free( myConn->URL );
+    myConn->URL = (char *) NULL;
+  }
 
 	return retval;
 }
@@ -528,25 +548,16 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
 int
 nsXIEngine::MakeUniqueTmpDir()
 {
-    int err = OK;
-    int i;
-    char buf[MAXPATHLEN];
-    struct stat dummy;
-    mTmp = NULL;
+    int err = E_DIR_CREATE;
 
-    for (i = 0; i < MAX_TMP_DIRS; i++)
-    {
-        sprintf(buf, TMP_DIR_TEMPLATE, i);
-        if (-1 == stat(buf, &dummy))
-            break; 
+    mTmp = tempnam( (const char *) NULL, "xpi" );
+
+    if ( mTmp != (char *) NULL ) {
+      int tmperr;
+      tmperr = mkdir(mTmp, 0755);
+      if ( tmperr != -1 )
+        err = OK;
     }
-
-    mTmp = (char *) malloc( (strlen(buf) * sizeof(char)) + 1 );
-    if (!mTmp) return E_MEM;
-
-    sprintf(mTmp, "%s", buf);
-    mkdir(mTmp, 0755);
-
     return err;
 }
 

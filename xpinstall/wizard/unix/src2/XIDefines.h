@@ -37,7 +37,6 @@
 #define MAX_URLS 32
 #define MAX_URL_LEN 1024
 #define MAX_DEPENDEE_KEY_LEN 16
-#define MAX_TMP_DIRS 1024
 #define MAX_LEGACY_CHECKS 32
 
 
@@ -104,7 +103,6 @@
 /*--------------------------------------------------------------------*
  *   Macros
  *--------------------------------------------------------------------*/
-#define TMP_DIR_TEMPLATE "/tmp/.tmp.xi.%d"
 #define TMP_EXTRACT_SUBDIR "bin"
 #define XPI_DIR "./xpi"
 
