@@ -409,7 +409,7 @@ nsStreamXferOp::OnStatus( nsIChannel      *channel,
         nsXPIDLString str;
         rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));
         if (NS_FAILED(rv)) return rv;
-        nsAutoString msg = str;
+        nsAutoString msg = (const PRUnichar*)str;
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onStatus" ).GetUnicode(),
                                   msg.GetUnicode() );

@@ -2187,7 +2187,7 @@ nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt,
     rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));
     if (NS_FAILED(rv)) return rv;
     PRUint32 size;
-    nsAutoString msg2 = msg;
+    nsAutoString msg2 = (const PRUnichar*)msg;
     mStatus->SetText(msg2, size);
   }
   return NS_OK;
