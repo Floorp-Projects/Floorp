@@ -1376,7 +1376,7 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
     if (parentTag == nsXULAtoms::menulist)
       return NS_OK;  // Consume outside clicks for combo boxes on all platforms
     if (parentTag == nsXULAtoms::menu || parentTag == nsXULAtoms::popupset) {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
       // Don't consume outside clicks for menus in Windows
       aConsumeOutsideClicks = PR_FALSE;
 #endif
