@@ -189,7 +189,7 @@ typedef struct {
 } contentSortInfo;
 
 int		PR_CALLBACK inplaceSortCallback(const void *data1, const void *data2, void *privateData);
-int		testSortCallback(const void * data1, const void *data2, void *privateData);
+int		PR_CALLBACK testSortCallback(const void * data1, const void *data2, void *privateData);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -321,6 +321,7 @@ nsIRDFResource		*XULSortServiceImpl::kRDF_Seq;
 
 PRInt32  XULSortServiceImpl::kNameSpaceID_XUL;
 PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1079,6 +1080,8 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, sortPtr sortInfo, PRB
 	return(rv);
 }
 
+
+
 nsresult 
 XULSortServiceImpl::GetTarget(contentSortInfo *contentSortInfo, sortPtr sortInfo,  PRBool first, PRBool onlyCollationHint, PRBool truthValue,
 				   nsIRDFNode **target, PRBool &isCollationKey)
@@ -1203,6 +1206,9 @@ XULSortServiceImpl::GetTarget(contentSortInfo *contentSortInfo, sortPtr sortInfo
 			
 	return NS_RDF_NO_VALUE;
 }
+
+
+
 nsresult
 XULSortServiceImpl::GetResourceValue(contentSortInfo *contentSortInfo, sortPtr sortInfo, PRBool first, PRBool useCache,
 				PRBool onlyCollationHint, nsIRDFNode **target, PRBool &isCollationKey)
@@ -1221,6 +1227,8 @@ XULSortServiceImpl::GetResourceValue(contentSortInfo *contentSortInfo, sortPtr s
 	}
 	return(rv);
 }
+
+
 
 nsresult
 XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool first,
@@ -1394,6 +1402,8 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
 	return(rv);
 }
 
+
+
 nsresult
 XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBool first,
 				PRBool onlyCollationHint, nsIRDFNode **theNode, PRBool &isCollationKey)
@@ -1564,6 +1574,7 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
 }
 
 
+
 nsresult
 XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr sortInfo, PRInt32 & sortOrder)
 {
@@ -1621,6 +1632,8 @@ XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 
 	return(NS_OK);
 }
+
+
 
 nsresult
 XULSortServiceImpl::InplaceSort(contentSortInfo *info1, contentSortInfo *info2, sortPtr sortInfo, PRInt32 & sortOrder)
@@ -1681,6 +1694,7 @@ XULSortServiceImpl::InplaceSort(contentSortInfo *info1, contentSortInfo *info2, 
 }
 
 
+
 int
 inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 {
@@ -1698,6 +1712,8 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 	}
 	return(sortOrder);
 }
+
+
 
 int
 testSortCallback(const void *data1, const void *data2, void *privateData)
@@ -1717,7 +1733,10 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
 	return(sortOrder);
 }
 
-static contentSortInfo * CreateContentSortInfo(nsIContent *content, nsIRDFResource * resource)
+
+
+static contentSortInfo *
+CreateContentSortInfo(nsIContent *content, nsIRDFResource * resource)
 {
 	contentSortInfo * info = new contentSortInfo;
 	if(!info)
@@ -1735,8 +1754,7 @@ static contentSortInfo * CreateContentSortInfo(nsIContent *content, nsIRDFResour
 	info->checkedNode1 = PR_FALSE;
 	info->checkedNode2 = PR_FALSE;
 
-
-	return info;
+	return(info);
 }
 
 
@@ -1874,6 +1892,8 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 
 	return(NS_OK);
 }
+
+
 
 NS_IMETHODIMP
 XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSortState *sortState, nsIContent *root,
