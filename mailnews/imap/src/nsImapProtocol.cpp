@@ -1778,7 +1778,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
 						copyState = ImapOnlineCopyStateType::kInterruptedState;
 					else
 						copyState = GetServerStateParser().LastCommandSuccessful() ? 
-                                ImapOnlineCopyStateType::kSuccessfulCopy : ImapOnlineCopyStateType::kFailedCopy;
+                                (ImapOnlineCopyState) ImapOnlineCopyStateType::kSuccessfulCopy : 
+								(ImapOnlineCopyState) ImapOnlineCopyStateType::kFailedCopy;
 					if (m_imapMessageSink)
 						m_imapMessageSink->OnlineCopyReport(copyState);
                     
@@ -1792,7 +1793,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
                         	
 						if (m_imapMessageSink)
 						{
-							copyState = storeSuccessful ? ImapOnlineCopyStateType::kSuccessfulDelete : ImapOnlineCopyStateType::kFailedDelete;
+							copyState = storeSuccessful ? (ImapOnlineCopyState) ImapOnlineCopyStateType::kSuccessfulDelete 
+										: (ImapOnlineCopyState) ImapOnlineCopyStateType::kFailedDelete;
 							m_imapMessageSink->OnlineCopyReport(copyState);
 						}
                     }
