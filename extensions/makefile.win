@@ -31,6 +31,9 @@ DIRS = wallet \
 !endif
 	content-packs \
 	help \
+!if defined(MOZ_ENABLE_P3P)
+  p3p \
+!endif
 	pref \
 !if !defined(DISABLE_XSLT)
 	transformiix \
