@@ -42,7 +42,6 @@ CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\ArrayList.obj \
 	..\source\base\$(OBJDIR)\Double.obj \
 	..\source\base\$(OBJDIR)\List.obj \
-	..\source\base\$(OBJDIR)\TxObjectWrapper.obj \
 	..\source\base\$(OBJDIR)\Map.obj \
 	..\source\base\$(OBJDIR)\NamedMap.obj \
 	..\source\base\$(OBJDIR)\SimpleErrorObserver.obj \
@@ -52,7 +51,7 @@ CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\txAtoms.obj \
 	..\source\base\$(OBJDIR)\txExpandedNameMap.obj \
 	..\source\base\$(OBJDIR)\MozillaString.obj \
-	..\source\net\$(OBJDIR)\URIUtils.obj \
+	..\source\base\$(OBJDIR)\txURIUtils.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaObjectWrapper.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaAttr.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaCDATASection.obj \

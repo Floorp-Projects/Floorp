@@ -39,7 +39,6 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\ArrayList.obj 		\
 	.\$(OBJDIR)\Double.obj			\
 	.\$(OBJDIR)\List.obj			\
-	.\$(OBJDIR)\TxObjectWrapper.obj	\
 	.\$(OBJDIR)\NamedMap.obj		\
 	.\$(OBJDIR)\SimpleErrorObserver.obj	\
 	.\$(OBJDIR)\Stack.obj			\
@@ -47,7 +46,8 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\StringList.obj		\
 	.\$(OBJDIR)\Tokenizer.obj		\
 	.\$(OBJDIR)\txAtoms.obj			\
-	.\$(OBJDIR)\txExpandedNameMap.obj
+	.\$(OBJDIR)\txExpandedNameMap.obj	\
+	.\$(OBJDIR)\txURIUtils.obj
 
 !ifndef TX_EXE
 CPP_OBJS = $(CPP_OBJS)			\

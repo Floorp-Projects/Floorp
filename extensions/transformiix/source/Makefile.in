@@ -26,7 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = base net xml xpath xslt 
+DIRS            = base xml xpath xslt 
 
 ifdef TX_EXE
 DIRS += main

@@ -47,7 +47,7 @@ CPP_OBJS=					\
 EXPORTS = 					\
 	$(NULL)
 
-LINCS=-I..\.. -I..\..\..\base -I..\..\..\net \
+LINCS=-I..\.. -I..\..\..\base \
       -I..\..\..\xpath -I..\..\..\xslt
 
 LCFLAGS = \

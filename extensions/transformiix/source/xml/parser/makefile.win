@@ -51,7 +51,7 @@ CPP_OBJS= 					\
 EXPORTS =	\
 	$(NULL)
 
-LINCS=-I..\..\base -I..\dom -I..\..\net
+LINCS=-I..\..\base -I..\dom
 !ifndef TX_EXE
 LINCS=$(LINCS) -I$(PUBLIC)\expat
 !else

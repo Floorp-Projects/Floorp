@@ -72,11 +72,11 @@ EXPORTS = 					\
 	$(NULL)
 
 !ifdef TX_EXE
-LINCS=-I. -I..\base -I..\net -I..\xml -I..\xml\dom -I..\xml\parser \
-	-I..\xml\parser\xmlparse -I..\xml\printer -I..\xpath -Iutil -Ifunctions
+LINCS=-I. -I..\base -I..\xml -I..\xml\dom -I..\xml\parser \
+	-I..\xml\parser\xmlparse -I..\xpath -I.\util -I.\functions
 !else
 LINCS=-I$(PUBLIC)\xpcom -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
-      -I..\base -I ..\xml -I .\util -I ..\net -I..\xml\parser -I.\functions
+      -I..\base -I ..\xml -I .\util -I..\xml\parser -I.\functions
 !endif
 
 LCFLAGS = \

@@ -58,14 +58,4 @@ class TxObject {
     } //-- equals
 };
 
-/**
- * A Simple TxObject wrapper class
-**/
-class TxObjectWrapper : public TxObject {
-public:
-    TxObjectWrapper();
-    virtual ~TxObjectWrapper();
-    void* object;
-};
-
 #endif
