@@ -1,0 +1,49 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH = ../../..
+
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+MODULE = necko
+XPIDL_MODULE = necko_socket
+
+LIBRARY_NAME = neckosocket_s
+
+include $(DEPTH)/config/autoconf.mk
+
+XPIDLSRCS =				\
+	nsISocketProvider.idl		\
+	nsISocketProviderService.idl	\
+        $(NULL)
+
+CPPSRCS =				\
+	nsSocketProviderService.cpp	\
+        $(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+MKSHLIB :=
+
+# we don't want the shared lib, but we want to force the creation of a 
+# static l\ib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
+
+include $(topsrcdir)/config/rules.mk
