@@ -47,7 +47,7 @@
 
 menu,
 menuitem {
-  -moz-appearance: menuitem;
+  -moz-appearance: none !important;
   -moz-box-align: center;
   color: #000000;
   font: menu;
@@ -134,6 +134,8 @@ menupopup > menu[_moz-menuactive="true"],
 menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],
 popup > menuitem[_moz-menuactive="true"] {
+  /* background: url("chrome://global/skin/icons/menuselected.png") #FFFFFF repeat !important; */
+  background-color: #3063b0;
   color:  #FFF;
 }
 
