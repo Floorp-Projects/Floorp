@@ -2473,7 +2473,6 @@ NS_IMETHODIMP nsRenderingContextWinA :: GetWidth(const PRUnichar *aString,
   {
     nsFontMetricsWinA* metrics = (nsFontMetricsWinA*) mFontMetrics;
     nsFontSubset* prevFont = nsnull;
-    SIZE size;
 
     SetupFontAndColor();
 
@@ -2486,17 +2485,17 @@ NS_IMETHODIMP nsRenderingContextWinA :: GetWidth(const PRUnichar *aString,
       nsFontWinA** end = (nsFontWinA**) &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
         if (FONT_HAS_GLYPH((*font)->mMap, c)) {
-          nsFontSubset* subset = (*font)->mSubsets;
-          nsFontSubset* endSubsets = &((*font)->mSubsets[(*font)->mSubsetsCount]);
+          nsFontSubset** subset = (*font)->mSubsets;
+          nsFontSubset** endSubsets = &((*font)->mSubsets[(*font)->mSubsetsCount]);
           while (subset < endSubsets) {
-            if (!subset->mMap) {
-              if (!subset->Load(*font)) {
+            if (!(*subset)->mMap) {
+              if (!(*subset)->Load(*font)) {
                 subset++;
                 continue;
               }
             }
-            if (FONT_HAS_GLYPH(subset->mMap, c)) {
-              currFont = subset;
+            if (FONT_HAS_GLYPH((*subset)->mMap, c)) {
+              currFont = *subset;
               goto FoundFont; // for speed -- avoid "if" statement
             }
             subset++;
@@ -2509,18 +2508,7 @@ FoundFont:
       // XXX avoid this test by duplicating code
       if (prevFont) {
         if (currFont != prevFont) {
-          ::SelectObject(mDC, prevFont->mFont);
-          char str[1024];
-          int len = WideCharToMultiByte(prevFont->mCodePage, 0, &aString[start],
-            i - start, str, sizeof(str), nsnull, nsnull);
-          if (len) {
-            ::GetTextExtentPoint32A(mDC, str, len, &size);
-            width += size.cx;
-          }
-          else {
-            // XXX failed
-            printf("%d: WideCharToMultiByte failed\n", prevFont->mCodePage);
-          }
+          width += prevFont->GetWidth(mDC, &aString[start], i - start);
           prevFont = currFont;
           start = i;
         }
@@ -2532,18 +2520,7 @@ FoundFont:
     }
 
     if (prevFont) {
-      ::SelectObject(mDC, prevFont->mFont);
-      char str[1024];
-      int len = WideCharToMultiByte(prevFont->mCodePage, 0, &aString[start],
-        i - start, str, sizeof(str), nsnull, nsnull);
-      if (len) {
-        ::GetTextExtentPoint32A(mDC, str, len, &size);
-        width += size.cx;
-      }
-      else {
-        // XXX failed
-        printf("%d: WideCharToMultiByte failed\n", prevFont->mCodePage);
-      }
+      width += prevFont->GetWidth(mDC, &aString[start], i - start);
     }
 
     aWidth = NSToCoordRound(float(width) * mP2T);
@@ -2577,7 +2554,6 @@ NS_IMETHODIMP nsRenderingContextWinA :: DrawString(const PRUnichar *aString, PRU
     mTMatrix->TransformCoord(&x, &y);
     nsFontMetricsWinA* metrics = (nsFontMetricsWinA*) mFontMetrics;
     nsFontSubset* prevFont = nsnull;
-    SIZE size;
 
     SetupFontAndColor();
 
@@ -2589,17 +2565,17 @@ NS_IMETHODIMP nsRenderingContextWinA :: DrawString(const PRUnichar *aString, PRU
       nsFontWinA** end = (nsFontWinA**) &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
         if (FONT_HAS_GLYPH((*font)->mMap, c)) {
-          nsFontSubset* subset = (*font)->mSubsets;
-          nsFontSubset* endSubsets = &((*font)->mSubsets[(*font)->mSubsetsCount]);
+          nsFontSubset** subset = (*font)->mSubsets;
+          nsFontSubset** endSubsets = &((*font)->mSubsets[(*font)->mSubsetsCount]);
           while (subset < endSubsets) {
-            if (!subset->mMap) {
-              if (!subset->Load(*font)) {
+            if (!(*subset)->mMap) {
+              if (!(*subset)->Load(*font)) {
                 subset++;
                 continue;
               }
             }
-            if (FONT_HAS_GLYPH(subset->mMap, c)) {
-              currFont = subset;
+            if (FONT_HAS_GLYPH((*subset)->mMap, c)) {
+              currFont = *subset;
               goto FoundFont; // for speed -- avoid "if" statement
             }
             subset++;
@@ -2611,7 +2587,6 @@ NS_IMETHODIMP nsRenderingContextWinA :: DrawString(const PRUnichar *aString, PRU
 FoundFont:
       if (prevFont) {
         if (currFont != prevFont) {
-          ::SelectObject(mDC, prevFont->mFont);
           if (aSpacing) {
             // XXX Fix path to use a twips transform in the DC and use the
             // spacing values directly and let windows deal with the sub-pixel
@@ -2626,33 +2601,14 @@ FoundFont:
               x = aX;
               y = aY;
               mTMatrix->TransformCoord(&x, &y);
-              char mb[1024];
-              int len = WideCharToMultiByte(prevFont->mCodePage, 0, str, 1, mb,
-                sizeof(mb), nsnull, nsnull);
-              if (len) {
-                ::ExtTextOutA(mDC, x, y, 0, NULL, mb, len, NULL);
-              }
-              else {
-                // XXX failed
-                printf("%d: WideCharToMultiByte failed\n", prevFont->mCodePage);
-              }
+              prevFont->DrawString(mDC, x, y, str, 1);
               aX += *aSpacing++;
               str++;
             }
           }
           else {
-            char mb[1024];
-            int len = WideCharToMultiByte(prevFont->mCodePage, 0,
-              &aString[start], i - start, mb, sizeof(mb), nsnull, nsnull);
-            if (len) {
-              ::ExtTextOutA(mDC, x, y, 0, NULL, mb, len, NULL);
-              ::GetTextExtentPoint32A(mDC, mb, len, &size);
-              x += size.cx;
-            }
-            else {
-              // XXX failed
-              printf("%d: WideCharToMultiByte failed\n", prevFont->mCodePage);
-            }
+            prevFont->DrawString(mDC, x, y, &aString[start], i - start);
+            x += prevFont->GetWidth(mDC, &aString[start], i - start);
           }
           prevFont = currFont;
           start = i;
@@ -2665,7 +2621,6 @@ FoundFont:
     }
 
     if (prevFont) {
-      ::SelectObject(mDC, prevFont->mFont);
       if (aSpacing) {
         // XXX Fix path to use a twips transform in the DC and use the
         // spacing values directly and let windows deal with the sub-pixel
@@ -2680,31 +2635,13 @@ FoundFont:
           x = aX;
           y = aY;
           mTMatrix->TransformCoord(&x, &y);
-          char mb[1024];
-          int len = WideCharToMultiByte(prevFont->mCodePage, 0, str, 1, mb,
-            sizeof(mb), nsnull, nsnull);
-          if (len) {
-            ::ExtTextOutA(mDC, x, y, 0, NULL, mb, len, NULL);
-          }
-          else {
-            // XXX failed
-            printf("%d: WideCharToMultiByte failed\n", prevFont->mCodePage);
-          }
+          prevFont->DrawString(mDC, x, y, str, 1);
           aX += *aSpacing++;
           str++;
         }
       }
       else {
-        char mb[1024];
-        int len = WideCharToMultiByte(prevFont->mCodePage, 0,
-          &aString[start], i - start, mb, sizeof(mb), nsnull, nsnull);
-        if (len) {
-          ::ExtTextOutA(mDC, x, y, 0, NULL, mb, len, NULL);
-        }
-        else {
-          // XXX failed
-          printf("%d: WideCharToMultiByte failed\n", prevFont->mCodePage);
-        }
+        prevFont->DrawString(mDC, x, y, &aString[start], i - start);
       }
     }
 
