@@ -103,7 +103,6 @@ PR_STATIC_CALLBACK(PLHashEntry*) pref_AllocEntry(void *pool, const void *key)
 PR_STATIC_CALLBACK(void) pref_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
 {
 	PrefNode *pref = (PrefNode *) he->value;
-    if (!pref) printf("no hashentry, so not freeing\n");
 	if (pref)
 	{
 		if (pref->flags & PREF_STRING)
