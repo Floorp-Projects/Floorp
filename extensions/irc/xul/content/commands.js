@@ -1053,13 +1053,15 @@ function cmdDeleteView(e)
             client.deck.removeChild(e.view.frame);
             delete e.view.frame;
 
+            var oldView = client.currentObject;
             if (client.currentObject == e.view)
             {
                 if (i >= client.viewsArray.length)
                     i = client.viewsArray.length - 1;
-                client.currentObject = null;
-                setCurrentObject(client.viewsArray[i].source);
+                oldView = client.viewsArray[i].source
             }
+            client.currentObject = null;
+            setCurrentObject(oldView);
         }
     }
 }
@@ -1079,13 +1081,15 @@ function cmdHideView(e)
             client.deck.removeChild(e.view.frame);
             delete e.view.frame;
 
+            var oldView = client.currentObject;
             if (client.currentObject == e.view)
             {
                 if (i >= client.viewsArray.length)
                     i = client.viewsArray.length - 1;
-                client.currentObject = null;
-                setCurrentObject (client.viewsArray[i].source);
+                oldView = client.viewsArray[i].source
             }
+            client.currentObject = null;
+            setCurrentObject(oldView);
         }
     }
 }
