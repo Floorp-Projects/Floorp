@@ -108,12 +108,16 @@ nsSharableString::SetLength( size_type aNewLength )
     else
       {
         mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
-        *mBuffer->DataEnd() = char_type(0); // This is needed for |Truncate|
-                                            // callers but perhaps not
-                                            // for callers that are
-                                            // manipulating the
-                                            // internals of the string.
       }
+    // This is needed for |Truncate| callers and also for some callers
+    // (such as nsAString::do_AppendFromReadable) that are manipulating
+    // the internals of the string.  It also makes sense to do this
+    // since this class implements |nsAFlatString|, so the buffer must
+    // always be null-terminated at its length.  Callers using writing
+    // iterators can't be expected to null-terminate themselves since
+    // they don't know if they're dealing with a string that has a
+    // buffer big enough for null-termination.
+    *mBuffer->DataEnd() = char_type(0);
   }
 
 void
@@ -253,12 +257,16 @@ nsSharableCString::SetLength( size_type aNewLength )
     else
       {
         mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
-        *mBuffer->DataEnd() = char_type(0); // This is needed for |Truncate|
-                                            // callers but perhaps not
-                                            // for callers that are
-                                            // manipulating the
-                                            // internals of the string.
       }
+    // This is needed for |Truncate| callers and also for some callers
+    // (such as nsACString::do_AppendFromReadable) that are manipulating
+    // the internals of the string.  It also makes sense to do this
+    // since this class implements |nsAFlatString|, so the buffer must
+    // always be null-terminated at its length.  Callers using writing
+    // iterators can't be expected to null-terminate themselves since
+    // they don't know if they're dealing with a string that has a
+    // buffer big enough for null-termination.
+    *mBuffer->DataEnd() = char_type(0);
   }
 
 void
