@@ -50,7 +50,7 @@ nsCellMap::nsCellMap(int aRowCount, int aColCount)
 nsCellMap::~nsCellMap()
 {
   PRInt32 mapRowCount = mRows.Count();
-  PRInt32 colCount    = mNumCellsInCol.Count();
+  PRInt32 colCount    = mNumCellsOrigInCol.Count();
   PRInt32 colX;
   for (PRInt32 rowX = 0; rowX < mapRowCount; rowX++) {
     nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
@@ -61,11 +61,15 @@ nsCellMap::~nsCellMap()
       } 
     }
     delete row;
+    PRInt32* numOrig = (PRInt32 *)mNumCellsOrigInRow.ElementAt(rowX);
+    if (numOrig) {
+      delete numOrig;
+    }
   }
   for (colX = 0; colX < colCount; colX++) {
-    PRInt32* val = (PRInt32 *)mNumCellsInCol.ElementAt(colX);
+    PRInt32* val = (PRInt32 *)mNumCellsOrigInCol.ElementAt(colX);
     if (val) {
-      delete [] val;
+      delete val;
     }
   }
 
@@ -83,7 +87,7 @@ nsCellMap::~nsCellMap()
 
 void nsCellMap::AddColsAtEnd(PRUint32 aNumCols)
 {
-  Grow(mRowCount, mNumCellsInCol.Count() + aNumCols);
+  Grow(mRowCount, mNumCellsOrigInCol.Count() + aNumCols);
 }
 
 PRInt32 nsCellMap::GetNextAvailRowIndex()
@@ -95,7 +99,7 @@ void nsCellMap::Grow(PRInt32 aNumMapRows,
                      PRInt32 aNumCols)
 {
   PRInt32 origNumMapRows = mRows.Count();
-  PRInt32 origNumCols    = mNumCellsInCol.Count();
+  PRInt32 origNumCols    = mNumCellsOrigInCol.Count();
 
   // if the number of columns has increased, we need to add extra cols to mNumColsOriginating and
   // each row in mRows.
@@ -110,9 +114,10 @@ void nsCellMap::Grow(PRInt32 aNumMapRows,
     }
     // update the col array 
     for (colX = origNumCols; colX < aNumCols; colX++) {
-      PRInt32* val = new PRInt32[2];
-      val[0] = val[1] = 0;
-      mNumCellsInCol.AppendElement(val);
+      PRInt32* val = new PRInt32(0);
+      if (val) {
+        mNumCellsOrigInCol.AppendElement(val);
+      }
     }
   }
 
@@ -122,7 +127,13 @@ void nsCellMap::Grow(PRInt32 aNumMapRows,
   for ( ; newRows > 0; newRows--) {
     nsVoidArray* row;
     row = (0 == aNumCols) ? new nsVoidArray() : new nsVoidArray(aNumCols);
-    mRows.AppendElement(row);
+    if (row) {
+      mRows.AppendElement(row);
+    }
+    PRInt32* val = new PRInt32(0);
+    if (val) {
+      mNumCellsOrigInRow.AppendElement(val);
+    }
   }
 }
 
@@ -132,7 +143,7 @@ PRInt32 nsCellMap::AppendCell(nsTableCellFrame* aCellFrame,
   NS_ASSERTION(aCellFrame, "bad cell frame");
 
   PRInt32 origNumMapRows = mRows.Count();
-  PRInt32 origNumCols    = mNumCellsInCol.Count();
+  PRInt32 origNumCols    = mNumCellsOrigInCol.Count();
 
   // get the first null CellData in the desired row. It may be 1 past the end if there are none
   PRInt32 startColIndex;
@@ -216,29 +227,28 @@ void nsCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
   // XXX write me. For now the cell map is recalculate from scratch when a cell is deleted
 }
 
-PRInt32 nsCellMap::GetNumCellsIn(PRInt32 aColIndex, 
-                                 PRBool aOriginating) const
+PRInt32 nsCellMap::GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const
 {
-  PRInt32 colCount = mNumCellsInCol.Count();
-  if ((aColIndex >= 0) && (aColIndex < colCount)) {
-    PRInt32* numCellsArray = (PRInt32 *)mNumCellsInCol.ElementAt(aColIndex);
-    PRInt32 numCells = (aOriginating) ? *numCellsArray : *(numCellsArray + 1);
-    return numCells;
+  PRInt32 rowCount = mNumCellsOrigInRow.Count();
+  if ((aRowIndex >= 0) && (aRowIndex < rowCount)) {
+    return *((PRInt32 *)mNumCellsOrigInRow.ElementAt(aRowIndex));
   }
   else {
-    NS_ASSERTION(PR_FALSE, "nsCellMap::GetNumCellsIn - bad col index");
+    NS_ASSERTION(PR_FALSE, "nsCellMap::GetNumCellsOriginatingInRow - bad row index");
     return 0;
   }
 }
 
-PRInt32 nsCellMap::GetNumCellsIn(PRInt32 aColIndex) const
+PRInt32 nsCellMap::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
 {
-  return GetNumCellsIn(aColIndex, 1);
-}
-  
-PRInt32 nsCellMap::GetNumCellsOriginatingIn(PRInt32 aColIndex) const
-{
-  return GetNumCellsIn(aColIndex, 0);
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
+  if ((aColIndex >= 0) && (aColIndex < colCount)) {
+    return *((PRInt32 *)mNumCellsOrigInCol.ElementAt(aColIndex));
+  }
+  else {
+    NS_ASSERTION(PR_FALSE, "nsCellMap::GetNumCellsOriginatingInCol - bad col index");
+    return 0;
+  }
 }
 
 #ifdef NS_DEBUG
@@ -246,11 +256,12 @@ void nsCellMap::Dump() const
 {
   printf("***** start CellMap Dump *****\n");
   PRInt32 mapRowCount = mRows.Count();
-  PRInt32 colCount = mNumCellsInCol.Count();
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
   PRInt32 colIndex;
   printf("mapRowCount=%d tableRowCount=%d, colCount=%d \n", mapRowCount, mRowCount, colCount);
+  PRInt32 rowIndex;
 
-  for (PRInt32 rowIndex = 0; rowIndex < mapRowCount; rowIndex++) {
+  for (rowIndex = 0; rowIndex < mapRowCount; rowIndex++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowIndex);
     printf("row %d : ", rowIndex);
     for (colIndex = 0; colIndex < colCount; colIndex++) {
@@ -304,6 +315,13 @@ void nsCellMap::Dump() const
     printf("\n");
   }
 
+  // output cells originating in rows
+	printf ("\ncells originating in rows array -> ");
+	for (rowIndex = 0; rowIndex < mapRowCount; rowIndex++) {
+    PRInt32* numCells = (PRInt32 *)mNumCellsOrigInRow.ElementAt(rowIndex);
+		printf ("%d=%d ", rowIndex, *numCells);
+	}
+  printf("\n");
 	// output col frame info
   printf("\n col frames ->");
 	for (colIndex = 0; colIndex < mColFrames.Count(); colIndex++) {
@@ -313,10 +331,10 @@ void nsCellMap::Dump() const
     printf ("%d=%p ", colIndex, colFrame);
 	}
   // output cells originating in cols
-	printf ("\ncells in/originating in cols array -> ");
+	printf ("\ncells originating in cols array -> ");
 	for (colIndex = 0; colIndex < colCount; colIndex++) {
-    PRInt32* numCells = (PRInt32 *)mNumCellsInCol.ElementAt(colIndex);
-		printf ("%d=%d,%d ", colIndex, *numCells, *(numCells + 1));
+    PRInt32* numCells = (PRInt32 *)mNumCellsOrigInCol.ElementAt(colIndex);
+		printf ("%d=%d ", colIndex, *numCells);
 	}
   printf("\n");
   printf("\n***** end CellMap Dump *****\n");
@@ -330,12 +348,13 @@ void nsCellMap::SetMapCellAt(CellData& aNewCell,
 {
   nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aMapRowIndex));
   row->ReplaceElementAt(&aNewCell, aColIndex);
-  // update the col array
-  PRInt32* numCells = (PRInt32 *)mNumCellsInCol.ElementAt(aColIndex);
-  if (aNewCell.mOrigCell) { // cell originates in this col
+  // update the originating cell counts if cell originates in this row, col
+  if (aNewCell.mOrigCell) { 
+    PRInt32* numCells = (PRInt32 *)mNumCellsOrigInCol.ElementAt(aColIndex);
+    (*numCells)++;
+    numCells = (PRInt32 *)mNumCellsOrigInRow.ElementAt(aMapRowIndex);
     (*numCells)++;
   }
-  (*(numCells + 1))++;         // cell occupies this col
 }
 
 PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32                 aColIndex, 
@@ -347,7 +366,7 @@ PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32                 aColIndex,
   aCell->GetRowIndex(initialRowX);
 
   PRInt32 effColSpan = 0;
-  PRInt32 colCount = mNumCellsInCol.Count();
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
   for (PRInt32 colX = aColIndex; colX < colCount; colX++) {
     PRBool found = PR_FALSE;
     CellData* cellData = GetCellAt(initialRowX, colX);
@@ -466,7 +485,7 @@ PRInt32 nsCellMap::GetNumCollapsedCols() const
 
 PRBool nsCellMap::IsColCollapsedAt(PRInt32 aCol) const
 {
-  PRInt32 colCount = mNumCellsInCol.Count();
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
   if ((aCol >= 0) && (aCol < colCount)) {
     if (mIsCollapsedCols) {
       return mIsCollapsedCols[aCol];
@@ -477,7 +496,7 @@ PRBool nsCellMap::IsColCollapsedAt(PRInt32 aCol) const
 
 void nsCellMap::SetColCollapsedAt(PRInt32 aCol, PRBool aValue)
 {
-  PRInt32 colCount = mNumCellsInCol.Count();
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
   if ((aCol >= 0) && (aCol < colCount)) {
     if (nsnull == mIsCollapsedCols) {
       mIsCollapsedCols = new PRPackedBool[colCount];
@@ -501,7 +520,7 @@ PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex) const
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount)) {
     return PR_FALSE;
   }
-  PRInt32 colCount = mNumCellsInCol.Count();
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
 	for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++) {
 		CellData* cd = GetCellAt(aRowIndex, colIndex);
 		if (cd) { // there's really a cell at (aRowIndex, colIndex)
@@ -519,7 +538,7 @@ PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex) const
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount)) {
     return PR_FALSE;
   }
-  PRInt32 colCount = mNumCellsInCol.Count();
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
   if (aRowIndex != mRowCount - 1) {
     // aRowIndex is not the last row, so we check the next row after aRowIndex for spanners
     for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++) {
@@ -538,7 +557,7 @@ PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex) const
 
 PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
 {
-  if ((0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
+  if ((0 > aColIndex) || (aColIndex >= mNumCellsOrigInCol.Count())) {
     return PR_FALSE;
   }
 	for (PRInt32 rowIndex = 0; rowIndex < mRowCount; rowIndex++) {
@@ -555,8 +574,8 @@ PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
 
 PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex) const
 {
-  NS_PRECONDITION (aColIndex < mNumCellsInCol.Count(), "bad col index arg");
-  PRInt32 colCount = mNumCellsInCol.Count();
+  NS_PRECONDITION (aColIndex < mNumCellsOrigInCol.Count(), "bad col index arg");
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
   if ((0 > aColIndex) || (aColIndex >= colCount - 1)) 
     return PR_FALSE;
  

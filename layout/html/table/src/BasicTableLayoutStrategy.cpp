@@ -402,7 +402,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
     NS_ASSERTION(nsnull != colFrame, "bad col frame");
     colFrame->ResetSizingInfo();
 
-    if (mTableFrame->GetNumCellsOriginatingIn(colX) > 0) {
+    if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
       mCellSpacingTotal += spacingX;
     }
 
@@ -580,7 +580,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
             colWidth = PR_MAX(colWidth, colFrame->GetFixWidth());
           }
           divisor += colWidth;
-          if ((0 == widthX) && (spanX > 0) && (mTableFrame->GetNumCellsOriginatingIn(colX + spanX) > 0)) {
+          if ((0 == widthX) && (spanX > 0) && (mTableFrame->GetNumCellsOriginatingInCol(colX + spanX) > 0)) {
             spanCellSpacing += spacingX;
           }
         }
@@ -863,7 +863,7 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
           colWidth = PR_MAX(colWidth, colFrame->GetDesWidth()); // XXX check this
           //colWidth = PR_MAX(colWidth, colFrame->GetPctWidth());
           spanTotal += colWidth;
-          if ((spanX > 0) && (mTableFrame->GetNumCellsOriginatingIn(colX + spanX) > 0)) {
+          if ((spanX > 0) && (mTableFrame->GetNumCellsOriginatingInCol(colX + spanX) > 0)) {
             spanCellSpacing += spacingX;
           }
         }
@@ -951,7 +951,7 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableContentWidths()
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     mMinTableContentWidth += colFrame->GetMinWidth();
     mMaxTableContentWidth += colFrame->GetDesWidth();
-    if (mTableFrame->GetNumCellsOriginatingIn(colX) > 0) {
+    if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
       mMaxTableContentWidth += spacingX;
       mMinTableContentWidth += spacingX;
     }
@@ -983,7 +983,7 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32& aCellSpacing,
   nscoord spacingX = mTableFrame->GetCellSpacingX();
   for (PRInt32 colX = 0; colX < mNumCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    if (mTableFrame->GetNumCellsOriginatingIn(colX) > 0) {
+    if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
       aCellSpacing += spacingX;
     }
     nscoord minCol = colFrame->GetMinWidth();

@@ -270,7 +270,8 @@ nsTableFrame::nsTableFrame()
     mHasScrollableRowGroup(PR_FALSE),
     mCellMap(nsnull),
     mColCache(nsnull),
-    mTableLayoutStrategy(nsnull)
+    mTableLayoutStrategy(nsnull),
+    mPercentBasisForRows(0)
 {
   mColumnWidthsSet=PR_FALSE;
   mColumnWidthsLength = kColumnWidthIncrement;  
@@ -1974,7 +1975,7 @@ void nsTableFrame::SetColumnDimensions(nscoord aHeight)
         else if ((0 == colX) || (numCols - 1 == colX)) {
           colWidth += cellSpacingX + halfCellSpacingX;
         }
-        else if (GetNumCellsOriginatingIn(colX) > 0) {
+        else if (GetNumCellsOriginatingInCol(colX) > 0) {
           colWidth += cellSpacingX;
         }
 
@@ -2377,6 +2378,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
 
   // Reflow the existing frames
   if (mFrames.NotEmpty()) {
+    ComputePercentBasisForRows(aReflowState);
     rv = ReflowMappedChildren(aPresContext, aDesiredSize, state, aStatus);
   }
 
@@ -2411,6 +2413,29 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
 
   return rv;
 
+}
+
+void nsTableFrame::ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState)
+{
+  nscoord height;
+  GetTableSpecifiedHeight(height, aReflowState);
+  if ((height > 0) && (height < NS_UNCONSTRAINEDSIZE)) {
+    // exclude our border and padding
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+	  nsMargin borderPadding(0,0,0,0);
+    // XXX handle percentages
+    if (spacing->GetBorderPadding(borderPadding)) {
+     height -= borderPadding.top + borderPadding.bottom;
+    }
+    // exclude cell spacing for all rows
+    height -= (1 + GetRowCount()) * GetCellSpacingY();
+    height = PR_MAX(0, height);
+  }
+  else {
+    height = 0;
+  }
+  mPercentBasisForRows = height;
 }
 
 // collapsing row groups, rows, col groups and cols are accounted for after both passes of
@@ -3613,7 +3638,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
   PRInt32 numCols = GetColCount();
   for (PRInt32 colIndex = 0; colIndex < numCols; colIndex++) {
     nscoord totalColWidth = mColumnWidths[colIndex];
-    if (GetNumCellsOriginatingIn(colIndex) > 0) { // skip degenerate cols
+    if (GetNumCellsOriginatingInCol(colIndex) > 0) { // skip degenerate cols
       totalColWidth += cellSpacing;           // add cell spacing to left of col
     }
     tableWidth += totalColWidth;
@@ -3838,68 +3863,51 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
   DistributeSpaceToCells(aPresContext, aReflowState, aRowGroupFrame);
 }
 
-NS_IMETHODIMP nsTableFrame::GetTableSpecifiedHeight(nscoord& aResult, const nsHTMLReflowState& aReflowState)
+NS_IMETHODIMP nsTableFrame::GetTableSpecifiedHeight(nscoord&                 aResult, 
+                                                    const nsHTMLReflowState& aReflowState)
 {
   const nsStylePosition* tablePosition;
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
   
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  nscoord tableSpecifiedHeight=-1;
+  nscoord tableSpecifiedHeight = -1;
   if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE &&
       aReflowState.mComputedHeight > 0)
-      tableSpecifiedHeight = aReflowState.mComputedHeight;
+    tableSpecifiedHeight = aReflowState.mComputedHeight;
   else if (eStyleUnit_Coord == tablePosition->mHeight.GetUnit())
     tableSpecifiedHeight = tablePosition->mHeight.GetCoordValue();
-  else if (eStyleUnit_Percent == tablePosition->mHeight.GetUnit())
-  {
+  else if (eStyleUnit_Percent == tablePosition->mHeight.GetUnit()) {
     float percent = tablePosition->mHeight.GetPercentValue();
     nscoord parentHeight = GetEffectiveContainerHeight(aReflowState);
-    if (NS_UNCONSTRAINEDSIZE!=parentHeight && 0!=parentHeight)
+    if ((NS_UNCONSTRAINEDSIZE != parentHeight) && (0 != parentHeight))
       tableSpecifiedHeight = NSToCoordRound((float)parentHeight * percent);
   }
   aResult = tableSpecifiedHeight;
   return NS_OK;
 }
 
-nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
+nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext&          aPresContext,
                                            const nsHTMLReflowState& aReflowState, 
-                                           nscoord aDefaultHeight) 
+                                           nscoord                  aDefaultHeight) 
 {
-  NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
+  NS_ASSERTION(mCellMap, "never ever call me until the cell map is built!");
   nscoord result = aDefaultHeight;
-  const nsStylePosition* tablePosition;
-  GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
-  if (eStyleUnit_Auto == tablePosition->mHeight.GetUnit())
-    return result; // auto width tables are sized by the row heights, which we already have
 
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  nscoord tableSpecifiedHeight=-1;
-  if (eStyleUnit_Coord == tablePosition->mHeight.GetUnit())
-    tableSpecifiedHeight = tablePosition->mHeight.GetCoordValue();
-  else if (eStyleUnit_Percent == tablePosition->mHeight.GetUnit())
-  {
-    float percent = tablePosition->mHeight.GetPercentValue();
-    nscoord parentHeight = GetEffectiveContainerHeight(aReflowState);
-    if (NS_UNCONSTRAINEDSIZE!=parentHeight && 0!=parentHeight)
-      tableSpecifiedHeight = NSToCoordRound((float)parentHeight * percent);
-  }
-  if (-1!=tableSpecifiedHeight)
-  {
-    if (tableSpecifiedHeight>aDefaultHeight)
-    { // proportionately distribute the excess height to each row
+  nscoord tableSpecifiedHeight;
+  GetTableSpecifiedHeight(tableSpecifiedHeight, aReflowState);
+  if (-1 != tableSpecifiedHeight) {
+    if (tableSpecifiedHeight > aDefaultHeight) { 
+      // proportionately distribute the excess height to each row
       result = tableSpecifiedHeight;
-      nscoord excess = tableSpecifiedHeight-aDefaultHeight;
-      nscoord sumOfRowHeights=0;
-      nsIFrame * rowGroupFrame=mFrames.FirstChild();
-      while (nsnull!=rowGroupFrame)
-      {
+      nscoord excess = tableSpecifiedHeight - aDefaultHeight;
+      nscoord sumOfRowHeights = 0;
+      nsIFrame* rowGroupFrame=mFrames.FirstChild();
+      while (nsnull != rowGroupFrame) {
         const nsStyleDisplay *rowGroupDisplay;
         rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay) &&
-            ((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace())
-        { 
+            ((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace()) { 
           ((nsTableRowGroupFrame*)rowGroupFrame)->GetHeightOfRows(sumOfRowHeights);
         }
         rowGroupFrame->GetNextSibling(&rowGroupFrame);
@@ -3918,19 +3926,18 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
           rowGroupYPos += margin.top;
         }
       }
-      while (nsnull!=rowGroupFrame)
-      {
+      while (nsnull!=rowGroupFrame) {
         const nsStyleDisplay *rowGroupDisplay;
         rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay)) {
-          if (((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace())
-          {
+          if (((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace()) {
             nscoord excessForGroup = 0;
+            const nsStyleTable* tableStyle;
+            GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
             DistributeSpaceToRows(aPresContext, aReflowState, rowGroupFrame, sumOfRowHeights, 
                                   excess, tableStyle, excessForGroup, rowGroupYPos);
           }
-          else
-          {
+          else {
             nsRect rowGroupRect;
             rowGroupFrame->GetRect(rowGroupRect);
             rowGroupYPos += rowGroupRect.height;
@@ -5317,10 +5324,16 @@ NS_IMETHODIMP nsTableFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
 
 /*---------------- end of nsITableLayout implementation ------------------*/
 
-PRInt32 nsTableFrame::GetNumCellsOriginatingIn(PRInt32 aColIndex)
+PRInt32 nsTableFrame::GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const
 {
   nsCellMap* cellMap = GetCellMap();
-  return cellMap->GetNumCellsOriginatingIn(aColIndex);
+  return cellMap->GetNumCellsOriginatingInRow(aRowIndex);
+}
+
+PRInt32 nsTableFrame::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
+{
+  nsCellMap* cellMap = GetCellMap();
+  return cellMap->GetNumCellsOriginatingInCol(aColIndex);
 }
 
 #define INDENT_PER_LEVEL 2

@@ -51,7 +51,7 @@ nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
-  NS_PRECONDITION(mFrames.IsEmpty(), "already initialized");
+//  NS_PRECONDITION(mFrames.IsEmpty(), "already initialized");
 
   nsresult  result;
   if (!mFrames.IsEmpty()) {

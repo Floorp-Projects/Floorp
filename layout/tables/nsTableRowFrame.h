@@ -235,10 +235,11 @@ protected:
                            nsTableCellFrame *   aStartFrame,
                            PRBool               aDoSiblings);
 
-  nsresult CalculateCellActualSize(nsIFrame* aRowFrame,
-                                   nscoord&  aDesiredWidth,
-                                   nscoord&  aDesiredHeight,
-                                   nscoord   aAvailWidth);
+  nsresult CalculateCellActualSize(RowReflowState& aReflowState,
+                                   nsIFrame*       aRowFrame,
+                                   nscoord&        aDesiredWidth,
+                                   nscoord&        aDesiredHeight,
+                                   nscoord         aAvailWidth);
 
   nscoord CalculateCellAvailableWidth(nsTableFrame* aTableFrame,
                                       nsIFrame*     aCellFrame,

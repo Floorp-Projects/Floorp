@@ -679,10 +679,11 @@ void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
 // needed for backwards compatibility.
 // Modifies the desired width and height that are passed in.
 nsresult
-nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
-                                         nscoord&  aDesiredWidth,
-                                         nscoord&  aDesiredHeight,
-                                         nscoord   aAvailWidth)
+nsTableRowFrame::CalculateCellActualSize(RowReflowState& aReflowState,
+                                         nsIFrame*       aCellFrame,
+                                         nscoord&        aDesiredWidth,
+                                         nscoord&        aDesiredHeight,
+                                         nscoord         aAvailWidth)
 {
   nscoord                specifiedHeight = 0;
   const nsStylePosition* position;
@@ -694,7 +695,19 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
   case eStyleUnit_Coord:
     specifiedHeight = position->mHeight.GetCoordValue();
     break;
-
+  case eStyleUnit_Percent:
+    {
+      nsTableFrame* table = nsnull;
+      nsTableFrame::GetTableFrame(this, table);
+      if (table) {
+        nscoord basis = table->GetPercentBasisForRows();
+        if (basis > 0) {
+          float percent = position->mHeight.GetPercentValue();
+          specifiedHeight = NSToCoordRound(percent * ((float)basis));
+        }
+      }
+      break;
+    }
   case eStyleUnit_Inherit:
     // XXX for now, do nothing
   default:
@@ -733,7 +746,7 @@ nsTableRowFrame::CalculateCellAvailableWidth(nsTableFrame* aTableFrame,
 
     // If the cell spans columns, then for all columns except the first column
     // add in the column spacing
-    if ((index != 0) && (aTableFrame->GetNumCellsOriginatingIn(aCellColIndex + index) > 0)) {
+    if ((index != 0) && (aTableFrame->GetNumCellsOriginatingInCol(aCellColIndex + index) > 0)) {
       availWidth += aCellSpacingX;
     }
   }
@@ -821,7 +834,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
           if (prevColIndex != (cellColIndex - 1)) { 
             for (PRInt32 colIndex = prevColIndex + 1; cellColIndex > colIndex; colIndex++) {
               aReflowState.x += aReflowState.tableFrame->GetColumnWidth(colIndex);
-              if (aReflowState.tableFrame->GetNumCellsOriginatingIn(colIndex) > 0) {
+              if (aReflowState.tableFrame->GetNumCellsOriginatingInCol(colIndex) > 0) {
                 aReflowState.x += cellSpacingX;
               }
             }
@@ -832,7 +845,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
             PRInt32 lastCol = cellColIndex + cellColSpan - 1;
             for (PRInt32 colIndex = prevColIndex - 1; colIndex > lastCol; colIndex--) {
               aReflowState.x += aReflowState.tableFrame->GetColumnWidth(colIndex);
-              if (aReflowState.tableFrame->GetNumCellsOriginatingIn(colIndex) > 0) {
+              if (aReflowState.tableFrame->GetNumCellsOriginatingInCol(colIndex) > 0) {
                 aReflowState.x += cellSpacingX;
               }
             }
@@ -920,8 +933,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         // Calculate the cell's actual size given its pass2 size. This function
         // takes into account the specified height (in the style), and any special
         // logic needed for backwards compatibility
-        CalculateCellActualSize(kidFrame, desiredSize.width, desiredSize.height,
-                                availWidth);
+        CalculateCellActualSize(aReflowState, kidFrame, desiredSize.width, 
+                                desiredSize.height, availWidth);
   
         // Place the child
         nsRect kidRect (aReflowState.x, kidMargin.top, desiredSize.width,
@@ -1131,7 +1144,7 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
           // See if it has a specified height that overrides the desired size.
           // Note: we don't care about the width so don't compute the column
           // width and just pass in the desired width for the available width
-          CalculateCellActualSize(frame, desiredSize.width, desiredSize.height,
+          CalculateCellActualSize(aReflowState, frame, desiredSize.width, desiredSize.height,
                                   desiredSize.width);
 
           // Update maxCellHeight
@@ -1353,7 +1366,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // Calculate the cell's actual size given its pass2 size. This function
     // takes into account the specified height (in the style), and any special
     // logic needed for backwards compatibility
-    CalculateCellActualSize(aNextFrame, desiredSize.width, desiredSize.height,
+    CalculateCellActualSize(aReflowState, aNextFrame, desiredSize.width, desiredSize.height,
                             cellAvailWidth);
 
     // Now place the child
