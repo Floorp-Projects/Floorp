@@ -524,12 +524,12 @@ mime_generate_headers (nsMsgCompFields *fields,
       rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
       if (NS_FAILED(rv)) 
         return nsnull;
+#ifdef NS_DEBUG
       else 
       {
-#ifdef NS_DEBUG
         printf("SUCCESS:  %s -> %s\n",n2,newHeader);
-#endif
       }
+#endif
     }
     else 
       return nsnull;
