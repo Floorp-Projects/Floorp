@@ -4261,6 +4261,10 @@ void EnsureBlockDisplay(/*in out*/PRUint8 &display)
     // do not muck with these at all - already blocks
     break;
 
+  case NS_STYLE_DISPLAY_LIST_ITEM :
+    // do not change list items to blocks - retain the bullet/numbering
+    break;
+
   case NS_STYLE_DISPLAY_TABLE_ROW_GROUP :
   case NS_STYLE_DISPLAY_TABLE_COLUMN :
   case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP :
