@@ -431,20 +431,30 @@ NS_IMETHODIMP nsScrollPortView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLi
   return ScrollTo(mOffsetX + dx, mOffsetY + dy, NS_VMREFRESH_SMOOTHSCROLL);
 }
 
-NS_IMETHODIMP nsScrollPortView::ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY)
+NS_IMETHODIMP nsScrollPortView::GetPageScrollDistances(nsSize *aDistances)
 {
   nsSize size;
   GetDimensions(size);
+
+  // The page increment is the size of the page, minus the smaller of
+  // 10% of the size or 2 lines.
+  aDistances->width  = size.width  - PR_MIN(size.width  / 10, 2 * mLineHeight);
+  aDistances->height = size.height - PR_MIN(size.height / 10, 2 * mLineHeight);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollPortView::ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY)
+{
+  nsSize delta;
+  GetPageScrollDistances(&delta);
     
-  // scroll % of the window
-  nscoord dx = nscoord(float(size.width)*PAGE_SCROLL_PERCENT);
-  nscoord dy = nscoord(float(size.height)*PAGE_SCROLL_PERCENT);
-
   // put in the number of pages.
-  dx *= aNumPagesX;
-  dy *= aNumPagesY;
+  delta.width *= aNumPagesX;
+  delta.height *= aNumPagesY;
 
-  return ScrollTo(mOffsetX + dx, mOffsetY + dy, NS_VMREFRESH_SMOOTHSCROLL);
+  return ScrollTo(mOffsetX + delta.width, mOffsetY + delta.height,
+                  NS_VMREFRESH_SMOOTHSCROLL);
 }
 
 NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)

@@ -45,14 +45,12 @@
 class nsIView;
 class nsIScrollPositionListener;
 struct nsMargin;
-
-// the percentage of the page that is scrolled on a page up or down
-#define PAGE_SCROLL_PERCENT 0.9
+struct nsSize;
 
 // IID for the nsIScrollableView interface
 #define NS_ISCROLLABLEVIEW_IID    \
-{ 0x3b88347a, 0x7a86, 0x4eff, \
-{ 0xa8, 0x37, 0xd9, 0xd1, 0x08, 0x8e, 0xc9, 0xa8 } }
+{ 0x1a8c8cfa, 0x86aa, 0x4421, \
+{ 0xa1, 0x86, 0xae, 0x51, 0x79, 0x03, 0xe9, 0x06 } }
 
 /**
  * A scrolling view allows an arbitrary view that you supply to be scrolled
@@ -169,6 +167,13 @@ public:
    * @return error status
    */
   NS_IMETHOD ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinexY) = 0;
+
+  /**
+   * Get the desired size of a page scroll in each dimension.
+   * ScrollByPages will scroll by independent multiples of these amounts
+   * unless it hits the edge of the view.
+   */
+  NS_IMETHOD GetPageScrollDistances(nsSize *aDistances) = 0;
 
   /**
    * Scroll the view left or right by aNumPagesX pages. Positive values move right. 
