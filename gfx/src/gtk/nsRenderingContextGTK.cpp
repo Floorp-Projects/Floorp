@@ -105,6 +105,8 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
   if (mSurface)
   {
+    if (!aWindow) return NS_ERROR_NULL_POINTER;
+
     // we want to ref the window here so that we can unref in the drawing surface.
     // otherwise, we can not unref and that causes windows that are created in the
     // drawing surface not to be freed.
@@ -114,6 +116,8 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
     else
     {
       GtkWidget *w = (GtkWidget *) aWindow->GetNativeData(NS_NATIVE_WIDGET);
+
+      if (!w) return NS_ERROR_NULL_POINTER;
 
       win = gdk_pixmap_new(nsnull,
                            w->allocation.width,
