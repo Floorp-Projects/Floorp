@@ -818,6 +818,12 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
 }
 
 
+typedef struct {
+  PRFileDesc *fd;
+  PRBool      bEOF;
+} nsReadFromSocketClosure;
+
+
 NS_METHOD
 nsReadFromSocket(void* closure,
                  char* toRawSegment,
@@ -827,13 +833,15 @@ nsReadFromSocket(void* closure,
 {
   nsresult rv = NS_OK;
   PRInt32 len;
-  PRFileDesc* fd = (PRFileDesc*)closure;
+  nsReadFromSocketClosure *info = (nsReadFromSocketClosure*)closure;
 
+  info->bEOF = PR_FALSE;
   *readCount = 0;
   if (count > 0) {
-    len = PR_Read(fd, toRawSegment, count);
+    len = PR_Read(info->fd, toRawSegment, count);
     if (len >= 0) {
       *readCount = (PRUint32)len;
+      info->bEOF = (0 == len);
     } 
     //
     // Error...
@@ -856,7 +864,7 @@ nsReadFromSocket(void* closure,
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("nsReadFromSocket [fd=%x].  rv = %x. Buffer space = %d.  Bytes read =%d\n",
-          fd, rv, count, *readCount));
+          info->fd, rv, count, *readCount));
 
   return rv;
 }
@@ -921,6 +929,7 @@ nsWriteToSocket(void* closure,
 //-----
 nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 {
+  nsReadFromSocketClosure info;
   PRUint32 totalBytesWritten;
   nsresult rv = NS_OK;
 
@@ -937,13 +946,14 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   //
   //
   totalBytesWritten = 0;
+  info.fd = mSocketFD;
   //
   // Release the transport lock...  WriteSegments(...) aquires the nsBuffer
   // lock which could cause a deadlock by blocking the socket transport 
   // thread
   //
   PR_Unlock(mLock);
-  rv = mReadPipeOut->WriteSegments(nsReadFromSocket, (void*)mSocketFD, 
+  rv = mReadPipeOut->WriteSegments(nsReadFromSocket, (void*)&info, 
                                    MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
   PR_Lock(mLock);
 
@@ -955,7 +965,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // Deal with the possible return values...
   //
   if (NS_SUCCEEDED(rv)) {
-    if (totalBytesWritten == 0) {       // EOF condition
+    if (info.bEOF) {       // EOF condition
       mSelectFlags &= (~PR_POLL_READ);
       rv = NS_OK;
     } 
