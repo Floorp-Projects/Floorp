@@ -45,6 +45,7 @@
 #include "nsTextReflow.h"/* XXX rename to nsTextRun */
 #include "nsTextFragment.h"
 #include "nsTextTransformer.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
@@ -123,7 +124,10 @@ public:
                          PRInt32&        aOffset);
 
   NS_IMETHOD SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw);
-  NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
+  NS_IMETHOD SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected);
+  NS_IMETHOD GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
+  NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
+
   // nsIHTMLReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -429,6 +433,8 @@ TextFrame::TextFrame()
     // Create text timer the first time out
     gTextBlinker = new BlinkTimer();
   }
+  mSelectionOffset = -1;
+  mSelectionEnd = -1;
   NS_ADDREF(gTextBlinker);
 }
 
@@ -1611,7 +1617,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     delete [] paintBuf;
   }
 
-  aAcutalContentOffset = offset;//((TextFrame *)aNewFrame)->mContentOffset;
+  aAcutalContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
   aOffset = index;
 
   return NS_OK;
@@ -1633,14 +1639,44 @@ TextFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffse
     if (mSelectionOffset != aBeginOffset || mSelectionEnd != aEndOffset) {
       mSelectionOffset = aBeginOffset;
       mSelectionEnd = aEndOffset;
-      //nsRect  damageRect;
-      //GetRect(damageRect);
-      //ForceDrawFrame(this);
-      mSelected = aSelected;
       aForceRedraw = PR_TRUE;
     }
   }
   return nsFrame::SetSelected(aSelected, aBeginOffset, aEndOffset, aForceRedraw);
+}
+
+NS_IMETHODIMP
+TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected)
+{
+  if (!aActualSelected)
+    return NS_ERROR_NULL_POINTER;
+
+  PRInt32 beginOffset(aBeginContentOffset);
+  if (aBeginContentOffset != -1) //-1 signified the end of the current content
+    beginOffset = aBeginContentOffset - mContentOffset;
+
+  if (beginOffset >= mContentLength){
+    //this is not the droid we are looking for.
+    nsIFrame *nextInFlow =GetNextInFlow();
+    if (nextInFlow)
+      return nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw, aActualSelected);
+    else
+      return NS_ERROR_FAILURE;
+  }
+  if (beginOffset <0)
+    beginOffset = 0;  //start from the beginning
+  *aActualSelected = this;
+  PRInt32 endOffset(aEndContentOffset);
+  if (endOffset != -1) //-1 signified the end of the current content
+    endOffset = aEndContentOffset - mContentOffset;
+  if (endOffset > mContentLength){
+    nsIFrame *nextInFlow =GetNextInFlow();
+    if (nextInFlow)
+      nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw, aActualSelected);
+    else
+      return NS_ERROR_FAILURE;
+  }
+  return SetSelected(aSelected, beginOffset, endOffset, aForceRedraw);
 }
 
 NS_IMETHODIMP
@@ -1655,6 +1691,18 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
   return NS_OK;
 }
 
+
+
+NS_IMETHODIMP
+TextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const
+{
+  start = mContentOffset;
+  end = mContentOffset+mContentLength;
+  return NS_OK;
+}
+
+
+
 NS_IMETHODIMP
 TextFrame::Reflow(nsIPresContext& aPresContext,
                   nsHTMLReflowMetrics& aMetrics,
@@ -1662,6 +1710,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
                   nsReflowStatus& aStatus)
 {
   //  NS_PRECONDITION(nsnull != aReflowState.lineLayout, "no line layout");
+  mSelected = PR_FALSE;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter TextFrame::Reflow: aMaxSize=%d,%d",
       aReflowState.availableWidth, aReflowState.availableHeight));
@@ -1950,7 +1999,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   mContentLength = offset - startingOffset;
 
   //go to selection and ask if we are selected here. and where!!
-  //MJUDGE
+
   nsReflowStatus rs = (offset == contentLength)
     ? NS_FRAME_COMPLETE
     : NS_FRAME_NOT_COMPLETE;

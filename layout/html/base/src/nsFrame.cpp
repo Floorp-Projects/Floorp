@@ -356,6 +356,15 @@ nsFrame::GetContent(nsIContent*& aContent) const
 }
 
 NS_IMETHODIMP
+nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
+{
+  aStart = 0;
+  aEnd = 0;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsFrame::GetStyleContext(nsIStyleContext*& aStyleContext) const
 {
   NS_ASSERTION(nsnull != mStyleContext, "frame should always have style context");
@@ -1248,6 +1257,7 @@ nsFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
   aStatus = NS_FRAME_COMPLETE;
+  mSelected = PR_FALSE;
   return NS_OK;
 }
 
@@ -1747,22 +1757,38 @@ nsFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset,
   if (mSelected != aSelected || aForceRedraw)
   {
     mSelected = aSelected;
-    nsRect  damageRect;
-    GetRect(damageRect);
     ForceDrawFrame(this);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
+nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected)
+{
+  if (!aActualSelected)
+    return NS_ERROR_NULL_POINTER;
+  nsIFrame *child = nsnull;
+  nsresult result = FirstChild(nsnull, child);
+  if (NS_FAILED(result)){
+    *aActualSelected = this;
+    return SetSelected(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw);
+  }
+  while (child && NS_SUCCEEDED(result)){
+    result |= child->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw , aActualSelected);
+    result |= child->GetNextSibling(child);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
 nsFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset)
 {
-  if (!aSelected || !aBeginOffset || !aEndOffset || !aBeginContentOffset)
+  if (!aSelected )
     return NS_ERROR_NULL_POINTER;
   *aSelected = mSelected;
-  *aBeginContentOffset = 0;
   return NS_OK;
 }
+
 
 //-----------------------------------------------------------------------------------
 

@@ -32,6 +32,7 @@
 // Selection interface
 class nsISelection : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ISELECTION_IID; return iid; }
 
   /** HandleKeyEvent will accept an event and frame and 
    *  will return NS_OK if it handles the event or NS_COMFALSE if not.
@@ -51,6 +52,11 @@ public:
    *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
    */
   virtual nsresult TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection) = 0;
+
+  /** ResetSelection will top down search for frames that need selection
+   */
+  virtual nsresult ResetSelection(nsIFrame *aStartFrame) = 0;
+
 
 };
 

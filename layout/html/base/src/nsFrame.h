@@ -207,8 +207,9 @@ public:
   NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
   NS_IMETHOD  VerifyTree() const;
   NS_IMETHOD  SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw);
+  NS_IMETHOD  SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected);
   NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
-
+  NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   // nsIHTMLReflow
   //@{
   /**

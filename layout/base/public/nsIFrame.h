@@ -277,6 +277,12 @@ public:
   NS_IMETHOD  GetContent(nsIContent*& aContent) const = 0;
 
   /**
+   * Get the offsets of the frame. most will be 0,0
+   *
+   */
+  NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end) const = 0;
+
+  /**
    * Get the style context associated with this frame. Note that GetStyleContext()
    * adds a reference to the style context so the caller must do a release.
    *
@@ -528,6 +534,8 @@ public:
   NS_IMETHOD  VerifyTree() const = 0;
 
   NS_IMETHOD  SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw) = 0;
+
+  NS_IMETHOD  SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected) = 0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset) = 0;
 
