@@ -169,6 +169,7 @@ CString CInterpret::replaceVars(char *str, char *listval)
 	char *b = buf;
 	char *v;
 	CString v1;
+	char x[MIN_SIZE];
 
 	while (*str)
 	{
@@ -179,13 +180,17 @@ CString CInterpret::replaceVars(char *str, char *listval)
 				str++;
 			if (*str == '%')
 			{
-				*str = '\0';
+//				*str = '\0';
 
-				if (listval && strlen(n) <= 0)
+				int len = (strchr(n,'%') - n);
+				strncpy(x,n,len);
+				x[len]=NULL;
+				
+				if (listval && strlen(x) <= 0)
 					v = listval;
 				else
 				{
-					WIDGET *w = theApp.findWidget(n);
+					WIDGET *w = theApp.findWidget(x);
 					if (w)
 					{
 						if (w->control && w->control->m_hWnd)

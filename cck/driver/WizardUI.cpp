@@ -114,8 +114,10 @@ END_MESSAGE_MAP()
 
 BOOL CWizardUI::OnSetActive() 
 {
+	char* TempTitle = (char *)(LPCTSTR)(CurrentNode->localVars->title);
+	CString WizTitle = theInterpreter->replaceVars(TempTitle,NULL);
 	SetForegroundWindow();
-	(AfxGetMainWnd( ))->SetWindowText(CurrentNode->localVars->title);
+	(AfxGetMainWnd( ))->SetWindowText(WizTitle);
 	if (!(CurrentNode->isWidgetsSorted)) {
 		SortWidgetsForTabOrder();
 	}
