@@ -35,60 +35,6 @@ static const char* kWhitespace="\b\t\r\n ";
 
 
 
-#define NOT_USED 0xfffd 
-
-static PRUint16 PA_HackTable[] = {
-	NOT_USED,
-	NOT_USED,
-	0x201a,  /* SINGLE LOW-9 QUOTATION MARK */
-	0x0192,  /* LATIN SMALL LETTER F WITH HOOK */
-	0x201e,  /* DOUBLE LOW-9 QUOTATION MARK */
-	0x2026,  /* HORIZONTAL ELLIPSIS */
-	0x2020,  /* DAGGER */
-	0x2021,  /* DOUBLE DAGGER */
-	0x02c6,  /* MODIFIER LETTER CIRCUMFLEX ACCENT */
-	0x2030,  /* PER MILLE SIGN */
-	0x0160,  /* LATIN CAPITAL LETTER S WITH CARON */
-	0x2039,  /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
-	0x0152,  /* LATIN CAPITAL LIGATURE OE */
-	NOT_USED,
-	NOT_USED,
-	NOT_USED,
-
-	NOT_USED,
-	0x2018,  /* LEFT SINGLE QUOTATION MARK */
-	0x2019,  /* RIGHT SINGLE QUOTATION MARK */
-	0x201c,  /* LEFT DOUBLE QUOTATION MARK */
-	0x201d,  /* RIGHT DOUBLE QUOTATION MARK */
-	0x2022,  /* BULLET */
-	0x2013,  /* EN DASH */
-	0x2014,  /* EM DASH */
-	0x02dc,  /* SMALL TILDE */
-	0x2122,  /* TRADE MARK SIGN */
-	0x0161,  /* LATIN SMALL LETTER S WITH CARON */
-	0x203a,  /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
-	0x0153,  /* LATIN SMALL LIGATURE OE */
-	NOT_USED,
-	NOT_USED,
-	0x0178   /* LATIN CAPITAL LETTER Y WITH DIAERESIS */
-};
-
-static PRUnichar gToUCS2[256];
-
-class CTableConstructor {
-public:
-  CTableConstructor(){
-    PRUnichar* cp = gToUCS2;
-    PRInt32 i;
-    for (i = 0; i < 256; i++) {
-      *cp++ = PRUnichar(i);
-    }
-    cp = gToUCS2;
-    for (i = 0; i < 32; i++) {
-      cp[0x80 + i] = PA_HackTable[i];
-    }
-  }
-};
 
 
 static void CSubsume(nsStr& aDest,nsStr& aSource){
@@ -138,7 +84,27 @@ nsCString::nsCString(const char* aCString,PRInt32 aLength,nsIMemoryAgent* anAgen
  */
 nsCString::nsCString(const PRUnichar* aString,PRInt32 aLength,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
   nsStr::Initialize(*this,eOneByte);
-  Assign(aString,aLength);
+
+  if(aString && aLength){
+    nsStr temp;
+    Initialize(temp,eTwoByte);
+    temp.mUStr=(PRUnichar*)aString;
+
+    if(0<aLength) {
+        //this has to be done to make sure someone doesn't tell us
+        //aCount=n but offer a string whose len<aCount
+      temp.mLength=aLength;
+      PRInt32 pos=nsStr::FindChar(temp,0,PR_FALSE,0);
+      if((0<=pos) && (pos<(PRInt32)mLength)) {
+        aLength=temp.mLength=pos;
+      }
+    }
+    else aLength=temp.mLength=nsCRT::strlen(aString);
+
+    if(0<aLength)
+      nsStr::Append(*this,temp,0,aLength,mAgent);
+  }
+
 }
 
 /**
@@ -236,8 +202,6 @@ void nsCString::SetCapacity(PRUint32 aLength) {
  *********************************************************************/
 
 
-//static char gChar=0;
-
 /**
  * 
  * @update	gess1/4/99
@@ -263,13 +227,14 @@ PRUnichar nsCString::First(void) const{
 }
 
 PRUnichar nsCString::Last(void) const{
-  return GetCharAt(*this,mLength-1);
+  return (char)GetCharAt(*this,mLength-1);
 }
 
 PRBool nsCString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
   PRBool result=PR_FALSE;
   if(anIndex<mLength){
-    mStr[anIndex]=char(aChar);
+    mStr[anIndex]=(char)aChar;
+// SOON!   if(0==aChar) mLength=anIndex;
     result=PR_TRUE;
   }
   return result;
@@ -285,7 +250,7 @@ PRBool nsCString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
  * @param   aString -- 2nd string to be appended
  * @return  new string
  */
-nsSubsumeCStr nsCString::operator+(const nsStr& aString){
+nsSubsumeCStr nsCString::operator+(const nsCString& aString){
   nsCString temp(*this); //make a temp string the same size as this...
   nsStr::Append(temp,aString,0,aString.mLength,mAgent);
   return nsSubsumeCStr(temp);
@@ -311,48 +276,28 @@ nsSubsumeCStr nsCString::operator+(const char* aCString) {
  * @param   aChar is a char to be added to this
  * @return  newly created string
  */
-nsSubsumeCStr nsCString::operator+(char aChar) {
+nsSubsumeCStr nsCString::operator+(PRUnichar aChar) {
   nsCString temp(*this);
-  temp.Append(char(aChar));
+  temp.Append(aChar);
   return nsSubsumeCStr(temp);
 }
-
-/**
- * create a new string by adding this to the given buffer.
- * @update	gess 01/04/99
- * @param   aString is a ptr to unistring to be added to this
- * @return  newly created string
- */
-nsSubsumeCStr nsCString::operator+(const PRUnichar* aString) {
-  nsCString temp(*this);
-  temp.Append(aString);
-  return nsSubsumeCStr(temp);
-}
-
 
 /**
  * create a new string by adding this to the given char.
  * @update	gess 01/04/99
- * @param   aChar is a unichar to be added to this
+ * @param   aChar is a char to be added to this
  * @return  newly created string
  */
-nsSubsumeCStr nsCString::operator+(PRUnichar aChar) {
-  nsString temp(*this);
-  temp.Append(char(aChar));
+nsSubsumeCStr nsCString::operator+(char aChar) {
+  nsCString temp(*this);
+  temp.Append(aChar);
   return nsSubsumeCStr(temp);
 }
-
 
 
 /**********************************************************************
   Lexomorphic transforms...
  *********************************************************************/
-
-/**
- * Converts all chars in given string to UCS2
- */
-void nsCString::ToUCS2(PRUint32 aStartOffset){
-}
 
 /**
  * Converts all chars in internal string to lower
@@ -591,7 +536,7 @@ PRUnichar* nsCString::ToNewUnicode() const {
  */
 char* nsCString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) const{
   if(aBuf) {
-    CSharedStrBuffer theSB(aBuf,PR_FALSE,aBufLength,0);
+    CBufDescriptor theSB(aBuf,PR_FALSE,aBufLength,0);
     nsCAutoString temp(theSB);
     temp.Assign(*this);
     temp.mStr=0;
@@ -645,7 +590,7 @@ PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
   char theChar=0;
   char theDigit=0;
   while(--cp>=aString.mStr){
-    theChar=*cp;
+    char theChar=*cp;
     if((theChar>='0') && (theChar<='9')){
       theDigit=theChar-'0';
     }
@@ -797,7 +742,7 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
  * @param   aString: string to be added to this
  * @return  this
  */
-nsCString& nsCString::Assign(const nsStr& aString,PRInt32 aCount) {
+nsCString& nsCString::Assign(const nsCString& aString,PRInt32 aCount) {
   if(this!=&aString){
     nsStr::Truncate(*this,0,0);
 
@@ -825,26 +770,12 @@ nsCString& nsCString::Assign(const char* aCString,PRInt32 aCount) {
 }
 
 /**
- * assign given unichar* to this string
- * @update	gess 01/04/99
- * @param   aString: buffer to be assigned to this 
- * @return  this
- */
-nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
-  nsStr::Truncate(*this,0,0);
-  if(aString){
-    Append(aString,aCount);
-  }
-  return *this;
-}
-
-/**
  * assign given char to this string
  * @update	gess 01/04/99
  * @param   aChar: char to be assignd to this
  * @return  this
  */
-nsCString& nsCString::Assign(char aChar) {
+nsCString& nsCString::Assign(PRUnichar aChar) {
   nsStr::Truncate(*this,0,0);
   return Append(aChar);
 }
@@ -855,7 +786,7 @@ nsCString& nsCString::Assign(char aChar) {
  * @param   aChar: char to be assignd to this
  * @return  this
  */
-nsCString& nsCString::Assign(PRUnichar aChar) {
+nsCString& nsCString::Assign(char aChar) {
   nsStr::Truncate(*this,0,0);
   return Append(aChar);
 }
@@ -886,7 +817,7 @@ nsCString& nsCString::operator=(nsSubsumeCStr& aSubsumeString) {
  * @param   aString : string to be appended to this
  * @return  this
  */
-nsCString& nsCString::Append(const nsStr& aString,PRInt32 aCount) {
+nsCString& nsCString::Append(const nsCString& aString,PRInt32 aCount) {
   if(aCount<0)
     aCount=aString.mLength;
   else aCount=MinInt(aCount,aString.mLength);
@@ -899,8 +830,7 @@ nsCString& nsCString::Append(const nsStr& aString,PRInt32 aCount) {
  * append given string to this string
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
- * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
- *          WARNING: If you provide a count>0, we don't double check the actual string length!
+ * @param   aCount: #of chars to be copied; -1 means to copy the whole thing
  * @return  this
  */
 nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
@@ -909,9 +839,16 @@ nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
     Initialize(temp,eOneByte);
     temp.mStr=(char*)aCString;
 
-    if(aCount<0) 
-      aCount=temp.mLength=nsCRT::strlen(aCString);
-    else temp.mLength=aCount;
+    if(0<aCount) {
+        //this has to be done to make sure someone doesn't tell us
+        //aCount=n but offer a string whose len<aCount
+      temp.mLength=aCount;
+      PRInt32 pos=nsStr::FindChar(temp,0,PR_FALSE,0);
+      if((0<=pos) && (pos<aCount)) {
+        aCount=temp.mLength=pos;
+      }
+    }
+    else aCount=temp.mLength=nsCRT::strlen(aCString);
 
     if(0<aCount)
       nsStr::Append(*this,temp,0,aCount,mAgent);
@@ -919,27 +856,22 @@ nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
   return *this;
 }
 
+
 /**
- * append given uni-string to this string
+ * append given string to this string
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
- * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
- *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  this
  */
-nsCString& nsCString::Append(const PRUnichar* aString,PRInt32 aCount) {
-  if(aString){
-    nsStr temp;
-    Initialize(temp,eTwoByte);
-    temp.mUStr=(PRUnichar*)aString;
+nsCString& nsCString::Append(PRUnichar aChar) {
+  PRUnichar buf[2]={0,0};
+  buf[0]=aChar;
 
-    if(aCount<0) 
-      aCount=temp.mLength=nsCRT::strlen(aString);
-    else temp.mLength=aCount;
-
-    if(0<aCount)
-      nsStr::Append(*this,temp,0,aCount,mAgent);
-  }
+  nsStr temp;
+  Initialize(temp,eTwoByte);
+  temp.mUStr=buf;
+  temp.mLength=1;
+  nsStr::Append(*this,temp,0,1,mAgent);
   return *this;
 }
 
@@ -958,19 +890,6 @@ nsCString& nsCString::Append(char aChar) {
   temp.mStr=buf;
   temp.mLength=1;
   nsStr::Append(*this,temp,0,1,mAgent);
-  return *this;
-}
-
-/**
- * append given string to this string
- * @update	gess 01/04/99
- * @param   aString : string to be appended to this
- * @return  this
- */
-nsCString& nsCString::Append(PRUnichar aChar) {
-  if((aChar>=0) && (aChar<128)) {
-    return Append((char)aChar);
-  }
   return *this;
 }
 
@@ -1073,7 +992,7 @@ PRUint32 nsCString::Right(nsCString& aCopy,PRInt32 aCount) const{
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
  */
-nsCString& nsCString::Insert(const nsStr& aCopy,PRUint32 anOffset,PRInt32 aCount) {
+nsCString& nsCString::Insert(const nsCString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
 
   nsStr::Insert(*this,anOffset,aCopy,0,aCount,mAgent);
   return *this;
@@ -1086,8 +1005,6 @@ nsCString& nsCString::Insert(const nsStr& aCopy,PRUint32 anOffset,PRInt32 aCount
  * @update	gess4/22/98
  * @param   aChar char to be inserted into this string
  * @param   anOffset is insert pos in str 
- * @param   aCount -- number of chars to insert; -1 tells us to compute the strlen for you
- *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  the number of chars inserted into this string
  */
 nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
@@ -1096,39 +1013,16 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
     nsStr::Initialize(temp,eOneByte);
     temp.mStr=(char*)aCString;
 
-    if(aCount<0) 
-      aCount=temp.mLength=nsCRT::strlen(aCString);
-    else temp.mLength=aCount;
-
-    if(temp.mLength && (0<aCount)){
-      nsStr::Insert(*this,anOffset,temp,0,aCount,0);
+    if(0<aCount) {
+        //this has to be done to make sure someone doesn't tell us
+        //aCount=n but offer a string whose len<aCount
+      temp.mLength=aCount;
+      PRInt32 pos=nsStr::FindChar(temp,0,PR_FALSE,0);
+      if((0<=pos) && (pos<aCount)) {
+        aCount=temp.mLength=pos;
+      }
     }
-  }
-  return *this;  
-}
-
-
-
-/**
- * Insert a unicode* into this string at
- * a specified offset.
- *
- * @update	gess4/22/98
- * @param   aChar char to be inserted into this string
- * @param   anOffset is insert pos in str 
- * @param   aCount -- number of chars to insert; -1 tells us to compute the strlen for you
- *          WARNING: If you provide a count>0, we don't double check the actual string length!
- * @return  the number of chars inserted into this string
- */
-nsCString& nsCString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aCount){
-  if(aString){
-    nsStr temp;
-    nsStr::Initialize(temp,eTwoByte);
-    temp.mUStr=(PRUnichar*)aString;
-
-    if(aCount<0) 
-      aCount=temp.mLength=nsCRT::strlen(aString);
-    else temp.mLength=aCount;
+    else aCount=temp.mLength=nsCRT::strlen(aCString);
 
     if(temp.mLength && (0<aCount)){
       nsStr::Insert(*this,anOffset,temp,0,aCount,0);
@@ -1153,6 +1047,26 @@ nsCString& nsCString::Insert(PRUnichar aChar,PRUint32 anOffset){
   nsStr temp;
   nsStr::Initialize(temp,eTwoByte);
   temp.mUStr=theBuffer;
+  temp.mLength=1;
+  nsStr::Insert(*this,anOffset,temp,0,1,0);
+  return *this;
+}
+
+/**
+ * Insert a single uni-char into this string at
+ * a specified offset.
+ *
+ * @update	gess4/22/98
+ * @param   aChar char to be inserted into this string
+ * @param   anOffset is insert pos in str 
+ * @return  the number of chars inserted into this string
+ */
+nsCString& nsCString::Insert(char aChar,PRUint32 anOffset){
+  char theBuffer[2]={0,0};
+  theBuffer[0]=aChar;
+  nsStr temp;
+  nsStr::Initialize(temp,eOneByte);
+  temp.mStr=theBuffer;
   temp.mLength=1;
   nsStr::Insert(*this,anOffset,temp,0,1,0);
   return *this;
@@ -1585,48 +1499,6 @@ PRBool nsCString::Equals(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCo
 }
 
 
-/**
- *  Determine if given char in valid alpha range
- *  
- *  @update  gess 3/31/98
- *  @param   aChar is character to be tested
- *  @return  TRUE if in alpha range
- */
-PRBool nsCString::IsAlpha(PRUnichar aChar) {
-  // XXX i18n
-  if (((aChar >= 'A') && (aChar <= 'Z')) || ((aChar >= 'a') && (aChar <= 'z'))) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-/**
- *  Determine if given char is a valid space character
- *  
- *  @update  gess 3/31/98
- *  @param   aChar is character to be tested
- *  @return  TRUE if is valid space char
- */
-PRBool nsCString::IsSpace(PRUnichar aChar) {
-  // XXX i18n
-  if ((aChar == ' ') || (aChar == '\r') || (aChar == '\n') || (aChar == '\t')) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-/**
- *  Determine if given char is valid digit
- *  
- *  @update  gess 3/31/98
- *  @param   aChar is character to be tested
- *  @return  TRUE if char is a valid digit
- */
-PRBool nsCString::IsDigit(PRUnichar aChar) {
-  // XXX i18n
-  return PRBool((aChar >= '0') && (aChar <= '9'));
-}
-
 
 /**************************************************************
   Define the string deallocator class...
@@ -1832,7 +1704,7 @@ nsCAutoString::nsCAutoString(const char* aCString,PRInt32 aLength) : nsCString()
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsCAutoString::nsCAutoString(CSharedStrBuffer& aBuffer) : nsCString() {
+nsCAutoString::nsCAutoString(CBufDescriptor& aBuffer) : nsCString() {
   mAgent=0;
   if(!aBuffer.mBuffer) {
     nsStr::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
