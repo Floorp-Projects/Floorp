@@ -484,8 +484,8 @@ void MRJContext::processAppletTag()
 				const char* archive;
 				PRBool mayScript;
 				if (tagInfo2->GetUniqueID(&documentID) != NS_OK) documentID = 0;
-				if (jvmTagInfo->GetCodeBase(&codeBase) != NS_OK) codeBase = NULL;
-				if (jvmTagInfo->GetArchive(&archive) != NS_OK) archive = NULL;
+				if (jvmTagInfo->GetCodeBase(&codeBase) != NS_OK || codeBase == NULL) codeBase = "";
+				if (jvmTagInfo->GetArchive(&archive) != NS_OK || archive == NULL) archive = "";
 				if (jvmTagInfo->GetMayScript(&mayScript) != NS_OK) mayScript = PR_FALSE;
                 MRJPageAttributes pageAttributes = { documentID, codeBase, archive, mayScript };
 				mPage = findPage(pageAttributes);
