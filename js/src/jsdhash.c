@@ -162,7 +162,7 @@ static JSDHashEntryHdr *
 SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
 {
     JSDHashNumber hash1, hash2;
-    uint32 hashShift;
+    int hashShift;
     JSDHashEntryHdr *entry;
     JSDHashMatchEntry matchEntry;
 
@@ -181,7 +181,7 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
 
     /* Hit: return entry. */
     matchEntry = table->ops->matchEntry;
-    if (matchEntry(table, entry, key)) {
+    if (entry->keyHash == keyHash && matchEntry(table, entry, key)) {
         METER(table->stats.hits++);
         return entry;
     }
