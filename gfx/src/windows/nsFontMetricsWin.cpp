@@ -2203,7 +2203,7 @@ nsFontMetricsWin::CreateFontAdjustHandle(HDC aDC, LOGFONT* aLogFont)
 }
 
 HFONT
-nsFontMetricsWin::CreateFontHandle(HDC aDC, const nsString& aName, LOGFONT* aLogFont)
+nsFontMetricsWin::CreateFontHandle(HDC aDC, nsString* aName, LOGFONT* aLogFont)
 {
   PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
   PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
@@ -2215,7 +2215,7 @@ nsFontMetricsWin::CreateFontHandle(HDC aDC, const nsString& aName, LOGFONT* aLog
    * but we don't really have a choice since CreateFontIndirectW is
    * not supported on Windows 9X (see below) -- erik
    */
-  WideCharToMultiByte(CP_ACP, 0, aName.get(), aName.Length() + 1,
+  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
     aLogFont->lfFaceName, sizeof(aLogFont->lfFaceName), nsnull, nsnull);
 
   if (mFont.sizeAdjust <= 0) {
@@ -2228,7 +2228,7 @@ nsFontMetricsWin::CreateFontHandle(HDC aDC, const nsString& aName, LOGFONT* aLog
 HFONT
 nsFontMetricsWin::CreateFontHandle(HDC aDC, nsGlobalFont* aGlobalFont, LOGFONT* aLogFont)
 {
-  PRUint16 weightTable = LookForFontWeightTable(aDC, aGlobalFont->name);
+  PRUint16 weightTable = LookForFontWeightTable(aDC, &aGlobalFont->name);
   PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
 
   FillLogFont(aLogFont, weight);
@@ -2244,7 +2244,7 @@ nsFontMetricsWin::CreateFontHandle(HDC aDC, nsGlobalFont* aGlobalFont, LOGFONT* 
 }
 
 nsFontWin*
-nsFontMetricsWin::LoadFont(HDC aDC, const nsString& aName)
+nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
 {
   LOGFONT logFont;
   HFONT hfont = CreateFontHandle(aDC, aName, &logFont);
@@ -2559,7 +2559,7 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
       // that the substitute font also has glyphs for '&', '#', 'x', ';' and digits?
       // (Because this is a unicode font, those glyphs should in principle be there.)
       name.AssignWithConversion(font->mName);
-      font = LoadSubstituteFont(aDC, name);
+      font = LoadSubstituteFont(aDC, &name);
       if (font) {
         ((nsFontWinSubstitute*)font)->SetRepresentable(c);
         mSubstituteFont = font;
@@ -2580,7 +2580,7 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
       continue;
     }
     if (CCMAP_HAS_CHAR(globalFont->ccmap, NS_REPLACEMENT_CHAR)) {
-      nsFontWin* font = LoadSubstituteFont(aDC, globalFont->name);
+      nsFontWin* font = LoadSubstituteFont(aDC, &globalFont->name);
       if (font) {
         ((nsFontWinSubstitute*)font)->SetRepresentable(c);
         mSubstituteFont = font;
@@ -2591,7 +2591,7 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
 
   // We are running out of resources if we reach here... Try a stock font
   NS_ASSERTION(::GetMapMode(aDC) == MM_TEXT, "mapping mode needs to be MM_TEXT");
-  nsFontWin* font = LoadSubstituteFont(aDC, nsString());
+  nsFontWin* font = LoadSubstituteFont(aDC, nsnull);
   if (font) {
     ((nsFontWinSubstitute*)font)->SetRepresentable(c);
     mSubstituteFont = font;
@@ -2603,17 +2603,17 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
 }
 
 nsFontWin*
-nsFontMetricsWin::LoadSubstituteFont(HDC aDC, const nsString& aName)
+nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
 {
   LOGFONT logFont;
-  HFONT hfont = !aName.IsEmpty()
+  HFONT hfont = aName
     ? CreateFontHandle(aDC, aName, &logFont)
     : (HFONT)::GetStockObject(SYSTEM_FONT);
   if (hfont) {
     // XXX 'displayUnicode' has to be initialized based on the desired rendering mode
     PRBool displayUnicode = PR_FALSE;
     /* substitute font does not need ccmap */
-    LOGFONT* lfont = !aName.IsEmpty() ? &logFont : nsnull;
+    LOGFONT* lfont = aName ? &logFont : nsnull;
     nsFontWinSubstitute* font = new nsFontWinSubstitute(lfont, hfont, nsnull, displayUnicode);
     if (font) {
       HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
@@ -2782,12 +2782,12 @@ SearchSimulatedFontWeight(HDC aDC, nsFontWeightInfo* aWeightInfo)
 }
 
 PRUint16 
-nsFontMetricsWin::GetFontWeightTable(HDC aDC, const nsString& aFontName)
+nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName)
 {
   // Look for all of the weights for a given font.
   LOGFONT logFont;
   logFont.lfCharSet = DEFAULT_CHARSET;
-  WideCharToMultiByte(CP_ACP, 0, aFontName.get(), aFontName.Length() + 1,
+  WideCharToMultiByte(CP_ACP, 0, aFontName->get(), aFontName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
   logFont.lfPitchAndFamily = 0;
 
@@ -2936,7 +2936,7 @@ nsFontMetricsWin::GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable)
 }
 
 PRUint16
-nsFontMetricsWin::LookForFontWeightTable(HDC aDC, const nsString& aName)
+nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
 {
   // Initialize the font weight table if need be.
   if (!gFontWeights) {
@@ -2950,7 +2950,7 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, const nsString& aName)
   // Use lower case name for hash table searches. This eliminates
   // keeping multiple font weights entries when the font name varies 
   // only by case.
-  nsAutoString low(aName);
+  nsAutoString low(*aName);
   ToLowerCase(low);
 
    // See if the font weight has already been computed.
@@ -2994,7 +2994,7 @@ nsFontMetricsWin::FindUserDefinedFont(HDC aDC, PRUint32 aChar)
 {
   if (mIsUserDefined) {
     // the user-defined font is always loaded as the first font
-    nsFontWin* font = LoadFont(aDC, mUserDefined);
+    nsFontWin* font = LoadFont(aDC, &mUserDefined);
     mIsUserDefined = PR_FALSE;
     if (font && font->HasGlyph(aChar))
       return font;    
@@ -3110,7 +3110,7 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUint32 aChar)
     if (!winName) {
       winName = name;
     }
-    nsFontWin* font = LoadFont(aDC, *winName);
+    nsFontWin* font = LoadFont(aDC, winName);
     if (font && font->HasGlyph(aChar)) {
       return font;
     }
@@ -3119,14 +3119,14 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUint32 aChar)
 }
 
 nsFontWin*
-nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUint32 aChar, const nsString& aName)
+nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUint32 aChar, nsString* aName)
 {
   for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
     // woah, this seems bad
     const nsACString& fontName =
       nsDependentCString(((nsFontWin*)mLoadedFonts[i])->mName);
-    if (aName.Equals(NS_ConvertASCIItoUCS2(fontName),
-                     nsCaseInsensitiveStringComparator()))
+    if (aName->Equals(NS_ConvertASCIItoUCS2(((nsFontWin*)mLoadedFonts[i])->mName),
+                                            nsCaseInsensitiveStringComparator()))
       return nsnull;
 
   }
@@ -3152,7 +3152,7 @@ GenericFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void* aData)
   HDC dc = context->mDC;
   PRUint32 ch = context->mChar;
   nsFontMetricsWin* metrics = context->mMetrics;
-  context->mFont = metrics->LoadGenericFont(dc, ch, aFamily);
+  context->mFont = metrics->LoadGenericFont(dc, ch, (nsString*)&aFamily);
   if (context->mFont) {
     return PR_FALSE; // stop enumerating the list
   }
@@ -3211,9 +3211,10 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
   nsFont font("", 0, 0, 0, 0, 0);
 
   if (mLangGroup) {
-    const char* langGroup;
-    mLangGroup->GetUTF8String(&langGroup);
-    AppendGenericFontFromPref(font.name, langGroup, 
+    nsAutoString langGroup;
+    mLangGroup->ToString(langGroup);
+    AppendGenericFontFromPref(font.name, 
+                              NS_ConvertUCS2toUTF8(langGroup).get(), 
                               NS_ConvertUCS2toUTF8(mGeneric).get());
   }
 
@@ -3225,12 +3226,13 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
   }
 
 #if defined(DEBUG_rbs) || defined(DEBUG_shanjian)
-  const char* lang;
-  mLangGroup->GetUTF8String(&lang);
-  NS_ConvertUCS2toUTF8 generic(mGeneric);
-  NS_ConvertUCS2toUTF8 family(mFont.name);
+  nsAutoString langGroupName;
+  mLangGroup->ToString(langGroupName);
+  nsCAutoString lang; lang.Assign(NS_ConvertUCS2toUTF8(langGroupName));
+  nsCAutoString generic; generic.Assign(NS_ConvertUCS2toUTF8(mGeneric));
+  nsCAutoString family; family.Assign(NS_ConvertUCS2toUTF8(mFont.name));
   printf("FindGenericFont missed:U+%04X langGroup:%s generic:%s mFont.name:%s\n", 
-         aChar, lang, generic.get(), family.get());
+         aChar, lang.get(), generic.get(), family.get());
 #endif
 
   mTriedAllGenerics = 1;
@@ -3277,17 +3279,17 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
     
     // then try user locale first, if it is CJK
     if ((gUsersLocale != mLangGroup) && IsCJKLangGroupAtom(gUsersLocale)) {
-      nsCAutoString usersLocaleLangGroup;
-      gUsersLocale->ToUTF8String(usersLocaleLangGroup);
-      AppendGenericFontFromPref(font.name, usersLocaleLangGroup.get(), 
+      const PRUnichar *usersLocaleLangGroup;
+      gUsersLocale->GetUnicode(&usersLocaleLangGroup);
+      AppendGenericFontFromPref(font.name, NS_ConvertUCS2toUTF8(usersLocaleLangGroup).get(), 
                                 NS_ConvertUCS2toUTF8(mGeneric).get());
     }
     
     // then system locale (os language)
     if ((gSystemLocale != mLangGroup) && (gSystemLocale != gUsersLocale) && IsCJKLangGroupAtom(gSystemLocale)) {
-      nsCAutoString systemLocaleLangGroup;
-      gSystemLocale->ToUTF8String(systemLocaleLangGroup);
-      AppendGenericFontFromPref(font.name, systemLocaleLangGroup.get(), 
+      const PRUnichar *systemLocaleLangGroup;
+      gSystemLocale->GetUnicode(&systemLocaleLangGroup);
+      AppendGenericFontFromPref(font.name, NS_ConvertUCS2toUTF8(systemLocaleLangGroup).get(), 
                                 NS_ConvertUCS2toUTF8(mGeneric).get());
     }
 
@@ -4599,7 +4601,7 @@ nsFontWinA::DumpFontInfo()
 #endif
 
 nsFontWin*
-nsFontMetricsWinA::LoadFont(HDC aDC, const nsString& aName)
+nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
 {
   LOGFONT logFont;
   HFONT hfont = CreateFontHandle(aDC, aName, &logFont);
@@ -4732,7 +4734,7 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUint32 aChar)
     if (!winName) {
       winName = name;
     }
-    nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, *winName);
+    nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, winName);
     if (font && font->HasGlyph(aChar)) {
       nsFontSubset* subset = font->FindSubset(aDC, (PRUnichar)aChar, this);
       if (subset) 
@@ -4744,11 +4746,12 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUint32 aChar)
 }
 
 nsFontWin*
-nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUint32 aChar, const nsString& aName)
+nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUint32 aChar, nsString* aName)
 {
   for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
 
-    if (aName.EqualsIgnoreCase(((nsFontWin*)mLoadedFonts[i])->mName))
+    if (aName->Equals(NS_ConvertASCIItoUCS2(((nsFontWin*)mLoadedFonts[i])->mName),
+                                            nsCaseInsensitiveStringComparator()))
       return nsnull;
 
   }
@@ -4874,7 +4877,7 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUint32 aChar)
         // make a substitute font from this one
         nsAutoString name;
         name.AssignWithConversion(font->mName);
-        nsFontWinSubstituteA* substituteFont = (nsFontWinSubstituteA*)LoadSubstituteFont(aDC, name);
+        nsFontWinSubstituteA* substituteFont = (nsFontWinSubstituteA*)LoadSubstituteFont(aDC, &name);
         if (substituteFont) {
           nsFontSubset* substituteSubset = substituteFont->mSubsets[0];
           substituteSubset->mCharset = subset->mCharset;
@@ -4916,7 +4919,7 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUint32 aChar)
       delete font;
       if (charset != DEFAULT_CHARSET) {
         // make a substitute font now
-        nsFontWinSubstituteA* substituteFont = (nsFontWinSubstituteA*)LoadSubstituteFont(aDC, globalFont->name);
+        nsFontWinSubstituteA* substituteFont = (nsFontWinSubstituteA*)LoadSubstituteFont(aDC, &globalFont->name);
         if (substituteFont) {
           nsFontSubset* substituteSubset = substituteFont->mSubsets[0];
           substituteSubset->mCharset = charset;
@@ -4938,7 +4941,7 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUint32 aChar)
 }
 
 nsFontWin*
-nsFontMetricsWinA::LoadSubstituteFont(HDC aDC, const nsString& aName)
+nsFontMetricsWinA::LoadSubstituteFont(HDC aDC, nsString* aName)
 {
   LOGFONT logFont;
   HFONT hfont = CreateFontHandle(aDC, aName, &logFont);

@@ -229,12 +229,12 @@ STDMETHODIMP SimpleDOMNode::get_attributes(
   for (index = 0; index < numAttribs; index++) {
     aNameSpaceIDs[index] = 0; aAttribValues[index] = aAttribNames[index] = nsnull;
     nsAutoString attributeValue;
-    const char *pszAttributeName; 
+    const PRUnichar *pszAttributeName; 
 
     if (NS_SUCCEEDED(content->GetAttrNameAt(index, nameSpaceID, *getter_AddRefs(nameAtom), *getter_AddRefs(prefixAtom)))) {
       aNameSpaceIDs[index] = NS_STATIC_CAST(short, nameSpaceID);
-      nameAtom->GetUTF8String(&pszAttributeName);
-      aAttribNames[index] = ::SysAllocString(NS_ConvertUTF8toUCS2(pszAttributeName).get());
+      nameAtom->GetUnicode(&pszAttributeName);
+      aAttribNames[index] = ::SysAllocString(pszAttributeName);
       if (NS_SUCCEEDED(content->GetAttr(nameSpaceID, nameAtom, attributeValue))) 
         aAttribValues[index] = ::SysAllocString(attributeValue.get());
     }

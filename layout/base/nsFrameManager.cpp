@@ -2250,16 +2250,6 @@ static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
   aKey.Append(NS_ConvertUCS2toUTF8(aString));
 }
 
-static inline void KeyAppendString(const nsACString& aString, nsACString& aKey)
-{
-  KeyAppendSep(aKey);
-  
-  // Could escape separator here if collisions happen.  > is not a legal char
-  // for a name or type attribute, so we should be safe avoiding that extra work.
-
-  aKey.Append(aString);
-}
-
 static inline void KeyAppendInt(PRInt32 aInt, nsACString& aKey)
 {
   KeyAppendSep(aKey);
@@ -2271,10 +2261,10 @@ static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
 {
   NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
 
-  const char* atomString = nsnull;
-  aAtom->GetUTF8String(&atomString);
+  const PRUnichar* atomString = nsnull;
+  aAtom->GetUnicode(&atomString);
 
-  KeyAppendString(nsDependentCString(atomString), aKey);
+  KeyAppendString(nsDependentString(atomString), aKey);
 }
 
 static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)

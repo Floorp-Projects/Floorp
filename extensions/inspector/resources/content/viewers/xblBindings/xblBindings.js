@@ -178,7 +178,7 @@ XBLBindings.prototype =
     
     while (urls.hasMoreElements()) {
       var item = urls.getNext();
-      var url = item.QueryInterface(Components.interfaces.nsIAtom).toString();
+      var url = item.QueryInterface(Components.interfaces.nsIAtom).GetUnicode();
       var menu = document.createElement("menuitem");
       menu.setAttribute("value", url);
       menu.setAttribute("label", url);

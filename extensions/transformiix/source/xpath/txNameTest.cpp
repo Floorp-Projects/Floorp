@@ -88,12 +88,12 @@ double txNameTest::getDefaultPriority()
 void txNameTest::toString(nsAString& aDest)
 {
     if (mPrefix) {
-        nsAutoString prefix;
-        mPrefix->ToString(prefix);
-        aDest.Append(prefix);
+        const PRUnichar* prefix;
+        mPrefix->GetUnicode(&prefix);
+        aDest.Append(nsDependentString(prefix));
         aDest.Append(PRUnichar(':'));
     }
-    nsAutoString localName;
-    mLocalName->ToString(localName);
-    aDest.Append(localName);
+    const PRUnichar* localName;
+    mLocalName->GetUnicode(&localName);
+    aDest.Append(nsDependentString(localName));
 }

@@ -599,8 +599,9 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
    // Encoding:
    //  There doesn't seem to be any encoding stuff yet, so guess.
    //  (XXX unicode hack; use same codepage as converter!)
-  const char* langGroup;
-  mLangGroup->GetUTF8String(&langGroup);
+  const PRUnichar* langGroup = nsnull;
+  mLangGroup->GetUnicode(&langGroup);
+  nsCAutoString name(NS_LossyConvertUCS2toASCII(langGroup).get());
   for (int j=0; j < eCharset_COUNT; j++ )
   {
     if (langGroup[0] == gCharsetInfo[j].mLangGroup[0])

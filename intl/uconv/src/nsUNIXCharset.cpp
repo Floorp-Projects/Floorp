@@ -382,10 +382,10 @@ nsPlatformCharset::VerifyCharset(nsString &aCharset)
   //
   // return the preferred string
   //
-  const char *prefName;
-  res = charsetAtom->GetUTF8String(&prefName);
+  const PRUnichar *prefName;
+  res = charsetAtom->GetUnicode(&prefName);
   if (NS_SUCCEEDED(res))
-    aCharset.AssignWithConversion(prefName);
+    aCharset.Assign(prefName);
   NS_ASSERTION(NS_SUCCEEDED(res), "failed to get preferred charset name, using non-preferred");
   return NS_OK;
 }

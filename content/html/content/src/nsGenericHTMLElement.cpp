@@ -1862,8 +1862,10 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
 
 PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
 {
-  const char* name;
-  aName->GetUTF8String(&name);
+  const PRUnichar *name = nsnull;
+
+  aName->GetUnicode(&name);
+  NS_ASSERTION(name, "Null string in atom!");
 
   if (name[0] != 'o' || name[1] != 'n') {
     return PR_FALSE;

@@ -374,7 +374,9 @@ XULContentSinkImpl::~XULContentSinkImpl()
                 nsAutoString prefix;
                 if (prefixAtom)
                     {
-                        prefixAtom->ToString(prefix);
+                        const PRUnichar *unicodeString;
+                        prefixAtom->GetUnicode(&unicodeString);
+                        prefix = unicodeString;
                     }
                 else
                     {

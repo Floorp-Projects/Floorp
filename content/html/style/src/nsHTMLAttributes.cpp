@@ -1376,15 +1376,17 @@ nsHTMLAttributes::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
         classList = classList->mNext;
       } while (classList);
     } else {
-      const char* class1;
-      aClass->GetUTF8String(&class1);
+      const PRUnichar* class1Buf;
+      aClass->GetUnicode(&class1Buf);
       // This length calculation (and the |aCaseSensitive| check above) could
       // theoretically be pulled out of another loop by creating a separate
       // |HasClassCI| function.
+      nsDependentString class1(class1Buf);
       do {
-        const char* class2;
-        classList->mAtom->GetUTF8String(&class2);
-        if (nsCRT::strcasecmp(class1, class2) == 0)
+        const PRUnichar* class2Buf;
+        classList->mAtom->GetUnicode(&class2Buf);
+        nsDependentString class2(class2Buf);
+        if (class1.Equals(class2, nsCaseInsensitiveStringComparator()))
           return PR_TRUE;
         classList = classList->mNext;
       } while (classList);
