@@ -329,7 +329,7 @@ nsXPINotifierImpl::AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor)
                         if (NS_FAILED(rv)) break;
 
                         mInner->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
-                        mInner->Assert(aPackage, kNC_Source, title, PR_TRUE);
+                        mInner->Assert(aPackage, kNC_Description, title, PR_TRUE);
                         mInner->Assert(aPackage, kNC_URL, url, PR_TRUE);
 
                         mInner->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
