@@ -79,6 +79,7 @@ LLIBS=                                   \
         $(DIST)\lib\js3250.lib           \
         $(DIST)\lib\xpcom.lib            \
         $(DIST)\lib\timer_s.lib          \
+		$(DIST)\lib\unicharutil_s.lib    \
         $(LIBNSPR)                       \
 	$(NULL)
 

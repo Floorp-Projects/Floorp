@@ -89,6 +89,7 @@ LLIBS=\
  $(DIST)\lib\xpcom.lib		        \
  $(DIST)\lib\gkgfx.lib			\
  $(DIST)\lib\timer_s.lib                \
+ $(DIST)\lib\unicharutil_s.lib \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_PERF)
  $(DIST)\lib\util.lib		        \

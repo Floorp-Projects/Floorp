@@ -40,6 +40,7 @@ REQUIRES= 	xpcom \
             mimetype \
             content \
 			layout \
+			unicharutil \
 			$(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -73,6 +74,7 @@ LCFLAGS = \
 LLIBS=				                \
         $(DIST)\lib\util.lib                    \
         $(DIST)\lib\xpcom.lib	                \
+		$(DIST)\lib\unicharutil_s.lib			\
         $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

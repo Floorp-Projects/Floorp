@@ -36,7 +36,6 @@ EXPORTS = \
 MODULE=widget 
 REQUIRES	= xpcom \
 		  string \
-		  widget \
 		  layout \
 		  gfx \
 		  $(NULL)

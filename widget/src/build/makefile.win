@@ -27,7 +27,6 @@ LIBRARY_NAME   = gkwidget
 MODULE_NAME = nsWidgetModule
 REQUIRES	= xpcom \
 		  string \
-		  widget \
 		  necko \
 		  uconv \
 		  gfx \

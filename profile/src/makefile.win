@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webBrowser_core \
 		  widget \
-		  rdf \
 		  uconv \
 		  $(NULL)
 include <$(DEPTH)\config\config.mak>

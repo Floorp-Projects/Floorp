@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  editor \
 		  appcomps \
-		  rdf \
 		  webBrowser_core \
 		  uconv \
 		  chardet \
