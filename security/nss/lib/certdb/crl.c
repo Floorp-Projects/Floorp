@@ -34,14 +34,13 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.13 2002/08/07 03:42:45 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.14 2002/08/08 01:55:34 jpierre%netscape.com Exp $
  */
 
 #include "cert.h"
 #include "certi.h"
 #include "secder.h"
 #include "secasn1.h"
-#include "quickder.h"
 #include "secoid.h"
 #include "certdb.h"
 #include "certxutl.h"
