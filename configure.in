@@ -799,6 +799,9 @@ case "$target" in
         IMPLIB='emximp -o'
         FILTER='emxexp'
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
+	MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
+	MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
+	XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
         ;;
 
     *-*-os2_vacpp)
@@ -3669,7 +3672,7 @@ fi # $no_x
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_TARGET" = "OS2" || test "$OS_TARGET" = "OS_2"; then
+if test "$OS_TARGET" = "OS/2" || test "$OS_TARGET" = "OS_2"; then
   AC_DEFINE(XP_PC)
   AC_DEFINE(XP_OS2)
   AC_DEFINE(OS2)
