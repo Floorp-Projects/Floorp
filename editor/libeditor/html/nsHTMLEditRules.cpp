@@ -1424,8 +1424,7 @@ nsresult
 nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
-  nsCOMPtr<nsISelection> selection(aSelection);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
   // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
@@ -1453,51 +1452,9 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   // should we abort this if we encounter table cell boundaries?
   if (mFlags & nsIPlaintextEditor::eEditorMailMask)
   {
-    nsCOMPtr<nsIDOMNode> citeNode, selNode, leftCite, rightCite;
-    PRInt32 selOffset, newOffset;
-    res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+    res = SplitMailCites(aSelection, bPlaintext, aHandled);
     if (NS_FAILED(res)) return res;
-    res = GetTopEnclosingMailCite(selNode, address_of(citeNode), bPlaintext);
-    if (NS_FAILED(res)) return res;
-    if (citeNode)
-    {
-      nsCOMPtr<nsIDOMNode> brNode;
-      res = mHTMLEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset, 
-                         PR_TRUE, address_of(leftCite), address_of(rightCite));
-      if (NS_FAILED(res)) return res;
-      res = citeNode->GetParentNode(getter_AddRefs(selNode));
-      if (NS_FAILED(res)) return res;
-      res = mHTMLEditor->CreateBR(selNode, newOffset, address_of(brNode));
-      if (NS_FAILED(res)) return res;
-      // want selection before the break, and on same line
-      selPriv->SetInterlinePosition(PR_TRUE);
-      res = aSelection->Collapse(selNode, newOffset);
-      if (NS_FAILED(res)) return res;
-      // if citeNode wasn't a block, we also want another break before it
-      if (IsInlineNode(citeNode))
-      {
-        res = mHTMLEditor->CreateBR(selNode, newOffset, address_of(brNode));
-        if (NS_FAILED(res)) return res;
-      }
-      // delete any empty cites
-      PRBool bEmptyCite = PR_FALSE;
-      if (leftCite)
-      {
-        res = mHTMLEditor->IsEmptyNode(leftCite, &bEmptyCite, PR_TRUE, PR_FALSE);
-        if (NS_SUCCEEDED(res) && bEmptyCite)
-          res = mHTMLEditor->DeleteNode(leftCite);
-        if (NS_FAILED(res)) return res;
-      }
-      if (rightCite)
-      {
-        res = mHTMLEditor->IsEmptyNode(rightCite, &bEmptyCite, PR_TRUE, PR_FALSE);
-        if (NS_SUCCEEDED(res) && bEmptyCite)
-          res = mHTMLEditor->DeleteNode(rightCite);
-        if (NS_FAILED(res)) return res;
-      }
-      *aHandled = PR_TRUE;
-      return NS_OK;
-    }
+    if (*aHandled) return NS_OK;
   }
 
   // smart splitting rules
@@ -1582,6 +1539,110 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
 nsresult
 nsHTMLEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
 {
+  return NS_OK;
+}
+
+
+nsresult
+nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRBool *aHandled)
+{
+  if (!aSelection || !aHandled)
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
+  nsCOMPtr<nsIDOMNode> citeNode, selNode, leftCite, rightCite;
+  PRInt32 selOffset, newOffset;
+  nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+  if (NS_FAILED(res)) return res;
+  res = GetTopEnclosingMailCite(selNode, address_of(citeNode), aPlaintext);
+  if (NS_FAILED(res)) return res;
+  if (citeNode)
+  {
+    if (IsInlineNode(citeNode))
+    {
+      // this is getting messy.  If our selection is just before a break, nudge it to be
+      // just after it.  This does two things for us.  It saves us the trouble of having to add
+      // a break here ourselves to preserve the "blockness" of the inline span mailquote, and 
+      // it means the break wont end up making an empty line that happens to be inside a
+      // mailquote.  The latter can confuse a user if they click there and start typing,
+      // because being in the mailquote may affect wrapping behavior, or font color, etc.
+      nsWSRunObject wsObj(mHTMLEditor, selNode, newOffset);
+      nsCOMPtr<nsIDOMNode> visNode;
+      PRInt32 visOffset=0;
+      PRInt16 wsType;
+      res = wsObj.NextVisibleNode(selNode, selOffset, address_of(visNode), &visOffset, &wsType);
+      if (NS_FAILED(res)) return res;
+      if (wsType==nsWSRunObject::eBreak)
+      {
+        // ok, we are just before a break.  is it inside the mailquote?
+        PRInt32 unused;
+        if (nsHTMLEditUtils::IsDescendantOf(visNode, citeNode, &unused))
+        {
+          // it is.  so lets reset our selection to be just after it.
+          res = mHTMLEditor->GetNodeLocation(visNode, address_of(selNode), &selOffset);
+          if (NS_FAILED(res)) return res;
+          ++selOffset;
+        }
+      }
+    }
+    
+    nsCOMPtr<nsIDOMNode> brNode;
+    res = mHTMLEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset, 
+                       PR_TRUE, address_of(leftCite), address_of(rightCite));
+    if (NS_FAILED(res)) return res;
+    res = citeNode->GetParentNode(getter_AddRefs(selNode));
+    if (NS_FAILED(res)) return res;
+    res = mHTMLEditor->CreateBR(selNode, newOffset, address_of(brNode));
+    if (NS_FAILED(res)) return res;
+    // want selection before the break, and on same line
+    selPriv->SetInterlinePosition(PR_TRUE);
+    res = aSelection->Collapse(selNode, newOffset);
+    if (NS_FAILED(res)) return res;
+    // if citeNode wasn't a block, we might also want another break before it.
+    // We need to examine the content both before the br we just added and also
+    // just after it.  If we dont have another br or block boundary adjacent,
+    // then we will ned a 2nd br added to achieve blank line that user expects.
+    if (IsInlineNode(citeNode))
+    {
+      nsWSRunObject wsObj(mHTMLEditor, selNode, newOffset);
+      nsCOMPtr<nsIDOMNode> visNode;
+      PRInt32 visOffset=0;
+      PRInt16 wsType;
+      res = wsObj.PriorVisibleNode(selNode, newOffset, address_of(visNode), &visOffset, &wsType);
+      if (NS_FAILED(res)) return res;
+      if ((wsType==nsWSRunObject::eNormalWS) || 
+          (wsType==nsWSRunObject::eText)     ||
+          (wsType==nsWSRunObject::eSpecial))
+      {
+        nsWSRunObject wsObjAfterBR(mHTMLEditor, selNode, newOffset+1);
+        res = wsObj.NextVisibleNode(selNode, newOffset, address_of(visNode), &visOffset, &wsType);
+        if (NS_FAILED(res)) return res;
+        if ((wsType==nsWSRunObject::eNormalWS) || 
+            (wsType==nsWSRunObject::eText)     ||
+            (wsType==nsWSRunObject::eSpecial))
+        {
+          res = mHTMLEditor->CreateBR(selNode, newOffset, address_of(brNode));
+          if (NS_FAILED(res)) return res;
+        }
+      }
+    }
+    // delete any empty cites
+    PRBool bEmptyCite = PR_FALSE;
+    if (leftCite)
+    {
+      res = mHTMLEditor->IsEmptyNode(leftCite, &bEmptyCite, PR_TRUE, PR_FALSE);
+      if (NS_SUCCEEDED(res) && bEmptyCite)
+        res = mHTMLEditor->DeleteNode(leftCite);
+      if (NS_FAILED(res)) return res;
+    }
+    if (rightCite)
+    {
+      res = mHTMLEditor->IsEmptyNode(rightCite, &bEmptyCite, PR_TRUE, PR_FALSE);
+      if (NS_SUCCEEDED(res) && bEmptyCite)
+        res = mHTMLEditor->DeleteNode(rightCite);
+      if (NS_FAILED(res)) return res;
+    }
+    *aHandled = PR_TRUE;
+  }
   return NS_OK;
 }
 
@@ -2837,7 +2898,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
       continue;
     }
       
-    // need to make a list to put things in if we haven't already
+    // need to make a list to put things in if we haven't already,
     if (!curList)
     {
       res = SplitAsNeeded(aListType, address_of(curParent), &offset);
