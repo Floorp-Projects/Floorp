@@ -416,6 +416,8 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
 {
   if (mResources)
     mResources->LoadResources(aResult);
+  else
+    *aResult = PR_TRUE;
   return NS_OK;
 }
 
