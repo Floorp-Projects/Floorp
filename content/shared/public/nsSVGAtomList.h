@@ -171,6 +171,7 @@ SVG_ATOM(x2, "x2")
 SVG_ATOM(y, "y")
 SVG_ATOM(y1, "y1")
 SVG_ATOM(y2, "y2")
+SVG_ATOM(zoomAndPan, "zoomAndPan")
   
 // transformation keywords
 SVG_ATOM(matrix, "matrix")
@@ -199,3 +200,7 @@ SVG_ATOM(repeat, "repeat")
 // Gradient Units
 SVG_ATOM(userSpaceOnUse, "userSpaceOnUse")
 SVG_ATOM(objectBoundingBox, "objectBoundingBox")
+
+// Zoom and Pan options
+SVG_ATOM(disable, "disable")
+SVG_ATOM(magnify, "magnify")

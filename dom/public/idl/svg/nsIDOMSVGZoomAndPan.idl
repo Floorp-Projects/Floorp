@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,13 +14,11 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,30 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ISVGSVGELEMENT__
-#define __NS_ISVGSVGELEMENT__
+#include "domstubs.idl"
 
-#include "nsISupports.h"
-#include "nsIDOMSVGSVGElement.h"
+[scriptable, uuid(18967370-921a-4245-8158-a279b190abca)]
+interface nsIDOMSVGZoomAndPan : nsISupports
+{ 
+    // Zoom and Pan Types
+    const unsigned short SVG_ZOOMANDPAN_UNKNOWN = 0;
+    const unsigned short SVG_ZOOMANDPAN_DISABLE = 1;
+    const unsigned short SVG_ZOOMANDPAN_MAGNIFY = 2;
 
-class nsSVGCoordCtxProvider;
-class nsIDOMSVGNumber;
-class nsISVGEnum;
-
-////////////////////////////////////////////////////////////////////////
-// nsISVGSVGElement: private interface implemented by <svg>-elements
-
-#define NS_ISVGSVGELEMENT_IID \
-{ 0x8ae345f3, 0x5232, 0x426b, { 0xba, 0x23, 0x47, 0x1e, 0x45, 0x64, 0x50, 0xf9 } }
-
-class nsISVGSVGElement : public nsIDOMSVGSVGElement
-{
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGSVGELEMENT_IID; return iid; }
-
-  NS_IMETHOD SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)=0;
-  NS_IMETHOD GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)=0;
-  NS_IMETHOD GetZoomAndPanEnum(nsISVGEnum **aResult)=0;
+    attribute unsigned short zoomAndPan;
+       // raises DOMException on setting
 };
-
-#endif // __NS_ISVGSVGELEMENT__

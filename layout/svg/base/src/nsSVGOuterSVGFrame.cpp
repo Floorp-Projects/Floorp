@@ -66,6 +66,12 @@
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
 #endif
+#include "nsISVGEnum.h"
+#include "nsIDOMSVGPoint.h"
+#include "nsIDOMSVGZoomAndPan.h"
+#include "nsIDOMSVGAnimatedRect.h"
+#include "nsIDOMSVGFitToViewBox.h"
+
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
 // used in nsSVGOuterSVGFrame::InvalidateRegion
@@ -260,6 +266,11 @@ protected:
   PRBool mViewportInitialized;
   nsCOMPtr<nsISVGRenderer> mRenderer;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+
+  // zoom and pan
+  nsCOMPtr<nsISVGEnum>      mZoomAndPan;
+  nsCOMPtr<nsIDOMSVGPoint>  mCurrentTranslate;
+  nsCOMPtr<nsIDOMSVGNumber> mCurrentScale;
 };
 
 //----------------------------------------------------------------------
@@ -302,6 +313,14 @@ nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
 #ifdef DEBUG
 //  printf("~nsSVGOuterSVGFrame %p\n", this);
 #endif
+
+  if (mZoomAndPan)
+    NS_REMOVE_SVGVALUE_OBSERVER(mZoomAndPan);
+  if (mCurrentTranslate)
+    NS_REMOVE_SVGVALUE_OBSERVER(mCurrentTranslate);
+  if (mCurrentScale)
+    NS_REMOVE_SVGVALUE_OBSERVER(mCurrentScale);
+
   RemoveAsWidthHeightObserver();
 }
 
@@ -331,6 +350,12 @@ nsresult nsSVGOuterSVGFrame::Init()
   NS_ASSERTION(SVGElement, "wrong content element");
   SVGElement->SetParentCoordCtxProvider(this);
 
+  SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
+  NS_ADD_SVGVALUE_OBSERVER(mZoomAndPan);
+  SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
+  NS_ADD_SVGVALUE_OBSERVER(mCurrentTranslate);
+  SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
+  NS_ADD_SVGVALUE_OBSERVER(mCurrentScale);
   
   AddAsWidthHeightObserver();
   SuspendRedraw();
@@ -1022,6 +1047,19 @@ nsSVGOuterSVGFrame::GetCanvasTM()
     nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
     NS_ASSERTION(svgElement, "wrong content element");
     svgElement->GetViewboxToViewportTransform(getter_AddRefs(mCanvasTM));
+
+    PRUint16 val;
+    mZoomAndPan->GetIntegerValue(val);
+    if (val == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
+      float scale, x, y;
+      mCurrentScale->GetValue(&scale);
+      mCurrentTranslate->GetX(&x);
+      mCurrentTranslate->GetY(&y);
+
+      nsCOMPtr<nsIDOMSVGMatrix> tmp;
+      mCanvasTM->Translate(x, y, getter_AddRefs(tmp));
+      tmp->Scale(scale, getter_AddRefs(mCanvasTM));
+    }
   }
   nsIDOMSVGMatrix* retval = mCanvasTM.get();
   NS_IF_ADDREF(retval);

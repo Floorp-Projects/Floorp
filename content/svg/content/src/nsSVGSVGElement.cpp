@@ -65,6 +65,8 @@
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
+#include "nsIDOMSVGZoomAndPan.h"
+#include "nsSVGEnum.h"
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
@@ -72,6 +74,7 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
                         public nsISVGSVGElement, // : nsIDOMSVGSVGElement
                         public nsIDOMSVGFitToViewBox,
                         public nsIDOMSVGLocatable,
+                        public nsIDOMSVGZoomAndPan,
                         public nsSVGCoordCtxProvider
 {
 protected:
@@ -88,6 +91,7 @@ public:
   NS_DECL_NSIDOMSVGSVGELEMENT
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
   NS_DECL_NSIDOMSVGLOCATABLE
+  NS_DECL_NSIDOMSVGZOOMANDPAN
   
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGSVGElementBase::)
@@ -96,6 +100,8 @@ public:
 
   // nsISVGSVGElement interface:
   NS_IMETHOD SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx);
+  NS_IMETHOD GetCurrentScaleNumber(nsIDOMSVGNumber **aResult);
+  NS_IMETHOD GetZoomAndPanEnum(nsISVGEnum **aResult);
 
   // nsIStyledContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -103,7 +109,7 @@ public:
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
-  
+
 protected:
   // nsSVGElement overrides
   PRBool IsEventName(nsIAtom* aName);
@@ -118,6 +124,11 @@ protected:
   nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
+
+  // zoom and pan
+  nsCOMPtr<nsISVGEnum>              mZoomAndPan;
+  nsCOMPtr<nsIDOMSVGPoint>          mCurrentTranslate;
+  nsCOMPtr<nsIDOMSVGNumber>         mCurrentScale;
   
   PRInt32 mRedrawSuspendCount;
 };
@@ -139,6 +150,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFitToViewBox)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLocatable)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGZoomAndPan)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGSVGElement)
@@ -255,9 +267,37 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
-  // add observers -------------------------- :
-  NS_ADD_SVGVALUE_OBSERVER(mViewBox);
-  NS_ADD_SVGVALUE_OBSERVER(mPreserveAspectRatio);
+  // nsIDOMSVGZoomAndPan attribute ------:
+
+  // Define enumeration mappings
+  static struct nsSVGEnumMapping zoomMap[] = {
+        {&nsSVGAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
+        {&nsSVGAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
+        {nsnull, 0}
+  };
+
+  // DOM property: zoomAndPan ,  #IMPLIED attrib: zoomAndPan
+  {
+    rv = NS_NewSVGEnum(getter_AddRefs(mZoomAndPan),
+                       nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY, zoomMap);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::zoomAndPan, mZoomAndPan);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: currentScale
+  {
+    rv = NS_NewSVGNumber(getter_AddRefs(mCurrentScale), 1.0f);
+    NS_ENSURE_SUCCESS(rv,rv);
+    NS_ADD_SVGVALUE_OBSERVER(mCurrentScale);
+  }
+
+  // DOM property: currentTranslate
+  {
+    rv = nsSVGPoint::Create(0.0f, 0.0f, getter_AddRefs(mCurrentTranslate));
+    NS_ENSURE_SUCCESS(rv,rv);
+    NS_ADD_SVGVALUE_OBSERVER(mCurrentTranslate);
+  }
 
   return rv;
 }
@@ -432,21 +472,22 @@ nsSVGSVGElement::GetCurrentView(nsIDOMSVGViewSpec * *aCurrentView)
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentScale(float *aCurrentScale)
 {
-  *aCurrentScale = 1.0;
-  return NS_OK;
+  return mCurrentScale->GetValue(aCurrentScale);
 }
 
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScale(float aCurrentScale)
 {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  return mCurrentScale->SetValue(aCurrentScale);
 }
 
 /* readonly attribute nsIDOMSVGPoint currentTranslate; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentTranslate(nsIDOMSVGPoint * *aCurrentTranslate)
 {
-  return nsSVGPoint::Create(0.0f, 0.0f, aCurrentTranslate);
+  *aCurrentTranslate = mCurrentTranslate;
+  NS_ADDREF(*aCurrentTranslate);
+  return NS_OK;
 }
 
 /* unsigned long suspendRedraw (in unsigned long max_wait_milliseconds); */
@@ -1061,6 +1102,25 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element, nsIDOMSVGMatri
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//----------------------------------------------------------------------
+// nsIDOMSVGZoomAndPan methods
+
+/* attribute unsigned short zoomAndPan; */
+NS_IMETHODIMP
+nsSVGSVGElement::GetZoomAndPan(PRUint16 *aZoomAndPan)
+{
+  return mZoomAndPan->GetIntegerValue(*aZoomAndPan);
+}
+
+NS_IMETHODIMP
+nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
+{
+  if (aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE ||
+      aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY)
+    return mZoomAndPan->SetIntegerValue(aZoomAndPan);
+
+  return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
+}
 
 //----------------------------------------------------------------------
 // nsISVGSVGElement methods:
@@ -1107,6 +1167,22 @@ nsSVGSVGElement::SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)
     l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextY()));
   }
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGSVGElement::GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)
+{
+  *aResult = mCurrentScale;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGSVGElement::GetZoomAndPanEnum(nsISVGEnum **aResult)
+{
+  *aResult = mZoomAndPan;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
