@@ -86,8 +86,6 @@ GetTheTempDirectoryOnTheSystem(void)
     GetWindowsDirectory(retPath, 1024);
 #endif 
 
-  // RICHIE - should do something better here!
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
   char *tPath = getenv("TEMP");
   if (!tPath)

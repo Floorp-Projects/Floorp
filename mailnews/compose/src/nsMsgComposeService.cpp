@@ -220,7 +220,8 @@ nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose, PRBool clos
 	{
 		m_msgQueue->RemoveElementAt(i);
 		
-		if (closeWindow)
+    // rhp: Commenting out for now to cleanup compile warning...
+		// if (closeWindow)
 			;//TODO
 
 

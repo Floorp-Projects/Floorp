@@ -210,12 +210,6 @@ public:
 	PRInt32 GetReturnReceiptType() { return m_receiptType; };
 	void SetReturnReceiptType(PRInt32 type) {m_receiptType = type;};
 
-	void SetOwner(MSG_Pane *pane) {
-		m_owner = pane;
-	}
-
-	MSG_Pane * GetOwner() { return m_owner; }
-
 	NS_IMETHOD  SetTheForcePlainText(PRBool value);
 	NS_IMETHOD  GetTheForcePlainText(PRBool *_retval);
 	void        SetForcePlainText(PRBool value) {m_force_plain_text = value;}
@@ -231,7 +225,6 @@ protected:
 	HJ30181
 
 	#define MAX_HEADERS		32
-	MSG_Pane*	m_owner;
 	char*		m_headers[MAX_HEADERS];
 	char*		m_body;
 	char**		m_forwardurl;

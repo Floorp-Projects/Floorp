@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsMsgCompUtils.h"
 #include "nsIPref.h"
 #include "prmem.h"
@@ -437,80 +438,9 @@ mime_generate_headers (nsMsgCompFields *fields,
 		PUSH_NEWLINE ();
 	}
 
-	// X-Sender tag
-	if (fields->GetOwner())
-	{
-		PRBool bUseXSender = PR_FALSE;
-
-    if (prefs) 
-  	  prefs->GetBoolPref("mail.use_x_sender", &bUseXSender);
-
-		if (bUseXSender) {
-			char *convbuf;
-			char *tmpBuffer=nsnull;
-
-			PUSH_STRING ("X-Sender: ");
-
-			PUSH_STRING("\"");
-
-      if (prefs) 
-  	    prefs->CopyCharPref("mail.identity.username", &tmpBuffer);
-			convbuf = nsMsgI18NEncodeMimePartIIStr(tmpBuffer, charset,
-										nsMsgMIMEGetConformToStandard());
-			if (convbuf) {     /* MIME-PartII conversion */
-				PUSH_STRING (convbuf);
-				PR_Free(convbuf);
-			}
-			else
-				PUSH_STRING (tmpBuffer);
-            if (tmpBuffer) PL_strfree(tmpBuffer);
-            tmpBuffer=nsnull;
-            
-			PUSH_STRING("\" <");
-
-      if (NS_SUCCEEDED(rv) && prefs) 
-  	    prefs->CopyCharPref("mail.smtp_name", &tmpBuffer);
-			convbuf = nsMsgI18NEncodeMimePartIIStr(tmpBuffer, charset,
-											nsMsgMIMEGetConformToStandard());
-			if (convbuf) {     /* MIME-PartII conversion */
-				PUSH_STRING (convbuf);
-				PR_Free(convbuf);
-			}
-			else
-				PUSH_STRING (tmpBuffer);
-            if (tmpBuffer) PL_strfree(tmpBuffer);
-            tmpBuffer=nsnull;
-
-			PUSH_STRING ("@");
-
-      if (NS_SUCCEEDED(rv) && prefs) 
-  	    prefs->CopyCharPref("network.hosts.smtp_server", &tmpBuffer);
-			convbuf = nsMsgI18NEncodeMimePartIIStr(tmpBuffer, charset,
-											nsMsgMIMEGetConformToStandard());
-			if (convbuf) {     /* MIME-PartII conversion */
-				PUSH_STRING (convbuf);
-				PR_Free(convbuf);
-			}
-			else
-				PUSH_STRING (tmpBuffer);
-
-			PUSH_STRING(">");
-
-			convbuf = nsMsgI18NEncodeMimePartIIStr(tmpBuffer, charset,
-											nsMsgMIMEGetConformToStandard());
-            if (tmpBuffer) PL_strfree(tmpBuffer);
-            tmpBuffer=nsnull;
-
-/**** RICHIE - have to change this as we convert to new world stuff!
-			if (!fields->GetOwner()->GetMaster()->IsUserAuthenticated())
-				PUSH_STRING (" (Unverified)");
-****************************/
-			PUSH_NEWLINE ();
-		}
-	}
-
 	// X-Mozilla-Draft-Info
-	if (isDraft) {
+	if (isDraft) 
+  {
 		char *htmlAction = 0;
 		char *lineWidth = 0; // force plain text hard line break info
 
@@ -538,20 +468,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 		else
 		  PUSH_STRING("uuencode=0");
 
-// RICHIE		htmlAction = PR_smprintf("html=%d", 
-// RICHIE		  ((nsMsgCompose*)fields->GetOwner())->GetHTMLAction());
-		if (htmlAction) {
-			PUSH_STRING("; ");
-			PUSH_STRING(htmlAction);
-			PR_FREEIF(htmlAction);
-		}
-
-// RICHIE		lineWidth = PR_smprintf("; linewidth=%d",
-// RICHIE		  ((nsMsgCompose*)fields->GetOwner())->GetLineWidth());
-		if (lineWidth) {
-			PUSH_STRING(lineWidth);
-			PR_FREEIF(lineWidth);
-		}
 		PUSH_NEWLINE ();
 	}
 
@@ -652,24 +568,16 @@ mime_generate_headers (nsMsgCompFields *fields,
       // and turns it into "netscape.test,netscape.junk"
       rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
       if (NS_FAILED(rv)) 
+        return nsnull;
+      else 
       {
-#ifdef NS_DEBUG
-        printf("FAILURE to convert!\n");
-        printf("RICHIE, we need to figure out how to handle this\n");
-#endif
-      }
-      else {
 #ifdef NS_DEBUG
         printf("SUCCESS:  %s -> %s\n",n2,newHeader);
 #endif
       }
     }
-    else {
-#ifdef NS_DEBUG
-      printf("FAILURE to get nntpService\n");
-      printf("RICHIE, we need to figure out how to handle this\n");
-#endif
-    }
+    else 
+      return nsnull;
 
     PUSH_STRING ("Newsgroups: ");
 		PUSH_STRING (newHeader);
@@ -893,7 +801,8 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 								  const char *base_url,
 								  PRBool /*digest_p*/,
 								  nsMsgAttachmentHandler * /*ma*/,
-								  const char *charset)
+								  const char *charset,
+                  const char *content_id)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
@@ -986,6 +895,14 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 			PR_Free(s);
 		}
 	}
+
+  if ( (content_id) && (*content_id) )
+  {
+    PUSH_STRING ("Content-ID: <");
+    PUSH_STRING (content_id);
+    PUSH_STRING (">");
+    PUSH_NEWLINE ();
+  }
 
 	if (real_name && *real_name) {
 		char *period = PL_strrchr(real_name, '.');
@@ -1169,7 +1086,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 				   const char *language, const char *parmValue)
 {
 #define PR_MAX_FOLDING_LEN 75			// this is to gurantee the folded line will
-								// never be greater than 78 = 75 + CRLFLWSP
+								                  // never be greater than 78 = 75 + CRLFLWSP
 	char *foldedParm = NULL;
 	char *dupParm = NULL;
 	PRInt32 parmNameLen = 0;
@@ -1543,12 +1460,13 @@ mime_type_needs_charset (const char *type)
 // (because of CC) so a new URL to actually post to is returned.
 //
 int 
-nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
-									const char * /*referer*/,
-									char **new_post_url_return,
-									char **headers_return)
+nsMsgMIMEGenerateMailtoFormPostHeaders (const char *from,
+                                        const char *old_post_url,
+									                      const char * /*referer*/,
+									                      char **new_post_url_return,
+									                      char **headers_return)
 {
-  char *from = 0, *to = 0, *cc = 0, *body = 0, *search = 0;
+  char *to = 0, *cc = 0, *body = 0, *search = 0;
   char *extra_headers = 0;
   char *s;
   PRBool subject_p = PR_FALSE;
@@ -1581,12 +1499,6 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 	HEADER_X_UIDL,
 	"XRef",
 	0 };
-
-  from = MIME_MakeFromField (CS_DEFAULT);
-  if (!from) {
-	status = NS_ERROR_OUT_OF_MEMORY;
-	goto FAIL;
-  }
 
   to = nsMsgParseURL (old_post_url, GET_PATH_PART);
   if (!to) {
@@ -1775,7 +1687,6 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 	StrAllocCat ((*new_post_url_return), cc);
 
  FAIL:
-  PR_FREEIF (from);
   PR_FREEIF (to);
   PR_FREEIF (cc);
   PR_FREEIF (body);
@@ -1848,24 +1759,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 
   attachment->mURL->GetSpec(&url);
 
-  /* Perhaps the MIME parser knows a better name than the URL itself?
-	 This can happen when one attaches a MIME part from one message
-	 directly into another message.
-	 
-	 ### mwelch Note that this function simply duplicates and returns an existing
-	 			MIME header, so we don't need to process it. */
-
-  // RICHIE  - NEED TO DO SOMETHING BETTER HERE!!!!!! THIS WILL HELP WITH FILENAMES
-  // FOR TEMP FILES
-  // RICHIE attachment->m_real_name =	MimeGuessURLContentName(x, url);
-  attachment->m_real_name = nsnull;  
-  if (attachment->m_real_name)
-  {
-  	return;
-  }
-
-  /* Otherwise, extract a name from the URL. */
-
+  // Otherwise, extract a name from the URL.
   s = url;
   s2 = PL_strchr (s, ':');
   if (s2) s = s2 + 1;
@@ -1884,24 +1778,6 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
   if (s2) s = s2+1;
   s2 = PL_strrchr (s, '\\');
   
-#if 0
-//TODO: convert to unicode to do the truncation
-  if (csid & MULTIBYTE)
-  {
-	  // We don't want to truncate the file name in case of the double
-	  // byte file name
-	  while ( s2 != NULL && 
-			  s2 > s &&
-			  nsMsgI18NIsLeadByte(csid, *(s2-1)))
-	  {
-		  s3 = (char *) s2;
-		  *s3 = 0;
-		  s2 = PL_strrchr(s, '\\');
-		  *s3 = '\\';
-	  }
-  }
-#endif
-	  
   if (s2) s = s2+1;
   /* Copy it into the attachment struct. */
   PR_FREEIF(attachment->m_real_name);
@@ -2159,4 +2035,50 @@ GenerateFileNameFromURI(nsIURI *aURL)
   }
 
   return nsnull;
+}
+
+//
+// This routine will generate a content id for use in a mail part.
+// It will take the part number passed in as well as the email 
+// address. If the email address is null or invalid, we will simply
+// use netscape.com for the interesting part. The content ID's will
+// look like the following:
+//
+//      Content-ID: <part1.36DF1DCE.73B5A330@netscape.com>
+//
+char *
+mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
+{
+	PRInt32           randLen = 5;
+  unsigned char     rand_buf1[5]; 
+	unsigned char     rand_buf2[5]; 
+  char              *domain = nsnull;
+  char              *defaultDomain = "@netscape.com";
+
+  nsCRT::memset(rand_buf1, 0, randLen-1);
+  nsCRT::memset(rand_buf2, 0, randLen-1);
+
+  GenerateGlobalRandomBytes(rand_buf1, randLen);
+  GenerateGlobalRandomBytes(rand_buf2, randLen);
+
+  // Find the @domain.com string...
+  if ((!aEmailAddress) || (!*aEmailAddress))
+    domain = PL_strchr(aEmailAddress, '@');
+
+  if (!domain)
+    domain = defaultDomain;
+
+  char *retVal = PR_smprintf("part%d."
+                              "%02X%02X%02X%02X"
+                              "."
+                              "%02X%02X%02X%02X"
+                              "%s",
+                              aPartNum,
+                              rand_buf1[0], rand_buf1[1], rand_buf1[2], rand_buf1[3],
+                              rand_buf2[0], rand_buf2[1], rand_buf2[2], rand_buf2[3],
+                              domain);
+  if (domain != defaultDomain)
+    PR_FREEIF(domain);
+
+  return retVal;
 }

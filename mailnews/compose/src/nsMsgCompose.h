@@ -25,6 +25,7 @@
 #include "nsIMsgQuote.h"
 #include "nsIMsgSendListener.h"
 #include "nsIMsgCopyServiceListener.h"
+#include "nsIMsgSend.h"
 
 class QuotingOutputStreamImpl;
 class nsMsgComposeSendListener;
@@ -106,6 +107,8 @@ class nsMsgCompose : public nsIMsgCompose
 	QuotingOutputStreamImpl *	mOutStream;
 	nsCOMPtr<nsIOutputStream>   mBaseStream;
 	nsCOMPtr<nsIMsgQuote>       mQuote;
+
+  nsCOMPtr<nsIMsgSend>        mMsgSend;   // for composition back end
 
 	// For only making a single LoadUrl call on the editor
 	PRBool						mBodyLoaded;

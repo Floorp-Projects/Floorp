@@ -131,6 +131,8 @@
 #include "nsMsgCompFields.h"
 #include "nsIMsgSendListener.h"
 #include "nsIMessage.h"
+#include "nsIDOMNode.h"
+#include "nsIEditorShell.h"
 #if 0
 #include "nsMsgCopy.h"
 #endif
@@ -166,14 +168,6 @@ class nsMsgDeliveryListener;
 class nsMsgComposeAndSend : public nsIMsgSend
 {
 public:
-
-  //
-  ////////////////////////////////////////////////////////////////////////////////
-  // RICHIE - What is here must go away when I have the time to get rid of them!
-  ////////////////////////////////////////////////////////////////////////////////
-  //
-  MSG_Pane          *m_pane;			/* Pane to use when loading the URLs */
-
   //
   // The exit method used when downloading attachments only.
   // This still may be useful because of the fact that it is an
@@ -246,6 +240,7 @@ public:
   //
   nsresult    InitCompositionFields(nsMsgCompFields *fields);
   int         SetMimeHeader(MSG_HEADER_SET header, const char *value);
+  NS_IMETHOD  GetBodyFromEditor();
 
   // methods for listener array processing...
   NS_IMETHOD  SetListenerArray(nsIMsgSendListener **aListener);
@@ -266,19 +261,26 @@ public:
   NS_IMETHOD  SetMessageKey(PRUint32 aMessageKey);
   NS_IMETHOD  GetMessageId(nsString2* aMessageId);
 
-  nsMsgKey m_messageKey; // jt -- Draft/Template support; newly created key
-
   //
   // Attachment processing...
   //
   int	        GatherMimeAttachments();
   int         HackAttachments(const struct nsMsgAttachmentData *attachments,
 					                    const struct nsMsgAttachedFile *preloaded_attachments);
+  // Deal with multipart related data
+  nsresult    ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aNewsCount); 
+  PRUint32    GetMultipartRelatedCount(void);
+
+  // Body processing
+  nsresult    SnarfAndCopyBody(const char  *attachment1_body,
+						                   PRUint32    attachment1_body_length,
+                               const char  *attachment1_type);
 
   ////////////////////////////////////////////////////////////////////////////////
   // The current nsIMsgSend Interfaces exposed to the world!
   ////////////////////////////////////////////////////////////////////////////////
   NS_IMETHOD  CreateAndSendMessage(
+                          nsIEditorShell                    *aEditor,
                           nsIMsgIdentity                    *aUserIdentity,
  						              nsIMsgCompFields                  *fields,
 						              PRBool                            digest_p,
@@ -315,9 +317,10 @@ public:
   //
   // All vars necessary for this implementation
   //
+  nsMsgKey                  m_messageKey;        // jt -- Draft/Template support; newly created key
   nsCOMPtr<nsIMsgIdentity>  mUserIdentity;
   nsCOMPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)
-  nsFileSpec                *mTempFileSpec;     // our temporary file
+  nsFileSpec                *mTempFileSpec;      // our temporary file
   
   nsOutputFileStream        *mOutputFile;        // the actual output file stream
 
@@ -344,6 +347,9 @@ public:
   nsIFileSpec               *mCopyFileSpec;
   nsMsgCopy                 *mCopyObj;
 
+  // For MHTML message creation
+  nsIEditorShell            *mEditor;
+
   //
   // The first attachment, if any (typed in by the user.)
   //
@@ -362,13 +368,14 @@ public:
   //
   // Subsequent attachments, if any.
   //
-  PRInt32                 m_attachment_count;
-  PRInt32                 m_attachment_pending_count;
+  PRUint32                m_attachment_count;
+  PRUint32                m_attachment_pending_count;
   nsMsgAttachmentHandler  *m_attachments;
   PRInt32                 m_status; // in case some attachments fail but not all 
 
-  PRInt32                 mPreloadedAttachmentCount;
-  PRInt32                 mRemoteAttachmentCount;
+  PRUint32                mPreloadedAttachmentCount;
+  PRUint32                mRemoteAttachmentCount;
+  PRUint32                mMultipartRelatedAttachmentCount; // the number of mpart related attachments
 
   //
   // attachment states and other info...

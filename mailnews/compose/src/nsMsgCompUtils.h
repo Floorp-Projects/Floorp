@@ -58,6 +58,7 @@ char        *mime_generate_headers (nsMsgCompFields *fields,
 									                  nsMsgDeliverMode deliver_mode);
 
 char        *mime_make_separator(const char *prefix);
+char        *mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress);
 
 char        *mime_generate_attachment_headers (const char *type,
 											     const char *encoding,
@@ -68,7 +69,8 @@ char        *mime_generate_attachment_headers (const char *type,
 											     const char *base_url,
 											     PRBool digest_p,
 											     nsMsgAttachmentHandler *ma,
-											     const char *charset);
+											     const char *charset,
+                           const char *content_id);
 
 char        *msg_generate_message_id (nsIMsgIdentity*);
 
@@ -85,7 +87,8 @@ char        *mime_fix_news_header (const char *string);
 PRBool      mime_type_requires_b64_p (const char *type);
 PRBool      mime_type_needs_charset (const char *type);
 
-int         nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
+int         nsMsgMIMEGenerateMailtoFormPostHeaders (const char *from,
+                                                    const char *old_post_url,
 									                                  const char * /*referer*/,
 									                                  char **new_post_url_return,
 									                                  char **headers_return);

@@ -258,49 +258,12 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
   int status = 0;
   char* encoded_data = buffer;
   
-  /* if this is the first block, create the conversion object
-	 */
-  if (m_firstBlock) {
-    if (m_needIntlConversion) {
-      MWContext *x = nsnull; // RICHIE
-      m_intlDocToMailConverter =
-        nsMsgI18NCreateDocToMailConverter(x,
-        (!PL_strcasecmp(m_type,
-        TEXT_HTML)),
-        (unsigned char*) buffer,
-        length);
-      
-      // No conversion is done when mail_csid (ToCSID for the converter) is JIS 
-      // and type is HTML (usually csid is SJIS or EUC for Japanese HTML)
-      // in order to avoid mismatch META_TAG (bug#104255).
-      if (m_intlDocToMailConverter != NULL) {
-        PRBool Base64HtmlNoChconv = ((INTL_GetCCCToCSID(m_intlDocToMailConverter) == CS_JIS) &&
-          !PL_strcasecmp(m_type, TEXT_HTML) &&
-          (m_encoder_data != NULL));
-        if (Base64HtmlNoChconv) {
-          nsMsgI18NDestroyCharCodeConverter(m_intlDocToMailConverter);
-          m_intlDocToMailConverter = NULL;
-        }
-      }
-    }
-    m_firstBlock = PR_FALSE;		/* No longer the first block */
-  }
-  
-  if (m_intlDocToMailConverter) {
-    encoded_data =
-      (char*)nsMsgI18NCallCharCodeConverter(m_intlDocToMailConverter,
-      (unsigned char*)buffer,
-      length);
-    /* the return buffer is different from the */
-    /* origional one.  The size needs to be change */
-    if(encoded_data && encoded_data != buffer) {
-      length = PL_strlen(encoded_data);
-    }
-  }
-  
-  if (m_encoder_data) {
+  if (m_encoder_data) 
+  {
     status = MIME_EncoderWrite(m_encoder_data, encoded_data, length);
-  } else {
+  } 
+  else 
+  {
     // Merely translate all linebreaks to CRLF.
     int status = 0;
     const char *in = encoded_data;
@@ -809,10 +772,6 @@ int nsMsgSendPart::Write()
   
 FAIL:
   PR_FREEIF(separator);
-  if (m_intlDocToMailConverter) {
-    nsMsgI18NDestroyCharCodeConverter(m_intlDocToMailConverter);
-    m_intlDocToMailConverter = NULL;
-  }
   return status;
 }
 

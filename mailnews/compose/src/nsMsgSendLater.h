@@ -165,6 +165,7 @@ private:
   PRInt32                   m_flagsPosition;
   PRInt32                   m_headersSize;
   char                      *mLeftoverBuffer;
+  PRBool                    mRequestReturnReceipt;
 };
 
 

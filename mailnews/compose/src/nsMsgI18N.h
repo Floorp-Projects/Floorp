@@ -42,26 +42,6 @@ nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset,
 
 const char *nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec);
 
-//
-// THIS IS BAD STUFF...MAKE IT GO AWAY!!!
-//
-#include "intl_csi.h"
-
-void				nsMsgI18NDestroyCharCodeConverter(CCCDataObject);
-unsigned char *		nsMsgI18NCallCharCodeConverter(CCCDataObject,const unsigned char *,int32);
-int					nsMsgI18NGetCharCodeConverter(int16 ,int16 ,CCCDataObject);
-CCCDataObject		nsMsgI18NCreateCharCodeConverter();
-int16				nsMsgI18NGetCSIWinCSID(INTL_CharSetInfo);
-INTL_CharSetInfo	LO_GetDocumentCharacterSetInfo(MWContext *);
-int16				nsMsgI18NGetCSIDocCSID(INTL_CharSetInfo obj);
-int16				nsMsgI18NDefaultWinCharSetID(MWContext *);
-int16				nsMsgI18NDefaultMailCharSetID(int16 csid);
-int16				nsMsgI18NDefaultNewsCharSetID(int16 csid);
-void				nsMsgI18NMessageSendToNews(XP_Bool toNews);
-CCCDataObject nsMsgI18NCreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned char *buffer, 
-                                            uint32 buffer_size);
-
-
 NS_END_EXTERN_C
 
 #endif /* _nsMsgI18N_H_ */

@@ -48,9 +48,15 @@
 #include "nsMsgCopy.h"
 #include "nsMsgTransition.h"
 #include "nsMsgPrompts.h"
+#include "nsMsgTransition.h"
+#include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 
-/* use these macros to define a class IID for our component. Our object currently supports two interfaces 
-   (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
+// use these macros to define a class IID for our component. Our object currently 
+// supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
+// for these two interfaces 
+//
 static NS_DEFINE_IID(kIMsgSend, NS_IMSGSEND_IID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
@@ -58,7 +64,6 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
-
 
 #ifdef XP_MAC
 #include "errors.h"
@@ -124,7 +129,183 @@ nsresult NS_NewMsgSend(const nsIID &aIID, void ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was nsnull....*/
 }
 
+/* the following macro actually implement addref, release and query interface for our component. */
+NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, nsCOMTypeInfo<nsIMsgSend>::GetIID());
 
+nsMsgComposeAndSend::nsMsgComposeAndSend() : 
+    m_messageKey(0xffffffff)
+{
+  mEditor = nsnull;
+  mMultipartRelatedAttachmentCount = 0;
+  mCompFields = nsnull;			/* Where to send the message once it's done */
+  mListenerArray = nsnull;
+  mListenerArrayCount = 0;
+  mSendListener = nsnull;
+
+	mOutputFile = nsnull;
+
+	m_dont_deliver_p = PR_FALSE;
+	m_deliver_mode = nsMsgDeliverNow;
+
+	m_attachments_only_p = PR_FALSE;
+	m_pre_snarfed_attachments_p = PR_FALSE;
+	m_digest_p = PR_FALSE;
+	m_be_synchronous_p = PR_FALSE;
+	m_crypto_closure = nsnull;
+	m_attachment1_type = 0;
+	m_attachment1_encoding = 0;
+	m_attachment1_encoder_data = nsnull;
+	m_attachment1_body = 0;
+	m_attachment1_body_length = 0;
+	m_attachment_count = 0;
+	m_attachment_pending_count = 0;
+	m_attachments = nsnull;
+	m_status = 0;
+	m_attachments_done_callback = nsnull;
+	m_plaintext = nsnull;
+	m_related_part = nsnull;
+
+  // These are for temp file creation and return
+  mReturnFileSpec = nsnull;
+  mTempFileSpec = nsnull;
+	mHTMLFileSpec = nsnull;
+  mCopyFileSpec = nsnull;
+  mCopyObj = nsnull;
+
+  mPreloadedAttachmentCount = 0;
+  mRemoteAttachmentCount = 0;
+
+	NS_INIT_REFCNT();
+}
+
+nsMsgComposeAndSend::~nsMsgComposeAndSend()
+{
+	Clear();
+}
+
+void 
+nsMsgComposeAndSend::Clear()
+{
+#ifdef NS_DEBUG
+  printf("\nTHE CLEANUP ROUTINE FOR nsMsgComposeAndSend() WAS CALLED\n");
+#endif
+	PR_FREEIF (m_attachment1_type);
+	PR_FREEIF (m_attachment1_encoding);
+	PR_FREEIF (m_attachment1_body);
+
+	if (m_attachment1_encoder_data) 
+  {
+		MIME_EncoderDestroy(m_attachment1_encoder_data, PR_TRUE);
+		m_attachment1_encoder_data = 0;
+	}
+
+	if (m_plaintext) 
+  {
+		if (m_plaintext->mOutFile)
+			m_plaintext->mOutFile->close();
+
+		if (m_plaintext->mFileSpec)
+		  delete m_plaintext->mFileSpec;
+		delete m_plaintext;
+		m_plaintext = nsnull;
+	}
+
+	if (mHTMLFileSpec) 
+  {
+		mHTMLFileSpec->Delete(PR_FALSE);
+		delete mHTMLFileSpec;
+		mHTMLFileSpec= nsnull;
+	}
+
+	if (mOutputFile) 
+  {
+		delete mOutputFile;
+		mOutputFile = 0;
+	}
+
+  if (mCopyFileSpec)
+  {
+    nsFileSpec aFileSpec;
+    mCopyFileSpec->GetFileSpec(&aFileSpec);
+    if (aFileSpec.Valid())
+      aFileSpec.Delete(PR_FALSE);
+
+    // jt -- *don't* use delete someone may still holding the nsIFileSpec
+    // pointer
+    NS_IF_RELEASE(mCopyFileSpec);
+  }
+
+	if (mTempFileSpec) 
+  {
+    if (mReturnFileSpec == nsnull)
+    {
+      mTempFileSpec->Delete(PR_FALSE);
+      delete mTempFileSpec;
+	    mTempFileSpec = nsnull;
+    }
+	}
+
+	HJ82388
+
+	if (m_attachments)
+	{
+		PRUint32 i;
+		for (i = 0; i < m_attachment_count; i++) 
+    {
+			if (m_attachments [i].m_encoder_data) 
+      {
+				MIME_EncoderDestroy(m_attachments[i].m_encoder_data, PR_TRUE);
+				m_attachments [i].m_encoder_data = 0;
+			}
+
+			if (m_attachments[i].mURL)
+      {
+        NS_RELEASE(m_attachments[i].mURL);
+        m_attachments[i].mURL = nsnull;
+      }
+
+			PR_FREEIF (m_attachments [i].m_type);
+			PR_FREEIF (m_attachments [i].m_override_type);
+			PR_FREEIF (m_attachments [i].m_override_encoding);
+			PR_FREEIF (m_attachments [i].m_desired_type);
+			PR_FREEIF (m_attachments [i].m_description);
+			PR_FREEIF (m_attachments [i].m_x_mac_type);
+			PR_FREEIF (m_attachments [i].m_x_mac_creator);
+			PR_FREEIF (m_attachments [i].m_real_name);
+			PR_FREEIF (m_attachments [i].m_encoding);
+			PR_FREEIF (m_attachments [i].m_content_id);
+			if (m_attachments [i].mOutFile)
+          m_attachments[i].mOutFile->close();
+			if (m_attachments[i].mFileSpec) 
+      {
+        // Only Delete the file if this variable is set!
+        if (m_attachments[i].mDeleteFile)
+  				m_attachments[i].mFileSpec->Delete(PR_FALSE);
+
+				delete m_attachments[i].mFileSpec;
+        m_attachments[i].mFileSpec = nsnull;
+			}
+
+#ifdef XP_MAC
+		  //
+      // remove the appledoubled intermediate file after we done all.
+		  //
+			if (m_attachments[i].mAppleFileSpec) 
+      {
+				m_attachments[i].mAppleFileSpec->Delete(PR_FALSE);
+				delete m_attachments[i].mAppleFileSpec;
+			}
+#endif /* XP_MAC */
+		}
+
+		delete[] m_attachments;
+		m_attachment_count = m_attachment_pending_count = 0;
+		m_attachments = 0;
+	}
+
+  // Cleanup listener array...
+  DeleteListeners();
+}
 
 static char *mime_mailto_stream_read_buffer = 0;
 static char *mime_mailto_stream_write_buffer = 0;
@@ -149,7 +330,8 @@ int
 nsMsgComposeAndSend::GatherMimeAttachments()
 {
 	PRBool shouldDeleteDeliveryState = PR_TRUE;
-	PRInt32 status, i;
+	PRInt32 status;
+  PRUint32    i;
 	char *headers = 0;
 	char *separator = 0;
 	PRFileDesc  *in_file = 0;
@@ -167,10 +349,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		if (pstrzNewsgroup && *pstrzNewsgroup)
 			tonews = PR_TRUE;
 	}
-
-	nsMsgI18NMessageSendToNews(tonews);			// hack to make Korean Mail/News work correctly 
-											// Look at libi18n/doc_ccc.c for details 
-											// temp solution for bug 30725
 
 	nsMsgSendPart* toppart = nsnull;			// The very top most container of the message
 											// that we are going to send.
@@ -211,7 +389,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
       {
 				m_attachments_done_callback (nsnull, nsnull, nsnull);
 				m_attachments_done_callback = nsnull;
-				// SHERRY: for now, we are going to let the destructor do the Clear();
 				goto FAIL;
 			}
 
@@ -227,12 +404,11 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 #undef SNARF
 #define SNARF(x,y) do { if((y) && *(y) && !(x)) { ((x) = (y)); ((y) = 0); }} \
 				   while(0)
-				/* Rather than copying the strings and dealing with allocation
-				 failures, we'll just "move" them into the other struct (this
-				 should be ok since this file uses PR_FREEIF when discarding
-				 the mime_attachment objects.) */
-
-        // RICHIE - not sure on this...but we'll try
+				// Rather than copying the strings and dealing with allocation
+				// failures, we'll just "move" them into the other struct (this
+				// should be ok since this file uses PR_FREEIF when discarding
+				// the mime_attachment objects.) 
+        //
 				attachments[i].orig_url = ma->mURL;
 				attachments[i].file_spec = ma->mFileSpec;
 
@@ -261,7 +437,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 			m_attachments_done_callback(nsnull, nsnull, attachments);
 			PR_FREEIF(attachments);
 			m_attachments_done_callback = nsnull;
-			// SHERRY: for now, we are going to let the destructor do the Clear();
 		}
 		goto FAIL;
 	}
@@ -478,7 +653,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 											  m_plaintext->m_real_name, 0,
 											  m_digest_p,
 											  m_plaintext,
-											  mCompFields->GetCharacterSet());
+											  mCompFields->GetCharacterSet(),
+                        nsnull);
 		if (!hdrs)
 			goto FAILMEM;
 		status = plainpart->SetOtherHeaders(hdrs);
@@ -550,7 +726,12 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		toppart = new nsMsgSendPart(this);
 		if (!toppart)
 			goto FAILMEM;
-		status = toppart->SetType(m_digest_p ? MULTIPART_DIGEST : MULTIPART_MIXED);
+
+    if (mMultipartRelatedAttachmentCount > 0)
+  		status = toppart->SetType(MULTIPART_RELATED);
+    else
+	  	status = toppart->SetType(m_digest_p ? MULTIPART_DIGEST : MULTIPART_MIXED);
+
 		if (status < 0)
 			goto FAIL;
 		status = toppart->AddChild(maincontainer);
@@ -623,7 +804,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 #endif
 		}
 
-	// ### mwelch
 	// If we converted HTML into plaintext, the plaintext part
 	// already has its type/encoding headers set. So, in the specific
 	// case where such a plaintext part is the main message body
@@ -641,7 +821,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 											   0, 0, 0, 0, 0,
 											   m_digest_p,
 											   nsnull, /* no "ma"! */
-											   mCompFields->GetCharacterSet());
+											   mCompFields->GetCharacterSet(),
+                         nsnull);
 		if (!hdrs)
 			goto FAILMEM;
 		status = mainbody->AppendOtherHeaders(hdrs);
@@ -706,7 +887,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 												   turl,
 												   m_digest_p,
 												   ma,
-												   mCompFields->GetCharacterSet());
+												   mCompFields->GetCharacterSet(),
+                           ma->m_content_id);
 			if (!hdrs)
 				goto FAILMEM;
 
@@ -772,8 +954,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
       NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     else
       NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, mReturnFileSpec);
-
-		// SHERRY: for now, we are going to let the destructor do the Clear();
 	}
 	else 
   {
@@ -856,14 +1036,286 @@ mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure)
   return mime_write_message_body (state, (char *) buf, size);
 }
 
+PRUint32
+nsMsgComposeAndSend::GetMultipartRelatedCount(void)
+{
+  nsresult                  rv = NS_OK;
+  nsISupportsArray          *aNodeList = nsnull;
+  PRUint32                  count;
+
+  if (!mEditor)
+    return 0;
+
+  rv = mEditor->GetEmbeddedObjects(&aNodeList);
+  if ((NS_FAILED(rv) || (!aNodeList)))
+    return 0;
+
+  if (NS_SUCCEEDED(aNodeList->Count(&count)))
+    return count;
+  else
+    return 0;
+}
+
+nsresult
+nsMsgComposeAndSend::GetBodyFromEditor()
+{
+  //
+  // Now we have to fix up and get the HTML from the editor. After we
+  // get the HTML data, we need to store it in the m_attachment_1_body
+  // member variable after doing the necessary charset conversion.
+  //
+  char          *attachment1_body = nsnull;
+  char          *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
+  PRInt32       attachment1_body_length = 0;
+
+  // 
+  // Query the editor, get the body of HTML!
+  //
+  nsString  format(TEXT_HTML);
+  PRUint32  flags = 0;
+  PRUnichar *bodyText = NULL;
+
+  // Ok, get the body...the DOM should have been whacked with 
+  // Content ID's already
+  mEditor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
+
+  //
+  // If we really didn't get a body, just return NS_OK
+  //
+  if ((!bodyText) || (!*bodyText))
+    return NS_OK;
+		
+	// Convert body to mail charset
+	char      *outCString;
+  nsString  aCharset = mCompFields->GetCharacterSet();
+  if (aCharset != "")
+  {
+    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, bodyText, &outCString))) 
+    {
+      PR_FREEIF(attachment1_body);
+      attachment1_body = outCString;
+    }
+  }
+  else
+  {
+    attachment1_body = (char *)bodyText;
+  }
+
+  attachment1_body_length = PL_strlen(attachment1_body);
+  return SnarfAndCopyBody(attachment1_body, attachment1_body_length, attachment1_type);
+}
+
+//
+// This is the routine that does the magic of generating the body and the
+// attachments for the multipart/related email message.
+//
+nsresult
+nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aNewsCount)
+{
+PRUint32                  multipartCount = GetMultipartRelatedCount();
+nsresult                  rv = NS_OK;
+nsISupportsArray          *aNodeList = nsnull;
+PRUint32                  i; 
+
+  // Sanity check to see if we should be here or not...if not, just return
+  if (!mEditor)
+    return NS_OK;
+
+  // First, check to see if the multipartCount still matches
+  // what we got before. It always should, BUT If it doesn't, 
+  // we will have memory problems and we should just return 
+  // with an error.
+  if (multipartCount != mMultipartRelatedAttachmentCount)
+    return MK_MIME_MPART_ATTACHMENT_ERROR;
+
+  rv = mEditor->GetEmbeddedObjects(&aNodeList);
+  if ((NS_FAILED(rv) || (!aNodeList)))
+    return MK_MIME_MPART_ATTACHMENT_ERROR;
+ 
+  nsMsgAttachmentData   attachment;
+  PRInt32               locCount = -1;
+
+  for (i = mPreloadedAttachmentCount; i < (mPreloadedAttachmentCount + multipartCount); i++)
+  {
+    // Reset this structure to null!
+    nsCRT::memset(&attachment, 0, sizeof(nsMsgAttachmentData));
+
+    locCount++;
+    m_attachments[i].mDeleteFile = PR_TRUE;
+    m_attachments[i].m_done = PR_FALSE;
+		m_attachments[i].m_mime_delivery_state = this;
+
+    // Ok, now we need to get the element in the array and do the magic
+    // to process this element.
+    //
+    nsCOMPtr<nsIDOMNode>    node;
+    nsISupports             *isupp = aNodeList->ElementAt(locCount);
+
+    if (!isupp)
+      return MK_MIME_MPART_ATTACHMENT_ERROR;
+
+    node = do_QueryInterface(isupp);
+    NS_IF_RELEASE(isupp);             // make sure we cleanup
+    if (!node)
+      return MK_MIME_MPART_ATTACHMENT_ERROR;
+
+    // Now, we know the types of objects this node can be, so we will do
+    // our query interface here and see what we come up with 
+    nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(node));
+    nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(node));
+    nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(node));
+    
+    // First, try to see if this is an embedded image 
+    if (image)
+    {
+      nsString    tUrl;
+      nsString    tName;
+      nsString    tDesc;
+
+      // Create the URI
+      if (NS_FAILED(image->GetSrc(tUrl)))
+        return MK_MIME_MPART_ATTACHMENT_ERROR;
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, tUrl)))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      NS_ADDREF(attachment.url);
+
+      if (NS_FAILED(image->GetName(tName)))
+        return NS_ERROR_OUT_OF_MEMORY;
+      attachment.real_name = tName.ToNewCString();
+
+      if (NS_FAILED(image->GetLongDesc(tDesc)))
+        return NS_ERROR_OUT_OF_MEMORY;
+      attachment.description = tDesc.ToNewCString();
+
+    }
+    else if (link)        // Is this a link?
+    {
+      nsString    tUrl;
+
+      // Create the URI
+      if (NS_FAILED(link->GetHref(tUrl)))
+        return MK_MIME_MPART_ATTACHMENT_ERROR;
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, tUrl)))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      NS_ADDREF(attachment.url);
+    }
+    else if (anchor)
+    {
+      nsString    tUrl;
+      nsString    tName;
+
+      // Create the URI
+      if (NS_FAILED(anchor->GetHref(tUrl)))
+        return MK_MIME_MPART_ATTACHMENT_ERROR;
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, tUrl)))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      NS_ADDREF(attachment.url);
+
+      if (NS_FAILED(anchor->GetName(tName)))
+        return NS_ERROR_OUT_OF_MEMORY;
+      attachment.real_name = tName.ToNewCString();
+    }
+    else
+    {
+      // If we get here, we got something we didn't expect!
+      return MK_MIME_MPART_ATTACHMENT_ERROR;
+    }
+
+    // 
+    // Now we have to get all of the interesting information from
+    // the nsIDOMNode we have in hand...
+
+    if (m_attachments[i].mURL)
+      NS_RELEASE(m_attachments[i].mURL);
+    m_attachments[i].mURL = attachment.url;
+
+		PR_FREEIF(m_attachments[i].m_override_type);
+		m_attachments[i].m_override_type = PL_strdup (attachment.real_type);
+    PR_FREEIF(m_attachments[i].m_override_encoding);
+		m_attachments[i].m_override_encoding = PL_strdup (attachment.real_encoding);
+		PR_FREEIF(m_attachments[i].m_desired_type);
+		m_attachments[i].m_desired_type = PL_strdup (attachment.desired_type);
+		PR_FREEIF(m_attachments[i].m_description);
+		m_attachments[i].m_description = PL_strdup (attachment.description);
+		PR_FREEIF(m_attachments[i].m_real_name);
+		m_attachments[i].m_real_name = PL_strdup (attachment.real_name);
+		PR_FREEIF(m_attachments[i].m_x_mac_type);
+		m_attachments[i].m_x_mac_type = PL_strdup (attachment.x_mac_type);
+		PR_FREEIF(m_attachments[i].m_x_mac_creator);
+		m_attachments[i].m_x_mac_creator = PL_strdup (attachment.x_mac_creator);
+
+    PR_FREEIF(m_attachments[i].m_charset);
+		m_attachments[i].m_charset = PL_strdup (mCompFields->GetCharacterSet());
+		PR_FREEIF(m_attachments[i].m_encoding);
+		m_attachments[i].m_encoding = PL_strdup ("7bit");
+
+		msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
+
+    //
+    // Next, generate a content id for use with this part
+    //    
+    PRUnichar   *myEmail = nsnull;
+    
+    if (NS_FAILED(mCompFields->GetFrom(&myEmail)))
+      m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, nsnull);  
+    else
+    {
+      nsString2 tEmail(myEmail);
+      m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, tEmail.GetBuffer());  
+    }
+
+    if (!m_attachments[i].m_content_id)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    //
+		// Start counting the attachments which are going to come from mail folders
+		// and from NNTP servers.
+    //
+    const char    *turl;
+    m_attachments[i].mURL->GetSpec(&turl);
+		if (PL_strncasecmp(turl, "mailbox:",8) || PL_strncasecmp(turl, "IMAP:",5))
+			(*aMailboxCount)++;
+		else if (PL_strncasecmp(turl, "news:",5) || PL_strncasecmp(turl, "snews:",6))
+				(*aNewsCount)++;
+
+    // Ok, cleanup the temp structure...
+    PR_FREEIF(attachment.real_name);
+    PR_FREEIF(attachment.description);
+    PR_FREEIF(attachment.real_type);
+		PR_FREEIF(attachment.real_encoding);
+    PR_FREEIF(attachment.desired_type);
+		PR_FREEIF(attachment.x_mac_type);
+		PR_FREEIF(attachment.x_mac_creator); 
+
+    //
+    // Ok, while we are here, we should whack the DOM with the generated 
+    // Content-ID for this object. This will be necessary for generating
+    // the HTML we need.
+    //
+		if (m_attachments[i].m_content_id)  
+    {
+      nsString2   newSpec("cid:");
+      
+      newSpec.Append(m_attachments[i].m_content_id);
+      if (anchor) 
+        anchor->SetHref(newSpec);
+      else if (link)
+        anchor->SetHref(newSpec);
+      else if (image)
+        image->SetSrc(newSpec);
+    }
+  }
+
+  return GetBodyFromEditor();
+}
+
 int 
 nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 						                         const nsMsgAttachedFile *preloaded_attachments)
-{  // RICHIE - CLEANUP!!!!
-  MWContext *x = NULL;
-  INTL_CharSetInfo c;
-  c = LO_GetDocumentCharacterSetInfo(x);
-
+{ 
   //
   // First, count the total number of attachments we are going to process
   // for this operation!
@@ -877,12 +1329,22 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 			mPreloadedAttachmentCount++;
   }
 
-  mRemoteAttachmentCount = 0;
-  // Count the attachments we have to go retrieve!
+  // Count the attachments we have to go retrieve! Keep in mind, that these
+  // will be APPENDED to the current list of URL's that we have gathered if
+  // this is a multpart/related send operation
+  if (mEditor)
+    mRemoteAttachmentCount = mMultipartRelatedAttachmentCount = GetMultipartRelatedCount();
+  else
+    mRemoteAttachmentCount = mMultipartRelatedAttachmentCount = 0;  // The constructor took care of this, but just to be sure
+
+  PRInt32     tCount = 0;
   if (attachments && attachments[0].url) 
   {
-		while (attachments[mRemoteAttachmentCount].url)
+		while (attachments[tCount].url)
+    {
 			mRemoteAttachmentCount++;
+      tCount++;
+    }
   }
 
   m_attachment_count = mPreloadedAttachmentCount + mRemoteAttachmentCount;
@@ -892,7 +1354,9 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   if (! m_attachments)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRInt32     i;    // counter for location in attachment array...
+  // clear this new memory...
+  nsCRT::memset(m_attachments, 0, (sizeof(nsMsgAttachmentHandler) * m_attachment_count)); 
+  PRUint32     i;    // counter for location in attachment array...
 
   // Now handle the preloaded attachments...
   if (preloaded_attachments && preloaded_attachments[0].orig_url) 
@@ -957,15 +1421,29 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 		}
 	}
 
+  // First, handle the multipart related attachments if any...
   //
-  // Now deal remote attachments (url's and such..)
+  PRInt32     mailbox_count = 0, news_count = 0;
+
+  if ((mEditor) && (mMultipartRelatedAttachmentCount > 0))
+  {
+    nsresult rv = ProcessMultipartRelated(&mailbox_count, &news_count);
+    if (NS_FAILED(rv))
+    {
+      // The destructor will take care of the m_attachment array
+      return rv;
+    }
+  }
+
+  //
+  // Now deal remote attachments and attach multipart/related attachments (url's and such..)
+  // first!
   //
   if (attachments && attachments[0].url) 
   {
-		int         mailbox_count = 0, news_count = 0;
     PRInt32     locCount = -1;
 
-		for (i = mPreloadedAttachmentCount; i < m_attachment_count; i++) 
+    for (i = (mPreloadedAttachmentCount + mMultipartRelatedAttachmentCount); i < m_attachment_count; i++) 
     {
       locCount++;
       m_attachments[i].mDeleteFile = PR_TRUE;
@@ -1013,36 +1491,40 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
 			msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
 		}
+  }
 
-		// If there is more than one mailbox URL, or more than one NNTP url,
-		// do the load in serial rather than parallel, for efficiency.
-		if (mailbox_count > 1 || news_count > 1)
-			m_be_synchronous_p = PR_TRUE;
-
-		m_attachment_pending_count = m_attachment_count;
-
-		// Start the URL attachments loading (eventually, an exit routine will
-		// call the done_callback).
+  if ( (attachments && attachments[0].url) || 
+       (mMultipartRelatedAttachmentCount > 0) )
+  {
+	  // If there is more than one mailbox URL, or more than one NNTP url,
+	  // do the load in serial rather than parallel, for efficiency.
+	  if (mailbox_count > 1 || news_count > 1)
+      m_be_synchronous_p = PR_TRUE;
   
-		for (i = 0; i < m_attachment_count; i++) 
+    m_attachment_pending_count = m_attachment_count;
+  
+    // Start the URL attachments loading (eventually, an exit routine will
+    // call the done_callback).
+  
+    for (i = 0; i < m_attachment_count; i++) 
     {
       if (m_attachments[i].m_done)
       {
         m_attachment_pending_count--;
         continue;
       }
-
+    
       //
       // This only returns a failure code if NET_GetURL was not called
       // (and thus no exit routine was or will be called.) 
       //
-      int status = m_attachments [i].SnarfAttachment(mCompFields);
+      int status = m_attachments[i].SnarfAttachment(mCompFields);
       if (status < 0)
         return status;
       if (m_be_synchronous_p)
         break;
-		}
-	}
+    }
+  }
 
   // If no attachments - finish now (this will call the done_callback).
 	if (m_attachment_pending_count <= 0)
@@ -1199,6 +1681,46 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 }
 
 nsresult
+nsMsgComposeAndSend::SnarfAndCopyBody(const char  *attachment1_body,
+						                          PRUint32    attachment1_body_length,
+                                      const char  *attachment1_type)
+{
+  //
+  // If we are here, then just process the body from what was
+  // passed in the attachment_1_body field.
+  //
+  // Strip whitespace from beginning and end of body.
+  if (attachment1_body)
+  {
+		// strip out whitespaces from the end of body ONLY.
+		while (attachment1_body_length > 0 &&
+      IS_SPACE (attachment1_body [attachment1_body_length - 1]))
+    {
+      attachment1_body_length--;
+    }
+    if (attachment1_body_length <= 0)
+      attachment1_body = 0;
+    
+    if (attachment1_body)
+    {
+      char *newb = (char *) PR_Malloc (attachment1_body_length + 1);
+      if (! newb)
+        return NS_ERROR_OUT_OF_MEMORY;
+      nsCRT::memcpy (newb, attachment1_body, attachment1_body_length);
+      newb [attachment1_body_length] = 0;
+      m_attachment1_body = newb;
+      m_attachment1_body_length = attachment1_body_length;
+    }
+  }
+  
+  PR_FREEIF(m_attachment1_type);
+  m_attachment1_type = PL_strdup (attachment1_type);
+  PR_FREEIF(m_attachment1_encoding);
+  m_attachment1_encoding = PL_strdup ("8bit");
+  return NS_OK;
+}
+
+nsresult
 nsMsgComposeAndSend::Init(
               nsIMsgIdentity  *aUserIdentity,
 						  nsMsgCompFields *fields,
@@ -1261,6 +1783,8 @@ nsMsgComposeAndSend::Init(
 	if (m_related_part)
 		m_related_part->SetMimeDeliveryState(this);
 
+  m_digest_p = digest_p;
+
   //
   // Needed for mime encoding!
   //
@@ -1274,36 +1798,25 @@ nsMsgComposeAndSend::Init(
   nsMsgMIMESetConformToStandard(strictly_mime);
 	mime_use_quoted_printable_p = strictly_mime;
 
-	/* Strip whitespace from beginning and end of body. */
-	if (attachment1_body)
-	{
-		/* BUG 115202 -- we used to strip out whitespaces from
-		   beginning of body. We are not doing that anymore. */
-		while (attachment1_body_length > 0 &&
-			IS_SPACE (attachment1_body [attachment1_body_length - 1]))
-		{
-			attachment1_body_length--;
-		}
-		if (attachment1_body_length <= 0)
-			attachment1_body = 0;
+  // Ok, now watch me pull a rabbit out of my hat....what we need
+  // to do here is figure out what the body will be. If this is a
+  // MHTML request, then we need to do some processing of the document
+  // from and figure out what we need to package along with this message
+  // to send. See ProcessMultipartRelated() for further details.
+  //
 
-		if (attachment1_body)
-		{
-			char *newb = (char *) PR_Malloc (attachment1_body_length + 1);
-			if (! newb)
-				return NS_ERROR_OUT_OF_MEMORY;
-      nsCRT::memcpy (newb, attachment1_body, attachment1_body_length);
-			newb [attachment1_body_length] = 0;
-			m_attachment1_body = newb;
-			m_attachment1_body_length = attachment1_body_length;
-		}
-	}
-
-	PR_FREEIF(m_attachment1_type);
-	m_attachment1_type = PL_strdup (attachment1_type);
-	PR_FREEIF(m_attachment1_encoding);
-	m_attachment1_encoding = PL_strdup ("8bit");
-  m_digest_p = digest_p;
+  //
+  // If we don't have an editor, then we won't be doing multipart related processing 
+  // for the body, so make a copy of the one passed in.
+  //
+  if (!mEditor)
+  {
+    SnarfAndCopyBody(attachment1_body, attachment1_body_length, attachment1_type);
+  }
+  else if (GetMultipartRelatedCount() == 0) // Only do this if there are not embedded objects
+  {
+    GetBodyFromEditor();
+  }
 
 	return HackAttachments(attachments, preloaded_attachments);
 }
@@ -1413,7 +1926,6 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)
   {
-  	AddRef();
     mSendListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
     if (!mSendListener)
     {
@@ -1422,11 +1934,11 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // RICHIE:
-    // Since we are in the same thread, we are going to use the callback method
-    // mSendListener->SetMsgComposeAndSendObject(this);
-
+    // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
+    // using callbacks for notification
+    // 
     nsFilePath    filePath(*mTempFileSpec);
+  	AddRef();
     rv = smtpService->SendMailMessage(filePath, buf, mSendListener, nsnull);
   }
   
@@ -1445,7 +1957,6 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {	
-  	AddRef();
     mSendListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
     if (!mSendListener)
     {
@@ -1454,29 +1965,16 @@ nsMsgComposeAndSend::DeliverFileAsNews()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // RICHIE:
-    // Since we are in the same thread, we are going to use the callback method
-    // mSendListener->SetMsgComposeAndSendObject(this);
-    
+    // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
+    // using callbacks for notification
+    // 
     nsFilePath    filePath (*mTempFileSpec);
-
+  	AddRef();
     rv = nntpService->PostMessage(filePath, mCompFields->GetNewsgroups(), mSendListener, nsnull);
   }
 
   return rv;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-// RICHIE CLASS INIT STUFF
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-/* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, nsCOMTypeInfo<nsIMsgSend>::GetIID());
 
 void 
 nsMsgComposeAndSend::Fail(nsresult failure_code, char *error_msg)
@@ -1496,8 +1994,6 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, char *error_msg)
 	  m_attachments_done_callback (failure_code, error_msg, nsnull);
     m_attachments_done_callback = nsnull;
 	}
-  
-  // SHERRY: for now, we are going to let the destructor do the Clear();
 }
 
 void
@@ -1600,7 +2096,6 @@ nsMsgComposeAndSend::DoFcc()
 #endif
 
     NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, nsnull);
-    // SHERRY: for now, we are going to let the destructor do the Clear();
     return NS_OK;
   }
 
@@ -1627,179 +2122,6 @@ nsMsgComposeAndSend::DoFcc()
   }
 
   return rv;
-}
-
-void 
-nsMsgComposeAndSend::Clear()
-{
-#ifdef NS_DEBUG
-  printf("\nTHE CLEANUP ROUTINE FOR nsMsgComposeAndSend() WAS CALLED\n");
-#endif
-	PR_FREEIF (m_attachment1_type);
-	PR_FREEIF (m_attachment1_encoding);
-	PR_FREEIF (m_attachment1_body);
-
-	if (m_attachment1_encoder_data) 
-  {
-		MIME_EncoderDestroy(m_attachment1_encoder_data, PR_TRUE);
-		m_attachment1_encoder_data = 0;
-	}
-
-	if (m_plaintext) 
-  {
-		if (m_plaintext->mOutFile)
-			m_plaintext->mOutFile->close();
-
-		if (m_plaintext->mFileSpec)
-		  delete m_plaintext->mFileSpec;
-		delete m_plaintext;
-		m_plaintext = nsnull;
-	}
-
-	if (mHTMLFileSpec) 
-  {
-		mHTMLFileSpec->Delete(PR_FALSE);
-		delete mHTMLFileSpec;
-		mHTMLFileSpec= nsnull;
-	}
-
-	if (mOutputFile) 
-  {
-		delete mOutputFile;
-		mOutputFile = 0;
-	}
-
-  if (mCopyFileSpec)
-  {
-    nsFileSpec aFileSpec;
-    mCopyFileSpec->GetFileSpec(&aFileSpec);
-    if (aFileSpec.Valid())
-      aFileSpec.Delete(PR_FALSE);
-
-    // jt -- *don't* use delete someone may still holding the nsIFileSpec
-    // pointer
-    NS_IF_RELEASE(mCopyFileSpec);
-  }
-
-	if (mTempFileSpec) 
-  {
-    if (mReturnFileSpec == nsnull)
-    {
-      mTempFileSpec->Delete(PR_FALSE);
-      delete mTempFileSpec;
-	    mTempFileSpec = nsnull;
-    }
-	}
-
-	HJ82388
-
-	if (m_attachments)
-	{
-		int i;
-		for (i = 0; i < m_attachment_count; i++) 
-    {
-			if (m_attachments [i].m_encoder_data) 
-      {
-				MIME_EncoderDestroy(m_attachments[i].m_encoder_data, PR_TRUE);
-				m_attachments [i].m_encoder_data = 0;
-			}
-
-			if (m_attachments[i].mURL)
-      {
-        NS_RELEASE(m_attachments[i].mURL);
-        m_attachments[i].mURL = nsnull;
-      }
-
-			PR_FREEIF (m_attachments [i].m_type);
-			PR_FREEIF (m_attachments [i].m_override_type);
-			PR_FREEIF (m_attachments [i].m_override_encoding);
-			PR_FREEIF (m_attachments [i].m_desired_type);
-			PR_FREEIF (m_attachments [i].m_description);
-			PR_FREEIF (m_attachments [i].m_x_mac_type);
-			PR_FREEIF (m_attachments [i].m_x_mac_creator);
-			PR_FREEIF (m_attachments [i].m_real_name);
-			PR_FREEIF (m_attachments [i].m_encoding);
-			if (m_attachments [i].mOutFile)
-          m_attachments[i].mOutFile->close();
-			if (m_attachments[i].mFileSpec) 
-      {
-        // Only Delete the file if this variable is set!
-        if (m_attachments[i].mDeleteFile)
-  				m_attachments[i].mFileSpec->Delete(PR_FALSE);
-
-				delete m_attachments[i].mFileSpec;
-        m_attachments[i].mFileSpec = nsnull;
-			}
-
-#ifdef XP_MAC
-		  //
-      // remove the appledoubled intermediate file after we done all.
-		  //
-			if (m_attachments[i].mAppleFileSpec) 
-      {
-				m_attachments[i].mAppleFileSpec->Delete(PR_FALSE);
-				delete m_attachments[i].mAppleFileSpec;
-			}
-#endif /* XP_MAC */
-		}
-
-		delete[] m_attachments;
-		m_attachment_count = m_attachment_pending_count = 0;
-		m_attachments = 0;
-	}
-
-  // Cleanup listener array...
-  DeleteListeners();
-}
-
-nsMsgComposeAndSend::nsMsgComposeAndSend() : 
-    m_messageKey(0xffffffff)
-{
-	mCompFields = nsnull;			/* Where to send the message once it's done */
-  mListenerArray = nsnull;
-  mListenerArrayCount = 0;
-  mSendListener = nsnull;
-
-	mOutputFile = nsnull;
-
-	m_dont_deliver_p = PR_FALSE;
-	m_deliver_mode = nsMsgDeliverNow;
-
-	m_attachments_only_p = PR_FALSE;
-	m_pre_snarfed_attachments_p = PR_FALSE;
-	m_digest_p = PR_FALSE;
-	m_be_synchronous_p = PR_FALSE;
-	m_crypto_closure = nsnull;
-	m_attachment1_type = 0;
-	m_attachment1_encoding = 0;
-	m_attachment1_encoder_data = nsnull;
-	m_attachment1_body = 0;
-	m_attachment1_body_length = 0;
-	m_attachment_count = 0;
-	m_attachment_pending_count = 0;
-	m_attachments = nsnull;
-	m_status = 0;
-	m_attachments_done_callback = nsnull;
-	m_plaintext = nsnull;
-	m_related_part = nsnull;
-	m_pane = nsnull;		/* Pane to use when loading the URLs */
-
-  // These are for temp file creation and return
-  mReturnFileSpec = nsnull;
-  mTempFileSpec = nsnull;
-	mHTMLFileSpec = nsnull;
-  mCopyFileSpec = nsnull;
-  mCopyObj = nsnull;
-
-  mPreloadedAttachmentCount = 0;
-  mRemoteAttachmentCount = 0;
-
-	NS_INIT_REFCNT();
-}
-
-nsMsgComposeAndSend::~nsMsgComposeAndSend()
-{
-	Clear();
 }
 
 nsresult
@@ -2061,6 +2383,7 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
  */
 nsresult 
 nsMsgComposeAndSend::CreateAndSendMessage(
+              nsIEditorShell                    *aEditor,
               nsIMsgIdentity                    *aUserIdentity,
  						  nsIMsgCompFields                  *fields,
 						  PRBool                            digest_p,
@@ -2070,8 +2393,8 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  const char                        *attachment1_type,
 						  const char                        *attachment1_body,
 						  PRUint32                          attachment1_body_length,
-						  const nsMsgAttachmentData  *attachments,
-						  const nsMsgAttachedFile    *preloaded_attachments,
+						  const nsMsgAttachmentData         *attachments,
+						  const nsMsgAttachedFile           *preloaded_attachments,
 						  void                              *relatedPart,
               nsIMsgSendListener                **aListenerArray)
 {
@@ -2081,6 +2404,10 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 
   if (!attachment1_body || !*attachment1_body)
 		attachment1_type = attachment1_body = 0;
+
+  // Set the editor for MHTML operations if necessary
+  if (aEditor)
+    mEditor = aEditor;
 
   rv = Init(aUserIdentity, (nsMsgCompFields *)fields, nsnull,
 					digest_p, dont_deliver_p, mode, msgToReplace,
@@ -2226,6 +2553,7 @@ nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndenti
 
   bodyLen = PL_strlen(msgBody);
   rv = CreateAndSendMessage(
+              nsnull,    // no MHTML in this case...
               aUserIndentity,
  						  fields, //nsIMsgCompFields                  *fields,
 						  PR_FALSE, //PRBool                            digest_p,
@@ -2437,7 +2765,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	// one in so that it's marked as read already.
   //
   //
-  // RICHIE - need to add these lines for POP3 ONLY! IMAP servers will handle
+  // Need to add these lines for POP3 ONLY! IMAP servers will handle
   // this status information for summary file regeneration for us. 
   if ( (mode == nsMsgQueueForLater  || mode == nsMsgSaveAsDraft ||
 	      mode == nsMsgSaveAsTemplate || mode == nsMsgDeliverNow) &&

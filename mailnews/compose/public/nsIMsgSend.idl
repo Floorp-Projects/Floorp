@@ -31,6 +31,7 @@
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgSendListener.idl"
+#include "nsIEditorShell.idl"
 
 %{C++
 #include "nsIMsgHdr.h"
@@ -144,7 +145,16 @@ typedef struct nsMsgAttachedFile
 [scriptable, uuid(9E9BD970-C5D6-11d2-8297-000000000000)]
 interface nsIMsgSend : nsISupports 
 {
-  void CreateAndSendMessage(
+  //
+  // This is the primary interface for creating and sending RFC822 messages
+  // in the new architecture. Currently, this method supports many arguments
+  // that change the behavior of the operation. This will change in time to 
+  // be separate calls that will be more singluar in nature.
+  //
+  // NOTE: when aEditor is non-null, a multipart related MHTML message will 
+  // be created
+  //
+  void CreateAndSendMessage(in nsIEditorShell               aEditor,      
                             in nsIMsgIdentity               aUserIdentity,
    						              in nsIMsgCompFields             fields,
   						              in PRBool                       digest_p,

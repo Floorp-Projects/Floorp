@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "nsMsgCompose.h"
 #include "nsMsgCompPrefs.h"
 #include "nsIScriptGlobalObject.h"
@@ -59,6 +58,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMsgCompose::nsMsgCompose()
 {
+  mMsgSend = nsnull;
 	m_sendListener = nsnull;
 	m_window = nsnull;
 	m_webShell = nsnull;
@@ -272,104 +272,120 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
                                nsIMsgIdentity *identity,
                                const PRUnichar *callback)
 {
-	nsresult rv = NS_OK;
-	
-	if (m_compFields && identity) 
-	{
-		// Pref values are supposed to be stored as UTF-8, so no conversion
-		nsXPIDLCString email;
-		nsXPIDLCString replyTo;
-		nsXPIDLCString organization;
-
-		identity->GetEmail(getter_Copies(email));
-		identity->GetReplyTo(getter_Copies(replyTo));
-		identity->GetOrganization(getter_Copies(organization));
+  nsresult rv = NS_OK;
+  
+  if (m_compFields && identity) 
+  {
+    // Pref values are supposed to be stored as UTF-8, so no conversion
+    nsXPIDLCString email;
+    nsXPIDLCString replyTo;
+    nsXPIDLCString organization;
     
-		m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
-		m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
-		m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization));
-
-#ifdef DEBUG
-		printf("----------------------------\n");
-		printf("--  Sending Mail Message  --\n");
-		printf("----------------------------\n");
-		printf("from: %s\n", m_compFields->GetFrom());
-		printf("To: %s  Cc: %s  Bcc: %s\n", m_compFields->GetTo(), m_compFields->GetCc(), m_compFields->GetBcc());
-		printf("Newsgroups: %s\n", m_compFields->GetNewsgroups());
-		printf("Subject: %s  \nMsg: %s\n", m_compFields->GetSubject(), m_compFields->GetBody());
-		printf("----------------------------\n");
+    identity->GetEmail(getter_Copies(email));
+    identity->GetReplyTo(getter_Copies(replyTo));
+    identity->GetOrganization(getter_Copies(organization));
+    
+    m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
+    m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
+    m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization));
+    
+#ifdef DEBUG_ducarroz
+    printf("----------------------------\n");
+    printf("--  Sending Mail Message  --\n");
+    printf("----------------------------\n");
+    printf("from: %s\n", m_compFields->GetFrom());
+    printf("To: %s  Cc: %s  Bcc: %s\n", m_compFields->GetTo(), m_compFields->GetCc(), m_compFields->GetBcc());
+    printf("Newsgroups: %s\n", m_compFields->GetNewsgroups());
+    printf("Subject: %s  \nMsg: %s\n", m_compFields->GetSubject(), m_compFields->GetBody());
+    printf("----------------------------\n");
 #endif //DEBUG
 
-		nsCOMPtr<nsIMsgSend>msgSend = do_QueryInterface(new nsMsgComposeAndSend);
-		if (msgSend)
-	    {
-	        const char *bodyString = m_compFields->GetBody();
-	        PRInt32 bodyLength = PL_strlen(bodyString);
+    nsIMsgSend *tMsgComp = new nsMsgComposeAndSend();
+    if (!tMsgComp)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-
-			// Create the listener for the send operation...
-			m_sendListener = new nsMsgComposeSendListener();
-			if (!m_sendListener)
-				return NS_ERROR_FAILURE;
+    mMsgSend = do_QueryInterface( tMsgComp );
+    if (mMsgSend)
+    {
+      const char *bodyString = m_compFields->GetBody();
+      PRInt32 bodyLength = PL_strlen(bodyString);
+      
+      
+      // Create the listener for the send operation...
+      m_sendListener = new nsMsgComposeSendListener();
+      if (!m_sendListener)
+        return NS_ERROR_FAILURE;
       
       NS_ADDREF(m_sendListener);
-			// set this object for use on completion...
-			m_sendListener->SetComposeObj(this);
-			m_sendListener->SetDeliverMode(deliverMode);
-			nsIMsgSendListener **tArray = m_sendListener->CreateListenerArray();
-			if (!tArray)
-			{
+      // set this object for use on completion...
+      m_sendListener->SetComposeObj(this);
+      m_sendListener->SetDeliverMode(deliverMode);
+      nsIMsgSendListener **tArray = m_sendListener->CreateListenerArray();
+      if (!tArray)
+      {
 #ifdef DEBUG
-				printf("Error creating listener array.\n");
+        printf("Error creating listener array.\n");
 #endif
-				return NS_ERROR_FAILURE;
-			}
-
-
-	        rv = msgSend->CreateAndSendMessage(
-					          identity,
-					          m_compFields, 
-					          PR_FALSE,         					// PRBool                            digest_p,
-					          PR_FALSE,         					// PRBool                            dont_deliver_p,
-					          (nsMsgDeliverMode)deliverMode,   		// nsMsgDeliverMode                  mode,
-					          nsnull,                     			// nsIMessage *msgToReplace, 
-					          m_composeHTML?TEXT_HTML:TEXT_PLAIN,	// const char                        *attachment1_type,
-					          bodyString,               			// const char                        *attachment1_body,
-					          bodyLength,               			// PRUint32                          attachment1_body_length,
-					          nsnull,             					// const struct nsMsgAttachmentData  *attachments,
-					          nsnull,             					// const struct nsMsgAttachedFile    *preloaded_attachments,
-					          nsnull,             					// nsMsgSendPart                     *relatedPart,
-					          tArray);                   			// listener array
-
-			delete tArray;
-	    }
-	    else
+        return NS_ERROR_FAILURE;
+      }
+      
+      // If we are composing HTML, then this should be sent as
+      // multipart/related which means we pass the editor into the
+      // backend...if not, just pass nsnull
+      //
+      nsIEditorShell  *tEditor = nsnull;
+      
+      if (m_composeHTML)
+      {
+        tEditor = m_editor;
+      }
+      else
+        tEditor = nsnull;      
+      rv = mMsgSend->CreateAndSendMessage(
+                    tEditor,
+                    identity,
+                    m_compFields, 
+                    PR_FALSE,         					// PRBool                            digest_p,
+                    PR_FALSE,         					// PRBool                            dont_deliver_p,
+                    (nsMsgDeliverMode)deliverMode,   		// nsMsgDeliverMode                  mode,
+                    nsnull,                     			// nsIMessage *msgToReplace, 
+                    m_composeHTML?TEXT_HTML:TEXT_PLAIN,	// const char                        *attachment1_type,
+                    bodyString,               			// const char                        *attachment1_body,
+                    bodyLength,               			// PRUint32                          attachment1_body_length,
+                    nsnull,             					// const struct nsMsgAttachmentData  *attachments,
+                    nsnull,             					// const struct nsMsgAttachedFile    *preloaded_attachments,
+                    nsnull,             					// nsMsgSendPart                     *relatedPart,
+                    tArray);                   			// listener array
+      
+      delete tArray;
+    }
+    else
 	    	rv = NS_ERROR_FAILURE;
-	}
-	else
-		rv = NS_ERROR_NOT_INITIALIZED;
-
-	if (NS_SUCCEEDED(rv))
-	{
-/*TODO, don't close the window but just hide it, we will close it later when we receive a call back from the BE
-	if (nsnull != mScriptContext) {
+  }
+  else
+    rv = NS_ERROR_NOT_INITIALIZED;
+  
+  if (NS_SUCCEEDED(rv))
+  {
+  /*TODO, don't close the window but just hide it, we will close it later when we receive a call back from the BE
+  if (nsnull != mScriptContext) {
 		const char* url = "";
-		PRBool isUndefined = PR_FALSE;
-		nsString rVal;
-		
-		mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
-		CloseWindow();
-	}
-	else // If we don't have a JS callback, then close the window by default!
-*/
+    PRBool isUndefined = PR_FALSE;
+    nsString rVal;
+    
+      mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
+      CloseWindow();
+      }
+      else // If we don't have a JS callback, then close the window by default!
+    */
     // rhp:
     // We shouldn't close the window if we are just saving a draft or a template
     // so do this check
-		if ( (deliverMode != nsMsgSaveAsDraft) && (deliverMode != nsMsgSaveAsTemplate) )
-			ShowWindow(PR_FALSE);
-	}
+    if ( (deliverMode != nsMsgSaveAsDraft) && (deliverMode != nsMsgSaveAsTemplate) )
+      ShowWindow(PR_FALSE);
+  }
 		
-	return rv;
+  return rv;
 }
 
 nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
@@ -493,8 +509,8 @@ nsresult nsMsgCompose::CloseWindow()
 {
 	if (m_webShellWin)
 	{
-		m_editor = nsnull;	/* m_editor will be destroyed during the Close Window. Set it to null to
-							   be sure we wont use it anymore. */
+    m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to
+							                /* be sure we wont use it anymore. */
 		m_webShellWin->Close();
 		m_webShellWin = nsnull;
 	}
@@ -843,7 +859,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   {
     mQuotingToFollow = PR_FALSE;
   	printf("nsMsgCompose: using old quoting function!");
-	mQuotingToFollow = PR_FALSE;
+	  mQuotingToFollow = PR_FALSE;
     HackToGetBody(what);
     return NS_OK;
   }

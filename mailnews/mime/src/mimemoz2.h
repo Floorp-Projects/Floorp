@@ -34,9 +34,19 @@ extern "C" {
 #ifdef XP_UNIX
 #undef Bool
 #endif
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
   
 #include "net.h"
 #include "mimei.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include "nsIPref.h"
 
 #define     MIME_PREFS_FILE   "prefs50.js"

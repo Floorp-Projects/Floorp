@@ -661,7 +661,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 	  /* Find the next attachment which has not yet been loaded,
 		 if any, and start it going.
 	   */
-	  PRInt32 i;
+	  PRUint32 i;
 	  nsMsgAttachmentHandler *next = 0;
 	  for (i = 0; i < m_mime_delivery_state->m_attachment_count; i++)
     {

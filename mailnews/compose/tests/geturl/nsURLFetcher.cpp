@@ -104,7 +104,7 @@ nsURLFetcher::StillRunning(PRBool *running)
 nsresult
 nsURLFetcher::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
-#ifdef NS_DEBUG_richie
+#ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::GetBindInfo()\n");
 #endif
 
@@ -157,7 +157,7 @@ nsURLFetcher::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream,
 nsresult
 nsURLFetcher::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
-#ifdef NS_DEBUG_richie
+#ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStartRequest() for Content-Type: %s\n", aContentType);
 #endif
 
@@ -170,7 +170,7 @@ nsURLFetcher::OnStartRequest(nsIURI* aURL, const char *aContentType)
 nsresult
 nsURLFetcher::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
-#ifdef NS_DEBUG_richie
+#ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnProgress() - %d bytes\n", aProgress);
 #endif
 
@@ -183,7 +183,7 @@ nsURLFetcher::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax
 nsresult
 nsURLFetcher::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
-#ifdef NS_DEBUG_richie
+#ifdef NS_DEBUG_rhp
   nsString  tmp(aMsg);
   char      *msg = tmp.ToNewCString();
   printf("nsURLFetcher::OnStatus(): %s\n", msg);
@@ -207,7 +207,7 @@ nsURLFetcher::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 nsresult
 nsURLFetcher::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
-#ifdef NS_DEBUG_richie
+#ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStopRequest()\n");
 #endif
 

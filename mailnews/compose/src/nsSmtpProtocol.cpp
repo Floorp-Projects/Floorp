@@ -543,10 +543,12 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 					PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, s);
 				}
 			}
+#ifdef UNREADY_CODE
 			else if (MSG_SendingMDNInProgress(CE_URL_S->msg_pane)) 
 			{
 				PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, "");
 			}
+#endif
 			else 
 			{
 				PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, s);

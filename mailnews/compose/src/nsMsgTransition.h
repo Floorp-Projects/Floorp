@@ -47,13 +47,6 @@
 #define MK_ERROR_SENDING_DATA_COMMAND -232
 #define MK_ERROR_SENDING_MESSAGE	  -233
 #define MK_MIME_NO_RECIPIENTS		  -267
-
-class MSG_Pane
-{
-public:
-	void    *unused;
-};
-
-#define MIME_MakeFromField(a)  PL_strdup("testmsg@netscape.com")
+#define MK_MIME_MPART_ATTACHMENT_ERROR		  -268
 
 #endif /* _nsMsgTransition_h_ */

@@ -275,8 +275,6 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
   return charset; 
 } 
 
-
-
 // RICHIE - not sure about this one?? need to see what it did in the old
 // world.
 char *
@@ -284,20 +282,3 @@ nsMsgI18NGetAcceptLanguage(void)
 {
   return "en";
 }
-
-///////////////////////////////////////////////////////
-// RICHIE -MAKE THESE GO AWAY!!!!
-///////////////////////////////////////////////////////
-void				nsMsgI18NDestroyCharCodeConverter(CCCDataObject) {return;}
-unsigned char *		nsMsgI18NCallCharCodeConverter(CCCDataObject,const unsigned char *,int32) {return NULL;}
-int					nsMsgI18NGetCharCodeConverter(int16 ,int16 ,CCCDataObject) {return nsnull;}
-CCCDataObject		nsMsgI18NCreateCharCodeConverter() {return NULL;}
-int16				nsMsgI18NGetCSIWinCSID(INTL_CharSetInfo) {return 2;}
-INTL_CharSetInfo LO_GetDocumentCharacterSetInfo(MWContext *) {return NULL;}
-int16				nsMsgI18NGetCSIDocCSID(INTL_CharSetInfo obj) {return 2;}
-int16				nsMsgI18NDefaultWinCharSetID(MWContext *) {return 2;}
-int16				nsMsgI18NDefaultMailCharSetID(int16 csid) {return 2;}
-int16				nsMsgI18NDefaultNewsCharSetID(int16 csid) {return 2;}
-void				nsMsgI18NMessageSendToNews(XP_Bool toNews) {return;}
-CCCDataObject nsMsgI18NCreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned char *buffer, 
-                                            uint32 buffer_size) {return NULL;}

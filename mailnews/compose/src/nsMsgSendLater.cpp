@@ -112,6 +112,7 @@ nsMsgSendLater::nsMsgSendLater()
   m_headersSize = 0;
 
   mSaveListener = nsnull;
+  mRequestReturnReceipt = PR_FALSE;
   NS_INIT_REFCNT();
 }
 
@@ -131,8 +132,7 @@ nsMsgSendLater::~nsMsgSendLater()
   PR_FREEIF(m_headers);
   PR_FREEIF(mLeftoverBuffer);
 
-  if (mSendListener)
-    NS_RELEASE(mSendListener);
+  NS_IF_RELEASE(mSendListener);
   NS_IF_RELEASE(mIdentity);
 }
 
@@ -295,7 +295,7 @@ SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
     }
     else
     {
-      // RICHIE - do we do the messages here?
+      // RICHIE - do we do the message loss here?
       nsMsgDisplayMessageByString("Failed to get message from unsent folder.");
 
       // Save failed, but we will still keep trying to send the rest...
@@ -388,7 +388,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
     }
     else
     {
-      // RICHIE - do we do the messages here?
+      // RICHIE - do we do the message loss here?
       nsMsgDisplayMessageByString("Sending of message failed.");
     }
 
@@ -472,6 +472,9 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   // header
   if (m_newshost)
     fields->SetNewsgroups(m_newshost);
+
+  if (mRequestReturnReceipt)
+    fields->SetReturnReceipt(PR_TRUE);
 
   // Create the listener for the send operation...
   mSendListener = new SendOperationListener();
@@ -623,7 +626,11 @@ nsMsgSendLater::StartNextMailFileSend()
   rv = messageService->SaveMessageToDisk(aMessageURI, mHackTempIFileSpec, PR_FALSE, mSaveListener, nsnull);
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
 
-  // RICHIE NS_RELEASE(mSendListener); - this is causing us grief! Looks like messageService is not addref'ing
+  // RICHIE 
+  // I think i had a typo here....this should work now!
+  // before I was releasing mSendListener and this was causing us grief! Thought that it
+  // looked like messageService was not addref'ing
+  NS_RELEASE(mSaveListener); 
 
 	if (NS_FAILED(rv))
     return rv;    
@@ -892,14 +899,16 @@ SEARCH_NEWLINE:
 		  receipt = PL_strstr(draftInfo, "receipt=");
 		  if (receipt) 
 			{
+printf("RICHIE - FIX THIS......jjust add a member var and set the comp fields later!!!!!\n\7");
+
 			  char *s = receipt+8;
 			  int requestForReturnReceipt = 0;
 			  sscanf(s, "%d", &requestForReturnReceipt);
           // RICHIE - return recipients are an issue! We should probably
           // add these to the CompFields for tracking instead of tying this
           // stuff to the MessagePane like in the old days.
-			  // if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
-  			//   m_pane->SetRequestForReturnReceipt(TRUE);
+			    // if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
+  			  //   m_pane->SetRequestForReturnReceipt(TRUE);
 			}
 		  PR_FREEIF(draftInfo);
 		}

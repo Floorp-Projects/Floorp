@@ -54,7 +54,6 @@ nsMsgCompFields::nsMsgCompFields()
 	PRInt16 i;
 	PRBool bReturnReceiptOn = PR_FALSE;
 
-	m_owner = NULL;
 	for (i = 0; i < MAX_HEADERS; i ++)
 		m_headers[i] = NULL;
 	m_body = NULL;

@@ -31,7 +31,7 @@ class    nsMsgComposeAndSend;
 // This is a class that deals with processing remote attachments. It implements
 // an nsIStreamListener interface to deal with incoming data
 //
-class nsMsgAttachmentHandler
+class nsMsgAttachmentHandler // : public nsMsgZapIt
 {
 public:
   nsMsgAttachmentHandler();
@@ -71,6 +71,7 @@ public:
   PRBool                m_done;
   nsMsgComposeAndSend		*m_mime_delivery_state;
   char                  *m_charset;         // charset name 
+  char                  *m_content_id;      // This is for mutipart/related Content-ID's
   char                  *m_type;            // The real type, once we know it.
   char                  *m_override_type;   // The type we should assume it to be
 									                          // or 0, if we should get it from the

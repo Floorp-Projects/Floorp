@@ -21,7 +21,6 @@
 
 #include "nscore.h"
 #include "nsIFileSpec.h"
-// RICHIE #include "nsMsgComposeBE.h"
 #include "nsMsgSend.h"
 #include "nsIMsgFolder.h"
 #include "nsITransactionManager.h"

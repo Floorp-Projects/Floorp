@@ -17,10 +17,6 @@
  */
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #ifndef kMIME_ENCODED_WORD_SIZE
 #define kMIME_ENCODED_WORD_SIZE 75
 #endif 
@@ -31,6 +27,10 @@ extern "C" {
 
 #include "xp_core.h"
   
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /**
  * If a header is MIME encoded then decode a header and sets a charset name.
  * This is a replacement for INTL_DecodeMimePartIIStr.

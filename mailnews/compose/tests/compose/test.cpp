@@ -236,7 +236,7 @@ GetRemoteAttachments()
   // This can be any explanatory text; it's not a file name.						 
   
   url = nsnull;
-  nsMsgNewURL(&url, nsString("http://people.netscape.com/rhp/sherry.html"));
+  nsMsgNewURL(&url, nsString("http://people.netscape.com/rhp/rhp-home2.gif"));
   NS_ADDREF(url);
   attachments[1].url = url; // The URL to attach. This should be 0 to signify "end of list".
   
@@ -431,7 +431,8 @@ int main(int argc, char *argv[])
       }
       NS_ADDREF(sendListener);
       pMsgSend->AddListener(sendListener);
-      pMsgSend->CreateAndSendMessage(identity,
+      pMsgSend->CreateAndSendMessage( nsnull,   // No MHTML from here....
+                                      identity,
                                       pMsgCompFields, 
                                       PR_FALSE,         // PRBool                            digest_p,
                                       PR_FALSE,         // PRBool                            dont_deliver_p,
