@@ -149,7 +149,7 @@ void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
  * @param   anIndex -- new length of string
  * @return  nada
  */
-void nsString::Truncate(PRInt32 anIndex) {
+void nsString::Truncate(PRUint32 anIndex) {
   nsStr::Truncate(*this,anIndex);
 }
 
@@ -661,23 +661,19 @@ nsString* nsString::ToNewString() const {
 /**
  * Creates an ascii clone of this string
  * Note that calls to this method should be matched with calls to Recycle().
- * @update  gess 01/04/99
+ * @update  gess 02/24/00
+ * @WARNING! Potential i18n issue here, since we're stepping down from 2byte chars to 1byte chars!
  * @return  ptr to new ascii string
  */
 char* nsString::ToNewCString() const {
-  nsCString temp(*this);
-  temp.SetCapacity(8); //ensure that we get an allocated buffer instead of the common empty one.
-  char* result=temp.mStr;
-  temp.mStr=0;
-  temp.mOwnsBuffer=PR_FALSE;
 
-#ifdef RICKG_DEBUG
-//  fstream& theStream=GetLogStream();
-//  theStream << "tonewcString() " << result << endl;
-#endif
-  
-  return result;
+  nsCString temp(*this);  //construct nsCString with alloc on heap (which we'll steal in a moment)
+  temp.SetCapacity(8);    //force it to have an allocated buffer, even if this is empty.
+  char* result=temp.mStr; //steal temp's buffer
+  temp.mStr=0;            //clear temp's buffer to prevent deallocation
+  return result;          //and return the char*
 }
+
 /**
  * Creates an UTF8 clone of this string
  * Note that calls to this method should be matched with calls to Recycle().
@@ -761,26 +757,17 @@ char* nsString::ToNewUTF8String() const {
 /**
  * Creates an ascii clone of this string
  * Note that calls to this method should be matched with calls to Recycle().
- * @update  gess 01/04/99
+ * @update  gess 02/24/00
  * @return  ptr to new ascii string
  */
 PRUnichar* nsString::ToNewUnicode() const {
-  PRUnichar* result=0;
-  if(eOneByte==mCharSize) {
-    nsString temp(mStr);
-    temp.SetCapacity(8);
-    result=temp.mUStr;
-    temp.mStr=0;
-    temp.mOwnsBuffer=PR_FALSE;
-  }
-  else{
-    nsString temp(mUStr);
-    temp.SetCapacity(8);
-    result=temp.mUStr;
-    temp.mStr=0;
-    temp.mOwnsBuffer=PR_FALSE;
-  }
-  return result;
+
+  nsString temp(*this);         //construct nsString with alloc on heap (which we'll steal in a moment)
+  temp.SetCapacity(8);          //force it to have an allocated buffer, even if this is empty.
+  PRUnichar* result=temp.mUStr; //steal temp's buffer
+  temp.mStr=0;                  //clear temp's buffer to prevent deallocation
+  temp.mOwnsBuffer=PR_FALSE;
+  return result;                //and return the PRUnichar* to the caller
 }
 
 /**

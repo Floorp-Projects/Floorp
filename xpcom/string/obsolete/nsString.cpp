@@ -139,7 +139,7 @@ void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
  * @param   anIndex -- new length of string
  * @return  nada
  */
-void nsCString::Truncate(PRInt32 anIndex) {
+void nsCString::Truncate(PRUint32 anIndex) {
   nsStr::Truncate(*this,anIndex);
 }
 
@@ -591,15 +591,15 @@ nsCString* nsCString::ToNewString() const {
 /**
  * Creates an ascii clone of this string
  * Note that calls to this method should be matched with calls to Recycle().
- * @update  gess 01/04/99
+ * @update  gess 02/24/00
  * @return  ptr to new ascii string
  */
 char* nsCString::ToNewCString() const {
-  nsCString temp(*this);
-  temp.SetCapacity(8);
-  char* result=temp.mStr;
-  temp.mStr=0;
-  return result;
+  nsCString temp(*this);  //construct nsCString with alloc on heap (which we'll steal in a moment)
+  temp.SetCapacity(8);    //force it to have an allocated buffer, even if this is empty.
+  char* result=temp.mStr; //steal temp's buffer
+  temp.mStr=0;            //clear temp's buffer to prevent deallocation
+  return result;          //and return the char*
 }
 
 /**
@@ -609,11 +609,11 @@ char* nsCString::ToNewCString() const {
  * @return  ptr to new ascii string
  */
 PRUnichar* nsCString::ToNewUnicode() const {
-  nsString temp(mStr,mLength);
-  temp.SetCapacity(8);
-  PRUnichar* result=temp.mUStr;
-  temp.mStr=0;
-  temp.mOwnsBuffer=PR_FALSE;
+  nsString temp(*this);         //construct nsCString with alloc on heap (which we'll steal in a moment)
+  temp.SetCapacity(8);          //force temp to have an allocated buffer, even if this is empty.
+  PRUnichar* result=temp.mUStr; //steal temp's buffer
+  temp.mStr=0;                  //now clear temp's buffer to prevent deallocation
+  temp.mOwnsBuffer=PR_FALSE;    //and return the PRUnichar*
   return result;
 }
 

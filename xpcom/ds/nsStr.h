@@ -481,7 +481,7 @@ inline void Recycle( PRUnichar* aBuffer) { nsAllocator::Free(aBuffer); }
 */
 inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
   if(anIndex<aDest.mLength)  {
-    return (eTwoByte==aDest.mCharSize) ? aDest.mUStr[anIndex] : aDest.mStr[anIndex];
+    return (eTwoByte==aDest.mCharSize) ? aDest.mUStr[anIndex] : (PRUnichar)aDest.mStr[anIndex];
   }//if
   return 0;
 }
