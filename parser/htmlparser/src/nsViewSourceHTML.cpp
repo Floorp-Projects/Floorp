@@ -882,7 +882,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
           const nsAReadableString& theKey=theAttrToken->GetKey();
 
           result=WriteTag(mKey,theKey,0,PR_FALSE);
-          const nsString& theValue=theAttrToken->GetValue();
+          const nsAString& theValue=theAttrToken->GetValue();
 
           if((0<theValue.Length()) || (theAttrToken->mHasEqualWithoutValue)){
             result=WriteTag(mValue,theValue,0,PR_FALSE);

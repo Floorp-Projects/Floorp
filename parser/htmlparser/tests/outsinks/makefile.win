@@ -26,7 +26,6 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  necko \
 		  layout \
-		  dom \
 		  content \
 		  $(NULL)
 

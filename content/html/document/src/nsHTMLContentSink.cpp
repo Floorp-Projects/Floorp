@@ -403,7 +403,7 @@ public:
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
-  nsSupportsArray mScriptElements;
+  nsCOMPtr<nsISupportsArray> mScriptElements;
   nsCOMPtr<nsIRequest> mDummyParserRequest;
 
   nsCString           mRef;
@@ -701,7 +701,7 @@ HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
                                      PRInt32 aIndex)
 {
   // Copy value
-  const nsString& value = aNode.GetValueAt(aIndex);
+  const nsAString& value = aNode.GetValueAt(aIndex);
   nsString::const_iterator iter, end_iter;
   value.BeginReading(iter);
   value.EndReading(end_iter);
@@ -2448,6 +2448,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   nsresult rv;
 
+  rv = NS_NewISupportsArray(getter_AddRefs(mScriptElements));
+  if (NS_FAILED(rv)) return rv;
+  
   mDocument = aDoc;
   NS_ADDREF(aDoc);
   aDoc->AddObserver(this);
@@ -4920,9 +4923,10 @@ HTMLContentSink::ScriptAvailable(nsresult aResult,
 {
   // Check if this is the element we were waiting for
   PRUint32 count;
-  mScriptElements.Count(&count);
-  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
+  mScriptElements->Count(&count);
+
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
+    do_QueryElementAt(mScriptElements, count-1);
   if (aElement != scriptElement.get()) {
     return NS_OK;
   }
@@ -4942,7 +4946,7 @@ HTMLContentSink::ScriptAvailable(nsresult aResult,
     PreEvaluateScript();
   }
   else {
-    mScriptElements.RemoveElementAt(count-1);
+    mScriptElements->RemoveElementAt(count-1);
     
     if(mParser && aWasPending){
       // Loading external script failed!. So, resume
@@ -4963,15 +4967,16 @@ HTMLContentSink::ScriptEvaluated(nsresult aResult,
 {
   // Check if this is the element we were waiting for
   PRUint32 count;
-  mScriptElements.Count(&count);
-  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
+  mScriptElements->Count(&count);
+
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
+    do_QueryElementAt(mScriptElements, count-1);
   if (aElement != scriptElement.get()) {
     return NS_OK;
   }
 
   // Pop the script element stack
-  mScriptElements.RemoveElementAt(count-1); 
+  mScriptElements->RemoveElementAt(count-1); 
 
   if (NS_SUCCEEDED(aResult)) {
     PostEvaluateScript();
@@ -5065,7 +5070,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     mNeedToBlockParser = PR_TRUE;
 
     nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(element));
-    mScriptElements.AppendElement(scriptElement);
+    mScriptElements->AppendElement(scriptElement);
   }
 
   // Insert the child into the content tree. This will evaluate the

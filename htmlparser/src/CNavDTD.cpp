@@ -1007,20 +1007,20 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
           //we should only enable user-defined entities in debug builds...
 
         PRInt32 theCount=aNode.GetAttributeCount();
-        const nsString* theNamePtr=0;
-        const nsString* theValuePtr=0;
+        const nsAString* theNamePtr=0;
+        const nsAString* theValuePtr=0;
 
         if(theCount) {
           PRInt32 theIndex=0;
           for(theIndex=0;theIndex<theCount;theIndex++){
             const nsAString& theKey = aNode.GetKeyAt(theIndex);
             if(theKey.Equals(NS_LITERAL_STRING("ENTITY"), nsCaseInsensitiveStringComparator())) {
-              const nsString& theName=aNode.GetValueAt(theIndex);
+              const nsAString& theName=aNode.GetValueAt(theIndex);
               theNamePtr=&theName;
             }
             else if(theKey.Equals(NS_LITERAL_STRING("VALUE"), nsCaseInsensitiveStringComparator())) {
               //store the named enity with the context...
-              const nsString& theValue=aNode.GetValueAt(theIndex);
+              const nsAString& theValue=aNode.GetValueAt(theIndex);
               theValuePtr=&theValue;
             }
           }
@@ -1408,11 +1408,11 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
       PRInt32 theCount=aNode.GetAttributeCount(); 
       if(1<theCount){ 
   
-        nsAutoString theKey(aNode.GetKeyAt(0)); 
+        const nsAString& theKey = aNode.GetKeyAt(0);
         if(theKey.Equals("NAME",IGNORE_CASE)) { 
           const nsString& theValue1=aNode.GetValueAt(0); 
           if(theValue1.Equals("\"CRC\"",IGNORE_CASE)) { 
-            nsAutoString theKey2(aNode.GetKeyAt(1)); 
+            const nsAString& theKey2 = aNode.GetKeyAt(1); 
             if(theKey2.Equals("CONTENT",IGNORE_CASE)) { 
               const nsString& theValue2=aNode.GetValueAt(1); 
               PRInt32 err=0; 
@@ -2128,9 +2128,9 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 
   nsresult  result=NS_OK;
 
-  nsAutoString theStr(aToken->GetStringValue());
-  PRUnichar theChar=theStr.CharAt(0);
-  if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
+  const nsAString& theStr = aToken->GetStringValue();
+
+  if((kHashsign!=theStr.First()) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
     CToken *theToken=0;
 #ifdef DEBUG
     //before we just toss this away as a bogus entity, let's check...

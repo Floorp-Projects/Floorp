@@ -872,7 +872,7 @@ nsHTMLFragmentContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
                                                nsString& aResult)
 {
   // Copy value
-  const nsString& value = aNode.GetValueAt(aIndex);
+  const nsAString& value = aNode.GetValueAt(aIndex);
   aResult.Truncate();
   aResult.Append(value);
 
