@@ -42,6 +42,8 @@
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 
+#include "nsIObserverService.h"
+
 #ifdef  XP_MAC  // sdagley dougt fix
 #include <Files.h>
 #include <Errors.h>
@@ -649,6 +651,14 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
     return res;
 }
 
+static const PRUnichar sNativeComponentReg[] = {'R','e','g','i','s','t','e','r',
+    'i','n','g',' ','n', 'a', 't', 'i', 'v', 'e', ' ', 'c', 'o', 'm', 'p', 'o',
+    'n', 'e', 'n', 't',':',' ', 0};
+
+static const PRUnichar sNativeComponentUnreg[] = {'U','n','r','e','g','i','s','t','e','r',
+    'i','n','g',' ','n', 'a', 't', 'i', 'v', 'e', ' ', 'c', 'o', 'm', 'p', 'o',
+    'n', 'e', 'n', 't',':',' ', 0};
+
 nsresult
 nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
                                                  nsIFile *component,
@@ -660,6 +670,21 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
     rv = mCompMgr->RegistryLocationForSpec(component,
                                            getter_Copies(persistentDescriptor));
     if (NS_FAILED(rv)) return rv;
+
+    // Notify observers, if any, of autoregistration work
+    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+	if (NS_SUCCEEDED(rv))
+	{
+	    nsAutoString topic;	//	This is quite ineficient, but is how it is
+				    //	done in every other example.
+	    topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
+	    (void) observerService->Notify(mgr, topic.GetUnicode(), sNativeComponentUnreg);
+	}
+    }
 
     nsDll *dll = NULL;
     PRInt64 mod = LL_Zero(), size = LL_Zero();
@@ -677,7 +702,6 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
             (NS_FAILED(rv) ? "FAILED" : "succeeded"), dll->GetDisplayPath()));
     return rv;
 }
-
 
 nsresult
 nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
@@ -806,6 +830,23 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
         // Aagh! the dll has changed since the last time we saw it.
         // re-register dll
+
+
+        // Notify observers, if any, of autoregistration work
+        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+            rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+            if (NS_SUCCEEDED(rv))
+            {
+                nsAutoString topic;	//	This is quite ineficient, but is how it is
+					//	done in every other example.
+                topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
+                (void) observerService->Notify(mgr, topic.GetUnicode(), sNativeComponentReg);
+            }
+        }
+
         if (dll->IsLoaded())
         {
             // We loaded the old version of the dll and now we find that the

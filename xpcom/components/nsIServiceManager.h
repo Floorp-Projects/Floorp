@@ -354,4 +354,7 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 
 #define NS_XPCOM_SHUTDOWN_OBSERVER_ID "xpcom-shutdown"
 
+#define NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID "xpcom-autoregistration"
+
+
 #endif /* nsIServiceManager_h___ */

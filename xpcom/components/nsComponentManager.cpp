@@ -52,6 +52,8 @@
 #include "nsNativeComponentLoader.h"
 #include "nsXPIDLString.h"
 
+#include "nsIObserverService.h"
+
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
@@ -1970,6 +1972,9 @@ RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
     return NS_SUCCEEDED(closure->status) ? PR_TRUE : PR_FALSE;
 }
 
+static const PRUnichar sARStart[] = {'S', 't', 'a', 'r', 't', ':', ' ', 0};
+static const PRUnichar sAREnd[] = {'E', 'n', 'd', ':', ' ', 0};
+
 nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
@@ -2009,70 +2014,102 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
     nsCOMPtr<nsIInterfaceInfoManager> iim = 
         dont_AddRef(XPTI_GetInterfaceInfoManager());
 
+
     if (!iim)
         return NS_ERROR_UNEXPECTED;    
+    
+    // Notify observers of xpcom autoregistration start
+    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_FAILED(rv))
+    {
+
+        nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+        rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsAutoString topic;
+            topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
+            (void) observerService->Notify(mgr, topic.GetUnicode(), sARStart);
+        }
+    }
 
     rv = iim->AutoRegisterInterfaces();
     if (NS_FAILED(rv))
     return rv;
 
-    /* do the native loader first, so we can find other loaders */
-    rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
-    if (NS_FAILED(rv))
-    return rv;
-
-    /* XXX eagerly instantiate all known loaders */
-    nsCOMPtr<nsIEnumerator> loaderEnum;
-    rv = mRegistry->EnumerateSubtrees(mLoadersKey, getter_AddRefs(loaderEnum));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIRegistryEnumerator> regEnum = 
-        do_QueryInterface(loaderEnum, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    
-    for (rv = regEnum->First();
-         NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
-         rv = regEnum->Next()) {
-        const char * type;
-        nsRegistryKey throwAway;
-        /*
-         * CurrentItemInPlaceUTF8 will give us back a _shared_ pointer in 
-         * type.  This is bad XPCOM practice.  It is evil, and requires
-         * great care with the relative lifetimes of type and regEnum.
-         *
-         * It is also faster, and less painful in the allocation department.
-         */
-        rv = regEnum->CurrentItemInPlaceUTF8(&throwAway, &type);
-        if (NS_FAILED(rv))
-            continue;
-        
-        nsCOMPtr<nsIComponentLoader> loader;
-        /* this will create it if we haven't already */
-        GetLoaderForType(type, getter_AddRefs(loader));
-
-        continue;
+    if (NS_SUCCEEDED(rv))
+    {
+        /* do the native loader first, so we can find other loaders */
+        rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
     }
 
-    /* iterate over all known loaders and ask them to autoregister. */
-    struct AutoReg_closure closure;
-    /* XXX convert when to nsIComponentLoader::(when) properly */
-    closure.when = when;
-    closure.spec = dir.get();
-    closure.status = NS_OK;
-    closure.native = mNativeComponentLoader; // prevent duplicate autoreg
+    nsCOMPtr<nsIEnumerator> loaderEnum;
+    if (NS_SUCCEEDED(rv))
+    {
+        /* XXX eagerly instantiate all known loaders */
+        rv = mRegistry->EnumerateSubtrees(mLoadersKey, getter_AddRefs(loaderEnum));
+    }
+
+    nsCOMPtr<nsIRegistryEnumerator> regEnum;
+    if (NS_SUCCEEDED(rv))
+    {
+        regEnum = do_QueryInterface(loaderEnum, &rv);
+    }
     
-    mLoaders->Enumerate(AutoRegister_enumerate, &closure);
-    if (NS_FAILED(closure.status))
-        return closure.status;
+    struct AutoReg_closure closure;
+    if (NS_SUCCEEDED(rv))
+    {
+        for (rv = regEnum->First();
+             NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
+             rv = regEnum->Next()) {
+            const char * type;
+            nsRegistryKey throwAway;
+            /*
+             * CurrentItemInPlaceUTF8 will give us back a _shared_ pointer in 
+             * type.  This is bad XPCOM practice.  It is evil, and requires
+             * great care with the relative lifetimes of type and regEnum.
+             *
+             * It is also faster, and less painful in the allocation department.
+             */
+            rv = regEnum->CurrentItemInPlaceUTF8(&throwAway, &type);
+            if (NS_FAILED(rv))
+                continue;
+            
+            nsCOMPtr<nsIComponentLoader> loader;
+            /* this will create it if we haven't already */
+            GetLoaderForType(type, getter_AddRefs(loader));
 
-    do {
-        closure.registered = PR_FALSE;
-        mLoaders->Enumerate(RegisterDeferred_enumerate, &closure);
-    } while (NS_SUCCEEDED(closure.status) && closure.registered);
+            continue;
+        }
 
-    return closure.status;
+        /* iterate over all known loaders and ask them to autoregister. */
+        /* XXX convert when to nsIComponentLoader::(when) properly */
+        closure.when = when;
+        closure.spec = dir.get();
+        closure.status = NS_OK;
+        closure.native = mNativeComponentLoader; // prevent duplicate autoreg
+        
+        mLoaders->Enumerate(AutoRegister_enumerate, &closure);
+        rv = closure.status;
+    }
+    if (NS_SUCCEEDED(rv))
+    {
+        do {
+            closure.registered = PR_FALSE;
+            mLoaders->Enumerate(RegisterDeferred_enumerate, &closure);
+        } while (NS_SUCCEEDED(closure.status) && closure.registered);
+        rv = closure.status;
+
+    }
+	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+	if (NS_SUCCEEDED(rv))
+	{
+		nsAutoString topic;
+		topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
+		(void) observerService->Notify(mgr, topic.GetUnicode(), sAREnd);
+	}
+    return rv;
 }
 
 static PRBool PR_CALLBACK
