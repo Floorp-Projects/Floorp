@@ -63,7 +63,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryBeOS :: Init(void)
  *  Get a device context specification
  *  @update   dc 2/16/98
  */
-NS_IMETHODIMP nsDeviceContextSpecFactoryBeOS :: CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+NS_IMETHODIMP nsDeviceContextSpecFactoryBeOS :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {

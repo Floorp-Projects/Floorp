@@ -48,7 +48,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::Init(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                       nsIDeviceContextSpec *&aNewSpec,
                                                                       PRBool aQuiet)
 {
