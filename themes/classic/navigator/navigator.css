@@ -140,9 +140,7 @@
   min-width: 0;
 }
 
-.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-menubutton-button
-    > .toolbarbutton-text,
-.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-text {
+.toolbarbutton-text[toolbarmode="small"] {
   display: none;
 }
 
@@ -150,13 +148,16 @@
   display: none;
 }
 
-#nav-bar[toolbarmode="small"] > #nav-bar-inner {
-  margin: 0;
-  border: none;
+.toolbarbutton-icon[toolbarmode="small"] {
+  display: inline;
 }
 
 #nav-bar[toolbarmode="small"] > .toolbar-primary-grippy {
   display: none;
+}
+
+.toolbarbutton-text[buttonstyle="text"] {
+  padding: 4px 0;
 }
 
 /* ::::: fullscreen window controls ::::: */
@@ -185,7 +186,6 @@
 #nav-bar-inner {
   -moz-box-align: center;
   min-width: 0px;
-  margin: 4px 6px;
 }
 
 #urlbar {

@@ -142,7 +142,13 @@
 .toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
   > .toolbarbutton-text,
 .toolbarbutton-1 > .toolbarbutton-text {
-  display: none;
+  display: none !important;
+}
+
+.toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
+  > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-icon {
+  display: inline !important;
 }
 
 /* ::::: small primary toolbar buttons ::::: */
@@ -216,12 +222,8 @@
   -moz-image-region: rect(57px 76px 76px 57px) !important;
 } 
 
-#back-button[toolbarmode="small"] > .toolbarbutton-menubutton-stack
-    > .toolbarbutton-menubutton-dropmarker,
-#forward-button[toolbarmode="small"] > .toolbarbutton-menubutton-stack
-    > .toolbarbutton-menubutton-dropmarker
-{
-  margin: 8px 0px 0px 14px;
+.toolbarbutton-menubutton-dropmarker[toolbarmode="small"] {
+  margin: 8px 0px 0px 14px !important;
 }
 
 /* temporary - still don't have small print icons */

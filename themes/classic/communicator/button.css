@@ -61,6 +61,16 @@
   display: none;
 }
 
+.toolbarbutton-1[buttonstyle="pictures"],
+.toolbarbutton-menubutton-button[buttonstyle="pictures"] {
+  min-width: 0px;
+}
+
+.toolbarbutton-text[buttonstyle="pictures"],
+.toolbarbutton-icon[buttonstyle="text"] {
+  display: none;
+}
+
 /* ::::: standard toolbar buttons ::::: */
 
 .button-toolbar {

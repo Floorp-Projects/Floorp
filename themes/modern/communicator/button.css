@@ -82,6 +82,19 @@
   display: none;
 }
 
+.toolbarbutton-text[buttonstyle="pictures"],
+.toolbarbutton-icon[buttonstyle="text"] {
+  display: none;
+}
+
+.toolbarbutton-menubutton-dropmarker[buttonstyle="pictures"] {
+  margin: 20px 0px 0px 40px;
+}
+
+.toolbarbutton-menubutton-dropmarker[buttonstyle="text"] {
+  margin: 8px 0px 0px 40px;
+}
+
 /* ::::: standard toolbar buttons ::::: */
  
 .button-toolbar {

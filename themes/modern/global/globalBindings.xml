@@ -16,8 +16,8 @@
         <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
              anonid="button" allowevents="true"
              xbl:inherits="disabled,image,label,crop,accesskey,command,
-                           buttonover,buttondown,align,dir,pack,orient"/>
-        <xul:dropmarker type="menu-button" xbl:inherits="open,disabled"
+                           buttonover,buttondown,align,dir,pack,orient,toolbarmode,buttonstyle"/>
+        <xul:dropmarker type="menu-button" xbl:inherits="open,disabled,toolbarmode,buttonstyle"
                         class="toolbarbutton-menubutton-dropmarker"/>
       </xul:stack>
     </content>
