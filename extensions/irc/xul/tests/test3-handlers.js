@@ -2,8 +2,8 @@
 function onLoad()
 {
 
-    initStatic();
     initHost(client);
+    initStatic();
     mainStep();
     
 }
@@ -189,8 +189,8 @@ function clie_inetwork (e)
     
 }
 
-client.onInputConnect =
-function cli_iconnect (e)
+client.onInputAttach =
+function cli_iattach (e)
 {
     var net;
     
@@ -207,7 +207,7 @@ function cli_iconnect (e)
         {
             client.display ("No network specified, and no default network " +
                             "is in place.", "ERROR");
-            client.display ("connect <network-name>.", "USAGE");
+            client.display ("attach <network-name>.", "USAGE");
             return false;
         }
     }

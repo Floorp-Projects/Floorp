@@ -240,7 +240,7 @@ function keys (o)
     var rv = "";
     
     for (var p in o)
-        rv += p + ", ";
+        rv += rv ? ", " + p : p;
 
     return rv;
     

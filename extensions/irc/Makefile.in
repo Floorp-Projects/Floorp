@@ -19,6 +19,13 @@
 # Contributor(s):
 #  Robert Ginda, rginda@ndcico.com, original author
 #
+# Large LED icons (green-*, red-*, yellow-*) and Marble background (xtal.jpg)
+# Copyright (C) 1996, 1997 Jim Evins.
+# http://www.clark.net/pub/evins/Icons/
+#
+# Other Icons came from "Anthony's WWW Images"
+# http://www.cit.gu.edu.au/images/Images.html
+#
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
@@ -36,10 +43,12 @@ JSLIBFILES	= \
 		$(srcdir)/js/lib/events.js \
 		$(srcdir)/js/lib/connection-xpcom.js \
 		$(srcdir)/js/lib/irc.js \
+		$(srcdir)/js/lib/irc-debug.js \
 		$(NULL)
 
 XULLIBFILES	= \
 		$(srcdir)/xul/lib/EntryHistory.js \
+		$(srcdir)/xul/lib/listbox.js \
 		$(NULL)
 
 TESTFILES	= \
@@ -52,6 +61,18 @@ TESTFILES	= \
 		$(srcdir)/xul/tests/test2-handlers.js \
 		$(srcdir)/xul/tests/csteel1.jpg \
 		$(srcdir)/xul/tests/csteel2.jpg \
+		$(srcdir)/xul/tests/test3.xul \
+		$(srcdir)/xul/tests/test3.css \
+		$(srcdir)/xul/tests/test3-static.js \
+		$(srcdir)/xul/tests/test3-handlers.js \
+		$(srcdir)/xul/tests/g_blue.gif \
+		$(srcdir)/xul/tests/g_blue_on.gif \
+		$(srcdir)/xul/tests/g_grey.gif \
+		$(srcdir)/xul/tests/g_grey_on.gif \
+		$(srcdir)/xul/tests/green-on.gif \
+		$(srcdir)/xul/tests/green-off.gif \
+		$(srcdir)/xul/tests/yellow-on.gif \
+		$(srcdir)/xul/tests/xtal.jpg \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

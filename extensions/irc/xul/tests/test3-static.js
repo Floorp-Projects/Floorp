@@ -44,7 +44,12 @@ function initStatic()
     
     client.quickList = new CListBox(document.getElementById("quickList"));
 
-    client.display ("Welcome to ChatZilla", "HELP");
+    client.display ("More help is on the way!", "HELP");
+    client.display ("/nick, /join, /part, and /me may also be useful.", "HELP");
+    client.display ("Where <network-name> is one of [" +
+                    keys (client.networks) + "]", "HELP");
+    client.display ("Use /attach <network-name> connect to a network.", "HELP");
+    client.display ("Welcome to ChatZilla...", "HELP");
     setCurrentObject (client);
     
 }

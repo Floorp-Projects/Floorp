@@ -16,12 +16,11 @@ file:/home/rginda/src/mozilla_DEV/mozilla/extensions/irc/xul/tests/test3.xul
 <html:script src="resource:///irc/js/lib/connection-xpcom.js"/>
 <html:script src="resource:///irc/js/lib/events.js"/>
 <html:script src="resource:///irc/js/lib/irc.js"/>
+<html:script src="resource:///irc/js/lib/irc-debug.js"/>
+<html:script src="resource:///irc/xul/lib/listbox.js"/>
 
-<html:script src="../lib/listbox.js"/>
-
-<html:script src="../../js/lib/irc-debug.js"/>
-<html:script src="test3-static.js"/>
-<html:script src="test3-handlers.js"/>
+<html:script src="resource:///irc/tests/test3-static.js"/>
+<html:script src="resource:///irc/tests/test3-handlers.js"/>
 
 <toolbox>
   <menubar>
