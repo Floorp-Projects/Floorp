@@ -1377,24 +1377,6 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             else
                                 return restMatch;
                         }
-/*
-                        int saveNum = state.parenCount;
-                        int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, input, index);
-                        if (kidMatch == -1)
-                            break;
-                        else {
-                            int restMatch = matchRENodes(state, ren.next,
-                                                        stop, input, kidMatch);
-                            if (restMatch == -1) {
-                                // need to undo the result of running the kid
-                                state.parenCount = saveNum;
-                                break;
-                            }
-                            else
-                                return restMatch;
-                        }
-*/
                      }
                 case REOP_LPARENNON:
                     ren = (RENode)ren.kid;
