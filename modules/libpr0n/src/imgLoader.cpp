@@ -549,10 +549,10 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     }
     else if (RevalidateEntry(entry, requestFlags, bHasExpired)) {
       nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(channel));
-
-      NS_ASSERTION(cacheChan, "Cache entry without a caching channel!");
       if (cacheChan) {
         cacheChan->IsFromCache(&bUseCacheCopy);
+      } else {
+        bUseCacheCopy = PR_FALSE;
       }
     }
 
