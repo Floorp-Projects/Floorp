@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.4 $ 
-# $Date: 2000/08/31 21:59:53 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/09/10 16:01:28 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -107,7 +107,7 @@ sub setup_environment {
 
 
 sub encrypt_passwd {
-  my $passwd = @_;
+  my ($passwd) = @_;
 
   # The man page for Crypt says:
 
@@ -439,7 +439,7 @@ sub change_motd {
 # of strings explaining the problem
 
 sub security_problem {
-  my @out = ();
+  my (@out) = ();
 
   ($MAILADDR) ||
     (push @out, "Error, No Mail Address\n");
