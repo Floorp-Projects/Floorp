@@ -48,9 +48,11 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #ifdef NS_DEBUG
 #undef NOISY
 #undef NOISY_BLINK
+#undef DEBUG_WORD_WRAPPING
 #else
 #undef NOISY
 #undef NOISY_BLINK
+#undef DEBUG_WORD_WRAPPING
 #endif
 
 // XXX TODO:
@@ -208,6 +210,17 @@ public:
                               const nsStyleText& aTextStyle,
                               PRInt32 aStartingOffset);
 
+  nscoord ComputeTotalWordWidth(nsLineLayout& aLineLayout,
+                                const nsHTMLReflowState& aReflowState,
+                                nsIFrame* aNextFrame,
+                                nscoord aBaseWidth);
+
+  nscoord ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsIFrame* aNextFrame,
+                                   nsITextContent* aText,
+                                   PRBool& aStop);
+
 protected:
   virtual ~TextFrame();
 
@@ -226,7 +239,7 @@ protected:
 #define TEXT_HAS_MULTIBYTE      0x02
 #define TEXT_IS_PRE             0x04
 #define TEXT_BLINK_ON           0x08
-#define TEXT_ENDS_IN_WHITESPACE 0x10
+//#define TEXT_ENDS_IN_WHITESPACE 0x10
 
 #define TEXT_GET_TAB_COUNT(_mf) ((_mf) >> 5)
 #define TEXT_SET_TAB_COUNT(_mf,_tabs) (_mf) = (_mf) | ((_tabs)<< 5)
@@ -1427,8 +1440,10 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   nscoord x = 0;
   nscoord maxWidth = aReflowState.maxSize.width;
   nscoord maxWordWidth = 0;
+  nscoord prevMaxWordWidth = 0;
+  nscoord lastWordWidth;
   const PRUnichar* lastWordEnd = cpStart;
-//  const PRUnichar* lastWordStart = cpStart;
+  const PRUnichar* lastWordStart = nsnull;
   PRBool hasMultibyte = PR_FALSE;
   PRBool endsInWhitespace = PR_FALSE;
 
@@ -1447,25 +1462,22 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
         break;
       }
       if (skipWhitespace) {
-#if XXX_fix_me
-        aLineLayout->AtSpace();
-#endif
         skipWhitespace = PR_FALSE;
         continue;
       }
       width = spaceWidth;
       isWhitespace = PR_TRUE;
+      lastWordStart = cp;
     } else {
       // The character is not a space character. Find the end of the
       // word and then measure it.
       if (ch >= 128) {
         hasMultibyte = PR_TRUE;
       }
-      const PRUnichar* wordStart = cp - 1;
-//      lastWordStart = wordStart;
+      lastWordStart = cp - 1;
       while (cp < end) {
         ch = *cp;
-        if (ch >= 256) {
+        if (ch >= 128) {
           hasMultibyte = PR_TRUE;
         }
         if (!XP_IS_SPACE(ch)) {
@@ -1474,9 +1486,12 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
         }
         break;
       }
-      aReflowState.rendContext->GetWidth(wordStart, PRUint32(cp - wordStart), width);
+      aReflowState.rendContext->GetWidth(lastWordStart,
+                                         PRUint32(cp - lastWordStart),
+                                         width);
       skipWhitespace = PR_FALSE;
       isWhitespace = PR_FALSE;
+      lastWordWidth = width;
     }
 
     // Now that we have the end of the word or whitespace, see if it
@@ -1487,31 +1502,85 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
       break;
     }
 
-#if XXX_fix_me
-    // Update break state in line reflow state
-    // XXX move this out of the loop!
-    if (isWhitespace) {
-      aLineLayout.AtSpace();
-    }
-    else {
-      aLineLayout.AtWordStart(this, x);
-    }
-#endif
-
-    // The word fits. Add it to the run of text.
+    // The word/whitespace fits. Add it to the run of text.
     x += width;
+    prevMaxWordWidth = maxWordWidth;
     if (width > maxWordWidth) {
       maxWordWidth = width;
     }
     lastWordEnd = cp;
     endsInWhitespace = isWhitespace;
   }
-
   if (hasMultibyte) {
     mFlags |= TEXT_HAS_MULTIBYTE;
   }
-  if (endsInWhitespace) {
-    mFlags |= TEXT_ENDS_IN_WHITESPACE;
+
+  // Post processing logic to deal with non-breakable-units (in
+  // english "words")
+  if (aLineLayout.InNonBreakingUnit()) {
+    // We are already in an nbu. This means a text frame prior to
+    // this one had a fragment of an nbu that is joined with this
+    // frame. It also means that the prior frame already found this
+    // frame and recorded it as part of the nbu.
+#ifdef DEBUG_WORD_WRAPPING
+    ListTag(stdout);
+    printf(": in nbu; skipping\n");
+#endif
+    aLineLayout.ForgetWordFrame(this);
+  }
+  else {
+    // There is no currently active nbu. This frame may contain the
+    // start of one.
+    if (endsInWhitespace) {
+      // Nope, this frame doesn't start an nbu.
+      aLineLayout.ForgetWordFrames();
+    }
+    else if ((nsnull != lastWordStart) && wrapping && (cp == end)) {
+      // This frame does start an nbu. However, there is no point
+      // messing around with it if we are already out of room.
+      if ((0 == aLineLayout.GetPlacedFrames()) || (x <= maxWidth)) {
+        // There is room for this nbu fragment. It's possible that
+        // this nbu fragment is the end of the text-run. If it's not
+        // then we continue with the look-ahead processing.
+        nsIFrame* next = aLineLayout.FindNextText(this);
+        if (nsnull != next) {
+#ifdef DEBUG_WORD_WRAPPING
+          nsAutoString tmp(lastWordStart, cp - lastWordStart);
+          ListTag(stdout);
+          printf(": start='");
+          fputs(tmp, stdout);
+          printf("' baseWidth=%d\n", lastWordWidth);
+#endif
+          // Look ahead in the text-run and compute the final nbu
+          // width, taking into account any style changes and stopping
+          // at the first breakable point.
+          nscoord nbuWidth = ComputeTotalWordWidth(aLineLayout, aReflowState,
+                                                   next, lastWordWidth);
+          if ((0 == aLineLayout.GetPlacedFrames()) ||
+              (x - lastWordWidth + nbuWidth <= maxWidth)) {
+            // The fully joined nbu has fit. Account for the joined
+            // nbu's affect on the max-element-size here (since the
+            // joined nbu is large than it's pieces, the right effect
+            // will occur)
+            if (nbuWidth > maxWordWidth) {
+              maxWordWidth = nbuWidth;
+            }
+          }
+          else {
+            // The fully joined nbu won't fit. We need to reduce our
+            // size by the lastWordWidth.
+            x -= lastWordWidth;
+            maxWordWidth = prevMaxWordWidth;
+            cp = lastWordEnd = lastWordStart;
+#ifdef DEBUG_WORD_WRAPPING
+            printf("  x=%d maxWordWidth=%d len=%d\n", x, maxWordWidth,
+                   cp - cpStart);
+#endif
+            aLineLayout.ForgetWordFrames();
+          }
+        }
+      }
+    }
   }
 
   if (0 == x) {
@@ -1559,6 +1628,133 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
 }
 
+nscoord
+TextFrame::ComputeTotalWordWidth(nsLineLayout& aLineLayout,
+                                 const nsHTMLReflowState& aReflowState,
+                                 nsIFrame* aNextFrame,
+                                 nscoord aBaseWidth)
+{
+  nscoord addedWidth = 0;
+  while (nsnull != aNextFrame) {
+    nsIFrame* frame = aNextFrame;
+    while (nsnull != frame) {
+      nsIContent* content = nsnull;
+      if ((NS_OK == frame->GetContent(content)) && (nsnull != content)) {
+#ifdef DEBUG_WORD_WRAPPING
+        printf("  next textRun=");
+        frame->ListTag(stdout);
+        printf("\n");
+#endif
+        nsITextContent* tc;
+        if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
+          PRBool stop;
+          nscoord moreWidth = ComputeWordFragmentWidth(aLineLayout,
+                                                       aReflowState,
+                                                       frame, tc,
+                                                       stop);
+          NS_RELEASE(tc);
+          NS_RELEASE(content);
+          addedWidth += moreWidth;
+#ifdef DEBUG_WORD_WRAPPING
+          printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreWidth,
+                 addedWidth, stop?'T':'F');
+#endif
+          if (stop) {
+            goto done;
+          }
+        }
+        else {
+          // It claimed it was text but it doesn't implement the
+          // nsITextContent API. Therefore I don't know what to do with it
+          // and can't look inside it. Oh well.
+          NS_RELEASE(content);
+          goto done;
+        }
+      }
+      // XXX This assumes that a next-in-flow will follow it's
+      // prev-in-flow in the text-run. Maybe not a good assumption?
+      // What if the next-in-flow isn't actually part of the flow?
+      frame->GetNextInFlow(frame);
+    }
+
+    // Move on to the next frame in the text-run
+    aNextFrame = aLineLayout.FindNextText(aNextFrame);
+  }
+
+ done:;
+#ifdef DEBUG_WORD_WRAPPING
+  printf("  total word width=%d\n", aBaseWidth + addedWidth);
+#endif
+  return aBaseWidth + addedWidth;
+}
+
+nscoord
+TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
+                                    const nsHTMLReflowState& aReflowState,
+                                    nsIFrame* aTextFrame,
+                                    nsITextContent* aText,
+                                    PRBool& aStop)
+{
+  // Get a pointer and length count for the text
+  const PRUnichar* cp;
+  const PRUnichar* cp0;
+  const PRUnichar* end;
+  PRInt32 len;
+  if (NS_OK != aText->GetText(cp0, len)) {
+    aStop = PR_TRUE;
+    return 0;
+  }
+  cp = cp0;
+  end = cp0 + len;
+
+  // Count forward in the text until we hit a whitespace character or
+  // run out of text.
+  aStop = PR_FALSE;
+  while (cp < end) {
+    PRUnichar ch = *cp;
+    if (XP_IS_SPACE(ch)) {
+      aStop = PR_TRUE;
+      break;
+    }
+    cp++;
+  }
+  len = cp - cp0;
+  if (0 == len) {
+    // Don't bother measuring nothing
+    return 0;
+  }
+
+  const nsStyleFont* font;
+  aTextFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
+  if (nsnull != font) {
+    // Measure the piece of text. Note that we have to select the
+    // appropriate font into the text first because the rendering
+    // context has our font in it, not the font that aText is using.
+    nscoord width;
+    nsIRenderingContext& rc = *aReflowState.rendContext;
+    nsIFontMetrics* oldfm = rc.GetFontMetrics();
+    nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(font->mFont);
+    rc.SetFont(fm);
+    rc.GetWidth(cp0, len, width);
+    rc.SetFont(oldfm);
+    NS_RELEASE(oldfm);
+    NS_RELEASE(fm);
+#ifdef DEBUG_WORD_WRAPPING
+    nsAutoString tmp(cp0, len);
+    printf("  fragment='");
+    fputs(tmp, stdout);
+    printf("' width=%d\n", width);
+#endif
+
+    // Remember the text frame for later so that we don't bother doing
+    // the word look ahead.
+    aLineLayout.RecordWordFrame(aTextFrame);
+    return width;
+  }
+
+  return 0;
+}
+
 nsReflowStatus
 TextFrame::ReflowPre(nsLineLayout& aLineLayout,
                      nsHTMLReflowMetrics& aMetrics,
@@ -1581,7 +1777,7 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
   PRUint16 tabs = 0;
   PRUint16 col = aLineLayout.GetColumn();
   mColumn = col;
-  nscoord spaceWidth;
+  nscoord spaceWidth, charWidth;
   aReflowState.rendContext->SetFont(fm);
   aReflowState.rendContext->GetWidth(' ', spaceWidth);
 
@@ -1607,14 +1803,9 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
       col++;
       continue;
     }
-    if (ch < 256) {
-      nscoord charWidth;
-      aReflowState.rendContext->GetWidth(ch, charWidth);
-      width += charWidth;
-    } else {
-      nscoord charWidth;
-      aReflowState.rendContext->GetWidth(ch, charWidth);
-      width += charWidth;
+    aReflowState.rendContext->GetWidth(ch, charWidth);
+    width += charWidth;
+    if (ch > 128) {
       hasMultibyte = PR_TRUE;
     }
     col++;
