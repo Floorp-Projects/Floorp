@@ -31,8 +31,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= jsdebug
 LIBRARY_NAME	= jsd
 
-REQUIRES	= java js
-
+# REQUIRES	= java js
+REQUIRES	= xpcom string js
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
 EXPORTS		= jsdebug.h
 
 ifdef JS_THREADSAFE
