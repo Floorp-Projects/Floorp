@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -19,7 +19,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -  Mike Potter <mikep@oeone.com> 
+   -  Mike Potter <mikep@oeone.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,61 +36,73 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE overlay [
-   <!ENTITY % calendarPrefsOverlayDTD SYSTEM "chrome://calendar/locale/prefs.dtd" >
-   %calendarPrefsOverlayDTD;
+  <!ENTITY % calendarPrefsOverlayDTD SYSTEM "chrome://calendar/locale/prefs.dtd" >
+    %calendarPrefsOverlayDTD;
 ]>
 
 <overlay id="calendarPrefOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-   <script type="application/x-javascript">
-   <![CDATA[
+  <script type="application/x-javascript">
+  <![CDATA[
     var panel;
     if ((panel != undefined)&&(panel == "chrome://communicator/content/pref/pref-appearance.xul"))
     {
-        _elementIDs.push("generalStartupCalendar");
+       _elementIDs.push("generalStartupCalendar");
     }
-   ]]>
-   </script>         
-   
-   <!-- calendar startup toggle -->
-   <groupbox id="generalStartupPreferences">           
-      <checkbox id="generalStartupCalendar" wsm_persist="true" position="4"
+  ]]>
+  </script>
+
+  <!-- calendar startup toggle -->
+  <groupbox id="generalStartupPreferences">
+    <checkbox id="generalStartupCalendar" wsm_persist="true" position="4"
               label="&calendar.label;" accesskey="&calendar.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.calendar"
-              prefattribute="checked"/>         
-   </groupbox>
-   
-   <treechildren id="panelChildren">
+              prefattribute="checked"/>
+  </groupbox>
+
+  <treechildren id="panelChildren">
     <treeitem id="calendarPanel" container="true">
-        <treerow>
-            <treecell class="treecell-indent" url="chrome://calendar/content/pref/calendarPref.xul" label="&calendar.label;" id="calendar"/>
-        </treerow>
-        <treechildren id="calendarPrefChildren">
-            <treeitem id="calendarPublishPanel" container="false">
-                <treerow>
-                    <treecell class="treecell-indent" url="chrome://calendar/content/pref/alarmPrefs.xul" label="&calendar.alarms.label;" id="calendarAlarm"/>
-                </treerow>
-            </treeitem>
-		<treeitem id="calendarPublishPanel" container="false">
-            <treerow>
-                <treecell class="treecell-indent" url="chrome://calendar/content/pref/publishPrefs.xul" label="&calendar.publish.label;" id="calendarPublish"/>
-            </treerow>
- 	    </treeitem>
+      <treerow>
+        <treecell class="treecell-indent"
+                  url="chrome://calendar/content/pref/calendarPref.xul"
+                  label="&calendar.label;"
+                  id="calendar"/>
+      </treerow>
+      <treechildren id="calendarPrefChildren">
         <treeitem id="calendarPublishPanel" container="false">
-            <treerow>
-		        <treecell class="treecell-indent" url="chrome://calendar/content/pref/viewPrefs.xul" label="&calendar.views.label;" id="calendarView"/>
-            </treerow>
- 	    </treeitem>
+          <treerow>
+            <treecell class="treecell-indent"
+                      url="chrome://calendar/content/pref/alarmPrefs.xul"
+                      label="&calendar.alarms.label;"
+                      id="calendarAlarm"/>
+          </treerow>
+        </treeitem>
+        <treeitem id="calendarPublishPanel" container="false">
+          <treerow>
+            <treecell class="treecell-indent"
+                      url="chrome://calendar/content/pref/publishPrefs.xul"
+                      label="&calendar.publish.label;"
+                      id="calendarPublish"/>
+          </treerow>
+        </treeitem>
+        <treeitem id="calendarViewPanel" container="false">
+          <treerow>
+            <treecell class="treecell-indent"
+                      url="chrome://calendar/content/pref/viewPrefs.xul"
+                      label="&calendar.views.label;"
+                      id="calendarView"/>
+          </treerow>
+        </treeitem>
         <treeitem id="calendarTimezonePanel" container="false">
-            <treerow>
-		        <treecell class="treecell-indent" 
-			        url="chrome://calendar/content/pref/timezonePrefs.xul" 
-			        label="&calendar.timezone.label;" id="timezone"/>
-            </treerow>
- 	    </treeitem>
-     </treechildren>
+          <treerow>
+            <treecell class="treecell-indent"
+                      url="chrome://calendar/content/pref/timezonePrefs.xul"
+                      label="&calendar.timezone.label;"
+                      id="timezone"/>
+          </treerow>
+        </treeitem>
+      </treechildren>
     </treeitem>
   </treechildren>
-  
 </overlay>

@@ -154,7 +154,7 @@ nsPrefWindow.prototype =
                   }
               }
             return "!/!ERROR_UNDEFINED_PREF!/!";
-          }    ,
+          },
 
       setPref:
         function ( aPrefType, aPrefString, aValue )
@@ -272,10 +272,10 @@ nsPrefWindow.prototype =
                       dump(e + "\n");
                     }
                 }
-          },                        
+          },
 
       switchPage:
-        function (aNewURL, aNewTag)
+        function ( aNewURL, aNewTag )
           {
             var oldURL = document.getElementById( this.contentFrame ).getAttribute("tag");
             if( !oldURL )

@@ -67,7 +67,7 @@
     var newTag = aEvent.target.getAttribute("tag");
     if (hPrefWindow)
       hPrefWindow.switchPage(newURL, newTag);
-  }    
+  }
 
   function visitLink(aEvent)
   {
