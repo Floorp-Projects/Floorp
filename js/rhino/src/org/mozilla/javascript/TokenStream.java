@@ -51,7 +51,8 @@ import java.io.*;
  * @author Brendan Eich
  */
 
-public class TokenStream {
+public class TokenStream
+{
     /*
      * JSTokenStream flags, mirroring those in jsscan.h.  These are used
      * by the parser to change/check the state of the scanner.
@@ -73,6 +74,29 @@ public class TokenStream {
      */
     private final static int
         EOF_CHAR = -1;
+
+    public TokenStream(Context cx, Interpreter compiler,
+                       Reader sourceReader, String sourceString,
+                       String sourceName, int lineno)
+    {
+        this.cx = cx;
+        this.compiler = compiler;
+        this.pushbackToken = Token.EOF;
+        this.sourceName = sourceName;
+        this.lineno = lineno;
+        this.flags = 0;
+        if (sourceReader != null) {
+            if (sourceString != null) Kit.codeBug();
+            this.sourceReader = sourceReader;
+            this.sourceBuffer = new char[512];
+            this.sourceEnd = 0;
+        } else {
+            if (sourceString == null) Kit.codeBug();
+            this.sourceString = sourceString;
+            this.sourceEnd = sourceString.length();
+        }
+        this.sourceCursor = 0;
+    }
 
     /* This function uses the cached op, string and number fields in
      * TokenStream; if getToken has been called since the passed token
@@ -269,67 +293,20 @@ public class TokenStream {
         return id & 0xff;
     }
 
-    public TokenStream(Context cx, Reader sourceReader, String sourceString,
-                       boolean fromEval, String sourceName, int lineno,
-                       ErrorReporter errorReporter)
+    public final void reportCurrentLineError(String messageProperty,
+                                             Object[] args)
     {
-        this.cx = cx;
-        this.fromEval = fromEval;
-        this.pushbackToken = Token.EOF;
-        this.sourceName = sourceName;
-        this.lineno = lineno;
-        this.flags = 0;
-        if (sourceReader != null) {
-            if (sourceString != null) Kit.codeBug();
-            this.sourceReader = sourceReader;
-            this.sourceBuffer = new char[512];
-            this.sourceEnd = 0;
-        } else {
-            if (sourceString == null) Kit.codeBug();
-            this.sourceString = sourceString;
-            this.sourceEnd = sourceString.length();
-        }
-        this.sourceCursor = 0;
-        this.errorReporter = errorReporter;
+        compiler.reportSyntaxError(true, messageProperty, args,
+                                   getSourceName(), getLineno(),
+                                   getLine(), getOffset());
     }
 
-    public final void
-    reportCurrentLineError(String messageProperty, Object[] args)
+    public final void reportCurrentLineWarning(String messageProperty,
+                                               Object[] args)
     {
-        reportSyntaxError(true, messageProperty, args,
-                          getSourceName(), getLineno(),
-                          getLine(), getOffset());
-    }
-
-    public void
-    reportCurrentLineWarning(String messageProperty, Object[] args)
-    {
-        reportSyntaxError(false, messageProperty, args,
-                          getSourceName(), getLineno(),
-                          getLine(), getOffset());
-    }
-
-    public void
-    reportSyntaxError(boolean isError, String messageProperty, Object[] args,
-                      String sourceName, int lineno,
-                      String line, int lineOffset)
-    {
-        String message = Context.getMessage(messageProperty, args);
-        if (isError) {
-            ++errorCount;
-            if (fromEval) {
-                // We're probably in an eval. Need to throw an exception.
-                throw ScriptRuntime.constructError(
-                    "SyntaxError", message, sourceName,
-                    lineno, line, lineOffset);
-            } else {
-                errorReporter.error(message, sourceName,
-                                    lineno, line, lineOffset);
-            }
-        } else {
-            errorReporter.warning(message, sourceName,
-                                  lineno, line, lineOffset);
-        }
+        compiler.reportSyntaxError(false, messageProperty, args,
+                                   getSourceName(), getLineno(),
+                                   getLine(), getOffset());
     }
 
     public final String getSourceName() { return sourceName; }
@@ -1230,7 +1207,6 @@ public class TokenStream {
     private int sourceEnd;
     private int sourceCursor;
 
-    private ErrorReporter errorReporter;
-    int errorCount;
+    private Interpreter compiler;
     Context cx;
 }

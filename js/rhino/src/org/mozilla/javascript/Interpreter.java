@@ -110,6 +110,36 @@ public class Interpreter
     // Last icode
         END_ICODE                       = BASE_ICODE + 30;
 
+    final void setSyntaxErrorReporter(ErrorReporter syntaxErrorReporter,
+                                      boolean fromEval)
+    {
+        this.syntaxErrorReporter = syntaxErrorReporter;
+        this.fromEval = fromEval;
+        this.syntaxErrorCount = 0;
+    }
+
+    public void reportSyntaxError(boolean isError,
+                                  String messageProperty, Object[] args,
+                                  String sourceName, int lineno,
+                                  String line, int lineOffset)
+    {
+        String message = Context.getMessage(messageProperty, args);
+        if (isError) {
+            ++syntaxErrorCount;
+            if (fromEval) {
+                // We're probably in an eval. Need to throw an exception.
+                throw ScriptRuntime.constructError(
+                    "SyntaxError", message, sourceName,
+                    lineno, line, lineOffset);
+            } else {
+                syntaxErrorReporter.error(message, sourceName,
+                                          lineno, line, lineOffset);
+            }
+        } else {
+            syntaxErrorReporter.warning(message, sourceName,
+                                        lineno, line, lineOffset);
+        }
+    }
 
     public IRFactory createIRFactory(Context cx, TokenStream ts)
     {
@@ -121,10 +151,9 @@ public class Interpreter
         return new FunctionNode(name);
     }
 
-    public ScriptOrFnNode transform(Context cx, TokenStream ts,
-                                    ScriptOrFnNode tree)
+    public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
     {
-        (new NodeTransformer(ts)).transform(tree);
+        (new NodeTransformer(this)).transform(tree);
         return tree;
     }
 
@@ -142,6 +171,7 @@ public class Interpreter
             return createFunction(cx, scope, itsData, false);
         } else {
             generateICodeFromTree(cx, scriptOrFn);
+            itsData.itsFromEvalCode = fromEval;
             return new InterpretedScript(itsData);
         }
     }
@@ -3290,6 +3320,10 @@ public class Interpreter
         if ((iCode[pc] & 0xFF) != Icode_CATCH) Kit.codeBug();
         return pc;
     }
+
+    private ErrorReporter syntaxErrorReporter;
+    private boolean fromEval;
+    int syntaxErrorCount;
 
     private boolean itsInFunctionFlag;
 

@@ -45,10 +45,11 @@ package org.mozilla.javascript;
  * @author Norris Boyd
  */
 
-public class NodeTransformer {
-
-    public NodeTransformer(TokenStream ts) {
-        this.ts = ts;
+public class NodeTransformer
+{
+    public NodeTransformer(Interpreter compiler)
+    {
+        this.compiler = compiler;
     }
 
     public final void transform(ScriptOrFnNode tree)
@@ -528,14 +529,13 @@ public class NodeTransformer {
         return replacement;
     }
 
-    private void
-    reportError(String messageId, Object[] messageArgs, Node stmt,
-                ScriptOrFnNode tree)
+    private void reportError(String messageId, Object[] messageArgs,
+                             Node stmt, ScriptOrFnNode tree)
     {
         int lineno = stmt.getLineno();
         String sourceName = tree.getSourceName();
-        ts.reportSyntaxError(true, messageId, messageArgs,
-                                       sourceName, lineno, null, 0);
+        compiler.reportSyntaxError(true, messageId, messageArgs,
+                                   sourceName, lineno, null, 0);
     }
 
     private ObjArray loops;
@@ -543,6 +543,6 @@ public class NodeTransformer {
     private boolean inFunction;
     private boolean hasFinally;
 
-    private TokenStream ts;
+    private Interpreter compiler;
 }
 

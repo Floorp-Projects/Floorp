@@ -75,8 +75,7 @@ public class Codegen extends Interpreter {
         return new OptFunctionNode(name);
     }
 
-    public ScriptOrFnNode transform(Context cx, TokenStream ts,
-                                    ScriptOrFnNode tree)
+    public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
     {
         int optLevel = cx.getOptimizationLevel();
         Hashtable possibleDirectCalls = null;
@@ -110,7 +109,7 @@ public class Codegen extends Interpreter {
             directCallTargets = new ObjArray();
         }
 
-        OptTransformer ot = new OptTransformer(ts, possibleDirectCalls,
+        OptTransformer ot = new OptTransformer(this, possibleDirectCalls,
                                                directCallTargets);
         ot.transform(tree);
 

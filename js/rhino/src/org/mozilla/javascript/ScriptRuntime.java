@@ -1580,12 +1580,8 @@ public class ScriptRuntime {
                                          null, 0);
         }
 
-        InterpretedScript is = (InterpretedScript) script;
-        is.itsData.itsFromEvalCode = true;
-        Object result = is.call(cx, scope, (Scriptable) thisArg,
-                                ScriptRuntime.emptyArgs);
-
-        return result;
+        Callable c = (Callable)script;
+        return c.call(cx, scope, (Scriptable)thisArg, ScriptRuntime.emptyArgs);
     }
 
     /**

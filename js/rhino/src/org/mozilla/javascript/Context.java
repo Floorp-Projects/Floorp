@@ -976,13 +976,13 @@ public class Context
      */
     public boolean stringIsCompilableUnit(String source)
     {
-        // no source name or source text manager, because we're just
-        // going to throw away the result.
-        TokenStream ts = new TokenStream(this, null, source, false, null, 1,
-                                         new DefaultErrorReporter());
-
         boolean errorseen = false;
         Interpreter compiler = new Interpreter();
+        compiler.setSyntaxErrorReporter(new DefaultErrorReporter(), false);
+        // no source name or source text manager, because we're just
+        // going to throw away the result.
+        TokenStream ts = new TokenStream(this, compiler, null, source, null, 1);
+
         IRFactory irf = compiler.createIRFactory(this, ts);
         Parser p = createParser();
         Decompiler decompiler = new Decompiler();
@@ -2015,6 +2015,8 @@ public class Context
         if (!(scope == null ^ returnFunction)) Kit.codeBug();
 
         Interpreter compiler = createCompiler();
+        ErrorReporter reporter = getErrorReporter();
+        compiler.setSyntaxErrorReporter(reporter, fromEval);
 
         if (securityController != null) {
             securityDomain = securityController.
@@ -2030,23 +2032,22 @@ public class Context
             }
         }
 
-        ErrorReporter reporter = getErrorReporter();
-        TokenStream ts = new TokenStream(this, sourceReader, sourceString,
-                                         fromEval, sourceName, lineno,
-                                         reporter);
+        TokenStream ts = new TokenStream(this, compiler,
+                                         sourceReader, sourceString,
+                                         sourceName, lineno);
         Parser p = createParser();
 
         IRFactory irf = compiler.createIRFactory(this, ts);
         Decompiler decompiler = new Decompiler();
         ScriptOrFnNode tree = p.parse(ts, irf, decompiler);
-        if (ts.errorCount == 0) {
+        if (compiler.syntaxErrorCount == 0) {
             String encodedSource = null;
             if (isGeneratingSource()) {
                 encodedSource = decompiler.getEncodedSource();
             }
             decompiler = null; // It helps GC
 
-            tree = compiler.transform(this, ts, tree);
+            tree = compiler.transform(this, tree);
 
             if (Token.printTrees) {
                 System.out.println(tree.toStringTree(tree));
@@ -2062,7 +2063,7 @@ public class Context
             Object result = compiler.compile(this, scope, tree,
                                              securityController, securityDomain,
                                              encodedSource);
-            if (ts.errorCount == 0) {
+            if (compiler.syntaxErrorCount == 0) {
                 if (debugger != null) {
                     if (sourceString == null) Kit.codeBug();
                     compiler.notifyDebuggerCompilationDone(this, result,
@@ -2072,7 +2073,7 @@ public class Context
             }
         }
         String msg = Context.getMessage1("msg.got.syntax.errors",
-                                         String.valueOf(ts.errorCount));
+                         String.valueOf(compiler.syntaxErrorCount));
         throw reporter.runtimeError(msg, sourceName, lineno, null, 0);
     }
 
