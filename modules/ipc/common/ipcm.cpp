@@ -197,10 +197,9 @@ ipcmMessageClientInfo::NextTarget(const nsID *target) const
     ipcmClientInfoHeader *hdr = (ipcmClientInfoHeader *) Data();
 
     if (!target)
-        return (const nsID *) hdr + hdr->mTargetStart;
+        return (const nsID *) (Data() + hdr->mTargetStart);
 
-    target += sizeof(nsID);
-    if (target == (const nsID *) MsgBuf() + MsgLen())
+    if (++target == (const nsID *) (MsgBuf() + MsgLen()))
         target = NULL;
     return target;
 }

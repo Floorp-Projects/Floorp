@@ -44,6 +44,14 @@
 #include "nsString.h"
 #include "prmem.h"
 
+static const nsID kIPCMTargetID =
+{ /* 753ca8ff-c8c2-4601-b115-8c2944da1150 */
+    0x753ca8ff,
+    0xc8c2,
+    0x4601,
+    {0xb1, 0x15, 0x8c, 0x29, 0x44, 0xda, 0x11, 0x50}
+};
+
 static const nsID kTestTargetID =
 { /* e628fc6e-a6a7-48c7-adba-f241d1128fb8 */
     0xe628fc6e,
@@ -144,8 +152,15 @@ myIpcClientObserver::OnClientInfo(PRUint32 aReqToken,
         printf("***    %d={%s}\n", i, aNames[i]);
     printf("***  targets:\n");
     for (i = 0; i < aTargetCount; ++i) {
+        const char *trailer;
+        if (aTargets[i]->Equals(kTestTargetID))
+            trailer = " (TEST_TARGET_ID)";
+        else if (aTargets[i]->Equals(kIPCMTargetID))
+            trailer = " (IPCM_TARGET_ID)";
+        else
+            trailer = " (unknown)";
         char *str = aTargets[i]->ToString();
-        printf("***    %d=%s\n", i, str);
+        printf("***    %d=%s%s\n", i, str, trailer);
         PR_Free(str);
     }
 
