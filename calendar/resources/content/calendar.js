@@ -335,9 +335,6 @@ function calendarFinish()
 
 function launchPreferences()
 {
-  if( applicationName == "Mozilla" || applicationName == "Firebird" ) {
-    goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
-  } else
     window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable,modal");
 }
 
