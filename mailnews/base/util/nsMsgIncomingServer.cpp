@@ -155,7 +155,7 @@ nsMsgIncomingServer::GetServerURI(char **)
     rv = GetUsername(getter_Copies(username));
 
     nsXPIDLCString escapedUsername;
-    *getter_Copies(escapedUsername) = nsEscape(username, url_Path);
+    *((char **)getter_Copies(escapedUsername)) = nsEscape(username, url_Path);
     // not all servers have hostnames
     if (NS_SUCCEEDED(rv) && ((const char*)username) && username[0])
         uri += username;
