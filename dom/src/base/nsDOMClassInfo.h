@@ -259,6 +259,7 @@ protected:
   static jsval sWindow_id;
   static jsval sFrames_id;
   static jsval sSelf_id;
+  static jsval sSubmit_id;
 
   static const JSClass *sObjectClass;
 
