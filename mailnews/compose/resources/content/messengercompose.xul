@@ -229,34 +229,36 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuseparator/>
 			<menu value="&dcharMenu.label;">
 			<menupopup>
-			<menuitem value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-1');"/>
-			<menuitem value="&dcharIso2Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-2');"/>
-			<menuitem value="&dcharIso3Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-3');"/>
-			<menuitem value="&dcharIso4Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-4');"/>
-			<menuitem value="&dcharIso9Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-9');"/>
-			<menuitem value="&dcharIso10Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-10');"/>
-			<menuitem value="&dcharIso14Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-14');"/>
-			<menuitem value="&dcharIso15Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-15');"/>
+			<menuitem id="ISO-8859-1" type="radio" name="charsetGroup" value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="ISO-8859-2" type="radio" name="charsetGroup" value="&dcharIso2Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="ISO-8859-3" type="radio" name="charsetGroup" value="&dcharIso3Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="ISO-8859-4" type="radio" name="charsetGroup" value="&dcharIso4Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="ISO-8859-9" type="radio" name="charsetGroup" value="&dcharIso9Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="ISO-8859-10" type="radio" name="charsetGroup" value="&dcharIso10Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id= "ISO-8859-14" type="radio" name="charsetGroup" value="&dcharIso14Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="ISO-8859-15" type="radio" name="charsetGroup" value="&dcharIso15Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharJapanCmd.label;" oncommand="SetDocumentCharacterSet('ISO-2022-JP');"/>
+			<menuitem id="ISO-2022-JP" type="radio" name="charsetGroup" value="&dcharJapanCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharTradChiBigCmd.label;" oncommand="SetDocumentCharacterSet('Big5');"/>
-			<menuitem value="&dcharSimpChiGbCmd.label;" oncommand="SetDocumentCharacterSet('GB2312');"/>
+			<menuitem id="Big5" type="radio" name="charsetGroup" value="&dcharTradChiBigCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="GB2312" type="radio" name="charsetGroup" value="&dcharSimpChiGbCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharKoreanCmd.label;" oncommand="SetDocumentCharacterSet('EUC-KR');"/>
+			<menuitem id="EUC-KR" type="radio" name="charsetGroup" value="&dcharKoreanCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharUtf8Cmd.label;" oncommand="SetDocumentCharacterSet('UTF-8');"/>
+			<menuitem id="UTF-8" type="radio" name="charsetGroup" value="&dcharUtf8Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharRusCmd.label; " oncommand="SetDocumentCharacterSet('KOI8-R');"/>
-			<menuitem value="&dcharUkrCmd.label;" oncommand="SetDocumentCharacterSet('KOI8-U');"/>
+			<menuitem id="KOI8-R" type="radio" name="charsetGroup" value="&dcharRusCmd.label; " oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="KOI8-U" type="radio" name="charsetGroup" value="&dcharUkrCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharIsoGreekCmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-7');"/>
+			<menuitem id="ISO-8859-7" type="radio" name="charsetGroup" value="&dcharIsoGreekCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharVietViCmd.label;" oncommand="SetDocumentCharacterSet('VISCII');"/>
+			<menuitem id="VISCII" type="radio" name="charsetGroup" value="&dcharVietViCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharThaiCmd.label;" oncommand="SetDocumentCharacterSet('TIS-620');"/>
+			<menuitem id="TIS-620" type="radio" name="charsetGroup" value="&dcharThaiCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem value="&dcharArmCmd.label;" oncommand="SetDocumentCharacterSet('ARMSCII-8');"/>
+			<menuitem id="ARMSCII-8" type="radio" name="charsetGroup" value="&dcharArmCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			 <menuseparator />
+			<menuitem value="&dcharDEFAULT.label;" oncommand="SetDefaultMailSendCharacterSet();"/>
 			</menupopup>
 		</menu>
 	</menupopup>

@@ -65,6 +65,8 @@ var stateListener = {
 	}
 };
 
+var currentMailSendCharset = null;
+
 function GetArgs()
 {
 	var args = new Object();
@@ -263,7 +265,7 @@ function ComposeStartup()
                     }
                 }
 			}
-			
+ 			
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 			msgCompose.editor = window.editorShell;
 
@@ -340,12 +342,71 @@ function SetDocumentCharacterSet(aCharset)
 	dump("SetDocumentCharacterSet Callback!\n");
 	dump(aCharset + "\n");
 
-	if (msgCompose)
+	if (msgCompose) {
 		msgCompose.SetDocumentCharset(aCharset);
+    currentMailSendCharset = aCharset;
+  }
 	else
 		dump("Compose has not been created!\n");
 }
 
+function SetDefaultMailSendCharacterSet()
+{
+  // Set the current menu selection as the default
+  if (currentMailSendCharset != null) {
+    // try to get preferences service
+    var prefs = null;
+    try {
+      prefs = Components.classes['component://netscape/preferences'];
+      prefs = prefs.getService();
+      prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+    }
+    catch (ex) {
+      dump("failed to get prefs service!\n");
+      prefs = null;
+    }
+
+	  if (msgCompose) {
+      // write to the pref file
+      prefs.SetCharPref("mailnews.send_default_charset", currentMailSendCharset);
+      dump("Set send_default_charset to" + currentMailSendCharset + "\n");
+    }
+	  else
+		  dump("Compose has not been created!\n");
+  }
+}
+
+function InitCharsetMenuCheckMark()
+{
+  // return if the charset is already set explitily
+  if (currentMailSendCharset != null) {
+    dump("already set to " + currentMailSendCharset + "\n");
+    return;
+  }
+
+  // try to get preferences service
+  var prefs = null;
+  try {
+    prefs = Components.classes['component://netscape/preferences'];
+    prefs = prefs.getService();
+    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+  }
+  catch (ex) {
+    dump("failed to get prefs service!\n");
+    prefs = null;
+  }
+
+  var send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
+  var menuitem = document.getElementById(send_default_charset);
+  if (menuitem)
+    menuitem.setAttribute('checked', 'true');
+  else
+    dump("getElementById failed for " + send_default_charset + "\n");
+
+  // Set a document charset to a default mail send charset.
+  SetDocumentCharacterSet(send_default_charset);
+}
+			
 function GenericSendMessage( msgType )
 {
 	dump("GenericSendMessage from XUL\n");

@@ -84,6 +84,7 @@
 <!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
 <!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
 <!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
+<!ENTITY dcharDEFAULT.label "Set Default Mail Send Character Set">
 
 <!-- Format menu items -->
 <!ENTITY formatMenu.label "Format">
