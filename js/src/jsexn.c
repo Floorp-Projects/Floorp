@@ -601,7 +601,7 @@ js_ReportUncaughtException(JSContext *cx)
     }
 
     if (exnObject != NULL)
-        js_RemoveRoot(cx, &exnObject);
+        js_RemoveRoot(cx->runtime, &exnObject);
     return JS_TRUE;
 }
 

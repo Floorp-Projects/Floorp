@@ -182,7 +182,7 @@ extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize);
 
 extern void
-js_DestroyContext(JSContext *cx);
+js_DestroyContext(JSContext *cx, JSBool force_gc);
 
 extern JSContext *
 js_ContextIterator(JSRuntime *rt, JSContext **iterp);

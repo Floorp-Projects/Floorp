@@ -74,7 +74,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 
 #if JS_HAS_REGEXPS
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
-	js_DestroyContext(cx);
+	js_DestroyContext(cx, JS_TRUE);
 	return NULL;
     }
 #endif
@@ -86,7 +86,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 }
 
 void
-js_DestroyContext(JSContext *cx)
+js_DestroyContext(JSContext *cx, JSBool force_gc)
 {
     JSRuntime *rt;
     JSBool rtempty;
@@ -127,9 +127,14 @@ js_DestroyContext(JSContext *cx)
 #if JS_HAS_REGEXPS
     js_FreeRegExpStatics(cx, &cx->regExpStatics);
 #endif
-    js_ForceGC(cx);
+
+    if (force_gc)
+        js_ForceGC(cx);
 
     if (rtempty) {
+        if (!force_gc)
+            js_ForceGC(cx);
+
 	/* Free atom state now that we've run the GC. */
 	js_FreeAtomState(cx, &rt->atomState);
     }
@@ -173,7 +178,13 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     char *last;
 
     fp = cx->fp;
-    if (fp && fp->script && fp->pc) {
+
+    /* Walk stack until we find a frame that is associated with
+       some script rather than a native frame. */
+    while (fp && (!fp->script || !fp->pc))
+        fp = fp->down;
+
+    if (fp) {
 	report.filename = fp->script->filename;
 	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
 	/* XXX should fetch line somehow */

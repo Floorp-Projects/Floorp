@@ -106,7 +106,7 @@ prop_iterator_finalize(JSContext *cx, JSObject *obj)
 	OBJ_ENUMERATE(cx, JSVAL_TO_OBJECT(iteratee), JSENUMERATE_DESTROY, 
 	              &iter_state, NULL);
     }
-    js_RemoveRoot(cx, &obj->slots[JSSLOT_PARENT]);
+    js_RemoveRoot(cx->runtime, &obj->slots[JSSLOT_PARENT]);
 }
 
 static JSClass prop_iterator_class = {
@@ -701,6 +701,15 @@ out2:
     /* Store the return value and restore sp just above it. */
     *vp = frame.rval;
     fp->sp = vp + 1;
+    
+    /* Store the location of JSOP_CALL that generated the return value. */
+    if (fp->script) {
+        JS_ASSERT(JS_UPTRDIFF(vp - fp->script->depth,
+                              cx->stackPool.current->base) <
+                  JS_UPTRDIFF(cx->stackPool.current->avail,
+                              cx->stackPool.current->base));
+        vp[-fp->script->depth] = (jsval)fp->pc;
+    }
     return ok;
 
 bad:

@@ -156,11 +156,8 @@ js_AddRoot(JSContext *cx, void *rp, const char *name)
 }
 
 JSBool
-js_RemoveRoot(JSContext *cx, void *rp)
+js_RemoveRoot(JSRuntime *rt, void *rp)
 {
-    JSRuntime *rt;
-
-    rt = cx->runtime;
     JS_LOCK_GC_VOID(rt, JS_HashTableRemove(rt->gcRootsHash, rp));
     return JS_TRUE;
 }
