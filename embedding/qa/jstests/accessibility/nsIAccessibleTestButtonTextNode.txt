@@ -1,0 +1,158 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<title> nsIAccessible Interface Test Case </title>
+<!-- Descrpt: Test nsIAccessible Interface methods for HTML Button Text
+     Author: dsirnapalli@netscape.com
+     Revs: 01.08.02 - Created
+     Last Run On:01.08.02.
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+<head>
+
+<!-- script below is ngdriverspecific  -->
+<script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
+</script>
+
+<script type="text/javascript" src="accessibility.js"></script>
+
+<script type="text/javascript">
+
+function getDomNodeButtonText()
+{
+ try{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var node = document.getElementsByTagName("button").item(0);
+  node = node.firstChild;
+  return node;
+ }
+ catch(e){
+  alert("Exception: " + e);
+ }
+}
+
+function executeTestCase()
+{
+  var domNode = getDomNodeButtonText();
+  if(domNode == null)
+  {
+    res = res + "Could not get the DOM Node";
+  }
+  else
+  { //else1
+    var accNode = getAccessibleNode(domNode);
+
+    if(accNode == "Exception")
+    {
+      res = res + "The Node you selected is not an Accessible Node";
+    }
+    else
+    { //else2
+	  try{
+	   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+	   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+       var name = getName(accNode);
+       var role = getRole(accNode);
+       var state = getState(accNode);
+       var value = getValue(accNode);
+       var newvalue = value.toString();
+
+       var col1 = new Array("Property", "Name->", "Role->", "State->", "Value->");
+       var col2 = new Array("Values", name, role, state, value);
+       var col3 = new Array("Result");
+
+       if (name == " Submit ")   col3[1] = "PASS"; else col3[1] = "FAIL";
+       if (role == "42")         col3[2] = "PASS"; else col3[2] = "FAIL";
+       if (state == "3145792")   col3[3] = "PASS"; else col3[3] = "FAIL";
+       if (newvalue.search("NS_ERROR_NOT_IMPLEMENTED"))
+                                 col3[4] = "PASS"; else col3[4] = "FAIL";
+
+       res += "<table border cols=2 width='75%'>";
+
+       for(i=0; i<=4; i++)
+       {
+	     res += "<tr>";
+	     res += " <td width='20%'><b>" + col1[i] + "</b></td>";
+	     if(i==0)
+	       res += " <td width='70%'><b>" + col2[i] + "</b></td>";
+	     else
+	       res += " <td>" + col2[i] + "</td>";
+	     if (i==0)
+	       res += " <td><b>" + col3[i] + "</b></td>";
+	     else
+	     {
+	       if (col3[i] == "FAIL")
+	         res += " <td bgcolor='#FF0000' width='10%'>" + col3[i] + "</td>";
+	       else
+	         res += " <td>" + col3[i] + "</td>";
+	     }
+         res += "</tr>";
+       }
+	   res += "</table>";
+
+      }
+      catch(e){
+       alert("Exception**: " + e);
+      }
+    }//else2
+  }//else1
+
+  createCookie("nsIAccessibleTestButtonNodeText", res, 14);
+  setTimeout("window.location.reload();", 2000);
+}
+
+</script>
+</head>
+<body>
+
+<!-- form below is ngdriverspecific  -->
+<form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
+<script type="text/javascript">
+document.write('<input name="resultsfile" type="hidden" value="' + window.opener.document.resultsform.resultsfile.value + '">');
+</script>
+<input type="hidden" name="textarea">
+</form>
+
+<script type="text/javascript">
+
+var res = "<b><u> Results for HTML Button Node Text:</u></b><br><br>";
+if(readCookie("nsIAccessibleTestButtonNodeText") == null)
+{
+  <!-- Test Button -->
+
+  document.write('<br>');
+  document.write('Testing Button..<br><br>');
+  document.write('<button value="submit"> Submit </button>');
+
+  setTimeout("executeTestCase();", 2000);
+}
+else
+{
+  var cookieValue = readCookie("nsIAccessibleTestButtonNodeText");
+  eraseCookie("nsIAccessibleTestButtonNodeText");
+  displayResults(cookieValue);
+}
+
+</script>
+</body>
+</html>
