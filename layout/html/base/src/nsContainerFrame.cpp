@@ -519,6 +519,22 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       vm->SetViewContentTransparency(aView, viewHasTransparentContent);
     }
 
+    // Make sure z-index is correct
+    PRInt32                zIndex = 0;
+    PRBool                 autoZIndex = PR_FALSE;
+    const nsStylePosition* position;
+
+    aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+      zIndex = position->mZIndex.GetIntValue();
+
+    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+      autoZIndex = PR_TRUE;
+    }
+    
+    vm->SetViewZIndex(aView, zIndex);
+    vm->SetViewAutoZIndex(aView, autoZIndex);
+
     // Clip applies to block-level and replaced elements with overflow
     // set to other than 'visible'
     if (display->IsBlockLevel()) {
