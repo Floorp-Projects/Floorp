@@ -40,194 +40,6 @@
 #
 
 #----------------------------------------------------------------------
-# Unclassified JavaScript allocations
-#
-
-<JS-unclassified>
-JS_malloc
-js_Interpret
-js_Execute
-
-<JS-unclassified>
-JS_DHashTableEnumerate
-JS_DHashTableEnumerate
-JS_strtod
-
-<JS-unclassified>
-tzset
-adjtime
-tzset
-mktime
-PRMJ_LocalGMTDifference
-js_InitDateClass
-
-<JS-unclassified>
-js_SetupLocks
-
-<JS-unclassified>
-PR_Malloc
-PR_NewCondVar
-js_SetSlotThreadSafe
-
-# XXX dladdr badness: js_SetSlotThreadSafe doesn't call *alloc
-<JS-unclassified>
-js_SetSlotThreadSafe
-
-<JS-cached-deflated-string>
-js_DeflateString
-js_GetStringBytes
-
-<JS-ad-hoc-deflated-string>
-JS_malloc
-js_DeflateString
-
-<JS-unclassified>
-JS_vsxprintf
-
-<JSContext>
-js_NewContext
-
-<JSRuntime>
-PR_Malloc
-PR_NewCondVar
-JS_Init
-
-<JSRuntime>
-PR_Calloc
-PR_NewLock
-JS_Init
-
-<JSRuntime>
-JS_Init
-
-<js_AllocRawStack>
-JS_ArenaAllocate
-js_AllocRawStack
-
-<JSRuntime.gcRootsHash>
-~.*
-JS_NewHashTable
-js_InitGC
-
-# XXX dladdr badness: js_GC doesn't call *alloc
-<JS-unclassified>
-js_GC
-
-<JS-GC-roots>
-JS_DHashAllocTable
-JS_DHashTableFinish
-JS_DHashTableOperate
-js_AddRootRT
-
-<JS-GC-arena>
-JS_ArenaAllocate
-~.*
-js_AllocGCThing
-
-<JS-unclassified-arena>
-JS_ArenaAllocate
-
-<js_MatchToken>
-JS_malloc
-js_MatchToken
-
-<JSScope>
-JS_malloc
-js_NewScope
-
-# first .* is js_alloc_symbol, second is js_hash_scope_add
-<JSScope>
-JS_malloc
-~.*
-JS_HashTableRawAdd
-~.*
-~js_(Define|Set)Property
-
-# first .* is js_alloc_symbol, second is js_list_scope_add
-<JSScope>
-JS_malloc
-~.*
-~.*
-~js_(Define|Set)Property
-
-<JSScopeProperty>
-JS_malloc
-js_NewScopeProperty
-
-<JS-slots>
-JS_malloc
-js_AllocSlot
-
-<JS-slots>
-JS_realloc
-js_AllocSlot
-
-<JS-unclassified>
-PR_Malloc
-PR_NewCondVar
-js_SetSlotThreadSafe
-
-<JS-unclassified>
-PR_Calloc
-PR_NewLock
-js_SetSlotThreadSafe
-
-<JS-Array>
-js_NewArrayObject
-
-<JS-function>
-JS_malloc
-js_NewFunction
-
-<JS-function>
-JS_malloc
-js_NewObject
-js_CloneFunctionObject
-
-<JS-function>
-JS_malloc
-js_NewObject
-js_CloneFunctionObject
-JS_CloneFunctionObject
-
-<JS-atom>
-JS_malloc
-js_NewStringCopyN
-js_AtomizeString
-
-<JS-script>
-JS_malloc
-js_NewScript
-
-<JS-script>
-JS_malloc
-JS_strdup
-js_NewScriptFromParams
-js_NewScriptFromCG
-
-<JS-script>
-JS_malloc
-js_FinishTakingSrcNotes
-js_NewScriptFromCG
-
-<JS-script>
-JS_malloc
-js_InitAtomMap
-js_NewScriptFromCG
-
-<JS-function>
-JS_malloc
-js_NewObject
-js_NewFunction
-
-<JSScope>
-JS_malloc
-~.*
-JS_NewHashTable
-~.*
-~js_(Define|Set)Property
-
-#----------------------------------------------------------------------
 
 <nsStringRecycler>
 __builtin_new
@@ -327,6 +139,12 @@ nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
 nsString::AppendWithConversion(char const *, int)
 nsString::AssignWithConversion(char const *)
 CSSLoaderImpl::SetCharset(nsString const &)
+
+<CSSLoaderImpl>
+PL_strdup
+URLKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+CSSLoaderImpl::SheetComplete(nsICSSStyleSheet *, SheetLoadData *)
 
 #----------------------------------------------------------------------
 
@@ -448,6 +266,14 @@ nsLocalFile::ParseURL(char const *, char **, char **, char **, char **)
 <nsXULAttribute>
 __builtin_new
 nsXULAttribute::operator new(unsigned int)
+
+<nsXULAttribute>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<nsAString, unsigned short>(nsAString const &, unsigned short *)
+ToNewUnicode(nsAString const &)
+nsXULAttributeValue::SetValue(nsAString const &, int)
 
 <nsXULAttribute::mValue>
 PR_Malloc
@@ -1139,20 +965,12 @@ PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), in
 nsHashtable::nsHashtable(unsigned int, int)
 nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent *)
 
-# script
 <nsXBLPrototypeBinding>
-JS_malloc
-js_NewObject
-JS_InitClass
-nsXBLPrototypeBinding::InitClass(nsCString const &, nsIScriptContext *, void *, void **)
-
-<nsXBLPrototypeBinding>
-JS_malloc
-js_InflateString
-js_Atomize
-JS_DefinePropertyWithTinyId
-JS_LookupProperty
-nsXBLPrototypeBinding::InitClass(nsCString const &, nsIScriptContext *, void *, void **)
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
+nsXBLAttributeEntry::Create(nsIAtom *, nsIAtom *, nsIContent *)
+nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent *)
 
 #----------------------------------------------------------------------
 #
@@ -1237,15 +1055,13 @@ nsXBLPrototypeBinding::GetBindingURI(nsCString &)
 nsXBLPrototypeProperty::ConstructProperty(nsIContent *, nsIContent *)
 
 <nsXBLPrototypeProperty>
-JS_malloc
-js_NewObject
-JS_NewObject
-XPCWrappedNativeProto::Init(XPCCallContext &, XPCNativeScriptableCreateInfo const *)
-XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext &, XPCWrappedNativeScope *, nsIClassInfo *, XPCNativeScriptableCreateInfo const *, int)
-XPCWrappedNative::GetNewOrUsed(XPCCallContext &, nsISupports *, XPCWrappedNativeScope *, XPCNativeInterface *, XPCWrappedNative **)
-XPCConvert::NativeInterface2JSObject(XPCCallContext &, nsIXPConnectJSObjectHolder **, nsISupports *, nsID const *, JSObject *, unsigned int *)
-nsXPConnect::WrapNative(JSContext *, JSObject *, nsISupports *, nsID const &, nsIXPConnectJSObjectHolder **)
-nsXBLPrototypeProperty::InitTargetObjects(nsIScriptContext *, nsIContent *, void **, void **)
+JS_DHashAllocTable
+JS_DHashTableFinish
+JS_DHashTableOperate
+js_AddRootRT
+JS_AddNamedRootRT
+NS_NewXBLPrototypeBinding(nsACString const &, nsIContent *, nsIXBLDocumentInfo *, nsIXBLPrototypeBinding **)
+nsXBLPrototypeProperty::ParseMethod(nsIScriptContext *)
 
 # ----------------------------------------------------------------------
 #
@@ -1876,12 +1692,6 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext &, nsIClassInfo *)
 XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext &, XPCWrappedNativeScope *, nsIClassInfo *, XPCNativeScriptableCreateInfo const *, int)
 
 <XPCWrappedNative>
-JS_malloc
-js_NewObject
-JS_NewObject
-XPCWrappedNative::Init(XPCCallContext &, JSObject *, XPCNativeScriptableCreateInfo const *)
-
-<XPCWrappedNative>
 JS_DHashAllocTable
 JS_DHashTableFinish
 JS_DHashTableOperate
@@ -2144,6 +1954,20 @@ nsACString::do_AssignFromElementPtr(char const *)
 nsCString::nsCString(char const *)
 nsFactoryEntry::nsFactoryEntry(nsID const &, char const *, int)
 nsComponentManagerImpl::PlatformPrePopulateRegistry(void)
+
+<nsComponentManagerImpl>
+PL_strdup
+nsComponentManagerImpl::HashContractID(char const *, nsFactoryEntry *)
+
+<nsComponentManagerImpl>
+PL_strdup
+nsFactoryEntry::nsFactoryEntry(nsID const &, char const *, int)
+nsComponentManagerImpl::PlatformPrePopulateRegistry(void)
+
+<nsComponentManagerImpl>
+PL_DHashAllocTable
+PL_DHashTableInit
+nsComponentManagerImpl::Init(void)
 
 # ----------------------------------------------------------------------
 
@@ -2576,48 +2400,16 @@ nsXULPrototypeCache::PutScript(nsIURI *, void *)
 __builtin_new
 XULContentSinkImpl::CreateElement(nsINodeInfo *, nsXULPrototypeElement **)
 
+# nsXULPrototypeNode
+<nsXULPrototypeCache>
+__builtin_new
+__builtin_vec_new
+XULContentSinkImpl::CloseContainer(nsIParserNode const &)
+
 # nsXULPrototypeScript
 <nsXULPrototypeCache>
 __builtin_new
 XULContentSinkImpl::OpenScript(nsIParserNode const &)
-
-# nsXULPrototypeScript
-<nsXULPrototypeCache>
-JS_malloc
-js_NewObject
-JS_NewScriptObject
-nsJSContext::CompileScript(unsigned short const *, int, void *, nsIPrincipal *, char const *, unsigned int, char const *, void **)
-nsXULPrototypeScript::Compile(unsigned short const *, int, nsIURI *, int, nsIDocument *, nsIXULPrototypeDocument *)
-
-# nsXULPrototypeScript
-<nsXULPrototypeCache>
-JS_malloc
-js_FinishTakingTryNotes
-js_NewScriptFromCG
-js_EmitFunctionBody
-js_EmitTree
-js_CompileFunctionBody
-js_CompileTokenStream
-JS_DefineFunction
-JS_CompileUCScriptForPrincipals
-nsJSContext::CompileScript(unsigned short const *, int, void *, nsIPrincipal *, char const *, unsigned int, char const *, void **)
-nsXULPrototypeScript::Compile(unsigned short const *, int, nsIURI *, int, nsIDocument *, nsIXULPrototypeDocument *)
-
-# nsXULPrototypeScript
-<nsXULPrototypeCache>
-JS_malloc
-js_FinishTakingTryNotes
-js_NewScriptFromCG
-js_EmitFunctionBody
-js_EmitTree
-js_EmitTree
-js_EmitTree
-js_CompileFunctionBody
-js_CompileTokenStream
-JS_DefineFunction
-JS_CompileUCScriptForPrincipals
-nsJSContext::CompileScript(unsigned short const *, int, void *, nsIPrincipal *, char const *, unsigned int, char const *, void **)
-nsXULPrototypeScript::Compile(unsigned short const *, int, nsIURI *, int, nsIDocument *, nsIXULPrototypeDocument *)
 
 # ----------------------------------------------------------------------
 #
@@ -3193,6 +2985,11 @@ StyleContextCache::VerifyList(unsigned int)
 __builtin_new
 StyleContextCache::AllocateList(void)
 
+# ----------------------------------------------------------------------
+#
+# nsPersistentProperties
+#
+
 <nsPersistentProperties>
 __builtin_new
 nsPersistentProperties::Create(nsISupports *, nsID const &, void **)
@@ -3233,6 +3030,19 @@ nsMemory::Alloc(unsigned int)
 ToNewUnicode(nsAString const &)
 nsPersistentProperties::SetStringProperty(nsAString const &, nsAString &, nsAString &)
 
+<nsPersistentProperties>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<nsAString, unsigned short>(nsAString const &, unsigned short *)
+ToNewUnicode(nsAString const &)
+nsPersistentProperties::SetStringProperty(nsAString const &, nsAString &, nsAString &)
+
+# ----------------------------------------------------------------------
+#
+# nsCSSValue
+#
+
 <nsCSSValue>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -3249,6 +3059,16 @@ nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 ToNewUnicode(nsAString const &)
 nsCSSValue::SetStringValue(nsAString const &, nsCSSUnit)
+
+<nsCSSValue>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<nsAString, unsigned short>(nsAString const &, unsigned short *)
+ToNewUnicode(nsAString const &)
+nsCSSValue::SetStringValue(nsAString const &, nsCSSUnit)
+
+# ----------------------------------------------------------------------
 
 <nsStringKey>
 PR_Malloc
@@ -4222,6 +4042,11 @@ PL_ArenaAllocate
 nsFixedSizeAllocator::Alloc(unsigned int)
 CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource *, nsISimpleEnumerator **)
 
+# ----------------------------------------------------------------------
+#
+# nsHTMLValue
+#
+
 <nsHTMLValue>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -4236,6 +4061,24 @@ nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 ToNewUnicode(nsAString const &)
 nsHTMLValue::SetStringValue(nsAString const &, nsHTMLUnit)
+
+<nsHTMLValue>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<nsAString, unsigned short>(nsAString const &, unsigned short *)
+ToNewUnicode(nsAString const &)
+nsHTMLValue::nsHTMLValue(nsAString const &, nsHTMLUnit)
+
+<nsHTMLValue>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<nsAString, unsigned short>(nsAString const &, unsigned short *)
+ToNewUnicode(nsAString const &)
+nsHTMLValue::SetStringValue(nsAString const &, nsHTMLUnit)
+
+# ----------------------------------------------------------------------
 
 <nsMemCache>
 PR_Malloc
@@ -5195,6 +5038,18 @@ nsFixedSizeAllocator::AddBucket(unsigned int)
 nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
 nsConflictSet::Init(void)
 
+<nsConflictSet>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
+nsConflictSet::SupportEntry::Create(nsFixedSizeAllocator &)
+
+<nsConflictSet>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
+nsConflictSet::ClusterEntry::Create(nsFixedSizeAllocator &)
+
 #----------------------------------------------------------------------
 
 <nsAssignmentSet>
@@ -5276,6 +5131,12 @@ PL_ArenaAllocate
 nsFixedSizeAllocator::Alloc(unsigned int)
 nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet &, void *) const
 
+<nsTemplateMatch>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
+nsTemplateMatch::Create(nsFixedSizeAllocator &, nsTemplateRule const *, Instantiation const &, nsAssignmentSet const &)
+
 #----------------------------------------------------------------------
 
 <ReteNodeSet::mNodes>
@@ -5284,11 +5145,6 @@ __builtin_vec_new
 ReteNodeSet::Add(ReteNode *)
 
 #----------------------------------------------------------------------
-
-<nsXULPrototypeNode>
-__builtin_new
-__builtin_vec_new
-XULContentSinkImpl::CloseContainer(nsIParserNode const &)
 
 <StaticModuleInfo>
 __builtin_new
@@ -5399,6 +5255,8 @@ nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsXULDocument::SetTemplateBuilderFor(nsIContent *, nsIXULTemplateBuilder *)
 
+# ----------------------------------------------------------------------
+
 <nsXULDocument::mElementMap>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -5446,6 +5304,14 @@ nsFixedSizeAllocator::AddBucket(unsigned int)
 nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
 nsElementMap::nsElementMap(void)
 
+<nsXULDocument::mElementMap>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<nsAString, unsigned short>(nsAString const &, unsigned short *)
+ToNewUnicode(nsAString const &)
+nsElementMap::Add(nsAString const &, nsIContent *)
+
 <nsXULDocument::mContentWrapperHash>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
@@ -5461,6 +5327,12 @@ nsSupportsArray::GrowArrayBy(int)
 nsSupportsArray::InsertElementAt(nsISupports *, unsigned int)
 nsSupportsArray::AppendElement(nsISupports *)
 nsXULDocument::PrepareToWalk(void)
+
+<nsXULDocument>
+PL_DHashAllocTable
+PL_DHashTableInit
+PL_NewDHashTable
+nsXULDocument::AddBroadcastListenerFor(nsIDOMElement *, nsIDOMElement *, nsAString const &)
 
 #----------------------------------------------------------------------
 
@@ -5699,12 +5571,24 @@ PresShell::AllocateFrame(unsigned int, void **)
 nsPresContext::AllocateFromShell(unsigned int, void **)
 nsRuleNode::ComputeColorData(nsStyleStruct *, nsCSSStruct const &, nsIStyleContext *, nsRuleNode *, nsRuleNode::RuleDetail const &, int)
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+#
+# nsBookmarksService
+#
 
 <nsBookmarksService>
 PL_DHashAllocTable
 PL_DHashTableFinish
 PL_DHashTableOperate
+InMemoryDataSource::LockedAssert(nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int)
+InMemoryDataSource::Assert(nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int)
+BookmarkParser::updateAtom(nsIRDFDataSource *, nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int *)
+
+<nsBookmarksService>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
+Assertion::Create(nsFixedSizeAllocator &, nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int)
 InMemoryDataSource::LockedAssert(nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int)
 InMemoryDataSource::Assert(nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int)
 BookmarkParser::updateAtom(nsIRDFDataSource *, nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int *)
@@ -6176,3 +6060,17 @@ nsSupportsArray::InsertElementAt(nsISupports *, unsigned int)
 nsSupportsArray::AppendElement(nsISupports *)
 LocalStoreImpl::AddObserver(nsIRDFObserver *)
 
+# ----------------------------------------------------------------------
+#
+# NSS
+#
+
+<NSS>
+PR_Malloc
+PL_ArenaAllocate
+PORT_ArenaAlloc
+
+<NSS>
+PR_Malloc
+PL_ArenaAllocate
+nss_ZAlloc
