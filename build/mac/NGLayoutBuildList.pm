@@ -548,12 +548,6 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
 	}
 
-	{
-		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
-		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST", 		"$pref_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",			"$pref_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",	"$pref_chrome_dir:locale:en-US:", 0);
-	}
 
 	# QA Menu
 	_InstallResources(":mozilla:intl:strres:tests:MANIFEST",			"$resource_dir");
@@ -903,7 +897,7 @@ sub BuildClientDist()
 	 _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
 	 my $dir = '';
-	 for $dir (qw(bookmarks find history prefwindow related sample search shistory sidebar ucth xfer)) {
+	 for $dir (qw(bookmarks find history related sample search shistory sidebar ucth xfer)) {
 	 _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	 }
 
@@ -1173,7 +1167,6 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:shistory:macbuild:shistoryIDL.mcp",	"shistory");
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 	BuildIDLProject(":mozilla:xpfe:components:search:macbuild:SearchIDL.mcp",	"search");
-	BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
 
 	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
@@ -1577,7 +1570,6 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.shlb", "RegViewerComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", "shistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindow.mcp", "prefwindow$D.shlb", "prefwindowComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	# Applications
