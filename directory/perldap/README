@@ -1,54 +1,123 @@
 #############################################################################
 #                                                                           #
-#            PerlDAP v1.0 - A Perl Developers' Kit for LDAP                 #
+#            PerLDAP v1.0 - A Perl Developers' Kit for LDAP                 #
 #                                                                           #
 #############################################################################
 
-[ This doc needs LOTS of work... --CED ]
 
-INTRODUCTION
-============
+What is PerLDAP?
+================
 
-PerlDAP (also known as Mozilla::LDAP) allows Perl programmers to develop
-software that leverages directories supporting the Lightweight Directory
-Access Protocol (LDAP).
+PerLDAP is a set of modules written in Perl and C that allow developers to
+leverage their existing Perl knowledge to easily access and manage LDAP-
+enabled directories.  PerLDAP makes it very easy to search, add, delete,
+and modify directory entries.  For example, Perl developers can easily
+build web applications to access information stored in a directory or
+create directory sync tools between directories and other services.
 
-Version 1.0 provides both object oriented and direct methods of access
-for all LDAP version 2 operations.  Experimental direct access is also
-included for version 3 operations.
+PerLDAP is an open source development project, the result of a joint effort
+between Netscape and Clayton Donley, an open source developer.  PerLDAP
+currently provides the basic functions to allow Perl users to access and
+manipulate directories easily.  Based on developer feedback and
+involvement, PerLDAP will continue to evolve to include additional
+functionality in future releases.
 
-Numerous examples and test applications are provided to help developers
-quickly understand and utilize this module.
+Installing PerLDAP Binaries
+===========================
 
-LICENSE/COPYRIGHT
+You will first need version 3.0 Beta 1 of the LDAP C SDK from Netscape.  This
+is available from the DevEdge page at:
+    http://developer.netscape.com/tech/directory/
+
+You will also need Perl v5.005, available at http://www.perl.com/.  Earlier
+versions will NOT work with the binaries.  If you wish to use v5.004, you
+will need to compile PerLDAP from source.
+
+On Unix (Solaris Only...HPUX, IRIX, AIX to follow):
+  1. Be sure that the libraries from the C SDK are installed in locations
+     referenced by the environment variable LD_LIBRARY_PATH.
+  2. Save the file in a temporary location
+  3. Unzip the file by entering the command:
+      gunzip <filename>.tar.gz
+  4. Untar the resulting tar file by entering the command:
+      tar xvof <filename>.tar
+  5. Locate the site install directory for Perl v5.005.  If you are unsure,
+     this is likely the directory ending in 'site_perl' when executing the
+     following command:
+      perl -e 'print join("\n",@INC);'
+  6. Execute the following command as the super-user (root):
+      ./install-bin <site_lib_directory>
+
+On Windows NT:
+  1. Be sure that the DLL from the C SDK is installed in your system32
+     directory.
+  2. Save the file in a temporary location
+  3. Unzip the file by entering the command:
+      I don't have a tool for creating self-extracting archives...
+  4. Locate the site install directory for Perl v5.005.  If you are unsure,
+     this is likely the directory ending in 'site' when executing the
+     following command:
+      perl -e 'print join("\n",@INC);' 
+  5. Execute the following command:
+      install-bin <site_lib_directory>
+
+
+Compiling the PerLDAP Sources
+=============================
+
+The source to PerLDAP is available on the Mozilla site at:
+
+  http://www.mozilla.org/directory/
+
+Instructions for building the source can be found in the INSTALL file
+in the source distribution.
+
+
+Getting Started
+===============
+
+Documentation for this module is in standard Perl 'pod' format.  HTML
+versions of this documentation can also be found on the Netscape DevEdge
+site at:  http://developer.netscape.com/tech/directory/.
+
+Additionally, many good examples can be found in the 'examples' directory.
+
+
+Modules and Examples Included
+=============================
+
+Mozilla::LDAP::API - Low level interface between Perl and the LDAP C API
+Mozilla::LDAP::Entry - Perl methods for manipulating entry objects
+Mozilla::LDAP::Conn - Perl methods for performing LDAP operations
+Mozilla::LDAP::LDIF - Perl methods for utilizing LDIF
+test_api/search.pl - Tests low level API search calls
+test_api/write.pl  - Tests low level API write calls
+test_api/api.pl - Tests ALL low level LDAPv2 calls
+examples/lfinger.pl
+examples/qsearch.pl
+examples/monitor.pl
+examples/ldappasswd.pl
+examples/rmentry.pl
+
+
+License/Copyright
 =================
 
-...stuff goes here...
+Portions by Netscape (c) Copyright 1998 Netscape Communications Corp, Inc.
+Portions by Clayton Donley (c) Copyright 1998 Clayton Donley
 
-REQUIREMENTS
-============
+Please read the MPL-1.0.txt file included for information on the Mozilla
+Public License, which covers all files in this distribution.
 
-Netscape LDAP C Developers' Kit (Version 1.1 or 3.0)
-  - http://developer.netscape.com/ldap/
-  - http://www.mozilla.org/ldap/
-Perl 5.004 or higher (5.005 recommended)
-  - http://www.perl.com/
-C Language Compiler
-
-SUPPORTED SYSTEMS
-=================
-
-...Core systems that we test...
-
-KNOWN BUGS
+Known Bugs
 ==========
 
-LDAPv3 API calls are included as a baseline for further development only.  Use
-at your own risk.
+There are a number of issues still outstanding at the time of release.  Most
+of these are already in the process of being resolved.
 
-WHERE TO GET - change section name
-============
-- Binaries
-- Sources
+ - There is a possible memory leak in the search routines.
+ - The Rebind operation on NT does NOT work properly when set to a Perl
+   function.  This is being investigated.
+ - Some of the documentation is incomplete.
 
 
