@@ -23,13 +23,13 @@
 #include "nsErrorService.h"
 #include "nsCRT.h"
 
-static PR_CALLBACK void*
+static void*
 CloneCString(nsHashKey *aKey, void *aData, void* closure)
 {
   return nsCRT::strdup((const char*)aData);
 }
 
-static PR_CALLBACK PRBool
+static PRBool
 DeleteCString(nsHashKey *aKey, void *aData, void* closure)
 {
   nsCRT::free((char*)aData);
@@ -37,7 +37,7 @@ DeleteCString(nsHashKey *aKey, void *aData, void* closure)
 }
 
 nsInt2StrHashtable::nsInt2StrHashtable()
-    : mHashtable(CloneCString, nsnull, DeleteCString, nsnull, 16)
+    : mHashtable((nsHashtableCloneElementFunc)CloneCString, nsnull, (nsHashtableEnumFunc)DeleteCString, nsnull, 16)
 {
 }
 
