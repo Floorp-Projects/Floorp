@@ -31,6 +31,11 @@ var gPrefs = Components.classes["@mozilla.org/preferences-service;1"];
 gPrefs = gPrefs.getService();
 gPrefs = gPrefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 	
+var gProfile = Components.classes["@mozilla.org/profile/manager;1"].getService(Components.interfaces.nsIProfileInternal);
+
+var gProfileDirURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
+gProfileDirURL.file = gProfile.getProfileDir(gProfile.currentProfile);
+
 var gMapItURLFormat = gPrefs.getComplexValue("mail.addr_book.mapit_url.format", 
                                               Components.interfaces.nsIPrefLocalizedString).data;
 
@@ -92,6 +97,7 @@ function OnLoadCardView()
 	cvData.cvEmail1			= doc.getElementById("cvEmail1");
 	cvData.cvScreennameBox		= doc.getElementById("cvScreennameBox");
 	cvData.cvScreenname		= doc.getElementById("cvScreenname");
+	cvData.cvBuddyIcon              = doc.getElementById("cvBuddyIcon");
 	cvData.cvListNameBox		= doc.getElementById("cvListNameBox");
 	cvData.cvListName               = doc.getElementById("cvListName");
 	cvData.cvEmail2Box		= doc.getElementById("cvEmail2Box");
@@ -252,14 +258,38 @@ function DisplayCardViewPane(card)
 	visible = cvSetNodeWithLabel(data.cvCustom3, zCustom3, card.custom3) || visible;
 	visible = cvSetNodeWithLabel(data.cvCustom4, zCustom4, card.custom4) || visible;
 	visible = cvSetNode(data.cvNotes, card.notes) || visible;
-	cvSetVisible(data.cvhOther, visible);
-	cvSetVisible(data.cvbOther, visible);
 
-    // hide description section, not show for non-mailing lists
-  	cvSetVisible(data.cvbDescription, false);
+        var iconURLStr = "";
+        try {
+          var myScreenName = gPrefs.getCharPref("aim.session.screenname");
+          if (myScreenName && card.aimScreenName) {
+            iconURLStr = gProfileDirURL.spec + "/NIM/" + myScreenName + "/picture/" + card.aimScreenName + ".gif";
 
-    // hide addresses section, not show for non-mailing lists
-  	cvSetVisible(data.cvbAddresses, false);
+            // check if the file exists
+            var iconFileURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
+            iconFileURL.spec = iconURLStr;
+            
+            if (iconFileURL.file.exists()) {
+              data.cvBuddyIcon.setAttribute("src", iconURLStr);
+              visible = true;
+            }
+            else {
+              data.cvBuddyIcon.setAttribute("src", "");
+            }
+          }
+        }
+        catch (ex) {
+          dump("ex = " + ex + "\n");
+        }
+
+        cvSetVisible(data.cvhOther, visible);
+        cvSetVisible(data.cvbOther, visible);
+
+        // hide description section, not show for non-mailing lists
+        cvSetVisible(data.cvbDescription, false);
+
+        // hide addresses section, not show for non-mailing lists
+        cvSetVisible(data.cvbAddresses, false);
   }
 
 	// Phone section

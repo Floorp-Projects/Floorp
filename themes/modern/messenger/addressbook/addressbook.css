@@ -202,6 +202,11 @@ sidebarheader {
   font-weight: bold;
 }
 
+#cvBuddyIcon {
+  padding-left: 20px;
+  padding-top: 2px;
+}
+
 .CardViewText,
 .CardViewLink {
   margin: 0px;

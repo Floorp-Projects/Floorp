@@ -85,6 +85,10 @@ Rights Reserved.
           <description class="CardViewText" id="cvCustom3"/>
           <description class="CardViewText" id="cvCustom4"/>
           <description class="CardViewText" id="cvNotes"/>
+
+          <hbox autostretch="never">
+            <image id="cvBuddyIcon"/> 
+          </hbox>
         </vbox>
 
         <vbox id="cvbDescription" class="cardViewGroup">
