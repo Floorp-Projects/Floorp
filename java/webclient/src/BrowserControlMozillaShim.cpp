@@ -48,6 +48,10 @@ nsMacMessageSink gMessageSink;
 
 #endif
 
+#ifdef XP_UNIX
+#include <gtk/gtk.h>
+#endif
+
 #include "nsActions.h"
 
 #include "nsIRegistry.h"
@@ -67,7 +71,12 @@ extern "C" void NS_SetupRegistry();
 
 
 struct WebShellInitContext {
-	HWND				parentHWnd;
+#ifdef XP_UNIX
+    GtkWidget * parentHWnd;
+#else 
+    // PENDING(mark): Don't we need something for Mac?
+    HWND				parentHWnd;
+#endif
 	nsIWebShell		*	webShell;
 	PLEventQueue	*	actionQueue;
 	PRThread		*	embeddedThread;
@@ -81,43 +90,36 @@ struct WebShellInitContext {
 	int					h;
 };
 
-
 static void
 ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
+    if (env->ExceptionOccurred())
+	env->ExceptionClear();
+    jclass excCls = env->FindClass("java/lang/Exception");
+    
+    if (excCls == 0) { // Unable to find the exception class, give up.
 	if (env->ExceptionOccurred())
+	    env->ExceptionClear();
+	return;
+    }
+    
+    // Throw the exception with the error code and description
+    jmethodID jID = env->GetMethodID(excCls, "<init>", "(Ljava/lang/String;)V");		// void Exception(String)
+    
+    if (jID != NULL) {
+	jstring	exceptionString = env->NewStringUTF(message);
+	jthrowable newException = (jthrowable) env->NewObject(excCls, jID, exceptionString);
+        
+        if (newException != NULL) {
+	    env->Throw(newException);
+	}
+	else {
+	    if (env->ExceptionOccurred())
 		env->ExceptionClear();
-
-	jclass excCls = env->FindClass("java/lang/Exception");
-
-	if (excCls == 0) { // Unable to find the exception class, give up.
-		if (env->ExceptionOccurred())
-			env->ExceptionClear();
-		return;
 	}
-	
-	// Throw the exception with the error code and description
-	jmethodID jID = env->GetMethodID(excCls, "<init>", "(Ljava/lang/String;)V");		// void Exception(String)
-	
-	if (jID != NULL)
-	{
-	   	jstring	exceptionString = env->NewStringUTF(message);
-		jthrowable newException = (jthrowable) env->NewObject(excCls, jID, exceptionString);
-		
-		if (newException != NULL)
-		{
-			env->Throw(newException);
-		}
-		else
-		{
-			if (env->ExceptionOccurred())
-				env->ExceptionClear();
-		}
-	}
-	else
-	{
-		if (env->ExceptionOccurred())
-			env->ExceptionClear();
+	} else {
+	    if (env->ExceptionOccurred())
+		env->ExceptionClear();
 	}
 } // ThrowExceptionToJava()
 
@@ -139,37 +141,94 @@ char * errorMessages[] = {
 };
 
 
-void
-EmbeddedEventHandler (void * arg)
-{
-	WebShellInitContext	*	initContext = (WebShellInitContext *) arg;
-	nsIEventQueueService*	aEventQService = nsnull;
-	nsresult				rv;
-	PRBool					allowPlugins = PR_FALSE;
+int processEventLoop(WebShellInitContext * initContext) {
+#ifdef XP_UNIX
+    while(gtk_events_pending()) {
+        gtk_main_iteration();
+    }
+#else
+    // PENDING(mark): Does this work on the Mac?
+    MSG msg;
+    
+    if (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+        if (::GetMessage(&msg, NULL, 0, 0)) {
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+        }
+    }
+#endif
+    ::PR_Sleep(PR_INTERVAL_NO_WAIT);
+    
+    if ((initContext->initComplete) && (initContext->actionQueue)) {
+        
+        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        
+        if (::PL_EventAvailable(initContext->actionQueue)) {
+            
+            PLEvent * event = ::PL_GetEvent(initContext->actionQueue);
+            
+            if (event != NULL) {
+                ::PL_HandleEvent(event);
+            }
+        }
+        
+        PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        
+    }
+    if (initContext->stopThread) {
+        initContext->stopThread++;
+        
+        return 0;
+      }
+    return 1;
+}
 
-	//TODO Add tracing from nspr.
-
+#ifdef XP_UNIX
+static void event_processor_callback(gpointer data,
+                                     gint source,
+                                     GdkInputCondition condition) {
 #if DEBUG_RAPTOR_CANVAS
-	printf("EmbeddedEventHandler(%lx): Create the Event Queue for the UI thread...\n", initContext);
+    printf("event_processor_callback()\n");
+#endif
+    nsIEventQueue *eventQueue = (nsIEventQueue*)data;
+    eventQueue->ProcessPendingEvents();
+#if DEBUG_RAPTOR_CANVAS
+    printf("Done processing pending events...\n");
+#endif
+}
 #endif
 
-	// Create the Event Queue for the UI thread...
-	rv = nsServiceManager::GetService(kEventQueueServiceCID,
-        kIEventQueueServiceIID,
-        (nsISupports **)&aEventQService);
+void
+EmbeddedEventHandler (void * arg) {
+    WebShellInitContext * initContext = (WebShellInitContext *) arg;
+    nsIEventQueueService * aEventQService = nsnull;
+    nsresult rv;
+    PRBool allowPlugins = PR_FALSE;
 
-	if (NS_FAILED(rv)) {
-		initContext->initFailCode = kEventQueueError;
-		return;
+    //TODO Add tracing from nspr.
+    
+#if DEBUG_RAPTOR_CANVAS
+    printf("EmbeddedEventHandler(%lx): Create the Event Queue for the UI thread...\n", initContext);
+#endif
+    
+    // Create the Event Queue for the UI thread...
+    rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                      kIEventQueueServiceIID,
+                                      (nsISupports **) &aEventQService);
+    
+    if (NS_FAILED(rv)) {
+        initContext->initFailCode = kEventQueueError;
+        return;
     }
+    
+    // Create the event queue.
+    rv = aEventQService->CreateThreadEventQueue();
+    
+    NS_InitINetService();
+    
+    // Create the action queue
+    if (initContext->embeddedThread) {
 
-	// Create the event queue.
-	rv = aEventQService->CreateThreadEventQueue();
-	
-	NS_InitINetService();
-
-	// Create the action queue
-	if (initContext->embeddedThread) {
 #if DEBUG_RAPTOR_CANVAS
 		printf("EmbeddedEventHandler(%lx): embeddedThread != NULL\n", initContext);
 #endif
@@ -184,74 +243,61 @@ EmbeddedEventHandler (void * arg)
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Create the WebShell...\n", initContext);
 #endif
-
-	// Create the WebShell.
-	rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID, (void**)&initContext->webShell);
-	if (NS_FAILED(rv)) {
-		initContext->initFailCode = kCreateWebShellError;
-		return;
-	}
-
+    // Create the WebShell.
+    rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID, (void**)&initContext->webShell);
+    if (NS_FAILED(rv)) {
+        initContext->initFailCode = kCreateWebShellError;
+        return;
+    }
+    
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Init the WebShell...\n", initContext);
 #endif
-
-	rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
-									 initContext->x, initContext->y, initContext->w, initContext->h
-									);
-	if (NS_FAILED(rv)) {
-		initContext->initFailCode = kInitWebShellError;
-		return;
-	}
-
+    
+    rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
+                                     initContext->x, initContext->y, initContext->w, initContext->h);
+    if (NS_FAILED(rv)) {
+        initContext->initFailCode = kInitWebShellError;
+        return;
+    }
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Show the WebShell...\n", initContext);
 #endif
-	
-	rv = initContext->webShell->Show();
-	if (NS_FAILED(rv)) {
-		initContext->initFailCode = kShowWebShellError;
-		return;
-	}
-
-	initContext->initComplete = TRUE;
-
+    
+    rv = initContext->webShell->Show();
+    if (NS_FAILED(rv)) {
+        initContext->initFailCode = kShowWebShellError;
+        return;
+    }
+    
+    initContext->initComplete = TRUE;
+    
 #if DEBUG_RAPTOR_CANVAS
-	printf("EmbeddedEventHandler(%lx): enter event loop\n", initContext);
+    printf("EmbeddedEventHandler(%lx): enter event loop\n", initContext);
+#endif
+    
+#ifdef XP_UNIX
+    // PENDING(mark): I'm not sure why the following code is needed....
+    // All I know is that when I add the code here, the document 
+    // loader will try to load any clicked urls before crashing.
+    // Whereas, if I left it out, nothing happens when the user clicks on
+    // a URL
+    nsIEventQueue * EQueue = nsnull;
+
+    rv = aEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+    
+    gdk_input_add(EQueue->GetEventQueueSelectFD(),
+                  GDK_INPUT_READ,
+                  event_processor_callback,
+                  EQueue);
 #endif
 
     do {
-		MSG msg;
-		
-		if (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-			if (::GetMessage(&msg, NULL, 0, 0)) {
-				::TranslateMessage(&msg);
-				::DispatchMessage(&msg);
-			}
-		}
-
-		::PR_Sleep(PR_INTERVAL_NO_WAIT);
-
-		if ((initContext->initComplete) && (initContext->actionQueue)) {
-
-			PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-			if (::PL_EventAvailable(initContext->actionQueue)) {
-				
-				PLEvent *	event = ::PL_GetEvent(initContext->actionQueue);
-	
-				if (event != NULL) {
-					::PL_HandleEvent(event);
-				}
-			}
-
-			PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		}
-		if (initContext->stopThread) {
-			initContext->stopThread++;
-			break;
-		}
+        if (!processEventLoop(initContext)) {
+#ifndef XP_UNIX	
+            break;
+#endif
+        }
     } while (PR_TRUE);
 }
 
@@ -274,27 +320,24 @@ void
 InitEmbeddedEventHandler (WebShellInitContext* initContext)
 {
 #if DEBUG_RAPTOR_CANVAS
-	printf("InitEmbeddedEventHandler(%lx): Creating embedded thread...\n", initContext);
+    printf("InitEmbeddedEventHandler(%lx): Creating embedded thread...\n", initContext);
 #endif
-
     initContext->embeddedThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
-                                    EmbeddedEventHandler,
-                                    (void*)initContext,
-                                    PR_PRIORITY_NORMAL,
-                                    PR_GLOBAL_THREAD,
-                                    PR_UNJOINABLE_THREAD,
-                                    0);
+                                                    EmbeddedEventHandler,
+                                                    (void*)initContext,
+                                                    PR_PRIORITY_NORMAL,
+                                                    PR_GLOBAL_THREAD,
+                                                    PR_UNJOINABLE_THREAD,
+                                                    0);
 #if DEBUG_RAPTOR_CANVAS
 	printf("InitEmbeddedEventHandler(%lx): Embedded Thread created...\n", initContext);
 #endif
-
-	while (initContext->initComplete == FALSE) {
-		if (initContext->initFailCode != 0) {
-			::ThrowExceptionToJava(initContext->env, errorMessages[initContext->initFailCode]);
-			return;
-		}
-	}
-
+    while (initContext->initComplete == FALSE) {
+        if (initContext->initFailCode != 0) {
+	    ::ThrowExceptionToJava(initContext->env, errorMessages[initContext->initFailCode]);
+	    return;
+        }
+    }
 }
 
 
@@ -302,34 +345,32 @@ InitEmbeddedEventHandler (WebShellInitContext* initContext)
 static nsEventStatus PR_CALLBACK
 HandleRaptorEvent (nsGUIEvent *)
 {
-  nsEventStatus result = nsEventStatus_eIgnore;
-  return result;
+    nsEventStatus result = nsEventStatus_eIgnore;
+    return result;
 } // HandleRaptorEvent()
 
 
-static void
+static void 
 DispatchEvent (nsGUIEvent* eventPtr, nsIWidget* widgetPtr)
 {
+    // PENDING(mark): DO I NEED TO DO ANYTHING SPECIAL HERE FOR UNIX?????????
 #ifdef XP_MAC
-
-	// Enable Raptor background activity
-	// Note: This will be moved to nsMacMessageSink very soon.
-	// The application will not have to do it anymore.
-	
-	EventRecord * macEventPtr = (EventRecord *) eventPtr->nativeMsg;
-
-	gMessageSink.DispatchOSEvent(*macEventPtr, FrontWindow());
-	Repeater::DoRepeaters(*macEventPtr);
-
-	if (macEventPtr->what == nullEvent)
-		Repeater::DoIdlers(*macEventPtr);
-
+    // Enable Raptor background activity
+    // Note: This will be moved to nsMacMessageSink very soon.
+    // The application will not have to do it anymore.
+    
+    EventRecord * macEventPtr = (EventRecord *) eventPtr->nativeMsg;
+    
+    gMessageSink.DispatchOSEvent(*macEventPtr, FrontWindow());
+    Repeater::DoRepeaters(*macEventPtr);
+    
+    if (macEventPtr->what == nullEvent)
+        Repeater::DoIdlers(*macEventPtr);
+    
 #else
-
-	nsEventStatus aStatus = nsEventStatus_eIgnore;
-	
-   widgetPtr->DispatchEvent(eventPtr, aStatus);
-
+    nsEventStatus aStatus = nsEventStatus_eIgnore;
+    
+    widgetPtr->DispatchEvent(eventPtr, aStatus);
 #endif
 } // DispatchEvent()
 
@@ -347,36 +388,35 @@ const jint BUTTON3_MASK		= META_MASK;
 static unsigned short
 ConvertModifiersToMacModifiers (jint modifiers)
 {
-	unsigned short convertedModifiers = 0;
-
-	if (modifiers & META_MASK)
-		convertedModifiers |= cmdKey;
-	if (modifiers & SHIFT_MASK)
-		convertedModifiers |= shiftKey;
-	if (modifiers & ALT_MASK)
-		convertedModifiers |= optionKey;
-	if (modifiers & CTRL_MASK)
-		convertedModifiers |= controlKey;
-	if (modifiers & BUTTON1_MASK)
-		convertedModifiers |= btnState;
-
-	// KAB alphaLock would be nice too...
-	
-	return convertedModifiers;
+    unsigned short convertedModifiers = 0;
+    
+    if (modifiers & META_MASK)
+        convertedModifiers |= cmdKey;
+    if (modifiers & SHIFT_MASK)
+        convertedModifiers |= shiftKey;
+    if (modifiers & ALT_MASK)
+        convertedModifiers |= optionKey;
+    if (modifiers & CTRL_MASK)
+        convertedModifiers |= controlKey;
+    if (modifiers & BUTTON1_MASK)
+        convertedModifiers |= btnState;
+    
+    // KAB alphaLock would be nice too...
+    return convertedModifiers;
 } // ConvertModifiersToMacModifiers()
 
 
 static void
 ConvertMouseCoordsToMacMouseCoords (jint windowPtr, jint x, jint y, Point& pt)
 {
-	GrafPtr	savePort;
-	
-	pt.h = (short) x;
-	pt.v = (short) y;
-	GetPort(&savePort);
-	SetPort((WindowPtr) windowPtr);
-	LocalToGlobal(&pt);
-	SetPort(savePort);
+    GrafPtr	savePort;
+
+    pt.h = (short) x;
+    pt.v = (short) y;
+    GetPort(&savePort);
+    SetPort((WindowPtr) windowPtr);
+    LocalToGlobal(&pt);
+    SetPort(savePort);
 } // ConvertMouseCoordsToMacMouseCoords()
 
 #endif // ifdef XP_MAC
@@ -385,11 +425,11 @@ ConvertMouseCoordsToMacMouseCoords (jint windowPtr, jint x, jint y, Point& pt)
 static void
 ConvertModifiersTo_nsInputEvent (jint modifiers, nsInputEvent& event)
 {
-	event.isShift   = (modifiers & SHIFT_MASK) ? PR_TRUE : PR_FALSE;
-	event.isControl = (modifiers & CTRL_MASK) ? PR_TRUE : PR_FALSE;
-	event.isAlt     = (modifiers & ALT_MASK) ? PR_TRUE : PR_FALSE;
+    event.isShift   = (modifiers & SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+    event.isControl = (modifiers & CTRL_MASK) ? PR_TRUE : PR_FALSE;
+    event.isAlt     = (modifiers & ALT_MASK) ? PR_TRUE : PR_FALSE;
 #ifdef XP_MAC
-	event.isCommand = (modifiers & META_MASK) ? PR_TRUE : PR_FALSE;
+    event.isCommand = (modifiers & META_MASK) ? PR_TRUE : PR_FALSE;
 #endif
 } // ConvertModifiersTo_nsInputEvent()
 
@@ -398,7 +438,7 @@ ConvertModifiersTo_nsInputEvent (jint modifiers, nsInputEvent& event)
 static unsigned long
 ConvertKeys (jchar keyChar, jint keyCode)
 {
-	return 0;
+    return 0;
 } // ConvertKeys()
 
 
@@ -514,8 +554,12 @@ ConvertMouseMessageToMacMouseEvent (jint message)
 /*
  * JNI interfaces
  */
- 
 
+// I need this extern "C" for reasons I won't go into right now....
+// - Mark
+#ifdef XP_UNIX 
+extern "C" {
+#endif
 
 /*
  * Class:     BrowserControlMozillaShim
@@ -530,7 +574,6 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize (
 	JNIEnv		*	pEnv = env;
 	jobject			jobj = obj;
 	static PRBool	gFirstTime = PR_TRUE;
-
 	if (gFirstTime)
 	{
 		NS_SetupRegistry();
@@ -577,7 +620,6 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent (
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 	nsKeyEvent	keyEvent;
-
 #ifdef XP_MAC
 	EventRecord event;
 	
@@ -588,25 +630,21 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent (
 	event.where.h = 0;
 	event.where.v = 0;
 	event.modifiers = ConvertModifiersToMacModifiers(modifiers);
-
 	keyEvent.nativeMsg = &event;
 #else
 	keyEvent.nativeMsg = nsnull;
 #endif
-
 	// nsEvent
 	keyEvent.eventStructType = NS_KEY_EVENT;
 	keyEvent.message = NS_KEY_DOWN;
 	keyEvent.point.x = 0;
 	keyEvent.point.y = 0;
 	// keyEvent.time = TickCount();
-
 	// nsGUIEvent
 	keyEvent.widget = (nsIWidget *) widgetPtr;
 	
 	// nsInputEvent
 	ConvertModifiersTo_nsInputEvent(modifiers, keyEvent);
-
 	// nsKeyEvent
 	keyEvent.keyCode  = (PRUint32) keyCode;
 	keyEvent.charCode = (PRUint32) keyChar;
@@ -824,6 +862,8 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate (
 	WindowPtr	pWindow = (WindowPtr) windowPtr;
 #elif defined(XP_PC)
 	HWND	pWindow = (HWND) windowPtr;
+#elif defined(XP_UNIX)
+	GtkWidget * pWindow = (GtkWidget *) windowPtr;
 #endif
 	nsRect		r(x, y, width, height);
 	nsresult	rv;
@@ -832,7 +872,6 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate (
 	// IMPORTANT: It must be created before any controls are added to the window
 	
 	rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&widgetPtr);
-
 	if (rv != NS_OK)
 	{
 		::ThrowExceptionToJava(env, "raptorWidgetCreate Exception: unable to create widget instance");
@@ -840,7 +879,6 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate (
 	}
 	
 	rv = widgetPtr->Create((nsNativeWidget)pWindow, r, HandleRaptorEvent, nsnull);
-
 	if (rv != NS_OK)
 	{
 		::ThrowExceptionToJava(env, "raptorWidgetCreate Exception: unable to create widget");
@@ -864,14 +902,11 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetDelete (
 {
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
-
 	if (widgetPtr)
 	{
 		delete ((nsIWidget *) widgetPtr);
 	}
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetDelete()
-
-
+}
 
 /*
  * Class:     BrowserControlMozillaShim
@@ -894,7 +929,6 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize (
 
 	((nsIWidget *) widgetPtr)->Resize((PRUint32) x, (PRUint32) y, (PRUint32) width, (PRUint32) height, (PRBool) repaint);
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize()
-
 
 
 /*
@@ -1009,18 +1043,19 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate (
 #ifdef XP_MAC
 	WindowPtr		pWindow = (WindowPtr) windowPtr;
 	Rect			webRect = pWindow->portRect;
-// nsIWidget	*	pWidget = (nsIWidget *) widgetPtr;
-#else
-// elif defined(XP_WIN)
-	HWND			parentHWnd = (HWND)windowPtr;
+    // nsIWidget	*	pWidget = (nsIWidget *) widgetPtr;
+#elif defined(XP_PC)
+    // elif defined(XP_WIN)
+	HWND parentHWnd = (HWND)windowPtr;
+#elif defined(XP_UNIX)
+    GtkWidget * parentHWnd = (GtkWidget *) windowPtr;
 #endif
 
 	if (parentHWnd == nsnull) {
 		::ThrowExceptionToJava(env, "Exception: null window handle passed to raptorWebShellCreate");
 		return (jint) 0;
 	}
-
-    WebShellInitContext* initContext = new WebShellInitContext;
+	WebShellInitContext* initContext = new WebShellInitContext;
 
 	initContext->initComplete = FALSE;
 	initContext->initFailCode = 0;
@@ -1058,7 +1093,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellDelete (
 	if (webShellPtr)
 	{
 	    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-	
+
 		// stop the event thread
 		initContext->stopThread = 1;
 		while (initContext->stopThread <= 1) {
@@ -1104,7 +1139,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL (
 		return;
 	}
 
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+	WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellLoadURL");
@@ -1153,13 +1188,12 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop (
 		wsStopEvent		* actionEvent = new wsStopEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
+        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        
+        ::PL_PostEvent(initContext->actionQueue, event);
 		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+	PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 	}
-
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop()
 
 
@@ -1177,7 +1211,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow (
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+	WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellShow");
@@ -1188,13 +1222,12 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow (
 		wsShowEvent		* actionEvent = new wsShowEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
+        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        
+	::PL_PostEvent(initContext->actionQueue, event);
 		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+	PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 	}
-
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow()
 
 
@@ -1223,7 +1256,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide (
 		wsHideEvent		* actionEvent = new wsHideEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+	PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		::PL_PostEvent(initContext->actionQueue, event);
 		
@@ -1448,7 +1481,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack (
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
-			Sleep(0);
+#ifndef XP_UNIX
+		  Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1493,7 +1528,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward (
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
+#ifndef XP_UNIX
 			Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1538,7 +1575,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack (
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
+#ifndef XP_UNIX
 			Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1583,7 +1622,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward (
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
+#ifndef XP_UNIX
 			Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1629,7 +1670,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo (
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
+#ifndef XP_UNIX
 			Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1674,7 +1717,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLen
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
+#ifndef XP_UNIX
 			Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1719,7 +1764,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryInd
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
+#ifndef XP_UNIX
 			Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1766,7 +1813,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 		while (actionEvent->isComplete() == PR_FALSE) {
+#ifndef XP_UNIX
 			Sleep(0);
+#endif
 		}
 		voidResult = actionEvent->getResult();
 		delete actionEvent;
@@ -1801,6 +1850,8 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 	return urlString;
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL()
 
-
+#ifdef XP_UNIX
+}// End extern "C"
+#endif
 
 // EOF

@@ -1,0 +1,62 @@
+#
+# PENDING(mark): I need to use gtk-config to find the libraries and 
+# include files
+# For JDK1.2
+JAVADIR = ${JDKHOME}
+DLLNAME = libwebclient.so
+DLLNAMESTUB = libwebclientstub.so
+MOZILLA_TOP = ../../..
+DIST = ${MOZILLA_TOP}/dist
+LIBDIR = ${DIST}/lib
+GTKINCLUDES = -I/usr/X11R6/include -I/usr/lib/glib/include
+GTKLIBS = -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm
+JAVAINCLUDE = -I${JAVADIR}/include -I${JAVADIR}/include/genunix -I${JAVADIR}/include/linux
+# For JDK1.2
+JAVALIBS = -L${JAVADIR}/jre/lib/i386 -L${JAVADIR}/jre/lib/i386/classic -L${JAVADIR}/jre/lib/i386/native_threads -ljava
+INCLUDE = ${JAVAINCLUDE} -I${DIST}/include ${GTKINCLUDES} ${GTKMOZILLAINCLUDE}
+DEFINES = -D_REENTRANT -DXP_UNIX -DDEBUG_RAPTOR_CANVAS -DMOZ_DLL_SUFFIX=\".so\"
+STUBDEFINES = -D_REENTRANT
+STUBINCLUDE = ${JAVAINCLUDE}
+STUBLIBS = ${JAVALIBS}
+LIBS =  ${GTKLIBS} ${JAVALIBS} \
+-L${DIST}/lib -lraptorgfx -lexpat -lxmltok -labouturl -lfileurl -lftpurl -lgophurl -lhttpurl -lremoturl -lsockstuburl -lmimetype -lnetcache -lnetcnvts -lnetwork -ljsurl -lmozdbm -lpwcac -lreg -lmozjs -lsecfree -lmozutil -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lwidgetgtk -lgfxgtk -lraptorwebwidget -lraptorhtmlpars -lnetlib -lpref -lplds3 -lplc3 -ljsdom
+LN = ln -f -s
+
+all: libwebclientstub.so libwebclient.so component.reg components
+
+component.reg:
+	${LN} ${DIST}/bin/component.reg
+
+components:
+	${LN} ${DIST}/bin/components
+
+libwebclientstub.so: BrowserControlMozillaShimStub.o MotifBrowserControlCanvasStub.o
+	g++ -shared -Wl,-h -Wl,${DLLNAMESTUB} -o ${DLLNAMESTUB} BrowserControlMozillaShimStub.o MotifBrowserControlCanvasStub.o -Wl,--whole-archive ${STUBLIBS} -Wl,--no-whole-archive
+
+libwebclient.so: BrowserControlMozillaShim.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o
+	g++ -shared -Wl,-h -Wl,${DLLNAME} -o ${DLLNAME} BrowserControlMozillaShim.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o -Wl,--whole-archive ${LIBS} -Wl,--no-whole-archive
+
+gtkmozilla.o: motif/gtkmozilla.cpp
+	g++ ${DEFINES} ${INCLUDE} -c motif/gtkmozilla.cpp
+
+MotifBrowserControlCanvasStub.o: motif/MotifBrowserControlCanvasStub.cpp
+	g++ ${STUBDEFINES} ${STUBINCLUDE} -c motif/MotifBrowserControlCanvasStub.cpp
+
+MotifBrowserControlCanvas.o: motif/MotifBrowserControlCanvas.cpp
+	g++ ${DEFINES} ${INCLUDE} -c motif/MotifBrowserControlCanvas.cpp
+
+BrowserControlMozillaShimStub.o: motif/BrowserControlMozillaShimStub.cpp
+	g++ ${STUBDEFINES} ${STUBINCLUDE} -c motif/BrowserControlMozillaShimStub.cpp
+
+BrowserControlMozillaShim.o: BrowserControlMozillaShim.cpp
+	g++ ${DEFINES} ${INCLUDE} -c BrowserControlMozillaShim.cpp
+
+#PENDING(mark): I think we should use this for the Win32 version as well...
+nsSetupRegistry.o: motif/nsSetupRegistry.cpp
+	g++ ${DEFINES} ${INCLUDE} -c motif/nsSetupRegistry.cpp
+
+nsActions.o: nsActions.cpp
+	g++ ${DEFINES} ${INCLUDE} -c nsActions.cpp
+
+clean:
+	rm -f component.reg components *.o *.so *~ motif/*~

@@ -40,7 +40,7 @@ include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\java\config\localdefs.mak>
 
 JAR_WEBCLIENT_CLASSES = org\mozilla\webclient \
-	org\mozilla\webclient\test 
+	org\mozilla\webclient\test  org\mozilla\webclient\win32
 
 !ifdef JAVA_OR_NSJVM
 JDIRS = $(JAR_WEBCLIENT_CLASSES)

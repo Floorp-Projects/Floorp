@@ -22,7 +22,10 @@
 #ifndef nsActions_h___
 #define nsActions_h___
 
+#ifndef XP_UNIX
+//PENDING(mark): Will this work on the Mac????
 #include <windows.h>
+#endif
 #include "nsIWebShell.h"
 #include "nsString.h"
 #include "plevent.h"

@@ -38,7 +38,7 @@ import java.awt.*;
  * There is one instance of this class and all of the exposed methods
  * are static.
 
- * @version $Id: BrowserControlMozillaShim.java,v 1.1 1999/07/30 01:03:05 edburns%acm.org Exp $
+ * @version $Id: BrowserControlMozillaShim.java,v 1.2 1999/08/10 03:59:04 mark.lin%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlImpl
 
@@ -89,14 +89,20 @@ public static void initialize () throws Exception
 {
 	if (!initialized) {
 		instance = new BrowserControlMozillaShim();
-		
+
+        // PENDING(mark): Try loading the native library in your own implemntation specfic canvas
+        // class (ie. Win32BrowserControlCanvas or MotifBrowserControlCanvas.
+        // The Unix port needs this. If this is a problem, let me know ASAP.
+        // - Mark
+		/*
 		try {
 			System.loadLibrary("webclient");
 		}
 		catch (java.lang.UnsatisfiedLinkError e) {
 			throw new Exception("Unable to open native webclient library");
 		}
-		
+		*/
+
 		instance.nativeInitialize();
 		initialized = true;
 	}
@@ -563,7 +569,7 @@ public static void main(String [] args)
     BrowserControlMozillaShim me = new BrowserControlMozillaShim();
     Log.setApplicationName("BrowserControlMozillaShim");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.1 1999/07/30 01:03:05 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.2 1999/08/10 03:59:04 mark.lin%eng.sun.com Exp $");
     
 }
 

@@ -5,6 +5,11 @@ Authors: Kirk Baker <kbaker@eb.com>
 
 Build hacking and packaging: Ed Burns <edburns@acm.org>
 
+Unix port: Mark Lin <mark.lin@eng.sun.com>
+
+========================================================================
+Win32 Build Directions:
+========================================================================
 Requirements:
 
 * built M8 mozilla tree for WinNT4.0
@@ -47,13 +52,53 @@ Problems:
 
 * post to netscape.public.mozilla.java newsgroup
 
-General notes:
+========================================================================
+Unix Build Directions (currently only Linux, 
+Solaris support is coming soon):
+========================================================================
+Requirements:
 
-* Please update the ChangeLog (changelo) when you make changes.
+* built M8 mozilla tree for some variant of Linux
 
+* JDK1.2 with native threads support from http://www.blackdown.org 
+(JDK1.1 doesn't seem to work)
+
+* built org.mozilla.util java classes (see NOTE_UTIL)
+
+How To Build:
+
+* Follow the directions in ../util/README
+
+* set JDKHOME to where your JDK install directory resides 
+	-> setenv JDKHOME /usr/local/jdk1.2
+
+* cd to 'classes' and type "make -f makefile.unix" and hope for the best
+	-> cd classes; make -f Makefile.unix
+
+* then cd to 'src' and type "make -f makefile.unix" and hope for the best
+	-> cd src; make -f Makefile.unix
+
+How to Run:
+
+* once the build has successfully completed, run 'runem.unix' in your
+'src' directory:
+	-> cd src; ./runem.unix <YOUR_URL>
+
+  Note that YOUR_URL is probably necessary since firewall support wasn't
+  working in M8.
+
+Problems? Email mark.lin@eng.sun.com or post to netscape.public.mozilla.java.
+
+========================================================================
 NOTE_UTIL:
-
+========================================================================
 * this package depends on the org.mozilla.util classes, which can be
   found in the mozilla tree under mozilla\java\util.  They are a
   separate checkout and build.  Once you check out the org.mozilla.util
   classes, see the README in the mozilla\java\util\README.
+
+General notes:
+
+* Please update the ChangeLog (changelo) when you make changes.
+
+

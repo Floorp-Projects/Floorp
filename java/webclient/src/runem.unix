@@ -1,0 +1,23 @@
+#!/bin/sh
+
+MOZILLA_TOP=${PWD}/../../..
+MOZILLA_DIST=${MOZILLA_TOP}/dist
+MOZILLA_FIVE_HOME=${MOZILLA_DIST}/bin
+export MOZILLA_FIVE_HOME
+
+# Standard JDK 1.2 location
+JDK_LOCATION=${JDKHOME}
+# Native Threads
+LD_LIBRARY_PATH=${JDK_LOCATION}/jre/lib/i386:${JDK_LOCATION}/jre/lib/i386/classic:${JDK_LOCATION}/jre/lib/i386/native_threads:/disk4/mozilla/mozilla/dist/bin:.:/usr/local/lib:/usr/lib:/lib:.
+export LD_LIBRARY_PATH
+# Green Threads
+#LD_LIBRARY_PATH=${JDK_LOCATION}/jre/lib/i386:${JDK_LOCATION}/jre/lib/i386/classic:${JDK_LOCATION}/jre/lib/i386/green_threads:/disk4/mozilla/mozilla/dist/bin:.:/usr/local/lib:/usr/lib:/lib
+JAVA=${JDK_LOCATION}/bin/java
+OUTPUT_DIR=${MOZILLA_DIST}/classes
+# JDK 1.2 CLASSES
+CLASSES=${JDK_LOCATION}/lib/tools.jar:${JDK_LOCATION}/lib/rt.jar:${OUTPUT_DIR}
+CLASSNAME=org.mozilla.webclient.test.EmbeddedMozilla
+
+# For debugging...
+#${JAVA} -verbose:jni -Xcheck:jni -classpath ${CLASSES} ${CLASSNAME} $1
+${JAVA} -classpath ${CLASSES} ${CLASSNAME} $1 $2 $3 $4 $5

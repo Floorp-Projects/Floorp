@@ -1,3 +1,8 @@
+Mon Aug  9 20:25:49 1999 Mark Lin <mark.lin@eng.sun.com>
+	* Ported webclient to Linux
+	* Added a motif and win32 directory under classes/org/mozilla/webclient
+	* Added a motif directory under src/motif
+	
 Fri Jul 30 14:40:32 1999  Ed Burns  <Ed Burns <ed.burns@sun.com>>
 
 	* Modified makefile to reference new location for localdefs.mak: 
