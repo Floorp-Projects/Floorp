@@ -657,33 +657,6 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
             // but not overlap the floater.
             aResult.x = mAvailSpaceRect.x + borderPadding.left;
             aResult.width = mAvailSpaceRect.width;
-
-            // Compatability hack: See if we have a list-item and if
-            // the bullet would end up overlapping the floater.
-            if ((NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay) &&
-                ((mBand.GetLeftFloaterCount() &&
-                   (NS_STYLE_DIRECTION_LTR == aDisplay->mDirection)) ||
-                  (mBand.GetRightFloaterCount() &&
-                   (NS_STYLE_DIRECTION_RTL == aDisplay->mDirection)))) {
-              // Ok, we have a list-item and its bullet will be
-              // impacted by the floater.
-              nscoord marginValue = 0;
-              nsStyleUnit unit = spacing->mCompatFloaterMargin.GetUnit();
-              if (eStyleUnit_Auto == unit) {
-                // This is the default value: do nothing
-              }
-              else if (eStyleUnit_Percent == unit) {
-                // XXX write me
-              }
-              else if (eStyleUnit_Coord == unit) {
-                marginValue = spacing->mCompatFloaterMargin.GetCoordValue();
-              }
-              else if (eStyleUnit_Inherit == unit) {
-                // XXX write me
-              }
-              aResult.x += marginValue;
-              aResult.width -= marginValue;
-            }
           }
           break;
       }
