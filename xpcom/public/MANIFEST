@@ -11,9 +11,7 @@ nsError.h
 nsHashtable.h
 nsID.h
 nsIID.h
-nsIFactory.h
 nsISimpleEnumerator.h
-nsISupports.h
 nsISupportsUtils.h
 nsIPtr.h
 nsIRegistry.h
@@ -21,7 +19,6 @@ nsIServiceManager.h
 nsIComponentManager.h
 nsISupportsArray.h
 nsRepository.h
-nsIEnumerator.h
 nsVector.h
 nsMacRepository.h
 nsTraceRefcnt.h
@@ -34,4 +31,3 @@ nsIEventQueueService.h
 nsICollection.h
 nsIAllocator.h
 nsIGenericFactory.h
-nsrootidl.h
