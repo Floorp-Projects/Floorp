@@ -265,7 +265,7 @@ public class Interpreter
                           Object staticSecurityDomain)
     {
         this.compilerEnv = compilerEnv;
-        (new NodeTransformer(compilerEnv)).transform(tree);
+        new NodeTransformer().transform(tree);
 
         if (Token.printTrees) {
             System.out.println(tree.toStringTree(tree));

@@ -134,26 +134,18 @@ public class Node
             super(type, child, lineno);
         }
 
-        public final String getLabel()
+        public final Jump getJumpStatement()
         {
-            if (!(type == Token.BREAK || type == Token.CONTINUE
-                  || type == Token.LABEL))
-            {
-                Kit.codeBug();
-            }
-            return label;
+            if (!(type == Token.BREAK || type == Token.CONTINUE)) Kit.codeBug();
+            return jumpNode;
         }
 
-        public final void setLabel(String label)
+        public final void setJumpStatement(Jump jumpStatement)
         {
-            if (!(type == Token.BREAK || type == Token.CONTINUE
-                  || type == Token.LABEL))
-            {
-                Kit.codeBug();
-            }
-            if (label == null) Kit.codeBug();
-            if (this.label != null) Kit.codeBug(); //only once
-            this.label = label;
+            if (!(type == Token.BREAK || type == Token.CONTINUE)) Kit.codeBug();
+            if (jumpStatement == null) Kit.codeBug();
+            if (this.jumpNode != null) Kit.codeBug(); //only once
+            this.jumpNode = jumpStatement;
         }
 
         public final Target getDefault()
@@ -184,21 +176,37 @@ public class Node
             target2 = finallyTarget;
         }
 
+        public final Jump getLoop()
+        {
+            if (!(type == Token.LABEL)) Kit.codeBug();
+            return jumpNode;
+        }
+
+        public final void setLoop(Jump loop)
+        {
+            if (!(type == Token.LABEL)) Kit.codeBug();
+            if (loop == null) Kit.codeBug();
+            if (jumpNode != null) Kit.codeBug(); //only once
+            jumpNode = loop;
+        }
+
         public final Target getContinue()
         {
-            if (!(type == Token.LABEL || type == Token.LOOP)) Kit.codeBug();                return target2;
+            if (type != Token.LOOP) Kit.codeBug();
+            return target2;
         }
 
         public final void setContinue(Target continueTarget)
         {
-            if (!(type == Token.LABEL || type == Token.LOOP)) Kit.codeBug();                if (continueTarget == null) Kit.codeBug();
+            if (type != Token.LOOP) Kit.codeBug();
+            if (continueTarget == null) Kit.codeBug();
             if (target2 != null) Kit.codeBug(); //only once
             target2 = continueTarget;
         }
 
         public Target target;
         private Target target2;
-        private String label;
+        private Jump jumpNode;
     }
 
     public static class Target extends Node
@@ -575,12 +583,9 @@ public class Node
             } else if (this instanceof Jump) {
                 Jump jump = (Jump)this;
                 if (type == Token.BREAK || type == Token.CONTINUE) {
-                    String label = jump.getLabel();
-                    if (label != null) {
-                        sb.append(" [label: ");
-                        sb.append(label);
-                        sb.append(']');
-                    }
+                    sb.append(" [label: ");
+                    sb.append(jump.getJumpStatement());
+                    sb.append(']');
                 } else if (type == Token.TRY) {
                     Node catchNode = jump.target;
                     Node.Target finallyTarget = jump.getFinally();

@@ -47,9 +47,9 @@ package org.mozilla.javascript;
 
 public class NodeTransformer
 {
-    public NodeTransformer(CompilerEnvirons compilerEnv)
+
+    public NodeTransformer()
     {
-        this.compilerEnv = compilerEnv;
     }
 
     public final void transform(ScriptOrFnNode tree)
@@ -90,67 +90,10 @@ public class NodeTransformer
 
             int type = node.getType();
 
-          typeswitch:
             switch (type) {
 
               case Token.LABEL:
-              {
-                Node.Jump labelNode = (Node.Jump)node;
-                String id = labelNode.getLabel();
-
-                // check against duplicate labels...
-                for (int i=loops.size()-1; i >= 0; i--) {
-                    Node n = (Node) loops.get(i);
-                    if (n.getType() == Token.LABEL) {
-                        String otherId = ((Node.Jump)n).getLabel();
-                        if (id.equals(otherId)) {
-                            reportError(
-                                Context.getMessage1("msg.dup.label", id),
-                                node, tree);
-                            break typeswitch;
-                        }
-                    }
-                }
-
-                /* Make a target and put it _after_ the following
-                 * node.  And in the LABEL node, so breaks get the
-                 * right target.
-                 */
-                Node.Target breakTarget = new Node.Target();
-                Node next = node.getNext();
-                while (next != null &&
-                       (next.getType() == Token.LABEL ||
-                        next.getType() == Token.TARGET))
-                    next = next.getNext();
-                if (next == null)
-                    break;
-                parent.addChildAfter(breakTarget, next);
-                labelNode.target = breakTarget;
-                if (next.getType() == Token.LOOP) {
-                    labelNode.setContinue(((Node.Jump)next).getContinue());
-                } else if (next.getType() == Token.LOCAL_BLOCK) {
-                    // check for "for (in)" loop that is wrapped in local_block
-                    Node child = next.getFirstChild();
-                    if (child != null && child.getType() == Token.LOOP) {
-                        labelNode.setContinue(((Node.Jump)child).getContinue());
-                    }
-                }
-
-                loops.push(node);
-                loopEnds.push(breakTarget);
-
-                break;
-              }
-
               case Token.SWITCH:
-              {
-                Node.Jump switchNode = (Node.Jump)node;
-                Node breakTarget = switchNode.target;
-                loops.push(switchNode);
-                loopEnds.push(breakTarget);
-                break;
-              }
-
               case Token.LOOP:
                 loops.push(node);
                 loopEnds.push(((Node.Jump)node).target);
@@ -243,12 +186,22 @@ public class NodeTransformer
               case Token.CONTINUE:
               {
                 Node.Jump jump = (Node.Jump)node;
-                Node.Jump loop = null;
-                String label = jump.getLabel();
+                Node.Jump jumpStatement = jump.getJumpStatement();
+                if (jumpStatement == null) Kit.codeBug();
 
-                int i;
-                for (i=loops.size()-1; i >= 0; i--) {
+                for (int i = loops.size(); ;) {
+                    if (i == 0) {
+                        // Parser/IRFactory ensure that break/continue
+                        // always has a jump statement associated with it
+                        // which should be found
+                        throw Kit.codeBug();
+                    }
+                    --i;
                     Node n = (Node) loops.get(i);
+                    if (n == jumpStatement) {
+                        break;
+                    }
+
                     int elemtype = n.getType();
                     if (elemtype == Token.WITH) {
                         Node leave = new Node(Token.LEAVEWITH);
@@ -260,54 +213,16 @@ public class NodeTransformer
                         jsrFinally.target = tryNode.getFinally();
                         previous = addBeforeCurrent(parent, previous, node,
                                                     jsrFinally);
-                    } else if (elemtype == Token.LABEL) {
-                        if (label != null) {
-                            Node.Jump labelNode = (Node.Jump)n;
-                            if (label.equals(labelNode.getLabel())) {
-                                loop = labelNode;
-                                break;
-                            }
-                        }
-                    } else if (elemtype == Token.LOOP) {
-                        if (label == null) {
-                               // break/continue the nearest loop if has no label
-                               loop = (Node.Jump)n;
-                               break;
-                        }
-                    } else if (elemtype == Token.SWITCH) {
-                        if (label == null && type == Token.BREAK) {
-                               // break the nearest switch if has no label
-                               loop = (Node.Jump)n;
-                               break;
-                        }
                     }
                 }
-                Node.Target target;
-                if (loop == null) {
-                    target = null;
-                } else if (type == Token.BREAK) {
-                    target = loop.target;
+
+                if (type == Token.BREAK) {
+                    jump.target = jumpStatement.target;
                 } else {
-                    target = loop.getContinue();
-                }
-                if (loop == null || target == null) {
-                    String msg;
-                    Object[] messageArgs = null;
-                    if (label == null) {
-                        // didn't find an appropriate target
-                        msg = Context.getMessage0(
-                            (type == Token.CONTINUE)
-                                ? "msg.continue.outside" : "msg.bad.break");
-                    } else if (loop != null) {
-                        msg = Context.getMessage0("msg.continue.nonloop");
-                    } else {
-                        msg = Context.getMessage1("msg.undef.label", label);
-                    }
-                    reportError(msg, node, tree);
-                    break;
+                    jump.target = jumpStatement.getContinue();
                 }
                 jump.setType(Token.GOTO);
-                jump.target = target;
+
                 break;
               }
 
@@ -423,18 +338,9 @@ public class NodeTransformer
         return replacement;
     }
 
-    private void reportError(String message, Node stmt, ScriptOrFnNode tree)
-    {
-        int lineno = stmt.getLineno();
-        String sourceName = tree.getSourceName();
-        compilerEnv.reportSyntaxError(message, sourceName, lineno, null, 0);
-    }
-
     private ObjArray loops;
     private ObjArray loopEnds;
     private boolean inFunction;
     private boolean hasFinally;
-
-    private CompilerEnvirons compilerEnv;
 }
 

@@ -48,10 +48,8 @@ import java.util.Hashtable;
 
 class OptTransformer extends NodeTransformer {
 
-    OptTransformer(CompilerEnvirons compilerEnv, Hashtable possibleDirectCalls,
-                   ObjArray directCallTargets)
+    OptTransformer(Hashtable possibleDirectCalls, ObjArray directCallTargets)
     {
-        super(compilerEnv);
         this.possibleDirectCalls = possibleDirectCalls;
         this.directCallTargets = directCallTargets;
     }

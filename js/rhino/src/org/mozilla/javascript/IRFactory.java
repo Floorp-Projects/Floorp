@@ -318,34 +318,63 @@ final class IRFactory
     /**
      * Label
      */
-    Node createLabel(String label, int lineno)
+    Node createLabel(int lineno)
     {
-        Node.Jump n = new Node.Jump(Token.LABEL, lineno);
-        n.setLabel(label);
-        return n;
+        return new Node.Jump(Token.LABEL, lineno);
+    }
+
+    Node getLabelLoop(Node label)
+    {
+        return ((Node.Jump)label).getLoop();
+    }
+
+    /**
+     * Label
+     */
+    Node createLabeledStatement(Node labelArg, Node statement)
+    {
+        Node.Jump label = (Node.Jump)labelArg;
+
+        // Make a target and put it _after_ the statement
+        // node.  And in the LABEL node, so breaks get the
+        // right target.
+
+        Node.Target breakTarget = new Node.Target();
+        Node block = new Node(Token.BLOCK, label, statement, breakTarget);
+        label.target = breakTarget;
+
+        return block;
     }
 
     /**
      * Break (possibly labeled)
      */
-    Node createBreak(String label, int lineno)
+    Node createBreak(Node breakStatement, int lineno)
     {
         Node.Jump n = new Node.Jump(Token.BREAK, lineno);
-        if (label != null) {
-            n.setLabel(label);
+        Node.Jump jumpStatement;
+        int t = breakStatement.getType();
+        if (t == Token.LOOP || t == Token.LABEL) {
+            jumpStatement = (Node.Jump)breakStatement;
+        } else if (t == Token.BLOCK
+                   && breakStatement.getFirstChild().getType() == Token.SWITCH)
+        {
+            jumpStatement = (Node.Jump)breakStatement.getFirstChild();
+        } else {
+            throw Kit.codeBug();
         }
+        n.setJumpStatement(jumpStatement);
         return n;
     }
 
     /**
      * Continue (possibly labeled)
      */
-    Node createContinue(String label, int lineno)
+    Node createContinue(Node loop, int lineno)
     {
+        if (loop.getType() != Token.LOOP) Kit.codeBug();
         Node.Jump n = new Node.Jump(Token.CONTINUE, lineno);
-        if (label != null) {
-            n.setLabel(label);
-        }
+        n.setJumpStatement((Node.Jump)loop);
         return n;
     }
 
@@ -429,31 +458,48 @@ final class IRFactory
     }
 
     /**
+     * Create loop node. The parser will later call
+     * createWhile|createDoWhile|createFor|createForIn
+     * to finish loop generation.
+     */
+    Node createLoopNode(Node loopLabel, int lineno)
+    {
+        Node.Jump result = new Node.Jump(Token.LOOP, lineno);
+        if (loopLabel != null) {
+            ((Node.Jump)loopLabel).setLoop(result);
+        }
+        return result;
+    }
+
+    /**
      * While
      */
-    Node createWhile(Node cond, Node body, int lineno)
+    Node createWhile(Node loop, Node cond, Node body)
     {
-        return createLoop(LOOP_WHILE, body, cond, null, null, lineno);
+        return createLoop((Node.Jump)loop, LOOP_WHILE, body, cond,
+                          null, null);
     }
 
     /**
      * DoWhile
      */
-    Node createDoWhile(Node body, Node cond, int lineno)
+    Node createDoWhile(Node loop, Node body, Node cond)
     {
-        return createLoop(LOOP_DO_WHILE, body, cond, null, null, lineno);
+        return createLoop((Node.Jump)loop, LOOP_DO_WHILE, body, cond,
+                          null, null);
     }
 
     /**
      * For
      */
-    Node createFor(Node init, Node test, Node incr, Node body, int lineno)
+    Node createFor(Node loop, Node init, Node test, Node incr, Node body)
     {
-        return createLoop(LOOP_FOR, body, test, init, incr, lineno);
+        return createLoop((Node.Jump)loop, LOOP_FOR, body, test,
+                          init, incr);
     }
 
-    private Node createLoop(int loopType, Node body, Node cond,
-                            Node init, Node incr, int lineno)
+    private Node createLoop(Node.Jump loop, int loopType, Node body, Node cond,
+                            Node init, Node incr)
     {
         Node.Target bodyTarget = new Node.Target();
         Node.Target condTarget = new Node.Target();
@@ -464,54 +510,53 @@ final class IRFactory
         IFEQ.target = bodyTarget;
         Node.Target breakTarget = new Node.Target();
 
-        Node.Jump result = new Node.Jump(Token.LOOP, lineno);
-        result.addChildToBack(bodyTarget);
-        result.addChildrenToBack(body);
+        loop.addChildToBack(bodyTarget);
+        loop.addChildrenToBack(body);
         if (loopType == LOOP_WHILE || loopType == LOOP_FOR) {
             // propagate lineno to condition
-            result.addChildrenToBack(new Node(Token.EMPTY, lineno));
+            loop.addChildrenToBack(new Node(Token.EMPTY, loop.getLineno()));
         }
-        result.addChildToBack(condTarget);
-        result.addChildToBack(IFEQ);
-        result.addChildToBack(breakTarget);
+        loop.addChildToBack(condTarget);
+        loop.addChildToBack(IFEQ);
+        loop.addChildToBack(breakTarget);
 
-        result.target = breakTarget;
+        loop.target = breakTarget;
         Node.Target continueTarget = condTarget;
 
         if (loopType == LOOP_WHILE || loopType == LOOP_FOR) {
             // Just add a GOTO to the condition in the do..while
             Node.Jump GOTO = new Node.Jump(Token.GOTO);
             GOTO.target = condTarget;
-            result.addChildToFront(GOTO);
+            loop.addChildToFront(GOTO);
 
             if (loopType == LOOP_FOR) {
                 if (init.getType() != Token.EMPTY) {
                     if (init.getType() != Token.VAR) {
                         init = new Node(Token.EXPR_VOID, init);
                     }
-                    result.addChildToFront(init);
+                    loop.addChildToFront(init);
                 }
                 Node.Target incrTarget = new Node.Target();
-                result.addChildAfter(incrTarget, body);
+                loop.addChildAfter(incrTarget, body);
                 if (incr.getType() != Token.EMPTY) {
                     incr = new Node(Token.EXPR_VOID, incr);
-                    result.addChildAfter(incr, incrTarget);
+                    loop.addChildAfter(incr, incrTarget);
                 }
                 continueTarget = incrTarget;
             }
         }
 
-        result.setContinue(continueTarget);
+        loop.setContinue(continueTarget);
 
-        return result;
+        return loop;
     }
 
     /**
      * For .. In
      *
      */
-    Node createForIn(Node lhs, Node obj, Node body, boolean isForEach,
-                     int lineno)
+    Node createForIn(Node loop, Node lhs, Node obj, Node body,
+                     boolean isForEach)
     {
         String name;
         int type = lhs.getType();
@@ -560,7 +605,7 @@ final class IRFactory
         newBody.addChildToBack(new Node(Token.EXPR_VOID, assign));
         newBody.addChildToBack(body);
 
-        Node loop = createWhile(cond, newBody, lineno);
+        loop = createWhile(loop, cond, newBody);
         loop.addChildToFront(init);
         if (type == Token.VAR)
             loop.addChildToFront(lhs);

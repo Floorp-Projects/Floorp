@@ -183,8 +183,7 @@ public class Codegen extends Interpreter
             directCallTargets = new ObjArray();
         }
 
-        OptTransformer ot = new OptTransformer(compilerEnv,
-                                               possibleDirectCalls,
+        OptTransformer ot = new OptTransformer(possibleDirectCalls,
                                                directCallTargets);
         ot.transform(tree);
 

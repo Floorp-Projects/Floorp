@@ -90,9 +90,9 @@ public class CompilerEnvirons
         this.errorReporter = errorReporter;
     }
 
-    public final void reportSyntaxError(String message,
-                                        String sourceName, int lineno,
-                                        String lineText, int lineOffset)
+    final void reportSyntaxError(String message,
+                                 String sourceName, int lineno,
+                                 String lineText, int lineOffset)
     {
         ++syntaxErrorCount;
         if (fromEval) {
@@ -106,20 +106,20 @@ public class CompilerEnvirons
         }
     }
 
-    public final void reportSyntaxWarning(String message,
-                                          String sourceName, int lineno,
-                                          String lineText, int lineOffset)
+    final void reportSyntaxWarning(String message,
+                                   String sourceName, int lineno,
+                                   String lineText, int lineOffset)
     {
         getErrorReporter().warning(message, sourceName,
                                    lineno, lineText, lineOffset);
     }
 
-    public final boolean isFromEval()
+    final boolean isFromEval()
     {
         return fromEval;
     }
 
-    public void setFromEval(boolean fromEval)
+    final void setFromEval(boolean fromEval)
     {
         this.fromEval = fromEval;
     }
