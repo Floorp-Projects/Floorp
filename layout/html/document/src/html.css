@@ -1484,7 +1484,7 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 /* combobox dropdown list hidden */
 select:-moz-dropdown-list {
-  visibility:collapse;
+  visibility:hidden;
 }
 
 /* combobox dropdown list visible */
