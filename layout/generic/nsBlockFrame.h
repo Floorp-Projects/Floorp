@@ -29,7 +29,6 @@
 class nsBlockReflowState;
 class nsBulletFrame;
 class nsLineBox;
-class nsTextRun;
 class nsFirstLineFrame;
 
 /**
@@ -391,8 +390,6 @@ protected:
                              const nsRect& aOldCombinedArea,
                              nscoord aDeltaY);
 
-  nsresult ComputeTextRuns(nsIPresContext* aPresContext);
-
   void BuildFloaterList();
 
   //----------------------------------------
@@ -440,9 +437,6 @@ protected:
 #endif
 
   nsLineBox* mLines;
-
-  // Text run information
-  nsTextRun* mTextRuns;
 
   // List of all floaters in this block
   nsFrameList mFloaters;

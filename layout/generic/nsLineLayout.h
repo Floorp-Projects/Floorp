@@ -32,7 +32,6 @@
 
 #include "nsFrame.h"
 #include "nsVoidArray.h"
-#include "nsTextRun.h"
 #include "nsLineBox.h"
 
 class nsISpaceManager;
@@ -215,7 +214,7 @@ public:
     mWordFrames.Clear();
   }
 
-  nsIFrame* FindNextText(nsIFrame* aFrame);
+  nsIFrame* FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
   PRBool CanPlaceFloaterNow() const;
 
@@ -254,33 +253,10 @@ public:
   }
 
   //----------------------------------------
-  // Text run usage methods. These methods are using during reflow to
-  // track the current text run and to advance through text runs.
-
-  void SetReflowTextRuns(nsTextRun* aTextRuns) {
-    mReflowTextRuns = aTextRuns;
-  }
-
-  //----------------------------------------
 
   static PRBool TreatFrameAsBlock(nsIFrame* aFrame);
 
   //----------------------------------------
-
-  // XXX Move this out of line-layout; make some little interface to
-  // deal with it...
-
-  // Add another piece of text to a text-run during FindTextRuns.
-  // Note: continuation frames must NOT add themselves; just the
-  // first-in-flow
-  nsresult AddText(nsIFrame* aTextFrame);
-
-  // Close out a text-run during FindTextRuns.
-  void EndTextRun();
-
-  // This returns the first nsTextRun found during a FindTextRuns. The
-  // internal text-run state is reset.
-  nsTextRun* TakeTextRuns();
 
   nsIPresContext* mPresContext;
 
@@ -317,9 +293,6 @@ protected:
   // Final computed line-height value after VerticalAlignFrames for
   // the block has been called.
   nscoord mFinalLineHeight;
-
-  nsTextRun* mReflowTextRuns;
-  nsTextRun* mTextRun;
 
   // Per-frame data recorded by the line-layout reflow logic. This
   // state is the state needed to post-process the line after reflow
@@ -457,11 +430,6 @@ protected:
   PRInt32 mSpansAllocated, mSpansFreed;
   PRInt32 mFramesAllocated, mFramesFreed;
 #endif
-
-  // XXX These slots are used ONLY during FindTextRuns
-  nsTextRun* mTextRuns;
-  nsTextRun** mTextRunP;
-  nsTextRun* mNewTextRun;
 
   nsresult NewPerFrameData(PerFrameData** aResult);
 

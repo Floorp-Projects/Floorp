@@ -27,7 +27,6 @@
 
 class nsIContent;
 class nsIFrame;
-class nsTextRun;
 class nsILineBreaker;
 class nsIWordBreaker;
 

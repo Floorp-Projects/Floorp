@@ -104,6 +104,9 @@ nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aInden
 {
   IndentBy(out, aIndent);
   ListTag(out);
+#ifdef DEBUG_waterson
+  fprintf(out, " [parent=%p]", mParent);
+#endif
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {

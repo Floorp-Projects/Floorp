@@ -915,10 +915,6 @@ public:
 
   // XXX Maybe these three should be a separate interface?
 
-  // Helper method used by block reflow to identify runs of text so that
-  // proper word-breaking can be done.
-  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout) = 0;
-
   // Justification helper method used to distribute extra space in a
   // line to leaf frames. aUsedSpace is filled in with the amount of
   // space actually used.

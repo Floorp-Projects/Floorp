@@ -69,7 +69,6 @@ static PRBool gReallyNoisyReflow;
 static PRBool gNoisySpaceManager;
 static PRBool gVerifyLines;
 static PRBool gDisableResizeOpt;
-static PRBool gListTextRuns;
 
 struct BlockDebugFlags {
   const char* name;
@@ -86,7 +85,6 @@ static BlockDebugFlags gFlags[] = {
   { "lame-paint-metrics", &gLamePaintMetrics },
   { "lame-reflow-metrics", &gLameReflowMetrics },
   { "disable-resize-opt", &gDisableResizeOpt },
-  { "list-text-runs", &gListTextRuns },
 };
 #define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 
@@ -1200,8 +1198,6 @@ nsBlockFrame::nsBlockFrame()
 
 nsBlockFrame::~nsBlockFrame()
 {
-  
-  nsTextRun::DeleteTextRuns(mTextRuns);
 }
 
 NS_IMETHODIMP
@@ -1262,20 +1258,14 @@ nsBlockFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 }
 
 #ifdef DEBUG
-static void
-ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
-{
-  while (nsnull != aRuns) {
-    aRuns->List(out, aIndent);
-    aRuns = aRuns->GetNext();
-  }
-}
-
 NS_METHOD
 nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
+#ifdef DEBUG_waterson
+  fprintf(out, " [parent=%p]", mParent);
+#endif
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {
@@ -1353,17 +1343,6 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
       fputs(">\n", out);
     }
     NS_IF_RELEASE(listName);
-  }
-
-  // Output the text-runs
-  if (gListTextRuns && mTextRuns) {
-    IndentBy(out, aIndent);
-    fputs("text-runs <\n", out);
-
-    ListTextRuns(out, aIndent + 1, mTextRuns);
-
-    IndentBy(out, aIndent);
-    fputs(">\n", out);
   }
 
   aIndent--;
@@ -1629,7 +1608,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (eReflowReason_Resize != aReflowState.reason) {
     RenumberLists(aPresContext);
-    ComputeTextRuns(aPresContext);
   }
 
   nsresult rv = NS_OK;
@@ -4157,7 +4135,6 @@ nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   ll->Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
-  ll->SetReflowTextRuns(mTextRuns);
   nsresult rv = DoReflowInlineFrames(aState, *ll, aLine, aKeepReflowGoing,
                                      aLineReflowStatus, aUpdateMaximumWidth, aDamageDirtyArea);
   ll->EndLineReflow();
@@ -4178,7 +4155,6 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
                           &aState.mReflowState,
                           aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE));
   lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
-  lineLayout.SetReflowTextRuns(mTextRuns);
   nsresult rv = DoReflowInlineFrames(aState, lineLayout, aLine,
                                      aKeepReflowGoing, aLineReflowStatus,
                                      aUpdateMaximumWidth, aDamageDirtyArea);
@@ -6801,15 +6777,6 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     line = line->mNext;
   }
 
-  // Add in text-run data
-  nsTextRun* runs = mTextRuns;
-  while (runs) {
-    PRUint32 runSize;
-    runs->SizeOf(aHandler, &runSize);
-    aHandler->AddSize(nsLayoutAtoms::textRun, runSize);
-    runs = runs->GetNext();
-  }
-
   *aResult = sum;
   return NS_OK;
 }
@@ -7160,42 +7127,6 @@ nsBlockFrame::BuildFloaterList()
 }
 
 // XXX keep the text-run data in the first-in-flow of the block
-
-// XXX Switch to an interface to pass to child frames -or- do the
-// grovelling directly ourselves?
-nsresult
-nsBlockFrame::ComputeTextRuns(nsIPresContext* aPresContext)
-{
-  // Destroy old run information first
-  nsTextRun::DeleteTextRuns(mTextRuns);
-  mTextRuns = nsnull;
-
-  nsLineLayout textRunThingy(aPresContext);
-
-  // Ask each child to find its text runs
-  nsLineBox* line = mLines;
-  while (nsnull != line) {
-    if (!line->IsBlock()) {
-      nsIFrame* frame = line->mFirstChild;
-      PRInt32 n = line->GetChildCount();
-      while (--n >= 0) {
-        frame->FindTextRuns(textRunThingy);
-        frame->GetNextSibling(&frame);
-      }
-    }
-    else {
-      // A block frame isn't text therefore it will end an open text
-      // run.
-      textRunThingy.EndTextRun();
-    }
-    line = line->mNext;
-  }
-  textRunThingy.EndTextRun();
-
-  // Now take the text-runs away from the line layout engine.
-  mTextRuns = textRunThingy.TakeTextRuns();
-  return NS_OK;
-}
 
 #ifdef DEBUG
 void
