@@ -535,7 +535,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
     }
 
     enum Action { AllowProtocol, DenyProtocol, PrefControlled };
-    struct { 
+    static const struct { 
         const char *name;
         Action action;
     } protocolList[] = {
