@@ -109,7 +109,6 @@ static void PR_CALLBACK Thread(void *null)
     }
     PrintProgress(__LINE__);
 
-#if !defined(DEBUG)
     did = should = PR_FALSE;
     for (keys = 4; keys < 8; ++keys)
     {
@@ -117,7 +116,6 @@ static void PR_CALLBACK Thread(void *null)
         MY_ASSERT(PR_FAILURE == rv);
     }
     PrintProgress(__LINE__);
-#endif
     
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
