@@ -91,6 +91,7 @@ endif
 
 BASE_LIBS		= \
 			-lpref \
+			-lsecfree \
 			-lmozreg \
 			-lmozjs \
 			-lxpcom \
