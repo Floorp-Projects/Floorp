@@ -1857,6 +1857,21 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aS
 {
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
+	// check whether style allows selection
+	const nsStyleUserInterface* userinterface;
+	GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+	if (userinterface) {
+		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
+				// if 'user-select' isn't set for this frame, use the parent's
+				if (mParent) {
+					mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+				}
+		}
+		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+		  return NS_OK;//do not continue no selection for this frame.
+		}
+	}
+
 /*  nsresult rv;
 
   if (eSpreadDown == aSpread){
