@@ -1247,7 +1247,7 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
       // handle array size_of/length_of.
       if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
         pparamDesc->type.argnum = 
-            pparamDesc->type.argnum2 = k; // not '-1' because of leading arg  
+            pparamDesc->type.argnum2 = k - 1;  
       }
     }
 

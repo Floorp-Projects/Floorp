@@ -130,7 +130,8 @@ public:
                                  nsIInterfaceInfo* aInterfaceInfo,
                                  nsIVariant* aProperty);
   static nsresult VariantToArrayValue(uint8 aTypeTag,
-                                      nsXPTCMiniVariant* aResult,
+                                      nsXPTCMiniVariant* aResultSize,
+                                      nsXPTCMiniVariant* aResultArray,
                                       nsIInterfaceInfo* aInterfaceInfo,
                                       nsIVariant* aProperty);
 

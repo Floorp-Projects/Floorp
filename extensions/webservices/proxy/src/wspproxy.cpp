@@ -666,6 +666,7 @@ WSPProxy::XPTCMiniVariantToVariant(uint8 aTypeTag, nsXPTCMiniVariant aResult,
       var->SetAsWString(NS_STATIC_CAST(PRUnichar*, aResult.val.p));
       break;
     case nsXPTType::T_DOMSTRING:
+    case nsXPTType::T_ASTRING:
       var->SetAsAString(*((nsAString*)aResult.val.p));
       break;
     case nsXPTType::T_INTERFACE:
@@ -816,9 +817,6 @@ WSPProxy::VariantToInParameter(nsIInterfaceInfo* aInterfaceInfo,
     return rv;
   }
   
-  // Set the param's type on the XPTCVariant because xptcinvoke's 
-  // invoke_copy_to_stack depends on it. This fixes bug 203434.
-  aXPTCVariant->type = type;
   
   uint8 type_tag = type.TagPart();
   nsCOMPtr<nsIInterfaceInfo> iinfo;
@@ -838,9 +836,15 @@ WSPProxy::VariantToInParameter(nsIInterfaceInfo* aInterfaceInfo,
       }
     }
 
-    return VariantToArrayValue(arrayType.TagPart(), aXPTCVariant,
+    aXPTCVariant[0].type = nsXPTType::T_U32;
+    aXPTCVariant[1].type = nsXPTType::T_ARRAY;
+    aXPTCVariant[1].SetValIsArray();
+    return VariantToArrayValue(arrayType.TagPart(), aXPTCVariant, aXPTCVariant+1,
                                iinfo, aVariant);
   }
+  // Set the param's type on the XPTCVariant because xptcinvoke's 
+  // invoke_copy_to_stack depends on it. This fixes bug 203434.
+  aXPTCVariant->type = type;
   // else
   if (type.IsInterfacePointer()) {
     rv = aInterfaceInfo->GetInfoForParam(aMethodIndex, aParamInfo, 
@@ -892,7 +896,8 @@ WSPProxy::VariantToOutParameter(nsIInterfaceInfo* aInterfaceInfo,
         return rv;
       }
     }
-    return VariantToArrayValue(arrayType.TagPart(), aMiniVariant,
+    return VariantToArrayValue(arrayType.TagPart(), 
+                               aMiniVariant, aMiniVariant + 1,
                                iinfo, aVariant);
   }
   // else
@@ -978,6 +983,7 @@ WSPProxy::VariantToValue(uint8 aTypeTag, void* aValue,
       rv = aProperty->GetAsWString((PRUnichar**)aValue);
       break;
     case nsXPTType::T_DOMSTRING:
+    case nsXPTType::T_ASTRING:
       rv = aProperty->GetAsAString(*(nsAString*)aValue);
       break;
     case nsXPTType::T_INTERFACE:
@@ -1023,7 +1029,9 @@ WSPProxy::VariantToValue(uint8 aTypeTag, void* aValue,
 }
 
 nsresult
-WSPProxy::VariantToArrayValue(uint8 aTypeTag, nsXPTCMiniVariant* aResult,
+WSPProxy::VariantToArrayValue(uint8 aTypeTag,
+                              nsXPTCMiniVariant* aResultSize,
+                              nsXPTCMiniVariant* aResultArray,
                               nsIInterfaceInfo* aInterfaceInfo,
                               nsIVariant* aProperty)
 {
@@ -1037,7 +1045,8 @@ WSPProxy::VariantToArrayValue(uint8 aTypeTag, nsXPTCMiniVariant* aResult,
     return rv;
   }
 
-  *((PRUint32*)aResult[0].val.p) = count;
+  aResultSize->val.u32 = count;
+
   switch (aTypeTag) {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
@@ -1054,13 +1063,13 @@ WSPProxy::VariantToArrayValue(uint8 aTypeTag, nsXPTCMiniVariant* aResult,
     case nsXPTType::T_WCHAR:
     case nsXPTType::T_CHAR_STR:
     case nsXPTType::T_WCHAR_STR:
-      *((void**)aResult[1].val.p) = array;
+      aResultArray->val.p = array;
       break;
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
       if (arrayIID.Equals(NS_GET_IID(nsIVariant))) {
-        *((void**)aResult[1].val.p) = array;
+        aResultArray->val.p = array;
       }
       else if (!arrayIID.Equals(NS_GET_IID(nsIPropertyBag))) {
         NS_ERROR("Array of complex types should be represented by property "
@@ -1097,7 +1106,7 @@ WSPProxy::VariantToArrayValue(uint8 aTypeTag, nsXPTCMiniVariant* aResult,
             }
           }
         }
-        *((void**)aResult[1].val.p) = outptr;
+        aResultArray->val.p = outptr;
       }
       break;
     }
