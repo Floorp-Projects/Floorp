@@ -134,6 +134,7 @@ int main(int argc, char **argv)
   NS_RELEASE(app);
   rv = NS_ShutdownXPCOM(servMgr);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  NS_RELEASE(servMgr);
   return result;
 }
 
