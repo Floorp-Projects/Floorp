@@ -829,17 +829,17 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
 
             if (!answer.IsEmpty()) {
               // Evaluate our script and obtain a value.
-              jsval* result = nsnull;
+              jsval result = nsnull;
               PRBool undefined;
               rv = context->EvaluateStringWithValue(answer, 
                                            mScriptObject,
                                            nsnull, nsnull, 0, nsnull,
-                                           (void*)result, &undefined);
+                                           (void*) &result, &undefined);
               
               if (!undefined) {
                 // Define that value as a property
                 rv = ::JS_DefineUCProperty(cx, (JSObject*)mScriptObject, name.GetUnicode(), 
-                                           name.Length(), *result,
+                                           name.Length(), result,
                                            nsnull, nsnull,
                                            attrs); 
               }
