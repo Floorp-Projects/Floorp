@@ -105,7 +105,7 @@ sub domakefile {
       $lastLine =~ s/\\$//;
       chomp($lastLine);
     }
-    elsif ( $lastLine =~ m#(REQUIRES\s*=\s*)(.*)$# ) {
+    elsif ( $lastLine =~ m#^(REQUIRES\s*=\s*)(.*)$# ) {
       $requiresLines[$#requiresLines+1] = $_;
       $lastLine = "";
       my $requires = $1;
@@ -128,6 +128,7 @@ sub domakefile {
         }
         else {
           splice(@reqs, $index, 1);     # if it's not in .deps, don't write it out
+          $index--;                     # adjust index after splicing
           $modified = 1;
         }
       }
