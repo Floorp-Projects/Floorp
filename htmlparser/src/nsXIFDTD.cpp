@@ -337,8 +337,6 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
   memset(mHTMLNameStack,0,sizeof(mHTMLNameStack));
 
-  
-  mContextStackPos=0;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
   InitializeDefaultTokenHandlers();
@@ -469,11 +467,12 @@ NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,n
     mTokenizer=aTokenizer;
     nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
 
-    while(NS_OK==result){
+    while (NS_SUCCEEDED(result))
+    {
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) {
         result=HandleToken(theToken,aParser);
-        if(NS_SUCCEEDED(result)) {
+        if (NS_SUCCEEDED(result)) {
           theRecycler->RecycleToken(theToken);
         }
         else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
@@ -583,7 +582,7 @@ nsresult nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
   PRInt16       attrCount=aToken->GetAttributeCount();
   nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(node,attrCount);
 
-  if(NS_OK==result)
+  if (NS_SUCCEEDED(result))
   {
     if (mInContent == PR_TRUE)
       mSink->AddLeaf(node);
@@ -657,11 +656,13 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
   PRInt16         attrCount=aToken->GetAttributeCount();
   nsresult        result=(0==attrCount) ? NS_OK : CollectAttributes(node,attrCount);
 
-  if(NS_OK==result)   {
+  if (NS_SUCCEEDED(result))
+  {
     switch (type)
     {
       case eXIFTag_container:
       case eXIFTag_leaf: 
+      case eXIFTag_comment:
         StartTopOfStack();
         result = OpenContainer(node);        
       break;
@@ -674,11 +675,6 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
       case eXIFTag_content:
         StartTopOfStack();
         mInContent = PR_TRUE;
-      break;
-
-      case eXIFTag_comment:
-        StartTopOfStack();
-        mSink->AddComment(node);
       break;
 
       case eXIFTag_encode:
@@ -1452,7 +1448,8 @@ void nsXIFDTD::AddEndCommentTag(const nsIParserNode& aNode)
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode){
+nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode)
+{
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   
   nsresult  result=NS_OK; 
@@ -1463,10 +1460,13 @@ nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode){
     case eXIFTag_container:
     case eXIFTag_leaf:
       BeginStartTag(aNode);
-    break;
+      break;
+    case eXIFTag_comment:
+      mSink->AddComment(aNode);
+      break;
     default:
-    break;
-  }    
+      break;
+  }
   mContextStack[mContextStackPos++]=type;
 
   return result;
@@ -1483,6 +1483,7 @@ nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode){
 nsresult nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
 {
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+
   nsresult   result=NS_OK; //was false
   eXIFTags type=(eXIFTags)aNode.GetNodeType();
   
