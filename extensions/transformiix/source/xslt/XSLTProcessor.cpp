@@ -105,6 +105,7 @@ XSLTProcessor::XSLTProcessor() {
     xslTypes.put(COMMENT,         new XSLType(XSLType::COMMENT));
     xslTypes.put(COPY,            new XSLType(XSLType::COPY));
     xslTypes.put(COPY_OF,         new XSLType(XSLType::COPY_OF));
+    xslTypes.put(DECIMAL_FORMAT,  new XSLType(XSLType::DECIMAL_FORMAT));
     xslTypes.put(ELEMENT,         new XSLType(XSLType::ELEMENT));
     xslTypes.put(FOR_EACH,        new XSLType(XSLType::FOR_EACH));
     xslTypes.put(IF,              new XSLType(XSLType::IF));
@@ -471,6 +472,24 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                 case XSLType::ATTRIBUTE_SET:
                     aPs->addAttributeSet(element, currentFrame);
                     break;
+                case XSLType::DECIMAL_FORMAT :
+                {
+                    if (!aPs->addDecimalFormat(element)) {
+                        // Add error to ErrorObserver
+                        String fName = element->getAttribute(NAME_ATTR);
+                        String err("unable to add ");
+                        if (fName.length() == 0)
+                            err.append("default");
+                        else {
+                            err.append("\"");
+                            err.append(fName);
+                            err.append("\"");
+                        }
+                        err.append(" decimal format for xsl:decimal-format");
+                        notifyError(err);
+                    }
+                    break;
+                }
                 case XSLType::PARAM :
                 {
                     String name = element->getAttribute(NAME_ATTR);
@@ -2109,6 +2128,3 @@ XSLType::XSLType(const XSLType& xslType) {
 XSLType::XSLType(short type) {
     this->type = type;
 } //-- XSLType
-
-
-

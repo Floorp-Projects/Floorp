@@ -381,6 +381,7 @@ public:
         COMMENT,
         COPY,
         COPY_OF,
+        DECIMAL_FORMAT,
         ELEMENT,
         IF,
         IMPORT,
@@ -413,5 +414,3 @@ public:
 };
 
 #endif
-
-

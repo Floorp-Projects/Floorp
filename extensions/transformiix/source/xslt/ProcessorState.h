@@ -40,6 +40,7 @@
 #include "OutputFormat.h"
 
 class txXSLKey;
+class txDecimalFormat;
 
 /**
  * Class used for keeping the current state of the XSL Processor
@@ -213,6 +214,12 @@ public:
     **/
     List* getImportFrames();
 
+    /**
+     * Finds a template for the given Node. Only templates without
+     * a mode attribute will be searched.
+    **/
+    Element* findTemplate(Node* node, Node* context);
+
     /*
      * Finds a template for the given Node. Only templates with
      * a mode attribute equal to the given mode will be searched.
@@ -293,6 +300,17 @@ public:
      * returns NULL if no such key exists
     **/
     txXSLKey* getKey(String& keyName);
+
+    /*
+     * Adds a decimal format. Returns false if the format already exists
+     * but dosn't contain the exact same parametervalues
+     */
+    MBool addDecimalFormat(Element* element);
+
+    /**
+     * Returns a decimal format or NULL if no such format exists.
+    **/
+    txDecimalFormat* getDecimalFormat(String& name);
 
     //-------------------------------------/
     //- Virtual Methods from ContextState -/
@@ -395,6 +413,11 @@ private:
     /**
      * List of import containers. Sorted by ascending import precedence
     **/
+    List           importFrames;
+
+    /**
+     * A map for named attribute sets
+    **/
     List           mImportFrames;
 
     /**
@@ -423,6 +446,17 @@ private:
      * The set of all available keys
     **/
     NamedMap       xslKeys;
+
+    /*
+     * A list of all avalible decimalformats
+     */
+    NamedMap       decimalFormats;
+    
+    /*
+     * bool indicating if the default decimal format has been explicitly set
+     * by the stylesheet
+     */
+    MBool          defaultDecimalFormatSet;
 
 
     XSLTAction*    currentAction;

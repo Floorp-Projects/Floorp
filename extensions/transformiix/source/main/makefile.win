@@ -110,8 +110,9 @@ CPP_OBJS=                                       \
   ../xslt/functions/$(OBJDIR)/ElementAvailableFnCall.obj \
   ../xslt/functions/$(OBJDIR)/FunctionAvailableFnCall.obj \
   ../xslt/functions/$(OBJDIR)/GenerateIdFunctionCall.obj \
-  ../xslt/functions/$(OBJDIR)/txKeyFunctionCall.obj \
   ../xslt/functions/$(OBJDIR)/SystemPropertyFunctionCall.obj \
+  ../xslt/functions/$(OBJDIR)/txFormatNumberFunctionCall.obj \
+  ../xslt/functions/$(OBJDIR)/txKeyFunctionCall.obj \
   ../xslt/util/$(OBJDIR)/NodeStack.obj \
   ../xslt/util/$(OBJDIR)/txNodeSorter.obj \
   ../xslt/util/$(OBJDIR)/txXPathResultComparator.obj \

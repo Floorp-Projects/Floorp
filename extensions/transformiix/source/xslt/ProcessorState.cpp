@@ -797,6 +797,116 @@ txXSLKey* ProcessorState::getKey(String& keyName) {
     return (txXSLKey*)xslKeys.get(keyName);
 }
 
+/*
+ * Adds a decimal format. Returns false if the format already exists
+ * but dosn't contain the exact same parametervalues
+ */
+MBool ProcessorState::addDecimalFormat(Element* element)
+{
+    // build new DecimalFormat structure
+    MBool success = MB_TRUE;
+    txDecimalFormat* format = new txDecimalFormat;
+    if (!format)
+        return MB_FALSE;
+
+    String attValue = element->getAttribute(NAME_ATTR);
+    String formatName = attValue;
+
+    attValue = element->getAttribute(DECIMAL_SEPARATOR_ATTR);
+    if (attValue.length() == 1)
+        format->mDecimalSeparator = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    attValue = element->getAttribute(GROUPING_SEPARATOR_ATTR);
+    if (attValue.length() == 1)
+        format->mGroupingSeparator = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    attValue = element->getAttribute(INFINITY_ATTR);
+    if (attValue.length() > 0)
+        format->mInfinity=attValue;
+
+    attValue = element->getAttribute(MINUS_SIGN_ATTR);
+    if (attValue.length() == 1)
+        format->mMinusSign = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    attValue = element->getAttribute(NAN_ATTR);
+    if (attValue.length() > 0)
+        format->mNaN=attValue;
+        
+    attValue = element->getAttribute(PERCENT_ATTR);
+    if (attValue.length() == 1)
+        format->mPercent = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    attValue = element->getAttribute(PER_MILLE_ATTR);
+    if (attValue.length() == 1)
+        format->mPerMille = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    attValue = element->getAttribute(ZERO_DIGIT_ATTR);
+    if (attValue.length() == 1)
+        format->mZeroDigit = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    attValue = element->getAttribute(DIGIT_ATTR);
+    if (attValue.length() == 1)
+        format->mDigit = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    attValue = element->getAttribute(PATTERN_SEPARATOR_ATTR);
+    if (attValue.length() == 1)
+        format->mPatternSeparator = attValue.charAt(0);
+    else if (attValue.length() > 1)
+        success = MB_FALSE;
+
+    if (!success) {
+        delete format;
+        return MB_FALSE;
+    }
+
+    // Does an existing format with that name exist?
+    // (name="" means default format)
+    
+    txDecimalFormat* existing = NULL;
+
+    if (defaultDecimalFormatSet || formatName.length() > 0) {
+        existing = (txDecimalFormat*)decimalFormats.get(formatName);
+    }
+    else {
+        // We are overriding the predefined default format which is always
+        // allowed
+        delete decimalFormats.remove(formatName);
+        defaultDecimalFormatSet = MB_TRUE;
+    }
+
+    if (existing) {
+        success = existing->isEqual(format);
+        delete format;
+    }
+    else {
+        decimalFormats.put(formatName, format);
+    }
+    
+    return success;
+}
+
+/*
+ * Returns a decimal format or NULL if no such format exists.
+ */
+txDecimalFormat* ProcessorState::getDecimalFormat(String& name)
+{
+    return (txDecimalFormat*)decimalFormats.get(name);
+}
+
   //--------------------------------------------------/
  //- Virtual Methods from derived from ContextState -/
 //--------------------------------------------------/
@@ -915,8 +1025,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
        return new txKeyFunctionCall(this);
    }
    else if (FORMAT_NUMBER_FN.isEqual(name)) {
-       err = "function not yet implemented: ";
-       err.append(name);
+       return new txFormatNumberFunctionCall(this);
    }
    else if (CURRENT_FN.isEqual(name)) {
        return new CurrentFunctionCall(this);
@@ -1118,6 +1227,11 @@ void ProcessorState::initialize() {
     
     //-- Make sure all loaded documents get deleted
     loadedDocuments.setObjectDeletion(MB_TRUE);
+
+    //-- add predefined default decimal format
+    defaultDecimalFormatSet = MB_FALSE;
+    decimalFormats.put("", new txDecimalFormat);
+    decimalFormats.setObjectDeletion(MB_TRUE);
 }
 
 ProcessorState::ImportFrame::ImportFrame()
