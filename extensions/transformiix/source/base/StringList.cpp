@@ -23,13 +23,13 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: StringList.cpp,v 1.5 2001/01/12 20:06:08 axel%pike.org Exp $
+ * $Id: StringList.cpp,v 1.6 2001/04/03 12:37:57 peterv%netscape.com Exp $
  */
 
 /**
  * StringList
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2001/01/12 20:06:08 $
+ * @version $Revision: 1.6 $ $Date: 2001/04/03 12:37:57 $
 **/
 
 #ifndef MOZ_XSL
@@ -41,9 +41,9 @@
  * Creates an empty list
 **/
 StringList::StringList() {
-   firstItem  = 0;
-   lastItem   = 0;
-   itemCount  = 0;
+    firstItem  = 0;
+    lastItem   = 0;
+    itemCount  = 0;
 } //-- StringList;
 
 /**
@@ -51,26 +51,28 @@ StringList::StringList() {
  * references, make sure you make copies of any needed Strings
 */
 StringList::~StringList() {
-  StringListItem* item = firstItem;
-  while (item) {
-    StringListItem* tItem = item;
-    item = item->nextItem;
-    delete tItem->strptr;
-    delete tItem;
-  }
+    StringListItem* item = firstItem;
+    while (item) {
+        StringListItem* tItem = item;
+        item = item->nextItem;
+        delete tItem->strptr;
+        delete tItem;
+    }
 } //-- ~StringList
 
 void StringList::add(String* strptr) {
-   StringListItem* sItem = new StringListItem;
-   sItem->strptr = strptr;
-   sItem->nextItem = 0;
-   sItem->prevItem = lastItem;
-   if (lastItem) lastItem->nextItem = sItem;
-   lastItem = sItem;
-   if (!firstItem) firstItem = sItem;
+    StringListItem* sItem = new StringListItem;
+    if (sItem) {
+        sItem->strptr = strptr;
+        sItem->nextItem = 0;
+        sItem->prevItem = lastItem;
+    }
+    if (lastItem) lastItem->nextItem = sItem;
+    lastItem = sItem;
+    if (!firstItem) firstItem = sItem;
 
-   // increase the item count
-   ++itemCount;
+    // increase the item count
+    ++itemCount;
 } //-- add
 
 MBool StringList::contains(String& search) {
@@ -86,7 +88,7 @@ MBool StringList::contains(String& search) {
  * Returns the number of Strings in this List
 **/
 Int32 StringList::getLength() {
-   return itemCount;
+    return itemCount;
 } //-- getLength
 
 
@@ -99,28 +101,30 @@ Int32 StringList::getLength() {
 **/
 void StringList::insertAfter(String* strptr, StringListItem* refItem) {
 
-   //-- if refItem == null insert at end
-   if (!refItem) {
-      if (firstItem) insertBefore(strptr, firstItem);
-      else add(strptr);
-      return;
-   }
+    //-- if refItem == null insert at end
+    if (!refItem) {
+        if (firstItem) insertBefore(strptr, firstItem);
+        else add(strptr);
+        return;
+    }
 
-   //-- if inserting at end of list
-   if (refItem == lastItem) {
-       add(strptr);
-       return;
-   }
+    //-- if inserting at end of list
+    if (refItem == lastItem) {
+        add(strptr);
+        return;
+    }
 
-   //-- insert into middle of list
-   StringListItem* sItem = new StringListItem;
-   sItem->strptr = strptr;
-   sItem->prevItem = refItem;
-   sItem->nextItem = refItem->nextItem;
-   refItem->nextItem = sItem;
+    //-- insert into middle of list
+    StringListItem* sItem = new StringListItem;
+    if (sItem) {
+        sItem->strptr = strptr;
+        sItem->prevItem = refItem;
+        sItem->nextItem = refItem->nextItem;
+        refItem->nextItem = sItem;
 
-   // increase the item count
-   ++itemCount;
+        // increase the item count
+        ++itemCount;
+    }
 } //-- insertAfter
 
 /**
@@ -132,23 +136,25 @@ void StringList::insertAfter(String* strptr, StringListItem* refItem) {
 **/
 void StringList::insertBefore(String* strptr, StringListItem* refItem) {
 
-   //-- if refItem == null insert at end
-   if (!refItem) {
-      add(strptr);
-      return;
-   }
+    //-- if refItem == null insert at end
+    if (!refItem) {
+        add(strptr);
+        return;
+    }
 
-   StringListItem* sItem = new StringListItem;
-   sItem->strptr = strptr;
-   sItem->nextItem = refItem;
-   sItem->prevItem = refItem->prevItem;
-   refItem->prevItem = sItem;
+    StringListItem* sItem = new StringListItem;
+    if (sItem) {
+        sItem->strptr = strptr;
+        sItem->nextItem = refItem;
+        sItem->prevItem = refItem->prevItem;
+        refItem->prevItem = sItem;
+    }
 
-   if (refItem == firstItem) firstItem = sItem;
-   if (itemCount == 0) lastItem = sItem;
+    if (refItem == firstItem) firstItem = sItem;
+    if (itemCount == 0) lastItem = sItem;
 
-   // increase the item count
-   ++itemCount;
+    // increase the item count
+    ++itemCount;
 } //-- insertBefore
 
 /**
@@ -156,32 +162,32 @@ void StringList::insertBefore(String* strptr, StringListItem* refItem) {
  * will need to be deleted by the caller.
 **/
 StringListIterator* StringList::iterator() {
-   return new StringListIterator(this);
+    return new StringListIterator(this);
 } //-- iterator
 
 String* StringList::remove(String* strptr) {
-   StringListItem* sItem = firstItem;
-   while (sItem) {
-      if (sItem->strptr == strptr) {
-         remove(sItem);
-         delete sItem;
-         return strptr;
-      }
-      sItem = sItem->nextItem;
-   }
-   // not in list
-   return 0;
+    StringListItem* sItem = firstItem;
+    while (sItem) {
+        if (sItem->strptr == strptr) {
+            remove(sItem);
+            delete sItem;
+            return strptr;
+        }
+        sItem = sItem->nextItem;
+    }
+    // not in list
+    return 0;
 } //-- remove
 
 StringList::StringListItem* StringList::remove(StringList::StringListItem* sItem) {
-   if (sItem->prevItem) {
-       sItem->prevItem->nextItem = sItem->nextItem;
-   }
-   if (sItem == firstItem) firstItem = sItem->nextItem;
-   if (sItem == lastItem) lastItem = sItem->prevItem;
-   //-- decrease Item count
-   --itemCount;
-   return sItem;
+    if (sItem->prevItem) {
+        sItem->prevItem->nextItem = sItem->nextItem;
+    }
+    if (sItem == firstItem) firstItem = sItem->nextItem;
+    if (sItem == lastItem) lastItem = sItem->prevItem;
+    //-- decrease Item count
+    --itemCount;
+    return sItem;
 } //-- remove
 
 /**
@@ -189,8 +195,8 @@ StringList::StringListItem* StringList::remove(StringList::StringListItem* sItem
  * All removed strings will be destroyed
 **/
 void StringList::remove(String& search) {
-   StringListItem* sItem = firstItem;
-   while (sItem) {
+    StringListItem* sItem = firstItem;
+    while (sItem) {
         if (sItem->strptr->isEqual(search)) {
             delete sItem->strptr;
             StringListItem* temp = remove(sItem);
@@ -198,7 +204,7 @@ void StringList::remove(String& search) {
             delete temp;
         }
         else sItem = sItem->nextItem;
-   }
+    }
 } //-- remove
 
   //----------------------------------------/
@@ -210,9 +216,9 @@ void StringList::remove(String& search) {
  * Creates a new StringListIterator for the given StringList
 **/
 StringListIterator::StringListIterator(StringList* list) {
-   stringList = list;
-   currentItem = 0;
-   allowRemove = MB_FALSE;
+    stringList = list;
+    currentItem = 0;
+    allowRemove = MB_FALSE;
 } //-- StringListIterator
 
 StringListIterator::~StringListIterator() {
@@ -226,8 +232,8 @@ StringListIterator::~StringListIterator() {
 **/
 void StringListIterator::add(String* strptr) {
 
-   stringList->insertAfter(strptr,currentItem);
-   allowRemove = MB_FALSE;
+    stringList->insertAfter(strptr,currentItem);
+    allowRemove = MB_FALSE;
 
 } //-- add
 
@@ -235,20 +241,20 @@ void StringListIterator::add(String* strptr) {
  * Returns true if a sucessful call to the next() method can be made
 **/
 MBool StringListIterator::hasNext() {
-   if (currentItem) {
-      return (MBool)(currentItem->nextItem);
-   }
-   return (MBool)(stringList->firstItem);
+    if (currentItem) {
+        return (MBool)(currentItem->nextItem);
+    }
+    return (MBool)(stringList->firstItem);
 } //-- hasNext
 
 /**
  * Returns true if a successful call to the previous() method can be made
 **/
 MBool StringListIterator::hasPrevious() {
-   if (currentItem) {
-      return (MBool)(currentItem->prevItem);
-   }
-   return MB_FALSE;
+    if (currentItem) {
+        return (MBool)(currentItem->prevItem);
+    }
+    return MB_FALSE;
 } //-- hasPrevious
 
 /**
@@ -256,19 +262,19 @@ MBool StringListIterator::hasPrevious() {
 **/
 String* StringListIterator::next() {
 
-   if (currentItem) {
-      if (currentItem->nextItem) {
-         currentItem = currentItem->nextItem;
-         allowRemove = MB_TRUE;
-         return currentItem->strptr;
-      }
-   }
-   else {
-      currentItem = stringList->firstItem;
-      allowRemove = MB_TRUE;
-      return currentItem->strptr;
-   }
-   return 0;
+    if (currentItem) {
+        if (currentItem->nextItem) {
+            currentItem = currentItem->nextItem;
+            allowRemove = MB_TRUE;
+            return currentItem->strptr;
+        }
+    }
+    else {
+        currentItem = stringList->firstItem;
+        allowRemove = MB_TRUE;
+        return currentItem->strptr;
+    }
+    return 0;
 } //-- next
 
 /**
@@ -276,15 +282,15 @@ String* StringListIterator::next() {
 **/
 String* StringListIterator::previous() {
 
-   if (currentItem) {
-      if (currentItem->prevItem) {
-         currentItem = currentItem->prevItem;
-         allowRemove = MB_TRUE;
-         return currentItem->strptr;
-      }
-   }
+    if (currentItem) {
+        if (currentItem->prevItem) {
+            currentItem = currentItem->prevItem;
+            allowRemove = MB_TRUE;
+            return currentItem->strptr;
+        }
+    }
 
-   return 0;
+    return 0;
 }
 //-- prev
 
@@ -294,24 +300,24 @@ String* StringListIterator::previous() {
 **/
 String* StringListIterator::remove() {
 
-   if (allowRemove == MB_FALSE) return 0;
+    if (allowRemove == MB_FALSE) return 0;
 
-   allowRemove = MB_FALSE;
+    allowRemove = MB_FALSE;
 
-   StringList::StringListItem* sItem = 0;
-   if (currentItem) {
-      // Make previous Item the current Item or null
-      sItem = currentItem;
-      if (stringList->firstItem == sItem) currentItem = 0;
-      stringList->remove(sItem);
-      return sItem->strptr;
-   }
-   return 0;
+    StringList::StringListItem* sItem = 0;
+    if (currentItem) {
+        // Make previous Item the current Item or null
+        sItem = currentItem;
+        if (stringList->firstItem == sItem) currentItem = 0;
+        stringList->remove(sItem);
+        return sItem->strptr;
+    }
+    return 0;
 } //-- remove
 
 /**
  * Resets the current location within the StringList to the beginning
 **/
 void StringListIterator::reset() {
-   currentItem = 0;
+    currentItem = 0;
 } //-- reset

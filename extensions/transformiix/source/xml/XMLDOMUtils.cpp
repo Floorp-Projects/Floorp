@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.11 2001/01/31 11:48:55 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.12 2001/04/03 12:37:44 peterv%netscape.com Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.11 $ $Date: 2001/01/31 11:48:55 $
+ * @version $Revision: 1.12 $ $Date: 2001/04/03 12:37:44 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -61,6 +61,8 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
         {
             Document* doc = (Document*)node;
             Document* newDoc = new Document();
+            if (!newDoc)
+                break;
 #ifdef MOZ_XSL
             owner->addWrapper(newDoc);
 #endif
