@@ -271,7 +271,7 @@ nsDiskCacheRecordChannel::OpenInputStream(nsIInputStream* *aResult)
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
   if(NS_FAILED(rv)) return rv;
   // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(mSpec, PR_RDONLY, 0,
+  rv = fts->CreateTransport(mSpec, PR_RDONLY, PR_IRWXU,
                             getter_AddRefs(mFileTransport));
   if(NS_FAILED(rv))
     return rv;
@@ -299,7 +299,7 @@ nsDiskCacheRecordChannel::OpenOutputStream(nsIOutputStream* *aResult)
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
   if(NS_FAILED(rv)) return rv;
    // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(mSpec, PR_WRONLY | PR_CREATE_FILE, 0,
+  rv = fts->CreateTransport(mSpec, PR_WRONLY | PR_CREATE_FILE, PR_IRWXU,
                             getter_AddRefs(mFileTransport));
   if(NS_FAILED(rv))
     return rv;
@@ -358,7 +358,7 @@ nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener,
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
  // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(mSpec, PR_RDONLY, 0,
+  rv = fts->CreateTransport(mSpec, PR_RDONLY, PR_IRWXU,
                             getter_AddRefs(mFileTransport));
   if (NS_FAILED(rv)) return rv;
 

@@ -287,7 +287,7 @@ nsNetDiskCache::Init(void)
 		PRBool exists;
 		if ( NS_SUCCEEDED( cacheFolder->Exists(&exists ) ) && !exists)
 		{
-				rv = cacheFolder->Create( nsIFile::DIRECTORY_TYPE, 0 );
+				rv = cacheFolder->Create( nsIFile::DIRECTORY_TYPE, PR_IRWXU );
 				if ( NS_FAILED( rv ) ) 
 					return rv;
 		}
@@ -312,7 +312,7 @@ nsNetDiskCache::InitDB(void)
 		PRBool exists;
 		if ( NS_SUCCEEDED( mDBFile->Exists(&exists ) ) && !exists)
 		{
-			mDBFile->Create( nsIFile::NORMAL_FILE_TYPE, 0 );
+			mDBFile->Create( nsIFile::NORMAL_FILE_TYPE, PR_IRWXU );
 		}
 	#endif
   rv = mDB->Init(mDBFile) ;
@@ -671,7 +671,7 @@ nsNetDiskCache::CreateDir(nsIFile* dir_spec)
   		return rv;
   }
   
-  rv = dir_spec->Create( nsIFile::DIRECTORY_TYPE, 0) ;  
+  rv = dir_spec->Create( nsIFile::DIRECTORY_TYPE, PR_IRWXU) ;  
   return rv ;
 }
 
