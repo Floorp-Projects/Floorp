@@ -509,8 +509,10 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   {
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
-    else
+    else {
+      ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
       ::ShowHide(mWindowPtr, true);
+    }
     ComeToFront();
   }
   else
