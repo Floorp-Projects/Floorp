@@ -218,7 +218,7 @@ sub changePassword {
     
     # Update the user's password in the profiles table and delete the token
     # from the tokens table.
-    SendSQL("LOCK TABLE profiles WRITE , tokens WRITE");
+    SendSQL("LOCK TABLES profiles WRITE , tokens WRITE");
     SendSQL("UPDATE   profiles
              SET      cryptpassword = $quotedpassword
              WHERE    userid = $userid");
