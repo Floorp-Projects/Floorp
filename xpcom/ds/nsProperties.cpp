@@ -138,8 +138,8 @@ nsProperties::HasProperty(const char* prop, nsISupports* expectedValue)
 {
     nsISupports* value;
     nsresult rv = GetProperty(prop, &value);
-    if (NS_FAILED(rv)) return NS_COMFALSE;
-    rv = (value == expectedValue) ? NS_OK : NS_COMFALSE;
+    if (NS_FAILED(rv)) return rv;
+    rv = (value == expectedValue) ? NS_OK : NS_ERROR_FAILURE;
     NS_IF_RELEASE(value);
     return rv;
 }
