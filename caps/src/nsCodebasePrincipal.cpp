@@ -24,8 +24,6 @@
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
-
 NS_IMPL_QUERY_INTERFACE2(nsCodebasePrincipal, nsICodebasePrincipal, nsIPrincipal)
 
 // special AddRef/Release to unify reference counts between XPCOM 

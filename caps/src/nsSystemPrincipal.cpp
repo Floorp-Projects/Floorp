@@ -26,8 +26,7 @@
 #include "nsXPIDLString.h"
 
 
-static NS_DEFINE_IID(kIPrincipalIID, NS_IPRINCIPAL_IID);
-NS_IMPL_ISUPPORTS(nsSystemPrincipal, kIPrincipalIID);
+NS_IMPL_ISUPPORTS(nsSystemPrincipal, NS_GET_IID(nsIPrincipal));
 
 ////////////////////////////////////
 // Methods implementing nsIPrincipal
