@@ -345,10 +345,15 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
     nsMargin border = borderPadding - padding;
 
     // Figure out how big the legend is if there is one. 
+    // get the legend's margin
     nsMargin legendMargin(0,0,0,0);
-
     // reflow the legend only if needed
     if (mLegendFrame) {
+        const nsStyleSpacing* legendSpacing;
+        mLegendFrame->GetStyleData(eStyleStruct_Spacing,
+                              (const nsStyleStruct*&) legendSpacing);
+        legendSpacing->GetMargin(legendMargin);
+
         if (reflowLegend) {
           nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
                                               mLegendFrame, nsSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE));
@@ -368,14 +373,6 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
             printf("  and maxES (%d, %d)\n", 
                    legendDesiredSize.maxElementSize->width, legendDesiredSize.maxElementSize->height);
 #endif
-
-          // get the legend's margin
-          const nsStyleSpacing* legendSpacing;
-          mLegendFrame->GetStyleData(eStyleStruct_Spacing,
-                                (const nsStyleStruct*&) legendSpacing);
-
-          legendSpacing->GetMargin(legendMargin);
-
           // figure out the legend's rectangle
           mLegendRect.width  = legendDesiredSize.width + legendMargin.left + legendMargin.right;
           mLegendRect.height = legendDesiredSize.height + legendMargin.top + legendMargin.bottom;
