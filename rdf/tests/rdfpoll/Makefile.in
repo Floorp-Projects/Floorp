@@ -38,23 +38,6 @@ BASE_LIBS =	     \
 	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(NULL)
 
-GECKO_LIBS =		      \
-	-lraptorwebwidget     \
-	-lraptorgfx 	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
-	-lraptorhtmlpars      \
-	-lexpat \
-	-lxmltok \
-	-lraptorview	      \
-	-ljsdom		      \
-	-lraptorplugin	      \
-	$(NULL)
-
-IMGLIB_LIBS =	     \
-	-limg	     \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS)  \
-	$(NULL)
 ifndef NECKO
 
 NETLIB_LIBS =	      \
@@ -85,8 +68,8 @@ NETLIB_LIBS =	      \
 endif
 
 LIBS		= \
-	$(GECKO_LIBS) \
 	$(NETLIB_LIBS) \
+	$(TIMER_LIBS) \
 	$(IMGLIB_LIBS) \
 	$(BASE_LIBS) \
 	$(NSPR_LIBS) \

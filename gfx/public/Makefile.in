@@ -49,8 +49,6 @@ EXPORTS =				\
   nsIDeviceContextSpecFactory.h \
   nsIDrawingSurface.h \
   nsColorNameIDs.h \
-  nsITimer.h \
-  nsITimerCallback.h \
   $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

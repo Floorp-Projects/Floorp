@@ -41,8 +41,6 @@ CPPSRCS=nsDOMFactory.cpp \
 INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
 	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(srcdir)/../base -I$(PUBLIC)/jsurl
 
-GFX_DSO_FLAGS = $(addprefix -lgfx, $(MOZ_GFX_TOOLKIT))
-
 SHARED_LIBRARY_LIBS =		       \
 	$(DIST)/lib/libjsdombase_s.a   \
 	$(DIST)/lib/libjsdomcore_s.a   \

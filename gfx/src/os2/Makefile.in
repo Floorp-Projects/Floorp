@@ -51,7 +51,6 @@ CPPSRCS = \
 	nsDeviceContextSpecOS2.cpp      \
 	nsDrawingSurfaceOS2.cpp         \
 	nsGfxFactoryOS2.cpp             \
-	nsTimerOS2.cpp                  \
 	$(NULL)
 
 CSRCS = libprint.c

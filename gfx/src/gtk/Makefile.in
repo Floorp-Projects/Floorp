@@ -45,7 +45,6 @@ CPPSRCS = \
 	nsImageGTK.cpp \
 	nsRegionGTK.cpp \
 	nsRenderingContextGTK.cpp \
-	nsTimer.cpp \
 	$(NULL)
 
 CSRCS = \

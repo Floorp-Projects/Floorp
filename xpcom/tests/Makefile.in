@@ -85,9 +85,6 @@ NETLIB_LIBS = 	\
 endif
 
 LIBS += \
-	-lraptorgfx 	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
-	$(TK_LIBS) \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_JS_PREFIX)js \
@@ -95,7 +92,9 @@ LIBS += \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
+	$(TK_LIBS) \
 	$(NETLIB_LIBS) \
+	$(TIMER_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)

@@ -27,19 +27,18 @@ BASE_LIBS =          \
         $(ZLIB_LIBS) \
         -lreg        \
         -l$(MOZ_LIB_JS_PREFIX)js             \
+		-ltimer_s \
         -lxpcom      \
         -lsecfree    \
         -l$(MOZ_LIB_UTIL_PREFIX)util    \
         $(NULL)
 
 MOZ_WIDGET_TOOLKIT_LDFLAGS=-lwidgetgtk
-MOZ_GFX_TOOLKIT_LDFLAGS=-lgfxgtk
 
 GECKO_LIBS =                  \
         -lraptorwebwidget     \
 		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 		-lraptorgfx 	\
-		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
         -lraptorhtmlpars      \
         -lexpat \
         -lxmltok \

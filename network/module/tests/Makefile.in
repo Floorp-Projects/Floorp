@@ -33,8 +33,6 @@ LOCAL_INCLUDES := -I$(srcdir)/../src
 REQUIRES = raptor netlib xpcom reg pref
 
 LIBS = \
-	-lraptorgfx 	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lnetlib \
 	-labouturl \
 	-lfileurl \
@@ -48,7 +46,6 @@ LIBS = \
 	-lhttpurl \
 	-lnetwork \
 	-lnetcache \
-	$(TK_LIBS) \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_JS_PREFIX)js \
@@ -56,6 +53,8 @@ LIBS = \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
+	$(TIMER_LIBS) \
+	$(TK_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
