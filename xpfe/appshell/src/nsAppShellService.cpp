@@ -282,11 +282,14 @@ void nsAppShellService::CreateHiddenWindow()
   nsresult rv;
   nsIURI* url = nsnull;
 
+#if 0 // temporary until the right NECKO thing is figured out
 #ifndef NECKO
   rv = NS_NewURL(&url, "chrome://navigator/content/hiddenWindow.xul");
 #else
   rv = NS_NewURI(&url, "chrome://navigator/content/hiddenWindow.xul");
 #endif
+#else
+  rv = NS_ERROR_FAILURE;
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWebShellWindow> newWindow;
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, getter_AddRefs(newWindow),
@@ -298,6 +301,7 @@ void nsAppShellService::CreateHiddenWindow()
     NS_RELEASE(url);
   }
   NS_ASSERTION(NS_SUCCEEDED(rv), "HiddenWindow not created");
+#endif
 }
 
 // Apply function (Initialize/Shutdown) to each app shell component.
