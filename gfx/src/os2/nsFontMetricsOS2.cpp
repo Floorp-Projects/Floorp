@@ -216,7 +216,7 @@ InitGlobals(void)
                  UconvObject Converter = 0;
                  int unirc = ::UniCreateUconvObject( codepage, &Converter);
                  if (unirc == ULS_SUCCESS) {
-                    gCharSetInfo[11].mCodePage = 943;
+                    gCharSetInfo[10].mCodePage = 943;
                    ::UniFreeUconvObject(Converter);
                  }
               }
