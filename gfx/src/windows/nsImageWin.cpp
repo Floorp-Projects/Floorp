@@ -124,12 +124,12 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 
     // Allocate the image bits
     mImageBits = new unsigned char[mSizeImage];
-    // XXX We don't need to waste time initializing the bits. The reason Purify
-    // complains about UMR is because when asked to Draw() we ask GDI to render
-    // bits that aren't valid yet. We need to fix that...
-#if 0
-    memset(mImageBits, 128, mSizeImage);
-#endif
+ 
+    // Need to clear the entire buffer so an incrementally loaded image
+    // will not have garbage rendered for the unloaded bits.
+    if (mImageBits != nsnull) {
+      memset(mImageBits, 128, mSizeImage);
+    }
 
     if (256 == mNumPaletteColors) {
       // Initialize the array of indexes into the logical palette
