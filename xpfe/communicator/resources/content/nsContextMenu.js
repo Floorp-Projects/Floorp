@@ -677,10 +677,9 @@ nsContextMenu.prototype = {
         // Construct nsIURL.
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
-        var uriToAdd  = ioService.newURI(base, null);
-        // Resolve
-        var result = baseURL.resolve( url );
-        return result;
+        var baseURI  = ioService.newURI(base, null);
+        
+        return ioService.newURI(baseURI.resolve(url), null);
     },
     // Save specified URL in user-selected file.
     savePage : function ( url, doNotValidate ) {
