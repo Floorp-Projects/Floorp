@@ -340,6 +340,7 @@ nsMsgPrintEngine::SetPrintURICount(PRInt32 aCount)
 NS_IMETHODIMP
 nsMsgPrintEngine::StartPrintOperation(nsIPrintSettings* aPS)
 {
+  NS_ENSURE_ARG_POINTER(aPS);
   mPrintSettings = aPS;
 
   // Load the about:blank on the tail end...
