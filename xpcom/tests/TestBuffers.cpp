@@ -172,7 +172,7 @@ TestMallocBuffers(PRUint32 growByPages, PRUint32 pageCount)
     rv = NS_NewBuffer(&buffer,
                       NS_PAGEMGR_PAGE_SIZE * growByPages, 
                       NS_PAGEMGR_PAGE_SIZE * pageCount,
-					  nsnull);
+                      nsnull);
     if (NS_FAILED(rv)) {
         printf("failed to create buffer\n");
         return rv;
@@ -192,7 +192,7 @@ TestPageBuffers(PRUint32 growByPages, PRUint32 pageCount)
     rv = NS_NewPageBuffer(&buffer,
                           NS_PAGEMGR_PAGE_SIZE * growByPages,
                           NS_PAGEMGR_PAGE_SIZE * pageCount,
-						  nsnull);
+                          nsnull);
     if (NS_FAILED(rv)) {
         printf("failed to create buffer\n");
         return rv;
