@@ -31,6 +31,12 @@
 #include <X11/Xmu/Editres.h>
 #endif
 
+//#define DR_EVIL 1
+
+#ifdef DR_EVIL
+#include "xlibrgb.h"
+#endif
+
 #include "nsIPref.h"
 
 XtAppContext gAppContext;
@@ -65,20 +71,6 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 // Create the application shell
 //
 //-------------------------------------------------------------------------
-
-//#define DR_EVIL 1
-
-#ifdef DR_EVIL
-extern Display *  gDisplay;
-extern Screen *   gScreen;
-extern Visual *   gVisual;
-extern int        gDepth;
-
-extern "C" void xlib_rgb_init (Display *display, Screen *screen);
-extern "C" Visual * xlib_rgb_get_visual (void);
-extern "C" XVisualInfo * xlib_rgb_get_visual_info (void);
-
-#endif
 
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
@@ -117,29 +109,12 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
   // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
 
-
 #ifdef DR_EVIL
-  gDisplay = XtDisplay(mTopLevel);
-  gScreen = XtScreen(mTopLevel);
+  xlib_rgb_init(XtDisplay(mTopLevel), XtScreen(mTopLevel));
 
-  xlib_rgb_init(gDisplay, gScreen);
-
-  gVisual = xlib_rgb_get_visual();
-
-  XVisualInfo * x_visual_info = xlib_rgb_get_visual_info();
-
-  NS_ASSERTION(nsnull != x_visual_info,"Visual info from xlibrgb is null.");
-
-  if (nsnull != x_visual_info)
-  {
-    gDepth = x_visual_info->depth;
-  }
-
-  printf("nsAppShell::Create(dpy=%p  screen=%p  visual=%p  depth=%d)\n",
-         gDisplay,
-         gScreen,
-         gVisual,
-         gDepth);
+  printf("nsAppShell::Create(dpy=%p  screen=%p)\n",
+         XtDisplay(mTopLevel),
+         XtScreen(mTopLevel));
 #endif
 
   return NS_OK;
