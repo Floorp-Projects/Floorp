@@ -28,6 +28,7 @@
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
 #include "nsCSSRendering.h"
+#include "nsIFrameManager.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
@@ -1115,8 +1116,7 @@ nsBlockFrame::Destroy(nsIPresContext& aPresContext)
 
   mFloaters.DestroyFrames(aPresContext);
 
-  nsLineBox::DeleteLineList(aPresContext, mLines);
-  nsLineBox::DeleteLineList(aPresContext, mOverflowLines);
+  nsLineBox::DeleteLineList(&aPresContext, mLines);
 
   return nsBlockFrameSuper::Destroy(aPresContext);
 }
@@ -4183,7 +4183,7 @@ nsBlockFrame::PushLines(nsBlockReflowState& aState)
   nsLineBox* nextLine = lastLine->mNext;
 
   lastLine->mNext = nsnull;
-  mOverflowLines = nextLine;
+  SetOverflowLines(aState.mPresContext, nextLine);
 
   // Mark all the overflow lines dirty so that they get reflowed when
   // they are pulled up by our next-in-flow.
@@ -4197,7 +4197,7 @@ nsBlockFrame::PushLines(nsBlockReflowState& aState)
   lastFrame->SetNextSibling(nsnull);
 
 #ifdef DEBUG
-  VerifyOverflowSituation();
+  VerifyOverflowSituation(aState.mPresContext);
 #endif
 }
 
@@ -4205,21 +4205,21 @@ PRBool
 nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
 {
 #ifdef DEBUG
-  VerifyOverflowSituation();
+  VerifyOverflowSituation(aPresContext);
 #endif
   PRBool drained = PR_FALSE;
+  nsLineBox* overflowLines;
 
   // First grab the prev-in-flows overflow lines
   nsBlockFrame* prevBlock = (nsBlockFrame*) mPrevInFlow;
   if (nsnull != prevBlock) {
-    nsLineBox* line = prevBlock->mOverflowLines;
-    if (nsnull != line) {
+    overflowLines = prevBlock->GetOverflowLines(aPresContext, PR_TRUE);
+    if (nsnull != overflowLines) {
       drained = PR_TRUE;
-      prevBlock->mOverflowLines = nsnull;
 
-      // Make all the frames on the mOverflowLines list mine
+      // Make all the frames on the overflow line list mine
       nsIFrame* lastFrame = nsnull;
-      nsIFrame* frame = line->mFirstChild;
+      nsIFrame* frame = overflowLines->mFirstChild;
       while (nsnull != frame) {
         frame->SetParent(this);
 
@@ -4234,38 +4234,101 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
 
       // Join the line lists
       if (nsnull == mLines) {
-        mLines = line;
+        mLines = overflowLines;
       }
       else {
         // Join the sibling lists together
         lastFrame->SetNextSibling(mLines->mFirstChild);
 
         // Place overflow lines at the front of our line list
-        nsLineBox* lastLine = nsLineBox::LastLine(line);
+        nsLineBox* lastLine = nsLineBox::LastLine(overflowLines);
         lastLine->mNext = mLines;
-        mLines = line;
+        mLines = overflowLines;
       }
     }
   }
 
   // Now grab our own overflow lines
-  if (nsnull != mOverflowLines) {
+  overflowLines = GetOverflowLines(aPresContext, PR_TRUE);
+  if (overflowLines) {
     // This can happen when we reflow and not everything fits and then
     // we are told to reflow again before a next-in-flow is created
     // and reflows.
     nsLineBox* lastLine = nsLineBox::LastLine(mLines);
     if (nsnull == lastLine) {
-      mLines = mOverflowLines;
+      mLines = overflowLines;
     }
     else {
-      lastLine->mNext = mOverflowLines;
+      lastLine->mNext = overflowLines;
       nsIFrame* lastFrame = lastLine->LastChild();
-      lastFrame->SetNextSibling(mOverflowLines->mFirstChild);
+      lastFrame->SetNextSibling(overflowLines->mFirstChild);
     }
-    mOverflowLines = nsnull;
     drained = PR_TRUE;
   }
   return drained;
+}
+
+nsLineBox*
+nsBlockFrame::GetOverflowLines(nsIPresContext* aPresContext,
+                               PRBool          aRemoveProperty)
+{
+  nsCOMPtr<nsIPresShell>     presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      PRUint32  options = 0;
+      void*     value;
+  
+      if (aRemoveProperty) {
+        options |= NS_IFRAME_MGR_REMOVE_PROP;
+      }
+      frameManager->GetFrameProperty(this, nsLayoutAtoms::overflowLinesProperty,
+                                     options, &value);
+      return (nsLineBox*)value;
+    }
+  }
+
+  return nsnull;
+}
+
+// Destructor function for the overflowLines frame property
+static void
+DestroyOverflowLines(nsIPresContext* aPresContext,
+                     nsIFrame*       aFrame,
+                     nsIAtom*        aPropertyName,
+                     void*           aPropertyValue)
+{
+  if (aPropertyValue) {
+    nsLineBox* lines = (nsLineBox*) aPropertyValue;
+    nsLineBox::DeleteLineList(aPresContext, lines);
+  }
+}
+
+nsresult
+nsBlockFrame::SetOverflowLines(nsIPresContext* aPresContext,
+                               nsLineBox*      aOverflowFrames)
+{
+  nsCOMPtr<nsIPresShell>     presShell;
+  nsresult                   rv = NS_ERROR_FAILURE;
+
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      rv = frameManager->SetFrameProperty(this, nsLayoutAtoms::overflowLinesProperty,
+                                          aOverflowFrames, DestroyOverflowLines);
+
+      // Verify that we didn't overwrite an existing overflow list
+      NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow list");
+    }
+  }
+  return rv;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -4714,7 +4777,7 @@ void
 nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                      nsIFrame* aChild)
 {
-  NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
+  NS_PRECONDITION(IsChild(&aPresContext, aChild), "bad geometric parent");
   nsIFrame* nextInFlow;
   aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
@@ -4722,7 +4785,7 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   nextInFlow->GetParent((nsIFrame**)&parent);
   NS_PRECONDITION(nsnull != parent, "next-in-flow with no parent");
   NS_PRECONDITION(nsnull != parent->mLines, "next-in-flow with weird parent");
-  NS_PRECONDITION(nsnull == parent->mOverflowLines, "parent with overflow");
+//  NS_PRECONDITION(nsnull == parent->mOverflowLines, "parent with overflow");
   parent->DoRemoveFrame(&aPresContext, nextInFlow);
 }
 
@@ -5675,7 +5738,7 @@ InSiblingList(nsLineBox* aLine, nsIFrame* aFrame)
 }
 
 PRBool
-nsBlockFrame::IsChild(nsIFrame* aFrame)
+nsBlockFrame::IsChild(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
   nsIFrame* parent;
   aFrame->GetParent(&parent);
@@ -5685,8 +5748,8 @@ nsBlockFrame::IsChild(nsIFrame* aFrame)
   if (InLineList(mLines, aFrame) && InSiblingList(mLines, aFrame)) {
     return PR_TRUE;
   }
-  if (InLineList(mOverflowLines, aFrame) &&
-      InSiblingList(mOverflowLines, aFrame)) {
+  nsLineBox* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+  if (InLineList(overflowLines, aFrame) && InSiblingList(overflowLines, aFrame)) {
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -5710,13 +5773,6 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 
   // Add in size of each line object
   nsLineBox* line = mLines;
-  while (line) {
-    PRUint32  lineBoxSize;
-    nsIAtom* atom = line->SizeOf(aHandler, &lineBoxSize);
-    aHandler->AddSize(atom, lineBoxSize);
-    line = line->mNext;
-  }
-  line = mOverflowLines;
   while (line) {
     PRUint32  lineBoxSize;
     nsIAtom* atom = line->SizeOf(aHandler, &lineBoxSize);
@@ -6166,13 +6222,14 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
 // list. But its never possible for multiple frames to have overflow
 // lists. Check that this fact is actually true.
 void
-nsBlockFrame::VerifyOverflowSituation()
+nsBlockFrame::VerifyOverflowSituation(nsIPresContext* aPresContext)
 {
   PRBool haveOverflow = PR_FALSE;
   nsBlockFrame* flow = (nsBlockFrame*) GetFirstInFlow();
   while (nsnull != flow) {
-    if (nsnull != flow->mOverflowLines) {
-      NS_ASSERTION(nsnull != flow->mOverflowLines->mFirstChild,
+    nsLineBox* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+    if (nsnull != overflowLines) {
+      NS_ASSERTION(nsnull != overflowLines->mFirstChild,
                    "bad overflow list");
       NS_ASSERTION(!haveOverflow, "two frames with overflow lists");
       haveOverflow = PR_TRUE;

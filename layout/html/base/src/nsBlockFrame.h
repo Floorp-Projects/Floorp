@@ -329,18 +329,22 @@ protected:
 
   //----------------------------------------
 
+  nsLineBox* GetOverflowLines(nsIPresContext* aPresContext,
+                              PRBool          aRemoveProperty);
+
+  nsresult SetOverflowLines(nsIPresContext* aPresContext,
+                            nsLineBox*      aOverflowFrames);
+
   nsIFrame* LastChild();
 
 #ifdef NS_DEBUG
-  PRBool IsChild(nsIFrame* aFrame);
+  PRBool IsChild(nsIPresContext* aPresContext, nsIFrame* aFrame);
   void VerifyLines(PRBool aFinalCheckOK);
-  void VerifyOverflowSituation();
+  void VerifyOverflowSituation(nsIPresContext* aPresContext);
   PRInt32 GetDepth() const;
 #endif
 
   nsLineBox* mLines;
-
-  nsLineBox* mOverflowLines;
 
   // XXX subclass!
   PRUint32 mFlags;
