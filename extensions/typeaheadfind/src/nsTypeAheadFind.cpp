@@ -69,6 +69,7 @@
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIEventStateManager.h"
@@ -1905,19 +1906,6 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
 
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
   nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(webNav));
-  NS_ENSURE_TRUE(treeItem, NS_OK);
-
-  // Don't listen for events on chrome windows
-  PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
-  if (treeItem) {
-    treeItem->GetItemType(&itemType);
-  }
-
-  if (itemType == nsIDocShellTreeItem::typeChrome) {
-    return NS_OK;
-  }
-
-  // Check for editor or message pane
   nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(treeItem));
   if (editorDocShell) {
     PRBool isEditable;
@@ -1932,6 +1920,19 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
   aDOMWin->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_TRUE(doc, NS_OK);
+
+  nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
+  if (xulDoc) {
+    return NS_OK; // Avoid any xul docs, whether in chrome or content
+  }
+
+  if (mLinksOnlyPref) {
+    nsAutoString contentType;
+    doc->GetContentType(contentType);
+    if (contentType.Equals(NS_LITERAL_STRING("text/plain"))) {
+      return NS_OK; // No auto link search in plain text pages
+    }
+  }
 
   nsCOMPtr<nsIDocument> parentDoc;
   doc->GetParentDocument(getter_AddRefs(parentDoc));
