@@ -640,27 +640,6 @@ NS_IMETHODIMP TokenStreamListener::ProcessHeaders(nsIUTF8StringEnumerator *aHead
 
 NS_IMETHODIMP TokenStreamListener::HandleAttachment(const char *contentType, const char *url, const PRUnichar *displayName, const char *uri, PRBool aNotDownloaded)
 {
-    // UE Improvement, if we are downloading the message for the junk filter, and the junk filter is told the msg has attachments
-    // then go ahead and mark the message as having attachments instead of waiting for the user to display the message
-    // before making such a notation. 
-    // XXX Unfortunately this code causes us to be over agressive in marking messages as having attachments
-#if 0
-    if (!mSetAttachmentFlag)
-    {
-      nsCOMPtr <nsIMsgMessageService> messageService;
-      nsresult rv = GetMessageServiceFromURI(uri, getter_AddRefs(messageService));
-      if (messageService)
-      {
-        nsCOMPtr <nsIMsgDBHdr> msgHdr;
-        rv = messageService->MessageURIToMsgHdr(uri, getter_AddRefs(msgHdr));
-        if (msgHdr) 
-          msgHdr->MarkHasAttachments(PR_TRUE);
-      }
-
-      mSetAttachmentFlag = PR_TRUE;
-    }
-#endif
-
     mTokenizer.tokenizeAttachment(contentType, NS_ConvertUCS2toUTF8(displayName).get());
     return NS_OK;
 }

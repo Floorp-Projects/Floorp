@@ -395,10 +395,13 @@ var messageHeaderSink = {
 
       if (contentType == "text/x-vcard")
       {
-      var inlineAttachments = pref.getBoolPref("mail.inline_attachments");
+        var inlineAttachments = pref.getBoolPref("mail.inline_attachments");
         var displayHtmlAs = pref.getIntPref("mailnews.display.html_as");
         if (inlineAttachments && !displayHtmlAs)
-        return;
+        {
+          mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
+          return;
+        }
       }
 
       currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded));
@@ -426,6 +429,10 @@ var messageHeaderSink = {
     
     onEndAllAttachments: function()
     {
+      // if we only got a v-card, turn off the attachments flag
+      if (!currentAttachments.length && mSaveHdr)
+        mSaveHdr.markHasAttachments(false);
+      mSaveHdr = null;
       displayAttachmentsForExpandedView();
     },
 
@@ -445,6 +452,7 @@ var messageHeaderSink = {
     },
 
     mSecurityInfo  : null,
+    mSaveHdr: null,
     getSecurityInfo: function()
     {
       return this.mSecurityInfo;

@@ -1402,6 +1402,12 @@ int nsParseMailMessageState::FinalizeHeaders()
               }
             }
           }
+          substring = PL_strstr(content_type->value, "multipart/mixed");
+          if (substring)
+          {
+            PRUint32 newFlags;
+            m_newMsgHdr->OrFlags(MSG_FLAG_ATTACHMENT, &newFlags);
+          }
         }
       }
     } 
