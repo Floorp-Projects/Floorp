@@ -917,8 +917,6 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
   PRBool rv;
   PRBool bIsBusy;
 
-  NS_PRECONDITION(((mTotalURLs > 0) && (mForegroundURLs >= 0)), "URL counters are wrong.");
-
   /*
    * If the entry is not found in the list, then it must have been cancelled
    * via Stop(...). So ignore just it... 
