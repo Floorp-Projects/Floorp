@@ -3940,6 +3940,39 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         nsIFrame* parentFrame;
         childFrame->GetParent(&parentFrame);
         rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull, childFrame);
+
+#ifdef INCLUDE_XUL
+        // Need to (for XUL only) do a special check for the treeitem tag
+				PRInt32 nameSpaceID;
+				if (NS_SUCCEEDED(aContainer->GetNameSpaceID(nameSpaceID)) &&
+								nameSpaceID == nsXULAtoms::nameSpaceID) {
+					// See if we're the treeitem tag.  This tag is treated differently,
+					// since the children of the content node are actually SIBLING frames.
+					// We've only removed the parent frame.  Now we have to remove all of
+					// its children.
+					nsCOMPtr<nsIAtom> tag;
+					aContainer->GetTag(*getter_AddRefs(tag));
+					nsString tagName;
+					tag->ToString(tagName);
+					if (tagName == "treeitem")
+					{
+						// Calling content removed on each of our content node children
+						// should do the trick.
+						PRInt32 count;
+						for (PRInt32 i = 0; i < count; i++)
+						{
+							nsCOMPtr<nsIContent> childContent;
+							aContainer->ChildAt(i, *getter_AddRefs(childContent));
+							if (childContent)
+							{
+								// Call ContentRemoved.
+							  ContentRemoved(aPresContext, aContainer,
+															 childContent, i);
+							}
+						}
+					}
+				}
+#endif // INCLUDE_XUL
       }
     }
 
