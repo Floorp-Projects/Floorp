@@ -4,7 +4,7 @@
 nsCSSValue.h
 nsDOMCSSDeclaration.h
 nsICSSCharsetRule.h
-nsICSSDeclaration.h
+nsCSSDeclaration.h
 nsICSSGroupRule.h
 nsICSSImportRule.h
 nsICSSMediaRule.h
