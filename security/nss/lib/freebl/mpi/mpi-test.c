@@ -25,6 +25,7 @@
  * All Rights Reserved.
  *
  * Contributor(s):
+ *	Netscape Communications Corporation
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -37,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.1 2000/07/14 00:44:20 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.2 2000/07/17 22:23:23 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -362,7 +363,7 @@ char *v_mp9[] = {
   "FTAA7QXGoQOaZi7PzePtFFN5vNk"
 };
 
-char b_mp4[] = {
+unsigned char b_mp4[] = {
   0x01, 0x63, 0xDB, 0xC2, 0x26, 0x5B, 0x88, 0x26,
   0x8D, 0xC8, 0x01, 0xC1, 0x0E, 0xA6, 0x84, 0x76,
   0xB7, 0xBD, 0xE0, 0x09, 0x0F
