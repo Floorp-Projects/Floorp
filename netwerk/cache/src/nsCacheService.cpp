@@ -244,7 +244,7 @@ nsCacheService::NotifyListener(nsCacheRequest *          request,
 
     // XXX can we hold onto the proxy object manager?
     NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjMgr, kProxyObjectManagerCID, &rv);
-    if (NS_FAILED(rv)) goto error_exit;
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICacheListener> listenerProxy;
     NS_ASSERTION(request->mEventQ, "no event queue for async request!");
@@ -253,16 +253,9 @@ nsCacheService::NotifyListener(nsCacheRequest *          request,
                                         request->mListener,
                                         PROXY_ASYNC|PROXY_ALWAYS,
                                         getter_AddRefs(listenerProxy));
-    if (NS_FAILED(rv)) goto error_exit;
+    if (NS_FAILED(rv)) return rv;
 
-    rv = listenerProxy->OnDescriptorAvailable(descriptor, accessGranted, error);
-    if (NS_FAILED(rv)) goto error_exit;
-
-    return NS_OK;
-
- error_exit:
-        delete descriptor;
-        return rv;
+    return listenerProxy->OnDescriptorAvailable(descriptor, accessGranted, error);
 }
 
 
@@ -306,9 +299,9 @@ nsCacheService::ProcessRequest(nsCacheRequest * request,
         // loop back around to look for another entry
     }
 
-    nsICacheEntryDescriptor * descriptor;
+    nsCOMPtr<nsICacheEntryDescriptor> descriptor;
 
-    rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
+    rv = entry->CreateDescriptor(request, accessGranted, getter_AddRefs(descriptor));
 
     if (request->mListener) {  // Asynchronous
         // call listener to report error or descriptor
@@ -694,8 +687,8 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
                              "if entry is valid, RequestAccess must succeed.");
 
                 // entry->CreateDescriptor dequeues request, and queues descriptor
-                nsICacheEntryDescriptor * descriptor;
-                rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
+                nsCOMPtr<nsICacheEntryDescriptor> descriptor;
+                rv = entry->CreateDescriptor(request, accessGranted, getter_AddRefs(descriptor));
                 
                 // post call to listener to report error or descriptor
                 rv = NotifyListener(request, descriptor, accessGranted, rv);
