@@ -18,9 +18,6 @@
 #ifndef nsStyleStruct_h___
 #define nsStyleStruct_h___
 
-#include "nslayout.h"
-
-
 enum nsStyleStructID {
   eStyleStruct_Font     = 1,
   eStyleStruct_Color    = 2,
