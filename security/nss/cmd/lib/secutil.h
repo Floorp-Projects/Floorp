@@ -72,7 +72,8 @@ typedef struct {
     enum {
 	PW_NONE = 0,
 	PW_FROMFILE = 1,
-	PW_PLAINTEXT = 2
+	PW_PLAINTEXT = 2,
+	PW_EXTERNAL = 3
     } source;
     char *data;
 } secuPWData;
