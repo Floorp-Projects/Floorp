@@ -200,7 +200,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrCacheSize(PRUint32 *aSize)
 
 NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
 {
-  ClearCachedObjects();
+  ClearCachedObjects(PR_FALSE);
 #ifdef DEBUG_bienvenu
   if (mRefCnt > 1)
   {
@@ -211,7 +211,7 @@ NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
   return NS_OK;
 }
 
-void nsMsgDatabase::ClearCachedObjects()
+void nsMsgDatabase::ClearCachedObjects(PRBool dbGoingAway)
 {
   ClearHdrCache(PR_FALSE);
 #ifdef DEBUG_bienvenu
@@ -221,7 +221,7 @@ void nsMsgDatabase::ClearCachedObjects()
     printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
   }
 #endif
-  ClearUseHdrCache();
+  ClearUseHdrCache(dbGoingAway);
   m_cachedThread = nsnull;
   m_cachedThreadId = nsMsgKey_None;
 }
@@ -387,13 +387,16 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 	return NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult nsMsgDatabase::ClearUseHdrCache()
+nsresult nsMsgDatabase::ClearUseHdrCache(PRBool dbGoingAway)
 {
   if (m_headersInUse)
   {
-    // clear mdb row pointers of any headers still in use, because the
-    // underlying db is going away.
-    PL_DHashTableEnumerate(m_headersInUse, ClearHeaderEnumerator, nsnull);
+    if (dbGoingAway)
+    {
+      // clear mdb row pointers of any headers still in use, because the
+      // underlying db is going away.
+      PL_DHashTableEnumerate(m_headersInUse, ClearHeaderEnumerator, nsnull);
+    }
     PL_DHashTableDestroy(m_headersInUse);
     m_headersInUse = nsnull;
   }
@@ -737,7 +740,7 @@ nsMsgDatabase::nsMsgDatabase()
 nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
-  ClearCachedObjects();
+  ClearCachedObjects(PR_TRUE);
   delete m_cachedHeaders;
   delete m_headersInUse;
 	RemoveFromCache(this);
@@ -1056,7 +1059,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
   NS_IF_RELEASE(m_dbFolderInfo);
   
   err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
-  ClearCachedObjects();
+  ClearCachedObjects(PR_TRUE);
   if (m_mdbAllMsgHeadersTable)
   {
     m_mdbAllMsgHeadersTable->Release();

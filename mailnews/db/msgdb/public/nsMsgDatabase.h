@@ -262,10 +262,10 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
 	// these get added when msg hdrs get constructed, and removed when they get destroyed.
 	nsresult      GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result);
 	nsresult      AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key); 
-	nsresult      ClearUseHdrCache();
+	nsresult      ClearUseHdrCache(PRBool dbGoingAway);
 	nsresult      RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 
-        void          ClearCachedObjects();
+        void          ClearCachedObjects(PRBool dbGoingAway);
 	// all instantiated headers, but doesn't hold refs. 
   PLDHashTable  *m_headersInUse;
   static const void* PR_CALLBACK GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
