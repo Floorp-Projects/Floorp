@@ -207,6 +207,7 @@
 #define HG65294
 #define HG83267
 #define HG63287
+#define HG06196
 #define HG63453
 #define HG98471
 #define HG52897
@@ -444,6 +445,7 @@
 #define HG89327
 #define HG27635
 #define HG83722
+#define HG06197
 #define HG32564
 #define HG73537
 #define HG21675
