@@ -446,6 +446,7 @@ static gboolean
 op_dcl(TreeState *state)
 {
     struct _IDL_OP_DCL *op = &IDL_OP_DCL(state->tree);
+    gboolean no_generated_args = TRUE;
     gboolean op_notxpcom =
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
     IDL_tree iter;
@@ -470,6 +471,7 @@ op_dcl(TreeState *state)
         if ((IDL_LIST(iter).next ||
              (!op_notxpcom && op->op_type_spec) || op->f_varargs))
             fputs(", ", state->file);
+        no_generated_args = FALSE;
     }
 
     /* make IDL return value into trailing out argument */
@@ -484,12 +486,23 @@ op_dcl(TreeState *state)
             return FALSE;
         if (op->f_varargs)
             fputs(", ", state->file);
+        no_generated_args = FALSE;
     }
 
     /* varargs go last */
     if (op->f_varargs) {
         fputs("nsVarArgs *_varargs", state->file);
+        no_generated_args = FALSE;
     }
+
+    /*
+     * If generated method has no arguments, output 'void' to avoid C legacy
+     * behavior of disabling type checking.
+     */
+    if (no_generated_args) {
+        fputs("void", state->file);
+    }
+
     fputs(") = 0;\n", state->file);
     return TRUE;
 }
@@ -516,7 +529,6 @@ codefrag(TreeState *state)
     }
     g_slist_foreach(IDL_CODEFRAG(state->tree).lines, write_codefrag_line,
                     (gpointer)state);
-    fputc('\n', state->file);
     return TRUE;
 }
 
