@@ -1,5 +1,7 @@
 1998-07-30  Leif Hedstrom  <leif@netscape.com>
 
+	* Conn.pm (modifyRDN): New method, to rename the RDN of the entry.
+
 	* Utils.pm (answer): New function, from LdapUtils.pm.
 
 	* Conn.pm (delete): Fixed references to normalizeDN.
