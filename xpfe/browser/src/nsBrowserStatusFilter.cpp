@@ -136,14 +136,8 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
         if (aStateFlags & STATE_IS_REQUEST) {
             ++mFinishedRequests;
             if (!mUseRealProgressFlag && mTotalRequests)
-                return OnProgressChange(nsnull, nsnull, 0, 0, mFinishedRequests, mTotalRequests);
-        }
-        if (aStateFlags & STATE_IS_NETWORK) {
-            if (mTimer) {
-                ProcessTimeout();
-                mTimer->Cancel();
-                mTimer = nsnull;
-            }
+                return OnProgressChange(nsnull, nsnull, 0, 0,
+                                        mFinishedRequests, mTotalRequests);
         }
     }
     else if (aStateFlags & STATE_TRANSFERRING) {
@@ -171,15 +165,21 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
     // If we're here, we have either STATE_START or STATE_STOP.  The
     // listener only cares about these in certain conditions.
     PRBool isLoadingDocument = PR_FALSE;
-    if (! (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK ||
-           (aStateFlags & nsIWebProgressListener::STATE_IS_REQUEST &&
-            mTotalRequests == mFinishedRequests &&
-            (aWebProgress->GetIsLoadingDocument(&isLoadingDocument),
-             !isLoadingDocument))))
-        return NS_OK;
+    if ((aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK ||
+         (aStateFlags & nsIWebProgressListener::STATE_IS_REQUEST &&
+          mFinishedRequests == mTotalRequests &&
+          (aWebProgress->GetIsLoadingDocument(&isLoadingDocument),
+           !isLoadingDocument)))) {
+        if (mTimer && (aStateFlags & nsIWebProgressListener::STATE_STOP)) {
+            mTimer->Cancel();
+            ProcessTimeout();
+        }
 
+        return mListener->OnStateChange(aWebProgress, aRequest, aStateFlags,
+                                        aStatus);
+    }
 
-    return mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -286,6 +286,8 @@ nsBrowserStatusFilter::StartDelayTimer()
 void
 nsBrowserStatusFilter::ProcessTimeout()
 {
+    mTimer = nsnull;
+
     if (!mListener)
         return;
 
