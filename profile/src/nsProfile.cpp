@@ -15,15 +15,19 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsIProfile.h"
 
 #include "pratom.h"
 #include "prmem.h"
 #include "nsIRegistry.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
-#include "nsIProfile.h"
 #include "nsIEnumerator.h"
+#include "plstr.h"
+
+#ifdef XP_PC
 #include <direct.h>
+#endif
 
 // It is important to include this header file as it contains the
 // registry CIDs.
@@ -63,22 +67,22 @@ private:
   static nsProfile *mInstance;
 
 public:
-	static nsProfile *GetInstance();
+    static nsProfile *GetInstance();
 
-	// Initialize/shutdown
-	NS_IMETHOD Startup(char *registry);
-	NS_IMETHOD Shutdown();
+    // Initialize/shutdown
+    NS_IMETHOD Startup(char *registry);
+    NS_IMETHOD Shutdown();
 
-	// Getters
-	NS_IMETHOD GetProfileDir(const char *profileName, nsFileSpec **profileDir);
-	NS_IMETHOD GetProfileCount(int *numProfiles);
-	NS_IMETHOD GetSingleProfile(char **profileName);
-	NS_IMETHOD GetCurrentProfile(char **profileName);
-	NS_IMETHOD GetFirstProfile(char **profileName);
-	NS_IMETHOD GetCurrentProfileDir(nsFileSpec **profileDir);
+    // Getters
+    NS_IMETHOD GetProfileDir(const char *profileName, nsFileSpec* profileDir);
+    NS_IMETHOD GetProfileCount(int *numProfiles);
+    NS_IMETHOD GetSingleProfile(char **profileName);
+    NS_IMETHOD GetCurrentProfile(char **profileName);
+    NS_IMETHOD GetFirstProfile(char **profileName);
+    NS_IMETHOD GetCurrentProfileDir(nsFileSpec* profileDir);
 
-	// Setters
-	NS_IMETHOD SetProfileDir(char *profileName, nsFileSpec& profileDir);
+    // Setters
+    NS_IMETHOD SetProfileDir(const char *profileName, const nsFileSpec& profileDir);
 };
 
 nsProfile* nsProfile::mInstance = NULL;
@@ -131,35 +135,37 @@ NS_IMPL_ISUPPORTS(nsProfile, kIProfileIID);
 // or any other registry that would be finalized for 5.0
 NS_IMETHODIMP nsProfile::Startup(char *filename)
 {
-	fprintf(stderr, "ProfileManager (nsProfile) : Startup : Get Registry handle\n");
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf(stderr, "ProfileManager (nsProfile) : Startup : Get Registry handle\n");
+#endif
+    nsresult rv;
+    nsIServiceManager *servMgr = NULL;
+    rv = nsServiceManager::GetGlobalServiceManager(&servMgr);
 
-	nsresult rv;
-	nsIServiceManager *servMgr = NULL;
-	rv = nsServiceManager::GetGlobalServiceManager(&servMgr);
+    if (NS_FAILED(rv))
+    {
+        // Cannot initialize XPCOM
+        printf("servMan failed. Exit. [rv=0x%08X]\n", (int)rv);
+        exit(-1);
+    }
 
-	if (NS_FAILED(rv))
-	{
-		// Cannot initialize XPCOM
-		printf("servMan failed. Exit. [rv=0x%08X]\n", (int)rv);
-		exit(-1);
-	}
-
-	static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-	static NS_DEFINE_IID(kComponentManagerIID, NS_ICOMPONENTMANAGER_IID);
-	rv = servMgr->GetService(kComponentManagerCID, kComponentManagerIID, (nsISupports **)&compMgr);
-	if (NS_FAILED(rv))
-	{
-		// Cant get component manager
-		printf("Cannot get component manager from service manager.. Exit. [rv=0x%08X]\n", (int)rv);
-		exit(-1);
-	}
+    static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+    static NS_DEFINE_IID(kComponentManagerIID, NS_ICOMPONENTMANAGER_IID);
+    rv = servMgr->GetService(kComponentManagerCID, kComponentManagerIID, (nsISupports **)&compMgr);
+    if (NS_FAILED(rv))
+    {
+        // Cant get component manager
+        printf("Cannot get component manager from service manager.. Exit. [rv=0x%08X]\n", (int)rv);
+        exit(-1);
+    }
 
     static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
     static NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
     rv = compMgr->CreateInstance(kRegistryCID, NULL, kRegistryIID, (void **) &reg);
 
 
-	return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsProfile::Shutdown()
@@ -174,54 +180,81 @@ NS_IMETHODIMP nsProfile::Shutdown()
 
 
 // Gets the profiles directory for a given profile
-NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec **profileDir)
+NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* profileDir)
 {
-	fprintf(stderr, "ProfileManager : GetProfileDir\n");
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf(stderr, "ProfileManager : GetProfileDir\n");
+#endif
+    // Check result.
+    if ( reg != NULL ) {
+        // Latch onto the registry object.
+        reg->AddRef();
 
-	// Check result.
-	if ( reg != NULL ) {
-		// Latch onto the registry object.
-		reg->AddRef();
+        // Open it against the input file name.
+        rv = reg->Open();
+        if (NS_FAILED(rv))
+        {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+            fprintf( stderr, "Error opening Registry.\n" );
+#endif
+            return rv;
+        }
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+        fprintf( stderr, "Registry opened OK.\n" );
+#endif
+        nsIRegistry::Key key;
+        rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
 
-		// Open it against the input file name.
-		rv = reg->Open();
-		if ( rv == NS_OK ) {
-			fprintf( stderr, "Registry opened OK.\n" );
-			nsIRegistry::Key key;
-			rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+        if (NS_FAILED(rv))
+        {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+            fprintf( stderr, "Registry Error OK.\n" );
+#endif
+            return rv;
+        }
 
-			if ( rv == NS_OK ) {
-				fprintf( stderr, "Registry:Profiles opened OK.\n" );
-				nsIRegistry::Key newKey;
-				rv = reg->GetSubtree(key, profileName, &newKey);
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+        fprintf( stderr, "Registry:Profiles opened OK.\n" );
+#endif
+        nsIRegistry::Key newKey;
+        rv = reg->GetSubtree(key, profileName, &newKey);
 
-				if ( rv == NS_OK ) {
-					char* encodedProfileDir = nsnull;
-					rv = reg->GetString( newKey, "directory", &encodedProfileDir );
+        if (NS_FAILED(rv))
+           return rv;
 
-					if ( rv == NS_OK ) {
-						rv = reg->SetString(key, "CurrentProfile", profileName);
-						nsInputStringStream stream(encodedProfileDir);
-						nsPersistentFileDescriptor *descriptor = new nsPersistentFileDescriptor;
-						stream >> *descriptor;
-						*profileDir = (nsFileSpec *)descriptor;
-					} 
-					else {
-						printf( "Error");
-					}
-					PR_FREEIF(encodedProfileDir);
-				}
-			} 
-			else {
-				fprintf( stderr, "Registry Error OK.\n" );
-			}
-			reg->Close();
-		} 
-		else {
-			fprintf( stderr, "Error opening Registry.\n" );
-		}
-	}
-	return NS_OK;
+        char* encodedProfileDir = nsnull;
+        rv = reg->GetString( newKey, "directory", &encodedProfileDir );
+
+        if (NS_FAILED(rv))
+        {
+#ifdef NS_DEBUG
+            printf( "Error");
+#endif
+            return rv;
+        }
+
+        rv = reg->SetString(key, "CurrentProfile", profileName);
+        if (NS_FAILED(rv))
+        {
+#ifdef NS_DEBUG
+            printf( "Error");
+#endif
+            return rv;
+        }
+        nsInputStringStream stream(encodedProfileDir);
+        nsPersistentFileDescriptor descriptor;
+        stream >> descriptor;
+        *profileDir = descriptor;
+
+        PR_FREEIF(encodedProfileDir);
+        reg->Close();
+    }
+    return NS_OK;
 }
 
 
@@ -229,42 +262,47 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec **pro
 // Location: Common/Profiles
 NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 {
-	fprintf(stderr, "ProfileManager : GetProfileCount\n");
-	// Check result.
-	if ( reg != NULL ) {
-		// Latch onto the registry object.
-		reg->AddRef();
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf(stderr, "ProfileManager : GetProfileCount\n");
+#endif
+    // Check result.
+    if ( reg != NULL ) {
+        // Latch onto the registry object.
+        reg->AddRef();
 
-		// Open it against the input file name.
-		rv = reg->Open();
-		if ( rv == NS_OK ) {
-			fprintf( stderr, "Registry opened OK.\n" );
-		  
-			// Enumerate all subkeys (immediately) under the given node.
-			nsIEnumerator *enumKeys;
-			nsIRegistry::Key key;
-			rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-			if ( rv == NS_OK ) {
-				rv = reg->EnumerateSubtrees( key, &enumKeys );
+        // Open it against the input file name.
+        rv = reg->Open();
+        if (NS_SUCCEEDED(rv)) {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+            fprintf( stderr, "Registry opened OK.\n" );
+#endif
+            // Enumerate all subkeys (immediately) under the given node.
+            nsIEnumerator *enumKeys;
+            nsIRegistry::Key key;
+            rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+            if (NS_SUCCEEDED(rv)) {
+                rv = reg->EnumerateSubtrees( key, &enumKeys );
 
-				if ( rv == NS_OK ) {
-					int numKeys=0;
-					rv = enumKeys->First();
-					// Enumerate subkeys till done.
-					while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
-					{
-						rv = enumKeys->Next();
-						numKeys++;
-					}
-					*numProfiles = numKeys;
-					enumKeys->Release();
-				}
-			}
-			reg->Close();
-		}
-	}
+                if (NS_SUCCEEDED(rv)) {
+                    int numKeys=0;
+                    rv = enumKeys->First();
+                    // Enumerate subkeys till done.
+                    while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
+                    {
+                        rv = enumKeys->Next();
+                        numKeys++;
+                    }
+                    *numProfiles = numKeys;
+                    enumKeys->Release();
+                }
+            }
+            reg->Close();
+        }
+    }
 
-	return NS_OK;
+    return NS_OK;
 }
 
 
@@ -272,66 +310,74 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 // and returns the name of the single profile
 NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 {
-	fprintf(stderr, "ProfileManager : GetSingleProfile\n");
-	// Check result.
-	if ( reg != NULL ) {
-		// Latch onto the registry object.
-		reg->AddRef();
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf(stderr, "ProfileManager : GetSingleProfile\n");
+#endif
+    // Check result.
+    if ( reg != NULL ) {
+        // Latch onto the registry object.
+        reg->AddRef();
 
-		// Open it against the input file name.
-		rv = reg->Open();
-		if ( rv == NS_OK ) {
-			fprintf( stderr, "Registry opened OK.\n" );
-		  
-			// Enumerate all subkeys (immediately) under the given node.
-			nsIEnumerator *enumKeys;
-			nsIRegistry::Key key;
-			rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-			if ( rv == NS_OK ) {
-				rv = reg->EnumerateSubtrees( key, &enumKeys );
+        // Open it against the input file name.
+        rv = reg->Open();
+        if (NS_SUCCEEDED(rv)) {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+            fprintf( stderr, "Registry opened OK.\n" );
+#endif
+            // Enumerate all subkeys (immediately) under the given node.
+            nsIEnumerator *enumKeys;
+            nsIRegistry::Key key;
+            rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+            if (NS_SUCCEEDED(rv)) {
+                rv = reg->EnumerateSubtrees( key, &enumKeys );
 
-				// Go to beginning.
-				rv = enumKeys->First();
-				if( rv == NS_OK && !enumKeys->IsDone() ) {
-					nsISupports *base;
-					rv = enumKeys->CurrentItem( &base );
-					
-					// Test result.
-					if ( rv == NS_OK ) {
-						// Get specific interface.
-						nsIRegistryNode *node;
-						nsIID nodeIID = NS_IREGISTRYNODE_IID;
-						rv = base->QueryInterface( nodeIID, (void**)&node );
-						
-						// Test that result.
-						if ( rv == NS_OK ) {
-							// Get node name.
-							*profileName = (char*) malloc(sizeof(char)*_MAX_LENGTH);
-							rv = node->GetName( profileName );
+                // Go to beginning.
+                rv = enumKeys->First();
+                if(NS_SUCCEEDED(rv)&& !enumKeys->IsDone() ) {
+                    nsISupports *base;
+                    rv = enumKeys->CurrentItem( &base );
+                    
+                    // Test result.
+                    if (NS_SUCCEEDED(rv)) {
+                        // Get specific interface.
+                        nsIRegistryNode *node;
+                        nsIID nodeIID = NS_IREGISTRYNODE_IID;
+                        rv = base->QueryInterface( nodeIID, (void**)&node );
+                        
+                        // Test that result.
+                        if (NS_SUCCEEDED(rv)) {
+                            // Get node name.
+                            *profileName = (char*) malloc(sizeof(char)*_MAX_LENGTH);
+                            rv = node->GetName( profileName );
 
-							// Test result.
-							if ( rv == NS_OK ) {
-								rv = reg->SetString(key, "CurrentProfile", *profileName);
-								// Print name:
-								printf( "\t\t%s", *profileName);
-							}
-						}
-					}
-				}
-			}
-			
-			reg->Close();
-		}
-	}
+                            // Test result.
+                            if (NS_SUCCEEDED(rv)) {
+                                rv = reg->SetString(key, "CurrentProfile", *profileName);
+                                // Print name:
+                                printf( "\t\t%s", *profileName);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            reg->Close();
+        }
+    }
 
-	return NS_OK;
+    return NS_OK;
 }
 
 
 // Returns the name of the current profile i.e., the last used profile
 NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
   fprintf(stderr, "ProfileManager : GetCurrentProfile\n");
+#endif
   // Check result.
   if ( reg != NULL ) {
       // Latch onto the registry object.
@@ -339,27 +385,29 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 
       // Open it against the input file name.
       rv = reg->Open();
-      if ( rv == NS_OK ) 
-	  {
+      if (NS_SUCCEEDED(rv)) 
+      {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
           fprintf( stderr, "Registry opened OK.\n" );
-		  
-		  nsIRegistry::Key key;
-		  rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-		  if ( rv == NS_OK ) 
-		  {			
-			    *profileName = (char*) malloc(sizeof(char)*_MAX_LENGTH);
+#endif
+          nsIRegistry::Key key;
+          rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+          if (NS_SUCCEEDED(rv)) 
+          {            
+                *profileName = (char*) malloc(sizeof(char)*_MAX_LENGTH);
 
- 				rv = reg->GetString( key, "CurrentProfile", profileName );
-				if ( rv == NS_OK ) {
-				
-				}
-				else {
-					profileName = '\0';
-				}
-		  }
-		  reg->Close();
-	  }
-	}
+                 rv = reg->GetString( key, "CurrentProfile", profileName );
+                if (NS_SUCCEEDED(rv)) {
+                
+                }
+                else {
+                    profileName = '\0';
+                }
+          }
+          reg->Close();
+      }
+    }
   return NS_OK;
 }
 
@@ -367,23 +415,29 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 //  Returns the name of the first profile in the Registry
 NS_IMETHODIMP nsProfile::GetFirstProfile(char **profileName)
 {
-	fprintf(stderr, "ProfileManager : GetFirstProfile\n");
-	GetSingleProfile(profileName);
-	return NS_OK;
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf(stderr, "ProfileManager : GetFirstProfile\n");
+#endif
+    GetSingleProfile(profileName);
+    return NS_OK;
 }
 
 
 // Returns the name of the current profile directory
-NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec **profileDir)
+NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 {
-	fprintf(stderr, "ProfileManager : GetCurrentProfileDir\n");
-	
-	char *profileName;
+#if defined(NS_DEBUG) && defined(XP_WIN)
+// You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf(stderr, "ProfileManager : GetCurrentProfileDir\n");
+#endif
+    char *profileName;
 
-	GetCurrentProfile(&profileName);
-	GetProfileDir(profileName, profileDir);
-
-	return NS_OK;
+    GetCurrentProfile(&profileName);
+    nsresult rv = GetProfileDir(profileName, profileDir);
+    free(profileName);
+    
+    return rv;
 
 }
 
@@ -392,70 +446,78 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec **profileDir)
  */
 
 // Sets the current profile directory
-NS_IMETHODIMP nsProfile::SetProfileDir(char *profileName, nsFileSpec& profileDir)
+NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec& profileDir)
 {
-  fprintf(stderr, "ProfileManager : SetProfileDir\n");
-  fprintf(stderr, "profileName : %s ", profileName);
-  fprintf(stderr, "profileDir  : %s\n", profileDir.GetCString());
+#if defined(NS_DEBUG) && defined(XP_WIN)
+    // You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf(stderr, "ProfileManager : SetProfileDir\n");
+    fprintf(stderr, "profileName : %s ", profileName);
+    fprintf(stderr, "profileDir  : %s\n", profileDir.GetCString());
+#endif
+    // Check result.
+    if ( !reg != NULL )
+        return NS_ERROR_NULL_POINTER;
 
-  char * tmpStr;
-  tmpStr = _strdup(profileDir.GetCString());
+    // Latch onto the registry object.
+    reg->AddRef();
 
-  // Check result.
-  if ( reg != NULL ) {
-      // Latch onto the registry object.
-      reg->AddRef();
+    // Open it against the input file name.
+    rv = reg->Open();
+    if (NS_FAILED(rv))
+    {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+        // You can't printf in the production version! Or use stderr in XP code at all.
+        fprintf( stderr, "Registry NOT opened OK.\n" );
+#endif
+        return rv;
+    }
 
-      // Open it against the input file name.
-      rv = reg->Open();
-      if ( rv == NS_OK ) 
-	  {
-          fprintf( stderr, "Registry opened OK.\n" );
-		  nsIRegistry::Key key;
-          rv = reg->AddSubtree(nsIRegistry::Common, "Profiles", &key);
-          if ( rv == NS_OK ) 
-		  {
-              fprintf( stderr, "Registry:Profiles opened OK.\n" );
-			  nsIRegistry::Key newKey;
-              rv = reg->AddSubtree(key, profileName, &newKey);
-			  if ( rv == NS_OK ) 
-			  {			  
-				  
-					rv = reg->SetString(key, "CurrentProfile", profileName);
-					
-					if ( rv == NS_OK ) 
-					{				  
-						nsPersistentFileDescriptor descriptor(profileDir);
-						char* profileDirString = nsnull;
-				        nsOutputStringStream stream(profileDirString);
-				        stream << descriptor;
-				        rv = reg->SetString(newKey, "directory", profileDirString);
+#if defined(NS_DEBUG) && defined(XP_WIN)
+    // You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf( stderr, "Registry opened OK.\n" );
+#endif
+    nsIRegistry::Key key;
+    rv = reg->AddSubtree(nsIRegistry::Common, "Profiles", &key);
+    if (NS_FAILED(rv)) 
+    {
+#if defined(NS_DEBUG) && defined(XP_WIN)
+        // You can't printf in the production version! Or use stderr in XP code at all.
+        fprintf( stderr, "Registry Subtree not added.\n" );
+#endif
+        return rv;
+    }
 
-						if ( rv == NS_OK ) {
-							if ((PR_MkDir(tmpStr, 0777)) < 0) {
-								/* Creation of directory failed. */
-								//return NULL;
-							}
+#if defined(NS_DEBUG) && defined(XP_WIN)
+    // You can't printf in the production version! Or use stderr in XP code at all.
+    fprintf( stderr, "Registry:Profiles opened OK.\n" );
+#endif
+    nsIRegistry::Key newKey;
+    rv = reg->AddSubtree(key, profileName, &newKey);
+    if (NS_FAILED(rv))
+        return rv;
 
-							delete [] profileDirString;
-						}
-					}
-			  }
-          } 
-		  else 
-		  {
-              fprintf( stderr, "Registry Error OK.\n" );
-          }
+    rv = reg->SetString(key, "CurrentProfile", profileName);
+    if (NS_FAILED(rv))
+        return rv;
 
-		  reg->Close();
-      } 
-	  else 
-	  {
-           fprintf( stderr, "Registry opened NOT OK.\n" );
-      }
-  }
+    if (!profileDir.Exists())
+    {
+        // nsPersistentFileDescriptor requires an existing
+        // object. Make it first.
+        nsFileSpec tmp(profileDir);
+        tmp.CreateDirectory();
+    }
+    nsPersistentFileDescriptor descriptor(profileDir);
+    char* profileDirString = nsnull;
+    nsOutputStringStream stream(profileDirString);
+    stream << descriptor;
+    if (profileDirString && *profileDirString)
+        rv = reg->SetString(newKey, "directory", profileDirString);
+    delete [] profileDirString;
 
-  return NS_OK;
+    reg->Close();
+
+    return NS_OK;
 }
 
 
