@@ -688,7 +688,7 @@ public class FunctionObject extends BaseFunction {
     /** Get default master implementation or null if not available */
     private static Invoker newInvokerMaster() {
         try {
-            Class cl = ScriptRuntime.loadClassName(INVOKER_MASTER_CLASS);
+            Class cl = Class.forName(INVOKER_MASTER_CLASS);
             return (Invoker)cl.newInstance();
         }
         catch (ClassNotFoundException ex) {}

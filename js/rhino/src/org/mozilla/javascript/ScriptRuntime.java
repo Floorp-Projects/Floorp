@@ -41,7 +41,6 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
-import org.mozilla.classfile.DefiningClassLoader;
 
 /**
  * This is the class that implements the runtime.
@@ -1799,7 +1798,7 @@ public class ScriptRuntime {
 
     private static ScriptableObject getGlobal(Context cx) {
         try {
-            Class globalClass = loadClassName(GLOBAL_CLASS);
+            Class globalClass = Class.forName(GLOBAL_CLASS);
             Class[] parm = { Context.class };
             Constructor globalClassCtor = globalClass.getConstructor(parm);
             Object[] arg = { cx };
@@ -2004,29 +2003,11 @@ public class ScriptRuntime {
 
     private static Class getClassOrNull(String className) {
         try {
-            return loadClassName(className);
+            return Class.forName(className);
         } catch  (ClassNotFoundException ex) {
-            return null;
+        } catch  (SecurityException ex) {
         }
-    }
-
-    public static Class loadClassName(String className)
-        throws ClassNotFoundException
-    {
-        try {
-            ClassLoader cl = DefiningClassLoader.getContextClassLoader();
-            if (cl != null)
-                return cl.loadClass(className);
-        } catch (SecurityException e) {
-            // fall through...
-        } catch (ClassNotFoundException e) {
-            // Rather than just letting the exception propagate
-            // we'll try Class.forName as well. The results could be
-            // different if this class was loaded on a different
-            // thread than the current thread.
-            // So fall through...
-        }
-        return Class.forName(className);
+        return null;
     }
 
     static boolean hasProp(Scriptable start, String name) {

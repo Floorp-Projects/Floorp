@@ -38,6 +38,7 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
+import org.mozilla.classfile.DefiningClassLoader;
 
 /**
  * This class reflects Java packages into the JavaScript environment.  We
@@ -207,7 +208,7 @@ public class NativeJavaPackage extends ScriptableObject {
 
         String newPackage = packageName.length() == 0
                             ? name
-                            : packageName + "." + name;
+                            : packageName + '.' + name;
         Context cx = Context.getContext();
         ClassShutter shutter = cx.getClassShutter();
         Scriptable newValue = null;
@@ -273,16 +274,17 @@ public class NativeJavaPackage extends ScriptableObject {
     }
 
     private static Class findClass(ClassLoader loader, String className) {
-        try {
-            if (loader != null) {
-                return loader.loadClass(className);
-            } else {
-                return ScriptRuntime.loadClassName(className);
-            }
-        } catch (ClassNotFoundException ex) {
-        } catch (SecurityException ex) {
+        Class cl = null;
+        if (loader != null) {
+            try { cl = loader.loadClass(className); }
+            catch (ClassNotFoundException ex) { }
+            catch (SecurityException ex) { }
+        } else {
+            try { cl = Class.forName(className); }
+            catch (ClassNotFoundException ex) { }
+            catch (SecurityException ex) { }
         }
-        return null;
+        return cl;
     }
 
     private String packageName;
