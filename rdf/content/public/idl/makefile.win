@@ -26,6 +26,8 @@ MODULE=rdf
 
 IDLSRCS =  \
         XULDocument.idl         \
+        XULBrowserElement.idl          \
+        XULIFrameElement.idl          \
         XULElement.idl          \
         XULCommandDispatcher.idl   \
         XULTreeElement.idl      \
