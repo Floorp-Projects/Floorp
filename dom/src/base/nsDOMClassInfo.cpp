@@ -1353,7 +1353,8 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 // static
 nsresult
-nsWindowSH::DefineInterfaceProperty(JSContext *cx, JSObject *obj, JSString *str)
+nsWindowSH::DefineInterfaceProperty(JSContext *cx, JSObject *obj,
+                                    JSString *str)
 {
   jsval components_val;
 

@@ -164,7 +164,8 @@ NS_IMPL_RELEASE(nsEventListenerManager)
 // results of the partial aggregation we began using nsGenericElement
 // and nsGenericDOMDataNode.  We should look for a better long term
 // solution. -joki
-nsresult nsEventListenerManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsEventListenerManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -2547,12 +2548,6 @@ nsEventListenerManager::GetListenerManager(nsIEventListenerManager** aInstancePt
   return NS_OK;
 }
  
-NS_IMETHODIMP 
-nsEventListenerManager::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
-{
-  return NS_NewEventListenerManager(aInstancePtrResult);
-}
-
 NS_IMETHODIMP 
 nsEventListenerManager::HandleEvent(nsIDOMEvent *aEvent)
 {

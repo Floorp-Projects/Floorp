@@ -2606,20 +2606,16 @@ GlobalWindowImpl::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
 NS_IMETHODIMP
 GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aResult)
 {
-  if (mListenerManager)
-    return CallQueryInterface(mListenerManager, aResult);
+  if (!mListenerManager) {
+    static NS_DEFINE_CID(kEventListenerManagerCID,
+                         NS_EVENTLISTENERMANAGER_CID);
+    nsresult rv;
 
-  // This is gonna get ugly.  Can't use NS_NewEventListenerManager because of
-  // a circular link problem.
-  nsCOMPtr<nsIDOMEventReceiver> doc(do_QueryInterface(mDocument));
-
-  if (doc) {
-    if (NS_OK == doc->GetNewListenerManager(aResult)) {
-      mListenerManager = *aResult;
-      return NS_OK;
-    }
+    mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  return NS_ERROR_FAILURE;
+
+  return CallQueryInterface(mListenerManager, aResult);
 }
 
 //XXX I need another way around the circular link problem.

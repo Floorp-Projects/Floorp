@@ -2024,15 +2024,6 @@ nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 }
 
 NS_IMETHODIMP
-nsXULElement::GetNewListenerManager(nsIEventListenerManager **aResult)
-{
-    return nsComponentManager::CreateInstance(kEventListenerManagerCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIEventListenerManager),
-                                        (void**) aResult);
-}
-
-NS_IMETHODIMP
 nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
 {
   return DispatchEvent(aEvent);

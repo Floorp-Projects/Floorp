@@ -402,9 +402,6 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) {            \
     return _g.GetListenerManager(aResult);                                      \
   }                                                                             \
-  NS_IMETHOD GetNewListenerManager(nsIEventListenerManager** aResult) {         \
-    return _g.GetNewListenerManager(aResult);                                   \
-  }                                                                             \
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) {                                 \
     return _g.HandleEvent(aEvent);                                              \
   }                                                                             \
