@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = base coreDom coreEvents events html css
 
-DEFINES = -D_IMPL_NS_DOM
+DEFINES += -D_IMPL_NS_DOM
  
 EXPORTS =			 \
 	nsIScriptContext.h	 \
