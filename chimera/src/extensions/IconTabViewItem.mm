@@ -39,8 +39,9 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#import "CHIconTabViewItem.h"
+#import "NSString+Utils.h"
 
+#import "CHIconTabViewItem.h"
 
 //
 // NSParagraphStyle has a line break mode which will automatically
@@ -91,7 +92,7 @@ static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
   [labelParagraphStyle setLineBreakMode:NSLineBreakByTruncatingMiddle];
 #endif
 
-  [labelParagraphStyle setAlignment:NSCenterTextAlignment];
+  [labelParagraphStyle setAlignment:NSNaturalTextAlignment];
 
   NSFont *labelFont = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
   mLabelAttributes  = [[NSDictionary alloc] initWithObjectsAndKeys:
@@ -139,9 +140,9 @@ static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
   if ([self tabIcon]) {
     NSPoint	drawPoint = NSMakePoint( (tabRect.origin.x), (tabRect.origin.y + 15.0) );
     [[self tabIcon] compositeToPoint:drawPoint operation:NSCompositeSourceOver];
-    tabRect = NSMakeRect(NSMinX(tabRect)+15.0,
+    tabRect = NSMakeRect(NSMinX(tabRect) + 18.0,
                          NSMinY(tabRect),
-                         NSWidth(tabRect)-15.0,
+                         NSWidth(tabRect) - 18.0,
                          NSHeight(tabRect));
   }
   
