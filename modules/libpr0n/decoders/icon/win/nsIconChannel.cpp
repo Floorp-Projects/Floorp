@@ -249,14 +249,14 @@ static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFO* aSFI,
   aFile->GetNativePath(fileNativePathStr);
   ::GetShortPathName(fileNativePathStr.get(), fileNativePath, sizeof(fileNativePath));
 
-  char specialNativePath[MAX_PATH];
-  ::SHGetSpecialFolderPath(NULL, specialNativePath, aFolder, FALSE);
-  ::GetShortPathName(specialNativePath, specialNativePath, sizeof(specialNativePath));
+  LPITEMIDLIST idList;
+  HRESULT hr = ::SHGetSpecialFolderLocation(NULL, aFolder, &idList);
+  if (SUCCEEDED(hr)) {
+    char specialNativePath[MAX_PATH];
+    ::SHGetPathFromIDList(idList, specialNativePath);
+    ::GetShortPathName(specialNativePath, specialNativePath, sizeof(specialNativePath));
   
-  if (nsDependentCString(fileNativePath).EqualsIgnoreCase(specialNativePath)) {
-    LPITEMIDLIST idList;
-    HRESULT hr = ::SHGetSpecialFolderLocation(NULL, aFolder, &idList);
-    if (SUCCEEDED(hr)) {
+    if (nsDependentCString(fileNativePath).EqualsIgnoreCase(specialNativePath)) {
       aInfoFlags |= (SHGFI_PIDL | SHGFI_SYSICONINDEX);
       shellResult = ::SHGetFileInfo((LPCTSTR)(LPCITEMIDLIST)idList, 0, aSFI, 
                                     sizeof(SHFILEINFO), aInfoFlags);
