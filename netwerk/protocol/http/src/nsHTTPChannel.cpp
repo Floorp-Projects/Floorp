@@ -337,7 +337,7 @@ nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsHTTPChannel::GetOwner(nsISupports * *aOwner)
 {
-    *aOwner = mOwner;
+    *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
