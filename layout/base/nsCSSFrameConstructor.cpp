@@ -2226,9 +2226,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
   nsIFrame* newFrame = nsnull;  // the frame we construct
   PRBool    newFrameIsFloaterContainer = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
-  PRBool    canHaveGeneratedContent = PR_FALSE;  // ignore things like text
-  nsIFrame* beforeGenerated = nsnull;
-  nsIFrame* afterGenerated = nsnull;
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
@@ -2256,9 +2253,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
         isFloating = PR_TRUE;
       }
-
-      // Most things in here can have generated content
-      canHaveGeneratedContent = PR_TRUE;
 
       // Create a frame based on the tag
       if (nsHTMLAtoms::img == aTag) {
@@ -2309,16 +2303,10 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         rv = NS_NewLegendFrame(newFrame);
         processChildren = PR_TRUE;
         canBePositioned = PR_FALSE;
-        canHaveGeneratedContent = PR_FALSE;
       }
       else if (nsHTMLAtoms::object == aTag) {
         isReplaced = PR_TRUE;
         rv = NS_NewObjectFrame(newFrame);
-        // Note: if we can render the OBJECT element, then the generated content
-        // goes before and after the replaced element (as sibling frames) because
-        // we're ignoring the OBJECT element's content.
-        // If we can't render the OBJECT element, then the generated content goes
-        // before and after the OBJECT element's content
       }
       else if (nsHTMLAtoms::form == aTag) {
         rv = NS_NewFormFrame(newFrame);
@@ -2326,7 +2314,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       else if (nsHTMLAtoms::frameset == aTag) {
         rv = NS_NewHTMLFramesetFrame(newFrame);
         canBePositioned = PR_FALSE;
-        canHaveGeneratedContent = PR_FALSE;
       }
       else if (nsHTMLAtoms::iframe == aTag) {
         isReplaced = PR_TRUE;
@@ -2381,15 +2368,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
                                                aStyleContext, PR_FALSE);
 
-      // If it's allowed to have generated content, then check for :before
-      // and :after pseudo-elements
-      if (canHaveGeneratedContent) {
-        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
-                                    nsCSSAtoms::beforePseudo, &beforeGenerated);
-        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
-                                    nsCSSAtoms::afterPseudo, &afterGenerated);
-      }
-
       // Process the child content if requested
       nsFrameItems childItems;
       nsAbsoluteItems floaterList(newFrame);
@@ -2415,14 +2393,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                       nsLayoutAtoms::floaterList,
                                       floaterList.childList);
       }
-    }
-
-    // If there's :before generated content, then add that frame first.
-    // Note: 'position' and 'float' properties don't apply to :before and
-    // :after pseudo elements, so we always add the generated content frames
-    // to the flow
-    if (beforeGenerated) {
-      aFrameItems.AddChild(beforeGenerated);
     }
 
     // If the frame is positioned, then create a placeholder frame
@@ -2457,11 +2427,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
     } else {
       // Add the newly constructed frame to the flow
       aFrameItems.AddChild(newFrame);
-    }
-
-    // If there's :after generated content, then add that frame last
-    if (afterGenerated) {
-      aFrameItems.AddChild(afterGenerated);
     }
   }
 
@@ -3909,8 +3874,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         else
         {
           // No previous or next sibling so treat this like an appended frame.
-          // XXX This won't always be true if there's auto-generated before/after
-          // content
           isAppend = PR_TRUE;
           shell->GetPrimaryFrameFor(aContainer, &parentFrame);
         }      
