@@ -56,6 +56,7 @@ class ITokenizerDelegate {
 
       virtual eParseMode  GetParseMode(void) const=0;
       virtual nsIDTD*     GetDTD(void) const=0;
+      virtual void        Destroy(void) = 0;
 };
 
 #endif

@@ -54,7 +54,6 @@ public:
      */
     CNavDelegate();
 
-
     /**
      * Copy constructor
      * @update	gess 5/11/98
@@ -108,6 +107,16 @@ public:
      * @return  ptr to DTD -- should NOT be null.
      */
     virtual nsIDTD*     GetDTD(void) const;
+
+    /**
+     * This function deletes the actual delegate and cleans up
+     * any referenced memory
+     * @update jevering 06/15/98
+     * @param
+     * @return
+     */
+
+    virtual void        Destroy(void);
 
     /**
      * Conduct self test.
@@ -212,6 +221,8 @@ protected:
      * @return  error code
      */
     virtual PRInt32     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+
+    
 
     nsDeque     mTokenDeque;
 

@@ -63,6 +63,19 @@ CNavDelegate::CNavDelegate(CNavDelegate& aDelegate) :
 
 
 /**
+ * This function deletes the actual delegate and cleans up
+ * any referenced memory
+ *
+ * @update jevering 06/15/98
+ * @param
+ * @return
+ */
+
+void CNavDelegate::Destroy(void) {
+   delete this;
+}
+
+/**
  * 
  * @update  gess4/11/98
  * @param 
@@ -241,7 +254,8 @@ PRInt32 CNavDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*
 
             CEndToken* endtoken=new CEndToken(str);
             mTokenDeque.Push(endtoken);
-          } //if
+          } else if (skippedToken) 
+             delete skippedToken;
         } //if
       } //if
 

@@ -110,6 +110,16 @@ public:
     virtual nsIDTD*     GetDTD(void) const;
 
     /**
+     * This function deletes the actual delegate and cleans up
+     * any referenced memory
+     * @update jevering 06/15/98
+     * @param
+     * @return
+     */
+
+    virtual void        Destroy(void);
+
+    /**
      * Conduct self test.
      * @update	gess 5/11/98
      */

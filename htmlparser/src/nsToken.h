@@ -71,7 +71,7 @@ class CToken {
      * destructor
      * @update	gess5/11/98
      */
-    ~CToken();
+    virtual ~CToken();
     
     /**
      * Retrieve string value of the token

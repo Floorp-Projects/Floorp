@@ -75,6 +75,19 @@ eParseMode COtherDelegate::GetParseMode(void) const {
 
 
 /**
+ * This function deletes the actual delegate and cleans up
+ * any referenced memory
+ *
+ * @update jevering 06/15/98
+ * @param
+ * @return
+ */
+
+void COtherDelegate::Destroy(void) {
+   delete this;
+}
+
+/**
  * Cause delegate to create and return a new DTD.
  *
  * @update  gess4/22/98
