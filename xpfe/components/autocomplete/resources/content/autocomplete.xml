@@ -1500,6 +1500,11 @@
   </binding>
 
   <binding id="autocomplete-history-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+    <resources>
+      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+
     <content>
       <xul:vbox class="autocomplete-result-box autocomplete-history-box" flex="1">
         <children/>
