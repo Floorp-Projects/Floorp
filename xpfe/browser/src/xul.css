@@ -61,7 +61,7 @@ toolbox {
 }
 
 :toolbox-normal {
-	background-color: inherit;
+	background-color: #666699;
 	background-image: url("resource:/res/toolbar/TB_Tab.gif");
 	background-repeat: no-repeat;
 	color: lightgray;
