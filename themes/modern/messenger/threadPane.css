@@ -145,12 +145,12 @@ outlinerbody:-moz-outliner-image(subjectCol, unread) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-new.gif");
 }
 
-outlinerbody:-moz-outliner-image(subjectCol, mail, imapdeleted) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.gif");
+outlinerbody:-moz-outliner-image(subjectCol, attach) {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
 }
 
-outlinerbody:-moz-outliner-image(subjectCol, mail, attach) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
+outlinerbody:-moz-outliner-image(subjectCol, imapdeleted) {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.gif");
 }
 
 outlinerbody:-moz-outliner-image(subjectCol, news) {
@@ -160,3 +160,4 @@ outlinerbody:-moz-outliner-image(subjectCol, news) {
 outlinerbody:-moz-outliner-image(subjectCol, news, unread) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
 }
+

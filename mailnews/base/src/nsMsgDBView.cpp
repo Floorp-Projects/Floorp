@@ -682,7 +682,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
     return NS_MSG_INVALID_DBVIEW_INDEX;
   }
 
-  char    flags = m_flags.GetAt(aRow);
+  PRUint32 flags = m_flags.GetAt(aRow);
   if (!(flags & MSG_FLAG_READ))
     properties->AppendElement(kUnreadMsgAtom);  
 
