@@ -55,8 +55,6 @@
 class nsXFormsLabelElement : public nsXFormsControlStub
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIXFormsControl
   NS_IMETHOD Refresh();
 
@@ -78,10 +76,6 @@ private:
   nsCOMPtr<nsIDOMElement> mOuterSpan;
   nsCOMPtr<nsIDOMElement> mInnerSpan;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsLabelElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl)
 
 NS_IMETHODIMP
 nsXFormsLabelElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)

@@ -68,8 +68,6 @@
 class nsXFormsOutputElement : public nsXFormsControlStub
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
 
@@ -92,10 +90,6 @@ private:
   nsCOMPtr<nsIDOMElement> mValue;
   PRBool                  mHasBinding;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsOutputElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl)
 
 // nsIXTFXMLVisual
 

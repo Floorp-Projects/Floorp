@@ -55,29 +55,25 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsSwitchElement.h"
 #include "nsIXFormsCaseElement.h"
-#include "nsIXFormsContextControl.h"
 
 /**
  * Implementation of the XForms \<switch\> element.
  *
  * @see http://www.w3.org/TR/xforms/slice9.html#id2631571
- *
- * The implementation of the context control is based on
- * nsXFormsGroupElement.
  */
 
 class nsXFormsSwitchElement : public nsIXFormsSwitchElement,
-                              public nsIXFormsContextControl,
                               public nsXFormsControlStub
 {
 public:
-  nsXFormsSwitchElement();
+  nsXFormsSwitchElement() : mAddingChildren(PR_FALSE) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD WillRemoveChild(PRUint32 aIndex);
+  NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
   NS_IMETHOD OnDestroyed();
 
@@ -88,10 +84,7 @@ public:
   NS_DECL_NSIXFORMSSWITCHELEMENT
 
   // nsIXFormsControl
-  NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
-
-  NS_DECL_NSIXFORMSCONTEXTCONTROL
 
 private:
   /**
@@ -120,19 +113,13 @@ private:
 
   nsCOMPtr<nsIDOMElement> mVisual;
   nsCOMPtr<nsIDOMElement> mSelected;
-  PRBool mDoneAddingChildren;
-  nsString mModelID;
+  PRBool mAddingChildren;
 };
 
-nsXFormsSwitchElement::nsXFormsSwitchElement() : mDoneAddingChildren(PR_FALSE)
-{
-}
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsSwitchElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsSwitchElement,
-                             nsIXFormsControl,
-                             nsIXFormsContextControl)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSwitchElement,
+                             nsXFormsControlStub,
+                             nsIXFormsSwitchElement)
 
 NS_IMETHODIMP
 nsXFormsSwitchElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
@@ -141,6 +128,7 @@ nsXFormsSwitchElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   NS_ENSURE_SUCCESS(rv, rv);
 
   aWrapper->SetNotificationMask(kStandardNotificationMask |
+                                nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
@@ -183,7 +171,7 @@ nsXFormsSwitchElement::OnDestroyed()
 NS_IMETHODIMP
 nsXFormsSwitchElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
 {
-  if (mDoneAddingChildren)
+  if (!mAddingChildren)
     CaseChanged(aChild, PR_FALSE);
   return NS_OK;
 }
@@ -191,7 +179,7 @@ nsXFormsSwitchElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
 NS_IMETHODIMP
 nsXFormsSwitchElement::ChildAppended(nsIDOMNode *aChild)
 {
-  if (mDoneAddingChildren)
+  if (!mAddingChildren)
     CaseChanged(aChild, PR_FALSE);
   return NS_OK;
 }
@@ -199,7 +187,7 @@ nsXFormsSwitchElement::ChildAppended(nsIDOMNode *aChild)
 NS_IMETHODIMP
 nsXFormsSwitchElement::WillRemoveChild(PRUint32 aIndex)
 {
-  if (mDoneAddingChildren) {
+  if (!mAddingChildren) {
     nsCOMPtr<nsIDOMNodeList> list;
     mElement->GetChildNodes(getter_AddRefs(list));
     if (list) {
@@ -212,34 +200,25 @@ nsXFormsSwitchElement::WillRemoveChild(PRUint32 aIndex)
 }
 
 NS_IMETHODIMP
+nsXFormsSwitchElement::BeginAddingChildren()
+{
+  mAddingChildren = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsSwitchElement::DoneAddingChildren()
 {
   if (!mElement)
     return NS_OK;
 
   Init();
-  mDoneAddingChildren = PR_TRUE;
+  mAddingChildren = PR_FALSE;
   Refresh();
   return NS_OK;
 }
 
 // nsIXFormsControl
-
-NS_IMETHODIMP
-nsXFormsSwitchElement::Bind()
-{
-  mModelID.Truncate();
-
-  // Re-evaluate what instance node this element is bound to.
-  ResetBoundNode();
-
-  // Get model ID
-  nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(mModel);
-  NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
-  modelElement->GetAttribute(NS_LITERAL_STRING("id"), mModelID);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXFormsSwitchElement::Refresh()
@@ -248,36 +227,6 @@ nsXFormsSwitchElement::Refresh()
 }
 
 // nsXFormsSwitchElement
-
-NS_IMETHODIMP
-nsXFormsSwitchElement::SetContextNode(nsIDOMNode *aContextNode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsXFormsSwitchElement::GetContext(nsAString&      aModelID,
-                                 nsIDOMNode    **aContextNode,
-                                 PRInt32        *aContextPosition,
-                                 PRInt32        *aContextSize)
-{
-  NS_ENSURE_ARG(aContextSize);
-  NS_ENSURE_ARG(aContextPosition);
-  
-  /** @todo Not too elegant to call Process() here, but DoneAddingChildren is,
-   *        logically, called on children before us.  We need a notification
-   *        that goes from the document node and DOWN, where the controls
-   *        should Refresh().
-   */
-  *aContextPosition = 1;
-  *aContextSize = 1;
-
-  if (mBoundNode && aContextNode)
-    CallQueryInterface(mBoundNode, aContextNode); // addrefs
-  aModelID = mModelID;
-
-  return NS_OK;
-}
 
 void
 nsXFormsSwitchElement::Init(nsIDOMElement* aDeselected)

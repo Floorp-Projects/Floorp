@@ -52,8 +52,6 @@
 class nsXFormsTriggerElement : public nsXFormsControlStub
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
 
@@ -68,10 +66,6 @@ public:
 protected:
   nsCOMPtr<nsIDOMHTMLButtonElement> mButton;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsTriggerElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl)
 
 // nsIXTFXMLVisual
 

@@ -64,13 +64,17 @@ class nsIXTFXMLVisualWrapper;
  * It also inherits from nsXFormsXMLVisualStub, and overrides a couple of its
  * functions.
  *
- * @todo nsIXFormsContextControl-stub should probably also be included here
- *       (mBoundNode is in fact also the context) (XXX)
+ * @bug If a control has a model attribute, but no binding attributes we fail
+ *      to set this as the context for children. We need to return the contextnode
+ *      from EvaluateNodeBinding in that case, and return that in GetContext(). (XXX)
+ *      @see http://bugzilla.mozilla.org/show_bug.cgi?id=280366
  */
 class nsXFormsControlStub : public nsIXFormsControl,
                             public nsXFormsXMLVisualStub
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   /** The standard notification flags set on nsIXTFElement */
   const PRUint32 kStandardNotificationMask;
   /**
@@ -99,6 +103,9 @@ public:
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+
+  // nsIXFormsContextControl
+  NS_DECL_NSIXFORMSCONTEXTCONTROL
   
   /** Constructor */
   nsXFormsControlStub() :

@@ -316,7 +316,6 @@ nsXFormsUtils::GetModel(nsIDOMElement  *aElement,
                         PRUint32        aElementFlags)
 
 {
-
   nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMNode> contextNode;
   nsCOMPtr<nsIDOMElement> bind;
@@ -820,12 +819,15 @@ nsXFormsUtils::FindParentContext(nsIDOMElement           *aElement,
   nsAutoString contextModelID;
   while (curNode) {
     nsCOMPtr<nsIXFormsContextControl> contextControl = do_QueryInterface(curNode);
-    nsCOMPtr<nsIDOMElement> cElement = do_QueryInterface(curNode);
-    if (contextControl && cElement) {
+
+    if (contextControl) {
       PRInt32 cSize;
       PRInt32 cPosition;
       nsCOMPtr<nsIDOMNode> tempNode;
-      rv = contextControl->GetContext(contextModelID, getter_AddRefs(tempNode), &cPosition, &cSize);
+      rv = contextControl->GetContext(contextModelID,
+                                      getter_AddRefs(tempNode),
+                                      &cPosition,
+                                      &cSize);
       NS_ENSURE_SUCCESS(rv, rv);
       // If the call failed, it means that we _have_ a parent which sets the
       // context but it is invalid, ie. the XPath expression could have

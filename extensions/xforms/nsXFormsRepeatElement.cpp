@@ -143,8 +143,6 @@ protected:
                       const PRUint16   aType);
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
   
@@ -165,11 +163,6 @@ public:
 
   nsXFormsRepeatElement() : mAddingChildren(PR_FALSE) {};  
 };
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsRepeatElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl)
-
 
 // nsIXTFXMLVisual
 NS_IMETHODIMP
@@ -450,7 +443,9 @@ nsXFormsRepeatElement::TryFocus(PRBool* aOK)
  * only live here until this is implemented there. (XXX)
  */
 nsresult
-nsXFormsRepeatElement::GetIntAttr(const nsAString& aName, PRInt32* aVal, const PRUint16 aType)
+nsXFormsRepeatElement::GetIntAttr(const nsAString &aName,
+                                  PRInt32         *aVal,
+                                  const PRUint16   aType)
 {
   nsresult rv = NS_OK;
   

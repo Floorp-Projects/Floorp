@@ -111,9 +111,8 @@ private:
   PRBool                           mIncremental;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl,
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsInputElement,
+                             nsXFormsControlStub,
                              nsIDOMFocusListener,
                              nsIDOMEventListener)
 

@@ -79,6 +79,11 @@ nsXFormsHintHelpListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsControlStub,
+                             nsXFormsXMLVisualStub,
+                             nsIXFormsContextControl,
+                             nsIXFormsControl)
+
 NS_IMETHODIMP
 nsXFormsControlStub::GetBoundNode(nsIDOMNode **aBoundNode)
 {
@@ -374,3 +379,39 @@ nsXFormsControlStub::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 
   return NS_OK;
 }
+
+// nsIXFormsContextControl
+
+NS_IMETHODIMP
+nsXFormsControlStub::SetContextNode(nsIDOMNode *aContextNode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXFormsControlStub::GetContext(nsAString      &aModelID,
+                                nsIDOMNode    **aContextNode,
+                                PRInt32        *aContextPosition,
+                                PRInt32        *aContextSize)
+{
+  NS_ENSURE_ARG(aContextSize);
+  NS_ENSURE_ARG(aContextPosition);
+
+  *aContextPosition = 1;
+  *aContextSize = 1;
+
+  if (mBoundNode && aContextNode) {
+    CallQueryInterface(mBoundNode, aContextNode); // addrefs
+    NS_ASSERTION(*aContextNode, "could not QI context node from bound node?");
+  }
+
+  ///
+  /// @todo expensive to run this
+  nsCOMPtr<nsIDOMElement> model = do_QueryInterface(mModel);
+  if (model) {
+    model->GetAttribute(NS_LITERAL_STRING("id"), aModelID);
+  }
+  
+  return NS_OK;
+}
+

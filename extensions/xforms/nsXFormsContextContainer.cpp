@@ -67,16 +67,13 @@
  *       @see http://www.w3.org/TR/xforms/sliceF.html#id2645142
  *       @see http://bugzilla.mozilla.org/show_bug.cgi?id=271724
  */
-class nsXFormsContextContainer : public nsXFormsControlStub,
-                                 public nsIXFormsContextControl
+class nsXFormsContextContainer : public nsXFormsControlStub
 {
 protected:
   /** The HTML representation for the node */
   nsCOMPtr<nsIDOMElement> mHTMLElement;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
   
@@ -94,14 +91,7 @@ public:
 
   // nsIXFormsContextControl
   NS_DECL_NSIXFORMSCONTEXTCONTROL
-  
 };
-
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsContextContainer,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl,
-                             nsIXFormsContextControl)
-
 
 // nsIXTFXMLVisual
 NS_IMETHODIMP

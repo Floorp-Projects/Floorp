@@ -51,7 +51,6 @@
 #include "nsIXTFXMLVisualWrapper.h"
 
 #include "nsXFormsControlStub.h"
-#include "nsIXFormsContextControl.h"
 #include "nsIModelElementPrivate.h"
 #include "nsXFormsUtils.h"
 
@@ -67,34 +66,19 @@
  * @todo If a \<label\> is the first element child for \<group\> it is the
  * label for the entire group
  *
- * @todo "Setting the input focus on a group results in the focus being set to
- * the first form control in the navigation order within that group."
- * (spec. 9.1.1)
- *
- * @bug If a group only has a model attribute, the group fails to set this for
- * children, as it is impossible to distinguish between a failure and absence
- * of binding attributes when calling ProcessNodeBinding().
+ * @todo With some small adjustments we could let nsXFormsContextContainer
+ * implement group, and get rid of this class (XXX).
  */
-class nsXFormsGroupElement : public nsXFormsControlStub,
-                             public nsIXFormsContextControl
+class nsXFormsGroupElement : public nsXFormsControlStub
 {
 protected:
   /** Tries to focus a child form control.*/
-  PRBool TryFocusChildControl(nsIDOMNode* aParent);
+  PRBool TryFocusChildControl(nsIDOMNode *aParent);
   
   /** The UI HTML element used to represent the tag */
   nsCOMPtr<nsIDOMHTMLDivElement> mHTMLElement;
 
-  /** The current ID of the model node is bound to */
-  nsString mModelID;
-
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // Constructor
-  nsXFormsGroupElement();
-  ~nsXFormsGroupElement();
-
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
   
@@ -106,30 +90,9 @@ public:
   NS_IMETHOD OnDestroyed();
 
   // nsIXFormsControl
-  NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
-  NS_IMETHOD TryFocus(PRBool* aOK);
-
-  // nsIXFormsContextControl
-  NS_DECL_NSIXFORMSCONTEXTCONTROL
+  NS_IMETHOD TryFocus(PRBool *aOK);
 };
-
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsGroupElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl,
-                             nsIXFormsContextControl)
-
-MOZ_DECL_CTOR_COUNTER(nsXFormsGroupElement)
-
-nsXFormsGroupElement::nsXFormsGroupElement()
-{
-  MOZ_COUNT_CTOR(nsXFormsGroupElement);
-}
-
-nsXFormsGroupElement::~nsXFormsGroupElement()
-{
-  MOZ_COUNT_DTOR(nsXFormsGroupElement);
-}
 
 // nsIXTFXMLVisual
 NS_IMETHODIMP
@@ -183,22 +146,6 @@ nsXFormsGroupElement::OnDestroyed()
 // nsIXFormsControl
 
 NS_IMETHODIMP
-nsXFormsGroupElement::Bind()
-{
-  mModelID.Truncate();
-
-  // Re-evaluate what instance node this element is bound to.
-  ResetBoundNode();
-
-  // Get model ID
-  nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(mModel);
-  NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
-  modelElement->GetAttribute(NS_LITERAL_STRING("id"), mModelID);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsGroupElement::Refresh()
 {
 #ifdef DEBUG_XF_GROUP
@@ -247,35 +194,6 @@ nsXFormsGroupElement::TryFocus(PRBool* aOK)
   if (GetRelevantState()) {
     *aOK = TryFocusChildControl(mElement);
   }
-  return NS_OK;
-}
-
-// nsIXFormsContextControl
-NS_IMETHODIMP
-nsXFormsGroupElement::SetContextNode(nsIDOMNode *aContextNode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsXFormsGroupElement::GetContext(nsAString&      aModelID,
-                                 nsIDOMNode    **aContextNode,
-                                 PRInt32        *aContextPosition,
-                                 PRInt32        *aContextSize)
-{
-#ifdef DEBUG_XF_GROUP
-  printf("nsXFormsGroupElement::GetContext()\n");
-#endif
-  NS_ENSURE_ARG(aContextSize);
-  NS_ENSURE_ARG(aContextPosition);
-
-  *aContextPosition = 1;
-  *aContextSize = 1;
-
-  if (mBoundNode && aContextNode)
-    CallQueryInterface(mBoundNode, aContextNode); // addrefs
-  aModelID = mModelID;
-  
   return NS_OK;
 }
 

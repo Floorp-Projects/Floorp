@@ -95,9 +95,8 @@ private:
   nsVoidArray mOptions;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsSelectElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl,
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSelectElement,
+                             nsXFormsControlStub,
                              nsIDOMEventListener)
 
 // nsIXTFXMLVisual

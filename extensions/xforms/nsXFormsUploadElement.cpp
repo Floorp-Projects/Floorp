@@ -102,9 +102,8 @@ private:
   nsCOMPtr<nsIDOMHTMLInputElement>  mInput;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsUploadElement,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsControl,
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsUploadElement,
+                             nsXFormsControlStub,
                              nsIDOMFocusListener,
                              nsIDOMEventListener)
 
