@@ -564,6 +564,7 @@
                 if ( statusText ) {
                     statusText.childNodes[0].nodeValue = text;
                 }
+                /*
                 if ( bindCount == 0 ) {
                     // This presumably precedes the first onStartBinding, spin
                     // the progress meter.
@@ -572,6 +573,7 @@
                         meter.setAttribute( "mode", "undetermined" );
                     } 
                 }
+                */
             } else {
                 dump("Can't find status broadcaster!\n");
             }
@@ -651,6 +653,25 @@
                 meter.setAttribute("mode","normal");
             }
         }
+        function onProgress() {
+            var throbber = document.getElementById("Browser:Throbber");
+            var meter    = document.getElementById("Browser:LoadingProgress");
+            if ( throbber && meter ) {
+                var busy = throbber.getAttribute("busy");
+                if ( busy == "true" ) {
+                    mode = "undetermined";
+                } else {
+                    mode = "normal";
+                }
+                meter.setAttribute("mode",mode);
+                if ( mode == "normal" ) {
+                    var status = document.getElementById("Browser:Status");
+                    if ( status ) {
+                        status.setAttribute("text","Document: Done");
+                    }
+                }
+            }
+        }
         function dumpProgress() {
             var broadcaster = document.getElementById("Browser:LoadingProgress");
             var meter       = document.getElementById("meter");
@@ -689,6 +710,7 @@
                 <progressmeter id="meter" mode="normal" value="0" style="width:100px; height: 16px;">
                     <!-- <observes element="Browser:LoadingProgress" attribute="value"/> -->
                     <observes element="Browser:LoadingProgress" attribute="mode"/>
+                    <observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
                 </progressmeter>
           </html:td>
           
@@ -697,8 +719,10 @@
                 <html:div id="statusText">
                     Document: Done
                     <observes element="Browser:Status" attribute="text" onchange="onStatus()"/>			
+                    <!--
                     <observes element="Browser:OnStartBinding" attribute="url" onchange="onStartBinding()"/>			
                     <observes element="Browser:OnStopBinding" attribute="url" onchange="onStopBinding()"/>			
+                    -->
                 </html:div>
           </html:td>
           
