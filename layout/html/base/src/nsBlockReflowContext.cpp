@@ -71,7 +71,9 @@ nsBlockReflowContext::ComputeMarginsFor(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace,
+nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
+                                  const nsRect& aSpace,
+                                  PRBool aIsAdjacentWithTop,
                                   nsReflowStatus& aFrameReflowStatus)
 {
   nsresult rv = NS_OK;
@@ -123,6 +125,9 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace,
   reflowState.mRunInFrame = mRunInFrame;
   reflowState.mCompactMarginWidth = mCompactMarginWidth;
   reflowState.reason = reason;
+  if (!aIsAdjacentWithTop) {
+    reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
+  }
   mLineLayout.SetUnderstandsWhiteSpace(PR_FALSE);
 
   // Let frame know that we are reflowing it

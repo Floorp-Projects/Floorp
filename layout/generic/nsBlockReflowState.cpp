@@ -2191,7 +2191,7 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsRect availSpace(availX, aState.mY, availWidth, availHeight);
   WillReflowFrame(aState, aLine, frame);
   nsReflowStatus frameReflowStatus;
-  rv = brc.ReflowBlock(frame, availSpace, frameReflowStatus);
+  rv = brc.ReflowBlock(frame, availSpace, aState.IsAdjacentWithTop(), frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2340,7 +2340,8 @@ nsBaseIBFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 
   // Reflow the inline frame
   nsReflowStatus frameReflowStatus;
-  nsresult rv = aState.mInlineReflow->ReflowFrame(aFrame, frameReflowStatus);
+  nsresult rv = aState.mInlineReflow->ReflowFrame(aFrame, aState.IsAdjacentWithTop(),
+                                                  frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }

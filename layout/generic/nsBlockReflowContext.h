@@ -47,7 +47,9 @@ public:
     mCompactMarginWidth = aCompactMarginWidth;
   }
 
-  nsresult ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace,
+  nsresult ReflowBlock(nsIFrame* aFrame,
+                       const nsRect& aSpace,
+                       PRBool aIsAdjacentWithTop,
                        nsReflowStatus& aReflowStatus);
 
   PRBool PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,

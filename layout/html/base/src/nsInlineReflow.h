@@ -50,7 +50,9 @@ public:
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                   PRBool aPlacedLeftFloater);
 
-  nsresult ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus);
+  nsresult ReflowFrame(nsIFrame* aFrame,
+                       PRBool aIsAdjacentWithTop,
+                       nsReflowStatus& aReflowStatus);
 
   void VerticalAlignFrames(nsRect& aLineBox,
                            nscoord& aMaxAscent,
@@ -105,7 +107,8 @@ protected:
 
   PRBool ComputeAvailableSize();
 
-  PRBool ReflowFrame(nsHTMLReflowMetrics& aMetrics,
+  PRBool ReflowFrame(PRBool aIsAsjacentWithTop,
+                     nsHTMLReflowMetrics& aMetrics,
                      nsReflowStatus& aStatus);
 
   PRBool CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
