@@ -27,7 +27,7 @@
 #include "nsMimeTransition.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
-#include "net.h"                /* for APPLICATION_APPLEFILE */
+#include "nsMimeTypes.h"
 #include "nsCRT.h"                
 
 #define MIME_SUPERCLASS mimeMultipartClass
