@@ -500,16 +500,17 @@ NS_METHOD  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 /*aBufferSize*/
 	if (!mControl)
 		return NS_ERROR_NOT_INITIALIZED;
 
+	ResType	textTag = (mIsPassword ? kControlEditTextPasswordTag : kControlEditTextTextTag);
+
 	Size textSize;
-	::GetControlDataSize(mControl, kControlNoPart, kControlEditTextTextTag, &textSize);
+	::GetControlDataSize(mControl, kControlNoPart, textTag, &textSize);
 
 	char* str = new char[textSize];
 	if (str)
 	{
-		ResType	tag = (mIsPassword ? kControlEditTextPasswordTag : kControlEditTextTextTag);
-		::GetControlData(mControl, kControlNoPart, tag, textSize, (Ptr)str, &textSize);
-	  aTextBuffer.SetLength(0);
-	  aTextBuffer.Append(str, textSize);
+		::GetControlData(mControl, kControlNoPart, textTag, textSize, (Ptr)str, &textSize);
+		aTextBuffer.SetLength(0);
+		aTextBuffer.Append(str, textSize);
 		aSize = textSize;
 		delete [] str;
 	}
@@ -538,8 +539,9 @@ NS_METHOD  nsTextWidget::SetText(const nsString& aText, PRUint32& outSize)
 	auto_ptr<char> str ( new char[bufferSize] );
 	if ( str.get() )
 	{
+		ResType	textTag = (mIsPassword ? kControlEditTextPasswordTag : kControlEditTextTextTag);
 		aText.ToCString(str.get(), bufferSize);
-		::SetControlData(mControl, kControlNoPart, kControlEditTextTextTag, outSize, (Ptr)str.get());
+		::SetControlData(mControl, kControlNoPart, textTag, outSize, (Ptr)str.get());
 		Invalidate(PR_FALSE);
 	}
 	else
