@@ -41,6 +41,9 @@
 
 #include "nsStyleContext.h"
 
+// Paint forcing
+#include "prenv.h"
+
 NS_IMPL_ISUPPORTS2(nsImageLoader, imgIDecoderObserver, imgIContainerObserver)
 
 nsImageLoader::nsImageLoader() :
@@ -114,10 +117,16 @@ nsImageLoader::Load(nsIURI *aURI)
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
+  // If Paint Forcing is enabled, then force all background image loads
+  // to complete before firing onload for the document
+  static PRInt32 loadFlag
+    = PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD")
+      ? (PRInt32)nsIRequest::LOAD_NORMAL
+      : (PRInt32)nsIRequest::LOAD_BACKGROUND;
+
   // XXX: initialDocumentURI is NULL!
   return il->LoadImage(aURI, nsnull, doc->GetDocumentURI(), loadGroup,
-                       this, 
-                       doc, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull,
+                       this, doc, loadFlag, nsnull, nsnull,
                        getter_AddRefs(mRequest));
 }
 
