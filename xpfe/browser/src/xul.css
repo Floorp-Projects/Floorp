@@ -5,11 +5,12 @@ toolbar {
     border-left: solid white 1px;
     border-right: solid darkGray 1px;
     font: 10pt sans-serif;
+    min-height: 20px;
 }
-toolbar[collapsed] {
+toolbar[collapsed="true"] {
 	display:none;
 }
-toolbar[hidden] {
+toolbar[hidden="true"] {
 	display:none;
 }
 
