@@ -6492,6 +6492,14 @@ ResDef(XP_EDT_MSG_TEXT_BUFFER_TOO_LARGE,    (XP_MSG_BASE + 843),
 ResDef(XP_EDT_MSG_CANNOT_PASTE, (XP_MSG_BASE + 844),
 "You cannot paste this much text in a single operation.\nTry pasting the text in several smaller segments.")
 
+ResDef(XP_EDT_CAN_PASTE_AS_TABLE, (XP_MSG_BASE + 845),
+"Text can be pasted as %d rows and %d columns.\n\n")
+ResDef(XP_EDT_REPLACE_CELLS, (XP_MSG_BASE + 846),
+"Replace existing cells?")
+ResDef(XP_EDT_PASTE_AS_TABLE, (XP_MSG_BASE + 847),
+"Paste text as a new table?")
+
+
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
 ResDef(MK_ADDR_IMPORT_CARDS, XP_MSG_BASE+861, "Adding cards to %s") /* line text for progress window on importing an address book */
 ResDef(MK_ADDR_IMPORT_MAILINGLISTS, XP_MSG_BASE+862, "Updating Mailing Lists in %s") /* line text for progress window on importing an address book */
@@ -7565,42 +7573,14 @@ ResDef(XP_MSG_JS_CLOSE_WINDOW_NAME, XP_MSG_BASE + 1333, "Close Window %s?")
 
 ResDef(MK_ACCESS_YOUR_COOKIES, XP_MSG_BASE + 1334,
        "Your Cookies")
-ResDef(MK_ACCESS_MAXIMUM_COOKS, XP_MSG_BASE + 1335,
-       "Maximum number of cookies allowed:")
-ResDef(MK_ACCESS_COOK_COUNT, XP_MSG_BASE + 1336,
-       "The number of cookies you have:")
-ResDef(MK_ACCESS_MAXIMUM_COOKS_PER_SERV, XP_MSG_BASE + 1337,
-       "Maximum number of cookies per server:")
-ResDef(MK_ACCESS_MAXIMUM_COOK_SIZE, XP_MSG_BASE + 1338,
-       "Maximum size of each cookie:")
-ResDef(MK_ACCESS_NO_COOKIES, XP_MSG_BASE + 1339,
-       "You have no cookies.")
+
 ResDef(MK_ACCESS_NAME, XP_MSG_BASE + 1340,
        "Name:")
 ResDef(MK_ACCESS_VALUE, XP_MSG_BASE + 1341,
        "Value:")
 ResDef(MK_ACCESS_HOST, XP_MSG_BASE + 1342,
 	   "Host:")
-/* id conflict: these strings have been moved way down
-ResDef(MK_ACCESS_DOMAIN, XP_MSG_BASE + 1343,
-           "Domain:")
-ResDef(MK_ACCESS_PATH, XP_MSG_BASE + 1344,
-           "Path:")
-ResDef(MK_ACCESS_YES, XP_MSG_BASE + 1345,
-           "Yes")
-ResDef(MK_ACCESS_NO, XP_MSG_BASE + 1346,
-           "No")
-*/
-ResDef(MK_ACCESS_SEND_TO_HOST, XP_MSG_BASE + 1343,
-       "Send to host:")
-ResDef(MK_ACCESS_IS_DOMAIN, XP_MSG_BASE + 1344,
-       "any host in the domain from the host above")
-ResDef(MK_ACCESS_IS_NOT_DOMAIN, XP_MSG_BASE + 1345,
-       "the above fully qualified host only")
-ResDef(MK_ACCESS_SEND_TO_PATH, XP_MSG_BASE + 1346,
-       "Send to path:")
-ResDef(MK_ACCESS_AND_BELOW, XP_MSG_BASE + 1347,
-       " (and below)")
+
 ResDef(MK_ACCESS_SECURE, XP_MSG_BASE + 1348,
        "Secure:")
 ResDef(MK_ACCESS_EXPIRES, XP_MSG_BASE + 1349,
@@ -7875,16 +7855,29 @@ ResDef(MK_ACCESS_NO, XP_MSG_BASE + 1446,
 
 /* -------- Range up tp 1449 reserved for MSGLIB!! ----------------*/
 
-/* JavaScript dialog strings - seem to be duplicates!
+ResDef(PRVCY_HAS_A_POLICY, XP_MSG_BASE + 1450,
+"This site has declared a <a href=\042javascript:Policy();\042);>policy</a> \
+for what it does with the information you give it.\n")
 
-ResDef(XP_MSG_JS_CLOSE_WINDOW, XP_MSG_BASE + 1450, "Close Window?")
+ResDef(PRVCY_HAS_NO_POLICY, XP_MSG_BASE + 1451,
+"This site has not declared a policy for what it does \
+with the information you give it.\n")
 
-ResDef(XP_MSG_JS_CLOSE_WINDOW_NAME, XP_MSG_BASE + 1451, "Close Window %s?")
+ResDef(PRVCY_CANNOT_SET_COOKIES, XP_MSG_BASE + 1452,
+"This site cannot store information on your computer.\n")
 
- XXX - more strings to put here so that they can be internationalized
+ResDef(PRVCY_CAN_SET_COOKIES, XP_MSG_BASE + 1453,
+"This site can store information on your computer.\n")
 
- End JavaScript dialog strings */
+ResDef(PRVCY_NEEDS_PERMISSION_TO_SET_COOKIES, XP_MSG_BASE + 1454,
+"This site needs permission to store information on your computer.\n")
 
+ResDef(PRVCY_HAS_NOT_SET_COOKIES, XP_MSG_BASE + 1455,
+"This site has not stored information on your computer.\n")
+
+ResDef(PRVCY_HAS_SET_COOKIES, XP_MSG_BASE + 1456,
+"This site has <a href=\042javascript:ViewCookies();\042);>stored information</a> \
+on your computer.\n")
 
 
 /* Related Links XP Strings */
