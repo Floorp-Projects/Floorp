@@ -66,7 +66,7 @@
         accesskey="&calendarCmd.accesskey;"
         key="key_calendar"
         command="Tasks:Calendar"
-        position="6"
+        insertbefore="sep-window-list"
         class="menuitem-iconic icon-calendar16 menu-iconic"/>
 </menupopup>
 
