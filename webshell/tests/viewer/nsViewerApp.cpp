@@ -192,6 +192,7 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "\t-R filename -- record pages visited in <filename>\n");
   fprintf(stderr, "\t-S domain -- add a domain/host that is safe to crawl (e.g. www.netscape.com)\n");
   fprintf(stderr, "\t-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
+  fprintf(stderr, "\t-N pages -- set the max # of pages to crawl\n");
 }
 
 static void
@@ -298,6 +299,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
       }
       else if (PL_strcmp(argv[i], "-C") == 0) {
         mCrawler->EnableCrawler();
+        mCrawler->SetExitOnDone(PR_TRUE);
         mCrawl = PR_TRUE;
       }
       else if (PL_strcmp(argv[i], "-R") == 0) {
@@ -328,6 +330,15 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mCrawler->AddAvoidDomain(argv[i]);
+      }
+      else if (PL_strcmp(argv[i], "-N") == 0) {
+        int pages;
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &pages)) {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mCrawler->SetMaxPages(pages);
       }
       else {
         PrintHelpInfo(argv);
