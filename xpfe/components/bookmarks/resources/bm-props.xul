@@ -35,16 +35,16 @@
 ]>
 
 <window id="bmPropsWindow" xmlns:html="http://www.w3.org/1999/xhtml"
-	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	      title="&bookmarks.windowtitle.label;"
-	      onload="Init()" style="width: 30em;"
-	      class="dialog" orient="vertical">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&bookmarks.windowtitle.label;"
+        onload="Init()" style="width: 30em;"
+        class="dialog" orient="vertical">
  
-	<script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-	<script type="text/javascript" src="chrome://global/content/strres.js"/>
-	<script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
+<stringbundle id="bundle_bookmark" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+<script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
 
-  <keyset id="keyset"/>  
+<keyset id="keyset"/>  
   
 <tabcontrol orient="vertical">
   <tabbox>
