@@ -366,9 +366,6 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   nsPoint   framePos(0, 0);
   theFrame->GetPointFromOffset(presContext, rendContext, theFrameOffset, &framePos);
 
-  nsRect          frameRect;
-  theFrame->GetRect(frameRect);
-  
   // we don't need drawingView anymore so reuse that; reset viewOffset values for our purposes
   if (aRelativeToType == eClosestViewCoordinates)
   {
@@ -380,7 +377,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   viewOffset += framePos;
   outCoordinates->x = viewOffset.x;
   outCoordinates->y = viewOffset.y;
-  outCoordinates->height = frameRect.height;
+  outCoordinates->height = theFrame->GetSize().height;
   outCoordinates->width  = mCaretTwipsWidth;
   
   return NS_OK;
@@ -754,10 +751,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
   // mark the frame, so we get notified on deletion.
   // frames are never unmarked, which means that we'll touch every frame we visit.
   // this is not ideal.
-  nsFrameState frameState;
-  theFrame->GetFrameState(&frameState);
-  frameState |= NS_FRAME_EXTERNAL_REFERENCE;
-  theFrame->SetFrameState(frameState);
+  theFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
 
   mLastCaretFrame = theFrame;
   mLastContentOffset = theFrameOffset;
@@ -806,8 +800,6 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 
   nsIView*    returnView = nsnull;    // views are not refcounted
   
-  nscoord   x, y;
-  
   // coorinates relative to the view we are going to use for drawing
   if (coordType == eRenderingViewCoordinates)
   {
@@ -817,23 +809,17 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     
     // walk up to the first view with a widget
     do {
-      theView->GetPosition(&x, &y);
-
       //is this a scrollable view?
       if (!scrollableView)
         theView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollableView);
 
-      PRBool hasWidget;
-      theView->HasWidget(&hasWidget);
-      if (hasWidget)
+      if (theView->HasWidget())
       {
         returnView = theView;
         break;
       }
-      drawViewOffset.x += x;
-      drawViewOffset.y += y;
-      
-      theView->GetParent(theView);
+      drawViewOffset += theView->GetPosition();
+      theView = theView->GetParent();
     } while (theView);
     
     viewOffset = withinViewOffset;
@@ -845,8 +831,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
       scrollableView->GetClipView(&clipView);
       if (!clipView) return;      // should always have one
       
-      nsRect  bounds;
-      clipView->GetBounds(bounds);
+      nsRect  bounds = clipView->GetBounds();
       scrollableView->GetScrollPosition(bounds.x, bounds.y);
       
       bounds += drawViewOffset;   // offset to coords of returned view
@@ -854,7 +839,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     }
     else
     {
-      returnView->GetBounds(outClipRect);
+      outClipRect = returnView->GetBounds();
     }
 
     if (outRelativeView)
@@ -867,28 +852,17 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     viewOffset = withinViewOffset;
 
     do {
-      theView->GetPosition(&x, &y);
-
-      if (!returnView)
-      {
-        PRBool hasWidget;
-        theView->HasWidget(&hasWidget);
-        
-        if (hasWidget)
-          returnView = theView;
-      }
+      if (!returnView && theView->HasWidget())
+        returnView = theView;
       // is this right?
-      viewOffset.x += x;
-      viewOffset.y += y;
+      viewOffset += theView->GetPosition();
       
       if (outRelativeView && coordType == eTopLevelWindowCoordinates)
         *outRelativeView = theView;
 
-      theView->GetParent(theView);
+      theView = theView->GetParent();
     } while (theView);
-  
   }
-  
   
   *outRenderingView = returnView;
 }
@@ -981,8 +955,7 @@ void nsCaret::GetCaretRectAndInvert()
 {
   NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
   
-  nsRect    frameRect;
-  mLastCaretFrame->GetRect(frameRect);
+  nsRect    frameRect = mLastCaretFrame->GetRect();
   
   frameRect.x = 0;      // the origin is accounted for in GetViewForRendering()
   frameRect.y = 0;
@@ -992,7 +965,7 @@ void nsCaret::GetCaretRectAndInvert()
   nsIView   *drawingView;
   GetViewForRendering(mLastCaretFrame, eRenderingViewCoordinates, viewOffset, clipRect, &drawingView, nsnull);
   
-  if (drawingView == nsnull)
+  if (!drawingView)
     return;
   
   frameRect += viewOffset;

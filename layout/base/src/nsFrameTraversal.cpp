@@ -363,18 +363,19 @@ nsLeafIterator::Next()
   }
   else {
     while(parent && !IsRootFrame(parent)) {
-     if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result) {
-       parent = result;
-       while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
-         {
-           parent = result;
-         }
-       result = parent;
+      result = parent->GetNextSibling();
+      if (result) {
+        parent = result;
+        while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
+          {
+            parent = result;
+          }
+        result = parent;
         break;
       }
       else
       {
-        parent->GetParent(&result);
+        result = parent->GetParent();
         if (!result || IsRootFrame(result)) {
           result = nsnull;
           break;
@@ -415,9 +416,9 @@ nsLeafIterator::Prev()
   if (!parent)
     parent = getLast();
 
-  while(parent){
-    nsIFrame *grandParent;
-    if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent ) 
+  while (parent){
+    nsIFrame *grandParent = parent->GetParent();
+    if (grandParent) 
     {
       // check if  FrameType of grandParent is TextInputFrame
       if (mLockScroll) //lock the traversal when we hit a scroll frame
@@ -450,7 +451,7 @@ nsLeafIterator::Prev()
           while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
           {
             parent = result;
-            while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result)
+            while ((result = parent->GetNextSibling()) != nsnull)
             {
               parent = result;
             }
@@ -458,11 +459,10 @@ nsLeafIterator::Prev()
           result = parent;
           break;
         }
-        else if (NS_FAILED(parent->GetParent(&result)) || !result)
+        else if (!(result = parent->GetParent()))
         {
           result = nsnull;
           break;
-        
         }
         else 
         {
@@ -550,12 +550,11 @@ nsFocusIterator::IsPopupFrame(nsIFrame* aFrame)
 nsIFrame*
 nsFocusIterator::GetParentFrame(nsIFrame* aFrame)
 {
-  nsIFrame* result = 0;
   nsIFrame* placeholder = GetPlaceholderFrame(aFrame);
   if (placeholder)
-    placeholder->GetParent(&result);
+    return placeholder->GetParent();
 
-  return result;
+  return nsnull;
 }
 
 nsIFrame*
@@ -575,10 +574,10 @@ nsFocusIterator::GetFirstChild(nsIFrame* aFrame)
 nsIFrame*
 nsFocusIterator::GetNextSibling(nsIFrame* aFrame)
 {
-  nsIFrame* result = 0;
+  nsIFrame* result = nsnull;
   nsIFrame* placeholder = GetPlaceholderFrame(aFrame);
   if (placeholder) {
-    placeholder->GetNextSibling(&result);
+    result = placeholder->GetNextSibling();
     if (result)
       result = GetRealFrame(result);
   }
@@ -724,8 +723,8 @@ NS_IMETHODIMP
   }
   else {
     while(parent && !IsRootFrame(parent)) {
-      nsIFrame *grandParent;
-      if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent &&
+      nsIFrame *grandParent = parent->GetParent();
+      if (grandParent &&
           NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result))){
         nsFrameList list(result);
         result = list.GetNextVisualFor(parent);
@@ -737,7 +736,7 @@ NS_IMETHODIMP
           result = parent;
           break;
         }
-        else if (NS_FAILED(parent->GetParent(&result)) || !result || IsRootFrame(result)){
+        else if (!(result = parent->GetParent()) || IsRootFrame(result)) {
           result = nsnull;
           break;
         }
@@ -769,8 +768,8 @@ NS_IMETHODIMP
   if (!parent)
     parent = getLast();
   while(parent){
-    nsIFrame *grandParent;
-    if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent &&
+    nsIFrame *grandParent = parent->GetParent();
+    if (grandParent &&
         NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result))){
       nsFrameList list(result);
       result = list.GetPrevVisualFor(parent);
@@ -778,14 +777,14 @@ NS_IMETHODIMP
         parent = result;
         while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result){
           parent = result;
-          while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
+          while ((result = parent->GetNextSibling()) != nsnull) {
             parent = result;
           }
         }
         result = parent;
         break;
       }
-      else if (NS_FAILED(parent->GetParent(&result)) || !result){
+      else if ((result = parent->GetParent()) != nsnull) {
         result = nsnull;
         break;
       }
