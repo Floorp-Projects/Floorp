@@ -127,8 +127,8 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
                 if (NS_SUCCEEDED(selectionResult) && selection) {
                   PRInt32 offset=0;
                   nsEditor::GetChildOffset(mNewNode, mParent, offset);
-                  selectionResult = selection->Collapse(mParent, offset);
-                  NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
+                  selectionResult = selection->Collapse(mParent, offset+1);
+                  NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after insert.");
                 }
               }
             }
