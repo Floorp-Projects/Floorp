@@ -118,32 +118,30 @@ ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
   NS_IF_RELEASE(mInst);
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
 {
-  if(!mStreamStarted || mStreamCleanedUp)
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if(mStreamCleanedUp)
     return NS_OK;
 
   if(!mInst || !mInst->IsStarted())
-    return NS_ERROR_FAILURE;
+    return rv;
+
+  const NPPluginFuncs *callbacks = nsnull;
+  mInst->GetCallbacks(&callbacks);
+  if(!callbacks)
+    return rv;
 
   NPP npp;
-  const NPPluginFuncs *callbacks = nsnull;
-
-  mInst->GetCallbacks(&callbacks);
   mInst->GetNPP(&npp);
 
-  if(!callbacks)
-    return NS_ERROR_FAILURE;
-
-  NPError error;
-
-  if (callbacks->destroystream != NULL)
+  if (mStreamStarted && callbacks->destroystream != NULL)
   {
     PRLibrary* lib = nsnull;
     lib = mInst->fLibrary;
-
+    NPError error;
     NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
                                                                npp,
                                                                &mNPStream,
@@ -153,8 +151,8 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
     ("NPP DestroyStream called: this=%p, npp=%p, reason=%d, return=%d, url=%s\n",
     this, npp, reason, error, mNPStream.url));
 
-    if(error != NPERR_NO_ERROR)
-      return NS_ERROR_FAILURE;
+    if(error == NPERR_NO_ERROR)
+      rv = NS_OK;
   }
 
   // check to see if we have a callback
@@ -182,7 +180,7 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
 
   mStreamCleanedUp = PR_TRUE;
   mStreamStarted   = PR_FALSE;
-  return NS_OK;
+  return rv;
 }
 
 
