@@ -455,6 +455,17 @@ void PK11_SetFortezzaHack(PK11SymKey *symKey) ;
 /**********************************************************************
  *                   PBE functions 
  **********************************************************************/
+
+/* This function creates PBE parameters from the given inputs.  The result
+ * can be used to create a password integrity key for PKCS#12, by sending
+ * the return value to PK11_KeyGen along with the appropriate mechanism.
+ */
+SECItem * 
+PK11_CreatePBEParams(SECItem *salt, SECItem *pwd, unsigned int iterations);
+
+/* free params created above (can be called after keygen is done */
+void PK11_DestroyPBEParams(SECItem *params);
+
 SECAlgorithmID *
 PK11_CreatePBEAlgorithmID(SECOidTag algorithm, int iteration, SECItem *salt);
 PK11SymKey *

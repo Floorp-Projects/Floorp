@@ -1152,14 +1152,16 @@ static SECStatus
 sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 {
     SECStatus rv = SECFailure;
-    PBEBitGenContext *pbeCtxt = NULL;
-    SECItem *hmacKey = NULL, hmacRes;
+    SECItem hmacRes;
     unsigned char buf[IN_BUF_LEN];
     unsigned int bufLen;
     int iteration;
     PK11Context *pk11cx;
-    SECOidTag algtag;
     SECItem ignore = {0};
+    PK11SymKey *symKey;
+    SECItem *params;
+    SECOidTag algtag;
+    CK_MECHANISM_TYPE integrityMech;
     
     if(!p12dcx || p12dcx->error) {
 	return SECFailure;
@@ -1171,28 +1173,28 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
     } else {
 	iteration = 1;
     }
-    pbeCtxt = PBE_CreateContext(SECOID_GetAlgorithmTag(
-				&p12dcx->macData.safeMac.digestAlgorithm),
-				pbeBitGenIntegrityKey, p12dcx->pwitem,
-				&p12dcx->macData.macSalt, 160, iteration);
-    if(!pbeCtxt) {
-	return SECFailure;
-    }
-    hmacKey = PBE_GenerateBits(pbeCtxt);
-    PBE_DestroyContext(pbeCtxt);
-    pbeCtxt = NULL;
-    if(!hmacKey) {
-	return SECFailure;
+
+    params = PK11_CreatePBEParams(&p12dcx->macData.macSalt, p12dcx->pwitem,
+                                  iteration);
+
+    algtag = SECOID_GetAlgorithmTag(&p12dcx->macData.safeMac.digestAlgorithm);
+    switch (algtag) {
+    case SEC_OID_SHA1:
+	integrityMech = CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN; break;
+    case SEC_OID_MD5:
+	integrityMech = CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN;  break;
+    case SEC_OID_MD2:
+	integrityMech = CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN;  break;
+    default:
+	goto loser;
     }
 
+    symKey = PK11_KeyGen(NULL, integrityMech, params, 20, NULL);
+    PK11_DestroyPBEParams(params);
+    if (!symKey) goto loser;
     /* init hmac */
-    algtag = SECOID_GetAlgorithmTag(&p12dcx->macData.safeMac.digestAlgorithm);
-    pk11cx = PK11_CreateContextByRawKey(NULL, 
-                                        sec_pkcs12_algtag_to_mech(algtag),
-                                        PK11_OriginDerive, CKA_SIGN, 
-                                        hmacKey, &ignore, NULL);
-    SECITEM_ZfreeItem(hmacKey, PR_TRUE);
-    hmacKey = NULL;
+    pk11cx = PK11_CreateContextBySymKey(sec_pkcs12_algtag_to_mech(algtag),
+                                        CKA_SIGN, symKey, &ignore);
     if(!pk11cx) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
@@ -1245,10 +1247,6 @@ loser:
 
     if(pk11cx) {
 	PK11_DestroyContext(pk11cx, PR_TRUE);
-    }
-
-    if(hmacKey) {
-	SECITEM_ZfreeItem(hmacKey, PR_TRUE);
     }
 
     return rv;

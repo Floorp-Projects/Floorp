@@ -406,6 +406,9 @@ static struct mechanismList mechanisms[] = {
      {CKM_PBE_SHA1_RC2_128_CBC,		     {128,128, CKF_GENERATE}, PR_TRUE},
      {CKM_PBE_SHA1_RC4_40,		     {40,40, CKF_GENERATE}, PR_TRUE},
      {CKM_PBE_SHA1_RC4_128,		     {128,128, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN,    {1,32, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN,     {1,32, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN,     {1,32, CKF_GENERATE}, PR_TRUE},
 };
 static CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 /* load up our token database */
