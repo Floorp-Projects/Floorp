@@ -95,6 +95,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIScriptGlobalObjectOwner.h"
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -184,8 +185,10 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 
 nsXMLDocument::nsXMLDocument() 
   : mCountCatalogSheets(0), mCrossSiteAccessEnabled(PR_FALSE),
-    mLoadedAsData(PR_FALSE), mXMLDeclarationBits(0)
+    mLoadedAsData(PR_FALSE), mAsync(PR_TRUE), 
+    mLoopingForSyncLoad(PR_FALSE), mXMLDeclarationBits(0)
 {
+  mEventQService = do_GetService(kEventQueueServiceCID);
 }
 
 nsXMLDocument::~nsXMLDocument()
@@ -199,6 +202,9 @@ nsXMLDocument::~nsXMLDocument()
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();
   }
+
+  // XXX We rather crash than hang
+  mLoopingForSyncLoad = PR_FALSE;
 }
 
 
@@ -335,17 +341,33 @@ nsXMLDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange
 }
 
 NS_IMETHODIMP
+nsXMLDocument::GetAsync(PRBool *aAsync)
+{
+  NS_ENSURE_ARG_POINTER(aAsync);
+  *aAsync = mAsync;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLDocument::SetAsync(PRBool aAsync)
+{
+  mAsync = aAsync;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXMLDocument::EvaluateXPointer(const nsAString& aExpression,
                                 nsIXPointerResult **aResult)
 {
   return nsXPointer::Evaluate(this, aExpression, aResult);
 }
 
-
-
 NS_IMETHODIMP
-nsXMLDocument::Load(const nsAString& aUrl)
+nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = PR_FALSE;
+
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
@@ -419,6 +441,17 @@ nsXMLDocument::Load(const nsAString& aUrl)
     NS_ENSURE_TRUE(mPrincipal, rv);
   }
 
+  nsCOMPtr<nsIEventQueue> modalEventQueue;
+
+  if(!mAsync) {
+    NS_ENSURE_TRUE(mEventQService, NS_ERROR_FAILURE);
+
+    rv = mEventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
   // Prepare for loading the XML document "into oneself"
   nsCOMPtr<nsIStreamListener> listener;
   if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel, 
@@ -426,13 +459,48 @@ nsXMLDocument::Load(const nsAString& aUrl)
                                        getter_AddRefs(listener),
                                        PR_FALSE))) {
     NS_ERROR("nsXMLDocument::Load: Failed to start the document load.");
+    if (modalEventQueue) {
+      mEventQService->PopThreadEventQueue(modalEventQueue);
+    }
     return rv;
   }
 
   // Start an asynchronous read of the XML document
   rv = channel->AsyncOpen(listener, nsnull);
+  if (NS_FAILED(rv)) {
+    if (modalEventQueue) {
+      mEventQService->PopThreadEventQueue(modalEventQueue);
+    }
+    return rv;
+  }
 
-  return rv;
+  if (!mAsync) {
+    mLoopingForSyncLoad = PR_TRUE;
+
+    while (mLoopingForSyncLoad) {
+      modalEventQueue->ProcessPendingEvents();
+    }
+
+    mEventQService->PopThreadEventQueue(modalEventQueue);
+
+    // We set return to true unless there was a parsing error
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mRootContent);
+    if (node) {
+      nsAutoString name, ns;      
+      if (NS_SUCCEEDED(node->GetLocalName(name)) &&
+          name.Equals(NS_LITERAL_STRING("parsererror")) &&
+          NS_SUCCEEDED(node->GetNamespaceURI(ns)) &&
+          ns.Equals(NS_LITERAL_STRING("http://www.mozilla.org/newlayout/xml/parsererror.xml"))) {
+        //return is already false
+      } else {
+        *aReturn = PR_TRUE;
+      }
+    }
+  } else {
+    *aReturn = PR_TRUE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -542,6 +610,8 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 NS_IMETHODIMP 
 nsXMLDocument::EndLoad()
 {
+  mLoopingForSyncLoad = PR_FALSE;
+
   if (mLoadedAsData) {
     // Generate a document load event for the case when an XML document was loaded
     // as pure data without any presentation attached to it.
