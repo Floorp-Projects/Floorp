@@ -85,7 +85,7 @@
 <!ENTITY newevent.private.label      "Privé" >
 <!ENTITY newevent.private.note       "Cet événement est privé." >
 <!ENTITY newevent.alarm.label        "Alarme" >
-<!ENTITY newevent.server.label       "Fichier Calendar" >
+<!ENTITY newevent.server.label       "Calendrier" >
 <!ENTITY newevent.invite.label       "Inviter" >
 <!ENTITY newevent.email.label        "Envoyer l'alarme par courriel à :" >
 <!ENTITY newevent.beforealarm.label  "avant le début de l'événement" >
@@ -105,10 +105,11 @@
 <!ENTITY newevent.endtime.tooltip    "Choisissez une heure de fin pour cet événement" >
 <!ENTITY newevent.starttimeerror.alertmessage "Votre événement ne peut pas se terminer avant d'avoir commencé. Veuillez régler l'heure de début ou l'heure de fin." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "La répétition ne peut pas se faire avant la fin de l'événement. Veuillez régler la répétition, ou la désactiver." >
-<!ENTITY newevent.newevent.tab.label "Événement" >
+<!ENTITY newevent.general.tab.label "Général" >
 <!ENTITY newevent.recurrence.tab.label "Répétition" >
-<!ENTITY newevent.contacts.tab.label "Contacts" >
-<!ENTITY newevent.files.tab.label "Fichiers" >
+<!ENTITY newevent.attendees.tab.label "Participants" >
+<!ENTITY newevent.attachments.tab.label "Fichiers joints" >
+<!ENTITY newevent.advanced.tab.label        "Avancé" >
 <!ENTITY newevent.status.label "Statut" >
 <!ENTITY newevent.status.longlabel "Statut de l'événement">
 <!ENTITY newevent.status.needsaction.label "Une action est requise" >
@@ -117,6 +118,10 @@
 <!ENTITY newevent.status.cancelled.label   "Annulé" >
 <!ENTITY newevent.status.tentative.label   "Provisoire" >
 <!ENTITY newevent.status.confirmed.label   "Confirmé" >
+<!ENTITY newevent.itemType.label            "Type d'élément" >                       
+<!ENTITY newevent.itemType.event.label      "Événement" >                           
+<!ENTITY newevent.itemType.todo.label       "Tâche" >                            
+<!ENTITY newevent.itemType.journal.label    "Journal" >                         
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "Le énième jour du mois">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "Le quatrième mardi du mois">
