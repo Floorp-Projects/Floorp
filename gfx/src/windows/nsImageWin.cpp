@@ -740,7 +740,6 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
- *  @update 8/26/02 dwc
  */
 NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
@@ -749,7 +748,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 {
   float           scale;
   unsigned char   *targetRow,*imageRow,*alphaRow;
-  PRBool          result;
   PRInt32         numTiles,x0,y0,x1,y1,destScaledWidth,destScaledHeight;
   PRInt32         validWidth,validHeight,validX,validY,targetRowBytes;
   PRInt32         x,y,width,height,canRaster;
@@ -806,7 +804,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
 
   // do alpha depth equal to 8 here.. this needs some special attention
-  if ( mAlphaDepth == 8) {
+  if (mAlphaDepth == 8 && !mIsOptimized) {
     unsigned char *screenBits=nsnull,*adjAlpha,*adjImage,*adjScreen;
     HDC           memDC=nsnull;
     HBITMAP       tmpBitmap=nsnull,oldBitmap;
@@ -900,19 +898,19 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     } 
   }
 
-  numTiles = (aDestRect.width*aDestRect.height)/(ScaledTileWidth*ScaledTileHeight);
+  numTiles = (aDestRect.width * aDestRect.height) /
+             (ScaledTileWidth * ScaledTileHeight);
 
-  // if alpha is less than 8,not printing, and not 8 bit palette image then we can do
-  // a progressive tile and the tile is at least 8 times smaller than the area to update
-  // if the number of tiles are less than 32 the progressive doubling can slow down
-  // because of the creation of the offscreens, DC's etc.
-  if ( (mAlphaDepth < 8) && (canRaster!=DT_RASPRINTER) && (256!=mNumPaletteColors) && 
-          (numTiles > 32) ) {
-    result = ProgressiveDoubleBlit(aSurface,x1-x0, y1-y0,
-                             ScaledTileWidth,ScaledTileHeight, x0,y0,x1,y1);  
-    if (result ) {
-      return(NS_OK);
-    }
+  // If not printing, and not 8 bit palette image then we can do a progressive
+  // tile.  If the number of tiles are less than 32 the progressive doubling 
+  // can slow down because of the creation of the offscreens, DC's etc.
+  // XXX How was 32 determined optimal?
+  if ((canRaster != DT_RASPRINTER) && (256 != mNumPaletteColors) && 
+      (numTiles > 32)) {
+    if (ProgressiveDoubleBlit(aSurface, x1 - x0, y1 - y0,
+                              ScaledTileWidth, ScaledTileHeight,
+                              x0, y0, x1, y1))
+      return NS_OK;
   }
 
   // if we got to this point.. everything else failed.. and the slow blit backstop
@@ -930,124 +928,212 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
 /** ---------------------------------------------------
  *  See documentation in nsImageWin.h
- *  @update 8/26/02 dwc
  */
 PRBool
 nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
-                              PRInt32 aDestBufferWidth, PRInt32 aDestBufferHeight,
-                              PRInt32 aScaledTileWidth,PRInt32 aScaledTileHeight,
-                              PRInt32 aX0,PRInt32 aY0,
-                              PRInt32 aX1,PRInt32 aY1)
+                                  PRInt32 aDestBufferWidth,
+                                  PRInt32 aDestBufferHeight,
+                                  PRInt32 aScaledTileWidth,
+                                  PRInt32 aScaledTileHeight,
+                                  PRInt32 aX0, PRInt32 aY0,
+                                  PRInt32 aX1, PRInt32 aY1)
 {
-  PRInt32 x,y,width,height;
   nsRect  srcRect;
-  HDC     theHDC,offDC,maskDC;
-  HBITMAP maskBits,tileBits,oldBits,oldMaskBits; 
+  HDC     theHDC, offDC, maskDC;
+  HBITMAP maskBits, tileBits, oldBits, oldMaskBits;
+  int     offDCBytesPerPix;
+  PRInt32 offDCWidth, offDCHeight;
+
+  // create a larger tile from the smaller one
+  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
+  if (!theHDC)
+    return PR_FALSE;
+
+  // so we will create a screen compatible bitmap and then install this into the
+  // offscreen DC
+  offDC = ::CreateCompatibleDC(theHDC);
+
+  if (!offDC)
+    return PR_FALSE;
+
+  // Calculate bytesPerPix for memory DC
+  if (mAlphaDepth == 8 && mIsOptimized)
+    offDCBytesPerPix = 4;
+  else
+    offDCBytesPerPix = ::GetDeviceCaps(offDC, BITSPIXEL) / 8;
 
 
-    // create a larger tile from the smaller one
-    ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
-    if (NULL == theHDC) {
-      return (PR_FALSE);
-    }
+  // Win 95/98/ME can't do > 0xFF0000 DDBs.  Adjust our memory DC
+  // Note: This should be extremely rare.  We'd need a tile of
+  //       1920x2176 @ 4 bytesPerPix before we hit this.
+  if (gPlatform == VER_PLATFORM_WIN32_WINDOWS &&
+      aDestBufferWidth * aDestBufferHeight * offDCBytesPerPix > 0xFF0000) {
+
+    PRUint32 sizeSoFar = mBHead->biWidth * mBHead->biHeight * offDCBytesPerPix;
+    if (aDestBufferWidth * offDCBytesPerPix * mBHead->biHeight < 0xFF0000)
+      offDCWidth = aDestBufferWidth;
+    else
+      offDCWidth = PRUint32(0xFF0000 / sizeSoFar) * mBHead->biWidth;
+
+    sizeSoFar = offDCWidth * mBHead->biHeight * offDCBytesPerPix;
+    offDCHeight = PR_MIN(mBHead->biHeight,
+                         PRUint32(0xFF0000 / sizeSoFar) *
+                         mBHead->biHeight);
+  } else {
+    offDCWidth = aDestBufferWidth;
+    offDCHeight = aDestBufferHeight;
+  }
 
 
-    // so we will create a screen compatible bitmap and then install this into the offscreen DC
-    offDC = ::CreateCompatibleDC(theHDC);
+  // Create DDB
+  if (mAlphaDepth == 8 && mIsOptimized) {
+    // Create a bitmap of 1 plane, 32 bit color depth
+    // Can't use ::CreateBitmap, since the resulting HBITMAP will only be able
+    // to be selected into a compatible HDC (ie. User is @ 24 bit, you can't
+    // select the 32 HBITMAP into the HDC.)
+    ALPHA32BITMAPINFO bmi(offDCWidth, offDCHeight);
+    tileBits = ::CreateDIBSection(theHDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
+                                  NULL, NULL, 0);
+  } else {
+    tileBits = ::CreateCompatibleBitmap(theHDC, offDCWidth, offDCHeight);
+  }
+  if (!tileBits) {
+    ::DeleteDC(offDC);
+    return PR_FALSE;
+  }
+
+  oldBits = (HBITMAP)::SelectObject(offDC, tileBits);
 
 
-    if (NULL ==offDC) {
-        return (PR_FALSE);
-    }
-
-
-    tileBits = ::CreateCompatibleBitmap(theHDC, aDestBufferWidth,aDestBufferHeight);
-
-
-    if (NULL == tileBits) {
+  if (1 == mAlphaDepth) {
+    // larger tile for mask
+    maskDC = ::CreateCompatibleDC(theHDC);
+    if (!maskDC){
+      ::SelectObject(offDC, oldBits);
+      ::DeleteObject(tileBits);
       ::DeleteDC(offDC);
-      return (PR_FALSE);
+      return PR_FALSE;
     }
-    oldBits =(HBITMAP) ::SelectObject(offDC,tileBits);
-
-
-    if (1==mAlphaDepth) {
-      // larger tile for mask
-      maskDC = ::CreateCompatibleDC(theHDC);
-      if (NULL ==maskDC){
-        ::SelectObject(offDC,oldBits);
-        ::DeleteObject(tileBits);
-        ::DeleteDC(offDC);
-        return (PR_FALSE);
-      }
-      maskBits = ::CreateCompatibleBitmap(theHDC, aDestBufferWidth, aDestBufferHeight);
-      if (NULL ==maskBits) {
-        ::SelectObject(offDC,oldBits);
-        ::DeleteObject(tileBits);
-        ::DeleteDC(offDC);
-        ::DeleteDC(maskDC);
-        return (PR_FALSE);
-      }
-
-      oldMaskBits = (HBITMAP)::SelectObject(maskDC,maskBits);
-
-      // get the mask into our new tiled mask
-      MONOBITMAPINFO  bmi(mAlphaWidth,mAlphaHeight);
-      ::StretchDIBits(maskDC, 0, 0, aScaledTileWidth, aScaledTileHeight,0, 0, 
-                      mAlphaWidth, mAlphaHeight, mAlphaBits,(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCCOPY);
-
-
-      ::BitBlt(maskDC,0,0,aScaledTileWidth,aScaledTileHeight,maskDC,0,0,SRCCOPY);
-      srcRect.SetRect(0,0,aScaledTileWidth,aScaledTileHeight);
-      BuildTile(maskDC,srcRect,aDestBufferWidth/2,aDestBufferHeight/2,SRCCOPY);
-    }
-
-
-    // put the initial tile of background image into the offscreen
-    if (!IsOptimized() || nsnull==mHBitmap) {
-      ::StretchDIBits(offDC, 0, 0, aScaledTileWidth, aScaledTileHeight,0, 0, aScaledTileWidth, aScaledTileHeight, mImageBits,
-                      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS:DIB_RGB_COLORS,
-                      SRCCOPY);
-    } else {
-      // need to select install this bitmap into this DC first
-      HBITMAP oldBits;
-      oldBits = (HBITMAP)::SelectObject(theHDC, mHBitmap);
-      ::BitBlt(offDC,0,0,aScaledTileWidth,aScaledTileHeight,theHDC,0,0,SRCCOPY);
-      ::SelectObject(theHDC, oldBits);
-    }
-    
-    srcRect.SetRect(0,0,aScaledTileWidth,aScaledTileHeight);
-    BuildTile(offDC,srcRect,aDestBufferWidth/2,aDestBufferHeight/2,SRCCOPY);
-
-    // now duplicate our tile into the background
-    width = srcRect.width;
-    height = srcRect.height;
-
-    if (1!=mAlphaDepth) {
-      for (y=aY0;y<aY1;y+=srcRect.height) {
-        for (x=aX0;x<aX1;x+=srcRect.width) {
-          ::BitBlt(theHDC,x,y,width,height,offDC,0,0,SRCCOPY);
-        }
-      } 
-    } else {
-      for (y=aY0;y<aY1;y+=srcRect.height) {
-        for (x=aX0;x<aX1;x+=srcRect.width) {
-          ::BitBlt(theHDC,x,y,width,height,maskDC,0,0,SRCAND);
-          ::BitBlt(theHDC,x,y,width,height,offDC,0,0,SRCPAINT);
-        }
-      } 
-      ::SelectObject(maskDC,oldMaskBits);
-      ::DeleteObject(maskBits);
+    maskBits = ::CreateCompatibleBitmap(theHDC, offDCWidth, offDCHeight);
+    if (!maskBits) {
+      ::SelectObject(offDC, oldBits);
+      ::DeleteObject(tileBits);
+      ::DeleteDC(offDC);
       ::DeleteDC(maskDC);
+      return PR_FALSE;
     }
+
+    oldMaskBits = (HBITMAP)::SelectObject(maskDC, maskBits);
+    // get the mask into our new tiled mask
+    MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+    ::SetDIBitsToDevice(maskDC, 0, 0, aScaledTileWidth, aScaledTileHeight,
+                        0, 0, 0, aScaledTileHeight, mAlphaBits,
+                        (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+    srcRect.SetRect(0, 0, aScaledTileWidth, aScaledTileHeight);
+    BuildTile(maskDC, srcRect, offDCWidth, offDCHeight, SRCCOPY);
+  }
+
+
+  // put the initial tile of background image into the offscreen
+  if (!mIsOptimized || !mHBitmap) {
+    ::StretchDIBits(offDC, 0, 0, aScaledTileWidth, aScaledTileHeight,
+                    0, 0, aScaledTileWidth, aScaledTileHeight,
+                    mImageBits, (LPBITMAPINFO)mBHead,
+                    256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
+                    SRCCOPY);
+  } else {
+    // need to select install this bitmap into this DC first
+    HBITMAP oldBits;
+    oldBits = (HBITMAP)::SelectObject(theHDC, mHBitmap);
+    ::BitBlt(offDC, 0, 0, aScaledTileWidth, aScaledTileHeight,
+             theHDC, 0, 0, SRCCOPY);
+    ::SelectObject(theHDC, oldBits);
+  }
+
+  srcRect.SetRect(0, 0, aScaledTileWidth, aScaledTileHeight);
+  // srcRect returns width/height containing tiled image
+  BuildTile(offDC, srcRect, offDCWidth, offDCHeight, SRCCOPY);
+
+  // now duplicate our tile into the background
+
+  if (mAlphaDepth == 1) {
+    for (PRInt32 y = aY0; y < aY1; y += srcRect.height) {
+      for (PRInt32  x = aX0; x < aX1; x += srcRect.width) {
+        ::BitBlt(theHDC, x, y, srcRect.width, srcRect.height,
+                 maskDC, 0, 0, SRCAND);
+        ::BitBlt(theHDC, x, y, srcRect.width, srcRect.height,
+                 offDC, 0, 0, SRCPAINT);
+      }
+    }
+    // Destroy Alpha/Mask GDI Object
+    ::SelectObject(maskDC,oldMaskBits);
+    ::DeleteObject(maskBits);
+    ::DeleteDC(maskDC);
+  } else if (mAlphaDepth == 8) {
+    BLENDFUNCTION blendFunction;
+    blendFunction.BlendOp = AC_SRC_OVER;
+    blendFunction.BlendFlags = 0;
+    blendFunction.SourceConstantAlpha = 255;
+    blendFunction.AlphaFormat = 1;
+    for (PRInt32 y = aY0; y < aY1; y += srcRect.height) {
+      for (PRInt32  x = aX0; x < aX1; x += srcRect.width) {
+        gAlphaBlend(theHDC, x, y, srcRect.width, srcRect.height,
+                    offDC, 0, 0, srcRect.width, srcRect.height, blendFunction);
+      }
+    }
+  } else {
+    for (PRInt32 y = aY0; y < aY1; y += srcRect.height) {
+      for (PRInt32  x = aX0; x < aX1; x += srcRect.width) {
+        ::BitBlt(theHDC, x, y, srcRect.width, srcRect.height,
+                 offDC, 0, 0, SRCCOPY);
+      }
+    }
+  }
 
   ::SelectObject(offDC,oldBits);
   ::DeleteObject(tileBits);
   ::DeleteDC(offDC);
 
-  return(PR_TRUE);
+  return PR_TRUE;
 }
 
+/** ---------------------------------------------------
+ *  build a tile area by doubling the image until it reaches its limits
+ *  @param aTheHDC -- HDC to render to
+ *  @param aSrcRect -- the size of the tile we are building
+ *  @param aWidth -- max width allowed for the  HDC
+ *  @param aHeight -- max height allowed for the HDC
+ */
+void
+nsImageWin::BuildTile(HDC aTheHDC, nsRect &aSrcRect,
+                      PRInt32 aWidth, PRInt32 aHeight, PRInt32 aCopyMode)
+{
+  nsRect destRect;
+
+  // keep doubling the width until doubling results in more than the max width
+  while (aSrcRect.width < aWidth) {
+    destRect.x = aSrcRect.XMost();
+    destRect.width = aSrcRect.width;
+    if (destRect.XMost() > aWidth)
+      destRect.width = aWidth - destRect.x;
+
+    ::BitBlt(aTheHDC, destRect.x, aSrcRect.y, destRect.width, aSrcRect.height,
+             aTheHDC, aSrcRect.x, aSrcRect.y, aCopyMode);
+    aSrcRect.width += destRect.width;
+  }
+
+  // keep doubling the height until doubling results in more than the max height
+  while (aSrcRect.height < aHeight) {
+    destRect.y = aSrcRect.YMost();
+    destRect.height = aSrcRect.height;
+    if (destRect.YMost() > aHeight)
+      destRect.height = aHeight - destRect.y;
+
+    ::BitBlt(aTheHDC, aSrcRect.x, destRect.y, aSrcRect.width, destRect.height,
+             aTheHDC, aSrcRect.x, aSrcRect.y, aCopyMode);
+    aSrcRect.height += destRect.height;
+  }
+}
 
 
 ALPHABLENDPROC nsImageWin::gAlphaBlend = NULL;
@@ -1449,36 +1535,6 @@ nsImageWin::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2)
   return NS_OK;
 }
 
-
-/** ---------------------------------------------------
- *  A bit blitter to tile images to the background recursively
- *  @update 9/9/2000 dwc
- *  @param aTheHDC -- HDC to render to
- *  @param aSrcRect -- the size of the tile we are building
- *  @param aWidth -- max width allowed for the  HDC
- *  @param aHeight -- max height allowed for the HDC
- */
-void
-nsImageWin::BuildTile(HDC TheHDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32  aCopyMode)
-{
-  nsRect  destRect;
-  
-  if (aSrcRect.width < aWidth) {
-    // width is less than double so double our source bitmap width
-    destRect = aSrcRect;
-    destRect.x += aSrcRect.width;
-    ::BitBlt(TheHDC,destRect.x,destRect.y,destRect.width,destRect.height,TheHDC,aSrcRect.x,aSrcRect.y,aCopyMode);
-    aSrcRect.width*=2;
-    this->BuildTile(TheHDC,aSrcRect,aWidth,aHeight,aCopyMode);
-  }else if (aSrcRect.height < aHeight) {
-    // height is less than double so double our source bitmap height
-    destRect = aSrcRect;
-    destRect.y += aSrcRect.height;
-    ::BitBlt(TheHDC,destRect.x,destRect.y,destRect.width,destRect.height,TheHDC,aSrcRect.x,aSrcRect.y,aCopyMode);
-    aSrcRect.height*=2;
-    this->BuildTile(TheHDC,aSrcRect,aWidth,aHeight,aCopyMode);
-  } 
-}
 
 
 /**
