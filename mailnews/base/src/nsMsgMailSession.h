@@ -39,7 +39,7 @@ public:
 	nsMsgMailSession();
 	virtual ~nsMsgMailSession();
 
-	NS_DECL_ISUPPORTS;
+	NS_DECL_ISUPPORTS
 	
 	// nsIMsgMailSession support
 	NS_IMETHOD GetCurrentIdentity(nsIMsgIdentity ** aIdentity);
