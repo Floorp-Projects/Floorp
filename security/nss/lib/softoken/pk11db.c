@@ -255,7 +255,7 @@ secmod_getSecmodName(char *param, char **appName, char **filename,PRBool *rw)
     char *secmodName = NULL;
     char *value = NULL;
     char *save_params = param;
-    char *lconfigdir;
+    const char *lconfigdir;
     param = pk11_argStrip(param);
 	
 
@@ -275,7 +275,7 @@ secmod_getSecmodName(char *param, char **appName, char **filename,PRBool *rw)
    lconfigdir = pk11_EvaluateConfigDir(configdir, appName);
 
    if (lconfigdir) {
-	value = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,secmodName);
+	value = PR_smprintf("%s" PATH_SEPARATOR "%s",lconfigdir,secmodName);
    } else {
 	value = PR_smprintf("%s",secmodName);
    }
@@ -637,8 +637,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 
 
 static DB *
-secmod_OpenDB(const char *appName, 
-		const char *filename, const char *dbName, PRBool readOnly)
+secmod_OpenDB(const char *appName, const char *filename, const char *dbName, 
+				PRBool readOnly, PRBool update)
 {
     DB *pkcs11db = NULL;
 
@@ -652,6 +652,22 @@ secmod_OpenDB(const char *appName,
 	}
     	pkcs11db=rdbopen(appName, "", secname, readOnly ? NO_RDONLY:NO_CREATE);
 	PORT_Free(secname);
+	if (update && !pkcs11db) {
+	    DB *updatedb;
+
+    	    pkcs11db = rdbopen(appName, "", secname, NO_CREATE);
+	    if (!pkcs11db) {
+		return NULL;
+	    }
+	    updatedb = dbopen(dbName, NO_RDONLY, 0600, DB_HASH, 0);
+	    if (updatedb) {
+		db_Copy(pkcs11db,updatedb);
+		(*updatedb->close)(updatedb);
+	    } else {
+		(*pkcs11db->close)(pkcs11db);
+		return NULL;
+	   }
+	}
 	return pkcs11db;
     }
   
@@ -723,7 +739,7 @@ secmod_ReadPermDB(const char *appName, const char *filename,
     moduleList = (char **) PORT_ZAlloc(useCount*sizeof(char **));
     if (moduleList == NULL) return NULL;
 
-    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_TRUE);
+    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_TRUE,rw);
     if (pkcs11db == NULL) goto done;
 
     /* read and parse the file or data base */
@@ -797,7 +813,7 @@ secmod_DeletePermDB(const char *appName, const char *filename,
     if (!rw) return SECFailure;
 
     /* make sure we have a db handle */
-    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_FALSE);
+    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_FALSE,PR_FALSE);
     if (pkcs11db == NULL) {
 	return SECFailure;
     }
@@ -834,7 +850,7 @@ secmod_AddPermDB(const char *appName, const char *filename,
     if (!rw) return SECFailure;
 
     /* make sure we have a db handle */
-    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_FALSE);
+    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_FALSE,PR_FALSE);
     if (pkcs11db == NULL) {
 	return SECFailure;
     }

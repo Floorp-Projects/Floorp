@@ -692,7 +692,7 @@ pk11_mkSlotFlags(unsigned long defaultFlags)
 	    char *string = NULL;
 
 	    for (j=0; j < pk11_argSlotFlagTableSize; j++) {
-		if (pk11_argSlotFlagTable[j].value == (1<<i)) {
+		if (pk11_argSlotFlagTable[j].value == (((unsigned long)1)<<i)) {
 		    string = pk11_argSlotFlagTable[j].name;
 		    break;
 		}

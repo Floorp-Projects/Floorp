@@ -34,7 +34,7 @@
  * cdbhdl.h - certificate database handle
  *   private to the certdb module
  *
- * $Id: cdbhdl.h,v 1.3 2002/04/05 09:17:49 relyea%netscape.com Exp $
+ * $Id: cdbhdl.h,v 1.4 2002/04/08 23:37:47 relyea%netscape.com Exp $
  */
 #ifndef _CDBHDL_H_
 #define _CDBHDL_H_
@@ -66,4 +66,6 @@ typedef DB * (*rdbfunc)(const char *appName, const char *prefix,
 
 DB * rdbopen(const char *appName, const char *prefix, 
 				const char *type, int flags);
+
+SECStatus db_Copy(DB *dest,DB *src);
 #endif
