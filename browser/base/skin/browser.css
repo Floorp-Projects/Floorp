@@ -609,6 +609,8 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
   display: -moz-box;
 }
 
+/* --- close button --- */
+
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
