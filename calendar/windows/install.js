@@ -1,4 +1,4 @@
-initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.7");
+initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.9");
 
 calendarDir = getFolder("Chrome","calendar");
 
