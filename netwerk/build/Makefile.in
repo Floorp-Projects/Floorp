@@ -1,0 +1,62 @@
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+
+DEPTH = ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+LIBRARY_NAME = netwerk
+
+MODULE = netwerk
+
+CPPSRCS =                              \
+        nsNetFactory.cpp 	       \
+        $(NULL)
+
+SHARED_LIBRARY_LIBS =                       \
+        $(DIST)/lib/libnetwerkbase_s.a \
+        $(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH),HP-UX)
+EXTRA_DSO_LDOPTS = -c objs/objslist
+else
+EXTRA_DSO_LDOPTS =	       \
+	$(MKSHLIB_FORCE_ALL)   \
+	$(SHARED_LIBRARY_LIBS) \
+	$(MKSHLIB_UNFORCE_ALL) \
+	$(NULL)
+endif
+
+include $(DEPTH)/config/rules.mk
+
+ifeq ($(OS_ARCH),HP-UX)
+shared_library_objs: $(SHARED_LIBRARY_LIBS)
+	rm -rf objs
+	mkdir objs
+	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
+	 | awk '{ print "objs/"$$3 }' > objs/objslist
+
+$(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
+else
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+endif

@@ -179,6 +179,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsMarshalingStreamListener,
 // OnStartBinding...
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 class nsOnStartBindingEvent : public nsStreamListenerEvent
 {
 public:
