@@ -285,6 +285,25 @@ var gPublishingListener =
   onStopRequest: function(request, ctxt, status, errorMsg)
   {
     dump("onStopRequest status = " + request.status.toString(16) + " " + errorMsg + "\n");
+    var ch;
+    var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                  .getService(Components.interfaces.nsIPromptService);
+    try {
+      ch = request.QueryInterface(Components.interfaces.nsIHttpChannel);
+      dump(ch.requestSucceeded+"\n");
+    } catch(e) {
+    }
+    if (ch && !ch.requestSucceeded) {
+      promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                          calendarStringBundle.formatStringFromName('httpPutError',[ch.responseStatus, ch.responseStatusText],2));
+    }
+
+    else if (ch && !Components.isSuccessCode(request.status)) {
+      // XXX this should be made human-readable.
+      promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                          calendarStringBundle.formatStringFromName('otherPutError',[request.status.toString(16)],1));
+    }
   },
 
   onDataAvailable: function(request, ctxt, inStream, sourceOffset, count)
