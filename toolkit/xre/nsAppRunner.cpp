@@ -1597,7 +1597,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
 
 #if defined(MOZ_WIDGET_QT)
-  QAppliction qapp(argc, argv);
+  QApplication qapp(argc, argv);
 #endif
 
 // #if defined(MOZ_WIDGET_XLIB)
