@@ -42,8 +42,6 @@
 #include "plstr.h"
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
-#include "nsIEventQueueService.h"
-#include "nsIStringBundle.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
@@ -173,15 +171,6 @@ main(PRInt32 argc, char *argv[])
 {
     nsresult rv0 = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv0)) return -1;
-
-    nsCOMPtr<nsIStringBundleService> bundleService = 
-             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv0);
-    if (NS_SUCCEEDED(rv0))
-    {
-        nsCOMPtr<nsIStringBundle> stringBundle;
-        const char propertyURL[] = "chrome://necko/locale/necko.properties";
-        rv0 = bundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
-    }
 
     nsCOMPtr<nsICookieService> cookieService =
              do_GetService(kCookieServiceCID, &rv0);
