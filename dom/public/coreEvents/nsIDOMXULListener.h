@@ -21,27 +21,30 @@
  */
 
 
-#ifndef nsIDOMMenuListener_h__
-#define nsIDOMMenuListener_h__
+#ifndef nsIDOMXULListener_h__
+#define nsIDOMXULListener_h__
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 
 // {0730C841-42F3-11d3-97FA-00400553EEF0}
-#define NS_IDOMMENULISTENER_IID \
+#define NS_IDOMXULLISTENER_IID \
 { 0x730c841, 0x42f3, 0x11d3, { 0x97, 0xfa, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
 
-class nsIDOMMenuListener : public nsIDOMEventListener {
+class nsIDOMXULListener : public nsIDOMEventListener {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMENULISTENER_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMXULLISTENER_IID)
 
-  NS_IMETHOD Create(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD PopupShown(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent) = 0;
+
   NS_IMETHOD Close(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Destroy(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Action(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Command(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) = 0;
 };
 
-#endif // nsIDOMMenuListener_h__
+#endif // nsIDOMXULListener_h__
