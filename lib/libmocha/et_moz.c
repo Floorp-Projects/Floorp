@@ -35,6 +35,7 @@
 #include "prefapi.h"
 #include "pa_parse.h"
 #include "netcache.h"
+#include "secnav.h"
 
 #define IL_CLIENT
 #include "libimg.h"             /* Image Library public API. */
@@ -2872,6 +2873,51 @@ ET_moz_CompMethodFunction(ETCompMethodFunc fn, int32 argc, JSCompArg *argv)
 	XP_MEMCPY(event->argv, argv, (argc * sizeof(JSCompArg)));
 
     return (void *)et_PostEvent(&event->ce, TRUE);
+}
+
+/****************************************************************************/
+
+typedef struct {
+    ETEvent ce;
+    char* prin;
+    char* target;
+    char* risk;
+    int isCert;
+} MozillaEvent_signedAppletPrivileges;
+
+PR_STATIC_CALLBACK(void)
+et_HandleEvent_signedAppletPrivileges(MozillaEvent_signedAppletPrivileges* e)
+{
+    SECNAV_signedAppletPrivilegesOnMozillaThread
+	(e->ce.context, e->prin, e->target, e->risk, e->isCert);
+}
+
+PR_STATIC_CALLBACK(void)
+et_DestroyEvent_signedAppletPrivileges(MozillaEvent_signedAppletPrivileges* e)
+{
+    XP_FREE((char*)e->prin);
+    XP_FREE((char*)e->target);
+    XP_FREE((char*)e->risk);
+    XP_FREE(e);
+}
+
+void
+ET_PostSignedAppletPrivileges
+    (MWContext* context, char* prin, char* target, char* risk, int isCert)
+{
+    MozillaEvent_signedAppletPrivileges* event =
+	PR_NEW(MozillaEvent_signedAppletPrivileges);
+    if (event == NULL)
+	return;
+    PR_InitEvent(&event->ce.event, context,
+		 (PRHandleEventProc)et_HandleEvent_signedAppletPrivileges,
+		 (PRDestroyEventProc)et_DestroyEvent_signedAppletPrivileges);
+    event->ce.context = context;
+    event->prin = strdup(prin);
+    event->target = strdup(target);
+    event->risk = strdup(risk);
+    event->isCert = isCert;
+    et_PostEvent(&event->ce, FALSE);
 }
 
 #ifdef DOM
