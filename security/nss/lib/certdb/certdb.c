@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.63 2004/02/07 01:41:15 wchang0222%aol.com Exp $
+ * $Id: certdb.c,v 1.64 2004/02/26 00:05:29 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2014,9 +2014,17 @@ CERT_DecodeTrustString(CERTCertTrust *trust, char *trusts)
     unsigned int i;
     unsigned int *pflags;
     
+    if (!trust) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
     trust->sslFlags = 0;
     trust->emailFlags = 0;
     trust->objectSigningFlags = 0;
+    if (!trusts) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
 
     pflags = &trust->sslFlags;
     
