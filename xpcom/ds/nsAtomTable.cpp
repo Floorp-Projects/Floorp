@@ -130,7 +130,7 @@ NS_BASE nsIAtom* NS_NewAtom(const PRUnichar* us)
                                      (PLHashComparator) nsnull,
                                      nsnull, nsnull);
   }
-  PRInt32 uslen;
+  PRUint32 uslen;
   PRUint32 hashCode = nsCRT::HashValue(us, &uslen);
   PLHashEntry** hep = PL_HashTableRawLookup(gAtomHashTable, hashCode, us);
   PLHashEntry* he = *hep;
