@@ -696,77 +696,47 @@ var nsValidateCommand =
 // Link checking.
 // XXX THIS CODE IS WORK IN PROGRESS (only exposed in the debug menu).
 
+// Variables used across all the links being checked:
 const kIOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const nsIIOService = Components.interfaces['nsIIOService'];
+var gIOService = 0;
+var gNumLinksToCheck = 0;     // The number of nsILinkCheckers
+var gLinksBeingChecked;       // holds the array of nsILinkCheckers
+var gNumLinksCalledBack = 0;
+var gStartedAllChecks = false;
+var gLinkCheckTimerID = 0;
 
-var nsLinkChecker =
+function GetIOService()
 {
-  uri : null,
-  linkCheckDone : true,
-  ios : Components.classes[kIOSERVICE_CONTRACTID].getService(nsIIOService),
-  linkCheckURI : "",
+  if (gIOService == 0)
+    gIOService = Components.classes[kIOSERVICE_CONTRACTID].getService(nsIIOService);
+}
 
-  LoadFromURI: function(aURI, ioService) {
-    this.done = false;
-    this.uri = aURI;
-    dump("LoadFromURI(" + this.uri + ")\n");
-    var theURI = this.ios.newURI(this.uri, null);
-    //pacURL = uri.spec;
-
-    var channel = this.ios.newChannelFromURI(theURI);
-    // Don't load for cache, that would be cheating:
-    //channel.loadFlags |= nsIRequest::LOAD_BYPASS_CACHE;
-    try {
-    var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
-    if (httpChannel) {
-      httpChannel.requestMethod = "HEAD";
-    }
-    } catch(e) { }
-    try {
-      channel.asyncOpen(this, null);
-    }
-    catch (ex) {
-      dump("asyncOpen failed for " + this.uri + "\n");
-    }
-  },
-
-  // nsIStreamListener interface
-  onStartRequest: function(request, ctxt) { 
-    dump("onStartRequest(" + this.uri + ", status = " + request.status
-         + ")\n");
-    try {
-    var httpChannel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
-    if (httpChannel) {
-      var stat = httpChannel.responseStatus/100;
-      dump("Response status was " + stat + "\n");
-    }
-    } catch(e) { }
-    // Probably don't actually need this stream if we're not going to read:
-    this.sis = 
-      Components.Constructor('@mozilla.org/scriptableinputstream;1',
-                             'nsIScriptableInputStream', 
-                             'init');
-    throw(Components.results.NS_ERROR_FAILURE);
-  },
-
-  onStopRequest: function(request, ctxt, status, errorMsg) {
-    dump("onStopRequest(" + this.uri + ", status = " + status + ")\n");
-    this.done = true;
-  },
-
-  onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {
-    dump("onDataAvailable(" + this.uri + ")\n");
-    var ins = new this.sis(inStream);
-    pac += ins.read(count);
-
-    // Now check the error code and cancel the request.
-    // This should pass NS_BINDING_ABORTED, according to nsIRequest.idl,
-    // but it doesn't seem to be available from JS.
-    // ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_ERROR)<<31) | ((PRUint32)(module+
-    //     NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))
-    //request.cancel(0x80000001);
+function nsLinkCheckTimeOut()
+{
+  // We might have gotten here via a late timeout
+  if (gNumLinksToCheck <= 0)
+    return;
+  dump("Timed out!  Heard from " + gNumLinksCalledBack + " of "
+       + gNumLinksToCheck + "\n");
+  for (var i=0; i < gNumLinksToCheck; ++i)
+  {
+    var linkChecker = gLinksBeingChecked[i].QueryInterface(Components.interfaces.nsIURIChecker);
+    var status = linkChecker.status;
+    if (status == 1)         // LINK_INVALID
+      dump(">> " + linkChecker.name + " is broken\n");
+    else if (status == 2)    // LINK_TIMED_OUT
+      dump(">> " + linkChecker.name + " timed out\n");
+    else if (status == 3)    // LINK_NOT_CHECKED
+      dump(">> " + linkChecker.name + " not checked\n");
+    else
+      dump("   " + linkChecker.name + " OK!\n");
   }
-};
+
+  delete gLinksBeingChecked;  // This deletes/cancels everything
+  gNumLinksToCheck = 0;
+  gStartedAllChecks = false;
+}
 
 var nsCheckLinksCommand =
 {
@@ -777,18 +747,66 @@ var nsCheckLinksCommand =
 
   doCommand: function(aCommand)
   {
+    //window.openDialog("chrome://editor/content/EdLinkCheck.xul", "_blank",
+    //                  "chrome,close,titlebar", "");
+
     objects = window.editorShell.GetLinkedObjects();
     // Objects is an nsISupportsArray.
-    var uri;
-    dump("Checking links in " + objects.Count() + " items ...\n");
-    for (var i = 0; i < objects.Count(); ++i)
+    gLinksBeingChecked = new Array;
+    gNumLinksCalledBack = 0;
+    gStartedAllChecks = false;
+    gLinkCheckTimerID = setTimeout("nsLinkCheckTimeOut()", 5000);
+
+    // We'll need the IO service if we don't already have one:
+    //GetIOService();
+
+    // Loop over the nodes that have links:
+    for (gNumLinksToCheck = 0; gNumLinksToCheck < objects.Count();
+         ++gNumLinksToCheck)
     {
-      var refobj = objects.GetElementAt(i).QueryInterface(Components.interfaces.nsIURIRefObject);
-      uri = refobj.GetNextURI();
-      dump(i + ": '" + uri + "'\n");
+      var refobj = objects.GetElementAt(gNumLinksToCheck).QueryInterface(Components.interfaces.nsIURIRefObject);
+      // Loop over the links in this node:
+      try {
+        var uri;
+        while (refobj && (uri = refobj.GetNextURI()))
+        {
+          // Use the real class in netlib:
+          dump(gNumLinksToCheck + ": Trying to check " + uri + "\n");
+          // Make a new nsIURIChecker
+          gLinksBeingChecked[gNumLinksToCheck]
+            = Components.classes["@mozilla.org/network/urichecker;1"]
+                .createInstance()
+                  .QueryInterface(Components.interfaces.nsIURIChecker);
+          gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, this);
+        }
+      } catch(e) {
+        // NS_ERROR_NOT_AVAILABLE means the refobj was out of uris,
+        // anything else means a real error that we should handle
+        // (probably throw again).
+        //dump("Exception: result = " + e.result + ", '" + e.message + "'\n");
+        if (e.result != 2147746065)
+          throw(e);
+      }
     }
-    // Check only the last link, for now:
-    nsLinkChecker.LoadFromURI(uri);
+    // Done with the loop, now we can be prepared for the finish:
+    gStartedAllChecks = true;
+  },
+
+  // urichecker requires that we have an OnStartRequest even tho it's a nop
+  onStartRequest: function(request, ctxt) { },
+
+  onStopRequest: function(request, ctxt, status)
+  {
+    var linkChecker = request.QueryInterface(Components.interfaces.nsIURIChecker);
+    if (linkChecker)
+    {
+      ++gNumLinksCalledBack;
+      if (gStartedAllChecks && gNumLinksCalledBack >= gNumLinksToCheck)
+      {
+        clearTimeout(gLinkCheckTimerID);
+        nsLinkCheckTimeOut();
+      }
+    }
   }
 };
 
