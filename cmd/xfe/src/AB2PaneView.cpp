@@ -51,8 +51,6 @@ XFE_AB2PaneView::XFE_AB2PaneView(XFE_Component *toplevel_component,
 													   xmFormWidgetClass,
 													   parent,
 													   NULL);
-
-	
 	Widget hpane;
 
 	hpane = XtVaCreateWidget("hpane",
@@ -296,7 +294,14 @@ XFE_AB2PaneView::isCommandEnabled(CommandType command,
 								  void *calldata,
 								  XFE_CommandInfo* i)
 {
-	if (m_focusedView)
+	if (IS_CONTAINER_PANE_CMD(command))
+		return m_dirListView->isCommandEnabled(command, calldata, i);
+	else if (IS_AB_PANE_CMD(command))
+		return m_entriesListView->isCommandEnabled(command, calldata, i);
+	else if (m_focusedView)
+		/* 
+		 * AB_PropertiesCmd | AB_DeleteCmd | AB_PropertiesCmd | 
+		 */
 		return m_focusedView->isCommandEnabled(command, calldata, i);
 	return FALSE;
 }
@@ -306,7 +311,14 @@ XFE_AB2PaneView::isCommandSelected(CommandType command,
 								   void *calldata,
 								   XFE_CommandInfo* i)
 {
-	if (m_focusedView)
+	if (IS_CONTAINER_PANE_CMD(command))
+		return m_dirListView->isCommandSelected(command, calldata, i);
+	else if (IS_AB_PANE_CMD(command))
+		return m_entriesListView->isCommandSelected(command, calldata, i);
+	else if (m_focusedView)
+		/* 
+		 * AB_PropertiesCmd | AB_DeleteCmd | AB_PropertiesCmd | 
+		 */
 		return m_focusedView->isCommandSelected(command, calldata, i);
 	return FALSE;
 }
@@ -316,7 +328,14 @@ XFE_AB2PaneView::handlesCommand(CommandType command,
 								void *calldata,
 								XFE_CommandInfo* i)
 {
-	if (m_focusedView)
+	if (IS_CONTAINER_PANE_CMD(command))
+		return m_dirListView->handlesCommand(command, calldata, i);
+	else if (IS_AB_PANE_CMD(command))
+		return m_entriesListView->handlesCommand(command, calldata, i);
+	else if (m_focusedView)
+		/* 
+		 * AB_PropertiesCmd | AB_DeleteCmd | AB_PropertiesCmd | 
+		 */
 		return m_focusedView->handlesCommand(command, calldata, i);
 	return FALSE;
 }
@@ -326,7 +345,14 @@ XFE_AB2PaneView::doCommand(CommandType command,
 						   void *calldata,
 						   XFE_CommandInfo* i)
 {
-	if (m_focusedView)
+	if (IS_CONTAINER_PANE_CMD(command))
+		m_dirListView->doCommand(command, calldata, i);
+	else if (IS_AB_PANE_CMD(command))
+		m_entriesListView->doCommand(command, calldata, i);
+	else if (m_focusedView)
+		/* 
+		 * AB_PropertiesCmd | AB_DeleteCmd | AB_PropertiesCmd | 
+		 */
 		m_focusedView->doCommand(command, calldata, i);
 }
 

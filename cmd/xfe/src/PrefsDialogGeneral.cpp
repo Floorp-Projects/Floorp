@@ -2869,6 +2869,54 @@ XFE_PrefsPageGeneralAppl::~XFE_PrefsPageGeneralAppl()
 	delete m_prefsDataGeneralAppl;
 }
 
+
+/*
+ * mimetype_is_locked
+ */
+static int
+mimetype_is_locked(char* pref_name)
+{
+	char buf[1024];
+
+	strcpy(buf, pref_name);
+	strcat(buf, ".mimetype");
+
+	return PREF_PrefIsLocked(buf);
+}
+
+
+/*
+ * selection_cb
+ * Invoked when a row in the application panel is selected.
+ * Greys out the 'Edit' and 'Delete' buttons if that mimetype is
+ * locked by preferences.
+ */
+static void
+selection_cb(Widget w, XtPointer closure, XtPointer callData)
+{
+	XmLGridCallbackStruct* cb = (XmLGridCallbackStruct*) callData;
+	PrefsDataGeneralAppl* fep = (PrefsDataGeneralAppl*) closure;
+	NET_cdataStruct* cd = NULL;
+	int row;
+
+	if ( cb == NULL ) return;
+
+	row = cb->row - xfe_prefsAppl_get_static_app_count();
+
+	if ( row < 0 ) return;
+
+	cd = xfe_prefsDialogAppl_get_mime_data_at_pos(row);
+
+	if ( cd && cd->pref_name && mimetype_is_locked(cd->pref_name) ) {
+		XtSetSensitive(fep->edit_button, FALSE);
+		XtSetSensitive(fep->delete_button, FALSE);
+	} else {
+		XtSetSensitive(fep->edit_button, TRUE);
+		XtSetSensitive(fep->delete_button, TRUE);
+	}
+}
+
+
 // Member:       create
 // Description:  Creates page for GeneralAppl
 // Inputs:
@@ -2930,6 +2978,8 @@ void XFE_PrefsPageGeneralAppl::create()
 	XtSetArg(av[ac], XmNallowColumnResize, True); ac++;
 	XtSetArg(av[ac], XmNheight, 250); ac++;
 	kids[i++] = helpers_list = XmLCreateGrid(form1, "helperApp", av, ac);
+/* DEM */
+	XtAddCallback(helpers_list, XmNselectCallback, selection_cb, fep);
 	fep->helpers_list = helpers_list;
 	XtVaSetValues(helpers_list, XmNcolumnSizePolicy, XmVARIABLE, NULL);
 	XtVaSetValues(helpers_list, XmNlayoutFrozen, True, NULL);

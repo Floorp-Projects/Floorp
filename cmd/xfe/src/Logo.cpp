@@ -16,6 +16,7 @@
  * Reserved.
  */
 /*---------------------------------------*/
+#include "prefapi.h"
 /*																		*/
 /* Name:		Logo.cpp												*/
 /* Description:	XFE_Logo component source.								*/
@@ -88,7 +89,7 @@ XFE_Logo::XFE_Logo(XFE_Frame *		frame,
 								NULL);
 
 	// Add tooltip to logo
-	fe_WidgetAddToolTips(m_widget);
+	fe_AddTipStringCallback(m_widget, XFE_Logo::tipStringCallback, NULL);
 
 	// Add the netscape callback
 	XtAddCallback(m_widget,
@@ -679,6 +680,7 @@ XFE_Logo::logoCallback(Widget /* w */,XtPointer clientData,XtPointer callData)
 	XfeButtonCallbackStruct *	cbs = (XfeButtonCallbackStruct *) callData;
 
 	XP_ASSERT( logo != NULL );
+    if (!logo) return;
 
 	switch(cbs->reason)
 	{
@@ -691,6 +693,28 @@ XFE_Logo::logoCallback(Widget /* w */,XtPointer clientData,XtPointer callData)
 		break;
 	}
 }
+
+// XFE_Logo::tipStringCallback
+// Checks to see if a config pref has been set to overrule the tooltip
+// string or documentation string.
+/* static */ void
+XFE_Logo::tipStringCallback(Widget, XtPointer closure, XtPointer call_data)
+{
+	XFE_TipStringCallbackStruct* cb_info = (XFE_TipStringCallbackStruct*) call_data;
+	char* pref;
+	char* value;
+
+	if ( !cb_info ) return;
+
+	pref = ( cb_info->reason == XFE_DOCSTRING ) ? "toolbar.logo.doc_string" :
+		   ( cb_info->reason == XFE_TIPSTRING ) ? "toolbar.logo.tooltip" :
+		   (char *)NULL;
+
+	if ( pref && PREF_CopyConfigString(pref, &value) == PREF_OK ) {
+		*(cb_info->string) = value;
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 XP_Bool
 XFE_Logo::processTraversal(XmTraversalDirection direction)

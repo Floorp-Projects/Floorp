@@ -1,0 +1,609 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include <dlgs.h>
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include <dlgs.h>\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MESSAGES DIALOG DISCARDABLE  0, 0, 256, 181
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Forwarding and Replying to messages",IDC_STATIC,7,7,242,
+                    57
+    CONTROL         "&Automatically quote original message when replying",
+                    IDC_CHECK_AUTO_QUOTE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,18,32,210,12
+    LTEXT           "Add my reply:",IDC_STATIC,29,46,53,9
+    GROUPBOX        "Message wrapping",IDC_STATIC,7,71,242,40
+    CONTROL         "&Wrap incoming, plain text messages to window width",
+                    IDC_WRAP_INCOMING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    17,80,222,14
+    CONTROL         "Wrap outgoing, plain text messages at:",IDC_STATIC,
+                    "Static",SS_LEFTNOWORDWRAP | WS_GROUP,17,97,128,11
+    EDITTEXT        IDC_EDIT_WRAP_LEN,145,95,28,12,ES_AUTOHSCROLL
+    LTEXT           "&characters",IDC_STATIC,177,97,56,11
+    GROUPBOX        "Send messages that use 8-bit characters",IDC_STATIC,7,
+                    117,242,56
+    CONTROL         "As &is (does not work well with some mail servers)",
+                    IDC_RADIO_8BITS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,18,127,182,10
+    CONTROL         "&Using the ""quoted printable"" MIME encoding",
+                    IDC_RADIO_MIME,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    18,140,186,10
+    LTEXT           "(does not work well with some mail or newsgroups readers)",
+                    IDC_STATIC,30,150,159,18
+    LTEXT           "By Default Forward Messages:",IDC_STATIC,18,19,97,8
+    COMBOBOX        IDC_COMBO_FORWARD,120,18,117,48,CBS_DROPDOWNLIST | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_COMBO_REPLY,89,44,148,40,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_IDENTITY DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,6,242,188
+    LTEXT           "The information is needed before you can send mail.  If you do not know the information requested, please contact your system administrator or Internet Service Provider.",
+                    IDC_STATIC,17,16,226,24
+    LTEXT           "Your &name:",IDC_STATIC,17,43,223,8
+    EDITTEXT        IDC_EDIT_NAME,17,52,180,12,ES_AUTOHSCROLL
+    LTEXT           "E&mail address:",IDC_STATIC,17,69,225,8
+    EDITTEXT        IDC_EDIT_EMAIL,17,78,180,12,ES_AUTOHSCROLL
+    LTEXT           "&Reply-to address(only needed if different from email address):",
+                    IDC_STATIC,17,96,223,10
+    EDITTEXT        IDC_EDIT_REPLYTO,17,105,180,13,ES_AUTOHSCROLL
+    LTEXT           "&Organization:",IDC_STATIC,17,122,216,8
+    EDITTEXT        IDC_EDIT_ORGANIZATION,17,131,180,13,ES_AUTOHSCROLL
+    LTEXT           "&Signature File:",IDC_STATIC,17,148,222,8
+    EDITTEXT        IDC_EDIT_SIGFILE,17,158,175,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Choose...",IDC_BUTTON_BROWSE,197,157,45,14
+    CONTROL         "Always attach &Address Book Card to messages.",
+                    IDC_ATTACH_VCARD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    17,175,178,13
+    PUSHBUTTON      "&Edit Card...",IDC_BUTTON_EDITCARD,197,175,45,14
+END
+
+IDD_MAILNEWS DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Plain quoted text beginning with "">"" is displayed with",
+                    IDC_STATIC,7,7,242,66
+    LTEXT           "S&tyle:",IDC_STATIC,17,21,18,8
+    COMBOBOX        IDC_FONT_STYLE,39,19,75,41,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Size:",IDC_STATIC,17,39,16,8
+    COMBOBOX        IDC_FONT_SIZE,39,37,62,41,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Color:",IDC_STATIC,17,56,19,8
+    CONTROL         "",IDC_COLOR,"Button",BS_OWNERDRAW | WS_TABSTOP,39,55,23,
+                    12
+    GROUPBOX        "Display plain text messages and articles with",
+                    IDC_STATIC,7,78,242,39
+    CONTROL         "&Fixed width font",IDC_RADIO_FIXED,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,88,130,12
+    CONTROL         "&Variable width font",IDC_RADIO_VARIABLE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,17,102,130,12
+    GROUPBOX        "",IDC_STATIC,7,122,242,72
+    CONTROL         "&Enable sound alert when messages arrive",
+                    IDC_ENABLE_SOUND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    17,135,228,10
+    CONTROL         "Use &Netscape Messenger from MAPI-based applications",
+                    IDC_USE_MAPI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,
+                    178,227,10
+    CONTROL         "&Remember the last selected message",
+                    IDC_REMEMBER_LAST_MESSAGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,147,222,13
+    CONTROL         "C&onfirm when moving folders to the trash",
+                    IDC_CONFIRM_ON_DELETE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,161,222,13
+END
+
+IDD_NEWSSERVER DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,5,109,242,63
+    LTEXT           "Ne&wsgroup folder:",IDC_STATIC,15,117,194,8
+    EDITTEXT        IDC_EDIT_NEWS_DIR,15,129,169,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "&Choose...",IDC_BUTTON_BROWSE,190,127,50,14
+    CONTROL         "&Ask me before downloading more than",IDC_CHECK_NOTIFY,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,151,137,13
+    LTEXT           "&messages",IDC_STATIC,189,153,40,8
+    EDITTEXT        IDC_EDIT_MSG_COUNT,152,151,34,12,ES_AUTOHSCROLL
+    GROUPBOX        "",IDC_STATIC,5,3,241,101
+    LISTBOX         IDC_SERVERS_LIST,15,15,154,82,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&New...",IDC_NEW,182,16,56,14
+    PUSHBUTTON      "&Edit...",IDC_EDIT,182,34,56,14
+    PUSHBUTTON      "&Delete",IDC_DELETE,182,52,56,14
+    PUSHBUTTON      "&Set as Default",IDC_DEFAULT,182,72,56,14
+END
+
+IDD_OFFLINE DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Startup State",IDC_STATIC,6,6,242,98
+    LTEXT           "Communicator can start in either online or offline modes.  When online you have full access to your network.  When offline you can only read messages that you have previously downloaded.",
+                    IDC_STATIC,15,17,226,29
+    CONTROL         "&Remember Previous State",IDC_PREVIOUS_STATE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,15,46,200,12
+    CONTROL         "&Ask Me",IDC_ASK_ME,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,78,200,12
+    LTEXT           "Communicator will remember the state it was in last and start in that mode.",
+                    IDC_STATIC,27,59,182,18
+    LTEXT           "Communicator will ask you each time you start the program.",
+                    IDC_STATIC,27,90,199,13
+    GROUPBOX        "When Going Online",IDC_STATIC,5,107,241,53
+    CONTROL         "A&sk me if I want to send my unsent messages",
+                    IDC_ONLINE_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,117,219,13
+    CONTROL         "A&utomatically send my unsent mesages",
+                    IDC_ONLINE_RADIO2,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,130,219,13
+    CONTROL         "&Do not send my unsent messages",IDC_ONLINE_RADIO3,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,15,143,219,13
+    GROUPBOX        "When Exiting Communicator",IDC_STATIC,5,164,241,29
+    CONTROL         "&Prompt me to synchronize my messages",
+                    IDC_PROMPT_SYNCHRONIZE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,178,207,10
+END
+
+IDD_OFFLINE_NEWS DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Newsgroup Messages",IDC_STATIC,7,9,242,77
+    CONTROL         "Download only &unread messages",IDC_UNREAD_ONLY,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,20,166,12
+    CONTROL         "Download by da&te",IDC_DOWNLOAD_BY_DATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,20,34,166,12
+    COMBOBOX        IDC_COMBO_FROM,68,47,78,56,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "&from",IDC_RADIO_FROM,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,33,49,29,10
+    CONTROL         "&since",IDC_RADIO_SINCE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,33,65,33,10
+    LTEXT           "&days ago",IDC_STATIC_DAYS_AGO,101,65,47,8
+    EDITTEXT        IDC_EDIT_DAYS,68,63,30,12,ES_AUTOHSCROLL
+    GROUPBOX        "All Messages",IDC_STATIC,7,92,242,65
+    LTEXT           "In order to read mail and newsgroups offline, you must first select them for downloading.  Click the Select... button to choose newsgroups for downloading.",
+                    IDC_STATIC,20,102,212,27
+    PUSHBUTTON      "&Select ...",IDC_SELECT_DOWNLOAD,19,134,65,14
+END
+
+IDD_READRECEIPT DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "If I request a receipt when sending a message, I want",
+                    IDC_STATIC,3,6,249,68
+    CONTROL         "A delivery receipt(DSN) from the receiving &server",
+                    IDC_RADIO_SERVER_ONLY,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,12,20,231,10
+    CONTROL         "&A read receipt(MDN), notifying me when recipients display ",
+                    IDC_RADIO_CLIENT_ONLY,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,12,35,231,12
+    CONTROL         "&Both types of receipt",IDC_RADIO_BOTH,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,12,58,231,10
+    GROUPBOX        "When a receipt arrives",IDC_STATIC,3,80,249,43
+    CONTROL         "&Leave it in my Inbox",IDC_RADIO_IN_INBOX,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,12,91,233,10
+    CONTROL         "&Move it to my Sent Mail folder",IDC_RADIO_TO_SENT,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,12,106,233,10
+    GROUPBOX        "When I receive a message and the sender requested a receipt (MDN)",
+                    IDC_STATIC,3,130,249,51
+    CONTROL         "&Never return a receipt",IDC_RADIO_NO_RECEIPT,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,12,142,156,12
+    CONTROL         "&Return receipts for some messages",
+                    IDC_RADIO_CUSTOMIZE_RECEIPT,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,12,157,143,12
+    PUSHBUTTON      "&Customize...",IDC_CUSTOMIZE,155,157,60,14
+    LTEXT           "the message",IDC_STATIC,23,46,222,10
+END
+
+IDD_RECEIPT_CUSTOMIZE DIALOG DISCARDABLE  0, 0, 240, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Customize Return Receipts"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "When I receive a message and its sender requested a receipt(MDN), send one in the following cases:",
+                    IDC_STATIC,5,7,228,18
+    LTEXT           "If I'm not in the To or CC list of the message (as for a message to a mailing list):",
+                    IDC_STATIC1,5,35,150,20
+    COMBOBOX        IDC_NOT_TOCC,160,35,72,45,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "If the message comes from outside the domain netscape.com:",
+                    IDC_STATIC2,5,65,150,20
+    COMBOBOX        IDC_OUTSIDE_DOMAIN,160,65,72,45,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "In all other cases:",IDC_STATIC3,5,96,150,12
+    COMBOBOX        IDC_GENERAL,160,96,71,45,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,117,120,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,182,120,50,14
+END
+
+IDD_OUTGOING_MSG DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "When sending a mail message, automatically",IDC_STATIC,
+                    4,7,248,60
+    CONTROL         "&BCC: user's@email.address",IDC_CHECK_MAIL_SELF,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,35,140,10
+    CONTROL         "BCC &Other",IDC_CHECK_MAIL_OTHER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,50,48,10
+    CONTROL         "a&ddress:",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | 
+                    WS_GROUP,58,50,28,8
+    EDITTEXT        IDC_EDIT_MAIL_TOADDRESS,87,49,111,12,ES_AUTOHSCROLL
+    CONTROL         "Folder",IDC_CHECK_MAIL_FOLDER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,9,20,176,10
+    PUSHBUTTON      "&Choose Folder...",IDC_CHOOSE_FOLDER_MAIL,188,20,60,11
+    GROUPBOX        "When sending a newsgroup message, automatically",
+                    IDC_STATIC,4,72,248,61
+    CONTROL         "BCC: &user's@email.address",IDC_CHECK_NEWS_SELF,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,101,172,10
+    CONTROL         "BCC O&ther",IDC_CHECK_NEWS_OTHER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,116,50,10
+    CONTROL         "add&ress:",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | 
+                    WS_GROUP,59,116,28,8
+    EDITTEXT        IDC_EDIT_NEWS_TOADDRESS,87,116,111,12,ES_AUTOHSCROLL
+    CONTROL         "Folder",IDC_CHECK_NEWS_FOLDER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,9,86,176,10
+    PUSHBUTTON      "&Choose Folder...",IDC_CHOOSE_FOLDER_NEWS,188,86,60,11
+    GROUPBOX        "Storage for Drafts and Templates",IDC_STATIC,4,137,248,
+                    48
+    PUSHBUTTON      "&Choose Folder...",IDC_CHOOSE_FOLDER_DRAFT,188,149,60,
+                    11
+    PUSHBUTTON      "&Choose Folder...",IDC_CHOOSE_FOLDER_TEMPLATE,188,165,
+                    60,11
+    LTEXT           "Keep Draft",IDC_STATIC_DRAFT,9,150,176,10
+    LTEXT           "Keep Template",IDC_STATIC_TEMPLATE,9,166,176,10
+END
+
+IDD_HTML_FORMATTING DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Message formatting",IDC_STATIC,7,7,242,41
+    CONTROL         "&Use the HTML editor to compose messages",
+                    IDC_HTMLCOMPOSE,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,14,18,228,9
+    CONTROL         "Use &the plain text editor to compose messages",
+                    IDC_PLAINCOMPOSE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,14,31,228,9
+    GROUPBOX        "When sending HTML mail messages to recipients who are not  ",
+                    IDC_STATIC,7,51,242,146
+    LTEXT           "listed as being able to receive them:",IDC_STATIC,15,59,
+                    188,10
+    CONTROL         "&Ask me what to do if the message has HTML formatting,",
+                    IDC_ASK,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,20,72,215,10
+    CONTROL         "&Convert the message into plain text",IDC_PLAIN,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,20,97,213,10
+    CONTROL         "&Send the message in HTML anyway",IDC_ANYWAY,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,20,122,219,10
+    CONTROL         "S&end the message in plain text and HTML",IDC_BOTH,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,20,147,182,10
+    LTEXT           "otherwise send plain text",IDC_STATIC,32,82,201,11
+    LTEXT           "(may lose some formatting)",IDC_STATIC,32,107,202,9
+    LTEXT           "(some recipients may not be able to read it)",
+                    IDC_STATIC,32,132,205,9
+    LTEXT           "(uses more disk space)",IDC_STATIC,32,157,178,9
+    LTEXT           "You can override these settings in any message through the options panel of the message composition window",
+                    IDC_STATIC,16,172,216,18
+END
+
+IDD_ADDRESSING DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&First Name   Last Name",IDC_FIRSTNAME_FIRST,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,163,114,11
+    CONTROL         "&Last Name,  First Name",IDC_LASTNAME_FIRST,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,17,176,115,11
+    LTEXT           "(John Smith)",IDC_STATIC,139,164,66,8
+    LTEXT           "(Smith, John)",IDC_STATIC,139,177,68,8
+    GROUPBOX        "Sort full names by:",IDC_STATIC,7,152,242,41
+    GROUPBOX        "When addressing messages:",IDC_STATIC,7,6,242,142
+    CONTROL         "&Names in Address Book",IDC_CHECK_IN_PAB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,28,197,12
+    CONTROL         "Names in this &directory",IDC_CHECK_IN_DIR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,42,204,12
+    COMBOBOX        IDC_COMBO_DIRS,36,57,130,64,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Use the address and do not search in the directory",
+                    IDC_CHECK_PAB_FIRST,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,24,130,200,13
+    CONTROL         "&Show me a list of choices when I press return",
+                    IDC_RADIO_SHOW,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,24,89,211,12
+    CONTROL         "&Accept what I have typed and don't show me a list of choices",
+                    IDC_RADIO_NO_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,24,100,211,12
+    LTEXT           "Auto-complete names from:",IDC_STATIC,14,19,151,10
+    LTEXT           "If there are two or more matches:",IDC_STATIC,14,79,206,
+                    10
+    LTEXT           "If there is only one match in your personal address books:",
+                    IDC_STATIC,14,119,227,10
+END
+
+IDD_MAILSERVER DIALOG DISCARDABLE  0, 0, 256, 200
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "&Incoming Mail Servers",IDC_STATIC,8,2,241,85,WS_GROUP
+    LISTBOX         IDC_SERVERS_LIST,15,14,167,68,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&New...",IDC_NEW,187,16,56,13
+    PUSHBUTTON      "&Edit...",IDC_EDIT,187,33,56,13
+    PUSHBUTTON      "&Delete",IDC_DELETE,187,50,56,12
+    GROUPBOX        "Outgoing Mail Server",IDC_STATIC,7,88,242,64
+    CONTROL         "&Outgoing mail (SMTP) server:",IDC_STATIC,"Static",
+                    SS_LEFTNOWORDWRAP | WS_GROUP,14,100,99,8
+    EDITTEXT        IDC_EDIT_SMTP_SERVER,116,98,128,12,ES_AUTOHSCROLL
+    CONTROL         "&Mail server user name:",IDC_STATIC,"Static",
+                    SS_LEFTNOWORDWRAP | WS_GROUP,14,113,101,8
+    EDITTEXT        IDC_EDIT_NAME,116,111,128,12,ES_AUTOHSCROLL
+    GROUPBOX        "",IDC_STATIC,7,154,242,42
+    LTEXT           "&Local mail directory:",IDC_STATIC,15,164,72,8
+    EDITTEXT        IDC_EDIT_MAIL_DIR,15,178,187,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "&Choose...",IDC_BUTTON_BROWSE,204,177,40,14
+    LTEXT           "Use Secure Socket Layer(SSL) or TLS for outgoing messages:",
+                    IDC_STATIC,14,126,227,10
+    CONTROL         "Ne&ver",IDC_RADIO_NEVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,15,138,56,12
+    CONTROL         "If &Possible",IDC_RADIO_POSSIBLE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,83,137,66,12
+    CONTROL         "Al&ways",IDC_RADIO_ALWAYS,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,157,137,58,12
+    PUSHBUTTON      "&Set as Default",IDC_DEFAULT,187,68,56,12
+END
+
+IDD_DISK_SPACE DIALOG DISCARDABLE  0, 0, 256, 190
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "All Messages",IDC_STATIC,6,7,242,47
+    CONTROL         "&Do not download any message larger than ",
+                    IDC_CHECK_MSG_SIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    20,17,149,14
+    LTEXT           "&kB",IDC_STATIC,202,19,25,8
+    EDITTEXT        IDC_EDIT_MSG_SIZE,171,18,28,12,ES_AUTOHSCROLL
+    CONTROL         "Auto&matically compact folders when it will save over",
+                    IDC_CHECK_COMPACT_SIZE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,20,33,179,14
+    LTEXT           "k&B",IDC_STATIC,232,35,11,8
+    EDITTEXT        IDC_EDIT_COMPACT_SIZE,201,34,28,12,ES_AUTOHSCROLL
+    GROUPBOX        "Newsgroup Messages Only",IDC_STATIC,6,60,242,111
+    LTEXT           "When it's time to clean up messages:",IDC_STATIC,12,74,
+                    161,10,NOT WS_GROUP
+    CONTROL         "Keep messages which have arrived within the &past",
+                    IDC_KEEP_MSG_DAYS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,20,86,175,10
+    CONTROL         "Keep &all messages",IDC_KEEP_ALL,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,20,99,123,10
+    CONTROL         "Keep the &newest",IDC_KEEP_COUNT,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,20,112,69,10
+    LTEXT           "&days",IDC_STATIC,223,86,19,8
+    EDITTEXT        IDC_EDIT_MSG_DAYS,196,85,24,12,ES_AUTOHSCROLL
+    LTEXT           "&messages",IDC_STATIC,117,112,65,8
+    EDITTEXT        IDC_EDIT_MSG_COUNT,90,111,24,12,ES_AUTOHSCROLL
+    CONTROL         "Keep only &unread messages",IDC_KEEP_UNREAD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,21,128,150,12
+    CONTROL         "&Remove message bodies only older than ",
+                    IDC_CHECK_MSG_DAYS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    21,144,145,13
+    LTEXT           "&days",IDC_STATIC,203,145,24,8
+    EDITTEXT        IDC_EDIT_REMOVE_DAYS,167,144,32,12,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_READRECEIPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 193
+    END
+
+    IDD_RECEIPT_CUSTOMIZE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 136
+    END
+
+    IDD_ADDRESSING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 193
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_MESSAGES DLGINIT
+BEGIN
+    IDC_COMBO_FORWARD, 0x403, 7, 0
+0x6e49, 0x696c, 0x656e, "\000" 
+    IDC_COMBO_FORWARD, 0x403, 7, 0
+0x7551, 0x746f, 0x6465, "\000" 
+    IDC_COMBO_FORWARD, 0x403, 14, 0
+0x7341, 0x4120, 0x7474, 0x6361, 0x6d68, 0x6e65, 0x0074, 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDD_MAILNEWS            "Mail & Newsgroups\nAppearance settings for Mail and Newsgroups"
+    IDD_IDENTITY            "Identity\nSet your name, email address, and signature file"
+    IDD_MESSAGES            "Messages\nChoose settings for messages"
+    IDD_MAILSERVER          "Mail Servers\nSpecify servers for mail"
+    IDD_NEWSSERVER          "Newsgroup Servers\nSpecify your servers for reading newsgroups"
+    IDD_READRECEIPT         "Return Receipts\nSettings for requesting or returning receipts"
+    IDD_OFFLINE             "Offline\nChoose the startup mode of the product"
+    IDD_OFFLINE_NEWS        "Download\nChoose settings for reading messages offline"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_YESTERDAY           "yesterday"
+    IDS_1_WEEK              "1 week ago"
+    IDS_2_WEEK              "2 weeks ago"
+    IDS_1_MONTH             "1 month ago"
+    IDS_6_MONTH             "6 months ago"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_1_YEAR              "1 year ago"
+    IDS_SELECT_COUNT        "( %d newsgroups selected)"
+    IDS_NUMERIC_ONLY        "Please enter numeric digits only."
+    IDS_PLAIN               "Regular"
+    IDS_BOLD                "Bold"
+    IDS_ITALIC              "Italic"
+    IDS_BOLD_ITALIC         "Bold Italic"
+    IDS_FONT_SIZE_FIRST     "Regular"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FONT_SIZE_2         "Bigger"
+    IDS_FONT_SIZE_LAST      "Smaller"
+    IDS_MESSAGES            "Messages"
+    IDS_GROUPS_SERVER       "Newsgroup Servers"
+    IDS_DOWNLOAD            "Download"
+    IDS_NEVER               "Never Send"
+    IDS_AUTOMATICALLY       "Automatically"
+    IDS_ASK_ME              "Ask me"
+    IDS_FOLDER_MAIL         "&Place a copy in folder '%s' on '%s'"
+    IDS_FOLDER_NEWS         "Pl&ace a copy in folder '%s' on '%s'"
+    IDS_FOLDER_DRAFT        "Keep draft in '%s' on '%s'"
+    IDS_FOLDER_TEMPLATE     "Keep templates in '%s' on '%s'"
+    IDS_DISK_SPACE          "Disk Space"
+    IDS_MORE_DISK_SPACE     "More disk space"
+    IDS_DEFAULT             " (Default)"
+    IDS_NON_ZERO            "Please enter a number that is greater than 0."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDD_OUTGOING_MSG        "Copies and Folders\nCopies, drafts and templates"
+    IDD_HTML_FORMATTING     "Formatting\nMessages formatting"
+    IDD_ADDRESSING          "Addressing\nChoose settings for addressing messages"
+    IDD_DISK_SPACE          "Disk Space\nManage the amount of disk space taken by messages"
+    IDS_FORWARDINLINE       "Inline"
+    IDS_FORWARDQUOTE        "Quoted"
+    IDS_FORWARDATTACHMENT   "As Attachment"
+    IDS_REPLYABOVE          "Above the quoted text"
+    IDS_REPLYBELOW          "Below the quoted text"
+    IDS_REPLYSELECT         "Select the quoted text"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

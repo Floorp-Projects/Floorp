@@ -94,7 +94,6 @@ struct pref_map {
  */
 static void fix_path(void*);
 static Bool XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs);
-static Bool evaluate_preferences_file(char* filename);
 static Bool read_old_prefs_file(XFE_GlobalPrefs* prefs);
 static void split_all_proxies(XFE_GlobalPrefs* prefs);
 static void split_proxy(char** proxy, int* port, int default_port);
@@ -261,7 +260,6 @@ static struct pref_map pref_map[] = {
 {"mail.use_movemail", FIELD_OFFSET(use_movemail_p), read_bool, write_bool},
 {"mail.use_builtin_movemail", FIELD_OFFSET(builtin_movemail_p), read_bool, write_bool},
 {"mail.movemail_program", FIELD_OFFSET(movemail_program), read_path, write_path, },
-{"mail.pop_name", FIELD_OFFSET(pop3_user_id), read_str, write_str},
 {"mail.directory", FIELD_OFFSET(mail_directory), read_path, write_path, },
 {"mail.imap.server_sub_directory", FIELD_OFFSET(imap_mail_directory), read_path, write_path, },
 {"mail.imap.root_dir", FIELD_OFFSET(imap_mail_local_directory), read_path, write_path, },
@@ -299,7 +297,6 @@ static struct pref_map pref_map[] = {
 {"network.cookie.warnAboutCookies", FIELD_OFFSET(warn_accept_cookie), read_bool, write_bool},
 {"network.cookie.cookieBehavior", FIELD_OFFSET(accept_cookie), read_int, write_int},
 {"network.hosts.smtp_server", FIELD_OFFSET(mailhost), read_str, write_str},
-{"network.hosts.pop_server", FIELD_OFFSET(pop3_host), read_str, write_str},
 {"network.max_connections", FIELD_OFFSET(max_connections), read_int, write_int},
 {"network.tcpbufsize", FIELD_OFFSET(network_buffer_size), read_int, write_int},
 {"network.hosts.nntp_server", FIELD_OFFSET(newshost), read_str, write_str},
@@ -467,12 +464,15 @@ XFE_UpgradePrefs(char* filename, XFE_GlobalPrefs* prefs)
     char* tmp = NULL;
     void* field;
     Bool status;
+    XP_Bool passwordProtectLocalCache;
 
+    PREF_GetBoolPref("mail.password_protect_local_cache",
+                     &passwordProtectLocalCache);
     /*
      * If we're not supposed to remember the password, replace
      * the password with blank, and then restore it after saving.
      */
-    if ( !prefs->rememberPswd ) {
+    if ( !prefs->rememberPswd && !passwordProtectLocalCache) {
         tmp = prefs->pop3_password;
         prefs->pop3_password = "";
     }
@@ -486,13 +486,12 @@ XFE_UpgradePrefs(char* filename, XFE_GlobalPrefs* prefs)
 
     status = ( PREF_SavePrefFileAs(filename) == PREF_NOERROR ) ? TRUE : FALSE;
 
-    if ( !prefs->rememberPswd ) {
+    if ( !prefs->rememberPswd && !passwordProtectLocalCache) {
         prefs->pop3_password = tmp;
     }
 
     return status;
 }
-
 
 /*
  * XFE_SavePrefs
@@ -505,12 +504,16 @@ XFE_SavePrefs(char* filename, XFE_GlobalPrefs* prefs)
     char* tmp = NULL;
     void* field;
     Bool status;
+    XP_Bool passwordProtectLocalCache;
+	
+    PREF_GetBoolPref("mail.password_protect_local_cache",
+                     &passwordProtectLocalCache);
 
     /*
      * If we're not supposed to remember the password, replace
      * the password with blank, and then restore it after saving.
      */
-    if ( !prefs->rememberPswd ) {
+    if ( !prefs->rememberPswd && !passwordProtectLocalCache) {
         tmp = prefs->pop3_password;
         prefs->pop3_password = "";
     }
@@ -526,7 +529,7 @@ XFE_SavePrefs(char* filename, XFE_GlobalPrefs* prefs)
 
     status = ( PREF_SavePrefFileAs(filename) == PREF_NOERROR ) ? TRUE : FALSE;
 
-    if ( !prefs->rememberPswd ) {
+    if ( !prefs->rememberPswd && !passwordProtectLocalCache) {
         prefs->pop3_password = tmp;
     }
 
@@ -595,10 +598,6 @@ XFE_ReadPrefs(char* filename, XFE_GlobalPrefs* prefs)
         }
     }
 
-    if ( evaluate_preferences_file(filename) == FALSE ) {
-        return FALSE;
-    }
-
     def = 0; /* Indicate that we want to read real prefs, not defaults */
     for ( i = 0; i < num_prefs; i++ ) {
         field = GET_FIELD(pref_map[i], prefs);
@@ -642,42 +641,6 @@ XFE_DefaultPrefs(XFE_GlobalPrefs* prefs)
     if ( organization ) free(organization);
 
 	tweaks(prefs);
-}
-
-
-/*
- * evaluate_preferences_file
- */
-static Bool
-evaluate_preferences_file(char* filename)
-{
-    FILE* file;
-    char* pref_buf;
-    struct stat stat_buf;
-    size_t size;
-    Bool ret;
- 
-    if ( stat(filename, &stat_buf) == -1 ) {
-        return FALSE;
-    }
- 
-    size = stat_buf.st_size;
- 
-    if ( (file = fopen(filename, "r")) == NULL ) {
-        return FALSE;
-    }
- 
-    if ( (pref_buf = malloc(size)) == NULL ) {
-        return FALSE;
-    }
- 
-    if ( fread(pref_buf, sizeof(char), size, file) != size ) {
-        return FALSE;
-    }
- 
-    ret = (Bool) PREF_EvaluateJSBuffer(pref_buf, size);
-    free(pref_buf);
-    return ret;
 }
 
 
@@ -1412,10 +1375,10 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			prefs->builtin_movemail_p = BOOLP (value);
 		else if (!XP_STRCASECMP("MOVEMAIL_PROGRAM", name))
 			StrAllocCopy (prefs->movemail_program, value);
-		else if (!XP_STRCASECMP("POP3_HOST", name))
-			StrAllocCopy (prefs->pop3_host, value);
-		else if (!XP_STRCASECMP("POP3_USER_ID", name))
-			StrAllocCopy (prefs->pop3_user_id, value);
+		/* else if (!XP_STRCASECMP("POP3_HOST", name)) */
+        /* StrAllocCopy (prefs->pop3_host, value); */
+        /*		else if (!XP_STRCASECMP("POP3_USER_ID", name)) */
+        /* StrAllocCopy (prefs->pop3_user_id, value); */
 		else if (!XP_STRCASECMP("POP3_LEAVE_ON_SERVER", name))
 			prefs->pop3_leave_mail_on_server = BOOLP (value);
 		else if (!XP_STRCASECMP("POP3_MSG_SIZE_LIMIT", name))

@@ -36,6 +36,7 @@
 #include "mailpriv.h"
 #include "mailqf.h"
 #include "dspppage.h"
+#include "addrfrm.h" //for MOZ_NEWADDR
 
 #ifdef DEBUG_WHITEBOX
 #include "qa.h"
@@ -67,31 +68,32 @@ UINT MailCodes[10] = {
 	ID_FILE_GETNEWMAIL,
 	ID_FILE_NEWMESSAGE,
 	ID_MESSAGE_REPLYBUTTON,
-	ID_MESSAGE_FORWARD,
+	ID_MESSAGE_FORWARDBUTTON,
 	ID_MESSAGE_FILE,
     ID_MESSAGE_NEXTUNREAD,
 	ID_FILE_PRINT,
 	ID_SECURITY,
-	ID_EDIT_DELETEMESSAGE,
+	ID_EDIT_DELETE_3PANE,
 	ID_NAVIGATE_INTERRUPT
 };
 
 int MailIndices[10] = { 0, 1, 2, 3, 4, 5, 6, 10, 11, 13 };
 
-UINT NewsCodes[10] = {
+UINT NewsCodes[11] = {
 	ID_FILE_GETNEWMAIL,
     ID_NEWS_POSTNEW,
 	ID_MESSAGE_REPLYBUTTON,
-	ID_MESSAGE_FORWARD,
+	ID_MESSAGE_FORWARDBUTTON,
 	ID_MESSAGE_FILE,
     ID_MESSAGE_NEXTUNREAD,
     ID_FILE_PRINT,
 	ID_SECURITY,
 	ID_MESSAGE_MARKBUTTON,
+	ID_EDIT_DELETE_3PANE,
 	ID_NAVIGATE_INTERRUPT
 };
 
-int NewsIndices[10] = { 0, 1, 2, 3, 4, 5, 6, 10, 11, 13 };
+int NewsIndices[11] = { 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 14 };
 
 //status bar format
 static const UINT BASED_CODE indicators[] =
@@ -101,6 +103,7 @@ static const UINT BASED_CODE indicators[] =
 	IDS_SIGNED_STATUS,
     IDS_TRANSFER_STATUS,    
     ID_SEPARATOR,
+	IDS_ONLINE_STATUS,
 	IDS_TASKBAR
 };
 
@@ -117,11 +120,18 @@ C3PaneMailFrame::C3PaneMailFrame()
 	m_pThreadSplitter = NULL;
 	m_nLoadingFolder = 0;
 	m_bDragCopying = FALSE;
+	m_bBlockingFolderSelection = FALSE;
 
 	m_bNoScrollHack = FALSE;
 
-   // All our favorite hotkeys
-   LoadAccelerators( IDR_ONEKEYMESSAGE );
+	m_actionOnLoad = actionSelectFirst;
+	m_navPending = MSG_FirstMessage;
+	m_selPending = -1L;
+
+	m_pFocusWnd = NULL;
+
+	// All our favorite hotkeys
+	LoadAccelerators( IDR_ONEKEYMESSAGE );
 }
 
 C3PaneMailFrame::~C3PaneMailFrame()
@@ -181,6 +191,16 @@ void C3PaneMailFrame::PaneChanged( MSG_Pane *pane, XP_Bool asynchronous,
 		}
 		return;
 	}
+	if (notify == MSG_PaneNotifySafeToSelectFolder)
+	{
+		if (m_bBlockingFolderSelection)
+		{
+			m_bBlockingFolderSelection = FALSE;
+			PostMessage(WM_COMMAND, ID_FOLDER_SELECT, 0);
+		}
+		return;
+	}
+
 	if ( notify == MSG_PaneNotifyFolderLoaded ) {
 
 		if (m_nLoadingFolder > 0) {
@@ -205,9 +225,22 @@ void C3PaneMailFrame::PaneChanged( MSG_Pane *pane, XP_Bool asynchronous,
 		switch ( m_actionOnLoad ) {
 		case actionSelectFirst: 
 			{
-				m_pOutliner->SelectItem( m_pOutliner->GetTotalLines() > 0 ? 0 : -1 );
-				m_bNoScrollHack = TRUE;
-				OnDoneGettingMail();
+				if (m_navPending != MSG_NextUnreadMessage)
+				{
+					XP_Bool bSelectLastMsg = FALSE;
+ 					PREF_GetBoolPref("mailnews.remember_selected_message", &bSelectLastMsg);
+					MessageKey lastKey = MSG_GetLastMessageLoaded(folderInfo);
+					MSG_ViewIndex index = 
+						MSG_GetMessageIndexForKey(m_pPane, lastKey, TRUE);
+					if (index != MSG_VIEWINDEXNONE && bSelectLastMsg) 
+						SelectMessage(lastKey);
+					else
+						m_pOutliner->SelectItem( m_pOutliner->GetTotalLines() > 0 ? 0 : -1 );
+					m_bNoScrollHack = TRUE;
+					OnDoneGettingMail();
+				}
+				else
+					m_navPending = MSG_FirstMessage;
 			}
 			break;
 
@@ -258,7 +291,8 @@ void C3PaneMailFrame::PaneChanged( MSG_Pane *pane, XP_Bool asynchronous,
 		}
 		m_bWantToGetMail = FALSE;
 	} else if ( notify == MSG_PaneNotifyFolderDeleted ) {
-		OnSelectFolder();
+		if (!m_pPane)
+			CreateThreadPane();
 	} else if ( notify == MSG_PaneNotifyMessageLoaded ) {
 		MSG_FolderInfo *curFolder = GetCurFolder();
 		MSG_FolderInfo *folderInfo = MSG_GetCurFolder(m_pMessagePane);
@@ -288,7 +322,7 @@ void C3PaneMailFrame::PaneChanged( MSG_Pane *pane, XP_Bool asynchronous,
 	}
 	// We get notified of message deletes individually, so lets
 	// ignore it.
-	if ( notify != MSG_PaneNotifyMessageDeleted ) {
+	if ( notify != MSG_PaneNotifyMessageDeleted && m_pPane) {
 		m_pInfoBar->Update();
 	}
 #ifdef DEBUG_WHITEBOX
@@ -385,8 +419,73 @@ void C3PaneMailFrame::SelectItem( MSG_Pane* pane, int item )
 	}
 }
 
-#define IS_IN_WINDOW(hParent,hChild)\
-	(((hParent) == (hChild)) || ::IsChild(hParent, hChild))
+//clock wise
+void C3PaneMailFrame::CheckFocusWindow(BOOL bUseTab)
+{
+	CWnd* pNextFocusWnd = NULL;
+	CWnd* pMsgBodyView = m_pMessageView ? m_pMessageView->GetMessageBodyView() : NULL;
+	BOOL  bFolderClosed = m_pFolderSplitter->IsOnePaneClosed();
+	BOOL  bMessageClosed = m_pThreadSplitter->IsOnePaneClosed();
+
+	if (m_pFocusWnd == pMsgBodyView ) 
+	{
+		if (bUseTab || bMessageClosed)
+			pNextFocusWnd = bFolderClosed ? m_pOutliner : m_pFolderOutliner;
+		else
+			pNextFocusWnd = pMsgBodyView;
+	}
+	else if (m_pFocusWnd == m_pOutliner)
+	{   
+		if (bUseTab)
+		{
+			if (!bMessageClosed)
+				pNextFocusWnd = pMsgBodyView;
+			else if (!bFolderClosed)
+				pNextFocusWnd = m_pFolderOutliner;
+			else
+				pNextFocusWnd = m_pOutliner;
+		}
+		else
+			pNextFocusWnd = m_pOutliner;
+	}
+	else 
+		pNextFocusWnd = m_pOutliner;
+
+	if (pNextFocusWnd != m_pFocusWnd)
+	{
+		m_pFocusWnd = pNextFocusWnd;
+		m_pFocusWnd->SetFocus();
+	}
+}
+
+//counter clock wise
+void C3PaneMailFrame::CheckShiftKeyFocusWindow()
+{
+	CWnd* pNextFocusWnd = NULL;
+	CWnd* pMsgBodyView = m_pMessageView ? m_pMessageView->GetMessageBodyView() : NULL;
+	BOOL  bFolderClosed = m_pFolderSplitter->IsOnePaneClosed();
+	BOOL  bMessageClosed = m_pThreadSplitter->IsOnePaneClosed();
+
+	if (m_pFocusWnd == m_pFolderOutliner) 
+		pNextFocusWnd = bMessageClosed ? m_pOutliner : pMsgBodyView;
+	else if (m_pFocusWnd == m_pOutliner)
+	{
+		if (!bFolderClosed)
+			pNextFocusWnd = m_pFolderOutliner;
+		else if (!bMessageClosed)
+			pNextFocusWnd = pMsgBodyView;
+		else
+			pNextFocusWnd = m_pOutliner;
+	}
+	else 
+		pNextFocusWnd = m_pOutliner;
+
+	if (pNextFocusWnd != m_pFocusWnd)
+	{
+		m_pFocusWnd = pNextFocusWnd;
+		m_pFocusWnd->SetFocus();
+	}
+}
 
 BOOL C3PaneMailFrame::PreTranslateMessage(MSG* pMsg)
 {
@@ -394,7 +493,10 @@ BOOL C3PaneMailFrame::PreTranslateMessage(MSG* pMsg)
 	{
 		CWnd* pFocusWnd = GetFocus();
 		if (pFocusWnd == m_pFolderOutliner)
+		{
+			PrepareForDeleteFolder();
 			OnDeleteFolder();
+		}
 		else 
 		{
 			if (GetKeyState(VK_SHIFT) & 0x8000)
@@ -406,41 +508,14 @@ BOOL C3PaneMailFrame::PreTranslateMessage(MSG* pMsg)
 	}
 	if ( pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB && 
 		 !(GetKeyState(VK_MENU) & 0x8000) && 
-		 !(GetKeyState(VK_CONTROL) & 0x8000)) { 
-		HWND hwndFocus = ::GetFocus();
+		 !(GetKeyState(VK_CONTROL) & 0x8000)) 
+	{ 
+		if (GetKeyState(VK_SHIFT) & 0x8000) 
+			CheckShiftKeyFocusWindow();
+		else 
+			CheckFocusWindow();
 
-		HWND hwndFolder = m_pFolderOutliner ? m_pFolderOutliner->m_hWnd : NULL;
-		HWND hwndOutliner = m_pOutliner ? m_pOutliner->m_hWnd : NULL;
-		HWND hwndView = m_pMessageView ? m_pMessageView->m_hWnd : NULL;
-
-		HWND hwndNext = NULL;
-
-		if (GetKeyState(VK_SHIFT) & 0x8000) {
-			if ( hwndView && IS_IN_WINDOW(hwndView, hwndFocus) ) {
-				// Don't steal the event if the tab is destined for a child window of
-				// the active view, because the child window may want the tab itself
-				hwndNext = hwndOutliner;
-			} else if ( hwndFocus == hwndOutliner ) {
-				hwndNext = hwndFolder;
-			} else { // hwndFocus == hwndFolder
-				hwndNext = hwndView;
-			}
-		} else {
-			if ( hwndView && IS_IN_WINDOW(hwndView, hwndFocus) ) {
-				// Don't steal the event if the tab is destined for a child window of
-				// the active view, because the child window may want the tab itself
-				hwndNext = hwndFolder;
-			} else if ( hwndFocus == hwndFolder ) {
-				hwndNext = hwndOutliner;
-			} else { // hwndFocus == hwndOutliner
-				hwndNext = hwndView;
-			}
-		}
-
-		if ( hwndNext ) {
-			::SetFocus( hwndNext );
-			return TRUE;
-		}
+		return TRUE;
 	}
 
 	return CMsgListFrame::PreTranslateMessage( pMsg );
@@ -460,6 +535,8 @@ BOOL C3PaneMailFrame::OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pCont
 		m_pFolderSplitter->ModifyStyleEx(WS_EX_CLIENTEDGE, 0, SWP_FRAMECHANGED);
 #endif
 
+		m_pFolderSplitter->SetNotifyFrame(this); //for setting focus in pane
+		
 		m_pThreadSplitter = (CMailNewsSplitter *) RUNTIME_CLASS(CMailNewsSplitter)->CreateObject();
         ASSERT(m_pThreadSplitter); 
 
@@ -472,6 +549,8 @@ BOOL C3PaneMailFrame::OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pCont
 								 WS_BORDER|WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS,
 								 CRect(0,0,0,0), m_pFolderSplitter, 99, pContext ); 
 #endif
+		m_pThreadSplitter->SetNotifyFrame(this); //for loading message when pane opens
+		m_pThreadSplitter->SetLoadMessage(TRUE); //for loading message when pane opens
 
 		m_pMessageView = (CMessageView *) RUNTIME_CLASS(CMessageView)->CreateObject();
 #ifdef _WIN32
@@ -523,8 +602,6 @@ BOOL C3PaneMailFrame::OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pCont
 		DOWNCAST(CMessageOutliner, m_pOutliner)->SetNews(m_bNews);
 		m_pOutlinerParent->CreateColumns ( );
 
-		m_pMessagePane = MSG_CreateMessagePane( pWinCX->GetContext(), m_pMaster );
-
 		int32 prefInt = -1;
 		PREF_GetIntPref("mailnews.3pane_thread_height", &prefInt);
 		m_pThreadSplitter->AddPanes(m_pOutlinerParent, m_pMessageView, prefInt, FALSE);
@@ -533,12 +610,11 @@ BOOL C3PaneMailFrame::OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pCont
 		PREF_GetIntPref("mailnews.3pane_folder_width", &prefInt);
 		m_pFolderSplitter->AddPanes(m_pFolderOutlinerParent, m_pThreadSplitter, prefInt);
 
+		CreateMessagePane();
 		CreateThreadPane();
-		MSG_SetFEData( m_pFolderPane, (LPVOID) (LPUNKNOWN) (LPMSGLIST) this );
-		MSG_SetFEData( m_pMessagePane, (LPVOID) (LPUNKNOWN) (LPMSGLIST) this );
-		MSG_SetMessagePaneCallbacks(m_pMessagePane, &MsgPaneCB, NULL);
 
 		m_pOutlinerParent->SetFocus();
+		m_pFocusWnd = m_pOutliner;
 
 		// Don't call CMsgListFrame, since we create our list
 		// differently
@@ -562,7 +638,11 @@ BEGIN_MESSAGE_MAP(C3PaneMailFrame, CMailNewsFrame)
 	ON_WM_CREATE()
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
+	ON_WM_SETFOCUS()
  
+	// File Menu Items
+	ON_COMMAND(ID_FILE_EMPTYTRASHFOLDER, OnEmptyTrash)
+
 	// Edit Menu Items
     ON_COMMAND(ID_EDIT_UNDO, OnEditUndo)
     ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
@@ -572,12 +652,14 @@ BEGIN_MESSAGE_MAP(C3PaneMailFrame, CMailNewsFrame)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTMARKEDMESSAGES, OnUpdateSelectFlagged)
 	ON_COMMAND(ID_EDIT_SELECTALL, OnSelectAll)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTALL, OnUpdateSelectAll)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_PROPERTIES, OnUpdateProperties)
-	ON_COMMAND(ID_VIEW_PROPERTIES,OnEditProperties)
+	ON_COMMAND(ID_EDIT_DELETE_3PANE, OnDeleteFrom3Pane)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE_3PANE, OnUpdateDeleteFrom3Pane)
 
 	// View Menu Items
 	ON_COMMAND(ID_VIEW_MESSAGE, OnViewMessage)		 
 	ON_UPDATE_COMMAND_UI(ID_VIEW_MESSAGE, OnUpdateViewMessage)
+	ON_COMMAND(ID_VIEW_FOLDER, OnViewFolder)	
+	ON_UPDATE_COMMAND_UI(ID_VIEW_FOLDER, OnUpdateViewFolder)
 
 	// Message Menu Items
 #ifdef ON_COMMAND_RANGE
@@ -602,7 +684,6 @@ BEGIN_MESSAGE_MAP(C3PaneMailFrame, CMailNewsFrame)
 	ON_COMMAND(ID_NAVIGATE_CONTAINER, OnContainer )
 	ON_UPDATE_COMMAND_UI( ID_MESSAGE_FILE, OnUpdateFile )
 	ON_COMMAND(ID_FILE_OPENFOLDER, OnOpenNewFrame )
-	ON_COMMAND(ID_VIEW_FOLDER, OnViewFolder)	
 
 	ON_COMMAND(ID_HOTLIST_ADDCURRENTTOHOTLIST, OnFileBookmark)
 	ON_UPDATE_COMMAND_UI(ID_HOTLIST_ADDCURRENTTOHOTLIST, OnUpdateFileBookmark)
@@ -619,9 +700,43 @@ BEGIN_MESSAGE_MAP(C3PaneMailFrame, CMailNewsFrame)
 	ON_UPDATE_COMMAND_UI(ID_PRIORITY_HIGHEST, OnUpdatePriority)
 
 	ON_COMMAND(ID_DONEGETTINGMAIL, OnDoneGettingMail)
+
+	ON_MESSAGE(TB_FILLINTOOLTIP, OnFillInToolTip)
+	ON_MESSAGE(TB_FILLINSTATUS, OnFillInToolbarButtonStatus)
+
 END_MESSAGE_MAP()
 
+void C3PaneMailFrame::HandleGetNNNMessageMenuItem()
+{
+	//News needs to have Get Next N messages and mail doesn't.
+	CMenu *pMainMenu = GetMenu();
 
+	if(pMainMenu)
+	{
+		CMenu *pFileMenu = pMainMenu->GetSubMenu(0);
+
+		if(pFileMenu)
+		{
+			if(!m_bNews)
+			{
+				pFileMenu->RemoveMenu(ID_FILE_GETNEXT, MF_BYCOMMAND);
+			}
+			else
+			{
+				int nGetNNNMessagePosition = WFE_FindMenuItem(pFileMenu, ID_FILE_GETNEXT);
+				if(nGetNNNMessagePosition == -1)
+				{
+					int nGetMessagePosition = WFE_FindMenuItem(pFileMenu, ID_FILE_GETNEWMAIL);
+					if(nGetMessagePosition != -1)
+					{
+						pFileMenu->InsertMenu(nGetMessagePosition + 1, MF_BYPOSITION, ID_FILE_GETNEXT);
+
+					}
+				}
+			}
+		}
+	}
+}
 void C3PaneMailFrame::SwitchUI( )
 {
 
@@ -651,15 +766,17 @@ void C3PaneMailFrame::SwitchUI( )
 					DWORD dwButtonStyle = 0;
 
 					switch (aidButtons[i]) {
-					case ID_MESSAGE_REPLYBUTTON:
 					case ID_MESSAGE_MARKBUTTON:
 						dwButtonStyle |= TB_HAS_IMMEDIATE_MENU;
 						break;
 
+					case ID_MESSAGE_REPLYBUTTON:
 					case ID_MESSAGE_NEXTUNREAD:
 						dwButtonStyle |= TB_HAS_TIMED_MENU;
 						break;
-
+					case ID_EDIT_DELETE_3PANE:
+						dwButtonStyle |= TB_DYNAMIC_TOOLTIP | TB_DYNAMIC_STATUS;
+						break;
 					case ID_NAVIGATE_MSG_BACK:
 						break;
 					default:
@@ -696,6 +813,8 @@ void C3PaneMailFrame::SwitchUI( )
 	}
 #endif
 }
+
+
 
 void C3PaneMailFrame::SetIsNews( BOOL bNews )
 {
@@ -804,7 +923,6 @@ void C3PaneMailFrame::DoNavigate( MSG_MotionType msgCommand )
 				switch ( msgCommand ) {
 				case MSG_NextFolder:
 				case MSG_NextUnreadGroup:
-					LoadFolder(pFolderInfo);
 					break;
 				case MSG_Forward:
 				case MSG_Back:
@@ -813,6 +931,8 @@ void C3PaneMailFrame::DoNavigate( MSG_MotionType msgCommand )
 				default:
 					break;
 				}
+
+				LoadFolder(pFolderInfo, MSG_MESSAGEKEYNONE, actionNavigation);
 			}
 		} else if ( resultId != key && (int) resultIndex >= 0 &&
 					(int) resultIndex < m_pOutliner->GetTotalLines() ) {
@@ -844,6 +964,14 @@ void C3PaneMailFrame::DoUpdateNavigate( CCmdUI* pCmdUI, MSG_MotionType msgComman
 	}
 
 	pCmdUI->Enable( enable );
+}
+
+void C3PaneMailFrame::LoadFrameMenu(CMenu *pPopup, UINT nIndex)
+{
+	CGenericFrame::LoadFrameMenu(pPopup, nIndex);
+	//if it's the file menu we want to make sure it's correct
+	HandleGetNNNMessageMenuItem();
+
 }
 
 int C3PaneMailFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -947,6 +1075,7 @@ BOOL C3PaneMailFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLER
 			OnUpdateFile( pCmdUI );
 			return TRUE;
 		}
+
 	}
 	return CMsgListFrame::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
@@ -987,18 +1116,14 @@ void C3PaneMailFrame::OnDestroy()
 		MSG_FreeAttachmentList(m_pMessagePane, m_pAttachmentData);
 	m_pAttachmentData = NULL;
 
-	if (m_pMessagePane) {
-		// Since MSG_DestroyPane can result in notifications that
-		// we may attempt to act upon with the dying pane, NULL
-		// it out first
-		MSG_Pane *pTemp = m_pMessagePane;
-		m_pMessagePane = NULL;
-		MSG_DestroyPane( pTemp );
-	}
+	DestroyMessagePane();
+
 	if ( m_pFolderPane ) {
 		// Ditto...
 		MSG_Pane *pTemp = m_pFolderPane;
 		m_pFolderPane = NULL;
+		//otherwise folder pane sometimes gets accessed on quit
+		m_pFolderOutliner->SetPane(NULL);
 		MSG_DestroyPane( pTemp );
 	}
 
@@ -1010,6 +1135,14 @@ void C3PaneMailFrame::OnDestroy()
 		((CNetscapeView *)pView)->FrameClosing();
 
 	CMsgListFrame::OnDestroy();
+}
+
+void C3PaneMailFrame::OnSetFocus(CWnd* pOldWnd)
+{
+	CMsgListFrame::OnSetFocus(pOldWnd);
+	if (!m_pFocusWnd)
+		m_pFocusWnd = m_pOutliner;
+	m_pFocusWnd->SetFocus();
 }
 
 // Edit Menu Items
@@ -1047,6 +1180,9 @@ void C3PaneMailFrame::OnUpdateSelectFlagged( CCmdUI *pCmdUI )
 	pCmdUI->Enable( TRUE );
 }
 
+#define IS_IN_WINDOW(hParent,hChild)\
+	(((hParent) == (hChild)) || ::IsChild(hParent, hChild))
+
 void C3PaneMailFrame::OnSelectAll()
 {
 	HWND hwndFocus = ::GetFocus();
@@ -1062,6 +1198,8 @@ void C3PaneMailFrame::OnSelectAll()
 	UINT nID = IDS_MENU_ALL;
 
 	if (IS_IN_WINDOW(hwndOutliner, hwndFocus)) {
+		if (MSG_GetToggleStatus(m_pPane, MSG_SortByThread, NULL, 0) == MSG_Checked)
+			((CMessageOutliner*)m_pOutliner)->SelectAllMessages();
 		m_pOutliner->SelectRange( 0, -1, TRUE );
 	} else if (hwndView == hwndFocus){
 		LO_SelectAll(pContext->GetDocumentContext());
@@ -1092,81 +1230,29 @@ void C3PaneMailFrame::OnUpdateSelectAll( CCmdUI *pCmdUI )
 	pCmdUI->Enable(bEnable);
 }
 
-void C3PaneMailFrame::OnUpdateProperties(CCmdUI *pCmdUI)
+void C3PaneMailFrame::OnUpdateDeleteFrom3Pane(CCmdUI* pCmdUI)
 {
-	MSG_ViewIndex *indices = NULL;
-	int count = 0;
-	MSG_FolderLine folderLine;
+	if(IsThreadFocus() || IsMessageFocus())
+	{
+		OnUpdateDeleteMessage(pCmdUI);
 
-
-	if (pCmdUI)
-	{   
-		if (m_pFolderOutliner == GetFocus())
-		{
-			m_pFolderOutliner->GetSelection( indices, count );
-
-			if (indices && count)
-			{
-				MSG_FolderInfo *folderInfo = MSG_GetFolderInfo( m_pFolderPane, indices[0] );
-				MSG_GetFolderLineByIndex( m_pFolderPane, indices[0], 1, &folderLine );
-
-				//only make and add the pages if they selected a news group or category
-				if ( folderLine.flags & (MSG_FOLDER_FLAG_NEWSGROUP|MSG_FOLDER_FLAG_CATEGORY) )
-				{
-					pCmdUI->Enable(TRUE);
-					return;
-				}
-			}
-		}
 	}
-	pCmdUI->Enable(FALSE);
+	else
+	{
+		OnUpdateDeleteFolder(pCmdUI);
+	}
 }
 
-void C3PaneMailFrame::OnEditProperties()
+void C3PaneMailFrame::OnDeleteFrom3Pane()
 {
-	MSG_ViewIndex *indices = NULL;
-	int count = 0;
-	MSG_FolderLine folderLine;
-
-	if (m_pFolderOutliner)
-		m_pFolderOutliner->GetSelection( indices, count );
-
-	if (indices && count)
+	if(IsThreadFocus() || IsMessageFocus())
 	{
-		MSG_FolderInfo *folderInfo = MSG_GetFolderInfo( m_pFolderPane, indices[0] );
-		MSG_GetFolderLineByIndex( m_pFolderPane, indices[0], 1, &folderLine );
-
-		CNewsFolderPropertySheet FolderSheet( szLoadString(IDS_NEWSGROUPPROP), this );
-		//destructor handles clean up of added sheets
-
-		//only make and add the pages if they selected a news group or category
-		if ( folderLine.flags & (MSG_FOLDER_FLAG_NEWSGROUP|MSG_FOLDER_FLAG_CATEGORY) )
-		{
-			FolderSheet.m_pNewsFolderPage= new CNewsGeneralPropertyPage(&FolderSheet);
-			FolderSheet.m_pNewsFolderPage->SetFolderInfo( folderInfo, (MWContext*)GetContext() );
-
-			FolderSheet.m_pDownLoadPageNews = new CDownLoadPPNews(&FolderSheet);
-			FolderSheet.m_pDownLoadPageNews->SetFolderInfo(folderInfo);
-
-			FolderSheet.m_pDiskSpacePage = new CDiskSpacePropertyPage(&FolderSheet);
-			FolderSheet.m_pDiskSpacePage->SetFolderInfo (folderInfo );
-
-			FolderSheet.AddPage(FolderSheet.m_pNewsFolderPage);
-			FolderSheet.AddPage(FolderSheet.m_pDownLoadPageNews);
-			FolderSheet.AddPage(FolderSheet.m_pDiskSpacePage);
-
-			if(FolderSheet.DoModal() == IDOK)
-			{
-				if(FolderSheet.DownLoadNow())
-				{
-				  new CProgressDialog(this, NULL,_ShutDownFrameCallBack,
-					folderInfo,szLoadString(IDS_DOWNLOADINGARTICLES));
-					;//DonwLoad!!!!!!!
-				}
-				else if (FolderSheet.SynchronizeNow())
-						;//Synchronize!!!! NOT IMPLEMENTED
-			}
-		}
+		OnDeleteMessage();
+	}
+	else
+	{
+		PrepareForDeleteFolder();
+		OnDeleteFolder();
 	}
 }
 
@@ -1216,12 +1302,46 @@ void C3PaneMailFrame::OnCopy(UINT nID)
 
 void C3PaneMailFrame::OnUpdateFile( CCmdUI *pCmdUI ) 
 {
+	//note you can get in here if m_nID == ID_MESSAGE_FILE or
+	//if in the move and copy ranges. So we have to make sure it
+	//works for all of those scenarios.
 	MSG_ViewIndex *indices;
 	int count;
 	m_pOutliner->GetSelection( indices, count );
 
-	BOOL bEnable = count > 0;
+		// find the desired effect
+	MSG_DragEffect request = (pCmdUI->m_nID >= FIRST_MOVE_MENU_ID && 
+			   pCmdUI->m_nID <= LAST_MOVE_MENU_ID) ? 
+			   MSG_Require_Move : MSG_Require_Copy;
 
+	// find the id
+	int nID = (request == MSG_Require_Move) ? 
+			   pCmdUI->m_nID - FIRST_MOVE_MENU_ID :
+			   pCmdUI->m_nID - FIRST_COPY_MENU_ID;
+
+
+	// get the folderInfo
+	MSG_FolderInfo *folderInfo = NULL;
+	MSG_DragEffect effect = MSG_Drag_Not_Allowed;
+
+	if(pCmdUI->m_nID != ID_MESSAGE_FILE &&
+	  (request == MSG_Require_Move && pCmdUI->m_nID >=FIRST_MOVE_MENU_ID 
+									&& pCmdUI->m_nID <=LAST_MOVE_MENU_ID) ||
+	   (request == MSG_Require_Copy && pCmdUI->m_nID >=FIRST_COPY_MENU_ID
+									&& pCmdUI->m_nID <=LAST_COPY_MENU_ID))
+	{
+		folderInfo = FolderInfoFromMenuID(pCmdUI->m_nID);
+	}
+
+	if(pCmdUI->m_nID != ID_MESSAGE_FILE && folderInfo)
+	{
+		effect = MSG_DragMessagesIntoFolderStatus(m_pPane,
+								NULL, 0, folderInfo, request);
+	}
+
+	BOOL bEnable = count > 0 && (pCmdUI->m_nID == ID_MESSAGE_FILE || 
+								(pCmdUI->m_pSubMenu || effect != MSG_Drag_Not_Allowed));
+//	BOOL bEnable = count > 0;
 	if (pCmdUI->m_pSubMenu) {
 	    pCmdUI->m_pMenu->EnableMenuItem(pCmdUI->m_nIndex,
 										MF_BYPOSITION |(bEnable ? MF_ENABLED : MF_GRAYED));
@@ -1237,17 +1357,21 @@ void C3PaneMailFrame::OnViewMessage()
 	if ( folderInfo ) {
 		if (m_pThreadSplitter->IsOnePaneClosed()) { 
 			CFolderFrame::SetFolderPref( folderInfo, MSG_FOLDER_PREF_ONEPANE );
+			m_pThreadSplitter->SetPaneSize(m_pOutlinerParent, m_pThreadSplitter->GetPreviousPaneSize());
+			SendMessage(WM_COMMAND, ID_MESSAGE_SELECT, 0);
+
 		} else {
 			CFolderFrame::ClearFolderPref( folderInfo, MSG_FOLDER_PREF_ONEPANE );
+			m_pThreadSplitter->SetPaneSize(m_pMessageView, 0);
 		}
 	}
 }
 
 void C3PaneMailFrame::OnUpdateViewMessage( CCmdUI *pCmdUI )
 {
-	pCmdUI->SetText( szLoadString( CASTUINT(m_pThreadSplitter->IsOnePaneClosed() ? 
-								   IDS_MENU_SHOWMESSAGE : IDS_MENU_HIDEMESSAGE )) );
+	pCmdUI->SetCheck(!m_pThreadSplitter->IsOnePaneClosed());
 	pCmdUI->Enable( TRUE );
+
 }
 
 void C3PaneMailFrame::OnViewFolder()
@@ -1258,7 +1382,26 @@ void C3PaneMailFrame::OnViewFolder()
 
 		MSG_FolderInfo *pFolderInfo = MSG_GetCurFolder(m_pPane);
 		UpdateFolderPane(pFolderInfo);
+
+		m_pFolderSplitter->SetPaneSize(m_pFolderOutlinerParent, m_pFolderSplitter->GetPreviousPaneSize());
+
 	}
+	else
+	{
+		m_pFolderSplitter->SetPaneSize(m_pFolderOutlinerParent , 0);
+
+	}
+
+
+
+}
+
+
+void C3PaneMailFrame::OnUpdateViewFolder( CCmdUI *pCmdUI )
+{
+	pCmdUI->SetCheck(!m_pFolderSplitter->IsOnePaneClosed());
+	pCmdUI->Enable( TRUE );
+
 }
 
 // Message Menu Items
@@ -1276,6 +1419,9 @@ void C3PaneMailFrame::OnUpdateIgnore(CCmdUI *pCmdUI)
 
 void C3PaneMailFrame::OnSelectFolder()
 {
+	if (m_bBlockingFolderSelection)
+		return;
+
 	MSG_FolderLine folderLine;
 	if (GetSelectedFolder(&folderLine))
 	{
@@ -1287,6 +1433,7 @@ void C3PaneMailFrame::OnSelectFolder()
 		MSG_FolderInfo *folderInfo = MSG_GetCurFolder(m_pPane);
 		if (folderLine.id == folderInfo)
 		{
+			m_pInfoBar->Update();
 			if (folderLine.total == m_pOutliner->GetTotalLines())
 				return;
 		}
@@ -1294,24 +1441,25 @@ void C3PaneMailFrame::OnSelectFolder()
 		pFrame = FindFrame(folderLine.id);
 		if (pFrame) 
 		{
-			pFrame->ActivateFrame();
-			// fix do next unread group selection problem
-			if (folderLine.total != m_pOutliner->GetTotalLines())
-				return;
-			// set selection back to original one when doing a double click
-			int nIndex = m_pFolderOutliner->GetCurrentSelected();
-			if (nIndex != -1)
-				m_pFolderOutliner->SelectItem(nIndex);
+			if (pFrame != this)
+			{
+				pFrame->ActivateFrame();
+				// set selection back to original one when doing a double click
+				int nIndex = m_pFolderOutliner->GetCurrentSelected();
+				if (nIndex != -1)
+				{
+					m_pFolderOutliner->SelectItem(nIndex);
+					m_pFolderOutliner->ScrollIntoView(nIndex);
+				}
+			}
 		}
 		else
-			LoadFolder(folderLine.id);
+			LoadFolder(folderLine.id, MSG_MESSAGEKEYNONE, m_actionOnLoad);
 	}
 	else
 	{
 		BlankOutThreadPane();
 		BlankOutMessagePane(NULL);
-		MSG_DestroyPane(m_pPane);
-		m_pPane = NULL;
 	}
 }
 
@@ -1403,7 +1551,12 @@ void C3PaneMailFrame::DoOpenMessage(BOOL bReuse)
 						pFrame->ActivateFrame();
 					}
 				}
-				m_pOutliner->SelectItem(((CMessageOutliner*)m_pOutliner)->GetCurrentSelected());
+				int nPreviousSel = ((CMessageOutliner*)m_pOutliner)->GetCurrentSelected();
+				if (-1 != nPreviousSel)
+				{
+					m_pOutliner->SelectItem(nPreviousSel);
+					m_pOutliner->ScrollIntoView(nPreviousSel);
+				}
 			}
 		}
 	}
@@ -1452,7 +1605,10 @@ void C3PaneMailFrame::OnOpenNewFrame()
 				{
 					int nIndex = m_pFolderOutliner->GetCurrentSelected();
 					if (nIndex != -1)
-					m_pFolderOutliner->SelectItem(nIndex);
+					{
+						m_pFolderOutliner->SelectItem(nIndex);
+						m_pFolderOutliner->ScrollIntoView(nIndex);
+					}
 				}
 			}
 		}
@@ -1571,6 +1727,24 @@ void C3PaneMailFrame::DoUndoNavigate( MSG_MotionType motionCmd )
 	}
 }
 
+// File Menu Items
+
+void C3PaneMailFrame::OnEmptyTrash()
+{
+	MSG_FolderLine folderLine;
+	MSG_FolderInfo *curFolderInfo = MSG_GetCurFolder( m_pPane );
+	if (MSG_GetFolderLineById(WFE_MSGGetMaster(), curFolderInfo, &folderLine)) 
+	{
+		if (folderLine.flags & MSG_FOLDER_FLAG_TRASH)
+		{
+			BlankOutThreadPane();
+			BlankOutMessagePane(curFolderInfo);
+		}
+	}
+
+	CMailNewsFrame::OnEmptyTrash();
+}
+
 // Edit Menu Items
 
 void C3PaneMailFrame::OnEditUndo()
@@ -1583,6 +1757,62 @@ void C3PaneMailFrame::OnEditRedo()
 {
     DoCommand(MSG_Redo);
 	DoUndoNavigate(MSG_EditRedo);
+}
+
+//lpttt->szText can only hold 80 characters
+#define MAX_TOOLTIP_CHARS 79
+//status can only hold 1000 characters 
+#define MAX_STATUS_CHARS 999
+
+LRESULT C3PaneMailFrame::OnFillInToolTip(WPARAM wParam, LPARAM lParam)
+{
+	HWND hwnd = (HWND)wParam;
+	LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT) lParam;
+
+	CToolbarButton *pButton = (CToolbarButton *)CWnd::FromHandle(hwnd);
+	UINT nCommand = pButton->GetButtonCommand();
+
+	const char * pText = "";
+	if(nCommand == ID_EDIT_DELETE_3PANE)
+	{
+		if(IsThreadFocus() || IsMessageFocus())
+		{
+			pText = szLoadString(IDS_DELETEMESSAGE_TOOLTIP);
+		}
+		else
+		{
+			pText = szLoadString(IDS_DELETEFOLDER_TOOLTIP);
+		}
+
+	}
+
+	strncpy(lpttt->szText, pText, MAX_TOOLTIP_CHARS);
+
+	return 1;
+}
+
+LRESULT C3PaneMailFrame::OnFillInToolbarButtonStatus(WPARAM wParam, LPARAM lParam)
+{
+	UINT nCommand = LOWORD(wParam);
+	char *pStatus = (char*)lParam;
+
+	const char * pText = "";
+
+	if(nCommand == ID_EDIT_DELETE_3PANE)
+	{
+		if(IsThreadFocus() || IsMessageFocus())
+		{
+			pText = szLoadString(IDS_DELETEMESSAGE_STATUS);
+		}
+		else
+		{
+			pText = szLoadString(IDS_DELETEFOLDER_STATUS);
+		}
+
+	}
+
+	strncpy(pStatus, pText, MAX_TOOLTIP_CHARS);
+	return 1;
 }
 
 void C3PaneMailFrame::SelectMessage( MessageKey key )
@@ -1603,8 +1833,22 @@ void C3PaneMailFrame::CreateThreadPane()
 		if (m_pOutliner)
 			m_pOutliner->SetPane(m_pPane);
 		MSG_SetFEData( m_pPane, (LPVOID) (LPUNKNOWN) (LPMSGLIST) this );
+#ifdef MOZ_NEWADDR
+		AB_SetShowPropertySheetForEntryFunc(m_pPane, ShowPropertySheetForEntry);
+#endif
 		if (m_pInfoBar)
 			m_pInfoBar->SetPane(m_pPane);
+	}
+}
+
+void C3PaneMailFrame::CreateMessagePane()
+{
+	m_pMessagePane = MSG_CreateMessagePane(GetMainContext()->GetContext(), m_pMaster );
+
+	if (m_pMessagePane)
+	{
+		MSG_SetFEData( m_pMessagePane, (LPVOID) (LPUNKNOWN) (LPMSGLIST) this );
+		MSG_SetMessagePaneCallbacks(m_pMessagePane, &MsgPaneCB, NULL);
 	}
 }
 
@@ -1626,6 +1870,8 @@ void C3PaneMailFrame::CreateFolderOutliner()
 	m_pFolderOutliner = DOWNCAST(CFolderOutliner, m_pFolderOutlinerParent->m_pOutliner);
 	m_pFolderOutlinerParent->CreateColumns ( );
 	m_pFolderOutliner->SetPane(m_pFolderPane);
+
+	MSG_SetFEData( m_pFolderPane, (LPVOID) (LPUNKNOWN) (LPMSGLIST) this );
 }
 
 void C3PaneMailFrame::UpdateFolderPane(MSG_FolderInfo *pFolderInfo)
@@ -1658,12 +1904,44 @@ BOOL C3PaneMailFrame::GetSelectedFolder(MSG_FolderLine* pFolderLine)
 		else
 		{
 			int nIndex = m_pFolderOutliner->GetCurrentSelected();
-			indices[0] = nIndex;
-			if (MSG_GetFolderLineByIndex(m_pFolderPane, indices[0], 1, pFolderLine)) 
-				return TRUE;
+			if (count == 0)
+			{
+				indices[0] = nIndex;
+				if (MSG_GetFolderLineByIndex(m_pFolderPane, indices[0], 1, pFolderLine)) 
+					return TRUE;
+			}
+			else
+			{
+				ASSERT(m_pPane);
+				if (m_pPane)
+				{
+					MSG_FolderInfo *pFolderInfo = MSG_GetCurFolder( m_pPane );
+					if (pFolderInfo && MSG_GetFolderLineById(m_pMaster, pFolderInfo, pFolderLine)) 
+						return TRUE;
+				}
+			}
 		}
 	}
 	return FALSE;
+}
+
+void C3PaneMailFrame::PrepareForDeleteFolder()
+{
+	MSG_FolderLine folderLine;
+	if (GetSelectedFolder(&folderLine))
+	{
+		BlankOutMessagePane(folderLine.id);
+		DestroyMessagePane();
+		CreateMessagePane();
+
+		BlankOutThreadPane();
+		MSG_Pane *pTemp = m_pPane;
+		m_pPane = NULL;
+		MSG_DestroyPane(pTemp);
+		CreateThreadPane();
+
+		m_bBlockingFolderSelection = TRUE;
+	}
 }
 
 void C3PaneMailFrame::BlankOutThreadPane()
@@ -1676,17 +1954,76 @@ void C3PaneMailFrame::BlankOutThreadPane()
 
 void C3PaneMailFrame::BlankOutMessagePane(MSG_FolderInfo *pFolderInfo)
 {
-	MSG_LoadMessage(m_pMessagePane, pFolderInfo, MSG_MESSAGEKEYNONE);
-	m_pChrome->SetDocumentTitle("");
-	m_pMessageView->SetAttachments(NULL, 0);
+	if (m_pMessagePane)
+	{
+		MSG_LoadMessage(m_pMessagePane, pFolderInfo, MSG_MESSAGEKEYNONE);
+		m_pChrome->SetDocumentTitle("");
+		m_pMessageView->SetAttachments(NULL, 0);
+	}
+}
+
+void C3PaneMailFrame::DestroyMessagePane()
+{
+	if (m_pMessagePane) {
+		// Since MSG_DestroyPane can result in notifications that
+		// we may attempt to act upon with the dying pane, NULL
+		// it out first
+		MSG_Pane *pTemp = m_pMessagePane;
+		m_pMessagePane = NULL;
+		MSG_DestroyPane( pTemp );
+	}
+}
+
+void C3PaneMailFrame::BlankOutRightPanes()
+{
+	MSG_FolderInfo *pCurFolderInfo = MSG_GetCurFolder( m_pPane );
+	if (pCurFolderInfo)
+		BlankOutMessagePane(pCurFolderInfo);
+	DestroyMessagePane();
+	CreateMessagePane();
+
+	BlankOutThreadPane();
+	MSG_Pane *pTemp = m_pPane;
+	m_pPane = NULL;
+	MSG_DestroyPane(pTemp);
+	CreateThreadPane();
+}
+
+void C3PaneMailFrame::CheckForChangeFocus()
+{
+	MSG_FolderInfo* pFolderInfo = NULL;
+	MSG_FolderLine folderLine;
+
+	if (m_pPane)
+		pFolderInfo = MSG_GetCurFolder(m_pPane);
+	if (m_pFolderOutliner && m_pFolderPane)
+	{
+		MSG_ViewIndex *indices;
+		int count = 0;
+
+		m_pFolderOutliner->GetSelection(indices, count);
+		if (count == 1)
+			MSG_GetFolderLineByIndex(m_pFolderPane, indices[0], 1, &folderLine);
+	}
+	if (!pFolderInfo || (pFolderInfo != folderLine.id))
+		m_pOutliner->SetFocus();
 }
 
 void C3PaneMailFrame::LoadFolder( MSG_FolderInfo *folderInfo, MessageKey key, int action )
 {
-	if (m_pPane) {
-		if ( key == MSG_MESSAGEKEYNONE ) {
+	MSG_FolderInfo *curFolderInfo = MSG_GetCurFolder( m_pPane );
+	if (curFolderInfo != folderInfo && m_pPane) 
+	{
+		//remember last message
+		MessageKey lastKey = GetCurMessage();
+		MSG_SetLastMessageLoaded(curFolderInfo, lastKey); 
+
+		if ( key == MSG_MESSAGEKEYNONE ) 
+		{
 			m_actionOnLoad = action;
-		} else {
+		} 
+		else 
+		{
 			m_actionOnLoad = actionSelectKey;
 			m_selPending = key;
 		}
@@ -1695,7 +2032,8 @@ void C3PaneMailFrame::LoadFolder( MSG_FolderInfo *folderInfo, MessageKey key, in
 
 		UIForFolder( folderInfo );
 
-		if (m_nLoadingFolder == 0) {
+		if (m_nLoadingFolder == 0) 
+		{
 			m_nLoadingFolder++; // FYI
 			m_pOutliner->BlockSelNotify(TRUE);
 		} 
@@ -1719,10 +2057,7 @@ MessageKey C3PaneMailFrame::GetCurMessage() const
 
 MSG_FolderInfo *C3PaneMailFrame::GetCurFolder() const
 {
-	if (m_pPane)
-		return MSG_GetCurFolder(m_pPane);
-	else
-		return NULL;
+	return m_pPane ? MSG_GetCurFolder( m_pPane ) : NULL;
 }
 
 LPCTSTR C3PaneMailFrame::GetWindowMenuTitle()
@@ -1802,6 +2137,18 @@ BOOL C3PaneMailFrame::FileBookmark()
 	}
 
 	return res;
+}
+
+void C3PaneMailFrame::SetFocusWindowBackToFrame()
+{
+	CWnd* pWnd = GetFocus();
+	if (m_pFocusWnd != pWnd)
+		m_pFocusWnd->SetFocus();
+}
+
+BOOL C3PaneMailFrame::MessageViewClosed()
+{
+	return m_pThreadSplitter->IsOnePaneClosed();
 }
 
 C3PaneMailFrame *C3PaneMailFrame::FindFrame( MSG_FolderInfo *folderInfo )

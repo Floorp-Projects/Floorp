@@ -53,7 +53,12 @@ public:
 		AB_LAST
   } GEN_TEXTF;
 #endif
+
+  static void textFValChgCallback(Widget, XtPointer, XtPointer);
+
 protected:
+  virtual void textFValChgCB(Widget, XtPointer);
+
   virtual void apply(){};
   virtual void getDlgValues();
 
@@ -67,6 +72,8 @@ private:
   Widget m_labels[AB_LAST+1];
   Widget m_notesTxt;
   Widget m_prefHTMLTog;
+
+  XP_Bool m_userDefined;
 
 }; /* XFE_ABNameGenTabView */
 

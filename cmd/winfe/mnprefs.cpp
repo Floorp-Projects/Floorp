@@ -17,6 +17,8 @@
  */
 
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "prefapi.h"
 #include "dialog.h"
 #include "msgcom.h"
@@ -38,6 +40,9 @@ extern "C" {
 #include "xpgetstr.h"
 #ifdef MOZ_MAIL_NEWS
 extern int MK_MSG_LOCAL_MAIL;
+extern int MK_MSG_SENT_L10N_NAME;  //Sent folder
+extern int MK_MSG_DRAFTS_L10N_NAME;
+extern int MK_MSG_TEMPLATES_L10N_NAME;
 #endif
 };
 
@@ -208,7 +213,7 @@ static BOOL UpdateMapiDll(BOOL prefUseMAPI, CWnd* pWnd)
 	return(TRUE);
 }
 
-static BOOL UpdateMapiDll(void)
+extern "C" BOOL UpdateMapiDll(void)
 {
 	XP_Bool prefUseMAPI = FALSE;
  	PREF_GetBoolPref("mail.use_mapi_server", &prefUseMAPI);
@@ -235,12 +240,12 @@ extern "C" MSG_Host *DoAddNewsServer(CWnd* pParent, int nFromWhere)
 	if (IDOK == addServerDialog.DoModal())
 	{
 		char* pName = addServerDialog.GetNewsHostName();
-		XP_Bool bSecure = addServerDialog.GetSecure();
+		XP_Bool bxxx = HG28751
 		XP_Bool bAuthentication = addServerDialog.GetAuthentication();
 		int32 nPort = addServerDialog.GetNewsHostPort();
 
 		MSG_NewsHost *pNewHost = MSG_CreateNewsHost(WFE_MSGGetMaster(), pName, 
-													bSecure, nPort);
+													bxxx, nPort);
 					 
 		if (pNewHost)
 		{
@@ -259,14 +264,10 @@ extern "C" MSG_Host *DoAddNewsServer(CWnd* pParent, int nFromWhere)
 extern "C" MSG_Host *DoAddIMAPServer(CWnd* pParent, char* pServerName, BOOL bImap)
 {
 	CString title;
-	title.LoadString(IDS_ADD_MAIL_SERVER);
+	title.LoadString(IDS_MAIL_SERVER_PROPERTY);
     CMailServerPropertySheet addMailServer(pParent, title, pServerName, TYPE_IMAP, FALSE);
-    if (IDOK == addMailServer.DoModal())
-	{
-		return NULL;
-	}
-	else
-		return NULL;
+    addMailServer.DoModal();
+	return NULL;
 }
 
 void UnixToDosString(char* pStr)
@@ -328,15 +329,15 @@ MSG_FolderInfo * GetFolderInfoFromPref(char* lpPref)
 				pURL = ConvertPathToURL(lpPref);
 				if (pURL)
 				{
-					pFolderInfo = MSG_GetFolderInfoFromURL(pMaster, pURL);
+					pFolderInfo = MSG_GetFolderInfoFromURL(pMaster, pURL, FALSE);
 					XP_FREE(pURL);
 				}
 			}
 			else
-				pFolderInfo = MSG_GetFolderInfoFromURL(pMaster, lpPref);
+				pFolderInfo = MSG_GetFolderInfoFromURL(pMaster, lpPref, FALSE);
 		}
 		else if (IMAP_TYPE_URL == nUrlType)
-			pFolderInfo = MSG_GetFolderInfoFromURL(pMaster, lpPref);
+			pFolderInfo = MSG_GetFolderInfoFromURL(pMaster, lpPref, FALSE);
 	}
 	return pFolderInfo;
 }
@@ -380,10 +381,28 @@ BOOL SetServerComboCurSel(HWND hControl, char* lpName, int nDefaultID)
 	if (nLen)
 	{
 		pFolder = GetFolderInfoFromPref(lpName);
-		MSG_GetFolderLineById (pMaster, pFolder, &folderLine);
-		if (!XP_FILENAMECMP(pDefaultName, folderLine.name))
+		if (pFolder)
 		{
-			bUseDefaultName = TRUE;
+			MSG_GetFolderLineById (pMaster, pFolder, &folderLine);
+			// We are checking against local mail directory or imap server
+			// versus any other folder by checking folderline level
+			// we should check the folder flag instead of folderline level
+			if (folderLine.level == 1 || (!XP_FILENAMECMP(pDefaultName, folderLine.name)))
+			{
+				bUseDefaultName = TRUE;
+			}
+		}
+		else
+		{	//Get folder path from URL
+			char* pFolderPath = NET_ParseURL(lpName, GET_PATH_PART);
+			if (pFolderPath)
+			{
+				if (XP_STRSTR(&pFolderPath[1], pDefaultName))
+				{
+					bUseDefaultName = TRUE;
+				}
+				XP_FREE(pFolderPath);
+			}
 		}
 		if (0 == nUrlType || MAILBOX_TYPE_URL == nUrlType)
 			bLocalMail = TRUE;
@@ -398,7 +417,10 @@ BOOL SetServerComboCurSel(HWND hControl, char* lpName, int nDefaultID)
 
 	if (bLocalMail)
 		pLocal = XP_GetString(MK_MSG_LOCAL_MAIL);
+
 	MSG_FolderInfo*  pHostFolderInfo = GetHostFolderInfo(pFolder);
+	char* pHost = NET_ParseURL(lpName, GET_HOST_PART);
+
 	int nCount = (int)SendMessage(hControl, CB_GETCOUNT, 0, 0);
 	for (int i = 0; i < nCount; i++ ) 
 	{
@@ -412,8 +434,6 @@ BOOL SetServerComboCurSel(HWND hControl, char* lpName, int nDefaultID)
 				nFolderIndex = i;
 				break;
 			}
-			nFolderIndex = (int)SendMessage(hControl, CB_FINDSTRING, (WPARAM)-1,
-											(LPARAM)(LPCSTR)pLocal);
 		}
 		else
 		{
@@ -422,9 +442,21 @@ BOOL SetServerComboCurSel(HWND hControl, char* lpName, int nDefaultID)
 				nFolderIndex = i;
 				break;
 			}
+			else if (!pHostFolderInfo && pHost)
+			{	//Get Host name	from URL
+				MSG_GetFolderLineById (pMaster, pFolderInfo, &folderLine);
+				if (!XP_FILENAMECMP(pHost, folderLine.name))
+				{
+					nFolderIndex = i;
+					break;
+				}
+			}
 		}
 	}
 	SendMessage(hControl, CB_SETCURSEL, nFolderIndex, 0);
+
+	if (pHost)
+		XP_FREE(pHost);
 
 	if (bUseDefaultName)
 		return TRUE;
@@ -439,16 +471,13 @@ extern "C" void GetFolderServerNames
 
 	int nLen = strlen(lpName);
 	if (nLen)
-	{
 		pFolderInfo = GetFolderInfoFromPref(lpName);
-	}
 	else
 	{
-		char* pDefault = XP_GetString(nDefaultID);
-
 		char defaultName[256];
 		int nLen = 255;
 
+		char* pDefault = XP_GetString(nDefaultID);
 		if (PREF_NOERROR == PREF_GetCharPref("mail.directory", defaultName, &nLen))
 		{
 			defaultName[nLen] = '\0';
@@ -463,16 +492,48 @@ extern "C" void GetFolderServerNames
 		MSG_Master* pMaster = WFE_MSGGetMaster();
 		MSG_FolderLine folderLine;
 		if (MSG_GetFolderLineById(pMaster, pFolderInfo, &folderLine)) 
-			folder = folderLine.name;
-
-		MSG_FolderInfo*  pHostFolderInfo = GetHostFolderInfo(pFolderInfo);
-		if (pHostFolderInfo)
 		{
-			if (MSG_GetFolderLineById(pMaster, pHostFolderInfo, &folderLine)) 
+			// We are checking against local mail directory or imap server
+			// versus any other folder by checking folderline level
+			// we should check the folder flag instead of folderline level
+			if (folderLine.level == 1)
+			{
+				folder = XP_GetString(nDefaultID);
 				server = folderLine.name;
+			}
+			else
+			{
+				folder = folderLine.name;
+
+				MSG_FolderInfo*  pHostFolderInfo = GetHostFolderInfo(pFolderInfo);
+				if (pHostFolderInfo)
+				{
+					if (MSG_GetFolderLineById(pMaster, pHostFolderInfo, &folderLine)) 
+						server = folderLine.name;
+				}
+				else
+					server = XP_GetString(MK_MSG_LOCAL_MAIL);
+			}
 		}
 		else
+		{
+			folder = XP_GetString(nDefaultID);
 			server = XP_GetString(MK_MSG_LOCAL_MAIL);
+		}
+	}
+	else
+	{	//Get Host name	from URL
+		char* pHost = NET_ParseURL(lpName, GET_HOST_PART);
+		if (pHost && strlen(pHost))
+		{
+			server = pHost;
+			XP_FREE(pHost);
+		}
+		else
+		{
+			server = XP_GetString(MK_MSG_LOCAL_MAIL);
+		}
+		folder = XP_GetString(nDefaultID);
 	}
 }
 
@@ -483,12 +544,26 @@ CChooseFolderDialog::CChooseFolderDialog(CWnd *pParent, char* pFolderPath, int n
 	: CDialog(IDD, pParent)
 {
 	m_pFolderPath =  pFolderPath;
-	m_nDefaultID = nTypeID;
+	m_nTypeID = nTypeID;
+
+	if (nTypeID == TYPE_SENTMAIL || nTypeID == TYPE_SENTNEWS)
+		m_nDefaultID = MK_MSG_SENT_L10N_NAME;
+	else if (nTypeID == TYPE_DRAFT)
+		m_nDefaultID = MK_MSG_DRAFTS_L10N_NAME;
+	else if (nTypeID == TYPE_TEMPLATE)
+		m_nDefaultID = MK_MSG_TEMPLATES_L10N_NAME;
 }
 
 BOOL CChooseFolderDialog::OnInitDialog()
 {
 	BOOL ret = CDialog::OnInitDialog();
+
+	if (m_nTypeID == TYPE_SENTNEWS)
+		SetDlgItemText(IDC_STATIC_TITLE, szLoadString(IDS_COPY_NEWS_MSG));
+	else if (m_nTypeID == TYPE_DRAFT)
+		SetDlgItemText(IDC_STATIC_TITLE, szLoadString(IDS_COPY_DRAFTS));
+	else if (m_nTypeID == TYPE_TEMPLATE)
+		SetDlgItemText(IDC_STATIC_TITLE, szLoadString(IDS_COPY_TEMPLATES));
 
 	CString formatString, defaultTitle;
 	formatString.LoadString(IDS_SPECIAL_FOLDER);
@@ -529,7 +604,19 @@ void CChooseFolderDialog::OnOK()
 		if (MSG_GetFolderLineById(pMaster, pFolder, &folderLine)) 
 			m_szServer = folderLine.name;
 		URL_Struct *url = MSG_ConstructUrlForFolder(NULL, pFolder);
-		m_szPrefUrl = url->address;
+		if (MK_MSG_SENT_L10N_NAME == m_nDefaultID && 
+			MAILBOX_TYPE_URL == NET_URL_Type(url->address))
+		{  //local mail
+			int nPos = strlen("mailbox:/");
+			m_szPrefUrl = &url->address[nPos];
+			LPTSTR pBuffer = m_szPrefUrl.GetBuffer(m_szPrefUrl.GetLength());
+			UnixToDosString(pBuffer);
+			m_szPrefUrl.ReleaseBuffer();
+		}
+		else
+		{	//imap
+			m_szPrefUrl = url->address; 
+		}
 	}
 	else if (IsDlgButtonChecked(IDC_RADIO_OTHER))
 	{
@@ -540,15 +627,27 @@ void CChooseFolderDialog::OnOK()
 			m_szFolder = folderLine.name;
 			MSG_FolderInfo*  pHostFolderInfo = GetHostFolderInfo(pFolder);
 			if (pHostFolderInfo)
-			{
+			{	//imap
 				if (MSG_GetFolderLineById(pMaster, pHostFolderInfo, &folderLine)) 
 					m_szServer = folderLine.name;
+				URL_Struct *url = MSG_ConstructUrlForFolder(NULL, pFolder);
+				m_szPrefUrl = url->address;
 			}
 			else
+			{	//local mail
 				m_szServer = XP_GetString(MK_MSG_LOCAL_MAIL);
-
-			URL_Struct *url = MSG_ConstructUrlForFolder(NULL, pFolder);
-			m_szPrefUrl = url->address;
+				URL_Struct *url = MSG_ConstructUrlForFolder(NULL, pFolder);
+				if (MK_MSG_SENT_L10N_NAME == m_nDefaultID)
+				{
+					int nPos = strlen("mailbox:/");
+					m_szPrefUrl = &url->address[nPos]; 
+					LPTSTR pBuffer = m_szPrefUrl.GetBuffer(m_szPrefUrl.GetLength());
+					UnixToDosString(pBuffer);
+					m_szPrefUrl.ReleaseBuffer();
+				}
+				else
+					m_szPrefUrl = url->address;
+			}
 		}
 	}
 
@@ -577,11 +676,32 @@ void CChooseFolderDialog::OnNewFolder()
 				break;
 			}
 		}
+		OnSelectFolder(); //check the radio button
+	}
+}                                     
+
+void CChooseFolderDialog::OnSelectServer()
+{   
+	if (!IsDlgButtonChecked(IDC_RADIO_SENT))
+	{
+		CheckDlgButton(IDC_RADIO_SENT, TRUE);
+		CheckDlgButton(IDC_RADIO_OTHER, FALSE);
+	}
+}                                     
+
+void CChooseFolderDialog::OnSelectFolder()
+{   
+	if (!IsDlgButtonChecked(IDC_RADIO_OTHER))
+	{
+		CheckDlgButton(IDC_RADIO_OTHER, TRUE);
+		CheckDlgButton(IDC_RADIO_SENT, FALSE);
 	}
 }                                     
 
 BEGIN_MESSAGE_MAP(CChooseFolderDialog, CDialog)
     ON_BN_CLICKED(IDC_NEW_FOLDER, OnNewFolder)
+	ON_CBN_SELCHANGE(IDC_COMBO_SERVERS, OnSelectServer)
+	ON_CBN_SELCHANGE(IDC_COMBO_FOLDERS, OnSelectFolder)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -600,7 +720,7 @@ CNewsServerDialog::CNewsServerDialog(CWnd *pParent, const char* pName, int nFrom
 	m_pEditHost = pHost;
     if (pHost)
 	{
-		 m_bIsSecure = MSG_IsNewsHostSecure(pHost);
+		 HG28972
 		 m_lPort = MSG_GetNewsHostPort(pHost);
 		 m_bAuthentication = MSG_GetNewsHostPushAuth(pHost);
 	}
@@ -614,10 +734,10 @@ BOOL CNewsServerDialog::OnInitDialog()
 
 	sprintf(port, "%ld", m_lPort);
 	SetDlgItemText(IDC_EDIT_PORT, port);
+	title.LoadString(IDS_NEWS_SERVER_PROPERTY);
+	SetWindowText(LPCTSTR(title));
 	if (m_pEditHost)
 	{
-		title.LoadString(IDS_NEWS_SERVER_PROPERTY);
-		SetWindowText(LPCTSTR(title));
 		SetDlgItemText(IDC_STATIC_HOST, MSG_GetNewsHostName(m_pEditHost));
 		GetDlgItem(IDC_EDIT_HOST)->ShowWindow(SW_HIDE);
 
@@ -629,8 +749,6 @@ BOOL CNewsServerDialog::OnInitDialog()
 	}
 	else
 	{
-		title.LoadString(IDS_ADD_NEWS_SERVER);
-		SetWindowText(LPCTSTR(title));
 		GetDlgItem(IDC_STATIC_HOST)->ShowWindow(SW_HIDE);
 	#ifdef _WIN32
 		((CEdit*)GetDlgItem(IDC_EDIT_HOST))->SetLimitText(MAX_HOSTNAME_LEN - 1);
@@ -686,9 +804,7 @@ void CNewsServerDialog::OnOK()
 	}
 	else
 	{
-		if (m_bIsSecure)
-			m_lPort = SECURE_NEWS_PORT;
-		else
+		HG29172
 			m_lPort = NEWS_PORT;
 	}
 	if (IsDlgButtonChecked(IDC_USE_NAME))	// Authentication
@@ -750,16 +866,22 @@ BOOL CNewsServerDialog::NewsHostExists()
 
 BOOL CNewsServerDialog::IsSameServer(MSG_Host *pHost)
 {	
-	XP_Bool bIsSecure = IsDlgButtonChecked(IDC_SECURE);
+	const char* pHostName = NULL;
+
+	HG98271
 	int32 lEditPort = GetPortNumber();
-	const char* pHostName = MSG_GetNewsHostName((MSG_NewsHost*)pHost);
-	if (0 == lstrcmp(m_hostName, pHostName))
+	MSG_NewsHost* pNewsHost = MSG_GetNewsHostFromMSGHost(pHost);
+	if (pNewsHost)
 	{
-		XP_Bool bSecure = MSG_IsNewsHostSecure((MSG_NewsHost*)pHost);
-		int32 lPort = MSG_GetNewsHostPort((MSG_NewsHost*)pHost);
-		if (bIsSecure == bSecure && lEditPort == lPort)
-			return TRUE;
-	}  
+		pHostName = MSG_GetNewsHostName(pNewsHost);
+		if (0 == lstrcmp(m_hostName, pHostName))
+		{
+			HG27851
+			int32 lPort = MSG_GetNewsHostPort(pNewsHost);
+			if (HG98261 lEditPort == lPort)
+				return TRUE;
+		}  
+	}
 	return FALSE;
 }
 
@@ -775,26 +897,9 @@ int32 CNewsServerDialog::GetPortNumber()
 
 void CNewsServerDialog::OnCheckSecure() 
 {
-	char port[16];
-	if (IsDlgButtonChecked(IDC_SECURE))
-		m_bIsSecure = TRUE;
-	else
-		m_bIsSecure = FALSE;
-	if (GetDlgItemText(IDC_EDIT_PORT, port, 16) == 0)
-	{
-		if (m_bIsSecure)
-			SetDlgItemInt(IDC_EDIT_PORT, SECURE_NEWS_PORT);
-		else
-			SetDlgItemInt(IDC_EDIT_PORT, NEWS_PORT);
-	}
-	else
-	{
-		int32 lPort = GetPortNumber();
-		if (m_bIsSecure && lPort == NEWS_PORT)
-			SetDlgItemInt(IDC_EDIT_PORT, SECURE_NEWS_PORT);
-		else  if (!m_bIsSecure && lPort == SECURE_NEWS_PORT)
-			SetDlgItemInt(IDC_EDIT_PORT, NEWS_PORT);
-	}
+	SetDlgItemInt(IDC_EDIT_PORT, NEWS_PORT);
+	HG28768
+	
 }
 
 void CNewsServerDialog::OnHelp()
@@ -810,22 +915,6 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // IMAP pref stuff
-
-typedef enum
-{
-  CHAR_USERNAME,
-  BOOL_REMEMBER_PASSWORD,
-  BOOL_CHECK_NEW_MAIL,
-  INT_CHECK_TIME,
-  BOOL_OFFLINE_DOWNLOAD,
-  BOOL_MOVE_TO_TRASH,
-  BOOL_IS_SECURE,
-  CHAR_PERAONAL_DIR,
-  CHAR_PUBLIC_DIR,
-  CHAR_OTHER_USER_DIR,
-  BOOL_OVERRIDE_NAMESPACES
-
-}IMAP_PREF;
 
 
 static const char *kPrefTemplate = "mail.imap.server.%s.%s";
@@ -861,8 +950,8 @@ char* IMAP_GetPrefString(const char *pHostName, int nID)
 		PR_snprintf(pPrefName, prefSize, kPrefTemplate, pHostName, "offline_download");
 		break;
 
-	case BOOL_MOVE_TO_TRASH:
-		PR_snprintf(pPrefName, prefSize, kPrefTemplate, pHostName, "delete_is_move_to_trash");
+	case INT_DELETE_MODEL:
+		PR_snprintf(pPrefName, prefSize, kPrefTemplate, pHostName, "delete_model");
 		break;
 
 	case BOOL_IS_SECURE:
@@ -883,6 +972,14 @@ char* IMAP_GetPrefString(const char *pHostName, int nID)
 
 	case BOOL_OVERRIDE_NAMESPACES:
 		PR_snprintf(pPrefName, prefSize, kPrefTemplate, pHostName, "override_namespaces");
+		break;
+
+	case BOOL_EMPTY_TRASH_ON_EXIT:
+		PR_snprintf(pPrefName, prefSize, kPrefTemplate, pHostName, "empty_trash_on_exit");
+		break;
+
+	case BOOL_CLEANUP_INBOX_ON_EXIT:
+		PR_snprintf(pPrefName, prefSize, kPrefTemplate, pHostName, "cleanup_inbox_on_exit");
 		break;
 
 	default:
@@ -990,9 +1087,9 @@ CMailServerPropertySheet::CMailServerPropertySheet
 	if (pName && strlen(pName))
 		XP_STRCAT(m_hostName, pName);
 	if (nType == TYPE_IMAP)
-		m_bPop = FALSE;
+		m_bWasPop = m_bPop = FALSE;
 	else
-		m_bPop = TRUE;
+		m_bWasPop = m_bPop = TRUE;
 	m_bEdit = bEdit;
 	m_bBothType = bBothType;
 
@@ -1034,14 +1131,15 @@ CMailServerPropertySheet::~CMailServerPropertySheet()
 void CMailServerPropertySheet::SetMailHostName(char* pName)
 {
 	if (pName && strlen(pName))
+	{
+		m_hostName[0] = '\0';
 		XP_STRCAT(m_hostName, pName);
+	}
 }
 
 XP_Bool CMailServerPropertySheet::GetIMAPUseSSL()
 {
-	if (m_pIMAPPage && IsWindow(m_pIMAPPage->GetSafeHwnd()))
-		return m_pIMAPPage->GetUseSSL();
-	else
+	HG21675
 		return FALSE;
 }
 
@@ -1203,6 +1301,14 @@ void CMailServerPropertySheet::OnOK()
 
 void CMailServerPropertySheet::OnHelp()
 {
+	if (GetActivePage() == m_pGeneralPage)
+		NetHelp(HELP_MAILSERVER_PROPERTY_GENERAL);
+	else if (GetActivePage() == m_pPopPage)
+		NetHelp(HELP_MAILSERVER_PROPERTY_POP);
+	else if (GetActivePage() == m_pIMAPPage)
+		NetHelp(HELP_MAILSERVER_PROPERTY_IMAP);
+	else if (GetActivePage() == m_pAdvancedPage)
+		NetHelp(HELP_MAILSERVER_PROPERTY_ADVANCED);
 }
 
 BEGIN_MESSAGE_MAP(CMailServerPropertySheet, CPropertySheet)
@@ -1210,6 +1316,7 @@ BEGIN_MESSAGE_MAP(CMailServerPropertySheet, CPropertySheet)
     ON_WM_CREATE()
 #endif
 	ON_BN_CLICKED(IDOK, OnOK)
+	ON_BN_CLICKED(IDHELP, OnHelp)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1232,7 +1339,7 @@ BOOL CGeneralServerPage::OnInitDialog()
 	((CEdit*)GetDlgItem(IDC_EDIT_CHECK_MAIL))->LimitText(5);
 #endif
 
-	if (!m_szServerName.IsEmpty())
+	if (!m_pParent->IsPopServer() && !m_szServerName.IsEmpty())
 	{
 		SetDlgItemText(IDC_STATIC_MAIL_SERVER, szLoadString(IDS_MAIL_SERVER));
 		SetDlgItemText(IDC_STATIC_SERVER, LPCTSTR(m_szServerName));
@@ -1241,6 +1348,8 @@ BOOL CGeneralServerPage::OnInitDialog()
 	else
 	{
 		GetDlgItem(IDC_STATIC_SERVER)->ShowWindow(SW_HIDE);
+		if (!m_szServerName.IsEmpty())
+			SetDlgItemText(IDC_EDIT_SERVER, LPCTSTR(m_szServerName));
 	#ifdef _WIN32
 		((CEdit*)GetDlgItem(IDC_EDIT_SERVER))->SetLimitText(MAX_HOSTNAME_LEN - 1);
 	#else
@@ -1354,7 +1463,7 @@ BOOL CGeneralServerPage::ProcessOK()
     char userName[256];
     char text[MAX_DESCRIPTION_LEN];
 
-	if (m_szServerName.IsEmpty() && 
+	if ((m_szServerName.IsEmpty() || m_pParent->WasPopServer()) && 
 		0 == GetDlgItemText(IDC_EDIT_SERVER, name, MAX_HOSTNAME_LEN))
 	{
 		AfxMessageBox(IDS_EMPTY_STRING);
@@ -1380,8 +1489,11 @@ BOOL CGeneralServerPage::ProcessOK()
 			return FALSE;
 		}
 	}
-	if (m_szServerName.IsEmpty())
+	if (m_szServerName.IsEmpty() || m_pParent->WasPopServer())
+	{
+		m_szServerName = name;
 		m_pParent->SetMailHostName(name);
+	}
 	else
 		strncpy(name, LPCTSTR(m_szServerName), m_szServerName.GetLength());
 
@@ -1402,9 +1514,9 @@ BOOL CGeneralServerPage::ProcessOK()
 	}
 	else
 	{
-		if (!m_pParent->EditServer())
+		if (!m_pParent->EditServer() || m_pParent->WasPopServer())
 		{
-			XP_Bool bIsSecure = m_pParent->GetIMAPUseSSL();
+			XP_Bool bIsxxx = HG72866
 			XP_Bool bOverrideNamespaces = m_pParent->GetIMAPOverrideNameSpaces();
 			char personalDir[256];
 			char publicDir[256];
@@ -1415,12 +1527,12 @@ BOOL CGeneralServerPage::ProcessOK()
 
 			MSG_IMAPHost* pHost = MSG_CreateIMAPHost(WFE_MSGGetMaster(),
 											name,
-											bIsSecure, 
+											bIsxxx, 
 											userName,
 											bCheckMail,
 											nCheckTime,
 											bRememberPassword,
-											FALSE,
+											TRUE,
 											bOverrideNamespaces, 
 											personalDir,
 											publicDir, 
@@ -1444,6 +1556,10 @@ void CGeneralServerPage::OnChangeServerType()
 	if ((m_pParent->IsPopServer() && nType == TYPE_POP) ||
 		(!m_pParent->IsPopServer() && nType == TYPE_IMAP))
 		return;
+	if (nType == TYPE_POP)
+		m_pParent->SetPopServer(TRUE);
+	else
+		m_pParent->SetPopServer(FALSE);
 	m_pParent->ShowHidePages(nType);
 }
 
@@ -1508,29 +1624,49 @@ BOOL CIMAPServerPage::OnInitDialog()
 	BOOL ret = CPropertyPage::OnInitDialog();
 
 	XP_Bool bOfflineDownload = FALSE;
-	XP_Bool bMoveToTrash = FALSE;
-	XP_Bool bUseSSL = FALSE;
+	XP_Bool bxxx = FALSE;
+	XP_Bool bEmptyTrash = FALSE;
+	XP_Bool bCleanupInbox = FALSE;
+	int32 lDeleteModel = -1;
 
 	IMAP_GetBoolPref(LPCTSTR(m_szServerName), BOOL_OFFLINE_DOWNLOAD, &bOfflineDownload);
-	IMAP_GetBoolPref(LPCTSTR(m_szServerName), BOOL_MOVE_TO_TRASH, &bMoveToTrash);
-	IMAP_GetBoolPref(LPCTSTR(m_szServerName), BOOL_IS_SECURE, &bUseSSL);
+	
+	IMAP_GetBoolPref(LPCTSTR(m_szServerName), BOOL_EMPTY_TRASH_ON_EXIT, &bEmptyTrash);
+	IMAP_GetBoolPref(LPCTSTR(m_szServerName), BOOL_CLEANUP_INBOX_ON_EXIT, &bCleanupInbox);
+	IMAP_GetIntPref(LPCTSTR(m_szServerName), INT_DELETE_MODEL, &lDeleteModel);
 	CheckDlgButton(IDC_CHECK_IMAP_LOCAL, bOfflineDownload);
-	CheckDlgButton(IDC_CHECK_IMAP_TRASH, bMoveToTrash);
-	CheckDlgButton(IDC_CHECK_IMAP_SSL, bUseSSL);
+	
+	CheckDlgButton(IDC_CHECK_EMPTY_TRASH, bEmptyTrash);
+	CheckDlgButton(IDC_CHECK_EMPTY_INBOX, bCleanupInbox);
+	if (lDeleteModel == 0)
+		CheckDlgButton(IDC_RADIO_IMAP_DELETE, TRUE);
+	else if (lDeleteModel == 1)
+		CheckDlgButton(IDC_RADIO_MOVE_TO_TRASH, TRUE);
+	else if (lDeleteModel == 2)
+		CheckDlgButton(IDC_RADIO_REAL_DELETE, TRUE);
+	else 
+		CheckDlgButton(IDC_RADIO_MOVE_TO_TRASH, TRUE);
 
 	if (IMAP_PrefIsLocked(LPCTSTR(m_szServerName), BOOL_OFFLINE_DOWNLOAD)) 
 		GetDlgItem(IDC_CHECK_IMAP_LOCAL)->EnableWindow(FALSE);
-	if (IMAP_PrefIsLocked(LPCTSTR(m_szServerName), BOOL_MOVE_TO_TRASH)) 
-		GetDlgItem(IDC_CHECK_IMAP_TRASH)->EnableWindow(FALSE);
 	if (IMAP_PrefIsLocked(LPCTSTR(m_szServerName), BOOL_IS_SECURE)) 
 		GetDlgItem(IDC_CHECK_IMAP_SSL)->EnableWindow(FALSE);
-
+	if (IMAP_PrefIsLocked(LPCTSTR(m_szServerName), BOOL_EMPTY_TRASH_ON_EXIT)) 
+		GetDlgItem(IDC_CHECK_EMPTY_TRASH)->EnableWindow(FALSE);
+	if (IMAP_PrefIsLocked(LPCTSTR(m_szServerName), BOOL_CLEANUP_INBOX_ON_EXIT)) 
+		GetDlgItem(IDC_CHECK_EMPTY_INBOX)->EnableWindow(FALSE);
+	if (IMAP_PrefIsLocked(LPCTSTR(m_szServerName), INT_DELETE_MODEL)) 
+	{
+		GetDlgItem(IDC_RADIO_IMAP_DELETE)->EnableWindow(FALSE);
+		GetDlgItem(IDC_RADIO_MOVE_TO_TRASH)->EnableWindow(FALSE);
+		GetDlgItem(IDC_RADIO_REAL_DELETE)->EnableWindow(FALSE);
+	}
 	return ret;
 }
 
 XP_Bool CIMAPServerPage::GetUseSSL()
 {
-	return (IsDlgButtonChecked(IDC_CHECK_IMAP_SSL) == 0 ? FALSE : TRUE);
+	return (HG73221);
 }
 
 void CIMAPServerPage::DoDataExchange(CDataExchange* pDX)
@@ -1540,13 +1676,24 @@ void CIMAPServerPage::DoDataExchange(CDataExchange* pDX)
 
 BOOL CIMAPServerPage::ProcessOK()
 {
+	m_szServerName = m_pParent->GetMailHostName();
+
 	XP_Bool bOfflineDownload = IsDlgButtonChecked(IDC_CHECK_IMAP_LOCAL);
-	XP_Bool bMoveToTrash = IsDlgButtonChecked(IDC_CHECK_IMAP_TRASH);
-	XP_Bool bUseSSL = IsDlgButtonChecked(IDC_CHECK_IMAP_SSL);
+	HG73723
+	XP_Bool bEmptyTrash = IsDlgButtonChecked(IDC_CHECK_EMPTY_TRASH);
+	XP_Bool bCleanupInbox = IsDlgButtonChecked(IDC_CHECK_EMPTY_INBOX);
+	int nDeleteModel = 1;
+	if (IsDlgButtonChecked(IDC_RADIO_IMAP_DELETE))
+		nDeleteModel = 0;
+	else if (IsDlgButtonChecked(IDC_RADIO_MOVE_TO_TRASH))
+		nDeleteModel = 1;
+	else if (IsDlgButtonChecked(IDC_RADIO_REAL_DELETE))
+		nDeleteModel = 2;
 
 	IMAP_SetBoolPref(LPCTSTR(m_szServerName), BOOL_OFFLINE_DOWNLOAD, bOfflineDownload);
-	IMAP_SetBoolPref(LPCTSTR(m_szServerName), BOOL_MOVE_TO_TRASH, bMoveToTrash);
-	IMAP_SetBoolPref(LPCTSTR(m_szServerName), BOOL_IS_SECURE, bUseSSL);
+	IMAP_SetBoolPref(LPCTSTR(m_szServerName), BOOL_EMPTY_TRASH_ON_EXIT, bEmptyTrash);
+	IMAP_SetBoolPref(LPCTSTR(m_szServerName), BOOL_CLEANUP_INBOX_ON_EXIT, bCleanupInbox);
+	IMAP_SetIntPref(LPCTSTR(m_szServerName), INT_DELETE_MODEL, (int32)nDeleteModel);
 	return TRUE;
 }
 
@@ -1635,6 +1782,8 @@ void CIMAPAdvancedPage::DoDataExchange(CDataExchange* pDX)
 
 BOOL CIMAPAdvancedPage::ProcessOK()
 {
+	m_szServerName = m_pParent->GetMailHostName();
+
     char directory[256];
 	if (0 == GetDlgItemText(IDC_EDIT_IMAP_DIR, directory, 255))
 		IMAP_SetCharPref(LPCTSTR(m_szServerName), CHAR_PERAONAL_DIR, "");

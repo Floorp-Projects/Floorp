@@ -36,43 +36,15 @@
 
 
 #include "mozilla.h"
-#include "xfe.h"
-#include "menu.h"
-#include "outline.h"
-#include "felocale.h"
-#include "xlate.h"
-#include "addrbook.h"
 #include "xp_file.h"
-#include "intl_csi.h"
-
-/* Kludge around conflicts between Motif and xp_core.h... */
-#undef Bool
-#define Bool char
-
-#include <Xfe/Xfe.h>			/* for xfe widgets and utilities */
-
-
-/* for XP_GetString() */
-#include <xpgetstr.h>
 #include "addrbk.h"
 
-#ifndef LDAP_PORT
-#define LDAP_PORT       389
-#endif
+#ifdef MOZ_MAIL_NEWS
 
 /* list of DIR_Server 
 */
 static ABook*       AddrBook = NULL; 
-static MWContext*   ABfeContext = NULL;
-
 extern ABook*       fe_GetABook(MWContext *); 
-extern void         fe_attach_dropfunc(Widget dropw, void* closure, 
-									   fe_dnd_Event type,
-									   fe_dnd_Source* source, 
-									   XEvent* event);
-
-#define XFE_CHUNK_SIZE   1024
-#define AB_DATA(context) ((context->type == MWContextAddressBook)?CONTEXT_DATA(context)->abdata:CONTEXT_DATA(context)->mailcomposer->abdata) 
 
 /*****************************************************
  * Actual code begins here 
@@ -157,3 +129,12 @@ void FE_InitAddrBook()
 void FE_CloseAddrBook() {
   AB_CloseAddressBook(&AddrBook);
 }
+
+#else
+extern XP_List* FE_GetDirServers()
+{
+  return 0 ;
+}
+
+#endif
+

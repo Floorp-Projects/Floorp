@@ -20,6 +20,7 @@
 #define _THRDFRM_H
 
 #include "mailfrm.h"
+#include "msgview.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // C3PaneMailFrame frame
@@ -38,6 +39,7 @@ protected:
 
 	int m_nLoadingFolder;
 	BOOL m_bDragCopying;
+	BOOL m_bBlockingFolderSelection;
 
 	BOOL m_bNoScrollHack;
 
@@ -51,12 +53,14 @@ protected:
 	CMailNewsSplitter *m_pFolderSplitter;
 	CMailNewsSplitter *m_pThreadSplitter;
 	CThreadStatusBar m_barStatus;
+	CWnd* m_pFocusWnd;
 
 	void UIForFolder( MSG_FolderInfo *folderInfo );
 	void DoOpenMessage(BOOL bReuse);
 	void BlankOutThreadPane();
 	void BlankOutMessagePane(MSG_FolderInfo *folderInfo = NULL);
-
+	void DestroyMessagePane();
+	void HandleGetNNNMessageMenuItem();
 // IMailFrame override
 	virtual void PaneChanged( MSG_Pane *pane, XP_Bool asynchronous, 
 							  MSG_PANE_CHANGED_NOTIFY_CODE, int32 value);
@@ -81,17 +85,20 @@ protected:
 
 	void CreateFolderOutliner();
 	void CreateThreadPane();
+	void CreateMessagePane();
 
 	virtual void SetSort( int idSort );
 
-	BOOL IsThreadFocus() const { return m_pOutliner && m_pOutliner == GetFocus(); }
-	BOOL IsMessageFocus() const;
+	BOOL IsThreadFocus() { return m_pOutliner && m_pOutliner == GetFocus(); }
+	BOOL IsMessageFocus() { return m_pMessageView && m_pMessageView->HasFocus(); }
 
 	virtual void DoUpdateNavigate( CCmdUI* pCmdUI, MSG_MotionType cmd );
 	virtual void DoNavigate( MSG_MotionType msgCommand );
 	virtual void DoPriority( MSG_PRIORITY priority );
 
 	virtual void GetMessageString( UINT nID, CString& rMessage ) const;
+
+	virtual void LoadFrameMenu(CMenu *pPopup, UINT nIndex);
 
 	// Helper
 	void DoUndoNavigate( MSG_MotionType msgCommand );
@@ -103,7 +110,10 @@ protected:
 #endif
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
+	afx_msg void OnSetFocus( CWnd* pOldWnd );
 
+	// File Menu Items
+	afx_msg void OnEmptyTrash ();
 	// Edit Menu Items
 	afx_msg void OnEditUndo();
 	afx_msg void OnEditRedo();
@@ -113,8 +123,9 @@ protected:
 	afx_msg void OnUpdateSelectFlagged( CCmdUI *pCmdUI );
 	afx_msg void OnSelectAll();
 	afx_msg void OnUpdateSelectAll( CCmdUI *pCmdUI );
-	afx_msg void OnEditProperties();
-	afx_msg void OnUpdateProperties( CCmdUI *pCmdUI );
+	afx_msg void OnUpdateDeleteFrom3Pane(CCmdUI* pCmdUI);
+	afx_msg void OnDeleteFrom3Pane();
+
 
 	// View Menu Items
 	afx_msg void OnViewMessage();
@@ -122,11 +133,13 @@ protected:
 	afx_msg void OnViewCategories();
 	afx_msg void OnUpdateViewCategories( CCmdUI *pCmdUI );
 	afx_msg void OnViewFolder();
+	afx_msg void OnUpdateViewFolder(CCmdUI *pCmdUI);
 
 	// Message Menu Items
 	afx_msg void OnMove( UINT nID );
 	afx_msg void OnCopy( UINT nID );
 	afx_msg void OnUpdateFile( CCmdUI *pCmdUI );
+
 	afx_msg void OnIgnore();
 	afx_msg void OnUpdateIgnore(CCmdUI *pCmdUI);
 
@@ -153,19 +166,32 @@ protected:
 	afx_msg void OnUpdatePriority( CCmdUI *pCmdUI );
 
 	afx_msg void OnDoneGettingMail();
+	afx_msg LRESULT OnFillInToolTip(WPARAM, LPARAM); 
+	afx_msg LRESULT OnFillInToolbarButtonStatus(WPARAM, LPARAM); 
+
+
 	DECLARE_MESSAGE_MAP()
 
 	void SelectMessage( MessageKey key );
-
 public:
 	~C3PaneMailFrame();
-
+ 
 	CMailNewsOutliner* GetFolderOutliner() { return m_pFolderOutliner; }
+	MSG_Pane* GetFolderPane() { return m_pFolderPane; }
+	void SetFocusWindow(CWnd* pWnd)  { m_pFocusWnd = pWnd;	}
 	void LoadFolder( MSG_FolderInfo *folderInfo, 
 					 MessageKey key = MSG_MESSAGEKEYNONE,
 					 int action = actionSelectFirst);
 	void UpdateFolderPane(MSG_FolderInfo *pFolderInfo);
 	BOOL GetSelectedFolder(MSG_FolderLine* pFolderLine);
+	void SetFocusWindowBackToFrame();
+	void BlankOutRightPanes();
+	void CheckForChangeFocus();
+	void BlockFolderSelection (BOOL block) { m_bBlockingFolderSelection = block; }
+	void PrepareForDeleteFolder();
+	void CheckFocusWindow(BOOL bUseTab = TRUE);
+	void CheckShiftKeyFocusWindow();
+	BOOL MessageViewClosed();
 
 	virtual MessageKey GetCurMessage() const;
 	virtual MSG_FolderInfo *GetCurFolder() const;

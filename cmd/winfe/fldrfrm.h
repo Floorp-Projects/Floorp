@@ -62,8 +62,6 @@ protected:
 	// View Menu Items
 	afx_msg void OnUpdateView();
 	afx_msg void OnUpdateUpdateView( CCmdUI *pCmdUI );
-	afx_msg void OnViewProperties();
-	afx_msg void OnUpdateViewProperties( CCmdUI *pCmdUI );
 
 	// Message Menu Items
 	afx_msg void OnMove( UINT nID );

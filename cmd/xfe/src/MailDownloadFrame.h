@@ -51,7 +51,7 @@ public:
 
 	virtual void app_delete_response();
 
-	virtual void allConnectionsComplete();
+	virtual void allConnectionsComplete(MWContext  *context = NULL);
 
  	virtual XFE_Logo *	getLogo			();
  	virtual void		configureLogo	();

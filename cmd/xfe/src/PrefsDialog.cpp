@@ -69,13 +69,21 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_CACHE                "Cache"
 #define CAT_PROXIES              "Proxies"
 #define CAT_MAILNEWS_IDENTITY    "Identity"
-#define CAT_MAILNEWS_COMPOSITION "Composition"
+#define CAT_MAILNEWS_MESSAGES    "Messages"
 #define CAT_MAILNEWS_MAILSERVER  "Mail Server"
-#define CAT_MAILNEWS_NEWSSERVER  "News Server"
-#define CAT_MAILNEWS_ADDRBOOK    "Address Book"
+#define CAT_MAILNEWS_NSERVER     "News Server"
+#define CAT_MAILNEWS_ADDRESS     "Addressing"
+#define CAT_MAILNEWS_COPIES      "Message Copies"
+#define CAT_MAILNEWS_HTML        "HTML Formatting"
+#define CAT_MAILNEWS_RECEIPTS    "Read Receipts"
 #define CAT_EDITOR_PUBLISH       "Publish"
 #define CAT_DISKSPACE            "Disk Space"
 #define CAT_EDITOR_APPEARANCE    "Appearance"
+#ifdef MOZ_LI
+#define CAT_LI    "Location Independence"
+#define CAT_LI_SERVER    "Location Independence Server"
+#define CAT_LI_FILES    "Location Independence Files"
+#endif /* MOZ_LI */
 #ifdef PREFS_UNSUPPORTED
 #define CAT_HELPFILES            "Help Files"
 #define CAT_OFFLINE_NEWS         "News"
@@ -89,10 +97,13 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESNAME_APPS                 "pref.applications"
 #define CAT_RESNAME_MAILNEWS             "pref.mailNews"
 #define CAT_RESNAME_MAILNEWS_IDENTITY    "pref.identity"
-#define CAT_RESNAME_MAILNEWS_COMPOSITION "pref.composition"
+#define CAT_RESNAME_MAILNEWS_MESSAGES    "pref.messages"
 #define CAT_RESNAME_MAILNEWS_MAILSERVER  "pref.mailServer"
-#define CAT_RESNAME_MAILNEWS_NEWSSERVER  "pref.newsServer"
-#define CAT_RESNAME_MAILNEWS_ADDRBOOK    "pref.addressBook"
+#define CAT_RESNAME_MAILNEWS_NSERVER     "pref.newsServer"
+#define CAT_RESNAME_MAILNEWS_ADDRESS     "pref.addressing"
+#define CAT_RESNAME_MAILNEWS_COPIES      "pref.copies"
+#define CAT_RESNAME_MAILNEWS_HTML        "pref.htmlmail"
+#define CAT_RESNAME_MAILNEWS_RECEIPTS    "pref.readreceipts"
 #define CAT_RESNAME_EDITOR               "pref.editor"
 #define CAT_RESNAME_EDITOR_PUBLISH       "pref.editorPublish"
 #define CAT_RESNAME_ADVANCED             "pref.advanced"
@@ -100,6 +111,11 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESNAME_PROXIES              "pref.proxies"
 #define CAT_RESNAME_DISKSPACE            "pref.diskSpace"
 #define CAT_RESNAME_EDITOR_APPEARANCE    "pref.editorAppearance"
+#ifdef MOZ_LI
+#define CAT_RESNAME_LI    "pref.liGeneral"
+#define CAT_RESNAME_LI_SERVER    "pref.liServer"
+#define CAT_RESNAME_LI_FILES    "pref.liFiles"
+#endif /* MOZ_LI */
 #ifdef PREFS_UNSUPPORTED
 #define CAT_RESNAME_HELPFILES            "pref.helpFiles"
 #define CAT_RESNAME_OFFLINE              "pref.offline"
@@ -114,10 +130,13 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESCLASS_APPS                 "Pref.Applications"
 #define CAT_RESCLASS_MAILNEWS             "Pref.MailNews"
 #define CAT_RESCLASS_MAILNEWS_IDENTITY    "Pref.Identity"
-#define CAT_RESCLASS_MAILNEWS_COMPOSITION "Pref.Composition"
+#define CAT_RESCLASS_MAILNEWS_MESSAGES    "Pref.Messages"
 #define CAT_RESCLASS_MAILNEWS_MAILSERVER  "Pref.MailServer"
-#define CAT_RESCLASS_MAILNEWS_NEWSSERVER  "Pref.NewsServer"
-#define CAT_RESCLASS_MAILNEWS_ADDRBOOK    "Pref.AddressBook"
+#define CAT_RESCLASS_MAILNEWS_NSERVER     "Pref.NewsServer"
+#define CAT_RESCLASS_MAILNEWS_ADDRESS     "Pref.Addressing"
+#define CAT_RESCLASS_MAILNEWS_COPIES      "Pref.Copies"
+#define CAT_RESCLASS_MAILNEWS_HTML        "Pref.HtmlMail"
+#define CAT_RESCLASS_MAILNEWS_RECEIPTS    "Pref.ReadReceipts"
 #define CAT_RESCLASS_EDITOR               "Pref.Editor"
 #define CAT_RESCLASS_EDITOR_PUBLISH       "Pref.EditorPublish"
 #define CAT_RESCLASS_ADVANCED             "Pref.Advanced"
@@ -125,6 +144,11 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESCLASS_PROXIES              "Pref.Proxies"
 #define CAT_RESCLASS_DISKSPACE            "Pref.DiskSpace"
 #define CAT_RESCLASS_EDITOR_APPEARANCE    "Pref.EditorAppearance"
+#ifdef MOZ_LI
+#define CAT_RESCLASS_LI    "Pref.liGeneral"
+#define CAT_RESCLASS_LI_SERVER    "Pref.liServer"
+#define CAT_RESCLASS_LI_FILES    "Pref.liFiles"
+#endif /* MOZ_LI */
 #ifdef PREFS_UNSUPPORTED
 #define CAT_RESCLASS_HELPFILES            "Pref.HelpFiles"
 #define CAT_RESCLASS_OFFLINE              "Pref.Offline"
@@ -139,10 +163,13 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESNAME_APPS                 "prefDesc.applications"
 #define DESC_RESNAME_MAILNEWS             "prefDesc.mailNews"
 #define DESC_RESNAME_MAILNEWS_IDENTITY    "prefDesc.identity"
-#define DESC_RESNAME_MAILNEWS_COMPOSITION "prefDesc.composition"
+#define DESC_RESNAME_MAILNEWS_MESSAGES    "prefDesc.messages"
 #define DESC_RESNAME_MAILNEWS_MAILSERVER  "prefDesc.mailServer"
-#define DESC_RESNAME_MAILNEWS_NEWSSERVER  "prefDesc.newsServer"
-#define DESC_RESNAME_MAILNEWS_ADDRBOOK    "prefDesc.addressBook"
+#define DESC_RESNAME_MAILNEWS_NSERVER     "prefDesc.newsServer"
+#define DESC_RESNAME_MAILNEWS_ADDRESS     "prefDesc.addressing"
+#define DESC_RESNAME_MAILNEWS_COPIES      "prefDesc.copies"
+#define DESC_RESNAME_MAILNEWS_HTML        "prefDesc.htmlMail"
+#define DESC_RESNAME_MAILNEWS_RECEIPTS    "prefDesc.readReceipts"
 #define DESC_RESNAME_EDITOR               "prefDesc.editor"
 #define DESC_RESNAME_EDITOR_PUBLISH       "prefDesc.editorPublish"
 #define DESC_RESNAME_ADVANCED             "prefDesc.advanced"
@@ -150,6 +177,11 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESNAME_PROXIES              "prefDesc.proxies"
 #define DESC_RESNAME_DISKSPACE            "prefDesc.diskSpace"
 #define DESC_RESNAME_EDITOR_APPEARANCE    "prefDesc.editorAppearance"
+#ifdef MOZ_LI
+#define DESC_RESNAME_LI    "prefDesc.liGeneral"
+#define DESC_RESNAME_LI_SERVER    "prefDesc.liServer"
+#define DESC_RESNAME_LI_FILES    "prefDesc.liFiles"
+#endif /* MOZ_LI */
 #ifdef PREFS_UNSUPPORTED
 #define DESC_RESNAME_HELPFILES            "prefDesc.helpFiles"
 #define DESC_RESNAME_OFFLINE              "prefDesc.offline"
@@ -164,10 +196,13 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESCLASS_APPS                 "PrefDesc.Applications"
 #define DESC_RESCLASS_MAILNEWS             "PrefDesc.MailNews"
 #define DESC_RESCLASS_MAILNEWS_IDENTITY    "PrefDesc.Identity"
-#define DESC_RESCLASS_MAILNEWS_COMPOSITION "PrefDesc.Composition"
+#define DESC_RESCLASS_MAILNEWS_MESSAGES    "PrefDesc.Messages"
 #define DESC_RESCLASS_MAILNEWS_MAILSERVER  "PrefDesc.MailServer"
-#define DESC_RESCLASS_MAILNEWS_NEWSSERVER  "PrefDesc.newsServer"
-#define DESC_RESCLASS_MAILNEWS_ADDRBOOK    "PrefDesc.AddressBook"
+#define DESC_RESCLASS_MAILNEWS_NSERVER     "PrefDesc.newsServer"
+#define DESC_RESCLASS_MAILNEWS_ADDRESS     "PrefDesc.Addressing"
+#define DESC_RESCLASS_MAILNEWS_COPIES      "PrefDesc.Copies"
+#define DESC_RESCLASS_MAILNEWS_HTML        "PrefDesc.HTMLMail"
+#define DESC_RESCLASS_MAILNEWS_RECEIPTS    "PrefDesc.readReceipts"
 #define DESC_RESCLASS_EDITOR               "PrefDesc.Editor"
 #define DESC_RESCLASS_EDITOR_PUBLISH       "PrefDesc.EditorPublish"
 #define DESC_RESCLASS_ADVANCED             "PrefDesc.Advanced"
@@ -175,6 +210,11 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESCLASS_PROXIES              "PrefDesc.Proxies"
 #define DESC_RESCLASS_DISKSPACE            "PrefDesc.DiskSpace"
 #define DESC_RESCLASS_EDITOR_APPEARANCE    "PrefDesc.EditorAppearance"
+#ifdef MOZ_LI
+#define DESC_RESCLASS_LI    "PrefDesc.liGeneral"
+#define DESC_RESCLASS_LI_SERVER    "PrefDesc.liServer"
+#define DESC_RESCLASS_LI_FILES    "PrefDesc.liFiles"
+#endif /* MOZ_LI */
 #ifdef PREFS_UNSUPPORTED
 #define DESC_RESCLASS_HELPFILES            "PrefDesc.HelpFiles"
 #define DESC_RESCLASS_OFFLINE              "PrefDesc.Offline"
@@ -190,10 +230,13 @@ typedef enum _prefsPageType {
 	PAGE_TYPE_APPS,
 	PAGE_TYPE_MAILNEWS,
 	PAGE_TYPE_MAILNEWS_IDENTITY,
-	PAGE_TYPE_MAILNEWS_COMPOSITION,
+	PAGE_TYPE_MAILNEWS_MESSAGES,
 	PAGE_TYPE_MAILNEWS_MAILSERVER,
-	PAGE_TYPE_MAILNEWS_NEWSSERVER,
-	PAGE_TYPE_MAILNEWS_ADDRBOOK,
+	PAGE_TYPE_MAILNEWS_NSERVER,
+    PAGE_TYPE_MAILNEWS_ADDRESS,
+	PAGE_TYPE_MAILNEWS_COPIES,
+	PAGE_TYPE_MAILNEWS_HTML,
+	PAGE_TYPE_MAILNEWS_RECEIPTS,
 	PAGE_TYPE_EDITOR,
 	PAGE_TYPE_EDITOR_APPEARANCE,
 	PAGE_TYPE_EDITOR_PUBLISH,
@@ -201,6 +244,12 @@ typedef enum _prefsPageType {
 	PAGE_TYPE_CACHE,
 	PAGE_TYPE_PROXIES,
 	PAGE_TYPE_DISKSPACE
+#ifdef MOZ_LI
+	,
+	PAGE_TYPE_LI,	
+	PAGE_TYPE_LI_SERVER,	
+	PAGE_TYPE_LI_FILES
+#endif
 #ifdef PREFS_UNSUPPORTED
 	PAGE_TYPE_HELPFILES
 	PAGE_TYPE_OFFLINE,
@@ -258,17 +307,6 @@ struct _prefsCategory prefsMailNews[] = {
 		PAGE_TYPE_MAILNEWS_IDENTITY,
 	},
 	{
-		CAT_MAILNEWS_COMPOSITION,
-		CAT_RESNAME_MAILNEWS_COMPOSITION,
-		CAT_RESCLASS_MAILNEWS_COMPOSITION,
-		DESC_RESNAME_MAILNEWS_COMPOSITION,
-		DESC_RESCLASS_MAILNEWS_COMPOSITION,
-		TRUE,  
-		NULL,
-		0,
-		PAGE_TYPE_MAILNEWS_COMPOSITION,
-	},
-	{
 		CAT_MAILNEWS_MAILSERVER, 
 		CAT_RESNAME_MAILNEWS_MAILSERVER, 
 		CAT_RESCLASS_MAILNEWS_MAILSERVER, 
@@ -280,27 +318,84 @@ struct _prefsCategory prefsMailNews[] = {
 		PAGE_TYPE_MAILNEWS_MAILSERVER,
 	},
 	{
-		CAT_MAILNEWS_NEWSSERVER, 
-		CAT_RESNAME_MAILNEWS_NEWSSERVER, 
-		CAT_RESCLASS_MAILNEWS_NEWSSERVER, 
-		DESC_RESNAME_MAILNEWS_NEWSSERVER, 
-		DESC_RESCLASS_MAILNEWS_NEWSSERVER, 
+		CAT_MAILNEWS_NSERVER, 
+		CAT_RESNAME_MAILNEWS_NSERVER, 
+		CAT_RESCLASS_MAILNEWS_NSERVER, 
+		DESC_RESNAME_MAILNEWS_NSERVER, 
+		DESC_RESCLASS_MAILNEWS_NSERVER, 
 		TRUE,  
 		NULL, 
 		0,
-		PAGE_TYPE_MAILNEWS_NEWSSERVER,
+		PAGE_TYPE_MAILNEWS_NSERVER,
 	},
 	{
-		CAT_MAILNEWS_ADDRBOOK,    
-		CAT_RESNAME_MAILNEWS_ADDRBOOK,    
-		CAT_RESCLASS_MAILNEWS_ADDRBOOK,    
-		DESC_RESNAME_MAILNEWS_ADDRBOOK,    
-		DESC_RESCLASS_MAILNEWS_ADDRBOOK,    
+		CAT_MAILNEWS_ADDRESS,    
+		CAT_RESNAME_MAILNEWS_ADDRESS,    
+		CAT_RESCLASS_MAILNEWS_ADDRESS,    
+		DESC_RESNAME_MAILNEWS_ADDRESS,    
+		DESC_RESCLASS_MAILNEWS_ADDRESS,    
 		TRUE,  
 		NULL,
 		0, 
-		PAGE_TYPE_MAILNEWS_ADDRBOOK,
+		PAGE_TYPE_MAILNEWS_ADDRESS,
 	},
+	{
+		CAT_MAILNEWS_MESSAGES,
+		CAT_RESNAME_MAILNEWS_MESSAGES,
+		CAT_RESCLASS_MAILNEWS_MESSAGES,
+		DESC_RESNAME_MAILNEWS_MESSAGES,
+		DESC_RESCLASS_MAILNEWS_MESSAGES,
+		TRUE,  
+		NULL,
+		0,
+		PAGE_TYPE_MAILNEWS_MESSAGES,
+	},
+	{
+        CAT_MAILNEWS_COPIES,
+        CAT_RESNAME_MAILNEWS_COPIES,
+        CAT_RESCLASS_MAILNEWS_COPIES,
+        DESC_RESNAME_MAILNEWS_COPIES,
+        DESC_RESNAME_MAILNEWS_COPIES,
+        TRUE,
+        NULL,
+        0,
+        PAGE_TYPE_MAILNEWS_COPIES,
+    },
+	{
+        CAT_MAILNEWS_HTML,
+        CAT_RESNAME_MAILNEWS_HTML,
+        CAT_RESCLASS_MAILNEWS_HTML,
+        DESC_RESNAME_MAILNEWS_HTML,
+        DESC_RESNAME_MAILNEWS_HTML,
+        TRUE,
+        NULL,
+        0,
+        PAGE_TYPE_MAILNEWS_HTML,
+    },
+	{
+        CAT_MAILNEWS_RECEIPTS,
+        CAT_RESNAME_MAILNEWS_RECEIPTS,
+        CAT_RESCLASS_MAILNEWS_RECEIPTS,
+        DESC_RESNAME_MAILNEWS_RECEIPTS,
+        DESC_RESNAME_MAILNEWS_RECEIPTS,
+        TRUE,
+        NULL,
+        0,
+        PAGE_TYPE_MAILNEWS_RECEIPTS,
+    },
+#ifdef MOZ_MAIL_NEWS
+	{
+		CAT_DISKSPACE,      
+		CAT_RESNAME_DISKSPACE,      
+		CAT_RESCLASS_DISKSPACE,      
+		DESC_RESNAME_DISKSPACE,      
+		DESC_RESCLASS_DISKSPACE,      
+		TRUE,
+		NULL,
+		0,
+		PAGE_TYPE_DISKSPACE,
+	},
+#endif // MOZ_MAIL_NEWS
 };
 
 struct _prefsCategory prefsEditor[] = {
@@ -420,6 +515,33 @@ struct _prefsCategory prefsAdvanced[] = {
 #endif /* PREFS_UNSUPPORTED */
 };
 
+#ifdef MOZ_LI
+struct _prefsCategory prefsLI[] = {
+	{
+		CAT_LI_SERVER,
+		CAT_RESNAME_LI_SERVER,      
+		CAT_RESCLASS_LI_SERVER,      
+		DESC_RESNAME_LI_SERVER,      
+		DESC_RESCLASS_LI_SERVER,      
+		TRUE,
+		NULL,
+		0,
+		PAGE_TYPE_LI_SERVER,
+	},
+	{
+		CAT_LI_FILES,
+		CAT_RESNAME_LI_FILES,
+		CAT_RESCLASS_LI_FILES,
+		DESC_RESNAME_LI_FILES,
+		DESC_RESCLASS_LI_FILES,
+		TRUE,
+		NULL,
+		0,
+		PAGE_TYPE_LI_FILES,
+	}
+};
+#endif /* MOZ_LI */
+
 struct _prefsCategory prefsCategories[] = {
 	{
 		CAT_APPEARANCE,     
@@ -469,6 +591,19 @@ struct _prefsCategory prefsCategories[] = {
 		PAGE_TYPE_MAILNEWS,
 	},
 #endif // MOZ_MAIL_NEWS
+#ifdef MOZ_LI
+	{
+		CAT_LI,
+		CAT_RESNAME_LI,
+		CAT_RESCLASS_LI,      
+		DESC_RESNAME_LI,      
+		DESC_RESCLASS_LI,      
+		FALSE,
+		prefsLI,
+		XtNumber(prefsLI),
+		PAGE_TYPE_LI,
+	},
+#endif /* MOZ_LI */
 #ifdef EDITOR
 	{
 		CAT_EDITOR,               
@@ -670,6 +805,19 @@ XFE_PrefsPage::XFE_PrefsPage(XFE_PrefsDialog *prefsDialog) :  // prefs dialog
 {
 	m_wPageForm = m_prefsDialog->getPageForm();
 	m_context = m_prefsDialog->getContext();
+}
+
+XFE_PrefsPage::XFE_PrefsPage(Widget w) :  // prefs dialog
+	m_context(0),
+	m_prefsDialog(0),
+	m_wPageForm(w),
+	m_wPage(0),
+	m_created(FALSE),
+	m_initialized(FALSE),
+	m_doInitInMap(FALSE),
+	m_changed(FALSE)
+{
+	m_wPageForm = w;
 }
 
 // Member:       ~XFE_PrefsPage
@@ -1290,9 +1438,12 @@ Dimension XFE_PrefsDialog::calculateWidth()
 	Dimension widest = 0;
 	Dimension width;
 
+    if (!m_pages) return 0;
 	for (int i = 0; i < m_numPages; i++) {
-		width = m_pages[i]->getWidth();
-		if (width > widest) widest = width;
+		if (m_pages[i]) {
+            width = m_pages[i]->getWidth();
+			if (width > widest) widest = width;
+		}
 	}
 	return widest;
 }
@@ -1308,8 +1459,10 @@ Dimension XFE_PrefsDialog::calculateHeight()
 	Dimension height;
 
 	for (int i = 0; i < m_numPages; i++) {
-		height = m_pages[i]->getHeight();
-		if (height > tallest) tallest = height;
+		if (m_pages[i]) {
+			height = m_pages[i]->getHeight();
+			if (height > tallest) tallest = height;
+		}
 	}
 	return tallest;
 }
@@ -1486,11 +1639,27 @@ void XFE_PrefsDialog::initCategories()
 	XrmValue     value;
 	char        *type = NULL;
 	int          i;
+#ifdef MOZ_LI
+	XP_Bool      li_ui_enabled = FALSE;
+#endif
 
 	if (m_categories) deleteCategories();
 
 	m_numCategories = XtNumber(prefsCategories);
 
+#ifdef MOZ_LI
+	/* If li.ui.enabled is false, we hide the LI prefs */
+	PREF_GetBoolPref("li.ui.enabled", &li_ui_enabled);
+	if ( li_ui_enabled == FALSE ) {
+		int found_it = 0;
+		for ( i = 0; i < m_numCategories; i++ ) {
+			if ( prefsCategories[i].type == PAGE_TYPE_LI ) found_it = 1;
+			if ( found_it ) prefsCategories[i] = prefsCategories[i+1];
+		}
+		m_numCategories--;
+	}
+#endif
+	
 	// Calculate the number of pages we have
 
 	m_numPages = 0;
@@ -1546,6 +1715,7 @@ void XFE_PrefsDialog::initCategories()
 
 			for (int j = 0; j < numChildren; j++) {
 				newPage(m_pages[page_index], prefs[j].type);
+
 				children[j].page = m_pages[page_index];
 				page_index++;
 				children[j].open = FALSE;
@@ -1652,8 +1822,8 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 	case PAGE_TYPE_MAILNEWS:
 		page = new XFE_PrefsPageMailNews(this);
 		break;
-	case PAGE_TYPE_MAILNEWS_COMPOSITION:
-		page = new XFE_PrefsPageMailNewsComposition(this);
+	case PAGE_TYPE_MAILNEWS_MESSAGES:
+		page = new XFE_PrefsPageMessages(this);
 		break;
 	case PAGE_TYPE_MAILNEWS_MAILSERVER:
 		page = new XFE_PrefsPageMailNewsMserver(this);
@@ -1661,8 +1831,23 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 	case PAGE_TYPE_MAILNEWS_NEWSSERVER:
 		page = new XFE_PrefsPageMailNewsNserver(this);
 		break;
+	case PAGE_TYPE_MAILNEWS_NSERVER:
+		page = new XFE_PrefsPageNServer(this);
+		break;
 	case PAGE_TYPE_MAILNEWS_ADDRBOOK:
 		page = new XFE_PrefsPageMailNewsAddrBook(this);
+        	break;
+        case PAGE_TYPE_MAILNEWS_ADDRESS:
+        	page = new XFE_PrefsPageAddress(this);
+        	break;
+	case PAGE_TYPE_MAILNEWS_COPIES:
+	    	page = new XFE_PrefsPageMailNewsCopies(this);
+		break;
+	case PAGE_TYPE_MAILNEWS_HTML:
+	    	page = new XFE_PrefsPageMailNewsHTML(this);
+		break;
+	case PAGE_TYPE_MAILNEWS_RECEIPTS:
+	    	page = new XFE_PrefsPageMailNewsReceipts(this);
 		break;
 #endif  // MOZ_MAIL_NEWS
 #ifdef EDITOR
@@ -1693,6 +1878,17 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 		page = new XFE_PrefsPageOfflineNews(this);
 		break;
 #endif /* PREFS_UNSUPPORTED */
+#ifdef MOZ_LI
+	case PAGE_TYPE_LI:
+		page = new XFE_PrefsPageLIGeneral(this);
+		break;
+	case PAGE_TYPE_LI_SERVER:
+		page = new XFE_PrefsPageLIServer(this);
+		break;
+	case PAGE_TYPE_LI_FILES:
+		page = new XFE_PrefsPageLIFiles(this);
+		break;
+#endif
 	}
 }
 
@@ -1877,7 +2073,7 @@ Boolean XFE_PrefsDialog::categoryDataFunc(Widget          /* widget */,
 			static char label[256];
 			data->type[dataColumn] = FE_OUTLINE_String;
 			if (entry->leaf) 
-				sprintf(label, "   %s", entry->categoryName);
+				PR_snprintf(label, sizeof(label),"   %s", entry->categoryName);
 			else
 				strcpy(label, entry->categoryName);
 			data->str[dataColumn] = label;

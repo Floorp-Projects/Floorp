@@ -481,6 +481,35 @@ BOOL CSaveCX::Creator()
     return(bRetval);
 }
 
+#ifdef MOZ_MAIL_NEWS
+void CSaveCX::AddFileExtension (char *& pFileName)
+{
+	char *ext = FE_FindFileExt(pFileName);
+
+	if (!ext) {
+		// get the mime content type 
+		char * pSuggestedType = MimeGetURLContentType(GetContext(),m_csAnchor);
+
+		if (pSuggestedType && *pSuggestedType) {
+			// Look up an extension
+			char aExt[_MAX_EXT];
+			DWORD dwFlags = 0;
+			size_t stExt = 0;
+
+			aExt[0] = '\0';
+#ifdef XP_WIN16
+			dwFlags |= EXT_DOT_THREE;
+#endif
+			stExt = EXT_Invent(aExt, sizeof(aExt), dwFlags, pFileName, pSuggestedType);
+			XP_FREE(pSuggestedType);
+			
+			if (stExt)
+				StrAllocCat (pFileName, aExt);
+		}
+	}
+}
+#endif // MOZ_MAIL_NEWS
+
 //	Determine if it's OK to create the dialog for the transfer.
 BOOL CSaveCX::CanCreate(URL_Struct* pUrl)	
 {
@@ -503,6 +532,11 @@ BOOL CSaveCX::CanCreate(URL_Struct* pUrl)
 
 #ifdef MOZ_MAIL_NEWS
 				char * pSuggested = MimeGuessURLContentName(GetContext(),m_csAnchor);
+  				// get the mime content type 
+ 				if (pSuggested && *pSuggested) {
+ 					// check if the file doesn't have an extension
+  				AddFileExtension(pSuggested);
+ 				}				
 				if (!pSuggested)
 #else
         char *            
@@ -646,13 +680,18 @@ BOOL CSaveCX::CanCreate(URL_Struct* pUrl)
 				int type = NET_URL_Type(pUrl->address);
 				// bug 63751 for Mail/News attachment
 				if ((type == MAILBOX_TYPE_URL) || (type == NEWS_TYPE_URL) || (type == IMAP_TYPE_URL))  
+				{
 	#ifdef XP_WIN16
 					pLocalName = GetMailNewsTempFileName(pLocalName, dosName);
 	#else 
 					pLocalName = GetMailNewsTempFileName(pLocalName);
 	#endif
+#ifdef MOZ_MAIL_NEWS
+					AddFileExtension( pLocalName );
+#endif
+				}
 				else	{
-					//  Retain the extension.
+				//  Retain the extension.
 					char aExt[_MAX_EXT];
 					DWORD dwFlags = 0;
 					size_t stExt = 0;
@@ -737,39 +776,42 @@ char* CSaveCX::GetMailNewsTempFileName(char* pTempPath, char *pFileName)
 #ifdef XP_WIN16
 	if (pFileName) {
 		pExt = FE_FindFileExt(pFileName);
-		*pExt = '\0';
+		if (pExt) *pExt = '\0';
 	}
 #endif
 
 	pExt = FE_FindFileExt(tempName);
-	strcpy(extension, pExt);
-	*pExt = '\0';
-
-    //  Get a name, If this file exists, then we attempt another temp file.
-    do {
-		char number[3];
-		int numLen;
-
-		nUniqueNo += 1;
-		numLen = sprintf(number, "%d", nUniqueNo);
-
-#ifdef XP_WIN16
+	if (pExt)
+	{
+		strcpy(extension, pExt);
 		*pExt = '\0';
-		if (strlen(pFileName) < (8 - numLen)) {
-			strcat(pExt, number);	//append if we can
-			*(pExt + numLen) = '\0';
-		}
-		else  {
-			strncpy((pExt - numLen), number, numLen);
-			*pExt = '\0';
-		}
-#else
-		strncpy(pExt, number, numLen);
-		*(pExt + numLen) = '\0';
-#endif
-        strcat(tempName, extension);
 
-    } while (-1 != _access(tempName, 0)); 
+		//  Get a name, If this file exists, then we attempt another temp file.
+		do {
+			char number[3];
+			int numLen;
+
+			nUniqueNo += 1;
+			numLen = sprintf(number, "%d", nUniqueNo);
+
+	#ifdef XP_WIN16
+			*pExt = '\0';
+			if (strlen(pFileName) < (8 - numLen)) {
+				strcat(pExt, number);	//append if we can
+				*(pExt + numLen) = '\0';
+			}
+			else  {
+				strncpy((pExt - numLen), number, numLen);
+				*pExt = '\0';
+			}
+	#else
+			strncpy(pExt, number, numLen);
+			*(pExt + numLen) = '\0';
+	#endif
+			strcat(tempName, extension);
+
+		} while (-1 != _access(tempName, 0)); 
+	}
 	
     if(pTempPath != NULL)  {
         XP_FREE(pTempPath);
@@ -1237,6 +1279,7 @@ CString CSaveCX::GetViewer() const
 class CSaveAttachmentStream {
 protected:
 	HGLOBAL m_hGlobal;
+	CFile *m_pFile;
 	int32 m_nPosition;
 	int32 m_nFileSize;
 	int32 m_nBufferSize;
@@ -1251,6 +1294,7 @@ protected:
 
 public:
 	CSaveAttachmentStream(MWContext *pContext, HGLOBAL hGlobal, LPCTSTR lpszUrl, LPCTSTR lpszTitle, BOOL *pbStatus);
+	CSaveAttachmentStream(MWContext *pContext, CFile *pFile, LPCTSTR lpszUrl, LPCTSTR lpszTitle, BOOL *pbStatus);
 	~CSaveAttachmentStream();
 
 	NET_StreamClass *GetStream() const { return m_pStream; }
@@ -1302,6 +1346,34 @@ CSaveAttachmentStream::CSaveAttachmentStream(MWContext *pContext, HGLOBAL hGloba
 	m_nBufferSize = ::GlobalSize(m_hGlobal);
 	m_nPosition = 0;
 	m_nFileSize = 0;
+	m_pFile = 0;
+
+	m_pStream = NET_NewStream("SaveAttachment",
+		AttachmentSaveWrite,
+		AttachmentSaveComplete,
+		AttachmentSaveAbort,
+		AttachmentSaveReady,
+		this,
+		pContext);
+
+	m_pbStatus = pbStatus;
+
+	if (m_pbStatus)
+		*m_pbStatus = TRUE;
+
+	m_mail_csid = 0;
+	m_win_csid = 0;
+	m_converter = NULL;
+	m_doConvert = FALSE;
+}
+
+CSaveAttachmentStream::CSaveAttachmentStream(MWContext *pContext, CFile *pFile, LPCTSTR lpszUrl, LPCTSTR lpszTitle, BOOL *pbStatus)
+{
+	m_hGlobal = 0;
+	m_nBufferSize = 0;
+	m_nPosition = 0;
+	m_nFileSize = 0;
+	m_pFile = pFile;
 
 	m_pStream = NET_NewStream("SaveAttachment",
 		AttachmentSaveWrite,
@@ -1380,21 +1452,28 @@ int CSaveAttachmentStream::Write(const char *lpBuf, int32 nCount)
 		}
 	}
 
-	if (m_nPosition + nCount > m_nBufferSize)
-		Grow(m_nPosition + nCount);
-
-	ASSERT(m_nPosition + nCount <= m_nBufferSize);
-
-	// Safety net
-	if (m_nPosition + nCount > m_nBufferSize)
+	if (m_pFile)
 	{
-		XP_FREEIF(newStr);
-		return 0;
+		m_pFile->Write(lpBuf, nCount);
 	}
+	else
+	{
+		if (m_nPosition + nCount > m_nBufferSize)
+			Grow(m_nPosition + nCount);
+		
+		ASSERT(m_nPosition + nCount <= m_nBufferSize);
+		
+		// Safety net
+		if (m_nPosition + nCount > m_nBufferSize)
+		{
+			XP_FREEIF(newStr);
+			return 0;
+		}
 
-	BYTE *lpBuffer = (BYTE *)::GlobalLock(m_hGlobal);
-	memcpy((BYTE*)lpBuffer + m_nPosition, (BYTE*)lpBuf, nCount);
-	::GlobalUnlock(m_hGlobal);
+		BYTE *lpBuffer = (BYTE *)::GlobalLock(m_hGlobal);
+		memcpy((BYTE*)lpBuffer + m_nPosition, (BYTE*)lpBuf, nCount);
+		::GlobalUnlock(m_hGlobal);
+	}
 
 	m_nPosition += nCount;
 	if (m_nPosition > m_nFileSize)
@@ -1406,10 +1485,18 @@ int CSaveAttachmentStream::Write(const char *lpBuf, int32 nCount)
 
 void CSaveAttachmentStream::Complete()
 {
-	BOOL res = SetSize(m_nFileSize);
+	if (m_pFile)
+	{
+		m_pFile->SetLength(m_nFileSize);
+		m_pFile->SeekToBegin();
+	}
+	else
+	{
+		BOOL res = SetSize(m_nFileSize);
 
-	if (m_pbStatus)
-		*m_pbStatus = res;
+		if (m_pbStatus)
+			*m_pbStatus = res;
+	}
 }
 
 void CSaveAttachmentStream::Abort(int iStatus)
@@ -1426,7 +1513,7 @@ BOOL CSaveAttachmentStream::Grow(int32 newLen)
 		int32 newBufferSize = m_nBufferSize;
 
 		// determine new buffer size
-		while (newBufferSize < newLen)
+		while ((int32)newBufferSize < newLen)
 			newBufferSize += 4096;
 
 		// allocate new buffer
@@ -1488,4 +1575,39 @@ BOOL CSaveCX::SaveToGlobal(HGLOBAL *phGlobal, LPCSTR lpszUrl, LPCSTR lpszTitle)
 
 	return bRes;
 }
+
+#ifdef MOZ_MAIL_NEWS
+BOOL CSaveCX::SaveToFile(CFile *pFile, LPCSTR lpszUrl, LPCSTR lpszTitle)
+{
+	//	Indirect constructor for serializing object.
+	BOOL bRes = TRUE;
+
+	if (!pFile) return FALSE;
+
+	//	Allocate the dialog.
+	CSaveCX *pSaveCX = new CSaveCX(lpszUrl, NULL, NULL);
+
+	pSaveCX->m_bSavingToGlobal = TRUE;
+	pSaveCX->m_csFileName = lpszTitle;
+
+	CSaveAttachmentStream *pStream = 
+		new CSaveAttachmentStream(pSaveCX->GetContext(), pFile, lpszUrl, lpszTitle, &bRes);
+
+	pSaveCX->SetSecondaryStream(pStream->GetStream());
+
+	if (pSaveCX->CanCreate()) {
+		pSaveCX->DoCreate();
+	} else {
+		return FALSE;
+	}
+
+    // XXX Note from gab:  Should use XP_IsContextInList and not block
+    //     here since pSaveCX could already be invalid.
+	FEU_BlockUntilDestroyed(pSaveCX->GetContextID());
+
+	delete pStream;
+
+	return bRes;
+}
+#endif
 

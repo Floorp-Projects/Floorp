@@ -32,6 +32,7 @@
 #include "wfemsg.h"
 #include "intl_csi.h"
 #include "fegui.h"
+#include "addrfrm.h" //for MOZ_NEWADDR
 #include "rdfglobal.h"
 
 #ifndef _AFXDLL
@@ -46,6 +47,10 @@ IMPLEMENT_DYNCREATE(CFolderView, COutlinerView)
 #define EXTRATEXT_SIZE	128
  
 extern "C" const char* FE_GetFolderDirectory(MWContext *pContext);
+
+#ifdef _WIN32
+extern "C" BOOL UpdateMapiDll(void);
+#endif
 
 int WFE_MSGTranslateFolderIcon( uint8 level, int32 iFlags, BOOL bOpen )
 {
@@ -79,8 +84,14 @@ int WFE_MSGTranslateFolderIcon( uint8 level, int32 iFlags, BOOL bOpen )
 						  IDX_TRASH, IDX_TRASHOPEN,
 						  IDX_TRASH, IDX_TRASHOPEN,
 						// 40
-						   IDX_TEMPLATE, IDX_TEMPLATEOPEN,
-						   IDX_TEMPLATE, IDX_TEMPLATEOPEN,
+						  IDX_TEMPLATECLOSE, IDX_TEMPLATEOPEN,
+						  IDX_TEMPLATECLOSE, IDX_TEMPLATEOPEN,
+						// 44
+						  IDX_SHARECLOSED, IDX_SHAREOPEN,
+						  IDX_SHARECLOSED, IDX_SHAREOPEN,
+						// 48
+						  IDX_PUBLICCLOSED, IDX_PUBLICOPEN,
+						  IDX_PUBLICCLOSED, IDX_PUBLICOPEN,
 						};
 
 	int idx = 0;
@@ -88,13 +99,16 @@ int WFE_MSGTranslateFolderIcon( uint8 level, int32 iFlags, BOOL bOpen )
 	if (iFlags & MSG_FOLDER_FLAG_NEWSGROUP)
 		idx = 4;
 	else if (level < 2)
+	{
 		if (iFlags & MSG_FOLDER_FLAG_NEWS_HOST)
 			idx = 16;
 		else if (iFlags & MSG_FOLDER_FLAG_IMAPBOX)
 			idx = 12;
 		else
 			idx = 8;
+	}
 	else
+	{
 		if (iFlags & MSG_FOLDER_FLAG_INBOX)
 			idx = 20;
 		else if (iFlags & MSG_FOLDER_FLAG_QUEUE)
@@ -107,6 +121,13 @@ int WFE_MSGTranslateFolderIcon( uint8 level, int32 iFlags, BOOL bOpen )
 			idx = 28;
 		else if (iFlags & MSG_FOLDER_FLAG_TEMPLATES )
 			idx = 40;
+		else if (iFlags & MSG_FOLDER_FLAG_PERSONAL_SHARED )
+			idx = 44;
+		else if (iFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER )
+			idx = 44;
+		else if (iFlags & MSG_FOLDER_FLAG_IMAP_PUBLIC )
+			idx = 48;
+	}
 		
 	idx += bOpen ? 1 : 0;
 	idx += iFlags & MSG_FOLDER_FLAG_GOT_NEW ? 2 : 0;
@@ -114,7 +135,8 @@ int WFE_MSGTranslateFolderIcon( uint8 level, int32 iFlags, BOOL bOpen )
 	return folderTable[idx];
 }
 
-void WFE_MSGBuildMessagePopup( HMENU hmenu, BOOL bNews, BOOL bInHeaders )
+
+void WFE_MSGBuildMessagePopup( HMENU hmenu, BOOL bNews, BOOL bInHeaders, MWContext *pContext )
 {
 	::AppendMenu( hmenu, MF_STRING, ID_MESSAGE_REPLY, szLoadString( IDS_MENU_REPLY ) );
 	if ( bNews ) {
@@ -125,12 +147,18 @@ void WFE_MSGBuildMessagePopup( HMENU hmenu, BOOL bNews, BOOL bInHeaders )
 	}
 	::AppendMenu( hmenu, MF_STRING, ID_MESSAGE_FORWARD, szLoadString( IDS_MENU_FORWARD ) );
 	::AppendMenu( hmenu, MF_STRING, ID_MESSAGE_FORWARDQUOTED, szLoadString( IDS_MENU_FORWARDQUOTED ) );
+	::AppendMenu( hmenu, MF_STRING, ID_MESSAGE_FORWARDINLINE, szLoadString(IDS_MENU_FORWARDINLINE));
 	::AppendMenu( hmenu, MF_SEPARATOR, 0, NULL );
 	 
+#ifdef MOZ_NEWADDR
+	WFE_MSGBuildAddAddressBookPopups(hmenu, ::GetMenuItemCount(hmenu), TRUE, pContext); 
+
+#else
 	HMENU hAddMenu = ::CreatePopupMenu();
 	::AppendMenu( hAddMenu, MF_STRING, ID_MESSAGE_ADDSENDER, szLoadString( IDS_POPUP_ADDSENDER ) );
 	::AppendMenu( hAddMenu, MF_STRING, ID_MESSAGE_ADDALL, szLoadString( IDS_POPUP_ADDALL ) );
 	::AppendMenu( hmenu, MF_STRING|MF_POPUP, (UINT) hAddMenu, szLoadString( IDS_POPUP_ADDTOADDRESSBOOK ) );
+#endif
 	::AppendMenu( hmenu, MF_SEPARATOR, 0, NULL );
  
 	if (bInHeaders) {
@@ -231,19 +259,33 @@ void WFE_MSGInit()
 
 void WFE_MSGShutdown()
 {
-	MSG_DestroyMaster(WFE_MSGGetMaster());
- 	MSG_ShutdownMsgLib();
-	g_MsgPrefs.Shutdown();
+    // Don't do anything if we never called WFE_MSGInit
+    if (g_MsgPrefs.m_bInitialized)
+    {
+		MSG_DestroyMaster(WFE_MSGGetMaster());
+		MSG_ShutdownMsgLib();
+		g_MsgPrefs.Shutdown();
+	}
 }
 
+// returns the master.  If there isn't one then it
+// creates one.
 MSG_Master* WFE_MSGGetMaster()
 {
 	return g_MsgPrefs.GetMaster();
 }
 
+// returns the current value of the master.
+MSG_Master* WFE_MSGGetMasterValue()
+{
+	return g_MsgPrefs.GetMasterValue();
+
+}
+
 CMsgPrefs::CMsgPrefs()
 {
 	m_pMaster = NULL;
+	m_bInitialized = FALSE;
 }
 
 PR_CALLBACK cbMsgPrefs(const char *prefName, void *pData)
@@ -331,7 +373,16 @@ PR_CALLBACK cbMsgPrefs(const char *prefName, void *pData)
 				f->PostMessage(WM_COMMAND, (WPARAM) ID_DONEGOINGOFFLINE, (LPARAM) 0);
 		}
 		break;
-
+	case 13:
+#ifdef _WIN32
+		UpdateMapiDll();
+#endif
+		break;
+	case 14:
+		bPref= TRUE;
+		PREF_GetBoolPref("ldap_1.autoComplete.showDialogForMultipleMatches", &bPref);
+		g_MsgPrefs.m_bShowCompletionPicker = bPref;
+		break;
 	default:
 		ASSERT(0);
 	}
@@ -343,6 +394,8 @@ PR_CALLBACK cbMsgPrefs(const char *prefName, void *pData)
 
 void CMsgPrefs::Init()
 {
+	m_bInitialized = TRUE;
+
     m_pFolderTemplate = new CFolderTemplate(IDR_MAILFRAME,  
             RUNTIME_CLASS(CNetscapeDoc),
             RUNTIME_CLASS(CFolderFrame),     // mail window
@@ -474,6 +527,10 @@ void CMsgPrefs::Init()
 	PREF_GetBoolPref("mailnews.message_in_thread_window", &prefBool);
 	m_bThreadPaneMaxed = !prefBool;
 
+	prefBool = TRUE;
+	PREF_GetBoolPref("ldap_1.autoComplete.showDialogForMultipleMatches", &prefBool);
+	m_bShowCompletionPicker = prefBool;
+
 	PREF_RegisterCallback("mailnews.reuse_thread_window", cbMsgPrefs, (void *) 0);
 	PREF_RegisterCallback("mailnews.reuse_message_window", cbMsgPrefs, (void *) 1);
 	PREF_RegisterCallback("mailnews.message_in_thread_window", cbMsgPrefs, (void *) 2);
@@ -488,6 +545,9 @@ void CMsgPrefs::Init()
 	PREF_RegisterCallback("mail.signature_file", cbMsgPrefs, (void *) 10);
 	PREF_RegisterCallback("mail.leave_on_server", cbMsgPrefs, (void *) 11);
 	PREF_RegisterCallback("network.online", cbMsgPrefs, (void *) 12);
+	PREF_RegisterCallback("mail.use_mapi_server", cbMsgPrefs, (void *) 13);
+	//autocomplete
+	PREF_RegisterCallback("ldap_1.autoComplete.showDialogForMultipleMatches", cbMsgPrefs, (void*) 14);
 
 	// START THE BIFF CONTEXT
 	CBiffCX *pCX = new CBiffCX();
@@ -511,15 +571,29 @@ BOOL CMsgPrefs::IsValid() const
 	int nLen = 255;
 
 	buffer[0] = '\0';
-	if (PREF_NOERROR == PREF_GetCharPref("mail.pop_name", buffer, &nLen))
-    {
-		if (strlen(buffer) && !m_csMailHost.IsEmpty())
+
+	long prefLong = MSG_Pop3;
+	PREF_GetIntPref("mail.server_type",&prefLong);
+	if (prefLong == MSG_Imap4 && 
+		PREF_NOERROR == PREF_GetCharPref("network.hosts.imap_servers", buffer, &nLen))
+	{
+		if (strlen(buffer))
 			return TRUE;
 		else
 			return FALSE;
 	}
 	else
-		return FALSE;
+	{
+		if (PREF_NOERROR == PREF_GetCharPref("mail.pop_name", buffer, &nLen))
+		{
+			if (strlen(buffer) && !m_csMailHost.IsEmpty())
+				return TRUE;
+			else
+				return FALSE;
+		}
+		else
+			return FALSE;
+	}
 }
 
 MSG_Master *CMsgPrefs::GetMaster()
@@ -536,6 +610,11 @@ MSG_Master *CMsgPrefs::GetMaster()
 	return m_pMaster;
 }
 
+MSG_Master *CMsgPrefs::GetMasterValue()
+{
+	return m_pMaster;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // CMailNewsOutliner
 
@@ -546,6 +625,7 @@ CMailNewsOutliner::CMailNewsOutliner()
 	m_bExpandOrCollapse = FALSE;
 	m_pPane = NULL;
 	m_iMysticPlane = 0;
+	m_nCurrentSelected = -1;
 }
 
 CMailNewsOutliner::~CMailNewsOutliner()
@@ -657,6 +737,8 @@ int CMailNewsOutliner::ToggleExpansion( int iLine )
     MSG_ToggleExpansion( m_pPane, iLine, &numChanged );
 	m_bExpandOrCollapse = FALSE;
 
+	m_iLastSelected = m_iSelection;
+
 	return (int) numChanged;
 }
 
@@ -758,10 +840,9 @@ CFolderOutliner::CFolderOutliner ( )
 
 	m_uTimer = 0;
 	m_dwPrevTime = 0;
-	m_bLButtonDown = FALSE;
 	m_bDoubleClicked = FALSE;
 	m_b3PaneParent = FALSE;
-	m_nCurrentSelected = -1;
+	m_bRButtonDown = FALSE;
 }
 
 CFolderOutliner::~CFolderOutliner ( )
@@ -1127,14 +1208,10 @@ void CFolderOutliner::AcceptDrop( int iLineNo, COleDataObject *pDataObject,
 									 pDragData->m_count, pFolder);
 				if (IsParent3PaneFrame())
 				{
-					C3PaneMailFrame* pFrame = C3PaneMailFrame::FindFrame(pFolder);;
+					C3PaneMailFrame* pFrame = C3PaneMailFrame::FindFrame(pFolder);
 					if (pFrame) 
 						pFrame->ActivateFrame();
-#if 0	// this interrupts the move - why are we doing it?
-					else
-						GetParentFrame()->SendMessage(WM_COMMAND, 
-													ID_FOLDER_SELECT, 0);
-#endif
+					((C3PaneMailFrame*)GetParentFrame())->BlockFolderSelection (TRUE);
 				}
 			}
 			GlobalUnlock (hContent); //do we have to GlobalFree it too?
@@ -1303,12 +1380,6 @@ void CFolderOutliner::OnDestroy()
 	CMailNewsOutliner::OnDestroy();
 }
 
-void CFolderOutliner::OnLButtonDown(UINT nFlags, CPoint point)
-{
-	m_bLButtonDown = TRUE;
-	CMailNewsOutliner::OnLButtonDown(nFlags, point);
-}
-
 void CFolderOutliner::OnTimer(UINT nIDEvent)
 {
 	if (m_uTimer == nIDEvent)
@@ -1325,12 +1396,9 @@ void CFolderOutliner::OnTimer(UINT nIDEvent)
 			if (delta > GetDoubleClickTime())
 			{	// single click
 				m_bSelChanged = FALSE;
-				if (GetCurrentSelected() != m_iSelection)
-				{
-					if (!m_iSelBlock)
-						GetParentFrame()->SendMessage(WM_COMMAND, 
-													ID_FOLDER_SELECT, 0);
-				}
+				if (!m_iSelBlock)
+					GetParentFrame()->SendMessage(WM_COMMAND, 
+												ID_FOLDER_SELECT, 0);
 				KillTimer(m_uTimer);
 				m_uTimer = 0;
 			}
@@ -1345,8 +1413,14 @@ void CFolderOutliner::OnSelChanged()
 {
 	if (IsParent3PaneFrame())
 	{
+		if (m_bRButtonDown)
+		{
+			((C3PaneMailFrame*)GetParentFrame())->BlankOutRightPanes();
+			return;
+		}
 		SetCurrentSelected(m_iLastSelected);
-		if (m_uTimer == 0 && m_bLButtonDown && !m_bDoubleClicked)
+		BOOL bControlKeydown = ((GetKeyState(VK_CONTROL) & 0x8000) && m_bLButtonDown);
+		if (!bControlKeydown && m_bLButtonDown && m_uTimer == 0 && !m_bDoubleClicked)
 		{
 			m_dwPrevTime = GetTickCount();
 			UINT uElapse = GetDoubleClickTime() / 5;
@@ -1361,7 +1435,8 @@ void CFolderOutliner::OnSelChanged()
 
 void CFolderOutliner::OnSelDblClk()
 {
-	m_bDoubleClicked = TRUE;
+	if (m_bLButtonDown && m_uTimer != 0)
+		m_bDoubleClicked = TRUE;
 
 	MSG_FolderLine folderLine;
 	if (MSG_GetFolderLineByIndex(m_pPane, m_iFocus, 1, &folderLine)) {
@@ -1447,11 +1522,36 @@ LPCTSTR CFolderOutliner::GetColumnTip( UINT iColumn, void * pLineData )
 	return NULL;
 }
 
+void CFolderOutliner::OnSetFocus(CWnd* pOldWnd)
+{
+	C3PaneMailFrame* pParent = (C3PaneMailFrame*)GetParentFrame();
+	CMailNewsOutliner::OnSetFocus(pOldWnd);
+	if (IsParent3PaneFrame())
+		pParent->SetFocusWindow(this);
+}
+
+void CFolderOutliner::OnRButtonDown (UINT nFlags, CPoint point)
+{
+	m_bRButtonDown = TRUE;
+	CMailNewsOutliner::OnRButtonDown (nFlags, point);
+}
+
+void CFolderOutliner::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	CMailNewsOutliner::OnRButtonUp(nFlags, point);
+	m_bRButtonDown = FALSE;
+
+	if (IsParent3PaneFrame())
+		((C3PaneMailFrame*)GetParentFrame())->CheckForChangeFocus();
+}
+
 BEGIN_MESSAGE_MAP(CFolderOutliner, CMailNewsOutliner)
 	ON_WM_CREATE()
-	ON_WM_LBUTTONDOWN()
 	ON_WM_TIMER()
+	ON_WM_SETFOCUS()
 	ON_WM_DESTROY()
+	ON_WM_RBUTTONDOWN()
+    ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1467,9 +1567,7 @@ CMessageOutliner::CMessageOutliner ( )
 
 	m_uTimer = 0;
 	m_dwPrevTime = 0;
-	m_bLButtonDown = FALSE;
 	m_bDoubleClicked = FALSE;
-	m_nCurrentSelected = -1;
 
 	m_pUnkUserImage = NULL;
 	ApiApiPtr(api);
@@ -1625,26 +1723,32 @@ BOOL CMessageOutliner::IsCollapsed( int iLine )
 	return messageLine.flags & MSG_FLAG_ELIDED ? TRUE : FALSE;
 }
 
+void CMessageOutliner::SelectAllMessages()
+{
+	for (int i = GetTotalLines() - 1; i >= 0; i--) 
+		Expand(i);
+}
+
 int CMessageOutliner::ExpandAll( int iLine )
 {
-	int iDelta = 0;
-	for (int i = GetTotalLines() - 1; i >= 0; i--) {
-		iDelta += Expand(i);
-	}
+	MSG_ViewIndex viewIndex = (MSG_ViewIndex) iLine;
+	int32 numLines = GetTotalLines();
+
+	MSG_Command(m_pPane, MSG_ExpandAll, &viewIndex, 1);
 	ScrollIntoView(m_iFocus);
 
-	return iDelta;
+	return GetTotalLines() - numLines;
 }
 
 int CMessageOutliner::CollapseAll( int iLine )
 {
-	int iDelta = 0;
-	for (int i = 0; i < GetTotalLines(); i++) {
-		iDelta += Collapse(i);
-	}
+	MSG_ViewIndex viewIndex = (MSG_ViewIndex) iLine;
+	int32 numLines = GetTotalLines();
+
+	MSG_Command(m_pPane, MSG_CollapseAll, &viewIndex, 1);
 	ScrollIntoView(m_iFocus);
 
-	return iDelta;
+	return numLines - GetTotalLines();
 }
 
 void CMessageOutliner::SelectThread( int iLine, UINT flags )
@@ -1770,7 +1874,7 @@ void CMessageOutliner::PropertyMenu ( int iSel, UINT flags )
 		}
 		::AppendMenu( hmenu, MF_SEPARATOR, 0, NULL );
 		//
-		WFE_MSGBuildMessagePopup( hmenu, m_bNews, TRUE );
+		WFE_MSGBuildMessagePopup( hmenu, m_bNews, TRUE, MSG_GetContext(m_pPane) );
     }
 
     //	Track the popup now.
@@ -1896,8 +2000,7 @@ void CMessageOutliner::AcceptDrop( int iLineNo, COleDataObject *pDataObject,
 						pInterface->CopyMessagesInto( pDragData->m_pane, pDragData->m_indices, 
 													  pDragData->m_count, pFolder);
 						break;
-					default:
-						ASSERT(0);
+					default: //do nothing
 						break;
 					}
 				}
@@ -2005,6 +2108,8 @@ int CMessageOutliner::TranslateIcon (void * pData)
 
 	if (pMessage->flags & MSG_FLAG_IMAP_DELETED)
 		return IDX_IMAPMSGDELETED;
+	if (pMessage->flags & MSG_FLAG_ATTACHMENT)
+		return IDX_ATTACHMENTMAIL;
 
 	int idx = 0;
 
@@ -2051,6 +2156,7 @@ BOOL CMessageOutliner::ColumnCommand ( int iColumn, int iLine )
 	case ID_COLUMN_THREAD:
 		if ( MSG_GetToggleStatus( m_pPane, MSG_SortByThread, NULL, 0) == MSG_Checked ) {
 			SelectThread( iLine );
+			SetCapture();//~~~
 			return TRUE;
 		} else {
 			return FALSE;
@@ -2269,12 +2375,6 @@ void CMessageOutliner::OnDestroy()
 	CMailNewsOutliner::OnDestroy();
 }
 
-void CMessageOutliner::OnLButtonDown(UINT nFlags, CPoint point)
-{
-	m_bLButtonDown = TRUE;
-	CMailNewsOutliner::OnLButtonDown(nFlags, point);
-}
-
 void CMessageOutliner::OnTimer(UINT nIDEvent)
 {
 	if (m_uTimer == nIDEvent)
@@ -2308,20 +2408,31 @@ void CMessageOutliner::OnTimer(UINT nIDEvent)
 
 void CMessageOutliner::OnSelChanged()
 {
-	SetCurrentSelected(m_iLastSelected);
-	if (m_bLButtonDown && m_uTimer == 0 && !m_bDoubleClicked)
+	if (((C3PaneMailFrame*)GetParentFrame())->MessageViewClosed())
 	{
-		m_dwPrevTime = GetTickCount();
-		UINT uElapse = GetDoubleClickTime() / 5;
-		m_uTimer = SetTimer(DOUBLE_CLICK_TIMER, uElapse, NULL);
+		m_bSelChanged = FALSE;   
+		if (!m_iSelBlock)
+			GetParentFrame()->PostMessage(WM_COMMAND, ID_MESSAGE_SELECT, 0);
 	}
 	else
 	{
-		if (!m_bDoubleClicked)
+		BOOL bControlKeydown = ((GetKeyState(VK_CONTROL) & 0x8000) && m_bLButtonDown);
+		if (!bControlKeydown)
+			SetCurrentSelected(m_iLastSelected);
+		if (!bControlKeydown && m_bLButtonDown && m_uTimer == 0 && !m_bDoubleClicked)
 		{
-			m_bSelChanged = FALSE;   
-			if (!m_iSelBlock)
-				GetParentFrame()->PostMessage(WM_COMMAND, ID_MESSAGE_SELECT, 0);
+			m_dwPrevTime = GetTickCount();
+			UINT uElapse = GetDoubleClickTime() / 5;
+			m_uTimer = SetTimer(DOUBLE_CLICK_TIMER, uElapse, NULL);
+		}
+		else
+		{
+			if (!m_bDoubleClicked)
+			{
+				m_bSelChanged = FALSE;   
+				if (!m_iSelBlock)
+					GetParentFrame()->PostMessage(WM_COMMAND, ID_MESSAGE_SELECT, 0);
+			}
 		}
 	}
 }
@@ -2334,9 +2445,16 @@ void CMessageOutliner::OnSelDblClk()
 	GetParentFrame()->PostMessage(WM_COMMAND, ID_FILE_OPENMESSAGE, 0);
 }
 
+void CMessageOutliner::OnSetFocus(CWnd* pOldWnd)
+{
+	C3PaneMailFrame* pParent = (C3PaneMailFrame*)GetParentFrame();
+	CMailNewsOutliner::OnSetFocus(pOldWnd);
+	pParent->SetFocusWindow(this);
+}
+
 BEGIN_MESSAGE_MAP(CMessageOutliner, CMailNewsOutliner)
-	ON_WM_LBUTTONDOWN()
 	ON_WM_TIMER()
+	ON_WM_SETFOCUS()
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 

@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 
+#include "rosetta.h"
 #include "dialog.h"
 #include "winclose.h"
 #include "cntritem.h"
@@ -408,6 +409,7 @@ void CMainFrame::OnUpdateNetSearch(CCmdUI *pCmdUI)
 void CMainFrame::OnUpdateSecurity(CCmdUI *pCmdUI)
 {
 	
+	HG73537
 	MWContext *pContext = GetMainContext()->GetContext();
 
 	if(EDT_IS_EDITOR(pContext))
@@ -442,6 +444,7 @@ void CMainFrame::OnUpdateSecurity(CCmdUI *pCmdUI)
 
 void CMainFrame::OnUpdateSecurityStatus(CCmdUI *pCmdUI)
 {
+	HG73537
 	int status = XP_GetSecurityStatus(GetMainContext()->GetContext());	
 	pCmdUI->Enable(status == SSL_SECURITY_STATUS_ON_LOW || status == SSL_SECURITY_STATUS_ON_HIGH);
 }

@@ -516,6 +516,8 @@
 	 Alt ~Ctrl<Key>H:		xfeDoCommand(deliverQueuedMessages)		\n\
 	Meta ~Ctrl<Key>K:		xfeDoCommand(compressFolders)		\n\
 	 Alt ~Ctrl<Key>K:		xfeDoCommand(compressFolders)		\n\
+	Meta ~Ctrl Shift <Key>f:	xfeDoCommand(search)	   	\n\
+	 Alt ~Ctrl Shift <Key>f:	xfeDoCommand(search)	   	\n\
 	Meta ~Ctrl Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
 	 Alt ~Ctrl Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
 	Meta ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
@@ -1063,8 +1065,8 @@
 									  \
 	~Meta ~Alt ~Ctrl<Key>osfDelete:	PageUp()			\n\
 	~Meta ~Alt ~Ctrl<Key>osfBackSpace:PageUp()			\n\
-	 Meta  Ctrl<Key>f:		fishcam()			\n\
-	  Alt  Ctrl<Key>f:		fishcam()			\n\
+	 Meta  Ctrl<Key>g:		fishcam()			\n\
+	  Alt  Ctrl<Key>g:		fishcam()			\n\
 	 Meta  Ctrl<Key>t:		net_showstatus()		\n\
 	  Alt  Ctrl<Key>t:		net_showstatus()		\n\
 	~Meta ~Alt ~Ctrl<Key>osfUp:	LineUp()			\n\
@@ -1488,13 +1490,14 @@ Open a local file or a web page in the current window
 *menuBar*recentSubmenu.labelString:	Open Recent...
 
 *menuBar*saveAs.labelString:        Save As...
+*menuBar*saveMsgAs.labelString:     Save As
+
 *saveAsCmdString:					Save As...
 *saveFramesetAsCmdString:			Save Frameset As...
 *menuBar*saveAs.mnemonic:           S
 *menuBar*saveAs.acceleratorText:    Alt+S
 *saveAs.documentationString:		Save a copy of the current page
 
-!xxx out of spec (saveFrameAs)
 *menuBar*saveFrameAs.labelString:	Save Frame As...
 *menuBar*saveFrameAs.mnemonic:		F
 *saveFrameAs.documentationString:	Save a copy of the selected frame
@@ -1548,7 +1551,7 @@ Send current page location to a recipient
 *exit.documentationString:	Close all windows in the application and exit
 
 !===========================
-  File Menu - Page Composer
+!  File Menu - Page Composer
 !===========================
 
 *menuBar*save.labelString:					Save
@@ -1569,17 +1572,25 @@ Upload current file or directory to a server for public viewing
 Open the current file in a new browser window
 
 !=============================
-  File Menu - Compose Message
+! File Menu - Compose Message
 !=============================
 
-*menuBar*saveDraft.labelString:       		Save Draft
-*menuBar*saveDraft.mnemonic:				S
-*saveDraft.documentationString:		Save the message in the Drafts folder
+*Composition*menuBar*saveAs.labelString:    File
+*Composition*menuBar*saveAs.mnemonic:       F
+*Composition*menuBar*saveAs.acceleratorText:
 
-*menuBar*saveMessagesAs.labelString:		Save As...
-*menuBar*saveMessagesAs.mnemonic:			A
-*menuBar*saveMessagesAs.acceleratorText:    Alt+S
-*saveMessagesAs.documentationString:		Save the message as a file
+*menuBar*saveDraft.labelString:       		Draft
+*menuBar*saveDraft.mnemonic:				D
+*saveDraft.documentationString:		Finish this message at a later time by saving it in the Drafts folder.
+
+*menuBar*saveTemplate.labelString:          Template
+*menuBar*saveTemplate.mnemonic:             T
+*saveTemplate.documentationString:  Use this message as a template for future messages.
+
+*menuBar*saveAsMenu.labelString:		        Save As...
+*menuBar*saveAsMenu.mnemonic:			        A
+*menuBar*saveAsMenu.acceleratorText:            Alt+S
+*menuBar*saveAsMenu.saveMessagesAs.documentationString:		Save the message
 
 *menuBar*sendMessageNow.labelString:		Send Now
 *menuBar*sendMessageNow.mnemonic:			d
@@ -1602,6 +1613,11 @@ Paste text from the original page in quoted form
 *menuBar*attach.labelString:				Attach
 *menuBar*attach.mnemonic:					A
 *attach.documentationString: 				Attach a page or address book card to the current message
+
+*menuBar*showChrome.labelString:            Show
+*menuBar*showChrome.mnemonic:               S
+
+*menuBar*floatingTaskBarClose.labelString:  Floating Component Bar
 
 !============================
   File Menu - Message Center
@@ -1646,9 +1662,8 @@ Open the selected mail folder or discussion group
 Get new mail and discussion group messages
 
 ! File/Get Messages Submenu
-*menuBar*getNewMessages.labelString:       	New
-*menuBar*getNewMessages.mnemonic: 			N
-*menuBar*getNewMessages.acceleratorText: 	Alt+T
+*menuBar*getNewMessages.labelString:       	Get New Messages
+*menuBar*getNewMessages.mnemonic: 		M
 		
 ! This label is generated dynamically from the preferences
 !*menuBar*getNextNNewMsgs.labelString:       Next 500
@@ -1668,9 +1683,9 @@ Send messages in Outbox folder now
 *updateMessageCount.documentationString:	\
 Update number of unread messages
 
-*addNewsgroup.labelString:			Join Discussion Groups...
+*menuBar*addNewsgroup.labelString:		Subscribe...
 *menuBar*addNewsgroup.mnemonic:			b
-*addNewsgroup.documentationString:		Join discussion groups
+*addNewsgroup.documentationString:		Subscribe...
  
 !=============================
   File Menu - Message Threads
@@ -1693,24 +1708,45 @@ Open the selected attachment
 *menuBar*editMessage.mnemonic:					E
 *editMessage.documentationString:				Edit the selected message
 
+*menuBar*saveAsTemplate.labelString:		Template
+*menuBar*saveAsTemplate.mnemonic:		T
+
+*MailThread*menuBar*saveMessageAs.labelString:  File
+*MailThread*menuBar*saveMessageAs.mnemonic:  F
+*MailThread*menuBar*saveMessageAs.acceleratorText:	Alt+S
 !==========================
   File Menu - Address Book
 !==========================
 
-*addToAddressBook.labelString:	New Card...
-*addToAddressBook.mnemonic:		w
+*addToAddressBook.labelString:	Card...
+*addToAddressBook.mnemonic:		C
+*addToAddressBook.acceleratorText:	Alt+N
 *addToAddressBook.documentationString:	\
 Create a new address book card entry
 
-*abNewList.labelString:			New List...
+*abNewList.labelString:			List...
 *abNewList.mnemonic:			L
 *abNewList.documentationString:	\
 Create a new address book list
+
+*abNewPAB.labelString:			Address Book...
+*abNewPAB.mnemonic:			A
+*abNewPAB.documentationString:	\
+Create a new address book 
+
+*abNewLDAPDirectory.labelString:			Directory...
+*abNewLDAPDirectory.mnemonic:			D
+*abNewLDAPDirectory.documentationString:	\
+Create a Directory Server
 
 *menuBar*import.labelString:	Import...
 *menuBar*import.mnemonic:		I
 *AddressBook*import.documentationString:	\
 Import a file into the address book
+!
+! customized for PAB
+!
+*AddressBook*menuBar*saveAs.labelString:        Export...
 
 *AddressBook*menuBar*composeMessage.labelString:	Message
 *menuBar*composeMessage.mnemonic:	M
@@ -1932,14 +1968,14 @@ Paste clipboard contents in quoted form
 
 *menuBar*search.labelString:            Search Messages...
 *menuBar*search.mnemonic:               M
-!*menuBar*search.acceleratorText:        Alt+S
+*menuBar*search.acceleratorText:        Alt+Shift+F
 *search.documentationString:	Search mail and discussion group messages
 
 *menuBar*editConfiguration.labelString:	Manage Mail Account
 *menuBar*editConfiguration.mnemonic:		n
 
-*menuBar*moderateDiscussion.labelString:	Manage Discussion Group
-*menuBar*moderateDiscussion.mnemonic:		v
+*menuBar*moderateDiscussion.labelString:	Manage Newsgroups
+*menuBar*moderateDiscussion.mnemonic:		N
 
 *menuBar*editMailFilterRules.labelString: Mail Filters...
 *editMailFilterRules.documentationString:	\
@@ -1993,12 +2029,15 @@ View mail folder or discussion group properties
 *abDeleteEntry.documentationString:	\
 Delete the selected address book entries
 
+*menuBar*abDeleteAllEntries.labelString:    	Delete All Occurences
+*menuBar*abDeleteAllEntries.mnemonic: O
+
 *menuBar*displayHTMLDomainsDialog.labelString:	HTML Domains...
 *menuBar*displayHTMLDomainsDialog.mnemonic:		H
 *displayHTMLDomainsDialog.documentationString:	\
 Edit the list of domains that can receive HTML messages
 
-*AddressBook*menuBar*viewProperties.labelString:	Card Properties
+*AddressBook*menuBar*viewProperties.labelString:	Properties
 *menuBar*viewProperties.mnemonic:					s
 *viewProperties.documentationString:	\
 Place a call with Mozilla Conference
@@ -2213,6 +2252,7 @@ Wrap long lines when the message is sent
   View Menu - Message Center
 !============================
 
+*menuBar*showSubmenu.labelString:   Show
 *MailFolder*hideNavToolbarCmdString:   Hide Message Center Toolbar
 *MailFolder*showNavToolbarCmdString:   Show Message Center Toolbar
 *MailFolder*toggleNavigationToolbar.documentationString:	\
@@ -2233,6 +2273,9 @@ Show or hide the Message toolbar
 
 *showMsgAreaCmdString:			Show Message
 *hideMsgAreaCmdString:			Hide Message
+
+*showFolderAreaCmdString:		Show Folder
+*hideFolderAreaCmdString:		Hide Folder
 
 *menuBar*sortSubmenu.labelString:	Sort
 *menuBar*sortSubmenu.mnemonic:		t
@@ -2511,6 +2554,9 @@ Sort history list by visit count
   Go Menu - Message Threads
 !===========================
 
+*menuBar*nextSubmenu.labelString:				Next 
+*menuBar*prevSubmenu.labelString:				Previous
+
 *menuBar*nextMessage.labelString:				Next Message
 *menuBar*nextMessage.mnemonic:					N
 *menuBar*nextMessage.acceleratorText:			Alt+Down
@@ -2573,6 +2619,9 @@ Go to the previous unread message
 *menuBar*previousFlaggedMessage.mnemonic:		g
 *previousFlaggedMessage.documentationString:	\
 Go to the previous flagged message
+
+*menuBar*firstUnreadMessage.labelString:		First Unread Message
+*menuBar*firstFlaggedMessage.mnemonic:			U
 
 *menuBar*firstFlaggedMessage.labelString:		First Flagged Message
 *menuBar*firstFlaggedMessage.mnemonic:			F
@@ -2642,6 +2691,9 @@ Forward the selected message
 *menuBar*forwardMessageQuoted.acceleratorText:	Alt+Shift+L
 *forwardMessageQuoted.documentationString:	\
 Forward the selected message as quoted text
+
+*menuBar*forwardMessageInLine.labelString:		Forward Inline
+*menuBar*forwardMessageInLine.mnemonic:			l
 
 *menuBar*fileSubmenu.labelString:				File Message
 *menuBar*fileSubmenu.mnemonic:					l
@@ -3053,6 +3105,12 @@ Open the address book
 *menuBar*bookmarksSubmenu.labelString:			Bookmarks
 *menuBar*bookmarksSubmenu.mnemonic:				B
 
+*menuBar*toolsSubmenu.labelString:			Tools
+*menuBar*toolsSubmenu.mnemonic:				T
+
+*menuBar*serverToolsSubmenu.labelString:		Server Tools
+*menuBar*serverToolsSubmenu.mnemonic:			S
+
 ! Communicator/Bookmarks Submenu
 *addBookmark.labelString:						Add Bookmark
 *addBookmark.mnemonic:							A
@@ -3107,6 +3165,15 @@ File the current page in a Bookmarks folder
 *menuBar*viewSecurity.acceleratorText:			Alt+Shift+I
 *viewSecurity.documentationString:	\
 Show security information for this page
+
+! Communicator/Server Tools Submenu
+*menuBar*manageMailingList.labelString:		Mailing Lists
+*menuBar*manageMailingList.mnemonic:		L
+
+*menuBar*managePublicFolders.labelString:	Public Folders
+*menuBar*managePublicFolders.mnemonic:		F
+
+! end Communicator/Bookmarks Submenu
 
 !===========
   Help Menu
@@ -3530,6 +3597,8 @@ Insert an arbitrary HTML Tag at the insertion location
 *popup*abDeleteEntry.labelString:    	Delete
 *popup*abDeleteEntry.mnemonic:    		D
 *popup*abDeleteEntry.acceleratorText: 	Alt+D
+!
+*popup*abDeleteAllEntries.labelString:    	Delete From All Lists
 !
 *popup*addToAddressBook.labelString: 	New Card...
 *popup*addToAddressBook.mnemonic: 		w
@@ -5126,6 +5195,7 @@ from the network, or save to a file and then play from the file?
 @CLASS@*XmLGrid.background:		#C0C0C0
 !@CLASS@*XmLGrid.selectBackground:	#FFFFCC
 
+
 ! Turn off borders in XmLFolder widgets.
 @CLASS@*XmLFolder.highlightThickness: 0
 
@@ -5251,22 +5321,39 @@ from the network, or save to a file and then play from the file?
 ! These are the fonts used in the outline lists used in Mail, News, Bookmarks,
 ! and Address Book windows.  (Note that there can't be any whitespace after
 ! the commas.)
-*XmLGrid*fontList:\
+
+! For non-SUN platforms, user can accept font size to be 10 pt on the message list
+@NOTSUN@@CLASS@*XmLGrid*fontList:\
 -*-helvetica-medium-r-*-*-*-100-*-*-*-*-iso8859-*,\
 -*-helvetica-bold-r-*-*-*-100-*-*-*-*-iso8859-*=BOLD,\
 -*-helvetica-medium-o-*-*-*-100-*-*-*-*-iso8859-*=ITALIC
 
+! For SUN platforms, user wants default font size to be 12 pt on the message list to be readable
+@ONLYSUN@@CLASS@*XmLGrid*fontList:\
+-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*, -*-helvetica-bold-r-*-*-*-120-*-*-*-*-iso8859-*=BOLD, -*-helvetica-medium-o-*-*-*-120-*-*-*-*-iso8859-*=ITALIC
+
 ! Font for the Mail/News banner
-*banner*folderDropdown*XmLabel.fontList: -adobe-courier-bold-r-*-*-*-100-*-*-*-*-iso8859-*
-*banner*folderDropdown*shadowThickness: 1
-*banner*folderDropdown*.fontList:\
+! For non-SUN platforms, user can accept font size to be 10 pt to be default on the message list
+@NOTSUN@@CLASS@*banner*folderDropdown*XmLabel.fontList: -adobe-courier-bold-r-*-*-*-100-*-*-*-*-iso8859-*
+@NOTSUN@@CLASS@*banner*folderDropdown*fontList:\
 -adobe-courier-medium-r-*-*-*-100-*-*-*-*-iso8859-*,\
 -adobe-courier-bold-r-*-*-*-100-*-*-*-*-iso8859-*=BOLD
 
-*banner*title.fontList:		-*-helvetica-bold-r-*-*-*-100-*-*-*-*-iso8859-*
-*banner*subtitle.fontList:	-*-helvetica-medium-r-*-*-*-100-*-*-*-*-iso8859-*
-*banner*info.fontList:	-*-helvetica-medium-r-*-*-*-100-*-*-*-*-iso8859-*
+@NOTSUN@@CLASS@*banner*title.fontList:		-*-helvetica-bold-r-*-*-*-100-*-*-*-*-iso8859-*
+@NOTSUN@@CLASS@*banner*subtitle.fontList:	-*-helvetica-medium-r-*-*-*-100-*-*-*-*-iso8859-*
+@NOTSUN@@CLASS@*banner*info.fontList:	-*-helvetica-medium-r-*-*-*-100-*-*-*-*-iso8859-*
 
+! For SUN platforms, user wants default font size to be 12 pt on the message list to be readable
+@ONLYSUN@@CLASS@*banner*folderDropdown*XmLabel.fontList: -adobe-courier-bold-r-*-*-*-120-*-*-*-*-iso8859-*
+@ONLYSUN@@CLASS@*banner*folderDropdown*.fontList:\
+-adobe-courier-medium-r-*-*-*-120-*-*-*-*-iso8859-*,\
+-adobe-courier-bold-r-*-*-*-120-*-*-*-*-iso8859-*=BOLD
+
+@ONLYSUN@@CLASS@*banner*title.fontList:		-*-helvetica-bold-r-*-*-*-120-*-*-*-*-iso8859-*
+@ONLYSUN@@CLASS@*banner*subtitle.fontList:	-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
+@ONLYSUN@@CLASS@*banner*info.fontList:	-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
+
+*banner*folderDropdown*shadowThickness: 1
 ! Font for the Thread window expando flippy label
 *arrowlabel.fontList:		-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
 
@@ -6052,6 +6139,7 @@ Drag a document here to attach it to this message.
 !
 *prefs*fontList:							-*-helvetica-medium-r-normal-*-*-120-*-*-*-*-iso8859-*
 *prefs_popup.title:							@NAME@: Preferences
+*pref.category:                             Category
 
 *prefs.form.leftPane.topOffset:				8
 *prefs.form.leftPane.leftOffset:			8
@@ -6243,6 +6331,39 @@ rather than via the proxy:
 *prefsProxiesView*waisPortLabel.labelString:	Port:
 *prefsProxiesView*socksPortLabel.labelString:	Port:
 
+! Preferences dialog - Location Independence: General Prefs
+*prefs*liGeneral*topTitle.labelString: General Flags
+*prefs*liGeneral*enableToggle.labelString: Enable Location Independence
+*prefs*liGeneral*syncToggle.labelString: Background synchronize every
+*prefs*liGeneral*unitLabel.labelString: minutes.
+*prefs*liLoginAdvancedButton.labelString: More Options...
+
+*prefs*liGeneral*bottomTitle.labelString: User Information
+*prefs*liGeneral*userInfoLabel.labelString: Enter your login info to retrieve your network profile.
+*prefs*liGeneral*userLabel.labelString: User Name:
+*prefs*liGeneral*passwordLabel.labelString: Password:
+
+! Preferences dialog - Location Independence: Server Prefs
+*prefs*liServer*serverLabel.labelString: Enter the parameters necessary to connect to your profile server.
+*prefs*liServer*frameLabel.labelString: Server Information
+*prefs*liServer*ldapToggle.labelString: LDAP (Netscape Directory Server)
+*prefs*liServer*ldapAddrLabel.labelString: Address:
+*prefs*liServer*ldapBaseLabel.labelString: Search Base:
+*prefs*liServer*httpToggle.labelString: HTTP Server (Netscape Enterprise Server)
+*prefs*liServer*httpBaseLabel.labelString: Base URL:
+
+! Preferences dialog - Location Independence: File Prefs
+*prefs*liFiles*fileLabel.labelString: Select which files to transfer by default as part of the startup/shutdown procedure.
+*prefs*liFiles*frameLabel.labelString: Files/File Groups
+*prefs*liFiles*bookmarkToggle.labelString: Bookmarks
+*prefs*liFiles*cookiesToggle.labelString: Cookies
+*prefs*liFiles*filterToggle.labelString: Mail Filters
+*prefs*liFiles*addrbookToggle.labelString: Address Book
+*prefs*liFiles*navcenterToggle.labelString: Nav Center
+*prefs*liFiles*prefsToggle.labelString: User Preferences
+*prefs*liFiles*javasecToggle.labelString: Java Security Files
+*prefs*liFiles*certToggle.labelString: Certificates
+
 ! Preferences dialog - Advanced/Disk space
 
 *prefs*diskSpace*allMsgsBoxLabel.labelString: 	All Messages
@@ -6338,52 +6459,25 @@ Reuse message list (thread) window \n\
 Reuse message window \n\
 (All messages appear in the same window)
 
-! Preferences dialog - Mail News/Composition
 
-*prefs*mailnewsCompose*msgPropLabel.labelString:Message Properties
-*prefs*mailnewsCompose*ccLabel.labelString:		Copies of Outgoing Messages
-*prefs*mailnewsCompose*emailLabel.labelString:	Automatically email a copy of outgoing messages to
-*prefs*mailnewsCompose*mailMsgLabel.labelString:Mail messages:
-*prefs*mailnewsCompose*mEmailSelfToggle.labelString:Self
-*prefs*mailnewsCompose*mEmailOtherLabel.labelString:Other address:
-*prefs*mailnewsCompose*newsMsgLabel.labelString:	Groups messages:
-*prefs*mailnewsCompose*nEmailSelfToggle.labelString:Self
-*prefs*mailnewsCompose*nEmailOtherLabel.labelString:Other address:
-*prefs*mailnewsCompose*fccLabel.labelString:		Automatically copy outgoing messages to a folder
-*prefs*mailnewsCompose*mailFolderToggle.labelString:Mail messages:
-*prefs*mailnewsCompose*newsFolderToggle.labelString:Groups messages
-*prefs*mailnewsCompose*autoQuoteToggle.labelString:	Automatically quote original message when replying
-*prefs*mailnewsCompose*sendHtmlMsgToggle.labelString:By default, send rich text (HTML) messages
-*prefs*mailnewsCompose*wrapLabel.labelString:		Wrap long lines at
-*prefs*mailnewsCompose*charLabel.labelString:		characters
-*prefs*mailnewsCompose*moreButton.labelString:		More Options...
-
-! Preferences dialog - Mail News/Messages - More
-
-*prefsMsgMore*fontList:						-*-helvetica-medium-r-normal-*-*-120-*-*-*-*-iso8859-*
-*prefsMsgMore_popup.title:					@NAME@: More Messages Preferences
-*prefsMsgMore*addressingLabel.labelString:	When addressing messages:
-*prefsMsgMore*nameAndNicknamesToggle.labelString:	Expand addresses against names and nicknames
-*prefsMsgMore*nicknamesOnlyToggle.labelString:	Expand addresses against nicknames only
-*prefsMsgMore*composeLabel.labelString:		Send messages that use 8-bit characters
-*prefsMsgMore*8bitToggle.labelString:		As is (does not work well with some mail servers)
-*prefsMsgMore*qpToggle.labelString:			\
-Using the \"quoted printable\" MIME encoding\n\
-(does not work well with some mail or discussion\n\
-groups readers)
-*prefsMsgMore*sendLabel.labelString:		\
-When sending HTML messages to recipients who are not\n\
-listed as being able to receive HTML messages:
-*prefsMsgMore*askToggle.labelString:		Always ask me what to do
-*prefsMsgMore*sendTextToggle.labelString:\
-Always convert the message into Plain Text\n\
-(may lose some formatting)
-*prefsMsgMore*sendHtmlToggle.labelString:\
-Always send the message in HTML anyway\n\
-(may be unreadable to some recipients)
-*prefsMsgMore*sendBothToggle.labelString:\
-Always send the message in both Plain Text and HTML\n\
-(may take a lot of disk space for the recipient)
+! Preferences dialog - Mail News/Messages
+*prefs*mailnewsMessages*replyLabel.labelString: Replying to messages:
+*prefs*mailnewsMessages*forwardLabel.labelString: By Default Forward Messages:
+*prefs*mailnewsMessages*autoquoteToggle.labelString: Automatically quote the original message when replying
+*prefs*mailnewsMessages*autoquoteMyReplyLabel.labelString: Add my reply 
+*prefs*mailnewsMessages*autoquoteSepLabel.labelString: Seperate reply and quoted text by 
+*prefs*mailnewsMessages*autoquoteSepLinesLabel.labelString: lines
+*prefs*mailnewsMessages*spellLabel.labelString: Spell checking:
+*prefs*mailnewsMessages*spellToggle.labelString: Spell check messages before sending
+*prefs*mailnewsMessages*wrapLabel.labelString: Message wrapping:
+*prefs*mailnewsMessages*wrapToggle.labelString: Wrap incoming, plain text messages to window width
+*prefs*mailnewsMessages*wrapLengthLabel.labelString: Wrap outgoing, plain text messages at:
+*prefs*mailnewsMessages*wrapLengthAfterLabel.labelString: characters
+*prefs*mailnewsMessages*eightbitLabel.labelString: Send messages that use 8-bit charaters:
+*prefs*mailnewsMessages*eightbitAsIsToggle.labelString: As is (does not work well with some mail servers)
+*prefs*mailnewsMessages*eightbitQuotedToggle.labelString: \
+Using the "quoted printable" MIME encoding \n\
+(does not work well with some mail or news group readers)
 
 ! Preferences dialog - Mail News/Identity
 
@@ -6403,31 +6497,106 @@ Reply-to address (only needed if different from email address):
 
 ! Preferences dialog - Mail News/Mail Server
 
-*prefs*mailnewsMserver*serverLabel.labelString:		\
-The information below is needed before you can receive mail. If you do\n\
-not know the information requested, please contact your system\n\
-administrator or Internet Service Provider.
-*prefs*mailnewsMserver*popUserNameLabel.labelString:Mail server user name:
-*prefs*mailnewsMserver*outgoingMailServerLabel.labelString:\
+*prefs*mailnewsMserver*iServerFrame*incomingServerLabel.labelString: \
+ Incoming mail servers
+*prefs*mailnewsMserver*oServerFrame*outgoingServerLabel.labelString: \
+Outgoing mail server
+*prefs*mailnewsMserver*localFrame*localMailDirLabel.labelString: \
+Local mail directory
+*prefs*mailnewsMserver*iServerFrame*iServerBox*ButtonForm*New.labelString: \
+Add...
+*prefs*mailnewsMserver*iServerFrame*iServerBox*ButtonForm*Edit.labelString: \
+Edit...
+*prefs*mailnewsMserver*iServerFrame*iServerBox*ButtonForm*Delete.labelString: \
+Delete
+
+*SubUpgradeDialog*paragraphLabel.labelString: \
+Messenger detects that you have upgraded from a previous version. In order to read your \n\
+mail, Messenger will need to know which folders you would like to subscribe to.\n\
+\n\
+Only folders you subscribe to will appear in your folder view. Any folders you do not\n\
+subscribe to will not be available. (Note: you can always change which folders\n\
+you subscribe to later on by selecting Subscribe from the File menu.)
+*SubUpgradeDialog*automaticToggle.labelString: \
+Automatically subscribe to all my folders on "(server)"
+*SubUpgradeDialog*customToggle.labelString: \
+Let me choose now which folders are subscribed to
+
+! Preferences dialog - incoming mail server - new server pop up
+
+*MailServerInfo.title:	Netscape: Mail server info
+*MailServerInfo*form1*ServerName.labelString: \
+Server Name:
+*MailServerInfo*form1*ServerType.labelString: \
+Server Type:
+*MailServerInfo*form1*ServerUser.labelString: \
+User Name:
+*MailServerInfo*form1*RememberPass.labelString: \
+Remember password
+*MailServerInfo*form1*CheckMail.labelString: \
+Check for mail every
+*MailServerInfo*form1*MinuteLabel.labelString: \
+minutes
+*MailServerInfo*form1*imapOption.labelString: IMAP
+*MailServerInfo*form1*popOption.labelString: POP
+
+! Imap tab
+
+*prefs_popup*MailServerInfo*xmlFolder*form2*imapImap.labelString: IMAP
+*prefs_popup*MailServerInfo*xmlFolder*form2*deleteLabel.labelString: \
+When I delete a message:
+*prefs_popup*MailServerInfo*xmlFolder*form2*trashToggle.labelString: \
+Move it to the Trash folder \n\
+(It will be removed when I select 'Empty Trash')
+*prefs_popup*MailServerInfo*xmlFolder*form2*markToggle.labelString: \
+Mark it as deleted \n\
+(It will be removed when I select 'Compact This Folder')
+*prefs_popup*MailServerInfo*xmlFolder*form2*removeToggle.labelString: \
+Remove it immediately \n\
+(It can be restored by selecting Undo)
+
+*prefs_popup*MailServerInfo*xmlFolder*form2*UseSSL.labelString: \
+Use secure connection (SSL)
+
+! Advanced tab 
+
+*MailServerInfo*form3*PathPrefsLabel.labelString: \
+These preferences specify the different namespaces on your\n\
+IMAP server.
+*MailServerInfo*form3*PersonalDir.labelString: \
+Personal Directory
+*MailServerInfo*form3*PublicDir.labelString: \
+Public (shared)
+*MailServerInfo*form3*OtherUsers.labelString: \
+Other Users
+*MailServerInfo*form3*AllowServer.labelString: \
+Allow server to override these namespaces
+
+! pop server - general tab
+
+*MailServerInfo*form4*LeaveMessages.labelString: \
+Leave messages on server
+
+! Preferences dialog - outgoing mail server
+*prefs*mailnewsMserver*oServerFrame*oServerBox*oServerLabel.labelString: \
 Outgoing mail (SMTP) server:
-*prefs*mailnewsMserver*incomingMailServerLabel.labelString:	Incoming mail server:
-*prefs*mailnewsMserver*serverTypeLabel.labelString:		Mail server type:
-*prefs*mailnewsMserver*pop3Toggle.labelString:		\
-POP3 (messages and folders are kept locally, on the hard disk)
-*prefs*mailnewsMserver*leaveMsgToggle.labelString:	\
-Leave messages on server after retrieval
-*prefs*mailnewsMserver*moveMailToggle.labelString:		Movemail application
-*prefs*mailnewsMserver*imapToggle.labelString:		\
-IMAP4 (messages and folders are kept remotely, on the server)
-*prefs*mailnewsMserver*imapLocalCopiesToggle.labelString:	\
-By default, copies of folders are kept locally for reading mail offline
-*prefs*mailnewsMserver*imapServerSslToggle.labelString:	Server supports encrypted connections (SSL)
-*prefs*mailnewsMserver*imapDeleteToggle.labelString:	Move deleted messages into trash
-*prefs*mailnewsMserver*inboxToggle.labelString:			System Inbox
-*prefs*mailnewsMserver*builtInAppToggle.labelString:	Built in
-*prefs*mailnewsMserver*externalAppToggle.labelString:	External application
-*prefs*mailnewsMserver*externalAppBrowse.labelString:	Choose...
-*prefs*mailnewsMserver*moreButton.labelString:			More Options...
+*prefs*mailnewsMserver*oServerFrame*oServerBox*serverUsernameLabel.labelString:\
+Mail server user name:
+*prefs*mailnewsMserver*oServerFrame*oServerBox*chooseSSLLabel.labelString: \
+Use Secure Socket Layer (SSL) or TLS for outgoing messages:
+*prefs*mailnewsMserver*oServerFrame*oServerBox*sslNever.labelString: \
+Never
+*prefs*mailnewsMserver*oServerFrame*oServerBox*sslIfPossible.labelString: \
+If Possible
+*prefs*mailnewsMserver*oServerFrame*oServerBox*sslAlways.labelString: \
+Always
+
+! Preferences dialog - mail server - local mail directory
+
+*prefs*mailnewsMserver*localFrame*localBox*localMailDir.labelString: \
+Directory: 
+*prefs*mailnewsMserver*localFrame*localBox*chooseButton.labelString: \
+Choose...
 
 ! Preferences dialog - Mail News/Mail Server - More
 
@@ -6451,17 +6620,25 @@ Remember my mail password.
 
 ! Preferences dialog - Mail News/News Server
 
-*prefs*mailnewsNserver*newsServerLabel.labelString:		\
-The information below is needed before you can read discussion\n\
-groups. If you do not know the information requested, please contact \n\
-your system administrator or Internet Service Provider.
-*prefs*mailnewsNserver*nntpServerLabel.labelString:	Discussion groups (news) server:
-*prefs*mailnewsNserver*newsDirLabel.labelString:	Discussion groups (news) directory:
-*prefs*mailnewsNserver*notify.labelString:			Ask me before downloading more than
-*prefs*mailnewsNserver*msgLabel.labelString:		messages
-*prefs*mailnewsNserver*browse.labelString:			Choose...
-*prefs*mailnewsNserver*portLabel.labelString:		Port:
-*prefs*mailnewsNserver*secure.labelString:			Secure
+*prefs*mailnewsNServer*serverLabel.labelString: Newgroup Servers
+*prefs*mailnewsNServer*serverAddButton.labelString: Add...
+*prefs*mailnewsNServer*serverEditButton.labelString: Edit...
+*prefs*mailnewsNServer*serverDeleteButton.labelString: Delete
+*prefs*mailnewsNServer*serverDefaultButton.labelString: Set as Default
+*prefs*mailnewsNServer*localLabel.labelString: Local News Storage
+*prefs*mailnewsNServer*dirLabel.labelString: Discussion group (news) folder:
+*prefs*mailnewsNServer*chooseButton.labelString: Choose...
+*prefs*mailnewsNServer*sizeLimitToggle.labelString: Ask me before downloading more than 
+*prefs*mailnewsNServer*sizeLimit2.labelString: messages.
+
+! Preferences dialog - Mail News/News Server popup
+
+*NewsServerInfo*serverLabel.labelString: Server:
+*NewsServerInfo*portLabel.labelString: Port:
+*NewsServerInfo*sslToggle.labelString: \
+Support encrypted connections (SSL)
+*NewsServerInfo*passwordToggle.labelString: \
+Always use name and password
 
 ! Preferences dialog - Mail News/Address Book
 
@@ -6477,6 +6654,18 @@ these directories in the following order:
 *prefs*mailnewsAddrBook*firstLastLabel.labelString:	(John Smith)
 *prefs*mailnewsAddrBook*lastFirstLabel.labelString:	(Smith, John)
 
+*prefs*mailnewsAddress*messageLabel.labelString: When addressing messages:
+*prefs*mailnewsAddress*completeLabel.labelString: Auto-complete names from:
+*prefs*mailnewsAddress*completeABToggle.labelString: Address books
+*prefs*mailnewsAddress*completeDirToggle.labelString: This Directory:
+*prefs*mailnewsAddress*conflictLabel.labelString: If there are two or more matches:
+*prefs*mailnewsAddress*conflictShowToggle.labelString: Show me a list of choices
+*prefs*mailnewsAddress*conflictAcceptToggle.labelString: Accept what I have typed
+*prefs*mailnewsAddress*onlyMatchLabel.labelString: If there is only one match in your personal address books:
+*prefs*mailnewsAddress*onlyMatchToggle.labelString: Use the address and do not search in the directory
+*prefs*mailnewsAddress*sortLabel.labelString: Sort full names by:
+*prefs*mailnewsAddress*sortFirstToggle.labelString: First Name Lastname (John Smith)
+*prefs*mailnewsAddress*sortLastToggle.labelString: LastName, First Name (Smith, John)
 ! Preferences dialog - Mail News/Directory - New/Edit
 
 *prefsLdapProp*fontList:					-*-helvetica-medium-r-normal-*-*-120-*-*-*-*-iso8859-*
@@ -6488,6 +6677,33 @@ these directories in the following order:
 *prefsLdapProp*numHitLabel.labelString:		Maximum Number of Hits:
 *prefsLdapProp*secure.labelString:			Secure
 *prefsLdapProp*savePasswd.labelString:		Save Password
+! Preferences dialog - Mail News/Message Copies
+
+*prefs*mailnewsCopies*newsCopies.labelString: Copy outgoing newsgroup messages to
+*prefs*mailnewsCopies*newsOtherToggle.labelString: BCC other addresses:
+*prefs*mailnewsCopies*newsChooseButton.labelString: Choose Folder ...
+*prefs*mailnewsCopies*newsFccToggle.labelString: Folder %s on %s
+*prefs*mailnewsCopies*mailCopies.labelString: Copy outgoing mail messages to
+*prefs*mailnewsCopies*mailOtherToggle.labelString: BCC other addresses:
+*prefs*mailnewsCopies*mailChooseButton.labelString: Choose Folder ...
+*prefs*mailnewsCopies*mailFccToggle.labelString: Folder %s on %s
+*prefs*mailnewsCopies*dtCopies.labelString: Storage for Drafts and Templates
+*prefs*mailnewsCopies*dSaveToggle.labelString: Keep drafts in '%s' on %s
+*prefs*mailnewsCopies*tSaveToggle.labelString: Keep templates in '%s' on %s
+*prefs*mailnewsCopies*dFccButton.labelString: Choose Folder ...
+*prefs*mailnewsCopies*tFccButton.labelString: Choose Folder ...
+
+*prefsMailFolderDialog*specificFolder.labelString: Other:
+
+! Preferences dialog - HTML Formatting
+*prefs*mailnewsHTML*useHTML.labelString: Enable HTML message formatting
+*prefs*mailnewsHTML*useHTMLToggle.labelString: Use the HTML editor to compose messages
+*prefs*mailnewsHTML*noHTML.labelString: When sending HTML messages to recipients who are not\nlisted as being able to recieve them:
+*prefs*mailnewsHTML*noHTMLoverride.labelString: You can override these settings in any message through the\noptions panel of the message composition window.
+*prefs*mailnewsHTML*noHTMLAsk.labelString: Ask me what to do if the message has HTML formatting,\notherwise send plain text.
+*prefs*mailnewsHTML*noHTMLText.labelString: Convert the message into plain text.\n(May loose some formatting)
+*prefs*mailnewsHTML*noHTMLHTML.labelString: Send the message in HTML anyway\n(some recipients may not be able to read it)
+*prefs*mailnewsHTML*noHTMLBoth.labelString: Send the message in plain text and HTML\n(uses more disk space)
 
 ! Preferences dialog - Editor
 
@@ -6501,6 +6717,18 @@ these directories in the following order:
 *prefs*editor*autosaveEnable.labelString:	Automatically save page every
 *prefs*editor*minutes.labelString:			minutes
 *prefs*editor*browse.labelString:			Choose...
+
+! Preferences dialog - Read Receipts
+*prefs*mailnewsReceipts*requestReceiptsLabel.labelString: If I request a receipt when sending a message, I want
+*prefs*mailnewsReceipts*dsn.labelString: A delivery receipt (DSN) from the receiving server
+*prefs*mailnewsReceipts*mdn.labelString: A read receipt (MDN) notify me when receipients display this message
+*prefs*mailnewsReceipts*both.labelString: Both types of receipt
+*prefs*mailnewsReceipts*receiptsArriveLabel.labelString: When a receipt arrives
+*prefs*mailnewsReceipts*inbox.labelString: Leave it in my inbox
+*prefs*mailnewsReceipts*sentmail.labelString: Move it to my Sent Mail folder
+*prefs*mailnewsReceipts*receiveReceiptsLabel.labelString: When I receive a message and sender requested a receipt (MDN)
+*prefs*mailnewsReceipts*never.labelString: Never return a receipt
+*prefs*mailnewsReceipts*some.labelString: Return receipts for some messages
 
 ! Preferences dialog - Editor/Publish
 
@@ -6565,20 +6793,26 @@ for download.
 *pref.applications:					Applications
 *pref.mailNews:						Mail & Groups
 *pref.identity:						Identity
-*pref.composition:					Messages
-*pref.mailServer:					Mail Server
-*pref.newsServer:					Groups Server
-*pref.addressBook:					Directory
+*pref.messages:                     Messages
+*pref.mailServer:					Mail Servers
+*pref.newsServer:					Newsgroups Servers
+*pref.addressing:                   Addressing
+*pref.copies:                       Copies and Folders
+*pref.htmlmail:                     Formatting
+*pref.readreceipts:                 Return Receipts
+*pref.diskSpace:					Disk Space
 *pref.editor:						Composer
 *pref.editorAppearance:				New Page Colors
 *pref.editorPublish:				Publish
 *pref.offline:						Offline
 *pref.offlineNews:					Groups
-*pref.diskSpace:					Disk Space
 *pref.helpFiles:					Help Files
 *pref.advanced:						Advanced
 *pref.cache:						Cache
 *pref.proxies:						Proxies
+*pref.liGeneral:					Location Independence
+*pref.liServer:						Server Info
+*pref.liFiles:						File Selection
 
 *prefDesc.appearance:				Change the appearance of the display
 *prefDesc.fonts:					Change the fonts in your display
@@ -6589,9 +6823,13 @@ for download.
 *prefDesc.mailNews:					Change appearance settings for Mail & Groups
 *prefDesc.identity:					Set your name, email address, and signature file
 *prefDesc.composition:				Choose settings for outgoing messages
-*prefDesc.mailServer:				Specify server for incoming mail
-*prefDesc.newsServer:				Specify server for reading discussion groups
+*prefDesc.mailServer:				Specify servers for mail
+*prefDesc.newsServer:				Specify your servers for reading newsgroups
 *prefDesc.addressBook:				Choose directories for searching addresses
+*prefDesc.addressing:               Choose settings for addressing messages
+*prefDesc.copies:                   Copies, drafts, and templates
+*prefDesc.htmlMail:                 Send HTML formatted messages
+*prefDesc.readReceipts:             Choose settings for requesting or returning receipts
 *prefDesc.editor:					Set general preferences for authoring Web pages
 *prefDesc.editorAppearance:			Choose default appearance of new Web pages
 *prefDesc.editorPublish:			Designate the default publishing location
@@ -6602,6 +6840,9 @@ for download.
 *prefDesc.advanced:					Change preferences that affect the entire product
 *prefDesc.cache:					Designate the size of the cache
 *prefDesc.proxies:					Configure proxies to access the Internet
+*prefDesc.liGeneral:				Enter your remote server login info
+*prefDesc.liServer:					Specify the remote server info
+*prefDesc.liFiles:					Specify which files to store remotely
 
 ! Preferences dialog - TODOs
 
@@ -6626,16 +6867,17 @@ for download.
 ! Subscribe UI
 
 *subscribeFolder*fontList: -*-helvetica-medium-r-normal-*-*-120-*-*-*-*-iso8859-*
-*subscribeFolder*toggleSubscribe.labelString:	Join
-*subscribeFolder*expandAll.labelString:		Expand All
+*subscribeFolder*toggleSubscribe.labelString:	Subscribe
+*subscribeFolder*unsubscribe.labelString: Unsubscribe
+*subscribeFolder*expandAll.labelString:		Expand
 *subscribeFolder*collapseAll.labelString:	Collapse All
-*subscribeFolder*fetchGroupList.labelString:	Get Discussion Groups
+*subscribeFolder*fetchGroupList.labelString:	Refresh List
 *subscribeFolder*stopLoading.labelString:	Stop
 *subscribeFolder*getNewGroups.labelString:	Get New
 *subscribeFolder*clearNewGroups.labelString:	Clear New
 *subscribeFolder*search.labelString:		Search Now
 *subscribeFolder*addNewsServer.labelString:	Add Server...
-
+*subscribeFolder*subNewInfoLabel.labelString: This list shows all new discussion groups since you last cleared the list.
 *subscribeFolder*searchLabel.labelString:	Search For:
 *subscribeFolder*onserverLabel.labelString:	On Server:
 *subscribeFolder*serverLabel.labelString:	Server:
@@ -6932,6 +7174,7 @@ for download.
 *toolBar*newFolder.labelString:		New Folder
 *toolBar*addNewsgroup.labelString:	Join Groups
 *toolBar*deleteFolder.labelString:	Delete
+*toolBar*deleteAny.labelString:		Delete
 
 *unsubscribeNewsgroupCmdString: Delete Discussion
 *deleteFolderCmdString:		Delete Folder
@@ -6958,6 +7201,7 @@ for download.
 *toolBar*nextUnreadCollection.labelString:	Next Unread Collection
 *toolBar*forwardMessage.labelString:	Forward
 *toolBar*deleteMessage.labelString:	Delete
+*toolBar*deleteAny.labelString:		Delete
 *toolBar*previousUnreadMessage.labelString: Previous
 *toolBar*previousMessage.labelString:	Previous
 *previousMessage.tipString: Previous message
@@ -7088,6 +7332,9 @@ Edit the list of domains that can receive HTML messages
 *MailFolderProps*total_label.labelString: Total Messages:
 *MailFolderProps*wasted_label.labelString: Disk Space Wasted:
 *MailFolderProps*space_label.labelString: Total Space Used:
+*MailFolderProps*sharePrivilegesLabel.labelString: Share this and \
+other folders with network users \n\
+and display and set access privileges
 
 !
 ! For the news server property dialog
@@ -7425,7 +7672,12 @@ when necessary
 
 
 
-*AddressOutlinerPopup*fontList:\
+@ONLYSUN@@CLASS@*AddressOutlinerPopup*fontList:\
+-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*,\
+-*-helvetica-bold-r-*-*-*-120-*-*-*-*-iso8859-*=BOLD,\
+-*-helvetica-medium-o-*-*-*-120-*-*-*-*-iso8859-*=ITALIC
+
+@NOTSUN@@CLASS@*AddressOutlinerPopup*fontList:\
 -*-helvetica-medium-r-*-*-*-100-*-*-*-*-iso8859-*,\
 -*-helvetica-bold-r-*-*-*-100-*-*-*-*-iso8859-*=BOLD,\
 -*-helvetica-medium-o-*-*-*-100-*-*-*-*-iso8859-*=ITALIC

@@ -32,6 +32,7 @@
 #include "java.h"
 #endif
 #include "PrefsDialog.h"
+#include "prefapi.h"
 
 extern "C"
 {
@@ -120,8 +121,10 @@ extern "C" void fe_installMailNewsComposition()
 
 extern "C" void fe_installMailNewsMserver()
 {
-	NET_SetPopUsername (fe_globalPrefs.pop3_user_id); 
-	MSG_SetBiffStatFile(fe_globalPrefs.use_movemail_p ? fe_mn_getmailbox() :
+    char *user_name;
+    PREF_CopyCharPref("mail.pop_name", &user_name);
+    NET_SetPopUsername (user_name);
+    MSG_SetBiffStatFile(fe_globalPrefs.use_movemail_p ? fe_mn_getmailbox() :
 						(char *)NULL);
 }
 

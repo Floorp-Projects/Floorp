@@ -28,24 +28,23 @@
 #ifdef XP_CPLUSPLUS
 class AB_Pane;
 class AB_ContainerPane;
-class AB_ContainerInfo;
 class AB_MailingListPane;
 class AB_PersonPane;
+class AB_NameCompletionCookie;
 #else
 typedef struct AB_Pane AB_Pane;
 typedef struct AB_ContainerPane AB_ContainerPane;
-typedef struct AB_ContainerInfo AB_ContainerInfo;
 typedef struct AB_MailingListPane AB_MailingListPane;
 typedef struct AB_PersonPane AB_PersonPane;
+typedef struct AB_NameCompletionCookie AB_NameCompletionCookie;
 #endif
 
 XP_BEGIN_PROTOS
 
 #define AB_API extern "C"
 
-#if defined(XP_MAC)
-#define FE_IMPLEMENTS_SHOW_PROPERTY_SHEET
-#endif
+/* #define FE_IMPLEMENTS_VISIBLE_NC */  /* as each platform uses the new API, we should set this flag */
+/* #define MOZ_NEWADDR */ /* FE address book developers should uncomment this flag. Leave it commented for the tree */
 
 const ABID AB_ABIDUNKNOWN = 0;   /* Find a better home for this somewhere! */
 
@@ -57,7 +56,15 @@ enum
 	AB_INVALID_PANE,
 	AB_INVALID_CONTAINER,
 	AB_INVALID_ATTRIBUTE,
-	AB_OUT_OF_MEMORY
+	AB_OUT_OF_MEMORY,
+	AB_ENTRY_BEING_FETCHED,  /* introduced by virtual list view. all of the get entry attribute APIs can return this error code
+								whenever we have to go get the desired result. In other words, it means the get is now asynch! */
+	AB_INVALID_COMMAND,       /* returned by AB_Command and AB_GetCommandStatus when the pane you passed in does not accept the cmd you
+							    wanted. */ 
+	ABError_NullPointer,	  /* I'm trying to switch over to this new error model.....*/	
+	ABError_InvalidAttribute,  /* I'm trying to switch over to this new error model.....*/
+	ABError_UnknownFileFormat  /* returned when you try to import a file type the address book does not recognize */
+
 };
 
 /* these are the types of possible containers */
@@ -65,7 +72,8 @@ typedef enum
 {
 	AB_LDAPContainer,
 	AB_MListContainer,       /* a mailing list */
-	AB_PABContainer          /* a personal AB */
+	AB_PABContainer,          /* a personal AB */
+	AB_UnknownContainer		 /* when we don't know what container type it is! */
 } AB_ContainerType;
 
 /* AB_ContainerAttributes define the types of information FEs can ask the BE about
@@ -96,7 +104,7 @@ typedef enum
 	AB_Drag_Not_Allowed	= 0x00000000,
 	AB_Require_Copy		= 0x00000001,
 	AB_Require_Move		= 0x00000002,
-	AB_Default_Drag		= 0xFFFFFFFF
+	AB_Default_Drag		= -1  /* 0xFFFFFFFF */
 } AB_DragEffect; 
 
 typedef enum 
@@ -105,8 +113,10 @@ typedef enum
           AB_attribEntryType,					/* mailing list or person entry */ 
 		  AB_attribEntryID,
           AB_attribFullName, 
+		  AB_attribFullAddress,					/* RFC822 address for an entry.....i.e. "John Smith <smith@netscape.com>" */
+		  AB_attribVCard,						/* get the Vcard for an attribute */
           AB_attribNickName, 
-          AB_attribGivenName,					/* all of the following are person entry specific */ 
+          AB_attribGivenName,					
           AB_attribMiddleName, 
           AB_attribFamilyName, 
           AB_attribCompanyName, 
@@ -135,16 +145,10 @@ typedef enum
 		  AB_attribOther			/* any attrib with this value or higher is always a string type (our dyanmic attributes) */
 } AB_AttribID;
 
-/* WARNING!!! WILL BE PHASING THIS STRUCTURE OUT!!!! */
-typedef struct AB_EntryAttributeItem{
-	AB_AttribID id;
-	char * description;  /* resource string specifying a user-readable descript for the attrib i.e. "First Name" */
-	XP_Bool sortable;    /* is this attribute sortable? (may help FEs display the column if they know if it can be sorted or not */
-}AB_EntryAttributeItem;
-
 typedef enum{
 	AB_MailingList = 0,
-	AB_Person
+	AB_Person,
+	AB_NakedAddress
 } AB_EntryType;
 
 typedef struct AB_AttributeValue
@@ -158,8 +162,13 @@ typedef struct AB_AttributeValue
 	} u;
 } AB_AttributeValue;
 
+typedef struct AB_EntryAttributeItem{                                                                                                                           
+        AB_AttribID id;                                                                                                                                         
+        char * description;  /* resource string specifying a user-readable descr  */
+        XP_Bool sortable;    /* is this attribute sortable? (may help FEs displa  */                                                                            
+} AB_EntryAttributeItem;  
 
-/* New Column ID structure used to abstract the columns in the AB_Pane used by the FEs from the attributes thos columns actually
+/* New Column ID structure used to abstract the columns in the AB_Pane used by the FEs from the attributes those columns actually
 	represent. */
 typedef enum{
 	AB_ColumnID0 = 0,
@@ -179,6 +188,28 @@ typedef struct AB_ColumnInfo{
 } AB_ColumnInfo;
 
 
+/*********************************************************************************************
+	A poor man's msgCopyInfo struct. We use this to encapsulate any data we may need when
+	running copy / move urls in the address book. The creator of the URL acquires each ctr
+	and the url handler releases the containers when the url is done or interrupted
+**********************************************************************************************/
+typedef enum{
+	AB_CopyInfoCopy = 0 ,
+	AB_CopyInfoMove,
+	AB_CopyInfoDelete
+} AB_AddressCopyInfoState;
+
+typedef struct _AB_AddressBookCopyInfo
+{
+	AB_ContainerInfo * destContainer;
+	AB_ContainerInfo * srcContainer;
+	ABID * idArray;
+	int32 numItems;
+	AB_AddressCopyInfoState state; /* used to determine what type of action to perform on the entries */
+} AB_AddressBookCopyInfo;
+
+int AB_FreeAddressBookCopyInfo(AB_AddressBookCopyInfo * abCopyInfo);  /* use this to free copy info structs */
+
 /**********************************************************************************************
 FE Call back functions. We'll show the types here...NOTE: FEs must now register their call back
 functions through these APIs so the back end knows which return to use. 
@@ -187,7 +218,6 @@ functions through these APIs so the back end knows which return to use.
  /* FEs must register this function with the appropriate pane, it is called by the back end in 
 response to the following commands: AB_PropertiesCmd, AB_AddUserCmd, AB_AddMailingListCmd */
 
-/* typedef int AB_ShowPropertySheetForEntryFunc (MSG_Pane * pane, AB_EntryType entryType); */
 typedef int AB_ShowPropertySheetForEntryFunc (MSG_Pane * pane, MWContext * context);
 
 int AB_SetShowPropertySheetForEntryFunc(
@@ -199,31 +229,132 @@ int AB_SetShowPropertySheetForEntryFunc(
 pane. It is called by the back end in response to the following commands: AB_PropertiesCmd, 
 AB_NewLDAPDirectory, AB_NewAddressBook. */
 
-typedef int AB_ShowPropertySheetForDirFunc(DIR_Server * server, MWContext * context, XP_Bool newDirectory /* is it a new directory? */);
+typedef int AB_ShowPropertySheetForDirFunc(
+		DIR_Server * server, 
+		MWContext * context, 
+		MSG_Pane * srcPane, /* BE will pass in the pane that was used to generate this call (usually the container pane) */
+		XP_Bool newDirectory /* is it a new directory? */);
 
 int AB_SetShowPropertySheetForDirFunc(
 		MSG_Pane * abcPane,						/* container pane */
 		AB_ShowPropertySheetForDirFunc * func);
-
-
-/***************************************************************************************
-DON'T USE THIS FUNCTION!!!! THIS WILL BE PHASING OUT!!!!!! #mscott 01/21/98
- This is a callback into the FE instructing them to bring up a person entry pane or a 
- mailing list pane. The back end has already created the pane. A type is included to let the FE
- determine if the pane is a mailing list or person entry pane. In addition, in the case of a mailing list
- pane, the FE must still initialize the mailing list pane before it can be used 
- ***************************************************************************************/
-#ifdef FE_IMPLEMENTS_SHOW_PROPERTY_SHEET
-extern int FE_ShowPropertySheetForAB2(
-	MSG_Pane * pane, /* BE created mailing list or person entry pane */
-	AB_EntryType entryType); /* mailing list or person entry */
-#endif
 
 /***************************************************************************************
  None pane-specific APIs. These function work on many panes 
  ***************************************************************************************/
 
 int AB_ClosePane(MSG_Pane * pane);
+
+/***************************************************************************************
+	Virtual List View APIs. 
+****************************************************************************************/
+
+int AB_SetFEPageSizeForPane(
+	MSG_Pane * abPane, 
+	uint32 pageSize);  /* number of entries in the FE pane's view. That is, total # entries
+					      the FE is concerned with at a time */
+
+/***************************************************************************************
+	Selection APIs. 
+****************************************************************************************/
+XP_Bool AB_UseExtendedSelection(
+	MSG_Pane * pane);
+int AB_AddSelection(
+	MSG_Pane * pane,
+	MSG_ViewIndex index); /* index of entry to add selection for */
+XP_Bool AB_IsSelected(
+		MSG_Pane * pane,
+		MSG_ViewIndex index); /* index of entry to check for selection */
+int AB_RemoveSelection(
+	MSG_Pane * pane,
+	MSG_ViewIndex index); /* index of entry to remove selection for */
+void AB_RemoveAllSelections(
+		MSG_Pane * pane);
+
+/***************************************************************************************
+    Replication APIs and Types.
+****************************************************************************************/
+
+AB_ContainerInfo *AB_BeginReplication(MWContext *context, DIR_Server *server);
+int AB_EndReplication(AB_ContainerInfo *container);
+int AB_AddReplicaEntry(AB_ContainerInfo *container, char **valueList);
+int AB_DeleteReplicaEntry(AB_ContainerInfo *container, char *targetDn);
+int AB_RemoveReplicaEntries(AB_ContainerInfo *container);
+int AB_GetNumReplicaAttributes(AB_ContainerInfo *container);
+char **AB_GetReplicaAttributeNames(AB_ContainerInfo *container);
+XP_Bool AB_ReplicaAttributeMatchesId(AB_ContainerInfo *container, int attribIndex, DIR_AttributeId id);
+
+/***************************************************************************************
+	Type down and name completion APIs. Both actions are asynchronous. Type down generates
+	a MSG_PaneNotifyTypeDownCompleted pane notification and name completion calls a FE
+	regsitered call back. 
+****************************************************************************************/
+int AB_TypedownSearch(
+		MSG_Pane * abPane, /* AB_Pane we are doing the type down against */
+		const char * typedownValue, /* NULL terminated character string for type down value. Caller frees */
+		MSG_ViewIndex startIndex);  /* if this is a refined typedown search, insert the start index. Else MSG_VIEWINDEXNONE */
+
+
+typedef int AB_NameCompletionExitFunction(
+		AB_NameCompletionCookie * cookie, /* object which encapsulates name completion result */
+		int numResults,  /* number results we had. Result string is NULL if this is 0 or > 1 */
+		void * FEcookie);  /* whatever you passed into the type down call, we pass back to you here */
+
+#ifdef FE_IMPLEMENTS_VISIBLE_NC
+int AB_NameCompletionSearch(
+		MSG_Pane * NCResolutionPane, /* the picker pane to fill the results with */
+		const char * completionValue, /* partial string to perform auto-complete on */
+		AB_NameCompletionExitFunction * exitFunction, /* FE exit function BE calls when asynch op is done */
+		XP_Bool userSeesPane, /* back end has different search behavior if the pane is currently visible to the user */
+		void * FEcookie);  /* FE can pass in the address of the object asking for the name completion. Will return in exit func */
+#else
+int AB_NameCompletionSearch(
+		MSG_Pane * NCResolutionPane, /* the picker pane to fill the results with */
+		const char * completionValue, /* partial string to perform auto-complete on */
+		AB_NameCompletionExitFunction * exitFunction, /* FE exit function BE calls when asynch op is done */
+		void * FEcookie);  /* FE can pass in the address of the object asking for the name completion. Will return in exit func */
+#endif
+
+/****************************************************************************************
+	Name completion returns a name completion cookie. These APIs are used to extract
+	the various string components from the name completion cookie
+*****************************************************************************************/
+
+/* NC Display string is the "blurr" string you see in the composition pane. It could include
+   extra column attributes like company and department as determined by a pref */
+char * AB_GetNameCompletionDisplayString(AB_NameCompletionCookie * cookie);
+
+/* Header String is the string the composer should insert into the composition pane. It could
+be the name of a mailing list: "testList" or a user: "John Doe <johndoe@netscape.com>" */
+char * AB_GetHeaderString(AB_NameCompletionCookie * cookie);
+
+/* getting the expanded header string returns the display string unless the entry was a mailing
+ list in which case you get addresses for all the people in the mailing list. */
+char * AB_GetExpandedHeaderString(AB_NameCompletionCookie * cookie);
+
+AB_EntryType AB_GetEntryTypeForNCCookie(AB_NameCompletionCookie * cookie);
+
+int AB_FreeNameCompletionCookie(AB_NameCompletionCookie * cookie);
+
+/****************************************************************************************
+	Name completion resolution pane specific APIs. 
+*****************************************************************************************/
+int AB_CreateABPickerPane( /* bad terminology on my part...you are really creating a name completion resolution picker pane */
+		MSG_Pane ** NCResolutionPane, /* BE creates one and passes it back to FE here */
+		MWContext * context,
+		MSG_Master * master,
+		uint32 pageSize);  /* what is your page size going to be */
+
+AB_ContainerType AB_GetEntryContainerType(
+		MSG_Pane * abPickerPane,
+		MSG_ViewIndex index);   /* the name completion result index you want the type for... */
+
+AB_NameCompletionCookie * AB_GetNameCompletionCookieForIndex(
+		MSG_Pane * abPickerPane,
+		MSG_ViewIndex index); /* NC result index you want the type for */
+
+/* returns a cookie for the naked address including the default domain name...*/
+AB_NameCompletionCookie * AB_GetNameCompletionCookieForNakedAddress(const char * nakedAddress);
 
 /****************************************************************************************
  Address Book Pane General APIs - creating, initializing, closing, changing containers,
@@ -266,14 +397,15 @@ int AB_LDAPSearchResultsAB2(
 
 int AB_FinishSearchAB2(MSG_Pane * abPane);
 
+
 int AB_CommandAB2(
-		MSG_Pane * srcPane,   /* NOTE: this can be a ABpane or an ABContainerPane!!! you can delete containers & entries */
-		AB_CommandType command, /* delete or mailto are the only currently supported commands */
+		MSG_Pane * srcPane,  
+		AB_CommandType command,
 		MSG_ViewIndex * indices,
 		int32 numIndices);
 
 int AB_CommandStatusAB2(
-		MSG_Pane * srcPane,    /* NOTE: Can be an ABPane or an ABContainerPane!! */
+		MSG_Pane * srcPane, 
 		AB_CommandType command,
 		MSG_ViewIndex * indices,
 		int32 numIndices,
@@ -281,8 +413,6 @@ int AB_CommandStatusAB2(
 		MSG_COMMAND_CHECK_STATE * selected_p,
 		const char ** displayString,
 		XP_Bool * plural_p);
-
-/* still need to add registering and unregistering compose windows */
 
 /****************************************************************************************
  AB_ContainerInfo General APIs - adding users and a sender. Doesn't require a pane.
@@ -294,16 +424,25 @@ int AB_AddUserAB2(
 		ABID * entryID);			   /* BE returns the ABID for this new user */
 
 int AB_AddUserWithUIAB2(
+		MSG_Pane* pane, /* we need the src pane because it has the call back function for the person property sheet */
 		AB_ContainerInfo * abContainer,
 		AB_AttributeValue * values,
 		uint16 numItems,
 		XP_Bool lastOneToAdd);
 
 int AB_AddSenderAB2(
+		MSG_Pane * pane, /* need the pane to get the property sheet function and context */
 		AB_ContainerInfo * abContainer,
-		char * author,
-		char * url);
+		const char * author,
+		const char * url);
 
+/* the following is called by the msgdbview when it wants to add a name and a address to the specified container */
+int AB_AddNameAndAddress(
+		MSG_Pane * pane,
+		AB_ContainerInfo * abContainer,
+		const char *name, 
+		const char *address, 
+		XP_Bool lastOneToAdd);
 
 /****************************************************************************************
 Drag and Drop Related APIs - vcards, ab lines, containers, etc. 
@@ -325,24 +464,80 @@ AB_DragEffect AB_DragEntriesIntoContainerStatus(
 		AB_ContainerInfo * destContainer,
 		AB_DragEffect request);        /* do you want to do a move? a copy? default drag? */
 
+/***************************************************************************************
+
+  Asynchronous copy APIs. These APIs are used by mkabook.cpp for asycnh copy/move/delete
+  entry operations between containers. 
+
+***************************************************************************************/
+
+/* this API is called only by the back end...it is used to do all the dirty work for
+   assembling a addbook-copy url and adding it to a queue for running */
+int AB_CreateAndRunCopyInfoUrl( 
+		MSG_Pane * pane, 
+		AB_ContainerInfo * srcContainer, 
+		ABID * idArray, 
+		int32 numItems, 
+		AB_ContainerInfo * destContainer, 
+		AB_AddressCopyInfoState action);
+
+int AB_BeginEntryCopy(
+		AB_ContainerInfo * srcContainer, 
+		MWContext * context, 
+		AB_AddressBookCopyInfo * copyInfo,
+		void ** copyCookie, /* filled by container, position in IDArray to be copied next */
+		XP_Bool * copyFinished); /* container sets to TRUE if copy is finished */
+
+int AB_MoreEntryCopy(
+		AB_ContainerInfo * srcContainer,
+		MWContext * context,
+		AB_AddressBookCopyInfo * copyInfo,
+		void ** copyCookie,
+		XP_Bool * copyFinished);
+
+int AB_FinishEntryCopy(
+		AB_ContainerInfo * srcContainer,
+		MWContext * context,
+		AB_AddressBookCopyInfo * copyInfo,
+		void ** copyCookie);
+
+int AB_InterruptEntryCopy(
+		AB_ContainerInfo * srcContainer,
+		MWContext * context,
+		AB_AddressBookCopyInfo * copyInfo,
+		void ** copyCookie);
+
 /****************************************************************************************
 Importing and Exporting - ABs from files, vcards...
 *****************************************************************************************/
 
 typedef enum
 {
-	AB_Filename,      /* char * in import and export APIs contain an FE allocated/freed filename */
+	AB_Filename = 0,      /* char * in import and export APIs contain an FE allocated/freed filename */
 	AB_PromptForFileName, /* prompt for file name on import or export */
 	AB_Vcard,        
 	AB_CommaList,    /* comma separated list of email addresses */
 	AB_RawData       /* we don't know what it is, will try to extract email addresses */
 } AB_ImportExportType;  
 
+/* Note, besides the usual suspects for error return values, AB_ImportData can also return ABError_UnknownFileFormat
+   when the address book does not recognize the import file type. In certain cases, the caller may try to import
+   the unrecognized file format by calling a third party import utiltity. */
+#ifdef FE_IMPLEMENTS_NEW_IMPORT
 int AB_ImportData(
+		MSG_Pane * pane, /* we need a pane in order to get the url queue */
 		AB_ContainerInfo * destContainer,
-		const char * buffer, /* could be a filename or NULL (if type = prompt for filename) or a block of data to be imported */
+		const char * buffer, /* could be a full path or NULL (if type = prompt for filename) or a block of data to be imported */
 		int32 bufSize, /* how big is the buffer? */
 		AB_ImportExportType dataType); /* valid types: All */
+#else
+int AB_ImportData(
+	AB_ContainerInfo * destContainer,
+	const char * buffer, /* could be a full path or NULL (if type = prompt for filename) or a block of data to be imported */
+	int32 bufSize, /* how big is the buffer? */
+	AB_ImportExportType dataType); /* valid types: All */
+
+#endif
 
 /* returns TRUE if the container accepts imports of the data type and FALSE otherwise */
 XP_Bool AB_ImportDataStatus(
@@ -358,8 +553,72 @@ int AB_ExportData(
 		int32 * bufSize, /* ignored unless VCard is data type in which case FE allocates, BE fills */
 		AB_ImportExportType dataType); /* valid types: filename, prompt for filename, vcard */
 
+/*** Import and Export APIs used in libnet to perform these operations asynchronously...***/
+int AB_ImportBegin(
+		AB_ContainerInfo * container, 
+		MWContext * context,
+		const char * fileName, 
+		void ** importCookie, /* used by container to keep track of the import state */
+		XP_Bool * importFinished); /* set to TRUE by container if we finished the import */
+
+int AB_ImportMore(
+		AB_ContainerInfo * container, 
+		void ** importCookie, /* used by container to keep track of the import state */
+		XP_Bool * importFinished);
+
+int AB_ImportInterrupt(
+		AB_ContainerInfo * container,
+		void ** importCookie);
+
+int AB_ImportFinish(
+		AB_ContainerInfo * container,
+		void ** importCookie);
+
+int AB_ImportProgress(
+		AB_ContainerInfo * container,
+		void * importCookie,
+		uint32 * position,   /* the line we are on in the file */
+		uint32 * fileLength, /* total # of lines in the file */
+		uint32 * passCount); /* the pass we are on (out of 2) */
+
+int AB_ExportBegin(
+		AB_ContainerInfo * container,
+		MWContext * context,
+		const char * fileName,
+		void ** exportCookie, /* used by container info to keep track of the export state */
+		XP_Bool * exportFinished); /* set to TRUE by container if the export has finished */
+
+int AB_ExportMore(
+		AB_ContainerInfo * container,
+		void ** exportCookie,
+		XP_Bool * exportFinished);
+
+int AB_ExportInterrupt(
+		AB_ContainerInfo * container,
+		void ** exportCookie);
+
+int AB_ExportFinish(
+		AB_ContainerInfo * container,
+		void ** exportCookie);
+
+int AB_ExportProgress(
+		AB_ContainerInfo * container,
+		void * exportCookie,
+		uint32 * numberExported,  /* # of entries in the container we have exported so far */
+		uint32 * totalEntries);   /* total # of entries in the address book */
+
+/* used only in the back end to generate add ldap to abook urls and adds them to the url queue...
+	For each entry, we fire off an ldap url to fetch its attributes..*/
+int AB_ImportLDAPEntriesIntoContainer(
+		MSG_Pane * pane,			/* source pane */
+		const MSG_ViewIndex * indices,  /* selected indices in the src pane to add */
+		int32 numIndices,    
+		AB_ContainerInfo * destContainer);	/* destination container to add the selections too */
+
 /****************************************************************************************
-ABContainer Pane --> Creation, Loading, getting line data for each container. 
+
+	ABContainer Pane --> Creation, Loading, getting line data for each container. 
+
 *****************************************************************************************/
 int AB_CreateContainerPane(
 		MSG_Pane ** abContainerPane, /* BE will pass back ptr to pane through this */
@@ -375,7 +634,7 @@ MSG_ViewIndex AB_GetIndexForContainer(
 
 /* this will return NULL if the index is invalid */
 AB_ContainerInfo * AB_GetContainerForIndex(
-		MSG_Pane * abContainerPane,
+		MSG_Pane * abContainerPane, 
 		const MSG_ViewIndex index);
 
 /* the following set of APIs support getting/setting container pane line data out such as the container's
@@ -466,20 +725,6 @@ int AB_UpdateDIRServerForContainerPane(
 		MSG_Pane * abContainerPane,
 		DIR_Server * directory);
 
-
-/*******************************************************************************************************************
- Old Column Header APIs. These will be phased out!!! Please don't use them
- ******************************************************************************************************************/
-
-int AB_GetNumEntryAttributesForContainer(
-		AB_ContainerInfo * container,
-		uint16 * numItems);  /* BE will fill this integer with the number of available attributes for the container */
-
-int AB_GetEntryAttributesForContainer(
-		AB_ContainerInfo * container,
-		AB_EntryAttributeItem * items, /* FE allocated array which BE fills with values */
-		uint16 * maxItems);   /* FE passes in # elements allocated in array. BE returns # elements filled in array */
-
 /********************************************************************************************************************
  Our New Column Header APIs. We'll be phasing out AB_GetNumEntryAttributesForContainer and AB_GetEntryAttributesForContainer
  ********************************************************************************************************************/
@@ -492,6 +737,18 @@ int AB_GetNumColumnsForContainer(AB_ContainerInfo * container);
 
 int AB_GetColumnAttribIDs(
 		AB_ContainerInfo * container, 
+		AB_AttribID * attribIDs, /* FE allocated array of attribs. BE fills with values */
+		int * numAttribs);       /* FE passes in # elements allocated in array. BE returns # elements filled */
+
+/* we also have pane versions which are used by the picker pane */
+AB_ColumnInfo * AB_GetColumnInfoForPane(
+		MSG_Pane * abPickerPane,
+		AB_ColumnID columnID);   /* ID for the column you want the info for */
+
+int AB_GetNumColumnsForPane(MSG_Pane * abPickerPane);
+
+int AB_GetColumnAttribIDsForPane(
+		MSG_Pane * abPickerPane, 
 		AB_AttribID * attribIDs, /* FE allocated array of attribs. BE fills with values */
 		int * numAttribs);       /* FE passes in # elements allocated in array. BE returns # elements filled */
 
@@ -560,6 +817,23 @@ int AB_CopyEntryAttributeValue(
 		AB_AttributeValue * srcValue, /* already allocated attribute value you want to copy from */
 		AB_AttributeValue * destValue); /* already allocated attribute value you want to copy into */
 
+/* Assigns a default value for the given attribute and stores it in the attribute value passed in */
+int AB_CopyDefaultAttributeValue(
+		AB_AttribID attrib, 
+		AB_AttributeValue * value /* already allocated */);
+
+/* I think this API is used only by the back end...*/
+int AB_CreateAttributeValuesForNakedAddress(
+		char * nakedAddress, 
+		AB_AttributeValue ** valueArray, /* caller must free returned array */
+		uint16 * numItems);
+
+int AB_GetAttributesForNakedAddress(
+		char * nakedAddress,
+		AB_AttribID * attribs, /* caller allocated array of attribs that you want */
+		AB_AttributeValue ** values, /* BE allocates & fills an array of values for the input array of attribs.Caller ust later free */
+		uint16 * numItems);			 /* IN: size of attribs array. OUT: # of values in value array */
+
 XP_Bool AB_IsStringEntryAttributeValue(AB_AttributeValue * value);
 
 /****************************************************************************************
@@ -595,6 +869,19 @@ XP_Bool AB_GetPaneSortedAscendingAB2(MSG_Pane * abPane);
 int AB_InitializeMailingListPaneAB2(MSG_Pane * mailingListPane);
 
 AB_ContainerInfo * AB_GetContainerForMailingList(MSG_Pane * mailingListPane); 
+
+/* Use these two APIs to add entries to the mailing list that are the result of name completion. */
+int AB_AddNakedEntryToMailingList(
+		MSG_Pane * mailingListPane,
+		const MSG_ViewIndex index, /* index in pane to add the element at. Use MSG_VIEWINDEXNONE to signify don't care */
+		const char * nakedAddress, /* entry was not a name completion match, but a naked adddress */
+		XP_Bool ReplaceExisting);  /* TRUE if replace current entry, FALSE for inserting */
+
+int AB_AddNCEntryToMailingList(
+		MSG_Pane * mailingListPane,
+		const MSG_ViewIndex index, 
+		AB_NameCompletionCookie * cookie, /* result from name completion code. FE must still free the cookie */
+		XP_Bool ReplaceExisting);
 
 /* this could return ABID = 0 for a new entry that is not in the database */
 ABID AB_GetABIDForMailingListIndex(
@@ -658,6 +945,66 @@ int AB_GetPersonEntryAttributes(
 		uint16 * numItems); /* in - FE provides # of attribs. out - BE fills with # values */
 
 int AB_CommitChanges(MSG_Pane * pane); /* commits changes to a mailing list pane or a person entry pane! */
+
+
+/* FEs should use this to obtain a property sheet pane representing the user's identity vcard...*/
+int AB_GetIdentityPropertySheet(
+		MWContext *context, 
+		MSG_Master * master, 
+		MSG_Pane ** pane);
+
+/**********************************************************************************************
+	Miscellaneous APIs which need to be public to folks outside of libaddr. Not necessarily
+	used by the FES..
+
+***********************************************************************************************/
+
+int AB_SplitFullName (
+		const char *fullName, 
+		char **firstName, 
+		char **lastName, 
+		int16 csid);
+
+/* use the default display name API for generating a display name in the person property sheet card for new users */
+int AB_GenerateDefaultDisplayName(
+		const char * firstName, 
+		const char * lastName, 
+		char ** defaultDisplayName /* calller must free with XP_FREE */);
+
+XP_List * AB_AcquireAddressBookContainers(MWContext * context);
+
+int AB_ReleaseContainersList(XP_List * containers);
+
+int AB_AcquireContainer(AB_ContainerInfo * container);
+int AB_ReleaseContainer(AB_ContainerInfo * container); 
+
+/* should not be called by FEs....they should use AB_ImportData.....
+   This function iterates over all of the vcard objects in the string and adds each one to the container 
+*/
+int AB_ImportVCards(
+		AB_ContainerInfo * destContainer, 
+		const char * vCardString);
+
+/* the following are only used in libaddr...not by the FEs...*/
+int AB_ConvertVCardToAttribValues( /* import.cpp */
+		const char * vCard, 
+		AB_AttributeValue ** values,  /* function allocates, caller must free */
+		uint16 * numItems);
+
+int AB_ConvertAttribValuesToVCard(   /* export.cpp */
+		AB_AttributeValue * values, 
+		uint16 numItems,
+		char **VCard); /* function allocates...caller must free with XP_FREE */
+
+int AB_ExportVCardToPrefs(const char * VCardString); /* import.cpp */
+
+/* Used by libmsg compose pane to attach a vcard file to the message */
+int AB_ExportVCardToTempFile (  /* export.cpp */
+		const char * vCard, 
+		char** filename);
+
+/* used to load the current user's vcard from preferences. Caller must free */
+int AB_LoadIdentityVCard(char ** IdentityVCard); /* import.cpp */ 
 
 XP_END_PROTOS
 

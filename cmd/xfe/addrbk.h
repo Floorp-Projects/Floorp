@@ -18,7 +18,7 @@
 
 /*
    addrbk.h --- X-specific headers for the front end.
-   Created: Tao Cheng  <tao@netscape.com>, 10-nov-94.
+   Created: Tao Cheng  <tao@netscape.com>, 10-nov-96.
  */
 #ifndef _ADDRBK_H_
 #define _ADDRBK_H_
@@ -29,6 +29,62 @@
 
 #define AB_MAX_ENTRIES  175000
 #define AB_MAX_STRLEN   1024
+
+#if !defined(EMPTY_STRVAL)
+#define EMPTY_STRVAL(value) \
+  (!(value) || !((value)->u.string) || !XP_STRLEN(((value)->u.string)))
+
+#endif
+
+#ifndef IS_AB_PANE_CMD
+#define IS_AB_PANE_CMD(command) \
+        ((command == xfeCmdComposeMessage) || \
+		 (command == xfeCmdComposeMessagePlain) || \
+		 (command == xfeCmdComposeMessageHTML) || \
+		 \
+		 (command == xfeCmdImport) ||  \
+		 (command == xfeCmdSaveAs) || \
+		  \
+		 (command == xfeCmdClose) ||  \
+		  \
+		 (command == xfeCmdUndo) ||  \
+		 (command == xfeCmdRedo) ||  \
+		  \
+		 (command == xfeCmdABDeleteAllEntries) ||  \
+		  \
+		 (command == xfeCmdABByType) ||  \
+		 (command == xfeCmdABByName) ||  \
+		 (command == xfeCmdABByEmailAddress) ||  \
+		 (command == xfeCmdABByNickName) ||  \
+		 (command == xfeCmdABByCompany) ||  \
+		 (command == xfeCmdABByLocality) ||  \
+		  \
+		 (command == xfeCmdSortAscending) ||  \
+		 (command == xfeCmdSortDescending) ||  \
+		 \
+		 (command == xfeCmdAddToAddressBook) ||  \
+		 (command == xfeCmdABNewList) ||  \
+		  \
+		 (command == xfeCmdABCall)  \
+		 )
+
+#endif /* IS_AB_PANE_CMD */
+
+#ifndef IS_CONTAINER_PANE_CMD
+#define IS_CONTAINER_PANE_CMD(command) \
+        ((command == xfeCmdABNewPAB) ||  \
+		 (command == xfeCmdABNewLDAPDirectory)\
+		 )
+#endif /* IS_CONTAINER_PANE_CMD */
+
+#ifndef IS_2_PANE_CMD
+#define IS_2_PANE_CMD(command) \
+        ((command == xfeCmdShowPopup) ||  \
+		 (command == xfeCmdABDeleteEntry) ||  \
+		 (command == xfeCmdABEditEntry) ||\
+		 (command == xfeCmdViewProperties)\
+		 )
+#endif /* IS_2_PANE_CMD */
 
 typedef struct fe_addrbk_data 
 {

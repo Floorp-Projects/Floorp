@@ -21,7 +21,7 @@
    */
 
 
-
+#include "rosetta.h"
 #include "ComposeAddressView.h"
 #include "xfe.h"
 #include "msgcom.h"
@@ -76,7 +76,7 @@ XDEBUG(	printf ("in XFE_ComposeAddressView::handlesCommand(%s)\n", Command::getS
   if (command == xfeCmdGetNewMessages
       || command == xfeCmdAddNewsgroup
       || command == xfeCmdDelete
-      || command == xfeCmdViewSecurity
+      HG78281
       || command == xfeCmdStopLoading)
     return True;
 

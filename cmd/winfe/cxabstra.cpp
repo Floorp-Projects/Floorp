@@ -241,14 +241,6 @@ void fe_finish_exit(void *pClosure)
         }
     }
 
-#ifdef MOZ_LOC_INDEP
-	/* li_stuff - time to do last synch */
-	if (theApp.LIStuffEnd() == FALSE) {
-        //  synching files.
-        bCanExit = FALSE;
-	}
-#endif // MOZ_LOC_INDEP
-
     if(AfxOleCanExitApp() == FALSE) {
         //  Outstanding com lock.
         bCanExit = FALSE;
@@ -262,7 +254,7 @@ void fe_finish_exit(void *pClosure)
     if(theApp.m_pMainWnd != NULL)   {
         if(bCanExit)    {
             TRACE("Posting WM_CLOSE to %p hidden frame to exit app.\n", theApp.m_pMainWnd);
-            theApp.m_pMainWnd->PostMessage(WM_CLOSE);
+             theApp.m_pMainWnd->PostMessage(WM_CLOSE);
         }
         else    {
             //  Have to retry in a little while.
@@ -584,7 +576,7 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
 #ifdef MOZ_MAIL_NEWS
             if ((((iFormatOut & 0x1f ) == FO_PRESENT) 
 				  && (GetContext()->type != MWContextMetaFile) 
-        		  && MSG_NewWindowRequired(GetContext(), pUrl->address)) 
+        		  && MSG_NewWindowRequiredForURL(GetContext(), pUrl)) 
 				  || bForceNew)
 
             {
@@ -603,7 +595,7 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
         			{
         			case MSG_THREADPANE:
         				{
-        				MSG_FolderInfo *folder = MSG_GetFolderInfoFromURL(WFE_MSGGetMaster(), pUrl->address);
+	       				MSG_FolderInfo *folder = MSG_GetFolderInfoFromURL(WFE_MSGGetMaster(), pUrl->address, TRUE);
 						BOOL bContinue = FALSE;
         				if (folder){
         					C3PaneMailFrame::Open(folder, MSG_MESSAGEKEYNONE, &bContinue);
@@ -1270,8 +1262,8 @@ void CAbstractCX::CopySelection()	{
 		INTL_StrToUnicode(datacsid, (unsigned char*)text, (INTL_Unicode*)string, len);
 
 		GlobalUnlock(hData);		
+  	h = ::SetClipboardData(CF_UNICODETEXT, hData); 
 	}
-	h = ::SetClipboardData(CF_UNICODETEXT, hData); 
 
 #endif
 

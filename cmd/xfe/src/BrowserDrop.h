@@ -40,7 +40,7 @@ class XFE_BrowserDrop : public XFE_DropNetscape
 {
 public:
     XFE_BrowserDrop(Widget,XFE_BrowserFrame*);
-    ~XFE_BrowserDrop();
+    virtual ~XFE_BrowserDrop();
 protected:
     XFE_BrowserFrame *_browserFrame;
     char **_jsList;

@@ -125,6 +125,8 @@ public:
   void setOutlinable(XFE_Outlinable *o);
 #endif /* USE_MOTIF_DND */
 
+  int visibleRows(int& firstrow, int& lastrow);
+
   XFE_Outlinable *getOutlinable();
 
   void setSortColumn(int column, EOutlinerSortDirection direction);

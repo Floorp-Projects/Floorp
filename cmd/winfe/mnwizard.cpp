@@ -61,6 +61,64 @@ extern "C" BOOL EmailValid(char* pEmail)
 		return FALSE;
 }
 
+void GetImapServerName(char* pServerName)
+{
+	char serverStr[512];
+	int nLen = 511;
+	if (PREF_NOERROR == PREF_GetCharPref("network.hosts.imap_servers", serverStr, &nLen))
+	{
+		nLen = strlen(serverStr);
+		int j = 0;
+		for (int i = 0; i <= nLen; i++)
+		{
+			if (serverStr[i] != ',' && serverStr[i] != '\0')
+				pServerName[j++] = serverStr[i];
+			else
+			{	
+				pServerName[j] = '\0';
+				break;
+			}
+		}
+	}
+}
+
+void GetImapUserName(char* pServerName, char* pUserName)
+{
+	if (strlen(pServerName) > 0)
+	{
+		char* pName = NULL;
+		IMAP_GetCharPref(pServerName, CHAR_USERNAME, &pName);
+		if (pName)
+		{
+			strcat(pUserName, pName);
+			XP_FREE(pName);
+		}
+	}
+}
+
+void SetImapServerName(const char* pServerName)
+{
+	char *pServerList = NULL;
+	PREF_CopyCharPref("network.hosts.imap_servers", &pServerList);
+
+	if (pServerList)
+	{
+		int nListLen = XP_STRLEN(pServerList) + strlen(pServerName) + 1;
+		char *pNewList = nListLen ? (char *) XP_ALLOC(nListLen) : 0;
+		if (pNewList)
+		{
+			XP_STRCAT(pNewList, ",");
+			XP_STRCAT(pNewList, pServerName);
+			PREF_SetCharPref("network.hosts.imap_servers", pNewList);
+			XP_FREE(pNewList);
+		}
+		XP_FREE(pServerList);
+	}
+	else
+		PREF_SetCharPref("network.hosts.imap_servers", pServerName);
+
+}
+
 #ifdef _WIN32
 /////////////////////////////////////////////////////////////////////////////
 // CCoverPage
@@ -205,31 +263,41 @@ BOOL CReceiveMailPage::OnInitDialog()
 	char buffer[256];
 	int nLen = 255;
 
-	if (PREF_NOERROR == PREF_GetCharPref("mail.pop_name", buffer, &nLen))
-        SetDlgItemText(IDC_EDIT_USER_NAME, buffer);
-	if (PREF_NOERROR == PREF_GetCharPref("network.hosts.pop_server", buffer, &nLen))
-	{
-		int nameLen = strlen(buffer);
-		if (nameLen)
-			SetDlgItemText(IDC_EDIT_MAIL_SERVER, buffer);
-		else
+	long prefLong = MSG_Pop3;
+	PREF_GetIntPref("mail.server_type",&prefLong);
+	if (prefLong == MSG_Imap4)
+	{	// imap server
+		CheckDlgButton(IDC_RADIO_IMAP, TRUE);
+
+		char serverName[128];
+		GetImapServerName(serverName);
+
+		if (strlen(serverName) > 0)
 		{
-			if (PREF_NOERROR == PREF_GetCharPref("network.hosts.smtp_server", buffer, &nLen))
-				SetDlgItemText(IDC_EDIT_MAIL_SERVER, buffer);
+			char userName[128];
+			SetDlgItemText(IDC_EDIT_MAIL_SERVER, serverName);
+			GetImapUserName(serverName, userName);
+			if (strlen(userName) > 0)
+				SetDlgItemText(IDC_EDIT_USER_NAME, userName);
 		}
 	}
 	else
+	{	// pop server
+		CheckDlgButton(IDC_RADIO_POP, TRUE);
+		if (PREF_NOERROR == PREF_GetCharPref("mail.pop_name", buffer, &nLen))
+			SetDlgItemText(IDC_EDIT_USER_NAME, buffer);
+		if (PREF_NOERROR == PREF_GetCharPref("network.hosts.pop_server", buffer, &nLen))
+		{
+			int nameLen = strlen(buffer);
+			if (nameLen)
+				SetDlgItemText(IDC_EDIT_MAIL_SERVER, buffer);
+		}
+	}
+	if (!GetDlgItemText(IDC_EDIT_MAIL_SERVER, buffer, 255))
 	{
 		if (PREF_NOERROR == PREF_GetCharPref("network.hosts.smtp_server", buffer, &nLen))
 			SetDlgItemText(IDC_EDIT_MAIL_SERVER, buffer);
 	}
-    
-	long prefLong = MSG_Pop3;
-	PREF_GetIntPref("mail.server_type",&prefLong);
-	if (prefLong == MSG_Imap4)
-		CheckDlgButton(IDC_RADIO_IMAP, TRUE);
-	else
-		CheckDlgButton(IDC_RADIO_POP, TRUE);
 	return ret;
 }
 
@@ -281,9 +349,30 @@ void CReceiveMailPage::DoFinish()
 	PREF_SetCharPref("network.hosts.pop_server", text);
 
 	if (IsDlgButtonChecked(IDC_RADIO_IMAP)) 
+	{	// IMAP server
 		PREF_SetIntPref("mail.server_type", (int32)MSG_Imap4);
+
+		char server[BUFSZ];
+		server[0] = '\0';
+		GetDlgItemText(IDC_EDIT_MAIL_SERVER, server, BUFSZ);  
+		SetImapServerName(server);
+
+		text[0] = '\0';
+		GetDlgItemText(IDC_EDIT_USER_NAME, text, BUFSZ);
+		IMAP_SetCharPref(server, CHAR_USERNAME, text);
+		
+	}
 	else
+	{	// pop server
 		PREF_SetIntPref("mail.server_type", (int32)MSG_Pop3);
+
+		GetDlgItemText(IDC_EDIT_USER_NAME, text, BUFSZ);
+		PREF_SetCharPref("mail.pop_name", text);
+		
+		text[0] = '\0';
+		GetDlgItemText(IDC_EDIT_MAIL_SERVER, text, BUFSZ);  
+		PREF_SetCharPref("network.hosts.pop_server", text);
+	}
 }
 
 void CReceiveMailPage::DoDataExchange(CDataExchange* pDX)
@@ -558,10 +647,33 @@ CMailNewsWizard::CMailNewsWizard(CWnd *pParent)
 
 	long prefLong = MSG_Pop3;
 	PREF_GetIntPref("mail.server_type",&prefLong);
-	if (prefLong == MSG_Imap4)
-		m_bUseIMAP = TRUE;
+	m_bUseIMAP = prefLong == MSG_Imap4;
+
+	if (m_bUseIMAP)
+	{
+		char serverName[128];
+		GetImapServerName(serverName);
+		m_szPopName = serverName;
+		if (strlen(serverName) > 0)
+		{
+			char userName[128];
+			GetImapUserName(serverName, userName);
+			if (strlen(userName) > 0)
+				m_szInMailServer = userName;
+		}
+	}
 	else
-		m_bUseIMAP = FALSE;
+	{   //POP server
+		pPrefStr = NULL;
+		PREF_CopyCharPref("mail.pop_name", &pPrefStr);
+		m_szPopName = pPrefStr;
+		if (pPrefStr) XP_FREE(pPrefStr); 
+
+		pPrefStr = NULL;
+		PREF_CopyCharPref("network.hosts.pop_server", &pPrefStr);
+		m_szInMailServer = pPrefStr;
+		if (pPrefStr) XP_FREE(pPrefStr); 
+	}
 
 	pPrefStr = NULL;
 	PREF_CopyCharPref("network.hosts.nntp_server", &pPrefStr);
@@ -915,11 +1027,18 @@ BOOL CMailNewsWizard::DoFinish()
 	PREF_SetCharPref("mail.identity.useremail", LPCTSTR(m_szEmail));
 	PREF_SetCharPref("network.hosts.smtp_server", LPCTSTR(m_szMailServer));
 
-	PREF_SetCharPref("mail.pop_name", LPCTSTR(m_szPopName));
-	PREF_SetCharPref("network.hosts.pop_server", LPCTSTR(m_szInMailServer));
-
 	long imapPref = m_bUseIMAP ? MSG_Imap4 : MSG_Pop3;
 	PREF_SetIntPref("mail.server_type", imapPref);
+	if (m_bUseIMAP)
+	{
+		SetImapServerName(LPCTSTR(m_szInMailServer));
+		IMAP_SetCharPref(LPCTSTR(m_szInMailServer), CHAR_USERNAME, LPCTSTR(m_szPopName));
+	}
+	else
+	{
+		PREF_SetCharPref("mail.pop_name", LPCTSTR(m_szPopName));
+		PREF_SetCharPref("network.hosts.pop_server", LPCTSTR(m_szInMailServer));
+	}
 
 	PREF_SetCharPref("network.hosts.nntp_server", LPCTSTR(m_szNewsServer));
 

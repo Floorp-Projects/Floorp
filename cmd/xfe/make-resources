@@ -49,6 +49,15 @@ else
 	ONLYSGI="!"
 fi
 
+SUNP=`echo ${DEST} | sed -n 's/.*SunOS.*/TRUE/p'`
+if [ "x${SUNP}" = "xTRUE" ]; then
+	NOTSUN="!"
+	ONLYSUN=""
+else
+	NOTSUN=""
+	ONLYSUN="!"
+fi
+
 SCOP=`echo ${DEST} | sed -n 's/.*SCO.*/TRUE/p'`
 if [ "x${SCOP}" = "xTRUE" ]; then
 	ONLYSCO=""
@@ -63,8 +72,10 @@ cat resources ${LOCALE_MAP} strs | sed \
 	 s/@PROGNAME@/${PROGNAME}/g;
 	 s/@VERSION@/${VERS}/g;
 	 s/@NOTSGI@/${NOTSGI}/g;
+	 s/@NOTSUN@/${NOTSUN}/g;
 	 s/@ONLYSGI@/${ONLYSGI}/g;
 	 s/@ONLYSCO@/${ONLYSCO}/g;
+	 s/@ONLYSUN@/${ONLYSUN}/g;
 	 s/@LOC@//g;
 	 s/@LTD@//g;
 	 s:@LIBDIR@:${LOC_LIB_DIR}:g;

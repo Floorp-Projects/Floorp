@@ -46,6 +46,21 @@ XFE_Dialog::XFE_Dialog(Widget   parent,      // dialog parent
 					   Widget chrome_widget)
 	: XFE_Component()
 {
+#if defined(GLUE_COMPO_CONTEXT)
+    Widget s = parent;
+    while (s && !XtIsShell(s)) {
+        s = XtParent(s);
+    }
+	m_wParent = s;
+
+	// Create the chrome
+
+	if (chrome_widget == NULL)
+	  m_chrome = createDialogChromeWidget(s, name, ok, cancel,
+										  help, apply, separator, modal);
+	else
+	  m_chrome = chrome_widget;
+#else
 	m_wParent = parent;
 
 	// Create the chrome
@@ -55,6 +70,7 @@ XFE_Dialog::XFE_Dialog(Widget   parent,      // dialog parent
 										  help, apply, separator, modal);
 	else
 	  m_chrome = chrome_widget;
+#endif /* GLUE_COMPO_CONTEXT */
 
 	// Register base widget and parent widget
 

@@ -31,6 +31,8 @@
 
 /**	INCLUDE	**/
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "statbar.h"
 #include "ssl.h"
 #include "tooltip.h"
@@ -67,9 +69,12 @@ static const int nSEC_KEY_WIDTH = 34;
 // status bar format
 static const UINT BASED_CODE pPaneIndicators[] =
 {
-    IDS_SECURITY_STATUS,
+    HG21326
     IDS_TRANSFER_STATUS,
     ID_SEPARATOR
+#ifdef MOZ_OFFLINE
+    ,IDS_ONLINE_STATUS
+#endif //MOZ_OFFLINE
 #ifdef MOZ_TASKBAR
 	,IDS_TASKBAR
 #endif /* MOZ_TASKBAR */
@@ -95,6 +100,13 @@ HBITMAP CNetscapeStatusBar::sm_hbmpSecure    = NULL;
 SIZE    CNetscapeStatusBar::sm_sizeSecure = {0,0};
 int		CNetscapeStatusBar::sm_iRefCount = 0;
 
+#ifdef MOZ_OFFLINE
+HBITMAP CNetscapeStatusBar::sm_hbmpOnline = NULL;
+SIZE	CNetscapeStatusBar::sm_sizeOnline = {0, 0};
+int     CNetscapeStatusBar::sm_iOnlineRefCount = 0;
+
+CPtrArray CNetscapeStatusBar::gStatusBars;
+#endif //MOZ_OFFLINE
 //------------------------------------------------------------------------------
 CNetscapeStatusBar::CNetscapeStatusBar()
 {
@@ -119,16 +131,20 @@ CNetscapeStatusBar::CNetscapeStatusBar()
 
     m_pProxy2Frame = NULL;
     
-    if( !sm_hbmpSecure )
+    HG22121
+	sm_iRefCount++;
+#ifdef MOZ_OFFLINE
+   if( !sm_hbmpOnline )
     { 
-    	VERIFY( sm_hbmpSecure = ::LoadBitmap( AfxGetResourceHandle(), MAKEINTRESOURCE( IDB_SECURE_STATUS ) ));
+    	VERIFY( sm_hbmpOnline = ::LoadBitmap( AfxGetResourceHandle(), MAKEINTRESOURCE( IDB_OFFLINE_STATUS ) ));
         
     	BITMAP bm;
-    	::GetObject( sm_hbmpSecure, sizeof(bm), &bm );
-    	sm_sizeSecure.cx = bm.bmWidth / 3;
-    	sm_sizeSecure.cy = bm.bmHeight;
+    	::GetObject( sm_hbmpOnline, sizeof(bm), &bm );
+    	sm_sizeOnline.cx = bm.bmWidth / 2;
+    	sm_sizeOnline.cy = bm.bmHeight;
     }
-	sm_iRefCount++;
+	sm_iOnlineRefCount++;
+#endif //MOZ_OFFLINE
 } 
 
 //------------------------------------------------------------------------------
@@ -144,16 +160,74 @@ CNetscapeStatusBar::~CNetscapeStatusBar()
 	delete [] m_anIDSaved;
 
 	if (!--sm_iRefCount) {
-		VERIFY(::DeleteObject(sm_hbmpSecure));
+		HG28363
 		sm_hbmpSecure = NULL;
 	}
+
+#ifdef MOZ_OFFLINE
+	if (!--sm_iOnlineRefCount) {
+		VERIFY(::DeleteObject(sm_hbmpOnline));
+		sm_hbmpOnline = NULL;
+	}
+#endif //MOZ_OFFLINE
 }
 
 //------------------------------------------------------------------------------
-BOOL CNetscapeStatusBar::Create( CWnd *pParent, BOOL bSecurityStatus /*=TRUE*/, BOOL bTaskbar /*=TRUE*/ )
+#ifdef MOZ_OFFLINE
+BOOL CNetscapeStatusBar::Create( CWnd *pParent, BOOL bxxx /*=TRUE*/, BOOL bTaskbar /*=TRUE*/,
+								BOOL bOnlineStatus /*TRUE*/)
 {
     m_bTaskbar = bTaskbar;
-	m_bSecurityStatus = bSecurityStatus;
+	HG26545
+	m_bOnlineStatus = bOnlineStatus;
+    
+	if( !CNetscapeStatusBarBase::Create( pParent ) )
+        return FALSE;
+
+    if( m_bSecurityStatus || m_bOnlineStatus)
+    {
+        m_pTooltip = new CNSToolTip2;
+        if( !m_pTooltip )
+        {
+            return FALSE;
+        }
+        
+        m_pTooltip->Create( this );
+		HG12421
+
+		if(m_bOnlineStatus)
+		{
+			m_pTooltip->AddTool(this, IDS_STATBAR_ONLINE, CRect(0,0,0,0), IDS_ONLINE_STATUS);
+		}
+    }
+
+	if (!CreateDefaultPanes())
+		return FALSE;
+
+    pParentSubclass = new CNetscapeStatusBar::CParentSubclass( pParent, this );
+    ASSERT( pParentSubclass );
+    
+#ifdef MOZ_TASKBAR
+    if( m_bTaskbar )
+    {    
+        //
+       	// Tell the Task Bar manager about us so it can be docked on our status bar.
+        //
+       	((CNetscapeApp *)AfxGetApp())->GetTaskBarMgr().RegisterStatusBar( this );
+		SaveModeState();
+	}
+#endif /* MOZ_TASKBAR*/
+        
+	// add to status bar array
+	gStatusBars.Add(m_hWnd);
+	return TRUE;
+}
+#else //MOZ_OFFLINE
+BOOL CNetscapeStatusBar::Create( CWnd *pParent, BOOL bxxx /*=TRUE*/, BOOL bTaskbar /*=TRUE*/ )
+
+{
+    m_bTaskbar = bTaskbar;
+	m_bSecurityStatus = bxxx;
     
 	if( !CNetscapeStatusBarBase::Create( pParent ) )
         return FALSE;
@@ -167,8 +241,7 @@ BOOL CNetscapeStatusBar::Create( CWnd *pParent, BOOL bSecurityStatus /*=TRUE*/, 
         }
         
         m_pTooltip->Create( this );
-        m_pTooltip->AddTool( this, IDS_STATBAR_SECURITY, CRect(0,0,0,0), IDS_SECURITY_STATUS );
-        m_pTooltip->AddTool( this, IDS_STATBAR_SECURITY, CRect(0,0,0,0), IDS_SIGNED_STATUS );
+        HG17231
     }
 
 	if (!CreateDefaultPanes())
@@ -190,6 +263,7 @@ BOOL CNetscapeStatusBar::Create( CWnd *pParent, BOOL bSecurityStatus /*=TRUE*/, 
         
 	return TRUE;
 }
+#endif //MOZ_OFFLINE
 
 #ifdef _WIN32
 //------------------------------------------------------------------------------
@@ -346,33 +420,32 @@ void CNetscapeStatusBar::SetupMode()
             
 			RECT rcTool;
 
-			int idx = CommandToIndex(IDS_SECURITY_STATUS);
-			if (idx > -1) {
-	            SetPaneInfo(idx, IDS_SECURITY_STATUS, SBPS_DISABLED, sm_sizeSecure.cx - iFudge);
-
-				if (m_pTooltip) {
-	                GetItemRect(idx, &rcTool);
-		            m_pTooltip->SetToolRect(this, IDS_SECURITY_STATUS, &rcTool);
-				}
-			}
-			idx = CommandToIndex(IDS_SIGNED_STATUS);
-			if (idx > -1) {
-	            SetPaneInfo(idx, IDS_SIGNED_STATUS, SBPS_DISABLED, sm_sizeSecure.cx - iFudge);       
-
-				if (m_pTooltip) {
-	                GetItemRect(idx, &rcTool);
-		            m_pTooltip->SetToolRect(this, IDS_SIGNED_STATUS, &rcTool);
-				}
-			}	
+			HG26576
+			
             
             //
             // Set common pane info (size, style, etc).
             // WHS -- I'm assuming we'll always have these, probably not good in the long term
 			//
 
-            SetPaneInfo( CommandToIndex( ID_SEPARATOR ),        ID_SEPARATOR,        SBPS_STRETCH, 0 );
-            SetPaneInfo( CommandToIndex( IDS_TRANSFER_STATUS ), IDS_TRANSFER_STATUS, SBPS_NORMAL,  90 );
-                
+  			
+
+			idx = CommandToIndex(IDS_TRANSFER_STATUS);
+			if(idx > -1) {
+	            SetPaneInfo( idx, IDS_TRANSFER_STATUS, SBPS_NORMAL,  90 );
+			}
+#ifdef MOZ_OFFLINE
+			idx = CommandToIndex(IDS_ONLINE_STATUS);
+			if (idx > -1) {
+	            SetPaneInfo(idx, IDS_ONLINE_STATUS, SBPS_DISABLED, sm_sizeOnline.cx - iFudge);       
+
+				if (m_pTooltip) {
+	                GetItemRect(idx, &rcTool);
+		            m_pTooltip->SetToolRect(this, IDS_ONLINE_STATUS, &rcTool);
+				}
+			}	
+#endif
+               
             // Note the taskbar mgr sets the width of the taskbar pane
             // Also note we must call these SetPaneXXX methods even if m_bTaskbar is FALSE because
             // pPaneIndicators specifies the IDS_TASKBAR.  If we don't, the default CStatusBar
@@ -545,6 +618,22 @@ void CNetscapeStatusBar::SetPercentDone(const int32 nPercent)
 //------------------------------------------------------------------------------
 void CNetscapeStatusBar::OnDestroy()
 {
+#ifdef MOZ_OFFLINE
+	//remove the status bar;
+
+	int count = gStatusBars.GetSize();
+
+	for(int i = 0; i < count; i++)
+	{
+		HWND hWnd = (HWND)gStatusBars.GetAt(i);
+		if(hWnd == m_hWnd)
+		{
+			gStatusBars.RemoveAt(i);
+			break;
+		}
+
+	}
+#endif //MOZ_OFFLINE
 #ifdef MOZ_TASKBAR
     if( m_bTaskbar )
     {    
@@ -609,20 +698,17 @@ void CNetscapeStatusBar::OnSize( UINT nType, int cx, int cy )
 #endif /* MOZ_TASKBAR */
 		RECT rcTool;
 
-		int idx = CommandToIndex(IDS_SECURITY_STATUS);
+		HG26522
+#ifdef MOZ_OFFLINE
+		idx = CommandToIndex(IDS_ONLINE_STATUS);
 		if (idx > -1) {
 			if (m_pTooltip) {
 	            GetItemRect(idx, &rcTool);
-		        m_pTooltip->SetToolRect(this, IDS_SECURITY_STATUS, &rcTool);
-			}
-		}
-		idx = CommandToIndex(IDS_SIGNED_STATUS);
-		if (idx > -1) {
-			if (m_pTooltip) {
-	            GetItemRect(idx, &rcTool);
-		        m_pTooltip->SetToolRect(this, IDS_SIGNED_STATUS, &rcTool);
+		        m_pTooltip->SetToolRect(this, IDS_ONLINE_STATUS, &rcTool);
 			}
 		}	
+#endif
+	
 	}
 }
 
@@ -659,6 +745,9 @@ void CNetscapeStatusBar::OnPaint()
     
     DrawSecureStatus(dc.m_hDC);
 	DrawSignedStatus(dc.m_hDC);
+#ifdef MOZ_OFFLINE
+	DrawOnlineStatus(dc.m_hDC);
+#endif //MOZ_OFFLINE
    	DrawProgressBar();
 }
 
@@ -681,6 +770,7 @@ void CNetscapeStatusBar::DrawSecureStatus(HDC hdc)
  	if (idx < 0) 
         return;
 
+	HG87236
 	UINT nID, nStyle;
 	int cxWidth;
 	GetPaneInfo(idx, nID, nStyle, cxWidth);
@@ -705,6 +795,7 @@ void CNetscapeStatusBar::DrawSignedStatus(HDC hdc)
  	if (idx < 0) 
         return;
 
+	HG17236
 	UINT nID, nStyle;
 	int cxWidth;
 	GetPaneInfo(idx, nID, nStyle, cxWidth);
@@ -725,6 +816,32 @@ void CNetscapeStatusBar::DrawSignedStatus(HDC hdc)
 	}
 }
 
+#ifdef MOZ_OFFLINE
+//------------------------------------------------------------------------------
+void CNetscapeStatusBar::DrawOnlineStatus(HDC hdc)
+{
+ 	int idx = CommandToIndex( IDS_ONLINE_STATUS );
+ 	if (idx < 0) 
+        return;
+
+	UINT nID, nStyle;
+	int cxWidth;
+	GetPaneInfo(idx, nID, nStyle, cxWidth);
+	//BOOL bOnline = !(nStyle & SBPS_DISABLED);
+	BOOL bOnline = !NET_IsOffline();
+    
+  	RECT rect; 
+  	GetItemRect( idx, &rect );
+
+  	HDC hdcBitmap = ::CreateCompatibleDC( hdc );
+  	HBITMAP hbmOld = (HBITMAP)::SelectObject( hdcBitmap, sm_hbmpOnline );
+
+  	FEU_TransBlt( hdc, rect.left+1, rect.top+1, sm_sizeOnline.cx, sm_sizeOnline.cy, hdcBitmap, bOnline ? sm_sizeOnline.cx : 0, 0,WFE_GetUIPalette(GetParentFrame()) );
+
+  	::SelectObject( hdcBitmap, hbmOld );
+  	VERIFY( ::DeleteDC( hdcBitmap ));
+}
+#endif //MOZ_OFFLINE
 //------------------------------------------------------------------------------
 void CNetscapeStatusBar::DrawProgressBar()
 {

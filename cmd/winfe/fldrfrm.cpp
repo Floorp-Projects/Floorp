@@ -57,8 +57,9 @@ const UINT FolderCodes[] = {
 CFolderFrame::CFolderFrame()
 {
 	m_iMessageMenuPos = 2;
-	m_iMoveMenuPos = 3;
+	m_iMoveMenuPos = 2;
 	m_iCopyMenuPos = -1;
+	m_iAddAddressBookMenuPos = -1;
 
 	m_iFileMenuPos = -1;
 	m_iAttachMenuPos = -1;
@@ -140,8 +141,6 @@ BEGIN_MESSAGE_MAP( CFolderFrame, CMsgListFrame )
 
 	ON_COMMAND(ID_FILE_UPDATECOUNTS, OnUpdateView)
 	ON_UPDATE_COMMAND_UI(ID_FILE_UPDATECOUNTS, OnUpdateUpdateView)
-	ON_COMMAND(ID_VIEW_PROPERTIES, OnViewProperties)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_PROPERTIES, OnUpdateViewProperties)
 	// Organize Menu
 #ifdef ON_COMMAND_RANGE
 	ON_COMMAND_RANGE(FIRST_MOVE_MENU_ID, LAST_MOVE_MENU_ID, OnMove )
@@ -348,7 +347,17 @@ void CFolderFrame::OnNew()
 	if (folderLine.flags & (MSG_FOLDER_FLAG_NEWSGROUP|MSG_FOLDER_FLAG_NEWS_HOST)) {
 		OnNewNewsgroup();
 	} else {
-		CNewFolderDialog( this, m_pPane, GetCurFolder() );
+		MWContext *pXPCX = NULL;
+		MWContextType saveType;
+		if (m_pPane)
+		{
+			pXPCX = MSG_GetContext( m_pPane );
+			saveType = pXPCX->type;
+		}
+		CNewFolderDialog newFolderDlg( this, m_pPane, MSG_SuggestNewFolderParent(GetCurFolder(), WFE_MSGGetMaster()) );
+		newFolderDlg.DoModal();
+		if (m_pPane)
+			pXPCX->type = saveType;	
 	}
 }
 
@@ -390,124 +399,6 @@ void _ShutDownFrameCallBack(HWND hwnd, MSG_Pane *pane, void * closure)
 		MSG_DownloadFolderForOffline(WFE_MSGGetMaster(), pane, (MSG_FolderInfo *) closure);
 }
 
-
-void CFolderFrame::OnViewProperties()
-{
-	MSG_ViewIndex *indices;
-	int count;
-	BOOL bNoPropertiesNeeded = FALSE;
-	MSG_FolderLine folderLine;
-
-	m_pOutliner->GetSelection( indices, count );
-	MSG_FolderInfo *folderInfo = MSG_GetFolderInfo( m_pPane, indices[0] );
-	MSG_GetFolderLineByIndex( m_pPane, indices[0], 1, &folderLine );
-	
-	CString csTitle;
-	if (folderLine.flags & (MSG_FOLDER_FLAG_NEWSGROUP|MSG_FOLDER_FLAG_CATEGORY)) {
-		csTitle.LoadString(IDS_NEWSGROUPPROP);
-	} else if (folderLine.flags & MSG_FOLDER_FLAG_NEWS_HOST) {
-		csTitle.LoadString(IDS_NEWSHOSTPROP);
-	} else {
-		if (folderLine.level > 1) {
-			csTitle.LoadString(IDS_FOLDERPROP);
-		}else {
-			csTitle.LoadString(IDS_MAILSERVERPROP);
-		}
-	}
-	CNewsFolderPropertySheet FolderSheet( csTitle, this );
-
-    //destructor handles clean up of added sheets
-
-	//only make and add the pages if they selected a news group or category
-	if ( folderLine.flags & (MSG_FOLDER_FLAG_NEWSGROUP|MSG_FOLDER_FLAG_CATEGORY) )
-	{
-		FolderSheet.m_pNewsFolderPage= new CNewsGeneralPropertyPage(&FolderSheet);
-		FolderSheet.m_pNewsFolderPage->SetFolderInfo( folderInfo, (MWContext*)GetContext() );
-
-		FolderSheet.m_pDownLoadPageNews = new CDownLoadPPNews(&FolderSheet);
-		FolderSheet.m_pDownLoadPageNews->SetFolderInfo(folderInfo);
-
-		FolderSheet.m_pDiskSpacePage = new CDiskSpacePropertyPage(&FolderSheet);
-		FolderSheet.m_pDiskSpacePage->SetFolderInfo (folderInfo );
-
-		FolderSheet.AddPage(FolderSheet.m_pNewsFolderPage);
-		FolderSheet.AddPage(FolderSheet.m_pDownLoadPageNews);
-		FolderSheet.AddPage(FolderSheet.m_pDiskSpacePage);
-	}
-	else if ( folderLine.flags & MSG_FOLDER_FLAG_NEWS_HOST) 
-	{
-		MSG_NewsHost *pNewsHost = MSG_GetNewsHostFromIndex (m_pPane, indices[0]);
-		FolderSheet.m_pNewsHostPage= new CNewsHostGeneralPropertyPage;
-		FolderSheet.m_pNewsHostPage->SetFolderInfo( folderInfo,pNewsHost );
-		FolderSheet.AddPage(FolderSheet.m_pNewsHostPage);
-	}
-	else if ( folderLine.level > 1)
-	{
-		FolderSheet.m_pFolderPage= new CFolderPropertyPage(&FolderSheet);
-		FolderSheet.m_pFolderPage->SetFolderInfo( folderInfo, m_pPane );
-		FolderSheet.AddPage(FolderSheet.m_pFolderPage);
-		//only add this page if it's an offline mail folder.
-		if (folderLine.flags & MSG_FOLDER_FLAG_IMAPBOX)
-		{
-			FolderSheet.m_pDownLoadPageMail = new CDownLoadPPMail;
-			FolderSheet.m_pDownLoadPageMail->SetFolderInfo( folderInfo );
-			FolderSheet.AddPage(FolderSheet.m_pDownLoadPageMail);
-		}
-	}
-	else
-	{
-		wfe_DisplayPreferences((CGenericFrame*)this);
-		bNoPropertiesNeeded = TRUE;
-	}
-
-	if ( !bNoPropertiesNeeded)
-	{
-		if(FolderSheet.DoModal() == IDOK)
-		{
-			if(FolderSheet.DownLoadNow())
-			{
-				new CProgressDialog(this, NULL,_ShutDownFrameCallBack,
-						folderInfo,szLoadString(IDS_DOWNLOADINGARTICLES));
-				;//DonwLoad!!!!!!!
-			}
-			else if (FolderSheet.CleanUpNow())
-			{
-				 MSG_Command (m_pPane, MSG_CompressFolder,
-							indices, 1);
-			}
-			else if (FolderSheet.SynchronizeNow())
-					;//Synchronize!!!!
-		}
-	}
-}
-
-void CFolderFrame::OnUpdateViewProperties( CCmdUI *pCmdUI )
-{
-	MSG_ViewIndex *indices;
-	int count;
-
-	m_pOutliner->GetSelection( indices, count );
-
-	MSG_FolderLine folderLine;
-
-	MSG_FolderInfo *folderInfo = MSG_GetFolderInfo( m_pPane, indices[0] );
-	MSG_GetFolderLineByIndex( m_pPane, indices[0], 1, &folderLine );
-
-	CString csTitle;
-	if (folderLine.flags & (MSG_FOLDER_FLAG_NEWSGROUP|MSG_FOLDER_FLAG_CATEGORY)) {
-		pCmdUI->SetText(szLoadString(IDS_POPUP_NEWSGROUPPROP));
-	} else if (folderLine.flags & MSG_FOLDER_FLAG_NEWS_HOST) {
-		pCmdUI->SetText(szLoadString(IDS_POPUP_NEWSHOSTPROP));
-	} else {
-		if (folderLine.level > 1) {
-			pCmdUI->SetText(szLoadString(IDS_POPUP_FOLDERPROP));
-		}else {
-			pCmdUI->SetText(szLoadString(IDS_POPUP_MAILSERVERPROP));
-		}
-	}
-
-	pCmdUI->Enable( count == 1 );
-}
 
 void CFolderFrame::OnMove(UINT nID)
 {		    
@@ -604,7 +495,10 @@ void CFolderFrame::DoOpenFolder(BOOL bReuse)
 			}
 
 			if (pFrame)
+			{
 				pFrame->ActivateFrame();
+				pFrame->LoadFolder(folderLine.id);
+			}
 		}
 	}
 }

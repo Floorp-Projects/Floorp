@@ -109,6 +109,15 @@ BOOL bIsGold = FALSE;
 	void WFE_LJ_StartDebugger(void);
 #endif
 
+#ifdef NEW_PREF_ARCH
+#include "cprofile.h"
+#include "cprofmgr.h"
+
+extern int  login_NewProfilePreInit();
+extern int  login_NewProfilePostInit(CProfile *pProfile);
+
+#endif
+
 #ifdef _DEBUG
 #undef THIS_FILE
 static char BASED_CODE THIS_FILE[] = __FILE__;
@@ -121,6 +130,8 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 #ifdef __BORLANDC__
 	#define _mkdir mkdir
 #endif
+
+extern "C" void WFE_StartCalendar();
 
 extern "C"      {
 NET_StreamClass *memory_stream(int iFormatOut, void *pDataObj, URL_Struct *pUrlData, MWContext *pContext);
@@ -653,8 +664,14 @@ BOOL CNetscapeApp::InitInstance()
 
 	JSContext * prefContext=NULL;
 	JSObject *prefObject=NULL;
+#ifdef NEW_PREF_ARCH
+    CProfile        *profile = NULL;
+    CProfileManager *profMgr;
 
+	profile = (CProfile *) PREF_Init();
+#else
 	PREF_Init(NULL);
+
     // Read network and cache parameters
 
 	PREF_GetConfigContext(&prefContext);
@@ -663,6 +680,7 @@ BOOL CNetscapeApp::InitInstance()
 
 	if (!pref_InitInitialObjects(prefContext,prefObject))
 		return FALSE;
+#endif
 
 	SECNAV_InitConfigObject();
 
@@ -778,6 +796,150 @@ BOOL CNetscapeApp::InitInstance()
 	// init parts of security for li
 	SECNAV_EarlyInit();
 
+#ifdef NEW_PREF_ARCH
+    // After the new preferences architecture lands from the Nova branch, enable
+    // this #define
+
+
+    // Get the main NSPR event queue
+    mozilla_event_queue  = PR_GetMainEventQueue();
+
+    LM_InitMocha();
+
+	// Register all XP content type converters and stream decoders.
+    // We can overwrite these settings if we have other settings ourselves.
+	NET_RegisterMIMEDecoders();
+
+    // Do PE precleanup and such
+    login_NewProfilePreInit();
+    
+    // Read network and cache parameters
+
+	PREF_GetConfigContext(&prefContext);
+	PREF_GetPrefConfigObject(&prefObject);
+	if (!(prefContext && prefObject)) return FALSE;
+
+	if (!pref_InitInitialObjects(prefContext,prefObject))
+		return FALSE;
+
+    profile->LoadPrefs("netscape.cfg");
+    profMgr = new CProfileManager(profile);
+
+    int     profErr = PREF_OK;
+
+    if (m_bAccountSetup) {
+        // FIXME!  This isn't permanent!
+//        profMgr->CreateNewDialupAcct();
+        profErr = login_QueryForCurrentProfile();
+    } else if (m_bCreateNewProfile) {
+        if (theApp.m_bPEEnabled) {
+            profErr = login_QueryForCurrentProfile();
+            // FIXME!  This isn't permanent!
+//            profMgr->CreateNewDialupAcct();
+        } else {
+            profErr = profMgr->DoNewProfileWizard(PROFMGR_DEFAULT);
+        }
+    } else if (m_bProfileManager) {
+        profErr = profMgr->ChooseProfile(PROFMGR_FORCE_SHOW | PROFMGR_SHOW_CONTROLS, m_CmdLineProfile);
+    } else if (m_CmdLineProfile != NULL) {
+        profErr = profMgr->GetProfileFromName(m_CmdLineProfile);
+    } else {
+        if (theApp.m_bPEEnabled) {
+            profErr = profMgr->ChooseProfile(PROFMGR_USE_DIALUP);
+        } else {
+            profErr = profMgr->ChooseProfile(PROFMGR_DEFAULT);
+        }
+    }
+
+    if (profErr != PREF_OK) {
+        return FALSE;
+    }
+
+    {
+    char       userDir[FILENAME_MAX + 1];
+    int        nameLength = FILENAME_MAX;
+
+    profile->GetCharPref("profile.directory", userDir, &nameLength, PR_TRUE);
+    theApp.m_UserDirectory = userDir;
+    }
+
+    profile->LoadPrefs();
+
+	// do this font init here for now for ldap 
+	m_iCSID = (int16)2;
+	INTL_ChangeDefaultCharSetID((int16)m_iCSID);
+#ifdef XP_WIN32
+    theApp.m_bUseUnicodeFont = GetProfileInt("Intl", "UseUnicodeFont",  TRUE ) ;
+    theApp.m_bUseVirtualFont = GetProfileInt("Intl", "UseVirtualFont",  FALSE);
+    if(! theApp.m_bUseUnicodeFont ) {
+	theApp.m_bUseVirtualFont = TRUE;
+	}
+#else
+    theApp.m_bUseUnicodeFont = FALSE ;
+    theApp.m_bUseVirtualFont = TRUE;
+#endif
+
+    STARTUP_cvffc();	
+
+	// Set version and application names
+    //  We have to get around it's const status.
+    XP_AppName     = XP_STRDUP(szLoadString(IDS_APP_NAME));
+    XP_AppLanguage = XP_STRDUP(szLoadString(IDS_APP_LANGUAGE));
+    XP_AppCodeName = XP_STRDUP(szLoadString(IDS_APP_CODE_NAME));
+    XP_AppVersion  = XP_STRDUP(ResolveShortAppVersion());
+
+  // Create our hidden frame window.
+	// Set this to be the applications main window.
+	m_pHiddenFrame = new CHiddenFrame();
+#ifdef _WIN32
+	{
+		WNDCLASS wc;
+		wc.style         = 0;
+		wc.lpfnWndProc   = ::DefWindowProc;
+		wc.cbClsExtra    = 0;
+		wc.cbWndExtra    = sizeof(DWORD);               // this is used by java's setAgentPassword
+		wc.hInstance     = ::AfxGetInstanceHandle();
+		wc.hIcon         = NULL;
+		wc.hCursor       = ::LoadCursor(NULL, IDC_ARROW);
+		wc.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
+		wc.lpszMenuName  = (LPCSTR) NULL;
+		wc.lpszClassName = "aHiddenFrameClass";
+		ATOM result = ::RegisterClass(&wc);
+		ASSERT(result != 0);
+		m_pHiddenFrame->Create(wc.lpszClassName, "Netscape's Hidden Frame");
+	}
+#else
+		m_pHiddenFrame->Create(NULL, "Netscape's Hidden Frame");
+#endif
+	m_pMainWnd = m_pHiddenFrame;
+	m_pHiddenFrame->ShowWindow(SW_HIDE);
+
+    do {
+        profErr = login_NewProfilePostInit(profile);
+
+        if (profErr == -1) {
+            profErr = profMgr->PromptPassword();
+            if (profErr == PREF_OK) {
+                profErr = -1;
+            }
+        }
+    } while (profErr == -1);
+
+    if (profErr < PREF_OK) {
+        return FALSE;
+    }
+
+    int32   csid ;
+	if( PREF_GetIntPref("intl.character_set",&csid) != PREF_NOERROR)
+		csid = 2;
+
+	m_iCSID = (int16)csid;
+    
+//#ifdef MOZ_NETSCAPE_FONT_MODULE
+	VERIFY( FONTERR_OK == theGlobalNSFont.InitFontModule() );
+//#endif MOZ_NETSCAPE_FONT_MODULE
+
+#else // NEW_PREF_ARCH
     // Create our hidden frame window.
 	// Set this to be the applications main window.
 	m_pHiddenFrame = new CHiddenFrame();
@@ -835,8 +997,6 @@ BOOL CNetscapeApp::InitInstance()
     theApp.m_bUseVirtualFont = TRUE;
 #endif
 
-	m_pIntlFont = new CIntlFont;
-
 	int32   csid ;
 	if( PREF_GetIntPref("intl.character_set",&csid) != PREF_NOERROR)
 		csid = 2;
@@ -863,6 +1023,11 @@ BOOL CNetscapeApp::InitInstance()
 	if (!login_QueryForCurrentProfile())
 		return FALSE;
 
+#endif  // NEW_PREF_ARCH
+
+	// Read in font and setup encoding table stuff (must be done after prefs are read)
+	m_pIntlFont = new CIntlFont;
+
     // SECNAV_INIT requires AppCodeName and the first substring in AppVersion 
     SECNAV_Init();
 
@@ -884,8 +1049,10 @@ BOOL CNetscapeApp::InitInstance()
     if(!bAlreadyRunning)
 	{
 #endif
+#ifdef MOZ_OFFLINE
 		extern void AskMeDlg(void);
-		AskMeDlg();		
+		AskMeDlg();	
+#endif /* MOZ_OFFLINE */
 #ifdef XP_WIN32
     }
 #endif
@@ -1312,6 +1479,10 @@ BOOL CNetscapeApp::InitInstance()
 		PREF_SetCharPref("browser.bookmark_location",msg);
 	}
 
+#ifdef MOZ_OFFLINE
+	m_bSynchronizingExit = FALSE;
+	m_bSynchronizing = FALSE;
+#endif/* MOZ_OFFLINE */
 
 	// Get LDAP servers filename
 #ifdef MOZ_LDAP
@@ -1323,7 +1494,6 @@ BOOL CNetscapeApp::InitInstance()
 	PREF_CopyCharPref("browser.ldapfile_location",&ldapFile);
 
 	// Initialize the directories and PAB
-//      msg = m_UserDirectory;
     msg = "abook.nab";
 	PREF_SetDefaultCharPref("browser.addressbook_location",msg);
 
@@ -1406,7 +1576,7 @@ BOOL CNetscapeApp::InitInstance()
 	}
 	else
 	{
-		DIR_GetServerPreferences (&m_directories, msg);
+		m_directories = DIR_GetDirServers();
 		char * ldapPref = PR_smprintf("ldap_%d.end_of_directories", kCurrentListVersion);
 		if (ldapPref)
 			PREF_RegisterCallback(ldapPref, DirServerListChanged, NULL);
@@ -1511,7 +1681,7 @@ BOOL CNetscapeApp::InitInstance()
 
 	if(m_bAutomated == FALSE && m_bEmbedded == FALSE  && csPrintCommand.IsEmpty())
 	{
-		int iStartupMode=0;
+		long iStartupMode=0;
 	    PRBool bStartMode = FALSE;
 
 		PREF_GetBoolPref("general.startup.browser", &bStartMode);
@@ -1521,6 +1691,10 @@ BOOL CNetscapeApp::InitInstance()
 		PREF_GetBoolPref("general.startup.mail", &bStartMode);
 		if (bStartMode)
 			iStartupMode |= STARTUP_MAIL;
+
+		PREF_GetBoolPref("general.startup.calendar", &bStartMode);
+		if (bStartMode)
+			iStartupMode |= STARTUP_CALENDAR;
 
 		PREF_GetBoolPref("general.startup.news", &bStartMode);
 		if (bStartMode)
@@ -1631,12 +1805,18 @@ BOOL CNetscapeApp::InitInstance()
                     m_CmdLineLoadURL = NULL;
                     break;
                 }
+
+				case STARTUP_CALENDAR:
+					WFE_StartCalendar();
+					break;
+
 #ifdef MOZ_MAIL_NEWS
 				case STARTUP_INBOX:
 					WFE_MSGOpenInbox();     //opens the inbox folder with the split pain view.
 					break;
 
         case STARTUP_CLIENT_MAPI:  // rhp - for MAPI Startup
+        case STARTUP_CLIENT_ABAPI: // rhp - for Address Book API
           {
             CGenericDoc *pDoc = (CGenericDoc *)theApp.m_ViewTmplate->OpenDocumentFile(NULL, FALSE);
             if (pDoc)
@@ -1648,9 +1828,17 @@ BOOL CNetscapeApp::InitInstance()
                 if (pFrameWnd)
                 {
                   extern void StoreMAPIFrameWnd(CFrameWnd *pFrameWnd);
+                  extern void StoreNABFrameWnd(CFrameWnd *pFrameWnd);
 
                   pFrameWnd->ShowWindow(SW_SHOWMINIMIZED);
-                  StoreMAPIFrameWnd(pFrameWnd);
+                  if (iStartupMode == STARTUP_CLIENT_MAPI)
+                  {
+                    StoreMAPIFrameWnd(pFrameWnd);
+                  }
+                  else
+                  {
+                    StoreNABFrameWnd(pFrameWnd);
+                  }
                 }
               } 
             }
@@ -1852,10 +2040,19 @@ BOOL CNetscapeApp::InitInstance()
 		}
 
 		//fall through here and launch browser if necessary
+#ifdef MOZ_MAIL_NEWS
+	if ((iStartupMode & STARTUP_BROWSER || iStartupMode & STARTUP_EDITOR || // if startup browser or editor
+	    !(iStartupMode & (STARTUP_BROWSER|STARTUP_CALENDAR|STARTUP_MAIL|STARTUP_ADDRESS
+			|STARTUP_INBOX|STARTUP_COMPOSE|STARTUP_FOLDER|STARTUP_FOLDERS|STARTUP_NETCASTER
+      |STARTUP_CLIENT_MAPI|STARTUP_CLIENT_ABAPI)) ||    // or invalid data
+	    m_bKioskMode ))  {                                                  // or kiosk mode - start browser
+#else
 	if ((iStartupMode & STARTUP_BROWSER || iStartupMode & STARTUP_EDITOR || // if startup browser or editor
 	    !(iStartupMode & (STARTUP_BROWSER|STARTUP_NEWS|STARTUP_MAIL|STARTUP_ADDRESS
-			|STARTUP_INBOX|STARTUP_COMPOSE|STARTUP_FOLDER|STARTUP_FOLDERS|STARTUP_NETCASTER)) ||    // or invalid data
+			|STARTUP_INBOX|STARTUP_COMPOSE|STARTUP_FOLDER|STARTUP_FOLDERS|STARTUP_NETCASTER|STARTUP_CALENDAR)) ||    // or invalid data
 	    m_bKioskMode ))  {                                                  // or kiosk mode - start browser
+#endif /* MOZ_MAIL_NEWS */
+
 #ifdef EDITOR
 	    if ( (bIsGold && (iStartupMode & STARTUP_EDITOR)) && !(iStartupMode & STARTUP_BROWSER))
 			{   //start the editor
@@ -2025,9 +2222,6 @@ int CNetscapeApp::ExitInstance()
 	// Shutdown RDF
 	RDF_Shutdown();
 
-#ifdef MOZ_LOC_INDEP
-	SHUTDOWN_li();
-#endif /* MOZ_LOC_INDEP */
 	SHUTDOWN_np();
 
     //  Unload any remaining images.
@@ -2053,9 +2247,6 @@ int CNetscapeApp::ExitInstance()
     fe_CleanupFileFormatTypes();
 
     PREF_SavePrefFile();
-	char * prefName = WH_FileName(NULL, xpLIPrefs);
-	PREF_SaveLIPrefFile(prefName);
-	XP_FREEIF (prefName);
     NR_ShutdownRegistry();
 #ifdef MOZ_SMARTUPDATE
     SU_Shutdown();
@@ -2080,7 +2271,7 @@ int CNetscapeApp::ExitInstance()
 
 #ifdef MOZ_MAIL_NEWS
     if (m_pABook)
-	AB_CloseAddressBook(&m_pABook);
+		AB_CloseAddressBook(&m_pABook);
     WFE_MSGShutdown();
 #endif /* MOZ_MAIL_NEWS */
 

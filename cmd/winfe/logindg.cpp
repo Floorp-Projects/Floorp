@@ -33,6 +33,10 @@
 #include "winli.h"
 #endif /* MOZ_LOC_INDEP */
 
+#ifdef NEW_PREF_ARCH
+#include "cprofile.h"
+#include "clocal.h"
+#endif
 
 #ifdef XP_WIN16
 #include "winfile.h"
@@ -954,6 +958,88 @@ ProfileNameChangedFunc(const char *pref, void *data)
 	return FALSE;
 }
 
+#ifdef NEW_PREF_ARCH
+int login_NewProfilePreInit() {
+    /* There's still some wacky stuff that the WinFE needs to do that
+       hasn't been rolled into the new profile/preference management.  This is
+       where that goes */
+
+	//------------------------------------------------------------------------------------------------
+	//  KLUDGE!
+	//    The Account Setup Wizard is now a Java/Javascript application.  Since they have no control
+	//    over the profile that will contain the preference changes, we use a hidden magic profile to
+	//    hold their changes until they're done MUCKing about.  When they've finished, they will 
+	//    rename the profile based on user inputs.  If all goes well, the magic profile never outlives
+	//    any given instance of the navigator/ASW.  However, if anything fails the magic profile could
+	//    be left lying about.  This would be bad.
+	//
+	//    The most unfortunate occurance of this problem would be while creating the first profile.
+	//    In this case, we don't know the user hasn't successfully created a profile unless we check
+	//    to see if the magic profile is the only one.  The simplest way to handle this is to just
+	//    expunge the magic profile whenever we get here and find that it exists.
+	//------------------------------------------------------------------------------------------------
+	//
+	//  Delete the magic profile if it exists
+	CUserProfileDB profileDB;
+	profileDB.DeleteUserProfile( ASW_MAGIC_PROFILE_NAME );
+
+    return 0;
+}
+
+
+int login_NewProfilePostInit(CProfile *pProfile) {
+    /* There's still some wacky stuff that the WinFE needs to do that
+       hasn't been rolled into the new profile/preference management.  This is
+       where that goes */
+    char       profileName[81];
+    char       profilePW[41];
+    int        nameLength = 80;
+    int        error = 0;
+
+    PREF_GetCharPref("profile.name", profileName, &nameLength);
+
+#ifdef MOZ_LOC_INDEP
+	// read in the preference file (will assume valid dir here...we need to know if LI)
+
+	XP_Bool prefBool=FALSE;
+	PREF_GetBoolPref("li.enabled",&prefBool);
+
+	if (prefBool) {
+        CPrefStoreLocal     *pLIStore;
+        CString             csLIPrefsPath;
+        BOOL                loginSuccess;
+
+        pProfile->GetProfilePassword(profilePW, 40);
+        PREF_SetCharPref("li.login.password",profilePW);	
+
+		loginSuccess = FEU_StartGetCriticalFiles(profileName,theApp.m_UserDirectory);
+
+        /* Ok, now we're back, so add the liprefs into the mix and reload from there */
+
+        if (loginSuccess) {
+        	XP_StatStruct   statinfo; 
+            int             ret;
+
+            csLIPrefsPath = theApp.m_UserDirectory + "\\liprefs.js";
+
+	        ret = _stat(csLIPrefsPath, &statinfo);
+	        if(ret != -1) {
+
+                pLIStore = new CPrefStoreLocalLI("liprefs.js", csLIPrefsPath);
+                pProfile->AddPrefsStoreBefore(pLIStore, "profile.cfg");
+
+                pProfile->LoadPrefs("liprefs.js", TRUE);
+            }
+        } else {
+            error = -1;
+        }
+    }
+#endif
+
+    return error;
+}
+#endif
+
 int login_QueryForCurrentProfile() {
 	CLoginDlg dlg;
 	Bool bGotoASW = FALSE;
@@ -1136,7 +1222,11 @@ int login_QueryForCurrentProfile() {
 	// REMIND:  JEM:  we now read prefs twice...just to find this one pref...we should parse the file
 	CString csTmp = pString;
 	csTmp += "\\prefs.js";
-	PREF_Init((char *)(const char *)csTmp);
+#ifdef NEW_PREF_ARCH
+	PREF_Init();
+#else
+    PREF_Init((char *)(const char *)csTmp);
+#endif
 
 	XP_Bool prefBool=FALSE;
 	PREF_GetBoolPref("li.enabled",&prefBool);
@@ -1186,12 +1276,19 @@ Bool login_ProfileSelectedCompleteTheLogin(const char * szProfileName, const cha
 	csTmp = theApp.m_UserDirectory;
 	csTmp += "\\prefs.js";
 
-	PREF_Init((char *)(const char *)csTmp);
+#ifdef NEW_PREF_ARCH
+	PREF_Init();
+#else
+    PREF_Init((char *)(const char *)csTmp);
+#endif
 
-	// read in the user's LI prefs file
+
+#ifdef MOZ_LOC_INDEP
+    // read in the user's LI prefs file
 	char * prefName = WH_FileName(NULL, xpLIPrefs);
 	PREF_ReadLIJSFile(prefName);
 	XP_FREEIF (prefName);
+#endif
 
 	// read in the users optional JS file
 	csTmp = theApp.m_UserDirectory;

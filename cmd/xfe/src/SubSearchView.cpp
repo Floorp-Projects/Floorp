@@ -77,165 +77,148 @@ XFE_SubSearchView::XFE_SubSearchView(XFE_Component *toplevel_component,
 	m_outliner->setColumnWidth(OUTLINER_COLUMN_SUBSCRIBE, subscribedIcon.width + 2 /* for the outliner's shadow */);
 	m_outliner->setColumnResizable(OUTLINER_COLUMN_SUBSCRIBE, False);
 
-	m_topForm = XtCreateManagedWidget("topForm",
-									  xmFormWidgetClass,
-									  m_form,
-									  NULL, 0);
+    Widget dataForm = XmCreateForm(m_form, "dataForm", NULL, 0);
+    
+    Widget serverLabel, searchLabel;
+    
+    int i=0;
+    Widget dataWidgets[6];
 
-	m_searchForm = XtCreateManagedWidget("searchForm",
-										 xmFormWidgetClass,
-										 m_topForm,
-										 NULL, 0);
-  
-	m_searchLabel = XtCreateManagedWidget("searchLabel",
+    dataWidgets[i++] = serverLabel =
+        XmCreateLabelGadget(dataForm, "serverLabel", NULL, 0);
+    initializeServerCombo(dataForm);
+    dataWidgets[i++] = m_serverCombo;
+
+    int server_height = XfeVaGetTallestWidget(serverLabel,
+                                              m_serverCombo,
+                                              NULL);
+    XtVaSetValues(serverLabel,
+                  XmNheight, server_height,
+                  XmNalignment, XmALIGNMENT_END,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  NULL);
+    XtVaSetValues(m_serverCombo,
+                  XmNheight, server_height,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, serverLabel,
+                  XmNleftAttachment, XmATTACH_WIDGET,
+                  XmNleftWidget, serverLabel,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  NULL);
+                  
+    dataWidgets[i++] =
+	searchLabel = XtCreateManagedWidget("searchLabel",
 										  xmLabelWidgetClass,
-										  m_searchForm,
+										  dataForm,
 										  NULL, 0);
 
-	m_searchText = fe_CreateTextField(m_searchForm, "searchText", NULL, 0);
-	XtManageChild(m_searchText);
+    dataWidgets[i++] =
+	m_searchText = fe_CreateTextField(dataForm, "searchText", NULL, 0);
 
-	m_onserverForm = XtCreateManagedWidget("onserverForm",
-										   xmFormWidgetClass,
-										   m_topForm,
-										   NULL, 0);
+    int search_height = XfeVaGetTallestWidget(searchLabel,
+                                              m_searchText,
+                                              NULL);
+    XtVaSetValues(searchLabel,
+                  XmNheight, search_height,
+                  XmNalignment, XmALIGNMENT_END,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, serverLabel,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  NULL);
+                                                 
+    XtVaSetValues(m_searchText,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, searchLabel,
+                  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNleftWidget, m_serverCombo,
+                  XmNrightAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNrightWidget, m_serverCombo,
+                  NULL);
 
-	m_onserverLabel = XtCreateManagedWidget("onserverLabel",
-											xmLabelWidgetClass,
-											m_onserverForm,
-											NULL, 0);
+    int label_width = XfeVaGetWidestWidget(serverLabel,
+                                           searchLabel,
+                                           NULL);
+    XtVaSetValues(serverLabel,    XmNwidth, label_width, NULL);
+    XtVaSetValues(searchLabel, XmNwidth, label_width, NULL);
+    XtManageChildren(dataWidgets, i);
 
-	initializeServerCombo(m_onserverForm);
+    // upper-right - search button
+    
+    Widget actionForm = XmCreateRowColumn(m_form, "actionForm", NULL, 0);
+    m_searchnowButton =
+        XmCreatePushButtonGadget(actionForm, xfeCmdSearch, NULL, 0);
+    XtManageChild(m_searchnowButton);
 
-	m_buttonForm = XtCreateManagedWidget("buttonForm",
-										 xmFormWidgetClass,
+    // lower-right - other buttons
+    i=0;
+    Widget buttons[6];
+	Widget buttonForm = XtCreateManagedWidget("buttonForm",
+										 xmRowColumnWidgetClass,
 										 m_form, NULL, 0);
 
-	m_searchnowButton = XtCreateManagedWidget(xfeCmdSearch,
-											  xmPushButtonWidgetClass,
-											  m_buttonForm,
-											  NULL, 0);
-
+    buttons[i++] =
 	m_subscribeButton = XtCreateManagedWidget(xfeCmdToggleSubscribe,
 											  xmPushButtonWidgetClass,
-											  m_buttonForm,
+											  buttonForm,
 											  NULL, 0);
+    buttons[i++] =
+    m_unsubscribeButton = XtCreateManagedWidget(xfeCmdUnsubscribe,
+                                                xmPushButtonWidgetClass,
+                                                buttonForm,
+                                                NULL, 0);
 
-	m_sep1 = XtVaCreateManagedWidget("sep1",
-									 xmSeparatorWidgetClass,
-									 m_buttonForm,
-									 XmNleftAttachment, XmATTACH_FORM,
-									 XmNrightAttachment, XmATTACH_FORM,
-									 XmNtopAttachment, XmATTACH_WIDGET,
-									 XmNtopWidget, m_subscribeButton,
-									 XmNbottomAttachment, XmATTACH_NONE,
-									 NULL);
-	
+    buttons[i++] = XmCreateSeparatorGadget(buttonForm, "sep1", NULL, 0);
+	buttons[i++] =
 	m_stopButton = XtVaCreateManagedWidget(xfeCmdStopLoading,
 										   xmPushButtonWidgetClass,
-										   m_buttonForm,
-										   XmNleftAttachment, XmATTACH_FORM,
-										   XmNrightAttachment, XmATTACH_FORM,
-										   XmNtopAttachment, XmATTACH_WIDGET,
-										   XmNtopWidget, m_sep1,
-										   XmNbottomAttachment, XmATTACH_NONE,
+										   buttonForm,
 										   NULL);
 
-	/* search text stuff. */
-	XtVaSetValues(m_searchLabel,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  NULL);
+    XtManageChildren(buttons, i);
 
-	XtVaSetValues(m_searchText,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, m_searchLabel,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  NULL);
 
-	/* server selection stuff. */
-	XtVaSetValues(m_onserverLabel,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  NULL);
-
-	XtVaSetValues(m_serverCombo,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, m_onserverLabel,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  NULL);
-		
-	/* button attachments. */
-	XtVaSetValues(m_searchnowButton,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(m_subscribeButton,
-				  XmNleftAttachment, XmATTACH_FORM,
+    // now lay out the main forms
+    int button_width = XfeVaGetWidestWidget(actionForm, dataForm, NULL);
+    XtVaSetValues(actionForm,
+                  XmNwidth, button_width,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  NULL);
+    
+	XtVaSetValues(buttonForm,
+                  XmNwidth, button_width,
 				  XmNrightAttachment, XmATTACH_FORM,
 				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, m_searchnowButton,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	/* attachments for the forms and outliner */
-	XtVaSetValues(m_searchForm,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(m_onserverForm,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, m_searchForm,
+                  XmNtopWidget, dataForm,
 				  XmNbottomAttachment, XmATTACH_FORM,
 				  NULL);
 
+    XtVaSetValues(dataForm,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_WIDGET,
+                  XmNrightWidget, actionForm,
+                  NULL);
+    
 	XtVaSetValues(m_outliner->getBaseWidget(),
 				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_WIDGET,
-				  XmNrightWidget, m_buttonForm,
 				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, m_topForm,
+				  XmNtopWidget, dataForm,
+                  XmNrightAttachment, XmATTACH_WIDGET,
+                  XmNrightWidget, buttonForm,
 				  XmNbottomAttachment, XmATTACH_FORM,
 				  NULL);
-
-	XtVaSetValues(m_topForm,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_WIDGET,
-				  XmNrightWidget, m_buttonForm,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(m_buttonForm,
-				  XmNleftAttachment, XmATTACH_NONE,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  NULL);
-
-
 
 	XtAddCallback(m_subscribeButton, XmNactivateCallback, button_callback, this);
+    XtAddCallback(m_unsubscribeButton, XmNactivateCallback, button_callback, this);
 	XtAddCallback(m_searchnowButton, XmNactivateCallback, button_callback, this);
 	XtAddCallback(m_searchText, XmNactivateCallback, search_activate_callback, this);
 
-	m_outliner->show();  
+    XtManageChild(actionForm);
+    XtManageChild(buttonForm);
+    XtManageChild(dataForm);
+	m_outliner->show();
 
 	// setBaseWidget happens in SubTabView.
 }

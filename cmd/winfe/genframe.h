@@ -102,7 +102,7 @@ protected:
 #endif
 
 	void AddToMenuMap(int nIndex, UINT nID);
-	void LoadFrameMenu(CMenu *pPopup, UINT nIndex);
+	virtual void LoadFrameMenu(CMenu *pPopup, UINT nIndex);
 	void DeleteFrameMenu(HMENU hMenu);
 	void DeleteMenuMapMenus(void);
 	void DeleteMenuMapIDs(void);
@@ -264,12 +264,19 @@ protected:
 	afx_msg void OnFishCam(); 
     afx_msg void OnShowBookmarkWindow();
     afx_msg void OnShowAddressBookWindow();
+#ifdef MOZ_MAIL_NEWS
+	afx_msg void OnMigrationTools();
+	afx_msg void OnUpdateMigrationTools(CCmdUI* pCmdUI);
+#endif //MOZ_MAIL_NEWS
 #if defined(JAVA) || defined(OJI)
 	afx_msg void OnToggleJavaConsole();
 	afx_msg void OnUpdateJavaConsole(CCmdUI* pCmdUI);
 #endif
 	afx_msg void OnSecurity();
 	afx_msg void OnUpdateSecurity(CCmdUI *pCmdUI);
+#ifdef MOZ_OFFLINE
+	afx_msg void OnUpdateOnlineStatus(CCmdUI *pCmdUI);
+#endif //MOZ_OFFLINE
 	afx_msg void OnViewCommandToolbar();
 	afx_msg void OnUpdateViewCommandToolbar(CCmdUI* pCmdUI);
 	afx_msg void OnViewLocationToolbar();
@@ -301,6 +308,10 @@ protected:
 	afx_msg void OnUpdateFileRoot(CCmdUI* pCmdUI);
 	afx_msg void OnGoOffline();
 	afx_msg void OnUpdateGoOffline(CCmdUI* pCmdUI);
+#ifdef MOZ_MAIL_NEWS
+	afx_msg void OnSynchronize();
+	afx_msg void OnUpdateSynchronize(CCmdUI* pCmdUI);
+#endif
 	afx_msg void OnDoneGoingOffline();
 #ifdef FORTEZZA
     afx_msg void OnStartFortezzaCard();
@@ -405,6 +416,6 @@ BOOL edt_IsEditorDynamicMenu(WPARAM wParam);
 
 CGenericFrame *wfe_FrameFromXPContext(MWContext * pXPCX);
 
-static UINT NEAR WM_FINDREPLACE = ::RegisterWindowMessage(FINDMSGSTRING);
-static UINT NEAR WM_HELPMSG = ::RegisterWindowMessage(HELPMSGSTRING);
+extern UINT NEAR WM_FINDREPLACE;
+extern UINT NEAR WM_HELPMSG;
 #endif

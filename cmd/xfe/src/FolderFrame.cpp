@@ -23,6 +23,7 @@
 
 
 #include "MozillaApp.h"
+#include "ThreadFrame.h"
 #include "FolderFrame.h"
 #include "FolderView.h"
 #include "FolderMenu.h"
@@ -52,8 +53,7 @@ extern int XFE_INBOX_DOESNT_EXIST;
 static XFE_FolderFrame *theFrame = NULL;
 
 MenuSpec XFE_FolderFrame::file_menu_spec[] = {
-  { "newSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_Frame::new_submenu_spec },
-  { xfeCmdNewFolder,		PUSHBUTTON },
+  { "newSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::new_submenu_spec },
   { xfeCmdNewNewsHost,		PUSHBUTTON },
   { xfeCmdOpenSelected,		PUSHBUTTON },
   MENU_SEPARATOR,
@@ -87,10 +87,11 @@ MenuSpec XFE_FolderFrame::edit_menu_spec[] = {
 	{ xfeCmdSelectAll,		PUSHBUTTON },
 	MENU_SEPARATOR,
 	{ xfeCmdSearch,		        PUSHBUTTON },
+#if 0
+  /* temporary take out
+   */
 	{ xfeCmdSearchAddress,	    PUSHBUTTON },
-	MENU_SEPARATOR,
-	{ xfeCmdEditConfiguration,	PUSHBUTTON },
-	{ xfeCmdModerateDiscussion,	PUSHBUTTON },
+#endif
 	MENU_SEPARATOR,
 	{ xfeCmdEditMailFilterRules,PUSHBUTTON },
 	{ xfeCmdViewProperties,	    PUSHBUTTON },
@@ -99,8 +100,7 @@ MenuSpec XFE_FolderFrame::edit_menu_spec[] = {
 };
 
 MenuSpec XFE_FolderFrame::view_menu_spec[] = {
-  { xfeCmdToggleNavigationToolbar,	PUSHBUTTON },
-  { xfeCmdToggleLocationToolbar,	PUSHBUTTON },
+{ "showSubmenu",            CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::show_submenu_spec },
   MENU_SEPARATOR,
   { "expandCollapseSubmenu",    CASCADEBUTTON,
     (MenuSpec *) &XFE_Frame::expand_collapse_submenu_spec },

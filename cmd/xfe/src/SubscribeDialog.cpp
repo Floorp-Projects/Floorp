@@ -34,8 +34,18 @@ static Widget create_chrome_widget(Widget   parent, char    *name,
 
 static XFE_SubscribeDialog *theDialog;
 
-XFE_SubscribeDialog::XFE_SubscribeDialog(char *name, XFE_NotificationCenter *toplevel,
-										 Widget parent, MWContext *context, MSG_Host *host)
+XFE_SubscribeDialog::XFE_SubscribeDialog(char *name, 
+										 XFE_NotificationCenter *toplevel,
+										 Widget parent, MWContext *context, 
+										 MSG_Host *host)
+#if defined(GLUE_COMPO_CONTEXT)
+	: XFE_ViewDashBDlg(parent, name, context,
+				   True, /* ok */
+				   True, /* cancel */
+				   True, /* help */
+				   False, /* apply; remove */
+				   True)
+#else
 	: XFE_ViewDialog(NULL, parent, name,
 					 context,
 					 FALSE, // ok
@@ -44,15 +54,19 @@ XFE_SubscribeDialog::XFE_SubscribeDialog(char *name, XFE_NotificationCenter *top
 					 FALSE, // apply
 					 FALSE, // separator
 					 FALSE, // modal
-					 create_chrome_widget(parent,
-										  name, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE))
+					 create_chrome_widget(parent, name, TRUE, TRUE, FALSE, 
+										  FALSE, FALSE, TRUE))
+#endif /* GLUE_COMPO_CONTEXT */
 {
-	XFE_SubscribeView *subscribeview;
+	m_toplevelNotifier = toplevel;
+
+#if !defined(GLUE_COMPO_CONTEXT)
 	Widget button_area;
 
-    m_okToDestroy = FALSE;
-
-	m_toplevelNotifier = toplevel;
+    	/* Fix bug" 114163: Comment out this line so that when user cancel the dialog,
+	   the dialog will be destroyed properly. Please let me know
+	   if you need it to work other wise - dora */
+        /* m_okToDestroy = FALSE; */
 
 	m_dashboard = new XFE_Dashboard(this,
 									m_chrome,
@@ -62,8 +76,15 @@ XFE_SubscribeDialog::XFE_SubscribeDialog(char *name, XFE_NotificationCenter *top
 	m_dashboard->setShowStatusBar(True);
 	m_dashboard->setShowProgressBar(True);
 
-	subscribeview = new XFE_SubscribeView(this, m_chrome, NULL, m_context, host);
+#endif /* GLUE_COMPO_CONTEXT */
+	m_subscribeview = new XFE_SubscribeView(this, m_chrome, NULL, 
+											m_context, host);
+#if defined(GLUE_COMPO_CONTEXT)
+	m_aboveButtonArea = m_subscribeview->getBaseWidget();
+#endif /* GLUE_COMPO_CONTEXT */
 
+
+#if !defined(GLUE_COMPO_CONTEXT)
 	button_area = createButtonArea(m_chrome, TRUE, TRUE, FALSE, FALSE);
 
 	XtVaSetValues(m_dashboard->getBaseWidget(),
@@ -83,7 +104,7 @@ XFE_SubscribeDialog::XFE_SubscribeDialog(char *name, XFE_NotificationCenter *top
 				  XmNmarginHeight, 0,
 				  NULL);
 				  
-	XtVaSetValues(subscribeview->getBaseWidget(),
+	XtVaSetValues(m_subscribeview->getBaseWidget(),
 				  XmNleftAttachment, XmATTACH_FORM,
 				  XmNleftOffset, 3,
 				  XmNrightAttachment, XmATTACH_FORM,
@@ -96,20 +117,36 @@ XFE_SubscribeDialog::XFE_SubscribeDialog(char *name, XFE_NotificationCenter *top
 
 	XtManageChild(button_area);
 	m_dashboard->show();
-	subscribeview->show();
+#endif /* GLUE_COMPO_CONTEXT */
+	m_subscribeview->show();
 
-	setView(subscribeview);
+	setView(m_subscribeview);
+
+#if defined(GLUE_COMPO_CONTEXT)
+	if (m_dashboard && m_subscribeview)
+		m_dashboard->connect2Dashboard(m_subscribeview);
+	// 
+	// 
+	attachView();
+#endif /* GLUE_COMPO_CONTEXT */
 }
 
 XFE_SubscribeDialog::~XFE_SubscribeDialog()
 {
+#if defined(GLUE_COMPO_CONTEXT)
+	if (m_subscribeview && m_dashboard)
+		m_dashboard->disconnectFromDashboard(m_subscribeview);
+#endif /* GLUE_COMPO_CONTEXT */
+
     unregisterInterest(XFE_Frame::frameNotBusyCallback,
 					   m_toplevelNotifier,
 					   (XFE_FunctionNotification)XFE_Frame::updateBusyState_cb,
 					   (void*)False);
 
+#if !defined(GLUE_COMPO_CONTEXT)
 	// Resotore the original notifier
 	m_toplevelNotifier->setForwarder(m_oldForwarder);
+#endif /* GLUE_COMPO_CONTEXT */
 
 	theDialog = NULL;
 }
@@ -119,18 +156,22 @@ XFE_SubscribeDialog::show()
 {
 	XFE_ViewDialog::show();
 
+#if !defined(GLUE_COMPO_CONTEXT)
+
 	// Save the old notifier
 	m_oldForwarder = m_toplevelNotifier->getForwarder();
 
 	// Set up the forwarder
 	m_toplevelNotifier->setForwarder(this);
 
+#endif /* GLUE_COMPO_CONTEXT */
 	registerInterest(XFE_Frame::frameNotBusyCallback,
 					 m_toplevelNotifier,
 					 (XFE_FunctionNotification)XFE_Frame::updateBusyState_cb,
 					 (void*)False);
 }
 
+#if !defined(GLUE_COMPO_CONTEXT)
 Widget
 XFE_SubscribeDialog::createButtonArea(Widget parent,
 									  Boolean ok, Boolean cancel,
@@ -225,13 +266,43 @@ create_chrome_widget(Widget   parent,
 	return chrome;
 }
 
+XFE_CALLBACK_DEFN(XFE_SubscribeDialog, allConnectionsComplete)
+	(XFE_NotificationCenter *, void *, void *)
+{
+	if (m_subscribeview->isInterrupting()) {
+		m_subscribeview->doneInterrupting();
+	} else {
+		// We're done commiting the subscribe information
+		hide();
+
+		unregisterInterest(XFE_Frame::allConnectionsCompleteCallback,
+						   this,
+						   (XFE_FunctionNotification)allConnectionsComplete_cb);
+		m_toplevelNotifier->setForwarder(m_oldForwarder);
+
+		// XXX: For some reason, the context is found not busy, though the N
+		// icon indicates that it's busy. Needs investigation.
+		// Forcing an interrupt for now.
+		XP_InterruptContext(m_context); 
+
+		// If the context is busy interrupt it
+		if (XP_IsContextBusy(m_context)) { 
+			XP_InterruptContext(m_context); 
+		} 
+
+	}
+}
+#endif /* GLUE_COMPO_CONTEXT */
+
 void
 XFE_SubscribeDialog::ok()
 {
+#if !defined(GLUE_COMPO_CONTEXT)
     registerInterest(XFE_Frame::allConnectionsCompleteCallback,
-                     this,
+					 this,
                      (XFE_FunctionNotification)allConnectionsComplete_cb);
-    XFE_ViewDialog::ok();
+#endif /* GLUE_COMPO_CONTEXT */
+   XFE_ViewDialog::ok();
 }
 
 void
@@ -245,10 +316,8 @@ fe_showSubscribeDialog(XFE_NotificationCenter *toplevel,
     if (theDialog)
         delete theDialog;
 
-    theDialog = new XFE_SubscribeDialog("SubscribeDialog", 
-                                        toplevel, parent,
-                                        context,
-                                        host);
+    theDialog = new XFE_SubscribeDialog("SubscribeDialog", toplevel, parent, 
+										context, host);
 	theDialog->show();
 }
 
@@ -257,16 +326,14 @@ XP_Bool FE_CreateSubscribePaneOnHost(MSG_Master* /*master*/,
                                      MWContext* parentContext,
                                      MSG_Host* host)
 {
+#if 1
+    XFE_Component* toplevel = ViewGlue_getFrame(parentContext);
+#else
     XFE_Component* toplevel = ViewGlue_getFrame(parentContext)->getToplevel();
+#endif
+	XP_ASSERT(toplevel);
+    if (!toplevel) return False;
     fe_showSubscribeDialog(toplevel, toplevel->getBaseWidget(),
                            parentContext, host);
     return True;
 }
-
-XFE_CALLBACK_DEFN(XFE_SubscribeDialog, allConnectionsComplete)(XFE_NotificationCenter *,
-														  void *,
-														  void *)
-{
-    hide();
-}
-

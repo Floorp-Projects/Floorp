@@ -21,6 +21,9 @@
 #include "prefapi.h"
 #include "edt.h"
 #include "prefs.h"
+#ifdef MOZ_OFFLINE
+#include "statbar.h"
+#endif //MOZ_OFFLINE
 
 int PR_CALLBACK prefWatcher(const char *pPrefName, void *pData)
 {
@@ -131,6 +134,22 @@ int PR_CALLBACK SetToolbarButtonStyle(const char *newPref, void *data)
 	
 	return PREF_NOERROR;
 }
+
+#ifdef MOZ_OFFLINE
+int PR_CALLBACK HandleOnlineStateChange(const char*newPref, void *data)
+{
+	int count = CNetscapeStatusBar::gStatusBars.GetSize();
+
+	for(int i = 0; i < count; i++)
+	{
+		HWND hWnd = (HWND)CNetscapeStatusBar::gStatusBars.GetAt(i);
+		::SendMessage(hWnd, WM_IDLEUPDATECMDUI, (WPARAM)TRUE, (LPARAM)0);
+
+	}
+
+	return PREF_NOERROR;
+}
+#endif //MOZ_OFFLINE
 
 CPrefInfo prefInfo;
 
@@ -246,5 +265,9 @@ void CPrefInfo::Initialize()
 	theApp.m_pToolbarStyle = CASTINT(prefInt);
 	PREF_RegisterCallback("browser.chrome.button_style", SetToolbarButtonStyle, NULL);
 
+#ifdef MOZ_OFFLINE
+	//Online state
+	PREF_RegisterCallback("network.online", HandleOnlineStateChange, NULL);
+#endif //MOZ_OFFLINE
 
 }

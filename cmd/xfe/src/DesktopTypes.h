@@ -68,7 +68,7 @@ class XFE_URLDesktopType : public XFE_DesktopType
 public:
     XFE_URLDesktopType(const char *string=NULL);
     XFE_URLDesktopType(FILE*);
-    ~XFE_URLDesktopType();
+    virtual ~XFE_URLDesktopType();
     
     static const char *ftrType();
     static int isDesktopType(const char*);
@@ -114,7 +114,7 @@ class XFE_WebJumperDesktopType : public XFE_DesktopType
 {
 public:
     XFE_WebJumperDesktopType(FILE*);
-    ~XFE_WebJumperDesktopType();
+    virtual ~XFE_WebJumperDesktopType();
 
     static int isDesktopType(const char*);
 

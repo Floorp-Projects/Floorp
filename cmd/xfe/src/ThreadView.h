@@ -63,6 +63,8 @@ public:
 
   virtual ~XFE_ThreadView();
 
+  void selectTimer();
+
   virtual void paneChanged(XP_Bool asynchronous, 
 						   MSG_PANE_CHANGED_NOTIFY_CODE code, int32 value);
 
@@ -70,8 +72,8 @@ public:
   void listChangeStarting(XP_Bool asynchronous, MSG_NOTIFY_CODE notify, 
 						  MSG_ViewIndex where, int32 num);
 #endif /* DEL_5_0 */
- void listChangeFinished(XP_Bool asynchronous, MSG_NOTIFY_CODE notify, 
-						  MSG_ViewIndex where, int32 num);
+  virtual void listChangeFinished(XP_Bool asynchronous, MSG_NOTIFY_CODE notify, 
+								  MSG_ViewIndex where, int32 num);
 
   void loadFolder(MSG_FolderInfo *folderInfo);
   MSG_FolderInfo *getFolderInfo();
@@ -248,6 +250,11 @@ private:
   static MenuSpec addrbk_submenu_spec[];
 
   void selectThread();
+
+  /* select timer
+   */
+  XtIntervalId  m_scrollTimer;
+  MSG_ViewIndex m_targetIndex;
 };
 
 #endif /* _xfe_threadview_h */

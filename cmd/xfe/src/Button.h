@@ -76,7 +76,7 @@ public:
                IconGroup *			iconGroup3 = NULL,
                IconGroup *			iconGroup4 = NULL);
 
-    ~XFE_Button();
+    virtual ~XFE_Button();
 
 	const char *	getName()		{ return m_name; }
 	CommandType		getCmd()		{ return m_cmd; }

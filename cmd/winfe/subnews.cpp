@@ -61,7 +61,7 @@ extern "C" XP_Bool FE_CreateSubscribePaneOnHost(MSG_Master* master,
 	while (pFrame) {
 		if (pFrame->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame))) {
 			C3PaneMailFrame *pThreadFrame = DYNAMIC_DOWNCAST(C3PaneMailFrame, pFrame);
-			pThreadFrame->SendMessage(WM_COMMAND, ID_FILE_SUBSCRIBE, (LPARAM)host);
+			pThreadFrame->PostMessage(WM_COMMAND, ID_FILE_SUBSCRIBE, (LPARAM)host);
 			return TRUE;
 		}
 		pFrame = pFrame->m_pNext;
@@ -70,7 +70,7 @@ extern "C" XP_Bool FE_CreateSubscribePaneOnHost(MSG_Master* master,
 	while (pFrame) {
 		if (pFrame->IsKindOf(RUNTIME_CLASS(CFolderFrame))) {
 			CFolderFrame *pFolderFrame = DYNAMIC_DOWNCAST(CFolderFrame, pFrame);
-			pFolderFrame->SendMessage(WM_COMMAND, ID_FILE_SUBSCRIBE, (LPARAM)host);
+			pFolderFrame->PostMessage(WM_COMMAND, ID_FILE_SUBSCRIBE, (LPARAM)host);
 			return TRUE;
 		}
 		pFrame = pFrame->m_pNext;
@@ -527,6 +527,16 @@ int CNewsgroupsOutliner::TranslateIcon(void * pLineData)
 	{
 		if (pGroup->flags & MSG_GROUPNAME_FLAG_NEW_GROUP) 
 			return IDX_NEWSNEW; 
+		else if (pGroup->flags & MSG_GROUPNAME_FLAG_IMAP_PERSONAL )
+			return IDX_MAILFOLDERCLOSED; 
+		else if (pGroup->flags & MSG_GROUPNAME_FLAG_IMAP_PUBLIC )
+			return IDX_PUBLICCLOSED; 
+		else if (pGroup->flags & MSG_GROUPNAME_FLAG_IMAP_OTHER_USER )
+			return IDX_SHARECLOSED; 
+		else if (pGroup->flags & MSG_GROUPNAME_FLAG_IMAP_NOSELECT )
+			return IDX_MAILFOLDERCLOSED; 
+		else if (pGroup->flags & MSG_GROUPNAME_FLAG_PERSONAL_SHARED )
+			return IDX_SHARECLOSED; 
 		else
 			return IDX_NEWSGROUP; 
 	}
@@ -822,6 +832,8 @@ DoFetchGroups(MSG_Pane* pane, void* closure)
 {
     CSubscribePropertySheet* tmp = (CSubscribePropertySheet*) closure;
     tmp->GetAllGroupPage()->OnGetDeletions();
+	tmp->GetAllGroupPage()->EnableAllControls(FALSE);
+	tmp->GetAllGroupPage()->GetDlgItem(IDC_STOP)->EnableWindow(TRUE);  
 }
 
 static void
@@ -832,6 +844,7 @@ DoEnableAllControls(MSG_Pane* pane, void* closure)
 	{
 		tmp->GetAllGroupPage()->m_bProcessGetDeletion = FALSE;
 		tmp->GetAllGroupPage()->EnableAllControls(TRUE);
+		tmp->GetAllGroupPage()->GetDlgItem(IDC_STOP)->EnableWindow(FALSE);
 	}
 
 	CNewsgroupsOutliner* pOutliner = tmp->GetAllGroupPage()->GetOutliner();
@@ -887,6 +900,7 @@ BOOL CSubscribePropertyPage::OnInitDialog()
 	}
 	if (m_pOutliner)
 		m_pOutliner->SelectInitialItem();
+	GetDlgItem(IDC_STOP)->EnableWindow(FALSE);  
 	return ret;
 }
 
@@ -910,19 +924,40 @@ BOOL CSubscribePropertyPage::InitSubscribePage()
 {
 	BOOL result = TRUE;
 
+	MSG_Host *pHost = ((CSubscribePropertySheet*)GetParent())->GetHost();
+	if (pHost)
+	{
+		if (MSG_IsIMAPHost(pHost) && m_nMode != MSG_SubscribeAll)
+			DoEnableImapControls();
+		else if (MSG_IsNewsHost(pHost)) 
+			EnableAllControls(TRUE);
+	}
+
 	if (m_bInitDialog)
 	{
 		m_bInitDialog = FALSE;
 		result = CreateSubscribePage();
+		if (!pHost)	
+			pHost = ((CSubscribePropertySheet*)GetParent())->GetHost();
 	}
-	if (result && GetPane() &&
-		m_nMode != MSG_SubscribeGetMode(GetPane()))
+
+	if (GetPane())
 	{
-		MSG_SubscribeSetMode(GetPane(), m_nMode); 
+		MSG_Host* pSubscribingHost = MSG_SubscribeGetHost(GetPane());
+		if (m_nMode == MSG_SubscribeAll	&& pSubscribingHost	!= pHost)
+		{
+			MSG_SubscribeSetHost(GetPane(), pHost);
+		}
+		if (MSG_IsNewsHost(pHost)  && result &&
+			m_nMode != MSG_SubscribeGetMode(GetPane()))
+		{
+			MSG_SubscribeSetMode(GetPane(), m_nMode); 
+		}
 		if (GetList())
 			GetList()->SetSubscribePage(this);
 		m_pOutliner->SetPane(GetPane());
 	}
+
 	return result;
 }
 
@@ -1020,7 +1055,7 @@ void CSubscribePropertyPage::SetNewsHosts(MSG_Master* pMaster)
 		}
 		GetServerCombo()->SetCurSel(i);
 		if (pNewsHost && MSG_IsIMAPHost(pNewsHost))
-			m_pParent->EnableNonImapPages(FALSE);
+			DoEnableImapControls();
 	}
 }
 
@@ -1067,7 +1102,7 @@ BOOL CSubscribePropertyPage::OnSetActive()
 		if (nNewIndex != nSelection)  
 			GetServerCombo()->SetCurSel(nNewIndex);
 	}
- 
+
 	if (GetOutliner())
 	{
 		if (GetOutliner()->SelectInitialItem())
@@ -1280,21 +1315,25 @@ void CSubscribePropertyPage::OnChangeServer()
 		return;
 
 	DoStopListChange();
-	ClearNewsgroupSelection();
-	if (m_nMode != MSG_SubscribeNew && GetDlgItem(IDC_EDIT_NEWSGROUP))
-	{
-		GetDlgItem(IDC_EDIT_NEWSGROUP)->SetWindowText("");
-		//SetWindowText() caused call to OnChangeNewsgroup() and set 
-		//m_bFromTyping == TRUE,  reset it back to FALSE 
-		m_bFromTyping = FALSE;	  
-	}
-	GetOutliner()->SetTotalLines(0);	// fix for bug# 38007
+
+	pParent->ClearSelection();
 	pParent->SetHost(pHost);
-	MSG_SubscribeSetHost(GetPane(), pHost);
 	if (MSG_IsIMAPHost(pHost))
-		m_pParent->EnableNonImapPages(FALSE);
+		DoEnableImapControls();
 	else
-		m_pParent->EnableNonImapPages(TRUE);
+	{
+		EnableAllControls(TRUE);
+	}
+
+	if (m_nMode == MSG_SubscribeAll || MSG_IsNewsHost(pHost))
+	{
+		MSG_SubscribeSetHost(GetPane(), pHost);
+		if (MSG_IsNewsHost(pHost) && 
+			m_nMode != MSG_SubscribeGetMode(GetPane()))
+		{
+			MSG_SubscribeSetMode(GetPane(), m_nMode); 
+		}
+	}
 }
 
 void CSubscribePropertyPage::EnableAllControls(BOOL bEnable)
@@ -1316,12 +1355,29 @@ void CSubscribePropertyPage::EnableAllControls(BOOL bEnable)
       wnd->EnableWindow(bEnable);
     if (wnd = GetDlgItem(IDC_COMBO_SERVER))
       wnd->EnableWindow(bEnable);
+    if (wnd = GetDlgItem(IDC_SEARCH_NOW))
+      wnd->EnableWindow(bEnable);
+    if (wnd = GetDlgItem(IDC_GET_NEW))
+      wnd->EnableWindow(bEnable);
+    if (wnd = GetDlgItem(IDC_CLEAR_NEW))
+      wnd->EnableWindow(bEnable);
+
     if (wnd = GetParent()->GetDlgItem(IDOK))
       wnd->EnableWindow(bEnable);
 	if (bEnable == TRUE)
 		m_pParent->StopAnimation();
 
 }
+
+void CSubscribePropertyPage::DoEnableImapControls()
+{
+	EnableAllControls(FALSE);
+
+	CWnd* wnd = NULL;
+	if (wnd = GetDlgItem(IDC_COMBO_SERVER))
+	  wnd->EnableWindow(TRUE);
+}
+
 
 void CSubscribePropertyPage::DoStopListChange()
 {
@@ -1522,6 +1578,7 @@ void CAllNewsgroupsPage::OnGetDeletions()
 		ClearNewsgroupSelection();
 	m_bProcessGetDeletion = TRUE;
 	EnableAllControls(FALSE);
+	GetDlgItem(IDC_STOP)->EnableWindow(TRUE);  
 	m_pParent->StartAnimation();
 	MSG_Command(GetPane(), MSG_FetchGroupList, NULL, 0);
 }
@@ -1539,6 +1596,7 @@ void CAllNewsgroupsPage::OnStop()
 		EnableAllControls(TRUE);
 	}
 	GetOutliner()->SelectInitialItem();
+	GetDlgItem(IDC_STOP)->EnableWindow(FALSE);  
 }
 
 void CAllNewsgroupsPage::DoDataExchange(CDataExchange* pDX)
@@ -1896,14 +1954,25 @@ void CSubscribePropertySheet::AllConnectionsComplete(MWContext *pContext )
 
 void CSubscribePropertySheet::AddServer(MSG_Host* pHost)
 {
-    if (::IsWindow(m_pSearchGroupPage->GetSafeHwnd()))
+    CSubscribePropertyPage* pActivePage = (CSubscribePropertyPage*)GetActivePage();
+	if (pActivePage != m_pAllGroupPage &&
+		::IsWindow(m_pAllGroupPage->GetSafeHwnd()))
+	{
+		int nIndex = m_pAllGroupPage->GetServerCombo()->AddString(MSG_GetHostUIName(pHost));
+		if (nIndex != CB_ERR)
+			m_pAllGroupPage->GetServerCombo()->SetItemDataPtr(nIndex, pHost);
+	}
+
+	if (pActivePage != m_pSearchGroupPage &&
+		::IsWindow(m_pSearchGroupPage->GetSafeHwnd()))
 	{
 		int nIndex = m_pSearchGroupPage->GetServerCombo()->AddString(MSG_GetHostUIName(pHost));
 		if (nIndex != CB_ERR)
 			m_pSearchGroupPage->GetServerCombo()->SetItemDataPtr(nIndex, pHost);
 	}
 
-    if (::IsWindow(m_pNewGroupPage->GetSafeHwnd()))
+	if (pActivePage != m_pNewGroupPage &&
+		::IsWindow(m_pNewGroupPage->GetSafeHwnd()))
 	{
 		int nIndex = m_pNewGroupPage->GetServerCombo()->AddString(MSG_GetHostUIName(pHost));
 		if (nIndex != CB_ERR)
@@ -1911,12 +1980,35 @@ void CSubscribePropertySheet::AddServer(MSG_Host* pHost)
 	}
 }
 
-void CSubscribePropertySheet::EnableNonImapPages(BOOL bEnable)
+void CSubscribePropertySheet::ClearSelection()
 {
+	if (::IsWindow(m_pAllGroupPage->GetSafeHwnd()))
+	{
+		if (m_pAllGroupPage->GetDlgItem(IDC_EDIT_NEWSGROUP))
+		{
+			m_pAllGroupPage->GetDlgItem(IDC_EDIT_NEWSGROUP)->SetWindowText("");
+			//SetWindowText() caused call to OnChangeNewsgroup() and set 
+			//m_bFromTyping == TRUE,  reset it back to FALSE 
+			m_pAllGroupPage->m_bFromTyping = FALSE;	  
+		}
+		m_pAllGroupPage->GetOutliner()->SelectItem(-1);
+		m_pAllGroupPage->GetOutliner()->SetTotalLines(0);
+	}
 	if (::IsWindow(m_pSearchGroupPage->GetSafeHwnd()))
-		m_pSearchGroupPage->EnableAllControls(bEnable);
-    if (::IsWindow(m_pNewGroupPage->GetSafeHwnd()))
-		m_pNewGroupPage->EnableAllControls(bEnable);
+	{
+		if (m_pSearchGroupPage->GetDlgItem(IDC_EDIT_NEWSGROUP))
+		{
+			m_pSearchGroupPage->GetDlgItem(IDC_EDIT_NEWSGROUP)->SetWindowText("");
+			m_pSearchGroupPage->m_bFromTyping = FALSE;	  
+		}
+		m_pSearchGroupPage->GetOutliner()->SelectItem(-1);
+		m_pSearchGroupPage->GetOutliner()->SetTotalLines(0);
+	}
+	if (::IsWindow(m_pNewGroupPage->GetSafeHwnd()))
+	{
+		m_pNewGroupPage->GetOutliner()->SelectItem(-1);
+		m_pNewGroupPage->GetOutliner()->SetTotalLines(0);
+	}
 }
 
 void CSubscribePropertySheet::OnHelp()
@@ -1972,4 +2064,88 @@ void CServerTypeDialog::OnOK()
 BEGIN_MESSAGE_MAP(CServerTypeDialog, CDialog)
 	ON_BN_CLICKED(IDOK, OnOK)
 END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CUpgradeSubscribeDlg dialog
+
+
+CUpgradeSubscribeDlg::CUpgradeSubscribeDlg(CWnd* pParent /*=NULL*/, const char* hostName)
+	: CDialog(CUpgradeSubscribeDlg::IDD, pParent)
+{
+	m_pHostName = hostName;
+	m_iUpgrade = 0;
+}
+
+void CUpgradeSubscribeDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CFilterDialog)
+	DDX_Radio(pDX, IDC_RADIO1, m_iUpgrade);
+	//}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(CUpgradeSubscribeDlg, CDialog)
+	//{{AFX_MSG_MAP(CUpgradeSubscribeDlg)
+	ON_BN_CLICKED(IDHELP, OnHelp)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CUpgradeSubscribeDlg message handlers
+
+void CUpgradeSubscribeDlg::OnOK() 
+{
+	// TODO: Add extra validation here
+	UpdateData();
+	if (m_iUpgrade == 0)
+		CDialog::EndDialog(MSG_IMAPUpgradeAutomatic);
+	else
+		CDialog::EndDialog(MSG_IMAPUpgradeCustom);
+}
+
+void CUpgradeSubscribeDlg::OnCancel() 
+{
+	// TODO: Add extra validation here
+	CDialog::EndDialog(MSG_IMAPUpgradeDont);
+}
+
+void CUpgradeSubscribeDlg::OnHelp()
+{
+	NetHelp(HELP_IMAP_UPGRADE);
+}
+
+int CUpgradeSubscribeDlg::DoModal()
+{
+	if (!m_MNResourceSwitcher.Initialize())
+		return -1;
+	return CDialog::DoModal();
+}
+
+
+BOOL CUpgradeSubscribeDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	m_MNResourceSwitcher.Reset();
+
+	if (m_pHostName.GetLength())
+	{
+		CString label, format;
+		GetDlgItemText (IDC_RADIO1, format );
+		label.Format (format, m_pHostName);
+		SetDlgItemText (IDC_RADIO1, label );
+	}
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+MSG_IMAPUpgradeType FE_PromptIMAPSubscriptionUpgrade (MWContext* context,
+													  const char *hostName)
+{
+	MSG_IMAPUpgradeType upgradeType = MSG_IMAPUpgradeDont;
+	CUpgradeSubscribeDlg * upgradeDlg = new CUpgradeSubscribeDlg (ABSTRACTCX(context)->GetDialogOwner(), hostName);
+	if (upgradeDlg)
+		upgradeType = (MSG_IMAPUpgradeType) upgradeDlg->DoModal();
+	return upgradeType;
+}
 

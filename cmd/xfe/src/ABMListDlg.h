@@ -46,7 +46,7 @@ public:
 
   virtual void setDlgValues();
 
-  ~XFE_ABMListDlg();
+  virtual ~XFE_ABMListDlg();
 
   //
   void createUI();
@@ -80,6 +80,10 @@ private:
   DIR_Server       *m_dir;
 #if defined(USE_ABCOM)
   MSG_Pane         *m_pane;
+
+  char             *m_fullName;
+  char             *m_nickName;
+  char             *m_info;
 #endif /* USE_ABCOM */
   MLPane           *m_mListPane;
   ABook            *m_AddrBook;

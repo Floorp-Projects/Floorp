@@ -55,7 +55,7 @@ public:
     XFE_ComposeAttachFolderView(
                XFE_Component *toplevel_component, XFE_View *parent_view,
                MSG_Pane *p = NULL, MWContext *context = NULL);
-    ~XFE_ComposeAttachFolderView();
+    virtual ~XFE_ComposeAttachFolderView();
 
     // widgets
     virtual void createWidgets(Widget);
@@ -135,7 +135,7 @@ private:
 class XFE_ComposeAttachPanel : public XFE_AttachPanel {
 public:
     XFE_ComposeAttachPanel(XFE_ComposeAttachFolderView*,MWContext*);
-    ~XFE_ComposeAttachPanel();
+    virtual ~XFE_ComposeAttachPanel();
 
     // widgets
     void createWidgets(Widget);
@@ -168,7 +168,7 @@ class XFE_ComposeAttachDrop : public XFE_DropNetscape
 {
 public:
     XFE_ComposeAttachDrop(Widget,XFE_ComposeAttachPanel*);
-    ~XFE_ComposeAttachDrop();
+    virtual ~XFE_ComposeAttachDrop();
     
 protected:
     XFE_ComposeAttachPanel *_attachPanel;

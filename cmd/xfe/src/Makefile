@@ -22,6 +22,8 @@ include $(DEPTH)/config/config.mk
 MODULE		= xfe2
 
 USE_3PANE 	= 1
+USE_ABCOM 	= 1
+GLUE_COMPO_CONTEXT = 1
 
 LIBRARY_NAME	= xfe2
 
@@ -50,8 +52,10 @@ REQUIRES	=\
 			xfeicons \
 			rdf \
 			xpcom \
-			plug \
-			netcnvts
+			netcnvts \
+			msg \
+			progress \
+			plug
 
 CPPSRCS		= \
 		  plugin.cpp \
@@ -133,6 +137,8 @@ endif
 
 ifdef MOZ_MAIL_NEWS
 CPPSRCS		+= \
+		  ABComplPickerDlg.cpp \
+		  ABComplPickerView.cpp \
 		  ABDirGenTabView.cpp \
 		  ABDirPropertyDlg.cpp \
 		  ABSearchDlg.cpp \
@@ -181,7 +187,6 @@ CPPSRCS		+= \
 		  FolderPromptDialog.cpp \
 		  FolderMenu.cpp \
 		  FolderView.cpp \
-		  Frame.cpp \
 		  $(NULL)
 endif
 
@@ -212,25 +217,20 @@ CPPSRCS		+= \
 		  NewsServerPropDialog.cpp \
 		  NewsgroupPropDialog.cpp \
 		  OptionFolderView.cpp \
+		  PrefsDialogMServer.cpp \
+		  PrefsDialogNServer.cpp \
+		  PrefsMailFolderDlg.cpp \
+		  PrefsPageAddress.cpp \
+		  PrefsPageMessages.cpp \
+		  PrefsPageNServer.cpp \
+		  ProgressFrame.cpp \
+		  SubUpgradeDialog.cpp \
 		  $(NULL)
 endif
 
 ifdef EDITOR
 CPPSRCS		+= \
 		  PrefsDialogEditor.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_LDAP
-CPPSRCS		+= \
-		  PrefsLdapProp.cpp \
-		  PrefsMserverMore.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= \
-		  PrefsMsgMore.cpp \
 		  $(NULL)
 endif
 
@@ -293,9 +293,10 @@ CSRCS		= commands.c
 
 include $(DEPTH)/config/rules.mk
 
-INCLUDES	+= -I$(OBJDIR) -I.. -I../DtWidgets -I$(DEPTH)/modules/libreg/include
+INCLUDES	+= -I$(OBJDIR) -I.. -I../DtWidgets -I$(DEPTH)/modules/libreg/include \
+		-I$(DEPTH)/lib/libmsg -I$(DEPTH)/dist/public/security -I$(DEPTH)/dist/public/ldap
 
-#ifndef MOZ_LITE
+#ifdef MOZ_MAIL_NEWS
 #CFLAGS		+= -DEDITOR
 #endif
 
@@ -306,14 +307,19 @@ ifdef USE_3PANE
 DEFINES		+= -DUSE_3PANE
 endif
 
+ifdef MOZ_MAIL_NEWS
 ifdef USE_ABCOM
 DEFINES		+= -DUSE_ABCOM
+endif
+endif
+
+ifdef GLUE_COMPO_CONTEXT
+DEFINES		+= -DGLUE_COMPO_CONTEXT
 endif
 
 ifdef USE_MOTIF_DND
 DEFINES		+= -DUSE_MOTIF_DND
 endif
-
 
 $(LIBRARY): $(OBJS)
 

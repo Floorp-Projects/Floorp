@@ -21,6 +21,7 @@
    Revised: Tao Cheng <tao@netscape.com>, 01-nov-96
  */
 
+#include "rosetta.h"
 #include "AddrBookFrame.h"
 #include "LdapSearchFrame.h"
 
@@ -52,20 +53,55 @@ extern "C" {
 XP_List* FE_GetDirServers();
 };
 
-MenuSpec XFE_AddrBookFrame::file_menu_spec[] = {
-  { "newSubmenu",		CASCADEBUTTON,
-	(MenuSpec*)&XFE_Frame::new_menu_spec },
+#if defined(USE_ABCOM)
+MenuSpec XFE_AddrBookFrame::new_sub_menu_spec[] = {
+  { xfeCmdOpenBrowser,		PUSHBUTTON },
+  { xfeCmdComposeMessage,	PUSHBUTTON },
+  MENU_PUSHBUTTON(xfeCmdNewBlank),
+  MENU_SEPARATOR,
   { xfeCmdAddToAddressBook,	PUSHBUTTON },
   { xfeCmdABNewList,		PUSHBUTTON },
-  { xfeCmdImport,		PUSHBUTTON },
+  { xfeCmdABNewPAB,		PUSHBUTTON },
+  { xfeCmdABNewLDAPDirectory,		PUSHBUTTON },
+  { NULL }
+};
+
+MenuSpec XFE_AddrBookFrame::file_menu_spec[] = {
+  { "newSubmenu",		CASCADEBUTTON,
+	(MenuSpec*)&new_sub_menu_spec },
   MENU_SEPARATOR,
+  { xfeCmdImport,		PUSHBUTTON },
   { xfeCmdSaveAs,		PUSHBUTTON },
+  MENU_SEPARATOR,
   { xfeCmdABCall,		PUSHBUTTON },
   MENU_SEPARATOR,
   { xfeCmdClose,		PUSHBUTTON },
   { xfeCmdExit,		PUSHBUTTON },
   { NULL }
 };
+#else
+MenuSpec XFE_AddrBookFrame::file_menu_spec[] = {
+  { "newSubmenu",		CASCADEBUTTON,
+	(MenuSpec*)&XFE_Frame::new_menu_spec },
+  { xfeCmdAddToAddressBook,	PUSHBUTTON },
+  { xfeCmdABNewList,		PUSHBUTTON },
+#if defined(USE_ABCOM)
+  { xfeCmdABNewPAB,		PUSHBUTTON },
+  { xfeCmdABNewLDAPDirectory,		PUSHBUTTON },
+#else
+  { xfeCmdImport,		PUSHBUTTON },
+#endif /* USE_ABCOM */
+  MENU_SEPARATOR,
+  { xfeCmdImport,		PUSHBUTTON },
+  { xfeCmdSaveAs,		PUSHBUTTON },
+  MENU_SEPARATOR,
+  { xfeCmdABCall,		PUSHBUTTON },
+  MENU_SEPARATOR,
+  { xfeCmdClose,		PUSHBUTTON },
+  { xfeCmdExit,		PUSHBUTTON },
+  { NULL }
+};
+#endif /* USE_ABCOM */
 
 MenuSpec XFE_AddrBookFrame::edit_menu_spec[] = {
   { xfeCmdUndo,			PUSHBUTTON },
@@ -78,9 +114,10 @@ MenuSpec XFE_AddrBookFrame::edit_menu_spec[] = {
   { xfeCmdPaste,		PUSHBUTTON },
 #endif
   { xfeCmdABDeleteEntry,PUSHBUTTON },
+#if defined(USE_ABCOM)
+  { xfeCmdABDeleteAllEntries,PUSHBUTTON },
+#endif /* USE_ABCOM */
   { xfeCmdSelectAll,	PUSHBUTTON },
-  MENU_SEPARATOR,
-  { xfeCmdSearchAddress,		PUSHBUTTON },
   MENU_SEPARATOR,
   { xfeCmdDisplayHTMLDomainsDialog,	PUSHBUTTON },
   { xfeCmdViewProperties,	PUSHBUTTON },
@@ -141,7 +178,6 @@ ToolbarSpec XFE_AddrBookFrame::toolbar_spec[] = {
     XFE_TOOLBAR_DELAY_LONG // Popup delay
   },
 
-  { xfeCmdSearchAddress,	        PUSHBUTTON, &MNC_Directory_group},
   { xfeCmdABCall,	        PUSHBUTTON, &MNAB_Call_group},
   { xfeCmdABDeleteEntry,	PUSHBUTTON, &MNTB_Trash_group},
   { xfeCmdStopLoading,		PUSHBUTTON, &TB_Stop_group },
@@ -195,6 +231,15 @@ XFE_AddrBookFrame::XFE_AddrBookFrame(Widget toplevel,
 											  AB_BOOK);
   m_abView = (XFE_AddrBookView *) view->getEntriesListView();
 
+  /* Attachment
+   */
+  XtVaSetValues(view->getBaseWidget(),
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNtopAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		XmNbottomAttachment, XmATTACH_FORM,
+		NULL);
+
   setView(view);
   setMenubar(menu_bar_spec);
 
@@ -211,7 +256,7 @@ XFE_AddrBookFrame::XFE_AddrBookFrame(Widget toplevel,
   m_dashboard->setShowStatusBar(True);
   m_dashboard->setShowProgressBar(True);
   //
-  m_dashboard->setShowSecurityIcon(True);
+  HG01283
 
   // Configure the toolbox for the first time
   configureToolbox();
@@ -226,13 +271,20 @@ XP_Bool XFE_AddrBookFrame::handlesCommand(CommandType cmd,
 										  void */* calldata */,
 										  XFE_CommandInfo* /* info */)
 {
+#if defined(USE_ABCOM)
+  if (cmd == xfeCmdShowPopup
+	  || cmd == xfeCmdStopLoading
+	  || cmd == xfeCmdDisplayHTMLDomainsDialog
+	  || cmd == xfeCmdEditPreferences
+	  )
+	  return TRUE;
+#else
   if (cmd == xfeCmdShowPopup
 	  || cmd == xfeCmdImport
 	  || cmd == xfeCmdSaveAs
 	  || cmd == xfeCmdStopLoading
 	  || cmd == xfeCmdUndo
 	  || cmd == xfeCmdRedo
-	  || cmd == xfeCmdABDeleteEntry
 	  || cmd == xfeCmdFindInObject
 	  || cmd == xfeCmdFindAgain
 	  || cmd == xfeCmdSearchAddress
@@ -247,13 +299,17 @@ XP_Bool XFE_AddrBookFrame::handlesCommand(CommandType cmd,
 	  || cmd == xfeCmdSortDescending
 	  || cmd == xfeCmdAddToAddressBook
 	  || cmd == xfeCmdABNewList
+	  || cmd == xfeCmdABNewPAB
+	  || cmd == xfeCmdABNewLDAPDirectory
 	  || cmd == xfeCmdViewProperties
 	  || cmd == xfeCmdDisplayHTMLDomainsDialog
 	  || cmd == xfeCmdABEditEntry
 	  || cmd == xfeCmdABDeleteEntry
+	  || cmd == xfeCmdABDeleteAllEntries
 	  || cmd == xfeCmdABCall
 	  || cmd == xfeCmdABvCard)
 	  return TRUE;
+#endif /* USE_ABCOM */
   else
 	  /* Default
 	   */
@@ -291,7 +347,6 @@ XFE_AddrBookFrame::isCommandEnabled(CommandType cmd, void *, XFE_CommandInfo*)
       || cmd == xfeCmdOpenNewsgroups
       || cmd == xfeCmdOpenFolders
 
-	  || cmd == xfeCmdSearchAddress
       || cmd == xfeCmdEditPreferences
 
       || cmd == xfeCmdOpenBookmarks
@@ -301,7 +356,13 @@ XFE_AddrBookFrame::isCommandEnabled(CommandType cmd, void *, XFE_CommandInfo*)
 #endif /* JAVA */
 
 	  || cmd == xfeCmdSelectAll
+
+#if !defined(USE_ABCOM)
+	  || cmd == xfeCmdSearchAddress
 	  || cmd == xfeCmdABvCard
+#else
+	  || cmd == xfeCmdABvCard
+#endif /* USE_ABCOM */
 
 	  || cmd == xfeCmdDisplayHTMLDomainsDialog) {
 	  return TRUE;
@@ -335,10 +396,8 @@ char *XFE_AddrBookFrame::getTipString(CommandType /* cmd */)
 void XFE_AddrBookFrame::doCommand(CommandType cmd, 
 								  void *calldata, XFE_CommandInfo* info)
 {
+#if defined(USE_ABCOM)
   /* first we handle the commands we know about. 
-   */
-
-  /* file_menu_spec xfeCmdClose
    */
   if (cmd == xfeCmdComposeMessage) 
 	  composeMessage();
@@ -356,8 +415,54 @@ void XFE_AddrBookFrame::doCommand(CommandType cmd,
 			(fe_globalPrefs.send_html_msg == True);
      composeMessage();
   }
-  else if (cmd == xfeCmdImport)
-    import();
+  else	if (cmd == xfeCmdShowPopup) {
+		// Finish up the popup
+		XEvent *event = info->event;
+
+		if (m_popup)
+			delete m_popup;
+		
+		m_popup = 
+			new XFE_PopupMenu("popup",(XFE_Frame *) this,
+							  XfeAncestorFindApplicationShell(getBaseWidget()));
+		m_popup->addMenuSpec(frame_popup_spec);
+		m_popup->position (event);
+		m_popup->show();
+  }/* else if */
+  else if (cmd == xfeCmdEditPreferences)
+    fe_showMailNewsPreferences(this, (MWContext*)m_view->getContext());
+
+  else if (cmd == xfeCmdDisplayHTMLDomainsDialog)
+    
+	  MSG_DisplayHTMLDomainsDialog((MWContext*)m_view->getContext());
+  /* ToolBar
+   */
+  else
+    /* Default
+     */
+    XFE_Frame::doCommand(cmd, calldata, info);
+#else
+  /* first we handle the commands we know about. 
+   */
+  if (cmd == xfeCmdComposeMessage) 
+	  composeMessage();
+  else if (cmd == xfeCmdStopLoading) 
+	  m_abView->stopSearch();
+  else if (cmd == xfeCmdComposeMessageHTML) 
+  {
+     CONTEXT_DATA(m_context)->stealth_cmd = 
+			(fe_globalPrefs.send_html_msg == False);
+     composeMessage();
+  }
+  else if ( cmd == xfeCmdComposeMessagePlain) 
+  {
+     CONTEXT_DATA(m_context)->stealth_cmd = 
+			(fe_globalPrefs.send_html_msg == True);
+     composeMessage();
+  }
+  else if (cmd == xfeCmdImport) {
+	  import();
+  }
   else if (cmd == xfeCmdSaveAs)
     saveAs();
   /* edit_menu_spec
@@ -368,6 +473,8 @@ void XFE_AddrBookFrame::doCommand(CommandType cmd,
     redo();
   else if (cmd == xfeCmdABDeleteEntry)
     abDelete();
+  else if (cmd == xfeCmdABDeleteAllEntries)
+    abDeleteAllEntries();
   else if (cmd == xfeCmdFindInObject)
     printf("\n %s", xfeCmdComposeMessage);
   else if (cmd == xfeCmdFindAgain)
@@ -380,26 +487,6 @@ void XFE_AddrBookFrame::doCommand(CommandType cmd,
 
   /* view_menu_spec
    */
-#if defined(USE_ABCOM)
-  else if (cmd == xfeCmdABByType) {
-    m_abView->setSortType(AB_attribEntryType);
-  }
-  else if (cmd == xfeCmdABByName) {
-    m_abView->setSortType(AB_attribFullName);
-  }
-  else if (cmd == xfeCmdABByEmailAddress) {
-    m_abView->setSortType(AB_attribEmailAddress);
-  }
-  else if (cmd == xfeCmdABByCompany) {
-    m_abView->setSortType(AB_attribCompanyName);
-  }
-  else if (cmd == xfeCmdABByLocality) {
-    m_abView->setSortType(AB_attribLocality);
-  }
-  else if (cmd == xfeCmdABByNickName) {
-    m_abView->setSortType(AB_attribNickName);
-  }
-#else
   else if (cmd == xfeCmdABByType) {
     m_abView->setSortType(AB_SortByTypeCmd);
   }
@@ -418,7 +505,6 @@ void XFE_AddrBookFrame::doCommand(CommandType cmd,
   else if (cmd == xfeCmdABByNickName) {
     m_abView->setSortType(AB_SortByNickname);
   }
-#endif /* USE_ABCOM */
   else if (cmd == xfeCmdSortAscending) {
     m_abView->setAscending(True);
   }
@@ -472,6 +558,7 @@ void XFE_AddrBookFrame::doCommand(CommandType cmd,
     /* Default
      */
     XFE_Frame::doCommand(cmd, calldata, info);
+#endif /* USE_ABCOM */
 }/* XFE_AddrBookFrame::doCommand() */
 
 
@@ -538,7 +625,11 @@ void XFE_AddrBookFrame::redo() {
 }
 
 void XFE_AddrBookFrame::abDelete() {
-  m_abView->delUser();
+  m_abView->abDelete();
+}
+
+void XFE_AddrBookFrame::abDeleteAllEntries() {
+  m_abView->abDeleteAllEntries();
 }
 
 void XFE_AddrBookFrame::addToAddressBook() {

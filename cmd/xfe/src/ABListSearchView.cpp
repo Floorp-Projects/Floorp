@@ -20,6 +20,7 @@
    Created: Tao Cheng <tao@netscape.com>, 17-dec-96
  */
 
+#include "rosetta.h"
 #include "Frame.h"
 #include "ViewGlue.h"
 #include "ABListSearchView.h"
@@ -33,10 +34,8 @@
 
 #endif /* USE_MOTIF_DND */
 
-#ifdef MOZ_MAIL_NEWS
 #include "ABSearchDlg.h"
 #include "MNView.h"
-#endif
 #include "Xfe/Xfe.h"
 
 #include <Xm/ArrowB.h>
@@ -71,7 +70,16 @@ const char *XFE_ABListSearchView::dirSelect =
 // icons
 fe_icon XFE_ABListSearchView::m_personIcon = { 0 };
 fe_icon XFE_ABListSearchView::m_listIcon = { 0 };
-fe_icon XFE_ABListSearchView::m_securityIcon = { 0 };
+HG28190
+
+extern int XFE_AB_HEADER_NAME;
+extern int XFE_AB_HEADER_CERTIFICATE;
+extern int XFE_AB_HEADER_EMAIL;
+extern int XFE_AB_HEADER_NICKNAME;
+extern int XFE_AB_HEADER_EMAIL;
+extern int XFE_AB_HEADER_COMPANY;
+extern int XFE_AB_HEADER_PHONE;
+extern int XFE_AB_HEADER_LOCALITY;
 
 extern int XFE_AB_SEARCH_DLG;
 extern int XFE_AB_SEARCH;
@@ -94,10 +102,15 @@ MenuSpec XFE_ABListSearchView::view_popup_spec[] = {
   { xfeCmdComposeMessage,	PUSHBUTTON },
   MENU_SEPARATOR,
   { xfeCmdABDeleteEntry,PUSHBUTTON },
+#if defined(USE_ABCOM)
+  { xfeCmdABDeleteAllEntries,PUSHBUTTON },
+#endif /* USE_ABCOM */
   MENU_SEPARATOR,
   { xfeCmdViewProperties,	PUSHBUTTON },
   { NULL }
 };
+
+static char a_line[AB_MAX_STRLEN];
 
 XFE_ABListSearchView::XFE_ABListSearchView(XFE_Component *toplevel_component,
 										   Widget         /* parent */,
@@ -116,11 +129,19 @@ XFE_ABListSearchView::XFE_ABListSearchView(XFE_Component *toplevel_component,
 #if defined(USE_ABCOM)
   m_containerInfo = 0;
   m_abContainerPane = 0;
+
   // TODO: what is the default??
   m_sortType = AB_attribFullName;
+  m_pageSize = 0;
+
+  m_numAttribs = 0;
+  //  m_attribIDs = 0;
 #else
   m_sortType = AB_SortByFullNameCmd;
 #endif /* USE_ABCOM */
+  m_dataIndex = MSG_VIEWINDEXNONE;
+  m_typeDownIndex = MSG_VIEWINDEXNONE;
+
   m_expandBtn = 0;
 
   m_ldapDisabled = False;
@@ -166,6 +187,8 @@ XFE_ABListSearchView::XFE_ABListSearchView(XFE_Component *toplevel_component,
   error = 
 	  AB_SetShowPropertySheetForEntryFunc((MSG_Pane *) m_abPane,
 		 &XFE_ABListSearchView::ShowPropertySheetForEntryFunc);
+
+  m_pane = (MSG_Pane *) m_abPane;
 #else
   m_AddrBook = fe_GetABook(0);
   m_directories = directories;
@@ -190,7 +213,11 @@ XFE_ABListSearchView::XFE_ABListSearchView(XFE_Component *toplevel_component,
    */
   setPane((MSG_Pane *)m_abPane);
 
-  /* Tao_17dec96
+#if !defined(GLUE_COMPO_CONTEXT)
+  registerInterest(XFE_View::allConnectionsCompleteCallback,
+						  this,
+						  (XFE_FunctionNotification)allConnectionsComplete_cb);
+ /* Tao_17dec96
    * register interest in getting allconnectionsComplete
    */
   MWContext *top = XP_GetNonGridContext (context);
@@ -199,17 +226,28 @@ XFE_ABListSearchView::XFE_ABListSearchView(XFE_Component *toplevel_component,
 	  f->registerInterest(XFE_Frame::allConnectionsCompleteCallback,
 						  this,
 						  (XFE_FunctionNotification)allConnectionsComplete_cb);
-
+#endif /* GLUE_COMPO_CONTEXT */
 }
 
 XFE_ABListSearchView::~XFE_ABListSearchView()
 {
-	if (m_abPane)
+	if (m_abPane) {
 #if defined(USE_ABCOM)
+		MSG_SetFEData(m_pane, 0);
 		AB_ClosePane(m_pane);
 #else
 	    AB_CloseAddressBookPane(&m_abPane);
 #endif /* USE_ABCOM */
+	}/* if */
+
+	/* unregister 
+	 */
+ 	if (m_outliner)
+		XtRemoveCallback(m_outliner->getBaseWidget(), XmNresizeCallback, 
+						 XFE_ABListSearchView::resizeCallback, 
+						 (XtPointer) this);
+
+#if !defined(GLUE_COMPO_CONTEXT)
 	/* Tao_17dec96
 	 * register interest ingetting allconnectionsComplete
 	 */
@@ -219,6 +257,7 @@ XFE_ABListSearchView::~XFE_ABListSearchView()
 		f->unregisterInterest(XFE_Frame::allConnectionsCompleteCallback,
 							  this,
 							  (XFE_FunctionNotification)allConnectionsComplete_cb);
+#endif /* GLUE_COMPO_CONTEXT */
 
 	//
 	if (m_popup)
@@ -295,8 +334,7 @@ void XFE_ABListSearchView::idToPerson(DIR_Server *pDir,
 		DIR_Server *dir = pDir;
 		ABook      *aBook = m_AddrBook;
 		
-		char        a_line[AB_MAX_STRLEN];
-		
+		char        a_line[AB_MAX_STRLEN];		
 		pPerson->WinCSID = m_contextData->fe.data->xfe_doc_csid;
 
 		a_line[0] = '\0';
@@ -373,7 +411,7 @@ void XFE_ABListSearchView::idToPerson(DIR_Server *pDir,
 		if (AB_GetDistName(dir, aBook, entry, a_line) != MSG_VIEWINDEXNONE)
 			pPerson->pDistName = XP_STRDUP(a_line);
 #endif
-		AB_GetSecurity(dir, aBook, entry, &pPerson->Security);
+		HG87291
 		
 		a_line[0] = '\0';
 		if (AB_GetCoolAddress(dir, aBook, entry, a_line) != MSG_VIEWINDEXNONE)
@@ -401,6 +439,11 @@ XFE_ABListSearchView::isCommandEnabled(CommandType cmd,
   else if (cmd == xfeCmdABNewList)
     abCmd = AB_AddMailingListCmd;
 
+  else if (cmd == xfeCmdABNewPAB)
+    abCmd = AB_NewAddressBook;
+  else if (cmd == xfeCmdABNewLDAPDirectory)
+    abCmd = AB_NewLDAPDirectory;
+
   else if (cmd == xfeCmdImport)
     abCmd = AB_ImportCmd;
   else if (cmd == xfeCmdSaveAs)
@@ -414,6 +457,8 @@ XFE_ABListSearchView::isCommandEnabled(CommandType cmd,
     abCmd = AB_RedoCmd;
   else if (cmd == xfeCmdABDeleteEntry)
     abCmd = AB_DeleteCmd;
+  else if (cmd == xfeCmdABDeleteAllEntries)
+    abCmd = AB_DeleteAllCmd;
   else if (cmd == xfeCmdABSearchEntry)
     abCmd = AB_LDAPSearchCmd; 
   else if (cmd == xfeCmdViewProperties
@@ -446,6 +491,9 @@ XFE_ABListSearchView::isCommandEnabled(CommandType cmd,
   MSG_COMMAND_CHECK_STATE sState = MSG_NotUsed;
   XP_Bool enable = FALSE, 
 	      plural = FALSE;
+#if defined(DEBUG_tao_)
+  printf("\nXFE_ABListSearchView::isCommandEnabled:%s\n", Command::getString(cmd));
+#endif
   if (abCmd != ((AB_CommandType)~0))
 #if defined(USE_ABCOM)
 	  AB_CommandStatusAB2(m_pane, abCmd, 
@@ -456,7 +504,7 @@ XFE_ABListSearchView::isCommandEnabled(CommandType cmd,
 					   &enable, &sState, NULL, &plural);
 #endif /* USE_ABCOM */
   return enable;
-}/* XFE_AddrBookView::isCommandEnabled() */
+}/* XFE_ABListSearchView::isCommandEnabled() */
 
 /* used by toplevel to see which view can handle a command.  Returns true
  * if we can handle it. 
@@ -466,28 +514,13 @@ XFE_ABListSearchView::handlesCommand(CommandType cmd,
 									 void * /* calldata */, 
 									 XFE_CommandInfo* /* i */)
 {
+#if defined(DEBUG_tao_)
+  printf("\nXFE_ABListSearchView::handlesCommand:%s\n", Command::getString(cmd));
+#endif
 	// handle view specific command
-  if (cmd == xfeCmdShowPopup
-	  || cmd == xfeCmdImport
-	  || cmd == xfeCmdSaveAs
-	  || cmd == xfeCmdUndo
-	  || cmd == xfeCmdRedo
-	  || cmd == xfeCmdABDeleteEntry
-	  || cmd == xfeCmdFindInObject
-	  || cmd == xfeCmdFindAgain
-	  || cmd == xfeCmdSearchAddress
-	  || cmd == xfeCmdEditPreferences
-	  || cmd == xfeCmdABByType
-	  || cmd == xfeCmdABByName
-	  || cmd == xfeCmdABByEmailAddress
-	  || cmd == xfeCmdABByCompany
-	  || cmd == xfeCmdABByLocality
-	  || cmd == xfeCmdABByNickName
-	  || cmd == xfeCmdSortAscending
-	  || cmd == xfeCmdSortDescending
-	  || cmd == xfeCmdAddToAddressBook
-	  || cmd == xfeCmdABNewList
-	  || cmd == xfeCmdViewProperties
+  if (IS_AB_PANE_CMD(cmd)
+	  || IS_2_PANE_CMD(cmd)
+
 	  || cmd == xfeCmdDisplayHTMLDomainsDialog
 	  || cmd == xfeCmdABEditEntry
 	  || cmd == xfeCmdABDeleteEntry
@@ -520,9 +553,10 @@ XFE_ABListSearchView::doCommand(CommandType cmd,
 			if (m_popup)
 				delete m_popup;
 
-			m_popup = new XFE_PopupMenu("popup",(XFE_Frame *) getToplevel(), 
-										XfeAncestorFindApplicationShell(getToplevel()->
-															getBaseWidget()));
+			m_popup = 
+				new XFE_PopupMenu("popup",(XFE_Frame *) getToplevel(), 
+								  XfeAncestorFindApplicationShell(getToplevel()->
+																  getBaseWidget()));
 			m_popup->addMenuSpec(view_popup_spec);
 			m_popup->position (event);
 			m_popup->show();
@@ -530,7 +564,73 @@ XFE_ABListSearchView::doCommand(CommandType cmd,
 	}/* if */
 	else if (cmd == xfeCmdSelectAll)
       m_outliner->selectAllItems();
+#if defined(USE_ABCOM)
+	else {
+		AB_CommandType abCmd = (AB_CommandType)~0;
 
+		if (cmd == xfeCmdComposeMessage)
+			abCmd = AB_NewMessageCmd;
+		else if (cmd == xfeCmdAddToAddressBook)
+			abCmd = AB_AddUserCmd;
+		else if (cmd == xfeCmdABNewList)
+			abCmd = AB_AddMailingListCmd;
+		
+		else if (cmd == xfeCmdABNewPAB)
+			abCmd = AB_NewAddressBook;
+		else if (cmd == xfeCmdABNewLDAPDirectory)
+			abCmd = AB_NewLDAPDirectory;
+		
+		else if (cmd == xfeCmdImport)
+			abCmd = AB_ImportCmd;
+		else if (cmd == xfeCmdSaveAs)
+			abCmd = AB_SaveCmd;
+		else if (cmd == xfeCmdClose)
+			abCmd = AB_CloseCmd;
+		
+		else if (cmd == xfeCmdUndo)
+			abCmd = AB_UndoCmd;
+		else if (cmd == xfeCmdRedo)
+			abCmd = AB_RedoCmd;
+		else if (cmd == xfeCmdABDeleteEntry)
+			abCmd = AB_DeleteCmd;
+		else if (cmd == xfeCmdABDeleteAllEntries)
+			abCmd = AB_DeleteAllCmd;
+		else if (cmd == xfeCmdABSearchEntry)
+			abCmd = AB_LDAPSearchCmd; 
+		else if (cmd == xfeCmdViewProperties
+				 || cmd == xfeCmdABEditEntry)
+			abCmd = AB_PropertiesCmd;
+		else if (cmd == xfeCmdABByType)
+			abCmd = AB_SortByTypeCmd;
+		else if (cmd == xfeCmdABByName)
+			abCmd = AB_SortByFullNameCmd;
+		else if (cmd == xfeCmdABByEmailAddress)
+			abCmd = AB_SortByEmailAddress;
+		else if (cmd == xfeCmdABByCompany)
+			abCmd = AB_SortByCompanyName;
+		else if (cmd == xfeCmdABByLocality)
+			abCmd = AB_SortByLocality;
+		else if (cmd == xfeCmdABByNickName)
+			abCmd = AB_SortByNickname;
+		else if (cmd == xfeCmdSortAscending)
+			abCmd = AB_SortAscending;
+		else if (cmd == xfeCmdSortDescending)
+			abCmd = AB_SortDescending;
+
+		else if (cmd == xfeCmdABCall)
+			abCmd = AB_CallCmd;
+		
+		int32 count = 0;
+		const int *indices = 0;
+
+		m_outliner->getSelection(&indices, (int *) &count);
+		int error = AB_CommandAB2(m_pane,
+								  abCmd,
+								  (MSG_ViewIndex *) indices,
+								  count);
+
+	}/* else */
+#endif
 }
 
 /*
@@ -559,7 +659,7 @@ XFE_ABListSearchView::newList()
 }
 
 void 
-XFE_ABListSearchView::delUser()
+XFE_ABListSearchView::abDelete()
 {
   /* check which is selected
    */
@@ -582,19 +682,50 @@ XFE_ABListSearchView::delUser()
 	  AB_CommandAB2(m_pane, 
 					AB_DeleteCmd, 
 					(MSG_ViewIndex *)indices, count);
+	  count = MSG_GetNumLines(m_pane);
 #else
 	  AB_Command((ABPane *) m_abPane, 
 				 AB_DeleteCmd, 
 				 (MSG_ViewIndex *)indices, count);
-#endif /* USE_ABCOM */
 	  
 	  /* Tao_04dec96: use XFE_MNListView ???
 	   */
 	  AB_GetEntryCount (m_dir, m_AddrBook, 
 						&count, (ABID) ABTypeAll, 0);
+#endif /* USE_ABCOM */
 #if 0
 	  m_outliner->change(0, count, count);
 #endif
+	  if (count) {
+		
+		  int pos = (first <= (count-1))?first:(count-1);
+		  m_outliner->selectItemExclusive(pos);
+		  m_outliner->makeVisible(pos);
+	  }/* if */
+	  getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
+  }/* if */
+}
+
+void
+XFE_ABListSearchView::abDeleteAllEntries()
+{
+  /* check which is selected
+   */
+  uint32 count = 0;
+  const int *indices = 0;
+
+  m_outliner->getSelection(&indices, (int *) &count);
+  if (count > 0 && indices) {
+	  int first = indices[0];
+	  /* int AB_Command (ABPane* pane, AB_CommandType command,
+	   * MSG_ViewIndex* indices, int32 numindices);
+	   */
+#if defined(USE_ABCOM)
+	  AB_CommandAB2(m_pane, 
+					AB_DeleteAllCmd, 
+					(MSG_ViewIndex *)indices, count);
+	  count = MSG_GetNumLines(m_pane);
+#endif /* USE_ABCOM */
 	  if (count) {
 		
 		  int pos = (first <= (count-1))?first:(count-1);
@@ -700,7 +831,7 @@ XFE_ABListSearchView::popupUserPropertyWindow(ABID entry, XP_Bool newuser,
 	  getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
   }/* else */
 #endif /* USE_ABCOM */
-}/* XFE_AddrBookView::popupUserPropertyWindow() */
+}/* XFE_ABListSearchView::popupUserPropertyWindow() */
 
 void
 XFE_ABListSearchView::popupListPropertyWindow(ABID entry, XP_Bool newuser,
@@ -828,6 +959,43 @@ int XFE_ABListSearchView::addToAddressBook()
 }
 
 void 
+XFE_ABListSearchView::listChangeFinished(XP_Bool          /* asynchronous */,
+										 MSG_NOTIFY_CODE  notify, 
+										 MSG_ViewIndex    where,
+										 int32            num)
+{
+	switch (notify) {
+	case MSG_NotifyLDAPTotalContentChanged:
+		{
+#if defined(DEBUG_tao)
+	printf("\nXFE_ABListSearchView::MSG_NotifyLDAPTotalContentChanged, where=%d, num=%d", where, num);
+#endif
+			m_outliner->change(0, num, num);
+			m_outliner->scroll2Item((int) where);
+		}
+		break;
+
+	case MSG_NotifyInsertOrDelete:
+		if (m_searchingDir)
+#if defined(USE_ABCOM)
+			{
+				int error = AB_LDAPSearchResultsAB2(m_pane,
+													where, num);
+#if 1
+				//fe_UpdateGraph(m_contextData, True);
+#else
+				notifyInterested(XFE_Component::progressBarCylonTick);
+#endif
+			}
+#else
+		AB_LDAPSearchResults((ABPane*)m_pane, where, num);
+#endif /* USE_ABCOM */
+		break;
+
+	}/* notify */
+}
+
+void 
 XFE_ABListSearchView::paneChanged(XP_Bool asynchronous,
 								  MSG_PANE_CHANGED_NOTIFY_CODE notify_code,
 								  int32 value)
@@ -840,6 +1008,63 @@ XFE_ABListSearchView::paneChanged(XP_Bool asynchronous,
 		XtRemoveTimeOut(m_typeDownTimer);
 		m_typeDownTimer = 0;
 	}/* if */
+
+	switch (notify_code) {
+	case MSG_PaneDirectoriesChanged:
+		dirChanged(value);
+		break;
+
+	case MSG_PaneChanged: 
+		break;
+
+	case MSG_PaneClose: 
+		break;
+
+	case MSG_PaneNotifyStartSearching:
+		m_searchingDir = True;
+#if 1
+		//fe_UpdateGraph(m_contextData, True);
+#else
+		notifyInterested(XFE_Component::progressBarCylonStart);
+#endif 
+		break;
+
+	case MSG_PaneNotifyStopSearching:
+#if 1
+		//fe_StopProgressGraph(m_contextData);
+#else
+		notifyInterested(XFE_Component::progressBarCylonStop);
+#endif 
+		m_searchingDir = False;
+		break;
+
+	case MSG_PaneNotifyTypeDownCompleted:
+		{
+#if defined(DEBUG_tao)
+			printf("\nMSG_PaneNotifyTypeDownCompleted\n");
+#endif 
+			m_typeDownIndex = (MSG_ViewIndex) value;
+
+			/* Steal from SubAllView.cpp
+			 */
+			if (m_typeDownIndex == MSG_VIEWINDEXNONE) {
+				m_outliner->deselectAllItems();
+			}/* if */
+			else {
+				m_outliner->selectItemExclusive(m_typeDownIndex);
+				m_outliner->makeVisible(m_typeDownIndex);
+			}/* else */
+			getToplevel()->
+				notifyInterested(XFE_View::chromeNeedsUpdating);
+		}
+		break;
+
+	}/* notify_code */
+}
+
+void
+XFE_ABListSearchView::dirChanged(int32 /* value */)
+{
 
 #if defined(USE_ABCOM)
 	// rewrite with new APIs
@@ -1283,9 +1508,22 @@ void XFE_ABListSearchView::layout()
 
 XFE_CALLBACK_DEFN(XFE_ABListSearchView, allConnectionsComplete)(XFE_NotificationCenter */*obj*/, 
 								void */*clientData*/, 
-								void */* callData */)
+								void *callData)
 {
-  stopSearch();
+	MWContext *c = (MWContext *) callData;
+	if (c == m_contextData)
+		stopSearch();
+}
+
+void
+XFE_ABListSearchView::allConnectionsComplete(MWContext  *context)
+{
+#if defined(DEBUG_tao)
+	printf("\n**XFE_ABListSearchView::allConnectionsComplete\n");
+#endif
+	XFE_View::allConnectionsComplete(context);
+	if (context == m_contextData)
+		stopSearch();
 }
 
 void
@@ -1413,6 +1651,9 @@ void XFE_ABListSearchView::stopSearch()
 		 m_outliner->getTotalLines(), count);
 #endif
 
+#if 0
+	/* become annoying in tyepdown
+	 */
   if (!count) {
 	  char tmp[128];
 	  XP_SAFE_SPRINTF(tmp, sizeof(tmp),
@@ -1420,6 +1661,8 @@ void XFE_ABListSearchView::stopSearch()
 					  XP_GetString(XFE_SEARCH_NO_MATCHES));
 	  fe_Alert_2(getBaseWidget(), tmp);
   }/* if */
+#endif /* 0 */
+
   getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
 
 }/* */
@@ -1520,14 +1763,336 @@ XFE_ABListSearchView::ConvToIndex(void */*item*/)
   return 0;
 }
 
+/* Methods for the outlinable interface.
+ */
 char *
-XFE_ABListSearchView::getColumnName(int /*column*/)
+XFE_ABListSearchView::getCellTipString(int row, int column)
 {
-  return 0;
+	char *tmp = 0;
+	if (row < 0) {
+		/* header
+		 */
+		tmp = getColumnHeaderText(column);
+	}/* if */
+	else {
+		ABID orgID = m_entryID;
+		MSG_ViewIndex orgIndex = m_dataIndex;
+		
+		/* content 
+		 */
+		m_dataIndex = row;
+#if defined(USE_ABCOM)
+#if 0
+		int error = AB_GetABIDForIndex(m_pane,
+									   (MSG_ViewIndex) row,
+									   &m_entryID);
+#endif
+		
+#else
+		m_entryID = AB_GetEntryIDAt((AddressPane *) m_abPane, (uint32) row);
+#endif /* USE_ABCOM */
+		tmp = getColumnText(column);
+		
+		/* reset
+		 */
+		m_dataIndex = orgIndex;
+		m_entryID = orgID;
+	}/* else */
+
+	if (tmp && 
+		(!m_outliner->isColTextFit(tmp, row, column)))
+		return tmp;
+
+	return NULL;
 }
 
-/* This method acquires one line of data: entryID is set for getColumnText
+char *
+XFE_ABListSearchView::getCellDocString(int /* row */, int /* column */)
+{
+	return NULL;
+}
+
+char*
+XFE_ABListSearchView::getColumnName(int column)
+{
+  switch (column) {
+    case OUTLINER_COLUMN_TYPE:	
+		return XP_GetString(XFE_AB_HEADER_NAME);
+    case OUTLINER_COLUMN_NAME:
+		return XP_GetString(XFE_AB_HEADER_NAME);
+    case OUTLINER_COLUMN_EMAIL:	
+		return XP_GetString(XFE_AB_HEADER_EMAIL);
+    case OUTLINER_COLUMN_PHONE:	
+		return XP_GetString(XFE_AB_HEADER_PHONE);
+    case OUTLINER_COLUMN_NICKNAME:	
+		return XP_GetString(XFE_AB_HEADER_NICKNAME);
+    case OUTLINER_COLUMN_COMPANY:	
+		return XP_GetString(XFE_AB_HEADER_COMPANY);
+    case OUTLINER_COLUMN_LOCALITY:	
+		return XP_GetString(XFE_AB_HEADER_LOCALITY);
+    default:			
+		XP_ASSERT(0); 
+		return 0;
+    }
+}
+
+EOutlinerTextStyle 
+XFE_ABListSearchView::getColumnHeaderStyle(int column)
+{
+#if defined(USE_ABCOM)
+	AB_AttribID sortType = AB_attribUnknown;
+	if (column >= 0 &&
+		column < m_numAttribs) {
+		AB_ColumnInfo *cInfo = AB_GetColumnInfo(m_containerInfo, 
+												(AB_ColumnID) column);
+		if (cInfo) {
+			sortType = cInfo->sortable?cInfo->attribID:AB_attribUnknown;
+			AB_FreeColumnInfo(cInfo);
+		}/* if */
+	}/* if */
+#else
+	ABID sortType = 0;
+	switch (column) {
+	case OUTLINER_COLUMN_TYPE:
+		sortType = ABTypeEntry;
+		break;
+		
+	case OUTLINER_COLUMN_NAME:
+		sortType = ABFullName;
+		break;
+		
+	case OUTLINER_COLUMN_EMAIL:
+		sortType = ABEmailAddress;
+		break;
+		
+	case OUTLINER_COLUMN_NICKNAME:
+		sortType = ABNickname;
+	  break;
+	  
+	case OUTLINER_COLUMN_COMPANY:
+		sortType = ABCompany;
+		break;
+		
+	case OUTLINER_COLUMN_LOCALITY:
+		sortType = ABLocality;
+		break;
+	}/* switch */
+#endif /* USE_ABCOM */
+
+	if (sortType == getSortType())
+		return OUTLINER_Bold;
+	else
+		return OUTLINER_Default;
+}
+
+/* Returns the text and/or icon to display at the top of the column.
  */
+char*
+XFE_ABListSearchView::getColumnHeaderText(int column)
+{
+
+#if defined(USE_ABCOM)
+	a_line[0] = '\0';
+	if (column >= 0 &&
+		column < m_numAttribs) {
+		AB_ColumnInfo *cInfo = AB_GetColumnInfo(m_containerInfo, 
+												(AB_ColumnID) column);
+		if (cInfo) {
+			XP_SAFE_SPRINTF(a_line, sizeof(a_line),
+							"%s",
+							cInfo->displayString?cInfo->displayString:"");
+			AB_FreeColumnInfo(cInfo);
+		}/* if */
+	}/* if */
+	return a_line;
+#else
+  char *tmp = 0;
+  switch (column) {
+  case OUTLINER_COLUMN_TYPE:
+    tmp = XP_STRDUP(" ");
+    break;
+
+  case OUTLINER_COLUMN_NAME:
+    tmp = XP_GetString(XFE_AB_HEADER_NAME);
+    break;
+
+  case OUTLINER_COLUMN_NICKNAME:
+    tmp = XP_GetString(XFE_AB_HEADER_NICKNAME);
+    break;
+
+  case OUTLINER_COLUMN_EMAIL:
+    tmp = XP_GetString(XFE_AB_HEADER_EMAIL);
+    break;
+
+  case OUTLINER_COLUMN_PHONE:
+    tmp = XP_GetString(XFE_AB_HEADER_PHONE);
+    break;
+
+  case OUTLINER_COLUMN_COMPANY:
+    tmp = XP_GetString(XFE_AB_HEADER_COMPANY);
+    break;
+
+  case OUTLINER_COLUMN_LOCALITY:
+    tmp = XP_GetString(XFE_AB_HEADER_LOCALITY);
+    break;
+
+  }/* switch () */
+
+  return tmp;
+#endif /* USE_ABCOM */
+}
+
+char*
+XFE_ABListSearchView::getColumnText(int column)
+{
+  char *loc;
+
+  a_line[0] = '\0';
+#if defined(USE_ABCOM)
+  AB_AttributeValue *value = 0;
+  AB_AttribID attrib = AB_attribEntryType;
+  XP_Bool isPhone = False;
+#if 1
+	if (column >= 0 &&
+		column < m_numAttribs) {
+		AB_ColumnInfo *cInfo = AB_GetColumnInfo(m_containerInfo,  
+												(AB_ColumnID) column);
+		if (cInfo) {
+			attrib = cInfo->attribID;
+			AB_FreeColumnInfo(cInfo);
+		}/* if */
+	}/* if */
+#else
+  switch (column) {
+  case OUTLINER_COLUMN_TYPE:
+	  break;
+
+  case OUTLINER_COLUMN_NAME:
+	  attrib = AB_attribDisplayName; // shall be AB_attribDisplayName;
+	  break;
+
+  case OUTLINER_COLUMN_NICKNAME:
+	  attrib = AB_attribNickName;
+	  break;
+	  
+  case OUTLINER_COLUMN_EMAIL:
+	  attrib = AB_attribEmailAddress;
+	  break;
+	  
+  case OUTLINER_COLUMN_PHONE:
+	  isPhone = True;
+	  attrib = AB_attribWorkPhone;
+	  break;
+
+  case OUTLINER_COLUMN_COMPANY:
+	  attrib = AB_attribCompanyName;
+	  break;
+	  
+  case OUTLINER_COLUMN_LOCALITY:
+ 	  attrib = AB_attribLocality;
+	  break;
+	  
+  }/* switch () */
+#endif 
+  if (attrib != AB_attribEntryType) {
+#if 1
+	  int error = AB_GetEntryAttributeForPane(m_pane,
+											  m_dataIndex, 
+											  attrib,
+											  &value);
+
+	  if (isPhone && 
+		  EMPTY_STRVAL(value)) {
+		  error = AB_GetEntryAttributeForPane(m_pane,
+											  m_dataIndex, 
+											  AB_attribHomePhone, 
+											  &value);
+	  }/* if */
+#else
+	  int error = AB_GetEntryAttribute(m_containerInfo, m_entryID, 
+									   attrib, &value);
+
+	  if (isPhone && 
+		  EMPTY_STRVAL(value)) {
+		  error = AB_GetEntryAttribute(m_containerInfo, m_entryID, 
+									   AB_attribHomePhone, &value);
+	  }/* if */
+#endif
+	  XP_SAFE_SPRINTF(a_line, sizeof(a_line),
+					  "%s",
+					  EMPTY_STRVAL(value)?"":value->u.string);
+
+	  AB_FreeEntryAttributeValue(value);
+  }/* if */
+#else
+  switch (column) {
+  case OUTLINER_COLUMN_TYPE:
+    break;
+
+  case OUTLINER_COLUMN_NAME:
+    AB_GetFullName(m_dir, m_AddrBook, m_entryID, a_line);
+	INTL_CONVERT_BUF_TO_LOCALE(a_line, loc);
+    break;
+
+  case OUTLINER_COLUMN_NICKNAME:
+    AB_GetNickname(m_dir, m_AddrBook, m_entryID, a_line);
+	INTL_CONVERT_BUF_TO_LOCALE(a_line, loc);
+    break;
+
+  case OUTLINER_COLUMN_EMAIL:
+    AB_GetEmailAddress(m_dir, m_AddrBook, m_entryID, a_line);
+    break;
+
+  case OUTLINER_COLUMN_PHONE:
+    AB_GetWorkPhone(m_dir, m_AddrBook, m_entryID, a_line);
+	if (!a_line || !XP_STRLEN(a_line)) {
+		a_line[0] = '\0';
+		AB_GetHomePhone(m_dir, m_AddrBook, m_entryID, a_line);
+	}/* if */
+    break;
+
+  case OUTLINER_COLUMN_COMPANY:
+    AB_GetCompanyName(m_dir, m_AddrBook, m_entryID, a_line);
+	INTL_CONVERT_BUF_TO_LOCALE(a_line, loc);
+    break;
+
+  case OUTLINER_COLUMN_LOCALITY:
+    AB_GetLocality(m_dir, m_AddrBook, m_entryID, a_line);
+	INTL_CONVERT_BUF_TO_LOCALE(a_line, loc);
+    break;
+
+  }/* switch () */
+#endif /* !USE_ABCOM */
+  return a_line;
+}
+
+fe_icon*
+XFE_ABListSearchView::getColumnIcon(int column)
+{
+  fe_icon *myIcon = 0;
+  switch (column) {
+  case OUTLINER_COLUMN_TYPE:
+    {
+#if defined(USE_ABCOM)
+		AB_EntryType type = getType(m_pane, m_dataIndex);
+		if (type == AB_Person)
+			myIcon = &m_personIcon; /* shall call make/initialize icons */
+		else if (type == AB_MailingList)
+			myIcon = &m_listIcon;
+#else
+      ABID type;
+      AB_GetType(m_dir, m_AddrBook, m_entryID, &type);
+      if (type == ABTypePerson)
+	myIcon = &m_personIcon; /* shall call make/initialize icons */
+      else if (type == ABTypeList)
+	myIcon = &m_listIcon;
+#endif /* USE_ABCOM */
+    }
+    break;
+  }/* switch () */
+  return myIcon;
+}
+
 /* This method acquires one line of data: entryID is set for getColumnText
  */
 void*
@@ -1537,6 +2102,9 @@ XFE_ABListSearchView::acquireLineData(int line)
 	int error = AB_GetABIDForIndex(m_pane,
 								   (MSG_ViewIndex) line,
 								   &m_entryID);
+
+	m_dataIndex = (error == AB_SUCCESS)?line:MSG_VIEWINDEXNONE;
+
 #else
   m_entryID = AB_GetEntryIDAt((AddressPane *) m_abPane, (uint32) line);
 #endif /* USE_ABCOM */
@@ -1555,12 +2123,6 @@ XFE_ABListSearchView::getColumnHeaderIcon(int /*column*/)
 }
 
 // Returns the text and/or icon to display at the top of the column.
-EOutlinerTextStyle 
-XFE_ABListSearchView::getColumnHeaderStyle(int /*column*/)
-{
-  return OUTLINER_Default;
-}
-
 /*
  * The following 4 requests deal with the currently acquired line.
  */
@@ -1580,6 +2142,85 @@ XFE_ABListSearchView::getTreeInfo(XP_Bool */*expandable*/,
 				   OutlinerAncestorInfo **/*ancestor*/)
 {
   depth = 0;
+}
+
+void 
+XFE_ABListSearchView::clickHeader(const OutlineButtonFuncData *data)
+{
+  int column = data->column; 
+  int invalid = True;
+#if defined(USE_ABCOM)
+#if 1
+	if (column >= 0 &&
+		column < m_numAttribs) {
+		AB_ColumnInfo *cInfo = AB_GetColumnInfo(m_containerInfo,  
+												(AB_ColumnID) column);
+		if (cInfo) {
+			setSortType(cInfo->attribID);
+			AB_FreeColumnInfo(cInfo);
+		}/* if */
+	}/* if */
+#else
+  switch (column) {
+    case OUTLINER_COLUMN_TYPE:
+      setSortType(AB_attribEntryType);
+      break;
+
+    case OUTLINER_COLUMN_NAME:
+      setSortType(AB_attribFullName);
+      break;
+
+    case OUTLINER_COLUMN_NICKNAME:
+      setSortType(AB_attribNickName);
+      break;
+
+    case OUTLINER_COLUMN_EMAIL:
+      setSortType(AB_attribEmailAddress);
+      break;
+
+    case OUTLINER_COLUMN_COMPANY:
+      setSortType(AB_attribCompanyName);
+      break;
+
+    case OUTLINER_COLUMN_LOCALITY:
+      setSortType(AB_attribLocality);
+      break;
+    default:
+      invalid = False;
+    }/* switch() */
+#endif
+#else
+  switch (column) {
+    case OUTLINER_COLUMN_TYPE:
+      setSortType(AB_SortByTypeCmd);
+      break;
+
+    case OUTLINER_COLUMN_NAME:
+      setSortType(AB_SortByFullNameCmd);
+      break;
+
+    case OUTLINER_COLUMN_NICKNAME:
+      setSortType(AB_SortByNickname);
+      break;
+
+    case OUTLINER_COLUMN_EMAIL:
+      setSortType(AB_SortByEmailAddress);
+      break;
+
+    case OUTLINER_COLUMN_COMPANY:
+      setSortType(AB_SortByCompanyName);
+      break;
+
+    case OUTLINER_COLUMN_LOCALITY:
+      setSortType(AB_SortByLocality);
+      break;
+    default:
+      invalid = False;
+    }/* switch() */
+#endif /* USE_ABCOM */
+
+  if (invalid)
+    m_outliner->invalidate();
 }
 
 //
@@ -1765,15 +2406,21 @@ XFE_ABListSearchView::typeDownCB(Widget w,
 	  m_typeDownTimer = 0;
   }/* if */
 
-  const char *str;
-  str = fe_GetTextField(w);
-
-  m_searchStr = XP_STRDUP(str);
+  if (w) {
+	  const char *str;
+	  str = fe_GetTextField(w);
+	  
+	  m_searchStr = XP_STRDUP(str);
+  }/* if w */
 
   if (!m_dir)
 	  return;
 
   if (m_dir->dirType == LDAPDirectory) {
+	  /* for PAB
+	   */
+	  m_typeDownIndex = MSG_VIEWINDEXNONE;
+
 	  /* stop any search
 	   */
 	  stopSearch();
@@ -1781,7 +2428,7 @@ XFE_ABListSearchView::typeDownCB(Widget w,
 	  /* add a timer
 	   */
 	  unsigned long interval = 900;
-	  PREF_GetIntPref("ldap_1.autoCompleteInterval", (int *) &interval);
+	  PREF_GetIntPref("ldap_1.autoCompleteInterval", (int32 *) &interval);
 #if defined(DEBUG_tao)
 	  printf("\nldap_1.autoCompleteInterval=%d\n", interval);
 #endif
@@ -1792,35 +2439,28 @@ XFE_ABListSearchView::typeDownCB(Widget w,
   else if (m_dir->dirType == PABDirectory) {
     /* Do  type down 
      */
-    Widget outlinerW = m_outliner->getBaseWidget();
-    MSG_ViewIndex startIndex = 0;
+#if defined(USE_ABCOM)
+	if (m_searchStr && !XP_STRLEN(m_searchStr))
+		m_typeDownIndex = MSG_VIEWINDEXNONE;
+		
+	int error = AB_TypedownSearch(m_pane,
+								  m_searchStr,
+								  m_typeDownIndex);
+#else
+	MSG_ViewIndex startIndex = 0;
     int i;
 
     startIndex = 0;
-#if 1
 	int count = 0;
 	const int *indices = 0;
 	m_outliner->getSelection(&indices, &count);
     if (count != 0)
 		startIndex = *indices;
-#else
-    MSG_ViewIndex *indices = 0;
-    uint count = 0;
-    count = XmLGridGetSelectedRowCount(outlinerW);
-    if (count != 0) {
-      indices = (MSG_ViewIndex *) malloc (sizeof(MSG_ViewIndex) * count);
-      XmLGridGetSelectedRows(outlinerW, (int *) indices, count);
-      
-      /* use the first one selected
-       */
-      startIndex = *indices;
-      free (indices);
-    }/* if */
-#endif
     /* Get the first matching row
      */
     MSG_ViewIndex index = 0;
-    i = AB_GetIndexMatchingTypedown(m_abPane, &index, str, startIndex);
+    i = AB_GetIndexMatchingTypedown(m_abPane, 
+									&index, m_searchStr, startIndex);
     /* Steal from SubAllView.cpp
      */
     if (index == MSG_VIEWINDEXNONE) {
@@ -1831,6 +2471,7 @@ XFE_ABListSearchView::typeDownCB(Widget w,
       m_outliner->makeVisible(index);
     }/* else */
 	getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
+#endif /* USE_ABCOM */
   }/* if */
 }/* XFE_ABListSearchView::typeDownCB() */
 
@@ -1889,7 +2530,6 @@ void XFE_ABListSearchView::selectContainer(AB_ContainerInfo *containerInfo)
 		m_typeDownTimer = 0;
 	}/* if */
 
-
 	/* refresh chrome as well
 	 */
 	int error = -1;
@@ -1897,12 +2537,45 @@ void XFE_ABListSearchView::selectContainer(AB_ContainerInfo *containerInfo)
 		error = AB_ChangeABContainer(m_pane,
 									 containerInfo);
 	}/* if */
-	else
+	else {
 		error = AB_InitializeABPane(m_pane,
 									containerInfo);
+		// add callback here
+		XP_ASSERT(m_outliner);
+		if (m_outliner) {
+			int32 nRows = 0;
+			int   first = 0, last = 0;
+			nRows = m_outliner->visibleRows(first, last);
+			if (nRows < 10)
+				nRows = 10;
+			int error = AB_SetFEPageSizeForPane(m_pane, nRows); 
+			XtAddCallback(m_outliner->getBaseWidget(), XmNresizeCallback, 
+						  XFE_ABListSearchView::resizeCallback, 
+						  (XtPointer) this);
+		}/* m_outliner */
+	}/* else */
 		
 	m_containerInfo = containerInfo;
 
+	// get info on the fly
+	int num_columns = AB_GetNumColumnsForContainer(m_containerInfo);
+	AB_AttribID *attribIDs = (AB_AttribID *) XP_CALLOC(num_columns, 
+													   sizeof(AB_AttribID));
+	m_numAttribs = num_columns;
+	error = AB_GetColumnAttribIDs(m_containerInfo,
+								  attribIDs,
+								  &m_numAttribs);
+#if defined(DEBUG_tao_)
+	AB_ColumnInfo *cInfo = 0;
+	for (AB_ColumnID i=AB_ColumnID0; i < num_columns; i++) {
+		cInfo = AB_GetColumnInfo(m_containerInfo, i);
+		if (cInfo) {
+			printf("\nID=%d, attribID=%d, displayString=%s, sortable=%d\n",
+				   i, cInfo->attribID, cInfo->displayString, cInfo->sortable);
+			AB_FreeColumnInfo(cInfo);
+		}/* if */
+	}/* for i */
+#endif
 	// TODO: take out this once BE support Notification
 	changeEntryCount();
 
@@ -1932,6 +2605,11 @@ void XFE_ABListSearchView::selectContainer(AB_ContainerInfo *containerInfo)
 		}/* if */
 	}/* if */
 	getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);  
+
+	/* restart a new search when necessary
+	 */
+	m_typeDownIndex = MSG_VIEWINDEXNONE;
+	typeDownCB(NULL, NULL);
 }
 #endif /* USE_ABCOM */
 
@@ -1945,6 +2623,14 @@ void XFE_ABListSearchView::selectDir(DIR_Server* dir)
 {
 	if (dir == m_dir)
 		return;
+
+	if (!m_dir) {
+		XP_ASSERT(m_outliner);
+		if (m_outliner)
+			XtAddCallback(m_outliner->getBaseWidget(), XmNresizeCallback, 
+						  XFE_ABListSearchView::resizeCallback, 
+						  (XtPointer) this);
+	}/* if */
 
 	// remove the timer
 	if (m_typeDownTimer) {
@@ -1962,7 +2648,13 @@ void XFE_ABListSearchView::selectDir(DIR_Server* dir)
 	else {
 		XtSetSensitive(m_filterSearchBtn, True);
 	}/* else */
-	getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);  
+
+	getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating); 
+ 
+	/* restart a new search when necessary
+	 */
+	m_typeDownIndex = MSG_VIEWINDEXNONE;
+	typeDownCB(NULL, NULL);
 }
 
 void
@@ -2018,10 +2710,15 @@ XFE_ABListSearchView::startSearch(ABSearchInfo_t *info)
 
 	m_searchingDir = True;
 
+#if 0
+	/* Don't do this!
+	 */
 	/* change label to Stop
 	 */
 	fe_SetString(m_filterSearchBtn, 
 				 XmNlabelString, XP_GetString(XFE_AB_STOP));
+#endif
+
 #if defined(USE_ABCOM)
 	AB_SearchDirectoryAB2(m_pane, NULL);	
 #else
@@ -2043,6 +2740,47 @@ ABAddrMsgCBProcStruc* XFE_ABListSearchView::getSelections()
 		(ABAddrMsgCBProcStruc *) XP_CALLOC(1, sizeof(ABAddrMsgCBProcStruc));
 	pairs->m_pairs = (StatusID_t **) XP_CALLOC(count, sizeof(StatusID_t*)); 
 	for (int i=0; i < count; i++) {
+#if defined(USE_ABCOM)
+
+		StatusID_t *pair;
+		pair = (StatusID_t *) XP_CALLOC(1, sizeof(StatusID_t));
+		pair->status = ::TO;
+		pair->dir = 0;
+		pair->id = MSG_VIEWINDEXNONE;
+
+		// type, fulladdress
+		uint16 numItems = 2;
+		AB_AttribID *attribs = (AB_AttribID *) XP_CALLOC(numItems, 
+													 sizeof(AB_AttribID));
+		attribs[0] = AB_attribEntryType;
+		attribs[1] = AB_attribFullAddress;
+		AB_AttributeValue *values = NULL;
+
+		int error = 
+			AB_GetEntryAttributesForPane(m_pane,
+										 (MSG_ViewIndex) indices[i],
+										 attribs,
+										 &values,
+										 &numItems);
+		XP_ASSERT(values);
+		for (int i=0; i < numItems; i++) {
+			switch (values[i].attrib) {
+			case AB_attribEntryType:
+				pair->type = values[i].u.entryType;
+				break;
+
+			case AB_attribFullAddress:
+				pair->dplyStr = 
+					!EMPTY_STRVAL(&(values[i]))?XP_STRDUP(values[i].u.string)
+					:NULL;
+				break;
+			default:
+				XP_ASSERT(0);
+				break;
+			}/* switch */
+		}/* for i */
+		XP_FREEIF(attribs);
+#else
 		ABID entry;
 		entry = AB_GetEntryIDAt((AddressPane *) m_abPane, (uint32) indices[i]);
 		if (entry == MSG_VIEWINDEXNONE) 
@@ -2074,12 +2812,47 @@ ABAddrMsgCBProcStruc* XFE_ABListSearchView::getSelections()
 			AB_GetFullName(m_dir, m_AddrBook, entry, a_line);
 			pair->dplyStr = XP_STRDUP(a_line);
 		}/* if */
+#endif /* USE_ABCOM */
 
 		pairs->m_pairs[pairs->m_count] = pair;
 		(pairs->m_count)++;
 	}/* for i */
 	return pairs;
 }/* XFE_ABListSearchView::getSelections() */
+
+void 
+XFE_ABListSearchView::resizeCallback(Widget w, 
+									 XtPointer clientData, 
+									 XtPointer callData)
+{
+	XFE_ABListSearchView *obj = (XFE_ABListSearchView *) clientData;
+	obj->resizeCB(w, callData);
+}
+
+void
+XFE_ABListSearchView::resizeCB(Widget /* w */, XtPointer callData)
+{
+	XmLGridCallbackStruct *cData = (XmLGridCallbackStruct *) callData;
+
+	switch (cData->reason) {
+	case XmCR_RESIZE_GRID:
+		{
+			int32 nRows = 0;
+			int   first = 0, last = 0;
+			nRows = m_outliner->visibleRows(first, last);
+#if defined(DEBUG_tao)
+			printf("\nXFE_ABListSearchView::resizeCB: nRows=%d, first=%d, last=%d\n", nRows, first, last);
+#endif /* DEBUG_tao */
+			if (nRows < 10)
+				nRows = 10;
+#if defined(USE_ABCOM)
+			int error = AB_SetFEPageSizeForPane(m_pane, nRows); 
+#endif /* USE_ABCOM */
+		}
+		break;
+
+	}/* cData->reason */
+}
 
 #if defined(USE_MOTIF_DND)
 
@@ -2320,7 +3093,11 @@ XFE_ABListSearchView::entryListDropCallback(Widget,
 											void* cd,
 											fe_dnd_Event type,
 											fe_dnd_Source *source,
+#if defined(USE_ABCOM)
+											XEvent* event) 
+#else
 											XEvent* /* event */) 
+#endif /* USE_ABCOM */
 {
     XFE_ABListSearchView *ad = (XFE_ABListSearchView *)cd;
     if (type == FE_DND_DROP && 
@@ -2374,7 +3151,7 @@ XFE_ABListSearchView::entryListDropCB(fe_dnd_Source *source, XEvent *event)
 		XFE_Outliner *outliner = listView->getOutliner();
 		const int *indices = NULL;
 		int32 numIndices = 0;
-		outliner->getSelection(&indices, &numIndices);
+		outliner->getSelection(&indices, (int *) &numIndices);
 		MSG_Pane *srcPane = listView->getPane();
 		AB_DragEffect effect = 
 			AB_DragEntriesIntoContainerStatus(srcPane,

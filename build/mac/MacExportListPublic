@@ -23,6 +23,9 @@
 # PUBLIC TREE
 ###################
 
+# LDAP
+mozilla:directory:c-sdk:ldap:include:MANIFEST		:ldap
+
 #INCLUDE
 mozilla:config:mac:export.mac						:config
 mozilla:include:export.mac							:include
@@ -87,25 +90,29 @@ mozilla:modules:libfont:src:export.mac				:libfont
 mozilla:modules:schedulr:public:export.mac			:schedulr
 
 #NETWORK
-mozilla:network:cache:export.mac					:network
-mozilla:network:client:export.mac					:network
-mozilla:network:cnvts:export.mac					:network
-mozilla:network:cstream:export.mac					:network
-mozilla:network:main:export.mac						:network
-mozilla:network:protocol:about:export.mac			:network
-mozilla:network:protocol:certld:export.mac			:network
-mozilla:network:protocol:dataurl:export.mac			:network
-mozilla:network:protocol:file:export.mac			:network
-mozilla:network:protocol:ftp:export.mac				:network
-mozilla:network:protocol:gopher:export.mac			:network
-mozilla:network:protocol:http:export.mac			:network
-mozilla:network:protocol:js:export.mac				:network
-mozilla:network:protocol:mailbox:export.mac			:network
-mozilla:network:protocol:marimba:export.mac			:network
-mozilla:network:protocol:nntp:export.mac			:network
-mozilla:network:protocol:pop3:export.mac			:network
-mozilla:network:protocol:remote:export.mac			:network
-mozilla:network:protocol:smtp:export.mac			:network
+#This stuff is all in libnet on the branch.
+#mozilla:network:cache:export.mac					:network
+#mozilla:network:client:export.mac					:network
+#mozilla:network:cnvts:export.mac					:network
+#mozilla:network:cstream:export.mac					:network
+#mozilla:network:main:export.mac						:network
+#ozilla:network:protocol:about:export.mac			:network
+#mozilla:network:protocol:certld:export.mac			:network
+#mozilla:network:protocol:dataurl:export.mac			:network
+#mozilla:network:protocol:file:export.mac			:network
+#mozilla:network:protocol:ftp:export.mac				:network
+#mozilla:network:protocol:gopher:export.mac			:network
+#mozilla:network:protocol:http:export.mac			:network
+#mozilla:network:protocol:js:export.mac				:network
+#mozilla:network:protocol:mailbox:export.mac			:network
+#mozilla:network:protocol:marimba:export.mac			:network
+#mozilla:network:protocol:nntp:export.mac			:network
+#mozilla:network:protocol:pop3:export.mac			:network
+#mozilla:network:protocol:remote:export.mac			:network
+#mozilla:network:protocol:smtp:export.mac			:network
+
+#NORMANDY_BRANCH only
+mozilla:lib:libnet:export.mac						:libnet
 
 #HTML_DIALOGS
 mozilla:lib:htmldlgs:export.mac						:htmldlgs

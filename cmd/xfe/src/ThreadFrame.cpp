@@ -21,7 +21,7 @@
  */
 
 
-
+#include "rosetta.h"
 #include "MozillaApp.h"
 #include "FolderFrame.h"
 #include "FolderView.h"
@@ -73,36 +73,77 @@ extern int XFE_SEND_UNSENTMAIL;
 
 
 #define THREEPANEVIEW_SHOW_PREF "mail.threadpane.3pane"
-//
-MenuSpec XFE_ThreadFrame::file_menu_spec[] = {
-	{ "newSubmenu",		        CASCADEBUTTON, (MenuSpec *) &XFE_Frame::new_submenu_spec },
-	{ xfeCmdNewFolder,		    PUSHBUTTON },
-	{ xfeCmdOpenSelected,		PUSHBUTTON },
-//      { "openAttachmentsSubmenu",	DYNA_CASCADEBUTTON, 
-//          NULL, NULL, False, NULL, XFE_AttachmentMenu::generate },
-	MENU_SEPARATOR,
-	{ xfeCmdSaveMessagesAs,	PUSHBUTTON },
-	{ xfeCmdEditMessage,	PUSHBUTTON },
-	MENU_SEPARATOR,
-	{ xfeCmdEmptyTrash,		PUSHBUTTON },
-	{ xfeCmdCompressFolders,PUSHBUTTON },
-	{ xfeCmdCompressAllFolders,PUSHBUTTON },
-	MENU_SEPARATOR,
-	{ "newMsgSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_Frame::newMsg_submenu_spec },
-	{ xfeCmdSendMessagesInOutbox,	PUSHBUTTON },
-    { xfeCmdCleanUpDisk, PUSHBUTTON },
-#if 0
-	{ xfeCmdUpdateMessageCount,	    PUSHBUTTON },
+
+//new three pane menu spec for new
+MenuSpec XFE_ThreadFrame::new_submenu_spec[] = {
+  { xfeCmdOpenBrowser,          PUSHBUTTON },
+  { xfeCmdComposeMessage,       PUSHBUTTON },
+#ifdef EDITOR
+  MENU_PUSHBUTTON(xfeCmdNewBlank),
 #endif
-	{ xfeCmdAddNewsgroup,		    PUSHBUTTON },
-	//MENU_SEPARATOR,
-	//{ xfeCmdGoOffline,		PUSHBUTTON },
+  MENU_SEPARATOR,
+  { xfeCmdNewFolder,		    PUSHBUTTON },
+  { NULL }
+};
+
+//new three pane menu spec for new
+MenuSpec XFE_ThreadFrame::save_submenu_spec[] = {
+  { xfeCmdSaveMessagesAs,          PUSHBUTTON },
+  { xfeCmdSaveAsTemplate,          PUSHBUTTON },
+  { NULL }
+};
+
+MenuSpec XFE_ThreadFrame::select_submenu_spec[] = {
+        { xfeCmdSelectAll,                      PUSHBUTTON },
+        { xfeCmdSelectAllMessages,      	PUSHBUTTON },
+        { xfeCmdSelectThread,                   PUSHBUTTON },
+        { xfeCmdSelectFlaggedMessages,  PUSHBUTTON },
+        { NULL }
+};
+
+MenuSpec XFE_ThreadFrame::show_submenu_spec[] = {
+    { xfeCmdToggleNavigationToolbar,	 PUSHBUTTON },
+    { xfeCmdToggleLocationToolbar,    PUSHBUTTON },
+    { xfeCmdToggleMessageExpansion,	PUSHBUTTON },
+    { xfeCmdToggleFolderExpansion,	PUSHBUTTON },
+    MENU_SEPARATOR,
+    { xfeCmdToggleTaskbarShowing,  PUSHBUTTON },
+        { NULL }
+};
+
+MenuSpec XFE_ThreadFrame::mark_submenu_spec[] = {
+        { xfeCmdMarkMessageUnread,      PUSHBUTTON },
+        { xfeCmdMarkMessageRead,        PUSHBUTTON },
+        { xfeCmdMarkThreadRead, PUSHBUTTON },
+        { xfeCmdMarkAllMessagesRead,    PUSHBUTTON },
+        { xfeCmdMarkMessageByDate,      PUSHBUTTON },
+        { xfeCmdMarkMessageForLater,    PUSHBUTTON },
 	MENU_SEPARATOR,
-	//{ xfeCmdPrintSetup,		PUSHBUTTON },
-	//{ xfeCmdPrintPreview,	PUSHBUTTON },
-	{ xfeCmdPrint,		    PUSHBUTTON },
+        { xfeCmdMarkMessage,                    PUSHBUTTON },
+        { xfeCmdUnmarkMessage,          PUSHBUTTON },
+        { NULL }
+};
+
+MenuSpec XFE_ThreadFrame::file_menu_spec[] = {
+	{ "newSubmenu",		        CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::new_submenu_spec },
+//	{ xfeCmdOpenSelected,		PUSHBUTTON },
+//        { "openAttachmentsSubmenu",	DYNA_CASCADEBUTTON, 
+//          NULL, NULL, False, NULL, XFE_AttachmentMenu::generate },
+	{ "saveMsgAs",		        CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::save_submenu_spec },
 	MENU_SEPARATOR,
-	{ xfeCmdClose,		    PUSHBUTTON },
+	{ xfeCmdGetNewMessages,		PUSHBUTTON },
+	{ xfeCmdGetNextNNewMsgs ,	PUSHBUTTON },
+	{ xfeCmdSendMessagesInOutbox,	PUSHBUTTON },
+	{ xfeCmdAddNewsgroup,	    	PUSHBUTTON },
+	MENU_SEPARATOR,
+	{ xfeCmdRenameFolder,         	PUSHBUTTON },
+	{ xfeCmdEmptyTrash,		PUSHBUTTON },
+	{ xfeCmdCompressFolders,	PUSHBUTTON },
+    	{ xfeCmdCleanUpDisk, 		PUSHBUTTON },
+	MENU_SEPARATOR,
+	{ xfeCmdPrint,		    	PUSHBUTTON },
+	MENU_SEPARATOR,
+	{ xfeCmdClose,		    	PUSHBUTTON },
 	{ xfeCmdExit,			PUSHBUTTON },
 	{ NULL }
 };
@@ -113,36 +154,40 @@ MenuSpec XFE_ThreadFrame::edit_menu_spec[] = {
 	MENU_SEPARATOR,
 	{ xfeCmdCut,			PUSHBUTTON },
 	{ xfeCmdCopy,			PUSHBUTTON },
-	{ xfeCmdPaste,		    PUSHBUTTON },
-	{ xfeCmdDeleteMessage,	PUSHBUTTON },
-
-	{ "selectSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_Frame::select_submenu_spec },
+	{ xfeCmdPaste,		    	PUSHBUTTON },
+	{ xfeCmdDeleteAny,			PUSHBUTTON },
+	{ "selectSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::select_submenu_spec },
 	MENU_SEPARATOR,
 	{ xfeCmdFindInObject,		PUSHBUTTON },
 	{ xfeCmdFindAgain,		PUSHBUTTON },
 	{ xfeCmdSearch,		    PUSHBUTTON },
+#if 0
+	/* temporary take out
+	 */
 	{ xfeCmdSearchAddress,	PUSHBUTTON },
 	MENU_SEPARATOR,
 	{ xfeCmdEditConfiguration,	PUSHBUTTON },
 	{ xfeCmdModerateDiscussion,	PUSHBUTTON },
+#endif 
 	MENU_SEPARATOR,
-	{ xfeCmdEditMailFilterRules,PUSHBUTTON },
-    //xxxAdd Folder/Discussion Properties
+	{ xfeCmdEditMailFilterRules,	PUSHBUTTON },
+	{ xfeCmdViewProperties,     PUSHBUTTON },
+	MENU_SEPARATOR,
 	{ xfeCmdEditPreferences,	PUSHBUTTON },
 	{ NULL }
 };
 
 MenuSpec XFE_ThreadFrame::view_menu_spec[] = {
-    { xfeCmdToggleNavigationToolbar,PUSHBUTTON },
-    { xfeCmdToggleLocationToolbar,    PUSHBUTTON },
-	{ xfeCmdToggleMessageExpansion,	PUSHBUTTON },
+    { "showSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::show_submenu_spec },
 	MENU_SEPARATOR,
 	{ "sortSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_Frame::sort_submenu_spec },
 	{ "expandCollapseSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_Frame::expand_collapse_submenu_spec },
 	{ "threadSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_Frame::threads_submenu_spec },
 	{ "headersSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_Frame::headers_submenu_spec },
+    MENU_SEPARATOR,
     // This should just be a toggle.  -slamm
 	{ "attachmentsSubmenu",	CASCADEBUTTON, (MenuSpec *) &XFE_Frame::attachments_submenu_spec },
+	{ xfeCmdWrapLongLines,		TOGGLEBUTTON },
     MENU_SEPARATOR,
     { xfeCmdIncreaseFont,		PUSHBUTTON },
     { xfeCmdDecreaseFont,		PUSHBUTTON },
@@ -153,7 +198,6 @@ MenuSpec XFE_ThreadFrame::view_menu_spec[] = {
 	{ xfeCmdStopLoading,		PUSHBUTTON },
 	MENU_SEPARATOR,
 	{ xfeCmdRot13Message,		PUSHBUTTON },
-	{ xfeCmdWrapLongLines,		TOGGLEBUTTON },
 	MENU_SEPARATOR,
 	{ xfeCmdViewPageSource,	PUSHBUTTON },
 	{ xfeCmdViewPageInfo,	PUSHBUTTON },
@@ -162,23 +206,34 @@ MenuSpec XFE_ThreadFrame::view_menu_spec[] = {
 	{ NULL }
 };
 
-//
-MenuSpec XFE_ThreadFrame::go_menu_spec[] = {
+MenuSpec XFE_ThreadFrame::next_submenu_spec[] = {
 	{ xfeCmdNextMessage,			PUSHBUTTON },
 	{ xfeCmdNextUnreadMessage,		PUSHBUTTON },
 	{ xfeCmdNextFlaggedMessage,		PUSHBUTTON },
+    	MENU_SEPARATOR,
 	{ xfeCmdNextUnreadThread,		PUSHBUTTON },
+	MENU_SEPARATOR,
 	{ xfeCmdNextCollection,		    PUSHBUTTON },
 	{ xfeCmdNextUnreadCollection, 	PUSHBUTTON },
-	MENU_SEPARATOR,
+        { NULL }
+};
+
+MenuSpec XFE_ThreadFrame::prev_submenu_spec[] = {
 	{ xfeCmdPreviousMessage,		PUSHBUTTON },
 	{ xfeCmdPreviousUnreadMessage,	PUSHBUTTON },
 	{ xfeCmdPreviousFlaggedMessage,	PUSHBUTTON },
-	MENU_SEPARATOR,
+        { NULL }
+};
+//
+MenuSpec XFE_ThreadFrame::go_menu_spec[] = {
+	{ xfeCmdFirstUnreadMessage,		PUSHBUTTON },
 	{ xfeCmdFirstFlaggedMessage,	PUSHBUTTON },
 	MENU_SEPARATOR,
-    { xfeCmdBack,			PUSHBUTTON },
-    { xfeCmdForward,		PUSHBUTTON },
+    	{ "nextSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::next_submenu_spec },
+    	{ "prevSubmenu",		CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::prev_submenu_spec },
+	MENU_SEPARATOR,
+    	{ xfeCmdBack,			PUSHBUTTON },
+    	{ xfeCmdForward,		PUSHBUTTON },
 	{ NULL }
 };
 
@@ -200,15 +255,16 @@ MenuSpec XFE_ThreadFrame::message_menu_spec[] = {
 	{ "replySubmenu",			CASCADEBUTTON, (MenuSpec *) &XFE_Frame::reply_submenu_spec },
 	{ xfeCmdForwardMessage,		PUSHBUTTON },
 	{ xfeCmdForwardMessageQuoted,		PUSHBUTTON },
+	{ xfeCmdForwardMessageInLine,		PUSHBUTTON },
+	{ xfeCmdEditMessage,		PUSHBUTTON },
 	//{ xfeCmdInviteToNewsgroup,		PUSHBUTTON },
 	MENU_SEPARATOR,
-	{ "addToABSubmenu",			CASCADEBUTTON, (MenuSpec *) &XFE_Frame::addrbk_submenu_spec },
 	{ "fileSubmenu",			DYNA_CASCADEBUTTON, NULL, NULL, False, (void*)xfeCmdMoveMessage, XFE_FolderMenu::generate },
 	{ "copySubmenu",			DYNA_CASCADEBUTTON, NULL, NULL, False, (void*)xfeCmdCopyMessage, XFE_FolderMenu::generate },
 	MENU_SEPARATOR,
-	{ "markSubmenu",			CASCADEBUTTON, (MenuSpec *) &XFE_Frame::mark_submenu_spec },
-	{ xfeCmdMarkMessage,			PUSHBUTTON },
-	{ xfeCmdUnmarkMessage,		PUSHBUTTON },
+	{ "addToABSubmenu",			CASCADEBUTTON, (MenuSpec *) &XFE_Frame::addrbk_submenu_spec },
+	MENU_SEPARATOR,
+	{ "markSubmenu",			CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::mark_submenu_spec },
 	MENU_SEPARATOR,
 	{ xfeCmdIgnoreThread,		PUSHBUTTON },
 	{ xfeCmdWatchThread,		PUSHBUTTON },
@@ -287,11 +343,7 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
 	},
 	{ xfeCmdPrint,			PUSHBUTTON, &TB_Print_group },
-	{ xfeCmdViewSecurity,		PUSHBUTTON, 
-			&TB_Unsecure_group,
-                       	&TB_Secure_group,
-                       	&MNTB_SignUnsecure_group,
-                        &MNTB_SignSecure_group},
+	HG20938
 	{ xfeCmdMarkMessageRead, // XX news only
 	  CASCADEBUTTON, 
 	  &MNTB_MarkRead_group, NULL, NULL, NULL,				// Icons
@@ -299,7 +351,7 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 	  NULL, NULL,											// Generate proc/arg
 	  XFE_TOOLBAR_DELAY_LONG								// Popup delay
 	},
-	{ xfeCmdDeleteMessage,	PUSHBUTTON, &MNTB_Trash_group }, // XX mail only
+	{ xfeCmdDeleteAny,		PUSHBUTTON, &MNTB_Trash_group }, // XX mail only
 	{ xfeCmdStopLoading,		PUSHBUTTON, &TB_Stop_group },
 	{ NULL }
 };
@@ -392,8 +444,7 @@ XFE_ThreadFrame::XFE_ThreadFrame(Widget toplevel, XFE_Frame *parent_frame,
 	// Configure the dashboard
 	XP_ASSERT( m_dashboard != NULL );
 	
-	m_dashboard->setShowSecurityIcon(True);
-	m_dashboard->setShowSignedIcon(True);
+	HG71710
 	m_dashboard->setShowStatusBar(True);
 	m_dashboard->setShowProgressBar(True);
 
@@ -468,12 +519,20 @@ XFE_CALLBACK_DEFN(XFE_ThreadFrame, updateBanner)(XFE_NotificationCenter *,
 	if (MSG_GetFolderLineById(XFE_MNView::getMaster(),
 							  t_view->getFolderInfo(), &folderline))
 		{
+			XP_Bool xxxe = FALSE;
+
+			/* we need to check newshosts  */
+			if (folderline.flags & MSG_FOLDER_FLAG_NEWSGROUP)
+			{
+				MSG_NewsHost *host = MSG_GetNewsHostForFolder(folderline.id);
+				HG11299
+			}
 
 			m_dropdown->selectFolder(t_view->getFolderInfo(),False);
 			
 			m_banner->setProxyIcon(XFE_FolderView::treeInfoToIcon(folderline.level - 1,
 																  folderline.flags,
-																  False));
+																  xxxe));
 
 			proxy = m_banner->getProxyIcon();
 								   
@@ -502,12 +561,18 @@ XFE_CALLBACK_DEFN(XFE_ThreadFrame, updateBanner)(XFE_NotificationCenter *,
 XFE_CALLBACK_DEFN(XFE_ThreadFrame, folderDeleted)(XFE_NotificationCenter*,
 					       void *, void *cdata)
 {
+	MSG_FolderInfo *info = (MSG_FolderInfo *) cdata;
+
+#ifdef USE_3PANE
+	XFE_ThreePaneView *view3 = (XFE_ThreePaneView*)m_view;
+	view3->selectFolder(info);
+#else
 	/* Need to check if this folder ?
 	 * hide or switch ?
 	 */
-	MSG_FolderInfo *info = (MSG_FolderInfo *) cdata;
 	if (info == getFolderInfo())
 		delete_response();
+#endif
 }
 
 
@@ -536,7 +601,7 @@ XFE_ThreadFrame::loadFolder(MSG_FolderInfo *folderInfo)
 			if (folderline.flags & MSG_FOLDER_FLAG_NEWSGROUP)
 				{
 					m_toolbar->hideButton(xfeCmdComposeMessage, PUSHBUTTON);
-					m_toolbar->hideButton(xfeCmdDeleteMessage, PUSHBUTTON);
+					m_toolbar->hideButton(xfeCmdDeleteAny, PUSHBUTTON);
 					m_toolbar->hideButton(xfeCmdReplyToSender, CASCADEBUTTON);
 					m_toolbar->hideButton(xfeCmdMoveMessage, CASCADEBUTTON);
 
@@ -548,7 +613,7 @@ XFE_ThreadFrame::loadFolder(MSG_FolderInfo *folderInfo)
 			else
 				{
 					m_toolbar->showButton(xfeCmdComposeMessage, PUSHBUTTON);
-					m_toolbar->showButton(xfeCmdDeleteMessage, PUSHBUTTON);
+					m_toolbar->showButton(xfeCmdDeleteAny, PUSHBUTTON);
 					m_toolbar->showButton(xfeCmdReplyToSender, CASCADEBUTTON);
 					m_toolbar->showButton(xfeCmdMoveMessage, CASCADEBUTTON);
 					
@@ -871,7 +936,7 @@ XFE_ThreadFrame::isCommandEnabled(CommandType cmd,
 
 void
 XFE_ThreadFrame::doCommand(CommandType cmd,
-                            void *calldata, XFE_CommandInfo* info)
+                            void * calldata, XFE_CommandInfo* info)
 {
 	if (cmd == xfeCmdToggleLocationToolbar)
     {
@@ -891,6 +956,13 @@ XFE_ThreadFrame::doCommand(CommandType cmd,
         }
 
 		return;
+    }else if (cmd == xfeCmdToggleFolderExpansion)
+    {
+	if (m_banner)
+	{
+	    m_banner->setShowFolder(!(m_banner->isFolderShown()));
+	    notifyInterested(XFE_MNBanner::twoPaneView);
+        }
     } else if ( (cmd == xfeCmdComposeMessage) ||
 		(cmd == xfeCmdComposeMessagePlain) ||
 		(cmd == xfeCmdComposeMessageHTML) || 
@@ -941,8 +1013,7 @@ XFE_ThreadFrame::commandToString(CommandType cmd,
 int
 XFE_ThreadFrame::getSecurityStatus()
 {
- XP_Bool is_signed = False;
- XP_Bool is_encrypted = False;
+ HG12922
 #ifdef USE_3PANE
  XFE_ThreadView *tview = (XFE_ThreadView*)(
 			((XFE_ThreePaneView*)m_view)->getThreadView());
@@ -956,51 +1027,19 @@ XFE_ThreadFrame::getSecurityStatus()
  printf("XFE_ThreadFrame::getSecurityStatus\n");
 #endif
 
- MIME_GetMessageCryptoState(m_context, 0, 0, &is_signed, &is_encrypted);
+ 
 
  if (tview && tview->isDisplayingNews() )
  {
-   // If this is displaying news, we decide if a newsgroup is secure(encrypted)
-   // or not by checking the security status ...instead of the crypto state
+   // If this is displaying news, we decide if a newsgroup is s x
+   // or not by checking the status ...instead of the c state
 
 #ifdef DEBUG_dora
     printf("News Thread Frame context...\n");
 #endif
-    is_encrypted = XFE_Frame::getSecurityStatus() == XFE_SECURE;
+    HG28182
  }
-
- if (is_encrypted && is_signed )
- {
-#ifdef DEBUG_dora
-     printf("signed and encrypted %d\n", XFE_SECURE_SIGNED);
-#endif
-     status = XFE_SECURE_SIGNED;
- }
- else if (!is_encrypted && is_signed)
- {
-#ifdef DEBUG_dora
-     printf("signed and NO encrypted %d\n", XFE_UNSECURE_SIGNED);
-#endif
-     status = XFE_UNSECURE_SIGNED;
- }
- else if (is_encrypted && !is_signed)
- {
-#ifdef DEBUG_dora
-     printf("NO signed and  encrypted %d\n", XFE_SECURE_UNSIGNED);
-#endif
-     status = XFE_SECURE_UNSIGNED;
- }
- else if (!is_encrypted && !is_signed )
- {
-#ifdef DEBUG_dora
-     printf("NO signed and  NO encrypted %d\n", XFE_UNSECURE_UNSIGNED);
-#endif
-     status = XFE_UNSECURE_UNSIGNED;
- } else {
-	 // Error.  Play it safe, go unsecure.
-	 XP_ASSERT(0);
-	 status = XFE_UNSECURE_UNSIGNED;
- }
+ HG12832
 
  return status;
 }
@@ -1172,7 +1211,6 @@ XFE_CALLBACK_DEFN(XFE_ThreadFrame,showFolder)(XFE_NotificationCenter *,
 
   XP_ASSERT(m_banner!= NULL);
 
-  printf("threadframe...showFolder\n");
   m_banner->setShowFolder(showFolder);
 
 }

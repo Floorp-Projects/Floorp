@@ -24,10 +24,10 @@
 
 #include "ThreePaneView.h"
 #include "ThreadFrame.h"
+#include <Xfe/Pane.h>
 #include "prefs.h"
 #include "prefapi.h"
 
-#include <Xfe/Pane.h>
 
 const char* XFE_ThreePaneView::ShowFolder = "XFE_ThreePaneView::ShowFolder";
 #define THREEPANEVIEW_SHOW_PREF "mail.threadpane.3pane"
@@ -42,8 +42,9 @@ XFE_ThreePaneView::XFE_ThreePaneView(XFE_Component *toplevel_component,
 				       MWContext *context)
   : XFE_View(toplevel_component, parent_view, context)
 {
-  Widget	hpane;
-
+  Widget hpane;
+  
+#if 1
   hpane = XtVaCreateWidget("hpane",
 						   xfePaneWidgetClass,
 						   parent,
@@ -53,12 +54,25 @@ XFE_ThreePaneView::XFE_ThreePaneView(XFE_Component *toplevel_component,
 						   XmNsashShadowThickness,	1,
 						   XmNpaneSashType,			XmPANE_SASH_LIVE,
 						   NULL);
-
+#else
+  hpane = XmCreateHPanedWindow(parent, "hpane", NULL, 0);
+#endif
   m_focusview = NULL;
   m_folderview = new XFE_FolderView(toplevel_component, hpane, this,
 				    context);
   m_threadview = new XFE_ThreadView(toplevel_component, hpane, this,
 				    context);
+
+  XtVaSetValues(m_folderview->getBaseWidget(),
+                                XmNallowResize, TRUE,
+                                XmNpaneMinimum, PANE_MIN, // should this be a resource?
+                                XmNpaneMaximum, PANE_MAX, // why is the limit in HPaned 1000???
+                                NULL);
+  XtVaSetValues(m_threadview->getBaseWidget(),
+                                XmNallowResize, TRUE,
+                                XmNpaneMinimum, PANE_MIN, // should this be a resource?
+                                XmNpaneMaximum, PANE_MAX, // why is the limit in HPaned 1000???
+                                NULL);
 
   // add our subviews to the list of subviews for command dispatching and
   // deletion.
@@ -197,7 +211,24 @@ XFE_ThreePaneView::isCommandEnabled(CommandType cmd, void *calldata, XFE_Command
 {
 
   XP_ASSERT( m_focusview != NULL);
+#define IS_CMD(command) cmd == (command)
 
+  if (IS_CMD(xfeCmdToggleFolderExpansion))
+     return True;
+
+  if (m_focusview != m_folderview && m_folderview &&
+      (IS_CMD(xfeCmdRenameFolder) ||
+      IS_CMD(xfeCmdNewFolder) ))
+  {
+	return m_folderview->isCommandEnabled(cmd,calldata,info);
+  }
+  if ( IS_CMD(xfeCmdDeleteAny) )
+  {
+	if ( m_focusview == m_folderview) 
+	    return m_focusview->isCommandEnabled(xfeCmdDeleteFolder,calldata,info);
+        else if (m_focusview == m_threadview)
+	    return m_focusview->isCommandEnabled(xfeCmdDeleteMessage,calldata,info);
+  }
   return m_focusview->isCommandEnabled(cmd,calldata,info);
 }
 
@@ -211,6 +242,19 @@ XFE_ThreePaneView::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* i
   {
 	m_threadview->doCommand(cmd,calldata,info);
   }
+  else if (m_focusview != m_folderview && m_folderview &&
+      (IS_CMD(xfeCmdRenameFolder) ||
+      IS_CMD(xfeCmdNewFolder) ))
+  {
+	m_folderview->doCommand(cmd,calldata,info);
+  }
+  else if ( IS_CMD(xfeCmdDeleteAny) )
+  {
+	if ( m_focusview == m_folderview) 
+	    m_focusview->doCommand(xfeCmdDeleteFolder,calldata,info);
+        else if (m_focusview == m_threadview)
+	    m_focusview->doCommand(xfeCmdDeleteMessage,calldata,info);
+  }
   else
    	m_focusview->doCommand(cmd,calldata,info);
 }
@@ -220,11 +264,28 @@ XFE_ThreePaneView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandIn
 {
 #define IS_CMD(command) cmd == (command)
   XP_ASSERT( m_focusview != NULL);
+
+
+  if (IS_CMD(xfeCmdToggleFolderExpansion))
+     return True;
+
   if (IS_CMD(xfeCmdMommy) && m_focusview != m_threadview && m_threadview)
   {
 	return m_threadview->handlesCommand(cmd,calldata,info);
   }
-
+  else if (m_focusview != m_folderview && m_folderview &&
+      (IS_CMD(xfeCmdRenameFolder) ||
+      IS_CMD(xfeCmdNewFolder) ))
+  {
+	return m_folderview->handlesCommand(cmd,calldata,info);
+  }
+  else if ( IS_CMD(xfeCmdDeleteAny) )
+  {
+	if ( m_focusview == m_folderview) 
+	    return m_focusview->handlesCommand(xfeCmdDeleteFolder,calldata,info);
+        else if (m_focusview == m_threadview)
+	    return m_focusview->handlesCommand(xfeCmdDeleteMessage,calldata,info);
+  }
   return m_focusview->handlesCommand(cmd,calldata,info);
 }
 
@@ -239,5 +300,14 @@ char*
 XFE_ThreePaneView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 {
    XP_ASSERT( m_focusview != NULL);
+#define IS_CMD(command) cmd == (command)
+
+    if (IS_CMD(xfeCmdToggleFolderExpansion))
+    {
+        if (m_folderview->isShown())
+           return stringFromResource("hideFolderAreaCmdString");
+        else
+           return stringFromResource("showFolderAreaCmdString"); 
+    }
    return m_focusview->commandToString(cmd,calldata,info);
 }

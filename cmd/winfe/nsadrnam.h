@@ -26,22 +26,28 @@
 /////////////////////////////////////////////////////////////////////////////
 // CNSAddressNameEditField window
 #include "genedit.h"
-
 class CNSAddressNameEditField : public CGenericEdit
 {
 // Construction
 public:
-	CNSAddressNameEditField();
+	CNSAddressNameEditField(CNSAddressList *pParentAddressList);
     HFONT m_cfTextFont;
 	BOOL m_bNameCompletion;
 	BOOL m_bAttemptNameCompletion;
 	int  m_iTextHeight;
 	UINT m_uTypedownClock;
 	BOOL m_bSetTimerForCompletion;
+	MSG_Pane *m_pPickerPane;
+	CNSAddressList *m_pParentAddressList;
 
+	void StartNameCompletion(void);
+	void StopNameCompletion(void);
 	void DrawNameCompletion(void);
     void SetNameCompletionFlag(BOOL bComplete) { m_bAttemptNameCompletion = bComplete; }
-	BOOL Create( CWnd *pParent );
+	BOOL Create( CWnd *pParent, MWContext *pContext );
+
+
+  void Paste();
 
 // Overrides
 	// ClassWizard generated virtual function overrides

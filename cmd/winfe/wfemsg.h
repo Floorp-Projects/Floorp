@@ -30,8 +30,20 @@ CFolderFrame *WFE_MSGOpenFolders();						// In fldrfrm.cpp
 CFolderFrame *WFE_MSGOpenNews();						// In fldrfrm.cpp
 
 // Master API
+//gets current master.  If there isn't one it creates
+// one
 MSG_Master *WFE_MSGGetMaster();							// In msgfrm.cpp
+//gets current master.  If there isn't one it returns NULL.
+MSG_Master* WFE_MSGGetMasterValue();
 void WFE_MSGDestroyMaster();							// In msgfrm.cpp
+
+//building the add address book popup					   In addrfrm.cpp
+//bCreateMenuItem is TRUE if the add menu items don't already exist.
+void WFE_MSGBuildAddAddressBookPopups(HMENU hMenu, int nStartPosition,
+									  BOOL bCreateMenuItem, MWContext *pContext);
+
+void WFE_MSGLaunchMigrationUtility(HWND parent, int calledFromAddressBook,
+								   char* directory);
 
 // Pref API
 void WFE_MSGInit();										// In mailmisc.cpp
@@ -40,9 +52,38 @@ BOOL WFE_MSGCheckWizard( CWnd *pParent = NULL );		// In mailfrm.cpp
 
 void WFE_MSGOpenSearch();
 void WFE_MSGSearchClose();
-void WFE_MSGOpenLDAPSearch();
-void WFE_MSGLDAPSearchClose();
 void WFE_MSGOpenAB();
 void WFE_MSGABClose();
+
+void WFE_Synchronize(CWnd *pParent, BOOL bExitAfterSynchronizing);	//in offlndlg.cpp
+
+
+//in mnprefs.cpp
+
+typedef enum
+{
+  CHAR_USERNAME,
+  BOOL_REMEMBER_PASSWORD,
+  BOOL_CHECK_NEW_MAIL,
+  INT_CHECK_TIME,
+  BOOL_OFFLINE_DOWNLOAD,
+  INT_DELETE_MODEL,
+  BOOL_IS_SECURE,
+  CHAR_PERAONAL_DIR,
+  CHAR_PUBLIC_DIR,
+  CHAR_OTHER_USER_DIR,
+  BOOL_OVERRIDE_NAMESPACES,
+  BOOL_EMPTY_TRASH_ON_EXIT,
+  BOOL_CLEANUP_INBOX_ON_EXIT
+
+}IMAP_PREF;
+
+BOOL IMAP_PrefIsLocked(const char *pHostName, int nID);
+void IMAP_SetCharPref(const char *pHostName, int nID, const char* pValue);
+void IMAP_SetIntPref(const char *pHostName, int nID, int32 lValue);
+void IMAP_SetBoolPref(const char *pHostName, int nID, XP_Bool bValue); 
+void IMAP_GetCharPref(const char *pHostName, int nID, char **hBuffer); 
+void IMAP_GetIntPref(const char *pHostName, int nID, int32 *pInt); 	
+void IMAP_GetBoolPref(const char *pHostName, int nID, XP_Bool *pBool); 	
 
 #endif         

@@ -139,6 +139,7 @@ BEGIN
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "C",            ID_GET_COLOR,           VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    "D",            ID_TOGGLENAMECOMPLETION, VIRTKEY, CONTROL, NOINVERT
     "E",            ID_ALIGN_CENTER,        VIRTKEY, CONTROL, NOINVERT
     "F",            ID_EDIT_FINDINCURRENT,  VIRTKEY, CONTROL, NOINVERT
     "F",            ID_HOTLIST_FISHCAM,     VIRTKEY, CONTROL, ALT, NOINVERT
@@ -151,6 +152,7 @@ BEGIN
                                                     NOINVERT
     "I",            ID_SECURITY,            VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    "J",            ID_SHOW_NAME_PICKER,    VIRTKEY, CONTROL, NOINVERT
     "K",            ID_FORMAT_CHAR_NONE,    VIRTKEY, CONTROL, NOINVERT
     "L",            ID_ALIGN_LEFT,          VIRTKEY, CONTROL, NOINVERT
     "L",            ID_MAKE_LINK,           VIRTKEY, SHIFT, CONTROL, 

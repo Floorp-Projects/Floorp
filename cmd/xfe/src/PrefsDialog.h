@@ -33,6 +33,7 @@
 #ifndef _xfe_prefsdialog_h
 #define _xfe_prefsdialog_h
 
+#include "rosetta.h"
 #include "outline.h"
 #include "Dialog.h"
 #include "xeditor.h"
@@ -41,6 +42,10 @@
 #include "PrefsData.h"
 #ifdef MOZ_LDAP
  #include "dirprefs.h"
+#endif
+#ifdef MOZ_MAIL_NEWS
+#include "PrefsDialogMServer.h"
+#include "PrefsMailFolderDlg.h"
 #endif
 
 #define PREFS_SET_GLOBALPREF_TEXT(SLOT1,SLOT2) \
@@ -256,6 +261,7 @@ public:
 	// Constructors, Destructors
 
 	XFE_PrefsPage(XFE_PrefsDialog  *dialog);
+    XFE_PrefsPage(Widget w);
 	virtual ~XFE_PrefsPage();
 
 	// Manipulators
@@ -737,11 +743,12 @@ private:
 };
 
 #ifdef MOZ_MAIL_NEWS
-// ************************* XFE_PrefsPageMailNewsComposition  *************************
 
-class XFE_PrefsPageMailNewsComposition : public XFE_PrefsPage
+// Incoming Mail Servers Data
+class XFE_PrefsIncomingMServer
 {
 public:
+<<<<<<< PrefsDialog.h
 
 	// Constructors, Destructors
 
@@ -766,12 +773,105 @@ public:
 private:	
 
 	// Data
-
-	PrefsDataMailNewsComposition        *m_prefsDataMailNewsComposition;
-
-	void setFccMenu(Boolean);
+=======
+    XFE_PrefsIncomingMServer(Widget incomingServerBox, XFE_PrefsPage *page);
+    virtual ~XFE_PrefsIncomingMServer();
+    XFE_PrefsPage *getPage() { return prefsPage; };
+    void refresh_incoming();
+    XP_Bool has_pop();
+    XP_Bool has_imap();
+    XP_Bool has_many_imap();
+    
+private:
+    void select_incoming();
+    
+    static void cb_select_incoming(Widget w, XtPointer closure,
+                                   XtPointer callData);
+    static void cb_new_incoming(Widget w, XtPointer closure,
+                                XtPointer callData);
+    static void cb_edit_incoming(Widget w, XtPointer closure,
+                                 XtPointer callData);
+    static void cb_delete_incoming(Widget w, XtPointer closure,
+                                   XtPointer callData);
+    static void cb_refresh(Widget w, XtPointer closure, XtPointer callData);
+    
+    XFE_PrefsMServerDialog *m_mserver_dialog;
+    XFE_PrefsPage* prefsPage;
+    void newIncoming();
+    void editIncoming();
+    void deleteIncoming();
+    Widget m_incoming;
+    Widget m_button_form;
+    Widget m_new_button;
+    Widget m_edit_button;
+    Widget m_delete_button;
+    
 };
 
+// Outgoing Server Data
+class XFE_PrefsOutgoingServer
+{
+public:
+    XFE_PrefsOutgoingServer(Widget outgoingServerBox);
+    Widget get_server_name() { return m_servername_text; };
+    Widget get_user_name() { return m_username_text; };
+    HG02621
+ private:
+    
+    Widget m_outgoing;
+    
+    // Labels
+    Widget m_servername_text;           // Text field
+    Widget m_username_text;         // Text field
+    
+    HG19282
+};
+
+// Local mail directory data
+class XFE_PrefsLocalMailDir
+{
+public:
+    XFE_PrefsLocalMailDir(Widget localMailDirBox,  XFE_PrefsPage *page);
+    static void cb_choose(Widget w, XtPointer closure,
+                          XtPointer callData);
+    Widget get_local_dir_text() { return m_local_dir_text; };
+    XFE_PrefsPage *getPage() { return prefsPage; };
+    
+private:
+    XFE_PrefsPage *prefsPage;
+    Widget m_local_dir_text;
+};
+>>>>>>> 3.1.14.1
+
+<<<<<<< PrefsDialog.h
+	PrefsDataMailNewsComposition        *m_prefsDataMailNewsComposition;
+=======
+>>>>>>> 3.1.14.1
+
+ // News Servers Data
+class XFE_PrefsNewsServer
+{
+public:
+    XFE_PrefsNewsServer(Widget ServerBox, XFE_PrefsPage *page);
+    XFE_PrefsPage *getPage() { return prefsPage; };
+    
+private:
+    static void cb_option(Widget, XtPointer, XtPointer);
+    static void cb_new_news_server(Widget w, XtPointer closure,
+                                   XtPointer callData);
+    static void cb_edit_news_server(Widget w, XtPointer closure,
+                                    XtPointer callData);
+    static void cb_delete_news_server(Widget w, XtPointer closure,
+                                      XtPointer callData);
+    
+    XFE_PrefsPage *prefsPage;
+    Widget news_servers;
+    Widget button_form;
+    Widget new_button;
+    Widget edit_button;
+    Widget delete_button;
+};
+  
 // ************************* XFE_PrefsPageMailNewsMserver  *************************
 
 class XFE_PrefsPageMailNewsMserver : public XFE_PrefsPage
@@ -791,10 +891,6 @@ public:
 	virtual void save();
 	virtual Boolean verify();
 
-	// Gets
-
-	PrefsDataMailNewsMserver *getData();
-
 	// Callbacks - page Mail News/Mail Server
 
 	static void cb_browseApplication(Widget, XtPointer, XtPointer);
@@ -803,17 +899,21 @@ public:
 	static void cb_toggleApplication(Widget, XtPointer, XtPointer);
 
 private:	
+   XFE_PrefsIncomingMServer *xfe_incoming;
+   XFE_PrefsOutgoingServer *xfe_outgoing;
+   XFE_PrefsLocalMailDir   *xfe_local_mail;
 
+ 
 	// Data
 
-	PrefsDataMailNewsMserver        *m_prefsDataMailNewsMserver;
 };
 
-// ************************* XFE_PrefsPageMailNewsNserver  *************************
+// ************************* XFE_PrefsPageMailNewsCopies ******************
 
-class XFE_PrefsPageMailNewsNserver : public XFE_PrefsPage
+class XFE_PrefsPageMailNewsCopies : public XFE_PrefsPage
 {
 public:
+<<<<<<< PrefsDialog.h
 
 	// Constructors, Destructors
 
@@ -835,7 +935,7 @@ public:
 	// Callbacks - page Mail News/News Server
 
 	static void cb_browse(Widget, XtPointer, XtPointer);
-	static void cb_toggleSecure(Widget, XtPointer, XtPointer);
+	HG92727
 
 private:	
 
@@ -849,7 +949,93 @@ private:
 class XFE_PrefsPageMailNewsAddrBook : public XFE_PrefsPage, public XFE_Outlinable
 {
 public:
+=======
+  
+    XFE_PrefsPageMailNewsCopies(XFE_PrefsDialog *dialog);
+    virtual ~XFE_PrefsPageMailNewsCopies();
+    
+    virtual void create();
+    
+    MSG_FolderInfo *GetFolderInfoFromPath(char *path,
+                                          MSG_FolderInfo *parent=NULL);
+    virtual void init();
+    virtual void install();
+    virtual void save();
+    virtual Boolean verify();
+    
+private:
+    MSG_FolderInfo *m_mailFcc, *m_newsFcc, *m_draftsFcc, *m_templatesFcc;
+    MSG_Master *m_master;
+    XFE_PrefsMailFolderDialog *m_chooseDialog;
+    
+    MSG_FolderInfo *chooseFcc(int l10n_name, MSG_FolderInfo *selected_folder);
+    XmString VerboseFolderName(MSG_FolderInfo *,int folder_string_id=0);
+    MSG_FolderInfo *GetSpecialFolder(char *name, int l10n_name);
+    
+    static void cb_chooseMailFcc(Widget, XtPointer closure,XtPointer);
+    static void cb_chooseNewsFcc(Widget, XtPointer closure, XtPointer);
+    static void cb_chooseDraftsFcc(Widget, XtPointer closure, XtPointer);
+    static void cb_chooseTemplatesFcc(Widget, XtPointer closure, XtPointer);
+    
+    static void cb_gotMailFcc(Widget, XtPointer, XtPointer);
+    static void cb_gotNewsFcc(Widget, XtPointer, XtPointer);
+    static void cb_gotDraftsFcc(Widget, XtPointer, XtPointer);
+    
+    static void cb_gotTemplatesFcc(Widget, XtPointer, XtPointer);
+    
+         Widget createMailFrame(Widget parent, Widget attachTo);
+         Widget createNewsFrame(Widget parent, Widget attachTo);
+         Widget createDTFrame(Widget parent, Widget attachTo);
 
+     Widget m_mail_self_toggle;
+     Widget m_mail_other_toggle;
+     Widget m_mail_other_text;
+     Widget m_mail_fcc_toggle;
+     Widget m_mail_choose_button;
+
+     Widget m_news_self_toggle;
+     Widget m_news_other_toggle;
+     Widget m_news_other_text;
+     Widget m_news_fcc_toggle;
+     Widget m_news_choose_button;
+
+     Widget m_drafts_save_label;
+     Widget m_drafts_choose_button;
+
+     Widget m_templates_save_label;
+     Widget m_templates_choose_button;
+
+ };
+
+ // ************************* XFE_PrefsPageMailNewsHTML ******************
+
+
+class XFE_PrefsPageMailNewsHTML : public XFE_PrefsPage
+{
+public:
+    
+    XFE_PrefsPageMailNewsHTML(XFE_PrefsDialog *dialog);
+    virtual ~XFE_PrefsPageMailNewsHTML();
+    
+    virtual void create();
+    virtual void init();
+    virtual void install();
+    virtual void save();
+    virtual Boolean verify();
+    
+private:
+    Widget createUseHTMLFrame(Widget parent, Widget attachTo);
+    Widget createNoHTMLFrame(Widget parent, Widget attachTo);
+    Widget m_usehtml_toggle;
+    Widget m_nohtml_ask_toggle;
+    Widget m_nohtml_text_toggle;
+    Widget m_nohtml_html_toggle;
+    Widget m_nohtml_both_toggle;
+    
+};
+>>>>>>> 3.1.14.1
+
+<<<<<<< PrefsDialog.h
 	// Constructors, Destructors
 
 	XFE_PrefsPageMailNewsAddrBook(XFE_PrefsDialog  *dialog);
@@ -912,7 +1098,10 @@ public:
 	static void cb_toggleNameOrder(Widget, XtPointer, XtPointer);
 
 private:	
+=======
+>>>>>>> 3.1.14.1
 
+<<<<<<< PrefsDialog.h
 	// Data
 
 	static const int OUTLINER_COLUMN_NAME;
@@ -921,6 +1110,36 @@ private:
 
 	PrefsDataMailNewsAddrBook  *m_prefsDataMailNewsAddrBook;
 	int                         m_rowIndex;
+=======
+// ************************* XFE_PrefsPageMailNewsReceipts ******************
+
+
+class XFE_PrefsPageMailNewsReceipts : public XFE_PrefsPage
+{
+public:
+    
+    XFE_PrefsPageMailNewsReceipts(XFE_PrefsDialog *dialog);
+    virtual ~XFE_PrefsPageMailNewsReceipts();
+    
+    virtual void create();
+    virtual void init();
+    virtual void install();
+    virtual void save();
+    virtual Boolean verify();
+    
+    
+private:
+    Widget createRequestReceiptsFrame(Widget parent, Widget attachTo);
+    Widget createReceiptsArriveFrame(Widget parent, Widget attachTo);
+    Widget createReceiveReceiptsFrame(Widget parent, Widget attachTo);
+    Widget m_dsn_toggle;
+    Widget m_mdn_toggle;
+    Widget m_both_toggle;
+    Widget m_inbox_toggle;
+    Widget m_sentmail_toggle;
+    Widget m_never_toggle;
+    Widget m_some_toggle;
+>>>>>>> 3.1.14.1
 };
 
 #endif /* MOZ_MAIL_NEWS */

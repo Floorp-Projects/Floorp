@@ -117,6 +117,7 @@ protected:
     int m_iPaintLines;
 	UINT m_idImageCol;
 	BOOL m_bHasPipes;
+	BOOL m_bHasImageOnlyColumn;
 
 	int m_iCSID;
 
@@ -143,6 +144,7 @@ protected:
 
 	BOOL m_bClearOnRelease;
 	BOOL m_bSelectOnRelease;
+	BOOL m_bLButtonDown;
 
 	int m_iTotalWidth;
 
@@ -292,10 +294,15 @@ public:
 
 	void SetImageColumn( UINT idCol ) { m_idImageCol = idCol; }
 	void SetHasPipes( BOOL bPipes ) { m_bHasPipes = bPipes; }
+	//Sometimes you want to distinguish between a column that only has an
+	//image versus one that has both text and image.
+	void SetHasImageOnlyColumn(Bool bImageOnly) {m_bHasImageOnlyColumn = bImageOnly;}
 
 	int GetNumColumns() { return m_iNumColumns; }
 	void SetVisibleColumns( UINT iVisCol ) { m_iVisColumns = iVisCol; }
 	UINT GetVisibleColumns() { return m_iVisColumns; }
+	int GetNumberVisibleRows() { return m_iPaintLines; }
+	BOOL GetIsColumnVisible( int columnID );
     
 	void LoadXPPrefs( const char *prefname );
 	void SaveXPPrefs( const char *prefname );
@@ -376,12 +383,15 @@ public:
 	virtual void SelectItem ( int iSel, int mode = OUTLINER_SET, UINT flags = 0 );
 	virtual void SelectRange( int iStart, int iEnd, BOOL bNotify );
 
+	//multiple selection is on by default
+	virtual void SetMultipleSelection(BOOL bMultipleSelection);
+
 protected:
-	void AddSelection( MSG_ViewIndex iSel );
-	void SelectRange( MSG_ViewIndex iSelBegin, MSG_ViewIndex iSelEnd );
-	void RemoveSelection( MSG_ViewIndex iSel );
-	void RemoveSelectionRange( MSG_ViewIndex iSelBegin, MSG_ViewIndex iSelEnd );
-	void ClearSelection();
+	virtual void AddSelection( MSG_ViewIndex iSel );
+	virtual void SelectRange( MSG_ViewIndex iSelBegin, MSG_ViewIndex iSelEnd );
+	virtual void RemoveSelection( MSG_ViewIndex iSel );
+	virtual void RemoveSelectionRange( MSG_ViewIndex iSelBegin, MSG_ViewIndex iSelEnd );
+	virtual void ClearSelection();
 
 	virtual BOOL HandleInsert( MSG_ViewIndex iStart, LONG iCount );
 	virtual BOOL HandleDelete( MSG_ViewIndex iStart, LONG iCount );

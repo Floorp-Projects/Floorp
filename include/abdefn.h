@@ -135,6 +135,8 @@ typedef enum
 
   AB_SaveCmd,					/* export to a file */
 
+  AB_ExportCmd,					/* same as AB_SaveCmd, but I like export better...*/
+
   AB_CloseCmd,					/* close the address book window */
 
   AB_NewAddressBook,			/* Create a new personal address book */

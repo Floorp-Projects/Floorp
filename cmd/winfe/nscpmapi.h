@@ -32,6 +32,8 @@
 typedef unsigned char	UCHAR;
 #endif 
 
+#define           MAPI_CUSTOM_COMPOSE_MSG     "NSCP_CUSTOM_MAPI_MESSAGE"
+#define           MAPI_CUSTOM_RET_CODE        1966
 
 #define           MAX_NAME_LEN    256
 #define           MAX_PW_LEN      256
@@ -93,7 +95,7 @@ public:
 // Defines needed for requests being made with the WM_COPYDATA call...
 //
 typedef enum {
-    NSCP_MAPIStartRequestID = 0,
+    NSCP_MAPIStartRequestID = 100,
     NSCP_MAPILogon,
     NSCP_MAPILogoff,
     NSCP_MAPIFree,
@@ -106,6 +108,7 @@ typedef enum {
     NSCP_MAPIAddress,
     NSCP_MAPIDetails,
     NSCP_MAPIResolveName,
+    NSCP_MAPI_NSCP_SynchronizeClient,
     NSCP_MAPIEndRequestID       // Note: this is a marker for MAPI IPC requests
 } NSCP_IPC_REQUEST;
 
@@ -328,5 +331,11 @@ typedef struct {
   //      String x: LPSTR lpszAddress;  // Recipient N address (optional)             
   //
 } MAPIAddressType;
+
+typedef struct {
+  LHANDLE   lhSession;
+  ULONG     ulUIParam;
+  DWORD     ipcWorked;      // Necessary for IPC check with Communicator
+} MAPI_NSCP_SynchronizeClientType;
 
 #endif    // _NSCPMAPI

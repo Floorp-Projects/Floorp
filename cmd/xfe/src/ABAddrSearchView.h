@@ -38,8 +38,7 @@ public:
 					 XFE_View      *parent_view, 
 					 MWContext     *context,
 					 XP_List       *directories);
-  ~XFE_AddrSearchView();
-
+  virtual  ~XFE_AddrSearchView();
   void setAddressee(XFE_AddresseeView *view) { m_addresseeView = view;}
   void setAdd2ABBtn(Widget w) {m_addToAddressBtn = w;}
   void setPropertyBtn(Widget w) {m_propertyBtn = w;}
@@ -47,37 +46,7 @@ public:
   void setCcBtn(Widget w) {m_ccBtn = w;}
   void setBccBtn(Widget w) {m_bccBtn = w;}
 
-  // columns for the Outliner
-  enum {
-	OUTLINER_COLUMN_TYPE = 0,
-	OUTLINER_COLUMN_NAME,
-	OUTLINER_COLUMN_EMAIL,
-	OUTLINER_COLUMN_COMPANY,
-	OUTLINER_COLUMN_PHONE,
-	OUTLINER_COLUMN_NICKNAME,
-	OUTLINER_COLUMN_LOCALITY,
-	OUTLINER_COLUMN_LAST
-  };
-
-  // The Outlinable interface.
-  //
-
-  virtual fe_icon *getColumnIcon(int column);
-  virtual EOutlinerTextStyle 
-                   getColumnHeaderStyle(int column);
-  virtual char    *getColumnHeaderText(int column);
-  virtual char    *getColumnText(int column);
-  virtual char	  *getColumnName(int column);
-  virtual void     clickHeader(const OutlineButtonFuncData *data);
   virtual void     doubleClickBody(const OutlineButtonFuncData *data);
-
-  // Get tooltipString & docString; 
-  // returned string shall be freed by the callee
-  // row < 0 indicates heading row; otherwise it is a content row
-  // (starting from 0)
-  //
-  virtual char *getCellTipString(int /* row */, int /* column */);
-  virtual char *getCellDocString(int /* row */, int /* column */);
   //
   static void toCallback(Widget, XtPointer, XtPointer);
   static void ccCallback(Widget, XtPointer, XtPointer);

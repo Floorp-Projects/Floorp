@@ -25,6 +25,7 @@
 #ifndef _xfe_optionfolderview_h
 #define _xfe_optionfolderview_h
 
+#include "rosetta.h"
 #include "MNView.h"
 #include "msgcom.h"
 #include <Xm/Xm.h>
@@ -77,8 +78,7 @@ class XFE_OptionFolderView: public XFE_MNView
 	Widget  m_textEncodingOptionW;
 	Widget  m_binaryEncodingOptionW;
 	Widget  m_returnReceiptW;
-	Widget  m_encryptedW;
-	Widget  m_signedW;
+	HG21182
 	MSG_PRIORITY m_selectedPriority;
 	XFE_CALLBACK_DECL(updateSecurityOption)
 };

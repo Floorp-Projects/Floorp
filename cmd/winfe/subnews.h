@@ -24,6 +24,7 @@
 #include "mailmisc.h"
 #include "statbar.h"
 #include "apimsg.h"
+#include "mnrccln.h"
 
 // Definitions for column headings in the outliner control
 #define ID_COLNEWS_NAME			1
@@ -136,9 +137,10 @@ public:
  	void DoSelChanged(MSG_GroupNameLine* pGroup);
 	void CheckSubscribeButton(MSG_GroupNameLine* pGroup);
 	Bool IsOutlinerHasFocus();
-	void EnableAllControls(BOOL bEnable);
 	void DoStopListChange();
 	void ClearNewsgroupSelection();
+	void EnableAllControls(BOOL bEnable);
+	void DoEnableImapControls();
 
 	virtual void ListChangeStarting(MSG_Pane* pane, XP_Bool asynchronous,
 									MSG_NOTIFY_CODE notify, MSG_ViewIndex where,
@@ -387,7 +389,7 @@ public:
 	void StopAnimation();
 	void AllConnectionsComplete(MWContext *pContext);
 	void AddServer(MSG_Host* pHost);
-	void EnableNonImapPages(BOOL bEnable);
+	void ClearSelection();
 
 
 	//In Win16, GetActivePage() is a protected
@@ -461,6 +463,38 @@ protected:
 	afx_msg void OnOK();
 	DECLARE_MESSAGE_MAP()
 };
+
+//CUpgradeSubscribeDlg prompts user to synchronize before going offline.
+class CUpgradeSubscribeDlg : public CDialog
+{
+
+public:
+	CMailNewsResourceSwitcher m_MNResourceSwitcher;
+	CString	m_pHostName;
+
+// Construction
+public:
+	CUpgradeSubscribeDlg(CWnd* pParent = NULL, const char* hostName = NULL);   // standard constructor
+	virtual int DoModal ();
+	
+	// Dialog Data
+	//{{AFX_DATA(CUpgradeSubscribeDlg)
+	enum { IDD = IDD_UPGRADE_SUBSCRIBE };
+	int		m_iUpgrade;
+	//}}AFX_DATA
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support	
+
+// Implementation
+protected:
+	virtual void OnOK();
+	virtual void OnCancel();
+	virtual void OnHelp();
+	virtual BOOL OnInitDialog();
+	DECLARE_MESSAGE_MAP()
+};
+
 
 
 #endif SUBNEWS_H

@@ -35,6 +35,9 @@
 #include "nscpmapi.h"         // rhp - for MAPI
 #include "mapihook.h"         // rhp - for MAPI
 #include "mapismem.h"
+
+#include "abapi.h"           // rhp - for Address Book API
+#include "abhook.h"           // rhp - for Address Book API
 #endif 
 
 #ifdef _DEBUG
@@ -745,7 +748,11 @@ LONG CHiddenFrame::OnProcessIPCHook(WPARAM wParam, LPARAM lParam)
   // Now check for what type of IPC message this really is?
   if ((pcds->dwData > NSCP_MAPIStartRequestID) && (pcds->dwData < NSCP_MAPIEndRequestID))
   {
-      return ( ProcessNetscapeMAPIHook(wParam, lParam) );
+    return ( ProcessNetscapeMAPIHook(wParam, lParam) );
+  }
+  else if ((pcds->dwData > NSCP_NABStartRequestID) && (pcds->dwData < NSCP_NABEndRequestID))
+  {
+    return ( ProcessNetscapeNABHook(wParam, lParam) );    // 3-17: Address book API
   }
 
   return(-1);

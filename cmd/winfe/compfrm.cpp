@@ -22,11 +22,19 @@
  */
  
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "edt.h"
 #include "compbar.h"
 #include "compfrm.h"
 #include "prefapi.h"
+#include "addrdlg.h"
 #include "intl_csi.h"
+#include "apiaddr.h"
+#include "namcomp.h"
+#include "addrfrm.h"  //for MOZ_NEWADDR
+  
+#include "nscpmapi.h"   // rhp: for MAPI check
 
 extern "C" {
 #include "xpgetstr.h"
@@ -38,6 +46,7 @@ extern int MK_MSG_MISSING_SUBJECT;
 #ifdef XP_WIN32
 #include "postal.h"
 #endif
+
 
 #define COMPOSE_WINDOW_WIDTH    73 // default to 73 characters wide
 
@@ -51,11 +60,13 @@ static UINT ComposeCodes[] = {
    IDM_ADDRESSPICKER,
    ID_CHECK_SPELLING,
    IDM_SAVEASDRAFT,
-   ID_SECURITY,
+   HG26722
    ID_NAVIGATE_INTERRUPT
     };
 
 static BOOL bSendDeferred = FALSE;
+
+const UINT NEAR MAPI_CUST_MSG = RegisterWindowMessage(MAPI_CUSTOM_COMPOSE_MSG); // rhp - for MAPI
 
 BEGIN_MESSAGE_MAP(CComposeFrame, CGenericFrame)
    ON_WM_CREATE()
@@ -130,6 +141,16 @@ BEGIN_MESSAGE_MAP(CComposeFrame, CGenericFrame)
    	ON_UPDATE_COMMAND_UI(IDS_SECURITY_STATUS, OnUpdateSecureStatus)
 	ON_UPDATE_COMMAND_UI(IDS_SIGNED_STATUS, OnUpdateSecureStatus)
 
+	// Name completion 
+	ON_UPDATE_COMMAND_UI(ID_TOGGLENAMECOMPLETION, OnUpdateToggleNameCompletion)
+	ON_COMMAND(ID_TOGGLENAMECOMPLETION, OnToggleNameCompletion)
+	ON_UPDATE_COMMAND_UI(ID_SHOW_NAME_PICKER, OnUpdateShowNamePicker)
+	ON_COMMAND(ID_SHOW_NAME_PICKER, OnShowNamePicker)
+
+// rhp - for custom message
+#ifndef MOZ_LITE
+   ON_REGISTERED_MESSAGE(MAPI_CUST_MSG, OnProcessMAPIMessage)    // rhp - for MAPI
+#endif
 
 END_MESSAGE_MAP()
 
@@ -318,10 +339,10 @@ void CComposeFrame::CreatePlainTextEditor()
 // status bar format
 static const UINT BASED_CODE indicators[] =
 {
-	IDS_SECURITY_STATUS,
-	IDS_SIGNED_STATUS,
+	HG27811
     IDS_TRANSFER_STATUS,    
     ID_SEPARATOR,
+	IDS_ONLINE_STATUS,
 	IDS_TASKBAR
 };
 
@@ -384,7 +405,7 @@ int CComposeFrame::OnCreate( LPCREATESTRUCT lpCreateStruct )
 	}
 
    // create the address/attachment widget dialog bar
-   m_pComposeBar = new CComposeBar;
+   m_pComposeBar = new CComposeBar(GetMainContext()->GetContext());
    ASSERT(m_pComposeBar);
    m_pComposeBar->Create ( this, (UINT) IDD_COMPOSEBAR, 
 						   (UINT) WS_CLIPCHILDREN|CBRS_TOP, 
@@ -502,11 +523,12 @@ BOOL CComposeFrame::PreCreateWindow ( CREATESTRUCT &cs )
 		cs.x = iLeft;
 		cs.y = iTop;
 		cs.cy = iBottom-iTop;
-        if (m_bUseHtml)
-        {
-            cs.cx = iRight - iLeft;
-            return rv;
-        }
+
+    //if (m_bUseHtml)
+    //{
+      cs.cx = iRight - iLeft;
+      return rv;
+    //}
 	} 
 
     CWnd *pCwnd = AfxGetMainWnd();
@@ -1128,6 +1150,7 @@ void CComposeFrame::OnSaveDraft ( void )
 
     if (!m_bUseHtml)
         m_EditorParent.m_bModified = FALSE;
+
 }
 
 
@@ -1186,7 +1209,6 @@ void CComposeFrame::OnUpdateSaveTemplate(CCmdUI *pCmdUI)
     OnUpdateThis(pCmdUI, MSG_SaveTemplate );
 
 }
-
 
 LRESULT CComposeFrame::OnButtonMenuOpen(WPARAM wParam, LPARAM lParam)
 {
@@ -1626,8 +1648,7 @@ void CComposeFrame::CompleteComposeInitialization(void)
 
 void CComposeFrame::UpdateSecurityOptions(void)
 {
-    m_pComposeBar->SetSigned(MSG_GetCompBoolHeader(GetMsgPane(),MSG_SIGNED_BOOL_HEADER_MASK));
-    m_pComposeBar->SetEncrypted(MSG_GetCompBoolHeader(GetMsgPane(),MSG_ENCRYPTED_BOOL_HEADER_MASK));
+    HG27625
 }
 
 void CComposeFrame::GoldDoneLoading ()
@@ -1705,11 +1726,7 @@ void CComposeFrame::OnToggleMessageToolbar()
 
 void CComposeFrame::OnUpdateToggleMessageToolbar(CCmdUI* pCmdUI)
 {
-   if( pCmdUI->m_pMenu ){
-      pCmdUI->m_pMenu->ModifyMenu(IDM_OPT_MESSAGEBAR_TOGGLE, MF_BYCOMMAND | MF_STRING, CASTUINT(IDM_OPT_MESSAGEBAR_TOGGLE),
-                                  szLoadString(GetChrome()->GetToolbarVisible(ID_COMPOSE_MESSAGE_TOOLBAR) ?
-                                               IDS_HIDE_MESSAGE_TOOLBAR : IDS_SHOW_MESSAGE_TOOLBAR ) );
-   }   
+   pCmdUI->SetCheck(GetChrome()->GetToolbarVisible(ID_COMPOSE_MESSAGE_TOOLBAR));
    pCmdUI->Enable(TRUE);
 }
 
@@ -1720,12 +1737,7 @@ void CComposeFrame::OnToggleAddressArea()
 
 void CComposeFrame::OnUpdateToggleAddressArea(CCmdUI * pCmdUI)
 {
-   //CLM: Change to a Show|Hide pair of strings
-   if( pCmdUI->m_pMenu ){
-      pCmdUI->m_pMenu->ModifyMenu(IDM_MESSAGEBODYONLY, MF_BYCOMMAND | MF_STRING, CASTUINT(IDM_MESSAGEBODYONLY),
-                                  szLoadString(CASTUINT(m_pComposeBar->IsVisible() ?
-                                               IDS_HIDE_ADDRESS_AREA : IDS_SHOW_ADDRESS_AREA)) );
-   }   
+   pCmdUI->SetCheck(m_pComposeBar->IsVisible());
    pCmdUI->Enable(TRUE);
 }
 
@@ -1736,33 +1748,91 @@ void CComposeFrame::OnUpdateToggleAddressArea(CCmdUI * pCmdUI)
 
 void CComposeFrame::OnUpdateSecurity(CCmdUI * pCmdUI)
 {
-	XP_Bool bSigned = m_pComposeBar->GetSigned();
-	XP_Bool bEncrypted = m_pComposeBar->GetEncrypted();
-	LPNSTOOLBAR pIToolBar;
-	m_pChrome->QueryInterface( IID_INSToolBar, (LPVOID *) &pIToolBar );
-	if ( pIToolBar ) {
-		CCommandToolbar *pToolBar = (CCommandToolbar *) CWnd::FromHandlePermanent( pIToolBar->GetHWnd() );
-		
-		int index = bEncrypted ? 
-					(bSigned ? SEC_SIGNED_INDEX : SECURE_INDEX) :
-				    (bSigned ? UNSEC_SIGNED_INDEX : UNSECURE_INDEX);
-
-		pToolBar->ReplaceButtonBitmapIndex(ID_SECURITY, index);
-		pIToolBar->Release();
-	}
+	HG72521
    OnUpdateButtonGeneral(pCmdUI);
 }
 
 void CComposeFrame::OnUpdateSecureStatus(CCmdUI *pCmdUI)
 {
-	XP_Bool bSigned = m_pComposeBar->GetSigned();
-	XP_Bool bEncrypted = m_pComposeBar->GetEncrypted();
-
-	if (pCmdUI->m_nID == IDS_SECURITY_STATUS)
-		pCmdUI->Enable(bEncrypted);
-	else
-		pCmdUI->Enable(bSigned);
+	HG87282
 }
+
+void CComposeFrame::OnUpdateShowNamePicker(CCmdUI *pCmdUI)
+{
+#ifdef MOZ_NEWADDR
+	pCmdUI->Enable(FALSE);
+
+    LPADDRESSCONTROL pIAddress = GetAddressWidgetInterface();
+    if (pIAddress)
+    {
+		CEdit *pEdit = pIAddress->GetAddressNameField();
+
+		if(GetFocus() == pEdit)
+		{
+			pCmdUI->Enable(TRUE);
+		}
+    }
+
+#else
+	pCmdUI->Enable(FALSE);
+#endif
+}
+
+void CComposeFrame::OnShowNamePicker()
+{
+#ifdef MOZ_NEWADDR
+
+	//need to get text of current selection
+    LPADDRESSCONTROL pIAddress = GetAddressWidgetInterface();
+    if (pIAddress)
+    {
+		pIAddress->ShowNameCompletionPicker(this);
+    }
+
+
+#endif
+}
+
+void CComposeFrame::OnUpdateToggleNameCompletion(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(FALSE);
+
+#ifdef MOZ_NEWADDR
+
+	LPADDRESSCONTROL pIAddress = GetAddressWidgetInterface();
+	if(pIAddress)
+	{
+		pCmdUI->Enable(TRUE);
+		BOOL bHasNameCompletion = pIAddress->GetEntryHasNameCompletion();
+
+		if(bHasNameCompletion)
+		{
+			pCmdUI->SetText(::szLoadString(IDS_NAMECOMPLETIONOFF));
+
+		}
+		else
+		{
+			pCmdUI->SetText(::szLoadString(IDS_NAMECOMPLETIONON));
+		}
+
+	}
+#endif
+
+}
+
+void CComposeFrame::OnToggleNameCompletion()
+{
+#ifdef MOZ_NEWADDR
+	LPADDRESSCONTROL pIAddress = GetAddressWidgetInterface();
+	if(pIAddress)
+	{
+		BOOL bHasNameCompletion = pIAddress->GetEntryHasNameCompletion();
+
+		pIAddress->SetEntryHasNameCompletion(!bHasNameCompletion);
+	}
+#endif
+}
+
 
 char * CComposeFrame::PromptMessageSubject()
 {
@@ -1829,14 +1899,28 @@ LRESULT CComposeFrame::OnSetMessageString(WPARAM wParam, LPARAM lParam)
 // This is to wait until attachments are loaded for MAPI Operations
 void CComposeFrame::UpdateComposeWindowForMAPI(void) 
 { 
+    TRACE("UPDATE WINDOW FOR MAPI\n"); 
     if (GetMAPISendMode() == MAPI_SEND)
     {
+      TRACE("SEND WINDOW FOR MAPI\n"); 
       PostMessage(WM_COMMAND, IDM_SEND); 
       SetMAPISendMode(MAPI_IGNORE);
     }
     else if (GetMAPISendMode() == MAPI_SAVE)
     {
+      TRACE("SAVE WINDOW FOR MAPI\n"); 
       PostMessage(WM_COMMAND, IDM_SAVEASDRAFT); 
+      SetMAPISendMode(MAPI_QUITWHENDONE);
+    }
+    else if (GetMAPISendMode() == MAPI_QUITWHENDONE)
+    {
+      PostMessage(WM_CLOSE); 
       SetMAPISendMode(MAPI_IGNORE);
     }
 } 
+
+// rhp - This is to respond to a custom message to identify compose windows
+LONG CComposeFrame::OnProcessMAPIMessage(WPARAM wParam, LPARAM lParam)
+{
+  return(MAPI_CUSTOM_RET_CODE);
+}

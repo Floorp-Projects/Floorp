@@ -27,7 +27,7 @@
 
 #include "msg_filt.h"  
 #include "msg_srch.h"  
-
+#include "FolderDropdown.h"
 #include "MNListView.h"
 
 
@@ -37,7 +37,8 @@ public:
 	XFE_MailFilterView(XFE_Component *toplevel_component, 
 					   Widget         parent, 
 					   XFE_View      *parent_view, 
-					   MWContext     *context);
+					   MWContext     *context,
+					   MSG_Pane      *pane);
 	virtual ~XFE_MailFilterView();
 
 	// The Outlinable interface.
@@ -122,12 +123,15 @@ protected:
 private:
 	XFE_CALLBACK_DECL(updateCommands)
 
-	XFE_Outliner *m_outliner; 
+	XFE_Outliner *m_outliner;
+    XFE_FolderDropdown *m_server_dropdown;
+    
 	int m_dataRow;
 
 	MSG_FilterList *m_filterlist;
 	MSG_Filter     *m_filter;
 	MSG_Filter    **m_goneFilter;
+    MSG_Pane       *m_pane;
 	int             m_numGone;
 
 	Widget  m_editBtn;

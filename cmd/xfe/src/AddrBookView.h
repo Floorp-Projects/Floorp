@@ -41,52 +41,16 @@ public:
 				   XFE_View      *parent_view, 
 				   MWContext     *context,
 				   XP_List       *directories);
-  ~XFE_AddrBookView();
+  virtual ~XFE_AddrBookView();
 
   void abCall();
   void abVCard();
 
-  //
-  // The Outlinable interface.
-  //
-  virtual EOutlinerTextStyle 
-                   getColumnHeaderStyle(int column);
-  virtual char    *getColumnName(int column);
-  virtual char    *getColumnHeaderText(int column);
-  virtual char    *getColumnText(int column);
-  virtual fe_icon *getColumnIcon(int column);
-  virtual void     clickHeader(const OutlineButtonFuncData *data);
-  virtual void     doubleClickBody(const OutlineButtonFuncData *data);
-
-  // Get tooltipString & docString; 
-  // returned string shall be freed by the callee
-  // row < 0 indicates heading row; otherwise it is a content row
-  // (starting from 0)
-  //
-  virtual char *getCellTipString(int /* row */, int /* column */);
-  virtual char *getCellDocString(int /* row */, int /* column */);
-
   // tooltips and doc string
   virtual char *getDocString(CommandType cmd);
 
+  virtual void     doubleClickBody(const OutlineButtonFuncData *data);
 
-  //
-  // 
-  //
-
-  // columns for the Outliner
-  enum {OUTLINER_COLUMN_TYPE = 0,
-	OUTLINER_COLUMN_NAME,
-#if 0
-	OUTLINER_COLUMN_CERTIFICATE,
-#endif
-	OUTLINER_COLUMN_EMAIL,
-	OUTLINER_COLUMN_COMPANY,
-	OUTLINER_COLUMN_PHONE,
-	OUTLINER_COLUMN_NICKNAME,
-	OUTLINER_COLUMN_LOCALITY,
-	OUTLINER_COLUMN_LAST
-  };
 protected:
   /* Address Book specific
    */

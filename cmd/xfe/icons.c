@@ -21,6 +21,7 @@
  */
 
 
+#include "rosetta.h"
 #include "mozilla.h"
 #include "xfe.h"
 #include "fonts.h"
@@ -1131,20 +1132,7 @@ fe_make_icon (MWContext *context, Pixel transparent_color, int id,
 static void
 fe_new_init_security_icons (Widget widget)
 {
-#ifndef NO_SECURITY
-  Pixel fg = 0;
-  Pixel bg = 0;
-
-  XtVaGetValues (widget, XmNbackground, &bg, 0);
-  XtVaGetValues (widget, XmNforeground, &fg, 0);
-
-  fe_NewMakeIcon (widget, fg, bg, &fe_icons[IL_IMAGE_INSECURE],
-		  NULL,
-		  SEC_Replace.width, SEC_Replace.height,
-		  SEC_Replace.mono_bits, SEC_Replace.color_bits, SEC_Replace.mask_bits,
-		  FALSE);
-
-#endif
+  HG12675
 }
 
 static void
@@ -1176,18 +1164,7 @@ fe_init_document_icons (MWContext *c)
 		NULL,
 		IconUnknown.width, IconUnknown.height,
 		IconUnknown.mono_bits, IconUnknown.color_bits, IconUnknown.mask_bits);
-#ifndef NO_SECURITY
-  fe_make_icon (c, bg, IL_IMAGE_INSECURE,
-		NULL,
-		SEC_Replace.width, SEC_Replace.height,
-		SEC_Replace.mono_bits, SEC_Replace.color_bits, SEC_Replace.mask_bits);
-
-  bg2 = bg;
-  if (CONTEXT_DATA(c)->dashboard) {
-   /* XXX need to find why we do this - dp */
-    XtVaGetValues (CONTEXT_DATA (c)->dashboard, XmNbackground, &bg2, 0);
-  }
-#endif
+  HG87163
   /* Load all the desktop icons */
   save = fe_globalData.force_mono_p; /* hack. hack, hack */
   if (XP_STRCASECMP(fe_globalData.wm_icon_policy, "mono") == 0)
@@ -1969,8 +1946,7 @@ fe_NewSecurityPixmap (Widget widget, Dimension *w, Dimension *h,
   int index = 0;
   switch (type)
     {
-    case SSL_SECURITY_STATUS_ON_LOW:  index = IL_ICON_SECURITY_ON; break;
-    case SSL_SECURITY_STATUS_ON_HIGH: index = IL_ICON_SECURITY_HIGH; break;
+    HG27367
 #ifdef FORTEZZA
     case SSL_SECURITY_STATUS_FORTEZZA: index = IL_ICON_SECURITY_FORTEZZA; break;
 #endif
@@ -1990,8 +1966,7 @@ fe_SecurityPixmap (MWContext *context, Dimension *w, Dimension *h,
   int index = 0;
   switch (type)
     {
-    case SSL_SECURITY_STATUS_ON_LOW:  index = IL_ICON_SECURITY_ON; break;
-    case SSL_SECURITY_STATUS_ON_HIGH: index = IL_ICON_SECURITY_HIGH; break;
+    HG72671
 #ifdef FORTEZZA
     case SSL_SECURITY_STATUS_FORTEZZA: index = IL_ICON_SECURITY_FORTEZZA; break;
 #endif
@@ -2627,15 +2602,7 @@ FE_AboutData (const char *which,
       *length_ret = sizeof (hype_au) - 1;
       *content_type_ret = AUDIO_BASIC;
     }
-#ifndef NO_SECURITY
-  else if (!strcmp (which, "rsalogo"))
-    {
-      /* Note, this one returns a read-only string. */
-      *data_ret = (char *) rsalogo_gif;
-      *length_ret = sizeof (rsalogo_gif) - 1;
-      *content_type_ret = IMAGE_GIF;
-    }
-#endif
+   HG78262
 #ifdef JAVA
   else if (!strcmp (which, "javalogo"))
     {
@@ -2872,18 +2839,9 @@ FE_AboutData (const char *which,
 	    {
 	      char *a2;
 	      int len;
-#ifndef NO_SECURITY
-              /* These strings are for display in the about: page */
-	      char *s0 = XP_GetString(XFE_SECURITY_WITH);
-	      char *s1 = SECNAV_SecurityVersion(PR_TRUE);
-	      char *s2 = SECNAV_SSLCapabilities();
-	      char *ss;
-	      len = strlen(s0)+strlen(s1)+strlen(s2);
-	      ss = (char*) malloc(len);
-	      PR_snprintf(ss, len, s0, s1, s2);
-#else
-	      char *ss = XP_GetString(XFE_SECURITY_DISABLED);
-#endif
+          char *ss = NULL;
+
+	      HG72729 /* sets ss */
 	      len = strlen(a) + strlen(fe_version_and_locale) +
                         strlen(fe_version_and_locale) + strlen(ss);
 	      a2 = (char *) malloc(len);
@@ -2892,10 +2850,9 @@ FE_AboutData (const char *which,
 		       fe_version_and_locale,
 		       ss
 		       );
-#ifndef NO_SECURITY
-	      free (s2);
+
+	      HG78268
 	      free (ss);
-#endif
 	      free (a);
 	      a = a2;
 	    }
@@ -3083,10 +3040,7 @@ fe_get_icon_data(int icon_number)
         return &IconUnknown;
     case IL_IMAGE_BAD_DATA:
         return &IBad;
-#ifndef NO_SECURITY
-    case IL_IMAGE_INSECURE:
-        return &SEC_Replace;
-#endif /* ! NO_SECURITY */
+    HG87268
     case IL_IMAGE_EMBED:
         return &IconUnknown;
 
@@ -3122,31 +3076,7 @@ fe_get_icon_data(int icon_number)
         return &ed_tage;
 #endif /* EDITOR */
         
-        /* Security Advisor and S/MIME icons. */
-    case IL_SA_SIGNED:
-        return &A_Signed;
-    case IL_SA_ENCRYPTED:
-        return &A_Encrypt;
-    case IL_SA_NONENCRYPTED:
-        return &A_NoEncrypt;
-    case IL_SA_SIGNED_BAD:
-        return &A_SignBad;
-    case IL_SA_ENCRYPTED_BAD:
-        return &A_EncrypBad;
-    case IL_SMIME_ATTACHED:
-        return &M_Attach;
-    case IL_SMIME_SIGNED:
-        return &M_Signed;
-    case IL_SMIME_ENCRYPTED:
-        return &M_Encrypt;
-    case IL_SMIME_ENC_SIGNED:
-        return &M_SignEncyp;
-    case IL_SMIME_SIGNED_BAD:
-        return &M_SignBad;
-    case IL_SMIME_ENCRYPTED_BAD:
-        return &M_EncrypBad;
-    case IL_SMIME_ENC_SIGNED_BAD:
-        return &M_SgnEncypBad;
+     HG78261
 
         /* Message attachment icon. */
     case IL_MSG_ATTACH:

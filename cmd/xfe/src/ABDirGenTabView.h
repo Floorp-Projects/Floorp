@@ -64,7 +64,11 @@ private:
 	 */
 	Widget m_textFs[ABDIR_LAST+1];
 	Widget m_labels[ABDIR_LAST+1];
+#if defined(MOZ_MAIL_NEWS)
+	Widget m_toggles[ABDIR_SECLAST];
+#else
 	Widget m_toggles[3];
+#endif /* MOZ_MAIL_NEWS */
 }; /* XFE_ABDirGenTabView */
 
 #endif /* _ABDIRGENTABVIEW_H_ */

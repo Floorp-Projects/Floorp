@@ -420,6 +420,7 @@ void CNetscapeView::AddBrowserItemsToPopup(CMenu * pMenu, LO_Element * pElement,
 	pMenu->AppendMenu((SHIST_GetCurrent(&(pContext->hist)) != NULL) ? MF_ENABLED : MF_GRAYED,
 					   ID_POPUP_MAILTO, szLoadString(IDS_POPUP_SENDPAGE));
 
+
 }
 
 void CNetscapeView::AddNavigateItemsToPopup(CMenu *pMenu, LO_Element * pElement, CL_Layer *layer)
@@ -573,7 +574,8 @@ public:
 	virtual void SetText(LPCSTR lpszText) {}
 };
 
-void CNetscapeView::CreateMessagePopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer)
+void CNetscapeView::CreateMessagePopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer,
+									   MWContext *pContext)
 {
 	BOOL bAddSeparator = FALSE;
     //
@@ -605,7 +607,7 @@ void CNetscapeView::CreateMessagePopup(CMenu * pMenu, LO_Element * pElement, CL_
 	BOOL bNews = cmdUI.m_bEnabled;
 
 #ifdef MOZ_MAIL_NEWS
-	WFE_MSGBuildMessagePopup( pMenu->m_hMenu, bNews );
+	WFE_MSGBuildMessagePopup( pMenu->m_hMenu, bNews, FALSE, pContext );
 #endif /* MOZ_MAIL_NEWS */
 }
 
@@ -667,7 +669,7 @@ BOOL CNetscapeView::OnRButtonDownForLayer(UINT uFlags, CPoint& cpPoint,
 	// These two shouldn't occur
     case MWContextNewsMsg:
     case MWContextNews:
-        CreateMessagePopup(&cmPopup, pElement, layer);
+        CreateMessagePopup(&cmPopup, pElement, layer, GetContext()->GetContext());
         break;
     default:
         // just fall through and show the browser popup even though it

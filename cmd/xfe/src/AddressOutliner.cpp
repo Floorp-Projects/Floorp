@@ -23,13 +23,16 @@ AddressOutliner.cpp -- Object wrapper around outline widget hack.
 
 
 #include "AddressOutliner.h"
-#include "addrbook.h"
 
 #include "xp_core.h"
 #include "ComposeView.h"
 #include "ComposeFolderView.h"
 #include "AddressFolderView.h"
 #include "PopupMenu.h"
+
+#if defined(USE_ABCOM)
+#include "Frame.h"
+#endif /* USE_ABCOM */
 
 #include "xfe.h"
 
@@ -50,8 +53,6 @@ extern MSG_HEADER_SET MSG_HeaderValue( int pos );
 
 extern "C"
 {
-
-#include "addrbk.h"
 
 XP_List* FE_GetDirServers();
 ABook*   fe_GetABook(MWContext *context);
@@ -75,8 +76,22 @@ static void FieldTraverse(
          Cardinal *nparam);
 }
 
-extern "C" char * xfe_ExpandForNameCompletion(char * pString);
-extern "C" char * xfe_ExpandName(char *pString);
+extern "C" char* xfe_ExpandForNameCompletion(char *pString,
+                                             ABook *pAddrBook,
+                                             DIR_Server *pDirServer);
+
+#if defined(USE_ABCOM)
+/* C API
+ */
+extern "C"  XFE_ABComplPickerDlg*
+fe_showComplPickerDlg(Widget     toplevel, 
+					 MWContext *context,
+					 MSG_Pane  *pane,
+					 MWContext *pickerContext,
+					 NCPickerExitFunc func,
+					 void      *callData);
+
+#endif /* USE_ABCOM */
 
 const char *XFE_AddressOutliner::textFocusIn = "XFE_AddressOutliner::textFocusIn";
 const char *XFE_AddressOutliner::typeFocusIn = "XFE_AddressOutliner::typeFocusIn";
@@ -121,6 +136,27 @@ XFE_AddressOutliner::XFE_AddressOutliner(
   m_inPopup = False;
   m_lastFocus = NULL; /* Obselete ?! - dh */
   m_textTimer = 0;
+#if defined(USE_ABCOM)
+  m_pickerPane = 0;
+  XFE_Frame *f = (XFE_Frame *) parent_view->getToplevel();
+  XP_ASSERT(f);
+  m_pickerContext = 
+	  XFE_ABComplPickerDlg::cloneCntxtNcreatePane(f->getContext(),
+												  &m_pickerPane);
+  m_pickerDlg = 0;
+
+  m_rtnIsPicker = False;
+#endif /* USE_ABCOM */
+
+#if !defined(USE_ABCOM)
+  // get the list of directory servers & address books
+  XP_List *pDirectories=FE_GetDirServers();
+  XP_ASSERT(pDirectories);
+  
+  DIR_GetComposeNameCompletionAddressBook(pDirectories, &m_pCompleteServer);
+
+  m_pAddrBook = fe_GetABook(0);
+#endif /* USE_ABCOM */
 
   // Add actions
   XtAppAddActions( fe_XtAppContext, actions,  3);
@@ -241,6 +277,17 @@ XFE_AddressOutliner::XFE_AddressOutliner()
 // Destructor
 XFE_AddressOutliner::~XFE_AddressOutliner()
 {
+#if defined(USE_ABCOM)
+	if (m_pickerPane) {
+		MSG_SetFEData(m_pickerPane, 0);
+		AB_ClosePane(m_pickerPane);
+	}/* if */
+	if (m_pickerDlg) {
+		delete m_pickerDlg;
+		m_pickerDlg = 0;
+	}/* if */
+#endif /* USE_ABCOM */
+		
 }
 
 // Install local translations -- this needs to be after realize time,
@@ -544,6 +591,10 @@ XFE_AddressOutliner::MapText(int row)
 void 
 XFE_AddressOutliner::PlaceText(int row, int col, Boolean doUpdate)
 {
+#if defined(DEBUG_tao)
+	printf("\nXFE_AddressOutliner::PlaceText:row=%d, col=%d, update=%d,m_focusRow=%d, m_focusCol=%d\n", 
+		   row, col, doUpdate, m_focusRow, m_focusCol);
+#endif
   XRectangle rect;
   Boolean removed = False;
 
@@ -658,12 +709,28 @@ XFE_AddressOutliner::textLosingFocus(XtPointer /* callData*/ )
 void
 XFE_AddressOutliner::textactivate(XtPointer /* callData */)
 {
+#if defined(DEBUG_tao) && defined(USE_ABCOM)
+	printf("\nXFE_AddressOutliner::textactivate, m_rtnIsPicker=%d\n",
+		   m_rtnIsPicker);
+#endif /* DEBUG_tao */
     int oldrow = m_focusRow;
     int count = getTotalLines();
 
     // Don't do anything if there's nothing in the text field:
     if (XmTextFieldGetInsertionPosition(m_textWidget) <= 0)
         return;
+
+#if defined(USE_ABCOM)
+	if (m_rtnIsPicker) {
+		/* pop up picker
+		 */
+		if (m_pickerDlg) {
+			m_pickerDlg->show();
+			m_pickerDlg->selectItem(1);
+		}/* if */
+		return;
+	}/* if m_rtnIsPicker */
+#endif
 
     //textLosingFocus(0);
     updateAddresses();
@@ -775,6 +842,33 @@ XFE_AddressOutliner::processInput()
         // also need to skip past whitespace
     else
         curName = textStr;
+
+#if defined(USE_ABCOM)
+	m_lastPos = lastPos;
+	m_curName = curName;
+	m_textStr = textStr;
+
+	if (!m_pickerDlg) {
+		XFE_Frame *f = (XFE_Frame *) m_parentView->getToplevel();
+		XP_ASSERT(f);
+		m_pickerDlg = 
+			fe_showComplPickerDlg(f->getBaseWidget(),
+								  f->getContext(),
+								  m_pickerPane,
+								  m_pickerContext,
+								  &nameCPickerExitFunc,
+								  this);
+	}/* if */
+
+	int error = 
+		AB_NameCompletionSearch(m_pickerPane,
+								(const char *) curName,
+								&nameCompletionExitFunc,
+#ifdef FE_IMPLEMENTS_VISIBLE_NC
+								True, // for now
+#endif
+								(void *) this);
+#else
     char* completeName = nameCompletion(curName);
     if (completeName)
     {
@@ -801,7 +895,118 @@ XFE_AddressOutliner::processInput()
         XP_FREE(buf);
     }
     XtFree(textStr);
+#endif /* USE_ABCOM */
 }
+
+#if defined(USE_ABCOM)
+void 
+XFE_AddressOutliner::nameCPickerExitFunc(void *clientData, void *callData)
+{
+	XFE_AddressOutliner *obj = (XFE_AddressOutliner *) callData;
+	obj->nameCPickerCB(clientData);
+}
+
+void 
+XFE_AddressOutliner::nameCPickerCB(void *clientData)
+{
+	AB_NameCompletionCookie *cookie = (AB_NameCompletionCookie *) clientData;
+
+	/* reset the flag
+	 */		
+	m_rtnIsPicker = False;
+
+	char *completeName = AB_GetNameCompletionDisplayString(cookie);
+	if (completeName && XP_STRLEN(completeName)) {
+		m_lastPos = XP_STRLEN(completeName);
+		fillNameCompletionStr(completeName);
+		textactivate(NULL);
+		XP_FREE(completeName);
+	}/* if */
+
+}
+
+void 
+XFE_AddressOutliner::fillNameCompletionStr(char *completeName)
+{
+	char* buf = (char*)XP_CALLOC((size_t)m_lastPos
+								 + XP_STRLEN(completeName) + 1,
+								 sizeof (char));
+	if (m_curName != m_textStr) {
+		strncpy(buf, m_textStr, m_curName - m_textStr);
+		XP_STRCAT(buf, completeName);
+	}
+	else
+		XP_STRCPY(buf, completeName);
+
+	// Probably would be better to set all these
+	// with a single XtSetValues command and avoid
+	// having to worry about the callback from SetString.
+	fe_SetTextFieldAndCallBack(m_textWidget, buf);
+	XmTextFieldSetSelection(m_textWidget, m_lastPos,
+							XmTextFieldGetLastPosition(m_textWidget),
+                            XtLastTimestampProcessed(XtDisplay(m_textWidget)));
+	XmTextFieldSetInsertionPosition(m_textWidget, m_lastPos);
+	XmUpdateDisplay(m_textWidget);
+	XP_FREE(buf);
+}
+
+int 
+XFE_AddressOutliner::nameCompletionExitFunc(AB_NameCompletionCookie *cookie,
+											int                      numResults, 
+											void                    *FEcookie)
+{
+	XFE_AddressOutliner *obj = (XFE_AddressOutliner *) FEcookie;
+	return obj->nameCompletionCB(cookie, numResults);
+}
+
+int 
+XFE_AddressOutliner::nameCompletionCB(AB_NameCompletionCookie *cookie,
+									  int                      numResults)
+{
+#if defined(DEBUG_tao)
+	printf("\nnameCompletionCB,numResults=%d\n", numResults);
+#endif 
+	XP_ASSERT(m_pickerPane && m_pickerContext);
+	if (numResults > 1) {
+		/* set the flag
+		 */		
+		m_rtnIsPicker = True;
+
+		/* 1. assemble the hint
+		 */
+		AB_AttribID attrib = AB_attribDisplayName;
+		AB_ColumnInfo *cInfo = 
+			AB_GetColumnInfoForPane(m_pickerPane,  
+									(AB_ColumnID) 1);
+		if (cInfo) {
+			attrib = cInfo->attribID;
+			AB_FreeColumnInfo(cInfo);
+
+			AB_AttributeValue *value = 0;
+			int error = 
+				AB_GetEntryAttributeForPane(m_pickerPane, 
+											0, 
+											attrib, &value);
+			char a_line[1024];
+			a_line[0] = '\0';
+			XP_SAFE_SPRINTF(a_line, sizeof(a_line),
+							"%s <multiple matches found>",
+							EMPTY_STRVAL(value)?m_curName:value->u.string);
+			fillNameCompletionStr(a_line);
+			AB_FreeEntryAttributeValue(value);
+		}/* if */		
+	}/* if */
+	else if (numResults == 1){
+		char *completeName = AB_GetNameCompletionDisplayString(cookie);
+		if (completeName && XP_STRLEN(completeName)) {
+			fillNameCompletionStr(completeName);
+			XP_FREE(completeName);
+		}/* if */
+		
+	}/* else */
+	return numResults;
+}
+#endif /* USE_ABCOM */
 
 void
 XFE_AddressOutliner::textmodify(Widget, XtPointer callData)
@@ -861,7 +1066,7 @@ XFE_AddressOutliner::textmodify(Widget, XtPointer callData)
             len = length + cbs->text->length + 1;
             pName = (char*)XP_CALLOC(len, sizeof(char));
 
-            // If the field was empty before, it's easy:
+            // If the field was empt before, it's easy:
             if ( cbs->currInsert == 0 || (moreRecipients && length == 0))
             {
                 strcpy(pName, cbs->text->ptr);
@@ -1410,7 +1615,11 @@ XFE_AddressOutliner::eventHandler(Widget, XtPointer clientData, XEvent *event, B
 char *
 XFE_AddressOutliner::nameCompletion(char *pString)
 {
-   return xfe_ExpandForNameCompletion(pString);
+#if defined(USE_ABCOM)
+	return 0;
+#else
+   return xfe_ExpandForNameCompletion(pString, m_pAddrBook, m_pCompleteServer);
+#endif
 }
 
 //----------------------------  Static Functions for action table
@@ -1463,22 +1672,20 @@ static void TableTraverse(
 
 //----------- Address Book stuff here ------------
 
-extern "C" char * xfe_ExpandForNameCompletion(char * pString)
+extern "C" char * xfe_ExpandForNameCompletion(char * pString,
+                                              ABook *pAddrBook,
+                                              DIR_Server *pDirServer)
 {
     ABID entryID;
     ABID field;
-    ABook *pAddrBook = fe_GetABook(0);
-    XP_List *pDirectories= FE_GetDirServers();
     char *pName = XP_STRDUP(pString);
 
 #if defined(DEBUG_tao)
 	printf("\n  xfe_ExpandForNameCompletion");
 #endif
 
-	DIR_Server* pDirServer = NULL;
-	pAddrBook = fe_GetABook(0);
-	DIR_GetComposeNameCompletionAddressBook(pDirectories, &pDirServer);
-
+    XP_ASSERT(pAddrBook);
+    XP_ASSERT(pDirServer);
     AB_GetIDForNameCompletion(
         pAddrBook,
      	pDirServer,

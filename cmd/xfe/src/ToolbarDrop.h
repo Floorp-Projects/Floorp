@@ -42,7 +42,7 @@ class XFE_ToolbarDrop : public XFE_DropNetscape
 public:
 
     XFE_ToolbarDrop			(Widget);
-    ~XFE_ToolbarDrop		();
+    virtual ~XFE_ToolbarDrop		();
 
 protected:
 
@@ -67,7 +67,7 @@ public:
     XFE_PersonalDrop		(Widget					dropWidget,
 							 XFE_PersonalToolbar *	toolbar);
 
-    ~XFE_PersonalDrop		();
+    virtual ~XFE_PersonalDrop		();
 
 protected:
 
@@ -117,7 +117,7 @@ public:
 							 XFE_BookmarkMenu *		quickfileMenu);
 
 
-    ~XFE_QuickfileDrop		();
+    virtual ~XFE_QuickfileDrop		();
 
 protected:
 

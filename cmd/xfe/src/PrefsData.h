@@ -214,6 +214,8 @@ struct PrefsDataGeneralAppl
 	Widget     helpers_list;
 	Widget     folder_text;
 	Widget     browse_button;
+	Widget     edit_button;
+	Widget     delete_button;
 	
 	int        helpers_changed;
 	int        static_apps_count;
@@ -274,88 +276,6 @@ struct PrefsDataMailNewsIdentity
 #endif
 };
 
-struct PrefsDataMailNewsComposition
-{
-	MWContext *context;
-	Widget     prompt_dialog;
-	Widget     page;
-
-	Widget     mail_email_self_toggle;
-	Widget     mail_email_other_text;
-	Widget     news_email_self_toggle;
-	Widget     news_email_other_text;
-	Widget     mail_fcc_toggle;
-	Widget     mail_fcc_combo;
-	Widget     news_fcc_toggle;
-	Widget     news_fcc_combo;
-	Widget     auto_quote_toggle;
-	Widget     send_html_msg_toggle;
-	Widget     wrap_length_text;
-
-	XP_List   *mail_fcc_folders;
-	XP_List   *news_fcc_folders;
-	XP_List   *mail_fcc_paths;
-	XP_List   *news_fcc_paths;
-};
-
-struct PrefsDataMailNewsMserver
-{
-	MWContext *context;
-	Widget     prompt_dialog;
-	Widget     page;
-
-	Widget     pop_user_name_text;
-	Widget     outgoing_mail_server_text;
-	Widget     incoming_mail_server_text;
-	Widget     pop3_toggle;
-	Widget     movemail_toggle;
-	Widget     imap_toggle;
-	//Widget     inbox_toggle;
-	Widget     leave_msg_on_server_toggle;
-	//Widget     imap_local_copies_toggle;
-	Widget     delete_is_move_to_trash_toggle;
-	Widget     imap_server_ssl_toggle;
-	Widget     built_in_app_toggle;
-	Widget     external_app_toggle;
-	Widget     external_app_text;
-	Widget     external_app_browse_button;
-};
-
-struct PrefsDataMailNewsNserver
-{
-	MWContext *context;
-	Widget     prompt_dialog;
-	Widget     page;
-
-	Widget     nntp_server_text;
-	Widget     news_dir_text;
-	Widget     notify_toggle;
-	Widget     browse_button;
-	Widget     msg_size_text;
-	Widget     port_text;
-	Widget     secure_toggle;
-};
-
-struct PrefsDataMailNewsAddrBook
-{
-	MWContext *context;
-	Widget     prompt_dialog;
-	Widget     page;
-
-	XFE_Outliner  *dir_outliner;
-	Widget         dir_list;
-	Widget         up_button;
-	Widget         down_button;
-	Widget         add_button;
-	Widget         delete_button;
-	Widget         edit_button;
-	Widget         first_last_toggle;
-	Widget         last_first_toggle;
-
-	XP_List       *directories;
-	int            num_directories;
-	XP_List       *deleted_directories;
-};
 
 struct PrefsDataApplEdit
 {

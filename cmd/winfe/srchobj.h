@@ -58,6 +58,7 @@ public:
 	void BuildQuery (MSG_Pane* searchPane, int iMoreCount, Bool bLogicType);
 	int New (CWnd* window);
 	void ReInitializeWidgets ();
+	void RestoreDefaultFocus();
 	void OnSize( UINT nType, int cx, int cy, int dx);
 	void InitializeAttributes (MSG_SearchValueWidget widgetValue, MSG_SearchAttribute attribValue);
 	void UpdateColumn1Attributes();

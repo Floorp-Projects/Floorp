@@ -21,7 +21,7 @@
  */
 
 
-
+#include "rosetta.h"
 #include "Frame.h"
 #include "HTMLView.h"
 #include "MozillaApp.h"
@@ -328,10 +328,7 @@ XFE_Toolbar::update()
 	{
 		if (XfeIsButton(children[i]))
         {
-			if (m_security && children[i] == m_security->getBaseWidget())
-            {
-				m_security->useIconGroup(m_parentFrame->getSecurityStatus());
-            }
+			HG10291
 			updateButton(children[i]);
         }
     }
@@ -618,10 +615,7 @@ XFE_Toolbar::createPush(ToolbarSpec * spec)
 							 this,
 							 (XFE_FunctionNotification)doCommand_cb);
 	
-    if (XP_STRCMP(spec->toolbarButtonName, xfeCmdViewSecurity) == 0) 
-    {
-        m_security = button;
-    }
+    HG01922
 	
     return result;
 }

@@ -46,6 +46,12 @@ public:
 	
 	virtual ~XFE_Dashboard();
 
+#if defined(GLUE_COMPO_CONTEXT)
+	// connect the compo to the dashboard
+	void connect2Dashboard(XFE_Component *compo);
+	void disconnectFromDashboard(XFE_Component *compo);
+#endif /* GLUE_COMPO_CONTEXT */		
+
 	// Status methods
 	void setStatusText			(const char * text);
 

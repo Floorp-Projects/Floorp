@@ -51,6 +51,8 @@ public:
 	CAttachmentDataSource(LPCTSTR lpszURL, LPCTSTR lpszName);
 
 	virtual BOOL OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlobal);
+	virtual BOOL OnRenderFileData(LPFORMATETC lpFormatEtc, CFile* pFile);
+	virtual BOOL OnRenderData(LPFORMATETC lpFormatEtc, LPSTGMEDIUM lpStgMedium);
 };
 
 CAttachmentDataSource::CAttachmentDataSource(LPCTSTR lpszURL, LPCSTR lpszName)
@@ -63,11 +65,52 @@ BOOL CAttachmentDataSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL*
 {
 	BOOL bRes = FALSE;
 
-	if (!*phGlobal) {
+	if (sysInfo.m_bWinNT && !*phGlobal) 
+	{
 		bRes = CSaveCX::SaveToGlobal(phGlobal, m_csURL, m_csName);
 	}
 
 	return bRes;
+}
+
+BOOL CAttachmentDataSource::OnRenderFileData(LPFORMATETC lpFormatEtc, CFile *pFile)
+{
+	BOOL bRes = FALSE;
+
+	if (pFile) {
+		bRes = CSaveCX::SaveToFile(pFile, m_csURL, m_csName);
+	}
+
+	return bRes;
+}
+
+BOOL CAttachmentDataSource::OnRenderData(LPFORMATETC lpFormatEtc, LPSTGMEDIUM
+										 lpStgMedium)
+{
+	if (lpFormatEtc->tymed & TYMED_ISTREAM)
+	{
+		COleStreamFile file;
+		if (lpStgMedium->tymed == TYMED_ISTREAM)
+		{
+			ASSERT(lpStgMedium->pstm != NULL);
+			file.Attach(lpStgMedium->pstm);
+		}
+		else
+		{
+			if (!file.CreateMemoryStream())
+				AfxThrowMemoryException();
+		}
+		// get data into the stream
+		if (OnRenderFileData(lpFormatEtc, &file))
+		{
+			lpStgMedium->tymed = TYMED_ISTREAM;
+			lpStgMedium->pstm = file.Detach();
+			return TRUE;
+		}
+		if (lpStgMedium->tymed == TYMED_ISTREAM)
+			file.Detach();
+	}
+	return COleDataSource::OnRenderData(lpFormatEtc, lpStgMedium);
 }
 
 #endif
@@ -470,7 +513,10 @@ void CAttachmentTray::OnLButtonDown( UINT nFlags, CPoint point )
 			formatEtc.ptd = NULL;
 			formatEtc.dwAspect = DVASPECT_CONTENT;
 			formatEtc.lindex = 0;
-			formatEtc.tymed = TYMED_HGLOBAL;
+			if (sysInfo.m_bWinNT)
+				formatEtc.tymed = TYMED_HGLOBAL;
+			else
+				formatEtc.tymed = TYMED_ISTREAM;
 			pDataSource->DelayRenderFileData(cfFileContents, &formatEtc);
 
 #else
@@ -620,14 +666,23 @@ void CMessageBodyView::OnSetFocus(CWnd *pOldWnd)
 {
 	CNetscapeView::OnSetFocus(pOldWnd);
 
-	((CMessageView*)GetParent())->UpdateFocusFrame();
+	CMessageView* pParentView = (CMessageView*)GetParent();
+	if (pParentView->GetParentFrame()->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+	{
+		pParentView->UpdateFocusFrame();
+		((C3PaneMailFrame*)pParentView->GetParentFrame())->SetFocusWindow(this);
+	}
 }
 
 void CMessageBodyView::OnKillFocus(CWnd *pOldWnd)
 {
 	CNetscapeView::OnKillFocus(pOldWnd);
 
-	((CMessageView*)GetParent())->UpdateFocusFrame();
+	CMessageView* pParentView = (CMessageView*)GetParent();
+	if (pParentView->GetParentFrame()->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+	{
+		((CMessageView*)GetParent())->UpdateFocusFrame();
+	}
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -723,7 +778,7 @@ void CMessageView::OnDraw(CDC* pDC)
 		CWnd* pFocusWnd = GetFocus();
 		if (pFocusWnd && (pFocusWnd == this || pFocusWnd == m_pViewMessage ||
 			pFocusWnd == m_pWndAttachments))
-			hBrush = ::CreateSolidBrush( GetSysColor( COLOR_HIGHLIGHT ) );
+			hBrush = ::CreateSolidBrush( RGB(0, 0, 0) );
 		else
 			hBrush = ::CreateSolidBrush( GetSysColor( COLOR_WINDOW ) );
 
@@ -832,14 +887,23 @@ void CMessageView::OnSetFocus(CWnd *pOldWnd)
 {
 	CView::OnSetFocus(pOldWnd);
 
-	UpdateFocusFrame();
+	if (GetParentFrame()->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+	{
+		UpdateFocusFrame();
+		((C3PaneMailFrame*)GetParentFrame())->SetFocusWindow(m_pViewMessage);
+	}
+	else
+		m_pViewMessage->SetFocus();
 }
 
 void CMessageView::OnKillFocus(CWnd *pOldWnd)
 {
 	CView::OnKillFocus(pOldWnd);
 
-	UpdateFocusFrame();
+	if (GetParentFrame()->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+	{
+		UpdateFocusFrame();
+	}
 }
 
 void CMessageView::OnLButtonDown( UINT nFlags, CPoint point )
@@ -885,6 +949,16 @@ void CMessageView::SetCSID(int16 doc_csid)
 	if (m_pWndAttachments)
 		m_pWndAttachments->SetCSID(doc_csid);
 }
+
+BOOL CMessageView::HasFocus()
+{
+	CWnd* pFocusWnd = CWnd::GetFocus();
+
+	return(pFocusWnd == this || pFocusWnd == m_pWndAttachments ||
+		   pFocusWnd == m_pViewMessage);
+
+}
+
 
 #ifndef _AFXDLL
 #undef new

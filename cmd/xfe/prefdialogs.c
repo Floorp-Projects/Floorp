@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 
+#include "rosetta.h"
 #include "mozilla.h"
 #include "xlate.h"
 #include "xfe.h"
@@ -164,7 +165,7 @@ extern void fe_installMserverMore(void);
 #endif
 extern void fe_installProxiesView(void);
 extern void fe_installDiskMore(void);
-extern void fe_installSslConfig(void);
+HG26262
 extern void fe_installOffline(void);
 extern void fe_installDiskSpace(void);
 
@@ -283,7 +284,7 @@ struct fe_prefs_data
   Widget memory_text, memory_clear;
   Widget disk_text, disk_dir, disk_clear;
   Widget verify_label, once_p, every_p, expired_p;
-  Widget cache_ssl_p;
+  HG79266
 
   /* Nework page */
   Widget network_selector, network_page;
@@ -324,7 +325,7 @@ struct fe_prefs_data
   /* General Security page */
   Widget sec_general_selector, sec_general_page;
   Widget enter_toggle, leave_toggle, mixed_toggle, submit_toggle;
-  Widget ssl2_toggle, ssl3_toggle;
+  HG72611
 
   /* Security Passwords page */
   Widget sec_passwords_selector, sec_passwords_page;
@@ -654,7 +655,7 @@ fe_InstallPreferences (MWContext *context)
 #endif
 
 	fe_installProxiesView();
-	fe_installSslConfig();
+	HG72625
 	fe_installDiskMore();
 
 	/* CACHE

@@ -21,7 +21,7 @@
  */
 
 
-
+#include "rosetta.h"
 #include "NewsServerPropDialog.h"
 #include "PropertySheetView.h"
 #include <Xm/LabelG.h>
@@ -54,7 +54,7 @@ XFE_NewsServerPropGeneralTab::XFE_NewsServerPropGeneralTab(XFE_Component *top,
 
 	Widget name_label, name_value;
 	Widget port_label, port_value;
-	Widget security_label, security_value;
+	HG28921
 	Widget desc_label, desc_value;
 
 	m_newshost = host;
@@ -101,20 +101,7 @@ XFE_NewsServerPropGeneralTab::XFE_NewsServerPropGeneralTab(XFE_Component *top,
 										 NULL);
 	XmStringFree(str);
 
-	security_label = XtCreateManagedWidget("security_label",
-										   xmLabelGadgetClass,
-										   top_form,
-										   NULL, 0);
-	str = XmStringCreate(MSG_IsNewsHostSecure(m_newshost)
-						 ? XP_GetString(XFE_SEC_ENCRYPTED)
-						 : XP_GetString(XFE_SEC_NONE),
-						 XmFONTLIST_DEFAULT_TAG);
-	security_value = XtVaCreateManagedWidget("security_value",
-											 xmLabelGadgetClass,
-											 top_form,
-											 XmNlabelString, str,
-											 NULL);
-	XmStringFree(str);
+	HG21933
 	desc_label = XtCreateManagedWidget("desc_label",
 									   xmLabelGadgetClass,
 									   top_form,
@@ -154,7 +141,7 @@ XFE_NewsServerPropGeneralTab::XFE_NewsServerPropGeneralTab(XFE_Component *top,
 				  XmNrightAttachment, XmATTACH_FORM,
 				  NULL);
 
-	widest_width = XfeVaGetWidestWidget(name_label, port_label, security_label, desc_label, NULL);
+	widest_width = XfeVaGetWidestWidget(name_label, port_label, HG82872, NULL);
 
 	XtVaSetValues(name_label,
 				  XmNalignment, XmALIGNMENT_BEGINNING,
@@ -171,22 +158,9 @@ XFE_NewsServerPropGeneralTab::XFE_NewsServerPropGeneralTab(XFE_Component *top,
 				  XmNbottomAttachment, XmATTACH_NONE,
 				  XmNrightAttachment, XmATTACH_NONE,
 				  NULL);
-	XtVaSetValues(security_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, port_label,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  NULL);
-	XtVaSetValues(desc_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, security_label,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  NULL);
+	HG72723
+
+	
 
 	XtVaSetValues(name_value,
 				  XmNalignment, XmALIGNMENT_BEGINNING,
@@ -208,16 +182,7 @@ XFE_NewsServerPropGeneralTab::XFE_NewsServerPropGeneralTab(XFE_Component *top,
 				  XmNbottomAttachment, XmATTACH_NONE,
 				  XmNrightAttachment, XmATTACH_FORM,
 				  NULL);
-	XtVaSetValues(security_value,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, security_label,
-				  XmNleftOffset, widest_width - XfeWidth(security_label),
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, security_label,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  NULL);
+	
 	XtVaSetValues(desc_value,
 				  XmNalignment, XmALIGNMENT_BEGINNING,
 				  XmNleftAttachment, XmATTACH_WIDGET,

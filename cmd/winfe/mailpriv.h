@@ -246,6 +246,33 @@ protected:
 };
 
 ///////////////////////////////////////////////////////////////////////
+//CFolderSharingPage
+//Mail folder property page.
+class CFolderSharingPage: public CNetscapePropertyPage {
+
+protected:
+	MSG_FolderInfo *m_folderInfo;
+	MWContext *m_pContext;
+	MSG_Pane *m_pPane;
+	CNewsFolderPropertySheet *m_pParent;
+
+public:
+	enum { IDD = IDD_PP_SHARING };
+
+	CFolderSharingPage(CWnd *pWnd = NULL);
+	void SetFolderInfo(MSG_FolderInfo *folderInfo, MSG_Pane *pPane, MWContext *pContext);
+
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	afx_msg void OnClickPrivileges();
+	DECLARE_MESSAGE_MAP()
+
+};
+
+///////////////////////////////////////////////////////////////////////
 ///News Host property page.
 class CNewsHostGeneralPropertyPage: public CNetscapePropertyPage {
 
@@ -334,7 +361,8 @@ public:
 
 public:	             
 	CNewsGeneralPropertyPage	 *m_pNewsFolderPage;
-	CFolderPropertyPage			 *m_pFolderPage;	                                         
+	CFolderPropertyPage			 *m_pFolderPage;
+	CFolderSharingPage			 *m_pSharingPage;
     CDiskSpacePropertyPage		 *m_pDiskSpacePage;
     CDownLoadPPNews				 *m_pDownLoadPageNews;
 	CDownLoadPPMail				 *m_pDownLoadPageMail;
@@ -428,6 +456,7 @@ protected:
 //
 
 typedef void (*PROGRESSCALLBACK)(HWND,MSG_Pane *, void*);
+typedef BOOL (*SHOWPROGRESSCALLBACK)(HWND, MSG_Pane*, void*);
 
 #define	WM_REQUESTPARENT	WM_USER+1442
 
@@ -438,16 +467,19 @@ protected:
 	MSG_Pane *m_pPane;
 	CWnd * m_pParent;
 	char * m_pszTitle;
-
 	void *m_closure;
 	PROGRESSCALLBACK m_cbDone;
+	UINT m_uTimerId;       
+	UINT m_uProgressPos;
+	BOOL m_bProgressShown;
 
 public:
    CProgressDialog( CWnd *pParent, 
       MSG_Pane *parentPane, 
       PROGRESSCALLBACK callback, void * closure = NULL,
 	  char * pszTitle = NULL,
-	  PROGRESSCALLBACK cbDone = NULL);
+	  PROGRESSCALLBACK cbDone = NULL, 
+	  SHOWPROGRESSCALLBACK showCallback = NULL);
    ~CProgressDialog() {
       if (m_pszTitle)
          XP_FREE(m_pszTitle);
@@ -477,7 +509,9 @@ protected:
 
 	afx_msg void OnDestroy();
 	afx_msg LONG OnRequestParent(WPARAM,LPARAM);
+	afx_msg void OnTimer(UINT nIDEvent);
 	DECLARE_MESSAGE_MAP()
+
 
 public:
 	int32 QueryProgressPercent();
@@ -494,6 +528,34 @@ public:
 	void UpdateStopState( MWContext *pContext );
     
 	CWnd *GetDialogOwner() const;
+	// returns TRUE if we get past the test callback function
+	// used to determine if we should destruct now.
+	BOOL GetProgressShown() {return m_bProgressShown;}
+};
+
+/////////////////////////////////////////////////////////////////////
+//
+// COfflineProgressDialog
+//
+// Progress for offline synchronizing
+//
+
+class COfflineProgressDialog: public CProgressDialog {
+
+protected:
+	BOOL m_bQuitOnCompletion;
+
+public:
+   COfflineProgressDialog( CWnd *pParent, 
+      MSG_Pane *parentPane, 
+      PROGRESSCALLBACK callback, void * closure = NULL,
+	  char * pszTitle = NULL,
+	  PROGRESSCALLBACK cbDone = NULL, BOOL bQuitOnCompletion = FALSE);
+
+	  void AllConnectionsComplete(MWContext *pContext);
+
+protected:
+
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -583,6 +645,7 @@ protected:
 	BOOL m_bEraseBackground;
 	HBRUSH	m_hSliderBrush;
 
+	CMailNewsFrame* m_pNotifyFrame;
 	CWnd 	*m_pWnd1, *m_pWnd2;
 	BOOL	m_bVertical;
 	BOOL	m_bTrackSlider;
@@ -590,6 +653,7 @@ protected:
 	BOOL	m_bZapperDown;
 	BOOL	m_bZapped;
 	BOOL	m_bDoubleClicked;
+	BOOL	m_bLoadMessage;
 	RECT	m_rcSlider;
 	POINT	m_ptHit;
 	POINT	m_ptFirstHit;
@@ -603,11 +667,15 @@ protected:
 public:
 
 	~CMailNewsSplitter();
+
+	void SetNotifyFrame(CMailNewsFrame* pFrame = NULL) { m_pNotifyFrame = pFrame; }
+	void SetLoadMessage(BOOL bLoad = FALSE) { m_bLoadMessage = bLoad; }
 	void AddPanes(CWnd *pWnd1, CWnd *pWnd2 = NULL, int nSize = -1, BOOL bVertical = TRUE);
 	void AddOnePane(CWnd *pWnd, BOOL bFirstPane = FALSE, BOOL bVertical = TRUE);
 	void RemoveOnePane(CWnd *pWnd);
 	void SetPaneSize(CWnd *pWnd, int nSize);
 	int	 GetPaneSize();
+	int  GetPreviousPaneSize();
 
 
 	BOOL IsOnePaneClosed() const;
@@ -619,6 +687,9 @@ protected:
 	BOOL IsInZapper(POINT point);
 	void DeleteBitmaps();
 	void CreateBitmaps(HDC hDC);
+	void LoadingMessage();
+	void CheckFocusWindow();
+	void UpdateZapper();
 
 	virtual void PositionWindows(int cx, int cy);
 	virtual void InvertSlider(RECT* pRect);

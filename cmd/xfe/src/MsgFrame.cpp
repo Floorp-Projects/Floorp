@@ -21,7 +21,7 @@
  */
 
 
-
+#include "rosetta.h"
 #include "MsgFrame.h"
 #include "MsgView.h"
 #include "ThreadView.h"
@@ -48,10 +48,9 @@ extern int XFE_MN_UNREAD_AND_TOTAL;
 extern "C" void fe_set_scrolled_default_size(MWContext *context);
 
 MenuSpec XFE_MsgFrame::file_menu_spec[] = {
-  { "newSubmenu", CASCADEBUTTON, (MenuSpec *) &XFE_Frame::new_submenu_spec },
+  { "newSubmenu", CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::new_submenu_spec },
   MENU_SEPARATOR,
-  { xfeCmdSaveMessagesAs,	PUSHBUTTON },
-  { xfeCmdEditMessage,		PUSHBUTTON },
+  { "saveMsgAs", CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::save_submenu_spec },
   MENU_SEPARATOR,
   { xfeCmdRenameFolder,		PUSHBUTTON },
   { xfeCmdEmptyTrash,		PUSHBUTTON },
@@ -92,17 +91,13 @@ MenuSpec XFE_MsgFrame::edit_menu_spec[] = {
   { xfeCmdSearch,		PUSHBUTTON },
   { xfeCmdSearchAddress,	PUSHBUTTON },
   MENU_SEPARATOR,
-  { xfeCmdEditConfiguration,	PUSHBUTTON },
-  { xfeCmdModerateDiscussion,	PUSHBUTTON },
-  MENU_SEPARATOR,
   { xfeCmdEditMailFilterRules,PUSHBUTTON },
   { xfeCmdEditPreferences,	PUSHBUTTON },
   { NULL }
 };
 
 MenuSpec XFE_MsgFrame::view_menu_spec[] = {
-  { xfeCmdToggleNavigationToolbar,PUSHBUTTON },
-  { xfeCmdToggleLocationToolbar,  PUSHBUTTON },
+{ "showSubmenu",            CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::show_submenu_spec },
   MENU_SEPARATOR,
   { "headersSubmenu",     CASCADEBUTTON, (MenuSpec *) &XFE_Frame::headers_submenu_spec },
   // This should just be a toggle.  -slamm
@@ -132,6 +127,8 @@ MenuSpec XFE_MsgFrame::message_menu_spec[] = {
   { "replySubmenu",	CASCADEBUTTON, (MenuSpec *) &XFE_Frame::reply_submenu_spec },
   { xfeCmdForwardMessage,		PUSHBUTTON },
   { xfeCmdForwardMessageQuoted,		PUSHBUTTON },
+  { xfeCmdForwardMessageInLine, 	PUSHBUTTON },
+  { xfeCmdEditMessage,			PUSHBUTTON },
   MENU_SEPARATOR,
   { "addToABSubmenu", CASCADEBUTTON, (MenuSpec *) &XFE_Frame::addrbk_submenu_spec },
   { "fileSubmenu",  DYNA_CASCADEBUTTON, NULL, NULL, 
@@ -139,7 +136,7 @@ MenuSpec XFE_MsgFrame::message_menu_spec[] = {
   { "copySubmenu",  DYNA_CASCADEBUTTON, NULL, NULL, 
 	False, (void*)xfeCmdCopyMessage, XFE_FolderMenu::generate },
   MENU_SEPARATOR,
-  { "markSubmenu",	  CASCADEBUTTON, (MenuSpec *) &XFE_Frame::mark_submenu_spec },
+  { "markSubmenu",	  CASCADEBUTTON, (MenuSpec *) &XFE_ThreadFrame::mark_submenu_spec },
   { xfeCmdMarkMessage,			PUSHBUTTON },
   { xfeCmdUnflagMessage,		PUSHBUTTON },
   MENU_SEPARATOR,
@@ -171,7 +168,7 @@ MenuSpec XFE_MsgFrame::menu_bar_spec[] = {
   { xfeMenuFile, 	CASCADEBUTTON, file_menu_spec },
   { xfeMenuEdit, 	CASCADEBUTTON, edit_menu_spec },
   { xfeMenuView, 	CASCADEBUTTON, view_menu_spec },
-  { xfeMenuGo,	 	CASCADEBUTTON, go_menu_spec },
+  { xfeMenuGo,	 	CASCADEBUTTON, XFE_ThreadFrame::go_menu_spec },
   { xfeMenuMessage, 	CASCADEBUTTON, message_menu_spec },
   { xfeMenuWindow,	CASCADEBUTTON, XFE_Frame::window_menu_spec },
   { xfeMenuHelp, 	CASCADEBUTTON, XFE_Frame::help_menu_spec },
@@ -237,11 +234,7 @@ ToolbarSpec XFE_MsgFrame::toolbar_spec[] = {
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
 	},
 	{ xfeCmdPrint,			PUSHBUTTON, &TB_Print_group },
-	{ xfeCmdViewSecurity,		PUSHBUTTON, 
-			&TB_Unsecure_group,
-                        &TB_Secure_group,
-                        &MNTB_SignUnsecure_group,
-                        &MNTB_SignSecure_group},
+	HG71611
 	{ xfeCmdMarkMessageRead, // XX news only
 	  CASCADEBUTTON, 
 	  &MNTB_MarkRead_group, NULL, NULL, NULL,				// Icons
@@ -300,8 +293,7 @@ XFE_MsgFrame::XFE_MsgFrame(Widget toplevel, XFE_Frame *parent_frame, Chrome *chr
   // Configure the dashboard
   XP_ASSERT( m_dashboard != NULL );
 
-  m_dashboard->setShowSecurityIcon(True);
-  m_dashboard->setShowSignedIcon(True);
+  HG11111
   m_dashboard->setShowStatusBar(True);
   m_dashboard->setShowProgressBar(True);
 
@@ -456,9 +448,9 @@ void XFE_MsgFrame::setButtonsByContext(MWContextType cxType)
 }
 
 void
-XFE_MsgFrame::allConnectionsComplete()
+XFE_MsgFrame::allConnectionsComplete(MWContext  *context)
 {
-	XFE_Frame::allConnectionsComplete();
+	XFE_Frame::allConnectionsComplete(context);
 	updateReadAndTotalCounts();
 }
 
@@ -707,37 +699,8 @@ fe_showMsg(Widget toplevel,
 int
 XFE_MsgFrame::getSecurityStatus()
 {
- XP_Bool is_signed = False;
- XP_Bool is_encrypted = False;
- XFE_MsgView *mview = (XFE_MsgView*)m_view;
  XFE_MailSecurityStatusType status = XFE_UNSECURE_UNSIGNED;
-
- MIME_GetMessageCryptoState(getContext(), 0, 0, &is_signed, &is_encrypted);
-
- if (mview && mview->isDisplayingNews() )
- {
-   // If this is displaying news, we decide if a newsgroup is secure(encrypted)
-   // or not by checking the security status ...instead of the crypto state
-
-    is_encrypted = XFE_Frame::getSecurityStatus() == XFE_SECURE;
- }
-
- if (is_encrypted && is_signed )
- {
-     status = XFE_SECURE_SIGNED;
- }
- else if (!is_encrypted && is_signed)
- {
-     status = XFE_UNSECURE_SIGNED;
- }
- else if (is_encrypted && !is_signed)
- {
-     status = XFE_SECURE_UNSIGNED;
- }
- else if (!is_encrypted && !is_signed )
- {
-     status = XFE_UNSECURE_UNSIGNED;
- }
+ HG98200
  return status;
 }
 

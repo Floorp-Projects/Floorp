@@ -250,6 +250,15 @@ XFE_MailDownloadFrame::XFE_MailDownloadFrame(Widget			toplevel,
 	// We need to do this, cause the XFE_Frame class only does so
 	// if the have_toolbars ctor parameter is true and in our case
 	// it is not.
+#if defined(GLUE_COMPO_CONTEXT)
+	registerInterest(XFE_Component::logoStartAnimation,
+					 this,
+					 &XFE_Frame::logoAnimationStartNotice_cb);
+	
+	registerInterest(XFE_Component::logoStopAnimation,
+					 this,
+					 &XFE_Frame::logoAnimationStopNotice_cb);
+#else
 	registerInterest(XFE_Frame::logoStartAnimation,
 					 this,
 					 &XFE_Frame::logoAnimationStartNotice_cb);
@@ -257,6 +266,7 @@ XFE_MailDownloadFrame::XFE_MailDownloadFrame(Widget			toplevel,
 	registerInterest(XFE_Frame::logoStopAnimation,
 					 this,
 					 &XFE_Frame::logoAnimationStopNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 
 XFE_MailDownloadFrame::~XFE_MailDownloadFrame()
@@ -265,6 +275,15 @@ XFE_MailDownloadFrame::~XFE_MailDownloadFrame()
 	// We need to do this, cause the XFE_Frame class only does so
 	// if the have_toolbars ctor parameter is true and in our case
 	// it is not.
+#if defined(GLUE_COMPO_CONTEXT)
+	unregisterInterest(XFE_Component::logoStartAnimation,
+					   this,
+					   &XFE_Frame::logoAnimationStartNotice_cb);
+	
+	unregisterInterest(XFE_Component::logoStopAnimation,
+					   this,
+					   &XFE_Frame::logoAnimationStopNotice_cb);
+#else
 	unregisterInterest(XFE_Frame::logoStartAnimation,
 					   this,
 					   &XFE_Frame::logoAnimationStartNotice_cb);
@@ -272,6 +291,7 @@ XFE_MailDownloadFrame::~XFE_MailDownloadFrame()
 	unregisterInterest(XFE_Frame::logoStopAnimation,
 					   this,
 					   &XFE_Frame::logoAnimationStopNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 
 XFE_Logo *
@@ -335,7 +355,7 @@ XFE_MailDownloadFrame::app_delete_response()
 }
 
 void
-XFE_MailDownloadFrame::allConnectionsComplete()
+XFE_MailDownloadFrame::allConnectionsComplete(MWContext  */* context */)
 {
 	D(printf ("All Connections Complete in mail download frame.\n");)
 

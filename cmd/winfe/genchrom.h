@@ -65,6 +65,8 @@ public:
 	virtual void RemoveAllButtons();
 
 	virtual CToolbarButton *RemoveButton( int index );
+	virtual CToolbarButton *GetButtonByIndex(int index);
+	virtual CToolbarButton *GetButtonByID(int nCmd);
 
 	virtual BOOL LoadBitmap( LPCSTR lpszResourceName );
 
@@ -112,7 +114,7 @@ public:
 	virtual BOOL Create( CWnd* pParentWnd, 
 						DWORD dwStyle = WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, 
 						UINT nID = AFX_IDW_STATUS_BAR,
-                        BOOL bSecurityStatus = TRUE, BOOL bTaskbar = TRUE );
+                        BOOL bxxx = TRUE, BOOL bTaskbar = TRUE );
 
 	virtual void Attach( CNetscapeStatusBar *pBar );
 

@@ -55,12 +55,20 @@ public:
     // For security icon state...
   virtual int getSecurityStatus();
 
+  // Shared with MsgFrame and MsgCenter
+  static MenuSpec new_submenu_spec[];
+  static MenuSpec save_submenu_spec[];
+  static MenuSpec select_submenu_spec[];
+  static MenuSpec show_submenu_spec[];
+  static MenuSpec next_submenu_spec[];
+  static MenuSpec prev_submenu_spec[];
+  static MenuSpec go_menu_spec[];
+  static MenuSpec mark_submenu_spec[];
 private:
   static MenuSpec menu_bar_spec[];
   static MenuSpec file_menu_spec[];
   static MenuSpec edit_menu_spec[];
   static MenuSpec view_menu_spec[];
-  static MenuSpec go_menu_spec[];
   static MenuSpec message_menu_spec[];
 
   static MenuSpec offline_submenu_spec[];

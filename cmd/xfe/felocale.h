@@ -40,6 +40,13 @@ fe_ConvertFromLocaleEncoding(int16, unsigned char *);
 
 unsigned char *
 fe_ConvertToLocaleEncoding(int16, unsigned char *);
+#define INTL_CONVERT_BUF_TO_LOCALE(s,l) \
+    (l) = (char*)fe_ConvertToLocaleEncoding(\
+                INTL_DefaultWinCharSetID(NULL), \
+                (unsigned char*)(s)); \
+    if ((NULL!=(l)) && ((l) != (s))) \
+      XP_STRNCPY_SAFE((s), (l), sizeof(s)), XP_FREE(l);
+
 
 XmString
 fe_ConvertToXmString(unsigned char *, int16, fe_Font, XmFontType, XmFontList *);

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-// addrdlg.cpp : implementation file
+
+// namcomp : implementation file
 //
 
 #include "stdafx.h"
@@ -27,6 +28,8 @@
 #include "nethelp.h" 
 #include "prefapi.h"
 #include "intl_csi.h"
+#include "abcom.h"
+#include "addrfrm.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -37,6 +40,13 @@ extern "C" {
 #include "xpgetstr.h"
 };
 
+#define BUTTON_SPACING 5
+#define PICKER_RIGHT_MARGIN 20
+#define PICKER_LEFT_MARGIN 20
+#define PICKER_TOP_MARGIN 20
+#define PICKER_BOTTOM_MARGIN 20
+#define LIST_BUTTON_MARGIN 10
+#define BUTTON_STATUS_MARGIN 10
 
 class CNameCompletion;
 
@@ -187,24 +197,36 @@ CNameCompletion::CNameCompletion(LPCTSTR lpszSearchString,
 	m_pCX->GetContext()->reSize = FALSE;
 	INTL_SetCSIWinCSID(csi, CIntlWin::GetSystemLocaleCsid());
 
-	m_addrBookPane = NULL;
+	m_pPickerPane = NULL;
 	m_pOutliner = NULL;
 	m_pOutlinerParent = NULL;
 	m_bSearching = FALSE;
 	m_lpszSearchString = lpszSearchString;
-
+	m_bInitDialog = FALSE;
+	m_pCookie = NULL;
+	m_bFreeCookie = TRUE;
 	CNameCompletionEntryList *pInstance = new CNameCompletionEntryList( this );
 	pInstance->QueryInterface( IID_IMsgList, (LPVOID *) &m_pIAddrList );
 
-	HandleErrorReturn((result = AB_CreateAddressBookPane(&m_addrBookPane,
-			m_pCX->GetContext(),
-			WFE_MSGGetMaster())));
+	HandleErrorReturn((result = AB_CreateABPickerPane(&m_pPickerPane,
+		m_pCX->GetContext(), WFE_MSGGetMaster(), 20)));
 
+#ifdef MOZ_NEWADDR
+	HandleErrorReturn(AB_SetShowPropertySheetForEntryFunc(m_pPickerPane, ShowPropertySheetForEntry));
+#endif
 	//{{AFX_DATA_INIT(CNameCompletion)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 }
 
+CNameCompletion::~CNameCompletion()
+{
+	if(m_pCookie && m_bFreeCookie)
+	{
+		AB_FreeNameCompletionCookie(m_pCookie);
+	}
+
+}
 
 void CNameCompletion::CleanupOnClose()
 {
@@ -212,13 +234,18 @@ void CNameCompletion::CleanupOnClose()
 	// to call MSG_SearchFree, the MWContext will be gone, and we'll be reading freed memory
 	if (XP_IsContextBusy (m_pCX->GetContext()))
 		XP_InterruptContext (m_pCX->GetContext());
-	MSG_SearchFree ((MSG_Pane*) m_addrBookPane);
+	MSG_SearchFree ((MSG_Pane*) m_pPickerPane);
+
+
+	if (m_pPickerPane)
+		HandleErrorReturn(AB_ClosePane(m_pPickerPane));
+
+	if (m_pOutlinerParent){
+		delete m_pOutlinerParent;
+	}
 
 	if (m_pIAddrList)
 		m_pIAddrList->Release();
-
-	if (m_addrBookPane)
-		HandleErrorReturn(AB_CloseAddressBookPane(&m_addrBookPane));
 
 	if(!m_pCX->IsDestroyed()) {
 		m_pCX->DestroyContext();
@@ -228,35 +255,33 @@ void CNameCompletion::CleanupOnClose()
 		theApp.ReleaseAppFont(m_pFont);
 	}
 
-	if (m_pOutlinerParent){
-		delete m_pOutlinerParent;
-	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CNameCompletion Overloaded methods
 /////////////////////////////////////////////////////////////////////////////
+
+BOOL CNameCompletion::OnCommand( WPARAM wParam, LPARAM lParam )
+{
+	UINT nID = wParam;
+
+	if ( nID >= FIRST_ADDSENDER_MENU_ID && nID <= LAST_ADDSENDER_MENU_ID ) {
+		OnAddToAddressBook( nID );
+		return TRUE;
+	}
+
+	return CDialog::OnCommand( wParam, lParam );
+}
+
 BOOL CNameCompletion::OnInitDialog( )
 {
 	if (CDialog::OnInitDialog()) {
 
 		CWnd* widget;
 		CRect rect2, rect3, rect4;
-		UINT aIDArray[] = { IDS_SECURITY_STATUS, IDS_TRANSFER_STATUS, ID_SEPARATOR};
+		UINT aIDArray[] = { IDS_TRANSFER_STATUS, ID_SEPARATOR, IDS_ONLINE_STATUS};
 		int result = 0;
 
-		DIR_Server* dir = (DIR_Server*)XP_ListGetObjectNum(theApp.m_directories, 1);
-
-		XP_ASSERT (dir);
-
-		if (!dir)
-			return FALSE;
-
-		HandleErrorReturn((result = AB_InitializeAddressBookPane(m_addrBookPane,
-			dir,
-			theApp.m_pABook,
-			ABFullName,
-			TRUE)));
 
 		if (result) {
 			EndDialog(IDCANCEL);
@@ -287,11 +312,14 @@ BOOL CNameCompletion::OnInitDialog( )
 								  rect3, this, IDC_ADDRESSLIST);
 #endif
 
+		m_pOutliner = (CNameCompletionOutliner *) m_pOutlinerParent->m_pOutliner;
+		m_pOutliner->SetPane(m_pPickerPane);
+		m_pOutliner->SetContext( m_pCX->GetContext() );
+		m_pOutliner->SetMultipleSelection(FALSE);
+
 		m_pOutlinerParent->MoveWindow(&rect2, TRUE);
 		m_pOutlinerParent->CreateColumns ( );
-		m_pOutliner = (CNameCompletionOutliner *) m_pOutlinerParent->m_pOutliner;
-		m_pOutliner->SetPane(m_addrBookPane);
-		m_pOutliner->SetContext( m_pCX->GetContext() );
+		m_pOutlinerParent->EnableFocusFrame();
 
 		// create the status bar
 		widget = GetDlgItem(IDC_StatusRect);
@@ -302,14 +330,64 @@ BOOL CNameCompletion::OnInitDialog( )
 		widget->DestroyWindow ();
 
 		// create the status bar
-		m_barStatus.Create(this, TRUE, FALSE);
+		m_barStatus.Create(this, FALSE, FALSE);
 		m_barStatus.MoveWindow(&rect2, TRUE);
 		m_barStatus.SetIndicators( aIDArray, sizeof(aIDArray) / sizeof(UINT) );
 		
-		UpdateButtons();
-	}
+		//set initial online status
+		int idx = m_barStatus.CommandToIndex(IDS_ONLINE_STATUS);
+		if (idx > -1)
+		{
+			UINT nID = IDS_ONLINE_STATUS;
+			UINT nStyle; 
+			int nWidth;
+			m_barStatus.GetPaneInfo( idx, nID, nStyle, nWidth );
+			if (!NET_IsOffline())
+				m_barStatus.SetPaneInfo(idx, IDS_ONLINE_STATUS, SBPS_NORMAL, nWidth);
+			else
+				m_barStatus.SetPaneInfo(idx, IDS_ONLINE_STATUS, SBPS_DISABLED, nWidth);
+		}
 
+		UpdateButtons();
+
+		// add the correct title.
+		CString itemsMatching;
+		itemsMatching.LoadString(IDS_ITEMSMATCHING);
+		
+		CString title;
+		title.Format("%s \" %s \"", itemsMatching, m_lpszSearchString);
+		SetWindowText(title);
+
+	}
+	m_bInitDialog = TRUE;
+
+	//resize so everything gets laid out correct after m_bInitDialog set
+	CRect windowRect;
+	GetWindowRect(windowRect);
+	SetWindowPos(NULL, 0, 0, windowRect.Width() + 1, windowRect.Height() + 1, SWP_NOMOVE);
+
+	//get rid of current cookie
+	if(m_pCookie && m_bFreeCookie)
+	{
+		AB_FreeNameCompletionCookie(m_pCookie);
+	}
+	m_pCookie = NULL;
+	m_bFreeCookie = TRUE;
+
+	//start the name completion search
+#ifdef FE_IMPLEMENTS_VISIBLE_NC
+	int result = AB_NameCompletionSearch(m_pPickerPane, m_lpszSearchString, NULL, TRUE, NULL);
+#else
+	int result = AB_NameCompletionSearch(m_pPickerPane, m_lpszSearchString, NULL, NULL);
+#endif
 	return TRUE;
+}
+
+int CNameCompletion::DoModal ()
+{
+	if (!m_MailNewsResourceSwitcher.Initialize())
+		return -1;
+	return CDialog::DoModal();
 }
 
 
@@ -334,7 +412,11 @@ BEGIN_MESSAGE_MAP(CNameCompletion, CDialog)
 	ON_BN_CLICKED( IDCANCEL, OnCancel)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_WM_SIZE()
 	ON_COMMAND(ID_HELP, OnHelp)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_PROPERTIES, OnUpdateProperties)
+	ON_COMMAND(ID_ITEM_PROPERTIES, OnProperties)
+	ON_UPDATE_COMMAND_UI(IDS_ONLINE_STATUS, OnUpdateOnlineStatus)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -353,14 +435,86 @@ int CNameCompletion::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_MailNewsResourceSwitcher.Reset();
 
-	MSG_SetFEData( (MSG_Pane*) m_addrBookPane, (void *) m_pIAddrList );
+	if(m_pPickerPane)
+	{
+		MSG_SetFEData( (MSG_Pane*) m_pPickerPane, (void *) m_pIAddrList );
+	}
 	return res;
+}
+
+
+void CNameCompletion::OnSize( UINT nType, int cx, int cy )
+{
+	CDialog::OnSize(nType, cx, cy);
+
+	//if init dialog has been called then we can resize widgets inside.
+	if(m_bInitDialog)
+	{
+		CWnd *ok;
+		CWnd *cancel;
+		CWnd *statusSeparator;
+		int y = cy;
+		int x;
+
+		CRect statusRect;
+		CRect okRect;
+		CRect cancelRect;
+		CRect statusSeparatorRect;
+
+		m_barStatus.GetWindowRect(statusRect);
+		m_barStatus.MoveWindow(0, y - statusRect.Height(),
+							   cx, statusRect.Height());
+
+		y -= statusRect.Height() ;
+
+		statusSeparator = GetDlgItem(IDC_STATUSSEPARATOR);
+		statusSeparator->GetWindowRect(statusSeparatorRect);
+		statusSeparator->MoveWindow(0, y - statusSeparatorRect.Height(), cx, 
+									statusSeparatorRect.Height());
+
+		y -= BUTTON_STATUS_MARGIN + statusSeparatorRect.Height();
+
+		cancel = GetDlgItem(IDCANCEL);
+		cancel->GetWindowRect(cancelRect);
+		ok = GetDlgItem(IDOK);
+		ok->GetWindowRect(okRect);
+
+		x = (cx - okRect.Width() - cancelRect.Width() - BUTTON_SPACING) /2;
+
+		ok->MoveWindow(x, y - okRect.Height(),
+					   okRect.Width(), okRect.Height());
+
+		x+= BUTTON_SPACING + okRect.Width();
+		cancel->MoveWindow(x, y - cancelRect.Height(),
+						   cancelRect.Width(), cancelRect.Height());
+
+
+		y-= okRect.Height() + LIST_BUTTON_MARGIN;
+
+		m_pOutlinerParent->MoveWindow(PICKER_LEFT_MARGIN, PICKER_TOP_MARGIN,
+									cx - PICKER_LEFT_MARGIN - PICKER_RIGHT_MARGIN,
+									y - PICKER_TOP_MARGIN);
+	}
+
 }
 
 
 void CNameCompletion::OnOK() 
 {
 	CDialog::OnOK();
+	MSG_ViewIndex *pIndex;
+	int nCount;
+
+	m_pOutliner->GetSelection( pIndex, nCount );
+
+	if(m_pCookie && m_bFreeCookie)
+	{
+		AB_FreeNameCompletionCookie(m_pCookie);
+	}
+
+	m_pCookie = AB_GetNameCompletionCookieForIndex(m_pPickerPane, pIndex[0]);
+	m_bFreeCookie = FALSE;
+
 	CleanupOnClose();
 }
 
@@ -368,15 +522,31 @@ void CNameCompletion::OnOK()
 void CNameCompletion::OnCancel() 
 {
 	CDialog::OnCancel();
+
 	CleanupOnClose();
 }
 
+void CNameCompletion::OnUpdateProperties(CCmdUI *pCmdUI)
+{
+	DoUpdateCommand(pCmdUI, AB_PropertiesCmd);
+
+}
+
+void CNameCompletion::OnProperties()
+{
+	DoCommand(AB_PropertiesCmd);
+}
+
+void CNameCompletion::OnUpdateOnlineStatus(CCmdUI *pCmdUI)
+{
+ 	pCmdUI->Enable(!NET_IsOffline());
+}
 
 void CNameCompletion::ListChangeStarting( MSG_Pane* pane, XP_Bool asynchronous,
 										MSG_NOTIFY_CODE notify, MSG_ViewIndex where,
 										int32 num)
 {
-	if ( pane == (MSG_Pane*) m_addrBookPane ) {
+	if ( pane == (MSG_Pane*) m_pPickerPane ) {
 		if ( m_pOutliner ) {
 			m_pOutliner->MysticStuffStarting( asynchronous, notify,
 												   where, num );
@@ -388,7 +558,7 @@ void CNameCompletion::ListChangeFinished( MSG_Pane* pane, XP_Bool asynchronous,
 										MSG_NOTIFY_CODE notify, MSG_ViewIndex where,
 										int32 num)
 {
-	if ( pane == (MSG_Pane*) m_addrBookPane ) {
+	if ( pane == (MSG_Pane*) m_pPickerPane ) {
 		if ( m_pOutliner ) {
 			m_pOutliner->MysticStuffFinishing( asynchronous, notify,
 												    where, num );
@@ -409,6 +579,9 @@ void CNameCompletion::SetSearchResults(MSG_ViewIndex index, int32 num)
 
 	CString csStatus;
 
+	AB_LDAPSearchResultsAB2(m_pPickerPane, index, num);
+
+/*
 	ASSERT(m_pOutliner);
 	AB_LDAPSearchResults(m_addrBookPane, index, num);
 	if (num > 1 ) {
@@ -420,7 +593,7 @@ void CNameCompletion::SetSearchResults(MSG_ViewIndex index, int32 num)
 	}
 
 	m_barStatus.SetWindowText( csStatus );
-
+*/
 }
 
 STDMETHODIMP CNameCompletion::QueryInterface(REFIID refiid, LPVOID * ppv)
@@ -457,15 +630,28 @@ CMailNewsFrame *CNameCompletion::GetMailNewsFrame()
 
 MSG_Pane *CNameCompletion::GetPane()
 {
-	return (MSG_Pane*) m_addrBookPane;
+	return (MSG_Pane*) m_pPickerPane;
 }
 
 void CNameCompletion::PaneChanged(MSG_Pane *pane, XP_Bool asynchronous, 
 								 MSG_PANE_CHANGED_NOTIFY_CODE notify, int32 value)
 {
-	if (notify == MSG_PaneDirectoriesChanged) {
-		if (IsSearching())
-			PerformDirectorySearch ();
+	if (notify == MSG_PaneNotifyStartSearching)
+	{
+		m_bSearching = TRUE;
+		m_barStatus.StartAnimation();
+	}
+	else if(notify == MSG_PaneNotifyStopSearching )
+	{
+		m_bSearching = FALSE;
+		m_barStatus.StopAnimation();
+		if(::IsWindow(m_pOutlinerParent->m_hWnd))
+		{
+			//make sure outliner has the focus.
+			m_pOutlinerParent->SetFocus();
+		}
+
+
 	}
 }
 
@@ -484,6 +670,8 @@ void CNameCompletion::AllConnectionsComplete( MWContext *pContext )
 		csStatus.LoadString( IDS_SEARCHNOHITS );
 	}
 	m_barStatus.SetWindowText( csStatus );
+
+	HandleErrorReturn(AB_FinishSearchAB2(m_pPickerPane));
 
 	SendMessageToDescendants(WM_IDLEUPDATECMDUI, (WPARAM)TRUE, (LPARAM)0);
 }
@@ -512,7 +700,7 @@ void CNameCompletion::PerformDirectorySearch ()
 	if ( m_bSearching) {
 		// We've turned into stop button
 		XP_InterruptContext( m_pCX->GetContext() );
-		HandleErrorReturn(AB_FinishSearch(m_addrBookPane, m_pCX->GetContext()));
+	//	HandleErrorReturn(AB_FinishSearch(m_addrBookPane, m_pCX->GetContext()));
 		m_bSearching = FALSE;
 		return;
 	}
@@ -523,10 +711,90 @@ void CNameCompletion::PerformDirectorySearch ()
 	m_pOutliner->UpdateCount();
 	m_pOutliner->SetFocus();
 
-	HandleErrorReturn(AB_SearchDirectory(m_addrBookPane, NULL));
+//	HandleErrorReturn(AB_SearchDirectory(m_addrBookPane, NULL));
 
 }
 
+void CNameCompletion::OnAddToAddressBook(UINT nID)
+{
+	int nPos = nID - FIRST_ADDSENDER_MENU_ID;
+
+	XP_List *addressBooks = AB_AcquireAddressBookContainers(m_pCX->GetContext()); 
+
+	if(addressBooks)
+	{
+		AB_ContainerInfo *pInfo = (AB_ContainerInfo*)XP_ListGetObjectNum(addressBooks, nPos);
+
+		MSG_ViewIndex *indices = NULL;
+		int count = 0;
+		if (m_pOutliner)
+			m_pOutliner->GetSelection(indices, count);
+
+
+		HandleErrorReturn(AB_DragEntriesIntoContainer(m_pPickerPane, 
+						  indices, count, pInfo, AB_Require_Copy));
+
+		AB_ReleaseContainersList(addressBooks);
+
+	}
+}
+
+
+void CNameCompletion::DoUpdateCommand(CCmdUI *pCmdUI, AB_CommandType cmd,BOOL bUseCheck)
+{
+
+	XP_Bool bSelectable;
+	const char *displayString;
+	XP_Bool bPlural;
+	MSG_COMMAND_CHECK_STATE selected;
+
+	MSG_ViewIndex *indices = NULL;
+	int count = 0;
+	if (m_pOutliner)
+			m_pOutliner->GetSelection(indices, count);
+
+	HandleErrorReturn(AB_CommandStatusAB2(m_pPickerPane,
+		cmd, indices, count, &bSelectable, &selected, &displayString, &bPlural));
+
+	pCmdUI->Enable(bSelectable);
+	if(bUseCheck)
+        pCmdUI->SetCheck(selected == MSG_Checked);
+    else
+        pCmdUI->SetRadio(selected == MSG_Checked);
+
+
+
+}
+
+void CNameCompletion::DoCommand(AB_CommandType cmd)
+{
+	MSG_ViewIndex *indices = NULL;
+	int count = 0;
+	if (m_pOutliner)
+			m_pOutliner->GetSelection(indices, count);
+
+	HandleErrorReturn(AB_CommandAB2(m_pPickerPane, cmd, indices, count));
+
+}
+
+
+
+CNameCompletionLineData::CNameCompletionLineData(AB_AttributeValue *pValues, 
+												 int numColumns, int line)
+{
+	m_pValues = pValues;
+	m_nNumColumns = numColumns;
+	m_nLine = line;
+}
+
+CNameCompletionLineData::~CNameCompletionLineData()
+{
+	if(m_pValues)
+	{
+		AB_FreeEntryAttributeValues (m_pValues, m_nNumColumns);
+
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // CNameCompletionOutliner
@@ -542,10 +810,13 @@ CNameCompletionOutliner::CNameCompletionOutliner ( )
     if (m_pUnkUserImage) {
         m_pUnkUserImage->QueryInterface(IID_IImageMap,(LPVOID*)&m_pIUserImage);
         ASSERT(m_pIUserImage);
-        m_pIUserImage->Initialize(IDB_ADDRESSBOOK,16,16);
+        m_pIUserImage->Initialize(IDB_DIRLIST,16,16);
     }
 	m_iMysticPlane = 0;
 	m_hFont = NULL;
+	m_pLineData = NULL;
+	m_pEntryAttrib = NULL;
+	m_nNumColumns = 0;
 }
 
 CNameCompletionOutliner::~CNameCompletionOutliner ( )
@@ -558,86 +829,20 @@ CNameCompletionOutliner::~CNameCompletionOutliner ( )
 	if (m_hFont) {
 		theApp.ReleaseAppFont(m_hFont);
 	}
-}
 
-
-void CNameCompletionOutliner::SetColumnsForDirectory (DIR_Server* pServer)
-{
-	int iCount = GetNumColumns();
-	for (int i = 0; i < iCount; i++) {
-		CString cs;
-		int iColumn = GetColumnAtPos(i);
-		if (pServer->dirType == LDAPDirectory)
-		{
-			DIR_AttributeId id;
-			const char *text = NULL;
-			switch (iColumn) {
-			case ID_COLADDR_TYPE:
-				text = NULL;
-				break;
-			case ID_COLADDR_NAME:
-				MSG_SearchAttribToDirAttrib(attribCommonName, &id);		
-				text = DIR_GetAttributeName(pServer, id);
-				break;
-			case ID_COLADDR_EMAIL:
-				MSG_SearchAttribToDirAttrib(attrib822Address, &id);	
-				text = DIR_GetAttributeName(pServer, id);
-				break;
-			case ID_COLADDR_COMPANY:
-				MSG_SearchAttribToDirAttrib(attribOrganization, &id);	
-				text = DIR_GetAttributeName(pServer, id);
-				break;
-			case ID_COLADDR_PHONE:
-				MSG_SearchAttribToDirAttrib(attribPhoneNumber, &id);	
-				text = DIR_GetAttributeName(pServer, id);
-				break;
-			case ID_COLADDR_LOCALITY:
-				MSG_SearchAttribToDirAttrib(attribLocality, &id);	
-				text = DIR_GetAttributeName(pServer, id);
-				break;
-			case ID_COLADDR_NICKNAME:
-				text = NULL;	
-				break;
-			default:
-				break;
-			}
-			if (text)
-				SetColumnName(iColumn, text);
-		}
-		else
-		{
-			switch (iColumn) {
-			case ID_COLADDR_TYPE:
-				cs = "";
-				break;
-			case ID_COLADDR_NAME:
-				cs.LoadString(IDS_USERNAME);		
-				break;
-			case ID_COLADDR_EMAIL:
-				cs.LoadString(IDS_EMAILADDRESS);
-				break;
-			case ID_COLADDR_COMPANY:
-				cs.LoadString(IDS_COMPANYNAME);
-				break;
-			case ID_COLADDR_PHONE:
-				cs.LoadString(IDS_PHONE);
-				break;
-			case ID_COLADDR_LOCALITY:
-				cs.LoadString(IDS_LOCALITY);
-				break;
-			case ID_COLADDR_NICKNAME:
-				cs.LoadString(IDS_NICKNAME);
-				break;
-			default:
-				break;
-			}
-		if (cs.GetLength())
-			SetColumnName(iColumn, cs);
-		}
+	if(m_pEntryAttrib)
+	{
+		delete m_pEntryAttrib;
 	}
-	GetParent()->Invalidate();
-	GetParent()->UpdateWindow();
+
+	if (m_pLineData)
+	{
+		delete m_pLineData;
+		m_pLineData = NULL;
+	}
+
 }
+
 
 
 void CNameCompletionOutliner::UpdateCount( )
@@ -648,12 +853,27 @@ void CNameCompletionOutliner::UpdateCount( )
 }
 
 
-void CNameCompletionOutliner::SetPane(ABPane *pane)
+void CNameCompletionOutliner::SetPane(MSG_Pane *pane)
 {
 	m_pane = pane;
 	uint32 count = 0;
 
 	if (m_pane) {
+
+		//Get attributes for this pane
+		m_nNumColumns = AB_GetNumColumnsForPane(pane); 
+
+		if(m_pEntryAttrib)
+		{
+			delete m_pEntryAttrib;
+		}
+
+		m_pEntryAttrib = new AB_AttribID[m_nNumColumns];
+
+		int numAttribs = (int) m_nNumColumns;
+
+		AB_GetColumnAttribIDsForPane(pane,m_pEntryAttrib, &numAttribs);
+
 		SetTotalLines(CASTINT(count));
 		Invalidate();
 		UpdateWindow();
@@ -692,9 +912,28 @@ void CNameCompletionOutliner::MysticStuffFinishing( XP_Bool asynchronous,
 		// if its insert or delete then tell my frame to add the next chunk of values
 		// from the search
 		if (notify == MSG_NotifyInsertOrDelete 
-			&& ((CNameCompletion*)pParent)->IsSearching() && num > 0) 
+			&&  num > 0) 
 		{
-			((CNameCompletion*)pParent)->SetSearchResults(where, num);
+			if(((CNameCompletion*)pParent)->IsSearching())
+			{
+				((CNameCompletion*)pParent)->SetSearchResults(where, num);
+			}
+
+			if(num > 0)
+			{
+				HandleInsert(where, num);
+				//this is the first place I can figure out where to set the focus and have it
+				//stick.  So, if it's item 0 then we know to select the first item and then 
+				//set focus to us.
+				if(where == 0 || where == 1)
+				{
+					SetFocus();
+					if(GetTotalLines() == 1)
+						SelectItem(0);
+					else
+						SelectItem(1);
+				}
+			}
 		}
 		else
 		{
@@ -713,8 +952,6 @@ void CNameCompletionOutliner::MysticStuffFinishing( XP_Bool asynchronous,
 
 	if (( !--m_iMysticPlane && m_pane)) 
 	{
-		uint32 count;
-		SetTotalLines(CASTINT(count));
 		Invalidate();
 		UpdateWindow();
 	}
@@ -731,15 +968,18 @@ void CNameCompletionOutliner::SetTotalLines( int count)
 
 BOOL CNameCompletionOutliner::RenderData  ( UINT iColumn, CRect &rect, CDC &dc, const char * text )
 {
-	if ( iColumn != ID_COLADDR_TYPE )
-        return COutliner::RenderData ( iColumn, rect, dc, text );
+	if ( (iColumn) != AB_ColumnID0 )
+        return CMSelectOutliner::RenderData ( iColumn, rect, dc, text );
+	int idxImage;
 
-	int idxImage = 0;
+	AB_ContainerType type = AB_GetEntryContainerType(m_pane, m_pLineData->m_nLine);
 
-    if (m_EntryLine.entryType == ABTypeList)
-		idxImage = IDX_ADDRESSBOOKLIST;
-	else
-		idxImage = IDX_ADDRESSBOOKPERSON;
+    if (type == AB_MListContainer)
+		idxImage = IDX_NAME_DIRMAILINGLIST;
+	else if(type == AB_LDAPContainer)
+		idxImage = IDX_NAME_DIRLDAPAB;
+	else if(type == AB_PABContainer)
+		idxImage = IDX_NAME_DIRPERSONALAB;
 
 	m_pIUserImage->DrawImage ( idxImage,
 		rect.left + ( ( rect.Width ( ) - 16 ) / 2 ), rect.top, &dc, FALSE );
@@ -749,13 +989,17 @@ BOOL CNameCompletionOutliner::RenderData  ( UINT iColumn, CRect &rect, CDC &dc, 
 
 int CNameCompletionOutliner::TranslateIcon ( void * pLineData )
 {
-	AB_EntryLine* line = (AB_EntryLine*) pLineData;
+	CNameCompletionLineData * pNameLineData = (CNameCompletionLineData*) pLineData;
 	int idxImage = 0;
 
-    if (line->entryType == ABTypeList)
-		idxImage = IDX_ADDRESSBOOKLIST;
-	else
-		idxImage = IDX_ADDRESSBOOKPERSON;
+	AB_ContainerType type = AB_GetEntryContainerType(m_pane, pNameLineData->m_nLine);
+
+    if (type == AB_MListContainer)
+		idxImage = IDX_NAME_DIRMAILINGLIST;
+	else if(type == AB_LDAPContainer)
+		idxImage = IDX_NAME_DIRLDAPAB;
+	else if(type == AB_PABContainer)
+		idxImage = IDX_NAME_DIRPERSONALAB;
 	return idxImage;
 }
 
@@ -771,6 +1015,107 @@ BOOL CNameCompletionOutliner::ColumnCommand ( int iColumn, int iLine )
 	// We have no column commands
     return FALSE;
 }
+
+void CNameCompletionOutliner::AppendAddressBookMenuItem(CMenu *pMenu)
+{
+	MSG_ViewIndex *indices = NULL;
+	int count = 0;
+	GetSelection(indices, count);
+
+	//if selection is not an LDAP item then don't add it to menu
+	if(count > 0)
+	{
+		
+		AB_ContainerType type = AB_GetEntryContainerType(m_pane, indices[0]);
+
+		if(type != AB_LDAPContainer)
+			return;
+
+	}
+
+	XP_List *addressBooks = AB_AcquireAddressBookContainers(m_pContext); 
+
+
+	if(addressBooks)
+	{
+ 
+		int nCount = XP_ListCount(addressBooks);
+		if(nCount == 1)
+		{
+			pMenu->AppendMenu( MF_BYPOSITION| MF_STRING, FIRST_ADDSENDER_MENU_ID, 
+						"&Add to Address Book");
+
+		}
+		else
+		{
+			CMenu *pAddMenu = new CMenu;
+			
+			pAddMenu->CreatePopupMenu();
+
+			pMenu->AppendMenu( MF_BYPOSITION| MF_STRING | MF_POPUP, (UINT)pAddMenu->m_hMenu,
+						"&Add to Address Book");
+
+			for(int i = 1; i <= nCount; i++)
+			{
+				AB_ContainerInfo *info = 
+						(AB_ContainerInfo*)XP_ListGetObjectNum (addressBooks, i);
+
+				AB_ContainerAttribValue *value;
+				AB_GetContainerAttribute(info, attribName, &value);
+						
+				if(value != NULL)
+				{
+					pAddMenu->AppendMenu(MF_BYPOSITION | MF_STRING,  
+										 FIRST_ADDSENDER_MENU_ID + i, value->u.string);
+
+					AB_FreeContainerAttribValue(value);
+
+				}
+
+
+			}
+		}
+
+	
+		AB_ReleaseContainersList(addressBooks);
+	}
+
+
+}
+
+void CNameCompletionOutliner::PropertyMenu(int iSel, UINT flags)
+{
+	CMenu cmPopup;
+	CString cs;
+	
+	if(cmPopup.CreatePopupMenu() == 0) 
+		return;
+
+
+
+    if (iSel < m_iTotalLines) {
+
+		AppendAddressBookMenuItem(&cmPopup);
+
+		cs.LoadString(IDS_GETINFO);
+		cmPopup.AppendMenu(MF_ENABLED, ID_ITEM_PROPERTIES, cs);
+	}
+
+	//	Track the popup now.
+	POINT pt = m_ptHit;
+	ClientToScreen(&pt);
+
+	cmPopup.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 
+						   GetParent()->GetParent(), NULL);
+
+    //  Cleanup
+    cmPopup.DestroyMenu();
+
+
+
+}
+
+
 
 HFONT CNameCompletionOutliner::GetLineFont(void *pLineData)
 {
@@ -797,13 +1142,35 @@ HFONT CNameCompletionOutliner::GetLineFont(void *pLineData)
 
 void * CNameCompletionOutliner::AcquireLineData ( int line )
 {
-	m_lineindex = line + 1;
-	if ( line >= m_iTotalLines)
-		return NULL;
-	if (!AB_GetEntryLine(m_pane, line, &m_EntryLine ))
-        return NULL;
+	if ( line >= m_iTotalLines) {
+		if (m_pLineData) {
+			delete m_pLineData;
+		}
 
-	return &m_EntryLine;
+		m_pLineData = NULL;
+		return NULL;
+	}
+
+
+	if (m_pLineData) {
+		m_pLineData = NULL;
+	}
+
+	m_nNumColumns = AB_GetNumColumnsForPane(m_pane); 
+
+
+	AB_AttributeValue *pValues;
+
+	AB_GetEntryAttributesForPane(
+		m_pane,
+		line,
+		m_pEntryAttrib, /* FE allocated array of attribs that you want */
+		&pValues,
+		&m_nNumColumns);
+
+	m_pLineData = new CNameCompletionLineData(pValues, m_nNumColumns, line);
+	return m_pLineData;
+
 }
 
 
@@ -821,31 +1188,15 @@ void CNameCompletionOutliner::ReleaseLineData ( void * )
 
 LPCTSTR CNameCompletionOutliner::GetColumnText ( UINT iColumn, void * pLineData )
 {
-	AB_EntryLine* line = (AB_EntryLine*) pLineData;
+	if ((iColumn)== AB_ColumnID0)
+		return ("");
 
-	switch (iColumn) {
-		case ID_COLADDR_NAME:
-			return line->fullname;
-			break;
-		case ID_COLADDR_EMAIL:
-			return line->emailAddress;
-			break;
-		case ID_COLADDR_COMPANY:
-			return line->companyName;
-			break;
-		case ID_COLADDR_PHONE:
-			if (line->entryType == ABTypePerson)
-				return line->workPhone;
-			break;
-		case ID_COLADDR_LOCALITY:
-			return line->locality;
-			break;
-		case ID_COLADDR_NICKNAME:
-			return line->nickname;
-			break;
-		default:
-			break;
-	}
+	CNameCompletionLineData* pNameLineData = (CNameCompletionLineData*) pLineData;
+
+	if (pNameLineData->m_pValues [iColumn].u.string && 
+		*(pNameLineData->m_pValues [iColumn].u.string))
+		return pNameLineData->m_pValues [iColumn].u.string;
+
     return ("");
 }
 
@@ -917,25 +1268,46 @@ COutliner * CNameCompletionOutlinerParent::GetOutliner ( void )
 
 void CNameCompletionOutlinerParent::CreateColumns ( void )
 { 
-	CString cs; 
 
-	m_pOutliner->AddColumn ("",		ID_COLADDR_TYPE,			24, 0, ColumnFixed, 0, TRUE );
-	cs.LoadString(IDS_USERNAME);
-    m_pOutliner->AddColumn (cs,			ID_COLADDR_NAME,		175, 0, ColumnVariable, 1500);
-	cs.LoadString(IDS_EMAILADDRESS);
-    m_pOutliner->AddColumn (cs,			ID_COLADDR_EMAIL,		175, 0, ColumnVariable, 1500); 
-	cs.LoadString(IDS_COMPANYNAME);
-    m_pOutliner->AddColumn (cs,			ID_COLADDR_COMPANY,		175, 0, ColumnVariable, 1500 ); 
-	cs.LoadString(IDS_PHONE);
-    m_pOutliner->AddColumn (cs,			ID_COLADDR_PHONE,		175, 0, ColumnVariable, 1500, FALSE);
-	cs.LoadString(IDS_LOCALITY);
-    m_pOutliner->AddColumn (cs,			ID_COLADDR_LOCALITY,	175, 0, ColumnVariable, 1500 );
-	cs.LoadString(IDS_NICKNAME);
-    m_pOutliner->AddColumn (cs,			ID_COLADDR_NICKNAME,	175, 0, ColumnVariable, 1500 );
+	MSG_Pane *pPane = ((CNameCompletionOutliner*)m_pOutliner)->GetPane();
+
+	int nNumColumns = AB_GetNumColumnsForPane(pPane); 
+
+	char *displayString; 
+
+	for(int i = 0; i < nNumColumns; i++)
+	{
+		AB_ColumnInfo * info = AB_GetColumnInfoForPane(pPane, (AB_ColumnID)i);
+
+
+		if(i == AB_ColumnID0)
+		{
+			m_pOutliner->AddColumn ("",		0,			24, 0, ColumnFixed, 0, TRUE );
+		}
+		else
+		{
+			displayString = "";
+
+			if(info != NULL)
+			{
+				displayString = info->displayString;
+			}
+
+			m_pOutliner->AddColumn (displayString,	i,		175, 0, ColumnVariable, 1500);
+			
+		}
+
+		if(info)
+		{
+			AB_FreeColumnInfo(info);	
+		}
+	}
+
 	m_pOutliner->SetHasPipes( FALSE );
+	m_pOutliner->SetHasImageOnlyColumn(TRUE);
 
 	m_pOutliner->SetVisibleColumns(DEF_VISIBLE_COLUMNS);
-	m_pOutliner->LoadXPPrefs("mailnews.abook_columns_win");
+	m_pOutliner->LoadXPPrefs("name_completion.picker_columns_win");
 
 }
 
@@ -953,25 +1325,25 @@ BOOL CNameCompletionOutlinerParent::ColumnCommand ( int idColumn )
 
 	switch (idColumn) {
 		case ID_COLADDR_TYPE:
-			AB_Command(pOutliner->GetPane(), AB_SortByTypeCmd, 0, 0);
+			AB_CommandAB2(pOutliner->GetPane(), AB_SortByTypeCmd, 0, 0);
 			break;
 		case ID_COLADDR_NAME:
-			AB_Command(pOutliner->GetPane(), AB_SortByFullNameCmd, 0, 0);
+			AB_CommandAB2(pOutliner->GetPane(), AB_SortByFullNameCmd, 0, 0);
 			break;
 		case ID_COLADDR_NICKNAME:
-			AB_Command(pOutliner->GetPane(), AB_SortByNickname, 0, 0);
+			AB_CommandAB2(pOutliner->GetPane(), AB_SortByNickname, 0, 0);
 			break;
 		case ID_COLADDR_LOCALITY:
-			AB_Command(pOutliner->GetPane(), AB_SortByLocality, 0, 0);
+			AB_CommandAB2(pOutliner->GetPane(), AB_SortByLocality, 0, 0);
 			break;
 		case ID_COLADDR_COMPANY:
-			AB_Command(pOutliner->GetPane(), AB_SortByCompanyName, 0, 0);
+			AB_CommandAB2(pOutliner->GetPane(), AB_SortByCompanyName, 0, 0);
 			break;
 		case ID_COLADDR_EMAIL:
-			AB_Command(pOutliner->GetPane(), AB_SortByEmailAddress, 0, 0);
+			AB_CommandAB2(pOutliner->GetPane(), AB_SortByEmailAddress, 0, 0);
 			break;
 		default:
-			AB_Command(pOutliner->GetPane(), AB_SortByFullNameCmd, 0, 0);
+			AB_CommandAB2(pOutliner->GetPane(), AB_SortByFullNameCmd, 0, 0);
 			break;
 	}
 	
@@ -994,7 +1366,7 @@ void CNameCompletionOutlinerParent::OnLButtonUp( UINT nFlags, CPoint point )
 		(m_bResizeColumn || m_bDraggingHeader || m_iPusherHit))? TRUE : FALSE;
 	COutlinerParent::OnLButtonUp(nFlags, point);
 	if (bSaveColumns)
-		m_pOutliner->SaveXPPrefs("mailnews.autocomp_columns_win");
+		m_pOutliner->SaveXPPrefs("name_completion.picker_columns_win");
 }
 
 

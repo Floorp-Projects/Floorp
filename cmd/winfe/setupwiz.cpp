@@ -730,6 +730,34 @@ void CNewProfileWizard::InitPrefStrings()
 	PREF_GetIntPref("mail.server_type", &prefInt);
 	m_bUseIMAP = prefInt == MSG_Imap4;
 
+#ifdef MOZ_MAIL_NEWS
+	if (m_bUseIMAP)
+	{
+		char serverName[128];
+		GetImapServerName(serverName);
+		m_szPopName = serverName;
+		if (strlen(serverName) > 0)
+		{
+			char userName[128];
+			GetImapUserName(serverName, userName);
+			if (strlen(userName) > 0)
+				m_szInMailServer = userName;
+		}
+	}
+	else
+	{   //POP server
+		pPrefStr = NULL;
+		PREF_CopyCharPref("mail.pop_name", &pPrefStr);
+		m_szPopName = pPrefStr;
+		if (pPrefStr) XP_FREE(pPrefStr); 
+
+		pPrefStr = NULL;
+		PREF_CopyCharPref("network.hosts.pop_server", &pPrefStr);
+		m_szInMailServer = pPrefStr;
+		if (pPrefStr) XP_FREE(pPrefStr); 
+	}
+#endif /* MOZ_MAIL_NEWS */
+
 	prefStr = NULL;
 	PREF_CopyCharPref("network.hosts.nntp_server", &prefStr);
 	if (prefStr)
@@ -1554,17 +1582,17 @@ BOOL CNewProfileWizard::DoFinish()
 		PREF_SetCharPref("mail.identity.useremail", m_szEmail);
 		PREF_SetCharPref("network.hosts.smtp_server", m_szMailServer);
 
-		PREF_SetCharPref("network.hosts.pop_server", m_szInMailServer);
-
-		PREF_SetCharPref("mail.pop_name", m_szPopName);
-
 		if (m_bUseIMAP) 
 		{
 			PREF_SetBoolPref("mail.leave_on_server", m_bUseIMAP);
+			SetImapServerName(LPCTSTR(m_szInMailServer));
+			IMAP_SetCharPref(LPCTSTR(m_szInMailServer), CHAR_USERNAME, LPCTSTR(m_szPopName));
 		}
 		else
 		{
 			PREF_SetBoolPref("mail.leave_on_server", m_bLeftOnServer);
+			PREF_SetCharPref("network.hosts.pop_server", m_szInMailServer);
+			PREF_SetCharPref("mail.pop_name", m_szPopName);
 		}
 		long imapPref = m_bUseIMAP ? MSG_Imap4 : MSG_Pop3;
 		PREF_SetIntPref("mail.server_type", imapPref);

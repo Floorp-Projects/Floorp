@@ -69,6 +69,7 @@ protected:
   virtual void undo();
   virtual void redo();
   virtual void abDelete();
+  virtual void abDeleteAllEntries();
 
   virtual void addToAddressBook();
   virtual void newList();
@@ -84,7 +85,9 @@ private:
    */
   static MenuSpec menu_bar_spec[];
   static ToolbarSpec toolbar_spec[];
-
+#if defined(USE_ABCOM)
+  static MenuSpec new_sub_menu_spec[];
+#endif /* USE_ABCOM */
   static MenuSpec file_menu_spec[];
   static MenuSpec edit_menu_spec[];
   static MenuSpec view_menu_spec[];

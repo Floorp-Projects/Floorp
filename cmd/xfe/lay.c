@@ -4076,10 +4076,18 @@ fe_FinishHREF (MWContext *context,
 #ifdef MOZ_MAIL_NEWS
       if (MSG_NewWindowProhibited (context, url->address))
 	{
+#if 1
+	  XP_ASSERT (!MSG_NewWindowRequiredForURL (context, url));
+#else
 	  XP_ASSERT (!MSG_NewWindowRequired (context, url->address));
+#endif
 	  other_p = False;
 	}
+#if 1
+      else if (MSG_NewWindowRequiredForURL (context, url))
+#else
       else if (MSG_NewWindowRequired (context, url->address))
+#endif
 	{
 	  MWContext *new_context = 0;
 	  XP_ASSERT (!MSG_NewWindowProhibited (context, url->address));

@@ -54,6 +54,7 @@
 #include "mcom_db.h"
 #define _SVID3          /* for statvfs.h */
 #endif
+
 #include "xpgetstr.h"
 
 #ifdef MOZ_MAIL_NEWS
@@ -89,6 +90,8 @@ fe_icon XFE_MNView::inboxIcon = { 0 };
 fe_icon XFE_MNView::inboxOpenIcon = { 0 };
 fe_icon XFE_MNView::draftsIcon = { 0 };
 fe_icon XFE_MNView::draftsOpenIcon = { 0 };
+fe_icon XFE_MNView::templatesIcon = { 0 };
+fe_icon XFE_MNView::templatesOpenIcon = { 0 };
 fe_icon XFE_MNView::filedMailIcon = { 0 };
 fe_icon XFE_MNView::filedMailOpenIcon = { 0 };
 fe_icon XFE_MNView::outboxIcon = { 0 };
@@ -107,12 +110,14 @@ fe_icon XFE_MNView::mailMessageReadIcon = { 0 };
 fe_icon XFE_MNView::mailMessageUnreadIcon = { 0 };
 fe_icon XFE_MNView::newsPostIcon = { 0 };
 fe_icon XFE_MNView::draftIcon = { 0 };
+fe_icon XFE_MNView::templateIcon = { 0 };
 fe_icon XFE_MNView::newsNewIcon = { 0 };
 fe_icon XFE_MNView::msgReadIcon = { 0 };
 fe_icon XFE_MNView::msgUnreadIcon = { 0 };
 fe_icon XFE_MNView::deletedIcon = { 0 };
 fe_icon XFE_MNView::msgFlagIcon = { 0 };
 fe_icon XFE_MNView::collectionsIcon = { 0 };
+fe_icon XFE_MNView::mailMessageAttachIcon = { 0 };
 
 fe_icon XFE_MNView::openSpoolIcon = { 0 };
 fe_icon XFE_MNView::closedSpoolIcon = { 0 };
@@ -228,6 +233,7 @@ XFE_MNView::commandToMsgNav(CommandType cmd)
   MN_MSGMAP(xfeCmdNextUnreadThread, MSG_NextUnreadThread);
   MN_MSGMAP(xfeCmdNextFlaggedMessage, MSG_NextFlagged);
   MN_MSGMAP(xfeCmdFirstFlaggedMessage, MSG_FirstFlagged);
+  MN_MSGMAP(xfeCmdFirstUnreadMessage, MSG_FirstUnreadMessage);
   MN_MSGMAP(xfeCmdPreviousMessage, MSG_PreviousMessage);
   MN_MSGMAP(xfeCmdPreviousUnreadMessage, MSG_PreviousUnreadMessage);
   MN_MSGMAP(xfeCmdPreviousFlaggedMessage, MSG_PreviousFlagged);
@@ -267,6 +273,7 @@ XFE_MNView::commandToMsgCmd(CommandType cmd)
   MN_MSGMAP(xfeCmdFetchGroupList, MSG_FetchGroupList); // subscribe ui only
   MN_MSGMAP(xfeCmdForwardMessage, MSG_ForwardMessage);
   MN_MSGMAP(xfeCmdForwardMessageQuoted, MSG_ForwardMessageQuoted);
+  MN_MSGMAP(xfeCmdForwardMessageInLine, MSG_ForwardMessageInline);
   MN_MSGMAP(xfeCmdGetNewGroups, MSG_CheckForNew); // subscribe ui only
   MN_MSGMAP(xfeCmdGetNewMessages, MSG_GetNewMail);
   MN_MSGMAP(xfeCmdGetNextNNewMsgs, MSG_GetNextChunkMessages);
@@ -296,6 +303,7 @@ XFE_MNView::commandToMsgCmd(CommandType cmd)
   MN_MSGMAP(xfeCmdRetrieveSelectedMessages, MSG_RetrieveSelectedMessages);
   MN_MSGMAP(xfeCmdRot13Message, MSG_Rot13Message);
   MN_MSGMAP(xfeCmdSaveMessagesAs, MSG_SaveMessagesAs);
+  MN_MSGMAP(xfeCmdSaveAsTemplate, MSG_SaveTemplate );
   MN_MSGMAP(xfeCmdSaveMessagesAsAndDelete, MSG_SaveMessagesAsAndDelete);
   MN_MSGMAP(xfeCmdSendMessagesInOutbox, MSG_DeliverQueuedMessages);
   MN_MSGMAP(xfeCmdShowAllHeaders, MSG_ShowAllHeaders);
@@ -496,6 +504,9 @@ XFE_MNView::getNewNews()
 
 	XFE_MailDownloadFrame *download_frame = 
 		new XFE_MailDownloadFrame(XtParent(getToplevel()->getBaseWidget()),
+								  /* Tao: we might need to check if this returns a 
+								   * non-NULL frame
+								   */
 								  ViewGlue_getFrame(m_contextData),
 								  m_pane);
 	
@@ -526,6 +537,9 @@ XFE_MNView::getNewMail()
     {
 		XFE_MailDownloadFrame *download_frame = 
 			new XFE_MailDownloadFrame(XtParent(getToplevel()->getBaseWidget()),
+									  /* Tao: we might need to check if this returns a 
+									   * non-NULL frame
+									   */
 									  ViewGlue_getFrame(m_contextData),
 									  m_pane);
 		
@@ -719,6 +733,9 @@ XFE_MNView::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
            // create progress pane
            XFE_MailDownloadFrame* progressFrame = 
                new XFE_MailDownloadFrame(XfeAncestorFindApplicationShell(getBaseWidget()),
+										 /* Tao: we might need to check if this returns a 
+										  * non-NULL frame
+										  */
                                          ViewGlue_getFrame(m_contextData),
                                          getPane());
            progressFrame->cleanUpNews();
@@ -766,13 +783,7 @@ FE_PaneChanged(MSG_Pane *pane, XP_Bool asynchronous,
   if (view)
     view->paneChanged(asynchronous, code, value);
 
-//  MSG_HandlePaneChangedNotifications(pane, asynchronous, code, value);
 }
-
-#endif  // MOZ_MAIL_NEWS
-
-
-#ifdef MOZ_MAIL_NEWS
 
 extern "C" void
 FE_UpdateBiff(MSG_BIFF_STATE state)
@@ -832,7 +843,7 @@ FE_DestroyMailCompositionContext(MWContext* context)
   XFE_Frame *f = ViewGlue_getFrame(XP_GetNonGridContext(context));
   XFE_ComposeFrame *cf;
 
-  XP_ASSERT (f->getType() == FRAME_MAILNEWS_COMPOSE);
+  XP_ASSERT (f && f->getType() == FRAME_MAILNEWS_COMPOSE);
 
   cf = (XFE_ComposeFrame*)f;
 
@@ -868,10 +879,11 @@ FE_ListChangeStarting(MSG_Pane* pane, XP_Bool asynchronous,
 
   MSG_PaneType paneType = MSG_GetPaneType(pane);
   if (paneType == MSG_THREADPANE &&
-	  (notify == MSG_NotifyScramble ||
+	  (notify == MSG_NotifyNone ||
+	   notify == MSG_NotifyScramble ||
 	   notify == MSG_NotifyAll)) {
-	  XFE_ThreadView *threadView = (XFE_ThreadView *) list_view;
-	  threadView->listChangeStarting(asynchronous, notify, where, num);
+	  ((XFE_ThreadView *) list_view)->
+		  listChangeStarting(asynchronous, notify, where, num);
   }/* else if */
 
   outliner = list_view->getOutliner();
@@ -891,55 +903,38 @@ FE_ListChangeFinished(MSG_Pane* pane, XP_Bool asynchronous,
   //  int numsel;
   //  MSG_ViewIndex *sellist;
 
+  MSG_PaneType paneType = MSG_GetPaneType(pane);
   list_view = (XFE_MNListView*)MSG_GetFEData(pane);
 
   //
   // restore this quote out: use pane type to prevent mail/news pane 
   // get into this flow wrongfully
   //
-  if (!list_view)
+  if (!list_view) {
     return;
+  }
 
-  MSG_PaneType paneType = MSG_GetPaneType(pane);
   if (notify == MSG_NotifyInsertOrDelete) {
-	  if (paneType == MSG_ADDRPANE) {
-		  XFE_ABListSearchView *abView = (XFE_ABListSearchView *) list_view;
-		  if (abView->isSearching())
-			  /* Tao_12dec96
-			   * Added for LDAP search in AddrBook
-			   */
-
-#if defined(USE_ABCOM)
-			  {
-			  int error = AB_LDAPSearchResultsAB2(pane,
-												  where, num);
-			  }
-#else
-			  AB_LDAPSearchResults((ABPane*)pane, where, num);
-#endif /* USE_ABCOM */
+	  if (paneType == MSG_ADDRPANE ||
+		  paneType == AB_ABPANE ||
+		  paneType == AB_PICKERPANE) {
+		  list_view->listChangeFinished(asynchronous, notify, where, num);
 	  }/* if */
-	  else if (paneType == MSG_THREADPANE
-#if !defined(DEL_5_0)
-			   /* let them all fall through 
-				*/
-			   && num <= 0
-#endif /* DEL_5_0 */
-			   ) {
+	  else if (paneType == MSG_THREADPANE) {
 		  /* we do this hack :
 		   * 1. to make our code concise; only threadview need to handle this
 		   *    currently.
 		   * 2. need to deal with general cases when the time comes!
 		   */
-		  XFE_ThreadView *threadView = (XFE_ThreadView *) list_view;
-		  threadView->listChangeFinished(asynchronous, notify, where, num);
+		  list_view->listChangeFinished(asynchronous, notify, where, num);
 	  }/* else threadPane */
   }/* if */
   else if (paneType == MSG_THREADPANE &&
-		   (notify == MSG_NotifyChanged ||
+		   (notify == MSG_NotifyNone ||
+			notify == MSG_NotifyChanged ||
 			notify == MSG_NotifyScramble ||
 			notify == MSG_NotifyAll)) {
-	  XFE_ThreadView *threadView = (XFE_ThreadView *) list_view;
-	  threadView->listChangeFinished(asynchronous, notify, where, num);
+	  list_view->listChangeFinished(asynchronous, notify, where, num);
   }/* else if */
 
   outliner = list_view->getOutliner();
@@ -947,9 +942,6 @@ FE_ListChangeFinished(MSG_Pane* pane, XP_Bool asynchronous,
   if (!outliner)
     return;
 
-  if (notify == MSG_NotifyNone)
-  {
-  }
 
   outliner->listChangeFinished(asynchronous, notify, where, num, MSG_GetNumLines(pane));
 }
@@ -965,6 +957,8 @@ fe_incdone(void* closure, XP_Bool result)
 {
   fe_mn_incstate* state = (fe_mn_incstate*) closure;
   XFE_Frame *f = ViewGlue_getFrame(state->context);
+  XP_ASSERT(f);
+
   if (result) {
     unlink(state->filename);
     if (state->file) {

@@ -93,8 +93,14 @@
 #define IDX_MAILREADOFFLINE		53
 #define IDX_MAILMSGOFFLINE		54
 #define IDX_IMAPMSGDELETED		55
-#define IDX_TEMPLATE			56
+#define IDX_TEMPLATECLOSE		56
 #define IDX_TEMPLATEOPEN		57
+#define IDX_TEMPLAT 			58
+#define IDX_SHARECLOSED			59
+#define IDX_SHAREOPEN			60
+#define IDX_PUBLICCLOSED		61
+#define IDX_PUBLICOPEN			62
+#define IDX_ATTACHMENTMAIL		63
 
 // array of indexes for IDB_MAILCOL
 #define IDX_THREAD              0
@@ -108,7 +114,8 @@
 #define NETSCAPE_SEARCH_FORMAT "Netscape Search"
 
 int WFE_MSGTranslateFolderIcon( uint8 level, int32 iFlags, BOOL bOpen );
-void WFE_MSGBuildMessagePopup( HMENU hmenu, BOOL bNews, BOOL bInHeaders = FALSE );
+void WFE_MSGBuildMessagePopup( HMENU hmenu, BOOL bNews, BOOL bInHeaders = FALSE ,
+							   MWContext *pContext = NULL);
 
 ///////////////////////////////////////////////////////////////////////
 // CMessagePrefs
@@ -126,6 +133,7 @@ public:
 
 	BOOL IsValid() const;
 	MSG_Master *GetMaster();
+	MSG_Master *GetMasterValue();
 
 	CGenericDocTemplate *m_pFolderTemplate;
 	CGenericDocTemplate *m_pThreadTemplate;
@@ -146,9 +154,11 @@ public:
 	CString m_csUsersOrganization;
 	LPSTR m_pszUserSig;
 
+	BOOL m_bInitialized;
 	BOOL m_bThreadPaneMaxed;
 	BOOL m_bMessageReuse;
 	BOOL m_bThreadReuse;
+	BOOL m_bShowCompletionPicker;
 };
 
 extern CMsgPrefs g_MsgPrefs;
@@ -170,6 +180,7 @@ protected:
 	BOOL m_bSelChanged;
 	int m_iSelBlock;
 	BOOL m_bExpandOrCollapse;
+	int  m_nCurrentSelected;
 
 public:
 	CMailNewsOutliner();
@@ -177,6 +188,8 @@ public:
 
 	virtual void SetPane( MSG_Pane *pane );
 	MSG_Pane *GetPane() { return m_pPane; }
+	void SetCurrentSelected(int nIndex) { m_nCurrentSelected = nIndex; }
+	int	 GetCurrentSelected() { return m_nCurrentSelected; }
 
 	virtual void MysticStuffStarting( XP_Bool asynchronous,
 									 MSG_NOTIFY_CODE notify, 
@@ -218,10 +231,9 @@ protected:
 
     DWORD m_dwPrevTime; 
     UINT m_uTimer; 
-	BOOL m_bLButtonDown;
 	BOOL m_bDoubleClicked;
 	BOOL m_b3PaneParent;
-	int  m_nCurrentSelected;
+	BOOL m_bRButtonDown;
 
 	MSG_FolderInfo **m_pMysticStuff;
 	MSG_FolderInfo *m_MysticFocus;
@@ -232,8 +244,6 @@ public:
     ~CFolderOutliner ( );
 	
 	BOOL IsParent3PaneFrame() { return m_b3PaneParent; }
-	void SetCurrentSelected(int nIndex) { m_nCurrentSelected = nIndex; }
-	int	 GetCurrentSelected() { return m_nCurrentSelected; }
 
 	virtual void MysticStuffStarting( XP_Bool asynchronous,
 									 MSG_NOTIFY_CODE notify, 
@@ -278,9 +288,11 @@ protected:
     virtual void AcceptDrop(int iLineNo, COleDataObject *object, DROPEFFECT effect);
 
 	afx_msg int OnCreate(LPCREATESTRUCT lpcs);
-	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnDestroy();
+    afx_msg void OnRButtonDown( UINT nFlags, CPoint pt );
+    afx_msg void OnRButtonUp( UINT nFlags, CPoint pt );
    DECLARE_MESSAGE_MAP()
 };
 
@@ -301,9 +313,7 @@ protected:
 	BOOL m_bNews, m_bDrafts;
 
     UINT m_uTimer; 
-	BOOL m_bLButtonDown;
 	BOOL m_bDoubleClicked;
-	int  m_nCurrentSelected;
     DWORD m_dwPrevTime; 
 
 public:
@@ -319,9 +329,6 @@ public:
 								      MSG_ViewIndex where,
 									  int32 num);
 
-	void SetCurrentSelected(int nIndex) { m_nCurrentSelected = nIndex; }
-	int	 GetCurrentSelected() { return m_nCurrentSelected; }
-
 	void SelectThread( int iLine, UINT flags = 0 );
 	void SelectFlagged();
 
@@ -329,6 +336,8 @@ public:
 	void SetNews(BOOL bNews) { m_bNews = bNews;}
 
 	void EnsureFlagsVisible();
+
+	void SelectAllMessages();
 
 protected:
 	virtual void OnSelChanged();
@@ -371,8 +380,8 @@ protected:
 	virtual DROPEFFECT DropSelect( int iLineNo, COleDataObject *object );
     virtual void AcceptDrop( int iLineNo, COleDataObject *object, DROPEFFECT effect );
 
-	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnDestroy();
    DECLARE_MESSAGE_MAP()
 };
@@ -526,6 +535,32 @@ public:
 	virtual int Populate( MSG_Master *pMaster, MSG_FolderInfo *folderInfo )
 	{
 		return CMailFolderHelper::Populate( m_hWnd, pMaster, folderInfo );
+	}
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CMiscFolderCombo
+
+class CMiscFolderCombo: public CMailFolderCombo {
+
+protected:
+
+	virtual void DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct )
+	{
+		DoDrawItem( m_hWnd, lpDrawItemStruct );
+	}
+
+	virtual void MeasureItem( LPMEASUREITEMSTRUCT lpMeasureItemStruct )
+	{
+		DoMeasureItem( m_hWnd, lpMeasureItemStruct );
+	}
+
+public:
+	CMiscFolderCombo(): CMailFolderCombo() {}
+
+	virtual int Populate( MSG_Master *pMaster, MSG_FolderInfo *folderInfo )
+	{
+		return CMailFolderCombo::Populate( pMaster, folderInfo );
 	}
 };
 

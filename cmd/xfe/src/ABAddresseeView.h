@@ -38,8 +38,7 @@ public:
 		    Widget         parent,
 		    XFE_View      *parent_view, 
 		    MWContext     *context);
-  ~XFE_AddresseeView();
-
+  virtual ~XFE_AddresseeView();
   // callbacks
   static void removeCallback(Widget, XtPointer, XtPointer);
   static void selectCallback(Widget, XtPointer, XtPointer);

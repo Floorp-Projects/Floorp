@@ -60,6 +60,7 @@ public:
 // Implementation
 protected:
  
+	int m_nTypeID;
 	int m_nDefaultID;
 	CMailFolderCombo m_FolderCombo;
 	CMailFolderCombo m_ServerCombo;
@@ -69,6 +70,8 @@ protected:
 	virtual BOOL OnInitDialog();
 
 	afx_msg void OnNewFolder();
+	afx_msg void OnSelectServer();
+	afx_msg void OnSelectFolder();
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -200,6 +203,8 @@ public:
     ~CMailServerPropertySheet();
 	
 	BOOL	IsPopServer() { return m_bPop; }
+	BOOL	WasPopServer() { return m_bWasPop; }
+	void	SetPopServer(BOOL bPop) { m_bPop = bPop; }
 	BOOL	EditServer() { return m_bEdit; }
 	BOOL	AllowBothTypes() { return m_bBothType; }
 	char*	GetMailHostName() { return m_hostName; }
@@ -216,10 +221,9 @@ public:
 	CPropertyPage*  GetCurrentPage() 
 		{ return (CPropertyPage*)GetActivePage();	}
 
-	virtual void OnHelp();
-
 protected:
 
+	BOOL m_bWasPop;
 	BOOL m_bPop;
 	BOOL m_bEdit;
 	BOOL m_bBothType;
@@ -237,6 +241,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 #endif
 	afx_msg void OnOK();
+	afx_msg void OnHelp();
     DECLARE_MESSAGE_MAP()
 };
 

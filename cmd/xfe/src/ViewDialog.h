@@ -20,8 +20,6 @@
    Created: Chris Toshok <toshok@netscape.com>, 16-Oct-96.
  */
 
-
-
 #ifndef _xfe_viewdialog_h
 #define _xfe_viewdialog_h
 

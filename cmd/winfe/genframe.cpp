@@ -64,6 +64,9 @@ extern void wfe_Progress(MWContext *pContext, const char *pMessage);
 static char BASED_CODE THIS_FILE[] = __FILE__;
 #endif
 
+UINT NEAR WM_FINDREPLACE = ::RegisterWindowMessage(FINDMSGSTRING);
+UINT NEAR WM_HELPMSG = ::RegisterWindowMessage(HELPMSGSTRING);
+
 //CLM: Global in TEMPLATE.CPP - saves last frame location
 //     for new window postioning - cleared in ::OnClose method here
 extern CGenericFrame *wfe_pLastFrame;
@@ -100,6 +103,39 @@ IMPLEMENT_DYNCREATE(CNSGenFrame, CFrameWnd)
 #ifndef _AFXDLL
 #define new DEBUG_NEW
 #endif
+
+extern "C" void WFE_StartCalendar()
+{
+	if(!FEU_IsCalendarAvailable())
+		return;
+
+	CString installDirectory, executable;
+
+#ifdef WIN32
+	CString calRegistry;
+
+	calRegistry.LoadString(IDS_CALENDAR_REGISTRY);
+
+	calRegistry = FEU_GetCurrentRegistry(calRegistry);
+	if(calRegistry.IsEmpty())
+		return;
+
+    installDirectory = FEU_GetInstallationDirectory(calRegistry, szLoadString(IDS_INSTALL_DIRECTORY));
+	executable = szLoadString(IDS_CALENDAR32EXE);
+#else ifdef XP_WIN16
+    installDirectory = FEU_GetInstallationDirectory(szLoadString(IDS_CALENDAR),szLoadString(IDS_INSTALL_DIRECTORY));
+	executable = szLoadString(IDS_CALENDAR16EXE);
+#endif
+    if(!installDirectory.IsEmpty())
+	{
+		executable = installDirectory + executable;
+
+		if(	WinExec(executable, SW_SHOW) >= 31)
+			return;
+	}
+	::MessageBox(NULL, szLoadString(IDS_CANTCALENDAR), szLoadString(IDS_CALENDAR), MB_OK);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CGenericFrame
 
@@ -756,6 +792,10 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
 	ON_COMMAND(ID_OPEN_NEWS_WINDOW, OnOpenNewsWindow)
     ON_COMMAND(ID_WINDOW_BOOKMARKWINDOW, OnShowBookmarkWindow)
     ON_COMMAND(ID_WINDOW_ADDRESSBOOK, OnShowAddressBookWindow)
+#ifdef MOZ_MAIL_NEWS
+    ON_COMMAND(ID_MIGRATION_TOOLS, OnMigrationTools)
+    ON_UPDATE_COMMAND_UI(ID_MIGRATION_TOOLS, OnUpdateMigrationTools)
+#endif //MOZ_MAIL_NEWS
 #if defined(OJI) || defined(JAVA)
     ON_COMMAND(ID_OPTIONS_SHOWJAVACONSOLE, OnToggleJavaConsole)
     ON_UPDATE_COMMAND_UI(ID_OPTIONS_SHOWJAVACONSOLE, OnUpdateJavaConsole)
@@ -779,6 +819,13 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
     ON_COMMAND(ID_OPTIONS_MAILANDNEWS, OnPrefsMailNews)
     ON_COMMAND(ID_BIG_SWITCH, OnGoOffline)
 	ON_UPDATE_COMMAND_UI(ID_BIG_SWITCH, OnUpdateGoOffline)
+#ifdef MOZ_MAIL_NEWS
+    ON_COMMAND(ID_SYNCHRONIZE, OnSynchronize)
+    ON_UPDATE_COMMAND_UI(ID_SYNCHRONIZE, OnUpdateSynchronize)
+#endif
+#ifdef MOZ_OFFLINE
+    ON_UPDATE_COMMAND_UI(IDS_ONLINE_STATUS, OnUpdateOnlineStatus)
+#endif  //MOZ_OFFLINE
     ON_COMMAND(ID_DONEGOINGOFFLINE, OnDoneGoingOffline)
 #ifdef FORTEZZA
     ON_COMMAND(ID_FORTEZZA_CARD, OnStartFortezzaCard)
@@ -2329,38 +2376,9 @@ void CGenericFrame::OnAim()
 
 void CGenericFrame::OnCalendar()
 {
-
-	if(!FEU_IsCalendarAvailable())
-		return;
-
-	CString installDirectory, executable;
-
-#ifdef WIN32
-	CString calRegistry;
-
-	calRegistry.LoadString(IDS_CALENDAR_REGISTRY);
-
-	calRegistry = FEU_GetCurrentRegistry(calRegistry);
-	if(calRegistry.IsEmpty())
-		return;
-
-    installDirectory = FEU_GetInstallationDirectory(calRegistry, szLoadString(IDS_INSTALL_DIRECTORY));
-	executable = szLoadString(IDS_CALENDAR32EXE);
-#else ifdef XP_WIN16
-    installDirectory = FEU_GetInstallationDirectory(szLoadString(IDS_CALENDAR),szLoadString(IDS_INSTALL_DIRECTORY));
-	executable = szLoadString(IDS_CALENDAR16EXE);
-#endif
-    if(!installDirectory.IsEmpty())
-	{
-		executable = installDirectory + executable;
-
-		if(	WinExec(executable, SW_SHOW) >= 31)
-			return;
-	}
-	MessageBox(szLoadString(IDS_CANTCALENDAR), szLoadString(IDS_CALENDAR), MB_OK);
-
-
+	WFE_StartCalendar();
 }
+
 void CGenericFrame::OnShowAdvanced()
 {
 	int32 prefInt;
@@ -2871,55 +2889,6 @@ void CNetscapePropertySheet::OnDestroy()
 }
 
 extern int32 wfe_iFontSizeMode;
-
-// Toggle Go offline, Go online menu item
-//
-void CGenericFrame::OnGoOffline()
-{
-#ifdef MOZ_OFFLINE
-	BOOL bOnline;
-	CDownLoadDlg rDlg(this);
-	PREF_GetBoolPref("network.online", &bOnline);
-	rDlg.InitDialog(!bOnline);
-	rDlg.DoModal();
-	// don't set the offline preference here! GoOffline won't work if we're offline!
-#endif /* MOZ_OFFLINE */   
-}		
-
-void CGenericFrame::OnUpdateGoOffline(CCmdUI* pCmdUI)
-{
-#ifdef MOZ_OFFLINE
-	BOOL bOnline;
-	CString menuText;
-
-	PREF_GetBoolPref("network.online", &bOnline);
-	if (bOnline)
-	{	//online now, set to offline
-		menuText.LoadString(IDS_GO_OFFLINE);
-	}
-	else
-	{	//offline now, set to online
-		menuText.LoadString(IDS_GO_ONLINE);
-	}
-	pCmdUI->SetText(LPCTSTR(menuText));
-#endif /* MOZ_OFFLINE */
-}		 
-
-void CGenericFrame::OnDoneGoingOffline()
-{
-#ifdef MOZ_OFFLINE
-	// I'm sure this could happen at the worst possible time
-	if (!GetMainContext() || !GetMainContext()->GetContext())
-		return;
-
-	MWContext *pContext = GetMainContext()->GetContext();
-	if (NET_IsOffline() && !XP_IsContextBusy(pContext)) {
-		FE_Progress(pContext, szLoadString(IDS_STATUS_OFFLINE));
-	} else {
-		FE_Progress(pContext, szLoadString(IDS_DOC_DONE));
-	}
-#endif // MOZ_OFFLINE
-}
 
 #ifdef FORTEZZA
 /*

@@ -26,6 +26,7 @@
 #define _xfe_msgframe_h
 
 #include "Frame.h"
+#include "ThreadFrame.h"
 #include "MNBanner.h"
 
 #include "xp_core.h"
@@ -51,7 +52,7 @@ public:
 
   virtual XP_Bool isOkToClose();
 
-  virtual void allConnectionsComplete();
+  virtual void allConnectionsComplete(MWContext  *context = NULL);
   void loadMessage(MSG_FolderInfo *folder_info, MessageKey msg_key);
 
   MSG_FolderInfo *getFolderInfo();

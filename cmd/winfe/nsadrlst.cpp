@@ -18,6 +18,8 @@
 
 #include "stdafx.h"
 #include "nsadrlst.h"
+#include "namcomp.h"
+
 #ifdef __APIAPIDLL
 #include "festuff.h"
 #else
@@ -25,8 +27,263 @@
 #endif
 #include "resource.h"
 
+#include "addrfrm.h" //to get MOZ_NEWADDR
+#include "wfemsg.h"
+#include "intl_csi.h"
+
+
 #define IDM_HEADER                      8192
 #define MAX_HEADER_ITEMS                20
+
+
+CListNameCompletionCX::CListNameCompletionCX(CListNameCompletionEntryList *pOwnerList)  
+: CStubsCX(AddressCX, MWContextAddressBook)
+{
+	m_pOwnerList = pOwnerList;
+	m_lPercent = 0;
+	m_bAnimated = FALSE;
+}
+
+void CListNameCompletionCX::SetOwnerList(CListNameCompletionEntryList *pOwnerList)
+{
+	m_pOwnerList = pOwnerList;
+}
+
+void CListNameCompletionCX::SetProgressBarPercent(MWContext *pContext, int32 lPercent ) {
+	//	Ensure the safety of the value.
+
+	lPercent = lPercent < 0 ? 0 : ( lPercent > 100 ? 100 : lPercent );
+
+	if ( m_lPercent == lPercent ) {
+		return;
+	}
+
+	m_lPercent = lPercent;
+	if (m_pOwnerList) {
+		m_pOwnerList->SetProgressBarPercent(lPercent);
+	}
+}
+
+void CListNameCompletionCX::Progress(MWContext *pContext, const char *pMessage) {
+	if ( m_pOwnerList ) {
+		m_pOwnerList->SetStatusText(pMessage);
+	}
+}
+
+int32 CListNameCompletionCX::QueryProgressPercent()	{
+	return m_lPercent;
+}
+
+
+void CListNameCompletionCX::AllConnectionsComplete(MWContext *pContext)    
+{
+    //  Call the base.
+    CStubsCX::AllConnectionsComplete(pContext);
+
+	//	Also, we can clear the progress bar now.
+	m_lPercent = 0;
+	if ( m_pOwnerList ) {
+		m_pOwnerList->SetProgressBarPercent(m_lPercent);
+		m_pOwnerList->AllConnectionsComplete(pContext);
+	}
+    if (m_pOwnerList) {
+		CWnd *pOwnerWindow = m_pOwnerList->GetOwnerWindow();
+		if(pOwnerWindow)
+		{
+			pOwnerWindow->SendMessageToDescendants(WM_IDLEUPDATECMDUI, (WPARAM)TRUE, (LPARAM)0);
+		}
+	}
+}
+
+void CListNameCompletionCX::UpdateStopState( MWContext *pContext )
+{
+    if (m_pOwnerList) {
+		CWnd *pOwnerWindow = m_pOwnerList->GetOwnerWindow();
+		if(pOwnerWindow)
+		{
+			pOwnerWindow->SendMessageToDescendants(WM_IDLEUPDATECMDUI, (WPARAM)TRUE, (LPARAM)0);
+		}
+	}
+}
+
+CWnd *CListNameCompletionCX::GetDialogOwner() const {
+	return m_pOwnerList->GetOwnerWindow();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CListNameCompletionEntryList
+
+STDMETHODIMP CListNameCompletionEntryList::QueryInterface(REFIID refiid, LPVOID * ppv)
+{
+	*ppv = NULL;
+	if (IsEqualIID(refiid,IID_IUnknown))
+   		*ppv = (LPUNKNOWN) this;
+	else if (IsEqualIID(refiid,IID_IMsgList))
+   		*ppv = (LPMSGLIST) this;
+	else if (IsEqualIID(refiid,IID_IMailFrame))
+		*ppv = (LPMAILFRAME) m_pMailFrame;
+
+	if (*ppv != NULL) {
+   		AddRef();
+		return NOERROR;
+	}
+            
+	return ResultFromScode(E_NOINTERFACE);
+}
+
+
+
+STDMETHODIMP_(ULONG) CListNameCompletionEntryList::AddRef(void)
+{
+	return ++m_ulRefCount;
+}
+
+STDMETHODIMP_(ULONG) CListNameCompletionEntryList::Release(void)
+{
+	ULONG ulRef;
+	ulRef = --m_ulRefCount;
+	if (m_ulRefCount == 0) 
+		delete this;   	
+	return ulRef;   	
+}
+
+void CListNameCompletionEntryList::ListChangeStarting( MSG_Pane* pane, XP_Bool asynchronous,
+									   MSG_NOTIFY_CODE notify, MSG_ViewIndex where,
+									   int32 num)
+{
+}
+
+void CListNameCompletionEntryList::ListChangeFinished( MSG_Pane* pane, XP_Bool asynchronous,
+									   MSG_NOTIFY_CODE notify, MSG_ViewIndex where,
+									   int32 num)
+{
+	switch ( notify ) 
+	{
+
+
+	case MSG_NotifyInsertOrDelete:
+		// if its insert or delete then tell my frame to add the next chunk of values
+		// from the search
+		if (notify == MSG_NotifyInsertOrDelete 
+			&&  num > 0) 
+		{
+			if(m_bSearching)
+			{
+				AB_LDAPSearchResultsAB2(m_pPickerPane, where, num);
+			}
+
+		}
+		else
+		{
+		}
+		break;
+	}
+}
+
+void CListNameCompletionEntryList::GetSelection( MSG_Pane* pane, MSG_ViewIndex **indices, int *count, 
+							    int *focus)
+{
+}
+
+void CListNameCompletionEntryList::SelectItem( MSG_Pane* pane, int item )
+{
+}
+
+void CListNameCompletionEntryList::SetProgressBarPercent(int32 lPercent)
+{
+	m_pList->SetProgressBarPercent(lPercent);
+
+}
+
+void CListNameCompletionEntryList::SetStatusText(const char* pMessage)
+{
+	m_pList->SetStatusText(pMessage);
+}
+
+void CListNameCompletionEntryList::AllConnectionsComplete(MWContext *pContext)
+{
+		/*
+	PerformDirectorySearch();
+
+	int total = m_pOutliner->GetTotalLines();
+	CString csStatus;
+	if ( total > 1 ) {
+		csStatus.Format( szLoadString( IDS_SEARCHHITS ), total );
+	} else if ( total > 0 ) {
+		csStatus.LoadString( IDS_SEARCHONEHIT );
+	} else {
+		csStatus.LoadString( IDS_SEARCHNOHITS );
+	}
+	m_barStatus.SetWindowText( csStatus );
+
+	SendMessageToDescendants(WM_IDLEUPDATECMDUI, (WPARAM)TRUE, (LPARAM)0);
+	*/
+
+	CAddrFrame::HandleErrorReturn(AB_FinishSearchAB2(m_pPickerPane));
+}
+
+CWnd *CListNameCompletionEntryList::GetOwnerWindow()
+{
+
+	return m_pList->GetOwnerWindow();
+}
+
+STDMETHODIMP CListNameCompletionEntryMailFrame::QueryInterface(REFIID refiid, LPVOID * ppv)
+{
+	*ppv = NULL;
+	if (IsEqualIID(refiid,IID_IUnknown))
+   		*ppv = (LPUNKNOWN) this;
+	else if (IsEqualIID(refiid,IID_IMailFrame))
+		*ppv = (LPMAILFRAME) this;
+
+	if (*ppv != NULL) {
+   		AddRef();
+		return NOERROR;
+	}
+            
+	return ResultFromScode(E_NOINTERFACE);
+}
+
+STDMETHODIMP_(ULONG) CListNameCompletionEntryMailFrame::AddRef(void)
+{
+	return 0;
+}
+
+STDMETHODIMP_(ULONG) CListNameCompletionEntryMailFrame::Release(void)
+{
+	return 0;
+}
+
+// IMailFrame interface
+CMailNewsFrame *CListNameCompletionEntryMailFrame::GetMailNewsFrame()
+{
+	return (CMailNewsFrame *) NULL; 
+}
+
+MSG_Pane *CListNameCompletionEntryMailFrame::GetPane()
+{
+	return (MSG_Pane*) m_pParentList->m_pPickerPane;
+}
+
+void CListNameCompletionEntryMailFrame::PaneChanged(MSG_Pane *pane, XP_Bool asynchronous, 
+								 MSG_PANE_CHANGED_NOTIFY_CODE notify, int32 value)
+{
+	if (notify == MSG_PaneNotifyStartSearching)
+	{
+		m_pParentList->m_bSearching = TRUE;
+		m_pParentList->m_pList->SearchStarted();
+	//	m_barStatus.StartAnimation();
+	}
+	else if(notify == MSG_PaneNotifyStopSearching )
+	{
+		m_pParentList->m_bSearching = FALSE;
+		m_pParentList->m_pList->SearchStopped();
+
+	//	m_barStatus.StopAnimation();
+
+	}
+}
+
 
 //============================================================ CNSAddressList
 CNSAddressList::CNSAddressList()
@@ -42,13 +299,42 @@ CNSAddressList::CNSAddressList()
    m_iFieldControlWidth    = 0;
    m_iBitmapWidth          = 0;
    m_iTypeBitmapWidth      = 0;
-   m_pNameField            = new CNSAddressNameEditField;
+   m_pNameField            = new CNSAddressNameEditField(this);
    m_pAddressTypeList      = new CNSAddressTypeControl;
    m_iItemHeight           = 0;
    m_pIAddressParent       = NULL;
    m_bCreated              = FALSE;
    m_hTextFont             = NULL;
    m_bParse                = TRUE;
+
+   m_bDragging             = FALSE;
+   m_pContext			   = NULL;
+
+   m_pCX				    = new CListNameCompletionCX(NULL);
+   INTL_CharSetInfo csi;
+
+   csi = LO_GetDocumentCharacterSetInfo(m_pCX->GetContext());
+
+   m_pCX->GetContext()->type = MWContextAddressBook;
+   m_pCX->GetContext()->fancyFTP = TRUE;
+   m_pCX->GetContext()->fancyNews = TRUE;
+   m_pCX->GetContext()->intrupt = FALSE;
+   m_pCX->GetContext()->reSize = FALSE;
+   INTL_SetCSIWinCSID(csi, CIntlWin::GetSystemLocaleCsid());
+
+   m_pPickerPane = NULL;
+   m_bExpansion = TRUE;
+#ifdef MOZ_NEWADDR
+   int result;
+
+   result = AB_CreateABPickerPane(&m_pPickerPane, m_pCX->GetContext(), WFE_MSGGetMaster(), 1);
+
+   CListNameCompletionEntryList* pInstance = new CListNameCompletionEntryList(m_pPickerPane, this);
+   pInstance->QueryInterface( IID_IMsgList, (LPVOID *) &m_pINameCompList );
+   MSG_SetFEData( (MSG_Pane*) m_pPickerPane, (LPVOID) (LPUNKNOWN) (LPMAILFRAME) m_pINameCompList );
+   m_pCX->SetOwnerList(pInstance);
+#endif
+
 }
 
 LRESULT CNSAddressList::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -94,7 +380,7 @@ LRESULT CNSAddressList::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam
             DoChildLostFocus();
             return 0;
         case WM_NOTIFYSELECTIONCHANGE:
-            return (DoNotifySelectionChange());
+            return (DoNotifySelectionChange(FALSE));
         case WM_DISPLAYTYPELIST:
             DoDisplayTypeList();
             return 0;
@@ -111,6 +397,14 @@ LRESULT CNSAddressList::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam
             if (DoCommand(m_hWnd,wParam,lParam))
                return 0;
             break;
+        case WM_GETDLGCODE:
+          return DLGC_WANTTAB | DLGC_WANTARROWS;
+        case WM_KEYDOWN:
+          onKeyDown((int)wParam, (DWORD)lParam);
+          break;
+        case WM_MOUSEMOVE:
+          onMouseMove(m_hWnd, (WORD)wParam, (int)LOWORD(lParam), (int)HIWORD(lParam));
+          break;
     }
     return CListBox::DefWindowProc(message,wParam,lParam);
 }
@@ -118,6 +412,21 @@ LRESULT CNSAddressList::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam
 void CNSAddressList::EnableParsing(BOOL bParse)
 {
     m_bParse = bParse;
+}
+
+BOOL CNSAddressList::GetEnableParsing()
+{
+	return m_bParse;
+}
+
+void CNSAddressList::EnableExpansion(BOOL bExpansion)
+{
+	m_bExpansion = bExpansion;
+}
+
+BOOL CNSAddressList::GetEnableExpansion()
+{
+	return m_bExpansion;
 }
 
 void CNSAddressList::SetControlParent(LPADDRESSPARENT pIAddressParent)
@@ -143,10 +452,32 @@ CNSAddressList::~CNSAddressList()
         ::DeleteObject((HGDIOBJ)m_hPenGrey);
     delete m_pAddressTypeList;
     delete m_pNameField;
+
+	if(!m_pCX->IsDestroyed()) {
+		m_pCX->DestroyContext();
+	}
+#ifdef MOZ_NEWADDR
+	if(m_pPickerPane)
+	{
+		AB_ClosePane(m_pPickerPane);
+	}
+
+	m_pINameCompList->Release();
+#endif
 }
 
 BOOL CNSAddressList::DoCommand( HWND hwnd, WPARAM wParam, LPARAM lParam )
 {
+#ifdef XP_WIN16
+    if (HIWORD(lParam) == EN_SETFOCUS)
+#else
+    if (HIWORD(wParam) == EN_SETFOCUS)
+#endif
+    {
+    	selectAllEntries(FALSE);
+    	return TRUE;
+    }
+
 #ifdef XP_WIN16
     if (HIWORD(lParam) == EN_CHANGE)
 #else
@@ -282,29 +613,35 @@ int CNSAddressList::InsertEntry( int nIndex, NSAddressListEntry *pAddressEntry, 
 		// address type in the address type list.
     	if (m_bDrawTypeList)
     	{
-    	      CString cs;
-            int index = GetCount();
-            if (index > 0 && index != LB_ERR)
-            {
-            	CNSAddressInfo *pLastAddress = 
-                    (CNSAddressInfo *)GetItemDataPtr(index-1);
-                cs = pLastAddress->GetType();                                    
-                int index = m_pAddressTypeList->FindStringExact(-1,cs);
-                if (index != LB_ERR)
-                {
-                    CNSAddressTypeInfo * pInfo = (CNSAddressTypeInfo *)m_pAddressTypeList->GetItemData(index);
-                    ASSERT(pInfo);
-                    if (pInfo->GetExclusive())
-                        m_pAddressTypeList->GetText(0,cs);
-                }
-            }
-            else
-        	      m_pAddressTypeList->GetText(0,cs);
-			pAddress->SetType(cs);
-    		pAddress->SetBitmap(0);
+		    CString cs;
+			int index = GetCount();
+			if (index > 0 && index != LB_ERR)
+			{
+				CNSAddressInfo *pLastAddress = (CNSAddressInfo *)GetItemDataPtr(index-1);
+				cs = pLastAddress->GetType();                                    
+				int index = m_pAddressTypeList->FindStringExact(-1,cs);
+				if (index != LB_ERR)
+				{
+					CNSAddressTypeInfo * pInfo = (CNSAddressTypeInfo *)m_pAddressTypeList->GetItemData(index);
+					ASSERT(pInfo);
+					if (pInfo->GetExclusive())
+					m_pAddressTypeList->GetText(index, cs);
+				}
+			}
+			else
+			{
+				m_pAddressTypeList->GetText(0, cs);
+			}
+	        pAddress->SetType(cs);
+		    pAddress->SetBitmap(0);
 			pAddress->SetEntryID();
-            pAddress->SetName("");
-    	}
+			pAddress->SetName("");
+
+		}
+#ifdef MOZ_NEWADDR
+		pAddress->SetPickerPane(m_pPickerPane);
+#endif
+
 	}
 	else
 	{
@@ -332,6 +669,10 @@ int CNSAddressList::InsertEntry( int nIndex, NSAddressListEntry *pAddressEntry, 
 	    pAddress->SetName(pAddressEntry->szName);
 	    pAddress->SetBitmap(pAddressEntry->idBitmap);
 	    pAddress->SetEntryID(pAddressEntry->idEntry);
+#ifdef MOZ_NEWADDR
+		pAddress->SetPickerPane(m_pPickerPane);
+#endif
+
 	}
 	int index = InsertString( nIndex, (LPCTSTR)pAddress );
 	if ( index < 0 )
@@ -347,7 +688,7 @@ int CNSAddressList::InsertEntry( int nIndex, NSAddressListEntry *pAddressEntry, 
 
 	CRect WindowRect, ItemRect;
 	GetWindowRect(WindowRect);
-    
+   
     if (m_pIAddressParent && expandName)
 		m_pIAddressParent->AddedItem(m_hWnd, 0, index);
 
@@ -377,6 +718,432 @@ void CNSAddressList::SetCSID( int16 csid )
 		m_pNameField->SetCSID(csid);
 }
 
+//==================================================================ShowNameCompletionPicker
+void CNSAddressList::ShowNameCompletionPicker(CWnd* pParent)
+{
+
+	CString name;
+
+	//Stop the current name completion
+	StopNameCompletion();
+
+	//turn parsing and expansion off while we have dialog up
+	BOOL pOldParse = GetEnableParsing();
+	BOOL pOldExpansion = GetEnableExpansion();
+
+	EnableParsing(FALSE);
+	EnableExpansion(FALSE);
+	CEdit *pNameField = GetAddressNameField();
+	if(pNameField)
+	{
+		pNameField->GetWindowText(name);
+
+
+		CNameCompletion dialog( name, pParent);
+		
+		int result = dialog.DoModal();
+
+		//reset parsing and expansion state.
+		EnableParsing(pOldParse);
+		EnableExpansion(pOldExpansion);
+
+		if(result == IDOK)
+		{
+			AB_NameCompletionCookie *pCookie = dialog.GetNameCompletionCookie();
+
+			if(pCookie)
+			{
+				SetNameCompletionCookieInfo(pCookie, 1, NC_NameComplete);
+				DoNotifySelectionChange();
+
+			}
+			if ((GetActiveSelection()+1 == GetCount()))
+			{
+				// don't add a second blank line
+				if ( m_pNameField->LineLength() != 0 )
+                {
+					// add the new address entry to the list
+					InsertEntry( GetActiveSelection()+1,NULL);
+                }
+			}
+			SetActiveSelection( GetActiveSelection()+1 );
+			pNameField->SetFocus();
+
+		}
+
+		if(result == IDCANCEL)
+		{
+			//they have chosen not to accept a result so they have
+			//turned of name completion until they type something again.
+			SetNameCompletionCookieInfo(NULL, 0, NC_NameComplete);
+			pNameField->SetFocus();
+		}
+	}
+
+   
+}
+
+//=================================================================NameCompletionExit
+int NameCompletionExit(AB_NameCompletionCookie *cookie, int numResults,
+									void *FEcookie)
+{
+
+
+	if(FEcookie)
+	{
+		FENameCompletionCookieInfo *pCookieInfo = (FENameCompletionCookieInfo*)FEcookie;
+
+		CNSAddressList *pList = pCookieInfo->GetList();
+		int nIndex = pCookieInfo->GetIndex();
+
+		if(pList)
+		{
+			pList->SetNameCompletionCookieInfo(cookie, numResults, NC_NameComplete, nIndex );
+			//how do we make correct name show up correctly?
+			CNSAddressNameEditField * nameField = (CNSAddressNameEditField *)pList->GetAddressNameField();
+			nameField->DrawNameCompletion();
+		}
+
+	}
+	return 0;
+}
+
+int NameExpansionExit(AB_NameCompletionCookie *cookie, int numResults, void *FEcookie)
+{
+
+	if(FEcookie)
+	{
+		FENameCompletionCookieInfo *pCookieInfo = (FENameCompletionCookieInfo*)FEcookie;
+
+		CNSAddressList *pList = pCookieInfo->GetList();
+		int nIndex = pCookieInfo->GetIndex();
+
+		if(pList)
+		{
+			pList->SetNameCompletionCookieInfo(cookie, numResults, NC_Expand, nIndex );
+		}
+
+	}
+	return 0;
+
+}
+
+//=================================================================StartNameCompletion
+void CNSAddressList::StartNameCompletion(int nIndex)
+{
+
+	CString text;
+
+	m_pNameField->GetWindowText(text);
+
+	int result;
+
+	if(nIndex != -1 && (nIndex < 0 ||  nIndex >= GetCount()))
+	{
+		return;
+	}
+
+	if(nIndex == -1)
+		nIndex = GetActiveSelection();
+
+	if(nIndex != LB_ERR)
+	{
+		//dont do if name completion is turned off for this index
+		CNSAddressInfo *info = (CNSAddressInfo*)GetItemDataPtr(nIndex);
+
+		if(info->GetNameCompletionEnum() != NC_None)
+		{
+			FENameCompletionCookieInfo *pCookieInfo = new FENameCompletionCookieInfo();
+
+			pCookieInfo->SetList(this);
+			pCookieInfo->SetIndex(nIndex);
+
+			if(info)
+			{
+#ifdef FE_IMPLEMENTS_VISIBLE_NC
+				result = AB_NameCompletionSearch(info->GetPickerPane(), (const char*) text,
+											 NameCompletionExit, FALSE, pCookieInfo);
+#else
+				result = AB_NameCompletionSearch(info->GetPickerPane(), (const char*) text,
+											 NameCompletionExit, pCookieInfo);
+#endif
+			}
+		}
+	}
+}
+
+
+//=================================================================StopNameCompletion
+void CNSAddressList::StopNameCompletion(int nIndex, BOOL bEraseCookie)
+{
+
+	CString text;
+
+	int result;
+
+	if(nIndex != -1 && (nIndex < 0 ||  nIndex >= GetCount()))
+	{
+		return;
+	}
+
+	if(nIndex == -1)
+		nIndex = GetActiveSelection();
+
+	if(nIndex != LB_ERR)
+	{
+		CNSAddressInfo *info = (CNSAddressInfo*)GetItemDataPtr(nIndex);
+
+		if(bEraseCookie)
+		{
+			AB_NameCompletionCookie *pOldCookie = info->GetNameCompletionCookie();
+
+			if(pOldCookie)
+			{
+				AB_FreeNameCompletionCookie(pOldCookie);
+			}
+
+			info->SetNameCompletionCookie(NULL);
+			info->SetNumNameCompletionResults(-1);
+		}
+
+		//make sure m_pNameField doesn't keep setting timer off
+		m_pNameField->StopNameCompletion();
+		if(info)
+		{
+#ifdef FE_IMPLEMENTS_VISIBLE_NC
+			result = AB_NameCompletionSearch(info->GetPickerPane(), (const char*) NULL,
+										 NameCompletionExit, FALSE, NULL);
+#else
+			result = AB_NameCompletionSearch(info->GetPickerPane(), (const char*) NULL,
+										 NameCompletionExit, NULL);
+#endif
+		}
+	}
+}
+
+//=================================================================StartNameExpansion
+void CNSAddressList::StartNameExpansion(int nIndex)
+{
+
+	CString text;
+
+	m_pNameField->GetWindowText(text);
+
+	int result;
+
+	if(nIndex != -1 && (nIndex < 0 ||  nIndex >= GetCount()))
+	{
+		return;
+	}
+
+	if(nIndex == -1)
+		nIndex = GetActiveSelection();
+
+	if(nIndex != LB_ERR)
+	{
+		CNSAddressInfo *info = (CNSAddressInfo*)GetItemDataPtr(nIndex);
+
+		FENameCompletionCookieInfo *pCookieInfo = new FENameCompletionCookieInfo();
+
+		pCookieInfo->SetList(this);
+		pCookieInfo->SetIndex(nIndex);
+
+		if(info)
+		{
+#ifdef FE_IMPLEMENTS_VISIBLE_NC
+			result = AB_NameCompletionSearch(info->GetPickerPane(), (const char*) text,
+										 NameExpansionExit, FALSE, pCookieInfo);
+#else
+			result = AB_NameCompletionSearch(info->GetPickerPane(), (const char*) text,
+										 NameExpansionExit, pCookieInfo);
+#endif
+		}
+	}
+}
+
+//================================================================== SetEntryHasNameCompletion
+void CNSAddressList::SetEntryHasNameCompletion(BOOL bHasNameCompletion, int nIndex)
+{
+	if(nIndex != -1 && (nIndex < 0 ||  nIndex >= GetCount()))
+	{
+		return;
+	}
+
+	if(nIndex == -1)
+	{
+		nIndex = GetActiveSelection();
+	}
+
+	if(nIndex != LB_ERR)
+	{
+		CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr( nIndex );
+		if(bHasNameCompletion)
+		{
+			pAddress->SetNameCompletionEnum(NC_NameComplete);
+			StartNameCompletion(nIndex);
+		}
+		else
+		{
+			pAddress->SetNameCompletionEnum(NC_None);
+			StopNameCompletion(nIndex);
+			Invalidate();
+		}
+
+	}
+}
+
+//================================================================== GetEntryHasNameCompletion
+BOOL CNSAddressList::GetEntryHasNameCompletion(int nIndex)
+{
+	if(nIndex != -1 && (nIndex < 0 ||  nIndex >= GetCount()))
+	{
+		return FALSE;
+	}
+
+	if(nIndex == -1)
+	{
+		nIndex = GetActiveSelection();
+	}
+
+	if(nIndex != LB_ERR)
+	{
+		CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr( nIndex );
+		return (pAddress->GetNameCompletionEnum() != NC_None);
+	}
+	return FALSE;
+}
+
+
+//================================================================== SetContext
+void CNSAddressList::SetContext(MWContext *pContext)
+{
+	m_pContext = pContext;
+}
+
+//================================================================== GetContext
+MWContext *CNSAddressList::GetContext()
+{
+	return m_pContext;
+}
+
+//==============================================SetNameCompletionCookieInfo
+void CNSAddressList::SetNameCompletionCookieInfo(AB_NameCompletionCookie *pCookie,
+												 int nNumResults,  
+												 NameCompletionEnum ncEnum, int nIndex)
+{
+	if(nIndex != -1 && nIndex < 0 &&  nIndex > GetCount())
+	{
+		return;
+	}
+
+	if(nIndex == -1)
+	{
+		nIndex = GetActiveSelection();
+	}
+
+	if(nIndex != LB_ERR)
+	{
+		CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr( nIndex );
+		AB_NameCompletionCookie *pOldCookie = pAddress->GetNameCompletionCookie();
+
+		if(pOldCookie != NULL && pOldCookie == pCookie)
+		{
+			int i = 0;
+		}
+		if(pOldCookie)
+		{
+			AB_FreeNameCompletionCookie(pOldCookie);
+		}
+		pAddress->SetNameCompletionCookie(pCookie);
+		pAddress->SetNumNameCompletionResults(nNumResults);
+		pAddress->SetNameCompletionEnum(ncEnum);
+		//if we are supposed to expand then expand the address
+		if(ncEnum == NC_Expand)
+		{
+			if(pCookie != NULL && nNumResults == 1)
+			{
+				char *pName = AB_GetHeaderString(pCookie);
+
+				pAddress->SetName(pName);
+				XP_FREE(pName);
+				Invalidate();
+			}
+		}
+	}
+
+
+}
+
+void CNSAddressList::GetNameCompletionCookieInfo(AB_NameCompletionCookie **pCookie,
+													int *pNumResults, int nIndex)
+{
+
+	*pCookie = NULL;
+	*pNumResults = 0;
+
+	if(nIndex != -1 && nIndex < 0 && nIndex > GetCount())
+	{
+		return;
+	}
+
+	if(nIndex == -1)
+	{
+		nIndex = GetActiveSelection();
+	}
+
+	if(nIndex != LB_ERR)
+	{
+		CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr( nIndex );
+		*pCookie = pAddress->GetNameCompletionCookie();
+		*pNumResults = pAddress->GetNumNameCompletionResults();
+	}
+
+}
+
+//================================================================== SearchStarted
+void CNSAddressList::SearchStarted()
+{
+	if(m_pIAddressParent)
+	{
+		m_pIAddressParent->StartNameCompletionSearch();
+	}
+}
+
+//================================================================== SearchStopped
+void CNSAddressList::SearchStopped()
+{
+	if(m_pIAddressParent)
+	{
+		m_pIAddressParent->StopNameCompletionSearch();
+	}
+}
+
+void CNSAddressList::SetProgressBarPercent(int32 lPercent)
+{
+	if(m_pIAddressParent)
+	{
+		m_pIAddressParent->SetProgressBarPercent(lPercent);
+	}
+}
+
+void CNSAddressList::SetStatusText(const char* pMessage)
+{
+	if(m_pIAddressParent)
+	{
+		m_pIAddressParent->SetStatusText(pMessage);
+	}
+
+}
+
+CWnd *CNSAddressList::GetOwnerWindow()
+{
+	if(m_pIAddressParent)
+	{
+		return m_pIAddressParent->GetOwnerWindow();
+	}
+	return NULL;
+}
+
 //================================================================== SetEntry
 BOOL CNSAddressList::SetEntry( int nIndex, NSAddressListEntry *pNewAddressEntry )
 {
@@ -394,15 +1161,26 @@ BOOL CNSAddressList::SetEntry( int nIndex, NSAddressListEntry *pNewAddressEntry 
 	pAddress->SetBitmap(pNewAddressEntry->idBitmap);
 	pAddress->SetEntryID(pNewAddressEntry->idEntry);
 
+
+	unsigned long entryID = 0;
+	UINT bitmapID = 0;
+	char * pszFullName = NULL;
+
+#ifdef MOZ_NEWADDR
+	//since we just changed the name up there we should notify parent.
+	m_pIAddressParent->ChangedItem((char*)pNewAddressEntry->szName, nIndex, m_hWnd, 
+				&pszFullName, &entryID, &bitmapID);
+
+#endif
+
     if (m_pIAddressParent)
 	{
 	    NSAddressListEntry entry;
 	    BOOL bRetVal = GetEntry(nIndex,&entry);
 		if (bRetVal)
 		{
-			unsigned long entryID = 0;
-			UINT bitmapID = 0;
-			char * pszFullName = NULL;
+
+
 
         	CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr( nIndex );
             if (pAddress && pAddress->GetExpansion())
@@ -410,12 +1188,49 @@ BOOL CNSAddressList::SetEntry( int nIndex, NSAddressListEntry *pNewAddressEntry 
                 BOOL bExpand = TRUE;
                 if (m_bDrawTypeList)
                 {
-                    CNSAddressTypeInfo * pInfo = (CNSAddressTypeInfo *)m_pAddressTypeList->GetItemData(
+		            CNSAddressTypeInfo * pInfo = (CNSAddressTypeInfo *)m_pAddressTypeList->GetItemData(
                         m_pAddressTypeList->GetCurSel());
+
                     bExpand = pInfo->GetExpand();
                 }
-                if (bExpand)
+                if (bExpand && m_bExpansion)
                 {
+#ifdef MOZ_NEWADDR
+						AB_NameCompletionCookie *pCookie = pAddress->GetNameCompletionCookie();
+						int nNumResults = pAddress->GetNumNameCompletionResults();
+						BOOL bExpandName = FALSE;
+
+						if(pCookie != NULL && nNumResults == 1)
+						{
+							pszFullName = AB_GetHeaderString(pCookie);
+
+						}
+						//if we have multiple matches and preference is set.
+						else if(pCookie != NULL && nNumResults > 1 && g_MsgPrefs.m_bShowCompletionPicker)
+						{
+							ShowNameCompletionPicker(this);
+							return TRUE;
+						}
+						else
+						{
+							pszFullName = XP_STRDUP((char*)entry.szName);
+						}
+
+						//since we just changed the name, we need to notify parent.
+    					m_pIAddressParent->ChangedItem((char*)entry.szName, nIndex, m_hWnd, 
+							&pszFullName, &entryID, &bitmapID);
+
+	    				if (pszFullName != NULL)
+		    			{
+							pAddress->SetName(pszFullName);
+							if (bitmapID)
+    							SetItemBitmap(GetActiveSelection(), bitmapID);
+    						if (entryID)
+    						SetItemEntryID(GetActiveSelection(), entryID);
+    						free(pszFullName);
+	   					}
+
+#else
     			    m_pIAddressParent->ChangedItem((char*)entry.szName, nIndex, m_hWnd, 
     				    &pszFullName, &entryID, &bitmapID);
     			    if (pszFullName != NULL)
@@ -426,7 +1241,8 @@ BOOL CNSAddressList::SetEntry( int nIndex, NSAddressListEntry *pNewAddressEntry 
     				    if (entryID)
     					    SetItemEntryID(nIndex, entryID);
     				    free(pszFullName);
-	    		    }
+					}
+#endif
                 }
             }
 		}
@@ -482,14 +1298,18 @@ BOOL CNSAddressList::DeleteEntry( int nIndex )
         }
     }
 
-    if (GetCount() == 1)
-    {
-    	m_pNameField->SetWindowText("");
-    	UpdateHeaderContents();
-		if (m_pIAddressParent)
-			m_pIAddressParent->DeletedItem(m_hWnd, 0, nIndex);
-		return FALSE;
-    }
+	if(m_bDrawTypeList)
+	{
+		if (GetCount() == 1)
+		{
+    		m_pNameField->SetWindowText("");
+    		UpdateHeaderContents();
+			if (m_pIAddressParent)
+				m_pIAddressParent->DeletedItem(m_hWnd, 0, nIndex);
+			return FALSE;
+		}
+	}
+
 	// handle selection if deleting selected address
 	if ( (int)nIndex == GetActiveSelection() )
 	{
@@ -559,9 +1379,10 @@ BOOL CNSAddressList::AddAddressType(
     		m_pAddressTypeList->SetCurSel(0);
     }
    	if ( !IsWindow( m_pNameField->m_hWnd ) )
-   		VERIFY( m_pNameField->Create( this ) );
+   		VERIFY( m_pNameField->Create( this, m_pContext ) );
     return TRUE;
 }
+
 
 
 //==================================================== GetAddressTypeComboBox
@@ -630,6 +1451,19 @@ BOOL CNSAddressList::OnKeyPress( CWnd *pChildControl, UINT nKey, UINT nRepCnt, U
 {
 	switch (nKey) 
 	{
+#ifdef MOZ_NEWADDR
+		case 'J':
+		case 'j':
+			{
+    			BOOL bCtrl = GetKeyState( VK_CONTROL ) & 0x8000;
+				if(bCtrl)
+				{
+					ShowNameCompletionPicker(this);
+					return TRUE;
+				}
+			}
+			break;
+#endif
 		case VK_HOME:
 			if (GetActiveSelection()) 
 				SetActiveSelection(0);
@@ -685,34 +1519,34 @@ BOOL CNSAddressList::OnKeyPress( CWnd *pChildControl, UINT nKey, UINT nRepCnt, U
                     return FALSE;
                 return TRUE;
             }
-            break;
+           break;
 	    case VK_RETURN:
-            if (DoNotifySelectionChange() != -1)
-			{
-				if ((GetActiveSelection()+1 == GetCount()))
-				{
-					// don't add a second blank line
-					if ( m_pNameField->LineLength() == 0 )
-                    {
-				        CWnd *pNextWnd = GetNextWindow(GW_HWNDNEXT);
-				        if (pNextWnd) 
-					        pNextWnd->SetFocus();
-				        else
-					        GetParent()->SendMessage(WM_LEAVINGLASTFIELD);
-                        return TRUE;
-                    }
-					// add the new address entry to the list
-					InsertEntry( GetActiveSelection()+1,NULL);
-					// select the new address and make sure its visible
-					SetActiveSelection( GetActiveSelection()+1 );
-					return TRUE;
-				} 
-				else 
-				{
-					SetActiveSelection( GetActiveSelection()+1 );
-				}
-				return TRUE;
-			}
+        if (DoNotifySelectionChange() != -1)
+			  {
+				  if ((GetActiveSelection()+1 == GetCount()))
+				  {
+					  // don't add a second blank line
+					  if ( m_pNameField->LineLength() == 0 )
+                      {
+				          CWnd *pNextWnd = GetNextWindow(GW_HWNDNEXT);
+				          if (pNextWnd) 
+					          pNextWnd->SetFocus();
+				          else
+					          GetParent()->SendMessage(WM_LEAVINGLASTFIELD);
+                          return TRUE;
+                      }
+					  // add the new address entry to the list
+					  InsertEntry( GetActiveSelection()+1,NULL);
+					  // select the new address and make sure its visible
+					  SetActiveSelection( GetActiveSelection()+1 );
+					  return TRUE;
+				  } 
+				  else 
+				  {
+					  SetActiveSelection( GetActiveSelection()+1 );
+				  }
+				  return TRUE;
+			  }
 			else
 				SetSel( GetActiveSelection(), TRUE);
 
@@ -726,7 +1560,9 @@ BOOL CNSAddressList::OnKeyPress( CWnd *pChildControl, UINT nKey, UINT nRepCnt, U
 		{
     		BOOL bShift = GetKeyState( VK_SHIFT ) & 0x8000;
 			if ( !bShift && (pChildControl->m_hWnd == m_pAddressTypeList->m_hWnd) )
+      {
 				m_pNameField->SetFocus();
+      }
 			else if ( m_bDrawTypeList && bShift && (pChildControl->m_hWnd == m_pNameField->m_hWnd) )
 				m_pAddressTypeList->SetFocus();
 			else if ( !bShift && (GetActiveSelection()+1 == GetCount()) )
@@ -768,6 +1604,92 @@ BOOL CNSAddressList::OnKeyPress( CWnd *pChildControl, UINT nKey, UINT nRepCnt, U
 	return FALSE; // not handled - let the child continue processing this key
 }
 
+BOOL CNSAddressList::isPointInItemBitmap(LPPOINT pPoint, int iIndex)
+{
+  CRect rect;
+  if(GetItemRect(m_hWnd, iIndex, rect) == LB_ERR)
+    return FALSE;
+
+	CRect rectBitmap(m_iFieldControlWidth, 
+                   rect.top, 
+                   m_iFieldControlWidth + m_iBitmapWidth, 
+                   rect.bottom );
+	if (!m_bDrawTypeList)
+	{
+	    rectBitmap.left = rect.left;
+	    rectBitmap.right = rect.left + m_iBitmapWidth;
+	}
+  
+  BOOL bRet = rectBitmap.PtInRect(*pPoint);
+  return bRet;
+}
+
+void CNSAddressList::selectEntry(int iIndex, BOOL bState)
+{
+  if(iIndex >= GetCount())
+    return;
+  CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr(iIndex);
+  if(pAddress == NULL)
+    return;
+  if(pAddress->getEntrySelectedState() == bState)
+    return;
+  pAddress->setEntrySelectedState(bState);
+  RECT rcItem;
+  GetItemRect(m_hWnd, iIndex, &rcItem);
+  InvalidateRect(&rcItem);
+}
+
+BOOL CNSAddressList::isEntrySelected(int iIndex)
+{
+  CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr(iIndex);
+  if(pAddress == NULL)
+    return FALSE;
+  return pAddress->getEntrySelectedState();
+}
+
+void CNSAddressList::selectAllEntries(BOOL bState)
+{
+  for(int i = 0; i < GetCount(); i++)
+    selectEntry(i, bState);
+}
+
+int CNSAddressList::getEntryMultipleSelectionStatus(BOOL * pbContinuous, int * piFirst, int * piLast)
+{
+  if(GetCount() == 0)
+    return 0;
+
+  int iFirst = -1;
+  int iLast = -1;
+  
+  int iCounter = 0;
+  BOOL bContinuousSelectionStarted = FALSE;
+  BOOL bContinuousSelectionStopped = FALSE;
+  BOOL bBroken = FALSE;
+
+  for(int i = 0; i < GetCount(); i++)
+  {
+    if(isEntrySelected(i))
+    {
+      if(iFirst == -1)
+        iFirst = i;
+      iLast = i;
+      if(bContinuousSelectionStopped)
+        bBroken = TRUE;
+      bContinuousSelectionStarted = TRUE;
+      iCounter++;
+      continue;
+    }
+
+    if(bContinuousSelectionStarted)
+      bContinuousSelectionStopped = TRUE;
+  }
+
+  *pbContinuous = !bBroken;
+  *piFirst = iFirst;
+  *piLast = iLast;
+  return iCounter;
+}
+
 void CNSAddressList::DrawEntryBitmap(
     int iSel, 
     CNSAddressInfo * pAddress, 
@@ -789,9 +1711,16 @@ void CNSAddressList::DrawEntryBitmap(
 	        iBitmap = GetDefaultBitmapId();
         if (iBitmap)
         {
-	        if (bErase)
-                NS_FillSolidRect(pDC->GetSafeHdc(),rectBitmap,GetSysColor(COLOR_WINDOW));
-	        BITMAP bitmap;
+          if(!isEntrySelected(iSel))
+            NS_FillSolidRect(pDC->GetSafeHdc(),rectBitmap,GetSysColor(COLOR_WINDOW));
+          else
+          {
+            rectBitmap.InflateRect(0, -1);
+            NS_FillSolidRect(pDC->GetSafeHdc(),rectBitmap,GetSysColor(COLOR_HIGHLIGHT));
+            rectBitmap.InflateRect(0, 1);
+          }
+
+          BITMAP bitmap;
 	        CBitmap cbitmap;
 	        cbitmap.LoadBitmap(MAKEINTRESOURCE(iBitmap));
             cbitmap.GetObject(sizeof(BITMAP),&bitmap);
@@ -886,38 +1815,60 @@ void CNSAddressList::UpdateHeaderContents(void)
     }
 }
 
+void CNSAddressList::SingleHeaderCommand(int nID)
+{
+  if (GetActiveSelection()!=LB_ERR && m_bDrawTypeList)
+  {
+    m_pAddressTypeList->SetCurSel(nID);
+    UpdateHeaderType();
+    if(!isEntrySelected(GetActiveSelection()))
+      m_pNameField->SetFocus();
+    CNSAddressTypeInfo * pInfo = (CNSAddressTypeInfo*)m_pAddressTypeList->GetItemData(nID);
+    ASSERT(pInfo);
+    if (pInfo->GetExclusive())
+    {
+      CString cs;
+      m_pNameField->GetWindowText(cs);
+      if (!cs.GetLength())
+         m_pNameField->SetWindowText(pInfo->GetValue());
+      pInfo->SetHidden(FALSE);
+      pInfo->SetExclusive(FALSE);
+      UpdateHeaderContents();
+      int iLineLength = m_pNameField->LineLength();
+      UpdateWindow();
+      m_pNameField->SetSel(iLineLength,iLineLength,TRUE);
+    }
+	else
+    {
+      pInfo->SetExclusive(TRUE);
+    }
+  }
+}
+
 void CNSAddressList::HeaderCommand(int nID)
 {
-    if (GetActiveSelection()!=LB_ERR && m_bDrawTypeList)
+    BOOL bCont;
+    int iFirst = 0;
+    int iLast = 0;
+    int iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+
+    if(iCount <= 0)
     {
-        m_pAddressTypeList->SetCurSel(nID);
-        UpdateHeaderType();
-        m_pNameField->SetFocus();
-        CNSAddressTypeInfo * pInfo = (CNSAddressTypeInfo*)m_pAddressTypeList->GetItemData(nID);
-        ASSERT(pInfo);
-        if (pInfo->GetExclusive())
-        {
-            CString cs;
-            m_pNameField->GetWindowText(cs);
-            if (!cs.GetLength())
-               m_pNameField->SetWindowText(pInfo->GetValue());
-            pInfo->SetHidden(FALSE);
-            pInfo->SetExclusive(FALSE);
-            UpdateHeaderContents();
-            int iLineLength = m_pNameField->LineLength();
-            UpdateWindow();
-            m_pNameField->SetSel(iLineLength,iLineLength,TRUE);
-        }
-		else
-        {
-			CString cs;
-			m_pAddressTypeList->GetText (nID, cs);
-			if (!strnicmp(cs,szLoadString(IDS_ADDRESSREPLYTO),strlen(szLoadString(IDS_ADDRESSREPLYTO))))
-				pInfo->SetExclusive(TRUE);
-			else if (!strnicmp(cs,szLoadString(IDS_ADDRESSFOLLOWUPTO), strlen(szLoadString(IDS_ADDRESSFOLLOWUPTO))))
-				pInfo->SetExclusive(TRUE);
-        }
+      SingleHeaderCommand(nID);
+      return;
     }
+
+    int iCurSel = GetActiveSelection();
+
+    for(int i = iFirst; i <= iLast; i++)
+    {
+      if(!isEntrySelected(i))
+        continue;
+      SetActiveSelection(i);
+      SingleHeaderCommand(nID);
+    }
+
+    SetActiveSelection(iCurSel);
 }
 
 void CNSAddressList::DoSetFocus(HWND hwnd) 
@@ -929,10 +1880,14 @@ void CNSAddressList::DoSetFocus(HWND hwnd)
         if (m_bDrawTypeList)
             ::ShowWindow(m_pAddressTypeList->m_hWnd, SW_SHOW);
         m_pNameField->ShowWindow( SW_SHOW );
-    	if ( GetActiveSelection() == GetCount()-1 )
+
+    if(m_EntrySelector.WhatEntryBitmapClicked() == -1)
+    {
+      if ( GetActiveSelection() == GetCount()-1 )
             ::SetFocus(m_pNameField->m_hWnd);
     	else if (m_bDrawTypeList)
             ::SetFocus(m_pAddressTypeList->m_hWnd);
+    }
 	}
 }
 
@@ -1020,8 +1975,9 @@ void CNSAddressList::DrawAddress( int nIndex, CRect &rect, CDC *pDC, BOOL bSelec
 	int iremain = ((rectAddress.Height()-m_pNameField->m_iTextHeight)+1)%2;
 	rectAddress.top += (ioffset+iremain);
 	rectAddress.bottom -= ioffset;
-	// draw the address type and address name fields
-	if ( bSelected )
+
+  // draw the address type and address name fields
+  if ( bSelected )
 	{
 	    if (m_bDrawTypeList)
 	    {
@@ -1035,33 +1991,34 @@ void CNSAddressList::DrawAddress( int nIndex, CRect &rect, CDC *pDC, BOOL bSelec
 
 	    int nStart, nEnd;
 	    m_pNameField->GetSel(nStart,nEnd);
-	    m_pNameField->SetWindowText(pAddress->GetName());
+
+      m_pNameField->SetWindowText(pAddress->GetName());
 	    m_pNameField->MoveWindow( rectAddress, FALSE );
-        m_pNameField->UpdateWindow();
-	    m_lastIndex = nIndex;
-	    m_pNameField->SetSel(nStart,nEnd);
+      m_pNameField->UpdateWindow();
+
+      m_lastIndex = nIndex;
+      m_pNameField->SetSel(nStart,nEnd);
 	}
 
 	if (!bSelected || !m_pNameField->IsWindowVisible())
 	{
-
     	COLORREF cText = pDC->SetTextColor( GetSysColor( COLOR_WINDOWTEXT ) );
-		int iMode = pDC->SetBkMode( TRANSPARENT );
 
-		// draw the address
+      int iMode = pDC->SetBkMode(TRANSPARENT);
+
+      // draw the address
     	pDC->DrawText(
 			pAddress->GetName() ? pAddress->GetName() : "", 
 	        -1, rectAddress, DT_LEFT | DT_BOTTOM | DT_NOPREFIX );
-
-    	pDC->SetTextColor(cText);
-    	pDC->SetBkMode(iMode);
 
         if (m_bDrawTypeList)
         	m_pAddressTypeList->DrawItemSoItLooksLikeAButton(
 	            pDC,rectType,CString(pAddress->GetType() ? pAddress->GetType():""));
 
+      pDC->SetTextColor(cText);
+      pDC->SetBkMode(iMode);
 	}
-	// end fields
+  // end fields
 
 	// draw the bitmap
     DrawEntryBitmap(nIndex,pAddress,pDC, 
@@ -1082,7 +2039,7 @@ void CNSAddressList::DrawAddress( int nIndex, CRect &rect, CDC *pDC, BOOL bSelec
 	}
 
    	DrawGridLine(rect, pDC);
-    ValidateRect(&rect);
+    //ValidateRect(&rect);
 
     // draw the last line
     if (m_lastIndex != oldLine)
@@ -1163,6 +2120,212 @@ int CNSAddressList::GetItemRect(HWND hwnd, int nIndex, LPRECT lpRect) const
     return (int)::SendMessage(m_hWnd, LB_GETITEMRECT, nIndex, (LPARAM)lpRect); 
 }
 
+static BOOL IsShiftPressed()
+{
+  short sShiftState = GetKeyState(VK_SHIFT);
+  BOOL bDown = (sShiftState < 0);
+  return bDown;
+}
+
+void CNSAddressList::onKeyDown(int iVirtKey, DWORD dwFlags)
+{
+  switch (iVirtKey)
+  {
+    case VK_TAB:
+      selectAllEntries(FALSE);
+      ::SetFocus((m_pNameField->m_hWnd));
+      break;
+    case VK_UP:
+    case VK_LEFT:
+    {
+      if(GetCount() <= 1)
+        break;
+
+      int iIndex = GetActiveSelection();
+			if(iIndex <= 0) 
+        break;
+
+      if(IsShiftPressed())
+      {
+        if(!isEntrySelected(iIndex - 1))
+          selectEntry(iIndex - 1, TRUE);
+        else
+          selectEntry(iIndex, FALSE);
+      }
+      else
+      {
+        BOOL bCont;
+        int iFirst = 0;
+        int iLast = 0;
+
+        int iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+
+        if(iCount < 1)
+          break;
+
+        if(iCount > 1)
+          selectAllEntries(FALSE);
+        else
+          selectEntry(iIndex, FALSE);
+
+        selectEntry(iIndex - 1, TRUE);
+      }
+      break;
+    }
+    case VK_DOWN:
+    case VK_RIGHT:
+    {
+      if(GetCount() <= 1)
+        break;
+
+      int iIndex = GetActiveSelection();
+			if(iIndex >= GetCount() - 1) 
+        break;
+
+      if(IsShiftPressed())
+      {
+        if(!isEntrySelected(iIndex + 1))
+          selectEntry(iIndex + 1, TRUE);
+        else
+          selectEntry(iIndex, FALSE);
+      }
+      else
+      {
+        BOOL bCont;
+        int iFirst = 0;
+        int iLast = 0;
+        int iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+
+        if(iCount < 1)
+          break;
+
+        if(iCount > 1)
+          selectAllEntries(FALSE);
+        else
+          selectEntry(iIndex, FALSE);
+
+        selectEntry(iIndex + 1, TRUE);
+      }
+      break;
+    }
+    case VK_DELETE:
+    case VK_BACK:
+    {
+      BOOL bCont;
+      int iFirst = 0;
+      int iLast = 0;
+      int iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+
+      for(int i = GetCount() - 1; i >= 0; i--)
+      {
+        if(isEntrySelected(i))
+        {
+          if(!DeleteEntry(i))
+            break;
+        }
+      }
+
+      if(GetCount() == 1)
+        selectEntry(0, FALSE);
+
+      SetActiveSelection((iLast < GetCount()) ? iLast : GetCount() - 1);
+
+      ::InvalidateRect(m_hWnd, NULL, TRUE);
+      ::UpdateWindow(m_hWnd);
+
+      ::SetFocus((m_pNameField->m_hWnd));
+
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+static HCURSOR setDragYesCursor()
+{
+  HINSTANCE hInst =
+#ifdef _AFXDLL
+	AfxFindResourceHandle(MAKEINTRESOURCE(IDC_MOVEBUTTON), RT_GROUP_CURSOR);
+#else
+	AfxGetResourceHandle();
+#endif
+  HCURSOR hCursor = ::LoadCursor(hInst, MAKEINTRESOURCE(IDC_TEXT_MOVE));
+  HCURSOR hCursorOld = ::SetCursor(hCursor);
+  return hCursorOld;
+}
+
+static HCURSOR setDragNoCursor()
+{
+  HCURSOR hCursor = ::LoadCursor(NULL, IDC_NO);
+  HCURSOR hCursorOld = ::SetCursor(hCursor);
+  return hCursorOld;
+}
+
+static BOOL bDrugYesCursor = TRUE;
+
+void CNSAddressList::onMouseMove(HWND hWnd, WORD wFlags, int iX, int iY)
+{
+  if(!(wFlags & MK_LBUTTON))
+    return;
+  if((wFlags & MK_CONTROL) || (wFlags & MK_SHIFT))
+    return;
+  if(m_EntrySelector.WhatEntryBitmapClicked() == -1)
+    return;
+
+  BOOL bCont;
+  int iFirst = 0;
+  int iLast = 0;
+  int iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+  if(iCount == GetCount())
+    return;
+
+  if(!m_bDragging)
+  {
+    int iDelta = 3;
+    if((abs(m_EntrySelector.m_iX - iX) <= iDelta) && (abs(m_EntrySelector.m_iY - iY) <= iDelta))
+      return;
+
+    ::SetCapture(hWnd);
+    m_hCursorBackup = setDragYesCursor();
+    m_bDragging = TRUE;
+  }
+  else
+  {
+    RECT rc;
+    ::GetClientRect(m_hWnd, &rc);
+
+    if((iY < rc.top) || (iY > rc.bottom) || (iX < rc.left) || (iX > rc.right))
+    {
+      if(bDrugYesCursor)
+      {
+        setDragNoCursor();
+        bDrugYesCursor = FALSE;
+      }
+    }
+    else
+    {
+      if(!bDrugYesCursor)
+      {
+        setDragYesCursor();
+        bDrugYesCursor = TRUE;
+      }
+    }
+  }
+}
+
+static int minFromThree(int i1, int i2, int i3)
+{
+  int iRes = min(min(i1, i2), i3);
+  return iRes;
+}
+
+static int maxFromThree(int i1, int i2, int i3)
+{
+  int iRes = max(max(i1, i2), i3);
+  return iRes;
+}
+
 //=============================================================== OnLButtonDown
 void CNSAddressList::DoLButtonDown(HWND hwnd, UINT nFlags, LPPOINT lpPoint) 
 {
@@ -1170,37 +2333,129 @@ void CNSAddressList::DoLButtonDown(HWND hwnd, UINT nFlags, LPPOINT lpPoint)
     {
 	    BOOL bOutside;
 	    int nNewSelect = ItemFromPoint(hwnd, lpPoint, &bOutside );
+
+      if(!isPointInItemBitmap(lpPoint, nNewSelect))
+      {
         RECT rect;
-	    GetItemRect(m_hWnd,nNewSelect,&rect);
-        int iHeight = rect.bottom - rect.top;
-	    if (((lpPoint->y+iHeight)/iHeight)+GetTopIndex()>GetCount())
-	    {
-	        if (GetCount())
-	        {
-                CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr(GetCount()-1);
-                if (!pAddress->GetName()||!strlen(pAddress->GetName()))
-                {
-                    SetActiveSelection(GetCount()-1);
-                    ::SetFocus(m_pNameField->m_hWnd);
-                    return;
-                }
-	        }
-	        AppendEntry();
-            ::SetFocus(m_pNameField->m_hWnd);
-	        return;
-	    }
-	    SetActiveSelection(nNewSelect);
-	    rect.right = m_iFieldControlWidth;
-	    if ((lpPoint->x >= rect.left) && (lpPoint->x <= rect.right) &&
-		    (lpPoint->y >= rect.top) && (lpPoint->y <= rect.bottom))
-	    {
-		    m_bArrowDown = TRUE;
-            DisplayTypeList(nNewSelect);
-	    }
-    	else if (lpPoint->x < m_iFieldControlWidth)
-           ::SetFocus(m_pAddressTypeList->m_hWnd);
-    	else
-           ::SetFocus(m_pNameField->m_hWnd);
+	      GetItemRect(m_hWnd,nNewSelect,&rect);
+          int iHeight = rect.bottom - rect.top;
+	      if (((lpPoint->y+iHeight)/iHeight)+GetTopIndex()>GetCount())
+	      {
+	          if (GetCount())
+	          {
+                  CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr(GetCount()-1);
+                  if (!pAddress->GetName()||!strlen(pAddress->GetName()))
+                  {
+                      SetActiveSelection(GetCount()-1);
+                      ::SetFocus(m_pNameField->m_hWnd);
+                      return;
+                  }
+	          }
+	          AppendEntry();
+              ::SetFocus(m_pNameField->m_hWnd);
+	          return;
+	      }
+	      SetActiveSelection(nNewSelect);
+      
+        rect.right = m_iFieldControlWidth;
+	      if ((lpPoint->x >= rect.left) && (lpPoint->x <= rect.right) &&
+		      (lpPoint->y >= rect.top) && (lpPoint->y <= rect.bottom))
+	      {
+          if(!isEntrySelected(nNewSelect))
+            selectAllEntries(FALSE);
+
+		      m_bArrowDown = TRUE;
+              DisplayTypeList(nNewSelect);
+	      }
+    	  else if (lpPoint->x < m_iFieldControlWidth)
+        {
+             ::SetFocus(m_pAddressTypeList->m_hWnd);
+        }
+    	  else
+             ::SetFocus(m_pNameField->m_hWnd);
+      }
+      else
+      {
+	      SetActiveSelection(nNewSelect);
+      
+        m_EntrySelector.LButtonDown(nNewSelect);
+        m_EntrySelector.m_iX = (int)lpPoint->x;
+        m_EntrySelector.m_iY = (int)lpPoint->y;
+
+        if(!(nFlags & MK_CONTROL))
+        {
+          BOOL bCont = FALSE;
+          int iCount = 0;
+          int iFirst = 0;
+          int iLast = 0;
+
+          if(nFlags & MK_SHIFT)
+          {
+            iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+
+            int iMin = minFromThree(nNewSelect, iFirst, iLast);
+            int iMax = maxFromThree(nNewSelect, iFirst, iLast);
+
+            int iStart = 0;
+            int iStop = 0;
+
+            if(iCount == 0)
+            {
+              iStart = 0;
+              iStop = nNewSelect;
+            }
+            else if(iCount == 1)
+            {
+              iStart = min(iFirst, nNewSelect);
+              iStop = max(nNewSelect, iLast);
+            }
+            else if(nNewSelect == iMin)
+            {
+              iStart = nNewSelect;
+              iStop = iLast;
+            }
+            else if(nNewSelect == iMax)
+            {
+              iStart = iMin;
+              iStop = nNewSelect;
+            }
+            else
+            {
+              iStart = iMin;
+              iStop = nNewSelect;
+            }
+
+            selectAllEntries(FALSE);
+
+            for(int i = iStart; i <= iStop; i++)
+            {
+              selectEntry(i, TRUE);
+            }
+          }
+          else
+          {
+            if(!isEntrySelected(nNewSelect))
+            {
+              selectAllEntries(FALSE);
+              selectEntry(nNewSelect, TRUE);
+            }
+            else
+            {
+              iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+              if(!bCont)
+              {
+                selectAllEntries(FALSE);
+                selectEntry(nNewSelect, TRUE);
+              }
+              else
+                m_EntrySelector.m_bPostponedTillButtonUp = TRUE;
+            }
+          }
+        }
+        ::SetFocus(::GetParent(m_pAddressTypeList->m_hWnd));
+
+        return;
+      }
     }
 }
 
@@ -1208,6 +2463,98 @@ void CNSAddressList::DoLButtonUp(HWND hwnd, UINT nFlags, LPPOINT lpPoint)
 {
 	BOOL bOutside;
 	int nNewSelect = ItemFromPoint(hwnd, lpPoint, &bOutside );
+
+  if(GetCount() > 1)
+  {
+    if(isPointInItemBitmap(lpPoint, nNewSelect) && !m_bDragging)
+    {
+      if(m_EntrySelector.m_bPostponedTillButtonUp)
+      {
+        selectAllEntries(FALSE);
+        selectEntry(nNewSelect, TRUE);
+      }
+      if((nFlags & MK_CONTROL) && (m_EntrySelector.WhatEntryBitmapClicked() == nNewSelect))
+      {
+        selectEntry(nNewSelect, !isEntrySelected(nNewSelect));
+      }
+    }
+    m_EntrySelector.LButtonUp();
+  }
+
+  if(m_bDragging)
+  {
+    int iItemHeight = GetItemHeight(0);
+    BOOL bAtTheVeryEnd = (lpPoint->y > iItemHeight * GetCount());
+
+    int iInsertBefore = bAtTheVeryEnd ? GetCount() : nNewSelect;
+
+    BOOL bCont = FALSE;
+    int iCount = 0;
+    int iFirst = 0;
+    int iLast = 0;
+
+    iCount = getEntryMultipleSelectionStatus(&bCont, &iFirst, &iLast);
+
+    ASSERT(bCont);
+    ASSERT(iFirst != -1);
+    ASSERT(iLast != -1);
+
+    if(!bCont || (iFirst == -1) || (iLast == -1))
+      goto DontDrop;
+
+    if((iInsertBefore <= iLast + 1) && (iInsertBefore >= iFirst))
+      goto DontDrop;
+
+    {
+      NSAddressListEntry nsale;
+      BOOL bDraggingDown = TRUE;
+
+      if(iInsertBefore < iFirst)
+        bDraggingDown = FALSE;
+
+      int iCount = 0;
+
+      for(int i = iFirst; i <= iLast; i++)
+      {
+        if(bDraggingDown)
+        {
+          GetEntry(iFirst, &nsale);
+          InsertEntry(iInsertBefore, &nsale);
+          selectEntry(iInsertBefore, TRUE);
+          DeleteEntry(iFirst);
+        }
+        else
+        {
+          int iCount = i - iFirst;
+          GetEntry(iFirst + iCount, &nsale);
+          InsertEntry(iInsertBefore + iCount, &nsale);
+          selectEntry(iInsertBefore + iCount, TRUE);
+          DeleteEntry(iFirst + iCount + 1);
+        }
+      }
+
+      if(bAtTheVeryEnd)
+      {
+        ::InvalidateRect(m_hWnd, NULL, TRUE);
+        ::UpdateWindow(m_hWnd);
+      }
+    }
+
+    if(bAtTheVeryEnd)
+    {
+      ::InvalidateRect(m_hWnd, NULL, TRUE);
+      ::UpdateWindow(m_hWnd);
+    }
+
+DontDrop:
+    if(m_hCursorBackup != NULL)
+      ::SetCursor(m_hCursorBackup);
+    ::ReleaseCapture();
+    m_bDragging = FALSE;
+  }
+
+  m_EntrySelector.m_bPostponedTillButtonUp = FALSE;
+
 	if ( bOutside ) 
 		return;
 	if (m_bArrowDown) 
@@ -1216,17 +2563,17 @@ void CNSAddressList::DoLButtonUp(HWND hwnd, UINT nFlags, LPPOINT lpPoint)
 	}
 	else
 	{
-
-		// set the selection
+    if(!isPointInItemBitmap(lpPoint, nNewSelect))
+   {
+      // set the selection
     	if ( nNewSelect != GetActiveSelection() )
-    	{
-			SetActiveSelection( nNewSelect );
-    	}
+  			SetActiveSelection( nNewSelect );
+    }
 
 		// set the focus
 		if (lpPoint->x <=  m_iFieldControlWidth)
             ::SetFocus(m_pAddressTypeList->m_hWnd);
-		else 
+		else if((!isPointInItemBitmap(lpPoint, nNewSelect)) && (GetCount() > 1))
             ::SetFocus(m_pNameField->m_hWnd);
 	}
 }
@@ -1242,7 +2589,7 @@ void CNSAddressList::DoVScroll(HWND hwnd, UINT nSBCode, UINT nPos)
 
 void CNSAddressList::DoChildLostFocus()
 {
-	if (DoNotifySelectionChange() != -1)
+	if (DoNotifySelectionChange(FALSE) != -1)
 		DoKillFocus(NULL);
 }
 
@@ -1257,14 +2604,38 @@ BOOL CNSAddressList::ParseAddressEntry(int nSelection)
 		char * pNames = NULL, * pAddresses = NULL;
 		if (!entry.szName || XP_STRLEN (entry.szName) == 0)
 			return FALSE;
-
+#ifndef MOZ_NEWADDR
 		char * pName = m_pIAddressParent->NameCompletion((char *)entry.szName);
 		if (pName)
 		{
 			free(pName);
 			return FALSE;
 		}
+#endif
 		
+#ifdef MOZ_NEWADDR
+
+// if it's got a cookie and has one result then we don't want to parse it
+   	    CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr(GetActiveSelection());
+        if (pAddress)
+        {
+			AB_NameCompletionCookie *pCookie = pAddress->GetNameCompletionCookie();
+			int nNumResults = pAddress->GetNumNameCompletionResults();
+
+			if(pCookie && nNumResults == 1)
+				return FALSE;
+
+			//likewise, if we are in show picker mode and we have more than one 
+			//result, we don't want to parse it either.
+			if(pCookie && nNumResults > 1 && g_MsgPrefs.m_bShowCompletionPicker)
+				return FALSE;
+
+			//or if we are in show picker mode and don't have a cookie we don't want to
+			//show it
+			if(pCookie == NULL && g_MsgPrefs.m_bShowCompletionPicker)
+				return FALSE;
+		}
+#endif
 		iCount = MSG_ParseRFC822Addresses(entry.szName, &pNames, &pAddresses);
         if (iCount > 1)
         {
@@ -1273,7 +2644,8 @@ BOOL CNSAddressList::ParseAddressEntry(int nSelection)
             BOOL bExpanded = FALSE;
             p1 = pNames;
             p2 = pAddresses;
-            LockWindowUpdate();
+
+			LockWindowUpdate();
 	        for (int i = 0; i<iCount; i++)
 	        {
 		        NSAddressListEntry address;
@@ -1288,9 +2660,20 @@ BOOL CNSAddressList::ParseAddressEntry(int nSelection)
                 p1++;
                 while (*p2 != '\0') p2++;
                 p2++;
+#ifdef MOZ_NEWADDR
+				AB_NameCompletionCookie* pCookie =
+					AB_GetNameCompletionCookieForNakedAddress(address.szName);
+				//pAddress->SetNameCompletionCookie(pCookie);
+				//			pAddress->SetNumNameCompletionResults(1);
+				XP_FREE((void*)address.szName);
+				address.szName = AB_GetHeaderString(pCookie);
+#endif
 				address.idEntry = (ULONG)-1;
 		        bExpanded = TRUE;
 		        InsertEntry(nSelection+i+1,&address, FALSE);
+			    if (m_pIAddressParent)
+					m_pIAddressParent->AddedItem(m_hWnd, 0, nSelection+i+1);
+
 	        }
 
 	        if (bExpanded)
@@ -1327,7 +2710,7 @@ BOOL CNSAddressList::ParseAddressEntry(int nSelection)
     return FALSE;
 }
 
-int CNSAddressList::DoNotifySelectionChange()
+int CNSAddressList::DoNotifySelectionChange(BOOL bShowPicker)
 {
 	int result = TRUE;
     if (!ParseAddressEntry(GetActiveSelection()))
@@ -1348,12 +2731,55 @@ int CNSAddressList::DoNotifySelectionChange()
                         m_pAddressTypeList->GetCurSel());
                     bExpand = pInfo->GetExpand();
                 }
-                if (bExpand)
+                if (bExpand && m_bExpansion)
                 {
             	    CNSAddressInfo *pAddress = (CNSAddressInfo *)GetItemDataPtr(GetActiveSelection());
                     if (pAddress && pAddress->GetExpansion())
                     {
+#ifdef MOZ_NEWADDR
+						AB_NameCompletionCookie *pCookie = pAddress->GetNameCompletionCookie();
+						int nNumResults = pAddress->GetNumNameCompletionResults();
+						BOOL bExpandName = FALSE;
 
+						if(pCookie != NULL && nNumResults == 1)
+						{
+							pszFullName = AB_GetHeaderString(pCookie);
+
+						}
+						//if we have multiple matches and preference is set and we've been told it's
+						//ok to show the picker(i.e. KillFocus doesn't show picker).
+						else if((pCookie != NULL && nNumResults > 1 && bShowPicker
+								&& g_MsgPrefs.m_bShowCompletionPicker )||
+								(pCookie == NULL && nNumResults != 0 && g_MsgPrefs.m_bShowCompletionPicker))
+						{
+							ShowNameCompletionPicker(this);
+							return -1;
+						}
+						//otherwise it's a naked address, so let's append the default domain.
+						else
+						{
+							pCookie = AB_GetNameCompletionCookieForNakedAddress(entry.szName);
+							pAddress->SetNameCompletionCookie(pCookie);
+							pAddress->SetNumNameCompletionResults(1);
+							pszFullName = AB_GetHeaderString(pCookie);
+						}
+
+
+		   			    result = m_pIAddressParent->ChangedItem(
+			   			    (char*)entry.szName,GetActiveSelection(),m_hWnd, &pszFullName, &entryID, &bitmapID);
+		    		    if (pszFullName != NULL)
+			    	    {
+                            pAddress->SetName(pszFullName);
+					        if (bitmapID)
+    						    SetItemBitmap(GetActiveSelection(), bitmapID);
+    					    if (entryID)
+    						    SetItemEntryID(GetActiveSelection(), entryID);
+    					    free(pszFullName);
+	    			    }
+						StopNameCompletion(-1, FALSE);
+						
+
+#else
         			    result = m_pIAddressParent->ChangedItem(
 	        			    (char*)entry.szName,GetActiveSelection(),m_hWnd, &pszFullName, &entryID, &bitmapID);
 		    		    if (pszFullName != NULL)
@@ -1365,6 +2791,7 @@ int CNSAddressList::DoNotifySelectionChange()
     						    SetItemEntryID(GetActiveSelection(), entryID);
     					    free(pszFullName);
 	    			    }
+#endif
                     }
                 }
 			}
@@ -1472,7 +2899,7 @@ int CNSAddressList::AppendEntry(
     unsigned long idEntry)
 {
     if (!szType && !szName && !idBitmap && !idEntry)
-        return AppendEntry();
+        return AppendEntry(NULL, expandName);
     NSAddressListEntry address;
     address.szType = szType;
     address.szName = szName;

@@ -23,6 +23,7 @@
 #ifndef _ABLISTSEARCHVIEW_H_
 #define _ABLISTSEARCHVIEW_H_
 
+#include "rosetta.h"
 #include "MNListView.h"
 #include "ABSearchView.h"
 #include "PopupMenu.h"
@@ -50,17 +51,26 @@ public:
   // user/list functions
   void undo();
   void redo();
-  void delUser();
+  void abDelete();
+  void abDeleteAllEntries();
   void newUser();
   void newList();
 
   // Get and pack selection
   ABAddrMsgCBProcStruc* getSelections();
 
+  //
+  virtual void listChangeFinished(XP_Bool asynchronous,
+								  MSG_NOTIFY_CODE notify, 
+								  MSG_ViewIndex where, int32 num);
+
   virtual void paneChanged(XP_Bool asynchronous, 
 						   MSG_PANE_CHANGED_NOTIFY_CODE notify_code, 
 						   int32 value);
 
+  void dirChanged(int32 value);
+
+  //
   void changeEntryCount();
   XFE_Outliner *getOutliner() { return m_outliner;}
 
@@ -122,16 +132,40 @@ public:
   virtual void    *ConvFromIndex(int index);
   virtual int      ConvToIndex(void *item);
 
+  // columns for the Outliner
+  enum {
+	OUTLINER_COLUMN_TYPE = 0,
+	OUTLINER_COLUMN_NAME,
+	OUTLINER_COLUMN_EMAIL,
+	OUTLINER_COLUMN_COMPANY,
+	OUTLINER_COLUMN_PHONE,
+	OUTLINER_COLUMN_NICKNAME,
+	OUTLINER_COLUMN_LOCALITY,
+	OUTLINER_COLUMN_LAST
+  };
+
+  // Get tooltipString & docString; 
+  // returned string shall be freed by the callee
+  // row < 0 indicates heading row; otherwise it is a content row
+  // (starting from 0)
   //
-  virtual char	  *getColumnName(int column);
-  virtual char    *getColumnHeaderText(int /* column */){ return 0;};
-  virtual fe_icon *getColumnHeaderIcon(int column);
+  virtual char *getCellTipString(int /* row */, int /* column */);
+  virtual char *getCellDocString(int /* row */, int /* column */);
+
+  //
+  // The Outlinable interface.
+  //
   virtual EOutlinerTextStyle 
                    getColumnHeaderStyle(int column);
+  virtual char    *getColumnName(int column);
+  virtual char    *getColumnHeaderText(int column);
+  virtual char    *getColumnText(int column);
+  virtual fe_icon *getColumnIcon(int column);
+
+  //
+  virtual fe_icon *getColumnHeaderIcon(int column);
   virtual EOutlinerTextStyle 
                    getColumnStyle(int column);
-  virtual char    *getColumnText(int /* column */){ return 0;};
-  virtual fe_icon *getColumnIcon(int /* column */){ return 0;};
 
   //
   virtual void     getTreeInfo(XP_Bool *expandable, 
@@ -157,6 +191,8 @@ public:
 
 
   // callbacks
+  static void resizeCallback(Widget, XtPointer, XtPointer);
+
   static void typeDownTimerCallback(XtPointer closure, XtIntervalId *);
   static void typeActivateCallback(Widget, XtPointer, XtPointer);
   static void typeDownCallback(Widget, XtPointer, XtPointer);
@@ -169,6 +205,8 @@ public:
   //
   // callback to be notified when allconnectionsComplete
   //
+  virtual void allConnectionsComplete(MWContext  *context);
+
   void unRegisterInterested();
   XFE_CALLBACK_DECL(allConnectionsComplete)
 
@@ -181,7 +219,7 @@ public:
   // icons for the outliner
   static fe_icon m_personIcon;
   static fe_icon m_listIcon;
-  static fe_icon m_securityIcon;
+  HG82719
 
 #if defined(USE_MOTIF_DND)
 	/* motif drag and drop interface. 
@@ -232,6 +270,7 @@ protected:
 #endif /* USE_ABCOM */
 
 #endif
+  void        resizeCB(Widget, XtPointer);
 
   void    startSearch(ABSearchInfo_t *clientData);
   int     addToAddressBook();
@@ -240,7 +279,7 @@ protected:
   XP_Bool m_ldapDisabled;
 
   //
-  virtual void clickHeader(const OutlineButtonFuncData *){};
+  virtual void clickHeader(const OutlineButtonFuncData *);
   virtual void clickBody(const OutlineButtonFuncData *){};
   virtual void clickShiftBody(const OutlineButtonFuncData *){};
   virtual void doubleClickBody(const OutlineButtonFuncData *){};
@@ -272,12 +311,16 @@ protected:
 #if defined(USE_ABCOM)
   AB_ContainerInfo *m_containerInfo;
   MSG_Pane         *m_abContainerPane;
+  uint32           *m_pageSize;
+
+  int               m_numAttribs;
 #endif /* USE_ABCOM */
 
   ABook        *m_AddrBook; 
   ABPane       *m_abPane;
 
   ABID          m_entryID; /* entryID for current line */
+  MSG_ViewIndex m_dataIndex;
 
 #if defined(USE_ABCOM)
 	AB_AttribID m_sortType;
@@ -295,8 +338,9 @@ private:
   /* trigger search when time elapse
    */
   XtIntervalId    m_typeDownTimer;	
-
+  MSG_ViewIndex   m_typeDownIndex;
   XFE_PopupMenu *m_popup;
   static MenuSpec view_popup_spec[];
 };
+
 #endif

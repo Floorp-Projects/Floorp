@@ -1687,7 +1687,7 @@ void*
 BMFE_OpenFindWindow(MWContext* bm_context, BM_FindInfo* findInfo )
 {
 	XFE_Frame *frame = ViewGlue_getFrame(bm_context);
-
+	XP_ASSERT(frame);
 	fe_showBMFindDialog(frame->getBaseWidget(),
 						findInfo);
 

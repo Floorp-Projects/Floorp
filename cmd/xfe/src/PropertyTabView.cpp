@@ -31,6 +31,10 @@ XFE_PropertyTabView::XFE_PropertyTabView(XFE_Component *top,
 			       XFE_View *view, /* the parent view */
 			       int       tab_string_id): XFE_View(top, view)
 {
+	Widget 		folder;
+	WidgetList 	tabs;
+	int 		ntabs;
+
   m_labelWidth = 0;
 
   /* Create tab
@@ -38,12 +42,37 @@ XFE_PropertyTabView::XFE_PropertyTabView(XFE_Component *top,
   XmString xmstr;
   xmstr = XmStringCreate(XP_GetString(tab_string_id ), 
 			 XmFONTLIST_DEFAULT_TAG);
+
+	// Get the folder
+	folder = view->getBaseWidget();
+
   Widget form = XmLFolderAddTabForm(view->getBaseWidget(), xmstr);
   XmStringFree(xmstr);
+
+	// Get the tab list
+	XtVaGetValues(folder, XmNtabCount, &ntabs, NULL);
+	XtVaGetValues(folder, XmNtabWidgetList, &tabs, NULL);
+
+	// Save the tab
+	m_tab = tabs[ntabs - 1];
 
   setBaseWidget(form);
 }
 
 XFE_PropertyTabView::~XFE_PropertyTabView()
 {
+}
+
+void
+XFE_PropertyTabView::hide()
+{
+	XtUnmanageChild(getBaseWidget());
+	XtUnmanageChild(m_tab);
+}
+
+void
+XFE_PropertyTabView::show()
+{
+	XtManageChild(m_tab);
+	XtManageChild(getBaseWidget());
 }

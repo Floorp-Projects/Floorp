@@ -16,6 +16,7 @@
  * Reserved.
  */
 /* ** */
+/* Insert copyright and license here  19** */
 #ifndef __xfe_prefsdialogappl_h
 #define __xfe_prefsdialogappl_h
 
@@ -79,5 +80,7 @@ extern int              xfe_prefsAppl_get_static_app_count();
 #endif
 
 #endif
+
+
 
 

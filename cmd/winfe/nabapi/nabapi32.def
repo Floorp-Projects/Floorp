@@ -1,0 +1,17 @@
+EXPORTS
+    NAB_Open
+    NAB_Close
+    NAB_GetAddressBookList
+    NAB_GetDefaultAddressBook
+    NAB_CreatePersonalAddressBook
+    NAB_FreeMemory
+    NAB_SaveAddressBookToHTML
+    NAB_ImportLDIFFile
+    NAB_ExportLDIFFile
+    NAB_GetFirstAddressBookEntry
+    NAB_GetNextAddressBookEntry
+    NAB_FindAddressBookEntry
+    NAB_InsertAddressBookEntry
+    NAB_UpdateAddressBookEntry
+    NAB_DeleteAddressBookEntry
+    NAB_FormatLDIFLine

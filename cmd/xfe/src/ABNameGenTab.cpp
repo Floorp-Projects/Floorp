@@ -54,6 +54,7 @@ XFE_ABNameGenTabView::XFE_ABNameGenTabView(XFE_Component *top,
 					   XFE_View *view):
   XFE_PropertyTabView(top, view, XFE_AB_NAME_GENERAL_TAB)
 {
+  m_userDefined = False;
 
   int ac, numForms = AB_LAST+2;
   Arg    av[20];
@@ -106,9 +107,18 @@ XFE_ABNameGenTabView::XFE_ABNameGenTabView(XFE_Component *top,
 		  /* TextF
 		   */
 		  ac = 0;
+		  XtSetArg(av[ac], XmNuserData, i); ac++;
 		  m_textFs[i] = fe_CreateTextField(stripForm[i], 
 										  (char *) genTabLabels[i],
 										  av, ac);
+		  if (i <= AB_DISPLAY_NAME) {
+			  XtAddCallback(m_textFs[i], 
+							XmNvalueChangedCallback, 
+							XFE_ABNameGenTabView::textFValChgCallback,
+							this);
+			  
+		  }/* if */
+
 		  XtVaSetValues(m_textFs[i], 
 						XmNleftAttachment, XmATTACH_WIDGET,
 						XmNleftWidget, label,
@@ -186,6 +196,56 @@ XFE_ABNameGenTabView::~XFE_ABNameGenTabView()
 {
 }
 
+void 
+XFE_ABNameGenTabView::textFValChgCallback(Widget w, 
+										  XtPointer clientData, 
+										  XtPointer callData)
+{
+  XFE_ABNameGenTabView *obj = (XFE_ABNameGenTabView *) clientData;
+  obj->textFValChgCB(w, callData);
+}
+
+void
+XFE_ABNameGenTabView::textFValChgCB(Widget w, XtPointer /* callData */)
+{
+	if (m_userDefined)
+		// shall we remove CB ??
+		return;
+
+	int which = -1;
+	XtVaGetValues(w, 
+				  XmNuserData, &which, 
+				  0);
+	if (which == AB_DISPLAY_NAME) {
+		Widget focusW = XmGetFocusWidget(getBaseWidget());
+		if (w == focusW) {
+			char *tmp = fe_GetTextField(m_textFs[AB_DISPLAY_NAME]);
+			if (tmp && XP_STRLEN(tmp))
+				m_userDefined = True;
+		}/* if */
+#if defined(DEBUG_tao_)
+		printf("\n--XFE_ABNameGenTabView::textFValChgCB--%d,%x,%x\n", 
+			   which, w, focusW);
+#endif /* */
+		return;
+	}/* if */
+
+	char *firstName = fe_GetTextField(m_textFs[AB_FIRST_NAME]),
+		 *lastName = fe_GetTextField(m_textFs[AB_LAST_NAME]),
+		 *dplyName = NULL;
+
+#if defined(USE_ABCOM)
+	int error = AB_GenerateDefaultDisplayName(firstName, 
+											  lastName, 
+											  &dplyName);
+	fe_SetTextField(m_textFs[AB_DISPLAY_NAME], 
+					dplyName?dplyName:"");
+	XP_FREEIF(dplyName);
+#endif /* USE_ABCOM */
+	XmUpdateDisplay(w);
+	
+}
+
 void XFE_ABNameGenTabView::setDlgValues()
 {
   /* Get mode, entryid, and ab_view
@@ -232,6 +292,10 @@ void XFE_ABNameGenTabView::setDlgValues()
 		  tmp = values[i].u.string;
 		  fe_SetTextField(m_textFs[AB_DISPLAY_NAME], 
 						  tmp?tmp:"");
+		  if (tmp && XP_STRLEN(tmp))
+			  m_userDefined = True;
+		  else 
+			  m_userDefined = False;
 		  break;
 		  
 	  case AB_attribEmailAddress:
@@ -270,6 +334,10 @@ void XFE_ABNameGenTabView::setDlgValues()
 								 values[i].u.boolValue, FALSE);
 		  break;
 		  
+	  default:
+		  XP_ASSERT(0);
+		  break;
+
 	  }/* switch */
   }/* for i */
 
@@ -325,9 +393,10 @@ void XFE_ABNameGenTabView::getDlgValues()
   else
 	  values[AB_LAST_NAME].u.string = XP_STRDUP("");
 
-  // AB_attribInfo
-  tmp = fe_GetTextField(m_notesTxt);
-  values[AB_DISPLAY_NAME].attrib = AB_attribInfo;
+  // AB_attribDisplayName;
+
+  tmp = fe_GetTextField(m_textFs[AB_DISPLAY_NAME]);
+  values[AB_DISPLAY_NAME].attrib = AB_attribDisplayName;
   if (tmp && strlen(tmp))
 	  values[AB_DISPLAY_NAME].u.string = tmp;
   else
@@ -365,6 +434,13 @@ void XFE_ABNameGenTabView::getDlgValues()
   else
 	  values[AB_COMPANY_NAME].u.string = XP_STRDUP("");
 
+  tmp = fe_GetTextField(m_notesTxt);
+  values[AB_LAST].attrib = AB_attribInfo;
+  if (tmp && strlen(tmp))
+	  values[AB_LAST].u.string = tmp;
+  else
+	  values[AB_LAST].u.string = XP_STRDUP("");
+ 
   //
   values[AB_LAST].u.boolValue = XmToggleButtonGetState(m_prefHTMLTog);
   values[AB_LAST].attrib = AB_attribHTMLMail;

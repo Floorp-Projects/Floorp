@@ -1236,6 +1236,37 @@ XFE_Outliner::deselectAllItems()
 	deselectAll();
 }
 
+int
+XFE_Outliner::visibleRows(int& first, int& last)
+{
+	int firstrow, lastrow;
+	Dimension height, shadowthickness;
+
+	XtVaGetValues(m_widget,
+				  XmNscrollRow, &firstrow, 
+				  XmNheight, &height,
+				  XmNshadowThickness, &shadowthickness, 
+				  NULL);
+	first = firstrow;
+
+	height -= shadowthickness;
+
+	for (lastrow = firstrow + 1 ; ; lastrow++) {
+		XRectangle rect;
+
+		if (XmLGridRowColumnToXY(m_widget,
+								 XmCONTENT, lastrow,
+								 XmCONTENT, 0,
+								 False, &rect) < 0)
+			break;
+
+		if (rect.y + rect.height >= height) 
+			break;
+	}/* for lastrow */
+	last = lastrow;
+	return (lastrow-firstrow+1);
+}
+
 void
 XFE_Outliner::makeVisible(int index)
 {

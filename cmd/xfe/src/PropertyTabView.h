@@ -40,6 +40,8 @@ public:
   virtual void setDlgValues() {};
   virtual void getDlgValues() {};
   virtual void apply(){};
+	virtual void hide();
+	virtual void show();
 
 protected:
   Dimension m_labelWidth;
@@ -47,6 +49,7 @@ protected:
 private:
   /* m_widget is the tab form
    */
+	Widget m_tab;
 }; /* XFE_PropertyTabView */
 
 /* Offsets between widgets when hardwired is needed

@@ -1,0 +1,46 @@
+IGNORE_MANIFEST=1
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DLLNAME		= mnrc$(MOZ_BITS)
+PDBFILE		= $(DLLNAME).pdb
+MAPFILE		= $(DLLNAME).map
+DLL		=.\$(OBJDIR)\$(DLLNAME).dll
+DEFFILE		= mnrc$(MOZ_BITS).def
+RESFILE		= mnrcdll.res
+MAKE_OBJ_TYPE	= DLL
+
+OBJS = $(OBJS) 
+
+LLIBS = $(DIST)\lib\nsdlg$(MOZ_BITS).lib
+
+MODULE  = mnrcdll
+DEPTH  	= ..\..\..\..
+REQUIRES=mnrcdll coreincl nspr winprefs
+CPPSRCS = mnrcdll.cpp stdafx.cpp 
+
+CPP_OBJS=.\$(OBJDIR)\mnrcdll.obj .\$(OBJDIR)\stdafx.obj
+!if "$(MOZ_BITS)" != "16"
+LINCS=-I$(XPDIST)\public\mnrcdll -I$(XPDIST)\public\coreincl \
+    -I$(XPDIST)\public\nspr -I$(XPDIST)\public\winprefs 
+!endif
+
+!include "$(DEPTH)\config\rules.mak"
+
+libs:: $(DLL)
+       $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+       $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+

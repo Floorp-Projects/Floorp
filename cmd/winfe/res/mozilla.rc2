@@ -85,7 +85,7 @@ BEGIN
 #ifdef MOZ_MAIL_NEWS
     IDR_MAILFRAME           "Mozilla Message Center\nMozilla\nMozilla Document"
     IDR_MAILTHREAD          "Mozilla Folder\nMozilla\nMozilla Document"
-    IDR_NEWSTHREAD          "Mozilla Discussion\nMozilla\nMozilla Document"
+    IDR_NEWSTHREAD          "Mozilla Newsgroup\nMozilla\nMozilla Document"
     IDR_MESSAGEFRAME        "Mozilla Message\nMozilla\nMozilla Document"
     IDR_NEWSMSGFRAME        "Mozilla Message\nMozilla\nMozilla Document"
 	IDR_CATEGORYFRAME               "Mozilla Category\nMozilla\nMozilla Document"
@@ -444,8 +444,7 @@ BEGIN
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
 #ifdef MOZ_MAIL_NEWS
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "Collabra &Discussion Groups\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
 #endif /* MOZ_MAIL_NEWS */
 #ifdef EDITOR
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
@@ -476,6 +475,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#ifdef MOZ_MAIL_NEWS
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+#endif
         MENUITEM SEPARATOR
     END
     POPUP "&Help"
@@ -630,8 +632,7 @@ BEGIN
     BEGIN
 	    MENUITEM "&Navigator\tCtrl+1",                    ID_TOOLS_WEB
 #ifdef MOZ_MAIL_NEWS
-		MENUITEM "&Messenger Mailbox\tCtrl+2",            ID_TOOLS_INBOX
-	    MENUITEM "Collabra &Discussion Groups\tCtrl+3",         ID_TOOLS_NEWS
+		MENUITEM "&Messenger\tCtrl+2",            ID_TOOLS_INBOX
 #endif /* MOZ_MAIL_NEWS */
 #ifdef EDITOR
 	    MENUITEM "&Page Composer\tCtrl+4",				  ID_TOOLS_EDITOR
@@ -667,6 +668,9 @@ BEGIN
 		MENUITEM "&Java Console",                   ID_OPTIONS_SHOWJAVACONSOLE
 #endif
 		MENUITEM "&Security Info\tCtrl+Shift+I",	ID_SECURITY
+#ifdef MOZ_MAIL_NEWS
+		MENUITEM "Migration Tools",					ID_MIGRATION_TOOLS
+#endif //MOZ_MAIL_NEWS
 	    MENUITEM SEPARATOR
 #ifdef XP_WIN16
 	    MENUITEM "New Window"                       ID_WINDOW_WINDOW_0
@@ -727,6 +731,7 @@ BEGIN
 	MENUITEM "&Upload File...",                 ID_FILE_UPLOADFILE
 #ifdef MOZ_OFFLINE
 	MENUITEM SEPARATOR
+	MENUITEM "Synchronize..."					ID_SYNCHRONIZE
 	MENUITEM "Go Offl&ine...",					ID_BIG_SWITCH					
 #endif /* MOZ_OFFLINE */
 	MENUITEM SEPARATOR
@@ -861,6 +866,7 @@ BEGIN
 	MENUITEM "&Upload File...",                 ID_FILE_UPLOADFILE
 	MENUITEM SEPARATOR
 #ifdef MOZ_OFFLINE
+	MENUITEM "Synchronize..."					ID_SYNCHRONIZE
 	MENUITEM "Go Offl&ine...",					ID_BIG_SWITCH					
 	MENUITEM SEPARATOR
 #endif /* MOZ_OFFLINE */
@@ -960,8 +966,7 @@ BEGIN
     BEGIN
 	    MENUITEM "&Navigator\tCtrl+1",                    ID_TOOLS_WEB
 #ifdef MOZ_MAIL_NEWS
-		MENUITEM "&Messenger Mailbox\tCtrl+2",            ID_TOOLS_INBOX
-	    MENUITEM "Collabra &Discussion Groups\tCtrl+3",         ID_TOOLS_NEWS
+		MENUITEM "&Messenger\tCtrl+2",            ID_TOOLS_INBOX
 #endif // MOZ_MAIL_NEWS
 #ifdef EDITOR
 	    MENUITEM "&Page Composer\tCtrl+4",				  ID_TOOLS_EDITOR
@@ -1057,7 +1062,7 @@ END
 
 IDD_WIZARD_COVERPAGE DIALOG DISCARDABLE  0, 0, 240, 160
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION | WS_SYSMENU
-CAPTION "Mail and Discussion Groups Setup"
+CAPTION "Mail and Newsgroups Setup"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "title",IDC_STATIC_TITLE,0,0,216,39
@@ -1068,7 +1073,7 @@ END
 #ifdef MOZ_MAIL_NEWS
 IDD_WIZARD_READNEWS DIALOG DISCARDABLE  0, 0, 240, 159
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION | WS_SYSMENU
-CAPTION "Mail and Discussion Groups Setup"
+CAPTION "Mail and Newsgroups Setup"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "title",IDC_STATIC_TITLE,0,0,229,25
@@ -1084,7 +1089,7 @@ END
 
 IDD_WIZARD_RECEIVEMAIL DIALOG DISCARDABLE  0, 0, 240, 160
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION | WS_SYSMENU
-CAPTION "Mail and Discussion Groups Setup"
+CAPTION "Mail and Newsgroups Setup"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "title",IDC_STATIC_TITLE,0,0,229,25
@@ -1104,7 +1109,7 @@ END
 
 IDD_WIZARD_SENDMAIL DIALOG DISCARDABLE  0, 0, 240, 160
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION | WS_SYSMENU
-CAPTION "Mail and Discussion Groups Setup"
+CAPTION "Mail and Newsgroups Setup"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "title",IDC_STATIC_TITLE,0,0,229,25
@@ -1128,7 +1133,7 @@ END
 
 IDD_WIZARD_MAILNEWS_WIN16 DIALOG DISCARDABLE  0, 0, 279, 207
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Mail and Discussion Groups Setup"
+CAPTION "Mail and Newsgroups Setup"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "title",IDC_STATIC_TITLE,10,6,215,34
@@ -1773,7 +1778,7 @@ BEGIN
 
         END
         MENUITEM "Ne&w Folder...",              ID_FILE_NEWFOLDER
-        MENUITEM "New Discussion &Group Server...", ID_FILE_NEWNEWSHOST
+        MENUITEM "New News&group Server...", ID_FILE_NEWNEWSHOST
         MENUITEM "&Open Folder\tCtrl+O",        ID_FILE_OPENFOLDER
         MENUITEM SEPARATOR
         MENUITEM "&Rename Folder...",           ID_FOLDER_RENAME
@@ -1787,9 +1792,12 @@ BEGIN
         END
         MENUITEM "Send Unsent &Messages",       ID_FILE_DELIVERMAILNOW
         MENUITEM "&Update Message Count",       ID_FILE_UPDATECOUNTS
-        MENUITEM "Su&bscribe to Discussion Groups...", ID_FILE_SUBSCRIBE
-        MENUITEM SEPARATOR
+        MENUITEM "Su&bscribe to Newsgroups...", ID_FILE_SUBSCRIBE
+#ifdef MOZ_OFFLINE
+		MENUITEM SEPARATOR
+ 		MENUITEM "Synchronize..."				ID_SYNCHRONIZE
         MENUITEM "Go Offl&ine...",              ID_BIG_SWITCH
+#endif //MOZ_OFFLINE
         MENUITEM SEPARATOR
         MENUITEM "&Close\tCtrl+W",              ID_FILE_CLOSE
         MENUITEM "E&xit\tCtrl+Q",               ID_APP_EXIT
@@ -1807,9 +1815,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Search &Messages",            ID_EDIT_SEARCH
         MENUITEM "Search Director&y",           ID_EDIT_LDAPSEARCH
-        MENUITEM SEPARATOR
-        MENUITEM "Ma&nage Mail Account",        ID_EDIT_MANAGEMAILACCOUNT
-        MENUITEM "Manage Discussion Gr&oup",    ID_EDIT_SERVER
         MENUITEM SEPARATOR
         MENUITEM "Mai&l Filters...",            ID_EDIT_FILTER
         MENUITEM "Propertie&s\tAlt+Enter",      ID_VIEW_PROPERTIES
@@ -1830,8 +1835,7 @@ BEGIN
     POPUP "&Communicator"
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "Collabra &Discussion Groups\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
         MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
         MENUITEM SEPARATOR
@@ -1861,6 +1865,12 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+		POPUP "Server Tools"
+		BEGIN
+			MENUITEM "Ma&nage Mail Account",        ID_EDIT_MANAGEMAILACCOUNT
+			MENUITEM "&Manage Newsgroups",		    ID_EDIT_SERVER
+		END
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
     END
@@ -1870,6 +1880,117 @@ BEGIN
     END
 END
 
+#define MOZ_NEWADDR 1
+#ifdef MOZ_NEWADDR
+IDR_ADDRESS_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Navigator Window\tCtrl+N",   ID_NEW_FRAME
+            MENUITEM "&Message\tCtrl+M",            ID_FILE_NEWMESSAGE
+            MENUITEM SEPARATOR
+            MENUITEM "Blank &Page\tCtrl+Shift+N",   ID_EDT_NEW_DOC_BLANK
+            MENUITEM "Page From &Template",         ID_EDT_NEW_DOC_FROM_TEMPLATE
+
+            MENUITEM "Page From &Wizard...",        ID_COMMAND_PAGE_FROM_WIZARD
+            MENUITEM SEPARATOR
+			MENUITEM "&Card...\tCtrl+N",		ID_ITEM_ADDUSER
+			MENUITEM "&List...",                ID_ITEM_ADDLIST
+			MENUITEM "&Address &Book..."		ID_FILE_NEWAB
+			MENUITEM "&Directory..."			ID_FILE_NEWDIR
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Import...",                  ID_FILE_IMPORT
+		MENUITEM "&Export...\tCtrl+S",			ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "C&all",                       ID_LIVE_CALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Close\tCtrl+W",              ID_FILE_CLOSE
+		MENUITEM "E&xit\tCtrl+Q",				ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Redo\tCtrl+E",               ID_EDIT_REDO
+        MENUITEM SEPARATOR
+		MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+		MENUITEM "Delete &From All Lists",		ID_EDIT_DELETEALL
+		MENUITEM "&Select All\tCtrl+A",         ID_EDIT_SELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "&HTML Domains...",            ID_EDIT_DOMAINS
+        MENUITEM "Card &Properties",            ID_ITEM_PROPERTIES
+        MENUITEM "P&references...",             ID_OPTIONS_MAILANDNEWS
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Address &Book Toolbar ",      ID_VIEW_ABTOOLBAR
+		MENUITEM "&Directory Pane",				ID_VIEW_DIRPANE
+		MENUITEM SEPARATOR
+        POPUP "S&ort"
+			BEGIN
+				MENUITEM "By &Type",                    ID_SORT_COL0
+				MENUITEM "By &Name",                    ID_SORT_COL1
+				MENUITEM "By &Email Address",           ID_SORT_COL2
+				MENUITEM "By &Company",                 ID_SORT_COL3
+				MENUITEM "By C&ity",                    ID_SORT_COL4
+				MENUITEM "By &Phone",                   ID_SORT_COL5
+				MENUITEM "By Nic&kname",                ID_SORT_COL6
+				MENUITEM SEPARATOR
+				MENUITEM "Sort &Ascending",             ID_ASCENDING
+				MENUITEM "Sort &Descending",            ID_DECENDING
+			END
+        MENUITEM SEPARATOR
+		MENUITEM "S&earch...",					ID_DIRSEARCH
+        MENUITEM "S&top\tESC",					ID_NAVIGATE_INTERRUPT
+		MENUITEM SEPARATOR
+		MENUITEM "My Address B&ook Card",       ID_CREATE_CARD
+    END
+    POPUP "&Communicator"
+    BEGIN
+        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
+        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
+        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
+        MENUITEM SEPARATOR
+        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
+        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
+        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
+        POPUP "&Bookmarks"
+        BEGIN
+            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
+
+            POPUP "&File Bookmark"
+            BEGIN
+                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
+
+            END
+            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
+            MENUITEM SEPARATOR
+            POPUP "&Guide"
+            BEGIN
+                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
+
+            END
+            MENUITEM SEPARATOR
+        END
+        MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
+        MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+        MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+        MENUITEM SEPARATOR
+        MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "PLACEHOLDER",                 IDC_FIRST_HELP_MENU_ID
+    END
+END
+#else
 IDR_ADDRESS_MENU MENU DISCARDABLE 
 BEGIN
     POPUP "&File"
@@ -1910,8 +2031,9 @@ BEGIN
     POPUP "&View"
     BEGIN
         MENUITEM "Address &Book Toolbar ",      ID_VIEW_ABTOOLBAR
-        MENUITEM SEPARATOR
-        MENUITEM "By &Type",                    ID_SORT_TYPE
+		MENUITEM "&Directory Pane",				ID_VIEW_DIRPANE
+		MENUITEM SEPARATOR
+		MENUITEM "By &Type",                    ID_SORT_TYPE
         MENUITEM "By &Name",                    ID_SORT_NAME
         MENUITEM "By &Email Address",           ID_SORT_EMAILADDRESS
         MENUITEM "By &Company",                 ID_SORT_COMPANY
@@ -1928,8 +2050,7 @@ BEGIN
     POPUP "&Communicator"
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "Collabra &Discussion Groups\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
         MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
         MENUITEM SEPARATOR
@@ -1957,6 +2078,7 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
     END
@@ -1965,6 +2087,7 @@ BEGIN
         MENUITEM "PLACEHOLDER",                 IDC_FIRST_HELP_MENU_ID
     END
 END
+#endif
 
 IDR_MESSAGEFRAME MENU DISCARDABLE 
 BEGIN
@@ -1979,37 +2102,46 @@ BEGIN
             MENUITEM "Page From &Template",         ID_EDT_NEW_DOC_FROM_TEMPLATE
 
             MENUITEM "Page From &Wizard...",        ID_COMMAND_PAGE_FROM_WIZARD
-
+            MENUITEM SEPARATOR
+            MENUITEM "Ne&w Folder...",              ID_FILE_NEWFOLDER
         END
-        MENUITEM "Ne&w Folder...",              ID_FILE_NEWFOLDER
         POPUP "Open &Attachments"
         BEGIN
             MENUITEM "&Replace Me",                 FIRST_ATTACH_MENU_ID
         END
+		POPUP "&Save As"
+		BEGIN
+	        MENUITEM "&File...\tCtrl+S",			ID_FILE_SAVEMESSAGES
+		END
         MENUITEM SEPARATOR
-        MENUITEM "&Save As...\tCtrl+S",         ID_FILE_SAVEMESSAGES
-        MENUITEM "&Edit Message",               ID_FILE_EDITMESSAGE
+        MENUITEM "Get New Messages\tCtrl+T",        ID_FILE_GETNEWMAIL
+        MENUITEM "Send Unsent &Messages",			ID_FILE_DELIVERMAILNOW
+        MENUITEM "Su&bscribe...",					ID_FILE_SUBSCRIBE
+		MENUITEM SEPARATOR
+        MENUITEM "Empt&y Trash Folder",				ID_FILE_EMPTYTRASHFOLDER
+        MENUITEM "Compact Fol&ders",				ID_FILE_COMPRESSALLFOLDERS
         MENUITEM SEPARATOR
-        MENUITEM "&Rename Folder...",           ID_FOLDER_RENAME
-        MENUITEM "Empt&y Trash Folder",         ID_FILE_EMPTYTRASHFOLDER
-        MENUITEM "Compress Fol&ders",           ID_FILE_COMPRESSALLFOLDERS
+		MENUITEM "Import...",						ID_FILE_IMPORT_MAIL
+#ifdef MOZ_OFFLINE
         MENUITEM SEPARATOR
-        POPUP "Ge&t Messages"
-        BEGIN
-            MENUITEM "&New\tCtrl+T",                ID_FILE_GETNEWMAIL
-            MENUITEM "Ne&xt ###",                   ID_FILE_GETNEXT
-        END
-        MENUITEM "Send Unsent &Messages",       ID_FILE_DELIVERMAILNOW
-        MENUITEM "Su&bscribe to Discussion Groups...", ID_FILE_SUBSCRIBE
+		POPUP "Synchronize"
+		BEGIN
+			MENUITEM "Synchronize Now..."			ID_SYNCHRONIZE
+			            MENUITEM SEPARATOR
+            MENUITEM "Download Flagged Messages", 
+                                                    ID_MESSAGE_RETRIEVEOFFLINE
+            MENUITEM "Download Selected Messages", 
+	                                                ID_MESSAGE_RETRIEVESELECTED
+		END
+        MENUITEM "Work Offl&ine...",				ID_BIG_SWITCH
+#endif //MOZ_OFFLINE
         MENUITEM SEPARATOR
-        MENUITEM "Go Offl&ine...",              ID_BIG_SWITCH
+        MENUITEM "Pa&ge Setup...",					ID_FILE_PAGE_SETUP
+        MENUITEM "Print Pre&view",					ID_FILE_PRINT_PREVIEW
+        MENUITEM "&Print...\tCtrl+P",				ID_FILE_PRINT
         MENUITEM SEPARATOR
-        MENUITEM "Pa&ge Setup...",              ID_FILE_PAGE_SETUP
-        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
-        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
-        MENUITEM SEPARATOR
-        MENUITEM "&Close\tCtrl+W",              ID_FILE_CLOSE
-        MENUITEM "E&xit\tCtrl+Q",               ID_APP_EXIT
+        MENUITEM "&Close\tCtrl+W",					ID_FILE_CLOSE
+        MENUITEM "E&xit\tCtrl+Q",					ID_APP_EXIT
     END
     POPUP "&Edit"
     BEGIN
@@ -2025,12 +2157,12 @@ BEGIN
         MENUITEM "&Find in Message...\tCtrl+F", ID_EDIT_FINDINCURRENT
         MENUITEM "Find A&gain\tCtrl+G",         ID_EDIT_FINDAGAIN
         MENUITEM "Search &Messages",            ID_EDIT_SEARCH
-        MENUITEM "Search Director&y",           ID_EDIT_LDAPSEARCH
+		MENUITEM SEPARATOR
+        MENUITEM "Search &Messages",            ID_EDIT_SEARCH
+		MENUITEM "Search Directories",			ID_EDIT_LDAPSEARCH
         MENUITEM SEPARATOR
-        MENUITEM "Ma&nage Mail Account",        ID_EDIT_MANAGEMAILACCOUNT
-        MENUITEM "Manage Discussion Gr&oup",    ID_NEWS_MODERATE
-        MENUITEM SEPARATOR
-        MENUITEM "Mai&l Filters...",            ID_EDIT_FILTER
+        MENUITEM "Message F&ilters...",            ID_EDIT_FILTER
+		MENUITEM SEPARATOR
         MENUITEM "Pr&eferences...",             ID_OPTIONS_MAILANDNEWS
     END
     POPUP "&View"
@@ -2044,11 +2176,11 @@ BEGIN
             MENUITEM "&Normal",                     ID_VIEW_HEADERS_SHORT
             MENUITEM "&Brief",                      ID_VIEW_HEADERS_MICRO
         END
-        POPUP "&Attachments"
-        BEGIN
-            MENUITEM "&Inline",                     ID_VIEW_ATTACHINLINE
-            MENUITEM "As &Links",                   ID_VIEW_ATTACHLINKS
-        END
+		MENUITEM SEPARATOR
+        MENUITEM "View &Attachments Inline",    ID_VIEW_ATTACHINLINE
+		MENUITEM "View Attachments As &Links",  ID_VIEW_ATTACHLINKS
+		MENUITEM SEPARATOR
+        MENUITEM "Wrap Lon&g Lines",            ID_MAIL_WRAPLONGLINES
         MENUITEM SEPARATOR
         MENUITEM "Increase &Font\tCtrl+]",      ID_VIEW_INCREASEFONT
         MENUITEM "Decrease Fon&t\tCtrl+[",      ID_VIEW_DECREASEFONT
@@ -2059,7 +2191,6 @@ BEGIN
         MENUITEM "&Stop Loading\tESC",          ID_NAVIGATE_INTERRUPT
         MENUITEM SEPARATOR
         MENUITEM "Unscram&ble (ROT13)",         ID_VIEW_ROT13
-        MENUITEM "Wrap Lon&g Lines",            ID_MAIL_WRAPLONGLINES
         MENUITEM SEPARATOR
         MENUITEM "Page So&urce\tCtrl+U",        ID_FILE_VIEWSOURCE
         MENUITEM "Page &Info",                  ID_FILE_DOCINFO
@@ -2103,20 +2234,26 @@ BEGIN
     END
     POPUP "&Go"
     BEGIN
-        MENUITEM "&Next Message\tShift+N",      ID_MESSAGE_NEXT
-        MENUITEM "Next &Unread Message\tN",     ID_MESSAGE_NEXTUNREAD
-        MENUITEM "Next F&lagged Message",       ID_MESSAGE_NEXTFLAGGED
-        MENUITEM "Next Unread &Thread\tT",      ID_MESSAGE_NEXTUNREADTHREAD
-
-        MENUITEM "Ne&xt Folder",                ID_MESSAGE_NEXTNEWSGROUP
-        MENUITEM "Next Unrea&d Folder\tG",      ID_MESSAGE_NEXTUNREADNEWSGROUP
-
-        MENUITEM SEPARATOR
-        MENUITEM "&Previous Message\tShift+P",  ID_MESSAGE_PREVIOUS
-        MENUITEM "Previou&s Unread Message\tP", ID_MESSAGE_PREVIOUSUNREAD
-        MENUITEM "Previous Fla&gged Message",   ID_MESSAGE_PREVIOUSFLAGGED
-        MENUITEM SEPARATOR
-        MENUITEM "&First Flagged Message",      ID_MESSAGE_FIRSTFLAGGED
+		MENUITEM "First Unread Message",		ID_MESSAGE_FIRSTUNREAD
+		MENUITEM "&First Flagged Message",      ID_MESSAGE_FIRSTFLAGGED
+		MENUITEM SEPARATOR
+		POPUP "Next"
+		BEGIN
+			MENUITEM "Message\tShift+N",	        ID_MESSAGE_NEXT
+			MENUITEM "&Unread Message\tN",		    ID_MESSAGE_NEXTUNREAD
+			MENUITEM "F&lagged Message",	        ID_MESSAGE_NEXTFLAGGED
+			MENUITEM SEPARATOR
+			MENUITEM "Unread &Thread\tT",		    ID_MESSAGE_NEXTUNREADTHREAD
+			MENUITEM SEPARATOR
+			MENUITEM "Folder"	  ,                 ID_MESSAGE_NEXTNEWSGROUP
+			MENUITEM "Unrea&d Folder\tG",		    ID_MESSAGE_NEXTUNREADNEWSGROUP
+		END
+		POPUP "Previous"
+		BEGIN
+			MENUITEM "Message\tShift+P",			ID_MESSAGE_PREVIOUS
+			MENUITEM "Unread Message\tP",			ID_MESSAGE_PREVIOUSUNREAD
+			MENUITEM "Fla&gged Message",			ID_MESSAGE_PREVIOUSFLAGGED
+		END
         MENUITEM SEPARATOR
         MENUITEM "&Back\tAlt+<-",               ID_NAVIGATE_MSG_BACK
         MENUITEM "For&ward\tAlt+->",            ID_NAVIGATE_MSG_FORWARD
@@ -2126,29 +2263,29 @@ BEGIN
         MENUITEM "&New Message\tCtrl+M",        ID_FILE_NEWMESSAGE
         POPUP "&Reply"
         BEGIN
-            MENUITEM "to &Sender\tCtrl+R",          ID_MESSAGE_REPLY
+            MENUITEM "to &Sender Only\tCtrl+R",          ID_MESSAGE_REPLY
             MENUITEM "to Sender and &All Recipients\tCtrl+Shift+R", 
-                                                    ID_MESSAGE_REPLYALL
-            MENUITEM "to &Group",           ID_MESSAGE_POSTREPLY
+														ID_MESSAGE_REPLYALL
+            MENUITEM "to &Group",						ID_MESSAGE_POSTREPLY
             MENUITEM "to Sender and Gro&up", 
-                                                    ID_MESSAGE_POSTANDREPLY
+														ID_MESSAGE_POSTANDREPLY
         END
-        MENUITEM "Forwar&d\tCtrl+L",            ID_MESSAGE_FORWARD
-        MENUITEM "Forward &Quoted\tCtrl+Shift+L", ID_MESSAGE_FORWARDQUOTED
-        MENUITEM SEPARATOR
-        POPUP "&Add to Address Book"
+        MENUITEM "&Forward as attachment\tCtrl+L",					ID_MESSAGE_FORWARD
+        MENUITEM "Forward &Quoted\tCtrl+Shift+L",		ID_MESSAGE_FORWARDQUOTED
+		MENUITEM "Forward In&line",						ID_MESSAGE_FORWARDINLINE
+		MENUITEM "&Edit to Resend",						ID_FILE_EDITMESSAGE
+		MENUITEM SEPARATOR
+        POPUP "Move Message"
         BEGIN
-            MENUITEM "&Sender",                     ID_MESSAGE_ADDSENDER
-            MENUITEM "&All",                        ID_MESSAGE_ADDALL
-        END
-        POPUP "Fi&le Message"
-        BEGIN
-            MENUITEM "&Replace Me",                 FIRST_MOVE_MENU_ID
+            MENUITEM "&Replace Me",						FIRST_MOVE_MENU_ID
         END
         POPUP "&Copy Message"
         BEGIN
-            MENUITEM "&Replace Me",                 FIRST_MOVE_MENU_ID
+            MENUITEM "&Replace Me",						FIRST_MOVE_MENU_ID
         END
+        MENUITEM SEPARATOR
+        MENUITEM "&Add Sender to Address Book",         ID_MESSAGE_ADDSENDER
+        MENUITEM "Add All to Address Book",             ID_MESSAGE_ADDALL
         MENUITEM SEPARATOR
         POPUP "&Mark"
         BEGIN
@@ -2159,9 +2296,10 @@ BEGIN
             MENUITEM "&All Read\tShift+C",          ID_MESSAGE_MARKALLREAD
             MENUITEM "by &Date...\tC",              ID_MESSAGE_CATCHUP
             MENUITEM "for &Later\tL",               ID_MESSAGE_MARKASLATER
+			MENUITEM SEPARATOR
+	        MENUITEM "&Flag",                       ID_MESSAGE_MARK
+	        MENUITEM "&Unflag",                     ID_MESSAGE_UNMARK
         END
-        MENUITEM "&Flag",                       ID_MESSAGE_MARK
-        MENUITEM "&Unflag",                     ID_MESSAGE_UNMARK
         MENUITEM SEPARATOR
         MENUITEM "Ignor&e Thread\tK",           ID_MESSAGE_KILL
         MENUITEM "&Watch Thread\tW",            ID_MESSAGE_WATCH
@@ -2169,8 +2307,7 @@ BEGIN
     POPUP "&Communicator"
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "Collabra &Discussion Groups\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
         MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
         MENUITEM SEPARATOR
@@ -2198,6 +2335,13 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+		POPUP "Server Tools"
+		BEGIN
+		    MENUITEM "Ma&nage Mail Account",        ID_EDIT_MANAGEMAILACCOUNT
+		    MENUITEM "Manage Newsgr&oup",			ID_NEWS_MODERATE
+		END
+
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
     END
@@ -2456,8 +2600,7 @@ BEGIN
     POPUP "&Communicator"
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "Collabra &Discussion Groups\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",			ID_TOOLS_INBOX
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
         MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
         MENUITEM SEPARATOR
@@ -2485,6 +2628,12 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+		POPUP "Server Tools"
+		BEGIN
+		   MENUITEM "Ma&nage Mail Account",        ID_EDIT_MANAGEMAILACCOUNT
+		   MENUITEM "Manage Newsgroups",		   ID_EDIT_SERVER
+		END
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
     END
@@ -2505,33 +2654,38 @@ IDM_MAILTHREADFILEMENU MENU DISCARDABLE
             MENUITEM "Page From &Template",         ID_EDT_NEW_DOC_FROM_TEMPLATE
 
             MENUITEM "Page From &Wizard...",        ID_COMMAND_PAGE_FROM_WIZARD
-
+            MENUITEM SEPARATOR
+	        MENUITEM "Ne&w Folder...",              ID_FILE_NEWFOLDER
         END
-        MENUITEM "Ne&w Folder...",              ID_FILE_NEWFOLDER
-        MENUITEM "&Open Message",               ID_FILE_OPENMESSAGE
         POPUP "Open &Attachments"
         BEGIN
             MENUITEM "&Replace Me",                 FIRST_ATTACH_MENU_ID
         END
-        MENUITEM SEPARATOR
-        MENUITEM "&Save As...\tCtrl+S",         ID_FILE_SAVEMESSAGES
-        MENUITEM "&Edit Message",               ID_FILE_EDITMESSAGE
-        MENUITEM SEPARATOR
-        MENUITEM "&Rename Folder...",           ID_FOLDER_RENAME
+		POPUP "&Save As"
+		BEGIN
+	        MENUITEM "&File...\tCtrl+S",			ID_FILE_SAVEMESSAGES
+		END
+		MENUITEM SEPARATOR
+		MENUITEM "Get New Messages"				ID_FILE_GETNEWMAIL
+        MENUITEM "Get Ne&xt ###",               ID_FILE_GETNEXT
+        MENUITEM "Send Unsent &Messages",       ID_FILE_DELIVERMAILNOW
+        MENUITEM "Su&bscribe...",				ID_FILE_SUBSCRIBE
+		MENUITEM SEPARATOR
+        MENUITEM "&Rename Folder...",			ID_FOLDER_RENAME
         MENUITEM "Empt&y Trash Folder",         ID_FILE_EMPTYTRASHFOLDER
-        MENUITEM "Compress Fol&ders",           ID_FILE_COMPRESSALLFOLDERS
+        MENUITEM "Compact Fol&ders",			ID_FILE_COMPRESSALLFOLDERS
+//        MENUITEM "&Open Message",               ID_FILE_OPENMESSAGE
         MENUITEM SEPARATOR
-        POPUP "Ge&t Messages"
+		MENUITEM "Import..."					ID_FILE_IMPORT_MAIL
+		MENUITEM SEPARATOR
+        POPUP "Synchronize"
         BEGIN
-            MENUITEM "&New\tCtrl+T",                ID_FILE_GETNEWMAIL
-            MENUITEM "Ne&xt ###",                   ID_FILE_GETNEXT
+			MENUITEM "Synchronize Now..."				ID_SYNCHRONIZE
             MENUITEM SEPARATOR
-            MENUITEM "Se&lected For Offline Reading", 
-                                                    ID_MESSAGE_RETRIEVESELECTED
-
-            MENUITEM "&Flagged For Offline Reading", 
+            MENUITEM "Download Flagged Messages", 
                                                     ID_MESSAGE_RETRIEVEOFFLINE
-
+            MENUITEM "Download Selected Messages", 
+	                                                ID_MESSAGE_RETRIEVESELECTED
         END
         MENUITEM "Send Unsent &Messages",       ID_FILE_DELIVERMAILNOW
         MENUITEM "Su&bscribe to Discussion Groups...", ID_FILE_SUBSCRIBE
@@ -2554,25 +2708,22 @@ BEGIN
     MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
     MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
     MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
-    MENUITEM "&Delete Message\tDel",        ID_EDIT_DELETEMESSAGE
-    POPUP "Select Mess&age"
+    MENUITEM "&Delete Message\tDel",        ID_EDIT_DELETE_3PANE
+    POPUP "Selec&t"
     BEGIN
-        MENUITEM "&Thread\tCtrl+Shift+A",       ID_EDIT_SELECTTHREAD
-        MENUITEM "&Flagged",                    ID_EDIT_SELECTMARKEDMESSAGES
-
         MENUITEM "&All\tCtrl+A",                ID_EDIT_SELECTALL
+		MENUITEM "&Thread\tCtrl+Shift+A",       ID_EDIT_SELECTTHREAD
+        MENUITEM "&Flagged Messages",           ID_EDIT_SELECTMARKEDMESSAGES
     END
     MENUITEM SEPARATOR
-    MENUITEM "&Find in Message...\tCtrl+F", ID_EDIT_FINDINCURRENT
+    MENUITEM "&Find\tCtrl+F", ID_EDIT_FINDINCURRENT
     MENUITEM "Find A&gain\tCtrl+G",         ID_EDIT_FINDAGAIN
-    MENUITEM "Search &Messages",            ID_EDIT_SEARCH
-    MENUITEM "Search Director&y",           ID_EDIT_LDAPSEARCH
+	MENUITEM SEPARATOR
+    MENUITEM "&Search Messages",            ID_EDIT_SEARCH
     MENUITEM SEPARATOR
-    MENUITEM "Ma&nage Mail Account",        ID_EDIT_MANAGEMAILACCOUNT
-    MENUITEM "Manage Discussion Gr&oup",    ID_EDIT_SERVER
-    MENUITEM SEPARATOR
-    MENUITEM "Mai&l Filters...",            ID_EDIT_FILTER
-    MENUITEM "Propertie&s",                 ID_VIEW_PROPERTIES
+    MENUITEM "Message F&ilters...",         ID_EDIT_FILTER
+    MENUITEM "Pr&operties",                 ID_VIEW_PROPERTIES
+	MENUITEM SEPARATOR
     MENUITEM "Pr&eferences...",             ID_OPTIONS_MAILANDNEWS
 END
 
@@ -2582,6 +2733,7 @@ BEGIN
     MENUITEM "&Location Toolbar",           ID_VIEW_LOCATIONTOOLBAR
     MENUITEM "&Categories",                 ID_VIEW_CATEGORIES
     MENUITEM "Messa&ge",                    ID_VIEW_MESSAGE
+	MENUITEM "&Folders",					ID_VIEW_FOLDER
     MENUITEM SEPARATOR
     POPUP "S&ort"
     BEGIN
@@ -2594,18 +2746,19 @@ BEGIN
         MENUITEM "by &Subject",                 ID_SORT_BYSUBJECT
         MENUITEM "by &Thread",                  ID_SORT_BYTHREAD
         MENUITEM "by U&nread",                  ID_SORT_BYUNREAD
+        MENUITEM "by &Order received",          ID_SORT_BYMESSAGENUMBER
         MENUITEM SEPARATOR
         MENUITEM "&Ascending",                  ID_SORT_ASCENDING
         MENUITEM "&Descending",                 ID_SORT_DESCENDING
     END
     POPUP "&Messages"
     BEGIN
-        MENUITEM "&New",                        ID_VIEW_NEWONLY
-        MENUITEM "&Threads with New",           ID_VIEW_NEWTHREADS
-        MENUITEM "&Watched Threads with New",   ID_VIEW_WATCHEDTHREADS
-        MENUITEM "&All",                        ID_VIEW_ALLTHREADS
+        MENUITEM "&All",				           ID_VIEW_ALLTHREADS
+		MENUITEM "&Unread",                        ID_VIEW_NEWONLY
+        MENUITEM "&Threads with Unread",           ID_VIEW_NEWTHREADS
+        MENUITEM "&Watched Threads with Unread",   ID_VIEW_WATCHEDTHREADS
         MENUITEM SEPARATOR
-        MENUITEM "&Ignored",                    ID_VIEW_KILLEDTHREADS
+        MENUITEM "&Ignored Threads",               ID_VIEW_KILLEDTHREADS
     END
     POPUP "Hea&ders"
     BEGIN
@@ -2613,14 +2766,14 @@ BEGIN
         MENUITEM "&Normal",                     ID_VIEW_HEADERS_SHORT
         MENUITEM "&Brief",                      ID_VIEW_HEADERS_MICRO
     END
-    POPUP "&Attachments"
-    BEGIN
-        MENUITEM "&Inline",                     ID_VIEW_ATTACHINLINE
-        MENUITEM "As &Links",                   ID_VIEW_ATTACHLINKS
-    END
+	MENUITEM SEPARATOR
+    MENUITEM "View &Attachments Inline",        ID_VIEW_ATTACHINLINE
+    MENUITEM "View Attachments As &Links",		ID_VIEW_ATTACHLINKS
+	MENUITEM SEPARATOR
+    MENUITEM "Wra&p Long Lines",	            ID_MAIL_WRAPLONGLINES
     MENUITEM SEPARATOR
     MENUITEM "Increase &Font\tCtrl+]",      ID_VIEW_INCREASEFONT
-    MENUITEM "Decrease Fon&t\tCtrl+[",      ID_VIEW_DECREASEFONT
+    MENUITEM "Decrease Fo&nt\tCtrl+[",      ID_VIEW_DECREASEFONT
     MENUITEM SEPARATOR
     MENUITEM "&Reload",                     ID_NAVIGATE_RELOAD
     MENUITEM "Sho&w Images",                ID_VIEW_LOADIMAGES
@@ -2674,23 +2827,29 @@ END
 
 IDM_MAILTHREADGOMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "&Next Message\tShift+N",      ID_MESSAGE_NEXT
-     MENUITEM "Next &Unread Message\tN",     ID_MESSAGE_NEXTUNREAD
-    MENUITEM "Next F&lagged Message",       ID_MESSAGE_NEXTFLAGGED
-    MENUITEM "Next Unread &Thread\tT",      ID_MESSAGE_NEXTUNREADTHREAD
-
-    MENUITEM "Ne&xt Folder",                ID_MESSAGE_NEXTNEWSGROUP
-    MENUITEM "Next Unrea&d Folder\tG",      ID_MESSAGE_NEXTUNREADNEWSGROUP
-
-    MENUITEM SEPARATOR
-    MENUITEM "&Previous Message\tShift+P",  ID_MESSAGE_PREVIOUS
-    MENUITEM "Previou&s Unread Message\tP", ID_MESSAGE_PREVIOUSUNREAD
-    MENUITEM "Previous Fla&gged Message",   ID_MESSAGE_PREVIOUSFLAGGED
-    MENUITEM SEPARATOR
+	MENUITEM "First Unread Message"			ID_MESSAGE_FIRSTUNREAD
     MENUITEM "&First Flagged Message",      ID_MESSAGE_FIRSTFLAGGED
     MENUITEM SEPARATOR
+	POPUP "Next"
+	BEGIN
+		MENUITEM "Message\tShift+N",		ID_MESSAGE_NEXT
+		MENUITEM "&Unread Message\tN",	    ID_MESSAGE_NEXTUNREAD
+		MENUITEM "F&lagged Message",	    ID_MESSAGE_NEXTFLAGGED
+		MENUITEM SEPARATOR
+		MENUITEM "Unread &Thread\tT",       ID_MESSAGE_NEXTUNREADTHREAD
+		MENUITEM SEPARATOR
+		MENUITEM "Folder",					ID_MESSAGE_NEXTNEWSGROUP
+		MENUITEM "Unrea&d Folder\tG",		ID_MESSAGE_NEXTUNREADNEWSGROUP
+	END
+	POPUP "Previous"
+	BEGIN
+		MENUITEM "&Message\tShift+P",		ID_MESSAGE_PREVIOUS
+		MENUITEM "&Unread Message\tP",		ID_MESSAGE_PREVIOUSUNREAD
+		MENUITEM "Fla&gged Message",		ID_MESSAGE_PREVIOUSFLAGGED
+	END
+    MENUITEM SEPARATOR
     MENUITEM "&Back\tAlt+<-",               ID_NAVIGATE_MSG_BACK
-    MENUITEM "For&ward\tAlt+->",            ID_NAVIGATE_MSG_FORWARD*/
+    MENUITEM "For&ward\tAlt+->",            ID_NAVIGATE_MSG_FORWARD
 END
 
 IDM_MAILTHREADMESSAGEMENU MENU DISCARDABLE
@@ -2698,21 +2857,18 @@ IDM_MAILTHREADMESSAGEMENU MENU DISCARDABLE
     MENUITEM "&New Message\tCtrl+M",        ID_FILE_NEWMESSAGE
     POPUP "&Reply"
     BEGIN
-        MENUITEM "to &Sender\tCtrl+R",          ID_MESSAGE_REPLY
+        MENUITEM "to &Sender Only\tCtrl+R",     ID_MESSAGE_REPLY
         MENUITEM "to Sender and &All Recipients\tCtrl+Shift+R", 
                                                 ID_MESSAGE_REPLYALL
-        MENUITEM "to &Group",           ID_MESSAGE_POSTREPLY
+        MENUITEM "to &Group",					ID_MESSAGE_POSTREPLY
         MENUITEM "to Sender and Gro&up", 
                                                 ID_MESSAGE_POSTANDREPLY
     END
-    MENUITEM "Forwar&d\tCtrl+L",            ID_MESSAGE_FORWARD
-    MENUITEM "Forward &Quoted\tCtrl+Shift+L", ID_MESSAGE_FORWARDQUOTED
-    MENUITEM SEPARATOR
-    POPUP "&Add to Address Book"
-    BEGIN
-        MENUITEM "&Sender",                     ID_MESSAGE_ADDSENDER
-        MENUITEM "&All",                        ID_MESSAGE_ADDALL
-    END
+    MENUITEM "&Forward as attachment\tCtrl+L",	ID_MESSAGE_FORWARD
+    MENUITEM "Forward &Quoted\tCtrl+Shift+L",   ID_MESSAGE_FORWARDQUOTED
+	MENUITEM "Forward In&line",					ID_MESSAGE_FORWARDINLINE
+    MENUITEM "&Edit to Resend",               ID_FILE_EDITMESSAGE
+	MENUITEM SEPARATOR
     POPUP "Fi&le Message"
     BEGIN
         MENUITEM "&Replace Me",                 FIRST_MOVE_MENU_ID
@@ -2721,19 +2877,22 @@ IDM_MAILTHREADMESSAGEMENU MENU DISCARDABLE
     BEGIN
         MENUITEM "&Replace Me",                 FIRST_MOVE_MENU_ID
     END
+	MENUITEM SEPARATOR
+    MENUITEM "&Add Sender to Address Book",     ID_MESSAGE_ADDSENDER
+    MENUITEM "Add All to Address Book",			ID_MESSAGE_ADDALL
     MENUITEM SEPARATOR
     POPUP "&Mark"
     BEGIN
         MENUITEM "as &Unread\tU",               ID_MESSAGE_MARKASUNREAD
         MENUITEM "as &Read\tM",                 ID_MESSAGE_MARKASREAD
         MENUITEM "&Thread Read",                ID_MESSAGE_MARKTHREADREAD
-
-        MENUITEM "&All Read\tShift+C",          ID_MESSAGE_MARKALLREAD
         MENUITEM "by &Date...\tC",              ID_MESSAGE_CATCHUP
-        MENUITEM "for &Later\tL",               ID_MESSAGE_MARKASLATER
-    END
-    MENUITEM "&Flag",                       ID_MESSAGE_MARK
-    MENUITEM "&Unflag",                     ID_MESSAGE_UNMARK
+        MENUITEM "&All Read\tShift+C",          ID_MESSAGE_MARKALLREAD
+        //MENUITEM "for &Later\tL",               ID_MESSAGE_MARKASLATER
+		MENUITEM SEPARATOR
+	    MENUITEM "&Flag",                       ID_MESSAGE_MARK
+		MENUITEM "&Unflag",                     ID_MESSAGE_UNMARK
+		END
     MENUITEM SEPARATOR
     MENUITEM "Ignor&e Thread\tK",           ID_MESSAGE_KILL
     MENUITEM "&Watch Thread\tW",            ID_MESSAGE_WATCH
@@ -2762,29 +2921,30 @@ BEGIN
             MENUITEM "Page From &Template",         ID_EDT_NEW_DOC_FROM_TEMPLATE
 
             MENUITEM "Page From &Wizard...",        ID_COMMAND_PAGE_FROM_WIZARD
-
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Save Draft\tCtrl+S",         IDM_SAVEASDRAFT
-		MENUITEM "Save Template\tCtrl+T",       IDM_SAVEASTEMPLATE
-        MENUITEM "Save &As ...",                IDM_SAVEAS
-        MENUITEM SEPARATOR
-        MENUITEM "Sen&d Now\tCtrl+Enter",       IDM_SENDNOW
-        MENUITEM "Send &Later",                 IDM_SENDLATER
-        MENUITEM "&Quote Original Text",        IDM_QUOTEORIGINAL
-        MENUITEM "Selec&t Addresses...",        IDM_ADDRESSPICKER
+ 		POPUP "Save &As"
+		BEGIN
+			MENUITEM "&File...",	                IDM_SAVEAS
+			MENUITEM SEPARATOR
+			MENUITEM "&Draft\tCtrl+S",			    IDM_SAVEASDRAFT
+			MENUITEM "&Template\tCtrl+T",			IDM_SAVEASTEMPLATE 
+		END
         POPUP "A&ttach"
         BEGIN
             MENUITEM "&File...",                    IDM_ATTACHFILE
             MENUITEM "&Web Page...",                IDM_ATTACHWEBPAGE
-            MENUITEM "&Address Book Card...",       IDM_ATTACHVCARD
             MENUITEM SEPARATOR
             MENUITEM "&My Address Book Card",       IDM_ATTACHMYCARD
         END
         MENUITEM SEPARATOR
-        MENUITEM "Go Offl&ine...",              ID_BIG_SWITCH
+        MENUITEM "Sen&d Now\tCtrl+Enter",       IDM_SENDNOW
+        MENUITEM "Send &Later",     			IDM_SENDLATER
+        MENUITEM "&Quote Original Text",        IDM_QUOTEORIGINAL
+		MENUITEM "Selec&t Addresses...",		IDM_ADDRESSPICKER
         MENUITEM SEPARATOR
         MENUITEM "&Close\tCtrl+W",              ID_FILE_CLOSE
+        MENUITEM "E&xit\tCtrl+Q",               ID_APP_EXIT
     END
     POPUP "&Edit"
     BEGIN
@@ -2800,7 +2960,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find in Message\tCtrl+F",    IDM_FINDINMESSAGE
         MENUITEM "Find Again\tCtrl+G",          IDM_FINDAGAIN
-        MENUITEM "Search Director&y",           IDM_SEARCHADDRESSES
+		MENUITEM SEPARATOR
+		MENUITEM "Name Completion",				ID_TOGGLENAMECOMPLETION
+		MENUITEM "Show Name Picker\tCtrl+J"		ID_SHOW_NAME_PICKER
         MENUITEM SEPARATOR
         MENUITEM "&Preferences...",             ID_OPTIONS_PREFERENCES
     END
@@ -2860,8 +3022,7 @@ BEGIN
     POPUP "&Communicator"
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "Collabra &Discussion Groups\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
         MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
         MENUITEM SEPARATOR
@@ -2889,6 +3050,7 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
     END
@@ -3040,6 +3202,33 @@ BEGIN
     LTEXT           "Click Finish to continue.",IDC_STATIC,1,135,203,8
 END
 
+#ifdef MOZ_MAIL_NEWS 
+#define MOZ_NEWADDR 1
+#ifdef MOZ_NEWADDR 
+IDD_ADDRESSBOOK DIALOG DISCARDABLE  0, 0, 332, 34
+STYLE WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Search for names in:",IDC_STATIC,0,5,66,8
+    PUSHBUTTON      "Search...",IDC_DIRSEARCH,0,16,50,13
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDVERT,54,16,1,12
+    EDITTEXT        IDC_ADDRNAME,60,16,267,13,ES_AUTOHSCROLL
+    LTEXT           "a directory name",IDC_STATIC1,69,5,195,8
+END
+#else
+IDD_ADDRESSBOOK DIALOG DISCARDABLE  0, 0, 332, 34
+STYLE WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Select a directory and type in the name you are looking for:",
+                    IDC_STATIC,0,5,203,8
+    COMBOBOX        IDC_DIRECTORIES,0,0,0,0,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL
+    EDITTEXT        IDC_ADDRNAME,0,16,267,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "Search...",IDC_DIRSEARCH,277,16,50,13
+END
+#endif
+#endif //MOZ_MAIL_NEWS
 
 IDD_LOGIN_DIALOG DIALOG DISCARDABLE  0, 0, 244, 274
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -3171,8 +3360,7 @@ BEGIN
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
 #ifdef MOZ_MAIL_NEWS
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "&Collabra Discussions\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
 #endif /* MOZ_MAIL_NEWS */
 #ifdef EDITOR
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
@@ -3209,6 +3397,9 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#ifdef MOZ_MAIL_NEWS
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+#endif //MOZ_MAIL_NEWS
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
     END
@@ -3295,8 +3486,7 @@ BEGIN
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
 #ifdef MOZ_MAIL_NEWS
-        MENUITEM "&Messenger Mailbox\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "Collabra &Discussion Groups\tCtrl+3", ID_TOOLS_NEWS
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
 #endif // MOZ_MAIL_NEWS
 #ifdef EDITOR
         MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
@@ -3333,6 +3523,9 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#ifdef MOZ_MAIL_NEWS
+		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+#endif
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
     END

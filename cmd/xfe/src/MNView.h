@@ -83,6 +83,8 @@ public:
   static fe_icon inboxOpenIcon;
   static fe_icon draftsIcon;
   static fe_icon draftsOpenIcon;
+  static fe_icon templatesIcon;
+  static fe_icon templatesOpenIcon;
   static fe_icon filedMailIcon;
   static fe_icon filedMailOpenIcon;
   static fe_icon outboxIcon;
@@ -105,11 +107,13 @@ public:
   static fe_icon mailMessageUnreadIcon;
   static fe_icon newsPostIcon;
   static fe_icon draftIcon;
+  static fe_icon templateIcon;
   static fe_icon newsNewIcon;
   static fe_icon msgReadIcon;
   static fe_icon msgUnreadIcon;
   static fe_icon deletedIcon;
   static fe_icon msgFlagIcon;
+  static fe_icon mailMessageAttachIcon;
 
 	// thread selection icons;
 	static fe_icon openSpoolIgnoredIcon;

@@ -68,7 +68,8 @@ XFE_ABDirListView::XFE_ABDirListView(XFE_Component *toplevel_component,
 	m_directories(directories)
 #else
 	m_containerLine(NULL),
-	m_activeContainer(NULL)
+	m_activeContainer(NULL),
+	m_dataIndex(MSG_VIEWINDEXNONE)
 #endif /* USE_ABCOM */
 {
 	/* initialize 
@@ -134,6 +135,8 @@ XFE_ABDirListView::XFE_ABDirListView(XFE_Component *toplevel_component,
 		m_nDirs = XP_ListCount(directories);
 	}/* if */
 #endif /* USE_ABCOM */
+
+	setPane(m_pane);
 
 	m_outliner->change(0, m_nDirs, m_nDirs);
 	m_outliner->show();
@@ -272,6 +275,9 @@ XFE_ABDirListView::isCommandEnabled(CommandType command,
 									void * /* calldata */,
 									XFE_CommandInfo* /* i */)
 {
+#if defined(DEBUG_tao_)
+	printf("\nXFE_ABDirListView::isCommandEnabled:%s\n", Command::getString(command));
+#endif
 	AB_CommandType abCmd = (AB_CommandType)~0;
 	if (command == xfeCmdABNewPAB)
 		abCmd = AB_NewAddressBook;
@@ -279,7 +285,8 @@ XFE_ABDirListView::isCommandEnabled(CommandType command,
 		abCmd = AB_NewLDAPDirectory;
 	else if (command == xfeCmdABDelete)
 		abCmd = AB_DeleteCmd;
-	else if (command == xfeCmdABProperties)
+	else if ((command == xfeCmdABProperties) ||
+			 (command == xfeCmdABEditEntry))
 		abCmd = AB_PropertiesCmd;
 	else
 		return FALSE;
@@ -300,6 +307,11 @@ XFE_ABDirListView::isCommandEnabled(CommandType command,
 							NULL,
 							NULL);
 #endif /* USE_ABCOM */
+
+#if defined(DEBUG_tao_)
+	printf("\nXFE_ABDirListView::isCommandEnabled,cmd=%s, selectable_p=%d\n", 
+		   Command::getString(command), selectable_p);
+#endif
 	return selectable_p;
 }
 
@@ -316,10 +328,12 @@ XFE_ABDirListView::handlesCommand(CommandType command,
 								  void * /* calldata */,
 								  XFE_CommandInfo* /* i */)
 {
-	if (command == xfeCmdABNewPAB ||
-		command == xfeCmdABNewLDAPDirectory ||
-		command == xfeCmdABDelete ||
-		command == xfeCmdABProperties)
+#if defined(DEBUG_tao_)
+	printf("\nXFE_ABDirListView::handlesCommand:%s\n", Command::getString(command));
+#endif
+	if (IS_CONTAINER_PANE_CMD(command) ||
+		IS_2_PANE_CMD(command))
+
 		return True;
 	else
 		return FALSE;
@@ -337,7 +351,8 @@ XFE_ABDirListView::doCommand(CommandType command,
 		abCmd = AB_NewLDAPDirectory;
 	else if (command == xfeCmdABDelete)
 		abCmd = AB_DeleteCmd;
-	else if (command == xfeCmdABProperties)
+	else if (command == xfeCmdABProperties ||
+			 command == xfeCmdABEditEntry)
 		abCmd = AB_PropertiesCmd;
 	else
 		return;
@@ -510,7 +525,7 @@ XFE_ABDirListView::getTreeInfo(XP_Bool *expandable,
 	/* is_line_expanded ?
 	 */
 	if (is_line_expandable) {
-		int32 delta = MSG_ExpansionDelta(m_pane, value->u.number);
+		int32 delta = MSG_ExpansionDelta(m_pane, m_dataIndex);
 		if (delta < 0)
 			is_line_expanded = True;
 	}/* if */
@@ -631,6 +646,13 @@ XFE_ABDirListView::propertiesCB()
   int count = 0;
   const int *indices = 0;
   m_outliner->getSelection(&indices, &count);
+#if defined(USE_ABCOM)
+  int error = 
+	  AB_CommandAB2(m_pane, 
+					AB_PropertiesCmd,
+					(MSG_ViewIndex *) indices,
+					(int32) count);
+#else
   if (count > 0 && indices) {
 	  DIR_Server *dir = 
 		  (DIR_Server *) XP_ListGetObjectNum(m_directories, 
@@ -641,6 +663,7 @@ XFE_ABDirListView::propertiesCB()
 							  &(XFE_ABDirListView::propertyCallback),
 							  this);
   }/* if */
+#endif /* USE_ABCOM */
 }
 
 void XFE_ABDirListView::propertyCallback(DIR_Server *dir, void *callData)
@@ -779,8 +802,39 @@ void XFE_ABDirListView::Buttonfunc(const OutlineButtonFuncData *data)
 
 }
 
-void XFE_ABDirListView::Flippyfunc(const OutlineFlippyFuncData */* data */)
+void XFE_ABDirListView::Flippyfunc(const OutlineFlippyFuncData *data)
 {
+#if defined(DEBUG_tao)
+	printf("\n XFE_ABDirListView::Flippyfunc \n");
+#endif /* DEBUG_tao */
+	int row = data->row;
+#if defined(USE_ABCOM)
+	XP_Bool selection_needs_bubbling = False;
+
+		int delta = MSG_ExpansionDelta(m_pane, row);
+
+	if (delta == 0)
+		return;
+
+	/* we're not selected and we're being collapsed.
+	   check if any of our children are selected, and if
+	   so we select this row. */
+	if (!m_outliner->isSelected(row) && delta < 0) {
+		int num_children = -1 * delta;
+		int i;
+		
+		for (i = row + 1; i <= row + num_children; i ++)
+			if (m_outliner->isSelected(i)) {
+					selection_needs_bubbling = True;
+			}
+	}
+	MSG_ToggleExpansion(m_pane, row, NULL);
+
+	if (selection_needs_bubbling)
+		m_outliner->selectItem(row);
+
+	getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
+#endif /*USE_ABCOM */
 }
 	
 //
@@ -797,7 +851,7 @@ void *XFE_ABDirListView::acquireLineData(int line)
 		!m_outliner ||
 		line >= m_outliner->getTotalLines())
 		return 0;
-	
+	m_dataIndex = line;
 	AB_ContainerAttribValue *value = NULL;
 	int error = AB_GetContainerAttributeForPane(m_pane,
 										 line,
@@ -822,7 +876,7 @@ void *XFE_ABDirListView::acquireLineData(int line)
 #endif
 	AB_FreeContainerAttribValue(value);
 	if (depth) 
-		m_ancestorInfo = new OutlinerAncestorInfo[depth];
+		m_ancestorInfo = new OutlinerAncestorInfo[depth+1];
 	else
 		m_ancestorInfo = new OutlinerAncestorInfo[1];
       
@@ -1220,7 +1274,11 @@ XFE_ABDirListView::dirListDropCallback(Widget,
 									   void          *cd,
 									   fe_dnd_Event   type,
 									   fe_dnd_Source *source,
+#if defined(USE_ABCOM)
+									   XEvent        *event) 
+#else
 									   XEvent        */* event */) 
+#endif /* USE_ABCOM */
 {
     XFE_ABDirListView *ad = (XFE_ABDirListView *)cd;
     
@@ -1277,7 +1335,7 @@ XFE_ABDirListView::dirListDropCB(fe_dnd_Source *source, XEvent *event)
 		XFE_Outliner *outliner = listView->getOutliner();
 		const int *indices = NULL;
 		int32 numIndices = 0;
-		outliner->getSelection(&indices, &numIndices);
+		outliner->getSelection(&indices, (int *) &numIndices);
 		MSG_Pane *srcPane = listView->getPane();
 		AB_DragEffect effect = 
 			AB_DragEntriesIntoContainerStatus(srcPane,

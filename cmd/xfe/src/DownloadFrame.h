@@ -46,7 +46,7 @@ public:
 	void setAddress(char *address);
 	void setDestination(char *address);
 
-	void allConnectionsComplete();
+	virtual void allConnectionsComplete(MWContext  *context = NULL);
 
  	virtual XFE_Logo *	getLogo			();
  	virtual void		configureLogo	();

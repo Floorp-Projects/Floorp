@@ -281,6 +281,10 @@ void XFE_ABNameConTabView::setDlgValues()
 		  fe_SetTextField(m_textFs[AB_CELLULAR], 
 						  tmp?tmp:"");
 		  break;
+
+	  default:
+		  XP_ASSERT(0);
+		  break;
 	  }/* switch */
   }/* for i */
 

@@ -40,6 +40,15 @@ public:
 
   static const char *changeFocus;
 
+  //
+  virtual void listChangeFinished(XP_Bool /* asynchronous */,
+								  MSG_NOTIFY_CODE /* notify */, 
+								  MSG_ViewIndex /* where */, int32 /* num */) {};
+	
+  virtual void paneChanged(XP_Bool /*  asynchronous */, 
+						   MSG_PANE_CHANGED_NOTIFY_CODE /* notify_code */, 
+						   int32 /* value*/) {};
+
   // We're nice to our subclasses :)
   virtual Boolean handlesCommand(CommandType cmd, void *calldata = NULL,
 								   XFE_CommandInfo* i = NULL);

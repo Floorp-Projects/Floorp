@@ -106,10 +106,10 @@ XFE_PropertyTabView* XFE_PropertySheetView::addTab(int tabNameId)
   return tab;
 }/* XFE_PropertySheetView::addTab */
 
-void XFE_PropertySheetView::addTab(XFE_PropertyTabView* tab)
+void XFE_PropertySheetView::addTab(XFE_PropertyTabView* tab, XP_Bool show)
 {
   addView(tab);
-  tab->show();
+  if (show) tab->show();
 }/* XFE_PropertySheetView::addTab */
 
 void XFE_PropertySheetView::setDlgValues()

@@ -21,7 +21,7 @@
    */
 
 
-
+#include "rosetta.h"
 #include "xfe2_extern.h"
 #include "ComposeView.h"
 #include "ComposeFolderView.h"
@@ -46,7 +46,7 @@
 #include <xpgetstr.h>
 extern int MK_MSG_EMPTY_MESSAGE;
 extern int MK_MSG_DOUBLE_INCLUDE;
-extern int MK_MSG_MIXED_SECURITY;
+HG12821
 extern int MK_MSG_MISSING_SUBJECT;
 extern int XFE_NO_SUBJECT;
 
@@ -77,6 +77,7 @@ extern "C" {
   Widget         fe_EditorCreateComposeToolbar(MWContext*, Widget, char*);
 }
 
+extern "C" void fe_sec_logo_cb (Widget, XtPointer, XtPointer);
 
 extern "C" XtPointer fe_GetFont(MWContext *context, int sizeNum, int fontmask);
 extern "C" void
@@ -111,7 +112,7 @@ const char *XFE_ComposeView::tabBeforeSubject = "XFE_ComposeView::tabBeforeSubje
 const char *XFE_ComposeView::tabAfterSubject = "XFE_ComposeView::tabAfterSubject";
 const char *XFE_ComposeView::tabPrev   = "XFE_ComposeView::tabPrev";
 const char *XFE_ComposeView::tabNext   = "XFE_ComposeView::tabNext";
-const char *XFE_ComposeView::updateSecurityOption= "XFE_ComposeView::updateSecurityOption";
+HG12111
 
 static void TabBeforeSubjectTraverse(Widget w, XEvent *, String *, Cardinal *)
 {
@@ -757,6 +758,7 @@ XFE_ComposeView::isCommandEnabled(CommandType command, void *calldata,
 	}
 	else if ( (command == xfeCmdNewMessage )
 		 || (command == xfeCmdSaveDraft)
+         || (command == xfeCmdSaveTemplate)
 		 || (command == xfeCmdQuoteOriginalText)
 		 || (command == xfeCmdQuote)
 		 || (command == xfeCmdAttach)
@@ -1052,6 +1054,7 @@ XDEBUG(	printf ("in XFE_ComposeView::handlesCommand(%s)\n", Command::getString(c
 	  return False;
   if ( (command == xfeCmdNewMessage )
 	|| (command == xfeCmdSaveDraft)
+    || (command == xfeCmdSaveTemplate)
 	|| (command == xfeCmdAddresseePicker)
 	|| (command == xfeCmdQuoteOriginalText)
 	|| (command == xfeCmdQuote)
@@ -1153,10 +1156,7 @@ XFE_ComposeView::continueAfterSanityCheck()
   {
         cont = XFE_Confirm(m_contextData,XP_GetString(errcode));
   }
-  else if ( errcode == MK_MSG_MIXED_SECURITY ) 
-  {
-        cont = XFE_Confirm(m_contextData,XP_GetString(errcode));
-  }
+  
   else if ( errcode == MK_MSG_MISSING_SUBJECT ) 
   {
         const char *def = XP_GetString(XFE_NO_SUBJECT);
@@ -1243,7 +1243,8 @@ XDEBUG(	printf ("Do Command: %s \n", Command::getString(command));)
       /* ###tw  Should still probably do the commandstatus stuff. */
       MSG_Command(getPane(), MSG_SendMessageLater, NULL, 0);
     }
-  else if (command == xfeCmdSaveDraft)
+  else if (command == xfeCmdSaveDraft ||
+           command == xfeCmdSaveTemplate)
   {
       XDEBUG(   printf ("XFE_ComposeView::saveAsDraft()\n");)
  
@@ -1256,8 +1257,10 @@ XDEBUG(	printf ("Do Command: %s \n", Command::getString(command));)
       XP_FREE(pBody);
  
       /* ###tw  Should still probably do the commandstatus stuff. */
-    
-      MSG_Command(getPane(), MSG_SaveDraft, NULL, 0);
+      if (command == xfeCmdSaveDraft)
+          MSG_Command(getPane(), MSG_SaveDraft, NULL, 0);
+      else if (command == xfeCmdSaveTemplate)
+          MSG_Command(getPane(), MSG_SaveTemplate, NULL, 0);
 
      // Reset these two flags so that if user close the window, they
      // will not be prompt to save again
@@ -1485,11 +1488,7 @@ XDEBUG(	printf ("Do Command: %s \n", Command::getString(command));)
   {
 	  toggleAddressArea();
   }
-  else if (command == xfeCmdViewSecurity ) 
-  {
-           updateHeaderInfo();
-           fe_sec_logo_cb(NULL, getContext(), NULL);
-  }
+  HG81210
   else if (command == xfeCmdDeleteItem) {
 	  if ( m_focusW ) {
 		  if ( m_focusW != m_addrTypeW ) {
@@ -1667,7 +1666,7 @@ fe_compose_getData(MWContext *context)
 {
   XFE_Frame *f = ViewGlue_getFrame(context);
 
-  XP_ASSERT(f->getType() == FRAME_MAILNEWS_COMPOSE);
+  XP_ASSERT(f && f->getType() == FRAME_MAILNEWS_COMPOSE);
  
   return ((XFE_ComposeView *)f->getView())->getComposerData();
 }
@@ -1677,7 +1676,7 @@ fe_compose_setData(MWContext *context, void* data)
 {
   XFE_Frame *f = ViewGlue_getFrame(context);
   
-  XP_ASSERT(f->getType() == FRAME_MAILNEWS_COMPOSE);
+  XP_ASSERT(f && f->getType() == FRAME_MAILNEWS_COMPOSE);
   
   ((XFE_ComposeView *)f->getView())->setComposerData(data);
 }
@@ -1687,7 +1686,7 @@ fe_compose_getAttachment(MWContext *context)
 {
   XFE_Frame *f = ViewGlue_getFrame(context);
   
-  XP_ASSERT(f->getType() == FRAME_MAILNEWS_COMPOSE);
+  XP_ASSERT(f && f->getType() == FRAME_MAILNEWS_COMPOSE);
   
   return ((XFE_ComposeView *)f->getView())->getAttachmentData();
 }
@@ -1697,7 +1696,7 @@ fe_compose_setAttachment(MWContext *context, void* data)
 {
   XFE_Frame *f = ViewGlue_getFrame(context);
   
-  XP_ASSERT(f->getType() == FRAME_MAILNEWS_COMPOSE);
+  XP_ASSERT(f && f->getType() == FRAME_MAILNEWS_COMPOSE);
   
   ((XFE_ComposeView *)f->getView())->setAttachmentData(data);
 }
@@ -2278,7 +2277,7 @@ fe_set_compose_wrap_state(MWContext *context, XP_Bool wrap_p)
 {
   XFE_Frame *frame = ViewGlue_getFrame(XP_GetNonGridContext(context));
 
-  XP_ASSERT(frame->getType() == FRAME_MAILNEWS_COMPOSE);
+  XP_ASSERT(frame && frame->getType() == FRAME_MAILNEWS_COMPOSE);
 
   ((XFE_ComposeView*)frame->getView())->setComposeWrapState(wrap_p);
 }
@@ -2534,10 +2533,6 @@ XFE_ComposeView::getCommandView(XFE_Command* )
 extern "C" void
 FE_SecurityOptionsChanged(MWContext * pContext)
 {
-   XFE_Frame * pFrame = ViewGlue_getFrame(XP_GetNonGridContext(pContext));
-   if ( pFrame ) {
-        ((XFE_ComposeView*)pFrame->getView())->getToplevel()->
-		notifyInterested(XFE_ComposeView::updateSecurityOption, NULL);
-   }
+   HG03833
 }
 

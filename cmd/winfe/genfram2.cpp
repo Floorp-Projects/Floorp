@@ -17,6 +17,8 @@
  */
 
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "ssl.h"
 #include "secnav.h"
 #include "wfemsg.h"
@@ -33,9 +35,18 @@
 #include "nethelp.h"
 #include "navfram.h"
 #include "prefapi.h"
+#ifdef MOZ_MAIL_NEWS
+#include "mailpriv.h" 
+#include "offlndlg.h" 
+#endif //MOZ_MAIL_NEWS
+
+#ifdef MOZ_MAIL_NEWS
+extern "C" char *FE_GetProgramDirectory(char *buffer, int length);
+#endif //MOZ_MAIL_NEWS
 
 void CGenericFrame::OnSecurity()
 {
+  HG73537
   MWContext * pContext = GetMainContext()->GetContext();  
   
   if (pContext != NULL)
@@ -54,10 +65,18 @@ void CGenericFrame::OnSecurity()
 
 void CGenericFrame::OnUpdateSecurity(CCmdUI *pCmdUI)
 {
+	HG73537
 	int status = XP_GetSecurityStatus(GetMainContext()->GetContext());	
 
 	pCmdUI->Enable(status == SSL_SECURITY_STATUS_ON_LOW || status == SSL_SECURITY_STATUS_ON_HIGH);
 }
+
+#ifdef MOZ_OFFLINE
+void CGenericFrame::OnUpdateOnlineStatus(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!NET_IsOffline());
+}
+#endif //MOZ_OFFLINE
 
 void CGenericFrame::OnEnterIdle(UINT nWhy, CWnd* pWho )
 {
@@ -146,6 +165,29 @@ void CGenericFrame::OnShowAddressBookWindow()
 #endif
 }
 
+#ifdef MOZ_MAIL_NEWS
+void CGenericFrame::OnMigrationTools()
+{
+	WFE_MSGLaunchMigrationUtility(m_hWnd, FALSE, NULL);
+}
+
+void CGenericFrame::OnUpdateMigrationTools(CCmdUI* pCmdUI)
+{
+	char    executable [_MAX_PATH + 32];
+	strcpy (executable, "");
+	FE_GetProgramDirectory( executable, _MAX_PATH + 32 );
+	if ( *executable )
+	{
+		strcat( executable, "import32.exe" );
+	}
+#ifdef XP_WIN32
+	DWORD result = GetFileAttributes(executable);
+
+	pCmdUI->Enable(result !=0xFFFFFFFF);
+#endif
+}
+#endif //MOZ_MAIL_NEWS
+
 void CGenericFrame::OnFileMailNew()
 {
 #ifdef MOZ_MAIL_NEWS
@@ -157,11 +199,123 @@ void CGenericFrame::OnFileMailNew()
 #endif
 }
 
+// Toggle Go offline, Go online menu item
+//
+void CGenericFrame::OnGoOffline()
+{
+#ifdef MOZ_OFFLINE
+	BOOL bOnline;
+	// This is now just a toggle.
+	PREF_GetBoolPref("network.online", &bOnline);
+	
+	COfflineInfo *info = NULL;
+	BOOL bProgress = FALSE;
+	if(!bOnline)
+	{
+#ifdef MOZ_MAIL_NEWS
+		//if we're offline then tell it to send mail when we come back online
+		info = new COfflineInfo(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE);
+		CProgressDialog *pProgress = 
+			  new CProgressDialog(this, NULL,COfflineDlg::ShutDownFrameCallBack,
+			  info, szLoadString(IDS_SYNCHRONIZING), NULL,
+			  COfflineDlg::ShowOnlineCallBack);	// need correct window title
+
+		if(!pProgress->GetProgressShown())
+		{
+			PREF_SetBoolPref("network.online", TRUE);
+		}
+#endif //MOZ_MAIL_NEWS
+	}
+	else
+	{
+		//if we have a master then there could be mail/news activity and we
+		//  need to call progress pane.
+		if(WFE_MSGGetMasterValue() != NULL)
+		{
+#ifdef MOZ_MAIL_NEWS
+			//if we're online then tell backend to do nothing (any synchronization
+			//gets done through synchronize menu
+			info = new COfflineInfo(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE);
+			new CProgressDialog(this, NULL,COfflineDlg::ShutDownFrameCallBack,
+				  info, szLoadString(IDS_SYNCHRONIZING));	// need correct window title
+#endif // MOZ_MAIL_NEWS
+		}
+		else
+		{
+			PREF_SetBoolPref("network.online", FALSE);
+		}
+
+	}
+
+	if(info)
+	{
+		delete info;
+	}
+
+#endif //MOZ_OFFLINE  
+}		
+
+void CGenericFrame::OnUpdateGoOffline(CCmdUI* pCmdUI)
+{
+#ifdef MOZ_OFFLINE
+	BOOL bOnline;
+	CString menuText;
+
+	PREF_GetBoolPref("network.online", &bOnline);
+	if (bOnline)
+	{	//online now, set to offline
+		menuText.LoadString(IDS_GO_OFFLINE);
+	}
+	else
+	{	//offline now, set to online
+		menuText.LoadString(IDS_GO_ONLINE);
+	}
+	pCmdUI->SetText(LPCTSTR(menuText));
+	pCmdUI->Enable(!theApp.m_bSynchronizing);
+#endif //MOZ_OFFLINE
+}
+
+#ifdef MOZ_MAIL_NEWS
+void CGenericFrame::OnSynchronize()
+{
+#ifdef MOZ_OFFLINE
+	if(!theApp.m_bSynchronizing)
+	{
+		WFE_Synchronize(this, FALSE);
+	}
+#endif //MOZ_OFFLINE
+}
+
+void CGenericFrame::OnUpdateSynchronize(CCmdUI *pCmdUI)
+{
+#ifdef MOZ_OFFLINE
+    BOOL bOnline;
+    PREF_GetBoolPref("network.online", &bOnline);
+	//don't want it enabled if app is currently synchronizing.
+    pCmdUI->Enable(bOnline && !theApp.m_bSynchronizing);
+#endif //MOZ_OFFLINE
+}
+#endif //MOZ_MAIL_NEWS
+
+void CGenericFrame::OnDoneGoingOffline()
+{
+#ifdef MOZ_OFFLINE
+	// I'm sure this could happen at the worst possible time
+	if (!GetMainContext() || !GetMainContext()->GetContext())
+		return;
+
+	MWContext *pContext = GetMainContext()->GetContext();
+	if (NET_IsOffline() && !XP_IsContextBusy(pContext)) {
+		FE_Progress(pContext, szLoadString(IDS_STATUS_OFFLINE));
+	} else {
+		FE_Progress(pContext, szLoadString(IDS_DOC_DONE));
+	}
+#endif // MOZ_OFFLINE
+}
+
 void CGenericFrame::OnLDAPSearch()
 {
-#ifdef MOZ_LDAP
-	WFE_MSGOpenLDAPSearch();
-#endif
+
 }
 
 //	Set some options for printing.

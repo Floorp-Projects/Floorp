@@ -31,7 +31,7 @@ const char* XFE_MNListView::changeFocus = "XFE_MNListView::changeFocus";
 
 extern int XFE_INBOX_DOESNT_EXIST;
 
-extern "C" void fe_mailfilter_cb(Widget w, XtPointer closure, XtPointer call_data);
+extern "C" void fe_showMailFilterDlg(Widget toplevel, MWContext *context, MSG_Pane *pane);
 
 XFE_MNListView::XFE_MNListView(XFE_Component *toplevel_component,
 			       XFE_View *parent_view, MWContext *context, MSG_Pane *p) 
@@ -102,6 +102,11 @@ XFE_MNListView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInf
   
   if (msg_cmd != (MSG_CommandType)~0)
     {
+
+		if (IS_CMD(xfeCmdAddNewsgroup) || IS_CMD(xfeCmdInviteToNewsgroup)) {
+			return !XP_IsContextBusy(m_contextData);
+		}
+
 		if (IS_CMD(xfeCmdGetNewMessages)) {
 			int num_inboxes = MSG_GetFoldersWithFlag(XFE_MNView::getMaster(),
 													 MSG_FOLDER_FLAG_INBOX,
@@ -168,12 +173,6 @@ XFE_MNListView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInf
       }/* if */
       return enabled;
     }
-  else if (IS_CMD(xfeCmdAddNewsgroup)
-           || IS_CMD(xfeCmdInviteToNewsgroup)
-           )
-    {
-      return !XP_IsContextBusy(m_contextData);
-    }
   else if (IS_CMD(xfeCmdSelectAll))
     {
       return True; // not sure I feel comfortable with such extremes
@@ -196,10 +195,7 @@ XFE_MNListView::doCommand(CommandType cmd, void *calldata,
     }
   else if (IS_CMD(xfeCmdEditMailFilterRules))
     {
-      fe_mailfilter_cb(getToplevel()->getBaseWidget(), 
-		       (XtPointer) m_contextData, 
-		       (XtPointer) NULL);
-
+        fe_showMailFilterDlg(getToplevel()->getBaseWidget(),m_contextData,m_pane);
     }
   else
     {
@@ -264,6 +260,9 @@ XFE_MNListView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo
 
 
 	if (display_string)
+	   if ( IS_CMD(xfeCmdAddNewsgroup) || IS_CMD(xfeCmdRenameFolder) )
+		return  NULL;
+	   else
 		return  (char*)display_string;
 	else
 		return XFE_MNView::commandToString(cmd, calldata, info);

@@ -62,15 +62,17 @@ XFE_MailFilterRulesView::XFE_MailFilterRulesView(XFE_Component *toplevel_compone
 
     m_booleanAnd = TRUE;
 
+    m_booleanAnd = TRUE;
+
     /* Create main filter list dialog
      */
 	m_filterlist = 0;
 	m_dialog = XtParent(parent);
-	if (XmIsDialogShell(m_dialog)) {
 #ifdef DEBUG_tao_
+	if (XmIsDialogShell(m_dialog)) {
 		printf("\n XFE_MailFilterRulesView: parent is not dialog shell\n");
-#endif
 	}/* if */
+#endif
 
 	Widget    dummy;
 	Arg	      av[30];
@@ -472,6 +474,26 @@ XFE_MailFilterRulesView::getTerm(int num,
 #endif
 		XtFree(string);
 	} 
+	else if (*attrib == attribOtherHeader) {            /* Custom Header */
+		value->attribute = *attrib;
+        value->u.string = fe_GetTextField(m_scopeText[num]);
+
+        // and get the value of the custom header (ugh!)
+        Widget curW;
+        XtVaGetValues(m_scopeOptPopup[num],
+                      XmNmenuHistory, &curW,
+                      0);
+        XmString xmstr;
+        XtVaGetValues(curW, XmNlabelString, &xmstr, 0);
+        char* labl;
+        XmStringGetLtoR(xmstr, XmSTRING_DEFAULT_CHARSET, &labl);
+        XP_STRCPY(customHdr, labl);
+        XtFree(labl);
+#ifdef DEBUG_akkana
+        printf("Line %d had custom header of %s, value %s\n",
+               num, customHdr, value->u.string);
+#endif
+    }
 	else if (*attrib == attribOtherHeader) {            /* Custom Header */
 		value->attribute = *attrib;
         value->u.string = fe_GetTextField(m_scopeText[num]);
@@ -1050,7 +1072,7 @@ XFE_MailFilterRulesView::buildWhereOpt(Dimension *width,
   int num_inboxes = MSG_GetFoldersWithFlag(master,
 										   MSG_FOLDER_FLAG_INBOX,
 										   &folderInfo, 1);
-  if (num_inboxes == 1) {
+  if (num_inboxes >= 1) {
 	  selArray[0] = folderInfo;
 	  MSG_GetOperatorsForFilterScopes(master, scopeMailFolder, 
 									  (void**)selArray, 1,
@@ -1798,6 +1820,8 @@ XFE_MailFilterRulesView::makeRules(Widget rowcol, int fake_num)
     XtManageChild(m_strip[num]);
     XtManageChild(m_content[num]);
   }
+
+  // Doesn't userData also need to be deleted?
 }
 
 void

@@ -33,4 +33,9 @@
 extern void ViewGlue_addMapping(XFE_Frame *frame, void *context);
 extern XFE_Frame *ViewGlue_getFrame(void *context);
 
+/* for XFE_Component
+ */
+extern void ViewGlue_addMappingForCompo(XFE_Component *compo, void *context);
+extern XFE_Component *ViewGlue_getCompo(void *context);
+
 #endif /* _xfe_viewglue_h */

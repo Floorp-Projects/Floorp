@@ -21,7 +21,7 @@
    */
 
 
-
+#include "rosetta.h"
 #include "OptionFolderView.h"
 #include "ComposeView.h"
 #include <Xm/Xm.h>
@@ -247,35 +247,7 @@ XFE_CALLBACK_DEFN(XFE_OptionFolderView,updateSecurityOption)(XFE_NotificationCen
   Boolean notify = False;
 
   
-  XtVaGetValues(m_encryptedW, XmNset, &set, 0 );
-
-  // Encrypted
-  if ( !set && MSG_GetCompBoolHeader(getPane(), MSG_ENCRYPTED_BOOL_HEADER_MASK) )
-  {
-	notify = True;
-        XmToggleButtonSetState (m_encryptedW, True, False);
-  }
-  else if ( set && !MSG_GetCompBoolHeader(getPane(), MSG_ENCRYPTED_BOOL_HEADER_MASK) )
-  {
-	notify = True;
-        XmToggleButtonSetState (m_encryptedW, False, False);
-  }
-
-
-  XtVaGetValues(m_signedW, XmNset, &set, 0 );
-
-  // Signed
-  if ( !set && MSG_GetCompBoolHeader(getPane(), MSG_SIGNED_BOOL_HEADER_MASK) )
-  {
-       notify = True;
-       XmToggleButtonSetState (m_signedW, True, False);
-  }
-  else if ( set && !MSG_GetCompBoolHeader(getPane(), MSG_SIGNED_BOOL_HEADER_MASK) )
-  {
-       notify = True;
-       XmToggleButtonSetState (m_signedW, False, False);
-  }
-
+  HG20192
   if ( notify )
     getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating,
 			(void*)NULL);
@@ -343,22 +315,14 @@ XFE_OptionFolderView::createWidgets(Widget parent_widget)
 
     m_returnReceiptW = XmCreateToggleButtonGadget( RC0,
 		"returnReceipt", av, ac );		
-    m_encryptedW = XmCreateToggleButtonGadget( RC0,
-		"encrypted", av, ac );		
-    m_signedW = XmCreateToggleButtonGadget( RC0,
-		"signed", av, ac );		
 
     XtManageChild(m_textEncodingOptionW);
     XtManageChild(m_binaryEncodingOptionW);
     XtManageChild(m_returnReceiptW);
     XtAddCallback(m_returnReceiptW, XmNvalueChangedCallback, 
 		returnReceiptChangeCallback, (XtPointer)this);
-    XtManageChild(m_encryptedW);
-    XtAddCallback(m_encryptedW, XmNvalueChangedCallback, 
-		encryptedChangeCallback, (XtPointer)this);
-    XtManageChild(m_signedW);
-    XtAddCallback(m_signedW, XmNvalueChangedCallback, 
-		signedChangeCallback, (XtPointer)this);
+
+    HG20198
     // Do Some Attachments
 
 
@@ -432,22 +396,7 @@ XFE_OptionFolderView::updateAllOptions()
     else 
     	XtVaSetValues (m_returnReceiptW, XmNset, False, 0);
 
-    // Encrypted
-    if ( MSG_GetCompBoolHeader(getPane(), MSG_ENCRYPTED_BOOL_HEADER_MASK) )
-    {
-    	XtVaSetValues (m_encryptedW, XmNset, True, 0);
-    }
-    else 
-    	XtVaSetValues (m_encryptedW, XmNset, False, 0);
-
-
-    // Signed
-    if ( MSG_GetCompBoolHeader(getPane(), MSG_SIGNED_BOOL_HEADER_MASK) )
-    {
-    	XtVaSetValues (m_signedW, XmNset, True, 0);
-    }
-    else 
-    	XtVaSetValues (m_signedW, XmNset, False, 0);
+    HG35220
 
 
    // Binary encoding...
@@ -487,18 +436,7 @@ void
 XFE_OptionFolderView::handleEncrypted(Boolean set)
 {
   Boolean notify = False;
-  if ((set) && !MSG_GetCompBoolHeader(getPane(), 
-				MSG_ENCRYPTED_BOOL_HEADER_MASK))
-  {
-    MSG_SetCompBoolHeader(getPane(), MSG_ENCRYPTED_BOOL_HEADER_MASK, True);
-    notify = True;
-  }
-  else if ((!set) && MSG_GetCompBoolHeader(getPane(), 
-				MSG_ENCRYPTED_BOOL_HEADER_MASK))
-  {
-    MSG_SetCompBoolHeader(getPane(), MSG_ENCRYPTED_BOOL_HEADER_MASK, False);
-    notify = True;
-  }
+  HG82811
 
   if (notify) 
   {
@@ -523,18 +461,7 @@ void
 XFE_OptionFolderView::handleSigned(Boolean set)
 {
   Boolean notify = False;
-  if ((set) && !MSG_GetCompBoolHeader(getPane(), MSG_SIGNED_BOOL_HEADER_MASK))
-  {
-    MSG_SetCompBoolHeader(getPane(), MSG_SIGNED_BOOL_HEADER_MASK, True);
-    notify = True;
-  }
-  else if ((!set) && MSG_GetCompBoolHeader(getPane(), 
-				MSG_SIGNED_BOOL_HEADER_MASK))
-  {
-    MSG_SetCompBoolHeader(getPane(), MSG_SIGNED_BOOL_HEADER_MASK, False);
-    notify = True;
-
-  }
+  HG97291
   if (notify)
   {
 	getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating,

@@ -46,11 +46,13 @@ XFE_FolderDropdown::XFE_FolderDropdown(XFE_Component *toplevel_component,
 									   Widget parent,
 									   XP_Bool allowServerSelection,
 									   XP_Bool showNewsgroups,
-									   XP_Bool boldWithNew)
+									   XP_Bool boldWithNew,
+                                       XP_Bool showFolders)
 	: XFE_Component(toplevel_component)
 {
 	m_popupServer = True;
-
+    m_master = fe_getMNMaster();
+    
 	Widget combo;
 	Colormap cmap;
 	Cardinal depth;
@@ -66,7 +68,8 @@ XFE_FolderDropdown::XFE_FolderDropdown(XFE_Component *toplevel_component,
 	m_showNewsgroups = showNewsgroups;
 	m_boldWithNew = boldWithNew;
 	m_foldersHaveChanged = FALSE;
-
+    m_showFolders = showFolders;
+    
 	combo = XtVaCreateWidget("folderDropdown",
 							 dtComboBoxWidgetClass,
 							 parent,
@@ -186,8 +189,7 @@ void
 XFE_FolderDropdown::buildList(MSG_FolderInfo *info, int *position)
 {
 
-
-	int num_children = MSG_GetFolderChildren(fe_getMNMaster(),
+	int num_children = MSG_GetFolderChildren(m_master,
 											 info,
 											 NULL, 0);
 
@@ -200,7 +202,7 @@ XFE_FolderDropdown::buildList(MSG_FolderInfo *info, int *position)
 
 	if ( info )
  	{
-	MSG_GetFolderLineById(fe_getMNMaster(), info, &line);
+	MSG_GetFolderLineById(m_master, info, &line);
 
  	if ( line.name)
         	printf("folder name=%s\n", line.name);
@@ -220,7 +222,7 @@ XFE_FolderDropdown::buildList(MSG_FolderInfo *info, int *position)
 			tmp = new MSG_FolderInfo* [num_children];
 
 			/* first we handle local mail stuff. */
-			MSG_GetFolderChildren(fe_getMNMaster(),
+			MSG_GetFolderChildren(m_master,
 								  info,
 								  tmp,
 								  num_children);
@@ -233,7 +235,11 @@ XFE_FolderDropdown::buildList(MSG_FolderInfo *info, int *position)
 					*position += 1;
 
 					XP_ASSERT(tmp[i]);
-					buildList(tmp[i], position);
+
+                    // don't recurse if we're at the top level (info==NULL)
+                    // and we only want servers (m_showFolders=False)
+                    if (info || m_showFolders)
+                        buildList(tmp[i], position);
 				}
 			
 			delete [] tmp;
@@ -243,7 +249,6 @@ XFE_FolderDropdown::buildList(MSG_FolderInfo *info, int *position)
 void
 XFE_FolderDropdown::syncFolderList()
 {
-	MSG_Master *master = fe_getMNMaster();
 
 	int num_infos;
 
@@ -251,17 +256,17 @@ XFE_FolderDropdown::syncFolderList()
 
 	/* this should be the number of MSG_FolderInfo's for mail,
 	   including servers. */
-	num_infos = MSG_GetFoldersWithFlag(master,
+	num_infos = MSG_GetFoldersWithFlag(m_master,
 									   MSG_FOLDER_FLAG_MAIL,
 									   NULL, 0);
 
 	if (m_showNewsgroups)
 		{
-			num_infos += MSG_GetFoldersWithFlag(master,
+			num_infos += MSG_GetFoldersWithFlag(m_master,
 												MSG_FOLDER_FLAG_NEWSGROUP,
 												NULL, 0);
 
-			m_numNewsHosts = MSG_GetFoldersWithFlag(master,
+			m_numNewsHosts = MSG_GetFoldersWithFlag(m_master,
 													MSG_FOLDER_FLAG_NEWS_HOST,
 													NULL, 0);
 			num_infos += m_numNewsHosts;
@@ -283,7 +288,7 @@ XFE_FolderDropdown::syncFolderList()
 
 		news_hosts = new MSG_FolderInfo* [m_numNewsHosts];
 
-		MSG_GetFoldersWithFlag(master,
+		MSG_GetFoldersWithFlag(m_master,
 							   MSG_FOLDER_FLAG_NEWS_HOST,
 							   news_hosts, m_numNewsHosts);
 
@@ -343,7 +348,7 @@ XFE_FolderDropdown::syncCombo()
 					return;
 				}
 
-			MSG_GetFolderLineById(fe_getMNMaster(), m_infos[i], &line);
+			MSG_GetFolderLineById(m_master, m_infos[i], &line);
 			
 			xmstrings[i] = makeListItemFromLine(&line);
 		}
@@ -407,7 +412,7 @@ XFE_CALLBACK_DEFN(XFE_FolderDropdown, boldFolderInfo)(XFE_NotificationCenter *,
 	/* not found */
 	if (index == m_numinfos) return;
 	
-	if (!MSG_GetFolderLineById(fe_getMNMaster(), info, &line))
+	if (!MSG_GetFolderLineById(m_master, info, &line))
 		return;
 
 	XmString both = makeListItemFromLine(&line);	
@@ -431,7 +436,7 @@ XFE_FolderDropdown::folderSelect(int row)
 
 	XP_ASSERT(row >= 0 && row < m_numinfos);
 
-	if (!MSG_GetFolderLineById(fe_getMNMaster(),
+	if (!MSG_GetFolderLineById(m_master,
 							   m_infos[row],
 							   &line))
 		return;
@@ -532,7 +537,7 @@ XFE_FolderDropdown::selectFolder(char *name)
 		for (int i=0; i < m_numinfos; i++) {
 			MSG_FolderLine line;
 
-			MSG_GetFolderLineById(fe_getMNMaster(), m_infos[i], &line);
+			MSG_GetFolderLineById(m_master, m_infos[i], &line);
 			this_folder_name = MSG_GetFolderNameFromID(m_infos[i]);
 			if (this_folder_name && (XP_STRCMP(this_folder_name,name) == 0)) {
 

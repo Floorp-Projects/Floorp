@@ -45,10 +45,13 @@ BEGIN
             MENUITEM "Page From &Template...",      ID_EDT_NEW_DOC_FROM_TEMPLATE
             MENUITEM "Page From &Wizard...",        ID_COMMAND_PAGE_FROM_WIZARD
         END
-        MENUITEM SEPARATOR
-        MENUITEM "&Save Draft\tCtrl+S",         IDM_SAVEASDRAFT
-		MENUITEM "Save Template\tCtrl+T",       IDM_SAVEASTEMPLATE
-        MENUITEM "Save &As ...",                IDM_SAVEAS
+  	POPUP "Save &As"
+	BEGIN
+	    MENUITEM "&File...",	                IDM_SAVEAS
+	    MENUITEM SEPARATOR
+	    MENUITEM "&Draft\tCtrl+S",			    IDM_SAVEASDRAFT
+	    MENUITEM "&Template\tCtrl+T",			IDM_SAVEASTEMPLATE 
+	END
         MENUITEM SEPARATOR
         MENUITEM "Sen&d Now\tCtrl+Enter",       IDM_SENDNOW
         MENUITEM "Send &Later",     			IDM_SENDLATER
@@ -58,12 +61,14 @@ BEGIN
         BEGIN
             MENUITEM "&File...",                    IDM_ATTACHFILE
             MENUITEM "&Web Page...",                IDM_ATTACHWEBPAGE
-            MENUITEM "&Address Book Card...",       IDM_ATTACHVCARD
-            MENUITEM SEPARATOR
+             MENUITEM SEPARATOR
             MENUITEM "&My Address Book Card",       IDM_ATTACHMYCARD
         END
         MENUITEM SEPARATOR
-        MENUITEM "Go Offl&ine...",              ID_BIG_SWITCH
+        MENUITEM "Sen&d Now\tCtrl+Enter",       IDM_SENDNOW
+        MENUITEM "Send &Later",     			IDM_SENDLATER
+        MENUITEM "&Quote Original Text",        IDM_QUOTEORIGINAL
+	MENUITEM "Selec&t Addresses...",		IDM_ADDRESSPICKER
         MENUITEM SEPARATOR
         MENUITEM "Pa&ge Setup...",              ID_FILE_PAGE_SETUP
         MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
@@ -90,9 +95,11 @@ BEGIN
 	    MENUITEM SEPARATOR
 	    MENUITEM "&Find in Message\tCtrl+F",    ID_EDIT_FINDINCURRENT
 	    MENUITEM "Find A&gain\tCtrl+G",         ID_EDIT_FINDAGAIN
-	    MENUITEM "Search Director&y",           IDM_SEARCHADDRESSES
-	    MENUITEM SEPARATOR
-	    MENUITEM "Pr&eferences...",					ID_OPTIONS_PREFERENCES
+	MENUITEM SEPARATOR
+	MENUITEM "Name Completion",				ID_TOGGLENAMECOMPLETION
+	MENUITEM "Show Name Picker\tCtrl+J"		ID_SHOW_NAME_PICKER
+	MENUITEM SEPARATOR
+	MENUITEM "Pr&eferences...",					ID_OPTIONS_PREFERENCES
     END
     POPUP "&View"
     BEGIN
@@ -292,6 +299,9 @@ BEGIN
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#ifdef MOZ_MAIL_NEWS
+	MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+#endif
         MENUITEM SEPARATOR
         MENUITEM "{}",                          ID_WINDOW_WINDOW_0
     END
@@ -357,7 +367,6 @@ BEGIN
 	    MENUITEM SEPARATOR
 	    MENUITEM "&Find in Page...\tCtrl+F",       ID_EDIT_FINDINCURRENT
 	    MENUITEM "Find A&gain\tF3",                ID_EDIT_FINDAGAIN
-	    MENUITEM "Search Director&y",              IDM_SEARCHADDRESSES
 	    // Restore when implemented:
 	    // MENUITEM "&Replace...",                 ID_EDT_FINDREPLACE
 	    MENUITEM SEPARATOR
@@ -571,6 +580,9 @@ BEGIN
 	    MENUITEM "&Java Console",                   ID_OPTIONS_SHOWJAVACONSOLE
 #endif
         MENUITEM "&Security Info\tCtrl+Shift+I",    ID_SECURITY
+#ifdef MOZ_MAIL_NEWS
+	MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
+#endif
         MENUITEM SEPARATOR
 #ifdef XP_WIN16
         MENUITEM "New Window"                       ID_WINDOW_WINDOW_0

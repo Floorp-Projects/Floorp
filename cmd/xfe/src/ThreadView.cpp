@@ -37,6 +37,11 @@
 #include "xfe.h"
 #include "icondata.h"
 #include "msgcom.h"
+
+#if defined(USE_ABCOM)
+#include "ABListSearchView.h"
+#endif /* USE_ABCOM */
+
 //#include "allxpstr.h"
 #include "felocale.h" /* for fe_ConvertToLocalEncoding */
 #include "xp_mem.h"
@@ -71,6 +76,9 @@
 
 #include "xpgetstr.h"
 
+/*
+extern int MSG_HasAttachments(MSG_Pane* pane, MessageKey msgKey, XP_Bool *pHasThem);
+*/
 extern int XFE_RE;
 extern int XFE_WINDOW_TITLE_NEWSGROUP;
 extern int XFE_WINDOW_TITLE_FOLDER;
@@ -124,12 +132,13 @@ MenuSpec XFE_ThreadView::news_popup_spec[] = {
   MENU_SEPARATOR,
   // Setting the call data to non-null is a signal to commandToString
   // not to reset the menu string
-  { xfeCmdReplyToSender,	PUSHBUTTON, NULL, NULL, NULL, "reply-to-sender" },
-  { xfeCmdReplyToAll,	PUSHBUTTON, NULL, NULL, NULL, "reply-to-all" },
-  { xfeCmdReplyToNewsgroup,	PUSHBUTTON, NULL, NULL, NULL, "reply-to-newsgroup" },
-  { xfeCmdReplyToSenderAndNewsgroup,    PUSHBUTTON, NULL, NULL, NULL, "reply-to-sender-and-newsgroup" },
+  { xfeCmdReplyToSender,	PUSHBUTTON, NULL, NULL, False, "reply-to-sender" },
+  { xfeCmdReplyToAll,	PUSHBUTTON, NULL, NULL, False, "reply-to-all" },
+  { xfeCmdReplyToNewsgroup,	PUSHBUTTON, NULL, NULL, False, "reply-to-newsgroup" },
+  { xfeCmdReplyToSenderAndNewsgroup,    PUSHBUTTON, NULL, NULL, False, "reply-to-sender-and-newsgroup" },
   { xfeCmdForwardMessage,		PUSHBUTTON },
   { xfeCmdForwardMessageQuoted,	PUSHBUTTON },
+  { xfeCmdForwardMessageInLine,	PUSHBUTTON },
   MENU_SEPARATOR,
   { "addToABSubmenu",   CASCADEBUTTON,
     (MenuSpec *) &addrbk_submenu_spec },
@@ -150,10 +159,11 @@ MenuSpec XFE_ThreadView::mail_popup_spec[] = {
   MENU_SEPARATOR,
   // Setting the call data to non-null is a signal to commandToString
   // not to reset the menu string
-  { xfeCmdReplyToSender,	PUSHBUTTON, NULL, NULL, NULL, "reply-to-sender" },
-  { xfeCmdReplyToAll,		PUSHBUTTON, NULL, NULL, NULL, "reply-to-all" },
+  { xfeCmdReplyToSender,	PUSHBUTTON, NULL, NULL, False, "reply-to-sender" },
+  { xfeCmdReplyToAll,		PUSHBUTTON, NULL, NULL, False, "reply-to-all" },
   { xfeCmdForwardMessage,	PUSHBUTTON },
   { xfeCmdForwardMessageQuoted,	PUSHBUTTON },
+  { xfeCmdForwardMessageInLine,	PUSHBUTTON },
   MENU_SEPARATOR,
   { "addToABSubmenu",   CASCADEBUTTON,
     (MenuSpec *) &addrbk_submenu_spec },
@@ -177,6 +187,11 @@ MenuSpec XFE_ThreadView::addrbk_submenu_spec[] = {
 	{ NULL }
 };
 
+extern "C" void fe_showSubscribeDialog(XFE_NotificationCenter *toplevel,
+                                       Widget parent, MWContext *context,
+                                       MSG_Host *host = NULL);
+
+
 XFE_ThreadView::XFE_ThreadView(XFE_Component *toplevel_component,
 			       Widget parent,
 			       XFE_View *parent_view, MWContext *context,
@@ -189,6 +204,10 @@ XFE_ThreadView::XFE_ThreadView(XFE_Component *toplevel_component,
 
   m_frameDeleted = False;
 
+  /* timer
+   */
+  m_scrollTimer = 0 ;
+  m_targetIndex = MSG_VIEWINDEXNONE;
 #if HANDLE_CMD_QUEUE
 
   m_lastLoadedInd = MSG_VIEWINDEXNONE;
@@ -363,6 +382,11 @@ XFE_ThreadView::XFE_ThreadView(XFE_Component *toplevel_component,
   m_selectionAfterDeleting = MSG_VIEWINDEXNONE;
   m_popup = NULL;
   m_folderInfo = NULL;
+#if defined(USE_ABCOM)
+  int error = 
+	  AB_SetShowPropertySheetForEntryFunc((MSG_Pane *) m_pane,
+										  &XFE_ABListSearchView::ShowPropertySheetForEntryFunc);
+#endif /* USE_ABCOM */
 
   setBaseWidget(panedw);
 }
@@ -402,15 +426,26 @@ void XFE_ThreadView::setGetNewMsg(XP_Bool b)
 fe_icon*
 XFE_ThreadView::flagToIcon(int folder_flags, int message_flags)
 {
-	if (folder_flags & MSG_FOLDER_FLAG_NEWSGROUP)
+    if (folder_flags & MSG_FOLDER_FLAG_NEWSGROUP)
 		return (message_flags & MSG_FLAG_READ ? &newsPostIcon : &newsNewIcon);
-	else if (folder_flags & MSG_FOLDER_FLAG_DRAFTS)
+    else if (folder_flags & MSG_FOLDER_FLAG_DRAFTS)
 		return &draftIcon;
     else if (message_flags & MSG_FLAG_IMAP_DELETED
              || message_flags & MSG_FLAG_EXPUNGED)
         return &deletedIcon;
-	else
-		return (message_flags & MSG_FLAG_READ ? &mailMessageReadIcon : &mailMessageUnreadIcon);
+
+    else if (message_flags & MSG_FLAG_ATTACHMENT)
+    {
+	return &mailMessageAttachIcon;
+    }
+    else if (folder_flags & MSG_FOLDER_FLAG_TEMPLATES)
+    {
+	return &templateIcon;
+    }
+    else
+    {
+	return (message_flags & MSG_FLAG_READ ? &mailMessageReadIcon : &mailMessageUnreadIcon);
+    }
 }
 
 #if defined(USE_MOTIF_DND)
@@ -422,6 +457,7 @@ XFE_ThreadView::flagToIconData(int folder_flags, int message_flags)
   else if (folder_flags & MSG_FOLDER_FLAG_DRAFTS)
 	return &MN_Draftfile;
   else if (message_flags & MSG_FLAG_IMAP_DELETED
+  else if (folder_flags & MSG_FOLDER_FLAG_DRAFTS)
 		   || message_flags & MSG_FLAG_EXPUNGED)
 	return &MN_Delete;
   else
@@ -468,6 +504,15 @@ XFE_ThreadView::initMessageIcons(Widget widget,
 					   MN_Draftfile.width, MN_Draftfile.height,
 					   MN_Draftfile.mono_bits, MN_Draftfile.color_bits, MN_Draftfile.mask_bits, FALSE);
 	
+    if (!templateIcon.pixmap)
+		fe_NewMakeIcon(widget,
+					   fg_pixel,
+					   bg_pixel,
+					   &templateIcon,
+					   NULL, 
+					   MN_Templatefile.width, MN_Templatefile.height,
+					   MN_Templatefile.mono_bits, MN_Templatefile.color_bits, MN_Templatefile.mask_bits, FALSE);
+	
     if (!newsPostIcon.pixmap)
 		fe_NewMakeIcon(widget,
 					   fg_pixel,
@@ -513,6 +558,15 @@ XFE_ThreadView::initMessageIcons(Widget widget,
 					   MN_Flag.width, MN_Flag.height,
 					   MN_Flag.mono_bits, MN_Flag.color_bits, MN_Flag.mask_bits, FALSE);
     
+    if (!mailMessageAttachIcon.pixmap)
+		fe_NewMakeIcon(widget,
+					   fg_pixel,
+					   bg_pixel,
+					   &mailMessageAttachIcon,
+					   NULL, 
+					   MN_MailAttach.width, MN_MailAttach.height,
+					   MN_MailAttach.mono_bits, MN_MailAttach.color_bits, MN_MailAttach.mask_bits, FALSE); 
+
 	if (!threadonIcon.pixmap)
 		fe_NewMakeIcon(widget,
 					   fg_pixel,
@@ -687,8 +741,8 @@ XFE_ThreadView::listChangeStarting(XP_Bool /* asynchronous */,
 								   MSG_ViewIndex /* where */, 
 								   int32 /* num */)
 {
-	int listChangeDepth = m_outliner->getListChangeDepth()-1;
 #if defined(DEBUG_tao)
+	int listChangeDepth = m_outliner->getListChangeDepth()-1;
 	printf("\n>>XFE_ThreadView::listChangeStarting, depth=%d, m_lastLoadedInd=%d", 
 		   listChangeDepth, m_lastLoadedInd);
 #endif
@@ -697,6 +751,8 @@ XFE_ThreadView::listChangeStarting(XP_Bool /* asynchronous */,
 		notify == MSG_NotifyAll) {
 		m_lastLoadedInd = MSG_VIEWINDEXNONE;
 	}/* if */
+	else if (notify == MSG_NotifyNone) {
+	}/* MSG_NotifyNone */
 }
 #endif /* DEL_5_0 */
 
@@ -712,15 +768,28 @@ XFE_ThreadView::listChangeFinished(XP_Bool /* asynchronous */,
 		   listChangeDepth, m_lastLoadedInd);
 #endif
 
-#if defined(DEL_5_0)
-	if (notify == MSG_NotifyScramble ||
-		notify == MSG_NotifyAll) {
+	if (notify == MSG_NotifyNone && 
+		where == 0 && 
+		num == 0 &&
+		listChangeDepth == 0 &&
+		m_deletedCount &&
+		m_deleted) {
+		processCmdQueue();
+	}/* */
+	else if (notify == MSG_NotifyScramble ||
+			 notify == MSG_NotifyAll) {
 		m_lastLoadedInd = MSG_GetMessageIndexForKey(m_pane, 
 													m_lastLoadedKey,
 													False);
 	}/* if */
 	else if (notify == MSG_NotifyChanged) {
-		m_lineChanged = where;
+		m_lineChanged = where; 
+		/* when a msg header info changed on certain row,
+		   backend will use this notification to warn fe.
+	           we are suppose to re-acquire line m_messageLine info				
+	           from the backend and invalidate this row on display only
+                */
+		acquireLineData((int)m_lineChanged); 
 		return;
 	}/* if */
 	else if (notify == MSG_NotifyInsertOrDelete &&
@@ -747,8 +816,10 @@ XFE_ThreadView::listChangeFinished(XP_Bool /* asynchronous */,
 						m_deleted[m_deletedCount++] = where-1;		
 						processCmdQueue();
 					}/* if */
+#if 0
 					else
 						XP_ASSERT(0);
+#endif 
 				}/* if collapsed */
 				else {
 #if defined(DEBUG_tao)
@@ -762,11 +833,17 @@ XFE_ThreadView::listChangeFinished(XP_Bool /* asynchronous */,
 				 */
 				if (!m_deletedCount && !m_deleted) {
 					m_deleted = (int *) XP_CALLOC(1, sizeof(int));
-					m_deleted[m_deletedCount++] = where;		
-					processCmdQueue();
+					m_deleted[m_deletedCount++] = where;
+					if (listChangeDepth == 0) // non-nested
+#if 1
+						processCmdQueue();
+#endif
+
 				}/* if */
+#if 0
 				else
 					XP_ASSERT(0);
+#endif 
 			}/* where == m_lastLoadedInd */
 			else if (where <= m_lastLoadedInd)
 				m_lastLoadedInd += num; /* re-adjust */
@@ -785,8 +862,10 @@ XFE_ThreadView::listChangeFinished(XP_Bool /* asynchronous */,
 					m_deleted[m_deletedCount++] = where;		
 					processCmdQueue();
 				}/* if */
+#if 0
 				else
 					XP_ASSERT(0);
+#endif 
 
 #if defined(DEBUG_tao)
 				printf("\n**>SPECIAL case:listChangeFinished=%d, m_deletedCount=%d\n", 
@@ -795,85 +874,13 @@ XFE_ThreadView::listChangeFinished(XP_Bool /* asynchronous */,
 			}/* m_lastLoadedInd == where */
 		}/* if num == 0 */
 		else if (num > 0 && where <= m_lastLoadedInd)
-			m_lastLoadedInd += num;
+			m_lastLoadedInd += num; /* re-adjust */
 
 	}/* notify == MSG_NotifyInsertOrDelete */
 #if defined(DEBUG_tao)
 	printf("\n<<XFE_ThreadView::listChangeFinished, m_lastLoadedInd=%d", 
 		   m_lastLoadedInd);
 #endif
-
-
-#else
-	if (notify == MSG_NotifyChanged) {
-		m_lineChanged = where;
-		return;
-	}/* if */
-	else if (notify == MSG_NotifyInsertOrDelete && 
-			 num <= 0) {
-
-		if (num == 0) {
-			/* SPECIAL case: the header got deleted
-			 */
-
-			/* we do not care deletion on non-focusing line
-			 */
-			if (m_lastLoadedInd != where)
-				return;
-
-			/* deleted
-			 */
-			if (m_deletedCount && m_deleted)
-				m_deleted = (int *) XP_REALLOC(m_deleted, 
-											   (m_deletedCount+1)*sizeof(int));
-			else
-				m_deleted = (int *) XP_CALLOC(1, sizeof(int));
-			m_deleted[m_deletedCount++] = where;		
-#if defined(DEBUG_tao)
-			printf("\n**>SPECIAL case:listChangeFinished=%d, m_deletedCount=%d\n", 
-				   where, m_deletedCount);
-#endif		
-			
-		}/* if */
-		else if ((m_lineChanged != MSG_VIEWINDEXNONE) &&
-			(m_lineChanged == (where -1)) && /* essential */
-			(listChangeDepth == 0)) { /* must be collapsing */
-			/* collapsed
-			 */
-			if ((m_lastLoadedInd >= where) && 
-				(m_lastLoadedInd < (where-num))) { 
-				/* one of the "reply" is being hidden
-				 * selection would go to thread leader; 
-				 * thus needs reload right away
-				 */
-				if (!m_deletedCount && !m_deleted) {
-					m_deleted = (int *) XP_CALLOC(1, sizeof(int));
-					m_deleted[m_deletedCount++] = where-1;		
-					processCmdQueue();
-				}/* if */
-			}/* if */
-		}/* if */
-		else if (num == -1){
-			/* we do not care deletion on non-focusing line
-			 */
-			if (m_lastLoadedInd != where)
-				return;
-
-			/* deleted
-			 */
-			if (m_deletedCount && m_deleted)
-				m_deleted = (int *) XP_REALLOC(m_deleted, 
-											   (m_deletedCount+1)*sizeof(int));
-			else
-				m_deleted = (int *) XP_CALLOC(1, sizeof(int));
-			m_deleted[m_deletedCount++] = where;		
-#if defined(DEBUG_tao)
-			printf("\n-->listChangeFinished=%d, m_deletedCount=%d\n", 
-				   where, m_deletedCount);
-#endif		
-		}/* else if num == -1 */
-	}/* else if notify == MSG_NotifyInsertOrDelete && num < 0*/
-#endif /* DEL_5_0 */
 
 	m_lineChanged = MSG_VIEWINDEXNONE;
 }/* XFE_ThreadView::listChangeFinished() */
@@ -895,6 +902,19 @@ XFE_ThreadView::paneChanged(XP_Bool asynchronous,
 			/* bug 95564: check folderInfo before closing
 			 */
 			MSG_FolderInfo *deleted = (MSG_FolderInfo *) value;
+
+			DD(printf("Blank out message view...\n");)
+
+#if defined(USE_3PANE)
+			if (m_folderInfo == deleted) {
+				/* clear msgPane
+				 */
+				m_msgview->loadMessage(deleted, MSG_MESSAGEKEYNONE );
+				showMessage(-1);
+				m_outliner->change(0,0,0);
+			}/* if m_folderInfo == deleted */
+#else
+			m_msgview->loadMessage(deleted, MSG_MESSAGEKEYNONE );
 			if (m_folderInfo == deleted) {
 				/* test frame type
 				 */
@@ -909,10 +929,13 @@ XFE_ThreadView::paneChanged(XP_Bool asynchronous,
 					}/* if */
 				}/* if */
 			}/* if m_folderInfo == deleted */
+#endif /* USE_3PANE */
+
 #if defined(DEBUG_tao)
 			else
 				printf("\n---Wrong folder IGNORing MSG_PaneNotifyFolderDeleted\n");
 #endif
+
 		}
 		/* shall we update banner or simply return?
 		 */
@@ -949,11 +972,11 @@ XFE_ThreadView::paneChanged(XP_Bool asynchronous,
 
 #if HANDLE_CMD_QUEUE
 
+#if defined(DEBUG_tao)
 		MessageKey id = (MessageKey) value;
 		MSG_ViewIndex index = MSG_GetMessageIndexForKey(m_pane, 
 														id,
 														False);
-#if defined(DEBUG_tao)
 		printf("\n MSG_PaneNotifyMessageDeleted,index=%d", index);
 #endif
 #endif /* HANDLE_CMD_QUEUE */
@@ -999,6 +1022,12 @@ XFE_ThreadView::paneChanged(XP_Bool asynchronous,
 			{
 				m_commandPending = selectByIndex;
 				m_pendingSelectionIndex = 0;
+
+			/* when a msg being loaded after folder loaded, we should change
+			   focus of the three pane UI to thread view bug #109659
+ 			*/
+        		   getToplevel()->notifyInterested(XFE_MNListView::changeFocus, (void*) this);
+			/* end of #109659 */
 			}
 
 		/* we only actually handle the command here 
@@ -1055,7 +1084,9 @@ XFE_ThreadView::loadFolder(MSG_FolderInfo *folderInfo)
 	  XP_ASSERT(folderInfo);
 	  
 	  // clear the currently display message, since we're in a different folder now.
-	  showMessage(-1);
+	  DD(printf("Load Folder: Blank out message view...\n");)
+          m_msgview->loadMessage(folderInfo, MSG_MESSAGEKEYNONE );
+
 	  updateExpandoFlippyText(-1);
 
 	  m_outliner->deselectAllItems();
@@ -1243,25 +1274,35 @@ XFE_ThreadView::showMessage(int row)
 	if (!m_folderInfo)
 		return;
 
+	if (row > -1) {
+		m_lastLoadedInd = (MSG_ViewIndex) row;
+
+		m_lastLoadedKey = MSG_GetMessageKey(m_pane, row);
+#if defined(DEBUG_tao)
+		printf("\nXFE_ThreadView::showMessage m_lastLoadedInd=%d\n", 
+			   m_lastLoadedInd);
+#endif	
+	}/* if */
+
 	/*
 	** if the message area is expanded we just load the message, since
 	** we will turn around and call the makeVisible/selectItemExclusive/etc
 	** in our newMessageLoading method.
 	** If the message area isn't expanded, we handle it here.
 	*/
-	if (row > -1) {
-		m_lastLoadedInd = (MSG_ViewIndex) row;
-		m_lastLoadedKey = MSG_GetMessageKey(m_pane, row);
-#if defined(DEBUG_tao)
-		printf("\nXFE_ThreadView::showMessage m_lastLoadedInd=%d\n", 
-			   m_lastLoadedInd);
-#endif		
-	}/* if */
-
 	if (m_msgExpanded)
 		{
-			m_msgview->loadMessage(m_folderInfo,
-								   (row == -1 ? MSG_MESSAGEKEYNONE : MSG_GetMessageKey(m_pane, row)));
+			MSG_ViewIndex index;
+			MessageKey key;
+			MSG_FolderInfo *info = NULL;
+			
+			MSG_GetCurMessage(m_msgview->getPane(), &info, &key, &index);
+			if (key != m_lastLoadedKey) {
+				m_msgview->loadMessage(m_folderInfo,
+									   (row == -1 ? 
+										MSG_MESSAGEKEYNONE : 
+										MSG_GetMessageKey(m_pane, row)));
+			}/* if */
 		}
 	else
 		{
@@ -1285,7 +1326,7 @@ XFE_ThreadView::commandToString(CommandType cmd, void * calldata, XFE_CommandInf
 			else
 				return stringFromResource("showMsgAreaCmdString");
 		}
-    else if (IS_CMD(xfeCmdDeleteMessage) || IS_CMD(xfeCmdCancelMessages)) {
+    else if (IS_CMD(xfeCmdDeleteAny) || IS_CMD(xfeCmdDeleteMessage) || IS_CMD(xfeCmdCancelMessages)) {
 		if (isDisplayingNews())
 			return XP_GetString(MK_MSG_CANCEL_MESSAGE);
 		else
@@ -1348,7 +1389,7 @@ XFE_ThreadView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInf
 {
 #define IS_CMD(command) cmd == (command)
 
-	if (IS_CMD(xfeCmdDeleteMessage)) {
+	if (IS_CMD(xfeCmdDeleteAny)|| IS_CMD(xfeCmdDeleteMessage)) {
 		/* Given a flag or set of flags, returns the number of folders that have
 		 *  that flag set.  If the result pointer is not NULL, fills it in with the
 		 *  list of folders (providing up to resultsize entries).  
@@ -1365,9 +1406,41 @@ XFE_ThreadView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInf
     int count;
     m_outliner->getSelection(&selected, &count);
 
+#if defined(USE_ABCOM)
+	if ((IS_CMD(xfeCmdAddSenderToAddressBook)||
+		 IS_CMD(xfeCmdAddAllToAddressBook)) &&
+		count > 0) {
+
+		XP_List *abList = AB_AcquireAddressBookContainers(m_contextData);
+		XP_ASSERT(abList);
+		int nDirs = XP_ListCount(abList);
+
+		XP_Bool selectable = False;
+		if (!nDirs)
+			return selectable;
+		
+		/* XFE always returns the first one
+		 */
+		AB_ContainerInfo *destAB = 
+			(AB_ContainerInfo *) XP_ListGetObjectNum(abList,1);
+		XP_ASSERT(destAB);
+
+		int error = MSG_AddToAddressBookStatus(m_pane,
+											   commandToMsgCmd(cmd),
+											   (MSG_ViewIndex*)selected,
+											   count,
+											   &selectable, NULL, NULL, NULL,
+											   destAB);
+		error = AB_ReleaseContainersList(abList);
+
+		return selectable;	
+	}/* if */
+#endif /* USE_ABCOM */
+
     // DeleteMessage stands for CancelMessage in the ThreadView,
     // so intercept it early:
-    if ( (IS_CMD(xfeCmdDeleteMessage) || IS_CMD(xfeCmdCancelMessages))
+    if ( (IS_CMD(xfeCmdDeleteAny) || 
+	 IS_CMD(xfeCmdDeleteMessage) || IS_CMD(xfeCmdCancelMessages))
               && isDisplayingNews() )
     {
       XP_Bool selectable = False;
@@ -1404,7 +1477,7 @@ XFE_ThreadView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInf
  						  (MSG_ViewIndex*)selected, count,
  						  &selectable, NULL, NULL, NULL);
 
-#if defined(DEBUG_tao)
+#if defined(DEBUG_tao_)
  		if (IS_CMD(xfeCmdUndo))
  			printf("\n XFE_ThreadView, MSG_CommandStatus:: m_pane=%x, xfeCmdUndo=%d", m_pane, selectable);
  		else if (IS_CMD(xfeCmdRedo))
@@ -1532,10 +1605,12 @@ XFE_ThreadView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*
       || IS_CMD(xfeCmdReplyToAll)
       || IS_CMD(xfeCmdForwardMessage)
       || IS_CMD(xfeCmdForwardMessageQuoted)
+      || IS_CMD(xfeCmdForwardMessageInLine)
       || IS_CMD(xfeCmdNextMessage)
       || IS_CMD(xfeCmdNextUnreadMessage)
       || IS_CMD(xfeCmdPreviousMessage)
       || IS_CMD(xfeCmdPreviousUnreadMessage)
+      || IS_CMD(xfeCmdDeleteAny)
       || IS_CMD(xfeCmdDeleteMessage)
       || IS_CMD(xfeCmdSortBySender)
       || IS_CMD(xfeCmdSortByDate)
@@ -1666,9 +1741,37 @@ XFE_ThreadView::doCommand(CommandType cmd,
 		  toggleMsgExpansion();
 		  getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
 	  }
+#if defined(USE_ABCOM)
+  else if ((IS_CMD(xfeCmdAddSenderToAddressBook)||
+			IS_CMD(xfeCmdAddAllToAddressBook)) &&
+		   count > 0) {
+
+	  XP_List *abList = AB_AcquireAddressBookContainers(m_contextData);
+	  XP_ASSERT(abList);
+	  int nDirs = XP_ListCount(abList);
+	  
+	  if (nDirs) {
+		  /* XFE always returns the first one
+		   */
+		  AB_ContainerInfo *destAB = 
+			  (AB_ContainerInfo *) XP_ListGetObjectNum(abList,1);
+		  XP_ASSERT(destAB);
+
+		  int error = MSG_AddToAddressBook(m_pane,
+										   commandToMsgCmd(cmd),
+										   (MSG_ViewIndex*)selected,
+										   count,
+										   destAB);
+		  error = AB_ReleaseContainersList(abList);
+	  }/* if */
+  }/* if */
+#endif /* USE_ABCOM */
   else if (IS_CMD(xfeCmdMommy))
 	  {
 		  fe_showFoldersWithSelected(XtParent(getToplevel()->getBaseWidget()),
+									 /* Tao: we might need to check if this returns a 
+									  * non-NULL frame
+									  */
 									 ViewGlue_getFrame(m_contextData),
 									 NULL,
 									 m_folderInfo);
@@ -1684,6 +1787,9 @@ XFE_ThreadView::doCommand(CommandType cmd,
 
 		if (w == NULL) w = m_widget;
 		
+		/* Need to make the view that has the pop up the current focus so that menu items
+		   can be enabled on the context menu again */
+        	getToplevel()->notifyInterested(XFE_MNListView::changeFocus, (void*) this);
 		m_popup = new XFE_PopupMenu("popup",(XFE_Frame*)m_toplevel, // XXXXXXX
 						XfeAncestorFindApplicationShell(w));
 		
@@ -1715,6 +1821,17 @@ XFE_ThreadView::doCommand(CommandType cmd,
 	  {
 		  getNewMail();
 	  }
+	else if (IS_CMD(xfeCmdAddNewsgroup))
+		{
+			// Code pasted from FolderView.cpp
+			D(	printf ("MSG_FolderPane::addNewsgroup()\n");)
+
+			/* We can use folder info in ThreadView to get to Host */
+			MSG_Host *host = NULL;
+			host = MSG_GetHostForFolder(m_folderInfo);
+			
+			fe_showSubscribeDialog(getToplevel(), getToplevel()->getBaseWidget(), m_contextData, host);
+		}
   else if (IS_CMD(xfeCmdGetNextNNewMsgs))
 	  {
 		  getNewNews();
@@ -1786,7 +1903,8 @@ XFE_ThreadView::doCommand(CommandType cmd,
 	MSG_CopyMessagesIntoFolder(m_pane, (MSG_ViewIndex*)selected, count, info);
     }
   else if (isDisplayingNews()
-      && (IS_CMD(xfeCmdDeleteMessage) || IS_CMD(xfeCmdCancelMessages)))
+      && (IS_CMD(xfeCmdDeleteMessage) || IS_CMD(xfeCmdCancelMessages) ||
+	IS_CMD(xfeCmdDeleteAny) ))
     {
         // If this is a news article, then Delete Message
         // is really Cancel Message:
@@ -1848,7 +1966,7 @@ XFE_ThreadView::doCommand(CommandType cmd,
             }
         }
     }
-  else if (IS_CMD(xfeCmdDeleteMessage))
+  else if (IS_CMD(xfeCmdDeleteMessage) || IS_CMD(xfeCmdDeleteAny) )
 	  {
 		  if (count == 1)
 			  /* stop loading since we are deleting this message:
@@ -1867,11 +1985,14 @@ XFE_ThreadView::doCommand(CommandType cmd,
   else if (IS_CMD(xfeCmdEditMailFilterRules))
 	  {
 		  fe_showMailFilterDlg(getToplevel()->getBaseWidget(), 
-							   m_contextData);
+							   m_contextData,m_pane);
 	  }
   else if (IS_CMD(xfeCmdSearchAddress))
 	  {
 		  fe_showLdapSearch(XfeAncestorFindApplicationShell(getToplevel()->getBaseWidget()),
+							/* Tao: we might need to check if this returns a 
+							 * non-NULL frame
+							 */
 							ViewGlue_getFrame(m_contextData),
 							(Chrome*)NULL);
 	
@@ -1922,6 +2043,9 @@ XFE_ThreadView::doCommand(CommandType cmd,
 				  key = MSG_GetMessageKey(m_pane, (MSG_ViewIndex)selected[i]);
 				  
 				  fe_showMsg(XtParent(getToplevel()->getBaseWidget()),
+							 /* Tao: we might need to check if this returns a 
+							  * non-NULL frame
+							  */
 							 ViewGlue_getFrame(m_contextData),
 							 NULL, m_folderInfo, key, FALSE);
 			  }
@@ -1931,6 +2055,9 @@ XFE_ThreadView::doCommand(CommandType cmd,
 		  // We don't need to call XtParent on the base widget because
 		  // the base widget is the real toplevel widget already...dora 12/31/96
 		  fe_showMNSearch(XfeAncestorFindApplicationShell(getToplevel()->getBaseWidget()),
+						  /* Tao: we might need to check if this returns a 
+						   * non-NULL frame
+						   */
 						  ViewGlue_getFrame(m_contextData),
 						  NULL, this, m_folderInfo);
 	  }
@@ -2460,6 +2587,7 @@ XFE_ThreadView::getColumnText(int column)
 fe_icon *
 XFE_ThreadView::getColumnIcon(int column)
 {
+
   switch (column)
     {
     case OUTLINER_COLUMN_SUBJECT:
@@ -2467,7 +2595,6 @@ XFE_ThreadView::getColumnIcon(int column)
 			MSG_FolderLine folderLine;
 			
 			MSG_GetFolderLineById(XFE_MNView::getMaster(), m_folderInfo, &folderLine);
-			
 			return flagToIcon(folderLine.flags, m_messageLine.flags);
 		}
     case OUTLINER_COLUMN_UNREADMSG:
@@ -2657,7 +2784,9 @@ XFE_CALLBACK_DEFN(XFE_ThreadView, allConnectionsComplete)(XFE_NotificationCenter
 	printf("\n XFE_ThreadView::allConnectionsComplete\n");
 #endif
 
-	processCmdQueue();
+	if (m_deletedCount &&
+		m_deleted)
+		processCmdQueue();
 #endif /* HANDLE_CMD_QUEUE */
 
 	handlePendingCommand();
@@ -2785,7 +2914,7 @@ XFE_ThreadView::handlePendingCommand()
 						if (resultId == MSG_MESSAGEKEYNONE
 							|| resultingThread == MSG_MESSAGEKEYNONE)
 							{
-								resultIndex == m_outliner->getTotalLines() - 1;
+								resultIndex = (MSG_ViewIndex)m_outliner->getTotalLines() - 1;
 							}
 						else
 							{
@@ -2936,6 +3065,9 @@ XFE_ThreadView::Buttonfunc(const OutlineButtonFuncData *data)
 							// 2.  data->alt (whether the alt key was down or not...)
 							
 							fe_showMsg(XtParent(getToplevel()->getBaseWidget()),
+									   /* Tao: we might need to check if this returns a 
+										* non-NULL frame
+										*/
 									   ViewGlue_getFrame(m_contextData),
 									   (Chrome*)NULL,
 									   m_folderInfo,
@@ -2954,7 +3086,7 @@ XFE_ThreadView::Buttonfunc(const OutlineButtonFuncData *data)
 					int count;
 							
 					m_outliner->getSelection(&selected, &count);
-#if defined(DEBUG_tao)
+#if defined(DEBUG_tao_)
 					printf("\n+++ data->clicks count=%d\n", count);
 #endif
 					if (data->ctrl)
@@ -2962,7 +3094,7 @@ XFE_ThreadView::Buttonfunc(const OutlineButtonFuncData *data)
 							m_outliner->toggleSelected(data->row);
 
 							m_outliner->getSelection(&selected, &count);
-#if defined(DEBUG_tao)
+#if defined(DEBUG_tao_)
 							printf("\n+++ data->clicks count=%d\n", count);
 #endif
 							if (count == 1)
@@ -3021,6 +3153,14 @@ XFE_ThreadView::Buttonfunc(const OutlineButtonFuncData *data)
 								}
 							else
 								{
+									if ((int) m_targetIndex != data->row) {
+										//
+										m_targetIndex = MSG_VIEWINDEXNONE;
+										if (m_scrollTimer)
+											XtRemoveTimeOut(m_scrollTimer);
+										m_scrollTimer = 0;
+									}/* if */
+
 									// we've selected a message, update the label and load it into
 									// our message view.
 									
@@ -3089,6 +3229,26 @@ XFE_CALLBACK_DEFN(XFE_ThreadView, spaceAtMsgEnd)(XFE_NotificationCenter*,
 		doCommand(xfeCmdNextUnreadCollection);
 }
 
+static void
+click_timer_func(XtPointer closure, XtIntervalId *)
+{
+    XFE_ThreadView *v = (XFE_ThreadView *) closure;
+    if (v)
+        v->selectTimer();
+}
+
+void
+XFE_ThreadView::selectTimer()
+{
+	if (m_targetIndex != MSG_VIEWINDEXNONE) 
+		m_outliner->makeVisible(m_targetIndex);
+	//
+	m_targetIndex = MSG_VIEWINDEXNONE;
+	if (m_scrollTimer)
+		XtRemoveTimeOut(m_scrollTimer);
+	m_scrollTimer = 0;
+}
+
 XFE_CALLBACK_DEFN(XFE_ThreadView, newMessageLoading)(XFE_NotificationCenter*,
 													 void *, void*)
 {
@@ -3096,7 +3256,9 @@ XFE_CALLBACK_DEFN(XFE_ThreadView, newMessageLoading)(XFE_NotificationCenter*,
 		{
 			MSG_FolderInfo *info = m_msgview->getFolderInfo();
 			MessageKey key = m_msgview->getMessageKey();
-			
+#if defined(DEBUG_tao)
+			printf("--newMessageLoading, m_pane=0x%x, m_lastLoadedKey=0x%x,key=0x%x", m_pane, m_lastLoadedKey, key);
+#endif
 			if (info != m_folderInfo)
 				{
 					m_commandPending = selectByKey;
@@ -3112,8 +3274,25 @@ XFE_CALLBACK_DEFN(XFE_ThreadView, newMessageLoading)(XFE_NotificationCenter*,
 					int numLines = MSG_GetNumLines(m_pane);
 					if (m_outliner->getTotalLines() != numLines)
 						m_outliner->change(0, numLines, numLines);
-
+#if 1
+					m_targetIndex = index;
+					int intvl0 = XtGetMultiClickTime(XtDisplay(m_widget)),
+						intvl = intvl0 + intvl0/2;
+#if defined(DEBUG_tao)
+					printf("--newMessageLoading, intvl0=%d, intvl=%d", 
+						   intvl0, intvl);
+#endif
+					m_scrollTimer = XtAppAddTimeOut(fe_XtAppContext, intvl,
+												   click_timer_func, this);
+					
+#else
+					/* 97010: selecting the last mail/news article 
+					 *        show the wrong one.
+					 * 
+					 * Take out to prevent improper auto-selection... -tao
+					 */
 					m_outliner->makeVisible(index);
+#endif
 					m_outliner->selectItemExclusive(index);
 					updateExpandoFlippyText(index);
 				}

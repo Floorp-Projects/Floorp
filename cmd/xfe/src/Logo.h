@@ -92,6 +92,7 @@ private:
 	static fe_icon_data **	_large_animation_data;
 	static Cardinal		 	_num_animations;
 	static Cardinal *		_animation_frame_counts;
+	static void		tipStringCallback	(Widget,XtPointer,XtPointer);
 
 	void			updatePixmaps		();
 

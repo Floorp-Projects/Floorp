@@ -20,7 +20,7 @@
 //
 
 #include "stdafx.h"
-#include "netscape.h"
+#include "mozilla.h"
 #include "edhdrdlg.h"
 #include "wfemsg.h"
 #include "prefapi.h"
@@ -69,7 +69,12 @@ BOOL CEditHeadersDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-
+int CEditHeadersDlg::DoModal ()
+{
+	if (!m_MNResourceSwitcher.Initialize())
+		return -1;
+	return CDialog::DoModal();
+}
 
 void CEditHeadersDlg::OnChangeEditHeader() 
 {
@@ -337,12 +342,6 @@ void CCustomHeadersDlg::OnOK()
 void CCustomHeadersDlg::PostNcDestroy()
 {
 	CDialog::PostNcDestroy();
-	if( m_pParent && ::IsWindow(m_pParent->m_hWnd) ){
-		m_pParent->EnableWindow(TRUE);
-		// Return focus to parent window
-		m_pParent->SetActiveWindow();
-		m_pParent->SetFocus();
-	}
 	delete this;
 }
 
@@ -350,5 +349,6 @@ void CCustomHeadersDlg::PostNcDestroy()
 void CCustomHeadersDlg::OnClose()
 {
 	GetParent()->PostMessage(WM_EDIT_CUSTOM_DONE,0,m_nReturnCode);
+	m_pParent->EnableWindow(TRUE);
     DestroyWindow();
 }

@@ -39,7 +39,7 @@ class XFE_EditorDrop : public XFE_DropNetscape
 {
 public:
     XFE_EditorDrop(Widget,XFE_EditorView*);
-    ~XFE_EditorDrop();
+    virtual ~XFE_EditorDrop();
 protected:
     XFE_EditorView *_editorView;
 

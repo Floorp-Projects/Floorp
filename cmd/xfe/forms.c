@@ -2900,7 +2900,9 @@ fe_mocha_submit_form_cb (MWContext *context, LO_Element *element, int32 event,
   }
 
   NET_AddLOSubmitDataToURLStruct (data, url);
-  if (data->window_target)
+
+ /* rb, conflict start */
+ if (data->window_target)
   {
 	  MWContext *tempContext;
 
@@ -2915,6 +2917,14 @@ fe_mocha_submit_form_cb (MWContext *context, LO_Element *element, int32 event,
 		  }
   }
 
+/* =======
+  if (data->window_target)
+  {
+      context = XP_FindNamedContextInList(context, data->window_target);
+      data->window_target = NULL;
+ }
+
+>>>>>>> 3.2.2.1 , conflict end */
 
   fe_GetURL (context, url, FALSE);
   LO_FreeSubmitData (data);

@@ -1,19 +1,20 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1997
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
 //
 //  More MAPI Hooks for Communicator
@@ -21,6 +22,8 @@
 //  November 1997
 //
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "template.h"
 #include "msgcom.h"
 #include "wfemsg.h"
@@ -100,6 +103,12 @@ CString                 csDefault;
     return(MAPI_E_FAILURE);
   }
 
+  // Check on HTML compose...only do this if the window is shown!
+  XP_Bool           htmlCompose;
+  PREF_GetBoolPref("mail.html_compose", &htmlCompose);
+  if (!winShowFlag)
+    htmlCompose = FALSE;
+
   //
   // Now, we must build the fields object...
   //
@@ -110,8 +119,15 @@ CString                 csDefault;
   // up...
   if ((!subject) || !(*subject))
   {
-    csDefault.LoadString(IDS_COMPOSE_DEFAULTNOSUBJECT);
-    subject = csDefault.GetBuffer(2);
+    if (sendMailPtr->MSG_nFileCount > 0)
+    {
+      subject = NSStrSeqGet(mailInfoSeq, 6 + (sendMailPtr->MSG_nRecipCount * 3) + 1);
+    }
+    else
+    {
+      csDefault.LoadString(IDS_COMPOSE_DEFAULTNOSUBJECT);
+      subject = csDefault.GetBuffer(2);
+    }
   }
 
   TRACE("MAPI: ProcessMAPISendMail() Subject   = [%s]\n", subject);
@@ -157,11 +173,7 @@ CString                 csDefault;
     lstrcat(ptr, (LPSTR) tempString);
   }
 
-  BOOL    bEncrypt = FALSE;
-  BOOL    bSign    = FALSE;
-
-  PREF_GetBoolPref("mail.crypto_sign_outgoing_mail", &bSign);
-  PREF_GetBoolPref("mail.encrypt_outgoing_mail", &bEncrypt);
+  HG27129
   MSG_CompositionFields *fields =
       MSG_CreateCompositionFields(real_addr, real_addr, 
                   toString, 
@@ -171,8 +183,7 @@ CString                 csDefault;
 									"", subject, "",
 									"", "", "",
 									"", 
-                  bEncrypt,
-                  bSign);
+                  HG21198);
   if (!fields)
   {
     return(MAPI_E_FAILURE);
@@ -181,8 +192,16 @@ CString                 csDefault;
   // RICHIE
   // INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(pOldContext);
   // int16 win_csid = INTL_GetCSIWinCSID(csi);
-  
-  pDocument = (CGenericDoc*)theApp.m_TextComposeTemplate->OpenDocumentFile(NULL, NULL, /*win_csid RICHIE*/ winShowFlag);
+  if (htmlCompose)
+  {
+    pDocument = (CGenericDoc*)theApp.m_ComposeTemplate->OpenDocumentFile(NULL,
+                                    NULL, winShowFlag);
+  }
+  else
+  {
+    pDocument = (CGenericDoc*)theApp.m_TextComposeTemplate->OpenDocumentFile(NULL, 
+                                    NULL, winShowFlag);
+  }
   if ( !pDocument )
   {
     return(MAPI_E_FAILURE);
@@ -217,6 +236,20 @@ CString                 csDefault;
                                 WFE_MSGGetMaster())
                         );
   }
+  else
+  {
+    pCompose->SetMsgPane(MSG_CreateCompositionPaneNoInit(
+                              context, // pContext->GetContext(), 
+                              g_MsgPrefs.m_pMsgPrefs,
+                              WFE_MSGGetMaster()));
+
+    // Set the callbacks for askHTML and Recipients dialogs
+    MSG_SetCompositionPaneCallbacks( pCompose->GetMsgPane(), &Callbacks, 0);
+    if (pCompose->GetMsgPane())
+    {
+      MSG_SetHTMLMarkup(pCompose->GetMsgPane(), TRUE);
+    }
+  }
 
   ASSERT(pCompose->GetMsgPane());
   MSG_SetFEData(pCompose->GetMsgPane(),(void *)pCompose);  
@@ -241,6 +274,7 @@ CString                 csDefault;
   // rhp - Deal with addressing the brute force way! This is a 
   // "fix" for bad behavior when creating these windows and not
   // showing them on the desktop.
+
   if (!winShowFlag)      // Hack to fix the window not being mapped
   {
     pCompose->AppendAddress(MSG_TO_HEADER_MASK, "");
@@ -248,17 +282,42 @@ CString                 csDefault;
     pCompose->AppendAddress(MSG_BCC_HEADER_MASK, "");
   }
 
-  // Always do plain text composition!
-  pCompose->CompleteComposeInitialization();
-
-  // Do this so we don't get popups on "empty" messages
-  if ( (!pInitialText) || (!(*pInitialText)) )
-    pInitialText = " ";
-
-  const char * pBody = pInitialText ? pInitialText : MSG_GetCompBody(pCompose->GetMsgPane());
-  if (pBody)
+  if (!pCompose->UseHtml())
   {
-    FE_InsertMessageCompositionText(context,pBody,TRUE);
+    // Do this so we don't get popups on "empty" messages
+    if ( (!pInitialText) || (!(*pInitialText)) )
+      pInitialText = " ";
+
+    // IF we are doing plain text composition!
+    pCompose->CompleteComposeInitialization();
+
+    const char * pBody = pInitialText ? pInitialText : MSG_GetCompBody(pCompose->GetMsgPane());
+    if (pBody)
+    {
+      FE_InsertMessageCompositionText(context,pBody,TRUE);
+    }
+  }
+  else
+  {
+    // Gotta be more than just spaces! - rhp - fixes some bugs with Office
+    if ( (pInitialText) && (*pInitialText) )
+    {
+      char *tmp = (char *)pInitialText; 
+
+      while (*tmp == ' ')
+        tmp++; 
+
+      if (*tmp)
+        pCompose->SetInitialText(pInitialText); 
+    }
+    // Gotta be more than just spaces! - rhp - fixes some bugs with Office
+
+    URL_Struct * pUrl = NET_CreateURLStruct(EDT_NEW_DOC_URL,NET_DONT_RELOAD);
+    if (pUrl != NULL)
+    {
+      pContext->GetUrl(pUrl, FO_CACHE_AND_PRESENT);
+      pContext->GetContext()->bIsComposeWindow = TRUE;
+    }
   }
 
   // 
@@ -362,12 +421,7 @@ CGenericDoc             *pDocument;
   //
   // Now, build the fields object w/o much info...
   //
-  BOOL    bEncrypt = FALSE;
-  BOOL    bSign    = FALSE;
-
-  PREF_GetBoolPref("mail.crypto_sign_outgoing_mail", &bSign);
-  PREF_GetBoolPref("mail.encrypt_outgoing_mail", &bEncrypt);
-
+  HG26726
   MSG_CompositionFields *fields =
       MSG_CreateCompositionFields(real_addr, real_addr, NULL, 
                   "", "",
@@ -375,17 +429,28 @@ CGenericDoc             *pDocument;
 									"", "", "",
 									"", "", "",
 									"", 
-                  bEncrypt,
-                  bSign);
+                  HG21892);
   if (!fields)
   {
     return(MAPI_E_FAILURE);
   }
 
+  // Check on HTML compose...
+  XP_Bool           htmlCompose;
+  PREF_GetBoolPref("mail.html_compose", &htmlCompose);
+
   // RICHIE - INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(pOldContext);
   // int16 win_csid = INTL_GetCSIWinCSID(csi);
-
-  pDocument = (CGenericDoc*)theApp.m_TextComposeTemplate->OpenDocumentFile(NULL, NULL, /*RICHIE win_csid,*/ TRUE);
+  if (htmlCompose)
+  {
+    pDocument = (CGenericDoc*)theApp.m_ComposeTemplate->OpenDocumentFile(NULL,
+                                    NULL, TRUE);
+  }
+  else
+  {
+    pDocument = (CGenericDoc*)theApp.m_TextComposeTemplate->OpenDocumentFile(NULL, 
+                                    NULL, TRUE);
+  }
   if ( !pDocument )
   {
     // cleanup fields object
@@ -418,6 +483,20 @@ CGenericDoc             *pDocument;
       g_MsgPrefs.m_pMsgPrefs, fields,
       WFE_MSGGetMaster()));
   }
+  else
+  {
+    pCompose->SetMsgPane(MSG_CreateCompositionPaneNoInit(
+                              context, // pContext->GetContext(), 
+                              g_MsgPrefs.m_pMsgPrefs,
+                              WFE_MSGGetMaster()));
+
+    // Set the callbacks for askHTML and Recipients dialogs
+    MSG_SetCompositionPaneCallbacks( pCompose->GetMsgPane(), &Callbacks, 0);
+    if (pCompose->GetMsgPane())
+    {
+      MSG_SetHTMLMarkup(pCompose->GetMsgPane(), TRUE);
+    }
+  }
 
   ASSERT(pCompose->GetMsgPane());
   MSG_SetFEData(pCompose->GetMsgPane(),(void *)pCompose);
@@ -443,8 +522,20 @@ CGenericDoc             *pDocument;
     pBar->CreateAddressingBlock();
   }
 
-  // Always do plain text composition!
-  pCompose->CompleteComposeInitialization();
+  if (!pCompose->UseHtml())
+  {
+    // If doing plain text composition!
+    pCompose->CompleteComposeInitialization();
+  }
+  else
+  {
+    URL_Struct * pUrl = NET_CreateURLStruct(EDT_NEW_DOC_URL,NET_DONT_RELOAD);
+    if (pUrl != NULL)
+    {
+      pContext->GetUrl(pUrl, FO_CACHE_AND_PRESENT);
+      pContext->GetContext()->bIsComposeWindow = TRUE;
+    }
+  }
 
   //
   // Finally deal with the attachments...
@@ -583,6 +674,12 @@ BOOL                    winShowFlag = FALSE;
     return(MAPI_E_FAILURE);
   }
 
+  // Check on HTML compose...
+  XP_Bool           htmlCompose;
+  PREF_GetBoolPref("mail.html_compose", &htmlCompose);
+  if (!winShowFlag)
+    htmlCompose = FALSE;
+
   // Don't allow a compose window to be created if the user hasn't 
   // specified an email address
   const char *real_addr = FE_UsersMailAddress();
@@ -658,11 +755,10 @@ BOOL                    winShowFlag = FALSE;
     lstrcat(ptr, (LPSTR) tempString);
   }
 
-  BOOL    bEncrypt = FALSE;
-  BOOL    bSign    = FALSE;
+  BOOL    bxxx = FALSE;
+  BOOL    bxxx2    = FALSE;
 
-  PREF_GetBoolPref("mail.crypto_sign_outgoing_mail", &bSign);
-  PREF_GetBoolPref("mail.encrypt_outgoing_mail", &bEncrypt);
+  
   MSG_CompositionFields *fields =
       MSG_CreateCompositionFields(real_addr, real_addr, 
                   toString, 
@@ -672,8 +768,8 @@ BOOL                    winShowFlag = FALSE;
 									"", subject, "",
 									"", "", "",
 									"", 
-                  bEncrypt,
-                  bSign);
+                  bxxx,
+                  bxxx2);
   if (!fields)
   {
     return(MAPI_E_FAILURE);
@@ -683,7 +779,16 @@ BOOL                    winShowFlag = FALSE;
   // INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(pOldContext);
   // int16 win_csid = INTL_GetCSIWinCSID(csi);
   
-  pDocument = (CGenericDoc*)theApp.m_TextComposeTemplate->OpenDocumentFile(NULL, NULL, /*win_csid RICHIE*/ winShowFlag);
+  if (htmlCompose)
+  {
+    pDocument = (CGenericDoc*)theApp.m_ComposeTemplate->OpenDocumentFile(NULL,
+                                    NULL, winShowFlag);
+  }
+  else
+  {
+    pDocument = (CGenericDoc*)theApp.m_TextComposeTemplate->OpenDocumentFile(NULL, 
+                                    NULL, winShowFlag);
+  }
   if ( !pDocument )
   {
     return(MAPI_E_FAILURE);
@@ -718,6 +823,20 @@ BOOL                    winShowFlag = FALSE;
                                 WFE_MSGGetMaster())
                         );
   }
+  else
+  {
+    pCompose->SetMsgPane(MSG_CreateCompositionPaneNoInit(
+                              context, // pContext->GetContext(), 
+                              g_MsgPrefs.m_pMsgPrefs,
+                              WFE_MSGGetMaster()));
+
+    // Set the callbacks for askHTML and Recipients dialogs
+    MSG_SetCompositionPaneCallbacks( pCompose->GetMsgPane(), &Callbacks, 0);
+    if (pCompose->GetMsgPane())
+    {
+      MSG_SetHTMLMarkup(pCompose->GetMsgPane(), TRUE);
+    }
+  }
 
   ASSERT(pCompose->GetMsgPane());
   MSG_SetFEData(pCompose->GetMsgPane(),(void *)pCompose);  
@@ -749,17 +868,41 @@ BOOL                    winShowFlag = FALSE;
     pCompose->AppendAddress(MSG_BCC_HEADER_MASK, "");
   }
 
-  // Always do plain text composition!
-  pCompose->CompleteComposeInitialization();
-
-  // Do this so we don't get popups on "empty" messages
-  if ( (!pInitialText) || (!(*pInitialText)) )
-    pInitialText = " ";
-
-  const char * pBody = pInitialText ? pInitialText : MSG_GetCompBody(pCompose->GetMsgPane());
-  if (pBody)
+  if (!pCompose->UseHtml())
   {
-    FE_InsertMessageCompositionText(context,pBody,TRUE);
+    // Do this so we don't get popups on "empty" messages
+    if ( (!pInitialText) || (!(*pInitialText)) )
+      pInitialText = " ";
+
+    // If doing plain text composition!
+    pCompose->CompleteComposeInitialization();
+
+    const char * pBody = pInitialText ? pInitialText : MSG_GetCompBody(pCompose->GetMsgPane());
+    if (pBody)
+    {
+      FE_InsertMessageCompositionText(context,pBody,TRUE);
+    }
+  }
+  else
+  {
+    // Gotta be more than just spaces! - rhp - fixes some bugs with Office
+    if ( (pInitialText) && (*pInitialText) )
+    {
+      char *tmp = (char *)pInitialText; 
+
+      while (*tmp == ' ')
+        tmp++; 
+      if (*tmp)
+        pCompose->SetInitialText(pInitialText); 
+    }
+    // Gotta be more than just spaces! - rhp - fixes some bugs with Office
+
+    URL_Struct * pUrl = NET_CreateURLStruct(EDT_NEW_DOC_URL,NET_DONT_RELOAD);
+    if (pUrl != NULL)
+    {
+      pContext->GetUrl(pUrl, FO_CACHE_AND_PRESENT);
+      pContext->GetContext()->bIsComposeWindow = TRUE;
+    }
   }
 
   // 

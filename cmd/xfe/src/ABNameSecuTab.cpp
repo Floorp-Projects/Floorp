@@ -20,6 +20,7 @@
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 
+#include "rosetta.h"
 #include "ABNameSecuTab.h"
 
 #include <Xm/Form.h>
@@ -45,67 +46,7 @@ XFE_ABNameSecuTabView::XFE_ABNameSecuTabView(XFE_Component *top,
 					     XFE_View *view):
   XFE_PropertyTabView(top, view, XFE_AB_NAME_SECURITY_TAB)
 {
-  Widget topForm = getBaseWidget();
-
-  /* m_securityLabel
-   */
-  m_securLabel = XtVaCreateManagedWidget("securLabel",
-										 xmLabelGadgetClass, topForm,
-										 XmNalignment, XmALIGNMENT_BEGINNING, 
-										 NULL);
-  XmString info = XmStringCreateLtoR(XP_GetString(XFE_AB_SECUR_YES),
-									 XmFONTLIST_DEFAULT_TAG);
-
-  XtVaSetValues(m_securLabel,
-				XmNlabelString, info,
-				XmNleftAttachment, XmATTACH_FORM,
-				XmNtopAttachment, XmATTACH_FORM,
-				XmNrightAttachment, XmATTACH_FORM,
-				XmNbottomAttachment, XmATTACH_NONE,
-				XmNtopOffset, 10,
-				XmNrightOffset, 10,
-				XmNbottomOffset, 10,
-				XmNleftOffset, 10,
-				0);
-
-  /* Show Certificate button
-   */
-  Arg    av[20];
-  int    ac = 0;
-
-  XtSetArg (av[ac], XmNwidth, 120); ac++;
-  //XtSetArg (av[ac], XmNrecomputeSize, False); ac++;
-  m_showCertiBtn = XmCreatePushButton(topForm, 
-				      "showSecurBtn", 
-				      av, ac);
-  fe_SetString(m_showCertiBtn, 
-			   XmNlabelString, XP_GetString(XFE_AB_SECUR_SHOW));
-
-  Dimension widthF;
-  XtVaGetValues(m_securLabel, 
-				XmNwidth, &widthF,
-				0);
-  Dimension widthp;
-  XtVaGetValues(m_showCertiBtn, 
-				XmNwidth, &widthp,
-				0);
-
-  int leftoffset = (widthF-widthp)/2;
-  XtVaSetValues(m_showCertiBtn,
-				XmNleftAttachment, XmATTACH_FORM,
-				XmNleftOffset, leftoffset, 
-				XmNtopAttachment, XmATTACH_WIDGET,
-				XmNtopWidget, m_securLabel,
-				XmNtopOffset, 50, 
-				XmNrightAttachment, XmATTACH_NONE,
-				XmNbottomAttachment, XmATTACH_NONE,
-				NULL);
-  XtManageChild(m_showCertiBtn);
-
-  XtAddCallback(m_showCertiBtn,
-				XmNactivateCallback, 
-				XFE_ABNameSecuTabView::showCallback, 
-				this);
+  
 }
 
 XFE_ABNameSecuTabView::~XFE_ABNameSecuTabView()

@@ -21,7 +21,7 @@
  */
 
 
-
+#include "rosetta.h"
 #include "Dashboard.h"
 #include "Button.h"
 #include "View.h"
@@ -224,6 +224,32 @@ XFE_Dashboard::~XFE_Dashboard()
 	// Unregister progress notifications with parent
 	if (m_parentFrame && m_progressBar)
 	{
+#if defined(GLUE_COMPO_CONTEXT)
+		m_parentFrame->unregisterInterest(
+			XFE_Component::progressBarCylonStart,
+			this,
+			startCylonNotice_cb);
+		
+		m_parentFrame->unregisterInterest(
+			XFE_Component::progressBarCylonStop,
+			this,
+			stopCylonNotice_cb);
+		
+		m_parentFrame->unregisterInterest(
+			XFE_Component::progressBarCylonTick,
+			this,
+			tickCylonNotice_cb);
+		
+		m_parentFrame->unregisterInterest(
+			XFE_Component::progressBarUpdatePercent,
+			this,
+			progressBarUpdatePercentNotice_cb);
+
+		m_parentFrame->unregisterInterest(
+			XFE_Component::progressBarUpdateText,
+			this,
+			progressBarUpdateTextNotice_cb);
+#else
 		m_parentFrame->unregisterInterest(
 			XFE_Frame::progressBarCylonStart,
 			this,
@@ -248,6 +274,7 @@ XFE_Dashboard::~XFE_Dashboard()
 			XFE_Frame::progressBarUpdateText,
 			this,
 			progressBarUpdateTextNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */
 	}
 
 	// Unregister parent frame update chrome notifications if needed
@@ -261,6 +288,71 @@ XFE_Dashboard::~XFE_Dashboard()
 
 	D(	printf ("Leaving XFE_Dashboard::~XFE_Dashboard\n");)
 }
+
+#if defined(GLUE_COMPO_CONTEXT)
+void XFE_Dashboard::connect2Dashboard(XFE_Component *compo)
+{
+	if (compo) {
+		// register dashboard events
+		compo->registerInterest(XFE_View::statusNeedsUpdating,
+								this,
+								(XFE_FunctionNotification)setStatusTextNotice_cb);
+		
+		// Register progress notifications with parent
+		compo->registerInterest(XFE_Component::progressBarCylonStart,
+								this,
+								startCylonNotice_cb);
+			
+		compo->registerInterest(XFE_Component::progressBarCylonStop,
+								this,
+								stopCylonNotice_cb);
+			
+		compo->registerInterest(XFE_Component::progressBarCylonTick,
+								this,
+								tickCylonNotice_cb);
+		
+		compo->registerInterest(XFE_Component::progressBarUpdatePercent,
+								this,
+								progressBarUpdatePercentNotice_cb);
+		
+		compo->registerInterest(XFE_Component::progressBarUpdateText,
+								this,
+								progressBarUpdateTextNotice_cb);
+	}/* compo */
+}
+
+void XFE_Dashboard::disconnectFromDashboard(XFE_Component *compo)
+{
+	if (compo) {
+		// register dashboard events
+		compo->unregisterInterest(XFE_View::statusNeedsUpdating,
+								  this,
+								  (XFE_FunctionNotification)setStatusTextNotice_cb);
+		
+		// Register progress notifications with parent
+		compo->unregisterInterest(XFE_Component::progressBarCylonStart,
+								  this,
+								  startCylonNotice_cb);
+		
+		compo->unregisterInterest(XFE_Component::progressBarCylonStop,
+								  this,
+								  stopCylonNotice_cb);
+		
+		compo->unregisterInterest(XFE_Component::progressBarCylonTick,
+								  this,
+								  tickCylonNotice_cb);
+		
+		compo->unregisterInterest(XFE_Component::progressBarUpdatePercent,
+								  this,
+								  progressBarUpdatePercentNotice_cb);
+			
+		compo->unregisterInterest(XFE_Component::progressBarUpdateText,
+								  this,
+								  progressBarUpdateTextNotice_cb);
+	}/* compo */
+}
+#endif /* GLUE_COMPO_CONTEXT */		
+
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_Dashboard::createStatusBar()
@@ -331,6 +423,32 @@ XFE_Dashboard::createProgressBar()
 	// Register progress notifications with parent
 	if (m_parentFrame)
 	{
+#if defined(GLUE_COMPO_CONTEXT)
+		m_parentFrame->registerInterest(
+			XFE_Component::progressBarCylonStart,
+			this,
+			startCylonNotice_cb);
+		
+		m_parentFrame->registerInterest(
+			XFE_Component::progressBarCylonStop,
+			this,
+			stopCylonNotice_cb);
+		
+		m_parentFrame->registerInterest(
+			XFE_Component::progressBarCylonTick,
+			this,
+			tickCylonNotice_cb);
+		
+		m_parentFrame->registerInterest(
+			XFE_Component::progressBarUpdatePercent,
+			this,
+			progressBarUpdatePercentNotice_cb);
+
+		m_parentFrame->registerInterest(
+			XFE_Component::progressBarUpdateText,
+			this,
+			progressBarUpdateTextNotice_cb);
+#else
 		m_parentFrame->registerInterest(
 			XFE_Frame::progressBarCylonStart,
 			this,
@@ -355,6 +473,7 @@ XFE_Dashboard::createProgressBar()
 			XFE_Frame::progressBarUpdateText,
 			this,
 			progressBarUpdateTextNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */		
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -385,16 +504,12 @@ XFE_Dashboard::createSecurityBar()
 {
 	XP_ASSERT( m_parentFrame != NULL );
 	XP_ASSERT( XfeIsAlive(m_widget) );
-	XP_ASSERT( m_securityBar == NULL );
+	/* XP_ASSERT( m_securityBar == NULL ); */
 
 	if (!m_parentFrame)
 		return;
 
-	// Create the icon toolbar
-	m_securityBar = XtVaCreateWidget(ICON_TOOL_BAR_NAME,
-									 xfeToolBarWidgetClass,
-									 m_widget,
-									 NULL);
+	HG12928
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -402,46 +517,13 @@ XFE_Dashboard::addSecurityIcon()
 {
 	XP_ASSERT( m_parentFrame != NULL );
 	XP_ASSERT( XfeIsAlive(m_widget) );
-	XP_ASSERT( XfeIsAlive(m_securityBar) );
-	XP_ASSERT( m_securityIcon == NULL );
+	/* XP_ASSERT( XfeIsAlive(m_securityBar) ); */
+	/* XP_ASSERT( m_securityIcon == NULL ); */
 
 	if (!m_parentFrame)
 		return;
 
-	m_securityIcon = new XFE_Button(m_parentFrame,
-									m_securityBar,
-									xfeCmdViewSecurity,
-									&Dash_Unsecure_group,
-									&Dash_Secure_group,
-									&Dash_Unsecure_group,
-									&Dash_Secure_group);
-
-	// Show or hide the new security icon based on its isEnabled state.
-	m_securityIcon->show();
-
-	// Configure the icon
-	m_securityIcon->setToplevel(m_parentFrame);
-
-	XtVaSetValues(m_securityIcon->getBaseWidget(),
-				  XmNtraversalOn,			True,
-				  XmNhighlightThickness,	0,
-				  NULL);
-
-    // Add chrome update notice to parent frame if needed
-    if (m_parentFrame && !m_securityRegistered)
-	{
-		m_securityRegistered = True;
-		
-		m_parentFrame->registerInterest(XFE_View::chromeNeedsUpdating,
-										this,
-										(XFE_FunctionNotification)update_cb);
-    }
-
-    // Add button command notice
-	m_securityIcon->registerInterest(
-		XFE_Button::doCommandCallback,
-		this,
-		(XFE_FunctionNotification)doSecurityCommand_cb);
+	HG00298
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -449,57 +531,19 @@ XFE_Dashboard::addSignedIcon()
 {
 	XP_ASSERT( m_parentFrame != NULL );
 	XP_ASSERT( XfeIsAlive(m_widget) );
-	XP_ASSERT( XfeIsAlive(m_securityBar) );
-	XP_ASSERT( m_signedIcon == NULL );
+	/* XP_ASSERT( XfeIsAlive(m_securityBar) ); */
+	/* XP_ASSERT( m_signedIcon == NULL ); */
 
 	if (!m_parentFrame)
 		return;
 
-	m_signedIcon = new XFE_Button(m_parentFrame,
-								  m_securityBar,
-								  xfeCmdViewSecurity,
-								  &Dash_Unsigned_group,
-								  &Dash_Unsigned_group,
-								  &Dash_Signed_group,
-								  &Dash_Signed_group);
-
-	// Show or hide the new signed icon based on its isEnabled state.
-	m_signedIcon->show();
-
-	// Configure the icon
-	m_signedIcon->setToplevel(m_parentFrame);
-
-	XtVaSetValues(m_signedIcon->getBaseWidget(),
-				  XmNtraversalOn,			True,
-				  XmNhighlightThickness,	0,
-				  NULL);
-
-    // Add chrome update notice to parent frame if needed
-    if (m_parentFrame && !m_securityRegistered)
-	{
-		m_securityRegistered = True;
-		
-		m_parentFrame->registerInterest(XFE_View::chromeNeedsUpdating,
-										this,
-										(XFE_FunctionNotification)update_cb);
-    }
-
-    // Add button command notice
-	m_signedIcon->registerInterest(
-		XFE_Button::doCommandCallback,
-		this,
-		(XFE_FunctionNotification)doSecurityCommand_cb);
+	HG02920
 }
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_Dashboard::configureSecurityBar()
 {
-	// Make sure the is a security bar to configure
-	if (XfeIsAlive(m_securityBar))
-	{
-		XfeSetManagedState(m_securityBar,
-						   isSecurityIconShown() || isSignedIconShown());
-	}
+	HG02092
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -509,8 +553,11 @@ XFE_Dashboard::setStatusText(const char * text)
 		Widget top = m_toplevel->getBaseWidget();
 		printf("%s: setStatusText: %s\n", XtName(top), text);
 	)
-
 	XP_ASSERT( XfeIsAlive(m_statusBar) );
+#if defined(DEBUG_tao_)
+	printf("\nXFE_Dashboard::setStatusText=%s\n", text?text:"");
+#endif
+
 	XfeLabelSetStringPSZ(m_statusBar,(String) text);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -519,6 +566,9 @@ XFE_Dashboard::setProgressBarText(const char * text)
 {
 	XP_ASSERT( XfeIsAlive(m_progressBar) );
 
+#if defined(DEBUG_tao_)
+	printf("\nXFE_Dashboard::setProgressBarText=%s\n", text?text:"");
+#endif
 	XfeLabelSetStringPSZ(m_progressBar,(String) text);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -527,6 +577,9 @@ XFE_Dashboard::setProgressBarPercent(int percent)
 {
 	XP_ASSERT( XfeIsAlive(m_progressBar) );
 
+#if defined(DEBUG_tao_)
+	printf("\nXFE_Dashboard::setProgressBarPercent=%d\n", percent);
+#endif
 	if (percent < 0)
 	{
 		percent = 0;
@@ -543,7 +596,9 @@ void
 XFE_Dashboard::startCylon()
 {
 	XP_ASSERT( XfeIsAlive(m_progressBar) );
-
+#if defined(DEBUG_tao_)
+	printf("\nXFE_Dashboard::startCylon\n");
+#endif
 	XfeProgressBarCylonStart(m_progressBar);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -551,6 +606,9 @@ void
 XFE_Dashboard::stopCylon()
 {
 	XP_ASSERT( XfeIsAlive(m_progressBar) );
+#if defined(DEBUG_tao_)
+	printf("\nXFE_Dashboard::stopCylon\n");
+#endif
 
 	XfeProgressBarCylonStop(m_progressBar);
 }
@@ -560,6 +618,9 @@ XFE_Dashboard::tickCylon()
 {
 	XP_ASSERT( XfeIsAlive(m_progressBar) );
 
+#if defined(DEBUG_tao_)
+	printf("\nXFE_Dashboard::tickCylon\n");
+#endif
 	XfeProgressBarCylonTick(m_progressBar);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -860,16 +921,7 @@ XFE_CALLBACK_DEFN(XFE_Dashboard, update)
 	if (!XfeIsAlive(m_widget))
 		return;
 
-  if (m_securityIcon && m_securityIcon->isAlive())
-	  {
-		  m_securityIcon->setPretendSensitive(m_parentFrame->isCommandEnabled((CommandType)m_securityIcon->getName()));
-		  m_securityIcon->useIconGroup(m_parentFrame->getSecurityStatus());
-	  }
-  if (m_signedIcon && m_signedIcon->isAlive())
-	  {
-		  m_signedIcon->setPretendSensitive(m_parentFrame->isCommandEnabled((CommandType)m_signedIcon->getName()));
-		  m_signedIcon->useIconGroup(m_parentFrame->getSecurityStatus());
-	  }
+  HG28999
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_CALLBACK_DEFN(XFE_Dashboard, doSecurityCommand)
@@ -882,11 +934,7 @@ XFE_CALLBACK_DEFN(XFE_Dashboard, doSecurityCommand)
 	if (!XfeIsAlive(m_widget))
 		return;
 
-  m_parentFrame->doCommand(cmdArgs->cmd, cmdArgs->callData,
-                           cmdArgs->info );
-	
-  m_parentFrame->notifyInterested(Command::commandDispatchedCallback, 
-                                  callData);
+  HG09219
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_CALLBACK_DEFN(XFE_Dashboard, startCylonNotice)
@@ -1117,27 +1165,7 @@ XFE_Dashboard::setShowSecurityIcon(XP_Bool state)
 		return;
 	}
 
-	// Create the security bar if needed
-	if (!m_securityBar)
-	{
-		createSecurityBar();
-	}
-
-	// Create the security icon if needed
-	if (!m_securityIcon)
-	{
-		addSecurityIcon();
-	}
-
-	XP_ASSERT( m_securityIcon != NULL );
-
-	if (m_securityIcon && m_securityIcon->isAlive())
-	{
-		m_securityIcon->setShowingState(state);
-	}
-
-	// Configure the secutiry bar
-	configureSecurityBar();
+	HG89219
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -1183,57 +1211,25 @@ XFE_Dashboard::setShowSignedIcon(XP_Bool state)
 	}
 
 
-	// Create the security bar if needed
-	if (!m_securityBar)
-	{
-		createSecurityBar();
-	}
-
-	// Create the signed icon if needed
-	if (!m_signedIcon)
-	{
-		addSignedIcon();
-	}
-
-	XP_ASSERT( m_signedIcon != NULL );
-
-	if (m_signedIcon && m_signedIcon->isAlive())
-	{
-		m_signedIcon->setShowingState(state);
-	}
-
-	// Configure the secutiry bar
-	configureSecurityBar();
+	HG82198
 }
 //////////////////////////////////////////////////////////////////////////
 XP_Bool
 XFE_Dashboard::isSecurityIconShown()
 {
-	return (m_securityIcon && m_securityIcon->isShown());
+	return (HG20303);
 }
 //////////////////////////////////////////////////////////////////////////
 XP_Bool
 XFE_Dashboard::isSignedIconShown()
 {
-	return (m_signedIcon && m_signedIcon->isShown());
+	return (HG02023);
 }
 //////////////////////////////////////////////////////////////////////////
 XP_Bool
 XFE_Dashboard::processTraversal(XmTraversalDirection direction)
 {
-	// Try the security icon
-	if ((m_securityIcon && m_securityIcon->isAlive()) && 
-		XmProcessTraversal(m_securityIcon->getBaseWidget(),direction))
-	{
-		return True;
-	}
-
-	// Try the signed icon
-	if ((m_signedIcon && m_signedIcon->isAlive()) && 
-		XmProcessTraversal(m_signedIcon->getBaseWidget(),direction))
-	{
-		return True;
-	}
+	HG93649
 
 	// Try the progress bar
 	if (XfeIsAlive(m_progressBar) && 

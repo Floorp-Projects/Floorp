@@ -20,7 +20,7 @@
    Created: Richard Hess <rhess@netscape.com>, 11-Nov-96
  */
 
-
+#include "rosetta.h"
 #include "EditorFrame.h"
 #include "EditorView.h"
 #include "SpellHandler.h"
@@ -1497,26 +1497,7 @@ public:
 	}
 };
 
-#ifndef NO_SECURITY
-class SetEncryptedCommand : public XFE_EditorViewCommand
-{
-public:
-	SetEncryptedCommand() : XFE_EditorViewCommand(xfeCmdSetEncrypted) {};
-
-	XP_Bool isDynamic() { return TRUE; };
-
-   	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo* /*calldata*/) {
-	    return (XP_Bool) EDT_EncryptState(view->getContext());
-	}
-	XP_Bool isEnabled(XFE_View* /*view*/, XFE_CommandInfo*) {
-		return (XP_Bool) PK11_TokenExists(CKM_SKIPJACK_CBC64);
-	}
-	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
-		EDT_EncryptToggle(view->getContext());
-										 
-	}
-};
-#endif
+HG10297
 
 class SetCharacterColorCommand : public AlwaysEnabledCommand
 {
@@ -2823,9 +2804,7 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 	registerCommand(my_commands, new SetObjectPropertiesCommand);
 	registerCommand(my_commands, new SetPagePropertiesCommand);
 	registerCommand(my_commands, new SetTablePropertiesCommand);
-#ifndef NO_SECURITY
-	registerCommand(my_commands, new SetEncryptedCommand);
-#endif
+	HG81272
 	registerCommand(my_commands, new SetCharacterColorCommand);
 	registerCommand(my_commands, new BrowsePageCommand);
 	registerCommand(my_commands, new EditSourceCommand);

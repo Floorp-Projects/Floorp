@@ -29,6 +29,7 @@ class CMailNewsResourceDll
 
 public:
     HINSTANCE switchResources();
+	BOOL Initialize ();
     CMailNewsResourceDll();
     ~CMailNewsResourceDll();
 };
@@ -38,8 +39,9 @@ class CMailNewsResourceSwitcher:public CMailNewsResourceDll
 {
     HINSTANCE m_oldresourcehandle;
 public:
-    CMailNewsResourceSwitcher(){m_oldresourcehandle=switchResources();}
-    void Reset(){AfxSetResourceHandle(m_oldresourcehandle);}
+    CMailNewsResourceSwitcher();
+	BOOL Initialize ();
+    void Reset();
     ~CMailNewsResourceSwitcher(){Reset();}
 };
 

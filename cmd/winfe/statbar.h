@@ -65,8 +65,12 @@ class CNetscapeStatusBar : public CNetscapeStatusBarBase
 public:
    CNetscapeStatusBar();
    ~CNetscapeStatusBar();
-   BOOL Create( CWnd *pParent, BOOL bSecurityStatus = TRUE, BOOL bTaskbar = TRUE );
-
+#ifdef MOZ_OFFLINE
+   BOOL Create( CWnd *pParent, BOOL bxxx = TRUE, BOOL bTaskbar = TRUE,
+				BOOL bOnline = TRUE);
+#else //MOZ_OFFLINE
+   BOOL Create( CWnd *pParent, BOOL bxxx = TRUE, BOOL bTaskbar = TRUE );
+#endif //MOZ_OFFLINE
    BOOL SetIndicators( const UINT* lpIDArray, int nIDCount );
    BOOL ResetPanes( EStatBarMode enStatBarMode, BOOL bForce = FALSE );
    
@@ -105,6 +109,9 @@ protected:
    void DrawProgressBar();
    void DrawSecureStatus(HDC hdc);
    void DrawSignedStatus(HDC hdc);
+#ifdef MOZ_OFFLINE
+   void DrawOnlineStatus(HDC hdc);
+#endif
    
    // Pulsing vapor trails (aka Cylon) mode methods   
 protected:
@@ -148,7 +155,9 @@ private:
 
 public:
    CFrameGlue *m_pProxy2Frame; // Used while serving OLE container; mainly for JavaScript
-    
+#ifdef MOZ_OFFLINE
+   static CPtrArray gStatusBars; 
+#endif
 protected:
    int32 m_nDone;         // Percentage for progress
    
@@ -160,7 +169,9 @@ protected:
    BOOL  m_bTaskbar;
    
    BOOL m_bSecurityStatus;
-   
+ #ifdef MOZ_OFFLINE
+   BOOL m_bOnlineStatus;
+#endif  
    EStatBarMode m_enStatBarMode;
    
    CNetscapeStatusBar::CParentSubclass *pParentSubclass;
@@ -170,6 +181,12 @@ protected:
    static HBITMAP sm_hbmpSecure;
    static SIZE sm_sizeSecure;
    static int sm_iRefCount;
+
+#ifdef MOZ_OFFLINE
+   static HBITMAP sm_hbmpOnline;
+   static SIZE sm_sizeOnline;
+   static int sm_iOnlineRefCount;
+#endif //MOZ_OFFLINE
 
    // Mode state info for particular pane modes   
 private:

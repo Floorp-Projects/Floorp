@@ -322,6 +322,15 @@ XFE_DownloadFrame::XFE_DownloadFrame(Widget toplevel, XFE_Frame *parent_frame)
 	// We need to do this, cause the XFE_Frame class only does so
 	// if the have_toolbars ctor parameter is true and in our case
 	// it is not.
+#if defined(GLUE_COMPO_CONTEXT)
+	registerInterest(XFE_Component::logoStartAnimation,
+					 this,
+					 &XFE_Frame::logoAnimationStartNotice_cb);
+	
+	registerInterest(XFE_Component::logoStopAnimation,
+					 this,
+					 &XFE_Frame::logoAnimationStopNotice_cb);
+#else
 	registerInterest(XFE_Frame::logoStartAnimation,
 					 this,
 					 &XFE_Frame::logoAnimationStartNotice_cb);
@@ -329,6 +338,7 @@ XFE_DownloadFrame::XFE_DownloadFrame(Widget toplevel, XFE_Frame *parent_frame)
 	registerInterest(XFE_Frame::logoStopAnimation,
 					 this,
 					 &XFE_Frame::logoAnimationStopNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */
 }
 
 XFE_DownloadFrame::~XFE_DownloadFrame()
@@ -337,6 +347,15 @@ XFE_DownloadFrame::~XFE_DownloadFrame()
 	// We need to do this, cause the XFE_Frame class only does so
 	// if the have_toolbars ctor parameter is true and in our case
 	// it is not.
+#if defined(GLUE_COMPO_CONTEXT)
+	unregisterInterest(XFE_Component::logoStartAnimation,
+					   this,
+					   &XFE_Frame::logoAnimationStartNotice_cb);
+	
+	unregisterInterest(XFE_Component::logoStopAnimation,
+					   this,
+					   &XFE_Frame::logoAnimationStopNotice_cb);
+#else
 	unregisterInterest(XFE_Frame::logoStartAnimation,
 					   this,
 					   &XFE_Frame::logoAnimationStartNotice_cb);
@@ -344,6 +363,7 @@ XFE_DownloadFrame::~XFE_DownloadFrame()
 	unregisterInterest(XFE_Frame::logoStopAnimation,
 					   this,
 					   &XFE_Frame::logoAnimationStopNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */
 }
 
 XP_Bool
@@ -389,7 +409,7 @@ XFE_DownloadFrame::activate_cb(Widget w, XtPointer clientData, XtPointer)
 }
 
 void
-XFE_DownloadFrame::allConnectionsComplete()
+XFE_DownloadFrame::allConnectionsComplete(MWContext  */* context */)
 {
 	D( printf ("in allConnectionsComplete\n");)
 	XP_InterruptContext(m_context);
@@ -956,7 +976,7 @@ fe_MakeSaveAsStream (int /*format_out*/, void */*data_obj*/,
 					MWContext *new_context;
 
 					parent = ViewGlue_getFrame(XP_GetNonGridContext(context));
-
+					XP_ASSERT(parent);
 					new_frame = new XFE_DownloadFrame(XtParent(parent->getBaseWidget()), parent);
 					new_context = new_frame->getContext();
 
@@ -1029,7 +1049,7 @@ fe_save_as_nastiness (MWContext *context, URL_Struct *url,
   /* Hold on to the saved data. */
   XP_MEMCPY(&saved_data, &url->savedData, sizeof(SHIST_SavedData));
 
-  /* make damn sure the form_data slot is zero'd or else all
+  /* make sure the form_data slot is zero'd or else all
    * hell will break loose
    */
   XP_MEMSET (&url->savedData, 0, sizeof (SHIST_SavedData));

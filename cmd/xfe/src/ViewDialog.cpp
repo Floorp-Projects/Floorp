@@ -20,8 +20,6 @@
    Created: Chris Toshok <toshok@netscape.com>, 16-Oct-96.
  */
 
-
-
 #include "ViewDialog.h"
 #include "xpassert.h"
 #include "structs.h"
@@ -150,7 +148,8 @@ XFE_ViewDialog::cancel_cb(Widget, XtPointer clientData, XtPointer)
 
   obj->cancel();
 
-  XtDestroyWidget(obj->getBaseWidget());
+  if (obj->m_okToDestroy)
+	  XtDestroyWidget(obj->getBaseWidget());
 }
 
 void

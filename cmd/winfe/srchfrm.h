@@ -95,8 +95,6 @@ public:
 
 class CSearchOutliner;
 class IMsgList;
-class CAdvSearchOptionsDlg;
-class CCustomHeadersDlg;
 class CMailQFButton;
 
 class CSearchFrame : public CFrameWnd, public CStubsCX
@@ -109,9 +107,6 @@ public:
 protected:
 	CSearchBar m_barSearch;
 	CDialogBar m_barAction;
-	CAdvSearchOptionsDlg *m_pAdvancedOptionsDlg;
-	CCustomHeadersDlg *m_pCustomHeadersDlg;
-
 	XP_List *m_listSearch;
 	XP_List *m_listResult;
 
@@ -190,8 +185,8 @@ protected:
 	BOOL PreTranslateMessage( MSG* pMsg );
 
 	void AdjustHeight(int dy);
-	void EditHeader(int iRow); //Brings up Modeless dialog to edit headers.
 
+	afx_msg void OnSetFocus(CWnd * pOldWnd);
 	afx_msg int OnCreate(LPCREATESTRUCT);
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
@@ -212,17 +207,22 @@ protected:
 	afx_msg void OnUpdateSave( CCmdUI *pCmdUI );
 	afx_msg void OnUpdateHelp( CCmdUI *pCmdUI );
 	afx_msg void OnNew();
+  afx_msg void OnUpdateClearSearch(CCmdUI *pCmdUI);
 	afx_msg void OnAdvanced();
 	afx_msg void OnUpdateAdvanced(CCmdUI *pCmdUI );
-	afx_msg void OnAttrib1();
+  afx_msg void OnAttrib1();
 	afx_msg void OnAttrib2();
 	afx_msg void OnAttrib3();
 	afx_msg void OnAttrib4();
 	afx_msg void OnAttrib5();
-	afx_msg	void OnAndOr();
+
+  BOOL readyToSearch();
+
+  afx_msg	void OnAndOr();
 	afx_msg void OnUpdateAndOr(CCmdUI *pCmdUI );
-    afx_msg void OnFileButton();
+  afx_msg void OnFileButton();
 	afx_msg void OnUpdateFileButton(CCmdUI *pCmdUI );
+	afx_msg void OnUpdateDeleteButton(CCmdUI *pCmdUI );
 	afx_msg LONG OnFinishedAdvanced( WPARAM wParam, LPARAM lParam );
 	afx_msg LONG OnFinishedHeaders(WPARAM wParam, LPARAM lParam );
 
@@ -233,6 +233,7 @@ protected:
 	afx_msg void OnUpdateFile( CCmdUI *pCmdUI );
 	afx_msg void OnOpenMessage();
 	afx_msg void OnUpdateOpenMessage(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateOnlineStatus(CCmdUI *pCmdUI);
 	
 
 	DECLARE_MESSAGE_MAP()
@@ -300,7 +301,12 @@ public:
 	CLIPFORMAT *GetClipFormatList(void);
 	virtual COleDataSource * GetDataSource(void);
 
-	afx_msg int OnCreate ( LPCREATESTRUCT );
+  void deleteMessages(BOOL bNoTrash);
+
+  afx_msg int OnCreate(LPCREATESTRUCT);
+	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
+  afx_msg void OnSetFocus(CWnd* pOldWnd);
 	DECLARE_MESSAGE_MAP()
 
 };
@@ -328,6 +334,8 @@ public:
         m_pOutlinerParent = new CSearchOutlinerParent;
     }
 };
+
+#if 0
 
 /////////////////////////////////////////////////////////////////////////////
 // CLDAPSearchFrame
@@ -409,5 +417,6 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////
+#endif
 
 #endif

@@ -25,6 +25,12 @@
 #include "MailFolderPropDialog.h"
 #include "PropertySheetView.h"
 #include "MNView.h"
+#include "xfe.h"
+#include "felocale.h"
+#include "msgcom.h"
+#include "imap.h"
+#include "xpgetstr.h"
+
 #include <Xm/TextF.h>
 #include <Xm/LabelG.h>
 #include <Xm/SeparatoG.h>
@@ -32,11 +38,8 @@
 #include <Xm/ToggleBG.h>
 #include <Xfe/Xfe.h>
 
-#include "xfe.h"
-#include "felocale.h"
-
-#include "xpgetstr.h"
-extern int XFE_GENERAL;
+extern int XFE_GENERAL, XFE_SHARING, XFE_ACL_NOT_SUPPORTED;
+extern int XFE_ACL_FOLDER_TYPE, XFE_ACL_PERMISSIONS, XFE_ACL_SHARE_PRIVILEGES;
 
 static XFE_MailFolderPropDialog *theDialog = NULL;
 
@@ -322,12 +325,219 @@ XFE_MailFolderPropGeneralTab::apply()
 	XtFree(folder_name);
 }
 
+XFE_MailFolderPropSharingTab::XFE_MailFolderPropSharingTab(XFE_Component *top,
+                                                           XFE_View *view,
+                                                           MSG_Pane *pane,
+                                                           MSG_FolderInfo *folder)
+    : XFE_PropertyTabView(top, view, XFE_SHARING)
+{
+	char *p;
+	XP_Bool supports_acl;		// Does the server support ACL ?
+	XmString str;
+	Widget			kids[15];
+	int				i  = 0;
+
+    m_folder = folder;
+    m_pane = pane;
+
+	supports_acl = MSG_GetFolderNeedsACLListed(folder);
+
+    top_form = XtCreateManagedWidget("top_form",
+                                     xmFormWidgetClass,
+                                     getBaseWidget(),
+                                     NULL, 0);
+
+	if (supports_acl) {
+		bottom_form = XtCreateManagedWidget("bottom_form",
+											xmFormWidgetClass,
+											getBaseWidget(),
+											NULL, 0);
+
+		sep = XtCreateManagedWidget("sep",
+									xmSeparatorGadgetClass,
+									getBaseWidget(),
+									NULL, 0);
+
+	} else {
+		str = XmStringCreate(XP_GetString(XFE_ACL_NOT_SUPPORTED), 
+										  XmFONTLIST_DEFAULT_TAG);
+		not_supported = XtVaCreateManagedWidget("not_supported",
+											   xmLabelGadgetClass,
+											   top_form,
+											   XmNlabelString, str,
+											   NULL);
+		XmStringFree(str);
+	}
+
+    XtVaSetValues(top_form,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  NULL);
+
+
+	if (supports_acl) {
+		Widget folder_type_label, folder_type_string;
+		Widget folder_type_desc, folder_perm_label, folder_perm_string;
+		Widget share_privileges, privileges_button;
+
+		str = XmStringCreate(XP_GetString(XFE_ACL_FOLDER_TYPE),
+							 XmFONTLIST_DEFAULT_TAG);
+		folder_type_label = kids[i++] 
+			= XtVaCreateWidget("folderTypeLabel",
+									  xmLabelGadgetClass,
+									  top_form,
+									  XmNlabelString, str,
+									  NULL);
+		XmStringFree(str);
+
+ 		p = MSG_GetFolderTypeName(folder);
+
+		str = XmStringCreate(p, XmFONTLIST_DEFAULT_TAG);
+
+		folder_type_string = kids[i++] 
+			= XtVaCreateWidget("folderType",
+									  xmLabelGadgetClass,
+									  top_form,
+									  XmNlabelString, str,
+									  NULL);
+		XP_FREE(p);
+		XmStringFree(str);
+
+		p = MSG_GetFolderTypeDescription(folder);
+		str = XmStringCreate(p, XmFONTLIST_DEFAULT_TAG);
+
+		folder_type_desc = kids[i++] 
+			= XtVaCreateWidget("folderTypeDescription",
+									  xmLabelGadgetClass,
+									  top_form,
+									  XmNlabelString, str,
+									  NULL);
+		XP_FREE(p);
+		XmStringFree(str);
+
+		str = XmStringCreate(XP_GetString(XFE_ACL_PERMISSIONS), 
+							 XmFONTLIST_DEFAULT_TAG);
+		folder_perm_label = kids[i++] = 
+			XtVaCreateWidget("folderPermissions",
+									xmLabelGadgetClass,
+									top_form,
+									XmNlabelString, str,
+									NULL);
+		XmStringFree(str);
+
+		p = MSG_GetACLRightsStringForFolder(folder);
+
+		str = XmStringCreate(p, XmFONTLIST_DEFAULT_TAG);
+
+		folder_perm_string = kids[i++] 
+			= XtVaCreateWidget("folderACLString",
+							   xmLabelGadgetClass,
+							   top_form,
+							   XmNlabelString, str,
+							   NULL);
+		XP_FREE(p);
+		XmStringFree(str);
+
+		// Layout
+		XtVaSetValues(folder_type_label,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_FORM,
+					  NULL);
+
+		XtVaSetValues(folder_type_string,
+					  XmNleftAttachment, XmATTACH_WIDGET,
+					  XmNleftWidget, folder_type_label,
+					  XmNtopAttachment, XmATTACH_FORM,
+					  NULL);
+
+		XtVaSetValues(folder_type_desc,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_WIDGET,
+					  XmNtopWidget, folder_type_label,
+					  NULL);
+
+		XtVaSetValues(folder_perm_label,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_WIDGET,
+					  XmNtopWidget, folder_type_desc,
+					  NULL);
+
+		XtVaSetValues(folder_perm_string,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_WIDGET,
+					  XmNtopWidget, folder_perm_label,
+					  NULL);
+
+		// Manage the kids
+		XtManageChildren(kids, i);
+
+#if 0
+		str = XmStringCreate(XP_GetString(XFE_ACL_SHARE_PRIVILEGES), 
+							 XmFONTLIST_DEFAULT_TAG);
+#endif
+		// This should come from XFE_ACL_SHARE_PRIVILEGE
+		// But I can't figure out a way to do multiline labels. So reverting
+		// to the resources file
+		share_privileges = XtVaCreateManagedWidget("sharePrivilegesLabel",
+												   xmLabelGadgetClass,
+												   bottom_form,
+												   //XmNlabelString, str,
+												   NULL);
+#if 0													
+		XmStringFree(str);
+#endif
+
+		privileges_button = XtVaCreateManagedWidget("Privileges",
+													xmPushButtonGadgetClass,
+													bottom_form,
+													NULL);
+
+		XtVaSetValues(sep,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNrightAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_WIDGET,
+					  XmNtopWidget, top_form,
+					  NULL);
+
+		XtVaSetValues(bottom_form,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNrightAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_WIDGET,
+					  XmNtopWidget, sep,
+					  XmNbottomAttachment, XmATTACH_FORM,
+					  NULL);
+
+		XtVaSetValues(share_privileges,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_FORM,
+					  NULL);
+
+		XtVaSetValues(privileges_button,
+					  XmNleftAttachment, XmATTACH_FORM,
+					  XmNtopAttachment, XmATTACH_WIDGET,
+					  XmNtopWidget, share_privileges,
+					  NULL);
+		
+	}
+}
+
+XFE_MailFolderPropSharingTab::~XFE_MailFolderPropSharingTab()
+{
+}
+
+void
+XFE_MailFolderPropSharingTab::apply()
+{
+	// There is nothing to apply
+}
+
 XFE_MailFolderPropDialog::XFE_MailFolderPropDialog(Widget parent,
 												   char *name,
 												   MWContext *context,
 												   MSG_Pane *pane,
 												   MSG_FolderInfo *folder)
-	: XFE_PropertySheetDialog((XFE_View*)0, parent, name,
+    : XFE_PropertySheetDialog((XFE_View*)0, parent, name,
 						  context,
 						  TRUE, /* ok */
 						  TRUE, /* cancel */
@@ -336,10 +546,12 @@ XFE_MailFolderPropDialog::XFE_MailFolderPropDialog(Widget parent,
 						  FALSE, /* separator */
 						  True) /* modal */
 {
-	XFE_PropertySheetView* folderView = (XFE_PropertySheetView *) m_view;
+    XFE_PropertySheetView* folderView = (XFE_PropertySheetView *) m_view;
 	
-	folderView->addTab(new XFE_MailFolderPropGeneralTab(this,
-														folderView, pane, folder));
+    folderView->addTab(new XFE_MailFolderPropGeneralTab(this, folderView, 
+                                                        pane, folder));
+    folderView->addTab(new XFE_MailFolderPropSharingTab(this, folderView, 
+                                                        pane, folder));
 }
 						  
 XFE_MailFolderPropDialog::~XFE_MailFolderPropDialog()
@@ -356,7 +568,8 @@ fe_showMailFolderProperties(Widget parent,
 	if (theDialog)
 		delete theDialog;
 	
-	theDialog = new XFE_MailFolderPropDialog(parent, "MailFolderProps", context, pane, folder);
+    theDialog = new XFE_MailFolderPropDialog(parent, "MailFolderProps",
+                                             context, pane, folder); 
 	
 	theDialog->show();
 }

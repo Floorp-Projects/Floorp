@@ -161,8 +161,20 @@ void CGenericToolBar::SetButtons( const UINT *lpIDArray,
 			pButton->SetBitmap(hBitmap, TRUE);
 
 		m_pCommandToolbar->AddButton(pButton);
+
 	}
 //	m_barTool.PlaceToolbar();
+}
+
+CToolbarButton *CGenericToolBar::GetButtonByIndex(int index)
+{
+	return m_pCommandToolbar->GetNthButton(index);
+
+}
+
+CToolbarButton *CGenericToolBar::GetButtonByID(int nCmd)
+{
+	return m_pCommandToolbar->GetButton(nCmd);
 }
 	
 void CGenericToolBar::SetButtonStyle( UINT nIDButtonCommand, DWORD dwButtonStyle )
@@ -440,11 +452,11 @@ CNetscapeStatusBar *CGenericStatusBar::GetNetscapeStatusBar()
     return m_pStatusBar;
 }
 
-BOOL CGenericStatusBar::Create( CWnd* pParentWnd, DWORD dwStyle, UINT nID, BOOL bSecurityStatus /*=TRUE*/, BOOL bTaskbar /*=TRUE*/ )
+BOOL CGenericStatusBar::Create( CWnd* pParentWnd, DWORD dwStyle, UINT nID, BOOL bxxx /*=TRUE*/, BOOL bTaskbar /*=TRUE*/ )
 {
 	m_pCreatedBar = new CNetscapeStatusBar;
 
-    if( !m_pCreatedBar->Create( pParentWnd, bSecurityStatus, bTaskbar ) )
+    if( !m_pCreatedBar->Create( pParentWnd, bxxx, bTaskbar ) )
 	{
 		delete m_pCreatedBar;
 		m_pCreatedBar = NULL;

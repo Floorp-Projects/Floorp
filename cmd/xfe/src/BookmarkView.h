@@ -43,7 +43,7 @@ class XFE_BookmarkView : public XFE_View, public XFE_Outlinable
 public:
   XFE_BookmarkView(XFE_Component *toplevel, Widget parent, XFE_View *parent_view, MWContext *context);
 
-  ~XFE_BookmarkView();
+  virtual ~XFE_BookmarkView();
 
   // Methods we override from XFE_View
   virtual Boolean isCommandEnabled(CommandType cmd, void *calldata = NULL,

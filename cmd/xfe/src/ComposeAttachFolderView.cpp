@@ -623,7 +623,7 @@ char *XFE_ComposeAttachFolderView::parseItemLabel(const char *url)
         if (s3) *s3 = 0;
     }
 
-    /* Now lose the %XX crap. */
+    /* Now lose the %XX */
     NET_UnEscape (s);
 
     char *retLabel=XP_STRDUP(s);

@@ -84,6 +84,15 @@
 #define HTML_ACTION_HTML       2
 #define HTML_ACTION_BOTH       3
 
+/* default request receipt action */
+#define RETURN_RECEIPTS_DSN     1 
+#define RETURN_RECEIPTS_MDN     2 
+#define RETURN_RECEIPTS_BOTH    3 
+
+/* default receipt arrival action */
+#define RECEIPTS_ARRIVE_INBOX     0
+#define RECEIPTS_ARRIVE_SENTMAIL  1 
+
 /* global preferences structure.
  */
 typedef struct _XFE_GlobalPrefs 
@@ -339,8 +348,6 @@ typedef struct _XFE_GlobalPrefs
 
 	char   *mailhost;
 	char   *movemail_program;
-	char   *pop3_host;
-	char   *pop3_user_id;
 	char   *mail_directory;
 	char   *imap_mail_directory;
 	char   *imap_mail_local_directory;

@@ -44,6 +44,7 @@ XFE_MNBanner::XFE_MNBanner(XFE_Frame *parent_frame,
 
   m_parentFrame = parent_frame;
 
+  m_isFolderShown = True;
   // Create the base widget - a tool item
   tool_item = XtVaCreateWidget("bannerItem",
 							   xfeToolItemWidgetClass,
@@ -377,6 +378,7 @@ XFE_MNBanner::setShowFolder(XP_Bool show)
 {
   unsigned char arrowDir;
 
+  m_isFolderShown = show;
   if (!m_arrowButton )
   {
 		m_arrowButton =   XtVaCreateManagedWidget("arrowb",
@@ -404,4 +406,10 @@ XFE_MNBanner::setShowFolder(XP_Bool show)
      else if ( (arrowDir == XmARROW_RIGHT) && show)
 	XtVaSetValues(m_arrowButton, XmNarrowDirection, XmARROW_DOWN, NULL);
    }
+}
+
+XP_Bool
+XFE_MNBanner::isFolderShown()
+{
+   return m_isFolderShown;
 }

@@ -43,6 +43,10 @@ private:
 		MapDialogRect(m_crBounds);
 		m_crBounds.InflateRect(-1, -1);	//	Shrink for border.
 	}
+  // Helper function to figure out correct file extension
+#ifdef MOZ_MAIL_NEWS
+	void AddFileExtension(char *& pFileName);
+#endif
 public:
 	static BOOL SaveAnchorObject(const char *pAnchor, History_entry *pHist, int16 iCSID = 0, CWnd *pParent = NULL, char * pFileName = NULL);
     static BOOL SaveAnchorAsText(const char *pAnchor, History_entry *pHist,  CWnd *pParent, char *pFileName);
@@ -50,6 +54,9 @@ public:
 	static NET_StreamClass *ViewUrlObject(URL_Struct *pUrl, const char *pViewer, CWnd *pParent = NULL);
 	static NET_StreamClass *OleStreamObject(NET_StreamClass *pOleStream, URL_Struct *pUrl, const char *pViewer, CWnd *pParent = NULL);
 	static BOOL SaveToGlobal(HGLOBAL *phGlobal, LPCSTR lpszUrl, LPCSTR lpszTitle); // Returns context id
+#ifdef MOZ_MAIL_NEWS
+    static BOOL SaveToFile(CFile *pFile, LPCSTR lpszUrl, LPCSTR lpszTitle);
+#endif
 
 //  What we're saving
 private:

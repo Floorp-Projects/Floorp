@@ -1,0 +1,232 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+ID_DIALOG DIALOG DISCARDABLE  0, 0, 318, 274
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Netscape Address Book API Test"
+MENU ID_MENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Open/Close",IDC_STATIC,4,4,310,27
+    PUSHBUTTON      "NAB_Open",ID_BUTTON_OPEN,7,14,45,14
+    PUSHBUTTON      "NAB_Close",ID_BUTTON_CLOSE,61,14,45,14
+    GROUPBOX        "Address Book Operations",IDC_STATIC,4,36,310,69
+    PUSHBUTTON      "Get AB List",ID_BUTTON_GETADDRLIST,7,47,45,14
+    LISTBOX         ID_LIST_ABOOK,7,64,304,37,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "",ID_STATIC_RESULT,4,259,310,13,SS_SUNKEN
+    PUSHBUTTON      "Get Default AB",ID_BUTTON_GETDEF_ADDR,56,47,55,14
+    PUSHBUTTON      "Create Personal AB",ID_BUTTON_CREATEABOOK,240,47,71,14
+    EDITTEXT        ID_EDIT_ABOOKNAME,122,47,116,14,ES_AUTOHSCROLL
+    GROUPBOX        "Individual Calls",IDC_STATIC,4,107,310,101
+    LISTBOX         ID_LIST_USERS,6,118,305,47,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "List Users in AB",ID_BUTTON_LISTAB,8,190,60,14
+    EDITTEXT        ID_EDIT_FINDLDIF,61,171,216,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Find AB Entry",ID_BUTTON_FINDAB,72,190,52,14
+    PUSHBUTTON      "Insert AB Entry",ID_BUTTON_INSERT,128,190,54,14
+    PUSHBUTTON      "Update AB Entry",ID_BUTTON_UPDATE,186,190,60,14
+    PUSHBUTTON      "Delete AB Entry",ID_BUTTON_DELETE,250,190,60,14
+    GROUPBOX        "Utility Functions",IDC_STATIC,4,211,310,46
+    PUSHBUTTON      "Save AB to HTML",ID_BUTTON_SAVETOHTML,14,239,85,14
+    EDITTEXT        ID_EDIT_FNAME,83,221,214,14,ES_AUTOHSCROLL
+    LTEXT           "Filename:",IDC_STATIC,15,224,34,10
+    PUSHBUTTON      "Export AB to LDIF",ID_BUTTON_EXPORTLDIF,114,239,85,14
+    PUSHBUTTON      "Import LDIF File to AB",ID_BUTTON_IMPORTLDIF,214,239,85,
+                    14
+    PUSHBUTTON      "LDIF Param:",ID_BUTTON_LDIFDIAG,7,171,50,14
+    EDITTEXT        ID_EDIT_FINDID,292,171,19,14,ES_AUTOHSCROLL
+    LTEXT           "ID:",IDC_STATIC,280,174,10,8
+END
+
+ID_DIALOG_LDIF DIALOG DISCARDABLE  0, 0, 300, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "LDIF Attributes"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        EMAIL,53,7,94,13,ES_AUTOHSCROLL
+    EDITTEXT        FIRSTNAME,53,24,94,13,ES_AUTOHSCROLL
+    EDITTEXT        LASTNAME,53,42,94,13,ES_AUTOHSCROLL
+    EDITTEXT        ADDR1,53,61,94,13,ES_AUTOHSCROLL
+    EDITTEXT        ADDR2,53,79,94,13,ES_AUTOHSCROLL
+    EDITTEXT        NOTES,53,97,94,13,ES_AUTOHSCROLL
+    EDITTEXT        CITY,53,115,94,13,ES_AUTOHSCROLL
+    EDITTEXT        STATE,53,133,94,13,ES_AUTOHSCROLL
+    EDITTEXT        TITLE,53,151,94,13,ES_AUTOHSCROLL
+    EDITTEXT        ZIPCODE,199,7,94,13,ES_AUTOHSCROLL
+    EDITTEXT        COUNTRY,199,25,94,13,ES_AUTOHSCROLL
+    EDITTEXT        BUSINESSPHONE,199,43,94,13,ES_AUTOHSCROLL
+    EDITTEXT        FAXPHONE,199,61,94,13,ES_AUTOHSCROLL
+    EDITTEXT        HOMEPHONE,199,79,94,13,ES_AUTOHSCROLL
+    EDITTEXT        ORG,199,97,94,13,ES_AUTOHSCROLL
+    EDITTEXT        NICKNAME,199,115,94,13,ES_AUTOHSCROLL
+    EDITTEXT        USEHTML,199,133,94,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,62,181,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,126,181,50,14
+    PUSHBUTTON      "Set Defaults",IDDEFAULTS,190,181,50,14
+    LTEXT           "First Name:",IDC_STATIC,15,26,36,8
+    LTEXT           "Last Name:",IDC_STATIC,13,42,37,8
+    LTEXT           "General Info:",IDC_STATIC,9,98,42,8
+    LTEXT           "City:",IDC_STATIC,37,116,14,8
+    LTEXT           "State:",IDC_STATIC,31,134,20,8
+    LTEXT           "Email:",IDC_STATIC,31,9,20,8
+    LTEXT           "Title:",IDC_STATIC,35,152,16,8
+    LTEXT           "Zip code:",IDC_STATIC,164,9,31,8
+    LTEXT           "Country:",IDC_STATIC,168,27,27,8
+    LTEXT           "Work Phone:",IDC_STATIC,152,45,43,8
+    LTEXT           "FAX Phone:",IDC_STATIC,156,63,39,8
+    LTEXT           "Home Phone:",IDC_STATIC,150,81,44,8
+    LTEXT           "Organization:",IDC_STATIC,152,99,42,8
+    LTEXT           "Nickname:",IDC_STATIC,160,117,35,8
+    LTEXT           "Use HTML:",IDC_STATIC,156,135,38,8
+    LTEXT           "Addr Line #1:",IDC_STATIC,7,62,44,8
+    LTEXT           "Addr Line #2:",IDC_STATIC,7,80,44,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    ID_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 314
+        VERTGUIDE, 7
+        VERTGUIDE, 310
+        VERTGUIDE, 311
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 272
+    END
+
+    ID_DIALOG_LDIF, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 293
+        VERTGUIDE, 147
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+ID_ICON_APP             ICON    DISCARDABLE     "nscicon.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+ID_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_MENU_MYEXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Clear Results",              ID_MENU_CLEARRESULTS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...",                   ID_MENU_MYABOUT
+    END
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

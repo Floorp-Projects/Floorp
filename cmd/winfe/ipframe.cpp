@@ -225,10 +225,6 @@ BOOL CInPlaceFrame::OnCreateControlBars(CWnd* pWndFrame, CWnd* pWndDoc)
 
 	//    SetBarType(m_iShowStarterBar, m_iShowURLBar);
 
-		//	Create the security bar.
-	//	m_barSecurityStatus.Create(pWndFrame);
-	//	m_barSecurityStatus.SetOwner(this);
-
 
         ASSERT( m_pProxy2Frame );    
 		LPNSSTATUSBAR pIStatusBar = NULL;

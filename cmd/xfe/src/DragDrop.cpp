@@ -185,7 +185,7 @@ char *XFE_DragBase::guessUrlMimeType(const char *data)
     else if (XP_STRNCASECMP(data,"addbook:",8)==0)
         return "text/x-vcard";
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS)
     // mail or news message
     else if (MSG_RequiresMailMsgWindow(data) || MSG_RequiresNewsMsgWindow(data))
         return "message/rfc822";
@@ -193,7 +193,7 @@ char *XFE_DragBase::guessUrlMimeType(const char *data)
     // document URL - use internal id, since there's no URL mime type
     else if (MSG_RequiresBrowserWindow(data))
         return "_url";
-#endif
+#endif  /* MOZ_MAIL_NEWS */
 
     // fallback to generic type
     else

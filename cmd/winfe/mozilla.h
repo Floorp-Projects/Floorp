@@ -58,13 +58,13 @@ extern int winfeInProcessNet;
 #define STARTUP_NEWS        0x4
 #define STARTUP_EDITOR      0x8
 
-#define STARTUP_MAIL_NEWS                 (STARTUP_MAIL | STARTUP_NEWS)
+#define STARTUP_MAIL_NEWS             (STARTUP_MAIL | STARTUP_NEWS)
 #define STARTUP_MAIL_BROWSER          (STARTUP_MAIL | STARTUP_BROWSER)
 #define STARTUP_NEWS_BROWSER          (STARTUP_NEWS | STARTUP_BROWSER)
 #define STARTUP_MAIL_NEWS_BROWSER     (STARTUP_MAIL | STARTUP_NEWS | STARTUP_BROWSER)
-#define STARTUP_MAIL_EDITOR                   (STARTUP_MAIL | STARTUP_EDITOR)
-#define STARTUP_NEWS_EDITOR                   (STARTUP_NEWS | STARTUP_EDITOR)
-#define STARTUP_BROWSER_EDITOR            (STARTUP_BROWSER | STARTUP_EDITOR)
+#define STARTUP_MAIL_EDITOR           (STARTUP_MAIL | STARTUP_EDITOR)
+#define STARTUP_NEWS_EDITOR           (STARTUP_NEWS | STARTUP_EDITOR)
+#define STARTUP_BROWSER_EDITOR        (STARTUP_BROWSER | STARTUP_EDITOR)
 #define STARTUP_MAIL_NEWS_EDITOR      (STARTUP_MAIL | STARTUP_NEWS | STARTUP_EDITOR)
 #define STARTUP_MAIL_BROWSER_EDITOR   (STARTUP_MAIL | STARTUP_BROWSER | STARTUP_EDITOR)
 #define STARTUP_NEWS_BROWSER_EDITOR   (STARTUP_NEWS | STARTUP_BROWSER | STARTUP_EDITOR)
@@ -72,7 +72,6 @@ extern int winfeInProcessNet;
 // component launch states
 #define STARTUP_INBOX           0x10
 #define STARTUP_FOLDER          0x20    
-#define STARTUP_CLIENT_MAPI      0x30  // rhp - DOES THIS WORK - will it break other startups???
 #define STARTUP_FOLDERS         0x40
 #define STARTUP_ADDRESS         0x80
 #define STARTUP_COMPOSE         0x100
@@ -82,9 +81,11 @@ extern int winfeInProcessNet;
 #define STARTUP_ACCOUNT_SETUP   0x800
 #define STARTUP_JAVA_DEBUG_AGENT 0x1000
 #define STARTUP_JAVA			0x1200
+#define STARTUP_NETHELP         0x2000
 #define STARTUP_CALENDAR        0x4000
 #define STARTUP_CONFERENCE      0x8000
-#define STARTUP_NETHELP         0x2000
+#define STARTUP_CLIENT_MAPI     0x10000  // rhp - DOES THIS WORK - will it break other startups???  
+#define STARTUP_CLIENT_ABAPI    0x20000  // rhp - for use with Address Book API
 
 // max list of things in the menu
 #define MAX_HISTORY_ITEMS   (LAST_HISTORY_MENU_ID-FIRST_HISTORY_MENU_ID)
@@ -279,10 +280,6 @@ public:
 public:
     int Run();
     BOOL NSPumpMessage();
-#ifdef MOZ_LOC_INDEP
-    /* location independence exit code */
-    BOOL LIStuffEnd();
-#endif /* MOZ_LOC_INDEP */
     BOOL IsIdleMessage(MSG *pMsg);
     BOOL OnIdle(LONG lIdleCount);
 #ifdef XP_WIN16
@@ -419,6 +416,11 @@ public:
     // Appearance of toolbars/component bars
     int m_pToolbarStyle;
 
+#ifdef MOZ_OFFLINE
+	BOOL m_bSynchronizingExit; //Are we currently synchronizing on exiting
+	BOOL m_bSynchronizing;  //Are we currently synchronizing
+#endif /* MOZ_OFFLINE */
+
     // preference type stuff
     int    m_nConfig;
     int    m_iNumTypesInINIFile;
@@ -437,6 +439,7 @@ public:
     BOOL m_bCreateMail;
 #endif /* MOZ_MAIL_NEWS */
     BOOL m_bCreateNetcaster;
+	BOOL m_bCreateCalendar;
 #ifdef EDITOR
     // "-EDIT" or "/EDIT" on command line causes us to start editor
     BOOL m_bCmdEdit;
@@ -444,7 +447,8 @@ public:
 #ifdef MOZ_MAIL_NEWS
 	//component launch flags
 	BOOL m_bCreateInbox;    //causes the inbox to be started
-  BOOL m_bCreateInboxMAPI;   // start inbox minimized!
+	BOOL m_bCreateInboxMAPI;// start inbox minimized!
+	BOOL m_bCreateNABWin;   // rhp - for Address Book API
 	BOOL m_bCreateFolders;  //causes the folders frame window to be started
 	BOOL m_bCreateFolder;   //causes a particular folder in the folders frame window to open
 	BOOL m_bCreateCompose;  //causes the compose window to be opened, 3 different possibilities
@@ -537,7 +541,7 @@ public:
 	BOOL ParseComponentArguments(char *pszCommandLine, BOOL bRemove);
 	BOOL ExistComponentArguments(char *pszCommandLine);
 	void LaunchComponentWindow(int iStartupMode, char *pszCmdLine);
-	void SetStartupMode(int *iStartupMode);
+	void SetStartupMode(int32 *iStartupMode);
 	void BuildStubFile();//Sets the m_strStubFile member
     CString BuildDDEFile();//Returns a CString type to a random file name
 
@@ -583,6 +587,14 @@ public:
 	CString   m_csPEPage;  // Don't use this if one-time homepage happens
 
     void CommonAppExit();
+#ifdef MOZ_OFFLINE
+	void HideFrames();
+	BOOL CanCloseAllFrames();
+#endif /*MOZ_OFFLINE */
+
+#ifdef MOZ_MAIL_NEWS
+	BOOL m_bReverseSenseOfHtmlCompose;
+#endif /*MOZ_MAIL_NEWS */
 
 	inline BOOL showSplashScreen(const CString &csPrintCommand); 
 
@@ -600,7 +612,7 @@ public:
 BOOL CNetscapeApp::showSplashScreen(const CString &csPrintCommand)
 {
 #ifdef MOZ_MAIL_NEWS
-	return (!(m_bEmbedded || m_bAutomated || m_bCreateInboxMAPI) && csPrintCommand.IsEmpty());
+	return (!(m_bEmbedded || m_bAutomated || m_bCreateInboxMAPI || m_bCreateNABWin) && csPrintCommand.IsEmpty());
 #else
 	return (!(m_bEmbedded || m_bAutomated) && csPrintCommand.IsEmpty());
 #endif

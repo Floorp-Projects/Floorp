@@ -21,6 +21,8 @@
 //
 
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "intl_csi.h"
 #include "netsvw.h"
 #include "cxsave.h"
@@ -38,6 +40,9 @@
 #include "prefapi.h"
 #include "ssl.h"
 #include "xpgetstr.h"
+#include "wfemsg.h"
+#include "abcom.h"
+#include "addrfrm.h" //for MOZ_NEWADDR
 
 #ifdef DEBUG_WHITEBOX
 #include "xp_trace.h"
@@ -59,6 +64,8 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 #endif
 
 int g_iModalDelay = -1;
+int iMailFrameCount  = 0;
+
 
 MSG_Master *WFE_MSGGetMaster();				
 
@@ -335,11 +342,12 @@ CMailNewsFrame::CMailNewsFrame()
 
 	// Folder Frame is the only one that's different
 	m_iMessageMenuPos = 4;
-	m_iMoveMenuPos = 6;
-	m_iCopyMenuPos = 7;
+	m_iMoveMenuPos = 7;
+	m_iCopyMenuPos = 8;
+	m_iAddAddressBookMenuPos = 10;
 
 	m_iFileMenuPos = 0;
-	m_iAttachMenuPos = 3;
+	m_iAttachMenuPos = 1;
 
 	m_pPane = NULL;
 	m_pMessagePane = NULL;
@@ -629,6 +637,8 @@ BEGIN_MESSAGE_MAP(CMailNewsFrame, CGenericFrame)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_MANAGEMAILACCOUNT, OnUpdateSetupWizard)
 	ON_COMMAND(ID_EDIT_SERVER, OnServerStuff)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SERVER, OnUpdateServerStuff)
+	ON_COMMAND(ID_VIEW_PROPERTIES, OnEditProperties)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_PROPERTIES, OnUpdateProperties)
 
 	// View Menu Items
     ON_COMMAND(ID_MAIL_SORTAGAIN, OnSortAgain)
@@ -689,6 +699,8 @@ BEGIN_MESSAGE_MAP(CMailNewsFrame, CGenericFrame)
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_PREVIOUS, OnUpdatePrevious)
 	ON_COMMAND(ID_MESSAGE_PREVIOUSUNREAD, OnPreviousUnread)
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_PREVIOUSUNREAD, OnUpdatePreviousUnread)
+	ON_COMMAND(ID_MESSAGE_FIRSTUNREAD, OnFirstUnread)
+	ON_UPDATE_COMMAND_UI(ID_MESSAGE_FIRSTUNREAD, OnUpdateFirstUnread)
 	ON_COMMAND(ID_MESSAGE_NEXTUNREADTHREAD, OnNextUnreadThread)
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_NEXTUNREADTHREAD, OnUpdateNextUnreadThread)
 	ON_COMMAND(ID_MESSAGE_NEXTUNREADNEWSGROUP, OnNextUnreadFolder)
@@ -710,6 +722,7 @@ BEGIN_MESSAGE_MAP(CMailNewsFrame, CGenericFrame)
  	ON_COMMAND(ID_FILE_GETNEWMAIL, OnGetMail)
  	ON_UPDATE_COMMAND_UI(ID_FILE_GETNEWMAIL, OnUpdateGetMail)
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_REPLYBUTTON, OnUpdateReply)
+	ON_COMMAND(ID_MESSAGE_REPLYBUTTON, OnReplyButton)
  	ON_COMMAND(ID_FILE_GETMOREMESSAGES, OnGetMail)
  	ON_UPDATE_COMMAND_UI(ID_FILE_GETMOREMESSAGES, OnUpdateGetMail)
 	ON_COMMAND(ID_FILE_GETNEXT, OnGetNext)
@@ -725,10 +738,14 @@ BEGIN_MESSAGE_MAP(CMailNewsFrame, CGenericFrame)
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_MARKBUTTON, OnUpdateMarkAllRead )
     ON_COMMAND(ID_MESSAGE_REPLYALL, OnReplyAll)
     ON_UPDATE_COMMAND_UI(ID_MESSAGE_REPLYALL, OnUpdateReplyAll)
+	ON_COMMAND(ID_MESSAGE_FORWARDBUTTON, OnForwardButton)
+	ON_UPDATE_COMMAND_UI(ID_MESSAGE_FORWARDBUTTON, OnUpdateForwardButton)
     ON_COMMAND(ID_MESSAGE_FORWARD, OnForward)
     ON_UPDATE_COMMAND_UI(ID_MESSAGE_FORWARD, OnUpdateForward)
     ON_COMMAND(ID_MESSAGE_FORWARDQUOTED, OnForwardQuoted)
     ON_UPDATE_COMMAND_UI(ID_MESSAGE_FORWARDQUOTED, OnUpdateForwardQuoted)
+	ON_COMMAND(ID_MESSAGE_FORWARDINLINE, OnForwardInline)
+	ON_UPDATE_COMMAND_UI(ID_MESSAGE_FORWARDINLINE, OnUpdateForwardInline)
 	ON_COMMAND(ID_MESSAGE_POSTREPLY, OnPostReply)
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_POSTREPLY, OnUpdatePostReply)
 	ON_COMMAND(ID_MESSAGE_POSTANDREPLY, OnPostAndMailReply)
@@ -745,8 +762,6 @@ BEGIN_MESSAGE_MAP(CMailNewsFrame, CGenericFrame)
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_MARKASUNREAD, OnUpdateMarkMessagesUnread)
 	ON_COMMAND(ID_MESSAGE_MARKTHREADREAD, OnMarkThreadRead )
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_MARKTHREADREAD, OnUpdateMarkThreadRead )
-	ON_COMMAND(ID_MESSAGE_MARKALLREAD, OnMarkAllRead )
-	ON_UPDATE_COMMAND_UI(ID_MESSAGE_MARKALLREAD, OnUpdateMarkAllRead )
 	ON_COMMAND(ID_MESSAGE_MARKALLREAD, OnMarkAllRead )
 	ON_UPDATE_COMMAND_UI(ID_MESSAGE_MARKALLREAD, OnUpdateMarkAllRead )
 	ON_COMMAND(ID_MESSAGE_CATCHUP, OnCatchup)
@@ -781,6 +796,53 @@ BEGIN_MESSAGE_MAP(CMailNewsFrame, CGenericFrame)
     ON_UPDATE_COMMAND_UI(ID_MESSAGE_ADDSENDER, OnUpdateAddToAddressBook)
     ON_COMMAND(ID_MESSAGE_ADDALL, OnAddAllToAddressBook)
     ON_UPDATE_COMMAND_UI(ID_MESSAGE_ADDALL, OnUpdateAddAllToAddressBook)
+#ifdef ON_COMMAND_RANGE
+	ON_COMMAND_RANGE(FIRST_ADDSENDER_MENU_ID, LAST_ADDSENDER_MENU_ID, OnAddSenderAddressBook )
+	ON_COMMAND_RANGE(FIRST_ADDALL_MENU_ID, LAST_ADDALL_MENU_ID, OnAddAllAddressBook )
+	ON_UPDATE_COMMAND_UI_RANGE( FIRST_ADDSENDER_MENU_ID, LAST_ADDSENDER_MENU_ID, OnUpdateAddSenderAddressBook )
+	ON_UPDATE_COMMAND_UI_RANGE( FIRST_ADDALL_MENU_ID, LAST_ADDALL_MENU_ID, OnUpdateAddAllAddressBook )
+#endif
+	    // Encoding stuff                                                                                                                                           
+    ON_COMMAND(ID_OPTIONS_ENCODING_1, OnToggleEncoding1)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_1, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_2, OnToggleEncoding2)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_2, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_3, OnToggleEncoding3)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_3, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_4, OnToggleEncoding4)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_4, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_5, OnToggleEncoding5)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_5, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_6, OnToggleEncoding6)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_6, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_7, OnToggleEncoding7)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_7, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_8, OnToggleEncoding8)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_8, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_9, OnToggleEncoding9)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_9, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_10, OnToggleEncoding10)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_10, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_11, OnToggleEncoding11)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_11, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_12, OnToggleEncoding12)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_12, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_13, OnToggleEncoding13)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_13, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_14, OnToggleEncoding14)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_14, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_15, OnToggleEncoding15)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_15, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_16, OnToggleEncoding16)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_16, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_17, OnToggleEncoding17)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_17, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_18, OnToggleEncoding18)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_18, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_19, OnToggleEncoding19)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_19, OnUpdateEncoding)
+    ON_COMMAND(ID_OPTIONS_ENCODING_20, OnToggleEncoding20)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_ENCODING_20, OnUpdateEncoding)
 
 	// Non-MSG Commands
 	ON_COMMAND(ID_OPTIONS_TIPS, OnTips)
@@ -825,6 +887,17 @@ BOOL CMailNewsFrame::OnCommand( WPARAM wParam, LPARAM lParam )
 		OnAttachProperties( nID );
 		return TRUE;
 	}
+	else if(nID >= FIRST_ADDSENDER_MENU_ID && nID <= LAST_ADDSENDER_MENU_ID)
+	{
+		OnAddSenderAddressBook(nID);
+		return TRUE;
+	}
+	else if(nID >= FIRST_ADDALL_MENU_ID && nID <= LAST_ADDALL_MENU_ID)
+	{
+		OnAddAllAddressBook(nID);
+		return TRUE;
+	}
+
 #endif
 
 	return CGenericFrame::OnCommand( wParam, lParam );
@@ -846,13 +919,23 @@ BOOL CMailNewsFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERI
 			OnUpdateAttachProperties( pCmdUI );
 			return TRUE;
 		}
+		else if(nID >= FIRST_ADDSENDER_MENU_ID && nID <= LAST_ADDSENDER_MENU_ID)
+		{
+			OnUpdateAddSenderAddressBook(pCmdUI);
+			return TRUE;
+		}
+		else if(nID >= FIRST_ADDALL_MENU_ID && nID <= LAST_ADDALL_MENU_ID)
+		{
+			OnUpdateAddAllAddressBook(pCmdUI);
+			return TRUE;
+		}
+
 	}
 	return CGenericFrame::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
 #endif
 
-static int iMailFrameCount = 0;
 
 int CMailNewsFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -900,31 +983,43 @@ HCURSOR CMailNewsFrame::OnQueryDragIcon()
 	return (HCURSOR) theApp.LoadIcon(nIDIcon);
 }
 
-void CMailNewsFrame::OnClose()  
+//this is a static function
+BOOL CMailNewsFrame::CleanupFolders(MSG_Pane *pPane)
 {
 	XP_Bool bSelectable = FALSE;
 	XP_Bool bPlural = FALSE;
     MSG_COMMAND_CHECK_STATE sState = MSG_Unchecked;
 
+	ASSERT(pPane);
+	MSG_CommandStatus(pPane, MSG_DeliverQueuedMessages, 0, NULL,
+					  &bSelectable, &sState, NULL, &bPlural);
+
+	
+	if (bSelectable && !NET_IsOffline()) {
+		CString strTitle;
+		VERIFY(strTitle.LoadString(IDS_NETSCAPE_MAIL_TITLE));
+
+		if (::MessageBox(NULL, szLoadString(IDS_UNSENT_MESSAGES), strTitle, MB_YESNO) == IDYES) {
+			MSG_Command(pPane, MSG_DeliverQueuedMessages, 0, NULL );
+			return FALSE;
+		}
+	}
+	if (MSG_CleanupNeeded(WFE_MSGGetMaster()))
+	  new CProgressDialog(NULL, pPane,_ShutDownFrameCallBack,
+        NULL,szLoadString(IDS_COMPRESSINGFOLDERS));
+
+	return TRUE;
+}
+
+void CMailNewsFrame::OnClose()  
+{
+
 	if (1 == iMailFrameCount)	// this seems to be null when you close a message window dmb
 	{
-		ASSERT(m_pPane);
-		MSG_CommandStatus(m_pPane, MSG_DeliverQueuedMessages, 0, NULL,
-						  &bSelectable, &sState, NULL, &bPlural);
-
-		
-		if (bSelectable && !NET_IsOffline()) {
-			CString strTitle;
-			VERIFY(strTitle.LoadString(IDS_NETSCAPE_MAIL_TITLE));
-
-			if (MessageBox(szLoadString(IDS_UNSENT_MESSAGES), strTitle, MB_YESNO) == IDYES) {
-				MSG_Command(m_pPane, MSG_DeliverQueuedMessages, 0, NULL );
-				return;
-			}
+		if(!CleanupFolders(m_pPane))
+		{
+			return;
 		}
-		if (MSG_CleanupNeeded(m_pMaster))
-	      new CProgressDialog(NULL, m_pPane,_ShutDownFrameCallBack,
-            NULL,szLoadString(IDS_COMPRESSINGFOLDERS));
 	}
 
     CGenericFrame::OnClose();
@@ -949,6 +1044,9 @@ void CMailNewsFrame::OnInitMenuPopup( CMenu* pPopupMenu, UINT nIndex, BOOL bSysM
 	if ( m_iMessageMenuPos >= 0 && 
 		 pPopupMenu->m_hMenu == GetSubMenu(hmenu, m_iMessageMenuPos )) { 
 		UpdateFileMenus();
+#ifdef MOZ_NEWADDR
+		UpdateAddressBookMenus();
+#endif
 	} else if (m_iFileMenuPos >= 0 &&
 			   pPopupMenu->m_hMenu == GetSubMenu(hmenu, m_iFileMenuPos )) {
 		UpdateAttachmentMenus();
@@ -1070,12 +1168,13 @@ void CMailNewsFrame::UpdateMenu( MSG_FolderInfo *mailRoot,
 			for (i = 0; i < iCount; i++) {
 				if (MSG_GetFolderLineById(pMaster, folderInfos[i], &folderLine)) {
 					if (folderLine.flags & MSG_FOLDER_FLAG_MAIL) {
-						if ( bAddSep ) {
-							::AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-						}
-						UpdateMenu(folderInfos[i], hMenu, nID, nLevelTotal);
-						nLevelTotal = MSG_GetFolderChildren( pMaster, folderInfos[i],
+						int nChildTotal = MSG_GetFolderChildren( pMaster, folderInfos[i],
 									 NULL, NULL);
+						if (bAddSep)  
+							::AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+ 						if (nChildTotal)
+							UpdateMenu(folderInfos[i], hMenu, nID, nLevelTotal);
+						nLevelTotal += nChildTotal;
 						bAddSep = TRUE;
 					}
 				}
@@ -1158,6 +1257,34 @@ void CMailNewsFrame::UpdateFileMenus()
     DrawMenuBar();
 }
 
+void CMailNewsFrame::UpdateAddressBookMenus()
+{
+#ifdef MOZ_NEWADDR
+	if(m_iAddAddressBookMenuPos == -1)
+		return;
+
+	HMENU hFrameMenu = ::GetMenu( m_hWnd );
+
+	ASSERT( hFrameMenu );
+
+	if( hFrameMenu )
+	{
+		HMENU hMessage = ::GetSubMenu( hFrameMenu, m_iMessageMenuPos );
+
+		if(hMessage)
+		{
+
+			WFE_MSGBuildAddAddressBookPopups(hMessage, m_iAddAddressBookMenuPos,
+											 FALSE, GetContext()->GetContext());
+		}
+	}
+    DrawMenuBar();
+#endif
+}
+
+
+
+
 void CMailNewsFrame::UpdateAttachmentMenus()
 {
 	HMENU hFrameMenu = ::GetMenu( m_hWnd );
@@ -1224,13 +1351,35 @@ void CMailNewsFrame::DoUpdateCommand( CCmdUI* pCmdUI, MSG_CommandType cmd, BOOL 
     MSG_COMMAND_CHECK_STATE sState;
 	const char *display_string;
 
-	if (m_pPane) {
+	CMailNewsOutliner* pOutliner;
+
+	if ((cmd == MSG_DeleteFolder || cmd == MSG_MarkAllRead ||
+		 cmd == MSG_DoRenameFolder) &&
+		IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+	{
+		pOutliner = ((C3PaneMailFrame*)this)->GetFolderOutliner();
+		if (cmd == MSG_MarkAllRead)
+		{
+			MSG_FolderLine folderLine;
+			if (((C3PaneMailFrame*)this)->GetSelectedFolder(&folderLine))
+			{
+				if ( !(folderLine.flags & MSG_FOLDER_FLAG_NEWSGROUP) ) 
+					pOutliner = m_pOutliner;
+			}
+		}
+	}
+	else
+		pOutliner = m_pOutliner;
+
+	MSG_Pane *pPane = pOutliner ? pOutliner->GetPane(): m_pPane;
+	//XP_ASSERT(pPane);
+	if (pPane) {
 		MSG_ViewIndex *indices = NULL;
 		int count = 0;
-		if (m_pOutliner)
-			m_pOutliner->GetSelection(indices, count);
+		if (pOutliner)
+			pOutliner->GetSelection(indices, count);
 
-		MSG_CommandStatus(m_pPane,
+		MSG_CommandStatus(pPane,
 						  cmd,
 						  indices, count,
 						  &bSelectable,
@@ -1256,7 +1405,8 @@ void CMailNewsFrame::DoCommand( MSG_CommandType msgCommand, int iModalDelay, BOO
 	ModalStatusBegin( iModalDelay );
 
 	CMailNewsOutliner* pOutliner;
-	if (msgCommand == MSG_DeleteFolder && 
+	if ((msgCommand == MSG_DeleteFolder || msgCommand == MSG_MarkAllRead ||
+		 msgCommand == MSG_DoRenameFolder) &&
 		IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
 		pOutliner = ((C3PaneMailFrame*)this)->GetFolderOutliner();
 	else
@@ -1276,8 +1426,14 @@ void CMailNewsFrame::DoCommand( MSG_CommandType msgCommand, int iModalDelay, BOO
 	}
 #endif
 
+	if (msgCommand == MSG_PostNew || msgCommand == MSG_PostReply || msgCommand == MSG_PostAndMailReply ||
+		msgCommand == MSG_MailNew || msgCommand == MSG_ReplyToSender || msgCommand == MSG_ReplyToAll)
+		theApp.m_bReverseSenseOfHtmlCompose = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+
 	MSG_Pane *pPane = pOutliner ? pOutliner->GetPane(): m_pPane;
 	MSG_Command(pPane, msgCommand, indices, count);
+
+	theApp.m_bReverseSenseOfHtmlCompose = FALSE;
 
 	if (!bAsync)
 		ModalStatusEnd();
@@ -1465,19 +1621,17 @@ void CMailNewsFrame::DoSubscribe(MSG_Host* pThisHost)
     CSubscribePropertySheet SubscribeNewsgroup(this, pContext, title);
   
     if (pThisHost)
+	{
 		SubscribeNewsgroup.SetHost(pThisHost);
+	}
 	else
 	{
 		MSG_FolderInfo* pFolderInfo = GetCurFolder();
 		if (pFolderInfo)
 		{
-			MSG_FolderLine folderLine;
-			if (MSG_GetFolderLineById(WFE_MSGGetMaster(), pFolderInfo,
-									  &folderLine)) 
-			{
-				MSG_Host *pHost = MSG_GetHostForFolder(pFolderInfo);
+			MSG_Host *pHost = MSG_GetHostForFolder(pFolderInfo);
+			if (pHost)
 				SubscribeNewsgroup.SetHost(pHost);
-			}
 		}
 	}
 
@@ -1605,20 +1759,8 @@ void CMailNewsFrame::OnUpdateGoForward ( CCmdUI* pCmdUI )
 	DoUpdateNavigate(pCmdUI, MSG_Forward);
 }
 
-
 void CMailNewsFrame::OnDeleteFolder( )
 {
-	CMailNewsOutliner* pOutliner;
-	if (IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
-		pOutliner = ((C3PaneMailFrame*)this)->GetFolderOutliner();
-	else
-		pOutliner = m_pOutliner;
-
-	MSG_ViewIndex *indices;
-	int count;
-
-	pOutliner->GetSelection(indices, count);
-
 	DoCommand(MSG_DeleteFolder);
 }
 
@@ -1630,7 +1772,7 @@ void CMailNewsFrame::OnUpdateDeleteFolder(CCmdUI* pCmdUI)
 		MSG_FolderLine folderLine;
 		MSG_GetFolderLineById( WFE_MSGGetMaster(), folderInfo, &folderLine );
 
-		if ( pCmdUI->m_nID == ID_EDIT_DELETEFOLDER ) {
+		if ( pCmdUI->m_nID == ID_EDIT_DELETEFOLDER || pCmdUI->m_nID == ID_EDIT_DELETE_3PANE) {
 			if ( folderLine.flags & MSG_FOLDER_FLAG_NEWS_HOST ) {
 				pCmdUI->SetText( szLoadString( IDS_MENU_DELETENEWSHOST ) );
 			} else if ( folderLine.flags & MSG_FOLDER_FLAG_NEWSGROUP ) {
@@ -1675,16 +1817,6 @@ void CMailNewsFrame::OnReallyDeleteMessage( )
 
 void CMailNewsFrame::OnUpdateDeleteMessage(CCmdUI* pCmdUI)
 {
-	if (IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
-	{
-		if (GetFocus() == (CWnd*)((C3PaneMailFrame*)this)->GetFolderOutliner())
-		{
-			pCmdUI->Enable(FALSE);
-			return;
-		}
-		else
-			pCmdUI->Enable(TRUE);
-	}
 	if ( m_bNews ) {
 		pCmdUI->SetText( szLoadString( IDS_MENU_CANCELMESSAGE ) );
 	    DoUpdateCommand(pCmdUI, MSG_CancelMessage);
@@ -2028,6 +2160,20 @@ void CMailNewsFrame::OnUpdateNextUnread(CCmdUI* pCmdUI)
 		pCmdUI->Enable(TRUE);
 }
 
+void CMailNewsFrame::OnFirstUnread()
+{
+	//Currently no back end support for this and it asserts
+
+	//	DoNavigate(MSG_FirstUnreadMessage);
+}
+
+void CMailNewsFrame::OnUpdateFirstUnread(CCmdUI* pCmdUI)
+{
+	//Currently no back end support for this and it asserts
+	pCmdUI->Enable(FALSE);
+//	DoUpdateNavigate(pCmdUI, MSG_FirstUnreadMessage);
+}
+
 void CMailNewsFrame::OnNext ( )
 {
 	DoNavigate( MSG_NextMessage );
@@ -2202,6 +2348,24 @@ void CMailNewsFrame::OnUpdateReply(CCmdUI* pCmdUI)
 	DoUpdateCommand(pCmdUI, MSG_ReplyToSender);
 }
 
+/*
+ *  Reply button now has to respond on a single click as well
+ *  as supply a menu.
+ */
+void CMailNewsFrame::OnReplyButton()
+{
+	// this will have to be changed to be based on preferences
+	if(m_bNews)
+	{
+		DoCommand(MSG_PostReply);
+	}
+	else
+	{
+		DoCommand(MSG_ReplyToSender);
+	}
+
+}
+
 void CMailNewsFrame::OnReplyAll() 
 {
 	DoCommand(MSG_ReplyToAll);
@@ -2212,14 +2376,25 @@ void CMailNewsFrame::OnUpdateReplyAll(CCmdUI* pCmdUI)
 	DoUpdateCommand(pCmdUI, MSG_ReplyToAll);
 }
 
+void CMailNewsFrame::OnForwardButton()
+{
+
+	DoCommand(MSG_ForwardMessage);
+}
+
+void CMailNewsFrame::OnUpdateForwardButton(CCmdUI* pCmdUI)
+{
+	DoUpdateCommand(pCmdUI, MSG_ForwardMessage);
+}
+
 void CMailNewsFrame::OnForward() 
 {
-	DoCommand(MSG_ForwardMessage);
+	DoCommand(MSG_ForwardMessageAttachment);
 }
 
 void CMailNewsFrame::OnUpdateForward(CCmdUI* pCmdUI) 
 {
-	DoUpdateCommand(pCmdUI, MSG_ForwardMessage);
+	DoUpdateCommand(pCmdUI, MSG_ForwardMessageAttachment);
 }
 
 void CMailNewsFrame::OnForwardQuoted() 
@@ -2230,6 +2405,16 @@ void CMailNewsFrame::OnForwardQuoted()
 void CMailNewsFrame::OnUpdateForwardQuoted(CCmdUI* pCmdUI) 
 {
 	DoUpdateCommand(pCmdUI, MSG_ForwardMessageQuoted);
+}
+
+void CMailNewsFrame::OnForwardInline() 
+{
+	DoCommand(MSG_ForwardMessageInline);
+}
+
+void CMailNewsFrame::OnUpdateForwardInline(CCmdUI* pCmdUI) 
+{
+	DoUpdateCommand(pCmdUI, MSG_ForwardMessageInline);
 }
 
 void CMailNewsFrame::OnSave ( )
@@ -2477,7 +2662,14 @@ static void _EmptyTrashCallback(HWND hwnd, MSG_Pane *pane, void *closure)
 /////////////////////////////////////////////////////////////////////////////
 void CMailNewsFrame::OnGetMail()
 {
-	new CProgressDialog(this, m_pPane, _GetMailCallback, NULL, NULL, _GetMailDoneCallback);
+	// prompt user about going online. Make sure get new mail is checked
+	if (NET_IsOffline())
+	{
+		PREF_SetBoolPref("offline.download_mail", TRUE);
+		OnGoOffline();
+	}
+	else
+		new CProgressDialog(this, m_pPane, _GetMailCallback, NULL, NULL, _GetMailDoneCallback);
 }
 
 void CMailNewsFrame::OnUpdateGetMail(CCmdUI *pCmdUI)
@@ -2524,16 +2716,26 @@ void CMailNewsFrame::OnNewFolder ( )
 		else
 			OnNewNewsgroup();
 	} else {
+		MSG_FolderInfo *pFolderInfo	= NULL;
 		if (IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
 		{
 			MSG_FolderLine folderLine;
 			if (((C3PaneMailFrame*)this)->GetSelectedFolder(&folderLine))
-				CNewFolderDialog( this, m_pPane, folderLine.id );
-			else
-				CNewFolderDialog( this, m_pPane, NULL );
+				pFolderInfo = folderLine.id;
 		}
 		else
-			CNewFolderDialog( this, m_pPane, GetCurFolder() );
+			pFolderInfo = GetCurFolder();
+		MWContext *pXPCX = NULL;
+		MWContextType saveType;
+		if (m_pPane)
+		{
+			pXPCX = MSG_GetContext( m_pPane );
+			saveType = pXPCX->type;
+		}
+		CNewFolderDialog newFolderDlg( this, m_pPane, MSG_SuggestNewFolderParent(pFolderInfo, WFE_MSGGetMaster()) );
+		newFolderDlg.DoModal();
+		if (m_pPane)
+			pXPCX->type = saveType;	
 	}
 }
 
@@ -2578,15 +2780,23 @@ void CMailNewsFrame::OnCompressAll()
 	MSG_FolderInfo *folderInfo = GetCurFolder();
 	
 	if (folderInfo) {
-		XP_Bool bCompressAll = TRUE;
+		int32 lDeleteModel = 1;
 
 		MSG_FolderLine folderLine;
 		MSG_GetFolderLineById( WFE_MSGGetMaster(), GetCurFolder(), &folderLine );
 		if ( folderLine.flags & MSG_FOLDER_FLAG_IMAPBOX ) {
-			PREF_GetBoolPref("mail.imap.delete_is_move_to_trash", &bCompressAll);
+			MSG_Host *host = MSG_GetHostForFolder(folderInfo);
+			if(host != NULL)
+			{
+				const char * hostName = MSG_GetHostName(host);
+				if(hostName != NULL)
+				{
+					IMAP_GetIntPref(hostName, INT_DELETE_MODEL, &lDeleteModel);
+				}
+			}
 		}
 
-		if (!bCompressAll) {
+		if (lDeleteModel != 1) {
 			CompressFolderClosure cfc;
 			cfc.indices = NULL;
 			cfc.count = 0;
@@ -2608,15 +2818,23 @@ void CMailNewsFrame::OnUpdateCompressAll ( CCmdUI* pCmdUI )
 	MSG_FolderInfo *folderInfo = GetCurFolder();
 	
 	if (folderInfo) {
-		XP_Bool bCompressAll = TRUE;
+		int32 lDeleteModel = 1;
 
 		MSG_FolderLine folderLine;
 		MSG_GetFolderLineById( WFE_MSGGetMaster(), GetCurFolder(), &folderLine );
 		if ( folderLine.flags & MSG_FOLDER_FLAG_IMAPBOX ) {
-			PREF_GetBoolPref("mail.imap.delete_is_move_to_trash", &bCompressAll);
+			MSG_Host *host = MSG_GetHostForFolder(folderInfo);
+			if(host != NULL)
+			{
+				const char * hostName = MSG_GetHostName(host);
+				if(hostName != NULL)
+				{
+					IMAP_GetIntPref(hostName, INT_DELETE_MODEL, &lDeleteModel);
+				}
+			}
 		}
 
-		if (!bCompressAll) {
+		if (lDeleteModel != 1) {
 			pCmdUI->SetText(szLoadString(IDS_MENU_COMPRESSFOLDER));
 			DoUpdateCommand(pCmdUI, MSG_CompressFolder);
 		} else {
@@ -2637,6 +2855,87 @@ void CMailNewsFrame::OnEmptyTrash()
 void CMailNewsFrame::OnUpdateEmptyTrash ( CCmdUI* pCmdUI )
 {
     DoUpdateCommand(pCmdUI, MSG_EmptyTrash);
+}
+
+void CMailNewsFrame::OnAddSenderAddressBook(UINT nID)
+{	
+	OnAddAddressBook(nID, MSG_AddSender);	
+}
+
+void CMailNewsFrame::OnAddAllAddressBook(UINT nID)
+{	
+	OnAddAddressBook(nID, MSG_AddAll);	
+}
+
+void CMailNewsFrame::OnAddAddressBook(UINT nID, MSG_CommandType command)
+{
+	int nIndex = (command == MSG_AddSender) ? nID - FIRST_ADDSENDER_MENU_ID :
+											  nID - FIRST_ADDALL_MENU_ID;
+
+	XP_List *addressBooks = AB_AcquireAddressBookContainers(GetContext()->GetContext()); 
+
+	if(addressBooks)
+	{
+		AB_ContainerInfo *pInfo = (AB_ContainerInfo*)XP_ListGetObjectNum(addressBooks, nIndex);
+																		 
+
+		if(m_pPane)
+		{
+			MSG_ViewIndex *indices = NULL;
+			int count = 0;
+			if(m_pOutliner)
+				m_pOutliner->GetSelection( indices, count );
+
+			MSG_AddToAddressBook(m_pPane, command, indices, count, pInfo); 
+		}
+
+		AB_ReleaseContainersList(addressBooks);
+	}
+	  
+}
+
+void CMailNewsFrame::OnUpdateAddSenderAddressBook(CCmdUI *pCmdUI)
+{
+
+	OnUpdateAddAddressBook(pCmdUI, MSG_AddSender);
+
+}
+
+void CMailNewsFrame::OnUpdateAddAllAddressBook(CCmdUI *pCmdUI)
+{
+
+	OnUpdateAddAddressBook(pCmdUI, MSG_AddAll);
+}
+
+void CMailNewsFrame::OnUpdateAddAddressBook(CCmdUI *pCmdUI, MSG_CommandType command)
+{
+    XP_Bool selectable = FALSE; 
+    MSG_COMMAND_CHECK_STATE selected; 
+    const char *displayString = NULL;
+    XP_Bool plural = FALSE; 
+	MSG_ViewIndex *indices = NULL;
+	int count = 0;
+	if(m_pOutliner)
+		m_pOutliner->GetSelection( indices, count );
+
+	int nIndex = (command == MSG_AddSender) ? pCmdUI->m_nID - FIRST_ADDSENDER_MENU_ID :
+											  pCmdUI->m_nID - FIRST_ADDALL_MENU_ID;
+
+	XP_List *addressBooks = AB_AcquireAddressBookContainers(GetContext()->GetContext()); 
+
+	if(addressBooks)
+	{
+		AB_ContainerInfo *pInfo = (AB_ContainerInfo*)XP_ListGetObjectNum(addressBooks, nIndex);
+																		 
+
+		MSG_AddToAddressBookStatus(m_pPane, command, indices, count, &selectable, 
+								   &selected, &displayString, &plural, pInfo); 
+
+		pCmdUI->Enable(selectable);
+
+		AB_ReleaseContainersList(addressBooks);
+	}
+
 }
 
 void CMailNewsFrame::OnAddToAddressBook()
@@ -2770,55 +3069,12 @@ void CMailNewsFrame::OnUpdatePriority(CCmdUI *pCmdUI)
 
 void CMailNewsFrame::OnUpdateSecurity(CCmdUI *pCmdUI)
 {
-	XP_Bool bSigned = FALSE;
-	XP_Bool bEncrypted = FALSE;
-
-	MIME_GetMessageCryptoState(GetMainContext()->GetContext(),
-							   0, 0,
-							   &bSigned,
-							   &bEncrypted);
-
-	if (m_bNews) {
-		int status = XP_GetSecurityStatus(GetMainContext()->GetContext());	
-		if (status == SSL_SECURITY_STATUS_ON_LOW || status == SSL_SECURITY_STATUS_ON_HIGH)
-			bEncrypted = TRUE;
-	}
-
-	LPNSTOOLBAR pIToolBar;
-	m_pChrome->QueryInterface( IID_INSToolBar, (LPVOID *) &pIToolBar );
-	if ( pIToolBar ) {
-		CCommandToolbar *pToolBar = (CCommandToolbar *) CWnd::FromHandlePermanent( pIToolBar->GetHWnd() );
-		
-		int index = bEncrypted ? 
-					(bSigned ? SEC_SIGNED_INDEX : SECURE_INDEX) :
-				    (bSigned ? UNSEC_SIGNED_INDEX : UNSECURE_INDEX);
-
-		pToolBar->ReplaceButtonBitmapIndex(ID_SECURITY, index);
-		pIToolBar->Release();
-	}
-	pCmdUI->Enable(TRUE);
+	HG92611
 }
 
 void CMailNewsFrame::OnUpdateSecureStatus(CCmdUI *pCmdUI)
 {
-	XP_Bool bSigned = FALSE;
-	XP_Bool bEncrypted = FALSE;
-
-	MIME_GetMessageCryptoState(GetMainContext()->GetContext(),
-							   0, 0,
-							   &bSigned,
-							   &bEncrypted);
-
-	if (m_bNews) {
-		int status = XP_GetSecurityStatus(GetMainContext()->GetContext());	
-		if (status == SSL_SECURITY_STATUS_ON_LOW || status == SSL_SECURITY_STATUS_ON_HIGH)
-			bEncrypted = TRUE;
-	}
-
-	if (pCmdUI->m_nID == IDS_SECURITY_STATUS)
-		pCmdUI->Enable(bEncrypted);
-	else
-		pCmdUI->Enable(bSigned);
+	HG11173
 }
 
 void CMailNewsFrame::SetCSID( int csid ) {
@@ -2860,8 +3116,202 @@ void CMailNewsFrame::RefreshNewEncoding(int16 doc_csid, BOOL bSave )
 	}
 }
 
-// CMsgListFrame
+void CMailNewsFrame::OnToggleEncoding1()  // Latin1
+{
+    RefreshNewEncoding(CS_LATIN1);
+}
 
+void CMailNewsFrame::OnToggleEncoding2()  // Latin2
+{
+    RefreshNewEncoding(CS_LATIN2);
+}
+
+void CMailNewsFrame::OnToggleEncoding3()  // Japanese(Auto)
+{
+    RefreshNewEncoding(CS_SJIS_AUTO);
+}
+
+void CMailNewsFrame::OnToggleEncoding4()  // Japanese(ShiftJIS)
+{
+    RefreshNewEncoding(CS_SJIS);
+}
+
+void CMailNewsFrame::OnToggleEncoding5()  // Japanese(EUC)
+{
+    RefreshNewEncoding(CS_EUCJP);
+}
+
+void CMailNewsFrame::OnToggleEncoding6()  // Chinese(BIG5)
+{
+    RefreshNewEncoding(CS_BIG5);
+}
+
+void CMailNewsFrame::OnToggleEncoding7()  // Chinese (EUC)
+{
+    RefreshNewEncoding(CS_CNS_8BIT);
+}
+
+void CMailNewsFrame::OnToggleEncoding8()  // Simplified Chinese
+{
+    RefreshNewEncoding(CS_GB_8BIT);
+}
+
+void CMailNewsFrame::OnToggleEncoding9()    // Korean ( Auto )
+{
+    RefreshNewEncoding(CS_KSC_8BIT | CS_AUTO);
+}
+
+void CMailNewsFrame::OnToggleEncoding10()
+{
+    RefreshNewEncoding(CS_USER_DEFINED_ENCODING);
+}
+
+void CMailNewsFrame::OnToggleEncoding11()
+{ 
+    RefreshNewEncoding(CS_CP_1250);
+}
+
+void CMailNewsFrame::OnToggleEncoding12()
+{
+    RefreshNewEncoding(CS_CP_1251);
+}
+
+void CMailNewsFrame::OnToggleEncoding13()
+{
+    RefreshNewEncoding(CS_8859_5);
+}
+
+void CMailNewsFrame::OnToggleEncoding14()
+{
+    RefreshNewEncoding(CS_KOI8_R);
+}
+
+void CMailNewsFrame::OnToggleEncoding15()
+{
+    RefreshNewEncoding(CS_8859_7);
+}
+
+void CMailNewsFrame::OnToggleEncoding16()
+{
+    RefreshNewEncoding(CS_CP_1253);
+}
+
+void CMailNewsFrame::OnToggleEncoding17()
+{
+    RefreshNewEncoding(CS_8859_9);
+}
+
+void CMailNewsFrame::OnToggleEncoding18()
+{
+    RefreshNewEncoding(CS_UTF8);
+}
+
+void CMailNewsFrame::OnToggleEncoding19()
+{
+    RefreshNewEncoding(CS_UCS2);
+}
+
+void CMailNewsFrame::OnToggleEncoding20()
+{
+    RefreshNewEncoding(CS_UTF7);
+}
+
+void CMailNewsFrame::OnUpdateEncoding(CCmdUI* pCmdUI)
+{
+    BOOL bCheck;
+    bCheck = FALSE;
+    switch (pCmdUI->m_nID) {
+    case ID_OPTIONS_ENCODING_1:    // Western(Latin1)
+        if(m_iCSID == CS_LATIN1)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_2:     // East European(latin2)
+        if(m_iCSID == CS_LATIN2)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_3:     // Japanese(Auto)
+        if(m_iCSID == CS_SJIS_AUTO)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_4:     // Japanese(ShiftJIS)
+        if(m_iCSID == CS_SJIS)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_5:     // Japanese(EUC)
+        if(m_iCSID == CS_EUCJP)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_6:     // Traditional Chinese(Big5)
+        if(m_iCSID == CS_BIG5)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_7:     // Traditional Chinese(EUC)
+        if(m_iCSID == CS_CNS_8BIT)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_8:     // Simplified Chinese
+        if(m_iCSID == CS_GB_8BIT)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_9:     // Korean
+        if((m_iCSID & ~CS_AUTO) == CS_KSC_8BIT)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_10:        // User defined 
+        if(m_iCSID == CS_USER_DEFINED_ENCODING)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_11:        // Windows Central European(latin2)
+        if(m_iCSID == CS_CP_1250)
+            bCheck = TRUE;
+        break; 
+    case ID_OPTIONS_ENCODING_12:        // Cyrillic (KOI8-R)
+        if(m_iCSID == CS_CP_1251)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_13:        // Cyrillic (ISO8859-5)
+        if(m_iCSID == CS_8859_5)
+            bCheck = TRUE;
+        break;
+	case ID_OPTIONS_ENCODING_14:
+        if(m_iCSID == CS_KOI8_R)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_15:        // Greek (8859_7)
+        if(m_iCSID == CS_8859_7)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_16:        // Greek (cp1253)
+        if(m_iCSID == CS_CP_1253)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_17:        // Turkish (8859_9) 
+        if(m_iCSID == CS_8859_9)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_18:            // Unicode (UTF8)
+        if(m_iCSID == CS_UTF8)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_19:            // Unicode (UCS2)
+        if(m_iCSID == CS_UCS2 || m_iCSID == CS_UCS2_SWAP)
+            bCheck = TRUE;
+        break;
+    case ID_OPTIONS_ENCODING_20:            // Unicode (UTF7)
+        if(m_iCSID == CS_UTF7)
+            bCheck = TRUE;
+        break;
+    default:                // Illegal ID is wrong.
+        return;
+    }
+ 
+    if (bCheck)
+        pCmdUI->SetCheck(TRUE);
+    else
+        pCmdUI->SetCheck(FALSE);
+}
+
+// CMsgListFrame
 STDMETHODIMP CMsgListFrame::QueryInterface(REFIID refiid, LPVOID * ppv)
 {
 	*ppv = NULL;

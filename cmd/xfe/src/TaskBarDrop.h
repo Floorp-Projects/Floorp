@@ -37,7 +37,7 @@ class XFE_TaskBarDrop : public XFE_DropNetscape
 {
 public:
     XFE_TaskBarDrop(Widget,const char*);
-    ~XFE_TaskBarDrop();
+    virtual ~XFE_TaskBarDrop();
 protected:
     const char *_command;
     

@@ -19,7 +19,7 @@
 #include "stdafx.h"
 
 #include "cxwin.h"
-
+#include "rosetta.h"
 #include "cntritem.h"
 #include "medit.h"
 #include "button.h"
@@ -4510,10 +4510,7 @@ void CWinCX::LayoutNewDocument(MWContext *pContext, URL_Struct *pURL, int32 *pWi
 	//  Call the base.
     CPaneCX::LayoutNewDocument(pContext, pURL, pWidth, pHeight, pmWidth, pmHeight);
 
-	//	Set our security indicators.
-	if(GetFrame()->GetMainContext() != NULL)	{
-		GetFrame()->SetSecurityStatus(XP_GetSecurityStatus(GetFrame()->GetMainContext()->GetContext()));
-	}
+	
 
     //  We're beginning to layout.
     m_bIsLayingOut = TRUE;

@@ -322,6 +322,10 @@ void XFE_ABNameCTalkTabView::setDlgValues()
 	  case AB_attribCoolAddress:
 		  tmp = values[i].u.string;
 		  break;
+
+	  default:
+		  XP_ASSERT(0);
+		  break;
 	  }/* switch */
   }/* for i */
 

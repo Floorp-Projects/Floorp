@@ -30,6 +30,12 @@
 #include "MNListView.h"
 #include "Addressable.h"
 
+#if defined(USE_ABCOM)
+#include "ABComplPickerDlg.h"
+#endif /* USE_ABCOM */
+
+#include "addrbk.h"
+
 class XFE_AddressOutliner : public XFE_Outliner
 {
 public:
@@ -89,9 +95,33 @@ public:
   static const char *textFocusIn;
   static const char *typeFocusIn;
 
+#if defined(USE_ABCOM)
+  static int nameCompletionExitFunc(AB_NameCompletionCookie *cookie,
+									int   numResults, 
+									void *FEcookie);
+  static void nameCPickerExitFunc(void *clientData, void *callData);
+#endif /* USE_ABCOM */
+
 protected:
+#if defined(USE_ABCOM)
+  int  nameCompletionCB(AB_NameCompletionCookie *cookie,
+						int                      numResults);
+  void nameCPickerCB(void *clientData);
+  void fillNameCompletionStr(char *completeName);
+							 
+  MSG_Pane       *m_pickerPane;
+  MWContext      *m_pickerContext;
+  XFE_ABComplPickerDlg *m_pickerDlg;
+
+  XmTextPosition  m_lastPos;
+  char           *m_curName;
+  char           *m_textStr;
+  XP_Bool         m_rtnIsPicker;
+#endif /* USE_ABCOM */
+
   void selectLine(int line);         // call with -1 to clear all selections
   void extendSelection(int line);
+
 
 private:
 
@@ -114,6 +144,11 @@ private:
   int       m_lastSelected;
   XtIntervalId m_textTimer;
 
+#if !defined(USE_ABCOM)
+  ABook *m_pAddrBook;
+  DIR_Server *m_pCompleteServer;
+#endif /* USE_ABCOM */
+    
   // Methods
   void handleEvent(XEvent *event, Boolean *c); 
   void textLosingFocus(XtPointer);

@@ -21,7 +21,7 @@
  */
 
 
-
+#include "rosetta.h"
 #include "BrowserFrame.h"
 /* #include "HTMLView.h" */
 #include "BrowserView.h"
@@ -191,9 +191,7 @@ ToolbarSpec XFE_BrowserFrame::toolbar_spec[] = {
 
   { xfeCmdShowImages,   PUSHBUTTON, &TB_LoadImages_group },
   { xfeCmdPrint,	    PUSHBUTTON, &TB_Print_group },
-#ifndef NO_SECURITY
-  { xfeCmdViewSecurity,	PUSHBUTTON, &TB_Unsecure_group, &TB_Secure_group, &TB_MixSecurity_group },
-#endif
+  HG10219
   TOOLBAR_SEPARATOR,
   { xfeCmdStopLoading,	PUSHBUTTON, &TB_Stop_group },
 	{ NULL }
@@ -222,14 +220,7 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
     fe_copy_context_settings(m_context, parent_frame->getContext());
 #ifdef notyet
 
-#ifndef NO_SECURITY
-  /* Enable security bar for all browser windows. I had to do this
-     so that this would get focus whenever we set focus on the main
-     window. Thus all owr translations will work. Otherwise, if all
-     chrome is switched off, there will be no widget to set focus to
-     */
-  CONTEXT_DATA(context)->show_security_bar_p = True;
-#endif
+  HG01092
   
 #endif /* notyet */
 
@@ -296,9 +287,7 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 
   respectChrome(chromespec);
 
-#ifndef NO_SECURITY
-  m_dashboard->setShowSecurityIcon(True);
-#endif
+  HG72711
   m_dashboard->setShowStatusBar(True);
   m_dashboard->setShowProgressBar(True);
 

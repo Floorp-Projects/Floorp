@@ -17,6 +17,8 @@
  */
 
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "msgcom.h"
 #include "wfemsg.h"
 #include "dspppage.h"
@@ -24,6 +26,8 @@
 #include "nethelp.h"
 #include "xp_help.h"
 #include "prefapi.h"
+#include "mailfrm.h"
+#include "thrdfrm.h"
 
 #ifndef _AFXDLL
 #undef new
@@ -81,7 +85,8 @@ BOOL CFolderPropertyPage::OnInitDialog()
 	char buff[50];
 	CWnd *widget = NULL;
 
-	if ( MSG_GetFolderLineById( WFE_MSGGetMaster(), m_folderInfo, &folderLine ) ) {
+	if ( MSG_GetFolderLineById( WFE_MSGGetMaster(), m_folderInfo, &folderLine ) ) 
+	{
 		widget = GetDlgItem( IDC_EDIT1 ); 
 		if(widget)
 			widget->SetWindowText( folderLine.prettyName != NULL ? folderLine.prettyName : folderLine.name );
@@ -89,14 +94,28 @@ BOOL CFolderPropertyPage::OnInitDialog()
 
 	
 	int nLen = 49;
-	if ( PREF_NOERROR == PREF_GetCharPref("network.hosts.pop_server",buff,&nLen) )
+	MSG_FolderInfo*  pHostFolderInfo = GetHostFolderInfo(m_folderInfo);
+	if (pHostFolderInfo)
+	{
+		MSG_FolderLine hostFolderLine;
+		if ( MSG_GetFolderLineById( WFE_MSGGetMaster(), pHostFolderInfo, &hostFolderLine ) )  
+			SetDlgItemText(IDC_MAIL_SERVER_NAME, 
+			hostFolderLine.prettyName != NULL ? hostFolderLine.prettyName : hostFolderLine.name );
+	}
+	else if ( PREF_NOERROR == PREF_GetCharPref("network.hosts.pop_server",buff,&nLen) )
 		SetDlgItemText(IDC_MAIL_SERVER_NAME,buff);
 
-	
+	char*  pFolderType = MSG_GetFolderTypeName(m_folderInfo);
+	if (pFolderType)
+	{
+		SetDlgItemText(IDC_STATIC_TYPE, pFolderType);
+		XP_FREE(pFolderType);
+	}
+
 	widget = GetDlgItem(IDC_STATIC_UNREAD);
 	if (widget)
 	{
-		if (folderLine.unseen > 0)
+		if (folderLine.unseen >= 0)
 		widget->SetWindowText(itoa(folderLine.unseen, buff, 10));
 	}
 
@@ -105,21 +124,16 @@ BOOL CFolderPropertyPage::OnInitDialog()
 		widget->SetWindowText(itoa(folderLine.total, buff, 10));
 	
 	int32 nSpaceUsed = MSG_GetFolderSizeOnDisk (m_folderInfo);
-	int nSpaceWasted = 0;
-
-	if (folderLine.deletedBytes != 0 && (nSpaceUsed != 0))//never divide by zero
-		nSpaceWasted = (int)(100 *((double)(folderLine.deletedBytes)/(double)nSpaceUsed) );
-	else
-		nSpaceWasted = 0;
-
-	//never calculate more than a 100% 
-	nSpaceWasted = nSpaceWasted > 100 ? 100 : nSpaceWasted;  
+	int nSpaceWasted = folderLine.deletedBytes;
 
 	widget = GetDlgItem(IDC_PERCENT_WASTED);
 	if (widget)
 	{
-		CString strSpaceWasted = itoa(nSpaceWasted, buff, 10) + (CString)"%";
-		widget->SetWindowText(strSpaceWasted);
+		char buff[30];
+		//convert bytes to Kilobytes and display in floating point format with 
+		//up to 2 pricision points
+		sprintf(buff,"%.2f kbytes",(float)nSpaceWasted/1000/1000);	
+		widget->SetWindowText(buff);
 	}
 
 	widget = GetDlgItem(IDC_USED_SPACE);
@@ -134,6 +148,15 @@ BOOL CFolderPropertyPage::OnInitDialog()
 
 	if (folderLine.flags & MSG_FOLDER_FLAG_IMAPBOX)
 	{
+		if (folderLine.flags & MSG_FOLDER_FLAG_IMAP_PERSONAL)
+			SetDlgItemText(IDC_STATIC_TYPE, "Personal Folder");
+		else if(folderLine.flags & MSG_FOLDER_FLAG_IMAP_PUBLIC)
+			SetDlgItemText(IDC_STATIC_TYPE, "Public  Folder");
+		else if(folderLine.flags & MSG_FOLDER_FLAG_PERSONAL_SHARED)
+			SetDlgItemText(IDC_STATIC_TYPE, "Shared  Folder");
+		else if(folderLine.flags & MSG_FOLDER_FLAG_IMAP_OTHER_USER)
+			SetDlgItemText(IDC_STATIC_TYPE, "Other User's Folder");
+
 		if (widget = GetDlgItem(IDC_BUTTON1)) 
 			widget->ShowWindow(SW_HIDE);	
 	}
@@ -150,6 +173,87 @@ void CFolderPropertyPage::OnOK()
 	CNetscapePropertyPage::OnOK();
 	MSG_RenameMailFolder (m_pPane,m_folderInfo,m_strFolderName);
 }
+
+//Mail folder property page
+CFolderSharingPage::CFolderSharingPage(CWnd *pWnd): 
+	CNetscapePropertyPage( CFolderSharingPage::IDD, 0 )
+{
+	m_pParent = (CNewsFolderPropertySheet*)pWnd; 
+	m_pContext = NULL;
+}
+
+void CFolderSharingPage::DoDataExchange(CDataExchange* pDX)
+{
+	CPropertyPage::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CDiskSpacePropertyPage)
+	//}}AFX_DATA_MAP
+}
+
+BOOL CFolderSharingPage::OnInitDialog()
+{
+	BOOL ret = CNetscapePropertyPage::OnInitDialog();
+
+	char*  pFolderType = MSG_GetFolderTypeName(m_folderInfo);
+	if (pFolderType)
+	{
+		SetDlgItemText(IDC_STATIC_TYPE, pFolderType);
+		XP_FREE(pFolderType);
+	}
+
+	char*  pFolderDesc = MSG_GetFolderTypeDescription(m_folderInfo);
+	if (pFolderDesc)
+	{
+		SetDlgItemText(IDC_STATIC_DESCRIPTION, pFolderDesc);
+		XP_FREE(pFolderDesc);
+	}
+	 
+	MSG_IMAPHost* pHost = MSG_GetIMAPHostFromMSGHost( 
+						   MSG_GetHostForFolder(m_folderInfo));
+	if (MSG_GetHostSupportsSharing(pHost))
+	{
+		char*  pRighrts = MSG_GetACLRightsStringForFolder(m_folderInfo);
+		if (pRighrts)
+		{
+			SetDlgItemText(IDC_STATIC_ACLRIGHTS, pRighrts);
+			XP_FREE(pRighrts);
+		}
+		GetDlgItem(IDC_PRIVILEGES)->EnableWindow(
+			MSG_HaveAdminUrlForFolder(m_folderInfo, MSG_AdminFolder));
+	}
+	else
+	{
+		SetDlgItemText(IDC_STATIC2, szLoadString(IDS_NO_ACLSHARING));
+		GetDlgItem(IDC_STATIC_ACLRIGHTS)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STATIC4)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_PRIVILEGES)->ShowWindow(SW_HIDE);
+	}  
+	return ret;
+}
+
+void CFolderSharingPage::OnOK()
+{
+	CNetscapePropertyPage::OnOK();
+}
+
+void CFolderSharingPage::SetFolderInfo
+(MSG_FolderInfo *folderInfo, MSG_Pane *pPane, MWContext *pContext)
+{
+	m_folderInfo = folderInfo;
+	m_pPane = pPane;
+	m_pContext = pContext;
+}
+
+void CFolderSharingPage::OnClickPrivileges()
+{
+	MSG_GetAdminUrlForFolder(m_pContext, m_folderInfo, MSG_AdminFolder);
+}
+
+BEGIN_MESSAGE_MAP(CFolderSharingPage, CPropertyPage)
+	//{{AFX_MSG_MAP(CFolderSharingPage)
+	ON_BN_CLICKED(IDC_PRIVILEGES, OnClickPrivileges)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //CNewsGeneralPropertyPage
@@ -293,18 +397,7 @@ BOOL CNewsHostGeneralPropertyPage::OnInitDialog()
 	int32 nPort = MSG_GetNewsHostPort(m_pNewsHost);
 	if (widget)
 		widget->SetWindowText(itoa(nPort,buffer,10));
-	//set the security type
-	widget = GetDlgItem( IDC_SECURITY_TYPE );	
-	if ( MSG_IsNewsHostSecure(m_pNewsHost))
-	{
-		strItemText.LoadString(IDS_IS_ENCRYPTED);
-	}
-	else
-	{
-		strItemText.LoadString(IDS_NOT_ENCRYPTED);
-	}
-	if (widget)
-		widget->SetWindowText(strItemText);
+	HG21215
 
 	//set the authentication type.
 	//We are transposing values here because the radio buttons are in reverse  
@@ -332,6 +425,7 @@ CNewsFolderPropertySheet::CNewsFolderPropertySheet(LPCTSTR pszCaption, CWnd *pPa
 						 : CNetscapePropertySheet(pszCaption, pParent)
 {
 	m_pFolderPage=NULL;
+	m_pSharingPage=NULL;
 	m_pNewsFolderPage=NULL;
 	m_pDiskSpacePage=NULL;
 	m_pDownLoadPageMail=NULL;
@@ -348,6 +442,8 @@ CNewsFolderPropertySheet::~CNewsFolderPropertySheet()
 {
 	if (m_pFolderPage)
 		delete m_pFolderPage;
+	if (m_pSharingPage)
+		delete m_pSharingPage;
 	if (m_pNewsFolderPage)
 		delete m_pNewsFolderPage;
 	if (m_pDiskSpacePage)
@@ -365,8 +461,11 @@ void CNewsFolderPropertySheet::OnHelp()
 	if ((GetActivePage() == m_pFolderPage))
 		NetHelp(HELP_MAIL_FOLDER_PROPS_GENERAL);
 	
+	else if (GetActivePage() == m_pSharingPage)
+		NetHelp(HELP_MAIL_FOLDER_PROPERTIES_SHARING);
+
 	else if (GetActivePage() == m_pDownLoadPageMail)
-		NetHelp(HELP_MAIL_FOLDER_PROPS_GENERAL);
+		NetHelp(HELP_MAIL_FOLDER_PROPERTIES_DOWNLOAD);
 
 	else if (GetActivePage() == m_pNewsFolderPage )
 		NetHelp(HELP_NEWS_DISCUSION_GENERAL);
@@ -379,6 +478,7 @@ void CNewsFolderPropertySheet::OnHelp()
 
 	else if (GetActivePage() == m_pDownLoadPageNews)
 		NetHelp(HELP_NEWS_DISCUSION_DOWNLOAD);
+
 }
 
 void CNewsFolderPropertySheet::OnDownLoadButton()
@@ -590,7 +690,7 @@ void CThreadStatusBar::OnPaint()
 
 CProgressDialog::CProgressDialog( CWnd *pParent, MSG_Pane *parentPane, 
 	PROGRESSCALLBACK callback, void * closure, char * pszTitle,
-	PROGRESSCALLBACK cbDone):
+	PROGRESSCALLBACK cbDone, SHOWPROGRESSCALLBACK showCallback):
 	CStubsCX( MailCX, MWContextMailNewsProgress )
 {
 	m_pszTitle = pszTitle ? XP_STRDUP(pszTitle) : NULL;
@@ -600,12 +700,43 @@ CProgressDialog::CProgressDialog( CWnd *pParent, MSG_Pane *parentPane,
 	m_pParent = pParent;
 	m_cbDone = cbDone;
 	m_closure = closure;
-
 	MSG_SetFEData( m_pPane, (LPVOID) (LPUNKNOWN) (LPMAILFRAME) this );
 
+	m_uTimerId = 0;
+	m_uProgressPos = 0;
+	m_bProgressShown = FALSE;
+	if(showCallback)
+	{
+		if(!(*showCallback)(m_pParent ? m_pParent->m_hWnd : NULL,
+						    m_pPane, closure))
+		{
+			if ( m_pPane )
+			{
+				MSG_DestroyPane( m_pPane );
+				m_pPane = NULL;
+			}
+
+
+			if(!IsDestroyed()) {
+				DestroyContext();
+
+			}
+			m_bProgressShown = FALSE;
+			return;
+		}
+	}
+
 	if (Create( CProgressDialog::IDD, pParent )) {
+		m_bProgressShown = TRUE;
 		if (callback)
+		{
 			(*callback)(m_hWnd, m_pPane, closure);
+			//m_hWnd may have been destroyed during above callback.
+			if(::IsWindow(m_hWnd))
+			{
+				StartAnimation();
+			}
+		}
 	} else {
 		if (m_cbDone)
 			(*m_cbDone)(m_hWnd, m_pPane, closure);
@@ -641,7 +772,13 @@ STDMETHODIMP_(ULONG) CProgressDialog::Release(void)
 void CProgressDialog::PaneChanged( MSG_Pane *pane, XP_Bool asynchronous, 
 							    MSG_PANE_CHANGED_NOTIFY_CODE notify, int32 value)
 {
-	if ( notify == MSG_PanePastPasswordCheck ) {
+	if ( notify == MSG_PaneNotifySelectNewFolder || 
+		 notify == MSG_PaneNotifyNewFolderFailed ) 
+	{
+		if (m_cbDone)
+			(*m_cbDone)(m_hWnd, m_pPane, m_closure);
+	}
+ 	if ( notify == MSG_PanePastPasswordCheck ) {
 		ShowWindow( SW_SHOWNA );
 		UpdateWindow();
 	}
@@ -662,6 +799,7 @@ void CProgressDialog::UserWantsToSeeAttachments(MSG_Pane *messagepane, void *clo
 BEGIN_MESSAGE_MAP( CProgressDialog, CDialog )
 	ON_WM_DESTROY()
 	ON_MESSAGE(WM_REQUESTPARENT,OnRequestParent)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 LONG CProgressDialog::OnRequestParent(WPARAM,LPARAM)
@@ -680,21 +818,34 @@ BOOL CProgressDialog::OnInitDialog( )
 
 void CProgressDialog::OnCancel()
 {
+	StopAnimation();
 	if (XP_IsContextStoppable(GetContext()))
 		XP_InterruptContext(GetContext());
 	else
+	{
 		DestroyWindow();
+		if ( m_pPane )
+		{
+			MSG_DestroyPane( m_pPane );
+			m_pPane = NULL;
+		}
+	}
 }
+
 
 void CProgressDialog::OnDestroy()
 {
+	StopAnimation();
 	if (m_cbDone)
 		(*m_cbDone)(m_hWnd, m_pPane, m_closure);
 
 	CDialog::OnDestroy();
 
 	if ( m_pPane )
+	{
 		MSG_DestroyPane( m_pPane );
+		m_pPane = NULL;
+	}
 
 	if(!IsDestroyed()) {
 		DestroyContext();
@@ -705,6 +856,7 @@ void CProgressDialog::SetProgressBarPercent(MWContext *pContext, int32 lPercent 
 {
 	//	Ensure the safety of the value.
 
+	StopAnimation();
 	lPercent = lPercent < 0 ? 0 : ( lPercent > 100 ? 100 : lPercent );
 
 	if ( m_lPercent == lPercent ) {
@@ -734,14 +886,36 @@ int32 CProgressDialog::QueryProgressPercent()
 
 void CProgressDialog::SetDocTitle( MWContext *pContext, char *pTitle )
 {
+	int i = 0;
 }
 
+#define ID_CYLONTIMER    3001  // timer id
+#define PULSE_INTERVAL   250  // Pulse interval for timer (ms)
 void CProgressDialog::StartAnimation()
 {
+	if( m_uTimerId )
+	{
+	  return;
+	}
+	m_uProgressPos = 0;
+	m_uTimerId = SetTimer(ID_CYLONTIMER, PULSE_INTERVAL, NULL);
+
+	if( !m_uTimerId )
+	{
+	  return;
+	}
 }
 
 void CProgressDialog::StopAnimation()
 {
+	if( !m_uTimerId )
+	{
+	  return;
+	}
+
+	KillTimer(ID_CYLONTIMER);
+	m_uProgressPos = 0;
+	m_uTimerId = 0;
 }
 
 void CProgressDialog::AllConnectionsComplete(MWContext *pContext)    
@@ -760,6 +934,53 @@ CWnd *CProgressDialog::GetDialogOwner() const {
 	return (CDialog *) this;
 }
 
+void CProgressDialog::OnTimer(UINT nIDEvent)
+{
+	if (m_uTimerId == nIDEvent)
+	{
+		m_uProgressPos += 10;
+		if (m_uProgressPos > 100)
+			m_uProgressPos = 0;
+		m_progressMeter.StepItTo( CASTINT(m_uProgressPos) );
+	}
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+// COfflineProgressDialog
+//
+// Dialog for offline progress
+//
+
+COfflineProgressDialog::COfflineProgressDialog( CWnd *pParent, 
+      MSG_Pane *parentPane, 
+      PROGRESSCALLBACK callback, void * closure,
+	  char * pszTitle, PROGRESSCALLBACK cbDone, BOOL bQuitOnCompletion):
+	CProgressDialog(pParent, parentPane, callback, closure, pszTitle, cbDone)
+{
+
+	m_bQuitOnCompletion = bQuitOnCompletion;
+
+}
+
+void COfflineProgressDialog::AllConnectionsComplete(MWContext *pContext)
+{
+	CProgressDialog::AllConnectionsComplete(pContext);
+	theApp.m_bSynchronizing = FALSE;
+
+	//if we're the last one keeping count then we need to cleanup
+	//folders.  Note DestroyWindow is called first which is why == 0
+
+	if(m_bQuitOnCompletion)
+	{
+		theApp.CommonAppExit();
+	}
+}
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////
 //
 // CNewFolderDialog
@@ -771,30 +992,18 @@ CNewFolderDialog::CNewFolderDialog( CWnd *pParent, MSG_Pane *pPane,
 								    MSG_FolderInfo *folderInfo ):
 	CDialog( IDD, pParent )
 {
-	MWContext *pXPCX;
-	MWContextType saveType;
-
 	m_bEnabled = TRUE;
 	m_pPane = NULL;
 
 	if (pPane)
 	{
-		pXPCX = MSG_GetContext( pPane );
-		// Since the progress pane changes it's context's type,
-		// Save it
-		saveType = pXPCX->type;
+		MWContext *pXPCX = MSG_GetContext( pPane );
 
 		m_pPane= MSG_CreateProgressPane( pXPCX, WFE_MSGGetMaster(), pPane );
 		MSG_SetFEData( m_pPane, (LPVOID) (LPUNKNOWN) this );
 	}
 	
 	m_pParentFolder = folderInfo;
-
-	DoModal();
-
-	// Restore true context type
-	if (pPane)
-		pXPCX->type = saveType;	
 }
 
 BOOL CNewFolderDialog::OnInitDialog( )
@@ -883,7 +1092,8 @@ STDMETHODIMP_(ULONG) CNewFolderDialog::Release(void)
 void CNewFolderDialog::PaneChanged( MSG_Pane *pane, XP_Bool asynchronous, 
 								    MSG_PANE_CHANGED_NOTIFY_CODE notify, int32 value)
 {
-	if ( notify == MSG_PaneNotifySelectNewFolder ) {
+	if ( notify == MSG_PaneNotifySelectNewFolder || 
+		 notify == MSG_PaneNotifyNewFolderFailed ) {
 		EndDialog( IDOK );
 	}
 }
@@ -1036,7 +1246,7 @@ BOOL CPrefNewFolderDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			m_bCreating = TRUE;
 			new CProgressDialog(this, NULL, _CreateFolderCallback,
-						this->GetSafeHwnd(), "Createing Mail Folder", _CreateFolderDoneCallback);
+						this->GetSafeHwnd(), szLoadString(IDS_CREATING_FOLDER), _CreateFolderDoneCallback);
 			return TRUE;
 		}
 		else 
@@ -1100,6 +1310,9 @@ CMailNewsSplitter::CMailNewsSplitter()
 	m_bZapperDown = FALSE;
 	m_bDoubleClicked = FALSE;
 	m_bMouseMove = FALSE;
+
+	m_pNotifyFrame = NULL;
+	m_bLoadMessage = FALSE;
 }
 
 CMailNewsSplitter::~CMailNewsSplitter()
@@ -1296,6 +1509,7 @@ void CMailNewsSplitter::SetPaneSize(CWnd *pWnd, int nSize)
 
 	if (m_bVertical)
 	{
+		m_nPrevSize = m_rcSlider.left;
 		if (nSize > (rect.right - m_nSliderWidth)) 
 		{
 			if (m_pWnd1 == pWnd)
@@ -1308,12 +1522,13 @@ void CMailNewsSplitter::SetPaneSize(CWnd *pWnd, int nSize)
 			if (m_pWnd1 == pWnd)
 				m_rcSlider.left = nSize;
 			else if (m_pWnd2 == pWnd)
-				m_rcSlider.left = rect.right - nSize;
+				m_rcSlider.left = rect.right - nSize - m_nSliderWidth;
 		}
 		m_rcSlider.right = m_rcSlider.left + m_nSliderWidth;				
 	}
 	else
 	{
+		m_nPrevSize = m_rcSlider.top;
 		if (nSize > (rect.bottom - m_nSliderWidth)) 
 		{
 			if (m_pWnd1 == pWnd)
@@ -1326,10 +1541,14 @@ void CMailNewsSplitter::SetPaneSize(CWnd *pWnd, int nSize)
 			if (m_pWnd1 == pWnd)
 				m_rcSlider.top = nSize;
 			else if (m_pWnd2 == pWnd)
-				m_rcSlider.top = rect.bottom - nSize;
+				m_rcSlider.top = rect.bottom - nSize - m_nSliderWidth;
 		}
 		m_rcSlider.bottom = m_rcSlider.top + m_nSliderWidth;				
 	}
+	//if we are setting a pane to 0 then we need to set zapped state
+	//otherwise we know it's not zapped.
+	m_bZapped = (nSize == 0);
+	PositionWindows(rect.right - rect.left, rect.bottom - rect.top);
 }
 
 // always return width of m_pWnd1 if split vertically
@@ -1340,6 +1559,14 @@ int CMailNewsSplitter::GetPaneSize()
 		return m_rcSlider.left;
 	else
 		return m_rcSlider.top;
+}
+
+// if vertical always returns the left of the slider(which is right of 1st pane)
+// or if horizontal always returns the top of the slider (which is bottom of 1st pane)
+int  CMailNewsSplitter::GetPreviousPaneSize()
+{
+	return m_nPrevSize;
+
 }
 
 void CMailNewsSplitter::UpdateSplitter()
@@ -1477,6 +1704,24 @@ void CMailNewsSplitter::InvertSlider(RECT* pRect)
 	::ReleaseDC(GetSafeHwnd(), hDC);
 }
 
+void CMailNewsSplitter::UpdateZapper()
+{
+	RECT rect = m_rcSlider;
+
+	if (m_bVertical)
+	{
+		rect.top = (m_rcSlider.bottom - m_rcSlider.top - ZAP_HEIGHT) / 2;
+		rect.bottom = rect.top + ZAP_HEIGHT;
+	}
+	else
+	{
+		rect.left = (m_rcSlider.right - m_rcSlider.left - ZAP_HEIGHT) / 2;
+		rect.right = rect.left + ZAP_HEIGHT;
+	}
+	InvalidateRect(&rect, FALSE);
+	UpdateWindow();
+}
+
 BEGIN_MESSAGE_MAP(CMailNewsSplitter, CView)
 	ON_WM_CREATE()
 	ON_WM_SETFOCUS()
@@ -1497,14 +1742,12 @@ int CMailNewsSplitter::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	//create invert slider brush 
 	HDC hDC = ::GetDC(GetSafeHwnd());
-	WORD grayBits[8]; 
-	for (int i = 0; i < 8; i++)
-		grayBits[i] = (WORD)(0x5555 << (i & 1));
-	HBITMAP grayBitmap = CreateBitmap(8, 8, 1, 1, &grayBits);
-	if (grayBitmap != NULL)
+	WORD sliderBits[8] = {43690,21845,43690,21845,43690,21845,43690,21845};
+	HBITMAP sliderBitmap = CreateBitmap(8, 8, 1, 1, &sliderBits);
+	if (sliderBitmap != NULL)
 	{
-		m_hSliderBrush = ::CreatePatternBrush(grayBitmap);
-		DeleteObject(grayBitmap);
+		m_hSliderBrush = ::CreatePatternBrush(sliderBitmap);
+		DeleteObject(sliderBitmap);
 	}
 
 	CreateBitmaps(hDC);
@@ -1521,10 +1764,9 @@ BOOL CMailNewsSplitter::PreTranslateMessage( MSG* pMsg )
 		if ((GetCapture() != this) && m_bZapperDown)
 		{
 			m_bZapperDown  = FALSE;
-			Invalidate();
-			UpdateWindow();
+			UpdateZapper();
 		}
-	}
+	}  
 	return CView::PreTranslateMessage( pMsg );
 }
 
@@ -1605,21 +1847,8 @@ void CMailNewsSplitter::OnLButtonDown(UINT nFlags, CPoint point)
 
 		if (IsInZapper(point))
 		{
-			RECT rect = m_rcSlider;
-
 			m_bZapperDown = TRUE;
-			if (m_bVertical)
-			{
-				rect.top = (m_rcSlider.bottom - m_rcSlider.top - ZAP_HEIGHT) / 2;
-				rect.bottom = rect.top + ZAP_HEIGHT;
-			}
-			else
-			{
-				rect.left = (m_rcSlider.right - m_rcSlider.left - ZAP_HEIGHT) / 2;
-				rect.right = rect.left + ZAP_HEIGHT;
-			}
-			InvalidateRect(&rect, TRUE);
-			UpdateWindow();
+			UpdateZapper();
 		}
 		m_ptHit = point;
 		m_ptFirstHit = point;
@@ -1634,21 +1863,14 @@ void CMailNewsSplitter::OnMouseMove(UINT nFlags, CPoint point)
 		if (IsInZapper(point))
 		{
 			if (!m_bZapperDown)
-			{
 				m_bZapperDown = TRUE;
-				Invalidate();
-				UpdateWindow();
-			}
 		}
 		else
 		{
 			if (m_bZapperDown)
-			{
 				m_bZapperDown = FALSE;
-				Invalidate();
-				UpdateWindow();
-			}
 		}
+		UpdateZapper();
 	}
 	if (GetCapture() == this) 
 	{
@@ -1722,6 +1944,24 @@ void CMailNewsSplitter::OnMouseMove(UINT nFlags, CPoint point)
 	}
 }
 
+//When the pane opens in 3pane mail frame,
+//Need to load the current message
+void CMailNewsSplitter::LoadingMessage()
+{
+	if (m_pNotifyFrame && m_bLoadMessage &&
+		m_pNotifyFrame->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+		m_pNotifyFrame->PostMessage(WM_COMMAND, ID_MESSAGE_SELECT, 0);
+}
+
+//When the collapse window has focus 
+//change focus to next windwow
+void CMailNewsSplitter::CheckFocusWindow()
+{
+	if (m_pNotifyFrame && 
+		m_pNotifyFrame->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+		((C3PaneMailFrame*)m_pNotifyFrame)->CheckFocusWindow(FALSE);
+}
+
 void CMailNewsSplitter::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	if (m_bDoubleClicked)
@@ -1737,6 +1977,7 @@ void CMailNewsSplitter::OnLButtonUp(UINT nFlags, CPoint point)
 
 	if (GetCapture() == this) 
 	{
+		BOOL bCheckFocus = FALSE;
 		ReleaseCapture();
 
 		RECT rect;
@@ -1762,6 +2003,14 @@ void CMailNewsSplitter::OnLButtonUp(UINT nFlags, CPoint point)
 				}
 				m_rcSlider.right = m_rcSlider.left + m_nSliderWidth;
 				m_bZapped = !m_bZapped;
+				if (m_bZapped)
+				{	//only use for 3 pane mail frame
+					bCheckFocus = TRUE;
+				}
+				else
+				{	//only use for 3 pane mail frame
+					LoadingMessage();
+				}
 			}
 			else if (m_bTrackSlider)
 			{
@@ -1801,6 +2050,14 @@ void CMailNewsSplitter::OnLButtonUp(UINT nFlags, CPoint point)
 				}
 				m_rcSlider.bottom = m_rcSlider.top + m_nSliderWidth;				
 				m_bZapped = !m_bZapped;
+				if (m_bZapped)
+				{	//only use for 3 pane mail frame
+					bCheckFocus = TRUE;
+				}
+				else
+				{	//only use for 3 pane mail frame
+					LoadingMessage();
+				}
 			}
 			else if (m_bTrackSlider)
 			{
@@ -1821,6 +2078,8 @@ void CMailNewsSplitter::OnLButtonUp(UINT nFlags, CPoint point)
 		m_bZapperDown = FALSE;
 		Invalidate();
 		UpdateWindow();
+		if (bCheckFocus)
+			CheckFocusWindow();
 	}
 }
 
@@ -1830,8 +2089,6 @@ void CMailNewsSplitter::OnLButtonDblClk( UINT nFlags, CPoint point )
 	{
 		m_bTrackSlider = FALSE;
 		m_bDoubleClicked = TRUE;
-//		if (GetCapture() == this) 
-//			ReleaseCapture();
 		RECT rect;
 		GetClientRect(&rect);
 		if (m_bVertical)
@@ -1920,12 +2177,9 @@ void CMailNewsSplitter::OnSize(UINT nType, int cx, int cy)
 
 void CMailNewsSplitter::OnSetFocus(CWnd* pOldWnd)
 {
-	if (m_pWnd1)   
-		m_pWnd1->SetFocus();
-	else if (m_pWnd2)  
-		m_pWnd2->SetFocus();
-
-	CView::OnSetFocus(pOldWnd);
+	if (m_pNotifyFrame && 
+		m_pNotifyFrame->IsKindOf(RUNTIME_CLASS(C3PaneMailFrame)))
+		((C3PaneMailFrame*)m_pNotifyFrame)->SetFocusWindowBackToFrame();
 }
 
 void CMailNewsSplitter::OnShowWindow(BOOL bShow, UINT nStatus)
@@ -1943,30 +2197,10 @@ BOOL CMailNewsSplitter::OnEraseBkgnd(CDC* pDC)
 	return TRUE;
 }
 
-
 BOOL CMailNewsSplitter::IsOnePaneClosed() const
 {
-	CRect rect;
-	if (m_bVertical)
-	{
-		m_pWnd1->GetClientRect(&rect);
-		if (rect.right == 0)
-			return TRUE;
-		else
-			return FALSE;
-	}
-	else
-	{
-		m_pWnd2->GetClientRect(&rect);
-		if (rect.bottom == 0)
-			return TRUE;
-		else
-			return FALSE;
-	}
-
-	return FALSE;
+	return m_bZapped;
 }
-
 
 int CMailNewsSplitter::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message)
 {
@@ -1974,17 +2208,5 @@ int CMailNewsSplitter::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT me
 
 	nResult = CWnd::OnMouseActivate(pDesktopWnd, nHitTest, message);
 
-	if (nResult == MA_NOACTIVATE || nResult == MA_NOACTIVATEANDEAT)
-		return nResult;   // frame does not want to activate
-
-	CFrameWnd* pParentFrame = GetParentFrame();
-	if (pParentFrame != NULL)
-	{
-		// eat it if this will cause activation
-		if (pParentFrame == pDesktopWnd || pDesktopWnd->IsChild(pParentFrame))
-			nResult = CView::OnMouseActivate(pDesktopWnd, nHitTest, message);
-	}
 	return nResult;
 }
-
-

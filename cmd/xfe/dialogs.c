@@ -181,6 +181,29 @@ FE_Alert (MWContext *context, const char *message)
     }
 }
 
+/* Hack for 109371 */
+void
+FE_Alert_modal (MWContext *context, const char *message)
+{
+  if (context && context->type == MWContextBiff)
+	return;
+
+  if (context)
+      fe_Alert_modal(CONTEXT_WIDGET (context), message);
+  else
+    {
+      Widget toplevel = FE_GetToplevelWidget();
+      if ( toplevel ) {
+	      fe_Alert_2(toplevel, message);
+      } else {
+	  /* So that didn't even work. Write to stdout and
+	   * exit.
+	   */
+	  XP_ABORT((message));
+	}
+    }
+}
+
 /* Lame hack to get the right title for javascript dialogs.
  * This should be instead added to the call arguments.
  */
@@ -200,7 +223,7 @@ XFE_Alert (MWContext *context, const char *message)
   if (context->bJavaScriptCalling)
 	javaScriptCallingContextHack = context;
 
-  fe_Alert_2 (CONTEXT_WIDGET (context), message);
+  fe_Alert_2(CONTEXT_WIDGET (context), message);
 }
 
 /* Just like XFE_Alert, but with a different dialog title. */
@@ -226,11 +249,27 @@ XFE_Confirm (MWContext *context, const char *message)
   return fe_Confirm_2 (CONTEXT_WIDGET (context), message);
 }
 
+/*
+ * Yet Another front end function that
+ * noone told us we were supposed to implement.
+ */
+PRBool
+XP_Confirm(MWContext *c, const char *msg)
+{
+    return XFE_Confirm(c,msg);
+}
+
 Boolean
 fe_Confirm_2 (Widget parent, const char *message)
 {
   return (Bool) ((int) fe_dialog (parent, "question", message,
 				  TRUE, 0, TRUE, FALSE, 0));
+}
+
+void
+fe_Alert_modal (Widget parent, const char *message)
+{
+  (void) fe_dialog (parent, "error", message, FALSE, 0, TRUE, FALSE, 0);
 }
 
 void
@@ -1894,6 +1933,18 @@ fe_CreateFileSelectionBox(Widget parent, char* name,
 #endif
 
 
+#ifdef IRIX
+#ifndef IRIX5_3
+	/* FIX 98019
+	 *
+	 * For IRIX 6.2 and later:
+	 *	Reset filetype mask to suit custom Sgm file dialog.
+	 *	(otherwise directories don't show up in the list.)
+	 */
+	XtVaSetValues(fsb,XmNfileTypeMask,XmFILE_ANY_TYPE,NULL);
+#endif
+#endif
+
 #ifdef USE_WINNING_FILE_SELECTION
 	if (mode == FSB_HACKS || mode == FSB_CDE_PLUS) {
 		filter_button = XmFileSelectionBoxGetChild(fsb, XmDIALOG_APPLY_BUTTON);
@@ -2768,6 +2819,15 @@ XFE_PromptPassword (MWContext *context, const char *message)
 			     ((char **) 1));
 }
 
+/*
+ * Yet Another front end function that
+ * noone told us we were supposed to implement.
+ */
+char *XP_PromptPassword(MWContext *context, const char *message)
+{
+    return XFE_PromptPassword(context, message);
+}
+
 /* Prompt for a  username and password
  *
  * message is a prompt message.
@@ -2804,6 +2864,17 @@ XFE_PromptUsernameAndPassword (MWContext *context,
     }
 }
 
+/*
+ * Yet Another front end function that
+ * noone told us we were supposed to implement.
+ */
+PRBool XP_PromptUsernameAndPassword (MWContext *window_id,
+                                      const char *message,
+                                      char **username,
+                                      char **password)
+{
+    return XFE_PromptUsernameAndPassword(window_id, message, username, password);
+}
 
 
 /* Prompting for visuals

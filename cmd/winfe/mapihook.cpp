@@ -65,6 +65,7 @@ LONG    ProcessMAPIResolveName(MAPIResolveNameType *nameInfo);
 LONG    ProcessMAPIDetails(MAPIDetailsType *detailInfo);
 LONG    ProcessMAPIReadMail(MAPIReadMailType *readInfo);
 LONG    ProcessMAPIAddress(MAPIAddressType *addrInfo);
+LONG    ProcessMAPI_NSCP_SynchronizeClient(MAPI_NSCP_SynchronizeClientType *syncInfo);
 
 //
 // This will store the CFrameWnd we startup for MAPI and if we do start
@@ -386,7 +387,29 @@ LONG ProcessNetscapeMAPIHook(WPARAM wParam, LPARAM lParam)
     addrInfo->ipcWorked = 1;         // Set the worked flag
     return(ProcessMAPIAddress(addrInfo));
     }
-  
+
+  //////////////////////////////////////////////////////////////////////
+  // MAPI_NSCP_SynchronizeClient
+  //////////////////////////////////////////////////////////////////////
+  case NSCP_MAPI_NSCP_SynchronizeClient:
+    {
+    MAPI_NSCP_SynchronizeClientType *syncInfo;
+ 
+#ifdef WIN32
+    syncInfo = (MAPI_NSCP_SynchronizeClientType *) &(sMem->m_buf[0]);
+#else    
+    syncInfo = (MAPI_NSCP_SynchronizeClientType *) ipcInfo->lpsmem;
+#endif
+
+    if (!syncInfo)
+    {
+      return(MAPI_E_FAILURE);
+    }
+
+    syncInfo->ipcWorked = 1;         // Set the worked flag    
+    return(ProcessMAPI_NSCP_SynchronizeClient(syncInfo));
+    }
+
   case NSCP_MAPIFree:   // This should never hit Communicator, but if it does
 #ifdef WIN16
     return(SUCCESS_SUCCESS);       // Just return
@@ -999,10 +1022,10 @@ ProcessMAPIDetails(MAPIDetailsType *detailInfo)
   }
 
   // Now, convert the stuff to real values for the API...
+  extern MWContext  *GetUsableContext(void);
   ABID              id = atoi((const char *) idString);
-  AB_ContainerInfo  *container = AB_MAPI_ConvertToContainer(containerString);
   MSG_Pane          *personPane = NULL;
-  extern MWContext         *GetUsableContext(void);
+  AB_ContainerInfo  *container = AB_MAPI_ConvertToContainer(GetUsableContext(), containerString);
 
   // Need to first create a person entry pane and then call
   // FE_ShowPropertySheetAB2 on that pane - return 0 is problem
@@ -1561,4 +1584,28 @@ ProcessMAPIAddress(MAPIAddressType *addrInfo)
 
   NSStrSeqDelete(strSeq);
   return(SUCCESS_SUCCESS);
+}
+
+
+//
+// This is for synchronizing the client from an external application via
+// the MAPI interface.
+//
+LONG    
+ProcessMAPI_NSCP_SynchronizeClient(MAPI_NSCP_SynchronizeClientType *syncInfo)
+{  
+  extern void WFE_MAPISynchronize(CWnd *pParent);
+  MSG msg;
+  
+  WFE_MAPISynchronize(NULL);
+  while (theApp.m_bSynchronizing)
+  {
+    // get the next message if any...
+    if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) 
+    {
+      (void) theApp.NSPumpMessage();
+    }
+  }
+
+  return SUCCESS_SUCCESS;
 }

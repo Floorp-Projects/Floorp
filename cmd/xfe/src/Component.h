@@ -42,7 +42,7 @@ public:
 
   Widget getBaseWidget();
   virtual void setBaseWidget(Widget w);
-  
+    
   XFE_Component *getToplevel();
 
   void setSensitive(Boolean sensitive);
@@ -77,7 +77,27 @@ public:
   void translateFromRootCoords(int x_root, int y_root, int *x, int *y);
   Boolean	isWidgetInside(Widget w);
 
+  virtual const char* getClassName(); // return the class name 
+  virtual XP_Bool isClassOf(char *xyz);  // return true if this object is an
+	                                  // instance of  class
+	                                  // or subclass XFE_xyz;
+	                                  // otherwise, return false. 
+  
+	
   static const char *afterRealizeCallback; // called after we are realized, if we need to notify anyone.
+
+  // Progress bar cylon notifications
+  static const char *progressBarCylonStart;
+  static const char *progressBarCylonStop;
+  static const char *progressBarCylonTick;
+
+  // Progress bar percent notifications
+  static const char *progressBarUpdatePercent;
+  static const char *progressBarUpdateText;
+
+  // Logo animation notifications
+  static const char *logoStartAnimation;
+  static const char *logoStopAnimation;
 
   // use this method to get 'cmd.labelString' resources
   // for the specified widget (default is the base widget)

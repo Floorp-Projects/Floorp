@@ -42,6 +42,13 @@ public:
   MWContext*	getContext();
   int		getNumSubViews();
 
+  virtual const char* getClassName();
+
+  // called when all connections when this window are finished.
+  // Really should be a notification...
+  virtual void allConnectionsComplete(MWContext  *context);
+  static const char *allConnectionsCompleteCallback;
+
   /* The view that is returned is either this view or one of it's sub views. */
   virtual XFE_View* widgetToView(Widget w);
 

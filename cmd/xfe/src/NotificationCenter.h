@@ -106,7 +106,7 @@ class XFE_NotificationCenter
 {
 public:
 	XFE_NotificationCenter();
-	~XFE_NotificationCenter();
+	virtual ~XFE_NotificationCenter();
 	
 	// These two deal with static member function callbacks
 	void registerInterest(const char *notification_name,

@@ -46,6 +46,26 @@ private:
 	Widget m_namevalue;
 };
 
+class XFE_MailFolderPropSharingTab : public XFE_PropertyTabView
+{
+public:
+	XFE_MailFolderPropSharingTab(XFE_Component *top,
+								 XFE_View *view,
+								 MSG_Pane *pane,
+								 MSG_FolderInfo *folder);
+	virtual ~XFE_MailFolderPropSharingTab();
+
+	void apply();
+
+private:
+	MSG_FolderInfo *m_folder;
+	MSG_Pane *m_pane;
+    Widget top_form;
+	Widget bottom_form;
+    Widget sep;
+	Widget not_supported;
+};
+
 class XFE_MailFolderPropDialog : public XFE_PropertySheetDialog
 {
 public:

@@ -105,6 +105,7 @@ public:
   virtual ~XFE_Frame();
 
 
+  virtual const char* getClassName();
   virtual EFrameType getType();
 
   virtual void setTitle(char *title);
@@ -178,6 +179,7 @@ public:
   // Encoding for this window has changed.
   static const char *encodingChanged;
 
+#if !defined(GLUE_COMPO_CONTEXT)
   // Progress bar cylon notifications
   static const char *progressBarCylonStart;
   static const char *progressBarCylonStop;
@@ -190,6 +192,7 @@ public:
   // Logo animation notifications
   static const char *logoStartAnimation;
   static const char *logoStopAnimation;
+#endif /* GLUE_COMPO_CONTEXT */
 
   // Frame busy notifications.
   static const char *frameBusyCallback;
@@ -207,7 +210,7 @@ public:
 
   // called when all connections when this window are finished.
   // Really should be a notification...
-  virtual void allConnectionsComplete();
+  virtual void allConnectionsComplete(MWContext  *context);
 
   static const char *allConnectionsCompleteCallback;
 
@@ -398,6 +401,9 @@ protected:
   static MenuSpec next_submenu_spec[];
   static MenuSpec compose_message_submenu_spec[];
   static MenuSpec compose_article_submenu_spec[];
+  static MenuSpec tools_submenu_spec[];
+  static MenuSpec servertools_submenu_spec[];
+
 
 private:
 

@@ -56,12 +56,6 @@ extern int XFE_AB_HEADER_LOCALITY;
 
 #define OUTLINER_GEOMETRY_PREF "addressbook.searchpane.outliner_geometry"
 
-#if !defined(EMPTY_STRVAL)
-#define EMPTY_STRVAL(value) \
-  (!(value) || !((value)->u.string) || !XP_STRLEN(((value)->u.string)))
-
-#endif
-
 XFE_AddrSearchView::XFE_AddrSearchView(XFE_Component *toplevel_component,
 									   Widget parent /* the form */,
 									   XFE_View *parent_view, 
@@ -151,13 +145,14 @@ XFE_CALLBACK_DEFN(XFE_AddrSearchView, updateCommands)(XFE_NotificationCenter*,
 		!m_bccBtn)
 		return;
 
+#if defined(USE_ABCOM)
+	uint32 count32 = MSG_GetNumLines(m_pane);
+	// XtSetSensitive(m_propertyBtn, True);
+#else
 	/* properties
 	 */
 	XtSetSensitive(m_propertyBtn, m_dir?True:False);		
 
-#if defined(USE_ABCOM)
-	uint32 count32 = MSG_GetNumLines(m_pane);
-#else
 	/* check which is selected
 	 */
 	uint32 count32 = 0; 
@@ -165,6 +160,7 @@ XFE_CALLBACK_DEFN(XFE_AddrSearchView, updateCommands)(XFE_NotificationCenter*,
 	 */
 	AB_GetEntryCount (m_dir, m_AddrBook, &count32, (ABID) ABTypeAll, 0);
 #endif /* USE_ABCOM */
+
 
 	int count = 0; 
 	const int *indices = 0;
@@ -191,364 +187,6 @@ XFE_CALLBACK_DEFN(XFE_AddrSearchView, updateCommands)(XFE_NotificationCenter*,
 #endif		
 	}/* else */
 }
-
-fe_icon*
-XFE_AddrSearchView::getColumnIcon(int column)
-{
-  fe_icon *myIcon = 0;
-#if defined(USE_ABCOM)
-  switch (column) {
-  case OUTLINER_COLUMN_TYPE:
-	  {
-		  AB_EntryType type = getType(m_containerInfo, m_entryID);
-		  if (type == AB_Person)
-			  myIcon = &m_personIcon; /* shall call make/initialize icons */
-		  else if (type == AB_MailingList)
-			  myIcon = &m_listIcon;
-	  }
-  break;
-  }/* switch () */
-
-#else
-  switch (column) {
-  case OUTLINER_COLUMN_TYPE:
-	  {
-		ABID type;
-		AB_GetType(m_dir, m_AddrBook, m_entryID, &type);
-		if (type == ABTypePerson)
-			myIcon = &m_personIcon; /* shall call make/initialize icons */
-		else if (type == ABTypeList)
-			myIcon = &m_listIcon;
-	  }
-  break;
-  }/* switch () */
-#endif /* USE_ABCOM */
-  return myIcon;
-}
-
-/* Methods for the outlinable interface.
- */
-
-/* The Outlinable interface.
- */
-char *XFE_AddrSearchView::getCellTipString(int row, int column)
-{
-	char *tmp = 0;
-	static char tipstr[128];
-	tipstr[0] = '\0';
-
-	if (row < 0) {
-		/* header
-		 */
-		tmp = getColumnHeaderText(column);
-	}/* if */
-	else {
-		ABID orgID = m_entryID;
-
-		/* content 
-		 */
-#if defined(USE_ABCOM)
-		int error = AB_GetABIDForIndex(m_pane,
-									   (MSG_ViewIndex) row,
-									   &m_entryID);
-#else
-		m_entryID = AB_GetEntryIDAt((AddressPane *) m_abPane, (uint32) row);
-#endif /* USE_ABCOM */
-		tmp = getColumnText(column);
-
-		/* reset
-		 */
-		m_entryID = orgID;
-	}/* else */
-	if (tmp && 
-		(!m_outliner->isColTextFit(tmp, row, column)))
-		XP_STRCPY(tipstr,tmp);
-	return tipstr;
-}
-
-char *XFE_AddrSearchView::getCellDocString(int /* row */, 
-										   int /* column */)
-{
-	return NULL;
-}
-
-/* Returns the text and/or icon to display at the top of the column.
- */
-char*
-XFE_AddrSearchView::getColumnHeaderText(int column)
-{
-	char *tmp = 0;
-	switch (column) {
-	case OUTLINER_COLUMN_NAME:
-		tmp = XP_GetString(XFE_AB_HEADER_NAME);
-		break;
-	case OUTLINER_COLUMN_EMAIL:
-		tmp = XP_GetString(XFE_AB_HEADER_EMAIL);
-	  break;
-
-	case OUTLINER_COLUMN_NICKNAME:
-		tmp = XP_GetString(XFE_AB_HEADER_NICKNAME);
-		break;
-
-	case OUTLINER_COLUMN_PHONE:
-		tmp = XP_GetString(XFE_AB_HEADER_PHONE);
-		break;
-		
-	case OUTLINER_COLUMN_COMPANY:
-		tmp = XP_GetString(XFE_AB_HEADER_COMPANY);
-		break;
-		
-	case OUTLINER_COLUMN_LOCALITY:
-		tmp = XP_GetString(XFE_AB_HEADER_LOCALITY);
-		break;
-	}/* switch */
-	return tmp;
-}
-
-char*
-XFE_AddrSearchView::getColumnText(int column)
-{
-
-  static char a_line[AB_MAX_STRLEN];
-  a_line[0] = '\0';
-#if defined(USE_ABCOM)
-  AB_AttributeValue *value = 0;
-  AB_AttribID attrib = AB_attribEntryType;
-  XP_Bool isPhone = False;
-  switch (column) {
-  case OUTLINER_COLUMN_NAME:
-	  attrib = AB_attribFullName; // shall be AB_attribDisplayName;
-	  break;
-
-  case OUTLINER_COLUMN_EMAIL:
-	  attrib = AB_attribEmailAddress;
-	  break;
-	  
-  case OUTLINER_COLUMN_NICKNAME:
-	  attrib = AB_attribNickName;
-	  break;
-	  
-  case OUTLINER_COLUMN_PHONE:
-	  isPhone = True;
-	  attrib = AB_attribWorkPhone;
-	  break;
-
-  case OUTLINER_COLUMN_COMPANY:
-	  attrib = AB_attribCompanyName;
-	  break;
-	  
-  case OUTLINER_COLUMN_LOCALITY:
- 	  attrib = AB_attribLocality;
-	  break;
-	  
-  }/* switch () */
-  if (attrib != AB_attribEntryType) {
-	  int error = AB_GetEntryAttribute(m_containerInfo, m_entryID, 
-									   attrib, &value);
-
-	  if (isPhone && 
-		  EMPTY_STRVAL(value)) {
-		  error = AB_GetEntryAttribute(m_containerInfo, m_entryID, 
-									   AB_attribHomePhone, &value);
-	  }/* if */
-	  XP_SAFE_SPRINTF(a_line, sizeof(a_line),
-					  "%s",
-					  EMPTY_STRVAL(value)?"":value->u.string);
-
-	  AB_FreeEntryAttributeValue(value);
-  }/* if */
-#else
-  switch (column) {
-  case OUTLINER_COLUMN_NAME:
-    AB_GetFullName(m_dir, m_AddrBook, m_entryID, a_line);
-    break;
-
-  case OUTLINER_COLUMN_EMAIL:
-    AB_GetEmailAddress(m_dir, m_AddrBook, m_entryID, a_line);
-    break;
-
-  case OUTLINER_COLUMN_NICKNAME:
-    AB_GetNickname(m_dir, m_AddrBook, m_entryID, a_line);
-    break;
-
-  case OUTLINER_COLUMN_PHONE:
-    AB_GetWorkPhone(m_dir, m_AddrBook, m_entryID, a_line);
-	if (!a_line || !XP_STRLEN(a_line)) {
-		a_line[0] = '\0';
-		AB_GetHomePhone(m_dir, m_AddrBook, m_entryID, a_line);
-	}/* if */
-    break;
-
-  case OUTLINER_COLUMN_COMPANY:
-    AB_GetCompanyName(m_dir, m_AddrBook, m_entryID, a_line);
-    break;
-
-  case OUTLINER_COLUMN_LOCALITY:
-    AB_GetLocality(m_dir, m_AddrBook, m_entryID, a_line);
-    break;
-
-  }/* switch () */
-#endif /* !USE_ABCOM */
-  return a_line;
-}
-
-char*
-XFE_AddrSearchView::getColumnName(int column)
-{
-  switch (column) {
-  case OUTLINER_COLUMN_NAME:
-	  return XP_GetString(XFE_AB_HEADER_NAME);
-
-  case OUTLINER_COLUMN_EMAIL:
-	  return XP_GetString(XFE_AB_HEADER_EMAIL);
-
-  case OUTLINER_COLUMN_PHONE:	
-	  return XP_GetString(XFE_AB_HEADER_PHONE);
-  case OUTLINER_COLUMN_NICKNAME:	
-	  return XP_GetString(XFE_AB_HEADER_NICKNAME);
-  case OUTLINER_COLUMN_COMPANY:	
-	  return XP_GetString(XFE_AB_HEADER_COMPANY);
-  case OUTLINER_COLUMN_LOCALITY:	
-	  return XP_GetString(XFE_AB_HEADER_LOCALITY);
-  }/* switch () */
-  return "unDefined";
-}
-
-#if defined(USE_ABCOM)
-EOutlinerTextStyle XFE_AddrSearchView::getColumnHeaderStyle(int column)
-{
-	AB_AttribID sortType = AB_attribUnknown;
-	switch (column) {
-	case OUTLINER_COLUMN_NAME:
-		sortType = AB_attribFullName;
-		break;
-		
-	case OUTLINER_COLUMN_EMAIL:
-		sortType = AB_attribEmailAddress;
-		break;
-		
-	case OUTLINER_COLUMN_NICKNAME:
-		sortType = AB_attribNickName;
-	  break;
-	  
-	case OUTLINER_COLUMN_COMPANY:
-		sortType = AB_attribCompanyName;
-		break;
-		
-	case OUTLINER_COLUMN_LOCALITY:
-		sortType = AB_attribLocality;
-		break;
-	}/* switch */
-	
-	if (sortType == getSortType())
-		return OUTLINER_Bold;
-	else
-		return OUTLINER_Default;
-}
-
-void XFE_AddrSearchView::clickHeader(const OutlineButtonFuncData *data)
-{
-  int column = data->column; 
-  int invalid = True;
-  switch (column) {
-#if 0
-    case OUTLINER_COLUMN_TYPE:
-      setSortType(AB_attribEntryType);
-      break;
-#endif
-    case OUTLINER_COLUMN_NAME:
-      setSortType(AB_attribFullName);
-      break;
-
-    case OUTLINER_COLUMN_NICKNAME:
-      setSortType(AB_attribNickName);
-      break;
-
-    case OUTLINER_COLUMN_EMAIL:
-      setSortType(AB_attribEmailAddress);
-      break;
-
-    case OUTLINER_COLUMN_COMPANY:
-      setSortType(AB_attribCompanyName);
-      break;
-
-    case OUTLINER_COLUMN_LOCALITY:
-      setSortType(AB_attribLocality);
-      break;
-    default:
-      invalid = False;
-  }/* switch() */
-  if (invalid)
-    m_outliner->invalidate();
-}
-#else
-EOutlinerTextStyle XFE_AddrSearchView::getColumnHeaderStyle(int column)
-{
-	ABID sortType = 0;
-	switch (column) {
-	case OUTLINER_COLUMN_NAME:
-		sortType = ABFullName;
-		break;
-		
-	case OUTLINER_COLUMN_EMAIL:
-		sortType = ABEmailAddress;
-		break;
-		
-	case OUTLINER_COLUMN_NICKNAME:
-		sortType = ABNickname;
-	  break;
-	  
-	case OUTLINER_COLUMN_COMPANY:
-		sortType = ABCompany;
-		break;
-		
-	case OUTLINER_COLUMN_LOCALITY:
-		sortType = ABLocality;
-		break;
-	}/* switch */
-	
-	if (sortType == getSortType())
-		return OUTLINER_Bold;
-	else
-		return OUTLINER_Default;
-}
-
-void XFE_AddrSearchView::clickHeader(const OutlineButtonFuncData *data)
-{
-  int column = data->column; 
-  int invalid = True;
-  switch (column) {
-#if 0
-    case OUTLINER_COLUMN_TYPE:
-      setSortType(AB_SortByTypeCmd);
-      break;
-#endif
-    case OUTLINER_COLUMN_NAME:
-      setSortType(AB_SortByFullNameCmd);
-      break;
-
-    case OUTLINER_COLUMN_NICKNAME:
-      setSortType(AB_SortByNickname);
-      break;
-
-    case OUTLINER_COLUMN_EMAIL:
-      setSortType(AB_SortByEmailAddress);
-      break;
-
-    case OUTLINER_COLUMN_COMPANY:
-      setSortType(AB_SortByCompanyName);
-      break;
-
-    case OUTLINER_COLUMN_LOCALITY:
-      setSortType(AB_SortByLocality);
-      break;
-    default:
-      invalid = False;
-  }/* switch() */
-  if (invalid)
-    m_outliner->invalidate();
-}
-#endif /* USE_ABCOM */
 
 void XFE_AddrSearchView::doubleClickBody(const OutlineButtonFuncData */* data */)
 {
@@ -592,13 +230,12 @@ XFE_AddrSearchView::makePair(const int ind, SEND_STATUS status)
     pair->dir = m_dir;
     pair->id = entry;
 
-	uint16      numItems = 4;
+	uint16      numItems = 2;
 	AB_AttribID *attribs = (AB_AttribID *) XP_CALLOC(numItems, 
 													 sizeof(AB_AttribID));
 	attribs[0] = AB_attribEntryType;
-	attribs[1] = AB_attribEmailAddress;
-	attribs[2] = AB_attribExpandedName;
-	attribs[3] = AB_attribFullName;
+	attribs[1] = AB_attribFullAddress;
+
 
 	AB_AttributeValue *values = NULL;
 	error = 
@@ -609,32 +246,23 @@ XFE_AddrSearchView::makePair(const int ind, SEND_STATUS status)
 									 &numItems);
 	XP_ASSERT(values);
 
-	// AB_attribEntryType
-	int i = 0;
-	if (values[i].attrib == attribs[i])
-		pair->type = values[i].u.entryType;
-	i++;
+    int i;
+	for (i=0; i < numItems; i++) {
+		switch (values[i].attrib) {
+		case AB_attribEntryType:
+			pair->type = values[i].u.entryType;
+			break;
 
-	// AB_attribEmailAddress
-	if (values[i].attrib == attribs[i])
-		pair->emailAddr = values[i].u.string?XP_STRDUP(values[i].u.string)
-			                                :NULL;
-	i++;
-
-	// AB_attribExpandedName
-	pair->dplyStr = NULL;
-	if (values[i].attrib == attribs[i])
-		pair->dplyStr = values[i].u.string?XP_STRDUP(values[i].u.string)
-			                              :NULL;
-	i++;
-
-	if (!pair->dplyStr) {
-		// fullname
-		if (values[i].attrib == attribs[i])
-			pair->dplyStr = values[i].u.string?XP_STRDUP(values[i].u.string)
-			                                  :NULL;
-		i++;
-	}/* if */
+		case AB_attribFullAddress:
+			pair->dplyStr = 
+				!EMPTY_STRVAL(&(values[i]))?XP_STRDUP(values[i].u.string)
+				                           :(char *)NULL;
+			break;
+		default:
+			XP_ASSERT(0);
+			break;
+		}/* switch */
+	}/* for i */
     return pair;
 }
 

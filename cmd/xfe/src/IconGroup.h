@@ -25,6 +25,7 @@
 #ifndef _xfe_icongroup_h
 #define _xfe_icongroup_h
 
+#include "rosetta.h"
 #include "mozilla.h"
 #include "xfe.h"
 #include "icons.h"
@@ -80,15 +81,7 @@ ICONGROUP(TB_LoadImages)
 ICONGROUP(TB_Print)
 ICONGROUP(TB_Reload)
 ICONGROUP(TB_Stop)
-ICONGROUP(TB_Unsecure)
-ICONGROUP(TB_Secure)
-ICONGROUP(TB_MixSecurity)
-
-/* Dashboard icons. */
-ICONGROUP_VERBOSE(Dash_Secure, &Dash_Secure, NULL, NULL, NULL)
-ICONGROUP_VERBOSE(Dash_Unsecure, &Dash_Unsecure, NULL, NULL, NULL)
-ICONGROUP_VERBOSE(Dash_Signed, &Dash_Signed, NULL, NULL, NULL)
-ICONGROUP_VERBOSE(Dash_Unsigned, &Dash_Unsigned, NULL, NULL, NULL)
+HG29081
 
 /* Dynamic ToolBox tab icons. */
 ICONGROUP_VERBOSE(DTB_bottom,	&DTB_bottom,	NULL, &DTB_bottom_mo,	NULL)
@@ -142,9 +135,7 @@ ICONGROUP(MNTB_MarkRead)
 /* Message Center */
 ICONGROUP(MNTB_NewFolder)
 
-/* Toolbar Security */
-ICONGROUP(MNTB_SignUnsecure)
-ICONGROUP(MNTB_SignSecure)
+HG10282
 
 /* Compose Window. */
 ICONGROUP(MNC_Send)

@@ -69,12 +69,8 @@ void CMsgTemplate::_InitialUpdate(CFrameWnd *pFrame, CFrameWnd *pPrevFrame,
 		// Sanity check size
 		if (size.cx > sx)
 			size.cx = sx;
-		if (size.cx < 300)
-			size.cx = 300;
 		if (size.cy > sy)
 			size.cy = sy;
-		if (size.cy < 300)
-			size.cy = 300;
 
 		// Sanity check position
 		if (ptPos.x + size.cx > sx)

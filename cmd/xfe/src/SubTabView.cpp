@@ -145,6 +145,7 @@ Boolean
 XFE_SubTabView::handlesCommand(CommandType command, void */*calldata*/, XFE_CommandInfo*)
 {
 	if (command == xfeCmdToggleSubscribe
+        || command == xfeCmdUnsubscribe
 		|| command == xfeCmdStopLoading)
 		{
 			return True;
@@ -165,8 +166,12 @@ XFE_SubTabView::doCommand(CommandType command, void */*calldata*/, XFE_CommandIn
 
 	if (command == xfeCmdToggleSubscribe)
 		{
-			MSG_Command(m_pane, MSG_ToggleSubscribed, (MSG_ViewIndex*)selected, count);
+			MSG_Command(m_pane, MSG_SetSubscribed, (MSG_ViewIndex*)selected, count);
 		}
+    else if (command == xfeCmdUnsubscribe)
+        {
+            MSG_Command(m_pane, MSG_ClearSubscribed, (MSG_ViewIndex*)selected, count);
+        }
 	else if (command == xfeCmdStopLoading)
 		{
 			XP_InterruptContext(m_contextData);
@@ -355,18 +360,23 @@ XFE_SubTabView::getColumnText(int column)
 fe_icon *
 XFE_SubTabView::getColumnIcon(int column)
 {
+    MSG_Host *pHost=NULL;
 	switch (column)
 		{
 		case OUTLINER_COLUMN_NAME:
 			return &newsgroupIcon;
 		case OUTLINER_COLUMN_SUBSCRIBE:
-			if (!(m_groupLine.flags & MSG_GROUPNAME_FLAG_HASCHILDREN))
-				if (m_groupLine.flags & MSG_GROUPNAME_FLAG_SUBSCRIBED)
-					return &subscribedIcon;
-				else
-					return &msgReadIcon; // XXX 
+			pHost = MSG_SubscribeGetHost(m_pane);
+			
+			if ( !pHost ) return 0;
+
+			if ((m_groupLine.flags & MSG_GROUPNAME_FLAG_HASCHILDREN) && (MSG_IsNewsHost(pHost)) ) 
+			    return 0;
+			
+			if (m_groupLine.flags & MSG_GROUPNAME_FLAG_SUBSCRIBED)
+			   return &subscribedIcon;
 			else
-				return 0;
+		 	   return &msgReadIcon; // XXX 
 		case OUTLINER_COLUMN_POSTINGS:
 			return 0;
 		default:
@@ -436,8 +446,14 @@ XFE_SubTabView::Buttonfunc(const OutlineButtonFuncData *data)
 					// handle the columns that don't actually move the selection here
 					if (data->column == OUTLINER_COLUMN_SUBSCRIBE)
 						{
-							if (!(m_groupLine.flags & MSG_GROUPNAME_FLAG_HASCHILDREN))
-								MSG_Command(m_pane, MSG_ToggleSubscribed, (MSG_ViewIndex*)&data->row, 1);
+						     MSG_Host *pHost = MSG_SubscribeGetHost(m_pane);
+						     
+						     // when the host is a news server, we allow the toggle subscribe to go thru
+						     if ( pHost && 
+							  ( !(m_groupLine.flags & MSG_GROUPNAME_FLAG_HASCHILDREN) ||
+						            !(MSG_IsNewsHost(pHost)) ) 
+							)
+							MSG_Command(m_pane, MSG_ToggleSubscribed, (MSG_ViewIndex*)&data->row, 1);
 						}
 					else
 						{

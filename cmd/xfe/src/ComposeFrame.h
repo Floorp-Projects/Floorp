@@ -53,7 +53,7 @@ public:
 
   virtual int initEditor();
 
-  virtual void allConnectionsComplete();
+  virtual void allConnectionsComplete(MWContext  *context = NULL);
 
   void destroyWhenAllConnectionsComplete();
 
@@ -68,10 +68,13 @@ private:
   static MenuSpec file_menu_spec[];
   static MenuSpec edit_menu_spec[];
   static MenuSpec view_menu_spec[];
+  static MenuSpec show_chrome_spec[];
+  static MenuSpec saveas_spec[];
   static MenuSpec message_attach_menu_spec[];
   static ToolbarSpec toolbar_spec[];
   static MenuSpec html_edit_menu_spec[];
   static MenuSpec html_view_menu_spec[];
+  static MenuSpec html_show_chrome_spec[];
   static MenuSpec html_menu_bar_spec[];
   XP_Bool m_destroyWhenConnectionsComplete;
 

@@ -42,7 +42,8 @@ extern "C" {
 XFE_MailFilterDlg::XFE_MailFilterDlg(Widget   parent,
 									 char    *name,
 									 Boolean  modal,
-									 MWContext *context):
+									 MWContext *context,
+									 MSG_Pane *pane):
 	XFE_ViewDialog((XFE_View *) 0, parent, name,
 				   context,
 				   True, /* ok */
@@ -81,7 +82,8 @@ XFE_MailFilterDlg::XFE_MailFilterDlg(Widget   parent,
 	  new XFE_MailFilterView(this,     /* toplevel_component */
 							 form,     /* parent */
 							 NULL,     /* parent_view */
-							 m_context /* context */);
+							 m_context,/* context */
+							 pane);
   setView(view);
 }
 
@@ -116,7 +118,7 @@ XFE_CALLBACK_DEFN(XFE_MailFilterDlg, listChanged)(XFE_NotificationCenter */*obj*
 /* C API
  */
 extern "C"  void
-fe_showMailFilterDlg(Widget toplevel, MWContext *context)
+fe_showMailFilterDlg(Widget toplevel, MWContext *context, MSG_Pane *pane)
 {
 	/* recreate every time -> delete for eaech cancel
 	 */
@@ -124,12 +126,8 @@ fe_showMailFilterDlg(Widget toplevel, MWContext *context)
 		new XFE_MailFilterDlg(toplevel, 
 							  "filterDialog",
 							  False,
-							  context);
+							  context,
+                              pane);
 	dlg->show();
 }
 
-extern "C"  void
-fe_mailfilter_cb(Widget w, XtPointer closure, XtPointer /* call_data */)
-{
-	fe_showMailFilterDlg(w, (MWContext *)closure);
-}

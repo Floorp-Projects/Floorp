@@ -23,7 +23,11 @@
 #ifndef _ABADDRESSINGDLG_H_
 #define _ABADDRESSINGDLG_H_
 
+#if defined(GLUE_COMPO_CONTEXT)
+#include "ViewDashBDlg.h"
+#else
 #include "ViewDialog.h"
+#endif /* GLUE_COMPO_CONTEXT */
 
 #include "addrbook.h"
 
@@ -35,19 +39,23 @@ class  XFE_AddrSearchView;
 class  XFE_AddresseeView;
 
 //
+#if defined(GLUE_COMPO_CONTEXT)
+class XFE_ABAddressingDlg: public XFE_ViewDashBDlg
+#else
 class XFE_ABAddressingDlg: public XFE_ViewDialog 
+#endif /* GLUE_COMPO_CONTEXT */
 {
 
 public:
 
   XFE_ABAddressingDlg(Widget           parent,
-		      char            *name,
-		      ABAddrMsgCBProc  proc, 
-		      void            *callData,
-		      Boolean          modal,
-		      MWContext *context);
+					  char            *name,
+					  ABAddrMsgCBProc  proc, 
+					  void            *callData,
+					  Boolean          modal,
+					  MWContext       *context);
 
-  ~XFE_ABAddressingDlg();
+  virtual ~XFE_ABAddressingDlg();
 
   enum { AB_SEARCH_VIEW = 0,
 	 AB_ADDRESSEE_VIEW,
@@ -69,6 +77,7 @@ private:
   void                  *m_callData;
 
   MWContext             *m_searchContext;
+
 };
 
 #endif /* _ABADDRESSINGDLG_H_ */

@@ -33,37 +33,49 @@ unsigned int CMailNewsResourceDll::s_refcount=0;
 
 CMailNewsResourceDll::CMailNewsResourceDll()
 {
+}
+   
+CMailNewsResourceDll::~CMailNewsResourceDll()
+{
+	if (s_dllinstance)
+	{
+#ifdef WIN32
+		if (!FreeLibrary(s_dllinstance))
+			XP_ASSERT(0);
+#else
+		FreeLibrary(s_dllinstance);
+#endif
+       s_refcount--;
+	}
+}
+
+BOOL CMailNewsResourceDll::Initialize()
+{
     // Running under Win3.1, if the default drive is A or B and the disk
     //  was removed, this tries to load from the default drive.
     //  So change to C before loading. (A=1, B=2, C=3)
+	BOOL ret = FALSE;
     if( _getdrive() < 3 ){
         _chdrive(3);
     }
     if (s_refcount)
     {
         s_dllinstance=LoadLibrary(MAILNEWSDLL);
-        s_refcount++;
-        return;
+		if (s_dllinstance) {
+			s_refcount++;
+			ret = TRUE;
+		}
     }
     else
     {
         s_dllinstance=LoadLibrary(MAILNEWSDLL);
         XP_ASSERT(s_dllinstance);
-        s_refcount++;
-        if(!s_dllinstance)
-            return;
+		if(s_dllinstance) {
+            s_refcount++;
+			ret = TRUE;
+		}
     }
-}
-
-CMailNewsResourceDll::~CMailNewsResourceDll()
-{
-#ifdef WIN32
-    if (!FreeLibrary(s_dllinstance))
-        XP_ASSERT(0);
-#else
-    FreeLibrary(s_dllinstance);
-#endif
-       s_refcount--;
+	return ret;
 }
 
 HINSTANCE
@@ -71,6 +83,31 @@ CMailNewsResourceDll::switchResources()
 {
     XP_ASSERT(s_refcount);
     HINSTANCE t_hinstance=AfxGetResourceHandle();
-    AfxSetResourceHandle(s_dllinstance);
+	if (s_dllinstance)
+		AfxSetResourceHandle(s_dllinstance);
     return t_hinstance;
+}
+
+CMailNewsResourceSwitcher::CMailNewsResourceSwitcher()
+{
+	m_oldresourcehandle = NULL;
+}
+
+void CMailNewsResourceSwitcher::Reset()
+{
+	if (m_oldresourcehandle)
+		AfxSetResourceHandle(m_oldresourcehandle);
+}
+
+
+BOOL
+CMailNewsResourceSwitcher::Initialize()
+{
+	BOOL ret = FALSE;
+	if (CMailNewsResourceDll::Initialize()) {
+		m_oldresourcehandle=switchResources();
+		ret = TRUE;
+	}
+
+	return ret;
 }

@@ -236,7 +236,8 @@ protected:
     // populate the given menu with items appropritate for being 
     //   over the given LO_Element
     void CreateWebPopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer);
-    void CreateMessagePopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer);
+    void CreateMessagePopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer,
+							MWContext *pContext);
     BOOL AddLinkToPopup(CMenu * pMenu, LO_Element * pElement, BOOL bBrowser);
     BOOL AddEmbedToPopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer, BOOL bAddSeparator);
     BOOL AddClipboardToPopup(CMenu * pMenu, LO_Element * pElement, BOOL bAddSeparator);

@@ -44,6 +44,7 @@ extern "C" {
 #undef Bool
 #endif
 
+#include "rosetta.h"
 #include <X11/Shell.h>
 
 #include <Xm/Xm.h>
@@ -138,7 +139,7 @@ extern const char fe_BuildConfiguration[];
 extern const char fe_version[];
 extern const char fe_long_version[];
 extern char *fe_version_and_locale;
-extern int fe_SecurityVersion;
+HG87265
 extern int fe_HaveDNS;
 extern int fe_VendorAnim;
 extern char *fe_pidlock;
@@ -311,6 +312,7 @@ extern void *fe_dialog (Widget parent, const char *title,
 			const char *text, XP_Bool wait_p, XP_Bool select_p,
 			char **passwd);
 extern Boolean fe_Confirm_2 (Widget parent, const char *message);
+extern void fe_Alert_modal (Widget parent, const char *message);
 extern void fe_Alert_2 (Widget parent, const char *message);
 extern void fe_perror_2 (Widget parent, const char *message);
 extern void fe_UpdateGraph (MWContext *context, Boolean update_text);
@@ -749,7 +751,7 @@ typedef struct fe_MailNewsContextData {
   Widget openNewsHost_shell;
   Widget openNewsHost_host;
   Widget openNewsHost_port;
-  Widget openNewsHost_secure;
+  HG78272
   ReadFileNameCallbackFunction openNewsHost_fn;
   void *openNewsHost_fnClosure;
   
@@ -906,17 +908,15 @@ typedef struct fe_ContextData
   Widget toolbar;		/* RowColumn containing the toolbar buttons. */
   Widget character_toolbar;	/* RowColumn containing editor char buttons. */
   Widget paragraph_toolbar;	/* RowColumn containing editor para buttons. */
-  Widget dashboard;		/* Form containing the security/thermometer */
+  Widget dashboard;		/* Form containing the status/thermometer */
 				/* info at bottom of window.*/
 #ifdef LEDGES
   Widget top_ledge, bottom_ledge; /* Half-implemented fixed areas that */
 				  /* display other URLs. */
 #endif
-#ifndef NO_SECURITY
-  Widget security_bar;		/* Drawing area for colored security bar. */
-  Widget security_logo;		/* Label gadget containing security "key" */
-				/* icon.*/
-#endif
+
+  HG87921
+
 #ifdef JAVA
   Widget show_java;
 #endif
@@ -1112,9 +1112,7 @@ typedef struct fe_ContextData
   Boolean show_paragraph_toolbar_p;
   Boolean autoload_images_p;
   Boolean fancy_ftp_p;
-#ifndef NO_SECURITY
-  Boolean show_security_bar_p;
-#endif
+  HG72881
 #ifdef JAVA
   Boolean show_java_console_p;
 #endif
@@ -1155,7 +1153,7 @@ typedef struct fe_ContextData
 
   /* a handle to the current pref dialog being displayed. this
      is useful if you need to create a modal html dialog as it's
-     child, as in the case of the security prefs.
+     child, as in the case of the some prefs.
      */
   Widget currentPrefDialog;
   struct fe_prefs_data *fep;

@@ -427,9 +427,20 @@ fe_FreeTransientColors(MWContext *context)
   unsigned long i;
   int num_cells;
   int pixel;
+  fe_colormap *colormap;
+  fe_ContextData *context_data;
 
-  fe_colormap *colormap = CONTEXT_DATA (context)->colormap;
+  XP_ASSERT(context);
+  if (!context) return;
 
+  context_data = CONTEXT_DATA(context);
+  XP_ASSERT(context_data);
+  if (!context_data) return;
+  
+  colormap = context_data->colormap;
+  XP_ASSERT(colormap);
+  if (!colormap) return;
+  
   /* colormap is shared, by the time this function is called
      visual_info by be NULL because it was deleted with
      earlier deletion of a context that reference to it.

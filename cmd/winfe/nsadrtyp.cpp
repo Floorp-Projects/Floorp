@@ -133,9 +133,22 @@ void CNSAddressTypeControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 void DrawTransparentBitmap(HDC hdc, HBITMAP hBitmap, short xStart, short yStart, COLORREF cTransparentColor )
 {
-#ifdef FEATURE_DRAWTRANSBITMAP
-#include "nsadrtyp.i00"
-#endif
+	HDC hSrcDC = CreateCompatibleDC(hdc);
+	SelectObject(hSrcDC, hBitmap);
+
+	BITMAP bm;
+  GetObject(hBitmap, sizeof(BITMAP), (LPSTR)&bm);
+
+  POINT ptSize;
+	ptSize.x = bm.bmWidth;
+	ptSize.y = bm.bmHeight;
+	DPtoLP(hSrcDC, &ptSize, 1);
+
+  HPALETTE hPalette = (HPALETTE)GetCurrentObject(hdc, OBJ_PAL);
+
+  FEU_TransBlt(hdc, xStart, yStart, ptSize.x, ptSize.y, hSrcDC, 0, 0, hPalette, cTransparentColor);
+
+  DeleteDC(hSrcDC);
 }
 
 int CNSAddressTypeControl::OnCreate(LPCREATESTRUCT lpCreateStruct) 

@@ -318,45 +318,6 @@ BEGIN
     ICON            "",IDC_ICON2,18,158,20,20
 END
 
-IDD_DISK_SPACE DIALOG DISCARDABLE  0, 0, 256, 190
-STYLE WS_CHILD | WS_CLIPSIBLINGS
-FONT 8, "MS Sans Serif"
-BEGIN
-    GROUPBOX        "All Messages",IDC_STATIC,6,7,242,47
-    CONTROL         "&Do not download any message larger than ",
-                    IDC_CHECK_MSG_SIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    20,17,149,14
-    LTEXT           "&kB",IDC_STATIC,202,19,25,8
-    EDITTEXT        IDC_EDIT_MSG_SIZE,171,18,28,12,ES_AUTOHSCROLL
-    CONTROL         "Auto&matically compact folders when it will save over",
-                    IDC_CHECK_COMPACT_SIZE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,20,33,179,14
-    LTEXT           "k&B",IDC_STATIC,232,35,11,8
-    EDITTEXT        IDC_EDIT_COMPACT_SIZE,201,34,28,12,ES_AUTOHSCROLL
-    GROUPBOX        "Discussion Groups Messages Only",IDC_STATIC,6,60,242,
-                    106
-    LTEXT           "When it's time to clean up messages:",IDC_STATIC,12,74,
-                    161,10,NOT WS_GROUP
-    CONTROL         "Keep messages which have arrived within the &past",
-                    IDC_KEEP_MSG_DAYS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
-                    WS_TABSTOP,20,86,175,10
-    CONTROL         "Keep &all messages",IDC_KEEP_ALL,"Button",
-                    BS_AUTORADIOBUTTON | WS_TABSTOP,20,99,123,10
-    CONTROL         "Keep the &newest",IDC_KEEP_COUNT,"Button",
-                    BS_AUTORADIOBUTTON | WS_TABSTOP,20,112,69,10
-    LTEXT           "&days",IDC_STATIC,223,86,19,8,NOT WS_GROUP
-    EDITTEXT        IDC_EDIT_MSG_DAYS,196,85,24,12,ES_AUTOHSCROLL
-    LTEXT           "&messages",IDC_STATIC,117,112,65,8
-    EDITTEXT        IDC_EDIT_MSG_COUNT,90,111,24,12,ES_AUTOHSCROLL
-    CONTROL         "Keep only &unread messages",IDC_KEEP_UNREAD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,21,128,150,12
-    CONTROL         "&Remove message bodies only older than ",
-                    IDC_CHECK_MSG_DAYS2,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,21,143,145,13
-    LTEXT           "da&ys",IDC_STATIC,203,144,24,8
-    EDITTEXT        IDC_EDIT_MSG_DAYS2,167,143,32,12,ES_AUTOHSCROLL
-END
-
 IDD_CACHE16 DIALOG DISCARDABLE  0, 0, 256, 190
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
@@ -385,6 +346,59 @@ BEGIN
                     35,10
 END
 
+#ifdef MOZ_MAIL_NEWS
+IDD_EDIT_TYPE DIALOG DISCARDABLE  0, 0, 223, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Type"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            "",IDC_ICON1,7,4,18,20
+    LTEXT           "Description",IDC_DESCRIPTION,34,10,180,8,SS_NOPREFIX
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,28,209,1
+    LTEXT           "Extension:",IDC_STATIC,7,40,34,8
+    LTEXT           "GIF",IDC_EXTENSION,50,40,165,8
+    LTEXT           "&MIME Type:",IDC_STATIC,7,56,40,8
+    EDITTEXT        IDC_EDIT1,50,53,166,14,ES_AUTOHSCROLL
+    GROUPBOX        "Handled By",IDC_STATIC,7,89,209,77
+    CONTROL         "&Navigator",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED | WS_GROUP | WS_TABSTOP,17,101,47,10
+    CONTROL         "&Save to Disk",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
+                    17,115,57,10
+    CONTROL         "&Application:",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,
+                    17,129,51,10
+    EDITTEXT        IDC_EDIT2,70,128,140,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON1,160,145,50,14
+    DEFPUSHBUTTON   "OK",IDOK,111,199,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,166,199,50,14
+    CONTROL         "As&k me before opening downloaded files of this type",
+                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,171,
+                    179,10
+    CONTROL         "Use this MIME as the outgoing default for these file extensions",
+                    IDC_USEASDEFAULT,"Button",BS_AUTO3STATE | WS_TABSTOP,7,
+                    72,211,10
+END
+
+IDD_NEW_TYPE DIALOG DISCARDABLE  0, 0, 222, 142
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New Type"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Description of type:",IDC_STATIC,7,10,62,8
+    EDITTEXT        IDC_EDIT1,71,8,144,14,ES_AUTOHSCROLL
+    LTEXT           "File &extension:",IDC_STATIC,7,27,46,8
+    EDITTEXT        IDC_EDIT2,71,25,144,14,ES_AUTOHSCROLL
+    LTEXT           "&MIME Type:",IDC_STATIC,7,43,40,8
+    EDITTEXT        IDC_EDIT3,71,42,144,14,ES_AUTOHSCROLL
+    LTEXT           "&Application to use:",IDC_STATIC,7,61,59,8
+    EDITTEXT        IDC_EDIT4,71,59,144,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON1,165,76,50,14
+    DEFPUSHBUTTON   "OK",IDOK,109,121,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,165,121,50,14
+    CONTROL         "Use this MIME as the outgoing default for this file extension",
+                    IDC_USEASDEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    100,201,10
+END
+#else
 IDD_EDIT_TYPE DIALOG DISCARDABLE  0, 0, 223, 199
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Type"
@@ -466,6 +480,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,109,97,10
 END
 
+#endif
 
 
 
@@ -558,14 +573,6 @@ BEGIN
     END
 
     IDD_APPLICATIONS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 249
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 183
-    END
-
-    IDD_DISK_SPACE, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 249
@@ -689,7 +696,6 @@ BEGIN
     IDS_HISTORY             "History"
     IDS_CONTINUE_CLEAR_HISTORY 
                             "This will clear the list of pages you have previously visited.\r\nContinue?"
-    IDD_DISK_SPACE          "Disk Space\nManage the amount of disk space taken by messages"
     IDD_CACHE16             "Cache\nDesignate the size of the cache"
     IDS_FILTER_HTM32        "HTML Files\n*.html;*.htm\n\n"
     IDS_BROWSE_HOMEPAGE     "Browse for Home Page"

@@ -37,7 +37,7 @@ class XFE_HTMLDrag : public XFE_DragNetscape
 {
 public:
     XFE_HTMLDrag(Widget,MWContext*);
-    ~XFE_HTMLDrag();
+    virtual ~XFE_HTMLDrag();
 protected:
     MWContext *_context;
     URL_Struct *_dragURLStruct;

@@ -22,6 +22,7 @@
 #include "edtclass.h"
 #include "edprops.h"//for wfe call
 #include "edt.h"
+//#include "edtable.h"
 #include "xp_help.h"
 #include "nethelp.h"
 

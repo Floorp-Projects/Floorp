@@ -21,7 +21,7 @@
    */
 
 
-
+#include "rosetta.h"
 #include "FolderView.h"
 #include "SubscribeDialog.h" /* for fe_showSubscribeDialog */
 #include "ThreadFrame.h" /* for fe_showMessages */
@@ -117,6 +117,7 @@ MenuSpec XFE_FolderView::mailfolder_popup_menu[] = {
   { xfeCmdDeleteFolder,		PUSHBUTTON },
   { xfeCmdRenameFolder,		PUSHBUTTON },
   { xfeCmdCompressFolders,	PUSHBUTTON },
+  { xfeCmdCompressAllFolders,	PUSHBUTTON },
   MENU_SEPARATOR,
   { xfeCmdComposeMessage,	PUSHBUTTON },
   MENU_SEPARATOR,
@@ -288,6 +289,24 @@ XFE_FolderView::initFolderIcons(Widget widget, Pixel bg_pixel, Pixel fg_pixel)
 					   MN_DraftO.width, MN_DraftO.height,
 					   MN_DraftO.mono_bits, MN_DraftO.color_bits, MN_DraftO.mask_bits, FALSE);
 	
+    if (!templatesIcon.pixmap)
+		fe_NewMakeIcon(widget,
+					   fg_pixel,
+					   bg_pixel,
+					   &templatesIcon,
+					   NULL, 
+					   MN_Template.width, MN_Template.height,
+					   MN_Template.mono_bits, MN_Template.color_bits, MN_Template.mask_bits, FALSE);
+	
+    if (!templatesOpenIcon.pixmap)
+		fe_NewMakeIcon(widget,
+					   fg_pixel,
+					   bg_pixel,
+					   &templatesOpenIcon,
+					   NULL, 
+					   MN_TemplateO.width, MN_TemplateO.height,
+					   MN_TemplateO.mono_bits, MN_TemplateO.color_bits, MN_TemplateO.mask_bits, FALSE);
+	
     if (!outboxIcon.pixmap)
 		fe_NewMakeIcon(widget,
 					   fg_pixel,
@@ -351,15 +370,7 @@ XFE_FolderView::initFolderIcons(Widget widget, Pixel bg_pixel, Pixel fg_pixel)
 					   MN_NewsServer.width, MN_NewsServer.height,
 					   MN_NewsServer.mono_bits, MN_NewsServer.color_bits, MN_NewsServer.mask_bits, FALSE);
 
-    if (!newsServerSecureIcon.pixmap)
-		fe_NewMakeIcon(widget,
-					   fg_pixel,
-					   bg_pixel,
-					   &newsServerSecureIcon,
-					   NULL, 
-					   MN_NewsServerSecure.width, MN_NewsServerSecure.height,
-					   MN_NewsServerSecure.mono_bits, MN_NewsServerSecure.color_bits, MN_NewsServerSecure.mask_bits, FALSE);
-	
+    HG39875	
     if (!newsgroupIcon.pixmap)
 		fe_NewMakeIcon(widget,
 					   fg_pixel,
@@ -460,8 +471,7 @@ XFE_FolderView::isCommandEnabled(CommandType cmd, void *call_data, XFE_CommandIn
             )
       return True;
 #endif
-  else if (IS_CMD(xfeCmdViewSecurity))
-      return True;
+  HG07326
   else if (IS_CMD(xfeCmdViewProperties))
 	  {
 		  return count == 1;
@@ -470,12 +480,27 @@ XFE_FolderView::isCommandEnabled(CommandType cmd, void *call_data, XFE_CommandIn
 	  {
 		  return !XP_IsContextBusy(m_contextData);
 	  }
-  else if (IS_CMD(xfeCmdSearch) 
-		   || IS_CMD(xfeCmdSearchAddress))
+  else if (IS_CMD(xfeCmdSearch) )
+  {
+     // Find current selected folder, if none, disable this button
+			
+     if (XP_IsContextBusy(m_contextData) ) return False;
+
+     const int *selected;
+     int count;
+
+     m_outliner->getSelection(&selected, &count);
+			
+     if ( count > 0 ) 
+       return True;
+     else 
+       return False;
+  }
+  else if ( IS_CMD(xfeCmdSearchAddress))
 	  {
 		  return !XP_IsContextBusy(m_contextData);
 	  }
-  else if (IS_CMD(xfeCmdDelete))
+  else if (IS_CMD(xfeCmdDeleteAny))
     {
       return XFE_MNListView::isCommandEnabled(xfeCmdDeleteFolder);
     }
@@ -483,6 +508,20 @@ XFE_FolderView::isCommandEnabled(CommandType cmd, void *call_data, XFE_CommandIn
     {
       return True;
     }
+  else if (IS_CMD(xfeCmdEditConfiguration) )
+  {
+        MSG_FolderLine line;
+        if (!MSG_GetFolderLineByIndex(m_pane, selected[0], 1, &line))
+            return False;
+	return (line.flags & MSG_FOLDER_FLAG_MAIL);
+  }
+  else if (IS_CMD(xfeCmdModerateDiscussion) )
+  {
+        MSG_FolderLine line;
+        if (!MSG_GetFolderLineByIndex(m_pane, selected[0], 1, &line))
+            return False;
+	return (line.flags & MSG_FOLDER_FLAG_NEWSGROUP);
+  }
   else if (IS_CMD(xfeCmdOpenSelected))
     {
         MSG_FolderLine line;
@@ -510,6 +549,19 @@ XFE_FolderView::isCommandEnabled(CommandType cmd, void *call_data, XFE_CommandIn
                               &selectable, NULL, NULL, NULL);
         return selectable;
     }
+  else if (IS_CMD(xfeCmdRenameFolder) && count == 1)
+    {
+        MSG_FolderLine line;
+        if (!MSG_GetFolderLineByIndex(m_pane, selected[0], 1, &line))
+            return False;
+        XP_Bool selectable;
+					
+        if (line.flags & MSG_FOLDER_FLAG_MAIL)
+            MSG_CommandStatus(m_pane, MSG_NewFolder,
+                              (MSG_ViewIndex*)selected, count, 
+                              &selectable, NULL, NULL, NULL);
+        return selectable;
+    }
   else
     {
       return XFE_MNListView::isCommandEnabled(cmd, call_data, info);
@@ -530,6 +582,7 @@ XFE_FolderView::handlesCommand(CommandType cmd, void *, XFE_CommandInfo*)
       || IS_CMD(xfeCmdRenameFolder)
       || IS_CMD(xfeCmdEmptyTrash)
       || IS_CMD(xfeCmdCompressFolders)
+      || IS_CMD(xfeCmdCompressAllFolders)
       || IS_CMD(xfeCmdAddNewsgroup)
       || IS_CMD(xfeCmdNewNewsHost)
       || IS_CMD(xfeCmdInviteToNewsgroup)
@@ -557,11 +610,11 @@ XFE_FolderView::handlesCommand(CommandType cmd, void *, XFE_CommandInfo*)
       || IS_CMD(xfeCmdMoveFoldersInto)
 #endif
 
-      || IS_CMD(xfeCmdModerateDiscussion)
       || IS_CMD(xfeCmdMarkAllMessagesRead)
       || IS_CMD(xfeCmdSendMessagesInOutbox)
+      || IS_CMD(xfeCmdDeleteAny)
       || IS_CMD(xfeCmdDeleteFolder)
-      || IS_CMD(xfeCmdViewSecurity)
+      HG82883
 	  || IS_CMD(xfeCmdViewProperties)
       || IS_CMD(xfeCmdUpdateMessageCount)
       || IS_CMD(xfeCmdShowPopup))
@@ -605,6 +658,11 @@ D(	printf ("in XFE_FolderView::doCommand()\n");)
 			/* we create a new popup each time. */
 			if (m_popup)
 				delete m_popup;
+
+			/* Need to switch focus for the popup menu so that menu items can be enabled in 
+			   the three pane world */
+
+			getToplevel()->notifyInterested(XFE_MNListView::changeFocus, (void*)this);
 			
 			m_popup = new XFE_PopupMenu("popup",
 										(XFE_Frame*)m_toplevel, // XXXXXXX
@@ -671,6 +729,9 @@ D(	printf ("in XFE_FolderView::doCommand()\n");)
 					
 					if (!(line.level == 1 && line.flags & MSG_FOLDER_FLAG_DIRECTORY))
 						fe_showMessages(XtParent(getToplevel()->getBaseWidget()), 
+										/* Tao: we might need to check if this returns a 
+										 * non-NULL frame
+										 */
 										ViewGlue_getFrame(m_contextData),
 										NULL,
 										MSG_GetFolderInfo(m_pane, selected[i]),
@@ -761,28 +822,32 @@ D(	printf ("in XFE_FolderView::doCommand()\n");)
 			
 			MSG_Command(m_pane, MSG_CompressFolder, (MSG_ViewIndex*)selected, count);
 		}
-	else if (IS_CMD(xfeCmdDeleteFolder))
+	else if (IS_CMD(xfeCmdCompressAllFolders))
+		{
+		D(	printf ("MSG_FolderPane::compressAllFolders()\n");)
+			
+			MSG_Command(m_pane, MSG_CompressAllFolders, (MSG_ViewIndex*)selected, count);
+		}
+	else if (IS_CMD(xfeCmdDeleteFolder) || IS_CMD(xfeCmdDeleteAny) )
 		{
 		D(	printf ("MSG_FolderPane::deleteFolder()\n");)
 			MSG_Command(m_pane, MSG_DeleteFolder, (MSG_ViewIndex*)selected, count);
 			XFE_MozillaApp::theApp()->notifyInterested(XFE_MNView::foldersHaveChanged);
 		}
-	else if (IS_CMD(xfeCmdViewSecurity))
-		{
-            D(	printf ("MSG_FolderPane::viewSecurity()\n");)
-            fe_sec_logo_cb(NULL, m_contextData, NULL);
-            return;
-        }
+	HG20388
 	else if (IS_CMD(xfeCmdEditMailFilterRules))
 		{
 			fe_showMailFilterDlg(getToplevel()->getBaseWidget(), 
-								 m_contextData);
+								 m_contextData,m_pane);
 			
 		}
 	else if (IS_CMD(xfeCmdSearchAddress))
 		{
 		DD(printf ("searchAddress\n");)
 			fe_showLdapSearch(XfeAncestorFindApplicationShell(getToplevel()->getBaseWidget()), 
+							  /* Tao: we might need to check if this returns a 
+							   * non-NULL frame
+							   */
 							  ViewGlue_getFrame(m_contextData),
 							  (Chrome*)NULL);
 			
@@ -850,6 +915,9 @@ D(	printf ("in XFE_FolderView::doCommand()\n");)
 			// to get to the wrong frame if we don't use the real toplevel
 			// as the base for the toplevel frames ... dora 12/31/96
 			fe_showMNSearch(XfeAncestorFindApplicationShell(getToplevel()->getBaseWidget()), 
+							/* Tao: we might need to check if this returns a 
+							 * non-NULL frame
+							 */
 							ViewGlue_getFrame(m_contextData),
 							NULL, this,
 							folderInfo);
@@ -874,6 +942,9 @@ D(	printf ("in XFE_FolderView::doCommand()\n");)
             // This code taken out of SubAllView::doCommand():
              XFE_NewsServerDialog *d = new XFE_NewsServerDialog(getToplevel()->getBaseWidget(),
                                                                 "addServer",
+										   /* Tao: we might need to check if this returns a 
+											* non-NULL frame
+											*/
                                                                 ViewGlue_getFrame(m_contextData));
              XP_Bool ok_pressed = d->post();
 
@@ -881,12 +952,12 @@ D(	printf ("in XFE_FolderView::doCommand()\n");)
              {
                  const char *serverName = d->getServer();
                  int serverPort = d->getPort();
-                 XP_Bool isSecure = d->isSecure();
+                 XP_Bool isxxx = HG72988;
                  MSG_NewsHost *host;
 
                  host = MSG_CreateNewsHost(XFE_MNView::getMaster(),
                                            serverName,
-                                           isSecure,
+                                           isxxx,
                                            serverPort);
 					
                  XFE_MozillaApp::theApp()->notifyInterested(XFE_MNView::foldersHaveChanged);
@@ -900,11 +971,42 @@ D(	printf ("in XFE_FolderView::doCommand()\n");)
                         (MSG_ViewIndex*)selected, count);
 //			XFE_MozillaApp::theApp()->notifyInterested(XFE_MNView::foldersHaveChanged);
 		}
-    else if (IS_CMD(xfeCmdModerateDiscussion))
-		{
-			MSG_Command(m_pane, MSG_ModerateNewsgroup,
-                        (MSG_ViewIndex*)selected, count);
+    else if (IS_CMD(xfeCmdEditConfiguration) ||
+		 IS_CMD(xfeCmdModerateDiscussion) )
+    		{
+            		MSG_CommandType msg_cmd = commandToMsgCmd(cmd);
+            		MSG_Command(m_pane, msg_cmd, (MSG_ViewIndex*)selected, count);
+			return;
+    		}
+	/* Do it now
+	 */
+	else if ( (cmd == xfeCmdComposeMessage) 
+			  || (cmd == xfeCmdComposeArticle) ) {
+        if (info) {
+			CONTEXT_DATA(m_contextData)->stealth_cmd =
+				((info->event->type == ButtonRelease) &&
+				 (info->event->xkey.state & ShiftMask));
 		}
+
+		MSG_Command(m_pane, commandToMsgCmd(cmd), 
+					(MSG_ViewIndex*)selected, count);
+	}
+	else if ( (cmd == xfeCmdComposeMessageHTML) 
+			  || (cmd == xfeCmdComposeArticleHTML) ) {
+		CONTEXT_DATA(m_contextData)->stealth_cmd = 
+			(fe_globalPrefs.send_html_msg == False);
+		MSG_Command(m_pane, commandToMsgCmd(cmd), 
+					(MSG_ViewIndex*)selected, count);
+	}
+	else if ( (cmd == xfeCmdComposeMessagePlain)
+			  || (cmd == xfeCmdComposeArticlePlain) ) {
+		CONTEXT_DATA(m_contextData)->stealth_cmd = 
+			(fe_globalPrefs.send_html_msg == True) ;
+		MSG_Command(m_pane, commandToMsgCmd(cmd), 
+					(MSG_ViewIndex*)selected, count);
+	}
+	/* End of New message
+	 */
 	else
 		{
 			XFE_MNListView::doCommand(cmd, calldata, info);
@@ -957,7 +1059,7 @@ XFE_FolderView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo
 			else
 				return stringFromResource("openFolderCmdString");
 		}
-	else if (IS_CMD(xfeCmdDeleteFolder))
+	else if (IS_CMD(xfeCmdDeleteFolder) || IS_CMD(xfeCmdDeleteAny))
 		{
 			if (count != 1)
 				return stringFromResource("deleteFolderCmdString");
@@ -1002,12 +1104,12 @@ XFE_FolderView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo
 }
 
 fe_icon*
-XFE_FolderView::treeInfoToIcon(int depth, int flags, XP_Bool expanded, XP_Bool secure)
+XFE_FolderView::treeInfoToIcon(int depth, int flags, XP_Bool expanded, XP_Bool xxxe)
 {
 	if (depth < 1)
 		{
 			if (flags & MSG_FOLDER_FLAG_NEWS_HOST)
-			  return secure ? &newsServerSecureIcon : &newsServerIcon;
+			  return HG17272 &newsServerIcon;
 			else if (flags & MSG_FOLDER_FLAG_IMAPBOX)
 				return &mailServerIcon;
 			else
@@ -1015,11 +1117,13 @@ XFE_FolderView::treeInfoToIcon(int depth, int flags, XP_Bool expanded, XP_Bool s
 		}
 
 	if (flags & MSG_FOLDER_FLAG_NEWSGROUP)
-		return &newsgroupIcon;
+		return HG00288 &newsgroupIcon;
 	else if (flags & MSG_FOLDER_FLAG_INBOX)
 		return expanded ? &inboxOpenIcon : &inboxIcon;
 	else if (flags & MSG_FOLDER_FLAG_DRAFTS)
 		return expanded ? &draftsOpenIcon : &draftsIcon;
+	else if (flags & MSG_FOLDER_FLAG_TEMPLATES)
+		return expanded ? &templatesOpenIcon : &templatesIcon;
 	else if (flags & MSG_FOLDER_FLAG_TRASH)
 		return &trashIcon;
 	else if (flags & MSG_FOLDER_FLAG_QUEUE)
@@ -1050,6 +1154,8 @@ XFE_FolderView::treeInfoToIconData(int depth, int flags, XP_Bool expanded)
 		return expanded ? &MN_InboxO : &MN_Inbox;
 	else if (flags & MSG_FOLDER_FLAG_DRAFTS)
 		return expanded ? &MN_DraftO : &MN_Draft;
+	else if (flags & MSG_FOLDER_FLAG_TEMPLATES)
+		return expanded ? &MN_TemplateO : &MN_Template;
 	else if (flags & MSG_FOLDER_FLAG_TRASH)
 		return &MN_TrashSmall;
 	else if (flags & MSG_FOLDER_FLAG_QUEUE)
@@ -1247,10 +1353,7 @@ XFE_FolderView::getTreeInfo(XP_Bool *expandable,
   XP_Bool is_line_expandable;
   XP_Bool is_line_expanded;
 
-  is_line_expandable = ((m_folderLine.numChildren > 0) 
-						&& !(m_folderLine.flags 
-							 & MSG_FOLDER_FLAG_CAT_CONTAINER));
-
+  is_line_expandable = (m_folderLine.numChildren > 0);
   if (is_line_expandable)
     {
       is_line_expanded = !(m_folderLine.flags & MSG_FOLDER_FLAG_ELIDED);
@@ -1279,20 +1382,28 @@ XFE_FolderView::getColumnStyle(int /*column*/)
   return (m_folderLine.unseen > 0) ? OUTLINER_Bold : OUTLINER_Default;
 }
 
+#define A_BIG_BUFFER_SIZE 1024 /* I have no idea what the right size is */
+
 char *
 XFE_FolderView::getColumnText(int column)
 {
 	static char unseen_a[10]; /* uniquify name for IRIX5.3 */
 	static char total_a[10];
+	static char a_line[A_BIG_BUFFER_SIZE];
+	char *loc;
 	
 	switch (column)
 		{
 		case OUTLINER_COLUMN_NAME:
 			{
-				if (m_folderLine.prettyName)
-					return (char*)m_folderLine.prettyName;
-				else
-					return (char*)m_folderLine.name;
+				if (m_folderLine.prettyName) {
+					XP_STRNCPY_SAFE(a_line, m_folderLine.prettyName, sizeof(a_line));
+				}
+				else {
+					XP_STRNCPY_SAFE(a_line, m_folderLine.name, sizeof(a_line));
+				}
+				INTL_CONVERT_BUF_TO_LOCALE(a_line, loc);
+				return a_line;
 			}
 		
 		case OUTLINER_COLUMN_UNREAD:
@@ -1369,16 +1480,15 @@ XFE_FolderView::getColumnIcon(int column)
 
   if (column == OUTLINER_COLUMN_NAME)
     {
-	  XP_Bool secure = False;
-	  /* we need to check if newshosts are secure */
+	  XP_Bool xxxe = False;
+	  /* we need to check newshosts */
 	  if (m_folderLine.flags & MSG_FOLDER_FLAG_NEWS_HOST)
 		{
 		  MSG_NewsHost *host = MSG_GetNewsHostForFolder(m_folderLine.id);
-		  if (host)
-			secure = MSG_IsNewsHostSecure(host);
+		  HG82992
 		}
 
-		return treeInfoToIcon(depth, m_folderLine.flags, expanded, secure);
+		return treeInfoToIcon(depth, m_folderLine.flags, expanded, xxxe);
     }
   else
     {
@@ -1496,6 +1606,9 @@ XFE_FolderView::Buttonfunc(const OutlineButtonFuncData *data)
 				  // the alt button was held during the double click.
 				  
 				  fe_showMessages(XtParent(getToplevel()->getBaseWidget()),
+								  /* Tao: we might need to check if this return a 
+								   * non-NULL frame
+								   */
 								  ViewGlue_getFrame(m_contextData),
 								  NULL,
 								  MSG_GetFolderInfo(m_pane, data->row),
@@ -1589,6 +1702,9 @@ XFE_FolderView::processClick()
 		  m_outliner->selectItemExclusive(m_cur_selected[i]);
 #endif
 		  fe_showMessages(XtParent(getToplevel()->getBaseWidget()),
+						  /* Tao: we might need to check if this return a 
+						   * non-NULL frame
+						   */
 				  ViewGlue_getFrame(m_contextData),
 				  NULL,
 				  MSG_GetFolderInfo(m_pane, data->row),
@@ -2053,7 +2169,7 @@ XFE_FolderView::ProcessTargets(int row, int col,
 			  else
 				{
 				  MSG_FolderInfo *info = MSG_GetFolderInfoFromURL(m_master,
-																  url);
+																  url,FALSE);
 				  MSG_ViewIndex new_index;
 
 				  if (!info)

@@ -32,7 +32,22 @@
 
 // Callback message strings.  (Comment about these declarations in header file)
 
+static char myClassName[] = "XFE_Component::className";
+
 const char *XFE_Component::afterRealizeCallback = "XFE_Component::afterRealizeCallback";
+
+// Progress bar cylon notifications
+const char * XFE_Component::progressBarCylonStart = "XFE_Component::progressBarCylonStart";
+const char * XFE_Component::progressBarCylonStop = "XFE_Component::progressBarCylonStop";
+const char * XFE_Component::progressBarCylonTick = "XFE_Component::progressBarCylonTick";
+
+// Progress bar percentage notifications
+const char * XFE_Component::progressBarUpdatePercent = "XFE_Component::progressBarUpdatePercent";
+const char * XFE_Component::progressBarUpdateText = "XFE_Component::progressBarUpdateText";
+
+// Logo animation notifications
+const char * XFE_Component::logoStartAnimation = "XFE_Component::logoStartAnimation";
+const char * XFE_Component::logoStopAnimation = "XFE_Component::logoStopAnimation";
 
 
 XFE_Component::XFE_Component(XFE_Component *toplevel_component)
@@ -65,6 +80,31 @@ XFE_Component::~XFE_Component()
 		
 		m_widget = 0;
     }
+}
+
+
+const char* 
+XFE_Component::getClassName()
+{
+	return myClassName;
+}
+
+XP_Bool 
+XFE_Component::isClassOf(char *name)
+{
+	XP_Bool ans = False;
+	if (name) {
+		char tmp[256];
+		sprintf(tmp, "XFE_%s::className", name);
+
+		const char* className = getClassName();
+#if defined(DEBUG_tao_)
+		printf("\n**XFE_Component::isClassOf %s,%s\n", tmp, className);
+#endif
+		if (!XP_STRCMP(tmp, className))
+			ans = True;
+	}/* if */
+	return ans;
 }
 
 Widget

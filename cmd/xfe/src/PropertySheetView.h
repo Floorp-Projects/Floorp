@@ -41,7 +41,7 @@ public:
 
   //
   XFE_PropertyTabView* addTab(int tabNameId);
-  void addTab(XFE_PropertyTabView* tab);
+  void addTab(XFE_PropertyTabView* tab, XP_Bool show=TRUE);
 
   virtual void setDlgValues();
   virtual void getDlgValues();

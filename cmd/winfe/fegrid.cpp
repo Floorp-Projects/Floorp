@@ -18,6 +18,7 @@
 
 
 #include "stdafx.h"
+#include "rosetta.h"
 #include "gridedge.h"
 #include "netsvw.h"
 #include "template.h"
@@ -926,9 +927,7 @@ void FE_QueryChrome(MWContext *pContext, Chrome *pChrome)
         pChrome->show_url_bar = pIChrome->GetToolbarVisible(ID_LOCATION_TOOLBAR);
         pChrome->show_directory_buttons = pIChrome->GetToolbarVisible(ID_PERSONAL_TOOLBAR);
 
-        //	The security bar?
-        //  TODO: Fix me!
-        pChrome->show_security_bar = TRUE;
+        HG28762
 
         //	Status bar!
         LPNSSTATUSBAR pIStatusBar = NULL;

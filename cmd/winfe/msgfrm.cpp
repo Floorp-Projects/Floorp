@@ -33,6 +33,8 @@
 #include "msgview.h"
 #include "template.h"
 #include "mailqf.h"
+#include "abcom.h"
+#include "addrfrm.h" //for MOZ_NEWADDR
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -61,7 +63,7 @@ CMessageFrame::CMessageFrame()
    // All our favorite hotkeys
    LoadAccelerators( IDR_ONEKEYMESSAGE );
 
-	m_iAttachMenuPos = 2;
+	m_iAttachMenuPos = 1;
 }
 
 CMessageFrame::~CMessageFrame()
@@ -80,8 +82,8 @@ CMessageFrame::~CMessageFrame()
 extern UINT MailCodes[10];
 extern int MailIndices[10];
 
-extern UINT NewsCodes[10];
-extern int NewsIndices[10];
+extern UINT NewsCodes[11];
+extern int NewsIndices[11];
 
 BOOL CMessageFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext) 
 {
@@ -114,6 +116,9 @@ BOOL CMessageFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext
 
 		m_pMaster = WFE_MSGGetMaster();
 		m_pPane = MSG_CreateMessagePane( pWinCX->GetContext(), m_pMaster );
+#ifdef MOZ_NEWADDR
+		AB_SetShowPropertySheetForEntryFunc(m_pPane, ShowPropertySheetForEntry);
+#endif
 		m_pMessagePane = m_pPane;
 
 		MSG_SetFEData(m_pPane, (LPVOID) (LPUNKNOWN) this );
@@ -260,6 +265,7 @@ static const UINT BASED_CODE indicators[] =
 	IDS_SIGNED_STATUS,
     IDS_TRANSFER_STATUS,    
     ID_SEPARATOR,
+	IDS_ONLINE_STATUS,
 	IDS_TASKBAR
 };
 
@@ -430,7 +436,7 @@ void CMessageFrame::OnContinue()
 
 void CMessageFrame::OnContainer()
 {
-	MSG_FolderInfo* folderInfo;
+	MSG_FolderInfo* folderInfo = NULL;
 	MessageKey		key;
 	MSG_ViewIndex	viewIndex;
 
@@ -439,7 +445,8 @@ void CMessageFrame::OnContainer()
 					   &key,
 					   &viewIndex);
 
-	C3PaneMailFrame::Open( folderInfo, key );
+	if (folderInfo)
+		C3PaneMailFrame::Open( folderInfo, key );
 }
 
 void CMessageFrame::OnUpdateContainer( CCmdUI * pCmdUI )
@@ -536,7 +543,7 @@ void CMessageFrame::PaneChanged( MSG_Pane *pane, XP_Bool asynchronous,
 								 MSG_PANE_CHANGED_NOTIFY_CODE notify, int32 value)
 {
 	if ( notify == MSG_PaneNotifyLastMessageDeleted ||
-		 notify == MSG_PaneNotifyMessageDeleted ) {
+		 (notify == MSG_PaneNotifyMessageDeleted && GetCurMessage() == value)) {
 		PostMessage( WM_CLOSE, (WPARAM) 0, (LPARAM) 0 );
 	} else if (notify == MSG_PaneNotifyFolderLoaded) {
 		MSG_FolderInfo *folderInfo = GetCurFolder();
@@ -592,7 +599,9 @@ void CMessageFrame::SwitchUI( )
 			int nButtons = (m_bNews ? sizeof(NewsCodes) : sizeof(MailCodes)) /sizeof(UINT);
 			for(int i = 0; i < nButtons; i++)
 			{
-				if ( aidButtons[i] == ID_MESSAGE_FILE ) {
+				UINT id = aidButtons[i];
+
+				if ( id == ID_MESSAGE_FILE ) {
 					CMailQFButton *pFileButton = new CMailQFButton;
 					pFileButton->Create( CRect(0,0,0,0), pToolWnd, ID_MESSAGE_FILE);
 					pIToolBar->AddButton(pFileButton, i);
@@ -603,16 +612,19 @@ void CMessageFrame::SwitchUI( )
 					WFE_ParseButtonString( aidButtons[i], statusStr, toolTipStr, textStr );
 					DWORD dwButtonStyle = 0;
 
-					switch (aidButtons[i]) {
-					case ID_MESSAGE_REPLYBUTTON:
+					switch (id) {
 					case ID_MESSAGE_MARKBUTTON:
 						dwButtonStyle |= TB_HAS_IMMEDIATE_MENU;
 						break;
 
+					case ID_MESSAGE_REPLYBUTTON:
 					case ID_MESSAGE_NEXTUNREAD:
 						dwButtonStyle |= TB_HAS_TIMED_MENU;
 						break;
-
+					case ID_EDIT_DELETE_3PANE:
+						//we don't want to do 3pane delete in this window
+						id = ID_EDIT_DELETEMESSAGE;
+						break;
 					case ID_NAVIGATE_MSG_BACK:
 						break;
 					default:
@@ -625,7 +637,7 @@ void CMessageFrame::SwitchUI( )
 											textStr, toolTipStr, statusStr,
 											m_bNews ? IDR_NEWSTHREAD : IDR_MAILTHREAD,
 											aidxButtons[i], CSize(23,21), 
-											aidButtons[i], -1, dwButtonStyle);
+											id, -1, dwButtonStyle);
 
 					pIToolBar->AddButton(pCommandButton, i);
 				}

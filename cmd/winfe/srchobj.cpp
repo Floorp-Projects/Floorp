@@ -585,14 +585,15 @@ int CSearchObject::More(int* moreCount, BOOL bLogicType)
 		for (int i = 0; i < COL_COUNT; i++) {
 			nID = ChoicesTable[(*moreCount)][i];
 			widget = m_wnd->GetDlgItem(nID);
+ 	        if(widget == NULL) continue;
 			if (i == 3 && bLogicType)
 			{
-				strLogicText.LoadString(IDS_ORTHE);
+				strLogicText.LoadString(IDS_ANDTHE);
 				widget->SetWindowText(strLogicText);
 			}
 			else if ( i==3 && !bLogicType)
 			{   //jump to another set up resource id's
-				strLogicText.LoadString(IDS_ANDTHE);
+				strLogicText.LoadString(IDS_ORTHE);
 				widget->SetWindowText(strLogicText);
 			}
 			widget->ShowWindow(SW_SHOW);
@@ -623,13 +624,7 @@ int CSearchObject::More(int* moreCount, BOOL bLogicType)
 
 void CSearchObject::OnAndOr(int iMoreCount, BOOL* bLogicType)
 {
-	CComboBox *combo;
-	int iCurSel = 0;
-
-	combo = (CComboBox *) m_wnd->GetDlgItem( IDC_COMBO_AND_OR );
-	if (!combo) return;
-	iCurSel = combo->GetCurSel();
-	*bLogicType = (iCurSel == 0 ? 0 : 1);
+  *bLogicType = m_wnd->IsDlgButtonChecked(IDC_RADIO_ALL);
 	ChangeLogicText(iMoreCount, *bLogicType);
 }
 
@@ -646,13 +641,13 @@ int CSearchObject::ChangeLogicText(int iMoreCount, BOOL bLogicType)
 			widget = m_wnd->GetDlgItem(ChoicesTable[Row][3]);
 			if (!widget) return 0;
 			if (bLogicType)
-			{   //Display OR logic text
-				strLogicText.LoadString(IDS_ORTHE);
+			{   //Display AND logic text
+				strLogicText.LoadString(IDS_ANDTHE);
 				widget->SetWindowText(strLogicText);
 			}
 			else 
-			{   //Display AND logic text
-				strLogicText.LoadString(IDS_ANDTHE);
+			{   //Display OR logic text
+				strLogicText.LoadString(IDS_ORTHE);
 				widget->SetWindowText(strLogicText);
 			}
 			widget->ShowWindow(SW_SHOW);
@@ -671,6 +666,7 @@ int CSearchObject::Fewer(int* iMoreCount, BOOL bLogicTyp)
 	if (*iMoreCount > 0) {
 		for (int i = 0; i < COL_COUNT; i++) {
 			widget = m_wnd->GetDlgItem(ChoicesTable[*iMoreCount][i]);
+  	        if(widget == NULL) continue;
 			widget->ShowWindow(SW_HIDE);
 		}
 		(*iMoreCount)--;
@@ -823,7 +819,7 @@ void CSearchObject::BuildQuery (MSG_Pane* searchPane, int iMoreCount, BOOL bLogi
 			break;
 		}
 
-		MSG_AddSearchTerm(searchPane, attrib, op, &value, !bLogicType, 
+		MSG_AddSearchTerm(searchPane, attrib, op, &value, bLogicType, 
 						 (attrib != attribOtherHeader ? NULL : szArbitraryHeader) );
 
 		if (freeValueStr)	
@@ -863,17 +859,12 @@ int CSearchObject::New(CWnd* window)
 	for (int j = 1; j < 5; j++) {
 		for (int i = 0; i < COL_COUNT; i++) {
 			widget = m_wnd->GetDlgItem(ChoicesTable[j][i]);
-			ASSERT(widget);
+		    if(widget == NULL) continue;
 			widget->ShowWindow(SW_HIDE);
 		}
 	}
 
-	CComboBox *comboAndOr = (CComboBox*) m_wnd->GetDlgItem(IDC_COMBO_AND_OR);
-	if (comboAndOr)
-	{	//Default to AND logic for display in the combobox
-		comboAndOr->SetCurSel(0);
-	}
-
+  m_wnd->CheckRadioButton(IDC_RADIO_ANY, IDC_RADIO_ALL, IDC_RADIO_ANY);
 
 	// Move more and fewer and disable fewer
 	widget = m_wnd->GetDlgItem(IDC_FEWER);
@@ -922,7 +913,15 @@ void CSearchObject::ReInitializeWidgets()
 
 	widget = m_wnd->GetDlgItem( ChoicesTable[0][COL_VALUE] );
 	widget->SetFocus();
+}
 
+void CSearchObject::RestoreDefaultFocus()
+{
+	if(m_wnd == NULL)
+    return;
+  CWnd * widget = m_wnd->GetDlgItem( ChoicesTable[0][COL_VALUE] );
+	if(widget != NULL)
+    widget->SetFocus();
 }
 
 void CSearchObject::UpdateColumn1Attributes()

@@ -25,6 +25,8 @@
 
 #include "stdafx.h"
 
+#include "rosetta.h"
+
 // arrays of IDs used to initialize control bars
 
 // This must correspond to position in toolbar
@@ -42,7 +44,7 @@ static UINT BASED_CODE buttons[] =
 	ID_PLACES,
     ID_VIEW_LOADIMAGES,
     ID_FILE_PRINT,
-	ID_SECURITY,
+	HG28118
     ID_NAVIGATE_INTERRUPT,
 	ID_HOTLIST_MCOM
 };

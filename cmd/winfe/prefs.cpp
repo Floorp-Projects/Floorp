@@ -50,9 +50,6 @@
 #include "mnprefs.h"
 #include "mailmisc.h"
 #include "wfemsg.h"
-#endif /* MOZ_MAIL_NEWS */
-#include "dlgseldg.h"
-#ifdef MOZ_MAIL_NEWS
 #include "addrbook.h"
 #include "addrfrm.h"	// for creating vcards
 #ifdef FEATURE_ADDRPROP
@@ -63,6 +60,9 @@
 #include "VerReg.h"
 #include "softupdt.h"
 #endif /* MOZ_SMARTUPDATE */
+#ifdef MOZ_OFFLINE
+#include "offpkdlg.h"
+#endif // MOZ_OFFLINE
 
 extern "C" {
 #include "xpgetstr.h"
@@ -82,9 +82,13 @@ extern int MK_MSG_REMOVE_MAILHOST_CONFIRM;
 
 BOOL	g_bReloadAllWindows;
 
+#ifdef MOZ_MAIL_NEWS
 extern "C" void GetFolderServerNames
 (char* lpName, int nDefaultID, CString& folder, CString& server);
 extern "C" MSG_Host *DoAddNewsServer(CWnd* pParent, int nFromWhere);
+#endif
+
+extern "C" char *FE_GetProgramDirectory(char *buffer, int length);
 
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -860,7 +864,7 @@ CAppearancePrefs::GetCurrentCharset(LPDWORD pdwCharsetNum)
 
 class CMailNewsPreferences : public IMailNewsInterface {
 	public:
-		CMailNewsPreferences();
+		CMailNewsPreferences(MWContext *pContext);
 		~CMailNewsPreferences();
 
 		// IUnknown methods
@@ -880,18 +884,20 @@ class CMailNewsPreferences : public IMailNewsInterface {
 		STDMETHODIMP GetFolderServer(LPOLESTR lpFolderPath, DWORD dwType, 
 						LPOLESTR *lpFolder, LPOLESTR *lpServer);
 		
-		STDMETHODIMP FillNewsServerList(HWND hControl, LPOLESTR lpServerName);
-		STDMETHODIMP GetNewsServerName(HWND hControl, LPOLESTR *lpServerName);
+		STDMETHODIMP FillNewsServerList(HWND hControl, LPOLESTR lpServerName, LPVOID FAR* ppServer);
 		STDMETHODIMP_(BOOL) AddNewsServer(HWND hParent, HWND hControl);
 		STDMETHODIMP_(BOOL) EditNewsServer(HWND hParent, HWND hControl, BOOL *pChanged);
-		STDMETHODIMP DeleteNewsServer(HWND hParent, HWND hControl);
+		STDMETHODIMP DeleteNewsServer(HWND hParent, HWND hControl, LPVOID FAR* lpDefault);
 
 		STDMETHODIMP_(BOOL) AddMailServer(HWND hParent, HWND hControl, BOOL bAllowBoth, DWORD dwType);
 		STDMETHODIMP_(BOOL) EditMailServer(HWND hParent, HWND hControl, BOOL bAllowBoth, DWORD dwType);
 		STDMETHODIMP_(BOOL) DeleteMailServer(HWND hParent, HWND hControl, DWORD dwType);
+		STDMETHODIMP SetImapDefaultServer(HWND hControl);
 
 		STDMETHODIMP FillLdapDirList(HWND hControl, LPOLESTR lpServerName);
 		STDMETHODIMP SetLdapDirAutoComplete(HWND hControl, BOOL bOnOrOff);
+		STDMETHODIMP SaveLdapDirAutoComplete();
+
 
 		// Initialization routine to create contained and aggregated objects
 		HRESULT		 Init();
@@ -908,12 +914,13 @@ class CMailNewsPreferences : public IMailNewsInterface {
 		HFONT m_hFont, m_hBoldFont;
 		XP_List	*m_pLdapServers;
 		MSG_NewsHost** m_hNewsHost;
+		MWContext *m_pContext;
 };
 
 /////////////////////////////////////////////////////////////////////////////
 // CMailNewsPreferences
 
-CMailNewsPreferences::CMailNewsPreferences()
+CMailNewsPreferences::CMailNewsPreferences(MWContext *pContext)
 {
 	m_uRef = 0;
 	m_pCategory = NULL;
@@ -923,10 +930,9 @@ CMailNewsPreferences::CMailNewsPreferences()
 	m_hBoldFont = NULL;
 	m_pLdapServers = NULL;
 	m_hNewsHost = NULL;
-
 	char location[256];
 	int nLen = 255;
-
+	m_pContext = pContext;
 	m_pLdapServers = XP_ListNew();
 	PREF_GetDefaultCharPref("browser.addressbook_location", location, &nLen);
 	DIR_GetServerPreferences (&m_pLdapServers, location);
@@ -943,7 +949,6 @@ CMailNewsPreferences::~CMailNewsPreferences()
 		theApp.ReleaseAppFont(m_hBoldFont);
 	if (m_pLdapServers)
 	{
-		DIR_DeleteServerList(m_pLdapServers);
 		m_pLdapServers = NULL;
 	}
 	if (m_hNewsHost)
@@ -1036,11 +1041,21 @@ CMailNewsPreferences::CreateAddressBookCard(HWND hParent)
 					formattedString.Format(XP_GetString (MK_ADDR_BOOK_CARD), name);
 				else
 					formattedString = XP_GetString (MK_ADDR_NEW_CARD);
+#ifndef MOZ_NEWADDR
 				CAddrEditProperties prop(NULL, pab,
 					(const char *) formattedString, &parent, 0, &person);
 				prop.SetCurrentPage(0);
 				if (prop.DoModal() == IDCANCEL)
 					result = FALSE;
+#else
+				MSG_Pane *pPane = NULL;
+				AB_GetIdentityPropertySheet(m_pContext, WFE_MSGGetMaster(), 
+											&pPane);
+				CAddrEditProperties prop(NULL, (const char *) formattedString,
+										 &parent, pPane, m_pContext, TRUE);
+				if(prop.DoModal() == IDCANCEL)
+					result = FALSE;
+#endif
 			}
 			else
 			{
@@ -1086,19 +1101,38 @@ CMailNewsPreferences::EditAddressBookCard(HWND hParent)
 			char fullname [kMaxFullNameLength];
 			AB_GetFullName(pab, theApp.m_pABook, entryID, fullname);
 			formattedString.Format(XP_GetString (MK_ADDR_BOOK_CARD), fullname);
+#ifndef MOZ_NEWADDR
 			CAddrEditProperties prop(NULL, pab,
 				(const char *) formattedString, &parent, entryID);
 			prop.SetCurrentPage(0);
 			prop.DoModal();
+#else
+			MSG_Pane *pPane = NULL;
+			AB_GetIdentityPropertySheet(m_pContext, WFE_MSGGetMaster(), 
+											&pPane);
+			CAddrEditProperties prop(NULL, (const char *) formattedString,
+									 &parent, pPane, m_pContext);
+			prop.DoModal();
+#endif
 		}
 		else 
 		{
 			CString formattedString;
 			formattedString.Format(XP_GetString (MK_ADDR_BOOK_CARD), name);
+#ifndef MOZ_NEWADDR
 			CAddrEditProperties prop(NULL, pab,
 				(const char *) formattedString, &parent, 0, &person);
 			prop.SetCurrentPage(0);
 			prop.DoModal();
+#else
+			MSG_Pane *pPane = NULL;
+			AB_GetIdentityPropertySheet(m_pContext, WFE_MSGGetMaster(), 
+											&pPane);
+			CAddrEditProperties prop(NULL, (const char *) formattedString,
+									 &parent, pPane, m_pContext);
+			prop.DoModal();
+
+#endif
 		}
 	}
 
@@ -1163,16 +1197,9 @@ STDMETHODIMP CMailNewsPreferences::ShowChooseFolder
  LPOLESTR *lpServer, LPOLESTR *lpPref)
 {
 	char* lpPath = (char*)lpFolderPath;
-	int nDefaultID;
-	if (dwType == TYPE_SENT)
-		nDefaultID = MK_MSG_SENT_L10N_NAME;
-	else if (dwType == TYPE_DRAFT)
-		nDefaultID = MK_MSG_DRAFTS_L10N_NAME;
-	else if (dwType == TYPE_TEMPLATE)
-		nDefaultID = MK_MSG_TEMPLATES_L10N_NAME;
 	CWnd parent;
 	parent.Attach(hParent);
-	CChooseFolderDialog folderDialog(&parent, lpPath, nDefaultID);
+	CChooseFolderDialog folderDialog(&parent, lpPath, (int)dwType);
 	if (IDOK == folderDialog.DoModal())
 	{
 	 	*lpFolder = AllocTaskOleString(LPCTSTR(folderDialog.m_szFolder));
@@ -1191,7 +1218,7 @@ STDMETHODIMP CMailNewsPreferences::GetFolderServer
 	
 	char* lpPath = (char*)lpFolderPath;
 	int nDefaultID;
-	if (dwType == TYPE_SENT)
+	if (dwType == TYPE_SENTMAIL || dwType == TYPE_SENTNEWS)
 		nDefaultID = MK_MSG_SENT_L10N_NAME;
 	else if (dwType == TYPE_DRAFT)
 		nDefaultID = MK_MSG_DRAFTS_L10N_NAME;
@@ -1211,7 +1238,8 @@ STDMETHODIMP CMailNewsPreferences::GetFolderServer
 	return NOERROR;
 }
 
-STDMETHODIMP CMailNewsPreferences::FillNewsServerList(HWND hControl, LPOLESTR lpServerName)
+STDMETHODIMP CMailNewsPreferences::FillNewsServerList
+(HWND hControl, LPOLESTR lpServerName, LPVOID FAR* ppServer)
 {
 	int nDefaultHost = 0;
 	int nSelectedIndex = -1;
@@ -1233,25 +1261,15 @@ STDMETHODIMP CMailNewsPreferences::FillNewsServerList(HWND hControl, LPOLESTR lp
 				            (LPARAM)(DWORD)m_hNewsHost[i]);
 				const char *pName = MSG_GetNewsHostUIName(m_hNewsHost[i]);
 				if (!XP_FILENAMECMP(lpPrefName, pName))
+				{
 					nSelectedIndex = nAddedIndex;
+					*ppServer = m_hNewsHost[i];
+				}
 			}
 		}
 		if (nSelectedIndex >= 0)
 			SendMessage(hControl, LB_SETCURSEL, (WPARAM)nSelectedIndex, (LPARAM)0);
 	}	
-	return NOERROR;
-}
-
-STDMETHODIMP 
-CMailNewsPreferences::GetNewsServerName(HWND hControl, LPOLESTR *lpServerName)
-{
-	int nIndex = (int)SendMessage(hControl, LB_GETCURSEL, 0,0);
-	if (nIndex != CB_ERR)
-	{
-		MSG_NewsHost* pServer = (MSG_NewsHost*)SendMessage(hControl, LB_GETITEMDATA, 
-											(WPARAM)nIndex, 0);
-		*lpServerName = AllocTaskOleString(MSG_GetHostUIName((MSG_Host*)pServer));
-	}
 	return NOERROR;
 }
 
@@ -1287,51 +1305,60 @@ CMailNewsPreferences::EditNewsServer(HWND hParent, HWND hControl, BOOL *pChanged
 	if (nIndex >= 0)
 	{
 		parent.Attach(hParent);
-		MSG_Host* pServer = (MSG_Host*)SendMessage(hControl, LB_GETITEMDATA, 
+		MSG_NewsHost* pServer = (MSG_NewsHost*)SendMessage(hControl, LB_GETITEMDATA, 
 													(WPARAM)nIndex, 0);
+		MSG_Host* pMsgHost = MSG_GetMSGHostFromNewsHost(pServer);
 
-		CNewsServerDialog addServerDialog(&parent, MSG_GetHostUIName(pServer), 
-										FROM_PREFERENCE, (MSG_NewsHost*)pServer);
-		if (IDOK == addServerDialog.DoModal())
-		{
-			char* pName = addServerDialog.GetNewsHostName();
-			XP_Bool bSecure = addServerDialog.GetSecure();
-			XP_Bool bAuthentication = addServerDialog.GetAuthentication();
-			int32 nPort = addServerDialog.GetNewsHostPort();
-
-			// set the new value
-			MSG_SetNewsHostPushAuth ((MSG_NewsHost*)pServer, bAuthentication);
-
+		CString csTitle;
+		csTitle.LoadString(IDS_NEWSHOSTPROP);
+		CNewsFolderPropertySheet editServerDialog(csTitle, &parent);
+		MSG_FolderInfo *pFolderInfo = MSG_GetFolderInfoForHost(pMsgHost);
+		editServerDialog.m_pNewsHostPage= new CNewsHostGeneralPropertyPage;
+		editServerDialog.m_pNewsHostPage->SetFolderInfo(pFolderInfo, pServer);
+		editServerDialog.AddPage(editServerDialog.m_pNewsHostPage);
+		if (IDOK == editServerDialog.DoModal())
 			*pChanged = TRUE;
-			parent.Detach();
-			return TRUE;
-		}
-		else
-		{
-			parent.Detach();
-			return FALSE;
-		}
+
+		parent.Detach();
+
 	}
 	return FALSE;
 }
 
-STDMETHODIMP CMailNewsPreferences::DeleteNewsServer(HWND hParent, HWND hControl)
+STDMETHODIMP CMailNewsPreferences::DeleteNewsServer
+(HWND hParent, HWND hControl, LPVOID FAR* lpDefault)
 {
 	
     CWnd parent;
 	parent.Attach(hParent);
+
+	MSG_NewsHost* pDefaultServer = (MSG_NewsHost*)(*lpDefault);
 	int nIndex = (int)SendMessage(hControl, LB_GETCURSEL, 0, 0);
 	if (nIndex >= 0)
 	{
-		MSG_Host* pServer = (MSG_Host*)SendMessage(hControl, LB_GETITEMDATA, 
-													(WPARAM)nIndex, 0);
+		MSG_NewsHost* pServer = (MSG_NewsHost*)SendMessage(hControl, LB_GETITEMDATA, 
+											(WPARAM)nIndex, 0);
+		MSG_Host* pMsgHost = MSG_GetMSGHostFromNewsHost(pServer);
+
 		char* tmp = PR_smprintf(XP_GetString(MK_MSG_REMOVE_HOST_CONFIRM),
-								MSG_GetHostUIName(pServer));
+								MSG_GetHostUIName(pMsgHost));
 		if (IDOK == parent.MessageBox(tmp, szLoadString(AFX_IDS_APP_TITLE), MB_OKCANCEL))
 		{
  			MSG_Master * pMaster = WFE_MSGGetMaster();
-			MSG_DeleteNewsHost(pMaster, (MSG_NewsHost*)pServer);
+			MSG_DeleteNewsHost(pMaster, pServer);
 			SendMessage(hControl, LB_DELETESTRING, nIndex, 0);
+			if (pDefaultServer == pServer)
+			{
+				int nNewDefault;
+				int nTotal = (int)SendMessage(hControl, LB_GETCOUNT, 0, 0);
+				if (nIndex >= nTotal)
+					nNewDefault = nTotal -1;
+				else
+					nNewDefault = nIndex;
+
+				*lpDefault = (LPVOID)SendMessage(hControl, LB_GETITEMDATA, 
+											(WPARAM)nNewDefault, 0);
+			}
 		}
 		if(tmp && tmp[0])
 			XP_FREE(tmp);
@@ -1357,7 +1384,7 @@ STDMETHODIMP_(BOOL) CMailNewsPreferences::AddMailServer
 	}
 
 	CString title;
-	title.LoadString(IDS_ADD_MAIL_SERVER);
+	title.LoadString(IDS_MAIL_SERVER_PROPERTY);
     CMailServerPropertySheet addMailServer(&parent, title, NULL, TYPE_IMAP, FALSE, bAllowBoth);
     if (IDOK == addMailServer.DoModal())
 	{
@@ -1390,12 +1417,24 @@ STDMETHODIMP_(BOOL) CMailNewsPreferences::EditMailServer
 	int nIndex = (int)SendMessage(hControl, LB_GETCURSEL, 0, 0);
 	SendMessage(hControl, LB_GETTEXT, (WPARAM)nIndex, 
 			(LPARAM)(DWORD)serverName);
+	
+	char* pDefault = XP_STRSTR(serverName, szLoadString(IDS_DEFAULT_STRING));
+	if (pDefault)
+		*pDefault = '\0'; //get rid of (Default)
 
     CMailServerPropertySheet editMailServer(&parent, title, serverName,
 											nType, TRUE, bAllowBoth);
     if (IDOK == editMailServer.DoModal())
 	{
 		PREF_SavePrefFile();
+
+		char* pNewName = editMailServer.GetMailHostName();
+		if ((nType == TYPE_POP && 0 != lstrcmp(pNewName, serverName)) ||
+			(nType == TYPE_IMAP && editMailServer.IsPopServer()))
+		{
+			SendMessage(hControl, LB_DELETESTRING, nIndex, 0);
+			SendMessage(hControl, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)pNewName);
+		}
 		parent.Detach();
 		return TRUE;
 	}
@@ -1421,7 +1460,7 @@ STDMETHODIMP_(BOOL) CMailNewsPreferences::DeleteMailServer
 
 	int nIndex = (int)SendMessage(hControl, LB_GETCURSEL, 0, 0);
 	int nType = (int)dwType;
-	if (nType = TYPE_IMAP)
+	if (nType == TYPE_IMAP)
 	{
 		char serverName[MSG_MAXGROUPNAMELENGTH];
 
@@ -1430,6 +1469,9 @@ STDMETHODIMP_(BOOL) CMailNewsPreferences::DeleteMailServer
 		SendMessage(hControl, LB_GETTEXT, (WPARAM)nIndex, 
 				(LPARAM)(DWORD)serverName);
 
+		char* pDefault = XP_STRSTR(serverName, szLoadString(IDS_DEFAULT_STRING));
+		if (pDefault)
+			*pDefault = '\0'; //get rid of (Default)
 		int nTotal =  MSG_GetIMAPHosts(pMaster, NULL, 0);
 		if (nTotal)
 		{
@@ -1441,7 +1483,10 @@ STDMETHODIMP_(BOOL) CMailNewsPreferences::DeleteMailServer
 			{
 	            MSG_Host* pMsgHost = MSG_GetMSGHostFromIMAPHost(hImapHost[i]);
 		        if (0 == lstrcmp(serverName, MSG_GetHostName(pMsgHost)))
+				{
 		            MSG_DeleteIMAPHost(pMaster, hImapHost[i]);
+					break;
+				}
 			}
 			if (hImapHost)
 				delete [] hImapHost;
@@ -1452,6 +1497,35 @@ STDMETHODIMP_(BOOL) CMailNewsPreferences::DeleteMailServer
 
 	parent.Detach();
 	return TRUE;
+}
+
+STDMETHODIMP CMailNewsPreferences::SetImapDefaultServer(HWND hControl)
+{
+	char serverName[MSG_MAXGROUPNAMELENGTH];
+	SendMessage(hControl, LB_GETTEXT, (WPARAM)0, (LPARAM)(DWORD)serverName);
+
+	MSG_Master* pMaster = WFE_MSGGetMaster();
+
+	int nTotal =  MSG_GetIMAPHosts(pMaster, NULL, 0);
+	if (nTotal)
+	{
+ 		MSG_IMAPHost** hImapHost = NULL;
+		hImapHost = new MSG_IMAPHost* [nTotal];
+		ASSERT(hImapHost != NULL);
+		nTotal =  MSG_GetIMAPHosts(pMaster, hImapHost, nTotal);
+		for (int i = 0; i < nTotal; i++)
+		{
+	        MSG_Host* pMsgHost = MSG_GetMSGHostFromIMAPHost(hImapHost[i]);
+		    if (XP_STRSTR(serverName, MSG_GetHostName(pMsgHost)))
+			{
+				MSG_ReorderIMAPHost(pMaster, hImapHost[i], NULL);
+				break;
+			}
+		}
+		if (hImapHost)
+			delete [] hImapHost;
+	}
+	return NOERROR;
 }
 
 STDMETHODIMP CMailNewsPreferences::FillLdapDirList(HWND hControl, LPOLESTR lpServerName)
@@ -1489,6 +1563,12 @@ STDMETHODIMP CMailNewsPreferences::SetLdapDirAutoComplete(HWND hControl, BOOL bO
 										(WPARAM)nIndex, 0);
 	DIR_SetAutoCompleteEnabled(m_pLdapServers, pServer, bOnOrOff);
 
+	return NOERROR;
+}
+
+STDMETHODIMP CMailNewsPreferences::SaveLdapDirAutoComplete()
+{
+	DIR_SaveServerPreferences(m_pLdapServers);
 	return NOERROR;
 }
 #endif /* MOZ_MAIL_NEWS */
@@ -1579,7 +1659,7 @@ COfflinePreference::DoSelectDiscussion(HWND hParent)
 
 	parent.Attach(hParent);
 
-	CDlgSelectGroups selDiscussionDlg(&parent);
+	CDlgOfflinePicker selDiscussionDlg(&parent);
 	selDiscussionDlg.DoModal();
 
 	parent.Detach();
@@ -1587,14 +1667,67 @@ COfflinePreference::DoSelectDiscussion(HWND hParent)
 }
 #endif // MOZ_OFFLINE
 
+typedef HRESULT (*DllServerFunction)(void);
+
+static BOOL
+RegisterCLSIDForDll(char * dllName)
+{
+	BOOL 	bRetval = FALSE;
+	char    szLib[_MAX_PATH + 32];
+	FE_GetProgramDirectory( szLib, _MAX_PATH + 32 );
+	if ( *szLib ) {
+		strcat( szLib, dllName );
+
+		if(szLib)  {
+			HINSTANCE hLibInstance = hLibInstance = LoadLibrary(szLib);
+#ifdef WIN32
+			if(hLibInstance)
+#else
+			if(hLibInstance > (HINSTANCE)HINSTANCE_ERROR)
+#endif
+			{
+				FARPROC RegistryFunc = NULL;
+
+				RegistryFunc = ::GetProcAddress(hLibInstance, "DllRegisterServer");
+							
+				if(RegistryFunc)   {
+					HRESULT hResult = (RegistryFunc)();
+
+					if(GetScode(hResult) == S_OK)   {
+						bRetval = TRUE;
+					}
+
+					RegistryFunc = NULL;
+				}
+				else    {
+					/* If the DLL doesn't have those functions then it just doesn't support
+					 * self-registration. We don't consider that to be an error
+					 *
+					 * We should consider checking for the "OleSelfRegister" string in the
+					 * StringFileInfo section of the version information resource. If the DLL
+					 * has "OleSelfRegister" but doesn't have the self-registration functions
+					 * then that would be an error
+					 */
+					bRetval = TRUE;
+				}
+
+				FreeLibrary(hLibInstance);
+				hLibInstance = NULL;
+			}
+		}
+	}
+			
+	return bRetval;
+}
+
 #ifdef MOZ_MAIL_NEWS
 static BOOL
-CreateMailNewsCategory(LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
+CreateMailNewsCategory(MWContext *pContext, LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
 {
 	BOOL	bResult = FALSE;
 
 	// Create the property page providers
-	CMailNewsPreferences *pMailNews = new CMailNewsPreferences;
+	CMailNewsPreferences *pMailNews = new CMailNewsPreferences(pContext);
 	pMailNews->AddRef();
 
 	// Initialize the mail news object. This allows it to load any objects that are
@@ -1604,13 +1737,29 @@ CreateMailNewsCategory(LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
 		if (SUCCEEDED(pMailNews->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
 			bResult = TRUE;
 	}
+	else {
+		// Try to register the dll and initialize again
+#ifdef _WIN32
+		bResult = RegisterCLSIDForDll("mnpref32.dll");
+#else
+		bResult = RegisterCLSIDForDll("mnpref16.dll");
+#endif
+		if (bResult) {
+			if (SUCCEEDED(pMailNews->Init())) {
+				// Get the interface pointer for ISpecifyPropertyPageObjects
+				if (SUCCEEDED(pMailNews->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
+					bResult = TRUE;
+			}
+			else
+				bResult = FALSE;
+		}
+	}
 	
 	// We're all done with the object
 	pMailNews->Release();
 	return bResult;
 }
 #endif /* MOZ_MAIL_NEWS */
-
 
 #ifdef MOZ_LOC_INDEP
 /////////////////////////////////////////////////////////////////////////////
@@ -1900,6 +2049,23 @@ CreateAppearancesCategory(int nCharsetId, LPSPECIFYPROPERTYPAGEOBJECTS *pCategor
 		if (SUCCEEDED(pAppearance->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
 			bResult = TRUE;
 	}
+	else {
+		// Try to register the dll and initialize again
+#ifdef _WIN32
+		bResult = RegisterCLSIDForDll("brpref32.dll");
+#else
+		bResult = RegisterCLSIDForDll("brpref16.dll");
+#endif
+		if (bResult) {
+			if (SUCCEEDED(pAppearance->Init())) {
+				// Get the interface pointer for ISpecifyPropertyPageObjects
+				if (SUCCEEDED(pAppearance->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
+					bResult = TRUE;
+			}
+			else
+				bResult = FALSE;
+		}
+	}
 
 	// We're all done with the object
 	pAppearance->Release();
@@ -1925,12 +2091,59 @@ CreateBrowserCategory(MWContext *pContext, LPSPECIFYPROPERTYPAGEOBJECTS *pCatego
 		if (SUCCEEDED(pBrowser->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
 			bResult = TRUE;
 	}
+	else {
+		// Try to register the dll and initialize again
+#ifdef _WIN32
+		bResult = RegisterCLSIDForDll("brpref32.dll");
+#else
+		bResult = RegisterCLSIDForDll("brpref16.dll");
+#endif
+		if (bResult) {
+			if (SUCCEEDED(pBrowser->Init())) {
+				// Get the interface pointer for ISpecifyPropertyPageObjects
+				if (SUCCEEDED(pBrowser->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
+					bResult = TRUE;
+			}
+			else
+				bResult = FALSE;
+		}
+	}
 
 	// We're all done with the object
 	pBrowser->Release();
 	return bResult;
 }
 
+#ifdef EDITOR		
+static BOOL
+CreateComposerCategory(LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
+{
+	if (SUCCEEDED(CoCreateInstance(CLSID_EditorPrefs,
+			                       NULL,
+								   CLSCTX_INPROC_SERVER,
+								   IID_ISpecifyPropertyPageObjects,
+								   (LPVOID *)pCategory))) {
+		return TRUE;
+	}
+	else {
+		// Try to register the dll and initialize again
+#ifdef _WIN32
+		if (RegisterCLSIDForDll("edpref32.dll")) {
+#else
+		if (RegisterCLSIDForDll("edpref16.dll")) {
+#endif
+			if (SUCCEEDED(CoCreateInstance(CLSID_EditorPrefs,
+										   NULL,
+										   CLSCTX_INPROC_SERVER,
+										   IID_ISpecifyPropertyPageObjects,
+										   (LPVOID *)pCategory))) {
+				return TRUE;
+			}
+		}
+	}  
+	return FALSE;
+}
+#endif /* EDITOR */
 
 #ifdef MOZ_OFFLINE		
 static BOOL
@@ -1949,7 +2162,24 @@ CreateOfflineCategory(LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
 		if (SUCCEEDED(pOffline->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
 			bResult = TRUE;
 	}
-	
+	else {
+		// Try to register the dll and initialize again
+#ifdef _WIN32
+		bResult = RegisterCLSIDForDll("mnpref32.dll");
+#else
+		bResult = RegisterCLSIDForDll("mnpref16.dll");
+#endif
+		if (bResult) {
+			if (SUCCEEDED(pOffline->Init())) {
+				// Get the interface pointer for ISpecifyPropertyPageObjects
+				if (SUCCEEDED(pOffline->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
+					bResult = TRUE;
+			}
+			else
+				bResult = FALSE;
+		}
+	}
+
 	// We're all done with the object
 	pOffline->Release();
 	return bResult;
@@ -2073,7 +2303,7 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 
 #ifdef MOZ_MAIL_NEWS
 		// Mail and News category
-		if (CreateMailNewsCategory(&categories[nCategories]))
+		if (CreateMailNewsCategory(pContext, &categories[nCategories]))
 			nCategories++;
 #endif // MOZ_MAIL_NEWS
 
@@ -2103,8 +2333,8 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 		// Advanced category
         if (CreateAdvancedCategory(pContext, &categories[nCategories])) {
 			nCategories++;
-        }
-
+		}
+             
         // Make sure we have at least one category
 		if (nCategories == 0) {
             pFrame->MessageBox(szLoadString(IDS_CANT_LOAD_PREFS), NULL, MB_OK | MB_ICONEXCLAMATION);

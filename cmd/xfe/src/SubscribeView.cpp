@@ -28,6 +28,7 @@
 #include "SubAllView.h"
 #include "SubSearchView.h"
 #include "SubNewView.h"
+#include "ViewGlue.h"
 
 #include "xfe.h"
 #include "msgcom.h"
@@ -50,13 +51,40 @@ XFE_SubscribeView::XFE_SubscribeView(XFE_Component *toplevel_component,
 	int all_buttons_maxwidth, search_buttons_maxwidth, new_buttons_maxwidth;
 	int max_button_width;
 
-	if (!p)
-		{
-            setPane(MSG_CreateSubscribePaneForHost(m_contextData,
-                                                   XFE_MNView::m_master,
-                                                   host));
-            XP_ASSERT(m_pane != 0);
-		}
+	// Clone the context
+	m_cloneContext = XP_NewContext();
+	if (!m_cloneContext)
+		return;
+	
+#if defined(GLUE_COMPO_CONTEXT)
+	fe_ContextData *fec = XP_NEW_ZAP (fe_ContextData);
+	XP_ASSERT(fec);
+	CONTEXT_DATA(m_cloneContext) = fec;
+	m_cloneContext->funcs = fe_BuildDisplayFunctionTable();
+
+	ViewGlue_addMappingForCompo(this, (void *)m_cloneContext);
+	CONTEXT_WIDGET(m_cloneContext) = getBaseWidget();
+#else
+	XFE_Frame *f = ViewGlue_getFrame(context);
+	XP_ASSERT(f);
+	fe_ContextData *fec = XP_NEW_ZAP (fe_ContextData);
+	XP_ASSERT(fec);
+	CONTEXT_DATA(m_cloneContext) = fec;
+	ViewGlue_addMapping(f, (void *)m_cloneContext);
+	m_cloneContext->funcs = fe_BuildDisplayFunctionTable();
+	CONTEXT_WIDGET(m_cloneContext) = CONTEXT_WIDGET(context);
+#endif
+	// Set the type of the context
+	m_cloneContext->type = MWContextNews;
+
+	if (!p) {
+		setPane(MSG_CreateSubscribePaneForHost(m_cloneContext,
+											   XFE_MNView::m_master,
+											   host));
+		XP_ASSERT(m_pane != 0);
+	}
+
+	m_interrupting = FALSE;
 
 	getToplevel()->registerInterest(XFE_View::chromeNeedsUpdating,
 									this,
@@ -114,6 +142,11 @@ XFE_SubscribeView::XFE_SubscribeView(XFE_Component *toplevel_component,
 XFE_SubscribeView::~XFE_SubscribeView()
 {
     destroyPane();
+#if defined(GLUE_COMPO_CONTEXT)
+	// unglue; reset context 
+	ViewGlue_addMappingForCompo(NULL, (void *)m_cloneContext);
+	//CONTEXT_WIDGET(m_cloneContext) = getBaseWidget();
+#endif 
 
 #if notyet
 /* This line is needed to fix bug #77615.  The problem is that if it's present,
@@ -162,26 +195,31 @@ XFE_SubscribeView::handlesCommand(CommandType command, void *calldata, XFE_Comma
 }
 
 void
-XFE_SubscribeView::doCommand(CommandType command, void *calldata, XFE_CommandInfo*)
+XFE_SubscribeView::doCommand(CommandType command, void *calldata,
+							 XFE_CommandInfo*) 
 {
-	if (command == xfeCmdDialogCancel)
-		{
-			MSG_SubscribeCancel(m_pane);
-		}
-	else if (command == xfeCmdStopLoading)
-		{
-			MWContext *c = MSG_GetContext(m_pane);
+	if (command == xfeCmdDialogCancel) {
+		MSG_SubscribeCancel(m_pane);
+	} else if (command == xfeCmdStopLoading) {
+		MWContext *c = MSG_GetContext(m_pane);
 
-			XP_InterruptContext(c);
-		}
-    else if (command == xfeCmdDialogOk)
-		{
-            MSG_SubscribeCommit(m_pane);
-		}
-	else
-		{
-			m_activeView->doCommand(command, calldata);
-		}
+		m_interrupting = TRUE;
+		XP_InterruptContext(c);
+
+	} else if (command == xfeCmdDialogOk) {
+
+		// If the context is busy, interrupt it.
+		if (XP_IsContextBusy(m_cloneContext)) { 
+			m_interrupting = TRUE;
+			XP_InterruptContext(m_cloneContext); 
+		} 
+
+		// Commit the subscription info
+		MSG_SubscribeCommit(m_pane);
+
+	} else {
+		m_activeView->doCommand(command, calldata);
+	}
 }
 
 void

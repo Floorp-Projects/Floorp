@@ -36,6 +36,15 @@ ViewGlue_addMapping(XFE_Frame *frame,
   CONTEXT_DATA(mwcontext)->view = frame;
 }
 
+void 
+ViewGlue_addMappingForCompo(XFE_Component *compo,
+							void *context)
+{
+  MWContext *mwcontext = (MWContext*)context;
+
+  CONTEXT_DATA(mwcontext)->view = compo;
+}
+
 
 // Get a view associated with a context.
 // Toshok: "the name is a throwback to when we had
@@ -46,5 +55,25 @@ ViewGlue_getFrame(void *context)
   MWContext *mwcontext = (MWContext*)context;
   if (mwcontext == NULL) return NULL;
 
+#if defined(GLUE_COMPO_CONTEXT)
+  XFE_Component *compo = (XFE_Component *) (CONTEXT_DATA(mwcontext)->view);
+  if (compo &&
+	  compo->isClassOf("Frame"))
+	  return ((XFE_Frame*) compo); 
+  else
+	  return NULL;
+#else
   return (XFE_Frame*)(CONTEXT_DATA(mwcontext)->view);
+#endif /* GLUE_COMPO_CONTEXT */
+}
+
+// Get a view associated with a context.
+//          one context per view.  Now we have one per frame."
+XFE_Component *
+ViewGlue_getCompo(void *context)
+{
+  MWContext *mwcontext = (MWContext*)context;
+  if (mwcontext == NULL) return NULL;
+
+  return (XFE_Component*)(CONTEXT_DATA(mwcontext)->view);
 }

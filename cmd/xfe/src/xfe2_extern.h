@@ -103,7 +103,7 @@ extern MWContext* fe_showMsg(Widget toplevel, XFE_Frame *parent_frame, Chrome *c
 extern MWContext* fe_showInbox(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, XP_Bool with_reuse, XP_Bool getNewMail);
 extern MWContext* fe_showMessages(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, MSG_FolderInfo *info, XP_Bool with_reuse, XP_Bool getNewMail, MessageKey key);
 
-#ifdef MOZ_TASKBAR
+#if defined(MOZ_MAIL_NEWS)
 /* task bar */
 extern void fe_showTaskBar(Widget toplevel);
 #endif
@@ -121,6 +121,11 @@ extern void fe_manual_cb (Widget widget, XtPointer closure, XtPointer call_data)
 extern void XFE_SetDocTitle(MWContext *context, char *title);
 
 extern void fe_openTargetUrl(MWContext * context,LO_AnchorData * anchor_data);
+
+#if defined(MOZ_MAIL_NEWS)
+extern MSG_IMAPUpgradeType fe_promptForIMAPSubscriptionUpgrade(MWContext *context,
+                                                               const char* hostName);
+#endif
 
 XP_END_PROTOS
 

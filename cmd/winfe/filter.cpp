@@ -22,6 +22,11 @@
 
 #include "stdafx.h"
 #include "filter.h"
+
+//
+// filter.cpp : implementation file
+//
+
 #include "mailmisc.h"
 #include "xp_time.h"
 #include "xplocale.h"
@@ -29,10 +34,11 @@
 #include "dateedit.h"
 #include "nethelp.h"
 #include "xp_help.h"
-#include "edhdrdlg.h"
 #include "prefapi.h"
 #include "numedit.h"
 #include "mailpriv.h"
+#include "mailfrm.h"
+#include "advprosh.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -43,6 +49,242 @@ extern MSG_SearchError MSG_GetValuesForAttribute( MSG_ScopeAttribute scope,
 												  MSG_SearchAttribute attrib, 
 												  MSG_SearchMenuItem *items, 
 												  uint16 *maxItems);
+
+
+extern "C" void HelperInitFonts( HDC hdc , HFONT *phFont, HFONT *phBoldFont);
+
+#define NAV_BUTTONWIDTH		24
+#define NAV_BUTTONHEIGHT	16
+
+#define BITMAP_MARGIN 5
+
+CFilterScopeCombo::CFilterScopeCombo() : CMiscFolderCombo()
+{
+	m_bFirst = TRUE;
+	m_hFont = NULL;
+	m_hBigFont = NULL;
+}
+
+CFilterScopeCombo::~CFilterScopeCombo()
+{
+}
+
+void CFilterScopeCombo::SetFont( CFont *pFont, CFont *pBigFont )
+{
+	m_hFont = (HFONT) pFont->m_hObject;
+	m_hBigFont = (HFONT) pBigFont->m_hObject;
+
+	CMailFolderCombo::SetFont(pFont);
+}
+
+void CFilterScopeCombo::DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct )
+{
+	HDC hDC = lpDrawItemStruct->hDC;
+	RECT rcItem = lpDrawItemStruct->rcItem;
+	RECT rcTemp = rcItem;
+	RECT rcText;
+	DWORD dwItemData = lpDrawItemStruct->itemData;
+	HBRUSH hBrushWindow = ::CreateSolidBrush( GetSysColor( COLOR_WINDOW ) );
+	HBRUSH hBrushHigh = ::CreateSolidBrush( GetSysColor( COLOR_HIGHLIGHT ) );
+	HBRUSH hBrushFill = NULL;
+
+	if ( !m_hFont ) {
+		HelperInitFonts( hDC, &m_hFont, &m_hBoldFont);
+	}
+
+	HFONT hOldFont = NULL;
+	if ( m_hFont ) {
+		hOldFont = (HFONT) ::SelectObject( hDC,(HFONT)&m_hFont );
+	}
+
+	if ( lpDrawItemStruct->itemState & ODS_SELECTED ) {
+		hBrushFill = hBrushHigh;
+		::SetBkColor( hDC, GetSysColor( COLOR_HIGHLIGHT ) );
+		::SetTextColor( hDC, GetSysColor( COLOR_HIGHLIGHTTEXT ) );
+	} else {
+		hBrushFill = hBrushWindow;
+		::SetBkColor( hDC, GetSysColor( COLOR_WINDOW ) );
+		::SetTextColor( hDC, GetSysColor( COLOR_WINDOWTEXT ) );
+	}
+
+	if ( lpDrawItemStruct->itemID != -1 && dwItemData)
+	{
+		MSG_FolderInfo *itemData = (MSG_FolderInfo *) lpDrawItemStruct->itemData;
+		MSG_FolderLine folderLine;
+		MSG_GetFolderLineById( m_pMaster, itemData , &folderLine);
+		int idxImage = WFE_MSGTranslateFolderIcon( folderLine.level,
+												   folderLine.flags, 
+												   folderLine.numChildren );
+
+		if ( m_hBoldFont && folderLine.unseen > 0 ) 
+		{
+			::SelectObject( hDC, (HFONT)&m_hBoldFont );
+		}
+		int iIndent = 0;
+
+		BOOL bStatic = FALSE;
+#ifdef _WIN32
+	if ( sysInfo.m_bWin4 )
+		bStatic = ( lpDrawItemStruct->itemState & ODS_COMBOBOXEDIT ) ? TRUE : FALSE;
+	else 
+#endif
+		bStatic = m_bStaticCtl;
+
+		if (!bStatic)
+			iIndent += (folderLine.level - m_iInitialDepth) * 8;
+
+//Draw the news bitmap
+        m_pIImageMap->DrawImage( idxImage, iIndent + BITMAP_MARGIN , rcItem.top, hDC, FALSE );
+		LPCTSTR name = (LPCTSTR) folderLine.prettyName;
+		if ( !name || !name[0] )
+			name = folderLine.name;
+//Draw the text
+		::DrawText( hDC, name, -1, &rcTemp, DT_SINGLELINE|DT_CALCRECT|DT_NOPREFIX );
+		int iWidth = rcTemp.right - rcTemp.left;
+
+		rcTemp = rcItem;
+		rcText = rcItem;
+		rcTemp.left = iIndent + BITMAP_MARGIN + 20;
+		rcTemp.right = rcTemp.left + iWidth + 4;
+
+		VERIFY(::FillRect( hDC, &rcTemp, hBrushFill ));
+		rcText.left = rcTemp.left + 2;
+		rcText.right = rcTemp.right - 2;
+		::DrawText( hDC, name, -1, &rcText, DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX );
+	}
+
+	if ( hBrushHigh ) 
+		VERIFY( ::DeleteObject( hBrushHigh ));
+	if ( hBrushWindow ) 
+		VERIFY( ::DeleteObject( hBrushWindow ));
+
+	if ( hOldFont )
+		::SelectObject( hDC, hOldFont );
+}
+
+
+BEGIN_MESSAGE_MAP( CFilterScopeCombo, CMiscFolderCombo )
+	ON_WM_CTLCOLOR()
+	ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+void CFilterScopeCombo::OnPaint()
+{
+	m_bStaticCtl = TRUE;
+	CMailFolderCombo::OnPaint();
+	m_bFirst = TRUE;
+}
+
+HBRUSH CFilterScopeCombo::OnCtlColor( CDC* pDC, CWnd* pWnd, UINT nCtlColor )
+{
+	if (nCtlColor == CTLCOLOR_LISTBOX) {
+		if (m_bFirst) {
+			RECT rcParent;
+			GetWindowRect( &rcParent );
+			pWnd->GetWindowRect(&m_rcList);
+			m_bFirst = FALSE;
+			int height = m_rcList.bottom - m_rcList.top;
+			if ( (rcParent.bottom + height) > GetSystemMetrics( SM_CYFULLSCREEN ) ) {
+				height = GetSystemMetrics( SM_CYFULLSCREEN ) - rcParent.bottom;
+			}
+			pWnd->MoveWindow( m_rcList.left, rcParent.bottom,
+							  m_rcList.right - m_rcList.left, height );
+		}
+	}
+
+	m_bStaticCtl = (nCtlColor == CTLCOLOR_EDIT);
+
+	return CMailFolderCombo::OnCtlColor( pDC, pWnd, nCtlColor );
+}
+
+
+int  CFilterScopeCombo::PopulateNews(MSG_Master *pMaster, BOOL bRoots)
+{
+	m_pMaster = pMaster;
+	int index = 0;
+	int nCount=0;
+	m_iInitialDepth = 1;
+
+	::SendMessage( m_hWnd, m_nResetContent, (WPARAM) 0, (LPARAM) 0 );
+
+	int32 iLines = MSG_GetFolderChildren (m_pMaster, NULL, NULL, 0);
+	MSG_FolderInfo **ppFolderInfo = new MSG_FolderInfo *[iLines];
+
+	ASSERT(ppFolderInfo);
+	if (ppFolderInfo)
+	{
+		MSG_GetFolderChildren (m_pMaster, NULL, ppFolderInfo, iLines);
+		for (int i = 0; i < iLines; i++)
+		{
+			MSG_FolderLine folderLine;
+			if (MSG_GetFolderLineById (m_pMaster, ppFolderInfo[i], &folderLine)) 
+			{
+				if ( folderLine.flags & MSG_FOLDER_FLAG_NEWSGROUP     ||
+					 folderLine.flags & MSG_FOLDER_FLAG_NEWS_HOST     || 
+					 folderLine.flags & MSG_FOLDER_FLAG_IMAP_PUBLIC   ||
+					 folderLine.flags & MSG_FOLDER_FLAG_INBOX         ||
+					 folderLine.flags & MSG_FOLDER_FLAG_MAIL		  ||
+					 folderLine.flags & MSG_FOLDER_FLAG_IMAP_SERVER   ||
+					 folderLine.flags & MSG_FOLDER_FLAG_CAT_CONTAINER) 
+				{
+					if ( bRoots )
+					{
+						if ( folderLine.flags & MSG_FOLDER_FLAG_IMAP_PUBLIC   ||
+							 folderLine.flags & MSG_FOLDER_FLAG_INBOX)
+						{
+
+							::SendMessage( m_hWnd, m_nAddString, (WPARAM) 0, (LPARAM) folderLine.name );
+							::SendMessage( m_hWnd, m_nSetItemData, (WPARAM) index,(DWORD)(folderLine.id) );
+							index++;
+						}
+						
+						if ( folderLine.numChildren > 0 ) 
+						{
+							SubPopulate(index, folderLine.id );
+						}
+					}
+				}
+			}
+		}
+		delete [] ppFolderInfo;
+	}
+
+	return 1;	
+}
+
+
+void CFilterScopeCombo::SubPopulate(int &index, MSG_FolderInfo *folder )
+{
+	int32 iLines = MSG_GetFolderChildren (m_pMaster, folder, NULL, 0);
+	MSG_FolderInfo **ppFolderInfo = new MSG_FolderInfo *[iLines];
+
+	ASSERT(ppFolderInfo);
+	if (ppFolderInfo)
+	{
+		MSG_GetFolderChildren (m_pMaster, folder, ppFolderInfo, iLines);
+		for (int i = 0; i < iLines; i++)
+		{
+			MSG_FolderLine folderLine;
+			if (MSG_GetFolderLineById (m_pMaster, ppFolderInfo[i], &folderLine)) 
+			{
+				if ( folderLine.flags & MSG_FOLDER_FLAG_NEWSGROUP     ||
+					 folderLine.flags & MSG_FOLDER_FLAG_NEWS_HOST     || 
+					 folderLine.flags & MSG_FOLDER_FLAG_IMAP_PUBLIC   ||
+					 folderLine.flags & MSG_FOLDER_FLAG_INBOX)
+				{ 
+
+					::SendMessage( m_hWnd, m_nAddString, (WPARAM) 0, (LPARAM) folderLine.name );
+					::SendMessage( m_hWnd, m_nSetItemData, (WPARAM) index,(DWORD)(folderLine.id) );
+					index++;
+				}
+				if ( folderLine.numChildren > 0 ) {
+					SubPopulate(index, folderLine.id);
+				}
+			}
+		}
+		delete [] ppFolderInfo;
+	}
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -233,7 +475,26 @@ CFilterPickerDialog::CFilterPickerDialog(MSG_Pane *pPane, CWnd* pParent /*=NULL*
 	: CDialog(CFilterPickerDialog::IDD, pParent)
 {
 	m_pPane = pPane;
+	m_pParent = pParent;
+	m_FolderInfoScope = NULL;
+	m_pDWordArray = new CDWordArray;  //list of Filter Lists
+									  //each each filter list represents a change in scope
 }
+
+CFilterPickerDialog::~CFilterPickerDialog()
+{
+	MSG_FilterList *pListData = NULL;
+
+	while (-1 != m_pDWordArray->GetUpperBound())
+	{
+		m_pDWordArray->RemoveAt(m_pDWordArray->GetUpperBound());
+		m_pDWordArray->FreeExtra();
+		//we don't need to free what was in the array because the backend ownes the memory.
+	}
+	if (m_pDWordArray)
+		delete m_pDWordArray;
+}
+
 
 
 void CFilterPickerDialog::DoDataExchange(CDataExchange* pDX)
@@ -247,13 +508,42 @@ int CFilterPickerDialog::OnInitDialog()
 
 	m_FilterList.SubclassDlgItem( IDC_LIST_FILTERS, this );
 
+	m_ScopeCombo.SubclassDlgItem(IDC_COMBO_SERVER_SCOPE, this);
+	m_ScopeCombo.PopulateNews(WFE_MSGGetMaster(),TRUE);
+	m_ScopeCombo.SetCurSel(0);
+
+	CRect comboRect;
+	m_ScopeCombo.GetWindowRect(comboRect);
+
+	m_ScopeCombo.SetWindowPos(NULL, 0, 0, comboRect.Width(), comboRect.Height() * 5, SWP_NOMOVE | SWP_NOZORDER);
+	
+	DWORD dwData = m_ScopeCombo.GetItemData(0);
+
+	if(dwData != -1)
+		m_FolderInfoScope = (MSG_FolderInfo*)dwData;
+	else
+		m_FolderInfoScope = NULL;
+
+	ASSERT(m_FolderInfoScope != NULL);
+
 	m_UpButton.AutoLoad( IDC_UP, this );
 	m_DownButton.AutoLoad( IDC_DOWN, this );
 
-	MSG_OpenFolderFilterList(m_pPane, NULL, filterInbox, &m_pFilterList);
-	MSG_GetFilterCount(m_pFilterList, &m_iFilterCount);
-	m_bLoggingEnabled = MSG_IsLoggingEnabled(m_pFilterList);
-	m_iIndex = 0;
+	if(m_FolderInfoScope != NULL)
+	{
+		MSG_OpenFolderFilterList(m_pPane, 
+								m_FolderInfoScope,
+								GetFilterType(m_FolderInfoScope), 
+								&m_pFilterList);
+		m_pDWordArray->Add((DWORD)m_pFilterList); //put the list on the array
+		MSG_GetFilterCount(m_pFilterList, &m_iFilterCount);
+		m_bLoggingEnabled = MSG_IsLoggingEnabled(m_pFilterList);
+		m_iIndex = 0;
+	}
+	else
+	{
+		m_pFilterList = NULL;
+	}
 
 	CWnd *widget;
     widget = GetDlgItem(IDC_CHECK_LOG);
@@ -293,23 +583,26 @@ int CFilterPickerDialog::OnInitDialog()
 
 void CFilterPickerDialog::UpdateList()
 {
-	MSG_GetFilterCount(m_pFilterList, &m_iFilterCount);
+	if(m_pFilterList != NULL)
+	{
+		MSG_GetFilterCount(m_pFilterList, &m_iFilterCount);
 
-	const char *lpszName;
-	CListBox *pListBox = (CListBox *) GetDlgItem( IDC_LIST_FILTERS );
-	pListBox->ResetContent();
+		const char *lpszName;
+		CListBox *pListBox = (CListBox *) GetDlgItem( IDC_LIST_FILTERS );
+		pListBox->ResetContent();
 
-	for ( int i = 0; i < m_iFilterCount; i++ ) {
-		if (FilterError_Success == MSG_GetFilterAt(m_pFilterList, (MSG_FilterIndex) i, &m_pFilter) && m_pFilter)
-		{
-			MSG_GetFilterName( m_pFilter, (char **) &lpszName );
-			pListBox->AddString( lpszName );
-			pListBox->SetItemData( i, (ULONG) m_pFilter );
+		for ( int i = 0; i < m_iFilterCount; i++ ) {
+			if (FilterError_Success == MSG_GetFilterAt(m_pFilterList, (MSG_FilterIndex) i, &m_pFilter) && m_pFilter)
+			{
+				MSG_GetFilterName( m_pFilter, (char **) &lpszName );
+				pListBox->AddString( lpszName );
+				pListBox->SetItemData( i, (ULONG) m_pFilter );
+			}
 		}
-	}
-	pListBox->SetCurSel(m_iIndex);
+		pListBox->SetCurSel(m_iIndex);
 
-	OnSelchangeListFilter();
+		OnSelchangeListFilter();
+	}
 }
 
 BEGIN_MESSAGE_MAP(CFilterPickerDialog, CDialog)
@@ -317,7 +610,9 @@ BEGIN_MESSAGE_MAP(CFilterPickerDialog, CDialog)
 	ON_BN_CLICKED( IDCANCEL, OnCancel)
 	ON_BN_CLICKED( IDC_NEW, OnNew)
 	ON_BN_CLICKED( IDC_EDIT, OnEdit)
+	ON_BN_CLICKED( IDC_BUTTON_SERVER_FILTERS, OnServerFilters)
 	ON_UPDATE_COMMAND_UI( IDC_EDIT, OnUpdateEdit )
+	ON_UPDATE_COMMAND_UI(IDC_BUTTON_SERVER_FILTERS, OnUpdateServerFilters)
 	ON_BN_CLICKED( IDC_DELETE, OnDelete)
 	ON_UPDATE_COMMAND_UI( IDC_DELETE, OnUpdateEdit )
 	ON_BN_CLICKED( IDC_UP, OnUp)
@@ -328,9 +623,115 @@ BEGIN_MESSAGE_MAP(CFilterPickerDialog, CDialog)
 	ON_UPDATE_COMMAND_UI( IDC_DOWN, OnUpdateDown )
 	ON_LBN_DBLCLK( IDC_LIST_FILTERS, OnDblclkListFilter )
 	ON_LBN_SELCHANGE( IDC_LIST_FILTERS, OnSelchangeListFilter )
+	ON_CBN_SELCHANGE(IDC_COMBO_SERVER_SCOPE, OnScope)
 	ON_BN_CLICKED( IDC_FILTER_HELP, OnHelp)
 	ON_BN_CLICKED( IDC_VIEW, OnView)
 END_MESSAGE_MAP()
+
+
+
+void CFilterPickerDialog::OnServerFilters()
+{
+	if(m_FolderInfoScope != NULL)
+	{
+		CMailNewsFrame *pFrame = (CMailNewsFrame *)m_pParent;
+		MWContext *context = pFrame->GetContext()->GetContext();
+		MSG_GetAdminUrlForFolder(context, m_FolderInfoScope,MSG_AdminServerSideFilters);
+	}
+}
+
+void CFilterPickerDialog::OnUpdateServerFilters(CCmdUI *pCmdUI)
+{
+	if(m_FolderInfoScope != NULL)
+	{
+		BOOL bOKToEnable = MSG_HaveAdminUrlForFolder(m_FolderInfoScope,MSG_AdminServerSideFilters);
+		pCmdUI->Enable(bOKToEnable);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}
+
+void CFilterPickerDialog::OnScope()
+{
+	int iCurSel = m_ScopeCombo.GetCurSel();
+	MSG_FolderInfo *pfolderInfo = NULL;
+	DWORD dwData = m_ScopeCombo.GetItemData(iCurSel);
+
+	if(dwData != -1)
+	{
+		pfolderInfo = (MSG_FolderInfo*)dwData;
+	}
+	else
+	{
+		pfolderInfo = NULL;
+	}
+
+	if ( m_FolderInfoScope != pfolderInfo)
+	{   //set the new scope
+		m_FolderInfoScope = pfolderInfo;
+		if(m_FolderInfoScope != NULL)
+		{
+			//Check the filter arrary to see if we already opened this scope's filter list
+			if ( !FilterListAlreadyOpen(m_FolderInfoScope,m_pFilterList) )	
+			{
+				//Get a new list of filters for this scope 
+				MSG_OpenFolderFilterList(m_pPane,
+										m_FolderInfoScope, 
+										GetFilterType(m_FolderInfoScope), 
+										&m_pFilterList);
+				//put the list on the array
+				m_pDWordArray->Add((DWORD)m_pFilterList); 
+			}
+
+			MSG_GetFilterCount(m_pFilterList, &m_iFilterCount);
+			m_bLoggingEnabled = MSG_IsLoggingEnabled(m_pFilterList);
+			m_iIndex = 0;
+		}
+		else
+		{
+			m_pFilterList = NULL;
+		}
+		CWnd *widget;
+		widget = GetDlgItem(IDC_CHECK_LOG);
+		((CButton *) widget)->SetCheck(m_bLoggingEnabled);
+		UpdateList();
+	}
+ //nothing change so don't do anything
+}
+
+MSG_FilterType CFilterPickerDialog::GetFilterType(MSG_FolderInfo *pFolderInfo)
+{
+	if (!(MSG_GetFolderFlags(pFolderInfo) & MSG_FOLDER_FLAG_NEWSGROUP) && 
+		!(MSG_GetFolderFlags(pFolderInfo) & MSG_FOLDER_FLAG_NEWS_HOST))
+	{
+		return filterInbox;
+	}
+	else 
+	{
+		return filterNews;
+	}
+}
+
+//Searches the filter list array to see if we arleady have an open filter list for this folder scope
+BOOL CFilterPickerDialog::FilterListAlreadyOpen(MSG_FolderInfo *pFolder, MSG_FilterList *&pReturnList)
+{   
+	for (int i=0; i <= m_pDWordArray->GetUpperBound(); i++)
+	{
+		MSG_FilterList *pFilterList = NULL;
+		pFilterList = (MSG_FilterList*)m_pDWordArray->GetAt(i);
+		if (pFilterList)
+		{   
+			if (MSG_GetFolderInfoForFilterList(pFilterList) == pFolder)
+			{
+				pReturnList = pFilterList;
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
 
 void CFilterPickerDialog::OnDblclkListFilter() 
 {
@@ -368,27 +769,32 @@ void CFilterPickerDialog::OnSelcancelListFilter()
 
 void CFilterPickerDialog::OnNew() 
 {
-	m_pFilter = NULL;
-	CFilterDialog dialog( m_pPane, &m_pFilter, this );
+	if(m_FolderInfoScope != NULL )
+	{
+		m_pFilter = NULL;
+		CFilterDialog dialog( m_pPane, m_FolderInfoScope, &m_pFilter, this );
 
-	if (dialog.DoModal() == IDOK ) {
-		m_iIndex += 1;
-		MSG_InsertFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex, m_pFilter );
+		if (dialog.DoModal() == IDOK ) {
+			m_iIndex += 1;
+			MSG_InsertFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex, m_pFilter );
+		}
+
+		UpdateList();
 	}
-
-	UpdateList();
 }
 
 void CFilterPickerDialog::OnEdit() 
 {
-	MSG_GetFilterAt(m_pFilterList, (MSG_FilterIndex) m_iIndex, &m_pFilter);
-	CFilterDialog dialog( m_pPane, &m_pFilter, this );
+	if(m_FolderInfoScope != NULL)
+	{
+		MSG_GetFilterAt(m_pFilterList, (MSG_FilterIndex) m_iIndex, &m_pFilter);
+		CFilterDialog dialog( m_pPane, m_FolderInfoScope, &m_pFilter, this );
 
-	if ( dialog.DoModal() == IDOK ) {
-		MSG_SetFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex, m_pFilter );
+		if ( dialog.DoModal() == IDOK )
+			MSG_SetFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex, m_pFilter );
+
+		UpdateList();
 	}
-
-	UpdateList();
 }
 
 void CFilterPickerDialog::OnUpdateEdit( CCmdUI *pCmdUI )
@@ -407,14 +813,17 @@ void CFilterPickerDialog::OnUpdateEdit( CCmdUI *pCmdUI )
 
 void CFilterPickerDialog::OnDelete() 
 {
-	if (m_iIndex < m_iFilterCount && m_iIndex >= 0) {
-		MSG_GetFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex, &m_pFilter );
-		MSG_RemoveFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex );
-		MSG_DestroyFilter( m_pFilter );
-		if (m_iIndex) {
-			m_iIndex--;
+	if(m_FolderInfoScope != NULL)
+	{
+		if (m_iIndex < m_iFilterCount && m_iIndex >= 0) {
+			MSG_GetFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex, &m_pFilter );
+			MSG_RemoveFilterAt( m_pFilterList, (MSG_FilterIndex) m_iIndex );
+			MSG_DestroyFilter( m_pFilter );
+			if (m_iIndex) {
+				m_iIndex--;
+			}
+			UpdateList();
 		}
-		UpdateList();
 	}
 }
 
@@ -445,15 +854,30 @@ void CFilterPickerDialog::OnUpdateDown( CCmdUI *pCmdUI )
 void CFilterPickerDialog::OnOK() 
 {
 	CDialog::OnOK();
+	//Set logging for the currently displayed filter scope
 	MSG_EnableLogging(m_pFilterList, IsDlgButtonChecked(IDC_CHECK_LOG));
 
-	MSG_CloseFilterList(m_pFilterList);	
+	for (int i=0; i <= m_pDWordArray->GetUpperBound(); i++)
+	{
+		MSG_FilterList *pFilterList = (MSG_FilterList*)m_pDWordArray->GetAt(i);
+		if (pFilterList)
+		{   
+			MSG_CloseFilterList(pFilterList);	
+		}
+	}
 }
 
 void CFilterPickerDialog::OnCancel() 
 {
 	CDialog::OnCancel();
-	MSG_CancelFilterList( m_pFilterList );
+	for (int i=0; i <= m_pDWordArray->GetUpperBound(); i++)
+	{
+		MSG_FilterList *pFilterList = (MSG_FilterList*)m_pDWordArray->GetAt(i);
+		if (pFilterList)
+		{   
+			MSG_CancelFilterList( pFilterList );
+		}
+	}
 }
 
 void CFilterPickerDialog::OnHelp() 
@@ -469,16 +893,16 @@ void CFilterPickerDialog::OnView()
 // CFilterDialog dialog
 
 
-CFilterDialog::CFilterDialog(MSG_Pane *pPane, MSG_Filter **filter, 
-							 CWnd* pParent /*=NULL*/)
+CFilterDialog::CFilterDialog(MSG_Pane *pPane, MSG_FolderInfo *pFolderInfoScope, 
+							 MSG_Filter **filter, CWnd* pParent /*=NULL*/)
 	: CDialog(CFilterDialog::IDD, pParent)
 {
 	m_pPane = pPane;
+	m_pFolderInfoScope = pFolderInfoScope;
 	m_hFilter = filter;
 	m_bLogicType = 0;
 
 	m_iRowIndex = 0;
-	m_pCustomHeadersDlg = NULL;
 
 	//{{AFX_DATA_INIT(CFilterDialog)
 	m_iActive = 1;
@@ -497,10 +921,47 @@ void CFilterDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CFilterDialog)
-	DDX_Radio(pDX, IDC_RADIO_OFF, m_iActive);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_lpszFilterName);
 	DDX_Text(pDX, IDC_EDIT_DESC, m_lpszFilterDesc);
 	//}}AFX_DATA_MAP
+}
+
+MSG_ScopeAttribute CFilterDialog::GetFolderScopeAttribute()
+{
+
+	uint32 flags = MSG_GetFolderFlags(m_pFolderInfoScope);
+
+	MSG_ScopeAttribute scopeAttrib;
+
+	if (flags & MSG_FOLDER_FLAG_NEWSGROUP || flags & MSG_FOLDER_FLAG_NEWS_HOST)
+	{
+		scopeAttrib = scopeNewsgroup;
+	}
+	else
+	{
+		scopeAttrib = scopeMailFolder;
+	}
+
+	return scopeAttrib;
+}
+
+MSG_FilterType CFilterDialog::GetFolderFilterType()
+{
+
+	MSG_FilterType filterType;
+	
+	uint32 flags = MSG_GetFolderFlags(m_pFolderInfoScope);
+	
+	if(flags & MSG_FOLDER_FLAG_NEWSGROUP || flags & MSG_FOLDER_FLAG_NEWS_HOST)
+	{
+		filterType = filterNewsRule;
+	}
+	else
+	{
+		filterType = filterInboxRule;
+	}
+
+	return filterType;
 }
 
 int CFilterDialog::OnInitDialog() 
@@ -514,42 +975,39 @@ int CFilterDialog::OnInitDialog()
 
 	CComboBox *combo;
 
+#if defined (B3_SEARCH_API)
 	MSG_FolderInfo *pInbox = NULL;
 	MSG_GetFoldersWithFlag (WFE_MSGGetMaster(), MSG_FOLDER_FLAG_INBOX, &pInbox, 1);
+#endif
 
 	uint16 numItems;
-	MSG_GetNumAttributesForFilterScopes (WFE_MSGGetMaster(), scopeMailFolder, (void**)&pInbox, 1, &numItems); 
-    MSG_SearchMenuItem * HeaderItems = new MSG_SearchMenuItem [numItems+1];
+
+	MSG_ScopeAttribute scopeAttrib = GetFolderScopeAttribute();
+	
+	MSG_GetNumAttributesForFilterScopes (WFE_MSGGetMaster(), scopeAttrib, (void**)&m_pFolderInfoScope, 1, &numItems); 
+  MSG_SearchMenuItem * HeaderItems = new MSG_SearchMenuItem [numItems];
 	
 	if (!HeaderItems) 
 		return FALSE;  //something bad happened here!!
 
-	MSG_GetAttributesForFilterScopes (WFE_MSGGetMaster(), scopeMailFolder, (void**)&pInbox, 1, HeaderItems, &numItems);
-	CString strEditCustom;
-	strEditCustom.LoadString(IDS_EDIT_CUSTOM);
-	strcpy( HeaderItems[numItems].name,  strEditCustom);
-	HeaderItems[numItems].attrib = -1;  //identifies a command to launch the Edit headers dialog
-	HeaderItems[numItems].isEnabled = FALSE;
-	BOOL bUsesCustomHeaders = MSG_ScopeUsesCustomHeaders(WFE_MSGGetMaster(), scopeMailFolder, pInbox, TRUE);
+#if defined (B3_SEARCH_API)
+	MSG_GetAttributesForFilterScopes (WFE_MSGGetMaster(), scopeAttrib, (void**)&m_pFolderInfoScope, 1, HeaderItems, &numItems);
+#else
+	MSG_GetAttributesForScope(scopeAttrib, HeaderItems, &numItems);
+#endif
 
-
-	for (i = 0; i < 5; i++) {
-
+  for (i = 0; i < 5; i++) {
 		combo = (CComboBox *) GetDlgItem( RuleMatrix[i][COL_ATTRIB] );
 		combo->ResetContent();
 		for (j = 0; j < numItems; j++) {
 			combo->AddString(HeaderItems[j].name);
 			combo->SetItemData(j, HeaderItems[j].attrib);
 		}
-		if (j == numItems && bUsesCustomHeaders)
-		{   //place the edit text in the last position of the combo box
-			combo->AddString(HeaderItems[j].name);
-			combo->SetItemData(j, HeaderItems[j].attrib);
-		}
 		if (i > 0) {
 			for (j = 0; j < COL_COUNT; j++) {
 				widget = GetDlgItem(RuleMatrix[i][j]);
-				widget->ShowWindow(SW_HIDE);
+				if(widget != NULL)
+          widget->ShowWindow(SW_HIDE);
 			}
 		}
 		combo->SetCurSel(0);
@@ -561,12 +1019,7 @@ int CFilterDialog::OnInitDialog()
 
 	//Above we are getting the list of Headers and updating controls in column 1 
 
-	CComboBox *comboAndOr = (CComboBox*) GetDlgItem(IDC_COMBO_AND_OR);
-	if (comboAndOr)
-	{	//Default to AND logic for display in the combobox
-		comboAndOr->SetCurSel(0);
-	}
-
+  CheckRadioButton(IDC_RADIO_ANY, IDC_RADIO_ALL, IDC_RADIO_ANY);
 
 	MSG_RuleActionType type;
 	combo = (CComboBox *) GetDlgItem( IDC_COMBO_ACTION );
@@ -575,7 +1028,9 @@ int CFilterDialog::OnInitDialog()
 	MSG_RuleMenuItem items[16];
 	uint16 maxItems = 16;
 
-	MSG_GetRuleActionMenuItems(filterInbox, items, &maxItems);
+	MSG_FilterType filterType = GetFolderFilterType();
+
+	MSG_GetRuleActionMenuItems(filterType, items, &maxItems);
 	for (j = 0; j < maxItems; j++) {
 		combo->AddString(items[j].name);
 		combo->SetItemData(j, items[j].attrib);
@@ -599,7 +1054,6 @@ int CFilterDialog::OnInitDialog()
 	if ( *m_hFilter ) {
 		const char *lpszTemp;
 		CWnd *widget;
-		CButton *button;
 
 		// Name
 		MSG_GetFilterName( *m_hFilter, (char **) &lpszTemp);
@@ -617,10 +1071,6 @@ int CFilterDialog::OnInitDialog()
 		XP_Bool bEnabled;
 		MSG_IsFilterEnabled( *m_hFilter, &bEnabled );
 		m_iActive = bEnabled ? 1 : 0;
-		button = (CButton *) GetDlgItem( IDC_RADIO_OFF );
-		button->SetCheck(m_iActive ? 0 : 1 );
-		button = (CButton *) GetDlgItem( IDC_RADIO_ON );
-		button->SetCheck(m_iActive);
 
 		// Terms
 		long iNumTerms;
@@ -635,29 +1085,38 @@ int CFilterDialog::OnInitDialog()
 
 		MSG_RuleGetNumTerms( rule, &iNumTerms );
 		ASSERT(iNumTerms > 0 && iNumTerms < 6);
-		
 
 		for ( i = 0; i < (uint16)iNumTerms; i++) {
-			if (i > 0) {
+      if (i > 0)
 				OnMore();
-			}
+
+#ifndef FE_IMPLEMENTS_BOOLEAN_OR
+			MSG_RuleGetTerm(rule, i, &attrib, &op, &value);
+			SetTerm(i, attrib, op, value);
+#else
 			MSG_RuleGetTerm(rule, i, &attrib, &op, &value, &m_bLogicType, (char **)&arbitraryHeaders);
 			SetTerm(i, attrib, op, value, (char*)arbitraryHeaders);
+#endif 
 		}
 
-		m_bLogicType = !m_bLogicType;  //we have to switch it since the combo box has these values reversed by index
-									   //the backend stores AND = 1  and OR = 0.
-		CComboBox *comboAndOr = (CComboBox*) GetDlgItem(IDC_COMBO_AND_OR);
-		if (comboAndOr)
-		{	
-			comboAndOr->SetCurSel(m_bLogicType);
-		}
+    CheckRadioButton(IDC_RADIO_ANY, IDC_RADIO_ALL, m_bLogicType ? IDC_RADIO_ALL : IDC_RADIO_ANY);
 
 		ChangeLogicText();
 		void *value2;
 
 		MSG_RuleGetAction( rule, &type, &value2);
 		SetAction( type, value2 );
+
+    if(iNumTerms > 1)
+    {
+      GetDlgItem(IDC_RADIO_ANY)->EnableWindow(TRUE);
+      GetDlgItem(IDC_RADIO_ALL)->EnableWindow(TRUE);
+    }
+    else
+    {
+      GetDlgItem(IDC_RADIO_ANY)->EnableWindow(FALSE);
+      GetDlgItem(IDC_RADIO_ALL)->EnableWindow(FALSE);
+    }
 	}
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -670,24 +1129,16 @@ void CFilterDialog::UpdateColumn1Attributes()
 	uint16 numItems;
 	CComboBox *combo = NULL;
 
-	MSG_FolderInfo *pInbox = NULL;
-	MSG_GetFoldersWithFlag (WFE_MSGGetMaster(), MSG_FOLDER_FLAG_INBOX, &pInbox, 1);
-	MSG_GetNumAttributesForFilterScopes (WFE_MSGGetMaster(), scopeMailFolder, (void**)&pInbox, 1, &numItems); 
-    MSG_SearchMenuItem * HeaderItems = new MSG_SearchMenuItem [numItems+1];
+	MSG_ScopeAttribute scopeAttrib = GetFolderScopeAttribute();
+
+	MSG_GetNumAttributesForFilterScopes (WFE_MSGGetMaster(), scopeAttrib, (void**)&m_pFolderInfoScope, 1, &numItems); 
+  MSG_SearchMenuItem * HeaderItems = new MSG_SearchMenuItem [numItems];
 	
 	if (!HeaderItems) 
 		return;  //something bad happened here!!
 
 	//we are getting the list of Headers and updating controls in column 1 
-	MSG_GetAttributesForFilterScopes (WFE_MSGGetMaster(), scopeMailFolder, (void**)&pInbox, 1, HeaderItems, &numItems);
-
-	CString strEditCustom;
-	strEditCustom.LoadString(IDS_EDIT_CUSTOM);
-	strcpy( HeaderItems[numItems].name,  strEditCustom);
-	HeaderItems[numItems].attrib = -1;  //identifies a command to launch the Edit headers dialog
-	HeaderItems[numItems].isEnabled = FALSE;
-	BOOL bUsesCustomHeaders = MSG_ScopeUsesCustomHeaders(WFE_MSGGetMaster(),scopeMailFolder, pInbox, TRUE);
-
+	MSG_GetAttributesForFilterScopes (WFE_MSGGetMaster(), scopeAttrib, (void**)&m_pFolderInfoScope, 1, HeaderItems, &numItems);
 
 	for (i = 0; i < 5; i++) {
 
@@ -702,12 +1153,6 @@ void CFilterDialog::UpdateColumn1Attributes()
 			combo->AddString(HeaderItems[j].name);
 			combo->SetItemData(j, HeaderItems[j].attrib);
 		}
-		if (j == numItems && bUsesCustomHeaders)
-		{   //place the edit text in the last position of the combo box
-			combo->AddString(HeaderItems[j].name);
-			combo->SetItemData(j, HeaderItems[j].attrib);
-		}
-
 		combo->SetCurSel(0);
 		UpdateOpList(i);
 	}
@@ -715,62 +1160,12 @@ void CFilterDialog::UpdateColumn1Attributes()
 	delete HeaderItems; //free the memory since it's now in the combo box
 }
 
-
-void CFilterDialog::EditHeaders(int iRow)
-{
-	//We are being asked to modify custom headers
-
-	CComboBox *combo;	
-	int iCurSel;
-	MSG_SearchAttribute attrib;
-	m_iRowSelected = iRow;
-	combo = (CComboBox *) GetDlgItem( RuleMatrix[iRow][COL_ATTRIB] );
-	iCurSel = combo->GetCurSel();
-	attrib = (MSG_SearchAttribute) combo->GetItemData(iCurSel);
-
-	if (attrib == -1)
-	{
-		MSG_Master *master = WFE_MSGGetMaster();
-		//find out if we are the only ones trying to edit headers.
-		if (master)
-		{
-			if (!MSG_AcquireEditHeadersSemaphore(master, this))
-			{
-				::MessageBox(this->GetSafeHwnd(),
-						 szLoadString(IDS_EDIT_HEADER_IN_USE), 
-						 szLoadString(IDS_CUSTOM_HEADER_ERROR), 
-						 MB_OK|MB_ICONSTOP);
-				combo->SetCurSel(0);
-				return;
-			}
-		}
-		else
-		{
-			return;
-		}
-
-		m_pCustomHeadersDlg = new CCustomHeadersDlg(this);
-		if (m_pCustomHeadersDlg)
-		{
-			m_pCustomHeadersDlg->ShowWindow(SW_SHOW);
-		}
-	}
-}
-
 LONG CFilterDialog::OnFinishedHeaders(WPARAM wParam, LPARAM lParam )
 {
 	MSG_Master *master = WFE_MSGGetMaster();
-	CComboBox *pCombo = (CComboBox *) GetDlgItem( RuleMatrix[m_iRowSelected][COL_ATTRIB] );
 	if (lParam == IDOK )
-	{
 		UpdateColumn1Attributes();
-	}
-	else
-	{
-		pCombo->SetCurSel(0);
-	}
 	MSG_ReleaseEditHeadersSemaphore(master, this);
-	m_pCustomHeadersDlg = NULL;
 	return 0;
 }
 
@@ -778,15 +1173,11 @@ void CFilterDialog::OnNewFolder()
 {
 	int iCurSel = m_FolderCombo.GetCurSel();
 	MSG_FolderInfo *pFolderInfo = (MSG_FolderInfo*)m_FolderCombo.GetItemData(iCurSel);
-	if (pFolderInfo)
-	{
-		CNewFolderDialog(this, m_pPane, pFolderInfo);
-	}
-	else
-	{
-		CNewFolderDialog(this,m_pPane, NULL);
-	}
-	OnUpdateDest();
+
+  CNewFolderDialog nfd(this, m_pPane, pFolderInfo);
+  nfd.DoModal();
+
+  OnUpdateDest();
 }
 
 
@@ -810,9 +1201,13 @@ void CFilterDialog::UpdateOpList(int iRow)
 	combo = (CComboBox *) GetDlgItem( RuleMatrix[iRow][COL_OP] );
 	combo->ResetContent();
 
-	MSG_FolderInfo *pInbox = NULL;
-	MSG_GetFoldersWithFlag (WFE_MSGGetMaster(), MSG_FOLDER_FLAG_INBOX, &pInbox, 1);
-	MSG_GetOperatorsForFilterScopes (WFE_MSGGetMaster(), scopeMailFolder, (void**) &pInbox, 1, attrib, items, &maxItems);
+  MSG_ScopeAttribute scopeAttrib = GetFolderScopeAttribute();
+
+#if defined (B3_SEARCH_API)
+	MSG_GetOperatorsForFilterScopes (WFE_MSGGetMaster(), scopeAttrib, (void**) &m_pFolderInfoScope, 1, attrib, items, &maxItems);
+#else
+	MSG_GetOperatorsForAttribute(scopeAttrib, attrib, items, &maxItems);
+#endif
 
 	for (j = 0; j < maxItems; j++) {
 		combo->AddString(items[j].name);
@@ -1026,7 +1421,6 @@ void CFilterDialog::UpdateDestList()
 	}
 }
 
-
 int CFilterDialog::ChangeLogicText()
 {
 	CWnd *widget;
@@ -1040,12 +1434,12 @@ int CFilterDialog::ChangeLogicText()
 			if (!widget) return 0;
 			if (m_bLogicType)
 			{   //Display AND logic text
-				strLogicText.LoadString(IDS_ORTHE);
+				strLogicText.LoadString(IDS_ANDTHE);
 				widget->SetWindowText(strLogicText);
 			}
 			else 
-			{   //Display AND logic text
-				strLogicText.LoadString(IDS_ANDTHE);
+			{   //Display OR logic text
+				strLogicText.LoadString(IDS_ORTHE);
 				widget->SetWindowText(strLogicText);
 			}
 			widget->ShowWindow(SW_SHOW);
@@ -1054,14 +1448,14 @@ int CFilterDialog::ChangeLogicText()
 	return 1;
 }
 
-
-
 int CFilterDialog::GetNumTerms()
 {
 	return m_iRowIndex + 1;
 }
 
 static char szResultText[64];
+
+#ifdef FE_IMPLEMENTS_BOOLEAN_OR
 
 void CFilterDialog::GetTerm( int iRow,
 							 MSG_SearchAttribute *attrib,
@@ -1113,6 +1507,58 @@ void CFilterDialog::GetTerm( int iRow,
 	}
 }
 
+#else
+
+void CFilterDialog::GetTerm( int iRow,
+							 MSG_SearchAttribute *attrib,
+							 MSG_SearchOperator *op,
+							 MSG_SearchValue *value)
+							 
+{
+	CComboBox *combo;
+	CNSDateEdit *date;
+	CWnd *widget;
+	int iCurSel;
+
+	combo = (CComboBox *) GetDlgItem(RuleMatrix[iRow][COL_ATTRIB]);
+	iCurSel = combo->GetCurSel();
+	*attrib = (MSG_SearchAttribute) combo->GetItemData(iCurSel);
+	
+	combo = (CComboBox *) GetDlgItem(RuleMatrix[iRow][COL_OP]);
+	iCurSel = combo->GetCurSel();
+	*op = (MSG_SearchOperator) combo->GetItemData(iCurSel);
+	
+	widget = GetDlgItem(RuleMatrix[iRow][COL_VALUE]);
+	widget->GetWindowText(szResultText, sizeof(szResultText));
+
+	value->attribute = *attrib;
+	switch (*attrib) {
+		case attribDate:
+			{
+				CTime ctime;
+				date = (CNSDateEdit *) GetDlgItem(RuleMatrix[iRow][COL_VALUE]);
+				date->GetDate(ctime);
+				value->u.date = ctime.GetTime();
+			}
+			break;
+		case attribPriority:
+			combo = (CComboBox *) GetDlgItem(RuleMatrix[iRow][COL_VALUE]);
+			iCurSel = combo->GetCurSel();
+			value->u.priority = (MSG_PRIORITY) combo->GetItemData(iCurSel);
+			break;
+		case attribMsgStatus:
+			combo = (CComboBox *) GetDlgItem(RuleMatrix[iRow][COL_VALUE]);
+			iCurSel = combo->GetCurSel();
+			value->u.msgStatus = combo->GetItemData(iCurSel);
+			break;
+		default:
+			value->u.string = XP_STRDUP( szResultText );
+	}
+}
+#endif
+
+#ifdef FE_IMPLEMENTS_BOOLEAN_OR
+
 void CFilterDialog::SetTerm( int iRow,
 							 MSG_SearchAttribute attrib,
 							 MSG_SearchOperator op,
@@ -1130,8 +1576,15 @@ void CFilterDialog::SetTerm( int iRow,
 	combo->SetCurSel(0);
 	CString strCheckHeader = pszArbitraryHeader;
 
+	MSG_ScopeAttribute scopeAttrib = GetFolderScopeAttribute();
+
+	BOOL bUsesCustomHeaders = MSG_ScopeUsesCustomHeaders(WFE_MSGGetMaster(),scopeAttrib, m_pFolderInfoScope, TRUE);
+
+	//if it uses custom headers then don't compare last item which is the "Custom" item
+	int headerCount = bUsesCustomHeaders ? combo->GetCount() - 1 : combo->GetCount();
+
 	if (!strCheckHeader.IsEmpty() ) {
-		for ( i = 0; i < (combo->GetCount() -1) ; i++ ) {
+		for ( i = 0; i < headerCount ; i++ ) {
 			combo->GetLBText(i,strHeader);
 			if ( (MSG_SearchAttribute) combo->GetItemData(i) == attrib && !strHeader.Compare(strCheckHeader) ) {
 				combo->SetCurSel(i);
@@ -1142,7 +1595,8 @@ void CFilterDialog::SetTerm( int iRow,
 	}
 	else
 	{
-		for ( i = 0; i < (combo->GetCount() -1) ; i++ ) {
+		// get count has to be based on whether or not there is a custom header in this.
+		for ( i = 0; i < headerCount ; i++ ) {
 			if ( (MSG_SearchAttribute) combo->GetItemData(i) == attrib ) {
 				combo->SetCurSel(i);
 	 			bFound=TRUE;
@@ -1231,6 +1685,73 @@ void CFilterDialog::SetTerm( int iRow,
 		widget->SetWindowText( (const char *) value.u.string );
 	}
 }
+
+#else
+void CFilterDialog::SetTerm( int iRow,
+							 MSG_SearchAttribute attrib,
+							 MSG_SearchOperator op,
+							 MSG_SearchValue value)
+{
+	CComboBox *combo;
+	CNSDateEdit *date;
+	CWnd *widget;
+	int i;
+
+	combo = (CComboBox *) GetDlgItem( RuleMatrix[iRow][COL_ATTRIB] );
+	combo->SetCurSel(0);
+	for ( i = 0; i < (combo->GetCount() -1) ; i++ ) {
+		if ( (MSG_SearchAttribute) combo->GetItemData(i) == attrib ) {
+			combo->SetCurSel(i);
+			break;
+		}
+	}
+
+
+	UpdateOpList( iRow );
+
+	combo = (CComboBox *) GetDlgItem( RuleMatrix[iRow][COL_OP] );
+	combo->SetCurSel(0);
+	for ( i = 0; i < combo->GetCount(); i++ ) {
+		if ( (MSG_SearchOperator) combo->GetItemData(i) == op) {
+			combo->SetCurSel(i);
+			break;
+		}
+	}
+
+	switch ( value.attribute ) {
+	case attribDate:
+		{
+			CTime ctime( value.u.date );
+			date = (CNSDateEdit *) GetDlgItem( RuleMatrix[iRow][COL_VALUE] );
+			date->SetDate( ctime );
+		}
+		break;
+	case attribPriority:
+		combo = (CComboBox *) GetDlgItem( RuleMatrix[iRow][COL_VALUE] );
+		combo->SetCurSel(0);
+		for ( i = 0; i < combo->GetCount(); i++ ) {
+			if ( (MSG_PRIORITY) combo->GetItemData(i) == value.u.priority ) {
+				combo->SetCurSel(i);
+				break;
+			}
+		}
+		break;
+	case attribMsgStatus:
+		combo = (CComboBox *) GetDlgItem( RuleMatrix[iRow][COL_VALUE] );
+		for ( i = 0; i < combo->GetCount(); i++ ) {
+			if ( combo->GetItemData(i) == value.u.msgStatus ) {
+				combo->SetCurSel(i);
+				break;
+			}
+		}
+		break;
+	default:
+		widget = GetDlgItem( RuleMatrix[iRow][COL_VALUE] );
+		widget->SetWindowText( (const char *) value.u.string );
+	}
+}
+
+#endif
 
 void CFilterDialog::GetAction(MSG_RuleActionType *action, void **value)
 {
@@ -1324,7 +1845,9 @@ BEGIN_MESSAGE_MAP(CFilterDialog, CDialog)
 	ON_CBN_SELCHANGE( IDC_COMBO_ATTRIB3, OnAttrib3 )
 	ON_CBN_SELCHANGE( IDC_COMBO_ATTRIB4, OnAttrib4 )
 	ON_CBN_SELCHANGE( IDC_COMBO_ATTRIB5, OnAttrib5 )
-	ON_CBN_SELCHANGE( IDC_COMBO_AND_OR,  OnAndOr   )
+  ON_BN_CLICKED(IDC_RADIO_ALL, OnAndOr)
+  ON_BN_CLICKED(IDC_RADIO_ANY, OnAndOr)
+	ON_BN_CLICKED(IDC_ADVANCED_OPTIONS, OnAdvanced)
 	ON_MESSAGE(WM_EDIT_CUSTOM_DONE, OnFinishedHeaders )
 	//}}AFX_MSG_MAP
 #ifndef _WIN32
@@ -1351,7 +1874,10 @@ static void GrowDialog(CWnd *pWnd, int dx, int dy)
 
 static void SlideWindow(CWnd *pWnd, int dx, int dy)
 {
-	CRect rect;
+	if(pWnd == NULL)
+    return;
+
+  CRect rect;
 	CWnd *parent;
 
 	pWnd->GetWindowRect(&rect);
@@ -1376,8 +1902,6 @@ void CFilterDialog::SlideBottomControls(int dy)
 	SlideWindow(widget, 0, dy);
 	widget = GetDlgItem(IDC_STATIC2);
 	SlideWindow(widget, 0, dy);
-	widget = GetDlgItem(IDC_STATIC3);
-	SlideWindow(widget, 0, dy);
 	widget = GetDlgItem(IDCANCEL);
 	SlideWindow(widget, 0, dy);
 	widget = GetDlgItem(IDOK);
@@ -1392,10 +1916,6 @@ void CFilterDialog::SlideBottomControls(int dy)
 	SlideWindow(widget, 0, dy);
 	widget = GetDlgItem(IDC_BUTTON_NEW_FOLDER);
 	SlideWindow(widget,0,dy);
-	widget = GetDlgItem(IDC_RADIO_ON);
-	SlideWindow(widget, 0, dy);
-	widget = GetDlgItem(IDC_RADIO_OFF);
-	SlideWindow(widget, 0, dy);
 	widget = GetDlgItem(IDC_FEWER);
 	SlideWindow(widget, 0, dy);
 	widget = GetDlgItem(IDC_MORE);
@@ -1428,45 +1948,42 @@ void CFilterDialog::OnAction()
 
 void CFilterDialog::OnAttrib1()
 {
-	EditHeaders(0);
 	UpdateOpList(0);
 }
 
 void CFilterDialog::OnAttrib2()
 {
-	EditHeaders(1);
 	UpdateOpList(1);
 }
 
 void CFilterDialog::OnAttrib3()
 {
-	EditHeaders(2);
 	UpdateOpList(2);
 }
 
 void CFilterDialog::OnAttrib4()
 {
-	EditHeaders(3); 
 	UpdateOpList(3);
 }
 
 void CFilterDialog::OnAttrib5()
 {
-	EditHeaders(4);
 	UpdateOpList(4);
 }
 
 void CFilterDialog::OnAndOr()
 {
-	CComboBox *combo;
-	int iCurSel;
-
-	combo = (CComboBox *) GetDlgItem( IDC_COMBO_AND_OR );
-	if (!combo) return;
-	iCurSel = combo->GetCurSel();
-	m_bLogicType = (iCurSel == 0 ? 0 : 1);
+  m_bLogicType = IsDlgButtonChecked(IDC_RADIO_ALL);
 	ChangeLogicText();
 }
+
+void CFilterDialog::updateAndOr()
+{
+  BOOL bEnable = GetDlgItem(IDC_COMBO_ATTRIB2)->IsWindowVisible();
+  GetDlgItem(IDC_RADIO_ANY)->EnableWindow(bEnable);
+  GetDlgItem(IDC_RADIO_ALL)->EnableWindow(bEnable);
+}
+
 
 void CFilterDialog::OnMore() 
 {
@@ -1480,16 +1997,19 @@ void CFilterDialog::OnMore()
 	widget = GetDlgItem(RuleMatrix[m_iRowIndex][0]);
 	widget->GetWindowRect(&rect);
 	m_iRowIndex++;
-	for (j = 0; j < COL_COUNT; j++) {
+	for (j = 0; j < COL_COUNT; j++) 
+  {
 		widget = GetDlgItem(RuleMatrix[m_iRowIndex][j]);
+    if(widget == NULL)
+      continue;
 		if (j == 3 && m_bLogicType)
 		{
-			strLogicText.LoadString(IDS_ORTHE);
+			strLogicText.LoadString(IDS_ANDTHE);
 			widget->SetWindowText(strLogicText);
 		}
 		else if ( j==3 && !m_bLogicType)
-		{   //change the logic text for this new rule line to AND
-			strLogicText.LoadString(IDS_ANDTHE);
+		{   //change the logic text for this new rule line to OR
+			strLogicText.LoadString(IDS_ORTHE);
 			widget->SetWindowText(strLogicText);
 		}
 		widget->ShowWindow(SW_SHOW);
@@ -1507,7 +2027,8 @@ void CFilterDialog::OnMore()
 	widget = GetDlgItem(IDC_FEWER);
 	widget->EnableWindow(TRUE);
 
-	Invalidate();
+	updateAndOr();
+  Invalidate();
 }
 
 void CFilterDialog::OnFewer() 
@@ -1522,6 +2043,8 @@ void CFilterDialog::OnFewer()
 	widget->GetWindowRect(&rect);
 	for (j = 0; j < COL_COUNT; j++) {
 		widget = GetDlgItem(RuleMatrix[m_iRowIndex][j]);
+    if(widget == NULL)
+      continue;
 		widget->ShowWindow(SW_HIDE);
 	}
 	m_iRowIndex--;
@@ -1538,7 +2061,39 @@ void CFilterDialog::OnFewer()
 	widget = GetDlgItem(IDC_MORE);
 	widget->EnableWindow(TRUE);
 
+	updateAndOr();
 	Invalidate();
+}
+
+void CFilterDialog::OnAdvanced()
+{
+	MSG_Master *master = WFE_MSGGetMaster();
+	//find out if we are the only ones trying to edit headers.
+	if (master)
+	{
+		if (!MSG_AcquireEditHeadersSemaphore(master, this))
+		{
+			::MessageBox(FEU_GetLastActiveFrame()->GetSafeHwnd(),
+					 szLoadString(IDS_EDIT_HEADER_IN_USE), 
+					 szLoadString(IDS_CUSTOM_HEADER_ERROR), 
+					 MB_OK|MB_ICONSTOP);
+			return;
+			//We can't edit anything since another window already has the semaphore.
+		}
+	}
+	else
+	{	//Something is hosed!
+		return;
+	}
+
+  CString title;
+  title.LoadString(IDS_ADVFILTER_PROPERTY_SHEET);
+
+  // it will delete itself in OnNcDestroy. This is a way to have two "modal" dialogs
+  CAdvancedOptionsPropertySheet * paops = new CAdvancedOptionsPropertySheet(this, title, AOP_CUSTOM_HEADERS);
+  assert(paops != NULL);
+  if(paops != NULL)
+    paops->Create(this);
 }
 
 void CFilterDialog::OnHelp()
@@ -1556,11 +2111,7 @@ void CFilterDialog::OnOK()
 		MSG_DestroyFilter( *m_hFilter );
 	}
 
-	MSG_FilterType filterType = filterInboxRule;
-
-	MSG_FolderInfo *folder = (m_pPane) ? MSG_GetCurFolder(m_pPane) : NULL;
-	if (folder && MSG_GetFolderFlags(folder) &  MSG_FOLDER_FLAG_NEWSGROUP)
-		filterType = filterNewsRule;
+	MSG_FilterType filterType = GetFolderFilterType();
 
 	MSG_CreateFilter(filterType, 
 					 (char *) (const char *) m_lpszFilterName, 
@@ -1581,8 +2132,13 @@ void CFilterDialog::OnOK()
 
 	for (i = 0; i < GetNumTerms(); i++) {
 //TODO add support for arbitrary headers
+#ifdef FE_IMPLEMENTS_BOOLEAN_OR
 		GetTerm(i, &attrib, &op, &value, szHeader);
-		MSG_RuleAddTerm( rule, attrib, op, &value, !m_bLogicType, szHeader);
+		MSG_RuleAddTerm( rule, attrib, op, &value, m_bLogicType, szHeader); //~~
+#else	
+		GetTerm(i, &attrib, &op, &value);
+		MSG_RuleAddTerm( rule, attrib, op, &value);
+#endif
 	}
 
 	MSG_RuleActionType action;
@@ -1600,4 +2156,5 @@ LRESULT CFilterDialog::OnDlgSubclass(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 #endif
+
 

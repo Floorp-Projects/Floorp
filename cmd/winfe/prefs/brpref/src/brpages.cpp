@@ -939,6 +939,10 @@ class CEditTypeDialog : public CDialog {
 		BOOL		m_bConfirmBeforeOpening;
 		CString		m_strOpenCmd;
 		BOOL		m_bURLProtocol;
+#ifdef MOZ_MAIL_NEWS
+		int			m_UseAsDefaultMIMEType;
+		BOOL		m_LockDefaultMIMEType;
+#endif /* MOZ_MAIL_NEWS */
 
 	private:
 		void	CheckControls();
@@ -949,6 +953,10 @@ CEditTypeDialog::CEditTypeDialog()
 {
 	m_bConfirmBeforeOpening = TRUE;
 	m_bURLProtocol = FALSE;
+#ifdef MOZ_MAIL_NEWS
+	m_UseAsDefaultMIMEType = 0;		// initialized later from the caller, which knows about extension lists
+	m_LockDefaultMIMEType = FALSE;	// initialized later from the caller, which knows about extension lists
+#endif /* MOZ_MAIL_NEWS */
 }
 
 BOOL
@@ -976,7 +984,18 @@ CEditTypeDialog::InitDialog()
 		EnableDlgItem(IDC_EDIT1, FALSE);
 		EnableDlgItem(IDC_RADIO2, FALSE);
 		EnableDlgItem(IDC_CHECK1, FALSE);
+#ifdef MOZ_MAIL_NEWS
+		EnableDlgItem(IDC_USEASDEFAULT, FALSE);
+#endif /* MOZ_MAIL_NEWS */
 	}
+
+#ifdef MOZ_MAIL_NEWS
+	// Check for locked preferences
+	if (m_LockDefaultMIMEType) {
+		// Disable the "Set this type as the default" pref
+		EnableDlgItem(IDC_USEASDEFAULT, FALSE);
+	}
+#endif /* MOZ_MAIL_NEWS */
 
 	return CDialog::InitDialog();
 }
@@ -1020,6 +1039,9 @@ CEditTypeDialog::DoTransfer(BOOL bSaveAndValidate)
 	EditFieldTransfer(IDC_EDIT1, m_strMimeType, bSaveAndValidate);
 	EditFieldTransfer(IDC_EDIT2, m_strOpenCmd, bSaveAndValidate);
 	CheckBoxTransfer(IDC_CHECK1, m_bConfirmBeforeOpening, bSaveAndValidate);
+#ifdef MOZ_MAIL_NEWS
+	CheckBoxTransfer(IDC_USEASDEFAULT, m_UseAsDefaultMIMEType, bSaveAndValidate);
+#endif /* MOZ_MAIL_NEWS */
 
 	if (bSaveAndValidate) {
 		// Map it back to the values the browser uses
@@ -1066,6 +1088,22 @@ CEditTypeDialog::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
 		// file should be enabled
 		CheckControls();
 	}
+#ifdef MOZ_MAIL_NEWS
+	else if (id == IDC_USEASDEFAULT && notifyCode == BN_CLICKED)
+	{
+		// handle tri-state silliness
+		if (m_UseAsDefaultMIMEType == 0 || m_UseAsDefaultMIMEType == 2)	// off, or partial
+		{
+			m_UseAsDefaultMIMEType = 1;	// set it on for all of them
+		}
+		else
+		{
+			m_UseAsDefaultMIMEType = 0;	// it was on;  set it to off.
+		}
+		CheckBoxTransfer(IDC_USEASDEFAULT, m_UseAsDefaultMIMEType, FALSE);
+		return TRUE;
+	}
+#endif /* MOZ_MAIL_NEWS */
 
 	return CDialog::OnCommand(id, hwndCtl, notifyCode);
 }
@@ -1088,6 +1126,9 @@ class CNewTypeDialog : public CDialog {
 		CString		m_strExtension;
 		CString		m_strMimeType;
 		CString		m_strOpenCmd;
+#ifdef MOZ_MAIL_NEWS
+		int			m_UseAsDefaultMIMEType;
+#endif /* MOZ_MAIL_NEWS */
 
 	private:
 		void	DisplayMessageBox(UINT nID);
@@ -1096,6 +1137,9 @@ class CNewTypeDialog : public CDialog {
 CNewTypeDialog::CNewTypeDialog()
 	: CDialog(CComDll::m_hInstance, IDD_NEW_TYPE)
 {
+#ifdef MOZ_MAIL_NEWS
+	m_UseAsDefaultMIMEType = 0;
+#endif /* MOZ_MAIL_NEWS */
 }
 
 void
@@ -1149,6 +1193,9 @@ CNewTypeDialog::DoTransfer(BOOL bSaveAndValidate)
 	EditFieldTransfer(IDC_EDIT2, m_strExtension, bSaveAndValidate);
 	EditFieldTransfer(IDC_EDIT3, m_strMimeType, bSaveAndValidate);
 	EditFieldTransfer(IDC_EDIT4, m_strOpenCmd, bSaveAndValidate);
+#ifdef MOZ_MAIL_NEWS
+	CheckBoxTransfer(IDC_USEASDEFAULT, m_UseAsDefaultMIMEType, bSaveAndValidate);
+#endif /* MOZ_MAIL_NEWS */
 
     // Validate the data
 	if (bSaveAndValidate) {
@@ -1440,6 +1487,83 @@ BuildExtensionList(NET_cdataStruct *pcdata, CString &strExts)
 	strExts.MakeUpper();
 }
 
+#ifdef MOZ_MAIL_NEWS
+// Scans through prefs for the extensions listed in cdata, and sees whether or
+// not this is the default outgoing MIME type for the given list.  If all in the
+// list say it is the default, returns 1.  If none do, returns 0.  If some do and
+// some don't, returns 2.
+static int
+GetDefaultMIMEStateFromExtensionList(NET_cdataStruct *pcdata)
+{
+	BOOL someDefaultsFound = FALSE, someNonDefaultsFound = FALSE;
+	int i = 0;
+
+	while (i < pcdata->num_exts)
+	{
+		BOOL defaultFound = FALSE;
+		CString pref("mime.table.extension.");
+		pref += CString(pcdata->exts[i]);
+		pref += CString(".outgoing_default_type");
+		CString defaultMimeTypeFromPrefs;
+		PREF_GetStringPref(pref, defaultMimeTypeFromPrefs);
+		defaultFound = (defaultMimeTypeFromPrefs.CompareNoCase(pcdata->ci.type) == 0);
+
+		someDefaultsFound = someDefaultsFound || defaultFound;
+		someNonDefaultsFound = someNonDefaultsFound || !defaultFound;
+		i++;
+	}
+
+	if (someDefaultsFound && someNonDefaultsFound)
+		return 2;
+	else if (someDefaultsFound && !someNonDefaultsFound)
+		return 1;
+	else // none in the list, or none are the default
+		return 0;
+}
+
+static void
+SetDefaultMIMEStateFromExtensionList(NET_cdataStruct *pcdata, int newState)
+{
+	int i = 0;
+
+	if (newState != 0 && newState != 1)
+		return;
+
+	while (i < pcdata->num_exts)
+	{
+		CString pref("mime.table.extension.");
+		pref += CString(pcdata->exts[i]);
+		pref += CString(".outgoing_default_type");
+		CString defaultMimeTypeFromPrefs;
+		if (newState == 1)
+			PREF_SetCharPref(pref, pcdata->ci.type);
+		else
+			PREF_ClearUserPref(pref);
+		i++;
+	}
+}
+
+// Scans through prefs for the extensions listed in cdata, and sees whether or
+// not those preferences are locked down.  If any of them are, returns TRUE, otherwise FALSE.
+static BOOL
+GetDefaultMIMEStateLockedFromExtensionList(NET_cdataStruct *pcdata)
+{
+	BOOL locked = FALSE;
+	int i = 0;
+
+	while (i < pcdata->num_exts && !locked)
+	{
+		CString pref("mime.table.extension.");
+		pref += CString(pcdata->exts[i]);
+		pref += (".outgoing_default_type");
+		locked = PREF_PrefIsLocked(pref);
+		i++;
+	}
+
+	return locked;
+}
+#endif /* MOZ_MAIL_NEWS */
+
 static HICON
 GetNavigatorAppIcon(HINSTANCE hInstance)
 {
@@ -1681,9 +1805,22 @@ CApplicationsPrefs::OnEditItem()
 	
 	// Build the file extension list
 	BuildExtensionList(cdata, dlg.m_strExtension);
+#ifdef MOZ_MAIL_NEWS
+	int originalUseAsDefaultMIMEType = GetDefaultMIMEStateFromExtensionList(cdata);
+	dlg.m_UseAsDefaultMIMEType = originalUseAsDefaultMIMEType;
+	dlg.m_LockDefaultMIMEType = GetDefaultMIMEStateLockedFromExtensionList(cdata);
+#endif /* MOZ_MAIL_NEWS */
 
 	// Display the dialog
 	if (dlg.DoModal(GetParent(m_hwndDlg)) == IDOK) {
+
+#ifdef MOZ_MAIL_NEWS
+		if (originalUseAsDefaultMIMEType != dlg.m_UseAsDefaultMIMEType)
+		{
+			SetDefaultMIMEStateFromExtensionList(cdata, dlg.m_UseAsDefaultMIMEType);
+		}
+#endif /* MOZ_MAIL_NEWS */
+
 		if (!cdata->ci.fe_data) {
 			CString	strDescription;
 
@@ -1752,6 +1889,17 @@ CApplicationsPrefs::OnNewItem()
 				assert(cdata && cdata->ci.desc);
 				nIndex = ListBox_AddString(hList, cdata->ci.desc);
 				ListBox_SetItemData(hList, nIndex, cdata);
+
+#ifdef MOZ_MAIL_NEWS 
+				if (dlg.m_UseAsDefaultMIMEType)
+				{
+					CString pref("mime.table.extension.");
+					pref += CString(dlg.m_strExtension);
+					pref += CString(".outgoing_default_type");
+					if (!PREF_PrefIsLocked(pref))
+						PREF_SetCharPref(pref, dlg.m_strMimeType);
+				}
+#endif /* MOZ_MAIL_NEWS */
 
 				// Select the item and update the file details
 				ListBox_SetCurSel(hList, nIndex);

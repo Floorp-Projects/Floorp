@@ -25,8 +25,10 @@
 
 #include "winproto.h"
 
-#include "tooltip.h"
+/* Needed for IconType enum */
+#include "rdfacc.h"
 
+#include "tooltip.h"
 
 #define SHOW_ALL_CHARACTERS -1
 

@@ -56,6 +56,8 @@ public:
 	//{{AFX_VIRTUAL(CEditHeadersDlg)
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	public:
+	virtual int	DoModal();
 	//}}AFX_VIRTUAL
 
 	void GetHeader(CString &strHeader);

@@ -25,6 +25,11 @@
     #include "nsguids.h"
 #endif
 
+#include "abcom.h"
+
+
+typedef enum {NC_NameComplete, NC_Expand, NC_RFC822, NC_None} NameCompletionEnum;
+
 class IAddressParent
 {
 public:
@@ -52,6 +57,27 @@ public:
     virtual char * NameCompletion (
         char * pString
         ) = 0;
+
+	virtual void StartNameCompletionSearch(
+		void
+		)=0;
+
+	virtual void StopNameCompletionSearch(
+		void
+		)=0;
+
+	virtual void SetProgressBarPercent(
+		int32 lPercent
+		)=0;
+
+	virtual void SetStatusText(
+		const char* pMessage
+		)=0;
+
+	virtual CWnd *GetOwnerWindow(
+		void
+		)=0;
+
 };
 
 typedef IAddressParent * LPADDRESSPARENT;
@@ -202,6 +228,14 @@ public:
 		BOOL bSelected
         ) = 0;
 
+	virtual void SetContext(
+		MWContext *pContext
+		) = 0;
+
+	virtual MWContext *GetContext(
+		void
+		) = 0;
+
 #define ADDRESS_TYPE_FLAG               UINT
 #define ADDRESS_TYPE_FLAG_VALUE         0x1
 #define ADDRESS_TYPE_FLAG_HIDDEN        0x2
@@ -219,9 +253,49 @@ public:
         BOOL bParse = TRUE
         ) = 0;
 
+	virtual BOOL GetEnableParsing(
+		void
+		)=0;
+
+	virtual void EnableExpansion(
+		BOOL bExpand = TRUE
+		)=0;
+
+	virtual BOOL GetEnableExpansion(
+		void
+		)=0;
     virtual void SetCSID (
         int16 csid = 0
         ) = 0;
+	virtual void ShowNameCompletionPicker(
+		CWnd *pParent = NULL
+		)=0;
+
+	virtual void StartNameCompletion(
+		int nIndex = -1
+		)=0;
+
+	virtual void StopNameCompletion(
+		int nIndex = -1,
+		BOOL bEraseCookie = TRUE
+		)=0;
+	virtual void SetEntryHasNameCompletion(
+		BOOL bHasNameCompletion = TRUE,
+		int nIndex = -1
+		)=0;
+	virtual BOOL GetEntryHasNameCompletion(
+		int nIndex = -1
+		)=0;
+	virtual void SetNameCompletionCookieInfo(
+		AB_NameCompletionCookie *pCookie,
+		int nNumResults,
+		NameCompletionEnum ncEnum,
+		int nIndex = -1)=0;
+	virtual void GetNameCompletionCookieInfo(
+		AB_NameCompletionCookie **pCookie,
+		int *pNumResults,
+		int nIndex = -1)=0;
+
   };
 
 typedef IAddressControl * LPADDRESSCONTROL;

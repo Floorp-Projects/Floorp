@@ -25,8 +25,13 @@
 #include "nsadrtyp.h"
 #include "nsadrnam.h"
 #include "apiaddr.h"
+#include "abcom.h"
+#include "apimsg.h"
+#include "mailmisc.h"
 
 #define NS_ADDRESSFONTSIZE          8
+
+class CListNameCompletionEntryList;
 
 class CNSAddressTypeInfo {
 protected:
@@ -76,6 +81,15 @@ protected:
 	UINT idBitmap;
 	ULONG idEntry;
     BOOL bAllowExpansion;
+	AB_NameCompletionCookie* pCookie;
+	int nNumCompletionResults;
+	MSG_Pane *pPickerPane;
+	BOOL bActiveSearch;
+	NameCompletionEnum eNCEnum;
+
+
+  BOOL m_bEntrySelected;
+
 public:
 	CNSAddressInfo() 
 	{
@@ -84,13 +98,24 @@ public:
 		idBitmap = 0;
 		idEntry = 0xffffffff;
         bAllowExpansion = FALSE;
-	}
+		pCookie = NULL;
+		nNumCompletionResults = -1;
+		pPickerPane = NULL;
+		bActiveSearch = FALSE;
+		eNCEnum = NC_NameComplete;
+		
+
+    m_bEntrySelected = FALSE;
+
+  }
 	~CNSAddressInfo()
 	{
 		if (szType)
 			free(szType);
 		if (szName)
 			free(szName);
+		if (pCookie)
+			AB_FreeNameCompletionCookie(pCookie);
 	}
 	char * GetType(void) { return szType; }
 	char * GetName(void) { return szName; }
@@ -98,6 +123,17 @@ public:
 	ULONG GetEntryID(void) { return idEntry; }
     BOOL GetExpansion(void) { return bAllowExpansion; }
     void SetExpansion(BOOL bExpand) { bAllowExpansion = bExpand; }
+
+    BOOL getEntrySelectedState()
+    {
+      return m_bEntrySelected;
+    }
+
+    void setEntrySelectedState(BOOL bEntrySelected)
+    {
+      m_bEntrySelected = bEntrySelected;
+    }
+
 	void SetName(const char *ptr = NULL) 
 	{
 		if (szName)
@@ -125,6 +161,58 @@ public:
 	{
 		idEntry = id;
 	}
+
+	void SetNameCompletionCookie(AB_NameCompletionCookie *cookie)
+	{
+		pCookie = cookie;
+	}
+
+	AB_NameCompletionCookie *GetNameCompletionCookie()
+	{
+		return pCookie;
+	}
+
+	void SetNumNameCompletionResults(int nNumResults)
+	{
+		nNumCompletionResults = nNumResults;
+	}
+
+	int GetNumNameCompletionResults()
+	{
+		return nNumCompletionResults;
+	}
+
+	void SetPickerPane(MSG_Pane *pickerPane)
+	{
+		pPickerPane = pickerPane;
+	}
+
+	MSG_Pane *GetPickerPane()
+	{
+		return pPickerPane;
+	}
+
+	void SetActiveSearch(BOOL activeSearch)
+	{
+		bActiveSearch = activeSearch;
+	}
+
+	BOOL GetActiveSearch()
+	{
+		return bActiveSearch;
+	}
+
+	void SetNameCompletionEnum(NameCompletionEnum ncEnum)
+	{
+		eNCEnum = ncEnum;
+	}
+
+	NameCompletionEnum GetNameCompletionEnum()
+	{
+		return eNCEnum;
+	}
+
+
 };
 
 /////////////////////////////////////////////////////////////////////////
@@ -140,6 +228,132 @@ typedef struct
 	unsigned long idEntry;
 } NSAddressListEntry;
 
+/////////////////////////////////////////////////////////////////
+// Helper object to deal with the whole entry selection
+// 
+class CEntrySelector
+{
+private:
+  int m_iIndex;
+
+public:
+  BOOL m_bPostponedTillButtonUp;
+  int m_iX;
+  int m_iY;
+
+public:
+  CEntrySelector() : m_iIndex(-1), m_bPostponedTillButtonUp(FALSE) {}
+  ~CEntrySelector(){}
+
+  void LButtonDown(int iIndex) {m_iIndex = iIndex;}
+  void LButtonUp() {m_iIndex = -1;}
+  BOOL WhatEntryBitmapClicked() {return m_iIndex;}
+};
+
+// name completion context
+class CListNameCompletionCX: public CStubsCX
+{
+protected:
+	CListNameCompletionEntryList* m_pOwnerList;
+
+	int32 m_lPercent;
+	BOOL m_bAnimated;
+
+public:
+	CListNameCompletionCX(CListNameCompletionEntryList *pOwnerList);
+
+public:
+	void SetOwnerList(CListNameCompletionEntryList *pOwnerList);
+	int32 QueryProgressPercent();
+	void SetProgressBarPercent(MWContext *pContext, int32 lPercent);
+
+	void Progress(MWContext *pContext, const char *pMessage);
+	void AllConnectionsComplete(MWContext *pContext);
+
+	void UpdateStopState( MWContext *pContext );
+    
+	CWnd *GetDialogOwner() const;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CListNamecompletionEntryMailFrame
+class CListNameCompletionEntryMailFrame: public IMailFrame{
+public:
+	CListNameCompletionEntryList *m_pParentList;
+	unsigned long m_ulRefCount;
+
+	// Support for IMailFrame
+	virtual CMailNewsFrame *GetMailNewsFrame();
+	virtual MSG_Pane *GetPane();
+	virtual void PaneChanged( MSG_Pane *pane, XP_Bool asynchronous, 
+							  MSG_PANE_CHANGED_NOTIFY_CODE, int32 value);
+	virtual void AttachmentCount(MSG_Pane *messagepane, void* closure,
+								 int32 numattachments, XP_Bool finishedloading) {};
+	virtual void UserWantsToSeeAttachments(MSG_Pane *messagepane, void *closure) {};
+
+	// IUnknown Interface
+	STDMETHODIMP			QueryInterface(REFIID,LPVOID *);
+	STDMETHODIMP_(ULONG)	AddRef(void);
+	STDMETHODIMP_(ULONG)	Release(void);
+
+	CListNameCompletionEntryMailFrame(CListNameCompletionEntryList *pParentList ) {
+		m_ulRefCount = 0;
+		m_pParentList = pParentList;
+	}
+
+
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CNameCompletionEntryList
+
+class CListNameCompletionEntryList: public IMsgList{
+public:
+	MSG_Pane *m_pPickerPane;
+	unsigned long m_ulRefCount;
+	BOOL m_bSearching;
+	CListNameCompletionEntryMailFrame *m_pMailFrame;
+	CNSAddressList *m_pList;
+
+
+public:
+// IUnknown Interface
+	STDMETHODIMP			QueryInterface(REFIID,LPVOID *);
+	STDMETHODIMP_(ULONG)	AddRef(void);
+	STDMETHODIMP_(ULONG)	Release(void);
+
+// IMsgList Interface
+	virtual void ListChangeStarting( MSG_Pane* pane, XP_Bool asynchronous,
+									 MSG_NOTIFY_CODE notify, MSG_ViewIndex where,
+									 int32 num);
+	virtual void ListChangeFinished( MSG_Pane* pane, XP_Bool asynchronous,
+									 MSG_NOTIFY_CODE notify, MSG_ViewIndex where,
+									 int32 num);
+	virtual void GetSelection( MSG_Pane* pane, MSG_ViewIndex **indices, int *count, 
+							    int *focus);
+	virtual void SelectItem( MSG_Pane* pane, int item );
+
+	virtual void CopyMessagesInto( MSG_Pane *pane, MSG_ViewIndex *indices, int count,
+								   MSG_FolderInfo *folderInfo) {}
+	virtual void MoveMessagesInto( MSG_Pane *pane, MSG_ViewIndex *indices, int count,
+								   MSG_FolderInfo *folderInfo) {}
+
+
+	//other functions
+	void SetProgressBarPercent(int32 lPercent);
+	void SetStatusText(const char* pMessage);
+	void AllConnectionsComplete(MWContext *pContext);
+	CWnd *GetOwnerWindow();
+
+	CListNameCompletionEntryList( MSG_Pane *pPickerPane, CNSAddressList* pList ) {
+		m_ulRefCount = 0;
+		m_pPickerPane = pPickerPane;
+		m_pList = pList;
+		m_bSearching = FALSE;
+		m_pMailFrame = new CListNameCompletionEntryMailFrame(this);
+	}
+};
+
 /////////////////////////////////////////////////////////////////////////////
 // CNSAddressList window
 
@@ -149,6 +363,7 @@ class CNSAddressList :  public  CListBox,
 {
 protected:
     BOOL                    m_bParse;
+	BOOL					m_bExpansion;
     BOOL                    m_bCreated;
     HBRUSH                  m_hBrushNormal;
     HPEN                    m_hPenNormal, m_hPenGrid, m_hPenGrey;
@@ -166,7 +381,15 @@ protected:
     int                     m_lastIndex;
     LPADDRESSPARENT         m_pIAddressParent;
     int                     m_iItemHeight;
+	MWContext *				m_pContext;
+	CListNameCompletionCX *	m_pCX;
+	MSG_Pane *				m_pPickerPane;
+	IMsgList*				m_pINameCompList;
    
+  CEntrySelector m_EntrySelector;
+  HCURSOR m_hCursorBackup;
+  BOOL m_bDragging;
+
 public:
 	CNSAddressList();	// Construction
 	virtual ~CNSAddressList();
@@ -204,7 +427,29 @@ public:
    virtual void GetTypeInfo(int nIndex, ADDRESS_TYPE_FLAG flag, void ** value);
 	virtual int SetSel(int nIndex, BOOL bSelect);
     virtual void EnableParsing(BOOL bParse);
+	virtual BOOL GetEnableParsing();
+	virtual void EnableExpansion(BOOL bExpansion);
+	virtual BOOL GetEnableExpansion();
     virtual void SetCSID (int16 csid);
+	virtual void SetContext(MWContext *pContext);
+	virtual MWContext *GetContext();
+	virtual void ShowNameCompletionPicker(CWnd* pParent);
+	virtual void StartNameCompletion(int nIndex = -1);
+	virtual void StopNameCompletion(int nIndex = -1, BOOL bEraseCookie = TRUE);
+	virtual void StartNameExpansion(int nIndex = -1);
+	virtual void SetEntryHasNameCompletion(BOOL bHasNameCompletion = TRUE, int nIndex = -1);
+	virtual BOOL GetEntryHasNameCompletion(int nIndex = -1);
+	// cookies for name completion -1 = active selection
+	virtual void SetNameCompletionCookieInfo(AB_NameCompletionCookie *pCookie, int nNumResults, 
+											 NameCompletionEnum ncEnum, int nIndex = -1);
+	virtual void GetNameCompletionCookieInfo(AB_NameCompletionCookie **pCookie, int *pNumResults, int nIndex = -1);
+	virtual void SearchStarted();
+	virtual void SearchStopped();
+	virtual void SetProgressBarPercent(int32 lPercent);
+	virtual void SetStatusText(const char* pMessage);
+	virtual CWnd *GetOwnerWindow();
+
+
 
 protected:
 
@@ -217,12 +462,19 @@ protected:
     int     GetTypeFieldLength(void);
     BOOL    ParseAddressEntry(int nSelection);
     void    SetEditField(char * text) { m_pNameField->SetWindowText(text); }
+	void    SingleHeaderCommand(int nID);
 	void    HeaderCommand(int nID);
 	void    UpdateHeaderType(void);
 	void    UpdateHeaderContents(void);
     void    DisplayTypeList(int item = -1);
    inline int  GetActiveSelection() { return GetCurSel(); }
 	int     SetActiveSelection(int);
+
+
+  void selectEntry(int iIndex, BOOL bState);
+  BOOL isEntrySelected(int iIndex);
+  void selectAllEntries(BOOL bState);
+  int getEntryMultipleSelectionStatus(BOOL * pbContinuous, int * piFirst, int * piLast);
 
     virtual LRESULT DefWindowProc( UINT message, WPARAM wParam, LPARAM lParam );
 
@@ -238,6 +490,11 @@ protected:
 
     int     GetItemRect(HWND hwnd, int nIndex, LPRECT lpRect) const;
 	UINT	ItemFromPoint(HWND hwnd, LPPOINT lpPoint, BOOL * bOutside) const;		
+
+  BOOL isPointInItemBitmap(LPPOINT pPoint, int iIndex);
+  void onKeyDown(int iVirtKey, DWORD dwFlags);
+  void onMouseMove(HWND m_hWnd, WORD wFlags, int iX, int iY);
+
     BOOL    DoCommand( HWND hwnd, WPARAM wParam, LPARAM lParam );
 
 	BOOL	OnKeyPress( CWnd *pChildControl, UINT nChar, UINT nRepCnt, UINT nFlags );
@@ -252,12 +509,31 @@ protected:
 	void    DoLButtonDown(HWND hwmd, UINT nFlags, LPPOINT point);
 	void    DoVScroll(HWND hwnd, UINT nSBCode, UINT nPos);
 	void    DoChildLostFocus();
-    int	    DoNotifySelectionChange();
+    int	    DoNotifySelectionChange(BOOL bShowPicker = TRUE);
     void    DoDisplayTypeList();
 
     friend class CNSAddressNameEditField;
     friend class CNSAddressTypeControl;
 
+};
+
+class FENameCompletionCookieInfo {
+protected:
+	CNSAddressList *m_pList;
+	int				m_nIndex;
+
+public:
+	FENameCompletionCookieInfo()
+	{
+		m_pList = NULL;
+		m_nIndex = -1;
+	}
+
+	void SetList(CNSAddressList* pList) {m_pList = pList;}
+	CNSAddressList *GetList() { return m_pList;}
+
+	void SetIndex(int nIndex) { m_nIndex = nIndex;}
+	int  GetIndex() { return m_nIndex;}
 };
 
 void DrawTransparentBitmap(HDC hdc, HBITMAP hBitmap, short xStart, short yStart, COLORREF cTransparentColor );

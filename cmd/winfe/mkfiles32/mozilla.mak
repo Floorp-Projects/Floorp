@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-# 
+#
 
 #   Mozilla makefile
 #       Please use ns/client.mak for building.
@@ -38,7 +38,7 @@ MOZ_SRC=y:
 !endif
 
 !if !defined(MOZ_OUT)
-MOZ_OUT=. 
+MOZ_OUT=.
 !endif
 
 !if !defined(MOZ_INT)
@@ -88,14 +88,14 @@ MOZ_NO_PATCHER=1
 
 !IF "$(OS)" == "Windows_NT"
 NULL=
-!ELSE 
+!ELSE
 NULL=nul
-!ENDIF 
+!ENDIF
 
 
 CPP= \
 !if "$(MOZ_BCPRO)" == ""
-    cl.exe 
+    cl.exe
 !else
     bcompile.exe
 !endif
@@ -134,7 +134,7 @@ PROD=16x86
 
 #
 # Some will differ.
-# 
+#
 # Using x86 for MOZ_MEDIUM
 #
 !ifdef MOZ_NAV_BUILD_PREFIX
@@ -209,7 +209,6 @@ MOZ_STACK=33679
 !if defined(MOZ_DEBUG)
 VERSTR=Dbg
 !if "$(MOZ_BITS)"=="32"
-#CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon\
 !else
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
@@ -253,7 +252,8 @@ LINKFLAGS_DEBUG= \
 #
 CFLAGS_DEFAULT=\
 !if "$(MOZ_BITS)"=="32"
-    $(CFLAGS_DEBUG)
+    $(CFLAGS_DEBUG) \
+    /I$(DEPTH)\dist\public\js /I$(DEPTH)\dist\public\security /I$(DEPTH)\dist\public\network /I$(DEPTH)\dist\public\htmldlgs /I$(DEPTH)\dist\public\libfont /I$(DEPTH)\dist\public\httpurl /I$(DEPTH)\dist\public\netcache /I$(DEPTH)\dist\public\jsdebug /I$(DEPTH)\dist\public\winfont
 !else
     $(CFLAGS_RELEASE) -DFORCE_PR_LOG
 !endif
@@ -262,52 +262,47 @@ CFLAGS_DEFAULT=\
 POLICY  = moz40p3
 
 
-NEOFLAGS=/DqNeoThreads /DqNeoStandAlone /I$(DEPTH)\lib\libneo ^
-    /I$(DEPTH)\lib\libneo\ibmpc ^
-    /I$(DEPTH)\lib\libneo\ibmpc\alone 
-
 
 #
 # If you add a file in a new directory, you must add flags for that directory
 #
-CFLAGS_LIBMSG_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/msgc.pch" /YX"msg.h"
-CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT)
+CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\mime
 CFLAGS_LIBI18N_C=       $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/intlpriv.pch" /YX"intlpriv.h"
 CFLAGS_LIBIMG_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
-CFLAGS_JTOOLS_C=        $(CFLAGS_DEFAULT)  
+CFLAGS_JTOOLS_C=        $(CFLAGS_DEFAULT)
 CFLAGS_LIBCNV_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
-CFLAGS_JPEG_C=          $(CFLAGS_DEFAULT) 
+CFLAGS_JPEG_C=          $(CFLAGS_DEFAULT)
 CFLAGS_LAYOUT_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/layoutc.pch" /YX"xp.h"
 CFLAGS_LIBSTYLE_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/stylec.pch" /YX"xp.h"
 CFLAGS_LIBJAR_C=        $(CFLAGS_DEFAULT) 
 CFLAGS_LIBLAYER_C=      $(CFLAGS_DEFAULT) 
 CFLAGS_LIBMISC_C=       $(CFLAGS_DEFAULT) 
+CFLAGS_LIBNET_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/netc.pch" /YX"mkutils.h"
+CFLAGS_LIBNET_CPP=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/netcpp.pch" /YX"mkutils.h"
+CFLAGS_LIBMSG_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/netc.pch" /YX"mkutils.h"
+CFLAGS_LIBMSG_CPP=      $(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\msg /I$(DEPTH)\lib\libaddr /I$(DEPTH)\lib\libmsg /Fp"$(OUTDIR)/netcpp.pch" /YX"mkutils.h"
 CFLAGS_LIBPARSE_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/pa_parse.pch" /YX"pa_parse.h"
-CFLAGS_XP_C=            $(CFLAGS_DEFAULT) 
-CFLAGS_LIBPICS_C=       $(CFLAGS_DEFAULT) 
-CFLAGS_LIBPWCAC_C=       $(CFLAGS_DEFAULT) 
-CFLAGS_XLATE_C=         $(CFLAGS_DEFAULT) 
-CFLAGS_LIBDBM_C=        $(CFLAGS_DEFAULT) 
-CFLAGS_PLUGIN_C=        $(CFLAGS_DEBUG)
+CFLAGS_XP_C=            $(CFLAGS_DEFAULT)
+CFLAGS_LIBPICS_C=       $(CFLAGS_DEFAULT)
+CFLAGS_LIBPWCAC_C=       $(CFLAGS_DEFAULT)
+CFLAGS_XLATE_C=         $(CFLAGS_DEFAULT)
+CFLAGS_LIBDBM_C=        $(CFLAGS_DEFAULT)
+CFLAGS_PLUGIN_C=        $(CFLAGS_DEFAULT)
 CFLAGS_APPLET_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/lj.pch" /YX"lj.h"
 CFLAGS_EDTPLUG_C=       $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/le.pch" /YX"le.h"
 CFLAGS_LIBMOCHA_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/lm.pch" /YX"lm.h"
-CFLAGS_LIBMSG_CPP=      $(CFLAGS_DEFAULT) $(NEOFLAGS) /Fp"$(OUTDIR)/msgcpp.pch" /YX"msg.h"
-CFLAGS_LIBADDR_CPP=     $(CFLAGS_DEFAULT) $(NEOFLAGS) /Fp"$(OUTDIR)/addr.pch" /YX"neohdrsa.h"
-CFLAGS_LIBADDR_C=       $(CFLAGS_DEFAULT) $(NEOFLAGS)
-CFLAGS_LIBNEO_CPP=      $(CFLAGS_DEFAULT) $(NEOFLAGS) 
 CFLAGS_LAYOUT_CPP=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/editor.pch" /YX"editor.h"
-CFLAGS_PLUGIN_CPP=      $(CFLAGS_DEBUG) /I$(DEPTH)\cmd\winfe /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
+CFLAGS_PLUGIN_CPP=      $(CFLAGS_DEFAULT) /I$(DEPTH)\cmd\winfe /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
 CFLAGS_LIBPREF_C=                 $(CFLAGS_DEBUG)
-CFLAGS_WINFE_C=                 $(CFLAGS_DEBUG)
+CFLAGS_WINFE_C=                 $(CFLAGS_DEFAULT)
 !if "$(MOZ_BITS)"=="32"
 !if "$(MOZ_BCPRO)" == ""
-CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
+CFLAGS_WINFE_CPP=       $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
 !else
-CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG) /I$(DEPTH)\jpeg
+CFLAGS_WINFE_CPP=       $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg
 !endif
 !else
-CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG)
+CFLAGS_WINFE_CPP=       $(CFLAGS_DEFAULT)
 !endif
 !if "$(MOZ_BITS)"=="16"
 CFLAGS_WINDOWS_C=		$(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\win16\private
@@ -423,7 +418,7 @@ LINK_LIBS= \
     $(DIST)\lib\cnetinit.lib \
 !ifdef MOZ_LDAP
 !ifdef MOZ_JAVA
-    $(DIST)\lib\nsldap32.lib \
+    $(DIST)\lib\nsldap32v30.lib \
 !endif
 !endif
     $(DIST)\lib\unicvt32.lib \
@@ -438,6 +433,12 @@ LINK_LIBS= \
 !ifdef MOZ_LOC_INDEP
     $(DIST)\lib\li32.lib \
 !endif
+!ifdef MOZ_MAIL_NEWS
+    $(DIST)\lib\mime.lib \
+    $(DIST)\lib\msg.lib \
+    $(DIST)\lib\addr.lib \
+    $(DIST)\lib\neo.lib \
+!endif
     $(DIST)\lib\prgrss32.lib \
     $(DIST)\lib\sched32.lib \
     $(DIST)\lib\prefuuid.lib \
@@ -445,6 +446,12 @@ LINK_LIBS= \
     $(DIST)\lib\xpstrdll.lib \
 !ifdef MOZ_MAIL_NEWS
 	$(DIST)\lib\mnrc32.lib \
+!endif
+!ifdef MOZ_CALENDAR
+    $(DIST)\lib\cal3240.lib \
+    $(DIST)\lib\nsfmt3230.lib \
+    $(DIST)\lib\nsuni3230.lib \
+    $(DIST)\lib\nscnv3230.lib \
 !endif
     $(DIST)\lib\zip$(MOZ_BITS)$(VERSION_NUMBER).lib \
     $(DIST)\lib\jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib \
@@ -503,7 +510,7 @@ LINK_FLAGS= \
     /pdb:"$(OUTDIR)/mozilla.pdb" /machine:I386 \
 !if !defined(MOZ_DEBUG)
     /fixed \
-!endif        
+!endif
     /nodefaultlib /out:"$(OUTDIR)/mozilla.exe"
 !else
 #    $(DIST)\lib\jmc.lib \
@@ -554,15 +561,11 @@ CINCLUDES= \
     /I$(DEPTH)\lib\layout \
     /I$(DEPTH)\lib\libstyle \
     /I$(DEPTH)\lib\liblayer\include \
+	/I$(DEPTH)\lib\libmsg \
     /I$(DEPTH)\lib\libcnv \
     /I$(DEPTH)\lib\libi18n \
     /I$(DEPTH)\lib\libparse \
     /I$(DEPTH)\lib\plugin \
-!ifdef MOZ_MAIL_NEWS
-    /I$(DEPTH)\lib\libmsg \
-    /I$(DEPTH)\lib\libaddr \
-    /I$(DEPTH)\lib\libneo \
-!endif
 !else
     /I$(EXPORTINC)
 !endif
@@ -573,8 +576,8 @@ CDEPENDINCLUDES= \
     /I$(DEPTH)\cmd\winfe \
     /I$(DEPTH)\jpeg
 
-# if you add something to CDISTINCLUDES, you must also add it to the exports target
-# at the end of the file.
+# if you add something to CDISTINCLUDES1 or CDISTINCLUDES2, you must also add
+# it to the exports target at the end of the file.
 
 CDISTINCLUDES1= \
 !if "$(MOZ_BITS)" == "32"
@@ -619,6 +622,13 @@ CDISTINCLUDES3= \
     /I$(XPDIST)\public\progress \
     /I$(XPDIST)\public\schedulr \
     /I$(XPDIST)\public\xpcom \
+!ifdef MOZ_MAIL_NEWS
+	/I$(XPDIST)\public\mime \
+	/I$(XPDIST)\public\net \
+!endif
+!ifdef MOZ_CALENDAR
+	/I$(XPDIST)\public\calendar \
+!endif
 #!ifdef EDITOR
 !ifdef JAVA_OR_OJI
     /I$(XPDIST)\public\edtplug \
@@ -634,6 +644,9 @@ CDISTINCLUDES3= \
     /I$(XPDIST)\public\img \
     /I$(XPDIST)\public\jtools \
 !endif
+#Add additional include directories to CDISTINCLUDES2
+
+CDISTINCLUDES2= \
     /I$(XPDIST)\public \
     /I$(XPDIST)\public\coreincl \
 !ifndef NO_SECURITY
@@ -725,7 +738,7 @@ all: "$(OUTDIR)" $(DEPTH)\cmd\winfe\mkfiles32\makedep.exe $(OUTDIR)\mozilla.dep
 
 $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
     @rem <<$(PROD)$(VERSTR).dep
-	$(CINCLUDES) $(CDISTINCLUDES) $(CDEPENDINCLUDES) -O $(OUTDIR)\mozilla.dep
+	$(CINCLUDES) $(CDISTINCLUDES1) $(CDISTINCLUDES2) $(CDEPENDINCLUDES) -O $(OUTDIR)\mozilla.dep
 !IF "$(MOZ_BITS)"=="16"
     -16
 !ENDIF
@@ -739,104 +752,80 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\liblayer\src\cl_util.c
 	$(DEPTH)\lib\liblayer\src\xp_rect.c
 
-	$(DEPTH)\lib\layout\bullet.c  
+	$(DEPTH)\lib\layout\bullet.c
 	$(DEPTH)\lib\layout\clipline.c
 !ifdef EDITOR
-	$(DEPTH)\lib\layout\editor.cpp   
-	$(DEPTH)\lib\layout\edtbuf.cpp   
-	$(DEPTH)\lib\layout\edtcmd.cpp   
-	$(DEPTH)\lib\layout\edtele.cpp   
-	$(DEPTH)\lib\layout\edtjava.cpp   
-	$(DEPTH)\lib\layout\edtsave.cpp   
-	$(DEPTH)\lib\layout\edtutil.cpp   
+	$(DEPTH)\lib\layout\editor.cpp
+	$(DEPTH)\lib\layout\edtbuf.cpp
+	$(DEPTH)\lib\layout\edtcmd.cpp
+	$(DEPTH)\lib\layout\edtele.cpp
+	$(DEPTH)\lib\layout\edtjava.cpp
+	$(DEPTH)\lib\layout\edtsave.cpp
+	$(DEPTH)\lib\layout\edtutil.cpp
 !endif
-	$(DEPTH)\lib\layout\layedit.c 
-	$(DEPTH)\lib\layout\fsfile.cpp   
-	$(DEPTH)\lib\layout\streams.cpp   
+	$(DEPTH)\lib\layout\layedit.c
+	$(DEPTH)\lib\layout\fsfile.cpp
+	$(DEPTH)\lib\layout\streams.cpp
 	$(DEPTH)\lib\layout\layarena.c
-	$(DEPTH)\lib\layout\layblock.c 
-	$(DEPTH)\lib\layout\laycell.c 
-	$(DEPTH)\lib\layout\laycols.c 
-	$(DEPTH)\lib\layout\laydisp.c 
+	$(DEPTH)\lib\layout\layblock.c
+	$(DEPTH)\lib\layout\laycell.c
+	$(DEPTH)\lib\layout\laycols.c
+	$(DEPTH)\lib\layout\laydisp.c
 	$(DEPTH)\lib\layout\layembed.c
-	$(DEPTH)\lib\layout\layfind.c 
-	$(DEPTH)\lib\layout\layform.c 
-	$(DEPTH)\lib\layout\layfree.c 
-	$(DEPTH)\lib\layout\laygrid.c 
+	$(DEPTH)\lib\layout\layfind.c
+	$(DEPTH)\lib\layout\layform.c
+	$(DEPTH)\lib\layout\layfree.c
+	$(DEPTH)\lib\layout\laygrid.c
 	$(DEPTH)\lib\layout\layhrule.c
 	$(DEPTH)\lib\layout\layimage.c
-	$(DEPTH)\lib\layout\layinfo.c 
+	$(DEPTH)\lib\layout\layinfo.c
 !if defined(MOZ_JAVA)
-	$(DEPTH)\lib\layout\layjava.c 
+	$(DEPTH)\lib\layout\layjava.c
 !endif
-	$(DEPTH)\lib\layout\laylayer.c 
-	$(DEPTH)\lib\layout\laylist.c 
-	$(DEPTH)\lib\layout\laymap.c  
+	$(DEPTH)\lib\layout\laylayer.c
+	$(DEPTH)\lib\layout\laylist.c
+	$(DEPTH)\lib\layout\laymap.c
 	$(DEPTH)\lib\layout\laymocha.c
 	$(DEPTH)\lib\layout\layobj.c
-	$(DEPTH)\lib\layout\layout.c  
-	$(DEPTH)\lib\layout\layprobe.c  
+	$(DEPTH)\lib\layout\layout.c
+	$(DEPTH)\lib\layout\layprobe.c
 	$(DEPTH)\lib\layout\layscrip.c
 	$(DEPTH)\lib\layout\laystyle.c
-	$(DEPTH)\lib\layout\laysel.c  
-	$(DEPTH)\lib\layout\layspace.c  
-	$(DEPTH)\lib\layout\laysub.c  
+	$(DEPTH)\lib\layout\laysel.c
+	$(DEPTH)\lib\layout\layspace.c
+	$(DEPTH)\lib\layout\laysub.c
 	$(DEPTH)\lib\layout\laytable.c
-	$(DEPTH)\lib\layout\laytags.c 
-	$(DEPTH)\lib\layout\laytext.c 
-	$(DEPTH)\lib\layout\layutil.c 
+	$(DEPTH)\lib\layout\laytags.c
+	$(DEPTH)\lib\layout\laytext.c
+	$(DEPTH)\lib\layout\layutil.c
 	$(DEPTH)\lib\layout\ptinpoly.c
 	$(DEPTH)\lib\layout\layrelay.c 
 	$(DEPTH)\lib\layout\laytrav.c 
 !endif
-
-!ifdef MOZ_MAIL_NEWS
-	$(DEPTH)\lib\libaddr\line64.c
-	$(DEPTH)\lib\libaddr\vobject.c
-	$(DEPTH)\lib\libaddr\vcc.c
-	$(DEPTH)\lib\libaddr\ab.cpp  
-	$(DEPTH)\lib\libaddr\abcntxt.cpp  
-	$(DEPTH)\lib\libaddr\abentry.cpp  
-	$(DEPTH)\lib\libaddr\abinfo.cpp  
-	$(DEPTH)\lib\libaddr\ablist.cpp  
-	$(DEPTH)\lib\libaddr\addbook.cpp  
-	$(DEPTH)\lib\libaddr\abpane.cpp  
-	$(DEPTH)\lib\libaddr\nickindx.cpp  
-	$(DEPTH)\lib\libaddr\tyindex.cpp  
-	$(DEPTH)\lib\libaddr\import.cpp
-	$(DEPTH)\lib\libaddr\export.cpp
-	$(DEPTH)\lib\libaddr\abundoac.cpp
-	$(DEPTH)\lib\libaddr\abglue.cpp
-	$(DEPTH)\lib\libaddr\abcinfo.cpp
-	$(DEPTH)\lib\libaddr\abcpane.cpp
-	$(DEPTH)\lib\libaddr\abpane2.cpp
-	$(DEPTH)\lib\libaddr\abntfy.cpp
-!endif
-
 	$(DEPTH)\lib\libi18n\detectu2.c
 	$(DEPTH)\lib\libi18n\metatag.c
 	$(DEPTH)\lib\libi18n\autokr.c
 	$(DEPTH)\lib\libi18n\autocvt.c
-	$(DEPTH)\lib\libi18n\b52cns.c 
-	$(DEPTH)\lib\libi18n\cns2b5.c 
-	$(DEPTH)\lib\libi18n\cvchcode.c   
+	$(DEPTH)\lib\libi18n\b52cns.c
+	$(DEPTH)\lib\libi18n\cns2b5.c
+	$(DEPTH)\lib\libi18n\cvchcode.c
 	$(DEPTH)\lib\libi18n\euc2jis.c
-	$(DEPTH)\lib\libi18n\euc2sjis.c   
-	$(DEPTH)\lib\libi18n\euckr2is.c   
-	$(DEPTH)\lib\libi18n\fe_ccc.c 
-	$(DEPTH)\lib\libi18n\doc_ccc.c 
-	$(DEPTH)\lib\libi18n\intl_csi.c 
-	$(DEPTH)\lib\libi18n\is2euckr.c   
-	$(DEPTH)\lib\libi18n\intl_csi.c   
+	$(DEPTH)\lib\libi18n\euc2sjis.c
+	$(DEPTH)\lib\libi18n\euckr2is.c
+	$(DEPTH)\lib\libi18n\fe_ccc.c
+	$(DEPTH)\lib\libi18n\doc_ccc.c
+	$(DEPTH)\lib\libi18n\intl_csi.c
+	$(DEPTH)\lib\libi18n\is2euckr.c
+	$(DEPTH)\lib\libi18n\intl_csi.c
 	$(DEPTH)\lib\libi18n\jis2oth.c
 	$(DEPTH)\lib\libi18n\nscstr.c
-	$(DEPTH)\lib\libi18n\sjis2euc.c   
-	$(DEPTH)\lib\libi18n\sjis2jis.c   
-	$(DEPTH)\lib\libi18n\ucs2.c   
-	$(DEPTH)\lib\libi18n\ugen.c   
-	$(DEPTH)\lib\libi18n\ugendata.c   
-	$(DEPTH)\lib\libi18n\umap.c   
-	$(DEPTH)\lib\libi18n\uscan.c   
+	$(DEPTH)\lib\libi18n\sjis2euc.c
+	$(DEPTH)\lib\libi18n\sjis2jis.c
+	$(DEPTH)\lib\libi18n\ucs2.c
+	$(DEPTH)\lib\libi18n\ugen.c
+	$(DEPTH)\lib\libi18n\ugendata.c
+	$(DEPTH)\lib\libi18n\umap.c
+	$(DEPTH)\lib\libi18n\uscan.c
 !IF "$(MOZ_BITS)"=="16"
 	$(DEPTH)\lib\libi18n\unicvt.c
 !ENDIF
@@ -852,17 +841,16 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libi18n\dblower.c
 	$(DEPTH)\lib\libi18n\kinsokud.c
 	$(DEPTH)\lib\libi18n\kinsokuf.c
-	$(DEPTH)\lib\libi18n\net_junk.c 
-	$(DEPTH)\lib\libi18n\katakana.c 
-	$(DEPTH)\lib\libcnv\libcnv.c 
-	$(DEPTH)\lib\libcnv\writejpg.c 
-	$(DEPTH)\lib\libcnv\colorqnt.c 
-	$(DEPTH)\lib\libcnv\readbmp.c 
-	$(DEPTH)\lib\libcnv\libppm3.c 
+	$(DEPTH)\lib\libi18n\net_junk.c
+	$(DEPTH)\lib\libi18n\katakana.c
+	$(DEPTH)\lib\libcnv\libcnv.c
+	$(DEPTH)\lib\libcnv\writejpg.c
+	$(DEPTH)\lib\libcnv\colorqnt.c
+	$(DEPTH)\lib\libcnv\readbmp.c
+	$(DEPTH)\lib\libcnv\libppm3.c
 
 !ifdef MOZ_MAIL_NEWS
 	$(DEPTH)\lib\libmime\mimecont.c
-	$(DEPTH)\lib\libmime\mimecryp.c
 	$(DEPTH)\lib\libmime\mimeebod.c
 	$(DEPTH)\lib\libmime\mimeenc.c
 	$(DEPTH)\lib\libmime\mimeeobj.c
@@ -876,18 +864,12 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmime\mimemmix.c
 	$(DEPTH)\lib\libmime\mimemoz.c
 	$(DEPTH)\lib\libmime\mimempar.c
-!ifndef NO_SECURITY
-	$(DEPTH)\lib\libmime\mimempkc.c
-!endif
 	$(DEPTH)\lib\libmime\mimemrel.c
 	$(DEPTH)\lib\libmime\mimemsg.c
 	$(DEPTH)\lib\libmime\mimemsig.c
 	$(DEPTH)\lib\libmime\mimemult.c
 	$(DEPTH)\lib\libmime\mimeobj.c
 	$(DEPTH)\lib\libmime\mimepbuf.c
-!ifndef NO_SECURITY
-	$(DEPTH)\lib\libmime\mimepkcs.c
-!endif
 	$(DEPTH)\lib\libmime\mimesun.c
 	$(DEPTH)\lib\libmime\mimetenr.c
 	$(DEPTH)\lib\libmime\mimetext.c
@@ -897,14 +879,15 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmime\mimeunty.c
 	$(DEPTH)\lib\libmime\mimevcrd.c
 	$(DEPTH)\lib\libmime\mimedrft.c
-	$(DEPTH)\lib\libmisc\mime.c   
+	$(DEPTH)\lib\libmisc\mime.c
 	$(DEPTH)\lib\libmisc\dirprefs.c
+	$(DEPTH)\lib\libmime\mimecal.c
 !endif
- 
-	$(DEPTH)\lib\libmisc\glhist.c 
+
+	$(DEPTH)\lib\libmisc\glhist.c
 	$(DEPTH)\lib\libmisc\hotlist.c
-	$(DEPTH)\lib\libmisc\shist.c  
-	$(DEPTH)\lib\libmisc\undo.c   
+	$(DEPTH)\lib\libmisc\shist.c
+	$(DEPTH)\lib\libmisc\undo.c
 
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\lib\libmocha\et_mocha.c
@@ -915,20 +898,20 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_doc.c
 	$(DEPTH)\lib\libmocha\lm_embed.c
 	$(DEPTH)\lib\libmocha\lm_event.c
-	$(DEPTH)\lib\libmocha\lm_form.c   
-	$(DEPTH)\lib\libmocha\lm_hardw.c   
-	$(DEPTH)\lib\libmocha\lm_hist.c   
-	$(DEPTH)\lib\libmocha\lm_href.c   
+	$(DEPTH)\lib\libmocha\lm_form.c
+	$(DEPTH)\lib\libmocha\lm_hardw.c
+	$(DEPTH)\lib\libmocha\lm_hist.c
+	$(DEPTH)\lib\libmocha\lm_href.c
 	$(DEPTH)\lib\libmocha\lm_img.c
-	$(DEPTH)\lib\libmocha\lm_init.c   
-	$(DEPTH)\lib\libmocha\lm_input.c  
-	$(DEPTH)\lib\libmocha\lm_layer.c  
+	$(DEPTH)\lib\libmocha\lm_init.c
+	$(DEPTH)\lib\libmocha\lm_input.c
+	$(DEPTH)\lib\libmocha\lm_layer.c
 	$(DEPTH)\lib\libmocha\lm_nav.c
-	$(DEPTH)\lib\libmocha\lm_plgin.c  
-	$(DEPTH)\lib\libmocha\lm_screen.c  
-	$(DEPTH)\lib\libmocha\lm_supdt.c  
-	$(DEPTH)\lib\libmocha\lm_taint.c  
-	$(DEPTH)\lib\libmocha\lm_trggr.c  
+	$(DEPTH)\lib\libmocha\lm_plgin.c
+	$(DEPTH)\lib\libmocha\lm_screen.c
+	$(DEPTH)\lib\libmocha\lm_supdt.c
+	$(DEPTH)\lib\libmocha\lm_taint.c
+	$(DEPTH)\lib\libmocha\lm_trggr.c
 	$(DEPTH)\lib\libmocha\lm_url.c
 	$(DEPTH)\lib\libmocha\lm_win.c
 !if "$(MOZ_BITS)" == "32"
@@ -942,24 +925,22 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmsg\ad_strm.c 
 	$(DEPTH)\lib\libmsg\msgppane.cpp 
 	$(DEPTH)\lib\libmsg\addr.c
+	$(DEPTH)\lib\libmsg\addrutil.c
 	$(DEPTH)\lib\libmsg\ap_decod.c
 	$(DEPTH)\lib\libmsg\ap_encod.c
 	$(DEPTH)\lib\libmsg\appledbl.c
-	$(DEPTH)\lib\libmsg\bh_strm.c 
+	$(DEPTH)\lib\libmsg\bh_strm.c
+	$(DEPTH)\lib\libmsg\biffmast.cpp
 	$(DEPTH)\lib\libmsg\bytearr.cpp
 	$(DEPTH)\lib\libmsg\chngntfy.cpp
-!ifndef NO_SECURITY
-	$(DEPTH)\lib\libmsg\composec.c
-!endif
 	$(DEPTH)\lib\libmsg\dwordarr.cpp
-	$(DEPTH)\lib\libmsg\eneoidar.cpp
 	$(DEPTH)\lib\libmsg\filters.cpp
 	$(DEPTH)\lib\libmsg\grec.cpp
 	$(DEPTH)\lib\libmsg\grpinfo.cpp
-	$(DEPTH)\lib\libmsg\hashtbl.cpp
 	$(DEPTH)\lib\libmsg\hosttbl.cpp
 	$(DEPTH)\lib\libmsg\idarray.cpp
 	$(DEPTH)\lib\libmsg\imaphost.cpp
+	$(DEPTH)\lib\libmsg\imapoff.cpp
 	$(DEPTH)\lib\libmsg\jsmsg.cpp
 	$(DEPTH)\lib\libmsg\listngst.cpp
 	$(DEPTH)\lib\libmsg\m_binhex.c
@@ -968,28 +949,26 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmsg\mhtmlstm.cpp
 	$(DEPTH)\lib\libmsg\msgbg.cpp
 	$(DEPTH)\lib\libmsg\msgbgcln.cpp
-	$(DEPTH)\lib\libmsg\msgbiff.c
-	$(DEPTH)\lib\libmsg\msgcpane.cpp
 	$(DEPTH)\lib\libmsg\msgccach.cpp
 	$(DEPTH)\lib\libmsg\msgcflds.cpp
-	$(DEPTH)\lib\libmsg\msgcmfld.cpp 
+	$(DEPTH)\lib\libmsg\msgcmfld.cpp
+	$(DEPTH)\lib\libmsg\msgcpane.cpp
 	$(DEPTH)\lib\libmsg\msgdb.cpp
 	$(DEPTH)\lib\libmsg\msgdbini.cpp
 	$(DEPTH)\lib\libmsg\msgdbvw.cpp
-	$(DEPTH)\lib\libmsg\msgdoc.cpp
-	$(DEPTH)\lib\libmsg\msgdwnof.cpp
 	$(DEPTH)\lib\libmsg\msgdlqml.cpp
+	$(DEPTH)\lib\libmsg\msgdwnof.cpp
 	$(DEPTH)\lib\libmsg\msgfcach.cpp
 	$(DEPTH)\lib\libmsg\msgfinfo.cpp
-	$(DEPTH)\lib\libmsg\imapoff.cpp
-	$(DEPTH)\lib\libmsg\msgimap.cpp
 	$(DEPTH)\lib\libmsg\msgfpane.cpp
 	$(DEPTH)\lib\libmsg\msgglue.cpp
 	$(DEPTH)\lib\libmsg\msghdr.cpp
+	$(DEPTH)\lib\libmsg\msgimap.cpp
 	$(DEPTH)\lib\libmsg\msglpane.cpp
 	$(DEPTH)\lib\libmsg\msglsrch.cpp
-	$(DEPTH)\lib\libmsg\msgmast.cpp
 	$(DEPTH)\lib\libmsg\msgmapi.cpp
+	$(DEPTH)\lib\libmsg\msgmast.cpp
+	$(DEPTH)\lib\libmsg\msgmdn.cpp
 	$(DEPTH)\lib\libmsg\msgmpane.cpp
 	$(DEPTH)\lib\libmsg\msgmsrch.cpp
 	$(DEPTH)\lib\libmsg\msgnsrch.cpp
@@ -999,24 +978,22 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmsg\msgprefs.cpp
 	$(DEPTH)\lib\libmsg\msgpurge.cpp
 	$(DEPTH)\lib\libmsg\msgrulet.cpp
-	$(DEPTH)\lib\libmsg\msgsec.cpp
 	$(DEPTH)\lib\libmsg\msgsend.cpp
 	$(DEPTH)\lib\libmsg\msgsendp.cpp
 	$(DEPTH)\lib\libmsg\msgspane.cpp
 	$(DEPTH)\lib\libmsg\msgtpane.cpp
-	$(DEPTH)\lib\libmsg\msgundmg.cpp
 	$(DEPTH)\lib\libmsg\msgundac.cpp
+	$(DEPTH)\lib\libmsg\msgundmg.cpp
 	$(DEPTH)\lib\libmsg\msgurlq.cpp
 	$(DEPTH)\lib\libmsg\msgutils.c
 	$(DEPTH)\lib\libmsg\msgzap.cpp
-	$(DEPTH)\lib\libmsg\msgmdn.cpp
 	$(DEPTH)\lib\libmsg\newsdb.cpp
-	$(DEPTH)\lib\libmsg\newshdr.cpp 
-	$(DEPTH)\lib\libmsg\newshost.cpp 
-	$(DEPTH)\lib\libmsg\newspane.cpp 
-	$(DEPTH)\lib\libmsg\newsset.cpp 
-	$(DEPTH)\lib\libmsg\nwsartst.cpp 
-	$(DEPTH)\lib\libmsg\prsembst.cpp 
+	$(DEPTH)\lib\libmsg\newshdr.cpp
+	$(DEPTH)\lib\libmsg\newshost.cpp
+	$(DEPTH)\lib\libmsg\newspane.cpp
+	$(DEPTH)\lib\libmsg\newsset.cpp
+	$(DEPTH)\lib\libmsg\nwsartst.cpp
+	$(DEPTH)\lib\libmsg\prsembst.cpp
 	$(DEPTH)\lib\libmsg\ptrarray.cpp
 	$(DEPTH)\lib\libmsg\search.cpp
 	$(DEPTH)\lib\libmsg\subline.cpp
@@ -1026,60 +1003,14 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmsg\thrlstst.cpp
 	$(DEPTH)\lib\libmsg\thrnewvw.cpp
 	$(DEPTH)\lib\libmsg\mozdb.cpp
-
-	$(DEPTH)\lib\libneo\enstring.cpp
-	$(DEPTH)\lib\libneo\enswizz.cpp
-	$(DEPTH)\lib\libneo\nappl.cpp
-	$(DEPTH)\lib\libneo\nappsa.cpp
-	$(DEPTH)\lib\libneo\narray.cpp
-	$(DEPTH)\lib\libneo\nblob.cpp
-	$(DEPTH)\lib\libneo\nclass.cpp
-	$(DEPTH)\lib\libneo\ncstream.cpp
-	$(DEPTH)\lib\libneo\ndata.cpp
-	$(DEPTH)\lib\libneo\ndblndx.cpp
-	$(DEPTH)\lib\libneo\ndoc.cpp
-	$(DEPTH)\lib\libneo\nfltndx.cpp
-	$(DEPTH)\lib\libneo\nformat.cpp
-	$(DEPTH)\lib\libneo\nfree.cpp
-	$(DEPTH)\lib\libneo\nfstream.cpp
-	$(DEPTH)\lib\libneo\nidindex.cpp
-	$(DEPTH)\lib\libneo\nidlist.cpp
-	$(DEPTH)\lib\libneo\nindexit.cpp
-	$(DEPTH)\lib\libneo\ninode.cpp
-	$(DEPTH)\lib\libneo\nioblock.cpp
-	$(DEPTH)\lib\libneo\niter.cpp
-	$(DEPTH)\lib\libneo\nlaundry.cpp
-	$(DEPTH)\lib\libneo\nlongndx.cpp
-	$(DEPTH)\lib\libneo\nmeta.cpp
-	$(DEPTH)\lib\libneo\nmrswsem.cpp
-	$(DEPTH)\lib\libneo\nmsem.cpp
-	$(DEPTH)\lib\libneo\nnode.cpp
-	$(DEPTH)\lib\libneo\nnstrndx.cpp
-	$(DEPTH)\lib\libneo\noffsprn.cpp
-	$(DEPTH)\lib\libneo\npartmgr.cpp
-	$(DEPTH)\lib\libneo\npersist.cpp
-	$(DEPTH)\lib\libneo\npliter.cpp
-	$(DEPTH)\lib\libneo\nquery.cpp
-	$(DEPTH)\lib\libneo\nselect.cpp
-	$(DEPTH)\lib\libneo\nsselect.cpp
-	$(DEPTH)\lib\libneo\nstream.cpp
-	$(DEPTH)\lib\libneo\nstrndx.cpp
-	$(DEPTH)\lib\libneo\nsub.cpp
-	$(DEPTH)\lib\libneo\nthread.cpp
-	$(DEPTH)\lib\libneo\ntrans.cpp
-	$(DEPTH)\lib\libneo\nulngndx.cpp
-	$(DEPTH)\lib\libneo\nutils.cpp
-	$(DEPTH)\lib\libneo\nwselect.cpp
-	$(DEPTH)\lib\libneo\semnspr.cpp
-	$(DEPTH)\lib\libneo\thrnspr.cpp
 !endif
 
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\lib\libparse\pa_amp.c
-	$(DEPTH)\lib\libparse\pa_hash.c   
-	$(DEPTH)\lib\libparse\pa_hook.c   
+	$(DEPTH)\lib\libparse\pa_hash.c
+	$(DEPTH)\lib\libparse\pa_hook.c
 	$(DEPTH)\lib\libparse\pa_mdl.c
-	$(DEPTH)\lib\libparse\pa_parse.c  
+	$(DEPTH)\lib\libparse\pa_parse.c
 
 	$(DEPTH)\lib\libstyle\libstyle.c
 	$(DEPTH)\lib\libstyle\csslex.c
@@ -1115,30 +1046,33 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\lib\plugin\npassoc.c 
 	$(DEPTH)\lib\plugin\npglue.cpp
-	$(DEPTH)\lib\plugin\npwplat.cpp 
-	$(DEPTH)\lib\plugin\nsplugin.cpp 
+	$(DEPTH)\lib\plugin\npwplat.cpp
+	$(DEPTH)\lib\plugin\nsplugin.cpp
 
-	$(DEPTH)\lib\xlate\isotab.c   
+	$(DEPTH)\lib\xlate\isotab.c
 	$(DEPTH)\lib\xlate\stubs.c
 	$(DEPTH)\lib\xlate\tblprint.c 
 	$(DEPTH)\lib\xlate\text.c 
 !endif
-
 	$(DEPTH)\lib\xp\allxpstr.c
 	$(DEPTH)\lib\xp\xp_alloc.c
 	$(DEPTH)\lib\xp\xp_cntxt.c
-	$(DEPTH)\lib\xp\xp_core.c 
+	$(DEPTH)\lib\xp\xp_core.c
 	$(DEPTH)\lib\xp\xp_error.c
-	$(DEPTH)\lib\xp\xp_file.c 
+	$(DEPTH)\lib\xp\xp_file.c
 	$(DEPTH)\lib\xp\xp_hash.c
-	$(DEPTH)\lib\xp\xp_mesg.c 
+	$(DEPTH)\lib\xp\xp_mesg.c
+!ifdef MOZ_MAIL_NEWS
+	$(DEPTH)\lib\xp\xp_md5.c
+!endif
 	$(DEPTH)\lib\xp\xp_ncent.c
-	$(DEPTH)\lib\xp\xp_rgb.c  
-	$(DEPTH)\lib\xp\xp_str.c  
+	$(DEPTH)\lib\xp\xp_reg.c
+	$(DEPTH)\lib\xp\xp_rgb.c
+	$(DEPTH)\lib\xp\xp_str.c
 	$(DEPTH)\lib\xp\xp_thrmo.c
-	$(DEPTH)\lib\xp\xp_time.c 
+	$(DEPTH)\lib\xp\xp_time.c
 	$(DEPTH)\lib\xp\xp_trace.c
-	$(DEPTH)\lib\xp\xp_wrap.c 
+	$(DEPTH)\lib\xp\xp_wrap.c
 	$(DEPTH)\lib\xp\xpassert.c
 	$(DEPTH)\lib\xp\xp_list.c
 	$(DEPTH)\lib\xp\xplocale.c
@@ -1159,10 +1093,13 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\compmapi.cpp
 !endif
 !ifdef MOZ_MAIL_NEWS
-	$(DEPTH)\cmd\winfe\addrfrm.cpp   
-	$(DEPTH)\cmd\winfe\addrdlg.cpp   
-	$(DEPTH)\cmd\winfe\abmldlg.cpp   
-	$(DEPTH)\cmd\winfe\advopdlg.cpp
+	$(DEPTH)\cmd\winfe\abhook.cpp
+	$(DEPTH)\cmd\winfe\abutils.cpp
+	$(DEPTH)\cmd\winfe\addrfrm.cpp
+	$(DEPTH)\cmd\winfe\addrdlg.cpp
+	$(DEPTH)\cmd\winfe\addrprop.cpp
+	$(DEPTH)\cmd\winfe\abmldlg.cpp
+	$(DEPTH)\cmd\winfe\advprosh.cpp
 	$(DEPTH)\cmd\winfe\compbar.cpp
 	$(DEPTH)\cmd\winfe\compfe.cpp
 	$(DEPTH)\cmd\winfe\compfile.cpp
@@ -1174,13 +1111,13 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\edframe.cpp
 	$(DEPTH)\cmd\winfe\edprops.cpp
 	$(DEPTH)\cmd\winfe\edtable.cpp
-	$(DEPTH)\cmd\winfe\edview.cpp 
-	$(DEPTH)\cmd\winfe\edview2.cpp 
+	$(DEPTH)\cmd\winfe\edview.cpp
+	$(DEPTH)\cmd\winfe\edview2.cpp
 	$(DEPTH)\cmd\winfe\eddialog.cpp
-	$(DEPTH)\cmd\winfe\edlayout.cpp   
+	$(DEPTH)\cmd\winfe\edlayout.cpp
 !endif
 !ifdef MOZ_MAIL_NEWS
-	$(DEPTH)\cmd\winfe\filter.cpp 
+	$(DEPTH)\cmd\winfe\filter.cpp
 	$(DEPTH)\cmd\winfe\edhdrdlg.cpp
 	$(DEPTH)\cmd\winfe\mailfrm.cpp
 	$(DEPTH)\cmd\winfe\mailfrm2.cpp
@@ -1191,16 +1128,16 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\mapismem.cpp
 	$(DEPTH)\cmd\winfe\mapimail.cpp
 	$(DEPTH)\cmd\winfe\nsstrseq.cpp
-	$(DEPTH)\cmd\winfe\mnprefs.cpp  
-	$(DEPTH)\cmd\winfe\mnwizard.cpp  
+	$(DEPTH)\cmd\winfe\mnprefs.cpp
+	$(DEPTH)\cmd\winfe\mnwizard.cpp
 	$(DEPTH)\cmd\winfe\msgfrm.cpp
 	$(DEPTH)\cmd\winfe\msgtmpl.cpp
 	$(DEPTH)\cmd\winfe\msgview.cpp
 	$(DEPTH)\cmd\winfe\namcomp.cpp
 	$(DEPTH)\cmd\winfe\numedit.cpp
-	$(DEPTH)\cmd\winfe\srchfrm.cpp 
-	$(DEPTH)\cmd\winfe\subnews.cpp 
-	$(DEPTH)\cmd\winfe\taskbar.cpp 
+	$(DEPTH)\cmd\winfe\srchfrm.cpp
+	$(DEPTH)\cmd\winfe\subnews.cpp
+	$(DEPTH)\cmd\winfe\taskbar.cpp
 	$(DEPTH)\cmd\winfe\thrdfrm.cpp
 !endif
 !ifdef EDITOR
@@ -1209,37 +1146,40 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\spellcli.cpp
 !endif
 !ifdef MOZ_MAIL_NEWS
-	$(DEPTH)\cmd\winfe\dlgdwnld.cpp
 	$(DEPTH)\cmd\winfe\dlghtmmq.cpp
 	$(DEPTH)\cmd\winfe\dlghtmrp.cpp
 	$(DEPTH)\cmd\winfe\dlgseldg.cpp
    $(DEPTH)\cmd\winfe\nsadrlst.cpp
    $(DEPTH)\cmd\winfe\nsadrnam.cpp
    $(DEPTH)\cmd\winfe\nsadrtyp.cpp
-	$(DEPTH)\cmd\winfe\fldrfrm.cpp        
+   	$(DEPTH)\cmd\winfe\offlndlg.cpp
+	$(DEPTH)\cmd\winfe\offpkdlg.cpp
+	$(DEPTH)\cmd\winfe\fldrfrm.cpp
    $(DEPTH)\cmd\winfe\dspppage.cpp
 	$(DEPTH)\cmd\winfe\srchdlg.cpp
 	$(DEPTH)\cmd\winfe\srchobj.cpp
 	$(DEPTH)\cmd\winfe\mnrccln.cpp
 !endif
-	$(DEPTH)\cmd\winfe\setupwiz.cpp  
+	$(DEPTH)\cmd\winfe\setupwiz.cpp
 	$(DEPTH)\cmd\winfe\ngdwtrst.cpp
-	$(DEPTH)\cmd\winfe\animbar.cpp   
-	$(DEPTH)\cmd\winfe\animbar2.cpp   
-	$(DEPTH)\cmd\winfe\apiapi.cpp 
+	$(DEPTH)\cmd\winfe\animbar.cpp
+	$(DEPTH)\cmd\winfe\animbar2.cpp
+	$(DEPTH)\cmd\winfe\apiapi.cpp
 	$(DEPTH)\cmd\winfe\animecho.cpp
-	$(DEPTH)\cmd\winfe\askmedlg.cpp 
+!ifdef MOZ_OFFLINE
+	$(DEPTH)\cmd\winfe\askmedlg.cpp
+!endif
 	$(DEPTH)\cmd\winfe\authdll.cpp
 !ifndef MOZ_NGLAYOUT
-	$(DEPTH)\cmd\winfe\button.cpp 
+	$(DEPTH)\cmd\winfe\button.cpp
 !endif
 	$(DEPTH)\cmd\winfe\cfe.cpp
 	$(DEPTH)\cmd\winfe\cmdparse.cpp
-	$(DEPTH)\cmd\winfe\cntritem.cpp   
+	$(DEPTH)\cmd\winfe\cntritem.cpp
 	$(DEPTH)\cmd\winfe\confhook.cpp
 	$(DEPTH)\cmd\winfe\csttlbr2.cpp
-	$(DEPTH)\cmd\winfe\custom.cpp 
 !ifndef MOZ_NGLAYOUT
+	$(DEPTH)\cmd\winfe\custom.cpp
 	$(DEPTH)\cmd\winfe\cuvfm.cpp
 	$(DEPTH)\cmd\winfe\cuvfs.cpp
 	$(DEPTH)\cmd\winfe\cvffc.cpp
@@ -1249,8 +1189,8 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\cxdc1.cpp   
 	$(DEPTH)\cmd\winfe\cxicon.cpp
 	$(DEPTH)\cmd\winfe\cxinit.cpp
-	$(DEPTH)\cmd\winfe\cxmeta.cpp 
-	$(DEPTH)\cmd\winfe\cxnet1.cpp 
+	$(DEPTH)\cmd\winfe\cxmeta.cpp
+	$(DEPTH)\cmd\winfe\cxnet1.cpp
 	$(DEPTH)\cmd\winfe\cxpane.cpp
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\cxprint.cpp
@@ -1263,8 +1203,8 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\dateedit.cpp
 	$(DEPTH)\cmd\winfe\dde.cpp
 	$(DEPTH)\cmd\winfe\ddecmd.cpp
-	$(DEPTH)\cmd\winfe\ddectc.cpp 
-	$(DEPTH)\cmd\winfe\dialog.cpp 
+	$(DEPTH)\cmd\winfe\ddectc.cpp
+	$(DEPTH)\cmd\winfe\dialog.cpp
 	$(DEPTH)\cmd\winfe\display.cpp
 	$(DEPTH)\cmd\winfe\dragbar.cpp   
 !ifndef MOZ_NGLAYOUT
@@ -1293,10 +1233,10 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\fmbutton.cpp   
 	$(DEPTH)\cmd\winfe\fmfile.cpp 
 	$(DEPTH)\cmd\winfe\fmradio.cpp
-	$(DEPTH)\cmd\winfe\fmrdonly.cpp   
-	$(DEPTH)\cmd\winfe\fmselmul.cpp   
-	$(DEPTH)\cmd\winfe\fmselone.cpp   
-	$(DEPTH)\cmd\winfe\fmtext.cpp 
+	$(DEPTH)\cmd\winfe\fmrdonly.cpp
+	$(DEPTH)\cmd\winfe\fmselmul.cpp
+	$(DEPTH)\cmd\winfe\fmselone.cpp
+	$(DEPTH)\cmd\winfe\fmtext.cpp
 	$(DEPTH)\cmd\winfe\fmtxarea.cpp
 !endif
 	$(DEPTH)\cmd\winfe\frameglu.cpp   
@@ -1304,16 +1244,16 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\genchrom.cpp   
 	$(DEPTH)\cmd\winfe\gendoc.cpp 
 	$(DEPTH)\cmd\winfe\genedit.cpp
-	$(DEPTH)\cmd\winfe\genframe.cpp   
-	$(DEPTH)\cmd\winfe\genfram2.cpp   
-	$(DEPTH)\cmd\winfe\prefs.cpp   
+	$(DEPTH)\cmd\winfe\genframe.cpp
+	$(DEPTH)\cmd\winfe\genfram2.cpp
+	$(DEPTH)\cmd\winfe\prefs.cpp
 	$(DEPTH)\cmd\winfe\genview.cpp
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\gridedge.cpp   
 !endif
 	$(DEPTH)\cmd\winfe\helpers.cpp
-	$(DEPTH)\cmd\winfe\hiddenfr.cpp   
-	$(DEPTH)\cmd\winfe\histbld.cpp   
+	$(DEPTH)\cmd\winfe\hiddenfr.cpp
+	$(DEPTH)\cmd\winfe\histbld.cpp
 	$(DEPTH)\cmd\winfe\imagemap.cpp
 !if "$(MOZ_BITS)"  == "32"
 	$(DEPTH)\cmd\winfe\intelli.cpp
@@ -1321,7 +1261,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\intlwin.cpp
 	$(DEPTH)\cmd\winfe\ipframe.cpp
 	$(DEPTH)\cmd\winfe\lastacti.cpp
-	$(DEPTH)\cmd\winfe\logindg.cpp   
+	$(DEPTH)\cmd\winfe\logindg.cpp
 	$(DEPTH)\cmd\winfe\mainfrm.cpp
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\medit.cpp  
@@ -1399,18 +1339,19 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
     $(DEPTH)\cmd\winfe\testcasemanager.cpp
     $(DEPTH)\cmd\winfe\tclist.cpp
     $(DEPTH)\cmd\winfe\testcasedlg.cpp
-!endif 
-	$(DEPTH)\cmd\winfe\timer.cpp  
-	$(DEPTH)\cmd\winfe\tip.cpp 
-	$(DEPTH)\cmd\winfe\tlbutton.cpp   
-	$(DEPTH)\cmd\winfe\toolbar2.cpp 
-	$(DEPTH)\cmd\winfe\tooltip.cpp  
-	$(DEPTH)\cmd\winfe\urlbar.cpp 
+!endif
+	$(DEPTH)\cmd\winfe\timer.cpp
+	$(DEPTH)\cmd\winfe\tip.cpp
+	$(DEPTH)\cmd\winfe\tlbutton.cpp
+	$(DEPTH)\cmd\winfe\toolbar2.cpp
+	$(DEPTH)\cmd\winfe\tooltip.cpp
+	$(DEPTH)\cmd\winfe\urlbar.cpp
 	$(DEPTH)\cmd\winfe\urlecho.cpp
 	$(DEPTH)\cmd\winfe\usertlbr.cpp
-	$(DEPTH)\cmd\winfe\viewerse.cpp    
-	$(DEPTH)\cmd\winfe\winclose.cpp   
+	$(DEPTH)\cmd\winfe\viewerse.cpp
+	$(DEPTH)\cmd\winfe\winclose.cpp
 	$(DEPTH)\cmd\winfe\winpref.c
+	$(DEPTH)\cmd\winfe\winprog.cpp
 !ifdef MOZ_LOC_INDEP
 	$(DEPTH)\cmd\winfe\winli.cpp
 !endif
@@ -1443,7 +1384,7 @@ $(DEPTH)\cmd\winfe\mkfiles32\makedep.exe: $(DEPTH)\cmd\winfe\mkfiles32\makedep.c
 ALL : $(OUTDIR)\mozilla.dep "$(OUTDIR)" prebuild $(OUTDIR)\resdll.dll $(OUTDIR)\appicon.res $(OUTDIR)\mozilla.exe $(OUTDIR)\mozilla.tlb install rebase \
 !if !defined(MOZ_NO_PATCHER)
 # Allow building without patcher. You get intl security, but faster build time
-"$(OUTDIR)\netsc_us.exe" "$(OUTDIR)\netsc_fr.exe"  
+"$(OUTDIR)\netsc_us.exe" "$(OUTDIR)\netsc_fr.exe"
 !else
 !endif
 
@@ -1456,7 +1397,7 @@ PURIFY : "$(OUTDIR)" "$(OUTDIR)\PurifyCache" "$(OUTDIR)\mozilla.exe" pure
 
 !ENDIF
 
-# 
+#
 # utility Stuff.
 #
 $(OUTDIR) :
@@ -1669,6 +1610,20 @@ install:    \
 	    $(OUTDIR)\mnrc$(MOZ_BITS).dll    \
 !ENDIF
 !endif
+!ifdef MOZ_CALENDAR
+!IF EXIST($(DIST)\bin\cal3240.dll)
+	    $(OUTDIR)\cal3240.dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\nsfmt3230.dll)
+	   $(OUTDIR)\nsfmt3230.dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\nsuni3230.dll)
+	   $(OUTDIR)\nsuni3230.dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\nscnv3230.dll)
+	   $(OUTDIR)\nscnv3230.dll    \
+!ENDIF
+!endif
 !IF EXIST($(DIST)\bin\xpstrdll.dll)
 	    $(OUTDIR)\xpstrdll.dll    \
 !ENDIF
@@ -1762,8 +1717,8 @@ install:    \
 	    $(OUTDIR)\dynfonts\nstdfp32.dll    \
 !ENDIF
 !ifdef MOZ_LDAP
-!IF EXIST($(DIST)\bin\nsldap32.dll)
-	    $(OUTDIR)\nsldap32.dll    \
+!IF EXIST($(DIST)\bin\nsldap32v30.dll)
+	    $(OUTDIR)\nsldap32v30.dll    \
 !ENDIF
 !endif
 !IF EXIST($(DIST)\bin\unicvt32.dll)
@@ -2064,9 +2019,9 @@ $(OUTDIR)\dynfonts\nstdfp32.dll:   $(DEPTH)\cmd\winfe\nstdfp32.dll
     @IF NOT EXIST "$(OUTDIR)\dynfonts/$(NULL)" mkdir "$(OUTDIR)\dynfonts"
     @IF EXIST $(DEPTH)\cmd\winfe\nstdfp32.dll copy $(DEPTH)\cmd\winfe\nstdfp32.dll $(OUTDIR)\dynfonts\nstdfp32.dll
 
-!if !defined(MOZ_NO_LDAP)
-$(OUTDIR)\nsldap32.dll:   $(DIST)\bin\nsldap32.dll
-    @IF EXIST $(DIST)\bin\nsldap32.dll copy $(DIST)\bin\nsldap32.dll $(OUTDIR)\nsldap32.dll
+!if defined(MOZ_LDAP)
+$(OUTDIR)\nsldap32v30.dll:   $(DIST)\bin\nsldap32v30.dll
+    @IF EXIST $(DIST)\bin\nsldap32v30.dll copy $(DIST)\bin\nsldap32v30.dll $(OUTDIR)\nsldap32v30.dll
 !endif
 
 $(JAVABIN_DIR)\awt32$(VERSION_NUMBER).dll:   $(DIST)\bin\awt32$(VERSION_NUMBER).dll
@@ -2139,7 +2094,7 @@ $(OUTDIR)\dynfonts\nstdfp16.dll:   $(DEPTH)\cmd\winfe\nstdfp16.dll
     @IF NOT EXIST "$(OUTDIR)\dynfonts/$(NULL)" mkdir "$(OUTDIR)\dynfonts"
     @IF EXIST $(DEPTH)\cmd\winfe\nstdfp16.dll copy $(DEPTH)\cmd\winfe\nstdfp16.dll $(OUTDIR)\dynfonts\nstdfp16.dll
 
-!if !defined(MOZ_NO_LDAP)
+!if defined(MOZ_LDAP)
 $(OUTDIR)\nsldap.dll:   $(DIST)\bin\nsldap.dll
     @IF EXIST $(DIST)\bin\nsldap.dll copy $(DIST)\bin\nsldap.dll $(OUTDIR)\nsldap.dll
 !endif
@@ -2179,6 +2134,16 @@ $(OUTDIR)\nsinit.exe: $(DIST)\bin\nsinit.exe
 
 !ENDIF
 
+!if defined(MOZ_CALENDAR)
+$(OUTDIR)\cal3240.dll:   $(DIST)\bin\cal3240.dll
+    @IF EXIST $(DIST)\bin\cal3240.dll copy $(DIST)\bin\cal3240.dll $(OUTDIR)\cal3240.dll
+$(OUTDIR)\nsfmt3230.dll:   $(DIST)\bin\nsfmt3230.dll
+    @IF EXIST $(DIST)\bin\nsfmt3230.dll copy $(DIST)\bin\nsfmt3230.dll $(OUTDIR)\nsfmt3230.dll
+$(OUTDIR)\nsuni3230.dll:   $(DIST)\bin\nsuni3230.dll
+    @IF EXIST $(DIST)\bin\nsuni3230.dll copy $(DIST)\bin\nsuni3230.dll $(OUTDIR)\nsuni3230.dll
+$(OUTDIR)\nscnv3230.dll:   $(DIST)\bin\nscnv3230.dll
+    @IF EXIST $(DIST)\bin\nscnv3230.dll copy $(DIST)\bin\nscnv3230.dll $(OUTDIR)\nscnv3230.dll
+!endif
 
 # XXX this will copy them all, we really only want the ones that changed
 $(JAVACLS_DIR)\$(JAR_NAME): $(JAVA_DESTPATH)\$(JAR_NAME)
@@ -2260,57 +2225,57 @@ $(OUTDIR)\res:   $(NGLAYOUT_DIST)\bin\res
     @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
 !endif
 
-$(OUTDIR)\spellchk\$(SPELLCHK_DLL):   $(DIST)\bin\$(SPELLCHK_DLL) 
+$(OUTDIR)\spellchk\$(SPELLCHK_DLL):   $(DIST)\bin\$(SPELLCHK_DLL)
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(DIST)\bin\$(SPELLCHK_DLL) copy $(DIST)\bin\$(SPELLCHK_DLL) $(OUTDIR)\spellchk\$(SPELLCHK_DLL)
 
-# spell checker English dictionary 
-$(OUTDIR)\spellchk\pen4s324.dat:   $(SPELLCHK_DATA)\pen4s324.dat 
+# spell checker English dictionary
+$(OUTDIR)\spellchk\pen4s324.dat:   $(SPELLCHK_DATA)\pen4s324.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pen4s324.dat copy $(SPELLCHK_DATA)\pen4s324.dat $(OUTDIR)\spellchk\pen4s324.dat
 
 #spell checker built-in dictionary extension
-$(OUTDIR)\spellchk\netscape.dic:   $(SPELLCHK_DATA)\netscape.dic 
+$(OUTDIR)\spellchk\netscape.dic:   $(SPELLCHK_DATA)\netscape.dic
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\netscape.dic copy $(SPELLCHK_DATA)\netscape.dic $(OUTDIR)\spellchk\netscape.dic
 
-# spell checker Spanish dictionary 
-$(OUTDIR)\spellchk\psp4s333.dat:   $(SPELLCHK_DATA)\psp4s333.dat 
+# spell checker Spanish dictionary
+$(OUTDIR)\spellchk\psp4s333.dat:   $(SPELLCHK_DATA)\psp4s333.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\psp4s333.dat copy $(SPELLCHK_DATA)\psp4s333.dat $(OUTDIR)\spellchk\psp4s333.dat
 
-# spell checker German dictionary 
-$(OUTDIR)\spellchk\pgr2s321.dat:   $(SPELLCHK_DATA)\pgr2s321.dat 
+# spell checker German dictionary
+$(OUTDIR)\spellchk\pgr2s321.dat:   $(SPELLCHK_DATA)\pgr2s321.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pgr2s321.dat copy $(SPELLCHK_DATA)\pgr2s321.dat $(OUTDIR)\spellchk\pgr2s321.dat
 
-# spell checker French dictionary 
-$(OUTDIR)\spellchk\pfr2s331.dat:   $(SPELLCHK_DATA)\pfr2s331.dat 
+# spell checker French dictionary
+$(OUTDIR)\spellchk\pfr2s331.dat:   $(SPELLCHK_DATA)\pfr2s331.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pfr2s331.dat copy $(SPELLCHK_DATA)\pfr2s331.dat $(OUTDIR)\spellchk\pfr2s331.dat
 
-# spell checker Italian dictionary 
-$(OUTDIR)\spellchk\pit2s340.dat:   $(SPELLCHK_DATA)\pit2s340.dat 
+# spell checker Italian dictionary
+$(OUTDIR)\spellchk\pit2s340.dat:   $(SPELLCHK_DATA)\pit2s340.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pit2s340.dat copy $(SPELLCHK_DATA)\pit2s340.dat $(OUTDIR)\spellchk\pit2s340.dat
 
-# spell checker Brazilian dictionary 
-$(OUTDIR)\spellchk\ppo4s331.dat:   $(SPELLCHK_DATA)\ppo4s331.dat 
+# spell checker Brazilian dictionary
+$(OUTDIR)\spellchk\ppo4s331.dat:   $(SPELLCHK_DATA)\ppo4s331.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\ppo4s331.dat copy $(SPELLCHK_DATA)\ppo4s331.dat $(OUTDIR)\spellchk\ppo4s331.dat
 
-# spell checker Catalan dictionary 
-$(OUTDIR)\spellchk\pca4s323.dat:   $(SPELLCHK_DATA)\pca4s323.dat 
+# spell checker Catalan dictionary
+$(OUTDIR)\spellchk\pca4s323.dat:   $(SPELLCHK_DATA)\pca4s323.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pca4s323.dat copy $(SPELLCHK_DATA)\pca4s323.dat $(OUTDIR)\spellchk\pca4s323.dat
 
-# spell checker Dutch dictionary 
-$(OUTDIR)\spellchk\pdu2s341.dat:   $(SPELLCHK_DATA)\pdu2s341.dat 
+# spell checker Dutch dictionary
+$(OUTDIR)\spellchk\pdu2s341.dat:   $(SPELLCHK_DATA)\pdu2s341.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pdu2s341.dat copy $(SPELLCHK_DATA)\pdu2s341.dat $(OUTDIR)\spellchk\pdu2s341.dat
 
-# spell checker Finnish dictionary 
-$(OUTDIR)\spellchk\pfn2s311.dat:   $(SPELLCHK_DATA)\pfn2s311.dat 
+# spell checker Finnish dictionary
+$(OUTDIR)\spellchk\pfn2s311.dat:   $(SPELLCHK_DATA)\pfn2s311.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pfn2s311.dat copy $(SPELLCHK_DATA)\pfn2s311.dat $(OUTDIR)\spellchk\pfn2s311.dat
 
@@ -2318,33 +2283,31 @@ $(OUTDIR)\spellchk\pfn2s311.dat:   $(SPELLCHK_DATA)\pfn2s311.dat
 BATCH_BUILD_1:          \
 	BATCH_LIBI18N_C         \
 	BATCH_LIBLAYER_C                \
-	BATCH_LIBMSG_CPP                \
 	BATCH_PLUGIN_CPP                \
+	BATCH_LIBMSG_CPP                \
 	BATCH_LIBDBM_C          \
 	BATCH_LAYOUT_CPP                \
 	BATCH_WINFE_CPP         \
 	BATCH_LIBJAR_C          \
-	BATCH_XLATE_C           
+	BATCH_XLATE_C
     echo Done > $(TMP)\bb1.sem
     echo BATCH BUILD 1 Successful and complete
 
 
 BATCH_BUILD_2:             \
-	BATCH_LIBADDR_C         \
 	BATCH_LIBMIME_C         \
 	BATCH_LIBPARSE_C                \
 	BATCH_LIBMSG_C          \
+	BATCH_LIBPARSE_C                \
 	BATCH_LIBMISC_C         \
 	BATCH_LIBSTYLE_C                \
 	BATCH_XP_C              \
 	BATCH_PICS_C              \
 	BATCH_WINFE_C           \
 	BATCH_PLUGIN_C          \
-	BATCH_LIBADDR_CPP               \
 	BATCH_LAYOUT_C          \
 	BATCH_JPEG_C            \
-	BATCH_LIBNEO_CPP                \
-	BATCH_LIBMOCHA_C                
+	BATCH_LIBMOCHA_C
     echo Done >$(TMP)\bb2.sem
     echo BATCH BUILD 2 Successful and complete
 
@@ -2495,6 +2458,12 @@ BUILD_SOURCE: $(OBJ_FILES)
 !ifdef MOZ_MAIL_NEWS
 	$(DIST)\lib\mnrc16.lib +
 !endif
+!ifdef MOZ_CALENDAR
+    $(DIST)\lib\cal3240.lib +
+    $(DIST)\lib\nsfmt3230.lib +
+    $(DIST)\lib\nsuni3230.lib +
+    $(DIST)\lib\nscnv3230.lib +
+!endif
     $(DIST)\lib\zip$(MOZ_BITS)$(VERSION_NUMBER).lib +
     $(DIST)\lib\jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib +
     $(DIST)\lib\dbm$(MOZ_BITS).lib +
@@ -2517,14 +2486,14 @@ PATCHER	= $(PATCHER:16=32)
 $(OUTDIR)\netsc_us.exe : "$(OUTDIR)" $(PATCHER) $(XPDIST)\xpdist\domestic.txt $(OUTDIR)\mozilla.exe
 	$(PATCHER) @<<
     $(XPDIST)\xpdist\domestic.txt
-    $(OUTDIR)\mozilla.exe 
+    $(OUTDIR)\mozilla.exe
     $(OUTDIR)\netsc_us.exe
 <<
 
 $(OUTDIR)\netsc_fr.exe : "$(OUTDIR)" $(PATCHER) $(XPDIST)\xpdist\france.txt $(OUTDIR)\mozilla.exe
 	$(PATCHER) @<<
     $(XPDIST)\xpdist\france.txt
-    $(OUTDIR)\mozilla.exe 
+    $(OUTDIR)\mozilla.exe
     $(OUTDIR)\netsc_fr.exe
 <<
 
@@ -2668,7 +2637,7 @@ $(OUTDIR)\mozilla.res : $(RES_FILES) "$(OUTDIR)"
     @SET SAVEINCLUDE=%%INCLUDE%%
     @SET INCLUDE=$(RCINCLUDES);$(RCDISTINCLUDES);%%SAVEINCLUDE%%
     $(RSC) /Fo$(PROD)$(VERSTR).res $(RCFILEFLAGS) $(RCFLAGS) $(DEPTH)\cmd\winfe\mozilla.rc
-    @IF EXIST $(PROD)$(VERSTR).res copy $(PROD)$(VERSTR).res $(OUTDIR)\mozilla.res 
+    @IF EXIST $(PROD)$(VERSTR).res copy $(PROD)$(VERSTR).res $(OUTDIR)\mozilla.res
     @IF EXIST $(PROD)$(VERSTR).res del $(PROD)$(VERSTR).res
     @SET INCLUDE=%%SAVEINCLUDE%%
     @SET SAVEINCLUDE=
@@ -2677,7 +2646,7 @@ $(OUTDIR)\appicon.res : $(DEPTH)\cmd\winfe\res\silver.ico "$(OUTDIR)"
     @SET SAVEINCLUDE=%%INCLUDE%%
     @SET INCLUDE=$(DEPTH)\cmd\winfe\res;%%SAVEINCLUDE%%
     $(RSC) /Fo$(PROD)$(VERSTR).res $(RCFILEFLAGS) $(RCFLAGS) $(DEPTH)\cmd\winfe\res\appicon.rc
-    @IF EXIST $(PROD)$(VERSTR).res copy $(PROD)$(VERSTR).res $(OUTDIR)\appicon.res 
+    @IF EXIST $(PROD)$(VERSTR).res copy $(PROD)$(VERSTR).res $(OUTDIR)\appicon.res
     @IF EXIST $(PROD)$(VERSTR).res del $(PROD)$(VERSTR).res
     @SET INCLUDE=%%SAVEINCLUDE%%
     @SET SAVEINCLUDE=
@@ -2791,7 +2760,6 @@ exports:
 !ifdef MOZ_MAIL_NEWS
     -xcopy $(DEPTH)\lib\libaddr\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\lib\libmsg\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(DEPTH)\lib\libneo\*.h $(EXPORTINC) $(XCF)
 !endif
 !ifdef MOZ_LDAP
     -xcopy $(DEPTH)\netsite\ldap\include\*.h $(EXPORTINC) $(XCF)
@@ -2847,6 +2815,9 @@ exports:
     -xcopy $(DEPTH)\dist\public\spellchk\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\jpeg\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\lib\libcnv\*.h $(EXPORTINC) $(XCF)
+!if defined(MOZ_CALENDAR)
+    -xcopy $(DIST)\public\calendar\*.h $(EXPORTINC) $(XCF)
+!endif
 
 pure:
 	$(MOZ_PURIFY)\purify /Run=no /ErrorCallStackLength=20 /AllocCallStackLength=20 \
@@ -2862,7 +2833,7 @@ symbols:
 	@echo "MOZ_SRC = $(MOZ_SRC)"
 	@echo "PATCHER = $(PATCHER)"
 !if "$(MOZ_USERNAME)" == "WHITEBOX"
-	@echo "MOZ_USERNAME = $(MOZ_USERNAME)"  
+	@echo "MOZ_USERNAME = $(MOZ_USERNAME)"
 	@echo "MOZ_USERDEBUG = $(MOZ_USERDEBUG)"
 !endif
 
@@ -2898,12 +2869,16 @@ ns.zip:
 		resdll.dll		\
 		prefui32.dll		\
 		pr3240.dll		\
-		nsldap32.dll		\
+		nsldap32v30.dll		\
 		nsdlg32.dll		\
 		mnpref32.dll		\
 		mnrc32.dll		\
 		xpstrdll.dll		\
 		js3240.dll		\
+		cal3240.dll		\
+		nsfmt3230.dll   \
+		nsuni3230.dll	\
+		nscnv3230.dll	\
 		jpeg3240.dll		\
 		edpref32.dll		\
 		editor32.dll		\
@@ -2911,4 +2886,4 @@ ns.zip:
 		sched32.dll			\
 		xpcom32.dll		\
 		netscape.cfg		\
-		moz40p3	
+		moz40p3

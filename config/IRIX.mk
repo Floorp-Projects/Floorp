@@ -67,7 +67,7 @@ ifeq ($(OS_RELEASE),6)
 # having multiply defined weak symbols.
 #
 # The "-woff 3247" silences complaints about the "#pragma segment"
-# stuff strewn all over libneo (apparently for Macintoshes).
+# stuff strewn all over db (apparently for Macintoshes).
 #
 NO_NOISE		= -woff 131
 PLATFORM_FLAGS		+= -multigot -Wl,-nltgot,170

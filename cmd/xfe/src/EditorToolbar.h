@@ -22,7 +22,7 @@
  *  EditorToolbar.h --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.h,v 3.1 1998/03/28 03:26:25 ltabb Exp $"
+ *  RCSID: "$Id: EditorToolbar.h,v 3.2 1998/06/22 21:19:13 spider Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -46,7 +46,7 @@ public:
 					  ToolbarSpec* spec,
 					  Boolean      show_frame);
 
-	~XFE_EditorToolbar();
+	virtual ~XFE_EditorToolbar();
 
 	// contract:
 	void   update();

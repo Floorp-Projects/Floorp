@@ -18,6 +18,7 @@
 
 #include "stdafx.h"
 
+#include "rosetta.h"
 #include "res\appicon.h"
 #include "dialog.h"
 #include "mainfrm.h"
@@ -1462,6 +1463,7 @@ xp_FileName(const char * name, XP_FileType type, char* *myName)
 		break;
 
 
+#ifdef MOZ_LOC_INDEP
 	case xpLIClientDB:
 		newName = (char *) XP_ALLOC(_MAX_PATH);
 		sprintf(newName, "%s\\locindep.dat", (const char *)theApp.m_UserDirectory);
@@ -1471,6 +1473,7 @@ xp_FileName(const char * name, XP_FileType type, char* *myName)
 		newName = (char *) XP_ALLOC(_MAX_PATH);
 		sprintf(newName, "%s\\liprefs.js", (const char *)theApp.m_UserDirectory);
 		break;
+#endif /* MOZ_LOC_INDEP */
 
 	default:
 		ASSERT(0);  /* all types should be covered */
@@ -2373,15 +2376,7 @@ PUBLIC void *FE_AboutData (const char *which, char **data_ret, int32 *length_ret
 
             char *pSSLVersion = NULL;
 			char *pSSLString = NULL;
-			char *pSSLCapability = SECNAV_SSLCapabilities();
-            pSSLVersion = strdup(SECNAV_SecurityVersion(PR_TRUE));
-            /* NULL pointer check. strlen fires a page fault if passed a NULL pointer */
-            if (pSSLVersion && pSSLCapability) 
-			{
-				pSSLString = (char *)malloc(strlen(pSSLVersion) + strlen(pSSLCapability) + 48*2);
-                sprintf(pSSLString, szLoadString(IDS_ABOUT_SECURITY), pSSLVersion, pSSLCapability);
-            }
-			if (pSSLCapability) free(pSSLCapability);
+			HG83722
 
             char *pSp = szLoadString(IDS_ABOUT_0);
             /* Null pointer check */

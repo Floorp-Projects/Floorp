@@ -37,8 +37,8 @@ public:
 					MWContext      *context,
 					ABSearchInfo_t *info);
 
-	~XFE_ABSearchDlg();
-	
+	virtual ~XFE_ABSearchDlg();
+
 	void            setParams(ABSearchInfo_t *info);
 
 	virtual void cancel();

@@ -1,25 +1,25 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1996
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
 // srchfrm.cpp : implementation file
 //
 
 #include "stdafx.h"
-#include "srchfrm.h"
 #include "fldrfrm.h"
 #include "thrdfrm.h"
 #include "msgfrm.h"
@@ -37,19 +37,19 @@
 #include "fegui.h"
 #include "intl_csi.h"
 #include "msg_srch.h"
-#include "advopdlg.h"
-#include "edhdrdlg.h"
 #include "srchobj.h"
 #include "shcut.h"
 #include "msgcom.h"
 #include "mailqf.h"
-#include "rdfglobal.h"
+#include "srchfrm.h"
+
+#include "advprosh.h"
 
 #define SEARCH_GROW_HEIGHT 200
 
 #define SCOPE_SELECTED                  0
 #define SCOPE_ALL_MAIL                  1
-#define SCOPE_SUBSCRIBED_NEWS			2
+#define SCOPE_SUBSCRIBED_NEWS		        2
 #define SCOPE_ALL_NEWS                  3
 
 #define DEF_VISIBLE_COLUMNS				4
@@ -57,13 +57,17 @@
 #define NETSCAPE_SEARCH_FORMAT "Netscape Search"
 
 CSearchFrame            *g_pSearchWindow = NULL;
+#if 0 // MW fix
 CLDAPSearchFrame        *g_pLDAPSearchWindow = NULL;
+#endif
 
 #ifndef _AFXDLL
 #undef new
 #endif
 IMPLEMENT_DYNCREATE(CSearchView, COutlinerView)
+#if 0 // MW fix
 IMPLEMENT_DYNCREATE(CLDAPSearchView, COutlinerView)
+#endif
 #ifndef _AFXDLL
 #define new DEBUG_NEW
 #endif
@@ -131,7 +135,7 @@ int CSearchBar::GetHeightNeeded()
 
 	if(m_bLDAP)
 	{
-		widget2 = GetDlgItem(IDC_ADVANCED_SEARCH);
+		widget2 = GetDlgItem(IDC_ADVANCED_OPTIONS);
 	}
 	else
 	{
@@ -353,15 +357,18 @@ void CSearchBar::OnSize( UINT nType, int cx, int cy )
 		
 		widget = GetDlgItem(IDC_FIND);
 		SlideWindow(widget, dx, 0);
-		widget = GetDlgItem(IDC_SAVE);
-		if (widget)
-			SlideWindow(widget, dx, 0);
-		widget = GetDlgItem(IDC_SEARCHHELP);
+
+		widget = GetDlgItem(IDC_NEW);
 		SlideWindow(widget, dx, 0);
 
-		widget = GetDlgItem(IDC_ADVANCED_SEARCH);
+    widget = GetDlgItem(IDC_SAVE);
 		SlideWindow(widget, dx, 0);
 
+    widget = GetDlgItem(IDC_SEARCHHELP);
+		SlideWindow(widget, dx, 0);
+
+		widget = GetDlgItem(IDC_ADVANCED_OPTIONS);
+		SlideWindow(widget, dx, 0);
 
 		m_searchObj.OnSize (nType, cx, cy, dx);
 		m_iWidth = cx;
@@ -527,10 +534,8 @@ CSearchFrame::CSearchFrame()
 	m_listSearch = XP_ListNew();
 	m_listResult = NULL;
 	m_pOutliner = NULL;
-	m_pAdvancedOptionsDlg = NULL;
-	m_pCustomHeadersDlg = NULL;
 
-	CSearchResultsList *pInstance = new CSearchResultsList (this);
+  CSearchResultsList *pInstance = new CSearchResultsList (this);
 	pInstance->QueryInterface (IID_IMsgList, (LPVOID *) &m_pIMsgList);
 
 	m_pSearchPane = MSG_CreateSearchPane (GetContext(), WFE_MSGGetMaster());
@@ -600,11 +605,11 @@ void CSearchFrame::ShowResults( BOOL bShow )
 			SetWindowPos( NULL, 0, 0, size.cx, m_iHeight,
 						  SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
 
-			m_barStatus.ShowWindow(SW_SHOW);		
+			m_barStatus.ShowWindow(SW_SHOW);
 
 			RecalcLayout();
 
-		} else {
+    } else {
 
 			CRect rect;
 			GetWindowRect(&rect);
@@ -754,7 +759,8 @@ BOOL CSearchFrame::OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pContext
 // CSearchFrame message handlers
 
 BEGIN_MESSAGE_MAP(CSearchFrame, CFrameWnd)
-	ON_WM_CREATE()
+	ON_WM_SETFOCUS()
+  ON_WM_CREATE()
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_WM_GETMINMAXINFO()
@@ -768,23 +774,27 @@ BEGIN_MESSAGE_MAP(CSearchFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI( IDC_TO, OnUpdateTo )
 	ON_BN_CLICKED(IDC_BUTTON_FILE_MESSAGE, OnFileButton)
 	ON_UPDATE_COMMAND_UI( IDC_BUTTON_FILE_MESSAGE, OnUpdateFileButton )
+	ON_BN_CLICKED(IDC_BUTTON_DELETE_MESSAGE, OnDeleteMessage)
+	ON_UPDATE_COMMAND_UI( IDC_BUTTON_DELETE_MESSAGE, OnUpdateDeleteButton )
 
 	ON_BN_CLICKED(IDC_NEW, OnNew)
-	ON_UPDATE_COMMAND_UI(IDC_NEW, OnUpdateQuery)
+	ON_UPDATE_COMMAND_UI(IDC_NEW, OnUpdateClearSearch)
 	ON_BN_CLICKED(IDC_SAVE, OnSave)
 	ON_UPDATE_COMMAND_UI( IDC_SAVE, OnUpdateSave )
 	ON_BN_CLICKED(IDC_SEARCHHELP, OnHelp)
 	ON_UPDATE_COMMAND_UI( IDC_SEARCHHELP, OnUpdateHelp )
-	ON_BN_CLICKED(IDC_ADVANCED_SEARCH, OnAdvanced)
-	ON_UPDATE_COMMAND_UI( IDC_ADVANCED_SEARCH, OnUpdateAdvanced )
+	ON_BN_CLICKED(IDC_ADVANCED_OPTIONS, OnAdvanced)
+	ON_UPDATE_COMMAND_UI( IDC_ADVANCED_OPTIONS, OnUpdateAdvanced )
 	ON_CBN_SELCHANGE(IDC_COMBO_SCOPE, OnScope)
 	ON_CBN_SELCHANGE(IDC_COMBO_ATTRIB1, OnAttrib1)
 	ON_CBN_SELCHANGE(IDC_COMBO_ATTRIB2, OnAttrib2)
 	ON_CBN_SELCHANGE(IDC_COMBO_ATTRIB3, OnAttrib3)
 	ON_CBN_SELCHANGE(IDC_COMBO_ATTRIB4, OnAttrib4)
 	ON_CBN_SELCHANGE(IDC_COMBO_ATTRIB5, OnAttrib5)
-	ON_CBN_SELCHANGE(IDC_COMBO_AND_OR, OnAndOr)
-	ON_UPDATE_COMMAND_UI(IDC_COMBO_AND_OR, OnUpdateAndOr)
+  ON_BN_CLICKED(IDC_RADIO_ALL, OnAndOr)
+  ON_BN_CLICKED(IDC_RADIO_ANY, OnAndOr)
+	ON_UPDATE_COMMAND_UI(IDC_RADIO_ALL, OnUpdateAndOr)
+	ON_UPDATE_COMMAND_UI(IDC_RADIO_ANY, OnUpdateAndOr)
 	ON_MESSAGE(WM_ADVANCED_OPTIONS_DONE, OnFinishedAdvanced)
 	ON_MESSAGE(WM_EDIT_CUSTOM_DONE, OnFinishedHeaders)
 
@@ -805,6 +815,8 @@ BEGIN_MESSAGE_MAP(CSearchFrame, CFrameWnd)
 #endif
 	ON_UPDATE_COMMAND_UI( ID_MESSAGE_FILE, OnUpdateFile )
 	ON_UPDATE_COMMAND_UI( IDC_COMBO_SCOPE, OnUpdateQuery )
+
+	ON_UPDATE_COMMAND_UI(IDS_ONLINE_STATUS, OnUpdateOnlineStatus)
 
 END_MESSAGE_MAP()
 
@@ -862,37 +874,30 @@ void CSearchFrame::OnFileButton()
 	if (!hFileMenu)
 		return;  //Bail!!!
 
-	if ( iSel < nTotalLines ) 
+	if(iSel <= nTotalLines) 
 	{
 		UINT nID = FIRST_MOVE_MENU_ID;
-		CMailNewsFrame::UpdateMenu( NULL, hFileMenu, nID );
-    }
-
+		CMailNewsFrame::UpdateMenu(NULL, hFileMenu, nID);
+  }
 
 	CRect rect;
-	CWnd *pWidget = (CWnd*) m_barAction.GetDlgItem(IDC_BUTTON_FILE_MESSAGE);
-	if (pWidget)
+	CWnd * pWidget = (CWnd *)m_barAction.GetDlgItem(IDC_BUTTON_FILE_MESSAGE);
+	if(pWidget)
 	{   //convert this bad boy to Screen units
 		pWidget->GetWindowRect(&rect);
 		::MapDialogRect(pWidget->GetSafeHwnd(), &rect);
 		pWidget->EnableWindow(FALSE);
 	}
 	else
-	{
 		return;//Bail!!
-	}
 
-    //	Track the popup now.		
-   	DWORD dwError = ::TrackPopupMenu( hFileMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, rect.left, rect.bottom, 0,
-					  GetSafeHwnd(), NULL);
-
+  // Track the popup now.		
+ 	DWORD dwError = ::TrackPopupMenu(hFileMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, 
+                                   rect.left, rect.bottom, 0, GetSafeHwnd(), NULL);
 	pWidget->EnableWindow(TRUE);
 
-
-    //  Cleanup handled in CMailNewsFrame
-    //VERIFY(::DestroyMenu( hFileMenu ));
+  //  Cleanup handled in CMailNewsFrame
 }
-
 
 void CSearchFrame::OnUpdateFileButton(CCmdUI *pCmdUI)
 {
@@ -901,7 +906,17 @@ void CSearchFrame::OnUpdateFileButton(CCmdUI *pCmdUI)
 	m_pOutliner->GetSelection(indices, count);
 	int nLines = m_pOutliner->GetTotalLines();
 
-	pCmdUI->Enable( ((nLines > 0) && count));
+	pCmdUI->Enable(((nLines > 0) && count));
+}
+
+void CSearchFrame::OnUpdateDeleteButton(CCmdUI *pCmdUI)
+{
+	MSG_ViewIndex *indices;
+	int count;
+	m_pOutliner->GetSelection(indices, count);
+	int nLines = m_pOutliner->GetTotalLines();
+
+	pCmdUI->Enable(((nLines > 0) && count));
 }
 
 void CSearchFrame::OnFileMessage(UINT nID)
@@ -1096,10 +1111,37 @@ BOOL CSearchFrame::PreTranslateMessage( MSG* pMsg )
 		HWND hwndFocus = ::GetFocus();
 
 		HWND hwndSearchFirst = ::GetNextDlgTabItem( m_barSearch.m_hWnd, NULL, FALSE );
-		HWND hwndActionFirst = ::GetNextDlgTabItem( m_barAction.m_hWnd, NULL, FALSE );
-
 		HWND hwndSearchLast = ::GetNextDlgTabItem( m_barSearch.m_hWnd, hwndSearchFirst, TRUE );
+		
+#ifdef _WIN32
+		HWND hwndActionFirst = ::GetNextDlgTabItem( m_barAction.m_hWnd, NULL, FALSE );
 		HWND hwndActionLast = ::GetNextDlgTabItem( m_barAction.m_hWnd, hwndActionFirst, TRUE );
+#else
+		HWND hwndActionFirst = NULL;
+		HWND hwndActionLast = NULL;
+		if (m_bIsLDAPSearch)
+		{
+			HWND hAdd = ::GetDlgItem( m_barAction.m_hWnd, IDC_ADD );
+			HWND hTo = ::GetDlgItem( m_barAction.m_hWnd, IDC_TO );
+			if (::IsWindow(hAdd) && ::IsWindowVisible(hAdd) && ::IsWindowEnabled(hAdd))
+			{
+				hwndActionFirst = hAdd;
+				if (::IsWindow(hTo) && ::IsWindowVisible(hTo) && ::IsWindowEnabled(hTo))
+					hwndActionLast = hTo;
+			}
+			else
+			{
+				if (::IsWindow(hTo) && ::IsWindowVisible(hTo) && ::IsWindowEnabled(hTo))
+					hwndActionFirst = hTo;
+			}
+		}
+		else
+		{
+			HWND hTo = ::GetDlgItem( m_barAction.m_hWnd, IDC_TO );
+			if (::IsWindow(hTo) && ::IsWindowVisible(hTo) && ::IsWindowEnabled(hTo))
+				hwndActionFirst = hTo;
+		}
+#endif
 
 		if ( GetKeyState(VK_SHIFT) & 0x8000 ) {
 
@@ -1126,7 +1168,6 @@ BOOL CSearchFrame::PreTranslateMessage( MSG* pMsg )
 		} else {
 
 			// Tab forward
-
 			if (hwndFocus == m_pOutliner->m_hWnd) {
 				// Handle tabbing out of outliner
 				hwndNext = hwndActionFirst;
@@ -1171,7 +1212,22 @@ int CSearchFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 #else
 	m_barSearch.Create( this, IDD_SEARCH, WS_CHILD|CBRS_TOP, 1 );
 #endif
-	m_barStatus.Create( this, FALSE, FALSE );
+	m_barStatus.Create( this, FALSE, FALSE, TRUE );
+
+	//set initial online status
+	int idx = m_barStatus.CommandToIndex(IDS_ONLINE_STATUS);
+	if (idx > -1)
+	{
+		UINT nID = IDS_ONLINE_STATUS;
+		UINT nStyle; 
+		int nWidth;
+		m_barStatus.GetPaneInfo( idx, nID, nStyle, nWidth );
+		if (!NET_IsOffline())
+			m_barStatus.SetPaneInfo(idx, IDS_ONLINE_STATUS, SBPS_NORMAL, nWidth);
+		else
+			m_barStatus.SetPaneInfo(idx, IDS_ONLINE_STATUS, SBPS_DISABLED, nWidth);
+	}
+
 	m_barAction.Create( this, IDD_MSGSRCHACTION, WS_CHILD|CBRS_BOTTOM, 2);
 
 	RecalcLayout( );
@@ -1202,14 +1258,13 @@ int CSearchFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_barSearch.m_iOrigFrameHeight = m_iOrigFrameHeight = m_iHeight;
 	m_barSearch.m_searchObj.SetOrigFrameHeight(m_barSearch.m_iOrigFrameHeight);
 
-	OnNew();
-	
+  OnNew();
 
 #ifndef _WIN32
 	SendMessageToDescendants(WM_IDLEUPDATECMDUI, (WPARAM)TRUE, (LPARAM)0);
 #endif
 
-	return res;
+  return res;
 }
 
 void CSearchFrame::OnSize( UINT nType, int cx, int cy )
@@ -1232,6 +1287,11 @@ void CSearchFrame::OnDestroy()
 	}
 }
 
+void CSearchFrame::OnSetFocus(CWnd *pOldWnd)
+{
+  m_barSearch.m_searchObj.RestoreDefaultFocus();
+}
+
 void CSearchFrame::OnUpdateDeleteMessage(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(TRUE);
@@ -1245,7 +1305,7 @@ void CSearchFrame::OnDeleteMessage()
 	int count = 0;
 	m_pOutliner->GetSelection(indices, count);
 
-	MSG_Command(m_pSearchPane, MSG_DeleteMessage, indices, count);
+  MSG_Command(m_pSearchPane, MSG_DeleteMessage, indices, count);
 
 	ModalStatusEnd();
 }
@@ -1258,34 +1318,26 @@ void CSearchFrame::ModalStatusBegin( int iModalDelay )
 
 void CSearchFrame::ModalStatusEnd()
 {
-
 }
-
 
 LONG CSearchFrame::OnFinishedHeaders(WPARAM wParam, LPARAM lParam )
 {
 	MSG_Master *master = WFE_MSGGetMaster();
-	CComboBox *pCombo = (CComboBox *) m_barSearch.m_searchObj.GetColumnOneAttributeWidget(m_iRowSelected);
-	if (lParam == IDOK )
-	{
+	if(lParam == IDOK)
 		m_barSearch.m_searchObj.UpdateColumn1Attributes();
-	}
-	else
-	{
-		pCombo->SetCurSel(0);
-	}
 	MSG_ReleaseEditHeadersSemaphore(master, this);
-	m_pCustomHeadersDlg = NULL;
 	return 0;
 }
 
-
 LONG CSearchFrame::OnFinishedAdvanced(WPARAM wParam, LPARAM lParam )
 {
-	m_barSearch.UpdateAttribList();
-	m_barSearch.UpdateOpList();
-	m_barSearch.m_searchObj.ReInitializeWidgets();	
-	m_pAdvancedOptionsDlg = NULL;
+	if(lParam == IDOK)
+  {
+	  m_barSearch.UpdateAttribList();
+	  m_barSearch.UpdateOpList();
+  	//m_barSearch.m_searchObj.ReInitializeWidgets();	
+  }
+
 	return 0;
 }
 
@@ -1312,10 +1364,33 @@ void CSearchFrame::OnAndOr()
 
 void CSearchFrame::OnAdvanced()
 {
-	m_pAdvancedOptionsDlg = new CAdvSearchOptionsDlg(this);
-	if(m_pAdvancedOptionsDlg)
-		m_pAdvancedOptionsDlg->ShowWindow(SW_SHOW);
+	MSG_Master *master = WFE_MSGGetMaster();
+	//find out if we are the only ones trying to edit headers.
+	if (master)
+	{
+		if (!MSG_AcquireEditHeadersSemaphore(master, this))
+		{
+			::MessageBox(FEU_GetLastActiveFrame()->GetSafeHwnd(),
+					 szLoadString(IDS_EDIT_HEADER_IN_USE), 
+					 szLoadString(IDS_CUSTOM_HEADER_ERROR), 
+					 MB_OK|MB_ICONSTOP);
+			return;
+			//We can't edit anything since another window already has the semaphore.
+		}
+	}
+	else
+	{	//Something is hosed!
+		return;
+	}
 
+  CString title;
+  title.LoadString(IDS_ADVSEARCH_PROPERTY_SHEET);
+
+  // it will delete itself in OnNcDestroy. This is a way to have two "modal" dialogs
+  CAdvancedOptionsPropertySheet * paops = new CAdvancedOptionsPropertySheet(this, title, AOP_SEARCH_OPTIONS | AOP_CUSTOM_HEADERS);
+  assert(paops != NULL);
+  if(paops != NULL)
+    paops->Create(this);
 }
 
 void CSearchFrame::OnUpdateAdvanced( CCmdUI *pCmdUI)
@@ -1364,7 +1439,12 @@ void CSearchFrame::OnNew()
 
 	m_pOutliner->SelectItem(0);
 	int dy = m_barSearch.ClearSearch(m_bIsLDAPSearch);
-
+  CComboBox * pCombo = (CComboBox *)m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB1);
+  if(pCombo != NULL)
+  {
+    pCombo->SetCurSel(0);
+    OnAttrib1();
+  }
 
 	AdjustHeight(dy);
 
@@ -1443,26 +1523,26 @@ void CSearchFrame::OnFind()
 	}
 }
 
-void CSearchFrame::OnUpdateFind( CCmdUI *pCmdUI )
+void CSearchFrame::OnUpdateFind(CCmdUI *pCmdUI)
 {
 	CString cs;
-	if ( m_bSearching || CanAllInterrupt()) {
-		cs.LoadString( IDS_STOP );
-	} else {
-		cs.LoadString( IDS_SEARCH );
-	}
+  BOOL bStopButton = FALSE;
 
-	pCmdUI->SetText( cs );
+	if(m_bSearching || CanAllInterrupt())
+  {
+		cs.LoadString( IDS_STOP );
+    bStopButton = TRUE;
+	} 
+  else
+		cs.LoadString( IDS_SEARCH );
+
+	pCmdUI->SetText(cs);
+  pCmdUI->Enable(bStopButton ? TRUE : readyToSearch());
 }
 
 void CSearchFrame::OnUpdateAndOr(CCmdUI *pCmdUI)
 {
-
-	if ( m_bSearching || CanAllInterrupt()) {	 
-		pCmdUI->Enable(FALSE);		
-	}else {
-		pCmdUI->Enable(TRUE); 
-	}
+  //pCmdUI->Enable(!(m_bSearching || CanAllInterrupt()) && m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB2)->IsWindowVisible());
 }
 
 void CSearchFrame::OnTo()
@@ -1504,7 +1584,16 @@ void CSearchFrame::OnUpdateTo( CCmdUI *pCmdUI )
 
 void CSearchFrame::OnUpdateQuery( CCmdUI *pCmdUI )
 {
-	pCmdUI->Enable( !m_bSearching );
+	pCmdUI->Enable(!m_bSearching);
+}
+
+void CSearchFrame::OnUpdateClearSearch(CCmdUI *pCmdUI)
+{
+  BOOL b = FALSE;
+  CComboBox * pCombo = (CComboBox *)m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB2);
+  if(pCombo != NULL)
+    b = pCombo->IsWindowVisible();
+	pCmdUI->Enable(!m_bSearching && (b || readyToSearch() || m_bResultsShowing));
 }
 
 void CSearchFrame::OnScope()
@@ -1513,77 +1602,136 @@ void CSearchFrame::OnScope()
 	m_barSearch.UpdateOpList();
 }
 
+BOOL CSearchFrame::readyToSearch()
+{
+  BOOL bRet = FALSE;
+  BOOL b1 = FALSE;
+  BOOL b2 = FALSE;
+  BOOL b3 = FALSE;
+  BOOL b4 = FALSE;
+  BOOL b5 = FALSE;
+  char szString[256];
+  CEdit * pEdit = NULL;
+  CComboBox * pCombo = NULL;
+  DWORD dwAttrib;
+
+  pCombo = (CComboBox *)m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB1);
+  if(pCombo != NULL)
+  {
+    dwAttrib = pCombo->GetItemData(pCombo->GetCurSel());
+    if(pCombo->IsWindowVisible() && ((dwAttrib == attribDate)||(dwAttrib == attribPriority)||(dwAttrib == attribMsgStatus)))
+      b1 = TRUE;
+    else
+    {
+      pEdit = (CEdit *)m_barSearch.GetDlgItem(IDC_EDIT_VALUE1);
+      if(pEdit != NULL)
+      {
+        pEdit->GetWindowText(szString, sizeof(szString));
+        b1 = ((strlen(szString) > 0) && pEdit->IsWindowVisible());
+      }
+    }
+  }
+
+  pCombo = (CComboBox *)m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB2);
+  if(pCombo != NULL)
+  {
+    dwAttrib = pCombo->GetItemData(pCombo->GetCurSel());
+    if(pCombo->IsWindowVisible() && ((dwAttrib == attribDate)||(dwAttrib == attribPriority)||(dwAttrib == attribMsgStatus)))
+      b2 = TRUE;
+    else
+    {
+      pEdit = (CEdit *)m_barSearch.GetDlgItem(IDC_EDIT_VALUE2);
+      if(pEdit != NULL)
+      {
+        pEdit->GetWindowText(szString, sizeof(szString));
+        b2 = ((strlen(szString) > 0) && pEdit->IsWindowVisible());
+      }
+    }
+  }
+
+  pCombo = (CComboBox *)m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB3);
+  if(pCombo != NULL)
+  {
+    dwAttrib = pCombo->GetItemData(pCombo->GetCurSel());
+    if(pCombo->IsWindowVisible() && ((dwAttrib == attribDate)||(dwAttrib == attribPriority)||(dwAttrib == attribMsgStatus)))
+      b3 = TRUE;
+    else
+    {
+      pEdit = (CEdit *)m_barSearch.GetDlgItem(IDC_EDIT_VALUE3);
+      if(pEdit != NULL)
+      {
+        pEdit->GetWindowText(szString, sizeof(szString));
+        b3 = ((strlen(szString) > 0) && pEdit->IsWindowVisible());
+      }
+    }
+  }
+
+  pCombo = (CComboBox *)m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB4);
+  if(pCombo != NULL)
+  {
+    dwAttrib = pCombo->GetItemData(pCombo->GetCurSel());
+    if(pCombo->IsWindowVisible() && ((dwAttrib == attribDate)||(dwAttrib == attribPriority)||(dwAttrib == attribMsgStatus)))
+      b4 = TRUE;
+    else
+    {
+      pEdit = (CEdit *)m_barSearch.GetDlgItem(IDC_EDIT_VALUE4);
+      if(pEdit != NULL)
+      {
+        pEdit->GetWindowText(szString, sizeof(szString));
+        b4 = ((strlen(szString) > 0) && pEdit->IsWindowVisible());
+      }
+    }
+  }
+
+  pCombo = (CComboBox *)m_barSearch.GetDlgItem(IDC_COMBO_ATTRIB5);
+  if(pCombo != NULL)
+  {
+    dwAttrib = pCombo->GetItemData(pCombo->GetCurSel());
+    if(pCombo->IsWindowVisible() && ((dwAttrib == attribDate)||(dwAttrib == attribPriority)||(dwAttrib == attribMsgStatus)))
+      b5 = TRUE;
+    else
+    {
+      pEdit = (CEdit *)m_barSearch.GetDlgItem(IDC_EDIT_VALUE5);
+      if(pEdit != NULL)
+      {
+        pEdit->GetWindowText(szString, sizeof(szString));
+        b5 = ((strlen(szString) > 0) && pEdit->IsWindowVisible());
+      }
+    }
+  }
+
+  bRet = b1 || b2 || b3 || b4 || b5;
+  return bRet;
+}
+
 void CSearchFrame::OnAttrib1()
 {
-	EditHeader(0);
 	m_barSearch.UpdateOpList();
-
 }
 
 void CSearchFrame::OnAttrib2()
 {
-	EditHeader(1);
 	m_barSearch.UpdateOpList();
 }
 
 void CSearchFrame::OnAttrib3()
 {
-	EditHeader(2);
 	m_barSearch.UpdateOpList();
 }
 
 void CSearchFrame::OnAttrib4()
 {
-	EditHeader(3);
 	m_barSearch.UpdateOpList();
 }
 
 void CSearchFrame::OnAttrib5()
 {
-	EditHeader(4);
 	m_barSearch.UpdateOpList();
 }
 
-
-void CSearchFrame::EditHeader(int iRow)
+void CSearchFrame::OnUpdateOnlineStatus(CCmdUI *pCmdUI)
 {
-	//We are being asked to modify custom headers
-	CComboBox *combo;	
-	int iCurSel;
-	MSG_SearchAttribute attrib;
-	m_iRowSelected = iRow;
-	combo = (CComboBox *) m_barSearch.m_searchObj.GetColumnOneAttributeWidget(iRow);
-	iCurSel = combo->GetCurSel();
-	attrib = (MSG_SearchAttribute) combo->GetItemData(iCurSel);
-
-	if (attrib == -1)
-	{
-		MSG_Master *master = WFE_MSGGetMaster();
-		//find out if we are the only ones trying to edit headers.
-		if (master)
-		{
-			if (!MSG_AcquireEditHeadersSemaphore(master, this))
-			{
-				::MessageBox(FEU_GetLastActiveFrame()->GetSafeHwnd(),
-						 szLoadString(IDS_EDIT_HEADER_IN_USE), 
-						 szLoadString(IDS_CUSTOM_HEADER_ERROR), 
-						 MB_OK|MB_ICONSTOP);
-				combo->SetCurSel(0);
-				return;
-				//We can't edit anything since another window already has the semaphore.
-			}
-		}
-		else
-		{	//Something is hosed!
-			return;
-		}
-
-		m_pCustomHeadersDlg = new CCustomHeadersDlg(this);
-		if (m_pCustomHeadersDlg)
-		{
-			m_pCustomHeadersDlg->ShowWindow(SW_SHOW);
-		}
-	}
+ 	pCmdUI->Enable(!NET_IsOffline());
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1619,8 +1767,54 @@ CSearchOutliner::~CSearchOutliner ( )
 BEGIN_MESSAGE_MAP(CSearchOutliner, CMSelectOutliner )
 	//{{AFX_MSG_MAP(CSearchOutliner)
 	ON_WM_CREATE()
+  ON_WM_KEYDOWN()
+  ON_WM_CHAR()
+  ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+void CSearchOutliner::OnSetFocus(CWnd* pOldWnd)
+{
+  CMSelectOutliner::OnSetFocus(pOldWnd);
+  int iTotal = GetTotalLines();
+	MSG_ViewIndex * indices = NULL;
+	int iSelected = 0;
+	GetSelection(indices, iSelected);
+  if((iSelected == 0) && (iTotal > 0))
+    SelectItem(0);
+}
+
+void CSearchOutliner::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+  if(nChar == VK_DELETE)
+  {
+    BOOL bShiftPressed = (GetKeyState(VK_SHIFT) < 0);
+    deleteMessages(bShiftPressed);
+    return;
+  }
+
+  CMSelectOutliner::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+void CSearchOutliner::deleteMessages(BOOL bNoTrash)
+{
+	MSG_ViewIndex *indices = NULL;
+	int count = 0;
+	GetSelection(indices, count);
+  MSG_Command(m_pSearchPane, bNoTrash ? MSG_DeleteMessageNoTrash : MSG_DeleteMessage, indices, count);
+}
+
+void CSearchOutliner::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+  if(nChar == 1) // CTRL/A -- select all
+  {
+    int iTotalLines = GetTotalLines();
+    if(iTotalLines > 0)
+      SelectRange(0, iTotalLines - 1, TRUE);
+  }
+
+  CMSelectOutliner::OnChar(nChar, nRepCnt, nFlags);
+}
 
 int CSearchOutliner::OnCreate ( LPCREATESTRUCT lpCreateStruct )
 {
@@ -1708,14 +1902,12 @@ COleDataSource * CSearchOutliner::GetDataSource(void)
 		URL_Struct *url = MSG_ConstructUrlForMessage( m_pSearchPane, key );
 
 		if ( url ) {			
-			RDFGLOBAL_DragTitleAndURL( pDataSource, value->u.string, url->address );
 			NET_FreeURLStruct( url );
 		}
 	}
 
     return pDataSource;
 }
-
 
 BOOL CSearchOutliner::DeleteItem ( int iLine )
 {
@@ -1929,7 +2121,6 @@ void CSearchOutliner::MysticStuffFinishing( XP_Bool asynchronous,
 	}	
 }
 
-
 /////////////////////////////////////////////////////////////////////////////
 // CSearchOutlinerParent
 
@@ -2027,6 +2218,8 @@ void CSearchFrame::Close()
 		g_pSearchWindow->PostMessage(WM_CLOSE);
 	}       
 }
+
+#if 0 // MW fix
 
 /////////////////////////////////////////////////////////////////////////////
 // CLDAPSearchFrame
@@ -2481,6 +2674,8 @@ void CLDAPSearchFrame::Close()
 	}       
 }
 
+#endif
+
 void WFE_MSGOpenSearch()
 {
 	CSearchFrame::Open();
@@ -2491,6 +2686,7 @@ void WFE_MSGSearchClose()
 	CSearchFrame::Close();
 }
 	
+#if 0 //MW fix
 void WFE_MSGOpenLDAPSearch()
 {
 	CLDAPSearchFrame::Open();
@@ -2500,3 +2696,5 @@ void WFE_MSGLDAPSearchClose()
 {
     CLDAPSearchFrame::Close();
 }
+#endif
+

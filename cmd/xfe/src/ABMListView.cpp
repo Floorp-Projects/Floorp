@@ -67,6 +67,24 @@ static XtActionsRec actions[] =
 { {"TableTraverse",     TableTraverse     },};
 
 extern XtAppContext fe_XtAppContext;
+
+//
+static char a_line[AB_MAX_STRLEN];
+
+#if defined(USE_ABCOM)
+
+/* C API
+ */
+extern "C"  XFE_ABComplPickerDlg*
+fe_showComplPickerDlg(Widget     toplevel, 
+					 MWContext *context,
+					 MSG_Pane  *pane,
+					 MWContext *pickerContext,
+					 NCPickerExitFunc func,
+					 void      *callData);
+
+#endif /* USE_ABCOM */
+
 //
 XFE_ABMListView::XFE_ABMListView(XFE_Component *toplevel_component, 
 				 Widget         parent,
@@ -75,8 +93,13 @@ XFE_ABMListView::XFE_ABMListView(XFE_Component *toplevel_component,
 				 XFE_View      *parent_view,
 				 MWContext     *context,
 				 MSG_Master    *master): 
+#if defined(USE_ABCOM)
+  XFE_MNListView(toplevel_component, parent_view, context,
+				 (MSG_Pane *)NULL),
+#else
   XFE_MNView(toplevel_component, parent_view, context,
 			 (MSG_Pane *)NULL),
+#endif /* USE_ABCOM */
 
   m_master(master),
   m_dir(dir),
@@ -179,14 +202,286 @@ XFE_ABMListView::XFE_ABMListView(XFE_Component *toplevel_component,
   }
 }
 
+#if defined(USE_ABCOM)
+XFE_ABMListView::XFE_ABMListView(XFE_Component *toplevel_component, 
+								 Widget         parent,
+								 MSG_Pane      *pane,
+								 MWContext     *context):
+	XFE_MNListView(toplevel_component, 
+				   NULL, 
+				   context,
+				   (MSG_Pane *)pane),
+	m_count(0),
+	m_textF(0)
+{
+  /* initialize m_directroies
+   */
+  m_lastPos = 0;
+  m_curPos = 0;
+  m_curName = 0;
+  m_textStr = 0;
+  m_pickerPane = 0;
+  m_pickerContext = 
+	  XFE_ABComplPickerDlg::cloneCntxtNcreatePane(context,
+												  &m_pickerPane);
+  m_pickerDlg = 0;
+  m_rtnIsPicker = False;
+
+  m_valChgedByMe = False;
+  m_numResults = 0;
+  m_ncCookie = 0;
+
+  m_index =	MSG_VIEWINDEXNONE;
+  m_preStr[0] = '\0';
+
+  setPane(pane);
+
+  // Add actions
+  XtAppAddActions( fe_XtAppContext, actions,  XtNumber(actions));
+
+  /* For outliner
+   */
+  int num_columns = 2;
+  static int column_widths[] = {6, 50};
+
+  m_outliner = new XFE_Outliner("mailingList",
+								this,
+								toplevel_component,
+								parent,
+								False, // constantSize
+								False,  //hasHeadings
+								num_columns,
+                                num_columns,
+								column_widths,
+								OUTLINER_GEOMETRY_PREF);
+  /* BEGIN_3P: XmLGrid
+   */
+  XtVaSetValues(m_outliner->getBaseWidget(),
+                XtVaTypedArg, XmNblankBackground, XmRString, "white", 6,
+				XmNselectionPolicy, XmSELECT_MULTIPLE_ROW,
+				XmNvisibleRows, 10,
+				NULL);
+  XtVaSetValues(m_outliner->getBaseWidget(),
+				XmNcellDefaults, True,
+                XtVaTypedArg, XmNcellBackground, XmRString, "white", 6,
+				NULL);
+  // editable
+  XtVaSetValues(m_outliner->getBaseWidget(),
+				XmNcellDefaults, True,
+				XmNcolumn, 1,
+                XmNcellEditable, True,
+				NULL);
+  /* END_3P: XmLGrid
+   */
+
+  // create drop site for internal drop
+  fe_dnd_CreateDrop(m_outliner->getBaseWidget(),AddressDropCb,this);
+
+  
+  /* XFE_Outliner constructor does not allocate any content row
+   * XFE_Outliner::change(int first, int length, int newnumrows)
+   */
+  m_outliner->show();
+  setBaseWidget(m_outliner->getBaseWidget());
+  m_count = MSG_GetNumLines(m_pane);
+  m_outliner->change(0, m_count, m_count);
+
+  // initialize the icons if they haven't already been
+  {
+    Pixel bg_pixel;
+    
+    XtVaGetValues(m_outliner->getBaseWidget(), XmNbackground, &bg_pixel, 0);
+    if (!m_personIcon.pixmap)
+      fe_NewMakeIcon(getToplevel()->getBaseWidget(),
+		     /* umm. fix me
+		      */
+		     BlackPixelOfScreen(XtScreen(m_outliner->getBaseWidget())),
+		     bg_pixel,
+		     &m_personIcon,
+		     NULL, 
+		     MN_Person.width, 
+		     MN_Person.height,
+		     MN_Person.mono_bits, 
+		     MN_Person.color_bits, 
+		     MN_Person.mask_bits, 
+		     FALSE);
+
+    if (!m_listIcon.pixmap)
+      fe_NewMakeIcon(getToplevel()->getBaseWidget(),
+		     /* umm. fix me
+		      */
+		     BlackPixelOfScreen(XtScreen(m_outliner->getBaseWidget())),
+		     bg_pixel,
+		     &m_listIcon,
+		     NULL, 
+		     MN_People.width, 
+		     MN_People.height,
+		     MN_People.mono_bits, 
+		     MN_People.color_bits, 
+		     MN_People.mask_bits, 
+		     FALSE);
+
+  }
+}
+#endif /* USE_ABCOM */
+
 XFE_ABMListView::~XFE_ABMListView()
 {
   /* close the pane
    */
+#if defined(USE_ABCOM)
+	if (m_pickerPane) {
+		MSG_SetFEData(m_pickerPane, 0);
+		AB_ClosePane(m_pickerPane);
+	}/* if */
+	if (m_pane) {
+		MSG_SetFEData(m_pane, 0);
+		AB_ClosePane(m_pane);
+	}/* if */
+
+	if (m_pickerDlg) {
+		delete m_pickerDlg;
+		m_pickerDlg = 0;
+	}/* if */
+#else
 	if (m_mListPane)
 		AB_CloseMailingListPane(&m_mListPane);
+#endif /* USE_ABCOM */
 
 }
+
+#if defined(USE_ABCOM)
+void 
+XFE_ABMListView::fillNameCompletionStr(char *completeName, 
+									   XP_Bool completed)
+{
+	/* put completeName into textF and hilight auto-completed portion
+	 */
+	int lastPos = completeName?XP_STRLEN(completeName):0;
+	int curPos = m_curPos;
+	
+	/* set flag for artificial valchg
+	 */
+	m_valChgedByMe = True;
+
+	fe_SetTextFieldAndCallBack(m_textF, completeName);
+	XP_STRCPY(m_preStr, completeName);
+	if (!completed) {
+		/* set selection
+		 */
+		if (curPos > 0 && lastPos > m_curPos) {
+			Time time = XtLastTimestampProcessed(XtDisplay(m_textF));
+#if defined(DEBUG_tao)
+	printf("\nfillNameCompletionStr:%s, curPos=%d, m_curPos=%d, lastPos=%d\n", 
+		   completeName, curPos, m_curPos, lastPos);
+#endif
+			XmTextFieldSetSelection(m_textF, curPos, lastPos, time);
+			/* set cursor position
+			 */
+		}/* if */
+		XmTextFieldSetCursorPosition(m_textF, curPos);
+		m_curPos = curPos;
+	}/* if */
+	XmUpdateDisplay(m_textF);
+}
+
+void 
+XFE_ABMListView::nameCPickerExitFunc(void *clientData, void *callData)
+{
+	XFE_ABMListView *obj = (XFE_ABMListView *) callData;
+	obj->nameCPickerCB(clientData);
+}
+
+void 
+XFE_ABMListView::nameCPickerCB(void *clientData)
+{
+	AB_NameCompletionCookie *cookie = (AB_NameCompletionCookie *) clientData;
+#if 1
+	/* push it down to the list
+	 */
+	int error = AB_AddNCEntryToMailingList(m_pane,
+										   MSG_VIEWINDEXNONE, // for new
+										   cookie, 
+										   False);
+	// if not the same,need to free as well.
+	m_ncCookie = 0;
+	AB_FreeNameCompletionCookie(cookie);
+#else
+	char *completeName = AB_GetNameCompletionDisplayString(cookie);
+	if (completeName && XP_STRLEN(completeName)) {
+
+		fillNameCompletionStr(completeName, True);
+
+
+		XP_FREE(completeName);
+	}/* if */
+#endif
+
+	/* reset the flag && ..
+	 */		
+	fe_SetTextFieldAndCallBack(m_textF, "");		   
+	m_numResults = 0;
+	m_rtnIsPicker = False;
+}
+
+int 
+XFE_ABMListView::nameCompletionExitFunc(AB_NameCompletionCookie *cookie,
+										int                      numResults, 
+										void                    *FEcookie)
+{
+	XFE_ABMListView *obj = (XFE_ABMListView *) FEcookie;
+	return obj->nameCompletionCB(cookie, numResults);
+}
+
+int 
+XFE_ABMListView::nameCompletionCB(AB_NameCompletionCookie *cookie,
+								  int                      numResults)
+{
+#if defined(DEBUG_tao)
+	printf("\n** nameCompletionCB,numResults=%d\n", numResults);
+#endif 
+	XP_ASSERT(m_pickerPane && m_pickerContext);
+	m_numResults = numResults;
+	if (numResults > 1) {
+		/* set the flag
+		 */		
+		m_rtnIsPicker = True;
+
+		/* 1. assemble the hint
+		 */
+		AB_AttribID attrib = AB_attribDisplayName;
+		AB_ColumnInfo *cInfo = 
+			AB_GetColumnInfoForPane(m_pickerPane,  
+									(AB_ColumnID) 1);
+		if (cInfo) {
+			attrib = cInfo->attribID;
+			AB_FreeColumnInfo(cInfo);
+
+			AB_AttributeValue *value = 0;
+			int error = 
+				AB_GetEntryAttributeForPane(m_pickerPane, 
+											0, 
+											attrib, &value);
+			a_line[0] = '\0';
+			XP_SAFE_SPRINTF(a_line, sizeof(a_line),
+							"%s <multiple matches found>",
+							EMPTY_STRVAL(value)?m_curName:value->u.string);
+			fillNameCompletionStr(a_line, False);
+			AB_FreeEntryAttributeValue(value);
+		}/* if */		
+	}/* if */
+	else if (numResults == 1){
+		char *completeName = AB_GetNameCompletionDisplayString(cookie);
+		m_ncCookie = cookie;
+		if (completeName && XP_STRLEN(completeName)) {
+			fillNameCompletionStr(completeName, False);
+			XP_FREE(completeName);
+		}/* if */
+		
+	}/* else */
+	return numResults;
+}
+#endif /*  USE_ABCOM */
 
 ABID XFE_ABMListView::setValues(ABID listID)
 {
@@ -232,6 +527,12 @@ char *XFE_ABMListView::getCellTipString(int row, int column)
 		tmp = getColumnHeaderText(column);
 	}/* if */
 	else {
+#if defined(USE_ABCOM)
+		MSG_ViewIndex orgInd = m_index;
+		m_index = row;
+		tmp = getColumnText(column);
+		m_index = orgInd;
+#else
 		ABID orgID = m_entryID;
 
 		/* content 
@@ -243,6 +544,7 @@ char *XFE_ABMListView::getCellTipString(int row, int column)
 		/* reset
 		 */
 		m_entryID = orgID;
+#endif /* USE_ABCOM */
 	}/* else */
 	if (tmp && 
 		(!m_outliner->isColTextFit(tmp, row, column)))
@@ -276,11 +578,17 @@ XFE_ABMListView::ConvToIndex(void */*item*/)
 void*
 XFE_ABMListView::acquireLineData(int line)
 {
+
+#if defined(USE_ABCOM)
+	m_index = line;
+	return (void *) &m_index; // a non-zero val
+#else
   m_entryID = AB_GetEntryIDAt((AddressPane *) m_mListPane, (uint32) line);
 
   static char tmp[8];
   tmp[0] = '\0';
   return tmp;
+#endif /* USE_ABCOM */
 }
 
 /* The Outlinable interface.
@@ -290,10 +598,10 @@ char*
 XFE_ABMListView::getColumnName(int column)
 {
   switch (column) {
-  case XFE_AddrBookView::OUTLINER_COLUMN_TYPE:
+  case OUTLINER_COLUMN_TYPE:
 	  return XP_GetString(XFE_AB_NAME_CONTACT_TAB);
 
-  case XFE_AddrBookView::OUTLINER_COLUMN_NAME:
+  case OUTLINER_COLUMN_NAME:
 	  return XP_GetString(XFE_AB_NAME_GENERAL_TAB);
   }/* switch */
 
@@ -336,19 +644,43 @@ XFE_ABMListView::getColumnStyle(int /*column*/)
 char*
 XFE_ABMListView::getColumnText(int column)
 {
-  static char a_line[AB_MAX_STRLEN];
+
   a_line[0] = '\0';
   switch (column) {
+#if defined(USE_ABCOM)
+  case OUTLINER_COLUMN_TYPE:
+    break;
+
+  case OUTLINER_COLUMN_NAME:
+#else
   case XFE_AddrBookView::OUTLINER_COLUMN_TYPE:
     break;
 
   case XFE_AddrBookView::OUTLINER_COLUMN_NAME:
+#endif /* USE_ABCOM */
     {
+#if defined(USE_ABCOM)
+		AB_AttribID *attribs = 
+			(AB_AttribID *) XP_CALLOC(1,sizeof(AB_AttribID));
+		attribs[0] = AB_attribFullAddress;
+
+		AB_AttributeValue *values = 0; 
+		uint16             numItems = 1;
+		int error = 
+			AB_GetMailingListEntryAttributes(m_pane,
+											 m_index,
+											 attribs,
+											 &values,
+											 &numItems);
+		XP_ASSERT(numItems == 1 && values[0].attrib == AB_attribFullAddress);
+		XP_STRCPY(a_line, !EMPTY_STRVAL(&(values[0]))?values[0].u.string:"");
+#else
 		char *expandedName = NULL;
 		AB_GetExpandedName(m_dir, m_AddrBook, m_entryID, &expandedName);
 		if (expandedName)
 			XP_STRCPY(a_line, expandedName);
-    }
+#endif /* USE_ABCOM */
+   }
     break;
 
   }/* switch () */
@@ -362,12 +694,39 @@ XFE_ABMListView::getColumnIcon(int column)
   switch (column) {
   case OUTLINER_COLUMN_TYPE:
     {
+#if defined(USE_ABCOM)
+		AB_AttribID *attribs = 
+			(AB_AttribID *) XP_CALLOC(1,sizeof(AB_AttribID));
+		attribs[0] = AB_attribEntryType;
+
+		AB_AttributeValue *values = 0; 
+		uint16             numItems = 1;
+		int error = 
+			AB_GetMailingListEntryAttributes(m_pane,
+											 m_index,
+											 attribs,
+											 &values,
+											 &numItems);
+		XP_ASSERT(numItems == 1 && values[0].attrib == AB_attribEntryType);
+		switch (values[0].u.entryType) {
+		case AB_MailingList:
+			myIcon = &m_listIcon;
+			break;
+			
+		case AB_Person:
+			myIcon = &m_personIcon;
+			break;
+
+		}/* switch */
+#else
+
       ABID type;
       AB_GetType(m_dir, m_AddrBook, m_entryID, &type);
       if (type == ABTypePerson)
 	myIcon = &m_personIcon; /* shall call make/initialize icons */
       else if (type == ABTypeList)
 	myIcon = &m_listIcon;
+#endif /* USE_ABCOM */
     }
     break;
   }/* switch () */
@@ -396,23 +755,18 @@ XFE_ABMListView::Buttonfunc(const OutlineButtonFuncData *data)
   } 
   else {
     /* content row 
-     */
-    ABID type;
-    ABID entry;
-
-    entry = AB_GetEntryIDAt((AddressPane *) m_mListPane, (uint32) row);
-    
-    if (entry == MSG_VIEWINDEXNONE) 
-      return;
-    
-    AB_GetType(m_dir, m_AddrBook, entry, &type);
-    
-    if (clicks == 2) {
+	 */
+	if (clicks == 2) {
 		m_outliner->selectItemExclusive(data->row);
     }/* clicks == 2 */
     else if (clicks == 1) {
 #if MULTI_SELECT_ON
-		if (data->shift) {
+#if defined(USE_ABCOM)
+		  if (data->ctrl)
+			  m_outliner->toggleSelected(data->row);
+		  else
+#endif /* USE_ABCOM */
+ if (data->shift) {
 			// select the range.
 			const int *selected;
 			int count;
@@ -493,6 +847,34 @@ XFE_ABMListView::entryTTYActivateCB(Widget w, XtPointer /* callData */)
   if (!str || XP_STRLEN(str) == 0)
 	  return;
 
+#if defined(USE_ABCOM)
+	if (m_rtnIsPicker) {
+		/* pop up picker
+		 */
+		if (m_pickerDlg) {
+			m_pickerDlg->show();
+			m_pickerDlg->selectItem(1);
+		}/* if */
+		return;
+	}/* if m_rtnIsPicker */
+	else if (m_numResults == 1) {
+		int error = AB_AddNCEntryToMailingList(m_pane,
+											   MSG_VIEWINDEXNONE, // for new
+											   m_ncCookie, 
+											   False);
+	// if not the same,need to free as well.
+	AB_FreeNameCompletionCookie(m_ncCookie);
+	m_ncCookie = 0;
+
+	}/* m_numResults == 1 */
+	else if (m_numResults == 0) {
+		int error =
+			AB_AddNakedEntryToMailingList(m_pane,
+										  MSG_VIEWINDEXNONE,
+										  str,
+										  False);
+	}/* m_numResults == 0 */
+#else
   /* if the name does not match/get expanded:
    * we break down every token
    */
@@ -542,6 +924,7 @@ XFE_ABMListView::entryTTYActivateCB(Widget w, XtPointer /* callData */)
   /* reset 
    */
   m_memberID = MSG_VIEWINDEXNONE;
+#endif /* USE_ABCOM */
   XP_FREE((void *)str);
   fe_SetTextFieldAndCallBack(w, "");
 }
@@ -558,20 +941,62 @@ void
 XFE_ABMListView::entryTTYValChgCB(Widget w, XtPointer /* callData */)
 {
 
+#if defined(USE_ABCOM)
+  if (m_valChgedByMe) {
+	  /* reset flag for artificial valchg
+	   */
+	  m_valChgedByMe = False;
+	  return;
+  }/* if */
+#endif /* USE_ABCOM */
+
   m_textF = w;
 
   const char *str;
   str = fe_GetTextField(w);
 
-  int curPos = XmTextFieldGetCursorPosition(w);
-
   if (m_preStr && XP_STRCMP(str, (const char*)m_preStr) == 0)
     return;
 
+  int curPos = XmTextFieldGetCursorPosition(w);
+
+#if defined(USE_ABCOM)
+#if defined(DEBUG_tao)
+  printf("\n-->entryTTYValChgCB,m_pickerPane=0x%x, str=%s,curPos=%d,m_preStr=%s **\n",
+		 m_pickerPane, str, curPos, m_preStr);
+#endif
+  if (m_curPos == curPos)
+	  return;
+
+  m_curPos = curPos;
+  m_curName = str?XP_STRDUP(str):0;
+
+  /* get name compl
+   */
+  if (!m_pickerDlg)
+	  m_pickerDlg = 
+		  fe_showComplPickerDlg(getToplevel()->getBaseWidget(),
+								m_contextData,
+								m_pickerPane,
+								m_pickerContext,
+								&nameCPickerExitFunc,
+								this);
+  int error = 
+	  AB_NameCompletionSearch(m_pickerPane,
+							  (const char *) str,
+							  &nameCompletionExitFunc,
+#ifdef FE_IMPLEMENTS_VISIBLE_NC
+							  True, // for now
+#endif
+							  (void *) this);
+
+#else
+
+  XP_Bool setV = False;
+
   ABID entryID;
   ABID field;
-  XP_Bool setV = False;
-#if 1
+
   DIR_Server* pab  = NULL;
   DIR_GetComposeNameCompletionAddressBook(m_directories, &pab);
   if (pab && 
@@ -580,14 +1005,6 @@ XFE_ABMListView::entryTTYValChgCB(Widget w, XtPointer /* callData */)
 								&entryID, 
 								&field, 
 								str) != MSG_VIEWINDEXNONE) {
-#else
-  if (AB_GetIDForNameCompletion(m_AddrBook, 
-				 m_dir,
-				 &entryID, 
-				 &field, 
-				 str) != MSG_VIEWINDEXNONE) {
-#endif
-	  char a_line[AB_MAX_STRLEN];
 	  a_line[0] = '\0';
 
 	  if (field == ABNickname) {
@@ -619,6 +1036,7 @@ XFE_ABMListView::entryTTYValChgCB(Widget w, XtPointer /* callData */)
 	  m_memberID = MSG_VIEWINDEXNONE;
 	  strcpy(m_preStr, str);
   }/* else */
+
   if (setV) {
 	  int lastPos = m_preStr?XP_STRLEN(m_preStr):0;
 
@@ -638,6 +1056,7 @@ XFE_ABMListView::entryTTYValChgCB(Widget w, XtPointer /* callData */)
 	  }/* if */
 	  XmTextFieldSetCursorPosition(w, curPos);
   }/* if */
+#endif /* USE_ABCOM */
 }
 
 void XFE_ABMListView::remove()
@@ -648,6 +1067,12 @@ void XFE_ABMListView::remove()
   const int *indices = 0;
   m_outliner->getSelection(&indices, (int *) &num);
   if (num > 0 && indices) {
+#if defined(USE_ABCOM)
+	  int error = AB_CommandAB2(m_pane,
+								AB_DeleteCmd,
+								(MSG_ViewIndex *) indices,
+								num);
+#else
 	  int curInd =  indices[0];
 #if MULTI_SELECT_ON
 	  /* indices is an internal buffer and
@@ -676,6 +1101,7 @@ void XFE_ABMListView::remove()
 			m_outliner->makeVisible(curInd);
 		}/* if */
 	}/* if m_count */
+#endif /* USE_ABCOM */
   }/* if num > 0 && indices */
 }/* remove() */
 
@@ -828,6 +1254,61 @@ XFE_ABMListView::AddressDropCb(Widget,void* cd,
 void
 XFE_ABMListView::addressDropCb(fe_dnd_Source *source)
 {
+#if defined(USE_ABCOM)
+    switch (source->type) {
+
+    case FE_DND_ADDRESSBOOK:
+ 	case FE_DND_BOOKS_DIRECTORIES: 
+		{
+#if defined(DEBUG_tao)
+		printf("\nXFE_ABMListView::addressDropCb:%d\n",source->type);
+#endif
+		
+		//
+		XFE_MNListView* listView = (XFE_MNListView *) source->closure;
+		XFE_Outliner *outliner = listView->getOutliner();
+		const int *indices = NULL;
+		int32 numIndices = 0;
+		outliner->getSelection(&indices, (int *) &numIndices);
+		MSG_Pane *srcPane = listView->getPane();
+		AB_ContainerInfo *destContainer = 
+			AB_GetContainerForMailingList(m_pane); 
+
+		AB_DragEffect effect = 
+			AB_DragEntriesIntoContainerStatus(srcPane,
+											  (const MSG_ViewIndex *) indices,
+											  (int32) numIndices,
+											  destContainer,
+											  AB_Default_Drag); 
+#if defined(DEBUG_tao)
+		printf("\nXFE_ABMListView::addressDropCb:effect=%d\n",
+			   effect);
+		
+#endif
+		int error = 0;
+		if (effect == AB_Drag_Not_Allowed)
+			return;
+		else
+			error = 
+				AB_DragEntriesIntoContainer(srcPane,
+											(const MSG_ViewIndex *) indices,
+											(int32) numIndices,
+											destContainer,
+											effect);
+			
+#if defined(DEBUG_tao)
+		printf("\nXFE_ABMListView::AB_DragEntriesIntoContainer:error=%d\n",
+			   error);
+		
+#endif
+		//
+		break;
+		}
+    default:
+        break;
+    }
+
+#else
     switch (source->type) {
 
     case FE_DND_ADDRESSBOOK:
@@ -852,6 +1333,7 @@ XFE_ABMListView::addressDropCb(fe_dnd_Source *source)
     default:
         break;
     }
+#endif /* USE_ABCOM */
 }
 
 void
@@ -879,7 +1361,6 @@ XFE_ABMListView::processAddressBookDrop(XFE_Outliner *outliner,
 
 			/* check if email address exist
 			 */
-			char a_line[AB_MAX_STRLEN];
 			a_line[0] = '\0';
 			AB_GetEmailAddress(m_dir, m_AddrBook, entry, a_line);
 			if (!a_line ||

@@ -41,94 +41,22 @@ extern int XFE_CANNOT_EDIT_JS_MAILFILTERS;
 
 #define OUTLINER_GEOMETRY_PREF "mail.mailfilter.outliner_geometry"
 
-/* Old struct
- */
-typedef struct fe_mailfilt_data {
-  
-  Widget filterDialog;
-  Widget filterOutline;
-  Widget editDialog;
-  Widget deletebtn;
-  Widget editbtn;
- 
-  Widget filterName; 
-  Widget rulesRC;
-  Widget content[5];	 /* rule content RC */
-  Widget scopeOpt[5];  /* scope option */
-  Widget whereOpt[5];  /* where option */
-  Widget scopeOptPopup[5];
-  Widget whereOptPopup[5];
-  Widget scopeText[5]; /* scope text */
-  Widget priLevel[5];  /* priority level */
-  Widget priLevelPopup[5];
-  Widget whereLabel[5];
-  Widget rulesLabel[5];
-  Widget thenTo;
-  Widget thenToPopup;
-  Widget thenClause;
-  Widget thenClausePopup;
-  Widget priAction;
-  Widget priActionPopup;
-  Widget commandGroup;
-  Widget despField;
-  Widget strip[5];
-  Widget mainDespField;
-  Widget filterOnBtn;
-  Widget filterOffBtn;  
-  Widget filterLabel;
-  Widget despLabel;
-  Widget thenLabel;
-  Widget upBtn;
-  Widget downBtn;
-  Widget btnform;
-
-  /* these are just pointers to other widgets, they are not really
-   * widgets themselves */
-  /* priority buttons */
-  Widget highBtn;
-  Widget lowBtn;
-  Widget noneBtn;
-  Widget logBtn;
-  /* selected btns */
-  Widget scopeOptSelected[5];
-  Widget whereOptSelected[5];
-  Widget priLevelSelected[5];
-  Widget thenToSelected;
-  Widget thenClauseSelected;
-  Widget priActionSelected;
-  Widget editOK;
-  Widget editCancel;
-  Widget ScriptBtnGroup;
-  Widget ScriptEdit;
- 
-  Dimension despwidth;
-  MSG_FilterList *filterlist;
-
-  int curPos;
-  int stripCount;
-  XP_Bool curFilterOn;
-  XP_Bool logOn;
-} fe_mailfilt_data;
-
-#if !defined(FILTER_DATA)
-#define FILTER_DATA(context) (CONTEXT_DATA(context)->filtdata)
-#endif
-
-#define VIEW_LOG 1
-
 XFE_MailFilterView::XFE_MailFilterView(XFE_Component *toplevel_component,
 									   Widget         parent, /* the dialog 
 																 form */
 									   XFE_View      *parent_view,
-									   MWContext     *context) 
+									   MWContext     *context,
+									   MSG_Pane      *pane) 
 	: XFE_MNListView(toplevel_component, parent_view, context, 
-					 (MSG_Pane *) NULL),
+					 pane),
 	  m_dataRow(-1),
 	  m_goneFilter(0),
 	  m_numGone(0)
 {
 	int ac;
 	Arg av[20];
+
+	m_pane=pane;
 
     /* Create main filter list dialog
      */
@@ -158,6 +86,13 @@ XFE_MailFilterView::XFE_MailFilterView(XFE_Component *toplevel_component,
     XtAddCallback(m_downBtn,
 				  XmNactivateCallback, XFE_MailFilterView::downCallback, this);
 
+
+    m_server_dropdown = new XFE_FolderDropdown(toplevel_component,
+                                               parent,
+                                               TRUE, // allow server sel
+                                               FALSE, // show newgroups
+                                               FALSE, // boldwithnew
+                                               FALSE); // showFolders
 	/* In new 4.x spec
 	 */    
 	XmString info = XmStringCreateLtoR(XP_GetString(XFE_MFILTER_INFO),
@@ -237,50 +172,35 @@ XFE_MailFilterView::XFE_MailFilterView(XFE_Component *toplevel_component,
 	 * XFE_Outliner::change(int first, int length, int newnumrows)
 	 */
 
-
-	/*
-	 * Provide callbacks as for entries outside world
-	 XtVaSetValues(m_outliner->getBaseWidget(),
-	 XmNleftAttachment, XmATTACH_FORM,
-	 XmNtopAttachment, XmATTACH_FORM,
-	 XmNrightAttachment, XmATTACH_WIDGET,
-	 XmNrightWidget, m_toBtn,
-	 XmNbottomAttachment, XmATTACH_FORM,
-	 NULL);
-	 */
-
     /* Command buttons
      */
-    ac = 0;
-    Widget dummy = XtVaCreateManagedWidget("btnrowcol", 
+    Widget cmd_rowcol = XtVaCreateManagedWidget("btnrowcol", 
 										   xmRowColumnWidgetClass, parent,
 										   XmNorientation, XmVERTICAL,
 										   NULL);
 	/* always on 
 	 */
     Widget newbtn = XtVaCreateWidget("newFilter", 
-									 xmPushButtonGadgetClass, dummy,
+									 xmPushButtonGadgetClass, cmd_rowcol,
 									 NULL);
 
     m_editBtn = XtVaCreateWidget("editFilter",
-								 xmPushButtonGadgetClass, dummy,
+								 xmPushButtonGadgetClass, cmd_rowcol,
 								 NULL);
 
     m_deleteBtn = XtVaCreateWidget("delFilter",
-								   xmPushButtonGadgetClass, dummy,
+								   xmPushButtonGadgetClass, cmd_rowcol,
 								   NULL);
 
-#if VIEW_LOG
 	/* view log
 	 */
-    Widget dummy2 = XtVaCreateManagedWidget("btnrowcol2", 
+    Widget log_rowcol = XtVaCreateManagedWidget("btnrowcol2", 
 											xmRowColumnWidgetClass, parent,
 											XmNorientation, XmVERTICAL,
 											NULL);
     Widget viewLogBtn = XtVaCreateWidget("viewLog",
-										 xmPushButtonGadgetClass, dummy2,
+										 xmPushButtonGadgetClass, log_rowcol,
 										 NULL);
-#endif
 
     m_text = XtVaCreateWidget("text",
 							  xmTextWidgetClass, parent,
@@ -294,9 +214,7 @@ XFE_MailFilterView::XFE_MailFilterView(XFE_Component *toplevel_component,
 
     XtManageChild(m_text);
     XtManageChild(m_logBtn);
-#if VIEW_LOG
     XtManageChild(viewLogBtn);
-#endif
 
     XtAddCallback(newbtn, 
 				  XmNactivateCallback, XFE_MailFilterView::newCallback, 
@@ -310,13 +228,11 @@ XFE_MailFilterView::XFE_MailFilterView(XFE_Component *toplevel_component,
     XtAddCallback(m_logBtn, 
 				  XmNvalueChangedCallback, XFE_MailFilterView::logCallback,
 				  this);
-#if VIEW_LOG
     XtAddCallback(viewLogBtn, 
 				  XmNactivateCallback, XFE_MailFilterView::viewLogCallback,
 				  this);
-#endif
 
-    XtManageChild(dummy);
+    XtManageChild(cmd_rowcol);
     XtManageChild(newbtn);
     XtManageChild(m_editBtn);
     XtManageChild(m_deleteBtn);
@@ -336,32 +252,37 @@ XFE_MailFilterView::XFE_MailFilterView(XFE_Component *toplevel_component,
 				  XmNbottomAttachment, XmATTACH_WIDGET,
 				  XmNbottomWidget, m_text,
 				  0);
-    XtVaSetValues(dummy,
+    XtVaSetValues(cmd_rowcol,
 				  XmNtopAttachment, XmATTACH_FORM,
 				  XmNleftAttachment, XmATTACH_NONE,
 				  XmNrightAttachment, XmATTACH_FORM,
 				  XmNbottomAttachment, XmATTACH_NONE,
 				  0);
-#if VIEW_LOG
-    XtVaSetValues(dummy2,
+    XtVaSetValues(log_rowcol,
 				  XmNtopAttachment, XmATTACH_NONE,
 				  XmNrightAttachment, XmATTACH_FORM,
 				  XmNbottomAttachment, XmATTACH_WIDGET,
 				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, dummy,
+				  XmNleftWidget, cmd_rowcol,
 				  XmNbottomWidget, m_text,
 				  0);
-#endif
     XtVaSetValues(orderBox,
 				  XmNtopAttachment, XmATTACH_NONE, 
 				  XmNleftAttachment, XmATTACH_NONE,
 				  XmNrightAttachment, XmATTACH_WIDGET,
-				  XmNrightWidget, dummy,
+				  XmNrightWidget, cmd_rowcol,
 				  XmNbottomAttachment, XmATTACH_WIDGET,
 				  XmNbottomWidget, m_logBtn,
 				  0);
+    XtVaSetValues(m_server_dropdown->getBaseWidget(),
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+				  XmNrightAttachment, XmATTACH_NONE,
+				  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
     XtVaSetValues(outlinerLabel,
-				  XmNtopAttachment, XmATTACH_FORM,
+				  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, m_server_dropdown->getBaseWidget(),
 				  XmNleftAttachment, XmATTACH_FORM,
 				  XmNrightAttachment, XmATTACH_NONE,
 				  XmNbottomAttachment, XmATTACH_NONE,
@@ -409,16 +330,6 @@ XFE_MailFilterView::XFE_MailFilterView(XFE_Component *toplevel_component,
 									(XFE_NotificationCenter *) this,
 									(XFE_FunctionNotification) updateCommands_cb);
 
-
-	/* for extern C ; old stuff
-	 */
-	fe_mailfilt_data *d;
-	d = FILTER_DATA(context) = XP_NEW_ZAP(fe_mailfilt_data);
-
-    d->filterlist = m_filterlist;
-	d->filterOutline = m_outliner->getBaseWidget();
-    d->editDialog = NULL;
-    d->curPos = 0;
 }
 
 void XFE_MailFilterView::listChanged(int which)
@@ -862,22 +773,7 @@ void XFE_MailFilterView::viewLogCallback(Widget w,
 
 void XFE_MailFilterView::viewLogCB(Widget, XtPointer)
 {
-    XFE_Frame * frame = NULL;
-
-    // Try to use context's frame since dialog does not
-	// have pane !
-    frame = ViewGlue_getFrame(m_contextData);
-	if (frame && frame->isAlive())	{ 
-		EFrameType type = frame->getType();
-		if (type == FRAME_MAILNEWS_THREAD ||
-			type == FRAME_MAILNEWS_FOLDER) {
-			
-			XFE_MNView *mnView = (XFE_MNView *)frame->getView();
-			MSG_Pane *pane = mnView->getPane();
-			if (pane)
-				MSG_ViewFilterLog(pane);
-		}/* if */
-	}/* if */
+    MSG_ViewFilterLog(m_pane);
 }/* XFE_MailFilterView::viewLogCB() */
 
 void XFE_MailFilterView::apply()
@@ -953,11 +849,12 @@ void XFE_MailFilterView::editCB(Widget , XtPointer)
 
 XFE_MailFilterView::~XFE_MailFilterView()
 {
+#if 0
 	fe_mailfilt_data *d = FILTER_DATA(m_contextData);
 	if (d)
 	  XP_FREE((fe_mailfilt_data *) d);
 	FILTER_DATA(m_contextData) = 0;
-
+#endif
 	getToplevel()->unregisterInterest(XFE_View::chromeNeedsUpdating,
 									  (XFE_NotificationCenter *)this,
 									  (XFE_FunctionNotification)updateCommands_cb);

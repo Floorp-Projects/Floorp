@@ -26,6 +26,14 @@
 #include "ABMListView.h"
 #include "MNView.h"
 
+#if defined(USE_ABCOM)
+#include "abcom.h"
+#endif /* USE_ABCOM */
+
+/* to be taken out after USE_ABCOM turned on
+ */
+#include "AddrBookView.h"
+
 #include <Xm/Form.h>
 #include <Xm/Frame.h>
 #include <Xm/TextF.h> 
@@ -81,18 +89,30 @@ XFE_ABMListDlg::XFE_ABMListDlg(MSG_Pane  *pane,
 				   True, /* help */
 				   True, /* apply ; remove */
 				   False, /* separator */
-				   True),
+				   False),
 	m_pane(pane)
 {
-	/*
+	m_fullName = 0;
+	m_nickName = 0;
+	m_info = 0;
+
+	/* initialize the pane
 	 */
-  createUI();
+	XP_ASSERT(pane);
+	int error = AB_InitializeMailingListPaneAB2(pane);
+	XP_ASSERT(error == AB_SUCCESS);
+
+	/* UI
+	 */
+	createUI();
 }
 #endif /* USE_ABCOM */
 
 XFE_ABMListDlg::~XFE_ABMListDlg() 
 {
+#if !defined(USE_ABCOM)
 	m_mailListEntry.CleanUp();
+#endif /* USE_ABCOM */
 }/* XFE_ABMListDlg() */
 
 void 
@@ -215,13 +235,20 @@ XFE_ABMListDlg::createUI()
   
       /* mailing list view
        */
+#if defined(USE_ABCOM)
+	  XFE_ABMListView *listView = new XFE_ABMListView((XFE_Component *)this, 
+													  stripForm[i],
+													  m_pane,		  
+													  m_context);
+#else
       XFE_ABMListView *listView = new XFE_ABMListView((XFE_Component *)this, 
-						      stripForm[i],
-						      m_abView->getDir(), 
-						      m_abView->getAddrBook(),
-						      NULL,
-						      m_abView->getContext(),
-						      fe_getMNMaster());
+													  stripForm[i],
+													  m_abView->getDir(), 
+													  m_abView->getAddrBook(),
+													  NULL,
+													  m_abView->getContext(),
+													  fe_getMNMaster());
+#endif /* USE_ABCOM */
       XtVaSetValues(listView->getBaseWidget(),
 		    XmNleftAttachment, XmATTACH_FORM,
 		    XmNtopAttachment, XmATTACH_WIDGET,
@@ -294,7 +321,38 @@ void XFE_ABMListDlg::apply()
 void XFE_ABMListDlg::ok()
 {
 	getDlgValues();
+#if defined(USE_ABCOM)
+	// set attribs here
+	uint16 numItems = 3;
+	AB_AttributeValue *valuesArray = 
+		(AB_AttributeValue *) XP_CALLOC(numItems, 
+										sizeof(AB_AttributeValue));
+	valuesArray[0].attrib = AB_attribFullName;
+	valuesArray[0].u.string = m_fullName;
 
+	valuesArray[1].attrib = AB_attribNickName;
+	valuesArray[1].u.string = m_nickName;
+
+	valuesArray[2].attrib = AB_attribInfo;
+	valuesArray[2].u.string = m_info;
+
+	int error = AB_SetMailingListAttributes(m_pane, 
+											valuesArray,
+											numItems);
+
+
+	if (error == AB_SUCCESS) {
+		m_okToDestroy = TRUE;
+		cancel();
+	}/* if */
+	XP_FREEIF(valuesArray);
+	int err = AB_CommitChanges(m_pane);
+#if defined(DEBUG_tao)
+	if (AB_SUCCESS != err)
+		printf("\nXFE_ABMListDlg:AB_CommitChanges err=%d\n", err);
+#endif
+
+#else
 	if (!(((XFE_ABMListView *)m_view)->apply(m_mailListEntry.pNickName, 
 											 m_mailListEntry.pFullName, 
 											 m_mailListEntry.pInfo))) {
@@ -302,12 +360,64 @@ void XFE_ABMListDlg::ok()
 		m_okToDestroy = TRUE;
 		cancel();
 	}/* if */
+#endif
 	m_okToDestroy = FALSE;
 }
 
 void 
 XFE_ABMListDlg::setDlgValues()
 {
+#if defined(USE_ABCOM)
+	uint16 numItems = 3;
+	AB_AttribID *attribs = (AB_AttribID *) XP_CALLOC(numItems, 
+													 sizeof(AB_AttribID));
+	attribs[0] = AB_attribFullName;
+	attribs[1] = AB_attribNickName;
+	attribs[2] = AB_attribInfo;
+	//attribs[3] = AB_attribDistName;
+
+	AB_AttributeValue *values = 0;
+	int error = AB_GetMailingListAttributes(m_pane,
+											attribs,
+											&values,
+											&numItems);
+	for (int i=0; i < numItems; i++) {
+		switch (values[i].attrib) {
+		case AB_attribFullName:
+			fe_SetTextField(m_textFs[0],
+							!EMPTY_STRVAL(&(values[i]))?
+							values[i].u.string:
+							"");
+			m_fullName = 
+				!EMPTY_STRVAL(&(values[i]))?XP_STRDUP(values[i].u.string):
+					0;
+			break;
+		
+		case AB_attribNickName:
+			fe_SetTextField(m_textFs[1],
+							!EMPTY_STRVAL(&(values[i]))?
+							values[i].u.string:
+							"");
+			m_nickName = 
+				!EMPTY_STRVAL(&(values[i]))?XP_STRDUP(values[i].u.string):
+					0;
+			break;
+			
+		case AB_attribInfo:
+			fe_SetTextField(m_textFs[2],
+							!EMPTY_STRVAL(&(values[i]))?
+							values[i].u.string:
+							"");
+		
+			m_info = 
+				!EMPTY_STRVAL(&(values[i]))?XP_STRDUP(values[i].u.string):
+					0;
+			break;
+		}/* switch */
+
+		//AB_FreeEntryAttributeValues(values, numItems);
+	}/* for i */
+#endif /* USE_ABCOM */	
 }
 
 void XFE_ABMListDlg::setDlgValues(ABID entry, Boolean newList)
@@ -356,6 +466,11 @@ void XFE_ABMListDlg::setDlgValues(ABID entry, Boolean newList)
 
 void XFE_ABMListDlg::getDlgValues()
 {
+#if defined(USE_ABCOM)
+	m_fullName = fe_GetTextField(m_textFs[0]);
+	m_nickName = fe_GetTextField(m_textFs[1]);
+	m_info = fe_GetTextField(m_textFs[2]);
+#else
   char *tmp;
   tmp = fe_GetTextField(m_textFs[0]);
   if (tmp && strlen(tmp))
@@ -374,6 +489,7 @@ void XFE_ABMListDlg::getDlgValues()
 	  m_mailListEntry.pInfo = tmp;
   else
 	  m_mailListEntry.pInfo = XP_STRDUP("");
+#endif /* USE_ABCOM */
 }
 
 void XFE_ABMListDlg::Initialize()

@@ -30,6 +30,10 @@
 #include "xpgetstr.h"
 #include "prefapi.h"
 
+#if defined(USE_ABCOM)
+#include "ABListSearchView.h"
+#endif
+
 #include "ViewGlue.h"
 #include "MNSearchFrame.h"
 #include "ThreadFrame.h"
@@ -64,10 +68,11 @@ MenuSpec XFE_MsgView::separator_spec[] = {
 MenuSpec XFE_MsgView::repl_spec[] = {
 	// Setting the call data to non-null is a signal to commandToString
 	// not to reset the menu string
-	{ xfeCmdReplyToSender,    PUSHBUTTON, NULL, NULL, NULL, "reply-to-sender" },
-	{ xfeCmdReplyToAll,               PUSHBUTTON, NULL, NULL, NULL, "reply-to-all" },
+	{ xfeCmdReplyToSender,    PUSHBUTTON, NULL, NULL, False, "reply-to-sender" },
+	{ xfeCmdReplyToAll,               PUSHBUTTON, NULL, NULL, False, "reply-to-all" },
 	{ xfeCmdForwardMessage,	PUSHBUTTON },
 	{ xfeCmdForwardMessageQuoted,	PUSHBUTTON },
+	{ xfeCmdForwardMessageInLine,	PUSHBUTTON },
 	{ NULL }
 };
 
@@ -201,6 +206,12 @@ XFE_MsgView::XFE_MsgView(XFE_Component *toplevel_component,
   m_popup = NULL;
 
   m_htmlView->show();
+
+#if defined(USE_ABCOM)
+  int error = 
+	  AB_SetShowPropertySheetForEntryFunc((MSG_Pane *) m_pane,
+										  &XFE_ABListSearchView::ShowPropertySheetForEntryFunc);
+#endif /* USE_ABCOM */
 
   setBaseWidget(panedW);
 }
@@ -476,6 +487,7 @@ XFE_MsgView::paneChanged(XP_Bool asynchronous,
     {
 	case MSG_PaneNotifyFolderDeleted:
 		{
+#ifndef USE_3PANE
 			/* test frame type
 			 */
 			XFE_Frame *frame = (XFE_Frame*)m_toplevel;
@@ -489,6 +501,7 @@ XFE_MsgView::paneChanged(XP_Bool asynchronous,
 				}/* if */
 				
 			}/* if */
+#endif
 		}
 		/* shall we update banner or simply return? NO
 		 */
@@ -557,6 +570,35 @@ XFE_MsgView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInfo*)
                         &selectable, NULL, NULL, NULL);
       return selectable;
     }
+#if defined(USE_ABCOM)
+	if (IS_CMD(xfeCmdAddSenderToAddressBook)||
+		IS_CMD(xfeCmdAddAllToAddressBook)) {
+
+		XP_List *abList = AB_AcquireAddressBookContainers(m_contextData);
+		XP_ASSERT(abList);
+		int nDirs = XP_ListCount(abList);
+
+		XP_Bool selectable = False;
+		if (!nDirs)
+			return selectable;
+		
+		/* XFE always returns the first one
+		 */
+		AB_ContainerInfo *destAB = 
+			(AB_ContainerInfo *) XP_ListGetObjectNum(abList,1);
+		XP_ASSERT(destAB);
+
+		int error = MSG_AddToAddressBookStatus(m_pane,
+											   commandToMsgCmd(cmd),
+											   NULL,
+											   0,
+											   &selectable, NULL, NULL, NULL,
+											   destAB);
+		error = AB_ReleaseContainersList(abList);
+
+		return selectable;	
+	}/* if */
+#endif /* USE_ABCOM */
 
   MSG_MotionType nav_cmd;
   MSG_CommandType msg_cmd;
@@ -694,12 +736,39 @@ XFE_MsgView::doCommand(CommandType cmd,
   if (IS_CMD(xfeCmdMommy))
 	  {
 		  fe_showMessages(XtParent(getToplevel()->getBaseWidget()),
+						  /* Tao: we might need to check if this returns a 
+						   * non-NULL frame
+						   */
 						  ViewGlue_getFrame(m_contextData),
 						  NULL,
 						  m_folderInfo,
 						  fe_globalPrefs.reuse_thread_window,
 						  False, MSG_MESSAGEKEYNONE);
 	  }
+#if defined(USE_ABCOM)
+  else if (IS_CMD(xfeCmdAddSenderToAddressBook)||
+			IS_CMD(xfeCmdAddAllToAddressBook)) {
+
+	  XP_List *abList = AB_AcquireAddressBookContainers(m_contextData);
+	  XP_ASSERT(abList);
+	  int nDirs = XP_ListCount(abList);
+	  
+	  if (nDirs) {
+		  /* XFE always returns the first one
+		   */
+		  AB_ContainerInfo *destAB = 
+			  (AB_ContainerInfo *) XP_ListGetObjectNum(abList,1);
+		  XP_ASSERT(destAB);
+
+		  int error = MSG_AddToAddressBook(m_pane,
+										   commandToMsgCmd(cmd),
+										   NULL,
+										   0,
+										   destAB);
+		  error = AB_ReleaseContainersList(abList);
+	  }/* if */
+  }/* if */
+#endif /* USE_ABCOM */
   else if (IS_CMD(xfeCmdGetNewMessages))
     {
 		getNewMail();
@@ -730,6 +799,9 @@ XFE_MsgView::doCommand(CommandType cmd,
         // the base widget is the real toplevel widget already...dora 12/31/96
 		// Grabbed this from ThreadView.cpp  -slamm 2/19/96
 		fe_showMNSearch(XfeAncestorFindApplicationShell(getToplevel()->getBaseWidget()),
+						/* Tao: we might need to check if this returns a 
+						 * non-NULL frame
+						 */
 						ViewGlue_getFrame(m_contextData),
 						NULL, this, m_folderInfo);
     }
@@ -917,6 +989,9 @@ XFE_MsgView::doCommand(CommandType cmd,
 			  /* in message win
 			   */
 			  MWContext *thrContext = fe_showMessages(XtParent(getToplevel()->getBaseWidget()),
+													  /* Tao: we might need to check if this returns a 
+													   * non-NULL frame
+													   */
 													  ViewGlue_getFrame(m_contextData),
 													  NULL,
 													  info,
@@ -924,6 +999,7 @@ XFE_MsgView::doCommand(CommandType cmd,
 													  False, resultId);
 			  if (thrContext) {
 				  XFE_ThreadFrame *tFrame = (XFE_ThreadFrame *) ViewGlue_getFrame(thrContext);
+				  XP_ASSERT(tFrame);
 				  threadView = (XFE_ThreadView *) tFrame->getView();
 				  if (threadView) {
 					  switch (nav_cmd) {
@@ -950,11 +1026,11 @@ XFE_MsgView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
 
   if ( IS_CMD(xfeCmdSaveAs)
       || IS_CMD(xfeCmdSaveMessagesAs)
+      || IS_CMD(xfeCmdSaveAsTemplate)
 
       || IS_CMD(xfeCmdAddSenderToAddressBook)
       || IS_CMD(xfeCmdAddAllToAddressBook)
 
-	  || IS_CMD(xfeCmdSaveMessagesAs)
 	  || IS_CMD(xfeCmdGetNewMessages)
 	  || IS_CMD(xfeCmdGetNextNNewMsgs)
       || IS_CMD(xfeCmdPrint)
@@ -968,6 +1044,7 @@ XFE_MsgView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
       || IS_CMD(xfeCmdNextUnreadThread)
       || IS_CMD(xfeCmdNextCollection)
       || IS_CMD(xfeCmdNextUnreadCollection)
+      || IS_CMD(xfeCmdFirstUnreadMessage)
       || IS_CMD(xfeCmdFirstFlaggedMessage)
       || IS_CMD(xfeCmdPreviousFlaggedMessage)
       || IS_CMD(xfeCmdNextFlaggedMessage)
@@ -993,6 +1070,7 @@ XFE_MsgView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
       || IS_CMD(xfeCmdReplyToSenderAndNewsgroup)
       || IS_CMD(xfeCmdForwardMessage)
       || IS_CMD(xfeCmdForwardMessageQuoted)
+      || IS_CMD(xfeCmdForwardMessageInLine)
       || IS_CMD(xfeCmdShowAllHeaders)
       || IS_CMD(xfeCmdShowNormalHeaders)
       || IS_CMD(xfeCmdShowBriefHeaders)
@@ -1150,6 +1228,12 @@ XFE_CALLBACK_DEFN(XFE_MsgView, showPopup)(XFE_NotificationCenter *,
 
 	if (m_popup)
 		delete m_popup;
+
+	/* Need to switch focus for the popup menu so that menu items can be enabled in 
+           the three pane world */
+	XFE_ThreadView *threadView = (XFE_ThreadView *)getParent(); /* returns the thread view */
+        if (threadView)
+        getToplevel()->notifyInterested(XFE_MNListView::changeFocus, (void*) threadView);
 
 	m_popup = new XFE_PopupMenu("popup",(XFE_Frame*)m_toplevel,
 					XfeAncestorFindApplicationShell(m_widget));

@@ -20,6 +20,7 @@
 
 #include <afxwin.h>
 #include <afxext.h>
+#include "rosetta.h"
 #include "compstd.h"
 #include "msgcom.h"
 #include "addrbook.h"
@@ -106,6 +107,8 @@ public:
     CComboBox * m_pMessageFormat;
     CNSAttachDropTarget * m_pDropTarget;
 
+	MWContext *m_pContext;
+
     virtual CSize CalcFixedLayout(BOOL bStretch, BOOL bHorz );
     void Enable3d(BOOL bEnable);
    
@@ -118,7 +121,7 @@ public:
     BOOL m_bCanSize;
     int  m_iY;
     
-    CComposeBar ( );
+    CComposeBar (MWContext *pContext );
     ~CComposeBar ( );
     
     LPADDRESSCONTROL GetAddressWidgetInterface();
@@ -138,13 +141,10 @@ public:
     	return m_pComposeEdit;
     }
 	void SetCSID(int m_iCSID);
-    void SetSigned(BOOL bSigned) { m_bSigned = bSigned; }
-    void SetEncrypted(BOOL bEncrypted) { m_bEncrypted = bEncrypted; }
+    HG29792
 	void SetReturnReceipt(BOOL bReceipt) { m_bReceipt = bReceipt; }
 	void SetUse8Bit(BOOL bUse8Bit) { m_bUse8Bit = bUse8Bit; }
 	void SetUseUUENCODE(BOOL bUseUUENCODE) {m_bUseUUENCODE = bUseUUENCODE; }
-    BOOL GetEncrypted(void) { return m_bEncrypted; }
-    BOOL GetSigned(void) { return m_bSigned; }
 	BOOL GetReturnReceipt(void) { return m_bReceipt; }
 	BOOL GetUse8Bit(void) { return m_bUse8Bit; }
 	BOOL GetUseUUENCODE(void) { return m_bUseUUENCODE; }
@@ -181,8 +181,17 @@ public:
     virtual int	 ChangedItem (char * pString, int index, HWND hwnd, char ** ppszFullName, unsigned long* entryID = NULL, UINT* bitmapID = NULL);
     virtual void DeletedItem (HWND hwnd, LONG id,int index);
     virtual char * NameCompletion (char *);
+	  virtual void StartNameCompletionSearch();
+	  virtual void StopNameCompletionSearch();
+	  virtual void SetProgressBarPercent(int32 lPercent);
+	  virtual void SetStatusText(const char* pMessage	);
+	  virtual CWnd *GetOwnerWindow();
+
     virtual int OnToolHitTest( CPoint point, TOOLINFO* pTI ) const;
     BOOL ProcessVCardData(COleDataObject * pDataObject,CPoint &point);
+    BOOL ProcessAddressBookIndexFormat(COleDataObject *pDataObject, DROPEFFECT effect,
+									   CPoint &point);
+    BOOL AddURLToAddressPane(COleDataObject * pDataObject, CPoint &point, LPSTR szURL);
 
     void OnAttachTab(void);
     void OnAddressTab(void);

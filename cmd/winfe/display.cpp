@@ -205,6 +205,28 @@ ExternalFileSave(int iFormatOut, URL_Struct *pUrl, MWContext *pContext)
 		// Make a copy of the name, because that's what fe_URLtoLocalName() does
 		// and the code below is going to XP_FREE pSuggested
 		pSuggested = XP_STRDUP(pUrl->content_name);
+		if (pSuggested && *pSuggested) {
+			// check if the file doesn't have an extension
+			char *ext = FE_FindFileExt(pSuggested);
+
+			if (!ext) {
+				if (pUrl->content_type && *pUrl->content_type) {
+					// Look up an extension
+					char aExt[_MAX_EXT];
+					DWORD dwFlags = 0;
+					size_t stExt = 0;
+        
+					aExt[0] = '\0';
+#ifdef XP_WIN16
+					dwFlags |= EXT_DOT_THREE;
+#endif
+					stExt = EXT_Invent(aExt, sizeof(aExt), dwFlags, pSuggested, pUrl->content_type);
+					
+					if (stExt)
+						StrAllocCat (pSuggested, aExt);
+				}
+			}
+		}				
 	}
 	if (!pSuggested)
 		pSuggested = fe_URLtoLocalName(pUrl->address, pUrl->content_type);

@@ -12,6 +12,7 @@ cgi.h
 client.h
 csid.h
 ctxtfunc.h
+cvactive.h
 dirprefs.h
 ds.h
 dserr.h

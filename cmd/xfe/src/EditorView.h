@@ -43,7 +43,7 @@ class XFE_EditorView : public XFE_HTMLView, public XFE_Editable
 {
 public:
   XFE_EditorView(XFE_Component *toplevel_component, Widget parent, XFE_View *parent_view, MWContext *context);
-  ~XFE_EditorView();
+  virtual ~XFE_EditorView();
 #if 0
   virtual Boolean isCommandEnabled(CommandType cmd, void *calldata = NULL,
 								   XFE_CommandInfo* i = NULL);

@@ -19,16 +19,16 @@
 #if defined(FEATURE_CUSTOM_BRAND)
 #include "xp_brand.h"
 #else
-#define MOZ_NAME_PRODUCT	"Mozilla"
-#define MOZ_NAME_BRAND		"Mozilla"
-#define MOZ_NAME_FULL		"Mozilla Navigator"
-#define MOZ_NAME_COMPANY	"Netscape Communications Corp"
+#define MOZ_NAME_PRODUCT    "Mozilla"
+#define MOZ_NAME_BRAND      "Mozilla"
+#define MOZ_NAME_FULL       "Mozilla Navigator"
+#define MOZ_NAME_COMPANY    "Netscape Communications Corp"
 #endif /* FEATURE_CUSTOM_BRAND */
 
 
 /*
 ** Cross platform error codes. These are system errors, library errors,
-** etc.	 The ranges of error messages are displayed in the following table:
+** etc.  The ranges of error messages are displayed in the following table:
 **
 **       actual           7000 added        category
 **    low      high      low     high
@@ -45,18 +45,26 @@
 **  25769     27500    32769    34500    Win FE
 **  50000     58000    57000    65000    secerr, sslerr (Win)
 **
-** Newbie NOTE: allxpstr.c and allxpstr.rc are exactly the same file.
-** Edit only one and cvs update the other one. rc is for windows build.
-**
+**  JRM note 98/04/01.  The table above has little in common with reality.
+**  moreover, as a scheme, it is quite unworkable on Macintosh, where the
+**  legal range for resource ids is 128-0x7FFF.  This restricts the range
+**  from the min to the max to be around 16000.  This  was exacerbated by
+**  the security people staking out ranges such as -0x3000..-0x2000.  So
+**  if anybody's wondering why I messed with these ranges for XP_MAC, now
+**  you know.
 */
 #ifndef _ALLXPSTR_H_
 #define _ALLXPSTR_H_
 
 #include "resdef.h"
 
-#define XP_MSG_BASE			15000
-#define SEC_DIALOG_STRING_BASE		(XP_MSG_BASE + 8000)
-
+#ifdef XP_MAC
+#define XP_MSG_BASE					1000
+#define SEC_DIALOG_STRING_BASE		3000
+#else
+#define XP_MSG_BASE			14000
+#define SEC_DIALOG_STRING_BASE		(XP_MSG_BASE + 2000)
+#endif
 
 /* WARNING: DO NOT TAKE ERROR CODE -666, it is used internally
    by the message lib */
@@ -66,13 +74,13 @@
 RES_START
 BEGIN_STR(mcom_include_merrors_i_strings)
 
-/* #define MK_HTTP_TYPE_CONFLICT           -204	*/
+/* #define MK_HTTP_TYPE_CONFLICT           -204 */
 ResDef(MK_HTTP_TYPE_CONFLICT, -204,
 "A communications error occurred.\n\
  (TCP Error: %s)\n\n\
 Try connecting again.")
 
-/* #define MK_BAD_CONNECT                  -205	*/
+/* #define MK_BAD_CONNECT                  -205 */
 ResDef(MK_BAD_CONNECT,                  -205,
 MOZ_NAME_BRAND" is unable to connect to the server at\n\
 the location you have specified. The server may\n\
@@ -80,13 +88,13 @@ be down or busy.\n\n\
 Try connecting again later.")
 
 /* #define MK_TCP_ERROR                    -206 */
-ResDef(MK_TCP_ERROR,			-206,
+ResDef(MK_TCP_ERROR,            -206,
 "A communications error occurred.\n\
  (TCP Error: %s)\n\n\
 Try connecting again.")
 
 #ifdef XP_MAC
-/* #define MK_OUT_OF_MEMORY                -207	*/
+/* #define MK_OUT_OF_MEMORY                -207 */
 ResDef(MK_OUT_OF_MEMORY               , -207,
 MOZ_NAME_BRAND" is out of memory.\n\n\
 Try quitting "MOZ_NAME_PRODUCT" and increasing its minimum memory\n\
@@ -100,17 +108,17 @@ some windows.")
 #endif
 
 
-/* #define MK_MALFORMED_URL_ERROR          -209	*/
+/* #define MK_MALFORMED_URL_ERROR          -209 */
 ResDef(MK_MALFORMED_URL_ERROR,    -209,
 "This Location (URL) is not recognized:\n\
   %.200s\n\n\
 Check the Location and try again.")
 
-/* #define MK_UNABLE_TO_USE_PASV_FTP       -211	*/
+/* #define MK_UNABLE_TO_USE_PASV_FTP       -211 */
 ResDef(MK_UNABLE_TO_USE_PASV_FTP,       -211,
 "Unable to use FTP passive mode")
 
-/* #define MK_UNABLE_TO_CHANGE_FTP_MODE    -212	*/
+/* #define MK_UNABLE_TO_CHANGE_FTP_MODE    -212 */
 ResDef(MK_UNABLE_TO_CHANGE_FTP_MODE ,   -212,
 MOZ_NAME_BRAND" is unable to set the FTP transfer mode with\n\
 this server. You will not be able to download files.\n\n\
@@ -118,7 +126,7 @@ You should contact the administrator for this server\n\
 or try again later.")
 
 
-/* #define MK_UNABLE_TO_FTP_CWD            -213	*/
+/* #define MK_UNABLE_TO_FTP_CWD            -213 */
 ResDef(MK_UNABLE_TO_FTP_CWD,            -213,
 MOZ_NAME_BRAND" is unable to send the change directory (cd)\n\
 command, to the FTP server. You cannot view another\n\
@@ -127,7 +135,7 @@ You should contact the administrator for this server\n\
 or try again later.")
 
 
-/* #define MK_UNABLE_TO_SEND_PORT_COMMAND  -214	*/
+/* #define MK_UNABLE_TO_SEND_PORT_COMMAND  -214 */
 ResDef(MK_UNABLE_TO_SEND_PORT_COMMAND,  -214,
 MOZ_NAME_BRAND" is unable to send a port command to the FTP\n\
 server to establish a data connection.\n\n\
@@ -135,25 +143,25 @@ You should contact the administrator for this server\n\
 or try again later.")
 
 
-/* #define MK_UNABLE_TO_LOCATE_FILE        -215	*/
+/* #define MK_UNABLE_TO_LOCATE_FILE        -215 */
 ResDef(MK_UNABLE_TO_LOCATE_FILE,        -215,
-MOZ_NAME_BRAND" is unable to find the file or directory named:\n\
-  %.200s\n\n\
+MOZ_NAME_BRAND" is unable to find the file or directory\n\
+named %.200s.\n\n\
 Check the name and try again.")
 
 
-/* #define MK_BAD_NNTP_CONNECTION          -216	*/
+/* #define MK_BAD_NNTP_CONNECTION          -216 */
 ResDef(MK_BAD_NNTP_CONNECTION,          -216,
 "A News error occurred: Invalid NNTP connection\n\n\
 Try connecting again.")
 
-/* #define MK_NNTP_SERVER_ERROR            -217	*/
+/* #define MK_NNTP_SERVER_ERROR            -217 */
 ResDef(MK_NNTP_SERVER_ERROR,            -217,
 "An error occurred with the News server.\n\n\
 If you are unable to connect again, contact the\n\
 administrator for this server.")
 
-/* #define MK_SERVER_TIMEOUT               -218	*/
+/* #define MK_SERVER_TIMEOUT               -218 */
 ResDef(MK_SERVER_TIMEOUT,               -218,
 "There was no response. The server could be down\n\
 or is not responding.\n\n\
@@ -161,7 +169,7 @@ If you are unable to connect again later, contact\n\
 the server's administrator.")
 
 
-/* #define MK_UNABLE_TO_LOCATE_HOST        -219	*/
+/* #define MK_UNABLE_TO_LOCATE_HOST        -219 */
 ResDef(MK_UNABLE_TO_LOCATE_HOST,        -219,
 MOZ_NAME_BRAND" is unable to locate the server:\n\
   %.200s\n\
@@ -169,38 +177,38 @@ The server does not have a DNS entry.\n\n\
 Check the server name in the Location (URL)\n\
 and try again.")
 
-/* #define MK_SERVER_DISCONNECTED          -220	*/
+/* #define MK_SERVER_DISCONNECTED          -220 */
 ResDef(MK_SERVER_DISCONNECTED,          -220,
 "The server has disconnected.\n\
 The server may have gone down or there may be a\n\
 network problem.\n\n\
 Try connecting again.")
 
-/* #define MK_NEWS_ITEM_UNAVAILABLE        -221	*/
+/* #define MK_NEWS_ITEM_UNAVAILABLE        -221 */
 ResDef(MK_NEWS_ITEM_UNAVAILABLE,        -221,
-"The Discussion item is unavailable. It may have expired.\n\n\
+"The Newsgroup item is unavailable. It may have expired.\n\n\
 Try retrieving another item.")
 
-/* #define MK_UNABLE_TO_OPEN_NEWSRC        -222	*/
+/* #define MK_UNABLE_TO_OPEN_NEWSRC        -222 */
 ResDef(MK_UNABLE_TO_OPEN_NEWSRC,        -222,
 MOZ_NAME_BRAND" is unable to open your News file (newsrc).\n\n\
-Please verify that your Mail and Groups preferences are\n\
+Please verify that your Mail and News preferences are\n\
 correct and try again.")
 
 
-/* #define MK_UNABLE_TO_OPEN_FILE          -223	*/
+/* #define MK_UNABLE_TO_OPEN_FILE          -223 */
 ResDef(MK_UNABLE_TO_OPEN_FILE,          -223,
-MOZ_NAME_BRAND" is unable to open the file:\n\
-  %.200s\n\n\
+MOZ_NAME_BRAND" is unable to open the file \n\
+%.200s.\n\n\
 Check the file name and try again.")
 
-/* #define MK_TCP_WRITE_ERROR				-236	*/
+/* #define MK_TCP_WRITE_ERROR               -236    */
 ResDef(MK_TCP_WRITE_ERROR, -236,
 "A network error occurred while "MOZ_NAME_PRODUCT"\n\
 was sending data.\n(Network Error: %s)\n\n\
 Try connecting again.")
 
-/* #define MK_COULD_NOT_LOGIN_TO_SMTP_SERVER -229	*/
+/* #define MK_COULD_NOT_LOGIN_TO_SMTP_SERVER -229   */
 ResDef(MK_COULD_NOT_LOGIN_TO_SMTP_SERVER, -229,
 "An error occurred sending mail:\n\
 "MOZ_NAME_PRODUCT" was unable to connect to the SMTP server.\n\
@@ -209,41 +217,41 @@ Please verify that your Mail preferences are correct\n\
 and try again.")
 
 
-/* #define MK_ERROR_SENDING_FROM_COMMAND	-230	*/
+/* #define MK_ERROR_SENDING_FROM_COMMAND    -230    */
 ResDef(MK_ERROR_SENDING_FROM_COMMAND, -230,
-"An error occurred sending mail.\n\
+"An error occurred while sending mail.\n\
 The mail server responded:\n\
   %s\n\
 Please verify that your email address is correct\n\
 in your Mail preferences and try again.")
 
 
-/* #define MK_ERROR_SENDING_RCPT_COMMAND	-231	*/
-ResDef(MK_ERROR_SENDING_RCPT_COMMAND,	-231,
-"An error occurred sending mail.\n\
+/* #define MK_ERROR_SENDING_RCPT_COMMAND    -231    */
+ResDef(MK_ERROR_SENDING_RCPT_COMMAND,   -231,
+"An error occurred while sending mail.\n\
 The mail server responded:\n\
   %s\n\
 Please check the message recipients and try again.")
 
-/* #define MK_ERROR_SENDING_DATA_COMMAND	-232 */
-ResDef(MK_ERROR_SENDING_DATA_COMMAND,	-232,
-"SMTP Error while sending mail.\nServer responded: %s")
+/* #define MK_ERROR_SENDING_DATA_COMMAND    -232 */
+ResDef(MK_ERROR_SENDING_DATA_COMMAND,   -232,
+"An (SMTP) error occurred while sending mail.\nServer responded: %s")
 
-/* #define MK_ERROR_SENDING_MESSAGE		-233	*/
-ResDef(MK_ERROR_SENDING_MESSAGE,		-233,
-"An error occurred sending mail.\n\
+/* #define MK_ERROR_SENDING_MESSAGE     -233    */
+ResDef(MK_ERROR_SENDING_MESSAGE,        -233,
+"An error occurred while sending mail.\n\
 The mail server responded:\n\
-  %s\n\
+  %s.\n\
 Please check the message and try again.")
 
-/* #define MK_SMTP_SERVER_ERROR		    -234	*/
-ResDef(MK_SMTP_SERVER_ERROR,		    -234,
+/* #define MK_SMTP_SERVER_ERROR         -234    */
+ResDef(MK_SMTP_SERVER_ERROR,            -234,
 "An error occurred sending mail: SMTP server error.\n\
 The server responded:\n\
   %s\n\
 Contact your mail administrator for assistance.")
 
-/* #define MK_UNABLE_TO_CONNECT            -240    -- generic error --	*/
+/* #define MK_UNABLE_TO_CONNECT            -240    -- generic error --  */
 ResDef(MK_UNABLE_TO_CONNECT,            -240,
 "A network error occurred:\n\
 unable to connect to server (TCP Error: %s)\n\
@@ -251,23 +259,23 @@ The server may be down or unreachable.\n\n\
 Try connecting again later.")
 
 /* #define MK_CONNECTION_TIMED_OUT         -241 */
-ResDef(MK_CONNECTION_TIMED_OUT,		-241,
+ResDef(MK_CONNECTION_TIMED_OUT,     -241,
 "There was no response. The server could be down\n\
 or is not responding.\n\n\
 If you are unable to connect again later, contact\n\
 the server's administrator.")
 
-/* #define MK_CONNECTION_REFUSED           -242	*/
+/* #define MK_CONNECTION_REFUSED           -242 */
 ResDef(MK_CONNECTION_REFUSED,           -242,
-MOZ_NAME_BRAND"'s network connection was refused by the server:\n\
-  %.200s\n\
+MOZ_NAME_BRAND"'s network connection was refused by the server \n\
+%.200s.\n\
 The server may not be accepting connections or\n\
 may be busy.\n\n\
 Try connecting again later.")
 
 
 #ifdef XP_WIN
-/* #define MK_UNABLE_TO_CREATE_SOCKET      -243	*/
+/* #define MK_UNABLE_TO_CREATE_SOCKET      -243 */
 ResDef(MK_UNABLE_TO_CREATE_SOCKET   ,   -243,
 MOZ_NAME_BRAND" was unable to create a network socket connection.\n\
 There may be insufficient system resources or the network\n\
@@ -284,14 +292,14 @@ Try connecting again later or try restarting "MOZ_NAME_PRODUCT".")
 
 
 #ifdef XP_WIN
-/* #define MK_UNABLE_TO_ACCEPT_SOCKET      -245   	*/
+/* #define MK_UNABLE_TO_ACCEPT_SOCKET      -245     */
 ResDef(MK_UNABLE_TO_ACCEPT_SOCKET,      -245,
 MOZ_NAME_BRAND" is unable to complete a socket connection \n\
 with this server. There may be insufficient system\n\
 resources.\n\n\
 Try restarting "MOZ_NAME_PRODUCT" or restarting Windows.")
 #else
-/* #define MK_UNABLE_TO_ACCEPT_SOCKET      -245   	*/
+/* #define MK_UNABLE_TO_ACCEPT_SOCKET      -245     */
 ResDef(MK_UNABLE_TO_ACCEPT_SOCKET,      -245,
 MOZ_NAME_BRAND" is unable to complete a socket connection\n\
 with this server. There may be insufficient system\n\
@@ -300,14 +308,14 @@ Try restarting "MOZ_NAME_PRODUCT".")
 #endif
 
 
-/* #define MK_UNABLE_TO_CONNECT_TO_PROXY   -246	*/
+/* #define MK_UNABLE_TO_CONNECT_TO_PROXY   -246 */
 ResDef(MK_UNABLE_TO_CONNECT_TO_PROXY,   -246,
 MOZ_NAME_BRAND" is unable to connect to your proxy server.\n\
 The server may be down or may be incorrectly configured.\n\n\
 Please verify that your Proxy preferences are correct\n\
 and try again, or contact the server's administrator.")
 
-/* #define MK_UNABLE_TO_LOCATE_PROXY    -247	*/
+/* #define MK_UNABLE_TO_LOCATE_PROXY    -247    */
 ResDef(MK_UNABLE_TO_LOCATE_PROXY,    -247,
 MOZ_NAME_BRAND" is unable to locate your proxy server.\n\
 The server may be down or may be incorrectly configured.\n\n\
@@ -316,12 +324,13 @@ and try again, or contact the server's administrator.")
 
 
 
-/* #define MK_ZERO_LENGTH_FILE				-251	*/
+/* #define MK_ZERO_LENGTH_FILE              -251    */
 ResDef(MK_ZERO_LENGTH_FILE, -251,
-"Document contains no data")
+"The document contained no data.\n\
+Try again later, or contact the server's administrator.")
 
 
-/* #define MK_TCP_READ_ERROR               -252	*/
+/* #define MK_TCP_READ_ERROR               -252 */
 ResDef(MK_TCP_READ_ERROR            ,   -252,
 "A network error occurred while "MOZ_NAME_PRODUCT"\n\
 was receiving data.\n(Network Error: %s)\n\n\
@@ -329,53 +338,57 @@ Try connecting again.")
 
 
 
-/* #define MK_UNABLE_TO_OPEN_TMP_FILE      -253	*/
+/* #define MK_UNABLE_TO_OPEN_TMP_FILE      -253 */
 ResDef(MK_UNABLE_TO_OPEN_TMP_FILE, -253,
-MOZ_NAME_BRAND" is unable to open the temporary file:\n\
-  %.200s\n\n\
+MOZ_NAME_BRAND" is unable to open the temporary file\n\
+%.200s.\n\n\
 Check your `Temporary Directory' setting and try again.")
 
-/* #define MK_COULD_NOT_GET_USERS_MAIL_ADDRESS -235	*/
+/* #define MK_COULD_NOT_GET_USERS_MAIL_ADDRESS -235 */
 ResDef(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS, -235,
 "An error occurred sending mail:\n\
 the return mail address was invalid.\n\n\
 Please verify that your email address is correct\n\
 in your Mail preferences and try again.")
 
-/* #define MK_DISK_FULL                    -250	*/
+/* #define MK_DISK_FULL                    -250 */
 ResDef(MK_DISK_FULL,                    -250,
 "The disk is full. "MOZ_NAME_PRODUCT" is cancelling the file\n\
 transfer and removing the file.\n\n\
 Please remove some files and try again.")
 
 
-/* #define MK_NNTP_AUTH_FAILED             -260  -- NNTP authinfo failure --	*/
+/* #define MK_NNTP_AUTH_FAILED             -260  -- NNTP authinfo failure --    */
 ResDef(MK_NNTP_AUTH_FAILED,             -260,
 "An authorization error occurred:\n\n\
 %s\n\n\
 Please try entering your name and/or password again.")
 
-/* #define MK_MIME_NO_SENDER				-266  */
-ResDef(MK_MIME_NO_SENDER,				-266,  /* From: empty */
-"No sender was specified.")
+/* #define MK_MIME_NO_SENDER                -266  */
+ResDef(MK_MIME_NO_SENDER,               -266,  /* From: empty */
+"No sender was specified.\n\
+Please fill in your email address in the\n\
+Mail and Newsgroup preferences.")
 
-/* #define MK_MIME_NO_RECIPIENTS			-267  */
-ResDef(MK_MIME_NO_RECIPIENTS,			-267,  /* To: and Newsgroups: empty */
-"No recipients were specified.")
+/* #define MK_MIME_NO_RECIPIENTS            -267  */
+ResDef(MK_MIME_NO_RECIPIENTS,           -267,  /* To: and Newsgroups: empty */
+"No recipients were specified.\n\
+Please enter a recipient in a To: line,\n\
+or a newsgroup in a Group: line..")
 
-/* #define MK_MIME_NO_SUBJECT				-268  	*/
-ResDef(MK_MIME_NO_SUBJECT,				-268,  /* Subject: empty */
+/* #define MK_MIME_NO_SUBJECT               -268    */
+ResDef(MK_MIME_NO_SUBJECT,              -268,  /* Subject: empty */
 "No subject was specified.")
 
-/* #define MK_MIME_ERROR_WRITING_FILE		-269	*/
+/* #define MK_MIME_ERROR_WRITING_FILE       -269    */
 ResDef(MK_MIME_ERROR_WRITING_FILE, -269,
 "Error writing temporary file.")
 
-/* #define MK_MIME_MULTIPART_BLURB			-275  	*/
-ResDef(MK_MIME_MULTIPART_BLURB,			-275,  /* text preceding multiparts */
+/* #define MK_MIME_MULTIPART_BLURB          -275    */
+ResDef(MK_MIME_MULTIPART_BLURB,         -275,  /* text preceding multiparts */
 "This is a multi-part message in MIME format.")
 
-/* #define MK_PRINT_LOSSAGE                -278	*/
+/* #define MK_PRINT_LOSSAGE                -278 */
 ResDef(MK_PRINT_LOSSAGE,                -278,
 "Printing stopped.  A problem occurred while receiving\n\
 the document.  Transmission may have been interrupted\n\
@@ -383,147 +396,148 @@ or there may be insufficient space to write the file.\n\n\
 Try again. Check that space is available in the\n\
 temporary directory or restart "MOZ_NAME_PRODUCT".")
 
-/* #define MK_SIGNATURE_TOO_LONG           -279	*/
+/* #define MK_SIGNATURE_TOO_LONG           -279 */
 ResDef(MK_SIGNATURE_TOO_LONG,           -279,
 "Your signature exceeds the recommended four lines.")
 
-/* #define MK_SIGNATURE_TOO_WIDE           -280	*/
+/* #define MK_SIGNATURE_TOO_WIDE           -280 */
 ResDef(MK_SIGNATURE_TOO_WIDE,           -280,
 "Your signature exceeds the recommended 79 columns.\n\
 For most readers, the lines will appear truncated, or\n\
 will be wrapped unattractively.  \n\n\
 Please edit it to keep the lines shorter than 80 characters.")
 
-ResDef(MK_UNABLE_TO_CONNECT2,		-281,
+ResDef(MK_UNABLE_TO_CONNECT2,       -281,
 "A network error occurred:\n\
     unable to connect to server\n\
 The server may be down or unreachable.\n\n\
 Try connecting again later.")
 
-/* #define MK_CANT_LOAD_HELP_TOPIC			-282	*/
-ResDef(MK_CANT_LOAD_HELP_TOPIC,		-282,
+/* #define MK_CANT_LOAD_HELP_TOPIC          -282    */
+ResDef(MK_CANT_LOAD_HELP_TOPIC,     -282,
 "Unable to load the requested help topic")
 
-/* #define MK_TIMEBOMB_MESSAGE				-301	*/
+/* #define MK_TIMEBOMB_MESSAGE              -301    */
 ResDef(MK_TIMEBOMB_MESSAGE, -301,
 "This copy of "MOZ_NAME_PRODUCT" has expired.\n\
 This pre-release copy of "MOZ_NAME_FULL" has expired\n\
 and can only be used to download a newer version of "MOZ_NAME_PRODUCT".")
 
-/* #define MK_TIMEBOMB_URL_PROHIBIT		-302	*/
+/* #define MK_TIMEBOMB_URL_PROHIBIT     -302    */
 ResDef(MK_TIMEBOMB_URL_PROHIBIT, -302,
 "This trial or pre-release copy of "MOZ_NAME_FULL" has expired\n\
 and can only be used to purchase or download a newer version of "MOZ_NAME_PRODUCT".")
 
-/* #define MK_NO_WAIS_PROXY				-303	*/
+/* #define MK_NO_WAIS_PROXY             -303    */
 ResDef(MK_NO_WAIS_PROXY, -303,
 "No WAIS proxy is configured.\n\n\
 Check your Proxy preferences and try again.")
 
-/* #define MK_NNTP_ERROR_MESSAGE 			-304	*/
+/* #define MK_NNTP_ERROR_MESSAGE            -304    */
 ResDef(MK_NNTP_ERROR_MESSAGE, -304,
 "A News (NNTP) error occurred:\n\
  %.100s")
 
-/* #define MK_NNTP_NEWSGROUP_SCAN_ERROR 	-305	*/
-ResDef(MK_NNTP_NEWSGROUP_SCAN_ERROR, 	-305,
-"A News error occurred. The scan of all discussion groups is incomplete.\n\
+/* #define MK_NNTP_NEWSGROUP_SCAN_ERROR     -305    */
+ResDef(MK_NNTP_NEWSGROUP_SCAN_ERROR,    -305,
+"A News error occurred. The scan of all newsgroups is incomplete.\n\
  \n\
-Try to View All Discussion Groups again.")
+Try to View All Newsgroups again.")
 
-/* #define MK_CREATING_NEWSRC_FILE         -306	*/
+/* #define MK_CREATING_NEWSRC_FILE         -306 */
 ResDef(MK_CREATING_NEWSRC_FILE,        -306,
 MOZ_NAME_BRAND" could not find a News file (newsrc)\n\
 and is creating one for you.")
 
-/* #define MK_NNTP_SERVER_NOT_CONFIGURED   -307	*/
+/* #define MK_NNTP_SERVER_NOT_CONFIGURED   -307 */
 ResDef(MK_NNTP_SERVER_NOT_CONFIGURED,-307,
 "No NNTP server is configured.\n\n\
-Check your Mail and Groups preferences and try again.")
+Check your Mail and News preferences and try again.")
 
-/* #define MK_COMMUNICATIONS_ERROR			-308	*/
-ResDef(MK_COMMUNICATIONS_ERROR,			-308,
-"Communications exception (%d).")
+/* #define MK_COMMUNICATIONS_ERROR          -308    */
+ResDef(MK_COMMUNICATIONS_ERROR,         -308,
+"A communications error occurred.\n\
+Please try again.")
 
 
-/* #define MK_SECURE_NEWS_PROXY_ERROR      -309	*/
+/* #define MK_SECURE_NEWS_PROXY_ERROR      -309 */
 ResDef(MK_SECURE_NEWS_PROXY_ERROR,      -309,
 MOZ_NAME_BRAND" was unble to connect to the secure news server\n\
 because of a proxy error")
 
 
 /* #define MK_POP3_SERVER_ERROR            -311  generic pop3 error code */
-ResDef(MK_POP3_SERVER_ERROR,		-311,
-"An error occurred with the POP3 server.\n\
+ResDef(MK_POP3_SERVER_ERROR,        -311,
+"An error occurred with the POP3 mail server.\n\
 You should contact the administrator for this server\n\
 or try again later.")
 
 /* #define MK_POP3_USERNAME_UNDEFINED      -312  no username defined */
-ResDef(MK_POP3_USERNAME_UNDEFINED,	-312,
+ResDef(MK_POP3_USERNAME_UNDEFINED,  -312,
 MOZ_NAME_BRAND" is unable to use the mail server because\n\
 you have not provided a username.  Please provide\n\
 one in the preferences and try again")
 
 /* #define MK_POP3_PASSWORD_UNDEFINED      -313  no password defined */
-ResDef(MK_POP3_PASSWORD_UNDEFINED,	-313,
+ResDef(MK_POP3_PASSWORD_UNDEFINED,  -313,
 "Error getting mail password.")
 
-/* #define MK_POP3_USERNAME_FAILURE 		-314  failure in USER step */
-ResDef(MK_POP3_USERNAME_FAILURE,		-314,
+/* #define MK_POP3_USERNAME_FAILURE         -314  failure in USER step */
+ResDef(MK_POP3_USERNAME_FAILURE,        -314,
 "An error occurred while sending your user name to the mail server.\n\
 You should contact the administrator for this server\n\
 or try again later.")
 
-/* #define MK_POP3_PASSWORD_FAILURE 		-315  failure in PASS step */
-ResDef(MK_POP3_PASSWORD_FAILURE,		-315,
+/* #define MK_POP3_PASSWORD_FAILURE         -315  failure in PASS step */
+ResDef(MK_POP3_PASSWORD_FAILURE,        -315,
 "An error occurred while sending your password to the mail server.\n\
 You should contact the administrator for this server\n\
 or try again later.")
 
-/* #define MK_POP3_NO_MESSAGES				-316  no mail messages on pop server */
-ResDef(MK_POP3_NO_MESSAGES,				-316,
-"No new messages on server")
+/* #define MK_POP3_NO_MESSAGES              -316  no mail messages on pop server */
+ResDef(MK_POP3_NO_MESSAGES,             -316,
+"There are no new messages on the server.")
 
-/* #define MK_POP3_LIST_FAILURE			-317  LIST command failed */
-ResDef(MK_POP3_LIST_FAILURE,			-317,
-"An error occurred while listing messages on the POP3 server.\n\
+/* #define MK_POP3_LIST_FAILURE         -317  LIST command failed */
+ResDef(MK_POP3_LIST_FAILURE,            -317,
+"An error occurred while listing messages on the POP3 mail server.\n\
 You should contact the administrator for this server\n\
 or try again later.")
 
-/* #define MK_POP3_LAST_FAILURE			-318  LAST command failed */
-ResDef(MK_POP3_LAST_FAILURE,			-318,
-"An error occurred while querying the POP3 server for\n\
+/* #define MK_POP3_LAST_FAILURE         -318  LAST command failed */
+ResDef(MK_POP3_LAST_FAILURE,            -318,
+"An error occurred while querying the POP3 mail server for\n\
 the last processed message.\n\
 You should contact the administrator for this server\n\
 or try again later.")
 
 
 /* #define MK_POP3_RETR_FAILURE            -319  RETR command failed, continues */
-ResDef(MK_POP3_RETR_FAILURE,		-319,
-"An error occurred while getting messages from the POP3 server.\n\
+ResDef(MK_POP3_RETR_FAILURE,        -319,
+"An error occurred while getting messages from the POP3 mail server.\n\
 You should contact the administrator for this server\n\
 or try again later.")
 
-/* #define MK_POP3_DELE_FAILURE			-320  DELE command failed */
-ResDef(MK_POP3_DELE_FAILURE,			-320,
-"An error occurred while removing messages from the POP3 server.\n\
+/* #define MK_POP3_DELE_FAILURE         -320  DELE command failed */
+ResDef(MK_POP3_DELE_FAILURE,            -320,
+"An error occurred while removing messages from the POP3 mail server.\n\
 You should contact the administrator for this server\n\
 or try again later.")
 
-/* #define MK_POP3_OUT_OF_DISK_SPACE 		-321 */
-ResDef(MK_POP3_OUT_OF_DISK_SPACE,		-321,
+/* #define MK_POP3_OUT_OF_DISK_SPACE        -321 */
+ResDef(MK_POP3_OUT_OF_DISK_SPACE,       -321,
 "There isn't enough room on the local disk to download\n\
-your mail from the POP3 server.  Please make room and\n\
+your mail from the POP3 mail server.  Please make room and\n\
 try again.  (The `Empty Trash' and `Compress This Folder'\n\
 commands may recover some space.)")
 
-/* #define MK_POP3_MESSAGE_WRITE_ERROR 	-322 */
-ResDef(MK_POP3_MESSAGE_WRITE_ERROR,	-322,
+/* #define MK_POP3_MESSAGE_WRITE_ERROR  -322 */
+ResDef(MK_POP3_MESSAGE_WRITE_ERROR, -322,
 "An error occurred while saving mail messages.")
 
 
 /* #define MK_COULD_NOT_PUT_FILE           -325  FTP could not put file */
-ResDef(MK_COULD_NOT_PUT_FILE,		-325,
+ResDef(MK_COULD_NOT_PUT_FILE,       -325,
 "Could not post the file: %.80s.\n\
 For reason:\n\
   %.200s\n\n\
@@ -531,7 +545,7 @@ You may not have permission to write to\n\
 this directory.\n\
 Check the permissions and try again.")
 
-/* #define MK_TIMEBOMB_WARNING_MESSAGE				-326 */
+/* #define MK_TIMEBOMB_WARNING_MESSAGE              -326 */
 ResDef(MK_TIMEBOMB_WARNING_MESSAGE, -326,
 "This is a pre-release copy of "MOZ_NAME_FULL" that\n\
 will expire at %s.\n\
@@ -542,23 +556,23 @@ choose Software from the Help menu.")
 /* #define MK_UNABLE_TO_DELETE_FILE */
 ResDef(MK_UNABLE_TO_DELETE_FILE, -327,
 "Could not delete file:\n\
-	%s")
+    %s")
 
 /* #define MK_UNABLE_TO_DELETE_DIRECTORY */
 ResDef(MK_UNABLE_TO_DELETE_DIRECTORY, -328,
 "Could not remove directory:\n\
-	%s")
+    %s")
 
 /* #define MK_MKDIR_FILE_ALREADY_EXISTS */
 ResDef(MK_MKDIR_FILE_ALREADY_EXISTS, -329,
 "Cannot create directory because a file or\n\
 directory of that name already exists: \n\
-	%s")
+    %s")
 
 /* #define MK_COULD_NOT_CREATE_DIRECTORY */
 ResDef(MK_COULD_NOT_CREATE_DIRECTORY, -330,
 "Could not create directory:\n\
-	%s")
+    %s")
 
 /* #define MK_NOT_A_DIRECTORY */
 ResDef(MK_NOT_A_DIRECTORY, -331,
@@ -569,103 +583,110 @@ ResDef(MK_NOT_A_DIRECTORY, -331,
 ResDef(MK_COMPUSERVE_AUTH_FAILED, -332,
 "Authorization failed")
 
-/* #define MK_RELATIVE_TIMEBOMB_MESSAGE				-333	*/
+/* #define MK_RELATIVE_TIMEBOMB_MESSAGE             -333    */
 ResDef(MK_RELATIVE_TIMEBOMB_MESSAGE, -333,
 "This trial copy of "MOZ_NAME_PRODUCT" has expired.\n\n\
 To purchase a regular copy of "MOZ_NAME_FULL"\n(\
 which will not expire) choose Software from the Help menu.")
 
-/* #define MK_RELATIVE_TIMEBOMB_WARNING_MESSAGE				-334 */
+/* #define MK_RELATIVE_TIMEBOMB_WARNING_MESSAGE             -334 */
 ResDef(MK_RELATIVE_TIMEBOMB_WARNING_MESSAGE, -334,
 "This trial copy of "MOZ_NAME_FULL" \n\
 will expire at %s.\n\n\
 To purchase a regular copy of "MOZ_NAME_FULL"\n(\
 which will not expire) choose Software from the Help menu.")
 
-/* #define MK_REDIRECT_ATTEMPT_NOT_ALLOWED	-335 */
+/* #define MK_REDIRECT_ATTEMPT_NOT_ALLOWED  -335 */
 ResDef(MK_REDIRECT_ATTEMPT_NOT_ALLOWED, -335,
 "There was an attempt to redirect a url request,\n\
 but the attempt was not allowed by the client.")
 
-/* #define MK_BAD_GZIP_HEADER	-336 */
+/* #define MK_BAD_GZIP_HEADER   -336 */
 ResDef(MK_BAD_GZIP_HEADER, -336,
 "Corruption was detected in the compressed GZip file that was requested")
 
 /* Mail/News errors */
 
-ResDef(MK_MSG_CANT_COPY_TO_SAME_FOLDER,		-401,
-	   "Can't move or copy messages to the folder they're already in.")
+ResDef(MK_MSG_CANT_COPY_TO_SAME_FOLDER,     -401,
+       "Can't move or copy messages to the folder they're already in.")
 
 #ifdef XP_WIN16
-ResDef(MK_MSG_CANT_COPY_TO_QUEUE_FOLDER,	-402,
-	   "Cannot copy messages into the 'Unsent' folder:\n\
-That folder is only for holding messages which\n\
-have been deferred for later delivery.")
+ResDef(MK_MSG_CANT_COPY_TO_QUEUE_FOLDER,    -402,
+       "Cannot copy messages into the 'Unsent' folder:\n\
+That folder is only for storing messages\n\
+to be sent later.")
 #else
-ResDef(MK_MSG_CANT_COPY_TO_QUEUE_FOLDER,	-402,
-	   "Cannot copy messages into the 'Unsent Messages' folder:\n\
-That folder is only for holding messages which\n\
-have been deferred for later delivery.")
+ResDef(MK_MSG_CANT_COPY_TO_QUEUE_FOLDER,    -402,
+       "Cannot copy messages into the 'Unsent Messages' folder:\n\
+That folder is only for storing messages\n\
+to be sent later.")
 #endif
 
-ResDef(MK_MSG_CANT_COPY_TO_DRAFTS_FOLDER,	-403,
-	   "Cannot copy messages into the `unsent drafts' folder:\n\
-That folder is only for holding messages which have\n\
-have not yet been queued delivery.")
+ResDef(MK_MSG_CANT_COPY_TO_DRAFTS_FOLDER,   -403,
+       "Cannot copy messages into the `Drafts' folder:\n\
+That folder is only for holding drafts of messages which have\n\
+not yet been sent.")
 
-ResDef(MK_MSG_CANT_CREATE_FOLDER,			-404,
-	   "Couldn't create the folder!")
+#ifdef XP_WIN
+ResDef(MK_MSG_CANT_CREATE_FOLDER,           -404,
+       "Couldn't create the folder! Your hard disk may be full\n\
+or the folder pathname may be too long.")
+#else
+ResDef(MK_MSG_CANT_CREATE_FOLDER,           -404,
+       "Couldn't create the folder! Your hard disk may be full.")
+#endif
 
-ResDef(MK_MSG_FOLDER_ALREADY_EXISTS,		-405,
-	   "The folder already exists.")
+ResDef(MK_MSG_FOLDER_ALREADY_EXISTS,        -405,
+       "A folder with that name already exists.")
 
-ResDef(MK_MSG_FOLDER_NOT_EMPTY, 			-406,
-	   "Can't delete a folder without first deleting the messages in it.")
+ResDef(MK_MSG_FOLDER_NOT_EMPTY,             -406,
+       "Can't delete a folder without first deleting the messages in it.")
 
-ResDef(MK_MSG_CANT_DELETE_FOLDER, 			-407,
-	   "Can't delete a folder without first deleting the messages in it.")
+ResDef(MK_MSG_CANT_DELETE_FOLDER,           -407,
+       "Can't delete a folder without first deleting the messages in it.")
 
-ResDef(MK_MSG_CANT_CREATE_INBOX,			-408,
-	   "Couldn't create default inbox folder!")
+ResDef(MK_MSG_CANT_CREATE_INBOX,            -408,
+       "Couldn't create default inbox folder!")
 
-ResDef(MK_MSG_CANT_CREATE_MAIL_DIR,			-409,
-	   "Couldn't create a mail folder directory.  Mail will not work!")
+ResDef(MK_MSG_CANT_CREATE_MAIL_DIR,         -409,
+       "Couldn't create a mail folder directory.  Mail will not work!")
 
-ResDef(MK_MSG_NO_POP_HOST,					-410,
-	   "No mail server has been specified in preferences.")
+ResDef(MK_MSG_NO_POP_HOST,                  -410,
+       "No mail server has been specified. Please enter your mail \n\
+server in the preferences (select Preferences from the Edit menu).")
 
-ResDef(MK_MSG_MESSAGE_CANCELLED,			-414,
-	   "Message cancelled.")
+ResDef(MK_MSG_MESSAGE_CANCELLED,            -414,
+       "Message cancelled.")
 
-ResDef(MK_MSG_COULDNT_OPEN_FCC_FILE,		-415,
-	   "Couldn't open Sent Mail file. \n\
-	   Please verify that your Mail preferences are correct.")
+ResDef(MK_MSG_COULDNT_OPEN_FCC_FILE,        -415,
+       "Couldn't open Sent Mail file. \n\
+       Please verify that your Mail preferences are correct.")
 
-ResDef(MK_MSG_FOLDER_UNREADABLE,			-416,
-	   "Folder no longer exists?")
+ResDef(MK_MSG_FOLDER_UNREADABLE,            -416,
+       "Couldn't find the folder.")
 
-ResDef(MK_MSG_FOLDER_SUMMARY_UNREADABLE,	-417,
-	   "Folder summary file no longer exists?")
+ResDef(MK_MSG_FOLDER_SUMMARY_UNREADABLE,    -417,
+       "Couldn't find the summary file.")
 
-ResDef(MK_MSG_TMP_FOLDER_UNWRITABLE,		-418,
-	   "Couldn't open temporary folder file for output.")
+ResDef(MK_MSG_TMP_FOLDER_UNWRITABLE,        -418,
+       "Couldn't open temporary folder file for output.")
 
-ResDef(MK_MSG_ID_NOT_IN_FOLDER,				-419,
-	   "The specified message doesn't exist in that folder.\n\
+ResDef(MK_MSG_ID_NOT_IN_FOLDER,             -419,
+       "The specified message doesn't exist in that folder.\n\
 It may have been deleted or moved into another folder.")
 
-ResDef(MK_MSG_NEWSRC_UNPARSABLE,			-420,
-	   "A newsrc file exists but is unparsable.")
+ResDef(MK_MSG_NEWSRC_UNPARSABLE,            -420,
+       "A newsrc file exists but is unparsable.")
 
-ResDef(MK_MSG_NO_RETURN_ADDRESS,			-421,
-	   "Your email address has not been specified.\n\
-Before sending mail or discussion messages, you must specify a\n\
-return address in Mail and Groups Preferences.")
+ResDef(MK_MSG_NO_RETURN_ADDRESS,            -421,
+       "Your email address has not been specified.\n\
+Before sending mail or news messages, you must specify a\n\
+return address in Mail and News Preferences.")
 
 #if 0
 /* Windows and Mac resource only understand 254 chars per string */
-ResDef(MK_MSG_NO_RETURN_ADDRESS_AT,			-421,
-	   "The return email address set in Preferences is: %s\n\
+ResDef(MK_MSG_NO_RETURN_ADDRESS_AT,         -421,
+       "The return email address set in Preferences is: %s\n\
 \n\
 This does not appear to be complete (it contains no `@' and host name.)\n\
 A valid email address will be of the form `USER@HOST', where USER is\n\
@@ -676,8 +697,8 @@ name will have at least one `.' in it, and will usually end in `.com',\n\
 your full email address is, please consult your system administrator.")
 
 /* Windows and Mac resource only understand 254 chars per string */
-ResDef(MK_MSG_NO_RETURN_ADDRESS_DOT,		-422,
-	   "The return email address set in Preferences is: %s\n\
+ResDef(MK_MSG_NO_RETURN_ADDRESS_DOT,        -422,
+       "The return email address set in Preferences is: %s\n\
 \n\
 This does not appear to be complete (it contains no `.' in the host name.)\n\
 A valid email address will be of the form `USER@HOST', where USER is\n\
@@ -687,54 +708,54 @@ name will have at least one `.' in it, and will usually end in `.com',\n\
 `.edu', `.net', or a two-letter country code.  If you are unsure what\n\
 your full email address is, please consult your system administrator.")
 #else
-ResDef(MK_MSG_NO_RETURN_ADDRESS_AT,			-423,
-	   "The return email address set in Preferences is: %s\n\
+ResDef(MK_MSG_NO_RETURN_ADDRESS_AT,         -423,
+       "The return email address set in Preferences is: %s\n\
 \n\
 This appears to be incomplete (it contains no `@').  Examples of\n\
 correct email addresses are `fred@xyz.com' and `sue@xyz.gov.au'.")
 
-ResDef(MK_MSG_NO_RETURN_ADDRESS_DOT,		-424,
-	   "The return email address set in Preferences is: %s\n\
+ResDef(MK_MSG_NO_RETURN_ADDRESS_DOT,        -424,
+       "The return email address set in Preferences is: %s\n\
 \n\
 This appears to be incomplete (it contains no `.').  Examples of\n\
 correct email addresses are `fred@xyz.com' and `sue@xyz.gov.au'.")
 #endif
 
 ResDef(MK_MSG_NO_SMTP_HOST,-425,
-          "No SMTP server has been specified in Mail and Groups Preferences.")
+          "No outgoing mail (SMTP) server has been specified in Mail and News Preferences.")
 
-ResDef(MK_NNTP_CANCEL_CONFIRM,			-426,
-	   "Are you sure you want to cancel this message?")
+ResDef(MK_NNTP_CANCEL_CONFIRM,          -426,
+       "Are you sure you want to cancel this message?")
 
-ResDef(MK_NNTP_CANCEL_DISALLOWED,		-427,
-	   "This message does not appear to be from you.\n\
+ResDef(MK_NNTP_CANCEL_DISALLOWED,       -427,
+       "This message does not appear to be from you.\n\
 You may only cancel your own posts, not those made by others.")
 
-ResDef(MK_NNTP_CANCEL_ERROR,			-428,
-	   "Unable to cancel message!")
+ResDef(MK_NNTP_CANCEL_ERROR,            -428,
+       "Unable to cancel message!")
 
-ResDef(MK_NNTP_NOT_CANCELLED,			-429,
-	   "Message not cancelled.")
+ResDef(MK_NNTP_NOT_CANCELLED,           -429,
+       "Message not cancelled.")
 
-ResDef(MK_NEWS_ERROR_FMT,				-430,
-	   "Error!\nDiscussion group server responded: %.512s\n")
+ResDef(MK_NEWS_ERROR_FMT,               -430,
+       "Error!\nNews server responded: %.512s\n")
 
 
-ResDef(MK_MSG_NON_MAIL_FILE_READ_QUESTION,	-431,
-	   "%.300s does not appear to be a mail file.\n\
+ResDef(MK_MSG_NON_MAIL_FILE_READ_QUESTION,  -431,
+       "%.300s does not appear to be a mail file.\n\
 Attempt to read it anyway?")
 
-ResDef(MK_MSG_NON_MAIL_FILE_WRITE_QUESTION,	-432,
-	   "%.300s does not appear to be a mail file.\n\
+ResDef(MK_MSG_NON_MAIL_FILE_WRITE_QUESTION, -432,
+       "%.300s does not appear to be a mail file.\n\
 Attempt to write it anyway?")
 
-ResDef(MK_MSG_ERROR_WRITING_NEWSRC,			-433,
-	   "Error saving newsrc file!")
+ResDef(MK_MSG_ERROR_WRITING_NEWSRC,         -433,
+       "Error saving newsrc file!")
 
-ResDef(MK_MSG_ERROR_WRITING_MAIL_FOLDER,	-434,
-	   "Error writing mail file!")
+ResDef(MK_MSG_ERROR_WRITING_MAIL_FOLDER,    -434,
+       "Error writing mail file!")
 
-ResDef(MK_MSG_OFFER_COMPRESS, 			-435,
+ResDef(MK_MSG_OFFER_COMPRESS,           -435,
        "At least one of your mail folders is wasting a lot\n\
 of disk space.  If you compress your Mail folders now,\n\
 you can recover %ld Kbytes of disk space. Compressing\n\
@@ -742,14 +763,14 @@ folders might take a while.\n\
 \n\
 Compress folders now?")
 
-ResDef(MK_MSG_SEARCH_FAILED,			-436,
+ResDef(MK_MSG_SEARCH_FAILED,            -436,
        "Not found.")
 
-ResDef(MK_MSG_EMPTY_MESSAGE,			-437,
+ResDef(MK_MSG_EMPTY_MESSAGE,            -437,
        "You haven't typed anything, and there is no attachment.\n\
 Send anyway?")
 
-ResDef(MK_MSG_DOUBLE_INCLUDE,			-438,
+ResDef(MK_MSG_DOUBLE_INCLUDE,           -438,
        "You have included the same document twice: first as a quoted\n\
 document (meaning: with '>' at the beginning of each line), and\n\
 then as an attachment (meaning: as a second part of the message,\n\
@@ -784,75 +805,80 @@ corrected.")
 #endif
 
 
-ResDef(MK_MSG_MISSING_SUBJECT,			-441,
+ResDef(MK_MSG_MISSING_SUBJECT,          -441,
        "This message has no subject.  Send anyway?")
 
-ResDef(MK_MSG_MIXED_SECURITY,			-442,
+ResDef(MK_MSG_MIXED_SECURITY,           -442,
        "It will not be possible to send this message encrypted to all of the\n\
 addressees.  Send it anyway?")
 
-ResDef (MK_MSG_CAN_ONLY_DELETE_MAIL_FOLDERS, 	-443,
-	"Can only delete mail folders.")
+ResDef (MK_MSG_CAN_ONLY_DELETE_MAIL_FOLDERS,    -443,
+    "Can only delete mail folders.")
 
-ResDef(MK_MSG_FOLDER_BUSY,				-444,
+ResDef(MK_MSG_FOLDER_BUSY,              -444,
 "Can't copy messages because the mail folder is in use.\n\
 Please wait until other copy operations are \n\
 complete and try again.\n" )
 
-ResDef(MK_MSG_PANES_OPEN_ON_FOLDER,		-445,
+ResDef(MK_MSG_PANES_OPEN_ON_FOLDER,     -445,
 "Can't delete message folder '%s\' because you are viewing\n\
 its contents. Please close those windows and try again.")
 
-ResDef(MK_MSG_INCOMPLETE_NEWSGROUP_LIST,	-446,
-"The complete list of discussion groups was not retrieved for\n\
-this discussion group server. Operations will not proceed normally\n\
-until all discussion groups have been retrieved.\n\
+ResDef(MK_MSG_INCOMPLETE_NEWSGROUP_LIST,    -446,
+"The complete list of newsgroups was not retrieved for\n\
+this news server. Operations will not proceed normally\n\
+until all newsgroups have been retrieved.\n\
 \n\
-Click on the 'All Groups' tab to continue retrieving\n\
-discussion groups.")
+Click on the 'All Newsgroups' tab to continue retrieving\n\
+newsgroups.")
 
-ResDef(MK_MSG_ONLINE_IMAP_WITH_NO_BODY,		-447,
-"This IMAP message cannot be moved while offline.  It has no attached body.")
+ResDef(MK_MSG_ONLINE_IMAP_WITH_NO_BODY,     -447,
+"This message cannot be moved while Communicator is offline.\n\
+It has not been downloaded for offline reading.\n\
+Select Go Online from the File menu, then try again.")
 
-ResDef(MK_MSG_ONLINE_COPY_FAILED,		-448,
+ResDef(MK_MSG_ONLINE_COPY_FAILED,       -448,
 "The IMAP message copy failed.  A source message was not found.")
 
-ResDef(MK_MSG_ONLINE_MOVE_FAILED,		-449,
+ResDef(MK_MSG_ONLINE_MOVE_FAILED,       -449,
 "The IMAP message move failed.\n\
 The copy succeeded but a source message was not deleted.")
 
-ResDef(MK_MSG_CONFIRM_CONTINUE_IMAP_SYNC,		-450,
-"A playback operation failed. Continue?\n")
+ResDef(MK_MSG_CONFIRM_CONTINUE_IMAP_SYNC,       -450,
+"A problem has occured uploading an offline change.\n\
+ Continue uploading remaining offline changes (OK) \n\
+ or try again later (Cancel)")
 
-ResDef(MK_MSG_CANT_MOVE_INBOX,		-451,
+ResDef(MK_MSG_CANT_MOVE_INBOX,      -451,
 "You cannot move your Inbox Folder.")
 
-ResDef(MK_MSG_CANT_FIND_SNM,		-452,
+ResDef(MK_MSG_CANT_FIND_SNM,        -452,
 "Could not find the summary information\n\
  for the %s IMAP folder.")
 
-ResDef(MK_MSG_NO_UNDO_DURING_IMAP_FOLDER_LOAD,		-453,
+ResDef(MK_MSG_NO_UNDO_DURING_IMAP_FOLDER_LOAD,      -453,
 "You cannot undo or redo a folder action while\n\
- the folder is loading.")
+ the folder is loading.  Wait until the folder has\n\
+ finished loading, then try again.")
 
-ResDef(MK_MSG_MOVE_TARGET_NO_INFERIORS,		-454,
+ResDef(MK_MSG_MOVE_TARGET_NO_INFERIORS,     -454,
 "The targeted destination folder does not allow subfolders.")
 
-ResDef(MK_MSG_PARENT_TARGET_NO_INFERIORS,		-455,
+ResDef(MK_MSG_PARENT_TARGET_NO_INFERIORS,       -455,
 "The selected parent folder does not allow subfolders.\n\
  Try selecting the server folder and typing\n\
  'parent/newFolder' to create a new hierarchy.")
 
-ResDef(MK_MSG_COPY_TARGET_NO_SELECT,		-456,
+ResDef(MK_MSG_COPY_TARGET_NO_SELECT,        -456,
 "The targeted destination folder cannot hold messages.")
 
-ResDef(MK_MSG_TRASH_NO_INFERIORS,		-457,
+ResDef(MK_MSG_TRASH_NO_INFERIORS,       -457,
 "This mail server cannot undo folder deletes, delete anyway?")
 
-ResDef(MK_MSG_CANT_COPY_TO_QUEUE_FOLDER_OLD,	-458,
-	   "Cannot copy messages into the 'Outbox' folder:\n\
-That folder is only for holding messages which\n\
-have been deferred for later delivery.")
+ResDef(MK_MSG_CANT_COPY_TO_QUEUE_FOLDER_OLD,    -458,
+       "Cannot copy messages into the 'Outbox' folder:\n\
+That folder is only for storing messages\n\
+to be sent later.")
 
 ResDef(MK_MSG_DELIVERY_FAILURE_1_OLD,                -459,
        "Delivery failed for 1 message.\n\n\
@@ -867,27 +893,26 @@ Before they can be delivered, the errors must be\n\
 corrected.")
 
 ResDef(MK_MSG_NO_MAIL_TO_NEWS,                -461,
-       "You can't move a mail folder into a discussion group.")
+       "You can't move a mail folder into a newsgroup.")
 
 ResDef(MK_MSG_NO_NEWS_TO_MAIL,                -462,
-       "You can't move a discussion group into a mail folder.")
+       "You can't move a newsgroup into a mail folder.")
 
 ResDef(MK_MSG_BOGUS_SERVER_MAILBOX_UID_STATE,                -463,
        "Mail Server Problem: The UID's for the messages in this\n\
-       folder are not increasing.  Contact your sysadmin.")
+       folder are not increasing.  Contact your system administrator.")
 
 ResDef(MK_MSG_IMAP_SERVER_NOT_IMAP4,                -464,
        "This mail server is not an IMAP4 mail server.")
 
-ResDef(MK_MSG_HTML_IMAP_NO_CACHED_BODY, 				-465,
-"<TITLE>IMAP Go Online!</TITLE>\n\
+ResDef(MK_MSG_HTML_IMAP_NO_CACHED_BODY,                 -465,
+"<TITLE>Go Online to View This Message</TITLE>\n\
 The body of this message has not been downloaded from \n\
 the server for reading offline. To read this message \n\
-you must first go online using the 'Go Online' menu item \n\
-in the File menu and view the message again.")
+select 'Go Online' from the File menu and view the message again.")
 
 ResDef(MK_MSG_COMPRESS_FAILED,                  -466,
-	   "Compress failed.")
+       "Compress failed.")
 
 ResDef(MK_MSG_LOTS_NEW_IMAP_FOLDERS,                  -467,
 "At least 30 new IMAP folders have been found.\n\
@@ -896,10 +921,10 @@ Press <OK> to continue or <cancel> to change\n\
 the IMAP server directory.")
 
 ResDef(MK_MSG_IMAP_DIR_PROMPT,                  -468,
-	   "Enter IMAP server directory name.")
+       "Enter IMAP server directory name.")
 
 ResDef(MK_MSG_NO_POST_TO_DIFFERENT_HOSTS_ALLOWED,    -469,
-"Posting to discussion groups on different hosts is not supported.")
+"Posting to newsgroups on different hosts is not supported.")
 
 ResDef(MK_MSG_CANT_MOVE_OFFLINE_MOVE_RESULT,    -470,
 "This message was moved here while offline.  You have to \n\
@@ -913,11 +938,25 @@ ResDef(MK_MSG_MAIL_DIRECTORY_CHANGED,    -472,
 will take effect the next time\n\
 you restart Communicator.")
 
+ResDef(MK_MSG_UNABLE_TO_SAVE_DRAFT, -473,
+MOZ_NAME_BRAND" is unable to save your message as draft.\n\
+Please verify that your Mail preferences are correct\n\
+and try again.")
+
+ResDef(MK_MSG_UNABLE_TO_SAVE_TEMPLATE, -474,
+MOZ_NAME_BRAND" is unable to save your message as template.\n\
+Please verify that your Mail preferences are correct\n\
+and try again.")
+
+ResDef(MK_SENDMAIL_BAD_TLS,      -475,
+"Your SMTP mail server could not start a secure connection.\n\
+You have requested to send mail ONLY in secure mode and therefore \
+the connection has been aborted. Please check your preferences.")
+
 END_STR(mcom_include_merrors_i_strings)
 
 /* WARNING: DO NOT TAKE ERROR CODE -666, it is used internally
    by the message lib */
-
 
 /* General security error codes  */
 
@@ -927,142 +966,142 @@ END_STR(mcom_include_merrors_i_strings)
 RES_START
 BEGIN_STR(mcom_include_secerr_i_strings)
 
-ResDef(SEC_ERROR_IO,				SEC_ERROR_BASE + 0,
+ResDef(SEC_ERROR_IO,                SEC_ERROR_BASE + 0,
 "An I/O error occurred during security authorization.\n\
 Please try your connection again")
 
-ResDef(SEC_ERROR_LIBRARY_FAILURE,		SEC_ERROR_BASE + 1,
+ResDef(SEC_ERROR_LIBRARY_FAILURE,       SEC_ERROR_BASE + 1,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_BAD_DATA,			SEC_ERROR_BASE + 2,
+ResDef(SEC_ERROR_BAD_DATA,          SEC_ERROR_BASE + 2,
 "The security library has received bad data.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_OUTPUT_LEN,			SEC_ERROR_BASE + 3,
+ResDef(SEC_ERROR_OUTPUT_LEN,            SEC_ERROR_BASE + 3,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_INPUT_LEN,			SEC_ERROR_BASE + 4,
+ResDef(SEC_ERROR_INPUT_LEN,         SEC_ERROR_BASE + 4,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_INVALID_ARGS,			SEC_ERROR_BASE + 5,
+ResDef(SEC_ERROR_INVALID_ARGS,          SEC_ERROR_BASE + 5,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_INVALID_ALGORITHM,		SEC_ERROR_BASE + 6,
+ResDef(SEC_ERROR_INVALID_ALGORITHM,     SEC_ERROR_BASE + 6,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_INVALID_AVA,			SEC_ERROR_BASE + 7,
+ResDef(SEC_ERROR_INVALID_AVA,           SEC_ERROR_BASE + 7,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_INVALID_TIME,			SEC_ERROR_BASE + 8,
+ResDef(SEC_ERROR_INVALID_TIME,          SEC_ERROR_BASE + 8,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_BAD_DER,			SEC_ERROR_BASE + 9,
+ResDef(SEC_ERROR_BAD_DER,           SEC_ERROR_BASE + 9,
 "The security library has encountered an improperly formatted\n\
 DER-encoded message.")
 
-ResDef(SEC_ERROR_BAD_SIGNATURE,			SEC_ERROR_BASE + 10,
+ResDef(SEC_ERROR_BAD_SIGNATURE,         SEC_ERROR_BASE + 10,
 "The server's certificate has an invalid signature.\n\
 You will not be able to connect to this site securely.")
 
-ResDef(SEC_ERROR_EXPIRED_CERTIFICATE,		SEC_ERROR_BASE + 11,
+ResDef(SEC_ERROR_EXPIRED_CERTIFICATE,       SEC_ERROR_BASE + 11,
 "This operation cannot be performed because a required\n\
 certificate has expired.  Click on the `Security' icon\n\
 for more information about certificates.")
 
-ResDef(SEC_ERROR_REVOKED_CERTIFICATE,		SEC_ERROR_BASE + 12,
+ResDef(SEC_ERROR_REVOKED_CERTIFICATE,       SEC_ERROR_BASE + 12,
 "This operation cannot be performed because a required\n\
 certificate has been revoked.  Click on the `Security'\n\
 icon for more information about certificates.")
 
-ResDef(SEC_ERROR_UNKNOWN_ISSUER,		SEC_ERROR_BASE + 13,
+ResDef(SEC_ERROR_UNKNOWN_ISSUER,        SEC_ERROR_BASE + 13,
 "The certificate issuer for this server is not recognized by\n\
 "MOZ_NAME_PRODUCT". The security certificate may or may not be valid.\n\n\
 "MOZ_NAME_PRODUCT" refuses to connect to this server.")
 
-ResDef(SEC_ERROR_BAD_KEY,			SEC_ERROR_BASE + 14,
+ResDef(SEC_ERROR_BAD_KEY,           SEC_ERROR_BASE + 14,
 "The server's public key is invalid.\n\
 You will not be able to connect to this site securely.")
 
-ResDef(SEC_ERROR_BAD_PASSWORD,			SEC_ERROR_BASE + 15,
+ResDef(SEC_ERROR_BAD_PASSWORD,          SEC_ERROR_BASE + 15,
 "The security password entered is incorrect.")
 
-ResDef(SEC_ERROR_RETRY_PASSWORD,		SEC_ERROR_BASE + 16,
+ResDef(SEC_ERROR_RETRY_PASSWORD,        SEC_ERROR_BASE + 16,
 "You did not enter your new password correctly.  Please try again.")
 
-ResDef(SEC_ERROR_NO_NODELOCK,			SEC_ERROR_BASE + 17,
+ResDef(SEC_ERROR_NO_NODELOCK,           SEC_ERROR_BASE + 17,
 "The security library has experienced an error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_BAD_DATABASE,			SEC_ERROR_BASE + 18,
+ResDef(SEC_ERROR_BAD_DATABASE,          SEC_ERROR_BASE + 18,
 "The security library has experienced a database error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_NO_MEMORY,			SEC_ERROR_BASE + 19,
+ResDef(SEC_ERROR_NO_MEMORY,         SEC_ERROR_BASE + 19,
 "The security library has experienced an out of memory error.\n\
 Please try to reconnect.")
 
-ResDef(SEC_ERROR_UNTRUSTED_ISSUER,		SEC_ERROR_BASE + 20,
+ResDef(SEC_ERROR_UNTRUSTED_ISSUER,      SEC_ERROR_BASE + 20,
 "The certificate issuer for this server has been marked as\n\
 not trusted by the user.  "MOZ_NAME_PRODUCT" refuses to connect to this\n\
 server.")
 
-ResDef(SEC_ERROR_UNTRUSTED_CERT,		SEC_ERROR_BASE + 21,
+ResDef(SEC_ERROR_UNTRUSTED_CERT,        SEC_ERROR_BASE + 21,
 "The certificate for this server has been marked as not\n\
 trusted by the user.  "MOZ_NAME_PRODUCT" refuses to connect to this\n\
 server.")
 
-ResDef(SEC_ERROR_DUPLICATE_CERT,		(SEC_ERROR_BASE + 22),
+ResDef(SEC_ERROR_DUPLICATE_CERT,        (SEC_ERROR_BASE + 22),
 "The Certificate that you are trying to download\n\
 already exists in your database.")
 
-ResDef(SEC_ERROR_DUPLICATE_CERT_NAME,		(SEC_ERROR_BASE + 23),
+ResDef(SEC_ERROR_DUPLICATE_CERT_NAME,       (SEC_ERROR_BASE + 23),
 "You are trying to download a certificate whose name\n\
 is the same as one that already exists in your database.\n\
 If you want to download the new certificate you should\n\
 delete the old one first.")
 
-ResDef(SEC_ERROR_ADDING_CERT,			(SEC_ERROR_BASE + 24),
+ResDef(SEC_ERROR_ADDING_CERT,           (SEC_ERROR_BASE + 24),
 "Error adding certificate to your database")
 
-ResDef(SEC_ERROR_FILING_KEY,			(SEC_ERROR_BASE + 25),
+ResDef(SEC_ERROR_FILING_KEY,            (SEC_ERROR_BASE + 25),
 "Error refiling the key for this certificate")
 
-ResDef(SEC_ERROR_NO_KEY,			(SEC_ERROR_BASE + 26),
+ResDef(SEC_ERROR_NO_KEY,            (SEC_ERROR_BASE + 26),
 "The Private Key for this certificate can\n\
 not be found in your key database")
 
-ResDef(SEC_ERROR_CERT_VALID,			(SEC_ERROR_BASE + 27),
+ResDef(SEC_ERROR_CERT_VALID,            (SEC_ERROR_BASE + 27),
 "This certificate is valid.")
 
-ResDef(SEC_ERROR_CERT_NOT_VALID,		(SEC_ERROR_BASE + 28),
+ResDef(SEC_ERROR_CERT_NOT_VALID,        (SEC_ERROR_BASE + 28),
 "This certificate is not valid.")
 
-ResDef(SEC_ERROR_CERT_NO_RESPONSE,		(SEC_ERROR_BASE + 29),
+ResDef(SEC_ERROR_CERT_NO_RESPONSE,      (SEC_ERROR_BASE + 29),
 "No Response")
 
-ResDef(SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE,		(SEC_ERROR_BASE + 30),
+ResDef(SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE,        (SEC_ERROR_BASE + 30),
 "The certificate authority that issued this site's\n\
 certificate has expired.\n\
 Check your system date and time.")
 
-ResDef(SEC_ERROR_CRL_EXPIRED,		(SEC_ERROR_BASE + 31),
+ResDef(SEC_ERROR_CRL_EXPIRED,       (SEC_ERROR_BASE + 31),
 "The certificate revocation list for this certificate authority\n\
 that issued this site's certificate has expired.\n\
 Reload a new certificate revocation list or check your system data and time.")
 
-ResDef(SEC_ERROR_CRL_BAD_SIGNATURE,		(SEC_ERROR_BASE + 32),
+ResDef(SEC_ERROR_CRL_BAD_SIGNATURE,     (SEC_ERROR_BASE + 32),
 "The certificate revocation list for this certificate authority\n\
 that issued this site's certificate has an invalid signature.\n\
 Reload a new certificate revocation list.")
 
-ResDef(SEC_ERROR_CRL_INVALID,		(SEC_ERROR_BASE + 33),
+ResDef(SEC_ERROR_CRL_INVALID,       (SEC_ERROR_BASE + 33),
 "The certificate revocation list you are trying to load has\n\
 an invalid format.")
 
@@ -1082,240 +1121,240 @@ ResDef(SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID,(SEC_ERROR_BASE + 37),
 ResDef(SEC_ERROR_CERT_USAGES_INVALID,(SEC_ERROR_BASE + 38),
 "Certificate usages is invalid.")
 
-ResDef(SEC_INTERNAL_ONLY,		(SEC_ERROR_BASE + 39),
+ResDef(SEC_INTERNAL_ONLY,       (SEC_ERROR_BASE + 39),
 "**Internal ONLY module**")
 
-ResDef(SEC_ERROR_INVALID_KEY,		(SEC_ERROR_BASE + 40),
+ResDef(SEC_ERROR_INVALID_KEY,       (SEC_ERROR_BASE + 40),
 "The system tried to use a key which does not support\n\
 the requested operation.")
 
 ResDef(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,(SEC_ERROR_BASE + 41),
 "Certificate contains unknown critical extension.")
 
-ResDef(SEC_ERROR_OLD_CRL,		(SEC_ERROR_BASE + 42),
+ResDef(SEC_ERROR_OLD_CRL,       (SEC_ERROR_BASE + 42),
 "The certificate revocation list you are trying to load is not\n\
 later than the current one.")
 
-ResDef(SEC_ERROR_NO_EMAIL_CERT,		(SEC_ERROR_BASE + 43),
+ResDef(SEC_ERROR_NO_EMAIL_CERT,     (SEC_ERROR_BASE + 43),
 "This message cannot be encrypted or signed because you do not\n\
 yet have an email certificate.  Click on the `Security' icon for more\n\
 information about certificates.")
 
-ResDef(SEC_ERROR_NO_RECIPIENT_CERTS_QUERY,	(SEC_ERROR_BASE + 44),
+ResDef(SEC_ERROR_NO_RECIPIENT_CERTS_QUERY,  (SEC_ERROR_BASE + 44),
 "This message cannot be encrypted because you do not have\n\
 certificates for each of the recipients.  Clicking on the\n\
 `Security' icon will give you more information.\n\
 \n\
 Turn off encryption and send the message anyway?")
 
-ResDef(SEC_ERROR_NOT_A_RECIPIENT,	(SEC_ERROR_BASE + 45),
+ResDef(SEC_ERROR_NOT_A_RECIPIENT,   (SEC_ERROR_BASE + 45),
 "The data cannot be decrypted because you are not a recipient;\n\
 either it was not intended for you, or a matching certificate or\n\
 Private Key cannot be found in your local database.")
 
-ResDef(SEC_ERROR_PKCS7_KEYALG_MISMATCH,	(SEC_ERROR_BASE + 46),
+ResDef(SEC_ERROR_PKCS7_KEYALG_MISMATCH, (SEC_ERROR_BASE + 46),
 "The data cannot be decrypted because the key encryption\n\
 algorithm it used does not match that of your certificate.")
 
-ResDef(SEC_ERROR_PKCS7_BAD_SIGNATURE,	(SEC_ERROR_BASE + 47),
+ResDef(SEC_ERROR_PKCS7_BAD_SIGNATURE,   (SEC_ERROR_BASE + 47),
 "Signature verification failed due to no signer found,\n\
 too many signers found, or improper or corrupted data.")
 
-ResDef(SEC_ERROR_UNSUPPORTED_KEYALG,	(SEC_ERROR_BASE + 48),
+ResDef(SEC_ERROR_UNSUPPORTED_KEYALG,    (SEC_ERROR_BASE + 48),
 "An unsupported or unknown key algorithm was encountered;\n\
 the current operation cannot be completed.")
 
-ResDef(SEC_ERROR_DECRYPTION_DISALLOWED,	(SEC_ERROR_BASE + 49),
+ResDef(SEC_ERROR_DECRYPTION_DISALLOWED, (SEC_ERROR_BASE + 49),
 "The data cannot be decrypted because it was encrypted using an\n\
 algorithm or key size which is not allowed by this configuration.")
 
 
 #ifdef FORTEZZA
 /* Fortezza Alerts */
-ResDef(XP_SEC_FORTEZZA_BAD_CARD,		(SEC_ERROR_BASE + 50),
+ResDef(XP_SEC_FORTEZZA_BAD_CARD,        (SEC_ERROR_BASE + 50),
 "The Fortezza Card in Socket %d has not been properly initialized.\
  Please remove it and return it to your issuer.")
 
-ResDef(XP_SEC_FORTEZZA_NO_CARD,		(SEC_ERROR_BASE + 51),
+ResDef(XP_SEC_FORTEZZA_NO_CARD,     (SEC_ERROR_BASE + 51),
 "No cards Found")
 
-ResDef(XP_SEC_FORTEZZA_NONE_SELECTED,		(SEC_ERROR_BASE + 52),
+ResDef(XP_SEC_FORTEZZA_NONE_SELECTED,       (SEC_ERROR_BASE + 52),
 "No Card Selected")
 
-ResDef(XP_SEC_FORTEZZA_MORE_INFO,		(SEC_ERROR_BASE + 53),
+ResDef(XP_SEC_FORTEZZA_MORE_INFO,       (SEC_ERROR_BASE + 53),
 "Please Select a personality to get more info on")
 
-ResDef(XP_SEC_FORTEZZA_PERSON_NOT_FOUND,		(SEC_ERROR_BASE + 54),
+ResDef(XP_SEC_FORTEZZA_PERSON_NOT_FOUND,        (SEC_ERROR_BASE + 54),
 "Personality not found")
 
-ResDef(XP_SEC_FORTEZZA_NO_MORE_INFO,		(SEC_ERROR_BASE + 55),
+ResDef(XP_SEC_FORTEZZA_NO_MORE_INFO,        (SEC_ERROR_BASE + 55),
 "No more information on that Personality")
 
-ResDef(XP_SEC_FORTEZZA_BAD_PIN,		(SEC_ERROR_BASE + 56),
+ResDef(XP_SEC_FORTEZZA_BAD_PIN,     (SEC_ERROR_BASE + 56),
 "Invalid Pin")
 
-ResDef(XP_SEC_FORTEZZA_PERSON_ERROR,		(SEC_ERROR_BASE + 57),
+ResDef(XP_SEC_FORTEZZA_PERSON_ERROR,        (SEC_ERROR_BASE + 57),
 "Couldn't initialize personalities")
 #endif /* FORTEZZA */
 
-ResDef(SEC_ERROR_NO_KRL,		(SEC_ERROR_BASE + 58),
+ResDef(SEC_ERROR_NO_KRL,        (SEC_ERROR_BASE + 58),
 "No key revocation list for this site's certificate has been found.\n\
 You must load the key revocation list before continuing.")
 
-ResDef(SEC_ERROR_KRL_EXPIRED,		(SEC_ERROR_BASE + 59),
+ResDef(SEC_ERROR_KRL_EXPIRED,       (SEC_ERROR_BASE + 59),
 "The key revocation list for this site's certificate has expired.\n\
 Reload a new key revocation list.")
 
-ResDef(SEC_ERROR_KRL_BAD_SIGNATURE,		(SEC_ERROR_BASE + 60),
+ResDef(SEC_ERROR_KRL_BAD_SIGNATURE,     (SEC_ERROR_BASE + 60),
 "The key revocation list for this site's certificate has an invalid signature.\n\
 Reload a new key revocation list.")
 
-ResDef(SEC_ERROR_REVOKED_KEY,		(SEC_ERROR_BASE + 61),
+ResDef(SEC_ERROR_REVOKED_KEY,       (SEC_ERROR_BASE + 61),
 "The key for this site's certificate has been revoked.\n\
 You will be unable to access this site securely.")
 
-ResDef(SEC_ERROR_KRL_INVALID,		(SEC_ERROR_BASE + 62),
+ResDef(SEC_ERROR_KRL_INVALID,       (SEC_ERROR_BASE + 62),
 "The key revocation list you are trying to load has\n\
 an invalid format.")
 
-ResDef(SEC_ERROR_NEED_RANDOM,			(SEC_ERROR_BASE + 63),
+ResDef(SEC_ERROR_NEED_RANDOM,           (SEC_ERROR_BASE + 63),
 "The security library is out of random data.")
 
-ResDef(SEC_ERROR_NO_MODULE,			(SEC_ERROR_BASE + 64),
+ResDef(SEC_ERROR_NO_MODULE,         (SEC_ERROR_BASE + 64),
 "The security library could not find a security module which can\n\
 perform the requested operation.")
 
-ResDef(SEC_ERROR_NO_TOKEN,			(SEC_ERROR_BASE + 65),
+ResDef(SEC_ERROR_NO_TOKEN,          (SEC_ERROR_BASE + 65),
 "The security card or token does not exist, needs to be initialized\n\
 or has been removed.")
 
-ResDef(SEC_ERROR_READ_ONLY,			(SEC_ERROR_BASE + 66),
+ResDef(SEC_ERROR_READ_ONLY,         (SEC_ERROR_BASE + 66),
 "The security library has experienced a database error.\n\
 You will probably be unable to connect to this site securely.")
 
-ResDef(SEC_ERROR_NO_SLOT_SELECTED,		(SEC_ERROR_BASE + 67),
+ResDef(SEC_ERROR_NO_SLOT_SELECTED,      (SEC_ERROR_BASE + 67),
 "No slot or token was selected.")
 
-ResDef(SEC_ERROR_CERT_NICKNAME_COLLISION,	(SEC_ERROR_BASE + 68),
+ResDef(SEC_ERROR_CERT_NICKNAME_COLLISION,   (SEC_ERROR_BASE + 68),
 "A certificate with the same name already exists.")
 
-ResDef(SEC_ERROR_KEY_NICKNAME_COLLISION,	(SEC_ERROR_BASE + 69),
+ResDef(SEC_ERROR_KEY_NICKNAME_COLLISION,    (SEC_ERROR_BASE + 69),
 "A key with the same name already exists.")
 
-ResDef(SEC_ERROR_SAFE_NOT_CREATED,		(SEC_ERROR_BASE + 70),
+ResDef(SEC_ERROR_SAFE_NOT_CREATED,      (SEC_ERROR_BASE + 70),
 "An error occurred while creating safe object")
 
-ResDef(SEC_ERROR_BAGGAGE_NOT_CREATED,		(SEC_ERROR_BASE + 71),
+ResDef(SEC_ERROR_BAGGAGE_NOT_CREATED,       (SEC_ERROR_BASE + 71),
 "An error occurred while creating safe object")
 
-ResDef(XP_JAVA_REMOVE_PRINCIPAL_ERROR,		(SEC_ERROR_BASE + 72),
+ResDef(XP_JAVA_REMOVE_PRINCIPAL_ERROR,      (SEC_ERROR_BASE + 72),
 "Couldn't remove the principal")
 
-ResDef(XP_JAVA_DELETE_PRIVILEGE_ERROR,		(SEC_ERROR_BASE + 73),
+ResDef(XP_JAVA_DELETE_PRIVILEGE_ERROR,      (SEC_ERROR_BASE + 73),
 "Couldn't delete the privilege")
 
-ResDef(XP_JAVA_CERT_NOT_EXISTS_ERROR,		(SEC_ERROR_BASE + 74),
+ResDef(XP_JAVA_CERT_NOT_EXISTS_ERROR,       (SEC_ERROR_BASE + 74),
 "This principal doesn't have a certificate")
 
-ResDef(SEC_ERROR_BAD_EXPORT_ALGORITHM,		(SEC_ERROR_BASE + 75),
+ResDef(SEC_ERROR_BAD_EXPORT_ALGORITHM,      (SEC_ERROR_BASE + 75),
 "The operation cannot be performed because the required\n\
 algorithm is not allowed by this configuration.")
 
-ResDef(SEC_ERROR_EXPORTING_CERTIFICATES,	(SEC_ERROR_BASE + 76),
+ResDef(SEC_ERROR_EXPORTING_CERTIFICATES,    (SEC_ERROR_BASE + 76),
 "Unable to export certificates.  An error occurred attempting to\n\
 export the certificates.")
 
-ResDef(SEC_ERROR_IMPORTING_CERTIFICATES,	(SEC_ERROR_BASE + 77),
+ResDef(SEC_ERROR_IMPORTING_CERTIFICATES,    (SEC_ERROR_BASE + 77),
 "An error occurred attempting to import the certificates.")
 
-ResDef(SEC_ERROR_PKCS12_DECODING_PFX,		(SEC_ERROR_BASE + 78),
+ResDef(SEC_ERROR_PKCS12_DECODING_PFX,       (SEC_ERROR_BASE + 78),
 "Unable to import certificates.  The file specified is either\n\
 corrupt or is not a valid file.")
 
-ResDef(SEC_ERROR_PKCS12_INVALID_MAC,		(SEC_ERROR_BASE + 79),
+ResDef(SEC_ERROR_PKCS12_INVALID_MAC,        (SEC_ERROR_BASE + 79),
 "Unable to import certificates.  Either the integrity password\n\
 is incorrect or the data in the file specified has been tampered\n\
 with or corrupted in some manner.")
 
-ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_MAC_ALGORITHM,	(SEC_ERROR_BASE + 80),
+ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_MAC_ALGORITHM,  (SEC_ERROR_BASE + 80),
 "Unable to import certificates.  The algorithm used to generate the\n\
 integrity information for this file is not supported in the application.")
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_TRANSPORT_MODE,	(SEC_ERROR_BASE + 81),
+ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_TRANSPORT_MODE, (SEC_ERROR_BASE + 81),
 "Unable to import certificates.  "MOZ_NAME_PRODUCT" only supports password\n\
 integrity and password privacy modes for importing certificates.")
 #else
-ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_TRANSPORT_MODE,	(SEC_ERROR_BASE + 81),
+ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_TRANSPORT_MODE, (SEC_ERROR_BASE + 81),
 "Unable to import certificates.  Communicator only supports password\n\
 integrity and password privacy modes for importing certificates.")
 #endif
 
-ResDef(SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE,	(SEC_ERROR_BASE + 82),
+ResDef(SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE,  (SEC_ERROR_BASE + 82),
 "Unable to import certificates.  The file containing the certificates\n\
 is corrupt.  Required information is either missing or invalid.")
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_PBE_ALGORITHM, 	(SEC_ERROR_BASE + 83),
+ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_PBE_ALGORITHM,  (SEC_ERROR_BASE + 83),
 "Unable to import certificates.  The algorithm used to encrypt the\n\
 contents is not supported by "MOZ_NAME_PRODUCT".")
 #else
-ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_PBE_ALGORITHM, 	(SEC_ERROR_BASE + 83),
+ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_PBE_ALGORITHM,  (SEC_ERROR_BASE + 83),
 "Unable to import certificates.  The algorithm used to encrypt the\n\
 contents is not supported by Communicator.")
 #endif
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_VERSION,	(SEC_ERROR_BASE + 84),
+ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_VERSION,    (SEC_ERROR_BASE + 84),
 "Unable to import certificates.  The file is a version not supported by\n\
 "MOZ_NAME_PRODUCT".")
 #else
-ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_VERSION,	(SEC_ERROR_BASE + 84),
+ResDef(SEC_ERROR_PKCS12_UNSUPPORTED_VERSION,    (SEC_ERROR_BASE + 84),
 "Unable to import certificates.  The file is a version not supported by\n\
 Communicator.")
 #endif
 
-ResDef(SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT,	(SEC_ERROR_BASE + 85),
+ResDef(SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT, (SEC_ERROR_BASE + 85),
 "Unable to import certificates.  The privacy password specified is\n\
 incorrect.")
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(SEC_ERROR_PKCS12_CERT_COLLISION,		(SEC_ERROR_BASE + 86),
+ResDef(SEC_ERROR_PKCS12_CERT_COLLISION,     (SEC_ERROR_BASE + 86),
 "Unable to import certificates.  A certificate with the same nickname,\n\
 as one being imported already exists in your "MOZ_NAME_PRODUCT" database.")
 #else
-ResDef(SEC_ERROR_PKCS12_CERT_COLLISION,		(SEC_ERROR_BASE + 86),
+ResDef(SEC_ERROR_PKCS12_CERT_COLLISION,     (SEC_ERROR_BASE + 86),
 "Unable to import certificates.  A certificate with the same nickname,\n\
 as one being imported already exists in your Communicator database.")
 #endif
 
-ResDef(SEC_ERROR_USER_CANCELLED,		(SEC_ERROR_BASE + 87),
+ResDef(SEC_ERROR_USER_CANCELLED,        (SEC_ERROR_BASE + 87),
 "The user pressed cancel.")
 
-ResDef(SEC_ERROR_PKCS12_DUPLICATE_DATA,		(SEC_ERROR_BASE + 88),
+ResDef(SEC_ERROR_PKCS12_DUPLICATE_DATA,     (SEC_ERROR_BASE + 88),
 "Certificates could not be imported since they already exist on \
 the machine.")
 
-ResDef(SEC_ERROR_MESSAGE_SEND_ABORTED,		(SEC_ERROR_BASE + 89),
+ResDef(SEC_ERROR_MESSAGE_SEND_ABORTED,      (SEC_ERROR_BASE + 89),
 "Message not sent.")
 
-ResDef(SEC_ERROR_INADEQUATE_KEY_USAGE,	(SEC_ERROR_BASE + 90),
+ResDef(SEC_ERROR_INADEQUATE_KEY_USAGE,  (SEC_ERROR_BASE + 90),
 "The certificate is not approved for the attempted operation.")
 
-ResDef(SEC_ERROR_INADEQUATE_CERT_TYPE,	(SEC_ERROR_BASE + 91),
+ResDef(SEC_ERROR_INADEQUATE_CERT_TYPE,  (SEC_ERROR_BASE + 91),
 "The certificate is not approved for the attempted application.")
 
-ResDef(SEC_ERROR_CERT_ADDR_MISMATCH,		(SEC_ERROR_BASE + 92),
+ResDef(SEC_ERROR_CERT_ADDR_MISMATCH,        (SEC_ERROR_BASE + 92),
 "The email address in the signing certificate does not match\n\
 the email address in the message headers.  If these two\n\
 addresses do not belong to the same person, then this could\n\
 be an attempt at forgery.")
 
-ResDef(SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY,	(SEC_ERROR_BASE + 93),
+ResDef(SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY,   (SEC_ERROR_BASE + 93),
 "Unable to import certificates.  An error occurred while attempting\n\
 to import the Private Key associated with the certificate being imported.")
 
-ResDef(SEC_ERROR_PKCS12_IMPORTING_CERT_CHAIN,	(SEC_ERROR_BASE + 94),
+ResDef(SEC_ERROR_PKCS12_IMPORTING_CERT_CHAIN,   (SEC_ERROR_BASE + 94),
 "Unable to import certificates.  An error occurred while attempting\n\
 to import the certificate chain associated with the certificate\n\
 being imported.")
@@ -1324,37 +1363,37 @@ ResDef(SEC_ERROR_PKCS12_UNABLE_TO_LOCATE_OBJECT_BY_NAME,  (SEC_ERROR_BASE + 95),
 "Unable to export certificates.  An error occurred while trying to locate\n\
 a certificate or a key by its nickname.")
 
-ResDef(SEC_ERROR_PKCS12_UNABLE_TO_EXPORT_KEY,	(SEC_ERROR_BASE + 96),
+ResDef(SEC_ERROR_PKCS12_UNABLE_TO_EXPORT_KEY,   (SEC_ERROR_BASE + 96),
 "Unable to export certificates.  The Private Key associated with a\n\
 certificate could not be located or could not be exported from the\n\
 key database.")
 
-ResDef(SEC_ERROR_PKCS12_UNABLE_TO_WRITE, 	(SEC_ERROR_BASE + 97),
+ResDef(SEC_ERROR_PKCS12_UNABLE_TO_WRITE,    (SEC_ERROR_BASE + 97),
 "Unable to export certificates.  An error occurred while trying to write\n\
 the export file.  Make sure the destination drive is not full and try\n\
 exporting again.")
 
-ResDef(SEC_ERROR_PKCS12_UNABLE_TO_READ,		(SEC_ERROR_BASE + 98),
+ResDef(SEC_ERROR_PKCS12_UNABLE_TO_READ,     (SEC_ERROR_BASE + 98),
 "Unable to import certificates.  An error occurred while reading the\n\
 import file.  Please make sure the file exists and is not corrupt and\n\
 then try importing the file again.")
 
-ResDef(SEC_ERROR_PKCS12_KEY_DATABASE_NOT_INITIALIZED,	(SEC_ERROR_BASE + 99),
+ResDef(SEC_ERROR_PKCS12_KEY_DATABASE_NOT_INITIALIZED,   (SEC_ERROR_BASE + 99),
 "Unable to export certificates.  The database which contains\n\
 Private Keys has not been initialized.  Either your key database\n\
 is corrupt or has been deleted.  There is no key associated with\n\
 this certificate.")
 
-ResDef(SEC_ERROR_KEYGEN_FAIL,			(SEC_ERROR_BASE + 100),
+ResDef(SEC_ERROR_KEYGEN_FAIL,           (SEC_ERROR_BASE + 100),
 "Unable to generate Public/Private Key Pair.")
 
-ResDef(SEC_ERROR_INVALID_PASSWORD,		(SEC_ERROR_BASE + 101),
+ResDef(SEC_ERROR_INVALID_PASSWORD,      (SEC_ERROR_BASE + 101),
 "The password you entered is invalid.  Please pick a different one.")
 
-ResDef(SEC_ERROR_RETRY_OLD_PASSWORD,		(SEC_ERROR_BASE + 102),
+ResDef(SEC_ERROR_RETRY_OLD_PASSWORD,        (SEC_ERROR_BASE + 102),
 "You did not enter your old password correctly.  Please try again.")
 
-ResDef(SEC_ERROR_BAD_NICKNAME,			(SEC_ERROR_BASE + 103),
+ResDef(SEC_ERROR_BAD_NICKNAME,          (SEC_ERROR_BASE + 103),
 "The Certificate Name you entered is already in use by another certificate.")
 
 ResDef(SEC_ERROR_NOT_FORTEZZA_ISSUER,           (SEC_ERROR_BASE + 104),
@@ -1379,11 +1418,11 @@ ResDef(SEC_ERROR_JS_ADD_MOD_FAILURE, (SEC_ERROR_BASE + 108),
 ResDef(SEC_ERROR_JS_DEL_MOD_FAILURE, (SEC_ERROR_BASE + 109),
  "Unable to delete module")
 
-ResDef(SEC_ERROR_OLD_KRL,	     (SEC_ERROR_BASE + 110),
+ResDef(SEC_ERROR_OLD_KRL,        (SEC_ERROR_BASE + 110),
 "The key revocation list you are trying to load is not\n\
 later than the current one.")
  
-ResDef(SEC_ERROR_CKL_CONFLICT,	     (SEC_ERROR_BASE + 111),
+ResDef(SEC_ERROR_CKL_CONFLICT,       (SEC_ERROR_BASE + 111),
 "The CKL you are trying to load has a different issuer\n\
 than your current CKL.  You must first delete your\n\
 current CKL.")
@@ -1462,7 +1501,7 @@ ResDef(XP_DIALOG_CONTINUE_BUTTON_STRINGS, (SEC_DIALOG_STRING_BASE + 11), "\
 </div>")
 
 ResDef(XP_DIALOG_CANCEL_OK_BUTTON_STRINGS, 
-	(SEC_DIALOG_STRING_BASE + 12), "\
+    (SEC_DIALOG_STRING_BASE + 12), "\
 <div align=right><input type=\042button\042 value=\042%ok%\042 width=80 \
 onclick=\042parent.clicker(this,window.parent)\042>&nbsp;&nbsp;\
 <input type=\042button\042 value=\042%cancel%\042 width=80 \
@@ -1832,25 +1871,25 @@ ResDef(XP_PW_SETUP_STRINGS_5, (SEC_DIALOG_STRING_BASE + 72), "\
 preferences, choose Security Info from the Communicator menu.")
 #endif
 
-/* unused				(SEC_DIALOG_STRING_BASE + 73) */
+/* unused               (SEC_DIALOG_STRING_BASE + 73) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 74) */
+/* unused               (SEC_DIALOG_STRING_BASE + 74) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 75) */
+/* unused               (SEC_DIALOG_STRING_BASE + 75) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 76) */
+/* unused               (SEC_DIALOG_STRING_BASE + 76) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 77) */
+/* unused               (SEC_DIALOG_STRING_BASE + 77) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 78) */
+/* unused               (SEC_DIALOG_STRING_BASE + 78) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 79) */
+/* unused               (SEC_DIALOG_STRING_BASE + 79) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 80) */
+/* unused               (SEC_DIALOG_STRING_BASE + 80) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 81) */
+/* unused               (SEC_DIALOG_STRING_BASE + 81) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 82) */
+/* unused               (SEC_DIALOG_STRING_BASE + 82) */
 
 ResDef(XP_PW_SETUP_REFUSED_STRINGS, (SEC_DIALOG_STRING_BASE + 83), "\
 %sec-banner-begin%%0%%sec-banner-end%\
@@ -1861,74 +1900,74 @@ ResDef(XP_PW_SETUP_REFUSED_STRINGS_1, (SEC_DIALOG_STRING_BASE + 84), "\
 would like to have a password to protect your Private Keys and Certificates, \
 you can set up a password in Security Preferences.")
 
-ResDef(XP_PW_CHANGE_STRINGS,		(SEC_DIALOG_STRING_BASE + 85), "\
+ResDef(XP_PW_CHANGE_STRINGS,        (SEC_DIALOG_STRING_BASE + 85), "\
 %sec-banner-begin%%0%%sec-banner-end%\
 Change the password for the %1%.<p>Enter your old password: <input \
 %-cont-%")
 
-ResDef(XP_PW_CHANGE_STRINGS_1,		(SEC_DIALOG_STRING_BASE + 86), "\
+ResDef(XP_PW_CHANGE_STRINGS_1,      (SEC_DIALOG_STRING_BASE + 86), "\
 type=password name=password value=%2%><P><P>Enter your new password.  Leave \
 the password fields blank if you don't want a password.<p><table><tr><td>\
 %-cont-%")
 
-ResDef(XP_PW_CHANGE_STRINGS_2,		(SEC_DIALOG_STRING_BASE + 87), "\
+ResDef(XP_PW_CHANGE_STRINGS_2,      (SEC_DIALOG_STRING_BASE + 87), "\
 New Password:</td><td><input type=password name=password1></td></tr><tr>\
 <td>Type it again to confirm:</td><td><input type=password name=password2>\
 %-cont-%")
 
-ResDef(XP_PW_CHANGE_STRINGS_3,		(SEC_DIALOG_STRING_BASE + 88), "\
+ResDef(XP_PW_CHANGE_STRINGS_3,      (SEC_DIALOG_STRING_BASE + 88), "\
 </td></tr></table><p><B>Important: Your password cannot be recovered.  If \
 you forget it, you will lose all of your certificates.</B>")
 
-/* unused				(SEC_DIALOG_STRING_BASE + 89) */
+/* unused               (SEC_DIALOG_STRING_BASE + 89) */
 
-ResDef(XP_PW_CHANGE_FAILURE_STRINGS,	(SEC_DIALOG_STRING_BASE + 90), "\
+ResDef(XP_PW_CHANGE_FAILURE_STRINGS,    (SEC_DIALOG_STRING_BASE + 90), "\
 %sec-banner-begin%%0%%sec-banner-end%\
 Your attempt to change your password failed.<p>This may be because your \
 %-cont-%")
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(XP_PW_CHANGE_FAILURE_STRINGS_1,	(SEC_DIALOG_STRING_BASE + 91), "\
+ResDef(XP_PW_CHANGE_FAILURE_STRINGS_1,  (SEC_DIALOG_STRING_BASE + 91), "\
 key database is inaccessible (which can happen if you were already \
 running a "MOZ_NAME_PRODUCT" when you started this one), or because of some other \
 %-cont-%")
 #else
-ResDef(XP_PW_CHANGE_FAILURE_STRINGS_1,	(SEC_DIALOG_STRING_BASE + 91), "\
+ResDef(XP_PW_CHANGE_FAILURE_STRINGS_1,  (SEC_DIALOG_STRING_BASE + 91), "\
 key database is inaccessible (which can happen if you were already \
 running a Communicator when you started this one), or because of some other \
 %-cont-%")
 #endif
 
-ResDef(XP_PW_CHANGE_FAILURE_STRINGS_2,	(SEC_DIALOG_STRING_BASE + 92), "\
+ResDef(XP_PW_CHANGE_FAILURE_STRINGS_2,  (SEC_DIALOG_STRING_BASE + 92), "\
 error.<p>It may indicate that your key database file has been corrupted, \
 in which case you should try to get it from of a backup, if possible. As \
 %-cont-%")
 
-ResDef(XP_PW_CHANGE_FAILURE_STRINGS_3,	(SEC_DIALOG_STRING_BASE + 93), "\
+ResDef(XP_PW_CHANGE_FAILURE_STRINGS_3,  (SEC_DIALOG_STRING_BASE + 93), "\
 a last resort, you may need to delete your key database, after which you \
 will have to obtain new personal Certificates.")
 
 ResDef(XP_DIALOG_CANCEL_OK_MOREINFO_BUTTON_STRINGS, 
-	(SEC_DIALOG_STRING_BASE + 94), "\
+    (SEC_DIALOG_STRING_BASE + 94), "\
 <table border=0 cellpadding=0 cellspacing=0 width=\042100%%\042><td>\
 <input type=\042button\042 value=\042%moreinfo%\042 width=80 \
 onclick=\042parent.clicker(this,window.parent)\042></td>\
 %-cont-%")
 
 ResDef(XP_DIALOG_CANCEL_OK_MOREINFO_BUTTON_STRINGS_1,
-	(SEC_DIALOG_STRING_BASE + 95), "\
+    (SEC_DIALOG_STRING_BASE + 95), "\
 <td align=\042right\042 nowrap><input type=\042button\042 value=\042%ok%\042 \
 width=80 onclick=\042parent.clicker(this,window.parent)\042>&nbsp;&nbsp;\
 %-cont-%")
 
 ResDef(XP_DIALOG_CANCEL_OK_MOREINFO_BUTTON_STRINGS_2, 
-	(SEC_DIALOG_STRING_BASE + 96),"\
+    (SEC_DIALOG_STRING_BASE + 96),"\
 <input type=\042button\042 value=\042%cancel%\042 width=80 \
 onclick=\042parent.clicker(this,window.parent)\042></td></table>")
 
-/* unused				(SEC_DIALOG_STRING_BASE + 97) */
+/* unused               (SEC_DIALOG_STRING_BASE + 97) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 98) */
+/* unused               (SEC_DIALOG_STRING_BASE + 98) */
 
 ResDef(XP_PANEL_ONLY_BUTTON_STRINGS, (SEC_DIALOG_STRING_BASE + 99), "\
 <div align=right><input type=\042button\042 name=\042button\042 \
@@ -2243,28 +2282,28 @@ ResDef(XP_BROWSER_SEC_INFO_CLEAR_STRINGS_1, (SEC_DIALOG_STRING_BASE + 160), "\
 be observed by a third party while in transit.<p> <center><input \
 type=\042submit\042 name=\042button\042 value=\042%ok%\042></center>%1%")
 
-ResDef(	XP_SMIME_RC2_CBC_40,		(SEC_DIALOG_STRING_BASE + 161), \
+ResDef( XP_SMIME_RC2_CBC_40,        (SEC_DIALOG_STRING_BASE + 161), \
 "RC2 encryption in CBC mode with a 40-bit key")
 
-ResDef(	XP_SMIME_RC2_CBC_64,		(SEC_DIALOG_STRING_BASE + 162), \
+ResDef( XP_SMIME_RC2_CBC_64,        (SEC_DIALOG_STRING_BASE + 162), \
 "RC2 encryption in CBC mode with a 64-bit key")
 
-ResDef(	XP_SMIME_RC2_CBC_128,		(SEC_DIALOG_STRING_BASE + 163), \
+ResDef( XP_SMIME_RC2_CBC_128,       (SEC_DIALOG_STRING_BASE + 163), \
 "RC2 encryption in CBC mode with a 128-bit key")
 
-ResDef(	XP_SMIME_DES_CBC,		(SEC_DIALOG_STRING_BASE + 164), \
+ResDef( XP_SMIME_DES_CBC,       (SEC_DIALOG_STRING_BASE + 164), \
 "DES encryption in CBC mode with a 56-bit key")
 
-ResDef(	XP_SMIME_DES_EDE3,		(SEC_DIALOG_STRING_BASE + 165), \
+ResDef( XP_SMIME_DES_EDE3,      (SEC_DIALOG_STRING_BASE + 165), \
 "DES EDE3 encryption in CBC mode with a 168-bit key")
 
-ResDef(	XP_SMIME_RC5PAD_64_16_40,	(SEC_DIALOG_STRING_BASE + 166), \
+ResDef( XP_SMIME_RC5PAD_64_16_40,   (SEC_DIALOG_STRING_BASE + 166), \
 "RC5 encryption in CBC mode with a 40-bit key")
 
-ResDef(	XP_SMIME_RC5PAD_64_16_64,	(SEC_DIALOG_STRING_BASE + 167), \
+ResDef( XP_SMIME_RC5PAD_64_16_64,   (SEC_DIALOG_STRING_BASE + 167), \
 "RC5 encryption in CBC mode with a 64-bit key")
 
-ResDef(	XP_SMIME_RC5PAD_64_16_128,	(SEC_DIALOG_STRING_BASE + 168), \
+ResDef( XP_SMIME_RC5PAD_64_16_128,  (SEC_DIALOG_STRING_BASE + 168), \
 "RC5 encryption in CBC mode with a 128-bit key")
 
 
@@ -2331,7 +2370,7 @@ for: %3%<BR>Signed by: %4%</td><td align=right><input type=submit name=button \
 ResDef(XP_USER_CERT_DOWNLOAD_STRINGS_3, (SEC_DIALOG_STRING_BASE + 185), "\
 value=\042%showcert%\042></td></tr></table><HR><P>%5%</font>")
 
-ResDef(XP_USER_CERT_NICKNAME_STRINGS,	(SEC_DIALOG_STRING_BASE + 186), "\
+ResDef(XP_USER_CERT_NICKNAME_STRINGS,   (SEC_DIALOG_STRING_BASE + 186), "\
 You can use the name provided or enter a new one.")
 
 ResDef(XP_USER_CERT_DL_MOREINFO_STRINGS, (SEC_DIALOG_STRING_BASE + 187), "\
@@ -2355,31 +2394,31 @@ traditional username and password security methods.  For more information \
 about Certificates, choose <b>Security Info</b> from the Communicator menu.")
 #endif
 
-ResDef(XP_USER_CERT_SAVE_STRINGS,	(SEC_DIALOG_STRING_BASE + 190), "\
+ResDef(XP_USER_CERT_SAVE_STRINGS,   (SEC_DIALOG_STRING_BASE + 190), "\
 %sec-banner-begin%%0%%sec-banner-end%\
 You should make a copy of your new Certificate.<p>If you lose your Certificate \
 %-cont-%")
 
-ResDef(XP_USER_CERT_SAVE_STRINGS_1,	(SEC_DIALOG_STRING_BASE + 191), "\
+ResDef(XP_USER_CERT_SAVE_STRINGS_1, (SEC_DIALOG_STRING_BASE + 191), "\
 it <b>cannot be recovered</b>.  Only you hold your Private Key.  Without it \
 you will not be able to read any email that you received using that \
 %-cont-%")
 
-ResDef(XP_USER_CERT_SAVE_STRINGS_2,	(SEC_DIALOG_STRING_BASE + 192), "\
+ResDef(XP_USER_CERT_SAVE_STRINGS_2, (SEC_DIALOG_STRING_BASE + 192), "\
 Certificate.<p>To make a copy, click <b>Save As</b> and decide where you \
 would like to save your Certificate.  If possible, you should save it on a \
 %-cont-%")
 
-ResDef(XP_USER_CERT_SAVE_STRINGS_3,	(SEC_DIALOG_STRING_BASE + 193), "\
+ResDef(XP_USER_CERT_SAVE_STRINGS_3, (SEC_DIALOG_STRING_BASE + 193), "\
 floppy disk that you keep in a safe location.<p><input type=submit \
 name=button value=\042%saveas%\042>")
 
-ResDef(XP_USER_CERT_SAVE_TITLE,		(SEC_DIALOG_STRING_BASE + 194), "\
+ResDef(XP_USER_CERT_SAVE_TITLE,     (SEC_DIALOG_STRING_BASE + 194), "\
 Save User Certificate")
 
-/* unused				(SEC_DIALOG_STRING_BASE + 195) */
+/* unused               (SEC_DIALOG_STRING_BASE + 195) */
 
-/* unused				(SEC_DIALOG_STRING_BASE + 196) */
+/* unused               (SEC_DIALOG_STRING_BASE + 196) */
 
 #ifndef MOZ_COMMUNICATOR_NAME
 ResDef(XP_KEY_GEN_DIALOG_STRINGS, (SEC_DIALOG_STRING_BASE + 197), "\
@@ -2549,7 +2588,7 @@ Next>")
 ResDef(XP_SEC_BACK_KLUDGE, (SEC_DIALOG_STRING_BASE + 233), "\
 <Back")
 
-ResDef(XP_SEC_SAVEAS,			(SEC_DIALOG_STRING_BASE + 234), "\
+ResDef(XP_SEC_SAVEAS,           (SEC_DIALOG_STRING_BASE + 234), "\
 Save As...")
 
 /* SEC_DIALOG_STRING_BASE + 235 unused */
@@ -3424,13 +3463,13 @@ ResDef(XP_DIRECTORY_ERROR, (SEC_DIALOG_STRING_BASE + 458), "\
 An error occurred when communicating with the Directory")
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS,	(SEC_DIALOG_STRING_BASE + 459), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS, (SEC_DIALOG_STRING_BASE + 459), "\
 %sec-banner-begin%%0%%sec-banner-end%\
 "MOZ_NAME_PRODUCT" is about to generate a Private Key for you.  It will be used \
 along with the Certificate you are now \
 %-cont-%")
 #else
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS,	(SEC_DIALOG_STRING_BASE + 459), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS, (SEC_DIALOG_STRING_BASE + 459), "\
 %sec-banner-begin%%0%%sec-banner-end%\
 Communicator is about to generate a Private Key for you.  It will be used \
 along with the Certificate you are now \
@@ -3438,62 +3477,62 @@ along with the Certificate you are now \
 #endif
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_1,	(SEC_DIALOG_STRING_BASE + 460), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_1,   (SEC_DIALOG_STRING_BASE + 460), "\
 requesting to identify you to Web\
 Sites and via Email.  You Private Key never leaves your computer, and if you \
 choose, will be protected by a "MOZ_NAME_PRODUCT" password.<P>\
 %-cont-%")
 #else
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_1,	(SEC_DIALOG_STRING_BASE + 460), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_1,   (SEC_DIALOG_STRING_BASE + 460), "\
 requesting to identify you to Web\
 Sites and via Email.  You Private Key never leaves your computer, and if you \
 choose, will be protected by a Communicator password.<P>\
 %-cont-%")
 #endif
 
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_2,	(SEC_DIALOG_STRING_BASE + 461), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_2,   (SEC_DIALOG_STRING_BASE + 461), "\
 Passwords are particularly important if you are in an environment where other \
 people have access to your computer, either physically or over a network.  \
 %-cont-%")
 
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_3,	(SEC_DIALOG_STRING_BASE + 462), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_3,   (SEC_DIALOG_STRING_BASE + 462), "\
 Do not give others your password, because that would allow them to use your \
 Certificate to impersonate you.<P>\
 %-cont-%")
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_4,	(SEC_DIALOG_STRING_BASE + 463), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_4,   (SEC_DIALOG_STRING_BASE + 463), "\
 "MOZ_NAME_PRODUCT" uses a complex mathematical operation to generate your private \
 key.  It may take up to severeal minutes to complete.  If you interrupt \
 %-cont-%")
 #else
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_4,	(SEC_DIALOG_STRING_BASE + 463), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_4,   (SEC_DIALOG_STRING_BASE + 463), "\
 Communicator uses a complex mathematical operation to generate your private \
 key.  It may take up to severeal minutes to complete.  If you interrupt \
 %-cont-%")
 #endif
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_5,	(SEC_DIALOG_STRING_BASE + 464), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_5,   (SEC_DIALOG_STRING_BASE + 464), "\
 "MOZ_NAME_PRODUCT" during this process, it will not create your key, and you will \
 have to reapply for your Certificate.")
 #else
-ResDef(XP_KEY_GEN_MOREINFO_STRINGS_5,	(SEC_DIALOG_STRING_BASE + 464), "\
+ResDef(XP_KEY_GEN_MOREINFO_STRINGS_5,   (SEC_DIALOG_STRING_BASE + 464), "\
 Communicator during this process, it will not create your key, and you will \
 have to reapply for your Certificate.")
 #endif
 
-ResDef(XP_PW_MOREINFO_STRINGS,		(SEC_DIALOG_STRING_BASE + 465), "\
+ResDef(XP_PW_MOREINFO_STRINGS,      (SEC_DIALOG_STRING_BASE + 465), "\
 %sec-banner-begin%%0%%sec-banner-end%\
 Passwords are particularly important if you are in an environment where other \
 %-cont-%")
 
-ResDef(XP_PW_MOREINFO_STRINGS_1,	(SEC_DIALOG_STRING_BASE + 466), "\
+ResDef(XP_PW_MOREINFO_STRINGS_1,    (SEC_DIALOG_STRING_BASE + 466), "\
 people have access to your computer, either physically or over a network.  \
 Do not give others your password, because that would allow them to use your \
 %-cont-%")
 
-ResDef(XP_PW_MOREINFO_STRINGS_2,	(SEC_DIALOG_STRING_BASE + 467), "\
+ResDef(XP_PW_MOREINFO_STRINGS_2,    (SEC_DIALOG_STRING_BASE + 467), "\
 Certificate to impersonate you.<P>The safest passwords are at least 8 \
 characters long, include both letters, and number or symbols, and contain \
 no words found in a dictionary.")
@@ -3720,15 +3759,15 @@ ResDef(XP_DIALOG_JS_HEADER_STRINGS_WITH_UTF8_CHARSET, (SEC_DIALOG_STRING_BASE + 
 <HTML><HEAD><meta http-equiv=\042Content-Type\042 content=\042text/html; charset=utf-8\042>\
 <TITLE>%0%</TITLE><SCRIPT LANGUAGE=\042JavaScript\042>\nvar dlgstring ='")
 
-ResDef(XP_SIGN_TEXT_TITLE_STRING,	(SEC_DIALOG_STRING_BASE + 518), "\
+ResDef(XP_SIGN_TEXT_TITLE_STRING,   (SEC_DIALOG_STRING_BASE + 518), "\
 Digital Signature")
 
-ResDef(XP_SIGN_TEXT_DIALOG_STRINGS,	(SEC_DIALOG_STRING_BASE + 519), "\
+ResDef(XP_SIGN_TEXT_DIALOG_STRINGS, (SEC_DIALOG_STRING_BASE + 519), "\
 The site '%0%' has requested that you sign the following message:\
 <br><pre><dl><dd><tt>%1%</dl></tt></pre><br><b>If you agree to sign this \
 message press %ok%, otherwise press %cancel%.</b>")
 
-ResDef(XP_SIGN_TEXT_ASK_DIALOG_STRINGS,	(SEC_DIALOG_STRING_BASE + 520), "\
+ResDef(XP_SIGN_TEXT_ASK_DIALOG_STRINGS, (SEC_DIALOG_STRING_BASE + 520), "\
 The site '%0%' has requested that you sign the following message:\
 <br><pre><dl><dd><tt>%1%</dl></tt></pre><br>Please select a certificate \
 %-cont-%")
@@ -3834,7 +3873,7 @@ Certificate")
 
 /*
  * NOTE - the SA_* strings are programmatically derived 
- * 	from ns/security/lib/nav/secprefs.html.
+ *  from ns/security/lib/nav/secprefs.html.
  * To regenerate, run ns/security/lib/nav/convhtml.sh 
  * XXXXXXXXXXXXXXXXXXXXX    Do NOT edit by hand.   XXXXXXXXXXXXXXXXXXXX
  */
@@ -4497,108 +4536,108 @@ END_STR(mcom_include_sec_dialog_strings)
 RES_START
 BEGIN_STR(mcom_include_sslerr_i_strings)
 
-ResDef(SSL_ERROR_EXPORT_ONLY_SERVER,	SSL_ERROR_BASE + 0,
+ResDef(SSL_ERROR_EXPORT_ONLY_SERVER,    SSL_ERROR_BASE + 0,
 MOZ_NAME_BRAND" is unable to communicate securely with this site\n\
 because the server does not support high-grade encryption.")
 
-ResDef(SSL_ERROR_US_ONLY_SERVER,	SSL_ERROR_BASE + 1,
+ResDef(SSL_ERROR_US_ONLY_SERVER,    SSL_ERROR_BASE + 1,
 MOZ_NAME_BRAND" is unable to communicate securely with this site\n\
 because the server requires the use of high-grade encryption.\n\n\
 This version of "MOZ_NAME_PRODUCT" does not support high-grade\n\
 encryption, probably due to U.S. export restrictions.")
 
-ResDef(SSL_ERROR_NO_CYPHER_OVERLAP,	SSL_ERROR_BASE + 2,
+ResDef(SSL_ERROR_NO_CYPHER_OVERLAP, SSL_ERROR_BASE + 2,
 MOZ_NAME_BRAND" and this server cannot communicate securely\n\
 because they have no common encryption algorithm(s).")
 
-ResDef(SSL_ERROR_NO_CERTIFICATE,	SSL_ERROR_BASE + 3,
+ResDef(SSL_ERROR_NO_CERTIFICATE,    SSL_ERROR_BASE + 3,
 MOZ_NAME_BRAND" is unable to find the certificate or key necessary\n\
 for authentication.")
 
-ResDef(SSL_ERROR_BAD_CERTIFICATE,	SSL_ERROR_BASE + 4,
+ResDef(SSL_ERROR_BAD_CERTIFICATE,   SSL_ERROR_BASE + 4,
 MOZ_NAME_BRAND" is unable to communicate securely with this site\n\
 because the server's certificate was rejected.")
 
-/* unused				(SSL_ERROR_BASE + 5),	*/
+/* unused               (SSL_ERROR_BASE + 5),   */
 
-ResDef(SSL_ERROR_BAD_CLIENT,		SSL_ERROR_BASE + 6,
+ResDef(SSL_ERROR_BAD_CLIENT,        SSL_ERROR_BASE + 6,
 "The server has encountered bad data from the client.")
 
-ResDef(SSL_ERROR_BAD_SERVER,		SSL_ERROR_BASE + 7,
+ResDef(SSL_ERROR_BAD_SERVER,        SSL_ERROR_BASE + 7,
 MOZ_NAME_BRAND" has encountered bad data from the server.")
 
-ResDef(SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE,	SSL_ERROR_BASE + 8,
+ResDef(SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE,  SSL_ERROR_BASE + 8,
 MOZ_NAME_BRAND" has encountered an unsupported type of certificate.\n\n\
 A newer version of "MOZ_NAME_PRODUCT" may solve this problem.")
 
-ResDef(SSL_ERROR_UNSUPPORTED_VERSION,	SSL_ERROR_BASE + 9,
+ResDef(SSL_ERROR_UNSUPPORTED_VERSION,   SSL_ERROR_BASE + 9,
 "The server is using an unsupported version of the security\n\
 protocol.\n\n\
 A newer version of "MOZ_NAME_PRODUCT" may solve this problem.")
 
-/* unused				(SSL_ERROR_BASE + 10),	*/
+/* unused               (SSL_ERROR_BASE + 10),  */
 
-ResDef(SSL_ERROR_WRONG_CERTIFICATE,	SSL_ERROR_BASE + 11,
+ResDef(SSL_ERROR_WRONG_CERTIFICATE, SSL_ERROR_BASE + 11,
 "Client authentication failed due to mismatch between private\n\
 key found in client key database and public key found in client\n\
 certificate database.")
 
-ResDef(SSL_ERROR_BAD_CERT_DOMAIN,	SSL_ERROR_BASE + 12,
+ResDef(SSL_ERROR_BAD_CERT_DOMAIN,   SSL_ERROR_BASE + 12,
 MOZ_NAME_BRAND" is unable to communicate securely with this site\n\
 because the domain to which you are attempting to connect\n\
 does not match the domain name in the server's certificate.")
 
-/* SSL_ERROR_POST_WARNING		(SSL_ERROR_BASE + 13),
+/* SSL_ERROR_POST_WARNING       (SSL_ERROR_BASE + 13),
    defined in sslerr.h
 */
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(SSL_ERROR_SSL2_DISABLED,		(SSL_ERROR_BASE + 14),
+ResDef(SSL_ERROR_SSL2_DISABLED,     (SSL_ERROR_BASE + 14),
 "This site only supports SSL version 2.  You can enable\n\
 support for SSL version 2 by selecting Security Info from\n\
 the "MOZ_NAME_PRODUCT" menu and opening the "MOZ_NAME_PRODUCT" section.")
 #else
-ResDef(SSL_ERROR_SSL2_DISABLED,		(SSL_ERROR_BASE + 14),
+ResDef(SSL_ERROR_SSL2_DISABLED,     (SSL_ERROR_BASE + 14),
 "This site only supports SSL version 2.  You can enable\n\
 support for SSL version 2 by selecting Security Info from\n\
 the Communicator menu and opening the "MOZ_NAME_PRODUCT" section.")
 #endif
 
-ResDef(SSL_ERROR_BAD_MAC_READ,		(SSL_ERROR_BASE + 15),
+ResDef(SSL_ERROR_BAD_MAC_READ,      (SSL_ERROR_BASE + 15),
 "SSL has received a record with an incorrect Message\n\
 Authentication Code.  This could indicate a network error,\n\
 a bad server implementation, or a security violation.")
 
-ResDef(SSL_ERROR_BAD_MAC_ALERT,		(SSL_ERROR_BASE + 16),
+ResDef(SSL_ERROR_BAD_MAC_ALERT,     (SSL_ERROR_BASE + 16),
 "SSL has received an error from the server indicating an\n\
 incorrect Message Authentication Code.  This could indicate\n\
 a network error, a bad server implementation, or a\n\
 security violation.")
 
-ResDef(SSL_ERROR_BAD_CERT_ALERT,	(SSL_ERROR_BASE + 17),
+ResDef(SSL_ERROR_BAD_CERT_ALERT,    (SSL_ERROR_BASE + 17),
 "The server cannot verify your certificate.")
 
-ResDef(SSL_ERROR_REVOKED_CERT_ALERT,	(SSL_ERROR_BASE + 18),
+ResDef(SSL_ERROR_REVOKED_CERT_ALERT,    (SSL_ERROR_BASE + 18),
 "The server has rejected your certificate as revoked.")
 
-ResDef(SSL_ERROR_EXPIRED_CERT_ALERT,	(SSL_ERROR_BASE + 19),
+ResDef(SSL_ERROR_EXPIRED_CERT_ALERT,    (SSL_ERROR_BASE + 19),
 "The server has rejected your certificate as expired.")
 
 #ifndef MOZ_COMMUNICATOR_NAME
-ResDef(SSL_ERROR_SSL_DISABLED,		(SSL_ERROR_BASE + 20),
+ResDef(SSL_ERROR_SSL_DISABLED,      (SSL_ERROR_BASE + 20),
 "You cannot connect to an encrypted website because SSL\n\
 has been disabled.  You can enable SSL by selecting\n\
 Security Info from the "MOZ_NAME_PRODUCT" menu and opening the\n\
 "MOZ_NAME_PRODUCT" section.")
 #else
-ResDef(SSL_ERROR_SSL_DISABLED,		(SSL_ERROR_BASE + 20),
+ResDef(SSL_ERROR_SSL_DISABLED,      (SSL_ERROR_BASE + 20),
 "You cannot connect to an encrypted website because SSL\n\
 has been disabled.  You can enable SSL by selecting\n\
 Security Info from the Communicator menu and opening the\n\
 "MOZ_NAME_PRODUCT" section.")
 #endif
 
-ResDef(SSL_ERROR_FORTEZZA_PQG,		(SSL_ERROR_BASE + 21),
+ResDef(SSL_ERROR_FORTEZZA_PQG,      (SSL_ERROR_BASE + 21),
 "The server is in another FORTEZZA domain,\n\
 you cannot connect to it.")
 
@@ -4618,79 +4657,79 @@ END_STR(mcom_include_sslerr_i_strings)
 
 RES_START
 BEGIN_STR(mcom_include_xp_error_i_strings)
-ResDef(XP_ERRNO_NOTINITIALISED	,WSANOTINITIALISED	,"Winsock is uninitialized")
-ResDef(XP_ERRNO_EWOULDBLOCK		,WSAEWOULDBLOCK     ,"Operation would block")
-ResDef(XP_ERRNO_ECONNREFUSED	,WSAECONNREFUSED 	,"Connection refused")
-ResDef(XP_ERRNO_EINVAL			,WSAEINVAL          ,"Invalid argument")
-#ifndef RESOURCE_STR			/* ID conflicts	*/
-ResDef(XP_ERRNO_EIO				,WSAECONNREFUSED    ,"I/O error")
+ResDef(XP_ERRNO_NOTINITIALISED  ,WSANOTINITIALISED  ,"Winsock is uninitialized")
+ResDef(XP_ERRNO_EWOULDBLOCK     ,WSAEWOULDBLOCK     ,"Operation would block")
+ResDef(XP_ERRNO_ECONNREFUSED    ,WSAECONNREFUSED    ,"Connection refused")
+ResDef(XP_ERRNO_EINVAL          ,WSAEINVAL          ,"Invalid argument")
+#ifndef RESOURCE_STR            /* ID conflicts */
+ResDef(XP_ERRNO_EIO             ,WSAECONNREFUSED    ,"I/O error")
 #endif
-ResDef(XP_ERRNO_ENOMEM			,WSAENOBUFS         ,"Not enough memory")
-ResDef(XP_ERRNO_EBADF			,WSAEBADF			,"Bad file number")
-#ifndef RESOURCE_STR			/* ID conflicts  */
-ResDef(XP_ERRNO_HANDSHAKE		,WSAECONNREFUSED	,"Handshake failed")
+ResDef(XP_ERRNO_ENOMEM          ,WSAENOBUFS         ,"Not enough memory")
+ResDef(XP_ERRNO_EBADF           ,WSAEBADF           ,"Bad file number")
+#ifndef RESOURCE_STR            /* ID conflicts  */
+ResDef(XP_ERRNO_HANDSHAKE       ,WSAECONNREFUSED    ,"Handshake failed")
 #endif
-ResDef(XP_ERRNO_EISCONN			,WSAEISCONN			,"Socket is already connected")
-ResDef(XP_ERRNO_ETIMEDOUT      	,WSAETIMEDOUT		,"Connection timed out")
-ResDef(XP_ERRNO_EINPROGRESS    	,WSAEINPROGRESS		,"operation now in progress")
-#ifndef RESOURCE_STR			/* ID conflicts	*/
-ResDef(XP_ERRNO_EAGAIN         	,WSAEWOULDBLOCK		,"EAGAIN")
+ResDef(XP_ERRNO_EISCONN         ,WSAEISCONN         ,"Socket is already connected")
+ResDef(XP_ERRNO_ETIMEDOUT       ,WSAETIMEDOUT       ,"Connection timed out")
+ResDef(XP_ERRNO_EINPROGRESS     ,WSAEINPROGRESS     ,"operation now in progress")
+#ifndef RESOURCE_STR            /* ID conflicts */
+ResDef(XP_ERRNO_EAGAIN          ,WSAEWOULDBLOCK     ,"EAGAIN")
 #endif
-ResDef(XP_ERRNO_EALREADY       	,WSAEALREADY		,"EALREADY")
-ResDef(XP_ERRNO_EADDRINUSE     	,WSAEADDRINUSE		,"Address already in use")
+ResDef(XP_ERRNO_EALREADY        ,WSAEALREADY        ,"EALREADY")
+ResDef(XP_ERRNO_EADDRINUSE      ,WSAEADDRINUSE      ,"Address already in use")
 
 /* new by lou 2-21-95 */
-ResDef(XP_ERRNO_EINTR			,WSAEINTR			,"interrupted system call")
-ResDef(XP_ERRNO_EACCES 			,WSAEACCES			,"Permission denied")
-ResDef(XP_ERRNO_EADDRNOTAVAIL	,WSAEADDRNOTAVAIL	,"Can't assign requested address")
-ResDef(XP_ERRNO_ENETDOWN		,WSAENETDOWN		,"Network is down")
-ResDef(XP_ERRNO_ENETUNREACH		,WSAENETUNREACH		,"Network is unreachable")
-ResDef(XP_ERRNO_ENETRESET		,WSAENETRESET		,"Network dropped connection because of reset")
-ResDef(XP_ERRNO_ECONNABORTED	,WSAECONNABORTED	,"Connection aborted")
-ResDef(XP_ERRNO_ECONNRESET		,WSAECONNRESET		,"Connection reset by peer")
-ResDef(XP_ERRNO_ENOTCONN		,WSAENOTCONN		,"Socket is not connected")
-ResDef(XP_ERRNO_EHOSTDOWN		,WSAEHOSTDOWN		,"Host is down")
-ResDef(XP_ERRNO_EHOSTUNREACH	,WSAEHOSTUNREACH	,"No route to host")
+ResDef(XP_ERRNO_EINTR           ,WSAEINTR           ,"interrupted system call")
+ResDef(XP_ERRNO_EACCES          ,WSAEACCES          ,"Permission denied")
+ResDef(XP_ERRNO_EADDRNOTAVAIL   ,WSAEADDRNOTAVAIL   ,"Can't assign requested address")
+ResDef(XP_ERRNO_ENETDOWN        ,WSAENETDOWN        ,"Network is down")
+ResDef(XP_ERRNO_ENETUNREACH     ,WSAENETUNREACH     ,"Network is unreachable")
+ResDef(XP_ERRNO_ENETRESET       ,WSAENETRESET       ,"Network dropped connection because of reset")
+ResDef(XP_ERRNO_ECONNABORTED    ,WSAECONNABORTED    ,"Connection aborted")
+ResDef(XP_ERRNO_ECONNRESET      ,WSAECONNRESET      ,"Connection reset by peer")
+ResDef(XP_ERRNO_ENOTCONN        ,WSAENOTCONN        ,"Socket is not connected")
+ResDef(XP_ERRNO_EHOSTDOWN       ,WSAEHOSTDOWN       ,"Host is down")
+ResDef(XP_ERRNO_EHOSTUNREACH    ,WSAEHOSTUNREACH    ,"No route to host")
 END_STR(mcom_include_xp_error_i_strings)
 
 #else
 
 RES_START
 BEGIN_STR(mcom_include_xp_error_i_strings)
-ResDef(XP_ERRNO_EPIPE			,EPIPE				,"Broken pipe")
-ResDef(XP_ERRNO_ECONNREFUSED	,ECONNREFUSED		,"Connection refused")
-ResDef(XP_ERRNO_EINVAL			,EINVAL				,"Invalid argument")
-ResDef(XP_ERRNO_EIO				,EIO				,"I/O error")
-ResDef(XP_ERRNO_ENOMEM			,ENOMEM				,"Not enough memory")
-ResDef(XP_ERRNO_EBADF			,EBADF				,"Bad file number")
-#ifndef RESOURCE_STR			/* ID conflicts	*/
-ResDef(XP_ERRNO_HANDSHAKE		,EIO				,"Handshake failed")
+ResDef(XP_ERRNO_EPIPE           ,EPIPE              ,"Broken pipe")
+ResDef(XP_ERRNO_ECONNREFUSED    ,ECONNREFUSED       ,"Connection refused")
+ResDef(XP_ERRNO_EINVAL          ,EINVAL             ,"Invalid argument")
+ResDef(XP_ERRNO_EIO             ,EIO                ,"I/O error")
+ResDef(XP_ERRNO_ENOMEM          ,ENOMEM             ,"Not enough memory")
+ResDef(XP_ERRNO_EBADF           ,EBADF              ,"Bad file number")
+#ifndef RESOURCE_STR            /* ID conflicts */
+ResDef(XP_ERRNO_HANDSHAKE       ,EIO                ,"Handshake failed")
 #endif
-ResDef(XP_ERRNO_EWOULDBLOCK		,EWOULDBLOCK		,"Operation would block")
-ResDef(XP_ERRNO_EISCONN			,EISCONN			,"Socket is already connected")
-ResDef(XP_ERRNO_ETIMEDOUT		,ETIMEDOUT			,"Connection timed out")
-ResDef(XP_ERRNO_EINPROGRESS		,EINPROGRESS		,"operation now in progress")
-#ifndef RESOURCE_STR			/* ID conflicts	*/
-ResDef(XP_ERRNO_EAGAIN			,EAGAIN				,"EAGAIN")
+ResDef(XP_ERRNO_EWOULDBLOCK     ,EWOULDBLOCK        ,"Operation would block")
+ResDef(XP_ERRNO_EISCONN         ,EISCONN            ,"Socket is already connected")
+ResDef(XP_ERRNO_ETIMEDOUT       ,ETIMEDOUT          ,"Connection timed out")
+ResDef(XP_ERRNO_EINPROGRESS     ,EINPROGRESS        ,"operation now in progress")
+#ifndef RESOURCE_STR            /* ID conflicts */
+ResDef(XP_ERRNO_EAGAIN          ,EAGAIN             ,"EAGAIN")
 #endif
-ResDef(XP_ERRNO_EALREADY   		,EALREADY			,"EALREADY")
-ResDef(XP_ERRNO_EADDRINUSE 		,EADDRINUSE			,"Address already in use")
+ResDef(XP_ERRNO_EALREADY        ,EALREADY           ,"EALREADY")
+ResDef(XP_ERRNO_EADDRINUSE      ,EADDRINUSE         ,"Address already in use")
 
 /* new by lou 2-21-95 */
-ResDef(XP_ERRNO_EINTR          	,EINTR				,"interrupted system call")
-ResDef(XP_ERRNO_EACCES         	,EACCES				,"Permission denied")
-#ifdef NOTDEF						/* ID conflicts	*/
-ResDef(XP_ERRNO_EADDRINUSE     	,EADDRINUSE			,"Can't assign requested address")
+ResDef(XP_ERRNO_EINTR           ,EINTR              ,"interrupted system call")
+ResDef(XP_ERRNO_EACCES          ,EACCES             ,"Permission denied")
+#ifdef NOTDEF                       /* ID conflicts */
+ResDef(XP_ERRNO_EADDRINUSE      ,EADDRINUSE         ,"Can't assign requested address")
 #endif
-ResDef(XP_ERRNO_EADDRNOTAVAIL  	,EADDRNOTAVAIL		,"Can't assign requested address")
-ResDef(XP_ERRNO_ENETDOWN       	,ENETDOWN			,"Network is down")
-ResDef(XP_ERRNO_ENETUNREACH    	,ENETUNREACH		,"Network is unreachable")
-ResDef(XP_ERRNO_ENETRESET      	,ENETRESET			,"Network dropped connection because of reset")
-ResDef(XP_ERRNO_ECONNABORTED   	,ECONNABORTED		,"Connection aborted")
-ResDef(XP_ERRNO_ECONNRESET     	,ECONNRESET			,"Connection reset by peer")
-ResDef(XP_ERRNO_ENOTCONN       	,ENOTCONN			,"Socket is not connected")
-ResDef(XP_ERRNO_EHOSTDOWN      	,EHOSTDOWN			,"Host is down")
-ResDef(XP_ERRNO_EHOSTUNREACH   	,EHOSTUNREACH		,"No route to host")
+ResDef(XP_ERRNO_EADDRNOTAVAIL   ,EADDRNOTAVAIL      ,"Can't assign requested address")
+ResDef(XP_ERRNO_ENETDOWN        ,ENETDOWN           ,"Network is down")
+ResDef(XP_ERRNO_ENETUNREACH     ,ENETUNREACH        ,"Network is unreachable")
+ResDef(XP_ERRNO_ENETRESET       ,ENETRESET          ,"Network dropped connection because of reset")
+ResDef(XP_ERRNO_ECONNABORTED    ,ECONNABORTED       ,"Connection aborted")
+ResDef(XP_ERRNO_ECONNRESET      ,ECONNRESET         ,"Connection reset by peer")
+ResDef(XP_ERRNO_ENOTCONN        ,ENOTCONN           ,"Socket is not connected")
+ResDef(XP_ERRNO_EHOSTDOWN       ,EHOSTDOWN          ,"Host is down")
+ResDef(XP_ERRNO_EHOSTUNREACH    ,EHOSTUNREACH       ,"No route to host")
 END_STR(mcom_include_xp_error_i_strings)
 #endif
 
@@ -4699,85 +4738,83 @@ END_STR(mcom_include_xp_error_i_strings)
    by the message lib */
 
 
-
-
 RES_START
 BEGIN_STR(mcom_include_xp_msg_i_strings)
-ResDef(XP_DOCINFO_1,	XP_MSG_BASE+1, 	" (unrecognized)")
-ResDef(XP_DOCINFO_2,	XP_MSG_BASE+2,  	" (autoselect)"			    )
-ResDef(XP_DOCINFO_3,	XP_MSG_BASE+3,	" (default)")
-ResDef(XP_DOCINFO_4,	XP_MSG_BASE+4,	" (not found)" )
-ResDef(XP_IMAGE_1,		XP_MSG_BASE+10,	"%s image %dx%d pixels")
-ResDef(XP_IMAGE_2,		XP_MSG_BASE+11,	"Images are %d bits deep with %d cells allocated.")
-ResDef(XP_IMAGE_3,		XP_MSG_BASE+12,	"Images are monochrome.")
-ResDef(XP_IMAGE_4,		XP_MSG_BASE+13,	"Images are %d bit greyscale.")
-ResDef(XP_IMAGE_5,		XP_MSG_BASE+14,	"Images are %d bit truecolor.")
-ResDef(XP_LAYFORM_1,	XP_MSG_BASE+20,	"This is a searchable index. Enter search keywords: ")
-ResDef(XP_HISTORY_2,	XP_MSG_BASE+31,	"Main Hotlist")
-ResDef(XP_HISTORY_3,	XP_MSG_BASE+32,
+ResDef(XP_DOCINFO_1,    XP_MSG_BASE+1,  " (unrecognized)")
+ResDef(XP_DOCINFO_2,    XP_MSG_BASE+2,      " (autoselect)"             )
+ResDef(XP_DOCINFO_3,    XP_MSG_BASE+3,  " (default)")
+ResDef(XP_DOCINFO_4,    XP_MSG_BASE+4,  " (not found)" )
+ResDef(XP_IMAGE_1,      XP_MSG_BASE+10, "%s image %dx%d pixels")
+ResDef(XP_IMAGE_2,      XP_MSG_BASE+11, "Images are %d bits deep with %d cells allocated.")
+ResDef(XP_IMAGE_3,      XP_MSG_BASE+12, "Images are monochrome.")
+ResDef(XP_IMAGE_4,      XP_MSG_BASE+13, "Images are %d bit greyscale.")
+ResDef(XP_IMAGE_5,      XP_MSG_BASE+14, "Images are %d bit truecolor.")
+ResDef(XP_LAYFORM_1,    XP_MSG_BASE+20, "This is a searchable index. Enter search keywords: ")
+ResDef(XP_HISTORY_2,    XP_MSG_BASE+31, "Main Hotlist")
+ResDef(XP_HISTORY_3,    XP_MSG_BASE+32,
 "<!-- This is an automatically generated file.\n\
     It will be read and overwritten.\n\
     Do Not Edit! -->\n")
-ResDef(XP_HISTORY_4,					XP_MSG_BASE+33, 	"---End of History List---\n")
-ResDef(XP_HISTORY_SAVE,					XP_MSG_BASE+34, 	"Save History List")
-ResDef(XP_PROGRESS_LOOKUPHOST,			XP_MSG_BASE+40, 	"Connect: Looking up host: %.256s...")
-ResDef(XP_PROGRESS_CONTACTHOST,			XP_MSG_BASE+41, 	"Connect: Contacting host: %.256s...")
-ResDef(XP_PROGRESS_NOCONNECTION,		XP_MSG_BASE+42, 	"Error: Could not make connection non-blocking.")
-ResDef(XP_PROGRESS_UNABLELOCATE,		XP_MSG_BASE+43, 	"Unable to locate host %.256s.")
-ResDef(XP_PROGRESS_5,					XP_MSG_BASE+44, 	"Unable to locate host %.256s.")
-ResDef(XP_PROGRESS_READFILE,			XP_MSG_BASE+45, 	"Reading file...")
-ResDef(XP_PROGRESS_FILEZEROLENGTH,		XP_MSG_BASE+46, 	"Reading file...Error Zero Length")
-ResDef(XP_PROGRESS_READDIR,				XP_MSG_BASE+47, 	"Reading directory...")
-ResDef(XP_PROGRESS_FILEDONE,			XP_MSG_BASE+48, 	"Reading file...Done")
-ResDef(XP_PROGRESS_DIRDONE,				XP_MSG_BASE+49, 	"Reading directory...Done")
-ResDef(XP_PROGRESS_RECEIVE_FTPFILE,		XP_MSG_BASE+50, 	"Receiving FTP file")
-ResDef(XP_PROGRESS_RECEIVE_FTPDIR,		XP_MSG_BASE+51, 	"Receiving FTP directory")
-ResDef(XP_PROGRESS_RECEIVE_DATA,		XP_MSG_BASE+52, 	"Receiving data.")
-ResDef(XP_PROGRESS_TRANSFER_DATA,		XP_MSG_BASE+53, 	"Transferring data from %.256s")
-ResDef(XP_PROGRESS_WAIT_REPLY,			XP_MSG_BASE+54, 	"Connect: Host %.256s contacted. Waiting for reply...")
-ResDef(XP_PROGRESS_TRYAGAIN,			XP_MSG_BASE+55, 	"Connect: Trying again (HTTP 0.9)...")
-ResDef(XP_PROGRESS_WAITREPLY_GOTHER,	XP_MSG_BASE+56, 	"Connect: Host contacted. Waiting for reply (Gopher)")
-ResDef(XP_PROGRESS_MAILSENT,			XP_MSG_BASE+57, 	"Mail sent successfully")
-ResDef(XP_PROGRESS_RECEIVE_NEWSGROUP,	XP_MSG_BASE+58, 	"Receiving discussion groups...")
-ResDef(XP_PROGRESS_20,					XP_MSG_BASE+59, 	"Receiving discussion groups...")
-ResDef(XP_PROGRESS_RECEIVE_ARTICLE,		XP_MSG_BASE+60, 	"Receiving articles...")
-ResDef(XP_PROGRESS_RECEIVE_LISTARTICLES,XP_MSG_BASE+61, 	"Receiving articles...")
-ResDef(XP_PROGRESS_READ_NEWSGROUPLIST,	XP_MSG_BASE+62, 	"Reading discussion group list")
-ResDef(XP_PROGRESS_READ_NEWSGROUPINFO,	XP_MSG_BASE+63, 	"Reading discussion group overview information")
-ResDef(XP_PROGRESS_SORT_ARTICLES,		XP_MSG_BASE+64, 	"Sorting articles...")
-ResDef(XP_PROGRESS_STARTING_JAVA,	XP_MSG_BASE+65,	"Starting Java...")
-ResDef(XP_PROGRESS_STARTING_JAVA_DONE,	XP_MSG_BASE+66,	"Starting Java...done")
-ResDef(XP_ALERT_UNABLE_INVOKEVIEWER,	XP_MSG_BASE+101, 	"Unable to invoke external viewer")
-ResDef(XP_ALERT_2,						XP_MSG_BASE+102, 	"Proxy is requiring an authentication scheme that is not supported.")
-ResDef(XP_ALERT_OUTMEMORY,				XP_MSG_BASE+103, 	"Out of memory error in HTTP Load routine!")
-ResDef(XP_ALERT_UNKNOWN_STATUS,			XP_MSG_BASE+104, 	"Unknown status reply from server: %d!")
-ResDef(XP_ALERT_URLS_LESSZERO,			XP_MSG_BASE+105, 	"Warning! Non-critical application error: NET_TotalNumberOfProcessingURLs < 0")
-ResDef(XP_ALERT_CONNECTION_LESSZERO,	XP_MSG_BASE+106, 	"Warning! Non-critical application error: NET_TotalNumberOfOpenConnections < 0")
-ResDef(XP_ALERT_URN_USEHTTP,			XP_MSG_BASE+107, 	"URN's not internally supported, use an HTTP proxy server: ")
-ResDef(XP_ALERT_INTERRUPT_WINDOW,		XP_MSG_BASE+108, 	"reentrant call to Interrupt window")
-ResDef(XP_ALERT_BADMSG_NUMBER,			XP_MSG_BASE+109, 	"Bad message number")
-ResDef(XP_ALERT_ARTICLE_OUTRANGE,		XP_MSG_BASE+110, 	"Article number out of range")
-ResDef(XP_ALERT_CANTLOAD_MAILBOX,		XP_MSG_BASE+111, 	"Could not load mailbox")
-ResDef(XP_ALERT_SMTPERROR_SENDINGMAIL,	XP_MSG_BASE+113, 	"SMTP Error sending mail. Server responded: %.256s")
-ResDef(XP_ALERT_UNRECOGNIZED_ENCODING,	XP_MSG_BASE+114, 	"Warning: unrecognized encoding: `")
-ResDef(XP_ALERT_CANTFIND_CONVERTER,		XP_MSG_BASE+115, 	"Alert! did not find a converter or decoder")
-ResDef(XP_ALERT_CANT_FORMHOTLIST,		XP_MSG_BASE+116, 	"Cannot add the result of a form submission to the hotlist")
+ResDef(XP_HISTORY_4,                    XP_MSG_BASE+33,     "---End of History List---\n")
+ResDef(XP_HISTORY_SAVE,                 XP_MSG_BASE+34,     "Save History List")
+ResDef(XP_PROGRESS_LOOKUPHOST,          XP_MSG_BASE+40,     "Connect: Looking up host: %.256s...")
+ResDef(XP_PROGRESS_CONTACTHOST,         XP_MSG_BASE+41,     "Connect: Contacting host: %.256s...")
+ResDef(XP_PROGRESS_NOCONNECTION,        XP_MSG_BASE+42,     "Error: Could not make connection non-blocking.")
+ResDef(XP_PROGRESS_UNABLELOCATE,        XP_MSG_BASE+43,     "Unable to locate host %.256s.")
+ResDef(XP_PROGRESS_5,                   XP_MSG_BASE+44,     "Unable to locate host %.256s.")
+ResDef(XP_PROGRESS_READFILE,            XP_MSG_BASE+45,     "Reading file...")
+ResDef(XP_PROGRESS_FILEZEROLENGTH,      XP_MSG_BASE+46,     "Reading file...Error Zero Length")
+ResDef(XP_PROGRESS_READDIR,             XP_MSG_BASE+47,     "Reading directory...")
+ResDef(XP_PROGRESS_FILEDONE,            XP_MSG_BASE+48,     "Reading file...Done")
+ResDef(XP_PROGRESS_DIRDONE,             XP_MSG_BASE+49,     "Reading directory...Done")
+ResDef(XP_PROGRESS_RECEIVE_FTPFILE,     XP_MSG_BASE+50,     "Receiving FTP file")
+ResDef(XP_PROGRESS_RECEIVE_FTPDIR,      XP_MSG_BASE+51,     "Receiving FTP directory")
+ResDef(XP_PROGRESS_RECEIVE_DATA,        XP_MSG_BASE+52,     "Receiving data.")
+ResDef(XP_PROGRESS_TRANSFER_DATA,       XP_MSG_BASE+53,     "Transferring data from %.256s")
+ResDef(XP_PROGRESS_WAIT_REPLY,          XP_MSG_BASE+54,     "Connect: Host %.256s contacted. Waiting for reply...")
+ResDef(XP_PROGRESS_TRYAGAIN,            XP_MSG_BASE+55,     "Connect: Trying again (HTTP 0.9)...")
+ResDef(XP_PROGRESS_WAITREPLY_GOTHER,    XP_MSG_BASE+56,     "Connect: Host contacted. Waiting for reply (Gopher)")
+ResDef(XP_PROGRESS_MAILSENT,            XP_MSG_BASE+57,     "Mail sent successfully")
+ResDef(XP_PROGRESS_RECEIVE_NEWSGROUP,   XP_MSG_BASE+58,     "Receiving newsgroups...")
+ResDef(XP_PROGRESS_20,                  XP_MSG_BASE+59,     "Receiving newsgroups...")
+ResDef(XP_PROGRESS_RECEIVE_ARTICLE,     XP_MSG_BASE+60,     "Receiving articles...")
+ResDef(XP_PROGRESS_RECEIVE_LISTARTICLES,XP_MSG_BASE+61,     "Receiving articles...")
+ResDef(XP_PROGRESS_READ_NEWSGROUPLIST,  XP_MSG_BASE+62,     "Reading newsgroup list")
+ResDef(XP_PROGRESS_READ_NEWSGROUPINFO,  XP_MSG_BASE+63,     "Reading newsgroup overview information")
+ResDef(XP_PROGRESS_SORT_ARTICLES,       XP_MSG_BASE+64,     "Sorting articles...")
+ResDef(XP_PROGRESS_STARTING_JAVA,   XP_MSG_BASE+65, "Starting Java...")
+ResDef(XP_PROGRESS_STARTING_JAVA_DONE,  XP_MSG_BASE+66, "Starting Java...done")
+ResDef(XP_ALERT_UNABLE_INVOKEVIEWER,    XP_MSG_BASE+101,    "Unable to invoke external viewer")
+ResDef(XP_ALERT_2,                      XP_MSG_BASE+102,    "Proxy is requiring an authentication scheme that is not supported.")
+ResDef(XP_ALERT_OUTMEMORY,              XP_MSG_BASE+103,    "Out of memory error in HTTP Load routine!")
+ResDef(XP_ALERT_UNKNOWN_STATUS,         XP_MSG_BASE+104,    "Unknown status reply from server: %d!")
+ResDef(XP_ALERT_URLS_LESSZERO,          XP_MSG_BASE+105,    "Warning! Non-critical application error: NET_TotalNumberOfProcessingURLs < 0")
+ResDef(XP_ALERT_CONNECTION_LESSZERO,    XP_MSG_BASE+106,    "Warning! Non-critical application error: NET_TotalNumberOfOpenConnections < 0")
+ResDef(XP_ALERT_URN_USEHTTP,            XP_MSG_BASE+107,    "URN's not internally supported, use an HTTP proxy server: ")
+ResDef(XP_ALERT_INTERRUPT_WINDOW,       XP_MSG_BASE+108,    "reentrant call to Interrupt window")
+ResDef(XP_ALERT_BADMSG_NUMBER,          XP_MSG_BASE+109,    "Bad message number")
+ResDef(XP_ALERT_ARTICLE_OUTRANGE,       XP_MSG_BASE+110,    "Article number out of range")
+ResDef(XP_ALERT_CANTLOAD_MAILBOX,       XP_MSG_BASE+111,    "Could not load mailbox")
+ResDef(XP_ALERT_SMTPERROR_SENDINGMAIL,  XP_MSG_BASE+113,    "SMTP Error sending mail. Server responded: %.256s")
+ResDef(XP_ALERT_UNRECOGNIZED_ENCODING,  XP_MSG_BASE+114,    "Warning: unrecognized encoding: `")
+ResDef(XP_ALERT_CANTFIND_CONVERTER,     XP_MSG_BASE+115,    "Alert! did not find a converter or decoder")
+ResDef(XP_ALERT_CANT_FORMHOTLIST,       XP_MSG_BASE+116,    "Cannot add the result of a form submission to the hotlist")
 #ifdef XP_UNIX
-ResDef(XP_UNKNOWN_HTTP_PROXY,			XP_MSG_BASE+117,
+ResDef(XP_UNKNOWN_HTTP_PROXY,           XP_MSG_BASE+117,
 "Warning: an HTTP proxy host was specified\n(\
 %.2048s), but that host is unknown.\n\
 \n\
 This means that external hosts will be unreachable.\n\
 Perhaps there is a problem with your name server?\n\
 Consult your system administrator.")
-ResDef(XP_UNKNOWN_SOCKS_HOST,			XP_MSG_BASE+118,
+ResDef(XP_UNKNOWN_SOCKS_HOST,           XP_MSG_BASE+118,
 "Warning: a SOCKS host was specified (%.2048s)\n\
 but that host is unknown.\n\
 \n\
 This means that external hosts will be unreachable.\n\
 \n\
 Perhaps there is a problem with your name server?\n")
-ResDef(XP_SOCKS_NS_ENV_VAR,				XP_MSG_BASE+119,
+ResDef(XP_SOCKS_NS_ENV_VAR,             XP_MSG_BASE+119,
 "If your site must use a non-root name server, you will\n\
 need to set the $SOCKS_NS environment variable to\n\
 point at the appropriate name server.  It may (or\n\
@@ -4785,29 +4822,29 @@ may not) be necessary to set this variable, or the\n\
 SOCKS host preference, to the IP address of the host\n\
 in question rather than its name.\n\
 \n")
-ResDef(XP_CONSULT_SYS_ADMIN,			XP_MSG_BASE+120,
+ResDef(XP_CONSULT_SYS_ADMIN,            XP_MSG_BASE+120,
 "Consult your system administrator.")
-ResDef(XP_UNKNOWN_HOSTS,				XP_MSG_BASE+121,
+ResDef(XP_UNKNOWN_HOSTS,                XP_MSG_BASE+121,
 "Warning: the following hosts are unknown:\n\n")
-ResDef(XP_UNKNOWN_HOST,					XP_MSG_BASE+122,
+ResDef(XP_UNKNOWN_HOST,                 XP_MSG_BASE+122,
 "Warning: the host %.256s is unknown.\n")
-ResDef(XP_SOME_HOSTS_UNREACHABLE,		XP_MSG_BASE+123,
+ResDef(XP_SOME_HOSTS_UNREACHABLE,       XP_MSG_BASE+123,
 "\n\
 This means that some or all hosts will be unreachable.\n\
 \n\
 Perhaps there is a problem with your name server?\n")
-ResDef(XP_THIS_IS_DNS_VERSION,			XP_MSG_BASE+124,
+ResDef(XP_THIS_IS_DNS_VERSION,          XP_MSG_BASE+124,
 "On SunOS 4 systems, there are two %s executables,\n\
 one for sites using DNS, and one for sites using YP/NIS.\n\
 This is the DNS executable.  Perhaps you need to use\n\
 the other one?\n\n")
-ResDef(XP_THIS_IS_YP_VERSION,			XP_MSG_BASE+125,
+ResDef(XP_THIS_IS_YP_VERSION,           XP_MSG_BASE+125,
 "On SunOS 4 systems, there are two %s executables,\n\
 one for sites using DNS, and one for sites using YP/NIS.\n\
 This is the YP/NIS executable.  Perhaps you need to use\n\
 the other one?\n\n")
 
-ResDef(XP_CONFIRM_EXEC_UNIXCMD_ARE,	XP_MSG_BASE+130,
+ResDef(XP_CONFIRM_EXEC_UNIXCMD_ARE, XP_MSG_BASE+130,
 "Warning: this is an executable `%.1024s' script!\n\n\
 You are about to execute arbitrary system commands\n\
 on your local machine.  This is a security risk.\n\
@@ -4815,7 +4852,7 @@ Unless you completely understand this script, it\n\
 is strongly recommended you not do this.\n\n\
 Execute the script?")
 
-ResDef(XP_CONFIRM_EXEC_UNIXCMD_MAYBE,	XP_MSG_BASE+131,
+ResDef(XP_CONFIRM_EXEC_UNIXCMD_MAYBE,   XP_MSG_BASE+131,
 "Warning: this is an executable `%.1024s' script!\n\n\
 You may be about to execute arbitrary system commands\n\
 on your local machine.  This is a security risk.\n\
@@ -4824,49 +4861,49 @@ is strongly recommended you not do this.\n\n\
 Execute the script?")
 
 #endif /* XP_UNIX */
-ResDef(XP_CONFIRM_AUTHORIZATION_FAIL,	XP_MSG_BASE+133, 	"Authorization failed.  Retry?")
-ResDef(XP_CONFIRM_PROXYAUTHOR_FAIL,	XP_MSG_BASE+134, 	"Proxy authorization failed.  Retry?")
-ResDef(XP_CONFIRM_REPOST_FORMDATA,		XP_MSG_BASE+135, 	"Repost form data?")
-ResDef(XP_CONFIRM_SAVE_NEWSGROUPS,    	XP_MSG_BASE+136,
-"Before viewing all discussion groups, "MOZ_NAME_PRODUCT" saves\n\
-a copy of the discussion group list.\n\n\
+ResDef(XP_CONFIRM_AUTHORIZATION_FAIL,   XP_MSG_BASE+133,    "Authorization failed.  Retry?")
+ResDef(XP_CONFIRM_PROXYAUTHOR_FAIL, XP_MSG_BASE+134,    "Proxy authorization failed.  Retry?")
+ResDef(XP_CONFIRM_REPOST_FORMDATA,      XP_MSG_BASE+135,    "Repost form data?")
+ResDef(XP_CONFIRM_SAVE_NEWSGROUPS,      XP_MSG_BASE+136,
+"Before viewing all newsgroups, "MOZ_NAME_PRODUCT" saves\n\
+a copy of the newsgroup list.\n\n\
 On a modem or slow connection, this may take a\n\
 few minutes. You can choose New Window from the\n\
 File menu to continue browsing.  Proceed?")
-ResDef(XP_CONFIRM_MAILTO_POST_1,    	XP_MSG_BASE+137,
+ResDef(XP_CONFIRM_MAILTO_POST_1,        XP_MSG_BASE+137,
 "This form is being submitted via e-mail.\n\
 Submitting the form via e-mail will reveal\n\
 your e-mail address to the recipient, and\n\
 will send the form data without encrypting\n")
-ResDef(XP_CONFIRM_MAILTO_POST_2,    	XP_MSG_BASE+139,
+ResDef(XP_CONFIRM_MAILTO_POST_2,        XP_MSG_BASE+139,
 "it for privacy.  You may not want to submit\n\
 sensitive or private information via this\n\
 form.  You may continue or cancel this\n\
 submission.  ")
 
-ResDef(XP_ABORT_INVALID_SPECIFIER,		XP_MSG_BASE+151, 	"message: invalid specifier `%c'\n")
-ResDef(XP_ABORT_2,						XP_MSG_BASE+152, 	"Implement more temp name")
-ResDef(XP_ABORT_3,						XP_MSG_BASE+153, 	"Implement more XPStats")
+ResDef(XP_ABORT_INVALID_SPECIFIER,      XP_MSG_BASE+151,    "message: invalid specifier `%c'\n")
+ResDef(XP_ABORT_2,                      XP_MSG_BASE+152,    "Implement more temp name")
+ResDef(XP_ABORT_3,                      XP_MSG_BASE+153,    "Implement more XPStats")
 
 
-ResDef(XP_PROMPT_ENTER_USERNAME, 		XP_MSG_BASE+160, 	"Please enter a username for discussion group server access")
-ResDef(XP_PROMPT_ENTER_PASSWORD, 		XP_MSG_BASE+161, 	"Enter password for user %s:")
+ResDef(XP_PROMPT_ENTER_USERNAME,        XP_MSG_BASE+160,    "Please enter a username for news server access")
+ResDef(XP_PROMPT_ENTER_PASSWORD,        XP_MSG_BASE+161,    "Enter password for user %s:")
 
-/* XP_HTML_NEWS unused					XP_MSG_BASE+200, */
-/* XP_HTML_SUBSCRIBE_1 unused				XP_MSG_BASE+201, */
-/* XP_HTML_SUBSCRIBE_2 unused				XP_MSG_BASE+202, */
-/* XP_HTML_SUBSCRIBE_3 unused				XP_MSG_BASE+203, */
+/* XP_HTML_NEWS unused                  XP_MSG_BASE+200, */
+/* XP_HTML_SUBSCRIBE_1 unused               XP_MSG_BASE+201, */
+/* XP_HTML_SUBSCRIBE_2 unused               XP_MSG_BASE+202, */
+/* XP_HTML_SUBSCRIBE_3 unused               XP_MSG_BASE+203, */
 
-ResDef(XP_HTML_NEWS_ERROR, 				XP_MSG_BASE+204,
+ResDef(XP_HTML_NEWS_ERROR,              XP_MSG_BASE+204,
 "<TITLE>Error!</TITLE>\n\
-<H1>Error!</H1> discussion group server responded: <b>%.256s</b><p>\n")
+<H1>Error!</H1> newsgroup server responded: <b>%.256s</b><p>\n")
 
 ResDef(XP_HTML_ARTICLE_EXPIRED,         XP_MSG_BASE+205,
 "<b><p>Perhaps the article has expired</b><p>\n")
 
 /* XP_HTML_NEWSGROUP_LIST unused         XP_MSG_BASE+206, */
-/* XP_HTML_LISTNEW_NEWS unused         	XP_MSG_BASE+207, */
-/* XP_HTML_NEWSERROR_MAILADDRESS unused         	XP_MSG_BASE+209, */
+/* XP_HTML_LISTNEW_NEWS unused          XP_MSG_BASE+207, */
+/* XP_HTML_NEWSERROR_MAILADDRESS unused             XP_MSG_BASE+209, */
 
 ResDef(XP_HTML_FTPERROR_NOLOGIN,        XP_MSG_BASE+218,
 "<TITLE>FTP Error</TITLE>\n<H1>FTP Error</H1>\n<h2>Could not login to FTP server</h2>\n<PRE>")
@@ -4887,58 +4924,58 @@ ResDef(XP_HTML_MISSING_REPLYDATA,       XP_MSG_BASE+222,
 cache.  If you wish you can repost the form data to recreate the\ndocument by pressing the <b>reload</b> button.\n")
 
 
-ResDef(XP_SEC_GOT_RSA,         			XP_MSG_BASE+250,
+ResDef(XP_SEC_GOT_RSA,                  XP_MSG_BASE+250,
 "RSA Public Key Cryptography")
 
-ResDef(XP_SEC_INTERNATIONAL,         	XP_MSG_BASE+251,
+ResDef(XP_SEC_INTERNATIONAL,            XP_MSG_BASE+251,
 "International")
 
 #ifdef XP_UNIX
-ResDef(XP_SEC_NO_MESSAGE,				XP_MSG_BASE+252,
+ResDef(XP_SEC_NO_MESSAGE,               XP_MSG_BASE+252,
  "This is an insecure document that is not encrypted and offers no security\nprotection.")
 #else
-ResDef(XP_SEC_NO_MESSAGE,				XP_MSG_BASE+252,
+ResDef(XP_SEC_NO_MESSAGE,               XP_MSG_BASE+252,
  "This is an insecure document that is not encrypted and offers no security protection.")
 #endif
 
 
-ResDef(XP_NEWS_NONEWGROUP,				XP_MSG_BASE+253,
-"<h3>No new groups</h3>")
+ResDef(XP_NEWS_NONEWGROUP,              XP_MSG_BASE+253,
+"<h3>No new newsgroups</h3>")
 
-/* XP_NEWS_NOARTICLES unused				XP_MSG_BASE+254, */
-/* XP_NEWS_NOARTICLES_INRANGE unused		XP_MSG_BASE+255, */
+/* XP_NEWS_NOARTICLES unused                XP_MSG_BASE+254, */
+/* XP_NEWS_NOARTICLES_INRANGE unused        XP_MSG_BASE+255, */
 
-ResDef(XP_ACCESS_ENTER_USERNAME,		XP_MSG_BASE+256,
+ResDef(XP_ACCESS_ENTER_USERNAME,        XP_MSG_BASE+256,
 "Enter username for %.200s at %.200s:")
 
-ResDef(XP_NEWS_PROMPT_ADD_NEWSGROUP,		XP_MSG_BASE+257,
-"Type in a discussion group to add to the list:")
+ResDef(XP_NEWS_PROMPT_ADD_NEWSGROUP,        XP_MSG_BASE+257,
+"Type in a newsgroup to add to the list:")
 
 #ifdef XP_UNIX
-ResDef(XP_SEC_LOW_MESSAGE,				XP_MSG_BASE+260,
+ResDef(XP_SEC_LOW_MESSAGE,              XP_MSG_BASE+260,
  "This is a secure document that uses a medium-grade encryption key suited\nfor U.S. export")
-ResDef(XP_SEC_HIGH_MESSAGE,				XP_MSG_BASE+261,
+ResDef(XP_SEC_HIGH_MESSAGE,             XP_MSG_BASE+261,
  "This is a secure document that uses a high-grade encryption key for U.S.\ndomestic use only")
 #else
-ResDef(XP_SEC_LOW_MESSAGE,				XP_MSG_BASE+260,
+ResDef(XP_SEC_LOW_MESSAGE,              XP_MSG_BASE+260,
  "This is a secure document that uses a medium-grade encryption key suited for U.S. export")
-ResDef(XP_SEC_HIGH_MESSAGE,				XP_MSG_BASE+261,
+ResDef(XP_SEC_HIGH_MESSAGE,             XP_MSG_BASE+261,
  "This is a secure document that uses a high-grade encryption key for U.S. domestic use only")
 #endif
 
-ResDef(XP_BKMKS_BOOKMARKS_CHANGED,			XP_MSG_BASE+270,
+ResDef(XP_BKMKS_BOOKMARKS_CHANGED,          XP_MSG_BASE+270,
  "Bookmarks have changed on disk and are being reloaded.")
-ResDef(XP_BKMKS_ADDRESSBOOK_CHANGED,			XP_MSG_BASE+271,
+ResDef(XP_BKMKS_ADDRESSBOOK_CHANGED,            XP_MSG_BASE+271,
  "The address book has changed on disk and is being reloaded.")
-ResDef(XP_BKMKS_BOOKMARKS_CONFLICT,			XP_MSG_BASE+272,
+ResDef(XP_BKMKS_BOOKMARKS_CONFLICT,         XP_MSG_BASE+272,
  "Bookmarks have changed on disk.  Discard your unsaved changes\n\
 and reload?")
-ResDef(XP_BKMKS_ADDRESSBOOK_CONFLICT,			XP_MSG_BASE+273,
+ResDef(XP_BKMKS_ADDRESSBOOK_CONFLICT,           XP_MSG_BASE+273,
  "The address book has changed on disk.  Discard your unsaved changes\n\
 and reload?")
-ResDef(XP_BKMKS_CANT_WRITE_BOOKMARKS,			XP_MSG_BASE+274,
+ResDef(XP_BKMKS_CANT_WRITE_BOOKMARKS,           XP_MSG_BASE+274,
  "Error saving bookmarks file!")
-ResDef(XP_BKMKS_CANT_WRITE_ADDRESSBOOK,			XP_MSG_BASE+275,
+ResDef(XP_BKMKS_CANT_WRITE_ADDRESSBOOK,         XP_MSG_BASE+275,
  "Error saving address book file!")
 
 
@@ -5114,20 +5151,20 @@ ResDef(XP_PLUGIN_CANT_LOAD_PLUGIN,               XP_MSG_BASE+326,
   Make sure enough memory is available and that the plug-in is installed correctly.")
 
 
-ResDef(XP_JAVA_NO_CLASSES,			XP_MSG_BASE+327,
+ResDef(XP_JAVA_NO_CLASSES,          XP_MSG_BASE+327,
 "Unable to start a java applet: Can't find '%s' in your\n\
 CLASSPATH. Read the release notes and install '%s'\n\
 properly before restarting.\n\nCurrent value of CLASSPATH:\n%s\n")
 
-ResDef(XP_JAVA_WRONG_CLASSES,			XP_MSG_BASE+328,
+ResDef(XP_JAVA_WRONG_CLASSES,           XP_MSG_BASE+328,
 "Unable to start a java applet: the version number for your\n\
 classes is wrong. The version number found was %d. The correct\n\
 version number is %d.\n")
 
-ResDef(XP_JAVA_STARTUP_FAILED,			XP_MSG_BASE+329,
+ResDef(XP_JAVA_STARTUP_FAILED,          XP_MSG_BASE+329,
 "Java reported the following error on startup:\n\n%s\n")
 
-ResDef(XP_JAVA_DEBUGGER_FAILED,			XP_MSG_BASE+330,
+ResDef(XP_JAVA_DEBUGGER_FAILED,         XP_MSG_BASE+330,
 "Failed to start the Java debugger.\n")
 
 ResDef(XP_ALERT_PROMPT_JAVA_CAPIBILITIES_PASSWORD,XP_MSG_BASE+331,
@@ -5142,154 +5179,154 @@ during this session:")
 /*
  * UNUSED:
  *  XP_MSG_BASE + 333
- *	.
- *	.
- *	.
+ *  .
+ *  .
+ *  .
  *  XP_MSG_BASE + 334
  */
 
-ResDef(XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST,	XP_MSG_BASE +  335,
+ResDef(XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST,   XP_MSG_BASE +  335,
  "Connect: Please enter password for host...")
 
-ResDef(XP_PROXY_REQUIRES_UNSUPPORTED_AUTH_SCHEME,	XP_MSG_BASE + 336,
+ResDef(XP_PROXY_REQUIRES_UNSUPPORTED_AUTH_SCHEME,   XP_MSG_BASE + 336,
  "Proxy is requiring an authentication scheme that is not supported." )
 
 
-ResDef(XP_LOOPING_OLD_NONCES,	XP_MSG_BASE + 337,
+ResDef(XP_LOOPING_OLD_NONCES,   XP_MSG_BASE + 337,
   "Proxy nonces appear to expire immediately.\n\
 This is either a problem in the proxy's authentication \n\
 implementation, or you have mistyped your password.\n\
 Do you want to re-enter your username and password?" )
 
 
-ResDef(XP_UNIDENTIFIED_PROXY_SERVER,	XP_MSG_BASE + 338,
+ResDef(XP_UNIDENTIFIED_PROXY_SERVER,    XP_MSG_BASE + 338,
  "unidentified proxy server")
 
-ResDef(XP_PROXY_AUTH_REQUIRED_FOR,	XP_MSG_BASE + 339,
+ResDef(XP_PROXY_AUTH_REQUIRED_FOR,  XP_MSG_BASE + 339,
  "Proxy authentication required for %.250s at %.250s:" )
 
-ResDef(XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_PROXY,	XP_MSG_BASE + 340,
+ResDef(XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_PROXY,  XP_MSG_BASE + 340,
  "Connect: Please enter password for proxy...")
 
-ResDef(XP_BAD_KEYWORD_IN_PROXY_AUTOCFG,	XP_MSG_BASE + 341,
+ResDef(XP_BAD_KEYWORD_IN_PROXY_AUTOCFG, XP_MSG_BASE + 341,
  "Bad keyword in proxy automatic configuration: %s." )
 
-ResDef(XP_RETRY_AGAIN_PROXY,	XP_MSG_BASE + 342,
+ResDef(XP_RETRY_AGAIN_PROXY,    XP_MSG_BASE + 342,
  "Try connecting to the proxy again?" )
 
-ResDef(XP_RETRY_AGAIN_SOCKS,	XP_MSG_BASE + 343,
+ResDef(XP_RETRY_AGAIN_SOCKS,    XP_MSG_BASE + 343,
  "Try connecting to SOCKS again?" )
 
-ResDef(XP_RETRY_AGAIN_PROXY_OR_SOCKS,	XP_MSG_BASE + 344,
+ResDef(XP_RETRY_AGAIN_PROXY_OR_SOCKS,   XP_MSG_BASE + 344,
  "Try connecting to proxy / SOCKS again?" )
 
-ResDef(XP_PROXY_UNAVAILABLE_TRY_AGAIN,	XP_MSG_BASE + 345,
+ResDef(XP_PROXY_UNAVAILABLE_TRY_AGAIN,  XP_MSG_BASE + 345,
  "Proxy server is unavailable.\n\n\
 Try connecting to proxy %s again?")
 
-ResDef(XP_ALL_PROXIES_DOWN_TRY_AGAIN,	XP_MSG_BASE + 346,
+ResDef(XP_ALL_PROXIES_DOWN_TRY_AGAIN,   XP_MSG_BASE + 346,
  "All proxy servers are unavailable.\n\n\
 Try connecting to %s again?" )
 
-ResDef(XP_ALL_SOCKS_DOWN,	XP_MSG_BASE + 347,
+ResDef(XP_ALL_SOCKS_DOWN,   XP_MSG_BASE + 347,
  "SOCKS is unavailable.  Try connecting to SOCKS %s again?" )
 
-ResDef(XP_ALL_DOWN_MIX,	XP_MSG_BASE + 348,
+ResDef(XP_ALL_DOWN_MIX, XP_MSG_BASE + 348,
  "SOCKS and proxies are unavailable.  Try\n\
 connecting to %s again?" )
 
-ResDef(XP_OVERRIDE_PROXY,	XP_MSG_BASE + 349,
+ResDef(XP_OVERRIDE_PROXY,   XP_MSG_BASE + 349,
  "All proxies are unavailable. Do you wish to temporarily\n\
 override proxies by connecting directly until proxies\n\
 are available again?" )
 
-ResDef(XP_OVERRIDE_SOCKS,	XP_MSG_BASE + 350,
+ResDef(XP_OVERRIDE_SOCKS,   XP_MSG_BASE + 350,
  "SOCKS is unavailable. Do you wish to temporarily\n\
 override SOCKS by connecting directly until SOCKS\n\
 are available again?" )
 
-ResDef(XP_OVERRIDE_MIX,	XP_MSG_BASE + 351,
+ResDef(XP_OVERRIDE_MIX, XP_MSG_BASE + 351,
  "Both proxies and SOCKS are unavailable. Do you wish to\n\
 temporarily override them by connecting directly until they\n\
 are available again?" )
 
-ResDef(XP_STILL_OVERRIDE_PROXY,	XP_MSG_BASE + 352,
+ResDef(XP_STILL_OVERRIDE_PROXY, XP_MSG_BASE + 352,
  "All proxies are still down.\n\
 Continue with direct connections?" )
 
-ResDef(XP_STILL_OVERRIDE_SOCKS,	XP_MSG_BASE + 353,
+ResDef(XP_STILL_OVERRIDE_SOCKS, XP_MSG_BASE + 353,
  "SOCKS is still down.\n\n\
 Continue with direct connections?" )
 
-ResDef(XP_STILL_OVERRIDE_MIX,	XP_MSG_BASE + 354,
+ResDef(XP_STILL_OVERRIDE_MIX,   XP_MSG_BASE + 354,
  "SOCKS and proxies are still down.\n\n\
 Continue with direct connections?" )
 
-ResDef(XP_NO_CONFIG_RECIEVED,	XP_MSG_BASE + 355,
+ResDef(XP_NO_CONFIG_RECIEVED,   XP_MSG_BASE + 355,
  "No proxy automatic configuration file was received.\n\n\
 No proxies will be used." )
 
-ResDef(XP_EMPTY_CONFIG_USE_PREV,	XP_MSG_BASE + 356,
+ResDef(XP_EMPTY_CONFIG_USE_PREV,    XP_MSG_BASE + 356,
  "The automatic configuration file is empty:\n\n    %s\n\n\
 Use the configuration from the previous session instead?" )
 
-ResDef(XP_BAD_CONFIG_USE_PREV,	XP_MSG_BASE + 357,
+ResDef(XP_BAD_CONFIG_USE_PREV,  XP_MSG_BASE + 357,
  "The automatic configuration file has errors:\n\n        %s\n\n\
 Use the configuration from the previous session instead?" )
 
-ResDef(XP_BAD_CONFIG_IGNORED,	XP_MSG_BASE + 358,
+ResDef(XP_BAD_CONFIG_IGNORED,   XP_MSG_BASE + 358,
  "The proxy automatic configuration file has errors:\n\n        %s\n\n\
 No proxies will be used." )
 
-ResDef(XP_BAD_TYPE_USE_PREV,	XP_MSG_BASE + 359,
+ResDef(XP_BAD_TYPE_USE_PREV,    XP_MSG_BASE + 359,
  "The automatic configuration file is not of the correct type:\n\n\
         %s\n\n\
 Expected MIME type of application/x-javascript-config or application/x-ns-proxy-autoconfig.\n\n\
 Use the configuration from the previous session instead?" )
 
-ResDef(XP_CONF_LOAD_FAILED_IGNORED,	XP_MSG_BASE + 360,
+ResDef(XP_CONF_LOAD_FAILED_IGNORED, XP_MSG_BASE + 360,
  "The proxy automatic configuration file could not be loaded.\n\n\
 Check the proxy automatic configuration URL in preferences.\n\n\
 No proxies will be used." )
 
-ResDef(XP_CONF_LOAD_FAILED_USE_PREV,	XP_MSG_BASE + 361,
+ResDef(XP_CONF_LOAD_FAILED_USE_PREV,    XP_MSG_BASE + 361,
    "The automatic configuration file could not be loaded.\n\n\
 Use the configuration from the previous session instead?" )
 
-ResDef(XP_EVEN_SAVED_IS_BAD,	XP_MSG_BASE + 362,
+ResDef(XP_EVEN_SAVED_IS_BAD,    XP_MSG_BASE + 362,
  "The backup proxy automatic configuration file had errors.\n\n\
 No proxies will be used." )
 
-ResDef(XP_CONFIG_LOAD_ABORTED,	XP_MSG_BASE + 363,
+ResDef(XP_CONFIG_LOAD_ABORTED,  XP_MSG_BASE + 363,
  "Proxy automatic configuration load was cancelled.\n\n\
 No proxies will be used." )
 
-ResDef(XP_CONFIG_BLAST_WARNING,	XP_MSG_BASE + 364,
+ResDef(XP_CONFIG_BLAST_WARNING, XP_MSG_BASE + 364,
  "Warning:\n\n\
 Server sent an unrequested proxy automatic\n\
 configuration file to "MOZ_NAME_PRODUCT":\n\n        %s\n\n\
 Configuration file will be ignored." )
 
-ResDef(XP_RECEIVING_PROXY_AUTOCFG,	XP_MSG_BASE + 365,
+ResDef(XP_RECEIVING_PROXY_AUTOCFG,  XP_MSG_BASE + 365,
  "Receiving proxy auto-configuration file...")
 
-ResDef(XP_CACHE_CLEANUP,	XP_MSG_BASE + 366,
+ResDef(XP_CACHE_CLEANUP,    XP_MSG_BASE + 366,
  "Cache cleanup: removing %d files...")
 
-ResDef(XP_DATABASE_CANT_BE_VALIDATED_MISSING_NAME_ENTRY,	XP_MSG_BASE + 367,
+ResDef(XP_DATABASE_CANT_BE_VALIDATED_MISSING_NAME_ENTRY,    XP_MSG_BASE + 367,
  "The database selected is valid, but cannot\n\
 be validated as the correct database because\n\
 it is missing a name entry.  Do you wish to\n\
 use this database anyway?")
 
-ResDef(XP_DB_SELECTED_DB_NAMED,	XP_MSG_BASE + 368,
+ResDef(XP_DB_SELECTED_DB_NAMED, XP_MSG_BASE + 368,
  "The database selected is named:\n\
 %.900s\n\
 The database requested was named:\n\
 %.900s\n\
 Do you wish to use this database anyway?" )
 
-ResDef(XP_REQUEST_EXTERNAL_CACHE,	XP_MSG_BASE + 369,
+ResDef(XP_REQUEST_EXTERNAL_CACHE,   XP_MSG_BASE + 369,
  "The page currently loading has requested an external\n\
 cache.  Using a read-only external cache can improve\n\
 network file retrieval time.\n\
@@ -5297,105 +5334,105 @@ network file retrieval time.\n\
 If you do not have the external cache requested,\n\
 select \042Cancel\042 in the file selection box.")
 
-ResDef(XP_BAD_TYPE_CONFIG_IGNORED,	XP_MSG_BASE + 370,
+ResDef(XP_BAD_TYPE_CONFIG_IGNORED,  XP_MSG_BASE + 370,
  "The proxy automatic configuration file is not of the correct type:\n\n\
         %s\n\n\
 Expected the MIME type of application/x-ns-proxy-autoconfig.\n\n\
 No proxies will be used." )
 
 
-ResDef(XP_READING_SEGMENT,	XP_MSG_BASE + 371,
+ResDef(XP_READING_SEGMENT,  XP_MSG_BASE + 371,
  "Reading segment...Done" )
 
-ResDef(XP_TITLE_DIRECTORY_LISTING,	XP_MSG_BASE + 372,
+ResDef(XP_TITLE_DIRECTORY_LISTING,  XP_MSG_BASE + 372,
  "<TITLE>Directory listing of %.1024s</TITLE>\n" )
 
-ResDef(XP_H1_DIRECTORY_LISTING,	XP_MSG_BASE + 373,
+ResDef(XP_H1_DIRECTORY_LISTING, XP_MSG_BASE + 373,
  "<H1>Directory listing of %.1024s</H1>\n<PRE>" )
 
-ResDef( XP_UPTO_HIGHER_LEVEL_DIRECTORY,	XP_MSG_BASE + 374,
+ResDef( XP_UPTO_HIGHER_LEVEL_DIRECTORY, XP_MSG_BASE + 374,
  "\042>Up to higher level directory</A><BR>")
 
-ResDef(XP_COULD_NOT_LOGIN_TO_FTP_SERVER ,	XP_MSG_BASE + 375,
+ResDef(XP_COULD_NOT_LOGIN_TO_FTP_SERVER ,   XP_MSG_BASE + 375,
  "Could not login to FTP server")
 
-ResDef( XP_ERROR_COULD_NOT_MAKE_CONNECTION_NON_BLOCKING,	XP_MSG_BASE + 376,
+ResDef( XP_ERROR_COULD_NOT_MAKE_CONNECTION_NON_BLOCKING,    XP_MSG_BASE + 376,
  "Error: Could not make connection non-blocking.")
 
-ResDef( XP_POSTING_FILE,	XP_MSG_BASE + 377,
+ResDef( XP_POSTING_FILE,    XP_MSG_BASE + 377,
  "Posting file %.256s..." )
 
-ResDef(XP_TITLE_DIRECTORY_OF_ETC ,	XP_MSG_BASE + 378,
+ResDef(XP_TITLE_DIRECTORY_OF_ETC ,  XP_MSG_BASE + 378,
  "<TITLE>Directory of %.512s</TITLE>\n\
  <H2>Current directory is %.512s</H2>\n\
  <PRE>")
 
-ResDef( XP_URLS_WAITING_FOR_AN_OPEN_SOCKET,	XP_MSG_BASE + 379,
+ResDef( XP_URLS_WAITING_FOR_AN_OPEN_SOCKET, XP_MSG_BASE + 379,
  "%d URL's waiting for an open socket (limit %d)\n" )
 
-ResDef( XP_URLS_WAITING_FOR_FEWER_ACTIVE_URLS,	XP_MSG_BASE + 380,
+ResDef( XP_URLS_WAITING_FOR_FEWER_ACTIVE_URLS,  XP_MSG_BASE + 380,
 "%d URL's waiting for fewer active URL's\n" )
 
-ResDef( XP_CONNECTIONS_OPEN,	XP_MSG_BASE + 381,
+ResDef( XP_CONNECTIONS_OPEN,    XP_MSG_BASE + 381,
  "%d Connections Open\n" )
 
-ResDef( XP_ACTIVE_URLS,	XP_MSG_BASE + 382,
+ResDef( XP_ACTIVE_URLS, XP_MSG_BASE + 382,
  "%d Active URL's\n" )
 
-ResDef( XP_USING_PREVIOUSLY_CACHED_COPY_INSTEAD,	XP_MSG_BASE + 383,
+ResDef( XP_USING_PREVIOUSLY_CACHED_COPY_INSTEAD,    XP_MSG_BASE + 383,
 "\n\nUsing previously cached copy instead")
 
-ResDef( XP_SERVER_RETURNED_NO_DATA,	XP_MSG_BASE + 384,
+ResDef( XP_SERVER_RETURNED_NO_DATA, XP_MSG_BASE + 384,
 "Server returned no data")
 
-ResDef( XP_HR_TRANSFER_INTERRUPTED,	XP_MSG_BASE + 385,
+ResDef( XP_HR_TRANSFER_INTERRUPTED, XP_MSG_BASE + 385,
 ">\n<HR><H3>Transfer interrupted!</H3>\n")
 
-ResDef( XP_TRANSFER_INTERRUPTED,	XP_MSG_BASE + 386,
+ResDef( XP_TRANSFER_INTERRUPTED,    XP_MSG_BASE + 386,
 "\n\nTransfer interrupted!\n")
 
-ResDef( XP_MAIL_READING_FOLDER,	XP_MSG_BASE + 387,
+ResDef( XP_MAIL_READING_FOLDER, XP_MSG_BASE + 387,
 "Mail: Reading folder %s..." )
 
-ResDef( XP_MAIL_READING_MESSAGE,	XP_MSG_BASE + 388,
+ResDef( XP_MAIL_READING_MESSAGE,    XP_MSG_BASE + 388,
 "Mail: Reading message...")
 
-ResDef( XP_MAIL_EMPTYING_TRASH,	XP_MSG_BASE + 389,
+ResDef( XP_MAIL_EMPTYING_TRASH, XP_MSG_BASE + 389,
 "Mail: Emptying trash...")
 
-ResDef( XP_COMPRESSING_FOLDER,	XP_MSG_BASE + 390,
+ResDef( XP_COMPRESSING_FOLDER,  XP_MSG_BASE + 390,
 "Mail: Compressing folder %s..." )
 
-ResDef( XP_MAIL_DELIVERING_QUEUED_MESSAGES,	XP_MSG_BASE + 391,
+ResDef( XP_MAIL_DELIVERING_QUEUED_MESSAGES, XP_MSG_BASE + 391,
 "Mail: Delivering queued messages...")
 
-ResDef( XP_READING_MESSAGE_DONE,	XP_MSG_BASE + 392,
+ResDef( XP_READING_MESSAGE_DONE,    XP_MSG_BASE + 392,
 "Mail: Reading message...Done")
 
-ResDef( XP_MAIL_READING_FOLDER_DONE,	XP_MSG_BASE + 393,
+ResDef( XP_MAIL_READING_FOLDER_DONE,    XP_MSG_BASE + 393,
 "Mail: Reading folder...Done")
 
-ResDef( XP_MAIL_EMPTYING_TRASH_DONE,	XP_MSG_BASE + 394,
+ResDef( XP_MAIL_EMPTYING_TRASH_DONE,    XP_MSG_BASE + 394,
 "Mail: Emptying trash...Done")
 
-ResDef( XP_MAIL_COMPRESSING_FOLDER_DONE,	XP_MSG_BASE + 395,
+ResDef( XP_MAIL_COMPRESSING_FOLDER_DONE,    XP_MSG_BASE + 395,
 "Mail: Compressing folder...Done")
 
-ResDef( XP_MAIL_DELIVERING_QUEUED_MESSAGES_DONE,	XP_MSG_BASE + 396,
+ResDef( XP_MAIL_DELIVERING_QUEUED_MESSAGES_DONE,    XP_MSG_BASE + 396,
 "Mail: Delivering queued messages...Done")
 
-/* XP_UNKNOWN_ERROR unused	XP_MSG_BASE + 397, */
+/* XP_UNKNOWN_ERROR unused  XP_MSG_BASE + 397, */
 
 ResDef( XP_CONNECT_NEWS_HOST_CONTACTED_WAITING_FOR_REPLY, XP_MSG_BASE + 398,
- "Connect: Discussion group server contacted. Waiting for reply...")
+ "Connect: News server contacted. Waiting for reply...")
 
-ResDef( XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS,	XP_MSG_BASE + 399,
- "Please enter a password for discussion group server access")
+ResDef( XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS,  XP_MSG_BASE + 399,
+ "Please enter a password for news server access")
 
-ResDef( XP_MESSAGE_SENT_WAITING_NEWS_REPLY,	XP_MSG_BASE + 400,
+ResDef( XP_MESSAGE_SENT_WAITING_NEWS_REPLY, XP_MSG_BASE + 400,
 "Message sent; waiting for reply...")
 
-ResDef( XP_NO_ANSWER,	XP_MSG_BASE + 401,
+ResDef( XP_NO_ANSWER,   XP_MSG_BASE + 401,
  "No Answer")
 
 ResDef( XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC,   XP_MSG_BASE + 402,
@@ -5406,11 +5443,11 @@ ResDef( XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC,   XP_MSG_BASE + 402,
  To download your mail, turn off these options in the\n\
  Mail Server panel of Preferences.")
 
-ResDef( XP_RECEIVING_MESSAGE_OF,	XP_MSG_BASE + 403,
+ResDef( XP_RECEIVING_MESSAGE_OF,    XP_MSG_BASE + 403,
 "Receiving: message %lu of %lu" )
 
 ResDef( XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND,  XP_MSG_BASE + 404,
- "The POP3 server (%s) does not\n\
+ "The POP3 mail server (%s) does not\n\
 support the TOP command.\n\n\
 Without server support for this, we cannot implement\n\
 the ``Maximum Message Size'' preference.  This option\n\
@@ -5433,408 +5470,408 @@ Please enter a new password for user %.100s@%.100s:")
 ResDef( XP_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION, XP_MSG_BASE + 406,
 "Connect: Host contacted, sending login information...")
 
-ResDef(MK_MSG_ASSEMBLING_MSG,		XP_MSG_BASE + 407,
+ResDef(MK_MSG_ASSEMBLING_MSG,       XP_MSG_BASE + 407,
  "Assembling message...")
 
-ResDef(MK_MSG_ASSEMB_DONE_MSG,		XP_MSG_BASE + 408,
+ResDef(MK_MSG_ASSEMB_DONE_MSG,      XP_MSG_BASE + 408,
 "Assembling message...Done")
 
-ResDef(MK_MSG_LOAD_ATTACHMNT,		XP_MSG_BASE + 409,
+ResDef(MK_MSG_LOAD_ATTACHMNT,       XP_MSG_BASE + 409,
  "Loading attachment...")
 
-ResDef(MK_MSG_LOAD_ATTACHMNTS,		XP_MSG_BASE + 410,
+ResDef(MK_MSG_LOAD_ATTACHMNTS,      XP_MSG_BASE + 410,
  "Loading attachments...")
 
-ResDef(MK_MSG_DELIVERING_MAIL,		XP_MSG_BASE + 411,
+ResDef(MK_MSG_DELIVERING_MAIL,      XP_MSG_BASE + 411,
  "Delivering mail...")
 
-ResDef(MK_MSG_DELIV_MAIL,			XP_MSG_BASE + 412,
+ResDef(MK_MSG_DELIV_MAIL,           XP_MSG_BASE + 412,
  "Delivering mail...")
 
-ResDef(MK_MSG_DELIV_MAIL_DONE,		XP_MSG_BASE + 413,
+ResDef(MK_MSG_DELIV_MAIL_DONE,      XP_MSG_BASE + 413,
  "Delivering mail...Done")
 
-ResDef(MK_MSG_DELIV_NEWS,			XP_MSG_BASE + 414,
+ResDef(MK_MSG_DELIV_NEWS,           XP_MSG_BASE + 414,
  "Delivering news...")
 
-ResDef(MK_MSG_DELIV_NEWS_DONE,		XP_MSG_BASE + 415,
+ResDef(MK_MSG_DELIV_NEWS_DONE,      XP_MSG_BASE + 415,
  "Delivering news...Done")
 
-ResDef(MK_MSG_QUEUEING,				XP_MSG_BASE + 416,
+ResDef(MK_MSG_QUEUEING,             XP_MSG_BASE + 416,
  "Queueing for later delivery...")
 
-ResDef(MK_MSG_WRITING_TO_FCC,		XP_MSG_BASE + 417,
+ResDef(MK_MSG_WRITING_TO_FCC,       XP_MSG_BASE + 417,
  "Writing to Sent Mail file...")
 
-ResDef(MK_MSG_QUEUED,				XP_MSG_BASE + 418,
+ResDef(MK_MSG_QUEUED,               XP_MSG_BASE + 418,
  "Queued for later delivery.")
 
-ResDef(MK_MSG_MSG_COMPOSITION,		XP_MSG_BASE + 419,
+ResDef(MK_MSG_MSG_COMPOSITION,      XP_MSG_BASE + 419,
  "Message Composition")
 
-/* MK_MSG_UNKNOWN_ERROR unused		XP_MSG_BASE + 420, */
+/* MK_MSG_UNKNOWN_ERROR unused      XP_MSG_BASE + 420, */
 
-ResDef(MK_MSG_LOADING_MESSAGES,		XP_MSG_BASE + 421,
+ResDef(MK_MSG_LOADING_MESSAGES,     XP_MSG_BASE + 421,
  "Loading summary file...")
 
 ResDef(MK_MSG_LOADED_MESSAGES,          XP_MSG_BASE + 422,
  "loaded %ld of %ld messages")
 
-ResDef(MK_MSG_OPEN_FOLDER,			XP_MSG_BASE + 423,
+ResDef(MK_MSG_OPEN_FOLDER,          XP_MSG_BASE + 423,
  "Add Folder")
 
-ResDef(MK_MSG_OPEN_FOLDER2,			XP_MSG_BASE + 424,
+ResDef(MK_MSG_OPEN_FOLDER2,         XP_MSG_BASE + 424,
  "Add Folder...")
 
-ResDef(MK_MSG_ENTER_FOLDERNAME,		XP_MSG_BASE + 425,
+ResDef(MK_MSG_ENTER_FOLDERNAME,     XP_MSG_BASE + 425,
  "Enter the name for your new folder.")
 
-ResDef(MK_MSG_SAVE_MESSAGE_AS,		XP_MSG_BASE + 426,
+ResDef(MK_MSG_SAVE_MESSAGE_AS,      XP_MSG_BASE + 426,
  "Save Message As")
 
-ResDef(MK_MSG_SAVE_MESSAGES_AS,		XP_MSG_BASE + 427,
+ResDef(MK_MSG_SAVE_MESSAGES_AS,     XP_MSG_BASE + 427,
  "Save Messages As")
 
-ResDef(MK_MSG_GET_NEW_MAIL,			XP_MSG_BASE + 428,
+ResDef(MK_MSG_GET_NEW_MAIL,         XP_MSG_BASE + 428,
  "Get New Mail")
 
-ResDef(MK_MSG_DELIV_NEW_MSGS,		XP_MSG_BASE + 429,
+ResDef(MK_MSG_DELIV_NEW_MSGS,       XP_MSG_BASE + 429,
  "Send Unsent Messages")
 
-ResDef(MK_MSG_NEW_FOLDER,			XP_MSG_BASE + 430,
+ResDef(MK_MSG_NEW_FOLDER,           XP_MSG_BASE + 430,
  "New Folder...")
 
-ResDef(MK_MSG_COMPRESS_FOLDER,		XP_MSG_BASE + 431,
+ResDef(MK_MSG_COMPRESS_FOLDER,      XP_MSG_BASE + 431,
  "Compress This Folder")
 
-ResDef(MK_MSG_COMPRESS_ALL_FOLDER,	XP_MSG_BASE + 432,
+ResDef(MK_MSG_COMPRESS_ALL_FOLDER,  XP_MSG_BASE + 432,
  "Compress All Folders")
 
-ResDef(MK_MSG_OPEN_NEWS_HOST_ETC,		XP_MSG_BASE + 433,
- "Open Discussion Group Server...")
+ResDef(MK_MSG_OPEN_NEWS_HOST_ETC,       XP_MSG_BASE + 433,
+ "Open News Server...")
 
-ResDef(MK_MSG_EMPTY_TRASH_FOLDER,	XP_MSG_BASE + 434,
+ResDef(MK_MSG_EMPTY_TRASH_FOLDER,   XP_MSG_BASE + 434,
  "Empty Trash Folder")
 
-ResDef(MK_MSG_PRINT,				XP_MSG_BASE + 435,
+ResDef(MK_MSG_PRINT,                XP_MSG_BASE + 435,
  "Print...")
 
-ResDef(MK_MSG_UNDO,					XP_MSG_BASE + 436,
+ResDef(MK_MSG_UNDO,                 XP_MSG_BASE + 436,
  "Undo")
 
-ResDef(MK_MSG_REDO,					XP_MSG_BASE + 437,
+ResDef(MK_MSG_REDO,                 XP_MSG_BASE + 437,
  "Redo")
 
-ResDef(MK_MSG_DELETE_SEL_MSGS,		XP_MSG_BASE + 438,
+ResDef(MK_MSG_DELETE_SEL_MSGS,      XP_MSG_BASE + 438,
  "Delete Selected Messages")
 
-ResDef(MK_MSG_DELETE_MESSAGE,		XP_MSG_BASE + 439,
+ResDef(MK_MSG_DELETE_MESSAGE,       XP_MSG_BASE + 439,
  "Delete Message")
 
-ResDef(MK_MSG_DELETE_FOLDER,		XP_MSG_BASE + 440,
+ResDef(MK_MSG_DELETE_FOLDER,        XP_MSG_BASE + 440,
  "Delete Folder")
 
-ResDef(MK_MSG_CANCEL_MESSAGE,		XP_MSG_BASE + 441,
+ResDef(MK_MSG_CANCEL_MESSAGE,       XP_MSG_BASE + 441,
  "Cancel Message")
 
-ResDef(MK_MSG_RMV_NEWS_HOST,		XP_MSG_BASE + 442,
- "Remove Discussion Group Server")
+ResDef(MK_MSG_RMV_NEWS_HOST,        XP_MSG_BASE + 442,
+ "Remove News Server")
 
-ResDef(MK_MSG_SUBSCRIBE,			XP_MSG_BASE + 443,
+ResDef(MK_MSG_SUBSCRIBE,            XP_MSG_BASE + 443,
  "Subscribe")
 
-ResDef(MK_MSG_UNSUBSCRIBE,			XP_MSG_BASE + 444,
+ResDef(MK_MSG_UNSUBSCRIBE,          XP_MSG_BASE + 444,
  "Unsubscribe")
 
-ResDef(MK_MSG_SELECT_THREAD,		XP_MSG_BASE + 445,
+ResDef(MK_MSG_SELECT_THREAD,        XP_MSG_BASE + 445,
  "Select Thread")
 
-ResDef(MK_MSG_SELECT_FLAGGED_MSG,	XP_MSG_BASE + 446,
+ResDef(MK_MSG_SELECT_FLAGGED_MSG,   XP_MSG_BASE + 446,
  "Select Flagged Messages")
 
-ResDef(MK_MSG_SELECT_ALL,			XP_MSG_BASE + 447,
+ResDef(MK_MSG_SELECT_ALL,           XP_MSG_BASE + 447,
  "Select All Messages")
 
-ResDef(MK_MSG_DESELECT_ALL_MSG,		XP_MSG_BASE + 448,
+ResDef(MK_MSG_DESELECT_ALL_MSG,     XP_MSG_BASE + 448,
  "Deselect All Messages")
 
-ResDef(MK_MSG_FLAG_MESSAGE,			XP_MSG_BASE + 449,
+ResDef(MK_MSG_FLAG_MESSAGE,         XP_MSG_BASE + 449,
  "Flag Message")
 
-ResDef(MK_MSG_UNFLAG_MESSAGE,		XP_MSG_BASE + 450,
+ResDef(MK_MSG_UNFLAG_MESSAGE,       XP_MSG_BASE + 450,
  "Unflag Message")
 
-ResDef(MK_MSG_AGAIN,				XP_MSG_BASE + 451,
+ResDef(MK_MSG_AGAIN,                XP_MSG_BASE + 451,
  "Again")
 
-ResDef(MK_MSG_THREAD_MESSAGES,		XP_MSG_BASE + 452,
+ResDef(MK_MSG_THREAD_MESSAGES,      XP_MSG_BASE + 452,
  "Thread Messages")
 
-ResDef(MK_MSG_BY_DATE,				XP_MSG_BASE + 453,
+ResDef(MK_MSG_BY_DATE,              XP_MSG_BASE + 453,
  "By Date")
 
-ResDef(MK_MSG_BY_SENDER,			XP_MSG_BASE + 454,
+ResDef(MK_MSG_BY_SENDER,            XP_MSG_BASE + 454,
  "By Sender")
 
-ResDef(MK_MSG_BY_SUBJECT,			XP_MSG_BASE + 455,
+ResDef(MK_MSG_BY_SUBJECT,           XP_MSG_BASE + 455,
  "By Subject")
 
-ResDef(MK_MSG_BY_MESSAGE_NB,		XP_MSG_BASE + 456,
- "By Order Received")
+ResDef(MK_MSG_BY_MESSAGE_NB,        XP_MSG_BASE + 456,
+ "By Message Number")
 
-ResDef(MK_MSG_UNSCRAMBLE,			XP_MSG_BASE + 457,
+ResDef(MK_MSG_UNSCRAMBLE,           XP_MSG_BASE + 457,
  "Unscramble (Rot13)")
 
-ResDef(MK_MSG_ADD_FROM_NEW_MSG,		XP_MSG_BASE + 458,
+ResDef(MK_MSG_ADD_FROM_NEW_MSG,     XP_MSG_BASE + 458,
  "Add from Newest Messages")
 
-ResDef(MK_MSG_ADD_FROM_OLD_MSG,		XP_MSG_BASE + 459,
+ResDef(MK_MSG_ADD_FROM_OLD_MSG,     XP_MSG_BASE + 459,
  "Add from Oldest Messages")
 
-ResDef(MK_MSG_GET_MORE_MSGS,		XP_MSG_BASE + 460,
+ResDef(MK_MSG_GET_MORE_MSGS,        XP_MSG_BASE + 460,
  "Get More Messages")
 
-ResDef(MK_MSG_GET_ALL_MSGS,			XP_MSG_BASE + 461,
+ResDef(MK_MSG_GET_ALL_MSGS,         XP_MSG_BASE + 461,
  "Get All Messages")
 
-ResDef(MK_MSG_ADDRESS_BOOK,			XP_MSG_BASE + 462,
+ResDef(MK_MSG_ADDRESS_BOOK,         XP_MSG_BASE + 462,
  "Address Book")
 
-ResDef(MK_MSG_VIEW_ADDR_BK_ENTRY,	XP_MSG_BASE + 463,
+ResDef(MK_MSG_VIEW_ADDR_BK_ENTRY,   XP_MSG_BASE + 463,
  "View Address Book Entry")
 
-ResDef(MK_MSG_ADD_TO_ADDR_BOOK,		XP_MSG_BASE + 464,
+ResDef(MK_MSG_ADD_TO_ADDR_BOOK,     XP_MSG_BASE + 464,
  "Add to Address Book")
 
-ResDef(MK_MSG_NEW_NEWS_MESSAGE,		XP_MSG_BASE + 465,
- "New Discussion Message")
+ResDef(MK_MSG_NEW_NEWS_MESSAGE,     XP_MSG_BASE + 465,
+ "New Newsgroup Message")
 
-ResDef(MK_MSG_POST_REPLY,			XP_MSG_BASE + 466,
- "to Discussion")
+ResDef(MK_MSG_POST_REPLY,           XP_MSG_BASE + 466,
+ "to Newsgroup")
 
-ResDef(MK_MSG_POST_MAIL_REPLY,		XP_MSG_BASE + 467,
- "to Sender and Discussion")
+ResDef(MK_MSG_POST_MAIL_REPLY,      XP_MSG_BASE + 467,
+ "to Sender and Newsgroup")
 
-ResDef(MK_MSG_NEW_MAIL_MESSAGE,		XP_MSG_BASE + 468,
+ResDef(MK_MSG_NEW_MAIL_MESSAGE,     XP_MSG_BASE + 468,
  "New Message")
 
-ResDef(MK_MSG_REPLY,				XP_MSG_BASE + 469,
+ResDef(MK_MSG_REPLY,                XP_MSG_BASE + 469,
  "Reply")
 
-ResDef(MK_MSG_REPLY_TO_ALL,			XP_MSG_BASE + 470,
+ResDef(MK_MSG_REPLY_TO_ALL,         XP_MSG_BASE + 470,
  "to Sender and All Recipients")
 
-ResDef(MK_MSG_FWD_SEL_MESSAGES,		XP_MSG_BASE + 471,
+ResDef(MK_MSG_FWD_SEL_MESSAGES,     XP_MSG_BASE + 471,
  "Forward Selected Messages")
 
-ResDef(MK_MSG_FORWARD,				XP_MSG_BASE + 472,
- "Forward")
+ResDef(MK_MSG_FORWARD,              XP_MSG_BASE + 472,
+ "Forward As Attachment")
 
-ResDef(MK_MSG_MARK_SEL_AS_READ,		XP_MSG_BASE + 473,
+ResDef(MK_MSG_MARK_SEL_AS_READ,     XP_MSG_BASE + 473,
  "Mark Selected as Read")
 
-ResDef(MK_MSG_MARK_AS_READ,			XP_MSG_BASE + 474,
+ResDef(MK_MSG_MARK_AS_READ,         XP_MSG_BASE + 474,
  "Mark as Read")
 
-ResDef(MK_MSG_MARK_SEL_AS_UNREAD,	XP_MSG_BASE + 475,
+ResDef(MK_MSG_MARK_SEL_AS_UNREAD,   XP_MSG_BASE + 475,
  "Mark Selected as Unread")
 
-ResDef(MK_MSG_MARK_AS_UNREAD,		XP_MSG_BASE + 476,
+ResDef(MK_MSG_MARK_AS_UNREAD,       XP_MSG_BASE + 476,
  "Mark as Unread")
 
-ResDef(MK_MSG_UNFLAG_ALL_MSGS,		XP_MSG_BASE + 477,
+ResDef(MK_MSG_UNFLAG_ALL_MSGS,      XP_MSG_BASE + 477,
  "Unflag All Messages")
 
-ResDef(MK_MSG_COPY_SEL_MSGS,		XP_MSG_BASE + 478,
+ResDef(MK_MSG_COPY_SEL_MSGS,        XP_MSG_BASE + 478,
  "Copy Selected Messages")
 
-ResDef(MK_MSG_COPY_ONE,				XP_MSG_BASE + 479,
+ResDef(MK_MSG_COPY_ONE,             XP_MSG_BASE + 479,
  "Copy")
 
-ResDef(MK_MSG_MOVE_SEL_MSG,			XP_MSG_BASE + 480,
+ResDef(MK_MSG_MOVE_SEL_MSG,         XP_MSG_BASE + 480,
  "Move Selected Messages")
 
-ResDef(MK_MSG_MOVE_ONE,				XP_MSG_BASE + 481,
+ResDef(MK_MSG_MOVE_ONE,             XP_MSG_BASE + 481,
  "Move")
 
-ResDef(MK_MSG_SAVE_SEL_MSGS,		XP_MSG_BASE + 482,
+ResDef(MK_MSG_SAVE_SEL_MSGS,        XP_MSG_BASE + 482,
  "Save Selected Messages As...")
 
-ResDef(MK_MSG_SAVE_AS,				XP_MSG_BASE + 483,
+ResDef(MK_MSG_SAVE_AS,              XP_MSG_BASE + 483,
  "Save As...")
 
-ResDef(MK_MSG_MOVE_SEL_MSG_TO,		XP_MSG_BASE + 484,
+ResDef(MK_MSG_MOVE_SEL_MSG_TO,      XP_MSG_BASE + 484,
  "Move Selected Messages To...")
 
-ResDef(MK_MSG_MOVE_MSG_TO,			XP_MSG_BASE + 485,
+ResDef(MK_MSG_MOVE_MSG_TO,          XP_MSG_BASE + 485,
  "Move This Message To...")
 
-ResDef(MK_MSG_FIRST_MSG,			XP_MSG_BASE + 486,
+ResDef(MK_MSG_FIRST_MSG,            XP_MSG_BASE + 486,
  "First Message")
 
-ResDef(MK_MSG_NEXT_MSG,				XP_MSG_BASE + 487,
+ResDef(MK_MSG_NEXT_MSG,             XP_MSG_BASE + 487,
  "Next Message")
 
-ResDef(MK_MSG_PREV_MSG,				XP_MSG_BASE + 488,
+ResDef(MK_MSG_PREV_MSG,             XP_MSG_BASE + 488,
  "Previous Message")
 
-ResDef(MK_MSG_LAST_MSG,				XP_MSG_BASE + 489,
+ResDef(MK_MSG_LAST_MSG,             XP_MSG_BASE + 489,
  "Last Message")
 
-ResDef(MK_MSG_FIRST_UNREAD,			XP_MSG_BASE + 490,
+ResDef(MK_MSG_FIRST_UNREAD,         XP_MSG_BASE + 490,
  "First Unread")
 
-ResDef(MK_MSG_NEXT_UNREAD,			XP_MSG_BASE + 491,
+ResDef(MK_MSG_NEXT_UNREAD,          XP_MSG_BASE + 491,
  "Next Unread")
 
-ResDef(MK_MSG_PREV_UNREAD,			XP_MSG_BASE + 492,
+ResDef(MK_MSG_PREV_UNREAD,          XP_MSG_BASE + 492,
  "Previous Unread Message")
 
-ResDef(MK_MSG_LAST_UNREAD,			XP_MSG_BASE + 493,
+ResDef(MK_MSG_LAST_UNREAD,          XP_MSG_BASE + 493,
  "Last Unread")
 
-ResDef(MK_MSG_FIRST_FLAGGED,		XP_MSG_BASE + 494,
+ResDef(MK_MSG_FIRST_FLAGGED,        XP_MSG_BASE + 494,
  "First Flagged")
 
-ResDef(MK_MSG_NEXT_FLAGGED,			XP_MSG_BASE + 495,
+ResDef(MK_MSG_NEXT_FLAGGED,         XP_MSG_BASE + 495,
  "Next Flagged")
 
-ResDef(MK_MSG_PREV_FLAGGED,			XP_MSG_BASE + 496,
+ResDef(MK_MSG_PREV_FLAGGED,         XP_MSG_BASE + 496,
  "Previous Flagged")
 
-ResDef(MK_MSG_LAST_FLAGGED,			XP_MSG_BASE + 497,
+ResDef(MK_MSG_LAST_FLAGGED,         XP_MSG_BASE + 497,
  "Last Flagged")
 
-ResDef(MK_MSG_BACKTRACK,			XP_MSG_BASE + 498,
+ResDef(MK_MSG_BACKTRACK,            XP_MSG_BASE + 498,
  "Go back to the last message")
 
-ResDef(MK_MSG_GO_FORWARD,			XP_MSG_BASE + 499,
+ResDef(MK_MSG_GO_FORWARD,           XP_MSG_BASE + 499,
  "Go Forward from the last message")
 
-ResDef(MK_MSG_MARK_THREAD_READ,		XP_MSG_BASE + 500,
+ResDef(MK_MSG_MARK_THREAD_READ,     XP_MSG_BASE + 500,
  "Mark Thread Read")
 
-ResDef(MK_MSG_MARK_ALL_READ,	XP_MSG_BASE + 501,
+ResDef(MK_MSG_MARK_ALL_READ,    XP_MSG_BASE + 501,
  "Mark All Read")
 
-ResDef(MK_MSG_MARK_SEL_READ,		XP_MSG_BASE + 502,
+ResDef(MK_MSG_MARK_SEL_READ,        XP_MSG_BASE + 502,
  "Mark Selected Threads Read")
 
-ResDef(MK_MSG_SHOW_ALL_MSGS,		XP_MSG_BASE + 505,
+ResDef(MK_MSG_SHOW_ALL_MSGS,        XP_MSG_BASE + 505,
  "Show All Messages")
 
-ResDef(MK_MSG_SHOW_UNREAD_ONLY,		XP_MSG_BASE + 506,
+ResDef(MK_MSG_SHOW_UNREAD_ONLY,     XP_MSG_BASE + 506,
  "Show Only Unread Messages")
 
 /* 
    MK_MSG_SHOW_MICRO_HEADERS and MK_MSG_SHOW_SOME_HEADERS are way at the end.
  */
 
-ResDef(MK_MSG_SHOW_ALL_HEADERS,		XP_MSG_BASE + 507,
+ResDef(MK_MSG_SHOW_ALL_HEADERS,     XP_MSG_BASE + 507,
  "All")
 
-ResDef(MK_MSG_QUOTE_MESSAGE,		XP_MSG_BASE + 508,
+ResDef(MK_MSG_QUOTE_MESSAGE,        XP_MSG_BASE + 508,
  "Include Original Text")
 
-ResDef(MK_MSG_FROM,					XP_MSG_BASE + 509,
+ResDef(MK_MSG_FROM,                 XP_MSG_BASE + 509,
  "From")
 
-ResDef(MK_MSG_REPLY_TO,				XP_MSG_BASE + 510,
+ResDef(MK_MSG_REPLY_TO,             XP_MSG_BASE + 510,
  "Reply To")
 
-ResDef(MK_MSG_MAIL_TO,				XP_MSG_BASE + 511,
+ResDef(MK_MSG_MAIL_TO,              XP_MSG_BASE + 511,
  "Mail To")
 
-ResDef(MK_MSG_MAIL_CC,				XP_MSG_BASE + 512,
+ResDef(MK_MSG_MAIL_CC,              XP_MSG_BASE + 512,
  "Mail CC")
 
-ResDef(MK_MSG_MAIL_BCC,				XP_MSG_BASE + 513,
+ResDef(MK_MSG_MAIL_BCC,             XP_MSG_BASE + 513,
  "Mail BCC")
 
-ResDef(MK_MSG_FILE_CC,				XP_MSG_BASE + 514,
+ResDef(MK_MSG_FILE_CC,              XP_MSG_BASE + 514,
  "File CC")
 
-ResDef(MK_MSG_POST_TO,				XP_MSG_BASE + 515,
+ResDef(MK_MSG_POST_TO,              XP_MSG_BASE + 515,
  "Newsgroups")
 
-ResDef(MK_MSG_FOLLOWUPS_TO,			XP_MSG_BASE + 516,
+ResDef(MK_MSG_FOLLOWUPS_TO,         XP_MSG_BASE + 516,
  "Followups To")
 
-ResDef(MK_MSG_SUBJECT,				XP_MSG_BASE + 517,
+ResDef(MK_MSG_SUBJECT,              XP_MSG_BASE + 517,
  "Subject")
 
-ResDef(MK_MSG_ATTACHMENT,			XP_MSG_BASE + 518,
+ResDef(MK_MSG_ATTACHMENT,           XP_MSG_BASE + 518,
  "Attachment")
 
-ResDef(MK_MSG_SEND_FORMATTED_TEXT,	XP_MSG_BASE + 519,
+ResDef(MK_MSG_SEND_FORMATTED_TEXT,  XP_MSG_BASE + 519,
  "Send Formatted Text")
 
-ResDef(MK_MSG_Q4_LATER_DELIVERY,	XP_MSG_BASE + 520,
+ResDef(MK_MSG_Q4_LATER_DELIVERY,    XP_MSG_BASE + 520,
  "Queue For Later Delivery")
 
-ResDef(MK_MSG_ATTACH_AS_TEXT,		XP_MSG_BASE + 521,
+ResDef(MK_MSG_ATTACH_AS_TEXT,       XP_MSG_BASE + 521,
  "Attach As Text")
 
-ResDef(MK_MSG_FLAG_MESSAGES,		XP_MSG_BASE + 522,
+ResDef(MK_MSG_FLAG_MESSAGES,        XP_MSG_BASE + 522,
  "Flag Messages")
 
-ResDef(MK_MSG_UNFLAG_MESSAGES,		XP_MSG_BASE + 523,
+ResDef(MK_MSG_UNFLAG_MESSAGES,      XP_MSG_BASE + 523,
  "Unflag Messages")
 
-ResDef(MK_MSG_SORT_BACKWARD,		XP_MSG_BASE + 524,
+ResDef(MK_MSG_SORT_BACKWARD,        XP_MSG_BASE + 524,
  "Ascending")
 
-ResDef(MK_MSG_PARTIAL_MSG_FMT_1,	XP_MSG_BASE + 525,
+ResDef(MK_MSG_PARTIAL_MSG_FMT_1,    XP_MSG_BASE + 525,
  "<P><CENTER>\n<TABLE BORDER CELLSPACING=5 CELLPADDING=10 WIDTH=\04280%%\042>\n\
 <TR><TD ALIGN=CENTER><FONT SIZE=\042+1\042>Truncated!</FONT><HR>\n")
 
-ResDef(MK_MSG_PARTIAL_MSG_FMT_2,	XP_MSG_BASE + 526,
+ResDef(MK_MSG_PARTIAL_MSG_FMT_2,    XP_MSG_BASE + 526,
  "<B>This message exceeded the Maximum Message Size set in Preferences,\n\
 so we have only downloaded the first few lines from the mail server.<P>Click <A HREF=\042")
 
-ResDef(MK_MSG_PARTIAL_MSG_FMT_3,	XP_MSG_BASE + 527,
+ResDef(MK_MSG_PARTIAL_MSG_FMT_3,    XP_MSG_BASE + 527,
  "\042>here</A> to download the rest of the message.</B></TD></TR></TABLE></CENTER>\n")
 
-ResDef(MK_MSG_NO_HEADERS,			XP_MSG_BASE + 528,
+ResDef(MK_MSG_NO_HEADERS,           XP_MSG_BASE + 528,
  "(no headers)")
 
-ResDef(MK_MSG_UNSPECIFIED,			XP_MSG_BASE + 529,
+ResDef(MK_MSG_UNSPECIFIED,          XP_MSG_BASE + 529,
  "(unspecified)")
 
-ResDef(MK_MSG_MIME_MAC_FILE,		XP_MSG_BASE + 530,
+ResDef(MK_MSG_MIME_MAC_FILE,        XP_MSG_BASE + 530,
  "Macintosh File")
 
-ResDef(MK_MSG_DIR_DOESNT_EXIST,		XP_MSG_BASE + 531,
+ResDef(MK_MSG_DIR_DOESNT_EXIST,     XP_MSG_BASE + 531,
  "The directory %s does not exist.  Mail will not\nwork without it.\n\nCreate it now?")
 
-ResDef(MK_MSG_SAVE_DECODED_AS,		XP_MSG_BASE + 532,
+ResDef(MK_MSG_SAVE_DECODED_AS,      XP_MSG_BASE + 532,
  "Save decoded file as:")
 
-ResDef(MK_MSG_FILE_HAS_CHANGED,		XP_MSG_BASE + 533,
+ResDef(MK_MSG_FILE_HAS_CHANGED,     XP_MSG_BASE + 533,
  "The file %s has been changed by some other program!\nOverwrite it?")
 
-ResDef(MK_MSG_OPEN_NEWS_HOST,		XP_MSG_BASE + 534,
- "Open Discussion Group Server")
+ResDef(MK_MSG_OPEN_NEWS_HOST,       XP_MSG_BASE + 534,
+ "Open News Server")
 
-ResDef(MK_MSG_ANNOUNCE_NEWSGRP,		XP_MSG_BASE + 535,
+ResDef(MK_MSG_ANNOUNCE_NEWSGRP,     XP_MSG_BASE + 535,
  "news.announce.newusers")
 
-ResDef(MK_MSG_QUESTIONS_NEWSGRP,	XP_MSG_BASE + 536,
+ResDef(MK_MSG_QUESTIONS_NEWSGRP,    XP_MSG_BASE + 536,
  "news.newusers.questions")
 
-ResDef(MK_MSG_ANSWERS_NEWSGRP,		XP_MSG_BASE + 537,
+ResDef(MK_MSG_ANSWERS_NEWSGRP,      XP_MSG_BASE + 537,
  "news.answers")
 
-ResDef(MK_MSG_COMPRESS_FOLDER_ETC,		XP_MSG_BASE + 538,
+ResDef(MK_MSG_COMPRESS_FOLDER_ETC,      XP_MSG_BASE + 538,
  "Mail: Compressing folder %s...")
 
-ResDef(MK_MSG_COMPRESS_FOLDER_DONE,	XP_MSG_BASE + 539,
+ResDef(MK_MSG_COMPRESS_FOLDER_DONE, XP_MSG_BASE + 539,
  "Mail: Compressing folder %s...Done")
 
-ResDef(MK_MSG_CANT_OPEN,			XP_MSG_BASE + 540,
+ResDef(MK_MSG_CANT_OPEN,            XP_MSG_BASE + 540,
  "Can't open %s. You may not have permission to write to this file.\nCheck the permissions and try again.")
 
-ResDef(MK_MSG_SAVE_ATTACH_AS,		XP_MSG_BASE + 541,
+ResDef(MK_MSG_SAVE_ATTACH_AS,       XP_MSG_BASE + 541,
  "Save attachment as:")
 
 
@@ -5862,7 +5899,7 @@ ResDef(XP_THERMO_PERCENT_RATE_FORM,  XP_MSG_BASE + 548,
 ResDef(XP_THERMO_RAW_COUNT_FORM,  XP_MSG_BASE + 549,
  "%s read")
 
-ResDef( XP_MESSAGE_SENT_WAITING_MAIL_REPLY,	XP_MSG_BASE + 550,
+ResDef( XP_MESSAGE_SENT_WAITING_MAIL_REPLY, XP_MSG_BASE + 550,
 "Mail: Message sent; waiting for reply...")
 
 ResDef(XP_GLHIST_INFO_HTML,                     XP_MSG_BASE + 551,
@@ -5873,217 +5910,217 @@ ResDef(XP_GLHIST_INFO_HTML,                     XP_MSG_BASE + 551,
 ResDef(XP_THERMO_PERCENTAGE_FORMAT,   XP_MSG_BASE + 552,
  "%d%%")
 
-ResDef(XP_MSG_IMAGE_PIXELS,			XP_MSG_BASE + 553,	"%s image %dx%d pixels")
-ResDef(XP_MSG_IMAGE_NOT_FOUND,		XP_MSG_BASE + 554,	"Couldn't find image of correct URL, size, background, etc.\nin cache:\n%s\n")
-ResDef(XP_MSG_XBIT_COLOR,			XP_MSG_BASE + 555,	"%d-bit pseudocolor")
-ResDef(XP_MSG_1BIT_MONO,			XP_MSG_BASE + 556,	"1-bit monochrome")
-ResDef(XP_MSG_XBIT_GREYSCALE,		XP_MSG_BASE + 557,	"%d-bit greyscale")
-ResDef(XP_MSG_XBIT_RGB,				XP_MSG_BASE + 558,	"%d-bit RGB true color.")
-ResDef(XP_MSG_DECODED_SIZE,			XP_MSG_BASE + 559,	"Decoded&nbsp;size&nbsp;(bytes):")
-ResDef(XP_MSG_WIDTH_HEIGHT,			XP_MSG_BASE + 560,	"%u&nbsp;x&nbsp;%u")
-ResDef(XP_MSG_SCALED_FROM,			XP_MSG_BASE + 561,	" (scaled from %u&nbsp;x&nbsp;%u)")
-ResDef(XP_MSG_IMAGE_DIM,			XP_MSG_BASE + 562,	"Image&nbsp;dimensions:")
-ResDef(XP_MSG_COLOR,				XP_MSG_BASE + 563,	"Color:")
-ResDef(XP_MSG_NB_COLORS,			XP_MSG_BASE + 564,	"%d colors")
-ResDef(XP_MSG_NONE,					XP_MSG_BASE + 565,	"(none)")
-ResDef(XP_MSG_COLORMAP,				XP_MSG_BASE + 566,	"Colormap:")
-ResDef(XP_MSG_BCKDRP_VISIBLE,		XP_MSG_BASE + 567,	"yes, backdrop visible through transparency")
-ResDef(XP_MSG_SOLID_BKGND,			XP_MSG_BASE + 568,	"yes, solid color background <tt>#%02x%02x%02x</tt>")
-ResDef(XP_MSG_JUST_NO,				XP_MSG_BASE + 569,	"no")
-ResDef(XP_MSG_TRANSPARENCY,			XP_MSG_BASE + 570,	"Transparency:")
-ResDef(XP_MSG_COMMENT,				XP_MSG_BASE + 571,	"Comment:")
-ResDef(XP_MSG_UNKNOWN,				XP_MSG_BASE + 572,	"Unknown")
-ResDef(XP_MSG_COMPRESS_REMOVE,		XP_MSG_BASE + 573,	"Compressing image cache:\nremoving %s\n")
-ResDef(MK_MSG_ADD_NEWS_GROUP,		XP_MSG_BASE + 574,	"Add Discussion Group...")
-ResDef(MK_MSG_FIND_AGAIN,			XP_MSG_BASE + 575, 	"Find Again")
-ResDef(MK_MSG_SEND,					XP_MSG_BASE + 576, 	"Send")
-ResDef(MK_MSG_SEND_LATER,			XP_MSG_BASE + 577, 	"Send Later")
-ResDef(MK_MSG_ATTACH_ETC,			XP_MSG_BASE + 578, 	"Attach...")
-ResDef(MK_MSG_ATTACHMENTSINLINE,	XP_MSG_BASE + 579, 	"Attachments Inline")
-ResDef(MK_MSG_ATTACHMENTSASLINKS,	XP_MSG_BASE + 580, 	"Attachments as Links")
-ResDef(MK_MSG_FORWARD_QUOTED,   	XP_MSG_BASE + 581,  "Forward Quoted")
+ResDef(XP_MSG_IMAGE_PIXELS,         XP_MSG_BASE + 553,  "%s image %dx%d pixels")
+ResDef(XP_MSG_IMAGE_NOT_FOUND,      XP_MSG_BASE + 554,  "Couldn't find image of correct URL, size, background, etc.\nin cache:\n%s\n")
+ResDef(XP_MSG_XBIT_COLOR,           XP_MSG_BASE + 555,  "%d-bit pseudocolor")
+ResDef(XP_MSG_1BIT_MONO,            XP_MSG_BASE + 556,  "1-bit monochrome")
+ResDef(XP_MSG_XBIT_GREYSCALE,       XP_MSG_BASE + 557,  "%d-bit greyscale")
+ResDef(XP_MSG_XBIT_RGB,             XP_MSG_BASE + 558,  "%d-bit RGB true color.")
+ResDef(XP_MSG_DECODED_SIZE,         XP_MSG_BASE + 559,  "Decoded&nbsp;size&nbsp;(bytes):")
+ResDef(XP_MSG_WIDTH_HEIGHT,         XP_MSG_BASE + 560,  "%u&nbsp;x&nbsp;%u")
+ResDef(XP_MSG_SCALED_FROM,          XP_MSG_BASE + 561,  " (scaled from %u&nbsp;x&nbsp;%u)")
+ResDef(XP_MSG_IMAGE_DIM,            XP_MSG_BASE + 562,  "Image&nbsp;dimensions:")
+ResDef(XP_MSG_COLOR,                XP_MSG_BASE + 563,  "Color:")
+ResDef(XP_MSG_NB_COLORS,            XP_MSG_BASE + 564,  "%d colors")
+ResDef(XP_MSG_NONE,                 XP_MSG_BASE + 565,  "(none)")
+ResDef(XP_MSG_COLORMAP,             XP_MSG_BASE + 566,  "Colormap:")
+ResDef(XP_MSG_BCKDRP_VISIBLE,       XP_MSG_BASE + 567,  "yes, backdrop visible through transparency")
+ResDef(XP_MSG_SOLID_BKGND,          XP_MSG_BASE + 568,  "yes, solid color background <tt>#%02x%02x%02x</tt>")
+ResDef(XP_MSG_JUST_NO,              XP_MSG_BASE + 569,  "no")
+ResDef(XP_MSG_TRANSPARENCY,         XP_MSG_BASE + 570,  "Transparency:")
+ResDef(XP_MSG_COMMENT,              XP_MSG_BASE + 571,  "Comment:")
+ResDef(XP_MSG_UNKNOWN,              XP_MSG_BASE + 572,  "Unknown")
+ResDef(XP_MSG_COMPRESS_REMOVE,      XP_MSG_BASE + 573,  "Compressing image cache:\nremoving %s\n")
+ResDef(MK_MSG_ADD_NEWS_GROUP,       XP_MSG_BASE + 574,  "Add Newsgroup...")
+ResDef(MK_MSG_FIND_AGAIN,           XP_MSG_BASE + 575,  "Find Again")
+ResDef(MK_MSG_SEND,                 XP_MSG_BASE + 576,  "Send")
+ResDef(MK_MSG_SEND_LATER,           XP_MSG_BASE + 577,  "Send Later")
+ResDef(MK_MSG_ATTACH_ETC,           XP_MSG_BASE + 578,  "Attach...")
+ResDef(MK_MSG_ATTACHMENTSINLINE,    XP_MSG_BASE + 579,  "Attachments Inline")
+ResDef(MK_MSG_ATTACHMENTSASLINKS,   XP_MSG_BASE + 580,  "Attachments as Links")
+ResDef(MK_MSG_FORWARD_QUOTED,       XP_MSG_BASE + 581,  "Forward Quoted")
 ResDef(MK_MSG_REMOVE_HOST_CONFIRM,      XP_MSG_BASE + 582,
-       "Are you sure you want to remove the discussion group server %s\n\
-and all of the discussion groups in it?")
-ResDef(MK_MSG_ALL_FIELDS, 		XP_MSG_BASE + 583, "All Fields")
+       "Are you sure you want to remove the news server %s\n\
+and all of the newsgroups in it?")
+ResDef(MK_MSG_ALL_FIELDS,       XP_MSG_BASE + 583, "All Fields")
 
 #ifdef XP_WIN16
-ResDef(MK_MSG_BOGUS_QUEUE_MSG_1,	XP_MSG_BASE + 584,
+ResDef(MK_MSG_BOGUS_QUEUE_MSG_1,    XP_MSG_BASE + 584,
        "The `Unsent' folder contains a message which is not\n\
 scheduled for delivery!")
 
-ResDef(MK_MSG_BOGUS_QUEUE_MSG_N,	XP_MSG_BASE + 585,
+ResDef(MK_MSG_BOGUS_QUEUE_MSG_N,    XP_MSG_BASE + 585,
        "The `Unsent' folder contains %d messages which are not\n\
 scheduled for delivery!")
 #else
-ResDef(MK_MSG_BOGUS_QUEUE_MSG_1,	XP_MSG_BASE + 584,
+ResDef(MK_MSG_BOGUS_QUEUE_MSG_1,    XP_MSG_BASE + 584,
        "The `Unsent Messages' folder contains a message which is not\n\
 scheduled for delivery!")
 
-ResDef(MK_MSG_BOGUS_QUEUE_MSG_N,	XP_MSG_BASE + 585,
+ResDef(MK_MSG_BOGUS_QUEUE_MSG_N,    XP_MSG_BASE + 585,
        "The `Unsent Messages' folder contains %d messages which are not\n\
 scheduled for delivery!")
 #endif
 
-ResDef(MK_MSG_BOGUS_QUEUE_REASON,	XP_MSG_BASE + 586,
+ResDef(MK_MSG_BOGUS_QUEUE_REASON,   XP_MSG_BASE + 586,
        "\n\nThis probably means that some program other than\n\
 "MOZ_NAME_PRODUCT" has added messages to this folder.\n")
 
 #ifdef XP_WIN16
-ResDef(MK_MSG_WHY_QUEUE_SPECIAL,	XP_MSG_BASE + 587,
-       "The `Unsent' folder is special; it is only for holding\n\
-messages which have been deferred for later delivery.")
+ResDef(MK_MSG_WHY_QUEUE_SPECIAL,    XP_MSG_BASE + 587,
+       "The `Unsent' folder is special; it is only for storing\n\
+messages to be sent later.")
 #else
-ResDef(MK_MSG_WHY_QUEUE_SPECIAL,	XP_MSG_BASE + 587,
-       "The `Unsent Messages' folder is special; it is only for holding\n\
-messages which have been deferred for later delivery.")
+ResDef(MK_MSG_WHY_QUEUE_SPECIAL,    XP_MSG_BASE + 587,
+       "The `Unsent Messages' folder is special; it is only for storing\n\
+messages to be sent later.")
 #endif
 
-ResDef(MK_MSG_NOT_AS_SENT_FOLDER,	XP_MSG_BASE + 588,
+ResDef(MK_MSG_NOT_AS_SENT_FOLDER,   XP_MSG_BASE + 588,
        "\nTherefore, you can't use it as your `Sent' folder.\n\
 \n\
 Please verify that your outgoing messages destination is correct\n\
-in your Mail and Groups preferences.")
+in your Mail and News preferences.")
 
-ResDef(MK_MSG_QUEUED_DELIVERY_FAILED,	XP_MSG_BASE + 589,
-       "An error occurred delivering deferred mail.\n\n\
+ResDef(MK_MSG_QUEUED_DELIVERY_FAILED,   XP_MSG_BASE + 589,
+       "An error occurred delivering unsent messages.\n\n\
 %s\n\
-Continue delivery of any remaining deferred messages ?")
+Continue delivery of any remaining unsent messages?")
 
-ResDef(XP_PASSWORD_FOR_POP3_USER,	XP_MSG_BASE + 590,
+ResDef(XP_PASSWORD_FOR_POP3_USER,   XP_MSG_BASE + 590,
        "Password for mail user %.100s@%.100s:")
 
-ResDef(XP_BKMKS_SOMEONE_S_BOOKMARKS,	XP_MSG_BASE + 591,
+ResDef(XP_BKMKS_SOMEONE_S_BOOKMARKS,    XP_MSG_BASE + 591,
        "%sBookmarks for %s%s")
 
-ResDef(XP_BKMKS_PERSONAL_BOOKMARKS,	XP_MSG_BASE + 592,
+ResDef(XP_BKMKS_PERSONAL_BOOKMARKS, XP_MSG_BASE + 592,
        "%sPersonal Bookmarks%s")
 
-ResDef(XP_BKMKS_SOMEONE_S_ADDRESSBOOK,	XP_MSG_BASE + 593,
+ResDef(XP_BKMKS_SOMEONE_S_ADDRESSBOOK,  XP_MSG_BASE + 593,
        "%sAddress book for %s%s")
 
-ResDef(XP_BKMKS_PERSONAL_ADDRESSBOOK,	XP_MSG_BASE + 594,
+ResDef(XP_BKMKS_PERSONAL_ADDRESSBOOK,   XP_MSG_BASE + 594,
        "%sPersonal Address book%s")
 
-ResDef(XP_SOCK_CON_SOCK_PROTOCOL,	XP_MSG_BASE + 595,
+ResDef(XP_SOCK_CON_SOCK_PROTOCOL,   XP_MSG_BASE + 595,
        "sock: %d   con_sock: %d   protocol: %d\n")
 
-ResDef(XP_URL_NOT_FOUND_IN_CACHE,	XP_MSG_BASE + 596,
+ResDef(XP_URL_NOT_FOUND_IN_CACHE,   XP_MSG_BASE + 596,
        "URL not found in cache: ")
 
-ResDef(XP_PARTIAL_CACHE_ENTRY,	XP_MSG_BASE + 597,
+ResDef(XP_PARTIAL_CACHE_ENTRY,  XP_MSG_BASE + 597,
        "Partial cache entry, getting rest from server:\n")
 
-ResDef(XP_CHECKING_SERVER__FORCE_RELOAD,	XP_MSG_BASE + 598,
+ResDef(XP_CHECKING_SERVER__FORCE_RELOAD,    XP_MSG_BASE + 598,
        "Checking server to verify cache entry\nbecause force_reload is set:\n")
 
-ResDef(XP_OBJECT_HAS_EXPIRED,	XP_MSG_BASE + 599,
+ResDef(XP_OBJECT_HAS_EXPIRED,   XP_MSG_BASE + 599,
        "Object has expired, reloading:\n")
 
-ResDef(XP_CHECKING_SERVER_CACHE_ENTRY,	XP_MSG_BASE + 600,
+ResDef(XP_CHECKING_SERVER_CACHE_ENTRY,  XP_MSG_BASE + 600,
        "Checking server to verify cache entry:\n")
 
-ResDef(XP_CHECKING_SERVER__LASTMOD_MISS,	XP_MSG_BASE + 601,
+ResDef(XP_CHECKING_SERVER__LASTMOD_MISS,    XP_MSG_BASE + 601,
        "Checking server to verify cache entry\nbecause last_modified missing:\n")
 
-ResDef(XP_NETSITE_,	XP_MSG_BASE + 602,
+ResDef(XP_NETSITE_, XP_MSG_BASE + 602,
        "Netsite:")
 
-ResDef(XP_LOCATION_,	XP_MSG_BASE + 603,
+ResDef(XP_LOCATION_,    XP_MSG_BASE + 603,
        "Location:")
 
-ResDef(XP_FILE_MIME_TYPE_,	XP_MSG_BASE + 604,
+ResDef(XP_FILE_MIME_TYPE_,  XP_MSG_BASE + 604,
        "File&nbsp;MIME&nbsp;Type:")
 
-ResDef(XP_CURRENTLY_UNKNOWN,	XP_MSG_BASE + 605,
+ResDef(XP_CURRENTLY_UNKNOWN,    XP_MSG_BASE + 605,
        "Currently Unknown")
 
-ResDef(XP_SOURCE_,	XP_MSG_BASE + 606,
+ResDef(XP_SOURCE_,  XP_MSG_BASE + 606,
        "Source:")
 
-ResDef(XP_CURRENTLY_IN_DISK_CACHE,	XP_MSG_BASE + 607,
+ResDef(XP_CURRENTLY_IN_DISK_CACHE,  XP_MSG_BASE + 607,
        "Currently in disk cache")
 
-ResDef(XP_CURRENTLY_IN_MEM_CACHE,	XP_MSG_BASE + 608,
+ResDef(XP_CURRENTLY_IN_MEM_CACHE,   XP_MSG_BASE + 608,
        "Currently in memory cache" )
 
-ResDef(XP_CURRENTLY_NO_CACHE,	XP_MSG_BASE + 609,
+ResDef(XP_CURRENTLY_NO_CACHE,   XP_MSG_BASE + 609,
        "Not cached")
 
-ResDef(XP_THE_WINDOW_IS_NOW_INACTIVE,	XP_MSG_BASE + 610,
+ResDef(XP_THE_WINDOW_IS_NOW_INACTIVE,   XP_MSG_BASE + 610,
        "<H1>The window is now inactive</H1>")
 
-ResDef(XP_LOCAL_CACHE_FILE_,	XP_MSG_BASE + 611,
+ResDef(XP_LOCAL_CACHE_FILE_,    XP_MSG_BASE + 611,
        "Local cache file:")
 
-ResDef(XP_NONE,	XP_MSG_BASE + 612,
+ResDef(XP_NONE, XP_MSG_BASE + 612,
        "none")
 
 #ifdef XP_UNIX
-ResDef(XP_LOCAL_TIME_FMT,	XP_MSG_BASE + 613,
+ResDef(XP_LOCAL_TIME_FMT,   XP_MSG_BASE + 613,
        "%A, %d-%b-%y %H:%M:%S Local time")
 #else
-ResDef(XP_LOCAL_TIME_FMT,	XP_MSG_BASE + 613,
+ResDef(XP_LOCAL_TIME_FMT,   XP_MSG_BASE + 613,
        "%s Local time")
 #endif
 
-ResDef(XP_LAST_MODIFIED,	XP_MSG_BASE + 614,
+ResDef(XP_LAST_MODIFIED,    XP_MSG_BASE + 614,
        "Last Modified:")
 
 #ifdef XP_UNIX
-ResDef(XP_GMT_TIME_FMT,	XP_MSG_BASE + 615,
+ResDef(XP_GMT_TIME_FMT, XP_MSG_BASE + 615,
        "%A, %d-%b-%y %H:%M:%S GMT")
 #else
-ResDef(XP_GMT_TIME_FMT,	XP_MSG_BASE + 615,
+ResDef(XP_GMT_TIME_FMT, XP_MSG_BASE + 615,
        "%s GMT")
 #endif
 
-ResDef(XP_CONTENT_LENGTH_,	XP_MSG_BASE + 616,
+ResDef(XP_CONTENT_LENGTH_,  XP_MSG_BASE + 616,
        "Content Length:")
 
-ResDef(XP_NO_DATE_GIVEN,	XP_MSG_BASE + 617,
+ResDef(XP_NO_DATE_GIVEN,    XP_MSG_BASE + 617,
        "No date given")
 
-ResDef(XP_EXPIRES_,	XP_MSG_BASE + 618,
+ResDef(XP_EXPIRES_, XP_MSG_BASE + 618,
        "Expires:")
 
-ResDef(XP_MAC_TYPE_,	XP_MSG_BASE + 619,
+ResDef(XP_MAC_TYPE_,    XP_MSG_BASE + 619,
        "Mac Type:")
 
-ResDef(XP_MAC_CREATOR_,	XP_MSG_BASE + 620,
+ResDef(XP_MAC_CREATOR_, XP_MSG_BASE + 620,
        "Mac Creator:")
 
-ResDef(XP_CHARSET_,	XP_MSG_BASE + 621,
+ResDef(XP_CHARSET_, XP_MSG_BASE + 621,
        "Charset:")
 
-ResDef(XP_STATUS_UNKNOWN,	XP_MSG_BASE + 622,
+ResDef(XP_STATUS_UNKNOWN,   XP_MSG_BASE + 622,
        "Status unknown")
 
-ResDef(XP_SECURITY_,	XP_MSG_BASE + 623,
+ResDef(XP_SECURITY_,    XP_MSG_BASE + 623,
        "Security:")
 
-ResDef(XP_CERTIFICATE_,	XP_MSG_BASE + 624,
+ResDef(XP_CERTIFICATE_, XP_MSG_BASE + 624,
       "Certificate:")
 
-ResDef(XP_UNTITLED_DOCUMENT,	XP_MSG_BASE + 625,
+ResDef(XP_UNTITLED_DOCUMENT,    XP_MSG_BASE + 625,
        "Untitled document")
 
-ResDef(XP_HAS_THE_FOLLOWING_STRUCT,	XP_MSG_BASE + 626,
+ResDef(XP_HAS_THE_FOLLOWING_STRUCT, XP_MSG_BASE + 626,
        "</b></FONT> has the following structure:<p><ul><li>")
 
-ResDef(XP_DOCUMENT_INFO,	XP_MSG_BASE + 627,
-       "Document info")
+ResDef(XP_DOCUMENT_INFO,    XP_MSG_BASE + 627,
+       "Page Info")
 
 ResDef(XP_EDIT_NEW_DOC_URL,         XP_MSG_BASE + 628, "about:editfilenew")
 ResDef(XP_EDIT_NEW_DOC_NAME,        XP_MSG_BASE + 629, "file:///Untitled")
 
 /* Whoever decided all these numbers should be consecutive should be ashamed. */
-ResDef(MK_MSG_SHOW_MICRO_HEADERS,		XP_MSG_BASE + 630,
+ResDef(MK_MSG_SHOW_MICRO_HEADERS,       XP_MSG_BASE + 630,
  "Brief")
-ResDef(MK_MSG_SHOW_SOME_HEADERS,		XP_MSG_BASE + 631,
+ResDef(MK_MSG_SHOW_SOME_HEADERS,        XP_MSG_BASE + 631,
  "Normal")
 
-ResDef(MK_MSG_DELETE_FOLDER_MESSAGES,	XP_MSG_BASE + 632,
+ResDef(MK_MSG_DELETE_FOLDER_MESSAGES,   XP_MSG_BASE + 632,
  "Deleting '%s' will delete its subfolders and messages.\n\
 Are you sure you still want to delete this folder?")
 
@@ -6114,7 +6151,7 @@ ResDef(XP_BKMKS_IMPORT_ADDRBOOK, XP_MSG_BASE + 636,
 "Import address book file")
 
 ResDef(XP_BKMKS_SAVE_ADDRBOOK, XP_MSG_BASE + 637,
-"Save address book file")
+"Export address book file")
 
 ResDef(XP_BKMKS_BOOKMARK,   XP_MSG_BASE + 638,
 "this bookmark" )
@@ -6140,16 +6177,16 @@ ResDef(XP_ADDRBOOK_HEADER,   XP_MSG_BASE + 644,
 ResDef(MK_MSG_WRAP_LONG_LINES, XP_MSG_BASE + 645,
 "Wrap long lines" )
 
-ResDef(XP_EDITOR_AUTO_SAVE,		XP_MSG_BASE + 646,
+ResDef(XP_EDITOR_AUTO_SAVE,     XP_MSG_BASE + 646,
  "Auto Saving %s")
 
-ResDef(XP_EDITOR_NON_HTML,		XP_MSG_BASE + 647,
+ResDef(XP_EDITOR_NON_HTML,      XP_MSG_BASE + 647,
  "Cannot edit non-HTML documents!")
 
 /* Search attribute names */
 /* WARNING -- order must match MSG_SearchAttribute enum */
-ResDef(XP_SEARCH_SENDER,         XP_MSG_BASE + 648, "sender")
-ResDef(XP_SEARCH_SUBJECT,        XP_MSG_BASE + 649, "subject")
+ResDef(XP_SEARCH_SUBJECT,        XP_MSG_BASE + 648, "subject")
+ResDef(XP_SEARCH_SENDER,         XP_MSG_BASE + 649, "sender")
 ResDef(XP_SEARCH_BODY,           XP_MSG_BASE + 650, "body")
 ResDef(XP_SEARCH_DATE,           XP_MSG_BASE + 651, "date")
 ResDef(XP_SEARCH_PRIORITY,       XP_MSG_BASE + 652, "priority")
@@ -6187,9 +6224,9 @@ ResDef(XP_FORWARDED_MESSAGE_ATTACHMENT, XP_MSG_BASE + 680, "forward.msg")
 ResDef(XP_RETURN_RECEIPT_NOT_SUPPORT, XP_MSG_BASE + 681, 
 "Your SMTP server does not support the return receipt function \n\
 so your message will be sent without the return receipt request.")
-ResDef(XP_SEARCH_AGE,			XP_MSG_BASE + 682,   "age in days")				/* added to support age */
-ResDef(XP_SEARCH_IS_GREATER,	XP_MSG_BASE + 683,   "is greater than")
-ResDef(XP_SEARCH_IS_LESS,		XP_MSG_BASE + 684,   "is less than")
+ResDef(XP_SEARCH_AGE,           XP_MSG_BASE + 682,   "age in days")             /* added to support age */
+ResDef(XP_SEARCH_IS_GREATER,    XP_MSG_BASE + 683,   "is greater than")
+ResDef(XP_SEARCH_IS_LESS,       XP_MSG_BASE + 684,   "is less than")
 ResDef(XP_SENDMAIL_BAD_TLS,		XP_MSG_BASE + 685,
 "Your SMTP mail server could not start a secure connection.\n\
 You have requested to send mail ONLY in secure mode and therefore \
@@ -6203,15 +6240,15 @@ ResDef(MK_MSG_RENAME_FOLDER,     XP_MSG_BASE + 688, "Rename selected folder")
 
 ResDef(MK_MSG_SAVE_DRAFT,     XP_MSG_BASE + 689, "Save draft")
 
-ResDef(XP_FILTER_MOVE_TO_FOLDER, XP_MSG_BASE + 690,	 "Move to folder")
+ResDef(XP_FILTER_MOVE_TO_FOLDER, XP_MSG_BASE + 690,  "Move to folder")
 ResDef(XP_FILTER_CHANGE_PRIORITY,XP_MSG_BASE + 691,  "Change priority")
-ResDef(XP_FILTER_DELETE,		 XP_MSG_BASE + 692,  "Delete")
-ResDef(XP_FILTER_MARK_READ,		 XP_MSG_BASE + 693,	 "Mark read")
-ResDef(XP_FILTER_KILL_THREAD,	 XP_MSG_BASE + 694,	 "Ignore thread")
-ResDef(XP_FILTER_WATCH_THREAD,	 XP_MSG_BASE + 695,	 "Watch thread")
+ResDef(XP_FILTER_DELETE,         XP_MSG_BASE + 692,  "Delete")
+ResDef(XP_FILTER_MARK_READ,      XP_MSG_BASE + 693,  "Mark read")
+ResDef(XP_FILTER_KILL_THREAD,    XP_MSG_BASE + 694,  "Ignore thread")
+ResDef(XP_FILTER_WATCH_THREAD,   XP_MSG_BASE + 695,  "Watch thread")
 
-ResDef(XP_STATUS_FORWARDED,		 XP_MSG_BASE + 696,	 "forwarded")
-ResDef(XP_STATUS_REPLIED_AND_FORWARDED,	XP_MSG_BASE + 697, "replied and forwarded")
+ResDef(XP_STATUS_FORWARDED,      XP_MSG_BASE + 696,  "forwarded")
+ResDef(XP_STATUS_REPLIED_AND_FORWARDED, XP_MSG_BASE + 697, "replied and forwarded")
 
 ResDef (XP_LDAP_SERVER_SIZELIMIT_EXCEEDED, XP_MSG_BASE + 698,
 "More items were found than the directory server could return.\n\
@@ -6226,27 +6263,27 @@ ResDef (MK_MSG_NEXTUNREAD_THREAD, XP_MSG_BASE + 701, "Next Unread Thread" )
 ResDef (MK_MSG_NEXTUNREAD_CATEGORY, XP_MSG_BASE + 702, "Next Unread Category" )
 ResDef (MK_MSG_NEXTUNREAD_GROUP, XP_MSG_BASE + 703, "Next Unread Group" )
 
-ResDef (MK_MSG_BY_PRIORITY,		XP_MSG_BASE + 704, "By Priority" )
+ResDef (MK_MSG_BY_PRIORITY,     XP_MSG_BASE + 704, "By Priority" )
 
-ResDef (MK_MSG_CALL,			XP_MSG_BASE + 705, "Call" )
-ResDef (MK_MSG_BY_TYPE,			XP_MSG_BASE + 706, "By Type" )
-ResDef (MK_MSG_BY_NAME,			XP_MSG_BASE + 707, "By Name" )
-ResDef (MK_MSG_BY_NICKNAME,		XP_MSG_BASE + 708, "By Nickname" )
-ResDef (MK_MSG_BY_EMAILADDRESS,	XP_MSG_BASE + 709, "By Email Address" )
-ResDef (MK_MSG_BY_COMPANY,		XP_MSG_BASE + 710, "By Company" )
-ResDef (MK_MSG_BY_LOCALITY,		XP_MSG_BASE + 711, "By City" )
-ResDef (MK_MSG_SORT_DESCENDING,	XP_MSG_BASE + 712, "Descending" )
-ResDef (MK_MSG_ADD_NAME,		XP_MSG_BASE + 713, "New Card..." )
-ResDef (MK_MSG_ADD_LIST,		XP_MSG_BASE + 714, "New List..." )
-ResDef (MK_MSG_PROPERTIES,		XP_MSG_BASE + 715, "Card Properties..." )
+ResDef (MK_MSG_CALL,            XP_MSG_BASE + 705, "Call" )
+ResDef (MK_MSG_BY_TYPE,         XP_MSG_BASE + 706, "By Type" )
+ResDef (MK_MSG_BY_NAME,         XP_MSG_BASE + 707, "By Name" )
+ResDef (MK_MSG_BY_NICKNAME,     XP_MSG_BASE + 708, "By Nickname" )
+ResDef (MK_MSG_BY_EMAILADDRESS, XP_MSG_BASE + 709, "By Email Address" )
+ResDef (MK_MSG_BY_COMPANY,      XP_MSG_BASE + 710, "By Company" )
+ResDef (MK_MSG_BY_LOCALITY,     XP_MSG_BASE + 711, "By City" )
+ResDef (MK_MSG_SORT_DESCENDING, XP_MSG_BASE + 712, "Descending" )
+ResDef (MK_MSG_ADD_NAME,        XP_MSG_BASE + 713, "New Card..." )
+ResDef (MK_MSG_ADD_LIST,        XP_MSG_BASE + 714, "New List..." )
+ResDef (MK_MSG_PROPERTIES,      XP_MSG_BASE + 715, "Card Properties..." )
 
 ResDef (MK_MSG_SEARCH_STATUS,   XP_MSG_BASE + 716, "Searching %s..." )
 ResDef (MK_MSG_NEED_FULLNAME,   XP_MSG_BASE + 717, "You must enter a full name." )
 ResDef (MK_MSG_NEED_GIVENNAME,  XP_MSG_BASE + 718, "You must enter a first name." )
-ResDef (MK_MSG_REPARSE_FOLDER,	XP_MSG_BASE + 719, "Building summary file for %s...")
+ResDef (MK_MSG_REPARSE_FOLDER,  XP_MSG_BASE + 719, "Building summary file for %s...")
 
-ResDef( MK_MSG_ALIVE_THREADS,	XP_MSG_BASE + 720, "All")
-ResDef( MK_MSG_KILLED_THREADS,	XP_MSG_BASE + 721, "Ignored Threads")
+ResDef( MK_MSG_ALIVE_THREADS,   XP_MSG_BASE + 720, "All")
+ResDef( MK_MSG_KILLED_THREADS,  XP_MSG_BASE + 721, "Ignored Threads")
 ResDef( MK_MSG_WATCHED_THREADS, XP_MSG_BASE + 722, "Watched Threads with New")
 ResDef( MK_MSG_THREADS_WITH_NEW, XP_MSG_BASE + 723, "Threads with New")
 
@@ -6259,12 +6296,12 @@ ResDef (XP_LDAP_MODIFY_FAILED,     XP_MSG_BASE + 729, "Failed to modify entry on
 ResDef (MK_SEARCH_HITS_COUNTER,    XP_MSG_BASE + 730, "Found %d matches")
 ResDef( MK_MSG_UNSUBSCRIBE_GROUP,  XP_MSG_BASE + 731, "Are you sure you want to unsubscribe from %s?")
 
-ResDef (MK_HDR_DOWNLOAD_COUNT,	   XP_MSG_BASE + 732, "Received %ld of %ld headers")
+ResDef (MK_HDR_DOWNLOAD_COUNT,     XP_MSG_BASE + 732, "Received %ld of %ld headers")
 
-ResDef (MK_NO_NEW_DISC_MSGS,	   XP_MSG_BASE + 733, "No new messages in discussion")
-ResDef (MK_MSG_DOWNLOAD_COUNT,	   XP_MSG_BASE + 734, "Received %ld of %ld messages")
+ResDef (MK_NO_NEW_DISC_MSGS,       XP_MSG_BASE + 733, "No new messages in newsgroup")
+ResDef (MK_MSG_DOWNLOAD_COUNT,     XP_MSG_BASE + 734, "Received %ld of %ld messages")
 
-ResDef(XP_MAIL_SEARCHING,	XP_MSG_BASE + 735,
+ResDef(XP_MAIL_SEARCHING,   XP_MSG_BASE + 735,
 "Mail: Searching mail folders..." )
 
 ResDef(MK_MSG_IGNORE_THREAD, XP_MSG_BASE + 736,
@@ -6311,7 +6348,7 @@ ResDef(MK_MSG_NO_CALLPOINT_ADDRESS, XP_MSG_BASE + 763,
 entry and try calling them again.")
 ResDef(MK_MSG_CANT_DELETE_NEWS_DB, XP_MSG_BASE + 764,
 "The local database for %s couldn't be deleted. \n\
-Perhaps you are reading the discussion group in a thread window. \n\
+Perhaps you are reading the newsgroup in a message list window. \n\
 Unsubscribe anyway?")
 
 ResDef(MK_MSG_CALL_NEEDS_IPADDRESS, XP_MSG_BASE + 765,
@@ -6334,16 +6371,16 @@ ResDef(MK_MSG_ILLEGAL_CHARS_IN_NAME, XP_MSG_BASE + 770,
 "That file name contains illegal characters. Please use a different name.")
 
 ResDef(MK_MSG_UNSUBSCRIBE_PROFILE_GROUP,  XP_MSG_BASE + 771,
-"%s is a virtual discussion group. If you\n\
-delete it, the server will stop putting articles in the\n\
-group unless you save your search criteria again.\n\n")
+"%s is a virtual newsgroup. If you\n\
+delete it, the server will stop putting messages in the\n\
+newsgroup unless you save your search criteria again.\n\n")
 
 ResDef(MK_MSG_ARTICLES_TO_RETRIEVE,  XP_MSG_BASE + 772,
 "Found %ld articles to retrieve")
 
 ResDef(MK_MSG_RETRIEVING_ARTICLE_OF, XP_MSG_BASE + 773,
 "Retrieving %ld of %ld articles\n\
-  in group %s")
+  in newsgroup %s")
 
 ResDef(MK_MSG_RETRIEVING_ARTICLE, XP_MSG_BASE + 774,
 "Retrieving article %ld")
@@ -6450,9 +6487,9 @@ ResDef(XP_NSFONT_COURIER, XP_MSG_BASE + 841, "Courier")
 #endif
 ResDef(XP_NSFONTLIST_COURIER, XP_MSG_BASE + 842, "Courier New,Courier")
 
-ResDef(XP_EDT_MSG_TEXT_BUFFER_TOO_LARGE,	(XP_MSG_BASE + 843),
+ResDef(XP_EDT_MSG_TEXT_BUFFER_TOO_LARGE,    (XP_MSG_BASE + 843),
 "This document has %ld characters. The Spelling Checker cannot process more than %ld characters.")
-ResDef(XP_EDT_MSG_CANNOT_PASTE,	(XP_MSG_BASE + 844),
+ResDef(XP_EDT_MSG_CANNOT_PASTE, (XP_MSG_BASE + 844),
 "You cannot paste this much text in a single operation.\nTry pasting the text in several smaller segments.")
 
 ResDef(XP_EDT_CAN_PASTE_AS_TABLE, (XP_MSG_BASE + 845),
@@ -6462,6 +6499,18 @@ ResDef(XP_EDT_REPLACE_CELLS, (XP_MSG_BASE + 846),
 ResDef(XP_EDT_PASTE_AS_TABLE, (XP_MSG_BASE + 847),
 "Paste text as a new table?")
 
+
+ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
+ResDef(MK_ADDR_IMPORT_CARDS, XP_MSG_BASE+861, "Adding cards to %s") /* line text for progress window on importing an address book */
+ResDef(MK_ADDR_IMPORT_MAILINGLISTS, XP_MSG_BASE+862, "Updating Mailing Lists in %s") /* line text for progress window on importing an address book */
+ResDef(MK_ADDR_IMPORT_TITLE, XP_MSG_BASE+863, "Import") /* title for progress window on importing an address book */
+ResDef(MK_ADDR_EXPORT_CARDS, XP_MSG_BASE+864, "Copying cards from %s") /* line text for progress window on exporting cards from an address book */
+ResDef(MK_ADDR_EXPORT_TITLE, XP_MSG_BASE+865, "Export") /* title for progress window on exporting an address book */
+ResDef(MK_ADDR_DELETE_ENTRIES, XP_MSG_BASE+866, "Deleting entries from %s") /* deleting entries from address book name */
+ResDef(MK_ADDR_COPY_ENTRIES,  XP_MSG_BASE+867,"Copying entries to %s") /* copying entries to address book name */
+ResDef(MK_ADDR_MOVE_ENTRIES, XP_MSG_BASE+868, "Moving entries to %s") /* moving entries to address book name */
+
+
 ResDef(XP_EDT_MUST_SAVE_PROMPT, XP_MSG_BASE + 880, "You must save\n%s\nto a local file before editing.\nSave to a file now?")
 
 ResDef (MK_LDAP_ADD_SERVER_TO_PREFS, XP_MSG_BASE + 881,
@@ -6470,33 +6519,33 @@ ResDef (MK_LDAP_ADD_SERVER_TO_PREFS, XP_MSG_BASE + 881,
 ResDef(MK_ADDR_BOOK_CARD, XP_MSG_BASE + 882, "Card for %s")
 
 /*  The following are used by mimehtml.cpp to emit header display in HTML */
-ResDef(MK_MIMEHTML_DISP_SUBJECT, 	XP_MSG_BASE + 883, "Subject")
+ResDef(MK_MIMEHTML_DISP_SUBJECT,    XP_MSG_BASE + 883, "Subject")
 ResDef(MK_MIMEHTML_DISP_RESENT_COMMENTS,XP_MSG_BASE + 884, "Resent-Comments")
-ResDef(MK_MIMEHTML_DISP_RESENT_DATE,	XP_MSG_BASE + 885, "Resent-Date")
-ResDef(MK_MIMEHTML_DISP_RESENT_SENDER,	XP_MSG_BASE + 886, "Resent-Sender")
-ResDef(MK_MIMEHTML_DISP_RESENT_FROM,	XP_MSG_BASE + 887, "Resent-From")
-ResDef(MK_MIMEHTML_DISP_RESENT_TO,	XP_MSG_BASE + 888, "Resent-To")
-ResDef(MK_MIMEHTML_DISP_RESENT_CC,	XP_MSG_BASE + 889, "Resent-CC")
-ResDef(MK_MIMEHTML_DISP_DATE,		XP_MSG_BASE + 890, "Date")
-ResDef(MK_MIMEHTML_DISP_SENDER,		XP_MSG_BASE + 891, "Sender")
-ResDef(MK_MIMEHTML_DISP_FROM,		XP_MSG_BASE + 892, "From")
-ResDef(MK_MIMEHTML_DISP_REPLY_TO,	XP_MSG_BASE + 893, "Reply-To")
-ResDef(MK_MIMEHTML_DISP_ORGANIZATION,	XP_MSG_BASE + 894, "Organization")
-ResDef(MK_MIMEHTML_DISP_TO,		XP_MSG_BASE + 895, "To")
-ResDef(MK_MIMEHTML_DISP_CC,		XP_MSG_BASE + 896, "CC")
-ResDef(MK_MIMEHTML_DISP_NEWSGROUPS,	XP_MSG_BASE + 897, "Newsgroups")
-ResDef(MK_MIMEHTML_DISP_FOLLOWUP_TO,	XP_MSG_BASE + 898, "Followup-To")
-ResDef(MK_MIMEHTML_DISP_REFERENCES,	XP_MSG_BASE + 899, "References")
-ResDef(MK_MIMEHTML_DISP_NAME,		XP_MSG_BASE + 900, "Name")
-ResDef(MK_MIMEHTML_DISP_TYPE,		XP_MSG_BASE + 901, "Type")
-ResDef(MK_MIMEHTML_DISP_ENCODING,	XP_MSG_BASE + 902, "Encoding")
-ResDef(MK_MIMEHTML_DISP_DESCRIPTION,	XP_MSG_BASE + 903, "Description")
+ResDef(MK_MIMEHTML_DISP_RESENT_DATE,    XP_MSG_BASE + 885, "Resent-Date")
+ResDef(MK_MIMEHTML_DISP_RESENT_SENDER,  XP_MSG_BASE + 886, "Resent-Sender")
+ResDef(MK_MIMEHTML_DISP_RESENT_FROM,    XP_MSG_BASE + 887, "Resent-From")
+ResDef(MK_MIMEHTML_DISP_RESENT_TO,  XP_MSG_BASE + 888, "Resent-To")
+ResDef(MK_MIMEHTML_DISP_RESENT_CC,  XP_MSG_BASE + 889, "Resent-CC")
+ResDef(MK_MIMEHTML_DISP_DATE,       XP_MSG_BASE + 890, "Date")
+ResDef(MK_MIMEHTML_DISP_SENDER,     XP_MSG_BASE + 891, "Sender")
+ResDef(MK_MIMEHTML_DISP_FROM,       XP_MSG_BASE + 892, "From")
+ResDef(MK_MIMEHTML_DISP_REPLY_TO,   XP_MSG_BASE + 893, "Reply-To")
+ResDef(MK_MIMEHTML_DISP_ORGANIZATION,   XP_MSG_BASE + 894, "Organization")
+ResDef(MK_MIMEHTML_DISP_TO,     XP_MSG_BASE + 895, "To")
+ResDef(MK_MIMEHTML_DISP_CC,     XP_MSG_BASE + 896, "CC")
+ResDef(MK_MIMEHTML_DISP_NEWSGROUPS, XP_MSG_BASE + 897, "Newsgroups")
+ResDef(MK_MIMEHTML_DISP_FOLLOWUP_TO,    XP_MSG_BASE + 898, "Followup-To")
+ResDef(MK_MIMEHTML_DISP_REFERENCES, XP_MSG_BASE + 899, "References")
+ResDef(MK_MIMEHTML_DISP_NAME,       XP_MSG_BASE + 900, "Name")
+ResDef(MK_MIMEHTML_DISP_TYPE,       XP_MSG_BASE + 901, "Type")
+ResDef(MK_MIMEHTML_DISP_ENCODING,   XP_MSG_BASE + 902, "Encoding")
+ResDef(MK_MIMEHTML_DISP_DESCRIPTION,    XP_MSG_BASE + 903, "Description")
 
 /*  End of emit header stuff */
 
 ResDef(MK_MSG_NEWS_HOST_TABLE_INVALID, XP_MSG_BASE + 904,
-"Failed to initialize discussion servers. Perhaps your Discussion Group Directory preference is invalid.\n\
- You will be able to post to discussion groups, but not read them")
+"Failed to initialize news servers. Perhaps your Newsgroup Directory preference is invalid.\n\
+ You will be able to post to newsgroups, but not read them")
 
 ResDef(MK_MSG_ADD_SENDER_TO_ADDRESS_BOOK, XP_MSG_BASE + 905,
 "Sender")
@@ -6510,40 +6559,40 @@ ResDef(MK_MSG_CANT_MOVE_FOLDER_TO_CHILD, XP_MSG_BASE + 908,
 "Can't move a folder into a folder it contains")
 
 ResDef(MK_MSG_NEW_GROUPS_DETECTED, XP_MSG_BASE + 909,
-"%ld new discussion groups have been created on the %s discussion group server.  To view the list\n\
-of new discussion groups, select \042Join Discussion Group\042 and then click on\n\
-the \042New Discussion Groups\042 tab.")
+"%ld new newsgroups have been created on the %s news server.  To view the list\n\
+of new newsgroups, select \042Join Newsgroup\042 and then click on\n\
+the \042New Newsgroups\042 tab.")
 
 ResDef (MK_MSG_SEARCH_GROUPNAMES_STATUS, XP_MSG_BASE + 910,
-"Searching group names...")
+"Searching newsgroup names...")
 
 
-ResDef(MK_MSG_SEND_ENCRYPTED,		XP_MSG_BASE + 911,
+ResDef(MK_MSG_SEND_ENCRYPTED,       XP_MSG_BASE + 911,
        "Send Encrypted")
 
-ResDef(MK_MSG_SEND_SIGNED,		XP_MSG_BASE + 912,
+ResDef(MK_MSG_SEND_SIGNED,      XP_MSG_BASE + 912,
        "Send Cryptographically Signed")
 
-ResDef(MK_MSG_SECURITY_ADVISOR,		XP_MSG_BASE + 913,
+ResDef(MK_MSG_SECURITY_ADVISOR,     XP_MSG_BASE + 913,
        "Security")
 
 
-ResDef(MK_MSG_LINK_TO_DOCUMENT,		XP_MSG_BASE + 925,
+ResDef(MK_MSG_LINK_TO_DOCUMENT,     XP_MSG_BASE + 925,
        "Link to Document")
 
-ResDef(MK_MSG_DOCUMENT_INFO,		XP_MSG_BASE + 926,
+ResDef(MK_MSG_DOCUMENT_INFO,        XP_MSG_BASE + 926,
        "<B>Document Info:</B>")
 
-ResDef(MK_MSG_IN_MSG_X_USER_WROTE,	XP_MSG_BASE + 927,
+ResDef(MK_MSG_IN_MSG_X_USER_WROTE,  XP_MSG_BASE + 927,
        "In message %s %s wrote:<P>")
 
-ResDef(MK_MSG_USER_WROTE,		XP_MSG_BASE + 928,
+ResDef(MK_MSG_USER_WROTE,       XP_MSG_BASE + 928,
        "%s wrote:<P>")
 
-ResDef(MK_MSG_UNSPECIFIED_TYPE,		XP_MSG_BASE + 929,
+ResDef(MK_MSG_UNSPECIFIED_TYPE,     XP_MSG_BASE + 929,
        "unspecified type")
 
-ResDef(MK_MIME_MULTIPART_SIGNED_BLURB,	XP_MSG_BASE + 930,
+ResDef(MK_MIME_MULTIPART_SIGNED_BLURB,  XP_MSG_BASE + 930,
  "This is a cryptographically signed message in MIME format.")
 
 #ifdef OSF1
@@ -6551,14 +6600,14 @@ ResDef (MK_MSG_MARKREAD_COUNT,           XP_MSG_BASE + 931, "Marked %d messages 
 
 ResDef (MK_MSG_DONE_MARKREAD_COUNT,      XP_MSG_BASE + 932, "Marked %d messages read...Done")
 #else
-ResDef (MK_MSG_MARKREAD_COUNT,	   XP_MSG_BASE + 931, "Marked %ld messages read")
+ResDef (MK_MSG_MARKREAD_COUNT,     XP_MSG_BASE + 931, "Marked %ld messages read")
 
-ResDef (MK_MSG_DONE_MARKREAD_COUNT,	   XP_MSG_BASE + 932, "Marked %ld messages read...Done")
+ResDef (MK_MSG_DONE_MARKREAD_COUNT,    XP_MSG_BASE + 932, "Marked %ld messages read...Done")
 #endif
 
-ResDef(MK_MIMEHTML_DISP_MESSAGE_ID,			XP_MSG_BASE + 933, "Message-ID")
-ResDef(MK_MIMEHTML_DISP_RESENT_MESSAGE_ID,	XP_MSG_BASE + 934, "Resent-Message-ID")
-ResDef(MK_MIMEHTML_DISP_BCC,				XP_MSG_BASE + 935, "BCC")
+ResDef(MK_MIMEHTML_DISP_MESSAGE_ID,         XP_MSG_BASE + 933, "Message-ID")
+ResDef(MK_MIMEHTML_DISP_RESENT_MESSAGE_ID,  XP_MSG_BASE + 934, "Resent-Message-ID")
+ResDef(MK_MIMEHTML_DISP_BCC,                XP_MSG_BASE + 935, "BCC")
 
 ResDef (MK_MSG_CANT_DELETE_RESERVED_FOLDER, XP_MSG_BASE + 936,
 "Can't delete the reserved folder '%s'.")
@@ -6569,7 +6618,7 @@ ResDef (MK_MSG_CANT_SEARCH_IF_NO_SUMMARY, XP_MSG_BASE + 937,
 ResDef (XP_STATUS_NEW, XP_MSG_BASE + 938, "New")
 
 ResDef (MK_ADDR_PAB, XP_MSG_BASE + 939,
-		"Personal Address Book")
+        "Personal Address Book")
 
 ResDef (MK_MSG_BY_STATUS, XP_MSG_BASE + 940, "By Status")
 
@@ -6718,10 +6767,10 @@ ResDef (MK_MSG_HTML_RECIPIENTS_10, XP_MSG_BASE + 966, "")
 ResDef (MK_MSG_HTML_RECIPIENTS_11, XP_MSG_BASE + 967, "")
 
 ResDef (MK_ADDR_ENTRY_ALREADY_EXISTS, XP_MSG_BASE + 968, 
-	"An Address Book entry with this name and email address already exists.")
+    "An Address Book entry with this name and email address already exists.")
 
 ResDef (MK_ADDR_ENTRY_ALREADY_IN_LIST, XP_MSG_BASE + 969, 
-	"This Address Book entry is already a member of this list.")
+    "This Address Book entry is already a member of this list.")
 
 ResDef (MK_LDAP_CUSTOM1, XP_MSG_BASE + 970, "Custom 1")
 ResDef (MK_LDAP_CUSTOM2, XP_MSG_BASE + 971, "Custom 2")
@@ -6754,28 +6803,28 @@ ResDef (XP_EDT_HEAD_FAILED, XP_MSG_BASE + 984,
         "HEAD call to server failed.\nUpload aborted.")
 
 ResDef (MK_UNABLE_TO_OPEN_ADDR_FILE, XP_MSG_BASE + 985, 
-		"Unable to open address book database file.")
+        "Unable to open address book database file.")
 ResDef (MK_ADDR_LIST_ALREADY_EXISTS, XP_MSG_BASE + 986,
-		"A mailing list with this name already exists.")
+        "A mailing list with this name already exists.")
 #ifndef MOZ_COMMUNICATOR_NAME
 ResDef (MK_ADDR_UNABLE_TO_IMPORT, XP_MSG_BASE + 987,
-	MOZ_NAME_PRODUCT" is unable to import this file into the address book.")
+    MOZ_NAME_PRODUCT" is unable to import this file into the address book.")
 #else
 ResDef (MK_ADDR_UNABLE_TO_IMPORT, XP_MSG_BASE + 987,
-	"Communicator is unable to import this file into the address book.")
+    "Communicator is unable to import this file into the address book.")
 #endif
 
-ResDef(MK_MSG_PURGING_NEWSGROUP_ETC,		XP_MSG_BASE + 988,
- "Mail: Purging discussion group %s...")
+ResDef(MK_MSG_PURGING_NEWSGROUP_ETC,        XP_MSG_BASE + 988,
+ "Purging newsgroup %s...")
 
- ResDef(MK_MSG_PURGING_NEWSGROUP_HEADER,	XP_MSG_BASE + 989,
- "Mail: Purging discussion group %s...header %ld")
+ ResDef(MK_MSG_PURGING_NEWSGROUP_HEADER,    XP_MSG_BASE + 989,
+ "Purging newsgroup %s...header %ld")
 
 ResDef(MK_MSG_PURGING_NEWSGROUP_ARTICLE, XP_MSG_BASE + 990,
-"Purging discussion group %s...article %ld")
+"Purging newsgroup %s...article %ld")
 
-ResDef(MK_MSG_PURGING_NEWSGROUP_DONE,	XP_MSG_BASE + 991,
- "Mail: Purging discussion group %s...Done")
+ResDef(MK_MSG_PURGING_NEWSGROUP_DONE,   XP_MSG_BASE + 991,
+ "Purging newsgroup %s...Done")
 
 ResDef (XP_EDT_PUBLISH_ERROR_BODY, XP_MSG_BASE + 992,
   "Make sure you specify the entire destination URL.\n\
@@ -6793,44 +6842,44 @@ ResDef (XP_EDT_PUBLISH_NO_EXTENSION, XP_MSG_BASE + 997,
   "Publish destination has no file extension.")
 
 ResDef (MK_CVCOLOR_SOURCE_OF, XP_MSG_BASE + 998,
-	"Source of: ")
+    "Source of: ")
 ResDef (MK_ACCESS_COOKIES_THE_SERVER, XP_MSG_BASE + 999,
-	"The server ")
+    "The server ")
 ResDef (MK_ACCESS_COOKIES_WISHES, XP_MSG_BASE + 1000,
-	"\nwishes to set a cookie that will be sent ")
+    "\nwishes to set a cookie that will be sent ")
 ResDef (MK_ACCESS_COOKIES_TOANYSERV, XP_MSG_BASE + 1001,
-	"\nto any server in the domain ")
+    "\nto any server in the domain ")
 ResDef (MK_ACCESS_COOKIES_TOSELF, XP_MSG_BASE + 1002,
-	"only back to itself")
+    "only back to itself")
 ResDef (MK_ACCESS_COOKIES_NAME_AND_VAL, XP_MSG_BASE + 1003,
-	"\nThe name and value of the cookie are:\n")
+    "\nThe name and value of the cookie are:\n")
 ResDef (MK_ACCESS_COOKIES_COOKIE_WILL_PERSIST, XP_MSG_BASE + 1004,
-	"\nThis cookie will persist until ")
+    "\nThis cookie will persist until ")
 ResDef (MK_ACCESS_COOKIES_SET_IT, XP_MSG_BASE + 1005,
-	"\nDo you wish to allow the cookie to be set?")
+    "\nDo you wish to allow the cookie to be set?")
 
 ResDef (MK_CACHE_CONTENT_LENGTH, XP_MSG_BASE + 1006,
-	"Content Length:")
+    "Content Length:")
 ResDef (MK_CACHE_REAL_CONTENT_LENGTH, XP_MSG_BASE + 1007,
-	"Real Content Length:")
+    "Real Content Length:")
 ResDef (MK_CACHE_CONTENT_TYPE, XP_MSG_BASE + 1008,
-	"Content type:")
+    "Content type:")
 ResDef (MK_CACHE_LOCAL_FILENAME, XP_MSG_BASE + 1009,
-	"Local filename:")
+    "Local filename:")
 ResDef (MK_CACHE_LAST_MODIFIED, XP_MSG_BASE + 1010,
-	"Last Modified:")
+    "Last Modified:")
 ResDef (MK_CACHE_EXPIRES, XP_MSG_BASE + 1011,
-	"Expires:")
+    "Expires:")
 ResDef (MK_CACHE_LAST_ACCESSED, XP_MSG_BASE + 1012,
-	"Last accessed:")
+    "Last accessed:")
 ResDef (MK_CACHE_CHARSET, XP_MSG_BASE + 1013,
-	"Character set:")
+    "Character set:")
 ResDef (MK_CACHE_SECURE, XP_MSG_BASE + 1014,
-	"Secure:")
+    "Secure:")
 ResDef (MK_CACHE_USES_RELATIVE_PATH, XP_MSG_BASE + 1015,
-	"Uses relative path:")
+    "Uses relative path:")
 ResDef (MK_CACHE_FROM_NETSITE_SERVER, XP_MSG_BASE + 1016,
-	"From Netsite Server:")
+    "From Netsite Server:")
 
 ResDef (XP_EDT_I18N_HAS_CHARSET, XP_MSG_BASE + 1017,
   "Changing the character encoding may alter some\n\
@@ -6898,44 +6947,44 @@ ResDef (MK_ADDR_VIEW_COMPLETE_VCARD, XP_MSG_BASE + 1034,
 ResDef (MK_ADDR_VIEW_CONDENSED_VCARD, XP_MSG_BASE + 1035,
   "View Condensed Card")
 
-ResDef(MK_MSG_BY_FLAG,		XP_MSG_BASE + 1036,
+ResDef(MK_MSG_BY_FLAG,      XP_MSG_BASE + 1036,
  "By Flag")
 
-ResDef(MK_MSG_BY_UNREAD,		XP_MSG_BASE + 1037,
+ResDef(MK_MSG_BY_UNREAD,        XP_MSG_BASE + 1037,
  "By Unread")
 
-ResDef(MK_MSG_BY_SIZE,		XP_MSG_BASE + 1038,
+ResDef(MK_MSG_BY_SIZE,      XP_MSG_BASE + 1038,
  "By Size")
 
-ResDef(XP_ALERT_OFFLINE_MODE_SELECTED,	XP_MSG_BASE + 1039,
+ResDef(XP_ALERT_OFFLINE_MODE_SELECTED,  XP_MSG_BASE + 1039,
 MOZ_NAME_BRAND" was unable to connect to the network because\n\
 you are in offline mode.\n\
 Choose Go Online from the File Menu and try again.")
 
-ResDef(MK_ADDR_FIRST_LAST_SEP,		XP_MSG_BASE + 1040,
+ResDef(MK_ADDR_FIRST_LAST_SEP,      XP_MSG_BASE + 1040,
  " ")
 
-ResDef(MK_ADDR_LAST_FIRST_SEP,		XP_MSG_BASE + 1041,
+ResDef(MK_ADDR_LAST_FIRST_SEP,      XP_MSG_BASE + 1041,
  ", ")
 
-ResDef(MK_MSG_CANT_MOVE_FOLDER,		XP_MSG_BASE + 1042,
-	"That item can not be moved to the requested location.")
+ResDef(MK_MSG_CANT_MOVE_FOLDER,     XP_MSG_BASE + 1042,
+    "That item can not be moved to the requested location.")
 
-ResDef(XP_SEC_ENTER_EXPORT_PWD,		XP_MSG_BASE + 1043,
-	"Enter password to protect data being exported:")
+ResDef(XP_SEC_ENTER_EXPORT_PWD,     XP_MSG_BASE + 1043,
+    "Enter password to protect data being exported:")
 
-ResDef(MK_SEARCH_SCOPE_ONE,				XP_MSG_BASE + 1044, "in %s")
-ResDef(MK_SEARCH_SCOPE_SELECTED,		XP_MSG_BASE + 1045, "in selected items")
-ResDef(MK_SEARCH_SCOPE_OFFLINE_MAIL,	XP_MSG_BASE + 1046, "in offline mail folders") 
-ResDef(MK_SEARCH_SCOPE_ONLINE_MAIL,		XP_MSG_BASE + 1047, "in online mail folders")
-ResDef(MK_SEARCH_SCOPE_SUBSCRIBED_NEWS, XP_MSG_BASE + 1048, "in subscribed discussion groups")
-ResDef(MK_SEARCH_SCOPE_ALL_NEWS,		XP_MSG_BASE + 1049, "in searchable discussion groups")
+ResDef(MK_SEARCH_SCOPE_ONE,             XP_MSG_BASE + 1044, "in %s")
+ResDef(MK_SEARCH_SCOPE_SELECTED,        XP_MSG_BASE + 1045, "in selected items")
+ResDef(MK_SEARCH_SCOPE_OFFLINE_MAIL,    XP_MSG_BASE + 1046, "in offline mail folders") 
+ResDef(MK_SEARCH_SCOPE_ONLINE_MAIL,     XP_MSG_BASE + 1047, "in online mail folders")
+ResDef(MK_SEARCH_SCOPE_SUBSCRIBED_NEWS, XP_MSG_BASE + 1048, "in subscribed newsgroups")
+ResDef(MK_SEARCH_SCOPE_ALL_NEWS,        XP_MSG_BASE + 1049, "in searchable newsgroups")
 
-ResDef(MK_ADDR_DEFAULT_DLS,				XP_MSG_BASE + 1050, "Default Directory Server")
-ResDef(MK_ADDR_SPECIFIC_DLS,			XP_MSG_BASE + 1051, "Specific Directory Server")
-ResDef(MK_ADDR_HOSTNAMEIP,				XP_MSG_BASE + 1052, "Hostname or IP Address")
-ResDef(MK_ADDR_CONFINFO,				XP_MSG_BASE + 1053,MOZ_NAME_BRAND" Conference Address")
-ResDef(MK_ADDR_ADDINFO,					XP_MSG_BASE + 1054, "Additional Information:")
+ResDef(MK_ADDR_DEFAULT_DLS,             XP_MSG_BASE + 1050, "Default Directory Server")
+ResDef(MK_ADDR_SPECIFIC_DLS,            XP_MSG_BASE + 1051, "Specific Directory Server")
+ResDef(MK_ADDR_HOSTNAMEIP,              XP_MSG_BASE + 1052, "Hostname or IP Address")
+ResDef(MK_ADDR_CONFINFO,                XP_MSG_BASE + 1053,MOZ_NAME_BRAND" Conference Address")
+ResDef(MK_ADDR_ADDINFO,                 XP_MSG_BASE + 1054, "Additional Information:")
 
 ResDef(MK_MSG_HTML_DOMAINS_DIALOG_TITLE, XP_MSG_BASE + 1055, "HTML Domains")
 
@@ -6991,45 +7040,45 @@ ResDef (MK_MSG_HTML_DOMAINS_DIALOG_9, XP_MSG_BASE + 1065, "")
 
 
 ResDef (MK_MSG_SET_HTML_NEWSGROUP_HEIRARCHY_CONFIRM, XP_MSG_BASE + 1066,
-"The discussion group %s was accepting HTML because all groups whose name\n\
+"The newsgroup %s was accepting HTML because all newsgroups whose name\n\
 started with \042%s\042 were marked to accept HTML.  This action will\n\
-reverse that; groups whose name start with \042%s\042 will no longer\n\
+reverse that; newsgroups whose name start with \042%s\042 will no longer\n\
 accept HTML.")
 
 ResDef (MK_MSG_NEXT_CATEGORY, XP_MSG_BASE + 1067, "Next Category")
 
 ResDef (MK_MSG_GROUP_NOT_ON_SERVER, XP_MSG_BASE + 1068, 
-"The discussion group %s does not appear to exist on the host %s.\n\
+"The newsgroup %s does not appear to exist on the host %s.\n\
 Would you like to unsubscribe from it?")
 
-ResDef(MK_MIMEHTML_SHOW_SECURITY_ADVISOR,	XP_MSG_BASE + 1079,
+ResDef(MK_MIMEHTML_SHOW_SECURITY_ADVISOR,   XP_MSG_BASE + 1079,
        "Show Security Information")
 
-ResDef(MK_MIMEHTML_ENC_AND_SIGNED,	XP_MSG_BASE + 1080,
+ResDef(MK_MIMEHTML_ENC_AND_SIGNED,  XP_MSG_BASE + 1080,
        "Encrypted<BR><NOBR>and Signed</NOBR>")
-ResDef(MK_MIMEHTML_SIGNED,		XP_MSG_BASE + 1081, "Signed")
-ResDef(MK_MIMEHTML_ENCRYPTED,		XP_MSG_BASE + 1082, "Encrypted")
-ResDef(MK_MIMEHTML_CERTIFICATES,	XP_MSG_BASE + 1083, "Certificates")
-ResDef(MK_MIMEHTML_ENC_SIGNED_BAD,	XP_MSG_BASE + 1084,
+ResDef(MK_MIMEHTML_SIGNED,      XP_MSG_BASE + 1081, "Signed")
+ResDef(MK_MIMEHTML_ENCRYPTED,       XP_MSG_BASE + 1082, "Encrypted")
+ResDef(MK_MIMEHTML_CERTIFICATES,    XP_MSG_BASE + 1083, "Certificates")
+ResDef(MK_MIMEHTML_ENC_SIGNED_BAD,  XP_MSG_BASE + 1084,
        "Invalid Signature")
-ResDef(MK_MIMEHTML_SIGNED_BAD,		XP_MSG_BASE + 1085,
+ResDef(MK_MIMEHTML_SIGNED_BAD,      XP_MSG_BASE + 1085,
        "Invalid Signature")
-ResDef(MK_MIMEHTML_ENCRYPTED_BAD,	XP_MSG_BASE + 1086,
+ResDef(MK_MIMEHTML_ENCRYPTED_BAD,   XP_MSG_BASE + 1086,
        "Invalid Encryption")
-ResDef(MK_MIMEHTML_CERTIFICATES_BAD,	XP_MSG_BASE + 1087,
+ResDef(MK_MIMEHTML_CERTIFICATES_BAD,    XP_MSG_BASE + 1087,
        "Invalid Certificates")
 
 ResDef (MK_MSG_NEW_NEWSGROUP, XP_MSG_BASE + 1088,
-"New Discussion Group")
+"New Newsgroup")
 ResDef (MK_MSG_NEW_CATEGORY, XP_MSG_BASE + 1089,
-"Creates a new category in this discussion group")
+"Creates a new category in this newsgroup")
 
-ResDef(MK_ADDR_NO_EMAIL_ADDRESS,	XP_MSG_BASE + 1090,
+ResDef(MK_ADDR_NO_EMAIL_ADDRESS,    XP_MSG_BASE + 1090,
        "There is no email address for %s.")
 
-ResDef (MK_MSG_EXPIRE_COUNT,	   XP_MSG_BASE + 1091, "Expired %ld messages")
+ResDef (MK_MSG_EXPIRE_COUNT,       XP_MSG_BASE + 1091, "Expired %ld messages")
 
-ResDef (MK_MSG_DONE_EXPIRE_COUNT,	   XP_MSG_BASE + 1092, "Expired %ld messages...Done")
+ResDef (MK_MSG_DONE_EXPIRE_COUNT,      XP_MSG_BASE + 1092, "Expired %ld messages...Done")
 
 /* Localized names of mail folders */
 ResDef (MK_MSG_TRASH_L10N_NAME,  XP_MSG_BASE + 1093, "Trash")
@@ -7054,7 +7103,7 @@ Please contact your mail account administrator\n\
 or try again later.")
 
 ResDef (MK_MSG_MODERATE_NEWSGROUP, XP_MSG_BASE + 1102,
-"Manage Discussion Group")
+"Manage Newsgroups")
 
 ResDef(MK_UNABLE_TO_LOCATE_SOCKS_HOST, XP_MSG_BASE + 1103,
 MOZ_NAME_BRAND" is unable to locate the socks server:\n\
@@ -7066,15 +7115,15 @@ configuration and try again.")
 ResDef (XP_SEC_PROMPT_NICKNAME_COLLISION,       (XP_MSG_BASE + 1104),
   "An object with that nickname exists.  Please enter a new nickname.")
 
-ResDef(MK_MSG_GET_NEW_DISCUSSION_MSGS, XP_MSG_BASE + 1105, "Get New Discussion Messages")
+ResDef(MK_MSG_GET_NEW_DISCUSSION_MSGS, XP_MSG_BASE + 1105, "Get New News Articles")
 
 ResDef(MK_MSG_LOCAL_MAIL, XP_MSG_BASE + 1106, "Local Mail")
-ResDef(MK_NEWS_DISCUSSIONS_ON, XP_MSG_BASE + 1107, "%s Discussions")
+ResDef(MK_NEWS_DISCUSSIONS_ON, XP_MSG_BASE + 1107, "%s Newsgroups")
 
-ResDef( XP_RECEIVING_MESSAGE_HEADERS_OF,	XP_MSG_BASE + 1108,
+ResDef( XP_RECEIVING_MESSAGE_HEADERS_OF,    XP_MSG_BASE + 1108,
 "%s Receiving: message headers %lu of %lu" )
 
-ResDef( XP_RECEIVING_MESSAGE_FLAGS_OF,	XP_MSG_BASE + 1109,
+ResDef( XP_RECEIVING_MESSAGE_FLAGS_OF,  XP_MSG_BASE + 1109,
 "%s Receiving: message flags %lu of %lu" )
 
 ResDef( XP_IMAP_DELETING_MESSAGES, XP_MSG_BASE + 1110, "Deleting messages...")
@@ -7128,10 +7177,10 @@ ResDef (XP_EDT_BAD_CLIPBOARD_ENCODING, XP_MSG_BASE + 1129,
   "You can not copy and paste between windows with\n\
 different character set encodings.")
 
-ResDef(XP_ALERT_NFS_USEHTTP,			XP_MSG_BASE+1130, 	
+ResDef(XP_ALERT_NFS_USEHTTP,            XP_MSG_BASE+1130,   
 "NFS URLs not internally supported, use an HTTP proxy server: ")
 
-ResDef(MK_MSG_MARK_CATEGORY_READ,		XP_MSG_BASE+1131, "Mark Category Read")
+ResDef(MK_MSG_MARK_CATEGORY_READ,       XP_MSG_BASE+1131, "Mark Category Read")
 
 ResDef(MK_MSG_TRACK_FOLDER_MOVE, XP_MSG_BASE + 1132, 
 "Change rule to reflect new folder location?")
@@ -7183,34 +7232,34 @@ ResDef(WF_MSG_NATIVE_DISPLAYER_DESCRIPTION, XP_MSG_BASE + 1145,
 
 /* More messenger strings */
 ResDef (MK_MSG_OUTBOX_L10N_NAME_OLD, XP_MSG_BASE + 1146, "Outbox")
-ResDef(MK_MSG_BOGUS_QUEUE_MSG_1_OLD,	XP_MSG_BASE + 1147,
+ResDef(MK_MSG_BOGUS_QUEUE_MSG_1_OLD,    XP_MSG_BASE + 1147,
        "The `Outbox' folder contains a message which is not\n\
 scheduled for delivery!")
-ResDef(MK_MSG_BOGUS_QUEUE_MSG_N_OLD,	XP_MSG_BASE + 1148,
+ResDef(MK_MSG_BOGUS_QUEUE_MSG_N_OLD,    XP_MSG_BASE + 1148,
        "The `Outbox' folder contains %d messages which are not\n\
 scheduled for delivery!")
-ResDef(MK_MSG_BOGUS_QUEUE_REASON_OLD,	XP_MSG_BASE + 1149,
+ResDef(MK_MSG_BOGUS_QUEUE_REASON_OLD,   XP_MSG_BASE + 1149,
        "\n\nThis probably means that some program other than\n\
 "MOZ_NAME_PRODUCT" has added messages to this folder.\n")
-ResDef(MK_MSG_WHY_QUEUE_SPECIAL_OLD,	XP_MSG_BASE + 1150,
-       "The `Outbox' folder is special; it is only for holding\n\
-messages which have been deferred for later delivery.")
+ResDef(MK_MSG_WHY_QUEUE_SPECIAL_OLD,    XP_MSG_BASE + 1150,
+       "The `Outbox' folder is special; it is only for storing\n\
+messages to be sent later.")
 
-ResDef(XP_AUTOADMIN_MISSING,	XP_MSG_BASE + 1151,
+ResDef(XP_AUTOADMIN_MISSING,    XP_MSG_BASE + 1151,
  "The local configuration file specified a configuration URL but the AutoAdmin component could not \
  be loaded.  AutoAdmin is required to support remote configuration URLs.  You will be unable to load\
  any remote documents." )
 
  ResDef(MK_MSG_ADDING_LDAP_TO_AB, XP_MSG_BASE + 1152,
- "Adding to Address Book: %ld of %ld")
+ "Adding to %s: %ld of %ld")
 
  ResDef(MK_MSG_XSENDER_INTERNAL, XP_MSG_BASE + 1153,
  "<B><FONT COLOR=\042#808080\042>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Internal</FONT></B>")
 
-ResDef(XP_PKCS12_IMPORT_FILE_PROMPT,		(XP_MSG_BASE + 1154),
+ResDef(XP_PKCS12_IMPORT_FILE_PROMPT,        (XP_MSG_BASE + 1154),
 "File Name to Import")
 
-ResDef(XP_PKCS12_EXPORT_FILE_PROMPT,		(XP_MSG_BASE + 1155),
+ResDef(XP_PKCS12_EXPORT_FILE_PROMPT,        (XP_MSG_BASE + 1155),
 "File Name to Export")
 
 ResDef(XP_EDT_CP_DOCUMENT_TOO_LARGE_READ, XP_MSG_BASE + 1156,
@@ -7229,7 +7278,7 @@ ResDef(MK_MIME_SMIME_SIGNATURE_CONTENT_DESCRIPTION, XP_MSG_BASE + 1159,
 
 /* Netcaster Strings */
 
-ResDef(XP_ALERT_CANT_RUN_NETCASTER,	XP_MSG_BASE + 1160,
+ResDef(XP_ALERT_CANT_RUN_NETCASTER, XP_MSG_BASE + 1160,
 MOZ_NAME_BRAND" was unable to start Netcaster.\n\
 Make sure Netcaster is installed correctly.")
 
@@ -7241,7 +7290,7 @@ e.g. 'http://mysystem.com/mydoc.html'")
 
 ResDef(XP_SA_ALG_AND_BITS_FORMAT, XP_MSG_BASE + 1162, "%d-bit %s")
 
-ResDef(MK_MSG_IMAP_MULTIPLE_SELECT_FAILED,	XP_MSG_BASE + 1163,
+ResDef(MK_MSG_IMAP_MULTIPLE_SELECT_FAILED,  XP_MSG_BASE + 1163,
 "Only one operation at a time on this folder is permitted. \
 \nPlease wait until the other operation completes and try again.")
 
@@ -7269,25 +7318,24 @@ ResDef(XP_EDT_PERCENT_TABLE, XP_MSG_BASE + 1173,
  * We would like to reserve this range (1174 - 1250) for Editor
 */
 
-/* please reserve strings to here for future colors */
 ResDef(SU_NOT_A_JAR_FILE, XP_MSG_BASE + 1262,
-	   "SmartUpdate failed: Downloaded archive is not a JAR file.")
+       "SmartUpdate failed: Downloaded archive is not a JAR file.")
 
 ResDef(SU_SECURITY_CHECK, XP_MSG_BASE + 1263,
-	   "SmartUpdate failed: JAR archive failed security check. %s.")
+       "SmartUpdate failed: JAR archive failed security check. %s.")
 
 ResDef(SU_INSTALL_FILE_HEADER, XP_MSG_BASE + 1264,
-	   "SmartUpdate failed: JAR archive has no installer file information.")
+       "SmartUpdate failed: JAR archive has no installer file information.")
 
 ResDef(SU_INSTALL_FILE_MISSING, XP_MSG_BASE + 1265,
-	   "SmartUpdate failed: JAR archive is missing an installer file %s.")
+       "SmartUpdate failed: JAR archive is missing an installer file %s.")
 
 ResDef(XP_GLOBAL_NO_CONFIG_RECEIVED_NO_FAILOVER, XP_MSG_BASE + 1266,
 "No automatic configuration file was received.\n\n\
 You will be unable to load and documents from the network.\n\
 See your local system administrator for help." )
 
-ResDef(XP_GLOBAL_BAD_TYPE_CONFIG_IGNORED,	XP_MSG_BASE + 1267,
+ResDef(XP_GLOBAL_BAD_TYPE_CONFIG_IGNORED,   XP_MSG_BASE + 1267,
  "The automatic configuration file is not of the correct type:\n\n\
         %s\n\n\
 Expected the MIME type of application/x-javascript-config." )
@@ -7297,32 +7345,32 @@ ResDef(XP_GLOBAL_CONF_LOAD_FAILED_NO_FAILOVER, XP_MSG_BASE + 1268,
 You will be unable to load any documents from the network.\n\
 See your local system administrator for help." )
 
-ResDef(XP_GLOBAL_NO_CONFIG_RECIEVED,	XP_MSG_BASE + 1269,
+ResDef(XP_GLOBAL_NO_CONFIG_RECIEVED,    XP_MSG_BASE + 1269,
  "No automatic configuration file was received.\n\n\
 Will default based on the last configuration." )
 
-ResDef(XP_GLOBAL_EVEN_SAVED_IS_BAD,	XP_MSG_BASE + 1270,
+ResDef(XP_GLOBAL_EVEN_SAVED_IS_BAD, XP_MSG_BASE + 1270,
  "The backup automatic configuration file had errors.\n\n\
 We will default to the standard configuration." )
 
-ResDef(XP_GLOBAL_BAD_CONFIG_IGNORED,	XP_MSG_BASE + 1271,
+ResDef(XP_GLOBAL_BAD_CONFIG_IGNORED,    XP_MSG_BASE + 1271,
  "The automatic configuration file has errors:\n\n        %s\n\n\
 We will default to the standard configuration." )
 
-ResDef(XP_GLOBAL_CONFIG_LOAD_ABORTED,	XP_MSG_BASE + 1272,
+ResDef(XP_GLOBAL_CONFIG_LOAD_ABORTED,   XP_MSG_BASE + 1272,
  "Automatic configuration load was cancelled.\n\n\
 We will default to the standard configuration." )
 
-ResDef(XP_PKCS12_SUCCESSFUL_EXPORT,		(XP_MSG_BASE + 1273),
+ResDef(XP_PKCS12_SUCCESSFUL_EXPORT,     (XP_MSG_BASE + 1273),
 "Your certificates have been successfully exported.")
 
-ResDef(XP_PKCS12_SUCCESSFUL_IMPORT,		(XP_MSG_BASE + 1274),
+ResDef(XP_PKCS12_SUCCESSFUL_IMPORT,     (XP_MSG_BASE + 1274),
 "Your certificates have been successfully imported.")
 
-ResDef(XP_SEC_ENTER_IMPORT_PWD,			(XP_MSG_BASE + 1275),
+ResDef(XP_SEC_ENTER_IMPORT_PWD,         (XP_MSG_BASE + 1275),
 "Enter password protecting data to be imported:")
 
-ResDef(MK_MSG_CONTINUE_ADDING,			(XP_MSG_BASE + 1276),
+ResDef(MK_MSG_CONTINUE_ADDING,          (XP_MSG_BASE + 1276),
 "Would you like to add the remaining addresses to the personal address book?")
 
 ResDef(MK_LDAP_USER_CERTIFICATE, XP_MSG_BASE + 1277, "User Certificate")
@@ -7342,7 +7390,7 @@ ResDef(MK_MSG_IMAP_SERVER_SAID, XP_MSG_BASE + 1281,
 "The current command did not succeed.  The IMAP server responded:\n%s")
 
 ResDef(SU_INSTALL_ASK_FOR_DIRECTORY, XP_MSG_BASE + 1282,
-	   "Where would you like to install %s?")
+       "Where would you like to install %s?")
 
 ResDef(EDT_VIEW_SOURCE_WINDOW_TITLE, XP_MSG_BASE + 1283,
 "View Document Source")
@@ -7373,10 +7421,10 @@ ResDef(MK_MSG_MAC_PROMPT_UUENCODE, XP_MSG_BASE + 1294,
 Using UUENCODE will cause this information to be lost. \
 Continue sending?")
 
-ResDef(XP_SEC_REENTER_TO_CONFIRM_PWD,		XP_MSG_BASE + 1295,
+ResDef(XP_SEC_REENTER_TO_CONFIRM_PWD,       XP_MSG_BASE + 1295,
 "Re-enter the password to confirm it:")
 
-ResDef(XP_SEC_BAD_CONFIRM_EXPORT_PWD,		XP_MSG_BASE + 1296,
+ResDef(XP_SEC_BAD_CONFIRM_EXPORT_PWD,       XP_MSG_BASE + 1296,
 "The passwords entered did not match.  Enter\n\
 the password to protect data being exported:")
 
@@ -7426,19 +7474,19 @@ ResDef(MK_IMAP_STATUS_SENDING_AUTH_LOGIN, XP_MSG_BASE + 1311,
 "Sending authenticate login information...")
 
 ResDef(SU_NEED_TO_REBOOT, XP_MSG_BASE + 1312,
-	"SmartUpdate is not complete until you reboot Windows")
+    "SmartUpdate is not complete until you reboot Windows")
 
 ResDef(MK_MSG_REPLY_TO_SENDER, XP_MSG_BASE + 1313,
-	"to Sender")
+    "to Sender")
 
 ResDef(MK_ADDR_DEFAULT_EXPORT_FILENAME, XP_MSG_BASE + 1314,
-	"untitled")
+    "untitled")
 
 ResDef(MK_MSG_ADVANCE_TO_NEXT_FOLDER, XP_MSG_BASE + 1315,
-	"Advance to next unread message in %s?")
+    "Advance to next unread message in %s?")
 
 ResDef(MK_PORT_ACCESS_NOT_ALLOWED, XP_MSG_BASE + 1316,
-	"Sorry, access to the port number given\n\
+    "Sorry, access to the port number given\n\
 has been disabled for security reasons")
 
 ResDef(XP_PRIORITY_LOWEST, XP_MSG_BASE + 1317, "Lowest")
@@ -7449,35 +7497,35 @@ ResDef(XP_PRIORITY_HIGHEST, XP_MSG_BASE + 1321, "Highest")
 ResDef(XP_PRIORITY_NONE, XP_MSG_BASE + 1322, "NONE")
 
 ResDef(XP_PROGRESS_READ_NEWSGROUP_COUNTS, XP_MSG_BASE + 1323, 
-	   "Receiving: message totals: %lu of %lu")
+       "Receiving: message totals: %lu of %lu")
 
 ResDef(MK_LDAP_AUTH_PROMPT, XP_MSG_BASE + 1324,
-	   "Please enter your %s and password for access to %s")
+       "Please enter your %s and password for access to %s")
 
-ResDef( XP_FOLDER_RECEIVING_MESSAGE_OF,	XP_MSG_BASE + 1325,
+ResDef( XP_FOLDER_RECEIVING_MESSAGE_OF, XP_MSG_BASE + 1325,
 "%s - Receiving: message %lu of %lu" )
 
 ResDef(MK_MSG_COLLABRA_DISABLED, XP_MSG_BASE + 1326,
-	   "Sorry, Collabra has been disabled;  newsgroup functionality \
+       "Sorry, Collabra has been disabled;  newsgroup functionality \
 has been turned off.")
 
 ResDef(MK_IMAP_DOWNLOADING_MESSAGE, XP_MSG_BASE + 1327,
-	   "Downloading message...")
+       "Downloading message...")
 
 ResDef(MK_IMAP_CREATE_FOLDER_BUT_NO_SUBSCRIBE, XP_MSG_BASE + 1328,
-	   "Folder creation succeeded, but "MOZ_NAME_PRODUCT" was unable to subscribe \
+       "Folder creation succeeded, but "MOZ_NAME_PRODUCT" was unable to subscribe \
 the new folder.")
 
 ResDef(MK_IMAP_DELETE_FOLDER_BUT_NO_UNSUBSCRIBE, XP_MSG_BASE + 1329,
-	   "Folder deletion succeeded, but "MOZ_NAME_PRODUCT" was unable to unubscribe \
+       "Folder deletion succeeded, but "MOZ_NAME_PRODUCT" was unable to unubscribe \
 from the folder.")
 
 ResDef(MK_IMAP_RENAME_FOLDER_BUT_NO_SUBSCRIBE, XP_MSG_BASE + 1330,
-	   "Folder move succeeded, but "MOZ_NAME_PRODUCT" was unable to subscribe \
+       "Folder move succeeded, but "MOZ_NAME_PRODUCT" was unable to subscribe \
 to the new folder name.")
 
 ResDef(MK_IMAP_RENAME_FOLDER_BUT_NO_UNSUBSCRIBE, XP_MSG_BASE + 1331,
-	   "Folder move succeeded, but "MOZ_NAME_PRODUCT" was unable to unsubscribe \
+       "Folder move succeeded, but "MOZ_NAME_PRODUCT" was unable to unsubscribe \
 from the old folder name.")
 
 ResDef(XP_MSG_JS_CLOSE_WINDOW, XP_MSG_BASE + 1332, "Close Window?")
@@ -7485,23 +7533,24 @@ ResDef(XP_MSG_JS_CLOSE_WINDOW, XP_MSG_BASE + 1332, "Close Window?")
 ResDef(XP_MSG_JS_CLOSE_WINDOW_NAME, XP_MSG_BASE + 1333, "Close Window %s?")
 
 ResDef(MK_ACCESS_YOUR_COOKIES, XP_MSG_BASE + 1334,
-	   "Your Cookies")
+       "Your Cookies")
 ResDef(MK_ACCESS_MAXIMUM_COOKS, XP_MSG_BASE + 1335,
-	   "Maximum number of cookies allowed:")
+       "Maximum number of cookies allowed:")
 ResDef(MK_ACCESS_COOK_COUNT, XP_MSG_BASE + 1336,
-	   "The number of cookies you have:")
+       "The number of cookies you have:")
 ResDef(MK_ACCESS_MAXIMUM_COOKS_PER_SERV, XP_MSG_BASE + 1337,
-	   "Maximum number of cookies per server:")
+       "Maximum number of cookies per server:")
 ResDef(MK_ACCESS_MAXIMUM_COOK_SIZE, XP_MSG_BASE + 1338,
-	   "Maximum size of each cookie:")
+       "Maximum size of each cookie:")
 ResDef(MK_ACCESS_NO_COOKIES, XP_MSG_BASE + 1339,
-	   "You have no cookies.")
+       "You have no cookies.")
 ResDef(MK_ACCESS_NAME, XP_MSG_BASE + 1340,
-	   "Name:")
+       "Name:")
 ResDef(MK_ACCESS_VALUE, XP_MSG_BASE + 1341,
-	   "Value:")
+       "Value:")
 ResDef(MK_ACCESS_HOST, XP_MSG_BASE + 1342,
 	   "Host:")
+/* id conflict: these strings have been moved way down
 ResDef(MK_ACCESS_DOMAIN, XP_MSG_BASE + 1343,
            "Domain:")
 ResDef(MK_ACCESS_PATH, XP_MSG_BASE + 1344,
@@ -7510,16 +7559,27 @@ ResDef(MK_ACCESS_YES, XP_MSG_BASE + 1345,
            "Yes")
 ResDef(MK_ACCESS_NO, XP_MSG_BASE + 1346,
            "No")
+*/
+ResDef(MK_ACCESS_SEND_TO_HOST, XP_MSG_BASE + 1343,
+       "Send to host:")
+ResDef(MK_ACCESS_IS_DOMAIN, XP_MSG_BASE + 1344,
+       "any host in the domain from the host above")
+ResDef(MK_ACCESS_IS_NOT_DOMAIN, XP_MSG_BASE + 1345,
+       "the above fully qualified host only")
+ResDef(MK_ACCESS_SEND_TO_PATH, XP_MSG_BASE + 1346,
+       "Send to path:")
+ResDef(MK_ACCESS_AND_BELOW, XP_MSG_BASE + 1347,
+       " (and below)")
 ResDef(MK_ACCESS_SECURE, XP_MSG_BASE + 1348,
-	   "Secure:")
+       "Secure:")
 ResDef(MK_ACCESS_EXPIRES, XP_MSG_BASE + 1349,
-	   "Expires:")
+       "Expires:")
 ResDef(MK_ACCESS_END_OF_SESSION, XP_MSG_BASE + 1350,
-	   "at end of session")
+       "at end of session")
 ResDef(MK_LDAP_HTML_TITLE, XP_MSG_BASE + 1351,
-	   "LDAP Search Results")
+       "LDAP Search Results")
 ResDef(MK_ACCESS_JAVASCRIPT_COOKIE_FILTER, XP_MSG_BASE + 1352,
-	   "Javascript Cookie Filter Message:\n")
+       "Javascript Cookie Filter Message:\n")
 ResDef(MK_JSFILTERDIALOG_EDIT_TITLE, XP_MSG_BASE + 1353,
        "Edit JavaScript Message Filter")
 ResDef(MK_JSFILTERDIALOG_NEW_TITLE, XP_MSG_BASE + 1354,
@@ -7552,23 +7612,22 @@ ResDef(MK_JSFILTER_DIALOG_STRING_8, XP_MSG_BASE + 1362, "")
 ResDef(MK_JSFILTER_DIALOG_STRING_9, XP_MSG_BASE + 1363, "")
 ResDef(MK_JSFILTER_DIALOG_STRING_10, XP_MSG_BASE + 1364, "")
 ResDef(MK_MSG_RETRIEVE_SELECTED, XP_MSG_BASE + 1365,
-	   "Retrieve selected messages")
+       "Retrieve selected messages")
 ResDef(MK_MSG_RETRIEVE_FLAGGED, XP_MSG_BASE + 1366,
-	   "Retrieve flagged messages")
+       "Retrieve flagged messages")
 
 ResDef(MK_IMAP_STATUS_GETTING_NAMESPACE, XP_MSG_BASE + 1367,
-	   "Checking IMAP Namespace...")
+       "Checking IMAP Namespace...")
 
 ResDef(MK_LDAP_REPL_CHANGELOG_BOGUS, XP_MSG_BASE + 1368,
-	   "Can't replicate because the server's change log appears incomplete.")
-ResDef(MK_LDAP_REPL_DSE_BOGUS, XP_MSG_BASE + 1369,
-	   "Can't replicate because the server's replication information appears incomplete.")
-ResDef(MK_LDAP_REPL_CANT_SYNC_REPLICA, XP_MSG_BASE + 1370,
-	   "Can't replicate because the replica is too far out of date with the server.")
+       "Can't replicate because the server's change log appears incomplete.")
+ResDef(MK_LDAP_REPL_DSE_BOGUS, XP_MSG_BASE + 1369, "Can't replicate because the server's replication information appears incomplete.")
+ResDef(MK_LDAP_REPL_CANT_SYNC_REPLICA, XP_MSG_BASE + 1370,"Can't replicate at this time. "MOZ_NAME_BRAND" may be out of memory or busy.")
+	   
 ResDef(MK_ADD_ADDRESSBOOK, XP_MSG_BASE + 1371,
-	   "New Address Book...")
+       "New Address Book...")
 ResDef(MK_ADD_LDAPDIRECTORY, XP_MSG_BASE + 1372,
-	   "New Directory...")
+       "New Directory...")
 #ifdef XP_WIN16
 ResDef (MK_MSG_TEMPLATES_L10N_NAME,  XP_MSG_BASE + 1373, "Template")
 #else
@@ -7578,7 +7637,7 @@ ResDef (MK_MSG_SAVING_AS_DRAFT, XP_MSG_BASE + 1374, "Saving as draft ...")
 ResDef (MK_MSG_SAVING_AS_TEMPLATE, XP_MSG_BASE + 1375, "Saving as template ...")
 
 ResDef(MK_MSG_ADDBOOK_MOUSEOVER_TEXT, XP_MSG_BASE + 1376,
-	   "Add %s to your Address Book")
+       "Add %s to your Address Book")
 ResDef(MK_MSG_ENTER_NAME_FOR_TEMPLATE, XP_MSG_BASE + 1377,
        "Enter a name for your new message template.")
 
@@ -7612,21 +7671,16 @@ ResDef(MK_MSG_MDN_WISH_TO_SEND, XP_MSG_BASE + 1384,
 "The sender of the message requested a receipt to be returned. \n\
 Do you wish to send one?")
 
-ResDef(MK_MSG_DELIV_IMAP,			XP_MSG_BASE + 1385,
+ResDef(MK_MSG_DELIV_IMAP,           XP_MSG_BASE + 1385,
  "Delivering message...")
-ResDef(MK_MSG_DELIV_IMAP_DONE,			XP_MSG_BASE + 1386,
+ResDef(MK_MSG_DELIV_IMAP_DONE,          XP_MSG_BASE + 1386,
  "Delivering message... Done")
-ResDef(MK_MSG_IMAP_DISCOVERING_MAILBOX,	XP_MSG_BASE + 1387, 
+ResDef(MK_MSG_IMAP_DISCOVERING_MAILBOX, XP_MSG_BASE + 1387, 
 "Found folder: %s")
 
-ResDef(MK_MSG_UNABLE_TO_SAVE_DRAFT, XP_MSG_BASE + 1388,
-MOZ_NAME_BRAND" is unable to save your message as a draft. Please make sure \n\
-that your Drafts mail folder is correctly chosen in your Mail and \n\
-Newsgroups preferences.")
-ResDef(MK_MSG_UNABLE_TO_SAVE_TEMPLATE, XP_MSG_BASE + 1389,
-MOZ_NAME_BRAND" is unable to save your message as a template. Please make \n\
-sure that your Templates mail folder is correctly chosen in your Mail \n\
-and Newsgroups preferences.")
+ResDef(MK_MSG_FORWARD_INLINE, XP_MSG_BASE + 1388, "Forward Inline")
+
+/**** 1389 free for grab ***/
 
 ResDef(MK_MSG_IMAP_INBOX_NAME, XP_MSG_BASE + 1390, "Inbox")
 
@@ -7654,7 +7708,7 @@ ResDef(MK_IMAP_UPGRADE_WAIT_WHILE_UPGRADE, XP_MSG_BASE + 1397,
 "Please wait while "MOZ_NAME_PRODUCT" upgrades you to use IMAP subscriptions...")
 
 ResDef(MK_IMAP_UPGRADE_SUCCESSFUL, XP_MSG_BASE + 1398,
-"Upgrade to IMAP subscription successful.")
+"The upgrade was successful.")
 
 ResDef(MK_POP3_ONLY_ONE, XP_MSG_BASE + 1399,
 "You cannot add another server, because you are using POP.")
@@ -7696,30 +7750,160 @@ ResDef(MK_IMAP_GETTING_MAILBOX_INFO, XP_MSG_BASE + 1410,
 ResDef(MK_IMAP_EMPTY_MIME_PART, XP_MSG_BASE + 1411,
 "This body part will be downloaded on demand.")
 
-ResDef(MK_ACCESS_COOKIES_WISHES0, (XP_MSG_BASE + 1415),
+ResDef(MK_IMAP_UNABLE_TO_SAVE_MESSAGE, XP_MSG_BASE + 1412,
+"IMAP Error: The message could not be saved due to an error.")
+
+ResDef(MK_IMAP_NO_ONLINE_FOLDER, XP_MSG_BASE + 1413,
+"IMAP Error: The online folder information could not be retrieved.")
+
+ResDef(XP_MSG_IMAP_LOGIN_FAILED, XP_MSG_BASE + 1414, "Login failed.")
+
+ResDef(XP_SEARCH_VALUE_REQUIRED, XP_MSG_BASE + 1415, 
+       "Please enter some text to search for and try again.")
+
+ResDef(MK_MIMEHTML_SIGNED_UNVERIFIED,       XP_MSG_BASE + 1416,
+"Unverified Signature")
+
+
+/* IMAP ACL Rights descriptions */
+ResDef(XP_MSG_IMAP_ACL_FULL_RIGHTS, XP_MSG_BASE + 1417,
+       "Full Control")
+ResDef(XP_MSG_IMAP_ACL_LOOKUP_RIGHT, XP_MSG_BASE + 1418,
+       "Lookup")
+ResDef(XP_MSG_IMAP_ACL_READ_RIGHT, XP_MSG_BASE + 1419,
+       "Read")
+ResDef(XP_MSG_IMAP_ACL_SEEN_RIGHT, XP_MSG_BASE + 1420,
+       "Set Read/Unread State")
+ResDef(XP_MSG_IMAP_ACL_WRITE_RIGHT, XP_MSG_BASE + 1421,
+       "Write")
+ResDef(XP_MSG_IMAP_ACL_INSERT_RIGHT, XP_MSG_BASE + 1422,
+       "Insert (Copy Into)")
+ResDef(XP_MSG_IMAP_ACL_POST_RIGHT, XP_MSG_BASE + 1423,
+       "Post")
+ResDef(XP_MSG_IMAP_ACL_CREATE_RIGHT, XP_MSG_BASE + 1424,
+       "Create Subfolder")
+ResDef(XP_MSG_IMAP_ACL_DELETE_RIGHT, XP_MSG_BASE + 1425,
+       "Delete Messages")
+ResDef(XP_MSG_IMAP_ACL_ADMINISTER_RIGHT, XP_MSG_BASE + 1426,
+       "Administer Folder")
+
+ResDef(XP_MSG_IMAP_PERSONAL_FOLDER_TYPE_NAME, XP_MSG_BASE + 1427,
+       "Personal Folder")
+
+ResDef(XP_MSG_IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME, XP_MSG_BASE + 1428,
+       "Personal Folder")
+
+ResDef(XP_MSG_IMAP_PUBLIC_FOLDER_TYPE_NAME, XP_MSG_BASE + 1429,
+       "Public Folder")
+
+ResDef(XP_MSG_IMAP_OTHER_USERS_FOLDER_TYPE_NAME, XP_MSG_BASE + 1430,
+       "Other User's Folder")
+
+ResDef(XP_MSG_IMAP_PERSONAL_FOLDER_TYPE_DESCRIPTION, XP_MSG_BASE + 1431,
+       "This is a personal mail folder.  It is not shared.")
+
+ResDef(XP_MSG_IMAP_PERSONAL_SHARED_FOLDER_TYPE_DESCRIPTION, XP_MSG_BASE + 1432,
+       "This is a personal mail folder.  It has been shared.")
+
+ResDef(XP_MSG_IMAP_PUBLIC_FOLDER_TYPE_DESCRIPTION, XP_MSG_BASE + 1433,
+       "This is a public folder.")
+
+ResDef(XP_MSG_IMAP_OTHER_USERS_FOLDER_TYPE_DESCRIPTION, XP_MSG_BASE + 1434,
+       "This is a mail folder shared by the user '%s'.")
+
+ResDef(XP_MSG_IMAP_UNKNOWN_USER, XP_MSG_BASE + 1435, "Unknown")
+
+ResDef(XP_MSG_CACHED_PASSWORD_NOT_MATCHED, XP_MSG_BASE + 1436, "Password entered doesn't match last password used with server.")
+
+ResDef(XP_MSG_PASSWORD_FAILED, XP_MSG_BASE + 1437, "You have not entered a password or have exceeded the number of \
+password attempts allowed.")
+
+ResDef(MK_MSG_REMOVE_IMAP_HOST_CONFIRM,      XP_MSG_BASE + 1438,
+       "Are you sure you want to remove the mail host %s?")
+
+ResDef(MK_MIMEHTML_VERIFY_SIGNATURE,    XP_MSG_BASE + 1439,
+       "Verify Signature")
+
+ResDef(MK_MSG_SHOW_ATTACHMENT_PANE, XP_MSG_BASE + 1440,
+       "Toggle Attachment Pane")
+
+ResDef(MK_MIMEHTML_DOWNLOAD_STATUS_HEADER, XP_MSG_BASE + 1441,
+       "Download Status")
+
+ResDef(MK_MIMEHTML_DOWNLOAD_STATUS_NOT_DOWNLOADED, XP_MSG_BASE + 1442,
+       "Not Downloaded Inline")
+
+ResDef(MK_ACCESS_DOMAIN, XP_MSG_BASE + 1443,
+           "Domain:")
+ResDef(MK_ACCESS_PATH, XP_MSG_BASE + 1444,
+           "Path:")
+ResDef(MK_ACCESS_YES, XP_MSG_BASE + 1445,
+           "Yes")
+ResDef(MK_ACCESS_NO, XP_MSG_BASE + 1446,
+           "No")
+
+/* -------- Range up tp 1449 reserved for MSGLIB!! ----------------*/
+
+/* JavaScript dialog strings - seem to be duplicates!
+
+ResDef(XP_MSG_JS_CLOSE_WINDOW, XP_MSG_BASE + 1450, "Close Window?")
+
+ResDef(XP_MSG_JS_CLOSE_WINDOW_NAME, XP_MSG_BASE + 1451, "Close Window %s?")
+
+ XXX - more strings to put here so that they can be internationalized
+
+ End JavaScript dialog strings */
+
+
+
+/* Related Links XP Strings */
+
+ResDef(XP_RL_ABOUT_RL, XP_MSG_BASE + 1460, "About Related Sites") 
+
+ResDef(XP_RL_ENHANCED_LIST, XP_MSG_BASE + 1461, "Detailed List...") 
+
+ResDef(XP_RL_FETCHING, XP_MSG_BASE + 1462, "Fetching Related Sites...") 
+
+ResDef(XP_RL_UNAVAILABLE, XP_MSG_BASE + 1463, "No Related Sites Available")
+
+ResDef(XP_RL_DISABLED, XP_MSG_BASE + 1464, "Related Sites Disabled")
+
+
+/* LDAP Replication Strings */
+
+ResDef(MK_LDAP_REPL_PROGRESS_TITLE, XP_MSG_BASE + 1465, "Replicating Directory")
+ResDef(MK_LDAP_REPL_CONNECTING, XP_MSG_BASE + 1466, "Connecting to directory server...")
+ResDef(MK_LDAP_REPL_CHANGE_ENTRY, XP_MSG_BASE + 1467, "Replicating change entry %d")
+ResDef(MK_LDAP_REPL_NEW_ENTRY, XP_MSG_BASE + 1468, "Replicating entry %d")
+
+ResDef(MK_LDAP_AUTHDN_LOOKUP_FAILED, XP_MSG_BASE + 1469, "Mail id invalid or not unique, cannot resolve to directory authorization entry.")
+
+
+/* Cookies & Signons XP Strings */
+ResDef(MK_ACCESS_COOKIES_WISHES0, (XP_MSG_BASE + 1480),
 "The server %1$s \nwishes to set a cookie.\n\n\
 Do you wish to allow the cookie to be set?")
 
-ResDef(MK_ACCESS_COOKIES_WISHES1, (XP_MSG_BASE + 1416),
+ResDef(MK_ACCESS_COOKIES_WISHES1, (XP_MSG_BASE + 1481),
 "The server %1$s \nwishes to set another cookie.\n\
 You currently have a cookie from this server.\n\n\
 Do you wish to allow the cookie to be set?")
 
-ResDef(MK_ACCESS_COOKIES_WISHESN, (XP_MSG_BASE + 1417),
+ResDef(MK_ACCESS_COOKIES_WISHESN, (XP_MSG_BASE + 1482),
 "The server %1$s \nwishes to set another cookie.\n\
 You currently have %2$d cookies from this server.\n\n\
 Do you wish to allow the cookie to be set?")
 
-ResDef(MK_ACCESS_COOKIES_REMEMBER, (XP_MSG_BASE + 1418),
+ResDef(MK_ACCESS_COOKIES_REMEMBER, (XP_MSG_BASE + 1483),
 "Do you want to remember this decision?")
 
-ResDef(MK_ACCESS_COOKIES_ACCEPTED, (XP_MSG_BASE + 1419),
+ResDef(MK_ACCESS_COOKIES_ACCEPTED, (XP_MSG_BASE + 1484),
 "Cookies you have accepted")
 
-ResDef(MK_ACCESS_COOKIES_PERMISSION, (XP_MSG_BASE + 1420),
+ResDef(MK_ACCESS_COOKIES_PERMISSION, (XP_MSG_BASE + 1485),
 "Hosts that may (+) or may not (-)<BR> set cookies")
 
-ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1425), \
+ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1490), \
 "********")
 /* Note: above string used to say "generate" but at Rick Elliott's
  * suggestion it is being changed to be all asterisks.
@@ -7733,16 +7917,18 @@ ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1425), \
  * such as "**pick**".
  */
 
-ResDef(MK_SIGNON_PASSWORDS_REMEMBER, (XP_MSG_BASE + 1426), \
+ResDef(MK_SIGNON_PASSWORDS_REMEMBER, (XP_MSG_BASE + 1491), \
 "Remember this as a new pasword for %1$s at %2$s?")
 
-ResDef(MK_SIGNON_PASSWORDS_FETCH, (XP_MSG_BASE + 1427), \
+ResDef(MK_SIGNON_PASSWORDS_FETCH, (XP_MSG_BASE + 1492), \
 "Fetch old password for %1$s at %2$s?")
 
-ResDef(MK_SIGNON_YOUR_SIGNONS, (XP_MSG_BASE + 1428),
+ResDef(MK_SIGNON_YOUR_SIGNONS, (XP_MSG_BASE + 1493),
 "Your Signons")
 
-#define LI_MSG_BASE XP_MSG_BASE + 1500
+
+/* Location Independence XP Strings */
+#define LI_MSG_BASE XP_MSG_BASE + 1500	/* <-- offset = 1500, we don't have much room left above */
 ResDef(LI_DOWN_CONFLICT_1, LI_MSG_BASE+1,  "\
 Local and server copies of %0% are in conflict. What would you like to do:</P><P>\
 %-cont-%")
@@ -7813,8 +7999,27 @@ ResDef(LI_INIT_LATER, LI_MSG_BASE+14,
 will take effect the next time\n\
 you restart Communicator.")
 
+ResDef(LI_VERIFY_NOACCESS, LI_MSG_BASE+15, 
+"An authorization error occured,\n\
+please try retyping your username and password.")
 
-#define RDF_MSG_BASE XP_MSG_BASE + 2000
+ResDef(LI_VERIFY_DNSFAIL, LI_MSG_BASE+16, 
+"The LI server name specified does not exist,\n\
+please check the spelling and try again.")
+
+ResDef(LI_VERIFY_NETWORKERROR, LI_MSG_BASE+17,
+"An unexpected network error occurred.\n\
+Cannot connect to the LI server.")
+
+/* Julian XP Strings */
+#define JULIAN_MSG_BASE XP_MSG_BASE + 1550
+ResDef(JULIAN_STRING_1, JULIAN_MSG_BASE+1,
+"Put your Julian strings here.")
+
+
+/* RDF XP Strings */
+
+#define RDF_MSG_BASE XP_MSG_BASE + 1700
 
 ResDef(RDF_HTML_STR, RDF_MSG_BASE+1,  "\
 <CENTER><TABLE ALIGN=center WIDTH=470 BORDER=0>%0%</TABLE></CENTER><P>%1%")
@@ -7831,7 +8036,7 @@ ResDef(RDF_HTML_STR_3, RDF_MSG_BASE+4,  "\
 ResDef(RDF_HTML_STR_4, RDF_MSG_BASE+5,  "\
 <TR><TD><INPUT TYPE=CHECKBOX NAME='%s' VALUE='%s' %s> <B>%s</B></TD></TR><BR>\n")
 
-ResDef(RDF_HTML_STR_5, RDF_MSG_BASE+6,	"\
+ResDef(RDF_HTML_STR_5, RDF_MSG_BASE+6,  "\
 <TR><TD ALIGN=RIGHT><B>%s:</B></TD><TD><TEXTAREA ROWS=3 COLS=24 NAME='%s'>%s</TEXTAREA></TD></TR>\n")
 
 ResDef(RDF_HTML_WINDATE, RDF_MSG_BASE+7,  "%#m/%#d/%Y %#I:%M %p")
@@ -8039,7 +8244,7 @@ ResDef(RDF_FTP_NAME_STR, RDF_MSG_BASE+213, "FTP Locations")
 
 
 /* The following messages are for capabilities based Signed Applets/JS */
-#define CAPS_MSG_BASE XP_MSG_BASE + 3000
+#define CAPS_MSG_BASE XP_MSG_BASE + 3500
 
 ResDef(CAPS_TARGET_RISK_STR_LOW, (CAPS_MSG_BASE + 1), "\
 low")

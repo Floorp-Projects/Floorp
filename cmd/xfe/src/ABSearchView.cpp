@@ -292,8 +292,8 @@ XFE_ABSearchView::rebuildOptChildren(Widget            popupParent,
 				  XmNchildren, &childrenList,
 				  XmNnumChildren, &numChildren,
 				  NULL);
-
-	for (int i = 0; i < numChildren; i++) {
+    int i;
+	for (i = 0; i < numChildren; i++) {
 		/* free user data
 		 */
 
@@ -561,7 +561,8 @@ void XFE_ABSearchView::add1Rule(MSG_SearchAttribute  attrib,
 		(ABSearchUIHint_t *) XP_CALLOC(m_nAttribItems, 
 									   sizeof(ABSearchUIHint_t));
 	XP_Bool validAttrib = False;
-	for (int i=0; i < m_nAttribItems; i++) {
+    int i;
+	for (i=0; i < m_nAttribItems; i++) {
 		hint[i].m_th = m_nRules;
 		hint[i].m_type = AB_SEARCH_ATTRIB;
 		hint[i].m_menuItem = &(m_attrItems[i]);
@@ -583,7 +584,8 @@ void XFE_ABSearchView::add1Rule(MSG_SearchAttribute  attrib,
 	if (!validAttrib) {
 		/* correct 
 		 */
-		attrib = (MSG_SearchAttribute) m_attrItems[m_nRules].attrib;
+		attrib = (MSG_SearchAttribute)
+			m_attrItems[m_nRules%m_nAttribItems].attrib;
 	}/* if */
 	m_params[m_nRules].m_attribNval.attribute = attrib;
 
@@ -875,7 +877,8 @@ void XFE_ABSearchView::toggleSearchMode(ABSearchInfo_t *info)
 											   sizeof(ABSearchUIHint_t));
 			/* and, or
 			 */
-			for (int i=0; i < 2; i++) {
+            int i;
+			for (i=0; i < 2; i++) {
 				hint[i].m_th = -1;
 				hint[i].m_type = AB_SEARCH_CONNECTOR;
 				hint[i].m_menuItem = 

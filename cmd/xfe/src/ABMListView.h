@@ -23,25 +23,48 @@
 #ifndef _ABMLISTVIEW_H_
 #define _ABMLISTVIEW_H_
 
+#if defined(USE_ABCOM)
+#include "MNListView.h"
+#else
 #include "MNView.h"
+#endif /* USE_ABCOM */
+
 #include "Outliner.h"
 #include "Outlinable.h"
 
+#if defined(USE_ABCOM)
+#include "ABComplPickerDlg.h"
+#include "abcom.h"
+#endif /* USE_ABCOM */
+
+/* to be taken out when USE_ABCOM is on 
+*/
 #include "addrbook.h"
 
 class XFE_AddrBookView;
 
+#if defined(USE_ABCOM)
+class XFE_ABMListView  : public XFE_MNListView
+#else
 class XFE_ABMListView  : public XFE_MNView, public XFE_Outlinable 
+#endif /* USE_ABCOM */
 {
 public:
   XFE_ABMListView(XFE_Component *toplevel_component, 
-		  Widget         parent,
-		  DIR_Server    *dir, 
-		  ABook         *pABook,
-		  XFE_View	    *parent_view,
-		  MWContext     *context,
-		  MSG_Master*    master);
-  ~XFE_ABMListView();
+				  Widget         parent,
+				  DIR_Server    *dir, 
+				  ABook         *pABook,
+				  XFE_View	    *parent_view,
+				  MWContext     *context,
+				  MSG_Master*    master);
+#if defined(USE_ABCOM)
+  XFE_ABMListView(XFE_Component *toplevel_component, 
+				  Widget         parent,
+				  MSG_Pane      *pane,
+				  MWContext     *context);
+#endif /* USE_ABCOM */
+
+  virtual ~XFE_ABMListView();
 
 
   // The Outlinable interface.
@@ -85,10 +108,6 @@ public:
   // columns for the Outliner
   enum {OUTLINER_COLUMN_TYPE = 0,
 	OUTLINER_COLUMN_NAME,
-	OUTLINER_COLUMN_NICKNAME,
-	OUTLINER_COLUMN_EMAIL,
-	OUTLINER_COLUMN_COMPANY,
-	OUTLINER_COLUMN_LOCALITY,
 	OUTLINER_COLUMN_LAST
   };
 
@@ -112,7 +131,37 @@ public:
 					 String *params,
 					 Cardinal *nparam);
 
+#if defined(USE_ABCOM)
+	static int nameCompletionExitFunc(AB_NameCompletionCookie *cookie,
+									  int   numResults, 
+									  void *FEcookie);
+	static void nameCPickerExitFunc(void *clientData, void *callData);
+#endif /* USE_ABCOM */
+
 protected:
+
+#if defined(USE_ABCOM)
+	int  nameCompletionCB(AB_NameCompletionCookie *cookie,
+						  int                      numResults);
+	void nameCPickerCB(void *clientData);
+	void fillNameCompletionStr(char *completeName, 
+							   XP_Bool completed = False);
+
+	MSG_ViewIndex   m_index;
+
+	MSG_Pane       *m_pickerPane;
+	MWContext      *m_pickerContext;
+	XFE_ABComplPickerDlg *m_pickerDlg;
+	
+	XmTextPosition  m_lastPos;
+	XmTextPosition  m_curPos;
+	char           *m_curName; /* name token */
+	char           *m_textStr; /* whatever string in text field */
+	XP_Bool         m_rtnIsPicker;
+	XP_Bool         m_valChgedByMe;
+	int             m_numResults;
+	AB_NameCompletionCookie *m_ncCookie;
+#endif /* USE_ABCOM */
 
   XFE_Outliner *m_outliner;
 
@@ -143,6 +192,7 @@ private:
   Widget        m_textF;
 
   void doBackSpace(XEvent *event);
+
 };
 
 #endif /*  _ABMLISTVIEW_H_ */

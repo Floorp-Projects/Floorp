@@ -57,7 +57,9 @@
 
 #include "il_icons.h"           /* Image icon enumeration. */
 
+#ifdef JAVA
 #include "edtplug.h"
+#endif
 
 #define CB_STATIC static      /* let commands.c see it */
 

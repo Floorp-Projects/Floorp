@@ -34,9 +34,10 @@ class XFE_MailFilterDlg: public XFE_ViewDialog
 public:
 
   XFE_MailFilterDlg(Widget           parent,
-		      char            *name,
-		      Boolean          modal,
-		      MWContext *context);
+                    char            *name,
+                    Boolean          modal,
+                    MWContext *context,
+                    MSG_Pane *pane);
 
   virtual ~XFE_MailFilterDlg();
 
@@ -52,6 +53,7 @@ private:
 
 };
 
-extern "C" void fe_showMailFilterDlg(Widget toplevel, MWContext *context);
+extern "C" void fe_showMailFilterDlg(Widget toplevel, MWContext *context,
+                                     MSG_Pane *pane);
 
 #endif /* _MAILFILTERDLG_H_ */

@@ -34,7 +34,7 @@ DIRS=\
     edtrcdll \
 !endif
 !ifdef MOZ_MAIL_NEWS
-	mnrcdll \
+    mnrcdll \
 !endif
 	xpstrdll \
     $(NULL)

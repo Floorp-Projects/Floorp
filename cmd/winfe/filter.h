@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+
 #ifndef __Filter_h
 #define __Filter_h
 
@@ -30,7 +31,34 @@
 // filter.h : header file
 //
 
+class CFilterScopeCombo: public CMiscFolderCombo
+{
 
+protected:
+	int m_iPosIndex, m_iPosName, m_iPosStatus;
+	BOOL m_bFirst;
+	RECT m_rcList;
+
+	HFONT m_hFont, m_hBigFont;
+public:
+
+	//overriding functionality called in CMailFolderHelper
+	int  PopulateNews(MSG_Master *pMaster, BOOL bRoots);
+	void SubPopulate(int &index, MSG_FolderInfo *folder );
+
+	virtual void SetFont( CFont *pFont, CFont *pBigFont );
+
+	CFilterScopeCombo();
+	~CFilterScopeCombo();
+
+protected:
+	virtual void DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct );
+
+	afx_msg void OnPaint( );
+	afx_msg HBRUSH OnCtlColor( CDC* pDC, CWnd* pWnd, UINT nCtlColor );
+	DECLARE_MESSAGE_MAP()
+
+};
 /////////////////////////////////////////////////////////////////////////////
 // CFilterList
 
@@ -64,15 +92,22 @@ class CFilterPickerDialog : public CDialog
 {
 protected:
 	MSG_Pane *m_pPane;
+	CWnd *m_pParent;
 	CFilterList m_FilterList;
+	CFilterScopeCombo m_ScopeCombo;
+
 
 	CBitmapButton m_UpButton;
 	CBitmapButton m_DownButton;
+public:
+	MSG_FolderInfo *m_FolderInfoScope;
+	CDWordArray *m_pDWordArray;  //array of filter lists.
 
 // Construction
 public:
 	CFilterPickerDialog(MSG_Pane *pPane, CWnd* pParent = NULL);
 
+	~CFilterPickerDialog();
 // Dialog Data
 	//{{AFX_DATA(CFilterPickerDialog)
 	enum { IDD = IDD_FILTER_PICKER };
@@ -89,6 +124,9 @@ public:
 protected:
 	
 	void UpdateList();
+	MSG_FilterType GetFilterType(MSG_FolderInfo *pFolderInfo);
+
+	BOOL FilterListAlreadyOpen(MSG_FolderInfo *pFolder, MSG_FilterList *&pReturnList);
 
 	MSG_FilterList *m_pFilterList;
 	MSG_Filter *m_pFilter;
@@ -100,6 +138,9 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CFilterPickerDialog)
 	afx_msg void OnDblclkListFilter();
+	afx_msg void OnScope();
+    afx_msg void OnServerFilters();
+	afx_msg void OnUpdateServerFilters(CCmdUI *pCmdUI);
 	afx_msg void OnSelchangeListFilter();
 	afx_msg void OnSelcancelListFilter();
 	afx_msg void OnOK();
@@ -123,20 +164,19 @@ protected:
 /////////////////////////////////////////////////////////////////////////////
 // CFilterDialog dialog
 
-class CCustomHeadersDlg;
-
 class CFilterDialog : public CDialog
 {
 protected:
 	CMailFolderCombo m_FolderCombo;
 	MSG_Pane *m_pPane;
 	MSG_Filter **m_hFilter;
+	MSG_FolderInfo *m_pFolderInfoScope;
 
 // Construction
 public:
-	CFilterDialog(MSG_Pane *pPane, MSG_Filter **filter, CWnd* pParent = NULL);
+	CFilterDialog(MSG_Pane *pPane, MSG_FolderInfo *pFolderInfoScope, 
+				  MSG_Filter **filter, CWnd* pParent = NULL);
 
-	CCustomHeadersDlg *m_pCustomHeadersDlg;
 	int m_iRowIndex;
 	BOOL m_bLogicType;
 	int m_iRowSelected;
@@ -144,10 +184,9 @@ public:
 	void UpdateOpList(int iRow);
 	void UpdateDestList();
 	void UpdateColumn1Attributes();
-	void EditHeaders(int iRow);
 
 	int GetNumTerms();
-
+#ifdef FE_IMPLEMENTS_BOOLEAN_OR
 	void GetTerm(int iRow,
 				 MSG_SearchAttribute *attrib,
 				 MSG_SearchOperator *op,
@@ -159,6 +198,18 @@ public:
 				 MSG_SearchOperator op,
 				 MSG_SearchValue value,
 				 char *pszArbitraryHeader);
+#else
+	void GetTerm(int iRow,
+				 MSG_SearchAttribute *attrib,
+				 MSG_SearchOperator *op,
+				 MSG_SearchValue *value);
+				 
+	void SetTerm(int iRow,
+				 MSG_SearchAttribute attrib,
+				 MSG_SearchOperator op,
+				 MSG_SearchValue value);
+#endif
+
 
 	void GetAction(MSG_RuleActionType *action, void **value);
 	void SetAction(MSG_RuleActionType action, void *value);
@@ -183,6 +234,10 @@ public:
 protected:
 
 	void SlideBottomControls(int);
+	MSG_ScopeAttribute GetFolderScopeAttribute();
+	MSG_FilterType GetFolderFilterType();
+  void updateAndOr();
+
 
 	// Generated message map functions
 	//{{AFX_MSG(CFilterDialog)
@@ -197,6 +252,7 @@ protected:
 	afx_msg void OnFewer();
 	afx_msg void OnHelp();
 	afx_msg void OnAndOr();
+	afx_msg void OnAdvanced();
 	virtual void OnOK();
 	virtual BOOL OnInitDialog();
 	afx_msg LONG OnFinishedHeaders(WPARAM wParam, LPARAM lParam );
@@ -211,3 +267,4 @@ protected:
 };
 
 #endif
+

@@ -20,6 +20,7 @@
    Created: Linda Wei <lwei@netscape.com>, 17-Sep-96.
  */
 
+#include "rosetta.h"
 #include "MozillaApp.h"
 #include "felocale.h"
 #include "structs.h"
@@ -34,16 +35,13 @@ extern "C" {
 }
 #include "PrefsDialog.h"
 #ifdef MOZ_MAIL_NEWS
-#include "PrefsMserverMore.h"
-#include "PrefsMsgMore.h"
 #include "ColorDialog.h"
-#include "PrefsLdapProp.h"
 #include "dirprefs.h"
 #include "addrbk.h"
-#include "dirprefs.h"
 #include "xp_list.h"
 #endif
 #include "prefapi.h"
+#include "xp_mem.h"
 
 #include <Xm/DrawnB.h>
 #include <Xm/Label.h>
@@ -61,6 +59,10 @@ extern "C" {
 #include <Xm/ToggleBG.h> 
 #include <DtWidgets/ComboBox.h>
 #include <Xfe/Xfe.h>
+
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 64
+#endif
 
 #define COLOR_STRING_BLACK "black"
 
@@ -84,12 +86,22 @@ extern int XFE_PREFS_LABEL_SIZE_NORMAL;
 extern int XFE_PREFS_LABEL_SIZE_BIGGER;
 extern int XFE_PREFS_LABEL_SIZE_SMALLER;
 extern int XFE_EMPTY_EMAIL_ADDR;
+extern int XFE_FOLDER_ON_SERVER_FORMAT;
+extern int XFE_DRAFTS_ON_SERVER;
+extern int XFE_TEMPLATES_ON_SERVER;
 extern int MK_MSG_MAIL_DIRECTORY_CHANGED;
+extern int XFE_MAIL_SELF_FORMAT;
+extern int MK_MSG_SENT_L10N_NAME;
+extern int MK_MSG_DRAFTS_L10N_NAME;
+extern int MK_MSG_TEMPLATES_L10N_NAME;
+extern int MK_POP3_ONLY_ONE;
+extern int MK_MSG_REMOVE_MAILHOST_CONFIRM;
 
 #define OUTLINER_GEOMETRY_PREF "preferences.dir.outliner_geometry"
 
 extern "C"
 {
+  
 #ifdef MOZ_MAIL_NEWS
 	void      MIME_ConformToStandard(XP_Bool conform_p);
 	void      MSG_SetBiffStatFile(const char* filename);
@@ -99,10 +111,7 @@ extern "C"
 	void      NET_SetPopUsername(const char *username);
 	void      fe_browse_file_of_text(MWContext *context, Widget text_field, Boolean dirp);
 	void      fe_installMailNews();
-	void      fe_installMailNewsComposition();
 	void      fe_installMailNewsMserver();
-	void      fe_installMailNewsNserver();
-	void      fe_installMailNewsAddrBook();
 	XP_List  *FE_GetDirServers();
 	ABook    *fe_GetABook(MWContext *context);
 	void      fe_showABCardPropertyDlg(Widget parent,
@@ -113,12 +122,6 @@ extern "C"
 
 	static void fe_set_quoted_text_styles(PrefsDataMailNews *);
 	static void fe_set_quoted_text_sizes(PrefsDataMailNews *);
-	static void fe_fcc_add_folders(XP_List *paths, XP_List *folders, 
-								   MSG_FolderInfo *info, 
-								   char *default_folder_path,
-								   int default_folder_index, int depth);
-	static char *fe_GetFolderPathFromInfo(MSG_FolderInfo *f);
-	static char *fe_GetFolderNameFromInfo(MSG_FolderInfo *f);
 #endif // MOZ_MAIL_NEWS
 	char     *XP_GetString(int i);
 	void      fe_installMailNewsIdentity();
@@ -564,7 +567,8 @@ void XFE_PrefsPageMailNews::init()
 		prefs->citation_color : COLOR_STRING_BLACK;
 	if (! LO_ParseRGB(color_string, &color.red, &color.green, &color.blue))
 		LO_ParseRGB(COLOR_STRING_BLACK, &color.red, &color.green, &color.blue);
-    sprintf(buf, "#%02x%02x%02x", color.red, color.green, color.blue);
+    PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
+                color.red, color.green, color.blue);
 
 	XtVaGetValues(fep->quoted_text_color_button, XmNuserData, &orig_citation_color, NULL);
 	if (orig_citation_color) XtFree(orig_citation_color);
@@ -1418,3182 +1422,2239 @@ void XFE_PrefsPageMailNewsIdentity::cb_toggleAttachCard(Widget    /* w */,
 #endif // MOZ_MAIL_NEWS
 
 #ifdef MOZ_MAIL_NEWS
-// ************************************************************************
-// **********************  Mail News/Composition   ************************
-// ************************************************************************
-
-// Member:       XFE_PrefsPageMailNewsComposition
-// Description:  Constructor
-// Inputs:
-// Side effects: 
-
-XFE_PrefsPageMailNewsComposition::XFE_PrefsPageMailNewsComposition(XFE_PrefsDialog *dialog)
-	: XFE_PrefsPage(dialog),
-	  m_prefsDataMailNewsComposition(0)
-{
-}
-
-// Member:       ~XFE_PrefsPageMailNewsComposition
-// Description:  Destructor
-// Inputs:
-// Side effects: 
-
-XFE_PrefsPageMailNewsComposition::~XFE_PrefsPageMailNewsComposition()
-{
-	delete m_prefsDataMailNewsComposition;
-}
-
-// Member:       create
-// Description:  Creates page for MailNews/Composition
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsComposition::create()
-{
-	Widget            kids[100];
-	Arg               av[50];
-	int               ac;
-	int               i;
-
-	PrefsDataMailNewsComposition *fep = NULL;
-
-	fep = new PrefsDataMailNewsComposition;
-	memset(fep, 0, sizeof(PrefsDataMailNewsComposition));
-	m_prefsDataMailNewsComposition = fep;
-
-	fep->context = getContext();
-	fep->prompt_dialog = getPrefsDialog()->getDialogChrome();
-
-	Widget form;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	form = XmCreateForm (m_wPageForm, "mailnewsCompose", av, ac);
-	XtManageChild (form);
-	m_wPage = fep->page = form;
-
-	// Message Properties
-
-	Widget frame1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame1 = XmCreateFrame (form, "mailnewsCompFrame", av, ac);
-
-	Widget form1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	form1 = XmCreateForm (frame1, "mailnewsCompBox", av, ac);
-
-	Widget label1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
-	label1 = XmCreateLabelGadget (frame1, "msgPropLabel", av, ac);
-
-	ac = 0;
-	i = 0;
-
-	// Auto quote original message
-
-	Widget send_html_msg_toggle;
-	Widget auto_quote_toggle;
-	Widget wrap_label;
-	Widget wrap_length_text;
-	Widget char_label;
-
-	kids[i++] = send_html_msg_toggle =
-		XmCreateToggleButtonGadget(form1, "sendHtmlMsgToggle", av, ac);
-
-	kids[i++] = auto_quote_toggle =
-		XmCreateToggleButtonGadget(form1, "autoQuoteToggle", av, ac);
-
-	kids[i++] = wrap_label =
-		XmCreateLabelGadget(form1, "wrapLabel", av, ac);
-
-	kids[i++] = char_label =
-		XmCreateLabelGadget(form1, "charLabel", av, ac);
-
-	kids[i++] = wrap_length_text =
-		fe_CreateTextField(form1, "wrapLengthText", av, ac);
-
-	fep->auto_quote_toggle = auto_quote_toggle;
-	fep->send_html_msg_toggle = send_html_msg_toggle;
-	fep->wrap_length_text = wrap_length_text;
-
-	XtVaSetValues(send_html_msg_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(auto_quote_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, send_html_msg_toggle,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	int labels_height;
-	labels_height = XfeVaGetTallestWidget(wrap_label,
-										  wrap_length_text,
-										  NULL);
-
-	XtVaSetValues(wrap_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, auto_quote_toggle,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(wrap_length_text,
-				  XmNcolumns, 3,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, wrap_label,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, wrap_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(char_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, wrap_label,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, wrap_length_text,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtManageChildren(kids, i);
-	XtManageChild(label1);
-	XtManageChild(form1);
-	XtManageChild(frame1);
-
-	// Copies of outgoing messages
-
-	Widget frame2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
-	XtSetArg (av [ac], XmNtopWidget, frame1); ac++;
-	XtSetArg (av [ac], XmNtopOffset, 8); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame2 = XmCreateFrame (form, "ccFrame", av, ac);
-
-	Widget form2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	form2 = XmCreateForm (frame2, "ccBox", av, ac);
-
-	Widget label2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
-	label2 = XmCreateLabelGadget (frame2, "ccLabel", av, ac);
-
-	// Email a copy of outgoing message to
-
-	Widget email_label;
-	Widget mail_msg_label;
-	Widget news_msg_label;
-	Widget mail_email_self_toggle;
-	Widget mail_email_other_label;
-	Widget mail_email_other_text;
-	Widget news_email_self_toggle;
-	Widget news_email_other_label;
-	Widget news_email_other_text;
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = email_label = 
-		XmCreateLabelGadget(form2, "emailLabel", av, ac);
-
-	kids[i++] = mail_msg_label = 
-		XmCreateLabelGadget(form2, "mailMsgLabel", av, ac);
-
-	kids[i++] = news_msg_label = 
-		XmCreateLabelGadget(form2, "newsMsgLabel", av, ac);
-
-	kids[i++] = mail_email_self_toggle =
-		XmCreateToggleButtonGadget(form2, "mEmailSelfToggle", av, ac);
-
-	kids[i++] = news_email_self_toggle =
-		XmCreateToggleButtonGadget(form2, "nEmailSelfToggle", av, ac);
-
-	kids[i++] = mail_email_other_label = 
-		XmCreateLabelGadget(form2, "mEmailOtherLabel", av, ac);
-
-	kids[i++] = news_email_other_label = 
-		XmCreateLabelGadget(form2, "nEmailOtherLabel", av, ac);
-
-	kids[i++] = mail_email_other_text = 
-		fe_CreateTextField(form2, "mEmailOtherText", av, ac);
-
-	kids[i++] = news_email_other_text = 
-		fe_CreateTextField(form2, "nEmailOtherText", av, ac);
-
-	fep->mail_email_self_toggle = mail_email_self_toggle;
-	fep->mail_email_other_text = mail_email_other_text;
-	fep->news_email_self_toggle = news_email_self_toggle;
-	fep->news_email_other_text = news_email_other_text;
-
-	XtVaSetValues(email_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, auto_quote_toggle,
-				  XmNtopOffset, 8,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	int labels_width;
-	labels_width = XfeVaGetWidestWidget(mail_msg_label,
-										news_msg_label,
-										NULL);
-
-	labels_height = XfeVaGetTallestWidget(mail_msg_label,
-										  mail_email_self_toggle,
-										  mail_email_other_label,
-										  mail_email_other_text,
-										  NULL);
-
-	XtVaSetValues(mail_msg_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNwidth, labels_width,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, email_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, 26,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(mail_email_self_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, mail_msg_label,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, mail_msg_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(mail_email_other_label,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, mail_msg_label,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, mail_email_self_toggle,
-				  XmNleftOffset, 8,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(mail_email_other_text,
-				  XmNcolumns, 20,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, mail_msg_label,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, mail_email_other_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(news_msg_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNwidth, labels_width,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, mail_msg_label,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, mail_msg_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(news_email_self_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, news_msg_label,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, mail_email_self_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(news_email_other_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, news_msg_label,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, mail_email_other_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(news_email_other_text,
-				  XmNcolumns, 20,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, news_msg_label,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, mail_email_other_text,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	// FCC
-
-	Visual    *v = 0;
-	Colormap   cmap = 0;
-	Cardinal   depth = 0;
-
-	XtVaGetValues(getPrefsDialog()->getPrefsParent(),
-				  XtNvisual, &v,
-				  XtNcolormap, &cmap,
-				  XtNdepth, &depth, 
-				  0);
-
-	Widget fcc_label;
-	Widget mail_fcc_toggle;
-	Widget mail_fcc_combo;
-	Widget news_fcc_toggle;
-	Widget news_fcc_combo;
-
-	ac = 0;
-	kids[i++] = fcc_label = 
-		XmCreateLabelGadget(form2, "fccLabel", av, ac);
-
-	kids[i++] = mail_fcc_toggle =
-		XmCreateToggleButtonGadget(form2, "mailFolderToggle", av, ac);
-
-	kids[i++] = news_fcc_toggle =
-		XmCreateToggleButtonGadget(form2, "newsFolderToggle", av, ac);
-
-	ac = 0;
-	XtSetArg(av[ac], XmNvisual, v); ac++;
-	XtSetArg(av[ac], XmNdepth, depth); ac++;
-	XtSetArg(av[ac], XmNcolormap, cmap); ac++;
-	XtSetArg(av[ac], XmNmoveSelectedItemUp, False); ac++;
-	XtSetArg(av[ac], XmNtype, XmDROP_DOWN_LIST_BOX); ac++;
-	XtSetArg(av[ac], XmNarrowType, XmMOTIF); ac++;
-	kids[i++] = mail_fcc_combo = DtCreateComboBox(form2, "mailFccCombo", av, ac);
-
-	ac = 0;
-	XtSetArg(av[ac], XmNvisual, v); ac++;
-	XtSetArg(av[ac], XmNdepth, depth); ac++;
-	XtSetArg(av[ac], XmNcolormap, cmap); ac++;
-	XtSetArg(av[ac], XmNmoveSelectedItemUp, False); ac++;
-	XtSetArg(av[ac], XmNtype, XmDROP_DOWN_LIST_BOX); ac++;
-	XtSetArg(av[ac], XmNarrowType, XmMOTIF); ac++;
-	kids[i++] = news_fcc_combo = DtCreateComboBox(form2, "newsFccCombo", av, ac);
-
-	fep->mail_fcc_toggle = mail_fcc_toggle;
-	fep->mail_fcc_combo = mail_fcc_combo;
-	fep->news_fcc_toggle = news_fcc_toggle;
-	fep->news_fcc_combo = news_fcc_combo;
-
-	XtVaSetValues(fcc_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, news_msg_label,
-				  XmNtopOffset, 8,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	int labels_width2;
-	labels_width2 = XfeVaGetWidestWidget(mail_fcc_toggle,
-										 news_fcc_toggle,
-										 NULL);
-
-	int labels_height2;
-	labels_height2 = XfeVaGetTallestWidget(mail_fcc_toggle,
-										   mail_fcc_combo,
-										   NULL);
-
-	XtVaSetValues(mail_fcc_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNheight, labels_height2,
-				  XmNwidth, labels_width2,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, fcc_label,
-				  XmNtopOffset, 8,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, 16,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(mail_fcc_combo,
-				  XmNheight, labels_height2,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, mail_fcc_toggle,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, mail_fcc_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(news_fcc_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNwidth, labels_width2,
-				  XmNheight, labels_height2,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, mail_fcc_toggle,
-				  XmNtopOffset, 8,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, mail_fcc_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(news_fcc_combo,
-				  XmNheight, labels_height2,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, news_fcc_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, mail_fcc_combo,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtManageChildren(kids, i);
-	XtManageChild(label2);
-	XtManageChild(form2);
-	XtManageChild(frame2);
-
-	Widget more_button;
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = more_button =
-		XmCreatePushButtonGadget(form, "moreButton", av, ac);
-
-	XtVaSetValues(more_button,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, frame2,
-				  XmNtopOffset, 8,
-				  XmNleftAttachment, XmATTACH_NONE,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-	XtAddCallback(more_button, XmNactivateCallback, cb_more, this);
-
-	XtManageChildren(kids, i);
-
-	setCreated(TRUE);
-}
-
-// Member:       init
-// Description:  Initializes page for MailNewsComposition
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsComposition::init()
-{
-	XP_ASSERT(m_prefsDataMailNewsComposition);
-
-	PrefsDataMailNewsComposition  *fep = m_prefsDataMailNewsComposition;
-	XFE_GlobalPrefs               *prefs = &fe_globalPrefs;
-	char                           buf[1024];
-
-	// BCC
-
-	XtVaSetValues(fep->mail_email_self_toggle, XmNset, prefs->mailbccself_p, 0);
-	fe_SetTextField(fep->mail_email_other_text, prefs->mail_bcc);
-
-	XtVaSetValues(fep->news_email_self_toggle, XmNset, prefs->newsbccself_p, 0);
-	fe_SetTextField(fep->news_email_other_text, prefs->news_bcc);
-
-	// FCC
-
-	XtVaSetValues(fep->mail_fcc_toggle, XmNset, prefs->mailfcc_p, 0);
-	setFccMenu(TRUE);
-
-	XtVaSetValues(fep->news_fcc_toggle, XmNset, prefs->newsfcc_p, 0);
-	setFccMenu(FALSE);
-
-	XtVaSetValues(fep->auto_quote_toggle, XmNset, prefs->autoquote_reply, 0);
-
-	// send_html_msg_toggle
-
-	XtVaSetValues(fep->send_html_msg_toggle, XmNset, prefs->send_html_msg, 0);
-
-	// wrap length
-
-	PR_snprintf(buf, sizeof(buf), "%d", prefs->msg_wrap_length);
-	XtVaSetValues(fep->wrap_length_text, XmNvalue, buf, 0);
-
-
-    // If the preference is locked, grey it out.
-    XtSetSensitive(fep->mail_email_self_toggle,
-                   !PREF_PrefIsLocked("mail.cc_self"));
-    XtSetSensitive(fep->mail_email_other_text,
-                   !PREF_PrefIsLocked("mail.default_cc"));
-    XtSetSensitive(fep->news_email_self_toggle,
-                   !PREF_PrefIsLocked("news.cc_self"));
-    XtSetSensitive(fep->news_email_other_text,
-                   !PREF_PrefIsLocked("news.default_cc"));
-    XtSetSensitive(fep->mail_fcc_toggle,
-                   !PREF_PrefIsLocked("mail.use_fcc"));
-    XtSetSensitive(fep->mail_fcc_combo,
-                   !PREF_PrefIsLocked("mail.default_fcc"));
-    XtSetSensitive(fep->news_fcc_toggle,
-                   !PREF_PrefIsLocked("news.use_fcc"));
-    XtSetSensitive(fep->news_fcc_combo,
-                   !PREF_PrefIsLocked("news.default_fcc"));
-    XtSetSensitive(fep->auto_quote_toggle,
-                   !PREF_PrefIsLocked("mail.auto_quote"));
-    XtSetSensitive(fep->send_html_msg_toggle,
-                   !PREF_PrefIsLocked("mail.send_html"));
-    XtSetSensitive(fep->wrap_length_text,
-                   !PREF_PrefIsLocked("mailnews.wraplength"));
-
-	setInitialized(TRUE);
-}
-
-// Member:       install
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsComposition::install()
-{
-	fe_installMailNewsComposition();
-}
-
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsComposition::save()
-{
-	PrefsDataMailNewsComposition *fep = m_prefsDataMailNewsComposition;
-
-	XP_ASSERT(fep);
-
-	// BCC
-
-	PREFS_SET_GLOBALPREF_TEXT(mail_bcc, mail_email_other_text);
-	PREFS_SET_GLOBALPREF_TEXT(news_bcc, news_email_other_text);
-	XtVaGetValues(fep->mail_email_self_toggle, 
-				  XmNset, &fe_globalPrefs.mailbccself_p, 
-				  0);
-	XtVaGetValues(fep->news_email_self_toggle,
-				  XmNset, &fe_globalPrefs.newsbccself_p, 
-				  0);
-
-	// FCC
-
-	if (fe_globalPrefs.mail_fcc) {
-		free(fe_globalPrefs.mail_fcc); 
-		fe_globalPrefs.mail_fcc = 0;
-	}
-
-	if (fe_globalPrefs.news_fcc) {
-		free(fe_globalPrefs.news_fcc); 
-		fe_globalPrefs.news_fcc = 0;
-	}
-
-	XtVaGetValues(fep->mail_fcc_toggle, 
-				  XmNset, &fe_globalPrefs.mailfcc_p, 
-				  0);
-	XtVaGetValues(fep->news_fcc_toggle,
-				  XmNset, &fe_globalPrefs.newsfcc_p, 
-				  0);
-
-	// If there is no folder, unselect the fcc toggle
-
-	if ((fe_globalPrefs.mailfcc_p) &&
-		(XP_ListCount(fep->mail_fcc_folders) == 0))
-		fe_globalPrefs.mailfcc_p = FALSE;
-
-	if ((fe_globalPrefs.newsfcc_p) &&
-		(XP_ListCount(fep->news_fcc_folders) == 0))
-		fe_globalPrefs.newsfcc_p = FALSE;
-		
-	// Find out which folder was selected
-
-	int       pos;
-
-	if ((fe_globalPrefs.mailfcc_p) &&
-		(XP_ListCount(fep->mail_fcc_folders) > 0)){
-		XtVaGetValues(fep->mail_fcc_combo, XmNselectedPosition, &pos, 0);
-		fe_globalPrefs.mail_fcc = 
-			XP_STRDUP((char *)XP_ListGetObjectNum(fep->mail_fcc_paths, pos+1));
-		}
-	else 
-		fe_globalPrefs.mail_fcc = XP_STRDUP("");
-
-	if ((fe_globalPrefs.newsfcc_p) &&
-		(XP_ListCount(fep->news_fcc_folders) > 0)){
-		XtVaGetValues(fep->news_fcc_combo, XmNselectedPosition, &pos, 0);
-		fe_globalPrefs.news_fcc = 
-			XP_STRDUP((char *)XP_ListGetObjectNum(fep->news_fcc_paths, pos+1));
-	}
-	else
-		fe_globalPrefs.news_fcc = XP_STRDUP("");
-
-	// Auto quote when replying
-
-	XtVaGetValues(fep->auto_quote_toggle,
-				  XmNset, &fe_globalPrefs.autoquote_reply, 
-				  0);
-
-	// Send HTML messages
-
-	XtVaGetValues(fep->send_html_msg_toggle,
-				  XmNset, &fe_globalPrefs.send_html_msg, 
-				  0);
-
-	// Wrap length
-
-    char                    c;
-	char                   *s = 0;
-    int                     n;
-
-	XtVaGetValues (fep->wrap_length_text, XmNvalue, &s, 0);
-	if (1 == sscanf (s, " %d %c", &n, &c) &&
-		n > 0)
-		fe_globalPrefs.msg_wrap_length = n;
-	if (s) XtFree(s);
-
-	// Install preferences
-
-	install();
-}
-
-// Member:       getData
-// Description:  
-// Inputs:
-// Side effects: 
-
-PrefsDataMailNewsComposition *XFE_PrefsPageMailNewsComposition::getData()
-{
-	return m_prefsDataMailNewsComposition;
-}
-
-// Member:       setFccMenu
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsComposition::setFccMenu(Boolean isMail)
-{
-	PrefsDataMailNewsComposition *fep = m_prefsDataMailNewsComposition;
-	XFE_GlobalPrefs              *prefs = &fe_globalPrefs;
-
-	Widget   combo  = isMail ? fep->mail_fcc_combo : fep->news_fcc_combo;
-	XP_List *folders = isMail ? fep->mail_fcc_folders : fep->news_fcc_folders;
-	XP_List *paths = isMail ? fep->mail_fcc_paths : fep->news_fcc_paths;
-	char    *pref_folder_path = isMail ? prefs->mail_fcc : prefs->news_fcc;
-
-	// Remove existing children 
-
-	XmString  xms;
-	int       i;
-	char     *path;
-	char     *folder;
-
-	if (folders) {
-		int count = XP_ListCount(folders);
-		if (count > 0) {
-			DtComboBoxDeleteAllItems(combo);
-			for (i = 0; i < count; i++) {
-				folder = (char *)XP_ListGetObjectNum(folders, i+1);
-				path = (char *)XP_ListGetObjectNum(paths, i+1);
-				XP_FREEIF(folder);
-				XP_FREEIF(path);
-			}
-		}
-		XP_ListDestroy(folders);
-		XP_ListDestroy(paths);
-	}
-
-	if (isMail) {
-		fep->mail_fcc_folders = XP_ListNew();
-		fep->mail_fcc_paths = XP_ListNew();
-	}
-	else {
-		fep->news_fcc_folders = XP_ListNew();
-		fep->news_fcc_paths = XP_ListNew();
-	}
-	folders = isMail ? fep->mail_fcc_folders : fep->news_fcc_folders;
-	paths = isMail ? fep->mail_fcc_paths : fep->news_fcc_paths;
-
-	// Put the preferred folder as the first one on the list if there is one
-
-	char *default_folder_path = (pref_folder_path && XP_STRLEN(pref_folder_path) > 0) ?
-		pref_folder_path : 0;
-	int default_folder_index = (-1);
-
-	if (default_folder_path) {
-		XP_ListAddObjectToEnd(folders, XP_STRDUP(default_folder_path));
-		XP_ListAddObjectToEnd(paths, XP_STRDUP(default_folder_path));
-		default_folder_index = 0;
-	}
-
-	// Now read in all folders
-
-	int              depth = 0;
-	int              num_sub_folders = 0;
-	MSG_FolderInfo **children = 0;
-	MSG_FolderInfo  *localMailTree = MSG_GetLocalMailTree(fe_getMNMaster());
-
-	num_sub_folders = MSG_GetFolderChildren(fe_getMNMaster(), localMailTree, NULL, 0);
-	
-	if (num_sub_folders > 0) {
-		children = (MSG_FolderInfo **)XP_CALLOC(num_sub_folders, sizeof(MSG_FolderInfo*));
-		num_sub_folders = 
-			MSG_GetFolderChildren(fe_getMNMaster(), localMailTree, children, num_sub_folders);
-	}
-
-	for (i = 0; i < num_sub_folders; i++) {
-		fe_fcc_add_folders(paths, folders, children[i], default_folder_path, 
-						   default_folder_index, depth);
-	}
-
-	
-	int count = XP_ListCount(folders);
-	if (count > 0) {
-		for (i = 0; i < count; i++) {
-			char *folder_name = (char *)XP_ListGetObjectNum(folders, i+1);
-			xms = XmStringCreateLtoR(folder_name, XmFONTLIST_DEFAULT_TAG);
-			DtComboBoxAddItem(combo, xms, 0, True);
-			if (i == 0) DtComboBoxSelectItem(combo, xms);
-			XmStringFree(xms);
-		}
-	}
-	else {
-		xms = XmStringCreateLtoR("", XmFONTLIST_DEFAULT_TAG);
-		XtVaSetValues(combo, XmNlabelString, xms, 0);
-		XmStringFree(xms);
-	}
-
-	if (children) XP_FREE(children);
-}
-
-// Member:       cb_more
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsComposition::cb_more(Widget    /* w */,
-											   XtPointer closure,
-											   XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsComposition *thePage = (XFE_PrefsPageMailNewsComposition *)closure;
-	XFE_PrefsDialog                  *theDialog = thePage->getPrefsDialog();
-	Widget                            mainw = theDialog->getBaseWidget();
-
-	// Instantiate a mail server more dialog
-
-	XFE_PrefsMsgMoreDialog *theMoreDialog = 0;
-
-	if ((theMoreDialog =
-		 new XFE_PrefsMsgMoreDialog(theDialog, mainw, "prefsMsgMore")) == 0) {
-	    fe_perror(thePage->getContext(), XP_GetString(XFE_OUT_OF_MEMORY_URL));
-	    return;
-	}
-
-	// Initialize and pop up the more dialog
-
-	theMoreDialog->initPage();
-	theMoreDialog->show();
-}
-
-static void fe_fcc_add_folders(XP_List        *paths,
-							   XP_List        *folders,
-							   MSG_FolderInfo *info, 
-							   char           *default_folder_path,
-							   int             default_folder_index,
-							   int             depth)
-{
-	int              num_sub_folders;
-	int              i;
-	MSG_FolderInfo **children = 0;
-	char            *this_folder_path = fe_GetFolderPathFromInfo(info);
-	char            *this_folder_name = fe_GetFolderNameFromInfo(info);
-	char             folder_buf[256];
-
-	// Create the button if this is different from the default folder
-
-	*folder_buf = '\0';
-	for (i = 0; i < depth; i++)
-		XP_STRCAT(folder_buf, "  ");
-	XP_STRCAT(folder_buf, this_folder_name);
-
-	if ((default_folder_path != 0) &&
-		((XP_STRCMP(default_folder_path, this_folder_path) == 0))) {
-		// The default folder path is a folder in the mail directory.
-		// Replace the label with folder name.
-		
-		char *folder_name = (char *)XP_ListGetObjectNum(folders, default_folder_index+1);
-		XP_ListRemoveObject(folders, folder_name);
-		char *folder_path = (char *)XP_ListGetObjectNum(paths, default_folder_index+1);
-		XP_ListRemoveObject(paths, folder_path);
-
-		// add the default to the front of the list
-		XP_ListAddObject(folders, XP_STRDUP(folder_buf));
-		XP_ListAddObject(paths, XP_STRDUP(this_folder_path));
-	}
-	else {
-		// If there is no default folder path, make Sent as the one that gets displayed
-		if ((default_folder_path == 0) &&
-			(XP_STRCMP(this_folder_name, 
-					   XP_GetString(XFE_PREFS_MAIL_FOLDER_SENT)) == 0)) {
-			// add the Sent folder to the front of the list
-			XP_ListAddObject(folders, XP_STRDUP(folder_buf));
-			XP_ListAddObject(paths, XP_STRDUP(this_folder_path));
-		}
-		else {
-			// add this folder to the end of the list
-			XP_ListAddObjectToEnd(folders, XP_STRDUP(folder_buf));
-			XP_ListAddObjectToEnd(paths, XP_STRDUP(this_folder_path));
-		}
-	}
-
-	num_sub_folders = MSG_GetFolderChildren(fe_getMNMaster(), info, NULL, 0);
-
-	if (num_sub_folders > 0) {
-		children = (MSG_FolderInfo **)XP_CALLOC(num_sub_folders, sizeof(MSG_FolderInfo*));
-		num_sub_folders = MSG_GetFolderChildren(fe_getMNMaster(), info, children, num_sub_folders);
-	}
-
-	for (i = 0; i < num_sub_folders; i ++) {
-		fe_fcc_add_folders(paths, folders, children[i], default_folder_path,
-						   default_folder_index, depth+1);
-	}
-
-	if (num_sub_folders > 0)
-		XP_FREE(children);
-}
-
-static char *fe_GetFolderPathFromInfo(MSG_FolderInfo *f) {
-	return (char*)MSG_GetFolderNameFromID(f);
-}
-
-static char *fe_GetFolderNameFromInfo(MSG_FolderInfo *f) {
-	char *name = 0;
-	char *path = (char*)MSG_GetFolderNameFromID(f);
-	if (strrchr(path, '/'))
-		name = strrchr(path, '/') + 1;
-	else
-		name = path;
-	return name;
-}
 
 // ************************************************************************
 // ************************ Mail News/Mail Server *************************
 // ************************************************************************
 
+void
+XFE_PrefsIncomingMServer::select_incoming()
+{
+
+    // Turn on neccessary buttons if something is selected
+    if (m_edit_button) {
+        int count = 0;
+        XtVaGetValues(m_incoming, XmNselectedItemCount, &count, 0);
+
+        if ( count > 0 ) {
+            XtSetSensitive(m_edit_button, True);
+            XtSetSensitive(m_delete_button, True);
+        } else {
+            XtSetSensitive(m_edit_button, False);
+            XtSetSensitive(m_delete_button, False);
+        }
+    }
+}
+
+// When something is selected on the server list
+void
+XFE_PrefsIncomingMServer::cb_select_incoming(Widget /*w*/,
+                                             XtPointer clientData,
+                                             XtPointer)
+{
+    XFE_PrefsIncomingMServer *theClass = (XFE_PrefsIncomingMServer *) 
+        clientData;
+
+    // Refresh the list
+    theClass->select_incoming();
+}
+
+// Add a new incoming mail server
+void 
+XFE_PrefsIncomingMServer::cb_new_incoming(Widget    /*w*/,
+                                          XtPointer clientData,
+                                          XtPointer)
+{
+    // Get the main window
+    XFE_PrefsIncomingMServer *theClass = 
+        (XFE_PrefsIncomingMServer *) clientData;
+    theClass->newIncoming();
+}
+
+void XFE_PrefsIncomingMServer::newIncoming() {
+    XFE_PrefsPage *thePage = getPage();
+    XFE_PrefsDialog *theDialog = thePage->getPrefsDialog();
+    Widget mainw = theDialog->getBaseWidget();
+
+    int total_servers;
+
+    // Check if a POP server has already been configured. If so, this is an
+    // error. 
+    if (has_pop()) {
+        FE_Message(thePage->getContext(), 
+                   XP_GetString(MK_POP3_ONLY_ONE));
+        return;
+    }
+
+    XtVaGetValues(m_incoming,
+                  XmNitemCount, &total_servers,
+                  NULL);
+
+    // Create the popup
+    // why does this line keep crashing?!
+    //    if (m_mserver_dialog) delete m_mserver_dialog;
+    m_mserver_dialog =
+        new XFE_PrefsMServerDialog(mainw, NULL,
+                                   (total_servers==0),
+                                   thePage->getContext());
+
+    XtAddCallback(m_mserver_dialog->getChrome(), XmNokCallback,
+                  cb_refresh, (XtPointer)this);
+    m_mserver_dialog->show();
+}
+
+// Edit an existing incoming mail server
+void
+XFE_PrefsIncomingMServer::cb_edit_incoming(Widget    /*w*/,
+                                           XtPointer clientData,
+                                           XtPointer)
+{
+
+    // Get the main window
+    XFE_PrefsIncomingMServer *theClass = 
+        (XFE_PrefsIncomingMServer *) clientData;
+    theClass->editIncoming();
+}
+
+void XFE_PrefsIncomingMServer::editIncoming() {
+    XmString *selected_strings;
+    char *name;
+    int total_servers;
+
+    XFE_PrefsPage *thePage = getPage();
+    XFE_PrefsDialog *theDialog = thePage->getPrefsDialog();
+    Widget mainw = theDialog->getBaseWidget();
+
+    // Get the selected count
+    int selected_count = 0;
+    XtVaGetValues(m_incoming,
+                  XmNitemCount, &total_servers,
+                  XmNselectedItems, &selected_strings, 
+                  XmNselectedItemCount, &selected_count,
+                  NULL);
+
+    // Only when there is a current hostname selected, we will allow EDITing
+    if (selected_count <= 0) return;
+
+    // Get the current hostname
+    XmStringGetLtoR(selected_strings[0], 
+                    XmSTRING_DEFAULT_CHARSET, 
+                    &name);
+
+    // Create the popup
+    // Why does this line keep crashing?!
+    // if (m_mserver_dialog) delete m_mserver_dialog;
+    m_mserver_dialog =
+        new XFE_PrefsMServerDialog(mainw, name,
+                                   (total_servers==1),
+                                   getPage()->getContext());
+
+    XtAddCallback(m_mserver_dialog->getChrome(), XmNokCallback,
+                  cb_refresh, (XtPointer)this);
+    m_mserver_dialog->show();
+}
+
+// Delete an incoming mail server
+void
+XFE_PrefsIncomingMServer::cb_delete_incoming(Widget /*w*/,
+                                             XtPointer clientData,
+                                             XtPointer )
+{
+    // Get the main window
+    XFE_PrefsIncomingMServer *theClass = (XFE_PrefsIncomingMServer *) 
+        clientData;
+    theClass->deleteIncoming();
+}
+ 
+void
+XFE_PrefsIncomingMServer::deleteIncoming() {
+     
+    XmString 		*selected_strings;
+    char 			*name;
+    char			*pop_name;
+    XFE_PrefsPage *thePage = getPage();
+    XFE_PrefsDialog *theDialog = thePage->getPrefsDialog();
+    Widget mainw = theDialog->getBaseWidget();
+ 
+    // Get the selected count
+    int selected_count = 0;
+    XtVaGetValues(m_incoming, XmNselectedItems, &selected_strings, 
+                  XmNselectedItemCount, &selected_count, 0);
+ 
+    // Do nothing if nothing is selected
+    if (!selected_count)
+        return;
+ 
+    int32 server_type;
+    PREF_GetIntPref("mail.server_type", &server_type);
+    if ((server_type==TYPE_IMAP) &&
+        !fe_Confirm_2(mainw, XP_GetString(MK_MSG_REMOVE_MAILHOST_CONFIRM)))
+        return;
+
+    // Get the current hostname
+    XmStringGetLtoR(selected_strings[0], 
+                    XmSTRING_DEFAULT_CHARSET, 
+                    &name);
+    PREF_CopyCharPref("network.hosts.pop_server", &pop_name);
+     
+    if (strcmp(name, pop_name)) {
+        MSG_Master* master = fe_getMNMaster();
+         
+        int total =  MSG_GetIMAPHosts(master, NULL, 0);
+         
+        if (total) {
+            MSG_IMAPHost** hosts = NULL;
+             
+            hosts = new MSG_IMAPHost* [total];
+             
+            XP_ASSERT(hosts != NULL);
+             
+            // Get the list of IMAP hosts
+            total =  MSG_GetIMAPHosts(master, hosts, total);
+             
+            // Loop over all the IMAP hosts
+            for (int i = 0; i < total; i++) {
+                MSG_Host *p = MSG_GetMSGHostFromIMAPHost(hosts[i]);
+                if (strcmp(name, MSG_GetHostName(p)) == 0) {
+                    MSG_DeleteIMAPHost(master, hosts[i]);
+                }
+            }	
+             
+            if (hosts)
+                delete [] hosts;
+        }             
+    } else  {
+        // What do I do here ?
+        PREF_SetCharPref("network.hosts.pop_server",
+                         "");
+    }
+     
+    XP_FREE(pop_name);
+     
+    // Refresh the list
+    refresh_incoming();
+}
+ 
+void
+XFE_PrefsIncomingMServer::cb_refresh(Widget /*w*/,
+                                     XtPointer clientData,
+                                     XtPointer /* callData */)
+{
+    XFE_PrefsIncomingMServer *theClass = (XFE_PrefsIncomingMServer *)
+        clientData;
+    if (theClass->m_mserver_dialog)
+        XtRemoveCallback(theClass->m_mserver_dialog->getChrome(),
+                         XmNokCallback, cb_refresh, clientData);
+    theClass->refresh_incoming();
+}
+ 
+// Refreshes the incoming server list
+void
+XFE_PrefsIncomingMServer::refresh_incoming()
+{
+    XmString str;
+    char *server_ptr=NULL;
+    // Clear the list
+    XmListDeleteAllItems(m_incoming);
+    if (has_pop()) {
+ 
+        //	Get the POP server
+        PREF_CopyCharPref("network.hosts.pop_server", &server_ptr);
+ 	
+        // Create a string
+        str = XmStringCreateLocalized(server_ptr);
+ 
+        // Add it to the end of the list
+        XmListAddItem(m_incoming, str, 0);
+ 		
+        // Free the string
+        XmStringFree(str);
+ 
+        XP_FREEIF(server_ptr);      
+ 
+        return;
+    }
+     
+    // IMAP
+    MSG_Master *master=fe_getMNMaster();
+     
+    int total = MSG_GetIMAPHosts(master, NULL, 0);
+     
+    if (!total) return;
+    MSG_IMAPHost** hosts=NULL;
+     
+    hosts = new MSG_IMAPHost* [total];
+     
+    XP_ASSERT(hosts != NULL);
+     
+    // Get the list of IMAP hosts
+    total =  MSG_GetIMAPHosts(master, hosts, total);
+     
+    for (int i=0;i<total; i++) {
+        MSG_Host *p = MSG_GetMSGHostFromIMAPHost(hosts[i]);
+         
+        str = XmStringCreateLocalized((char *)MSG_GetHostName(p));
+         
+        // Add it to the end of the list
+        XmListAddItem(m_incoming, str, 0);
+         
+        // Free the string
+        XmStringFree(str);
+    }
+ 
+}
+ 
+XP_Bool
+XFE_PrefsIncomingMServer::has_pop()
+{
+    int32 server_type;
+    char *server;
+    XP_Bool pop;
+ 
+    PREF_CopyCharPref("network.hosts.pop_server", &server);
+    PREF_GetIntPref("mail.server_type",&server_type);
+    if ((server_type==TYPE_POP) && server[0])
+        pop=TRUE;
+    else
+        pop=FALSE;
+ 
+    XP_FREEIF(server);
+ 	
+    return pop;
+ 
+}
+ 
+ 
+XP_Bool
+XFE_PrefsIncomingMServer::has_imap()
+{
+    int32 server_type;
+    char *server;
+    XP_Bool	imap;
+ 
+    PREF_CopyCharPref("network.hosts.imap_servers", &server);
+    PREF_GetIntPref("mail.server_type", &server_type);
+     
+    if ((server_type==TYPE_IMAP) && server[0])
+        imap=TRUE;
+    else
+        imap=FALSE;
+ 
+    XP_FREEIF(server);
+ 
+    return imap;
+}
+ 
+ 
+XP_Bool
+XFE_PrefsIncomingMServer::has_many_imap()
+{
+    int32 server_type;
+    char *server;
+    XP_Bool	many_imap;
+ 
+    PREF_CopyCharPref("network.hosts.imap_servers", &server);
+    PREF_GetIntPref("mail.server_type", &server_type);
+     
+    if ((server_type==TYPE_IMAP) && server[0] && XP_STRCHR(server,','))
+        many_imap=TRUE;
+    else
+        many_imap=FALSE;
+ 
+    XP_FREEIF(server);
+ 
+    return many_imap;
+}
+ 
+ 
+// Incoming Servers Data
+XFE_PrefsIncomingMServer::XFE_PrefsIncomingMServer(Widget incomingServerBox,
+ 												   XFE_PrefsPage *page) :
+    // Store the page. This will be needed to get to the main window for
+    // further pop ups.
+    m_mserver_dialog(0),
+    prefsPage(page)
+{
+    // Use position attachments
+    XtVaSetValues(incomingServerBox, XmNfractionBase, 3, NULL);
+ 
+ 
+    m_incoming = XmCreateScrolledList(incomingServerBox, "incomingServerList",
+                                      NULL, 0);
+ 
+ 
+    // Add callback for browse selection - when something is selected in the list
+    // we should turn on action button accordingly
+    XtAddCallback(m_incoming, XmNbrowseSelectionCallback, cb_select_incoming, this);
+ 
+    refresh_incoming();
+ 
+    XtVaSetValues(XtParent(m_incoming),
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_POSITION,
+                  XmNrightPosition, 2,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  XmNselectionPolicy, XmSINGLE_SELECT,
+                  NULL);
+ 
+    m_button_form = XtVaCreateWidget ("ButtonForm", xmFormWidgetClass,
+                                      incomingServerBox,
+                                      XmNtopAttachment, XmATTACH_FORM,
+                                      XmNleftAttachment, XmATTACH_POSITION,
+                                      XmNleftPosition, 2,
+                                      XmNrightAttachment, XmATTACH_POSITION,
+                                      XmNrightPosition, 3,
+                                      XmNbottomAttachment, XmATTACH_FORM,
+                                      NULL);
+ 									
+ 	
+    m_new_button = XmCreatePushButtonGadget(m_button_form, "New", 
+                                            NULL, 0);
+ 
+    XtVaSetValues(m_new_button,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  NULL);
+    XtAddCallback(m_new_button, XmNactivateCallback, cb_new_incoming, this);
+ 
+    m_edit_button = XmCreatePushButtonGadget(m_button_form, "Edit", 
+                                             NULL, 0);
+ 
+    XtVaSetValues(m_edit_button,
+                  XmNtopAttachment, XmATTACH_WIDGET, 
+                  XmNtopWidget, m_new_button,
+                  XmNrightAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNrightWidget, m_new_button,
+                  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNleftWidget, m_new_button,
+                  XmNsensitive, False, // Set to false to begin with
+                  NULL);
+    XtAddCallback(m_edit_button, XmNactivateCallback, cb_edit_incoming, this);
+ 
+    m_delete_button = XmCreatePushButtonGadget(m_button_form, "Delete", 
+                                               NULL, 0);
+ 
+    XtVaSetValues(m_delete_button,
+                  XmNtopAttachment, XmATTACH_WIDGET, 
+                  XmNtopWidget, m_edit_button,
+                  XmNrightAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNrightWidget, m_new_button,
+                  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNleftWidget, m_new_button,
+                  XmNsensitive, False, // Set to FALSE until it's implemented
+                  NULL);
+    XtAddCallback(m_delete_button, XmNactivateCallback, cb_delete_incoming, this);
+ 
+    XtManageChild(m_new_button);
+    XtManageChild(m_edit_button);
+    XtManageChild(m_delete_button);
+    XtManageChild(m_button_form);
+    XtManageChild(m_incoming);
+ 
+ 
+}
+ 
+XFE_PrefsIncomingMServer::~XFE_PrefsIncomingMServer()
+{
+    if (m_mserver_dialog) delete m_mserver_dialog;
+}
+ 
+// Outgoing Server Data
+XFE_PrefsOutgoingServer::XFE_PrefsOutgoingServer(Widget outgoingServerBox)
+{
+    Widget          kids[6];
+    int             i  = 0;
+ 
+    Widget server_label;
+    Widget server_user_name_label;
+    HG11326
+     
+    kids[i++] = server_label = 
+        XmCreateLabelGadget(outgoingServerBox, "outgoingServerLabel", NULL, 0);
+ 
+    kids[i++] = m_servername_text =
+        fe_CreateTextField(outgoingServerBox, "serverNameText", NULL, 0);
+ 
+    kids[i++] = server_user_name_label = 
+        XmCreateLabelGadget(outgoingServerBox, "serverUsernameLabel", NULL, 0);
+ 
+    kids[i++] = m_username_text = 
+        fe_CreateTextField(outgoingServerBox, "serverUsernameText", NULL, 0);
+ 
+    HG72819
+ 
+         
+    XtVaSetValues(server_label,
+                  XmNalignment, XmALIGNMENT_END,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_servername_text,
+                  XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNbottomWidget, m_servername_text,
+                  NULL);
+ 
+    XtVaSetValues(m_servername_text,
+                  //XmNleftAttachment, XmATTACH_WIDGET,
+                  // XmNleftWidget, server_label,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  NULL);
+ 
+    XtVaSetValues(server_user_name_label,
+                  XmNalignment, XmALIGNMENT_END,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_username_text,
+                  XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNbottomWidget, m_username_text,
+                  NULL);
+ 
+    XtVaSetValues(m_username_text,
+                  //XmNleftAttachment, XmATTACH_WIDGET,
+                  //XmNleftWidget, m_username_label,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, m_servername_text,
+                  NULL);
+ 
+    HG71199
+    XtManageChildren(kids, i);
+}
+ 
+int32
+XFE_PrefsOutgoingServer::get_ssl() {
+    HG18159
+    return -1;
+}
+ 
+void
+XFE_PrefsOutgoingServer::set_ssl(int32 val) {
+ 
+    HG28688
+}
+ 
+void XFE_PrefsLocalMailDir::cb_choose(Widget    /*w*/,
+ 									  XtPointer clientData,
+ 									  XtPointer /* call data */)
+{
+    XFE_PrefsLocalMailDir *local= (XFE_PrefsLocalMailDir *) clientData;
+ 
+    XFE_PrefsPage *thePage = (XFE_PrefsPageGeneralCache *) local->getPage();
+    XFE_PrefsDialog              *theDialog = thePage->getPrefsDialog();
+ 
+    fe_browse_file_of_text(theDialog->getContext(), local->m_local_dir_text, 
+                           True);
+}
+ 
+// Local mail directory
+XFE_PrefsLocalMailDir::XFE_PrefsLocalMailDir(Widget localMailDirBox, 
+ 											 XFE_PrefsPage *page)
+    : prefsPage(page)
+{
+ 
+    Widget            kids[6];
+    int               i  = 0;
+ 
+    kids[i++] = XmCreateLabelGadget(localMailDirBox,
+                                    "localMailDir", 
+                                    NULL, 0);
+ 
+    // Get the local_dir from the prefs
+    kids[i++] = m_local_dir_text = fe_CreateTextField(localMailDirBox,
+                                                      "localMailText",
+                                                      NULL, 0);
+ 
+    kids[i++] = XmCreatePushButtonGadget(localMailDirBox, "chooseButton", 
+                                         NULL, 0);
+ 
+ 
+ 
+    XtVaSetValues(kids[0],
+                  XmNleftAttachment, XmATTACH_FORM,
+                  NULL);
+ 
+    XtVaSetValues(kids[1],
+                  XmNleftAttachment, XmATTACH_WIDGET,
+                  XmNleftWidget, kids[0],
+                  XmNrightAttachment, XmATTACH_WIDGET,
+                  XmNrightWidget, kids[2],
+                  NULL);
+ 
+    XtVaSetValues(kids[2],
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  NULL);
+ 
+    XtAddCallback(kids[2], XmNactivateCallback,
+                  cb_choose, this);
+ 
+    XtManageChildren(kids, i);
+}
+ 
 // Member:       XFE_PrefsPageMailNewsMserver
 // Description:  Constructor
 // Inputs:
 // Side effects: 
-
+ 
 XFE_PrefsPageMailNewsMserver::XFE_PrefsPageMailNewsMserver(XFE_PrefsDialog *dialog)
-	: XFE_PrefsPage(dialog),
-	  m_prefsDataMailNewsMserver(0)
+    : XFE_PrefsPage(dialog)
 {
 }
-
+ 
 // Member:       ~XFE_PrefsPageMailNewsMserver
 // Description:  Destructor
 // Inputs:
 // Side effects: 
-
+ 
 XFE_PrefsPageMailNewsMserver::~XFE_PrefsPageMailNewsMserver()
 {
-	delete m_prefsDataMailNewsMserver;
 }
-
+ 
 // Member:       create
 // Description:  Creates page for MailNews/Mail server
 // Inputs:
 // Side effects: 
-
+ 
 void XFE_PrefsPageMailNewsMserver::create()
 {
-	Widget            kids[100];
-	Arg               av[50];
-	int               ac;
-	int               i;
-
-	PrefsDataMailNewsMserver *fep = NULL;
-
-	fep = new PrefsDataMailNewsMserver;
-	memset(fep, 0, sizeof(PrefsDataMailNewsMserver));
-	m_prefsDataMailNewsMserver = fep;
-
-	fep->context = getContext();
-	fep->prompt_dialog = getPrefsDialog()->getDialogChrome();
-
-	Widget form;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	form = XmCreateForm (m_wPageForm, "mailnewsMserver", av, ac);
-	XtManageChild (form);
-	m_wPage = fep->page = form;
-
-	Widget frame1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame1 = XmCreateFrame (form, "mServerFrame", av, ac);
-
-	Widget form1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	form1 = XmCreateForm (frame1, "mServerBox", av, ac);
-
-	Widget server_label;
-	Widget pop_user_name_label;
-	Widget pop_user_name_text;
-	Widget incoming_mail_server_label;
-	Widget incoming_mail_server_text;
-	Widget outgoing_mail_server_label;
-	Widget outgoing_mail_server_text;
-
-	// POP user name and Incoming/outgoing mail server
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = server_label = 
-		XmCreateLabelGadget(form1, "serverLabel", av, ac);
-
-	kids[i++] = pop_user_name_label = 
-		XmCreateLabelGadget(form1, "popUserNameLabel", av, ac);
-
-	kids[i++] = incoming_mail_server_label = 
-		XmCreateLabelGadget(form1, "incomingMailServerLabel", av, ac);
-
-	kids[i++] = outgoing_mail_server_label = 
-		XmCreateLabelGadget(form1, "outgoingMailServerLabel", av, ac);
-
-	kids[i++] = pop_user_name_text =
-		fe_CreateTextField(form1, "popUserNameText", av, ac);
-
-	kids[i++] = incoming_mail_server_text =
-		fe_CreateTextField(form1, "incomingMailServerText", av, ac);
-
-	kids[i++] = outgoing_mail_server_text =
-		fe_CreateTextField(form1, "outgoingMailServerText", av, ac);
-
-	fep->pop_user_name_text = pop_user_name_text;
-	fep->incoming_mail_server_text = incoming_mail_server_text;
-	fep->outgoing_mail_server_text = outgoing_mail_server_text;
-
-	// Mail server type
-
-	Widget server_type_label;
-	Widget pop3_toggle;
-	Widget movemail_toggle;
-	Widget imap_toggle;
-
-
-	kids[i++] = server_type_label = 
-		XmCreateLabelGadget(form1, "serverTypeLabel", av, ac);
-
-	kids[i++] = pop3_toggle =
-		XmCreateToggleButtonGadget(form1, "pop3Toggle", av, ac);
-
-	kids[i++] = movemail_toggle =
-		XmCreateToggleButtonGadget(form1, "moveMailToggle", av, ac);
-
-	kids[i++] = imap_toggle =
-		XmCreateToggleButtonGadget(form1, "imapToggle", av, ac);
-
-	fep->pop3_toggle = pop3_toggle;
-	fep->movemail_toggle = movemail_toggle;
-	fep->imap_toggle = imap_toggle;
-
-	Widget leave_msg_on_server_toggle;
-	//	Widget imap_local_copies_toggle;
-	Widget imap_server_ssl_toggle;
-	Widget delete_is_move_to_trash_toggle;
-
-	kids[i++] = leave_msg_on_server_toggle =
-		XmCreateToggleButtonGadget(form1, "leaveMsgToggle", av, ac);
-
-	//	kids[i++] = imap_local_copies_toggle =
-	//  XmCreateToggleButtonGadget(form1, "imapLocalCopiesToggle", av, ac);
-
-	kids[i++] = imap_server_ssl_toggle =
-		XmCreateToggleButtonGadget(form1, "imapServerSslToggle", av, ac);
-
-	kids[i++] = delete_is_move_to_trash_toggle =
-		XmCreateToggleButtonGadget(form1, "imapDeleteToggle", av, ac);
-
-	fep->leave_msg_on_server_toggle = leave_msg_on_server_toggle;
-	//	fep->imap_local_copies_toggle = imap_local_copies_toggle;
-	fep->imap_server_ssl_toggle = imap_server_ssl_toggle;
-	fep->delete_is_move_to_trash_toggle = delete_is_move_to_trash_toggle;
-
-	Widget built_in_app_toggle;
-	Widget external_app_toggle;
-	Widget external_app_text;
-	Widget external_app_browse_button;
-
-	kids[i++] = built_in_app_toggle =
-		XmCreateToggleButtonGadget(form1, "builtInAppToggle", av, ac);
-
-	kids[i++] = external_app_toggle =
-		XmCreateToggleButtonGadget(form1, "externalAppToggle", av, ac);
-
-	kids[i++] = external_app_text =
-		fe_CreateTextField(form1, "externalAppText", av, ac);
-
-	kids[i++] = external_app_browse_button =
-		XmCreatePushButtonGadget(form1, "externalAppBrowse", av, ac);
-
-	fep->built_in_app_toggle = built_in_app_toggle;
-	fep->external_app_toggle = external_app_toggle;
-	fep->external_app_text = external_app_text;
-	fep->external_app_browse_button = external_app_browse_button;
-
-
-	// Attachments
-
-	int labels_width;
-	int labels_height;
-	int labels_height2;
-
-	labels_width = XfeVaGetWidestWidget(pop_user_name_label,
-										incoming_mail_server_label,
-										outgoing_mail_server_label,
-										NULL);
-
-	labels_height = XfeVaGetTallestWidget(incoming_mail_server_label,
-										  incoming_mail_server_text,
-										  NULL);
-
-	XtVaSetValues(server_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(pop_user_name_label,
-				  XmNheight, labels_height,
-				  RIGHT_JUSTIFY_VA_ARGS(pop_user_name_label,labels_width),
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, server_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(pop_user_name_text,
-				  XmNheight, labels_height,
-				  XmNcolumns, 25,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, pop_user_name_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, labels_width,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(outgoing_mail_server_label,
-				  RIGHT_JUSTIFY_VA_ARGS(outgoing_mail_server_label,labels_width),
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, pop_user_name_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(outgoing_mail_server_text,
-				  XmNcolumns, 25,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, outgoing_mail_server_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, labels_width,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(incoming_mail_server_label,
-				  RIGHT_JUSTIFY_VA_ARGS(incoming_mail_server_label,labels_width),
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, outgoing_mail_server_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(incoming_mail_server_text,
-				  XmNcolumns, 25,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, incoming_mail_server_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, labels_width,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(server_type_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, incoming_mail_server_text,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(pop3_toggle,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, server_type_label,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(leave_msg_on_server_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, pop3_toggle,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, 16,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(movemail_toggle,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, leave_msg_on_server_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, pop3_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	labels_height2 = XfeVaGetTallestWidget(external_app_toggle,
-										   external_app_text,
-										   external_app_browse_button,
-										   NULL);
-
-	XtVaSetValues(built_in_app_toggle,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, movemail_toggle,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, 16,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(external_app_toggle,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNheight, labels_height2,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, built_in_app_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, built_in_app_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(external_app_text,
-				  XmNheight, labels_height2,
-				  XmNcolumns, 20,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, external_app_toggle,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, external_app_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(external_app_browse_button,
-				  XmNheight, labels_height2,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, external_app_toggle,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, external_app_text,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(imap_toggle,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, external_app_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, movemail_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(delete_is_move_to_trash_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, imap_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, leave_msg_on_server_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(imap_server_ssl_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, delete_is_move_to_trash_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, leave_msg_on_server_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	// Add callbacks
-
-	XtAddCallback(pop3_toggle, XmNvalueChangedCallback,
-				  cb_toggleServerType, fep);
-	XtAddCallback(movemail_toggle, XmNvalueChangedCallback,
-				  cb_toggleServerType, fep);
-	XtAddCallback(imap_toggle, XmNvalueChangedCallback,
-				  cb_toggleServerType, fep);
-	
-	XtAddCallback(built_in_app_toggle, XmNvalueChangedCallback,
-				  cb_toggleApplication, fep);
-	XtAddCallback(external_app_toggle, XmNvalueChangedCallback,
-				  cb_toggleApplication, fep);
-
-	XtAddCallback(external_app_browse_button, XmNactivateCallback,
-				  cb_browseApplication, this);
-
-	XtManageChildren (kids, i);
-	XtManageChild(form1);
-	XtManageChild(frame1);
-
-	Widget more_button;
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = more_button =
-		XmCreatePushButtonGadget(form, "moreButton", av, ac);
-
-	XtVaSetValues(more_button,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, frame1,
-				  XmNtopOffset, 8,
-				  XmNleftAttachment, XmATTACH_NONE,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtAddCallback(more_button, XmNactivateCallback,
-				  cb_more, this);
-
-	XtManageChildren(kids, i);
-
-	setCreated(TRUE);
+    Arg               av[50];
+    int               ac;
+ 
+ 
+    Widget form;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    form = XmCreateForm (m_wPageForm, "mailnewsMserver", av, ac);
+    m_wPage = form;
+ 
+    // Incoming mail servers
+    Widget frame1;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    frame1 = XmCreateFrame (form, "iServerFrame", av, ac);
+ 
+    Widget form1;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    form1 = XmCreateForm (frame1, "iServerBox", av, ac);
+ 
+    Widget label1;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    label1 = XmCreateLabelGadget (frame1, "incomingServerLabel", av, ac);
+ 
+    // Outgoing mail server
+    Widget frame2;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg (av [ac], XmNtopWidget, frame1); ac++;
+ 
+    frame2 = XmCreateFrame (form, "oServerFrame", av, ac);
+ 
+    Widget form2;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    form2 = XmCreateForm (frame2, "oServerBox", av, ac);
+ 
+    Widget label2;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    label2 = XmCreateLabelGadget (frame2, "outgoingServerLabel", av, ac);
+ 
+    // Local mail directory
+    Widget frame3;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg (av [ac], XmNtopWidget, frame2); ac++;
+    frame3 = XmCreateFrame (form, "localFrame", av, ac);
+ 
+    Widget form3;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    form3 = XmCreateForm (frame3, "localBox", av, ac);
+ 
+    Widget label3;
+ 
+    ac = 0;
+    XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    label3 = XmCreateLabelGadget (frame3, "localMailDirLabel", av, ac);
+ 
+    // Create the objects corresponding to the frames
+    xfe_incoming = new XFE_PrefsIncomingMServer(form1, this);
+    xfe_outgoing = new XFE_PrefsOutgoingServer(form2);
+    xfe_local_mail = new XFE_PrefsLocalMailDir(form3, this);
+ 
+    XtManageChild(label1);
+    XtManageChild(form1);
+    XtManageChild(frame1);
+ 
+    XtManageChild(label2);
+    XtManageChild(form2);
+    XtManageChild(frame2);
+ 
+    XtManageChild(label3);
+    XtManageChild(form3);
+    XtManageChild(frame3);
+ 
+    setCreated(TRUE);
 }
-
+ 
 // Member:       init
 // Description:  Initializes page for MailNewsMserver
 // Inputs:
 // Side effects: 
-
+ 
 void XFE_PrefsPageMailNewsMserver::init()
 {
-	XP_ASSERT(m_prefsDataMailNewsMserver);
-
-	PrefsDataMailNewsMserver  *fep = m_prefsDataMailNewsMserver;
-	XFE_GlobalPrefs           *prefs = &fe_globalPrefs;
-	XP_Bool                    b;
-    Boolean                    sensitive;
-	
-	fe_SetTextField(fep->incoming_mail_server_text, prefs->pop3_host);
-	fe_SetTextField(fep->outgoing_mail_server_text, prefs->mailhost);
-	fe_SetTextField(fep->pop_user_name_text, prefs->pop3_user_id);
-	XtVaSetValues(fep->leave_msg_on_server_toggle, XmNset, prefs->pop3_leave_mail_on_server, 0);
-	//	XtVaSetValues(fep->imap_local_copies_toggle, XmNset, prefs->imap_local_copies, 0);
-	XtVaSetValues(fep->imap_server_ssl_toggle, XmNset, prefs->imap_server_ssl, 0);
-	XtVaSetValues(fep->delete_is_move_to_trash_toggle, XmNset, prefs->imap_delete_is_move_to_trash, 0);
-	XtVaSetValues (fep->built_in_app_toggle, XmNset, prefs->builtin_movemail_p, 0);
-	XtVaSetValues (fep->external_app_toggle, XmNset, !prefs->builtin_movemail_p, 0);
-
-    sensitive = !PREF_PrefIsLocked("mail.server_type");
-    XtSetSensitive(fep->movemail_toggle, sensitive);
-    XtSetSensitive(fep->pop3_toggle, sensitive);
-    XtSetSensitive(fep->imap_toggle, sensitive);
-
-	if (prefs->mail_server_type == MAIL_SERVER_MOVEMAIL) {
-		XtVaSetValues(fep->movemail_toggle, XmNset, True, 0);
-		XtVaSetValues(fep->pop3_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->imap_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->pop_user_name_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->incoming_mail_server_text, XmNsensitive, False, 0);
-		b = prefs->builtin_movemail_p;
-        sensitive = !PREF_PrefIsLocked("mail.use_builtin_movemail");
-		XtVaSetValues (fep->built_in_app_toggle, XmNset, b && sensitive, 0);
-		XtVaSetValues (fep->external_app_toggle, XmNset, !b && sensitive, 0);
-        sensitive = !PREF_PrefIsLocked("mail.movemail_program");
-		XtVaSetValues (fep->external_app_text, XmNsensitive, !b && sensitive, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, !b && sensitive, 0);
-	} 
-	else if (prefs->mail_server_type == MAIL_SERVER_POP3) {
-		// Pop 3
-		XtVaSetValues(fep->pop3_toggle, XmNset, True, 0);
-		XtVaSetValues(fep->movemail_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->imap_toggle, XmNset, False, 0);
-        sensitive = !PREF_PrefIsLocked("network.hosts.pop_server");
-		XtVaSetValues(fep->incoming_mail_server_text, XmNsensitive, sensitive, 0);
-        sensitive = !PREF_PrefIsLocked("mail.pop_name");
-		XtVaSetValues(fep->pop_user_name_text, XmNsensitive, sensitive, 0);
-		XtVaSetValues(fep->built_in_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, False, 0);
-	}
-	else if (prefs->mail_server_type == MAIL_SERVER_IMAP) {
-		XtVaSetValues(fep->movemail_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->pop3_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->imap_toggle, XmNset, True, 0);
-		XtVaSetValues(fep->built_in_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, False, 0);
-        sensitive = !PREF_PrefIsLocked("mail.pop_name");
-		XtVaSetValues(fep->pop_user_name_text, XmNsensitive, sensitive, 0);
-        sensitive = !PREF_PrefIsLocked("network.hosts.pop_server");
-		XtVaSetValues(fep->incoming_mail_server_text, XmNsensitive, sensitive, 0);
-	} 
-
-
-    sensitive = ( prefs->mail_server_type == MAIL_SERVER_POP3 &&
-                  !PREF_PrefIsLocked("mail.leave_on_server") );
-    XtSetSensitive(fep->leave_msg_on_server_toggle, sensitive);
-
-	//    sensitive = ( prefs->mail_server_type == MAIL_SERVER_IMAP &&
-	//                  !PREF_PrefIsLocked("mail.imap.local_copies") );
-	//    XtSetSensitive(fep->imap_local_copies_toggle, sensitive);
-
-    sensitive = ( prefs->mail_server_type == MAIL_SERVER_IMAP &&
-                  !PREF_PrefIsLocked("mail.imap.server_ssl") );
-    XtSetSensitive(fep->imap_server_ssl_toggle, sensitive);
-
-    sensitive = ( prefs->mail_server_type == MAIL_SERVER_IMAP &&
-                  !PREF_PrefIsLocked("mail.imap.delete_is_move_to_trash") );
-    XtSetSensitive(fep->delete_is_move_to_trash_toggle, sensitive);
-
-    XtSetSensitive(fep->outgoing_mail_server_text, 
-                   !PREF_PrefIsLocked("network.hosts.smtp_server"));
-
-	fe_SetTextField(fep->external_app_text, prefs->movemail_program);
-
-	setInitialized(TRUE);
+ 
+    char *charval;
+    int32 intval;
+     
+    // Fill in the outgoing server and the user name field
+    PREF_CopyCharPref("network.hosts.smtp_server", &charval);
+    fe_SetTextField(xfe_outgoing->get_server_name(), charval);
+    XP_FREE(charval);
+ 
+    PREF_CopyCharPref("mail.smtp_name", &charval);
+    fe_SetTextField(xfe_outgoing->get_user_name(), charval);
+    XP_FREE(charval);
+ 
+    HG82160
+ 
+    // Fill in the local mail directory field
+    PREF_CopyCharPref("mail.directory", &charval);
+    fe_SetTextField(xfe_local_mail->get_local_dir_text(), charval);
+    XP_FREE(charval);
+ 
+    setInitialized(TRUE);
 }
-
+ 
 // Member:       verify
 // Description:  
 // Inputs:
 // Side effects: 
-
+ 
 Boolean XFE_PrefsPageMailNewsMserver::verify()
 {
-	char         buf[10000];
-	char        *buf2;
-	char        *warning;
-	int          size;
-	int          orig_mail_server_type = fe_globalPrefs.mail_server_type;
-	int          new_mail_server_type=0;  // Initialized to avoid warning - RK
-	Boolean      b;
-
-	XP_ASSERT(m_prefsDataMailNewsMserver);
-	PrefsDataMailNewsMserver *fep = m_prefsDataMailNewsMserver;
-
-	// Pop up a dialog warning the user that he has to exit
-	// in order for mail server prefs to take effect.
-
-	XtVaGetValues(fep->pop3_toggle, XmNset, &b, 0);
-	if (b) new_mail_server_type = MAIL_SERVER_POP3;
-	
-	XtVaGetValues(fep->movemail_toggle, XmNset, &b, 0);
-	if (b) new_mail_server_type = MAIL_SERVER_MOVEMAIL;
-
-	XtVaGetValues(fep->imap_toggle, XmNset, &b, 0);
-	if (b) new_mail_server_type = MAIL_SERVER_IMAP;
-
-	if (new_mail_server_type != orig_mail_server_type) {
-		if (! XFE_Confirm(getContext(), XP_GetString(MK_MSG_MAIL_DIRECTORY_CHANGED))) {
-			// revert to old prefs if the user changes his mind
-			init();
-			return FALSE;
-		}
-	}
-
-	buf2 = buf;
-	strcpy (buf, XP_GetString(XFE_WARNING));
-	buf2 = buf + XP_STRLEN(buf);
-	warning = buf2;
-	size = buf + sizeof (buf) - warning;
-
-	PREFS_CHECK_HOST(fep->outgoing_mail_server_text, XP_GetString(XFE_MAIL_HOST), 
-					 warning, size);
-
-	if (*buf2) {
-		FE_Alert (getContext(), fe_StringTrim (buf));
-		return FALSE;
-	}
-	else {
-		return TRUE;
-	}
+ 
+    // Don't verify for now.
+    return TRUE;
 }
-
+ 
 // Member:       install
 // Description:  
 // Inputs:
 // Side effects: 
-
+ 
 void XFE_PrefsPageMailNewsMserver::install()
 {
-	fe_installMailNewsMserver();
+    fe_installMailNewsMserver();
 }
-
+ 
 // Member:       save
 // Description:  
 // Inputs:
 // Side effects: 
-
+ 
 void XFE_PrefsPageMailNewsMserver::save()
 {
-	PrefsDataMailNewsMserver *fep = m_prefsDataMailNewsMserver;
-	Boolean                   b;
-
-	XP_ASSERT(fep);
-
-	// Mail server and type
-
-	// POP3
-
-	XtVaGetValues(fep->leave_msg_on_server_toggle, XmNset, &b, 0);
-	fe_globalPrefs.pop3_leave_mail_on_server = b;
-
-	XtVaGetValues(fep->pop3_toggle, XmNset, &b, 0);
-	if (b) {
-		fe_globalPrefs.mail_server_type = MAIL_SERVER_POP3;
-	}
-
-	// Movemail
-	XtVaGetValues(fep->movemail_toggle, XmNset, &b, 0);
-	fe_globalPrefs.use_movemail_p = b;
-	if (b) {
-		fe_globalPrefs.mail_server_type = MAIL_SERVER_MOVEMAIL;
-	}
-
-	// IMAP
-	//	XtVaGetValues(fep->imap_local_copies_toggle, XmNset, &b, 0);
-	//	fe_globalPrefs.imap_local_copies = b;
-	XtVaGetValues(fep->imap_server_ssl_toggle, XmNset, &b, 0);
-	fe_globalPrefs.imap_server_ssl = b;
-
-	XtVaGetValues(fep->delete_is_move_to_trash_toggle, XmNset, &b, 0);
-	fe_globalPrefs.imap_delete_is_move_to_trash = b;
-
-	XtVaGetValues(fep->imap_toggle, XmNset, &b, 0);
-	if (b) {
-		fe_globalPrefs.mail_server_type = MAIL_SERVER_IMAP;
-	}
-
-
-	PREFS_SET_GLOBALPREF_TEXT(movemail_program, external_app_text);
-	PREFS_SET_GLOBALPREF_TEXT(pop3_host, incoming_mail_server_text);
-	PREFS_SET_GLOBALPREF_TEXT(pop3_user_id, pop_user_name_text);
-	PREFS_SET_GLOBALPREF_TEXT(mailhost, outgoing_mail_server_text);
-
-	if (fe_globalPrefs.use_movemail_p) {
-		XtVaGetValues(fep->built_in_app_toggle, XmNset, &b, 0);
-		fe_globalPrefs.builtin_movemail_p = b;
-	}
-
-	// Install preferences
-
-	install();
+ 	
+    PREF_SetCharPref("network.hosts.smtp_server",
+                     fe_GetTextField(xfe_outgoing->get_server_name()));
+ 
+    PREF_SetCharPref("mail.smtp_name",
+                     fe_GetTextField(xfe_outgoing->get_user_name()));
+ 
+    PREF_SetCharPref("mail.directory",
+                     fe_GetTextField(xfe_local_mail->get_local_dir_text()));
+ 
+ 
+    HG92799
+ 	
+    install();
 }
-
-// Member:       getData
-// Description:  
-// Inputs:
-// Side effects: 
-
-PrefsDataMailNewsMserver *XFE_PrefsPageMailNewsMserver::getData()
-{
-	return m_prefsDataMailNewsMserver;
-}
-
-// Member:       cb_browseApplication
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsMserver::cb_browseApplication(Widget    /* w */,
-														XtPointer closure,
-														XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsMserver *thePage = (XFE_PrefsPageMailNewsMserver *)closure;
-	XFE_PrefsDialog              *theDialog = thePage->getPrefsDialog();
-	PrefsDataMailNewsMserver     *fep = thePage->getData();
-
-	fe_browse_file_of_text(theDialog->getContext(), fep->external_app_text, False);
-}
-
-// Member:       cb_more
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsMserver::cb_more(Widget    /* w */,
-										   XtPointer closure,
-										   XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsMserver *thePage = (XFE_PrefsPageMailNewsMserver *)closure;
-	XFE_PrefsDialog              *theDialog = thePage->getPrefsDialog();
-	Widget                        mainw = theDialog->getBaseWidget();
-
-	//	while (!XtIsWMShell(mainw) && (XtParent(mainw)!=0))
-	//		mainw = XtParent(mainw);
-
-	// Instantiate a mail server more dialog
-
-	XFE_PrefsMserverMoreDialog *theMoreDialog = 0;
-
-	if ((theMoreDialog =
-		 new XFE_PrefsMserverMoreDialog(theDialog, mainw, "prefsMserverMore")) == 0) {
-	    fe_perror(thePage->getContext(), XP_GetString(XFE_OUT_OF_MEMORY_URL));
-	    return;
-	}
-
-	// Initialize and pop up the more dialog
-
-	theMoreDialog->initPage();
-	theMoreDialog->show();
-}
-
-// Member:       cb_toggleServerType
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsMserver::cb_toggleServerType(Widget    w,
-													   XtPointer closure,
-													   XtPointer callData)
-{
-	XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)callData;
-	PrefsDataMailNewsMserver     *fep = (PrefsDataMailNewsMserver *)closure;
-    Boolean                       sensitive;
-
-	if (! cb->set) {
-		XtVaSetValues(w, XmNset, True, 0);
-	}
-	else if (w == fep->pop3_toggle) {
-		XtVaSetValues(fep->movemail_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->imap_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->built_in_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, False, 0);
-		XtVaSetValues(fep->pop_user_name_text, 
-                      XmNsensitive, !PREF_PrefIsLocked("mail.pop_name"), 0);
-		XtVaSetValues(fep->incoming_mail_server_text, 
-                      XmNsensitive, !PREF_PrefIsLocked("network.hosts.pop_server"), 0);
-		XtVaSetValues(fep->leave_msg_on_server_toggle, 
-                      XmNsensitive, !PREF_PrefIsLocked("mail.leave_on_server"),
-                      0);
-
-		XtVaSetValues(fep->imap_server_ssl_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->delete_is_move_to_trash_toggle, XmNsensitive, False, 0);
-	}
-	else if (w == fep->movemail_toggle) {
-		XtVaSetValues(fep->pop3_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->imap_toggle, XmNset, False, 0);
-        sensitive = !PREF_PrefIsLocked("mail.use_builtin_movemail");
-		XtVaSetValues(fep->built_in_app_toggle, XmNsensitive, sensitive, 0);
-		XtVaSetValues(fep->external_app_toggle, XmNsensitive, sensitive, 0);
-        sensitive = !PREF_PrefIsLocked("mail.movemail_program");
-		XtVaSetValues(fep->external_app_text, XmNsensitive, sensitive, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, sensitive, 0);
-		XtVaSetValues(fep->pop_user_name_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->incoming_mail_server_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->leave_msg_on_server_toggle, XmNsensitive, False, 0);
-		//		XtVaSetValues(fep->imap_local_copies_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->imap_server_ssl_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->delete_is_move_to_trash_toggle, XmNsensitive, False, 0);
-	}
-	else if (w == fep->imap_toggle) {
-		XtVaSetValues(fep->movemail_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->pop3_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->built_in_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_toggle, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, False, 0);
-        sensitive = !PREF_PrefIsLocked("mail.pop_name");
-		XtVaSetValues(fep->pop_user_name_text, XmNsensitive, sensitive, 0);
-        sensitive = !PREF_PrefIsLocked("network.hosts.pop_server");
-		XtVaSetValues(fep->incoming_mail_server_text, XmNsensitive, sensitive, 0);
-		XtVaSetValues(fep->leave_msg_on_server_toggle, XmNsensitive, False, 0);
-		//		XtVaSetValues(fep->imap_local_copies_toggle, 
-		//                      XmNsensitive, !PREF_PrefIsLocked("mail.imap.local_copies"), 0);
-		XtVaSetValues(fep->imap_server_ssl_toggle, 
-                      XmNsensitive, !PREF_PrefIsLocked("mail.imap.server_ssl"), 0);
-		XtVaSetValues(fep->delete_is_move_to_trash_toggle, 
-                      XmNsensitive, !PREF_PrefIsLocked("mail.imap.delete_is_move_to_trash"), 0);
-	}
-	else
-		abort();
-}
-
-// Member:       cb_toggleApplication
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsMserver::cb_toggleApplication(Widget    w,
-														XtPointer closure,
-														XtPointer callData)
-{
-	XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)callData;
-	PrefsDataMailNewsMserver     *fep = (PrefsDataMailNewsMserver *)closure;
-
-	if (! cb->set) {
-		XtVaSetValues(w, XmNset, True, 0);
-	}
-	else if (w == fep->built_in_app_toggle) {
-		XtVaSetValues(fep->external_app_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->external_app_text, XmNsensitive, False, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, False, 0);
-	}
-	else if (w == fep->external_app_toggle) {
-		XtVaSetValues(fep->built_in_app_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->external_app_text, XmNsensitive, True, 0);
-		XtVaSetValues(fep->external_app_browse_button, XmNsensitive, True, 0);
-	}
-	else
-		abort();	
-}
-
+ 
+#endif
+ 
+#ifdef MOZ_MAIL_NEWS
 // ************************************************************************
-// ************************ Mail News/News Server *************************
+// ************************ Mail Message Copies ***************************
 // ************************************************************************
-
-// Member:       XFE_PrefsPageMailNewsNserver
-// Description:  Constructor
+ 
+ // Member:       XFE_PrefsPageMailNewsCopies
+ // Description:  Constructor
+ // Inputs:
+ // Side effects: 
+ 
+XFE_PrefsPageMailNewsCopies::XFE_PrefsPageMailNewsCopies(XFE_PrefsDialog *dialog)
+    : XFE_PrefsPage(dialog)
+{
+    m_master = fe_getMNMaster();
+    XP_ASSERT(m_master);
+ 
+    m_chooseDialog = NULL;
+}
+ 
+// Member:       ~XFE_PrefsPageMailNewsCopies
+// Description:  destructor
 // Inputs:
 // Side effects: 
-
-XFE_PrefsPageMailNewsNserver::XFE_PrefsPageMailNewsNserver(XFE_PrefsDialog *dialog)
-	: XFE_PrefsPage(dialog),
-	  m_prefsDataMailNewsNserver(0)
+ 
+XFE_PrefsPageMailNewsCopies::~XFE_PrefsPageMailNewsCopies()
 {
+    if (m_chooseDialog) delete m_chooseDialog;
 }
-
-// Member:       ~XFE_PrefsPageMailNewsNserver
-// Description:  Destructor
-// Inputs:
-// Side effects: 
-
-XFE_PrefsPageMailNewsNserver::~XFE_PrefsPageMailNewsNserver()
-{
-	delete m_prefsDataMailNewsNserver;
-}
-
+ 
 // Member:       create
-// Description:  Creates page for MailNews/News server
+// Description:  Creates widgets
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsNserver::create()
+ 
+void XFE_PrefsPageMailNewsCopies::create()
 {
-	Widget            kids[100];
-	Arg               av[50];
-	int               ac;
-	int               i;
-
-	PrefsDataMailNewsNserver *fep = NULL;
-
-	fep = new PrefsDataMailNewsNserver;
-	memset(fep, 0, sizeof(PrefsDataMailNewsNserver));
-	m_prefsDataMailNewsNserver = fep;
-
-	fep->context = getContext();
-	fep->prompt_dialog = getPrefsDialog()->getDialogChrome();
-
-	Widget form;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	form = XmCreateForm (m_wPageForm, "mailnewsNserver", av, ac);
-	XtManageChild (form);
-	m_wPage = fep->page = form;
-
-	Widget frame1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame1 = XmCreateFrame (form, "nServerFrame", av, ac);
-
-	Widget form1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	form1 = XmCreateForm (frame1, "nServerBox", av, ac);
-
-	Widget news_server_label;
-	Widget nntp_server_label;
-	Widget port_label;
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = news_server_label = 
-		XmCreateLabelGadget(form1, "newsServerLabel", av, ac);
-
-	kids[i++] = port_label = 
-		XmCreateLabelGadget(form1, "portLabel", av, ac);
-
-	kids[i++] = nntp_server_label = 
-		XmCreateLabelGadget(form1, "nntpServerLabel", av, ac);
-
-	kids[i++] = fep->nntp_server_text =
-		fe_CreateTextField(form1, "nntpServerText", av, ac);
-
-	kids[i++] = fep->port_text =
-		fe_CreateTextField(form1, "serverPortText", av, ac);
-
-	kids[i++] = fep->secure_toggle =
-		XmCreateToggleButtonGadget(form1, "secure", av, ac);
-
-	XtVaSetValues(news_server_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(nntp_server_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, news_server_label,
-				  XmNtopOffset, 4,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, news_server_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(fep->nntp_server_text,
-				  XmNcolumns, 35,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, nntp_server_label,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, news_server_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	int labels_height;
-	labels_height = XfeVaGetTallestWidget(port_label,
-										  fep->port_text,
-										  fep->secure_toggle,
-										  NULL);
-
-	XtVaSetValues(port_label,
-				  XmNheight, labels_height,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, fep->nntp_server_text,
-				  XmNtopOffset, 4,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, news_server_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(fep->port_text,
-				  XmNheight, labels_height,
-				  XmNcolumns, 5,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, port_label,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, port_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-	
-	XtVaSetValues(fep->secure_toggle,
-				  XmNheight, labels_height,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, port_label,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, fep->port_text,
-				  XmNleftOffset, 24,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-
-	XtManageChildren (kids, i);
-	XtManageChild(form1);
-	XtManageChild(frame1);
-
-	Widget frame2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
-	XtSetArg (av [ac], XmNtopWidget, frame1); ac++;
-	XtSetArg (av [ac], XmNtopOffset, 8); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame2 = XmCreateFrame(form, "newsDirFrame", av, ac);
-
-	Widget form2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	form2 = XmCreateForm (frame2, "newsDirBox", av, ac);
-
-	Widget news_dir_label;
-	Widget browse_button;
-	Widget msg_label;
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = news_dir_label = 
-		XmCreateLabelGadget(form2, "newsDirLabel", av, ac);
-
-	kids[i++] = msg_label = 
-		XmCreateLabelGadget(form2, "msgLabel", av, ac);
-
-	kids[i++] = fep->news_dir_text =
-		fe_CreateTextField(form2, "newsDirText", av, ac);
-
-	kids[i++] = fep->msg_size_text =
-		fe_CreateTextField(form2, "msgSizeText", av, ac);
-
-	kids[i++] = fep->notify_toggle =
-		XmCreateToggleButtonGadget(form2, "notify", av, ac);
-
-	kids[i++] = fep->browse_button = browse_button =
-		XmCreatePushButtonGadget(form2, "browse", av, ac);
-
-	XtVaSetValues(news_dir_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(fep->news_dir_text,
-				  XmNcolumns, 35,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, news_dir_label,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, news_dir_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(browse_button,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, fep->news_dir_text,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, fep->news_dir_text,
-				  XmNleftOffset, 16,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNbottomWidget, fep->news_dir_text,
-				  NULL);
-
-	labels_height = XfeVaGetTallestWidget(fep->notify_toggle,
-										  fep->msg_size_text,
-										  msg_label,
-										  NULL);
-
-	XtVaSetValues(fep->notify_toggle,
-				  XmNtopOffset, 4,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, fep->news_dir_text,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(fep->msg_size_text,
-				  XmNcolumns, 6,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, fep->notify_toggle,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, fep->notify_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNbottomWidget, fep->notify_toggle,
-				  NULL);
-
-	XtVaSetValues(msg_label,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, fep->notify_toggle,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, fep->msg_size_text,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNbottomWidget, fep->msg_size_text,
-				  NULL);
-
-	XtAddCallback(fep->secure_toggle, XmNvalueChangedCallback, cb_toggleSecure, fep);
-	XtAddCallback(browse_button, XmNactivateCallback, cb_browse, this);
-
-	XtManageChildren(kids, i);
-	XtManageChild(form2);
-	XtManageChild(frame2);
-
-	setCreated(TRUE);
+    Arg    av[50];
+    int    ac;
+ 
+    Widget copies_form;
+ 
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+ 
+    m_wPage = copies_form =
+        XmCreateForm(m_wPageForm, "mailnewsCopies", av,ac);
+    XtManageChild(copies_form);
+ 
+    Widget mail_frame = createMailFrame(copies_form, NULL);
+    Widget news_frame = createNewsFrame(copies_form, mail_frame);
+    /* Widget dt_frame   = */ createDTFrame(copies_form,news_frame);
+ 
+    // callbacks
+    XtAddCallback(m_mail_choose_button, XmNactivateCallback,
+                  cb_chooseMailFcc, this);
+    XtAddCallback(m_news_choose_button, XmNactivateCallback,
+                  cb_chooseNewsFcc, this);
+    XtAddCallback(m_drafts_choose_button, XmNactivateCallback,
+                  cb_chooseDraftsFcc, this);
+    XtAddCallback(m_templates_choose_button, XmNactivateCallback,
+                  cb_chooseTemplatesFcc, this);
+     
+    setCreated(TRUE);
+}  
+   
+// Member:       create
+// Description:  Creates widgets
+// Inputs:
+// Side effects: 
+ 
+Widget XFE_PrefsPageMailNewsCopies::createMailFrame(Widget parent,
+                                                    Widget /* attachTo */)
+{
+    
+    Widget kids[50];
+    Arg    av[20];
+    int    ac;
+    int    i=0;
+   
+    XP_ASSERT(parent);
+   
+    // Mail copies frame
+    // top frame, attached to form everywhere but bottom
+    Widget mail_frame;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    mail_frame =
+        XmCreateFrame(parent,"mailFrame",av,ac);
+   
+    Widget mail_form;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    mail_form =
+        XmCreateForm(mail_frame,"mailForm",av,ac);
+ 
+    Widget mail_label;
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    mail_label =
+        XmCreateLabelGadget(mail_frame, "mailCopies",av,ac);
+ 
+    ac=0;
+ 
+    kids[i++] = m_mail_self_toggle =
+        XmCreateToggleButtonGadget(mail_form,"mailSelfToggle", av, ac);
+ 
+    kids[i++] = m_mail_other_text =
+        fe_CreateTextField(mail_form,"mailOtherText", av, ac);
+ 
+    kids[i++] = m_mail_fcc_toggle =
+        XmCreateToggleButtonGadget(mail_form,"mailFccToggle",av,ac);
+ 
+    kids[i++] = m_mail_choose_button =
+        XmCreatePushButtonGadget(mail_form,"mailChooseButton",av,ac);
+ 
+    kids[i++] = m_mail_other_toggle =
+        XmCreateToggleButtonGadget(mail_form,"mailOtherToggle",av,ac);
+ 
+    // place the widgets
+    int max_height1 = XfeVaGetTallestWidget(m_mail_fcc_toggle,
+                                            m_mail_choose_button,
+                                            NULL);
+    int max_height2 = XfeVaGetTallestWidget(m_mail_other_text,
+                                            m_mail_other_toggle,
+                                            NULL);
+ 
+ 
+ 
+    XtVaSetValues(m_mail_fcc_toggle,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_mail_choose_button,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_mail_fcc_toggle,
+                  XmNleftAttachment, XmATTACH_NONE,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_mail_self_toggle,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, m_mail_fcc_toggle,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_mail_other_toggle,
+                  XmNheight, max_height2,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, m_mail_self_toggle,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+   
+    XtVaSetValues(m_mail_other_text,
+                  XmNheight, max_height2,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_mail_other_toggle,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_WIDGET,
+                  XmNleftWidget, m_mail_other_toggle,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtManageChildren(kids,i);
+    XtManageChild(mail_frame);
+    XtManageChild(mail_form);
+    XtManageChild(mail_label);
+ 
+    return mail_frame;
 }
-
+ 
+ 
+ 
+// Member:       create
+// Description:  Creates widgets
+// Inputs:
+// Side effects: 
+ 
+Widget XFE_PrefsPageMailNewsCopies::createNewsFrame(Widget parent,
+                                                    Widget attachTo)
+{
+ 
+    Widget kids[100];
+    Arg    av[50];
+    int    ac;
+    int    i=0;
+    XP_ASSERT(parent);
+    // News copies frame 
+    // middle frame, attached to mail copies frame and drafts frame
+    Widget news_frame;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg(av[ac], XmNtopWidget, attachTo); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    news_frame = XmCreateFrame(parent,"newsFrame",av,ac);
+   
+    Widget news_form;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    news_form = XmCreateForm(news_frame,"newsForm",av,ac);
+ 
+    Widget news_label;
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    news_label = XmCreateLabelGadget(news_frame, "newsCopies",av,ac);
+ 
+    ac=0;
+ 
+    kids[i++] = m_news_self_toggle =
+        XmCreateToggleButtonGadget(news_form,"newsSelfToggle", av, ac);
+ 
+    kids[i++] = m_news_other_text =
+        fe_CreateTextField(news_form,"newsOtherText", av, ac);
+ 
+    kids[i++] = m_news_fcc_toggle =
+        XmCreateToggleButtonGadget(news_form,"newsFccToggle",av,ac);
+ 
+    kids[i++] = m_news_choose_button =
+        XmCreatePushButtonGadget(news_form,"newsChooseButton",av,ac);
+ 
+    kids[i++] = m_news_other_toggle =
+        XmCreateToggleButtonGadget(news_form,"newsOtherToggle",av,ac);
+ 
+    // place the widgets
+    int max_height1 = XfeVaGetTallestWidget(m_news_fcc_toggle,
+                                            m_news_choose_button,
+                                            NULL);
+    int max_height2 = XfeVaGetTallestWidget(m_news_other_text,
+                                            m_news_other_toggle,
+                                            NULL);
+ 
+ 
+ 
+    XtVaSetValues(m_news_fcc_toggle,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_news_choose_button,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_news_fcc_toggle,
+                  XmNleftAttachment, XmATTACH_NONE,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_news_self_toggle,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, m_news_fcc_toggle,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_news_other_toggle,
+                  XmNheight, max_height2,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, m_news_self_toggle,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+   
+    XtVaSetValues(m_news_other_text,
+                  XmNheight, max_height2,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_news_other_toggle,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_WIDGET,
+                  XmNleftWidget, m_news_other_toggle,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+     
+    XtManageChildren(kids,i);
+    XtManageChild(news_frame);
+    XtManageChild(news_form);
+    XtManageChild(news_label);
+ 
+ 
+    return news_frame;
+}
+ 
+ 
+// Member:       create
+// Description:  Creates widgets
+// Inputs:
+// Side effects: 
+ 
+Widget XFE_PrefsPageMailNewsCopies::createDTFrame(Widget parent,
+                                                  Widget attachTo)
+{
+ 
+    Widget kids[100];
+    Arg    av[50];
+    int    ac;
+    int    i=0;
+   
+    XP_ASSERT(parent);
+ 
+    // Drafts/Templates frame 
+    // bottom frame, attached to news copies and bottom
+    Widget dt_frame;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg(av[ac], XmNtopWidget, attachTo); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    dt_frame = XmCreateFrame(parent,"dtFrame",av,ac);
+   
+    Widget dt_form;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    dt_form = XmCreateForm(dt_frame,"dtForm",av,ac);
+ 
+    Widget dt_label;
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    dt_label = XmCreateLabelGadget(dt_frame, "dtCopies",av,ac);
+ 
+    ac=0;
+    kids[i++] = m_drafts_save_label =
+        XmCreateLabelGadget(dt_form,"dSaveLabel",av,ac);
+    kids[i++] = m_drafts_choose_button =
+        XmCreatePushButtonGadget(dt_form, "dFccButton", av, ac);
+ 
+    kids[i++] = m_templates_save_label =
+        XmCreateLabelGadget(dt_form,"tSaveLabel",av,ac);
+    kids[i++] = m_templates_choose_button =
+        XmCreatePushButtonGadget(dt_form, "tFccButton", av, ac);
+ 
+ 
+    int max_height1 = XfeVaGetTallestWidget(m_drafts_save_label,
+                                            m_drafts_choose_button,
+                                            NULL);
+    int max_height2 = XfeVaGetTallestWidget(m_templates_save_label,
+                                            m_templates_choose_button,
+                                            NULL);
+ 
+    XtVaSetValues(m_drafts_save_label,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_drafts_choose_button,
+                  XmNheight, max_height1,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_drafts_save_label,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_templates_save_label,
+                  XmNheight, max_height2,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, m_drafts_save_label,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtVaSetValues(m_templates_choose_button,
+                  XmNheight, max_height2,
+                  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+                  XmNtopWidget, m_templates_save_label,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+   
+    XtManageChildren(kids,i);
+    XtManageChild(dt_frame);
+    XtManageChild(dt_form);
+    XtManageChild(dt_label);
+ 
+    return dt_frame;
+}
+ 
 // Member:       init
-// Description:  Initializes page for MailNewsNserver
+// Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsNserver::init()
+ 
+void XFE_PrefsPageMailNewsCopies::init()
 {
-	XP_ASSERT(m_prefsDataMailNewsNserver);
-
-	PrefsDataMailNewsNserver  *fep = m_prefsDataMailNewsNserver;
-	XFE_GlobalPrefs           *prefs = &fe_globalPrefs;
-    Boolean                    sensitive;
-	char                       buf[256];
-
-	// News server
-
-	XtVaSetValues(fep->nntp_server_text, 
-                  XmNsensitive, !PREF_PrefIsLocked("network.hosts.nntp_server"),
-                  0);
-	fe_SetTextField(fep->nntp_server_text, prefs->newshost);
-
-	PR_snprintf(buf, sizeof(buf), "%d", prefs->news_server_port);
-	XtVaSetValues(fep->port_text,
-                  XmNsensitive, !PREF_PrefIsLocked("news.server_port"),
-				  0);
-	fe_SetTextField(fep->port_text, buf);
-
-	XtVaSetValues(fep->secure_toggle,
-				  XmNset, prefs->news_server_secure,
-                  XmNsensitive, !PREF_PrefIsLocked("news.server_is_secure"),
-				  0);
-
-	// News folder and download
-
-	fe_SetTextField(fep->news_dir_text, prefs->newsrc_directory);
-    sensitive = !PREF_PrefIsLocked("news.directory");
-    XtSetSensitive(fep->news_dir_text, sensitive);
-    XtSetSensitive(fep->browse_button, sensitive);
-
-	XtVaSetValues(fep->notify_toggle, XmNset, prefs->news_notify_on, 0);
-	PR_snprintf(buf, sizeof(buf), "%d", prefs->news_max_articles);
-	XtVaSetValues(fep->msg_size_text, XmNvalue, buf, 0);
-
-    XtSetSensitive(fep->notify_toggle, !PREF_PrefIsLocked("news.notify.on"));
-    XtSetSensitive(fep->msg_size_text, !PREF_PrefIsLocked("news.notify.size"));
-
-	setInitialized(TRUE);
+ 
+    // values to grab from preference
+    Bool boolval;
+    Bool locked;
+    char *charval;
+    char *bcc, *email, *bcc_format;
+    XmString xmstr;             // temp compound string for labels
+ 
+    // get e-mail address for "BCC: userid@company.com" fields
+    PREF_CopyCharPref("mail.identity.useremail", &email);
+    bcc_format=XP_GetString(XFE_MAIL_SELF_FORMAT);
+    bcc = PR_smprintf(bcc_format, email);
+ 
+    // outgoing mail messages
+    // 1. Toggle self
+    xmstr = XmStringCreateLocalized(bcc);
+    PREF_GetBoolPref("mail.cc_self",&boolval);
+    locked = PREF_PrefIsLocked("mail.cc_self");
+    XtVaSetValues(m_mail_self_toggle,
+                  XmNset, boolval,
+                  XmNlabelString, xmstr,
+                  XmNsensitive,!locked,
+                  NULL);
+    XmStringFree(xmstr);
+     
+    // 2. toggle and value of fcc
+    PREF_GetBoolPref("mail.use_imap_sentmail", &boolval);
+    if (boolval)
+        PREF_CopyCharPref("mail.imap_sentmail_path", &charval);
+    else {
+        // prepend "mailbox:" onto path
+        PREF_CopyCharPref("mail.default_fcc", &charval);
+        char *url=(char *)XP_CALLOC(strlen(charval)+9, sizeof(char));
+        XP_STRCPY(url,"mailbox:");
+        XP_STRCAT(url,charval);
+        XP_FREE(charval);
+        charval=url;
+    }
+ 
+    m_mailFcc = GetSpecialFolder(charval, MK_MSG_SENT_L10N_NAME);
+    xmstr = VerboseFolderName(m_mailFcc);
+     
+    PREF_GetBoolPref("mail.use_fcc",&boolval);
+    locked = PREF_PrefIsLocked("mail.use_fcc");
+    XtVaSetValues(m_mail_fcc_toggle,
+                  XmNset, boolval,
+                  XmNlabelString, xmstr,
+                  XmNsensitive, !locked,
+                  NULL);
+    XmStringFree(xmstr);
+    XP_FREE(charval);
+ 
+    // 2.1 fcc button
+    locked = PREF_PrefIsLocked("mail.default_fcc");
+    XtVaSetValues(m_mail_choose_button,
+                  XmNsensitive, !locked,
+                  NULL);
+ 
+    // 3. CC
+    PREF_CopyCharPref("mail.default_cc",&charval);
+    locked = PREF_PrefIsLocked("mail.default_cc");
+    XtVaSetValues(m_mail_other_text,
+                  XmNvalue, charval,
+                  XmNsensitive,!locked,
+                  NULL);
+    XP_FREE(charval);
+ 
+    // outgoing news messages
+    // 1. Toggle self
+     
+    xmstr = XmStringCreateLocalized(bcc);
+    PREF_GetBoolPref("news.cc_self",&boolval);
+    locked = PREF_PrefIsLocked("news.cc_self");
+    XtVaSetValues(m_news_self_toggle,
+                  XmNset, boolval,
+                  XmNlabelString, xmstr,
+                  XmNsensitive,!locked,
+                  NULL);
+    XmStringFree(xmstr);
+ 
+    // TODO: format as "Fcc %s on %s"
+    // 2. toggle and value of fcc
+    PREF_GetBoolPref("news.use_imap_sentmail", &boolval);
+    if (boolval)                // new style - use imap URL
+        PREF_CopyCharPref("news.imap_sentmail_path", &charval);
+    else {                       // old style - use local path
+        PREF_CopyCharPref("news.default_fcc", &charval);
+        char *url=(char *)XP_CALLOC(strlen(charval)+9, sizeof(char));
+        XP_STRCPY(url,"mailbox:");
+        XP_STRCAT(url,charval);
+        XP_FREE(charval);
+        charval=url;
+    }
+     
+    m_newsFcc=GetSpecialFolder(charval, MK_MSG_SENT_L10N_NAME);
+    xmstr = VerboseFolderName(m_newsFcc);
+     
+    PREF_GetBoolPref("news.use_fcc",&boolval);
+    locked = PREF_PrefIsLocked("news.use_fcc");
+    XtVaSetValues(m_news_fcc_toggle,
+                  XmNset, boolval,
+                  XmNlabelString, xmstr,
+                  XmNsensitive, !locked,
+                  NULL);
+    XmStringFree(xmstr);
+    XP_FREE(charval);
+ 
+    // 2.1 fcc button
+    locked = PREF_PrefIsLocked("news.default_fcc");
+    XtVaSetValues(m_news_choose_button,
+                  XmNsensitive,!locked,
+                  NULL);
+   
+    // 3. CC
+    PREF_CopyCharPref("news.default_cc",&charval);
+    locked = PREF_PrefIsLocked("news.default_cc");
+    fe_SetTextField(m_news_other_text, charval);
+    XP_FREE(charval);
+ 
+    // storage for drafts and templates
+    PREF_CopyCharPref("mail.default_drafts",&charval);
+     
+    m_draftsFcc = GetSpecialFolder(charval, MK_MSG_DRAFTS_L10N_NAME);
+    xmstr = VerboseFolderName(m_draftsFcc, XFE_DRAFTS_ON_SERVER);
+     
+    XtVaSetValues(m_drafts_save_label,
+                  XmNlabelString, xmstr,
+                  NULL);
+    XmStringFree(xmstr);
+    XP_FREE(charval);
+ 
+    PREF_CopyCharPref("mail.default_templates",&charval);
+    m_templatesFcc = GetSpecialFolder(charval, MK_MSG_TEMPLATES_L10N_NAME);
+    xmstr = VerboseFolderName(m_templatesFcc, XFE_TEMPLATES_ON_SERVER);    
+    XtVaSetValues(m_templates_save_label,
+                  XmNlabelString, xmstr,
+                  NULL);
+    XmStringFree(xmstr);
+    XP_FREE(charval);
+ 
+    XP_FREE(email);
+    XP_FREE(bcc);
+     
+    setInitialized(TRUE);  
 }
-
+ 
+ 
+// Member:       install
+// Description:  
+// Inputs:
+// Side effects: 
+ 
+void XFE_PrefsPageMailNewsCopies::install()
+{
+}
+ 
+ 
+// Member:       save
+// Description:  
+// Inputs:
+// Side effects: 
+ 
+void XFE_PrefsPageMailNewsCopies::save()
+{
+    Bool boolval;
+    char *charval;
+    URL_Struct *url;
+ 
+    // Mail 
+    boolval = XmToggleButtonGadgetGetState(m_mail_self_toggle);
+    PREF_SetBoolPref("mail.cc_self",boolval);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_mail_fcc_toggle);
+    PREF_SetBoolPref("mail.use_fcc",boolval);
+ 
+    charval = XmTextFieldGetString(m_mail_other_text);
+    PREF_SetCharPref("mail.default_cc",charval);
+    XtFree(charval);
+ 
+    if (MSG_GetHostForFolder(m_mailFcc)) {
+        url=MSG_ConstructUrlForFolder(NULL, m_mailFcc);
+        XP_ASSERT(url);
+        if (url) {
+            PREF_SetBoolPref("mail.use_imap_sentmail",True);
+            PREF_SetCharPref("mail.imap_sentmail_path",url->address);
+            NET_FreeURLStruct(url);
+        }
+    } else {
+        charval = (char *)MSG_GetFolderNameFromID(m_mailFcc);
+        PREF_SetCharPref("mail.default_fcc", charval);
+        // don't need to free charval
+        PREF_SetBoolPref("mail.use_imap_sentmail",False);
+    }
+   
+ 
+    // News
+    boolval = XmToggleButtonGadgetGetState(m_news_self_toggle);
+    PREF_SetBoolPref("news.cc_self",boolval);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_news_fcc_toggle);
+    PREF_SetBoolPref("news.use_fcc",boolval);
+ 
+    charval = XmTextFieldGetString(m_news_other_text);
+    PREF_SetCharPref("news.default_cc",charval);
+    XtFree(charval);
+ 
+    if (MSG_GetHostForFolder(m_newsFcc)) {
+        url=MSG_ConstructUrlForFolder(NULL, m_newsFcc);
+        XP_ASSERT(url);
+        if (url) {
+            PREF_SetBoolPref("news.use_imap_sentmail",True);
+            PREF_SetCharPref("news.imap_sentmail_path",url->address);
+            NET_FreeURLStruct(url);
+        }
+    } else {
+        charval = (char *)MSG_GetFolderNameFromID(m_newsFcc);
+        PREF_SetCharPref("news.default_fcc", charval);
+        // don't need to free charval
+        PREF_SetBoolPref("news.use_imap_sentmail",False);
+    }
+ 
+    url=MSG_ConstructUrlForFolder(NULL, m_draftsFcc);
+    PREF_SetCharPref("mail.default_drafts",url->address);
+    NET_FreeURLStruct(url);
+     
+    url=MSG_ConstructUrlForFolder(NULL, m_templatesFcc);
+    PREF_SetCharPref("mail.default_templates",url->address);
+    NET_FreeURLStruct(url);
+ 
+    install();
+}
+ 
 // Member:       verify
 // Description:  
 // Inputs:
 // Side effects: 
-
-Boolean XFE_PrefsPageMailNewsNserver::verify()
+ 
+Boolean XFE_PrefsPageMailNewsCopies::verify()
 {
-	char         buf[10000];
-	char        *buf2;
-	char        *warning;
-	struct stat  st;
-	int          size;
-
-	buf2 = buf;
-	strcpy (buf, XP_GetString(XFE_WARNING));
-	buf2 = buf + XP_STRLEN(buf);
-	warning = buf2;
-	size = buf + sizeof (buf) - warning;
-
-	XP_ASSERT(m_prefsDataMailNewsNserver);
-	PrefsDataMailNewsNserver  *fep = m_prefsDataMailNewsNserver;
-
-	PREFS_CHECK_HOST (fep->nntp_server_text,
-					  XP_GetString(XFE_NEWS_HOST), warning, size);
-	PREFS_CHECK_DIR  (fep->news_dir_text,
-					  XP_GetString(XFE_NEWS_DIR),
-					  warning, size);
-
-	if (*buf2) {
-		FE_Alert(getContext(), fe_StringTrim (buf));
-		return FALSE;
-	}
-	else {
-		return TRUE;
-	}
+    return TRUE;
 }
-
-// Member:       install
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsNserver::install()
+ 
+ 
+XmString XFE_PrefsPageMailNewsCopies::VerboseFolderName(MSG_FolderInfo *pFolder, int format_string_id)
 {
-	fe_installMailNewsNserver();
+    MSG_FolderLine folderLine, hostFolderLine;
+    MSG_FolderInfo *hostFolder;
+    MSG_Host *host;
+    XmString xmstr;
+    char *verbose_folder;
+ 
+    XP_ASSERT(pFolder);
+ 
+    host=MSG_GetHostForFolder(pFolder);
+    if (host)
+        hostFolder=MSG_GetFolderInfoForHost(host);
+    else
+        hostFolder=MSG_GetLocalMailTree(m_master);
+ 
+    XP_ASSERT(hostFolder);
+ 
+    MSG_GetFolderLineById(m_master, pFolder, &folderLine);
+    MSG_GetFolderLineById(m_master, hostFolder, &hostFolderLine);
+     
+    if (format_string_id==0) format_string_id=XFE_FOLDER_ON_SERVER_FORMAT;
+     
+    char *folder_format=XP_GetString(format_string_id);
+    verbose_folder=PR_smprintf(folder_format,
+                               folderLine.prettyName,
+                               hostFolderLine.name);
+    xmstr = XmStringCreateLocalized(verbose_folder);
+    XP_FREE(verbose_folder);
+ 
+    return xmstr;
 }
-
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsNserver::save()
+ 
+MSG_FolderInfo *XFE_PrefsPageMailNewsCopies::GetSpecialFolder(char *url, int l10n_name) {
+ 
+    MSG_FolderInfo *folder;
+    if (url) {
+        folder = MSG_GetFolderInfoFromURL(m_master, url, TRUE);
+        if (folder) return folder;
+    }
+     
+    // the messaging library wouldn't give it to us,
+    // so we'll build it ourselves.
+     
+    char *folder_name=XP_GetString(l10n_name);
+    XP_ASSERT(folder_name);
+ 
+    char *mail_dir;
+    PREF_CopyCharPref("mail.directory",&mail_dir);
+ 
+    // concatinate "mailbox:" + mail_dir + "/" + folder_name
+    char *magic_url=(char *)XP_CALLOC(9+strlen(mail_dir)+1+
+                                      strlen(folder_name)+1,
+                                      sizeof(char));
+ 
+    XP_STRCPY(magic_url,"mailbox:");
+    XP_STRCAT(magic_url,mail_dir);
+ 
+    // make sure there is exactly one '/'
+    // MSG_GetFolderInfoFromURL doesn't like '//'
+    char *slash=XP_STRRCHR(magic_url,'/');
+    if (slash) {
+        slash++;
+        if (*slash!='\0')
+            XP_STRCAT(magic_url,"/");
+    }
+    XP_STRCAT(magic_url,folder_name);
+     
+    folder = MSG_GetFolderInfoFromURL(m_master,magic_url, TRUE);
+    XP_ASSERT(folder);
+    XP_FREE(mail_dir);
+    XP_FREE(magic_url);
+    return folder;
+ 
+}
+ 
+ 
+// global callback for all of the Choose Folder.. buttons
+MSG_FolderInfo *XFE_PrefsPageMailNewsCopies::chooseFcc(int l10n_name, MSG_FolderInfo *selected_folder) {
+ 
+    XFE_PrefsDialog *theDialog = getPrefsDialog();
+    Widget         mainw = theDialog->getBaseWidget();
+     
+    if (m_chooseDialog==NULL) {
+        m_chooseDialog = new XFE_PrefsMailFolderDialog(mainw, m_master, getContext());
+        m_chooseDialog->initPage();
+    }
+    m_chooseDialog->setFolder(selected_folder,l10n_name);
+    return m_chooseDialog->prompt();
+ 
+}
+ 
+void XFE_PrefsPageMailNewsCopies::cb_chooseMailFcc(Widget, XtPointer closure,XtPointer)
 {
-	PrefsDataMailNewsNserver *fep = m_prefsDataMailNewsNserver;
-
-	XP_ASSERT(fep);
-
-	PREFS_SET_GLOBALPREF_TEXT(newshost, nntp_server_text);
-
-	XP_FREEIF(fe_globalPrefs.newsrc_directory);
-	char *s = fe_GetTextField(fep->news_dir_text);
-    fe_globalPrefs.newsrc_directory = s ? s : XP_STRDUP("");
-
-	Boolean b;
-
-	XtVaGetValues(fep->notify_toggle, XmNset, &b, 0);
-	fe_globalPrefs.news_notify_on = b;
-
-	XtVaGetValues(fep->secure_toggle, XmNset, &b, 0);
-	fe_globalPrefs.news_server_secure = b;
-
-    char *text;
-	char  dummy;
-    int   size = 0;
-    int   port = 0;
-
-    XtVaGetValues(fep->msg_size_text, XmNvalue, &text, 0);
-    if (1 == sscanf(text, " %d %c", &size, &dummy) &&
-		size >= 0)
-		fe_globalPrefs.news_max_articles = size;
-	if (text) XtFree(text);
-
-    XtVaGetValues(fep->port_text, XmNvalue, &text, 0);
-    if (1 == sscanf(text, " %d %c", &port, &dummy) &&
-		port >= 0)
-		fe_globalPrefs.news_server_port = port;
-	if (text) XtFree(text);
-
-	// Install preferences
-
-	install();
+    XFE_PrefsPageMailNewsCopies *prefsPage=
+        (XFE_PrefsPageMailNewsCopies*)closure;
+ 
+    prefsPage->m_mailFcc =
+        prefsPage->chooseFcc(MK_MSG_SENT_L10N_NAME,prefsPage->m_mailFcc);
+    XmString xmstr=prefsPage->VerboseFolderName(prefsPage->m_mailFcc);
+    XtVaSetValues(prefsPage->m_mail_fcc_toggle,XmNlabelString,xmstr,NULL);
+    XmStringFree(xmstr);
 }
-
-// Member:       getData
-// Description:  
-// Inputs:
-// Side effects: 
-
-PrefsDataMailNewsNserver *XFE_PrefsPageMailNewsNserver::getData()
+ 
+void XFE_PrefsPageMailNewsCopies::cb_chooseNewsFcc(Widget, XtPointer closure, XtPointer)
 {
-	return m_prefsDataMailNewsNserver;
+    XFE_PrefsPageMailNewsCopies *prefsPage=
+        (XFE_PrefsPageMailNewsCopies*)closure;
+     
+    prefsPage->m_newsFcc =
+        prefsPage->chooseFcc(MK_MSG_SENT_L10N_NAME,prefsPage->m_newsFcc);
+    XmString xmstr=prefsPage->VerboseFolderName(prefsPage->m_newsFcc);
+    XtVaSetValues(prefsPage->m_news_fcc_toggle,XmNlabelString,xmstr,NULL);
+    XmStringFree(xmstr);
 }
-
-// Member:       cb_browse
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsNserver::cb_browse(Widget    /* w */,
-											 XtPointer closure,
-											 XtPointer /* callData */)
+ 
+void XFE_PrefsPageMailNewsCopies::cb_chooseDraftsFcc(Widget, XtPointer closure, XtPointer)
 {
-	XFE_PrefsPageMailNewsNserver *thePage = (XFE_PrefsPageMailNewsNserver *)closure;
-	XFE_PrefsDialog              *theDialog = thePage->getPrefsDialog();
-	PrefsDataMailNewsNserver     *fep = thePage->getData();
-
-	fe_browse_file_of_text(theDialog->getContext(), fep->news_dir_text, True);
+    XFE_PrefsPageMailNewsCopies *prefsPage=
+        (XFE_PrefsPageMailNewsCopies*)closure;
+ 
+    prefsPage->m_draftsFcc =
+        prefsPage->chooseFcc(MK_MSG_DRAFTS_L10N_NAME,prefsPage->m_draftsFcc);
+    XmString xmstr=prefsPage->VerboseFolderName(prefsPage->m_draftsFcc, XFE_DRAFTS_ON_SERVER);
+    XtVaSetValues(prefsPage->m_drafts_save_label,XmNlabelString,xmstr,NULL);
+    XmStringFree(xmstr);
 }
-
-// Member:       cb_toggleSecure
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsNserver::cb_toggleSecure(Widget    /*w*/,
-												   XtPointer closure,
-												   XtPointer callData)
+ 
+void XFE_PrefsPageMailNewsCopies::cb_chooseTemplatesFcc(Widget, XtPointer closure, XtPointer)
 {
-	XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)callData;
-	PrefsDataMailNewsNserver     *fep = (PrefsDataMailNewsNserver *)closure;
-	char                         *port_text = 0;
-	char                         *trimmed_port_text;
-	int                           port_number;
-	char                          buf[256];
-
-	port_text = fe_GetTextField(fep->port_text);
-	if (port_text) {
-		trimmed_port_text = fe_StringTrim(port_text);
-		if (XP_STRLEN(trimmed_port_text) == 0) {
-			port_number = (cb->set) ? SECURE_NEWS_PORT : NEWS_PORT;
-		}
-		else {
-			port_number = atoi(trimmed_port_text);
-			if (cb->set && port_number == NEWS_PORT)
-				port_number = SECURE_NEWS_PORT;
-			else if (! cb->set && port_number == SECURE_NEWS_PORT)
-				port_number = NEWS_PORT;
-		}
-		XtFree(port_text);
-	}
-	else {
-		port_number = (cb->set) ? SECURE_NEWS_PORT : NEWS_PORT;
-	}
-
-	PR_snprintf(buf, sizeof(buf), "%d", port_number);
-	fe_SetTextField(fep->port_text, buf);
+    XFE_PrefsPageMailNewsCopies *prefsPage=
+        (XFE_PrefsPageMailNewsCopies*)closure;
+     
+    prefsPage->m_templatesFcc =
+        prefsPage->chooseFcc(MK_MSG_TEMPLATES_L10N_NAME,prefsPage->m_templatesFcc);
+    XmString xmstr=prefsPage->VerboseFolderName(prefsPage->m_templatesFcc,XFE_DRAFTS_ON_SERVER);
+    XtVaSetValues(prefsPage->m_templates_save_label,XmNlabelString,xmstr,NULL);
+    XmStringFree(xmstr);    
 }
-
+ 
+#endif  /* MOZ_MAIL_NEWS */
+ 
+ 
+#ifdef MOZ_MAIL_NEWS
+ 
 // ************************************************************************
-// *********************** Mail News/Address Book *************************
+// ************************ Mail Message HTML ***************************
 // ************************************************************************
-
-const int XFE_PrefsPageMailNewsAddrBook::OUTLINER_COLUMN_NAME = 0;
-const int XFE_PrefsPageMailNewsAddrBook::OUTLINER_COLUMN_MAX_LENGTH = 256;
-const int XFE_PrefsPageMailNewsAddrBook::OUTLINER_INIT_POS = (-1);
-#define STRING_COL_NAME    "Name"
-
-// Member:       XFE_PrefsPageMailNewsAddrBook
-// Description:  Constructor
-// Inputs:
-// Side effects: 
-
-XFE_PrefsPageMailNewsAddrBook::XFE_PrefsPageMailNewsAddrBook(XFE_PrefsDialog *dialog)
-	: XFE_PrefsPage(dialog),
-	  m_prefsDataMailNewsAddrBook(0),
-	  m_rowIndex(0)
+ 
+ // Member:       XFE_PrefsPageMailNewsHTML
+ // Description:  Constructor
+ // Inputs:
+ // Side effects: 
+ 
+XFE_PrefsPageMailNewsHTML::XFE_PrefsPageMailNewsHTML(XFE_PrefsDialog *dialog)
+    : XFE_PrefsPage(dialog)
 {
 }
-
-// Member:       ~XFE_PrefsPageMailNewsAddrBook
-// Description:  Destructor
+ 
+// Member:       ~XFE_PrefsPageMailNewsHTML
+// Description:  destructor
 // Inputs:
 // Side effects: 
-
-XFE_PrefsPageMailNewsAddrBook::~XFE_PrefsPageMailNewsAddrBook()
+ 
+XFE_PrefsPageMailNewsHTML::~XFE_PrefsPageMailNewsHTML()
 {
-	PrefsDataMailNewsAddrBook   *fep = m_prefsDataMailNewsAddrBook;
-
-	if (fep) {
-		delete fep->dir_outliner;
-		if (fep->directories) 
-			XP_ListDestroy(fep->directories);
-		// Note: do not destroy deleted_directories. It's taken care of by 
-		// DIR_DeleteServerList, which is called by DIR_CleanUpServerPreferences
-	}
-	delete m_prefsDataMailNewsAddrBook;
 }
-
+ 
 // Member:       create
-// Description:  Creates page for MailNews/Address Book
+// Description:  Creates widgets
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::create()
+ 
+void XFE_PrefsPageMailNewsHTML::create()
 {
-	Widget            kids[100];
-	Arg               av[50];
-	int               ac;
-	int               i;
-
-	PrefsDataMailNewsAddrBook *fep = NULL;
-
-	fep = new PrefsDataMailNewsAddrBook;
-	memset(fep, 0, sizeof(PrefsDataMailNewsAddrBook));
-	m_prefsDataMailNewsAddrBook = fep;
-
-	fep->context = getContext();
-	fep->prompt_dialog = getPrefsDialog()->getDialogChrome();
-
-	Widget form;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	form = XmCreateForm (m_wPageForm, "mailnewsAddrBook", av, ac);
-	XtManageChild (form);
-	m_wPage = fep->page = form;
-
-	Widget frame1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame1 = XmCreateFrame (form, "addrBookFrame", av, ac);
-
-	Widget form1;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	form1 = XmCreateForm (frame1, "addrBookBox", av, ac);
-
-	Widget addr_book_label;
-	Widget dir_list;
-	Widget up_button;
-	Widget down_button;
-	Widget add_button;
-	Widget edit_button;
-	Widget delete_button;
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = addr_book_label = 
-		XmCreateLabelGadget(form1, "addrBookLabel", av, ac);
-
-	kids[i++] = up_button = 
-		XmCreateArrowButtonGadget(form1, "upButton", av, ac);
-
-	kids[i++] = down_button = 
-		XmCreateArrowButtonGadget(form1, "downButton", av, ac);
-
-	kids[i++] = add_button =
-		XmCreatePushButtonGadget(form1, "newButton", av, ac);
-
-	kids[i++] = edit_button =
-		XmCreatePushButtonGadget(form1, "editButton", av, ac);
-
-	kids[i++] = delete_button =
-		XmCreatePushButtonGadget(form1, "deleteButton", av, ac);
-
-	// Outliner
-
-	int           num_columns = 1;
-	static int    default_column_widths[] = {40};
-	XFE_Outliner *outliner;
-
-	outliner = new XFE_Outliner("dirList",            // name
-								this,                  // outlinable
-								getPrefsDialog(),      // top level								  
-								form1,                 // parent
-								FALSE,                 // constant size
-								FALSE,                 // has headings
-								num_columns,           // number of columns
-								num_columns,           // number of visible columns
-								default_column_widths, // default column widths
-								OUTLINER_GEOMETRY_PREF
-								);
-
-	dir_list = fep->dir_list = outliner->getBaseWidget();
-
-	XtVaSetValues(outliner->getBaseWidget(),
-				  XtVaTypedArg, XmNblankBackground, XmRString, "white", 6,
-				  XmNvisibleRows, 10,
-				  NULL);
-	XtVaSetValues(outliner->getBaseWidget(),
-				  XmNcellDefaults, True,
-				  XtVaTypedArg, XmNcellBackground, XmRString, "white", 6,
-				  NULL);
-
-	outliner->setColumnResizable(OUTLINER_COLUMN_NAME, False);
-	outliner->show();
-	
-	fep->add_button = add_button;
-	fep->edit_button = edit_button;
-	fep->delete_button = delete_button;
-	fep->up_button = up_button;
-	fep->down_button = down_button;
-	fep->dir_outliner = outliner;
-
-	XtVaSetValues(addr_book_label,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	Pixel parent_bg;
-	XtVaGetValues(getPrefsDialog()->getDialogChrome(), XmNbackground, &parent_bg, 0);
-
-	XtVaSetValues(dir_list,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, addr_book_label,
-				  XmNtopOffset, 4,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-	
-	Dimension list_height;
-	Dimension up_button_height;
-	int down_button_top_offset;
-	int up_button_top_offset;
-
-	XtVaGetValues(down_button,
-				  XmNtopOffset, &down_button_top_offset,
-				  NULL);
-
-	list_height = XfeHeight(dir_list);
-	up_button_height = XfeHeight(up_button);
-	up_button_top_offset = list_height/2 - up_button_height - down_button_top_offset/2;
-
-	XtVaSetValues(up_button,
-				  XmNarrowDirection, XmARROW_UP,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, dir_list,
-				  XmNtopOffset, up_button_top_offset,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, dir_list,
-				  XmNleftOffset, 8,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-				  
-	XtVaSetValues(down_button,
-				  XmNarrowDirection, XmARROW_DOWN,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, up_button,
-				  XmNtopOffset, 4,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, up_button,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	int labels_width;
-	labels_width = XfeVaGetWidestWidget(add_button,
-										edit_button,
-										delete_button,
-										NULL);
-
-	XtVaSetValues(add_button,
-				  XmNwidth, labels_width,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, dir_list,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, up_button,
-				  XmNleftOffset, 24,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(edit_button,
-				  XmNwidth, labels_width,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, add_button,
-				  XmNtopOffset, 4,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, add_button,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(delete_button,
-				  XmNwidth, labels_width,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, edit_button,
-				  XmNtopOffset, 4,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, add_button,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtManageChildren (kids, i);
-	XtManageChild(form1);
-	XtManageChild(frame1);
-
-	// Show full names as
-
-	Widget frame2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
-	XtSetArg (av [ac], XmNtopWidget, frame1); ac++;
-	XtSetArg (av [ac], XmNtopOffset, 8); ac++;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame2 = XmCreateFrame (form, "frame2", av, ac);
-
-	Widget form2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	form2 = XmCreateForm (frame2, "toolbarBox", av, ac);
-
-	Widget label2;
-
-	ac = 0;
-	XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
-	label2 = XmCreateLabelGadget (frame2, "fullNameLabel", av, ac);
-
-	Widget first_last_toggle;
-	Widget last_first_toggle;
-	Widget first_last_label;
-	Widget last_first_label;
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = first_last_toggle = 
-		XmCreateToggleButtonGadget(form2, "firstLastToggle", av, ac);
-
-	kids[i++] = last_first_toggle = 
-		XmCreateToggleButtonGadget(form2, "lastFirstToggle", av, ac);
-
-	kids[i++] = first_last_label = 
-		XmCreateLabelGadget(form2, "firstLastLabel", av, ac);
-
-	kids[i++] = last_first_label = 
-		XmCreateLabelGadget(form2, "lastFirstLabel", av, ac);
-
-	fep->first_last_toggle = first_last_toggle;
-	fep->last_first_toggle = last_first_toggle;
-
-	int labels_width2;
-
-	labels_width2 = XfeVaGetWidestWidget(first_last_toggle,
-										 last_first_toggle,
-										 NULL);
-
-	int labels_height;
-
-	labels_height = XfeVaGetTallestWidget(first_last_toggle,
-										  first_last_label,
-										  NULL);
-
-	XtVaSetValues(first_last_toggle,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNwidth, labels_width2,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNleftOffset, 16,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(first_last_label,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, first_last_toggle,
-				  XmNleftAttachment, XmATTACH_WIDGET,
-				  XmNleftWidget, first_last_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(last_first_toggle,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNwidth, labels_width2,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, first_last_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, first_last_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtVaSetValues(last_first_label,
-				  XmNheight, labels_height,
-				  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNtopWidget, last_first_toggle,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, first_last_label,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  NULL);
-
-	XtManageChildren (kids, i);
-	XtManageChild(label2);
-	XtManageChild(form2);
-	XtManageChild(frame2);
-
-	// Add callbacks
-
-	XtAddCallback(up_button, XmNactivateCallback, cb_promote, this);
-	XtAddCallback(down_button, XmNactivateCallback, cb_demote, this);
-	XtAddCallback(add_button, XmNactivateCallback, cb_add, this);
-	XtAddCallback(edit_button, XmNactivateCallback, cb_edit, this);
-	XtAddCallback(delete_button, XmNactivateCallback, cb_delete, this);
-
-	XtAddCallback(first_last_toggle, XmNvalueChangedCallback, cb_toggleNameOrder, fep);
-	XtAddCallback(last_first_toggle, XmNvalueChangedCallback, cb_toggleNameOrder, fep);
-
-	setCreated(TRUE);
+    Arg    av[50];
+    int    ac;
+ 
+    Widget html_form;
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+ 
+    m_wPage = html_form =
+        XmCreateForm(m_wPageForm, "mailnewsHTML", av,ac);
+    XtManageChild(html_form);
+ 
+    Widget usehtml_frame=createUseHTMLFrame(html_form, NULL);
+    /* Widget nohtml_frame= */ createNoHTMLFrame(html_form, usehtml_frame);
+ 
+    setCreated(TRUE);
 }
-
+ 
+Widget XFE_PrefsPageMailNewsHTML::createUseHTMLFrame(Widget parent,
+                                                     Widget attachTo)
+{
+    Widget kids[100];
+    Arg    av[50];
+    int ac;
+    int i=0;
+ 
+    XP_ASSERT(parent);
+ 
+    Widget usehtml_frame;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg(av[ac], XmNtopWidget, attachTo); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    usehtml_frame =
+        XmCreateFrame(parent,"useHTMLFrame",av,ac);
+   
+    Widget usehtml_form;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    usehtml_form =
+        XmCreateForm(usehtml_frame,"useHTMLForm",av,ac);
+ 
+    Widget usehtml_label;
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    usehtml_label =
+        XmCreateLabelGadget(usehtml_frame, "useHTML",av,ac);
+ 
+    // child Widgets
+ 
+    Widget usehtml_toggle;
+    kids[i++] = usehtml_toggle =
+        XmCreateToggleButtonGadget(usehtml_form, "useHTMLToggle",av,ac);
+ 
+    m_usehtml_toggle=usehtml_toggle;
+ 
+    XtVaSetValues(usehtml_toggle,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtManageChildren(kids,i);
+    XtManageChild(usehtml_frame);
+    XtManageChild(usehtml_form);
+    XtManageChild(usehtml_label);
+   
+    return usehtml_frame;
+}
+ 
+Widget XFE_PrefsPageMailNewsHTML::createNoHTMLFrame(Widget parent,
+                                                    Widget attachTo)
+{
+    Widget kids[100];
+    Arg    av[50];
+    int ac;
+    int i=0;
+ 
+    XP_ASSERT(parent);
+ 
+    Widget nohtml_frame;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg(av[ac], XmNtopWidget, attachTo); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    nohtml_frame =
+        XmCreateFrame(parent,"noHTMLFrame",av,ac);
+   
+    Widget nohtml_form;
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    nohtml_form =
+        XmCreateForm(nohtml_frame,"noHTMLForm",av,ac);
+ 
+ 
+    Widget nohtml_label;
+   
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    nohtml_label =
+        XmCreateLabelGadget(nohtml_frame, "noHTML",av,ac);
+ 
+    Widget nohtml_radio_rb;
+    Widget nohtml_override_label;
+ 
+    ac=0;
+    kids[i++] = nohtml_radio_rb =
+        XmCreateRadioBox(nohtml_form, "noHTMLRB", av, ac);
+    kids[i++] = nohtml_override_label =
+        XmCreateLabelGadget(nohtml_form,"noHTMLoverride", av, ac);
+   
+    XtVaSetValues(nohtml_radio_rb,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+   
+    XtVaSetValues(nohtml_override_label,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, nohtml_radio_rb,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+ 
+    XtManageChildren(kids,i);
+ 
+    i=0;
+    ac=0;
+    kids[i++] = m_nohtml_ask_toggle =
+        XmCreateToggleButtonGadget(nohtml_radio_rb, "noHTMLAsk", av, ac);
+    kids[i++] = m_nohtml_text_toggle =
+        XmCreateToggleButtonGadget(nohtml_radio_rb, "noHTMLText", av, ac);
+    kids[i++] = m_nohtml_html_toggle =
+        XmCreateToggleButtonGadget(nohtml_radio_rb, "noHTMLHTML", av, ac);
+    kids[i++] = m_nohtml_both_toggle =
+        XmCreateToggleButtonGadget(nohtml_radio_rb, "noHTMLBoth", av, ac);
+ 
+    XtManageChildren(kids,i);
+    XtManageChild(nohtml_radio_rb);
+    XtManageChild(nohtml_frame);
+    XtManageChild(nohtml_form);
+    XtManageChild(nohtml_label);
+ 
+    return nohtml_frame;
+}
 // Member:       init
-// Description:  Initializes page for MailNewsAddrBook
+// Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::init()
+ 
+void XFE_PrefsPageMailNewsHTML::init()
 {
-	XP_ASSERT(m_prefsDataMailNewsAddrBook);
-
-	PrefsDataMailNewsAddrBook     *fep = m_prefsDataMailNewsAddrBook;
-	XFE_GlobalPrefs               *prefs = &fe_globalPrefs;
-    Boolean                        sensitive;
-
-	if (! fep->deleted_directories) fep->deleted_directories = XP_ListNew();
-	fep->directories = FE_GetDirServers();
-	fep->num_directories = XP_ListCount(fep->directories);
-
-	fep->dir_outliner->change(0, fep->num_directories, fep->num_directories);
-	setSelectionPos(OUTLINER_INIT_POS);
-
-    sensitive = !PREF_PrefIsLocked("mail.addr_book.lastnamefirst");
-	XtVaSetValues(fep->first_last_toggle, 
-                  XmNset, !prefs->addr_book_lastname_first, 
-                  XmNsensitive, sensitive,
-                  0);
-	XtVaSetValues(fep->last_first_toggle, 
-                  XmNset, prefs->addr_book_lastname_first, 
-                  XmNsensitive, sensitive,
-                  0);
-
-	setInitialized(TRUE);
+  
+    Bool boolval;
+    Bool locked;
+    int32 intval;
+ 
+   
+    PREF_GetBoolPref("mail.html_compose",&boolval);
+    locked = PREF_PrefIsLocked("mail.html_compose");
+    XtVaSetValues(m_usehtml_toggle,
+                  XmNset, boolval,
+                  XmNsensitive, !locked,
+                  NULL);
+                 
+    PREF_GetIntPref("mail.default_html_action",&intval);
+    locked = PREF_PrefIsLocked("mail.default_html_action");
+    XtVaSetValues(m_nohtml_ask_toggle,
+                  XmNset, (intval == HTML_ACTION_ASK),
+                  XmNsensitive, !locked,
+                  NULL);
+    XtVaSetValues(m_nohtml_text_toggle,
+                  XmNset, (intval == HTML_ACTION_TEXT),
+                  XmNsensitive, !locked,
+                  NULL);
+    XtVaSetValues(m_nohtml_html_toggle,
+                  XmNset, (intval == HTML_ACTION_HTML),
+                  XmNsensitive, !locked,
+                  NULL);
+    XtVaSetValues(m_nohtml_both_toggle,
+                  XmNset, (intval == HTML_ACTION_BOTH),
+                  XmNsensitive, !locked,
+                  NULL);
+ 
+    setInitialized(TRUE);
 }
-
+ 
 // Member:       install
 // Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::install()
+ 
+void XFE_PrefsPageMailNewsHTML::install()
 {
-	XP_ASSERT(m_prefsDataMailNewsAddrBook);
-	PrefsDataMailNewsAddrBook     *fep = m_prefsDataMailNewsAddrBook;
-
-	// directory listing
-
-	DIR_SaveServerPreferences(fep->directories);
-	DIR_CleanUpServerPreferences(fep->deleted_directories);
-	fe_installMailNewsAddrBook();
 }
-
+ 
+ 
 // Member:       save
 // Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::save()
+ 
+void XFE_PrefsPageMailNewsHTML::save()
 {
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	Boolean                    b;
-
-	// XP_ASSERT(fep);
-
-	XtVaGetValues(fep->last_first_toggle, XmNset, &b, 0);
-	fe_globalPrefs.addr_book_lastname_first = b;
-
-	// Install preferences
-
-	install();
+    Bool boolval;
+ 
+    boolval = XmToggleButtonGadgetGetState(m_usehtml_toggle);
+    PREF_SetBoolPref("mail.html_compose",boolval);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_nohtml_ask_toggle);
+    if (boolval) PREF_SetIntPref("mail.default_html_action",HTML_ACTION_ASK);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_nohtml_text_toggle);
+    if (boolval) PREF_SetIntPref("mail.default_html_action",HTML_ACTION_TEXT);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_nohtml_html_toggle);
+    if (boolval) PREF_SetIntPref("mail.default_html_action",HTML_ACTION_HTML);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_nohtml_both_toggle);
+    if (boolval) PREF_SetIntPref("mail.default_html_action",HTML_ACTION_BOTH);
+   
+    install();
+   
+   
 }
-
-// Member:       insertDir
+ 
+// Member:       verify
 // Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::insertDir(DIR_Server *dir)
+ 
+Boolean XFE_PrefsPageMailNewsHTML::verify()
 {
-	// First figure out where to insert it
-
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	int                        pos = 0;
-	int                        count = fep->num_directories;
-	
-	if (count > 0) {
-		// Check if there is any selection
-		uint32     sel_count = 0;
-		const int *indices = 0;
-		fep->dir_outliner->getSelection(&indices, (int *) &sel_count);
-		if (sel_count > 0 && indices) {
-			pos = indices[0];
-		}
-	}
-
-	// Insert at pos
-
-	insertDirAtPos(pos, dir);
+    return TRUE;
 }
-
-// Member:       insertDirAtPos
+ 
+#endif  /* MOZ_MAIL_NEWS */
+ 
+#ifdef MOZ_MAIL_NEWS
+ 
+// ************************************************************************
+// ************************ Mail News Return Receipts  ********************
+// ************************************************************************
+ 
+ // Member:       XFE_PrefsPageMailNewsReceipts
+ // Description:  Constructor
+ // Inputs:
+ // Side effects: 
+ 
+XFE_PrefsPageMailNewsReceipts::XFE_PrefsPageMailNewsReceipts(XFE_PrefsDialog *dialog)
+    : XFE_PrefsPage(dialog)
+{
+}
+ 
+// Member:       ~XFE_PrefsPageMailNewsReceipts
+// Description:  destructor
+// Inputs:
+// Side effects: 
+ 
+XFE_PrefsPageMailNewsReceipts::~XFE_PrefsPageMailNewsReceipts()
+{
+}
+ 
+// Member:       create
+// Description:  Creates widgets
+// Inputs:
+// Side effects: 
+ 
+void XFE_PrefsPageMailNewsReceipts::create()
+{
+    Arg    av[10];
+    int    ac;
+ 
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+ 
+    Widget receipts_form;
+    m_wPage = receipts_form=
+        XmCreateForm(m_wPageForm, "mailnewsReceipts", av,ac);
+ 
+    Widget frame1, frame2, frame3, kids[5];
+    int i =0;
+    kids[i++]=frame1=createRequestReceiptsFrame(receipts_form, NULL);
+    XtVaSetValues(frame1, XmNtopAttachment, XmATTACH_FORM, 0);
+ 
+    kids[i++]=frame2=createReceiptsArriveFrame(receipts_form, frame1);
+    kids[i++]=frame3=createReceiveReceiptsFrame(receipts_form, frame2);
+     
+    XtManageChildren(kids,i);
+    XtManageChild(receipts_form);
+ 
+    setCreated(TRUE);
+}
+ 
+Widget XFE_PrefsPageMailNewsReceipts::createRequestReceiptsFrame(Widget parent,
+                                                                 Widget attachTo)
+{
+    Widget kids[10];
+    Arg    av[10];
+    int ac;
+    int i=0;
+ 
+    XP_ASSERT(parent);
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg(av[ac], XmNtopWidget, attachTo); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    Widget frame 
+        = XmCreateFrame(parent,"requestReceiptsFrame",av,ac);
+   
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    Widget label
+        = XmCreateLabelGadget(frame, "requestReceiptsLabel",av,ac);
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    Widget form
+        = XmCreateForm(frame,"requestReceiptsForm",av,ac);
+ 
+    // child Widgets
+ 
+    ac=0;
+    Widget radioBox=
+        XmCreateRadioBox(form, "requestReceiptsRB", av, ac);
+   
+    XtVaSetValues(radioBox,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+   
+ 
+    i=0;
+    ac=0;
+    kids[i++] = m_dsn_toggle =
+        XmCreateToggleButtonGadget(radioBox, "dsn", av, ac);
+    kids[i++] = m_mdn_toggle =
+        XmCreateToggleButtonGadget(radioBox, "mdn", av, ac);
+    kids[i++] = m_both_toggle =
+        XmCreateToggleButtonGadget(radioBox, "both", av, ac);
+ 
+    XtManageChildren(kids,i);
+    XtManageChild(radioBox);
+    XtManageChild(form);
+    XtManageChild(label);
+ 
+    return frame;
+}
+ 
+Widget XFE_PrefsPageMailNewsReceipts::createReceiptsArriveFrame(Widget parent,
+                                                                Widget attachTo)
+{
+    Widget kids[10];
+    Arg    av[50];
+    int ac;
+    int i=0;
+ 
+    XP_ASSERT(parent);
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg(av[ac], XmNtopWidget, attachTo); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    Widget frame 
+        = XmCreateFrame(parent,"receiptsArriveFrame",av,ac);
+   
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    Widget label
+        = XmCreateLabelGadget(frame, "receiptsArriveLabel",av,ac);
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    Widget form
+        = XmCreateForm(frame,"receiptsArriveForm",av,ac);
+ 
+    // child Widgets
+ 
+    ac=0;
+    Widget radioBox=
+        XmCreateRadioBox(form, "receiptsArriveRB", av, ac);
+   
+    XtVaSetValues(radioBox,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+   
+ 
+    i=0;
+    ac=0;
+    kids[i++] = m_inbox_toggle =
+        XmCreateToggleButtonGadget(radioBox, "inbox", av, ac);
+    kids[i++] = m_sentmail_toggle =
+        XmCreateToggleButtonGadget(radioBox, "sentmail", av, ac);
+ 
+    XtManageChildren(kids,i);
+    XtManageChild(radioBox);
+    XtManageChild(form);
+    XtManageChild(label);
+ 
+    return frame;
+}
+Widget XFE_PrefsPageMailNewsReceipts::createReceiveReceiptsFrame(Widget parent,
+                                                                 Widget attachTo)
+{
+    Widget kids[10];
+    Arg    av[50];
+    int ac;
+    int i=0;
+ 
+    XP_ASSERT(parent);
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+    XtSetArg(av[ac], XmNtopWidget, attachTo); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    Widget frame 
+        = XmCreateFrame(parent,"receiveReceiptsFrame",av,ac);
+   
+    ac=0;
+    XtSetArg(av[ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+    Widget label
+        = XmCreateLabelGadget(frame, "receiveReceiptsLabel",av,ac);
+ 
+    ac=0;
+    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+    Widget form
+        = XmCreateForm(frame,"receiveReceiptsForm",av,ac);
+ 
+    // child Widgets
+ 
+    ac=0;
+    Widget radioBox=
+        XmCreateRadioBox(form, "receiveReceiptsRB", av, ac);
+   
+    XtVaSetValues(radioBox,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_NONE,
+                  XmNbottomAttachment, XmATTACH_NONE,
+                  NULL);
+    i=0;
+    ac=0;
+    kids[i++] = m_never_toggle =
+        XmCreateToggleButtonGadget(radioBox, "never", av, ac);
+    kids[i++] = m_some_toggle =
+        XmCreateToggleButtonGadget(radioBox, "some", av, ac);
+ 
+    XtManageChildren(kids,i);
+    XtManageChild(radioBox);
+    XtManageChild(form);
+    XtManageChild(label);
+ 
+    return frame;
+}
+ 
+// Member:       init
 // Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::insertDirAtPos(int pos, DIR_Server *dir)
+ 
+void XFE_PrefsPageMailNewsReceipts::init()
 {
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	int                        count = fep->num_directories;
-	DIR_Server                *prev_dir;
-	
-	// Insert dir at position
-
-	if (count > 0) {
-		prev_dir = (DIR_Server*)XP_ListGetObjectNum(fep->directories,pos+1);
-		XP_ListInsertObjectAfter(fep->directories, prev_dir, dir);
-	}
-	else {
-		XP_ListAddObjectToEnd(fep->directories, dir);
-	}
-	fep->num_directories = XP_ListCount(fep->directories);
-
-	// Repaint 
-
-	fep->dir_outliner->change(0, fep->num_directories, fep->num_directories);
-
-	// Set selection
-
-	setSelectionPos(pos);
+  
+    Bool boolval;
+    Bool locked;
+    int32 intval;
+ 
+    // Request Receipts 
+ 
+    PREF_GetIntPref("mail.request.return_receipt",&intval);
+    locked = PREF_PrefIsLocked("mail.request.return_receipt");
+ 
+    XtVaSetValues(m_dsn_toggle,
+                  XmNset, (intval == RETURN_RECEIPTS_DSN),
+                  XmNsensitive, !locked,
+                  NULL);
+    XtVaSetValues(m_mdn_toggle,
+                  XmNset, (intval == RETURN_RECEIPTS_MDN),
+                  XmNsensitive, !locked,
+                  NULL);
+    XtVaSetValues(m_both_toggle,
+                  XmNset, (intval == RETURN_RECEIPTS_BOTH),
+                  XmNsensitive, !locked,
+                  NULL);
+ 
+   
+    // Receipts Arrives
+    PREF_GetIntPref("mail.incorporate.return_receipt",&intval);
+    locked = PREF_PrefIsLocked("mail.incorporate.return_receipt");
+ 
+    XtVaSetValues(m_inbox_toggle,
+                  XmNset, (intval == RECEIPTS_ARRIVE_INBOX),
+                  XmNsensitive, !locked,
+                  NULL);
+ 
+    XtVaSetValues(m_sentmail_toggle,
+                  XmNset, (intval == RECEIPTS_ARRIVE_SENTMAIL),
+                  XmNsensitive, !locked,
+                  NULL);
+ 
+    // Receive Receipts 
+    PREF_GetBoolPref("mail.request.return_receipt_on",&boolval);
+    locked = PREF_PrefIsLocked("mail.request.return_receipt_on");
+ 
+    XtVaSetValues(m_never_toggle,
+                  XmNset, boolval,
+                  XmNsensitive, !locked,
+                  NULL);
+                 
+    XtVaSetValues(m_some_toggle,
+                  XmNset, !boolval,
+                  XmNsensitive, !locked,
+                  NULL);
+     
+    setInitialized(TRUE);
 }
-
-// Member:       deleteDirAtPos
+ 
+// Member:       install
 // Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::deleteDirAtPos(int pos)
+ 
+void XFE_PrefsPageMailNewsReceipts::install()
 {
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	int                        count = fep->num_directories;
-
-	if (pos >= count) return;
-
-	// Remove the directory at pos
-
-	if (pos >=  fep->num_directories) return;
-	DIR_Server *dir = (DIR_Server*)XP_ListGetObjectNum(fep->directories,pos+1);
-	
-	DIR_Server *copy;
-	DIR_CopyServer(dir, &copy);
-	XP_ListAddObjectToEnd(fep->deleted_directories, copy);
-
-	if (! XP_ListRemoveObject(fep->directories, dir)) return;
-	fep->num_directories = XP_ListCount(fep->directories);
-
-	// Repaint
-
-	fep->dir_outliner->change(0, fep->num_directories, fep->num_directories);
-
-	// Set selection if there is more than one entry 
-
-	if (fep->num_directories > 0) {
-		if (pos >= fep->num_directories) pos--;
-		setSelectionPos(pos);
-	}
-	else {
-		setSelectionPos(OUTLINER_INIT_POS);
-	}
 }
-
-// Member:       swapDirs
+ 
+ 
+// Member:       save
 // Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::swapDirs(int pos1, int pos2, int sel_pos)
+ 
+void XFE_PrefsPageMailNewsReceipts::save()
 {
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	int                        count = fep->num_directories;
-	DIR_Server                *dir1;
-	DIR_Server                *dir2;
-	XP_List                   *ptr1;
-	XP_List                   *ptr2;
-
-	if ((pos1 >= count) ||
-		(pos2 >= count) ||
-		(sel_pos >= count))
-		return;
-
-	// Swap
-	
-	dir1 = (DIR_Server*)XP_ListGetObjectNum(fep->directories,pos1+1);
-	ptr1 = XP_ListFindObject(fep->directories, dir1);
-
-	dir2 = (DIR_Server*)XP_ListGetObjectNum(fep->directories,pos2+1);
-	ptr2 = XP_ListFindObject(fep->directories, dir2);
-
-	ptr1->object = (void *)dir2;
-	ptr2->object = (void *)dir1;
-
-	// Repaint
-
-	fep->dir_outliner->change(0, fep->num_directories, fep->num_directories);
-
-	// Set selection if there is more than one entry 
-
-	setSelectionPos(sel_pos);
+    Bool boolval;
+ 
+    boolval = XmToggleButtonGadgetGetState(m_dsn_toggle);
+    if (boolval) PREF_SetIntPref("mail.request.return_receipt", RETURN_RECEIPTS_DSN);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_mdn_toggle);
+    if (boolval) PREF_SetIntPref("mail.request.return_receipt", RETURN_RECEIPTS_MDN);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_both_toggle);
+    if (boolval) PREF_SetIntPref("mail.request.return_receipt", RETURN_RECEIPTS_BOTH);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_inbox_toggle);
+    if (boolval) PREF_SetIntPref("mail.incorporate.return_receipt", RECEIPTS_ARRIVE_INBOX);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_sentmail_toggle);
+    if (boolval) PREF_SetIntPref("mail.incorporate.return_receipt", RECEIPTS_ARRIVE_SENTMAIL);
+ 
+    boolval = XmToggleButtonGadgetGetState(m_never_toggle);
+    PREF_SetBoolPref("mail.request.return_receipt_on",boolval);
+ 
+    install();
+   
+   
 }
-
-// Member:       setSelelctionPos
+ 
+// Member:       verify
 // Description:  
 // Inputs:
 // Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::setSelectionPos(int pos)
+ 
+Boolean XFE_PrefsPageMailNewsReceipts::verify()
 {
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	int                        count = fep->num_directories;
-
-	if (pos >= count) return;
-
-	if (pos == OUTLINER_INIT_POS) {
-		XtVaSetValues(fep->delete_button, XmNsensitive, False, NULL);
-		XtVaSetValues(fep->up_button, XmNsensitive, False, NULL);
-		XtVaSetValues(fep->down_button, XmNsensitive, False, NULL);
-		XtVaSetValues(fep->edit_button, XmNsensitive, False, NULL);
-	}
-	else {
-		// Grey out the Delete/Edit button if it is Personal Address Book
-		DIR_Server *dir = (DIR_Server*)XP_ListGetObjectNum(fep->directories,pos+1);
-		fep->dir_outliner->selectItemExclusive(pos);
-		XtVaSetValues(fep->delete_button, XmNsensitive,
-					  (count != 0 && dir->dirType != PABDirectory), NULL);
-		XtVaSetValues(fep->edit_button, XmNsensitive,
-					  (count != 0 && dir->dirType != PABDirectory), NULL);
-		XtVaSetValues(fep->up_button, XmNsensitive, (pos != 0), NULL);
-		XtVaSetValues(fep->down_button, XmNsensitive, (pos != (count-1)), NULL);
-	}
+    return TRUE;
 }
 
-// Member:       deselelctionPos
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::deselectPos(int pos)
-{
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	int                        count = fep->num_directories;
-
-	if (pos >= count) return;
-
-	fep->dir_outliner->deselectItem(pos);
-}
-
-// Member:       getData
-// Description:  
-// Inputs:
-// Side effects: 
-
-PrefsDataMailNewsAddrBook *XFE_PrefsPageMailNewsAddrBook::getData()
-{
-	return m_prefsDataMailNewsAddrBook;
-}
-
-// Member:       cb_promote
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::cb_promote(Widget    /* w */,
-											   XtPointer closure,
-											   XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsAddrBook *thePage = (XFE_PrefsPageMailNewsAddrBook *)closure;
-	PrefsDataMailNewsAddrBook     *fep = thePage->getData();
-	int                            count = fep->num_directories;
-	int                            pos = 0;
-	uint32                         sel_count = 0;
-	const int                     *indices = 0;
-
-	if (count == 0) return;
-
-	fep->dir_outliner->getSelection(&indices, (int *) &sel_count);
-	if (sel_count > 0 && indices) {
-		pos = indices[0];
-		if (pos != 0) {
-			thePage->deselectPos(pos);
-			thePage->swapDirs(pos, pos-1, pos-1);
-		}
-	}
-}
-
-// Member:       cb_demote
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::cb_demote(Widget    /* w */,
-											  XtPointer closure,
-											  XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsAddrBook *thePage = (XFE_PrefsPageMailNewsAddrBook *)closure;
-	PrefsDataMailNewsAddrBook     *fep = thePage->getData();
-	int                            count = fep->num_directories;
-	int                            pos = 0;
-	uint32                         sel_count = 0;
-	const int                     *indices = 0;
-
-	if (count == 0) return;
-
-	fep->dir_outliner->getSelection(&indices, (int *) &sel_count);
-	if (sel_count > 0 && indices) {
-		pos = indices[0];
-		if (pos != (count-1)) {
-			thePage->deselectPos(pos);
-			thePage->swapDirs(pos, pos+1, pos+1);
-		}
-	}
-}
-
-// Member:       cb_add
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::cb_add(Widget    /* w */,
-										   XtPointer closure,
-										   XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsAddrBook *thePage = (XFE_PrefsPageMailNewsAddrBook *)closure;
-	XFE_PrefsDialog               *theDialog = thePage->getPrefsDialog();
-	Widget                         mainw = theDialog->getBaseWidget();
-
-	//	while (!XtIsWMShell(mainw) && (XtParent(mainw)!=0))
-	//		mainw = XtParent(mainw);
-
-	// Instantiate an LDAP dialog
-
-	XFE_PrefsLdapPropDialog *theLdapPropDialog = 0;
-
-	if ((theLdapPropDialog =
-		 new XFE_PrefsLdapPropDialog(theDialog, thePage, mainw, "prefsLdapProp")) == 0) {
-	    fe_perror(thePage->getContext(), XP_GetString(XFE_OUT_OF_MEMORY_URL));
-	    return;
-	}
-
-	// Initialize and pop up the LDAP dialog
-
-	theLdapPropDialog->initPage(0);
-	theLdapPropDialog->show();
-}
-
-// Member:       cb_edit
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::cb_edit(Widget    /* w */,
-											XtPointer closure,
-											XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsAddrBook *thePage = (XFE_PrefsPageMailNewsAddrBook *)closure;
-	XFE_PrefsDialog               *theDialog = thePage->getPrefsDialog();
-	PrefsDataMailNewsAddrBook     *fep = thePage->getData();
-	Widget                         mainw = theDialog->getBaseWidget();
-	int                            pos = 0;
-	uint32                         sel_count = 0;
-	const int                     *indices = 0;
-	DIR_Server                    *server;
-
-	// Find the entry that's selected
-
-	fep->dir_outliner->getSelection(&indices, (int *) &sel_count);
-	if (sel_count > 0 && indices) {
-		pos = indices[0];
-		if (pos >=  fep->num_directories) return;
-		server = (DIR_Server*)XP_ListGetObjectNum(fep->directories,pos+1);
-	}
-	else 
-		return;
-
-	//	while (!XtIsWMShell(mainw) && (XtParent(mainw)!=0))
-	//		mainw = XtParent(mainw);
-
-	// Instantiate an LDAP dialog
-
-	XFE_PrefsLdapPropDialog *theLdapPropDialog = 0;
-
-	if ((theLdapPropDialog =
-		 new XFE_PrefsLdapPropDialog(theDialog, thePage, mainw, "prefsLdapProp")) == 0) {
-	    fe_perror(thePage->getContext(), XP_GetString(XFE_OUT_OF_MEMORY_URL));
-	    return;
-	}
-
-	// Initialize and pop up the LDAP dialog
-
-	theLdapPropDialog->initPage(server);
-	theLdapPropDialog->show();
-}
-
-// Member:       cb_delete
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::cb_delete(Widget    /* w */,
-											  XtPointer closure,
-											  XtPointer /* callData */)
-{
-	XFE_PrefsPageMailNewsAddrBook *thePage = (XFE_PrefsPageMailNewsAddrBook *)closure;
-	PrefsDataMailNewsAddrBook     *fep = thePage->getData();
-	int                            count = fep->num_directories;
-	int                            pos = 0;
-	uint32                         sel_count = 0;
-	const int                     *indices = 0;
-
-	if (count == 0) return;
-
-	fep->dir_outliner->getSelection(&indices, (int *) &sel_count);
-	if (sel_count > 0 && indices) {
-		pos = indices[0];
-		thePage->deleteDirAtPos(pos);
-	}
-}
-
-// Member:       cb_toggleNameOrder
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageMailNewsAddrBook::cb_toggleNameOrder(Widget    w,
-													   XtPointer closure,
-													   XtPointer callData)
-{
-	XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)callData;
-	PrefsDataMailNewsAddrBook    *fep = (PrefsDataMailNewsAddrBook *)closure;
-
-	if (! cb->set) {
-		XtVaSetValues(w, XmNset, True, 0);
-	}
-	else if (w == fep->first_last_toggle) {
-		XtVaSetValues(fep->last_first_toggle, XmNset, False, 0);
-	}
-	else if (w == fep->last_first_toggle) {
-		XtVaSetValues(fep->first_last_toggle, XmNset, False, 0);
-	}
-	else
-		abort();	
-}
-
-/* Outlinable interface methods */
-
-void *XFE_PrefsPageMailNewsAddrBook::ConvFromIndex(int /* index */)
-{
-	return (void *)NULL;
-}
-
-int XFE_PrefsPageMailNewsAddrBook::ConvToIndex(void * /* item */)
-{
-	return 0;
-}
-
-char*XFE_PrefsPageMailNewsAddrBook::getColumnName(int column)
-{
-	switch (column){
-	case OUTLINER_COLUMN_NAME:
-		return STRING_COL_NAME;
-    default:
-		XP_ASSERT(0); 
-		return 0;
-    }
-}
-
-char *XFE_PrefsPageMailNewsAddrBook::getColumnHeaderText(int column)
-{
-  switch (column) 
-    {
-    case OUTLINER_COLUMN_NAME:
-      return "";
-    default:
-      XP_ASSERT(0);
-      return 0;
-    }
-}
-
-fe_icon *XFE_PrefsPageMailNewsAddrBook::getColumnHeaderIcon(int /* column */)
-{
-	return 0;
-
-}
-
-EOutlinerTextStyle XFE_PrefsPageMailNewsAddrBook::getColumnHeaderStyle(int /* column */)
-{
-	return OUTLINER_Default;
-}
-
-// This method acquires one line of data.
-void *XFE_PrefsPageMailNewsAddrBook::acquireLineData(int line)
-{
-	m_rowIndex = line;
-	return (void *)1;
-}
-
-void XFE_PrefsPageMailNewsAddrBook::getTreeInfo(Boolean * /* expandable */,
-												Boolean * /* is_expanded */,
-												int     * /* depth */,
-												OutlinerAncestorInfo ** /* ancestor */)
-{
-	// No-op
-}
-
-
-EOutlinerTextStyle XFE_PrefsPageMailNewsAddrBook::getColumnStyle(int /*column*/)
-{
-    return OUTLINER_Default;
-}
-
-char *XFE_PrefsPageMailNewsAddrBook::getColumnText(int column)
-{ 
-	PrefsDataMailNewsAddrBook *fep = m_prefsDataMailNewsAddrBook;
-	static char                line[OUTLINER_COLUMN_MAX_LENGTH+1];
-
-	*line = 0;
-    DIR_Server *dir = (DIR_Server*)XP_ListGetObjectNum(fep->directories,m_rowIndex+1);
-	if (! dir) return line;
-
-	switch (column) {
-    case OUTLINER_COLUMN_NAME:
-		sprintf(line, "%s", dir->description);
-		break;
-
-    default:
-		break;
-    }
-
-	return line;
-}
-
-fe_icon *XFE_PrefsPageMailNewsAddrBook::getColumnIcon(int /* column */)
-{
-	return 0;
-}
-
-void XFE_PrefsPageMailNewsAddrBook::releaseLineData()
-{
-	// No-op
-}
-
-void XFE_PrefsPageMailNewsAddrBook::Buttonfunc(const OutlineButtonFuncData *data)
-{
-	int row = data->row;
-
-	if (row < 0) {
-		// header
-		return;
-	} 
-
-	setSelectionPos(data->row);
-}
-
-void XFE_PrefsPageMailNewsAddrBook::Flippyfunc(const OutlineFlippyFuncData * /* data */)
-{
-	// No-op
-}
-
-XFE_Outliner *XFE_PrefsPageMailNewsAddrBook::getOutliner()
-{
-	return m_prefsDataMailNewsAddrBook->dir_outliner;
-}
 #endif // MOZ_MAIL_NEWS
 
 // ************************************************************************

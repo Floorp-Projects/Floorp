@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -12,39 +12,20 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1997 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#ifdef MOZ_LOC_INDEP
 
 #include "widgetry.h"
 #include "pw_public.h"
 
 
-extern Bool winli_QueryNetworkProfile(void);
+extern Bool winli_QueryNetworkProfile(BOOL bTempProfile);
 extern Bool FEU_StartGetCriticalFiles(const char * szProfileName, const char * szProfileDir);
-
-class CXPProgressDialog: public CDialog
-{
-public:
-	CXPProgressDialog(CWnd* pParent =NULL);
-
-	virtual  BOOL OnInitDialog( );
-	BOOL PreTranslateMessage( MSG* pMsg );
-    CProgressMeter m_ProgressMeter;
-	CStatic	m_PercentComplete;
-	int32 m_Min;
-	int32 m_Max;
-	int32 m_Range;
-	PW_CancelCallback m_cancelCallback;
-	void * m_cancelClosure;
-
-protected:
-	virtual void OnCancel();
-	virtual void DoDataExchange(CDataExchange*);
-	afx_msg int OnCreate( LPCREATESTRUCT );
-
-	DECLARE_MESSAGE_MAP()
-};
+extern Bool winli_Exit(void);
+extern void winli_RegisterCallbacks();
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -74,6 +55,8 @@ public:
 
 // Implementation
 protected:
+	void CRemoteProfileLoginDlg::GetPreferenceString(const CString name, CString & buffer, int nID); 
+    void CRemoteProfileLoginDlg::SetCheckItemLock(CString csPrefName, int  nID) ;
 
 	// Generated message map functions
 	//{{AFX_MSG(CLoginDlg)
@@ -106,7 +89,7 @@ public:
 	BOOL	m_bAddressBook;
 	BOOL	m_bSecurity;
 	BOOL	m_bJavaSec;
-	BOOL	m_bNavcntr;
+	BOOL	m_bHistory;
 	BOOL	m_bPrefs;
 	int		m_iLDAP;
 	int		m_iHTTP;
@@ -123,6 +106,10 @@ public:
 
 // Implementation
 protected:
+	void CAdvRemoteProfileLoginDlg::GetPreferenceString(const CString name, CString & buffer, int nID); 
+	void CAdvRemoteProfileLoginDlg::GetPreferenceString(const CString name, CString& buffer) ;
+	void CAdvRemoteProfileLoginDlg::GetPreferenceBool(const CString name, BOOL * bPref, int nID);
+    void CAdvRemoteProfileLoginDlg::SetCheckItemLock(CString csPrefName, int  nID) ;
 
 	// Generated message map functions
 	//{{AFX_MSG(CLoginDlg)
@@ -136,3 +123,5 @@ protected:
 
 private:
 };
+
+#endif /* MOZ_LOC_INDEP */

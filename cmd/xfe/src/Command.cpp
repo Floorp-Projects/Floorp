@@ -567,6 +567,7 @@ static struct cmd_mapping mapping[] = {
 	{ "mailNew",		xfeCmdNewMessage },
 #endif
 	{ "docInfo",		xfeCmdViewPageInfo },
+	{ "print",			xfeCmdPrint },
 	{ "delete",			xfeCmdClose },
 	{ "quit",			xfeCmdExit },
 

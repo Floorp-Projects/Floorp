@@ -45,22 +45,18 @@ public:
 
 	void defaultFocus();
 
-	virtual int getButtonsMaxWidth();
-	virtual void setButtonsWidth(int width);
-
 private:
-	Widget m_newsgroupForm;
-	Widget m_newsgroupLabel, m_newsgroupText;
-	Widget m_subscribeButton, m_expandallButton, 
+	Widget m_newsgroupText;
+	Widget m_subscribeButton, m_unsubscribeButton, m_expandallButton, 
 		m_collapseallButton, m_getdeletionsButton, 
 		m_stopButton, m_addserverButton;
-	Widget m_serverForm;
-	Widget m_serverLabel;
-	Widget m_sep1, m_sep2;
-	Widget m_buttonForm;
 
 	void newsgroup_typedown();
+	void newsgroup_selected();
+
 	static void newsgroup_typedown_callback(Widget, XtPointer, XtPointer);
+	static void newsgroup_selected_callback(Widget, XtPointer, XtPointer);
+
 };
 
 

@@ -239,31 +239,66 @@ XFE_ABDirGenTabView::setDlgValues()
 		 */
 		fe_SetTextField(m_textFs[ABDIR_DESCRIPTION], 
 						dir->description?dir->description:"");
-		fe_SetTextField(m_textFs[ABDIR_LDAPSERVER], 
-						dir->serverName?dir->serverName:"");
-		fe_SetTextField(m_textFs[ABDIR_SEARCHROOT], 
-						dir->searchBase?dir->searchBase:"");
-		char tmp[16];
-		XP_SAFE_SPRINTF(tmp, sizeof(tmp),
-						"%d",
-						dir->port);
-		fe_SetTextField(m_textFs[ABDIR_PORTNUMBER], 
-						tmp);
+		if (dir->dirType == PABDirectory) {
+#if 1
+			int i = 0;
+			for (i=ABDIR_LDAPSERVER; i < ABDIR_LAST; i++) {
+				fe_SetTextField(m_textFs[i], "");
+				XtSetSensitive(m_textFs[i], False);
+				XtSetSensitive(m_labels[i], False);
+			}/* for i */
+			for (i = ABDIR_SECUR; i < ABDIR_SECLAST; i++) {
+				XmToggleButtonSetState(m_toggles[i], False, FALSE);
+				XtSetSensitive(m_toggles[i], False);
+			}/* for i */
+#else
+			fe_SetTextField(m_textFs[ABDIR_LDAPSERVER], 
+							"");
+			fe_SetTextField(m_textFs[ABDIR_SEARCHROOT], 
+							"");
+			fe_SetTextField(m_textFs[ABDIR_PORTNUMBER], 
+							"");
+			fe_SetTextField(m_textFs[ABDIR_MAXHITS], 
+							"");
+			XtSetSensitive(m_textFs[ABDIR_LDAPSERVER], False);
+			XtSetSensitive(m_textFs[ABDIR_SEARCHROOT], False);
+			XtSetSensitive(m_textFs[ABDIR_PORTNUMBER], False);
+			XtSetSensitive(m_textFs[ABDIR_MAXHITS], False);
+			XmToggleButtonSetState(m_toggles[ABDIR_SECUR], False, FALSE);
+			XtSetSensitive(m_toggles[ABDIR_SECUR], False);
+			XmToggleButtonSetState(m_toggles[ABDIR_SAVEPASSWD], False, FALSE);
+			XtSetSensitive(m_toggles[ABDIR_SAVEPASSWD], False);
+	
+			XmToggleButtonSetState(m_toggles[ABDIR_USEPASSWD], False, TRUE);
+			XtSetSensitive(m_toggles[ABDIR_USEPASSWD], False);
+#endif
+		}
+		else {
+			fe_SetTextField(m_textFs[ABDIR_LDAPSERVER], 
+							dir->serverName?dir->serverName:"");
+			fe_SetTextField(m_textFs[ABDIR_SEARCHROOT], 
+							dir->searchBase?dir->searchBase:"");
+			char tmp[16];
+			XP_SAFE_SPRINTF(tmp, sizeof(tmp),
+							"%d",
+							dir->port);
+			fe_SetTextField(m_textFs[ABDIR_PORTNUMBER], 
+							tmp);
 		
-		XP_SAFE_SPRINTF(tmp, sizeof(tmp),
-						"%d",
-						dir->maxHits);
-		fe_SetTextField(m_textFs[ABDIR_MAXHITS], 
-						tmp);
-
-		XmToggleButtonSetState(m_toggles[ABDIR_SECUR], dir->isSecure, 
-							   FALSE);
-		XmToggleButtonSetState(m_toggles[ABDIR_SAVEPASSWD], dir->savePassword,
-							   FALSE);		
-		XmToggleButtonSetState(m_toggles[ABDIR_USEPASSWD], dir->enableAuth, 
-							   TRUE);		
-		XtSetSensitive(m_toggles[ABDIR_SAVEPASSWD], dir->enableAuth);
-
+			XP_SAFE_SPRINTF(tmp, sizeof(tmp),
+							"%d",
+							dir->maxHits);
+			fe_SetTextField(m_textFs[ABDIR_MAXHITS], 
+							tmp);
+			
+			XmToggleButtonSetState(m_toggles[ABDIR_SECUR], dir->isSecure, 
+								   FALSE);
+			XmToggleButtonSetState(m_toggles[ABDIR_SAVEPASSWD], dir->savePassword,
+								   FALSE);		
+			XmToggleButtonSetState(m_toggles[ABDIR_USEPASSWD], dir->enableAuth, 
+								   TRUE);		
+			XtSetSensitive(m_toggles[ABDIR_SAVEPASSWD], dir->enableAuth);
+		}
 	}/* if */
 	else {
 		/* clear

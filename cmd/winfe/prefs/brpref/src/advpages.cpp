@@ -985,4 +985,4 @@ CSmartUpdatePrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
 	return CBrowserPropertyPage::OnCommand(id, hwndCtl, notifyCode);
 }
 
-#endif /* MOZ_SMARTUPDATE */
+#endif /* MOZ_SMARTUPDATE */=======

@@ -40,6 +40,7 @@
 #define MAPI_IGNORE             0
 #define MAPI_SEND               1
 #define MAPI_SAVE               2
+#define MAPI_QUITWHENDONE       3
 
 
 // Forward declarations
@@ -228,11 +229,18 @@ protected:
 
 	afx_msg void OnUpdateSecurity(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateSecureStatus(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateToggleNameCompletion(CCmdUI *pCmdUI);
+	afx_msg void OnToggleNameCompletion();
+	afx_msg void OnUpdateShowNamePicker(CCmdUI *pCmdUI);
+	afx_msg void OnShowNamePicker();
     afx_msg LONG OnSetInitialFocus(WPARAM wParam, LPARAM lParam);
     LRESULT OnButtonMenuOpen(WPARAM wParam, LPARAM lParam);
 
+  	afx_msg void OnUpdateEncoding(CCmdUI* pCmdUI);
+  
     afx_msg LRESULT OnFindReplace(WPARAM wParam, LPARAM lParam) ;
- 	afx_msg LRESULT OnSetMessageString(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSetMessageString(WPARAM wParam, LPARAM lParam); 
+    afx_msg LONG OnProcessMAPIMessage(WPARAM wParam, LPARAM lParam); // rhp: for MAPI
 
 	DECLARE_MESSAGE_MAP()
 

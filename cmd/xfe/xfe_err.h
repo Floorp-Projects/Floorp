@@ -1525,6 +1525,44 @@ ResDef(XFE_ABDIR_USE_PASSWD, XFE_ERR_OFFSET + 611,
 ResDef(NO_SPELL_SHLIB_FOUND, XFE_ERR_OFFSET + 612,
        "No spellchk library found")
 
+ResDef(XFE_CHOOSE_FOLDER_INSTRUCT, XFE_ERR_OFFSET + 613,
+       "Choose where you would like your %s messages to be stored:")
+ResDef(XFE_FOLDER_ON_SERVER_FORMAT, XFE_ERR_OFFSET + 614,
+       "Place a copy in folder: '%s' on '%s'")
+ResDef(XFE_FOLDER_ON_FORMAT, XFE_ERR_OFFSET + 615,
+       "Folder '%s' on")
+ResDef(XFE_TEMPLATES_ON_SERVER, XFE_ERR_OFFSET + 616,
+       "Keep templates in '%s' on '%s'")
+ResDef(XFE_DRAFTS_ON_SERVER, XFE_ERR_OFFSET + 617,
+       "Keep drafts in '%s' on '%s'")
+ResDef(XFE_MAIL_SELF_FORMAT, XFE_ERR_OFFSET + 618,
+       "BCC: %s")
+
+ResDef(XFE_GENERAL_TAB, XFE_ERR_OFFSET + 619, "General")
+ResDef(XFE_ADVANCED_TAB, XFE_ERR_OFFSET + 620, "Advanced")
+ResDef(XFE_IMAP_TAB, XFE_ERR_OFFSET + 621, "IMAP")
+ResDef(XFE_SHARING, XFE_ERR_OFFSET + 622, "Sharing")
+ResDef(XFE_ACL_NOT_SUPPORTED, XFE_ERR_OFFSET + 623,
+	   "This server does not support shared folders")
+ResDef(XFE_ACL_PERMISSIONS, XFE_ERR_OFFSET + 624,
+	   "You have the following permissions:")
+ResDef(XFE_ACL_SHARE_PRIVILEGES, XFE_ERR_OFFSET + 625,
+	   "Share this and other folders with network users \n\
+        and display and set access privileges.")
+ResDef(XFE_ACL_FOLDER_TYPE, XFE_ERR_OFFSET + 626,
+	   "Folder Type:")
+
+ResDef(XFE_POP_TAB, XFE_ERR_OFFSET+627, "POP")
+     
+ResDef(XFE_AUTOQUOTE_STYLE_ABOVE, XFE_ERR_OFFSET+628,"above the quoted text")
+ResDef(XFE_AUTOQUOTE_STYLE_BELOW, XFE_ERR_OFFSET+629,"below the quoted text")
+ResDef(XFE_AUTOQUOTE_STYLE_SELECT,XFE_ERR_OFFSET+630,"select the quoted text")
+
+ResDef(XFE_NEWSSERVER_DEFAULT, XFE_ERR_OFFSET+631, " (default)")
+
+ResDef(XFE_FORWARD_INLINE, XFE_ERR_OFFSET+632, "Inline")
+ResDef(XFE_FORWARD_QUOTED, XFE_ERR_OFFSET+633, "Quoted")
+ResDef(XFE_FORWARD_ATTACH, XFE_ERR_OFFSET+634, "As Attachment")
 END_STR(mcom_cmd_xfe_xfe_err_h_strings)
 
 #endif /* __XFE_XFE_ERR_H_ */

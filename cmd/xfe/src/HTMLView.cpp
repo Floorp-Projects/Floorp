@@ -28,6 +28,7 @@
 #define D(x)
 #endif
 
+#include "rosetta.h"
 #include "HTMLView.h"
 #include "BookmarkFrame.h"
 #include "MozillaApp.h"
@@ -561,8 +562,8 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
 									NULL,      // priority
 									NULL,      // attachment
 									NULL,      // newspost_url
-									FALSE,     // encrypt_p
-									FALSE);    // sign_p
+									FALSE,     // xxx_p
+									FALSE);    // xxx2_p
 
       // Since they are only sending the link,
       // I am guessing that they want a plaintext editor.
@@ -738,11 +739,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
       getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
       return;
     }
-  else if (IS_CMD(xfeCmdViewSecurity))
-    {
-      fe_sec_logo_cb(NULL, m_contextData, NULL);
-      return;
-    }
+  HG28732
   else if (IS_CMD(xfeCmdAddBookmark))
     {
       History_entry *h = SHIST_GetCurrent (&m_contextData->hist);
@@ -1250,10 +1247,7 @@ XFE_HTMLView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInfo*
     {
       return True;
     }
-  else if (IS_CMD(xfeCmdViewSecurity))
-    {
-      return True; // should this always be enabled?
-    }
+  HG20931
   else if (IS_CMD(xfeCmdOpenUrl))
     {
       return True; // should this always be enabled?
@@ -1370,7 +1364,7 @@ XFE_HTMLView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
       || IS_CMD(xfeCmdRefresh)
       || IS_CMD(xfeCmdViewPageSource)
       || IS_CMD(xfeCmdViewPageInfo)
-      || IS_CMD(xfeCmdViewSecurity)
+      HG29322
       || IS_CMD(xfeCmdAddBookmark)
       || IS_CMD(xfeCmdOpenUrl)
       || IS_CMD(xfeCmdOpenUrlFromSelection)

@@ -51,10 +51,8 @@ public:
 	virtual void setButtonsWidth(int width);
 
 private:
-	Widget m_topForm;
-	Widget m_searchForm, m_searchLabel, m_searchText;
-	Widget m_onserverForm, m_onserverLabel;
-	Widget m_buttonForm, m_searchnowButton, m_subscribeButton, m_sep1, m_stopButton;
+	Widget m_searchText;
+	Widget m_searchnowButton, m_subscribeButton, m_unsubscribeButton, m_stopButton;
 	
 	static void search_activate_callback(Widget, XtPointer, XtPointer);
 };

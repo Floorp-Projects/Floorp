@@ -84,7 +84,7 @@ public:
 					 Widget          parent,
 					 MWContext      *context,
 					 ABSearchInfo_t *info);
-	~XFE_ABSearchView();
+	virtual ~XFE_ABSearchView();
 
 	void        setParams(ABSearchInfo_t *info);
 

@@ -185,6 +185,8 @@ extern "C" MSG_Pane *FE_CreateCompositionPane(MWContext *pOldContext,
 
 	XP_Bool htmlCompose;
 	PREF_GetBoolPref("mail.html_compose",&htmlCompose);
+	if (theApp.m_bReverseSenseOfHtmlCompose)
+		htmlCompose = !htmlCompose;
 
 	if (editorType == MSG_HTML_EDITOR)
 	  htmlCompose = TRUE;
@@ -292,6 +294,7 @@ extern "C" MSG_Pane *FE_CreateCompositionPane(MWContext *pOldContext,
                 if (pUrl != NULL)
                 {
 //                    pUrl->pre_exit_fn = wfe_GoldDoneLoading;
+					pUrl->internal_url = TRUE;
                     pContext->GetUrl(pUrl, FO_CACHE_AND_PRESENT);
                     pContext->GetContext()->bIsComposeWindow = TRUE;
                 }

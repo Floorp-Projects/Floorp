@@ -107,6 +107,9 @@ public:
 	BOOL AttachmentsVisible() const;
 	void UpdateFocusFrame();
 	void SetCSID(int16 doc_csid);
+	//Does this view or its children have focus
+	BOOL HasFocus();
+	CWnd* GetMessageBodyView() { return m_pViewMessage; }
 
 protected:
 

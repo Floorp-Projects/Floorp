@@ -474,16 +474,16 @@ extern "C" size_t FE_StrfTime(MWContext *context, char *result, size_t maxsize, 
 		{
 		case XP_TIME_FORMAT:
 			// return strftime (result, maxsize, "%X", timeptr);
-			if (n = GetTimeFormat(LOCALE_SYSTEM_DEFAULT, TIME_FORCE24HOURFORMAT | TIME_NOSECONDS | TIME_NOTIMEMARKER, &daytime, NULL, result, maxsize))
+			if (n = GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &daytime, NULL, result, maxsize))
 				return n;
 			else
 				return strftime (result, maxsize, "%H:%M", timeptr);
 		case XP_WEEKDAY_TIME_FORMAT:
 			// return strftime (result, maxsize, "%a %X", timeptr);
-			if (GetDateFormat(LOCALE_SYSTEM_DEFAULT,0,&daytime,"ddd ", result, maxsize))
+			if (GetDateFormat(LOCALE_USER_DEFAULT,0,&daytime,"ddd ", result, maxsize))
 			{
 				n = strlen(result);
-				if (m = GetTimeFormat(LOCALE_SYSTEM_DEFAULT, TIME_FORCE24HOURFORMAT | TIME_NOSECONDS | TIME_NOTIMEMARKER, &daytime, NULL, result+n, maxsize-n))
+				if (m = GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &daytime, NULL, result+n, maxsize-n))
 					return n + m;
 				else
 					return strftime (result, maxsize, "%a %H:%M", timeptr);
@@ -492,11 +492,11 @@ extern "C" size_t FE_StrfTime(MWContext *context, char *result, size_t maxsize, 
 				return strftime (result, maxsize, "%a %H:%M", timeptr);
 		case XP_DATE_TIME_FORMAT:
 			// return strftime (result, maxsize, "%x %X", timeptr);
-			if (GetDateFormat(LOCALE_SYSTEM_DEFAULT,DATE_SHORTDATE, &daytime,NULL, result, maxsize))
+			if (GetDateFormat(LOCALE_USER_DEFAULT,DATE_SHORTDATE, &daytime,NULL, result, maxsize))
 			{
 				n = strlen(result);
 				result[n++] = ' ';
-				if (m = GetTimeFormat(LOCALE_SYSTEM_DEFAULT, TIME_FORCE24HOURFORMAT | TIME_NOSECONDS | TIME_NOTIMEMARKER, &daytime, NULL, result+n, maxsize-n))
+				if (m = GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &daytime, NULL, result+n, maxsize-n))
 					return m + n;
 				else
 					return strftime (result, maxsize, "%x %H:%M", timeptr);
@@ -505,11 +505,11 @@ extern "C" size_t FE_StrfTime(MWContext *context, char *result, size_t maxsize, 
 				return strftime (result, maxsize, "%x %H:%M", timeptr);
 		case XP_LONG_DATE_TIME_FORMAT:
 			// return strftime (result, maxsize, "%x %X", timeptr);
-			if (GetDateFormat(LOCALE_SYSTEM_DEFAULT,DATE_LONGDATE, &daytime,NULL, result, maxsize))
+			if (GetDateFormat(LOCALE_USER_DEFAULT,DATE_LONGDATE, &daytime,NULL, result, maxsize))
 			{
 				n = strlen(result);
 				result[n++] = ' ';
-				if (m = GetTimeFormat(LOCALE_SYSTEM_DEFAULT, TIME_FORCE24HOURFORMAT | TIME_NOTIMEMARKER, &daytime, NULL, result+n, maxsize-n))
+				if (m = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &daytime, NULL, result+n, maxsize-n))
 					return m + n;
 				else
 					return strftime (result, maxsize, "%x %H:%M", timeptr);

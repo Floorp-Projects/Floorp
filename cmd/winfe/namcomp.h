@@ -31,6 +31,7 @@
 #include "mailfrm.h"
 #include "mailpriv.h"
 #include "mnrccln.h"
+#include "abcom.h"
 
 class CNameCompletion;
 class CNameCompletionOutliner;
@@ -47,10 +48,10 @@ class CNameCompletionEntryList;
 #define ID_COLADDR_LOCALITY			6
 #define ID_COLADDR_NICKNAME			7
 
-// array of indexes for IDB_ADDRESSBOOK bitmap
-#define IDX_ADDRESSBOOKPERSON   0
-#define IDX_ADDRESSBOOKLIST		1
-#define IDX_ADDRESSBOOKPERCARD  2
+// array of indexes for IDB_DIRLIST bitmap
+#define IDX_NAME_DIRLDAPAB			0
+#define IDX_NAME_DIRPERSONALAB		1
+#define IDX_NAME_DIRMAILINGLIST		2
 
 // name completion context
 class CNameCompletionCX: public CStubsCX
@@ -147,10 +148,13 @@ protected:
 	CNameCompletionOutliner			*m_pOutliner;
 
 	LPMSGLIST						m_pIAddrList;
-	ABPane							*m_addrBookPane;
+	MSG_Pane 						*m_pPickerPane;
 	BOOL							m_bSearching;
+	BOOL							m_bInitDialog;		//Has InitDialog been called
 	CMailNewsResourceSwitcher		m_MailNewsResourceSwitcher;
 	LPCTSTR							m_lpszSearchString;
+	AB_NameCompletionCookie*		m_pCookie;
+	BOOL							m_bFreeCookie;
 
 	// IUnknown Interface
 	STDMETHODIMP			QueryInterface(REFIID,LPVOID *);
@@ -170,6 +174,7 @@ protected:
 // Operations
 public:
 	CNameCompletion(LPCTSTR lpszSearchString, CWnd * parent = NULL);
+	~CNameCompletion();
 
 	enum { ToolInvalid = -1, ToolText = 0, ToolPictures = 1, ToolBoth = 2 };
 
@@ -195,16 +200,31 @@ public:
 	static void HandleErrorReturn(int errorID);
 
 	void Create();
-	void DoUpdateAddressBook( CCmdUI* pCmdUI, AB_CommandType cmd, BOOL bUseCheck = TRUE );
+	void DoUpdateCommand( CCmdUI* pCmdUI, AB_CommandType cmd, BOOL bUseCheck = TRUE );
+	void DoCommand(AB_CommandType cmd);
 
 	void UpdateButtons();
 	void PerformDirectorySearch();
+	//User is responsible for freeing returned cookie.  Each call for a given session
+	//returns same value.
+	AB_NameCompletionCookie *GetNameCompletionCookie() { return m_pCookie;}
+	void OnAddToAddressBook(UINT nID);
+
+
+
 
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CNameCompletion)
 	public:
 	virtual  BOOL OnInitDialog( );
+	afx_msg BOOL OnCommand( WPARAM wParam, LPARAM lParam );
+	virtual  int DoModal( );
+	afx_msg void OnUpdateProperties( CCmdUI *pCmdUI );
+	afx_msg void OnProperties();
+	afx_msg void OnUpdateOnlineStatus(CCmdUI *pCmdUI);
+
+
 	protected:
 	//}}AFX_VIRTUAL
 
@@ -227,24 +247,48 @@ protected:
 
 /****************************************************************************
 *
+*	Class: CNameCompletionLineData
+*
+*	DESCRIPTION:
+*		
+*
+****************************************************************************/
+class CNameCompletionLineData
+{
+
+public:
+	AB_AttributeValue *m_pValues;
+	int m_nLine;
+	int m_nNumColumns;
+
+	CNameCompletionLineData(AB_AttributeValue *pValues, int numColumns, int line);
+	~CNameCompletionLineData();
+};
+
+/****************************************************************************
+*
 *	Class: CNameCompletionOutliner
 *
 *	DESCRIPTION:
 *		This class is the column/list object in the name completion dialog
 *
 ****************************************************************************/
-class CNameCompletionOutliner : public COutliner
+class CNameCompletionOutliner : public CMSelectOutliner
 {
 friend class CNameCompletionOutlinerParent;
 
 protected:
 	int					m_lineindex;
 	char*				m_pszExtraText;
-	ABPane*				m_pane;
+	MSG_Pane*			m_pane;
 	int					m_iMysticPlane;
 	MWContext*			m_pContext;
-    AB_EntryLine		m_EntryLine;
 	HFONT				m_hFont;
+	CNameCompletionLineData*	m_pLineData;
+    AB_AttribID*		m_pEntryAttrib;
+	uint16				m_nNumColumns;
+
+
 
 public:
     CNameCompletionOutliner ( );
@@ -265,9 +309,8 @@ public:
     virtual int TranslateIcon ( void *);
     virtual int TranslateIconFolder ( void *);
 
-	void SetPane( ABPane *pane );
-	ABPane* GetPane() { return m_pane; }
-	void SetColumnsForDirectory (DIR_Server* pServer);
+	void SetPane( MSG_Pane *pane );
+	MSG_Pane* GetPane() { return m_pane; }
 
 	MWContext *GetContext() { return m_pContext; }
 	void SetContext( MWContext *pContext ) { m_pContext = pContext; }
@@ -284,6 +327,8 @@ public:
     virtual BOOL RenderData ( UINT iColumn, CRect & rect, CDC & pdc, const char * );
 
     virtual BOOL ColumnCommand ( int iColumn, int iLine );
+    virtual void PropertyMenu(int iSel, UINT flags=0);
+
 
 // Implementation
 protected:
@@ -293,6 +338,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 
+	void AppendAddressBookMenuItem(CMenu *pMenu);
 
 };
 

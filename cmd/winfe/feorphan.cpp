@@ -127,9 +127,7 @@ void OpenDraftExit (URL_Struct *url_struct, int/*status*/,MWContext *pContext)
 int PR_CALLBACK
 DirServerListChanged(const char *pref, void *data)
 {
-	CString msg = "abook.nab";
-
-	DIR_GetServerPreferences(&theApp.m_directories, msg);
+	theApp.m_directories = DIR_GetDirServers();
 	return TRUE;
 }
 #endif // MOZ_LDAP

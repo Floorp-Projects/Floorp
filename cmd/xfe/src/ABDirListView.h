@@ -36,9 +36,9 @@ public:
 					  XP_List       *directories);
 	virtual ~XFE_ABDirListView();
 
-	void paneChanged(XP_Bool asynchronous,
-					 MSG_PANE_CHANGED_NOTIFY_CODE notify_code,
-					 int32 value);
+	virtual void paneChanged(XP_Bool asynchronous,
+							 MSG_PANE_CHANGED_NOTIFY_CODE notify_code,
+							 int32 value);
 
 
 	/* used by toplevel to see which view can handle a command.  Returns true
@@ -196,7 +196,12 @@ private:
 	AB_ContainerInfo *m_containerLine;
 	AB_ContainerInfo *m_activeContainer;
 	int32             m_numLines;
+
+#if defined(MOZ_MAIL_NEWS)
+	MSG_ViewIndex     m_dataIndex;
+#endif /* MOZ_MAIL_NEWS */
 #endif /* USE_ABCOM */
 
 };
+
 #endif /* _XFE_ABDIRLISTVIEW_H */

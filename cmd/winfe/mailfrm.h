@@ -179,6 +179,8 @@ public:
 
 	void ActivateFrame( int nCmdShow = -1 );
 	virtual void RefreshNewEncoding(int16 doc_csid, BOOL bSave = TRUE);
+	static BOOL CleanupFolders(MSG_Pane *pPane);
+
 
 protected:
 	virtual void SetSort( int idSort ) {}
@@ -191,11 +193,13 @@ protected:
 	int m_iMessageMenuPos;
 	int m_iMoveMenuPos;
 	int m_iCopyMenuPos;
+	int m_iAddAddressBookMenuPos;
 
 	int m_iFileMenuPos;
 	int m_iAttachMenuPos;
 
 	virtual void UpdateFileMenus();
+	virtual void UpdateAddressBookMenus();
 	virtual void UpdateAttachmentMenus();
 
 	void ModalStatusBegin( int iModalDelay );
@@ -271,6 +275,8 @@ protected:
 	afx_msg void OnUpdateSetupWizard( CCmdUI *pCmdUI );
 	afx_msg void OnServerStuff();
 	afx_msg void OnUpdateServerStuff( CCmdUI *pCmdUI );
+	afx_msg void OnEditProperties();
+	afx_msg void OnUpdateProperties( CCmdUI *pCmdUI );
 
 	// View/Sort Menu Items
 	afx_msg void OnSortAgain ();
@@ -329,6 +335,8 @@ protected:
 	afx_msg void OnUpdatePrevious ( CCmdUI* pCmdUI );
 	afx_msg void OnNextUnread ();
 	afx_msg void OnUpdateNextUnread ( CCmdUI* pCmdUI );
+	afx_msg void OnFirstUnread();
+	afx_msg void OnUpdateFirstUnread(CCmdUI *pCmdUI);
 	afx_msg void OnNext();
 	afx_msg void OnUpdateNext ( CCmdUI* pCmdUI );
 	afx_msg void OnNextFolder();
@@ -359,6 +367,7 @@ protected:
 	afx_msg void OnUpdateDeliverNow(CCmdUI*);
 	afx_msg void OnReply ();
 	afx_msg void OnUpdateReply ( CCmdUI* pCmdUI );
+	afx_msg void OnReplyButton();
 	afx_msg void OnReplyAll ();
 	afx_msg void OnUpdateReplyAll ( CCmdUI* pCmdUI );
 	afx_msg void OnPostNew ();
@@ -369,10 +378,14 @@ protected:
 	afx_msg void OnUpdatePostAndMail ( CCmdUI * pCmdUI );
 	afx_msg void OnPostReply ();
 	afx_msg void OnUpdatePostReply ( CCmdUI* pCmdUI );
+	afx_msg void OnForwardButton ();
+	afx_msg void OnUpdateForwardButton  ( CCmdUI* pCmdUI );
 	afx_msg void OnForward ();
 	afx_msg void OnUpdateForward  ( CCmdUI* pCmdUI );
 	afx_msg void OnForwardQuoted ();
 	afx_msg void OnUpdateForwardQuoted ( CCmdUI * pCmdUI );
+	afx_msg void OnForwardInline ();
+	afx_msg void OnUpdateForwardInline ( CCmdUI * pCmdUI );
 	afx_msg void OnKill();
 	afx_msg void OnUpdateKill( CCmdUI *pCmdUI );
 	afx_msg void OnWatch();
@@ -415,10 +428,18 @@ protected:
 	afx_msg void OnUpdateCompressAll ( CCmdUI* pCmdUI );
 	afx_msg void OnEmptyTrash ();
 	afx_msg void OnUpdateEmptyTrash ( CCmdUI * pCmdUI );
+
+	//old address book
 	afx_msg void OnAddToAddressBook ();
 	afx_msg void OnUpdateAddToAddressBook ( CCmdUI * pCmdUI );
 	afx_msg void OnAddAllToAddressBook ();
 	afx_msg void OnUpdateAddAllToAddressBook ( CCmdUI * pCmdUI );
+
+	//new address book
+	afx_msg void OnUpdateAddSenderAddressBook(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateAddAllAddressBook(CCmdUI *pCmdUI);
+	afx_msg void OnAddSenderAddressBook(UINT nID);
+	afx_msg void OnAddAllAddressBook(UINT nID);
 
 	// Stop
 	afx_msg void OnInterrupt();
@@ -440,7 +461,33 @@ protected:
 	afx_msg void OnPriorityHighest();
 	afx_msg void OnUpdatePriority( CCmdUI *pCmdUI );
 
+	afx_msg void OnToggleEncoding1();
+    afx_msg void OnToggleEncoding2();
+    afx_msg void OnToggleEncoding3();
+    afx_msg void OnToggleEncoding4();
+    afx_msg void OnToggleEncoding5();
+    afx_msg void OnToggleEncoding6();
+    afx_msg void OnToggleEncoding7();
+    afx_msg void OnToggleEncoding8();
+    afx_msg void OnToggleEncoding9();
+    afx_msg void OnToggleEncoding10();
+    afx_msg void OnToggleEncoding11();
+    afx_msg void OnToggleEncoding12();
+    afx_msg void OnToggleEncoding13();
+    afx_msg void OnToggleEncoding14();
+    afx_msg void OnToggleEncoding15();
+    afx_msg void OnToggleEncoding16();
+    afx_msg void OnToggleEncoding17();
+    afx_msg void OnToggleEncoding18();
+    afx_msg void OnToggleEncoding19();
+    afx_msg void OnToggleEncoding20();
+    afx_msg void OnUpdateEncoding(CCmdUI* pCmdUI);
+
 	DECLARE_MESSAGE_MAP()
+
+	void OnUpdateAddAddressBook(CCmdUI *pCmdUI, MSG_CommandType command);
+	void OnAddAddressBook(UINT nID, MSG_CommandType command);
+
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -479,6 +526,7 @@ protected:
 };
 
 extern MSG_MessagePaneCallbacks MsgPaneCB;
+extern int iMailFrameCount;
 
 /////////////////////////////////////////////////////////////////////////////
 #endif

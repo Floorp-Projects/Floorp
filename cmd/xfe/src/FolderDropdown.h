@@ -36,7 +36,8 @@ public:
 					   Widget parent,
 					   XP_Bool allowServerSelection = TRUE,
 					   XP_Bool showNewsgroups = TRUE,
-					   XP_Bool boldWithNew = FALSE);
+					   XP_Bool boldWithNew = FALSE,
+                       XP_Bool showFolders = TRUE);
 
 	virtual ~XFE_FolderDropdown();
 
@@ -51,6 +52,7 @@ public:
 
 protected:
 private:
+    MSG_Master *m_master;
 	XmString makeListItemFromLine(MSG_FolderLine* line);
 
 	void buildList(MSG_FolderInfo *info, int *position);
@@ -72,6 +74,7 @@ private:
 	XP_Bool m_popupServer;
 	XP_Bool m_showNewsgroups;
 	XP_Bool m_boldWithNew;
+    XP_Bool m_showFolders;
 
 	int m_lastSelectedPosition;
 

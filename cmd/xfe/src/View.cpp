@@ -34,6 +34,9 @@ const char * XFE_View::chromeNeedsUpdating = "XFE_View::chromeNeedsUpdating";
 const char * XFE_View::commandNeedsUpdating = "XFE_View::commandNeedsUpdating";
 const char * XFE_View::statusNeedsUpdating = "XFE_View::statusNeedsUpdating";
 const char * XFE_View::statusNeedsUpdatingMidTruncated = "XFE_View::statusNeedsUpdatingMidTruncated";
+const char *XFE_View::allConnectionsCompleteCallback = "XFE_View::allConnectionsCompleteCallback";
+
+static char myClassName[] = "XFE_View::className";
 
 XFE_View::XFE_View(XFE_Component *toplevel_component,
 		   XFE_View *parent_view, MWContext *context) : XFE_Component(toplevel_component)
@@ -65,6 +68,22 @@ XFE_View::~XFE_View()
     }
 
   XP_FREE(m_subviews);
+}
+
+const char* 
+XFE_View::getClassName()
+{
+	return myClassName;
+}
+
+void
+XFE_View::allConnectionsComplete(MWContext  *context)
+{
+	/* Tao_27apr98
+	 * Notify whoever interested in "allConnectionsComplete" event
+	 */
+	notifyInterested(XFE_View::allConnectionsCompleteCallback, (void*) context);
+	notifyInterested(XFE_View::chromeNeedsUpdating);
 }
 
 XFE_View *
@@ -170,6 +189,9 @@ XFE_View::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
   else if ( cmd == xfeCmdSearchAddress)
     {
 	  fe_showLdapSearch(XfeAncestorFindApplicationShell(getToplevel()->getBaseWidget()),
+						/* Tao: we might need to check if this returns a 
+						 * non-NULL frame
+						 */
 						ViewGlue_getFrame(m_contextData),
 						(Chrome*)NULL);
 	

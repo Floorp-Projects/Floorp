@@ -23,12 +23,15 @@
  */
  
 #include "stdafx.h"
+
+#include "rosetta.h"
 #include "resource.h"
 #include "compstd.h"
 #include "compbar.h"
 #include "compfrm.h"
 #include "compfile.h"
 #include "apiaddr.h"
+#include "addrfrm.h"  //For MOZ_NEWADDR
 
 #include "msg_srch.h"
 
@@ -62,8 +65,7 @@ BEGIN_MESSAGE_MAP(CComposeBar, CDialogBar)
     ON_WM_LBUTTONUP()
     ON_WM_ERASEBKGND()
     ON_WM_DROPFILES()
-    ON_BN_CLICKED(ID_ENCRYPTED,OnUpdateOptions)
-    ON_BN_CLICKED(ID_SIGNED,OnUpdateOptions)
+    HG38729
  	ON_MESSAGE(WM_LEAVINGLASTFIELD,OnLeavingLastField)
 
 END_MESSAGE_MAP()
@@ -71,7 +73,7 @@ END_MESSAGE_MAP()
 extern "C" char * wfe_ExpandForNameCompletion(char * pString);
 extern "C" char * wfe_ExpandName(char * pString);
 
-CComposeBar::CComposeBar () :
+CComposeBar::CComposeBar (MWContext *pContext) :
     CDialogBar ()
 {
 	m_iBoxHeight = 0;
@@ -115,6 +117,7 @@ CComposeBar::CComposeBar () :
 	ASSERT(m_pIImage);
 	if (!m_pIImage->GetResourceID())
 		m_pIImage->Initialize(IDB_COMPOSETABS,16,16);
+	m_pContext = pContext;
 }
 
 CComposeBar::~CComposeBar ( )
@@ -822,8 +825,9 @@ int CComposeBar::OnCreate( LPCREATESTRUCT lpCreateStruct )
     m_pUnkAddressControl = api->CreateClassInstance(
 	    APICLASS_ADDRESSCONTROL, NULL, (APISIGNATURE)pCompose);
     m_pUnkAddressControl->QueryInterface(IID_IAddressControl,(LPVOID*)&m_pIAddressList);
-    m_pIAddressList->SetControlParent(this);
 
+    m_pIAddressList->SetControlParent(this);
+	m_pIAddressList->SetContext(m_pContext);
     // Static text is translated to many languages
     // That's why we choose font name based on resource definition.
 	CClientDC dc(this);
@@ -983,6 +987,20 @@ void CComposeBar::UpdateHeaderInfo ( void )
             char * szName, * szType;
 	        if(m_pIAddressList->GetEntry(i,&szType, &szName))
 	        {
+#ifdef MOZ_NEWADDR
+				AB_NameCompletionCookie *pCookie = NULL;
+				int nNumResults;
+				m_pIAddressList->GetNameCompletionCookieInfo(&pCookie, &nNumResults, i);
+
+				if(pCookie && nNumResults == 1)
+				{
+					entry[iRealCount].header_value = 
+						AB_GetExpandedHeaderString(pCookie);
+			
+				}
+				else
+
+#endif
 		        entry[iRealCount].header_value = XP_STRDUP(szName);
 		        if (!strcmp(szType,szLoadString(IDS_ADDRESSTO)))
 			        entry[iRealCount].header_type = MSG_TO_HEADER_MASK;
@@ -1033,8 +1051,7 @@ void CComposeBar::UpdateHeaderInfo ( void )
 										  untranslatedPriority, 32);
         MSG_SetCompHeader(pComposePane, MSG_PRIORITY_HEADER_MASK, untranslatedPriority);
         MSG_SetCompBoolHeader(pComposePane, MSG_RETURN_RECEIPT_BOOL_HEADER_MASK, m_bReceipt);
-        MSG_SetCompBoolHeader(pComposePane, MSG_ENCRYPTED_BOOL_HEADER_MASK, m_bEncrypted);
-        MSG_SetCompBoolHeader(pComposePane, MSG_SIGNED_BOOL_HEADER_MASK, m_bSigned);
+        HG87211
       	MSG_SetCompBoolHeader(pComposePane, MSG_UUENCODE_BINARY_BOOL_HEADER_MASK, m_bUseUUENCODE);
         MSG_SetCompBoolHeader(pComposePane, MSG_ATTACH_VCARD_BOOL_HEADER_MASK, m_bAttachVCard);
 
@@ -1102,19 +1119,7 @@ void CComposeBar::CreateOptionsPage()
     CString cs;
 
     // create the options on the left
-    m_pEncrypted = new CButton;
-    m_pEncrypted->Create(
-        szLoadString(IDS_ENCRYPTED),WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_AUTOCHECKBOX,
-        CRect(0,0,0,0),this,ID_ENCRYPTED);
-	::SendMessage(m_pEncrypted->GetSafeHwnd(), WM_SETFONT, (WPARAM)m_cfStaticFont, FALSE);
-    m_pEncrypted->SetCheck(m_bEncrypted);
-
-    m_pSigned = new CButton;
-    m_pSigned->Create(
-        szLoadString(IDS_SIGNED),WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_AUTOCHECKBOX,
-        CRect(0,0,0,0),this,ID_SIGNED);
-	::SendMessage(m_pSigned->GetSafeHwnd(), WM_SETFONT, (WPARAM)m_cfStaticFont, FALSE);
-    m_pSigned->SetCheck(m_bSigned);
+    HG81325
 
     m_pUseUUENCODE = new CButton;
     m_pUseUUENCODE->Create(
@@ -1139,7 +1144,7 @@ void CComposeBar::CreateOptionsPage()
     m_pPriority->Create(
         CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP,
         CRect(0,0,0,0), this, 1501);
-	::SendMessage(m_pPriority->GetSafeHwnd(), WM_SETFONT, (WPARAM)m_cfTextFont, FALSE);
+	::SendMessage(m_pPriority->GetSafeHwnd(), WM_SETFONT, (WPARAM)m_cfStaticFont, FALSE);
 
 	char priStr[32];
 	MSG_GetPriorityName(MSG_LowestPriority, priStr, 32);
@@ -1163,7 +1168,7 @@ void CComposeBar::CreateOptionsPage()
     m_pMessageFormat->Create(
         CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP,
         CRect(0,0,0,0), this, 1505);
-	::SendMessage(m_pMessageFormat->GetSafeHwnd(), WM_SETFONT, (WPARAM)m_cfTextFont, FALSE);
+	::SendMessage(m_pMessageFormat->GetSafeHwnd(), WM_SETFONT, (WPARAM)m_cfStaticFont, FALSE);
     m_pMessageFormat->AddString(szLoadString(IDS_FORMAT_ASKME));
     m_pMessageFormat->AddString(szLoadString(IDS_FORMAT_PLAIN));
     m_pMessageFormat->AddString(szLoadString(IDS_FORMAT_HTML));
@@ -1198,10 +1203,7 @@ void CComposeBar::UpdateOptionsInfo()
             free(m_pszMessageFormat);
         m_pszMessageFormat = strdup(cs);
     }
-    if (m_pSigned && ::IsWindow(m_pSigned->m_hWnd))
-        m_bSigned = m_pSigned->GetCheck();
-    if (m_pEncrypted && ::IsWindow(m_pEncrypted->m_hWnd))
-        m_bEncrypted = m_pEncrypted->GetCheck();
+	HG87322
     if (m_pUseUUENCODE && ::IsWindow(m_pUseUUENCODE->m_hWnd))
         m_bUseUUENCODE = m_pUseUUENCODE->GetCheck();
 }
@@ -1227,23 +1229,12 @@ void CComposeBar::DestroyOptionsPage()
         delete m_pReturnReceipt;
         m_pReturnReceipt = NULL;
     }
-    if (m_pEncrypted && ::IsWindow(m_pEncrypted->m_hWnd))
-    {
-        m_pEncrypted->DestroyWindow();
-        delete m_pEncrypted;
-        m_pEncrypted = NULL;
-    }
+
     if (m_pUseUUENCODE && ::IsWindow(m_pUseUUENCODE->m_hWnd))
     {
         m_pUseUUENCODE->DestroyWindow();
         delete m_pUseUUENCODE;
         m_pUseUUENCODE = NULL;
-    }
-    if (m_pSigned && ::IsWindow(m_pSigned->m_hWnd))
-    {
-        m_pSigned->DestroyWindow();
-        delete m_pSigned;
-        m_pSigned = NULL;
     }
     if (m_pMessageFormat && ::IsWindow(m_pMessageFormat->m_hWnd))
     {
@@ -1322,6 +1313,7 @@ void CComposeBar::CreateAddressingBlock(void)
 
 void CComposeBar::AddedItem (HWND hwnd, LONG id,int index)
 {
+#ifndef MOZ_NEWADDR
     char * szName = NULL;
     BOOL bRetVal = m_pIAddressList->GetEntry(index, NULL, &szName);
 	if (bRetVal)
@@ -1334,11 +1326,14 @@ void CComposeBar::AddedItem (HWND hwnd, LONG id,int index)
 			free(pszFullName);
 		}
 	}
+#endif
 }
 
 int CComposeBar::ChangedItem(char * pString, int, HWND, char** ppszFullName, unsigned long* entryID, UINT* bitmapID)
 {
+#ifndef MOZ_NEWADDR
 	(*ppszFullName) = wfe_ExpandName(pString);
+#endif
 	return TRUE;
 }
 
@@ -1349,6 +1344,45 @@ void CComposeBar::DeletedItem (HWND hwnd, LONG id,int index)
 char * CComposeBar::NameCompletion(char * pString)
 {
 	return wfe_ExpandForNameCompletion(pString);
+}
+
+void CComposeBar::StartNameCompletionSearch()
+{
+	if(IsWindow(m_hWnd))
+	{
+		CComposeFrame *pComposeFrame = (CComposeFrame*)GetParent();
+		if(pComposeFrame)
+			pComposeFrame->GetChrome()->StartAnimation();
+	}
+
+}
+
+void CComposeBar::StopNameCompletionSearch()
+{
+	if(IsWindow(m_hWnd))
+	{
+		CComposeFrame *pComposeFrame = (CComposeFrame*)GetParent();
+
+		if(pComposeFrame)
+			pComposeFrame->GetChrome()->StopAnimation();
+	}
+
+}
+
+void CComposeBar::SetProgressBarPercent(int32 lPercent)
+{
+
+}
+
+void CComposeBar::SetStatusText(const char* pMessage)
+{
+
+}
+
+CWnd *CComposeBar::GetOwnerWindow()
+{
+
+	return GetParent();
 }
 
 void CComposeBar::CreateStandardFields(void)
@@ -1452,11 +1486,7 @@ void CComposeBar::CalcFieldLayout(void)
 	    rect.bottom = rect.top + m_iBoxHeight;
 	    rect.left = x + m_cxChar * 3;
 	    rect.right = (WinRect.Width()/2) + 24;
-	    m_pEncrypted->MoveWindow(rect);
-
-	    rect.top = rect.bottom + 1;
-	    rect.bottom = rect.top + m_iBoxHeight;
-	    m_pSigned->MoveWindow(rect);
+	    HG76528
 
 	    rect.top = rect.bottom + 1;
 	    rect.bottom = rect.top + m_iBoxHeight;
@@ -1666,6 +1696,82 @@ void CComposeBar::OnDropFiles( HDROP hDropInfo )
    }
 }
 
+BOOL CComposeBar::ProcessAddressBookIndexFormat(COleDataObject *pDataObject,
+												DROPEFFECT effect,CPoint &point)
+{
+	HGLOBAL hContent;
+	BOOL retVal = FALSE;
+	if(!pDataObject)
+		return FALSE;
+
+	if (pDataObject->IsDataAvailable( ::RegisterClipboardFormat(ADDRESSBOOK_INDEX_FORMAT) ))
+	{
+		hContent = pDataObject->GetGlobalData (::RegisterClipboardFormat(ADDRESSBOOK_INDEX_FORMAT));
+		AddressBookDragData *pDragData = (AddressBookDragData *) GlobalLock(hContent);
+
+		BOOL retVal;
+		CWnd * pWnd = GetFocus();
+   
+		XP_List * pEntries;
+		int32 iEntries;
+		CComposeFrame *pCompose = (CComposeFrame *)GetParentFrame();
+   		ApiApiPtr(api);
+		LPUNKNOWN pUnk = api->CreateClassInstance(
+ 			APICLASS_ADDRESSCONTROL, NULL, (APISIGNATURE)pCompose);
+ 		LPADDRESSCONTROL pIAddressControl = NULL;
+   		if (pUnk)
+   		{
+   			HRESULT hRes = pUnk->QueryInterface(IID_IAddressControl,(LPVOID*)&pIAddressControl);
+   			ASSERT(hRes==NOERROR);
+   		}
+		if (pIAddressControl)
+		{
+			int itemNum = pIAddressControl->GetItemFromPoint(&point);
+			char * szType = NULL;
+			char * szName = NULL;
+			CListBox * pListBox = pIAddressControl->GetListBox();
+			if (itemNum <= pListBox->GetCount())
+				pIAddressControl->GetEntry (itemNum, &szType, &szName); 
+			char * pszType = strdup(szType);
+			if (pListBox->GetCount() == 1 && (!szName || !strlen(szName)))
+			   pListBox->ResetContent();
+			else
+			   if (!szName || !strlen(szName))
+				  pIAddressControl->DeleteEntry(itemNum);
+			// this is where we get all of the info
+			for (int32 i = 0; i < pDragData->m_count; i++)
+			{
+				AB_NameCompletionCookie *pCookie = AB_GetNameCompletionCookieForIndex( 
+											pDragData->m_pane, pDragData->m_indices[i]);
+				char * pString = AB_GetHeaderString(pCookie);
+				AB_EntryType type = AB_GetEntryTypeForNCCookie(pCookie);
+
+				if (pString != NULL)
+					pIAddressControl->AppendEntry(FALSE, pszType,pString,
+												  (type == AB_Person) ?
+												    IDB_PERSON :IDB_MAILINGLIST);
+				int count = pListBox->GetCount();
+				pIAddressControl->SetNameCompletionCookieInfo(pCookie, 1, 
+										 NC_NameComplete, count - 1);
+
+
+
+			}
+			if (pUnk)
+				pUnk->Release();
+			if (pszType)
+				free(pszType);
+			retVal = TRUE;
+		}
+		GlobalUnlock(hContent);
+		if (pWnd && ::IsWindow(pWnd->m_hWnd))
+			pWnd->SetFocus();
+	}
+	return retVal;
+
+}
+
+
 BOOL CComposeBar::ProcessVCardData(COleDataObject * pDataObject, CPoint &point)
 {
    UINT clipFormat;
@@ -1730,7 +1836,56 @@ BOOL CComposeBar::ProcessVCardData(COleDataObject * pDataObject, CPoint &point)
    return retVal;
 }
 
+BOOL CComposeBar::AddURLToAddressPane(COleDataObject * pDataObject, CPoint &point, LPSTR szURL)
+{
+  if(!pDataObject->IsDataAvailable(RegisterClipboardFormat(NETSCAPE_BOOKMARK_FORMAT)))
+    return FALSE;
 
+  CWnd * pWnd = GetFocus();
+  CComposeFrame *pCompose = (CComposeFrame *)GetParentFrame();
+  ApiApiPtr(api);
+  LPUNKNOWN pUnk = api->CreateClassInstance(
+  APICLASS_ADDRESSCONTROL, NULL, (APISIGNATURE)pCompose);
+  LPADDRESSCONTROL pIAddressControl = NULL;
+
+  if(pUnk == NULL)
+    return FALSE;
+
+  HRESULT hRes = pUnk->QueryInterface(IID_IAddressControl,(LPVOID*)&pIAddressControl);
+  ASSERT(hRes==NOERROR);
+
+  if(pIAddressControl == NULL)
+    return FALSE;
+
+  CListBox * pListBox = pIAddressControl->GetListBox();
+  char * szName = NULL;
+  char * szType = NULL;
+  BOOL bOutside = FALSE;
+  int iPlace = pListBox->ItemFromPoint(point, bOutside);
+
+  pIAddressControl->GetEntry(iPlace, &szType, &szName); 
+  
+  if(iPlace == pListBox->GetCount() - 1)
+  {
+    if(!szName || !strlen(szName))
+      if(pListBox->GetCount() == 1)
+        pListBox->ResetContent();
+      else
+        pIAddressControl->DeleteEntry(iPlace);
+  }
+
+  CString type;
+  type.LoadString(IDS_ADDRESSNEWSGROUP);
+
+  pIAddressControl->AppendEntry(FALSE, type, szURL, IDB_NEWSART);
+
+  pUnk->Release();
+
+  if(pWnd && ::IsWindow(pWnd->m_hWnd))
+    pWnd->SetFocus();
+
+  return TRUE;
+}
 //////////////////////////////////////////////////////////////////////////////
 // CNSCollapser
 
@@ -1906,12 +2061,5 @@ void CComposeBar::OnUpdateOptions(void)
 
 void CComposeBar::UpdateSecurityOptions(void)
 {
-    if (m_iSelectedTab == IDX_COMPOSEOPTIONS)
-    {
-        if (m_pEncrypted && ::IsWindow(m_pEncrypted->m_hWnd))
-           m_pEncrypted->SetCheck(m_bEncrypted);
-        if (m_pSigned && ::IsWindow(m_pSigned->m_hWnd))
-            m_pSigned->SetCheck(m_bSigned);
-    }
-
+    HG26723
 }

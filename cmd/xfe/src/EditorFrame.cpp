@@ -21,7 +21,7 @@
  */
 
 
-
+#include "rosetta.h"
 #include "EditorFrame.h"
 #include "EditorView.h"
 #include "Command.h"
@@ -241,7 +241,7 @@ MenuSpec XFE_EditorFrame::format_menu_spec[] = {
 	{ xfeCmdSetObjectProperties,   PUSHBUTTON },
 	{ xfeCmdSetTableProperties,   PUSHBUTTON },
 	{ xfeCmdSetPageProperties,   PUSHBUTTON },
-	{ xfeCmdSetEncrypted,   TOGGLEBUTTON },
+	HG10287
 	{ NULL }
 };
 

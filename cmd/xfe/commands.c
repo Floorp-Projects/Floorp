@@ -2901,6 +2901,144 @@ extern NET_StreamClass *fe_MakeSaveAsStream (int format_out, void *data_obj,
 extern NET_StreamClass *fe_MakeSaveAsStreamNoPrompt (int format_out, void *data_obj,
 													 URL_Struct *url_struct, MWContext *context);
 
+/*
+ * parse_extensions
+ * Give a comma separated string of extensions, fills in the array of
+ * character strings in NET_cdataStruct.
+ * eg, "cpp,cc" becomes:
+ * mimetype_entry->exts[0] = "cpp";
+ * mimetype_entry->exts[1] = "cc";
+ * mimetype_entry->exts[2] = NULL;
+ */
+static void
+parse_extensions(NET_cdataStruct* mimetype_entry, char* exts)
+{
+	int i;
+	char* p;
+
+	XP_ASSERT(mimetype_entry && exts);
+
+	mimetype_entry->num_exts = 0;
+	for ( p = exts; p && *p; p = strchr(p, ',') ) {
+		if ( *p == ',' ) p++;
+		mimetype_entry->num_exts++;
+	}
+
+	mimetype_entry->exts = (char**) malloc(sizeof(char*) * (mimetype_entry->num_exts+1));
+	if ( mimetype_entry->exts == NULL ) return;
+
+	for ( i = 0, p = exts; p && *p; p = strchr(p, ','), i++ ) {
+		if ( *p == ',' ) p++;
+		mimetype_entry->exts[i] = strdup(p);
+		if ( strchr(mimetype_entry->exts[i], ',') ) *strchr(mimetype_entry->exts[i], ',') = '\0';
+	}
+	mimetype_entry->exts[i] = NULL;
+}
+
+
+/*
+ * add_pref_mime_type
+ * Given the beginning of a mimetype preference, registers that
+ * mimetype handler with netlib.
+ */
+static void
+add_pref_mime_type(char* name)
+{
+	char buf[1024];
+	int32 load_action;
+	char* extension = NULL;
+	char* contenttype = NULL;
+	char* command = NULL;
+	char* description = NULL;
+	NET_cdataStruct* mimetype_entry = NULL;
+	NET_mdataStruct* mailcap_entry = NULL;
+
+	strcpy(buf, name); strcat(buf, ".mimetype");
+	if ( PREF_CopyCharPref(buf, &contenttype) != PREF_OK ) goto failed;
+
+	strcpy(buf, name); strcat(buf, ".extension");
+	if ( PREF_CopyCharPref(buf, &extension) != PREF_OK ) goto failed;
+
+	strcpy(buf, name); strcat(buf, ".load_action");
+	if ( PREF_GetIntPref(buf, &load_action) != PREF_OK ) goto failed;
+
+	strcpy(buf, name); strcat(buf, ".unix_appname");
+	if ( PREF_CopyCharPref(buf, &command) != PREF_OK ) goto failed;
+
+	strcpy(buf, name); strcat(buf, ".description");
+	if ( PREF_CopyCharPref(buf, &description) != PREF_OK ) goto failed;
+
+	mailcap_entry = NET_mdataCreate();
+	mimetype_entry = NET_cdataCreate();
+
+	mailcap_entry->contenttype = strdup(contenttype);
+	mailcap_entry->command = command ? strdup(command) : NULL;
+	mailcap_entry->xmode = (load_action == 1) ? 
+							strdup(NET_COMMAND_SAVE_TO_DISK) :
+							(load_action == 3) ?
+							strdup(NET_COMMAND_UNKNOWN) :
+							(load_action == 4) ?
+							strdup(NET_COMMAND_PLUGIN) : NULL;
+
+	mimetype_entry->ci.type = contenttype ? strdup(contenttype) : NULL;
+	mimetype_entry->ci.desc = description ? strdup(description) : NULL;
+	mimetype_entry->pref_name = strdup(name);
+
+	parse_extensions(mimetype_entry, extension);
+
+	if ( mailcap_entry->xmode == NULL && 
+		 mailcap_entry->command && 
+		 *(mailcap_entry->command) &&
+		 strcasecmp(mailcap_entry->contenttype, TEXT_HTML) &&
+		 strcasecmp(mailcap_entry->contenttype, MESSAGE_RFC822) &&
+		 strcasecmp(mailcap_entry->contenttype, MESSAGE_NEWS) ) {
+		NET_RegisterExternalViewerCommand(mailcap_entry->contenttype, mailcap_entry->command, mailcap_entry->stream_buffer_size);	
+	}
+
+	NET_cdataAdd(mimetype_entry);
+	NET_mdataAdd(mailcap_entry);
+
+	if ( extension ) XP_FREE(extension);
+	if ( contenttype ) XP_FREE(contenttype);
+	if ( description ) XP_FREE(description);
+	if ( command ) XP_FREE(command);
+	return;
+
+failed:
+	if ( extension ) XP_FREE(extension);
+	if ( contenttype ) XP_FREE(contenttype);
+	if ( description ) XP_FREE(description);
+	if ( command ) XP_FREE(command);
+	if ( mimetype_entry ) NET_cdataFree(mimetype_entry);
+	if ( mailcap_entry ) NET_mdataFree(mailcap_entry);
+}
+
+
+/*
+ * fe_RegisterPrefConverters
+ * Registers the mimetype converters that are specified by the
+ * preferences.
+ */
+void
+fe_RegisterPrefConverters(void)
+{
+	extern FILE* real_stderr;
+	char* children = NULL;
+	char* child = NULL;
+	int index = 0;
+
+	if ( PREF_CreateChildList("mime", &children) != PREF_OK ) {
+		return;
+	}
+
+	while ( (child = PREF_NextChild(children, &index)) != NULL ) {
+		add_pref_mime_type(child);
+	}
+
+	XP_FREE(children);
+}
+
+
 void
 fe_RegisterConverters (void)
 {
@@ -3064,6 +3202,8 @@ fe_RegisterConverters (void)
 			  fe_globalPrefs.global_mailcap_file);
   fe_isFileChanged(fe_globalPrefs.private_mailcap_file, 0,
 		   &fe_globalData.privateMailcapFileModifiedTime);
+
+  fe_RegisterPrefConverters();
 
 #ifndef NO_WEB_FONTS
   /* Register webfont converters */

@@ -21,7 +21,11 @@
  */
 
 
+#ifndef NO_SECURITY
+#include "ssl.h"
+#endif
 
+#include "rosetta.h"
 #include "Frame.h"
 
 #include "layers.h"
@@ -75,10 +79,6 @@
 
 #include <Xfe/Xfe.h>
 
-#ifndef NO_SECURITY
-#include "ssl.h" // For Security Status defines: SSL_SECURITY_STATUS_*
-#endif /* ! NO_SECURITY */
-
 #ifdef EDITOR
 #include "xeditor.h"
 #endif /*EDITOR*/
@@ -129,7 +129,7 @@ extern "C" {
 	XP_Bool fe_IsPolarisInstalled();
 	XP_Bool fe_IsConferenceInstalled();
 	URL_Struct *fe_GetBrowserStartupUrlStruct();
-};
+}
 
 extern MWContext *last_documented_xref_context;
 extern LO_Element *last_documented_xref;
@@ -162,6 +162,27 @@ MenuSpec XFE_Frame::bookmark_submenu_spec[] = {
 	{ NULL }
 };
 
+MenuSpec XFE_Frame::tools_submenu_spec[] = {
+	{ xfeCmdOpenHistory,		PUSHBUTTON },
+	HG27632
+#ifndef MOZ_LITE
+	{ xfeCmdOpenFolders,			PUSHBUTTON },
+#endif
+	{ xfeCmdJavaConsole,		PUSHBUTTON },
+	{ NULL }
+};
+
+MenuSpec XFE_Frame::servertools_submenu_spec[] = {
+	{ xfeCmdPageServices,		PUSHBUTTON },
+#ifndef MOZ_LITE
+        { xfeCmdEditConfiguration,      PUSHBUTTON }, // Mail Account
+        { xfeCmdManageMailingList,      PUSHBUTTON }, // Mail Account
+        { xfeCmdManagePublicFolders,      PUSHBUTTON },
+	{ xfeCmdModerateDiscussion,     PUSHBUTTON }, // Newsgroup
+#endif
+	{ NULL }
+};
+
 MenuSpec XFE_Frame::window_menu_spec[] = {
     { xfeCmdOpenNavCenter,  PUSHBUTTON },
 	{ xfeCmdOpenOrBringUpBrowser,	PUSHBUTTON },
@@ -190,12 +211,13 @@ MenuSpec XFE_Frame::window_menu_spec[] = {
 #endif
 	{ "bookmarksSubmenu",	CASCADEBUTTON, bookmark_submenu_spec },
 	{ xfeCmdOpenHistory,		PUSHBUTTON },
-#if JAVA
+#ifdef JAVA
 	{ xfeCmdJavaConsole,		PUSHBUTTON },
 #endif
-#ifndef NO_SECURITY
-	{ xfeCmdViewSecurity,		PUSHBUTTON },
-#endif
+	HG87782
+	MENU_SEPARATOR,
+	{ "toolsSubmenu",	CASCADEBUTTON, tools_submenu_spec },
+	{ "serverToolsSubmenu",	CASCADEBUTTON, servertools_submenu_spec },
 	MENU_SEPARATOR,
  	{ "frameListPlaceHolder",	DYNA_MENUITEMS, NULL, NULL, False, NULL, XFE_FrameListMenu::generate },
 	{ NULL }
@@ -239,6 +261,9 @@ MenuSpec XFE_Frame::mark_submenu_spec[] = {
 	{ xfeCmdMarkAllMessagesRead,	PUSHBUTTON },
 	{ xfeCmdMarkMessageByDate,	PUSHBUTTON },
 	{ xfeCmdMarkMessageForLater,	PUSHBUTTON },
+	MENU_SEPARATOR,
+        { xfeCmdMarkMessage,                    PUSHBUTTON },
+        { xfeCmdUnmarkMessage,          PUSHBUTTON },
 	{ NULL }
 };
 
@@ -525,6 +550,7 @@ const char *XFE_Frame::userActivityHere = "XFE_Frame::userActivityHere";
 const char *XFE_Frame::encodingChanged = "XFE_Frame::encodingChanged";
 const char *XFE_Frame::allConnectionsCompleteCallback = "XFE_Frame::allConnectionsCompleteCallback";
 
+#if !defined(GLUE_COMPO_CONTEXT)
 // Progress bar cylon notifications
 const char * XFE_Frame::progressBarCylonStart = "XFE_Frame::progressBarCylonStart";
 const char * XFE_Frame::progressBarCylonStop = "XFE_Frame::progressBarCylonStop";
@@ -537,6 +563,7 @@ const char * XFE_Frame::progressBarUpdateText = "XFE_Frame::progressBarUpdateTex
 // Logo animation notifications
 const char * XFE_Frame::logoStartAnimation = "XFE_Frame::logoStartAnimation";
 const char * XFE_Frame::logoStopAnimation = "XFE_Frame::logoStopAnimation";
+#endif /* GLUE_COMPO_CONTEXT */
 
 const char* XFE_Frame::frameBusyCallback = "XFE_Frame::frameBusyCallback";
 const char* XFE_Frame::frameNotBusyCallback = "XFE_Frame::frameNotBusyCallback";
@@ -545,6 +572,9 @@ const char* XFE_Frame::frameNotBusyCallback = "XFE_Frame::frameNotBusyCallback";
 static void resizeHandler(Widget, XtPointer, XEvent *, Boolean *);
 
 static XFE_CommandList* my_commands;
+
+//
+static char myClassName[] = "XFE_Frame::className";
 
 XFE_Command*
 XFE_Frame::getCommand(CommandType cmd)
@@ -1027,6 +1057,15 @@ XFE_Frame::XFE_Frame(char *name,
 									doCommandCallback_cb);
 		
 		// Register the logo animation notifications with ourselves
+#if defined(GLUE_COMPO_CONTEXT)
+		registerInterest(XFE_Component::logoStartAnimation,
+						 this,
+						 logoAnimationStartNotice_cb);
+		
+		registerInterest(XFE_Component::logoStopAnimation,
+						 this,
+						 logoAnimationStopNotice_cb);
+#else
 		registerInterest(XFE_Frame::logoStartAnimation,
 						 this,
 						 logoAnimationStartNotice_cb);
@@ -1034,6 +1073,7 @@ XFE_Frame::XFE_Frame(char *name,
 		registerInterest(XFE_Frame::logoStopAnimation,
 						 this,
 						 logoAnimationStopNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */
 	}
 	
 	XFE_MozillaApp::theApp()->registerInterest(XFE_MozillaApp::changeInToplevelFrames,
@@ -1175,6 +1215,12 @@ XFE_Frame::~XFE_Frame()
 	//    and never return.
 	//
 	XFE_MozillaApp::theApp()->unregisterFrame(this);
+}
+
+const char* 
+XFE_Frame::getClassName()
+{
+	return myClassName;
 }
 //////////////////////////////////////////////////////////////////////////
 //
@@ -1905,12 +1951,12 @@ XFE_Frame::initializeMWContext(EFrameType frame_type,
 }
 
 void
-XFE_Frame::allConnectionsComplete()
+XFE_Frame::allConnectionsComplete(MWContext  *context)
 {
 	/* Tao_17dec96
 	 * Notify whoever interested in "allConnectionsComplete" event
 	 */
-	notifyInterested(XFE_Frame::allConnectionsCompleteCallback);
+	notifyInterested(XFE_Frame::allConnectionsCompleteCallback, (void*) context);
 	notifyInterested(XFE_View::chromeNeedsUpdating);
 }
 
@@ -2158,23 +2204,7 @@ XFE_Frame::getSecurityStatus()
 {
   int rval = XFE_UNSECURE;
 
-#ifndef NO_SECURITY
-  switch (XP_GetSecurityStatus(m_context)) 
-    {
-    case SSL_SECURITY_STATUS_ON_HIGH: // us     
-    case SSL_SECURITY_STATUS_ON_LOW:  // export
-      rval = XFE_SECURE;
-      break;
-      /* rval =  XFE_SECURE_MIXED;
-      break;*/
-    case SSL_SECURITY_STATUS_NOOPT: // fall through
-    case SSL_SECURITY_STATUS_OFF:   // fall through
-    case SSL_SECURITY_STATUS_FORTEZZA:  // fall through  (is this be secure???)
-    default:
-      rval = XFE_UNSECURE;
-      break;
-    }
-#endif /* ! NO_SECURITY */
+  HG87111
 
   return rval;
 }
@@ -2622,9 +2652,7 @@ XFE_Frame::queryChrome(Chrome * chrome)
   chrome->show_button_bar        = m_toolbar && m_toolbar->isShown();
   chrome->show_bottom_status_bar = m_dashboard && m_dashboard->isShown();
   chrome->show_menu              = m_menubar && m_menubar->isShown();
-#ifndef NO_SECURITY
-  chrome->show_security_bar      = context_data->show_security_bar_p;
-#endif /* ! NO_SECURITY */
+  HG37211
 
   if (isTitleBarShown())
 	chrome->hide_title_bar = FALSE;

@@ -35,7 +35,9 @@
 #endif
 
 void WFE_LJ_StartDebugger(void);
-
+#ifdef MOZ_MAIL_NEWS
+extern "C" void WFE_StartCalendar();
+#endif
 //
 // Parse the command line for component launch arguments
 // Set bRemove to TRUE if you want to remove the switch from pszCommandLine
@@ -74,9 +76,17 @@ BOOL CNetscapeApp::ParseComponentArguments(char * pszCommandLine,BOOL bRemove)
 				m_bCreateInboxMAPI = TRUE;
   // rhp - for MAPI startup
 
+	}else	if (IsRuntimeSwitch("-NABAPI", pszCommandLine,  bRemove)){  
+				m_bCreateNABWin = TRUE;
+  // rhp - for Address Book API startup
+
 	}else	if (IsRuntimeSwitch("-ADDRESS", pszCommandLine,  bRemove)){
 				m_bCreateAddress = TRUE;
+
 #endif /* MOZ_MAIL_NEWS */
+	}else	if (IsRuntimeSwitch("-CALENDAR", pszCommandLine,  bRemove)){
+				m_bCreateCalendar = TRUE;
+
 	}else	if (IsRuntimeSwitch("-IMPORT", pszCommandLine,  bRemove)){
 				m_bCreateLDIF_IMPORT = TRUE;
 
@@ -139,6 +149,10 @@ BOOL CNetscapeApp::ExistComponentArguments(char * pszCommandLine)
     m_bCreateInboxMAPI = TRUE;
   // rhp - for MAPI startup
 
+  }else	if (strcasestr(pszCommandLine, "-NABAPI" )) {
+    m_bCreateNABWin = TRUE;
+  // rhp - for Address Book API startup
+
   } else if (strcasestr(pszCommandLine, "-FOLDERS" )){
     m_bCreateFolders = TRUE;
 
@@ -154,6 +168,9 @@ BOOL CNetscapeApp::ExistComponentArguments(char * pszCommandLine)
 #endif /* MOZ_MAIL_NEWS */
   } else if (strcasestr(pszCommandLine, "-NETCASTER" )){
     m_bCreateNetcaster = TRUE;
+
+  }else	if (strcasestr(pszCommandLine, "-CALENDAR" )){
+    m_bCreateCalendar = TRUE;
 
 #ifdef MOZ_MAIL_NEWS
   } else if (strcasestr(pszCommandLine, "-COMPOSE" )){
@@ -467,6 +484,10 @@ void CNetscapeApp::LaunchComponentWindow(int iStartupMode, char *pszCmdLine)
 			//starts the news and opens the default news server and group in split pain.
 			WFE_MSGOpenNews();
 			break; 
+
+		case STARTUP_CALENDAR:
+			WFE_StartCalendar();
+			break; 
 #endif // MOZ_MAIL_NEWS
 
 #ifdef EDITOR			
@@ -518,7 +539,12 @@ void CNetscapeApp::LaunchComponentWindow(int iStartupMode, char *pszCmdLine)
   // rhp - added STARTUP_CLIENT_MAPI for starting MAPI
     if ((iStartupMode & STARTUP_BROWSER || iStartupMode & STARTUP_EDITOR || // if startup browser or editor
         !(iStartupMode & (STARTUP_JAVA_DEBUG_AGENT|STARTUP_BROWSER|STARTUP_NEWS|STARTUP_MAIL|STARTUP_ADDRESS
-		|STARTUP_INBOX|STARTUP_CLIENT_MAPI|STARTUP_COMPOSE|STARTUP_FOLDER|STARTUP_FOLDERS)) ||    // or invalid data
+#ifdef MOZ_MAIL_NEWS
+		|STARTUP_INBOX|STARTUP_COMPOSE|STARTUP_FOLDER|STARTUP_FOLDERS|STARTUP_NETCASTER|STARTUP_CALENDAR 
+		|STARTUP_CLIENT_MAPI|STARTUP_CLIENT_ABAPI)) ||    // or invalid data
+#else
+		|STARTUP_INBOX|STARTUP_CLIENT_MAPI|STARTUP_COMPOSE|STARTUP_FOLDER|STARTUP_FOLDERS|STARTUP_CALENDAR)) ||    // or invalid data
+#endif /* MOZ_MAIL_NEWS */
         m_bKioskMode ))  {                                                  // or kiosk mode - start browser
 
  #ifdef EDITOR
@@ -799,7 +825,7 @@ MSG_AttachmentData * CNetscapeApp::BuildAttachmentListFromFile(char *pszAttachFi
 //Purpose:		Initialize iStartupMode with the appropriate component launch
 //				value.
 /////////////////////////////////////////////////////////////////////////////				
-void CNetscapeApp::SetStartupMode(int *iStartupMode)
+void CNetscapeApp::SetStartupMode(int32 *iStartupMode)
 {
 	// set launch type and clear global flag.
 	if (m_bAccountSetup)		{                  // MUST be first to ensure only in browser
@@ -865,6 +891,10 @@ void CNetscapeApp::SetStartupMode(int *iStartupMode)
 
 	//over ride prefference settings for this mode
 #endif /* MOZ_MAIL_NEWS */
+	}else	if (m_bCreateCalendar)			{ 
+				*iStartupMode=	STARTUP_CALENDAR;
+				m_bCreateCalendar= 0;
+
 	} else	if (m_bCreateBrowser)		{ 
 				*iStartupMode=	STARTUP_BROWSER;
 				m_bCreateBrowser= 0;
@@ -886,6 +916,17 @@ void CNetscapeApp::SetStartupMode(int *iStartupMode)
 	}else	if (m_bAccountSetupStartupJava) {
 				m_bAccountSetupStartupJava = FALSE;
 				*iStartupMode=	STARTUP_JAVA;
+#ifdef MOZ_MAIL_NEWS
+    // rhp - for MAPI startup
+    }else 	if (m_bCreateInboxMAPI)			{
+				*iStartupMode=	STARTUP_CLIENT_MAPI;
+				m_bCreateInboxMAPI= 0;
+    // rhp - for Address Book startup
+    }else 	if (m_bCreateNABWin)			{
+				*iStartupMode=	STARTUP_CLIENT_ABAPI;
+				m_bCreateNABWin= 0;
+    // rhp - for MAPI startup
+#endif /* MOZ_MAIL_NEWS */
 	}
 	else {
         //  Implied component checking here.
@@ -964,7 +1005,7 @@ BOOL CNetscapeApp::ProcessCommandLineDDE(char *pszDDECommand)
 
 	if (ExistComponentArguments(pszCommand))
 	{
-		int iStartupMode = 0;
+		int32 iStartupMode = 0;
 		SetStartupMode(&iStartupMode);
 		LaunchComponentWindow(iStartupMode,pszCommand);
 	}

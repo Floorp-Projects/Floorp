@@ -26,6 +26,8 @@
 #include "IconGroup.h"
 #undef WANT_GROUPS
 
+#include "rosetta.h"
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Private functions
@@ -116,7 +118,7 @@ static _name_and_group_t _iconGroups[] =
 	{ "Print",			&TB_Print_group },
 	{ "Reload",			&TB_Reload_group },
 	{ "Stop",			&TB_Stop_group },
-	{ "MixSecurity",	&TB_MixSecurity_group },
+	HG29281
 #ifdef MOZ_MAIL_NEWS
 	// Mail/News
 	{ "GetMsg",			&MNTB_GetMsg_group },

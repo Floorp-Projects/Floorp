@@ -162,10 +162,12 @@ COutliner::COutliner ( BOOL bUseTriggerAndLineBitmaps )
 	m_iTotalWidth	= 0;
 	m_idImageCol	= 0;
 	m_bHasPipes		= TRUE;
+	m_bHasImageOnlyColumn = FALSE;
 	m_pDropTarget   = NULL;
     m_bDraggingData = FALSE;
 	m_bClearOnRelease = FALSE;
 	m_bSelectOnRelease = FALSE;
+	m_bLButtonDown = FALSE;
 	
 	m_pTip = new CTip();
 	m_pTip->Create();
@@ -491,6 +493,16 @@ void COutliner::LoadXPPrefs( const char *prefname )
 
 	GetParent()->Invalidate();
 }
+
+BOOL COutliner::GetIsColumnVisible( int columnID )
+{
+	for (int i = 0; i < m_iVisColumns; i++) {
+		if ((UINT) columnID == GetColumnAtPos(i))
+			return TRUE;
+	}
+	return FALSE;
+}
+
 
 void COutliner::SaveXPPrefs( const char *prefname )
 {
@@ -822,6 +834,8 @@ void COutliner::OnRButtonDown ( UINT nFlags, CPoint point )
     CWnd::OnRButtonDown ( nFlags, point );
     m_ptHit = point;
 	int iSel = m_iTopLine + (point.y  / m_itemHeight);
+	if (iSel >= m_iTotalLines)	// Nothing to select
+		return;
 	SelectItem( iSel, OUTLINER_RBUTTONDOWN );
 }
 
@@ -962,6 +976,11 @@ void COutliner::OnLButtonDown ( UINT nFlags, CPoint point )
 		if ( ColumnCommand( m_pColumn[ iCol ]->iCommand, iRow) )
 			return;
 
+		//Set m_bLButtonDown = true when really select an item, 
+		//use in CFolderOutliner and CMessageOutliner for checking 
+		//double click before really load a folder or message.  
+		//Other outliner should not care for it.
+		m_bLButtonDown = TRUE;
 		SetCapture();
 		SelectItem( iRow, OUTLINER_LBUTTONDOWN, nFlags );
 	}
@@ -2017,7 +2036,9 @@ void COutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect )
 
         if ( rectInter.IntersectRect ( &rectColumn, lpPaintRect ) ) {
 			::FillRect(hdc, &rectColumn, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
-			if ( m_pColumn[ iColumn ]->iCommand == m_idImageCol ) {
+			//if this is the image column and it also has text in it then call DrawPipes
+			// but if it's only an image, don't call DrawPipes.
+			if ( m_pColumn[ iColumn ]->iCommand == m_idImageCol && !m_bHasImageOnlyColumn ) {
 				rectColumn.left = DrawPipes ( iLineNo, iColumn, offset, hdc, pLineData );
 				rectColumn.left += OUTLINE_TEXT_OFFSET;
 			}
@@ -2490,7 +2511,7 @@ LONG COutliner::OnProcessOLQAHook(WPARAM wParam, LPARAM lParam)
 			void	*pLineData = AcquireLineData ( lineNumber ); // Make this a parameter...
 
 			memset(workLine, 0, sizeof(workLine));
-			for (i=0; i<GetNumColumns(); i++)
+			for (i=0; i< (DWORD) GetNumColumns(); i++)
 			{
 				LPCTSTR colText = GetColumnText ( m_pColumn[ i ]->iCommand, pLineData );
 				if (!colText)
@@ -2556,6 +2577,7 @@ void CMSelectOutliner::ClearSelection()
 	int i;
 	for (i = 0; i < m_iIndicesCount; i++ ) {
 		InvalidateLine(CASTINT(m_pIndices[i]));
+		m_pIndices[i] = 0;
 	}
 	m_iIndicesCount = 0;
 }
@@ -2584,7 +2606,7 @@ void CMSelectOutliner::AddSelection( MSG_ViewIndex iSel )
 		m_pIndices = tmp;
 		m_iIndicesSize *= 2;
 	}
-	if (iSel >= 0 && iSel < m_iTotalLines) {
+	if (iSel >= 0 && iSel < (MSG_ViewIndex) m_iTotalLines) {
 		m_pIndices[i] = iSel;
 		m_iIndicesCount++;
 	}
@@ -2685,6 +2707,7 @@ BOOL CMSelectOutliner::HandleInsert( MSG_ViewIndex iStart, int32 iCount )
 		iCount++;
 	}
 	InvalidateLines( CASTINT(iStart), CASTINT(m_iTotalLines - iStart + iCount));
+  EnableScrollBars();
 
 	return FALSE;
 }
@@ -2755,6 +2778,7 @@ BOOL CMSelectOutliner::HandleDelete( MSG_ViewIndex iStart, int32 iCount )
 		iCount++;
 	}
 	InvalidateLines(CASTINT(iStart), CASTINT(m_iTotalLines - iStart + iCount));
+	EnableScrollBars();
 
 	return res;
 }
@@ -2835,6 +2859,12 @@ void CMSelectOutliner::PositionPageUp( )
 		AddSelection(m_iFocus);
 	}
 }
+
+void CMSelectOutliner::SetMultipleSelection(BOOL bMultipleSelection)
+{
+	m_bNoMultiSel = !bMultipleSelection;
+}
+
 
 void CMSelectOutliner::SetTotalLines ( int iLines )
 {
@@ -2997,7 +3027,7 @@ COutlinerDropTarget::COutlinerDropTarget( COutliner *pOutliner )
 void COutlinerDropTarget::DragScroll( BOOL bBackwards )
 {
     DWORD dwTicks = GetTickCount();
-    if (!dwTicks || (dwTicks - m_dwOldTicks) > m_pOutliner->GetDragHeartbeat()) {
+    if (!dwTicks || (dwTicks - m_dwOldTicks) > (DWORD) m_pOutliner->GetDragHeartbeat()) {
 		if (dwTicks) {
 			m_pOutliner->OnVScroll(bBackwards ? SB_LINEUP : SB_LINEDOWN, 0, 0);
 			m_pOutliner->UpdateWindow();
@@ -3934,7 +3964,7 @@ void COutlinerParent::OnPaint ( )
 	{
 		HBRUSH hBrush = NULL;
 		if (GetFocus() == m_pOutliner)
-			hBrush = ::CreateSolidBrush( GetSysColor( COLOR_HIGHLIGHT ) );
+			hBrush = ::CreateSolidBrush( RGB(0, 0, 0) );
 		else
 			hBrush = ::CreateSolidBrush( GetSysColor( COLOR_WINDOW ) );
 

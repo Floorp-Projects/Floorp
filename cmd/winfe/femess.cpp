@@ -630,9 +630,11 @@ extern "C" void FE_RememberPopPassword(MWContext * context, const char * passwor
 #ifdef MOZ_MAIL_NEWS
     // if we aren't supposed to remember clear anything in the registry
 	XP_Bool prefBool;
+	XP_Bool passwordProtectLocalCache;
 	PREF_GetBoolPref("mail.remember_password",&prefBool);
+	PREF_GetBoolPref("mail.password_protect_local_cache", &passwordProtectLocalCache);
 
-    if(prefBool)
+    if(prefBool || passwordProtectLocalCache)
 		PREF_SetCharPref("mail.pop_password",(char *)password);
     else
 		PREF_SetCharPref("mail.pop_password","");
@@ -784,7 +786,6 @@ extern "C" void FE_PaneChanged( MSG_Pane *pane, XP_Bool asynchronous,
 	if (pUnk) {
 		LPMAILFRAME pInterface = NULL;
 		pUnk->QueryInterface( IID_IMailFrame, (LPVOID *) &pInterface );
-		ASSERT( pInterface );
 		if ( pInterface ) {
 			pInterface->PaneChanged( pane, asynchronous, notify, value );
 			pInterface->Release();

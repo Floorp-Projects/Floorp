@@ -29,15 +29,21 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
 void AskMeDlg(void)
 {
 	    int32 nPromptAskMe = FALSE;
-	    PREF_GetIntPref("offline.startup_mode", &nPromptAskMe);
-		if (nPromptAskMe==0)            //online
-			PREF_SetBoolPref("network.online", TRUE);
-		else if (nPromptAskMe==1)       //offline
-			PREF_SetBoolPref("network.online", FALSE);
-	    else if (nPromptAskMe==2)   //ask me
+	    PREF_GetIntPref("offline.startup_state", &nPromptAskMe);
+		if(nPromptAskMe == 0) //old setting (note, network.online gets initialized before
+							  //user prefs read in so we have to reset this now
+		{
+			XP_Bool boolPref = FALSE;
+			PREF_GetBoolPref("network.online", &boolPref);
+			PREF_SetBoolPref("network.online", !boolPref);
+			PREF_SetBoolPref("network.online", boolPref);
+
+		}
+		else if (nPromptAskMe==1)            //askme
 	    {
 		    CAskMeDlg rAskMeDlg(nPromptAskMe);
 		    rAskMeDlg.DoModal();
@@ -88,25 +94,14 @@ void CAskMeDlg::OnOK()
 	UpdateData();
 	if (IsDlgButtonChecked(IDC_CHECK_ASKME_DEFAULT))
 	{
-		if (IsDlgButtonChecked(IDC_RADIO_ONLINE))
-		{
-			PREF_SetBoolPref("network.online", TRUE);
-			PREF_SetIntPref("offline.startup_mode",0);
-		}
-		else  
-		{
-			PREF_SetBoolPref("network.online", FALSE);
-			PREF_SetIntPref("offline.startup_mode",1);
-		}
-	}
-	else
-	{
-		if (IsDlgButtonChecked(IDC_RADIO_ONLINE))
-			PREF_SetBoolPref("network.online", TRUE);
-		else  
-			PREF_SetBoolPref("network.online", FALSE);
+		//remember previous setting the next time we exit.
+		PREF_SetIntPref("offline.startup_state",0);
 	}
 
+	if (IsDlgButtonChecked(IDC_RADIO_ONLINE))
+		PREF_SetBoolPref("network.online", TRUE);
+	else  
+		PREF_SetBoolPref("network.online", FALSE);
 }
 
 void CAskMeDlg::OnCheckAskMeDefault() 

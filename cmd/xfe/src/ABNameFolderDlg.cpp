@@ -131,7 +131,9 @@ XFE_ABNameFolderDlg::XFE_ABNameFolderDlg(MSG_Pane *personPane,
 XFE_ABNameFolderDlg::~XFE_ABNameFolderDlg()
 {
 #if defined(USE_ABCOM)
-  int error = AB_ClosePane(((XFE_MNView *) m_view)->getPane());
+	MSG_Pane *pane = ((XFE_MNView *) m_view)->getPane();
+	MSG_SetFEData(pane, 0);
+	int error = AB_ClosePane(pane);
 #else
   m_personEntry.CleanUp();
 
@@ -213,7 +215,7 @@ void XFE_ABNameFolderDlg::setDlgValues(ABID entry, PersonEntry* pPerson,
 	  if (pPerson->pHomePhone)
 		  m_personEntry.pHomePhone = XP_STRDUP(pPerson->pHomePhone);
 
-	  m_personEntry.Security = pPerson->Security;
+	  HG17211
 
 	  if (pPerson->pCoolAddress)
 		  m_personEntry.pCoolAddress = XP_STRDUP(pPerson->pCoolAddress);
@@ -327,7 +329,7 @@ void XFE_ABNameFolderDlg::setDlgValues(ABID entry, Boolean newUser)
 	  if (AB_GetDistName(dir, aBook, entry, a_line) != MSG_VIEWINDEXNONE)
 		  m_personEntry.pDistName = XP_STRDUP(a_line);
 #endif
-	  AB_GetSecurity(dir, aBook, entry, &m_personEntry.Security);
+	  HG01019
 	  
 	  a_line[0] = '\0';
 	  if (AB_GetCoolAddress(dir, aBook, entry, a_line) != MSG_VIEWINDEXNONE)
@@ -450,9 +452,31 @@ char* XFE_ABNameFolderDlg::getFullname()
 									attribs,
 									&values, 
 									&numItems);
-	char *tmp0 = values[0].u.string,
-		 *tmp1 = values[1].u.string,
-		 *tmp2 = values[2].u.string;
+
+	char *tmp0 = 0,
+		 *tmp1 = 0,
+		 *tmp2 = 0;
+
+	for (int i=0; i < numItems; i++) {
+		switch (values[i].attrib) {
+		case AB_attribGivenName:
+			tmp0 =  values[i].u.string;
+			break;
+
+		case AB_attribFamilyName:
+			tmp1 =  values[i].u.string;
+			break;
+
+		case AB_attribFullName:
+			tmp2 =  values[i].u.string;
+			break;
+
+		default:
+			XP_ASSERT(0);
+			break;
+
+		}/* switch */
+	}/* for i */
 
 	if (!changed &&	(firstName && tmp0 && XP_STRCMP(firstName, tmp0)) ||
 		(lastName && tmp1 && XP_STRCMP(lastName, tmp1)))
@@ -474,8 +498,8 @@ char* XFE_ABNameFolderDlg::getFullname()
 							tmp1:"");
 		}/* if */
 	}/* if FullName */
-	firstName = tmp0;
-	lastName = tmp1;
+	firstName = tmp0?XP_STRDUP(tmp0):0;
+	lastName = tmp1?XP_STRDUP(tmp1):0;
 
 	// free
 	XP_FREEIF(attribs);

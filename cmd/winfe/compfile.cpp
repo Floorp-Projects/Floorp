@@ -27,6 +27,7 @@
 #include "wfemsg.h"
 #include "mailmisc.h"
 #include "nsadrlst.h"
+#include "addrfrm.h"
 
 extern char* wfe_ConstructFilterString(int type);
 extern char* XP_NetToDosFileName(const char * NetName);
@@ -714,21 +715,57 @@ void CNSAttachDropTarget::OnDragLeave(CWnd *)
 {
 }
 
-BOOL CNSAttachDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject, DROPEFFECT, CPoint point)
+static LPSTR getDataObjectNewsURL(COleDataObject * pDataObject)
 {
-   CComposeFrame * pFrame = (CComposeFrame*)pWnd->GetParentFrame();
-   CComposeBar * pComposeBar = pFrame->GetComposeBar();
-   if(pDataObject->IsDataAvailable(::RegisterClipboardFormat(vCardClipboardFormat)) )
-   {
+	if (!pDataObject->IsDataAvailable(::RegisterClipboardFormat(NETSCAPE_BOOKMARK_FORMAT)))
+    return FALSE;
+
+  char * szURL = NULL;
+  char * szTitle = NULL;
+  wfe_GetBookmarkData(pDataObject, &szURL, &szTitle);
+  if((strnicmp(szURL, "news", 4) == 0) || (strnicmp(szURL, "snews", 5) == 0))
+    return szURL;
+  else
+    return NULL;
+}
+
+BOOL CNSAttachDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject, DROPEFFECT effect, CPoint point)
+{
+  CComposeFrame * pFrame = (CComposeFrame*)pWnd->GetParentFrame();
+  CComposeBar * pComposeBar = pFrame->GetComposeBar();
+#ifdef MOZ_NEWADDR
+  if(pDataObject->IsDataAvailable(::RegisterClipboardFormat(ADDRESSBOOK_INDEX_FORMAT)))
+  {
+	pComposeBar->OnAddressTab();
+	pComposeBar->UpdateWindow();
+	pComposeBar->ProcessAddressBookIndexFormat(pDataObject,effect, point);
+
+	return TRUE;
+  }
+  else
+#endif
+	  if(pDataObject->IsDataAvailable(::RegisterClipboardFormat(vCardClipboardFormat)) )
+  {
+    pComposeBar->OnAddressTab();
+    pComposeBar->UpdateWindow();
+    return pComposeBar->ProcessVCardData(pDataObject,point);
+  }
+  else 
+  {
+    // do not put news URLs to attachment
+    char * szURL = getDataObjectNewsURL(pDataObject);
+    if(szURL != NULL)
+    {
       pComposeBar->OnAddressTab();
       pComposeBar->UpdateWindow();
-      return pComposeBar->ProcessVCardData(pDataObject,point);
-   }
-   else 
-   {
+      return pComposeBar->AddURLToAddressPane(pDataObject, point, szURL);
+    }
+    else
+    {
       pComposeBar->OnAttachTab();
       pComposeBar->UpdateWindow();
       return pComposeBar->m_pAttachmentList->ProcessDropTarget(pDataObject);
-   }
+    }
+  }
 }
 

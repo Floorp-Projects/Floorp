@@ -24,6 +24,7 @@
 #include "il_types.h"
 #include "layers.h"
 #include "jsapi.h"
+#include "prefapi.h"
 #include "MozillaApp.h"
 #include "Frame.h"
 #include "ViewGlue.h"
@@ -97,7 +98,6 @@ extern int MK_UNABLE_TO_LOCATE_FILE;
 
 #ifdef MOZ_LDAP
 extern "C" void fe_ldapsearch_finished(MWContext *context);
-extern "C" void fe_AB_AllConnectionsComplete(MWContext *context);
 #endif
 
 #ifndef NO_WEB_FONTS
@@ -105,6 +105,7 @@ extern "C" void fe_AB_AllConnectionsComplete(MWContext *context);
 extern "C" int fe_WebfontsNeedReload(MWContext *context);
 #endif /* NO_WEB_FONTS */
 
+extern "C" char * _XmStringGetTextConcat(XmString);
 #if DEBUG_slamm_
 #define D(x) x
 #else
@@ -137,9 +138,9 @@ fe_stderr_dialog_timer (XtPointer /* closure */, XtIntervalId * /* id */)
       /* If too much data was printed, then something has gone haywire,
 	 so truncate it. */
       char *trailer = XP_GetString(XFE_STDERR_DIAGNOSTICS_HAVE_BEEN_TRUNCATED);
-      int max = sizeof (stderr_buffer) - strlen (trailer) - 5;
-      if (strlen (s) > max)
-	strcpy (s + max, trailer);
+      size_t max = sizeof (stderr_buffer)/sizeof(char) - strlen (trailer) - 5;
+      if (XP_STRLEN (s) > max)
+	XP_STRCPY (s + max, trailer);
 
       /* Now show the user.
 	 Possibly we should do something about not popping this up
@@ -349,6 +350,36 @@ fe_initialize_stderr (void)
 #define CHECK_CONTEXT_AND_DATA(c) \
 ((c) && CONTEXT_DATA(c) && !CONTEXT_DATA(context)->being_destroyed)
 
+#if defined(GLUE_COMPO_CONTEXT)
+//
+// Return either the context's component or the current active component
+//
+static XFE_Component * 
+fe_compoFromMWContext(MWContext *context)
+{
+    XFE_Component * compo = NULL;
+
+    // Sanity check for possible invocation of this function from a compo
+    // that was just destroyed (or is being destroyed)
+    if (!CHECK_CONTEXT_AND_DATA(context))
+    {
+		return NULL;
+    }
+
+    // Try to use context's frame
+    compo = ViewGlue_getCompo(XP_GetNonGridContext(context));
+    
+	// Make sure the frame is alive
+	if (compo && !compo->isAlive())
+	{
+		compo = NULL;
+	}
+
+    return compo;
+}
+
+#endif /* GLUE_COMPO_CONTEXT */
+
 //
 // Return either the context's frame or the current active frame
 //
@@ -451,12 +482,12 @@ XFE_EnableClicking(MWContext *context)
   D( printf("XFE_EnableClicking(context = 0x%x) running_p = %d\n",
             context, running_p); )
 
-  if (f)
+  if (f && f->isAlive())
     {
       f->notifyInterested(XFE_View::commandNeedsUpdating,
 						   (void*)xfeCmdStopLoading);
 
-	  f->notifyInterested(running_p ?
+	  f->notifyInterested(running_p?
 						  XFE_Frame::frameBusyCallback:
 						  XFE_Frame::frameNotBusyCallback);
     }
@@ -540,12 +571,19 @@ extern "C" void
 XFE_AllConnectionsComplete(MWContext *context)
 {
   MWContext *top = XP_GetNonGridContext (context);
+#if defined(GLUE_COMPO_CONTEXT)
+  XFE_Component *f = 0;
+#else
   XFE_Frame *f;
-
+#endif /* GLUE_COMPO_CONTEXT */
   // this is evil and vile but it's been known to happen
   if (top == NULL) return;
 
+#if defined(GLUE_COMPO_CONTEXT)
+  f = ViewGlue_getCompo(top);
+#else
   f = ViewGlue_getFrame(top);
+#endif /* GLUE_COMPO_CONTEXT */
 
   if (CONTEXT_DATA (context)->being_destroyed) return;
 
@@ -628,8 +666,16 @@ XFE_AllConnectionsComplete(MWContext *context)
     }
   
   if (f && f->isAlive())
+//  if (f && f->getBaseWidget() && f->getBaseWidget()->core.being_destroyed == False)
     {
-      f->allConnectionsComplete();
+#if defined(GLUE_COMPO_CONTEXT)
+		if (f->isClassOf("Frame"))
+			((XFE_Frame *) f)->allConnectionsComplete(context);
+		else if (f->isClassOf("View"))
+			((XFE_View *) f)->allConnectionsComplete(context);
+#else
+		f->allConnectionsComplete(context);
+#endif /* GLUE_COMPO_CONTEXT */
     }
   else
     {
@@ -640,19 +686,8 @@ XFE_AllConnectionsComplete(MWContext *context)
 #endif
       
       if (context->type == MWContextSaveToDisk) /* gag gag gag */
-	fe_DestroySaveToDiskContext (context);
-      else if ( context->type == MWContextSearchLdap) 
-	{
-#ifdef UNIX_LDAP 
-//	  fe_ldapsearch_finished(context);
-#endif
-	}
-#ifdef MOZ_LDAP
-      else if ( context->type == MWContextAddressBook) /* AB ldap search */
-	{
-	  fe_AB_AllConnectionsComplete(context);
-	}
-#endif  // MOZ_LDAP
+		  fe_DestroySaveToDiskContext (context);
+	
     }
 }
 
@@ -1143,22 +1178,29 @@ FE_UpdateChrome(MWContext *context, /* in */
   frame->respectChrome(chrome);
 }
 
+/* This used to be MOZ_MAIL_NEWS (MOZ_LITE actually) in the NOVA branch */
 #ifdef MOZ_LDAP
 extern "C" void
 FE_RememberPopPassword (MWContext *context, const char *password)
 {
-  /* Store password into preferences. */
-  StrAllocCopy (fe_globalPrefs.pop3_password, password);
+    // If we aren't supposed to remember don't save anything
+    XP_Bool passwordProtectLocalCache;
 
-  /* If user has already requesting saving it, do that. */
-  if (fe_globalPrefs.rememberPswd)
-    {
-      if (!XFE_SavePrefs ((char *) fe_globalData.user_prefs_file,
-			  &fe_globalPrefs))
-	fe_perror (context, XP_GetString( XFE_ERROR_SAVING_PASSWORD ) );
+    PREF_GetBoolPref("mail.password_protect_local_cache", 
+		     &passwordProtectLocalCache);
+
+    // Store password into preferences.
+    StrAllocCopy (fe_globalPrefs.pop3_password, password);
+    
+    // If user has already requesting saving it, do that.
+    if (fe_globalPrefs.rememberPswd || passwordProtectLocalCache) {
+	if (!XFE_SavePrefs ((char *) fe_globalData.user_prefs_file,
+			    &fe_globalPrefs))
+	    fe_perror (context, XP_GetString( XFE_ERROR_SAVING_PASSWORD ) );
     }
 }
-#endif
+#endif /* MOZ_LDAP */  
+
 
 extern "C" void
 FE_BackCommand(MWContext *context)
@@ -1560,7 +1602,7 @@ FE_FindCommand(MWContext *context,          /* in MOD: can this be mail or news?
       /*
        * This section is an exact cut and paste from fe_find().  Ugh!
        */
-      int32 x, y;
+      int32 x,y;
       LO_SelectText (context_to_find,
 		     find_data->start_element, find_data->start_pos,
 		     find_data->end_element, find_data->end_pos,
@@ -1690,6 +1732,8 @@ xfe2_MakeNewWindow(Widget toplevel, MWContext *context_to_copy,
 				   Boolean /* skip_get_url */, Chrome *decor)
 {
 	XFE_Frame *parent_frame = context_to_copy ? ViewGlue_getFrame(context_to_copy) : 0;
+//	XP_ASSERT(parent_frame);
+
 	MWContext *new_context = 0;
 
 	switch (type)
@@ -1731,7 +1775,7 @@ xfe2_MakeNewWindow(Widget toplevel, MWContext *context_to_copy,
 						}
 					case MSG_THREADPANE:
 						{
-							MSG_FolderInfo *folder = MSG_GetFolderInfoFromURL(fe_getMNMaster(), url->address);
+							MSG_FolderInfo *folder = MSG_GetFolderInfoFromURL(fe_getMNMaster(), url->address, FALSE);
 							if (folder)
 								new_context = fe_showMessages(toplevel, parent_frame, decor, 
 													   folder, fe_globalPrefs.reuse_thread_window, FALSE, MSG_MESSAGEKEYNONE);
@@ -1739,7 +1783,7 @@ xfe2_MakeNewWindow(Widget toplevel, MWContext *context_to_copy,
 						}
 					case MSG_MESSAGEPANE:
 						{
-							MSG_FolderInfo *folder = MSG_GetFolderInfoFromURL(fe_getMNMaster(), url->address);
+							MSG_FolderInfo *folder = MSG_GetFolderInfoFromURL(fe_getMNMaster(), url->address, TRUE);
 							MSG_MessageLine msgLine;
 							MessageKey key = MSG_MESSAGEKEYNONE;
 
@@ -1905,6 +1949,176 @@ extern "C" void fe_sgiStop()
 
 #endif
 
+#if 0
+//#if defined(GLUE_COMPO_CONTEXT)
+//////////////////////////////////////////////////////////////////////////
+//
+// Progress functions.  XFE_Component versions
+//
+//////////////////////////////////////////////////////////////////////////
+
+static void fe_compoNotifyLogoStopAnimation		(MWContext *);
+static void fe_compoNotifyLogoStartAnimation	(MWContext *);
+
+static void fe_compoNotifyProgressUpdateText	(MWContext *,char *);
+static void fe_compoNotifyProgressUpdatePercent	(MWContext *,int);
+
+static void	fe_compoNotifyProgressTickCylon	(MWContext *);
+
+static void fe_compoNotifyStatusUpdateText		(MWContext *,char *);
+
+//////////////////////////////////////////////////////////////////////////
+static void
+fe_compoNotifyLogoStartAnimation(MWContext * context)
+{
+	XP_ASSERT( context != NULL );
+
+    if (!CHECK_CONTEXT_AND_DATA(context))
+    {
+		return;
+    }
+
+	CONTEXT_DATA(context)->logo_animation_running = True;
+
+	// Try to get the xfe compo for the context
+	XFE_Component * compo = fe_compoFromMWContext(context);
+	
+	// There will be no compo for biff context so we ignore them
+	if (!compo)
+	{
+		return;
+	}
+
+	// Notify the compo to start animating the logo
+	compo->notifyInterested(XFE_Component::logoStartAnimation,(void *) NULL);
+}
+//////////////////////////////////////////////////////////////////////////
+static void
+fe_compoNotifyLogoStopAnimation(MWContext * context)
+{
+	XP_ASSERT( context != NULL );
+
+    if (!CHECK_CONTEXT_AND_DATA(context))
+    {
+		return;
+    }
+
+	CONTEXT_DATA(context)->logo_animation_running = False;
+
+	// Try to get the xfe compo for the context
+	XFE_Component * compo = fe_compoFromMWContext(context);
+	
+	// There will be no compo for biff context so we ignore them
+	if (!compo)
+	{
+		return;
+	}
+
+	// Notify the compo to stop animating the logo
+	compo->notifyInterested(XFE_Component::logoStopAnimation,(void *) NULL);
+}
+//////////////////////////////////////////////////////////////////////////
+static void
+fe_compoNotifyProgressUpdateText(MWContext * context,char * text)
+{
+	XP_ASSERT( context != NULL );
+
+    if (!CHECK_CONTEXT_AND_DATA(context))
+    {
+		return;
+    }
+
+	// Try to get the xfe compo for the context
+	XFE_Component * compo = fe_compoFromMWContext(context);
+	
+	// There will be no compo for biff context so we ignore them
+	if (!compo)
+	{
+		return;
+	}
+
+	// Notify the compo to update the progress text
+	compo->notifyInterested(XFE_Component::progressBarUpdateText,(void *) text);
+}
+//////////////////////////////////////////////////////////////////////////
+static void
+fe_compoNotifyProgressUpdatePercent(MWContext * context,int percent)
+{
+	XP_ASSERT( context != NULL );
+
+    if (!CHECK_CONTEXT_AND_DATA(context))
+    {
+		return;
+    }
+
+	// Try to get the xfe compo for the context
+	XFE_Component * compo = fe_compoFromMWContext(context);
+	
+	// There will be no compo for biff context so we ignore them
+	if (!compo)
+	{
+		return;
+	}
+
+	// Notify the compo to update the progress percent
+	compo->notifyInterested(XFE_Component::progressBarUpdatePercent,
+							(void *) percent);
+}
+
+//////////////////////////////////////////////////////////////////////////
+static void
+fe_compoNotifyProgressTickCylon(MWContext * context)
+{
+	XP_ASSERT( context != NULL );
+
+    if (!CHECK_CONTEXT_AND_DATA(context))
+    {
+		return;
+    }
+
+	// Try to get the xfe compo for the context
+	XFE_Component * compo = fe_compoFromMWContext(context);
+	
+	// There will be no compo for biff context so we ignore them
+	if (!compo)
+	{
+		return;
+	}
+
+	// Notify the compo to tick cyclone mode
+	compo->notifyInterested(XFE_Component::progressBarCylonTick);
+}
+//////////////////////////////////////////////////////////////////////////
+static void
+fe_compoNotifyStatusUpdateText(MWContext * context,char * text)
+{
+	XP_ASSERT( context != NULL );
+
+    if (!CHECK_CONTEXT_AND_DATA(context))
+    {
+		return;
+    }
+
+	// Try to get the xfe compo for the context
+	XFE_Component * compo = fe_compoFromMWContext(context);
+	
+	// There will be no compo for biff context so we ignore them
+	if (!compo)
+	{
+		return;
+	}
+
+	char * message = text;
+
+    if (message == 0 || *message == '\0')
+    {
+		message = context->defaultStatus;
+    }
+    
+	// Notify the compo to update the status text
+    compo->notifyInterested(XFE_View::statusNeedsUpdating,(void*) message);
+}
+#endif /* GLUE_COMPO_CONTEXT */
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -1918,7 +2132,7 @@ static void fe_frameNotifyLogoStartAnimation	(MWContext *);
 static void fe_frameNotifyProgressUpdateText	(MWContext *,char *);
 static void fe_frameNotifyProgressUpdatePercent	(MWContext *,int);
 
-static void	fe_frameNotifyProgressTickCylon		(MWContext *);
+static void	fe_frameNotifyProgressTickCylon	(MWContext *);
 
 static void fe_frameNotifyStatusUpdateText		(MWContext *,char *);
 
@@ -1935,6 +2149,17 @@ fe_frameNotifyLogoStartAnimation(MWContext * context)
 
 	CONTEXT_DATA(context)->logo_animation_running = True;
 
+#if defined(GLUE_COMPO_CONTEXT)
+	// Try to get the xfe compo for the context
+	XFE_Component *compo = fe_compoFromMWContext(context);
+	if (!compo)
+		return;
+
+	// Notify the frame to start animating the logo
+	compo->notifyInterested(XFE_Component::logoStartAnimation,
+							(void *) NULL);
+			
+#else
 	// Try to get the xfe frame for the context
 	XFE_Frame * frame = fe_frameFromMWContext(context);
 	
@@ -1946,6 +2171,7 @@ fe_frameNotifyLogoStartAnimation(MWContext * context)
 
 	// Notify the frame to start animating the logo
 	frame->notifyInterested(XFE_Frame::logoStartAnimation,(void *) NULL);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 //////////////////////////////////////////////////////////////////////////
 static void
@@ -1960,6 +2186,16 @@ fe_frameNotifyLogoStopAnimation(MWContext * context)
 
 	CONTEXT_DATA(context)->logo_animation_running = False;
 
+#if defined(GLUE_COMPO_CONTEXT)
+	// Try to get the xfe compo for the context
+	XFE_Component *compo = fe_compoFromMWContext(context);
+	if (!compo)
+		return;
+
+	// Notify the compo to stop animating the logo
+	compo->notifyInterested(XFE_Component::logoStopAnimation,
+							(void *) NULL);
+#else
 	// Try to get the xfe frame for the context
 	XFE_Frame * frame = fe_frameFromMWContext(context);
 	
@@ -1971,6 +2207,7 @@ fe_frameNotifyLogoStopAnimation(MWContext * context)
 
 	// Notify the frame to stop animating the logo
 	frame->notifyInterested(XFE_Frame::logoStopAnimation,(void *) NULL);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 //////////////////////////////////////////////////////////////////////////
 static void
@@ -1983,6 +2220,14 @@ fe_frameNotifyProgressUpdateText(MWContext * context,char * text)
 		return;
     }
 
+#if defined(GLUE_COMPO_CONTEXT)
+	XFE_Component *compo = fe_compoFromMWContext(context);
+	if (!compo)
+		return;
+
+	compo->notifyInterested(XFE_Component::progressBarUpdateText,
+								(void *) text);
+#else
 	// Try to get the xfe frame for the context
 	XFE_Frame * frame = fe_frameFromMWContext(context);
 	
@@ -1994,6 +2239,7 @@ fe_frameNotifyProgressUpdateText(MWContext * context,char * text)
 
 	// Notify the frame to update the progress text
 	frame->notifyInterested(XFE_Frame::progressBarUpdateText,(void *) text);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 //////////////////////////////////////////////////////////////////////////
 static void
@@ -2006,6 +2252,14 @@ fe_frameNotifyProgressUpdatePercent(MWContext * context,int percent)
 		return;
     }
 
+#if defined(GLUE_COMPO_CONTEXT)
+	XFE_Component *compo = fe_compoFromMWContext(context);
+	if (!compo)
+		return;
+
+	compo->notifyInterested(XFE_Component::progressBarUpdatePercent,
+							(void *) percent);
+#else
 	// Try to get the xfe frame for the context
 	XFE_Frame * frame = fe_frameFromMWContext(context);
 	
@@ -2018,6 +2272,7 @@ fe_frameNotifyProgressUpdatePercent(MWContext * context,int percent)
 	// Notify the frame to update the progress percent
 	frame->notifyInterested(XFE_Frame::progressBarUpdatePercent,
 							(void *) percent);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -2031,6 +2286,13 @@ fe_frameNotifyProgressTickCylon(MWContext * context)
 		return;
     }
 
+#if defined(GLUE_COMPO_CONTEXT)
+	XFE_Component *compo = fe_compoFromMWContext(context);
+	if (!compo)
+		return;
+
+	compo->notifyInterested(XFE_Component::progressBarCylonTick);
+#else
 	// Try to get the xfe frame for the context
 	XFE_Frame * frame = fe_frameFromMWContext(context);
 	
@@ -2040,8 +2302,9 @@ fe_frameNotifyProgressTickCylon(MWContext * context)
 		return;
 	}
 
-	// Notify the frame to tick cylon mode
+	// Notify the frame to tick cyclone mode
 	frame->notifyInterested(XFE_Frame::progressBarCylonTick);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 //////////////////////////////////////////////////////////////////////////
 static void
@@ -2054,6 +2317,20 @@ fe_frameNotifyStatusUpdateText(MWContext * context,char * text)
 		return;
     }
 
+#if defined(GLUE_COMPO_CONTEXT)
+	XFE_Component *compo = fe_compoFromMWContext(context);
+	if (!compo)
+		return;
+
+	char * message = text;
+
+    if (message == 0 || *message == '\0')
+    {
+		message = context->defaultStatus;
+    }
+    
+	compo->notifyInterested(XFE_View::statusNeedsUpdating,(void*) message);
+#else
 	// Try to get the xfe frame for the context
 	XFE_Frame * frame = fe_frameFromMWContext(context);
 	
@@ -2072,8 +2349,11 @@ fe_frameNotifyStatusUpdateText(MWContext * context,char * text)
     
 	// Notify the frame to update the status text
     frame->notifyInterested(XFE_View::statusNeedsUpdating,(void*) message);
+#endif /* GLUE_COMPO_CONTEXT */		
 }
 //////////////////////////////////////////////////////////////////////////
+
+			
 
 
 /* Print a status message in the wholine.
@@ -2113,11 +2393,11 @@ fe_progress_dialog_timer (XtPointer closure, XtIntervalId * /* id */)
      the length, only update every 1/2 second.
    */
   CONTEXT_DATA (context)->thermo_timer_id =
-	  XtAppAddTimeOut (fe_XtAppContext,
+    XtAppAddTimeOut (fe_XtAppContext,
 					   (CONTEXT_DATA (context)->thermo_lo_percent <= 0
-						? 100
-						: 500),
-					   fe_progress_dialog_timer, closure);
+		       ? 100
+		       : 500),
+		     fe_progress_dialog_timer, closure);
 }
 
 /* Start blinking the light and drawing the thermometer.

@@ -74,6 +74,7 @@ public:
 	static const char *		twoPaneView;
         void showFolderBtn();
   	void setShowFolder(XP_Bool show);
+        XP_Bool                 isFolderShown();
 
 protected:
 
@@ -96,6 +97,7 @@ private:
 	XFE_Frame *m_parentFrame;
 
 	XFE_ProxyIcon *m_proxyicon;
+        XP_Bool m_isFolderShown;
 };
 
 #endif /* _xfe_mnbanner_h */
