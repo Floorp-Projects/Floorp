@@ -175,11 +175,11 @@
 } 
 
 #button-delete:hover:active {
-  -moz-image-region: rect(238px 149px 271px 100px);
+  -moz-image-region: rect(0 149px 34px 100px);
 }
 
 #button-delete[disabled] {
-  -moz-image-region: rect(238px 199px 271px 150px) !important;
+  -moz-image-region: rect(0 199px 34px 150px) !important;
 } 
 
 #button-mark {
