@@ -61,7 +61,7 @@ void ShowWindowNow(HWND hWnd, int iShow)
   UpdateWindow(hWnd);
 }
 
-void fillAPIComboBox(HWND hWndCombo)
+void fillAPIComboBoxAndSetSel(HWND hWndCombo, int iSel)
 {
   ComboBox_AddString(hWndCombo, STRING_NPN_VERSION);
   ComboBox_AddString(hWndCombo, STRING_NPN_GETURL);
@@ -86,7 +86,7 @@ void fillAPIComboBox(HWND hWndCombo)
   ComboBox_AddString(hWndCombo, STRING_NPN_INVALIDATEREGION);
   ComboBox_AddString(hWndCombo, STRING_NPN_FORCEREDRAW);
 
-  ComboBox_SetCurSel(hWndCombo, 0);
+  ComboBox_SetCurSel(hWndCombo, iSel);
 }
 
 static void setStaticTexts7(HWND hWnd, LPSTR s1, LPSTR s2, LPSTR s3, LPSTR s4, LPSTR s5,LPSTR s6, LPSTR s7)

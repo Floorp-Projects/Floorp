@@ -195,7 +195,7 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   CPlugin * pPlugin = (CPlugin *)lParam;
   SetWindowLong(hWnd, DWL_USER, (long)pPlugin);
 
-  int iTopMargin = 160;
+  int iTopMargin = 188;
   SetWindowPos(hWnd, NULL, 0,iTopMargin, 0,0, SWP_NOZORDER | SWP_NOSIZE);
 
   Edit_SetText(GetDlgItem(hWnd, IDC_EDIT_SCRIPT_FILE_NAME), pPlugin->m_Pref_szScriptFile);

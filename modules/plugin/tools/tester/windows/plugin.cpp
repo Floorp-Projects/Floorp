@@ -101,6 +101,9 @@ void CPlugin::restorePreferences()
 
   XP_GetPrivateProfileString(szSection, KEY_FLUSH_NOW, ENTRY_YES, sz, sizeof(sz), szFileName);
   m_Pref_bFlushNow = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+
+  XP_GetPrivateProfileString(szSection, KEY_REMEMBER_LAST_API_CALL, ENTRY_YES, sz, sizeof(sz), szFileName);
+  m_Pref_bRememberLastCall = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
 }
 
 void CPlugin::savePreferences()
@@ -114,6 +117,7 @@ void CPlugin::savePreferences()
   XP_WritePrivateProfileString(szSection, KEY_TO_FILE, m_Pref_bToFile ? szYes : szNo, szFileName);
   XP_WritePrivateProfileString(szSection, KEY_TO_FRAME, m_Pref_bToFrame ? szYes : szNo, szFileName);
   XP_WritePrivateProfileString(szSection, KEY_FLUSH_NOW, m_Pref_bFlushNow ? szYes : szNo, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_REMEMBER_LAST_API_CALL, m_Pref_bRememberLastCall ? szYes : szNo, szFileName);
 }
 
 void CPlugin::updatePrefs(GUIPrefs prefs, int iValue, char * szValue)
@@ -139,6 +143,9 @@ void CPlugin::updatePrefs(GUIPrefs prefs, int iValue, char * szValue)
       break;
     case gp_flush:
       m_Pref_bFlushNow = (BOOL)iValue;
+      break;
+    case gp_rememberlast:
+      m_Pref_bRememberLastCall = (BOOL)iValue;
       break;
     default:
       break;

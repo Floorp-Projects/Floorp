@@ -65,12 +65,12 @@ BOOL WINAPI DllMain(HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
         hWndLoadStatus = ShowLoadStatus("Tester dll is loaded");
       break;
     }
-    case DLL_THREAD_ATTACH:
-      break;
     case DLL_PROCESS_DETACH:
       if (hWndLoadStatus)
         DestroyLoadStatus(hWndLoadStatus);
       break;
+
+    case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
       break;
     default:

@@ -230,6 +230,7 @@ void XP_FlushFileBuffers(XP_HFILE hFile);
 DWORD XP_GetPrivateProfileString(LPSTR szSection, LPSTR szKey, LPSTR szDefault, LPSTR szString, DWORD dwSize, LPSTR szFileName);
 int XP_GetPrivateProfileInt(LPSTR szSection, LPSTR szKey, int iDefault, LPSTR szFileName);
 BOOL XP_WritePrivateProfileString(LPSTR szSection, LPSTR szKey, LPSTR szString, LPSTR szFileName);
+BOOL XP_WritePrivateProfileInt(LPSTR szSection, LPSTR szKey, int iValue, LPSTR szFileName);
 
 // Misc utilities
 DWORD XP_GetTickCount();

@@ -195,6 +195,13 @@ BOOL XP_WritePrivateProfileString(LPSTR szSection, LPSTR szKey, LPSTR szString, 
 #endif // XP_WIN
 }
 
+BOOL XP_WritePrivateProfileInt(LPSTR szSection, LPSTR szKey, int iValue, LPSTR szFileName)
+{
+  char szString[80];
+  itoa(iValue, szString, 10);
+  return XP_WritePrivateProfileString(szSection, szKey, szString, szFileName);
+}
+
 /****************************************/
 /*                                      */
 /*       Miscellaneous utilities        */
