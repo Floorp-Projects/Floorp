@@ -685,7 +685,7 @@ function getStringBundle()
   const lsContractID = "@mozilla.org/intl/nslocaleservice;1";
   const lsIID = Components.interfaces.nsILocaleService;
   const ls = Components.classes[lsContractID].getService(lsIID);
-  var appLocale = ls.GetApplicationLocale();
+  var appLocale = ls.getApplicationLocale();
   return sbs.createBundle(bundleURL, appLocale);    
 }
 
