@@ -106,6 +106,7 @@ class NS_COM nsXPIDLString
 
         // deprecated, to be eliminated
       operator const PRUnichar*() const { return get(); }
+      PRUnichar  operator[]( int i ) const { return get()[ i ]; }
 
 
       class getter_Copies_t
@@ -199,6 +200,7 @@ class NS_COM nsXPIDLCString
 
         // deprecated, to be eliminated
       operator const char*() const { return get(); }
+      char  operator[]( int i ) const      { return get()[ i ]; }
 
 
       class getter_Copies_t
