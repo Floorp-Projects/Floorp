@@ -651,7 +651,7 @@ public:
     PRPackedBool        mMeasureText;         // IN
     PRPackedBool        mInWord;              // IN
     PRPackedBool        mFirstLetterOK;       // IN
-    PRPackedBool        mIsBreakable;         // IN
+    PRPackedBool        mCanBreakBefore;         // IN
     PRPackedBool        mComputeMaxWordWidth; // IN
     PRPackedBool        mTrailingSpaceTrimmed; // IN/OUT
   
@@ -661,7 +661,7 @@ public:
                    PRBool  aMeasureText,
                    PRBool  aInWord,
                    PRBool  aFirstLetterOK,
-                   PRBool  aIsBreakable,
+                   PRBool  aCanBreakBefore,
                    PRBool  aComputeMaxWordWidth,
                    PRBool  aTrailingSpaceTrimmed)
       : mX(0),
@@ -674,7 +674,7 @@ public:
         mMeasureText(aMeasureText),
         mInWord(aInWord),
         mFirstLetterOK(aFirstLetterOK),
-        mIsBreakable(aIsBreakable),
+        mCanBreakBefore(aCanBreakBefore),
         mComputeMaxWordWidth(aComputeMaxWordWidth),
         mTrailingSpaceTrimmed(aTrailingSpaceTrimmed)
     {}
@@ -774,7 +774,7 @@ public:
                                 PRUnichar* aWordBuf,
                                 PRUint32   aWordBufLen,
                                 PRUint32   aWordBufSize,
-                                PRBool     aIsBreakable);
+                                PRBool     aCanBreakBefore);
 
   nsTextDimensions ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
                                    nsILineBreaker* aLineBreaker,
@@ -787,7 +787,7 @@ public:
                                    const PRUnichar* aWordBuf,
                                    PRUint32 &aWordBufLen,
                                    PRUint32 aWordBufSize,
-                                   PRBool aIsBreakable);
+                                   PRBool aCanBreakBefore);
 
   void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
 
@@ -4648,6 +4648,14 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 #ifdef IBMBIDI
     wordLen = start;
 #endif // IBMBIDI
+
+    // if the first word has been processed and the last word is not whitespace,
+    // make it be breakable here after.
+    // whitespace is processed later (skipping leading space should not make it breakable)
+    if (!aTextData.mCanBreakBefore && !firstThing && !isWhitespace) {
+       aTextData.mCanBreakBefore = PR_TRUE;
+    }
+
     bp2 = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace,
                           &wasTransformed, textRun.mNumSegments == 0);
 #ifdef IBMBIDI
@@ -4717,7 +4725,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 
       // NOTE: Even if the textRun absorbs the whitespace below, we still
       // want to remember that we're breakable.
-      aTextData.mIsBreakable = PR_TRUE;
+      aTextData.mCanBreakBefore = PR_TRUE;
       aTextData.mFirstLetterOK = PR_FALSE;
  
       if ('\t' == firstChar) {
@@ -5024,13 +5032,13 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       // Force breakable to false when we aren't wrapping (this
       // guarantees that the combined word will stay together)
       if (!aTextData.mWrapping) {
-        aTextData.mIsBreakable = PR_FALSE;
+        aTextData.mCanBreakBefore = PR_FALSE;
       }
 
       // This frame does start a word. However, there is no point
       // messing around with it if we are already out of room. We
       // always have room if we are not breakable.
-      if (!aTextData.mIsBreakable || (aTextData.mX <= maxWidth)) {
+      if (!aTextData.mCanBreakBefore || (aTextData.mX <= maxWidth)) {
         // There is room for this word fragment. It's possible that
         // this word fragment is the end of the text-run. If it's not
         // then we continue with the look-ahead processing.
@@ -5086,8 +5094,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
                                                     pWordBuf,
                                                     lastWordLen,
                                                     wordBufLen,
-                                                    aTextData.mIsBreakable);
-          if (!aTextData.mIsBreakable || (aTextData.mX - lastWordDimensions.width + wordDimensions.width <= maxWidth)) {
+                                                    aTextData.mCanBreakBefore);
+          if (!aTextData.mCanBreakBefore || (aTextData.mX - lastWordDimensions.width + wordDimensions.width <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
             // word's affect on the max-element-size here (since the
             // joined word is large than it's pieces, the right effect
@@ -5606,9 +5614,9 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
                                    PRUnichar* aWordBuf,
                                    PRUint32 aWordLen,
                                    PRUint32 aWordBufSize,
-                                   PRBool aIsBreakable)
+                                   PRBool aCanBreakBefore)
 {
-  if (aIsBreakable) {
+  if (aCanBreakBefore) {
     // Before we get going, convert any spaces in the current word back
     // to nbsp's. This keeps the breaking logic happy.
     RevertSpacesToNBSP(aWordBuf, (PRInt32) aWordLen);
@@ -5640,7 +5648,7 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
                                                      newWordBuf,
                                                      aWordLen,
                                                      newWordBufSize,
-                                                     aIsBreakable);
+                                                     aCanBreakBefore);
       if (moreDimensions.width < 0) {
         PRUint32 moreSize = -moreDimensions.width;
         //Oh, wordBuf is too small, we have to grow it
@@ -5662,7 +5670,7 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
                                           aLineLayout, aReflowState,
                                           aNextFrame, content, tc, &stop,
                                           newWordBuf, aWordLen, newWordBufSize,
-                                          aIsBreakable);
+                                          aCanBreakBefore);
           NS_ASSERTION((moreDimensions.width >= 0),
                        "ComputeWordFragmentWidth is returning negative");
         } else {
@@ -5714,7 +5722,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
                                       const PRUnichar* aWordBuf,
                                       PRUint32& aRunningWordLen,
                                       PRUint32 aWordBufSize,
-                                      PRBool aIsBreakable)
+                                      PRBool aCanBreakBefore)
 {
   nsTextTransformer tx(aLineBreaker, nsnull, aPresContext);
   tx.Init(aTextFrame, aContent, 0);
@@ -5747,7 +5755,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
   }
   *aStop = contentLen < tx.GetContentLength();
 
-  if (aIsBreakable) {
+  if (aCanBreakBefore) {
     // Convert any spaces in the current word back to nbsp's. This keeps
     // the breaking logic happy.
     RevertSpacesToNBSP(bp, wordLen);
@@ -5780,6 +5788,17 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
         aRunningWordLen += wordLen;
     }
   }
+  else {
+    // Even if the previous text fragment is not breakable, the connected pieces 
+    // can be breakable in between. This especially true for CJK.
+    PRBool canBreak;
+    nsresult lres = aLineBreaker->BreakInBetween(aWordBuf, aRunningWordLen, bp, wordLen, &canBreak);
+    if (NS_SUCCEEDED(lres) && canBreak) {
+      wordLen = 0;
+      *aStop = PR_TRUE;
+    }
+  }
+
   if((*aStop) && (wordLen == 0))
     return dimensions; // 0;
 
