@@ -776,7 +776,12 @@ nsHTTPChannel::OnStatus(nsIChannel *aChannel,
 NS_IMETHODIMP
 nsHTTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
+  // These progreess notifications are coming from the raw socket and are not
+  // as interesting as the progress of HTTP channel (pushing the real data
+  // to the consumer)...
+  //
   // HTTP pushes out progress via the response listener.
+  // See ReportProgress(...)
   return NS_OK;
 }
 
@@ -1406,6 +1411,23 @@ PRUint32
 nsHTTPChannel::getChannelState()
 {
     return mState;
+}
+
+
+nsresult nsHTTPChannel::ReportProgress(PRUint32 aProgress,
+                                       PRUint32 aProgressMax)
+{
+  nsresult rv = NS_OK;
+
+  /*
+   * Only fire progress notifications if the URI is being loaded in 
+   * the forground...
+   */
+  if (!(nsIChannel::LOAD_BACKGROUND & mLoadAttributes) && mProgressEventSink) {
+      rv = mProgressEventSink->OnProgress(this, mResponseContext, 
+                                          aProgress, aProgressMax);
+  }
+  return rv;
 }
 
 
