@@ -593,6 +593,12 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD HideWindowChrome(PRBool aShouldHide) = 0;
 
     /**
+     * Put the toplevel window into or out of fullscreen mode.
+     *
+     */
+    NS_IMETHOD MakeFullScreen(PRBool aFullScreen) = 0;
+
+    /**
      * Validate the widget.
      *
      */

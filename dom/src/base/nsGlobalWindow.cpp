@@ -203,7 +203,6 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mTimeoutsWereCleared(PR_FALSE), mFirstDocumentLoad(PR_TRUE),
   mIsScopeClear(PR_TRUE), mIsDocumentLoaded(PR_FALSE),
   mLastMouseButtonAction(LL_ZERO), mFullScreen(PR_FALSE),
-  mOriginalPos(nsnull), mOriginalSize(nsnull),
   mGlobalObjectOwner(nsnull),
   mDocShell(nsnull), mMutationBits(0), mChromeEventHandler(nsnull),
   mFrameElement(nsnull)
@@ -1927,67 +1926,15 @@ NS_IMETHODIMP GlobalWindowImpl::SetFullScreen(PRBool aFullScreen)
   if (!allowDefault)
     return NS_OK;
 
-  if (aFullScreen) {
-    // hide window chrome
-    nsCOMPtr<nsIDOMElement> docEl;
-    mDocument->GetDocumentElement(getter_AddRefs(docEl));
-    if (docEl)
-        docEl->SetAttribute(NS_LITERAL_STRING("hidechrome"), NS_LITERAL_STRING("true"));
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+  NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-    // store current position for restoration later on
-    if (!mOriginalPos)
-      mOriginalPos = new nsPoint();
-    if (!mOriginalPos)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    GetScreenX(&(mOriginalPos->x));
-    GetScreenY(&(mOriginalPos->y));
+  nsCOMPtr<nsIWidget> widget;
+  treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
+  if (widget)
+    widget->MakeFullScreen(aFullScreen);
 
-    // store current size for restoration later on
-    if (!mOriginalSize)
-      mOriginalSize = new nsSize();
-    if (!mOriginalSize)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    GetOuterWidth(&(mOriginalSize->width));
-    GetOuterHeight(&(mOriginalSize->height));
-  
-    // get screen object so we can measure screen dimensions
-    nsCOMPtr<nsIDOMScreen> screen;
-    GetScreen(getter_AddRefs(screen));
-    PRInt32 width, height;
-    screen->GetWidth(&width);
-    screen->GetHeight(&height);
-  
-    // move to origin and size to fill entire screen
-    MoveTo(0, 0);
-    ResizeTo(width, height);
-
-    // hide all OS chrome (like the windows taskbar)
-    nsCOMPtr<nsIFullScreen> fullScreen =
-      do_GetService("@mozilla.org/browser/fullscreen;1");
-    if (fullScreen)
-      fullScreen->HideAllOSChrome();
-  } else {
-    // show window chrome again
-    nsCOMPtr<nsIDOMElement> docEl;
-    mDocument->GetDocumentElement(getter_AddRefs(docEl));
-    if (docEl)
-     docEl->RemoveAttribute(NS_LITERAL_STRING("hidechrome"));
-  
-    // restore window to original size/position
-    if (mOriginalPos)
-      MoveTo(mOriginalPos->x, mOriginalPos->y);
-    if (mOriginalSize)
-      ResizeTo(mOriginalSize->width, mOriginalSize->height);
-  
-    // show all OS chrome again
-    nsCOMPtr<nsIFullScreen> fullScreen =
-      do_GetService("@mozilla.org/browser/fullscreen;1");
-    if (fullScreen)
-      fullScreen->ShowAllOSChrome();
-  }
-  
   mFullScreen = aFullScreen;
 
   return NS_OK;
