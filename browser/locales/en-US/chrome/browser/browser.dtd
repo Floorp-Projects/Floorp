@@ -304,7 +304,7 @@
 <!ENTITY textZoomResetCmd.label         "Normal">
 <!ENTITY textZoomResetCmd.accesskey     "N">
 <!ENTITY textSize.label                 "Text Size">
-<!ENTITY textSize.accesskey             "S">
+<!ENTITY textSize.accesskey             "z">
 
 <!ENTITY mailMenu.label                   "Mail &amp; News">
 <!ENTITY mailMenu.accesskey               "M">
