@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.216 $ ';
+$::UtilsVersion = '$Revision: 1.217 $ ';
 
 package TinderUtils;
 
@@ -1593,98 +1593,17 @@ sub run_all_tests {
     }
 
 
-    # Codesize test.  Needed to do by hand:
-    #
-    # cvs checkout mozilla/tools/codesighs
+    # SeaMonkey Codesize test.
     #
     if ($Settings::CodesizeTest and $test_result eq 'success') {
-      
-      # test needs this set
-      $ENV{MOZ_MAPINFO} = "1";
-      $ENV{TINDERBOX_OUTPUT} = "1";
-      
-      #chdir(".."); # up one level.
-
-      my $cwd = get_system_cwd();
-      print_log "cwd = $cwd\n";
-      
-      my $args;
-
-      my $new_log   = "Codesize-new.log";
-      my $old_log   = "Codesize-old.log";
-      my $diff_log  = "Codesize-diff.log";
-      my $test_name = "CodesizeConversionTest";
-      my $test_log  = "$test_name.log";
-
-      $args = "$new_log $old_log $diff_log";
-
-      print_log "\$build_dir = $build_dir";
-
-      # Clear the logs from the last run, so we can properly test for success.
-      unlink("$build_dir/$new_log");
-      unlink("$build_dir/$diff_log");
-      unlink("$build_dir/$test_log");
-
-      my $bash_cmd;
-      if ($Settings::OS =~ /^WIN/) {
-        $bash_cmd = $Settings::CodesizeTestType . "summary.win.bash";
-      } else {
-        # Assume Linux for non-windows for now.
-        $bash_cmd = $Settings::CodesizeTestType . "summary.linux.bash";
-      }
-
-      my $test_result =
-        FileBasedTest($test_name, 
-                      "$build_dir", 
-                      "$build_dir",  # run top of tree, not in dist.
-                      ["$bash_cmd $args"], # auto|base
-                      $Settings::CodesizeTestTimeout,
-                      "FAILED", # Fake out failure mode, test file instead.
-                      0, 0);    # Timeout means failure.
-
-      # Set status based on file creation.
-      if (-e "$build_dir/$new_log") {
-        print_log "found $build_dir/$new_log\n";
-        $test_result = 'success';
-
-        # Print diff data to tbox log.
-        if (-e "$build_dir/$diff_log") {
-          print_logfile("$build_dir/$diff_log", "codesize diff log");
-        }
-
-        #
-        # Extract data.
-        #
-        my $z_data = extract_token_from_file("$build_dir/$test_log", "__codesize", ":");
-        chomp($z_data);
-        my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-        my $z_data_string = PrintSize($z_data,4);
-        print_log "TinderboxPrint:" .
-        "<a title=\"Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
-          ::hostname() . "&autoscale=1&units=bytes&days=7&avg=0&showpoint=$time,$z_data\">Z:$z_data_string" . "B</a>\n";
-
-        if($Settings::TestsPhoneHome) {
-          send_results_to_server($z_data, "--", "codesize", ::hostname());
-        }
-
-        my $zdiff_data = extract_token_from_file("$build_dir/$test_log", "__codesizeDiff", ":");
-        chomp($zdiff_data);
-
-        # Print out Zdiff if not zero.  Testing "zero" by looking for "+0 ".
-        my $zdiff_sample = substr($zdiff_data,0,3);
-        if (not ($zdiff_sample eq "+0 ")) {
-          print_log "<a title=\"Change from last Z value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data</a>\n";
-        }
-
-        # Get ready for next cycle.
-        rename("$build_dir/$new_log", "$build_dir/$old_log");
-      } else {
-        print_log "Error: $build_dir/$new_log not found.\n";
-        $test_result = 'buildfailed';
-      }
-
+      CodesizeTest("SeaMonkeyCodesizeTest", $build_dir, 0);
     }
 
+
+    # Embed Codesize test.
+    if ($Settings::EmbedCodesizeTest and $test_result eq 'success') {
+      CodesizeTest("EmbedCodesizeTest", $build_dir, 1);
+    }
 
 
     # Layout performance test.
@@ -1965,6 +1884,114 @@ sub LayoutPerformanceTest {
 
     return $layout_test_result;
 }
+
+
+#
+# Codesize test.  Needs:  cvs checkout mozilla/tools/codesighs
+#
+# This test can be run in two modes.  One for the whole SeaMonkey
+# tree, the other for just the embedding stuff.
+#
+sub CodesizeTest {
+  my ($test_name, $build_dir, $isEmbedTest) = @_;
+
+  # test needs this set
+  $ENV{MOZ_MAPINFO} = "1";
+  $ENV{TINDERBOX_OUTPUT} = "1";
+  
+  #chdir(".."); # up one level.
+  
+  my $cwd = get_system_cwd();
+  print_log "cwd = $cwd\n";
+  
+  my $type; # "auto" or "base"
+  my $zee;  # Letter that shows up on tbox.
+  my $testNameString;
+
+  if($isEmbedTest) {
+    $testNameString = "Embed"; 
+    $type = "base";     # Embed test.
+    $zee = "mZ"; 
+  } else {
+    $testNameString = "SeaMonkey"; 
+    $type = "auto";  # SeaMonkey test.
+    $zee = "Z";
+  }
+
+  my $new_log   = "Codesize-" . $type . "-new.log";
+  my $old_log   = "Codesize-" . $type . "-old.log";
+  my $diff_log  = "Codesize-" . $type . "-diff.log";
+  my $test_log  = "$test_name.log";
+  
+  my $args = "$new_log $old_log $diff_log";
+  
+  print_log "\$build_dir = $build_dir";
+
+  # Clear the logs from the last run, so we can properly test for success.
+  unlink("$build_dir/$new_log");
+  unlink("$build_dir/$diff_log");
+  unlink("$build_dir/$test_log");
+  
+  my $bash_cmd;
+  if ($Settings::OS =~ /^WIN/) {
+    $bash_cmd = $type . "summary.win.bash";
+  } else {
+    # Assume Linux for non-windows for now.
+    $bash_cmd = $type . "summary.linux.bash";
+  }
+  
+  my $test_result =
+    FileBasedTest($test_name, 
+                  "$build_dir", 
+                  "$build_dir",  # run top of tree, not in dist.
+                  ["$bash_cmd $args"],
+                  $Settings::CodesizeTestTimeout,
+                  "FAILED", # Fake out failure mode, test file instead.
+                  0, 0);    # Timeout means failure.
+  
+  # Set status based on file creation.
+  if (-e "$build_dir/$new_log") {
+    print_log "found $build_dir/$new_log\n";
+    $test_result = 'success';
+    
+    # Print diff data to tbox log.
+    if (-e "$build_dir/$diff_log") {
+      print_logfile("$build_dir/$diff_log", "codesize diff log");
+    }
+    
+    #
+    # Extract data.
+    #
+    my $z_data = extract_token_from_file("$build_dir/$test_log", "__codesize", ":");
+    chomp($z_data);
+    my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+    my $z_data_string = PrintSize($z_data,4);
+    print_log "TinderboxPrint:" .
+      "<a title=\"$testNameString: Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
+        ::hostname() . "&autoscale=1&units=bytes&days=7&avg=0&showpoint=$time,$z_data\">$zee:$z_data_string" . "B</a>\n";
+    
+    if($Settings::TestsPhoneHome) {
+      send_results_to_server($z_data, "--", "codesize", ::hostname());
+    }
+    
+    my $zdiff_data = extract_token_from_file("$build_dir/$test_log", "__codesizeDiff", ":");
+    chomp($zdiff_data);
+    
+    # Print out Zdiff if not zero.  Testing "zero" by looking for "+0 ".
+    my $zdiff_sample = substr($zdiff_data,0,3);
+    if (not ($zdiff_sample eq "+0 ")) {
+      print_log "<a title=\"Change from last $zee value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data</a>\n";
+    }
+    
+    # Get ready for next cycle.
+    rename("$build_dir/$new_log", "$build_dir/$old_log");
+  } else {
+    print_log "Error: $build_dir/$new_log not found.\n";
+    $test_result = 'buildfailed';
+  }
+}
+
+
 
 # Client-side JavaScript, DOM Core/HTML/Views, and Form Submission tests.
 # Currently only available inside netscape firewall.

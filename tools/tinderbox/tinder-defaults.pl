@@ -31,6 +31,7 @@ $BloatTest2               = 0;
 $DomToTextConversionTest  = 0;
 $XpcomGlueTest            = 0;
 $CodesizeTest             = 0;
+$EmbedCodesizeTest        = 0;
 $MailBloatTest            = 0;
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
 $LayoutPerformanceTest    = 0;
