@@ -244,11 +244,12 @@ menulist[editable="true"]
    
 html|*.menulist-editable-text 
   {
-    
-    border                : none !important;
-    margin                : 0px !important;
-    
-    
+    border              : none !important;
+    margin              : 0px;
+    padding             : 0px;
+    font                : inherit;
+    background-color    : inherit;
+    color               : inherit;
   }
 
 menulist[editable="true"] > .menulist-internal-box
@@ -258,6 +259,7 @@ menulist[editable="true"] > .menulist-internal-box
       border-right        : 1px inset #CCCCCC;
       border-bottom       : 1px inset #CCCCCC;
       margin              : 0px 2px 0px 0px;
+      padding             : 0px 0px 0px 2px;
 }
 
 menulist[editable="true"] > .menulist-internal-box > .menulist-display-box

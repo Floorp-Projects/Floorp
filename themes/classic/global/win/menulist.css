@@ -145,13 +145,18 @@
   
 html|*.menulist-editable-text 
   {
-    border                : none !important;
-    margin                : 0px !important;
+    border              : none !important;
+    margin              : 0px;
+    padding             : 0px;
+    font                : inherit;
+    background-color    : inherit;
+    color               : inherit;
   }
 
 menulist[editable="true"] > .menulist-internal-box > .menulist-display-box
   {
     margin                : 0px;
+    padding               : 1px 2px 1px 2px;
   }
 
 menulist[editable="true"]:focus > .menulist-internal-box > .menulist-display-box
