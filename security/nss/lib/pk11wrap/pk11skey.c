@@ -208,7 +208,7 @@ PK11_CleanKeyList(PK11SlotInfo *slot)
 /*
  * create a symetric key:
  *      Slot is the slot to create the key in.
- *      type is the mechainism type 
+ *      type is the mechanism type 
  */
 PK11SymKey *
 PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, void *wincx)
