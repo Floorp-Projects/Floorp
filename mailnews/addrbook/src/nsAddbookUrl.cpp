@@ -207,7 +207,7 @@ nsresult nsAddbookUrl::ParseUrl()
   if (startOfSearchPart > 0)
   {
     // now parse out the search field...
-    PRUint32 numExtraChars = mOperationPart.Mid(searchPart, startOfSearchPart, -1);
+    PRUint32 numExtraChars = mOperationPart.Right(searchPart, startOfSearchPart);
     if (!searchPart.IsEmpty())
     {
       // now we need to strip off the search part from the

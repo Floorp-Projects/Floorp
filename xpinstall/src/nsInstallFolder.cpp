@@ -554,7 +554,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
         else if ( curr == kNotFound )
         {
             // last segment
-            aRelativePath.Mid(segment,start,-1);
+            aRelativePath.Right(segment,start);
             start = aRelativePath.Length();
         }
         else

@@ -167,7 +167,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     PRInt32 extIndex = mDefault.RFind(".");
     if ( extIndex >= 0) {
       nsAutoString ext;
-      mDefault.Mid(ext, extIndex, -1);
+      mDefault.Right(ext, extIndex);
       // Should we test for ".cgi", ".asp", ".jsp" and other "generated" html pages?
       if ( ext.EqualsIgnoreCase(".htm")  || 
            ext.EqualsIgnoreCase(".html") || 
