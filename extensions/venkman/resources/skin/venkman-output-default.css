@@ -67,12 +67,17 @@ a.venkman-link:hover {
 }
 
 .msg-data[msg-type="ETRACE"]:before {
-    content: "!";
+    content: "X";
     color: brown;
 }
    
+.msg-data[msg-type="ERROR"]:before {
+    content: "!!";
+    color: orange;
+}
+
 .msg-data[msg-type="ERROR"] {
-    background: red;
+    background: darkred;
     color: white;
 }
 
