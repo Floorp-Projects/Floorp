@@ -323,6 +323,19 @@ mozSanitizingHTMLSerializer::AddHeadContent(const nsIParserNode& aNode)
       eHTMLTag_entity == type) {
     rv = AddLeaf(aNode);
   }
+  else if (eHTMLTag_title == type) {
+    NS_ASSERTION(mParser, "Only CNavDTD treats title this way.");
+
+    nsString skippedContent;
+    PRInt32 lineNo;
+
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    NS_ENSURE_TRUE(dtd, NS_ERROR_UNEXPECTED);
+
+    dtd->CollectSkippedContent(type, skippedContent, lineNo);
+    SetTitle(skippedContent);
+  }
   else {
     rv = OpenContainer(aNode);
     NS_ENSURE_SUCCESS(rv, rv);

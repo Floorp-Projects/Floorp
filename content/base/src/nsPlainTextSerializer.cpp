@@ -479,6 +479,10 @@ nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 NS_IMETHODIMP 
 nsPlainTextSerializer::AddHeadContent(const nsIParserNode& aNode)
 {
+  if (eHTMLTag_title == aNode.GetNodeType()) {
+    // XXX collect the skipped content
+    return NS_OK;
+  }
   OpenHead(aNode);
   nsresult rv = AddLeaf(aNode);
   CloseHead();

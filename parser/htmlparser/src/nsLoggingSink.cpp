@@ -247,7 +247,22 @@ nsLoggingSink::CloseContainer(const nsHTMLTag aTag) {
 
 NS_IMETHODIMP
 nsLoggingSink::AddHeadContent(const nsIParserNode& aNode) {
-  LeafNode(aNode);
+  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+
+  if (type == eHTMLTag_title) {
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+    
+    nsString theString;
+    PRInt32 lineNo = 0;
+
+    dtd->CollectSkippedContent(type, theString, lineNo);
+    SetTitle(theString);
+  }
+  else {
+    LeafNode(aNode);
+  }
 
   nsresult theResult=NS_OK;
 

@@ -134,13 +134,14 @@ public:
                          nsIContent* aContent);
 
   nsresult AddText(const nsAString& aString);
-  nsresult AddTextToContent(nsIContent* aContent,const nsString& aText);
+  nsresult AddTextToContent(nsIContent* aContent, const nsAString& aText);
   nsresult FlushText();
 
   void ProcessBaseTag(nsIContent* aContent);
   void AddBaseTagInfo(nsIContent* aContent);
 
   nsresult Init();
+  nsresult SetDocumentTitle(const nsAString& aString, const nsIParserNode* aNode);
 
   PRPackedBool mAllContent;
   PRPackedBool mProcessing;
@@ -297,35 +298,7 @@ nsHTMLFragmentContentSink::EndContext(PRInt32 aID)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
 {
-  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
-
-  nsresult result=NS_OK;
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  result = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
-                                         kNameSpaceID_None,
-                                         getter_AddRefs(nodeInfo));
-  if(NS_SUCCEEDED(result)) {
-    nsRefPtr<nsGenericHTMLElement> content = NS_NewHTMLTitleElement(nodeInfo);
-
-    if (!content) {
-      result = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-      nsIContent *parent = GetCurrentContent();
-
-      if (nsnull == parent) {
-        parent = mRoot;
-      }
-
-      result=parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
-
-      if (NS_SUCCEEDED(result)) {
-        result=AddTextToContent(content,aValue);
-      }
-    }
-  }
-
-  return result;
+  return SetDocumentTitle(aValue, nsnull);
 }
 
 NS_IMETHODIMP
@@ -433,6 +406,36 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
   }
 }
 
+nsresult
+nsHTMLFragmentContentSink::SetDocumentTitle(const nsAString& aString, const nsIParserNode* aNode)
+{
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
+                                              kNameSpaceID_None,
+                                              getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsGenericHTMLElement> content = NS_NewHTMLTitleElement(nodeInfo);
+  NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
+
+  nsIContent *parent = GetCurrentContent();
+
+  if (!parent) {
+    parent = mRoot;
+  }
+
+  if (aNode) {
+    AddAttributes(*aNode, content);
+  }
+
+  rv = parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return AddTextToContent(content, aString);
+}
+
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 {
@@ -523,6 +526,19 @@ nsHTMLFragmentContentSink::AddHeadContent(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 {
+  if (eHTMLTag_title == aNode.GetNodeType()) {
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+
+    nsAutoString skippedContent;
+    PRInt32 lineNo = 0;
+
+    dtd->CollectSkippedContent(eHTMLTag_title, skippedContent, lineNo);
+
+    return SetDocumentTitle(skippedContent, &aNode);
+  }
+
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
 
   nsresult result = NS_OK;
@@ -797,7 +813,7 @@ nsHTMLFragmentContentSink::AddText(const nsAString& aString)
 }
 
 nsresult
-nsHTMLFragmentContentSink::AddTextToContent(nsIContent* aContent,const nsString& aText) {
+nsHTMLFragmentContentSink::AddTextToContent(nsIContent* aContent, const nsAString& aText) {
   NS_ASSERTION(aContent !=nsnull, "can't add text w/o a content");
 
   nsresult result=NS_OK;
