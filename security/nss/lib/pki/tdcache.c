@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.19 $ $Date: 2002/01/09 21:09:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.20 $ $Date: 2002/01/09 21:35:42 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -449,6 +449,10 @@ nssTrustDomain_RemoveTokenCertsFromCache
     return PR_SUCCESS;
 }
 
+/* TODO: Even though cache keys are alloced in the cache's arena, the memory
+ * could be released in the failure case by using a mark.
+ */
+
 static PRStatus
 add_issuer_and_serial_entry
 (
@@ -458,11 +462,25 @@ add_issuer_and_serial_entry
 )
 {
     cache_entry *ce;
+    NSSCertificate *indexCert;
+    NSSItem *rv;
     ce = new_cache_entry(arena, (void *)cert);
 #ifdef DEBUG_CACHE
     log_cert_ref("added to issuer/sn", cert);
 #endif
-    return nssHash_Add(cache->issuerAndSN, cert, (void *)ce);
+    indexCert = nss_ZNEW(arena, NSSCertificate);
+    if (!indexCert) {
+	return PR_FAILURE;
+    }
+    rv = nssItem_Duplicate(&cert->issuer, arena, &indexCert->issuer);
+    if (!rv) {
+	return PR_FAILURE;
+    }
+    rv = nssItem_Duplicate(&cert->serial, arena, &indexCert->serial);
+    if (!rv) {
+	return PR_FAILURE;
+    }
+    return nssHash_Add(cache->issuerAndSN, indexCert, (void *)ce);
 }
 
 static PRStatus
