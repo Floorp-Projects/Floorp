@@ -48,53 +48,53 @@ CVSCO_LIZARD = {CVSCO}
 # standalone nglayout test program. The order is important. The
 # DIST_DIRS need to be built before the RAPTOR_DIRS.
 
-DIST_DIRS  = è
-  nsprpub			è
-  include			è
-  jpeg				è
-  "modules/libreg"	è
-  xpcom				è
-  "modules/zlib"	è
-  "modules/libutil"	è
-  sun-java			è
-  nav-java			è
-  js				è
-  "modules/security/freenav"	è
-  "modules/libpref"	è
-  "modules/libimg"	è
-  base              è
-  "lib/xp"			è
+DIST_DIRS  = ∂
+  nsprpub			∂
+  include			∂
+  jpeg				∂
+  "modules/libreg"	∂
+  xpcom				∂
+  "modules/zlib"	∂
+  "modules/libutil"	∂
+  sun-java			∂
+  nav-java			∂
+  js				∂
+  "modules/security/freenav"	∂
+  "modules/libpref"	∂
+  "modules/libimg"	∂
+  base              ∂
+  "lib/xp"			∂
   "lib/libnet"
 
 # The list of directories to build the nglayout layout engine and
 # related libraries.
 
-RAPTOR_DIRS =			è
-  htmlparser			è
-  dom				è
-  gfx				è
-  view				è
-  widget			è
-  layout			è
+RAPTOR_DIRS =			∂
+  htmlparser			∂
+  dom				∂
+  gfx				∂
+  view				∂
+  widget			∂
+  layout			∂
   webshell
 
 # Main rules
 
-all ü all_dist all_nglayout
+all ƒ all_dist all_nglayout
 
-export ü export_dist export_nglayout
+export ƒ export_dist export_nglayout
 
-libs ü libs_dist libs_nglayout
+libs ƒ libs_dist libs_nglayout
 
-install ü install_dist install_nglayout
+install ƒ install_dist install_nglayout
 
-depend ü depend_dist depend_nglayout
+depend ƒ depend_dist depend_nglayout
 
-clobber ü clobber_dist clobber_nglayout
+clobber ƒ clobber_dist clobber_nglayout
 	cd {MOZ_SRC}\{MOZ_TOP}
 	-rd /s /q dist
 
-clobber_all ü clobber_all_dist clobber_all_nglayout
+clobber_all ƒ clobber_all_dist clobber_all_nglayout
 	cd {MOZ_SRC}\{MOZ_TOP}
 	-rd /s /q dist
 
@@ -102,7 +102,7 @@ clobber_all ü clobber_all_dist clobber_all_nglayout
 
 # Rule to build subdirectories
 
-{DIST_DIRS} {RAPTOR_DIRS} ü
+{DIST_DIRS} {RAPTOR_DIRS} ƒ
 #!if "{WINOS}" == "WIN95"
 #    @echo +++ make: cannot recursively make on win95 using command.com, use w95make.
 #!else
@@ -116,9 +116,9 @@ clobber_all ü clobber_all_dist clobber_all_nglayout
 
 # Rules for pulling the source from the cvs repository
 
-pull_all ü pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_mac
+pull_all ƒ pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_mac
 
-pull_lizard ü
+pull_lizard ƒ
 	cd {MOZ_SRC}
 	{CVSCO_LIZARD} "{MOZ_TOP}/LICENSE"
 	{CVSCO_LIZARD} "{MOZ_TOP}/LEGAL"
@@ -133,24 +133,24 @@ pull_lizard ü
 	{CVSCO_LIZARD} "{MOZ_TOP}/modules/security/freenav"
 	{CVSCO_XPCOM} "{MOZ_TOP}/modules/libpref"
 
-pull_xpcom ü
+pull_xpcom ƒ
 	cd {MOZ_SRC}
 	{CVSCO_XPCOM} "{MOZ_TOP}/modules/libreg"
 	{CVSCO_XPCOM} "{MOZ_TOP}/xpcom"
 
-pull_imglib ü
+pull_imglib ƒ
 	cd {MOZ_SRC}
 	{CVSCO_IMGLIB} "{MOZ_TOP}/jpeg"
 	{CVSCO_IMGLIB} "{MOZ_TOP}/modules/libutil"
 	{CVSCO_IMGLIB} "{MOZ_TOP}/modules/libimg"
 
-pull_netlib ü
+pull_netlib ƒ
 	cd {MOZ_SRC}
 	{CVSCO_NETLIB} "{MOZ_TOP}/lib/xp"
 	{CVSCO_NETLIB} "{MOZ_TOP}/lib/libnet"
 	{CVSCO_NETLIB} "{MOZ_TOP}/include"
 
-pull_nglayout ü
+pull_nglayout ƒ
 	cd {MOZ_SRC}
 	{CVSCO_RAPTOR} "{MOZ_TOP}/base"
 	{CVSCO_RAPTOR} "{MOZ_TOP}/dom"
@@ -161,101 +161,103 @@ pull_nglayout ü
 	{CVSCO_RAPTOR} "{MOZ_TOP}/webshell"
 	{CVSCO_RAPTOR} "{MOZ_TOP}/widget"
 	
-pull_mac ü
+pull_mac ƒ
 	cd {MOZ_SRC}
 	{CVSCO_LIZARD} "{MOZ_TOP}/build/mac"
 	{CVSCO_LIZARD} "{MOZ_TOP}/cmd/macfe"
 	{CVSCO_LIZARD} "{MOZ_TOP}/lib/mac/MacMemoryAllocator"
 	{CVSCO_LIZARD} "{MOZ_TOP}/lib/mac/NSStdLib"
+	{CVSCO_LIZARD} "{MOZ_TOP}/lib/mac/MoreFiles"
+	{CVSCO_LIZARD} "{MOZ_TOP}/lib/mac/NSRuntime"
 
 ######################################################################
 
 # Build rules for the "dist" portion. The "dist" contains those things
 # which are imported by the nglayout test programs.
 
-all_dist ü
+all_dist ƒ
     @cd {MOZ_SRC}\{MOZ_TOP}
     {NMAKE} -f {THIS_MAKEFILE} export_dist
     {NMAKE} -f {THIS_MAKEFILE} libs_dist
     {NMAKE} -f {THIS_MAKEFILE} install_dist
 
-export_dist ü
+export_dist ƒ
     set MAKE_ARGS export
 
-export_dist ü {DIST_DIRS}
+export_dist ƒ {DIST_DIRS}
 
-libs_dist ü
+libs_dist ƒ
     set MAKE_ARGS libs
 
-libs_dist ü {DIST_DIRS}
+libs_dist ƒ {DIST_DIRS}
 
-install_dist ü
+install_dist ƒ
     set MAKE_ARGS install
 
-install_dist ü {DIST_DIRS}
+install_dist ƒ {DIST_DIRS}
 
-depend_dist ü
+depend_dist ƒ
     set MAKE_ARGS depend
 
-depend_dist ü {DIST_DIRS}
+depend_dist ƒ {DIST_DIRS}
 
-clobber_dist ü
+clobber_dist ƒ
     set MAKE_ARGS clobber
 
-clobber_dist ü {DIST_DIRS}
+clobber_dist ƒ {DIST_DIRS}
 
-clobber_all_dist ü
+clobber_all_dist ƒ
     set MAKE_ARGS clobber_all
 
-clobber_all_dist ü {DIST_DIRS}
+clobber_all_dist ƒ {DIST_DIRS}
 
 ######################################################################
 
 # Build rules for the "nglayout" portion. This builds the nglayout software
 # including the sample webshell viewer application.
 
-all_nglayout ü
+all_nglayout ƒ
     cd {MOZ_SRC}\{MOZ_TOP}
     {NMAKE} -f {THIS_MAKEFILE} export_nglayout
     {NMAKE} -f {THIS_MAKEFILE} libs_nglayout
     {NMAKE} -f {THIS_MAKEFILE} install_nglayout
 
-export_nglayout ü
+export_nglayout ƒ
 	set MAKE_ARGS export
 
-export_nglayout ü {RAPTOR_DIRS}
+export_nglayout ƒ {RAPTOR_DIRS}
 
-libs_nglayout ü
+libs_nglayout ƒ
     set MAKE_ARGS libs
 
-libs_nglayout ü {RAPTOR_DIRS}
+libs_nglayout ƒ {RAPTOR_DIRS}
 
-install_nglayout ü
+install_nglayout ƒ
     set MAKE_ARGS install
 
-install_nglayout ü {RAPTOR_DIRS}
+install_nglayout ƒ {RAPTOR_DIRS}
 
-depend_nglayout ü
+depend_nglayout ƒ
     set MAKE_ARGS=depend
 
-depend_nglayout ü {RAPTOR_DIRS}
+depend_nglayout ƒ {RAPTOR_DIRS}
 
-clobber_nglayout ü
+clobber_nglayout ƒ
     set MAKE_ARGS=clobber
 
-clobber_all_nglayout ü
+clobber_all_nglayout ƒ
     set MAKE_ARGS=clobber_all
 
-clobber_all_nglayout ü {RAPTOR_DIRS}
+clobber_all_nglayout ƒ {RAPTOR_DIRS}
 
 ######################################################################
 
 # Build nglayout Doc++ documentation
 DOCXX = {MOZ_TOOLS}\bin\docxx
-DOCXX_RAPTOR = {DOCXX} -H -A -p -f -B c ü\fake_banner-file_name -j -a
+DOCXX_RAPTOR = {DOCXX} -H -A -p -f -B c ƒ\fake_banner-file_name -j -a
 DOCXX_DESTDIR = {MOZ_SRC}\{MOZ_TOP}\dist\documentation
 
-doc_nglayout ü
+doc_nglayout ƒ
     -rm -rf {DOCXX_DESTDIR}
     -@mkdir {DOCXX_DESTDIR}
     @for %d in (nglayout xpcom img dom netlib} do \
@@ -278,15 +280,15 @@ TARBALL_ZIP = {MOZ_SRC}\win-{DATE}.zip
 
 TARFILES = mozilla README\\nglayout
 
-tarballs ü tarball_zip tarball_gz
+tarballs ƒ tarball_zip tarball_gz
 
-tarball_zip ü prepare_for_tarballing
+tarball_zip ƒ prepare_for_tarballing
     @echo Making {TARBALL_ZIP}
     cd {MOZ_SRC}
     rm -f {TARBALL_ZIP}
     {ZIP} -9 -r -q {TARBALL_ZIP} {TARFILES}
 
-tarball_gz ü prepare_for_tarballing
+tarball_gz ƒ prepare_for_tarballing
     @echo Making {TARBALL}
     cd {MOZ_SRC}
     rm -f {TARBALL} {TARBALL}.gz
@@ -294,5 +296,5 @@ tarball_gz ü prepare_for_tarballing
     @echo Making gzip of {TARBALL}
     {GZIP} -9 -q {TARBALL}
 
-prepare_for_tarballing ü
+prepare_for_tarballing ƒ
     {NMAKE} -f {THIS_MAKEFILE} clobber clobber_all
