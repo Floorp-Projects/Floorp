@@ -40,6 +40,8 @@ xpti_CompareIIDs(const void *v1, const void *v2)
     return (PRIntn) ((const nsID*)v1)->Equals(*((const nsID*)v2));        
 }         
 
+MOZ_DECL_CTOR_COUNTER(xptiWorkingSet);
+
 xptiWorkingSet::xptiWorkingSet()
     : mFileCount(0),
       mMaxFileCount(0),
@@ -60,6 +62,7 @@ xptiWorkingSet::xptiWorkingSet()
     mFileMergeOffsetMap(nsnull),
     mZipItemMergeOffsetMap(nsnull)
 {
+    MOZ_COUNT_CTOR(xptiWorkingSet);
     // do nothing else...            
 }        
 
@@ -135,6 +138,8 @@ xptiWorkingSet::ClearZipItems()
 
 xptiWorkingSet::~xptiWorkingSet()
 {
+    MOZ_COUNT_DTOR(xptiWorkingSet);
+
     ClearFiles();
     ClearZipItems();
     ClearHashTables();

@@ -24,6 +24,7 @@
 
 #include "xptiprivate.h"
 
+MOZ_DECL_CTOR_COUNTER(xptiFile);
 
 xptiFile::xptiFile()
     :   mSize(),
@@ -32,6 +33,7 @@ xptiFile::xptiFile()
         mGuts(nsnull)
 {
     // empty
+    MOZ_COUNT_CTOR(xptiFile);
 }
 
 xptiFile::xptiFile(const nsInt64&  aSize,
@@ -50,6 +52,8 @@ xptiFile::xptiFile(const nsInt64&  aSize,
 
     if(aHeader)
         SetHeader(aHeader);
+
+    MOZ_COUNT_CTOR(xptiFile);
 }
 
 xptiFile::xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet,
@@ -64,12 +68,16 @@ xptiFile::xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet,
 
     if(cloneGuts && r.mGuts)
         mGuts = r.mGuts->Clone();
+
+    MOZ_COUNT_CTOR(xptiFile);
 }
 
 xptiFile::~xptiFile()
 {
     if(mGuts)
         delete mGuts;
+
+    MOZ_COUNT_DTOR(xptiFile);
 }
 
 PRBool 

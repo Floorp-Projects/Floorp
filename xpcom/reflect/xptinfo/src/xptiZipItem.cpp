@@ -24,11 +24,13 @@
 
 #include "xptiprivate.h"
 
+MOZ_DECL_CTOR_COUNTER(xptiZipItem);
 
 xptiZipItem::xptiZipItem()
     :   mName(nsnull),
         mGuts(nsnull)
 {
+    MOZ_COUNT_CTOR(xptiZipItem);
     // empty
 }
 
@@ -39,6 +41,8 @@ xptiZipItem::xptiZipItem(const char*     aName,
     :   mName(aName),
         mGuts(nsnull)
 {
+    MOZ_COUNT_CTOR(xptiZipItem);
+
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), aName);
 
@@ -51,6 +55,8 @@ xptiZipItem::xptiZipItem(const xptiZipItem& r, xptiWorkingSet* aWorkingSet,
     :   mName(nsnull),
         mGuts(nsnull)
 {
+    MOZ_COUNT_CTOR(xptiZipItem);
+
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), r.mName);
 
@@ -60,6 +66,8 @@ xptiZipItem::xptiZipItem(const xptiZipItem& r, xptiWorkingSet* aWorkingSet,
 
 xptiZipItem::~xptiZipItem()
 {
+    MOZ_COUNT_DTOR(xptiZipItem);
+
     if(mGuts)
         delete mGuts;
 }
