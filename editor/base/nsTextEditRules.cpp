@@ -251,7 +251,38 @@ nsTextEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
   return NS_OK;
 }
 
-nsresult
+nsresult 
+nsTextEditRules::GetTopEnclosingPre(nsIDOMNode *aNode,
+                                    nsIDOMNode** aOutPreNode)
+{
+  // check parms
+  if (!aNode || !aOutPreNode) 
+    return NS_ERROR_NULL_POINTER;
+  *aOutPreNode = 0;
+  
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> node, parentNode;
+  node = do_QueryInterface(aNode);
+  
+  while (node)
+  {
+    nsAutoString tag;
+    nsEditor::GetTagString(node, tag);
+    if (tag.Equals("pre", PR_TRUE))
+      *aOutPreNode = node;
+    else if (tag.Equals("body", PR_TRUE))
+      break;
+    
+    res = node->GetParentNode(getter_AddRefs(parentNode));
+    if (NS_FAILED(res)) return res;
+    node = parentNode;
+  }
+
+  NS_IF_ADDREF(*aOutPreNode);
+  return res;
+}
+
+ nsresult
 nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
@@ -261,6 +292,33 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
     *aCancel = PR_TRUE;
   }
   else {
+    // Mail rule: split any <pre> tags in the way,
+    // since they're probably quoted text.
+    // For now, do this for all plaintext since mail is our main customer
+    // and we don't currently set eEditorMailMask for plaintext mail.
+    //if (mFlags & nsIHTMLEditor::eEditorMailMask)
+    {
+      nsCOMPtr<nsIDOMNode> preNode, selNode;
+      PRInt32 selOffset, newOffset;
+      nsresult res;
+      res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+      if (NS_FAILED(res)) return res;
+
+      // If any of the following fail, then just proceed with the
+      // normal break insertion without worrying about the error
+      res = GetTopEnclosingPre(selNode, getter_AddRefs(preNode));
+      if (NS_SUCCEEDED(res) && preNode)
+      {
+        res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset);
+        if (NS_SUCCEEDED(res))
+        {
+          res = preNode->GetParentNode(getter_AddRefs(selNode));
+          if (NS_SUCCEEDED(res))
+            res = aSelection->Collapse(selNode, newOffset);
+        }
+      }
+    }
+
     *aCancel = PR_FALSE;
   }
   return NS_OK;
@@ -271,7 +329,6 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 {
   return NS_OK;
 }
-
 
 nsresult
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
@@ -303,7 +360,7 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     res = EchoInsertionToPWBuff(aSelection, aOutString);
     if (NS_FAILED(res)) return res;
   }
-  
+
   // do text insertion
   PRBool bCancel;
   res = DoTextInsertion(aSelection, &bCancel, aOutString, aTypeInState);

@@ -31,8 +31,6 @@
 #include "nsEditRules.h"
 #include "TypeInState.h"
 
-class nsTextEditor;
-
 /** Object that encapsulates HTML text-specific editing rules.
   *  
   * To be a good citizen, edit rules must live by these restrictions:
@@ -95,6 +93,7 @@ protected:
                             TypeInState    typeInState,
                             PRInt32         aMaxLength);
   nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
   nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
 
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
