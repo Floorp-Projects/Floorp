@@ -693,7 +693,8 @@ public:
 
 	// nsIRequest
   NS_IMETHOD GetName(PRUnichar* *result) { 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = ToNewUnicode(NS_LITERAL_STRING("about:layout-dummy-request"));
+    return NS_OK;
   }
   NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; } 
@@ -5643,13 +5644,26 @@ PresShell::ReflowCommandAdded(nsIReflowCommand* aRC)
       aRC->SetFlags(flags);    
       mRCCreatedDuringLoad++;
 
+#ifdef PR_LOGGING
+      if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsIFrame* target;
+        aRC->GetTarget(target);
+
+        nsCOMPtr<nsIAtom> type;
+        target->GetFrameType(getter_AddRefs(type));
+
+        nsAutoString typeStr;
+        type->ToString(typeStr);
+
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("presshell=%p, ReflowCommandAdded(%p) target=%p[%s] mRCCreatedDuringLoad=%d\n",
+                this, aRC, target, NS_ConvertUCS2toUTF8(typeStr).get(), mRCCreatedDuringLoad));
+      }
+#endif
+
       if (!mDummyLayoutRequest) {
         AddDummyLayoutRequest();
       }
-
-  #ifdef DEBUG_nisheeth
-      printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
-  #endif
     }
   }
   return NS_OK;
@@ -5664,9 +5678,10 @@ PresShell::ReflowCommandRemoved(nsIReflowCommand* aRC)
     aRC->GetFlags(&flags);
     if (flags & NS_RC_CREATED_DURING_DOCUMENT_LOAD) {
       mRCCreatedDuringLoad--;
-  #ifdef DEBUG_nisheeth
-      printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
-  #endif
+
+      PR_LOG(gLog, PR_LOG_DEBUG,
+             ("presshell=%p, ReflowCommandRemoved(%p) mRCCreatedDuringLoad=%d\n",
+              this, aRC, mRCCreatedDuringLoad));
     }
   }
   return NS_OK;
