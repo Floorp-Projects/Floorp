@@ -1007,6 +1007,8 @@ public:
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 
+  NS_IMETHOD  IsSelectable(PRBool& aSelectable) const = 0;
+
   /** 
    *  Called to retrieve the SelectionController associated with the frame.
    *  @param aSelCon will contain the selection controller associated with

@@ -2843,19 +2843,10 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
 #endif
 
   // check whether style allows selection
-	const nsStyleUserInterface* userinterface;
-	GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-	if (userinterface) {
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
-				// if 'user-select' isn't set for this frame, use the parent's
-				if (mParent) {
-					mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-				}
-		}
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-		  return NS_OK;//do not continue no selection for this frame.
-		}
-	}
+  PRBool selectable;
+  IsSelectable(selectable);
+  if (!selectable)
+    return NS_OK;//do not continue no selection for this frame.
 
   PRBool found = PR_FALSE;
   PRBool wholeContentFound = PR_FALSE;//if the entire content we look at is selected.

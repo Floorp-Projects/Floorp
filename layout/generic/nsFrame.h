@@ -262,6 +262,7 @@ public:
 #endif
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
+  NS_IMETHOD  IsSelectable(PRBool& aSelectable) const;
   NS_IMETHOD  GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
   NS_IMETHOD  CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
