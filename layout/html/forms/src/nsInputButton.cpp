@@ -45,6 +45,7 @@
 #include "nsHTMLImage.h"
 #include "nsStyleUtil.h"
 #include "nsDOMEvent.h"
+#include "nsStyleConsts.h"
 
 enum nsButtonTagType {
   kButtonTag_Button,
@@ -435,11 +436,11 @@ NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
 void
 nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  nsInputButton* button = (nsInputButton *)mContent;
+  nsInputButton*  button     = (nsInputButton *)mContent;
+  nsButtonType    butType    = button->GetButtonType();
+  nsButtonTagType butTagType = button->GetButtonTagType();
   nsIFormManager* formMan = button->GetFormManager();
   if (nsnull != formMan) {
-    nsButtonType    butType    = button->GetButtonType();
-    nsButtonTagType butTagType = button->GetButtonTagType();
     if (kButton_Reset == butType) {
       //Send DOM event
       nsEventStatus mStatus;
@@ -466,10 +467,9 @@ nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext)
       //NS_RELEASE(this);
       NS_IF_RELEASE(control);
     }
-    else if (kButton_Browse == butType) {
-      ((nsInputFileFrame *)mContentParent)->MouseClicked(aPresContext);
-    }
     NS_RELEASE(formMan);
+  } else if (kButton_Browse == butType) {
+    ((nsInputFileFrame *)mContentParent)->MouseClicked(aPresContext);
   }
 }
 

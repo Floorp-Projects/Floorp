@@ -20,15 +20,16 @@
 #define nsInputFile_h___
 
 #include "nsInput.h"
-#include "nsCSSInlineFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsInputFrame.h"
+#include "nsInputText.h"
 
 class nsIAtom;
 class nsString;
 
 // this class definition will move to nsInputFile.cpp
 
-class nsInputFileFrame : public nsCSSInlineFrame {
+class nsInputFileFrame : public nsHTMLContainerFrame {
 public:
   nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   NS_IMETHOD Reflow(nsIPresContext&      aCX,
@@ -36,12 +37,11 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
-  NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
   static PRInt32 gSpacing;
 
 protected:
   virtual ~nsInputFileFrame();
+  virtual PRIntn GetSkipSides() const;
 };
 
 class nsInputFile : public nsInput {
@@ -61,10 +61,17 @@ public:
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 
+  nsInputText* GetTextField();
+  void         SetTextField(nsInputText* aTextField);
+  nsInput*     GetBrowseButton();
+  void         SetBrowseButton(nsInput* aBrowseButton);
+
 protected:
   virtual ~nsInputFile();
 
   virtual void GetType(nsString& aResult) const;
+  nsInputText*   mTextField;
+  nsInput*       mBrowseButton; // XXX don't have type safety until nsInputButton is exposed
 
   //PRInt32 mMaxLength;
 };
