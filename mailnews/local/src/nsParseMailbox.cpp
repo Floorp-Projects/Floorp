@@ -1867,8 +1867,12 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       PRUint32 newFlags;
       // set new byte offset, since the offset in the old file is certainly wrong
       newHdr->SetMessageKey (newMsgPos); 
-      newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
-      destMailDB->AddToNewList(newMsgPos);
+      newHdr->GetFlags(&newFlags);
+      if (! (newFlags & MSG_FLAG_READ))
+      {
+        newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
+        destMailDB->AddToNewList(newMsgPos);
+      }
       destMailDB->AddNewHdrToDB(newHdr, PR_TRUE);
     }
   }
