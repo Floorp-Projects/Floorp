@@ -60,7 +60,8 @@
 #include "nsStyleStruct.h"
 #include "nsIFrameUtil.h"
 #include "nsLayoutCID.h"
- 
+#include "nsNetUtil.h"
+
 NS_IMPL_ISUPPORTS1(nsDebugObject, nsIDebugObject)
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
@@ -82,6 +83,34 @@ nsDebugObject::~nsDebugObject()
 {
 
 }
+
+/** ---------------------------------------------------
+ *  See documentation in nsDebugObject.h
+ *	@update 5/16/02 dwc
+ */
+NS_IMETHODIMP
+nsDebugObject::CreateDirectory( const PRUnichar *aFilePath, PRUint32 aFlags) 
+{
+  nsresult                rv,result = NS_ERROR_FAILURE;
+  nsCAutoString           dirPathAS;
+  PRBool exists =         PR_TRUE;
+
+  // see if the directory exists, if not create it
+  dirPathAS.AssignWithConversion(aFilePath);
+  char* dirPath = ToNewCString(dirPathAS);
+
+  nsCOMPtr<nsILocalFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+  rv = NS_InitFileFromURLSpec( localFile,nsDependentCString(dirPath));
+  if ( rv == NS_OK) {
+    rv = localFile->Exists(&exists);
+    if (!exists){
+      rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
+    }
+  }
+    
+  return result;
+}
+
 
 /** ---------------------------------------------------
  *  See documentation in nsDebugObject.h
@@ -114,7 +143,6 @@ PRBool      stillLoading;
         docShell->GetPresShell(getter_AddRefs(presShell));
         presShell->GetRootFrame(&root);
         if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
-
           // create the string for the output
           nsCAutoString outputPath;
           outputPath.AssignWithConversion(aFilePath);
@@ -128,12 +156,17 @@ PRBool      stillLoading;
 
           FILE* fp = fopen(filePath, "wt");
 
-          presShell->GetPresContext(&thePC);
+          if ( fp ) {
+            presShell->GetPresContext(&thePC);
           
-          fdbg->DumpRegressionData(thePC, fp, 0, dumpStyle);
-          fclose(fp);
-          delete filePath;
-          result = NS_OK;    // the document is now loaded, and the frames are dumped.
+            fdbg->DumpRegressionData(thePC, fp, 0, dumpStyle);
+            fclose(fp);
+            delete filePath;
+            result = NS_OK;    // the document is now loaded, and the frames are dumped.
+          } else {
+
+            result = NS_ERROR_FILE_INVALID_PATH;
+          }
         }
       }
     }

@@ -30,6 +30,9 @@ class NS_NO_VTABLE nsIDebugPlugin : public nsISupports {
   /* readonly attribute string version; */
   NS_IMETHOD GetVersion(char * *aVersion) = 0;
 
+  /* void CreateDirectory (in wstring aDirPath, in unsigned long aFlags, [retval] out long aResult); */
+  NS_IMETHOD CreateDirectory(const PRUnichar *aDirPath, PRUint32 aFlags, PRInt32 *aResult) = 0;
+
   /* void DumpLayout (in nsISupports aWindow, in wstring aFilePath, in wstring aFileName, in unsigned long aFlags, [retval] out long aResult); */
   NS_IMETHOD DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags, PRInt32 *aResult) = 0;
 
@@ -47,6 +50,7 @@ class NS_NO_VTABLE nsIDebugPlugin : public nsISupports {
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDEBUGPLUGIN \
   NS_IMETHOD GetVersion(char * *aVersion); \
+  NS_IMETHOD CreateDirectory(const PRUnichar *aDirPath, PRUint32 aFlags, PRInt32 *aResult); \
   NS_IMETHOD DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags, PRInt32 *aResult); \
   NS_IMETHOD StartDirectorySearch(const char *aFilePath); \
   NS_IMETHOD GetNextFileInDirectory(char **aFileName); \
@@ -55,6 +59,7 @@ class NS_NO_VTABLE nsIDebugPlugin : public nsISupports {
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDEBUGPLUGIN(_to) \
   NS_IMETHOD GetVersion(char * *aVersion) { return _to GetVersion(aVersion); } \
+  NS_IMETHOD CreateDirectory(const PRUnichar *aDirPath, PRUint32 aFlags, PRInt32 *aResult) { return _to CreateDirectory(aDirPath, aFlags, aResult); } \
   NS_IMETHOD DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags, PRInt32 *aResult) { return _to DumpLayout(aWindow, aFilePath, aFileName, aFlags, aResult); } \
   NS_IMETHOD StartDirectorySearch(const char *aFilePath) { return _to StartDirectorySearch(aFilePath); } \
   NS_IMETHOD GetNextFileInDirectory(char **aFileName) { return _to GetNextFileInDirectory(aFileName); } \
@@ -63,6 +68,7 @@ class NS_NO_VTABLE nsIDebugPlugin : public nsISupports {
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDEBUGPLUGIN(_to) \
   NS_IMETHOD GetVersion(char * *aVersion) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVersion(aVersion); } \
+  NS_IMETHOD CreateDirectory(const PRUnichar *aDirPath, PRUint32 aFlags, PRInt32 *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateDirectory(aDirPath, aFlags, aResult); } \
   NS_IMETHOD DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags, PRInt32 *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->DumpLayout(aWindow, aFilePath, aFileName, aFlags, aResult); } \
   NS_IMETHOD StartDirectorySearch(const char *aFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->StartDirectorySearch(aFilePath); } \
   NS_IMETHOD GetNextFileInDirectory(char **aFileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextFileInDirectory(aFileName); } \
@@ -99,6 +105,12 @@ nsDebugPlugin::~nsDebugPlugin()
 
 /* readonly attribute string version; */
 NS_IMETHODIMP nsDebugPlugin::GetVersion(char * *aVersion)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void CreateDirectory (in wstring aDirPath, in unsigned long aFlags, [retval] out long aResult); */
+NS_IMETHODIMP nsDebugPlugin::CreateDirectory(const PRUnichar *aDirPath, PRUint32 aFlags, PRInt32 *aResult)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

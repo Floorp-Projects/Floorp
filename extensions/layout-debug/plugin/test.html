@@ -31,6 +31,7 @@ var origWidth;
 var origHeight;
 var dirType;
 var curIndex;
+var dumpStyle;
 
 
 var myArray = new Array(9);
@@ -211,11 +212,9 @@ RestoreWindow();
 
 function ShowDirectories()
 {
-
   for(i=0;i<(myArray.length);i+=3){
     WriteOutput( myArray[i], false, "normal" ,false,true );
   }
-
 }
 
 //=============================================================================
@@ -245,6 +244,7 @@ function runTests()
     testType = 4;
   }
 
+
   if ( dirType == 1 ) {
     ClearOutput();
     WriteOutput( "Starting Single Directory Tests",true,"normal",true,false );
@@ -256,12 +256,23 @@ function runTests()
     baseDir = document.TestForm.baseDir.value;
     verDir = document.TestForm.verDir.value;
 
+    // create the output directories 
+    if ( testType == 1 ) {
+      dirURL = "file:///"+ baseDir;
+      err = embed.CreateDirectory(dirURL,0);
+    }
+
+    if ( (testType == 1) || (testType == 2) ) {
+      dirURL = "file:///"+ verDir;
+      err = embed.CreateDirectory(dirURL,0);
+    }
+
     DumpFrames(true,0,testType);
   } else if (dirType == 2) {
     ClearOutput();
     WriteOutput( "Starting Directory Tests",true,"normal",true,false );
     curIndex = 0;
-    DumpDirectoryies(testType,0);
+    DumpDirectoryies(testType);
   }
 }
 
@@ -280,6 +291,19 @@ function DumpDirectoryies(aTestType)
     verDir = myArray[curIndex+2];
     baseExt = document.TestForm.baseExt.value;
     verExt = document.TestForm.verExt.value;
+
+    // create the output directories 
+    if ( testType == 1 ) {
+      dirURL = "file:///"+ baseDir;
+      err = embed.CreateDirectory(dirURL,0);
+    }
+
+    if ( (testType == 1) || (testType == 2) ) {
+      dirURL = "file:///"+ verDir;
+      err = embed.CreateDirectory(dirURL,0);
+    }
+
+
     WriteOutput( "New Directory" , false, "normal" ,true, true );
     DumpFrames(true,0,aTestType);
   } else {
@@ -306,6 +330,11 @@ var loadingFlag;
       theWindow = window.open(filename,0);
       placeWindows(outputWindow,theWindow);
     }
+	  if ( document.getElementById('ds').checked ) {
+      dumpStyle = 1;
+    } else {
+      dumpStyle = 0;
+    }
     started = true;
   } else {
     filename = lastFile;
@@ -319,22 +348,24 @@ var loadingFlag;
     if (aTestType==1) {
       // baseline
       outputfilename = outputfilename.replace (".html",baseExt);
-      loading = embed.DumpLayout(theWindow,baseDir,outputfilename,0);
+      loading = embed.DumpLayout(theWindow,baseDir,outputfilename,dumpStyle);
     } else if ((aTestType==2)|| (aTestType==3) ) {
       // verify
       outputfilename = outputfilename.replace (".html",verExt);
-      loading = embed.DumpLayout(theWindow,verDir,outputfilename,0);
+      loading = embed.DumpLayout(theWindow,verDir,outputfilename,dumpStyle);
     } else if (aTestType==4) {
       // just compare
       outputfilename = outputfilename.replace (".html",verExt);
       loading = 0;
     }
 
-    if (loading != 0) {
+    if (loading == 1) {
+      // page was not loaded
       testtype = aTestType;
-      setTimeout("DumpFrames(false,filename,testtype)",1000);
+      setTimeout("DumpFrames(false,filename,testtype,dumpStyle)",250);
       break;
-    } else {
+    } else if (loading == 0) {
+      // successful in loading the page
       if ( aTestType<4 ){
         WriteOutput("Writing File " + "\""+outputfilename+"\"",false,"success",true,true );
       }
@@ -357,6 +388,10 @@ var loadingFlag;
           DumpDirectoryies(aTestType);
         }
       }
+    } else {
+      // fatal error.. break
+      WriteOutput("FATAL ERROR" + "\""+outputfilename+"\"",false,"failure",true,true );
+      break;
     }
   }
 }
@@ -453,8 +488,15 @@ var loadingFlag;
         </td)
         <td>
           Run Compare
-          <input id="rc" type="radio" name="testType" value="runvercomp" >    
+          <input id="rc" type="radio" name="testType" value="runcomp" >    
         </td)
+      </tr>
+
+      <tr>
+        <td>
+          Dump Style 
+          <input id="ds" type="checkbox" name="styleDump" value="dumpStyle" checked >
+        </td>
       </tr>
 
       <tr>
@@ -471,11 +513,9 @@ var loadingFlag;
   
 <table>
 </form>
-
-
 </center>
 
-<h3 id="status">  OUTPUT IDLE </h3>
+<h4 id="status">  OUTPUT IDLE </h4>
 <div id="output" align="left" style="overflow:auto; width:700; height:100; border:solid red">
 </div>
 

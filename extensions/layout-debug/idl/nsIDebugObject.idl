@@ -44,6 +44,14 @@ interface nsIDebugObject : nsISupports
 {
 
   /**
+   * creates a directory.. only locally
+   * @param 
+   * @param 
+   */
+  void CreateDirectory(in wstring aDirectoryPath, in unsigned long aFlags);
+
+
+  /**
    * Dumps the content of a window
    * @param 
    * @param 
