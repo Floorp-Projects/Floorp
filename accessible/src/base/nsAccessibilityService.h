@@ -41,6 +41,8 @@
 
 #include "nsIAccessibilityService.h"
 #include "nsIObserver.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 
 class nsIFrame;
 class nsIWeakReference;
@@ -50,7 +52,10 @@ class nsIDocShell;
 class nsIPresShell;
 class nsIContent;
 
-class nsAccessibilityService : public nsIAccessibilityService, public nsIObserver
+class nsAccessibilityService : public nsIAccessibilityService, 
+                               public nsIObserver,
+                               public nsIWebProgressListener,
+                               public nsSupportsWeakReference
 {
 public:
   nsAccessibilityService();
@@ -59,6 +64,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBILITYSERVICE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   static nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
 

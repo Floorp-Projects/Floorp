@@ -43,6 +43,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
 #include "nsCaretAccessible.h"
+#include "nsCURILoader.h"
 #include "nsDocAccessible.h"
 #include "nsHTMLAreaAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
@@ -112,6 +113,11 @@ nsAccessibilityService::nsAccessibilityService()
     return;
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
+  if (progress) {
+    progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this),
+                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+  }
   nsAccessNodeWrap::InitAccessibility();
 }
 
@@ -120,7 +126,8 @@ nsAccessibilityService::~nsAccessibilityService()
   nsAccessNodeWrap::ShutdownAccessibility();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsAccessibilityService, nsIAccessibilityService, nsIObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsAccessibilityService, nsIAccessibilityService, 
+                              nsIObserver, nsIWebProgressListener, nsISupportsWeakReference);
 
 // nsIObserver
 
@@ -138,6 +145,67 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
   }
   return NS_OK;
 }
+
+// nsIWebProgressListener
+
+NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
+{
+  const kRequiredFlags = STATE_IS_DOCUMENT | STATE_TRANSFERRING;
+  if ((aStateFlags & kRequiredFlags ) != kRequiredFlags) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  NS_ASSERTION(domWindow, "No dom window for nsIWebProgress::OnStateChange");
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domWindow->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMNode> domDocRootNode(do_QueryInterface(domDoc));
+  NS_ENSURE_TRUE(domDocRootNode, NS_ERROR_FAILURE);
+
+  // Get the accessible for the new document
+  // This will cache the doc's accessible and set up event listeners
+  // so that toolkit and internal accessibility events will get fired
+  nsCOMPtr<nsIAccessible> accessible;
+  GetAccessibleFor(domDocRootNode, getter_AddRefs(accessible));
+  return NS_OK;
+}
+
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP nsAccessibilityService::OnProgressChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
+  PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP nsAccessibilityService::OnLocationChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, nsIURI *location)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP nsAccessibilityService::OnStatusChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
+NS_IMETHODIMP nsAccessibilityService::OnSecurityChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRUint32 state)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
 
 nsresult
 nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aNode)

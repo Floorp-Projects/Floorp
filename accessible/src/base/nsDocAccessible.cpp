@@ -483,8 +483,6 @@ void nsDocAccessible::AddContentDocListeners()
   if (!presShell)
     return;
 
-  AddScrollListener(presShell);
-
   nsCOMPtr<nsISupports> container;
   mDocument->GetContainer(getter_AddRefs(container));
 
@@ -497,16 +495,19 @@ void nsDocAccessible::AddContentDocListeners()
   PRInt32 itemType;
   docShellTreeItem->GetItemType(&itemType);
 
-  if (itemType != nsIDocShellTreeItem::typeContent)
-    return;
+  PRBool isContent = (itemType == nsIDocShellTreeItem::typeContent);
+  PRBool isLoading = isContent;
 
-  PRBool isLoading = PR_TRUE;
-  CheckForEditor();
-  if (!mEditor) {
-    // We're not an editor yet, but we might become one
-    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(container);
-    if (commandManager) {
-      commandManager->AddCommandObserver(this, "obs_documentCreated");
+  if (isContent) {
+    AddScrollListener(presShell);
+    CheckForEditor();
+  
+    if (!mEditor) {
+      // We're not an editor yet, but we might become one
+      nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(container);
+      if (commandManager) {
+        commandManager->AddCommandObserver(this, "obs_documentCreated");
+      }
     }
 
     // Make sure we're the top content doc shell 
@@ -517,22 +518,22 @@ void nsDocAccessible::AddContentDocListeners()
       mBusy = eBusyStateDone;
       return;
     }
-  
-    nsCOMPtr<nsIPresContext> context; 
-    presShell->GetPresContext(getter_AddRefs(context));
-    if (!context)
-      return;
-
-    mWebProgress = do_GetInterface(docShellTreeItem);
-    if (!mWebProgress)
-      return;
-
-    mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION | 
-                                      nsIWebProgress::NOTIFY_STATE_DOCUMENT);
-
-
-    mWebProgress->GetIsLoadingDocument(&isLoading);
   }
+  
+  nsCOMPtr<nsIPresContext> context; 
+  presShell->GetPresContext(getter_AddRefs(context));
+  if (!context)
+    return;
+
+  mWebProgress = do_GetInterface(docShellTreeItem);
+  if (!mWebProgress)
+    return;
+
+  mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION | 
+                                    nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+
+
+  mWebProgress->GetIsLoadingDocument(&isLoading);
 
   mIsNewDocument = PR_TRUE;
   mBusy = eBusyStateLoading;
@@ -975,6 +976,11 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
 
 void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessibleEventType)
 {
+  if (mBusy == eBusyStateLoading) {
+    // We need this unless bug 90983 is fixed -- 
+    // We only want mutation events after the doc is finished loading
+    return; 
+  }
   nsCOMPtr<nsIDOMMutationEvent> mutationEvent(do_QueryInterface(aEvent));
   NS_ASSERTION(mutationEvent, "Not a mutation event!");
 
