@@ -88,13 +88,7 @@ static void CrawlStack(malloc_log_entry* me, jmp_buf jb, char* first)
 #ifdef JPROF_PTHREAD_HACK
   int skip = 3;
 #else
-  // This is a linux hack we have to do to figure out where the signal was
-  // called from.  Only use |first| if it looks like a reasonable value
-  // (sometimes it's not -- in this case we'll just lose the lowest frame
-  // before the signal invocation).
-  if (first >= (char *)0x08000000 && first <= (char *)0x7fffffff) {
-    me->pcs[numpcs++] = first;
-  }
+  me->pcs[numpcs++] = first;
 
   // skip 2 frames: StackHook, __restore_rt.
   // The next frame is the frame _above_ |first|.
@@ -106,7 +100,7 @@ static void CrawlStack(malloc_log_entry* me, jmp_buf jb, char* first)
 #ifdef JPROF_PTHREAD_HACK
     if ((pc < 0x08000000) || ((pc > 0x7fffffff) && (skip <= 0)) || (nextbp < bp)) {
 #else
-    if ((pc < 0x08000000) || (pc > 0x7fffffff) || (nextbp < bp)) {
+    if ((nextbp < bp)) {
 #endif
       break;
     }
