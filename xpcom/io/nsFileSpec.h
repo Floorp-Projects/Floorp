@@ -418,7 +418,7 @@ class NS_COM nsFileSpec
                                 }
         
         PRUint32                GetFileSize() const;
-        PRUint64                GetDiskSpaceAvailable() const;
+        PRInt64                 GetDiskSpaceAvailable() const;
         
         nsFileSpec              operator + (const char* inRelativeUnixPath) const;
         nsFileSpec              operator + (const nsString& inRelativeUnixPath) const

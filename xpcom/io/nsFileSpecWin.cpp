@@ -551,10 +551,10 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 
 
 //----------------------------------------------------------------------------------------
-PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
+PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
-    PRUint64 int64;
+    PRInt64 int64;
     
     LL_I2L(int64 , ULONG_MAX);
 
@@ -613,7 +613,7 @@ PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
     {
         nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
     }
-    return (PRUint64)nBytes;
+    return (PRInt64)nBytes;
 }
 
 

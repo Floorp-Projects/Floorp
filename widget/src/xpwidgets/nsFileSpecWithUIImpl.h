@@ -143,7 +143,7 @@ class nsFileSpecWithUIImpl
 		{ return mBaseFileSpec ? mBaseFileSpec->GetFileSize(aFileSize) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute unsigned long DiskSpaceAvailable; */
-	NS_IMETHOD GetDiskSpaceAvailable(PRUint64 *aDiskSpaceAvailable)
+	NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetDiskSpaceAvailable(aDiskSpaceAvailable) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* nsIFileSpec AppendRelativeUnixPath (in string relativePath); */

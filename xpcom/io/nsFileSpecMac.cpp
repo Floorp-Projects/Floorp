@@ -1105,10 +1105,10 @@ OSErr nsFileSpec::GetFileTypeAndCreator(OSType* type, OSType* creator)
 
 
 //----------------------------------------------------------------------------------------
-PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
+PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
-    PRUint64 int64;
+    PRInt64 int64;
 
     LL_I2L(int64 , ULONG_MAX);
 
