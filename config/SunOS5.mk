@@ -172,7 +172,7 @@ MUST_BOOTLEG_ALLOCA	= 1
 BUILD_UNIX_PLUGINS	= 1
 
 # Turn on FULLCIRCLE crash reporting for 2.5.1 & up.
-if MOZ_FULLCIRCLE
+ifdef MOZ_FULLCIRCLE
 FC_PLATFORM		= SolarisSparc
 FC_PLATFORM_DIR	= SunOS5_sparc
 endif
