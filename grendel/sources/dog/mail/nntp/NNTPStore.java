@@ -816,15 +816,15 @@ public class NNTPStore extends Store implements StatusSource {
 			statusListeners.copyInto(listeners);
 		}
 		switch (event.getType()) {
-		  case event.OPERATION_START:
+		  case StatusEvent.OPERATION_START:
 			for (int i=0; i<listeners.length; i++)
 				listeners[i].statusOperationStarted(event);
 			break;
-		  case event.OPERATION_UPDATE:
+		  case StatusEvent.OPERATION_UPDATE:
 			for (int i=0; i<listeners.length; i++)
 				listeners[i].statusProgressUpdate(event);
 			break;
-		  case event.OPERATION_END:
+		  case StatusEvent.OPERATION_END:
 			for (int i=0; i<listeners.length; i++)
 				listeners[i].statusOperationEnded(event);
             break;
