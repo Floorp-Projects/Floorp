@@ -28,6 +28,7 @@
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsIRegistry.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsHashtable.h"
 #include "prtime.h"
 #include "prmon.h"
@@ -50,10 +51,13 @@ extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsComponentManagerImpl : public nsIComponentManager, public nsSupportsWeakReference {
+class nsComponentManagerImpl
+    : public nsIComponentManager, public nsSupportsWeakReference,
+      public nsIInterfaceRequestor {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOMPONENTMANAGER
+    NS_DECL_NSIINTERFACEREQUESTOR
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
