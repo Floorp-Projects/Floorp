@@ -1149,6 +1149,30 @@ public:
     static JSBool Initialize(JSContext * aJSContext,
                              JSObject* aGlobalJSObj);
     /**
+     * This is the define property for the IDispatch system. It called from
+     * the XPConnect's DefineProperty
+     * @param ccx an XPConnect call context
+     * @param obj the JS object receiving the property
+     * @param idval ID of the property to add
+     * @param wrapperToReflectInterfaceNames the wrapper
+     * @param propFlags JS property flags
+     * @param resolved a pointer to a JSBool, set to true if properly resolved
+     */
+    static JSBool DefineProperty(XPCCallContext & ccx, 
+                                 JSObject *obj, jsval idval,
+                                 XPCWrappedNative* wrapperToReflectInterfaceNames,
+                                 uintN propFlags, JSBool* resolved);
+    /**
+     * IDispatch system's enumeration function. This is called 
+     * from XPC_WN_Shared_Enumerate
+     * @param ccx a XPConnect call context
+     * @param obj pointer to the JSObject
+     * @param wrapper pointer to the wrapper
+     * @return true if the enumeration was successful
+     */
+    static JSBool Enumerate(XPCCallContext& ccx, JSObject* obj, 
+                            XPCWrappedNative * wrapper);
+    /**
      * This is the delegated QI called from the wrapped JS class
      * DelegatedQueryInterface
      * @param self pointer to the object

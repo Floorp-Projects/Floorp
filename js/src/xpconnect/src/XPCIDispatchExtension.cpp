@@ -227,6 +227,104 @@ JSBool XPCIDispatchExtension::Initialize(JSContext * aJSContext,
     return JS_TRUE;
 }
 
+JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx, 
+                                             JSObject *obj, jsval idval,
+                                             XPCWrappedNative* wrapperToReflectInterfaceNames,
+                                             uintN propFlags, JSBool* resolved)
+{
+    if(!JSVAL_IS_STRING(idval))
+        return JS_FALSE;
+    // Look up the native interface for IDispatch and then find a tearoff
+    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx,
+                                                                 "IDispatch");
+    if(iface == nsnull)
+        return JS_FALSE;
+    XPCWrappedNativeTearOff* to = 
+        wrapperToReflectInterfaceNames->FindTearOff(ccx, iface, JS_TRUE);
+    if(to == nsnull)
+        return JS_FALSE;
+    // get the JS Object for the tea
+    JSObject* jso = to->GetJSObject();
+    if(jso == nsnull)
+        return JS_FALSE;
+    // Look up the member in the interface
+    const XPCDispInterface::Member * member = to->GetIDispatchInfo()->FindMember(idval);
+    if(!member)
+    {
+        // IDispatch is case insensitive, so if we don't find a case sensitive
+        // match, we'll try a more expensive case-insensisitive search
+        // TODO: We need to create cleaner solution that doesn't create
+        // multiple properties of different case on the JS Object
+        member = to->GetIDispatchInfo()->FindMemberCI(ccx, idval);
+        if(!member)
+            return JS_FALSE;
+    }
+    // Get the function object
+    jsval funval;
+    if(!member->GetValue(ccx, iface, &funval))
+        return JS_FALSE;
+    // Protect the jsval 
+    AUTO_MARK_JSVAL(ccx, funval);
+    // clone a function we can use for this object 
+    JSObject* funobj = JS_CloneFunctionObject(ccx, JSVAL_TO_OBJECT(funval), obj);
+    if(!funobj)
+        return JS_FALSE;
+    jsid id;
+    // If this is a function or a parameterized property
+    if(member->IsFunction() || member->IsParameterizedProperty())
+    {
+        // define the function on the object
+        AutoResolveName arn(ccx, idval);
+        if(resolved)
+            *resolved = JS_TRUE;
+        return JS_ValueToId(ccx, idval, &id) &&
+               OBJ_DEFINE_PROPERTY(ccx, obj, id, OBJECT_TO_JSVAL(funobj),
+                                   nsnull, nsnull, propFlags, nsnull);
+    }
+    // Define the property on the object
+    NS_ASSERTION(member->IsProperty(), "way broken!");
+    propFlags |= JSPROP_GETTER | JSPROP_SHARED;
+    if(member->IsSetter())
+    {
+        propFlags |= JSPROP_SETTER;
+        propFlags &= ~JSPROP_READONLY;
+    }
+    AutoResolveName arn(ccx, idval);
+    if(resolved)
+        *resolved = JS_TRUE;
+    return JS_ValueToId(ccx, idval, &id) &&
+           OBJ_DEFINE_PROPERTY(ccx, obj, id, JSVAL_VOID,
+                               (JSPropertyOp) funobj,
+                               (JSPropertyOp) funobj,
+                               propFlags, nsnull);
+
+}
+
+JSBool XPCIDispatchExtension::Enumerate(XPCCallContext& ccx, JSObject* obj,
+                                        XPCWrappedNative * wrapper)
+{
+    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(
+        ccx,&NSID_IDISPATCH);
+    if(!iface)
+        return JS_FALSE;
+
+    XPCWrappedNativeTearOff* tearoff = wrapper->FindTearOff(ccx, iface);
+    if(!tearoff)
+        return JS_FALSE;
+
+    XPCDispInterface* pInfo = tearoff->GetIDispatchInfo();
+    PRUint32 members = pInfo->GetMemberCount();
+    // Iterate over the members and force the properties to be resolved
+    for(PRUint32 index = 0; index < members; ++index)
+    {
+        const XPCDispInterface::Member & member = pInfo->GetMember(index);
+        jsval name = member.GetName();
+        if(!xpc_ForcePropertyResolve(ccx, obj, name))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
 nsresult XPCIDispatchExtension::IDispatchQIWrappedJS(nsXPCWrappedJS * self, 
                                                      void ** aInstancePtr)
 {
