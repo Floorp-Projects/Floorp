@@ -121,9 +121,18 @@ sub Param {
     my ($param) = @_;
 
     # By this stage, the param must be in the hash
-    die "Can't find param named $param" unless (exists $param{$param});
+    die "Can't find param named $param" unless (exists $params{$param});
 
-    return $param{$param};
+    # When module startup code runs (which is does even via -c, when using
+    # |use|), we may try to grab params which don't exist yet. This affects
+    # tests, so have this as a fallback for the -c case
+    return $params{$param}->{default} if ($^C && not exists $param{$param});
+
+    # If we have a value for the param, return it
+    return $param{$param} if exists $param{$param};
+
+    # Else error out
+    die "No value for param $param";
 }
 
 sub GetParamList {
