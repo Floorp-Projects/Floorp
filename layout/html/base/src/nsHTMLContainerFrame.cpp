@@ -51,22 +51,20 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect& aDirtyRect)
 {
-  // Do not paint ourselves if we are a pseudo-frame
-  if (PR_FALSE == IsPseudoFrame()) {  // this trip isn't really necessary
-    nsStyleDisplay* disp =
-      (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  // Paint our background and border
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
-    if (disp->mVisible) {
-      PRIntn skipSides = GetSkipSides();
-      nsStyleColor* color =
-        (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-      nsStyleSpacing* spacing =
-        (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, mRect, *color);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, mRect, *spacing, skipSides);
-    }
+  if (disp->mVisible) {
+    PRIntn skipSides = GetSkipSides();
+    nsStyleColor* color =
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    nsStyleSpacing* spacing =
+      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, mRect, *color);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                aDirtyRect, mRect, *spacing, skipSides);
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
