@@ -307,6 +307,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
             }
 
         }
+		folderInfo = null_nsCOMPtr();
         if (db)
 	        db->Close(PR_FALSE);
     }
