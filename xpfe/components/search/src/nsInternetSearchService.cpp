@@ -1121,6 +1121,56 @@ NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 
 NS_IMETHODIMP
+InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
+	const PRUnichar *searchStr, char **resultURL)
+{
+	if (!resultURL)	return(NS_ERROR_NULL_POINTER);
+	*resultURL = nsnull;
+
+	// if we haven't already, load in the engines
+	if (mEngineListBuilt == PR_FALSE)	DeferredInit();
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFResource>	engine;
+	if (NS_FAILED(rv = gRDFService->GetResource(searchEngineURI, getter_AddRefs(engine))))
+		return(rv);
+	if (!engine)	return(NS_ERROR_UNEXPECTED);
+
+	// if its a engine from a search category, then get its "#Name",
+	// and try to map from that back to the real engine reference
+	if (isSearchCategoryEngineURI(engine))
+	{
+		nsCOMPtr<nsIRDFResource>	trueEngine;
+		rv = resolveSearchCategoryEngineURI(engine, getter_AddRefs(trueEngine));
+		if (NS_FAILED(rv) || (!trueEngine))	return(NS_ERROR_UNEXPECTED);			
+		engine = trueEngine;
+	}
+
+	nsAutoString	data;
+	if (NS_FAILED(rv = FindData(engine, data)))	return(rv);
+	if (data.Length() < 1)				return(NS_ERROR_UNEXPECTED);
+	
+	nsAutoString	action, input, method, text(searchStr), userVar;
+	if (NS_FAILED(rv = GetData(data, "search", "action", action)))	return(rv);
+	if (NS_FAILED(rv = GetData(data, "search", "method", method)))	return(rv);
+	if (NS_FAILED(rv = GetInputs(data, userVar, text, input)))	return(rv);
+	if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
+
+	// we can only handle HTTP GET
+	if (!method.EqualsIgnoreCase("get"))	return(NS_ERROR_UNEXPECTED);
+	// HTTP Get method support
+	action += "?";
+	action += input;
+
+	// return a copy of the resulting search URL
+	*resultURL = action.ToNewCString();
+
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
 InternetSearchDataSource::FindInternetSearchResults(const char *url)
 {
 	if (!mInner)	return(NS_OK);

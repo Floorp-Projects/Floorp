@@ -37,6 +37,7 @@ interface nsILocalSearchService : nsISupports
 [scriptable, uuid(6bd1d803-1c67-11d3-9820-ed1b357eb3c4)]
 interface nsIInternetSearchService : nsISupports
 {
+	string			GetInternetSearchURL(in string searchEngineURI, in wstring searchStr);
 	void			FindInternetSearchResults(in string url);
 	void			Stop();
 	void			ClearResults();
