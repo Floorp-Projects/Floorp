@@ -913,6 +913,54 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
       }
       break;
 
+    case NS_DRAGDROP_ENTER:
+    case NS_DRAGDROP_OVER:
+    case NS_DRAGDROP_EXIT:
+    case NS_DRAGDROP_DROP:
+      if (nsnull != mDragListeners) {
+        if (nsnull == *aDOMEvent) {
+          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+        }
+
+        if (NS_OK == ret) {
+          for (int i=0; i<mDragListeners->Count(); i++) {
+            nsListenerStruct *ls;
+            nsIDOMDragListener *dragListener;
+
+            ls = (nsListenerStruct*)mDragListeners->ElementAt(i);
+
+            if (ls->mFlags & aFlags) {
+              if (NS_OK == ls->mListener->QueryInterface(kIDOMDragListenerIID,
+                                                       (void**)&dragListener)) {
+                switch (aEvent->message) {
+                  case NS_DRAGDROP_ENTER:
+                    ret = dragListener->DragEnter(*aDOMEvent);
+                    break;
+                  case NS_DRAGDROP_OVER:
+                    ret = dragListener->DragOver(*aDOMEvent);
+                    break;
+                  case NS_DRAGDROP_EXIT:
+                    ret = dragListener->DragExit(*aDOMEvent);
+                    break;
+                  case NS_DRAGDROP_DROP:
+                    ret = dragListener->DragDrop(*aDOMEvent);
+                    break;
+                } // switch 
+                NS_RELEASE(dragListener);
+              }
+              else {
+                ret = ls->mListener->HandleEvent(*aDOMEvent);
+              }
+            }
+            aEventStatus = (NS_OK == ret)
+              ? aEventStatus
+              : nsEventStatus_eConsumeNoDefault;
+          }
+        }
+      }
+      break;
+
+
     default:
       break;
   }
