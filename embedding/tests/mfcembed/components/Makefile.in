@@ -42,6 +42,7 @@ REQUIRES = \
 	string \
 	dom \
 	content \
+	layout \
 	gfx \
 	widget \
 	pref \
