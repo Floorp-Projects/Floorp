@@ -1,3 +1,4 @@
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # **** BEGIN LICENSE BLOCK ****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -44,7 +45,7 @@ var gTargetNode = null;
 
 var gEntityConverter = null;
 var gWrapLongLines = false;
-const gViewSourceCSS = 'resource:///res/viewsource.css';
+const gViewSourceCSS = 'resource://gre/res/viewsource.css';
 const NS_XHTML = 'http://www.w3.org/1999/xhtml';
 
 // These are markers used to delimit the selection during processing. They
@@ -56,8 +57,7 @@ const MARK_SELECTION_START = '\u200B\u200B\u200B\u200B\u200B';
 const MARK_SELECTION_END = '\u200B\u200B\u200B\u200B\u200B';
 
 function onLoadViewPartialSource()
-{  
-  gBrowser = document.getElementById("content");
+{
   // check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
   if (gPrefs) {
     try {
@@ -78,7 +78,7 @@ function onLoadViewPartialSource()
   // disable menu items that don't work since the selection is munged and
   // the editor doesn't work for MathML
   document.getElementById('cmd_savePage').setAttribute('disabled', 'true');
-  // we don't support yet external editor
+  // we don't support external editors
   //document.getElementById('cmd_editPage').setAttribute('disabled', 'true');
 
   if (window.arguments[3] == 'selection')
@@ -197,8 +197,8 @@ function viewPartialSourceForSelection(selection)
 
   // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-  gBrowser.webNavigation
-          .loadURI("view-source:data:text/html;charset=utf-8," + escape(tmpNode.innerHTML),
+  getBrowser().webNavigation
+              .loadURI("view-source:data:text/html;charset=utf-8," + escape(tmpNode.innerHTML),
                        loadFlags, null, null, null);
 }
 
@@ -253,7 +253,7 @@ function drawSelection()
   var replaceString = findService.replaceString;
 
   // setup our find instance
-  var findInst = gBrowser.webBrowserFind;
+  var findInst = getBrowser().webBrowserFind;
   findInst.matchCase = true;
   findInst.entireWord = false;
   findInst.wrapFind = true;
@@ -264,7 +264,7 @@ function drawSelection()
   var startLength = MARK_SELECTION_START.length;
   findInst.findNext();
 
-  var contentWindow = gBrowser.contentDocument.defaultView;
+  var contentWindow = getBrowser().contentDocument.defaultView;
   var selection = contentWindow.getSelection();
   var range = selection.getRangeAt(0);
 
@@ -295,11 +295,11 @@ function drawSelection()
   // the selection, whereas in this situation, it is more user-friendly
   // to scroll at the beginning. So we override the default behavior here
   try {
-    gBrowser.docShell
-            .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-            .getInterface(Components.interfaces.nsISelectionDisplay)
-            .QueryInterface(Components.interfaces.nsISelectionController)
-            .scrollSelectionIntoView(Components.interfaces.nsISelectionController.SELECTION_NORMAL,
+    getBrowser().docShell
+                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsISelectionDisplay)
+                .QueryInterface(Components.interfaces.nsISelectionController)
+                .scrollSelectionIntoView(Components.interfaces.nsISelectionController.SELECTION_NORMAL,
                                          Components.interfaces.nsISelectionController.SELECTION_ANCHOR_REGION,
                                          true);
   }
@@ -359,7 +359,7 @@ function viewPartialSourceForFragment(node, context)
   ; // end
 
   // display
-  var doc = gBrowser.contentDocument;
+  var doc = getBrowser().contentDocument;
   doc.open("text/html", "replace");
   doc.write(source);
   doc.close();
