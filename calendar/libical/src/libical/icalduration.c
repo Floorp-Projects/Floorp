@@ -3,7 +3,7 @@
   FILE: icaltime.c
   CREATOR: eric 02 June 2000
   
-  $Id: icalduration.c,v 1.18 2005/01/24 11:50:54 acampi Exp $
+  $Id: icalduration.c,v 1.19 2005/02/15 17:38:58 acampi Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -40,7 +40,9 @@
 #include "icalmemory.h"
 #include "icalvalue.h"
 
-
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
 
 
 /* From Seth Alves,  <alves@hungry.com>   */

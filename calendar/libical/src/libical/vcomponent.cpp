@@ -402,7 +402,7 @@ void VComponent::set_sequence(int v){
 int VComponent::get_status(){
         return (int)icalcomponent_get_status(imp);
 }
-void VComponent::set_status(int v){
+void VComponent::set_status(enum icalproperty_status v){
         icalcomponent_set_status(imp, v);
 }
 
