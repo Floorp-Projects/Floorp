@@ -26,6 +26,10 @@ import traceback, getopt, sys
 
 verbose_level = 0
 
+def _check(condition, error = "test failed!"):
+    if not condition:
+        print error
+
 class SampleComponentsMissing(Exception):
     pass
 
@@ -85,11 +89,11 @@ def TestSampleComponent(test_flat = 0):
 
     if not test_flat:
         c = c.queryInterface(xpcom.components.interfaces.nsISample)
-    assert c.value == "initial value"
+    _check(c.value == "initial value")
     c.value = "new value"
-    assert c.value == "new value"
+    _check(c.value == "new value")
     c.poke("poked value")
-    assert c.value == "poked value"
+    _check(c.value == "poked value")
     c.writeValue("Python just poked:")
     if test_flat:
         print "The netscape sample worked with interface flattening!"
@@ -131,17 +135,45 @@ def TestIIDs():
     "Do some basic IID semantic tests."
     iid_str = "{7ee4bdc6-cb53-42c1-a9e4-616b8e012aba}"
     IID = xpcom._xpcom.IID
-    assert IID(iid_str)==IID(iid_str), "IIDs with identical strings dont compare!"
-    assert hash(IID(iid_str))==hash(IID(iid_str)), "IIDs with identical strings dont have identical hashes!"
-    assert IID(iid_str)==IID(iid_str.upper()), "IIDs with case-different strings dont compare!"
-    assert hash(IID(iid_str))==hash(IID(iid_str.upper())), "IIDs with case-different strings dont have identical hashes!"
+    _check(IID(iid_str)==IID(iid_str), "IIDs with identical strings dont compare!")
+    _check(hash(IID(iid_str))==hash(IID(iid_str)), "IIDs with identical strings dont have identical hashes!")
+    _check(IID(iid_str)==IID(iid_str.upper()), "IIDs with case-different strings dont compare!")
+    _check(hash(IID(iid_str))==hash(IID(iid_str.upper())), "IIDs with case-different strings dont have identical hashes!")
     # If the above work, this shoud too, but WTF
     dict = {}
     dict[IID(iid_str)] = None
-    assert dict.has_key(IID(iid_str))
-    assert dict.has_key(IID(iid_str.upper()))
+    _check(dict.has_key(IID(iid_str)), "hashes failed in dictionary")
+    _check(dict.has_key(IID(iid_str.upper())), "uppercase hash failed in dictionary")
     print "The IID tests seemed to work"
-    
+
+def _doTestRepr(progid, interfaces):
+    try:
+        ob = xpcom.components.classes[progid].createInstance()
+    except xpcom.COMException, details:
+        print "Could not test repr for progid '%s' - %s" % (progid, details)
+        return false
+
+    ok = 1
+    if repr(ob).find(progid) < 0:
+        print "The contract ID '%s' did not appear in the object repr '%r'" % (progid, ob)
+        ok = 0
+    for interface_name in interfaces.split():
+        if repr(ob).find(interface_name) < 0:
+            print "The interface '%s' did not appear in the object repr '%r'" % (interface_name, ob)
+            ok = 0
+    return ok
+
+def TestRepr():
+    "Test that the repr of our objects works as we expect."
+    ok = 1
+    ok = _doTestRepr("Python.TestComponent", "nsIPythonTestInterfaceDOMStrings nsIPythonTestInterfaceExtra nsIPythonTestInterface") and ok
+    # eeek - JS doesn't automatically provide class info yet :(
+    #ok = _doTestRepr("@mozilla.org/jssample;1", "nsISample") and ok
+    ok = _doTestRepr("@mozilla.org/sample;1", "nsISample") and ok
+    print "The object repr() tests seemed to have",
+    if ok: print "worked"
+    else: print "failed"
+
 def TestUnwrap():
     "Test the unwrap facilities"
     # First test that a Python object can be unwrapped.
