@@ -16,18 +16,6 @@
  * Reserved.
  */
 
-
-/*=============================================================================
- * This test program is designed to test netlib's implementation of nsITransport.
- * In particular, it is currently geared towards testing their socket implemnation.
- * When the test program starts up, you are prompted for a port and domain 
- * (I may have these hard coded right now to be nsmail-2 and port 143).
- * After entering this information, we'll build a connection to the host name.
- * You can then enter raw protocol text (i.e. "1 capability") and watch the data
- * that comes back from the socket. After data is returned, you can enter another
- * line of protocol.
-*===============================================================================*/
-
 #include <stdio.h>
 #include <assert.h>
 
@@ -47,10 +35,7 @@
 #include "nsString.h"
 #include "nsIPref.h"
 #include "nsIPop3Service.h"
-
-#include "nsPop3Protocol.h"
-#include "nsPop3URL.h"
-#include "nsPop3Sink.h"
+#include "nsIMsgMailNewsUrl.h"
 
 // include the event sinks for the protocol you are testing
 
@@ -65,12 +50,14 @@
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
+#define PREF_DLL   "xppref32.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
+#define PREF_DLL   "libpref.so"  
 #endif
 #endif
 
@@ -87,47 +74,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 // Define default values to be used to drive the test
 /////////////////////////////////////////////////////////////////////////////////
 
-#define DEFAULT_HOST	"nsmail-2.mcom.com"
-#define DEFAULT_PORT	POP3_PORT		/* we get this value from nsPop3Protocol.h */
-#define DEFAULT_URL_TYPE  "pop3://"
-
-//extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
-//											  URL_Struct *url, MWContext *context);
-
-#ifdef XP_UNIX
-extern "C" char *fe_GetConfigDir(void) {
-  printf("XXX: return /tmp for fe_GetConfigDir\n");
-  return strdup("/tmp");
-}
-#endif /* XP_UNIX */
-
-
-
-
-/* SI::BUFFERED-STREAM-MIXIN
-   Why do I feel like I've written this a hundred times before?
-   */
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// This function is used to load and prepare an pop3 url which can be run by
-// a transport instance. For different protocols, you'll have different url
-// functions like this one in the test harness...
-/////////////////////////////////////////////////////////////////////////////////
-nsresult NS_NewPop3URL(nsIPop3URL ** aResult, const nsString urlSpec)
-{
-	nsIURL * pUrl = NULL;
-	nsresult rv = NS_OK;
-
-	 nsPop3URL * pop3URL = new nsPop3URL(nsnull, nsnull);
-	 if (pop3URL)
-	 {
-		pop3URL->ParseURL(urlSpec);  // load the spec we were given...
-		rv = pop3URL->QueryInterface(nsIPop3URL::GetIID(), (void **) aResult);
-	 }
-
-	 return rv;
-}
 
 //////////////////////////////////////////////////////////////////////////////////
 // The nsPop3TestDriver is a class that I envision could be generalized to form the
@@ -136,11 +82,16 @@ nsresult NS_NewPop3URL(nsIPop3URL ** aResult, const nsString urlSpec)
 // would be asked to process it....right now it is just Pop3 specific....
 ///////////////////////////////////////////////////////////////////////////////////
 
-class nsPop3TestDriver
+class nsPop3TestDriver : public nsIUrlListener
 {
 public:
 	nsPop3TestDriver(nsINetService * pService);
 	virtual ~nsPop3TestDriver();
+	NS_DECL_ISUPPORTS;
+
+	// nsIUrlListener support
+	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
 
 	// run driver initializes the instance, lists the commands, runs the command and when
 	// the command is finished, it reads in the next command and continues...theoretically,
@@ -162,85 +113,70 @@ public:
     nsresult OnGet();
 	nsresult OnExit(); 
 	nsresult OnIdentityCheck();
+
 protected:
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[250];	// generic string buffer for storing the current user entered data...
 
-	// host and port info...
-	PRUint32	m_port;
-	char		m_host[200];		
-    char*       m_username;
-    char*       m_password;
-    char*       m_mailDirectory;
-
-	nsIPop3URL * m_url; 
-	nsPop3Protocol * m_pop3Protocol; // running protocol instance
-
+	PRBool		m_runTestHarness;
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
-
-	void InitializeProtocol(const char * urlSpec);
-	PRBool m_protocolInitialized; 
 };
+
+NS_IMPL_ISUPPORTS(nsPop3TestDriver, nsIUrlListener::GetIID())
 
 nsPop3TestDriver::nsPop3TestDriver(nsINetService * pNetService)
 {
+	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
-	m_url = nsnull;
-	m_protocolInitialized = PR_FALSE;
-	m_runningURL = PR_TRUE;
-    m_username = PL_strdup("qatest03");
-    m_password = PL_strdup("Ne!sc-pe");
-    char *env = PR_GetEnv("TEMP");
-    if (!env)
-        env = PR_GetEnv("TMP");
-    if (env)
-        m_mailDirectory = PL_strdup(env);
+	m_runningURL = PR_FALSE;
+	m_runTestHarness = PR_TRUE;
 	
 	InitializeTestDriver(); // prompts user for initialization information...
-	m_pop3Protocol = nsnull; // we can't create it until we have a url...
-}
-
-void nsPop3TestDriver::InitializeProtocol(const char * urlString)
-{
-	// this is called when we don't have a url nor a protocol instance yet...
-	NS_NewPop3URL(&m_url, urlString);
-	// now create a protocl instance...
-	m_pop3Protocol = new nsPop3Protocol(m_url);
-    m_pop3Protocol->SetUsername(m_username);
-    m_pop3Protocol->SetPassword(m_password);
-    
-	m_protocolInitialized = PR_TRUE;
-
-    nsPop3Sink* aPop3Sink = new nsPop3Sink;
-    if (aPop3Sink)
-    {
-		NS_ADDREF(aPop3Sink);
-        aPop3Sink->SetMailDirectory(m_mailDirectory);
-        m_url->SetPop3Sink(aPop3Sink);
-    }
 }
 
 nsPop3TestDriver::~nsPop3TestDriver()
 {
-	NS_IF_RELEASE(m_url);
-    PR_FREEIF(m_username);
-    PR_FREEIF(m_password);
-    PR_FREEIF(m_mailDirectory);
-	delete m_pop3Protocol;
+}
+
+nsresult nsPop3TestDriver::OnStartRunningUrl(nsIURL * aUrl)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	m_runningURL = PR_TRUE;
+	return NS_OK;
+}
+
+nsresult nsPop3TestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	nsresult rv = NS_OK;
+	m_runningURL = PR_FALSE;
+	if (aUrl)
+	{
+		// query it for a mailnews interface for now....
+		nsIMsgMailNewsUrl * mailUrl = nsnull;
+		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) &mailUrl);
+		if (NS_SUCCEEDED(rv))
+		{
+			mailUrl->UnRegisterListener(this);
+			NS_RELEASE(mailUrl);
+		}
+	}
+
+	return NS_OK;
 }
 
 nsresult nsPop3TestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
 
-	while (m_runningURL)
+	while (m_runTestHarness)
 	{
 		// if we haven't gotten started (and created a protocol) or
 		// if the protocol instance is currently not busy, then read in a new command
 		// and process it...
-		if ((!m_pop3Protocol) || m_pop3Protocol->IsRunning() == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
+		if (m_runningURL == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
 		{
 			status = ReadAndDispatchCommand();	
 		}  // if running url
@@ -260,71 +196,6 @@ nsresult nsPop3TestDriver::RunDriver()
 
 void nsPop3TestDriver::InitializeTestDriver()
 {
-	// prompt the user for port and host name 
-	char portString[20];  // used to read in the port string
-	char hostString[200];
-	portString[0] = '\0';
-	hostString[0] = '\0';
-	m_host[0] = '\0';
-	m_port = DEFAULT_PORT;
-
-	// load default host name and set the start of the url
-	PL_strcpy(m_host, DEFAULT_HOST);
-	PL_strcpy(m_urlSpec, DEFAULT_URL_TYPE); // copy "sockstub://" part into url spec...
-
-	// prompt user for port...
-	printf("Enter port to use [%d]: ", m_port);
-	scanf("%[^\n]", portString);
-	if (portString && *portString)
-	{
-		m_port = atoi(portString);
-	}
-	scanf("%c", portString);  // eat the extra CR
-
-	// now prompt for the host name....
-	printf("Enter host name to use [%s]: ", m_host);
-	scanf("%[^\n]", hostString);
-	scanf("%c", portString);  // eat the extra CR
-	if(hostString && *hostString)
-	{
-		PL_strcpy(m_host, hostString);
-	}
-
-	PL_strcat(m_urlSpec, m_host);
-    // we'll actually build the url (spec + user data) once the user has specified a command they want to try...
-
-	// now prompt for the mail account name....
-    hostString[0] = 0;
-	printf("Enter mail account name [%s]: ", m_username);
-	scanf("%[^\n]", hostString);
-	scanf("%c", portString);  // eat the extra CR
-	if(hostString && *hostString)
-	{
-        PR_FREEIF(m_username);
-		m_username = PL_strdup(hostString);
-	}
-
-	// now prompt for the mail account password .....
-    hostString[0] = 0;
-	printf("Enter mail account password [%s]: ", m_password);
-	scanf("%[^\n]", hostString);
-	scanf("%c", portString);  // eat the extra CR
-	if(hostString && *hostString)
-	{
-        PR_FREEIF(m_password);
-		m_password = PL_strdup(hostString);
-	}
-
-	// now prompt for the local mail folder directory .....
-    hostString[0] = 0;
-	printf("Enter local mail folder directory [%s]: ", m_mailDirectory);
-	scanf("%[^\n]", hostString);
-	scanf("%c", portString);  // eat the extra CR
-	if(hostString && *hostString)
-	{
-        PR_FREEIF(m_mailDirectory);
-		m_mailDirectory = PL_strdup(hostString);
-	}
 }
 
 // prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.
@@ -425,7 +296,7 @@ nsresult nsPop3TestDriver::ListCommands()
 nsresult nsPop3TestDriver::OnExit()
 {
 	printf("Terminating Pop3 test harness....\n");
-	m_runningURL = PR_FALSE; // next time through the test driver loop, we'll kick out....
+	m_runTestHarness = PR_FALSE; // next time through the test driver loop, we'll kick out....
 	return NS_OK;
 }
 
@@ -446,7 +317,7 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 			const char * value = nsnull;
 			msgIdentity->GetRootFolderPath(&value);
 			printf("Root folder path: %s\n", value ? value : "");
-			msgIdentity->GetUserName(&value);
+			msgIdentity->GetPopName(&value);
 			printf("User Name: %s\n", value ? value : "");
 			msgIdentity->GetPopServer(&value);
 			printf("Pop Server: %s\n", value ? value : "");
@@ -468,25 +339,30 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 }
 nsresult nsPop3TestDriver::OnCheck()
 {
-	nsresult rv = NS_OK; 
 
-	// no prompt for url data....just append a '*' to the url data and run it...
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-	PL_strcat(m_urlString, "?check");
-	
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
+	nsresult rv = NS_OK;
 
-	m_url->SetSpec(m_urlString); // reset spec
-	rv = m_pop3Protocol->Load(m_url);
+	nsIPop3Service * pop3Service = nsnull;
+	nsServiceManager::GetService(kPop3ServiceCID, nsIPop3Service::GetIID(),
+                                 (nsISupports **)&pop3Service); // XXX probably need shutdown listener here
+
+	if (pop3Service)
+	{
+		pop3Service->CheckForNewMail(this, nsnull);
+		m_runningURL = PR_TRUE;
+	}
+
+	nsServiceManager::ReleaseService(kPop3ServiceCID, pop3Service);
+
 	return rv;
 }
 
 nsresult nsPop3TestDriver::OnGUrl()
 {
 	nsresult rv = NS_OK;
-		// no prompt for url data....just append a '*' to the url data and run it...
+
+#if 0 
+	// no prompt for url data....just append a '*' to the url data and run it...
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
 	PL_strcat(m_urlString, "?gurl");
@@ -496,21 +372,22 @@ nsresult nsPop3TestDriver::OnGUrl()
 	else
 		rv = m_url->SetSpec(m_urlString); // reset spec
 	
-	// load the correct newsgroup interface as an event sink...
 	if (NS_SUCCEEDED(rv))
 	{
 		 // before we re-load, assume it is a group command and configure our Pop3URL correctly...
 
 		rv = m_pop3Protocol->Load(m_url);
 	} // if user provided the data...
+#endif
 
+	printf ("No longer implemented -- mscott\n");
 	return rv;
 }
 
 nsresult nsPop3TestDriver::OnUidl()
 {
 	nsresult rv = NS_OK;
-
+#if 0
 	// first, prompt the user for the name of the group to fetch
 	// prime article number with a default value...
 	m_userData[0] = '\0';
@@ -535,7 +412,8 @@ nsresult nsPop3TestDriver::OnUidl()
 
 		rv = m_pop3Protocol->Load(m_url);
 	} // if user provided the data...
-
+#endif
+	printf("No longer implemented -- mscott. \n");
 	return rv;
 }
 
@@ -552,26 +430,11 @@ nsresult nsPop3TestDriver::OnGet()
 
 	if (pop3Service)
 	{
-		pop3Service->GetNewMail(nsnull, nsnull);
+		pop3Service->GetNewMail(this, nsnull);
+		m_runningURL = PR_TRUE;
 	}
 
 	nsServiceManager::ReleaseService(kPop3ServiceCID, pop3Service);
-
-#if 0
-
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
-	else
-		rv = m_url->SetSpec(m_urlString); // reset spec
-	
-	// load the correct newsgroup interface as an event sink...
-	if (NS_SUCCEEDED(rv))
-	{
-		 // before we re-load, assume it is a group command and configure our Pop3URL correctly...
-
-		rv = m_pop3Protocol->Load(m_url);
-	} // if user provided the data...
-#endif
 	return rv;
 }
 
@@ -583,6 +446,7 @@ int main()
 
 	nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
