@@ -69,8 +69,17 @@ namespace MetaData {
     // Begin execution of a bytecodeContainer
     js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon)
     {
+        ActivationFrame *f = activationStackTop;
         jsr(execPhase, targetbCon);
-        js2val result = interpreterLoop();
+        js2val result;
+        try {
+            result = interpreterLoop();
+        }
+        catch (Exception &jsx) {
+            activationStackTop = f;
+            throw jsx;
+        }
+        activationStackTop = f;
         return result;
     }
 
@@ -155,10 +164,8 @@ namespace MetaData {
                     pc = hndlr->mPC;
                     push(x);
                 }
-                else {
-                    activationStackTop = activationStack;
+                else
                     throw jsx; //reportError(Exception::uncaughtError, "No handler for throw");
-                }
             }
         }
         return retval;
