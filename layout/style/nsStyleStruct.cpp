@@ -188,12 +188,9 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 
 
 nsStyleFont::nsStyleFont(nsIPresContext* aPresContext)
-  : mFlags(NS_STYLE_FONT_DEFAULT)
+  : mFlags(NS_STYLE_FONT_DEFAULT),
+    mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID)))
 {
-  const nsFont* defaultFont =
-    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
-
-  mFont = *defaultFont;
   mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
 }
 
