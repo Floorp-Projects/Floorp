@@ -112,11 +112,13 @@ public:
 
   // caching frequently used resources
   static nsIRDFResource* kNC_Child;
+  static nsIRDFResource* kNC_MessageChild;
   static nsIRDFResource* kNC_Folder;
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_Columns;
   static nsIRDFResource* kNC_MSGFolderRoot;
 
+  static nsIRDFResource* kNC_Subject;
 };
 
 class SingletonMsgFolderCursor : public nsIRDFAssertionCursor 
