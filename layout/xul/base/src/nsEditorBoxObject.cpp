@@ -37,6 +37,7 @@ public:
   nsEditorBoxObject();
   virtual ~nsEditorBoxObject();
 //NS_PIBOXOBJECT interfaces
+  NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
   
 protected:
@@ -44,32 +45,27 @@ protected:
 };
 
 /* Implementation file */
-NS_IMPL_ADDREF(nsEditorBoxObject)
-NS_IMPL_RELEASE(nsEditorBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED(nsEditorBoxObject, nsBoxObject, nsIEditorBoxObject)
 
 
 NS_IMETHODIMP
 nsEditorBoxObject::SetDocument(nsIDocument* aDocument)
 {
+  nsresult rv;
+  
+  if (mEditorShell)
+  {
+    rv = mEditorShell->Shutdown();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Error from editorShell->Shutdown");
+  }
+  
+  // this should only be called with a null document, which indicates
+  // that we're being torn down.
+  NS_ASSERTION(aDocument == nsnull, "SetDocument called with non-null document");
   mEditorShell = nsnull;
   return nsBoxObject::SetDocument(aDocument);
 }
 
-
-NS_IMETHODIMP 
-nsEditorBoxObject::QueryInterface(REFNSIID iid, void** aResult)
-{
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-  
-  if (iid.Equals(NS_GET_IID(nsIEditorBoxObject))) {
-    *aResult = (nsIEditorBoxObject*)this;
-    NS_ADDREF(this);
-    return NS_OK;
-  }
-
-  return nsBoxObject::QueryInterface(iid, aResult);
-}
   
 nsEditorBoxObject::nsEditorBoxObject()
 {
@@ -81,12 +77,27 @@ nsEditorBoxObject::~nsEditorBoxObject()
   /* destructor code */
 }
 
-/* void openEditor (in boolean openFlag); */
+
+NS_IMETHODIMP nsEditorBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresShell)
+{
+  nsresult rv = nsBoxObject::Init(aContent, aPresShell);
+  if (NS_FAILED(rv)) return rv;
+  
+  NS_ASSERTION(!mEditorShell, "Double init of nsEditorBoxObject");
+  
+  mEditorShell = do_CreateInstance("@mozilla.org/editor/editorshell;1");
+  if (!mEditorShell) return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = mEditorShell->Init();
+  if (NS_FAILED(rv)) return rv;
+  
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsEditorBoxObject::GetEditorShell(nsIEditorShell** aResult)
 {
-  if (!mEditorShell) {
-    mEditorShell = do_CreateInstance("@mozilla.org/editor/editorshell;1");
-  }
+  NS_ASSERTION(mEditorShell, "Editor box object not initted");
 
   *aResult = mEditorShell;
   NS_IF_ADDREF(*aResult);

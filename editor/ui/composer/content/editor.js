@@ -168,8 +168,6 @@ function EditorStartup(editorType, editorElement)
 
   // store the editor shell in the window, so that child windows can get to it.
   editorShell = editorElement.editorShell;        // this pattern exposes a JS/XBL bug that causes leaks
-  
-  editorShell.Init();
   editorShell.editorType = editorType;
 
   editorShell.webShellWindow = window;
@@ -284,8 +282,7 @@ function _EditorNotImplemented()
 
 function EditorShutdown()
 {
-  dump("In EditorShutdown..\n");
-  return editorShell.Shutdown();
+    // nothing to do. editorShell->Shutdown is called by the nsEditorBoxObject
 }
 
 function SafeSetAttribute(nodeID, attributeName, attributeValue)

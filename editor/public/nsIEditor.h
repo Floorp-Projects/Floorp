@@ -85,6 +85,12 @@ public:
    */
   NS_IMETHOD PostCreate()=0;
 
+  /**
+   * PreDestroy is called before the editor goes away, and gives the editor a chance
+   * to tell its documentStateObservers that the document is going away.
+   */
+  NS_IMETHOD PreDestroy()=0;
+
   /** return the edit flags for this editor */
   NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;
 
