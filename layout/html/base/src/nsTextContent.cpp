@@ -137,6 +137,11 @@ public:
                          nsIFrame** aFrame,
                          PRInt32& aCursor);
 
+  NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
+                            nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent);
+
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   PRInt32 GetPosition(nsIPresContext& aCX,
@@ -418,6 +423,24 @@ NS_METHOD TextFrame::GetCursorAt(nsIPresContext& aPresContext,
 {
   aCursor = NS_STYLE_CURSOR_IBEAM;
   return NS_OK;
+}
+
+NS_METHOD TextFrame::ContentChanged(nsIPresShell*   aShell,
+                                    nsIPresContext* aPresContext,
+                                    nsIContent*     aChild,
+                                    nsISupports*    aSubContent)
+{
+  // Generate a reflow command with this frame as the target frame
+  nsIReflowCommand* cmd;
+  nsresult          result;
+                                                
+  result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  if (NS_OK == result) {
+    aShell->AppendReflowCommand(cmd);
+    NS_RELEASE(cmd);
+  }
+
+  return result;
 }
 
 // XXX it would be nice to use a method pointer here, but I don't want
