@@ -273,24 +273,22 @@ function loadCalendarEventDialog()
    {
       for (var i = 0; i < serverList.length ; i++)
       {
-         if( serverList[i].remote != true )
-            document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+         //if( serverList[i].remote != true )
+         document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
       }
+      document.getElementById( "server-field" ).selectedIndex = 0;
    }
    else
    {
       for (var i = 0; i < serverList.length ; i++)
       {
          document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
-         if( serverList[i].remote == true && serverList[i].path == gEvent.parent.server )
-            document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", "true" );
       }
+      setFieldValue( "server-field", gEvent.parent.server );
    }
-   //if the server 
    
-   document.getElementById( "server-field" ).selectedIndex = 0;
    //the next line seems to crash Mozilla
-   //setFieldValue( "server-field", gEvent.parent.server );
+   
    
    // update enabling and disabling
    updateRepeatItemEnabled();
@@ -1191,30 +1189,28 @@ function updateAdvancedRepeatDayOfMonth()
    var dayExtension = getDayExtension( dayNumber );
 
    var weekNumber = getWeekNumberOfMonth();
-
-   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", "On the "+dayNumber+dayExtension+" of the month" );
+   
+   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", document.getElementById( "onthe-text" ).getAttribute( "value" )+dayNumber+dayExtension+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
    
    if( weekNumber == 4 && isLastDayOfWeekOfMonth() )
    {
-      //enable
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).removeAttribute( "collapsed" );
 
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", "Last "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", document.getElementById( "last-text" ).getAttribute( "value" )+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
    }
    else if( weekNumber == 4 && !isLastDayOfWeekOfMonth() )
    {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
    }
    else
    {
-      //disable
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "collapsed", "true" );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
 
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", "Last "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
    }
 
    
@@ -1373,7 +1369,7 @@ function isLastDayOfWeekOfMonth()
       if( nextWeek.getMonth() != thisMonth )
       {
          //its the last week of the month
-        return( true );
+         return( true );
       }
    }
 

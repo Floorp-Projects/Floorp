@@ -121,6 +121,11 @@
 <!ENTITY event.title.new         "New Event" >
 <!ENTITY event.title.edit        "Edit Event" >
 
+<!ENTITY onthe-text            "On the ">
+<!ENTITY last-text             "Last ">
+<!ENTITY ofthemonth-text       " of the month.">
+
+
 <!ENTITY todo.title.new         "New Task">
 <!ENTITY todo.title.edit        "Edit Task">
 
