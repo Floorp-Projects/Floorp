@@ -2575,6 +2575,10 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
         break;
     case nsMsgViewSortType::byLabel:
         rv = msgHdr->GetLabel(result);
+        if(*result == 0)
+          // set result to be the last label id value + 1 to ensure that it will always
+          // be sorted last.
+          *result = (nsMsgViewCommandType::lastLabel - nsMsgViewCommandType::label0) + 1;
         break;
     case nsMsgViewSortType::byFlagged:
         bits = 0;
