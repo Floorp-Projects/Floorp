@@ -7,11 +7,14 @@ jsPerformance.pl runs performance tests, with timing output.
 The driver outputs results files as peers to the test driver, and like
 jsDriver.pl, expects tests to be in a directory structure two levels deep.
 
-Additionally, jsPerformance.pl will post results to a server for logging
-purposes, if you have an appropriate CGI script to receive the results.
+Additionally, jsPerformance.pl can post to a CGI script for logging,
+e.g. http://lxr.mozilla.org/mozilla/source/webtools/graph/collect.cgi.
+For convenience, we have included collect.cgi in mozilla/js/perf/.
 
-The CGI script we used was http://jrgm.mcom.com/cgi-bin/jsperf/collect.cgi.
-This was adapted from John Morrison's loader.pl script (jrgm@netscape.com.).
+You can use collect.cgi locally to log performance results over time
+from one machine. If installed on a web server, many different machines
+can log results to it. Note that collect.cgi depends on CGI modules
+available at http://stein.cshl.org/WWW/software/CGI::modules/.
 
 Note: the call to send_results_to_server() is currently commented out.
-If you have a CGI script and want to post results to it, uncomment it.
+If you want to post results to collect.cgi, uncomment it as appropriate.
