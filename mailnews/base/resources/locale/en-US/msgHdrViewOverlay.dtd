@@ -21,6 +21,7 @@ Rights Reserved.
 <!ENTITY toField.label "To: ">
 <!ENTITY fromField.label "From: ">
 <!ENTITY subjectField.label "Subject: ">
+<!--# LOCALIZATION NOTE (ccField.label): DONT_TRANSLATE -->
 <!ENTITY ccField.label "Cc: ">
 <!ENTITY newsgroupsField.label "Newsgroups: ">
 <!ENTITY dateField.label "Date: ">

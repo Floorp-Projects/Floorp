@@ -6,7 +6,9 @@
 <!ENTITY keyword.label "keyword">
 <!ENTITY age.label "age in days">
 <!ENTITY to.label "to">
+<!-- LOCALIZATION NOTE (cc.label): DONT_TRANSLATE -->
 <!ENTITY cc.label "CC">
+<!-- LOCALIZATION NOTE (toOrCc.label): Do not translate "CC" -->
 <!ENTITY toOrCc.label "to or CC">
 <!ENTITY status.label "status">
 <!ENTITY priority.label "priority">

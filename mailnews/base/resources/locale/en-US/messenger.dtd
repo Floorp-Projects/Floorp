@@ -26,33 +26,24 @@ Rights Reserved.
 
 <!-- File menu items -->
 <!ENTITY newMessage.label				"New Message">  
-<!-- LOCALIZATION NOTE newMessage.accesskey		: DONT_TRANSLATE -->
 <!ENTITY newMessage.accesskey			"n">  
 <!ENTITY newFolderCmd.label				"Folder...">  
-<!-- LOCALIZATION NOTE newFolderCmd.accesskey		: DONT_TRANSLATE -->  
 <!ENTITY newFolderCmd.accesskey			"f">  
 <!ENTITY newAccountCmd.label			"Account...">  
-<!-- LOCALIZATION NOTE newAccountCmd.accesskey		: DONT_TRANSLATE -->  
 <!ENTITY newAccountCmd.accesskey		"a">  
 <!ENTITY openAttachmentCmd.label		".Open Attachment">  
 <!ENTITY saveAsMenu.label				"Save As"> 
-<!-- LOCALIZATION NOTE saveAsMenu.accesskey			: DONT_TRANSLATE --> 
 <!ENTITY saveAsMenu.accesskey			"s"> 
 <!ENTITY saveAsFileCmd.label			"File">  
-<!-- LOCALIZATION NOTE saveAsFileCmd.accesskey		: DONT_TRANSLATE -->  
 <!ENTITY saveAsFileCmd.accesskey		"f">  
 <!ENTITY saveAsTemplateCmd.label		"Template">  
-<!-- LOCALIZATION NOTE saveAsTemplateCmd.accesskey	: DONT_TRANSLATE -->  
 <!ENTITY saveAsTemplateCmd.accesskey	"t">  
 <!ENTITY getNewMsgCmd.label				"Get New Messages">  
-<!-- LOCALIZATION NOTE getNewMsgCmd.accesskey			: DONT_TRANSLATE -->  
 <!ENTITY getNewMsgCmd.accesskey			"m">  
 <!ENTITY sendUnsentCmd.label			"Send Unsent Messages">  
-<!-- LOCALIZATION NOTE sendUnsentCmd.accesskey		: DONT_TRANSLATE -->  
 <!ENTITY sendUnsentCmd.accesskey		"d">  
 <!ENTITY loadFirstDraft.label			"Load First Draft Message">
 <!ENTITY subscribeCmd.label				"Subscribe...">  
-<!-- LOCALIZATION NOTE subscribeCmd.accesskey			: DONT_TRANSLATE -->  
 <!ENTITY subscribeCmd.accesskey			"b">  
 <!ENTITY renameFolder.label				"Rename Folder...">
 <!ENTITY renameFolder.accesskey			"r">
@@ -93,10 +84,9 @@ Rights Reserved.
 <!ENTITY redoDefaultCmd.label "Redo">
 
 <!-- View Menu -->
-<!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate below line. -->
+<!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate line. -->
 <!ENTITY showSidebarMenu.label				".SideBar">
 <!ENTITY showMessengerToolbarCmd.label		"Mail Toolbar">
-<!-- LOCALIZATION NOTE showMessengerToolbarCmd.accesskey	: DONT_TRANSLATE -->
 <!ENTITY showMessengerToolbarCmd.accesskey	"o">
 <!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey	"l">
