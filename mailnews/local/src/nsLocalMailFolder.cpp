@@ -717,10 +717,10 @@ nsMsgLocalMailFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 			if (folderName && PL_strcasecmp(name, folderName)!=0)
 			{
 				*aChild = folder;
-				PR_FREEIF(folderName);
+				delete[] folderName;
 				return NS_OK;
 			}
-		PR_FREEIF(folderName);
+		delete[] folderName;
 		}
   }
   return NS_OK;
