@@ -59,16 +59,14 @@ $cvsroot = '/cvsroot';
 $source_root_pat = '^.*/mozilla/';
 
 @ignore = ( 
-  '__cmsg_data',
   'location of the previous definition',
   '\' was hidden',
-  'declaration of \`index\' shadows global',
   'aggregate has a partly bracketed initializer', # mailnews guys say this has to stay
+  #'declaration of \`index\' shadows global',
   'declaration of \`ws\' shadows global', # from istream
-  'declaration of \`y0\' shadows global', # from mathcalls.h
-  'declaration of \`y1\' shadows global', # from mathcalls.h
-  'by \`nsHTML(?:Anchor|[^:]*Element)::(?:Set|Get)Attribute', # kipp says this is bogus
+  'declaration of \`(?:y0|y1)\' shadows global', # from mathcalls.h
   'is not \(any longer\) pertinent', # cvs warning we can safely ignore
+  'ANSI C forbids long long integer constants', # js uses long long constants
 );
 @ignore_match = (
   { warning=>'statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
@@ -364,7 +362,7 @@ sub build_blame {
 sub print_summary_table
 {
   my ($who_list_ref, $who_count_hash_ref) = @_;
-  my $num_whos = $#{$who_list_ref};
+  my $num_whos = $#{$who_list_ref} + 1;
 
   # Summary Table (name, count)
   #
