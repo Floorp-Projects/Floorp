@@ -1730,20 +1730,69 @@ static int WriteOutVCardProperties (MimeObject *obj, VObject* v, int* numEmail)
 	return 0;
 }
 
+char *
+FindCharacterSet(MimeObject *obj)
+{
+  char    *retCharSet = nsnull;
+  char    *tCharSet = nsnull;
+
+  if ( (!obj->headers) || (!obj->headers->all_headers) )
+    return nsnull;
+
+  char *cTypePtr = (char *) PL_strcasestr(obj->headers->all_headers, HEADER_CONTENT_TYPE);
+  if (!cTypePtr)
+    return nsnull;
+
+  while ( (*cTypePtr) && (*cTypePtr != CR) && (*cTypePtr != LF) )
+  {
+    tCharSet  = (char *) PL_strcasestr(cTypePtr, "charset=");
+    if (tCharSet )
+      break;
+
+    ++cTypePtr;
+  }
+
+  if (tCharSet)
+  {
+    if (nsCRT::strlen(tCharSet) > 8)
+    {
+      retCharSet = PL_strdup( (tCharSet + 8) );
+      char  *ptr = retCharSet;
+
+      while (*ptr)
+      {
+        if ( (*ptr == ' ') || (*ptr == ';') || (*ptr == CR) || (*ptr == LF) ) 
+        {
+          *ptr = '\0';
+          break;
+        }
+
+        ptr++;
+      }
+    }
+  }
+
+  return retCharSet;
+}
+
 static int 
 WriteLineToStream (MimeObject *obj, const char *line)               
 {                                                                              
   int     status = 0;
   char    *htmlLine;
-  int     htmlLen ;                                                          
-  char    *charset = PL_strstr(obj->content_type, "charset=");
+  int     htmlLen ;
   char    *converted = NULL;
   PRInt32 converted_length;
   PRInt32 res;
-  
+  char    *charset = nsnull;
+
   if ( (!line) || (!*line) )
     return 0;
 
+  // Seek out a charset!
+  charset = PL_strcasestr(obj->content_type, "charset=");
+  if (!charset)
+    charset = FindCharacterSet(obj);
   if (!charset)
     charset = "ISO-8859-1";
   
@@ -1771,6 +1820,8 @@ WriteLineToStream (MimeObject *obj, const char *line)
   
   if (converted != line)
     PR_FREEIF(converted);
+
+  PR_FREEIF(charset);
   return status;
 }
 
