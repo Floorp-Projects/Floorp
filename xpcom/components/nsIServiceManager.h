@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -213,9 +213,6 @@ public:
     // This method can be called when shutting down the application. It  
     // releases all the global services, and deletes the global service manager.
     static nsresult ShutdownGlobalServiceManager(nsIServiceManager* *result);
-
-    static nsIServiceManager* mGlobalServiceManager;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////

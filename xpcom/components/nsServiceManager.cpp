@@ -25,8 +25,12 @@
 #include "nsHashtable.h"
 #include "prcmon.h"
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
+#include "nsAutoLock.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
+nsIServiceManager* gServiceManager = NULL;
+PRBool gShuttingDown = PR_FALSE;
 
 nsresult
 nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
@@ -201,7 +205,6 @@ protected:
     virtual ~nsServiceManagerImpl(void);
 
     nsObjectHashtable/*<nsServiceEntry>*/* mServices;
-    PRBool mShuttingDown;
     PRMonitor* mMonitor;
 };
 
@@ -216,8 +219,7 @@ DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 }
 
 nsServiceManagerImpl::nsServiceManagerImpl(void)
-    : mShuttingDown(PR_FALSE),
-      mMonitor(0)
+    : mMonitor(0)
 {
     NS_INIT_REFCNT();
     mServices = new nsObjectHashtable(nsnull, nsnull,   // should never be cloned
@@ -235,7 +237,6 @@ nsServiceManagerImpl::nsServiceManagerImpl(void)
 
 nsServiceManagerImpl::~nsServiceManagerImpl(void)
 {
-    mShuttingDown = PR_TRUE;
     if (mServices) {
         delete mServices;
     }
@@ -253,9 +254,20 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                                  nsISupports* *result,
                                  nsIShutdownListener* shutdownListener)
 {
-    nsresult rv = NS_OK;
-    PR_EnterMonitor(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
+    // test this first, since there's no point in returning a service during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+#ifdef DEBUG_dp
+        NS_WARN_IF_FALSE(PR_FALSE, "Creating new service on shutdown. Denied.");
+#endif /* DEBUG_dp */
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsresult rv = NS_OK;
     nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
 
@@ -276,44 +288,35 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                 }
             }
         }
+        return rv;
     }
-    else if (mShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
-#ifdef DEBUG_dp
-        NS_WARN_IF_FALSE(PR_FALSE, "Creating new service on shutdown. Denied.");
-#endif /* DEBUG_dp */
-        rv = NS_ERROR_UNEXPECTED;
-    }
-    else {
-        nsISupports* service;
-        // We need to not be holding the service manager's monitor while calling 
-        // CreateInstance, because it invokes user code which could try to re-enter
-        // the service manager:
-        PR_ExitMonitor(mMonitor);
-        rv = nsComponentManager::CreateInstance(aClass, NULL, aIID, (void**)&service);
-        PR_EnterMonitor(mMonitor);
-        if (NS_SUCCEEDED(rv)) {
-            entry = new nsServiceEntry(aClass, service);
-            if (entry == NULL) {
-                NS_RELEASE(service);
-                rv = NS_ERROR_OUT_OF_MEMORY;
+
+    nsISupports* service;
+    // We need to not be holding the service manager's monitor while calling 
+    // CreateInstance, because it invokes user code which could try to re-enter
+    // the service manager:
+    mon.Exit();
+    rv = nsComponentManager::CreateInstance(aClass, NULL, aIID, (void**)&service);
+    mon.Enter();
+    if (NS_SUCCEEDED(rv)) {
+        entry = new nsServiceEntry(aClass, service);
+        if (entry == NULL) {
+            NS_RELEASE(service);
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+        else {
+            rv = entry->AddListener(shutdownListener);
+            if (NS_SUCCEEDED(rv)) {
+                mServices->Put(&key, entry);
+                *result = service;
+                NS_ADDREF(service);		// Released in service manager destructor
             }
             else {
-                rv = entry->AddListener(shutdownListener);
-                if (NS_SUCCEEDED(rv)) {
-                    mServices->Put(&key, entry);
-                    *result = service;
-                    NS_ADDREF(service);		// Released in service manager destructor
-                }
-                else {
-                    NS_RELEASE(service);
-                    delete entry;
-                }
+                NS_RELEASE(service);
+                delete entry;
             }
         }
     }
-
-    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
@@ -323,7 +326,7 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
 {
     PRBool serviceFound = PR_FALSE;
     nsresult rv = NS_OK;
-    PR_EnterMonitor(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
 #ifndef NS_DEBUG
     // Do entry lookup only if there is a shutdownlistener to be removed.
@@ -353,7 +356,6 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
                  "*** Service in hash table but is being deleted. Dangling pointer\n"
                  "*** in service manager hash table.");
 
-    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
@@ -361,7 +363,7 @@ NS_IMETHODIMP
 nsServiceManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService)
 {
     nsresult rv = NS_OK;
-    PR_EnterMonitor(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
@@ -377,7 +379,6 @@ nsServiceManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService
             NS_ADDREF(aService);      // Released in DeleteEntry from UnregisterService
         }
     }
-    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
@@ -385,7 +386,7 @@ NS_IMETHODIMP
 nsServiceManagerImpl::UnregisterService(const nsCID& aClass)
 {
     nsresult rv = NS_OK;
-    PR_EnterMonitor(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
@@ -398,8 +399,6 @@ nsServiceManagerImpl::UnregisterService(const nsCID& aClass)
         entry->mShuttingDown = PR_TRUE;
         mServices->RemoveAndDelete(&key);				// This will call the delete entry func
     }
-
-    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
@@ -468,13 +467,17 @@ NS_NewServiceManager(nsIServiceManager* *result)
 nsresult
 nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
 {
+    if (gShuttingDown)
+        return NS_ERROR_UNEXPECTED;
+
     nsresult rv = NS_OK;
-    if (mGlobalServiceManager == NULL) {
+    if (gServiceManager == NULL) {
         // XPCOM not initialized yet. Let us do initialization of our module.
         rv = NS_InitXPCOM(NULL, NULL, NULL);
     }
     // No ADDREF as we are advicing no release of this.
-    if (NS_SUCCEEDED(rv)) *result = mGlobalServiceManager;
+    if (NS_SUCCEEDED(rv))
+        *result = gServiceManager;
 
     return rv;
 }
@@ -482,11 +485,11 @@ nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
 nsresult
 nsServiceManager::ShutdownGlobalServiceManager(nsIServiceManager* *result)
 {
-    if (mGlobalServiceManager != NULL) {
+    if (gServiceManager != NULL) {
         nsrefcnt cnt;
-        NS_RELEASE2(mGlobalServiceManager, cnt);
+        NS_RELEASE2(gServiceManager, cnt);
         NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
-        mGlobalServiceManager = NULL;
+        gServiceManager = NULL;
     }
     return NS_OK;
 }
@@ -508,8 +511,8 @@ nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
 {
     // Don't create the global service manager here because we might be shutting
     // down, and releasing all the services in its destructor
-    if (mGlobalServiceManager) 
-        return mGlobalServiceManager->ReleaseService(aClass, service, shutdownListener);
+    if (gServiceManager) 
+        return gServiceManager->ReleaseService(aClass, service, shutdownListener);
     // If there wasn't a global service manager, just release the object:
     NS_RELEASE(service);
     return NS_OK;
@@ -554,8 +557,8 @@ nsServiceManager::ReleaseService(const char* aProgID, nsISupports* service,
     // Don't create the global service manager here because we might
     // be shutting down, and releasing all the services in its
     // destructor
-    if (mGlobalServiceManager)
-        return mGlobalServiceManager->ReleaseService(aProgID, service, shutdownListener);
+    if (gServiceManager)
+        return gServiceManager->ReleaseService(aProgID, service, shutdownListener);
     // If there wasn't a global service manager, just release the object:
     NS_RELEASE(service);
     return NS_OK;
@@ -576,8 +579,8 @@ nsServiceManager::UnregisterService(const char* aProgID)
     // Don't create the global service manager here because we might
     // be shutting down, and releasing all the services in its
     // destructor
-    if (mGlobalServiceManager) 
-        return mGlobalServiceManager->UnregisterService(aProgID);
+    if (gServiceManager) 
+        return gServiceManager->UnregisterService(aProgID);
     return NS_OK;
 }
 
