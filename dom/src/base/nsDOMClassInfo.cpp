@@ -5238,22 +5238,24 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  // Do a security check when resolving heretofore unknown string
-  // properties on document objects to prevent detection of a
-  // property's existence across origins.
-  rv = doCheckPropertyAccess(cx, obj, id, wrapper,
-                             (flags & JSRESOLVE_ASSIGNING) ?
-                             nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
-                             nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                             PR_FALSE);
-  if (NS_FAILED(rv)) {
-    // Security check failed. The security manager set a JS exception,
-    // we must make sure that exception is propagated, so return NS_OK
-    // here.
+  if (documentNeedsSecurityCheck(cx, wrapper)) {
+    // Do a security check when resolving heretofore unknown string
+    // properties on document objects to prevent detection of a
+    // property's existence across origins.
+    rv = doCheckPropertyAccess(cx, obj, id, wrapper,
+                               (flags & JSRESOLVE_ASSIGNING) ?
+                               nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
+                               nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                               PR_FALSE);
+    if (NS_FAILED(rv)) {
+      // Security check failed. The security manager set a JS exception,
+      // we must make sure that exception is propagated, so return NS_OK
+      // here.
 
-    *_retval = PR_FALSE;
+      *_retval = PR_FALSE;
 
-    return NS_OK;
+      return NS_OK;
+    }
   }
 
   return nsNodeSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
