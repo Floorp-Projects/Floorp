@@ -21,12 +21,12 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsIImageContainerObserver.idl"
+#include "gfxIImageContainerObserver.idl"
 #include "gfxtypes.idl"
 
-interface nsIImageRequest;
-interface nsIImageContainer;
-interface nsIImageFrame;
+interface lpIImageRequest;
+interface gfxIImageContainer;
+interface gfxIImageFrame;
 
 %{C++
 #include "nsRect.h"
@@ -40,42 +40,42 @@ interface nsIImageFrame;
  * @see imagelib2
  */
 [scriptable, uuid(350163d2-1dd2-11b2-9e69-89959ecec1f3)]
-interface nsIImageDecoderObserver : nsIImageContainerObserver
+interface nsIImageDecoderObserver : gfxIImageContainerObserver
 {
   /**
    * called as soon as the image begins getting decoded
    */
-  void onStartDecode(in nsIImageRequest request, in nsISupports cx);
+  void onStartDecode(in lpIImageRequest request, in nsISupports cx);
 
   /**
    * called once the image has been inited and therefore has a width and height
    */
-  void onStartContainer(in nsIImageRequest request, in nsISupports cx, in nsIImageContainer image);
+  void onStartContainer(in lpIImageRequest request, in nsISupports cx, in gfxIImageContainer image);
 
   /**
    * called when each frame is created
    */
-  void onStartFrame(in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame);
+  void onStartFrame(in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame);
 
   /**
    * called when some part of the frame has new data in it
    */
-  [noscript] void onDataAvailable(in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame, [const] in nsRect rect);
+  [noscript] void onDataAvailable(in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect);
 
   /**
    * called when a frame is finished decoding
    */
-  void onStopFrame(in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame);
+  void onStopFrame(in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame);
 
   /**
    * probably not needed.  called right before onStopDecode
    */
-  void onStopContainer(in nsIImageRequest request, in nsISupports cx, in nsIImageContainer image);
+  void onStopContainer(in lpIImageRequest request, in nsISupports cx, in gfxIImageContainer image);
 
   /**
    * called when the decoder is dying off
    */
-  void onStopDecode(in nsIImageRequest request, in nsISupports cx,
+  void onStopDecode(in lpIImageRequest request, in nsISupports cx,
                     in nsresult status, in wstring statusArg);
 
 };

@@ -25,7 +25,7 @@
 #include "gfxtypes.idl"
 
 interface nsIImageDecoderObserver;
-interface nsIImageRequest;
+interface lpIImageRequest;
 interface nsISimpleEnumerator;
 interface nsIStreamListener;
 interface nsIURI;
@@ -47,7 +47,7 @@ interface nsIImageLoader : nsISupports
    * @param aObserver the observer
    * @param cx some random data
    */
-  nsIImageRequest loadImage(in nsIURI uri, in nsIImageDecoderObserver aObserver, in nsISupports cx);
+  lpIImageRequest loadImage(in nsIURI uri, in nsIImageDecoderObserver aObserver, in nsISupports cx);
 
   /**
    * Start the load and decode of an image.
@@ -55,11 +55,11 @@ interface nsIImageLoader : nsISupports
    * @param aObserver the observer
    * @param cx some random data
    */
-  nsIImageRequest loadImageWithChannel(in nsIChannel aChannel, in nsIImageDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
+  lpIImageRequest loadImageWithChannel(in nsIChannel aChannel, in nsIImageDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
 
   /**
    * Returns the channels contained directly in this group.
-   * @note Enumerator element type: nsIImageRequest.
+   * @note Enumerator element type: lpIImageRequest.
    */
   readonly attribute nsISimpleEnumerator requests;
 };
