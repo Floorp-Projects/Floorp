@@ -55,7 +55,7 @@ interface nsIWebPageDescriptor : nsISupports
   * @return NS_OK            - 
   *         NS_ERROR_FAILURE - 
   */
-  void LoadPage(in nsISupports aPageDescriptor, in unsigned long aDisplayType);
+  void loadPage(in nsISupports aPageDescriptor, in unsigned long aDisplayType);
 
 
  /**
