@@ -21,7 +21,7 @@
 #   Scott Collins <scc@mozilla.org>
 #
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -48,8 +48,6 @@ CPPSRCS		=				\
 		nsSlidingString.cpp		\
 		nsXPIDLString.cpp		\
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

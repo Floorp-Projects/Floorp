@@ -132,9 +132,8 @@ tier_2_dirs += lib/mac/MoreFiles
 endif
 
 tier_2_dirs	+= \
-		modules/libreg \
-		string \
 		xpcom \
+		modules/libreg \
 		xpcom/obsolete \
 		$(NULL)
 

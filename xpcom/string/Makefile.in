@@ -20,7 +20,7 @@
 #   Johnny Stenback <jst@netscape.com> (original author)
 #
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@

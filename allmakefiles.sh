@@ -545,12 +545,12 @@ widget/src/support/Makefile
 "
 
 MAKEFILES_xpcom="
-string/Makefile
-string/obsolete/Makefile
-string/public/Makefile
-string/src/Makefile
-string/embed/Makefile
-string/embed/standalone/Makefile
+xpcom/string/Makefile
+xpcom/string/obsolete/Makefile
+xpcom/string/public/Makefile
+xpcom/string/src/Makefile
+xpcom/string/embed/Makefile
+xpcom/string/embed/standalone/Makefile
 xpcom/Makefile
 xpcom/base/Makefile
 xpcom/build/Makefile
@@ -580,8 +580,6 @@ xpcom/reflect/xptinfo/Makefile
 xpcom/reflect/xptinfo/public/Makefile
 xpcom/reflect/xptinfo/src/Makefile
 xpcom/reflect/xptinfo/tests/Makefile
-xpcom/obsolete/Makefile
-xpcom/obsolete/component/Makefile
 xpcom/proxy/Makefile
 xpcom/proxy/public/Makefile
 xpcom/proxy/src/Makefile
@@ -599,6 +597,10 @@ intl/unicharutil/public/Makefile
 intl/uconv/public/Makefile
 netwerk/base/public/Makefile
 netwerk/build/Makefile
+"
+MAKEFILES_xpcom_obsolete="
+xpcom/obsolete/Makefile
+xpcom/obsolete/component/Makefile
 "
 
 MAKEFILES_xpcom_tests="
@@ -1371,6 +1373,7 @@ $MAKEFILES_webshell
 $MAKEFILES_widget
 $MAKEFILES_xft
 $MAKEFILES_xpcom
+$MAKEFILES_xpcom_obsolete
 $MAKEFILES_xpcom_tests
 $MAKEFILES_xpconnect
 $MAKEFILES_xpinstall
