@@ -168,10 +168,8 @@ my $leakstr  = PrintSize($newMap{"TOTAL"}{leaked}) . "B\n";
 my $bloatstr = PrintSize($newMap{"TOTAL"}{bloat}) . "B\n";
 
 if($LABEL) {
-  print "TinderboxPrint:$LABEL Lk/Bl\n";
-  my $shortlabel = substr($LABEL, 0, 1);
-  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt leaks\">Lk:$leakstr</a>\n";
-  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt bloat\">Bl:$bloatstr</a>\n";
+  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt leaks\">$LABEL Lk:$leakstr</a>\n";
+  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt bloat\">$LABEL Bl:$bloatstr</a>\n";
 } else {
   print "TinderboxPrint:<a title=\"nsTraceRefcnt leaks\">Lk:$leakstr</a>\n";
   print "TinderboxPrint:<a title=\"nsTraceRefcnt bloat\">Bl:$bloatstr</a>\n";
