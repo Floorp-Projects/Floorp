@@ -574,16 +574,16 @@ nsBrowserWindow::RemoveBrowser(nsBrowserWindow* aBrowser)
 void
 nsBrowserWindow::CloseAllWindows()
 {
-  if (!gBrowsers)
-    return;
-  while (0 != gBrowsers->Count()) {
+  while (gBrowsers && gBrowsers->Count()) {
     nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers->ElementAt(0);
     NS_ADDREF(bw);
     bw->Destroy();
     NS_RELEASE(bw);
   }
-  delete gBrowsers;
-  gBrowsers = nsnull;
+  if (gBrowsers) {
+    delete gBrowsers;
+    gBrowsers = nsnull;
+  }
 }
 
 static nsEventStatus PR_CALLBACK
