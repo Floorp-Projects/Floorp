@@ -278,9 +278,9 @@ if(MakeJsFile($seiStubRootName))
 }
 
 # Make .xpi file
-if(system("perl makexpi.pl $seiStubRootName $gLocalTmpStage $inDistPath\\xpi"))
+if(system("perl makexpi.pl $seiStubRootName $gLocalTmpStage $inDistPath"))
 {
-  print "\n Error: perl makexpi.pl $seiStubRootName $gLocalTmpStage $inDistPath\\xpi\n";
+  print "\n Error: perl makexpi.pl $seiStubRootName $gLocalTmpStage $inDistPath\n";
   return(1);
 }
 
