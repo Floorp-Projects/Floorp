@@ -1081,17 +1081,39 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
     nsSize          kidMaxElementSize;
     nsReflowMetrics desiredSize(&kidMaxElementSize);
     // XXX Correctly compute the available height...
-    nsSize          availSpace(NS_UNCONSTRAINEDSIZE, aReflowState.maxSize.height);
+    nsSize          availSpace(aReflowState.maxSize);
     nsReflowState kidReflowState(kidFrame, aReflowState, availSpace);
     kidFrame->WillReflow(*aPresContext);
+
+    // XXX Unfortunately we need to reflow the child several times.
+    // The first time is for the incremental reflow command. We can't pass in
+    // a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
+    // the width of the previous reflow...
     aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
-    // Update the cell layout data
-    nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame,
-                                                           &desiredSize, &kidMaxElementSize);
-    ((nsTableCellFrame *)kidFrame)->SetCellLayoutData(kidLayoutData);
-    // XXX The equivalent of incrementally updating the column cache
-    state.tableFrame->SetCellLayoutData(aPresContext, kidLayoutData, (nsTableCellFrame*)kidFrame);
+    // Now do the regular pass 1 reflow and gather the max width and max element
+    // size.
+    // XXX It would be nice if we could skip this step and the next step if the
+    // column width isn't dependent on the max cell width...
+    kidReflowState.reason = eReflowReason_Resize;
+    kidReflowState.reflowCommand = nsnull;
+    kidReflowState.maxSize.width = NS_UNCONSTRAINEDSIZE;
+    aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+
+    // Update the cell layout data. Note that we need to do this for both
+    // the data the cell maintains AND the data the table maintains...
+    nsCellLayoutData *kidLayoutData = ((nsTableCellFrame *)kidFrame)->GetCellLayoutData();
+
+    kidLayoutData->SetDesiredSize(&desiredSize);
+    kidLayoutData->SetMaxElementSize(&kidMaxElementSize);
+
+    kidLayoutData = state.tableFrame->GetCellLayoutData((nsTableCellFrame*)kidFrame);
+    kidLayoutData->SetDesiredSize(&desiredSize);
+    kidLayoutData->SetMaxElementSize(&kidMaxElementSize);
+
+    // Now reflow the cell again this time constraining the width
+    // XXX Skip this for the time being, because the table code is going to
+    // reflow the entire table anyway...
 
     // XXX Compute desired size...
 
