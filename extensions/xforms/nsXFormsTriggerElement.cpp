@@ -77,20 +77,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsTriggerElement,
 NS_IMETHODIMP
 nsXFormsTriggerElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_HANDLE_DEFAULT);
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMElement> node;
-  aWrapper->GetElementNode(getter_AddRefs(node));
-
-  // It's ok to keep a weak pointer to mElement.  mElement will have an
-  // owning reference to this object, so as long as we null out mElement in
-  // OnDestroyed, it will always be valid.
-
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
+  aWrapper->SetNotificationMask(kStandardNotificationMask |
+                                nsIXTFElement::NOTIFY_HANDLE_DEFAULT);
 
   nsCOMPtr<nsIDOMDocument> domDoc;
-  node->GetOwnerDocument(getter_AddRefs(domDoc));
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   NS_ENSURE_STATE(domDoc);
 
   nsCOMPtr<nsIDOMElement> inputElement;
@@ -99,7 +93,7 @@ nsXFormsTriggerElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
                           getter_AddRefs(inputElement));
 
   mButton = do_QueryInterface(inputElement);
-  NS_ENSURE_TRUE(mButton, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(mButton);
 
   return NS_OK;
 }
@@ -125,6 +119,20 @@ nsXFormsTriggerElement::GetInsertionPoint(nsIDOMElement **aElement)
 NS_IMETHODIMP
 nsXFormsTriggerElement::Refresh()
 {
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsresult rv =
+    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                       getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!result) {
+    return NS_OK;
+  }
+
+  // Get context node, if any  
+  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+
   return NS_OK;
 }
 
