@@ -29,6 +29,7 @@
 #include "nsIContent.h"
 #include "nsVoidArray.h"
 #include "nsIDOMNode.h"
+#include "nsINameSpaceManager.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -162,7 +163,9 @@ void nsHTDataModel::ToggleSelectionDelegate(nsHierarchicalDataItem* pDataItem)
 
 	// Set it and wait for the callback.
 	nsHTItem* pItem = NS_STATIC_CAST(nsHTItem*, pDataItem->GetImplData());
-	pItem->GetContentNode()->SetAttribute("selected", attrValue, PR_TRUE);
+  nsIAtom* selectedAtom = NS_NewAtom("selected");
+	pItem->GetContentNode()->SetAttribute(kNameSpaceID_None, selectedAtom, attrValue, PR_TRUE);
+  NS_RELEASE(selectedAtom);
 
 	// TODO: Remove this and put it in the callback instead.
 	pItem->FinishSelectionChange();
