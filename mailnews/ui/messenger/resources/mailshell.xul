@@ -45,7 +45,8 @@
 <!ENTITY cutCmd.label ".Cut">  
 <!ENTITY copyCmd.label ".Copy">  
 <!ENTITY pasteCmd.label ".Paste">  
-<!ENTITY deleteMsgCmd.label ".Delete Message">  
+<!ENTITY deleteMsgCmd.label "Delete Message">  
+<!ENTITY deleteFolderCmd.label ".Delete Folder">  
 <!ENTITY selectMenu.label ".Select"> 
 <!ENTITY selectAllCmd.label ".All">  
 <!ENTITY selectThreadCmd.label ".Thread">  
@@ -129,8 +130,8 @@
 <!ENTITY copyMsgMenu.label "Copy Message">  
 <!ENTITY addSenderToAddressBookCmd.label ".Add Sender to Address Book">  
 <!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">  
-<!ENTITY markMenu.label ".Mark">  
-<!ENTITY markAsReadCmd.label ".As Read">  
+<!ENTITY markMenu.label "Mark">  
+<!ENTITY markAsReadCmd.label "As Read">  
 <!ENTITY markThreadAsReadCmd.label ".Thread As Read">  
 <!ENTITY markByDateCmd.label ".by Date...">  
 <!ENTITY markAllReadCmd.label ".All Read">  
@@ -251,6 +252,7 @@
       <menuitem name="&copyCmd.label;" onclick="MsgEditCopy();"/>
       <menuitem name="&pasteCmd.label;" onclick="MsgEditPaste();"/>
       <menuitem name="&deleteMsgCmd.label;" onclick="MsgDeleteMessage();"/>
+      <menuitem name="&deleteFolderCmd.label;" onclick="MsgDeleteFolder();"/>
       <menu name="&selectMenu.label;">
       <menuitem name="&selectAllCmd.label;" onclick="MsgSelectAll();"/>
       <menuitem name="&selectThreadCmd.label;" onclick="MsgSelectThread();"/>
