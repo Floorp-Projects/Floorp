@@ -518,7 +518,7 @@ var BookmarksCommand = {
       if (aTargetBrowser == "save") {
         var item = aSelection.item[i];
         saveURL(item.Value, BookmarksUtils.getProperty(item, "Name"), null, true);
-      }      
+      }
       else if (type == "Bookmark" || type == "") {
         var webPanel = BMDS.GetTarget(aSelection.item[i],
                                       RDF.GetResource(NC_NS + "WebPanel"),
@@ -558,38 +558,15 @@ var BookmarksCommand = {
     w.openWebPanel(BookmarksUtils.getProperty(aResource,  NC_NS+"Name"), url);
   },
   
-  // requires utilityOverlay.js if opening in new window for getTopWin()
+  // requires utilityOverlay.js because it calls openUILinkIn
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {
     var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS);
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
-    var w = aTargetBrowser == "window"? null:getTopWin();
-    if (!w) {
-      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
-      return;
-    }
-    var browser = w.document.getElementById("content");
-    switch (aTargetBrowser) {
-    case "current":
-      browser.loadURI(url);
-      w._content.focus();
-      break;
-    case "tab":
-      var loadInBackground = false;
-      loadInBackground = PREF.getBoolPref("browser.tabs.loadBookmarksInBackground");
 
-      // open link in new tab
-      var tab = browser.addTab(url);
-
-      if (!loadInBackground)
-        browser.selectedTab = tab;
-
-      browser.focus();
-
-      break;
-    }
+    openUILinkIn(url, aTargetBrowser);
   },
 
   openGroupBookmark: function (aURI, aTargetBrowser)
@@ -1374,25 +1351,6 @@ var BookmarksUtils = {
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                "centerscreen,chrome,dialog,resizable,dependent", aTitle, aURL, null, aCharset,
                null, null, aIsWebPanel);
-  },
-
-  getBrowserTargetFromEvent: function (aEvent)
-  {
-    var button = (aEvent.type == "command" || aEvent.type == "keypress") ? 0 :aEvent.button;
-    if (button == 1)
-      return PREF.getBoolPref("browser.tabs.opentabfor.middleclick")? "tab":"window"
-    else if (aEvent.shiftKey)      
-      return "window";
-#ifdef XP_MACOSX
-    else if (aEvent.metaKey)
-#else
-    else if (aEvent.ctrlKey)
-#endif
-      return "tab";
-    else if (aEvent.altKey)
-      return "save"
-    else
-      return "current";
   }
 }
 

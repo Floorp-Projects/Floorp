@@ -268,10 +268,28 @@
               </menupopup>
             </menu>
   
-            <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;" oncommand="var url = event.target.getAttribute('statustext'); if (url) openTopWin(url);">
+            <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;" 
+                  oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
+                  onclick="checkForMiddleClick(this, event);">
+
               <menupopup id="goPopup" onpopupshowing="updateGoMenu(this);" onpopuphiding="onGoMenuHidden();">
-                <menuitem label="&backCmd.label;"    accesskey="&backCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
-                <menuitem label="&forwardCmd.label;" accesskey="&forwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
+                <menuitem label="&backCmd.label;"
+                          accesskey="&backCmd.accesskey;"
+                          key="goBackKb"
+                          oncommand="BrowserBack(event, true)"
+                          onclick="checkForMiddleClick(this, event);">
+                  <observes element="Browser:Back" attribute="disabled" />
+                </menuitem>
+                <menuitem label="&forwardCmd.label;" 
+                          accesskey="&forwardCmd.accesskey;"
+                          key="goForwardKb" 
+                          oncommand="BrowserForward(event, true)"
+                          onclick="checkForMiddleClick(this, event);">
+                  <observes element="Browser:Forward" attribute="disabled" />
+                </menuitem>
+
+                          
+                          
                 <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
@@ -368,7 +386,8 @@
             <menupopup id="menu_HelpPopup">
               <menuitem accesskey="&releaseCmd.accesskey;"
                         label="&releaseCmd.label;"
-                        oncommand="openTopWin('&releaseURL;');"/>
+                        oncommand="openUILink('&releaseURL;', event, false, true);"
+                        onclick="checkForMiddleClick(this, event);"/>
               <menuseparator/>
               <menuitem id="aboutName"
                         accesskey="&aboutCmd.accesskey;"

@@ -70,7 +70,8 @@
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
                 accesskey="&viewImageCmd.accesskey;"
-                oncommand="gContextMenu.viewImage();"/>
+                oncommand="gContextMenu.viewImage(event);"
+                onclick="checkForMiddleClick(this, event);"/>
 #ifndef XP_UNIX
 #ifndef XP_OS2
       <menuitem id="context-copyimage-contents"
@@ -134,7 +135,8 @@
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"
                 accesskey="&viewBGImageCmd.accesskey;"
-                oncommand="gContextMenu.viewBGImage();"/>
+                oncommand="gContextMenu.viewBGImage(event);"
+                onclick="checkForMiddleClick(this, event);"/>
       <menuitem id="context-undo"
                 label="&undoCmd.label;"
                 accesskey="&undoCmd.accesskey;"

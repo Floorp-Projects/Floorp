@@ -50,11 +50,11 @@
     <menuitem id="miCollapse" label="&collapse.label;" accesskey="&collapse.accesskey;"
               default="true" oncommand="collapseExpand();"/>
     <menuitem id="miOpen" label="&openLinkInWindow.label;" accesskey="&openLinkInWindow.accesskey;" default="true"
-              oncommand="OpenURL(0);"/>
+              oncommand="OpenURLIn('current');"/>
     <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" accesskey="&openInNewWindow.accesskey;"
-              oncommand="OpenURL(1);"/>
+              oncommand="OpenURLIn('window');"/>
     <menuitem id="miOpenInNewTab" label="&openInNewTab.label;" accesskey="&openInNewTab.accesskey;"
-              oncommand="OpenURL(2);"/>
+              oncommand="OpenURLIn('tab');"/>
     <menuseparator id="pre-bookmarks-separator"/>
     <menuitem id="miAddBookmark" label="&bookmarkLink.label;" accesskey="&bookmarkLink.accesskey;" oncommand="historyAddBookmarks();"/>
     <menuitem id="miCopyLink" label="&copyLink.label;" accesskey="&copyLink.accesskey;" oncommand="historyCopyLink();"/>
@@ -92,13 +92,13 @@
   <tree id="historyTree" flex="1" class="plain"
             context="historyContextMenu"
             datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
-            onkeypress="if (event.keyCode == 13) OpenURL(event.shiftKey || event.metaKey);" 
+            onkeypress="if (event.keyCode == 13) OpenURL(event);" 
             onselect="this.treeBoxObject.view.selectionChanged();
                       historyOnSelect();"
             hidecolumnpicker="true"
             ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
-            onclick="if (event.button == 1) OpenURL(2, event);" 
-            ondblclick="if (isValidLeftClick(event,'treechildren')) onDoubleClick(event);">
+            onclick="if (event.button == 1) OpenURL(event);" 
+            ondblclick="if (isValidLeftClick(event,'treechildren')) OpenURL(event);">
     <template>
       <rule>
         <treechildren>

@@ -96,14 +96,28 @@ function collapseExpand()
     gHistoryTree.treeBoxObject.view.toggleOpenState(currentIndex);
 }
 
-function onDoubleClick(event)
+function OpenURLIn(where)
 {
-  if (event.metaKey || event.shiftKey)
-    OpenURL(1);
-  else if (event.ctrlKey)
-    OpenURL(2, event);
-  else
-    OpenURL(0);
+  var count = gHistoryTree.view.selection.count;
+  if (count != 1)
+    return;
+
+  var currentIndex = gHistoryTree.currentIndex;     
+  if (isContainer(gHistoryTree, currentIndex))
+    return;
+ 
+  var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
+  
+  if (!checkURLSecurity(url)) 
+    return;
+
+  openUILinkIn(url, where);
+}
+
+function OpenURL(event)
+{
+  OpenURLIn(whereToOpenLink(event));
 }
 
 function checkURLSecurity(aURL)
@@ -124,30 +138,6 @@ function checkURLSecurity(aURL)
     return false;
   }
   return true;
-}
-
-function OpenURL(aWhere, event)
-{
-  var count = gHistoryTree.view.selection.count;
-  if (count != 1)
-    return;
-
-  var currentIndex = gHistoryTree.currentIndex;     
-  if (isContainer(gHistoryTree, currentIndex))
-    return;
- 
-  var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-  var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
-  
-  if (!checkURLSecurity(url)) 
-    return;
-
-  if (aWhere == 0)
-    openTopWin(url);
-  else if (aWhere == 1)
-    openNewWindowWith(url, null, false);
-  else
-    openNewTabWith(url, null, event, false);     
 }
 
 function SortBy(sortKey)

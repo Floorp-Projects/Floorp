@@ -549,7 +549,7 @@
                 return;
             }
           }
-          var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+          var browserTarget = whereToOpenLink(aEvent);
           BookmarksCommand.openBookmark(selection, browserTarget, this.db);
         ]]></body>
       </method>
