@@ -111,9 +111,10 @@ var nsUpdateNotifier =
       {
         // get update ds URI from prefs
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-          getService(Components.interfaces.nsIPref);
+          getService(Components.interfaces.nsIPrefBranch);
         var updateDatasourceURI = prefs.
-          getLocalizedUnicharPref(kUNDatasourceURIPref);
+          getComplexValue(kUNDatasourceURIPref,
+          Components.interfaces.nsIPrefLocalizedString).data;
 
         var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].
           getService(Components.interfaces.nsIRDFService);
