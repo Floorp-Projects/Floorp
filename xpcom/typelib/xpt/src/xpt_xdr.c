@@ -32,8 +32,7 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
 #define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
    ? (cursor)->offset                                                         \
-   : (XPT_ASSERT((cursor)->state->data_offset),                                \
-      (cursor)->offset + (cursor)->state->data_offset))
+   : ((cursor)->offset + (cursor)->state->data_offset))
 
 #define CURS_POOL_OFFSET(cursor)                                              \
   (CURS_POOL_OFFSET_RAW(cursor) - 1)
@@ -70,9 +69,8 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
 #define CHECK_COUNT(cursor, space)                                            \
   (CHECK_COUNT_(cursor, space)                                                \
    ? PR_TRUE                                                                  \
-   : (XPT_ASSERT(0),                                                          \
-      fprintf(stderr, "FATAL: can't no room for %d in cursor\n", space),      \
-      PR_FALSE))
+   : fprintf(stderr, "FATAL: can't no room for %d in cursor\n", space),       \
+     PR_FALSE)
 
 /* increase the data allocation for the pool by XPT_GROW_CHUNK */
 #define XPT_GROW_CHUNK 8192
