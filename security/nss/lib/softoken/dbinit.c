@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dbinit.c,v 1.23 2004/06/11 22:25:13 wchang0222%aol.com Exp $ */
+/* $Id: dbinit.c,v 1.24 2005/01/04 18:20:00 wtchang%redhat.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -118,11 +118,6 @@ pk11_keydb_name_cb(void *arg, int dbVersion)
     return dbname;
 }
 
-/* for now... we need to define vendor specific codes here.
- */
-#define CKR_CERTDB_FAILED	CKR_DEVICE_ERROR
-#define CKR_KEYDB_FAILED	CKR_DEVICE_ERROR
-
 const char *
 pk11_EvaluateConfigDir(const char *configdir,char **appName)
 {
@@ -151,7 +146,7 @@ pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
     					    NSSLOWCERTCertDBHandle **certdbPtr)
 {
     NSSLOWCERTCertDBHandle *certdb = NULL;
-    CK_RV        crv = CKR_CERTDB_FAILED;
+    CK_RV        crv = CKR_NETSCAPE_CERTDB_FAILED;
     SECStatus    rv;
     char * name = NULL;
     char * appName = NULL;
@@ -205,7 +200,7 @@ pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
     PR_smprintf_free(name);
     if (appName) PORT_Free(appName);
     if (keydb == NULL)
-	return CKR_KEYDB_FAILED;
+	return CKR_NETSCAPE_KEYDB_FAILED;
     *keydbPtr = keydb;
 
     return CKR_OK;

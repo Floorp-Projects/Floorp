@@ -39,7 +39,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.10 $ $Date: 2004/05/17 20:08:38 $ $Name:  $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.11 $ $Date: 2005/01/04 18:20:00 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -179,6 +179,9 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.10 $
  *
  */
 #define CKR_NETSCAPE (CKM_VENDOR_DEFINED|NSSCK_VENDOR_NETSCAPE)
+
+#define CKR_NETSCAPE_CERTDB_FAILED      (CKR_NETSCAPE + 1)
+#define CKR_NETSCAPE_KEYDB_FAILED       (CKR_NETSCAPE + 2)
 
 /*
  * Trust info

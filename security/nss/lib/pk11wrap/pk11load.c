@@ -111,7 +111,9 @@ secmod_ModuleInit(SECMODModule *mod)
     }
     crv = PK11_GETTAB(mod)->C_Initialize(pInitArgs);
     if (crv != CKR_OK) {
-	if (pInitArgs == NULL) {
+	if (pInitArgs == NULL ||
+		crv == CKR_NETSCAPE_CERTDB_FAILED ||
+		crv == CKR_NETSCAPE_KEYDB_FAILED) {
 	    PORT_SetError(PK11_MapError(crv));
 	    return SECFailure;
 	}
