@@ -903,7 +903,7 @@ function EditorDocumentLoaded()
 
 function UpdateSaveButton(modified)
 {
-  var saveButton = document.getElementById("SaveButton");
+  var saveButton = document.getElementById("saveButton");
    if (saveButton)
   {
     if (modified) {
@@ -1194,7 +1194,7 @@ function onStyleChange(theStyle)
 function onDirtyChange()
 {
   // this should happen through style, but that doesn't seem to work.
-  var theButton = document.getElementById("SaveButton");
+  var theButton = document.getElementById("saveButton");
   if (theButton)
   {
 	var isDirty = theButton.getAttribute("dirty");
@@ -1208,7 +1208,7 @@ function onDirtyChange()
 
 function onParagraphFormatChange()
 {
-  var theButton = document.getElementById("ParagraphPopup");
+  var theButton = document.getElementById("ParagraphPopupButton");
   if (theButton)
   {
 	var theFormat = theButton.getAttribute("format");
