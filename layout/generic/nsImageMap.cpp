@@ -571,14 +571,17 @@ void PolyArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
     aCX.GetPixelsToTwips(&p2t);
     nscoord x0 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y0 = NSIntPixelsToTwips(mCoords[1], p2t);
+    nscoord x1, y1;
     for (PRInt32 i = 2; i < mNumCoords; i += 2) {
-      nscoord x1 = NSIntPixelsToTwips(mCoords[i], p2t);
-      nscoord y1 = NSIntPixelsToTwips(mCoords[i+1], p2t);
+      x1 = NSIntPixelsToTwips(mCoords[i], p2t);
+      y1 = NSIntPixelsToTwips(mCoords[i+1], p2t);
       aRC.DrawLine(x0, y0, x1, y1);
       x0 = x1;
       y0 = y1;
     }
-    aRC.DrawLine(x0, y0, mCoords[0], mCoords[1]);
+    x1 = NSIntPixelsToTwips(mCoords[0], p2t);
+    y1 = NSIntPixelsToTwips(mCoords[1], p2t);
+    aRC.DrawLine(x0, y0, x1, y1);
   }
 }
 
@@ -877,31 +880,6 @@ nsImageMap::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
     area->Draw(aCX, aRC);
   }
 }
-
-#if 0
-NS_IMETHODIMP
-nsImageMap::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-
-  aHandler->Add((size_t) (- ((PRInt32) sizeof(mName))));
-  mName.SizeOf(aHandler);
-
-  if (!aHandler->HaveSeen(mTag)) {
-    mTag->SizeOf(aHandler);
-  }
-
-  aHandler->Add((size_t) (- ((PRInt32) sizeof(mAreas))));
-  mAreas.SizeOf(aHandler);
-
-  PRInt32 i, n = mAreas.Count();
-  for (i = 0; i < n; i++) {
-    Area* area = (Area*) mAreas[i];
-    area->SizeOf(aHandler);
-  }
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 nsImageMap::BeginUpdate(nsIDocument *aDocument)
