@@ -2529,26 +2529,22 @@ extern "C" MWContext *FE_GetRDFContext(void) {
 
 #ifdef SHACK
 
-extern "C" void
+extern "C" Widget
 fe_showRDFView (Widget parent, int width, int height)
 {
-#ifdef DEBUG_spence
-  printf ("fe_showRDFView\n");
-#endif
-
-#if 0
-  XtVaSetValues (parent, XmNwidth, width, XmNheight, height, 0);
-  XtRealizeWidget (parent);
-#endif
-
   MWContext *context = fe_WidgetToMWContext (parent);
   XFE_Component *toplevel = fe_frameFromMWContext (context);
   XFE_View *view = new XFE_NavCenterView (toplevel, parent, NULL, context);
+
+#ifdef DEBUG_spence
+  printf ("fe_showRDFView\n");
+#endif
 
   if (view == NULL) {
 #ifdef DEBUG_spence
     printf ("fe_showRDFView: view creation failed\n");
 #endif
+	return NULL;
   }
 
 #ifdef DEBUG_spence
@@ -2557,6 +2553,8 @@ fe_showRDFView (Widget parent, int width, int height)
 
   XtVaSetValues (view->getBaseWidget(), XmNwidth, width, XmNheight, height, 0);
   XtRealizeWidget (parent);
+
+  return (view->getBaseWidget());
 }
 
 #endif /* SHACK */
