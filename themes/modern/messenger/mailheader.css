@@ -26,12 +26,13 @@
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml"); 
 
 window {
   overflow: auto;
 }
 
-body {
+html|body {
   background-color: #FFFFFF;
 }
 
