@@ -69,7 +69,7 @@ NS_IMETHODIMP
 nsComposeStringService::GetBundle(nsIStringBundle **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mComposeStringBundle)
     rv = InitializeStringBundle();
   NS_ENSURE_SUCCESS(rv, rv);

@@ -67,7 +67,7 @@ NS_IMETHODIMP
 nsLocalStringService::GetBundle(nsIStringBundle **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mLocalStringBundle)
     rv = InitializeStringBundle();
   NS_ENSURE_SUCCESS(rv, rv);
