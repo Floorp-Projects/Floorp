@@ -222,6 +222,9 @@ public:
                      nsIAtom*& aPrefix, nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);
   }
+  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
+    return mInner.HasAttribute(aNameSpaceID, aAttribute);
+  }
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                      const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);

@@ -161,6 +161,7 @@ public:
                      nsAWritableString& aResult) const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                        PRBool aNotify);
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,

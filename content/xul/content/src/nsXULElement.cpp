@@ -1601,24 +1601,20 @@ nsXULElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
 NS_IMETHODIMP
 nsXULElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
 {
-    NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_ARG_POINTER(aReturn);
 
-    nsCOMPtr<nsIAtom> name;
-    nsCOMPtr<nsINodeInfo> ni;
-    PRInt32 nsid;
+  nsCOMPtr<nsIAtom> name;
+  nsCOMPtr<nsINodeInfo> ni;
+  PRInt32 nsid;
 
-    nsresult rv = NormalizeAttrString(aName, *getter_AddRefs(ni));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NormalizeAttrString(aName, *getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    ni->GetNameAtom(*getter_AddRefs(name));
-    ni->GetNamespaceID(nsid);
+  ni->GetNameAtom(*getter_AddRefs(name));
+  ni->GetNamespaceID(nsid);
 
-    nsAutoString tmp;
-    rv = GetAttr(nsid, name, tmp);
-
-    *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
-
-    return NS_OK;
+  *aReturn = HasAttr(nsid, name);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1635,16 +1631,11 @@ nsXULElement::HasAttributeNS(const nsAReadableString& aNamespaceURI,
 
     if (nsid == kNameSpaceID_Unknown) {
         // Unkonwn namespace means no attr...
-
         *aReturn = PR_FALSE;
         return NS_OK;
     }
 
-    nsAutoString tmp;
-    nsresult rv = GetAttr(nsid, name, tmp);
-
-    *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
-
+    *aReturn = HasAttr(nsid, name);
     return NS_OK;
 }
 
@@ -2794,6 +2785,39 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID,
     // Not found.
     aResult.Truncate();
     return NS_CONTENT_ATTR_NOT_THERE;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsXULElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
+{
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  if (!aName)
+    return PR_FALSE;
+
+  if (mSlots && mSlots->mAttributes) {
+    PRInt32 count = mSlots->mAttributes->Count();
+    for (PRInt32 i = 0; i < count; i++) {
+      nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*,
+                                                 mSlots->mAttributes->ElementAt(i));
+
+      nsINodeInfo *ni = attr->GetNodeInfo();
+      if (ni->Equals(aName, aNameSpaceID))
+        return PR_TRUE;
+    }
+  }
+
+  if (mPrototype) {
+    PRInt32 count = mPrototype->mNumAttributes;
+    for (PRInt32 i = 0; i < count; i++) {
+      nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
+
+      nsINodeInfo *ni = attr->mNodeInfo;
+      if (ni->Equals(aName, aNameSpaceID))
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

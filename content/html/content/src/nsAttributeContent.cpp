@@ -146,6 +146,9 @@ public:
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
+    return PR_FALSE;
+  }
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName, nsIAtom*& aPrefix) const {
     aName = nsnull;
     aPrefix = nsnull;

@@ -410,6 +410,7 @@ public:
     NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue, PRBool aNotify);
     NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aResult) const;
     NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+    NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
     NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
     NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
                              nsIAtom*& aName, nsIAtom*& aPrefix) const;

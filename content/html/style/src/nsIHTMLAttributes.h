@@ -81,6 +81,8 @@ public:
                           nsHTMLValue& aValue) const = 0;
   NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
                           const nsHTMLValue** aValue) const = 0;
+  
+  NS_IMETHOD_(PRBool) HasAttribute(nsIAtom* aAttrName) const = 0;
 
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
                                 nsIAtom*& aName) const = 0;

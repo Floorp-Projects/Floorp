@@ -193,6 +193,9 @@ struct nsGenericDOMDataNode {
     aPrefix = nsnull;
     return NS_CONTENT_ATTR_NOT_THERE;
   }
+  PRBool HasAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
+    return PR_FALSE;
+  }
   nsresult GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
                               nsIAtom*& aName, nsIAtom*& aPrefix) const {
     aNameSpaceID = kNameSpaceID_None;
@@ -515,6 +518,10 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,            \
                      nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);    \
+  }                                                                        \
+  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute)   \
+                              const {                                      \
+    return _g.HasAttribute(aNameSpaceID, aAttribute);             \
   }                                                                        \
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,            \
                      const nsAReadableString& aValue, PRBool aNotify) {    \
