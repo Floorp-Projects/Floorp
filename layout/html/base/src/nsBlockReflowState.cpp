@@ -195,6 +195,13 @@ struct nsBlockReflowState : public nsFrameReflowState {
      * data "availSpace".
      */
     void ComputeAvailSpaceRect();
+
+    /**
+     * Compute the height of the shortest floater on the current line.
+     * This is actually pretty easy because if there are any floaters
+     * on the line then the shortest if the height of the band.
+     */
+    PRBool FindShortestFloaterHeight(nscoord& aHeight);
   };
 
   BlockBandData mCurrentBand;
@@ -956,6 +963,17 @@ struct LineData {
        NS_CARRIED_BOTTOM_MARGIN_IS_AUTO : 0);
   }
 
+  void UnplaceFloaters(nsISpaceManager* aSpaceManager) {
+    if (nsnull != mFloaters) {
+      PRInt32 i, n = mFloaters->Count();
+      for (i = 0; i < n; i++) {
+        nsPlaceholderFrame* pf = (nsPlaceholderFrame*) mFloaters->ElementAt(i);
+        nsIFrame* floater = pf->GetAnchoredItem();
+        aSpaceManager->RemoveRegion(floater);
+      }
+    }
+  }
+
 #ifdef NS_DEBUG
   void Verify();
 #endif
@@ -1376,12 +1394,8 @@ nsBlockReflowState::GetAvailableSpace()
   // Fill in band data for the specific Y coordinate. Because the
   // space manager is pre-translated into our content-area (so that
   // nested blocks/inlines will line up properly), we have to remove
-  // the Y translation for find the band coordinates relative to our
-  // upper left corner (0,0).
-
-  // In addition, we need to use the entire available area
-  // (represented by mBorderArea) so that the band data is completely
-  // relative in size to our upper left corner.
+  // the Y translation to find the band coordinates relative to our
+  // inner (content area) upper left corner (0,0).
   sm->GetBandData(mY - mBorderPadding.top, mContentArea, mCurrentBand);
 
   // Compute the bounding rect of the available space, i.e. space
@@ -1928,18 +1942,14 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
                                 (const nsStyleStruct*&)floaterSpacing);
           floaterSpacing->CalcMarginFor(floater, floaterMargin);
           nscoord width = r.width + floaterMargin.left + floaterMargin.right;
-          switch (floaterDisplay->mFloats) {
-          default:
-            NS_NOTYETIMPLEMENTED("Unsupported floater type");
-            // FALL THROUGH
-
-          case NS_STYLE_FLOAT_LEFT:
+          NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
+                       (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
+                       "invalid float type");
+          if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
             leftSum += width;
-            break;
-
-          case NS_STYLE_FLOAT_RIGHT:
+          }
+          else {
             rightSum += width;
-            break;
           }
         }
         if (leftSum > maxLeft) maxLeft = leftSum;
@@ -2572,8 +2582,12 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   aState.mCurrentLine = aLine;
   aState.mInlineReflowPrepared = PR_FALSE;
 
-  // XXX temporary SLOW code
+  // If the line already has floaters on it from last time, remove
+  // them from the spacemanager now.
   if (nsnull != aLine->mFloaters) {
+    if (eReflowReason_Resize != aState.reason) {
+      aLine->UnplaceFloaters(aState.mSpaceManager);
+    }
     delete aLine->mFloaters;
     aLine->mFloaters = nsnull;
   }
@@ -2739,7 +2753,6 @@ nsBlockFrame::PrepareInlineReflow(nsBlockReflowState& aState,
   // Setup initial coordinate system for reflowing the frame into
   nscoord x, availWidth, availHeight;
 
-  // XXX KIPP I'm not sure what you want to do here...
   if (aIsBlock) {
     // XXX Child needs to apply OUR border-padding and IT's left
     // margin and right margin! How should this be done?
@@ -4102,11 +4115,7 @@ void
 nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
                                  PRBool& aIsLeftFloater)
 {
-  nsISpaceManager* sm = mSpaceManager;
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
-
-  // Remove floaters old placement from the space manager
-  sm->RemoveRegion(floater);
 
   // Reflow the floater if it's targetted for a reflow
   if (nsnull != reflowCommand) {
@@ -4140,34 +4149,58 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   nsMargin floaterMargin;
   floaterSpacing->CalcMarginFor(floater, floaterMargin);
 
-  // Compute the size of the region that will impact the space
-  // manager. Note that the x,y coordinates are computed <b>relative
-  // to the translation in the spacemanager</b> which means that the
-  // impacted region will be <b>inside</b> the border/padding area.
-  region.y = mY - mBorderPadding.top;
+  // Adjust the floater size by its margin. That's the area that will
+  // impact the space manager.
   region.width += floaterMargin.left + floaterMargin.right;
   region.height += floaterMargin.top + floaterMargin.bottom;
-  switch (floaterDisplay->mFloats) {
-  default:
-    NS_NOTYETIMPLEMENTED("Unsupported floater type");
-    // FALL THROUGH
 
-  case NS_STYLE_FLOAT_LEFT:
-    region.x = mCurrentBand.availSpace.x;
-    aIsLeftFloater = PR_TRUE;
-    break;
+  // Find a place to place the floater. The CSS2 spec doesn't want
+  // floaters overlapping each other or sticking out of the containing
+  // block (CSS2 spec section 9.5.1, see the rule list).
+  NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
+               (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
+               "invalid float type");
 
-  case NS_STYLE_FLOAT_RIGHT:
-    region.x = mCurrentBand.availSpace.XMost() - region.width;
-    if (region.x < 0) {    // XXX do this?
-      region.x = 0;
-    }
-    aIsLeftFloater = PR_FALSE;
-    break;
+  // While there is not enough room for the floater, clear past
+  // other floaters until there is room (or the band is not impacted
+  // by a floater).
+  while ((mCurrentBand.availSpace.width < region.width) &&
+         (mCurrentBand.availSpace.width < mContentArea.width)) {
+    // The CSS2 spec says that floaters should be placed as high as
+    // possible. We accomodate this easily by noting that if the band
+    // is not the full width of the content area then it must have
+    // been impacted by a floater. And we know that the height of the
+    // band will be the height of the shortest floater, therefore we
+    // adjust mY by that distance and keep trying until we have enough
+    // space for this floater.
+    mY += mCurrentBand.availSpace.height;
+    GetAvailableSpace();
   }
 
-  // Factor in the floaters margins
-  sm->AddRectRegion(floater, region);
+  // Assign an x and y coordinate to the floater. Note that the x,y
+  // coordinates are computed <b>relative to the translation in the
+  // spacemanager</b> which means that the impacted region will be
+  // <b>inside</b> the border/padding area.
+  if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
+    aIsLeftFloater = PR_TRUE;
+    region.x = mCurrentBand.availSpace.x;
+  }
+  else {
+    aIsLeftFloater = PR_FALSE;
+    region.x = mCurrentBand.availSpace.XMost() - region.width;
+  }
+  region.y = mY - mBorderPadding.top;
+  if (region.y < 0) {
+    // CSS2 spec, 9.5.1 rule [4]: A floating box's outer top may not
+    // be higher than the top of its containing block.
+
+    // XXX It's not clear if it means the higher than the outer edge
+    // or the border edge or the inner edge?
+    region.y = 0;
+  }
+
+  // Place the floater in the space manager
+  mSpaceManager->AddRectRegion(floater, region);
 
   // Set the origin of the floater frame, in frame coordinates. These
   // coordinates are <b>not</b> relative to the spacemanager
@@ -4208,6 +4241,7 @@ nsBlockReflowState::ClearFloaters(PRUint8 aBreakType)
 
   for (;;) {
     PRBool haveFloater = PR_FALSE;
+
     // Find the Y coordinate to clear to. Note that the band trapezoid
     // coordinates are relative to the our spacemanager translation
     // (which means the band coordinates are inside the border+padding
@@ -4244,9 +4278,6 @@ nsBlockReflowState::ClearFloaters(PRUint8 aBreakType)
                 nscoord ym = tmp.YMost();
                 if (ym > clearYMost) {
                   clearYMost = ym;
-                  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-                   ("nsBlockReflowState::ClearFloaters: left clearYMost=%d",
-                    clearYMost));
                 }
               }
               break;
@@ -4303,11 +4334,9 @@ nsBlockReflowState::ClearFloaters(PRUint8 aBreakType)
         }
       }
     }
-    if (!haveFloater) {
-      break;
-    }
-    if (clearYMost == mY - mBorderPadding.top) {
-      // Nothing to clear
+
+    // Nothing to clear
+    if (!haveFloater || (clearYMost == mY - mBorderPadding.top)) {
       break;
     }
 
