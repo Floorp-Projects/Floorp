@@ -80,3 +80,4 @@ interface nsIEventFilter : nsISupports
 		in voidStar data);
 
 };
+

@@ -257,3 +257,4 @@ interface nsIEventLoop : nsISupports
 	/* Specifies the name of the event loop.  This was set upon creation. */
 	readonly attribute wstring EventLoopName;
 };
+

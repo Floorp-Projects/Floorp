@@ -81,3 +81,4 @@ interface nsIEvent : nsISupports
 
 	readonly attribute boolean isExitEvent;
 };
+
