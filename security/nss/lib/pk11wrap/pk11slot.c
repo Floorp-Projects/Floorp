@@ -4356,12 +4356,18 @@ PK11_MapPBEMechanismToCryptoMechanism(CK_MECHANISM_PTR pPBEMechanism,
 	if (pk11_isAllZero(pPBEparams->pInitVector,iv_len)) {
 	    SECItem param;
 	    PK11SymKey *symKey;
+	    PK11SlotInfo *intSlot = PK11_GetInternalSlot();
+
+	    if (intSlot == NULL) {
+		return CKR_DEVICE_ERROR;
+	    }
 
 	    param.data = pPBEMechanism->pParameter;
 	    param.len = pPBEMechanism->ulParameterLen;
 
-	    symKey = PK11_RawPBEKeyGen(PK11_GetInternalSlot(),
+	    symKey = PK11_RawPBEKeyGen(intSlot,
 		pPBEMechanism->mechanism, &param, pbe_pwd, faulty3DES, NULL);
+	    PK11_FreeSlot(intSlot);
 	    if (symKey== NULL) {
 		return CKR_DEVICE_ERROR; /* sigh */
 	    }

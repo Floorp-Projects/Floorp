@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.42 2002/03/15 23:05:58 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.43 2002/04/12 19:05:09 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -458,8 +458,8 @@ void
 NSS_Shutdown(void)
 {
     SECOID_Shutdown();
-    SECMOD_Shutdown();
     STAN_Shutdown();
+    SECMOD_Shutdown();
     nss_IsInitted = PR_FALSE;
 }
 

@@ -1705,7 +1705,7 @@ pk11_mkPrivKey(PK11Object *object,CK_KEY_TYPE key_type)
     if (arena == NULL) return NULL;
 
     privKey = (NSSLOWKEYPrivateKey *)
-			PORT_ArenaAlloc(arena,sizeof(NSSLOWKEYPrivateKey));
+			PORT_ArenaZAlloc(arena,sizeof(NSSLOWKEYPrivateKey));
     if (privKey == NULL)  {
 	PORT_FreeArena(arena,PR_FALSE);
 	return NULL;
@@ -1893,7 +1893,7 @@ pk11_mkSecretKeyRep(PK11Object *object)
     if (arena == NULL) { crv = CKR_HOST_MEMORY; goto loser; }
 
     privKey = (NSSLOWKEYPrivateKey *)
-			PORT_ArenaAlloc(arena,sizeof(NSSLOWKEYPrivateKey));
+			PORT_ArenaZAlloc(arena,sizeof(NSSLOWKEYPrivateKey));
     if (privKey == NULL) { crv = CKR_HOST_MEMORY; goto loser; }
 
     privKey->arena = arena;
@@ -2302,7 +2302,7 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     int i;
 
     if (nsc_init) {
-	return crv;
+	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
     }
 
     rv = RNG_RNGInit();         /* initialize random number generator */

@@ -34,7 +34,7 @@
 /*
  * CMS encryptedData methods.
  *
- * $Id: cmsencdata.c,v 1.4 2002/01/25 19:08:17 relyea%netscape.com Exp $
+ * $Id: cmsencdata.c,v 1.5 2002/04/12 19:05:19 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -202,8 +202,10 @@ NSS_CMSEncryptedData_Encode_BeforeData(NSSCMSEncryptedData *encd)
 SECStatus
 NSS_CMSEncryptedData_Encode_AfterData(NSSCMSEncryptedData *encd)
 {
-    if (encd->contentInfo.ciphcx)
+    if (encd->contentInfo.ciphcx) {
 	NSS_CMSCipherContext_Destroy(encd->contentInfo.ciphcx);
+	encd->contentInfo.ciphcx = NULL;
+    }
 
     /* nothing to do after data */
     return SECSuccess;
@@ -265,7 +267,10 @@ loser:
 SECStatus
 NSS_CMSEncryptedData_Decode_AfterData(NSSCMSEncryptedData *encd)
 {
-    NSS_CMSCipherContext_Destroy(encd->contentInfo.ciphcx);
+    if (encd->contentInfo.ciphcx) {
+	NSS_CMSCipherContext_Destroy(encd->contentInfo.ciphcx);
+	encd->contentInfo.ciphcx = NULL;
+    }
 
     return SECSuccess;
 }

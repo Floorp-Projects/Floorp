@@ -724,6 +724,7 @@ int main(int argc, char **argv)
 
   done:
     PR_Close(s);
+    SSL_ClearSessionCache();
     NSS_Shutdown();
     PR_Cleanup();
     return error;

@@ -49,6 +49,8 @@ static  SECMODModule *internalModule = NULL;
 static  SECMODModule *defaultDBModule = NULL;
 static SECMODListLock *moduleLock = NULL;
 
+int secmod_PrivateModuleCount = 0;
+
 extern PK11DefaultArrayEntry PK11_DefaultArray[];
 extern int num_pk11_default_mechanisms;
 
@@ -73,6 +75,13 @@ void SECMOD_Shutdown() {
 	SECMOD_DestroyModule(internalModule);
 	internalModule = NULL;
     }
+
+    /* free the default database module */
+    if (defaultDBModule) {
+	SECMOD_DestroyModule(defaultDBModule);
+	defaultDBModule = NULL;
+    }
+	
     /* destroy the list */
     if (modules) {
 	SECMOD_DestroyModuleList(modules);
@@ -91,6 +100,12 @@ void SECMOD_Shutdown() {
 
     /* make all the slots and the lists go away */
     PK11_DestroySlotLists();
+
+#ifdef DEBUG
+    if (PR_GetEnv("NSS_STRICT_SHUTDOWN")) {
+	PORT_Assert(secmod_PrivateModuleCount == 0);
+    }
+#endif
 }
 
 
@@ -334,7 +349,7 @@ SECMOD_DeleteInternalModule(char *name) {
 	SECMOD_DestroyModule(oldModule);
  	SECMOD_DeletePermDB(mlp->module);
 	SECMOD_DestroyModuleListElement(mlp);
-	internalModule = SECMOD_ReferenceModule(newModule);
+	internalModule = newModule; /* adopt the module */
 	SECMOD_AddModule(internalModule);
     }
     return rv;
@@ -590,6 +605,13 @@ SECMOD_DestroyModule(SECMODModule *module) {
     if (!willfree) {
 	return;
     }
+   
+    if (module->parent != NULL) {
+	SECMODModule *parent = module->parent;
+	/* paranoia, don't loop forever if the modules are looped */
+	module->parent = NULL;
+	SECMOD_DestroyModule(parent);
+    }
 
     /* slots can't really disappear until our module starts freeing them,
      * so this check is safe */
@@ -632,6 +654,7 @@ SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot) {
     }
     PK11_USE_THREADS(PZ_DestroyLock((PZLock *)module->refLock);)
     PORT_FreeArena(module->arena,PR_FALSE);
+    secmod_PrivateModuleCount--;
 }
 
 /* destroy a list element

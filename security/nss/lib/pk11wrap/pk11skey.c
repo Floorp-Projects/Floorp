@@ -1566,7 +1566,6 @@ pk11_PairwiseConsistencyCheck(SECKEYPublicKey *pubKey,
 	    PK11_ExitSlotMonitor(slot);
 	    PORT_SetError( PK11_MapError(crv) );
 	    PORT_Free( ciphertext );
-	    PK11_FreeSlot(slot);
 	    return SECFailure;
 	}
 
@@ -1589,7 +1588,6 @@ pk11_PairwiseConsistencyCheck(SECKEYPublicKey *pubKey,
 
 	if( crv != CKR_OK ) {
 	   PORT_SetError( PK11_MapError(crv) );
-	    PK11_FreeSlot(slot);
 	   return SECFailure;
 	}
 
@@ -1600,7 +1598,6 @@ pk11_PairwiseConsistencyCheck(SECKEYPublicKey *pubKey,
 			   PAIRWISE_MESSAGE_LENGTH ) != 0 ) ) {
 	    /* Set error to Bad PUBLIC Key. */
 	    PORT_SetError( SEC_ERROR_BAD_KEY );
-	    PK11_FreeSlot(slot);
 	    return SECFailure;
 	}
       }
@@ -3205,12 +3202,14 @@ PK11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
     if (crv != CKR_OK) {
 	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
 	pk11_CloseSession(slot,session,owner);
+	PK11_FreeSlot(slot);
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
     crv = PK11_GETTAB(slot)->C_Encrypt(session,data,dataLen,enc,&out);
     if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
+    PK11_FreeSlot(slot);
     if (crv != CKR_OK) {
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
@@ -4461,7 +4460,7 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
    SECItem *pwitem, CERTCertificate *cert, int iteration, void *wincx)
 {
     SECKEYEncryptedPrivateKeyInfo *epki = NULL;
-    SECKEYPrivateKey *pk;
+    SECKEYPrivateKey *pk = NULL;
     PRArenaPool *arena = NULL;
     SECAlgorithmID *algid;
     CK_MECHANISM_TYPE mechanism;
@@ -4576,6 +4575,10 @@ loser:
 
     if(key != NULL) {
     	PK11_FreeSymKey(key);
+    }
+
+    if (pk != NULL) {
+	SECKEY_DestroyPrivateKey(pk);
     }
 
     if(rv == SECFailure) {

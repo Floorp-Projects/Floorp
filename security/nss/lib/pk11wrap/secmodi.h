@@ -57,6 +57,8 @@ SEC_BEGIN_PROTOS
 extern SECStatus SECMOD_DeletePermDB(SECMODModule *module);
 extern SECStatus SECMOD_AddPermDB(SECMODModule *module);
 
+extern int secmod_PrivateModuleCount;
+
 extern void SECMOD_Init(void);
 
 /* list managment */
