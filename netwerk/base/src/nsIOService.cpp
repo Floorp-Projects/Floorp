@@ -154,6 +154,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     char buf[MAX_NET_PROGID_LENGTH];
     nsCAutoString progID(NS_NETWORK_PROTOCOL_PROGID_PREFIX);
     progID += scheme;
+    progID.ToLowerCase();
     progID.ToCString(buf, MAX_NET_PROGID_LENGTH);
 
     rv = nsServiceManager::GetService(buf, NS_GET_IID(nsIProtocolHandler), (nsISupports **)result);
