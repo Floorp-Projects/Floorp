@@ -57,6 +57,7 @@ extern "C"
 {
 typedef HRESULT (__stdcall *fnSHSetUnreadMailCount)(LPCWSTR pszMailAddress, DWORD dwCount, LPCWSTR pszShellExecuteCommand);
 typedef HRESULT (__stdcall *fnSHEnumerateUnreadMailAccounts)(HKEY hKeyUser, DWORD dwIndex, LPCWSTR pszMailAddress, int cchMailAddress);
+typedef BOOL (_stdcall *fnShellNotifyW)(DWORD dwMessage, PNOTIFYICONDATAW lpdata);
 }
 
 #define NS_MESSENGERWININTEGRATION_CID \
@@ -79,17 +80,25 @@ public:
 
 private:
   
-  static NOTIFYICONDATAW mBiffIconData;   // status bar icon for biff.
+  static NOTIFYICONDATAW mWideBiffIconData; 
+  static NOTIFYICONDATA  mAsciiBiffIconData;
+
   void InitializeBiffStatusIcon(); 
   void FillToolTipInfo();
+  void GenericShellNotify(DWORD aMessage);
+  void SetToolTipStringOnIconData(const PRUnichar * aToolTipString);
+  void DestroyBiffIcon();
+  PRUint32 GetToolTipSize(); // available space for the tooltip string
+
   nsresult GetStringBundle(nsIStringBundle **aBundle);
   nsCOMPtr<nsISupportsArray> mFoldersWithNewMail;  // keep track of all the root folders with pending new mail
-
+  fnShellNotifyW mShellNotifyWideChar;
   nsCOMPtr<nsIAtom> mBiffStateAtom;
-
   PRUint32 mCurrentBiffState;
-  PRPackedBool   mStoreUnreadCounts; // for windows XP, we do a lot of work to store the last unread count for the inbox
-                               // this flag is set to true when we are doing that
+
+  PRPackedBool mUseWideCharBiffIcon; 
+  PRPackedBool mStoreUnreadCounts;   // for windows XP, we do a lot of work to store the last unread count for the inbox
+                                     // this flag is set to true when we are doing that
   PRPackedBool mBiffIconVisible;
   PRPackedBool mBiffIconInitialized;
   
