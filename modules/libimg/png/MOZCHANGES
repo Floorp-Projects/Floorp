@@ -10,8 +10,10 @@ Changes made to pristine png source by mozilla.org developers.
 
 2003/07/03  -- enable PNG_NO_WRITE_SUPPORTED in mozpngconf.h (bug 208607)
 
-2003/07/29  -- Add "moz_" decoration on exported symbols (bug 181936).  Set
+2003/07/29  -- Add "MOZ_" decoration on exported symbols (bug 181936).  Set
                "PNG_NO_GLOBAL_ARRAYS" to reduce number of exported symbols.
                Remove some legacy (1.0.x) code from png.c and pngread.c
 
 2004/05/07  -- out-of-bounds read in error processing (bug 242915)
+
+2004/06/30  -- enable more PNG_NO_*_SUPPORTED in mozpngconf.h (bug 208607)

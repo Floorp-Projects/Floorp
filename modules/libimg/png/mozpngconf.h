@@ -72,6 +72,15 @@
 
 #define PNG_NO_WRITE_SUPPORTED
 
+#define PNG_NO_READ_STRIP_ALPHA
+#define PNG_NO_USER_TRANSFORM_PTR
+#define PNG_NO_READ_oFFs
+#define PNG_NO_HANDLE_AS_UNKNOWN
+#define PNG_NO_CONSOLE_IO
+#define PNG_NO_ZALLOC_ZERO
+#define PNG_NO_ERROR_NUMBERS
+#define PNG_NO_EASY_ACCESS
+
 /* Mangle names of exported libpng functions so different libpng versions
    can coexist. It is recommended that if you do this, you give your
    library a different name such as "mozlibpng" instead of "libpng". */
