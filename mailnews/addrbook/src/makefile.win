@@ -37,6 +37,7 @@ EXPORTS=								\
 			nsAddrDatabase.h			\
 			nsAbDirProperty.h			\
 			nsAbAutoCompleteSession.h	\
+			nsAbAddressCollecter.h \
 			$(NULL)
 
 ################################################################################
@@ -58,6 +59,7 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAddrDatabase.obj				\
     .\$(OBJDIR)\nsAbDirProperty.obj				\
     .\$(OBJDIR)\nsAbAutoCompleteSession.obj		\
+    .\$(OBJDIR)\nsAbAddressCollecter.obj		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
