@@ -771,12 +771,12 @@ void nsImportModuleList::AddModule( const nsCID& cid, const char *pSupports, con
 		m_alloc = 10;
 		m_pList = new ImportModuleDesc *[m_alloc];
 		m_count = 0;
-		nsCRT::memset( m_pList, 0, sizeof( ImportModuleDesc *) * m_alloc);
+		memset( m_pList, 0, sizeof( ImportModuleDesc *) * m_alloc);
 	}
 	
 	if (m_count == m_alloc) {
 		ImportModuleDesc **pList = new ImportModuleDesc *[m_alloc + 10];
-		nsCRT::memset( &(pList[m_alloc]), 0, sizeof( ImportModuleDesc *) * 10);
+		memset( &(pList[m_alloc]), 0, sizeof( ImportModuleDesc *) * 10);
 		memcpy( pList, m_pList, sizeof( ImportModuleDesc *) * m_alloc);
 		delete [] m_pList;
 		m_pList = pList;

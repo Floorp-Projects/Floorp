@@ -42,7 +42,7 @@
 void* nsMsgZapIt::operator new(size_t size, const char *file, size_t line) {
   void* rv = ::operator new(size, file, line);
   if (rv) {
-    nsCRT::memset(rv, 0, size);
+    memset(rv, 0, size);
   }
   return rv;
 }
@@ -50,7 +50,7 @@ void* nsMsgZapIt::operator new(size_t size, const char *file, size_t line) {
 void* nsMsgZapIt::operator new(size_t size) {
   void* rv = ::operator new(size);
   if (rv) {
-    nsCRT::memset(rv, 0, size);
+    memset(rv, 0, size);
   }
   return rv;
 }

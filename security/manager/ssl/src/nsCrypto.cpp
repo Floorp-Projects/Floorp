@@ -1341,11 +1341,11 @@ nsCreateReqFromKeyPairs(nsKeyPairInfo *keyids, PRInt32 numRequests,
   CRMFCertRequest *certReq;
   if (!certReqMsgs)
     return nsnull;
-  nsCRT::memset(certReqMsgs, 0, sizeof(CRMFCertReqMsg*)*(1+numRequests));
+  memset(certReqMsgs, 0, sizeof(CRMFCertReqMsg*)*(1+numRequests));
   SECStatus srv;
   nsresult rv;
   CRMFCertReqMessages messages;
-  nsCRT::memset(&messages, 0, sizeof(messages));
+  memset(&messages, 0, sizeof(messages));
   messages.messages = certReqMsgs;
   SECItem *encodedReq;
   char *retString;
@@ -1516,7 +1516,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     JS_ReportError(cx, "%s\n", JS_ERROR_INTERNAL);
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsCRT::memset(keyids, 0, sizeof(nsKeyPairInfo)*numRequests);
+  memset(keyids, 0, sizeof(nsKeyPairInfo)*numRequests);
   int keyInfoIndex;
   PRUint32 i;
   PK11SlotInfo *slot = nsnull;
@@ -1885,7 +1885,7 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
     if (!certArr)
       aDoForcedBackup = PR_FALSE;
 
-    nsCRT::memset(certArr, 0, sizeof(nsIX509Cert*)*numResponses);
+    memset(certArr, 0, sizeof(nsIX509Cert*)*numResponses);
   }
   for (i=0; i<numResponses; i++) {
     currResponse = CMMF_CertRepContentGetResponseAtIndex(certRepContent,i);

@@ -1424,7 +1424,7 @@ NS_IMETHODIMP nsBidi::GetLevels(nsBidiLevel** aLevels)
     if(start>0 && levels!=mLevels) {
       memcpy(levels, mLevels, start);
     }
-    nsCRT::memset(levels+start, mParaLevel, length-start);
+    memset(levels+start, mParaLevel, length-start);
 
     /* this new levels array is set for the line and reflects the WS run */
     mTrailingWSStart=length;

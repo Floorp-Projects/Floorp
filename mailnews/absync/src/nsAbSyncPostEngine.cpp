@@ -567,7 +567,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::AddPostListener(nsIAbSyncPostListener *aListen
     if (!mListenerArray)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCRT::memset(mListenerArray, 0, (sizeof(nsIAbSyncPostListener *) * mListenerArrayCount));
+    memset(mListenerArray, 0, (sizeof(nsIAbSyncPostListener *) * mListenerArrayCount));
   
     mListenerArray[0] = aListener;
     NS_ADDREF(mListenerArray[0]);

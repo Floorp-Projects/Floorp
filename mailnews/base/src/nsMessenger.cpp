@@ -1784,7 +1784,7 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
     {
       if (maxReadCount > available)
         maxReadCount = available;
-      nsCRT::memset(m_dataBuffer, 0, FOUR_K+1);
+      memset(m_dataBuffer, 0, FOUR_K+1);
       rv = inStream->Read(m_dataBuffer, maxReadCount, &readCount);
 
       // rhp:

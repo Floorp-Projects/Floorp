@@ -183,7 +183,7 @@ MimeObject_parse_begin (MimeObject *obj)
 
 	  obj->options->state = PR_NEW(MimeParseStateObject);
 	  if (!obj->options->state) return MIME_OUT_OF_MEMORY;
-    nsCRT::memset(obj->options->state, 0, sizeof(*obj->options->state));
+	  memset(obj->options->state, 0, sizeof(*obj->options->state));
 	  obj->options->state->root = obj;
 	  obj->options->state->separator_suppressed_p = PR_TRUE; /* no first sep */
 	}

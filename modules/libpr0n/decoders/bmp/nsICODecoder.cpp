@@ -445,7 +445,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       delete []mRow;
       mRow = new PRUint8[rowSize];
       mAlphaBuffer = new PRUint8[mDirEntry.mHeight*rowSize];
-      nsCRT::memset(mAlphaBuffer, 0xff, mDirEntry.mHeight*rowSize);
+      memset(mAlphaBuffer, 0xff, mDirEntry.mHeight*rowSize);
     }
 
     PRUint32 toCopy;
@@ -487,7 +487,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
 void
 nsICODecoder::ProcessDirEntry()
 {
-  nsCRT::memset(&mDirEntry, 0, sizeof(mDirEntry));
+  memset(&mDirEntry, 0, sizeof(mDirEntry));
   DOCOPY(&mDirEntry.mWidth, mDirEntryArray);
   DOCOPY(&mDirEntry.mHeight, mDirEntryArray+1);
   DOCOPY(&mDirEntry.mColorCount, mDirEntryArray+2);
@@ -507,7 +507,7 @@ nsICODecoder::ProcessDirEntry()
 }
 
 void nsICODecoder::ProcessInfoHeader() {
-  nsCRT::memset(&mBIH, 0, sizeof(mBIH));
+  memset(&mBIH, 0, sizeof(mBIH));
   // Ignoring the size; it should always be 40 for icons, anyway
 
   DOCOPY(&mBIH.width, mBIHraw + 4);

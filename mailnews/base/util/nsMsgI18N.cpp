@@ -722,7 +722,7 @@ nsMsgI18NGetAcceptLanguage(void)
   {
     nsXPIDLString prefValue;
 
-    nsCRT::memset(lang, 0, sizeof(lang));
+    memset(lang, 0, sizeof(lang));
     res = prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(prefValue));
 	  if (NS_SUCCEEDED(res) && prefValue) 
     {

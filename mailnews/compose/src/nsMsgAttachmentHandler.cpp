@@ -892,7 +892,7 @@ nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, P
   readBuf = (char *)PR_Malloc(readSize + 1);
   if (!readBuf)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsCRT::memset(readBuf, 0, readSize + 1);
+  memset(readBuf, 0, readSize + 1);
 
   readSize = tempFile.read(readBuf, readSize);
   tempFile.close();

@@ -1134,7 +1134,7 @@ nsMsgSendLater::AddListener(nsIMsgSendLaterListener *aListener)
     if (!mListenerArray)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount));
+    memset(mListenerArray, 0, (sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount));
   
     mListenerArray[0] = aListener;
     NS_ADDREF(mListenerArray[0]);

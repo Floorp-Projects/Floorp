@@ -185,7 +185,7 @@ MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
   }
   
   linestring = (char *) PR_MALLOC (length + 1);
-  nsCRT::memset(linestring, 0, (length + 1));
+  memset(linestring, 0, (length + 1));
   
   if (linestring) 
   {
@@ -1729,7 +1729,7 @@ FindCharacterSet(MimeObject *obj)
   if (!workString)
     return nsnull;
 
-  nsCRT::memset(workString, 0, obj->headers->all_headers_size + 1);
+  memset(workString, 0, obj->headers->all_headers_size + 1);
   memcpy(workString, obj->headers->all_headers, obj->headers->all_headers_size);
 
   char *cTypePtr = (char *) PL_strcasestr(workString, HEADER_CONTENT_TYPE);

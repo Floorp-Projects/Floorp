@@ -64,7 +64,7 @@ int ap_decode_init(
 	PRBool	write_as_binhex,
 	void  	*closure)
 {	
-  nsCRT::memset(p_ap_decode_obj, 0, sizeof(appledouble_decode_object));
+	memset(p_ap_decode_obj, 0, sizeof(appledouble_decode_object));
 	
 	/* presume first buff starts a line */
 	p_ap_decode_obj->uu_starts_line = TRUE; 

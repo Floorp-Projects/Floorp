@@ -536,7 +536,7 @@ nsMsgAttachedFile * nsOutlookCompose::GetLocalAttachments( void)
 	nsMsgAttachedFile *a = (nsMsgAttachedFile *) new nsMsgAttachedFile[count + 1];
 	if (!a)
 		return( nsnull);
-	nsCRT::memset(a, 0, sizeof(nsMsgAttachedFile) * (count + 1));
+	memset(a, 0, sizeof(nsMsgAttachedFile) * (count + 1));
 	
 	nsresult			rv;
 	char *				urlStr;

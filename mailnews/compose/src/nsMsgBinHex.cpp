@@ -223,7 +223,7 @@ int binhex_encode_init(binhex_encode_object *p_bh_encode_obj)
 	/*
 	** init all the status.
 	*/
-	nsCRT::memset(p_bh_encode_obj, 0, sizeof(binhex_encode_object));
+	memset(p_bh_encode_obj, 0, sizeof(binhex_encode_object));
 	
 	p_bh_encode_obj->line_length = 1;
 	
@@ -500,7 +500,7 @@ static char binhex_decode[256] =
 int binhex_decode_init (
 	binhex_decode_object *p_bh_decode_obj)
 {
-	nsCRT::memset(p_bh_decode_obj, 0, sizeof(binhex_decode_object));
+	memset(p_bh_decode_obj, 0, sizeof(binhex_decode_object));
 	
 	p_bh_decode_obj->octetin 	= 26;
 	p_bh_decode_obj->donepos 	= 3;

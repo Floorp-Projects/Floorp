@@ -4517,7 +4517,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
     {
       char plainstr[512]; // placeholder for "<NUL>userName<NUL>password"
       int len = 1; // count for first <NUL> char
-      nsCRT::memset(plainstr, 0, 512);
+      memset(plainstr, 0, 512);
       PR_snprintf(&plainstr[1], 510, "%s", userName);
       len += PL_strlen(userName);
       len++;  // count for second <NUL> char

@@ -1439,7 +1439,7 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
   }
 
   PRUint32 map[UCS2_MAP_LEN];
-  nsCRT::memset(map, 0, sizeof(map));
+  memset(map, 0, sizeof(map));
   PRUint8* p = buf + sizeof(PRUint16); // skip version, move to numberSubtables
   PRUint16 n = GET_SHORT(p); // get numberSubtables
   p += sizeof(PRUint16); // skip numberSubtables, move to the encoding subtables
@@ -1495,7 +1495,7 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
   if (eTTFormat12SegmentedCoverage == keepFormat) {
     PRUint32* extMap[EXTENDED_UNICODE_PLANES+1];
     extMap[0] = map;
-    nsCRT::memset(extMap+1, 0, sizeof(PRUint32*)*EXTENDED_UNICODE_PLANES);
+    memset(extMap+1, 0, sizeof(PRUint32*)*EXTENDED_UNICODE_PLANES);
     ReadCMAPTableFormat12(buf+keepOffset, len-keepOffset, extMap);
     ccmap = MapToCCMapExt(map, extMap+1, EXTENDED_UNICODE_PLANES);
     for (i = 1; i <= EXTENDED_UNICODE_PLANES; ++i) {
@@ -3885,7 +3885,7 @@ nsFontWinSubstitute::nsFontWinSubstitute(LOGFONT* aLogFont, HFONT aFont,
   PRUint16* aCCMap, PRBool aDisplayUnicode) : nsFontWin(aLogFont, aFont, aCCMap)
 {
   mDisplayUnicode = aDisplayUnicode;
-  nsCRT::memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
+  memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
 }
 
 nsFontWinSubstitute::~nsFontWinSubstitute()
@@ -4102,7 +4102,7 @@ GenerateDefault(nsCharsetInfo* aSelf)
 { 
   PRUint32 map[UCS2_MAP_LEN];
 
-  nsCRT::memset(map, 0xff, sizeof(map));
+  memset(map, 0xff, sizeof(map));
   return MapToCCMap(map);
 }
 
@@ -4114,7 +4114,7 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
   PRUint16 wc[256];
   int i;
 
-  nsCRT::memset(map, 0, sizeof(map));
+  memset(map, 0, sizeof(map));
   for (i = 0; i < 256; ++i) {
     mb[i] = i;
   }
@@ -4139,7 +4139,7 @@ static PRUint16*
 GenerateMultiByte(nsCharsetInfo* aSelf)
 { 
   PRUint32 map[UCS2_MAP_LEN];
-  nsCRT::memset(map, 0, sizeof(map));
+  memset(map, 0, sizeof(map));
   for (PRUint16 c = 0; c < 0xFFFF; ++c) {
     BOOL defaulted = FALSE;
     WideCharToMultiByte(aSelf->mCodePage, 0, &c, 1, nsnull, 0, nsnull,
@@ -4743,7 +4743,7 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
 nsFontWinSubstituteA::nsFontWinSubstituteA(LOGFONT* aLogFont, HFONT aFont,
   PRUint16* aCCMap) : nsFontWinA(aLogFont, aFont, aCCMap)
 {
-  nsCRT::memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
+  memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
 }
 
 nsFontWinSubstituteA::~nsFontWinSubstituteA()

@@ -556,7 +556,7 @@ FrameArena::FrameArena(PRUint32 aArenaSize)
   PL_INIT_ARENA_POOL(&mPool, "FrameArena", aArenaSize);
 
   // Zero out the recyclers array
-  nsCRT::memset(mRecyclers, 0, sizeof(mRecyclers));
+  memset(mRecyclers, 0, sizeof(mRecyclers));
 #endif
 }
 

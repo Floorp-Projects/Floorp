@@ -1600,7 +1600,7 @@ void CMapiFolderList::DumpList( void)
 		depth *= 2;
 		if (depth > 255)
 			depth = 255;
-		nsCRT::memset( prefix, ' ', depth);
+		memset( prefix, ' ', depth);
 		prefix[depth] = 0;
 #ifdef MAPI_DEBUG
         char *ansiStr = ToNewCString(str);

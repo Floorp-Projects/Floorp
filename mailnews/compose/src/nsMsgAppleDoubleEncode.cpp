@@ -110,12 +110,12 @@ int ap_encode_init( appledouble_encode_object *p_ap_encode_obj,
 {
 	FSSpec	fspec;
 	
-  nsFileSpec  mySpec(fname);
+	nsFileSpec  mySpec(fname);
 	if (!mySpec.Exists())
 		return -1;
 
-  fspec = mySpec.GetFSSpec();
-  nsCRT::memset(p_ap_encode_obj, 0, sizeof(appledouble_encode_object));
+	fspec = mySpec.GetFSSpec();
+	memset(p_ap_encode_obj, 0, sizeof(appledouble_encode_object));
 	
 	/*
 	**	Fill out the source file inforamtion.

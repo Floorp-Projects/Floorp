@@ -2819,7 +2819,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   readSize = fSpec.GetFileSize();
   ptr = readBuf = (char *)PR_Malloc(readSize + 1);  if (!readBuf)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsCRT::memset(readBuf, 0, readSize + 1);
+  memset(readBuf, 0, readSize + 1);
 
   while (readSize) {
     nGot = tempFile.read(ptr, readSize);

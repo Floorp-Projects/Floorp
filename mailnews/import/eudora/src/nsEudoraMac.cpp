@@ -961,7 +961,7 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 		return( NS_ERROR_FAILURE);
 	}
 	
-	nsCRT::memset( &spec, 0, sizeof( spec));
+	memset( &spec, 0, sizeof( spec));
 	err = FSpResolveFileIDRef( nil, vRefNum, (long) fNum, &spec);
 	if (err != noErr) {
 		IMPORT_LOG1( "\t*** Error, cannot resolve fileIDRef: %ld\n", (long) err);

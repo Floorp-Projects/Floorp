@@ -460,7 +460,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
 
 void nsBMPDecoder::ProcessFileHeader()
 {
-    nsCRT::memset(&mBFH, 0, sizeof(mBFH));
+    memset(&mBFH, 0, sizeof(mBFH));
     DOCOPY(&mBFH.signature, mRawBuf);
     DOCOPY(&mBFH.filesize, mRawBuf + 2);
     DOCOPY(&mBFH.reserved, mRawBuf + 6);
@@ -475,7 +475,7 @@ void nsBMPDecoder::ProcessFileHeader()
 
 void nsBMPDecoder::ProcessInfoHeader()
 {
-    nsCRT::memset(&mBIH, 0, sizeof(mBIH));
+    memset(&mBIH, 0, sizeof(mBIH));
     if (mBFH.bihsize == 12) { // OS/2 Bitmap
         memcpy(&mBIH.width, mRawBuf, 2);
         memcpy(&mBIH.height, mRawBuf + 2, 2);

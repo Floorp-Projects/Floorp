@@ -871,7 +871,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  char plain_string[512];
 	  int len = 1; /* first <NUL> char */
 
-	  nsCRT::memset(plain_string, 0, 512);
+	  memset(plain_string, 0, 512);
 	  PR_snprintf(&plain_string[1], 510, "%s", (const char*)username);
 	  len += PL_strlen(username);
 	  len++; /* second <NUL> char */

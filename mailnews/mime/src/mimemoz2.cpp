@@ -131,7 +131,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
     return NS_ERROR_OUT_OF_MEMORY;
 
   tmp = *data;
-  nsCRT::memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
+  memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
   tmp->real_type = child->content_type ? nsCRT::strdup(child->content_type) : NULL;
   tmp->real_encoding = child->encoding ? nsCRT::strdup(child->encoding) : NULL;
   disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
@@ -521,7 +521,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     return NS_ERROR_OUT_OF_MEMORY;
 
   attIndex = 0;
-  nsCRT::memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
+  memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
   
   // Now, build the list!
   return BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL, PR_FALSE);
@@ -1617,7 +1617,7 @@ mime_bridge_create_display_stream(
     return 0;
   }
   
-  nsCRT::memset (stream, 0, sizeof (*stream));  
+  memset (stream, 0, sizeof (*stream));  
   stream->name           = "MIME Conversion Stream";
   stream->complete       = mime_display_stream_complete;
   stream->abort          = mime_display_stream_abort;

@@ -214,7 +214,7 @@ short nsPluginFile::OpenPluginResource()
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
    // clear out the info, except for the first field.
-   nsCRT::memset(&info.fName, 0, sizeof(info) - sizeof(PRUint32));
+   memset(&info.fName, 0, sizeof(info) - sizeof(PRUint32));
 
   // need to open the plugin's resource file and read some resources.
   short refNum = OpenPluginResource();

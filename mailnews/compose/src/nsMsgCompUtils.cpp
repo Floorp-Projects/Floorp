@@ -1881,8 +1881,8 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
   const char        *domain = nsnull;
   const char        *defaultDomain = "@netscape.com";
 
-  nsCRT::memset(rand_buf1, 0, randLen-1);
-  nsCRT::memset(rand_buf2, 0, randLen-1);
+  memset(rand_buf1, 0, randLen-1);
+  memset(rand_buf2, 0, randLen-1);
 
   GenerateGlobalRandomBytes(rand_buf1, randLen);
   GenerateGlobalRandomBytes(rand_buf2, randLen);

@@ -82,7 +82,7 @@ void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
     {
 	    // initialize the new elements
 
-      nsCRT::memset(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(PRUint8));
+      memset(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(PRUint8));
 
     }
 
@@ -110,7 +110,7 @@ void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
 
 		NS_ASSERTION(nNewSize > m_nSize, "did't grow size");
 
-    nsCRT::memset(&pNewData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(PRUint8));
+		memset(&pNewData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(PRUint8));
 
 		delete[] (PRUint8*)m_pData;
 		m_pData = pNewData;
@@ -172,7 +172,7 @@ nsresult nsUint8Array::InsertAt(PRInt32 nIndex, PRUint8 newElement, PRInt32 nCou
 
 		// re-init slots we copied from
 
-		nsCRT::memset(&m_pData[nIndex], 0, nCount * sizeof(PRUint8));
+		memset(&m_pData[nIndex], 0, nCount * sizeof(PRUint8));
 
 	}
 

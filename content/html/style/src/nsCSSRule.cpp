@@ -45,7 +45,7 @@ void* nsCSSRule::operator new(size_t size)
   nsCSSRule* rv = (nsCSSRule*) ::operator new(size);
 #ifdef NS_DEBUG
   if (nsnull != rv) {
-    nsCRT::memset(rv, 0xEE, size);
+    memset(rv, 0xEE, size);
   }
 #endif
   rv->mInHeap = 1;
@@ -57,7 +57,7 @@ void* nsCSSRule::operator new(size_t size, nsIArena* aArena)
   nsCSSRule* rv = (nsCSSRule*) aArena->Alloc(PRInt32(size));
 #ifdef NS_DEBUG
   if (nsnull != rv) {
-    nsCRT::memset(rv, 0xEE, size);
+    memset(rv, 0xEE, size);
   }
 #endif
   rv->mInHeap = 0;

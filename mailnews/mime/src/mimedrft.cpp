@@ -1388,7 +1388,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
         body = (char *)PR_MALLOC (bodyLen + 1);
         if (body)
         {
-          nsCRT::memset (body, 0, bodyLen+1);
+          memset (body, 0, bodyLen+1);
         
           nsInputFileStream inputFile(*(mdd->messageBody->file_spec));
           if (inputFile.is_open())
@@ -1753,7 +1753,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     }
     
     newAttachment = attachments + nAttachments;
-    nsCRT::memset ( newAttachment, 0, sizeof (nsMsgAttachedFile) * 2 );
+    memset ( newAttachment, 0, sizeof (nsMsgAttachedFile) * 2 );
   }
 
   char *workURLSpec = nsnull;

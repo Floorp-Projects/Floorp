@@ -238,7 +238,7 @@ void nsStyleCoord::ToString(nsString& aBuffer) const
 
 nsStyleSides::nsStyleSides(void)
 {
-  nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
+  memset(this, 0x00, sizeof(nsStyleSides));
 }
 
 #define COMPARE_SIDE(side)                                                            \
@@ -268,7 +268,7 @@ PRBool nsStyleSides::operator==(const nsStyleSides& aOther) const
 
 void nsStyleSides::Reset(void)
 {
-  nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
+  memset(this, 0x00, sizeof(nsStyleSides));
 }
 
 void nsStyleSides::AppendToString(nsString& aBuffer) const

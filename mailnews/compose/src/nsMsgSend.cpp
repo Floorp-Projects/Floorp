@@ -1637,13 +1637,13 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     domSaveArray = (domSaveStruct *)PR_MALLOC(sizeof(domSaveStruct) * multipartCount);
     if (!domSaveArray)
       return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
-    nsCRT::memset(domSaveArray, 0, sizeof(domSaveStruct) * multipartCount);
+    memset(domSaveArray, 0, sizeof(domSaveStruct) * multipartCount);
   }
 
   for (i = mPreloadedAttachmentCount; i < (mPreloadedAttachmentCount + multipartCount); i++)
   {
     // Reset this structure to null!
-    nsCRT::memset(&attachment, 0, sizeof(nsMsgAttachmentData));
+    memset(&attachment, 0, sizeof(nsMsgAttachmentData));
     
     // MUST set this to get placed in the correct part of the message
     m_attachments[i].mMHTMLPart = PR_TRUE;
@@ -2330,7 +2330,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
     return NS_ERROR_OUT_OF_MEMORY;
 
   // clear this new memory...
-  nsCRT::memset(m_attachments, 0, (sizeof(nsMsgAttachmentHandler) * m_attachment_count)); 
+  memset(m_attachments, 0, (sizeof(nsMsgAttachmentHandler) * m_attachment_count)); 
   PRUint32     i;    // counter for location in attachment array...
 
   //
@@ -3795,7 +3795,7 @@ BuildURLAttachmentData(nsIURI *url)
   else
     theName++;
 
-  nsCRT::memset(attachments, 0, sizeof(nsMsgAttachmentData) * attachCount);
+  memset(attachments, 0, sizeof(nsMsgAttachmentData) * attachCount);
   attachments[0].url = url; // The URL to attach. This should be 0 to signify "end of list".
   attachments[0].real_name = (char *)PL_strdup(theName);  // The original name of this document, which will eventually show up in the 
 

@@ -4415,7 +4415,7 @@ AHTC_WriteFunc(nsIInputStream * in,
         if (!headersBuf) {
             return NS_BASE_STREAM_WOULD_BLOCK;
         }
-        nsCRT::memset(headersBuf, nsnull, headersBufLen + 1);
+        memset(headersBuf, nsnull, headersBufLen + 1);
     }
     else {
         // data has been read, reallocate

@@ -620,7 +620,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   if (numRows > 0) {
     rowInfo = new RowInfo[numRows];
     if (!rowInfo) return;
-    nsCRT::memset (rowInfo, 0, numRows*sizeof(RowInfo));
+    memset (rowInfo, 0, numRows*sizeof(RowInfo));
   } 
   else return;
 

@@ -401,7 +401,7 @@ NS_IMETHODIMP nsAbSync::AddSyncListener(nsIAbSyncListener *aListener)
     if (!mListenerArray)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCRT::memset(mListenerArray, 0, (sizeof(nsIAbSyncListener *) * mListenerArrayCount));
+    memset(mListenerArray, 0, (sizeof(nsIAbSyncListener *) * mListenerArrayCount));
   
     mListenerArray[0] = aListener;
     NS_ADDREF(mListenerArray[0]);
@@ -1260,7 +1260,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         else
         {
           // Init the memory!
-          nsCRT::memset(mCrashTable, 0, (mCrashTableSize * sizeof(syncMappingRecord)) );
+          memset(mCrashTable, 0, (mCrashTableSize * sizeof(syncMappingRecord)) );
           nsString        tProtLine; 
 
           rv = NS_OK;  
@@ -1342,7 +1342,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
       }
       
       // Init the memory!
-      nsCRT::memset(mOldSyncMapingTable, 0, mOldTableSize);
+      memset(mOldSyncMapingTable, 0, mOldTableSize);
 
       // Now get the number of records in the table size!
       mOldTableSize /= sizeof(syncMappingRecord);
@@ -1394,7 +1394,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   }
 
   // Init the memory!
-  nsCRT::memset(mNewSyncMapingTable, 0, (mNewTableSize * sizeof(syncMappingRecord)) );
+  memset(mNewSyncMapingTable, 0, (mNewTableSize * sizeof(syncMappingRecord)) );
 
   rv = NS_OK;  
   workCounter =0;
@@ -2767,7 +2767,7 @@ nsAbSync::AddNewUsers()
 
       if (isNewCard)
       {
-        nsCRT::memset(newSyncRecord, 0, sizeof(syncMappingRecord));
+        memset(newSyncRecord, 0, sizeof(syncMappingRecord));
         newSyncRecord->CRC = GetCRC(tLine);
         newSyncRecord->serverID = serverID;
         newSyncRecord->localID = localID;

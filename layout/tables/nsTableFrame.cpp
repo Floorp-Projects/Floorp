@@ -4646,7 +4646,7 @@ void DebugGetIndent(const nsIFrame* aFrame,
     parent->GetParent(&parent);
   }
   PRInt32 indent = INDENT_PER_LEVEL * numLevels;
-  nsCRT::memset (aBuf, ' ', indent);
+  memset (aBuf, ' ', indent);
   aBuf[indent] = 0;
 }
 
@@ -4764,7 +4764,7 @@ void DebugReflowPrint(nsReflowTimer& aTimer,
   // set up the indentation
   char indentChar[128];
   PRInt32 indent = INDENT_PER_LEVEL * aLevel;
-  nsCRT::memset (indentChar, ' ', indent);
+  memset (indentChar, ' ', indent);
   indentChar[indent] = 0;
 
   // get the frame type
@@ -5146,7 +5146,7 @@ void DumpTableFramesRecur(nsIPresContext* aPresContext,
                           PRUint32        aIndent)
 {
   char indent[MAX_SIZE + 1];
-  nsCRT::memset (indent, ' ', aIndent + MIN_INDENT);
+  memset (indent, ' ', aIndent + MIN_INDENT);
   indent[aIndent + MIN_INDENT] = 0;
 
   char fName[MAX_SIZE];

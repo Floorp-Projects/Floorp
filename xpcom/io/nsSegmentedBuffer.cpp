@@ -86,7 +86,7 @@ nsSegmentedBuffer::AppendNewSegment()
         mSegmentArray = (char**)nsMemory::Alloc(bytes);
         if (mSegmentArray == nsnull)
             return nsnull;
-        nsCRT::memset(mSegmentArray, 0, bytes);
+        memset(mSegmentArray, 0, bytes);
     }
     
     if (IsFull()) {
@@ -102,14 +102,14 @@ nsSegmentedBuffer::AppendNewSegment()
             memcpy(&mSegmentArray[mSegmentArrayCount],
                    mSegmentArray,
                    mLastSegmentIndex * sizeof(char*));
-            nsCRT::memset(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));
+            memset(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));
             mLastSegmentIndex += mSegmentArrayCount;
-            nsCRT::memset(&mSegmentArray[mLastSegmentIndex], 0,
-                          (newArraySize - mLastSegmentIndex) * sizeof(char*));
+            memset(&mSegmentArray[mLastSegmentIndex], 0,
+                   (newArraySize - mLastSegmentIndex) * sizeof(char*));
         }
         else {
-            nsCRT::memset(&mSegmentArray[mLastSegmentIndex], 0,
-                          (newArraySize - mLastSegmentIndex) * sizeof(char*));
+            memset(&mSegmentArray[mLastSegmentIndex], 0,
+                   (newArraySize - mLastSegmentIndex) * sizeof(char*));
         }
         mSegmentArrayCount = newArraySize;
     }
