@@ -45,6 +45,9 @@
 #include "nsITokenizer.h"
 #include "nsFileSpec.h"
 
+// Testing xul window performance
+#define MALLOC_Driver_HandleExternalEntityRef 1 
+
 class nsIExpatSink;
 
 class nsExpatDriver : public nsIDTD,
@@ -59,7 +62,15 @@ public:
   virtual ~nsExpatDriver();
 
     // Load up an external stream to get external entity information
-  static nsresult OpenInputStream(const XML_Char* aURLStr, const XML_Char* aBaseURL, nsIInputStream** in, nsAString& aAbsURL);
+  static nsresult OpenInputStream(const XML_Char* aURLStr, 
+                                  const XML_Char* aBaseURL,
+                                  nsIInputStream** in, 
+                                  nsAString& aAbsURL);
+#ifdef MALLOC_Driver_HandleExternalEntityRef    
+  static nsresult LoadStream(nsIInputStream* in, 
+                             PRUnichar* &uniBuf, 
+                             PRUint32 &retLen);
+#endif
   
   nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts);
   nsresult HandleEndElement(const PRUnichar *aName);

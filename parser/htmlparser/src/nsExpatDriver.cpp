@@ -164,7 +164,118 @@ Driver_HandleEndDoctypeDecl(void *aUserData)
   }
 }
 
+#ifdef MALLOC_Driver_HandleExternalEntityRef
+PR_STATIC_CALLBACK(int)
+Driver_HandleExternalEntityRef(XML_Parser parser,
+                               const XML_Char *openEntityNames,
+                               const XML_Char *base,
+                               const XML_Char *systemId,
+                               const XML_Char *publicId)
+{
+  int result = PR_TRUE;
 
+#ifdef XML_DTD
+  // Load the external entity into a buffer
+  nsCOMPtr<nsIInputStream> in;
+  nsAutoString absURL;
+  nsresult rv = NS_OK;
+  PRUnichar *uniBuf = nsnull;
+  PRUint32 retLen = 0;
+  
+#ifdef MOZ_SVG
+  // yuck. I don't know of any other way to do this, though, since we don't
+  // read external dtd's, and we need the #FIXED xmlns attribute, so we
+  // can't do this later based on what namespace we're in - bbaetz
+
+  // The alternative is remapping the systemId, and installing an svg.dtd file
+  // in the dtd directory. This is simpler, for now.
+  
+  // XXX - need to do this for the other #FIXED attribuues as well
+  NS_NAMED_LITERAL_STRING(svgDtd,
+                          "<!ATTLIST svg xmlns CDATA #FIXED \"http://www.w3.org/2000/svg\" >");
+  
+#define svgPublicIdPrefix "-//W3C//DTD SVG "
+  
+  if (publicId && !nsCRT::strncmp((const PRUnichar*)publicId,
+                                  NS_LITERAL_STRING(svgPublicIdPrefix).get(),
+                                  sizeof(svgPublicIdPrefix)-1)) {
+    uniBuf = ToNewUnicode(svgDtd);
+    retLen = svgDtd.Length();
+  } else {
+#endif
+    rv = nsExpatDriver::OpenInputStream(systemId, base, getter_AddRefs(in), absURL);
+    
+    if (NS_SUCCEEDED(rv) && in)
+      rv = nsExpatDriver::LoadStream(in, uniBuf, retLen);
+#ifdef MOZ_SVG
+  }
+#endif
+
+  // Pass the buffer to expat for parsing
+  if (NS_SUCCEEDED(rv) && uniBuf) {    
+    // Create a parser for parsing the external entity
+    XML_Parser entParser = XML_ExternalEntityParserCreate(parser, 0, 
+      (const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
+
+    if (entParser) {
+      XML_SetBase(entParser, (const XML_Char*) absURL.get());
+      result = XML_Parse(entParser, (char *)uniBuf,  retLen * sizeof(PRUnichar), 1);
+      XML_ParserFree(entParser);
+    }
+  }
+  PR_FREEIF(uniBuf);
+
+#else /* ! XML_DTD */
+
+  NS_NOTYETIMPLEMENTED("Error: Driver_HandleExternalEntityRef() not yet implemented.");
+
+#endif /* XML_DTD */
+
+  return result;
+}
+
+nsresult 
+nsExpatDriver::LoadStream(nsIInputStream* in, 
+                          PRUnichar*& uniBuf, 
+                          PRUint32& retLen)
+{
+  // read it
+  PRUint32               aCount = 1024,
+                         bufsize = aCount*sizeof(PRUnichar);  
+  nsCOMPtr<nsIUnicharInputStream> uniIn;
+
+  nsresult res = NS_NewUTF8ConverterStream(getter_AddRefs(uniIn),
+                                           in, aCount);
+  if (NS_FAILED(res)) return res;
+
+  PRUint32 aReadCount = 0;
+  PRUnichar             *aBuf = (PRUnichar *) PR_Malloc(bufsize);
+
+  while (NS_OK == (res=uniIn->Read(aBuf, retLen, aCount, &aReadCount))
+         && aReadCount != 0) {
+    retLen += aReadCount;
+#if 1
+    bufsize += aCount * sizeof(PRUnichar);
+    aBuf = (PRUnichar *) PR_Realloc(aBuf, bufsize);
+#else
+    if (((aReadCount+32) >= aCount) &&
+        ((retLen+aCount) * sizeof(PRUnichar) >= bufsize)) {
+
+      bufsize += aCount * sizeof(PRUnichar);
+      uniBuf = (PRUnichar *) PR_Realloc(uniBuf, bufsize*sizeof(PRUnichar));
+    }
+#endif
+  }/* while */
+  uniBuf = (PRUnichar *) PR_Malloc(retLen*sizeof(PRUnichar));
+  nsCRT::memcpy(uniBuf, aBuf, sizeof(PRUnichar) * retLen);
+  PR_FREEIF(aBuf);      
+
+  return res;
+}
+
+#else
+static int
+=======
 PR_STATIC_CALLBACK(int)
 Driver_HandleExternalEntityRef(XML_Parser parser,
                                const XML_Char *openEntityNames,
@@ -216,12 +327,13 @@ Driver_HandleExternalEntityRef(XML_Parser parser,
     }
   }
 
-#else /* ! XML_DTD */
+#else // ! XML_DTD
   NS_NOTYETIMPLEMENTED("Error: Tokenizer_HandleExternalEntityRef() not yet implemented.");
-#endif /* XML_DTD */
+#endif // XML_DTD
   
   return result;
 }
+#endif
 
 /***************************** END CALL BACKS *********************************/
 
