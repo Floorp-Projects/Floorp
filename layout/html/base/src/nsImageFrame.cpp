@@ -1794,12 +1794,13 @@ mRect.height);
   fprintf(out, " [content=%p]", mContent);
 
   // output the img src url
-  nsCOMPtr<nsIURI> uri;
-  mLoads[0].mRequest->GetURI(getter_AddRefs(uri));
-  nsCAutoString uristr;
-  uri->GetAsciiSpec(uristr);
-  fprintf(out, " [src=%s]", uristr.get());
-
+  if (mLoads[0].mRequest) {
+    nsCOMPtr<nsIURI> uri;
+    mLoads[0].mRequest->GetURI(getter_AddRefs(uri));
+    nsCAutoString uristr;
+    uri->GetAsciiSpec(uristr);
+    fprintf(out, " [src=%s]", uristr.get());
+  }
   fputs("\n", out);
   return NS_OK;
 }

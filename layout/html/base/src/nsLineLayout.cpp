@@ -1420,6 +1420,19 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   // XXXwaterson probably not the right way to get this; e.g., embeddings, etc.
   PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
+  PRBool reducedBothMargins = PR_FALSE;
+  // An HR needs to reduce the avail width by both margins, because it effectively fits
+  // on one line. If it gets continued then only the continuation has any width. XXX - Are 
+  // there other elements with these characterstics and if so, is there a bit indicating that?
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
+    nsCOMPtr<nsIAtom> frameType;
+    pfd->mFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::hrFrame == frameType.get()) {
+      aReflowState.availableWidth -= pfd->mMargin.left + pfd->mMargin.right;
+      reducedBothMargins = PR_TRUE;
+    }
+  }
+
   // Only apply start-margin on the first-in flow for inline frames
   nsIFrame *prevInFlow;
   pfd->mFrame->GetPrevInFlow(&prevInFlow);
@@ -1432,7 +1445,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
       pfd->mMargin.right = 0;
   }
 
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
+  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) && !reducedBothMargins){
     // Adjust available width to account for the left margin. The
     // right margin will be accounted for when we finish flowing the
     // frame.
