@@ -291,7 +291,7 @@ MAKE_DIRS =
 
 ifdef MDDEPDIR
 $(MDDEPDIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; fi
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
 ifdef OBJS
 MAKE_DIRS += $(MDDEPDIR)
@@ -300,7 +300,7 @@ endif
 
 ifneq "$(OBJDIR)" "."
 $(OBJDIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; fi
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 MAKE_DIRS += $(OBJDIR)
 endif
@@ -322,7 +322,7 @@ endif # ! USE_AUTOCONF
 ifdef ALL_PLATFORMS
 all_platforms:: $(NFSPWD)
 	@d=`$(NFSPWD)`;							\
-	if test ! -d LOGS; then rm -rf LOGS; mkdir LOGS; fi;		\
+	if test ! -d LOGS; then rm -rf LOGS; mkdir LOGS; else true; fi;		\
 	for h in $(PLATFORM_HOSTS); do					\
 		echo "On $$h: $(MAKE) $(ALL_PLATFORMS) >& LOGS/$$h.log";\
 		rsh $$h -n "(chdir $$d;					\
@@ -495,8 +495,13 @@ ifneq ($(OS_ARCH),OS2)
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
+ifeq ($(OS_ARCH),NTO)
+AR_LIST		:= ar.elf t
+AR_EXTRACT	:= ar.elf x
+else
 AR_LIST		:= ar t
 AR_EXTRACT	:= ar x
+endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib}; done;)
 endif
 
@@ -669,6 +674,8 @@ export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 	if test "$$list"x != "x"; then				\
 	    echo $(JAVAC) $$list;				\
 	    $(JAVAC) $$list;					\
+	else				\
+		true;			\
 	fi
 
 all:: export
@@ -699,6 +706,8 @@ export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 			    echo Building all java files in $$d;		\
 			    echo $(JAVAC) $$list;				\
 			    $(JAVAC) $$list;					\
+			else				\
+				true;			\
 			fi;							\
 			set +e;							\
 		else								\
@@ -741,6 +750,8 @@ ifdef MOZ_GENMAC
 		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
 		echo "!!! This allows us to automatically update generated files for the mac.";	\
 		echo "!!! If you see any modified files there, please check them in.";		\
+	else				\
+		true;			\
 	fi
 	@echo Generating/Updating JDK headers for the Mac
 	$(JAVAH) -mac -d $(DEPTH)/lib/mac/Java/_gen $(JDK_PACKAGE_CLASSES)
@@ -782,6 +793,8 @@ ifdef MOZ_GENMAC
 		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
 		echo "!!! This allows us to automatically update generated files for the mac.";	\
 		echo "!!! If you see any modified files there, please check them in.";		\
+	else				\
+		true;			\
 	fi
 	@echo Generating/Updating JRI headers for the Mac
 	$(JAVAH) -jri -mac -d $(DEPTH)/lib/mac/Java/_jri $(JRI_PACKAGE_CLASSES)
@@ -821,6 +834,8 @@ ifdef MOZ_GENMAC
 		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
 		echo "!!! This allows us to automatically update generated files for the mac.";	\
 		echo "!!! If you see any modified files there, please check them in.";		\
+	else				\
+		true;			\
 	fi
 	@echo Generating/Updating JNI headers for the Mac
 	$(JAVAH) -jni -mac -d $(DEPTH)/lib/mac/Java/_jni $(JNI_PACKAGE_CLASSES)
@@ -882,7 +897,7 @@ endif
 
 ifneq ($(EXPORTS),)
 $(XPDIST)/include::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; fi
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(EXPORTS) $(XPDIST)/include
 	$(INSTALL) -m 444 $^
@@ -893,7 +908,7 @@ endif
 
 ifneq ($(IDLSRCS),)
 $(XPDIST)/idl::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; fi
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(IDLSRCS) $(XPDIST)/idl
 	$(INSTALL) -m 444 $^
