@@ -51,6 +51,7 @@ XPIDLSRCS =				  \
 		nsIMsgCopyServiceListener.idl	\
 		nsIMsgStatusFeedback.idl \
 		nsIMsgMailNewsUrl.idl	\
+		nsIMsgWindowData.idl	\
 		$(NULL)
 
 EXPORTS =				\
