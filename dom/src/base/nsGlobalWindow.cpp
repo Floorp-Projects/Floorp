@@ -1410,8 +1410,9 @@ GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerWidth = 0;
+  PRInt32 notused;
   if (docShellWin)
-    docShellWin->GetSize(aInnerWidth, nsnull);
+    docShellWin->GetSize(aInnerWidth, &notused);
 
   return NS_OK;
 }
@@ -1447,8 +1448,8 @@ GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
                     NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  PRInt32 cy = 0;
-  docShellAsWin->GetSize(nsnull, &cy);
+  PRInt32 notused, cy = 0;
+  docShellAsWin->GetSize(&notused, &cy);
   NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, aInnerWidth, cy),
                     NS_ERROR_FAILURE);
   return NS_OK;
@@ -1461,8 +1462,9 @@ GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerHeight = 0;
+  PRInt32 notused;
   if (docShellWin)
-    docShellWin->GetSize(nsnull, aInnerHeight);
+    docShellWin->GetSize(&notused, aInnerHeight);
 
   return NS_OK;
 }
@@ -1498,8 +1500,8 @@ GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
                     NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  PRInt32 cx = 0;
-  docShellAsWin->GetSize(&cx, nsnull);
+  PRInt32 cx = 0, notused;
+  docShellAsWin->GetSize(&cx, &notused);
   NS_ENSURE_SUCCESS(treeOwner->
                     SizeShellTo(docShellAsItem, cx, aInnerHeight),
                     NS_ERROR_FAILURE);
@@ -1514,8 +1516,8 @@ GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
   FlushPendingNotifications(PR_TRUE);
-
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(aOuterWidth, nsnull),
+  PRInt32 notused;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(aOuterWidth, &notused),
                     NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -1540,8 +1542,8 @@ GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aOuterWidth, nsnull),
                     NS_ERROR_FAILURE);
 
-  PRInt32 cy;
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(nsnull, &cy), NS_ERROR_FAILURE);
+  PRInt32 notused, cy;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&notused, &cy), NS_ERROR_FAILURE);
 
   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aOuterWidth, cy, PR_TRUE),
                     NS_ERROR_FAILURE);
@@ -1558,7 +1560,8 @@ GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
 
   FlushPendingNotifications(PR_TRUE);
 
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(nsnull, aOuterHeight),
+  PRInt32 notused;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&notused, aOuterHeight),
                     NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -1583,8 +1586,8 @@ GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nsnull, &aOuterHeight),
                     NS_ERROR_FAILURE);
 
-  PRInt32 cx;
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&cx, nsnull), NS_ERROR_FAILURE);
+  PRInt32 cx, notused;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&cx, &notused), NS_ERROR_FAILURE);
 
   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(cx, aOuterHeight, PR_TRUE),
                     NS_ERROR_FAILURE);
