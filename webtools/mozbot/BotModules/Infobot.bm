@@ -1,0 +1,762 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+################################
+# Infobot Module               #
+################################
+# some of these ideas are stolen from infobot, of course.
+# see www.infobot.org
+
+package BotModules::Infobot;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+use AnyDBM_File;
+use Fcntl;
+1;
+
+# XXX "mozbot is a bot" fails (gets handled as a Tell of "is a bot" :-/)
+# XXX "who is foo" responds "I don't know what is foo" (should respond "I don't know _who_ is foo")
+
+# it seems tie() works on scope and not on reference counting, so as
+# soon as the thing it is tying goes out of scope (even if the variable
+# in question still has active references) it loses its magic.
+our $factoids = {'is' => {}, 'are' => {}};
+tie(%{$factoids->{'is'}}, 'AnyDBM_File', 'factoids-is', O_RDWR|O_CREAT, 0666);
+tie(%{$factoids->{'are'}}, 'AnyDBM_File', 'factoids-are', O_RDWR|O_CREAT, 0666);
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+        '' => 'Keeps track of factoids and returns them on request. '.
+            'To set factoids, just tell me something in the form \'apple is a company\' or \'apples are fruit\'. '.
+            'To find out about something, say \'apple?\' or \'what are apples\'. '.
+            'To correct me, you can use any of: \'no, apple is a fruit\', \'apple =~ s/company/fruit/\', or \'apple is also a fruit\'. '.
+            'To make me forget a factoid, \'forget apple\'. '.
+            'You can use \'|\' to separate several alternative answers.',
+        'who' => 'If a definition contains $who, then it will be replaced by the name of the person who asked the question.',
+        'reply' => 'If a definition starts with <reply> then when responding the initial prefix will be skipped. '.
+            'e.g., \'apples are <reply>mm, apples\' will mean that \'what are apples\' will get the response \'mm, apples\'.',
+        'action' => 'If a definition starts with <action> then when responding the definition will be used as an action. '.
+            'e.g., \'apples are <action>eats one\' will mean that \'what are apples\' will get the response \'* bot eats one\'.',
+        'alias' => 'If a definition starts with <alias> then it will be treated as a symlink to whatever follows. '.
+            'e.g., \'crab apples are <alias>apples\' and \'apples are fruit\' will mean that \'what are crab apples\' will get the response \'apples are fruit\'.',
+        'status' => 'Reports on how many factoids are in the database.',
+        'tell' => 'Make me tell someone something. e.g., \'tell pikachu what apples are\' or \'tell fred about me\'.',
+        'literal' => 'To find out exactly what is stored for an entry apples, you would say to me: literal apples',
+        'remember' => 'If you are having trouble making me remember something (for example \'well, foo is bar\' '.
+            'getting treated as \'foo\' is \'bar\'), then you can prefix your statement with \'remember:\' '.
+            '(following the \'no,\' if you are changing an entry). For example, \'remember: well, foo is bar\'. '.
+            'Note that \'well, foo?\' is treated as \'what is foo\' not is \'what is well, foo\', so this is not always useful.',
+        'no' => 'To correct an entry, prefix your statement with \'no,\'. '.
+            'For example, \'no, I am good\' to correct your entry from \'is bad\' to \'is good\'. :-)',
+    };
+}
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['autoLearn', 1, 1, ['*']], # in the auto* variables, '*' means 'all channels'
+        ['autoHelp', 1, 1, ['*']],
+        ['autoEdit', 1, 1, []],
+        ['neverLearn', 1, 1, []], # the never* variables override the auto* variables
+        ['neverHelp', 1, 1, []],
+        ['neverEdit', 1, 1, []],
+        ['autoIgnore', 1, 1, []], # list of nicks for which to always turn off auto*
+        ['teachers', 1, 1, []], # list of users who may teach, leave blank to allow anyone to teach
+        ['factoidPositions', 0, 0, {'is' => {}, 'are' => {}}],
+        ['friendBots', 1, 1, []],
+        ['researchNotes', 0, 0, {}],
+        ['pruneDelay', 1, 1, 120], # how frequently to look through the research notes and remove expired items
+        ['queryTimeToLive', 1, 1, 600], # queries can be remembered up to ten minutes by default
+        ['dunnoTimeToLive', 1, 1, 604800], # DUNNO queries can be remembered up to a week by default
+        ['noIdeaDelay', 1, 1, 2], # how long to wait before admitting lack of knowledge
+        ['questions', 0, 0, 0], # how many questions there have been since the last load
+        ['edits', 0, 0, 0], # how many edits (learning, editing, forgetting) there have been since the last load
+        ['interbots', 0, 0, 0], # how many times we have spoken with other bots
+        ['maxInChannel', 1, 1, 200], # beyond this answers are /msged
+    );
+}
+
+# Schedule - called when bot connects to a server, to install any schedulers
+# use $self->schedule($event, $delay, $times, $data)
+# where $times is 1 for a single event, -1 for recurring events,
+# and a positive number for an event that occurs that many times.
+sub Schedule {
+    my $self = shift;
+    my ($event) = @_;
+    $self->schedule($event, \$self->{'pruneDelay'}, -1, 'pruneInfobot');
+    $self->SUPER::Schedule($event);
+}
+
+sub unload {
+    my $self = shift;
+    $self->SUPER::unload(@_);
+    # just to make sure...
+    untie(%{$factoids->{'is'}});
+    untie(%{$factoids->{'are'}});
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*status[?\s]*$/osi) {
+        my $sum = $self->countFactoids();
+        my $questions = $self->{'questions'} == 1 ? "$self->{'questions'} question" : "$self->{'questions'} questions";
+        my $edits = $self->{'edits'} == 1 ? "$self->{'edits'} edit" : "$self->{'edits'} edits";
+        my $interbots = $self->{'interbots'} == 1 ? "$self->{'interbots'} time" : "$self->{'interbots'} times";
+        my $friends = @{$self->{'friendBots'}} == 1 ? (scalar(@{$self->{'friendBots'}}).' bot friend') : (scalar(@{$self->{'friendBots'}}).' bot friends');
+        $self->targettedSay($event, "I have $sum factoids in my database and $friends to help me answer questions. ".
+                            "Since the last reload, I've been asked $questions, performed $edits, and spoken with other bots $interbots.", 1);
+    } elsif ($event->{'channel'} eq '' and $message =~ /^:INFOBOT:DUNNO <(\S+)> (.*)$/) {
+        $self->ReceivedDunno($event, $1, $2);
+    } elsif ($event->{'channel'} eq '' and $message =~ /^:INFOBOT:QUERY <(\S+)> (.*)$/) {
+        $self->ReceivedQuery($event, $2, $1);
+    } elsif ($event->{'channel'} eq '' and $message =~ /^:INFOBOT:REPLY <(\S+)> (.+?) =(is|are)?=> (.*)$/) {
+        $self->ReceivedReply($event, $3, $2, $1, $4);
+    } elsif ($message =~ /^\s*literal\s+(.+?)\s*$/) {
+        $self->Literal($event, $1);
+    } elsif (not $self->DoFactoidCheck($event, $message, 1)) {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Baffled {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if (not $self->DoFactoidCheck($event, $message, 2)) {
+        return $self->SUPER::Heard(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Heard {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if (not $self->DoFactoidCheck($event, $message, 0)) {
+        return $self->SUPER::Heard(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub DoFactoidCheck {
+    my $self = shift;
+    my ($event, $message, $direct) = @_;
+    # $direct is one of: 0 = heard, 1 = told, 2 = baffled
+
+    my $shortMessage;
+    if ($message =~ /^\s* (?:(?:well|and|or|yes|[uh]+m*|o+[oh]*[k]+(?:a+y+)?|still|well|so|[ah]+|[oh]+)[:,.!?\s]+|)*
+                          (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
+                          (?:(?:heya?|hello|hi)(?:\s+there)?(?:\s+peoples?|\s+kids?|\s+folks?)?[:,!.?\s]+)*
+                          (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
+                          (?:(?:(?:stupid\s+)?q(?:uestion)?|basically)[:,.!\s]+)*
+                          (?:(?:does\s+)?(?:any|ne)\s*(?:1|one|body)\s+know[,\s]+|)?
+                          (.*)
+                      \s*$/osix) {
+        $shortMessage = $1;
+    }
+
+    if ($message =~ /^\s*tell\s+(\S+)\s+about\s+me(?:[,\s]+please)?[\s!?.]*$/osi) {
+        $self->GiveFactoid($event,
+                                undef, # database
+                     $event->{'from'}, # what
+                              $direct,
+                                  $1); # who
+    } elsif ($message =~ /^\s*tell\s+(\S+)\s+about\s+(.+?)(?:[,\s]+please)?[\s!?.]*$/osi) {
+        $self->GiveFactoid($event,
+                                undef, # database
+                                   $2, # what
+                              $direct,
+                                  $1); # who
+    } elsif ($message =~ /^\s*tell\s+(\S+)\s+(?:what|who|where)\s+(?:am\s+I|I\s+am)(?:[,\s]+please)?[\s!?.]*$/osi) {
+        $self->GiveFactoid($event,
+                                 'is', # database
+                     $event->{'from'}, # what
+                              $direct,
+                                  $1); # who
+    } elsif ($message =~ /^\s*tell\s+(\S+)\s+(?:what|who|where)\s+(is|are)\s+(.+?)(?:[,\s]+please)?[\s!?.]*$/osi) {
+        $self->GiveFactoid($event,
+                               lc($2), # database
+                                   $3, # what
+                              $direct,
+                                  $1); # who
+    } elsif ($message =~ /^\s*tell\s+(\S+)\s+(?:what|who|where)\s+(.+?)\s+(is|are)(?:[,\s]+please)?[\s!?.]*$/osi) {
+        $self->GiveFactoid($event,
+                               lc($3), # database
+                                   $2, # what
+                              $direct,
+                                  $1); # who
+    } elsif ($message =~ /^\s*(.+?)\s*=~\s*s?\/(.+?)\/(.*?)\/(i)?(g)?(i)?\s*$/osi) {
+        $self->EditFactoid($event,
+                                   $1, # subject
+                                   $2, # first part to remove
+                                   $3, # second part to remove
+                          defined($5), # global?
+           defined($4) || defined($6), # case insensitive?
+                           $direct);
+    } elsif ($message =~ /^\s*forget\s+(?:about\s+)?me\s*$/osi) {
+        $self->ForgetFactoid($event, $event->{'from'}, $direct);
+    } elsif ($message =~ /^\s*forget\s+(?:about\s+)?(.+?)\s*$/osi) {
+        $self->ForgetFactoid($event, $1, $direct);
+    } elsif ($shortMessage =~ /^(?:what|where|who) \s+ (is|are) \s+ (.+?) [?\s]* $/osix) {
+        $self->GiveFactoid($event,
+                               lc($1), # is/are (optional)
+                                   $2, # subject
+                          $direct);
+    } elsif ($shortMessage =~ /^(?:(?:where|how)\s+can\s+(?:i|one|s?he|we)\s+(?:find|learn|read)(?:\s+about)? | how\s+about | what\'?s) \s+ (.+?) [?\s]* $/osix) {
+        $self->GiveFactoid($event,
+                                undef, # is/are (optional)
+                                   $1, # subject
+                          $direct);
+    } elsif ($shortMessage =~ /^(?:what|where|who)\s+ (.+?) (is|are) [?\s]* $/osix) {
+        $self->GiveFactoid($event,
+                               lc($2), # is/are (optional)
+                                   $1, # subject
+                          $direct);
+    } elsif ($shortMessage =~ /^(?:what|where|who) \s+ (?:am\s+I|I\s+am) [?\s]* $/osix) {
+        $self->GiveFactoid($event,
+                                 'is', # am => is
+                     $event->{'from'}, # subject
+                          $direct);
+    } elsif ($shortMessage =~ /^(no\s*, (\s*$event->{'nick'}\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.+?) $/six) {
+        # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
+        $self->SetFactoid($event,
+                          defined($1), # replace existing answer?
+                                   $3, # subject
+                               lc($4), # is/are
+                          defined($5), # add to existing answer?
+                                   $6, # object
+                         ($direct or defined($2)));
+    } elsif ($shortMessage =~ /^(no\s*, (\s*$event->{'nick'}\s*,)? \s+)? (?:remember\s*:\s+)? I \s+ am \s+ (also\s+)? (.+?) $/osix) {
+        # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
+        $self->SetFactoid($event,
+                          defined($1), # replace existing answer?
+                     $event->{'from'}, # subject
+                                 'is', # I am = Foo is
+                          defined($2), # add to existing answer?
+                                   $3, # object
+                          $direct);
+    } elsif ((not $direct or $direct == 2) and $shortMessage =~ /^(.+?)\s+(is|are)[?\s]*\?[?\s]*$/osi) {
+        $self->GiveFactoid($event,
+                               lc($2), # is/are (optional)
+                                   $1, # subject
+                          $direct);
+    } elsif ((not $direct or $direct == 2) and $shortMessage =~ /^(.+?)[?\s]*\?[?\s]*$/osi) {
+        $self->GiveFactoid($event,
+                                undef, # is/are (optional)
+                                   $1, # subject
+                          $direct);
+    } else {
+        return 0;
+    }
+    return 1;
+}
+
+sub SetFactoid {
+    my $self = shift;
+    my($event, $replace, $subject, $database, $add, $object, $direct, $fromBot) = @_;
+    if ($direct or $self->allowed($event, 'Learn')) {
+
+        teacher: if (@{$self->{'teachers'}}) {
+            foreach my $user (@{$self->{'teachers'}}) {
+                if ($user eq $event->{'userName'}) {
+                    last teacher;
+                }
+            }
+            return 0;
+        }
+
+        # update the database
+        if (not $replace) {
+            $subject = $self->CanonicalizeFactoid($database, $subject);
+        } else {
+            my $oldSubject = $self->CanonicalizeFactoid($database, $subject);
+            if (defined($factoids->{$database}->{$oldSubject})) {
+                delete($factoids->{$database}->{$oldSubject});
+            }
+        }
+        if ($replace or not defined($factoids->{$database}->{$subject})) {
+            $self->debug("Learning that $subject $database '$object'.");
+            $factoids->{$database}->{$subject} = $object;
+        } elsif (not $add) {
+            my @what = split(/\|/o, $factoids->{$database}->{$subject});
+            local $" = '\' or \'';
+            if (not defined($fromBot)) {
+                if (@what == 1 and $what[0] eq $object) {
+                    $self->targettedSay($event, 'Yep, that\'s what I thought. Thanks for confirming it.', $direct);
+                } else {
+                    # XXX "that's one of the alternatives, sure..."
+                    $self->targettedSay($event, "But $subject $database '@what'...", $direct);
+                }
+            }
+            return 0; # failed to update database
+        } else {
+            $self->debug("Learning that $subject $database also '$object'.");
+            $factoids->{$database}->{$subject} .= "|$object";
+        }
+        if (not defined($fromBot)) {
+            $self->targettedSay($event, 'ok', $direct);
+        }
+        if (defined($self->{'researchNotes'}->{lc($subject)})) {
+            my @queue = @{$self->{'researchNotes'}->{lc($subject)}};
+            foreach my $entry (@queue) {
+                my($eventE, $typeE, $databaseE, $subjectE, $targetE, $directE, $visitedAliasesE, $timeE) = @$entry;
+                if ($typeE eq 'QUERY') {
+                    if ((defined($targetE) and $event->{'from'} ne $targetE) or
+                        ($event->{'from'} ne $eventE->{'from'} and
+                         ($event->{'channel'} eq '' or $event->{'channel'} ne $eventE->{'channel'}))) {
+                        my($how, $what, $propagated) = $self->GetFactoid($eventE, $databaseE, $subjectE,
+                                                                         $targetE, $directE, $visitedAliasesE, $event->{'from'});
+                        if (defined($how)) {
+                            if (defined($targetE)) {
+                                $self->debug("I now know what '$subject' $database, so telling $targetE, since $eventE->{'from'} told me to.");
+                            } else {
+                                $self->debug("I now know what '$subject' $database, so telling $eventE->{'from'} who wanted to know.");
+                            }
+                            $self->factoidSay($eventE, $how, $what, $directE, $targetE);
+                            $entry->[1] = 'OLD';
+                        } else {
+                            # either $propagated, or database doesn't match requested database, or internal error
+                            $self->debug("I now know what '$subject' $database, but for some reason that ".
+                                         "didn't help me help $eventE->{'from'} who needed to know what '$subjectE' $databaseE.");
+                        }
+                    }
+                } elsif ($typeE eq 'DUNNO') {
+                    my $who = defined($targetE) ? $targetE : $eventE->{'from'};
+                    $self->directSay($eventE, ":INFOBOT:REPLY <$who> $subject =$database=> $factoids->{$database}->{$subject}");
+                    $entry->[1] = 'OLD';
+                }
+            }
+        }
+        $self->{'edits'}++;
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+sub GiveFactoid {
+    my $self = shift;
+    my($event, $database, $subject, $direct, $target) = @_;
+    if ($direct or $self->allowed($event, 'Help')) {
+        if ($target eq $event->{'nick'}) {
+            $self->targettedSay($event, 'Oh, yeah, great idea, get me to talk to myself.', $direct);
+        } else {
+            if (lc($subject) eq 'you') {
+                # first, skip some words that are handled by other commonly-used modules
+                # in particular, 'who are you' is handled by Greeting.bm
+                return;
+            }
+            $self->{'questions'}++;
+            my($how, $what, $propagated) = $self->GetFactoid($event, $database, $subject, $target, $direct);
+            if (not defined($how)) {
+                $self->scheduleNoIdea($event, $database, $subject, $direct, $propagated);
+            } else {
+                $self->debug("Telling $event->{'from'} about $subject.");
+                $self->factoidSay($event, $how, $what, $direct, $target);
+            }
+        }
+    }
+}
+
+sub Literal {
+    my $self = shift;
+    my($event, $subject) = @_;
+    my $is = $self->CanonicalizeFactoid('is', $subject);
+    my $are = $self->CanonicalizeFactoid('are', $subject);
+    if (defined($is) or defined($are)) {
+        local $" = '\' or \'';
+        if (defined($factoids->{'is'}->{$is})) {
+            my @what = split(/\|/o, $factoids->{'is'}->{$is});
+            $self->targettedSay($event, "$is is '@what'.", 1);
+        }
+        if (defined($factoids->{'are'}->{$are})) {
+            my @what = split(/\|/o, $factoids->{'are'}->{$is});
+            $self->targettedSay($event, "$are are '@what'.", 1);
+        }
+    } else {
+        $self->targettedSay($event, "I have no record of anything called '$subject'.", 1);
+    }
+}
+
+sub scheduleNoIdea {
+    my $self = shift;
+    my($event, $database, $subject, $direct, $propagated) = @_;
+    if (ref($propagated)) {
+        $self->schedule($event, \$self->{'noIdeaDelay'}, 1, 'noIdea', $database, $subject, $direct, $propagated);
+    } else {
+        $self->noIdea($event, $database, $subject, $direct);
+    }
+}
+
+sub GetFactoid {
+    my $self = shift;
+    my($event, $originalDatabase, $subject, $target, $direct, $visitedAliases, $friend) = @_;
+    if (not defined($visitedAliases)) {
+        $visitedAliases = {};
+    }
+    my $database;
+    ($database, $subject) = $self->FindFactoid($originalDatabase, $subject);
+    if (defined($factoids->{$database}->{$subject})) {
+        my @alternatives = split(/\|/o, $factoids->{$database}->{$subject});
+        my $answer;
+        if (@alternatives) {
+            if (not defined($self->{'factoidPositions'}->{$database}->{$subject})
+                or $self->{'factoidPositions'}->{$database}->{$subject} >= scalar(@alternatives)) {
+                $self->{'factoidPositions'}->{$database}->{$subject} = 0;
+            }
+            $answer = @alternatives[$self->{'factoidPositions'}->{$database}->{$subject}];
+            $self->{'factoidPositions'}->{$database}->{$subject}++;
+        } else {
+            $answer = @alternatives[0];
+        }
+        my $who = defined($target) ? $target : $event->{'from'};
+        $answer =~ s/\$who/$who/go;
+        if ($answer =~ /^<alias>(.*)$/o) {
+            if ($visitedAliases->{$1}) {
+                return ('msg', "see $subject", 0);
+            } else {
+                $visitedAliases->{$subject}++;
+                my($how, $what, $propagated) = $self->GetFactoid($event, undef, $1, $target, $direct, $visitedAliases);
+                if (not defined($how)) {
+                    return ('msg', "see $1", $propagated);
+                } else {
+                    return ($how, $what, $propagated);
+                }
+            }
+        } elsif ($answer =~ /^<action>/o) {
+            $answer =~ s/^<action>\s*//o;
+            return ('me', $answer, 0);
+        } else {
+            if ($answer =~ /^<reply>/o) {
+                $answer =~ s/^<reply>\s*//o;
+            } else {
+                if (lc($who) eq lc($subject)) {
+                    $answer = "you are $answer";
+                } else {
+                    $answer = "$subject $database $answer";
+                }
+                if (defined($friend)) {
+                    $answer = "$friend knew: $answer";
+                }
+            }
+            return ('msg', $answer, 0);
+        }
+    } else {
+        # we have no idea what this is
+        return (undef, undef, $self->Research($event, $originalDatabase, $subject, $target, $direct, $visitedAliases));
+    }
+}
+
+sub CanonicalizeFactoid {
+    my $self = shift;
+    my($database, $subject) = @_;
+    if (not defined($factoids->{$database}->{$subject})) {
+        while (my $key = each %{$factoids->{$database}}) {
+            if (lc($key) eq lc($subject)) {
+                $subject = $key;
+                # can't return or 'each' iterator won't be reset XXX
+            }
+        }
+    }
+    return $subject;
+}
+
+sub FindFactoid {
+    my $self = shift;
+    my($database, $subject) = @_;
+    if (not defined($database)) {
+        $database = 'is';
+        $subject = $self->CanonicalizeFactoid('is', $subject);
+        if (not defined($factoids->{'is'}->{$subject})) {
+            $subject = $self->CanonicalizeFactoid('are', $subject);
+            if (defined($factoids->{'are'}->{$subject})) {
+                $database = 'are';
+            }
+        }
+    } else {
+        $subject = $self->CanonicalizeFactoid($database, $subject);
+    }
+    return ($database, $subject);
+}
+
+sub EditFactoid {
+    my $self = shift;
+    my($event, $subject, $search, $replace, $global, $caseInsensitive, $direct) = @_;
+    if ($direct or $self->allowed($event, 'Edit')) {
+        my $database;
+        ($database, $subject) = $self->FindFactoid($database, $subject);
+        if (not defined($factoids->{$database}->{$subject})) {
+            $self->targettedSay($event, "Er, I don't know about this $subject thingy...", $direct);
+            return;
+        }
+        $self->debug("Editing the $subject entry.");
+        my @output;
+        foreach my $factoid (split(/\|/o, $factoids->{$database}->{$subject})) {
+            $search = $self->sanitizeRegexp($search);
+            if ($global and $caseInsensitive) {
+                $factoid =~ s/$search/$replace/gi;
+            } elsif ($global) {
+                $factoid =~ s/$search/$replace/g;
+            } elsif ($caseInsensitive) {
+                $factoid =~ s/$search/$replace/i;
+            } else {
+                $factoid =~ s/$search/$replace/;
+            }
+            push(@output, $factoid);
+        }
+        $factoids->{$database}->{$subject} = join('|', @output);
+        $self->targettedSay($event, 'ok', $direct);
+        $self->{'edits'}++;
+    }
+}
+
+sub ForgetFactoid {
+    my $self = shift;
+    my($event, $subject, $direct) = @_;
+    if ($direct or $self->allowed($event, 'Edit')) {
+        my $count = 0;
+        my $database;
+        foreach my $db ('is', 'are') {
+            ($database, $subject) = $self->FindFactoid($db, $subject);
+            if (defined($factoids->{$database}->{$subject})) {
+                delete($factoids->{$database}->{$subject});
+                $count++;
+            }
+        }
+        if ($count) {
+            $self->targettedSay($event, "I've forgotten what I knew about '$subject'.", $direct);
+            $self->{'edits'}++;
+        } else {
+            $self->targettedSay($event, "I never knew anything about '$subject' in the first place!", $direct);
+        }
+    }
+}
+
+# interbot communications
+sub Research {
+    my $self = shift;
+    my($event, $database, $subject, $target, $direct, $visitedAliases) = @_;
+    if (not @{$self->{'friendBots'}}) {
+        # no bots to ask, bail out
+        return 0;
+    }
+    # now check that we need to ask the bots about it:
+    my $asked = 0;
+    if (not defined($self->{'researchNotes'}->{$subject})) {
+        $self->{'researchNotes'}->{$subject} = [];
+    } else {
+        entry: foreach my $entry (@{$self->{'researchNotes'}->{lc($subject)}}) {
+            my($eventE, $typeE, $databaseE, $subjectE, $targetE, $directE, $visitedAliasesE, $timeE) = @$entry;
+            if ($typeE eq 'QUERY') {
+                $asked++; # at least one bot was already asked quite recently
+                if ((defined($targetE) and lc($targetE) eq lc($targetE)) or
+                    (not defined($targetE) and lc($event->{'from'}) eq lc($eventE->{'from'}))) {
+                    # already queued
+                    return 1;
+                }
+            }
+        }
+    }
+    # remember to tell these people about $subject if we ever find out about it:
+    my $entry = [$event, 'QUERY', $database, $subject, $target, $direct, $visitedAliases, time()];
+    push(@{$self->{'researchNotes'}->{lc($subject)}}, $entry);
+    my $who = defined($target) ? $target : $event->{'from'};
+    if (not $asked) {
+        # not yet asked, so ask each bot about $subject
+        foreach my $bot (@{$self->{'friendBots'}}) {
+            local $event->{'from'} = $bot;
+            $self->directSay($event, ":INFOBOT:QUERY <$who> $subject");
+        }
+        $self->{'interbots'}++;
+        return $entry; # return reference to entry so that we can check if it has been replied or not
+    } else {
+        return $asked;
+    }
+}
+
+sub ReceivedReply {
+    my $self = shift;
+    my($event, $database, $subject, $target, $object) = @_;
+    $self->{'interbots'}++;
+    if (not $self->SetFactoid($event, 0, $subject, $database, 0, $object, 1, 1) and
+        defined($self->{'researchNotes'}->{lc($subject)})) {
+        # we didn't believe $event->{'from'}, but we might as well
+        # tell any users that were wondering.
+        foreach my $entry (@{$self->{'researchNotes'}->{lc($subject)}}) {
+            my($eventE, $typeE, $databaseE, $subjectE, $targetE, $directE, $visitedAliasesE, $timeE) = @$entry;
+            if ($typeE eq 'QUERY') {
+                $self->factoidSay($eventE, 'msg', "According to $event->{'from'}, $subject $database '$object'.", $directE, $targetE);
+            } elsif ($typeE eq 'DUNNO') {
+                my $who = defined($targetE) ? $targetE : $eventE->{'from'};
+                $self->directSay($eventE, ":INFOBOT:REPLY <$who> $subject =$database=> $object");
+            }
+            $entry->[1] = 'OLD';
+        }
+    }
+}
+
+sub ReceivedQuery {
+    my $self = shift;
+    my($event, $subject, $target) = @_;
+    $self->{'interbots'}++;
+    if (not $self->tellBot($event, $subject, $target)) {
+        # in the spirit of embrace-and-extend, we're going to say that
+        # :INFOBOT:DUNNO means "I don't know, but if you ever find
+        # out, please tell me".
+        $self->directSay($event, ":INFOBOT:DUNNO <$event->{'nick'}> $subject");
+    }
+}
+
+sub ReceivedDunno {
+    my $self = shift;
+    my($event, $target, $subject) = @_;
+    $self->{'interbots'}++;
+    if (not $self->tellBot($event, $subject, $target)) {
+        # store the request
+        push(@{$self->{'researchNotes'}->{lc($subject)}}, [$event, 'DUNNO', undef, $1, $target, 0, {}, time()]);
+    }
+}
+
+sub tellBot {
+    my $self = shift;
+    my($event, $subject, $target) = @_;
+    my $count = 0;
+    my $database;
+    foreach my $db ('is', 'are') {
+        ($database, $subject) = $self->FindFactoid($db, $subject);
+        if (defined($factoids->{$database}->{$subject})) {
+            $self->directSay($event, ":INFOBOT:REPLY <$target> $subject =$database=> $factoids->{$database}->{$subject}");
+            $count++;
+        }
+    }
+    return $count;
+}
+
+sub Scheduled {
+    my $self = shift;
+    my ($event, @data) = @_;
+    if ($data[0] eq 'pruneInfobot') {
+        my $now = time();
+        foreach my $key (keys %{$self->{'researchNotes'}}) {
+            my @new;
+            foreach my $entry (@{$self->{'researchNotes'}->{$key}}) {
+                my($eventE, $typeE, $databaseE, $subjectE, $targetE, $directE, $visitedAliasesE, $timeE) = @$entry;
+                if (($typeE eq 'QUERY' and ($now - $timeE) < $self->{'queryTimeToLive'}) or
+                    ($typeE eq 'DUNNO' and ($now - $timeE) < $self->{'dunnoTimeToLive'})) {
+                    push(@new, $entry);
+                }
+            }
+            if (@new) {
+                $self->{'researchNotes'}->{$key} = \@new;
+            } else {
+                delete($self->{'researchNotes'}->{$key});
+            }
+        }
+    } elsif ($data[0] eq 'noIdea') {
+        my(undef, $database, $subject, $direct, $propagated) = @data;
+        my($eventE, $typeE, $databaseE, $subjectE, $targetE, $directE, $visitedAliasesE, $timeE) = @$propagated;
+        # in theory, $eventE = $event, $databaseE = $database,
+        # $subjectE = $subject, $targetE depends on if this was
+        # triggered by a tell, $directE = $direct, $visitedAliasesE is
+        # opaque, and $timeE is opaque.
+        if ($typeE ne 'OLD') {
+            $self->noIdea($event, $database, $subject, $direct);
+        }
+    } else {
+        $self->SUPER::Scheduled($event, @data);
+    }
+}
+
+
+# internal helper routines
+
+sub factoidSay {
+    my $self = shift;
+    my($event, $how, $what, $direct, $target) = @_;
+    if (defined($target)) {
+        $self->targettedSay($event, "told $target", 1);
+        my $helper = $event->{'from'};
+        local $event->{'from'} = $target;
+        if ($how eq 'me') {
+            $self->directEmote($event, $what);
+        } else {
+            if (length($what)) {
+                $self->directSay($event, "$helper wanted you to know: $what");
+            }
+        }
+    } elsif ($how eq 'me') {
+        $self->emote($event, $what);
+    } else {
+        if ($event->{'channel'} eq '' or length($what) < $self->{'maxInChannel'}) {
+            $self->targettedSay($event, $what, 1);
+        } else {
+            if ($direct) {
+                $self->targettedSay($event, substr($what, 0, $self->{'maxInChannel'}) . '... (rest /msged)' , 1);
+                $self->directSay($event, $what);
+            } else {
+                $self->targettedSay($event, substr($what, 0, $self->{'maxInChannel'}) . '... (there is more; ask me in a /msg)' , 1);
+            }
+        }
+    }
+}
+
+sub targettedSay {
+    my $self = shift;
+    my($event, $message, $direct) = @_;
+    if ($direct and length($message)) {
+        if ($event->{'channel'} ne '') {
+            $message = "$event->{'from'}: $message";
+        }
+        $self->say($event, $message);
+    }
+}
+
+sub countFactoids {
+    my $self = shift;
+    # don't want to use keys() as that would load the whole database index into memory.
+    my $sum = 0;
+    while (my $factoid = each %{$factoids->{'is'}}) { $sum++; }
+    while (my $factoid = each %{$factoids->{'are'}}) { $sum++; }
+    return $sum;
+}
+
+sub allowed {
+    my $self = shift;
+    my($event, $type) = @_;
+    if ($event->{'channel'} ne '') {
+        foreach my $user (@{$self->{'autoIgnore'}}) {
+            if ($user eq $event->{'from'}) {
+                return 0;
+            }
+        }
+        foreach my $channel (@{$self->{"never$type"}}) {
+            if ($channel eq $event->{'channel'} or
+                $channel eq '*') {
+                return 0;
+            }
+        }
+        foreach my $channel (@{$self->{"auto$type"}}) {
+            if ($channel eq $event->{'channel'} or
+                $channel eq '*') {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+sub noIdea {
+    my $self = shift;
+    my($event, $database, $subject, $direct) = @_;
+    if (lc($subject) eq lc($event->{'from'})) {
+        $self->targettedSay($event, "Sorry, I've no idea who you are.", $direct);
+    } else {
+        if (not defined($database)) {
+            $database = 'might be';
+        }
+        $self->targettedSay($event, "Sorry, I've no idea what '$subject' $database.", $direct);
+    }
+}
