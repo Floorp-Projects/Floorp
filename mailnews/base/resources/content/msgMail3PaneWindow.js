@@ -165,7 +165,6 @@ function OnUnloadMessenger()
 	}
 
     saveWindowPosition();
-	messenger.OnUnload();
 }
 
 function saveWindowPosition()
