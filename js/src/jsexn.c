@@ -39,11 +39,13 @@
 /* Declaration to resolve circular reference of exn_class by Exception. */
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+JSBool
+js_exnHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
-static JSClass exn_class = {
+JSClass exn_class = {
     "Exception",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -209,20 +211,15 @@ js_ErrorFromException(JSContext *cx, jsval exn)
 /* This must be kept in synch with the exceptions array below. */
 typedef enum JSExnType {
     JSEXN_NONE = -1,
-    JSEXN_EXCEPTION,
       JSEXN_ERR,
 	JSEXN_INTERNALERR,
-	JSEXN_SYNTAXERR,
-	JSEXN_REFERENCEERR,
-	JSEXN_CALLERR,
-	  JSEXN_TARGETERR,
-	JSEXN_CONSTRUCTORERR,
 	JSEXN_CONVERSIONERR,
-	  JSEXN_TOOBJECTERR,
-	  JSEXN_TOPRIMITIVEERR,
-	  JSEXN_DEFAULTVALUEERR,
-	JSEXN_ARRAYERR,
+	JSEXN_EVALERR,
 	JSEXN_RANGEERR,
+	JSEXN_REFERENCEERR,
+	JSEXN_SYNTAXERR,
+	JSEXN_TYPEERR,
+	JSEXN_URIERR,
 	JSEXN_LIMIT
 } JSExnType;
 
@@ -232,20 +229,15 @@ struct JSExnSpec {
 };
 
 static struct JSExnSpec exceptions[] = {
-    { JSEXN_NONE,          "Exception"         },
-    { JSEXN_EXCEPTION,     "Error"             },
+    { JSEXN_NONE,          "Error"             },
     { JSEXN_ERR,           "InternalError"     },
-    { JSEXN_ERR,           "SyntaxError"       },
-    { JSEXN_ERR,           "ReferenceError"    },
-    { JSEXN_ERR,           "CallError"         },
-    { JSEXN_CALLERR,       "TargetError"       },
-    { JSEXN_ERR,           "ConstructorError"  },
     { JSEXN_ERR,           "ConversionError"   },
-    { JSEXN_CONVERSIONERR, "ToObjectError"     },
-    { JSEXN_CONVERSIONERR, "ToPrimitiveError"  },
-    { JSEXN_CONVERSIONERR, "DefaultValueError" },
-    { JSEXN_ERR,           "ArrayError"        },
+    { JSEXN_ERR,           "EvalError"         },
     { JSEXN_ERR,           "RangeError"        },
+    { JSEXN_ERR,           "ReferenceError"    },
+    { JSEXN_ERR,           "SyntaxError"       },
+    { JSEXN_ERR,           "TypeError"         },
+    { JSEXN_ERR,           "URIError"          },
     {0}
 };
 
@@ -281,6 +273,35 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     if (!JS_DefineProperty(cx, obj, "message", STRING_TO_JSVAL(message),
                            NULL, NULL, JSPROP_ENUMERATE));
+
+    return JS_TRUE;
+}
+
+/*
+*   Called by fun_hasInstance when 'obj' has exn_class, to see if
+*   'v' could be an instanceof an exception from some other context
+*   - we'll know it is if it has that special 'something'
+*/
+
+JSBool
+js_exnHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+    JSFunction *fun;
+    JSAtom *functionName;
+    jsval pval;
+
+    JSObject *obj2;
+    *bp = JS_FALSE;
+
+    fun = (JSFunction *)JS_GetPrivate(cx, obj);
+    functionName = fun->atom;
+
+    obj2 = JSVAL_TO_OBJECT(v);
+    if (!OBJ_GET_PROPERTY(cx, obj2, (jsid)functionName, &pval))
+        return JS_FALSE;
+
+    if (JSVAL_IS_INT(pval))
+        *bp = JS_TRUE;
 
     return JS_TRUE;
 }
@@ -416,6 +437,20 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
         atom = js_Atomize(cx, exceptions[i].name, strlen(exceptions[i].name), 0);
 
+        /*
+            Now add a property to this prototype that can be used to 
+            identify these kind of exceptions across multiple contexts.
+            This is a little less than satisfying, since other proto
+            chains may include objects with the same property but it'll
+            pass for now.
+        */
+        if (!JS_DefineProperty(cx, protos[i], exceptions[i].name,
+                               INT_TO_JSVAL(i),
+                               NULL, NULL,
+                               JSPROP_READONLY | JSPROP_PERMANENT))
+            return NULL;
+
+
         /* Make a constructor function for the current name. */
         fun = js_DefineFunction(cx, obj, atom, Exception, 1, 0);
         if (!fun)
@@ -425,8 +460,9 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         fun->clasp = &exn_class;
 
         /* Make the prototype and constructor links. */
-        if (!js_SetClassPrototype(cx, fun->object, protos[i],
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!js_SetClassPrototype(cx, fun->object, 
+                              protos[i],
+                              JSPROP_READONLY | JSPROP_PERMANENT))
             return NULL;
 
         /* proto bootstrap bit from JS_InitClass omitted. */

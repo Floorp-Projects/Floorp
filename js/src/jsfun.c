@@ -40,6 +40,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsexn.h"
 
 enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */
@@ -1110,8 +1111,25 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 			  &pval)) {
 	return JS_FALSE;
     }
-    if (!JSVAL_IS_PRIMITIVE(pval))
-	return js_IsDelegate(cx, JSVAL_TO_OBJECT(pval), v, bp);
+    if (!JSVAL_IS_PRIMITIVE(pval)) {
+        JSObject *protoObj = JSVAL_TO_OBJECT(pval);
+        if (!js_IsDelegate(cx, protoObj, v, bp))
+            return JS_FALSE;
+
+#if JS_HAS_ERROR_EXCEPTIONS
+/*
+    For exceptions, we want cross-context exceptions to be equal, i.e. a 
+    SyntaxError thrown from one context (another window) will still be a 
+    'instanceof SyntaxError' in another context (window). Here, if we're 
+    asking if an object is an instance of an exception, make a special
+    call into js_exnHasInstance.
+*/
+        if (*bp == JS_TRUE) return JS_TRUE;
+        if (OBJ_GET_CLASS(cx, protoObj) == &exn_class)
+            return js_exnHasInstance(cx, obj, v, bp);
+#endif /* JS_HAS_ERROR_EXCEPTIONS */
+	return JS_TRUE;
+    }
 
     /*
      * Throw a runtime error if instanceof is called on a function
