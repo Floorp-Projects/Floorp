@@ -19,7 +19,37 @@ DEPTH = ../../..
 
 include $(DEPTH)/config/config.mk
 
+ifeq ($(USE_NGLAYOUT_GTK),1)
+
+	TOOLKIT_GFX_LIB     = -lgfxgtk
+	TOOLKIT_WIDGET_LIB  = -lwidgetgtk
+	TOOLKIT_BASE_LIB    = -lgmbasegtk
+
+	TOOLKIT_CFLAGS = \
+		-DWIDGET_DLL=\"libwidgetgtk.so\" \
+		-DGFXWIN_DLL=\"libgfxgtk.so\"
+
+	TOOLKIT_CPPSRCS = 
+
+	TOOLKIT_INCLUDES = $(shell gtk-config --cflags)
+
+else
+
+	TOOLKIT_GFX_LIB        = -lgfxmotif
+	TOOLKIT_WIDGET_LIB     = -lwidgetmotif
+	TOOLKIT_BASE_LIB = -lgmbasemotif
+
+	TOOLKIT_CFLAGS = \
+		-DWIDGET_DLL=\"libwidgetmotif.so\" \
+		-DGFXWIN_DLL=\"libgfxmotif.so\"
+
+	TOOLKIT_CPPSRCS = 
+
+endif
+
+
 CPPSRCS = \
+	$(TOOLKIT_CPPSRCS) \
 	nsBrowserMain.cpp \
 	nsBrowserWindow.cpp \
 	nsSetupRegistry.cpp \
@@ -29,7 +59,7 @@ CPPSRCS = \
 # This file is still a Windows-only file:  -mcafee
 # JSConsole.cpp
 
-PROGRAM = xpviewer
+PROGS = $(OBJDIR)/xpviewer
 
 TARGETS = $(PROGS)
 
@@ -41,6 +71,10 @@ INCLUDES = \
 	-I$(PUBLIC)/raptor \
 	-I$(PUBLIC)/xpcom \
 	$(NULL)
+
+ifdef MOZ_OJI
+	JSJ_LIB = -ljsj
+endif
 
 LDFLAGS += \
 	-L$(DIST)/bin \
@@ -62,6 +96,7 @@ LDFLAGS += \
 	$(DIST)/lib/libjsdombase_s.a \
 	$(DIST)/lib/libjsdomhtml_s.a \
 	$(DIST)/lib/libjsdomcore_s.a \
+	$(JSJ_LIB) \
 	-lhttpurl \
 	-labouturl \
 	-lmimetype \
@@ -83,20 +118,55 @@ LDFLAGS += \
 	-lplc21 \
 	-lnspr21 \
 	-lplds21 \
-	$(NULL)
-
-# Motif, use config/mkdetect here!  Hacking Linux for now. -mcafee
-LDFLAGS += \
-	-lwidgetmotif \
-	-lgmbasemotif \
-	-L/usr/X11R6/lib -lXm -lXp -lXt -lXext -lX11 \
+	$(TOOLKIT_WIDGET_LIB) \
+	$(TOOLKIT_BASE_LIB) \
 	$(NULL)
 
 include $(DEPTH)/config/rules.mk
 
-# This wasn't being used, due to the $(PROGRAM) + rules.mk stuff.
-# Commenting-out for now. -mcafee
-#
-#$(PROGS): $(OBJS)
-#	@$(MAKE_OBJDIR)
-#	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lXext -lX11
+# Reasonable? defaults
+TOOLKIT_LIB_PATH = -L/usr/X11R6/lib
+TOOLKIT_LDFLAGS = -lXm -lXt -lXext -lX11
+
+ifeq ($(OS_ARCH),Linux)
+	TOOLKIT_LIB_PATH    = -L/usr/X11R6/lib
+	TOOLKIT_LDFLAGS     = -lXm -lXp -lXt -lXext -lX11 -lSM -lICE
+	EXTRA_PRE_LDFLAGS   = -rdynamic
+	EXTRA_POST_LDFLAGS  =
+	POST_LINK_COMMAND   = true
+endif
+
+ifeq ($(OS_ARCH),IRIX)
+	TOOLKIT_LIB_PATH    = -L/usr/openwin/lib -L/usr/dt/lib
+	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
+	EXTRA_PRE_LDFLAGS   = -woff 84,85
+	EXTRA_POST_LDFLAGS  =
+	POST_LINK_COMMAND   = true
+endif
+
+ifeq ($(OS_ARCH),SunOS)
+	TOOLKIT_LIB_PATH    = -L/usr/openwin/lib -L/usr/dt/lib
+	TOOLKIT_LDFLAGS     = -lXm -lXt -lXext -lX11
+	EXTRA_PRE_LDFLAGS   =
+	EXTRA_POST_LDFLAGS  =
+	POST_LINK_COMMAND   = true
+endif
+
+ifeq ($(OS_ARCH),HP-UX)
+	TOOLKIT_LIB_PATH    = -L/usr/lib/X11R5 -L/usr/lib/Motif1.2
+	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
+	EXTRA_PRE_LDFLAGS   =
+	EXTRA_POST_LDFLAGS  = -lpthread
+	POST_LINK_COMMAND   = chatr +s enable
+endif
+
+
+$(PROGS): $(OBJS)
+	@$(MAKE_OBJDIR)
+	$(CCC) $(EXTRA_PRE_LDFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(TOOLKIT_LIB_PATH) $(TOOLKIT_LDFLAGS) $(EXTRA_POST_LDFLAGS)
+	$(POST_LINK_COMMAND) $@
+
+export::
+
+install:: $(TARGETS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
