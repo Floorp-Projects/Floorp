@@ -99,14 +99,32 @@ nsCSSProps::ReleaseTable(void)
   }
 }
 
+struct CSSPropertyAlias {
+  const char name[13];
+  nsCSSProperty id;
+};
+
+static const CSSPropertyAlias gAliases[] = {
+  { "-moz-opacity", eCSSProperty_opacity }
+};
+
 nsCSSProperty 
 nsCSSProps::LookupProperty(const nsACString& aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
-  if (gPropertyTable) {
-    return nsCSSProperty(gPropertyTable->Lookup(aProperty));
-  }  
-  return eCSSProperty_UNKNOWN;
+
+  nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  if (res == eCSSProperty_UNKNOWN) {
+    const nsCString& prop = PromiseFlatCString(aProperty);
+    for (const CSSPropertyAlias *alias = gAliases,
+                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
+         alias < alias_end; ++alias)
+      if (nsCRT::strcasecmp(prop.get(), alias->name) == 0) {
+        res = alias->id;
+        break;
+      }
+  }
+  return res;
 }
 
 nsCSSProperty 
@@ -115,10 +133,18 @@ nsCSSProps::LookupProperty(const nsAString& aProperty) {
   // LookupProperty(nsACString&).  The table will do its own
   // converting and avoid a PromiseFlatCString() call.
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
-  if (gPropertyTable) {
-    return nsCSSProperty(gPropertyTable->Lookup(aProperty));
-  }  
-  return eCSSProperty_UNKNOWN;
+  nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  if (res == eCSSProperty_UNKNOWN) {
+    NS_ConvertUTF16toUTF8 prop(aProperty);
+    for (const CSSPropertyAlias *alias = gAliases,
+                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
+         alias < alias_end; ++alias)
+      if (nsCRT::strcasecmp(prop.get(), alias->name) == 0) {
+        res = alias->id;
+        break;
+      }
+  }
+  return res;
 }
 
 const nsAFlatCString& 

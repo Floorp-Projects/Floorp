@@ -345,6 +345,10 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 #define CSS_PROP_SHORTHAND(name_, id_, method_) \
   CSS_PROP(name_, id_, method_, , , , ,)
 #include "nsCSSPropList.h"
+
+// Aliases
+CSS_PROP(opacity, X, MozOpacity, X, X, X, X, X)
+
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_NOTIMPLEMENTED
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
