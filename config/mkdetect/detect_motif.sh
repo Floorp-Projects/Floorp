@@ -577,7 +577,7 @@ for d in $MOTIF_SEARCH_PATH
 do
 	for l in $MOTIF_DYNAMIC_SEARCH_PATH
 	do
-		if [ -x $d/lib/$l ]
+		if [ -r $d/lib/$l ]
 		then
 			MOTIF_DYNAMIC_DIR=$d/lib
 
