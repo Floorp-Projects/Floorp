@@ -71,11 +71,7 @@
 
 #include "nsITextContent.h"
 #include "nsIDocumentEncoder.h"
-//#include "nsIXIFConverter.h"
 #include "nsIHTMLContentSink.h"
-//#include "nsHTMLContentSinkStream.h"
-//#include "nsHTMLToTXTSinkStream.h"
-//#include "nsXIFDTD.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsFileSpec.h"
@@ -116,6 +112,9 @@
 static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
 static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
@@ -629,6 +628,7 @@ nsDocument::nsDocument()
   mFileSpec = nsnull;
   mPrincipal = nsnull;
   mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
+  mDTD = 0;
   Init();/* XXX */
 }
 
@@ -709,6 +709,8 @@ nsDocument::~nsDocument()
   }
   NS_IF_RELEASE(mLineBreaker);
   NS_IF_RELEASE(mWordBreaker);
+
+  NS_IF_RELEASE(mDTD);
   
 	delete mFileSpec;
 	
@@ -3528,71 +3530,6 @@ nsDocument::CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection)
   return result;
 }
 
-static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-#if 0
-nsresult
-nsDocument::OutputDocumentAs(nsIOutputStream* aStream,
-                             nsIDOMSelection* selection,
-                             EOutputFormat aOutputFormat,
-                             const nsString& aCharset,
-                             PRUint32 aFlags)
-{
-  nsresult  rv = NS_OK;
-  
-  nsAutoString charsetStr; charsetStr.Assign(aCharset);
-  if (charsetStr.Length() == 0)
-  {
-	  rv = GetDocumentCharacterSet(charsetStr);
-	  if(NS_FAILED(rv)) {
-	     charsetStr.AssignWithConversion("ISO-8859-1"); 
-	  }
-  }
-
-  nsCOMPtr<nsIParser>  parser;
-  rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                             nsnull, 
-                                             kCParserIID, 
-                                             getter_AddRefs(parser));
-  if (NS_SUCCEEDED(rv))
-  {
- 	  nsString buffer;
-	  rv=CreateXIF(buffer, selection);			// if selection is null, ignores the selection
-
-    if(NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIHTMLContentSink> sink;
-
-      switch (aOutputFormat)
-      {
-      case eOutputText:
-        rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
-        break;
-      case eOutputHTML:
-        rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
-        break;
-      default:
-        rv = NS_ERROR_INVALID_ARG;
-      }
-
-      if (NS_SUCCEEDED(rv) && sink)
-      {
-        parser->SetContentSink(sink);
-        parser->SetDocumentCharset(charsetStr, kCharsetFromPreviousLoading);
-        nsCOMPtr<nsIDTD>  dtd;
-        rv = NS_NewXIFDTD(getter_AddRefs(dtd));
-        if (NS_SUCCEEDED(rv) && dtd)
-        {
-          parser->RegisterDTD(dtd);
-          parser->Parse(buffer, 0, NS_ConvertToString("text/xif"), PR_FALSE, PR_TRUE);           
-        }
-      }
-    }
-  }
-  return rv;
-}
-#endif
-
 NS_IMETHODIMP
 nsDocument::InitDiskDocument(nsFileSpec* aFileSpec)
 {
@@ -3886,6 +3823,46 @@ nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
     NS_IF_RELEASE(parent);
   }
   return result;
+}
+
+NS_IMETHODIMP    
+nsDocument::GetDTD(nsIDTD** aDTD) const
+{
+  if (!aDTD)
+    return NS_ERROR_INVALID_ARG;
+  if (!mDTD)
+  {
+    nsCOMPtr<nsIDOMDocumentType> doctype;
+    // Wish for mutable:
+    nsresult rv = NS_CONST_CAST(nsDocument* , this)->GetDoctype(getter_AddRefs(doctype));
+    if (NS_FAILED(rv)) return rv;
+    if (!doctype) return NS_ERROR_FAILURE;
+    nsAutoString doctypename;
+    rv = doctype->GetName(doctypename);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIParser> parser;
+    rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                            nsnull, 
+                                            kCParserIID, 
+                                            (void **)&parser);
+    if (NS_FAILED(rv)) return rv;
+    if (!parser) return NS_ERROR_FAILURE;
+
+    nsIDTD* dtd = 0;
+    rv = parser->CreateCompatibleDTD(&dtd, &doctypename, eViewNormal,
+                                     0, eDTDMode_unknown);
+    if (NS_FAILED(rv)) return rv;
+    if (!dtd) return NS_ERROR_FAILURE;
+
+    NS_ADDREF(dtd);
+    // Wish again for mutable:
+    NS_CONST_CAST(nsDocument* , this)->mDTD = dtd;
+  }
+
+  NS_ADDREF(mDTD);
+  *aDTD = mDTD;
+  return NS_OK;
 }
 
 
