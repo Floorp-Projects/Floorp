@@ -1106,12 +1106,12 @@ sub MakeResourceAliases()
 	{
 		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
 
-		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:composer:content:default:", 0);
-		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:composer:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:skin:default:", 0);
 
-		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:dialogs:content:default:", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				"$editor_chrome_dir:dialogs:skin:default:", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",		"$editor_chrome_dir:dialogs:locale:en-US:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				    "$editor_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",		"$editor_chrome_dir:locale:en-US:", 0);
 	}
 
 	# if ($main::build{mailnews})
