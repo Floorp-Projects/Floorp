@@ -48,16 +48,16 @@
 #include "xconst.h"
 #include "genname.h"
 #include "secasn1.h"
-
+#include "secerr.h"
 
 
 static const SEC_ASN1Template CERTSubjectKeyIDTemplate[] = {
-{ SEC_ASN1_OCTET_STRING }
+    { SEC_ASN1_OCTET_STRING }
 };
 
 
 static const SEC_ASN1Template CERTIA5TypeTemplate[] = {
-{ SEC_ASN1_IA5_STRING }
+    { SEC_ASN1_IA5_STRING }
 };
 
 
@@ -176,7 +176,11 @@ CERT_DecodeAltNameExtension(PRArenaPool *arena, SECItem *EncodedAltName)
     if (rv == SECFailure) {
 	goto loser;
     }
-    return cert_DecodeGeneralNames(arena, encodedContext.encodedGenName);
+    if (encodedContext.encodedGenName)
+	return cert_DecodeGeneralNames(arena, encodedContext.encodedGenName);
+    /* Extension contained an empty GeneralNames sequence */
+    /* Treat as extension not found */
+    PORT_SetError(SEC_ERROR_EXTENSION_NOT_FOUND);
 loser:
     return NULL;
 }
