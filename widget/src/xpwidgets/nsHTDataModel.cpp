@@ -113,7 +113,7 @@ void nsHTDataModel::AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel)
 			for (PRInt32 i = 0; i < numChildren; i++)
 			{
 				nsIContent* child = nsnull;
-				pContent->ChildAt(i, child);
+				pChildrenNode->ChildAt(i, child);
 				if (child)
 				{
 					AddNodesToArray(child, indentLevel);
