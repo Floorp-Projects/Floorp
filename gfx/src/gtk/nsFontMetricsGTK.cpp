@@ -620,9 +620,9 @@ static nsFontPropertyName gWeightNames[] =
 static char*
 atomToName(nsIAtom* aAtom)
 {
-  const PRUnichar *namePRU;
-  aAtom->GetUnicode(&namePRU);
-  return ToNewUTF8String(nsDependentString(namePRU));
+  const char *namePRU;
+  aAtom->GetUTF8String(&namePRU);
+  return ToNewCString(nsDependentCString(namePRU));
 }
 
 static PRUint16* gUserDefinedCCMap = nsnull;
@@ -1385,9 +1385,9 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       name.Append("variable");
     }
     name.Append(char('.'));
-    const PRUnichar* langGroup = nsnull;
-    mLangGroup->GetUnicode(&langGroup);
-    name.AppendWithConversion(langGroup);
+    const char* langGroup = nsnull;
+    mLangGroup->GetUTF8String(&langGroup);
+    name.Append(langGroup);
     PRInt32 minimum = 0;
     res = gPref->GetIntPref(name.get(), &minimum);
     if (NS_FAILED(res)) {
@@ -6102,9 +6102,9 @@ nsFontMetricsGTK::FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUint32 aChar)
     // check user set pref
     nsCAutoString pref = prefix;
     pref.Append(char('.'));
-    const PRUnichar* langGroup = nsnull;
-    aLangGroup->GetUnicode(&langGroup);
-    pref.AppendWithConversion(langGroup);
+    const char* langGroup = nsnull;
+    aLangGroup->GetUTF8String(&langGroup);
+    pref.Append(langGroup);
     nsXPIDLCString value;
     gPref->CopyCharPref(pref.get(), getter_Copies(value));
     nsCAutoString str;
