@@ -135,19 +135,13 @@ PRUnichar nsCompressedMap::Lookup(
 
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 
-PRBool nsCaseConversionImp2::gInit      = PR_FALSE;
+nsrefcnt nsCaseConversionImp2::gInit      = 0;
 
 NS_IMPL_ISUPPORTS(nsCaseConversionImp2, kCaseConversionIID);
 
 static nsCompressedMap *gUpperMap = nsnull;
 static nsCompressedMap *gLowerMap = nsnull;
 
-void nsCaseConversionImp2::Init()
-{
-  gUpperMap = new nsCompressedMap(&gToUpper[0], gToUpperItems);
-  gLowerMap = new nsCompressedMap(&gToLower[0], gToLowerItems);
-  gInit = PR_TRUE;
-}
 nsresult nsCaseConversionImp2::ToUpper(
   PRUnichar aChar, PRUnichar* aReturn
 )
@@ -320,13 +314,21 @@ nsresult nsCaseConversionImp2::ToTitle(
 
 nsCaseConversionImp2::nsCaseConversionImp2()
 {
-    if(! gInit)
-	Init();	
-    NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
+  if (gInit++ == 0) {
+    gUpperMap = new nsCompressedMap(&gToUpper[0], gToUpperItems);
+    gLowerMap = new nsCompressedMap(&gToLower[0], gToLowerItems);
+  }
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsCaseConversionImp2::~nsCaseConversionImp2()
 {
-    PR_AtomicDecrement(&g_InstanceCount);
+  PR_AtomicDecrement(&g_InstanceCount);
+  if (--gInit == 0) {
+    delete gUpperMap;
+    gUpperMap = nsnull;
+    delete gLowerMap;
+    gLowerMap = nsnull;
+  }
 }
