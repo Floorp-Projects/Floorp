@@ -1692,33 +1692,27 @@ nsSocketTransport::OpenOutputStream(PRUint32 aOffset,
 NS_IMETHODIMP
 nsSocketTransport::IsAlive (PRUint32 seconds, PRBool *alive)
 {
-    *alive = PR_TRUE;
+    *alive = PR_FALSE;
 
     // Enter the socket transport lock...
     nsAutoMonitor mon(mMonitor);
 
     if (mSocketFD) {
         if (mLastActiveTime != PR_INTERVAL_NO_WAIT) {
-            PRUint32  now = PR_IntervalToSeconds (PR_IntervalNow ());
-            PRUint32 last = PR_IntervalToSeconds ( mLastActiveTime );
+            PRUint32  now = PR_IntervalToSeconds(PR_IntervalNow());
+            PRUint32 last = PR_IntervalToSeconds(mLastActiveTime);
             PRUint32 diff = now - last;
 
-            if (seconds && diff > seconds || mIdleTimeoutInSeconds && diff > mIdleTimeoutInSeconds)
-                *alive = PR_FALSE;
+            if ((seconds && diff > seconds) || (mIdleTimeoutInSeconds && diff > mIdleTimeoutInSeconds))
+                return NS_OK;
         }
 
-        static char c;
-        PRInt32 rval = PR_Read (mSocketFD, &c, 0);
-        
-        if (rval < 0) {
-            PRErrorCode code = PR_GetError ();
+        char c;
+        PRInt32 rval = PR_Recv(mSocketFD, &c, 1, PR_MSG_PEEK, 0);
 
-            if (code != PR_WOULD_BLOCK_ERROR)
-                *alive = PR_FALSE;
-        }
+        if ((rval > 0) || (rval < 0 && PR_GetError() == PR_WOULD_BLOCK_ERROR))
+            *alive = PR_TRUE;
     }
-    else
-        *alive = PR_FALSE;
 
     return NS_OK;
 }
