@@ -97,6 +97,12 @@ PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 bufle
       case PR_SI_HOSTNAME:
         if (PR_FAILURE == _PR_MD_GETHOSTNAME(buf, (PRUintn)buflen))
             return PR_FAILURE;
+        /*
+         * On some platforms a system does not have a hostname and
+         * its IP address is returned instead.   The following code
+         * should be skipped on those platforms.
+         */
+#ifndef _PR_GET_HOST_ADDR_AS_NAME
         /* Return the unqualified hostname */
             while (buf[len] && (len < buflen)) {
                 if (buf[len] == '.') {
@@ -105,6 +111,7 @@ PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 bufle
                 }
                 len += 1;
             }    
+#endif
          break;
 
       case PR_SI_SYSNAME:
