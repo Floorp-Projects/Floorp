@@ -86,7 +86,6 @@
 #define XPCOM_DLL    "xpcom32.dll"
 #define LOCAL_DLL    "msglocal.dll"
 #define RDF_DLL      "rdf.dll"
-#define MAILNEWS_DLL "mailnews.dll"
 #define PREF_DLL	 "xppref32.dll"
 #else
 #ifdef XP_MAC
@@ -94,9 +93,9 @@
 #else
 #define NETLIB_DLL   "libnetlib.so"
 #define XPCOM_DLL    "libxpcom.so"
-#define LOCAL_DLL	 "msglocal.so"
-#define MAILNEWS_DLL "mailnewsbase.so"
-#define PREF_DLL	 "pref.so"   // mscott: is this right?
+#define LOCAL_DLL	 "libmsglocal.so"
+#define RDF_DLL      "librdf.so"
+#define PREF_DLL	 "libpref.so"  
 #endif
 #endif
 
