@@ -500,8 +500,8 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY tableDeleteMenu.label "Delete">
 <!ENTITY tabledeletemenu.accesskey "d">
 
-<!ENTITY tableFixup.label "Fix Table Layout">
-<!ENTITY tablefixup.accesskey "f">
+<!ENTITY tableFix.label "Fix Table Layout">
+<!ENTITY tablefix.accesskey "f">
 <!-- text for "Join Cells" is in editor.properties 
      ("JoinSelectedCells" and "JoinCellToRight")
      the access key must exist in both of those strings

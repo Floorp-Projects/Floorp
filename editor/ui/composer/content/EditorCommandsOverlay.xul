@@ -27,6 +27,34 @@
 <overlay id="editorCommandsOverlay"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <!-- commands updated when the table menu gets created -->
+  <commandset id="composerTableMenuItems"
+					commandupdater="true"
+					events="create"
+					oncommandupdate="goUpdateTableMenuItems(this)"
+  >
+    <command id="cmd_SelectTable"         oncommand="goDoCommand('cmd_SelectTable')"/>
+    <command id="cmd_SelectRow"           oncommand="goDoCommand('cmd_SelectRow')"/>
+    <command id="cmd_SelectColumn"        oncommand="goDoCommand('cmd_SelectColumn')"/>
+    <command id="cmd_SelectCell"          oncommand="goDoCommand('cmd_SelectCell')"/>
+    <command id="cmd_SelectAllCells"      oncommand="goDoCommand('cmd_SelectAllCells')"/>
+    <command id="cmd_InsertTable"         oncommand="goDoCommand('cmd_InsertTable')"/>
+    <command id="cmd_InsertRowAbove"      oncommand="goDoCommand('cmd_InsertRowAbove')"/>
+    <command id="cmd_InsertRowBelow"      oncommand="goDoCommand('cmd_InsertRowBelow')"/>
+    <command id="cmd_InsertColumnBefore"  oncommand="goDoCommand('cmd_InsertColumnBefore')"/>
+    <command id="cmd_InsertColumnAfter"   oncommand="goDoCommand('cmd_InsertColumnAfter')"/>
+    <command id="cmd_InsertCellBefore"    oncommand="goDoCommand('cmd_InsertCellBefore')"/>
+    <command id="cmd_InsertCellAfter"     oncommand="goDoCommand('cmd_InsertCellAfter')"/>
+    <command id="cmd_DeleteTable"         oncommand="goDoCommand('cmd_DeleteTable')"/>
+    <command id="cmd_DeleteRow"           oncommand="goDoCommand('cmd_DeleteRow')"/>
+    <command id="cmd_DeleteColumn"        oncommand="goDoCommand('cmd_DeleteColumn')"/>
+    <command id="cmd_DeleteCell"          oncommand="goDoCommand('cmd_DeleteCell')"/>
+    <command id="cmd_DeleteCellContents"  oncommand="goDoCommand('cmd_DeleteCellContents')"/>
+    <command id="cmd_NormalizeTable"      oncommand="goDoCommand('cmd_NormalizeTable')"/>
+    <command id="cmd_tableJoinCells"      oncommand="goDoCommand('cmd_tableJoinCells')"/>
+    <command id="cmd_tableSplitCell"      oncommand="goDoCommand('cmd_tableSplitCell')"/>
+  </commandset>
+
   <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
               accesskey="&formatremovelinks.accesskey;"
               oncommand="EditorRemoveLinks()"/>
@@ -44,41 +72,43 @@
       <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
               accesskey="&tableselectmenu.accesskey;">
         <menupopup>
-            <menuitem id="menu_SelectTable"    value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorSelectTable()"/>
-            <menuitem id="menu_SelectRow"      value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      oncommand="EditorSelectTableRow()"/>
-            <menuitem id="menu_SelectColumn"   value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   oncommand="EditorSelectTableColumn()"/>
-            <menuitem id="menu_SelectCell"     value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     oncommand="EditorSelectTableCell()"/>
-            <menuitem id="menu_SelectAllCells" value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" oncommand="EditorSelectAllTableCells()"/>
+            <menuitem id="menu_SelectTable"    value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    observes="cmd_SelectTable"    />
+            <menuitem id="menu_SelectRow"      value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      observes="cmd_SelectRow"      />
+            <menuitem id="menu_SelectColumn"   value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   observes="cmd_SelectColumn"   />
+            <menuitem id="menu_SelectCell"     value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     observes="cmd_SelectCell"     />
+            <menuitem id="menu_SelectAllCells" value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" observes="cmd_SelectAllCells" />
         </menupopup>
       </menu>
       <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
         <menupopup>
-          <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
+          <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"        observes="cmd_InsertTable"/>
           <menuseparator />
-          <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
-          <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
+          <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"          observes="cmd_InsertRowAbove"/>
+          <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"     observes="cmd_InsertRowBelow"/>
           <menuseparator />
-          <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"      oncommand="EditorInsertTableColumn(false)"/>
-          <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;" oncommand="EditorInsertTableColumn(true)"/>
+          <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"       observes="cmd_InsertColumnBefore"/>
+          <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;"  observes="cmd_InsertColumnAfter"/>
           <menuseparator />
-          <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"        oncommand="EditorInsertTableCell(false)"/>
-          <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"   oncommand="EditorInsertTableCell(true)"/>
+          <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"         observes="cmd_InsertCellBefore"/>
+          <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"    observes="cmd_InsertCellAfter"/>
         </menupopup>
       </menu>
       <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
         <menupopup>
-            <menuitem id="menu_DeleteTable"        value="&tableTable.label;"        accesskey="&tabletable.accesskey;"           oncommand="EditorDeleteTable()"/>
-            <menuitem id="menu_DeleteRow"          value="&tableRow.label;"          accesskey="&tablerow.accesskey;"             oncommand="EditorDeleteTableRow(1)"/>
-            <menuitem id="menu_DeleteColumn"       value="&tableColumn.label;"       accesskey="&tablecolumn.accesskey;"          oncommand="EditorDeleteTableColumn(1)"/>
-            <menuitem id="menu_DeleteCell"         value="&tableCell.label;"         accesskey="&tablecell.accesskey;"            oncommand="EditorDeleteTableCell(1)"/>
-            <menuitem id="menu_DeleteCellContents" value="&tableCellContents.label;" accesskey="&tablecellcontents.accesskey;"    oncommand="EditorDeleteTableCellContents()"/>
+          <menuitem                               value="&tableTable.label;"        accesskey="&tabletable.accesskey;"           observes="cmd_DeleteTable"/>
+          <menuitem                               value="&tableRow.label;"          accesskey="&tablerow.accesskey;"             observes="cmd_DeleteRow"/>
+          <menuitem                               value="&tableColumn.label;"       accesskey="&tablecolumn.accesskey;"          observes="cmd_DeleteColumn"/>
+          <menuitem id="menu_DeleteCell"          value="&tableCell.label;"         accesskey="&tablecell.accesskey;"            observes="cmd_DeleteCell"/>
+          <menuitem id="menu_DeleteCellContents"  value="&tableCellContents.label;" accesskey="&tablecellcontents.accesskey;"    observes="cmd_DeleteCellContents"/>
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem id="tableNormalizeTable" accesskey="&tablefixup.accesskey;"     oncommand="EditorNormalizeTable()" value="&tableFixup.label;"      />
-      <menuitem id="tableJoinCells"      accesskey="&tablejoincells.accesskey;" oncommand="EditorJoinTableCells()"/><!-- menu text set in InitTableMenu -->
-      <menuitem id="tableSlitCell"       accesskey="&tablesplitcell.accesskey;" oncommand="EditorSplitTableCell()" value="&tableSplitCell.label;"  />
-      <menuitem id="tableProperties"     accesskey="&properties.accesskey;"     observes="cmd_editTable"           value="&tableProperties.label;" />
+      <menuitem id="menu_NormalizeTable"  value="&tableFix.label;"        accesskey="&tablefix.accesskey;"       observes="cmd_NormalizeTable"/>
+      <!-- menu value is set in InitTableMenu -->
+      <menuitem id="menu_tableJoinCells"                                  accesskey="&tablejoincells.accesskey;" observes="cmd_tableJoinCells"/>
+      <menuitem id="menu_tableSlitCell"   value="&tableSplitCell.label;"  accesskey="&tablesplitcell.accesskey;" observes="cmd_tableSplitCell"/>
+      <!-- this is shared with Format Menu -->
+      <menuitem id="menu_tableProperties" value="&tableProperties.label;" accesskey="&properties.accesskey;"     observes="cmd_editTable"/>
     </menupopup>
   </menu>
 

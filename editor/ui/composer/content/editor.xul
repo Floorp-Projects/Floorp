@@ -68,6 +68,10 @@
     <commandset id="composerEditMenuItems"/>
     <commandset id="composerSaveMenuItems"/>    
     <commandset id="composerStyleMenuItems"/>
+    <!-- Note that some commandsets (e.g.,composerTableMenuItems) are not
+         included because they update in menu create methods only
+         But if any command is placed on a toolbar, they should be included here
+     --> 
   </commands>
 
   <!-- Use this when we abandon the default startup page -->
@@ -161,7 +165,7 @@
       <observes element="Editor:Throbber" attribute="busy"/>
     </button>
   </toolbar>
-  <toolbar id="FormatToolbar" class="chromeclass-toolbar" persist="collapsed">
+  <toolbar id="FormatToolbar" persist="collapsed">
     <!-- We need this else menulists get stretched -->
     <box autostretch="never" flex="1">
       <!-- from editorOverlay -->
@@ -213,7 +217,7 @@
       <button id="SourceModeButton"/>
       <button id="PreviewModeButton"/>
       <spring flex="1"/>
-      <button id="ToggleEditModeType"/>
+      <image id="ToggleEditModeType"/>
     </toolbar>
 
     <!-- Some of this is from globarOverlay.xul -->

@@ -45,26 +45,31 @@ function Startup()
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
-  // GET EACH CONTROL -- E.G.:
-  dialog.TitleInput = document.getElementById("TitleInput");
-  dialog.charsetTree      = document.getElementById('CharsetTree'); 
-  //dialog.charsetRoot  = document.getElementById('CharsetRoot'); 
+  dialog.TitleInput    = document.getElementById("TitleInput");
+  dialog.charsetTree   = document.getElementById('CharsetTree'); 
+  //dialog.charsetRoot = document.getElementById('CharsetRoot'); 
 
- contenttypeElement = GetHTTPEquivMetaElement("content-type");
- if(! contenttypeElement )
- {
+  contenttypeElement = GetHTTPEquivMetaElement("content-type");
+  if(! contenttypeElement )
+  {
     contenttypeElement = CreateHTTPEquivMetaElement("content-type");
     if( ! contenttypeElement )
       window.close();
     insertNewContentType = true;
- }
+  }
 
   InitDialog();
+
+  // Use the same text as the messagebox for getting title by regular "Save"
+  document.getElementById("EnterTitleLabel").setAttribute("value",GetString("NeedDocTitle"));
+  // This is an <HTML> element so it wraps -- append a child textnode
+  var helpTextParent = document.getElementById("TitleHelp");
+  var helpText = document.createTextNode(GetString("DocTitleHelp"));
+  if (helpTextParent)
+    helpTextParent.appendChild(helpText);
   
   // SET FOCUS TO FIRST CONTROL
-  //dialog.editBox.focus();
-  //dialog.TitleInput.focus();
-  dialog.charsetTree.focus();
+  dialog.TitleInput.focus();
   LoadAvailableCharSets();
   initDone = true;
 }
@@ -93,6 +98,7 @@ function onOK()
  }
  return false; 
 }
+
 function LoadAvailableCharSets()
 {
   try {
@@ -182,6 +188,7 @@ function LoadAvailableCharSets()
     }
   } // if
 }
+
 function SelectCharset()
 {
   if(initDone) {
@@ -196,129 +203,14 @@ function SelectCharset()
     }
   }
 }
+
 function ValidateData()
 {
   title=dialog.TitleInput.value.trimString();
   return true;
 }
+
 function TitleChanged()
 {
   titleWasEdited = true; 
-}
-// copy from EdPageProps.js
-function GetMetaElement(name)
-{
-  if (name)
-  {
-    name = name.toLowerCase();
-    if (name != "")
-    {
-      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
-      if (metaNodes && metaNodes.length > 0)
-      {
-        for (var i = 0; i < metaNodes.length; i++)
-        {
-          var metaNode = metaNodes.item(i);
-          if (metaNode && metaNode.getAttribute("name") == name)
-            return metaNode;
-        }
-      }
-    }
-  }
-  return null;
-}
-function GetHTTPEquivMetaElement(name)
-{
-  if (name)
-  {
-    name = name.toLowerCase();
-    if (name != "")
-    {
-      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
-      if (metaNodes && metaNodes.length > 0)
-      {
-        for (var i = 0; i < metaNodes.length; i++)
-        {
-          var metaNode = metaNodes.item(i);
-          if (metaNode && metaNode.getAttribute("http-equiv") == name)
-            return metaNode;
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function CreateMetaElement(name)
-{
-  metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
-    metaElement.setAttribute("name", name);
-  else
-    dump("Failed to create metaElement!\n");
-  
-  return metaElement;
-}
-function CreateHTTPEquivMetaElement(name)
-{
-  metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
-    metaElement.setAttribute("http-equiv", name);
-  else
-    dump("Failed to create httpequivMetaElement!\n");
-  
-  return metaElement;
-}
-
-function CreateHTTPEquivElement(name)
-{
-  metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
-    metaElement.setAttribute("http-equiv", name);
-  else
-    dump("Failed to create metaElement for http-equiv!\n");
-  
-  return metaElement;
-}
-
-// Change "content" attribute on a META element,
-//   or delete entire element it if content is empty
-// This uses undoable editor transactions 
-function SetMetaElementContent(metaElement, content, insertNew)
-{
-  if (metaElement)
-  {
-    if(!content || content == "")
-    {
-      if (!insertNew)
-        editorShell.DeleteElement(metaElement);
-    }
-    else
-    {
-      if (insertNew)
-      {
-        // Don't need undo for set attribute, just for InsertElement
-        metaElement.setAttribute("content", content);
-        AppendHeadElement(metaElement);
-      }
-      else
-        editorShell.SetAttribute(metaElement, "content", content);
-    }
-  }
-}
-
-function GetHeadElement()
-{
-  var headList = editorShell.editorDocument.getElementsByTagName("head");
-  if (headList)
-    return headList.item(0);
-  
-  return null;
-}
-
-function AppendHeadElement(element)
-{
-  var head = GetHeadElement();
-  if (head)
-    head.appendChild(element);
 }
