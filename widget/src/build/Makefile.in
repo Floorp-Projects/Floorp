@@ -34,11 +34,8 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 
 INCLUDES += $(FE_X_CFLAGS)
 
-CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp
-
-ifneq ($(USE_NGLAYOUT_GTK),1)
-CPPSRCS+=nsMotifWidgetFactory.cpp
-endif
+# nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
+CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
