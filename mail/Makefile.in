@@ -28,7 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= base components extensions app 
 
+# this will get cleaned up once OSX comes on board. We won't need platform specific ifdefs for
+# entering mail\config
+
 ifeq ($(OS_ARCH),WINNT)
+DIRS += config
+endif
+
+ifeq ($(OS_ARCH),Linux)
 DIRS += config
 endif
 
