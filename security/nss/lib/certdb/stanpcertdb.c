@@ -169,6 +169,16 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     NSSCryptoContext *context;
     NSSArena *arena;
     CERTCertificate *cc;
+    if (!isperm) {
+	/* Look for a perm cert first */
+	NSSDER encoding;
+	NSSITEM_FROM_SECITEM(&encoding, derCert);
+	c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, 
+	                                                       &encoding);
+	if (c) {
+	    return STAN_GetCERTCertificate(c);
+	}
+    }
     arena = NSSArena_Create();
     if (!arena) {
 	return NULL;
