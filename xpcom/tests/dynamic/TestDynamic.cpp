@@ -38,7 +38,7 @@ class TestDynamicClassImpl: public ITestClass {
   void Test();
 };
 
-NS_IMPL_ISUPPORTS(TestDynamicClassImpl, NS_GET_IID(ITestClass));
+NS_IMPL_ISUPPORTS1(TestDynamicClassImpl, ITestClass);
 
 void TestDynamicClassImpl::Test() {
   cout << "hello, dynamic world!\n";

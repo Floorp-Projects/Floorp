@@ -54,7 +54,7 @@ nsBinaryOutputStream::nsBinaryOutputStream(nsIOutputStream* aStream): mOutputStr
     NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsBinaryOutputStream, NS_GET_IID(nsIBinaryOutputStream))
+NS_IMPL_ISUPPORTS1(nsBinaryOutputStream, nsIBinaryOutputStream)
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Flush() { return mOutputStream->Flush(); }
@@ -230,7 +230,7 @@ nsBinaryOutputStream::WriteString(nsString* aString)
 
 nsBinaryInputStream::nsBinaryInputStream(nsIInputStream* aStream): mInputStream(aStream) { NS_INIT_REFCNT(); }
 
-NS_IMPL_ISUPPORTS(nsBinaryInputStream, NS_GET_IID(nsIBinaryInputStream))
+NS_IMPL_ISUPPORTS1(nsBinaryInputStream, nsIBinaryInputStream)
 
 NS_IMETHODIMP
 nsBinaryInputStream::Available(PRUint32* aResult) { return mInputStream->Available(aResult); }
