@@ -75,6 +75,8 @@ public:
   NS_IMETHOD SetActive(PRBool aActiveFlag); 
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = IsActive(); return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_TRUE; return NS_OK; };
+  NS_IMETHOD ConsumeOutsideClicks(PRBool& aConsumeOutsideClicks) \
+    {aConsumeOutsideClicks = PR_FALSE; return NS_OK;};
 
   NS_IMETHOD SetIsContextMenu(PRBool aIsContextMenu) { return NS_OK; };
   NS_IMETHOD GetIsContextMenu(PRBool& aIsContextMenu) { aIsContextMenu = PR_FALSE; return NS_OK; }; 

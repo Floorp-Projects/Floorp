@@ -1423,6 +1423,54 @@ NS_IMETHODIMP nsMenuPopupFrame::GetCurrentMenuItem(nsIMenuFrame** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClicks)
+{
+  /*
+   * When this popup is open, should clicks outside of it be consumed?
+   * Return PR_TRUE if the popup hould rollup on an outside click, 
+   * but consume that click so it can't be used for anything else.
+   * Return PR_FALSE to allow clicks outside the popup to activate content 
+   * even when the popup is open.
+   * ---------------------------------------------------------------------
+   * 
+   * Should clicks outside of a popup be eaten?
+   *
+   *       Menus     Autocomplete     Comboboxes
+   * Mac     Eat           No              Eat
+   * Win     No            No              Eat     
+   * Unix    Eat           No              Eat
+   *
+   */
+
+  aConsumeOutsideClicks = PR_TRUE;
+
+  nsCOMPtr<nsIContent> parentContent;
+  mContent->GetParent(*getter_AddRefs(parentContent));
+
+  if (parentContent) {
+    nsCOMPtr<nsIAtom> parentTag;
+    parentContent->GetTag(*getter_AddRefs(parentTag));
+    if (parentTag == nsXULAtoms::menulist)
+      return NS_OK;  // Consume outside clicks for combo boxes on all platforms
+    if (parentTag == nsXULAtoms::menu) {
+#ifdef XP_WIN
+      // Don't consume outside clicks for menus in Windows
+      aConsumeOutsideClicks = PR_FALSE;
+#endif
+      return NS_OK;
+    }
+    if (parentTag == nsXULAtoms::textbox) {
+      // Don't consume outside clicks for autocomplete widget
+      nsAutoString typeString;
+      parentContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, typeString);
+      if (typeString.EqualsIgnoreCase("autocomplete"))
+        aConsumeOutsideClicks = PR_FALSE;
+    }
+  }
+
+  return NS_OK;
+}
+
 nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
 {
   if ( ! aStart )
