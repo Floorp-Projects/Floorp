@@ -59,25 +59,26 @@ public:
   // nsTextEditRules action id's
   enum 
   {
-    kDefault         = 0,
+    kDefault             = 0,
     // any editor that has a txn mgr
-    kUndo            = 1000,
-    kRedo            = 1001,
+    kUndo                = 1000,
+    kRedo                = 1001,
     // text actions
-    kInsertText      = 2000,
-    kDeleteSelection = 2001,
-    kSetTextProperty = 2003,
-    kRemoveTextProperty = 2004,
-    kOutputText      = 2005,
+    kInsertText          = 2000,
+    kInsertTextIME       = 2001,
+    kDeleteSelection     = 2002,
+    kSetTextProperty     = 2003,
+    kRemoveTextProperty  = 2004,
+    kOutputText          = 2005,
     // html only action
-    kInsertBreak     = 3000,
-    kMakeList        = 3001,
-    kIndent          = 3002,
-    kOutdent         = 3003,
-    kAlign           = 3004,
-    kMakeBasicBlock  = 3005,
-    kRemoveList      = 3006,
-    kInsertElement   = 3008
+    kInsertBreak         = 3000,
+    kMakeList            = 3001,
+    kIndent              = 3002,
+    kOutdent             = 3003,
+    kAlign               = 3004,
+    kMakeBasicBlock      = 3005,
+    kRemoveList          = 3006,
+    kInsertElement       = 3008
   };
   
 protected:

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsICaret.h"
 
 
 #include "nsHTMLEditor.h"
@@ -3415,6 +3416,38 @@ nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 #endif
 }
 
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark --- nsIEditorIMESupport overrides ---
+#pragma mark -
+#endif
+
+NS_IMETHODIMP
+nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
+{
+  nsCOMPtr<nsICaret>  caretP;
+  
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult result = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(result)) return result;
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertTextIME);
+  PRBool cancel;
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  if (NS_FAILED(result)) return result;
+  // we don't care if WillInsert said to cancel...
+  result = SetInputMethodText(aCompositionString,aTextRangeList);
+  if (NS_FAILED(result)) return result;
+  mIMEBufferLength = aCompositionString.Length();
+
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  ps->GetCaret(getter_AddRefs(caretP));
+  caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
+
+  return result;
+}
 
 #ifdef XP_MAC
 #pragma mark -
