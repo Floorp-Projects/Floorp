@@ -164,7 +164,6 @@ protected:
 
   PRBool IsScrollable() const;
   nsresult SetInitialValue();
-  nsString *GetCachedString();
   void InvalidateCachedState();
   virtual PRIntn GetSkipSides() const;
   void RemoveNewlines(nsString &aString);
