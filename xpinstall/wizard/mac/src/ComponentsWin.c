@@ -193,7 +193,9 @@ UpdateCompWin(void)
 	DrawString( CToPascal(*gControls->cfg->selCompMsg));
 	HUnlock(gControls->cfg->selCompMsg);
 	LUpdate( (*gControls->cw->compList)->port->visRgn, gControls->cw->compList);
-	FrameRect(&gControls->cw->compListBox);	
+	SetRect(&r, gControls->cw->compListBox.left, gControls->cw->compListBox.top,
+	            gControls->cw->compListBox.right + 1, gControls->cw->compListBox.bottom); 
+	FrameRect(&r);	
 	
 	SetPt(&c, 0, 0);
 	if (LGetSelect(true, &c, gControls->cw->compList))
@@ -239,6 +241,20 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	GlobalToLocal( &localPt);
 	
 	/* Mouse Up */
+	
+	/* scroll */
+	SetRect(&r, gControls->cw->compListBox.right, gControls->cw->compListBox.top, 
+	            gControls->cw->compListBox.right + kScrollBarWidth, gControls->cw->compListBox.bottom);
+	if ((evt->what == mouseUp) && (PtInRect( localPt, &r)))
+	{
+	    LClick(localPt, evt->modifiers, gControls->cw->compList);
+	    
+	    SetRect(&r, gControls->cw->compListBox.left, gControls->cw->compListBox.top,
+	                gControls->cw->compListBox.right + 1, gControls->cw->compListBox.bottom);
+	    FrameRect(&r);
+	}
+	
+	/* or un/check item */
 	if ((evt->what == mouseUp) && (PtInRect( localPt, &gControls->cw->compListBox)))
 	{
 		LClick(localPt, evt->modifiers, gControls->cw->compList);
