@@ -360,7 +360,7 @@ nsChromeRegistry::GetChromeResource(nsString& aResult,
     }
 
     if (chromeBase == nsnull)
-      return NS_OK;
+        return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;

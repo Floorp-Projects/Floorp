@@ -117,6 +117,7 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentIID,             NS_IXMLCONTENT_IID);
 
 static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
+static NS_DEFINE_IID(kIDOMEventTargetIID,         NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,     NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,           NS_RDFSERVICE_CID);
 
@@ -474,6 +475,9 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIDOMEventReceiverIID)) {
         *result = NS_STATIC_CAST(nsIDOMEventReceiver*, this);
+    }
+    else if (iid.Equals(kIDOMEventTargetIID)) {
+        *result = NS_STATIC_CAST(nsIDOMEventTarget*, this);
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
@@ -1773,8 +1777,9 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         AddScriptEventListener(aName, aValue, kIDOMKeyListenerIID);
     else if (attributeName.EqualsIgnoreCase("onmousemove"))
         AddScriptEventListener(aName, aValue, kIDOMMouseMotionListenerIID); 
-    else if (attributeName.EqualsIgnoreCase("onload"))
-        AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID); 
+    // XXX Temporarily commented out to avoid bustage of nsIXULWindowCallbacks in nsWebShellWindow
+    //else if (attributeName.EqualsIgnoreCase("onload"))
+    //    AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID); 
     else if (attributeName.EqualsIgnoreCase("onunload") ||
              attributeName.EqualsIgnoreCase("onabort") ||
              attributeName.EqualsIgnoreCase("onerror"))
@@ -1836,7 +1841,30 @@ RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, R
     nsIScriptContextOwner* owner;
 
     owner = mDocument->GetScriptContextOwner();
+
+    nsAutoString tagStr;
+    mTag->ToString(tagStr);
+
     if (NS_OK == owner->GetScriptContext(&context)) {
+      if (tagStr == "window") {
+        nsIDOMEventReceiver *receiver;
+        nsIScriptGlobalObject *global = context->GetGlobalObject();
+
+        if (nsnull != global && NS_OK == global->QueryInterface(kIDOMEventReceiverIID, (void**)&receiver)) {
+          nsIEventListenerManager *manager;
+          if (NS_OK == receiver->GetListenerManager(&manager)) {
+            nsIScriptObjectOwner *mObjectOwner;
+            if (NS_OK == global->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
+              ret = manager->AddScriptEventListener(context, mObjectOwner, aName, aValue, aIID);
+              NS_RELEASE(mObjectOwner);
+            }
+            NS_RELEASE(manager);
+          }
+          NS_RELEASE(receiver);
+        }
+        NS_IF_RELEASE(global);
+      }
+      else {
         nsIEventListenerManager *manager;
         if (NS_OK == GetListenerManager(&manager)) {
             nsIScriptObjectOwner* owner;
@@ -1849,6 +1877,7 @@ RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, R
             NS_RELEASE(manager);
         }
         NS_RELEASE(context);
+      }
     }
     NS_RELEASE(owner);
 
