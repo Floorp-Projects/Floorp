@@ -5,27 +5,28 @@ noinst_LIBRARIES = libjs2.a
 libjs2_a_DEPENDENCIES = $(LIBFDLIBM)
 
 libjs2_a_SOURCES = \
-	bytecodegen.cpp \
-	collector.cpp \
+	bytecodecontainer.cpp \
+	epimetheus.cpp \
 	exception.cpp \
 	formatter.cpp \
-	fdlibm_ns.cpp \
 	hash.cpp \
-	js2runtime.cpp \
-	jsdate.cpp \
-	prmjtime.cpp \
-	js2execution.cpp \
-	jsarray.cpp \
-	jsmath.cpp \
-	jsstring.cpp \
+	js2array.cpp \
+	js2date.cpp \
+	js2engine.cpp \
+	js2eval.cpp \
+	js2math.cpp \
+	js2metadata.cpp \
+	js2number.cpp \
+	js2regexp.cpp \
+	js2string.cpp \
 	lexer.cpp \
 	mem.cpp \
 	numerics.cpp \
 	parser.cpp \
+	prmjtime.cpp \
 	reader.cpp \
         regexpwrapper.cpp \
 	strings.cpp \
-	tracer.cpp \
 	token.cpp \
 	utilities.cpp \
 	world.cpp
