@@ -20,7 +20,7 @@
 
 #include "nslayout.h"
 #include "nsIStyleSheet.h"
-#include "nscolor.h"
+#include "nsColor.h"
 
 // IID for the nsIHTMLStyleSheet interface {bddbd1b0-c5cc-11d1-8031-006008159b5a}
 #define NS_IHTML_STYLE_SHEET_IID     \
