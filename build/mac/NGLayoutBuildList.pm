@@ -1221,11 +1221,7 @@ sub BuildMailNewsProjects()
 
 	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",							"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:mailnews:mime:emitters:html:macbuild:htmlEmitter.mcp",	"htmlEmitter$D.shlb", "htmlEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-	BuildOneProject(":mozilla:mailnews:mime:emitters:xml:macbuild:xmlEmitter.mcp",		"xmlEmitter$D.shlb", "xmlEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-	BuildOneProject(":mozilla:mailnews:mime:emitters:raw:macbuild:rawEmitter.mcp",		"rawEmitter$D.shlb", "rawEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",			"mimeEmitter$D.shlb", "mimeEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:mime:cthandlers:vcard:macbuild:vcard.mcp",		"vcard$D.shlb", "vcard.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
