@@ -25,7 +25,6 @@
 //
 
 #include "nsToolbarFrame.h"
-#include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 
 #include "nsToolbarDragListener.h"
