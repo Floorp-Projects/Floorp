@@ -260,7 +260,7 @@ Java_org_mozilla_jss_CryptoManager_findPrivKeyByCertNative
     PRThread *pThread;
     CERTCertificate *cert;
     SECKEYPrivateKey *privKey=NULL;
-    jobject Key;
+    jobject Key = NULL;
 
     pThread = PR_AttachThread(PR_SYSTEM_THREAD, 0, NULL);
     PR_ASSERT( pThread != NULL);
