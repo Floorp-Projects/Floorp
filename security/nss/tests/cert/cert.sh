@@ -67,7 +67,7 @@ cert_init()
   fi
   if [ -z "${INIT_SOURCED}" ] ; then
       cd ../common
-      . init.sh
+      . ./init.sh
   fi
   SCRIPTNAME="cert.sh"
   html_head "Certutil Tests"

@@ -60,11 +60,11 @@ fips_init()
 
   if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
       cd ../common
-      . init.sh
+      . ./init.sh
   fi
   if [ ! -r $CERT_LOG_FILE ]; then  # we need certificates here
       cd ../cert
-      . cert.sh
+      . ./cert.sh
   fi
   SCRIPTNAME=fips.sh
   html_head "FIPS 140-1 Compliance Tests"

@@ -54,7 +54,7 @@ perf_init()
   SCRIPTNAME="perf.sh"
   if [ -z "${INIT_SOURCED}" ] ; then
       cd ../common
-      . init.sh
+      . ./init.sh
   fi
   SCRIPTNAME="perf.sh"
   PERFDIR=${HOSTDIR}/perf
