@@ -479,7 +479,7 @@
           observes="cmd_fontColor"
           oncommand="EditorSelectColor('Text', null);"
           position="4"/>
-    <menuseparator position="5"/>
+    <menuseparator id="removeSep" position="5"/>
 
     <!-- label and accesskey set at runtime from strings -->
     <menuitem id="removeStylesMenuitem" key="removestyleskb"
@@ -493,7 +493,7 @@
           accesskey="&formatRemoveNamedAnchors.accesskey;"
           observes="cmd_removeNamedAnchors"
           position="8"/>
-    <menuseparator position="9"/>
+    <menuseparator id="tabSep" position="9"/>
 
     <!-- Note: the 'Init' menu methods for Paragraph, List, and Align
          assume that the id = 'menu_'+tagName (the 'value' label),
@@ -531,7 +531,7 @@
         <menuitem id="listProps" label="&listProps.label;" accesskey="&listprops.accesskey;" observes="cmd_listProperties"/>
       </menupopup>
     </menu>
-    <menuseparator position="12"/>
+    <menuseparator id="identingSep" position="12"/>
 
     <menuitem id="increaseIndent" label="&increaseIndent.label;"  accesskey="&increaseindent.accesskey;"  key="increaseindentkb"
                 observes="cmd_indent" position="13"/>
@@ -549,7 +549,7 @@
         <menuitem id="menu_justify" label="&alignJustify.label;" accesskey="&alignjustify.accesskey;" type="radio" name="1" value="justify" observes="cmd_renderedHTMLEnabler"/>
       </menupopup>
     </menu>
-    <menuseparator position="16"/>
+    <menuseparator id="tableSep" position="16"/>
     <!-- Merge Table Menu and separator in Messenger Composer here -->
     <!-- Merge property items here -->
   </menupopup>
