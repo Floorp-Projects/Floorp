@@ -577,7 +577,14 @@ XFE_RDFMenuToolbarBase::entryActivated(Widget w, HT_Resource entry)
         if (ht_IsFECommand(entry)) 
         {
             Cardinal numparams = 1;
-            CommandType cmd = ht_GetFECommand(entry);
+            CommandType cmd;
+
+            // Hack an open page dialog until we fix the urlbar
+            if (HT_IsURLBar(entry)) {
+                cmd = xfeCmdOpenPage;
+            } else {
+                cmd = ht_GetFECommand(entry);
+            }
 
             XFE_CommandInfo info(XFE_COMMAND_EVENT_ACTION,
                                  w, 
@@ -1369,19 +1376,19 @@ XFE_RDFMenuToolbarBase::formatItem(HT_Resource        entry,
   head [j] = 0;
 
   if (HT_IsSeparator(entry))
-    {
+  {
       strcpy (buf, "-------------------------");
-    }
+  }
+  // hack hack hack
+  else if (HT_IsURLBar(entry))
+  {
+      strcpy (buf, "<URLBar RSN>" );
+  }
+  // end hack hack hack
   else if (title || url)
-    {
+  {
       fe_FormatDocTitle (title, url, buf, 1024);
-    }
-#if 0
-  else if (HT_IsUrl(entry))
-    {
-      strcpy (buf, XP_GetString( XFE_GG_EMPTY_LL ) );
-    }
-#endif
+  }
 
   if (!*head)
     xmhead = 0;
