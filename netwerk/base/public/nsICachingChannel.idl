@@ -93,6 +93,13 @@ interface nsICachingChannel : nsISupports
      * an error if cacheAsFile is false.
      */
     readonly attribute nsIFile cacheFile;
+
+    /**
+     * TRUE if this channel's data is being loaded from the cache.  This value
+     * is undefined before the channel fires its OnStartRequest notification
+     * and after the channel fires its OnStopRequest notification.
+     */
+    boolean isFromCache();
 };
 
 %{C++

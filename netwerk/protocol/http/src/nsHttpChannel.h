@@ -171,6 +171,7 @@ private:
     PRPackedBool                      mFromCacheOnly;
     PRPackedBool                      mCachedContentIsValid;
     PRPackedBool                      mResponseHeadersModified;
+    PRPackedBool                      mCanceled;
 };
 
 #endif // nsHttpChannel_h__
