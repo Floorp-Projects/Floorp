@@ -1,0 +1,10 @@
+<?xml version="1.0"?> 
+
+<window xmlns:NC="http://home.netscape.com/NC-rdf#"	
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        
+<script language="JavaScript" src="chrome://messenger/content/dbviewtest.js"/>
+
+<button value="Hit Me" onclick="doit()"/>
+
+</window>
