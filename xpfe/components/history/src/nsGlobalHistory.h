@@ -153,6 +153,10 @@ public:
   PRBool MatchHost(nsIMdbRow *row, matchHost_t *hostInfo);
   PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
 
+  PRInt64 GetNow();
+  PRTime  NormalizeTime(PRInt64 aTime);
+  PRInt32 GetAgeInDays(PRInt64 aDate);
+
 protected:
 
   //
@@ -236,11 +240,12 @@ protected:
   // caching of PR_Now() so we don't call it every time we do
   // a history query
   PRInt64   mLastNow;           // cache the last PR_Now()
+  PRInt64   mCachedGMTOffset;   // cached offset from GMT
+
   PRInt32   mBatchesInProgress;
   PRBool    mNowValid;          // is mLastNow valid?
   nsCOMPtr<nsITimer> mExpireNowTimer;
   
-  PRInt64 GetNow();
   void ExpireNow();
   
   static void expireNowTimer(nsITimer *aTimer, void *aClosure)
