@@ -42,51 +42,48 @@
 </html:style>
 
 <html:script>
-	var compAppCore = null;
-	var editAppCore = null;
+	var editorAppCore;
+	var composeAppCore;
 
 	function startup()
 	{
-		dump("Compose: StartUp\n");
+	  dump("Compose: StartUp\n");
 
-		editAppCore = XPAppCoresManager.Find("EditorAppCore");  
-		dump("Looking up EditorAppCore...\n");
-		if (editAppCore == null) {
-			dump("Creating EditorAppCore...\n");
-			editAppCore = new EditorAppCore();
-			if (editAppCore != null) {
-				dump("EditorAppCore has been created.\n");
-				editAppCore.Init("EditorAppCore");
-				editAppCore.setContentWindow(window.frames[0]);
-				editAppCore.setWebShellWindow(window);
-				editAppCore.setToolbarWindow(window);
-				dump("Adding EditorAppCore to AppCoreManager...\n");
-				XPAppCoresManager.Add(editAppCore);  
-			}
-		}
-		else {
-			dump("EditorAppCore has already been created! Why?\n");
-		}
+	  editorAppCore = XPAppCoresManager.Find("EditorAppCore");  
+	  dump("Looking up EditorAppCore...\n");
+	  if (editorAppCore == null) {
+	    dump("Creating EditorAppCore...\n");
+	    editorAppCore = new EditorAppCore();
+	    editorAppCore.Init("EditorAppCore");
+	    dump("Adding EditorAppCore to AppCoreManager...\n");
+	    XPAppCoresManager.Add(editorAppCore);
+	  }
+	  if (editorAppCore != null) {
+	    editorAppCore.setContentWindow(window.frames[0]);
+	    editorAppCore.setWebShellWindow(window);
+	    editorAppCore.setToolbarWindow(window);
+	  }
 
-		compAppCore = XPAppCoresManager.Find("ComposeAppCore");  
-		if (compAppCore==null) {
-			compAppCore = new ComposeAppCore();
-			if (compAppCore != null) {
-				dump("ComposeAppCore was created!\n");
-				compAppCore.Init("ComposeAppCore");
-				compAppCore.SetWindow(window);
-				compAppCore.SetEditor(editAppCore);
-				compAppCore.CompleteCallback("MessageSent();");
-				XPAppCoresManager.Add(compAppCore);  
-			}
-		}
-
+	  composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
+	  if (composeAppCore==null) {
+	    composeAppCore = new ComposeAppCore();
+	    if (composeAppCore != null) {
+	      dump("ComposeAppCore was created!\n");
+	      composeAppCore.Init("ComposeAppCore");
+	      XPAppCoresManager.Add(composeAppCore);  
+	    }
+	  }
+	  if(composeAppCore != null) {
+	    composeAppCore.SetWindow(window);
+	    composeAppCore.SetEditor(editorAppCore);
+	    composeAppCore.CompleteCallback("MessageSent();");
+	  }
 	}
 
-	function EditorGetText()
+        function EditorGetText()
 	{
-		if (editAppCore != null) {
-			var	outputText = editAppCore.contentsAsText;
+		if (editorAppCore != null) {
+			var	outputText = editorAppCore.contentsAsText;
 			dump(outputText + "\n");
 			return outputText;
 		} else
@@ -97,14 +94,14 @@
 	function SendMessage()
 	{
 		dump("SendMessage!\n");
-		if (compAppCore != null) {
-//			compAppCore.SendMessage(document.getElementById('msgTo').value, 
+		if (composeAppCore != null) {
+//			composeAppCore.SendMessage(document.getElementById('msgTo').value, 
 //					   document.getElementById('msgCc').value, 
 //					   document.getElementById('msgBcc').value, 
 //					   document.getElementById('msgSubject').value, 
 //					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
 //					   EditorGetText());
-			compAppCore.SendMessage2();
+			composeAppCore.SendMessage2();
 		}
 	}
 
