@@ -124,6 +124,7 @@ CSRCS =             \
 	priotest.c		\
 	provider.c		\
 	prpoll.c		\
+	prpollml.c		\
 	ranfile.c       \
 	randseed.c      \
 	rwlocktest.c    \
