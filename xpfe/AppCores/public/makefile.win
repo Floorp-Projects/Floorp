@@ -25,10 +25,11 @@ EXPORTS=  \
 		nsIDOMAppCoresManager.h		\
 		nsIDOMBaseAppCore.h		\
 		nsIDOMMailCore.h		\
+		nsIDOMRDFCore.h			\
 		nsIDOMToolbarCore.h		\
 		nsIDOMToolkitCore.h		\
-		nsIDOMBrowserAppCore.h	\
-    nsIDOMEditorAppCore.h \
+		nsIDOMBrowserAppCore.h		\
+		nsIDOMEditorAppCore.h		\
 		nsAppCoresCIDs.h       
 
 include <$(DEPTH)\config\rules.mak>

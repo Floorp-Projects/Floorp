@@ -28,6 +28,7 @@ EXPORTS =                         \
 		nsIDOMBaseAppCore.h          \
 		nsIDOMEditorAppCore.h          \
 		nsIDOMMailCore.h      \
+		nsIDOMRDFCore.h		\
 		nsIDOMToolbarCore.h	  \
 		nsIDOMToolkitCore.h		\
 		nsIDOMBrowserAppCore.h     \
