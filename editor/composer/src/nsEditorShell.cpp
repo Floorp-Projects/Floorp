@@ -554,15 +554,13 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   // get the URL of the page we are editing
   if (aUrl)
   {
-    nsXPIDLCString  pageScheme;                                               
-    aUrl->GetScheme(getter_Copies(pageScheme));
-
-    nsCAutoString   schemeStr(pageScheme);
    
     // if this is a file URL of a file that exists locally, we'll stash the nsIFile
     // in the disk document, so that later saves save back to the same file.
     nsCOMPtr<nsIFileURL> pageFileURL(do_QueryInterface(aUrl));
-    if (schemeStr.EqualsIgnoreCase("file") && pageFileURL)
+    PRBool isFile=PR_FALSE;
+    rv = aUrl->SchemeIs(nsIURI::FILE, &isFile);
+    if (NS_SUCCEEDED(rv) && isFile && pageFileURL)
     {
       nsCOMPtr<nsIFile> pageFile;
       pageFileURL->GetFile(getter_AddRefs(pageFile));

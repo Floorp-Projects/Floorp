@@ -484,11 +484,12 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
 
     // See if we're attempting to load a file: URI. If so, let a 
     // UniversalFileRead capability trump the above check.
-    nsXPIDLCString scheme;
-    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
+    PRBool isFile = PR_FALSE;
+    PRBool isRes = PR_FALSE;
+    if (NS_FAILED(aURI->SchemeIs(nsIURI::FILE, &isFile)) || 
+        NS_FAILED(aURI->SchemeIs(nsIURI::RESOURCE, &isRes)))
         return NS_ERROR_FAILURE;
-    if (nsCRT::strcasecmp(scheme, "file") == 0 ||
-        nsCRT::strcasecmp(scheme, "resource") == 0) 
+    if (isFile || isRes)
     {
         PRBool enabled;
         if (NS_FAILED(IsCapabilityEnabled("UniversalFileRead", &enabled)))

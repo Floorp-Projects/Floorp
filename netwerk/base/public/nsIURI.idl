@@ -17,6 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author: Gagan Saksena <gagan@netscape.com>
+ *
  * Contributor(s): 
  */
 
@@ -60,6 +62,25 @@
 [scriptable, uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40)]
 interface nsIURI : nsISupports
 {
+    /**
+     * List of standard/known URL scheme types for quicker lookups and
+     * comparisons. The UNKNOWN type applies for all other cases.
+     */
+    const PRUint32 UNKNOWN      = 0;
+    const PRUint32 ABOUT        = 1;
+    const PRUint32 CHROME       = 2;
+    const PRUint32 FILE         = 3;
+    const PRUint32 FTP          = 4;
+    const PRUint32 HTTP         = 5;
+    const PRUint32 HTTPS        = 6;
+    const PRUint32 IMAP         = 7;
+    const PRUint32 JAR          = 8;
+    const PRUint32 JAVASCRIPT   = 9;
+    const PRUint32 MAILBOX      = 10;
+    const PRUint32 MAILTO       = 11;
+    const PRUint32 NEWS         = 12;
+    const PRUint32 RESOURCE     = 13;
+
     /**
      * Returns a string representation of the URI. Setting the spec 
      * causes the new spec to be parsed, initializing the URI. Setting
@@ -127,6 +148,15 @@ interface nsIURI : nsISupports
      * for this case.
      */
     boolean equals(in nsIURI other);
+
+    /**
+    * An optimization to do scheme checks without requiring the users of nsIURI
+    * to GetScheme thereby saving extra allocating and freeing. Returns true if
+    * the schemes match (case ignored) to one of the standard known types
+    * mentioned above. Note that for unknown cases this will always return
+    * false.
+    */
+    boolean schemeIs(in PRUint32 scheme);
 
     /**
      * Clones the current URI. The newly created URI will be in a closed

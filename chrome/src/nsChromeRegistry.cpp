@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *      Gagan Saksena <gagan@netscape.com>
  */
 
 #include <string.h>
@@ -1079,16 +1080,10 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
 static PRBool IsChromeURI(nsIURI* aURI)
 {
-  nsresult rv;
-  nsXPIDLCString protocol;
-  rv = aURI->GetScheme(getter_Copies(protocol));
-  if (NS_SUCCEEDED(rv)) {
-    if (PL_strcmp(protocol, "chrome") == 0) {
+    PRBool isChrome=PR_FALSE;
+    if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) && isChrome)
         return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
+    return PR_FALSE;
 }
 
 NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)

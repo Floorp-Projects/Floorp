@@ -278,16 +278,8 @@ void nsUnknownDecoder::DetermineContentType(nsIChannel *aChannel)
     PRBool isLocalFile = PR_FALSE;
     if (aChannel) {
       nsCOMPtr<nsIURI> pURL;
-      nsresult rv = aChannel->GetURI(getter_AddRefs(pURL));
-      if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString protocol;
-        rv = pURL->GetScheme(getter_Copies(protocol));
-        if (NS_SUCCEEDED(rv)) {
-          if (!PL_strcasecmp(protocol, "file")) {
-            isLocalFile = PR_TRUE;
-          }
-        }
-      }
+      if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(pURL))))
+          pURL->SchemeIs(nsIURI::FILE, &isLocalFile);
     }
 
     if (!mRequireHTMLsuffix || !isLocalFile) {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *      Gagan Saksena <gagan@netscape.com>
  */
 #ifndef nsHTTPAtoms_h___
 #define nsHTTPAtoms_h___

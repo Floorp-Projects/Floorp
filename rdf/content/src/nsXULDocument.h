@@ -725,10 +725,6 @@ protected:
     nsresult
     RemoveElement(nsIContent* aParent, nsIContent* aChild);
 
-    static
-    PRBool
-    IsChromeURI(nsIURI* aURI);
-
     /**
      * The current prototype that we are walking to construct the
      * content model.

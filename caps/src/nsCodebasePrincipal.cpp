@@ -93,10 +93,12 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
     if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) 
 	{
         // Deny unless subject is executing from file: or resource: 
-        nsXPIDLCString scheme;
-        if (NS_FAILED(mURI->GetScheme(getter_Copies(scheme))) ||
-            (PL_strcmp(scheme, "file") != 0 &&
-             PL_strcmp(scheme, "resource") != 0))
+        PRBool isFile = PR_FALSE;
+        PRBool isRes = PR_FALSE;
+
+        if (NS_FAILED(mURI->SchemeIs(nsIURI::FILE, &isFile)) || 
+            NS_FAILED(mURI->SchemeIs(nsIURI::RESOURCE, &isRes)) ||
+            (!isFile && !isRes))
         {
             *result = nsIPrincipal::ENABLE_DENIED;
             return NS_OK;

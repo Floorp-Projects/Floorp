@@ -804,10 +804,13 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
       nsCOMPtr<nsIURI> uri;
       (void) aChannel->GetOriginalURI(getter_AddRefs(uri));
-      nsXPIDLCString scheme; 
-      (void)uri->GetScheme(getter_Copies(scheme));
-      if (scheme && ((0 == PL_strncmp((const char*)scheme, "chrome", 6)) ||
-                  (0 == PL_strncmp((const char*)scheme, "resource", 8))))
+
+      PRBool isChrome = PR_FALSE;
+      PRBool isRes = PR_FALSE;
+      (void)uri->SchemeIs(nsIURI::CHROME, &isChrome);
+      (void)uri->SchemeIs(nsIURI::RESOURCE, &isRes);
+
+      if (isChrome || isRes)
             (void)aChannel->GetOriginalURI(&mDocumentURL);
       else
             (void)aChannel->GetURI(&mDocumentURL);
@@ -1861,7 +1864,6 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
   NS_ENSURE_ARG_POINTER(aDoctype);
 
   *aDoctype = nsnull;
-
   PRUint32 i, count;
   mChildren->Count(&count);
   nsCOMPtr<nsIDOMNode> rootContentNode( do_QueryInterface(mRootContent) );
@@ -2689,7 +2691,6 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
 
   ContentInserted(nsnull, content, index);
   content->SetDocument(this, PR_TRUE, PR_TRUE);
-
   *aReturn = aOldChild;
   NS_ADDREF(aOldChild);
 

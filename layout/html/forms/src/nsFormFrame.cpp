@@ -805,12 +805,13 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       }
 
       nsXPIDLCString scheme;
-      if (actionURL && NS_FAILED(result = actionURL->GetScheme(getter_Copies(scheme))))
+      PRBool isMailto = PR_FALSE;
+      if (actionURL && NS_FAILED(result = actionURL->SchemeIs(nsIURI::MAILTO,
+                      &isMailto)))
         return result;
-      if (nsCRT::strcmp(scheme, "mailto") == 0) {
+      if (isMailto) {
         PRBool enabled;
-        if (NS_FAILED(result = securityManager->IsCapabilityEnabled("UniversalSendMail", 
-                                                                    &enabled)))
+        if (NS_FAILED(result = securityManager->IsCapabilityEnabled("UniversalSendMail", &enabled)))
         {
           return result;
         }

@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Gagan Saksena <gagan@netscape.com>
  */
 
 #include "nsSimpleURI.h"
@@ -40,7 +41,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsSimpleURI::nsSimpleURI(nsISupports* outer)
     : mScheme(nsnull),
-      mPath(nsnull)
+      mPath(nsnull),
+      mSchemeType(nsIURI::UNKNOWN)
 {
     NS_INIT_AGGREGATED(outer);
 }
@@ -243,6 +245,16 @@ nsSimpleURI::Equals(nsIURI* other, PRBool *result)
 //        NS_UNLOCK_INSTANCE();
     }
     *result = eq;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::SchemeIs(PRUint32 i_Scheme, PRBool *o_Equals)
+{
+    NS_ENSURE_ARG_POINTER(o_Equals);
+    if (i_Scheme == nsIURI::UNKNOWN)
+        return NS_ERROR_INVALID_ARG;
+    *o_Equals = (mSchemeType == i_Scheme);
     return NS_OK;
 }
 

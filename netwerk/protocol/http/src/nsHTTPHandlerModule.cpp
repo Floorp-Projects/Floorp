@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *      Gagan Saksena <gagan@netscape.com>
  */
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"

@@ -63,7 +63,6 @@ typedef struct _XMLParserState {
 static NS_DEFINE_IID(kHTMLTokenizerIID,   NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
 
-static const char* kChromeProtocol = "chrome";
 static const char* kDTDDirectory = "dtd/";
 static const char kHTMLNameSpaceURI[] = "http://www.w3.org/1999/xhtml";
 
@@ -718,7 +717,6 @@ void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData,
 static PRBool
 IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
 {
-  char* scheme = nsnull;
   PRBool isLoadable = PR_FALSE;
   nsresult res = NS_OK;
 
@@ -728,12 +726,7 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
   }
 
   // Return true if the url is a chrome url
-  res = (*aDTD)->GetScheme(&scheme);
-  if (NS_SUCCEEDED(res) && nsnull != scheme) {
-    if (PL_strcmp(scheme, kChromeProtocol) == 0)
-      isLoadable = PR_TRUE;
-    nsCRT::free(scheme);
-  }
+  res = (*aDTD)->SchemeIs(nsIURI::CHROME, &isLoadable);
 
   // If the url is not a chrome url, check to see if a DTD file of the same name
   // exists in the special DTD directory

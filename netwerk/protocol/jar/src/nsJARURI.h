@@ -50,6 +50,7 @@ public:
 protected:
     nsCOMPtr<nsIURI> mJARFile;
     char *mJAREntry;
+    PRUint32 mSchemeType;
 };
 
 #endif // nsJARURI_h__

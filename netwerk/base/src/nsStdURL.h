@@ -96,7 +96,10 @@ protected:
     char*       mRef;
 
     nsCOMPtr<nsIURLParser> mURLParser;
-    PRInt32     mDefaultPort;   // port for protocol (used for canonicalizing, and printing)
+    PRInt32     mDefaultPort;   // port for protocol (used for canonicalizing,
+                                // and printing)
+    PRUint32    mSchemeType; 
+
 
     // Global objects. Dont use comptr as its destructor will cause
     // a coredump if we leak it.

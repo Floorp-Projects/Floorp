@@ -423,12 +423,12 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     // Get the scheme of the URI.
     nsCOMPtr<nsIURI> actionURL;
     nsXPIDLCString scheme;
+    PRBool isJSURL = PR_FALSE;
     if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL))) {
-      result = actionURL->GetScheme(getter_Copies(scheme));
+      result = actionURL->SchemeIs(nsIURI::JAVASCRIPT, &isJSURL);
     }
-    nsAutoString theScheme; theScheme.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
     // Append the URI encoded variable/value pairs for GET's
-    if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
+    if (!isJSURL) { // Not for JS URIs, see bug 26917
         if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
           href.AppendWithConversion('?');
         } else {                              // Adding to existing query string

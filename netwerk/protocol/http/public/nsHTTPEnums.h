@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Gagan Saksena <gagan@netscape.com>
+ * 
  */
 
 #ifndef _nsHTTPEnums_h_
