@@ -254,7 +254,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
 
   // RICHIE SHERRY - this will go away once we cutover...
   nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
-  PRBool      mimeXULOutput = PR_FALSE;
+  PRBool      mimeXULOutput = PR_TRUE;
   
   if (pref)
     pref->GetBoolPref("mail.mime_xul_output", &mimeXULOutput);
