@@ -72,8 +72,11 @@ function GoUnreadThread(messageElement)
 	var messageuri = messageElement.getAttribute('id');
 	var messageResource = RDF.GetResource(messageuri);
 
-	var unreadCount = GetMessageValue(messageResource, "http://home.netscape.com/NC-rdf#TotalUnreadMessages");
-	return (unreadCount !="");
+	var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+	var folder = message.GetMsgFolder();
+	var thread = folder.getThreadForMessage(message);
+
+	return(thread.numUnreadChildren != 0);
 }
 
 /*GoNextMessage finds the message that matches criteria and selects it.  
@@ -412,6 +415,7 @@ function ChangeSelection(tree, newMessage)
 		tree.clearItemSelection();
 		tree.clearCellSelection();
 		tree.selectItem(newMessage);
+		tree.ensureElementIsVisible(newMessage);
 	}
 }
 
