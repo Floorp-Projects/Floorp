@@ -47,6 +47,7 @@ use Bugzilla::Error;
 
 use base qw(Exporter);
 @Bugzilla::Bug::EXPORT = qw(
+    AppendComment
     bug_alias_to_id
     ValidateComment
 );
@@ -602,6 +603,38 @@ sub bug_alias_to_id ($) {
 #####################################################################
 # Subroutines
 #####################################################################
+
+sub AppendComment ($$$;$$$) {
+    my ($bugid, $who, $comment, $isprivate, $timestamp, $work_time) = @_;
+    $work_time ||= 0;
+    my $dbh = Bugzilla->dbh;
+
+    ValidateTime($work_time, "work_time") if $work_time;
+    trick_taint($work_time);
+
+    # Use the date/time we were given if possible (allowing calling code
+    # to synchronize the comment's timestamp with those of other records).
+    $timestamp =  "NOW()" unless $timestamp;
+
+    $comment =~ s/\r\n/\n/g;     # Handle Windows-style line endings.
+    $comment =~ s/\r/\n/g;       # Handle Mac-style line endings.
+
+    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace
+        return;
+    }
+
+    # Comments are always safe, because we always display their raw contents,
+    # and we use them in a placeholder below.
+    trick_taint($comment); 
+    my $whoid = &::DBNameToIdAndCheck($who);
+    my $privacyval = $isprivate ? 1 : 0 ;
+    $dbh->do(q{INSERT INTO longdescs
+                      (bug_id, who, bug_when, thetext, isprivate, work_time)
+               VALUES (?,?,?,?,?,?)}, undef,
+             ($bugid, $whoid, $timestamp, $comment, $privacyval, $work_time));
+    $dbh->do("UPDATE bugs SET delta_ts = ? WHERE bug_id = ?",
+             undef, $timestamp, $bugid);
+}
 
 sub EmitDependList {
     my ($myfield, $targetfield, $bug_id) = (@_);

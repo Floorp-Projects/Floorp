@@ -109,35 +109,6 @@ $::SIG{PIPE} = 'IGNORE';
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
 
-sub AppendComment {
-    my ($bugid, $who, $comment, $isprivate, $timestamp, $work_time) = @_;
-    $work_time ||= 0;
-
-    if ($work_time) {
-        require Bugzilla::Bug;
-        Bugzilla::Bug::ValidateTime($work_time, "work_time");
-    }
-
-    # Use the date/time we were given if possible (allowing calling code
-    # to synchronize the comment's timestamp with those of other records).
-    $timestamp = ($timestamp ? SqlQuote($timestamp) : "NOW()");
-
-    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
-    $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
-
-    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace
-        return;
-    }
-
-    my $whoid = DBNameToIdAndCheck($who);
-    my $privacyval = $isprivate ? 1 : 0 ;
-    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate, work_time) " .
-        "VALUES($bugid, $whoid, $timestamp, " . SqlQuote($comment) . ", " . 
-        $privacyval . ", " . SqlQuote($work_time) . ")");
-
-    SendSQL("UPDATE bugs SET delta_ts = $timestamp WHERE bug_id = $bugid");
-}
-
 sub GetFieldID {
     my ($f) = (@_);
     SendSQL("SELECT fieldid FROM fielddefs WHERE name = " . SqlQuote($f));
