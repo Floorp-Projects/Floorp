@@ -697,6 +697,8 @@ protected:
     */
   virtual nsCellMap *GetCellMap() const;
 
+  void SetColumnDimensions(nscoord aHeight);
+
 #ifdef NS_DEBUG
   /** for debugging only
     * prints out information about the cell map

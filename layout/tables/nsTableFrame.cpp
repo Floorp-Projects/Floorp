@@ -2285,8 +2285,19 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
         (const nsStyleTable*)mStyleContext->GetStyleData(eStyleStruct_Table);
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *spacing, 0, 0);
+        
+      nsCompatibility mode;
+      aPresContext.GetCompatibilityMode(&mode);
+      if (eCompatibility_Standard == mode) {
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+        // paint the column groups and columns
+        nsIFrame* colGroupFrame = mColGroups.FirstChild();
+        while (nsnull != colGroupFrame) {
+          PaintChild(aPresContext, aRenderingContext, aDirtyRect, colGroupFrame, aWhichLayer);
+          colGroupFrame->GetNextSibling(&colGroupFrame);
+        }
+      }
       PRIntn skipSides = GetSkipSides();
       if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
       {
@@ -2411,6 +2422,47 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresCon
   aReflowState.y = rect.YMost();
 
   return NS_OK;
+}
+
+void nsTableFrame::SetColumnDimensions(nscoord aHeight)
+{
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+  nscoord colHeight = aHeight -= borderPadding.top + borderPadding.bottom;
+  nscoord cellSpacingX = GetCellSpacingX();
+  nscoord halfCellSpacingX = NSToCoordRound(((float)cellSpacingX) / (float)2);
+
+  nsIFrame* colGroupFrame = mColGroups.FirstChild();
+  PRInt32 colX = 0;
+  nsPoint colGroupOrigin(borderPadding.left, borderPadding.top);
+  while (nsnull != colGroupFrame) {
+    nscoord colGroupWidth = 0;
+    nsIFrame* colFrame = nsnull;
+    colGroupFrame->FirstChild(nsnull, &colFrame);
+    nsPoint colOrigin(0, 0);
+    while (nsnull != colFrame) {
+      NS_ASSERTION(colX < mColCount, "invalid number of columns");
+      nscoord colWidth = mColumnWidths[colX] + cellSpacingX;
+      if (mColCount == 1) {
+        colWidth += cellSpacingX;
+      }
+      else if ((0 == colX) || (mColCount - 1 == colX)) {
+        colWidth += halfCellSpacingX;
+      }
+      colGroupWidth += colWidth;
+      nsRect colRect(colOrigin.x, colOrigin.y, colWidth, colHeight);
+      colFrame->SetRect(colRect);
+      colFrame->GetNextSibling(&colFrame);
+      colOrigin.x += colWidth;
+      colX++;
+    }
+    nsRect colGroupRect(colGroupOrigin.x, colGroupOrigin.y, colGroupWidth, colHeight);
+    colGroupFrame->SetRect(colGroupRect);
+    colGroupFrame->GetNextSibling(&colGroupFrame);
+    colGroupOrigin.x += colGroupWidth;
+  }
 }
 
 // SEC: TODO need to worry about continuing frames prev/next in flow for splitting across pages.
@@ -2555,6 +2607,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
               this, aDesiredSize.width, aDesiredSize.height);
   }
+
+  SetColumnDimensions(aDesiredSize.height);
 
   if (PR_TRUE==gsDebug) printf("end reflow for table %p\n", this);
   return rv;
