@@ -1997,7 +1997,7 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIStreamObserver> loader;
-        rv = CachedChromeLoader::Create(this, getter_AddRefs(loader));
+        rv = nsXULDocument::CachedChromeLoader::Create(this, getter_AddRefs(loader));
         if (NS_FAILED(rv)) return rv;
 
         rv = loadgroup->Init(loader);
