@@ -1167,9 +1167,9 @@ sub get_type_ddl {
 
 } #eosub--get_type_ddl
 #--------------------------------------------------------------------------
-sub get_column_info {
+sub get_column_ddl {
 
-=item C<get_column_info>
+=item C<get_column_ddl>
 
  Description: Public method to generate a DDL segment of a "create table"
               SQL statement for a given table and field.
@@ -1192,7 +1192,7 @@ sub get_column_info {
     return() unless ($fields{$column});
     return %{ $fields{$column} };
 
-} #eosub--get_column_info
+} #eosub--get_column_ddl
 #--------------------------------------------------------------------------
 sub get_table_list {
 
@@ -1348,7 +1348,52 @@ sub _get_create_index_ddl {
 
 } #eosub--_get_create_index_ddl
 #--------------------------------------------------------------------------
+sub get_column_abstract {
 
+=item C<get_column_abstract($table, $column)>
+
+ Description: A column definition from the abstract internal schema.
+              cross-database format.
+ Params:      $table - The name of the table
+              $column - The name of the column that you want
+ Returns:     A hash reference. For the format, see the docs for
+              C<ABSTRACT_SCHEMA>.
+              Returns undef if the column or table does not exist.
+
+=cut
+
+    my ($self, $table, $column) = @_;
+
+    # Prevent a possible dereferencing of an undef hash, if the
+    # table doesn't exist.
+    if (exists $self->{abstract_schema}->{$table}) {
+        return $self->{abstract_schema}->{$table}{FIELDS}{$column};
+    }
+    return undef;
+}
+
+sub get_index_abstract {
+
+=item C<get_index_abstract($table, $index)
+
+ Description: Returns an index definition from the internal abstract schema.
+ Params:      $table - The table the index is on.
+              $index - The name of the index.
+ Returns:     A hash reference representing an index definition.
+              See the C<ABSTRACT_SCHEMA> docs for details.
+              Returns undef if the index does not exist.
+
+=cut
+
+    my ($self, $table, $index) = @_;
+
+    # Prevent a possible dereferencing of an undef hash, if the
+    # table doesn't exist.
+    if (exists $self->{abstract_schema}->{$table}) {
+        return $self->{abstract_schema}->{$table}{INDEXES}{$index};
+    }
+    return undef;
+}
 
 
 =head1 SERIALIZATION/DESERIALIZATION

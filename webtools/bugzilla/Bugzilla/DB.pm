@@ -434,6 +434,19 @@ sub _bz_schema {
     return $self->{private_bz_schema};
 }
 
+sub bz_column_info {
+    my ($self, $table, $column) = @_;
+
+    return $self->_bz_real_schema->get_column_abstract($table, $column);
+}
+
+sub bz_index_info {
+    my ($self, $table, $index) = @_;
+
+    return $self->_bz_real_schema->get_index_abstract($table, $index);
+}
+
+
 # XXX - Needs to be made cross-db compatible.
 sub bz_get_field_def ($$) {
     my ($self, $table, $field) = @_;
@@ -709,6 +722,10 @@ Bugzilla::DB - Database access routines, using L<DBI>
   $dbh->bz_rename_field($table, $column, $newname);
 
   # Schema Information
+  my $column = $dbh->bz_column_info($table, $column);
+  my $index  = $dbh->bz_index_info($table, $index);
+
+  # Schema Information (DEPRECATED)
   my @fields    = $dbh->bz_get_field_defs();
   my @fieldinfo = $dbh->bz_get_field_def($table, $column);
   my @indexinfo = $dbh->bz_get_index_def($table, $field);
@@ -1038,9 +1055,43 @@ These methods modify the current Bugzilla schema.
               $newname = the new name of the column
  Returns:     none
 
+=back
+
+
 =head2 Schema Information Methods
 
-These methods return info about the current Bugzilla database schema.
+These methods return information about the current Bugzilla database
+schema, as it currently exists on the disk. 
+
+Where a parameter says "Abstract index/column definition", it returns/takes
+information in the formats defined for indexes and columns in
+C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
+
+=over 4
+
+=item C<bz_column_info($table, $column)>
+
+ Description: Get abstract column definition.
+ Params:      $table - The name of the table the column is in.
+              $column - The name of the column.
+ Returns:     An abstract column definition for that column.
+              If the table or column does not exist, we return undef.
+
+=item C<bz_index_info($table, $index)>
+
+ Description: Get abstract index definition.
+ Params:      $table - The table the index is on.
+              $index - The name of the index.
+ Returns:     An abstract index definition for that index.
+              If the index does not exist, we return undef.
+
+=back
+
+
+=head2 Deprecated Schema Information Methods
+
+These methods return info about the current Bugzilla database, for
+MySQL only.
 
 =over 4
 
