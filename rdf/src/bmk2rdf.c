@@ -546,7 +546,12 @@ void
 readInBookmarks()
 {
   /* RDF_Resource ptFolder; */
-    RDF_Resource bmk = RDF_GetResource(NULL, "NC:Bookmarks", true);
+
+  /* XXX use rdf:bookmarks to get the demo up and running. I have no
+     clue what the difference is. */
+
+  /* RDF_Resource bmk = RDF_GetResource(NULL, "NC:Bookmarks", true); */
+  RDF_Resource bmk = RDF_GetResource(NULL, "rdf:bookmarks", true);
     RDFFile f = makeRDFFile(gBookmarkURL, bmk, true);
     PRFileDesc *fp;
     int32 len;
