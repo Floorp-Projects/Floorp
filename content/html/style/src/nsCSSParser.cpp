@@ -1701,42 +1701,24 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
         return PR_FALSE;
       }
-      if (eCSSToken_Symbol == mToken.mType) {
+      if ((eCSSToken_Symbol == mToken.mType) ||
+          (eCSSToken_Includes == mToken.mType) ||
+          (eCSSToken_Dashmatch == mToken.mType)) {
         mToken.AppendToString(aSource);
         PRUint8 func;
-        if (']' == mToken.mSymbol) {
+        if (eCSSToken_Includes == mToken.mType) {
+          func = NS_ATTR_FUNC_INCLUDES;
+        }
+        else if (eCSSToken_Dashmatch == mToken.mType) {
+          func = NS_ATTR_FUNC_DASHMATCH;
+        }
+        else if (']' == mToken.mSymbol) {
           dataMask |= SEL_MASK_ATTRIB;
           aSelector.AddAttribute(nameSpaceID, attr);
           func = NS_ATTR_FUNC_SET;
         }
         else if ('=' == mToken.mSymbol) {
           func = NS_ATTR_FUNC_EQUALS;
-        }
-        else if ('~' == mToken.mSymbol) {
-          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-            return PR_FALSE;
-          }
-          mToken.AppendToString(aSource);
-          if (mToken.IsSymbol('=')) {
-            func = NS_ATTR_FUNC_INCLUDES;
-          }
-          else {
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
-        else if ('|' == mToken.mSymbol) {
-          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-            return PR_FALSE;
-          }
-          mToken.AppendToString(aSource);
-          if (mToken.IsSymbol('=')) {
-            func = NS_ATTR_FUNC_DASHMATCH;
-          }
-          else {
-            UngetToken();
-            return PR_FALSE;
-          }
         }
         else {
           UngetToken(); // bad function
@@ -2473,7 +2455,13 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
             return PR_FALSE;
           }
           if (eCSSToken_Ident == mToken.mType) {
-            attr.Append(mToken.mIdent);
+            if (mCaseSensitive) {
+              attr.Append(mToken.mIdent);
+            } else {
+              nsAutoString buffer;
+              mToken.mIdent.ToLowerCase(buffer);
+              attr.Append(buffer);
+            }
           }
           else {
             UngetToken();
@@ -2481,7 +2469,12 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
           }
         }
         else {  // no namespace
-          attr = holdIdent;
+          if (mCaseSensitive) {
+            attr = holdIdent;
+          }
+          else {
+            holdIdent.ToLowerCase(attr);
+          }
         }
       }
       else if (mToken.IsSymbol('*')) {  // namespace wildcard
@@ -2508,7 +2501,13 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
           return PR_FALSE;
         }
         if (eCSSToken_Ident == mToken.mType) {
-          attr.Append(mToken.mIdent);
+          if (mCaseSensitive) {
+            attr.Append(mToken.mIdent);
+          } else {
+            nsAutoString buffer;
+            mToken.mIdent.ToLowerCase(buffer);
+            attr.Append(buffer);
+          }
         }
         else {
           UngetToken();

@@ -56,7 +56,10 @@ enum nsCSSTokenType {
   eCSSToken_URL = 10,           // mIdent
   eCSSToken_InvalidURL = 11,    // doesn't matter
 
-  eCSSToken_HTMLComment = 12    // "<!--" or "--{w}>"
+  eCSSToken_HTMLComment = 12,    // "<!--" or "-->"
+
+  eCSSToken_Includes = 13,      // "~="
+  eCSSToken_Dashmatch = 14      // "|="
 
 };
 
@@ -118,7 +121,9 @@ protected:
   PRBool ParseNumber(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseID(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseString(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
+#if 0
   PRBool ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aResult);
+#endif
   PRBool ParseCComment(PRInt32& aErrorCode, nsCSSToken& aResult);
 
   PRBool GatherString(PRInt32& aErrorCode, PRInt32 aStop,
