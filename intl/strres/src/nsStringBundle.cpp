@@ -239,9 +239,8 @@ nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
   if (NS_FAILED(aStatus)) {
     if (aLoader) {
       nsCOMPtr<nsIRequest> request;
-      nsCOMPtr<nsIChannel> channel;
       aLoader->GetRequest(getter_AddRefs(request));
-      request = do_QueryInterface(channel);
+      nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
 
       if (channel) {
         nsCOMPtr<nsIURI> uri;
