@@ -224,8 +224,7 @@ my $login_cookie_set = 0;
 # required, it will prompt for a login.
 sub quietly_check_login {
     if (Param('requirelogin') && !(@_)) {
-        confirm_login();
-        return;
+        return confirm_login();
     }
     $::disabledreason = '';
     my $userid = 0;
