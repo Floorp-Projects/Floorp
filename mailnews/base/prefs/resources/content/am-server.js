@@ -39,6 +39,10 @@ function onInit()
 
 function onPreInit(account, accountValues)
 {
+    // Bug 134238
+    // Make sure server.isSecure will be saved before server.port preference
+    parent.getAccountValue(account, accountValues, "server", "isSecure", null, false);
+
     var type = parent.getAccountValue(account, accountValues, "server", "type", null, false);
     gRedirectorType = parent.getAccountValue(account, accountValues, "server", "redirectorType", null, false);
     hideShowControls(type);
