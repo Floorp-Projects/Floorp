@@ -61,10 +61,16 @@ mz_euckr2iso(	CCCDataObject		obj,
  	register unsigned char	*tobufep, *eucep;	/* end of buffers		*/
 
  	/* Allocate a dest buffer:
-	 * ISO2022 would be at worst 3 times that of EUC
+
+           4 bytes: ESC $ ) C   
+           2 bytes: CR LF
+           * 2:     SI + one byte 
+           1 bytes: SI
+           1 bytes: NULL    
+
 	 */
 
-	tobufsz = eucbufsz * 3 + 8;
+	tobufsz = 4 + 2 + eucbufsz * 2 + 1 + 1;
 
 
 	if ((tobuf = (unsigned char *)XP_ALLOC(tobufsz)) == (unsigned char *)NULL) {
@@ -73,7 +79,7 @@ mz_euckr2iso(	CCCDataObject		obj,
 	}
 
  	tobufp = tobuf;
- 	tobufep = tobufp + tobufsz - 2;		/* save space for terminating null */
+ 	tobufep = tobufp + tobufsz - 3;		/* save space for terminating null */
  	eucp = (unsigned char *)eucbuf;
  	eucep = (unsigned char *)eucbuf + eucbufsz - 1;	/* save space for nul */
 
@@ -100,6 +106,9 @@ mz_euckr2iso(	CCCDataObject		obj,
 		}
 	}
 
+        if(IsIns5601_87_SO(obj))
+ 	   Ins5601_87_SI(tobufp, obj);
+             
 	*tobufp =  '\0';						/* null terminate dest. data */
 	INTL_SetCCCLen(obj,  tobufp - tobuf);			/* length not counting null	*/
 
