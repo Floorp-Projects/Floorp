@@ -1,9 +1,45 @@
+function upgradeCleanup()
+{
+  // Obsolete files from previous Netscape installation which
+  // need to be cleaned up.
+  deleteThisFile("Components", "l10n.ini");
+}
+
 // main
-
+var srDest;
 var err;
+var communicatorFolder;
 
-err = initInstall("Quality Feedback Agent", "Quality Feedback Agent", "6.5.0.2001012623"); 
-logComment("Talkback place holder .xpi for the real thing.");
-cancelInstall(err);
+srDest = $SpaceRequired$;
+err    = initInstall("Quality Feedback Utility", "Quality Feedback Utility", "$Version$"); 
+logComment("initInstall: " + err);
+
+communicatorFolder = getFolder("Communicator");
+logComment("communicatorFolder: " + communicatorFolder);
+
+if(verifyDiskSpace(communicatorFolder, srDest))
+{
+  setPackageFolder(communicatorFolder);
+
+  upgradeCleanup();
+  err = addDirectory("",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     communicatorFolder, // Where to put this file (Returned from getFolder) 
+                     "",                 // subdir name to create relative to communicatorFolder
+                     true );             // Force Flag 
+  logComment("addDirectory() returned: " + err);
+
+  // check return value
+  if(!err)
+  {
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
+  }
+  else
+    cancelInstall(err);
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
 
 // end main
