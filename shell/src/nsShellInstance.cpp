@@ -168,6 +168,14 @@ nsIWidget * nsShellInstance::CreateApplicationWindow(const nsRect &aRect,
                                                      EVENT_CALLBACK aHandleEventFunction)
 {
 
+  nsRect windowRect ;
+
+  if (aRect.IsEmpty()) {
+    windowRect.SetRect(100,100,320,480);
+  } else {
+    windowRect.SetRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+
   static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
   static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 

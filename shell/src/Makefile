@@ -21,6 +21,10 @@ MODULE=shell
 
 DEFINES = -D_IMPL_NS_WEB
 
+EXPORTS = \
+     nsApplicationManager.h			\
+	$(NULL)
+
 CPPSRCS=				\
  nsApplicationManager.cpp			\
  nsShellInstance.cpp			\
