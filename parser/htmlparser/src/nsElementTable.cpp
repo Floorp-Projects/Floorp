@@ -1898,7 +1898,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
 
           //fixes a derivative of bug 22842...
         if(CanContainType(kBlock)) { //INS/DEL can contain blocks.
-          if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity)) {
+          if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity) || gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kFlowEntity)) {
             if(HasOptionalEndTag(theTag)) {
               continue; //then I can close it.
             }
@@ -1924,14 +1924,16 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       if(theTag!=mTagID) {
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
 
-        if(gHTMLElements[theTag].IsSpecialEntity() || gHTMLElements[theTag].IsFontStyleEntity()) {
+        if((eHTMLTag_userdefined==theTag) ||
+            gHTMLElements[theTag].IsSpecialEntity() || 
+            gHTMLElements[theTag].IsFontStyleEntity()) {
           continue;
         }
         else {
 
             //fixes bug 22842...
           if(CanContainType(kBlock)) {
-            if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity)) {
+            if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity) || gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kFlowEntity)) {
               if(HasOptionalEndTag(theTag)) {
                 continue; //then I can close it.
               }
@@ -1989,7 +1991,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     // above SELECT. This would cause select to get closed!!!
     eHTMLTags thePrevTag=(eHTMLTags)aContext.Last();
 
-    if(IsInlineParent(thePrevTag)) {
+    if(IsInlineParent(thePrevTag) || (eHTMLTag_userdefined==thePrevTag)) {
     
       //we intentionally make 2 passes: 
       //The first pass tries to exactly match, the 2nd pass matches the group.
@@ -2021,6 +2023,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
  * @return
  */
 PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
+
 
   if(IsContainer(mTagID)){
 

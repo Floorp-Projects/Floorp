@@ -610,7 +610,8 @@ inline PRBool HasOptionalEndTag(eHTMLTags aTag) {
   static eHTMLTags gHasOptionalEndTags[]={eHTMLTag_body,eHTMLTag_colgroup,eHTMLTag_dd,eHTMLTag_dt,
                                                     eHTMLTag_head,eHTMLTag_li,eHTMLTag_option,
                                                     eHTMLTag_p,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_tfoot,
-                                                    eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr,eHTMLTag_unknown};
+                                                    eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr,
+                                                    eHTMLTag_userdefined,eHTMLTag_unknown};
   return FindTagInSet(aTag,gHasOptionalEndTags,sizeof(gHasOptionalEndTags)/sizeof(eHTMLTag_body));
 }
 
