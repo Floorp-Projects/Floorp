@@ -356,7 +356,7 @@ FileSystemDataSource::Assert(nsIRDFResource *source,
                        nsIRDFNode *target,
                        PRBool tv)
 {
-	PR_ASSERT(0);
+//	PR_ASSERT(0);
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -367,7 +367,7 @@ FileSystemDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFResource *property,
                          nsIRDFNode *target)
 {
-	PR_ASSERT(0);
+//	PR_ASSERT(0);
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
