@@ -1042,6 +1042,7 @@ mail/installer/Makefile
 mail/installer/windows/Makefile
 mail/themes/Makefile
 mail/themes/pinstripe/mail/Makefile
+mail/themes/pinstripe/editor/Makefile
 mail/themes/pinstripe/Makefile
 mail/themes/qute/mail/Makefile
 mail/themes/qute/editor/Makefile
