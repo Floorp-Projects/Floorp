@@ -1,0 +1,75 @@
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is the Mozilla OS/2 libraries.
+#
+# The Initial Developer of the Original Code is John Fairhurst,
+# <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
+# Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+#
+# Contributor(s): 
+#
+# Makefile for gfx/src/os2
+
+DEPTH = ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+OS2_IMPLIB = 1
+OS2_LIBRARYNAME = gfxos2
+
+MODULE = raptor 
+
+REQUIRES = util img xpcom raptor dom netlib java dbm js
+
+DEFINES += -D_IMPL_NS_GFXONXP
+
+OS2_LIBS = nggfx img mozjs mozutil netlib xpcom
+OS_LIBS += $(NSPR_LIBS) -luconv
+
+CPPSRCS = \
+	nsDeviceContextOS2.cpp          \
+	nsRenderingContextOS2.cpp       \
+	nsFontMetricsOS2.cpp            \
+	nsImageOS2.cpp                  \
+	nsPaletteOS2.cpp                \
+	nsRegionOS2.cpp                 \
+	nsDeviceContextSpecFactoryO.cpp \
+	nsDeviceContextSpecOS2.cpp      \
+	nsDrawingSurfaceOS2.cpp         \
+	nsGfxFactoryOS2.cpp             \
+	nsTimerOS2.cpp                  \
+	$(NULL)
+
+CSRCS = libprint.c
+
+RES_FILE = $(srcdir)/libprint.res
+
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES += -I$(topsrcdir)/gfx/src
+
+# This adds the resources for the print dialog to the gfxos2 dll.
+# I guess eventually we ought to use an xml dialog...
+# XXX Have to copy files because rc is too stupid for an objdir build
+
+$(SHARED_LIBRARY): $(OBJS) $(RES_FILE)
+
+$(RES_FILE): $(srcdir)/libprint.rc
+	cp $(srcdir)/libprint.ico ./libprint.ico
+	cp $(srcdir)/libprres.h ./libprres.h
+	rc -r $(srcdir)/libprint.rc
+
