@@ -82,7 +82,7 @@ const int kDefaultExpireDays = 9;
     return;
 
   if (sender == mAutoCloseDLManager) {
-    [self setPref:"browser.download.progressDnldDialog.keepAlive" toBoolean:[sender state]];
+    [self setPref:"browser.download.progressDnldDialog.keepAlive" toBoolean:![sender state]];
   }
   if (sender == mEnableHelperApps) {
     [self setPref:"browser.download.autoDispatch" toBoolean:[sender state]];
