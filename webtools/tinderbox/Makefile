@@ -33,30 +33,30 @@
 #UUDECODE = /usr/bin/uudecode
 
 FILES = \
-Backwards.pm
+Backwards.pm	\
 addimage.cgi	\
-addnote.cgi	\
+addnote.cgi		\
 admintree.cgi	\
-buildwho.pl	\
-clean.pl	\
-doadmin.cgi	\
-ep_mac.pl	\
-ep_unix.pl	\
+buildwho.pl		\
+clean.pl		\
+doadmin.cgi		\
+ep_mac.pl		\
+ep_unix.pl		\
 ep_windows.pl	\
 fixupimages.pl	\
 handlemail.pl	\
-imagelog.pl	\
+imagelog.pl		\
 processbuild.pl	\
 showbuilds.cgi	\
 showimages.cgi	\
-showlog.cgi	\
+showlog.cgi		\
 tbglobals.pl	\
-Empty.html	\
-faq.html	\
-index.html	\
+Empty.html		\
+faq.html		\
+index.html		\
 examples/build-moz-smoke.pl \
-examples/buildit.config \
-examples/mozilla-unix.pl \
+examples/buildit.config 	\
+examples/mozilla-unix.pl 	\
 examples/mozilla-windows.pl
 
 PICS = \
