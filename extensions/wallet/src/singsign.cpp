@@ -402,7 +402,7 @@ si_unlock_signon_list(void)
  */
 
 static const char *pref_rememberSignons =
-    "network.signon.rememberSignons";
+    "signon.rememberSignons";
 PRIVATE PRBool si_RememberSignons = PR_FALSE;
 
 PRIVATE int
