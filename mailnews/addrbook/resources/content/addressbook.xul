@@ -30,7 +30,14 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardViewOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd">
+<!DOCTYPE window [
+<!ENTITY % abMainWindowDTD SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd" >
+%abMainWindowDTD;
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
+%messengerDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+]>
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -228,7 +235,7 @@ Rights Reserved.
         <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
 			</box>
 
-      <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")'>
+      <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
         <observes element="broadcaster_throbber" attribute="busy"/>
       </button>
     </toolbar>

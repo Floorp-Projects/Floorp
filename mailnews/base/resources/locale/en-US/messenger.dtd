@@ -406,7 +406,8 @@ Rights Reserved.
 <!ENTITY deleteButton.tooltip "Delete selected message or folder"> 
 <!ENTITY markButton.tooltip "Mark messages">
 <!ENTITY printButton.tooltip "Print this message"> 
-<!ENTITY stopButton.tooltip "Stop the current transfer"> 
+<!ENTITY stopButton.tooltip "Stop the current transfer">
+<!ENTITY throbber.tooltip "Go to the &vendorShortName; home page"> 
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">

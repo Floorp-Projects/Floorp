@@ -34,7 +34,14 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd">
+<!DOCTYPE window [
+<!ENTITY % messengercomposeDTD SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd" >
+%messengercomposeDTD;
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
+%messengerDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+]>
 
 <window id="main-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -431,7 +438,7 @@
        <spring flex="1"/>
        <box id="throbber-box" autostretch="never">
          <button id="navigator-throbber" 
-               oncommand="goClickThrobber('compose.throbber.url')">
+               oncommand="goClickThrobber('compose.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
            <observes element="broadcaster_throbber" attribute="busy"/>
          </button>
        </box>
