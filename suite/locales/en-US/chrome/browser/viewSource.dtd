@@ -4,7 +4,7 @@
 <!ENTITY mainWindow.title "Mozilla"> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
 <!ENTITY mainWindow.titlemodifierseperator " - ">
-<!ENTITY mainWindow.preface "Source for"> 
+<!ENTITY mainWindow.preface "Source for: "> 
 
 <!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys if any but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
 <!ENTITY fileMenu.label "File">
