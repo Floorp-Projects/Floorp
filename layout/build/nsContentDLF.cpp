@@ -188,30 +188,30 @@ nsContentDLF::CreateInstance(const char* aCommand,
     nsCAutoString type;
     viewSourceChannel->GetOriginalContentType(type);
     PRBool knownType = PR_FALSE;
-    PRInt32 typeIndex = 0;
-    while (gHTMLTypes[typeIndex] && !knownType) {
-      if (type.Equals(gHTMLTypes[typeIndex++]) &&
+    PRInt32 typeIndex;
+    for (typeIndex = 0; gHTMLTypes[typeIndex] && !knownType; ++typeIndex) {
+      if (type.Equals(gHTMLTypes[typeIndex]) &&
           !type.Equals(NS_LITERAL_CSTRING("application/x-view-source"))) {
         knownType = PR_TRUE;
       }
     }
 
-    while (gXMLTypes[typeIndex] && !knownType) {
-      if (type.Equals(gXMLTypes[typeIndex++])) {
+    for (typeIndex = 0; gXMLTypes[typeIndex] && !knownType; ++typeIndex) {
+      if (type.Equals(gXMLTypes[typeIndex])) {
         knownType = PR_TRUE;
       }
     }
 
 #ifdef MOZ_SVG
-    while (gSVGTypes[typeIndex] && !knownType) {
-      if (type.Equals(gSVGTypes[typeIndex++])) {
+    for (typeIndex = 0; gSVGTypes[typeIndex] && !knownType; ++typeIndex) {
+      if (type.Equals(gSVGTypes[typeIndex])) {
         knownType = PR_TRUE;
       }
     }
 #endif // MOZ_SVG
-    
-    while (gRDFTypes[typeIndex] && !knownType) {
-      if (type.Equals(gRDFTypes[typeIndex++])) {
+
+    for (typeIndex = 0; gRDFTypes[typeIndex] && !knownType; ++typeIndex) {
+      if (type.Equals(gRDFTypes[typeIndex])) {
         knownType = PR_TRUE;
       }
     }
