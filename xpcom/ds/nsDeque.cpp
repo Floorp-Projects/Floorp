@@ -63,6 +63,13 @@ PRInt32 nsDeque::GetSize(void) const {
   return mSize;
 }
 
+void nsDeque::SetDeallocator(nsDequeFunctor* aDeallocator){
+  if(mDeallocator) {
+    delete mDeallocator;
+  }
+  mDeallocator=aDeallocator;
+}
+
 /**
  * Remove all items from container without destroying them.
  *
