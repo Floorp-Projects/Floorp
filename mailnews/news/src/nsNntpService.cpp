@@ -82,8 +82,8 @@
 #include "nsNewsDownloader.h"
 #include "prprf.h"
 #include "nsICacheService.h"
-#include "nsNetCID.h"
 #include "nsEscape.h"
+#include "nsNetUtil.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -605,32 +605,45 @@ nsNntpService::DecomposeNewsMessageURI(const char * aMessageURI, nsIMsgFolder **
 }
 
 nsresult
-nsNntpService::GetFolderFromUri(const char *uri, nsIMsgFolder **folder)
+nsNntpService::GetFolderFromUri(const char *aUri, nsIMsgFolder **aFolder)
 {
-    nsresult rv;
+  NS_ENSURE_ARG_POINTER(aUri);
+  NS_ENSURE_ARG_POINTER(aFolder);
 
-    NS_ENSURE_ARG_POINTER(uri);
-    NS_ENSURE_ARG_POINTER(folder);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aUri));
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-    
-    // the user might have typed in or clicked on a nntp:// url
-    // to support this, we turn it into a news:// url
-    nsCOMPtr<nsIRDFResource> res;
-    if ((strlen(uri) > kNntpRootURILen) && nsCRT::strncmp(uri, kNntpRootURI, kNntpRootURILen) == 0) {
-      nsCAutoString uriStr(kNewsRootURI);
-      uriStr.Append(uri+kNntpRootURILen);
-      rv = rdf->GetResource(uriStr, getter_AddRefs(res));
-    }
-    else {
-      rv = rdf->GetResource(nsDependentCString(uri), getter_AddRefs(res));
-    }
-    NS_ENSURE_SUCCESS(rv,rv);
+  nsCAutoString hostName;
+  rv = uri->GetAsciiHost(hostName);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **)folder);
-    NS_ENSURE_SUCCESS(rv,rv);
-    return NS_OK;
+  nsCAutoString path;
+  rv = uri->GetPath(path);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIMsgIncomingServer> server;
+  rv = accountManager->FindServer("", hostName.get(), "nntp", getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIFolder> rootFolder;
+  rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // check if path is "/"
+  // if so, use the root folder
+  if (path.Length() == 1) {
+    return rootFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
+  }
+
+  nsCOMPtr<nsISupports> subFolder;
+  rv = rootFolder->GetChildNamed(NS_ConvertASCIItoUCS2(path.get() + 1).get() /* skip the leading slash */, getter_AddRefs(subFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  return subFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
 }
 
 NS_IMETHODIMP
@@ -690,32 +703,31 @@ nsNntpService::FindServerWithNewsgroup(nsCString &host, nsCString &groupName)
 {
 	nsresult rv;
 
-    nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsISupportsArray> servers;
+  
+  rv = accountManager->GetAllServers(getter_AddRefs(servers));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  findNewsServerEntry serverInfo;
+  serverInfo.server = nsnull;
+  serverInfo.newsgroup = groupName.get();
+
+  // XXX TODO
+  // this only looks at the list of subscribed newsgroups.  
+  // fix to use the hostinfo.dat information
+  servers->EnumerateForwards(findNewsServerWithGroup, (void *)&serverInfo);
+  if (serverInfo.server) {
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverInfo.server);
+    nsXPIDLCString thisHostname;
+    rv = server->GetRealHostName(getter_Copies(thisHostname));
     NS_ENSURE_SUCCESS(rv,rv);
-	nsCOMPtr<nsISupportsArray> servers;
-	
-	rv = accountManager->GetAllServers(getter_AddRefs(servers));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-	findNewsServerEntry serverInfo;
-	serverInfo.server = nsnull;
-  	serverInfo.newsgroup = groupName.get();
-
-#ifdef DEBUG_seth
-    printf("XXX this only looks at the list of subscribed newsgroups.  fix to use the hostinfo.dat information\n");
-#endif
-
-	servers->EnumerateForwards(findNewsServerWithGroup, (void *)&serverInfo);
-	if (serverInfo.server) {
-		nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverInfo.server);
-		nsXPIDLCString thisHostname;
-      rv = server->GetRealHostName(getter_Copies(thisHostname));
-        NS_ENSURE_SUCCESS(rv,rv);
-
-		host = (const char *)thisHostname;
-	}
-    
-    return NS_OK;
+   
+    host = (const char *)thisHostname;
+  }
+  
+  return NS_OK;
 }
 
 nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
