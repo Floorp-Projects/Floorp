@@ -54,6 +54,11 @@ extern PRBool   NET_IsCacheTraceOn(void);
  */ 
 extern PRBool   NET_IsPartialCacheFile(URL_Struct *URL_s);
 
+#ifdef NU_CACHE
+/* return TRUE if the URL exists somewhere in the cache */
+extern PRBool   NET_IsURLInCache(const URL_Struct *URL_s);
+#endif
+
 /* Update cache entry on a 304 return*/
 extern void     NET_RefreshCacheFileExpiration(URL_Struct * URL_s);
 
