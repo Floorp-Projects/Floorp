@@ -888,12 +888,42 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     JSPropertyOp getter;
     JSScope *scope;
     JSScopeProperty *aprop;
+    jsval lastException;
+    JSBool wasThrowing;
 
     pd->id = ID_TO_VALUE(sprop->id);
-    if (!js_GetProperty(cx, obj, sprop->id, &pd->value))
-        return JS_FALSE;
+
+    wasThrowing = cx->throwing;
+    if (wasThrowing) {
+        lastException = cx->exception;
+        if (JSVAL_IS_GCTHING(lastException) &&
+            !js_AddRoot(cx, &lastException, "lastException")) {
+                return JS_FALSE;
+        }
+        cx->throwing = JS_FALSE;
+    }
+    
+    if (!js_GetProperty(cx, obj, sprop->id, &pd->value)) {
+        if (!cx->throwing) {
+            pd->flags = JSPD_ERROR;
+            pd->value = JSVAL_VOID;
+        } else {
+            pd->flags = JSPD_EXCEPTION;
+            pd->value = cx->exception;
+        }
+    } else {
+        pd->flags = 0;
+    }
+    
+    cx->throwing = wasThrowing;
+    if (wasThrowing) {
+        cx->exception = lastException;
+        if (JSVAL_IS_GCTHING(lastException))
+            js_RemoveRoot(cx->runtime, &lastException);
+    }
+    
     getter = sprop->getter;
-    pd->flags = ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
+    pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
               | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
               | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0)
 #if JS_HAS_CALL_OBJECT
