@@ -19,32 +19,26 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..\..
+DEPTH=..\..\..\..\..\..
 include <$(DEPTH)\config\config.mak>
 
-MODULE=npbasic
+MAKE_OBJ_TYPE	= LIB
+LIBRARY_NAME = plugingate
+LIB=.\$(OBJDIR)\$(LIBRARY_NAME).lib
 
-MAKE_OBJ_TYPE	= DLL
-DLLNAME = npbasic
-RESFILE = basic.res
-DEFFILE = basic.def
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+CFLAGS = $(CFLAGS) -I..\include -I..\..\include
 
-CFLAGS = $(CFLAGS) -I..\..\include -I..\..\..\include
-
-OBJS = \
-  .\$(OBJDIR)\plugin.obj \
+CPP_OBJS = \
+  .\$(OBJDIR)\npn_gate.obj \
+  .\$(OBJDIR)\npp_gate.obj \
+  .\$(OBJDIR)\np_entry.obj \
   $(NULL)
-
-LLIBS = \
-  ..\..\common\$(OBJDIR)\plugingate.lib \
-  $(NULL)
-
-WIN_LIBS = version.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
+# it will export the lib to the dist/lib dir, so do not forget to remove it
+libs:: $(LIB)
+  $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
 
 clobber::
-	$(RM) -f *.sbr
+	$(RM) *.sbr
