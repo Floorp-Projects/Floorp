@@ -42,11 +42,13 @@ PRUint32 nsUInt32Array::GetSize() const
 	return m_nSize;
 }
 
-PRBool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
+PRBool nsUInt32Array::SetSize(PRUint32 nSize,
+                              PRBool adjustGrowth,
+                              PRUint32 nGrowBy)
 {
 	PR_ASSERT(nSize >= 0);
 
-	if (nGrowBy >= 0)
+	if (adjustGrowth)
 		m_nGrowBy = nGrowBy;
 
 #ifdef MAX_ARR_ELEMS
@@ -273,6 +275,8 @@ static int CompareDWord (const void *v1, const void *v2, void *)
 void nsUInt32Array::QuickSort (int (*compare) (const void *elem1, const void *elem2, void *data))
 {
 	// we don't have a quick sort method in mozilla yet....commenting out for now.
+#if 0
 	if (m_nSize > 1)
 		nsQuickSort(m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord, nsnull);
+#endif
 }
