@@ -25,8 +25,3 @@ DIRS=public base db local news imap mime compose addrbook import absync mapi ext
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-        $(REGCHROME) content messenger messenger.jar
-        $(REGCHROME) content messenger-region messenger.jar
-        $(REGCHROME) locale en-US/messenger en-US.jar
-        $(REGCHROME) locale US/messenger-region US.jar

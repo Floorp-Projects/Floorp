@@ -35,5 +35,3 @@ CHROME_CONTENT = \
 include <$(DEPTH)\config\rules.mak>
 
 
-chrome::
-    $(REGCHROME) content messenger-smoketest messenger.jar 

@@ -37,7 +37,3 @@ include <$(DEPTH)\config\config.mak>
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-	$(REGCHROME) content venkman venkman.jar
-	$(REGCHROME) skin modern/venkman venkman.jar
-	$(REGCHROME) locale en-US/venkman venkman.jar

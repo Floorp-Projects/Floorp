@@ -25,5 +25,3 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-    $(REGCHROME) content messenger-mapi messenger.jar

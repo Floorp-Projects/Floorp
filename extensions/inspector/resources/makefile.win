@@ -26,8 +26,3 @@ DIRS = content skin locale
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-        $(REGCHROME) content inspector inspector.jar
-        $(REGCHROME) locale en-US/inspector inspector.jar
-        $(REGCHROME) skin modern/inspector inspector.jar
-        $(REGCHROME) skin classic/inspector inspector.jar

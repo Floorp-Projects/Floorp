@@ -37,6 +37,3 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-	$(REGCHROME) content pippki pippki.jar
-	$(REGCHROME) locale en-US/pippki en-US.jar

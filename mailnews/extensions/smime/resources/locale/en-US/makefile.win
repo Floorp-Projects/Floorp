@@ -33,6 +33,3 @@ CHROME_L10N = \
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-   $(REGCHROME) locale en-US/messenger-smime en-US.jar
-

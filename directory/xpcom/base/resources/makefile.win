@@ -35,6 +35,3 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-        $(REGCHROME) content mozldap comm.jar
-        $(REGCHROME) locale en-US/mozldap en-US.jar

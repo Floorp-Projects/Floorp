@@ -38,7 +38,3 @@ DEPTH=..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-        $(REGCHROME) content calendar calendar.jar
-        $(REGCHROME) skin modern/calendar calendar.jar
-        $(REGCHROME) locale en-US/calendar calendar.jar

@@ -41,5 +41,3 @@ libs::
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-    $(REGCHROME) content messenger-smime messenger.jar

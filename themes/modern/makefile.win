@@ -25,10 +25,3 @@ THEME_ROOT_DEPTH = .
 include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-        $(REGCHROME) skin modern/communicator modern.jar
-        $(REGCHROME) skin modern/editor modern.jar
-        $(REGCHROME) skin modern/global modern.jar
-        $(REGCHROME) skin modern/messenger modern.jar
-        $(REGCHROME) skin modern/navigator modern.jar
-        $(REGCHROME) skin modern/forms modern.jar
