@@ -782,9 +782,10 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*          aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::CreateInputFrame(nsIPresContext *aPresContext,
-                                        nsIContent     *aContent, 
-                                        nsIFrame      *&aFrame)
+nsCSSFrameConstructor::CreateInputFrame(nsIPresContext  *aPresContext,
+                                        nsIContent      *aContent, 
+                                        nsIFrame        *&aFrame,
+                                        nsIStyleContext *aStyleContext)
 {
   nsresult  rv;
 
@@ -816,7 +817,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresContext *aPresContext,
       rv = ConstructTextControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("radio")) {
-      rv = ConstructRadioControlFrame(aPresContext, aFrame, aContent);
+      rv = ConstructRadioControlFrame(aPresContext, aFrame, aContent, aStyleContext);
     }
     else if (val.EqualsIgnoreCase("text")) {
       rv = ConstructTextControlFrame(aPresContext, aFrame);
@@ -2350,12 +2351,13 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
 nsresult
 nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresContext*  aPresContext,
                                                  nsIFrame*&   aNewFrame,
-                                                 nsIContent*  aContent)
+                                                 nsIContent*  aContent,
+                                                 nsIStyleContext* aStyleContext)
 {
   nsresult rv = NS_NewRadioControlFrame(&aNewFrame);
   nsCOMPtr<nsIStyleContext> radioStyle;
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::radioPseudo, 
-    radioStyle, PR_FALSE, getter_AddRefs(radioStyle));
+    aStyleContext, PR_FALSE, getter_AddRefs(radioStyle));
   nsIRadioControlFrame* radio = nsnull;
   if (NS_SUCCEEDED(aNewFrame->QueryInterface(kIRadioControlFrameIID, (void**)&radio))) {
     radio->SetRadioButtonFaceStyleContext(radioStyle);
@@ -2598,7 +2600,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       }
       else if (nsHTMLAtoms::input == aTag) {
         isReplaced = PR_TRUE;
-        rv = CreateInputFrame(aPresContext, aContent, newFrame);
+        rv = CreateInputFrame(aPresContext, aContent, newFrame, aStyleContext);
       }
       else if (nsHTMLAtoms::textarea == aTag) {
         isReplaced = PR_TRUE;
@@ -2876,7 +2878,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::fontpicker)
       rv = NS_NewFontPickerFrame(&newFrame);
     else if (aTag == nsXULAtoms::radio)
-      rv = ConstructRadioControlFrame(aPresContext, newFrame, aContent);
+      rv = ConstructRadioControlFrame(aPresContext, newFrame, aContent, aStyleContext);
     else if (aTag == nsXULAtoms::text)
       rv = ConstructTextControlFrame(aPresContext, newFrame);
     else if (aTag == nsXULAtoms::widget)

@@ -402,7 +402,8 @@ protected:
 
   nsresult ConstructRadioControlFrame(nsIPresContext*    aPresContext,
                                       nsIFrame*&         aNewFrame,
-                                      nsIContent*        aContent);
+                                      nsIContent*        aContent,
+                                      nsIStyleContext*   aStyleContext);
 
   nsresult ConstructTextControlFrame(nsIPresContext*          aPresContext,
                                      nsIFrame*&               aNewFrame);
@@ -470,9 +471,10 @@ protected:
                            PRBool                   aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems);
 
-  nsresult CreateInputFrame(nsIPresContext *aPresContext,
-                            nsIContent     *aContent, 
-                            nsIFrame      *&aFrame);
+  nsresult CreateInputFrame(nsIPresContext  *aPresContext,
+                            nsIContent      *aContent, 
+                            nsIFrame        *&aFrame,
+                            nsIStyleContext *aStyleContext);
 
   PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
 
