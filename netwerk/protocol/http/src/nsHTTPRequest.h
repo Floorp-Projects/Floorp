@@ -19,13 +19,14 @@
 #ifndef _nsHTTPRequest_h_
 #define _nsHTTPRequest_h_
 
+#include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsIHTTPCommonHeaders.h"
 #include "nsIHTTPRequest.h"
 #include "nsIStreamObserver.h"
-#include "nscore.h"
+#include "nsIURL.h"
 
 class nsIInputStream;
-class nsIURL;
 class nsVoidArray;
 class nsIBufferInputStream;
 class nsIInputStream;
@@ -293,7 +294,7 @@ protected:
         return methods[i_Method];
     }
 
-    nsIURI*                     m_pURI;
+    nsCOMPtr<nsIURL>            m_pURL;
     HTTPVersion                 m_Version;
     HTTPMethod                  m_Method;
     // The actual request stream! 
