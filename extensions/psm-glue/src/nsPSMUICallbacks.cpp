@@ -106,7 +106,11 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
   char buffer[256];
   PR_snprintf(buffer,
               sizeof(buffer),
-              modal ? "menubar=no,height=%d,width=%d,dependent,modal"
+#ifdef WIN32
+	       modal ? "menubar=no,height=%d,width=%d,dependent,modal"
+#else
+              (modal && win) ? "menubar=no,height=%d,width=%d,dependent"
+#endif
               : "menubar=no,height=%d,width=%d",
               height,
               width );
@@ -115,12 +119,16 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
   if (argv) {
     // open the window
     nsIDOMWindowInternal *newWindow;
+#ifdef WIN32 
     if (modal && win) {
       parentWindow->OpenDialog(jsContext, argv, 3, &newWindow);
     } else {
       parentWindow->Open(jsContext, argv, 3, &newWindow);
     }
     newWindow->ResizeTo(width, height);
+#else
+    parentWindow->Open(jsContext, argv, 3, &newWindow);
+#endif
     JS_PopArguments(jsContext, stackPtr);
   }
  loser:
