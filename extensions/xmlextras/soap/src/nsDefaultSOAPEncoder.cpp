@@ -2922,7 +2922,7 @@ NS_IMETHODIMP
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
     return rc;
-  bool b;
+  PRBool b;
   if (value.Equals(nsSOAPUtils::kTrue)
       || value.Equals(nsSOAPUtils::kTrueA)) {
     b = PR_TRUE;
