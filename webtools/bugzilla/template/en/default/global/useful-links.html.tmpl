@@ -70,6 +70,7 @@
                                                   IF user.groups.creategroups %]
         [% ', <a href="editkeywords.cgi">keywords</a>' 
                                                   IF user.groups.editkeywords %]
+        [% Hook.process("edit") %]
         [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' 
                                                    IF user.groups.tweakparams %]
 
