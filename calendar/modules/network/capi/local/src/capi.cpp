@@ -130,6 +130,51 @@ void *CAPI_memset( void *dest, int c, size_t count )
     return memset(dest,c,count);
 }
 
+/************************************************************************/
+
+/**
+ * This is a useful piece of code but it's in the wrong
+ * place. Given a path, it ensures that the path exists, creating
+ * whatever needs to be created.
+ * @return 0 on success
+ *         file creation errors otherwise.
+ */
+PRInt32 CAPI_EnsureUserPath( JulianString& sPath )
+{
+  JulianString sTmp;
+  PRInt32 i;
+  nsCurlParser::ConvertToFileChars(sPath);
+  for (i = 0; -1 != (i = sPath.Strpbrk(i,"/\\")); i++ )
+  {
+    sTmp = sPath.Left(i);
+    if (PR_SUCCESS != PR_Access(sTmp.GetBuffer(), PR_ACCESS_EXISTS))
+    {
+      /*
+       * Try to create it...
+       */
+      if (PR_SUCCESS != PR_MkDir(sTmp.GetBuffer(),PR_RDWR))
+      {
+        PRInt32 iError = PR_GetError();
+        return iError;
+      }
+    }
+  }
+
+  /*
+   * OK, the path was there or it has been created. Now make
+   * sure we can write to it.
+   */
+  if (PR_SUCCESS != PR_Access(sPath.GetBuffer(), PR_ACCESS_WRITE_OK))
+  {
+      PRInt32 iError = PR_GetError();
+      return iError;
+  }
+
+  return 0;
+}
+
+
+
 /****************************************************************
 ***    MIME / ICAL ASSEMBLY FUNCTIONS
 *****************************************************************/
@@ -627,7 +672,7 @@ CAPIStatus CAPI_FetchEventsByRange(
     int32 j = 0;
     DateTime start;
     DateTime end;
-    UnicodeString uFilename = "calendar.ics";
+    UnicodeString uFilename;
     UnicodeString uTemp;
 
     if (0 == pSession)
@@ -822,6 +867,12 @@ CAPIStatus CAPI_FetchEventsByRange(
                 pCopy = 0;
             }
         }
+    
+        /*
+         * Signal the end of transmission...
+         */
+        (*pStream->pfnRcvCallback)(pStream->userDataRcv,p,0,&iAmountHandled);
+
     }
 
 FBRANGE_EXIT:
@@ -833,6 +884,7 @@ FBRANGE_EXIT:
         delete pRedr;
     if (0 != pCopy)
         delete pCopy;
+
     return iRetStatus;
 }
 
@@ -853,7 +905,7 @@ CAPIStatus CAPI_GetHandle(
     *pH = 0;
     if (0 == pHandle)
         return CAPI_ERR_NO_MEMORY;
-    pHandle->psFile = CAPI_strdup(u);
+    
     pHandle->pSession = pSession;
     pHandle->pCurl = new nsCurlParser(u);
 
@@ -862,6 +914,19 @@ CAPIStatus CAPI_GetHandle(
      *  qualified, use the Curl in the session to fill in the missing parts.
      */
     *pHandle->pCurl |= *pSession->pCurl;
+
+    char* psLocalFile = pHandle->pCurl->ToLocalFile();
+    pHandle->psFile = CAPI_strdup(psLocalFile);
+    PR_Free(psLocalFile);
+    
+    JulianString sPath = pHandle->pCurl->CSIDPath();
+    if (NS_OK != CAPI_EnsureUserPath( sPath ))
+    {
+      // XXX  do some error thing here...
+      // we should probably pop up a file dialog and let
+      // the user point us to a path to use.
+      return 1;
+    }
 
     *pH = pHandle;
     return CAPI_ERR_OK;
@@ -963,7 +1028,7 @@ CAPIStatus CAPI_SetStreamCallbacks (
     PCAPISESSION *pSession = (PCAPISESSION*)s;
     PCAPIStream* pRet = (PCAPIStream *)pOpaqueStream;
 
-    if (0 == pRet)
+    if (0 == *pOpaqueStream)
     {
       pRet = (PCAPIStream *) CAPI_malloc(sizeof(PCAPIStream));
       if (0 == pRet)

@@ -20,16 +20,19 @@
 /**
  * This class manages a string in one of the following forms:
  *
- *    protocol://host.domain[:port]/CSID[:extra]
+ *    protocol://user:password@host.domain[:port]/CSID[:extra]
  *    mailto:user@host.domain
  *
  * Examples:
  *    capi://calendar-1.mcom.com/sman
+ *    capi://jason:badguy@calendar-1.mcom.com/sman
  *    capi://localhost/c|/temp/junk.ics
  *    mailto:sman@netscape.com
  *
  * The component parts of a calendar URL are:
  *    protocol:   currently supported are CAPI, IMIP (mailto), and IRIP
+ *    user:       the user making the access
+ *    password:   the password for the user
  *    host:       the host.domain where the calendar server resides
  *    port:       optional, tells what port to use
  *    CSID:       a unique string identifying a calendar store. It
@@ -64,6 +67,8 @@ public:
 private:
   JulianString  m_sCurl;
   ePROTOCOL     m_eProto;
+  JulianString  m_sUser;
+  JulianString  m_sPassword;
   JulianString  m_sHost;
   PRInt32       m_iPort;
   JulianString  m_sCSID;
@@ -86,6 +91,8 @@ public:
   ePROTOCOL     GetProtocol();
   JulianString  GetProtocolString();
   JulianString  GetHost();
+  JulianString  GetUser();
+  JulianString  GetPassword();
   PRInt32       GetPort();
   JulianString  GetCSID();
   JulianString  GetPath();
@@ -127,25 +134,64 @@ public:
    */
   nsCurlParser& operator=(const nsCurlParser& that);
 
-  nsresult      SetCurl(JulianString& sCurl);
+  /**
+   *  Set the curl to the supplied string.
+   *  @param sCurl  new calendar url for this object
+   *  @return   0 on success
+   */
+  nsresult      SetCurl(const JulianString& sCurl);
+
+  /**
+   *  Set the curl to the supplied string.
+   *  @param psCurl  new calendar url for this object
+   *  @return   0 on success
+   */
   nsresult      SetCurl(const char* psCurl);
+
+  /**
+   *  Set the protocol for this curl to one of the enumerated types
+   *  @param e  the protocol
+   *  @return   0 on success
+   */
   nsresult      SetProtocol(ePROTOCOL e);
-  nsresult      SetHost(JulianString& sHost);
+  nsresult      SetHost(const JulianString& sHost);
   nsresult      SetHost(const char* sHost);
   nsresult      SetPort(PRInt32 iPort);
-  nsresult      SetCSID(JulianString& sCSID);
+  nsresult      SetUser(const JulianString& sUser);
+  nsresult      SetUser(const char* sUser);
+  nsresult      SetPassword(const JulianString& sPassword);
+  nsresult      SetPassword(const char* sPassword);
+  nsresult      SetCSID(const JulianString& sCSID);
   nsresult      SetCSID(const char* sCSID);
   nsresult      SetPath(const char* sPath);
-  nsresult      SetPath(JulianString& sPath);
-  nsresult      SetExtra(JulianString& sExtra);
+  nsresult      SetPath(const JulianString& sPath);
+  nsresult      SetExtra(const JulianString& sExtra);
   nsresult      SetExtra(const char* sExtra);
+
+  /**
+   * Encode any illegal characters in username, password, CSID, 
+   * and extra fields. No status is kept on whether or not any
+   * of the fields are currently encoded or not. The encoding
+   * is done blindly.
+   * @result NS_OK on success
+   */
+  nsresult URLEncode();
+
+  /**
+   * Decode any illegal characters in username, password, CSID, 
+   * and extra fields. No status is kept on whether or not any
+   * of the fields is currently decoded or not. The decoding is
+   * done blindly.
+   * @result NS_OK on success
+   */
+  nsresult URLDecode();
 
   /**
    * Filter the characters in the CSID portion of the curl so that it
    * is in acceptable format for OS specific file operations.
    * @result 0 on success
    */
-  nsresult      ResolveFileURL();
+  nsresult ResolveFileURL();
 
   /**
    * @return a JulianString the path portion of the CSID

@@ -91,6 +91,7 @@ public:
   NS_IMETHOD ReceiveCommand(nsString& aCommand, nsString& aReply);
 
 private:
+  NS_METHOD InitialLoadData();
   NS_METHOD RegisterFactories();
   NS_METHOD SetDefaultPreferences();
   NS_METHOD EnvVarsToValues(JulianString& s);

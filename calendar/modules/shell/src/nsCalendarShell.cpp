@@ -39,9 +39,15 @@
 #include "nsCalCommandCanvas.h"
 #include "nlsloc.h"
 #include "nsCapiCIID.h"
+#include "nspr.h"
+#include "prcvar.h"
 
 #include "capi.h"
 #include "nsICapi.h"
+
+/* for CAPI to work in general form */
+#include "nsCapiCallbackReader.h"
+#include "nsCalStreamReader.h"
 
 #ifdef NS_WIN32
 #include "windows.h"
@@ -88,9 +94,75 @@ nsresult NS_RegisterApplicationShellFactory()
 }
 
 /*
+ *  CAPI Callback used to fetch data from a general CAPI location
+ *  Gets nsCalStreamReader object.  
+ *  If parse not started yet.
+ *     Start the parser - the parser will block automatically when
+ *     no more data to parse.
+ *  When parse is blocked, set size handled
+ */
+int RcvData(void * pData, 
+            char * pBuf, 
+            size_t iSize, 
+            size_t * piTransferred)
+{
+    nsCalStreamReader * pCalStreamReader = (nsCalStreamReader *) pData;
+    nsCapiCallbackReader * pCapiCallbackReader = pCalStreamReader->getReader();
+    if (!pCalStreamReader->isParseStarted())
+    {
+        PRMonitor * pMon = (PRMonitor*) pCalStreamReader->getCallerData();
+        pCalStreamReader->setParseStarted();
+
+        /*
+         * Start up the thread that will receive the ical data
+         */
+        PR_ExitMonitor(pMon);
+    }
+
+    /*
+     * We're going to be adding a new buffer (unicode string) to the 
+     * list of data. We don't want the other thread accessing the list
+     * while we're doing this. So, we enter the monitor...
+     */
+    PR_EnterMonitor((PRMonitor *)pCapiCallbackReader->getMonitor());
+
+    /*
+     * if we're finished, set the CapiCallbackReader to finished.
+     */
+    if (iSize == 0)
+    {
+      pCapiCallbackReader->setFinished();
+    }
+    else
+    {
+      /*
+       * XXX: may want to ensure that pBuf is 0 terminated.
+       */
+      pCapiCallbackReader->AddChunk(new UnicodeString(pBuf));
+      *piTransferred = iSize;
+    }
+
+    /*
+     * The parsing thread may be waiting on more data before it
+     * can continue. When this happens, it enters a PR_WAIT for
+     * this monitor. We've just finished adding more data, so we
+     * want to notify the other thread now if it's waiting.
+     */
+    PR_Notify((PRMonitor *)pCapiCallbackReader->getMonitor());
+    PR_ExitMonitor((PRMonitor *)pCapiCallbackReader->getMonitor());
+
+    /*
+     * Now that another buffer is available for parsing, we want 
+     * the parsing thread to take over. This will help keep the 
+     * list of unparsed buffers to a minimum.
+     */
+    PR_Sleep(PR_INTERVAL_NO_WAIT);
+    return iSize > 0 ? 0 : -1;
+}
+
+/*
  * nsCalendarShell Definition
  */
-
 nsCalendarShell::nsCalendarShell()
 {
   NS_INIT_REFCNT();
@@ -229,13 +301,155 @@ nsresult nsCalendarShell::EnsureUserPath( JulianString& sPath )
   return NS_OK;
 }
 
-// XXX Define some error codes ... and use them.
+/* 
+ * required to set gasViewPropList and giViewPropListCount for now
+ * will need to change local CAPI so null gasViewPropList will return 
+ * all properties.
+ */
+char * gasViewPropList[10] = {
+  "ATTENDEE", "DTSTART", "DTEND", "UID", "RECURRENCE-ID",
+    "DTSTAMP", "SUMMARY", "DESCRIPTION", "ORGANIZER", "TRANSP"
+};
+int giViewPropListCount = 10;
+
+/**
+ * Given an nsICapi interface, log in and get some initial data.
+ * @return NS_OK on success.
+ */
+nsresult nsCalendarShell::InitialLoadData()
+{
+  nsresult res;
+  ErrorCode status = ZERO_ERROR;
+  DateTime d;
+  char * psDTStart = 0;
+  char * psDTEnd = 0;
+  CAPIStream RcvStream = 0;
+  CAPIStatus capiStatus;
+  JulianPtrArray * pParsedCalList = new JulianPtrArray();
+  nsCalStreamReader * pCalStreamReader = 0;
+  PRThread * parseThread = 0;
+  PRThread * mainThread = 0;
+  PRMonitor * pCBReaderMonitor = 0;
+  PRMonitor *pThreadMonitor = 0;
+
+  /*
+   * Select the capi interface to use for this operation...
+   */
+  nsICapi* pCapi = m_SessionMgr.GetAt(0L)->mCapi;
+
+  /*
+   * Begin a calendar for the logged in user...
+   */
+  m_pCalendar = new NSCalendar(0);
+  SetNSCalendar(m_pCalendar);
+
+  /*
+   * Set up the range of time for which we'll pull events...
+   */
+  int iOffset = 30;
+  d.prevDay(iOffset);
+  psDTStart = d.toISO8601().toCString("");
+  d.nextDay(2 * iOffset);
+  psDTEnd = d.toISO8601().toCString("");
+
+  /*
+   * The data is actually read and parsed in another thread. Set it all
+   * up here...
+   */
+  mainThread = PR_CurrentThread();    
+  pCBReaderMonitor = PR_NewMonitor();
+  nsCapiCallbackReader * capiReader = new nsCapiCallbackReader(pCBReaderMonitor);
+  pThreadMonitor = ::PR_NewMonitor();
+  PR_EnterMonitor(pThreadMonitor);
+  pCalStreamReader = new nsCalStreamReader(capiReader, pParsedCalList, parseThread, pThreadMonitor);
+  parseThread = PR_CreateThread(PR_USER_THREAD,
+                 main_CalStreamReader,
+                 pCalStreamReader,
+                 PR_PRIORITY_HIGH,
+                 PR_LOCAL_THREAD,
+                 PR_UNJOINABLE_THREAD,
+                 4096);
+
+  capiStatus = pCapi->CAPI_SetStreamCallbacks(
+    mCAPISession, &RcvStream, 0,0,RcvData, pCalStreamReader,0);
+
+  if (CAPI_ERR_OK != capiStatus)
+    return 1;   /* XXX: really need to fix this up */
+
+  {
+    /* XXX: Get rid of the local variables  as soon as 
+     *      local capi can take a null list or as soon as
+     *      cs&t capi can take a list.
+     */
+  nsCurlParser sessionURL(msCalURL);
+  char** asList = gasViewPropList;
+  int iListSize = giViewPropListCount;
+
+  if (nsCurlParser::eCAPI == sessionURL.GetProtocol())
+  {
+    asList = 0;
+    iListSize = 0;
+  }
+
+  
+  capiStatus = pCapi->CAPI_FetchEventsByRange( 
+      mCAPISession, &mCAPIHandle, 1, 0,
+      psDTStart, psDTEnd, 
+      asList, iListSize, RcvStream);
+  }  
+  
+  if (CAPI_ERR_OK != capiStatus)
+    return 1;   /* XXX: really need to fix this up */
+
+  /*
+   * Wait here until we know the thread completed.
+   */
+  if (!pCalStreamReader->isParseFinished() )
+  {
+    PR_EnterMonitor(pThreadMonitor);
+    PR_Wait(pThreadMonitor,PR_INTERVAL_NO_TIMEOUT);
+    PR_ExitMonitor(pThreadMonitor);
+  }
+
+  delete [] psDTStart; psDTStart = 0;
+  delete [] psDTEnd; psDTEnd = 0;
+
+  PR_DestroyMonitor(pThreadMonitor);
+
+  /*
+   * Load the retrieved events ito our calendar...
+   */
+  int i,j;
+  NSCalendar* pCal;
+  JulianPtrArray* pEventList;
+  ICalComponent* pEvent;
+  for ( i = 0; i < pParsedCalList->GetSize(); i++)
+  {
+    pCal = (NSCalendar*)pParsedCalList->GetAt(i);
+    pEventList = pCal->getEvents();
+    if (0 != pEventList)
+    {
+      for (j = 0; j < pEventList->GetSize(); j++)
+      {
+        pEvent = (ICalComponent*)pEventList->GetAt(j);
+        if (0 != pEvent)
+          m_pCalendar->addEvent(pEvent);
+      }
+    }
+  }
+
+  /*
+   * register the calendar...
+   */
+  if (NS_OK != (res = m_CalList.Add(m_pCalendar)))
+    return res;
+
+  return NS_OK;
+}
 
 /**
  * This method establishes a logged in user and opens a connection to 
  * the calendar server (or local database file if they're working offline).
- * HACK: currently it is loading the entire calendar into memory.
- *       We need to load events as needed.
  *
  * @return NS_OK on success
  *         1 = could not create or write to a local capi directory
@@ -246,87 +460,52 @@ nsresult nsCalendarShell::Logon()
   nsresult res;
 
   /*
-   *  Ask the session manager for a session...
-   */
-  res = m_SessionMgr.GetSession(msCalURL.GetBuffer(), 0L, GetCAPIPassword(), mCAPISession);
-  
-#if 0
-  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_LogonCurl( msCalURL.GetBuffer(), GetCAPIPassword(), 0L, &mCAPISession);
-
-  if (CAPI_ERR_OK != s)
-    return NS_OK;
-#endif
-
-  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(mCAPISession, mpLoggedInUser->GetUserName().GetBuffer(), 0, &mCAPIHandle);
-
-  if (CAPI_ERR_OK != s)
-    return NS_OK;
-
-  /*
-   * Load some data...
-   */
-  ICalReader * pRedr = 0;
-  ErrorCode status = ZERO_ERROR;
-  UnicodeString uFilename;
-  m_pCalendar = new NSCalendar(0);
-  SetNSCalendar(m_pCalendar);
-
-  /*
    *  Getting the first calendar by user name should be reviewed.
    */
   nsCurlParser theURL(mpLoggedInUser->GetUserName());
   nsCurlParser sessionURL(msCalURL);
   theURL |= sessionURL;
 
+  /*
+   *  Ask the session manager for a session...
+   */
+  res = m_SessionMgr.GetSession(
+        msCalURL.GetBuffer(),  // may contain a password, if so it will be used
+        0L, 
+        GetCAPIPassword(), 
+        mCAPISession);
+  
+  char* psHandle = mpLoggedInUser->GetUserName().GetBuffer();
+  
+  
+  /*
+   * XXX: we need to make this more general...
+   */
+  if (nsCurlParser::eCAPI == theURL.GetProtocol())
+    psHandle = ":/S=User1/G=Test/";
+
+
+  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(
+        mCAPISession, 
+        psHandle,
+        0, 
+        &mCAPIHandle);
+
+  if (CAPI_ERR_OK != s)
+    return NS_OK;
+
   switch(theURL.GetProtocol())
   {
     case nsCurlParser::eFILE:
-    {
-      char* psLocalFile = theURL.ToLocalFile();
-      JulianString sPath = theURL.CSIDPath();
-      if (NS_OK != EnsureUserPath( sPath ))
-      {
-        // XXX  do some error thing here...
-        // we should probably pop up a file dialog and let
-        // the user point us to a path to use.
-        return 1;
-      }
-      
-      /*
-       * load data into memory...
-       */
-      pRedr = (ICalReader *) new ICalFileReader(psLocalFile, status);
-      if (pRedr == 0)
-          return NS_OK;
-      if (FAILURE(status))
-          return NS_OK;
-      uFilename = psLocalFile;
-      m_pCalendar->parse(pRedr, uFilename);
-
-      /*
-       * register the calendar...
-       */
-      if (NS_OK != (res = m_CalList.Add(m_pCalendar)))
-        return res;
-
-      /*
-       * clean up...
-       */
-      PR_Free(psLocalFile);
-      delete pRedr; 
-      pRedr = 0;
-    }
-    break;
-
     case nsCurlParser::eCAPI:
     {
-      // UNHANDLED
+      InitialLoadData();
     }
     break;
 
     default:
     {
-      // unhandled
+      /* need to report that this is an unhandled curl type */
     }
     break;
   }
@@ -445,9 +624,7 @@ nsresult nsCalendarShell::EnvVarsToValues(JulianString& s)
       }
     }
   }
-
   return 0;
-
 }
 
 

@@ -20,17 +20,21 @@
 /**
  * This class manages a string in one of the following forms:
  *
- *    protocol://host.domain[:port]/CSID[:extra]
+ *    protocol://[user[:password]@]host.domain[:port]/CSID[:extra]
  *    mailto:user@host.domain
  *
  * Examples:
  *    capi://calendar-1.mcom.com/sman
+ *    capi://jason:badguy@calendar-1.mcom.com/sman
+ *    capi://guest@calendar-1.mcom.com/sman
  *    file://localhost/c|/temp/junk.ics
  *    file:///c|/temp/junk.ics
  *    mailto:sman@netscape.com
  *
  * The component parts of a calendar URL are:
  *    protocol:   currently supported are CAPI, IMIP (mailto), and IRIP
+ *    user:       the user making the access
+ *    password:   the password for the user
  *    host:       the host.domain where the calendar server resides
  *    port:       optional, tells what port to use
  *    CSID:       a unique string identifying a calendar store. It
@@ -113,6 +117,8 @@ void nsCurlParser::Init()
 {
   m_eProto = eUNKNOWN;
   m_sHost = "";
+  m_sUser = "";
+  m_sPassword = "";
   m_iPort = -1;
   m_sCSID = "";
   m_sExtra = "";
@@ -144,6 +150,17 @@ void nsCurlParser::Assemble()
   {
     m_sCurl  = GetProtocolString();
     m_sCurl += "://";
+    if (m_sUser != "" || m_sPassword != "")
+    {
+      if (m_sUser != "")
+        m_sCurl += m_sUser;
+      if (m_sPassword != "")
+      {
+        m_sCurl += ":";
+        m_sCurl += m_sPassword;
+      }
+      m_sCurl += "@";
+    }
     m_sCurl += m_sHost;
     if (m_iPort > 0)
     {
@@ -154,7 +171,7 @@ void nsCurlParser::Assemble()
     m_sCurl += m_sCSID;
     if (m_sExtra != "")
     {
-      m_sCurl += ":";
+      m_sCurl += "#";
       m_sCurl += m_sExtra;
     }
     m_bAssemblyNeeded = PR_FALSE;
@@ -231,19 +248,48 @@ void nsCurlParser::Parse()
   }
 
   /*
-   * Check for a port number. If it's there, we have a host of the form
-   * host.domain:port
+   * Check for a username, password, and port number.
+   * The general form for the host part is:
+   *    <username>:<password>@<host>.<domain>:<port>
    */ 
   if (m_sHost != "")
   {
-    iHead = m_sHost.Find(':',0);
-    if (iHead > 0)
+    int iTmpHead, iTmpTail;
+    /*
+     * Look for a username/password. If it is present there
+     * will be an '@' character.
+     */
+    iTmpHead = m_sHost.Find('@',0);
+    if (iTmpHead > 0)
+    {
+      m_sUser = m_sHost.Left(iTmpHead);
+      /*
+       * There may be a password embedded in the user name...
+       */
+      iTmpTail = m_sUser.Find(':');
+      if (iTmpTail >= 0)
+      {
+        m_sPassword = m_sUser.Right(m_sUser.GetStrlen()-iTmpTail-1);
+        m_sUser.GetBuffer()[iTmpTail] = 0;
+        m_sUser.DoneWithBuffer();
+      }
+
+      JulianString sTemp = m_sHost.indexSubstr(iTmpHead+1,m_sHost.GetStrlen());
+      m_sHost = sTemp;
+    }
+
+    /*
+     * look for a port number. If it is present there will
+     * be a ':' present.
+     */
+    iTmpHead = m_sHost.Find(':',0);
+    if (iTmpHead > 0)
     {
       int iPort;
       if (1 == sscanf( m_sHost.GetBuffer(),"%d",&iPort))
       {
         m_iPort = iPort;
-        m_sHost.GetBuffer()[iHead] = 0;
+        m_sHost.GetBuffer()[iTmpHead] = 0;
         m_sHost.DoneWithBuffer();
       }
     }
@@ -264,14 +310,48 @@ void nsCurlParser::Parse()
       if (m_sCSID.GetStrlen() > (size_t)iHead)
       {
         m_sExtra = m_sCSID(iHead, m_sCSID.GetStrlen());
-        m_sCSID.GetBuffer()[iHead] = 0;
+        m_sCSID.GetBuffer()[iHead-1] = 0;
         m_sCSID.DoneWithBuffer();
       }
     }
   }
 
   m_bAssemblyNeeded = PR_TRUE;
-  //m_sCurl = "";
+}
+
+/**
+ * Encode any illegal characters in username, password, CSID, 
+ * and extra fields. No status is kept on whether or not any
+ * of the fields are currently encoded or not. The encoding
+ * is done blindly.
+ * @result NS_OK on success
+ */
+nsresult nsCurlParser::URLEncode()
+{
+  m_sUser.URLEncode();
+  m_sPassword.URLEncode();
+  m_sCSID.URLEncode();
+  m_sExtra.URLEncode();
+  m_bAssemblyNeeded = PR_TRUE;
+  return NS_OK;
+}
+
+
+/**
+ * Decode any illegal characters in username, password, CSID, 
+ * and extra fields. No status is kept on whether or not any
+ * of the fields is currently decoded or not. The decoding is
+ * done blindly.
+ * @result NS_OK on success
+ */
+nsresult nsCurlParser::URLDecode()
+{
+  m_sUser.URLDecode();
+  m_sPassword.URLDecode();
+  m_sCSID.URLDecode();
+  m_sExtra.URLDecode();
+  m_bAssemblyNeeded = PR_TRUE;
+  return NS_OK;
 }
 
 /**
@@ -288,7 +368,7 @@ JulianString nsCurlParser::GetCurl()
  * Set a new value for this Curl. Parse it into its component parts
  * @return 0 = success
  */
-nsresult nsCurlParser::SetCurl(JulianString& sCurl)
+nsresult nsCurlParser::SetCurl(const JulianString& sCurl)
 {
   m_sCurl = sCurl;
   Parse();
@@ -449,10 +529,76 @@ JulianString nsCurlParser::GetProtocolString()
 }
 
 /**
- * Set the host for this curl
+ * Set the user for this curl
+ * @param sUser the user name
  * @return 0 on success
  */
-nsresult nsCurlParser::SetHost(JulianString& s)
+nsresult nsCurlParser::SetUser(const JulianString& sUser)
+{
+  m_sUser = sUser;
+  m_bAssemblyNeeded = PR_TRUE;
+  return 0;
+}
+
+/**
+ * Set the user for this curl
+ * @param sUser the user name
+ * @return 0 on success
+ */
+nsresult nsCurlParser::SetUser(const char* sUser)
+{
+  m_sUser = sUser;
+  m_bAssemblyNeeded = PR_TRUE;
+  return 0;
+}
+
+/**
+ * Get the user name
+ * @result an JulianString containing the current user name.
+ */
+JulianString nsCurlParser::GetUser()
+{
+  if (m_bAssemblyNeeded)
+    Assemble();
+  return m_sUser;
+}
+
+/**
+ * Set the password for this curl
+ * @param sPassword the password
+ * @return 0 on success
+ */
+nsresult nsCurlParser::SetPassword(const JulianString& sPassword)
+{
+  m_sPassword = sPassword;
+  m_bAssemblyNeeded = PR_TRUE;
+  return 0;
+}
+
+nsresult nsCurlParser::SetPassword(const char* sPassword)
+{
+  m_sPassword = sPassword;
+  m_bAssemblyNeeded = PR_TRUE;
+  return 0;
+}
+
+/**
+ * Get the user name
+ * @result an JulianString containing the current user name.
+ */
+JulianString nsCurlParser::GetPassword()
+{
+  if (m_bAssemblyNeeded)
+    Assemble();
+  return m_sPassword;
+}
+
+/**
+ * Set the host for this curl
+ * @param s the host name
+ * @return 0 on success
+ */
+nsresult nsCurlParser::SetHost(const JulianString& s)
 {
   m_sHost = s;
   m_bAssemblyNeeded = PR_TRUE;
@@ -495,13 +641,10 @@ nsresult nsCurlParser::SetPort(PRInt32 iPort)
  * Set the CSID (the calendar store id) for this curl
  * @result 0 on success
  */
-nsresult nsCurlParser::SetCSID(JulianString& s)
+nsresult nsCurlParser::SetCSID(const JulianString& s)
 {
-  if ( m_sCSID.CompareTo(s,PR_TRUE))
-  {
-    m_sCSID = s;
-    m_bAssemblyNeeded = PR_TRUE;
-  }
+  m_sCSID = s;
+  m_bAssemblyNeeded = PR_TRUE;
   return 0;
 }
 
@@ -607,7 +750,7 @@ nsresult nsCurlParser::SetPath(const char* p)
  *
  * @return 0  success
  */
-nsresult nsCurlParser::SetPath(JulianString& s)
+nsresult nsCurlParser::SetPath(const JulianString& s)
 {
   return SetPath(s.GetBuffer());
 }
@@ -663,13 +806,10 @@ nsresult nsCurlParser::ResolveFileURL()
  * Set the extra info
  * @return 0  success
  */
-nsresult nsCurlParser::SetExtra(JulianString& s)
+nsresult nsCurlParser::SetExtra(const JulianString& s)
 {
-  if ( m_sExtra.CompareTo(s,PR_TRUE))
-  {
-    m_sExtra = s;
-    m_bAssemblyNeeded = PR_TRUE;
-  }
+  m_sExtra = s;
+  m_bAssemblyNeeded = PR_TRUE;
   return 0;
 }
 

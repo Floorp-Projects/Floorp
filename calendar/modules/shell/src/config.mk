@@ -53,6 +53,7 @@ LD_LIBS += \
 	calui10 \
 	calnetwork10 \
 	calparser10 \
+    calcapi10 \
 	util10 \
 	$(NATIVE_RAPTOR_GFX) \
 	$(RAPTOR_GFX) \

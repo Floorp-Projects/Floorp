@@ -28,6 +28,7 @@ PRIVATE_EXPORTS = \
     nsCalendarShell.h \
     nsCalendarWidget.h \
     nsCalShellFactory.h \
+    nsCalScheduler.h \
 	$(NULL)
 
 MODULE = trex

@@ -35,6 +35,7 @@
 #include "nsICapi.h"
 #include "nsICapiLocal.h"
 #include "nsCapiCIID.h"
+#include "nsCurlParser.h"
 
 static NS_DEFINE_IID(kCCapiLocalCID, NS_CAPI_LOCAL_CID);
 static NS_DEFINE_IID(kCCapiCSTCID,   NS_CAPI_CST_CID);
@@ -95,54 +96,85 @@ nsCalSession::~nsCalSession()
  */
 nsresult nsCalSession::GetSession(CAPISession& Session, const char* psPassword)
 {
-  CAPIStatus s;
-  Session = 0;
-  nsICapiLocal * capi_local = nsnull;
-
-  if ( m_sCurl == "")
-    return 1;
-
-  /*
-   * Create an nsICapi Instance
-   *
-   * TODO:  The CID should be based on the type of url passed in!
-   *        For now, do local capi
-   */
-
   nsresult res = NS_OK;
+  if (0 == m_Session)
+  {
+    CAPIStatus s;
+    Session = 0;
+    nsICapiLocal * capi_local = nsnull;
 
-  res = nsRepository::CreateInstance(kCCapiLocalCID, 
-                                     nsnull, 
-                                     kICapiIID, 
-                                     (void**)&mCapi);
+    if ( m_sCurl == "")
+      return 1;
 
-  if (NS_OK != res)
-    return res;
+    /*
+     * Create an nsICapi Instance
+     *
+     * TODO:  The CID should be based on the type of url passed in!
+     *        For now, do local capi
+     */
+    res = 1;
+    nsCurlParser cp(m_sCurl);
+    switch ( cp.GetProtocol() )
+    {
+      case nsCurlParser::eFILE:
+        res = nsRepository::CreateInstance(kCCapiLocalCID,nsnull,kICapiIID,(void**)&mCapi);
+      break;
 
-  mCapi->Init();
+      case nsCurlParser::eCAPI:
+      {
+        res = nsRepository::CreateInstance(kCCapiCSTCID,nsnull, kICapiIID, (void**)&mCapi);
+      }
+      break;
+    }
 
-  /*
-   * Since we believe this to be local capi, see if the capi
-   * object we created supports the nsICapiLocal interface
-   */
+    if (NS_OK != res)
+      return res;
 
-  res = mCapi->QueryInterface(kICapiLocalIID,(void**)&capi_local);
+    mCapi->Init();
 
-  if (NS_OK != res)
-    return res;
+    /*
+     * Since we believe this to be local capi, see if the capi
+     * object we created supports the nsICapiLocal interface
+     */
+    res = mCapi->QueryInterface(kICapiLocalIID,(void**)&capi_local);
 
-  /*
-   * Do the CAPI login
-   */
+    if (NS_OK == res)
+    {
+      /*
+       * Do the CAPI login
+       */
+      s = capi_local->CAPI_LogonCurl(m_sCurl.GetBuffer(), psPassword, m_lFlags, &m_Session);
+      NS_RELEASE(capi_local);
+    }
+    else
+    {
+      /*
+       * use standard login...
+       * Try several things for the user name
+       */
+      JulianString sName;
+      JulianString sPW;
+      JulianString sHost = cp.GetHost();
+      if ( cp.GetUser() != "" )
+        sName = cp.GetUser();
+      else
+        sName = cp.GetExtra();
 
-  s = capi_local->CAPI_LogonCurl(m_sCurl.GetBuffer(), psPassword, m_lFlags, &m_Session);
+      if (cp.GetPassword() != "")
+        sPW = cp.GetPassword();
+      else
+        sPW = psPassword;
 
-  NS_RELEASE(capi_local);
+      s = mCapi->CAPI_Logon(
+        sName.GetBuffer(), sPW.GetBuffer(), 
+        sHost.GetBuffer(), m_lFlags, &m_Session);
+    }
 
-  if (CAPI_ERR_OK != s)
-    return res;
+    if (CAPI_ERR_OK != s)
+      return res;
+    ++m_iCount;
+  }
 
-  ++m_iCount;
   Session = m_Session;
 
   return res;

@@ -13,11 +13,12 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-        nsCurlParser.h \
+    nsCurlParser.h \
 	nsDateTime.h \
-        nsDuration.h \
+    nsDuration.h \
 	nsCalUtilCIID.h \
 	nscalexport.h \
+    nsX400Parser.h \
 	$(NULL)
 
 MODULE = trex

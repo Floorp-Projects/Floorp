@@ -15,6 +15,10 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	nsCapiLocal.h \
 	nsCapiCST.h \
+    JulianParser.h \
+    nsCalStreamReader.h \
+    nsCapiCallbackReader.h \
+    nscapiexport.h \
 	$(NULL)
 
 MODULE = trex

@@ -31,11 +31,11 @@
 class nsCalUser
 {
 private:
-  JulianString    m_sUserName;     /* example: sman */
-  nsString        m_sDisplayName;  /* example: Steve Mansour */
-  JulianPtrArray  m_CalAddrList;  /* a list of JulianString CalURL strings */
-  NSCalendar*     m_pCal;          /* the preferred calendar account (the only one for now) */
-  JulianPtrArray  m_CalList;      /* an array of calendars owned by this user */
+  JulianString    m_sUserName;      /* example: sman */
+  nsString        m_sDisplayName;   /* example: Steve Mansour */
+  JulianPtrArray  m_CalAddrList;    /* a list of JulianString CalURL strings */
+  NSCalendar*     m_pCal;           /* the preferred calendar account (the only one for now) */
+  JulianPtrArray  m_CalList;        /* an array of calendars owned by this user */
   void            InitMembers();
 
 public:
