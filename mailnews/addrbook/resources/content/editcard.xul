@@ -58,6 +58,10 @@
 
 <html:script language="JavaScript">
 
+var pref;
+var prefInitialized = false;
+var lastFirst = false;
+
 function GenerateDisplayName()
 {
         /* see AB_GenerateDisplayName in http://lxr.mcom.com/nova/source/ns/lib/libaddr/abglue.cpp for the proper logic */ 
@@ -70,18 +74,19 @@ function GenerateDisplayName()
 	/* this used to be XP_GetString(MK_ADDR_FIRST_LAST_SEP) */
 	var firstLastSep = " ";
 
-	/* todo: move pref out to be a global var for performance? */
-	var pref = Components.classes['component://netscape/preferences'];
-	var lastFirst = false;
+	if (!prefInitialized) {
+		pref = Components.classes['component://netscape/preferences'];
 
-	if (pref) {
-        	pref = pref.getService();
-        } 
-	if (pref) {
-		pref = pref.QueryInterface(Components.interfaces.nsIPref);
-	}
-	if (pref) {
-		lastFirst = pref.GetBoolPref("mail.addr_book.lastnamefirst");
+		if (pref) {
+			pref = pref.getService();
+		} 
+		if (pref) {
+			pref = pref.QueryInterface(Components.interfaces.nsIPref);
+		}
+		if (pref) {
+			lastFirst = pref.GetBoolPref("mail.addr_book.lastnamefirst");
+		}
+		prefInitialized = true;
 	}
 
 	/* todo:  mscott says there was a pref in 4.5 that would */
