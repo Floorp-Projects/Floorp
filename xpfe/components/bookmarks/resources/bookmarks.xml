@@ -1550,6 +1550,21 @@
       ]]></body>
       </method>
      
+      <method name="validOpenClickConditions">
+      <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.button != 0)
+            return false;
+          var row = {};
+          var col = {};
+          var obj = {};
+          this.outlinerBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
+          if (obj.value == "twisty")
+            return false;
+          return true;
+        ]]></body>
+      </method>
+
       // requires utilityOverlay.js if opening in new window for opentopwin()
       <method name="openItem">
       <parameter name="aEvent"/>
@@ -1668,7 +1683,7 @@
                          onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false);">
         <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
                       ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
-                      onclick="if (event.button == 0) this.parentNode.parentNode.openItem(event, false);"
+                      onclick="if (this.parentNode.parentNode.validOpenClickConditions(event)) this.parentNode.parentNode.openItem(event, false);"
                       onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
           <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
