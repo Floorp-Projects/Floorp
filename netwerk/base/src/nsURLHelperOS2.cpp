@@ -40,6 +40,7 @@
 /* OS/2-specific local file uri parsing */
 #define INCL_DOSERRORS
 #define INCL_DOS
+#include <os2.h>
 #include "nsURLHelper.h"
 #include "nsEscape.h"
 #include "nsILocalFile.h"
