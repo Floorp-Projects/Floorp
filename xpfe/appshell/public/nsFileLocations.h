@@ -112,6 +112,8 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
 		,   App_NewsDirectory50		   = App_FileBase	+  70
 		,   App_MessengerFolderCache50	   = App_FileBase	+  80
 		,   App_UsersPanels50		   = App_FileBase	+  90
+		,   App_SearchFile50		   = App_FileBase	+ 100
+		,   App_SearchDirectory50	   = App_FileBase	+ 101
 		};
                     //nsSpecialFileSpec();
                     nsSpecialFileSpec(Type aType);        

@@ -525,6 +525,42 @@ void nsSpecialFileSpec::operator = (Type aType)
 		break;
 	    }
             break;
+	case App_SearchFile50:
+	    {
+		*this = nsSpecialFileSpec(App_UserProfileDirectory50);
+		*this += "search.rdf";
+
+		if (!(this->Exists())) {
+			// find the default search.rdf file
+			// something like bin/defaults/profile/search.rdf
+			nsFileSpec defaultPanelsFile;
+			GetProfileDefaultsFolder(defaultPanelsFile);
+			defaultPanelsFile += "search.rdf";
+
+			// get the users profile directory
+			*this = nsSpecialFileSpec(App_UserProfileDirectory50);
+			
+			// copy the default search.rdf to <profile>/search.rdf
+			nsresult rv = defaultPanelsFile.CopyToDir(*this);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy search.rdf");
+			if (NS_SUCCEEDED(rv)) {
+				// set this to <profile>/search.rdf
+				*this += "search.rdf";
+			}
+		}
+		break;
+	    }
+            break;
+	case App_SearchDirectory50:
+	    {
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+#ifdef XP_MAC
+                *this += "Search Plugins";
+#else
+                *this += "searchplugins";
+#endif
+	    }
+            break;
         case App_DirectoryBase:
         case App_FileBase:
         default:
