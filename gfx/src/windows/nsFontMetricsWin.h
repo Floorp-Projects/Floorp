@@ -256,7 +256,7 @@ public:
   static void SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable);
   static PRBool IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable);
 
-  static PRUint16* GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset);
+  static PRUint16* GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFontType, PRUint8& aCharset);
   static PRUint16* GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset);
 
   static int SameAsPreviousMap(int aIndex);
