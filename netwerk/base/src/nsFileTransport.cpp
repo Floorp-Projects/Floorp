@@ -109,41 +109,20 @@ public:
             *contentLength = -1;
         }
         else {
-            char* fileName;
-            rv = mFile->GetLeafName(&fileName);
-            if (NS_FAILED(rv)) return rv;
-            if (fileName != nsnull) {
-	            PRInt32 len = nsCRT::strlen(fileName);
-	            const char* ext = nsnull;
-	            for (PRInt32 i = len; i >= 0; i--) {
-	                if (fileName[i] == '.') {
-	                    ext = &fileName[i + 1];
-	                    break;
-	                }
-	            }
-
-	            if (ext) {
-	                NS_WITH_SERVICE(nsIMIMEService, mimeServ, kMIMEServiceCID, &rv);
-	                if (NS_SUCCEEDED(rv)) {
-	                    rv = mimeServ->GetTypeFromExtension(ext, contentType);
-	                }
-	            }
-	            else
-	                rv = NS_ERROR_FAILURE;
-
-				nsCRT::free(fileName);
-			} else {
-				rv = NS_ERROR_FAILURE;
-			}
-
-            if (NS_FAILED(rv)) {
-                // if all else fails treat it as text/html?
-                *contentType = nsCRT::strdup(DEFAULT_TYPE);
-                if (*contentType == nsnull)
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-                else
-                    rv = NS_OK;
-            }
+   
+          NS_WITH_SERVICE(nsIMIMEService, mimeServ, kMIMEServiceCID, &rv);
+          if (NS_SUCCEEDED(rv)) {
+              rv = mimeServ->GetTypeFromFile(mFile, contentType);
+          }
+	
+          if (NS_FAILED(rv)) {
+              // if all else fails treat it as text/html?
+              *contentType = nsCRT::strdup(DEFAULT_TYPE);
+              if (*contentType == nsnull)
+                  rv = NS_ERROR_OUT_OF_MEMORY;
+              else
+                  rv = NS_OK;
+          }
         }
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: logically opening %s: type=%s len=%d",

@@ -38,6 +38,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsMIMEInfoImpl.obj          \
         .\$(OBJDIR)\nsMIMEService.obj           \
         .\$(OBJDIR)\nsMIMEServiceModule.obj    \
+        .\$(OBJDIR)\nsXMLMIMEDataSource.obj \
         $(NULL)
 
 LOCAL_INCLUDES=-I.

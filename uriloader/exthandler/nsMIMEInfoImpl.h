@@ -34,6 +34,7 @@ class nsMIMEInfoImpl : public nsIMIMEInfo {
     NS_DECL_NSIMIMEINFO
 
     // nsMIMEInfoImpl methods
+    nsMIMEInfoImpl();
     nsMIMEInfoImpl(const char *aMIMEType);
     virtual ~nsMIMEInfoImpl() {};
     PRUint32 GetExtCount();           // returns the number of extensions associated.
@@ -42,9 +43,9 @@ class nsMIMEInfoImpl : public nsIMIMEInfo {
     nsCStringArray       mExtensions; // array of file extensions associated w/ this MIME obj
     nsAutoString        mDescription; // human readable description
     nsCOMPtr<nsIURI>    mURI;         // URI pointing to data associated w/ this obj      
-
+		PRUint32						mMacType, mMacCreator; // Mac file type and creator
 protected:
-    nsCOMPtr<nsIAtom>   mMIMEType;
+    nsString					 mMIMEType;
 
 };
 

@@ -40,14 +40,13 @@
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-#include "nsMimeTypes.h"
 
-PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
-    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
-    NS_ASSERTION(entry, "mapping problem");
-	NS_RELEASE(entry);
-    return PR_TRUE;   
-};
+
+#ifdef XP_MAC
+#include "nsILocalFileMac.h"
+#endif
+
+
 
 // nsISupports methods
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEService, nsIMIMEService);
@@ -70,295 +69,47 @@ nsMIMEService::nsMIMEService() {
 }
 
 nsMIMEService::~nsMIMEService() {
-    mInfoObjects->Reset(DeleteEntry, nsnull);
-    delete mInfoObjects;
 }
 
 nsresult
 nsMIMEService::Init() {
     nsresult rv = NS_OK;
-    mInfoObjects = new nsHashtable();
-    if (!mInfoObjects) return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = NS_NewISupportsArray(getter_AddRefs(mInfoArray));
-    if (NS_FAILED(rv)) return rv;
-
-    return InitFromHack();
-}
-
- /* This bad boy needs to retrieve a url, and parse the data coming back, and
-  * add entries into the mInfoArray.
-  */
-nsresult
-nsMIMEService::InitFromURI(nsIURI *aUri) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsMIMEService::InitFromFile(const char *aFileName) {
-#if 0
-    nsFileSpec dirSpec;
-    nsIFileSpec* spec = NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
-    if (!spec) return NS_ERROR_FAILURE;
-    spec->GetFileSpec(&dirSpec);
-
-    nsInputFileStream inStream(dirSpec + aFileName);
-    if (!inStream.is_open()) {
-        return NS_OK;
-    }
-
-    // digest the file.
-#endif
-    return NS_ERROR_NOT_IMPLEMENTED;
-
-}
-
-NS_IMETHODIMP
-nsMIMEService::AddMapping(const char* mimeType, 
-                          const char* extension,
-                          const char* description,
-                          nsIURI* dataURI)
-{
-    nsresult rv = NS_OK;
-    // setup the new MIMEInfo object.
-    nsMIMEInfoImpl* anInfo = new nsMIMEInfoImpl(mimeType);
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-
-    anInfo->mExtensions.AppendCString(extension);
-    anInfo->mDescription.AssignWithConversion(description);
-    anInfo->mURI = dataURI;
-
-    // The entry is mapped many-to-one and the MIME type is the root mapping.
-    
-    // First remove any existing mapping.
-    rv = RemoveMapping(mimeType);
-    if (NS_FAILED(rv)) return rv;
-
-    // Next add the new root MIME mapping.
-    nsStringKey key(mimeType);
-    nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, anInfo);
-    NS_ASSERTION(!oldInfo, "we just removed the entry, we shouldn't have one");
-    NS_ADDREF(anInfo);
-
-    rv = mInfoArray->AppendElement(anInfo); // update the root array.
-    if (NS_FAILED(rv)) return rv;
-
-    // Finally add an extension mapping.
-    key = extension;
-    oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, anInfo);
-    NS_ASSERTION(!oldInfo, "file extension mappings should have been cleaned up in the RemoveMapping call");
-    NS_ADDREF(anInfo);
-
-    return NS_OK;
-}
-
-// used to cleanup any file extension mappings when 
-// a root MIME entry is removed.
-PRBool removeExts(nsCString& aElement, void *aData) {
-    nsHashtable* infoObjects = (nsHashtable*)aData;
-    NS_ASSERTION(infoObjects, "hash table botched up");
-
-    nsStringKey key(aElement);
-    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)infoObjects->Remove(&key);
-    NS_RELEASE(info);
-    return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsMIMEService::RemoveMapping(const char* aMIMEType) {
-    nsresult rv = NS_OK;
-    nsStringKey key(aMIMEType);
-
-    // First remove the root MIME mapping.
-    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
-    if (!info) return NS_OK;
-
-    rv = mInfoArray->RemoveElement(info); // update the root array.
-    if (NS_FAILED(rv)) return rv;
-
-    // Next remove any file association mappings.
-    rv = info->mExtensions.EnumerateForwards(removeExts, mInfoObjects);
-    NS_RELEASE(info);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEService::AppendExtension(const char* mimeType, const char* extension) {
-    nsStringKey key(mimeType);
-
-    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
-    if (!info) return NS_ERROR_FAILURE;
-
-    info->mExtensions.AppendCString(extension);
-
-    // Add another file extension mapping.
-    key = extension;
-    nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, info);
-    NS_IF_RELEASE(oldInfo); // overwrite any existing mapping.
-    NS_ADDREF(info);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEService::RemoveExtension(const char* aExtension) {
-    nsresult rv = NS_OK;
-    nsStringKey key(aExtension);
-
-    // First remove the extension mapping.
-    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
-    if (!info) return NS_ERROR_FAILURE;
-    
-    // Next remove the root MIME mapping from the array and hash
-    // IFF this was the only file extension mapping left.
-
-      // STRING USE WARNING: this particular use really needs to be examined -- scc
-    nsCAutoString keyString;
-    keyString.AssignWithConversion(key.GetString().GetUnicode());
-    PRBool removed = info->mExtensions.RemoveCString(keyString);
-    NS_ASSERTION(removed, "mapping problem");
-
-    if (info->GetExtCount() == 0) {
-        // it's empty, remove the root mapping from hash and array.
-        nsXPIDLCString mimeType;
-        rv = info->GetMIMEType(getter_Copies(mimeType));
-        if (NS_FAILED(rv)) return rv;
-
-        key = (const char*)mimeType;
-        nsMIMEInfoImpl* rootEntry = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
-        NS_ASSERTION(rootEntry, "mapping miss-hap");
-
-        rv = mInfoArray->RemoveElement(rootEntry); // update the root array
-        if (NS_FAILED(rv)) return rv;
-
-        NS_RELEASE(rootEntry);
-    }
-    
-    NS_RELEASE(info);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEService::EnumerateEntries(nsIBidirectionalEnumerator* *aEnumerator) {
-    return NS_NewISupportsArrayEnumerator(mInfoArray, aEnumerator);
-}
-
-NS_IMETHODIMP
-nsMIMEService::Serialize() {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsMIMEService::InitFromHack() {
-    nsresult rv;
-
-    rv = AddMapping(TEXT_PLAIN, "txt", "Text File", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_PLAIN, "text");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(APPLICATION_OCTET_STREAM, "exe", "Binary Executable", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "bin");
-    if (NS_FAILED(rv)) return rv;
-#if defined(VMS)
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "sav");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "bck");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi-dcx_axpexe");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi-dcx_vaxexe");
-    if (NS_FAILED(rv)) return rv;
-#endif
-
-    rv = AddMapping(TEXT_HTML, "htm", "Hyper Text Markup Language", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_HTML, "html");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_HTML, "shtml");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_HTML, "ehtml");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(TEXT_RDF, "rdf", "Resource Description Framework", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(TEXT_XUL, "xul", "XML-Based User Interface Language", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(TEXT_XML, "xml", "Extensible Markup Language", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(TEXT_CSS, "css", "Style Sheet", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(APPLICATION_JAVASCRIPT, "js", "Javascript Source File", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(MESSAGE_RFC822, "eml", "RFC-822 data", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(IMAGE_GIF, "gif", "GIF Image", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(IMAGE_JPG, "jpeg", "JPEG Image", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(IMAGE_JPG, "jpg");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(IMAGE_PNG, "png", "PNG Image", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(IMAGE_ART, "art", "ART Image", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(IMAGE_TIFF, "tiff", "TIFF Image", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(IMAGE_TIFF, "tif");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(APPLICATION_POSTSCRIPT, "ps", "Postscript File", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_POSTSCRIPT, "eps");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_POSTSCRIPT, "ai");
-    if (NS_FAILED(rv)) return rv;
-                 
-    rv = AddMapping(TEXT_RTF, "rtf", "Rich Text Format", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_RTF, "rtf");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping(TEXT_CPP, "cpp", "CPP file", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_CPP, "cpp");
-    if (NS_FAILED(rv)) return rv;
-    
-    return NS_OK;
+    rv = nsComponentManager::CreateInstance(NS_XMLMIMEDATASOURCE_PROGID, nsnull, nsIMIMEDataSource::GetIID(), getter_AddRefs(mXML) );
+  	
+  	// Create native
+		nsComponentManager::CreateInstance(NS_NATIVEMIMEDATASOURCE_PROGID, nsnull, nsIMIMEDataSource::GetIID(), getter_AddRefs(mNative) );
+   return rv;
 }
 
 
 // nsIMIMEService methods
 NS_IMETHODIMP
 nsMIMEService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) {
-    // for now we're assuming file extensions are case insensitive.
-    nsCAutoString fileExt(aFileExt);
-    fileExt.ToLowerCase();
-
-    nsStringKey key(fileExt.GetBuffer());
-
-    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
-    if (!entry) return NS_ERROR_FAILURE;
-    NS_ADDREF(entry);
-    *_retval = NS_STATIC_CAST(nsIMIMEInfo*, entry);
-    return NS_OK;
+    nsresult rv;
+  	if( !mXML || NS_FAILED (rv = mXML->GetFromExtension( aFileExt, _retval ) ) )
+  	{
+  		if ( mNative )
+  			rv = mNative->GetFromExtension( aFileExt, _retval );
+  	}
+  	return rv;
 }
+
+
+
+NS_IMETHODIMP
+nsMIMEService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval) {
+		nsresult rv =NS_ERROR_FAILURE;
+  	if( !mXML || NS_FAILED (rv = mXML->GetFromMIMEType( aMIMEType, _retval ) ) )
+  	{
+  		if ( mNative )
+  			rv = mNative->GetFromMIMEType( aMIMEType, _retval );
+  	}
+  	return rv;
+}
+
+
+
+// Helper routines implemented in terms of the above
 
 NS_IMETHODIMP
 nsMIMEService::GetTypeFromExtension(const char *aFileExt, char **aContentType) {
@@ -366,9 +117,8 @@ nsMIMEService::GetTypeFromExtension(const char *aFileExt, char **aContentType) {
     nsCOMPtr<nsIMIMEInfo> info;
     rv = GetFromExtension(aFileExt, getter_AddRefs(info));
     if (NS_FAILED(rv)) return rv;
+   return info->GetMIMEType(aContentType);
 
-    rv = info->GetMIMEType(aContentType);
-    return rv;
 }
 
 NS_IMETHODIMP
@@ -377,6 +127,29 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     // first try to get a url out of the uri so we can skip post
     // filename stuff (i.e. query string)
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
+    
+    #ifdef XP_MAC
+    	if ( NS_SUCCEEDED( rv ) )
+    	{
+    		nsXPIDLCString fileExt;
+        url->GetFileExtension(getter_Copies(fileExt));
+        
+    		nsresult rv2;
+    		nsCOMPtr<nsIFileURL> fileurl = do_QueryInterface( url, &rv2 );
+    		if ( NS_SUCCEEDED ( rv2 ) )
+    		{
+    			nsCOMPtr <nsIFile> file;
+    			rv2 = fileurl->GetFile( getter_AddRefs( file ) );
+    			if ( NS_SUCCEEDED( rv2 ) )
+    			{
+    				rv2 = GetTypeFromFile( file, aContentType );
+						if( NS_SUCCEEDED ( rv2 ) )
+							return rv2;
+					}			
+    	}
+    }
+    #endif
+    
     if (NS_SUCCEEDED(rv)) {
         nsXPIDLCString ext;
         rv = url->GetFileExtension(getter_Copies(ext));
@@ -407,16 +180,66 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     return rv;
 }
 
+NS_IMETHODIMP nsMIMEService::GetTypeFromFile( nsIFile* aFile, char **aContentType )
+{
+		nsresult rv;
+		nsCOMPtr<nsIMIMEInfo> info;
+		
+		// Get the Extension
+		char* fileName;
+		const char* ext = nsnull;
+    rv = aFile->GetLeafName(&fileName);
+    if (NS_FAILED(rv)) return rv;
+    if (fileName != nsnull) {
+      PRInt32 len = nsCRT::strlen(fileName); 
+      for (PRInt32 i = len; i >= 0; i--) {
+          if (fileName[i] == '.') {
+              ext = &fileName[i + 1];
+              break;
+          }
+      }
+     }
+     	nsCString fileExt( ext );       
+			nsCRT::free(fileName);
+		// Handle the mac case
+#ifdef XP_MAC
+		nsCOMPtr<nsILocalFileMac> macFile;
+		
+		macFile = do_QueryInterface( aFile, &rv );
+		if ( NS_SUCCEEDED( rv ) )
+		{
+				PRUint32 type, creator;
+				macFile->GetFileTypeAndCreator( (OSType*)&type,(OSType*) &creator );    			
+				if( !mXML || NS_FAILED (rv = mXML->GetFromTypeCreator( type, creator, fileExt, getter_AddRefs(info) ) ) )
+				{
+					if ( mNative )
+						rv = mNative->GetFromTypeCreator( type, creator, fileExt,  getter_AddRefs(info) );
+				}
+				
+				if ( NS_SUCCEEDED( rv) )
+				{
+					return info->GetMIMEType(aContentType);
+				}
+    }
+#endif
+// Windows, unix and mac when no type match occured.
+
+      
+		return GetTypeFromExtension( fileExt, aContentType );
+}
+
+// get a specific data source
 NS_IMETHODIMP
-nsMIMEService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval) {
-    nsCAutoString MIMEType(aMIMEType);
-    MIMEType.ToLowerCase();
+nsMIMEService::GetXMLDataSource(nsIMIMEDataSource * *aXMLDataSource){
+	*aXMLDataSource = mXML;
+	NS_IF_ADDREF( *aXMLDataSource );
+	return NS_OK;
+}
 
-    nsStringKey key(MIMEType.GetBuffer());
-
-    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
-    if (!entry) return NS_ERROR_FAILURE;
-    NS_ADDREF(entry);
-    *_retval = NS_STATIC_CAST(nsIMIMEInfo*, entry);
-    return NS_OK;
+NS_IMETHODIMP
+nsMIMEService::GetNativeDataSource(nsIMIMEDataSource * *aNativeDataSource)
+{
+	*aNativeDataSource = mNative;
+	NS_IF_ADDREF( *aNativeDataSource );
+	return NS_OK;
 }
