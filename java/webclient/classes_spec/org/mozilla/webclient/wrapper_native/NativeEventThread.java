@@ -172,6 +172,7 @@ public void delete()
 
 public void run() 
 {
+    this.setPriority(Thread.MIN_PRIORITY);
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != windowControl);
 
