@@ -29,6 +29,10 @@ titledbutton#stop-button {
 	list-style-image:url(resource:/res/toolbar/TB_Stop.gif);
 } 
 
+titledbutton#search-button {
+	list-style-image:url(resource:/res/toolbar/TB_Reload.gif);
+}
+
 titledbutton#reload-button {
 	list-style-image:url(resource:/res/toolbar/TB_Reload.gif);
 }
