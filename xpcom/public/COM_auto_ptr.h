@@ -151,7 +151,14 @@
 		What do I have to beware of?
 	*/
 
-#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90)
+
+
+	/*
+		Set up some #defines to turn off a couple of troublesome C++ features.
+		Interestingly, none of the compilers barf on template stuff.
+	*/
+
+#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
 	#define NO_MEMBER_USING_DECLARATIONS
 #endif
 
