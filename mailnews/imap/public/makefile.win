@@ -41,7 +41,6 @@ XPIDLSRCS =	\
 ## exports
 
 EXPORTS =								          \
-			nsIImapLog.h				        \
 			nsIIMAPHostSessionList.h	  \
 			nsIImapExtensionSink.h		  \
 			nsIImapMiscellaneousSink.h	\
