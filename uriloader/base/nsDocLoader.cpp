@@ -545,11 +545,7 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   if (mProgressListener)
   {
     mProgressStatusFlags = nsIWebProgress::flag_net_start;
-
-    if (aLoadInitiator == this)
-      mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
-    else // the load must be initiated by a child...mscott: I'm passing the WRONG channel here! I need to add a get channel to the doc loader interface
-      mProgressListener->OnChildStatusChange(mDocumentChannel, mProgressStatusFlags);
+    mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
   }
 
   /*
@@ -615,11 +611,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   if (mProgressListener)
   {
     mProgressStatusFlags = nsIWebProgress::flag_net_stop;
-
-    if (aLoadInitiator == this)
-      mProgressListener->OnStatusChange(aDocChannel, mProgressStatusFlags);
-    else // the load must be initiated by a child...mscott: I'm passing the WRONG channel here! I need to add a get channel to the doc loader interface
-      mProgressListener->OnChildStatusChange(aDocChannel, mProgressStatusFlags);
+    mProgressListener->OnStatusChange(aDocChannel, mProgressStatusFlags);
   }
 
 
