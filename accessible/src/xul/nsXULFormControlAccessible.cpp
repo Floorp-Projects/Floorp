@@ -92,7 +92,7 @@ NS_IMETHODIMP nsXULButtonAccessible::GetActionName(PRUint8 index, nsAString& _re
 NS_IMETHODIMP nsXULButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {
-    nsCOMPtr<nsIDOMXULElement> buttonElement(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIDOMXULButtonElement> buttonElement(do_QueryInterface(mDOMNode));
     if ( buttonElement )
     {
       buttonElement->Click();
@@ -345,7 +345,7 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetActionName(PRUint8 index, nsAString& _
 NS_IMETHODIMP nsXULCheckboxAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
-    nsCOMPtr<nsIDOMXULElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
     if (xulCheckboxElement) {
       xulCheckboxElement->Click();
       return NS_OK;
@@ -473,7 +473,7 @@ nsRadioButtonAccessible(aNode, aShell)
 NS_IMETHODIMP nsXULRadioButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
-    nsCOMPtr<nsIDOMXULElement> radioButton(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton(do_QueryInterface(mDOMNode));
     if (radioButton) {
       radioButton->Click();
       return NS_OK;

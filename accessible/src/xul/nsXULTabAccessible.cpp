@@ -87,7 +87,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetActionName(PRUint8 index, nsAString& _retva
 NS_IMETHODIMP nsXULTabAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Switch) {
-    nsCOMPtr<nsIDOMXULElement> tab(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
     if ( tab )
     {
       tab->Click();
