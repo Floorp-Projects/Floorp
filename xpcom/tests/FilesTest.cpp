@@ -46,10 +46,12 @@ struct FilesTest
     int Copy(const char*  sourceFile, const char* targDir);
     int Move(const char*  sourceFile, const char*  targDir);
     int Rename(const char*  sourceFile, const char* newName);
-
+    
     int Execute(const char* appName, const char* args);
 
     int SpecialSystemDirectories();
+    
+    int NSPRCompatiblity(const char* sourceFile);
 
     void Banner(const char* bannerString);
     int Passed();
@@ -476,6 +478,7 @@ int FilesTest::CanonicalPath(
     const char* pathAsString = (const char*)myTextFilePath;
     if (*pathAsString != '/')
     {
+#ifndef XP_PC
         mConsole
             << "ERROR: after initializing the path object with a relative path,"
             << "\n the path consisted of the string "
@@ -483,6 +486,7 @@ int FilesTest::CanonicalPath(
             << "\n which is not a canonical full path!"
             << nsEndl;
         return -1;
+#endif
     }
     return Passed();
 }
@@ -558,7 +562,7 @@ int FilesTest::Move(const char* file, const char* dir)
 
 
     dirPath += srcSpec.GetLeafName();
-    if (! dirPath.Exists() || srcSpec.Exists() || NS_FAILED(error))
+    if (! dirPath.Exists() || ! srcSpec.Exists() || NS_FAILED(error))
         return Failed();
 
     return Passed();
@@ -578,6 +582,64 @@ int FilesTest::Execute(const char* appName, const char* args)
 
     return Passed();
 }
+
+//----------------------------------------------------------------------------------------
+int FilesTest::NSPRCompatiblity(const char* sourceFile)
+//----------------------------------------------------------------------------------------
+{
+
+    nsFileSpec createTheFileSpec(sourceFile, PR_TRUE); // relative path.
+    {
+       nsIOFileStream testStream(createTheFileSpec); // creates the file
+       // file gets closed here because scope ends here.
+    };
+    
+
+
+    nsFilePath filePath(sourceFile, PR_TRUE);
+    PRFileDesc* fOut = NULL;
+
+    fOut = PR_Open( nsprPath(filePath), PR_RDONLY, 0 );
+    if ( fOut == NULL )
+    {
+        return Failed();
+    }
+    else
+    {
+        PR_Close( fOut );
+        fOut = NULL;
+    }
+
+    nsFileSpec fileSpec(filePath);
+    
+    fOut = PR_Open( nsprPath(fileSpec), PR_RDONLY, 0 );
+    if ( fOut == NULL )
+    {
+        return Failed();
+    }
+    else
+    {
+        PR_Close( fOut );
+        fOut = NULL;
+    }
+  
+    nsFileURL fileURL(fileSpec);
+    
+    fOut = PR_Open( nsprPath(fileURL), PR_RDONLY, 0 );
+    if ( fOut == NULL )
+    {
+        return Failed();
+    }
+    else
+    {
+        PR_Close( fOut );
+        fOut = NULL;
+    }
+
+
+    return Passed();
+}
+
 
 //----------------------------------------------------------------------------------------
 int FilesTest::SpecialSystemDirectories()
@@ -906,12 +968,16 @@ int FilesTest::RunAllTests()
 #endif
         return -1;
 
+    Banner("NSPR Compatiblity");
+    if (NSPRCompatiblity("mumble/aFile.txt") != 0)
+        return -1;
+
     Banner("Special System Directories");
     if (SpecialSystemDirectories() != 0)
         return -1;
 
 	Banner("Persistence");
-	if (Persistence("mumble/filedesc.dat") != 0)
+ 	if (Persistence("mumble/filedesc.dat") != 0)
 		return -1;
 
 	Banner("Delete again (to clean up our mess)");
