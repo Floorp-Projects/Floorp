@@ -463,7 +463,7 @@ cookie_GetLine(nsInputFileStream strm, nsAutoString& aLine) {
     }
 
     if (c != '\r') {
-      aLine.Append(c);
+      aLine.AppendWithConversion(c);
     }
   }
   return 0;
