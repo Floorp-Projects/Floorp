@@ -1853,21 +1853,11 @@ nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
   // Ok, once we are here, we need to escape the data to make sure that
   // we don't do HTML stuff with plain text sigs.
   //
-  char *tString = origBuf.ToNewCString();
-  if (tString)
+  PRUnichar *escaped = nsEscapeHTML2(origBuf.GetUnicode());
+  if (escaped) 
   {
-    char *escaped = nsEscapeHTML(tString);
-    if (escaped) 
-    {
-      aSigData.AppendWithConversion(escaped);
-      nsCRT::free(escaped);
-    }
-    else
-    {
-      aSigData.Append(origBuf);
-    }
-
-    nsCRT::free(tString);
+    aSigData.Append(escaped);
+    nsCRT::free(escaped);
   }
   else
   {
