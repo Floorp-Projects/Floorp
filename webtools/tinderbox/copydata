@@ -94,5 +94,5 @@ rm -f imagelog.txt
 wget $tinderbox_link/data/imagelog.txt
 
 cd $tinderbox_dir
-copylogs
+perl copylogs
 
