@@ -33,6 +33,7 @@ CPPSRCS=				\
 	nsObjectContent.cpp		\
 	nsHTMLLayer.cpp			\
 	nsHTMLGenericContent.cpp	\
+	nsHTMLAnchor.cpp		\
 	nsHTMLHR.cpp			\
 	$(NULL)
 
@@ -47,6 +48,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsObjectContent.obj		\
 	.\$(OBJDIR)\nsHTMLLayer.obj		\
 	.\$(OBJDIR)\nsHTMLGenericContent.obj	\
+	.\$(OBJDIR)\nsHTMLAnchor.obj		\
 	.\$(OBJDIR)\nsHTMLHR.obj		\
 	$(NULL)
 
