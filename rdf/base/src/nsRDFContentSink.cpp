@@ -94,6 +94,7 @@
 #include "nsIExpatSink.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
+#include "nsStaticAtom.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -331,7 +332,20 @@ nsIAtom* RDFContentSinkImpl::kXMLNSAtom;
 nsIAtom* RDFContentSinkImpl::kParseTypeAtom;
 
 ////////////////////////////////////////////////////////////////////////
-
+static const nsStaticAtom rdf_atoms[] = {
+    { "about", &RDFContentSinkImpl::kAboutAtom },
+    { "ID", &RDFContentSinkImpl::kIdAtom },
+    { "aboutEach", &RDFContentSinkImpl::kAboutEachAtom },
+    { "resource", &RDFContentSinkImpl::kResourceAtom },
+    { "RDF", &RDFContentSinkImpl::kRDFAtom },
+    { "Description", &RDFContentSinkImpl::kDescriptionAtom },
+    { "Bag", &RDFContentSinkImpl::kBagAtom },
+    { "Seq", &RDFContentSinkImpl::kSeqAtom },
+    { "Alt", &RDFContentSinkImpl::kAltAtom },
+    { "li", &RDFContentSinkImpl::kLiAtom },
+    { "xmlns", &RDFContentSinkImpl::kXMLNSAtom },
+    { "parseType", &RDFContentSinkImpl::kParseTypeAtom },
+};
 
 RDFContentSinkImpl::RDFContentSinkImpl()
     : mText(nsnull),
@@ -371,18 +385,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
                                           NS_GET_IID(nsIRDFContainerUtils),
                                           (nsISupports**) &gRDFContainerUtils);
 
-        kAboutAtom       = NS_NewAtom("about");
-        kIdAtom          = NS_NewAtom("ID");
-        kAboutEachAtom   = NS_NewAtom("aboutEach");
-        kResourceAtom    = NS_NewAtom("resource");
-        kRDFAtom         = NS_NewAtom("RDF");
-        kDescriptionAtom = NS_NewAtom("Description");
-        kBagAtom         = NS_NewAtom("Bag");
-        kSeqAtom         = NS_NewAtom("Seq");
-        kAltAtom         = NS_NewAtom("Alt");
-        kLiAtom          = NS_NewAtom("li");
-        kXMLNSAtom       = NS_NewAtom("xmlns");
-        kParseTypeAtom   = NS_NewAtom("parseType");
+        NS_RegisterStaticAtoms(rdf_atoms, NS_ARRAY_LENGTH(rdf_atoms));
     }
 
 #ifdef PR_LOGGING
@@ -460,18 +463,6 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
         NS_IF_RELEASE(kRDF_Seq);
         NS_IF_RELEASE(kRDF_nextVal);
 
-        NS_IF_RELEASE(kAboutAtom);
-        NS_IF_RELEASE(kIdAtom);
-        NS_IF_RELEASE(kAboutEachAtom);
-        NS_IF_RELEASE(kResourceAtom);
-        NS_IF_RELEASE(kRDFAtom);
-        NS_IF_RELEASE(kDescriptionAtom);
-        NS_IF_RELEASE(kBagAtom);
-        NS_IF_RELEASE(kSeqAtom);
-        NS_IF_RELEASE(kAltAtom);
-        NS_IF_RELEASE(kLiAtom);
-        NS_IF_RELEASE(kXMLNSAtom);
-        NS_IF_RELEASE(kParseTypeAtom);
     }
 }
 

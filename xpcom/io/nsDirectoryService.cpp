@@ -454,6 +454,7 @@ static const nsStaticAtom directory_atoms[] = {
     { NS_OS_TEMP_DIR,              &nsDirectoryService::sOS_TemporaryDirectory },
     { NS_OS_CURRENT_PROCESS_DIR,   &nsDirectoryService::sOS_CurrentProcessDirectory },
     { NS_OS_CURRENT_WORKING_DIR,   &nsDirectoryService::sOS_CurrentWorkingDirectory },
+    { NS_XPCOM_INIT_CURRENT_PROCESS_DIR, nsnull },
 #if defined (XP_MACOSX)
     { NS_OS_SYSTEM_DIR,                   &nsDirectoryService::sDirectory },
     { NS_MAC_DESKTOP_DIR,                 &nsDirectoryService::sDesktopDirectory },

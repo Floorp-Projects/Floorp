@@ -108,12 +108,14 @@
 #include "nsIDOMWindowCollection.h"
 #include "imgICache.h"
 #include "nsIAtom.h"
+#include "nsStaticAtom.h"
 #include "nsNetCID.h"
 #include "nsIJARURI.h"
 #include "nsIFileURL.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kUseXBLFormsPref[] = "nglayout.debug.enable_xbl_forms";
+nsIAtom* nsChromeRegistry::sCPrefix; // atom for "c"
 
 #define kChromeFileName           NS_LITERAL_CSTRING("chrome.rdf")
 #define kInstalledChromeFileName  NS_LITERAL_CSTRING("installed-chrome.txt")
@@ -315,6 +317,32 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsChromeRegistry, nsIChromeRegistry, nsIXULChromeR
 nsresult
 nsChromeRegistry::Init()
 {
+  // these atoms appear in almost every chrome registry manifest.rdf
+  // in some form or another. making static atoms prevents the atoms
+  // from constantly being created/destroyed during parsing
+  
+  static const nsStaticAtom atoms[] = {
+    { "c",             &sCPrefix },
+    { "chrome",        nsnull },
+    { "NC",            nsnull },
+    { "baseURL",       nsnull},
+    { "allowScripts",  nsnull },
+    { "skinVersion",   nsnull },
+    { "package",       nsnull },
+    { "packages",      nsnull },
+    { "locType",       nsnull },
+    { "displayName",   nsnull },
+    { "author",        nsnull },
+    { "localeVersion", nsnull },
+    { "localeType",    nsnull },
+    { "selectedLocale", nsnull },
+    { "selectedSkin",  nsnull },
+    { "hasOverlays",   nsnull },
+    { "previewURL", nsnull },
+  };
+
+  NS_RegisterStaticAtoms(atoms, NS_ARRAY_LENGTH(atoms));
+  
   gChromeRegistry = this;
   
   nsresult rv;
