@@ -54,3 +54,4 @@ nsPluginError.h
 npapi.h
 npupp.h
 nsDefaultPlugin.h
+nsPIPluginInstancePeer.h
