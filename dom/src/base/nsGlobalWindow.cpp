@@ -466,7 +466,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
         docURL->GetSpec(url);
       }
 
-      if (aClearScopeHint || !url.Equals(NS_LITERAL_CSTRING("about:blank"))) {
+      if (/* aClearScopeHint || */ !url.Equals(NS_LITERAL_CSTRING("about:blank"))) {
         // aClearScopeHint is true, or the current document is *not*
         // about:blank, clear timeouts and clear the scope.
         ClearAllTimeouts();
