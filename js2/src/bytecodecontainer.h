@@ -84,6 +84,13 @@ class JS2Object;
 class Frame;
 class RegExpInstance;
 
+class StashedMultiname {
+public:
+    uint16 stringIndex;     // the name
+    uint16 namespaceCount;  //
+    uint16 *namespaceList;  // if null and count is 1, it's the public namespace.
+};
+
 class BytecodeContainer {
 public:
     BytecodeContainer() : mStackTop(0), mStackMax(0) 

@@ -81,9 +81,9 @@
                         push(a);
                     }
                     else {
-                        pFrame = new ParameterFrame(fWrap->compileFrame);
+                        pFrame = new (meta) ParameterFrame(fWrap->compileFrame);
                         pFrame->instantiate(meta->env);
-                        baseVal = OBJECT_TO_JS2VAL(new SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
+                        baseVal = OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
                         pFrame->thisObject = baseVal;
                         pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);   // seems out of order, but we need to catch the current top frame 
@@ -142,7 +142,7 @@ doCall:
                 }
                 else {
                     if (length || fInst->isMethodClosure || fWrap->compileFrame->buildArguments) {
-                        pFrame = new ParameterFrame(fWrap->compileFrame);
+                        pFrame = new (meta) ParameterFrame(fWrap->compileFrame);
                         pFrame->instantiate(meta->env);
                         pFrame->thisObject = a;
                         // XXX (use fWrap->compileFrame->signature)
@@ -160,7 +160,7 @@ doCall:
                         // need to find a more efficient way of stashing 'this'
                         // used to be : "meta->env->addFrame(fWrap->compileFrame->prototype);"
                         // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
-                        pFrame = new ParameterFrame(a, fWrap->compileFrame->prototype);
+                        pFrame = new (meta) ParameterFrame(a, fWrap->compileFrame->prototype);
                         pFrame->pluralFrame = fWrap->compileFrame;
                         meta->env->addFrame(pFrame);
                     }
@@ -261,7 +261,7 @@ doCall:
         {
             a = pop();
             a = meta->toObject(a);
-            meta->env->addFrame(new WithFrame(JS2VAL_TO_OBJECT(a)));
+            meta->env->addFrame(new (meta) WithFrame(JS2VAL_TO_OBJECT(a)));
         }
         break;
 

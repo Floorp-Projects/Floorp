@@ -114,7 +114,7 @@
         {
             a = pop();
             b = meta->toObject(a);
-            ForIteratorObject *fi = new ForIteratorObject(JS2VAL_TO_OBJECT(b));
+            ForIteratorObject *fi = new (meta) ForIteratorObject(JS2VAL_TO_OBJECT(b));
             push(OBJECT_TO_JS2VAL(fi));
             push(BOOLEAN_TO_JS2VAL(fi->first(this)));
         }

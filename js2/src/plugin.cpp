@@ -146,7 +146,7 @@ NPBool nsPluginInstance::init(NPWindow* aWindow)
 
   world = new World();
   metadata = new JavaScript::MetaData::JS2Metadata(*world);
-  spiderMonkeyClass = new JS2SpiderMonkeyClass(&world->identifiers[widenCString("SpiderMonkey")]);
+  spiderMonkeyClass = new (metadata) JS2SpiderMonkeyClass(&world->identifiers[widenCString("SpiderMonkey")]);
  
   mInitialized = TRUE;
 
@@ -218,7 +218,7 @@ void nsPluginInstance::SetDocument(nsISupports *aDocument)
                 if (NS_SUCCEEDED(xpc->WrapNative(aJSContext, aJSContext->globalObject, doc, nsIDOMDocument::GetIID(), &wrappedDoc))) {
                     JSObject *obj;
                     if (NS_SUCCEEDED(wrappedDoc->GetJSObject(&obj))) {
-                        SpiderMonkeyInstance *smInst = new SpiderMonkeyInstance(metadata, metadata->objectClass->prototype, spiderMonkeyClass);
+                        SpiderMonkeyInstance *smInst = new (metadata) SpiderMonkeyInstance(metadata, metadata->objectClass->prototype, spiderMonkeyClass);
                         smInst->jsObject = obj;
                         smInst->pluginInstance = this;
                         metadata->createDynamicProperty(metadata->glob, "document", OBJECT_TO_JS2VAL(smInst), ReadWriteAccess, true, false);
@@ -399,17 +399,17 @@ js2val callJSFunction(JS2Metadata *meta, FunctionInstance *fnInst, const js2val 
                 if (argc) {
                     outgoingArgs = new jsval[argc];
                     for (uint32 i = 0; i < argc; i++) {
-                        if (!plug->convertJS2ValueToJSValue(meta, aJSContext, argv[i], &outgoingArgs[i]))
+                        if (!plug->convertJS2ValueToJSValue(aJSContext, argv[i], &outgoingArgs[i]))
                             goto out;
                     }
                 }
                 jsval resultVal;
                 jsval thisVal;
-                if (!plug->convertJS2ValueToJSValue(meta, aJSContext, thisValue, &thisVal))
+                if (!plug->convertJS2ValueToJSValue(aJSContext, thisValue, &thisVal))
                     goto out;
                 ASSERT(JSVAL_IS_OBJECT(thisVal));
                 if (JS_CallFunctionValue(aJSContext, JSVAL_TO_OBJECT(thisVal), OBJECT_TO_JSVAL(smFun->jsObject), argc, outgoingArgs, &resultVal))    
-                    plug->convertJSValueToJS2Value(meta, aJSContext, resultVal, &result);
+                    plug->convertJSValueToJS2Value(aJSContext, resultVal, &result);
                 NS_RELEASE(aCurrentNativeCallContext);
             }
         }
@@ -420,17 +420,17 @@ out:
     return result;
 }
 
-bool nsPluginInstance::convertJSValueToJS2Value(JavaScript::MetaData::JS2Metadata *meta, JSContext *cx, jsval v, js2val *rval)
+bool nsPluginInstance::convertJSValueToJS2Value(JSContext *cx, jsval v, js2val *rval)
 {
     bool result = true;
     if (JSVAL_IS_INT(v))
         *rval = INT_TO_JS2VAL(JSVAL_TO_INT(v));
     else
     if (JSVAL_IS_NUMBER(v))
-        *rval = meta->engine->allocNumber(*JSVAL_TO_DOUBLE(v));
+        *rval = metadata->engine->allocNumber(*JSVAL_TO_DOUBLE(v));
     else
     if (JSVAL_IS_STRING(v))
-        *rval = meta->engine->allocString(JS_GetStringChars(JSVAL_TO_STRING(v)), JS_GetStringLength(JSVAL_TO_STRING(v)));
+        *rval = metadata->engine->allocString(JS_GetStringChars(JSVAL_TO_STRING(v)), JS_GetStringLength(JSVAL_TO_STRING(v)));
     else
     if (JSVAL_IS_BOOLEAN(v))
         *rval = BOOLEAN_TO_JS2VAL(JSVAL_TO_BOOLEAN(v));
@@ -444,15 +444,17 @@ bool nsPluginInstance::convertJSValueToJS2Value(JavaScript::MetaData::JS2Metadat
     if (JSVAL_IS_OBJECT(v)) {
         JSObject *jsObj = JSVAL_TO_OBJECT(v);
         if (JS_ObjectIsFunction(cx, jsObj)) {
-            SpiderMonkeyFunction *smFun = new SpiderMonkeyFunction(meta);
-            smFun->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), callJSFunction, meta->env);  
+            SpiderMonkeyFunction *smFun = new (metadata) SpiderMonkeyFunction(metadata);
+            JS2Object *rooter = smFun;
+            DEFINE_ROOTKEEPER(metadata, rk, rooter);
+            smFun->fWrap = new FunctionWrapper(metadata, true, new (metadata) ParameterFrame(JS2VAL_VOID, true), callJSFunction, metadata->env);  
             smFun->fWrap->length = 0;
             smFun->jsObject = jsObj;
             smFun->pluginInstance = this;
             *rval = OBJECT_TO_JS2VAL(smFun);
         }
         else {
-            SpiderMonkeyInstance *smInst = new SpiderMonkeyInstance(meta, meta->objectClass->prototype, spiderMonkeyClass);
+            SpiderMonkeyInstance *smInst = new (metadata) SpiderMonkeyInstance(metadata, metadata->objectClass->prototype, spiderMonkeyClass);
             smInst->jsObject = jsObj;
             smInst->pluginInstance = this;
             *rval = OBJECT_TO_JS2VAL(smInst);
@@ -463,7 +465,7 @@ bool nsPluginInstance::convertJSValueToJS2Value(JavaScript::MetaData::JS2Metadat
     return result;
 }
 
-bool nsPluginInstance::convertJS2ValueToJSValue(JavaScript::MetaData::JS2Metadata *meta, JSContext *cx, js2val v, jsval *rval)
+bool nsPluginInstance::convertJS2ValueToJSValue(JSContext *cx, js2val v, jsval *rval)
 {
     bool result = true;
     if (JS2VAL_IS_INT(v))
@@ -517,7 +519,7 @@ bool JS2SpiderMonkeyClass::Read(JS2Metadata *meta, js2val *base, Multiname *mult
                 std::string str(multiname->name->length(), char());
                 std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
                 if (JS_GetProperty(aJSContext, smInst->jsObject, str.c_str(), &v))
-                    result = plug->convertJSValueToJS2Value(meta, aJSContext, v, rval);
+                    result = plug->convertJSValueToJS2Value(aJSContext, v, rval);
                 NS_RELEASE(aCurrentNativeCallContext);
             }
         }
@@ -545,7 +547,7 @@ bool JS2SpiderMonkeyClass::Write(JS2Metadata *meta, js2val base, Multiname *mult
             JSContext *aJSContext;
             if (NS_SUCCEEDED(aCurrentNativeCallContext->GetJSContext(&aJSContext))) {
                 jsval v;
-                if (plug->convertJS2ValueToJSValue(meta, aJSContext, newValue, &v)) {
+                if (plug->convertJS2ValueToJSValue(aJSContext, newValue, &v)) {
                     std::string str(multiname->name->length(), char());
                     std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
                     if (JS_SetProperty(aJSContext, smInst->jsObject, str.c_str(), &v))

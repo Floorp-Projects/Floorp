@@ -209,7 +209,7 @@ void dumpBytecode(BytecodeContainer *bCon);
 class JS2Engine {
 public:
 
-    JS2Engine(World &world);
+    JS2Engine(JS2Metadata *meta, World &world);
     ~JS2Engine();
 
     js2val interpret(Phase execPhase, BytecodeContainer *targetbCon, Environment *env);

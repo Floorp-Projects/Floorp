@@ -115,7 +115,7 @@
 				closure_fi++;
 				current_fi++;
             }
-            x->fWrap->env = new Environment(meta->env);
+            x->fWrap->env = new (meta) Environment(meta->env);
         }
         break;
 
@@ -160,7 +160,7 @@ makeLimitedInstance:
                 if (JS2VAL_IS_NULL(a))
                     push(JS2VAL_NULL);
                 else
-                    push(OBJECT_TO_JS2VAL(new LimitedInstance(JS2VAL_TO_OBJECT(a), limit)));
+                    push(OBJECT_TO_JS2VAL(new (meta) LimitedInstance(JS2VAL_TO_OBJECT(a), limit)));
             }
             pFrame = NULL;
         }
@@ -177,7 +177,7 @@ makeLimitedInstance:
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            SimpleInstance *sInst = new SimpleInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->objectClass);
+            SimpleInstance *sInst = new (meta) SimpleInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->objectClass);
             baseVal = OBJECT_TO_JS2VAL(sInst);
             for (uint16 i = 0; i < argCount; i++) {
                 a = pop();
@@ -196,7 +196,7 @@ makeLimitedInstance:
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            ArrayInstance *aInst = new ArrayInstance(meta, OBJECT_TO_JS2VAL(meta->arrayClass->prototype), meta->arrayClass);
+            ArrayInstance *aInst = new (meta) ArrayInstance(meta, OBJECT_TO_JS2VAL(meta->arrayClass->prototype), meta->arrayClass);
             baseVal = OBJECT_TO_JS2VAL(aInst);
             for (uint16 i = 0; i < argCount; i++) {
                 b = pop();

@@ -158,7 +158,7 @@ namespace MetaData {
         RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(thisValue));
    
         const String *str = NULL;
-        DEFINE_ROOTKEEPER(rk0, str);
+        DEFINE_ROOTKEEPER(meta, rk0, str);
 
 		js2val regexpClassVal = OBJECT_TO_JS2VAL(meta->regexpClass);
 		js2val result = JS2VAL_NULL;
@@ -193,21 +193,21 @@ namespace MetaData {
             }
 // construct the result array and set $1.. in RegExp statics
             ArrayInstance *A = NULL;
-            DEFINE_ROOTKEEPER(rk, A);
+            DEFINE_ROOTKEEPER(meta, rk, A);
 			if (test)
 				result = JS2VAL_TRUE;
 			else {
-				A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
+				A = new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
 				result = OBJECT_TO_JS2VAL(A);
 			}
             js2val matchStr = meta->engine->allocString(str->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
-            DEFINE_ROOTKEEPER(rk1, matchStr);
+            DEFINE_ROOTKEEPER(meta, rk1, matchStr);
 			js2val inputStr = meta->engine->allocString(str);
-            DEFINE_ROOTKEEPER(rk2, inputStr);
+            DEFINE_ROOTKEEPER(meta, rk2, inputStr);
 			if (!test)
 				meta->createDynamicProperty(A, meta->engine->numberToString((long)0), matchStr, ReadWriteAccess, false, true);
 			js2val parenStr = JS2VAL_VOID;
-			DEFINE_ROOTKEEPER(rk3, parenStr);
+			DEFINE_ROOTKEEPER(meta, rk3, parenStr);
 			if (match->parenCount == 0)	// arrange to set the lastParen to "", not undefined (it's a non-ecma 1.2 thing)
 				parenStr = meta->engine->allocString("");
             for (int32 i = 0; i < match->parenCount; i++) {
@@ -245,10 +245,10 @@ namespace MetaData {
             meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("lastMatch"), true, matchStr);
             meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("lastParen"), true, parenStr);
             js2val leftContextVal = meta->engine->allocString(str->substr(0, (uint32)match->startIndex));
-            DEFINE_ROOTKEEPER(rk4, leftContextVal);
+            DEFINE_ROOTKEEPER(meta, rk4, leftContextVal);
             meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("leftContext"), true, leftContextVal);
             js2val rightContextVal = meta->engine->allocString(str->substr((uint32)match->endIndex, (uint32)str->length() - match->endIndex));
-            DEFINE_ROOTKEEPER(rk5, rightContextVal);
+            DEFINE_ROOTKEEPER(meta, rk5, rightContextVal);
             meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("rightContext"), true, rightContextVal);
         }
         return result;
@@ -288,9 +288,9 @@ namespace MetaData {
         uint32 flags = 0;
 
         const String *regexpStr = meta->engine->Empty_StringAtom;
-        DEFINE_ROOTKEEPER(rk1, regexpStr);
+        DEFINE_ROOTKEEPER(meta, rk1, regexpStr);
         const String *flagStr = meta->engine->Empty_StringAtom;
-        DEFINE_ROOTKEEPER(rk2, flagStr);
+        DEFINE_ROOTKEEPER(meta, rk2, flagStr);
         if (argc > 0) {
             if (JS2VAL_IS_OBJECT(argv[0]) && !JS2VAL_IS_NULL(argv[0])
                     && (JS2VAL_TO_OBJECT(argv[0])->kind == SimpleInstanceKind)
@@ -335,16 +335,16 @@ namespace MetaData {
 
     js2val RegExp_ConstructorOpt(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc, bool flat)
     {
-        RegExpInstance *thisInst = new RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
-        DEFINE_ROOTKEEPER(rk, thisInst);
+        RegExpInstance *thisInst = new (meta) RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
+        DEFINE_ROOTKEEPER(meta, rk, thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
 		return RegExp_compile_sub(meta, thatValue, argv, argc, flat);
     }
 
     js2val RegExp_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc)
     {
-        RegExpInstance *thisInst = new RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
-        DEFINE_ROOTKEEPER(rk, thisInst);
+        RegExpInstance *thisInst = new (meta) RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
+        DEFINE_ROOTKEEPER(meta, rk, thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
 		return RegExp_compile_sub(meta, thatValue, argv, argc, false);
     }
@@ -423,13 +423,13 @@ namespace MetaData {
 
         for (i = 0; i < INSTANCE_VAR_COUNT; i++)
         {
-            Multiname *mn = new Multiname(meta->engine->allocStringPtr(RegExpInstanceVars[i].name), &publicNamespaceList);
+            Multiname *mn = new (meta) Multiname(meta->engine->allocStringPtr(RegExpInstanceVars[i].name), &publicNamespaceList);
             InstanceMember *m = new InstanceVariable(mn, RegExpInstanceVars[i].type, false, true, true, meta->regexpClass->slotCount++);
             meta->defineInstanceMember(meta->regexpClass, &meta->cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
         }
 
-        RegExpInstance *reProto = new RegExpInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->regexpClass);
-        DEFINE_ROOTKEEPER(rk, reProto);
+        RegExpInstance *reProto = new (meta) RegExpInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->regexpClass);
+        DEFINE_ROOTKEEPER(meta, rk, reProto);
         meta->regexpClass->prototype = OBJECT_TO_JS2VAL(reProto);   
         meta->initBuiltinClassPrototype(meta->regexpClass, &prototypeFunctions[0]);
 

@@ -57,9 +57,9 @@ namespace MetaData {
 
     js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
-        js2val thatValue = OBJECT_TO_JS2VAL(new BooleanInstance(meta, meta->booleanClass->prototype, meta->booleanClass));
+        js2val thatValue = OBJECT_TO_JS2VAL(new (meta) BooleanInstance(meta, meta->booleanClass->prototype, meta->booleanClass));
         BooleanInstance *boolInst = checked_cast<BooleanInstance *>(JS2VAL_TO_OBJECT(thatValue));
-        DEFINE_ROOTKEEPER(rk, boolInst);
+        DEFINE_ROOTKEEPER(meta, rk, boolInst);
 
         if (argc > 0)
             boolInst->mValue = meta->toBoolean(argv[0]);
@@ -106,7 +106,7 @@ namespace MetaData {
         };
 
         meta->initBuiltinClass(meta->booleanClass, NULL, Boolean_Constructor, Boolean_Call);
-        meta->booleanClass->prototype = OBJECT_TO_JS2VAL(new BooleanInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->booleanClass));
+        meta->booleanClass->prototype = OBJECT_TO_JS2VAL(new (meta) BooleanInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->booleanClass));
         meta->initBuiltinClassPrototype(meta->booleanClass, &prototypeFunctions[0]);
     }
 

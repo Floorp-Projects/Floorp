@@ -57,7 +57,7 @@ namespace MetaData {
 
     js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
-        js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta, meta->numberClass->prototype, meta->numberClass));
+        js2val thatValue = OBJECT_TO_JS2VAL(new (meta) NumberInstance(meta, meta->numberClass->prototype, meta->numberClass));
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thatValue));
 
         if (argc > 0)
@@ -184,7 +184,7 @@ namespace MetaData {
         };
 
         meta->initBuiltinClass(meta->numberClass, NULL, Number_Constructor, Number_Call);
-        meta->numberClass->prototype = OBJECT_TO_JS2VAL(new NumberInstance(meta, meta->objectClass->prototype, meta->numberClass));
+        meta->numberClass->prototype = OBJECT_TO_JS2VAL(new (meta) NumberInstance(meta, meta->objectClass->prototype, meta->numberClass));
         meta->initBuiltinClassPrototype(meta->numberClass, &prototypeFunctions[0]);
 
     }

@@ -259,7 +259,7 @@ namespace MetaData {
 
         CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
-            LexicalReference rVal(&world.identifiers[widenCString(fname)], false);
+            LexicalReference rVal(new (this) Multiname(&world.identifiers[widenCString(fname)]), false);
             rVal.emitReadForInvokeBytecode(bCon, 0);
             bCon->emitOp(eCall, 0, -(0 + 2) + 1);    // pop argCount args, the base & function, and push a result
             bCon->addShort(0);
@@ -285,8 +285,8 @@ namespace MetaData {
         if (c) init = c->init;
         if (init) {
             ParameterFrame *runtimeFrame;
-            DEFINE_ROOTKEEPER(rk, runtimeFrame);
-            runtimeFrame = new ParameterFrame(init->fWrap->compileFrame);
+            DEFINE_ROOTKEEPER(this, rk, runtimeFrame);
+            runtimeFrame = new (this) ParameterFrame(init->fWrap->compileFrame);
             if (!init->fWrap->compileFrame->callsSuperConstructor) {
                 invokeInit(c->super, thisValue, NULL, 0);
                 runtimeFrame->superConstructorCalled = true;
@@ -320,9 +320,9 @@ namespace MetaData {
                 BytecodeContainer *bCon = fWrap->bCon;
 
                 CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
-                DEFINE_ROOTKEEPER(rk, runtimeFrame);
+                DEFINE_ROOTKEEPER(this, rk, runtimeFrame);
                 if (runtimeFrame == NULL)
-                    runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                    runtimeFrame = new (this) ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(fWrap->env);
                 runtimeFrame->thisObject = thisValue;
                 runtimeFrame->assignArguments(this, fnObj, argv, argc, argc);
@@ -424,7 +424,7 @@ namespace MetaData {
         // if that's not available or returns a non primitive, throw a TypeError
 
         JS2Object *obj = JS2VAL_TO_OBJECT(x);
-        DEFINE_ROOTKEEPER(rk1, obj);
+        DEFINE_ROOTKEEPER(this, rk1, obj);
         if (obj->kind == ClassKind)    // therefore, not an E3 object, so just return
             return engine->allocString("Function");// engine->typeofString(x);     // the 'typeof' string
 
@@ -715,36 +715,36 @@ namespace MetaData {
     bool JS2Class::ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval)
     {
         // XXX could speed up by pushing knowledge of single namespace?
-        DEFINE_ROOTKEEPER(rk1, name);
-        Multiname *mn = new Multiname(name, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk, mn);
+        DEFINE_ROOTKEEPER(meta, rk1, name);
+        Multiname *mn = new (meta) Multiname(name, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(meta, rk, mn);
         return Read(meta, base, mn, NULL, phase, rval);
     }
 
     bool JS2Class::DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result)
     {
-        DEFINE_ROOTKEEPER(rk1, name);
+        DEFINE_ROOTKEEPER(meta, rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
-        Multiname *mn = new Multiname(name, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk, mn);
+        Multiname *mn = new (meta) Multiname(name, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(meta, rk, mn);
         return Delete(meta, base, mn, NULL, result);
     }
 
     bool JS2Class::WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue)
     {
-        DEFINE_ROOTKEEPER(rk1, name);
+        DEFINE_ROOTKEEPER(meta, rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
-        Multiname *mn = new Multiname(name, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk, mn);
+        Multiname *mn = new (meta) Multiname(name, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(meta, rk, mn);
         return Write(meta, base, mn, NULL, createIfMissing, newValue, false);
     }
 
     bool JS2Class::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
     {
         const String *indexStr = meta->toString(indexVal);
-        DEFINE_ROOTKEEPER(rk, indexStr);
-        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn);
+        DEFINE_ROOTKEEPER(meta, rk, indexStr);
+        Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(meta, rk1, mn);
         return Read(meta, base, mn, NULL, phase, rval);
     }
 
@@ -805,9 +805,9 @@ namespace MetaData {
     bool JS2ArrayClass::BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)
 	{
 		const String *indexStr = meta->toString(indexVal);
-		DEFINE_ROOTKEEPER(rk, indexStr);
-		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-		DEFINE_ROOTKEEPER(rk1, mn);
+		DEFINE_ROOTKEEPER(meta, rk, indexStr);
+		Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+		DEFINE_ROOTKEEPER(meta, rk1, mn);
 
 		ASSERT(JS2VAL_IS_OBJECT(base));
 		JS2Object *obj = JS2VAL_TO_OBJECT(base);
@@ -838,9 +838,9 @@ namespace MetaData {
     bool JS2ArrayClass::BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)
 	{
 		const String *indexStr = meta->toString(indexVal);
-		DEFINE_ROOTKEEPER(rk, indexStr);
-		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-		DEFINE_ROOTKEEPER(rk1, mn);
+		DEFINE_ROOTKEEPER(meta, rk, indexStr);
+		Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+		DEFINE_ROOTKEEPER(meta, rk1, mn);
 		return Delete(meta, base, mn, NULL, result);
 	}
 
@@ -910,27 +910,27 @@ namespace MetaData {
     bool JS2ArrayClass::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
 	{
 		const String *indexStr = meta->toString(indexVal);
-		DEFINE_ROOTKEEPER(rk, indexStr);
-		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-		DEFINE_ROOTKEEPER(rk1, mn);
+		DEFINE_ROOTKEEPER(meta, rk, indexStr);
+		Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+		DEFINE_ROOTKEEPER(meta, rk1, mn);
 		return Read(meta, base, mn, NULL, phase, rval);
 	}
 
     bool JS2Class::BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)
     {
         const String *indexStr = meta->toString(indexVal);
-        DEFINE_ROOTKEEPER(rk, indexStr);
-        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn);
+        DEFINE_ROOTKEEPER(meta, rk, indexStr);
+        Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(meta, rk1, mn);
         return Write(meta, base, mn, NULL, true, newValue, false);
     }
 
     bool JS2Class::BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)
     {
         const String *indexStr = meta->toString(indexVal);
-        DEFINE_ROOTKEEPER(rk, indexStr);
-        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn);
+        DEFINE_ROOTKEEPER(meta, rk, indexStr);
+        Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(meta, rk1, mn);
         return Delete(meta, base, mn, NULL, result);
     }
 
@@ -948,7 +948,7 @@ namespace MetaData {
         if (m == NULL) {
             // XXX E3 compatibility...
             JS2Object *baseObj = NULL;
-            DEFINE_ROOTKEEPER(rk, baseObj);
+            DEFINE_ROOTKEEPER(meta, rk, baseObj);
             if (JS2VAL_IS_PRIMITIVE(base)) {
                 if (meta->cxt.E3compatibility)
                     baseObj = JS2VAL_TO_OBJECT(meta->toObject(base));   
@@ -960,8 +960,8 @@ namespace MetaData {
                     && ( ((baseObj->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(baseObj)->sealed)
                             || ( (baseObj->kind == PackageKind) && !checked_cast<Package *>(baseObj)->sealed)) ) {
                 QualifiedName qName = multiname->selectPrimaryName(meta);
-                Multiname *mn = new Multiname(qName);
-                DEFINE_ROOTKEEPER(rk, mn);
+                Multiname *mn = new (meta) Multiname(qName);
+                DEFINE_ROOTKEEPER(meta, rk, mn);
                 if ( (meta->findBaseInstanceMember(this, mn, ReadAccess) == NULL)
                         && (meta->findCommonMember(&base, mn, ReadAccess, true) == NULL) ) {
                     meta->createDynamicProperty(baseObj, mn->name, newValue, ReadWriteAccess, false, true);

@@ -77,7 +77,7 @@ namespace MetaData {
             ASSERT(parser.lexer.peek(true).hasKind(Token::end));
             ASSERT(fnExpr);     // otherwise, an exception would have been thrown out of here
             fnExpr->function.fn = NULL;
-            DEFINE_ROOTKEEPER(rk, fnExpr->function.fn);
+            DEFINE_ROOTKEEPER(meta, rk, fnExpr->function.fn);
             meta->ValidateExpression(&meta->cxt, meta->env, fnExpr);
             Arena *oldArena = meta->referenceArena;
             meta->referenceArena = new Arena;
@@ -102,10 +102,10 @@ namespace MetaData {
             return OBJECT_TO_JS2VAL(fnExpr->function.fn);
         }
         else {  // construct an empty function wrapper
-            js2val thatValue = OBJECT_TO_JS2VAL(new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass));
+            js2val thatValue = OBJECT_TO_JS2VAL(new (meta) FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass));
             FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
-            DEFINE_ROOTKEEPER(rk, fnInst);
-            fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
+            DEFINE_ROOTKEEPER(meta, rk, fnInst);
+            fnInst->fWrap = new FunctionWrapper(meta, true, new (meta) ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
             fnInst->fWrap->length = 0;
             fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
             meta->createDynamicProperty(fnInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
@@ -137,7 +137,7 @@ namespace MetaData {
         FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
 
 		js2val callThis = argv[0];
-		DEFINE_ROOTKEEPER(rk0, callThis);
+		DEFINE_ROOTKEEPER(meta, rk0, callThis);
 		if (JS2VAL_IS_NULL(argv[0]) || JS2VAL_IS_UNDEFINED(argv[0]))
 			callThis = OBJECT_TO_JS2VAL(meta->glob);
 		else
@@ -157,7 +157,7 @@ namespace MetaData {
             meta->reportError(Exception::typeError, "Function.apply called on something other than a function thing", meta->engine->errorPos());
         FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
 		js2val callThis = argv[0];
-		DEFINE_ROOTKEEPER(rk0, callThis);
+		DEFINE_ROOTKEEPER(meta, rk0, callThis);
 		if (JS2VAL_IS_NULL(argv[0]) || JS2VAL_IS_UNDEFINED(argv[0]))
 			callThis = OBJECT_TO_JS2VAL(meta->glob);
 		else
@@ -171,7 +171,7 @@ namespace MetaData {
 					ArrayInstance *arrInst = checked_cast<ArrayInstance *>(obj);
 					uint32 length = getLength(meta, arrInst);
 					js2val *argArray = new js2val[length];
-					DEFINE_ARRAYROOTKEEPER(rk, argArray, length);
+					DEFINE_ARRAYROOTKEEPER(meta, rk, argArray, length);
 					for (uint32 i = 0; i < length; i++)
 						meta->arrayClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
 					return meta->invokeFunction(fnInst, callThis, argArray, length, NULL);
@@ -181,7 +181,7 @@ namespace MetaData {
 						ArgumentsInstance *argInst = checked_cast<ArgumentsInstance *>(obj);
 						uint32 length = getLength(meta, argInst);
 						js2val *argArray = new js2val[length];
-						DEFINE_ARRAYROOTKEEPER(rk, argArray, length);
+						DEFINE_ARRAYROOTKEEPER(meta, rk, argArray, length);
 						for (uint32 i = 0; i < length; i++)
 							meta->argumentsClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
 						return meta->invokeFunction(fnInst, callThis, argArray, length, NULL);
@@ -204,9 +204,9 @@ namespace MetaData {
             { NULL }
         };
 
-        FunctionInstance *fnInst = new FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass);
-        DEFINE_ROOTKEEPER(rk, fnInst);
-        fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
+        FunctionInstance *fnInst = new (meta) FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass);
+        DEFINE_ROOTKEEPER(meta, rk, fnInst);
+        fnInst->fWrap = new FunctionWrapper(meta, true, new (meta) ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
         fnInst->fWrap->length = 0;
         fnInst->fWrap->bCon->emitOp(eReturnVoid, 0);
 

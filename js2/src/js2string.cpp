@@ -57,9 +57,9 @@ namespace MetaData {
 
 js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
-    js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta, meta->stringClass->prototype, meta->stringClass));
+    js2val thatValue = OBJECT_TO_JS2VAL(new (meta) StringInstance(meta, meta->stringClass->prototype, meta->stringClass));
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    DEFINE_ROOTKEEPER(rk, strInst);
+    DEFINE_ROOTKEEPER(meta, rk, strInst);
     if (argc > 0)
         strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
     else
@@ -120,7 +120,7 @@ static js2val String_valueOf(JS2Metadata *meta, const js2val thisValue, js2val *
 static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *str = NULL;
-    DEFINE_ROOTKEEPER(rk, str);
+    DEFINE_ROOTKEEPER(meta, rk, str);
     str = meta->toString(thisValue);
 
     js2val S = STRING_TO_JS2VAL(str);
@@ -158,7 +158,7 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
 static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     js2val S = STRING_TO_JS2VAL(meta->toString(thisValue));
-    DEFINE_ROOTKEEPER(rk0, S);
+    DEFINE_ROOTKEEPER(meta, rk0, S);
 
     js2val regexp = argv[0];
     if ((argc == 0) || (meta->objectType(argv[0]) != meta->regexpClass)) {        
@@ -167,7 +167,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
     }
 
     RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp));
-    DEFINE_ROOTKEEPER(rk1, thisInst);
+    DEFINE_ROOTKEEPER(meta, rk1, thisInst);
     JS2RegExp *re = thisInst->mRegExp;
     if ((re->flags & JSREG_GLOB) == 0) {
         return RegExp_exec(meta, regexp, &S, 1);                
@@ -180,7 +180,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
 		bool globalMultiline = meta->toBoolean(globalMultilineVal);
 
         ArrayInstance *A = NULL;
-        DEFINE_ROOTKEEPER(rk2, A);
+        DEFINE_ROOTKEEPER(meta, rk2, A);
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
@@ -192,9 +192,9 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
             else
                 lastIndex = match->endIndex;
             js2val matchStr = meta->engine->allocString(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
-            DEFINE_ROOTKEEPER(rk3, matchStr);
+            DEFINE_ROOTKEEPER(meta, rk3, matchStr);
 			if (A == NULL)
-				A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
+				A = new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
             meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(index), true, matchStr);
             index++;
         }
@@ -278,7 +278,7 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
 static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *S = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, S);
+    DEFINE_ROOTKEEPER(meta, rk1, S);
 
     js2val searchValue = JS2VAL_UNDEFINED;
     js2val replaceValue = JS2VAL_UNDEFINED;
@@ -297,7 +297,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 
     if (argc > 1) replaceValue = argv[1];
     const String *replaceStr = meta->toString(replaceValue);
-    DEFINE_ROOTKEEPER(rk2, replaceStr);
+    DEFINE_ROOTKEEPER(meta, rk2, replaceStr);
 
 
     RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
@@ -397,11 +397,11 @@ static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, JS2Re
 static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *S = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk0, S);
+    DEFINE_ROOTKEEPER(meta, rk0, S);
 
-    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
+    js2val result = OBJECT_TO_JS2VAL(new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
-    DEFINE_ROOTKEEPER(rk1, A);
+    DEFINE_ROOTKEEPER(meta, rk1, A);
     setLength(meta, A, 0);
 
     uint32 lim;
@@ -418,7 +418,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
     JS2RegExp *RE = NULL;
     const String *R = NULL;
-    DEFINE_ROOTKEEPER(rk2, R);
+    DEFINE_ROOTKEEPER(meta, rk2, R);
     if (meta->objectType(separatorV) == meta->regexpClass)
         RE = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(separatorV)))->mRegExp;
     else
@@ -447,9 +447,9 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
     }
 
     String *T = NULL;
-    DEFINE_ROOTKEEPER(rk3, T);
+    DEFINE_ROOTKEEPER(meta, rk3, T);
     js2val v = JS2VAL_VOID;
-    DEFINE_ROOTKEEPER(rk4, v);
+    DEFINE_ROOTKEEPER(meta, rk4, v);
 
     while (true) {
         uint32 q = p;
@@ -491,7 +491,7 @@ step11:
 static js2val String_charAt(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *str = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk, str);
+    DEFINE_ROOTKEEPER(meta, rk, str);
 
     uint32 pos = 0;
     if (argc > 0)
@@ -507,7 +507,7 @@ static js2val String_charAt(JS2Metadata *meta, const js2val thisValue, js2val *a
 static js2val String_charCodeAt(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *str = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk, str);
+    DEFINE_ROOTKEEPER(meta, rk, str);
 
     float64 posd = 0.0;
     if (argc > 0)
@@ -522,9 +522,9 @@ static js2val String_charCodeAt(JS2Metadata *meta, const js2val thisValue, js2va
 static js2val String_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *str = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, str);
+    DEFINE_ROOTKEEPER(meta, rk1, str);
     String *result = meta->engine->allocStringPtr(str);
-    DEFINE_ROOTKEEPER(rk2, result);
+    DEFINE_ROOTKEEPER(meta, rk2, result);
 
     for (uint32 i = 0; i < argc; i++) {
         *result += *meta->toString(argv[i]);
@@ -539,9 +539,9 @@ static js2val String_indexOf(JS2Metadata *meta, const js2val thisValue, js2val *
         return meta->engine->allocNumber(-1.0);
 
     const String *str = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, str);
+    DEFINE_ROOTKEEPER(meta, rk1, str);
     const String *searchStr = meta->toString(argv[0]);
-    DEFINE_ROOTKEEPER(rk2, searchStr);
+    DEFINE_ROOTKEEPER(meta, rk2, searchStr);
     uint32 pos = 0;
 
     if (argc > 1) {
@@ -568,9 +568,9 @@ static js2val String_lastIndexOf(JS2Metadata *meta, const js2val thisValue, js2v
         return meta->engine->allocNumber(-1.0);
 
     const String *str = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, str);
+    DEFINE_ROOTKEEPER(meta, rk1, str);
     const String *searchStr = meta->toString(argv[0]);
-    DEFINE_ROOTKEEPER(rk2, searchStr);
+    DEFINE_ROOTKEEPER(meta, rk2, searchStr);
     uint32 pos = str->size();
 
     if (argc > 1) {
@@ -601,11 +601,11 @@ static js2val String_localeCompare(JS2Metadata * /* meta */, const js2val /*this
 static js2val String_toLowerCase(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     const String *str = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, str);
+    DEFINE_ROOTKEEPER(meta, rk1, str);
     js2val S = STRING_TO_JS2VAL(str);
 
     String *result = meta->engine->allocStringPtr(str);
-    DEFINE_ROOTKEEPER(rk2, result);
+    DEFINE_ROOTKEEPER(meta, rk2, result);
     for (String::iterator i = result->begin(), end = result->end(); i != end; i++)
         *i = toLower(*i);
 
@@ -615,11 +615,11 @@ static js2val String_toLowerCase(JS2Metadata *meta, const js2val thisValue, js2v
 static js2val String_toUpperCase(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     const String *str = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, str);
+    DEFINE_ROOTKEEPER(meta, rk1, str);
     js2val S = STRING_TO_JS2VAL(str);
 
     String *result = meta->engine->allocStringPtr(JS2VAL_TO_STRING(S));
-    DEFINE_ROOTKEEPER(rk2, result);
+    DEFINE_ROOTKEEPER(meta, rk2, result);
     for (String::iterator i = result->begin(), end = result->end(); i != end; i++)
         *i = toUpper(*i);
 
@@ -650,7 +650,7 @@ static js2val String_toUpperCase(JS2Metadata *meta, const js2val thisValue, js2v
 static js2val String_slice(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *sourceString = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, sourceString);
+    DEFINE_ROOTKEEPER(meta, rk1, sourceString);
 
     uint32 sourceLength = sourceString->size();
     uint32 start, end;
@@ -723,7 +723,7 @@ static js2val String_slice(JS2Metadata *meta, const js2val thisValue, js2val *ar
 static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *sourceString = meta->toString(thisValue);
-    DEFINE_ROOTKEEPER(rk1, sourceString);
+    DEFINE_ROOTKEEPER(meta, rk1, sourceString);
 
     uint32 sourceLength = sourceString->size();
     uint32 start, end;
@@ -803,8 +803,8 @@ void initStringObject(JS2Metadata *meta)
         { NULL }
     };
 
-    StringInstance *strInst = new StringInstance(meta, meta->objectClass->prototype, meta->stringClass);
-    DEFINE_ROOTKEEPER(rk1, strInst);
+    StringInstance *strInst = new (meta) StringInstance(meta, meta->objectClass->prototype, meta->stringClass);
+    DEFINE_ROOTKEEPER(meta, rk1, strInst);
     meta->stringClass->prototype = OBJECT_TO_JS2VAL(strInst);
     strInst->mValue = meta->engine->allocStringPtr("");
 

@@ -87,14 +87,14 @@ namespace MetaData {
 
     FunctionInstance *JS2Metadata::createFunctionInstance(Environment *env, bool prototype, bool unchecked, NativeCode *code, uint32 length, DynamicVariable **lengthProperty)
     {
-        ParameterFrame *compileFrame = new ParameterFrame(JS2VAL_VOID, prototype);
-        DEFINE_ROOTKEEPER(rk1, compileFrame);        
-        FunctionInstance *result = new FunctionInstance(this, functionClass->prototype, functionClass);
-        DEFINE_ROOTKEEPER(rk2, result);
+        ParameterFrame *compileFrame = new (this) ParameterFrame(JS2VAL_VOID, prototype);
+        DEFINE_ROOTKEEPER(this, rk1, compileFrame);        
+        FunctionInstance *result = new (this) FunctionInstance(this, functionClass->prototype, functionClass);
+        DEFINE_ROOTKEEPER(this, rk2, result);
         if (code == NULL)
-            result->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
+            result->fWrap = new FunctionWrapper(this, unchecked, compileFrame, env);
         else
-            result->fWrap = new FunctionWrapper(unchecked, compileFrame, code, env);
+            result->fWrap = new FunctionWrapper(this, unchecked, compileFrame, code, env);
         result->fWrap->length = length;
         DynamicVariable *dv = createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(length), ReadAccess, true, false);
         if (lengthProperty)
@@ -107,7 +107,7 @@ namespace MetaData {
     {
         DynamicVariable *lengthVar = NULL;
         FunctionInstance *result = createFunctionInstance(env, prototype, unchecked, NULL, 0, &lengthVar);
-        DEFINE_ROOTKEEPER(rk1, result);
+        DEFINE_ROOTKEEPER(this, rk1, result);
         fnDef->fn = result;
 
         Frame *curTopFrame = env->getTopFrame();
@@ -130,7 +130,7 @@ namespace MetaData {
 						defineHoistedVar(env, pb->name, JS2VAL_UNDEFINED, true, pos);
 					}
 					else {
-						FrameVariable *v = new FrameVariable(result->fWrap->compileFrame->allocateSlot(), FrameVariable::Parameter);
+						FrameVariable *v = new (this) FrameVariable(result->fWrap->compileFrame->allocateSlot(), FrameVariable::Parameter);
 						pb->member = v;
 						defineLocalMember(env, pb->name, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
 					}
@@ -159,7 +159,7 @@ namespace MetaData {
     void JS2Metadata::validateStatic(Context *cxt, Environment *env, FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted, size_t pos)
     {
         FunctionInstance *fnInst = NULL;
-        DEFINE_ROOTKEEPER(rk1, fnInst);
+        DEFINE_ROOTKEEPER(this, rk1, fnInst);
         switch (fnDef->prefix) {
         case FunctionName::normal:
             fnInst = validateStaticFunction(cxt, env, fnDef, a->prototype, unchecked, false, pos);
@@ -216,9 +216,9 @@ namespace MetaData {
             reportError(Exception::attributeError, "An instance method cannot have the prototype attribute", pos);
         // XXX shouldn't be using validateStaticFunction
         FunctionInstance *fnInst = NULL;
-        DEFINE_ROOTKEEPER(rk1, fnInst);
+        DEFINE_ROOTKEEPER(this, rk1, fnInst);
         fnInst = validateStaticFunction(cxt, env, fnDef, false, false, false, pos);
-        Multiname *mn = new Multiname(fnDef->name, a->namespaces);
+        Multiname *mn = new (this) Multiname(fnDef->name, a->namespaces);
         InstanceMember *m;
         switch (fnDef->prefix) {
         case FunctionName::normal:
@@ -240,7 +240,7 @@ namespace MetaData {
     void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p) 
     {
         CompoundAttribute *a = NULL;
-        DEFINE_ROOTKEEPER(rk, a);
+        DEFINE_ROOTKEEPER(this, rk, a);
         Frame *curTopFrame = env->getTopFrame();
 
         try {
@@ -249,7 +249,7 @@ namespace MetaData {
             case StmtNode::group:
                 {
                     BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                    b->compileFrame = new BlockFrame();
+                    b->compileFrame = new (this) BlockFrame();
                     bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc'd before eval pass.
                     env->addFrame(b->compileFrame);
                     targetList.push_back(p);
@@ -522,7 +522,7 @@ namespace MetaData {
                         ValidateAttributeExpression(cxt, env, f->attributes);
                         attr = EvalAttributeExpression(env, CompilePhase, f->attributes);
                     }
-                    a = Attribute::toCompoundAttribute(attr);
+                    a = Attribute::toCompoundAttribute(this, attr);
                     if (a->dynamic)
                         reportError(Exception::attributeError, "A function cannot have the dynamic attribute", p->pos);
                     Frame *topFrame = env->getTopFrame();
@@ -600,7 +600,7 @@ namespace MetaData {
                             defineHoistedVar(env, name, JS2VAL_UNDEFINED, true, p->pos);
                         }
                         else {
-                            a = Attribute::toCompoundAttribute(attr);
+                            a = Attribute::toCompoundAttribute(this, attr);
                             if (a->dynamic || a->prototype)
                                 reportError(Exception::definitionError, "Illegal attribute", p->pos);
                             Attribute::MemberModifier memberMod = a->memberMod;
@@ -624,7 +624,7 @@ namespace MetaData {
                             case Attribute::Virtual:
                             case Attribute::Final: 
                                 {
-                                    Multiname *mn = new Multiname(name, a->namespaces);
+                                    Multiname *mn = new (this) Multiname(name, a->namespaces);
                                     JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
                                     InstanceMember *m = new InstanceVariable(mn, FUTURE_TYPE, immutable, (memberMod == Attribute::Final), true, c->slotCount++);
                                     vb->member = m;
@@ -654,12 +654,12 @@ namespace MetaData {
                         ValidateAttributeExpression(cxt, env, ns->attributes);
                         attr = EvalAttributeExpression(env, CompilePhase, ns->attributes);
                     }
-                    a = Attribute::toCompoundAttribute(attr);
+                    a = Attribute::toCompoundAttribute(this, attr);
                     if (a->dynamic || a->prototype)
                         reportError(Exception::definitionError, "Illegal attribute", p->pos);
                     if ( ! ((a->memberMod == Attribute::NoModifier) || ((a->memberMod == Attribute::Static) && (env->getTopFrame()->kind == ClassKind))) )
                         reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                    Variable *v = new Variable(namespaceClass, OBJECT_TO_JS2VAL(new Namespace(&ns->name)), true);
+                    Variable *v = new Variable(namespaceClass, OBJECT_TO_JS2VAL(new (this) Namespace(&ns->name)), true);
                     defineLocalMember(env, &ns->name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
                 }
                 break;
@@ -698,7 +698,7 @@ namespace MetaData {
                         ValidateAttributeExpression(cxt, env, classStmt->attributes);
                         attr = EvalAttributeExpression(env, CompilePhase, classStmt->attributes);
                     }
-                    a = Attribute::toCompoundAttribute(attr);
+                    a = Attribute::toCompoundAttribute(this, attr);
                     if (!superClass->complete || superClass->final)
                         reportError(Exception::definitionError, "Illegal inheritance", p->pos);
                     js2val protoVal = JS2VAL_NULL;
@@ -719,7 +719,7 @@ namespace MetaData {
                         reportError(Exception::definitionError, "Illegal modifier for class definition", p->pos);
                         break;
                     }
-                    JS2Class *c = new JS2Class(superClass, protoVal, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), final, engine->allocStringPtr(&classStmt->name));
+                    JS2Class *c = new (this) JS2Class(superClass, protoVal, new (this) Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), final, engine->allocStringPtr(&classStmt->name));
                     classStmt->c = c;
                     Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
                     defineLocalMember(env, &classStmt->name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
@@ -739,7 +739,7 @@ namespace MetaData {
                     UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
                     ValidateExpression(cxt, env, w->expr);
                     if (w->stmt->getKind() != StmtNode::block) {
-                        w->compileFrame = new BlockFrame();
+                        w->compileFrame = new (this) BlockFrame();
                         env->addFrame(w->compileFrame);
                         ValidateStmt(cxt, env, pl, w->stmt);
                         env->removeTopFrame();
@@ -754,7 +754,7 @@ namespace MetaData {
                 {
                     PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
                     String packageName = getPackageName(ps->packageIdList);
-                    Package *package = new Package(packageName, new Namespace(&world.identifiers["internal"]));
+                    Package *package = new (this) Package(packageName, new (this) Namespace(&world.identifiers["internal"]));
 
                     Variable *v = new Variable(packageClass, OBJECT_TO_JS2VAL(package), true);
                     defineLocalMember(env, &packageName, NULL, Attribute::NoOverride, false, ReadAccess, v, 0, true);
@@ -909,7 +909,7 @@ namespace MetaData {
         case StmtNode::group:
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-//                BlockFrame *runtimeFrame = new BlockFrame(b->compileFrame);
+//                BlockFrame *runtimeFrame = new (this) BlockFrame(b->compileFrame);
                 env->addFrame(b->compileFrame);    // XXX is this right? shouldn't this be the compile frame until execution occurs?
                 bCon->emitOp(ePushFrame, p->pos);
                 bCon->addFrame(b->compileFrame);
@@ -1004,7 +1004,7 @@ namespace MetaData {
                 if (f->initializer->getKind() == StmtNode::Var) {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                     VariableBinding *vb = vs->bindings;
-                    v = new (*referenceArena) LexicalReference(vb->name, cxt.strict);
+                    v = new (*referenceArena) LexicalReference(new (this) Multiname(vb->name), cxt.strict);
                     referenceArena->registerDestructor(v);
                 }
                 else {
@@ -1300,7 +1300,7 @@ namespace MetaData {
                         }
                         // write the exception object (on stack top) into the named
                         // local variable
-                        Reference *r = new (*referenceArena) LexicalReference(&c->name, false);
+                        Reference *r = new (*referenceArena) LexicalReference(new (this) Multiname(&c->name), false);
                         referenceArena->registerDestructor(r);
                         r->emitWriteBytecode(bCon, p->pos);
                         bCon->emitOp(ePop, p->pos);
@@ -1399,7 +1399,7 @@ namespace MetaData {
                                             throw x;
                                         Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                                         if (r) r->emitReadBytecode(bCon, p->pos);
-                                        LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
+                                        LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict);
                                         referenceArena->registerDestructor(lVal);
                                         lVal->emitWriteBytecode(bCon, p->pos);      
                                         bCon->emitOp(ePop, p->pos);
@@ -1418,13 +1418,13 @@ namespace MetaData {
                                     if (r) r->emitReadBytecode(bCon, p->pos);
                                     bCon->emitOp(eCoerce, p->pos);
                                     bCon->addType(v->type);
-                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
+                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict);
                                     referenceArena->registerDestructor(lVal);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
                                 else {
                                     v->type->emitDefaultValue(bCon, p->pos);
-                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
+                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict);
                                     referenceArena->registerDestructor(lVal);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
@@ -1469,9 +1469,9 @@ namespace MetaData {
                         if (vb->initializer) {
                             Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
-                            LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->name, cxt.strict);
+                            LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->name), cxt.strict);
                             referenceArena->registerDestructor(lVal);
-                            lVal->variableMultiname.addNamespace(publicNamespace);
+                            lVal->variableMultiname->addNamespace(publicNamespace);
                             lVal->emitInitBytecode(bCon, p->pos);                                                        
                         }
                     }
@@ -1611,9 +1611,9 @@ namespace MetaData {
         switch (p->getKind()) {
         case ExprNode::boolean:
             if (checked_cast<BooleanExprNode *>(p)->value)
-                return new TrueAttribute();
+                return new (this) TrueAttribute();
             else
-                return new FalseAttribute();
+                return new (this) FalseAttribute();
         case ExprNode::juxtapose:
             {
                 BinaryExprNode *j = checked_cast<BinaryExprNode *>(p);
@@ -1622,7 +1622,7 @@ namespace MetaData {
                     return a;
                 Attribute *b = EvalAttributeExpression(env, phase, j->op2);
                 try {
-                    return Attribute::combineAttributes(a, b);
+                    return Attribute::combineAttributes(this, a, b);
                 }
                 catch (char *err) {
                     reportError(Exception::badValueError, err, p->pos);
@@ -1638,7 +1638,7 @@ namespace MetaData {
                 case Token::Public:
                     return publicNamespace;
                 case Token::Final:
-                    ca = new CompoundAttribute();
+                    ca = new (this) CompoundAttribute();
                     ca->memberMod = Attribute::Final;
                     return ca;
                 case Token::Private:
@@ -1647,30 +1647,30 @@ namespace MetaData {
                         return c->privateNamespace;
                     }
                 case Token::Static:
-                    ca = new CompoundAttribute();
+                    ca = new (this) CompoundAttribute();
                     ca->memberMod = Attribute::Static;
                     return ca;
                 case Token::identifier:
                     if (name == world.identifiers["override"]) {
-                        ca = new CompoundAttribute();
+                        ca = new (this) CompoundAttribute();
                         ca->overrideMod = Attribute::DoOverride;
                         return ca;
                     }
                     else
                     if (name == world.identifiers["enumerable"]) {
-                        ca = new CompoundAttribute();
+                        ca = new (this) CompoundAttribute();
                         ca->enumerable = true;
                         return ca;
                     }
                     else
                     if (name == world.identifiers["virtual"]) {
-                        ca = new CompoundAttribute();
+                        ca = new (this) CompoundAttribute();
                         ca->memberMod = Attribute::Virtual;
                         return ca;
                     }
                     else
                     if (name == world.identifiers["dynamic"]) {
-                        ca = new CompoundAttribute();
+                        ca = new (this) CompoundAttribute();
                         ca->dynamic = true;
                         return ca;
                     }
@@ -1697,7 +1697,7 @@ namespace MetaData {
 
     // Combine attributes a & b, reporting errors for incompatibilities
     // a is not false
-    Attribute *Attribute::combineAttributes(Attribute *a, Attribute *b)
+    Attribute *Attribute::combineAttributes(JS2Metadata *meta, Attribute *a, Attribute *b)
     {
         if (b && (b->attrKind == FalseAttr)) {
             if (a) delete a;
@@ -1719,7 +1719,7 @@ namespace MetaData {
             Namespace *na = checked_cast<Namespace *>(a);
             if (b->attrKind == NamespaceAttr) {
                 Namespace *nb = checked_cast<Namespace *>(b);
-                CompoundAttribute *c = new CompoundAttribute();
+                CompoundAttribute *c = new (meta) CompoundAttribute();
                 c->addNamespace(na);
                 c->addNamespace(nb);
                 delete a;
@@ -1775,26 +1775,26 @@ namespace MetaData {
 
     // Convert an attribute to a compoundAttribute. If the attribute
     // is NULL, return a default compoundAttribute
-    CompoundAttribute *Attribute::toCompoundAttribute(Attribute *a)
+    CompoundAttribute *Attribute::toCompoundAttribute(JS2Metadata *meta, Attribute *a)
     { 
         if (a) 
             return a->toCompoundAttribute(); 
         else
-            return new CompoundAttribute();
+            return new (meta) CompoundAttribute();
     }
 
     // Convert a simple namespace to a compoundAttribute with that namespace
-    CompoundAttribute *Namespace::toCompoundAttribute()    
+    CompoundAttribute *Namespace::toCompoundAttribute(JS2Metadata *meta)    
     { 
-        CompoundAttribute *t = new CompoundAttribute(); 
+        CompoundAttribute *t = new (meta) CompoundAttribute(); 
         t->addNamespace(this); 
         return t; 
     }
 
     // Convert a 'true' attribute to a default compoundAttribute
-    CompoundAttribute *TrueAttribute::toCompoundAttribute()    
+    CompoundAttribute *TrueAttribute::toCompoundAttribute(JS2Metadata *meta)    
     { 
-        return new CompoundAttribute(); 
+        return new (meta) CompoundAttribute(); 
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
@@ -2345,9 +2345,9 @@ doUnary:
                 RegExpExprNode *v = checked_cast<RegExpExprNode *>(p);
                 js2val args[2];
                 const String *reStr = engine->allocStringPtr(&v->re);
-                DEFINE_ROOTKEEPER(rk1, reStr);
+                DEFINE_ROOTKEEPER(this, rk1, reStr);
                 const String *flagStr = engine->allocStringPtr(&v->flags);
-                DEFINE_ROOTKEEPER(rk2, flagStr);
+                DEFINE_ROOTKEEPER(this, rk2, flagStr);
                 args[0] = STRING_TO_JS2VAL(reStr);
                 args[1] = STRING_TO_JS2VAL(flagStr);
                 // XXX error handling during this parse? The RegExp_Constructor is
@@ -2398,7 +2398,7 @@ doUnary:
                     reportError(Exception::badValueError, "Namespace expected in qualifier", p->pos);
                 Namespace *ns = checked_cast<Namespace *>(obj);
                 
-                returnRef = new (*referenceArena) LexicalReference(&name, ns, cxt.strict);
+                returnRef = new (*referenceArena) LexicalReference(new (this) Multiname(&name, ns), cxt.strict);
                 referenceArena->registerDestructor(returnRef);
             }
             break;
@@ -2424,16 +2424,16 @@ doUnary:
                         fi++;
                     }
                 }
-                returnRef = new (*referenceArena) LexicalReference(&i->name, cxt.strict);
+                returnRef = new (*referenceArena) LexicalReference(new (this) Multiname(&i->name), cxt.strict);
                 referenceArena->registerDestructor(returnRef);
-                ((LexicalReference *)returnRef)->variableMultiname.addNamespace(cxt);
+                ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
                 // Try to find this identifier at compile time, we have to stop if we reach
                 // a frame that supports dynamic properties - the identifier could be
                 // created at runtime without us finding it here.
                 // We're looking to find both the type of the reference (to store into exprType)
                 // and to see if we can change the reference to a FrameSlot or Slot (for member
                 // functions)
-                Multiname *multiname = &((LexicalReference *)returnRef)->variableMultiname;
+                Multiname *multiname = ((LexicalReference *)returnRef)->variableMultiname;
                 FrameListIterator fi = env->getBegin();
                 bool keepLooking = true;
                 while (fi != env->getEnd() && keepLooking) {
@@ -2635,18 +2635,18 @@ doUnary:
                     }
 
                     if (returnRef == NULL) {
-                        returnRef = new (*referenceArena) DotReference(&i->name);
+                        returnRef = new (*referenceArena) DotReference(new (this) Multiname(&i->name));
                         referenceArena->registerDestructor(returnRef);
-                        checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
+                        checked_cast<DotReference *>(returnRef)->propertyMultiname->addNamespace(cxt);
                     }
                 } 
                 else {
                     if (b->op2->getKind() == ExprNode::qualify) {
                         Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
-                        returnRef = new (*referenceArena) DotReference(&((LexicalReference *)rVal)->variableMultiname);
+                        returnRef = new (*referenceArena) DotReference(((LexicalReference *)rVal)->variableMultiname);
                         referenceArena->registerDestructor(returnRef);
-                        checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
+                        checked_cast<DotReference *>(returnRef)->propertyMultiname->addNamespace(cxt);
                     }
                     // XXX else bracketRef...
                     else
@@ -3238,7 +3238,7 @@ doUnary:
         if ((overrideMod != Attribute::NoOverride) || (xplicit && innerFrame->kind != PackageKind))
             reportError(Exception::definitionError, "Illegal definition", pos);
         
-        Multiname *multiname = new Multiname(id);
+        Multiname *multiname = new (this) Multiname(id);
         if (!namespaces || namespaces->empty()) 
             multiname->addNamespace(publicNamespace);
         else
@@ -3360,8 +3360,8 @@ doUnary:
         JS2Class *s = c->super;
         if (s) {
             for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
-                Multiname *mn = new Multiname(multiname->name, *nli);
-                DEFINE_ROOTKEEPER(rk, mn);
+                Multiname *mn = new (this) Multiname(multiname->name, *nli);
+                DEFINE_ROOTKEEPER(this, rk, mn);
                 InstanceMember *m = findBaseInstanceMember(s, mn, access);
                 if (mBase == NULL)
                     mBase = m;
@@ -3441,7 +3441,7 @@ doUnary:
                 reportError(Exception::definitionError, "Illegal override", pos);
             break;
         }
-        m->multiname = new Multiname(definedMultiname);
+        m->multiname = new (this) Multiname(definedMultiname);
         InstanceBindingEntry *ibe;
         if (ibeP == NULL) {
             ibe = new InstanceBindingEntry(*id);
@@ -3824,14 +3824,14 @@ static const uint8 urlCharType[256] =
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
         FunctionInstance *fInst = createFunctionInstance(env, true, true, code, length, NULL);
-        DEFINE_ROOTKEEPER(rk1, fInst);
+        DEFINE_ROOTKEEPER(this, rk1, fInst);
         createDynamicProperty(glob, &world.identifiers[name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
     }
 
     static js2val Object_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {
         if ((argc == 0) || JS2VAL_IS_NULL(argv[0]) || JS2VAL_IS_UNDEFINED(argv[0]))
-            return OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass));
+            return OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass));
         else {
             if (JS2VAL_IS_OBJECT(argv[0]))
                 return argv[0];     // XXX special handling for host objects?
@@ -3957,8 +3957,8 @@ static const uint8 urlCharType[256] =
         if (newLength < arrInst->length) {
             // need to delete all the elements above the new length
             bool deleteResult;
-			Multiname *mn = new Multiname(NULL, meta->publicNamespace);
-			DEFINE_ROOTKEEPER(rk, mn);
+			Multiname *mn = new (meta) Multiname(NULL, meta->publicNamespace);
+			DEFINE_ROOTKEEPER(meta, rk, mn);
 			for (uint32 i = newLength; i < arrInst->length; i++) {
 				mn->name = meta->engine->numberToString(i);
                 meta->arrayClass->Delete(meta, thisValue, mn, NULL, &deleteResult);
@@ -3974,47 +3974,54 @@ static const uint8 urlCharType[256] =
     }
 
     
-#define MAKEBUILTINCLASS(c, super, dynamic, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, final, name); c->complete = true; c->defaultValue = defaultVal;
+#define MAKEBUILTINCLASS(c, super, dynamic, final, name, defaultVal) c = new (this) JS2Class(super, NULL, new (this) Namespace(engine->private_StringAtom), dynamic, final, name); c->complete = true; c->defaultValue = defaultVal;
 
-    JS2Metadata::JS2Metadata(World &world) : JS2Object(MetaDataKind),
+    JS2Metadata::JS2Metadata(World &world) :
         world(world),
-        engine(new JS2Engine(world)),
-        publicNamespace(new Namespace(engine->public_StringAtom)),
+//        engine(new JS2Engine(world)),
+//        publicNamespace(new Namespace(engine->public_StringAtom)),
         bCon(new BytecodeContainer()),
-        glob(new Package(widenCString("global"), new Namespace(&world.identifiers["internal"]))),
-        env(new Environment(new MetaData::SystemFrame(), glob)),
+//        glob(new Package(widenCString("global"), new Namespace(&world.identifiers["internal"]))),
+//        env(new Environment(new MetaData::SystemFrame(), glob)),
         flags(JS1),
 		version(JS2VERSION_DEFAULT),
         showTrees(false),
-        referenceArena(NULL)
+        referenceArena(NULL),
+        pond(POND_SIZE, NULL)
     {
+        engine = new JS2Engine(this, world);
+        publicNamespace = new (this) Namespace(engine->public_StringAtom);
+        glob = new (this) Package(widenCString("global"), new (this) Namespace(&world.identifiers["internal"]));
+        env = new (this) Environment(new (this) SystemFrame(), glob);
+
+
         rngInitialized = false;
-        engine->meta = this;
+//        engine->meta = this;
 
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
 
         MAKEBUILTINCLASS(objectClass, NULL, false, false, engine->Object_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(undefinedClass, objectClass, false, true, engine->undefined_StringAtom, JS2VAL_VOID);
-        nullClass = new JS2NullClass(objectClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->null_StringAtom); nullClass->complete = true; nullClass->defaultValue = JS2VAL_NULL;
+        nullClass = new (this) JS2NullClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, engine->null_StringAtom); nullClass->complete = true; nullClass->defaultValue = JS2VAL_NULL;
         MAKEBUILTINCLASS(booleanClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Boolean"]), JS2VAL_FALSE);
         MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, engine->allocStringPtr(&world.identifiers["general number"]), engine->nanValue);
         MAKEBUILTINCLASS(numberClass, generalNumberClass, false, true, engine->allocStringPtr(&world.identifiers["Number"]), engine->nanValue);
-        integerClass = new JS2IntegerClass(numberClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["Integer"])); integerClass->complete = true; integerClass->defaultValue = JS2VAL_ZERO;
+        integerClass = new (this) JS2IntegerClass(numberClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["Integer"])); integerClass->complete = true; integerClass->defaultValue = JS2VAL_ZERO;
         MAKEBUILTINCLASS(characterClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Character"]), JS2VAL_ZERO);
-        stringClass = new JS2StringClass(objectClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["String"])); stringClass->complete = true; stringClass->defaultValue = JS2VAL_NULL;        
+        stringClass = new (this) JS2StringClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["String"])); stringClass->complete = true; stringClass->defaultValue = JS2VAL_NULL;        
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["attribute"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(classClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);                
         MAKEBUILTINCLASS(functionClass, objectClass, true, true, engine->Function_StringAtom, JS2VAL_NULL);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Package"]), JS2VAL_NULL);
-        argumentsClass = new JS2ArgumentsClass(objectClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["Object"])); argumentsClass->complete = true; argumentsClass->defaultValue = JS2VAL_NULL;
+        argumentsClass = new (this) JS2ArgumentsClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["Object"])); argumentsClass->complete = true; argumentsClass->defaultValue = JS2VAL_NULL;
 
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
     
         FunctionInstance *fInst = NULL;
-        DEFINE_ROOTKEEPER(rk1, fInst);
+        DEFINE_ROOTKEEPER(this, rk1, fInst);
         Variable *v;
         
 // XXX Built-in Attributes... XXX 
@@ -4038,7 +4045,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
         defineLocalMember(env, &world.identifiers["Object"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         // Function properties of the Object prototype object
-        objectClass->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(this, NULL, objectClass));
+        objectClass->prototype = OBJECT_TO_JS2VAL(new (this) SimpleInstance(this, NULL, objectClass));
         objectClass->construct = Object_Constructor;
         objectClass->call = Object_Constructor;
         // Adding "prototype" as a static member of the class - not a dynamic property
@@ -4139,13 +4146,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 /*** ECMA 3  Math Object ***/
         MAKEBUILTINCLASS(mathClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Math"]), JS2VAL_FALSE);
-        SimpleInstance *mathObject = new SimpleInstance(this, objectClass->prototype, mathClass);
+        SimpleInstance *mathObject = new (this) SimpleInstance(this, objectClass->prototype, mathClass);
         v = new Variable(objectClass, OBJECT_TO_JS2VAL(mathObject), true);
         defineLocalMember(env, &world.identifiers["Math"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initMathObject(this, mathObject);
 
 /*** ECMA 3  Array Class ***/
-        arrayClass = new JS2ArrayClass(objectClass, NULL, new Namespace(engine->private_StringAtom), true, true, engine->allocStringPtr(&world.identifiers["Array"])); arrayClass->complete = true; arrayClass->defaultValue = JS2VAL_NULL;        
+        arrayClass = new (this) JS2ArrayClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), true, true, engine->allocStringPtr(&world.identifiers["Array"])); arrayClass->complete = true; arrayClass->defaultValue = JS2VAL_NULL;        
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
@@ -4188,7 +4195,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         bConList.clear();
         targetList.clear();
-        JS2Object::clear(this); // don't blow off the contents of 'this' as the destructors for
+        clear();                // don't blow off the contents of 'this' as the destructors for
                                 // embedded objects will get messed up (as they run on exit).
         delete engine;
         if (bCon) delete bCon;
@@ -4395,7 +4402,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 InstanceMethod *im = checked_cast<InstanceMethod *>(m);
                 if (phase == CompilePhase)
                     reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-                FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+                FunctionInstance *fInst = new (this) FunctionInstance(this, functionClass->prototype, functionClass);
                 fInst->isMethodClosure = true;
                 fInst->fWrap = im->fInst->fWrap;
                 fInst->thisObject = containerVal;
@@ -4571,8 +4578,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name)
     {
-        Multiname *mn = new Multiname(name, publicNamespace);
-        DEFINE_ROOTKEEPER(rk, mn);
+        Multiname *mn = new (this) Multiname(name, publicNamespace);
+        DEFINE_ROOTKEEPER(this, rk, mn);
         js2val val = OBJECT_TO_JS2VAL(obj);
         return (findCommonMember(&val, mn, ReadWriteAccess, true) != NULL);
     }
@@ -4584,7 +4591,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 /*
     DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
     {
-        DEFINE_ROOTKEEPER(rk, name);
+        DEFINE_ROOTKEEPER(this, rk, name);
         QualifiedName qName(publicNamespace, name); 
         return createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
     }
@@ -4792,6 +4799,84 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         env->removeTopFrame();
     
+    }
+
+    // Add a pointer to the (address of a) gc-allocated object to the root list
+    // (Note - we hand out an iterator, so it's essential to
+    // use something like std::list that doesn't mess with locations)
+    RootIterator JS2Metadata::addRoot(RootKeeper *t)
+    {
+        return rootList.insert(rootList.end(), t);
+    }
+
+    // Remove a root pointer
+    void JS2Metadata::removeRoot(RootIterator ri)
+    {
+        rootList.erase(ri);
+    }
+
+    // Remove everything, regardless of rootlist
+    void JS2Metadata::clear()
+    {
+        pond.resetMarks();
+        pond.moveUnmarkedToFreeList(this);
+    }
+
+    // Mark all reachable objects and put the rest back on the freelist
+    uint32 JS2Metadata::gc()
+    {
+        pond.resetMarks();
+        markChildren();
+        // Anything on the root list may also be a pointer to a JS2Object.
+        for (RootIterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
+            RootKeeper *r = *i;
+            PondScum *scum = NULL;
+            if (r->is_js2val) {
+				if (r->js2val_count) {
+					js2val *valp = *((js2val **)(r->p));
+					for (uint32 c = 0; c < r->js2val_count; c++)
+						JS2Object::markJS2Value(*valp++);
+				}
+				else {
+					js2val *valp = (js2val *)(r->p);
+					JS2Object::markJS2Value(*valp);
+				}
+            }
+            else {
+                JS2Object **objp = (JS2Object **)(r->p);
+                if (*objp) {
+                    scum = ((PondScum *)(*objp) - 1);
+                    ASSERT(scum->owner && (scum->getSize() >= sizeof(PondScum)) && (scum->owner->sanity == POND_SANITY));
+                    if (scum->isJS2Object()) {
+                        JS2Object *obj = (JS2Object *)(scum + 1);
+                        GCMARKOBJECT(obj)
+                    }
+                    else
+                        JS2Object::mark(scum + 1);
+                }
+            }
+        }
+        return pond.moveUnmarkedToFreeList(this);
+    }
+
+    // Allocate a chunk of size s
+    void *JS2Metadata::alloc(size_t s, PondScum::ScumFlag flag)
+    {
+        s += sizeof(PondScum);
+        // make sure that the thing is a multiple of 16 bytes
+        if (s & 0xF) s += 16 - (s & 0xF);
+        ASSERT(s <= 0x7FFFFFFF);
+        void *p = pond.allocFromPond(this, s, flag);
+        ASSERT(((ptrdiff_t)p & 0xF) == 0);
+        return p;
+    }
+
+    // Release a chunk back to it's pond
+    void JS2Metadata::unalloc(void *t)
+    {
+        PondScum *p = (PondScum *)t - 1;
+        ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
+        p->owner->returnToPond(p);
     }
 
    
@@ -5022,10 +5107,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         // Add prototype property
         JS2Object *result = this;
-        DEFINE_ROOTKEEPER(rk1, result);
+        DEFINE_ROOTKEEPER(meta, rk1, result);
 
-        JS2Object *protoObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
-        DEFINE_ROOTKEEPER(rk2, protoObj);
+        JS2Object *protoObj = new (meta) SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
+        DEFINE_ROOTKEEPER(meta, rk2, protoObj);
 
         meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(protoObj), ReadWriteAccess, true, false);
         meta->createDynamicProperty(protoObj, &meta->world.identifiers["constructor"], OBJECT_TO_JS2VAL(this), ReadWriteAccess, true, false);
@@ -5188,7 +5273,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         
         ArgumentsInstance *argsObj = NULL;
-        DEFINE_ROOTKEEPER(rk2, argsObj);
+        DEFINE_ROOTKEEPER(meta, rk2, argsObj);
 
 		// slotCount is the number of slots required by the parameter frame
         uint32 slotCount = (plural->frameSlots) ? plural->frameSlots->size() : 0;
@@ -5197,7 +5282,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (plural->buildArguments) {
             // If we're building an arguments object, the slots for the parameter frame are located
             // there so that the arguments object itself can survive beyond the life of the function.
-            argsObj = new ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
+            argsObj = new (meta) ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
 			if (argCount > slotCount)
 				slotCount = argCount;
             if (slotCount) {
@@ -5311,86 +5396,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  *
  ************************************************************************************/
 
-    Pond JS2Object::pond(POND_SIZE, NULL);
-    std::list<RootKeeper *> JS2Object::rootList;
-
-    // Add a pointer to the (address of a) gc-allocated object to the root list
-    // (Note - we hand out an iterator, so it's essential to
-    // use something like std::list that doesn't mess with locations)
-    JS2Object::RootIterator JS2Object::addRoot(RootKeeper *t)
-    {
-        return rootList.insert(rootList.end(), t);
-    }
-
-    // Remove a root pointer
-    void JS2Object::removeRoot(RootIterator ri)
-    {
-        rootList.erase(ri);
-    }
-
-    void JS2Object::clear(JS2Metadata *meta)
-    {
-        pond.resetMarks();
-        JS2Object::mark(meta);
-        pond.moveUnmarkedToFreeList();
-    }
-
-    // Mark all reachable objects and put the rest back on the freelist
-    uint32 JS2Object::gc()
-    {
-        pond.resetMarks();
-        // Anything on the root list may also be a pointer to a JS2Object.
-        for (RootIterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
-            RootKeeper *r = *i;
-            PondScum *scum = NULL;
-            if (r->is_js2val) {
-				if (r->js2val_count) {
-					js2val *valp = *((js2val **)(r->p));
-					for (uint32 c = 0; c < r->js2val_count; c++)
-						markJS2Value(*valp++);
-				}
-				else {
-					js2val *valp = (js2val *)(r->p);
-					markJS2Value(*valp);
-				}
-            }
-            else {
-                JS2Object **objp = (JS2Object **)(r->p);
-                if (*objp) {
-                    scum = ((PondScum *)(*objp) - 1);
-                    ASSERT(scum->owner && (scum->getSize() >= sizeof(PondScum)) && (scum->owner->sanity == POND_SANITY));
-                    if (scum->isJS2Object()) {
-                        JS2Object *obj = (JS2Object *)(scum + 1);
-                        GCMARKOBJECT(obj)
-                    }
-                    else
-                        mark(scum + 1);
-                }
-            }
-        }
-        return pond.moveUnmarkedToFreeList();
-    }
-
-    // Allocate a chunk of size s
-    void *JS2Object::alloc(size_t s, PondScum::ScumFlag flag)
-    {
-        s += sizeof(PondScum);
-        // make sure that the thing is a multiple of 16 bytes
-        if (s & 0xF) s += 16 - (s & 0xF);
-        ASSERT(s <= 0x7FFFFFFF);
-        void *p = pond.allocFromPond(s, flag);
-        ASSERT(((ptrdiff_t)p & 0xF) == 0);
-        return p;
-    }
-
-    // Release a chunk back to it's pond
-    void JS2Object::unalloc(void *t)
-    {
-        PondScum *p = (PondScum *)t - 1;
-        ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
-        p->owner->returnToPond(p);
-    }
-
     void JS2Object::markJS2Value(js2val v)
     {
         if (JS2VAL_IS_OBJECT(v)) { 
@@ -5440,7 +5445,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
     
     // Allocate from this or the next Pond (make a new one if necessary)
-    void *Pond::allocFromPond(size_t sz, PondScum::ScumFlag flag)
+    void *Pond::allocFromPond(JS2Metadata *meta, size_t sz, PondScum::ScumFlag flag)
     {
         // See if there's room left...
         if (sz > pondSize) {
@@ -5469,12 +5474,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             // ok, then try the next Pond
             if (nextPond == NULL) {
                 // there isn't one; run the gc
-                uint32 released = JS2Object::gc();
+                uint32 released = meta->gc();
                 if (released > sz)
-                    return JS2Object::alloc(sz - sizeof(PondScum), flag);
+                    return meta->alloc(sz - sizeof(PondScum), flag);
                 nextPond = new Pond(sz, nextPond);
             }
-            return nextPond->allocFromPond(sz, flag);
+            return nextPond->allocFromPond(meta, sz, flag);
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
@@ -5515,7 +5520,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
     // Anything left unmarked is now moved to the free list
-    uint32 Pond::moveUnmarkedToFreeList()
+    uint32 Pond::moveUnmarkedToFreeList(JS2Metadata *meta)
     {
         uint32 released = 0;
         uint8 *t = pondBottom;
@@ -5538,7 +5543,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             t += p->getSize();
         }
         if (nextPond)
-            released += nextPond->moveUnmarkedToFreeList();
+            released += nextPond->moveUnmarkedToFreeList(meta);
         return released;
     }
 

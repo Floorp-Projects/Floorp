@@ -347,8 +347,8 @@ void initMathObject(JS2Metadata *meta, SimpleInstance *mathObject)
 
     FunctionData *pf = &prototypeFunctions[0];
     while (pf->name) {
-        FunctionInstance *callInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
-        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
+        FunctionInstance *callInst = new (meta) FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
+        callInst->fWrap = new FunctionWrapper(meta, true, new (meta) ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
         callInst->fWrap->length = pf->length;
 
         meta->createDynamicProperty(mathObject, &meta->world.identifiers[pf->name], OBJECT_TO_JS2VAL(callInst), ReadAccess, true, false);

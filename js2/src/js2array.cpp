@@ -89,9 +89,9 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
 
 js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
-    js2val thatValue = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
+    js2val thatValue = OBJECT_TO_JS2VAL(new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    DEFINE_ROOTKEEPER(rk, arrInst);
+    DEFINE_ROOTKEEPER(meta, rk, arrInst);
     if (argc > 0) {
         if (argc == 1) {
             if (JS2VAL_IS_NUMBER(argv[0])) {
@@ -230,9 +230,9 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
 {
     js2val E = thisValue;
 
-    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
+    js2val result = OBJECT_TO_JS2VAL(new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
-    DEFINE_ROOTKEEPER(rk, A);
+    DEFINE_ROOTKEEPER(meta, rk, A);
     uint32 n = 0;
     uint32 i = 0;
 
@@ -265,7 +265,7 @@ static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv
     uint32 length = getLength(meta, thisObj);
 
     const String *separator = NULL;
-    DEFINE_ROOTKEEPER(rk1, separator);
+    DEFINE_ROOTKEEPER(meta, rk1, separator);
     if ((argc == 0) || JS2VAL_IS_UNDEFINED(argv[0]))
         separator = meta->engine->allocStringPtr(",");
     else
@@ -298,10 +298,10 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
     JS2Class *c = meta->objectType(thisObj);
 
     // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new Multiname(meta->publicNamespace);
-    Multiname *mn2 = new Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(rk1, mn1);
-    DEFINE_ROOTKEEPER(rk2, mn2);
+    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
+    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
+    DEFINE_ROOTKEEPER(meta, rk1, mn1);
+    DEFINE_ROOTKEEPER(meta, rk2, mn2);
 
     for (uint32 k = 0; k < halfway; k++) {
         bool deleteResult;
@@ -353,10 +353,10 @@ static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*
 
     JS2Class *c = meta->objectType(thisObj);
     // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new Multiname(meta->publicNamespace);
-    Multiname *mn2 = new Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(rk1, mn1);
-    DEFINE_ROOTKEEPER(rk2, mn2);
+    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
+    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
+    DEFINE_ROOTKEEPER(meta, rk1, mn1);
+    DEFINE_ROOTKEEPER(meta, rk2, mn2);
 
     js2val result;
     bool deleteResult;
@@ -387,9 +387,9 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     ASSERT(JS2VAL_IS_OBJECT(thatValue));
     JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
 
-    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
+    js2val result = OBJECT_TO_JS2VAL(new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
-    DEFINE_ROOTKEEPER(rk, A);
+    DEFINE_ROOTKEEPER(meta, rk, A);
 
     uint32 length = getLength(meta, thisObj);
 
@@ -434,10 +434,10 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     
     JS2Class *c = meta->objectType(thisObj);
     // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new Multiname(meta->publicNamespace);
-    Multiname *mn2 = new Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(rk1, mn1);
-    DEFINE_ROOTKEEPER(rk2, mn2);
+    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
+    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
+    DEFINE_ROOTKEEPER(meta, rk1, mn1);
+    DEFINE_ROOTKEEPER(meta, rk2, mn2);
     uint32 n = 0;
     while (start < end) {
         mn1->name = meta->engine->numberToString(start);
@@ -545,9 +545,9 @@ static int32 sort_compare(js2val *a, js2val *b, CompareArgs *arg)
         }
         else {
             const String *astr = meta->toString(av);
-            DEFINE_ROOTKEEPER(rk1, astr);
+            DEFINE_ROOTKEEPER(meta, rk1, astr);
             const String *bstr = meta->toString(bv);
-            DEFINE_ROOTKEEPER(rk2, bstr);
+            DEFINE_ROOTKEEPER(meta, rk2, bstr);
             result = astr->compare(*bstr);
         }
         return result;
@@ -596,7 +596,7 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         meta->reportError(Exception::internalError, "out of memory", meta->engine->errorPos());
 
     js2val *vec = new js2val[length];
-    DEFINE_ARRAYROOTKEEPER(rk, vec, length);
+    DEFINE_ARRAYROOTKEEPER(meta, rk, vec, length);
 
     JS2Class *c = meta->objectType(thisObj);
     for (i = 0; i < length; i++) {
@@ -621,9 +621,9 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
         uint32 length = getLength(meta, thisObj);
 
-        js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
+        js2val result = OBJECT_TO_JS2VAL(new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
         ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
-        DEFINE_ROOTKEEPER(rk, A);
+        DEFINE_ROOTKEEPER(meta, rk, A);
 
         int32 arg0 = meta->valToInt32(argv[0]);
         uint32 start;
@@ -653,10 +653,10 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         
         JS2Class *c = meta->objectType(thisObj);
         // XXX Need to root the Strings somewhere, this'll do for now..
-        Multiname *mn1 = new Multiname(meta->publicNamespace);
-        Multiname *mn2 = new Multiname(meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn1);
-        DEFINE_ROOTKEEPER(rk2, mn2);
+        Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
+        Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
+        DEFINE_ROOTKEEPER(meta, rk1, mn1);
+        DEFINE_ROOTKEEPER(meta, rk2, mn2);
 
         for (k = 0; k < deleteCount; k++) {
             mn1->name = meta->engine->numberToString(start + k);
@@ -726,10 +726,10 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
 
     JS2Class *c = meta->objectType(thisObj);
     // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new Multiname(meta->publicNamespace);
-    Multiname *mn2 = new Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(rk1, mn1);
-    DEFINE_ROOTKEEPER(rk2, mn2);
+    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
+    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
+    DEFINE_ROOTKEEPER(meta, rk1, mn1);
+    DEFINE_ROOTKEEPER(meta, rk2, mn2);
 
     for (k = length; k > 0; k--) {
         bool deleteResult;
@@ -776,7 +776,7 @@ void initArrayObject(JS2Metadata *meta)
     };
 
     meta->initBuiltinClass(meta->arrayClass, NULL, Array_Constructor, Array_Constructor);
-    meta->arrayClass->prototype = OBJECT_TO_JS2VAL(new ArrayInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->arrayClass));
+    meta->arrayClass->prototype = OBJECT_TO_JS2VAL(new (meta) ArrayInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->arrayClass));
     meta->initBuiltinClassPrototype(meta->arrayClass, &prototypeFunctions[0]);
 }
 

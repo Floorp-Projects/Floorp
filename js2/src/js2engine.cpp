@@ -93,14 +93,14 @@ namespace MetaData {
 	    ParameterFrame *pFrame = NULL;
         const String *astr = NULL;
         const String *bstr = NULL;
-        DEFINE_ROOTKEEPER(rk1, pFrame);
-        DEFINE_ROOTKEEPER(rk2, astr);
-        DEFINE_ROOTKEEPER(rk3, bstr);
+        DEFINE_ROOTKEEPER(meta, rk1, pFrame);
+        DEFINE_ROOTKEEPER(meta, rk2, astr);
+        DEFINE_ROOTKEEPER(meta, rk3, bstr);
 
-        DEFINE_ROOTKEEPER(rk4, a);
-        DEFINE_ROOTKEEPER(rk5, b);
-        DEFINE_ROOTKEEPER(rk6, baseVal);
-        DEFINE_ROOTKEEPER(rk7, indexVal);
+        DEFINE_ROOTKEEPER(meta, rk4, a);
+        DEFINE_ROOTKEEPER(meta, rk5, b);
+        DEFINE_ROOTKEEPER(meta, rk6, baseVal);
+        DEFINE_ROOTKEEPER(meta, rk7, indexVal);
 
         retval = JS2VAL_VOID;
         while (true) {
@@ -211,7 +211,7 @@ namespace MetaData {
     // If not, fill the table or return a un-hashed pointer
     float64 *JS2Engine::newDoubleValue(float64 x)
     {
-        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), PondScum::GenericFlag);
+        float64 *p = (float64 *)meta->alloc(sizeof(float64), PondScum::GenericFlag);
         *p = x;
         return p;
 
@@ -243,7 +243,7 @@ namespace MetaData {
 
     String *JS2Engine::allocStringPtr(const char *s)
     { 
-        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
+        String *p = (String *)(meta->alloc(sizeof(String), PondScum::StringFlag));
         size_t len = strlen(s);
         String *result = new (p) String(len, uni::null);
         for (int i = 0; i < len; i++) {
@@ -255,26 +255,26 @@ namespace MetaData {
 
     String *JS2Engine::allocStringPtr(const char16 *s, uint32 length)
     { 
-        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
+        String *p = (String *)(meta->alloc(sizeof(String), PondScum::StringFlag));
         String *result = new (p) String(s, length);
         return result; 
     }
 
     String *JS2Engine::allocStringPtr(const String *s)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
+        String *p = (String *)(meta->alloc(sizeof(String), PondScum::StringFlag));
         return new (p) String(*s);
     }
 
     String *JS2Engine::allocStringPtr(const String *s, uint32 index, uint32 length)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
+        String *p = (String *)(meta->alloc(sizeof(String), PondScum::StringFlag));
         return new (p) String(*s, index, length);
     }
 
     String *JS2Engine::concatStrings(const String *s1, const String *s2)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
+        String *p = (String *)(meta->alloc(sizeof(String), PondScum::StringFlag));
         String *result = new (p) String(*s1);
         result->append(*s2);
         return result;
@@ -299,7 +299,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'longness'
     js2val JS2Engine::allocULong(uint64 x)
     {
-        uint64 *p = (uint64 *)(JS2Object::alloc(sizeof(uint64), PondScum::GenericFlag));
+        uint64 *p = (uint64 *)(meta->alloc(sizeof(uint64), PondScum::GenericFlag));
         *p = x;
         return ULONG_TO_JS2VAL(p);
         
@@ -308,7 +308,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'longness'
     js2val JS2Engine::allocLong(int64 x)
     {
-        int64 *p = (int64 *)(JS2Object::alloc(sizeof(int64), PondScum::GenericFlag));
+        int64 *p = (int64 *)(meta->alloc(sizeof(int64), PondScum::GenericFlag));
         *p = x;
         return LONG_TO_JS2VAL(p);
     }
@@ -316,7 +316,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'floatness'
     js2val JS2Engine::allocFloat(float32 x)
     {
-        float32 *p = (float32 *)(JS2Object::alloc(sizeof(float32), PondScum::GenericFlag));
+        float32 *p = (float32 *)(meta->alloc(sizeof(float32), PondScum::GenericFlag));
         *p = x;
         return FLOAT_TO_JS2VAL(p);
     }
@@ -455,8 +455,8 @@ namespace MetaData {
 
     #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(#n))
 
-    JS2Engine::JS2Engine(World &world)
-                : meta(NULL),
+    JS2Engine::JS2Engine(JS2Metadata *meta, World &world)
+                : meta(meta),
                   pc(NULL),
                   bCon(NULL),
                   phase(RunPhase),
@@ -483,7 +483,7 @@ namespace MetaData {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
 
-        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), PondScum::GenericFlag);
+        float64 *p = (float64 *)meta->alloc(sizeof(float64), PondScum::GenericFlag);
         *p = nan;
         nanValue = DOUBLE_TO_JS2VAL(p);
         posInfValue = DOUBLE_TO_JS2VAL(allocNumber(positiveInfinity));
@@ -996,8 +996,8 @@ namespace MetaData {
         JS2Class *c = checked_cast<JS2Class *>(obj);
         if (!c->complete)
             meta->reportError(Exception::constantError, "Cannot construct an instance of a class before its definition has been compiled", meta->engine->errorPos());
-        SimpleInstance *result = new SimpleInstance(meta, c->prototype, c);
-        DEFINE_ROOTKEEPER(rk, result);
+        SimpleInstance *result = new (meta) SimpleInstance(meta, c->prototype, c);
+        DEFINE_ROOTKEEPER(meta, rk, result);
         meta->invokeInit(c, OBJECT_TO_JS2VAL(result), argv, argc);
         return OBJECT_TO_JS2VAL(result);
     }

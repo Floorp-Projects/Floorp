@@ -870,9 +870,9 @@ js2val Date_Call(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, 
 #define MAXARGS        7
 js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc)
 {
-    js2val thatValue = OBJECT_TO_JS2VAL(new DateInstance(meta, meta->dateClass->prototype, meta->dateClass));
+    js2val thatValue = OBJECT_TO_JS2VAL(new (meta) DateInstance(meta, meta->dateClass->prototype, meta->dateClass));
     DateInstance *thisInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    DEFINE_ROOTKEEPER(rk, thisInst);
+    DEFINE_ROOTKEEPER(meta, rk, thisInst);
 
     /* Date called as constructor */
     if (argc == 0) {
@@ -1481,7 +1481,7 @@ void initDateObject(JS2Metadata *meta)
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
 
     meta->initBuiltinClass(meta->dateClass, &staticFunctions[0], Date_Constructor, Date_Call);
-	DateInstance *ur = new DateInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->dateClass);
+	DateInstance *ur = new (meta) DateInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->dateClass);
     meta->dateClass->prototype = OBJECT_TO_JS2VAL(ur);
 	ur->ms = 0;
     meta->initBuiltinClassPrototype(meta->dateClass, &prototypeFunctions[0]);

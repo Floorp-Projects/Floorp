@@ -126,7 +126,6 @@ enum ObjectKind {
     LimitedInstanceKind,
 
     EnvironmentKind,         // Not an available JS2 runtime kind
-    MetaDataKind
 };
 
 enum Plurality { Singular, Plural };
@@ -184,11 +183,11 @@ class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
-    void *allocFromPond(size_t sz, PondScum::ScumFlag flag);
+    void *allocFromPond(JS2Metadata *meta, size_t sz, PondScum::ScumFlag flag);
     uint32 returnToPond(PondScum *p);
 
     void resetMarks();
-    uint32 moveUnmarkedToFreeList();
+    uint32 moveUnmarkedToFreeList(JS2Metadata *meta);
 
     uint32 sanity;
 
@@ -206,6 +205,8 @@ public:
 #define GCMARKVALUE(v) JS2Object::markJS2Value(v)
 
 class RootKeeper;
+typedef std::list<RootKeeper *>::iterator RootIterator;
+
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -218,20 +219,11 @@ public:
 
     ObjectKind kind;
 
-    static Pond pond;
-    static std::list<RootKeeper *> rootList;
-    typedef std::list<RootKeeper *>::iterator RootIterator;
-    static RootIterator addRoot(RootKeeper *t);
-
-    static uint32 gc();
-    static void clear(JS2Metadata *meta);
-    static void removeRoot(RootIterator ri);
-
-    static void *alloc(size_t s, PondScum::ScumFlag flag);
-    static void unalloc(void *p);
-
-    void *operator new(size_t s)    { return alloc(s, PondScum::JS2ObjectFlag); }
+    void *operator new(size_t s)    { ASSERT(false); return 0; }
     void operator delete(void *p)   { }
+
+    void *operator new(size_t s, JS2Metadata *meta);
+    void operator delete(void *p, JS2Metadata *meta)   { ASSERT(false); }   // only called if constructor fails
 
     virtual void markChildren()     { } // XXX !!!! XXXX these are supposed to not have vtables !!!!
     virtual void finalize()         { }
@@ -243,63 +235,73 @@ public:
     static void markJS2Value(js2val v);
 };
 
-#ifdef DEBUG
-#define ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(type **p, int line, char *pfile) : is_js2val(false), p(p) { init(line, pfile); }
-#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj, __LINE__, __FILE__);
-#define DEFINE_ARRAYROOTKEEPER(rk_var, obj, count) RootKeeper rk_var(&obj, count, __LINE__, __FILE__);
-#else
-#define ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(type **p) : is_js2val(false), p(p) { ri = JS2Object::addRoot(this); }
-#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj);
-#define DEFINE_ARRAYROOTKEEPER(rk_var, obj, count) RootKeeper rk_var(&obj, count);
-#endif
-
 class RootKeeper {
 public:
 
-    ROOTKEEPER_CONSTRUCTOR(JS2Object)
-    ROOTKEEPER_CONSTRUCTOR(RegExpInstance)
-    ROOTKEEPER_CONSTRUCTOR(CompoundAttribute)
-    ROOTKEEPER_CONSTRUCTOR(const String)
-    ROOTKEEPER_CONSTRUCTOR(String)
-    ROOTKEEPER_CONSTRUCTOR(ArrayInstance)
-    ROOTKEEPER_CONSTRUCTOR(BooleanInstance)
-    ROOTKEEPER_CONSTRUCTOR(StringInstance)
-    ROOTKEEPER_CONSTRUCTOR(JS2Metadata)
-    ROOTKEEPER_CONSTRUCTOR(Environment)
-    ROOTKEEPER_CONSTRUCTOR(Multiname)
-    ROOTKEEPER_CONSTRUCTOR(ParameterFrame)
-    ROOTKEEPER_CONSTRUCTOR(SimpleInstance)
-    ROOTKEEPER_CONSTRUCTOR(FunctionInstance)
-    ROOTKEEPER_CONSTRUCTOR(DateInstance)
-    ROOTKEEPER_CONSTRUCTOR(ArgumentsInstance)
-
 #ifdef DEBUG
-    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), js2val_count(0), p(p)    { init(line, pfile); }
-    RootKeeper(js2val **p, uint32 count, int line, char *pfile) : is_js2val(true), js2val_count(count), p(p)    { init(line, pfile); }
-    ~RootKeeper() { JS2Object::removeRoot(ri); delete file; }
-    void RootKeeper::init(int ln, char *pfile)
-    {
-        line = ln;
-        file = new char[strlen(pfile) + 1];
-        strcpy(file, pfile);
-        ri = JS2Object::addRoot(this);
-    }
+
+#define DECLARE_ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(JS2Metadata *meta, type **p, int line, char *pfile);
+#define DEFINE_ROOTKEEPER_CONSTRUCTOR(type) inline RootKeeper::RootKeeper(JS2Metadata *meta, type **p, int line, char *pfile) : is_js2val(false), p(p), meta(meta) { init(meta, line, pfile); }
+
 #else
-    RootKeeper(js2val *p) : is_js2val(true), js2val_count(0), p(p)    { ri = JS2Object::addRoot(this); }
-    RootKeeper(js2val **p, uint32 count) : is_js2val(true), js2val_count(count), p(p)    { ri = JS2Object::addRoot(this); }
-    ~RootKeeper() { JS2Object::removeRoot(ri); }
+
+#define DECLARE_ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(JS2Metadata *meta, type **p);
+#define DEFINE_ROOTKEEPER_CONSTRUCTOR(type) inline RootKeeper::RootKeeper(JS2Metadata *meta, type **p) : is_js2val(false), p(p), meta(meta) { ri = meta->addRoot(this); }
+
 #endif
 
-    JS2Object::RootIterator ri;
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(JS2Object)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(RegExpInstance)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(CompoundAttribute)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(const String)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(String)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(ArrayInstance)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(BooleanInstance)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(StringInstance)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(JS2Metadata)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(Environment)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(Multiname)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(ParameterFrame)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(SimpleInstance)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(FunctionInstance)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(DateInstance)
+    DECLARE_ROOTKEEPER_CONSTRUCTOR(ArgumentsInstance)
+
+#ifdef DEBUG
+    RootKeeper(JS2Metadata *meta, js2val *p, int line, char *pfile);
+    RootKeeper(JS2Metadata *meta, js2val **p, uint32 count, int line, char *pfile);
+    ~RootKeeper();
+    void init(JS2Metadata *meta, int ln, char *pfile);
+#else
+    RootKeeper(JS2Metadata *meta, js2val *p);
+    RootKeeper(JS2Metadata *meta, js2val **p, uint32 count);
+    ~RootKeeper();
+#endif
+
+    RootIterator ri;
     bool is_js2val;
 	uint32 js2val_count;
     void *p;
+    JS2Metadata *meta;
 
 #ifdef DEBUG
     int line;
     char *file;
 #endif
 };
+
+#ifdef DEBUG
+
+#define DEFINE_ROOTKEEPER(meta, rk_var, obj) RootKeeper rk_var(meta, &obj, __LINE__, __FILE__);
+#define DEFINE_ARRAYROOTKEEPER(meta, rk_var, obj, count) RootKeeper rk_var(meta, &obj, count, __LINE__, __FILE__);
+
+#else
+
+#define DEFINE_ROOTKEEPER(meta, rk_var, obj) RootKeeper rk_var(meta, &obj);
+#define DEFINE_ARRAYROOTKEEPER(meta, rk_var, obj, count) RootKeeper rk_var(meta, &obj, count);
+
+#endif
+
 
 
 class Attribute : public JS2Object {
@@ -313,8 +315,8 @@ public:
     virtual ~Attribute()            { }
     virtual void markChildren()     { }
 
-    static Attribute *combineAttributes(Attribute *a, Attribute *b);
-    static CompoundAttribute *toCompoundAttribute(Attribute *a);
+    static Attribute *combineAttributes(JS2Metadata *meta, Attribute *a, Attribute *b);
+    static CompoundAttribute *toCompoundAttribute(JS2Metadata *meta, Attribute *a);
 
     virtual CompoundAttribute *toCompoundAttribute()    { ASSERT(false); return NULL; }
 
@@ -326,7 +328,7 @@ class Namespace : public Attribute {
 public:
     Namespace(const String *name) : Attribute(NamespaceAttr), name(name) { }
 
-    virtual CompoundAttribute *toCompoundAttribute();
+    virtual CompoundAttribute *toCompoundAttribute(JS2Metadata *meta);
     virtual void markChildren()     { if (name) JS2Object::mark(name); }
 
     const String *name;       // The namespace's name (used by toString)
@@ -361,6 +363,7 @@ public:
     Multiname(const String *name, NamespaceList *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
     Multiname(const String *name, NamespaceList &ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
     Multiname(const String *name, Context *cxt) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(*cxt); }
+    Multiname(Multiname *m) : JS2Object(MultinameKind), name(m->name), nsList(new NamespaceList())    { addNamespace(m->nsList); }
 
     Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(new NamespaceList())    { addNamespace(m.nsList); }
     void operator =(const Multiname& m) { name = m.name; delete nsList; nsList = new NamespaceList(); addNamespace(m.nsList); }   
@@ -893,35 +896,35 @@ class ParameterFrame;
 
 class FunctionWrapper {
 public:
-    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, Environment *env) 
+    FunctionWrapper(JS2Metadata *meta, bool unchecked, ParameterFrame *compileFrame, Environment *env) 
         : bCon(new BytecodeContainer()), 
             code(NULL), 
             alien(NULL), 
             unchecked(unchecked), 
             compileFrame(compileFrame), 
-            env(new Environment(env)), 
+            env(new (meta) Environment(env)), 
             length(0),
             resultType(NULL) 
         { }
 
-    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code, Environment *env) 
+    FunctionWrapper(JS2Metadata *meta, bool unchecked, ParameterFrame *compileFrame, NativeCode *code, Environment *env) 
         : bCon(NULL), 
             code(code), 
             alien(NULL), 
             unchecked(unchecked), 
             compileFrame(compileFrame), 
-            env(new Environment(env)), 
+            env(new (meta) Environment(env)), 
             length(0),
             resultType(NULL)
         { }
 
-    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, AlienCode *code, Environment *env) 
+    FunctionWrapper(JS2Metadata *meta, bool unchecked, ParameterFrame *compileFrame, AlienCode *code, Environment *env) 
         : bCon(NULL), 
             code(NULL),
             alien(code), 
             unchecked(unchecked), 
             compileFrame(compileFrame), 
-            env(new Environment(env)), 
+            env(new (meta) Environment(env)), 
             length(0),
             resultType(NULL)
         { }
@@ -1136,29 +1139,29 @@ class LexicalReference : public Reference {
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
 public:
-    LexicalReference(Multiname *mname, bool strict) : variableMultiname(*mname), env(NULL), strict(strict) { }
-    LexicalReference(const String *name, bool strict) : variableMultiname(name), env(NULL), strict(strict) { }
-    LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(name, nameSpace), env(NULL), strict(strict) { }
+    LexicalReference(Multiname *mname, bool strict) : variableMultiname(mname), env(NULL), strict(strict) { }
+//    LexicalReference(const String *name, bool strict) : variableMultiname(name), env(NULL), strict(strict) { }
+//    LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(name, nameSpace), env(NULL), strict(strict) { }
     virtual ~LexicalReference() { }
     
-    Multiname variableMultiname;   // A nonempty set of qualified names to which this reference can refer
+    Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
     
-    void emitInitBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalInit, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    void emitInitBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalInit, pos); bCon->addMultiname(variableMultiname); }
     
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
-    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
-    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
-    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
-    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(variableMultiname); }
     
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(variableMultiname); }
 
     virtual int hasStackEffect()                                           { return 0; }
 };
@@ -1168,8 +1171,8 @@ class DotReference : public Reference {
 // object with one of a given set of qualified names. DOTREFERENCE tuples arise from evaluating subexpressions such as a.b or
 // a.q::b.
 public:
-    DotReference(const String *name) : propertyMultiname(name) { }
-    DotReference(Multiname *mn) : propertyMultiname(*mn) { }
+//    DotReference(const String *name) : propertyMultiname(name) { }
+    DotReference(Multiname *mn) : propertyMultiname(mn) { }
     virtual ~DotReference() { }
 
     // In this implementation, the base is established by the execution of the preceding expression and
@@ -1178,21 +1181,21 @@ public:
                                     // object may be a LIMITEDINSTANCE if a is a super expression, in which case
                                     // the property lookup will be restricted to members defined in proper ancestors
                                     // of base.limit.
-    Multiname propertyMultiname;    // A nonempty set of qualified names to which this reference can refer (b
+    Multiname *propertyMultiname;    // A nonempty set of qualified names to which this reference can refer (b
                                     // qualified with the namespace q or all currently open namespaces in the
                                     // example above)
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
-    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
-    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
-    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
-    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(propertyMultiname); }
 
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(propertyMultiname); }
 
     virtual int hasStackEffect()                                            { return 1; }
 };
@@ -1409,7 +1412,7 @@ public:
 class TrueAttribute : public Attribute {
 public:
     TrueAttribute() : Attribute(TrueAttr) { }
-    virtual CompoundAttribute *toCompoundAttribute();
+    virtual CompoundAttribute *toCompoundAttribute(JS2Metadata *meta);
 };
 
 // The 'false' attribute
@@ -1456,7 +1459,7 @@ public:
     BytecodeContainer *execution_bCon;
 };
 
-class JS2Metadata : public JS2Object {
+class JS2Metadata {
 public:
     
     JS2Metadata(World &world);
@@ -1636,8 +1639,6 @@ public:
 
     TargetList targetList;          // stack of potential break/continue targets
 
-    virtual void markChildren();
-
     bool showTrees;                 // debug only, causes parse tree dump 
 
     Arena *referenceArena;          // allocation arena for all reference objects
@@ -1649,7 +1650,60 @@ public:
     void loadPackage(const String &packageName, const String &filename);  // load package from file
     String getPackageName(IdentifierList *packageIdList);
 
+    // iterates over contained gc allocated objects
+    void markChildren();
+
+
+    Pond pond;
+    std::list<RootKeeper *> rootList;
+
+    RootIterator addRoot(RootKeeper *t);
+    uint32 gc();
+    void clear();
+    void removeRoot(RootIterator ri);
+
+    void *alloc(size_t s, PondScum::ScumFlag flag);
+    void unalloc(void *p);
+
+
 };
+
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(JS2Object)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(RegExpInstance)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(CompoundAttribute)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(const String)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(String)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(ArrayInstance)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(BooleanInstance)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(StringInstance)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(JS2Metadata)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(Environment)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(Multiname)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(ParameterFrame)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(SimpleInstance)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(FunctionInstance)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(DateInstance)
+    DEFINE_ROOTKEEPER_CONSTRUCTOR(ArgumentsInstance)
+#ifdef DEBUG
+    inline RootKeeper::RootKeeper(JS2Metadata *meta, js2val *p, int line, char *pfile) : is_js2val(true), js2val_count(0), p(p), meta(meta)    { init(meta, line, pfile); }
+    inline RootKeeper::RootKeeper(JS2Metadata *meta, js2val **p, uint32 count, int line, char *pfile) : is_js2val(true), js2val_count(count), p(p), meta(meta)    { init(meta, line, pfile); }
+    inline RootKeeper::~RootKeeper() { meta->removeRoot(ri); delete file; }
+    inline void RootKeeper::init(JS2Metadata *meta, int ln, char *pfile)
+    {
+        line = ln;
+        file = new char[strlen(pfile) + 1];
+        strcpy(file, pfile);
+        ri = meta->addRoot(this);
+    }
+#else
+    inline RootKeeper::RootKeeper(JS2Metadata *meta, js2val *p) : is_js2val(true), js2val_count(0), p(p), meta(meta)    { ri = meta->addRoot(this); }
+    inline RootKeeper::RootKeeper(JS2Metadata *meta, js2val **p, uint32 count) : is_js2val(true), js2val_count(count), p(p), meta(meta)    { ri = meta->addRoot(this); }
+    inline RootKeeper::~RootKeeper() { meta->removeRoot(ri); }
+#endif
+
+    inline void *JS2Object::operator new(size_t s, JS2Metadata *meta)    { return meta->alloc(s, PondScum::JS2ObjectFlag); }
+
+
 
     inline char narrow(char16 ch) { return char(ch); }
 

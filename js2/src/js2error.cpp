@@ -57,15 +57,15 @@ namespace MetaData {
 
 js2val error_ConstructorCore(JS2Metadata *meta, JS2Class *errorClass, js2val arg)
 {
-	DEFINE_ROOTKEEPER(rk, arg);
+	DEFINE_ROOTKEEPER(meta, rk, arg);
 	JS2Object *obj = NULL;
-	DEFINE_ROOTKEEPER(rk1, obj);
-    obj = new SimpleInstance(meta, OBJECT_TO_JS2VAL(errorClass->prototype), errorClass);
+	DEFINE_ROOTKEEPER(meta, rk1, obj);
+    obj = new (meta) SimpleInstance(meta, OBJECT_TO_JS2VAL(errorClass->prototype), errorClass);
     js2val thatValue = OBJECT_TO_JS2VAL(obj);
 
     if (!JS2VAL_IS_VOID(arg)) {
 		const String *str = NULL;
-		DEFINE_ROOTKEEPER(rk2, str);
+		DEFINE_ROOTKEEPER(meta, rk2, str);
 		str = meta->toString(arg);
         errorClass->WritePublic(meta, thatValue, &meta->world.identifiers["message"], true, meta->engine->allocString(str));
     }
@@ -131,7 +131,7 @@ js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, u
 static void initErrorClass(JS2Metadata *meta, JS2Class *c, Constructor *constructor)
 {
     meta->initBuiltinClass(c, NULL, constructor, constructor);
-    c->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->errorClass->prototype, meta->errorClass));
+    c->prototype = OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, meta->errorClass->prototype, meta->errorClass));
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["name"], meta->engine->allocString(c->name), ReadAccess, true, true);
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["message"], meta->engine->allocString("Message"), ReadAccess, true, true);
 }
@@ -149,7 +149,7 @@ void initErrorObject(JS2Metadata *meta)
     publicNamespaceList.push_back(meta->publicNamespace);
 
     meta->initBuiltinClass(meta->errorClass, NULL, Error_Constructor, Error_Constructor);
-    meta->errorClass->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->objectClass->prototype, meta->errorClass));
+    meta->errorClass->prototype = OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, meta->objectClass->prototype, meta->errorClass));
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(meta->errorClass->prototype), &meta->world.identifiers["name"], meta->engine->allocString("Error"), ReadAccess, true, true);
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(meta->errorClass->prototype), &meta->world.identifiers["message"], meta->engine->allocString("Message"), ReadAccess, true, true);
     meta->initBuiltinClassPrototype(meta->errorClass, errorProtos);
