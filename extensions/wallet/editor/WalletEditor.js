@@ -90,7 +90,7 @@ function onOK(){
 /* get the wallet input data */
 function FetchInput()
 {
-  /*  get wallet data into an array */
+  /*  get wallet data into a list */
   list = walleteditor.GetValue();
 
   /* format of this list is as follows:
@@ -107,18 +107,17 @@ function FetchInput()
    * for each such distinct value
    */
 
-  /* fetch the wallet data */
+  /* check for database being unlocked */
   if (list.length == 0) {
     /* user supplied invalid database key */
     window.close();
     return false;
-  } else {
-    BREAK = list[0];
-    strings = list.split(BREAK);
   }
 
-  /* parse the wallet data into the stings, entries, and schemas arrays */
+  /* parse the wallet data list into the stings, entries, and schemas arrays */
+  BREAK = list[0];
   FlushTables();
+  strings = list.split(BREAK);
   stringsLength = strings.length;
   var i, j;
   j = 0;
