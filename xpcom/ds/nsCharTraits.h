@@ -480,7 +480,7 @@ struct nsCharSourceTraits
       }
 
     static
-    const InputIterator::value_type*
+    const typename InputIterator::value_type*
     read( const InputIterator& iter )
       {
         return iter.operator->();
@@ -520,7 +520,7 @@ struct nsCharSinkTraits
   {
     static
     PRUint32
-    write( OutputIterator& iter, const OutputIterator::value_type* s, PRUint32 n )
+    write( OutputIterator& iter, const typename OutputIterator::value_type* s, PRUint32 n )
       {
         return iter.write(s, n);
       }
