@@ -35,7 +35,7 @@ NS_DEF_PTR(nsIStyleContext);
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
+static PRBool gsDebug = PR_TRUE;
 static PRBool gsDebugCLD = PR_FALSE;
 static PRBool gsTiming = PR_FALSE;
 #else
@@ -117,10 +117,9 @@ PRBool BasicTableLayoutStrategy::IsAutoWidth(nsStylePosition* aStylePosition)
 
 
 // aSpecifiedTableWidth is filled if the table witdth is not auto
-PRBool
-BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle,
-                                           const nsReflowState& aReflowState,
-                                           nscoord& aSpecifiedTableWidth)
+PRBool BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle, 
+                                                  const nsReflowState& aReflowState,
+                                                  nscoord& aSpecifiedTableWidth)
 {
   NS_ASSERTION(nsnull!=aTableStyle, "bad arg - aTableStyle");
   PRBool result = PR_TRUE;  // the default
@@ -152,7 +151,39 @@ BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle,
       aSpecifiedTableWidth = tablePosition->mWidth.GetCoordValue();
       result = PR_FALSE;
       break;
+#ifdef STEVES_WAY
+    case eStyleUnit_Percent:
+      // get the parent's width (available only from parent frames that claim they can provide it)
+      // note that we start with our parent's parent (the outer table frame's parent)
+      nscoord parentWidth = 0;
+      NS_ASSERTION(nsnull!=aReflowState.parentReflowState, "bad outer table reflow state.");
+      NS_ASSERTION(nsnull!=aReflowState.parentReflowState->parentReflowState, "bad table parent reflow state.");
+      if ((nsnull!=aReflowState.parentReflowState) &&
+          (nsnull!=aReflowState.parentReflowState->parentReflowState))
+      {
+        const nsReflowState *parentReflowState = aReflowState.parentReflowState->parentReflowState;
+        nsIFrame *parentFrame=parentReflowState->frame;
+        NS_ASSERTION(nsnull!=parentFrame, "bad parent frame in reflow state struct.");
+        while(nsnull!=parentFrame)
+        {
+          PRBool isPercentageBase=PR_FALSE;
+          parentFrame->IsPercentageBase(isPercentageBase);
+          if (PR_TRUE==isPercentageBase)
+          { // found the ancestor who claims to be the container to base my percentage width on
+            parentWidth = parentReflowState->maxSize.width;
+            if (PR_TRUE==gsDebug) printf("  ** width for parent frame %p = %d\n", parentFrame, parentWidth);
+            break;
+          }
+          parentReflowState = parentReflowState->parentReflowState; // get next ancestor
+          if (nsnull!=parentReflowState)
+            parentFrame = parentReflowState->frame;
+          else
+            parentFrame = nsnull; // terminates loop.  
+          // TODO: do we need a backstop in case there are no IsPercentageBase==true frames?
+        }
+      }
 
+#else
     case eStyleUnit_Percent:
       // Get the parent's width (available only from parent frames
       // that claim they can provide it, and assuming it's already
@@ -175,25 +206,7 @@ BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle,
         }
         rs = rs->parentReflowState;
       }
-#if 0
-      nsIFrame *parent=nsnull;
-      nsIFrame *child=nsnull;
-      mTableFrame->GetGeometricParent(child); // start with the outer table frame as the child
-      child->GetGeometricParent(parent);      // and the table outer frame's parent as the first parent
-      while(nsnull!=parent)
-      {
-        PRBool isPercentageBase=PR_FALSE;
-        parent->IsPercentageBase(isPercentageBase);
-        if (PR_TRUE==isPercentageBase)
-        { // found the ancestor who claims to be the guy to base my percentage width on
-          nsRect parentRect;
-          parent->GetRect(parentRect);
-          parentWidth = parentRect.width;
-          if (PR_TRUE==gsDebug) printf("  ** width for parent frame %p = %d\n", parent, parentWidth);
-          break;
-        }
-        parent->GetGeometricParent(parent); // get next ancestor
-      }
+
 #endif
 
       // set aSpecifiedTableWidth to be the given percent of the parent.
@@ -208,6 +221,7 @@ BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle,
   return result; 
 }
 
+
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame)
 {
   mTableFrame = aFrame;
@@ -217,16 +231,15 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 {
 }
 
-PRBool
-BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContext,
-                                              nsIStyleContext *aTableStyle,
-                                              const nsReflowState& aReflowState,
-                                              PRInt32 aMaxWidth, 
-                                              PRInt32 aNumCols,
-                                              PRInt32 &aTotalFixedWidth,
-                                              PRInt32 &aMinTableWidth,
-                                              PRInt32 &aMaxTableWidth,
-                                              nsSize* aMaxElementSize)
+PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContext,
+                                                     nsIStyleContext *aTableStyle,
+                                                     const nsReflowState& aReflowState,
+                                                     PRInt32 aMaxWidth, 
+                                                     PRInt32 aNumCols,
+                                                     PRInt32 &aTotalFixedWidth,
+                                                     PRInt32 &aMinTableWidth,
+                                                     PRInt32 &aMaxTableWidth,
+                                                     nsSize* aMaxElementSize)
 {
   PRBool result = PR_TRUE;
 
@@ -483,14 +496,10 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
       }
     }
 
-    // if the col is fixed-width, expand the col to the specified
-    // fixed width if necessary
-    if (PR_TRUE==haveColWidth && specifiedFixedColWidth > mTableFrame->GetColumnWidth(colIndex))
-      mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);
+    // keep a running total of the amount of space taken up by all fixed-width columns
+    if (PR_TRUE==haveColWidth)
+      aTotalFixedWidth += mTableFrame->GetColumnWidth(colIndex);
 
-    // keep a running total of the amount of space taken up by all
-    // fixed-width columns
-    aTotalFixedWidth += mTableFrame->GetColumnWidth(colIndex);
     if (gsDebug) {
       printf ("    after col %d, aTotalFixedWidth = %d\n",
               colIndex, aTotalFixedWidth);
@@ -559,7 +568,8 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
     { // the table's specified width is between it's min and max, so fit the columns in proportionately
       if (gsDebug) printf ("  * specified width table < maxTableWidth, calling BalanceColumnsConstrained\n");
       result = BalanceColumnsConstrained(aPresContext, aAvailWidth,
-                                         aMaxTableWidth, aMinTableWidth, aMaxTableWidth);
+                                         aAvailWidth, aMinTableWidth, aMaxTableWidth);
+      // should 3rd param above be aAvailWidth?
     }
     else
     { // the table's specified width is >= its max width, so give each column its max requested size
@@ -819,7 +829,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
   if (nsnull!=proportionalColumnsList)
   {
     // first, figure out the amount of space per slice
-    nscoord widthRemaining = aMaxWidth - tableWidth;
+    nscoord maxWidthForTable = (0!=aTableFixedWidth) ? aTableFixedWidth : aMaxWidth;
+    nscoord widthRemaining = maxWidthForTable - tableWidth;
     nscoord widthPerSlice = widthRemaining/totalSlices;
     PRInt32 numSpecifiedProportionalColumns = proportionalColumnsList->Count();
     for (PRInt32 i=0; i<numSpecifiedProportionalColumns; i++)
@@ -894,6 +905,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
   nscoord numProportionalColumns = 0; // the total number of proportional-width columns
   PRInt32 totalSlices=0;              // the total number of slices the proportional-width columns request
   nsVoidArray *proportionalColumnsList=nsnull; // a list of the columns that are proportional-width
+  PRBool equalWidthColumns = PR_TRUE; // remember if we're in the special case where all
+                                      // proportional-width columns are equal (if any are anything other than 1)
   nsVoidArray *spanList=nsnull;       // a list of the cells that span columns
   nsVoidArray *columnLayoutData = mTableFrame->GetColumnLayoutData();
   PRInt32 numCols = columnLayoutData->Count();
@@ -1044,6 +1057,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
           new ProportionalColumnLayoutStruct(colIndex, minColWidth, maxColWidth, specifiedProportion);
         proportionalColumnsList->AppendElement(info);
         totalSlices += specifiedProportion;
+        if (1!=specifiedProportion)
+          equalWidthColumns = PR_FALSE;
       }
       else
       {  // give each remaining column a percentage of the remaining space
@@ -1090,12 +1105,21 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
     {
       ProportionalColumnLayoutStruct * info = 
         (ProportionalColumnLayoutStruct *)(proportionalColumnsList->ElementAt(i));
-      nscoord computedColWidth = info->mProportion*widthPerSlice;
-      mTableFrame->SetColumnWidth(info->mColIndex, computedColWidth);
-      if (gsDebug==PR_TRUE) 
-        printf ("  3c: col %d given %d proportion of remaining space %d, set to width = %d\n", 
-                info->mColIndex, info->mProportion, widthRemaining, computedColWidth);
-      tableWidth += computedColWidth;
+      if (PR_TRUE==equalWidthColumns && 0!=maxOfAllMinColWidths)
+      {
+        if (gsDebug==PR_TRUE) 
+          printf("  EqualColWidths specified and some column couldn't fit, so setting col %d width to %d\n", 
+                 info->mColIndex, maxOfAllMinColWidths);
+        mTableFrame->SetColumnWidth(info->mColIndex, maxOfAllMinColWidths);
+      }
+      else
+      {
+        nscoord computedColWidth = info->mProportion*widthPerSlice;
+        mTableFrame->SetColumnWidth(info->mColIndex, computedColWidth);
+        if (gsDebug==PR_TRUE) 
+          printf ("  3c: col %d given %d proportion of remaining space %d, set to width = %d\n", 
+                  info->mColIndex, info->mProportion, widthRemaining, computedColWidth);
+      }
       delete info;
     }
     delete proportionalColumnsList;
