@@ -1941,6 +1941,64 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
       }
       break;
     }
+    case eSelectBeginLine:
+    case eSelectEndLine:
+    {
+      nsCOMPtr<nsILineIterator> it; 
+      nsIFrame *blockFrame = this;
+      nsIFrame *thisBlock = this;
+      PRInt32   thisLine;
+      result = blockFrame->GetParent(&blockFrame);
+      if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
+        return result;
+      result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+      while (NS_FAILED(result) && blockFrame)
+      {
+        thisBlock = blockFrame;
+        result = blockFrame->GetParent(&blockFrame);
+        if (NS_SUCCEEDED(result) && blockFrame){
+          result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+        }
+      }
+      //this block is now one child down from blockframe
+      if (NS_FAILED(result) || !it || !blockFrame || !thisBlock)
+        return result;
+      result = it->FindLineContaining(thisBlock, &thisLine);
+      if (NS_FAILED(result) || thisLine < 0 )
+        return result;
+      nsCOMPtr<nsIPresContext> context;
+      result = aTracker->GetPresContext(getter_AddRefs(context));
+      if (NS_FAILED(result) || !context)
+        return result;
+      PRInt32 lineFrameCount;
+      nsIFrame *firstFrame;
+      nsRect  usedRect; 
+      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,usedRect);
+      if (eSelectBeginLine == aAmount)
+      {
+        if (firstFrame)
+        {
+          result = firstFrame->GetPosition(*(context.get()),0,
+                      aResultContent,*aContentOffset, *aContentOffset);
+        }
+      }
+      else
+      {
+        if (firstFrame)
+        {
+          while (--lineFrameCount)
+            firstFrame->GetNextSibling(&firstFrame);
+          nsPoint offsetPoint; //used for offset of result frame
+          nsIView * view; //used for call of get offset from view
+          firstFrame->GetOffsetFromView(offsetPoint, &view);
+          usedRect.x = offsetPoint.x;
+          usedRect.y = offsetPoint.y;
+
+          result = firstFrame->GetPosition(*(context.get()),2*usedRect.width,//2* just to be sure we are off the edge
+                      aResultContent,*aContentOffset, *aContentOffset);
+        }
+      }
+    }break;
     default: 
     {
       //this will use the nsFrameTraversal as the default peek method.

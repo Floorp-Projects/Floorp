@@ -157,7 +157,9 @@ enum nsSelectionAmount {
   eSelectCharacter = 0,
   eSelectWord      = 1,
   eSelectLine      = 2,  //previous drawn line in flow.
-  eSelectNoAmount  = 3   //just bounce back current offset.
+  eSelectBeginLine = 3,
+  eSelectEndLine   = 4,
+  eSelectNoAmount  = 5   //just bounce back current offset.
 };
 
 enum nsDirection {

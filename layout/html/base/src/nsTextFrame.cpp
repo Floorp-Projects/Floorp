@@ -1782,7 +1782,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
         break;
     }
     frame = GetNextInFlow();
-    while(frame){
+    while (frame){
       frame->SetSelected(aRange,aSelected,eSpreadNone);
       result = frame->GetNextInFlow(&frame);
       if (NS_FAILED(result))
@@ -1975,7 +1975,7 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
 
   if (!aResultContent || !aContentOffset || !mContent)
     return NS_ERROR_NULL_POINTER;
-  if (aStartOffset < 0)
+  if (aStartOffset < 0 )
     aStartOffset = mContentLength + mContentOffset;
   if (aStartOffset < mContentOffset){
     aStartOffset = mContentOffset;
@@ -1991,7 +1991,7 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
                         aResultContent,aContentOffset,aResultFrame,aEatingWS);
   }
 
-  if (aAmount == eSelectLine)
+  if (aAmount == eSelectLine || aAmount == eSelectBeginLine || aAmount == eSelectEndLine)
   {
       return nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, aStartOffset,
                         aResultContent, aContentOffset, aResultFrame,aEatingWS);
