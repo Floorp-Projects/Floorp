@@ -121,8 +121,6 @@ function Save() {
 
   for (i=1; i<=fieldCount; i++) { 
     var menuList = document.getElementById("x" + i);
-dump("menuList.selectedItem="+menuList.selectedItem.getAttribute("data")+"\n");
-dump("menuList.selectedItem="+menuList.selectedItem.getAttribute("value")+"\n");
     fillins +=
       menuList.selectedItem.getAttribute("data") + "#*%$" +
       menuList.selectedItem.getAttribute("value") + "#*%$";
