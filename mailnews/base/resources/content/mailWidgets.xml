@@ -172,7 +172,7 @@
 
   <!-- searchattribute - Subject, Sender, To, CC, etc. -->
   <binding id="searchattribute" name="searchAttribute"
-           extends="chrome://messenger/skin/mailWidgets.xml#search-menulist-abstract">
+           extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
     <interface>
       <property name="stringBundle">
           <![CDATA[
@@ -192,7 +192,7 @@
 
   <!-- searchoperator - Contains, Is Less than, etc -->
   <binding id="searchoperator" name="searchOperator"
-           extends="chrome://messenger/skin/mailWidgets.xml#search-menulist-abstract">
+           extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
     <interface>
       <property name="stringBundle">
           <![CDATA[
