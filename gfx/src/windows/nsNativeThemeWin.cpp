@@ -101,6 +101,9 @@
 // Tooltip constants
 #define TTP_STANDARD         1
 
+// Dropdown constants
+#define CBP_DROPMARKER       1
+
 NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
 
 typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
@@ -147,6 +150,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mStatusbarTheme = NULL;
   mTabTheme = NULL;
   mTreeViewTheme = NULL;
+  mComboBoxTheme = NULL;
 
   mThemeDLL = ::LoadLibrary(kThemeLibraryName);
   if (mThemeDLL) {
@@ -199,7 +203,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
         mButtonTheme = openTheme(NULL, L"Button");
       return mButtonTheme;
     }
-    case NS_THEME_TEXTFIELD: {
+    case NS_THEME_TEXTFIELD:
+    case NS_THEME_DROPDOWN: {
       if (!mTextFieldTheme)
         mTextFieldTheme = openTheme(NULL, L"Edit");
       return mTextFieldTheme;
@@ -261,6 +266,11 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mStatusbarTheme)
         mStatusbarTheme = openTheme(NULL, L"Status");
       return mStatusbarTheme;
+    }
+    case NS_THEME_DROPDOWN_BUTTON: {
+      if (!mComboBoxTheme)
+        mComboBoxTheme = openTheme(NULL, L"Combobox");
+      return mComboBoxTheme;
     }
   }
   return NULL;
@@ -409,7 +419,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState += 4; // 4 unchecked states, 4 checked states.
       return NS_OK;
     }
-    case NS_THEME_TEXTFIELD: {
+    case NS_THEME_TEXTFIELD:
+    case NS_THEME_DROPDOWN: {
       aPart = TFP_TEXTFIELD;
       if (!aFrame) {
         aState = TS_NORMAL;
@@ -611,6 +622,26 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       
       return NS_OK;
     }
+    case NS_THEME_DROPDOWN_BUTTON: {
+      aPart = CBP_DROPMARKER;
+      if (!aFrame) {
+        aState = TS_NORMAL;
+        return NS_OK;
+      }
+
+      if (IsDisabled(aFrame)) {
+        aState = TS_DISABLED;
+        return NS_OK;
+      }
+      PRInt32 eventState = GetContentState(aFrame);
+      if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
+        aState = TS_ACTIVE;
+      else if (eventState & NS_EVENT_STATE_HOVER)
+        aState = TS_HOVER;
+      else 
+        aState = TS_NORMAL;
+      return NS_OK;
+    }
   }
 
   aPart = 0;
@@ -685,7 +716,8 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 
   (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
 
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
+  if (!WidgetIsContainer(aWidgetType) ||
+      aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || 
       aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL)
     return NS_OK; // Don't worry about it.
@@ -765,6 +797,10 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
                  // themes.
                  // In our app, we want these widgets to be able to really shrink down,
                  // so use the min-size request value (of 0).
+
+  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON)
+    printf("HAHAHAH!");
+
   SIZE sz;
   getThemePartSize(theme, hdc, part, state, NULL, sizeReq, &sz);
   aResult->width = sz.cx;
@@ -855,6 +891,10 @@ nsNativeThemeWin::CloseData()
     closeTheme(mTreeViewTheme);
     mTreeViewTheme = NULL;
   }
+  if (mComboBoxTheme) {
+    closeTheme(mComboBoxTheme);
+    mComboBoxTheme = NULL;
+  }
 }
 
 NS_IMETHODIMP
@@ -871,6 +911,17 @@ nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
   // XXXdwh We can go even further and call the API to ask if support exists.
   HANDLE theme = GetTheme(aWidgetType);
   return theme != NULL;
+}
+
+PRBool 
+nsNativeThemeWin::WidgetIsContainer(PRUint8 aWidgetType)
+{
+  // XXXdwh At some point flesh all of this out.
+  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON || 
+      aWidgetType == NS_THEME_RADIO ||
+      aWidgetType == NS_THEME_CHECKBOX)
+    return PR_FALSE;
+  return PR_TRUE;
 }
 
 ///////////////////////////////////////////

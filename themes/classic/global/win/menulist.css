@@ -31,6 +31,7 @@
 /* :::::::::: menulist :::::::::: */
 
 menulist {
+  -moz-appearance: menulist;
   margin: 2px 4px;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
@@ -61,6 +62,8 @@ menulist[open="true"]:focus > .menulist-label-box {
 /* ..... dropmarker ..... */
 
 .menulist-dropmarker {
+  -moz-appearance: menulistbutton;
+  min-width: 17px;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;

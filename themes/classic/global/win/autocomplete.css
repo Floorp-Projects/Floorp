@@ -43,6 +43,8 @@ textbox {
 /* ::::: history button ::::: */
 
 .autocomplete-history-dropmarker {
+  -moz-appearance: menulistbutton;
+  min-width: 17px;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;

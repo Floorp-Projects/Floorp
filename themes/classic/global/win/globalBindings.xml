@@ -7,9 +7,9 @@
   <binding id="radio"
            extends="chrome://global/content/bindings/radio.xml#radio">
     <content>
-      <xul:hbox class="radio-check-box1">
+      <xul:hbox class="radio-check-box1" inherits="selected,checked,disabled">
         <xul:hbox class="radio-check-box2" flex="1">
-          <xul:image class="radio-check" inherits="checked,disabled"/>
+          <xul:image class="radio-check" inherits="selected,checked,disabled"/>
         </xul:hbox>
       </xul:hbox>
       <xul:hbox class="radio-label-box" flex="1">

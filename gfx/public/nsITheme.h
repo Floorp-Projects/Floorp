@@ -71,6 +71,8 @@ public:
 
   virtual PRBool ThemeSupportsWidget(nsIPresContext* aPresContext,
                                      PRUint8 aWidgetType)=0;
+
+  virtual PRBool WidgetIsContainer(PRUint8 aWidgetType)=0;
 };
 
 // Creator function

@@ -68,6 +68,7 @@ radio[disabled="true"] {
 /* ::::: checkmark image ::::: */
 
 .radio-check-box1 {
+  -moz-appearance: radio;
   margin: 1px 0px;
   border-top: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
