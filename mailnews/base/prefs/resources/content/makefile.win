@@ -30,9 +30,6 @@ install::
 	$(MAKE_INSTALL) am-copies.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.html	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) pref-identity.html	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) pref-mailservers.html $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) pref-newsservers.html $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-winsetting.html $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-receipts.html	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) custreceipt.html	$(DIST)\bin\chrome\messenger\content\default
@@ -66,9 +63,6 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\aw-accname.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-done.xul
 	rm -f $(DIST)\chrome\messenger\content\default\pref-mailnews.html
-	rm -f $(DIST)\chrome\messenger\content\default\pref-identity.html
-	rm -f $(DIST)\chrome\messenger\content\default\pref-mailservers.html
-	rm -f $(DIST)\chrome\messenger\content\default\pref-newsservers.html
 	rm -f $(DIST)\chrome\messenger\content\default\pref-winsetting.html
 	rm -f $(DIST)\chrome\messenger\content\default\pref-receipts.html
 	rm -f $(DIST)\chrome\messenger\content\default\custreceipt.html

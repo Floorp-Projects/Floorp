@@ -26,9 +26,6 @@ am-server-pop3.xul
 am-copies.xul
 am-advanced.xul
 pref-mailnews.html
-pref-identity.html
-pref-mailservers.html
-pref-newsservers.html
 pref-winsetting.html
 pref-receipts.html
 custreceipt.html
