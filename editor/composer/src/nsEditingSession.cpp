@@ -384,7 +384,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   }
 
   // Disable animation of images in this document:
-  nsCOMPtr<nsIDOMWindowUtils> utils(do_QueryInterface(aWindow));
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
   if (!utils) return NS_ERROR_FAILURE;
 
   rv = utils->GetImageAnimationMode(&mImageAnimationMode);
