@@ -347,7 +347,8 @@ nsNodeInfo::NamespaceEquals(const nsAReadableString& aNamespaceURI)
 NS_IMETHODIMP_(PRBool)
 nsNodeInfo::QualifiedNameEquals(const nsAReadableString& aQualifiedName)
 {
-  const PRUnichar *qname = nsPromiseFlatString(aQualifiedName);
+  nsPromiseFlatString flatName(aQualifiedName);
+  const PRUnichar *qname = flatName.get();
   PRUint32 i = 0;
 
   if (mInner.mPrefix) {

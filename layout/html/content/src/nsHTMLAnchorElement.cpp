@@ -345,7 +345,7 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (nsCRT::strcasecmp(nsPromiseFlatString(aValue), NS_LITERAL_STRING("true").get())) {
+    if (nsCRT::strcasecmp(nsPromiseFlatString(aValue).get(), NS_LITERAL_STRING("true").get())) {
       aResult.SetEmptyValue();  // XXX? shouldn't just leave "true"
       return NS_CONTENT_ATTR_HAS_VALUE;
     }

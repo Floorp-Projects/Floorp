@@ -419,7 +419,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableS
     return rv;
 
   // Load the binding doc.
-  nsCString url; url.AssignWithConversion((const PRUnichar*)nsPromiseFlatString(aURL));
+  nsCString url; url.AssignWithConversion((const PRUnichar*)nsPromiseFlatString(aURL).get());
   nsCOMPtr<nsIXBLDocumentInfo> info;
   xblService->LoadBindingDocumentInfo(nsnull, aBoundDoc, url, nsCAutoString(), PR_TRUE, getter_AddRefs(info));
   if (!info)
