@@ -139,11 +139,6 @@ nsPrinterEnumeratorPh::~nsPrinterEnumeratorPh()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorPh, nsIPrinterEnumerator)
 
-NS_IMETHODIMP nsPrinterEnumeratorPh::EnumeratePrintersExtended(PRUint32* aCount, PRUnichar*** aResult)
-{
-  	return DoEnumeratePrinters(PR_TRUE, aCount, aResult);
-}
-
 //----------------------------------------------------------------------------------
 // Enumerate all the Printers from the global array and pass their
 // names back (usually to script)
@@ -175,9 +170,8 @@ static void CleanupArray(PRUnichar**& aArray, PRInt32& aCount)
 
 
 nsresult
-nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended,
-                                            PRUint32* aCount,
-                                            PRUnichar*** aResult)
+nsPrinterEnumeratorPh::DoEnumeratePrinters(PRUint32* aCount,
+                                           PRUnichar*** aResult)
 {
   	NS_ENSURE_ARG(aCount);
   	NS_ENSURE_ARG_POINTER(aResult);

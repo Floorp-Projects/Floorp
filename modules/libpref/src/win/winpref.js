@@ -187,4 +187,6 @@ pref("print.print_headerfooter_gap", 0); // twips
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
-pref("print.whileInPrintPreview", true);
+// This indicates whether it should use the native dialog or the XP Dialog
+pref("print.use_native_print_dialog", true);
+

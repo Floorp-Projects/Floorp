@@ -84,5 +84,3 @@ pref("font.size.fixed.zh-CN", 16);
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
-pref("print.whileInPrintPreview", true);
-

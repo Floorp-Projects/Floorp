@@ -75,7 +75,7 @@ public:
 
 	private:
 		// helper
-		nsresult DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount, PRUnichar*** aResult);
+		nsresult DoEnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult);
 };
 
 
