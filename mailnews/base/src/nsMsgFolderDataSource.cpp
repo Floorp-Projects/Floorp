@@ -1152,6 +1152,7 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 		nsAutoCString nameStr(tempStr);
 
 		rv = folder->CreateSubfolder(nameStr);
+		nsAllocator::Free(name);
 	}
 	return rv;
 }
@@ -1170,7 +1171,7 @@ nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResou
 			if(NS_SUCCEEDED(rv))
 			{
 				rv = folder->SetCharset(value);
-				delete[] value;
+				nsAllocator::Free(value);
 			}
 		}
 		else

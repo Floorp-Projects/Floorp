@@ -1688,6 +1688,7 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
                         if (NS_SUCCEEDED(rv) && pMsgDraft)
                           pMsgDraft->OpenDraftMsg(str.GetUnicode(),
                                                   nsnull, PR_TRUE);
+						nsAllocator::Free(msgUri);
                       }
                   }
               }
