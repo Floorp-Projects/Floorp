@@ -43,7 +43,7 @@ XPIDLSRCS	= \
 		$(NULL)
 
 ifdef HAVE_MOVEMAIL
-XPIDLSRC	+= \
+XPIDLSRCS	+= \
 		nsIMovemailService.idl \
 		nsIMovemailIncomingServer.idl
 endif
