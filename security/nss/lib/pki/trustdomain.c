@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.32 $ $Date: 2002/02/08 02:51:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.33 $ $Date: 2002/02/08 15:13:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -962,6 +962,7 @@ NSSTrustDomain_TraverseCertificates
     nssList *certList;
     nssTokenCertSearch search;
     struct traverse_arg ta;
+    nssListIterator *tokens;
     certList = nssList_Create(NULL, PR_FALSE);
     if (!certList) return NULL;
     (void *)nssTrustDomain_GetCertsFromCache(td, certList);
@@ -976,16 +977,25 @@ NSSTrustDomain_TraverseCertificates
     search.searchType = nssTokenSearchType_TokenOnly;
     nssCertificateList_DoCallback(certList, 
                                   traverse_callback, &ta);
+    /* Must create a local copy of the token list, because the callback
+     * above may want to traverse the tokens as well.
+     */
+    tokens = nssList_CreateIterator(td->tokenList);
+    if (!tokens) {
+	goto cleanup;
+    }
     /* traverse the tokens */
-    for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
+    for (token  = (NSSToken *)nssListIterator_Start(tokens);
          token != (NSSToken *)NULL;
-         token  = (NSSToken *)nssListIterator_Next(td->tokens))
+         token  = (NSSToken *)nssListIterator_Next(tokens))
     {
 	if (nssToken_SearchCerts(token)) {
 	    nssrv = nssToken_TraverseCertificates(token, NULL, &search);
 	}
     }
-    nssListIterator_Finish(td->tokens);
+    nssListIterator_Finish(tokens);
+    nssListIterator_Destroy(tokens);
+cleanup:
 #ifdef NSS_3_4_CODE
     nssList_Clear(certList, cert_destructor_with_cache);
 #else
