@@ -45,22 +45,28 @@ var panelProgressListener = {
     }
 };
 
-var gLoadCachedSrc = true;
+var gLoadFired = false;
 function loadWebPanel(aURI) {
     var panelBrowser = document.getElementById('web-panels-browser');
     panelBrowser.removeAttribute("src");
+    panelBrowser.removeAttribute("cachedurl");
+    if (!gLoadFired)
+      load();
     panelBrowser.setAttribute("src", aURI);
     panelBrowser.setAttribute("cachedurl", aURI);
-    gLoadCachedSrc = false;
 }
 
 function load()
 {
+  if (gLoadFired)
+    return;
+
   var panelBrowser = document.getElementById('web-panels-browser');
   panelBrowser.webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-  if (gLoadCachedSrc && panelBrowser.getAttribute("cachedurl")) {
+  if (panelBrowser.getAttribute("cachedurl")) {
     panelBrowser.setAttribute("src", panelBrowser.getAttribute("cachedurl"));
   }
+  gLoadFired = true;
 }
 
 function unload()
