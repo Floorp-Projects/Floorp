@@ -45,4 +45,6 @@ protected:
   nsCOMPtr<nsICharsetConverterManager2> mCharSets;
   nsCOMPtr<nsISupportsArray> mLangs;
   nsCOMPtr<nsIPersistentProperties> mLangGroups;
+  nsCOMPtr<nsIAtom> mLocaleLangGroup;
+  nsCOMPtr<nsIAtom> mUnicode;
 };

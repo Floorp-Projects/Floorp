@@ -26,6 +26,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsICharsetConverterManager.h"
+#include "nsILocaleService.h"
 
 class nsLanguageAtom : public nsILanguageAtom
 {
@@ -214,12 +215,19 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
     mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
     NS_ENSURE_TRUE(mCharSets, NS_ERROR_FAILURE);
   }
+  if (!mUnicode) {
+    mUnicode = getter_AddRefs(NS_NewAtom("x-unicode"));
+  }
   nsCOMPtr<nsIAtom> charset;
   mCharSets->GetCharsetAtom(aCharSet, getter_AddRefs(charset));
   nsCOMPtr<nsIAtom> langGroup;
   mCharSets->GetCharsetLangGroup(charset, getter_AddRefs(langGroup));
   if (!langGroup) {
     return NS_ERROR_FAILURE;
+  }
+  if (langGroup.get() == mUnicode.get()) {
+    res = GetLocaleLanguageGroup(getter_AddRefs(langGroup));
+    NS_ENSURE_SUCCESS(res, res);
   }
   nsCOMPtr<nsILanguageAtom> lang;
   PRUint32 n;
@@ -248,6 +256,38 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
     mLangs->AppendElement(lang);
   }
   *aResult = lang;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLanguageAtomService::GetLocaleLanguageGroup(nsIAtom** aResult)
+{
+  nsresult res;
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+  if (!mLocaleLangGroup) {
+    nsCOMPtr<nsILocaleService> localeService;
+    localeService = do_GetService(NS_LOCALESERVICE_PROGID);
+    NS_ENSURE_TRUE(localeService, NS_ERROR_FAILURE);
+    nsCOMPtr<nsILocale> locale;
+    res = localeService->GetApplicationLocale(getter_AddRefs(locale));
+    NS_ENSURE_SUCCESS(res, res);
+    nsAutoString category;
+    category.AssignWithConversion(NSILOCALE_MESSAGE);
+    PRUnichar* loc = nsnull;
+    res = locale->GetCategory(category.GetUnicode(), &loc);
+    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsILanguageAtom> langAtom;
+    res = LookupLanguage(loc, getter_AddRefs(langAtom));
+    NS_ENSURE_SUCCESS(res, res);
+    res = langAtom->GetLanguageGroup(getter_AddRefs(mLocaleLangGroup));
+    NS_ENSURE_SUCCESS(res, res);
+  }
+
+  *aResult = mLocaleLangGroup;
   NS_ADDREF(*aResult);
 
   return NS_OK;
