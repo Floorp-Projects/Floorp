@@ -44,6 +44,14 @@
 #include "nsAString.h"
 #include "nsIAtom.h"
 
+class nsASingleFragmentString;
+
+/**
+ * Check equality between a string and an atom containing ASCII.
+ */
+PRBool
+TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom);
+
 #ifndef TX_EXE
 
 #include "nsUnicharUtils.h"
@@ -67,13 +75,5 @@ void TX_ToLowerCase(nsAString& aString);
 void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
 
 #endif
-
-/**
- * Check equality between a string and an atom.
- */
-inline PRBool TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
-{
-  return aAtom->Equals(aString);
-}
 
 #endif // txStringUtils_h__

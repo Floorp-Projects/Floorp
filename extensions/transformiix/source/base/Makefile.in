@@ -48,11 +48,8 @@ CPPSRCS	= Double.cpp \
 	txAtoms.cpp \
 	txExpandedNameMap.cpp \
 	txNamespaceMap.cpp \
-	txURIUtils.cpp
-
-ifdef TX_EXE
-	CPPSRCS	+= txStringUtils.cpp
-endif
+	txURIUtils.cpp \
+	txStringUtils.cpp
 
 include $(topsrcdir)/config/rules.mk
 
