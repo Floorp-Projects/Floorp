@@ -329,7 +329,10 @@ sub BuildDist()
 
 	#HTMLPARSER
    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
-   
+
+   #EXPAT
+   InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",							"$distdirectory:expat:");
+      
     #RDF
     InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
