@@ -36,17 +36,7 @@ var mozload  = "Fail";
 var seamonkeyload = "Fail";
 var pageload = "Fail";
 
-function mozillaimageLoaded()
-{
-  mozload = "Pass";
-}
-
-function seamonkeyimageLoaded()
-{
-  seamonkeyload = "Pass";
-}
-
-function displayResults()
+function constructResults()
 {
   var results = "";
   var mozloadcolor  = "white";
@@ -81,17 +71,76 @@ function displayResults()
   results = results + "  </table>";
   results = results + "</html>";
 
+  displayResults(results);
+}
+
+function displayResults(results)
+{
   document.results.textarea.value = results;
-  fixSubmit();
+  if (top.name == "testWindow")
+  {
+ 	fixSubmit();
+  }
+  else
+  {
+  	document.write(document.results.textarea.value);
+  }
+}
+
+function mozillaimageLoaded()
+{
+  mozload = "Pass";
+}
+
+function seamonkeyimageLoaded()
+{
+  seamonkeyload = "Pass";
 }
 
 function pageLoaded()
 {
-  pageload = "Pass";
-  setTimeout("displayResults();", 1000);
+  if (usingGecko == "False")
+  {
+     displayResults("<b> You cannot execute this test case. The Browser you are using doesnot use Gecko Engine. Try with other browser.<b>");
+  }
+  else
+  {
+    pageload = "Pass";
+    setTimeout("constructResults();", 1000);
+  }
 }
 
 </script>
+
+<script TYPE="text/javascript">
+
+function testPage()
+{
+  document.write('<center><b> This is a Test Page </b></center>');
+
+  document.write('<center><img src="mozilla-banner.gif" height=58 width=600 onLoad = "mozillaimageLoaded();"></center>');
+  document.write('<br> <br>');
+
+  document.write('<table bgcolor="blue" border="4">');
+  document.write('<tbody>');
+  document.write('<caption> <center> <b> Test Table </b> </center> </caption>');
+  document.write('<tr>');
+  document.write('  <td> <b> Cell1 </b> </td>');
+  document.write('  <td> <b> Cell2 </b> </td>');
+  document.write('</tr>');
+  document.write('<tr>');
+  document.write('  <td> <b> Cell3 </b> </td>');
+  document.write('  <td> <b> Cell4 </b> </td>');
+  document.write('</tr>');
+  document.write('</tbody>');
+  document.write('</table>');
+
+  document.write('<center>');
+  document.write('<img SRC="9709TUANP.jpg" height=183 width=300 onLoad = "seamonkeyimageLoaded();">');
+  document.write('</center>');
+}
+</script>
+
 </head>
 
 <body onLoad = "pageLoaded();">
@@ -104,30 +153,15 @@ document.write('<input name="resultsfile" type="hidden" value="' + window.opener
 <input type="hidden" name="textarea">
 </form>
 
-<center><b> This is a Test Page </b></center>
-
-<center>
-<img src="mozilla-banner.gif" height=58 width=600 onLoad = "mozillaimageLoaded();">
-</center>
-
-<br> <br>
-<table bgcolor='blue' border='4'>
-<tbody>
-<caption> <center> <b> Test Table </b> </center> </caption>
-  <tr>
-    <td> <b> Cell1 </b> </td>
-    <td> <b> Cell2 </b> </td>
-  </tr>
-  <tr>
-    <td> <b> Cell3 </b> </td>
-    <td> <b> Cell4 </b> </td>
-  </tr>
-</tbody>
-</table>
-
-<center>
-<img SRC="9709TUANP.jpg" height=183 width=300 onLoad = "seamonkeyimageLoaded();">
-</center>
+<script TYPE="text/javascript">
+var userAgent = navigator.userAgent;
+var usingGecko = "False";
+if (userAgent.search("Gecko") != -1)
+{
+  usingGecko = "True";
+  testPage();
+}
+</script>
 
 </body>
 </html>

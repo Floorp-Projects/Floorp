@@ -1,22 +1,60 @@
-<HTML>
-<!--
-Written by Dharma.
-Test last run on 07/02/01.
--->
-<TITLE> nsIFontList </TITLE>
-<HEAD>
-<SCRIPT TYPE="text/javascript">
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<title> nsIFontList Interface Test </title>
+<!-- Descrpt: nsIFontList Interface Test
+     Author: dsirnapalli@netscape.com
+     Revs: 07.26.01 - Created
 
-var langgroup = new Array("x-western", "ar", "el", "he", "ja", "ko", "th",
-                          "tr", "x-baltic", "x-central-euro", "x-cyrillic",
-                          "zh-CN", "zh-TW");
-var fonttype = new Array("serif" , "sans-serif", "cursive", "fantasy", "monospace");
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+
+<!-- script below is ngdriverspecific  -->
+<script TYPE="text/javascript" SRC="http://bubblegum/ngdriver/suites/testlib.js">
+</script>
+
+<script type="text/javascript">
+
+function getBrowserVersion()
+{
+  results = "";
+
+  results = results + "<html>";
+  results = results + "<b><h2>Browser Info </h2></b>" + "\n";
+  results = results + "<li><b>App Name:<TAB> </b>" + navigator.appName + "\n";
+  results = results + "<li><b>User Agent:<TAB> </b>" + navigator.userAgent + "\n";
+  results = results + "<li><b>Code Name:<TAB> </b>" + navigator.appCodeName + "\n";
+  results = results + "<li><b>App Version:<TAB> </b>" + navigator.appVersion + "\n";
+  results = results + "<li><b>Language:<TAB> </b>" + navigator.language + "\n";
+  results = results + "<li><b>Platform:<TAB> </b>" + navigator.platform + "\n";
+  results = results + "<hr>" + "\n";
+
+  document.results.textarea.value = results;
+}
 
 function getFontList()
 {
   try
   {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 
     var fontListObj = Components.classes["@mozilla.org/gfx/fontlist;1"].createInstance();
     if (fontListObj)
@@ -33,54 +71,70 @@ function getFontList()
   return fontListObj;
 }
 
-</SCRIPT>
-
-<SCRIPT LANGUAGE="JAVASCRIPT">
-
-function getBrowserVersion()
+function displayResults(results)
 {
-  document.write("<b><h2>Browser Info </h2></b>");
-  document.write("<p><li><b>App Name:<TAB> </b>" + navigator.appName);
-  document.write("<p><li><b>User Agent:<TAB> </b>" + navigator.userAgent);
-  document.write("<p><li><b>Code Name:<TAB> </b>" + navigator.appCodeName);
-  document.write("<p><li><b>App Version:<TAB> </b>" + navigator.appVersion);
-  document.write("<p><li><b>Language:<TAB> </b>" + navigator.language);
-  document.write("<p><li><b>Platform:<TAB> </b>" + navigator.platform);
+  document.results.textarea.value = results;
+  if (top.name == "testWindow")
+  {
+ 	fixSubmit();
+  }
+  else
+  {
+  	document.write(document.results.textarea.value);
+  }
 }
 
-</SCRIPT>
-</HEAD>
+</script>
 
-<BODY>
-<SCRIPT TYPE="text/javascript">
+</head>
+<body onLoad="displayResults(results);">
+
+<!-- form below is ngdriverspecific  -->
+<form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
+<script TYPE="text/javascript">
+document.write('<input name="resultsfile" type="hidden" value="' + window.opener.document.resultsform.resultsfile.value + '">');
+</script>
+<input type="hidden" name="textarea">
+</form>
+
+<script TYPE="text/javascript">
+var langgroup = new Array("x-western", "ar", "el", "he", "ja", "ko", "th",
+                          "tr", "x-baltic", "x-central-euro", "x-cyrillic",
+                          "zh-CN", "zh-TW");
+var fonttype = new Array("serif" , "sans-serif", "cursive", "fantasy", "monospace");
+
 getBrowserVersion();
 var fontList = getFontList();
+
 try
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  document.writeln("<H2><B>" + "Available Fonts" + "</B></H2>");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
+  results = results + "<H2><B>" + "Available Fonts" + "</B></H2>";
   for(i=0; i<langgroup.length; i++)
   {
-    document.writeln("<BR><B><U>" + langgroup[i] + "</U></B> <BR>");
+    results = results + "<BR><B><U>" + langgroup[i] + "</U></B> <BR>";
     for(j=0; j<fonttype.length; j++)
     {
-      document.writeln("<B>" + fonttype[j] + "</B> <BR>");
+      results = results + "<B>" + fonttype[j] + "</B> <BR>";
       var fontEnumerator = fontList.availableFonts(langgroup[i], fonttype[j]);
       while (fontEnumerator.hasMoreElements())
       {
         fontName = fontEnumerator.getNext();
         fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
         var fontNameStr = fontName.toString();
-        document.writeln(fontNameStr + "<BR>");
+        results = results + fontNameStr + "<BR>";
       }
     }
   }
-  document.writeln("<B>" + "-------------------" + "</B>");
-
+  results = results + "<B>" + "<hr>" + "</B>";
+  results = results + "</html>";
 }
 catch(e) {
   alert("Exception: " + e);
 }
-</SCRIPT>
-</BODY>
-</HTML>
+
+</script>
+
+</body>
