@@ -332,6 +332,8 @@ protected:
 
   PRBool IsScrollable(nsIFrame* aFrame, const nsStyleDisplay* aDisplay);
 
+  nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent);
+
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -1530,6 +1532,10 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
               aFrameSubTree->SetStyleContext(aPresContext, pseudoStyle);
               NS_RELEASE(pseudoStyle);
 
+              // Reset the scrolled frame's geometric and content parent
+              aFrameSubTree->SetGeometricParent(scrollFrame);
+              aFrameSubTree->SetContentParent(scrollFrame);
+
               // Initialize the scroll frame
               scrollFrame->Init(*aPresContext, aFrameSubTree);
               aFrameSubTree = scrollFrame;
@@ -1545,13 +1551,32 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
   return rv;
 }
 
+nsIFrame*
+HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent)
+{
+  nsIFrame* frame = aPresShell->FindFrameWithContent(aContent);
+
+  if (nsnull != frame) {
+    // If the primary frame is a scroll frame, then get the scrolled frame.
+    // That's the frame that gets the reflow command
+    const nsStyleDisplay* display;
+    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+    if (display->IsBlockLevel() && IsScrollable(frame, display)) {
+      frame->FirstChild(frame);
+    }
+  }
+
+  return frame;
+}
+
 NS_IMETHODIMP
 HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
                                     nsIContent*     aContainer,
                                     PRInt32         aNewIndexInContainer)
 {
   nsIPresShell* shell = aPresContext->GetShell();
-  nsIFrame* parentFrame = shell->FindFrameWithContent(aContainer);
+  nsIFrame*     parentFrame = GetFrameFor(shell, aContainer);
 
 #ifdef NS_DEBUG
   if (nsnull == parentFrame) {
@@ -1595,7 +1620,7 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
       NS_RELEASE(child);
     }
 
-    // adjust parent frame for table inner/outer frame
+    // Adjust parent frame for table inner/outer frame
     // we need to do this here because we need both the parent frame and the constructed frame
     nsresult result = NS_OK;
     nsIFrame *adjustedParentFrame=parentFrame;

@@ -106,6 +106,7 @@ RootFrame::RootFrame(nsIContent* aContent)
 NS_IMETHODIMP
 RootFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
+#if 0
   // Construct the root content frame and set its style context
   mFirstChild = new RootContentFrame(mContent, this);
   nsIStyleContext* pseudoStyleContext =
@@ -121,6 +122,10 @@ RootFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 
   // Queue up the frames for the root content frame
   return mFirstChild->Init(aPresContext, aChildList);
+#else
+  mFirstChild = aChildList;
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
@@ -155,6 +160,11 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowMetrics desiredSize(nsnull);
     nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
                                      aReflowState.maxSize);
+    // XXX HACK
+    kidReflowState.widthConstraint = eHTMLFrameConstraint_Fixed;
+    kidReflowState.minWidth = aReflowState.maxSize.width;
+    kidReflowState.heightConstraint = eHTMLFrameConstraint_Fixed;
+    kidReflowState.minHeight = aReflowState.maxSize.height;
     nsIHTMLReflow* htmlReflow;
 
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
