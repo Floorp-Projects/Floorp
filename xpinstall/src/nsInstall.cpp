@@ -456,10 +456,20 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
 {
     nsInstallFile*  ie;
     nsString        qualifiedRegName;
+    nsString        tempTargetName;
     
     PRInt32         errcode = nsInstall::SUCCESS;
+
+    if((aTargetName == "") || (aTargetName == "null"))
+    {
+      tempTargetName = aJarSource;
+    }
+    else
+    {
+      tempTargetName = aTargetName;
+    }
     
-    if ( aJarSource == "null" || aFolder == "null") 
+    if(aJarSource == "null" || aFolder == "null") 
     {
         *aReturn = SaveError( nsInstall::INVALID_ARGUMENTS );
         return NS_OK;
@@ -495,7 +505,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                             aVersion, 
                             aJarSource,
                             aFolder,
-                            aTargetName, 
+                            tempTargetName, 
                             aForceMode, 
                             &errcode );
 
@@ -555,16 +565,11 @@ nsInstall::AddSubcomponent(const nsString& aJarSource,
         return NS_OK;
     }
 
-    // Since parameter 5 cannot be an empty string,
-    // and a relative target name is required,
-    // aJarSource is passed instead.
-    // This will ensure a default target name of
-    // its original filename.
     return AddSubcomponent("", 
                            "", 
                            aJarSource, 
                            mPackageFolder, 
-                           aJarSource, 
+                           "",
                            PR_FALSE, 
                            aReturn);
       
