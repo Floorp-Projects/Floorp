@@ -64,6 +64,7 @@ EXPORTS=	nsImapUrl.h									\
 			nsIMAPGenericParser.h						\
 			nsImapSearchResults.h						\
 			nsImapIncomingServer.h						\
+			nsIMAPNamespace.h							\
             $(NULL)
 
 LINCS=													\
