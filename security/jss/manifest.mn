@@ -42,7 +42,7 @@ IMPORTS =	svrcore/SVRCORE_2_5_1 \
 			$(NULL)
 
 DIRS =  org     \
-        cmd     \
+        lib     \
         $(NULL)
 
 PACKAGE_DIR = _TOP
