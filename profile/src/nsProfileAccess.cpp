@@ -1576,7 +1576,7 @@ nsresult ProfileStruct::EnsureDirPathExists(nsILocalFile *aDir, PRBool *wasCreat
     rv = aDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
     {
-        rv = aDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+        rv = aDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
         *wasCreated = NS_SUCCEEDED(rv);
     }
     return rv;
