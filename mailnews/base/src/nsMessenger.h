@@ -47,6 +47,7 @@
 #include "nsIDocShell.h"
 #include "nsIStringBundle.h"
 #include "nsIFindComponent.h"
+#include "nsILocalFile.h"
 
 class nsMessenger : public nsIMessenger
 {
@@ -73,6 +74,11 @@ protected:
 
 private:
   nsresult InitializeSearch(nsIFindComponent *finder);
+
+  nsresult GetLastSaveDirectory(nsILocalFile **aLastSaveAsDir);
+  // if aLocalFile is a dir, we use it.  otherwise, we use the parent of aLocalFile.
+  nsresult SetLastSaveDirectory(nsILocalFile *aLocalFile);
+
   nsString mId;
   void *mScriptObject;
   nsCOMPtr<nsITransactionManager> mTxnMgr;

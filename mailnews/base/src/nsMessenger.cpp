@@ -121,6 +121,8 @@
 // Save As
 #include "nsIFilePicker.h"
 #include "nsIStringBundle.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // Find / Find Again 
 #include "nsIFindComponent.h"
@@ -141,7 +143,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #endif
 
 #define FOUR_K 4096
-
+#define MESSENGER_SAVE_DIR_PREF_NAME "messenger.save.dir"
 //
 // Convert an nsString buffer to plain text...
 //
@@ -409,13 +411,26 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
             filePicker->Init(nsnull, NS_LITERAL_STRING("Save Attachment").get(), nsIFilePicker::modeSave);
             filePicker->SetDefaultString(path.get());
             filePicker->AppendFilters(nsIFilePicker::filterAll);
+            
+            nsCOMPtr <nsILocalFile> lastSaveDir;
+            rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
+            if (NS_SUCCEEDED(rv) && lastSaveDir) {
+              filePicker->SetDisplayDirectory(lastSaveDir);
+            }
+
             filePicker->Show(&dialogReturn);
             if (dialogReturn == nsIFilePicker::returnCancel)
                 return NS_ERROR_FAILURE;
+
             nsCOMPtr<nsILocalFile> localFile;
             nsXPIDLCString filePath;
+            
             rv = filePicker->GetFile(getter_AddRefs(localFile));
             if (NS_FAILED(rv)) return rv;
+
+            rv = SetLastSaveDirectory(localFile);
+            NS_ENSURE_SUCCESS(rv,rv);
+
             rv = localFile->GetPath(getter_Copies(filePath));
             if (NS_FAILED(rv)) return rv;
             fileSpec = (const char*) filePath;
@@ -664,6 +679,7 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   char * unescapedDisplayName = nsnull;
   PRInt16 dialogResult;
   nsCOMPtr<nsILocalFile> localFile;
+  nsCOMPtr <nsILocalFile> lastSaveDir;
   nsCOMPtr<nsIFileSpec> fileSpec;
   nsXPIDLCString filePath;
 
@@ -695,12 +711,21 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   filePicker->AppendFilters(nsIFilePicker::filterAll);
   nsCRT::free(unescapedDisplayName);
   
+  rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
+  if (NS_SUCCEEDED(rv) && lastSaveDir) {
+    filePicker->SetDisplayDirectory(lastSaveDir);
+  }
+
   filePicker->Show(&dialogResult);
   if (dialogResult == nsIFilePicker::returnCancel)
       goto done;
 
   rv = filePicker->GetFile(getter_AddRefs(localFile));
   if (NS_FAILED(rv)) goto done;
+  
+  rv = SetLastSaveDirectory(localFile);
+  if (NS_FAILED(rv)) 
+    goto done;
   
   rv = localFile->GetPath(getter_Copies(filePath));
   fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
@@ -725,6 +750,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     nsCOMPtr<nsIFilePicker> filePicker =
         do_CreateInstance("@mozilla.org/filepicker;1", &rv);
     nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsILocalFile> lastSaveDir;
     nsCOMPtr<nsIFileSpec> fileSpec;
     nsXPIDLCString dirName;
     char *unescapedUrl = nsnull, *unescapedName = nsnull, *tempCStr = nsnull;
@@ -737,11 +763,23 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
         GetString(NS_LITERAL_STRING("Save All Attachments").get()),
         nsIFilePicker::modeGetFolder
         );
+
+    rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
+    if (NS_SUCCEEDED(rv) && lastSaveDir) {
+      filePicker->SetDisplayDirectory(lastSaveDir);
+    }
+    
     filePicker->Show(&dialogResult);
     if (dialogResult == nsIFilePicker::returnCancel)
         goto done;
+
     rv = filePicker->GetFile(getter_AddRefs(localFile));
     if (NS_FAILED(rv)) goto done;
+
+    rv = SetLastSaveDirectory(localFile);
+    if (NS_FAILED(rv)) 
+      goto done;
+    
     rv = localFile->GetPath(getter_Copies(dirName));
     if (NS_FAILED(rv)) goto done;
     rv = NS_NewFileSpec(getter_AddRefs(fileSpec));
@@ -821,6 +859,13 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         filePicker->AppendFilters(nsIFilePicker::filterHTML | nsIFilePicker::filterText | nsIFilePicker::filterAll);
 
         PRInt16 dialogResult;
+
+        nsCOMPtr <nsILocalFile> lastSaveDir;
+        rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
+        if (NS_SUCCEEDED(rv) && lastSaveDir) {
+          filePicker->SetDisplayDirectory(lastSaveDir);
+        }
+
         filePicker->Show(&dialogResult);
 
         if (dialogResult == nsIFilePicker::returnCancel)
@@ -829,7 +874,11 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         nsCOMPtr<nsILocalFile> localFile;
         rv = filePicker->GetFile(getter_AddRefs(localFile));
         if (NS_FAILED(rv)) goto done;
-            
+        
+        rv = SetLastSaveDirectory(localFile);
+        if (NS_FAILED(rv)) 
+          goto done;
+        
         nsXPIDLCString tmpFileName;
         rv = localFile->GetLeafName(getter_Copies(tmpFileName));
         if (NS_FAILED(rv)) goto done;
@@ -1838,3 +1887,62 @@ nsSaveAllAttachmentsState::~nsSaveAllAttachmentsState()
     delete m_messageUriArray;
     nsCRT::free(m_directoryName);
 }
+
+nsresult
+nsMessenger::GetLastSaveDirectory(nsILocalFile **aLastSaveDir)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // this can fail, and it will, on the first time we call it, as there is no default for this pref.
+  nsCOMPtr <nsILocalFile> localFile;
+  rv = prefBranch->GetComplexValue(MESSENGER_SAVE_DIR_PREF_NAME, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
+  if (NS_SUCCEEDED(rv)) {
+    NS_IF_ADDREF(*aLastSaveDir = localFile);
+  }
+  return rv;
+}
+
+nsresult
+nsMessenger::SetLastSaveDirectory(nsILocalFile *aLocalFile)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIFile> file = do_QueryInterface(aLocalFile, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // if the file is a directory, just use it for the last dir chosen
+  // otherwise, use the parent of the file as the last dir chosen.
+  // IsDirectory() will return error on saving a file, as the
+  // file doesn't exist yet.
+  PRBool isDirectory;
+  rv = file->IsDirectory(&isDirectory);
+  if (NS_SUCCEEDED(rv) && isDirectory) {
+    rv = prefBranch->SetComplexValue(MESSENGER_SAVE_DIR_PREF_NAME, NS_GET_IID(nsILocalFile), aLocalFile);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  else {
+    nsCOMPtr <nsIFile> parent;
+    rv = file->GetParent(getter_AddRefs(parent));
+    NS_ENSURE_SUCCESS(rv,rv);
+   
+    nsCOMPtr <nsILocalFile> parentLocalFile = do_QueryInterface(parent, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = prefBranch->SetComplexValue(MESSENGER_SAVE_DIR_PREF_NAME, NS_GET_IID(nsILocalFile), parentLocalFile);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return NS_OK;
+}
+
