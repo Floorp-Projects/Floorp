@@ -21,6 +21,7 @@ IGNORE_MANIFEST=1
 EXPORTS =							\
 		nsINNTPNewsgroupList.h		\
 		nsINNTPCategory.h			\
+		nsINNTPCategoryContainer.h	\
 		nsINNTPHost.h				\
 		nsINNTPNewsgroup.h 			\
 		nsIMsgOfflineNewsState.h 	\
