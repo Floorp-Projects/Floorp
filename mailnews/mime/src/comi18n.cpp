@@ -329,27 +329,8 @@ static  char *  intl_decode_mime_part2_str(const char *, int , char* );
 static char *DecodeBase64Buffer(char *subject);
 static char *EncodeBase64Buffer(char *subject, size_t size);
 
-static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
-                                    const char* inBuffer, const PRInt32 inLength,
-                                    char** outBuffer);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static PRBool NeedCharsetConversion(const char* from_charset, const char* to_charset)
-{
-  if (nsnull == from_charset || nsnull == to_charset || 
-      '\0' == *from_charset || '\0' == *to_charset) 
-    return PR_FALSE;
-  else if (!PL_strcasecmp(from_charset, to_charset)) {
-    return PR_FALSE;
-  }
-  else if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
-      (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii")))
-  {
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
 
 /* 4.0: Made Encode & Decode public for use by libpref; added size param.
  */
@@ -773,14 +754,14 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
           return NULL;
         }
         // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
-        if (INTL_ConvertCharset("utf-8", !PL_strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
-                                (const char*) begin, (const PRInt32) len, &buf1)) {
+        if (MIME_ConvertCharset("utf-8", !PL_strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
+                                (const char*) begin, (const PRInt32) len, &buf1, (PRInt32 *) &iBufLen)) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
           return NULL; //error
         }
 //        buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
-        iBufLen = PL_strlen( buf1 );
+//        iBufLen = PL_strlen( buf1 );
         PR_ASSERT( iBufLen > 0 );
 
         /* recal iThreshold each time based on last experience */
@@ -1200,86 +1181,6 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
-                                   const char* inBuffer, const PRInt32 inLength,
-                                   char** outBuffer)
-{
-  nsIUnicodeDecoder* decoder = nsnull;
-  nsIUnicodeEncoder* encoder = nsnull;
-  nsresult res;
-
-  *outBuffer = nsnull;
-
-  if (nsnull == from_charset || nsnull == to_charset || 
-      '\0' == *from_charset || '\0' == *to_charset || nsnull == inBuffer) 
-    return -1;
-
-  // Set up charset converters.
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
-
-  if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsString aCharset;
-
-    // get decoder (conv to unicode)
-    aCharset.SetString(from_charset);
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if (NS_FAILED(res)) {
-      decoder = nsnull;
-    }
-    // get encoder (conv from unicode)
-    aCharset.SetString(to_charset);
-    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
-    if (NS_FAILED(res)) {
-      encoder = nsnull;
-    }
-    // error, no conversion, copy the original
-    if (nsnull == decoder || nsnull == encoder) {
-      *outBuffer = PL_strdup(inBuffer); 
-      return (nsnull != *outBuffer) ? 0 : -1;
-    }
-  }
-  else
-    return -1;
-
-  // Do the actual convertions.
-  PRUnichar *unichars;
-  PRInt32 unicharLength;
-  PRInt32 srcLen = inLength;
-  PRInt32 dstLength = 0;
-  char *dstPtr = nsnull;
-
-  res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
-  // temporary buffer to hold unicode string
-  unichars = new PRUnichar[unicharLength];
-  if (unichars == nsnull) {
-    res = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    // convert to unicode
-    res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
-
-    res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-    // allocale an output buffer
-    dstPtr = (char *) PR_Malloc(dstLength + 1);
-    if (dstPtr == nsnull) {
-      res = NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-      // convert from unicode
-      res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
-      dstPtr[dstLength] = '\0';
-      *outBuffer = dstPtr;  // set the result string
-    }
-    delete [] unichars;
-  }
-
-  NS_IF_RELEASE(decoder);
-  NS_IF_RELEASE(encoder);
-
-  return NS_SUCCEEDED(res) ? 0 : -1;
-}
-
-
 static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
                                       void** uniBuffer, PRInt32* uniLength)
 {
@@ -1353,16 +1254,25 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 ////////////////////////////////////////////////////////////////////////////////
-
 class MimeCharsetConverterClass {
 public:
   MimeCharsetConverterClass();
   virtual ~MimeCharsetConverterClass();
+
+  // Initialize converters for charsets, fails if converter not available.
+  // 
   PRInt32 Initialize(const char* from_charset, const char* to_charset, 
                      const PRBool autoDetect=PR_FALSE, const PRInt32 maxNumCharsDetect=-1);
+
+  // Converts input buffer or duplicates input if converters not available (and returns 0).
+  // Also duplicates input if convertion not needed.
+  // C string is generated for converted string.
   PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength);
+
+protected:
   nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
   nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
+  PRBool NeedCharsetConversion(const char* from_charset, const char* to_charset);
 
 private:
   nsIUnicodeDecoder *mDecoder;          // decoder (convert to unicode)  
@@ -1373,7 +1283,6 @@ private:
   PRInt32 mNumChars;                    // accumulated number of characters converted in bytes
   PRBool mAutoDetect;                   // true if apply auto detection
 };
-
 
 MimeCharsetConverterClass::MimeCharsetConverterClass()
 {
@@ -1396,16 +1305,22 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
                                               const PRBool autoDetect, const PRInt32 maxNumCharsDetect)
 {
   nsresult res;
+
+  // No need to do the conversion then do not create converters. 
+  if (!autoDetect && !NeedCharsetConversion(from_charset, to_charset)) {
+    return 0;
+  }
+
   // Set up charset converters.
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 
   if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsString aCharset;
 
-    // create a decoder (conv to unicode)
+    // create a decoder (conv to unicode), ok if failed if we do auto detection
     aCharset.SetString(from_charset);
     res = ccm->GetUnicodeDecoder(&aCharset, &mDecoder);
-    if (NS_FAILED(res)) {
+    if (NS_FAILED(res) && !autoDetect) {
       return -1;
     }
     // create an encoder (conv from unicode)
@@ -1427,10 +1342,13 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
 
 PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
 {
-  if (NULL == mDecoder || NULL == mEncoder) {
-    *outBuffer = PL_strdup(inBuffer);
-    if (*outBuffer != nsnull) {
-      *outLength = PL_strlen(*outBuffer);
+  // Encoder is not available, duplicate the input.
+  if (NULL == mEncoder) {
+    *outBuffer = (char *) PR_Malloc(inLength+1);
+    if (NULL != *outBuffer) {
+      nsCRT::memcpy(*outBuffer, inBuffer, inLength);
+      *outLength = inLength;
+      (*outBuffer)[inLength] = '\0';
       return 0;
     }
     return -1;
@@ -1440,11 +1358,24 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
   nsIUnicodeEncoder* encoder = mEncoder;
 
   // try auto detection for this string
-  if (mAutoDetect && mMaxNumCharsDetect < mNumChars) {
+  if (mAutoDetect && (mMaxNumCharsDetect == -1 || mMaxNumCharsDetect > mNumChars)) {
+    // Call NeedCharsetConversion for detected charset, avoid create decoder.
   }
 
   // update the total so far
   mNumChars += inLength;
+
+  // Decoders are not available, duplicate the input.
+  if (NULL == mDecoder && NULL == mDecoderDetected) {
+    *outBuffer = (char *) PR_Malloc(inLength+1);
+    if (NULL != *outBuffer) {
+      nsCRT::memcpy(*outBuffer, inBuffer, inLength);
+      *outLength = inLength;
+      (*outBuffer)[inLength] = '\0';
+      return 0;
+    }
+    return -1;
+  }
 
   // do the conversion
   nsresult res;
@@ -1486,6 +1417,22 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
+PRBool MimeCharsetConverterClass::NeedCharsetConversion(const char* from_charset, const char* to_charset)
+{
+  if (nsnull == from_charset || nsnull == to_charset || 
+      '\0' == *from_charset || '\0' == *to_charset) 
+    return PR_FALSE;
+  else if (!PL_strcasecmp(from_charset, to_charset)) {
+    return PR_FALSE;
+  }
+  else if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
+      (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii")))
+  {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // BEGIN PUBLIC INTERFACE
 extern "C" {
@@ -1513,43 +1460,22 @@ PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, XP_Bo
 PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
                            const char* inCstring, char** outCstring)
 {
-  if (!NeedCharsetConversion(from_charset, to_charset)) {
-    *outCstring = PL_strdup(inCstring);
-    return (outCstring != NULL) ? 0 : -1;
-  }
-  return INTL_ConvertCharset(from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring);
+  PRInt32 outLength;
+  return MIME_ConvertCharset(from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring, &outLength);
 }
 
 PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
 {
-  if (!NeedCharsetConversion(from_charset, to_charset)) {
-    char *newbuf = (char *) PR_Malloc(inLength);
-    if (newbuf != NULL) {
-      nsCRT::memcpy(newbuf, inBuffer, inLength);
-      *outBuffer = newbuf;
-      *outLength = inLength;
-      return 0;
-    }
-    else {
-      return -1;
-    }
-  }
-#if 0
-  PRInt32 res = INTL_ConvertCharset(from_charset, to_charset, inBuffer, inLength, outBuffer);
-  if (res == 0) {
-    *outLength = PL_strlen(*outBuffer);
-  }
-#else
-  PRInt32 res;
   MimeCharsetConverterClass aMimeCharsetConverterClass;
+  PRInt32 res;
 
   res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, PR_FALSE, -1);
 
   if (res != -1) {
     res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength);
   }
-#endif
+
   return res;
 }
 
