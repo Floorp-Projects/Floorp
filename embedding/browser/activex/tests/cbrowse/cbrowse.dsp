@@ -91,7 +91,7 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\ActiveScriptSite.cpp
+SOURCE=..\..\src\control\ActiveScriptSite.cpp
 # End Source File
 # Begin Source File
 
@@ -120,11 +120,11 @@ SOURCE=.\ControlEventSink.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\ControlSite.cpp
+SOURCE=..\..\src\control\ControlSite.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\ControlSiteIPFrame.cpp
+SOURCE=..\..\src\control\ControlSiteIPFrame.cpp
 # End Source File
 # Begin Source File
 
@@ -140,7 +140,7 @@ SOURCE=.\PickerDlg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\PropertyBag.cpp
+SOURCE=..\..\src\control\PropertyBag.cpp
 # End Source File
 # Begin Source File
 

@@ -6,7 +6,7 @@
 #include "cbrowse.h"
 #include "CBrowseDlg.h"
 #include "ControlEventSink.h"
-#include "..\..\DHTMLCmdIds.h"
+#include "..\..\src\control\DHTMLCmdIds.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -94,6 +94,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_GOTO_FORWARD, OnUpdateViewGotoForward)
 	ON_COMMAND(ID_EDIT_SELECTALL, OnEditSelectAll)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_COMMAND(ID_VIEW_VIEWSOURCE, OnViewViewSource)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -843,4 +844,9 @@ void CBrowseDlg::OnEditSelectAll()
 void CBrowseDlg::OnHelpAbout() 
 {
 	AfxMessageBox(_T("CBrowse - Browser Control Test Harness"));
+}
+
+void CBrowseDlg::OnViewViewSource() 
+{
+	ExecOleCommand(&CGID_MSHTML, 3);
 }

@@ -50,13 +50,13 @@ extern CBrowseModule _Module;
 #include <map>
 #include <list>
 
-#include "..\..\ActiveXTypes.h"
-#include "..\..\BrowserDiagnostics.h"
-#include "..\..\PropertyList.h"
-#include "..\..\PropertyBag.h"
-#include "..\..\ControlSiteIPFrame.h"
-#include "..\..\ControlSite.h"
-#include "..\..\ActiveScriptSite.h"
+#include "..\..\src\control\ActiveXTypes.h"
+#include "..\..\src\control\BrowserDiagnostics.h"
+#include "..\..\src\control\PropertyList.h"
+#include "..\..\src\control\PropertyBag.h"
+#include "..\..\src\control\ControlSiteIPFrame.h"
+#include "..\..\src\control\ControlSite.h"
+#include "..\..\src\control\ActiveScriptSite.h"
 
 #include "CBrowserCtlSite.h"
 #include "Tests.h"
