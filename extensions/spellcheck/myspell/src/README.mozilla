@@ -1,0 +1,13 @@
+This is a straight copy of the openoffice myspell component
+
+Changes made for mozilla:
+
+* Renamed *.cxx to .cpp, for the build system
+* Replaced the makefile with a mozilla type makefile
+* Added a wrapper, implementing mozISpellCheckingEngine and calling myspell
+  This wrapper does the conversion from unicode to the charset used
+  by myspell for the current dictionary.
+* Rewrote get_current_cs to create tables when needed, to reduce size of
+  the resulting library.
+* Commented out std namespace declarations from .cpp files (using namespace std;)
+* Removed #include <unistd.h> for the build system

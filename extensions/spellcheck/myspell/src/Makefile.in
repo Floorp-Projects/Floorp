@@ -53,37 +53,29 @@ IS_COMPONENT	= 1
 
 REQUIRES	= xpcom \
 		  string \
-		  editor \
-		  content \
-		  layout \
-		  dom \
 		  necko \
-		  widget \
-		  gfx \
-		  txtsvc \
 		  uconv \
 		  unicharutil \
 		  spellchecker \
-		  nspr \
                   intl \
 		  $(NULL)
 
-CPPSRCS =				\
-		mozCStr2CStrHashtable.cpp	\
-		mozAffixMod.cpp			\
-		myspAffixmgr.cpp		\
-		mozMySpell.cpp			\
-		myspSuggestmgr.cpp		\
-		mozMySpellFactory.cpp		\
-		$(NULL)
+CPPSRCS =         affentry.cpp \
+		  affixmgr.cpp \
+		  hashmgr.cpp \
+		  suggestmgr.cpp \
+		  csutil.cpp \
+		  myspell.cpp \
+		  mozMySpell.cpp \
+		  mozMySpellFactory.cpp \
+                  $(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
-                $(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
