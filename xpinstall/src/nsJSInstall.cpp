@@ -1167,8 +1167,8 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   //  public int GetWinRegistry (void);
   if(NS_OK != nativeThis->GetWinRegistry(cx, &WinRegClass, rval))
   {
-    *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
-    return JSVAL_NULL;
+    *rval = JSVAL_NULL;
+    return JS_TRUE;
   }
 #endif
 
