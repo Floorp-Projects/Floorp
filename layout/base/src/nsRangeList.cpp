@@ -778,6 +778,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
             }
             result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
                                        } break;
+        
       }
       if (keyEvent->keyCode == nsIDOMUIEvent::VK_UP || keyEvent->keyCode == nsIDOMUIEvent::VK_DOWN)
         SetDesiredX(desiredX);
@@ -830,9 +831,21 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
           SetDesiredX(desiredX);
         }
         break;
-#ifdef DEBUG_NAVIGATION
-        printf("debug vk down\n");
-#endif
+      case nsIDOMUIEvent::VK_HOME :
+        {
+          amount = eSelectBeginLine;
+          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
+            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
+          }
+        }
+        break;
+      case nsIDOMUIEvent::VK_END :
+        {
+          amount = eSelectEndLine;
+          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
+            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
+          }
+        }
         break;
     default :break;
     }
