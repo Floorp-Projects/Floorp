@@ -66,26 +66,22 @@ PathExpr::~PathExpr()
  * Adds the Expr to this PathExpr
  * @param expr the Expr to add to this PathExpr
 **/
-void PathExpr::addExpr(Expr* expr, short ancestryOp)
+void PathExpr::addExpr(Expr* expr, PathOperator pathOp)
 {
+    NS_ASSERTION(expressions.getLength() > 0 || pathOp == RELATIVE_OP,
+                 "First step has to be relative in PathExpr");
     if (expr) {
         PathExprItem* pxi = new PathExprItem;
+        if (!pxi) {
+            // XXX ErrorReport: out of memory
+            NS_ASSERTION(0, "out of memory");
+            return;
+        }
         pxi->expr = expr;
-        pxi->ancestryOp = ancestryOp;
+        pxi->pathOp = pathOp;
         expressions.add(pxi);
     }
 } //-- addPattenExpr
-
-MBool PathExpr::isAbsolute()
-{
-    if (expressions.getLength() > 0) {
-        ListIterator* iter = expressions.iterator();
-        PathExprItem* pxi = (PathExprItem*)iter->next();
-        delete iter;
-        return (pxi->ancestryOp != RELATIVE_OP);
-    }
-    return MB_FALSE;
-} //-- isAbsolute
 
     //-----------------------------/
   //- Virtual methods from Expr -/
@@ -106,23 +102,23 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
             return new NodeSet(0);
 
     NodeSet* nodes = new NodeSet();
+    if (!nodes) {
+        // XXX ErrorReport: out of memory
+        NS_ASSERTION(0, "out of memory");
+        return 0;
+    }
+    nodes->add(context);
 
-    if (isAbsolute() && (context->getNodeType() != Node::DOCUMENT_NODE))
-        nodes->add(context->getOwnerDocument());
-    else
-        nodes->add(context);
+    ListIterator iter(&expressions);
+    PathExprItem* pxi;
 
-    ListIterator* iter = expressions.iterator();
-
-    while (iter->hasNext()) {
-        PathExprItem* pxi = (PathExprItem*)iter->next();
+    while (pxi = (PathExprItem*)iter.next()) {
         NodeSet* tmpNodes = 0;
-        cs->getNodeSetStack()->push(nodes);
         for (int i = 0; i < nodes->size(); i++) {
             Node* node = nodes->get(i);
             
             NodeSet* resNodes;
-            if (pxi->ancestryOp == ANCESTOR_OP) {
+            if (pxi->pathOp == DESCENDANT_OP) {
                 resNodes = new NodeSet;
                 evalDescendants(pxi->expr, node, cs, resNodes);
             }
@@ -144,12 +140,10 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
                 tmpNodes = resNodes;
 
         }
-        delete (NodeSet*) cs->getNodeSetStack()->pop();
+        delete nodes;
         nodes = tmpNodes;
         if (!nodes || (nodes->size() == 0)) break;
     }
-    delete iter;
-
     return nodes;
 } //-- evaluate
 
@@ -188,7 +182,7 @@ double PathExpr::getDefaultPriority(Node* node, Node* context,
                                     ContextState* cs)
 {
     int size = expressions.getLength();
-    if (size > 1 || isAbsolute())
+    if (size > 1)
         return 0.5;
 
     return ((PathExprItem*)expressions.get(0))->
@@ -201,133 +195,69 @@ double PathExpr::getDefaultPriority(Node* node, Node* context,
 **/
 MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
 {
+    /*
+     * The idea is to split up a path into blocks separated by descendant
+     * operators. For example "foo/bar//baz/bop//ying/yang" is split up into
+     * three blocks. The "ying/yang" block is handled by the first while-loop
+     * and the "foo/bar" and "baz/bop" blocks are handled by the second
+     * while-loop.
+     * A block is considered matched when we find a list of ancestors that
+     * match the block. If there are more than one list of ancestors that
+     * match a block we only need to find the one furthermost down in the
+     * tree.
+     */
+
     if (!node || (expressions.getLength() == 0))
        return MB_FALSE;
 
-    //-- for performance reasons, I've duplicated some code
-    //-- here. If we only have one expression, there is no
-    //-- reason to create NodeSets and go through the
-    //-- while loop below. This resulted in a decent
-    //-- performance gain in XSL:P, so I'm doing it here also,
-    //-- even though I have no real code in place to test the
-    //-- performance of transformiix.
+    ListIterator iter(&expressions);
+    iter.resetToEnd();
 
-    if (expressions.getLength() == 1) {
-        PathExprItem* pxi = (PathExprItem*)expressions.get(0);
-        switch(pxi->ancestryOp) {
-            case ANCESTOR_OP:
-            {
-                Node* ancestor = node;
-                while ((ancestor = ancestor->getXPathParent()))  {
-                    if (pxi->expr->matches(node, ancestor, cs))
-                        return MB_TRUE;
-                }
-                break;
-            }
-            case PARENT_OP:
-            {
-                Node* parent = node->getXPathParent();
-                if (parent) {
-                    //-- make sure node is Document node
-                    if (parent->getNodeType() == Node::DOCUMENT_NODE)
-                        return pxi->expr->matches(node, parent, cs);
-                }
-                break;
-            }
-            default:
-                return pxi->expr->matches(node, context, cs);
-        }
+    PathExprItem* pxi;
+    PathOperator pathOp = RELATIVE_OP;
+    
+    while (pathOp == RELATIVE_OP) {
 
-        return MB_FALSE;
-    }
+        pxi = (PathExprItem*)iter.previous();
+        if (!pxi)
+            return MB_TRUE; // We've stepped through the entire list
 
-    //-- if we reach here we have subpaths...
-    NodeSet nodes(3);
-    NodeSet tmpNodes(3);
-
-    nodes.add(node);
-
-    ListIterator* iter = expressions.iterator();
-    iter->resetToEnd();
-
-    while (iter->hasPrevious()) {
-
-        PathExprItem* pxi = (PathExprItem*)iter->previous();
-
-        for (int i = 0; i < nodes.size(); i++) {
-            Node* tnode = nodes.get(i);
-
-            //-- select node's parent or ancestors
-            switch (pxi->ancestryOp) {
-                case ANCESTOR_OP:
-                {
-                    Node* parent = tnode;
-                    while ((parent = parent->getXPathParent()))  {
-                        if (pxi->expr->matches(tnode, parent, cs))
-                            tmpNodes.add(parent);
-                    }
-                    break;
-                }
-                case PARENT_OP:
-                {
-                    Node* parent = tnode->getXPathParent();
-                    if (parent) {
-                        //-- make sure we have a document node if necessary
-                        if (!iter->hasPrevious())
-                            if (parent->getNodeType() != Node::DOCUMENT_NODE)
-                                break;
-                        if (pxi->expr->matches(tnode, parent, cs))
-                            tmpNodes.add(parent);
-                    }
-                    break;
-                }
-                default:
-                    if (!iter->hasPrevious()) {
-                        /*
-                          // PREVIOUS // result = pxi->expr->matches(tnode, context, cs);
-                          // result was being overwritten if there was more than one
-                          // node in nodes during the final iteration  (Marina)
-
-                          result = result || pxi->expr->matches(tnode, context, cs)
-                        */
-
-                        //-- Just return true if we match here
-                        if (pxi->expr->matches(tnode, context, cs)) {
-                            delete iter;
-                            return MB_TRUE;
-                        }
-                    }
-                    else {
-                        //-- error in expression, will we ever see this?
-                        delete iter;
-                        return MB_FALSE;
-                    }
-                    break;
-            }
-        } //-- for
-
-        if (tmpNodes.size() == 0) {
-            delete iter;
+        if (!node || !pxi->expr->matches(node, 0, cs))
             return MB_FALSE;
+        
+        node = node->getXPathParent();
+        pathOp = pxi->pathOp;
+    }
+    
+    // We have at least one DESCENDANT_OP
+    
+    Node* blockStart = node;
+    ListIterator blockIter(iter);
+
+    while ((pxi = (PathExprItem*)iter.previous())) {
+
+        if (!node)
+            return MB_FALSE; // There are more steps in the current block 
+                             // then ancestors of the tested node
+
+        if (!pxi->expr->matches(node, 0, cs)) {
+            // Didn't match. We restart at beginning of block using a new
+            // start node
+            iter = blockIter;
+            blockStart = blockStart->getXPathParent();
+            node = blockStart;
         }
-
-        nodes.clear();
-        tmpNodes.copyInto(nodes);
-        tmpNodes.clear();
+        else {
+            node = node->getXPathParent();
+            if (pxi->pathOp == DESCENDANT_OP) {
+                // We've matched an entire block. Set new start iter and start node
+                blockIter = iter;
+                blockStart = node;
+            }
+        }
     }
-
-    delete iter;
-
-    if ( this->isAbsolute()) {
-        Node* doc = 0;
-        if (node->getNodeType() == Node::DOCUMENT_NODE)
-            doc = node;
-        else
-            doc = node->getOwnerDocument();
-        return (MBool)nodes.contains(doc);
-    }
-
-    return (MBool)(nodes.size() > 0);
+    
+    return MB_TRUE;
 
 } //-- matches
 
@@ -342,22 +272,24 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
 **/
 void PathExpr::toString(String& dest)
 {
-    ListIterator* iter = expressions.iterator();
-    while (iter->hasNext()) {
-        //-- set operator
-        PathExprItem* pxi = (PathExprItem*)iter->next();
-        switch (pxi->ancestryOp) {
-            case ANCESTOR_OP:
+    ListIterator iter(&expressions);
+    
+    PathExprItem* pxi = (PathExprItem*)iter.next();
+    if (pxi) {
+        NS_ASSERTION(pxi->pathOp == RELATIVE_OP,
+                     "First step should be relative");
+        pxi->expr->toString(dest);
+    }
+    
+    while (pxi = (PathExprItem*)iter.next()) {
+        switch (pxi->pathOp) {
+            case DESCENDANT_OP:
                 dest.append("//");
                 break;
-            case PARENT_OP:
+            case RELATIVE_OP:
                 dest.append('/');
-                break;
-            default:
                 break;
         }
         pxi->expr->toString(dest);
     }
-    delete iter;
 } //-- toString
-
