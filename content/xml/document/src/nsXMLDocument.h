@@ -80,7 +80,7 @@ public:
                                   nsIDOMAttr** aReturn);
   NS_IMETHOD    GetElementById(const nsString& aElementId,
                                nsIDOMElement** aReturn);
-  NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType);
+  NS_IMETHOD    Load(const nsString& aUrl);
 
   // nsIXMLDocument interface
   NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
@@ -93,10 +93,10 @@ public:
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
   NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
+  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
-  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   // For HTML elements in our content model
   nsIHTMLStyleSheet*    mAttrStyleSheet;

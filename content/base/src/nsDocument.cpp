@@ -358,7 +358,7 @@ nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 
 class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIScriptObjectOwner,
-							public nsIPrivateDOMImplementation
+                            public nsIPrivateDOMImplementation
 {
 public:
   nsDOMImplementation(nsIDocument* aDocument = nsnull);
@@ -447,13 +447,15 @@ nsDOMImplementation::CreateDocument(const nsString& aNamespaceURI,
   nsresult rv = NS_OK;
   *aReturn = nsnull;
 
-  nsIURI* baseURI;
-  rv = mDocument->GetBaseURL(baseURI);
-  if (NS_FAILED(rv)) return rv;
+  nsIURI* baseURI = nsnull;
+  if (mDocument) {
+    rv = mDocument->GetBaseURL(baseURI);
+    if (NS_FAILED(rv)) return rv;
+  }
 
   NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype, baseURI);
 
-  NS_RELEASE(baseURI);
+  NS_IF_RELEASE(baseURI);
   return rv;
 }
 
@@ -909,15 +911,19 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
   NS_IF_RELEASE(mNameSpaceManager);
 
-  (void)aChannel->GetURI(&mDocumentURL);
-  nsCOMPtr<nsISupports> owner;
-  aChannel->GetOwner(getter_AddRefs(owner));
-  if (owner)
-    owner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
+  if (aChannel) {
+    (void)aChannel->GetURI(&mDocumentURL);
+    nsCOMPtr<nsISupports> owner;
+    aChannel->GetOwner(getter_AddRefs(owner));
+    if (owner)
+      owner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
+  }
 
-  mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
-  // there was an assertion here that aLoadGroup was not null.  This is no longer valid
-  // nsWebShell::SetDocument does not create a load group, and it works just fine.
+  if (aLoadGroup) {
+    mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
+    // there was an assertion here that aLoadGroup was not null.  This is no longer valid
+    // nsWebShell::SetDocument does not create a load group, and it works just fine.
+  }
 
   if (NS_OK == rv) {
     rv = NS_NewNameSpaceManager(&mNameSpaceManager);
@@ -1361,7 +1367,10 @@ nsDocument::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
 NS_IMETHODIMP 
 nsDocument::GetChildCount(PRInt32& aCount)
 {
-  aCount = 1;
+  aCount = 0;
+  if (nsnull != mRootContent) {
+    aCount++;
+  }
   if (nsnull != mProlog) {
     aCount += mProlog->Count();
   }
@@ -2445,7 +2454,7 @@ nsDocument::GetHeight(PRInt32* aHeight)
 }
 
 NS_IMETHODIMP
-nsDocument::Load (const nsString& aUrl, const nsString& aMimeType)
+nsDocument::Load (const nsString& aUrl)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2621,7 +2630,8 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
   aNewChild->GetNodeType(&nodeType);
   if ((COMMENT_NODE != nodeType) &&
       (PROCESSING_INSTRUCTION_NODE != nodeType) &&
-      (DOCUMENT_TYPE_NODE != nodeType)) {
+      (DOCUMENT_TYPE_NODE != nodeType) &&
+      (ELEMENT_NODE != nodeType)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2630,7 +2640,16 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  if (nsnull == aRefChild) {
+  if (ELEMENT_NODE == nodeType) {
+    if (mRootContent) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+    else {
+      SetRootContent(content);
+      ContentInserted(nsnull, content, 0);
+    }
+  }
+  else if (nsnull == aRefChild) {
     if ((!mProlog || (mProlog && mProlog->Count())) && mRootContent) {
       AppendToEpilog(content);
     } else if (nodeType != ELEMENT_NODE) {
@@ -2698,7 +2717,8 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
 
   if ((COMMENT_NODE != nodeType) &&
       (PROCESSING_INSTRUCTION_NODE != nodeType) &&
-      (DOCUMENT_TYPE_NODE != nodeType)) {
+      (DOCUMENT_TYPE_NODE != nodeType) &&
+      (ELEMENT_NODE != nodeType)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2725,7 +2745,18 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   }
 
   if (refContent == mRootContent) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    if (ELEMENT_NODE == nodeType) {
+      // Out with the old
+      mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      ContentRemoved(nsnull, mRootContent, 0);
+      
+      // In with the new
+      SetRootContent(content);
+      ContentInserted(nsnull, content, 0);      
+    }
+    else {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
   }
   else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
     index = mEpilog->IndexOf(refContent);
@@ -2781,7 +2812,10 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   }
 
   if (content == mRootContent) {
-    result = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    // Out with the old
+    mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    ContentRemoved(nsnull, mRootContent, 0);
+    SetRootContent(nsnull);
   }
   else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
     index = mEpilog->IndexOf(content);
