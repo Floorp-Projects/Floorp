@@ -37,7 +37,8 @@
   windowtype="history:manager"
   >
 
-  <script src="chrome://communicator/content/bookmarks/bookmarks.js"></script>
+  <script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
 
   <menubar>
     <menu value="&fileMenu.label;">
