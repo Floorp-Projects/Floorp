@@ -153,6 +153,9 @@ protected:
   void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
   void SetPageSizes(const nsRect& aRect, const nsMargin& aMarginRect);
 
+  void GetEdgePaperMarginCoord(nsIPref* aPref, char* aPrefName, nscoord& aCoord);
+  void GetEdgePaperMargin(nsIPref* aPref, nsMargin& aMargin);
+
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 
