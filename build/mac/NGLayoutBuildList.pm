@@ -463,6 +463,10 @@ sub BuildLayoutProjects()
 	MakeAlias(":mozilla:network:macbuild:NetworkModular$D.shlb",						"$dist_dir");
 	$main::DEBUG ? MakeAlias(":mozilla:network:macbuild:NetworkModular$D.shlb",			"$dist_dir") : 0;
 
+	#// waterson: depends on NetworkModular and base. IMO we should move these to "common" projects
+	BuildProject(":mozilla:rdf:macbuild:rdf.mcp",										"rdf$D.shlb");
+	MakeAlias(":mozilla:rdf:macbuild:rdf$D.shlb",										"$dist_dir");
+	
 	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",							"htmlparser$D.shlb");
 	MakeAlias(":mozilla:htmlparser:macbuild:htmlparser$D.shlb",							"$dist_dir");
 	
