@@ -81,11 +81,14 @@ nsresult
 nsPopupWindowManager::Init()
 {
   mOS = do_GetService("@mozilla.org/observer-service;1");
+  // we bypass the permission manager API's but it still owns the underlying
+  // list--we need to let it do the initializing to avoid conflict.
+  mPermManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs)
     prefs->GetBranch("", getter_AddRefs(mPopupPrefBranch));
 
-  if (mOS && mPopupPrefBranch) {
+  if (mOS && mPermManager && mPopupPrefBranch) {
      // initialize our local copy of the pref
     Observe(NS_STATIC_CAST(nsIPopupWindowManager *, this),
             sPrefChangedTopic, NS_LITERAL_STRING(POPUP_PREF).get());
@@ -117,6 +120,10 @@ NS_IMETHODIMP
 nsPopupWindowManager::Add(nsIURI *aURI, PRBool aPermit)
 {
   NS_ENSURE_ARG_POINTER(aURI);
+  if (!mPermManager)
+    // if we couldn't initialize the permission manager Permission_AddHost()
+    // will create a new list that could stomp an existing cookperm.txt
+    return NS_ERROR_FAILURE;
 
   nsCAutoString uri;
   aURI->GetHostPort(uri);
@@ -302,6 +309,7 @@ void
 nsPopupWindowManager::DeInitialize()
 {
   mOS = 0;
+  mPermManager = 0;
   mPopupPrefBranch = 0;
 }
 
