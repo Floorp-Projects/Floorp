@@ -55,6 +55,7 @@
 #include "HelperAppDlg.h"
 #include "WindowCreator.h"
 
+#include "nsNetUtil.h"
 #include "nsCWebBrowser.h"
 #include "nsILocalFile.h"
 #include "nsIWebBrowserPersist.h"
@@ -118,14 +119,16 @@ protected:
     nsCOMPtr<nsILocalFile> mUserProfileDir;
 };
 
-// Prefs
+// Default page in design mode. The data protocol may or may not be supported
+// so the scheme is checked before the page is loaded.
 
-static OLECHAR *kDesignModeURL =
+static const char kDesignModeScheme[] = "data";
+static const OLECHAR kDesignModeURL[] =
     L"data:text/html,<html><body bgcolor=\"#00FF00\"><p>Mozilla Control</p></body></html>";
 
 // Registry keys and values
 
-static const TCHAR *kBrowserHelperObjectRegKey =
+static const TCHAR kBrowserHelperObjectRegKey[] =
     _T("Software\\Mozilla\\ActiveX Control\\Browser Helper Objects");
 
 
@@ -424,7 +427,22 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     {
         if (!bUserMode)
         {
-            Navigate(const_cast<BSTR>(kDesignModeURL), NULL, NULL, NULL, NULL);
+            // Load a page in design mode if the specified page is supported
+            nsCOMPtr<nsIIOService> ios = do_GetIOService();
+            if (ios)
+            {
+                // Ensure design page can be loaded by checking for a
+                // registered protocol handler that supports the scheme
+                nsCOMPtr<nsIProtocolHandler> ph;
+                nsCAutoString phScheme;
+                ios->GetProtocolHandler(kDesignModeScheme, getter_AddRefs(ph));
+                if (ph &&
+                    NS_SUCCEEDED(ph->GetScheme(phScheme)) &&
+                    phScheme.EqualsIgnoreCase(kDesignModeScheme))
+                {
+                    Navigate(const_cast<BSTR>(kDesignModeURL), NULL, NULL, NULL, NULL);
+                }
+            }
         }
     }
 
