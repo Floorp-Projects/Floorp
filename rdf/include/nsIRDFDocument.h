@@ -59,9 +59,24 @@ public:
    */
   NS_IMETHOD CreateChildren(nsIRDFContent* element) = 0;
 
-  // XXX these should probably be strings so you can mess with them
-  // via the DOM.
+  // XXX the following two methods should probably accept strings as
+  // parameters so you can mess with them via JS. Also, should they
+  // take a "notify" parameter that would control whether any viewers
+  // of the content model should be informed that the content model is
+  // invalid?
+
+  /**
+   * Add a property to the set of "tree properties" that the document
+   * should use when constructing the content model from the RDF
+   * graph.
+   */
   NS_IMETHOD AddTreeProperty(nsIRDFNode* resource) = 0;
+
+  /**
+   * Remove a property from the set of "tree properties" that the
+   * document should use when constructing the content model from the
+   * RDF graph.
+   */
   NS_IMETHOD RemoveTreeProperty(nsIRDFNode* resource) = 0;
 };
 
