@@ -498,9 +498,7 @@ function ctrlNumberTabSelection(event)
     return;
 
   var index = event.charCode - 49;
-  if (index == -1)
-    index = 9;
-  if (index < 0 || index > 9)
+  if (index < 0 || index > 8)
     return;
 
   if (index >= gBrowser.mTabContainer.childNodes.length)
