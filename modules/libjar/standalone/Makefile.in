@@ -49,7 +49,7 @@ LIBRARY_NAME	= jar$(VERSION_NUMBER)_s
 REQUIRES	= xpcom \
 		  string \
 		  caps \
-		  $(ZLIB_REQUIRES) \
+		  zlib \
 		  $(NULL)
 
 #DEP_XPIDLSRCS	= $(MODULES_LIBJAR_XPIDLSRCS)
