@@ -4812,7 +4812,7 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
     rv = bundle->FormatStringFromID(IMAP_OTHER_USERS_FOLDER_TYPE_DESCRIPTION, params, 1, getter_Copies(folderTypeDesc));
   }
 
-  if (GetFolderACL()->GetIsFolderShared())
+  else if (GetFolderACL()->GetIsFolderShared())
   {
     folderTypeStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME;
     folderTypeDescStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_DESCRIPTION;
