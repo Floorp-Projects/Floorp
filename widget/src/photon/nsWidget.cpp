@@ -2651,7 +2651,7 @@ void nsWidget::EnableDamage( PtWidget_t *widget, PRBool enable )
   }
 }
 
-#if defined(DEBUG)
+//#if defined(DEBUG)
 /**************************************************************/
 /* This was stolen from widget/src/xpwidgets/nsBaseWidget.cpp */
 nsAutoString nsWidget::GuiEventToString(nsGUIEvent * aGuiEvent)
@@ -2774,4 +2774,4 @@ case _value: eventName = _name ; break
   
   return nsAutoString(eventName);
 }
-#endif
+//#endif

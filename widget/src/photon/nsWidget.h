@@ -181,10 +181,10 @@ protected:
                         nsWidgetInitData *aInitData,
                         nsNativeWidget aNativeParent = nsnull);
 
-#if defined(DEBUG)
+//#if defined(DEBUG)
   static nsAutoString GuiEventToString(nsGUIEvent * aGuiEvent);
   static nsAutoString PhotonEventToString(PhEvent_t * aPhEvent);
-#endif
+//#endif
 
   PRBool DispatchWindowEvent(nsGUIEvent* event);
 
