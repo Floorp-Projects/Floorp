@@ -1,2 +1,4 @@
 nsAutoLock.h
 plevent.h
+nsProcess.h
+
