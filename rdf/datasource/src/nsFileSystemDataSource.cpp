@@ -850,19 +850,9 @@ GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */)
 		const char		*childURL = fileURL.GetAsString();
 		if (childURL != nsnull)
 		{
-			nsAutoString	pathname(childURL);
-			if (nativeSpec.IsDirectory())
-			{
-				pathname += "/";
-			}
-			char		*filename = pathname.ToNewCString();
-			if (filename)
-			{
-				nsIRDFResource	*file;
-				gRDFService->GetResource(filename, (nsIRDFResource **)&file);
-				nameArray->AppendElement(file);
-				delete []filename;
-			}
+			nsIRDFResource	*file;
+			gRDFService->GetResource(childURL, (nsIRDFResource **)&file);
+			nameArray->AppendElement(file);
 		}
 	}
 	return(NS_OK);
