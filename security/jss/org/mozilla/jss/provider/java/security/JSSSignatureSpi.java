@@ -32,24 +32,10 @@
  */
 package org.mozilla.jss.provider.java.security;
 
-/*
-import java.security.SecureRandom;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.NoSuchProviderException;
-import java.security.InvalidKeySpecException;
-*/
 import org.mozilla.jss.crypto.PrivateKey;
 import java.security.*;
 import java.security.spec.*;
 import org.mozilla.jss.crypto.*;
-/*
-import java.security.SignatureException;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidParameterException;
-*/
 
 class JSSSignatureSpi extends java.security.SignatureSpi {
 
@@ -113,15 +99,15 @@ class JSSSignatureSpi extends java.security.SignatureSpi {
 
             // convert the public key into a JSS public key if necessary
             if( ! (publicKey instanceof org.mozilla.jss.pkcs11.PK11PubKey) ) {
-                KeyFactory fact = KeyFactory.getInstance(
-                    publicKey.getAlgorithm(), "Mozilla-JSS");
                 if( ! publicKey.getFormat().equalsIgnoreCase("X.509") ) {
-                    throw new NoSuchAlgorithmException(
+                    throw new InvalidKeyException(
                         "Unsupported public key format: " +
                         publicKey.getFormat());
                 }
                 X509EncodedKeySpec encodedKey =
                     new X509EncodedKeySpec(publicKey.getEncoded());
+                KeyFactory fact = KeyFactory.getInstance(
+                    publicKey.getAlgorithm(), "Mozilla-JSS");
                 publicKey = fact.generatePublic(encodedKey);
             }
 
