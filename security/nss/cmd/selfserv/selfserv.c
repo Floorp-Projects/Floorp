@@ -1411,6 +1411,7 @@ main(int argc, char **argv)
     PLOptState		*optstate;
     PLOptStatus          status;
     PRThread             *loggerThread;
+    PRBool               debugCache = PR_FALSE; /* bug 90518 */
 #ifdef LINUX  /* bug 119340 */
     struct sigaction     act;
 
@@ -1435,7 +1436,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-    	"2:3DL:M:RTc:d:f:hi:lmn:op:rt:vw:x");
+    	"2:3DL:M:RTc:d:f:hi:lmn:op:rt:vw:xy");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1494,6 +1495,8 @@ main(int argc, char **argv)
 	case 'w': passwd = strdup(optstate->value); break;
 
 	case 'x': useExportPolicy = PR_TRUE; break;
+
+	case 'y': debugCache = PR_TRUE; break;
 
 	default:
 	case '?':
@@ -1673,6 +1676,22 @@ main(int argc, char **argv)
     }
 
     VLOG(("selfserv: server_thread: exiting"));
+
+    {
+	int i;
+	for (i=0; i<kt_kea_size; i++) {
+	    if (cert[i]) {
+		CERT_DestroyCertificate(cert[i]);
+	    }
+	    if (privKey[i]) {
+		SECKEY_DestroyPrivateKey(privKey[i]);
+	    }
+	}
+    }
+
+    if (debugCache) {
+	nss_DumpCertificateCacheInfo();
+    }
 
     NSS_Shutdown();
     PR_Cleanup();
