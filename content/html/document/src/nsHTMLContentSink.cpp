@@ -432,6 +432,122 @@ AddAttributes(const nsIParserNode& aNode,
   return NS_OK;
 }
 
+static nsresult
+MakeContentObject(nsHTMLTag aNodeType,
+                  nsIAtom* aAtom,
+                  nsIFormManager* aForm,
+                  nsIWebShell* aWebShell,
+                  nsIHTMLContent** aResult)
+{
+  nsresult rv = NS_OK;
+  switch (aNodeType) {
+  case eHTMLTag_a:
+    rv = NS_NewHTMLAnchor(aResult, aAtom);
+    break;
+  case eHTMLTag_applet:
+    rv = NS_NewHTMLApplet(aResult, aAtom);
+    break;
+  case eHTMLTag_area:
+    rv = NS_NewHTMLArea(aResult, aAtom);
+    break;
+  case eHTMLTag_base:
+    rv = NS_NewHTMLBase(aResult, aAtom);
+    break;
+  case eHTMLTag_basefont:
+    rv = NS_NewHTMLBaseFont(aResult, aAtom);
+    break;
+  case eHTMLTag_body:
+    rv = NS_NewBodyPart(aResult, aAtom);
+    break;
+  case eHTMLTag_br:
+    rv = NS_NewHTMLBR(aResult, aAtom);
+    break;
+  case eHTMLTag_caption:
+    rv = NS_NewTableCaptionPart(aResult, aAtom);
+    break;
+  case eHTMLTag_col:
+    rv = NS_NewTableColPart(aResult, aAtom);
+    break;
+  case eHTMLTag_colgroup:
+    rv = NS_NewTableColGroupPart(aResult, aAtom);
+    break;
+  case eHTMLTag_embed:
+    rv = NS_NewHTMLEmbed(aResult, aAtom);
+    break;
+//    case eHTMLTag_form:
+//      rv = NS_NewHTMLForm(aResult, aAtom);
+//      break;
+  case eHTMLTag_frame:
+    rv = NS_NewHTMLFrame(aResult, aAtom, aWebShell);
+    break;
+  case eHTMLTag_frameset:
+    rv = NS_NewHTMLFrameset(aResult, aAtom, aWebShell);
+    break;
+  case eHTMLTag_hr:
+    rv = NS_NewHTMLHR(aResult, aAtom);
+    break;
+  case eHTMLTag_iframe:
+    rv = NS_NewHTMLIFrame(aResult, aAtom, aWebShell);
+    break;
+  case eHTMLTag_input:
+    rv = NS_NewHTMLInput(aResult, aAtom);
+    break;
+  case eHTMLTag_link:
+    rv = NS_NewHTMLLink(aResult, aAtom);
+    break;
+  case eHTMLTag_meta:
+    rv = NS_NewHTMLMeta(aResult, aAtom);
+    break;
+  case eHTMLTag_object:
+    rv = NS_NewHTMLObject(aResult, aAtom);
+    break;
+  case eHTMLTag_option:
+    rv = NS_NewHTMLOption(aResult, aAtom);
+    break;
+  case eHTMLTag_param:
+    rv = NS_NewHTMLParam(aResult, aAtom);
+    break;
+  case eHTMLTag_script:
+    rv = NS_NewHTMLScript(aResult, aAtom);
+    break;
+  case eHTMLTag_select:
+    rv = NS_NewHTMLSelect(aResult, aAtom, aForm);
+    break;
+  case eHTMLTag_spacer:
+    rv = NS_NewHTMLSpacer(aResult, aAtom);
+    break;
+  case eHTMLTag_style:
+    rv = NS_NewHTMLStyle(aResult, aAtom);
+    break;
+  case eHTMLTag_table:
+    rv = NS_NewTablePart(aResult, aAtom);
+    break;
+  case eHTMLTag_tbody:
+  case eHTMLTag_thead:
+  case eHTMLTag_tfoot:
+    rv = NS_NewTableRowGroupPart(aResult, aAtom);
+    break;
+  case eHTMLTag_td:
+  case eHTMLTag_th:
+    rv = NS_NewTableCellPart(aResult, aAtom);
+    break;
+  case eHTMLTag_tr:
+    rv = NS_NewTableRowPart(aResult, aAtom);
+    break;
+  case eHTMLTag_wbr:
+    rv = NS_NewHTMLWordBreak(aResult, aAtom);
+    break;
+  default:
+    rv = NS_NewHTMLContainer(aResult, aAtom);
+    break;
+
+  case eHTMLTag_title:
+    NS_NOTREACHED("illegal MakeContentObject call");
+    break;
+  }
+  return rv;
+}
+
 /**
  * Factory subroutine to create all of the html content objects.
  */
@@ -442,7 +558,7 @@ CreateContentObject(const nsIParserNode& aNode,
                     nsIWebShell* aWebShell,
                     nsIHTMLContent** aResult)
 {
-  // Find/create auto for the tag name
+  // Find/create atom for the tag name
   nsAutoString tmp;
   if (eHTMLTag_userdefined == aNodeType) {
     tmp.Append(aNode.GetText());
@@ -456,48 +572,14 @@ CreateContentObject(const nsIParserNode& aNode,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Create content object for the given tag
-  nsresult rv = NS_OK;
+  // Make the content object
+  nsresult rv;
+
+  // XXX right now this code is here because we need aNode to create
+  // images, textareas and input form elements. As soon as all of the
+  // generic content code is in use, it can be moved up into
+  // MakeContentObject
   switch (aNodeType) {
-  case eHTMLTag_a:
-    rv = NS_NewHTMLAnchor(aResult, atom);
-    break;
-  case eHTMLTag_applet:
-    rv = NS_NewHTMLApplet(aResult, atom);
-    break;
-  case eHTMLTag_body:
-    rv = NS_NewBodyPart(aResult, atom);
-    break;
-  case eHTMLTag_br:
-    rv = NS_NewHTMLBR(aResult, atom);
-    break;
-  case eHTMLTag_caption:
-    rv = NS_NewTableCaptionPart(aResult, atom);
-    break;
-  case eHTMLTag_col:
-    rv = NS_NewTableColPart(aResult, atom);
-    break;
-  case eHTMLTag_colgroup:
-    rv = NS_NewTableColGroupPart(aResult, atom);
-    break;
-  case eHTMLTag_embed:
-    rv = NS_NewHTMLEmbed(aResult, atom);
-    break;
-//    case eHTMLTag_form:
-//      rv = NS_NewHTMLForm(aResult, atom);
-//      break;
-  case eHTMLTag_frame:
-    rv = NS_NewHTMLFrame(aResult, atom, aWebShell);
-    break;
-  case eHTMLTag_frameset:
-    rv = NS_NewHTMLFrameset(aResult, atom, aWebShell);
-    break;
-  case eHTMLTag_hr:
-    rv = NS_NewHTMLHR(aResult, atom);
-    break;
-  case eHTMLTag_iframe:
-    rv = NS_NewHTMLIFrame(aResult, atom, aWebShell);
-    break;
   case eHTMLTag_img:
 #ifdef XXX_ART_HACK
     {
@@ -553,106 +635,90 @@ CreateContentObject(const nsIParserNode& aNode,
 #endif /* XXX */
     break;
   case eHTMLTag_input:
-  {
-    nsAutoString val;
-    if (FindAttribute(aNode, "type", val)) {
-      if (val.EqualsIgnoreCase("submit")) {
-        rv = NS_NewHTMLInputSubmit(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("reset")) {
-        rv = NS_NewHTMLInputReset(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("button")) {
-        rv = NS_NewHTMLInputButton(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("checkbox")) {
-        rv = NS_NewHTMLInputCheckbox(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("file")) {
-        rv = NS_NewHTMLInputFile(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("hidden")) {
-        rv = NS_NewHTMLInputHidden(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("image")) {
-        rv = NS_NewHTMLInputImage(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("password")) {
-        rv = NS_NewHTMLInputPassword(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("radio")) {
-        rv = NS_NewHTMLInputRadio(aResult, atom, aForm);
-      }
-      else if (val.EqualsIgnoreCase("text")) {
-        rv = NS_NewHTMLInputText(aResult, atom, aForm);
+    {
+      nsAutoString val;
+      if (FindAttribute(aNode, "type", val)) {
+        if (val.EqualsIgnoreCase("submit")) {
+          rv = NS_NewHTMLInputSubmit(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("reset")) {
+          rv = NS_NewHTMLInputReset(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("button")) {
+          rv = NS_NewHTMLInputButton(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("checkbox")) {
+          rv = NS_NewHTMLInputCheckbox(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("file")) {
+          rv = NS_NewHTMLInputFile(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("hidden")) {
+          rv = NS_NewHTMLInputHidden(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("image")) {
+          rv = NS_NewHTMLInputImage(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("password")) {
+          rv = NS_NewHTMLInputPassword(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("radio")) {
+          rv = NS_NewHTMLInputRadio(aResult, atom, aForm);
+        }
+        else if (val.EqualsIgnoreCase("text")) {
+          rv = NS_NewHTMLInputText(aResult, atom, aForm);
+        }
+        else {
+          rv = NS_NewHTMLInputText(aResult, atom, aForm);
+        }
       }
       else {
         rv = NS_NewHTMLInputText(aResult, atom, aForm);
       }
     }
-    else {
-      rv = NS_NewHTMLInputText(aResult, atom, aForm);
-    }
-  }
-  break;
-  case eHTMLTag_meta:
-    rv = NS_NewHTMLMeta(aResult, atom);
-    break;
-  case eHTMLTag_object:
-    rv = NS_NewHTMLObject(aResult, atom);
-    break;
-  case eHTMLTag_option:
-    rv = NS_NewHTMLOption(aResult, atom);
-    break;
-  case eHTMLTag_select:
-    rv = NS_NewHTMLSelect(aResult, atom, aForm);
-    break;
-  case eHTMLTag_spacer:
-    rv = NS_NewHTMLSpacer(aResult, atom);
-    break;
-  case eHTMLTag_table:
-    rv = NS_NewTablePart(aResult, atom);
-    break;
-  case eHTMLTag_tbody:
-  case eHTMLTag_thead:
-  case eHTMLTag_tfoot:
-    rv = NS_NewTableRowGroupPart(aResult, atom);
-    break;
-  case eHTMLTag_td:
-  case eHTMLTag_th:
-    rv = NS_NewTableCellPart(aResult, atom);
     break;
   case eHTMLTag_textarea:
-  {
-    const nsString& content = aNode.GetSkippedContent();
-    nsresult rv = NS_NewHTMLTextArea(aResult, atom, aForm);
-    if (NS_OK == rv) {
-      // If the text area has some content, give it to it now
-      if (content.Length() > 0) {
-        nsIFormControl* ctrl;
-        rv = (*aResult)->QueryInterface(kIFormControlIID, (void **)&ctrl);
-        if (NS_OK == rv) {
-          ctrl->SetContent(content);
-          NS_RELEASE(ctrl);
+    {
+      const nsString& content = aNode.GetSkippedContent();
+      nsresult rv = NS_NewHTMLTextArea(aResult, atom, aForm);
+      if (NS_OK == rv) {
+        // If the text area has some content, give it to it now
+        if (content.Length() > 0) {
+          nsIFormControl* ctrl;
+          rv = (*aResult)->QueryInterface(kIFormControlIID, (void **)&ctrl);
+          if (NS_OK == rv) {
+            ctrl->SetContent(content);
+            NS_RELEASE(ctrl);
+          }
         }
       }
     }
-  }
-  break;
-  case eHTMLTag_tr:
-    rv = NS_NewTableRowPart(aResult, atom);
-    break;
-  case eHTMLTag_wbr:
-    rv = NS_NewHTMLWordBreak(aResult, atom);
     break;
   default:
-    rv = NS_NewHTMLContainer(aResult, atom);
-    break;
-
-  case eHTMLTag_title:
-    NS_NOTREACHED("illegal CreateContentObject call");
+    rv = MakeContentObject(aNodeType, atom, aForm, aWebShell, aResult);
     break;
   }
+  NS_RELEASE(atom);
+
+  return rv;
+}
+
+nsresult
+NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
+{
+  // Find tag in tag table
+  nsAutoString tmp(aTag);
+  tmp.ToUpperCase();
+  char cbuf[20];
+  tmp.ToCString(cbuf, sizeof(cbuf));
+  nsHTMLTag id = NS_TagToEnum(cbuf);
+  if (eHTMLTag_userdefined == id) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Create atom for tag and then create content object
+  nsIAtom* atom = NS_NewAtom(tmp);
+  nsresult rv = MakeContentObject(id, atom, nsnull, nsnull, aResult);
   NS_RELEASE(atom);
 
   return rv;
