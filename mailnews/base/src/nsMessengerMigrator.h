@@ -94,7 +94,7 @@ private:
   nsresult SetNewsCopiesAndFolders(nsIMsgIdentity *identity);
    
   nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort);
+  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort, PRBool isDefaultAccount);
   
   nsresult MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostAndPort);
   

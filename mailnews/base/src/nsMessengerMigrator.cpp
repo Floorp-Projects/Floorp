@@ -1189,6 +1189,10 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   // pass the server so the send later uri pref 
   // will be something like "mailbox://sspitzer@movemail/Unsent Messages"
   rv = SetSendLaterUriPref(server);
+  if (NS_FAILED(rv)) return rv;
+
+  // we could only have one movemail account in 4.x, so we make it the default in 5.0
+  rv = accountManager->SetDefaultAccount(account);
   return rv;
 }
 #endif /* HAVE_MOVEMAIL */
@@ -1317,6 +1321,10 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   // pass the pop server so the send later uri pref 
   // will be something like "mailbox://sspitzer@tintin/Unsent Messages"
   rv = SetSendLaterUriPref(server);
+  if (NS_FAILED(rv)) return rv;
+
+  // we could only have one pop account in 4.x, so we make it the default in 5.0
+  rv = accountManager->SetDefaultAccount(account);
   return rv;
 }
 nsresult 
@@ -1392,6 +1400,8 @@ nsMessengerMigrator::MigrateImapAccounts(nsIMsgIdentity *identity)
   char *token = nsnull;
   char *rest = NS_CONST_CAST(char*,(const char*)hostList);
   nsCAutoString str;
+
+  PRBool isDefaultAccount = PR_TRUE;
       
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) {
@@ -1400,12 +1410,15 @@ nsMessengerMigrator::MigrateImapAccounts(nsIMsgIdentity *identity)
     
     if (!str.IsEmpty()) {
       // str is the hostname
-      rv = MigrateImapAccount(identity,str);
+      rv = MigrateImapAccount(identity,str,isDefaultAccount);
       if  (NS_FAILED(rv)) {
         // failed to migrate.  bail.
         return rv;
       }
       str = "";
+      // the default imap server in 4.x was the first one in the list.
+      // so after we've seen the first one, the rest are not the default
+      isDefaultAccount = PR_FALSE;
     }
     token = nsCRT::strtok(rest, ",", &rest);
   }
@@ -1431,7 +1444,7 @@ nsMessengerMigrator::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
 }
 
 nsresult
-nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort)
+nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort, PRBool isDefaultAccount)
 {
   nsresult rv;  
 
@@ -1548,6 +1561,11 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     imapMailDir->CreateDir();
   }
   
+  if (isDefaultAccount) {
+    rv = accountManager->SetDefaultAccount(account);
+    if (NS_FAILED(rv)) return rv;
+  }
+
   return NS_OK;
 }
 
