@@ -31,6 +31,8 @@ pref("news.sort_by", 0);
 pref("browser.startup.license_accepted", "");
 pref("browser.cache.memory_cache_size", 3000);
 pref("browser.cache.disk_cache_size", 5000);
+pref("browser.ncols", 0);
+pref("browser.installcmap", false);
 pref("mail.directory", "~/nsmail/");
 pref("mail.imap.root_dir", "~/ns_imap/");
 pref("mail.signature_file", "~/.signature");
