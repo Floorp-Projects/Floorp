@@ -41,6 +41,9 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "simpleCID.h"
+#include <gdk/gdk.h>
+#include <gdk/gdkprivate.h>
+#include <gtk/gtk.h>
 
 /*------------------------------------------------------------------------------
  * Windows Includes
@@ -91,6 +94,7 @@ typedef struct _PlatformInstance
 typedef struct _PlatformInstance
 {
     Window 		window;
+    GtkWidget         *widget;
     Display *		display;
     uint32 		x, y;
     uint32 		width, height;
@@ -1049,7 +1053,8 @@ SimplePluginInstance::PlatformNew(void)
 nsresult
 SimplePluginInstance::PlatformDestroy(void)
 {
-	return NS_OK;
+    gtk_widget_destroy(fPlatform.widget);
+    return NS_OK;
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1061,6 +1066,18 @@ SimplePluginInstance::PlatformDestroy(void)
 nsresult
 SimplePluginInstance::PlatformSetWindow(nsPluginWindow* window)
 {
+    if (window == NULL || window->window == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    fPlatform.widget = (GtkWidget *)window->window;
+    GtkWidget *button;
+
+    button = gtk_button_new_with_label("Hello World");
+    gtk_layout_put(GTK_LAYOUT(fPlatform.widget), button, 0, 0);
+
+    gtk_widget_show(button);
+    gtk_widget_show(fPlatform.widget);
+
     return NS_OK;
 }
 
