@@ -162,7 +162,8 @@ protected:
             id == sControllers_id  ||
             id == sScrollX_id      ||
             id == sScrollY_id      ||
-            id == sLength_id);
+            id == sLength_id       ||
+            id == sFrames_id);
   }
 
   static inline PRBool IsWritableReplaceable(jsval id)
@@ -248,6 +249,7 @@ protected:
   static jsval sNavigator_id;
   static jsval sDocument_id;
   static jsval sWindow_id;
+  static jsval sFrames_id;
 
   static const JSClass *sObjectClass;
 

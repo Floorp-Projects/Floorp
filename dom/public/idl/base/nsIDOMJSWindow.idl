@@ -88,8 +88,9 @@ interface nsIDOMJSWindow : nsISupports
    * window itself (i.e. window.frames === window), but this doesn't
    * make sense from a generic API point of view so that's why this is
    * JS specific.
+   *
+   * This property is "replaceable" in JavaScript.
    */
-
   readonly attribute nsIDOMWindow             frames;
 
   /* Scriptable version of find(). See nsIDOMWindowInternal for the
