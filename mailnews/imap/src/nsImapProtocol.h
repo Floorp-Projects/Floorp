@@ -316,6 +316,8 @@ private:
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
     PRInt32				 m_connectionStatus;
+
+	PRBool			m_nextUrlReadyToRun;
     nsCOMPtr<nsIMsgIncomingServer>  m_server;
 
     nsCOMPtr<nsIImapLog>			m_imapLog;

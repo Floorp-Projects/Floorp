@@ -196,7 +196,7 @@ nsImapProtocol::nsImapProtocol() :
 	m_active = PR_FALSE;
 	m_threadShouldDie = PR_FALSE;
 	m_pseudoInterrupted = PR_FALSE;
-
+	m_nextUrlReadyToRun = PR_FALSE;
     m_trackingTime = PR_FALSE;
     LL_I2L(m_startTime, 0);
     LL_I2L(m_endTime, 0);
@@ -267,7 +267,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 		SetFlag(IMAP_FIRST_PASS_IN_THREAD);
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-                                   PR_UNJOINABLE_THREAD, 0);
+                                   PR_JOINABLE_THREAD, 0);
         NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
     }
 	return NS_OK;
@@ -658,6 +658,7 @@ nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
 void
 nsImapProtocol::ImapThreadMainLoop()
 {
+	PRIntervalTime sleepTime = kImapSleepTime;
     // ****** please implement PR_LOG 'ing ******
     while (ImapThreadIsRunning() && !DeathSignalReceived())
     {
@@ -673,9 +674,12 @@ nsImapProtocol::ImapThreadMainLoop()
 
         PR_EnterMonitor(m_urlReadyToRunMonitor);
 
-        PR_Wait(m_urlReadyToRunMonitor, PR_INTERVAL_NO_TIMEOUT);
+        PR_Wait(m_urlReadyToRunMonitor, sleepTime);
 
-        ProcessCurrentURL();
+		if (m_nextUrlReadyToRun && m_runningUrl)
+			ProcessCurrentURL();
+
+		m_nextUrlReadyToRun = PR_FALSE;
 
         PR_ExitMonitor(m_urlReadyToRunMonitor);
     }
@@ -847,15 +851,23 @@ void nsImapProtocol::ProcessCurrentURL()
 
     if (!DeathSignalReceived() && (GetConnectionStatus() >= 0))
     {
-		FindMailboxesIfNecessary();
+		if (m_runningUrl)
+			FindMailboxesIfNecessary();
 		nsIImapUrl::nsImapState imapState;
 		if (m_runningUrl)
 			m_runningUrl->GetRequiredImapState(&imapState);
 		if (imapState == nsIImapUrl::nsImapAuthenticatedState)
 			ProcessAuthenticatedStateURL();
-	    else    // must be a url that requires us to be in the selected stae 
+	    else   // must be a url that requires us to be in the selected stae 
 			ProcessSelectedStateURL();
 
+#ifdef DEBUG_bienvenu1
+		nsresult rv;
+		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
+		if (NS_SUCCEEDED(rv))
+			aImapServer->RemoveConnection(this);
+        TellThreadToDie(PR_TRUE);
+#endif
 		// The URL has now been processed
         if (!logonFailed && GetConnectionStatus() < 0)
             HandleCurrentUrlError();
@@ -1065,6 +1077,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
 			// We now have a url to run so signal the monitor for url ready to be processed...
 			PR_EnterMonitor(m_urlReadyToRunMonitor);
+			m_nextUrlReadyToRun = PR_TRUE;
 			PR_Notify(m_urlReadyToRunMonitor);
 			PR_ExitMonitor(m_urlReadyToRunMonitor);
 
@@ -2686,6 +2699,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 	}
 	if (DeathSignalReceived())
 		GetServerStateParser().ResetFlagInfo(0);
+	PR_FREEIF(new_spec);
 }
 
 void nsImapProtocol::UpdatedMailboxSpec(mailbox_spec *aSpec)
