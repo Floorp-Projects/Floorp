@@ -18,6 +18,8 @@
 
 #include "msgCore.h"
 
+#include "nsString2.h"
+
 #include "nsIImapIncomingServer.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsImapIncomingServer.h"
@@ -45,6 +47,7 @@ public:
 	NS_IMETHOD GetRootFolderPath(char **);
 	NS_IMETHOD SetRootFolderPath(char *);
 	NS_IMETHOD SetKey(char * aKey);  // override nsMsgIncomingServer's implementation...
+	NS_IMETHOD GetServerURI(char * *aServerURI);
 
 private:
 	char *m_rootFolderPath;
@@ -93,6 +96,26 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomi
 
 	return rv;
 }
+
+NS_IMETHODIMP nsImapIncomingServer::GetServerURI(char ** aServerURI)
+{
+	nsresult rv = NS_OK;
+	nsString2 serverUri("imap://", eOneByte);
+	char * hostName = nsnull;
+	rv = GetHostName(&hostName);
+	if (NS_FAILED(rv))
+		return rv;
+
+	serverUri += hostName;
+	if (aServerURI)
+		*aServerURI = PL_strdup(serverUri.GetBuffer());
+
+
+	PR_FREEIF(hostName);
+
+	return rv;
+}
+
 
 nsresult NS_NewImapIncomingServer(const nsIID& iid,
                                   void **result)
