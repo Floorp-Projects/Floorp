@@ -71,7 +71,7 @@ our $webdotdir = "$datadir/webdot";
 %Bugzilla::Config::EXPORT_TAGS =
   (
    admin => [qw(GetParamList UpdateParams SetParam WriteParams)],
-   db => [qw($db_host $db_port $db_name $db_user $db_pass $db_sock)],
+   db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
    locations => [qw($libpath $localconfig $datadir $templatedir $webdotdir)],
   );
 Exporter::export_ok_tags('admin', 'db', 'locations');

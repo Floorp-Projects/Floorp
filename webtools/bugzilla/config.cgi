@@ -83,7 +83,7 @@ $vars->{'open_status'} = \@open_status;
 $vars->{'closed_status'} = \@closed_status;
 
 # Generate a list of fields that can be queried.
-$vars->{'field'} = [Bugzilla::DB::GetFieldDefs()];
+$vars->{'field'} = [Bugzilla->dbh->bz_get_field_defs()];
 
 # Determine how the user would like to receive the output; 
 # default is JavaScript.

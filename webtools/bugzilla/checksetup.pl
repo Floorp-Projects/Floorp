@@ -101,6 +101,7 @@
 # The format of that file is....
 #
 # $answer{'db_host'} = '$db_host = "localhost";
+# $db_driver = "mydbdriver";
 # $db_port = 3306;
 # $db_name = "mydbname";
 # $db_user = "mydbuser";';
@@ -644,6 +645,14 @@ END
 
 
 
+LocalVar('db_driver', '
+#
+# What SQL database to use. Default is mysql. List of supported databases
+# can be obtained by listing Bugzilla/DB directory - every module corresponds
+# to one supported database and the name corresponds to a driver name.
+#
+$db_driver = "mysql";
+');
 LocalVar('db_host', '
 #
 # How to access the SQL database:
@@ -793,6 +802,7 @@ if ($newstuff ne "") {
 # Note that we won't need to do this in globals.pl because globals.pl couldn't
 # care less whether they were defined ahead of time or not. 
 my $my_db_check = ${*{$main::{'db_check'}}{SCALAR}};
+my $my_db_driver = ${*{$main::{'db_driver'}}{SCALAR}};
 my $my_db_host = ${*{$main::{'db_host'}}{SCALAR}};
 my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
@@ -1505,11 +1515,6 @@ $::ENV{'PATH'} = $origPath;
 # Check if we have access to --MYSQL--
 #
 
-# This settings are not yet changeable, because other code depends on
-# the fact that we use MySQL and not, say, PostgreSQL.
-
-my $db_base = 'mysql';
-
 # No need to "use" this here.  It should already be loaded from the
 # version-checking routines above, and this file won't even compile if
 # DBI isn't installed so the user gets nasty errors instead of our
@@ -1522,15 +1527,15 @@ if ($my_db_check) {
     my $sql_want = "3.23.41";  # minimum version of MySQL
 
 # original DSN line was:
-#    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";
+#    my $dsn = "DBI:$my_db_driver:$my_db_name;$my_db_host;$my_db_port";
 # removed the $db_name because we don't know it exists yet, and this will fail
 # if we request it here and it doesn't. - justdave@syndicomm.com 2000/09/16
-    my $dsn = "DBI:$db_base:;$my_db_host;$my_db_port";
+    my $dsn = "DBI:$my_db_driver:;$my_db_host;$my_db_port";
     if ($my_db_sock ne "") {
         $dsn .= ";mysql_socket=$my_db_sock";
     }
     my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass)
-      or die "Can't connect to the $db_base database. Is the database " .
+      or die "Can't connect to the $my_db_driver database. Is the database " .
         "installed and\nup and running?  Do you have the correct username " .
         "and password selected in\nlocalconfig?\n\n";
     printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)") unless $silent;
@@ -1581,14 +1586,14 @@ EOF
 }
 
 # now get a handle to the database:
-my $connectstring = "dbi:$db_base:$my_db_name:host=$my_db_host:port=$my_db_port";
+my $connectstring = "dbi:$my_db_driver:$my_db_name:host=$my_db_host:port=$my_db_port";
 if ($my_db_sock ne "") {
     $connectstring .= ";mysql_socket=$my_db_sock";
 }
 
 my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
     or die "Can't connect to the table '$connectstring'.\n",
-           "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$db_base'?\n";
+           "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$my_db_driver'?\n";
 
 END { $dbh->disconnect if $dbh }
 
@@ -2191,7 +2196,7 @@ while (my ($tabname, $fielddef) = each %table) {
     $fielddef =~ s/\$my_platforms/$my_platforms/;
 
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n) TYPE = MYISAM")
-        or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
+        or die "Could not create table '$tabname'. Please check your '$my_db_driver' access.\n";
 }
 
 ###########################################################################

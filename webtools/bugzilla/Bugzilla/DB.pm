@@ -22,6 +22,7 @@
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Tomas Kopal <Tomas.Kopal@altap.cz>
 
 package Bugzilla::DB;
 
@@ -29,7 +30,11 @@ use strict;
 
 use DBI;
 
-use base qw(Exporter);
+# Inherit the DB class from DBI::db and Exporter
+# Note that we inherit from Exporter just to allow the old, deprecated
+# interface to work. If it gets removed, the Exporter class can be removed
+# from this list.
+use base qw(Exporter DBI::db);
 
 %Bugzilla::DB::EXPORT_TAGS =
   (
@@ -42,6 +47,7 @@ Exporter::export_ok_tags('deprecated');
 
 use Bugzilla::Config qw(:DEFAULT :db);
 use Bugzilla::Util;
+use Bugzilla::Error;
 
 # All this code is backwards compat fu. As such, its a bit ugly. Note the
 # circular dependencies on Bugzilla.pm
@@ -122,43 +128,29 @@ sub PopGlobalSQLState() {
 sub connect_shadow {
     die "Tried to connect to non-existent shadowdb" unless Param('shadowdb');
 
-    my $dsn = "DBI:mysql:host=" . Param("shadowdbhost") .
-      ";database=" . Param('shadowdb') . ";port=" . Param("shadowdbport");
-
-    $dsn .= ";mysql_socket=" . Param("shadowdbsock") if Param('shadowdbsock');
-
-    return _connect($dsn);
+    return _connect($db_driver, Param("shadowdbhost"),
+                    Param('shadowdb'), Param("shadowdbport"),
+                    Param("shadowdbsock"), $db_user, $db_pass);
 }
 
 sub connect_main {
-    my $dsn = "DBI:mysql:host=$db_host;database=$db_name;port=$db_port";
-
-    $dsn .= ";mysql_socket=$db_sock" if $db_sock;
-
-    return _connect($dsn);
+    return _connect($db_driver, $db_host, $db_name, $db_port,
+                    $db_sock, $db_user, $db_pass);
 }
 
 sub _connect {
-    my ($dsn) = @_;
+    my ($driver, $host, $dbname, $port, $sock, $user, $pass) = @_;
 
-    # connect using our known info to the specified db
-    # Apache::DBI will cache this when using mod_perl
-    my $dbh = DBI->connect($dsn,
-                           '',
-                           '',
-                           { RaiseError => 1,
-                             PrintError => 0,
-                             Username => $db_user,
-                             Password => $db_pass,
-                             ShowErrorStatement => 1,
-                             HandleError => \&_handle_error,
-                             TaintIn => 1,
-                             FetchHashKeyName => 'NAME',  
-                             # Note: NAME_lc causes crash on ActiveState Perl
-                             # 5.8.4 (see Bug 253696)
-                             # XXX - This will likely cause problems in DB
-                             # back ends that twiddle column case (Oracle?)
-                           });
+    # DB specific module have the same name as DB driver, here we
+    # just make sure we are not case sensitive
+    (my $db_module = $driver) =~ s/(\w+)/\u\L$1/g;
+    my $pkg_module = "Bugzilla::DB::" . $db_module;
+
+    # do the actual import
+    eval ("require $pkg_module") || die ($@);
+
+    # instantiate the correct DB specific module
+    my $dbh = $pkg_module->new($user, $pass, $host, $dbname, $port, $sock);
 
     return $dbh;
 }
@@ -173,6 +165,39 @@ sub _handle_error {
     return 0; # Now let DBI handle raising the error
 }
 
+# List of abstract methods we are checking the derived class implements
+our @_abstract_methods = qw(new sql_regexp sql_not_regexp sql_limit
+                            sql_to_days sql_date_format sql_interval
+                            bz_lock_tables bz_unlock_tables);
+
+# This overriden import method will check implementation of inherited classes
+# for missing implementation of abstract methods
+# See http://perlmonks.thepen.com/44265.html
+sub import {
+    my $pkg = shift;
+
+    # do not check this module
+    if ($pkg ne __PACKAGE__) {
+        # make sure all abstract methods are implemented
+        foreach my $meth (@_abstract_methods) {
+            $pkg->can($meth)
+                or croak("Class $pkg does not define method $meth");
+        }
+    }
+
+    # Now we want to call our superclass implementation.
+    # If our superclass is Exporter, which is using caller() to find
+    # a namespace to populate, we need to adjust for this extra call.
+    # All this can go when we stop using deprecated functions.
+    my $is_exporter = $pkg->isa('Exporter');
+    $Exporter::ExportLevel++ if $is_exporter;
+    $pkg->SUPER::import(@_);
+    $Exporter::ExportLevel-- if $is_exporter;
+}
+
+# note that when multiple databases are supported, version number does not
+# make sense anymore (as it is DB dependant). This needs to be removed in
+# the future and places where it's used fixed.
 my $cached_server_version;
 sub server_version {
     return $cached_server_version if defined($cached_server_version);
@@ -183,8 +208,8 @@ sub server_version {
     return $cached_server_version;
 }
 
-sub GetFieldDefs {
-    my $dbh = Bugzilla->dbh;
+sub bz_get_field_defs {
+    my ($self) = @_;
 
     my $extra = "";
     if (!&::UserInGroup(Param('timetrackinggroup'))) {
@@ -193,14 +218,90 @@ sub GetFieldDefs {
     }
 
     my @fields;
-    my $sth = $dbh->prepare("SELECT name, description
-                               FROM fielddefs $extra
-                           ORDER BY sortkey");
+    my $sth = $self->prepare("SELECT name, description
+                                FROM fielddefs $extra
+                            ORDER BY sortkey");
     $sth->execute();
     while (my $field_ref = $sth->fetchrow_hashref()) {
         push(@fields, $field_ref);
     }
     return(@fields);
+}
+
+sub bz_last_key {
+    my ($self, $table, $column) = @_;
+
+    return $self->last_insert_id($db_name, undef, $table, $column);
+}
+
+sub bz_start_transaction {
+    my ($self) = @_;
+
+    if ($self->{private_bz_in_transaction}) {
+        carp("Can't start transaction within another transaction");
+        ThrowCodeError("nested_transaction");
+    } else {
+        # Turn AutoCommit off and start a new transaction
+        $self->begin_work();
+
+        $self->{privateprivate_bz_in_transaction} = 1;
+    }
+}
+
+sub bz_commit_transaction {
+    my ($self) = @_;
+
+    if (!$self->{private_bz_in_transaction}) {
+        carp("Can't commit without a transaction");
+        ThrowCodeError("not_in_transaction");
+    } else {
+        $self->commit();
+
+        $self->{private_bz_in_transaction} = 0;
+    }
+}
+
+sub bz_rollback_transaction {
+    my ($self) = @_;
+
+    if (!$self->{private_bz_in_transaction}) {
+        carp("Can't rollback without a transaction");
+        ThrowCodeError("not_in_transaction");
+    } else {
+        $self->rollback();
+
+        $self->{private_bz_in_transaction} = 0;
+    }
+}
+
+sub db_new {
+    my ($class, $dsn, $user, $pass, $attributes) = @_;
+
+    # set up default attributes used to connect to the database
+    # (if not defined by DB specific implementation)
+    $attributes = { RaiseError => 1,
+                    AutoCommit => 1,
+                    PrintError => 0,
+                    ShowErrorStatement => 1,
+                    HandleError => \&_handle_error,
+                    TaintIn => 1,
+                    FetchHashKeyName => 'NAME',  
+                    # Note: NAME_lc causes crash on ActiveState Perl
+                    # 5.8.4 (see Bug 253696)
+                    # XXX - This will likely cause problems in DB
+                    # back ends that twiddle column case (Oracle?)
+                  } if (!defined($attributes));
+
+    # connect using our known info to the specified db
+    # Apache::DBI will cache this when using mod_perl
+    my $self = DBI->connect($dsn, $user, $pass, $attributes);
+
+    # class variables
+    $self->{private_bz_in_transaction} = 0;
+
+    bless ($self, $class);
+
+    return $self;
 }
 
 1;
@@ -213,29 +314,39 @@ Bugzilla::DB - Database access routines, using L<DBI>
 
 =head1 SYNOPSIS
 
-  # Connection
-  my $dbh = Bugzilla::DB->connect_main;
-  my $shadow = Bugzilla::DB->connect_shadow;
+  # Obtain db handle
+  use Bugzilla::DB;
+  my $dbh = Bugzilla->dbh;
+
+  # prepare a query using DB methods
+  my $sth = $dbh->prepare("SELECT " .
+                          $dbh->sql_date_format("creation_ts", "%Y%m%d") .
+                          " FROM bugs WHERE bug_status != 'RESOLVED' " .
+                          $dbh->sql_limit(1));
+
+  # Execute the query
+  $sth->execute;
+  
+  # Get the results
+  my @result = $sth->fetchrow_array;
 
   # Schema Information
-  my @fields = Bugzilla::DB::GetFieldDefs();
-
-  # Deprecated
-  SendSQL("SELECT COUNT(*) FROM bugs");
-  my $cnt = FetchOneColumn();
+  my @fields = $dbh->bz_get_field_defs();
 
 =head1 DESCRIPTION
 
-This allows creation of a database handle to connect to the Bugzilla database.
-This should never be done directly; all users should use the L<Bugzilla> module
-to access the current C<dbh> instead.
+Functions in this module allows creation of a database handle to connect
+to the Bugzilla database. This should never be done directly; all users
+should use the L<Bugzilla> module to access the current C<dbh> instead.
+
+This module also contains methods extending the returned handle with
+functionality which is different between databases allowing for easy
+customization for particular database via inheritance. These methods
+should be always preffered over hard-coding SQL commands.
 
 Access to the old SendSQL-based database routines are also provided by
 importing the C<:deprecated> tag. These routines should not be used in new
 code.
-
-The only functions that should be used by modern, regular Bugzilla code
-are the "Schema Information" functions.
 
 =head1 CONNECTION
 
@@ -243,30 +354,209 @@ A new database handle to the required database can be created using this
 module. This is normally done by the L<Bugzilla> module, and so these routines
 should not be called from anywhere else.
 
+=head2 Functions
+
 =over 4
 
 =item C<connect_main>
 
-Connects to the main database, returning a new dbh.
+ Description: Function to connect to the main database, returning a new
+              database handle.
+ Params:      none
+ Returns:     new instance of the DB class
 
 =item C<connect_shadow>
 
-Connects to the shadow database, returning a new dbh. This routine C<die>s if
-no shadow database is configured.
+ Description: Function to connect to the shadow database, returning a new
+              database handle.
+              This routine C<die>s if no shadow database is configured.
+ Params:      none
+ Returns:     new instance of the DB class
+
+=item C<_connect>
+
+ Description: Internal function, creates and returns a new, connected
+              instance of the correct DB class.
+              This routine C<die>s if no driver is specified.
+ Params:      $driver = name of the database driver to use
+              $host = host running the database we are connecting to
+              $dbname = name of the database to connect to
+              $port = port the database is listening on
+              $sock = socket the database is listening on
+              $user = username used to log in to the database
+              $pass = password used to log in to the database
+ Returns:     new instance of the DB class
+
+=item C<_handle_error>
+
+ Description: Function passed to the DBI::connect call for error handling.
+              It shortens the error for printing.
+
+=item C<import>
+
+ Description: Overrides the standard import method to check that derived class
+              implements all required abstract methods. Also calls original
+              implementation in its super class.
 
 =back
 
-=head1 SCHEMA INFORMATION
+=head2 Methods
 
-Bugzilla::DB also contains routines to get schema information about the 
-database.
+Note: Methods which can be implemented generically for all DBs are implemented in
+this module. If needed, they can be overriden with DB specific code.
+Methods which do not have standard implementation are abstract and must
+be implemented for all supported databases separately.
+To avoid confusion with standard DBI methods, all methods returning string with
+formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 
 =over 4
 
-=item C<GetFieldDefs>
+=item C<new>
 
-Returns a list of all the "bug" fields in Bugzilla. The list contains 
-hashes, with a 'name' key and a 'description' key.
+ Description: Constructor
+              Abstract method, should be overriden by database specific code.
+ Params:      $user = username used to log in to the database
+              $pass = password used to log in to the database
+              $host = host running the database we are connecting to
+              $dbname = name of the database to connect to
+              $port = port the database is listening on
+              $sock = socket the database is listening on
+ Returns:     new instance of the DB class
+ Note:        The constructor should create a DSN from the parameters provided and
+              then call C<db_new()> method of its super class to create a new
+              class instance. See C<db_new> description in this module. As per
+              DBI documentation, all class variables must be prefixed with
+              "private_". See L<DBI>.
+
+=item C<sql_regexp>
+
+ Description: Outputs SQL regular expression operator for POSIX regex
+              searches in format suitable for a given database.
+              Abstract method, should be overriden by database specific code.
+ Params:      none
+ Returns:     formatted SQL for regular expression search (e.g. REGEXP)
+              (scalar)
+
+=item C<sql_not_regexp>
+
+ Description: Outputs SQL regular expression operator for negative POSIX
+              regex searches in format suitable for a given database.
+              Abstract method, should be overriden by database specific code.
+ Params:      none
+ Returns:     formatted SQL for negative regular expression search
+              (e.g. NOT REGEXP) (scalar)
+
+=item C<sql_limit>
+
+ Description: Returns SQL syntax for limiting results to some number of rows
+              with optional offset if not starting from the begining.
+              Abstract method, should be overriden by database specific code.
+ Params:      $limit = number of rows to return from query (scalar)
+              $offset = number of rows to skip prior counting (scalar)
+ Returns:     formatted SQL for limiting number of rows returned from query
+              with optional offset (e.g. LIMIT 1, 1) (scalar)
+
+=item C<sql_to_days>
+
+ Description: Outputs SQL syntax for converting date to Julian days.
+              Abstract method, should be overriden by database specific code.
+ Params:      $date = date to convert to days
+ Returns:     formatted SQL for returning date fields in Julian days. (scalar)
+
+=item C<sql_date_format>
+
+ Description: Outputs SQL syntax for formatting dates.
+              Abstract method, should be overriden by database specific code.
+ Params:      $date = date or name of date type column (scalar)
+              $format = format string for date output (scalar)
+              (%Y = year, four digits, %y = year, two digits, %m = month,
+               %d = day, %a = weekday name, 3 letters, %H = hour 00-23,
+               %i = minute, %s = second)
+ Returns:     formatted SQL for date formatting (scalar)
+
+=item C<sql_interval>
+
+ Description: Outputs proper SQL syntax for a time interval function.
+              Abstract method, should be overriden by database specific code.
+ Params:      $interval = the time interval requested (e.g. '30 minutes')
+              (scalar)
+ Returns:     formatted SQL for interval function (scalar)
+
+=item C<bz_lock_tables>
+
+ Description: Performs a table lock operation on specified tables.
+              If the underlying database supports transactions, it should also
+              implicitly start a new transaction.
+              Abstract method, should be overriden by database specific code.
+ Params:      @tables = list of names of tables to lock in MySQL
+              notation (ex. 'bugs AS bugs2 READ', 'logincookies WRITE')
+ Returns:     none
+
+=item C<bz_unlock_tables>
+
+ Description: Performs a table unlock operation
+              If the underlying database supports transactions, it should also
+              implicitly commit or rollback the transaction.
+              Also, this function should allow to be called with the abort flag
+              set even without locking tables first without raising an error
+              to simplify error handling.
+              Abstract method, should be overriden by database specific code.
+ Params:      $abort = true (1) if the operation on locked tables failed
+              (if transactions are supported, the action will be rolled
+              back). False (0) or no param if the operation succeeded.
+ Returns:     none
+
+=item C<bz_last_key>
+
+ Description: Returns the last serial number, usually from a previous INSERT.
+              Must be executed directly following the relevant INSERT.
+              This base implementation uses DBI->last_insert_id. If the
+              DBD supports it, it is the preffered way to obtain the last
+              serial index. If it is not supported, the DB specific code
+              needs to override it with DB specific code.
+ Params:      $table = name of table containing serial column (scalar)
+              $column = name of column containing serial data type (scalar)
+ Returns:     Last inserted ID (scalar)
+
+=item C<bz_get_field_defs>
+
+ Description: Returns a list of all the "bug" fields in Bugzilla. The list
+              contains hashes, with a 'name' key and a 'description' key.
+ Params:      none
+ Returns:     List of all the "bug" fields
+
+=item C<bz_start_transaction>
+
+ Description: Starts a transaction if supported by the database being used
+ Params:      none
+ Returns:     none
+
+=item C<bz_commit_transaction>
+
+ Description: Ends a transaction, commiting all changes, if supported by
+              the database being used
+ Params:      none
+ Returns:     none
+
+=item C<bz_rollback_transaction>
+
+ Description: Ends a transaction, rolling back all changes, if supported by
+              the database being used
+ Params:      none
+ Returns:     none
+
+=item C<db_new>
+
+ Description: Constructor
+ Params:      $dsn = database connection string
+              $user = username used to log in to the database
+              $pass = password used to log in to the database
+              $attributes = set of attributes for DB connection (optional)
+ Returns:     new instance of the DB class
+ Note:        the name of this constructor is not new, as that would make
+              our check for implementation of new() by derived class useles.
+
+=back
 
 =head1 DEPRECATED ROUTINES
 
