@@ -1529,6 +1529,13 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         mOutput.OnSocketReady(mCondition);
     }
 
+    // break any potential reference cycle between the security info object
+    // and ourselves by resetting its notification callbacks object.  see
+    // bug 285991 for details.
+    nsCOMPtr<nsISSLSocketControl> secCtrl = do_QueryInterface(mSecInfo);
+    if (secCtrl)
+        secCtrl->SetNotificationCallbacks(nsnull);
+
     // finally, release our reference to the socket (must do this within
     // the transport lock) possibly closing the socket.
     {

@@ -257,6 +257,11 @@ nsNSSSocketInfo::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 NS_IMETHODIMP
 nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
+  if (!aCallbacks) {
+    mCallbacks = nsnull;
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
   if (!proxyman) 
     return NS_ERROR_FAILURE;
