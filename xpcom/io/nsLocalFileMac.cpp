@@ -1722,6 +1722,7 @@ nsLocalFile::Exists(PRBool *_retval)
 {
 	NS_ENSURE_ARG(_retval);
 	*_retval = PR_FALSE;		// Assume failure
+	MakeDirty();
 	nsresult rv = ResolveAndStat(PR_TRUE);
 	if ( rv == NS_ERROR_FILE_NOT_FOUND )
 		return NS_OK;
