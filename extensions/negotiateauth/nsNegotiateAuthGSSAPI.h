@@ -56,14 +56,6 @@
 #include <gssapi/gssapi_generic.h> 
 #endif
 
-#define NS_NEGOTIATEAUTH_CID                         \
-{ /* 96ec4163-efc8-407a-8735-007fb26be4e8 */         \
-    0x96ec4163,                                      \
-    0xefc8,                                          \
-    0x407a,                                          \
-    {0x87, 0x35, 0x00, 0x7f, 0xb2, 0x6b, 0xe4, 0xe8} \
-}
-
 // The nsNegotiateAuth class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
 
