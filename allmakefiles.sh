@@ -899,7 +899,7 @@ extensions/sql/pgsql/public/Makefile
 extensions/sql/pgsql/src/Makefile
 extensions/sql/build/Makefile
 extensions/sql/build/src/Makefile
-extensions/sql/packager/Makefile
+extensions/sql/sqltest/Makefile
 extensions/sql/tests/Makefile
 "
 
