@@ -287,96 +287,75 @@ className##Factory::LockFactory(PRBool aLock) { \
 extern "C" NS_EXPORT nsresult \
 NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) { \
     nsresult rv = NS_OK; \
-    /* Remember service manager. */\
-    rv = className::SetServiceManager( aServiceMgr ); \
+    /* WARNING: Dont remember service manager. */ \
+    /* Get the component manager service. */ \
+ \
+    nsCID cid = NS_COMPONENTMANAGER_CID; \
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServiceMgr, &rv)); \
+    if (NS_FAILED(rv)) return rv; \
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServiceMgr, cid, &rv); \
+    if (NS_FAILED(rv)) \
+    { \
+        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, GetService rv=0x%X\n", (int)rv ); \
+        return rv; \
+    } \
+ \
+    /* Register our component. */ \
+    rv = compMgr->RegisterComponent( className::GetCID(), #className, \
+                                          progId, path, PR_TRUE, PR_TRUE ); \
     if ( NS_SUCCEEDED( rv ) ) { \
-        /* Get the component manager service. */\
-        nsCID cid = NS_COMPONENTMANAGER_CID; \
-        nsIComponentManager *componentMgr = 0; \
-        rv = className::mServiceMgr->GetService( cid, \
-                                                 nsIComponentManager::GetIID(), \
-                                                 (nsISupports**)&componentMgr ); \
-        if ( NS_SUCCEEDED( rv ) ) { \
-            /* Register our component. */\
-            rv = componentMgr->RegisterComponent( className::GetCID(), \
-                                                  #className, \
-                                                  progId, \
-                                                  path, \
-                                                  PR_TRUE, \
-                                                  PR_TRUE ); \
+        DEBUG_PRINTF( PR_STDOUT, #className " registration successful\n" ); \
+        if ( autoInit ) { \
+            /* Add to appshell component list. */ \
+            nsIRegistry *registry; \
+            rv = servMgr->GetService( NS_REGISTRY_PROGID, \
+                                      nsIRegistry::GetIID(), \
+                                      (nsISupports**)&registry ); \
             if ( NS_SUCCEEDED( rv ) ) { \
-                DEBUG_PRINTF( PR_STDOUT, #className " registration successful\n" ); \
-                if ( autoInit ) { \
-                    /* Add to appshell component list. */\
-                    nsIRegistry *registry; \
-                    rv = className::mServiceMgr->GetService( NS_REGISTRY_PROGID, \
-                                                             nsIRegistry::GetIID(), \
-                                                             (nsISupports**)&registry ); \
-                    if ( NS_SUCCEEDED( rv ) ) { \
-                        registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry); \
-                        char buffer[256]; \
-                        char *cidString = className::GetCID().ToString(); \
-                        PR_snprintf( buffer, \
-                                     sizeof buffer, \
-                                     "%s/%s", \
-                                     NS_IAPPSHELLCOMPONENT_KEY, \
-                                     cidString ? cidString : "unknown" ); \
-                        delete [] cidString; \
-                        nsRegistryKey key; \
-                        rv = registry->AddSubtree( nsIRegistry::Common, \
-                                                   buffer, \
-                                                   &key ); \
-                        if ( NS_SUCCEEDED( rv ) ) { \
-                            DEBUG_PRINTF( PR_STDOUT, #className " added to appshell component list\n" ); \
-                        } else { \
-                            DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
-                        } \
-                        className::mServiceMgr->ReleaseService( NS_REGISTRY_PROGID, registry ); \
-                    } else { \
-                        DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
-                    } \
+                registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry); \
+                char buffer[256]; \
+                char *cidString = className::GetCID().ToString(); \
+                PR_snprintf( buffer, sizeof buffer, "%s/%s", \
+                             NS_IAPPSHELLCOMPONENT_KEY, \
+                             cidString ? cidString : "unknown" ); \
+                delete [] cidString; \
+                nsRegistryKey key; \
+                rv = registry->AddSubtree( nsIRegistry::Common, buffer, &key ); \
+                if ( NS_SUCCEEDED( rv ) ) { \
+                    DEBUG_PRINTF( PR_STDOUT, #className " added to appshell component list\n" ); \
+                } else { \
+                    DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
                 } \
             } else { \
-                DEBUG_PRINTF( PR_STDOUT, #className " registration failed, RegisterComponent rv=0x%X\n", (int)rv ); \
+                DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
             } \
-            /* Release the component manager service. */\
-            className::mServiceMgr->ReleaseService( cid, componentMgr ); \
-        } else { \
-            DEBUG_PRINTF( PR_STDOUT, #className " registration failed, GetService rv=0x%X\n", (int)rv ); \
         } \
     } else { \
-        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, bad service mgr, rv=0x%X\n", (int)rv ); \
+        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, RegisterComponent rv=0x%X\n", (int)rv ); \
     } \
+ \
     return rv; \
 } \
-/* NSUnregisterSelf implementation */\
+/* NSUnregisterSelf implementation */ \
 extern "C" NS_EXPORT nsresult \
 NSUnregisterSelf( nsISupports* aServiceMgr, const char* path ) { \
     nsresult rv = NS_OK; \
-    rv = className::SetServiceManager( aServiceMgr ); \
-    if ( NS_SUCCEEDED( rv ) ) { \
-        /* Get the component manager service. */\
-        nsCID cid = NS_COMPONENTMANAGER_CID; \
-        nsIComponentManager *componentMgr = 0; \
-        rv = className::mServiceMgr->GetService( cid, \
-                                                 nsIComponentManager::GetIID(), \
-                                                 (nsISupports**)&componentMgr ); \
-        if ( NS_SUCCEEDED( rv ) ) { \
-            /* Unregister our component. */\
-            rv = componentMgr->UnregisterComponent( className::GetCID(), path ); \
-            if ( NS_SUCCEEDED( rv ) ) { \
-                DEBUG_PRINTF( PR_STDOUT, #className " unregistration successful\n" ); \
-            } else { \
-                DEBUG_PRINTF( PR_STDOUT, #className " unregistration failed, UnregisterComponent rv=0x%X\n", (int)rv ); \
-            } \
-            /* Release the component manager service. */\
-            className::mServiceMgr->ReleaseService( cid, componentMgr ); \
-        } else { \
-            DEBUG_PRINTF( PR_STDOUT, #className, " unregistration failed, GetService rv=0x%X\n", (int)rv ); \
-        } \
-    } else { \
-        DEBUG_PRINTF( PR_STDOUT, #className " unregistration failed, bad service mgr, rv=0x%X\n", (int)rv ); \
+    nsCID cid = NS_COMPONENTMANAGER_CID; \
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServiceMgr, cid, &rv); \
+    if (NS_FAILED(rv)) \
+    { \
+        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, GetService rv=0x%X\n", (int)rv ); \
+        return rv; \
     } \
+ \
+    /* Unregister our component. */ \
+    rv = compMgr->UnregisterComponent( className::GetCID(), path ); \
+    if ( NS_SUCCEEDED( rv ) ) { \
+        DEBUG_PRINTF( PR_STDOUT, #className " unregistration successful\n" ); \
+    } else { \
+        DEBUG_PRINTF( PR_STDOUT, #className " unregistration failed, UnregisterComponent rv=0x%X\n", (int)rv ); \
+    } \
+ \
     return rv; \
 } \
 /* NSGetFactory implementation */\
