@@ -52,7 +52,7 @@ class nsSVGRect : public nsIDOMSVGRect,
                   public nsSVGValue
 {
 public:
-  nsSVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f); // addrefs
+  nsSVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f);
   
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -73,7 +73,7 @@ protected:
 // implementation:
 
 nsSVGRect::nsSVGRect(float x, float y, float w, float h)
-    : mRefCnt(1), mX(x), mY(y), mWidth(w), mHeight(h)
+    : mX(x), mY(y), mWidth(w), mHeight(h)
 {
 }
 
@@ -214,7 +214,7 @@ class nsSVGViewBox : public nsSVGRect,
 {
 public:
   nsSVGViewBox(nsIDOMSVGLength* viewportWidth,
-               nsIDOMSVGLength* viewportHeight); // addrefs
+               nsIDOMSVGLength* viewportHeight);
   virtual ~nsSVGViewBox();
 
   // nsISupports interface:
@@ -252,6 +252,7 @@ nsSVGViewBox::nsSVGViewBox(nsIDOMSVGLength* viewportWidth, nsIDOMSVGLength* view
 {
   mViewportWidth->GetValue(&mWidth);
   mViewportHeight->GetValue(&mHeight);
+  NS_ADDREF(this);
   NS_ADD_SVGVALUE_OBSERVER(mViewportWidth);
   NS_ADD_SVGVALUE_OBSERVER(mViewportHeight);
 }
@@ -354,9 +355,9 @@ nsresult
 NS_NewSVGRect(nsIDOMSVGRect** result, float x, float y,
               float width, float height)
 {
-  *result = new nsSVGRect(x, y, width, height); // ctor addrefs
+  *result = new nsSVGRect(x, y, width, height);
   if (!*result) return NS_ERROR_OUT_OF_MEMORY;
-
+  NS_ADDREF(*result);
   return NS_OK;
 }
 
@@ -370,7 +371,7 @@ NS_NewSVGViewBox(nsIDOMSVGRect** result,
     return NS_ERROR_FAILURE;
   }
   
-  *result = new nsSVGViewBox(viewportWidth, viewportHeight); // ctor addrefs
+  *result = new nsSVGViewBox(viewportWidth, viewportHeight);
   if (!*result) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;  
