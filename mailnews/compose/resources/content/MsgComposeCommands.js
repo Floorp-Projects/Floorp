@@ -698,8 +698,8 @@ function ComposeStartup()
 			msgCompose.editor = window.editorShell;
 			
 			//We need to unregister some of the editor commands to avoid conflict
-			if (gComposerCommandManager)
-			  gComposerCommandManager.unregisterCommand("cmd_preferences", nsPreferencesCommand);
+			if (gHTMLEditorCommandManager)
+			  gHTMLEditorCommandManager.unregisterCommand("cmd_preferences", nsPreferencesCommand);
 
 			msgCompose.RegisterStateListener(stateListener);
 
