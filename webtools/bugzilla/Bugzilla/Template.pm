@@ -244,6 +244,14 @@ sub create {
 
             # Format a time for display (more info in Bugzilla::Util)
             time => \&Bugzilla::Util::format_time,
+
+            # Simple filter to obscure the '@' in user visible strings
+            # See bug 120030 for details
+            obscure_email => sub {
+                my ($var) = @_;
+                $var =~ s/\@/\&#64;/g;
+                return $var;
+            },
         },
 
         PLUGIN_BASE => 'Bugzilla::Template::Plugin',

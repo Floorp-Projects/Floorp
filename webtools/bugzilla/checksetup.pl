@@ -1057,6 +1057,7 @@ END
                 bug_link => [ sub { return sub { return $_; } }, 1],
                 csv => sub { return $_; },
                 time => sub { return $_; },
+                obscure_email => sub { return $_; },
                },
            }) || die ("Could not create Template Provider: "
                        . Template::Provider->error() . "\n");
