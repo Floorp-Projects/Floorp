@@ -37,6 +37,7 @@ static NS_DEFINE_IID(kMailCoreCID,         NS_MAILCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,      NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kEditorAppCoreCID,    NS_EDITORAPPCORE_CID);
+static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
 
 #ifdef XP_PC
 
@@ -102,6 +103,7 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kToolbarCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 //#endif
 ///  nsComponentManager::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
