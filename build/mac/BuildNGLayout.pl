@@ -33,6 +33,7 @@ $CARBON					= 0;	# turn on to build with TARGET_CARBON
 $NECKO					= 1;
 $MOZ_FULLCIRCLE			= 0;
 $PROFILE				= 0;
+$GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
 
 $pull{all} 				= 0;
 $pull{lizard} 			= 0;
