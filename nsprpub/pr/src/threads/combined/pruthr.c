@@ -339,14 +339,14 @@ _PR_UserDestroyThread(PRThread *thread)
     if (thread->threadAllocatedOnStack == 1) {
         _PR_MD_CLEAN_THREAD(thread);
         /*
-          *  Because the no_sched field is set, this thread/stack will
-          *  will not be re-used until the flag is cleared by the thread
-          *  we will context switch to.
-          */
-    _PR_FreeStack(thread->stack);
+         *  Because the no_sched field is set, this thread/stack will
+         *  will not be re-used until the flag is cleared by the thread
+         *  we will context switch to.
+         */
+        _PR_FreeStack(thread->stack);
     } else {
 #ifdef WINNT
-    _PR_MD_CLEAN_THREAD(thread);
+        _PR_MD_CLEAN_THREAD(thread);
 #else
         /*
          * This assertion does not apply to NT.  On NT, every fiber,
@@ -1232,18 +1232,18 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
 #ifdef HAVE_STACK_GROWING_UP
             thread = (PRThread*) top;
             top = top + sizeof(PRThread);
-        /*
-         * Make stack 64-byte aligned
-         */
+            /*
+             * Make stack 64-byte aligned
+             */
             if ((PRUptrdiff)top & 0x3f) {
                 top = (char*)(((PRUptrdiff)top + 0x40) & ~0x3f);
             }
 #else
             top = top - sizeof(PRThread);
             thread = (PRThread*) top;
-        /*
-         * Make stack 64-byte aligned
-         */
+            /*
+             * Make stack 64-byte aligned
+             */
             if ((PRUptrdiff)top & 0x3f) {
                 top = (char*)((PRUptrdiff)top & ~0x3f);
             }
@@ -1295,13 +1295,13 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             _PR_MD_INIT_CONTEXT(thread, top, _PR_UserRunThread, &status);
 
             if (status == PR_FALSE) {
-        _MD_FREE_LOCK(&thread->threadLock);
+                _MD_FREE_LOCK(&thread->threadLock);
                 if (thread->threadAllocatedOnStack == 1)
-            _PR_FreeStack(thread->stack);
-        else {
-            PR_DELETE(thread->privateData);
-            PR_DELETE(thread);
-        }
+                    _PR_FreeStack(thread->stack);
+                else {
+                    PR_DELETE(thread->privateData);
+                    PR_DELETE(thread);
+                }
                 return NULL;
             }
 
@@ -1311,16 +1311,16 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             */
             if (state == PR_JOINABLE_THREAD) {
                 thread->term = PR_NewCondVar(_pr_terminationCVLock);
-        if (thread->term == NULL) {
-            _MD_FREE_LOCK(&thread->threadLock);
-            if (thread->threadAllocatedOnStack == 1)
-                _PR_FreeStack(thread->stack);
-            else {
-                PR_DELETE(thread->privateData);
-                PR_DELETE(thread);
-            }
-            return NULL;
-        }
+                if (thread->term == NULL) {
+                    _MD_FREE_LOCK(&thread->threadLock);
+                    if (thread->threadAllocatedOnStack == 1)
+                        _PR_FreeStack(thread->stack);
+                    else {
+                        PR_DELETE(thread->privateData);
+                        PR_DELETE(thread);
+                    }
+                    return NULL;
+                }
             }
   
         }
