@@ -217,7 +217,7 @@ static JSDJContext *_jsdjc;
 #endif /* JSDEBUGGER_JAVA_UI */
 #endif /* JSDEBUGGER */
 
-static int reportWarnings;
+static JSBool reportWarnings = JS_TRUE;
 
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
@@ -392,7 +392,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-s] [-w] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-s] [-w] [-W] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -417,8 +417,12 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 		i++;
 		break;
 
-	    case 'w':
-		reportWarnings++;
+            case 'w':
+                reportWarnings = JS_TRUE;
+                break;
+
+	    case 'W':
+		reportWarnings = JS_FALSE;
 		break;
 
 	    case 's':
