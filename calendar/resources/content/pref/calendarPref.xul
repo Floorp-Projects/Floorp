@@ -126,7 +126,7 @@
       function editCategory()
       {
         var list = document.getElementById("catergorieslist");
-        if (list.selectedIndex) {
+        if (list.selectedItem) {
           var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                         .getService(Components.interfaces.nsIPromptService);
           var result = {value: gCategoryList[list.selectedIndex]};
@@ -144,8 +144,10 @@
       function deleteCategory()
       {
         var list = document.getElementById("catergorieslist");
-        gCategoryList.splice(list.selectedIndex, 1);
-        updateCategoryList();
+        if (list.selectedItem) {
+          gCategoryList.splice(list.selectedIndex, 1);
+          updateCategoryList();
+        }
       }
 
       /* 
@@ -185,9 +187,9 @@
       
       <checkbox id="reloadonlaunch" preftype="bool" prefstring="calendar.servers.reloadonlaunch" label="&pref.reloadonlaunch;" />
    </groupbox>
-   <groupbox>
+   <groupbox flex="1">
      <caption label="&pref.categories.label;"/>
-     <hbox>
+     <hbox flex="1">
        <listbox flex="1" id="catergorieslist"/>
        <vbox>
          <spacer flex="1"/>
