@@ -1240,7 +1240,7 @@ nsEditingSession::SetupEditorCommandController(
 
   Set the editor on the controller(s) for this window
 ----------------------------------------------------------------------------*/
-nsresult
+NS_IMETHODIMP
 nsEditingSession::SetEditorOnControllers(nsIDOMWindow *aWindow,
                                          nsIEditor* aEditor)
 {

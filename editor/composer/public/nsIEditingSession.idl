@@ -102,5 +102,8 @@ interface nsIEditingSession : nsISupports
    */
   void tearDownEditorOnWindow(in nsIDOMWindow window);
 
+  void setEditorOnControllers(in nsIDOMWindow aWindow,
+                              in nsIEditor aEditor);
+
 };
 
