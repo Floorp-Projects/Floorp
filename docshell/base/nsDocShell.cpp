@@ -1232,12 +1232,30 @@ NS_IMETHODIMP nsDocShell::Create()
 
 NS_IMETHODIMP nsDocShell::Destroy()
 {
+   // Stop any URLs that are currently being loaded...
+   Stop();
+   if(mDocLoader)
+      {
+      mDocLoader->Destroy();
+      mDocLoader->SetContainer(nsnull);
+      }
+
+   SetDocLoaderObserver(nsnull);
+
+   // Remove this docshell from its parent's child list
+   nsCOMPtr<nsIDocShellTreeNode> docShellParentAsNode(do_QueryInterface(mParent));
+   if(docShellParentAsNode)
+      docShellParentAsNode->RemoveChild(this);
+
+   DestroyChildren();
+
    mContentViewer = nsnull;
    mDocLoader = nsnull;
    mDocLoaderObserver = nsnull;
    mParentWidget = nsnull;
    mPrefs = nsnull;
    mCurrentURI = nsnull;
+   mWebProgressListenerList = nsnull;
 
    if(mScriptGlobal)
       {
@@ -1254,7 +1272,7 @@ NS_IMETHODIMP nsDocShell::Destroy()
    mScriptContext = nsnull;
    mSessionHistory = nsnull;
    mLoadCookie = nsnull;
-   mTreeOwner = nsnull;
+   SetTreeOwner(nsnull);
 
    if(mInitInfo)
       {
@@ -1267,7 +1285,6 @@ NS_IMETHODIMP nsDocShell::Destroy()
       mContentListener->DocShell(nsnull);
       NS_RELEASE(mContentListener);
       }
-
 
    return NS_OK;
 }
