@@ -167,15 +167,15 @@ nsFindComponent::Context::Init( nsIWebShell *aWebShell,
 	if (!aWebShell)
 		return NS_ERROR_INVALID_ARG;
 		
+    mWebShell        = nsDontQueryInterface<nsIWebShell>( aWebShell );
+    mLastBlockIndex  = 0;
+    mLastBlockOffset = -1;
 	mSearchString    = lastSearchString;
 	mIgnoreCase      = lastIgnoreCase;
 	mSearchBackwards = lastSearchBackward;
 	mWrapSearch      = lastWrapSearch;
 	
-  // Construct nsITextServicesDocument...
-	nsresult	rv = MakeTSDocument(aWebShell);
-	
-	return rv;
+	return NS_OK;
 }
 
 
@@ -183,66 +183,98 @@ static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_IID(kITextServicesDocumentIID, NS_ITEXTSERVICESDOCUMENT_IID);
 
 
-NS_IMETHODIMP
-nsFindComponent::Context::MakeTSDocument(nsIWebShell *aWebShell)
-{
-	if (!aWebShell)
-		return NS_ERROR_INVALID_ARG;
+nsCOMPtr<nsITextServicesDocument>
+nsFindComponent::Context::MakeTSDocument() {
+	nsCOMPtr<nsITextServicesDocument> result;
 
-	nsITextServicesDocument		*textSvcDoc;
-
-	nsresult	rv;
-	rv = nsComponentManager::CreateInstance(kCTextServicesDocumentCID,
-																					 nsnull,
-	                                         kITextServicesDocumentIID,
-	                                         (void **)&textSvcDoc);
-	if (NS_FAILED(rv))
-		return rv;
-	
-    nsCOMPtr<nsIDocument>  document;
-    nsCOMPtr<nsIPresShell> presShell;
-
-    // Get content viewer from the web shell.
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    rv = aWebShell ? aWebShell->GetContentViewer(getter_AddRefs(contentViewer))
-                   : NS_ERROR_NULL_POINTER;
-
-    if ( contentViewer ) {
-        // Up-cast to a document viewer.
-        nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
-        if ( docViewer ) {
-            // Get the document and pres shell from the doc viewer.
-            rv = docViewer->GetDocument(*getter_AddRefs(document));
-            if ( document ) {
-                rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
+    // Create the text services document.
+	nsresult rv = nsComponentManager::CreateInstance( kCTextServicesDocumentCID,
+                                                      nsnull,
+                                                      kITextServicesDocumentIID,
+                                                      (void **)getter_AddRefs( result ) );
+    if ( NS_SUCCEEDED(rv) ) {
+        nsCOMPtr<nsIDocument>  document;
+        nsCOMPtr<nsIPresShell> presShell;
+    
+        // Get content viewer from the web shell.
+        nsCOMPtr<nsIContentViewer> contentViewer;
+        rv = mWebShell ? mWebShell->GetContentViewer(getter_AddRefs(contentViewer))
+                       : NS_ERROR_NULL_POINTER;
+    
+        if ( contentViewer ) {
+            // Up-cast to a document viewer.
+            nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
+            if ( docViewer ) {
+                // Get the document and pres shell from the doc viewer.
+                rv = docViewer->GetDocument(*getter_AddRefs(document));
+                if ( document ) {
+                    rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
+                }
             }
+        }
+    
+        if ( document && presShell ) {
+            // Compare this document with the one we searched last time.
+            if ( document == mLastDocument ) {
+                // Same document, use the block index/offset we have remembered.
+            } else {
+                // New document, remember it and reset saved index/offset.
+                mLastDocument = document;
+                mLastBlockIndex = 0;
+                mLastBlockOffset = -1;
+            }
+
+            // Upcast document to a DOM document.
+            nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
+
+            if ( domDoc ) {
+                // Initialize the text services document.
+                rv = result->InitWithDocument( domDoc, presShell );
+                
+                if ( NS_SUCCEEDED( rv ) ) {
+                    // Position to remembered location.
+                    if ( mLastBlockIndex ) {
+                        // Sign indicates whether we're off first vs. last.
+                        if ( mLastBlockIndex > 0 ) {
+                            // Relative to first block.
+                            rv = result->FirstBlock();
+                            for( PRInt32 i = 0; NS_SUCCEEDED(rv) && i < mLastBlockIndex; i++ ) {
+                                rv = result->NextBlock();
+                            }
+                        } else {
+                            // Relative to last block.
+                            rv = result->LastBlock();
+                            for( PRInt32 i = 0; NS_SUCCEEDED(rv) && i > mLastBlockIndex; i-- ) {
+                                rv = result->PrevBlock();
+                            }
+                        }
+                    } else {
+                        // Initialize, based on whether which direction we're searching in.
+                        if (mSearchBackwards)
+                            rv = result->LastBlock();
+                        else
+                            rv = result->FirstBlock();
+                    }
+                    // If something went wrong, reset result.
+                    if ( NS_FAILED( rv ) ) {
+                        result = nsDontQueryInterface<nsITextServicesDocument>( 0 );
+                    }
+                } else {
+                    // Give up.
+                    result = nsDontQueryInterface<nsITextServicesDocument>( 0 );
+                }
+            } else {
+                // Give up.
+                result = nsDontQueryInterface<nsITextServicesDocument>( 0 );
+            }
+        } else {
+            // Error, release the result and return null.
+            result = nsDontQueryInterface<nsITextServicesDocument>( 0 );
         }
     }
 
-    if ( !document || !presShell ) {
-        return rv;
-    }
-
-	nsCOMPtr<nsIDOMDocument>			domDoc = do_QueryInterface(document);
-	rv = textSvcDoc->InitWithDocument(domDoc, presShell);
-	if (NS_FAILED(rv))
-		return rv;
-	
-	mTextServicesDocument = do_QueryInterface(textSvcDoc);
-	if (!mTextServicesDocument)
-		return NS_ERROR_NULL_POINTER;
-	
-	// init the TS doc to start from the beginning
-	if (mSearchBackwards)
-		rv = mTextServicesDocument->LastBlock();			// do we want to do this?
-	else
-		rv = mTextServicesDocument->FirstBlock();
-	if (NS_FAILED(rv))
-		return rv;
-	
-	mLastBlockOffset = -1;
-	
-	return NS_OK;
+    // Return the resulting text services document.
+    return result;
 }
 
 
@@ -408,16 +440,20 @@ done:
 NS_IMETHODIMP
 nsFindComponent::Context::DoFind()
 {
-	if (!mTextServicesDocument)
+	if (!mWebShell)
 		return NS_ERROR_NOT_INITIALIZED;
 
 	nsAutoString		matchString = mSearchString;
 	if (mIgnoreCase)
 		matchString.ToLowerCase();
 	
-	nsresult	rv = NS_OK;
-  nsString str;
-	PRBool		done = PR_FALSE;
+    nsresult	rv = NS_OK;
+    nsString str;
+
+    // Construct a text services document to use.
+    nsCOMPtr<nsITextServicesDocument> txtDoc = MakeTSDocument();
+
+	PRBool done = ( txtDoc == 0 );
 	
     // Loop till we find a match or fail.
     while ( !done ) {
@@ -425,8 +461,8 @@ nsFindComponent::Context::DoFind()
         PRBool reset = PR_FALSE;
         // Look for next match.
         PRBool atEnd = PR_FALSE;
-        while ( NS_SUCCEEDED(mTextServicesDocument->IsDone( &atEnd ) ) && !atEnd ) {
-            rv = mTextServicesDocument->GetCurrentTextBlock(&str);
+        while ( NS_SUCCEEDED( txtDoc->IsDone( &atEnd ) ) && !atEnd ) {
+            rv = txtDoc->GetCurrentTextBlock(&str);
     
             if (NS_FAILED(rv))
                 return rv;
@@ -434,23 +470,26 @@ nsFindComponent::Context::DoFind()
             if (mIgnoreCase)
                 str.ToLowerCase();
             
-            
-            PRInt32		foundOffset = FindInString(str, matchString, (mLastBlockOffset == -1) ? 0 : mLastBlockOffset + 1, mSearchBackwards);
+            PRInt32 foundOffset = FindInString(str, matchString, (mLastBlockOffset == -1) ? 0 : mLastBlockOffset + 1, mSearchBackwards);
     
             mLastBlockOffset = -1;
     
-            if (foundOffset != -1)
-            {
-                mTextServicesDocument->SetSelection(foundOffset, mSearchString.Length());
+            if (foundOffset != -1) {
+                // Match found.  Select it, remember where it was, and quit.
+                txtDoc->SetSelection(foundOffset, mSearchString.Length());
                 mLastBlockOffset = foundOffset;
                 done = PR_TRUE;
                 break;
+            } else {
+                // No match found in this block, try the next (or previous) one.
+                if (mSearchBackwards) {
+                    txtDoc->PrevBlock();
+                    mLastBlockIndex--;
+                } else {
+                    txtDoc->NextBlock();
+                    mLastBlockIndex++;
+                }
             }
-            
-            if (mSearchBackwards)
-                mTextServicesDocument->PrevBlock();
-            else
-                mTextServicesDocument->NextBlock();
         }
         // At end (or matched).  Decide which it was...
         if ( !done ) {
@@ -465,11 +504,13 @@ nsFindComponent::Context::DoFind()
                 } else {
                     if ( mSearchBackwards ) {
                         // Reset to last block.
-                        rv = mTextServicesDocument->LastBlock();
+                        rv = txtDoc->LastBlock();
                     } else {
                         // Reset to first block.
-                        rv = mTextServicesDocument->FirstBlock();
+                        rv = txtDoc->FirstBlock();
                     }
+                    // Reset last block index.
+                    mLastBlockIndex = 0;
                     // Reset offset in block.
                     mLastBlockOffset = -1;
                 }
@@ -492,8 +533,8 @@ nsFindComponent::Context::Reset( nsIWebShell *aNewWebShell )
 	if (!aNewWebShell)
 		return NS_ERROR_INVALID_ARG;
 
-  // Reconstruct nsITextServicesDocument?...
-	return MakeTSDocument(aNewWebShell);
+    mWebShell = nsDontQueryInterface<nsIWebShell>( aNewWebShell );
+    return NS_OK;
 }
 
 

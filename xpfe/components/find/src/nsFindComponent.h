@@ -55,17 +55,22 @@ public:
 			                 PRBool lastSearchBackwards,
 			                 PRBool lastWrapSearch);
 
-			  NS_IMETHOD	MakeTSDocument( nsIWebShell *aNewWebShell );
 				NS_IMETHOD	Reset( nsIWebShell *aNewWebShell );
 				NS_IMETHOD	DoFind();
+
+                // Utility to construct new TS document from our webshell.
+                nsCOMPtr<nsITextServicesDocument> MakeTSDocument();
       
         // Maybe add Find/FindNext functions here?
-        nsCOMPtr<nsITextServicesDocument> mTextServicesDocument;
+
+        nsCOMPtr<nsIWebShell> mWebShell;
+        nsIDocument *mLastDocument; // Document last searched.
         nsString mSearchString;
         PRBool   mIgnoreCase;
         PRBool   mSearchBackwards;
         PRBool   mWrapSearch;
         PRUint32 mLastBlockOffset; // last offset within the cur block that we found something
+        PRInt32  mLastBlockIndex;  // last block (negative indicates it's relative to last block)
     }; // nsFindComponent::Context
 
 protected:
