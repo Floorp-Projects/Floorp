@@ -25,6 +25,9 @@ function AutoCompleteAddress(inputElement)
 	
 	dump("select = " + select + "\n");
 	dump("select.value = " + select.value + "\n");
+	
+	if (select.value == "") 
+		return;
 
 	if (select.value == "addr_newsgroups") {
 		dump("don't autocomplete, it's a newsgroup");

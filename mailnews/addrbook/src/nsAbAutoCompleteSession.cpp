@@ -185,6 +185,9 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
       rv = InitializeTable();
       if (NS_FAILED(rv)) return rv;
     }
+    
+    if (nsCRT::strlen(aSearchString) == 0)
+    	return NS_OK;
 
 	if (aResultListener)
 	{
