@@ -5,19 +5,19 @@
 
 <!ENTITY cookiePolicy.label             "Cookie acceptance policy">
 
-<!ENTITY accAllCookiesRadio.label       "Accept all cookies">
+<!ENTITY accAllCookiesRadio.label       "Enable all cookies">
 <!ENTITY accAllCookiesRadio.accesskey   "a">
 
-<!ENTITY accOrgCookiesRadio.label       "Accept cookies that get sent back to the originating server only">
+<!ENTITY accOrgCookiesRadio.label       "Enable cookies for the originating website only">
 <!ENTITY accOrgCookiesRadio.accesskey   "o">
 
-<!ENTITY disableCookies.label           "Reject all cookies">
+<!ENTITY disableCookies.label           "Disable cookies">
 <!ENTITY disableCookies.accesskey       "r">
 
-<!ENTITY warnAboutCookies.label         "Warn me before accepting a cookie">
+<!ENTITY warnAboutCookies.label         "Warn me before storing a cookie">
 <!ENTITY warnAboutCookies.accesskey     "w">
 
-<!ENTITY cookieDetails                  "Cookies are small pieces of information that websites store on your computer. This allows them to customize their web pages to suit your individual preferences.">
+<!ENTITY cookieDetails                  "Cookies are small pieces of information that are stored on your computer.  When you visit a website, it might store a cookie.  Such cookies will get sent back to the website on future visits.">
 
 <!ENTITY viewCookies.label              "View Stored Cookies">
 <!ENTITY viewCookies.accesskey          "v">
