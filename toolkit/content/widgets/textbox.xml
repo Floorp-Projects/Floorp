@@ -160,7 +160,9 @@
     <content>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
         <html:textarea class="textbox-textarea" flex="1" anonid="input"
-                       xbl:inherits="onfocus,onblur,value,disabled,rows,cols,readonly,wrap"/>
+                       xbl:inherits="onfocus,onblur,xbl:text=value,disabled,rows,cols,readonly,wrap">
+          <children/>
+        </html:textarea>
       </xul:hbox>
     </content>
   </binding>
