@@ -1844,8 +1844,11 @@ NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMessage *message)
     if (message)
         m_copyState->m_message = do_QueryInterface(message, &rv);
 
-    nsFileSpec tmpFileSpec("nscpmsg.txt");
-    rv = NS_NewFileSpecWithSpec(tmpFileSpec,
+  nsSpecialSystemDirectory tmpFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  
+  tmpFileSpec += "nscpmsg.txt";
+  tmpFileSpec.MakeUnique();
+	rv = NS_NewFileSpecWithSpec(tmpFileSpec,
                                 getter_AddRefs(m_copyState->m_tmpFileSpec));
     if (NS_SUCCEEDED(rv) && m_copyState->m_tmpFileSpec)
         rv = m_copyState->m_tmpFileSpec->OpenStreamForWriting();
@@ -2431,7 +2434,7 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
 			PRUint32 mask = MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_MARKED | MSG_FLAG_IMAP_DELETED;
 			PRUint32 dbHdrFlags;
 
-			tweakMe->GetFlags(&dbHdrFlags);
+ 			tweakMe->GetFlags(&dbHdrFlags);
 			tweakMe->AndFlags(~mask, &dbHdrFlags);
 			
 			// set the new value for these flags
