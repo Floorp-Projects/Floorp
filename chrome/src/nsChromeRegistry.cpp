@@ -352,13 +352,22 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetOverlayCount(const PRUnichar *aChromeURL, PRInt32 *aResult)
+NS_IMETHODIMP nsChromeRegistry::GetOverlayCount(nsIURI *aChromeURL, PRInt32 *aResult)
 {
+  if (!mDataSourceTable)
+  {
+    *aResult = 0;
+    return NS_OK;
+  }
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetOverlayAt(const PRUnichar *aChromeURL, PRInt32 aIndex, PRUnichar **aResult)
+NS_IMETHODIMP nsChromeRegistry::GetOverlayAt(nsIURI *aChromeURL, PRInt32 aIndex, nsIURI **aResult)
 {
+  if (!mDataSourceTable)
+    return NS_OK;
+
   return NS_OK;
 }
 

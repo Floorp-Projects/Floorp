@@ -27,8 +27,8 @@
 interface nsIChromeRegistry : nsISupports
 {
 	void convertChromeURL(in nsIURI aChromeURL);
-	long getOverlayCount(in wstring aChromeURL);
-	wstring getOverlayAt(in wstring aChromeURL, in long aIndex);
+	long getOverlayCount(in nsIURI aChromeURL);
+	nsIURI getOverlayAt(in nsIURI aChromeURL, in long aIndex);
 };
 
 
