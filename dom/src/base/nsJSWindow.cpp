@@ -2703,18 +2703,6 @@ static JSFunctionSpec WindowMethods[] =
 };
 
 
-#if 0
-//
-// Window constructor
-//
-PR_STATIC_CALLBACK(JSBool)
-Window(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  return JS_FALSE;
-}
-#endif
-
-
 //
 // Window class initialization
 //
