@@ -64,7 +64,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     /* create a TCP socket */
     newFD = PR_NewTCPSocket();
     if( newFD == NULL ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_NewTCPSocket() returned NULL");
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "PR_NewTCPSocket() returned NULL");
         goto finish;
     }
 
@@ -76,13 +76,13 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     /* enable SSL on the socket */
     sockdata->fd = SSL_ImportFD(NULL, sockdata->fd);
     if( sockdata->fd == NULL ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION, "SSL_ImportFD() returned NULL");
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "SSL_ImportFD() returned NULL");
         goto finish;
     }
 
     status = SSL_OptionSet(sockdata->fd, SSL_SECURITY, PR_TRUE);
     if( status != SECSuccess ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION,
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
             "Unable to enable SSL security on socket");
         goto finish;
     }
@@ -91,7 +91,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     status = SSL_HandshakeCallback(sockdata->fd, JSSL_HandshakeCallback,
                                     sockdata);
     if( status != SECSuccess ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION,
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
             "Unable to install handshake callback");
     }
 
@@ -112,7 +112,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
                     sockdata->fd, JSSL_DefaultCertAuthCallback, NULL);
     }
     if( status != SECSuccess ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION,
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
             "Unable to install certificate authentication callback");
         goto finish;
     }
@@ -129,7 +129,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
             sockdata->fd, JSSL_CallCertSelectionCallback,
             (void*) sockdata->clientCertSelectionCallback);
         if( status != SECSuccess ) {
-            JSS_throwMsg(env, SOCKET_EXCEPTION,
+            JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
                 "Unable to install client certificate selection callback");
             goto finish;
         }
@@ -267,21 +267,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketBind
     /* do the bind() call */
     status = PR_Bind(sock->fd, &addr);
     if( status != PR_SUCCESS ) {
-        PRErrorCode err = PR_GetError();
-        switch( err ) {
-          case PR_ADDRESS_NOT_AVAILABLE_ERROR:
-            JSS_throwMsg(env, SOCKET_EXCEPTION,
-                "Binding exception: address not available");
-            break;
-          case PR_ADDRESS_IN_USE_ERROR:
-            JSS_throwMsg(env, SOCKET_EXCEPTION,
-                "Binding exception: address in use");
-            break;
-          default:
-            JSS_throwMsg(env, SOCKET_EXCEPTION,
-                "Binding exception");
-            break;
-        }
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "Failed to bind socket");
         goto finish;
     }       
 
@@ -323,7 +309,7 @@ Java_org_mozilla_jss_ssl_SocketBase_requestClientAuthNoExpiryCheckNative
      */
     status = SSL_OptionSet(sock->fd, SSL_REQUEST_CERTIFICATE, b);
     if( status != SECSuccess ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION,
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
             "Failed to set REQUEST_CERTIFICATE option on socket");
         goto finish;
     }
@@ -335,7 +321,7 @@ Java_org_mozilla_jss_ssl_SocketBase_requestClientAuthNoExpiryCheckNative
         status = SSL_AuthCertificateHook(sock->fd,
                         JSSL_ConfirmExpiredPeerCert, NULL /*cx*/);
         if( status != SECSuccess ) {
-            JSS_throwMsg(env, SOCKET_EXCEPTION,
+            JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
                 "Failed to set certificate authentication callback");
             goto finish;
         }
@@ -360,7 +346,7 @@ Java_org_mozilla_jss_ssl_SocketBase_setSSLOption
     /* set the option */
     status = SSL_OptionSet(sock->fd, JSSL_enums[option], on);
     if( status != SECSuccess ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION, "SSL_OptionSet failed");
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "SSL_OptionSet failed");
         goto finish;
     }
 
@@ -388,7 +374,7 @@ JSSL_getSockAddr
         status = PR_GetPeerName(sock->fd, addr);
     }
     if( status != PR_SUCCESS ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_GetSockName failed");
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "PR_GetSockName failed");
     }
 }
 
@@ -438,7 +424,7 @@ Java_org_mozilla_jss_ssl_SocketBase_setClientCertNicknameNative(
     status = SSL_GetClientAuthDataHook(sock->fd, JSSL_GetClientAuthData,
                     (void*)sock);
     if(status != SECSuccess) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION,
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
             "Unable to set client auth data hook");
         goto finish;
     }

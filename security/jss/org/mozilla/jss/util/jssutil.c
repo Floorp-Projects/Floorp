@@ -45,6 +45,53 @@
 
 /***********************************************************************
 **
+** J S S _ t h r o w M s g P r E r r A r g
+**
+** Throw an exception in native code.  You should return right after
+** calling this function.
+**
+** throwableClassName is the name of the throwable you are throwing in
+** JNI class name format (xxx/xx/xxx/xxx). It must not be NULL.
+**
+** message is the message parameter of the throwable. It must not be NULL.
+** If you don't have a message, call JSS_throw.
+**
+** errCode is a PRErrorCode returned from PR_GetError().
+**
+** Example:
+**      JSS_throwMsg(env, ILLEGAL_ARGUMENT_EXCEPTION, PR_GetError());
+**      return -1;
+*/
+void
+JSS_throwMsgPrErrArg(JNIEnv *env, char *throwableClassName, char *message,
+    PRErrorCode errCode)
+{
+    const char *errStr = JSS_strerror(errCode);
+    char *msg = NULL;
+    int msgLen;
+
+    if( errStr == NULL ) {
+        errStr = "Unknown error";
+    }
+
+    msgLen = strlen(message) + strlen(errStr) + 40;
+    msg = PR_Malloc(msgLen);
+    if( msg == NULL ) {
+        JSS_throw(env, OUT_OF_MEMORY_ERROR);
+        goto finish;
+    }
+    snprintf(msg, msgLen, "%s: (%d) %s", message, errCode, errStr);
+
+    JSS_throwMsg(env, throwableClassName, msg);
+
+finish:
+    if(msg != NULL) {
+        PR_Free(msg);
+    }
+}
+
+/***********************************************************************
+**
 ** J S S _ t h r o w M s g
 **
 ** Throw an exception in native code.  You should return right after

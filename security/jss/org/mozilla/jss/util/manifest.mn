@@ -93,6 +93,7 @@ CLASSES =									\
 
 CSRCS =     jssutil.c                    \
             jssver.c                     \
+            errstrings.c                 \
             $(NULL)
 
 LIBRARY_NAME = jssutil
