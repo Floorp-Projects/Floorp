@@ -95,6 +95,8 @@ public:
                            nsISupportsArray* aInputWord,
                            nsIStyleContext** aResult);
 
+  static PRBool PR_CALLBACK DeleteDFAState(nsHashKey *aKey, void *aData, void *closure);
+
 protected:
   // A transition table for a deterministic finite automaton.  The DFA
   // takes as its input a single pseudoelement and an ordered set of properties.  
@@ -110,7 +112,7 @@ protected:
   //
   // Once the entire word has been consumed, the final state is used
   // to reference the cache table to locate the style context.
-  nsHashtable* mTransitionTable;
+  nsObjectHashtable* mTransitionTable;
 
   // The cache of all active style contexts.  This is a hash from 
   // a final state in the DFA, Sf, to the resultant style context.

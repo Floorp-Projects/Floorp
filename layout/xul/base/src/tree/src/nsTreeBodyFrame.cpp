@@ -87,7 +87,8 @@ nsOutlinerStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   // Go ahead and init the transition table.
   if (!mTransitionTable) {
     // Automatic miss. Build the table
-    mTransitionTable = new nsHashtable;
+    mTransitionTable =
+      new nsObjectHashtable(nsnull, nsnull, DeleteDFAState, nsnull);
   }
 
   // The first transition is always made off the supplied pseudo-element.
@@ -132,6 +133,16 @@ nsOutlinerStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   }
 
   return NS_OK;
+}
+
+/* static */ PRBool PR_CALLBACK
+nsOutlinerStyleCache::DeleteDFAState(nsHashKey *aKey,
+                                     void *aData,
+                                     void *closure)
+{
+  nsDFAState* entry = NS_STATIC_CAST(nsDFAState*, aData);
+  delete entry;
+  return PR_TRUE;
 }
 
 // Column class that caches all the info about our column.
@@ -216,8 +227,8 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
-:nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mImageCache(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE),
- mTopRowIndex(0), mRowHeight(0), mIndentation(0), mColumns(nsnull), mScrollbar(nsnull)
+:nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE), mImageCache(nsnull),
+ mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -1740,8 +1751,6 @@ nsOutlinerBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPre
                                           const nsRect& aRect, const nsRect& aDirtyRect)
 {
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
   const nsStyleColor* myColor = (const nsStyleColor*)
       aStyleContext->GetStyleData(eStyleStruct_Color);
   const nsStyleBorder* myBorder = (const nsStyleBorder*)
