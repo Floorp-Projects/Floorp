@@ -16,6 +16,7 @@
  * Reserved.
  */ 
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "msgCore.h"
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
@@ -1267,7 +1268,7 @@ nsMsgComposeAndSend::Init(
 			char *newb = (char *) PR_Malloc (attachment1_body_length + 1);
 			if (! newb)
 				return MK_OUT_OF_MEMORY;
-			memcpy (newb, attachment1_body, attachment1_body_length);
+      nsCRT::memcpy (newb, attachment1_body, attachment1_body_length);
 			newb [attachment1_body_length] = 0;
 			m_attachment1_body = newb;
 			m_attachment1_body_length = attachment1_body_length;

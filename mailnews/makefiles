@@ -65,6 +65,7 @@ mailnews/news/public/Makefile
 mailnews/news/src/Makefile
 mailnews/news/build/Makefile
 mailnews/news/resources/Makefile
+mailnews/news/resources/content/Makefile
 mailnews/news/resources/skin/Makefile
 mailnews/news/tests/Makefile
 mailnews/news/tests/nntp/Makefile

@@ -37,6 +37,8 @@ typedef unsigned long nsMsgKey;
 
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
+  
+  string ConvertNewsgroupsString(in string newsgroupsStr);
 
   nsIURI PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);
 

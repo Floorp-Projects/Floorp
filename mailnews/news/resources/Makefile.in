@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =  skin
+DIRS=content skin
 
 include $(topsrcdir)/config/config.mk
 

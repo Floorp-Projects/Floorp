@@ -61,7 +61,7 @@
 
 #define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
 
-#if defined(DEBUG_sspitzer) || defined (DEBUG_seth)
+#if defined(DEBUG_sspitzer_) || defined (DEBUG_seth_)
 #define DEBUG_NEWS 1
 #endif
 
@@ -273,9 +273,15 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 nsresult nsNntpService::FindHostFromGroup(nsString &host, nsString &groupName)
 {
   nsresult rv = NS_OK;
+  // host always comes in as ""
+  NS_ASSERTION(host == "", "host is not empty");
+  if (host != "") return NS_ERROR_FAILURE;
+  
   if (0) {
-    // we have "group"
-    // todo:  look for "group" in the newsrc files of all the hosts, starting with the default nntp host.
+    // groupName is "foobar"
+    // todo:  look for "foobar" in the newsrc files of all the hosts,
+    // starting with the default nntp host.
+    //
     // for now, leave host blank so we'll just use the default nntp host.
   }
   
@@ -302,37 +308,37 @@ nsresult nsNntpService::FindHostFromGroup(nsString &host, nsString &groupName)
     return NS_OK;
 }
 
-nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *newsgroupNames)
+nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *newsgroupsNames)
 {
   nsresult rv = NS_OK;
   
-  if (!newsgroupNames) return NS_ERROR_NULL_POINTER;
-  if (PL_strlen(newsgroupNames) == 0) return NS_ERROR_FAILURE;
+  if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
+  if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_NEWS
-  printf("newsgroupNames == %s\n",newsgroupNames);
+  printf("newsgroupsNames == %s\n",newsgroupsNames);
 #endif
   
-  // newsgroupNames can be a comma seperated list of these:
+  // newsgroupsNames can be a comma seperated list of these:
   // news://host/group
   // news://group
   // host/group
   // group
   //
   // we are not going to allow the user to cross post to multiple hosts.
-  // so as soon as we determine the host from newsgroupNames, we can stop.
+  // so as soon as we determine the host from newsgroupsNames, we can stop.
   //
   // 1) explict (news://host/group or host/group)
   // 2) context (if you reply to a message when reading it on host x, reply to that host.
   // 3) no context look up news://group or group in the various newsrc files to determine host, with PREF_NETWORK_HOSTS_NNTP_SERVER being the first newrc file searched each time
   // 4) use the default nntp server
 
-  //nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupNames.
-  char *list = PL_strdup(newsgroupNames);
+  //nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupsNames.
+  char *list = PL_strdup(newsgroupsNames);
   char *token = nsnull;
   char *rest = list;
   nsString str("", eOneByte);
-
+  
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) {
     str = token;
@@ -343,7 +349,8 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
       printf("value = %s\n", str.GetBuffer());
 #endif
       nsString theRest("",eOneByte);
-
+      nsString currentHost("", eOneByte);
+      
       // does str start with "news:/"?
       if (str.Find(kNewsRootURI) == 0) {
         // we have news://group or news://host/group
@@ -362,17 +369,34 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
       PRInt32 slashpos = theRest.Find('/');
       if (slashpos > 0 ) {
         // theRest is "host/group"
-        theRest.Left(host, slashpos);
+        theRest.Left(currentHost, slashpos);
 #ifdef DEBUG_NEWS
-        printf("host == %s\n", host.GetBuffer());
+        printf("currentHost == %s\n", currentHost.GetBuffer());
 #endif
       }
       else {
         // theRest is "group"
-        rv = FindHostFromGroup(host, str);
+        rv = FindHostFromGroup(currentHost, str);
+        PR_FREEIF(list);
         if (NS_FAILED(rv)) return rv;
-      }  
+      }
+
+      if (host == "") {
+        host = currentHost;
+
+        //we have our host, we're done.
+        //break;
+      }
+      else {
+        if (host != currentHost) {
+          printf("no cross posting to multiple hosts!\n");
+          PR_FREEIF(list);
+          return NS_ERROR_FAILURE;
+        }
+      }
+      
       str = "";
+      currentHost = "";
     }
 #ifdef DEBUG_NEWS
     else {
@@ -380,11 +404,8 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
     }
 #endif
     token = nsCRT::strtok(rest, ",", &rest);
-    
-    //we have our host, we're done.
-    //if (host != "") break;
   }    
-  PR_Free(list);
+  PR_FREEIF(list);
   
   if (host != "")
     return NS_OK;
@@ -394,13 +415,149 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
 ////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgroupNames, nsIUrlListener * aUrlListener, nsIURI **_retval)
+nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retval)
+{
+  nsresult rv = NS_OK;
+  
+  if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
+  if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_seth
+  printf("newsgroupsNames == %s\n",newsgroupsNames);
+#endif
+  
+  // newsgroupsNames can be a comma seperated list of these:
+  // news://host/group
+  // news://group
+  // host/group
+  // group
+  //
+  // we are not going to allow the user to cross post to multiple hosts.
+  // if we detect that, we stop and return error.
+
+  // nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupsNames.
+  char *list = PL_strdup(newsgroupsNames);
+  char *token = nsnull;
+  char *rest = list;
+  nsString host("", eOneByte);
+  nsString str("", eOneByte);
+  nsString retvalStr("", eOneByte);
+    
+  token = nsCRT::strtok(rest, ",", &rest);
+  while (token && *token) {
+    str = token;
+    str.StripWhitespace();
+
+    if (str != "") {
+#ifdef DEBUG_seth
+      printf("value = %s\n", str.GetBuffer());
+#endif
+      nsString currentHost("", eOneByte);
+      nsString theRest("",eOneByte);
+
+      // does str start with "news:/"?
+      if (str.Find(kNewsRootURI) == 0) {
+        // we have news://group or news://host/group
+        // set theRest to what's after news://
+        str.Right(theRest, str.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */);
+      }
+      else {
+        theRest = str;
+      }
+      
+#ifdef DEBUG_seth
+      printf("theRest == %s\n",theRest.GetBuffer());
+#endif
+      
+      // theRest is "group" or "host/group"
+      PRInt32 slashpos = theRest.Find('/');
+      if (slashpos > 0 ) {
+        nsString currentGroup("",eOneByte);
+        
+        // theRest is "host/group"
+        theRest.Left(currentHost, slashpos);
+        
+#ifdef DEBUG_seth
+        printf("currentHost == %s\n", currentHost.GetBuffer());
+#endif
+        // from "host/group", put "group" into currentGroup;
+        theRest.Right(currentGroup, theRest.Length() - currentHost.Length() - 1);
+
+        NS_ASSERTION(currentGroup != "", "currentGroup is empty");
+        if (currentGroup == "") {
+          PR_FREEIF(list);
+          return NS_ERROR_FAILURE;
+        }
+        
+        // build up the retvalStr;
+        if (retvalStr != "") {
+          retvalStr += ",";
+        }
+        retvalStr += currentGroup;
+      }
+      else {
+        // theRest is "group"
+        rv = FindHostFromGroup(currentHost, str);
+        if (NS_FAILED(rv)) {
+            PR_FREEIF(list);
+            return rv;
+        }
+
+        // build up the retvalStr;
+        if (retvalStr != "") {
+          retvalStr += ",";
+        }
+        retvalStr += str;
+      }
+
+      if (currentHost == "") {
+        printf("empty current host!\n");
+        PR_FREEIF(list);
+        return NS_ERROR_FAILURE;
+      }
+      
+      if (host == "") {
+        printf("got a host, set it\n");
+        host = currentHost;
+      }
+      else {
+        if (host != currentHost) {
+          printf("no cross posting to multiple hosts!\n");
+          PR_FREEIF(list);
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+      str = "";
+      currentHost = "";
+    }
+#ifdef DEBUG_seth
+    else {
+        printf("nothing between two commas. ignore and keep going...\n");
+    }
+#endif
+    token = nsCRT::strtok(rest, ",", &rest);
+  }
+  PR_FREEIF(list);
+  
+  // caller will free with PR_FREEIF()
+  *_retval = PL_strdup(retvalStr.GetBuffer());
+  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
+  
+#ifdef DEBUG_seth
+  printf("Newsgroups header = %s\n", *_retval);
+#endif
+
+  return NS_OK;
+}
+
+nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
-  printf("nsNntpService::PostMessage(%s,%s,??,??)\n",(const char *)pathToFile,newsgroupNames);
+  printf("nsNntpService::PostMessage(%s,%s,??,??)\n",(const char *)pathToFile,newsgroupsNames);
 #endif
-  if (!newsgroupNames) return NS_ERROR_NULL_POINTER;
-  if (PL_strlen(newsgroupNames) == 0) return NS_ERROR_FAILURE;
+  if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
+  if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
     
   NS_LOCK_INSTANCE();
   
@@ -411,8 +568,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
   if (NS_FAILED(rv) || !nntpUrl) return rv;
 
   nsString host("",eOneByte);
-
-  rv = DetermineHostForPosting(host, newsgroupNames);
+  rv = DetermineHostForPosting(host, newsgroupsNames);
+  
   if (NS_FAILED(rv) || (host == "")) return rv;
 
 #ifdef DEBUG_NEWS

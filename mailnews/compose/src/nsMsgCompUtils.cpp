@@ -27,11 +27,14 @@
 #include "nsMsgCompPrefs.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIMimeURLUtils.h"
+#include "nsINntpService.h"
+#include "nsMsgNewsCID.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
+static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 
 //
 // Hopefully, someone will write and XP call like this eventually!
@@ -235,6 +238,9 @@ nsMsgStripLine (char * string)
   return string;
 }
 
+//
+// Generate the message headers for the new RFC822 message
+//
 char * 
 mime_generate_headers (nsMsgCompFields *fields,
 									     const char *charset,
@@ -620,8 +626,48 @@ mime_generate_headers (nsMsgCompFields *fields,
 				PL_strcpy(ptr+1, ptr2);
 		}
 
-		PUSH_STRING ("Newsgroups: ");
-		PUSH_STRING (n2);
+    // RICHIE-SHERRY: This is where I will need to make some changes for Seth's
+    // new feature to allow for full specification of news hosts.
+    //
+    if (deliver_mode == nsMsgDeliverNow) 
+    {
+      // This is going out now...so we need to run this header through the 
+      // call to parse it into just the group names and put that into the 
+      // outgoing message.
+      char *newHeader = nsnull;
+      NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv); 
+      if (NS_SUCCEEDED(rv) && nntpService) {
+        // caller frees the memory in newHeader
+        // ConvertNewsgroupsString takes "news://news.mozilla.org./netscape.test,news://news.mozilla.org./netscape.junk"
+        // and turns it into "netscape.test,netscape.junk"
+        rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
+        if (NS_FAILED(rv)) {
+          printf("FAILURE to convert!\n");
+          printf("rhp, we need to figure out how to handle this\n");
+        }
+        else {
+          printf("SUCCESS:  %s -> %s\n",n2,newHeader);
+        }
+      }
+      else {
+        printf("FAILURE to get nntpService\n");
+        printf("rhp, we need to figure out how to handle this\n");
+      }
+      
+      PUSH_STRING ("Newsgroups: ");
+		  PUSH_STRING (newHeader);
+      PR_FREEIF(newHeader);
+    }
+    else
+    {
+      // This is going to be saved for later, that means we should just store
+      // what the user typed into the "Newsgroup" line in the HEADER_X_MOZILLA_NEWSHOST
+      // header for later use by "Send Unsent Messages", "Drafts" or "Templates"
+      PUSH_STRING (HEADER_X_MOZILLA_NEWSHOST);
+      PUSH_STRING (": ");
+      PUSH_STRING(n2);
+    }
+
 		PR_Free (n2);
 		PUSH_NEWLINE ();
 	}

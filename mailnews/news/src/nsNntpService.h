@@ -34,6 +34,8 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsINntpService Interface 
   ////////////////////////////////////////////////////////////////////////////////////////
+  NS_IMETHOD ConvertNewsgroupsString(const char *newsgroupsStr, char **_retval);
+
   NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURI **_retval);
 
   NS_IMETHOD RunNewsUrl (nsString& urlString, nsString& newsgroupName, nsMsgKey aKey, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURI **_retval);

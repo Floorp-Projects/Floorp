@@ -460,8 +460,11 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   if (m_newsgroups)
     compFields->SetNewsgroups(m_newsgroups, NULL);
 
-  // Need to set this before calling SendMessageFile????
-  // m_newshost
+  // If we have this, we found a HEADER_X_MOZILLA_NEWSHOST which means
+  // that we saved what the user typed into the "Newsgroup" line in this
+  // header
+  if (m_newshost)
+    compFields->SetNewsgroups(m_newshost, NULL);
 
   // Create the listener for the send operation...
   mSendListener = new SendOperationListener();
@@ -747,25 +750,25 @@ nsMsgSendLater::BuildHeaders()
 		  if (!PL_strncasecmp ("BCC", buf, end - buf))
 			{
 			  header = &m_bcc;
-			  prune_p = TRUE;
+			  prune_p = PR_TRUE;
 			}
 		  break;
 		case 'C': case 'c':
 		  if (!PL_strncasecmp ("CC", buf, end - buf))
 			header = &m_to;
 		  else if (!PL_strncasecmp (HEADER_CONTENT_LENGTH, buf, end - buf))
-			prune_p = TRUE;
+			prune_p = PR_TRUE;
 		  break;
 		case 'F': case 'f':
 		  if (!PL_strncasecmp ("FCC", buf, end - buf))
 			{
 			  header = &m_fcc;
-			  prune_p = TRUE;
+			  prune_p = PR_TRUE;
 			}
 		  break;
 		case 'L': case 'l':
 		  if (!PL_strncasecmp ("Lines", buf, end - buf))
-			prune_p = TRUE;
+			prune_p = PR_TRUE;
 		  break;
 		case 'N': case 'n':
 		  if (!PL_strncasecmp ("Newsgroups", buf, end - buf))
@@ -773,7 +776,7 @@ nsMsgSendLater::BuildHeaders()
 		  break;
 		case 'S': case 's':
 		  if (!PL_strncasecmp ("Sender", buf, end - buf))
-			prune_p = TRUE;
+			prune_p = PR_TRUE;
 		  break;
 		case 'T': case 't':
 		  if (!PL_strncasecmp ("To", buf, end - buf))
@@ -784,15 +787,15 @@ nsMsgSendLater::BuildHeaders()
         PRInt32 headLen = PL_strlen(HEADER_X_MOZILLA_STATUS2);
         if (headLen == end - buf &&
           !PL_strncasecmp(HEADER_X_MOZILLA_STATUS2, buf, end - buf))
-          prune_p = TRUE;
+          prune_p = PR_TRUE;
         else if (headLen == end - buf &&
           !PL_strncasecmp(HEADER_X_MOZILLA_STATUS, buf, end - buf))
-          prune_p = do_flags_p = TRUE;
+          prune_p = do_flags_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_DRAFT_INFO, buf, end - buf))
-          prune_p = do_return_receipt_p = TRUE;
+          prune_p = do_return_receipt_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_NEWSHOST, buf, end - buf))
         {
-          prune_p = TRUE;
+          prune_p = PR_TRUE;
           header = &m_newshost;
         }
         break;

@@ -123,12 +123,16 @@ nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value, PRInt32 *
 	/* Since colon is not a legal character in a newsgroup name under son-of-1036
 	   we're assuming that such a header contains a URL, and we should parse it out
 	   to infer the news server. */
-	if (value && MSG_NEWSGROUPS_HEADER_MASK == header && PL_strchr(value, ':')) {
+// RICHIE - for now we are not restricting this to a single mail host...// if (value && MSG_NEWSGROUPS_HEADER_MASK == header && PL_strchr(value, ':')) 
+  if (PR_FALSE)
+  {
 		status = ParseNewsgroupsForUrls (value);
 		if (status == 0)
 			return status; /* it was a news URL, and we snarfed it up */
-		else {
-			if (status == MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS) {
+		else 
+    {
+			if (status == MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS) 
+      {
 #ifdef UNREAD_CODE
 				MSG_Pane *owner = GetOwner();
 				if (owner)
@@ -524,10 +528,12 @@ PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
 {
 	int status = 0;
 
-	/* Here we pull apart the comma-separated header value and look for news
-	   URLs. We'll use the URL to set the newspost URL to determine the host */
-#if 0 //JFD
-	msg_StringArray values (PR_TRUE /*owns memory for strings*/);
+  //
+  // Here we pull apart the comma-separated header value and look for news
+  // URLs. We'll use the URL to set the newspost URL to determine the host 
+  //
+#if 0      // RICHIE - this will change with seth's new approach
+  msg_StringArray values (PR_TRUE /* owns memory for strings */);
 	values.ImportTokenList (value);
 
 	for (int i = 0; i < values.GetSize() && status == 0; i++) {
@@ -557,8 +563,9 @@ PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
 			PR_Free(newValue);
 		}
 	}
-#endif //JFD
-	return status;
+#endif
+
+  return status;
 }
 
 nsresult nsMsgCompFields::SetBody(const char *value, PRInt32 *_retval)
