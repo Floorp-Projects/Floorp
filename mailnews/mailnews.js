@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+pref("mail.showMessengerPerformance", false);
+
 // Added by mwelch 97 Feb
 pref("news.show_pretty_names",              false);
 pref("mail.wrap_long_lines",                false);
