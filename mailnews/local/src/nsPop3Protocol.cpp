@@ -1159,13 +1159,13 @@ nsPop3Protocol::SendStat()
 PRInt32
 nsPop3Protocol::GetStat()
 {
-    char *num;
-    char* newStr;
+  char *num;
+  char* newStr;
 	char* oldStr;
 
     /* check stat response */
-    if(!m_pop3ConData->command_succeeded)
-      return(Error(POP3_STAT_FAILURE));
+  if(!m_pop3ConData->command_succeeded)
+    return(Error(POP3_STAT_FAILURE));
 
     /* stat response looks like:  %d %d
      * The first number is the number of articles
@@ -1174,67 +1174,71 @@ nsPop3Protocol::GetStat()
      *  grab the first and second arg of stat response
      */
 	oldStr = ToNewCString(m_commandResponse);
-    num = nsCRT::strtok(oldStr, " ", &newStr);
-
+  num = nsCRT::strtok(oldStr, " ", &newStr);
+  if (num)
+  {
     m_pop3ConData->number_of_messages = atol(num);
-
     num = nsCRT::strtok(newStr, " ", &newStr);
-	m_commandResponse = newStr;
-	
-    m_totalFolderSize = (PRInt32) atol(num);
+    m_commandResponse = newStr;
+    if (num)
+      m_totalFolderSize = (PRInt32) atol(num);  //we always initialize m_totalFolderSize to 0
+  }
+  else
+    m_pop3ConData->number_of_messages = 0;
+
 	PR_FREEIF(oldStr);
-    m_pop3ConData->really_new_messages = 0;
-    m_pop3ConData->real_new_counter = 1;
+  m_pop3ConData->really_new_messages = 0;
+  m_pop3ConData->real_new_counter = 1;
 
-    m_totalDownloadSize = -1; /* Means we need to calculate it, later. */
+  m_totalDownloadSize = -1; /* Means we need to calculate it, later. */
 
-    if(m_pop3ConData->number_of_messages <= 0) {
-        /* We're all done.  We know we have no mail. */
-        m_pop3ConData->next_state = POP3_SEND_QUIT;
-        PL_HashTableEnumerateEntries(m_pop3ConData->uidlinfo->hash, hash_clear_mapper, nsnull);
-        return(0);
-    }
+  if(m_pop3ConData->number_of_messages <= 0) {
+      /* We're all done.  We know we have no mail. */
+     m_pop3ConData->next_state = POP3_SEND_QUIT;
+     PL_HashTableEnumerateEntries(m_pop3ConData->uidlinfo->hash, hash_clear_mapper, nsnull);
+     return(0);
+  }
 
-    if (m_pop3ConData->only_check_for_new_mail && !m_pop3ConData->leave_on_server &&
-        m_pop3ConData->size_limit < 0) {
-        /* We're just checking for new mail, and we're not playing any games that
-           involve keeping messages on the server.  Therefore, we now know enough
-           to finish up.  If we had no messages, that would have been handled
-           above; therefore, we know we have some new messages. */
-        m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NewMail;
-        m_pop3ConData->next_state = POP3_SEND_QUIT;
-        return(0);
-    }
+  if (m_pop3ConData->only_check_for_new_mail && !m_pop3ConData->leave_on_server &&
+      m_pop3ConData->size_limit < 0) {
+      /* We're just checking for new mail, and we're not playing any games that
+         involve keeping messages on the server.  Therefore, we now know enough
+         to finish up.  If we had no messages, that would have been handled
+         above; therefore, we know we have some new messages. */
+      m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NewMail;
+      m_pop3ConData->next_state = POP3_SEND_QUIT;
+      return(0);
+  }
 
 
-    if (!m_pop3ConData->only_check_for_new_mail) {
-        // The following was added to prevent the loss of Data when we try and
-        // write to somewhere we dont have write access error to (See bug 62480)
-        // (Note: This is only a temp hack until the underlying XPCOM is fixed
-        // to return errors)
+  if (!m_pop3ConData->only_check_for_new_mail) {
+      // The following was added to prevent the loss of Data when we try and
+      // write to somewhere we dont have write access error to (See bug 62480)
+      // (Note: This is only a temp hack until the underlying XPCOM is fixed
+      // to return errors)
 
-        nsresult rv;
-        nsCOMPtr <nsIMsgWindow> msgWindow;
-        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
-        if (mailnewsUrl)
-          rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-	      NS_ASSERTION(NS_SUCCEEDED(rv) && msgWindow, "no msg window");
+      nsresult rv;
+      nsCOMPtr <nsIMsgWindow> msgWindow;
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+      if (mailnewsUrl)
+        rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+	    NS_ASSERTION(NS_SUCCEEDED(rv) && msgWindow, "no msg window");
 
-        rv = m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull, msgWindow,
-                                                      &m_pop3ConData->msg_del_started);
-        if (NS_FAILED(rv))
-          if (rv == NS_MSG_FOLDER_BUSY)
-            return(Error(POP3_MESSAGE_FOLDER_BUSY));
-          else
-            return(Error(POP3_MESSAGE_WRITE_ERROR));
-        if(!m_pop3ConData->msg_del_started)
-        {
-            return(Error(POP3_MESSAGE_WRITE_ERROR));
-        }
-    }
+      rv = m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull, msgWindow,
+                                                    &m_pop3ConData->msg_del_started);
+      if (NS_FAILED(rv))
+        if (rv == NS_MSG_FOLDER_BUSY)
+          return(Error(POP3_MESSAGE_FOLDER_BUSY));
+        else
+          return(Error(POP3_MESSAGE_WRITE_ERROR));
+      if(!m_pop3ConData->msg_del_started)
+      {
+        return(Error(POP3_MESSAGE_WRITE_ERROR));
+      }
+  }
 
-    m_pop3ConData->next_state = POP3_SEND_LIST;
-    return 0;
+  m_pop3ConData->next_state = POP3_SEND_LIST;
+  return 0;
 }
 
 
@@ -1290,7 +1294,7 @@ PRInt32
 nsPop3Protocol::GetList(nsIInputStream* inputStream, 
                         PRUint32 length)
 {
-    char * line, *token, *newStr;
+    char * line;
     PRUint32 ln = 0;
     PRInt32 msg_num;
 
@@ -1327,7 +1331,8 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
 		PR_FREEIF(line);
         return(0);
 	}
-    
+  
+  char *token, *newStr;
 	token = nsCRT::strtok(line, " ", &newStr);
 	if (token)
 	{
@@ -1590,7 +1595,7 @@ PRInt32
 nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream, 
                                  PRUint32 length)
 {
-    char * line, *newStr;
+    char * line;
     PRUint32 ln = 0;
     PRInt32 msg_num;
 
@@ -1641,28 +1646,33 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
         return(0);
     }
     
-    msg_num = atol(nsCRT::strtok(line, " ", &newStr));
-
-    if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) {
-/*	  char *eatMessageIdToken = nsCRT::strtok(newStr, " ", &newStr);	*/
+    char *newStr;
+    char *token = nsCRT::strtok(line, " ", &newStr);
+    if (token)
+    {
+      msg_num = atol(token);
+      if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) 
+      {
+/*	    char *eatMessageIdToken = nsCRT::strtok(newStr, " ", &newStr);	*/
         char *uidl = nsCRT::strtok(newStr, " ", &newStr);/* not really a uidl but a unique token -km */
 
         if (!uidl)
-            /* This is bad.  The server didn't give us a UIDL for this message.
+               /* This is bad.  The server didn't give us a UIDL for this message.
                I've seen this happen when somehow the mail spool has a message
                that contains a header that reads "X-UIDL: \n".  But how that got
                there, I have no idea; must be a server bug.  Or something. */
-            uidl = "";
+          uidl = "";
         
         m_pop3ConData->msg_info[msg_num-1].uidl = PL_strdup(uidl);
         if (!m_pop3ConData->msg_info[msg_num-1].uidl)
-		{
-			PR_FREEIF(line);
-            return MK_OUT_OF_MEMORY;
-		}
+        {
+			    PR_FREEIF(line);
+          return MK_OUT_OF_MEMORY;
+        }
+      }
     }
-    
-	PR_FREEIF(line);
+	  
+    PR_FREEIF(line);
     return(0);
 }
 
@@ -1684,7 +1694,7 @@ PRInt32 nsPop3Protocol::SendUidlList()
 PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream, 
                             PRUint32 length)
 {
-    char * line, *newStr;
+    char * line;
     PRUint32 ln;
     PRInt32 msg_num;
 
@@ -1735,11 +1745,14 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
 		PR_FREEIF(line);
         return(0);
 	}
-
-    msg_num = atol(nsCRT::strtok(line, " ", &newStr));
     
-    if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) 
-	{
+    char *newStr;
+    char *token = nsCRT::strtok(line, " ", &newStr);
+    if (token)
+    {
+      msg_num = atol(token);
+      if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) 
+      {
         char *uidl = nsCRT::strtok(newStr, " ", &newStr);
 
         if (!uidl)
@@ -1751,10 +1764,11 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
 
         m_pop3ConData->msg_info[msg_num-1].uidl = PL_strdup(uidl);
         if (!m_pop3ConData->msg_info[msg_num-1].uidl)
-		{
-			PR_FREEIF(line);
-            return MK_OUT_OF_MEMORY;
-		}
+        {
+			    PR_FREEIF(line);
+          return MK_OUT_OF_MEMORY;
+        }
+      }
     }
     PR_FREEIF(line);
     return(0);
@@ -2173,7 +2187,6 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     PRUint32 buffer_size;
     PRInt32 flags = 0;
     char *uidl = NULL;
-    char *newStr;
     nsresult rv;
 #if 0
     PRInt32 old_bytes_received = m_totalBytesReceived;
@@ -2197,13 +2210,15 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             flags |= MSG_FLAG_PARTIAL;
         }
         else
-		{
-			char * oldStr = ToNewCString(m_commandResponse);
-	        m_pop3ConData->cur_msg_size =
-                atol(nsCRT::strtok(oldStr, " ", &newStr));
+        {
+          char *newStr;
+			    char * oldStr = ToNewCString(m_commandResponse);
+          char *num = nsCRT::strtok(oldStr, " ", &newStr);
+          if (num)
+	          m_pop3ConData->cur_msg_size = atol(num);
           m_commandResponse = newStr;
-			PR_FREEIF(oldStr);
-		}
+			    PR_FREEIF(oldStr);
+        }
         /* RETR complete message */
 
         if (!m_senderInfo.IsEmpty())
