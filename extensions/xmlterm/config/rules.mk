@@ -86,17 +86,17 @@ all: export libs progs
 
 export: $(EXPORTS)
 ifneq (,$(EXPORTS))
-	mkdir -p $(topsrcdir)/dist/include
+	mkdir -p $(topsrcdir)/distrib/include
 	+for x in $^; do                                                 \
-            rm $(topsrcdir)/dist/include/$$x;                            \
-            echo ln -s `pwd`/$$x $(topsrcdir)/dist/include/$$x;      \
-            ln -s `pwd`/$$x $(topsrcdir)/dist/include/$$x;      \
+            rm $(topsrcdir)/distrib/include/$$x;                            \
+            echo ln -s `pwd`/$$x $(topsrcdir)/distrib/include/$$x;      \
+            ln -s `pwd`/$$x $(topsrcdir)/distrib/include/$$x;      \
          done
 endif
 	+$(LOOP_OVER_DIRS)
 
 libs: $(LIBRARY)
-	mkdir -p  $(topsrcdir)/dist/lib $(topsrcdir)/base/lib
+	mkdir -p  $(topsrcdir)/distrib/lib $(topsrcdir)/base/lib
 	+$(LOOP_OVER_DIRS)
 
 progs: $(SIMPLE_PROGRAMS)
@@ -115,7 +115,7 @@ CPP_PROG_LINK = 1
 endif
 
 # Create single executable program (with limited dependency checking)
-$(PROGRAM): $(PROGOBJS) $(wildcard $(topsrcdir)/dist/$(OBJDIR)/*.a)
+$(PROGRAM): $(PROGOBJS) $(wildcard $(topsrcdir)/distrib/$(OBJDIR)/*.a)
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS))
 else
@@ -124,7 +124,7 @@ endif
 
 # Create multiple simple executable programs (with limited dependency checking)
 $(SIMPLE_PROGRAMS): $(OBJDIR)/%: $(OBJDIR)/%.o \
-                    $(wildcard $(topsrcdir)/dist/$(OBJDIR)/*.a)
+                    $(wildcard $(topsrcdir)/distrib/$(OBJDIR)/*.a)
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS))
 else
@@ -135,15 +135,15 @@ endif
 $(LIBRARY): $(OBJS)
 	$(AR) $(OBJS)
 	$(RANLIB) $@
-	-rm $(topsrcdir)/dist/$@
-	ln -s `pwd`/$@ $(topsrcdir)/dist/$@
+	-rm $(topsrcdir)/distrib/$@
+	ln -s `pwd`/$@ $(topsrcdir)/distrib/$@
 
 
 # Compilation rules (with limited dependency checking)
-$(OBJDIR)/%.o: %.c $(wildcard *.h) $(wildcard $(topsrcdir)/dist/include/*.h)
+$(OBJDIR)/%.o: %.c $(wildcard *.h) $(wildcard $(topsrcdir)/distrib/include/*.h)
 	$(CC) -o $@ -c $(CFLAGS) $<
 
-$(OBJDIR)/%.o: %.cpp $(wildcard *.h) $(wildcard $(topsrcdir)/dist/include/*.h)
+$(OBJDIR)/%.o: %.cpp $(wildcard *.h) $(wildcard $(topsrcdir)/distrib/include/*.h)
 	$(CCC) -o $@ -c $(CXXFLAGS) $<
 
 

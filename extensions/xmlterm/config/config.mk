@@ -73,10 +73,10 @@ OS_LDFLAGS  +=
 OBJDIR       = lib
 
 # Library directory
-LIBS_DIR     = -L$(topsrcdir)/dist/$(OBJDIR)
+LIBS_DIR     = -L$(topsrcdir)/distrib/$(OBJDIR)
 
 # Distribution includes
-LOCAL_INCLUDES += -I$(topsrcdir)/dist/include
+LOCAL_INCLUDES += -I$(topsrcdir)/distrib/include
 
 # NSPR libraries
 NSPR_LIBS = -lnspr3
