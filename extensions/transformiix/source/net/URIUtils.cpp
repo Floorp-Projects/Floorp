@@ -29,12 +29,11 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.13 2001/06/10 13:50:48 axel%pike.org Exp $
  */
 
 #include "URIUtils.h"
 
-#ifdef MOZ_XSL
+#ifndef TX_EXE
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -46,10 +45,10 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.13 $ $Date: 2001/06/10 13:50:48 $
+ * @version $Revision: 1.14 $ $Date: 2001/06/10 16:42:43 $
 **/
 
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 //- Constants -/
 
 const String URIUtils::HTTP_PROTOCOL  = "http";
@@ -100,7 +99,7 @@ istream* URIUtils::getInputStream
     * @return the document base of the given href
 **/
 void URIUtils::getDocumentBase(const String& href, String& dest) {
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     String docBase("");
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
@@ -155,7 +154,7 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
  * The new resolved href will be appended to the given dest String
 **/
 void URIUtils::resolveHref(const String& href, const String& base, String& dest) {
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
 
@@ -238,7 +237,7 @@ void URIUtils::getDocumentURI(const String& href, String& docUri) {
         docUri = href;
 } //-- getFragmentIdentifier
 
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 istream* URIUtils::openStream(ParsedURI* uri) {
     if ( !uri ) return 0;
     // check protocol

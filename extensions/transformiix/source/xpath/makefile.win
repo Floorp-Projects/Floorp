@@ -22,8 +22,8 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-!if defined(MOZ_XSL)
-DEFINES=$(DEFINES) -DMOZ_XSL
+!if defined(TX_EXE)
+DEFINES=$(DEFINES) -DTX_EXE
 !endif
 
 CPPSRCS=				\
@@ -61,7 +61,7 @@ CPPSRCS=				\
 	UnionExpr.cpp			\
 	VariableRefExpr.cpp		\
 	XPathNames.cpp			\
-!if defined(MOZ_XSL)
+!if !defined(TX_EXE)
 	nsNodeSet.cpp			\
 	XPathProcessor.cpp		\
 !endif
@@ -102,7 +102,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\UnionExpr.obj			\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
 	.\$(OBJDIR)\XPathNames.obj			\
-!if defined(MOZ_XSL)
+!if !defined(TX_EXE)
 	.\$(OBJDIR)\nsNodeSet.obj			\
 	.\$(OBJDIR)\XPathProcessor.obj		\
 !endif

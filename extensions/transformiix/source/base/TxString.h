@@ -32,11 +32,11 @@
 #include "baseutils.h"
 #include <iostream.h>
 
-#ifdef MOZ_XSL
+#ifdef TX_EXE
+typedef unsigned short UNICODE_CHAR;
+#else
 #include "nsString.h"
 typedef PRUnichar UNICODE_CHAR;
-#else
-typedef unsigned short UNICODE_CHAR;
 #endif
 
 #ifndef NULL
@@ -57,7 +57,7 @@ class String : public TxObject
     String(const char* source);   //Create a string from the characters
     String(const UNICODE_CHAR* source);
     String(const UNICODE_CHAR* source, Int32 length);
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     String(nsString* theNSString);
 #endif
 
@@ -121,7 +121,7 @@ class String : public TxObject
 
     virtual MBool isEqual(const String& data) const; //Check equality between
                                                      //strings
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     virtual MBool isEqualIgnoreCase(const String& data) const;
 #endif
 
@@ -173,7 +173,7 @@ class String : public TxObject
 
     virtual void reverse();               //Reverse the string
 
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     virtual nsString& getNSString();
     virtual const nsString& getConstNSString() const;
 #endif
@@ -187,7 +187,7 @@ class String : public TxObject
     Int32 UnicodeLength(const UNICODE_CHAR* data);
 
   private:
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     nsString* ptrNSString;
 #else
     Int32     strLength;

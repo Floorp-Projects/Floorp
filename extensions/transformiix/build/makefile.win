@@ -22,10 +22,6 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-!ifdef MOZ_XSL
-DEFINES= $(DEFINES) -DMOZ_XSL
-!endif
-
 MODULE=transformiix
 IS_COMPONENT = 1
 

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS            = functions util
 
-ifdef MOZ_XSL
+ifndef TX_EXE
 MODULE = transformiix
 REQUIRES = string xpcom dom layout widget necko xsl_doc
 endif

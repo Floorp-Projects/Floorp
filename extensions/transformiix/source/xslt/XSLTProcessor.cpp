@@ -38,7 +38,6 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.50 2001/06/10 12:54:58 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -51,7 +50,7 @@
 #include "Numbering.h"
 #include "Tokenizer.h"
 #include "URIUtils.h"
-#ifdef MOZ_XSL
+#ifndef TX_EXE
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
@@ -73,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.50 $ $Date: 2001/06/10 12:54:58 $
+ * @version $Revision: 1.51 $ $Date: 2001/06/10 16:41:19 $
 **/
 
 /**
@@ -88,7 +87,7 @@ const String XSLTProcessor::NON_TEXT_TEMPLATE_WARNING =
 **/
 XSLTProcessor::XSLTProcessor() {
 
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     NS_INIT_ISUPPORTS();
 #endif
 
@@ -138,7 +137,7 @@ XSLTProcessor::~XSLTProcessor() {
     //-- currently does nothing, but added for future use
 } //-- ~XSLTProcessor
 
-#ifdef MOZ_XSL
+#ifndef TX_EXE
 
 // XPConnect interface list for XSLTProcessor
 NS_CLASSINFO_MAP_BEGIN(XSLTProcessor)
@@ -166,7 +165,7 @@ void XSLTProcessor::addErrorObserver(ErrorObserver& errorObserver) {
     errorObservers.add(&errorObserver);
 } //-- addErrorObserver
 
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 void XSLTProcessor::print
     (Document& document, OutputFormat* format, ostream& out)
 {
@@ -215,7 +214,7 @@ String& XSLTProcessor::getAppVersion() {
     return appVersion;
 } //-- getAppVersion
 
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 /**
  * Parses all XML Stylesheet PIs associated with the
  * given XML document. If any stylesheet PIs are found with
@@ -555,7 +554,7 @@ void XSLTProcessor::processTopLevel
 
 } //-- process(Document, ProcessorState)
 
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 /**
  * Processes the given XML Document using the given XSL document
  * and returns the result tree
@@ -708,7 +707,7 @@ void XSLTProcessor::process
     delete xslDoc;
 } //-- process
 
-#endif // ifndef MOZ_XSL
+#endif // ifdef TX_EXE
 
   //-------------------/
  //- Private Methods -/
@@ -1101,7 +1100,7 @@ void XSLTProcessor::processAction
                     Element* element = 0;
                     //-- check name validity
                     if ( XMLUtils::isValidQName(name)) {
-#ifdef MOZ_XSL
+#ifndef TX_EXE
                         // XXX (pvdb) Check if we need to set a new default namespace?
                         String nameSpaceURI;
                         ps->getResultNameSpaceURI(name, nameSpaceURI);
@@ -1332,7 +1331,7 @@ void XSLTProcessor::processAction
             }
             //-- literal
             default:
-#ifdef MOZ_XSL
+#ifndef TX_EXE
                 // Find out if we have a new default namespace
                 MBool newDefaultNS = MB_FALSE;
                 String nsURI = actionElement->getAttribute(XMLUtils::XMLNS);
@@ -1396,7 +1395,7 @@ void XSLTProcessor::processAction
                     tmp = tmp->getNextSibling();
                 }
                 ps->getNodeStack()->pop();
-#ifdef MOZ_XSL
+#ifndef TX_EXE
                 if ( newDefaultNS ) {
                     ps->getDefaultNSURIStack()->pop();
                 }
@@ -1658,7 +1657,7 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
         {
             Element* element = (Element*)node;
             String nodeName = element->getNodeName();
-#ifdef MOZ_XSL
+#ifndef TX_EXE
             // Find out if we have a new default namespace
             MBool newDefaultNS = MB_FALSE;
             String nsURI = element->getAttribute(XMLUtils::XMLNS);
@@ -1690,7 +1689,7 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             //-- process template
             processTemplate(node, action, ps);
             ps->getNodeStack()->pop();
-#ifdef MOZ_XSL
+#ifndef TX_EXE
             if ( newDefaultNS ) {
                 ps->getDefaultNSURIStack()->pop();
             }
@@ -1745,7 +1744,7 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
     }
 } //-- xslCopyOf
 
-#ifdef MOZ_XSL
+#ifndef TX_EXE
 //#define PRINTF NS_LOG_PRINTF(XSLT)
 //#define FLUSH  NS_LOG_FLUSH(XSLT)
 NS_IMETHODIMP
