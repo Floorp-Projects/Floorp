@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 #ifndef nsGenericXMLElement_h___
 #define nsGenericXMLElement_h___
@@ -85,8 +86,6 @@ public:
   nsresult SetContainingNameSpace(nsINameSpace* aNameSpace);
   nsresult GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
 
-  nsresult SetNameSpacePrefix(nsIAtom* aNameSpace);
-  nsresult GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult MaybeTriggerAutoLink(nsIWebShell *aShell);
 

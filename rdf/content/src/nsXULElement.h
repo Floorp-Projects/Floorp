@@ -21,6 +21,7 @@
  *   Chris Waterson <waterson@netscape.com>
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 
 /*
@@ -56,7 +57,6 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 #include "nsIURI.h"
-#include "nsIXMLContent.h"
 #include "nsIXULContent.h"
 #include "nsIBoxObject.h"
 #include "nsXULAttributes.h"
@@ -311,8 +311,7 @@ public:
 
  */
 
-class nsXULElement : public nsIXMLContent,
-                     public nsIXULContent,
+class nsXULElement : public nsIXULContent,
                      public nsIDOMXULElement,
                      public nsIDOMEventReceiver,
                      public nsIScriptEventHandlerOwner,
@@ -393,8 +392,6 @@ public:
     // nsIXMLContent
     NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
     NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
-    NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
-    NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
     NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 
     // nsIStyledContent

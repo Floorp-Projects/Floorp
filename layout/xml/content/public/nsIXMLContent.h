@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 
 #ifndef nsIXMLContent_h___
@@ -44,9 +45,6 @@ public:
   NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace) = 0;
   NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const = 0;
   
-  NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace) = 0;
-  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const = 0;
-
   /**
    * Give this element a change to fire its links that should be fired
    * automatically when loaded. If the element was an autoloading link
