@@ -107,7 +107,7 @@ $tinder_version = '0.09';
 $PROGRAM = $0;
 
 
-if ($ARGV[0] !~ m/^-/) {
+if ( ($ARGV[0]) && ($ARGV[0] !~ m/^-/) ) {
     die("Command line arguments must begin with a '-'\n");
 }
 
