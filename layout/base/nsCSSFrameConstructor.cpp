@@ -3187,15 +3187,24 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
       // NOT create psuedoframe for it.
       // see bug 159359
       nsCOMPtr<nsINodeInfo> parentNodeInfo, childNodeInfo;
-      aParentContent->GetNodeInfo(*getter_AddRefs(parentNodeInfo));
       aChildContent->GetNodeInfo(*getter_AddRefs(childNodeInfo));
-      if (childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
-          (parentNodeInfo->Equals(nsHTMLAtoms::table, kNameSpaceID_None) ||
-           parentNodeInfo->Equals(nsHTMLAtoms::tr, kNameSpaceID_None) ||
-           parentNodeInfo->Equals(nsHTMLAtoms::tbody, kNameSpaceID_None) ||
-           parentNodeInfo->Equals(nsHTMLAtoms::thead, kNameSpaceID_None) ||
-           parentNodeInfo->Equals(nsHTMLAtoms::tfoot, kNameSpaceID_None))) {
-        break;
+      // Sometimes aChildContent is a #text node.  In those cases it
+      // does not have a nodeinfo, and in those cases we want to
+      // construct a foreign frame for it in any case.  So we can just
+      // null-check the nodeinfo here.
+      NS_ASSERTION(childNodeInfo ||
+                   aChildContent->IsContentOfType(nsIContent::eTEXT),
+                   "Non-#text nodes should have a nodeinfo here!");
+      if (childNodeInfo) {
+        aParentContent->GetNodeInfo(*getter_AddRefs(parentNodeInfo));
+        if (childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
+            (parentNodeInfo->Equals(nsHTMLAtoms::table, kNameSpaceID_None) ||
+             parentNodeInfo->Equals(nsHTMLAtoms::tr, kNameSpaceID_None) ||
+             parentNodeInfo->Equals(nsHTMLAtoms::tbody, kNameSpaceID_None) ||
+             parentNodeInfo->Equals(nsHTMLAtoms::thead, kNameSpaceID_None) ||
+             parentNodeInfo->Equals(nsHTMLAtoms::tfoot, kNameSpaceID_None))) {
+          break;
+        }
       }
 
       rv = ConstructTableForeignFrame(aPresShell, aPresContext, aState, aChildContent, 
