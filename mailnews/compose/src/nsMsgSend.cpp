@@ -149,8 +149,6 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mCompFields = nsnull;			/* Where to send the message once it's done */
   mListenerArray = nsnull;
   mListenerArrayCount = 0;
-  mNewsPostListener = nsnull;
-  mMailSendListener = nsnull;
   mSendMailAlso = PR_FALSE;
 	mOutputFile = nsnull;
 
@@ -2312,9 +2310,6 @@ MailDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
     ptr->DeliverAsMailExit(aUrl, aExitCode);
 
-    if (ptr->mMailSendListener) {
-      delete ptr->mMailSendListener;
-    }
     NS_RELEASE(ptr);
   }
 
@@ -2332,8 +2327,6 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 
     ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
 
-    if (ptr->mNewsPostListener)
-      delete ptr->mNewsPostListener;
     NS_RELEASE(ptr);
   }
 
@@ -2477,7 +2470,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)
   {
-    mMailSendListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
+    nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
+    mMailSendListener = do_QueryInterface(aListener);
+
     if (!mMailSendListener)
     {
       // RICHIE_TODO - message loss here?
@@ -2488,9 +2483,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
     // using callbacks for notification
     // 
-  	NS_ADDREF_THIS(); 
-	nsCOMPtr<nsIFileSpec> aFileSpec;
-	NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
+  	NS_ADDREF_THIS(); // why are we forcing an addref on ourselves? this doesn't look right to me
+	  nsCOMPtr<nsIFileSpec> aFileSpec;
+	  NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity, mMailSendListener, nsnull, nsnull);
   }
   
@@ -2509,7 +2504,9 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {
-    mNewsPostListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
+    nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
+    mNewsPostListener = do_QueryInterface(aListener);
+
     if (!mNewsPostListener)
     {
       // RICHIE_TODO - message loss here?
@@ -2520,8 +2517,8 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
     // using callbacks for notification
     // 
-	NS_ADDREF_THIS();
-  	AddRef();
+	NS_ADDREF_THIS();  // two addrefs on ourselves? This looks bogus too....
+ 	AddRef();
 	nsCOMPtr<nsIFileSpec>fileToPost;
 	
 	rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
@@ -3599,7 +3596,7 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
                                                nsMsgDeliverMode   mode,
                                                char          	  *dest_uri)
 {
-  char        *uri = nsnull;
+  nsCAutoString uri;
 
   mCopyObj = new nsMsgCopy();
   if (!mCopyObj)
@@ -3612,11 +3609,10 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   nsresult    rv;
 
   if (dest_uri && *dest_uri)
-  	uri = PL_strdup(dest_uri);
+  	uri = dest_uri;
   else
   	uri = GetFolderURIFromUserPrefs(mode, mUserIdentity);
   rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
                                     this, uri, mMsgToReplace);
-  PR_FREEIF(uri);
   return rv;
 }

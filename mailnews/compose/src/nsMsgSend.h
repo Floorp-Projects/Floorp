@@ -136,6 +136,7 @@
 #include "nsIMessage.h"
 #include "nsIDOMNode.h"
 #include "nsIEditorShell.h"
+#include "nsIUrlListener.h"
 #if 0
 #include "nsMsgCopy.h"
 #endif
@@ -345,8 +346,8 @@ public:
   PRInt32                   mListenerArrayCount;
 
   // we need two, in the case where we are sending and posting the same message
-  nsMsgDeliveryListener     *mNewsPostListener;
-  nsMsgDeliveryListener     *mMailSendListener;
+  nsCOMPtr<nsIUrlListener>  mNewsPostListener;
+  nsCOMPtr<nsIUrlListener>  mMailSendListener;
   
   PRBool                    mSendMailAlso;
   nsIFileSpec               *mReturnFileSpec;     // a holder for file spec's to be returned to caller
