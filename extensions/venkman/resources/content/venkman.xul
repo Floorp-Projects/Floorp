@@ -140,10 +140,12 @@
     <menubar id="main-menubar" persist="collapsed">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
+         <!--
           <menuitem id="menu_ReloadUI" key="key_reload_ui"
             observes="cmd_reload_ui"
             label="&ReloadUI.label;" accesskey="&ReloadUI.aKey;"/>
           <menuseparator/>
+         -->
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
@@ -160,15 +162,15 @@
                 accesskey="&TModeMenu.aKey;">
             <menupopup oncreate="console.onTModeMenuCreate();">
               <menuitem id="menu_TModeIgnore"
-                        observes="cmd_tmode_ignore" type="checkbox"
+                        observes="cmd_tmode_ignore" type="radio"
                         label="&TModeIgnore.label;"
                         accesskey="&TModeIgnore.aKey;"/>
               <menuitem id="menu_TModeTrace"
-                        observes="cmd_tmode_trace" type="checkbox"
+                        observes="cmd_tmode_trace" type="radio"
                         label="&TModeTrace.label;"
                         accesskey="&TModeTrace.aKey;"/>
               <menuitem id="menu_TModeBreak"
-                        observes="cmd_tmode_break" type="checkbox"
+                        observes="cmd_tmode_break" type="radio"
                         label="&TModeBreak.label;"
                         accesskey="&TModeBreak.aKey;"/>
               <menuseparator/>
