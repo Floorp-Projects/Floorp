@@ -17,12 +17,11 @@
  *
  */
 
-#include "nsNetUtil.h"
+#include "nsNeckoUtil.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIFileSpec.h"
 #include "nsSpecialSystemDirectory.h" 
-#include "nsJARDownloadListener.h"
 #include "nsJARChannel.h"
 #include "nsCRT.h"
 #include "nsIFileTransportService.h"
@@ -31,7 +30,7 @@
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
-static NS_DEFINE_CID(kJARCID, NS_JAR_CID);
+static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -456,25 +455,29 @@ NS_IMETHODIMP
 nsJARChannel::Open(char* *contentType, PRInt32 *contentLength) 
 {
 	nsresult rv;
-	rv = nsComponentManager::CreateInstance(kJARCID, 
-											nsnull,
-											NS_GET_IID(nsIJAR),
-											getter_AddRefs(mJAR));
+	rv = nsComponentManager::CreateInstance(kZipReaderCID, 
+                                            nsnull,
+                                            NS_GET_IID(nsIZipReader),
+                                            getter_AddRefs(mJAR));
     if (NS_FAILED(rv)) return rv;
 
-    char* path;
-    rv = mJARBaseFile->GetNativePath(&path);
+    nsFileSpec fs;
+    rv = mJARBaseFile->GetFileSpec(&fs);
+    if (NS_FAILED(rv)) return rv; 
+
+	rv = mJAR->Init(fs);
+    if (NS_FAILED(rv)) return rv; 
+
+	rv = mJAR->Open();
+    if (NS_FAILED(rv)) return rv; 
+
+    nsCOMPtr<nsIZipEntry> entry;
+	rv = mJAR->GetEntry(mJAREntry, getter_AddRefs(entry));
     if (NS_FAILED(rv)) return rv;
 
-	PRInt32 retVal;
-	rv = mJAR->Open(path, &retVal); // XXX this retVal sucks! -- fix nsIJAR interface
-    nsCRT::free(path);
-    if (NS_FAILED(rv) || retVal) return rv; 
-
-	rv = mJAR->ItemSize(mJAREntry, (PRUint32*)&mContentLength);
+    rv = entry->GetRealSize((PRUint32*)contentLength);
     if (NS_FAILED(rv)) return rv;
 
-    *contentLength = mContentLength;
     return GetContentType(contentType);
 }
 

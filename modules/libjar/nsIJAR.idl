@@ -61,7 +61,6 @@ interface nsIJAR : nsIZip
   /* This interface will be filled with other "JAR"-related functions. */
   /* The term "JAR" is in reference to security as opposed to "Zip" 
    * which is a non-secure archive format.                             */
-	
 };
 
 [uuid(70993CAD-2922-11d3-A431-0060B0EB5963)]

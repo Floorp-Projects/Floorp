@@ -721,6 +721,13 @@ nsFileChannel::Execute(const char *args)
     return rv;
 }
 
+NS_IMETHODIMP
+nsFileChannel::GetFileSpec(nsFileSpec *spec)
+{
+    *spec = mSpec;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult

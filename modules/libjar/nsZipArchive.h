@@ -62,6 +62,8 @@ public:
   nsZipItem();
   ~nsZipItem();
 
+  PRInt32 Init(nsZipItem* other);
+
 private:
   //-- prevent copies and assignments
   nsZipItem& operator=(const nsZipItem& rhs);
@@ -99,7 +101,20 @@ public:
    * @return  status code
    */
   PRInt32 OpenArchive( const char * aArchiveName );
- 
+
+  /**
+   * Closes an open archive.
+   */
+  PRInt32 CloseArchive();
+
+  /** 
+   * GetItem
+   *
+   * @param   aFilename Name of file in the archive
+   * @return  status code
+   */
+  PRInt32 GetItem(const char * aFilename, nsZipItem *result);
+  
   /** 
    * ReadInit
    * 

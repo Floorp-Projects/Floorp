@@ -17,12 +17,12 @@
  */
 
 #include "nsJARURI.h"
-#include "nsNetUtil.h"
+#include "nsNeckoUtil.h"
 #include "nsIIOService.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIJAR.h"
+#include "nsIZipReader.h"
  
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
  

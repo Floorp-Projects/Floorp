@@ -29,16 +29,6 @@
 #include "nsIURL.h"
 #include "nsJARChannel.h"
 
-//temp vars
-/**
-#include "nsIZip.h"
-#include "nsIJAR.h"
-#include "nsCOMPtr.h"
-#include "nsIMIMEService.h"
-#define DEFAULT_TYPE "text/html"
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
-static NS_DEFINE_CID(kJARCID, NS_JAR_CID);
-**/
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kJARUriCID,        NS_JARURI_CID);
 

@@ -54,7 +54,7 @@
 #include "nsIComponentManager.h"
 #include "nsIProperties.h"
 #include "nsIEnumerator.h"
-#include "nsIJAR.h"
+#include "nsIZipReader.h"
 
 class nsInstallInfo
 {
@@ -266,7 +266,7 @@ class nsInstall
         JSObject*           mWinProfileObject;
         
         nsString            mJarFileLocation;
-        nsIJAR*             mJarFileData;
+        nsIZipReader*       mJarFileData;
         
         nsString            mInstallArguments;
         nsString            mInstallURL;

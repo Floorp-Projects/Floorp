@@ -53,12 +53,8 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-static NS_DEFINE_IID(kIJAR_IID, NS_IJAR_IID);
-static NS_DEFINE_IID(kJAR_CID,  NS_JAR_CID);
-
-static NS_DEFINE_IID(kIJARFactory_IID, NS_IJARFactory_IID);
-static NS_DEFINE_IID(kJARFactory_CID,  NS_JARFactory_CID);
-
+static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
+static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
 
 //----------------------------------------------------------------------
 
@@ -151,7 +147,7 @@ nsJARModule::GetClassObject(nsIComponentManager *aCompMgr,
     // Choose the appropriate factory, based on the desired instance
     // class type (aClass).
     nsCOMPtr<nsIGenericFactory> fact;
-    if (aClass.Equals(kJAR_CID)) {
+    if (aClass.Equals(kZipReaderCID)) {
         if (!mFactory) {
             // Create and save away the factory object for creating
             // new instances of JAR. This way if we are called
@@ -188,7 +184,7 @@ struct Components {
 
 // The list of components we register
 static Components gComponents[] = {
-    { "LibJAR Component", &kJAR_CID,
+    { "Zip Reader", &kZipReaderCID,
       "component://netscape/libjar", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))

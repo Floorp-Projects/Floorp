@@ -28,8 +28,8 @@
 #ifndef nsJAR_h__
 #define nsJAR_h__
 
+#include "nsIZipReader.h"
 #include "prtypes.h"
-#include "nsIJAR.h"
 #include "nsIEnumerator.h"
 #include "nsZipArchive.h"
 #include "zipfile.h"
@@ -44,22 +44,23 @@ class nsIInputStream;
  * This class allows nsZipArchive to remain non-XPCOM yet still be loadable
  * by Mozilla.
  *------------------------------------------------------------------------*/
-class nsJAR : public nsIJAR
+class nsJAR : public nsIZipReader
 {
   public:
 
     nsJAR();
     virtual ~nsJAR();
     
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_JAR_CID );
+    NS_DEFINE_STATIC_CID_ACCESSOR( NS_ZIPREADER_CID );
   
     NS_DECL_ISUPPORTS
 
-    NS_DECL_NSIZIP
+    NS_DECL_NSIZIPREADER
   
   private:
 
-    nsZipArchive mZip;
+    nsFileSpec          mZipFile;
+    nsZipArchive        mZip;
 };
 
 
@@ -71,16 +72,12 @@ class nsJAR : public nsIJAR
  * An individual JAR entry. A set of nsJARItems macthing a
  * supplied pattern are returned in a nsJAREnumerator.
  */
-class nsJARItem : public nsZipItem, public nsIJARItem
+class nsJARItem : public nsZipItem, public nsIZipEntry
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIZIPENTRY
 
-    //NS_DEFINE_STATIC_CID_ACCESSOR( NS_JARITEM_CID );
-
-    NS_DECL_NSIJARITEM
-
-    nsJARItem(nsZipItem* aOther);
     nsJARItem();
     virtual ~nsJARItem();
 };
@@ -98,12 +95,7 @@ class nsJAREnumerator : public nsISimpleEnumerator
 {
 public:
     NS_DECL_ISUPPORTS
-
-    //NS_DEFINE_STATIC_CID_ACCESSOR( NS_JARENUMERATOR_CID );
-
-    // nsISimpleEnumerator methods
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
+    NS_DECL_NSISIMPLEENUMERATOR
 
     nsJAREnumerator(nsZipFind *aFind);
     virtual ~nsJAREnumerator();

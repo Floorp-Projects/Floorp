@@ -44,8 +44,7 @@ EXPORTS		= zipfile.h \
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 XPIDLSRCS	= \
-		nsIZip.idl \
-		nsIJAR.idl \
+		nsIZipReader.idl \
 		$(NULL)
 
 

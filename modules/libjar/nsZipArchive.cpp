@@ -290,6 +290,54 @@ PRInt32 nsZipArchive::OpenArchive( const char * aArchiveName )
 }
 
 //---------------------------------------------
+//  nsZipArchive::CloseArchive
+//---------------------------------------------
+PRInt32 nsZipArchive::CloseArchive()
+{
+  // close the file if open
+  if ( mFd != 0 ) {
+    PR_Close(mFd);
+  }
+
+  // delete nsZipItems in table
+  nsZipItem* pItem;
+  for ( int i = 0; i < ZIP_TABSIZE; ++i)
+  {
+    pItem = mFiles[i];
+    while ( pItem != 0 )
+    {
+      mFiles[i] = pItem->next;
+      delete pItem;
+      pItem = mFiles[i];
+    }
+  }
+  return ZIP_OK;
+}
+
+//---------------------------------------------
+// nsZipArchive::ItemSize
+//---------------------------------------------
+PRInt32 nsZipArchive::GetItem( const char * aFilename, nsZipItem *result)
+{
+	//-- Parameter validity check
+	if (aFilename == 0)
+		return ZIP_ERR_PARAM;
+
+	//PRInt32 result;
+	nsZipItem* aItem;
+
+	//-- find file information
+	aItem = GetFileItem( aFilename );
+	if ( aItem == 0 )
+	{
+		return ZIP_ERR_FNF;
+	}
+
+    memcpy(result, &aItem, sizeof(aItem));    // copy struct
+	return ZIP_OK;
+}
+
+//---------------------------------------------
 // nsZipArchive::ReadInit
 //---------------------------------------------
 PRInt32 nsZipArchive::ReadInit(const char* aFilename, nsZipRead** aRead)
@@ -1145,23 +1193,7 @@ nsZipArchive::nsZipArchive()
 
 nsZipArchive::~nsZipArchive()
 {
-  // close the file if open
-  if ( mFd != 0 ) {
-    PR_Close(mFd);
-  }
-
-  // delete nsZipItems in table
-  nsZipItem* pItem;
-  for ( int i = 0; i < ZIP_TABSIZE; ++i)
-  {
-    pItem = mFiles[i];
-    while ( pItem != 0 )
-    {
-      mFiles[i] = pItem->next;
-      delete pItem;
-      pItem = mFiles[i];
-    }
-  }
+  (void)CloseArchive();
 }
 
 
@@ -1177,6 +1209,28 @@ nsZipItem::~nsZipItem()
 {
   if (name != 0 )
     delete [] name;
+}
+
+PRInt32
+nsZipItem::Init(nsZipItem* other)
+{
+  if (name) delete[] name;
+  name = (char*)PR_Malloc(other->namelen);
+  if (name == 0)
+    return ZIP_ERR_MEMORY;
+  memcpy(name, other->name, other->namelen);
+  
+  namelen = other->namelen;
+  offset = other->offset;
+  headerloc = other->headerloc;
+  compression = other->compression;
+  size = other->size;
+  realsize = other->realsize;
+  crc32 = other->crc32;
+  mode = other->mode;
+  next = 0;        // don't copy next
+
+  return ZIP_OK;
 }
 
 //------------------------------------------
@@ -1224,8 +1278,6 @@ nsZipArchive* nsZipFind::GetArchive()
 
     return mArchive;
 }
-
-
 
 
 //------------------------------------------
