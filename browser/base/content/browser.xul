@@ -32,8 +32,6 @@ Contributor(s):
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % buildDTD SYSTEM "chrome://global/content/build.dtd" >
-%buildDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
 %browserDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
@@ -48,8 +46,6 @@ Contributor(s):
         onload="Startup()" onunload="Shutdown()"
         contenttitlesetting="true"
         title="&mainWindow.title;" 
-        titlemodifier="&mainWindow.titlemodifier;" 
-        titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
         width="610" height="450"
         screenX="4" screenY="4"
