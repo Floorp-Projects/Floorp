@@ -897,21 +897,25 @@ __ptr_t calloc(size_t count, size_t size)
 
 __ptr_t realloc(__ptr_t ptr, size_t size)
 {
+    __ptr_t oldptr;
     callsite *oldsite, *site;
     size_t oldsize;
     PLHashNumber hash;
-    PLHashEntry *he;
+    PLHashEntry **hep, *he;
     allocation *alloc;
 
     tmstats.realloc_calls++;
     if (suppress_tracing == 0) {
-        if (tmmon)
-            PR_EnterMonitor(tmmon);
+        oldptr = ptr;
         oldsite = NULL;
         oldsize = 0;
-        if (ptr && get_allocations()) {
-            hash = hash_pointer(ptr);
-            he = *PL_HashTableRawLookup(allocations, hash, ptr);
+        he = NULL;
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
+        if (oldptr && get_allocations()) {
+            hash = hash_pointer(oldptr);
+            hep = PL_HashTableRawLookup(allocations, hash, oldptr);
+            he = *hep;
             if (he) {
                 oldsite = (callsite*) he->value;
                 alloc = (allocation*) he;
@@ -936,6 +940,11 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
         if (tmmon && suppress_tracing == 0)
             PR_ExitMonitor(tmmon);
 #endif
+
+        /*
+         * When realloc() fails, the original block is not freed or moved, so
+         * we'll leave the allocation entry untouched.
+         */
     } else if (suppress_tracing == 0) {
 #ifdef EXIT_TMMON_AROUND_REALLOC
         if (tmmon)
@@ -948,7 +957,24 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
         }
         if (ptr && allocations) {
             suppress_tracing++;
-            he = PL_HashTableAdd(allocations, ptr, site);
+            if (ptr != oldptr) {
+                /*
+                 * If we're reallocating (not allocating new space by passing
+                 * null to realloc) and realloc moved the block, free oldptr.
+                 */
+                if (he)
+                    PL_HashTableRawRemove(allocations, hep, he);
+
+                /* Record the new allocation now, setting he. */
+                he = PL_HashTableAdd(allocations, ptr, site);
+            } else {
+                /*
+                 * If we haven't yet recorded an allocation (possibly due to a
+                 * temporary memory shortage), do it now.
+                 */
+                if (!he)
+                    he = PL_HashTableAdd(allocations, ptr, site);
+            }
             suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
