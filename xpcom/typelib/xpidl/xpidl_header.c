@@ -221,16 +221,12 @@ interface(TreeState *state)
               continue;
 
           case IDLN_CODEFRAG:
-/* IDL_tree_warning crashes in libIDL 0.6.5, sometimes */
-#if !(LIBIDL_MAJOR_VERSION == 0 && LIBIDL_MINOR_VERSION == 6 && \
-      LIBIDL_MICRO_VERSION == 5)
-              IDL_tree_warning(iter, IDL_WARNING1,
-                               "%%{ .. %%} code fragment within interface "
-                               "ignored when generating NS_DECL_IFOO macro; "
-                               "if the code fragment contains method "
-                               "declarations, the macro probably isn't "
-                               "complete.");
-#endif
+              XPIDL_WARNING((iter, IDL_WARNING1,
+                             "%%{ .. %%} code fragment within interface "
+                             "ignored when generating NS_DECL_IFOO macro; "
+                             "if the code fragment contains method "
+                             "declarations, the macro probably isn't "
+                             "complete."));
               continue;
 
           default:
@@ -476,9 +472,9 @@ attr_dcl(TreeState *state)
 static gboolean
 do_enum(TreeState *state)
 {
-    IDL_tree_warning(state->tree, IDL_WARNING1,
-                     "enums not supported, enum \'%s\' ignored",
-                     IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str);
+    XPIDL_WARNING((state->tree, IDL_WARNING1,
+                   "enums not supported, enum \'%s\' ignored",
+                   IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str));
     return TRUE;
 #if 0
     IDL_tree enumb = state->tree, iter;
@@ -509,9 +505,9 @@ do_const_dcl(TreeState *state)
     if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
         IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
         != IDLN_INTERFACE) {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-                         "const decl \'%s\' not inside interface, ignored",
-                         name);
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "const decl \'%s\' not inside interface, ignored",
+                       name));
         return TRUE;
     }
 
@@ -530,8 +526,9 @@ do_const_dcl(TreeState *state)
         fprintf(state->file, "\n  enum { %s = %d };\n",
                              name, (int) IDL_INTEGER(dcl->const_exp).value);
     } else {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-            "const decl \'%s\' was not of type short or long, ignored", name);
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "const decl \'%s\' was not of type "
+                       "short or long, ignored", name));
     }
     return TRUE;
 }
@@ -544,8 +541,8 @@ do_typedef(TreeState *state)
         complex;
 
     if (IDL_NODE_TYPE(type) == IDLN_TYPE_SEQUENCE) {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-                         "sequences not supported, ignored");
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "sequences not supported, ignored"));
     } else {
         state->tree = type;
         fputs("typedef ", state->file);
@@ -741,9 +738,9 @@ codefrag(TreeState *state)
 {
     char *desc = IDL_CODEFRAG(state->tree).desc;
     if (strcmp(desc, "C++")) {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-                         "ignoring '%%{%s' escape. "
-                         "(Use '%%{C++' to escape verbatim code.)", desc);
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "ignoring '%%{%s' escape. "
+                       "(Use '%%{C++' to escape verbatim code.)", desc));
 
         return TRUE;
     }

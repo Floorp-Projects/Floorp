@@ -564,9 +564,9 @@ constant_declaration(TreeState *state)
         IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree))) != 
         IDLN_INTERFACE) {
 
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-                         "A constant \"%s\" was declared outside an interface."
-                         "  It was ignored.", name);
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "A constant \"%s\" was declared outside an interface."
+                       "  It was ignored.", name));
 
         return TRUE;
     }
@@ -614,9 +614,9 @@ constant_declaration(TreeState *state)
 		(isshort ? "short" : "int"),
                 name, (int) IDL_INTEGER(declaration->const_exp).value);
     } else {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-                         "A constant \"%s\" was not of type short or long."
-                         "  It was ignored.", name);	
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "A constant \"%s\" was not of type short or long."
+                       "  It was ignored.", name));	
     }
 
     return TRUE;
@@ -699,9 +699,9 @@ attribute_declaration(TreeState *state)
 static gboolean
 enum_declaration(TreeState *state)
 {
-    IDL_tree_warning(state->tree, IDL_WARNING1,
-                     "enums not supported, enum \'%s\' ignored",
-                     IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str);
+    XPIDL_WARNING((state->tree, IDL_WARNING1,
+                   "enums not supported, enum \'%s\' ignored",
+                   IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str));
     return TRUE;
 }
 

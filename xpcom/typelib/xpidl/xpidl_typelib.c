@@ -933,9 +933,9 @@ typelib_const_dcl(TreeState *state)
     if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
         IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
         != IDLN_INTERFACE) {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-                         "const decl \'%s\' not inside interface, ignored",
-                         name);
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "const decl \'%s\' not inside interface, ignored",
+                       name));
         return TRUE;
     }
 
@@ -987,8 +987,8 @@ typelib_const_dcl(TreeState *state)
         }
         NEXT_CONST(state)++;
     } else {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-            "const decl \'%s\' was not of type short or long, ignored", name);
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+            "const decl \'%s\' was not of type short or long, ignored", name));
     }
     return TRUE;
 
@@ -1000,8 +1000,8 @@ typelib_const_dcl(TreeState *state)
     /* const -> list -> interface */
     if (IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
         != IDLN_INTERFACE) {
-        IDL_tree_warning(state->tree, IDL_WARNING1,
-                         "const decl not inside interface!\n");
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "const decl not inside interface!\n"));
         return TRUE;
     }
 
@@ -1088,9 +1088,9 @@ typelib_const_dcl(TreeState *state)
 static gboolean
 typelib_enum(TreeState *state)
 {
-    IDL_tree_warning(state->tree, IDL_WARNING1,
-                     "enums not supported, enum \'%s\' ignored",
-                     IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str);
+    XPIDL_WARNING((state->tree, IDL_WARNING1,
+                   "enums not supported, enum \'%s\' ignored",
+                   IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str));
     return TRUE;
 }
 
