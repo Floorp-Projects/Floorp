@@ -1072,6 +1072,14 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
                           line[L] = 0;
                       }
 					}
+                    else if (L == 0 && !fileStream->eof()
+                             /* && add_crlf_to_line_endings */)
+                    {
+                        // jt ** empty line; output CRLF
+                        line[L++] = CR;
+                        line[L++] = LF;
+                        line[L] = 0;
+                    }
 
 					bsize -= L;
 					b += L;
