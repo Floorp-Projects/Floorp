@@ -115,7 +115,7 @@ nsSupportsArray::Equals(const nsISupportsArray* aOther)
 NS_IMETHODIMP_(nsISupports*)
 nsSupportsArray::ElementAt(PRUint32 aIndex)
 {
-  if ((0 <= aIndex) && (aIndex < mCount)) {
+  if (aIndex < mCount) {
     nsISupports*  element = mArray[aIndex];
     NS_ADDREF(element);
     return element;
@@ -134,7 +134,7 @@ NS_IMETHODIMP_(PRInt32)
 nsSupportsArray::IndexOfStartingAt(const nsISupports* aPossibleElement,
                                    PRUint32 aStartIndex)
 {
-  if ((0 <= aStartIndex) && (aStartIndex < mCount)) {
+  if (aStartIndex < mCount) {
     const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
     const nsISupports** ep = (start + aStartIndex);
     const nsISupports** end = (start + mCount);
@@ -166,7 +166,7 @@ nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
-  if ((0 <= aIndex) && (aIndex <= mCount)) {
+  if (aIndex <= mCount) {
     if (mArraySize < (mCount + 1)) {  // need to grow the array
       mArraySize += kGrowArrayBy;
       nsISupports** oldArray = mArray;
@@ -207,7 +207,7 @@ nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
-  if ((0 <= aIndex) && (aIndex < mCount)) {
+  if (aIndex < mCount) {
     NS_ADDREF(aElement);  // addref first in case it's the same object!
     NS_RELEASE(mArray[aIndex]);
     mArray[aIndex] = aElement;
@@ -219,7 +219,7 @@ nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::RemoveElementAt(PRUint32 aIndex)
 {
-  if ((0 <= aIndex) && (aIndex < mCount)) {
+  if (aIndex < mCount) {
     NS_RELEASE(mArray[aIndex]);
     mCount--;
     PRInt32 slide = (mCount - aIndex);
@@ -235,7 +235,7 @@ nsSupportsArray::RemoveElementAt(PRUint32 aIndex)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex)
 {
-  if ((0 <= aStartIndex) && (aStartIndex < mCount)) {
+  if (aStartIndex < mCount) {
     nsISupports** ep = mArray;
     nsISupports** end = ep + mCount;
     while (ep < end) {
