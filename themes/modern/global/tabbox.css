@@ -250,7 +250,7 @@ tab:hover:active[selected="true"] > .tab-right >  .tab-right-btm {
 
 .tab-bottom > .tab-mid > .tab-mid-btm {
   background: none;
-  height: none;
+  height: 0px;
 }
 
 .tab-bottom > .tab-right {
