@@ -1551,6 +1551,11 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         if (NS_FAILED(rv)) return rv;
       }
 
+      // save the charset of a message being replied to because
+      // we need to use it when decoding RFC-2047-encoded author name
+      // with |charsetOverride == PR_TRUE|
+      nsCAutoString originCharset(charset); 
+
       // use send_default_charset if reply_in_default_charset is on.
       nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
       if (prefs)
@@ -1577,8 +1582,14 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       if (isFirstPass && !charset.IsEmpty())
         m_compFields->SetCharacterSet(charset);
 
-      rv = msgHdr->GetMime2DecodedSubject(getter_Copies(subject));
+      nsXPIDLCString subjectCStr;
+      (void) msgHdr->GetSubject(getter_Copies(subjectCStr));
+      rv = mimeConverter->DecodeMimeHeader(subjectCStr,
+                getter_Copies(decodedCString),
+                originCharset.get(), charsetOverride);
       if (NS_FAILED(rv)) return rv;
+
+      CopyUTF8toUTF16(decodedCString, subject);
 
       // Check if (was: is present in the subject
       nsAString::const_iterator wasStart, wasEnd;
@@ -1661,7 +1672,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
             rv = mimeConverter->DecodeMimeHeader(author,
                 getter_Copies(decodedCString),
-                charset, charsetOverride);
+                originCharset.get(), charsetOverride);
             if (NS_SUCCEEDED(rv) && decodedCString)
               m_compFields->SetTo(decodedCString);
             else
