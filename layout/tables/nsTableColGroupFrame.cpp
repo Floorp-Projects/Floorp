@@ -712,6 +712,11 @@ PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
   return result;
 }
 
+void nsTableColGroupFrame::DeleteColFrame(nsIPresContext& aPresContext, nsTableColFrame* aColFrame)
+{
+  mFrames.DestroyFrame(aPresContext, aColFrame);
+}
+
 /* ----- global methods ----- */
 
 nsresult 

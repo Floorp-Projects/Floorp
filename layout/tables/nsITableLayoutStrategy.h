@@ -48,9 +48,9 @@ public:
     * @param aMaxWidth        the width constraint
 
     */
-  virtual PRBool BalanceColumnWidths(nsIStyleContext *aTableStyle,
+  virtual PRBool BalanceColumnWidths(nsIStyleContext*         aTableStyle,
                                      const nsHTMLReflowState& aReflowState,
-                                     nscoord aMaxWidth)=0;
+                                     nscoord                  aMaxWidth)=0;
 
   /** return the computed max "natural" size of the table. 
     * this is the sum of the desired size of the content taking into account table
@@ -58,7 +58,7 @@ public:
     * the actual table width in a given situation will depend on the available size
     * provided by the parent (especially for percent-width tables.)
     */
-  virtual nscoord GetTableMaxWidth() const = 0;
+  virtual nscoord GetTableMaxContentWidth() const = 0;
 
   /** return the computed minimum possible size of the table. 
     * this is the sum of the minimum sizes of the content taking into account table
@@ -66,13 +66,7 @@ public:
     * the actual table width in a given situation will depend on the available size
     * provided by the parent (especially for percent-width tables.)
     */
-  virtual nscoord GetTableMinWidth() const = 0;
-
-  /** return the portion of the table width that is specified as "fixed" aka
-    * the amount of table width that does not vary with available width or other
-    * inputs to the table balancing algorithm.
-    */
-  virtual nscoord GetTableFixedWidth() const = 0;
+  virtual nscoord GetTableMinContentWidth() const = 0;
 
   /** return the value of the COLS attribute, used for balancing column widths */
   virtual nscoord GetCOLSAttribute() const = 0;

@@ -1,4 +1,5 @@
 file://s:/mozilla/layout/html/tests/table/core/backgrounds.html
+file://s:/mozilla/layout/html/tests/table/core/bloomberg.html
 file://s:/mozilla/layout/html/tests/table/core/one_row.html
 file://s:/mozilla/layout/html/tests/table/core/col_span.html
 file://s:/mozilla/layout/html/tests/table/core/col_widths.html
@@ -8,4 +9,5 @@ file://s:/mozilla/layout/html/tests/table/core/col_widths2.html
 file://s:/mozilla/layout/html/tests/table/core/misc.html
 file://s:/mozilla/layout/html/tests/table/core/row_span.html
 file://s:/mozilla/layout/html/tests/table/core/col_span2.html
+file://s:/mozilla/layout/html/tests/table/core/table_widths.html
 

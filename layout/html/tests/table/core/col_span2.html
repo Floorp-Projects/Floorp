@@ -129,16 +129,24 @@ this fixes a bug
   <td colspan=2 width=200>foo</td></tr>
 </table>
 <BR>
-
 <table border>
  <tr>
   <td colspan=3><img src=raptor.jpg width=600 height=100></td>
-  <td>foo</td></tr>
  <tr>
-  <td width=100>foo
-  <td width=100>bar
-  <td width=400>foo
-  <td>bar</tr>
+  <td width=100>100
+  <td width=100>100
+  <td width=400>400</tr>
+</table>
+<BR>
+<table border>
+ <tr>
+  <td colspan=3 width=600>600</td>
+  <td>auto</td></tr>
+ <tr>
+  <td>auto
+  <td>auto
+  <td>auto
+  <td>auto</tr>
 </table>
 fixed table - spanned cols based on fix widths
 <BR>
@@ -491,4 +499,85 @@ PERCENT COLSPANS
  <tr>
   <td colspan=3>auto</td>
   <td>auto</td></tr>
+</table>
+min colspan is based on min with no fix involved - IE uses max(min,des)
+<table width=50 border>
+ <tr>
+  <td colspan=2>xxxxxxxxxxxxxxxxxxx</td></tr>
+ <tr>
+  <td>x x x x</td>
+  <td>xxx</td></tr>
+</table>
+<BR>
+min colspan is based on max(min,des) but must exceed min with no fix involved
+<table width=50 border>
+ <tr>
+  <td colspan=2>xxxxxxxxxxxxxxxxxxxyyyyyyy</td></tr>
+ <tr>
+  <td>x x x x x x x</td>
+  <td>xxxxxxxxxxxxxxxxxx</td></tr>
+</table>
+<BR>
+min colspan is based on max(min,des,fix) 
+<table width=50 border>
+ <tr>
+  <td colspan=2>xxxxxxxxxxxxxxxxxxx</td></tr>
+ <tr>
+  <td>x x x</td>
+  <td width=100>100</td></tr>
+</table>
+<BR>
+<table border>
+ <tr>
+  <td width=300 colspan=2>xx</td></tr>
+ <tr>
+  <td width=100>x x x</td>
+  <td>auto</td></tr>
+</table>
+<BR>
+<table border>
+ <tr>
+  <td width=300 colspan=2>300</td></tr>
+ <tr>
+  <td width=300>400 400</td>
+  <td>auto</td></tr>
+</table>
+<BR>
+<table  border>
+ <tr>
+  <td width=300 colspan=2>300 300</td></tr>
+ <tr>
+  <td width=100>100</td>
+  <td>auto auto auto</td></tr>
+</table>
+<BR>
+<table  border>
+ <tr>
+  <td width=300 colspan=2>300 300 300 300 300 300 300 300 300 300 300 300 300 300 300300 300 300 300 300</td></tr>
+ <tr>
+  <td width=100>100</td>
+  <td>auto auto auto auto auto auto auto auto auto auto auto auto</td></tr>
+</table>
+<BR>
+<table  border>
+ <tr>
+  <td width=300 colspan=2>300</td></tr>
+ <tr>
+  <td width=100>100</td>
+  <td>auto</td></tr>
+</table>
+<BR>
+<table border>
+ <tr>
+  <td colspan=2>auto auto auto auto auto auto auto</td></tr>
+ <tr>
+  <td width=100>100</td>
+  <td>auto auto auto</td></tr>
+</table>
+fixed table looks more like IE than Nav
+<BR>
+<table width=150 border>
+ <tr>
+  <td width=100>100</td>
+  <td>auto auto auto auto auto auto auto auto auto auto auto auto</td></tr>
 </table>

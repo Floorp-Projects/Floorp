@@ -21,9 +21,8 @@
 class nsTableCellFrame;
 
 /** Data stored by nsCellMap to rationalize rowspan and colspan cells.
-  * if mCell is null then mRealCell will be the rowspan/colspan source
-  * in addition, if fOverlap is non-null then it will point to the
-  * other cell that overlaps this position
+  * if mOrigCell is null then mSpanCell will be the rowspan/colspan source.
+  * if mSpanCell2 is non-null then it will point to a 2nd cell that overlaps this position
   * @see nsCellMap
   * @see nsTableFrame::BuildCellMap
   * @see nsTableFrame::GrowCellMap
@@ -33,17 +32,26 @@ class nsTableCellFrame;
 class CellData
 {
 public:
-  /** if not null, the cell that this CellData maps.
-    * if null, mRealCell points to the CellData that holds the 
-	* mapped cell frame.
-	*/
-  nsTableCellFrame *mCell;
-  CellData *mRealCell;
-  CellData *mOverlap;
-
   CellData();
+  CellData(nsTableCellFrame* aOrigCell, CellData* aSpanData, CellData* aSpanData2)
+    : mOrigCell(aOrigCell), mSpanData(aSpanData), mSpanData2(aSpanData2)
+  {}
 
   ~CellData();
+  PRBool IsSpannedBy(nsTableCellFrame* aCellFrame)
+  { 
+    return (mSpanData  && mSpanData->mOrigCell  == aCellFrame) ||
+           (mSpanData2 && mSpanData2->mOrigCell == aCellFrame); 
+  }
+  PRBool IsOccupiedBy(nsTableCellFrame* aCellFrame)
+  {
+    return (mOrigCell == aCellFrame) || IsSpannedBy(aCellFrame);
+  }
+
+  nsTableCellFrame* mOrigCell;  // mCell
+  CellData*         mSpanData;  // mRealCell
+  CellData*         mSpanData2; // mOverlap
+
 };
 
 #endif

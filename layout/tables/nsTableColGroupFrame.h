@@ -94,6 +94,8 @@ public:
     */
   //PRBool IsManufactured();
 
+  void DeleteColFrame(nsIPresContext& aPresContext, nsTableColFrame* aColFrame);
+
 protected:
 
   /** implement abstract method on nsHTMLContainerFrame */

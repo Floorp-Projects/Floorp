@@ -97,7 +97,7 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 			{
 				CellData *cellData = mCellMap->GetCellAt(rowIndex, colIndex);
 				if (nsnull!=cellData)
-					cellFrame = cellData->mRealCell->mCell;
+					cellFrame = cellData->mSpanData->mOrigCell;
 			}
 
 			// Select this cell frame.
@@ -150,7 +150,7 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 		{
 			CellData *cellData = mCellMap->GetCellAt(i, colIndex);
 			if (nsnull!=cellData)
-				cellFrame = cellData->mRealCell->mCell;
+				cellFrame = cellData->mSpanData->mOrigCell;
 		}
 
 		// We now have the cell that should be selected. 
@@ -251,7 +251,7 @@ void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt3
 	{
 		CellData *cellData = mCellMap->GetCellAt(row, col);
 		if (nsnull!=cellData)
-			cellFrame = cellData->mRealCell->mCell;
+			cellFrame = cellData->mSpanData->mOrigCell;
 	}
 
 	// We now have the cell that should be selected. 

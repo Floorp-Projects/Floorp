@@ -44,33 +44,17 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 {
 }
 
-PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyle,
+PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableStyle,
                                                      const nsHTMLReflowState& aReflowState,
-                                                     nscoord aMaxWidth)
+                                                     nscoord                  aMaxWidth)
 {
-#ifdef NS_DEBUG
-  nsIFrame *tablePIF=nsnull;
-  mTableFrame->GetPrevInFlow(&tablePIF);
-  NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
-#endif
-
-  PRBool result = PR_TRUE;
-
-  NS_ASSERTION(nsnull!=aTableStyle, "bad arg");
-  if (nsnull==aTableStyle)
-    return PR_FALSE;
-
-
-  if (PR_TRUE==gsDebug)
-  {
+  if (PR_TRUE==gsDebug)  {
     printf("\n%p: BALANCE COLUMN WIDTHS\n", mTableFrame);
     for (PRInt32 i=0; i<mNumCols; i++)
       printf("  col %d assigned width %d\n", i, mTableFrame->GetColumnWidth(i));
     printf("\n");
   }
-
-  // XXX Hey Cujo, result has never been initialized...
-  return result;
+  return PR_TRUE;
 }
 
 /*
@@ -112,8 +96,10 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   for (colX = 0; colX < mNumCols; colX++) { 
     // Get column information
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    NS_ASSERTION(nsnull != colFrame, "bad col frame");
-    if (!colFrame) return PR_FALSE;
+    if (!colFrame) {
+      NS_ASSERTION(PR_FALSE, "bad col frame");
+      return PR_FALSE;
+    }
 
     // Get the columns's style
     const nsStylePosition* colPosition;
@@ -136,7 +122,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
         const nsStylePosition* cellPosition;
         cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
 
-        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(colX, cellFrame);
+        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(cellFrame);
         // Get fixed cell width if available
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
           colWidths[colX] = cellPosition->mWidth.GetCoordValue() / colSpan;
@@ -205,8 +191,8 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   }
 
   // min/max TW is min/max of (specified table width, sum of specified column(cell) widths)
-  mMinTableWidth = mMaxTableWidth = totalColWidth;
-  if (PR_TRUE == gsDebug) printf ("%p: aMinTW=%d, aMaxTW=%d\n", mTableFrame, mMinTableWidth, mMaxTableWidth);
+  mMinTableContentWidth = mMaxTableContentWidth = totalColWidth;
+  if (PR_TRUE == gsDebug) printf ("%p: aMinTW=%d, aMaxTW=%d\n", mTableFrame, mMinTableContentWidth, mMaxTableContentWidth);
 
   // clean up
   if (nsnull != colWidths) {

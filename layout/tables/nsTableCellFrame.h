@@ -124,6 +124,7 @@ public:
   
   /** return the cell's column index (starting at 0 for the first column) */
   virtual nsresult GetColIndex(PRInt32 &aColIndex);
+  virtual nsresult SetColIndex(PRInt32 aColIndex);
 
   /** return the available width given to this frame during its last reflow */
   virtual nscoord GetPriorAvailWidth();

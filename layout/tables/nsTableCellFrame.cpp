@@ -36,9 +36,11 @@
 #include "nsIView.h"
 #include "nsStyleUtil.h"
 #include "nsLayoutAtoms.h"
+#include "nsCOMPtr.h"
+#include "nsIHTMLTableCellElement.h"
 
 NS_DEF_PTR(nsIStyleContext);
-
+static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -78,7 +80,7 @@ nsTableCellFrame::Init(nsIPresContext&  aPresContext,
 void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
   NS_PRECONDITION(0<=aColIndex, "bad col index arg");
-  mColIndex = aColIndex;
+  SetColIndex(aColIndex); // this also sets the contents col index
   mBorderEdges.mOutsideEdge=PR_FALSE;
   nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
@@ -110,6 +112,33 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
   }
 }
 
+nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
+{  
+  mColIndex = aColIndex;
+  // for style context optimization, set the content's column index if possible.
+  // this can only be done if we really have an nsTableCell.  
+  // other tags mapped to table cell display won't benefit from this optimization
+  // see nsHTMLStyleSheet::RulesMatching
+
+  //nsIContent* cell;
+  //kidFrame->GetContent(&cell);
+  nsCOMPtr<nsIContent> cell;
+  nsresult rv = GetContent(getter_AddRefs(cell));
+  if (NS_FAILED(rv) || !cell)
+    return rv;
+
+  nsIHTMLTableCellElement* cellContent = nsnull;
+  rv = cell->QueryInterface(kIHTMLTableCellElementIID, 
+                            (void **)&cellContent);  // cellContent: REFCNT++
+  if (cellContent && NS_SUCCEEDED(rv)) { // it's a table cell
+    cellContent->SetColIndex(aColIndex);
+    if (gsDebug) printf("%p : set cell content %p to col index = %d\n", this, cellContent, aColIndex);
+    NS_RELEASE(cellContent);
+  }
+  return rv;
+}
+
+      
 void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide, 
                                            PRInt32 aIndex, 
                                            nscoord aLength)
@@ -325,52 +354,49 @@ void  nsTableCellFrame::VerticallyAlignChild()
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (NS_SUCCEEDED(rv) && tableFrame)
-  {
-    nsMargin borderPadding;
-    GetCellBorder (borderPadding, tableFrame);
-    nsMargin padding;
-    spacing->GetPadding(padding);
-    borderPadding += padding;
+  nsMargin borderPadding;
+  GetCellBorder (borderPadding, tableFrame);
+  nsMargin padding;
+  spacing->GetPadding(padding);
+  borderPadding += padding;
   
-    nscoord topInset = borderPadding.top;
-    nscoord bottomInset = borderPadding.bottom;
-    PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
-    if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-      verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
-    }
-    nscoord height = mRect.height;
-    nsRect kidRect;  
-    nsIFrame* firstKid = mFrames.FirstChild();
-    firstKid->GetRect(kidRect);
-    nscoord childHeight = kidRect.height;
-  
-
-    // Vertically align the child
-    nscoord kidYTop = 0;
-    switch (verticalAlignFlags) 
-    {
-      case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-      // Align the child's baseline at the max baseline
-      //kidYTop = aMaxAscent - kidAscent;
-      break;
-
-      case NS_STYLE_VERTICAL_ALIGN_TOP:
-      // Align the top of the child frame with the top of the box, 
-      // minus the top padding
-        kidYTop = topInset;
-      break;
-
-      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        kidYTop = height - childHeight - bottomInset;
-      break;
-
-      default:
-      case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-        kidYTop = height/2 - childHeight/2;
-    }
-    firstKid->MoveTo(kidRect.x, kidYTop);
+  nscoord topInset = borderPadding.top;
+  nscoord bottomInset = borderPadding.bottom;
+  PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
+  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+    verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
   }
+  nscoord height = mRect.height;
+  nsRect kidRect;  
+  nsIFrame* firstKid = mFrames.FirstChild();
+  firstKid->GetRect(kidRect);
+  nscoord childHeight = kidRect.height;
+  
+
+  // Vertically align the child
+  nscoord kidYTop = 0;
+  switch (verticalAlignFlags) 
+  {
+    case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+    // Align the child's baseline at the max baseline
+    //kidYTop = aMaxAscent - kidAscent;
+    break;
+
+    case NS_STYLE_VERTICAL_ALIGN_TOP:
+    // Align the top of the child frame with the top of the box, 
+    // minus the top padding
+      kidYTop = topInset;
+    break;
+
+    case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+      kidYTop = height - childHeight - bottomInset;
+    break;
+
+    default:
+    case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+      kidYTop = height/2 - childHeight/2;
+  }
+  firstKid->MoveTo(kidRect.x, kidYTop);
 }
 
 PRInt32 nsTableCellFrame::GetRowSpan()
@@ -486,7 +512,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (NS_FAILED(rv)) { return rv; }
   nsMargin borderPadding;
   spacing->GetPadding(borderPadding);
   nsMargin border;
@@ -527,7 +552,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
         aReflowState.reflowCommand->GetType(type);
         if (nsIReflowCommand::StyleChanged==type)
         {
-          rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
+          nsresult rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
           aStatus = NS_FRAME_COMPLETE;
           return rv;
         }
@@ -674,7 +699,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   // So here all we have to do is tell the table to rebalance.
   if (eReflowReason_Incremental == aReflowState.reason) 
   {
-    tableFrame->InvalidateColumnWidths();
+    nsTableFrame* tableFrame=nsnull;
+    rv = nsTableFrame::GetTableFrame(this, tableFrame);
+    if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+    {
+      tableFrame->InvalidateColumnWidths();
+    }
   }
    
 
@@ -1082,7 +1112,7 @@ PRUint8 nsTableCellFrame::GetOpposingEdge(PRUint8 aEdge)
 nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
 {
   nscoord result = 0;
-  PRInt32 theIndex = 0;
+  PRInt32 index = 0;
   PRInt32 count = 0;
 
 
@@ -1093,9 +1123,9 @@ nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
     nsIFrame* frame;
     
     nscoord value = 0;
-    while (theIndex < count)
+    while (index < count)
     {
-      frame = (nsIFrame*)(aList->ElementAt(theIndex++));
+      frame = (nsIFrame*)(aList->ElementAt(index++));
       value = GetMargin(frame, aEdge);
       if (value > result)
         result = value;

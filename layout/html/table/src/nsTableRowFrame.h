@@ -45,7 +45,7 @@ public:
                   nsIFrame*        aPrevInFlow);
 
   /** Initialization of data */
-  NS_IMETHOD InitChildren(PRInt32 aRowIndex=-1);
+  NS_IMETHOD InitChildren();
 
   void ResetInitChildren();
 
