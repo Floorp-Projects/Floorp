@@ -627,82 +627,94 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   nsString *strUnicodeBuffer = nsnull;
 
   if (aString && aStringLen>0) {
-
-    /*
-     * First determine the charset (if one is indicated)
-     * 1)  Check HTTP charset
-     * 2)  Check @charset rules
-     * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
-     *
-     * If all these fail to give us a charset, fall back on our
-     * default (document charset or ISO-8859-1 if we have no document
-     * charset)
-     */
-    nsAutoString strHTTPCharset;
     nsCOMPtr<nsIRequest> request;
     aLoader->GetRequest(getter_AddRefs(request));
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
-    if (httpChannel) {
-      nsXPIDLCString httpCharset;
-      httpChannel->GetCharset(getter_Copies(httpCharset));
-      CopyASCIItoUCS2(httpCharset, strHTTPCharset);
-    }
-    result = NS_ERROR_NOT_AVAILABLE;
-    if (! strHTTPCharset.IsEmpty()) {
-      result = mLoader->SetCharset(strHTTPCharset);
-    }
-    if (NS_FAILED(result)) {
-      //  We have no charset or the HTTP charset is not recognized.
-      //  Try @charset rules
-      result = mLoader->SetCharset(aString, aStringLen);
-    }
-    if (NS_FAILED(result)) {
-      // Now try the charset on the <link> or processing instruction
-      // that loaded us
-      nsCOMPtr<nsIStyleSheetLinkingElement>
-                    element(do_QueryInterface(mOwningElement));
-      if (element) {
-        nsAutoString linkCharset;
-        element->GetCharset(linkCharset);
-        if (! linkCharset.IsEmpty()) {
-          result = mLoader->SetCharset(linkCharset);
-        }
+    nsXPIDLCString contentType;
+    if (! (mLoader->mNavQuirkMode)) {
+      nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+      if (channel) {
+        channel->GetContentType(getter_Copies(contentType));
       }
     }
-    if (NS_FAILED(result)) {
-      // no useful data on charset.  Just set to empty string, and let
-      // SetCharset pick a sane default
-      mLoader->SetCharset(NS_LITERAL_STRING(""));
-    }      
-    {
-      // now get the decoder
-      nsCOMPtr<nsICharsetConverterManager> ccm = 
-               do_GetService(kCharsetConverterManagerCID, &result);
-      if (NS_SUCCEEDED(result) && ccm) {
-        nsString charset;
-        mLoader->GetCharset(charset);
-        nsIUnicodeDecoder *decoder = nsnull;
-        ccm->GetUnicodeDecoder(&charset,&decoder);
-        if (decoder) {
-          PRInt32 unicodeLength=0;
-          if (NS_SUCCEEDED(decoder->GetMaxLength(aString,aStringLen,&unicodeLength))) {
-            PRUnichar *unicodeString = nsnull;
-            strUnicodeBuffer = new nsString;
-            if (nsnull == strUnicodeBuffer) {
-              result = NS_ERROR_OUT_OF_MEMORY;
-            } else {
-              // make space for the decoding
-              strUnicodeBuffer->SetCapacity(unicodeLength);
-              unicodeString = (PRUnichar *) strUnicodeBuffer->get();
-              result = decoder->Convert(aString, (PRInt32 *) &aStringLen, unicodeString, &unicodeLength);
-              if (NS_SUCCEEDED(result)) {
-                strUnicodeBuffer->SetLength(unicodeLength);
+    if (mLoader->mNavQuirkMode ||
+        Compare(contentType,
+                NS_LITERAL_CSTRING("text/css"),
+                nsCaseInsensitiveCStringComparator()) == 0 ||
+        contentType.IsEmpty()) {
+      /*
+       * First determine the charset (if one is indicated)
+       * 1)  Check HTTP charset
+       * 2)  Check @charset rules
+       * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
+       *
+       * If all these fail to give us a charset, fall back on our
+       * default (document charset or ISO-8859-1 if we have no document
+       * charset)
+       */
+      nsAutoString strHTTPCharset;
+      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
+      if (httpChannel) {
+        nsXPIDLCString httpCharset;
+        httpChannel->GetCharset(getter_Copies(httpCharset));
+        CopyASCIItoUCS2(httpCharset, strHTTPCharset);
+      }
+      result = NS_ERROR_NOT_AVAILABLE;
+      if (! strHTTPCharset.IsEmpty()) {
+        result = mLoader->SetCharset(strHTTPCharset);
+      }
+      if (NS_FAILED(result)) {
+        //  We have no charset or the HTTP charset is not recognized.
+        //  Try @charset rules
+        result = mLoader->SetCharset(aString, aStringLen);
+      }
+      if (NS_FAILED(result)) {
+        // Now try the charset on the <link> or processing instruction
+        // that loaded us
+        nsCOMPtr<nsIStyleSheetLinkingElement>
+          element(do_QueryInterface(mOwningElement));
+        if (element) {
+          nsAutoString linkCharset;
+          element->GetCharset(linkCharset);
+          if (! linkCharset.IsEmpty()) {
+            result = mLoader->SetCharset(linkCharset);
+          }
+        }
+      }
+      if (NS_FAILED(result)) {
+        // no useful data on charset.  Just set to empty string, and let
+        // SetCharset pick a sane default
+        mLoader->SetCharset(NS_LITERAL_STRING(""));
+      }      
+      {
+        // now get the decoder
+        nsCOMPtr<nsICharsetConverterManager> ccm = 
+          do_GetService(kCharsetConverterManagerCID, &result);
+        if (NS_SUCCEEDED(result) && ccm) {
+          nsString charset;
+          mLoader->GetCharset(charset);
+          nsIUnicodeDecoder *decoder = nsnull;
+          ccm->GetUnicodeDecoder(&charset,&decoder);
+          if (decoder) {
+            PRInt32 unicodeLength=0;
+            if (NS_SUCCEEDED(decoder->GetMaxLength(aString,aStringLen,&unicodeLength))) {
+              PRUnichar *unicodeString = nsnull;
+              strUnicodeBuffer = new nsString;
+              if (nsnull == strUnicodeBuffer) {
+                result = NS_ERROR_OUT_OF_MEMORY;
               } else {
-                strUnicodeBuffer->SetLength(0);
+                // make space for the decoding
+                strUnicodeBuffer->SetCapacity(unicodeLength);
+                unicodeString = (PRUnichar *) strUnicodeBuffer->get();
+                result = decoder->Convert(aString, (PRInt32 *) &aStringLen, unicodeString, &unicodeLength);
+                if (NS_SUCCEEDED(result)) {
+                  strUnicodeBuffer->SetLength(unicodeLength);
+                } else {
+                  strUnicodeBuffer->SetLength(0);
+                }
               }
             }
+            NS_RELEASE(decoder);
           }
-          NS_RELEASE(decoder);
         }
       }
     }
