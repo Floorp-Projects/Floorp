@@ -29,11 +29,13 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsXPIDLString.h"
 
 #include "OLE2.h"
 #include "URLMON.h"
+#include "shlobj.h"
 
-#if 0
+#if 1
 #define PRNTDEBUG(_x) printf(_x);
 #define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
 #define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
@@ -147,11 +149,13 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   printf("nsDataObj::GetData2\n");
   PRNTDEBUG("nsDataObj::GetData\n");
   PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
-  if (nsnull == mTransferable) {
+  if ( !mTransferable )
 	  return ResultFromScode(DATA_E_FORMATETC);
-  }
 
   PRUint32 dfInx = 0;
+
+  static CLIPFORMAT fileDescriptorFlavor = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTOR ); 
+  static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
 
   ULONG count;
   FORMATETC fe;
@@ -166,16 +170,27 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 				  case CF_TEXT:
 				  case CF_UNICODETEXT:
 					  return GetText(df, *pFE, *pSTM);
+					  break;					  			  
+				  // ... not yet implemented ...
 				  //case CF_BITMAP:
 				  //	return GetBitmap(*pFE, *pSTM);
 				  //case CF_DIB:
 				  //	return GetDib(*pFE, *pSTM);
 				  //case CF_METAFILEPICT:
 				  //	return GetMetafilePict(*pFE, *pSTM);
+            
 				  default:
-            PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %x\n", format);
-					  return GetText(df, *pFE, *pSTM);
+
+            if ( format == fileDescriptorFlavor )
+              return GetFileDescriptor ( *pFE, *pSTM );
+            else if ( format == fileFlavor )
+              return GetFileContents ( *pFE, *pSTM );
+            else {
+              PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %x\n", format);
+					    return GetText(df, *pFE, *pSTM);
+            }
             break;
+
         } //switch
       } // if
     }
@@ -329,8 +344,169 @@ HRESULT nsDataObj::GetBitmap(FORMATETC&, STGMEDIUM&)
 HRESULT nsDataObj::GetDib(FORMATETC&, STGMEDIUM&)
 {
   PRNTDEBUG("nsDataObj::GetDib\n");
-	return ResultFromScode(E_NOTIMPL);
+	return E_NOTIMPL;
 }
+
+
+
+//
+// GetFileDescriptor
+//
+
+HRESULT 
+nsDataObj :: GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG )
+{
+  HRESULT res = S_OK;
+  
+  // How we handle this depends on if we're dealing with an internet
+  // shortcut, since those are done under the covers.
+  if ( IsInternetShortcut() )
+    res = GetFileDescriptorInternetShortcut ( aFE, aSTG );
+  else
+    NS_WARNING ( "Not yet implemented\n" );
+  
+	return res;
+	
+} // GetFileDescriptor
+
+
+//
+HRESULT 
+nsDataObj :: GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG )
+{
+  HRESULT res = S_OK;
+  
+  // How we handle this depends on if we're dealing with an internet
+  // shortcut, since those are done under the covers.
+  if ( IsInternetShortcut() )  
+    res = GetFileContentsInternetShortcut ( aFE, aSTG );
+  else
+    NS_WARNING ( "Not yet implemented\n" );
+
+	return res;
+	
+} // GetFileContents
+
+
+//
+// GetFileDescriptorInternetShortcut
+//
+// Create the special format for an internet shortcut and build up the data
+// structures the shell is expecting.
+//
+HRESULT
+nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
+{
+  HRESULT result = S_OK;
+  
+  // setup format structure
+  FORMATETC fmetc = { 0, NULL, DVASPECT_CONTENT, 0, TYMED_HGLOBAL };
+  fmetc.cfFormat = RegisterClipboardFormat ( CFSTR_FILEDESCRIPTOR );
+
+  HGLOBAL fileGroupDescHand = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTOR));
+  if ( fileGroupDescHand ) {
+    LPFILEGROUPDESCRIPTOR fileGroupDesc = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTOR, ::GlobalLock(fileGroupDescHand));
+
+    char* url = "http://www.dvdresource.com";     // TEMP!
+
+    // one file in the file descriptor block
+    fileGroupDesc->cItems = 1;
+    fileGroupDesc->fgd[0].dwFlags = FD_LINKUI;
+    
+    // create the filename string -- |.URL| extensions imply an internet shortcut file. Make
+    // sure the filename isn't too long as to blow out the array, and still have enough room
+    // for the |.URL| suffix.
+    int urlLength = strlen(url) > MAX_PATH - 5 ? MAX_PATH - 5 : strlen(url);
+    url[urlLength] = nsnull;
+    sprintf(fileGroupDesc->fgd[0].cFileName, "%s.URL", url);
+
+    ::GlobalUnlock ( fileGroupDescHand );
+    aSTG.hGlobal = fileGroupDescHand;
+  }
+  else
+    result = E_OUTOFMEMORY;
+    
+  return result;
+  
+} // GetFileDescriptorInternetShortcut
+
+
+//
+// GetFileContentsInternetShortcut
+//
+// Create the special format for an internet shortcut and build up the data
+// structures the shell is expecting.
+//
+HRESULT
+nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
+{
+  HRESULT result = S_OK;
+  
+  char* url = "foopy";    // TEMP!
+  
+  // setup format structure
+  FORMATETC fmetc = { 0, NULL, DVASPECT_CONTENT, 0, TYMED_HGLOBAL };
+  fmetc.cfFormat = RegisterClipboardFormat ( CFSTR_FILECONTENTS );
+
+  // create a global memory area and build up the file contents w/in it
+  static const char* shortcutPrefix = "[InternetShortcut]\nURL=";
+  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, strlen(shortcutPrefix) + strlen(url) + 1);
+  if ( hGlobalMemory ) {
+    char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
+    sprintf( contents, "%s%s", shortcutPrefix, url );
+    ::GlobalUnlock(hGlobalMemory);
+    aSTG.hGlobal = hGlobalMemory;
+  }
+  else
+    result = E_OUTOFMEMORY;
+    
+  return result;
+  
+} // GetFileContentsInternetShortcut
+
+
+//
+// IsInternetShortcut
+//
+// Is the data that we're handling destined for an internet shortcut if
+// dragged to the desktop? We can tell because there will be a mime type
+// of |kURLMime| present in the transferable
+//
+PRBool
+nsDataObj :: IsInternetShortcut ( )
+{
+  PRBool retval = PR_FALSE;
+  
+  if ( !mTransferable )
+    return PR_FALSE;
+  
+  // get the list of flavors available in the transferable
+  nsCOMPtr<nsISupportsArray> flavorList;
+  mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
+  if ( !flavorList )
+    return PR_FALSE;
+  
+  // go spelunking for the url flavor
+  PRUint32 cnt;
+  flavorList->Count(&cnt);
+  for ( PRUint32 i = 0;i < cnt; ++i ) {
+    nsCOMPtr<nsISupports> genericFlavor;
+    flavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
+    nsCOMPtr<nsISupportsString> currentFlavor (do_QueryInterface(genericFlavor));
+    if (currentFlavor) {
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
+      if ( strcmp(flavorStr, kURLMime) == 0 ) {
+        retval = PR_TRUE;         // found it!
+        break;
+      }
+    }
+  } // for each flavor
+
+  return retval;
+  
+} // IsInternetShortcut
+
 
 //-----------------------------------------------------
 HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
@@ -387,7 +563,7 @@ HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIU
   else if ( aFE.cfFormat == CF_UNICODETEXT )
     allocLen += sizeof(PRUnichar);
     
-  hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, allocLen);      // GHND zeroes the memory
+  hGlobalMemory = (HGLOBAL)::GlobalAlloc(GMEM_MOVEABLE, allocLen);
 
   // Copy text to Global Memory Area
   if ( hGlobalMemory ) {
