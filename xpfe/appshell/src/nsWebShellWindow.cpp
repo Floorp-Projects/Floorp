@@ -1101,40 +1101,6 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShellWindow::GetPresShell(nsIPresShell** aPresShell) 
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)),
-   NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocumentViewer> docViewer;
-  docViewer = do_QueryInterface(contentViewer);
-  if (!docViewer) {
-      NS_ERROR("Document viewer interface not supported by the content viewer.");
-      return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPresContext> presContext;
-  if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
-      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
-      return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPresShell> presShell;
-  if (NS_FAILED(rv = presContext->GetShell(getter_AddRefs(presShell)))) {
-      NS_ERROR("Unable to retrieve the pres shell.");
-      return NS_ERROR_FAILURE;
-  }
-
-  *aPresShell = presShell.get();
-  NS_IF_ADDREF(*aPresShell);
-
-  return NS_OK;
-}
-
 //----------------------------------------
 // nsIWebShellWindow methods...
 //----------------------------------------
@@ -1981,51 +1947,26 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
  
 NS_IMETHODIMP nsWebShellWindow::SetStatus(const PRUnichar* aStatus)
 {
-    nsresult rv = NS_OK;
-    // Store status text unless empty string was set, then use defaultStatus
-    mStatus = aStatus;
-    if (mStatus.Length() == 0) {
-      mStatus = mDefaultStatus;
-    }
-    // Broadcast status text change to interested parties.
-    nsAutoString statusName("status");
-    nsAutoString statusValue(aStatus);
-    rv = NotifyObservers( statusName, statusValue );
-    return rv;
+   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+   return mContentTreeOwner->SetJSStatus(aStatus);
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetStatus(const PRUnichar** aResult)
 {
-    nsresult rv = NS_OK;
-    if ( aResult ) {
-        // Semantics are ill-defined: How to allocate?  Who frees it?
-        *aResult = mStatus.ToNewUnicode();
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
+   NS_ERROR("Can't use this anymore");
+   return NS_ERROR_FAILURE;
 }
  
 NS_IMETHODIMP nsWebShellWindow::SetDefaultStatus(const PRUnichar* aStatus)
 {
-    nsresult rv = NS_OK;
-    // Store status text.
-    mDefaultStatus = aStatus;
-    // Broadcast status text change to interested parties.
-    rv = NotifyObservers( "defaultStatus", aStatus );
-    return rv;
+   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+   return mContentTreeOwner->SetJSDefaultStatus(aStatus);
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetDefaultStatus(const PRUnichar** aResult)
 {
-    nsresult rv = NS_OK;
-    if ( aResult ) {
-        // Semantics are ill-defined: How to allocate?  Who frees it?
-        *aResult = mDefaultStatus.ToNewUnicode();
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
+   NS_ERROR("Can't use this anymore");
+   return NS_ERROR_FAILURE;
 }
  
 NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
@@ -2050,8 +1991,7 @@ NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgress
 NS_IMETHODIMP
 nsWebShellWindow::IsIntrinsicallySized(PRBool& aResult)
 {
-  aResult = mIntrinsicallySized;
-  return NS_OK;
+   return GetIntrinsicallySized(&aResult);
 }
 
 
