@@ -82,7 +82,7 @@
 
 #endif
 
-#define MOZ_DECL_CTOR_COUNTER(_type);
+#define MOZ_DECL_CTOR_COUNTER(_type) class _type
 
 #define MOZ_COUNT_CTOR(_type)                                 \
 PR_BEGIN_MACRO                                                \
@@ -102,7 +102,7 @@ PR_END_MACRO
 #define NS_LOG_DELETE_XPCOM(_p,_file,_line)
 #define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) _rc
 #define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) _rc
-#define MOZ_DECL_CTOR_COUNTER(_type);
+#define MOZ_DECL_CTOR_COUNTER(_type) class _type
 #define MOZ_COUNT_CTOR(_type)
 #define MOZ_COUNT_DTOR(_type)
 
