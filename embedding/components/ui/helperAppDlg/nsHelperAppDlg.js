@@ -289,12 +289,12 @@ nsHelperAppDialog.prototype = {
         {
           // If a user-chosen application, show its path.
           this.updateApplicationName(this.chosenApp.unicodePath);
-          this.chooseApp = true;
+          this.choseApp = true;
         }
         else
          this.updateApplicationName(this.getString("noApplicationSpecified"));
 
-        if ( applicationDescription  && this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) 
+        if ( (applicationDescription || this.choseApp) && this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) 
         {
           this.dialogElement( "openUsing" ).checked = true;
           this.dialogElement( "saveToDisk" ).checked = false;         
