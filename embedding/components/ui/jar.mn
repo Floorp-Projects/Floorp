@@ -1,5 +1,6 @@
 en-US.jar:
     locale/en-US/global/nsHelperAppDlg.dtd (helperAppDlg/locale/en-US/nsHelperAppDlg.dtd)
+    locale/en-US/global/nsHelperAppDlg.properties (helperAppDlg/locale/en-US/nsHelperAppDlg.properties)
 
 toolkit.jar:
     content/global/nsHelperAppDlg.xul (helperAppDlg/nsHelperAppDlg.xul)
