@@ -600,7 +600,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
           menuElement->GetNodeName(menuNodeType);
           if (menuNodeType.Equals("menu")) {
             menuElement->GetAttribute(nsAutoString("name"), menuName);
-            printf("Creating Menu [%s]\n", menuName.ToNewCString()); // this leaks
+            printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
     
             // Create nsMenu
             nsIMenu * pnsMenu = nsnull;
@@ -610,7 +610,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
               pnsMenu->Create(pnsMenuBar, menuName);
             
               // Set nsMenu Name
-              pnsMenu->SetLabel(menuName);
+              pnsMenu->SetLabel(menuName); 
               // Make nsMenu a child of nsMenuBar
               //pnsMenuBar->AddMenu(pnsMenu); // XXX adds an additional menu
 
@@ -625,6 +625,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                   nsString menuitemName;
                   nsString menuitemCmd;
                   menuitemElement->GetNodeName(menuitemNodeType);
+                  printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
                   if (menuitemNodeType.Equals("menuitem")) {
                     menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
                     menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
@@ -662,15 +663,18 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                       //-----------------------------------------------------------
     
                     }
+                  } else if (menuitemNodeType.Equals("separator")) {
+                    pnsMenu->AddSeparator();
                   }
                 }
                 nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
                 oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
               } // end menu item innner loop
             }
-          }
+          } 
+
         }
-        nsCOMPtr<nsIDOMNode> oldmenuNode(menuNode);
+        nsCOMPtr<nsIDOMNode> oldmenuNode(menuNode);  
         oldmenuNode->GetNextSibling(getter_AddRefs(menuNode));
       } // end while (nsnull != menuNode)
           
