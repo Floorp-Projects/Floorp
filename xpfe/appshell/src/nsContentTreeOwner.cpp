@@ -710,10 +710,23 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
          if(contentTitleSetting.Equals(NS_LITERAL_STRING("true")))
             {
             mContentTitleSetting = PR_TRUE;
-            docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"), mWindowTitleModifier);
-            docShellElement->GetAttribute(NS_LITERAL_STRING("titlemenuseparator"), mTitleSeparator);
-            docShellElement->GetAttribute(NS_LITERAL_STRING("titlepreface"), mTitlePreface);
             docShellElement->GetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault);
+            docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"), mWindowTitleModifier);
+            docShellElement->GetAttribute(NS_LITERAL_STRING("titlepreface"), mTitlePreface);
+            
+#if defined(XP_MACOSX) && defined(MOZ_XUL_APP)
+            // On OS X, treat the titlemodifier like it's the titledefault, and don't ever append
+            // the separator + appname.
+            if (mTitleDefault.IsEmpty()) {
+                docShellElement->SetAttribute(NS_LITERAL_STRING("titledefault"),
+                                              mWindowTitleModifier);
+                docShellElement->RemoveAttribute(NS_LITERAL_STRING("titlemodifier"));
+                mTitleDefault = mWindowTitleModifier;
+                mWindowTitleModifier.Truncate();
+            }
+#else
+            docShellElement->GetAttribute(NS_LITERAL_STRING("titlemenuseparator"), mTitleSeparator);
+#endif
             }
          }
       else
