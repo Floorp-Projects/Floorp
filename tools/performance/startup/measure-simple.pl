@@ -51,6 +51,7 @@ END_USAGE
   # Setup run environment
   $ENV{"NS_TIMELINE_LOG_FILE"} = $timelinelog;
   $ENV{"XPCOM_DEBUG_BREAK"} = "warn";
+  unlink $timelinelog;
 
   my $i;
   my @runtimes = ();
@@ -63,11 +64,15 @@ END_USAGE
       open(F, "< $timelinelog") || die "no timeline log ($timelinelog) found";
       while(<F>) {
           if (/^(.*): \.\.\.main1$/) {
-              push @runtimes, $1;
-              print "[$i] runtime : $1 ms\n";
+              my $t = $1 + 0;
+              push @runtimes, $t;
+              print "[$i] startup time : $t ms\n";
+              last;
           }
       }
       close(F);
+      # Cleanup
+      unlink $timelinelog;
   }
 
   # Compute final number. Skip first run and average the rest.
@@ -76,6 +81,6 @@ END_USAGE
   foreach $i (@runtimes) {
       $sum += $i;
   }
-  printf "%8.4f ms (%d trials)\n", $sum/($ntimes-1), $ntimes-1;
+  printf "Average startup time : %8.4f ms (%d trials - %s)\n", $sum/($ntimes-1), $ntimes-1, join(" ", @runtimes);
 }
 
