@@ -103,6 +103,23 @@ BOOL CLogger::onNPP_DestroyStream(NPStream * npStream)
   return FALSE;
 }
 
+static void FixUpOutputString(char * aString, int aMaxSize)
+{
+  // search for "<html" substring in both lower and 
+  // upper cases and replace with "<@tml".
+  char * p = aString;
+  while(p = strstr(p, "<html")) {
+    p++;
+    *p = '@';
+  }
+
+  p = aString;
+  while(p = strstr(p, "<HTML")) {
+    p++;
+    *p = '@';
+  }
+}
+
 BOOL CLogger::appendToLog(NPAPI_Action action, DWORD dwTickEnter, DWORD dwTickReturn, 
                           DWORD dwRet, 
                           DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, 
@@ -194,6 +211,12 @@ Frame:
         NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
 
       int iLength = formatLogItem(plis, szOutput, "");
+
+      // we should fix the output string if it contains symbols <html
+      // If this is the case the browser will display the whole output
+      // in HTML format while we still want it to be in plain text.
+      // I do not know if this is a bug in the browser or not.
+      FixUpOutputString(szOutput, sizeof(szOutput));
 
       NPN_Write(m_pPluginInstance, m_pStream, iLength, (void *)szOutput);
       delete plis;
