@@ -32,6 +32,9 @@ interface nsIBrowserInstance : nsISupports {
     // History.
     void back();
     void forward();
+	 readonly attribute boolean canGoBack;
+	 readonly attribute boolean canGoForward;
+	 
     void reload(in PRUint32 reloadType);
     void stop();
     void loadUrl(in wstring url);

@@ -50,5 +50,21 @@ interface nsIXULBrowserWindow : nsISupports
 	 Tells the browser window what to use for the default status text.
 	*/
 	void setDefaultStatus(in wstring status);
+
+	/*
+	 Tells the browser window if there is network activity or not.
+	*/
+	void setNetworkActive(in boolean active);
+
+	/*
+	 Tells the browser window that there is activity in the window.
+	*/
+	void setWindowActive(in boolean active);
+
+	/*
+	 Tells the browser window that the location of the window has changed.
+	*/
+	void onLocationChange(in wstring location);
+	
 };
 

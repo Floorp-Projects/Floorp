@@ -61,10 +61,7 @@ Contributor(s): ______________________________________. -->
 <!-- broadcasters are appended from the overlay -->
 <broadcasterset id="broadcasterset">
   <broadcaster id="canReload" oncommand="BrowserReallyReload(0);"/>
-  <broadcaster id="canStop"/>
   <broadcaster id="canPrint"/>
-  <broadcaster id="Browser:LoadingProgress"/>
-  <broadcaster id="Browser:Throbber" busy="false"/>
   <broadcaster id="args" value=""/> 
 </broadcasterset>
 
@@ -334,12 +331,10 @@ Contributor(s): ______________________________________. -->
 
   <toolbar id="nav-bar" class="decorated main-bar" chromeclass="toolbar" persist="collapsed">
 	<box align="horizontal" flex="100%" style="overflow: hidden">
-      <button class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack" />  
-      <button class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward" />
-      <button class="large-toolbar left" id="reload-button" crop="right" orient="vertical" observes="canReload"/>
-      <button class="large-toolbar left" id="stop-button" crop="right" orient="vertical" onclick="BrowserStop()">
-        <observes element="canStop" attribute="disabled" onbroadcast="BrowserCanStop()"/>
-      </button>
+      <button class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack"/>  
+      <button class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward"/>
+      <button class="large-toolbar left" id="reload-button" crop="right" orient="vertical" observes="canReload" />
+      <button class="large-toolbar left" id="stop-button" crop="right" orient="vertical" onclick="BrowserStop()"/>
 
           <!-- changed : the url field is now grouped with search -->
           <box align="vertical" flex="100%">
@@ -399,9 +394,7 @@ Contributor(s): ______________________________________. -->
 
 	<!-- throbber area of navigation toolbar -->
 	<box id="toolbar_throbber_box" align="vertical">
-		<titledbutton id="Throbber" onclick='goClickThrobber("browser.throbber.url")'>
-			<observes element="Browser:Throbber" attribute="busy"/>
-		</titledbutton>
+		<titledbutton id="Throbber" onclick='goClickThrobber("browser.throbber.url")'/>
 	</box>
   </toolbar>
 
@@ -430,11 +423,7 @@ Contributor(s): ______________________________________. -->
           <box align="vertical" style="width:100px">
           <spring flex="100%"/>
           <progressmeter id="statusbar-icon" mode="normal"
-            align="horizontal" value="0" onclick="dumpProgress()">
-              <observes element="Browser:LoadingProgress" attribute="mode"/>
-              <observes element="Browser:Throbber" attribute="busy" 
-                onbroadcast="onProgress()"/>
-          </progressmeter>
+            align="horizontal" value="0" onclick="dumpProgress()"/>
           <spring flex="100%"/>
         </box>
 		<spring style="width: 1em"/>
