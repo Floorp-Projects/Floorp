@@ -418,6 +418,13 @@ nsAppShellService::Quit()
       }
     }
 
+    {
+      nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
+      if (hiddenWin)
+        hiddenWin->Close();
+      mHiddenWindow = nsnull;
+    }
+    
     // Note that we don't allow any premature returns from the above
     // loop: no matter what, make sure we send the exit event.  If
     // worst comes to worst, we'll do a leaky shutdown but we WILL
