@@ -157,6 +157,8 @@ class nsRenderingContextOS2 : public nsIRenderingContext
                          nscoord aWidth, nscoord aHeight); 
    NS_IMETHOD DrawImage( nsIImage *aImage, const nsRect& aRect);
    NS_IMETHOD DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
+   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                        nscoord aWidth,nscoord aHeight);
  
    NS_IMETHOD CopyOffScreenBits( nsDrawingSurface aSrcSurf,
                                  PRInt32 aSrcX, PRInt32 aSrcY,

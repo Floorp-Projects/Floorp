@@ -1433,6 +1433,19 @@ NS_IMETHODIMP nsRenderingContextMotif :: DrawImage(nsIImage *aImage, const nsRec
   return aImage->Draw(*this,mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/16/00 dwc
+ */
+NS_IMETHODIMP 
+nsRenderingContextMotif::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                                                    nscoord aWidth,nscoord aHeight)
+{
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsRenderingContextMotif :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                             PRInt32 aSrcX, PRInt32 aSrcY,
