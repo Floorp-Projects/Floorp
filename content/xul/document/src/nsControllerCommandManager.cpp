@@ -83,7 +83,7 @@ nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIC
 NS_IMETHODIMP
 nsControllerCommandManager::UnregisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
-  const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
+  const nsPromiseFlatString& flatString = PromiseFlatString(aCommandName);   
   nsStringKey commandKey(flatString);
 
   PRBool any_object_actually_removed_p = mCommandsTable.Remove (&commandKey);
