@@ -372,7 +372,7 @@ nsXInstaller::ParseGeneral(nsINIParser *aParser)
     else
     {
         err = OK; /* optional so no error if we didn't find it */
-        strcpy(gCtx->opt->mTitle, gCtx->Res("DEFAULT_TITLE"));
+        gCtx->opt->mTitle = strdup(gCtx->Res("DEFAULT_TITLE"));
     }
 
     return err;
