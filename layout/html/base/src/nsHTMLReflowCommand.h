@@ -49,6 +49,10 @@ public:
   NS_IMETHOD GetType(ReflowType& aReflowType) const;
   NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const;
 
+protected:
+  void      BuildPath();
+  nsIFrame* GetContainingBlock(nsIFrame* aFloater);
+
 private:
   ReflowType      mType;
   nsIFrame*       mTargetFrame;

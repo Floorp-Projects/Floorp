@@ -128,18 +128,20 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     NS_ASSERTION(target != this, "bad reflow command target");
 #endif
 
-    // Is the next frame in the reflow chain the pseudo block-frame or a
-    // floating frame?
+    // Is the next frame in the reflow chain the pseudo block-frame or an
+    // absolutely positioned frame?
     //
-    // XXX FIX ME
+    // If the next frame is the pseudo block-frame then fall thru to the main
+    // code below. The only thing that should be handled below is absolutely
+    // positioned elements...
     nsIFrame* next;
     aReflowState.reflowCommand->GetNext(next);
     if (mFirstChild != next) {
-      // It's a floating frame that's the target. Reflow the body making it
-      // look like a resize occured. This will reflow the placeholder which will
-      // resize the floating frame...
-      nsReflowState reflowState(next, aReflowState, aReflowState.maxSize, eReflowReason_Resize);
-      return Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+      // It's an absolutely positioned frame that's the target.
+      // XXX FIX ME. For an absolutely positioned item we need to properly
+      // compute the available space and then resize the frame if necessary...
+      nsReflowState reflowState(next, aReflowState, aReflowState.maxSize);
+      return next->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
     }
   }
 
