@@ -48,14 +48,13 @@ public:
   NS_IMETHOD GetNativeRegion(void *&aRegion) const;
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
 
+  GdkRegion *CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+
 private:
   GdkRegion           *mRegion;
   nsRegionComplexity  mRegionType;
 
-private:
-  virtual void SetRegionType();
   virtual void SetRegionEmpty();
-  virtual GdkRegion *CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
 };
 

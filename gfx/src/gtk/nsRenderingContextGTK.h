@@ -35,6 +35,7 @@
 #include "nsVoidArray.h"
 
 #include "nsDrawingSurfaceGTK.h"
+#include "nsRegionGTK.h"
 
 #include <gtk/gtk.h>
 
@@ -147,14 +148,13 @@ public:
 
   //locals
   NS_IMETHOD CommonInit();
-  NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
 
 protected:
   nsDrawingSurfaceGTK   *mOffscreenSurface;  
   nsDrawingSurfaceGTK   *mRenderingSurface;
   nsIDeviceContext      *mContext;
   nsIFontMetrics        *mFontMetrics;
-  GdkRegion             *mRegion;
+  nsRegionGTK           *mRegion;
   nsTransform2D         *mTMatrix;
   float                  mP2T;
 
