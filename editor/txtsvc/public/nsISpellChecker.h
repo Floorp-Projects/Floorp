@@ -86,13 +86,13 @@ public:
    * Add a word to the user's personal dictionary.
    * @param aWord is the word to add.
    */
-  NS_IMETHOD AddWordToPersonalDictionary(nsString *aWord);
+  NS_IMETHOD AddWordToPersonalDictionary(nsString *aWord) = 0;
 
   /**
    * Remove a word from the user's personal dictionary.
    * @param aWord is the word to remove.
    */
-  NS_IMETHOD RemoveWordFromPersonalDictionary(nsString *aWord);
+  NS_IMETHOD RemoveWordFromPersonalDictionary(nsString *aWord) = 0;
 
   /**
    * Returns the list of words in the user's personal dictionary.
