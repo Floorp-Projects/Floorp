@@ -33,21 +33,16 @@ Contributors:
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         class="color-dialog"
-        onload="onLoad();"
+        onload="parent.onPanelLoaded('am-server.xul');"
         orient="vertical">
 
   <script type="application/x-javascript" src="chrome://messenger/content/am-server.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
-  <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
-  </stringbundleset>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
   <broadcaster id="broadcaster_doBiff"/>
   <broadcaster id="broadcaster_limitMessageSize"/>
   
-  <text hidden="true" wsm_persist="true" id="identity.directoryServer"/>
   <text hidden="true" wsm_persist="true" id="server.type"/>
 
   <box class="box-smallheader" title="&serverSettings.label;"/>
@@ -238,6 +233,7 @@ Contributors:
   </box>
   </box>
   </titledbox>
+  <spring flex="100%"/>
     <box orient="vertical">
     <text class="label" value="&localPath.label;" for="server.localPath"/>
     <textbox wsm_persist="true" id="server.localPath"
@@ -245,19 +241,4 @@ Contributors:
             pref="true" preftype="string" prefattribute="value"
             prefstring="mail.server.%serverkey%.directory"/>
   </box>
-  <spring flex="100%"/>
-  <titledbox orient="vertical" id="ldapautocompletion" flex="1">
-    <label value="&autocomplete.title;"/>
-    <checkbox id="identity.overrideGlobalPref" wsm_persist="true" label="&override.label;" oncommand="enabling();"
-              pref="true" preftype="bool" prefattribute="value"
-              prefstring="mail.identity.%identitykey%.overrideGlobalPref"/>
-    <box autostretch="never">
-      <html>&directories.label;</html>
-      <menulist id="directoriesList" wsm_persist="true" flex="1">
-        <menupopup oncreate="createDirectoriesList(false);" id="directoriesListPopup">
-        </menupopup>
-      </menulist>
-      <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
-    </box>
-  </titledbox>
 </window>

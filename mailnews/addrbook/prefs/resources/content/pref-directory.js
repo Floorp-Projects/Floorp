@@ -51,29 +51,16 @@ function enableAutocomplete()
   LoadDirectories(directoriesListPopup);
 }
 
-function enabling()
-{
-  var override = document.getElementById("identity.overrideGlobalPref");
-  var directoriesList =  document.getElementById("directoriesList"); 
-  var directoriesListPopup = document.getElementById("directoriesListPopup");
-  var editButton = document.getElementById("editButton");
-  if (override.checked && !override.disabled)
-  {
-    directoriesList.removeAttribute("disabled");
-    directoriesListPopup.removeAttribute("disabled");
-    editButton.removeAttribute("disabled");
-  }
-  else {
-    directoriesList.setAttribute("disabled", true);
-    directoriesListPopup.setAttribute("disabled", true);
-    editButton.setAttribute("disabled", true);
-  }
-  gFromGlobalPref = false;
-  LoadDirectories(directoriesListPopup);
-}
-
 function setupDirectoriesList()
 {
+  var override = document.getElementById("identity.overrideGlobalPref").getAttribute("value");
+  var autocomplete = document.getElementById("ldapAutocomplete");
+
+  if(override == "true")
+    autocomplete.selectedItem = document.getElementById("directories");
+  else
+    autocomplete.selectedItem = document.getElementById("useGlobalPref");
+
   var directoriesList = document.getElementById("directoriesList");
   var directoryServer = 
         document.getElementById("identity.directoryServer").getAttribute('value');
@@ -87,18 +74,6 @@ function setupDirectoriesList()
   directoriesList.value = directoryServer;
   directoriesList.label = directoryServerString;
   gFromGlobalPref = false;
-}
-
-function onSave()
-{
-  var override = document.getElementById("identity.overrideGlobalPref");
-  if (override.checked)
-  {
-    var directoryServer = document.getElementById("identity.directoryServer");
-    var directoriesList = 
-	      document.getElementById("directoriesList").getAttribute('value');
-    directoryServer.setAttribute("value", directoriesList);
-  }
 }
 
 function createDirectoriesList(flag) 

@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+
+<!--
+
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-2001 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributors:
+  Srilatha Moturi <srilatha@netscape.com>
+
+-->
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-addressing.dtd" >
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        class="color-dialog"
+        onload="onLoad();"
+        orient="vertical">
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-addressing.js"/>
+  <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+  <text hidden="true" wsm_persist="true" id="identity.directoryServer"
+        pref="true" preftype="string" prefattribute="value"
+        prefstring="mail.identity.%identitykey%.directoryServer"/>
+  <text hidden="true" wsm_persist="true" id="identity.overrideGlobalPref"
+        pref="true" preftype="bool" prefattribute="value"
+        prefstring="mail.identity.%identitykey%.overrideGlobal_Pref"/>
+  <box class="box-smallheader" title="&addressing.label;"/>
+  
+  <separator class="thin"/>
+  <box orient="vertical" flex="1">
+    <html>&addressingText.label;</html>
+	<radiogroup orient="vertical" class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
+      <radio group="ldapAutocomplete" id="useGlobalPref" value="0" label="&useGlobal.label;"/>
+      <box orient="horizontal" autostretch="never">
+        <radio group="ldapAutocomplete" id="directories" value="1" label="&directories.label;"/>
+        <menulist id="directoriesList" wsm_persist="true" flex="1">
+          <menupopup oncreate="createDirectoriesList(false);" id="directoriesListPopup"/>
+        </menulist>
+        <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
+      </box>
+    </radiogroup>
+      
+  </box>
+</window>

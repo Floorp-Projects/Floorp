@@ -1,0 +1,9 @@
+<!-- extracted from am-addressing.xul -->
+
+<!ENTITY addressing.label          "Addressing">
+<!ENTITY addressingText.label      "When looking up addresses:">
+<!-- LOCALIZATION NOTE (override.label) : do not translate "LDAP" in below line -->
+<!ENTITY useGlobal.label           "Use my global LDAP server preferences for this account">
+<!ENTITY editDirectories.label     "Edit Directories...">
+<!-- LOCALIZATION NOTE (directories.label) : do not translate "LDAP" in below line -->
+<!ENTITY directories.label         "Use a different LDAP server:">

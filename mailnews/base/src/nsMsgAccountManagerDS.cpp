@@ -54,6 +54,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define NC_RDF_PAGETITLE_COPIES   NC_NAMESPACE_URI "PageTitleCopies"
 #define NC_RDF_PAGETITLE_ADVANCED NC_NAMESPACE_URI "PageTitleAdvanced"
 #define NC_RDF_PAGETITLE_OFFLINE  NC_NAMESPACE_URI "PageTitleOffline"
+#define NC_RDF_PAGETITLE_ADDRESSING  NC_NAMESPACE_URI "PageTitleAddressing"
 #define NC_RDF_PAGETITLE_SMTP     NC_NAMESPACE_URI "PageTitleSMTP"
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
 
@@ -97,6 +98,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleMain=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleServer=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleCopies=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleOffline=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAddressing=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
 
@@ -145,6 +147,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
       getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &kNC_PageTitleServer);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &kNC_PageTitleCopies);
 	  getRDFService()->GetResource(NC_RDF_PAGETITLE_OFFLINE, &kNC_PageTitleOffline);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_ADDRESSING, &kNC_PageTitleAddressing);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &kNC_PageTitleAdvanced);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_SMTP, &kNC_PageTitleSMTP);
       
@@ -185,6 +188,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_PageTitleServer);
       NS_IF_RELEASE(kNC_PageTitleCopies);
       NS_IF_RELEASE(kNC_PageTitleOffline);
+      NS_IF_RELEASE(kNC_PageTitleAddressing);
       NS_IF_RELEASE(kNC_PageTitleAdvanced);
       NS_IF_RELEASE(kNC_PageTitleSMTP);
       NS_IF_RELEASE(kTrueLiteral);
@@ -278,6 +282,9 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       else if (source == kNC_PageTitleOffline)
           mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-offline").GetUnicode(),
                                            getter_Copies(pageTitle));
+      else if (source == kNC_PageTitleAddressing)
+          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-addressing").GetUnicode(),
+                                           getter_Copies(pageTitle));
 
       else if (source == kNC_PageTitleAdvanced)
           mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-advanced").GetUnicode(),
@@ -306,6 +313,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = NS_LITERAL_STRING("am-copies.xul");
     else if (source == kNC_PageTitleOffline)
       str.AssignWithConversion("am-offline.xul");
+    else if (source == kNC_PageTitleAddressing)
+      str = NS_LITERAL_STRING("am-addressing.xul");
     else if (source == kNC_PageTitleAdvanced)
       str = NS_LITERAL_STRING("am-advanced.xul");
     else if (source == kNC_PageTitleSMTP) 
@@ -533,6 +542,7 @@ nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
                 server->GetOfflineSupportLevel(&offlineSupportLevel); 
                 if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR)
                     aNodeArray->AppendElement(kNC_PageTitleOffline);
+                aNodeArray->AppendElement(kNC_PageTitleAddressing);
             }
         }
     }
