@@ -535,8 +535,7 @@ ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
 {
   // Only throw this exception if one hasn't already been thrown, so we don't
   // mask a previous exception/error.
-  jthrowable throwObj = env->ExceptionOccurred();
-  if (throwObj != nsnull)
+  if (env->ExceptionCheck())
     return;
 
   // Create parameters and method signature. Max of 2 params.  The error code
@@ -555,6 +554,7 @@ ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
   methodSig.Append(")V");
 
   // create exception object
+  jthrowable throwObj = nsnull;
   jmethodID mid = env->GetMethodID(xpcomExceptionClass, "<init>",
                                    methodSig.get());
   if (mid) {
