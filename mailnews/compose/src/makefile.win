@@ -33,6 +33,7 @@ CPPSRCS=    nsMsgCompFields.cpp \
             MsgCompGlue.cpp     \
 			nsMsgSend.cpp		\
 			nsMsgSendPart.cpp	\
+			nsSmtpService.cpp	\
             $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
@@ -42,11 +43,13 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
 			.\$(OBJDIR)\nsSmtpProtocol.obj	\
 			.\$(OBJDIR)\nsMsgSend.obj		\
 			.\$(OBJDIR)\nsMsgSendPart.obj	\
+			.\$(OBJDIR)\nsSmtpService.obj	\
             $(NULL)
 
 
 EXPORTS=    nsSmtpUrl.h                 \
             nsSmtpProtocol.h            \
+			nsSmtpService.h				\
             $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
