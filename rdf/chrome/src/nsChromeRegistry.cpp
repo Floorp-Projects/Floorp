@@ -2979,7 +2979,7 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     }
 
     // We have to flush the chrome skin cache...
-    FlushAllCaches();
+    FlushSkinCaches();
   }
   return NS_OK;
 }
