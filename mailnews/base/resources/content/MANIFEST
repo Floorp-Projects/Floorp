@@ -26,3 +26,6 @@ shareglue.js
 3panemail.html
 messagePane.xul
 subscribe.xul
+contentframe.xul
+sidebar-messenger.xul
+sidebar-messenger.rdf

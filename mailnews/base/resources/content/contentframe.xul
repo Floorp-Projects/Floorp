@@ -1,0 +1,41 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/contentframe.css" type="text/css"?> 
+<!--
+ The contents of this file are subject to the Netscape Public
+ License Version 1.1 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of
+ the License at http://www.mozilla.org/NPL/
+ 
+ Software distributed under the License is distributed on an "AS
+ IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ implied. See the License for the specific language governing
+ rights and limitations under the License.
+ 
+ The Original Code is Mozilla Communicator client code, released
+ March 31, 1998.
+ 
+ The Initial Developer of the Original Code is Netscape
+ Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ Rights Reserved.
+-->
+
+<!DOCTYPE window> 
+
+<window style="height:100%;width:100%"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   onload="init_sidebar('messenger', 'chrome://messenger/content/sidebar-messenger.xul',
+                        275);" align="horizontal"> 
+
+<html:script src="resource:/res/samples/contentframe.js" />
+
+  <html:iframe id="sidebarframe" class="sidebarframe" src="about:blank" />
+  <titledbutton id="grippy" class="grippy" onclick="toggle_open_close();"/>
+  <!-- type attribute is used by frame construction to locate iframes
+       intended to hold (html) content -->
+  <!-- id's use is a mystery -->
+  <html:iframe src="chrome://messenger/content/3panemail.html" name="browser.3panemail" flex="100%" id="messengerContent"/>
+
+</window>

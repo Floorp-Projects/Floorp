@@ -39,6 +39,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/3panemail.html \
 	$(srcdir)/messagePane.xul \
 	$(srcdir)/subscribe.xul			\
+	$(srcdir)/contentframe.xul			\
+	$(srcdir)/sidebar-messenger.xul			\
+	$(srcdir)/sidebar-messenger.rdf			\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

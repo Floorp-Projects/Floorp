@@ -39,13 +39,27 @@ var showPerformance = prefs.GetBoolPref('mail.showMessengerPerformance');
 //put this in a function so we can change the position in hierarchy if we have to.
 function GetFolderTree()
 {
-	var folderTree = frames[0].frames[0].document.getElementById('folderTree'); 
+	var folderTree = FindInSidebar(frames[0].frames[0], 'folderTree'); 
 	return folderTree;
+}
+
+function FindInSidebar(currentWindow, id)
+{
+	var item = currentWindow.document.getElementById(id);
+	if(item)
+		return item;
+
+	for(var i = 0; i < frames.length; i++)
+	{
+		var frameItem = FindInSidebar(currentWindow.frames[i], id);
+		if(frameItem)
+			return frameItem;
+	}
 }
 
 function GetThreadTree()
 {
-	var threadTree = frames[0].frames[1].document.getElementById('threadTree');
+	var threadTree = frames[0].frames[1].frames[0].document.getElementById('threadTree');
 	return threadTree;
 }
 
@@ -102,7 +116,9 @@ function ComposeMessage(type, format)
 		{
 			uri = "";
 			for (var i = 0; i < nodeList.length && i < 8; i ++)
-			{					
+			{	
+				dump('i = '+ i);
+				dump('\n');				
 				if (type == 1 || type == 2) //reply or reply all
 				{
 					if (appCore)
