@@ -30,19 +30,31 @@ function BuildHTMLAttributeNameList()
 
   if (attNames && attNames.length)
   {
-    var forceOneChar = false;
-    var forceInteger = false;
+    var menuitem;
 
     for (var i = 0; i < attNames.length; i++)
     {
       var name = attNames[i];
+      var limitFirstChar;
+
       if (name == "_core")
       {
         // Signal to append the common 'core' attributes.
-        // Note: These currently don't have any filtering
         for (var j = 0; j < gCoreHTMLAttr.length; j++)
-          AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, gCoreHTMLAttr[j]);
+        {
+          name = gCoreHTMLAttr[j];
 
+          // "limitFirstChar" is the only filtering rule used for core attributes as of 8-20-01
+          // Add more rules if necessary          
+          limitFirstChar = name.indexOf("^") >= 0;
+          if (limitFirstChar)
+          {
+            menuitem = AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name.replace(/\^/g, ""));
+            menuitem.setAttribute("limitFirstChar", "true");
+          }
+          else
+            AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name);
+        }
       }
       else if (name == "-")
       {
@@ -58,15 +70,16 @@ function BuildHTMLAttributeNameList()
       else
       {
         // Get information about value filtering
-        forceOneChar = name.indexOf("!") >= 0;
-        forceInteger = name.indexOf("#") >= 0;
+        var forceOneChar = name.indexOf("!") >= 0;
+        var forceInteger = name.indexOf("#") >= 0;
         var forceIntOrPercent = name.indexOf("%") >= 0;
+        limitFirstChar = name.indexOf("\^") >= 0;
         //var required = name.indexOf("$") >= 0;
 
         // Strip flag characters ("_" is used when attribute name is reserved JS word)
-        name = name.replace(/[!#%$_]/g, "");
+        name = name.replace(/[!^#%$_]/g, "");
 
-        var menuitem = AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name);
+        menuitem = AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name);
         if (menuitem)
         {
           // Signify "required" attributes by special style
@@ -77,6 +90,7 @@ function BuildHTMLAttributeNameList()
 
           // Set flags to filter value input
           menuitem.setAttribute("forceOneChar", forceOneChar ? "true" : "");
+          menuitem.setAttribute("limitFirstChar", limitFirstChar ? "true" : "");
           menuitem.setAttribute("forceInteger", forceInteger ? "true" : "");
           menuitem.setAttribute("forceIntOrPercent", forceIntOrPercent ? "true" : "");
         }
@@ -285,6 +299,14 @@ function onInputHTMLAttributeValue()
       else if ( selectedItem.getAttribute("forceInteger") == "true" )
       {
         value = value.replace(/\D+/g,"");
+      }
+      
+      // Special case attributes 
+      if (selectedItem.getAttribute("limitFirstChar") == "true")
+      {
+        // Limit first character to letter, and all others to 
+        //  letters, numbers, and a few others
+        value = value.replace(/^[^a-zA-Z\u0080-\uFFFF]/, "").replace(/[^a-zA-Z0-9_\.\-\:\u0080-\uFFFF]+/g,'');
       }
 
       // Update once only if it changed
