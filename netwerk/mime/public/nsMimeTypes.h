@@ -69,6 +69,7 @@
 #define APPLICATION_PGP                     "application/pgp"
 #define APPLICATION_PGP2                    "application/x-pgp-message"
 #define APPLICATION_POSTSCRIPT              "application/postscript"
+#define APPLICATION_PDF                     "application/pdf"
 #define APPLICATION_PRE_ENCRYPTED           "application/pre-encrypted"
 #define APPLICATION_UUENCODE                "application/x-uuencode"
 #define APPLICATION_UUENCODE2               "application/x-uue"

@@ -268,6 +268,23 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
   CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
   nsCAutoString str(bufDesc);
 
+  NS_NAMED_LITERAL_CSTRING(pdfStart, "%PDF-");
+  NS_NAMED_LITERAL_CSTRING(psStart1, "%!PS-Adobe-");
+  NS_NAMED_LITERAL_CSTRING(psStart2, "%! PS-Adobe-");
+  
+  //
+  // If the buffer begins with "%PDF-" it's PDF
+  //
+  if (Substring(str, 0, pdfStart.Length()) == pdfStart) {
+    mContentType = APPLICATION_PDF;
+  }
+  //
+  // If the buffer begins with "%!PS-Adobe-" or "%! PS-Adobe-" it's PostScript
+  //
+  else if (Substring(str, 0, psStart1.Length()) == psStart1 ||
+           Substring(str, 0, psStart2.Length()) == psStart2) {
+    mContentType = APPLICATION_POSTSCRIPT;
+  }
   //
   // If the buffer begins with "#!" or "%!" then it is a script of some
   // sort...
@@ -275,8 +292,8 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
   // This false match happened all the time...  For example, CGI scripts
   // written in sh or perl that emit HTML.
   //
-  if (str.EqualsWithConversion("#!", PR_FALSE, 2) || 
-      str.EqualsWithConversion("%!", PR_FALSE, 2)) {
+  else if (str.EqualsWithConversion("#!", PR_FALSE, 2) || 
+           str.EqualsWithConversion("%!", PR_FALSE, 2)) {
     mContentType = TEXT_PLAIN;
   }
   //
