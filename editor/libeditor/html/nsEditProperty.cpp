@@ -107,6 +107,7 @@ nsIAtom * nsIEditProperty::table;
 nsIAtom * nsIEditProperty::fieldset;   
 nsIAtom * nsIEditProperty::address;    
 nsIAtom * nsIEditProperty::body;       
+nsIAtom * nsIEditProperty::head;       
 nsIAtom * nsIEditProperty::tr;         
 nsIAtom * nsIEditProperty::td;         
 nsIAtom * nsIEditProperty::th;         
@@ -242,6 +243,7 @@ nsEditProperty::nsEditProperty()
   // Unclear from 
   // DTD, block?
   nsIEditProperty::body       = NS_NewAtom("body");
+  nsIEditProperty::head       = NS_NewAtom("head");
   nsIEditProperty::tr         = NS_NewAtom("tr");
   nsIEditProperty::td         = NS_NewAtom("td");
   nsIEditProperty::th         = NS_NewAtom("th");
@@ -355,6 +357,7 @@ nsEditProperty::~nsEditProperty()
   NS_IF_RELEASE(nsIEditProperty::fieldset);   
   NS_IF_RELEASE(nsIEditProperty::address);    
   NS_IF_RELEASE(nsIEditProperty::body);       
+  NS_IF_RELEASE(nsIEditProperty::head);       
   NS_IF_RELEASE(nsIEditProperty::tr);         
   NS_IF_RELEASE(nsIEditProperty::td);         
   NS_IF_RELEASE(nsIEditProperty::th);         
