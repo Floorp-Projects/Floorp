@@ -327,6 +327,16 @@ sun-java/stubs/Makefile
 sun-java/stubs/include/Makefile
 sun-java/stubs/jri/Makefile
 sun-java/stubs/src/Makefile
+timer/Makefile
+timer/public/Makefile
+timer/src/Makefile
+timer/src/beos/Makefile
+timer/src/photon/Makefile
+timer/src/rhapsody/Makefile
+timer/src/unix/Makefile
+timer/src/unix/gtk/Makefile
+timer/src/unix/motif/Makefile
+timer/src/unix/xlib/Makefile
 caps/Makefile
 caps/idl/Makefile
 caps/include/Makefile
