@@ -33,4 +33,4 @@ Contributor(s): ______________________________________. -->
 <!ENTITY all.label      "All Messages">
 <!ENTITY errors.label   "Errors">
 <!ENTITY warnings.label "Warnings">
-
+<!ENTITY clear.label "Clear">
