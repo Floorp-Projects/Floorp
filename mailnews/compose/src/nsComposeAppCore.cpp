@@ -609,14 +609,13 @@ nsComposeAppCore::CompleteCallback(nsAutoString& aScript)
 
 NS_IMETHODIMP    
 nsComposeAppCore::NewMessage(nsAutoString& aUrl,
-							 nsAutoString& args,
+							               nsAutoString& args,
                              nsIDOMXULTreeElement *tree,
                              nsIDOMNodeList *nodeList,
                              nsIDOMMsgAppCore * msgAppCore,
                              PRInt32 messageType)
 {
 	nsresult rv;
-	nsString controllerCID;
   char *default_mail_charset = nsnull;
 
 	mArgs = args;
@@ -634,10 +633,9 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 	else
 		goto done;
 
-	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDF";
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
-                                   controllerCID,
+                                   PR_TRUE,
                                    mWebShellWindow,   // result widget
                                    nsnull,      // observer
                                    this,      // callbacks

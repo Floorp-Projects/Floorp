@@ -133,7 +133,7 @@ static void strip_nonprintable(char *string) {
 class nsSmtpTestDriver : public nsIUrlListener
 {
 public:
-	nsSmtpTestDriver(nsINetService * pService, PLEventQueue *queue);
+	nsSmtpTestDriver(nsINetService * pService, nsIEventQueue *queue);
 	virtual ~nsSmtpTestDriver();
 
 	NS_DECL_ISUPPORTS
@@ -159,7 +159,7 @@ public:
 	nsresult OnSendMessageInFile();
 	nsresult OnExit(); 
 protected:
-    PLEventQueue *m_eventQueue;
+    nsIEventQueue *m_eventQueue;
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[250];	// generic string buffer for storing the current user entered data...
@@ -210,7 +210,7 @@ nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
 }
 
 nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
-                                   PLEventQueue *queue)
+                                   nsIEventQueue *queue)
 {
 	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
@@ -218,9 +218,10 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	m_protocolInitialized = PR_FALSE;
 	m_runningURL = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
-    m_eventQueue = queue;
+  m_eventQueue = queue;
 	m_netService = dont_QueryInterface(pNetService);
-	
+  NS_IF_ADDREF(m_eventQueue);
+
 	InitializeTestDriver(); // prompts user for initialization information...
 
 	m_smtpService = nsnull;
@@ -231,6 +232,7 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 
 nsSmtpTestDriver::~nsSmtpTestDriver()
 {
+	NS_IF_RELEASE(m_eventQueue);
 	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService); // XXX probably need shutdown listener here
 }
 
@@ -248,7 +250,7 @@ nsresult nsSmtpTestDriver::RunDriver()
 	 // if running url
 #ifdef XP_UNIX
 
-        PL_ProcessPendingEvents(m_eventQueue);
+        m_eventQueue->ProcessPendingEvents();
 
 #endif
 #ifdef XP_PC	
@@ -426,7 +428,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 int main()
 {
 	nsINetService * pNetService;
-    PLEventQueue *queue;
+    nsIEventQueue *queue;
     nsresult result;
 
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
@@ -474,5 +476,6 @@ int main()
 		// when it kicks out...it is done....so delete it...
 		NS_RELEASE(driver);
 	}
+	NS_IF_RELEASE(queue);
     return NS_OK;
 }
