@@ -132,6 +132,17 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         PRInt32 type = -1;
         rv = mPrefs->GetIntPref("network.proxy.type",&type);
         if (NS_SUCCEEDED(rv)) {
+            // bug 115720 - type 3 is the same as 0 (no proxy),
+            // for ns4.x backwards compatability
+            if (type == 3) {
+                type = 0;
+                // Reset the type so that the dialog looks correct, and we
+                // don't have to handle this case everywhere else
+                // I'm paranoid about a loop of some sort - only do this
+                // if we're enumerating all prefs, and ignore any error
+                if (!pref)
+                    mPrefs->SetIntPref("network.proxy.type", 0);
+            }
             mUseProxy = type; // type == 2 is autoconfig stuff
             reloadPAC = PR_TRUE;
         }
