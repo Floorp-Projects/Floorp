@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.40 2002/08/21 18:05:20 wtc%netscape.com Exp $
+ * $Id: certdb.c,v 1.41 2002/08/22 18:05:32 wtc%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1345,8 +1345,7 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
 		    if (!cn)
 			goto finish;
 		}
-		PORT_Memcpy(cn, current->name.other.data, 
-		                current->name.other.len);
+		PORT_Memcpy(cn, current->name.other.data, cnLen);
 		cn[cnLen] = 0;
 		rv = cert_TestHostName(cn ,hn);
 		if (rv == SECSuccess)
