@@ -100,9 +100,6 @@ struct InnerTableReflowState {
   // Running y-offset
   nscoord y;
 
-  // Flag for whether we're dealing with the first interior row group
-  PRBool firstRowGroup;
-
   // a list of the footers in this table frame, for quick access when inserting bodies
   nsVoidArray *footerList;
 
@@ -132,7 +129,6 @@ struct InnerTableReflowState {
     }
     topInset = aBorderPadding.top;
 
-    firstRowGroup = PR_TRUE;
     footerHeight = 0;
     footerList = nsnull;
   }
@@ -1629,16 +1625,6 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
       }
     }
   }
-
-  // Update the maximum element size
-  if (PR_TRUE==aState.firstRowGroup)
-  {
-    aState.firstRowGroup = PR_FALSE;
-    if (nsnull != aMaxElementSize) {
-      aMaxElementSize->width = aKidMaxElementSize.width;
-      aMaxElementSize->height = aKidMaxElementSize.height;
-    }
-  }
 }
 
 /**
@@ -1724,8 +1710,6 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
       nscoord y = aState.topInset + aState.y + topMargin;
       kidFrame->MoveTo(x, y);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-      if (nsnull!=desiredSize.maxElementSize)
-        desiredSize.maxElementSize->width = desiredSize.width;
       // Did the child fit?
       if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
       {
