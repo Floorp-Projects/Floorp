@@ -99,25 +99,21 @@ function showMailIntegrationDialog() {
     // and we are not the default mail client
     var prefLocked = false;
     if (mapiRegistry && mapiRegistry.showDialog) {
-        const prefbase = "system.windows.lock_ui.";
+        const prefbase = "mailnews.";
         try {
             var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService()
                           .QueryInterface(Components.interfaces.nsIPrefService);
             var prefBranch = prefService.getBranch(prefbase);
         
-            if (prefBranch && prefBranch.prefIsLocked("defaultMailClient")) {
+            if (prefBranch && prefBranch.prefIsLocked("default_mail_client")) {
                 prefLocked = true;
-                if (prefBranch.getBoolPref("defaultMailClient"))
-                    mapiRegistry.setDefaultMailClient();
-                else
-                    mapiRegistry.unsetDefaultMailClient();
             }
         }
         catch (ex) {}
         try {
           if (!prefLocked && !mapiRegistry.isDefaultMailClient)
-            mapiRegistry.showMailIntegrationDialog();
+            mapiRegistry.showMailIntegrationDialog(window /* parent window */);
         }
         catch (ex) {
           dump("mapi code failed:  " + ex + "\n");
@@ -170,7 +166,9 @@ function verifyAccounts(wizardcallback) {
             MsgAccountWizard(prefillAccount);
 		        ret = false;
         }
-        showMailIntegrationDialog();
+        // hack, set a time out to do this, so that the window can load first
+        setTimeout("showMailIntegrationDialog();",0);
+
         return ret;
     }
     catch (ex) {

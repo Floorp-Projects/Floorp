@@ -44,6 +44,9 @@
 #include "nsMapiRegistryUtils.h" 
 #include "nsMapiRegistry.h"
 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 /** Implementation of the nsIMapiRegistry interface.
@@ -161,7 +164,16 @@ nsMapiRegistry::ShowMailIntegrationDialog(nsIDOMWindow *aParentWindow) {
 
         m_ShowDialog = PR_FALSE;
         if (!buttonPressed)
-            rv = SetIsDefaultMailClient(PR_TRUE) ; // SetDefaultMailClient();
+        {
+            // set the pref when OK is clicked on Mail Integration dialog, 
+            // setDefaultMailClient is called from the Observer.
+            nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv,rv);
+            nsCOMPtr<nsIPrefBranch> prefBranch;
+            rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+            NS_ENSURE_SUCCESS(rv,rv);
+            prefBranch->SetBoolPref(MAILNEWS_ALLOW_DEFAULT_MAIL_CLIENT, PR_TRUE) ;
+        }
     }
     return rv;
 }
