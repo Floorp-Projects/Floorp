@@ -48,7 +48,7 @@ protected:
                               nsReflowMetrics& aDesiredSize);
 
   nsresult CreateWidget(nsIPresContext* aPresContext,
-			nscoord aWidth, nscoord aHeight);
+                        nscoord aWidth, nscoord aHeight);
 };
 
 nsObjectFrame::nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame)
@@ -66,7 +66,7 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 nsresult
 nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
-			    nscoord aWidth, nscoord aHeight)
+                            nscoord aWidth, nscoord aHeight)
 {
   nsIView* view;
 
@@ -92,8 +92,8 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 //  nsWidgetInitData* initData = GetWidgetInitData(*aPresContext); // needs to be deleted
   // initialize the view as hidden since we don't know the (x,y) until Paint
   result = view->Init(viewMan, boundBox, parView, &kWidgetCID, nsnull,
-		      nsnull, 0, nsnull,
-		      1.0f, nsViewVisibility_kHide);
+                      nsnull, 0, nsnull,
+                      1.0f, nsViewVisibility_kHide);
 //  if (nsnull != initData) {
 //    delete(initData);
 //  }
@@ -129,8 +129,8 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 
 void
 nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
-			      const nsReflowState& aReflowState,
-			      nsReflowMetrics& aDesiredSize)
+                              const nsReflowState& aReflowState,
+                              nsReflowMetrics& aMetrics)
 {
   // Determine our size stylistically
   nsSize styleSize;
@@ -138,45 +138,49 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRBool haveWidth = PR_FALSE;
   PRBool haveHeight = PR_FALSE;
   if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
-    aDesiredSize.width = styleSize.width;
+    aMetrics.width = styleSize.width;
     haveWidth = PR_TRUE;
   }
   if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
-    aDesiredSize.height = styleSize.height;
+    aMetrics.height = styleSize.height;
     haveHeight = PR_TRUE;
   }
 
   // XXX Temporary auto-sizing logic
   if (!haveWidth) {
     if (haveHeight) {
-      aDesiredSize.width = aDesiredSize.height;
+      aMetrics.width = aMetrics.height;
     }
     else {
       float p2t = aPresContext->GetPixelsToTwips();
-      aDesiredSize.width = nscoord(p2t * EMBED_DEF_DIM);
+      aMetrics.width = nscoord(p2t * EMBED_DEF_DIM);
     }
   }
   if (!haveHeight) {
     if (haveWidth) {
-      aDesiredSize.height = aDesiredSize.width;
+      aMetrics.height = aMetrics.width;
     }
     else {
       float p2t = aPresContext->GetPixelsToTwips();
-      aDesiredSize.height = nscoord(p2t * EMBED_DEF_DIM);
+      aMetrics.height = nscoord(p2t * EMBED_DEF_DIM);
     }
   }
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+  aMetrics.ascent = aMetrics.height;
+  aMetrics.descent = 0;
 }
 
 NS_IMETHODIMP
 nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
-		      nsReflowMetrics&     aDesiredSize,
-		      const nsReflowState& aReflowState,
-		      nsReflowStatus&      aStatus)
+                      nsReflowMetrics&     aMetrics,
+                      const nsReflowState& aReflowState,
+                      nsReflowStatus&      aStatus)
 {
   // Get our desired size
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
+  }
 
   // XXX deal with border and padding the usual way...wrap it up!
 
@@ -184,8 +188,8 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
   nsIView* view;
   GetView(view);
   if (nsnull == view) {
-    nsresult rv = CreateWidget(&aPresContext, aDesiredSize.width,
-			       aDesiredSize.height);
+    nsresult rv = CreateWidget(&aPresContext, aMetrics.width,
+                               aMetrics.height);
     if (NS_OK != rv) {
       return rv;
     }
@@ -200,7 +204,7 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 
 NS_IMETHODIMP
 nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
-			 nsDidReflowStatus aStatus)
+                         nsDidReflowStatus aStatus)
 {
   nsresult rv = nsObjectFrameSuper::DidReflow(aPresContext, aStatus);
 
@@ -217,8 +221,9 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
   return rv;
 }
 
-nsresult NS_NewObjectFrame(nsIFrame*& aFrameResult, nsIContent* aContent,
-			   nsIFrame* aParentFrame)
+nsresult
+NS_NewObjectFrame(nsIFrame*& aFrameResult, nsIContent* aContent,
+                  nsIFrame* aParentFrame)
 {
   aFrameResult = new nsObjectFrame(aContent, aParentFrame);
   if (nsnull == aFrameResult) {
