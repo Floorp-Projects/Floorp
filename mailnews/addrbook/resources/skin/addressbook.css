@@ -170,3 +170,8 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 	padding: 0px;
 }
 
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
+                                                                                                                                               
+  list-style-image: none !important;                                             
+                                                                                                                                               
+}    
