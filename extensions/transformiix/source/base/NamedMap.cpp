@@ -25,13 +25,13 @@
  *    -- fixed memory leak in NamedMap::hashKey method by deleting
  *       up char[] chars;
  *
- * $Id: NamedMap.cpp,v 1.3 2000/06/11 12:22:32 Peter.VanderBeken%pandora.be Exp $
+ * $Id: NamedMap.cpp,v 1.4 2001/01/19 10:43:27 axel%pike.org Exp $
  */
 
 /**
  * A Named Map for MITREObjects
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/06/11 12:22:32 $
+ * @version $Revision: 1.4 $ $Date: 2001/01/19 10:43:27 $
 **/
 
 #include "NamedMap.h"
@@ -267,14 +267,17 @@ MITREObject* NamedMap::remove(String& key) {
 
     BucketItem* bktItem = elements[idx];
 
-    while ( bktItem ) {
-        if ( bktItem->key.isEqual(key) ) break;
+    while ( bktItem && !(key.isEqual(bktItem->key))) {
         bktItem = bktItem->next;
     }
 
     if ( bktItem ) {
         if (bktItem == elements[idx]) elements[idx] = bktItem->next;
-        else bktItem->prev->next = bktItem->next;
+        else {
+            bktItem->prev->next = bktItem->next;
+            if (bktItem->next)
+                bktItem->next->prev = bktItem->prev;
+        };
         numberOfElements--;
         MITREObject* mObject = bktItem->item;
         bktItem->item = 0;

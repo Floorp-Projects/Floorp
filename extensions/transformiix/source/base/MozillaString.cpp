@@ -593,10 +593,13 @@ Int32 String::lastIndexOf(const String& data, Int32 offset) const
   return ptrNSString->RFind(nsData, PR_FALSE, offset);
 }
 
-//Retreive the length of this string ( PrInt32 nsString::Length() )
+//Return the length of this string ( PrInt32 nsString::Length() )
 Int32 String::length() const
 {
-  return ptrNSString->Length();
+  if (ptrNSString){
+    return ptrNSString->Length();
+  };
+  return 0;
 }
 
 //
