@@ -45,7 +45,7 @@ class nsIDOMWindow;
 class nsStreamXferOp : public nsIStreamTransferOperation,
                        public nsIInterfaceRequestor,
                        public nsIProgressEventSink,
-                       public nsIStreamListener {
+                       public nsIStreamObserver {
 public:
     // ctor/dtor
     nsStreamXferOp( nsIChannel *source, nsIFileSpec *target );
@@ -67,9 +67,6 @@ public:
 
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
-
-    // nsIStreamListener methods:
-    NS_DECL_NSISTREAMLISTENER
 
 private:
     nsCOMPtr<nsIChannel>      mInputChannel;
