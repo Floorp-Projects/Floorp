@@ -28,7 +28,10 @@
 #include "CNavDelegate.h"
 #include "CNavDTD.h"
 #include "prenv.h"  //this is here for debug reasons...
+#include "plstr.h"
+#ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
+#endif
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_IHTML_PARSER_IID); 
@@ -331,9 +334,12 @@ PRBool VerifyContextVector(eHTMLTags tags[],PRInt32 count,nsIDTD* aDTD) {
   
     if(aDTD){
       PRInt32 theArray[50];
-      char    path[_MAX_PATH+1];
 
+#ifdef XP_PC
+      char    path[_MAX_PATH+1];
       strcpy(path,gVerificationOutputDir);
+#endif
+
       for(int i=0;i<count;i++){
         theArray[i]=tags[i];
 
@@ -448,7 +454,7 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL){
   char*       theModeStr= PR_GetEnv("PARSE_MODE");
 
   if(theModeStr) 
-    if(0!=strnicmp("nav",theModeStr,3))
+    if(0!=PL_strncasecmp("nav",theModeStr,3))
       theMode=eParseMode_other;
 
   return Parse(aURL,theMode);
