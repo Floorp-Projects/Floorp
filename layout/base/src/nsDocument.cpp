@@ -2654,8 +2654,6 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 
 void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
-  printf("nsDocument::CreateXIF\n");
-
   nsXIFConverter converter(aBuffer);
 
   converter.SetSelection(aSelection);

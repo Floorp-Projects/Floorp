@@ -2523,8 +2523,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
           PRUint16 nodeType;
           aNode->GetNodeType(&nodeType);
           if ((!nodeStartsBeforeRange && !nodeEndsAfterRange)
-              || (nodeType == nsIDOMNode::TEXT_NODE
-                  && (!nodeStartsBeforeRange || !nodeEndsAfterRange)))
+              || (nodeType == nsIDOMNode::TEXT_NODE))
           {
             *aYes = PR_TRUE;
             return NS_OK;
