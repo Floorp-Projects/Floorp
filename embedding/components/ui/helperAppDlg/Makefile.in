@@ -27,11 +27,11 @@ MODULE=helperAppDlg
 include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS = \
-	./nsIHelperAppLauncherDialog.idl \
+	$(srcdir)/nsIHelperAppLauncherDialog.idl \
 	$(NULL)
 
 JSCOMPONENTS = \
-	./nsHelperAppDlg.js \
+	$(srcdir)/nsHelperAppDlg.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
