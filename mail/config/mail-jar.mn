@@ -15,7 +15,7 @@ content/mesenger-region,                             msg/content/messenger-regio
 content/messenger-smime,                             msg/content/messenger-smime
 content/messenger-views,                             msg/content/messenger-views
 content/messenger/messengercompose,                  msg/content/messenger/messengercompose
-content/editor/images,				     msg/content/messenger/messengercompose/icons
+content/editor/images,				     msg/content/editor/images
 content/messenger/addressbook,			     msg/content/messenger/addressbook
 
 #################################################################################################
