@@ -73,7 +73,7 @@ sub init {
 
     if (&::lsearch($fieldsref, 'map_reporter.login_name') >= 0) {
         push @supptables, "profiles AS map_reporter";
-        push @wherepart, "bugs.assigned_to = map_reporter.userid";
+        push @wherepart, "bugs.reporter = map_reporter.userid";
     }
 
     if (&::lsearch($fieldsref, 'map_qa_contact.login_name') >= 0) {
