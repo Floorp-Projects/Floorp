@@ -77,6 +77,9 @@ public:
     nsresult         EvictEntriesForClient(const char *          clientID,
                                            nsCacheStoragePolicy  storagePolicy);
 
+    static nsresult  IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
+                                               PRBool *              result);
+
     /**
      * Methods called by nsCacheEntryDescriptor
      */

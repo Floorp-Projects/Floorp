@@ -555,6 +555,31 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
 }
 
 
+nsresult        
+nsCacheService::IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
+                                          PRBool *              result)
+{
+    if (gService == nsnull) return NS_ERROR_NOT_AVAILABLE;
+    nsAutoLock lock(gService->mCacheServiceLock);
+        
+    if (gService->mEnableMemoryDevice &&
+        (storagePolicy == nsICache::STORE_ANYWHERE ||
+         storagePolicy == nsICache::STORE_IN_MEMORY)) {
+        *result = PR_TRUE;   
+    }
+    else if (gService->mEnableDiskDevice &&
+             (storagePolicy == nsICache::STORE_ANYWHERE ||
+              storagePolicy == nsICache::STORE_ON_DISK  ||
+              storagePolicy == nsICache::STORE_ON_DISK_AS_FILE)) {
+        *result = PR_TRUE;         
+    } else {
+        *result = PR_FALSE;
+    }
+    
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
     nsAutoLock lock(mCacheServiceLock);

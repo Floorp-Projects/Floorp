@@ -104,3 +104,11 @@ NS_IMETHODIMP nsCacheSession::EvictEntries()
 {
     return nsCacheService::GlobalInstance()->EvictEntriesForSession(this);
 }
+
+
+NS_IMETHODIMP nsCacheSession::IsStorageEnabled(PRBool *result)
+{
+
+    return nsCacheService::IsStorageEnabledForPolicy(StoragePolicy(), result);
+}
+
