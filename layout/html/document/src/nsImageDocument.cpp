@@ -77,6 +77,15 @@ public:
   virtual ~ImageListener();
 
   NS_DECL_ISUPPORTS
+#ifdef NECKO
+  // nsIStreamObserver methods:
+  NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+  NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; } 
+  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; } 
+  // nsIStreamListener methods:
+  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+#else
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
@@ -85,6 +94,7 @@ public:
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
                              PRUint32 aCount);
+#endif
 
   nsImageDocument* mDocument;
   nsIStreamListener* mNextStream;
@@ -106,15 +116,30 @@ ImageListener::~ImageListener()
 NS_IMPL_ISUPPORTS(ImageListener, kIStreamListenerIID)
 
 NS_IMETHODIMP
+#ifdef NECKO
+ImageListener::OnStartBinding(nsISupports *ctxt)
+#else
 ImageListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
+#ifdef NECKO
+  nsIURI* uri;
+  
+  mDocument->StartImageLoad(uri, mNextStream);
+#else
   mDocument->StartImageLoad(aURL, mNextStream);
+#endif
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
+#ifdef NECKO
+  return mNextStream->OnStartBinding(ctxt);
+#else
   return mNextStream->OnStartBinding(aURL, aContentType);
+#endif
 }
 
+#ifndef NECKO
 NS_IMETHODIMP
 ImageListener::OnProgress(nsIURI* aURL, PRUint32 aProgress,
                           PRUint32 aProgressMax)
@@ -133,17 +158,28 @@ ImageListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
   }
   return mNextStream->OnStatus(aURL, aMsg);
 }
+#endif
 
 NS_IMETHODIMP
+#ifdef NECKO
+ImageListener::OnStopBinding(nsISupports *ctxt, nsresult status, 
+                             const PRUnichar *errorMsg)
+#else
 ImageListener::OnStopBinding(nsIURI* aURL, nsresult aStatus,
                              const PRUnichar* aMsg)
+#endif
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
+#ifdef NECKO
+  return mNextStream->OnStopBinding(ctxt, status, errorMsg);
+#else
   return mNextStream->OnStopBinding(aURL, aStatus, aMsg);
+#endif
 }
 
+#ifndef NECKO
 NS_IMETHODIMP
 ImageListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
@@ -152,15 +188,25 @@ ImageListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
   }
   return mNextStream->GetBindInfo(aURL, aInfo);
 }
+#endif
 
 NS_IMETHODIMP
+#ifdef NECKO
+ImageListener::OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr,
+                               PRUint32 sourceOffset, PRUint32 count)
+#else
 ImageListener::OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
                                PRUint32 aCount)
+#endif
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
+#ifdef NECKO
+  return mNextStream->OnDataAvailable(ctxt, inStr, sourceOffset, count);
+#else
   return mNextStream->OnDataAvailable(aURL, aStream, aCount);
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -225,12 +271,19 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
       nsIImageGroup* group = nsnull;
       cx->GetImageGroup(&group);
       if (nsnull != group) {
+#ifdef NECKO
+        char* spec;
+#else
         const char* spec;
+#endif
         (void)aURL->GetSpec(&spec);
         nsIStreamListener* listener = nsnull;
         rv = group->GetImageFromStream(spec, nsnull, nsnull,
                                        0, 0, 0,
                                        mImageRequest, listener);
+#ifdef NECKO
+        nsCRT::free(spec);
+#endif
         aListener = listener;
         NS_RELEASE(group);
       }
@@ -287,8 +340,13 @@ nsImageDocument::CreateSyntheticDocument()
   }
   image->SetDocument(this, PR_FALSE);
 
+#ifdef NECKO
+  char* src;
+  mDocumentURL->GetSpec(&src);
+#else
   PRUnichar* src;
   mDocumentURL->ToString(&src);
+#endif
   nsHTMLValue val(src);
   delete[] src;
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);

@@ -171,7 +171,14 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
       if (nsnull == sheetURL) {
         break;
       }
-      if (!sheetURL->Equals(mDocumentURL)) {
+#ifdef NECKO
+      PRBool eq;
+      nsresult rv = sheetURL->Equals(mDocumentURL, &eq);
+      if (NS_FAILED(rv) || !eq)
+#else
+      if (!sheetURL->Equals(mDocumentURL))
+#endif
+      {
         NS_RELEASE(sheetURL);
         break;
       }

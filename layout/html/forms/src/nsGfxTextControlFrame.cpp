@@ -1066,7 +1066,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     nsITextWidget* text = nsnull;
     if (PR_TRUE == IsSingleLineTextControl()) 
     {
-  #ifdef SingleSignon
+#ifdef SingleSignon
       // get name of text 
       PRBool failed = PR_TRUE;
       nsAutoString name;
@@ -1081,12 +1081,19 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
         docURL = doc->GetDocumentURL();
         NS_RELEASE(doc);
         if (nsnull != docURL) {
+#ifdef NECKO
+          char* spec;
+#else
           const char* spec;
+#endif
           (void)docURL->GetSpec(&spec);
           if (nsnull != spec) {
             URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
             PL_strcpy(URLName, spec);
           }
+#ifdef NECKO
+          nsCRT::free(spec);
+#endif
           NS_RELEASE(docURL);
         }
       }
@@ -1113,9 +1120,9 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
       if (failed) {
         GetText(&value, PR_TRUE);
       }
-  #else
+#else
       GetText(&value, PR_TRUE);
-  #endif
+#endif
     }
     else {
       GetText(&value, PR_TRUE);
@@ -1547,7 +1554,7 @@ EnderTempObserver::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 EnderTempObserver::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
@@ -1559,15 +1566,25 @@ EnderTempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
+#ifdef NECKO
+EnderTempObserver::OnStartBinding(nsISupports *ctxt)
+#else
 EnderTempObserver::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+EnderTempObserver::OnStopBinding(nsISupports *ctxt, nsresult status,
+                                 const PRUnichar *errorMsg)
+#else
 EnderTempObserver::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+#endif
 {
   if (PR_TRUE==mFirstCall)
   {

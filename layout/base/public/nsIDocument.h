@@ -37,7 +37,11 @@ class nsIStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
 class nsIURI;
+#ifdef NECKO
+class nsILoadGroup;
+#else
 class nsIURLGroup;
+#endif
 class nsIViewManager;
 class nsString;
 class nsIScriptContextOwner;
@@ -100,10 +104,17 @@ public:
    */
   virtual nsIURI* GetDocumentURL() const = 0;
 
+#ifdef NECKO
   /**
    * Return the URLGroup for the document. May return null.
    */
-  virtual nsIURLGroup* GetDocumentURLGroup() const = 0;
+  NS_IMETHOD_(nsILoadGroup*) GetDocumentLoadGroup() const = 0;
+#else
+  /**
+   * Return the URLGroup for the document. May return null.
+   */
+  virtual nsIURLGroup* GetDocumentLoadGroup() const = 0;
+#endif
 
   /**
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).
