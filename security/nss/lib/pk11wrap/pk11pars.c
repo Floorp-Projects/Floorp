@@ -41,6 +41,7 @@
 #include "secmod.h"
 #include "secmodi.h"
 #include "pki3hack.h"
+#include "secerr.h"
    
 #include "pk11pars.h" 
 
@@ -319,23 +320,33 @@ SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 
     if (recurse && module->isModuleDB) {
 	char ** moduleSpecList;
-	char **index;
+	PORT_SetError(0);
 
 	moduleSpecList = SECMOD_GetModuleSpecList(module);
+	if (moduleSpecList) {
+	    char **index;
 
-	for (index = moduleSpecList; index && *index; index++) {
-	    SECMODModule *child;
-	    child = SECMOD_LoadModule(*index,module,PR_TRUE);
-	    if (!child) break;
-	    if (child->isCritical && !child->loaded) {
-		rv = SECFailure;
+	    for (index = moduleSpecList; *index; index++) {
+		SECMODModule *child;
+		child = SECMOD_LoadModule(*index,module,PR_TRUE);
+		if (!child) break;
+		if (child->isCritical && !child->loaded) {
+		    int err = PORT_GetError();
+		    if (!err)  
+			err = SEC_ERROR_NO_MODULE;
+		    SECMOD_DestroyModule(child);
+		    PORT_SetError(err);
+		    rv = SECFailure;
+		    break;
+		}
 		SECMOD_DestroyModule(child);
-		break;
 	    }
-	    SECMOD_DestroyModule(child);
+	    SECMOD_FreeModuleSpecList(module,moduleSpecList);
+	} else {
+	    if (!PORT_GetError())
+		PORT_SetError(SEC_ERROR_NO_MODULE);
+	    rv = SECFailure;
 	}
-
-	SECMOD_FreeModuleSpecList(module,moduleSpecList);
     }
 
     if (rv != SECSuccess) {
