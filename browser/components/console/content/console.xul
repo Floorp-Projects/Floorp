@@ -91,47 +91,6 @@
 </popupset>
   
 <toolbox>
-  <menubar id="main-menubar" class="chromeclass-menubar" grippytooltiptext="&menuBar.tooltip;">
-    <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
-      <menupopup>
-        <menuitem id="menu_close"/>
-      </menupopup>
-    </menu>
-
-    <menu id="menu_Edit">
-      <menupopup onpopupshowing="UpdateCopyMenu()">
-        <menuitem id="menu_copy"/>
-      </menupopup>
-    </menu>
-  
-    <menu id="menu_View">
-      <menupopup>
-       <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;">
-          <menupopup> 
-            <menuitem type="checkbox" observes="Console:toggleToolbarMode"/>
-            <menuitem type="checkbox" observes="Console:toggleToolbarEval"/>
-          </menupopup>
-        </menu>
-        <menuseparator/>
-        <menuitem type="radio" observes="Console:sortAscend"/>
-        <menuitem type="radio" observes="Console:sortDescend"/>
-      </menupopup>
-    </menu>
-  
-    <menu label="&helpMenu.label;"
-          accesskey="&helpMenu.accesskey;">
-      <menupopup>
-        <menuitem accesskey="&releaseCmd.accesskey;"
-                  label="&releaseCmd.label;"
-                  oncommand="openTopWin('&releaseURL;');"/>
-        <menuseparator/>
-        <menuitem accesskey="&aboutCmd.accesskey;"
-                  label="&aboutCmd.label;"
-                  oncommand="openAboutDialog();"/>
-      </menupopup>
-    </menu>
-  </menubar>
-
   <toolbar class="chromeclass-toolbar" id="ToolbarMode" grippytooltiptext="&modeToolbar.tooltip;">
     <toolbarbutton type="radio" group="mode" observes="Console:modeAll"/>
     <toolbarbutton type="radio" group="mode" observes="Console:modeErrors"/>

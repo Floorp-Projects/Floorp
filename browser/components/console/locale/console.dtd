@@ -20,9 +20,6 @@
 
 <!ENTITY console.title "JavaScript Console">
 
-<!ENTITY menuBar.tooltip      "Menu Bar">
-<!ENTITY modeToolbar.tooltip  "Mode Toolbar">
-<!ENTITY entryToolbar.tooltip "Javascript Entry Toolbar">
 <!ENTITY errFile.label   "Source File:">
 <!ENTITY errLine.label   "Line:">
 <!ENTITY errColumn.label "Column:">
@@ -38,17 +35,3 @@
 <!ENTITY sortFirst.accesskey "f">
 <!ENTITY sortLast.label  "Last > First Sort Order">
 <!ENTITY sortLast.accesskey  "l">
-
-<!ENTITY toolbarsCmd.label "Toolbars">
-<!ENTITY toolbarsCmd.accesskey "T">
-<!ENTITY toolbarMode.label "Mode">
-<!ENTITY toolbarEval.label "JavaScript Entry">
-
-<!ENTITY helpMenu.label            "Help">
-<!ENTITY helpMenu.accesskey        "H">
-<!ENTITY releaseCmd.label          "Release Notes">
-<!ENTITY releaseCmd.accesskey      "R">
-<!ENTITY aboutCmd.label         "About &brandShortName;">
-<!ENTITY aboutCmd.accesskey       "A">
-<!ENTITY fileMenu.label            "File">  
-<!ENTITY fileMenu.accesskey        "F">
