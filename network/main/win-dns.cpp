@@ -106,6 +106,9 @@ DNSCacheEntry::Init(void* aContext, const char* aHost, PRFileDesc* fd)
   if ((NULL == mHost) || (NULL == mHostEnt) || (NULL == mSockets)) {
     return NS_ERROR_FAILURE;
   }
+  mHostEnt->h_name = NULL;
+  mHostEnt->h_aliases = NULL;
+  mHostEnt->h_addr_list = NULL;
   return NS_OK;
 }
 
