@@ -100,6 +100,7 @@ LAYOUT_ATOM(selectScrolledContentPseudo, ":-moz-select-scrolled-content")
 
   // Alphabetical list of frame types
 LAYOUT_ATOM(areaFrame, "AreaFrame")
+LAYOUT_ATOM(bcTableCellFrame, "BCTableCellFrame") // table cell in border collapsing model
 LAYOUT_ATOM(blockFrame, "BlockFrame")
 LAYOUT_ATOM(boxFrame, "BoxFrame")
 LAYOUT_ATOM(brFrame, "BRFrame")
@@ -143,7 +144,8 @@ LAYOUT_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFra
 LAYOUT_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
 LAYOUT_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
 LAYOUT_ATOM(spaceManagerProperty, "SpaceManagerProperty")      // the space manager for a block
-LAYOUT_ATOM(viewProperty, "ViewProperty")                      // nsView*
+LAYOUT_ATOM(tableBCProperty, "TableBCProperty")                // table border collapsing info (e.g. damage area, table border widths)
+LAYOUT_ATOM(viewProperty, "ViewProperty")                      
 
   // Alphabetical list of event handler names
 LAYOUT_ATOM(onabort, "onabort")

@@ -42,6 +42,7 @@
 
 class  nsTableFrame;
 class  nsTableCellFrame;
+struct nsTableCellReflowState;
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 class nsReflowTimer;
@@ -240,6 +241,12 @@ public:
   nscoord GetUnpaginatedHeight(nsIPresContext* aPresContext);
   void    SetUnpaginatedHeight(nsIPresContext* aPresContext, nscoord aValue);
 
+  nscoord GetTopBCBorderWidth(float* aPixelsToTwips = nsnull);
+  void    SetTopBCBorderWidth(nscoord aWidth);
+  nscoord GetBottomBCBorderWidth(float* aPixelsToTwips = nsnull);
+  void    SetBottomBCBorderWidth(nscoord aWidth);
+  nsMargin* GetBCBorderWidth(float     aPixelsToTwips,
+                             nsMargin& aBorder);
 protected:
 
   /** protected constructor.
@@ -247,6 +254,12 @@ protected:
     */
   nsTableRowFrame();
 
+  void InitChildReflowState(nsIPresContext&         aPresContext, 
+                            const nsSize&           aAvailSize,
+                            PRBool                  aBorderCollapse,
+                            float                   aPixelsToTwips,
+                            nsTableCellReflowState& aReflowState);
+  
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
@@ -314,6 +327,10 @@ private:
   // max-ascent and max-descent amongst all cells that have 'vertical-align: baseline'
   nscoord mMaxCellAscent;  // does include cells with rowspan > 1
   nscoord mMaxCellDescent; // does *not* include cells with rowspan > 1
+
+  // border widths in pixels in the collapsing border model
+  unsigned mTopBorderWidth:8;
+  unsigned mBottomBorderWidth:8;
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 public:
@@ -419,6 +436,39 @@ inline void nsTableRowFrame::SetHasUnpaginatedHeight(PRBool aValue)
   } else {
     mState &= ~NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
   }
+}
+
+inline nscoord nsTableRowFrame::GetTopBCBorderWidth(float*  aPixelsToTwips)
+{
+  nscoord width = (aPixelsToTwips) ? NSToCoordRound(*aPixelsToTwips * mTopBorderWidth) : mTopBorderWidth;
+  return width;
+}
+
+inline void nsTableRowFrame::SetTopBCBorderWidth(nscoord aWidth)
+{
+  mTopBorderWidth = aWidth;
+}
+
+inline nscoord nsTableRowFrame::GetBottomBCBorderWidth(float*  aPixelsToTwips)
+{
+  nscoord width = (aPixelsToTwips) ? NSToCoordRound(*aPixelsToTwips * mBottomBorderWidth) : mBottomBorderWidth;
+  return width;
+}
+
+inline void nsTableRowFrame::SetBottomBCBorderWidth(nscoord aWidth)
+{
+  mBottomBorderWidth = aWidth;
+}
+
+inline nsMargin* nsTableRowFrame::GetBCBorderWidth(float     aPixelsToTwips,
+                                                   nsMargin& aBorder)
+{
+  aBorder.left = aBorder.right = 0;
+
+  aBorder.top    = NSToCoordRound(aPixelsToTwips * mTopBorderWidth);
+  aBorder.bottom = NSToCoordRound(aPixelsToTwips * mBottomBorderWidth);
+
+  return &aBorder;
 }
 
 #endif

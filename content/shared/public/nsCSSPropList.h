@@ -103,7 +103,7 @@ CSS_PROP(border-bottom-color, border_bottom_color, VISUAL)
 CSS_PROP(-moz-border-bottom-colors, border_bottom_colors, VISUAL)
 CSS_PROP(border-bottom-style, border_bottom_style, REFLOW)  // on/off will need reflow
 CSS_PROP(border-bottom-width, border_bottom_width, REFLOW)
-CSS_PROP(border-collapse, border_collapse, REFLOW)
+CSS_PROP(border-collapse, border_collapse, FRAMECHANGE)
 CSS_PROP(border-color, border_color, VISUAL)
 CSS_PROP(border-left, border_left, REFLOW)
 CSS_PROP(border-left-color, border_left_color, VISUAL)

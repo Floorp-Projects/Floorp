@@ -216,6 +216,8 @@ public:
   nscoord GetHeightOfRows(nsIPresContext* aPresContext);
   nscoord GetHeightBasis(const nsHTMLReflowState& aReflowState);
   
+  nsMargin* GetBCBorderWidth(float     aPixelsToTwips,
+                             nsMargin& aBorder);
 // nsILineIterator methods
 public:
   NS_IMETHOD GetNumLines(PRInt32* aResult);
@@ -251,6 +253,11 @@ public:
 protected:
   nsTableRowGroupFrame();
 
+  void InitChildReflowState(nsIPresContext&    aPresContext, 
+                            PRBool             aBorderCollapse,
+                            float              aPixelsToTwips,
+                            nsHTMLReflowState& aReflowState);
+  
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 

@@ -43,6 +43,7 @@
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 #include "nsIStyleContext.h"
 #include "nsIPercentHeightObserver.h"
+#include "nsLayoutAtoms.h"
 
 class nsTableFrame;
 class nsHTMLValue;
@@ -266,6 +267,9 @@ public:
 
   nsTableCellFrame* GetNextCell() const;
 
+  virtual nsMargin* GetBorderWidth(float     aPixelsToTwips,
+                                   nsMargin& aBorder) const;
+
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -277,17 +281,10 @@ private:
   // All these methods are support methods for RecalcLayoutData
   nsIFrame* GetFrameAt(nsVoidArray* aList,  PRInt32 aIndex);
 
-  //XXX: aTableFrame can be removed as soon as border-collapse inherits correctly
-  void GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame);
-
 protected:
 
   friend class nsTableRowFrame;
   void      MapBorderPadding(nsIPresContext* aPresContext);
-
-  void      MapHTMLBorderStyle(nsIPresContext* aPresContext,
-                               nsStyleBorder&  aBorderStyle,
-                               nsTableFrame*   aTableFrame);
 
   void      MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
   void      MapHAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
@@ -421,6 +418,41 @@ inline void nsTableCellFrame::SetLastBlockHeight(nscoord aValue)
 {
   mBits.mLastBlockHeight = aValue;
 }
+
+// nsBCTableCellFrame
+class nsBCTableCellFrame : public nsTableCellFrame
+{
+public:
+
+  nsBCTableCellFrame();
+
+  ~nsBCTableCellFrame();
+
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
+  virtual nsMargin* GetBorderWidth(float     aPixelsToTwips,
+                                   nsMargin& aBorder) const;
+  nscoord GetBorderWidth(PRUint8 aSide) const;
+
+  void SetBorderWidth(const nsMargin& aBorder);
+  void SetBorderWidth(PRUint8 aSide, nscoord aPixelValue);
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
+
+private:
+  
+  PRUint32 mTopBorder:    8;
+  PRUint32 mRightBorder:  8;
+  PRUint32 mBottomBorder: 8;
+  PRUint32 mLeftBorder:   8;
+};
+
+#define IS_TABLE_CELL(frameType)\
+((nsLayoutAtoms::tableCellFrame == frameType) || (nsLayoutAtoms::bcTableCellFrame == frameType))
+
 #endif
 
 

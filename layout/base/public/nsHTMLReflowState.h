@@ -270,12 +270,13 @@ struct nsHTMLReflowState {
 
   // Initialize a reflow state for a child frames reflow. Some state
   // is copied from the parent reflow state; the remaining state is
-  // computed.
+  // computed. 
   nsHTMLReflowState(nsIPresContext*          aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
-                    nsReflowReason           aReason);
+                    nsReflowReason           aReason, 
+                    PRBool                   aInit = PR_TRUE);
 
   // Same as the previous except that the reason is taken from the
   // parent's reflow state.
@@ -293,6 +294,13 @@ struct nsHTMLReflowState {
                     nscoord                  aContainingBlockWidth,
                     nscoord                  aContainingBlockHeight);
 
+  // This method initializes various data members. It is automatically
+  // called by the various constructors
+  void Init(nsIPresContext* aPresContext,
+            nscoord         aContainingBlockWidth = -1,
+            nscoord         aContainingBlockHeight = -1,
+            nsMargin*       aBorder = nsnull,
+            nsMargin*       aPadding = nsnull);
   /**
    * Get the containing block reflow state, starting from a frames
    * <B>parent</B> reflow state (the parent reflow state may or may not end
@@ -352,15 +360,12 @@ struct nsHTMLReflowState {
 
 
 protected:
-  // This method initializes various data members. It is automatically
-  // called by the various constructors
-  void Init(nsIPresContext* aPresContext,
-            nscoord         aContainingBlockWidth = -1,
-            nscoord         aContainingBlockHeight = -1);
 
   void InitConstraints(nsIPresContext* aPresContext,
                        nscoord         aContainingBlockWidth,
-                       nscoord         aContainingBlockHeight);
+                       nscoord         aContainingBlockHeight,
+                       nsMargin*       aBorder,
+                       nsMargin*       aPadding);
 
   void CalculateHypotheticalBox(nsIPresContext*    aPresContext,
                                 nsIFrame*          aPlaceholderFrame,

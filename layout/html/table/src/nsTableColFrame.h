@@ -102,6 +102,8 @@ public:
   
   void SetColIndex (PRInt32 aColIndex);
 
+  nsTableColFrame* GetNextCol() const;
+
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -164,6 +166,11 @@ public:
 
   void ResetSizingInfo();
 
+  nscoord GetLeftBorderWidth(float* aPixelsToTwips = nsnull);
+  void    SetLeftBorderWidth(nscoord aWidth);
+  nscoord GetRightBorderWidth(float* aPixelsToTwips = nsnull);
+  void    SetRightBorderWidth(nscoord aWidth);
+
   void Dump(PRInt32 aIndent);
 
 protected:
@@ -172,17 +179,46 @@ protected:
   ~nsTableColFrame();
 
   // the starting index of the column (starting at 0) that this col object represents //
-  PRInt32           mColIndex;
+  PRUint32 mColIndex:        16;
+  PRUint32 mLeftBorderWidth:  8; // stored as pixels
+  PRUint32 mRightBorderWidth: 8; // stored as pixels
+  // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO, FINAL
   // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO, FINAL
   // XXX these could be stored as pixels and converted to twips for a savings of 10 x 2 bytes.
   nscoord           mWidths[NUM_WIDTHS];
 };
 
 inline PRInt32 nsTableColFrame::GetColIndex() const
-{ return mColIndex; }
+{ 
+  return mColIndex; 
+}
 
 inline void nsTableColFrame::SetColIndex (PRInt32 aColIndex)
-{ mColIndex = aColIndex; }
+{ 
+  mColIndex = aColIndex; 
+}
+
+inline nscoord nsTableColFrame::GetLeftBorderWidth(float*  aPixelsToTwips)
+{
+  nscoord width = (aPixelsToTwips) ? NSToCoordRound(*aPixelsToTwips * mLeftBorderWidth) : mLeftBorderWidth;
+  return width;
+}
+
+inline void nsTableColFrame::SetLeftBorderWidth(nscoord aWidth)
+{
+  mLeftBorderWidth = aWidth;
+}
+
+inline nscoord nsTableColFrame::GetRightBorderWidth(float*  aPixelsToTwips)
+{
+  nscoord width = (aPixelsToTwips) ? NSToCoordRound(*aPixelsToTwips * mRightBorderWidth) : mRightBorderWidth;
+  return width;
+}
+
+inline void nsTableColFrame::SetRightBorderWidth(nscoord aWidth)
+{
+  mRightBorderWidth = aWidth;
+}
 
 #endif
 

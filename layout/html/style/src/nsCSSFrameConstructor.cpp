@@ -52,8 +52,11 @@
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"
+#include "nsTableFrame.h"
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
+#include "nsIDOMHTMLTableColElement.h"
+#include "nsTableCellFrame.h" // to get IS_CELL_FRAME
 #include "nsHTMLIIDs.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"
@@ -859,6 +862,23 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
   }
 }
 
+
+static 
+PRBool IsBorderCollapse(nsIFrame* aFrame)
+{
+  nsIFrame* frame = aFrame;
+  while (frame) {
+    nsCOMPtr<nsIAtom> fType;
+    frame->GetFrameType(getter_AddRefs(fType));
+    if (nsLayoutAtoms::tableFrame == fType.get()) {
+      return ((nsTableFrame*)frame)->IsBorderCollapse();
+    }
+    frame->GetParent(&frame);
+  }
+  NS_ASSERTION(PR_FALSE, "program error");
+  return PR_FALSE;
+}
+
 // -----------------------------------------------------------
 
 // Structure used when creating table frames.
@@ -870,7 +890,7 @@ struct nsTableCreator {
   virtual nsresult CreateTableColFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableColGroupFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableCellFrame(nsIFrame* aParentFrame, nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
 
   nsTableCreator(nsIPresShell* aPresShell)
@@ -919,8 +939,9 @@ nsTableCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
 }
 
 nsresult
-nsTableCreator::CreateTableCellFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableCellFrame(mPresShell, aNewFrame);
+nsTableCreator::CreateTableCellFrame(nsIFrame*  aParentFrame,
+                                     nsIFrame** aNewFrame) {
+  return NS_NewTableCellFrame(mPresShell, IsBorderCollapse(aParentFrame), aNewFrame);
 }
 
 nsresult
@@ -1527,7 +1548,7 @@ IsTableRelated(nsIAtom* aParentType,
            ((nsLayoutAtoms::tableCaptionFrame  == aParentType)  ||
             (nsLayoutAtoms::tableColGroupFrame == aParentType)  ||
             (nsLayoutAtoms::tableColFrame      == aParentType)  ||
-            (nsLayoutAtoms::tableCellFrame     == aParentType))) {
+            IS_TABLE_CELL(aParentType))) {
     return PR_TRUE;
   }
   else return PR_FALSE;
@@ -1629,7 +1650,7 @@ ProcessPseudoFrames(nsIPresContext* aPresContext,
     
     if (aPseudoFrames.mCellOuter.mFrame) {
       rv = ProcessPseudoCellFrame(aPresContext, aPseudoFrames, aHighestFrame);
-      if (nsLayoutAtoms::tableCellFrame == aHighestType) return rv;
+      if (IS_TABLE_CELL(aHighestType)) return rv;
     }
     if (aPseudoFrames.mRow.mFrame) {
       rv = ProcessPseudoFrame(aPresContext, aPseudoFrames.mRow, aHighestFrame);
@@ -1650,7 +1671,7 @@ ProcessPseudoFrames(nsIPresContext* aPresContext,
     }
     if (aPseudoFrames.mCellOuter.mFrame) {
       rv = ProcessPseudoCellFrame(aPresContext, aPseudoFrames, aHighestFrame);
-      if (nsLayoutAtoms::tableCellFrame == aHighestType) return rv;
+      if (IS_TABLE_CELL(aHighestType)) return rv;
     }
     if (aPseudoFrames.mRow.mFrame) {
       rv = ProcessPseudoFrame(aPresContext, aPseudoFrames.mRow, aHighestFrame);
@@ -1671,12 +1692,12 @@ ProcessPseudoFrames(nsIPresContext* aPresContext,
     }
     if (aPseudoFrames.mCellOuter.mFrame) {
       rv = ProcessPseudoCellFrame(aPresContext, aPseudoFrames, aHighestFrame);
-      if (nsLayoutAtoms::tableCellFrame == aHighestType) return rv;
+      if (IS_TABLE_CELL(aHighestType)) return rv;
     }
   }
-  else if (nsLayoutAtoms::tableCellFrame == aPseudoFrames.mLowestType) {
+  else if (IS_TABLE_CELL(aPseudoFrames.mLowestType)) {
     rv = ProcessPseudoCellFrame(aPresContext, aPseudoFrames, aHighestFrame);
-    if (nsLayoutAtoms::tableCellFrame == aHighestType) return rv;
+    if (IS_TABLE_CELL(aHighestType)) return rv;
 
     if (aPseudoFrames.mRow.mFrame) {
       rv = ProcessPseudoFrame(aPresContext, aPseudoFrames.mRow, aHighestFrame);
@@ -1942,6 +1963,7 @@ nsCSSFrameConstructor::CreatePseudoCellFrame(nsIPresShell*            aPresShell
 
   // set pseudo data for the newly created frames
   pseudoOuter.mChildList.AddChild(pseudoInner.mFrame);
+  // give it nsLayoutAtoms::tableCellFrame, if it is really nsLayoutAtoms::bcTableCellFrame, it will match later
   aState.mPseudoFrames.mLowestType = nsLayoutAtoms::tableCellFrame;
 
   // set pseudo data for the parent
@@ -2021,7 +2043,7 @@ nsCSSFrameConstructor::GetPseudoColGroupFrame(nsIPresShell*            aPresShel
       rv = CreatePseudoCellFrame(aPresShell, aPresContext, aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
-    if (created || (nsLayoutAtoms::tableCellFrame == parentFrameType.get()) || // cell parent
+    if (created || IS_TABLE_CELL(parentFrameType.get()) || // cell parent
                    !IsTableRelated(parentFrameType.get(), PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aPresShell, aPresContext, aTableCreator, aState, &aParentFrameIn);
     }
@@ -2065,7 +2087,7 @@ nsCSSFrameConstructor::GetPseudoRowGroupFrame(nsIPresShell*            aPresShel
       rv = CreatePseudoCellFrame(aPresShell, aPresContext, aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
-    if (created || (nsLayoutAtoms::tableCellFrame == parentFrameType.get()) || // cell parent
+    if (created || IS_TABLE_CELL(parentFrameType.get()) || // cell parent
         !IsTableRelated(parentFrameType.get(), PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aPresShell, aPresContext, aTableCreator, aState, &aParentFrameIn);
     }
@@ -2102,7 +2124,7 @@ nsCSSFrameConstructor::GetPseudoRowFrame(nsIPresShell*            aPresShell,
 
   if (pseudoFrames.IsEmpty()) {
     PRBool created = PR_FALSE;
-    if ((nsLayoutAtoms::tableCellFrame == parentFrameType.get()) || // cell parent
+    if (IS_TABLE_CELL(parentFrameType.get()) || // cell parent
         !IsTableRelated(parentFrameType.get(), PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aPresShell, aPresContext, aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
@@ -2230,7 +2252,7 @@ nsCSSFrameConstructor::GetParentFrame(nsIPresShell*            aPresShell,
       pseudoParentFrame = pseudoFrames.mRowGroup.mFrame;
     }
   }
-  else if (nsLayoutAtoms::tableCellFrame == aChildFrameType) { // cell child
+  else if (IS_TABLE_CELL(aChildFrameType)) { // cell child
     if (nsLayoutAtoms::tableRowFrame != parentFrameType.get()) { // need pseudo row parent
       rv = GetPseudoRowFrame(aPresShell, aPresContext, aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
@@ -2572,7 +2594,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
                                               PRBool&                  aIsPseudoParent)
 {
   nsresult rv = NS_OK;
-  if (!aPresShell || !aPresContext || !aParentFrameIn) return rv;
+  if (!aPresShell || !aPresContext || !aParentFrameIn || !aStyleContext) return rv;
 
   nsIFrame* parentFrame = aParentFrameIn;
   aIsPseudoParent = PR_FALSE;
@@ -2585,16 +2607,42 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
     }
   }
 
-  rv = aTableCreator.CreateTableColFrame(&aNewFrame);
-  if (NS_FAILED(rv)) return rv;
-  InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      parentFrame, aStyleContext, nsnull, aNewFrame);
+  rv = aTableCreator.CreateTableColFrame(&aNewFrame); if (NS_FAILED(rv)) return rv;
+  InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame, aStyleContext, nsnull, aNewFrame);
+  // if the parent frame was anonymous then reparent the style context
+  nsCOMPtr<nsIStyleContext> parentStyleContext;
+  parentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
+  if (aIsPseudoParent) {
+    aPresContext->ReParentStyleContext(aNewFrame, parentStyleContext);
+  }
+
+  // construct additional col frames if the col frame has a span > 1
+  PRInt32 span = 1;
+  nsCOMPtr<nsIDOMHTMLTableColElement> cgContent(do_QueryInterface(aContent));
+  if (cgContent) { 
+    cgContent->GetSpan(&span);
+    nsIFrame* lastCol = aNewFrame;
+    for (PRInt32 spanX = 1; spanX < span; spanX++) {
+      nsCOMPtr<nsIStyleContext> styleContext;
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableColPseudo, aStyleContext, 
+                                                 PR_FALSE, getter_AddRefs(styleContext));
+      nsIFrame* newCol;
+      rv = aTableCreator.CreateTableColFrame(&newCol); if (NS_FAILED(rv)) return rv;
+      InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame, styleContext, nsnull, newCol);
+      if (aIsPseudoParent) {
+        aPresContext->ReParentStyleContext(newCol, aStyleContext);
+      }
+      ((nsTableColFrame*)newCol)->SetType(eColAnonymousCol);
+      lastCol->SetNextSibling(newCol);
+      lastCol = newCol;
+    }
+  }
+
   if (!aIsPseudo) {
     nsFrameItems childItems;
     nsIFrame* captionFrame;
     rv = TableProcessChildren(aPresShell, aPresContext, aState, aContent, aNewFrame,
-                              aTableCreator, childItems, captionFrame);
-    if (NS_FAILED(rv)) return rv;
+                              aTableCreator, childItems, captionFrame); if (NS_FAILED(rv)) return rv;
     aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (aIsPseudoParent) {
       aState.mPseudoFrames.mColGroup.mChildList.AddChild(aNewFrame);
@@ -2625,6 +2673,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
   aIsPseudoParent = PR_FALSE;
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
+    // use nsLayoutAtoms::tableCellFrame which will match if it is really nsLayoutAtoms::bcTableCellFrame
     GetParentFrame(aPresShell, aPresContext, aTableCreator, *aParentFrameIn, 
                    nsLayoutAtoms::tableCellFrame, aState, parentFrame, aIsPseudoParent);
     if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -2635,7 +2684,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
     }
   }
 
-  rv = aTableCreator.CreateTableCellFrame(&aNewCellOuterFrame);
+  rv = aTableCreator.CreateTableCellFrame(parentFrame, &aNewCellOuterFrame);
   if (NS_FAILED(rv)) return rv;
  
   // Initialize the table cell frame
@@ -11328,7 +11377,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
         
         // See if it's a table cell frame
         cellFrame->GetFrameType(&tableType);
-        if (nsLayoutAtoms::tableCellFrame == tableType) {
+        if (IS_TABLE_CELL(tableType)) {
           nsIFrame* continuingCellFrame;
 
           CreateContinuingFrame(aPresShell, aPresContext, cellFrame, newFrame, &continuingCellFrame);
@@ -11343,8 +11392,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
       newFrame->SetInitialChildList(aPresContext, nsnull, newChildList.childList);
     }
 
-  } else if (nsLayoutAtoms::tableCellFrame == frameType) {
-    rv = NS_NewTableCellFrame(aPresShell, &newFrame);
+  } else if (IS_TABLE_CELL(frameType)) {
+    rv = NS_NewTableCellFrame(aPresShell, IsBorderCollapse(aParentFrame), &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,

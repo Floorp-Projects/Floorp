@@ -100,7 +100,7 @@ nsTableCellFrame::GetNextCell() const
   while (childFrame) {
     nsCOMPtr<nsIAtom> frameType;
     childFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
+    if (IS_TABLE_CELL(frameType.get())) {
       return (nsTableCellFrame*)childFrame;
     }
     childFrame->GetNextSibling(&childFrame);
@@ -439,7 +439,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
         if ((NS_SUCCEEDED(rv)) && tableFrame) {
           const nsStyleTableBorder* tableStyle;
           tableFrame->GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)tableStyle)); 
-          if (NS_STYLE_BORDER_SEPARATE == tableFrame->GetBorderCollapseStyle()) {
+          if (!tableFrame->IsBorderCollapse()) {
             nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *myBorder, mStyleContext, skipSides);
           }
@@ -582,10 +582,9 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
   const nsStyleTextReset* textStyle =
       (const nsStyleTextReset*)mStyleContext->GetStyleData(eStyleStruct_TextReset);
   /* XXX: remove tableFrame when border-collapse inherits */
-  nsTableFrame* tableFrame = nsnull;
-  (void) nsTableFrame::GetTableFrame(this, tableFrame);
+  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   nsMargin borderPadding;
-  GetCellBorder (borderPadding, tableFrame);
+  GetBorderWidth (p2t, borderPadding);
   nsMargin padding = nsTableFrame::GetPadding(aReflowState, this);
   borderPadding += padding;
   
@@ -822,13 +821,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   PRBool contentEmptyBeforeReflow = GetContentEmpty();
   /* XXX: remove tableFrame when border-collapse inherits */
-  nsTableFrame* tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame* tableFrame = nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(NS_ERROR_NULL_POINTER);
   nsTableFrame* tableFrameFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
 
   nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;
-  GetCellBorder(border, tableFrame);
+  GetBorderWidth(p2t, border);
   if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !contentEmptyBeforeReflow) {
     borderPadding += border;
   }
@@ -1130,51 +1129,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
-/**
-  *
-  * Update the border style to map to the HTML border style
-  *
-  */
-void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, 
-                                          nsStyleBorder&  aBorderStyle,
-                                          nsTableFrame*   aTableFrame)
-{
-  //adjust the border style based on the table rules attribute
-
-  /* The RULES code below has been disabled because collapsing borders have been disabled 
-     and RULES depend on collapsing borders
-
-  const nsStyleTable* tableStyle;
-  aTableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-
-  switch (tableStyle->mRules)
-  {
-  case NS_STYLE_TABLE_RULES_NONE:
-    aBorderStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    aBorderStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-    aBorderStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-    aBorderStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-    break;
-
-  case NS_STYLE_TABLE_RULES_COLS:
-	  aBorderStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    aBorderStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-    break;
-
-  case NS_STYLE_TABLE_RULES_ROWS:
-    aBorderStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-    aBorderStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-    break;
-
-  default:
-    // do nothing for "GROUPS" or "ALL" or for any illegal value
-    // "GROUPS" will be handled in nsTableFrame::ProcessGroupRules
-    break;
-  }
-  */
-}
-
-
 PRBool nsTableCellFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
 {
   if (aValue.GetUnit() == eHTMLUnit_Pixel)
@@ -1401,13 +1355,16 @@ nsTableCellFrame::GetNextCellInColumn(nsITableCellLayout **aCellLayout)
 }
 
 nsresult 
-NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewTableCellFrame(nsIPresShell* aPresShell, 
+                     PRBool        aIsBorderCollapse,
+                     nsIFrame**    aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTableCellFrame* it = new (aPresShell) nsTableCellFrame;
+  nsTableCellFrame* it = (aIsBorderCollapse) ? new (aPresShell) nsBCTableCellFrame 
+                                             : new (aPresShell) nsTableCellFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1415,27 +1372,16 @@ NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-
-
-/* ----- methods from CellLayoutData ----- */
-
-void 
-nsTableCellFrame::GetCellBorder(nsMargin&     aBorder, 
-                                nsTableFrame* aTableFrame)
+nsMargin* 
+nsTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
+                                 nsMargin&  aBorder) const
 {
   aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
-  if (nsnull==aTableFrame) {
-    return;
-  }
 
-  if (NS_STYLE_BORDER_SEPARATE == aTableFrame->GetBorderCollapseStyle()) {
-    const nsStyleBorder* borderData;
-    GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData);
-    borderData->GetBorder(aBorder);
-  } 
-  else {
-    NS_ASSERTION(PR_FALSE, "not implemented");
-  }
+  const nsStyleBorder* borderData;
+  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData);
+  borderData->GetBorder(aBorder);
+  return &aBorder;
 }
 
 NS_IMETHODIMP
@@ -1493,6 +1439,103 @@ void nsTableCellFrame::GetCollapseOffset(nsIPresContext* aPresContext,
 #ifdef DEBUG
 NS_IMETHODIMP
 nsTableCellFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRUint32 sum = sizeof(*this);
+  *aResult = sum;
+  return NS_OK;
+}
+#endif
+
+// nsBCTableCellFrame
+
+nsBCTableCellFrame::nsBCTableCellFrame()
+:nsTableCellFrame()
+{
+  mTopBorder = mRightBorder = mBottomBorder = mLeftBorder = 0;
+}
+
+nsBCTableCellFrame::~nsBCTableCellFrame()
+{
+}
+
+NS_IMETHODIMP
+nsBCTableCellFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::bcTableCellFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsBCTableCellFrame::GetFrameName(nsAString& aResult) const
+{
+  return MakeFrameName(NS_LITERAL_STRING("BCTableCell"), aResult);
+}
+#endif
+
+void 
+nsBCTableCellFrame::SetBorderWidth(const nsMargin& aBorder)
+{
+  mTopBorder    = aBorder.top;
+  mRightBorder  = aBorder.right;
+  mBottomBorder = aBorder.bottom;
+  mLeftBorder   = aBorder.left;
+}
+
+nsMargin* 
+nsBCTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
+                                   nsMargin&  aBorder) const
+{
+  aBorder.top    = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mTopBorder) :   mTopBorder;
+  aBorder.right  = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mRightBorder) : mRightBorder;
+  aBorder.bottom = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mBottomBorder): mBottomBorder;
+  aBorder.left   = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mLeftBorder):   mLeftBorder;
+  return &aBorder;
+}
+
+nscoord 
+nsBCTableCellFrame::GetBorderWidth(PRUint8 aSide) const
+{
+  switch(aSide) {
+  case NS_SIDE_TOP:
+    return (PRUint8)mTopBorder;
+  case NS_SIDE_RIGHT:
+    return (PRUint8)mRightBorder;
+  case NS_SIDE_BOTTOM:
+    return (PRUint8)mBottomBorder;
+  default:
+    return (PRUint8)mLeftBorder;
+  }
+}
+
+void 
+nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
+                                   nscoord aValue)
+{
+  switch(aSide) {
+  case NS_SIDE_TOP:
+    mTopBorder = aValue;
+    break;
+  case NS_SIDE_RIGHT:
+    mRightBorder = aValue;
+    break;
+  case NS_SIDE_BOTTOM:
+    mBottomBorder = aValue;
+    break;
+  default:
+    mLeftBorder = aValue;
+  }
+}
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsBCTableCellFrame::SizeOf(nsISizeOfHandler* aHandler, 
+                           PRUint32*         aResult) const
 {
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;

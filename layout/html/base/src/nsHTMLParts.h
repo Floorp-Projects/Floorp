@@ -204,7 +204,7 @@ extern nsresult NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aResult
 extern nsresult NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-extern nsresult NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+extern nsresult NS_NewTableCellFrame(nsIPresShell* aPresShell, PRBool aIsBorderCollapse, nsIFrame** aResult);
 
 // XXX passing aWebShell into this is wrong
 extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,

@@ -76,7 +76,8 @@ public:
     * @param aPixelToTwips  - the number of twips in a pixel.
     * @return               - the basis for percent calculations
     */
-  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+  virtual nscoord CalcPctAdjTableWidth(nsIPresContext&          aPresContext,
+                                       const nsHTMLReflowState& aReflowState,
                                        nscoord                  aAvailWidth,
                                        float                    aPixelToTwips)=0;
 

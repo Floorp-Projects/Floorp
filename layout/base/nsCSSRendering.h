@@ -180,6 +180,17 @@ public:
                                  PRIntn aSkipSides,
                                  nsRect* aGap);
 
+  // Draw a border segment in the table collapsing border model without beveling corners
+  static void DrawTableBorderSegment(nsIRenderingContext&     aContext,
+                                     PRUint8                  aBorderStyle,  
+                                     nscolor                  aBorderColor,
+                                     const nsStyleBackground* aBGColor,
+                                     const nsRect&            aBorderRect,
+                                     float                    aPixelsToTwips,
+                                     PRUint8                  aStartBevelSide = 0,
+                                     nscoord                  aStartBevelOffset = 0,
+                                     PRUint8                  aEndBevelSide = 0,
+                                     nscoord                  aEndBevelOffset = 0);
   /**
    * transform a color to a color that will show up on a printer if needed
    * aMapColor - color to evaluate

@@ -514,6 +514,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
   }
 }
 
+
 /**
  * Draw a dotted/dashed sides of a box
  */
@@ -3820,4 +3821,357 @@ void FillOrInvertRect(nsIRenderingContext& aRC, const nsRect& aRect, PRBool aInv
     aRC.FillRect(aRect);
   }
 }
+
+// Begin table border-collapsing section
+// These functions were written to not disrupt the normal ones and yet satisfy some additional requirements
+// At some point, all functions should be unified to include the additional functionality that these provide
+
+static nscoord
+RoundIntToPixel(nscoord aValue, 
+                nscoord aTwipsPerPixel,
+                PRBool  aRoundDown = PR_FALSE)
+{
+  nscoord halfPixel = NSToCoordRound(aTwipsPerPixel / 2.0f);
+  nscoord extra = aValue % aTwipsPerPixel;
+  nscoord finalValue = (!aRoundDown && (extra >= halfPixel)) ? aValue + (aTwipsPerPixel - extra) : aValue - extra;
+
+  return finalValue;
+}
+
+static nscoord
+RoundFloatToPixel(float   aValue, 
+                  nscoord aTwipsPerPixel,
+                  PRBool  aRoundDown = PR_FALSE)
+{
+  return RoundIntToPixel(NSToCoordRound(aValue), aTwipsPerPixel, aRoundDown);
+}
+
+static void
+SetPoly(const nsRect& aRect,
+        nsPoint*      poly)
+{
+  poly[0].x = aRect.x;
+  poly[0].y = aRect.y;
+  poly[1].x = aRect.x + aRect.width;
+  poly[1].y = aRect.y;
+  poly[2].x = aRect.x + aRect.width;
+  poly[2].y = aRect.y + aRect.height;
+  poly[3].x = aRect.x;
+  poly[3].y = aRect.y + aRect.height;
+  poly[4].x = aRect.x;
+  poly[4].y = aRect.y;
+}
+          
+static void 
+DrawSolidBorderSegment(nsIRenderingContext& aContext,
+                       nsRect               aRect,
+                       nscoord              aTwipsPerPixel,
+                       PRUint8              aStartBevelSide = 0,
+                       nscoord              aStartBevelOffset = 0,
+                       PRUint8              aEndBevelSide = 0,
+                       nscoord              aEndBevelOffset = 0)
+{
+
+  if ((aRect.width == aTwipsPerPixel) || (aRect.height == aTwipsPerPixel) ||
+      ((0 == aStartBevelOffset) && (0 == aEndBevelOffset))) {
+    // simple line or rectangle
+    if ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide)) {
+      if (1 == aRect.height) 
+        aContext.DrawLine(aRect.x, aRect.y, aRect.x, aRect.y + aRect.height); 
+      else 
+        aContext.FillRect(aRect);
+    }
+    else {
+      if (1 == aRect.width) 
+        aContext.DrawLine(aRect.x, aRect.y, aRect.x + aRect.width, aRect.y); 
+      else 
+        aContext.FillRect(aRect);
+    }
+  }
+  else {
+    // polygon with beveling
+    nsPoint poly[5];
+    SetPoly(aRect, poly);
+    switch(aStartBevelSide) {
+    case NS_SIDE_TOP:
+      poly[0].x += aStartBevelOffset;
+      poly[4].x = poly[0].x;
+      break;
+    case NS_SIDE_BOTTOM:
+      poly[3].x += aStartBevelOffset;
+      break;
+    case NS_SIDE_RIGHT:
+      poly[1].y += aStartBevelOffset;
+      break;
+    case NS_SIDE_LEFT:
+      poly[0].y += aStartBevelOffset;
+      poly[4].y = poly[0].y;
+    }
+
+    switch(aEndBevelSide) {
+    case NS_SIDE_TOP:
+      poly[1].x -= aEndBevelOffset;
+      break;
+    case NS_SIDE_BOTTOM:
+      poly[2].x -= aEndBevelOffset;
+      break;
+    case NS_SIDE_RIGHT:
+      poly[2].y -= aEndBevelOffset;
+      break;
+    case NS_SIDE_LEFT:
+      poly[3].y -= aEndBevelOffset;
+    }
+
+    aContext.FillPolygon(poly, 5);
+  }
+
+
+}
+
+static void
+GetDashInfo(nscoord  aBorderLength,
+            nscoord  aDashLength,
+            nscoord  aTwipsPerPixel,
+            PRInt32& aNumDashSpaces,
+            nscoord& aStartDashLength,
+            nscoord& aEndDashLength)
+{
+  aNumDashSpaces = 0;
+  if (aStartDashLength + aDashLength + aEndDashLength >= aBorderLength) {
+    aStartDashLength = aBorderLength;
+    aEndDashLength = 0;
+  }
+  else {
+    aNumDashSpaces = aBorderLength / (2 * aDashLength); // round down
+    nscoord foo = ((2 * aNumDashSpaces) - 1) * aDashLength;
+    nscoord extra = aBorderLength - aStartDashLength - aEndDashLength - (((2 * aNumDashSpaces) - 1) * aDashLength);
+    if (extra > 0) {
+      nscoord half = RoundIntToPixel(extra / 2, aTwipsPerPixel);
+      aStartDashLength += half;
+      aEndDashLength += (extra - half);
+    }
+  }
+}
+
+void 
+nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
+                                       PRUint8                  aBorderStyle,  
+                                       nscolor                  aBorderColor,
+                                       const nsStyleBackground* aBGColor,
+                                       const nsRect&            aBorder,
+                                       float                    aPixelsToTwips,
+                                       PRUint8                  aStartBevelSide,
+                                       nscoord                  aStartBevelOffset,
+                                       PRUint8                  aEndBevelSide,
+                                       nscoord                  aEndBevelOffset)
+{
+  aContext.SetColor (aBorderColor); 
+
+  PRBool horizontal = ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide));
+  nscoord twipsPerPixel = NSIntPixelsToTwips(1, aPixelsToTwips);
+  PRBool ridgeGroove = NS_STYLE_BORDER_STYLE_RIDGE;
+
+  if ((twipsPerPixel >= aBorder.width) || (twipsPerPixel >= aBorder.height) ||
+      (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle) || (NS_STYLE_BORDER_STYLE_DOTTED == aBorderStyle)) {
+    // no beveling for 1 pixel border, dash or dot
+    aStartBevelOffset = 0;
+    aEndBevelOffset = 0;
+  }
+
+  switch (aBorderStyle) {
+  case NS_STYLE_BORDER_STYLE_NONE:
+  case NS_STYLE_BORDER_STYLE_HIDDEN:
+  case NS_STYLE_BORDER_STYLE_BLANK:
+    //NS_ASSERTION(PR_FALSE, "style of none, hidden, or blank");
+    break;
+  case NS_STYLE_BORDER_STYLE_DOTTED:
+  case NS_STYLE_BORDER_STYLE_DASHED: 
+    {
+      nscoord dashLength = (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle) ? DASH_LENGTH : DOT_LENGTH;
+      // make the dash length proportional to the border thickness
+      dashLength *= (horizontal) ? aBorder.height : aBorder.width;
+      // make the min dash length for the ends 1/2 the dash length
+      nscoord minDashLength = (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle) 
+                              ? RoundFloatToPixel(((float)dashLength) / 2.0f, twipsPerPixel) : dashLength;
+      minDashLength = PR_MAX(minDashLength, twipsPerPixel);
+      nscoord numDashSpaces = 0;
+      nscoord startDashLength = minDashLength;
+      nscoord endDashLength   = minDashLength;
+      if (horizontal) {
+        GetDashInfo(aBorder.width, dashLength, twipsPerPixel, numDashSpaces, startDashLength, endDashLength);
+        nsRect rect(aBorder.x, aBorder.y, startDashLength, aBorder.height);
+        DrawSolidBorderSegment(aContext, rect, PR_TRUE);
+        for (PRInt32 spaceX = 0; spaceX < numDashSpaces; spaceX++) {
+          rect.x += rect.width + dashLength;
+          rect.width = (spaceX == (numDashSpaces - 1)) ? endDashLength : dashLength;
+          DrawSolidBorderSegment(aContext, rect, PR_TRUE);
+        }
+      }
+      else {
+        GetDashInfo(aBorder.height, dashLength, twipsPerPixel, numDashSpaces, startDashLength, endDashLength);
+        nsRect rect(aBorder.x, aBorder.y, aBorder.width, startDashLength);
+        DrawSolidBorderSegment(aContext, rect, PR_FALSE);
+        for (PRInt32 spaceY = 0; spaceY < numDashSpaces; spaceY++) {
+          rect.y += rect.height + dashLength;
+          rect.height = (spaceY == (numDashSpaces - 1)) ? endDashLength : dashLength;
+          DrawSolidBorderSegment(aContext, rect, PR_FALSE);
+        }
+      }
+    }
+    break;                                  
+  case NS_STYLE_BORDER_STYLE_GROOVE:
+    ridgeGroove = NS_STYLE_BORDER_STYLE_GROOVE; // and fall through to ridge
+  case NS_STYLE_BORDER_STYLE_RIDGE:
+    if ((horizontal && (twipsPerPixel >= aBorder.height)) ||
+        (!horizontal && (twipsPerPixel >= aBorder.width))) {
+      // a one pixel border
+      DrawSolidBorderSegment(aContext, aBorder, twipsPerPixel, aStartBevelSide, aStartBevelOffset,
+                             aEndBevelSide, aEndBevelOffset);
+    }
+    else {
+      nscoord startBevel = (aStartBevelOffset > 0) 
+                            ? RoundFloatToPixel(0.5f * (float)aStartBevelOffset, twipsPerPixel, PR_TRUE) : 0;
+      nscoord endBevel =   (aEndBevelOffset > 0) 
+                            ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset, twipsPerPixel, PR_TRUE) : 0;
+      PRUint8 ridgeGrooveSide = (horizontal) ? NS_SIDE_TOP : NS_SIDE_LEFT;
+      aContext.SetColor ( 
+        MakeBevelColor (ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor, PR_TRUE));
+      nsRect rect(aBorder);
+      nscoord half;
+      if (horizontal) { // top, bottom
+        half = RoundFloatToPixel(0.5f * (float)aBorder.height, twipsPerPixel);
+        rect.height = half;
+        if (NS_SIDE_TOP == aStartBevelSide) {
+          rect.x += startBevel;
+          rect.width -= startBevel;
+        }
+        if (NS_SIDE_TOP == aEndBevelSide) {
+          rect.width -= endBevel;
+        }
+        DrawSolidBorderSegment(aContext, rect, twipsPerPixel, aStartBevelSide, 
+                               startBevel, aEndBevelSide, endBevel);
+      }
+      else { // left, right
+        half = RoundFloatToPixel(0.5f * (float)aBorder.width, twipsPerPixel);
+        rect.width = half;
+        if (NS_SIDE_LEFT == aStartBevelSide) {
+          rect.y += startBevel;
+          rect.height -= startBevel;
+        }
+        if (NS_SIDE_LEFT == aEndBevelSide) {
+          rect.height -= endBevel;
+        }
+        DrawSolidBorderSegment(aContext, rect, twipsPerPixel, aStartBevelSide, 
+                               startBevel, aEndBevelSide, endBevel);
+      }
+
+      rect = aBorder;
+      ridgeGrooveSide = (NS_SIDE_TOP == ridgeGrooveSide) ? NS_SIDE_BOTTOM : NS_SIDE_RIGHT;
+      aContext.SetColor ( 
+        MakeBevelColor (ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor, PR_TRUE));
+      if (horizontal) {
+        rect.y = rect.y + half;
+        rect.height = aBorder.height - half;
+        if (NS_SIDE_BOTTOM == aStartBevelSide) {
+          rect.x += startBevel;
+          rect.width -= startBevel;
+        }
+        if (NS_SIDE_BOTTOM == aEndBevelSide) {
+          rect.width -= endBevel;
+        }
+        DrawSolidBorderSegment(aContext, rect, twipsPerPixel, aStartBevelSide, 
+                               startBevel, aEndBevelSide, endBevel);
+      }
+      else {
+        rect.x = rect.x + half;
+        rect.width = aBorder.width - half;
+        if (NS_SIDE_RIGHT == aStartBevelSide) {
+          rect.y += aStartBevelOffset - startBevel;
+          rect.height -= startBevel;
+        }
+        if (NS_SIDE_RIGHT == aEndBevelSide) {
+          rect.height -= endBevel;
+        }
+        DrawSolidBorderSegment(aContext, rect, twipsPerPixel, aStartBevelSide, 
+                               startBevel, aEndBevelSide, endBevel);
+      }
+    }
+    break;
+  case NS_STYLE_BORDER_STYLE_DOUBLE:
+    if ((aBorder.width > 2) && (aBorder.height > 2)) {
+      nscoord startBevel = (aStartBevelOffset > 0) 
+                            ? RoundFloatToPixel(0.333333f * (float)aStartBevelOffset, twipsPerPixel) : 0;
+      nscoord endBevel =   (aEndBevelOffset > 0) 
+                            ? RoundFloatToPixel(0.333333f * (float)aEndBevelOffset, twipsPerPixel) : 0;
+      if (horizontal) { // top, bottom
+        nscoord thirdHeight = RoundFloatToPixel(0.333333f * (float)aBorder.height, twipsPerPixel);
+
+        // draw the top line or rect
+        nsRect topRect(aBorder.x, aBorder.y, aBorder.width, thirdHeight);
+        if (NS_SIDE_TOP == aStartBevelSide) {
+          topRect.x += aStartBevelOffset - startBevel;
+          topRect.width -= aStartBevelOffset - startBevel;
+        }
+        if (NS_SIDE_TOP == aEndBevelSide) {
+          topRect.width -= aEndBevelOffset - endBevel;
+        }
+        DrawSolidBorderSegment(aContext, topRect, twipsPerPixel, aStartBevelSide, 
+                               startBevel, aEndBevelSide, endBevel);
+
+        // draw the botom line or rect
+        nscoord heightOffset = aBorder.height - thirdHeight; 
+        nsRect bottomRect(aBorder.x, aBorder.y + heightOffset, aBorder.width, aBorder.height - heightOffset);
+        if (NS_SIDE_BOTTOM == aStartBevelSide) {
+          bottomRect.x += aStartBevelOffset - startBevel;
+          bottomRect.width -= aStartBevelOffset - startBevel;
+        }
+        if (NS_SIDE_BOTTOM == aEndBevelSide) {
+          bottomRect.width -= aEndBevelOffset - endBevel;
+        }
+        DrawSolidBorderSegment(aContext, bottomRect, twipsPerPixel, aStartBevelSide, 
+                               startBevel, aEndBevelSide, endBevel);
+      }
+      else { // left, right
+        nscoord thirdWidth = RoundFloatToPixel(0.333333f * (float)aBorder.width, twipsPerPixel);
+
+        nsRect leftRect(aBorder.x, aBorder.y, thirdWidth, aBorder.height); 
+        if (NS_SIDE_LEFT == aStartBevelSide) {
+          leftRect.y += aStartBevelOffset - startBevel;
+          leftRect.height -= aStartBevelOffset - startBevel;
+        }
+        if (NS_SIDE_LEFT == aEndBevelSide) {
+          leftRect.height -= aEndBevelOffset - endBevel;
+        }
+        DrawSolidBorderSegment(aContext, leftRect, twipsPerPixel, aStartBevelSide,
+                               startBevel, aEndBevelSide, endBevel);
+
+        nscoord widthOffset = aBorder.width - thirdWidth; 
+        nsRect rightRect(aBorder.x + widthOffset, aBorder.y, aBorder.width - widthOffset, aBorder.height);
+        if (NS_SIDE_RIGHT == aStartBevelSide) {
+          rightRect.y += aStartBevelOffset - startBevel;
+          rightRect.height -= aStartBevelOffset - startBevel;
+        }
+        if (NS_SIDE_RIGHT == aEndBevelSide) {
+          rightRect.height -= aEndBevelOffset - endBevel;
+        }
+        DrawSolidBorderSegment(aContext, rightRect, twipsPerPixel, aStartBevelSide,
+                               startBevel, aEndBevelSide, endBevel);
+      }
+      break;
+    }
+    // else fall through to solid
+  case NS_STYLE_BORDER_STYLE_SOLID:
+    DrawSolidBorderSegment(aContext, aBorder, twipsPerPixel, aStartBevelSide, 
+                           aStartBevelOffset, aEndBevelSide, aEndBevelOffset);
+    break;
+  case NS_STYLE_BORDER_STYLE_BG_OUTSET:
+  case NS_STYLE_BORDER_STYLE_BG_INSET:
+  case NS_STYLE_BORDER_STYLE_OUTSET:
+  case NS_STYLE_BORDER_STYLE_INSET:
+    NS_ASSERTION(PR_FALSE, "inset, outset should have been converted to groove, ridge");
+    break;
+  }
+}
+
+// End table border-collapsing section
 
