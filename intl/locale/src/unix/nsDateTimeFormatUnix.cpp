@@ -47,6 +47,7 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
 #include "nsCRT.h"
+#include "nsUnicharUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatUnix, nsIDateTimeFormat);
 
@@ -67,7 +68,9 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
   else {
     res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-      if (mLocale.Length() && mLocale.EqualsIgnoreCase(nsAutoString(aLocaleUnichar))) {
+      if (!mLocale.IsEmpty() &&
+          mLocale.Equals(aLocaleUnichar,
+                         nsCaseInsensitiveStringComparator())) {
         nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }

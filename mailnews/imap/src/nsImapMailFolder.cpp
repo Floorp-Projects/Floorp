@@ -355,11 +355,12 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
 
   if(NS_SUCCEEDED(rv))
   {
-    if(isServer && (Compare(*name,
-                            NS_LITERAL_STRING("Inbox"),
-                            nsCaseInsensitiveStringComparator()) == 0))
+    if(isServer &&
+       name->Equals(NS_LITERAL_STRING("Inbox"),
+                    nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_INBOX;
-    else if((isServer || isParentInbox) && name->EqualsIgnoreCase(nsAutoString(kTrashName)))
+    else if((isServer || isParentInbox) && name->Equals(kTrashName,
+                                                        nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_TRASH;
 #if 0
     else if(name->EqualsIgnoreCase(kSentName))

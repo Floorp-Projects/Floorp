@@ -295,15 +295,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	//Only set these is these are top level children.
 	if(NS_SUCCEEDED(rv) && isServer)
 	{
-		if(name->EqualsIgnoreCase(nsAutoString(kInboxName)))
+		if(name->Equals(kInboxName, nsCaseInsensitiveStringComparator()))
 		{
 			flags |= MSG_FOLDER_FLAG_INBOX;
                         SetBiffState(nsIMsgFolder::nsMsgBiffState_Unknown);
 		}
-		else if (name->EqualsIgnoreCase(nsAutoString(kTrashName)))
+		else if (name->Equals(kTrashName, nsCaseInsensitiveStringComparator()))
 			flags |= MSG_FOLDER_FLAG_TRASH;
-		else if (name->EqualsIgnoreCase(nsAutoString(kUnsentName))
-             || Compare(*name, NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()) == 0)
+		else if (name->Equals(kUnsentName, nsCaseInsensitiveStringComparator()) ||
+			name->Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
 			flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
 		// the logic for this has been moved into 
