@@ -75,9 +75,7 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 LLIBS   = \
     $(LIBNSPR) \
     $(DIST)\lib\xpcom.lib \
-!ifndef NECKO
-    $(DIST)\lib\netlib.lib \
-!endif
+    $(DIST)\lib\neckoutil_s.lib	\
     $(DIST)\lib\plc3.lib \
 
 #//------------------------------------------------------------------------
