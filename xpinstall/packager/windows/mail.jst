@@ -342,6 +342,12 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(CONTENT | DELAYED_CHROME,
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger-region/");
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-smime/");
+    registerChrome(LOCALE | DELAYED_CHROME, 
+                   getFolder("Chrome","messenger.jar"), 
+                   "locale/en-US/messenger-smime/");
 
     // log comments for uninstalling the registry keys created by mail for setting
     // itself up in WinXP's Start menu
