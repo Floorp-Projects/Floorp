@@ -122,3 +122,9 @@ Copy__14nsXPIDLCStringFPCc
 StartAssignmentByValue__14nsXPIDLCStringFv
 StartAssignmentByReference__14nsXPIDLCStringFv
 
+# nsCStringKey
+__ct__12nsCStringKeyFPCc
+__dt__12nsCStringKeyFv
+Clone__12nsCStringKeyCFv
+Equals__12nsCStringKeyCFPC9nsHashKey
+HashValue__12nsCStringKeyCFv
