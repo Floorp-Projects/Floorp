@@ -61,10 +61,11 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgNewsFolder::nsMsgNewsFolder(void)
-  : nsMsgFolder(), mPath(""), mExpungedBytes(0), 
+  : nsMsgFolder(), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mNewsDatabase(nsnull), m_optionLines(nsnull)
 {
+	mPath = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -73,6 +74,9 @@ nsMsgNewsFolder::~nsMsgNewsFolder(void)
 	if(mNewsDatabase)
 		//Close releases db;
 		mNewsDatabase->Close(PR_TRUE);
+
+	if (mPath)
+		delete mPath;
 
   PR_FREEIF(m_optionLines);
 }
@@ -851,6 +855,9 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 {
     nsresult openErr=NS_ERROR_UNEXPECTED;
     if(!db || !folderInfo)
+		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
+		
+	if (!mPath)
 		return NS_ERROR_NULL_POINTER;
 
 	nsIMsgDatabase *newsDBFactory = nsnull;
@@ -859,7 +866,7 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
 	if (NS_SUCCEEDED(rv) && newsDBFactory)
 	{
-		openErr = newsDBFactory->Open(mPath, PR_FALSE, (nsIMsgDatabase **) &newsDB, PR_FALSE);
+		openErr = newsDBFactory->Open(*mPath, PR_FALSE, (nsIMsgDatabase **) &newsDB, PR_FALSE);
 		newsDBFactory->Release();
 	}
 
@@ -1017,12 +1024,15 @@ NS_IMETHODIMP nsMsgNewsFolder::GetRememberedPassword(char ** password)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
 {
- nsFileSpec nopath("");
-  if (mPath == nopath) {
-    nsresult rv = nsNewsURI2Path(kNewsRootURI, mURI, mPath);
+  if (! mPath) {
+    mPath = new nsNativeFileSpec("");
+    if (! mPath)
+    	return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = nsNewsURI2Path(kNewsRootURI, mURI, *mPath);
     if (NS_FAILED(rv)) return rv;
   }
-  aPathName = mPath;
+  aPathName = *mPath;
   return NS_OK;
 }
 
