@@ -71,8 +71,10 @@ public:
     NS_IMETHOD SetMargin(PRInt32 aMargin);
     NS_IMETHOD SetLastItemIsRightJustified(const PRBool & aState);
     NS_IMETHOD SetNextLastItemIsStretchy(const PRBool & aState);
+#if GRIPPYS_NOT_WIDGETS
     NS_IMETHOD SetToolbarManager(nsIToolbarManager * aToolbarManager);
     NS_IMETHOD GetToolbarManager(nsIToolbarManager *& aToolbarManager);
+#endif
     NS_IMETHOD SetBorderType(nsToolbarBorderType aBorderType);
     NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                        const nsRect& aDirtyRect);
@@ -115,7 +117,9 @@ public:
 
   NS_IMETHOD GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt32& aSuggestedHeight, 
                                          PRInt32& aWidth,          PRInt32& aHeight);
+#if GRIPPYS_NOT_WIDGETS
   NS_IMETHOD CreateTab(nsIWidget *& aTab);
+#endif
 
   // Override the widget creation method
   NS_IMETHOD Create(nsIWidget *aParent,
@@ -130,10 +134,6 @@ protected:
   void GetMargins(PRInt32 &aX, PRInt32 &aY);
   void DoHorizontalLayout(const nsRect& aTBRect);
   void DoVerticalLayout(const nsRect& aTBRect);
-  void AddTab(const nsString& aUpURL,
-              const nsString& aPressedURL,
-              const nsString& aDisabledURL,
-              const nsString& aRollOverURL);
 
   // General function for painting a background image.
   void PaintBackgroundImage(nsIRenderingContext& drawCtx, 
@@ -142,7 +142,6 @@ protected:
 
   //*** these should be smart pointers ***
   nsToolbarDataModel* mDataModel;   // The data source from which everything to draw is obtained.
-  nsIImageGroup* mImageGroup;    // Used to make requests for toolbar images.
 
   //*** This will all be stored in the DOM
   ToolbarLayoutInfo ** mItems;
@@ -161,7 +160,9 @@ protected:
   PRBool  mWrapItems;
   PRBool  mDoHorizontalLayout;
 
+#if GRIPPYS_NOT_WIDGETS
   nsIToolbarManager * mToolbarMgr;
+#endif
 
 };
 
