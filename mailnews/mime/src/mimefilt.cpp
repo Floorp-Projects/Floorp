@@ -250,7 +250,7 @@ test(FILE *in, FILE *out,
   opt->output_init_fn		= test_output_init_fn;
   opt->output_fn			= test_output_fn;
   opt->charset_conversion_fn= 0;
-  opt->rfc1522_conversion_fn= 0;
+  opt->rfc1522_conversion_p = PR_FALSE;
   opt->file_type_fn			= test_file_type;
   opt->stream_closure		= out;
 

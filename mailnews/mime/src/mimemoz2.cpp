@@ -120,9 +120,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   if (tmp->real_name)
   {
     char *fname = NULL;
-    fname = mime_decode_filename(tmp->real_name, charset,
-                                 obj->options->default_charset,
-                                 obj->options->override_charset);
+    fname = mime_decode_filename(tmp->real_name, charset, obj->options);
     PR_FREEIF(charset);
     if (fname && fname != tmp->real_name)
     {
@@ -362,9 +360,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
         // So we should parse both types.
 
         char *fname = NULL;
-        fname = mime_decode_filename(tmp->real_name, charset,
-                                     aChild->options->default_charset,
-                                     aChild->options->override_charset);
+        fname = mime_decode_filename(tmp->real_name, charset, aChild->options);
         PR_FREEIF(charset);
 
         if (fname && fname != tmp->real_name)
@@ -405,9 +401,8 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
           // So we should parse both types.
 
           char *fname = NULL;
-          fname = mime_decode_filename(tmp->real_name, charset,
-                                     aChild->options->default_charset,
-                                     aChild->options->override_charset);
+          fname = mime_decode_filename(tmp->real_name, charset, 
+                                       aChild->options);
           PR_FREEIF(charset);
 
           if (fname && fname != tmp->real_name)
@@ -739,93 +734,6 @@ mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRI
 
   return 0;
 }
-
-static int
-mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
-                      const char *input_charset, const char *output_charset,
-                      char **output_ret, PRInt32 *output_size_ret,
-                      void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder)
-{
-  char *converted;
-  char *line;
-  char charset[128];
-  PRBool useInputCharset = PR_TRUE;
-  
-  charset[0] = '\0';
-
-  if (input_line[input_length] == 0)  /* oh good, it's null-terminated */
-    line = (char *) input_line;
-  else
-  {
-    line = (char *) PR_MALLOC(input_length+1);
-    if (!line) return MIME_OUT_OF_MEMORY;
-    nsCRT::memcpy(line, input_line, input_length);
-    line[input_length] = 0;
-  }
-  
-  // set the default charset to be used....
-  if (input_charset)
-  {
-    PRInt32 charsetLength = nsCRT::strlen(input_charset);
-    if (charsetLength > 127)
-      charsetLength = 127;
-    nsCRT::memcpy(charset, input_charset, charsetLength);
-    charset[charsetLength] = '\0';;
-  }
-  
-  converted = MIME_DecodeMimePartIIStr(line, charset, PR_TRUE);
-
-  const char * stringToUse = converted;
-  const char * charSetToUse = charset;
-
-  if (!stringToUse)
-  {
-    stringToUse = line;
-    charSetToUse = input_charset;
-  }
-  else
-    useInputCharset = PR_FALSE;
-  
-  // If output_charset is NULL, then we should just return the decoded
-  // header value
-  if (!output_charset)
-  {
-    *output_ret = converted;
-    *output_size_ret = nsCRT::strlen(stringToUse);
-  }
-  else
-  {
-    char  *convertedString = NULL; 
-  
-    PRInt32 res;
-
-    if (useInputCharset && encoder && decoder)
-    {
-      res = ConvertUsingEncoderAndDecoder(stringToUse, input_length, encoder, decoder, &convertedString);
-    }
-    else
-    {
-      res = MIME_ConvertString(charSetToUse, "UTF-8", stringToUse, &convertedString); 
-    }
-    if ( (res != 0) || (!convertedString) )
-    {
-      *output_ret = nsCRT::strdup(stringToUse);
-      *output_size_ret = nsCRT::strlen(stringToUse);
-    }
-    else
-    {
-      *output_ret = convertedString;
-      *output_size_ret = nsCRT::strlen(convertedString);
-    }
-    PR_FREEIF(converted);
-  }
-
-  if (line != input_line)
-    PR_Free(line);
-
-  return 0;
-}
-
 
 static int
 mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
@@ -1344,7 +1252,7 @@ MimeDisplayOptions::MimeDisplayOptions()
   output_closure = nsnull;
 
   charset_conversion_fn = nsnull;
-  rfc1522_conversion_fn = nsnull;
+  rfc1522_conversion_p = PR_FALSE;
 
   file_type_fn = nsnull;
 
@@ -1546,7 +1454,7 @@ mime_bridge_create_display_stream(
 
   msd->options->whattodo 	      = whattodo;
   msd->options->charset_conversion_fn = mime_convert_charset;
-  msd->options->rfc1522_conversion_fn = mime_convert_rfc1522;
+  msd->options->rfc1522_conversion_p  = PR_TRUE;
   msd->options->file_type_fn          = mime_file_type;
   msd->options->stream_closure        = msd;
   msd->options->passwd_prompt_fn      = 0;

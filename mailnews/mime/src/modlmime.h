@@ -258,15 +258,10 @@ public:
 								char **output_ret, PRInt32 *output_size_ret,
 								void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder);
 
-  /* A hook for the caller to perform both charset-conversion and decoding of
-	 MIME-2 header fields (using RFC-1522 encoding.)  Arguments and returned
-	 values are as for `charset_conversion_fn'.
+  /* If PR_TRUE, perform both charset-conversion and decoding of
+	 MIME-2 header fields (using RFC-1522 encoding.)
    */
-  int (*rfc1522_conversion_fn) (const char *input_line, PRInt32 input_length,
-								const char *input_charset,
-								const char *output_charset,
-								char **output_ret, PRInt32 *output_size_ret,
-								void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder);
+  PRBool rfc1522_conversion_p;
 
   /* A hook for the caller to turn a file name into a content-type. */
   char *(*file_type_fn) (const char *filename, void *stream_closure);

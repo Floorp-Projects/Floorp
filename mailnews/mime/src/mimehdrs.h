@@ -75,10 +75,9 @@ HG77761
 
 /* Does all the heuristic silliness to find the filename in the given headers.
  */
-extern char *MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opts);
+extern char *MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opt);
 
 extern char *mime_decode_filename(char *name, const char* charset,
-                                  const char* default_charset,
-                                  PRBool override_charset);
+                                  MimeDisplayOptions *opt);
 
 #endif /* _MIMEHDRS_H_ */

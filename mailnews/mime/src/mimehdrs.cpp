@@ -45,27 +45,33 @@
 extern "C"  char    *MIME_StripContinuations(char *original);
 int MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
-static int
-MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
-							              const char *input, PRInt32 input_length,
-							              char **output_ret, PRInt32 *output_length_ret);
-
-char *
+static char *
 MimeHeaders_convert_header_value(MimeDisplayOptions *opt, char **value)
 {
   char        *converted;
-  PRInt32     converted_length;
 
-  if ((!value) || (!*value))
+  if (!*value)
     return *value;
 
-  PRInt32 contents_length = nsCRT::strlen(*value);
-  int     status = MimeHeaders_convert_rfc1522(opt, *value, contents_length,
-					                          				   &converted, &converted_length);
-  if (status == 0) 
+  if (opt && opt->rfc1522_conversion_p)
   {
+    converted = MIME_DecodeMimeHeader(*value, opt->default_charset, 
+                                      opt->override_charset, PR_TRUE);
+
+    if (converted)
+    {
+      PR_FREEIF(*value);
+      *value = converted;
+    }
+  }
+  else
+  {
+    // This behavior, though highly unusual, was carefully preserved
+    // from the previous implementation.  It may be that this is dead
+    // code, in which case opt->rfc1522_conversion_p is no longer
+    // needed.
     PR_FREEIF(*value);
-    *value = converted;
+    *value = nsnull;
   }
 
   return(*value);
@@ -657,78 +663,6 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				   &(hdrs)->obuffer, &(hdrs)->obuffer_size) \
    : 0)
 
-static int
-MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
-							const char *input, PRInt32 input_length,
-							char **output_ret, PRInt32 *output_length_ret)
-{
-  *output_ret = 0;
-  *output_length_ret = 0;
-  if (input && *input && opt && opt->rfc1522_conversion_fn)
-	{
-	  char *converted = 0;
-	  PRInt32 converted_len = 0;
-    const char *output_charset = nsnull;
-
-    // Ok, here is where we need to check for the type
-    // of output that we are doing. If we are doing Save As output
-    // then we should convert to the charset that lives in the headers
-    // for the message...if not, then go to UTF-8
-    if (opt->format_out != nsMimeOutput::nsMimeMessageSaveAs)
-      output_charset = "UTF-8";
-
-    // check if we're converting from input charset to utf-8, and if so, cache converters.
-    if (!opt->m_unicodeToUTF8Encoder)
-    {
-      if (!nsCRT::strcasecmp(output_charset, "UTF-8"))
-      {
-        nsresult rv;
-        nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv)) 
-        {
-          nsCOMPtr <nsIAtom> sourceCharsetAtom;
-          nsCOMPtr <nsIAtom> destCharsetAtom;
-
-          opt->charsetForCachedInputDecoder = opt->default_charset;
-          nsAutoString sourceCharset, destCharset;
-          sourceCharset.AssignWithConversion(opt->default_charset);
-          destCharset.AssignWithConversion(output_charset);
-          rv = ccm2->GetCharsetAtom(sourceCharset.GetUnicode(), getter_AddRefs(sourceCharsetAtom));
-          rv = ccm2->GetCharsetAtom(destCharset.GetUnicode(), getter_AddRefs(destCharsetAtom));
-          ccm2->GetUnicodeDecoder(sourceCharsetAtom, getter_AddRefs(opt->m_inputCharsetToUnicodeDecoder));
-          ccm2->GetUnicodeEncoder(destCharsetAtom, getter_AddRefs(opt->m_unicodeToUTF8Encoder));
-        }
-      }
-    }
-
-    PRBool useInputCharsetConverter = opt->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(opt->default_charset, opt->charsetForCachedInputDecoder);
-	  int status;
-    if (useInputCharsetConverter)
-		  status = opt->rfc1522_conversion_fn(input, input_length,
-								   opt->default_charset, output_charset,  /* no input charset? */
-								   &converted, &converted_len,
-                   opt->stream_closure, opt->m_inputCharsetToUnicodeDecoder , opt->m_unicodeToUTF8Encoder);
-    else
-		  status = opt->rfc1522_conversion_fn(input, input_length,
-								   opt->default_charset, output_charset,  /* no input charset? */
-								   &converted, &converted_len,
-                   opt->stream_closure, nsnull , opt->m_unicodeToUTF8Encoder);
-
-	  if (status < 0)
-		{
-		  PR_FREEIF(converted);
-		  return status;
-		}
-
-	  if (converted)
-		{
-		  *output_ret = converted;
-		  *output_length_ret = converted_len;
-		}
-	}
-  return 0;
-}
-
 int
 MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBool attachment)
 {
@@ -874,7 +808,7 @@ extern PRInt16 INTL_DefaultMailToWinCharSetID(PRInt16 csid);
 	may be escaping other chars in the string. */
 char *
 mime_decode_filename(char *name, const char *charset,
-                     const char *default_charset, PRBool override_charset)
+                     MimeDisplayOptions *opt)
 {
 	char *s = name, *d = name;
 	char *cvt, *returnVal = NULL;
@@ -898,8 +832,8 @@ mime_decode_filename(char *name, const char *charset,
 	*d = 0;
 	returnVal = name;
 	
-    cvt = MIME_DecodeMimeHeader(returnVal, default_charset, override_charset,
-                                PR_TRUE);
+    cvt = MIME_DecodeMimeHeader(returnVal, opt->default_charset,
+                                opt->override_charset, PR_TRUE);
 
     if (cvt && cvt != returnVal) {
       returnVal = cvt;
@@ -915,7 +849,7 @@ mime_decode_filename(char *name, const char *charset,
    X-Sun-Data-Name: NAME (no RFC, but used by MailTool)
  */
 char *
-MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opts)
+MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opt)
 {
   char *s = 0, *name = 0, *cvt = 0;
   char *charset = nsnull; // for RFC2231 support
@@ -957,9 +891,8 @@ MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opts)
 		/*	Argh. What we should do if we want to be robust is to decode qtext
 			in all appropriate headers. Unfortunately, that would be too scary
 			at this juncture. So just decode qtext/mime2 here. */
-		cvt = mime_decode_filename(name, charset,
-                                   opts->default_charset,
-                                   opts->override_charset);
+		cvt = mime_decode_filename(name, charset, opt);
+
 		PR_FREEIF(charset);
 
 	   	if (cvt && cvt != name)
