@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Steve Clark <buster@netscape.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
+ *   L. David Baron <dbaron@fas.harvard.edu>
  */
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
@@ -1153,6 +1154,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     }
   }
 
+// XXX Does this do anything?  It doesn't seem to work.... (bug 29413)
   // It's possible that the line has clear after semantics
   if (!aLine->IsBlock() && aLine->HasBreak()) {
     PRUint8 breakType = aLine->GetBreakType();
@@ -3675,12 +3677,8 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
       aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
       return PR_TRUE;
     }
-    else if (line->HasFloaters()) {
-      // A line which preceeds aLine is not empty therefore the top
-      // margin applies.
-      aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
-      return PR_TRUE;
-    }
+    // No need to apply the top margin if the line has floaters.  We
+    // should collapse anyway (bug 44419)
     line = line->mNext;
   }
 
@@ -5954,11 +5952,13 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   //
 #ifdef FIX_BUG_37657
   // Also note that in backwards compatibility mode, we skip this step
-  // In old browsers, floaters are horizontally stacked regardless of 
-  // available space
+  // for tables, since in old browsers, floating tables are horizontally
+  // stacked regardless of available space.  (See bug 43086 about
+  // tables vs. non-tables.)
   nsCompatibility mode;
   mPresContext->GetCompatibilityMode(&mode);
-  if (eCompatibility_NavQuirks != mode) {
+  if ((eCompatibility_NavQuirks != mode) ||
+      (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay)) {
     while (!CanPlaceFloater(region, floaterDisplay->mFloats)) {
       mY += mAvailSpaceRect.height;
       GetAvailableSpace();
