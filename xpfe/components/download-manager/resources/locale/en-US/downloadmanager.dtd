@@ -14,11 +14,11 @@
 <!ENTITY cmd.properties.accesskey         "i">
 <!ENTITY cmd.properties.keybinding        "i">
 <!ENTITY cmd.pause.label                  "Pause">
-<!ENTITY cmd.pause.accesskey              "p">
+<!ENTITY cmd.pause.accesskey              "P">
 <!ENTITY cmd.remove.label                 "Remove from List">
-<!ENTITY cmd.remove.accesskey             "r">
+<!ENTITY cmd.remove.accesskey             "R">
 <!ENTITY cmd.cancel.label                 "Cancel">
-<!ENTITY cmd.cancel.accesskey             "c">
+<!ENTITY cmd.cancel.accesskey             "C">
 <!ENTITY cmd.openfile.label               "Launch File">
 <!ENTITY cmd.openfile.accesskey           "L">
 <!ENTITY cmd.showinshell.label            "Show File Location">
