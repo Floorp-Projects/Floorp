@@ -32,9 +32,15 @@
 #include "nsFileStream.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nspr.h"
 
+#ifdef XP_MAC
+#define INSTALL_LOG "Install Log"
+#else
+#define INSTALL_LOG "install.log"
+#endif
 
 
 nsLoggingProgressListener::nsLoggingProgressListener()
@@ -82,26 +88,59 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
     if (NS_FAILED(rv)) return rv;
 
     if (!nsSoftwareUpdate::GetLogName())
-    {
-#ifdef XP_MAC
-        rv = iFile->Append("Install Log");
-#else
-        rv = iFile->Append("install.log");
-#endif
-    }
+        rv = iFile->Append(INSTALL_LOG);
     else
         rv = iFile->Append(nsSoftwareUpdate::GetLogName());
 
     if (NS_FAILED(rv)) return rv;
 
     // create log file if it doesn't exist (to work around a mac filespec bug)
-    PRBool bExists = PR_FALSE;
+    PRBool bExists = PR_FALSE, bTryProfileDir = PR_FALSE, bWritable = PR_FALSE;
     rv = iFile->Exists(&bExists);
     if (NS_FAILED(rv)) return rv;
     if (!bExists)
     {
         rv = iFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+        if (NS_FAILED(rv))
+            bTryProfileDir = PR_TRUE;
+    }
+            
+    if (!bTryProfileDir)
+    {
+        rv = iFile->IsWritable(&bWritable);
+        if (NS_FAILED(rv) || !bWritable)
+            bTryProfileDir = PR_TRUE;
+    }
+
+    if (bTryProfileDir)
+    {
+        // failed to create the log file in the application directory 
+        // so try to create the log file in the user's profile directory
+        NS_WITH_SERVICE(nsIProperties, dirSvc, 
+                        NS_DIRECTORY_SERVICE_PROGID, &rv);
+        if (!dirSvc) return NS_ERROR_FAILURE;
+        dirSvc->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
+                    getter_AddRefs(iFile));
+    
+        if (!nsSoftwareUpdate::GetLogName())
+            rv = iFile->Append(INSTALL_LOG);
+        else
+            rv = iFile->Append(nsSoftwareUpdate::GetLogName());
+
         if (NS_FAILED(rv)) return rv;
+
+        bExists = PR_FALSE;
+        bWritable = PR_FALSE;
+        rv = iFile->Exists(&bExists);
+        if (NS_FAILED(rv)) return rv;
+        if (!bExists)
+        {
+            rv = iFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+            if (NS_FAILED(rv)) return rv;
+        }
+         
+        rv = iFile->IsWritable(&bWritable);
+        if (NS_FAILED(rv) || !bWritable) return NS_ERROR_FAILURE;
     }
 
     rv = Convert_nsIFile_To_nsFileSpec(iFile, &logFile);
