@@ -13,9 +13,9 @@
 #	was spend in 32878 calls to Data::Dumper::_dump()
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:16:18 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/24 14:54:32 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Dumper.pm,v $ 
 # $Name:  $ 
 
@@ -45,14 +45,6 @@
 
 
 
-# We need this empty package namespace for our dependency analysis, it
-# gets confused if there is not a package name which matches the file
-# name and in this case the file is one of several possible
-# implementations.
-
-package Persistence::Dumper;
-
-
 package Persistence;
 
 
@@ -60,52 +52,65 @@ package Persistence;
 use Data::Dumper;
 
 
-# The main function in this module, the calling structure looks like
-# the call for Data::Dumper because the arguments for that module are
-# more strict then Storable.
+# The calling structure looks like the call for Storable because the
+# arguments for that module are more strict then Data::Dumper.
 
-#    $data_refs: is a list of references to the data which we will save
-#    $data_names: is the names of the data
+#    $data: is a scalar (often a list of references to the data) which
+#    contains the data we will save. We can only save scalars to be
+#    consistant with the storable interface.
+
+#    $data_file: The file where the data will be stored.
 
 
 sub save_structure {
-  my ($data_refs, $data_names, $data_file,) = @_;
+  my ($data_refs, $data_file,) = @_;
 
-  # Create a text representation of the data we wish to save.
-  # We need only eval this string to get back the data.
+  # Create a text representation of the data we wish to save.  We need
+  # only eval this string to get back the data.  We pick the name of
+  # the data to be '$r' so that load_structure will know what to
+  # return.
 
   my (@out) = ( 
- 	       Data::Dumper->Dump( $data_refs, $data_names).
+ 	       Data::Dumper->Dump([$data_refs], ["\$r"],).
 	       "1;\n"
 	      );
-  
+
   main::overwrite_file($data_file, @out);
-  
+
   return ;
 }
 
-# I need a better abstraction for loading rather then just evaling the
-# files.  This will not work when storable is an alternate method.
+
+
+# return the value which was stored.
 
 sub load_structure {
   my ($data_file,) = @_;
 
-  # try to keep the require's modified variables local to this
-  # function.
-
-  my ($r);
-
   (-r $data_file) || (-R $data_file) ||
     die("data file: $data_file is not readable\n");
+
+  # Try to keep the require's modified variables local to this
+  # function.  We know that save_structure saved the data in a
+  # variable named '$r'.
+
+  my ($r);
 
   require($data_file) ||
     die("Could not eval filename: $data_file: $!\n");
 
+  # For some reason this sometimes makes a difference
+  # (Tree='Project-C').  I do not know why, though I think it has to
+  # do with the fact that $r is a 'my' variable.
+
+  $r = $Persistence::r;
 
   # since we have 'required' these files we need to forget that they
   # were loaded or we may not be able  to load them again.
 
-  delete $INC{"$dir/$file"};
+  my $basename = File::Basename::basename($data_file);
+  delete $INC{"$basename"};
+  delete $INC{$data_file};
 
   return $r;
 }
