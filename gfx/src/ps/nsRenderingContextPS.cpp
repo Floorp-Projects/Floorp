@@ -1286,13 +1286,12 @@ NS_IMETHODIMP nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRec
   mTranMatrix->TransformCoord(&pt.x, &pt.y);
 
   sr = *aSrcRect;
-#if 0
-  // need to do this if we fix the comments below
+  // We need to transform the whole source rect, since it has
+  // dimensions in twips and we want pixels
   mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
 
   sr.x = aSrcRect->x;
   sr.y = aSrcRect->y;
-#endif
   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   nsCOMPtr<gfxIImageFrame> iframe;
