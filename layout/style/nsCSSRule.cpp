@@ -59,13 +59,15 @@ void nsCSSRule::operator delete(void* ptr)
 }
 
 nsCSSRule::nsCSSRule(void)
-  : mSheet(nsnull)
+  : mSheet(nsnull),
+    mParentRule(nsnull)
 {
   NS_INIT_REFCNT();
 }
 
 nsCSSRule::nsCSSRule(const nsCSSRule& aCopy)
-  : mSheet(aCopy.mSheet)
+  : mSheet(aCopy.mSheet),
+    mParentRule(aCopy.mParentRule)
 {
   NS_INIT_REFCNT();
 }
@@ -93,6 +95,16 @@ nsCSSRule::SetStyleSheet(nsICSSStyleSheet* aSheet)
   // will tell us when it's going away or when we're detached from
   // it.
   mSheet = aSheet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSRule::SetParentRule(nsICSSGroupRule* aRule)
+{
+  // We don't reference count this up reference. The group rule
+  // will tell us when it's going away or when we're detached from
+  // it.
+  mParentRule = aRule;
   return NS_OK;
 }
 

@@ -29,6 +29,7 @@ class nsIStyleSheet;
 class nsICSSStyleSheet;
 class nsIPresContext;
 struct nsRuleData;
+class nsICSSGroupRule;
 
 class nsCSSRule {
 public:
@@ -46,6 +47,8 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
+  NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule);
+
   // nsIStyleRule methods
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
@@ -58,7 +61,7 @@ protected:
   NS_DECL_OWNINGTHREAD // for thread-safety checking
 
   nsICSSStyleSheet*   mSheet;                         
-
+  nsICSSGroupRule*    mParentRule;
 #ifdef DEBUG_REFS
   PRInt32 mInstance;
 #endif
