@@ -1278,7 +1278,13 @@ public class Interpreter {
                                 pc += 6;
                             }
                             break;
-                        case TokenStream.REGEXP :
+                        case TokenStream.REGEXP : {
+                                int i = getShort(iCode, pc);
+                                Object regexp = theData.itsRegExpLiterals[i];
+                                out.println(tname + " " + regexp);
+                                pc += 2;
+                            }
+                            break;
                         case TokenStream.CLOSURE :
                         case TokenStream.NEW :
                         case TokenStream.CALL : {
@@ -1432,6 +1438,9 @@ public class Interpreter {
                 return 1 + 2 + 2 + 2;
 
             case TokenStream.REGEXP :
+                // regexp index
+                return 1 + 2;
+
             case TokenStream.CLOSURE :
             case TokenStream.NEW :
             case TokenStream.CALL :
