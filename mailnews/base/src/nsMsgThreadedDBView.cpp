@@ -172,57 +172,50 @@ nsresult nsMsgThreadedDBView::InitThreadedView(PRInt32 *pCount)
 
 nsresult nsMsgThreadedDBView::SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
-  nsresult rv = NS_OK;
+  NS_PRECONDITION(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay, "trying to sort unthreaded threads");
 
-  if (!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
-  {
-    InitThreadedView(nsnull);	// build up thread list.
-    m_sortType = nsMsgViewSortType::byNone; // need to pretend we're not sorted by thread so ::Sort won't expandAll
-    nsMsgDBView::Sort(sortType, sortOrder);
-    m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
-    SetViewFlags(m_viewFlags); // persist view flags
-
-  }
-  else
-  {
+  PRUint32 numThreads = 0;
   // the idea here is that copy the current view,  then build up an m_keys and m_flags array of just the top level
   // messages in the view, and then call nsMsgDBView::Sort(sortType, sortOrder).
   // Then, we expand the threads in the result array that were expanded in the original view (perhaps by copying
   // from the original view, but more likely just be calling expand).
-    nsMsgKeyArray saveKeys;
-    nsUInt32Array saveFlags;
-    saveKeys.CopyArray(m_keys);
-    saveFlags.CopyArray(m_flags);
-    m_keys.RemoveAll();
-    m_flags.RemoveAll();
-    m_levels.RemoveAll();
-    for (PRInt32 i = 0; i < saveKeys.GetSize(); i++)
+  for (PRUint32 i = 0; i < m_keys.GetSize(); i++)
+  {
+    if (m_flags[i] & MSG_VIEW_FLAG_ISTHREAD)
     {
-      if (saveFlags.GetAt(i) & MSG_VIEW_FLAG_ISTHREAD)
+      if (numThreads < i)
       {
-        m_keys.Add(saveKeys.GetAt(i));
-        m_flags.Add(saveFlags.GetAt(i) | MSG_FLAG_ELIDED);
-        m_levels.Add(0);
+        m_keys.SetAt(numThreads, m_keys[i]);
+        m_flags[numThreads] = m_flags[i];
+        m_levels[numThreads] = 0;
       }
+      numThreads++;
     }
-//    m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
-    m_sortType = nsMsgViewSortType::byNone; // sort from scratch
-    nsMsgDBView::Sort(sortType, sortOrder);
-    m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
-    DisableChangeUpdates();
-    // Loop through the original array, for each thread that's expanded, find it in the new array
-    // and expand the thread.
-    for (PRInt32 j = 0; j < saveKeys.GetSize(); j++)
-    {
-      PRUint32 flags = saveFlags.GetAt(j);
-      if (flags & (MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED) == MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED)
-        FindKey(saveKeys.GetAt(j), PR_TRUE /* expand */);
-    }
-    EnableChangeUpdates();
   }
+  m_keys.SetSize(numThreads);
+  m_flags.SetSize(numThreads);
+  m_levels.SetSize(numThreads);
+  //m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
+  m_sortType = nsMsgViewSortType::byNone; // sort from scratch
+  nsMsgDBView::Sort(sortType, sortOrder);
+  m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
+  DisableChangeUpdates();
+  // Loop through the original array, for each thread that's expanded, find it in the new array
+  // and expand the thread.
+  for (PRUint32 j = 0; j < m_keys.GetSize(); j++)
+  {
+    PRUint32 flags = m_flags[j];
+    if ((flags & (MSG_VIEW_FLAG_HASCHILDREN | MSG_FLAG_ELIDED)) == MSG_VIEW_FLAG_HASCHILDREN)
+    {
+      PRUint32 numExpanded;
+      m_flags[j] = flags | MSG_FLAG_ELIDED;
+      ExpandByIndex(j, &numExpanded);
+      j += numExpanded;
+    }
+  }
+  EnableChangeUpdates();
 
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd)
