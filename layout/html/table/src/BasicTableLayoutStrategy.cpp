@@ -413,9 +413,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       if (0==colIndex)
         mFixedTableWidth += colInset;
     }
-    if (gsDebug) {
+    if (gsDebug)
       printf ("after col %d, mFixedTableWidth = %d\n", colIndex, mFixedTableWidth);
-    }
 
     // cache the computed column info
     colFrame->SetMinColWidth(effectiveMinColumnWidth);
@@ -426,6 +425,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);
     else
       mTableFrame->SetColumnWidth(colIndex, effectiveMaxColumnWidth);
+    if (gsDebug)
+      printf ("col %d, set col width to = %d\n", colIndex, mTableFrame->GetColumnWidth(colIndex));
 
     // add col[i] metrics to the running totals for the table min/max width
     if (NS_UNCONSTRAINEDSIZE!=mMinTableWidth)
@@ -455,6 +456,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
   {
     for (PRInt32 colIndex=0; colIndex<mNumCols; colIndex++)
     {
+      if (gsDebug) printf("handling span for %d\n", colIndex);
       PRInt32 spanCount = spanList->Count();
       // go through the list backwards so we can delete easily
       for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
@@ -474,6 +476,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
               spanInfo->effectiveMaxWidthOfSpannedCols += nextColFrame->GetEffectiveMaxColWidth();
               spanInfo->effectiveMinWidthOfSpannedCols += nextColFrame->GetEffectiveMinColWidth();
             }
+            if (gsDebug) printf("min total = %d, max total = %d\n", 
+                         spanInfo->effectiveMinWidthOfSpannedCols, spanInfo->effectiveMaxWidthOfSpannedCols);
           }
           nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
           // compute the spanning cell's contribution to the column min width
@@ -484,14 +488,17 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
             spanCellMinWidth = (spanInfo->cellMinWidth * colFrame->GetEffectiveMinColWidth()) /
                                (spanInfo->effectiveMinWidthOfSpannedCols);
             if (gsDebug==PR_TRUE) 
-              printf ("    spanlist min: %d of %d\n", spanCellMinWidth, spanInfo->effectiveMaxWidthOfSpannedCols);
+              printf ("spanCellMinWidth portion = %d \n", spanCellMinWidth);
             if (colMinWidth < spanCellMinWidth)
             {
               colFrame->SetMinColWidth(spanCellMinWidth);     // set the new min width for the col
               mMinTableWidth += spanCellMinWidth-colMinWidth; // add in the col min width delta 
-              if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, old min = %d, new min = %d\n", 
+              if (gsDebug) 
+              {
+                printf("min table width now %d\n", mMinTableWidth);
+                printf ("for spanning cell into col %d with remaining span=%d, old min = %d, new min = %d\n", 
                         colIndex, spanInfo->span, colMinWidth, spanCellMinWidth);
+              }
               // if the new min width is greater than the desired width, bump up the desired width
               nscoord colMaxWidth = colFrame->GetMaxColWidth();
               if (colMaxWidth < spanCellMinWidth)
@@ -499,16 +506,16 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
                 colFrame->SetMaxColWidth(spanCellMinWidth);
                 mMaxTableWidth += spanCellMinWidth - colMaxWidth;
                 if (gsDebug)
-                  printf("   also set max from %d to %d\n", colMaxWidth, spanCellMinWidth);
+                  printf("also set max from %d to %d, set maxTableWidth to %d\n", 
+                         colMaxWidth, spanCellMinWidth, mMaxTableWidth);
               }
               // if the new min width is greater than the actual col width, bump up the col width too
               nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
               if (colWidth < spanCellMinWidth)
               {
                 mTableFrame->SetColumnWidth(colIndex, spanCellMinWidth);
-                mMaxTableWidth += spanCellMinWidth - colMaxWidth;
                 if (gsDebug)
-                  printf("   also set computed col width from %d to %d\n", colWidth, spanCellMinWidth);
+                  printf("also set computed col width from %d to %d\n", colWidth, spanCellMinWidth);
               }
             }
           }
@@ -519,15 +526,15 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
               spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
               colFrame->SetMinColWidth(spanCellMinWidth);
               if (gsDebug==PR_TRUE) 
-                  printf ("    for spanning cell into col %d with remaining span=%d, old min = %d, new min = %d\n", 
-                          colIndex, spanInfo->span, colMinWidth, spanCellMinWidth);
+                  printf ("spanCellMinWidth portion = %d, old min = %d\n", 
+                          spanCellMinWidth, colMinWidth);
               // if the new min width is greater than the desired width, bump up the desired width
               nscoord colMaxWidth = colFrame->GetMaxColWidth();
               if (colMaxWidth < spanCellMinWidth)
               {
                 colFrame->SetMaxColWidth(spanCellMinWidth);
                 if (gsDebug)
-                  printf("   also set max from %d to %d\n", colMaxWidth, spanCellMinWidth);
+                  printf("also set max from %d to %d\n", colMaxWidth, spanCellMinWidth);
               }
             }
           }
@@ -538,10 +545,10 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
           nscoord spanCellMaxWidth;
           if (0!=spanInfo->effectiveMaxWidthOfSpannedCols)
           {
-            spanCellMaxWidth = (spanInfo->cellDesiredWidth * colFrame->GetEffectiveMinColWidth()) /
+            spanCellMaxWidth = (spanInfo->cellDesiredWidth * colFrame->GetEffectiveMaxColWidth()) /
                                (spanInfo->effectiveMaxWidthOfSpannedCols);
             if (gsDebug==PR_TRUE) 
-              printf ("    spanlist max: %d of %d\n", spanCellMaxWidth, spanInfo->effectiveMaxWidthOfSpannedCols);
+              printf ("spanCellMaxWidth portion = %d\n", spanCellMaxWidth);
             if (colMaxWidth < spanCellMaxWidth)
             {
               // make sure we're at least as big as our min
@@ -550,8 +557,11 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
               mMaxTableWidth += spanCellMaxWidth-colMaxWidth; // add in the col max width delta 
               mTableFrame->SetColumnWidth(colIndex, spanCellMaxWidth);  // set the column to the new desired max width
               if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
+              {
+                printf ("set mMaxTableWidth to %d\n", mMaxTableWidth);
+                printf ("for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
                         colIndex, spanInfo->span, colMaxWidth, spanCellMaxWidth);
+              }
             }
           }
           else
