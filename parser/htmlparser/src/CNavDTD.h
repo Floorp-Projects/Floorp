@@ -28,22 +28,22 @@
 #define NS_NAVHTMLDTD__
 
 #include "nsIDTD.h"
+#include "nsISupports.h"
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
-#include "nsParserNode.h"
-#include "nsTokenHandler.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
-
 
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
   {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
 
-class nsParser;
 class nsIHTMLContentSink;
 class nsIDTDDebug;
+class nsIParserNode;
+class CITokenHandler;
+class nsParser;
 
 class CNavDTD : public nsIDTD {
             
@@ -72,11 +72,19 @@ class CNavDTD : public nsIDTD {
 
     /**
      * 
+     * @update	gess7/1/98
+     * @param 
+     * @return
+     */
+    virtual PRBool IsCapableOf(eProcessType aProcessType, nsString& aString, PRInt32 aVersion);
+
+    /**
+     * 
      * @update	jevering6/23/98
      * @param 
      * @return
      */
-	virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
+	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
 
     /**
      * 
@@ -292,7 +300,7 @@ class CNavDTD : public nsIDTD {
      * @param   aNode is a node be updated with info from given token
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
+    PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
 
     /**
      * This method gets called when an end token has been consumed and needs 
@@ -359,7 +367,7 @@ class CNavDTD : public nsIDTD {
 
 	
 
-private:
+protected:
 
     /**
      * Causes token handlers to be registered for this parser.
@@ -373,13 +381,13 @@ private:
      * DEPRECATED
      * @update	gess5/11/98
      */
-    CTokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
+    CITokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
 
     /**
      * DEPRECATED
      * @update	gess5/11/98
      */
-    CTokenHandler* AddTokenHandler(CTokenHandler* aHandler);
+    CITokenHandler* AddTokenHandler(CITokenHandler* aHandler);
 
     /**
      * DEPRECATED
@@ -679,7 +687,7 @@ protected:
     nsParser*           mParser;
     nsIHTMLContentSink* mSink;
 
-    CTokenHandler*      mTokenHandlers[eToken_last];
+    CITokenHandler*     mTokenHandlers[eToken_last];
 
     nsVoidArray         mLeafBits;
     nsVoidArray         mContextStack;
@@ -691,9 +699,10 @@ protected:
     PRBool              mHasOpenMap;
     nsDeque             mTokenDeque;
     char*               mFilename;
-    nsIDTDDebug*		mDTDDebug;
+    nsIDTDDebug*		    mDTDDebug;
 };
 
+extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);
 
 #endif 
 

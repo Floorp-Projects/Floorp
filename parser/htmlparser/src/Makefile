@@ -42,8 +42,11 @@ EXPORTS =     \
   nsHTMLTokens.h    \
   nsIParserNode.h   \
   nsIParser.h   \
+  nsIDTD.h \
   nsIParserFilter.h \
   nsToken.h   \
+  CNavDTD.h \
+  COtherDTD.h \
   $(NULL)
 
 MODULE = raptor

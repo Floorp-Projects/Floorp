@@ -503,6 +503,15 @@ PRInt32 CScanner::ReadUntil(nsString& aString,PRUnichar aTerminalChar,PRBool add
   return result;
 }
 
+/**
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+nsString& CScanner::GetBuffer(void) {
+  return mBuffer;
+}
 
 /**
  *  Conduct self test. Actually, selftesting for this class

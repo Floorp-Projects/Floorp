@@ -22,8 +22,6 @@
 #include "nsIContentSink.h" 
 #include "nsString.h"
 #include "nsCRT.h"
-#include "COtherDTD.h"
-#include "CNavDTD.h"
 #include "nsScanner.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "plstr.h"
@@ -31,6 +29,7 @@
 #include "nsIInputStream.h"
 #include "nsIParserFilter.h"
 #include "nsIDTDDebug.h"
+#include "nshtmlpars.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
@@ -40,6 +39,7 @@ static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static const char* kNullURL = "Error: Null URL given";
 static const char* kNullFilename= "Error: Null filename given";
 static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
+static const char* kHTMLTextContentType = "text/html";
 
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
@@ -70,13 +70,62 @@ NS_HTMLPARS nsresult NS_NewParser(nsIParser** aInstancePtrResult)
 
 class CTokenDeallocator: public nsDequeFunctor{
 public:
-  virtual void operator()(void* anObject) {
+  virtual void* operator()(void* anObject) {
     CToken* aToken = (CToken*)anObject;
     delete aToken;
+    return 0;
   }
 };
 
-CTokenDeallocator gTokenKiller;
+CTokenDeallocator gTokenDeallocator;
+
+class CDTDDeallocator: public nsDequeFunctor{
+public:
+  virtual void* operator()(void* anObject) {
+    nsIDTD* aDTD =(nsIDTD*)anObject;
+    NS_RELEASE(aDTD);
+    return 0;
+  }
+};
+
+class CDTDFinder: public nsDequeFunctor{
+public:
+  CDTDFinder(nsIDTD* aDTD) {
+    NS_IF_ADDREF(mTargetDTD=aDTD);
+  }
+  ~CDTDFinder() {
+    NS_IF_RELEASE(mTargetDTD);
+  }
+  virtual void* operator()(void* anObject) {
+    return (anObject==(void*)mTargetDTD) ? anObject : 0;
+  }
+  nsIDTD* mTargetDTD;
+};
+
+class CSharedParserObjects {
+public:
+
+  CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
+  }
+  ~CSharedParserObjects() {
+  }
+
+  void RegisterDTD(nsIDTD* aDTD){
+    CDTDFinder theFinder(aDTD);
+    if(!mDTDDeque.ForEach(theFinder))
+      mDTDDeque.Push(aDTD);
+  }
+  
+  nsIDTD*  FindDTD(nsIDTD* aDTD){
+    return 0;
+  }
+
+  CDTDDeallocator mDeallocator;
+  nsDeque         mDTDDeque;
+};
+
+CSharedParserObjects gSharedParserObjects;
+
 
 /**
  *  default constructor
@@ -85,7 +134,10 @@ CTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-nsParser::nsParser() : mTokenDeque(gTokenKiller) {
+nsParser::nsParser() : 
+  mTokenDeque(gTokenDeallocator),
+  mContentType()  
+{
   NS_INIT_REFCNT();
   mDTDDebug = 0;
   mParserFilter = 0;
@@ -97,6 +149,9 @@ nsParser::nsParser() : mTokenDeque(gTokenKiller) {
   mParseMode=eParseMode_unknown;
   mURL=0;
   mDTD=0;
+  mScanner=0;
+  mTransferBuffer=new char[gTransferBufferSize+1];
+  mAutoDetectStatus=eUnknownDetect;
 }
 
 
@@ -121,7 +176,6 @@ nsParser::~nsParser() {
     delete mScanner;
   mScanner=0;
 
-  NS_IF_RELEASE(mDTD);
   NS_IF_RELEASE(mURL);
 
 }
@@ -207,26 +261,16 @@ nsIContentSink* nsParser::SetContentSink(nsIContentSink* aSink) {
   return old;
 }
 
-
 /**
- *  
+ *  Call this static method when you want to
+ *  register your dynamic DTD's with the parser.
  *  
  *  @update  gess 6/9/98
- *  @param   
- *  @return  
+ *  @param   aDTD  is the object to be registered.
+ *  @return  nothing.
  */
-void nsParser::SetDTD(nsIDTD* aDTD) {
-  mDTD=aDTD;
-}
-
-/**
- * Retrieve the DTD from the parser.
- * @update	gess6/18/98
- * @param 
- * @return
- */
-nsIDTD * nsParser::GetDTD(void) {
-   return mDTD;
+void nsParser::RegisterDTD(nsIDTD* aDTD){
+  gSharedParserObjects.RegisterDTD(aDTD);
 }
 
 /**
@@ -239,39 +283,6 @@ nsIDTD * nsParser::GetDTD(void) {
 CScanner* nsParser::GetScanner(void){
   return mScanner;
 }
-
-/**
- *  This is where we loop over the tokens created in the 
- *  tokenization phase, and try to make sense out of them. 
- *
- *  @update  gess 3/25/98
- *  @param   
- *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
- */
-PRInt32 nsParser::IterateTokens() {
-  nsDequeIterator e=mTokenDeque.End(); 
-  nsDequeIterator theMarkPos(e);
-  mMajorIteration++;
-
-  if(!mCurrentPos)
-    mCurrentPos=new nsDequeIterator(mTokenDeque.Begin());
-
-  PRInt32 result=kNoError;
-  while((kNoError==result) && ((*mCurrentPos<e))){
-    mMinorIteration++;
-    CToken* theToken=(CToken*)mCurrentPos->GetCurrent();
-
-    theMarkPos=*mCurrentPos;
-    result=mDTD->HandleToken(theToken);
-    ++(*mCurrentPos);
-  }
-
-  if(kInterrupted==result)
-    *mCurrentPos=theMarkPos;
-
-  return result;
-}
-
 
 /**
  *  
@@ -291,7 +302,6 @@ eParseMode DetermineParseMode() {
   return result;
 }
 
-
 /**
  *  
  *  
@@ -299,33 +309,58 @@ eParseMode DetermineParseMode() {
  *  @param   
  *  @return  
  */
-nsIDTD* CreateDTD(eParseMode aMode,const char* aContentType) {
-  nsIDTD* aDTD=0;
-  switch(aMode) {
-    case eParseMode_navigator:
-      aDTD=new CNavDTD(); break;
-    case eParseMode_other:
-      aDTD=new COtherDTD(); break;
-    default:
-      break;
+PRBool FindSuitableDTD(eProcessType aProcessType,eParseMode aMode,nsString& aContentType, nsIDTD*& aDefaultDTD) {
+ PRBool result=PR_FALSE;
+
+  if(aDefaultDTD) {
+    if(aDefaultDTD->IsCapableOf(aProcessType,aContentType,0)) {
+      result=PR_TRUE;
+    }
   }
-  if (aDTD)
-     aDTD->AddRef();
-  return aDTD;
-}
+  else {
+    nsDequeIterator b=gSharedParserObjects.mDTDDeque.Begin(); 
+    nsDequeIterator e=gSharedParserObjects.mDTDDeque.End(); 
 
-
-/**
- * 
- * @update	gess6/22/98
- * @param 
- * @return
- */
-PRBool nsParser::DetermineContentType(const char* aContentType) {
-  PRBool result=PR_TRUE;
-  aContentType="application/x-unknown-content-type";
+    while(b<e){
+      nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
+      if(theDTD && theDTD->IsCapableOf(aProcessType,aContentType,0)) {
+        aDefaultDTD=theDTD;
+        result=PR_TRUE;
+        break;
+      }
+      ++b;
+    }
+  }
   return result;
 }
+
+/**
+ * Call this method if you want the known DTD's to try 
+ * to detect the document type based through analysis
+ * of the underlying stream.
+ *
+ * @update	gess6/22/98
+ * @param   aBuffer -- nsString containing sample data to be analyzed.
+ * @return  auto-detect result: eValid, eInvalid, eUnknown
+ */
+eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer) {
+
+    //The process:
+    //  You should go out and ask each DTD if they
+    //  recognize the content in the scanner.
+    //  Somebody should say yes, or we can't continue.
+
+    //This method may change mContentType and mDTD.
+    //It absolutely changes mAutoDetectStatus
+
+  mAutoDetectStatus=eUnknownDetect;
+  if(PR_TRUE==mContentType.Equals(kHTMLTextContentType)) {
+    mAutoDetectStatus=eValidDetect;
+  }
+
+  return mAutoDetectStatus;  
+}
+
 
 /**
  * This gets called just prior to the model actually
@@ -338,14 +373,13 @@ PRBool nsParser::DetermineContentType(const char* aContentType) {
  * @param 
  * @return
  */
-PRInt32 nsParser::WillBuildModel(const char* aFilename, const char* aContentType){
+PRInt32 nsParser::WillBuildModel(eProcessType aProcessType, const char* aFilename){
+
   mMajorIteration=-1;
   mMinorIteration=-1;
 
   mParseMode=DetermineParseMode();  
-  mDTD=(0==mDTD) ? CreateDTD(mParseMode,aContentType) : mDTD;
-  if(mDTD) {
-	mDTD->SetDTDDebug(mDTDDebug);
+  if(PR_TRUE==FindSuitableDTD(aProcessType,mParseMode,mContentType,mDTD)) {
     mDTD->SetParser(this);
     mDTD->SetContentSink(mSink);
     mDTD->WillBuildModel(aFilename);
@@ -406,14 +440,64 @@ PRBool nsParser::Parse(const char* aFilename){
 
     //ok, time to create our tokenizer and begin the process
     mScanner=new CScanner(aFilename,mParseMode);
-    char theContentType[600];
-    DetermineContentType(theContentType);
-    WillBuildModel(aFilename,theContentType);
-    status=ResumeParse();
-    DidBuildModel(status);
-
+    if(mScanner) {
+      mScanner->Eof();
+      if(eValidDetect==AutoDetectContentType(mScanner->GetBuffer())) {
+        WillBuildModel(eParsing,aFilename);
+        status=ResumeParse();
+        DidBuildModel(status);
+      }
+    } //if
   }
   return status;
+}
+
+/**
+ *  This is the main controlling routine in the parsing process. 
+ *  Note that it may get called multiple times for the same scanner, 
+ *  since this is a pushed based system, and all the tokens may 
+ *  not have been consumed by the scanner during a given invocation 
+ *  of this method. 
+ *
+ *  NOTE: We don't call willbuildmodel here, because it will happen
+ *        as a result of calling OnStartBinding later on.
+ *
+ *  @update  gess 3/25/98
+ *  @param   aFilename -- const char* containing file to be parsed.
+ *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ */
+PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug) {
+  PRInt32 status;
+
+  status = BeginParse(aURL, aListener, aDTDDebug);
+  if (NS_OK == status) {
+    status=mURL->Open(this);
+  }
+  return status;
+}
+
+
+/**
+ * Call this method if all you want to do is parse 1 string full of HTML text.
+ *
+ * @update	gess5/11/98
+ * @param   anHTMLString contains a string-full of real HTML
+ * @param   appendTokens tells us whether we should insert tokens inline, or append them.
+ * @return  TRUE if all went well -- FALSE otherwise
+ */
+PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
+  PRInt32 result=kNoError;
+
+  mScanner=new CScanner(); 
+  mScanner->Append(aSourceBuffer);
+  
+  if(eValidDetect==AutoDetectContentType(aSourceBuffer)) {
+    WillBuildModel(eParsing,"from-string");
+    result=ResumeParse();
+    DidBuildModel(result);
+  }
+  
+  return result;
 }
 
 /**
@@ -454,46 +538,35 @@ PRInt32 nsParser::BeginParse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDe
 }
 
 /**
- *  This is the main controlling routine in the parsing process. 
- *  Note that it may get called multiple times for the same scanner, 
- *  since this is a pushed based system, and all the tokens may 
- *  not have been consumed by the scanner during a given invocation 
- *  of this method. 
- *
- *  NOTE: We don't call willbuildmodel here, because it will happen
- *        as a result of calling OnStartBinding later on.
- *
- *  @update  gess 3/25/98
- *  @param   aFilename -- const char* containing file to be parsed.
- *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ * 
+ * @update	gess6/23/98
+ * @param 
+ * @return
  */
-PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug) {
-  PRInt32 status;
-
-  status = BeginParse(aURL, aListener, aDTDDebug);
-  if (NS_OK == status) {
-    status=mURL->Open(this);
-  }
-  return status;
+PRInt32 nsParser::Convert(nsIURL* aURL,char* aSourceForm,char* aTargetForm,nsIStreamListener* aListener) {
+  PRInt32 result=0;
+  return result;
 }
 
-
 /**
- * Call this method if all you want to do is parse 1 string full of HTML text.
- *
- * @update	gess5/11/98
- * @param   anHTMLString contains a string-full of real HTML
- * @param   appendTokens tells us whether we should insert tokens inline, or append them.
- * @return  TRUE if all went well -- FALSE otherwise
+ * 
+ * @update	gess6/23/98
+ * @param 
+ * @return
  */
-PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
-  PRInt32 result=kNoError;
-  
-  WillBuildModel("nsString","text/html");
-  mScanner->Append(aSourceBuffer);
-  result=ResumeParse();
-  DidBuildModel(result);
-  
+PRInt32 nsParser::Convert(const char* aFilename,char* aSourceForm,char* aTargetForm) {
+  PRInt32 result=0;
+  return result;
+}
+
+/** 
+ * 
+ * @update	gess6/23/98
+ * @param 
+ * @return
+ */
+PRInt32 nsParser::Convert(nsString& anHTMLString,char* aSourceForm,char* aTargetForm,PRBool appendTokens){
+  PRInt32 result=0;
   return result;
 }
 
@@ -520,6 +593,37 @@ PRInt32 nsParser::ResumeParse() {
   return result;
 }
 
+/**
+ *  This is where we loop over the tokens created in the 
+ *  tokenization phase, and try to make sense out of them. 
+ *
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ */
+PRInt32 nsParser::IterateTokens() {
+  nsDequeIterator e=mTokenDeque.End(); 
+  nsDequeIterator theMarkPos(e);
+  mMajorIteration++;
+
+  if(!mCurrentPos)
+    mCurrentPos=new nsDequeIterator(mTokenDeque.Begin());
+
+  PRInt32 result=kNoError;
+  while((kNoError==result) && ((*mCurrentPos<e))){
+    mMinorIteration++;
+    CToken* theToken=(CToken*)mCurrentPos->GetCurrent();
+
+    theMarkPos=*mCurrentPos;
+    result=mDTD->HandleToken(theToken);
+    ++(*mCurrentPos);
+  }
+
+  if(kInterrupted==result)
+    *mCurrentPos=theMarkPos;
+
+  return result;
+}
 
 /**
  * Retrieve the attributes for this node, and add then into
@@ -577,6 +681,10 @@ PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
   return result;
 }
 
+/*******************************************************************
+  These methods are used to talk to the netlib system...
+ *******************************************************************/
+
 /**
  *  
  *  
@@ -618,11 +726,11 @@ nsresult nsParser::OnStartBinding(const char *aContentType){
   if (nsnull != mObserver) {
     mObserver->OnStartBinding(aContentType);
   }
-  nsresult result=WillBuildModel(mURL->GetSpec(),aContentType);
-  if(!mTransferBuffer) {
-    mTransferBuffer=new char[gTransferBufferSize+1];
-  }
-  return result;
+  mAutoDetectStatus=eUnknownDetect;
+  mDTD=0;
+
+  mContentType=aContentType;
+  return kNoError;
 }
 
 /**
@@ -634,8 +742,20 @@ nsresult nsParser::OnStartBinding(const char *aContentType){
  *  @return  error code (usually 0)
  */
 nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
+/*  if (nsnull != mListener) {
+      //Rick potts removed this.
+      //Does it need to be here?
+    mListener->OnDataAvailable(pIStream, length);
+  }
+*/
   int len=0;
   int offset=0;
+
+  if(eInvalidDetect==mAutoDetectStatus) {
+    if(mScanner) {
+      mScanner->GetBuffer().Truncate();
+    }
+  }
 
   do {
       PRInt32 err;
@@ -650,9 +770,13 @@ nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
 
         if (mParserFilter)
            mParserFilter->RawBuffer(mTransferBuffer, &len);
+        mScanner->Append(mTransferBuffer,len);
 
-        mScanner->Append(&mTransferBuffer[offset],len);
-
+        if(eUnknownDetect==mAutoDetectStatus) {
+          if(eValidDetect==AutoDetectContentType(mScanner->GetBuffer())) {
+            nsresult result=WillBuildModel(eParsing,mURL->GetSpec());
+          } //if
+        }
       } //if
   } while (len > 0);
 

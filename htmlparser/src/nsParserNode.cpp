@@ -19,7 +19,7 @@
 
 #include "nsParserNode.h" 
 #include "string.h"
-
+#include "nsHTMLTokens.h"
 
 /**
  *  Default constructor
@@ -32,7 +32,7 @@ nsCParserNode::nsCParserNode(CToken* aToken): nsIParserNode(),
   mName(), mEmptyString() {
   NS_PRECONDITION(0!=aToken, "Null Token");
   mAttributeCount=0;
-  mToken=(CHTMLToken*)aToken;
+  mToken=aToken;
   memset(mAttributes,0,sizeof(mAttributes));
 }
 
@@ -60,7 +60,7 @@ void nsCParserNode::AddAttribute(CToken* aToken) {
   NS_PRECONDITION(mAttributeCount<sizeof(mAttributes), "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
   if(aToken) {
-    mAttributes[mAttributeCount++]=(CHTMLToken*)aToken;
+    mAttributes[mAttributeCount++]=aToken;
   }
 }
 
@@ -79,7 +79,7 @@ void nsCParserNode::SetSkippedContent(CToken* aToken){
   NS_PRECONDITION(mAttributeCount<sizeof(mAttributes)-1, "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
   if(aToken) {
-    mAttributes[mAttributeCount++]=(CHTMLToken*)aToken;
+    mAttributes[mAttributeCount++]=aToken;
   }
 }
 

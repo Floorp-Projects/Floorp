@@ -60,7 +60,6 @@
 #include "nsParserNode.h"
 #include "nsParserTypes.h"
 #include "nsIURL.h"
-#include "nsIStreamListener.h"
 
 
 #define NS_PARSER_IID      \
@@ -107,11 +106,9 @@ friend class CTokenHandler;
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
     
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
+    
+    virtual void RegisterDTD(nsIDTD* aDTD);
 
-    virtual void SetDTD(nsIDTD* aDTD);
-    
-    virtual nsIDTD* GetDTD(void);
-    
     /**
      *  
      *  
@@ -151,6 +148,15 @@ friend class CTokenHandler;
      * @return  TRUE if all went well -- FALSE otherwise
      */
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens);
+
+    /******************************************************************************************
+     *  Convert methods start input source (of known or unknown form), and perform conversions 
+     *  until you wind up with a <i>stream</i> in your target form.
+     *  The internal content model is never effected.
+     ******************************************************************************************/
+    virtual PRInt32 Convert(nsIURL* aURL,char* aSourceForm, char* aTargetForm,nsIStreamListener* aListener);
+    virtual PRInt32 Convert(const char* aFilename,char* aSourceForm,char* aTargetForm);
+    virtual PRInt32 Convert(nsString& anHTMLString,char* aSourceForm,char* aTargetForm,PRBool appendTokens);
 
     /**
      * This method gets called (automatically) during incremental parsing
@@ -208,7 +214,7 @@ protected:
      * @param 
      * @return
      */
-    PRInt32 WillBuildModel(const char* aFilename=0,const char* aContentType=0);
+    PRInt32 WillBuildModel(eProcessType theProcessType=eParsing,const char* aFilename=0);
 
     /**
      * 
@@ -303,7 +309,7 @@ private:
      * @param 
      * @return  TRUE if we figured it out.
      */
-    PRBool DetermineContentType(const char* aContentType);
+    eAutoDetectResult AutoDetectContentType(nsString& aBuffer);
 
 
 protected:
@@ -328,7 +334,9 @@ protected:
     nsDeque             mTokenDeque;
     CScanner*           mScanner;
     nsIURL*             mURL;
-	nsIDTDDebug*		mDTDDebug;
+	  nsIDTDDebug*		    mDTDDebug;
+    nsString            mContentType;
+    eAutoDetectResult   mAutoDetectStatus;
 };
 
 

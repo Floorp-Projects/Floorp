@@ -39,10 +39,22 @@ class CToken;
 class nsIContentSink;
 class nsIDTDDebug;
 class nsIURL;
+class nsString;
+
+enum eProcessType {eParsing, eConverting};
+enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
 class nsIDTD : public nsISupports {
             
   public:
+
+    /**
+     * 
+     * @update	gess6/24/98
+     * @param 
+     * @return
+     */
+    virtual ~nsIDTD() {};
 
     /**
      *  This method is called to determine whether or not a tag
@@ -62,6 +74,14 @@ class nsIDTD : public nsISupports {
      * @return  old sink, or NULL
      */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink)=0;
+
+    /**
+     * 
+     * @update	gess6/24/98
+     * @param 
+     * @return
+     */
+    virtual PRBool IsCapableOf(eProcessType aProcessType, nsString& aContentType, PRInt32 aVersion)=0;
 
     /**
      * 
@@ -130,7 +150,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-	virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug) = 0;
+	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug) = 0;
 };
 
 

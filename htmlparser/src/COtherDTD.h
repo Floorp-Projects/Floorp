@@ -26,13 +26,7 @@
 #ifndef NS_OTHERHTMLDTD__
 #define NS_OTHERHTMLDTD__
 
-#include "nsIDTD.h"
-#include "nsHTMLTokens.h"
-#include "nshtmlpars.h"
-#include "nsParserNode.h"
-#include "nsTokenHandler.h"
-#include "nsDeque.h"
-#include "nsVoidArray.h"
+#include "CNavDTD.h"
 
 
 #define NS_IOtherHTML_DTD_IID      \
@@ -40,11 +34,10 @@
   {0x80, 0x22, 0x00,    0x60, 0x8, 0x14, 0x98, 0x89}}
 
 
-class nsParser;
-class nsIHTMLContentSink;
-class nsIDTDDebug;
+//class nsParser;
+//class nsIHTMLContentSink;
 
-class COtherDTD : public nsIDTD {
+class COtherDTD : public CNavDTD {
             
   public:
 
@@ -69,14 +62,8 @@ class COtherDTD : public nsIDTD {
      */
     virtual ~COtherDTD();
 
-    /**
-     * 
-     * @update	jevering6/23/98
-     * @param 
-     * @return
-     */
-	virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
-	
+    virtual PRBool IsCapableOf(eProcessType aProcessType, nsString& aString,PRInt32 aVersion);
+    
     /**
      * 
      * @update	gess5/18/98
@@ -100,15 +87,6 @@ class COtherDTD : public nsIDTD {
      *  @return  0 if all is well; non-zero is an error
      */
     virtual PRInt32 HandleToken(CToken* aToken);
-
-    /**
-     * 
-     *  
-     *  @update  gess 3/25/98
-     *  @param   
-     *  @return 
-     */
-    virtual void SetParser(nsIParser* aParser);
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -136,14 +114,6 @@ class COtherDTD : public nsIDTD {
      * @return
      */
     virtual void WillInterruptParse(void);
-
-   /**
-     * Select given content sink into parser for parser output
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
-     */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -240,30 +210,6 @@ class COtherDTD : public nsIDTD {
     virtual PRInt32 DidOpenContainer(eHTMLTags aTag,PRBool anExplicitOpen);    
 
     /**
-     * Ask parser if a given container is open ANYWHERE on stack
-     * @update	gess5/11/98
-     * @param   id of container you want to test for
-     * @return  TRUE if the given container type is open -- otherwise FALSE
-     */
-    virtual PRBool HasOpenContainer(eHTMLTags aContainer) const;
-
-
-    /**
-     * Retrieve the tag type of the topmost item on context vector stack
-     * @update	gess5/11/98
-     * @return  tag type (may be unknown)
-     */
-    virtual eHTMLTags GetTopNode() const;
-
-    /**
-     * Finds the topmost occurance of given tag within context vector stack.
-     * @update	gess5/11/98
-     * @param   tag to be found
-     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
-     */
-    virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTag) const;
-
-    /**
      * 
      * @update	gess6/4/98
      * @param 
@@ -291,7 +237,7 @@ class COtherDTD : public nsIDTD {
      * @param   aNode is a node be updated with info from given token
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
+    PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
 
     /**
      * This method gets called when an end token has been consumed and needs 
@@ -357,33 +303,6 @@ class COtherDTD : public nsIDTD {
     PRInt32 HandleStyleToken(CToken* aToken);
 
 private:
-
-    /**
-     * Causes token handlers to be registered for this parser.
-     * DO NOT CALL THIS! IT'S DEPRECATED!
-     * @update	gess5/11/98
-     */
-    void InitializeDefaultTokenHandlers();
-
-   
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    CTokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
-
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    CTokenHandler* AddTokenHandler(CTokenHandler* aHandler);
-
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    void DeleteTokenHandlers(void);
-
 
 
     //*************************************************
@@ -673,23 +592,8 @@ protected:
 
     PRBool  CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const;
     
-    nsParser*           mParser;
-    nsIHTMLContentSink* mSink;
-
-    CTokenHandler*      mTokenHandlers[eToken_last];
-
-    nsVoidArray         mLeafBits;
-    nsVoidArray         mContextStack;
-    PRInt32             mContextStackPos;
-
-    nsVoidArray         mStyleStack;
-    PRInt32             mStyleStackPos;
-    PRBool              mHasOpenForm;
-    PRBool              mHasOpenMap;
-    nsDeque             mTokenDeque;
-    char*               mFilename;
-    nsIDTDDebug*		mDTDDebug;
 };
 
+extern NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult);
 
 #endif 

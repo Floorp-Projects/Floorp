@@ -37,7 +37,7 @@
 #define NS_PARSERNODE__
 
 #include "nsIParserNode.h"
-#include "nsHTMLTokens.h"
+#include "nsToken.h"
 #include "nsString.h"
 
 //class nsParser;
@@ -148,11 +148,11 @@ class nsCParserNode :  public nsIParserNode {
 
               
   protected:
-                  PRInt32       mAttributeCount;    
-                  CHTMLToken*   mToken;
-                  CHTMLToken*   mAttributes[20]; // XXX Ack! This needs to be dynamic! 
-                  nsString      mName;
-                  nsString      mEmptyString;
+    PRInt32   mAttributeCount;    
+    CToken*   mToken;
+    CToken*   mAttributes[20]; // XXX Ack! This needs to be dynamic! 
+    nsString  mName;
+    nsString  mEmptyString;
 
 };
 
