@@ -809,7 +809,11 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
           MarkCurrentMsgRead();
 
           if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+          {
+            m_ContentType = "";
+            m_channelListener = nsnull;
             return NS_OK;
+          }
         }
       }
     }
@@ -5444,6 +5448,7 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
     m_channelContext = nsnull;
     m_channelListener = nsnull;
     m_loadGroup = nsnull;
+    mCallbacks = nsnull;
   }
   return NS_OK;
 }

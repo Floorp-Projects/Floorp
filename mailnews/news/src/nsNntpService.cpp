@@ -839,11 +839,11 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
     mailnewsurl->RegisterListener(aUrlListener);
   
   // almost there...now create a nntp protocol instance to run the url in...
-  nsNNTPProtocol *nntpProtocol = nsnull;
+  nsCOMPtr <nsIURI> nntpURI = do_QueryInterface(nntpUrl);;
+  nsCOMPtr<nsINNTPProtocol> nntpProtocol ;
+  rv = GetProtocolForUri(nntpURI, aMsgWindow, getter_AddRefs(nntpProtocol));
 
-  // ### try to access cache - but can't find server yet...
-  nntpProtocol = new nsNNTPProtocol(mailnewsurl, aMsgWindow);
-  if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;;
+  if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
   rv = nntpProtocol->Initialize(mailnewsurl, aMsgWindow);
   if (NS_FAILED(rv)) return rv;
