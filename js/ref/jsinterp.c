@@ -2644,8 +2644,8 @@ js_Interpret(JSContext *cx, jsval *result)
             if (JSVAL_IS_PRIMITIVE(rval)) {
                 str = js_DecompileValueGenerator(cx, rval, NULL);
                 if (str) {
-                    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_OPERANDS,
-                                   js_instanceof_str, JS_GetStringBytes(str));
+                    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_INSTANCEOF_RHS,
+                                   JS_GetStringBytes(str));
 
                 }
                 ok = JS_FALSE;

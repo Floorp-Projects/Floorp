@@ -582,6 +582,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 	report.uctokenptr = ts->token.ptr;
         report.flags = flags;
 
+#if JS_HAS_ERROR_EXCEPTIONS
         /*
          * If there's a runtime exception type associated with this error
          * number, set that as the pending exception.  For errors occuring at
@@ -591,12 +592,13 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
          * ignore this for all but toplevel compilation errors.
 
          * XXXmccabe it's still at issue if there's a public API to distinguish
-         * between the two.
+         * between toplevel compilation and other types.
 
          * XXX it'd probably be best if there was only one call to this
          * function, but there seem to be two error reporter call points.
          */
         (void)js_ErrorToException(cx, &report);
+#endif
 
 	(*onError)(cx, message, &report);
 
@@ -612,7 +614,6 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 	fprintf(stderr, "%s:\n%s\n",message,
                 js_DeflateString(cx, ts->linebuf.base,
                                  ts->linebuf.limit - ts->linebuf.base));
-        
 #endif
     }
     if (lastc == '\n')

@@ -447,13 +447,14 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 if (sprop->getter == js_GetArgument) {
 #ifdef CHECK_ARGUMENT_HIDING
                     OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-                    js_ReportCompileErrorNumber(cx, ts,JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
                                           JSMSG_DUPLICATE_FORMAL,
                                           ATOM_BYTES(argAtom));
                     ok = JS_FALSE;
                     goto out;
 #else
-                    /* A duplicate parameter name. We create a dummy symbol
+                    /*
+                     * A duplicate parameter name. We create a dummy symbol
                      * entry with property id of the parameter number and set
                      * the id to the name of the parameter.
                      * The decompiler will know to treat this case specially.
@@ -1542,7 +1543,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    if (sprop->getter == js_GetArgument) {
 		getter = sprop->getter;
 #ifdef CHECK_ARGUMENT_HIDING
-		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
                                       JSMSG_VAR_HIDES_ARG,
                                       ATOM_BYTES(atom));
 		ok = JS_FALSE;

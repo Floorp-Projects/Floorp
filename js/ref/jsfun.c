@@ -1413,7 +1413,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     n = argc ? argc - 1 : 0;
     if (n > 0) {
-        /* Collect the function-argument arguments into one string, separated
+        /*
+         * Collect the function-argument arguments into one string, separated
          * by commas, then make a tokenstream from that string, and scan it to
          * get the arguments.  We need to throw the full scanner at the
          * problem, because the argument string can legitimately contain
@@ -1431,7 +1432,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         /* Add 1 for each joining comma. */
         args_length += n - 1;
 
-        /* Allocate a string to hold the concatenated arguments, including room
+        /*
+         * Allocate a string to hold the concatenated arguments, including room
          * for a terminating 0.
          */
         cp = collected_args = (jschar *) JS_malloc(cx, (args_length + 1) *
@@ -1457,14 +1459,16 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         /* The argument string may be empty or contain no tokens. */
         if (tt != TOK_EOF) {
             while (1) {
-                /* Check that it's a name.  This also implicitly guards against
+                /*
+                 * Check that it's a name.  This also implicitly guards against
                  * TOK_ERROR.
                  */
                 if (tt != TOK_NAME) {
                     JS_ReportErrorNumber(cx, NULL, JSMSG_NO_FORMAL);
                     goto badargs;
                 }
-                /* Get the atom corresponding to the name from the tokenstream;
+                /*
+                 * Get the atom corresponding to the name from the tokenstream;
                  * we're assured at this point that it's a valid identifier.
                  */
                 atom = ts->token.t_atom;
@@ -1476,11 +1480,12 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef CHECK_ARGUMENT_HIDING
                     PR_ASSERT(sprop->getter == js_GetArgument);
                     OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                    JS_ReportErrorNumber(cx, NULL, JSMSG_SAME_FORMAL,
+                    JS_ReportErrorNumber(cx, JSREPORT_WARNING, JSMSG_SAME_FORMAL,
 				   ATOM_BYTES(atom));
                     goto badargs;
 #else
-                /* A duplicate parameter name. We create a dummy symbol
+                /*
+                 * A duplicate parameter name. We create a dummy symbol
                  * entry with property id of the parameter number and set
                  * the id to the name of the parameter.
                  * The decompiler will know to treat this case specially.
@@ -1515,7 +1520,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (tt == TOK_EOF)
                     break;
 
-                /* If a comma is seen, get the next token.  Otherwise, let the
+                /*
+                 * If a comma is seen, get the next token.  Otherwise, let the
                  * loop catch the error.
                  */
                 if (tt == TOK_COMMA)
@@ -1558,7 +1564,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	   js_CloseTokenStream(cx, ts);
 
 badargs:
-    /* Clean up the arguments string and tokenstream if we failed to parse
+    /*
+     * Clean up the arguments string and tokenstream if we failed to parse
      * the arguments.
      */
     JS_free(cx, collected_args);
@@ -1729,8 +1736,9 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
     if (fp)
 	fp->sp = sp;
     if (str) {
-	JS_ReportErrorNumber(cx, NULL, JSMSG_DENY,
-		       JS_GetStringBytes(str),
-		       constructing ? "constructor" : "function");
+	JS_ReportErrorNumber(cx, NULL,
+                             constructing ? JSMSG_NOT_CONSTRUCTOR
+                                          : JSMSG_NOT_FUNCTION,
+                             JS_GetStringBytes(str));
     }
 }
