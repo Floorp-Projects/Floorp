@@ -99,9 +99,12 @@
 #define WIN9X_PAINT_STARVATION_LIMIT 3000
 
 #define TIMER_ID 0
-static HHOOK   _md_MouseMsgFilterHook = NULL;
-static PRBool  _md_MovingWindow       = PR_FALSE;
-static PRInt32 _md_WindowCount        = 0;
+static HHOOK    _md_MouseMsgFilterHook = NULL;
+static PRBool   _md_MovingWindow       = PR_FALSE;
+static PRInt32  _md_WindowCount        = 0;
+static PRBool   _md_FavorPerformance   = PR_FALSE;
+static PRUint32 _md_StarvationDelay    = 0;
+static PRUint32 _md_SwitchTime         = 0;
 #endif
 
 static PRLogModuleInfo *event_lm = NULL;
@@ -714,6 +717,19 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
     PR_ExitMonitor(queue->monitor);
 }
 
+PR_IMPLEMENT(void)
+PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation, PRUint32 starvationDelay) 
+{
+#if defined(_WIN32)
+    _md_FavorPerformance = favorPerformanceOverEventStarvation;
+    _md_StarvationDelay = starvationDelay;
+
+    if (! favorPerformanceOverEventStarvation) {
+      _md_SwitchTime = PR_IntervalToMilliseconds(PR_IntervalNow()); 
+    }
+#endif
+}
+
 /*******************************************************************************
  * Pure Event Queues
  *
@@ -955,16 +971,16 @@ static PRUint32 _md_GetPaintStarvationLimit() {
  */
    
 static PRBool _md_EventIsStarved(PRBool isPending, PRUint32 starvationLimit, 
-                                 PRBool *wasPending, PRUint32 *lastTime) 
+                                 PRBool *wasPending, PRUint32 *lastTime,
+                                 PRUint32 currentTime) 
 {
   if ((*wasPending) && (isPending)) {
       /* It was pending previously and the event is still
        * pending so check to see if the elapsed time is
        * over the limit which indicates the event was starved
        */
-      PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow()); 
     
-      if ((now - *lastTime) > starvationLimit) {
+      if ((currentTime - *lastTime) > starvationLimit) {
         return PR_TRUE; /* pending and over the limit */
       }
 
@@ -976,7 +992,7 @@ static PRBool _md_EventIsStarved(PRBool isPending, PRUint32 starvationLimit,
      * so the elapsed time can be computed the next time this
      * function is called 
      */
-    *lastTime = PR_IntervalToMilliseconds(PR_IntervalNow());
+    *lastTime = currentTime;
     *wasPending = PR_TRUE; 
     return PR_FALSE; 
   }
@@ -1030,11 +1046,16 @@ _pl_NativeNotify(PLEventQueue* self)
 #ifdef USE_TIMER
     WORD qstatus;
 
-    if (_md_MovingWindow) {
+    PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow()); 
+
+    if (_md_MovingWindow || 
+       (! _md_FavorPerformance) && 
+        ((now - _md_SwitchTime) > _md_StarvationDelay)) {
       SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
       self->timerSet = PR_TRUE;
       _md_WasInputPending = PR_FALSE; 
       _md_WasPaintPending = PR_FALSE; 
+
       return PR_SUCCESS;
     }
 
@@ -1042,7 +1063,7 @@ _pl_NativeNotify(PLEventQueue* self)
 
     /* Check for starved input */
     if (_md_EventIsStarved( _md_IsInputPending(qstatus), INPUT_STARVATION_LIMIT, 
-        &_md_WasInputPending, &_md_InputTime )) {
+        &_md_WasInputPending, &_md_InputTime, now )) {
       /* Use timer for notification. Timers have the lowest priority. They are not processed 
        * until all other events have been processed. This allows the starved paints and input to
        * be processed 
@@ -1055,7 +1076,7 @@ _pl_NativeNotify(PLEventQueue* self)
     }
     
     if (_md_EventIsStarved( (qstatus & QS_PAINT), _md_GetPaintStarvationLimit(), 
-        &_md_WasPaintPending, &_md_PaintTime) ) {
+        &_md_WasPaintPending, &_md_PaintTime, now) ) {
       /* Use timer for notification. Timers have the lowest priority. They are not processed 
        * until all other events have been processed. This allows the starved paints and input to
        * be processed 
