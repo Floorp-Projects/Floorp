@@ -33,6 +33,8 @@
     0x11d2,                                          \
     {0x81, 0x77, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
+#define NS_ALLOCATOR_PROGID "component://netscape/allocator"
+#define NS_ALLOCATOR_CLASSNAME "Allocator"
 
 class nsIAllocator : public nsISupports {
 public:
