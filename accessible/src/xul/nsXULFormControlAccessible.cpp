@@ -498,8 +498,19 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccState(PRUint32 *_retval)
   if (radioButton) 
     radioButton->GetSelected(&selected);
 
-  if (selected) 
+  if (selected) {
     *_retval |= STATE_CHECKED;
+    // If our parent radio group is focused, then consider this radio button focused
+    nsCOMPtr<nsIDOMNode> parentNode;
+    mDOMNode->GetParentNode(getter_AddRefs(parentNode));
+    nsCOMPtr<nsIDOMElement> parentElement(do_QueryInterface(parentNode));
+    if (parentElement) {
+      nsCOMPtr<nsIDOMElement> focusedElement;
+      GetFocusedElement(getter_AddRefs(focusedElement));
+      if (focusedElement == parentElement)
+        *_retval |= STATE_FOCUSED;
+    }
+  }
 
   return NS_OK;
 }
@@ -537,6 +548,21 @@ nsAccessible(aNode, aShell)
 { 
 }
 
+NS_IMETHODIMP nsXULRadioGroupAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_GROUPING;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULRadioGroupAccessible::GetAccState(PRUint32 *_retval)
+{
+  // The radio group is not focusable.
+  // Sometimes the focus controller will report that it is focused.
+  // That means that the actual selected radio button should be considered focused
+  nsAccessible::GetAccState(_retval);
+  *_retval &= ~(STATE_FOCUSABLE | STATE_FOCUSED);
+  return NS_OK;
+}
 /**
   * XUL StatusBar: can contain arbitrary HTML content
   */
