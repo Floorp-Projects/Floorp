@@ -243,6 +243,9 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   if (!mMutable)
     return NS_ERROR_FAILURE;
 
+  if (aLength == 0)
+    return NS_OK;
+
   PRInt32 row_stride = mImage->GetLineStride();
 
   mImage->LockImagePixels(PR_FALSE);
@@ -270,7 +273,8 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   if (decY2 != mSize.height) {
     mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
   }
-  PRInt32 numnewrows = (aLength / row_stride);
+  // adjust for aLength < row_stride
+  PRInt32 numnewrows = ((aLength - 1) / row_stride) + 1;
   nsRect r(0, row, mSize.width, numnewrows);
   mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
