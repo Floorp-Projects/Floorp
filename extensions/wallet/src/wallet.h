@@ -76,6 +76,9 @@ WLLT_FetchFromNetCenter();
 extern void
 WLLT_ExpirePassword();
 
+extern void
+WLLT_InitReencryptCallback();
+
 extern nsresult
 Wallet_Encrypt (nsAutoString text, nsAutoString& crypt);
 

@@ -2689,7 +2689,7 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
   aSignonList = buffer;
 }
 
-PUBLIC void
+PUBLIC PRBool
 SINGSIGN_ReencryptAll()
 {
   /* force loading of the signons file */
@@ -2714,10 +2714,10 @@ SINGSIGN_ReencryptAll()
         data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(k));
         nsAutoString userName;
         if (NS_FAILED(si_Decrypt(data->value, userName))) {
-          return;
+          return PR_FALSE;
         }
         if (NS_FAILED(si_Encrypt(userName, data->value))) {
-          return;
+          return PR_FALSE;
         }
       }
     }
@@ -2725,6 +2725,7 @@ SINGSIGN_ReencryptAll()
   si_signon_list_changed = PR_TRUE;
   si_SaveSignonDataLocked();
   si_unlock_signon_list();
+  return PR_TRUE;
 }
 
 PUBLIC void

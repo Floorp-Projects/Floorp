@@ -2796,17 +2796,36 @@ WLLT_PreEdit(nsAutoString& walletList) {
   }
 }
 
-extern void
-SINGSIGN_ReencryptAll();
-
 PUBLIC void
 WLLT_ReencryptAll() {
+}
+
+extern PRBool
+SINGSIGN_ReencryptAll();
+
+MODULE_PRIVATE int PR_CALLBACK
+wallet_ReencryptAll(const char * newpref, void * data) {
   PRUnichar * message;
+
+  /* prevent reentry for the case that the user doesn't supply correct master password */
+  static PRInt32 level = 0;
+  if (level != 0) {
+    return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
+  }
+  level ++;
+
+  /* logout first so there is no conversion unless user knows the master password */
+  nsresult rv = wallet_CryptSetup();
+  if (NS_SUCCEEDED(rv)) {
+    rv = gSecretDecoderRing->Logout();
+  }
+
   wallet_Initialize(PR_FALSE);
   wallet_MapElement * ptr;
   nsAutoString value;
   PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
-  for (PRInt32 i=0; i<count; i++) {
+  gEncryptionFailure = PR_FALSE;
+  for (PRInt32 i=0; i<count && !gEncryptionFailure; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
     if (!ptr->item2.IsEmpty()) {
       if (NS_FAILED(Wallet_Decrypt(ptr->item2, value))) {
@@ -2830,15 +2849,29 @@ WLLT_ReencryptAll() {
     }
   }
   wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
-  SINGSIGN_ReencryptAll();
-  message = Wallet_Localize("Converted");
-  Wallet_Alert(message);
-  Recycle(message);
-  return;
+  if (!SINGSIGN_ReencryptAll()) {
+    goto fail;
+  }
+//  message = Wallet_Localize("Converted");
+//  Wallet_Alert(message);
+//  Recycle(message);
+  level--;
+  return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
 fail:
+  /* toggle the pref back to its previous value */
+  SI_SetBoolPref("wallet.crypto", !SI_GetBoolPref("wallet.crypto", PR_TRUE));
+
+  /* alert the user to the failure */
   message = Wallet_Localize("NotConverted");
   Wallet_Alert(message);
   Recycle(message);
+  level--;
+  return 1;
+}
+
+PUBLIC void
+WLLT_InitReencryptCallback() {
+  SI_RegisterCallback("wallet.crypto", wallet_ReencryptAll, NULL);
 }
 
 /*

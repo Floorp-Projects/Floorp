@@ -206,6 +206,9 @@ void nsWalletlibService::Init()
     docLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
     nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService );
   }
+
+  /* register callback to be used when encryption pref changes */
+  ::WLLT_InitReencryptCallback();
 }
 
 NS_IMETHODIMP
