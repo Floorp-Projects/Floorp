@@ -25,13 +25,6 @@
 #include "jsapi.h"
 #include "prlink.h"
 
-#if 0
-// beard these are old world APIs that must be excised in the new world.
-#include "LString.h"
-#include "ufilemgr.h"
-#include "uprefd.h"
-#endif
-
 #include "MacPrefUtils.h"
 
 #ifndef __MEMORY__
@@ -52,64 +45,6 @@
  * Mac-specific libpref routines
  */
 
-#if 0
-//----------------------------------------------------------------------------------------
-static JSBool pref_ReadResource(short id)
-//----------------------------------------------------------------------------------------
-{
-	Handle data = GetResource('TEXT', id);	
-	if (!data)
-		return JS_FALSE;
-
-	HLock(data);
-	UInt32 datasize = GetHandleSize(data);
-
-//	JSBool ok = (JSBool) PREF_QuietEvaluateJSBuffer((char*)*data, datasize);
-	JSBool ok = PREF_EvaluateConfigScript(
-		(char*)*data, datasize,
-		NULL, // No file
-		PR_FALSE, // Don't global context
-		PR_FALSE, // No callbacks
-		PR_FALSE // Don't skip first line.
-		);
-	ReleaseResource(data);
-	return ok;
-}
-#endif // 0
-
-#if 0
-//----------------------------------------------------------------------------------------
-extern "C" JSBool pref_InitInitialObjects()
-// Initialize default preference JavaScript buffers from
-// appropriate TEXT resources
-//----------------------------------------------------------------------------------------
-{
-	if (gPrefResources <= 0)
-	    return JS_FALSE;
-	    
-	short savedResFile = ::CurResFile();
-	::UseResFile(gPrefResources);
-	JSBool ok = pref_ReadResource(3000);		// initpref.js
-	if (ok)
-		ok = pref_ReadResource(3010);			// all.js
-	if (ok)
-		ok = pref_ReadResource(3016);			// mailnews.js
-	if (ok)
-		ok = pref_ReadResource(3017);			// editor.js
-	if (ok)
-		ok = pref_ReadResource(3018);			// security.js
-	if (ok)
-		ok = pref_ReadResource(3011);			// config.js
-	if (ok)
-		ok = pref_ReadResource(3015);			// macprefs.js
-	
-	::CloseResFile(gPrefResources);
-	if (savedResFile != gPrefResources)
-		::UseResFile(savedResFile);
-	gPrefResources = -1;
-	return ok;
-}
-#endif // 0
 
 //----------------------------------------------------------------------------------------
 PR_IMPLEMENT(PrefResult)
@@ -175,9 +110,5 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 PR_IMPLEMENT(PRBool) PREF_IsAutoAdminEnabled()
 //----------------------------------------------------------------------------------------
 {
-#if 0
-	FSSpec spec;
-	return (XP_Bool) pref_FindAutoAdminLib(spec);
-#endif
 	return PR_FALSE;
 }
