@@ -441,6 +441,29 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIPars
   */
 NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
+
+  if(aTokenizer) {
+    nsITokenizer*  oldTokenizer=mTokenizer;
+    mTokenizer=aTokenizer;
+    nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
+
+    while(NS_OK==result){
+      CToken* theToken=mTokenizer->PopToken();
+      if(theToken) {
+        result=HandleToken(theToken,aParser);
+        if(NS_SUCCEEDED(result)) {
+          theRecycler->RecycleToken(theToken);
+        }
+        else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
+          mTokenizer->PushTokenFront(theToken);
+        }
+        // theRootDTD->Verify(kEmptyString,aParser);
+      }
+      else break;
+    }//while
+    mTokenizer=oldTokenizer;
+  }
+  else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   return result;
 }
 
