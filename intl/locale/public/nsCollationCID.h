@@ -46,10 +46,14 @@
 { 0xaa13e4a0, 0xa5ac, 0x11d2, \
 { 0x91, 0x19, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
 
+#define NS_COLLATION_CONTRACTID "@mozilla.org/intl/collation;1"
+
 // {A1B72850-A999-11d2-9119-006008A6EDF6}
 #define NS_COLLATIONFACTORY_CID \
 { 0xa1b72850, 0xa999, 0x11d2, \
 { 0x91, 0x19, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
+
+#define NS_COLLATIONFACTORY_CONTRACTID "@mozilla.org/intl/collation-factory;1"
 
 #endif  // nsCollationCID_h__
 

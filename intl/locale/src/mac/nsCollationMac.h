@@ -55,32 +55,14 @@ protected:
   unsigned char m_mac_sort_tbl[256];    // Mapping table from a character code to a collation key value.
 
 public: 
-  NS_DECL_ISUPPORTS
-    
-  // compare two strings
-  // result is same as strcmp
-  NS_IMETHOD CompareString(const nsCollationStrength strength, 
-                           const nsAString& string1, const nsAString& string2, PRInt32* result);
-
-  // allocate sort key from input string
-  // returns newly allocated key and its byte length
-  NS_IMETHOD AllocateRawSortKey(const nsCollationStrength strength, 
-                                const nsAString& stringIn, PRUint8** key, PRUint32 *outLen);
-
-  // compare two sort keys
-  // length is character length not byte length, result is same as strcmp
-  NS_IMETHOD CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
-                               const PRUint8* key2, const PRUint32 len2, 
-                               PRInt32* result) 
-                               {*result = PL_strcmp((const char *)key1, (const char *)key2); return NS_OK;}
-
-  // init this interface to a specified locale (should only be called by collation factory)
-  //
-  NS_IMETHOD Initialize(nsILocale* locale);
-
   nsCollationMac();
+  ~nsCollationMac();
 
-  virtual ~nsCollationMac(); 
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  // nsICollation interface
+  NS_DECL_NSICOLLATION
 
 };
 

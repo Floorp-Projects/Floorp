@@ -51,32 +51,15 @@ protected:
   nsString      mSavedLocale;
 
 public:
+  nsCollationOS2();
+  ~nsCollationOS2();
+
+  // nsISupports interface
   NS_DECL_ISUPPORTS
 
-  // compare two strings
-  // result is same as strcmp
-  NS_IMETHOD CompareString(const nsCollationStrength strength, 
-                           const nsAString& string1, const nsAString& string2, PRInt32* result);
+  // nsICollation interface
+  NS_DECL_NSICOLLATION
 
-  // allocate sort key from input string
-  // returns newly allocated key and its byte length
-  NS_IMETHOD AllocateRawSortKey(const nsCollationStrength strength, 
-                                const nsAString& stringIn, PRUint8** key, PRUint32 *outLen);
-
-  // compare two sort keys
-  // length is character length not byte length, result is same as strcmp
-  NS_IMETHOD CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
-                               const PRUint8* key2, const PRUint32 len2, 
-                               PRInt32* result) 
-                               {*result = nsCRT::strcmp((PRUnichar *)key1, (PRUnichar *)key2); return NS_OK;}
-   
-  // init this interface to a specified locale (should only be called by collation factory)
-  //
-  NS_IMETHOD Initialize(nsILocale* locale);
-
-  nsCollationOS2();
-
-  virtual ~nsCollationOS2();
 };
 
 #endif /* nsCollationOS2_h__ */ 

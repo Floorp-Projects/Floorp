@@ -68,7 +68,7 @@ nsCollationMacUC::~nsCollationMacUC()
 }
 
 nsresult nsCollationMacUC::StrengthToOptions(
-  const nsCollationStrength aStrength,
+  const PRInt32 aStrength,
   UCCollateOptions* aOptions)
 {
   NS_ENSURE_ARG_POINTER(aOptions);
@@ -102,7 +102,7 @@ nsresult nsCollationMacUC::ConvertLocale(
 }
 
 nsresult nsCollationMacUC::EnsureCollator(
-  const nsCollationStrength newStrength) 
+  const PRInt32 newStrength) 
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   if (mHasCollator && (mLastStrength == newStrength))
@@ -154,7 +154,7 @@ NS_IMETHODIMP nsCollationMacUC::Initialize(
  
 
 NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(
-  const nsCollationStrength strength,
+  PRInt32 strength,
   const nsAString& stringIn,
   PRUint8** key,
   PRUint32* outLen)
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(
 
     
 NS_IMETHODIMP nsCollationMacUC::CompareString(
-  const nsCollationStrength strength, 
+  PRInt32 strength, 
   const nsAString& string1, 
   const nsAString& string2, 
   PRInt32* result) 
@@ -227,8 +227,8 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(
 
 
 NS_IMETHODIMP nsCollationMacUC::CompareRawSortKey(
-  const PRUint8* key1, const PRUint32 len1, 
-  const PRUint8* key2, const PRUint32 len2, 
+  const PRUint8* key1, PRUint32 len1, 
+  const PRUint8* key2, PRUint32 len2, 
   PRInt32* result)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);

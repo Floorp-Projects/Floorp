@@ -44,9 +44,8 @@
 #ifndef TX_EXE
 #include "nsCOMPtr.h"
 #include "nsICollation.h"
-#else
-#include "nsString.h"
 #endif
+#include "nsString.h"
 
 class txAExprResult;
 
@@ -88,7 +87,7 @@ private:
 #ifndef TX_EXE
     nsCOMPtr<nsICollation> mCollation;
     nsresult init(const nsAFlatString& aLanguage);
-    nsresult createRawSortKey(const nsCollationStrength aStrength,
+    nsresult createRawSortKey(const PRInt32 aStrength,
                               const nsString& aString,
                               PRUint8** aKey,
                               PRUint32* aLength);

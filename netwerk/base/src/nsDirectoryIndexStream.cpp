@@ -127,7 +127,7 @@ static int PR_CALLBACK compare(const void* aElement1,
     nsString str2(name2);
 
     nsICollation* coll = (nsICollation*)aData;
-    coll->CompareString(kCollationStrengthDefault, str1, str2, &res);
+    coll->CompareString(nsICollation::kCollationStrengthDefault, str1, str2, &res);
     return res;*/
 #else
     nsCAutoString name1, name2;

@@ -47,7 +47,6 @@ MODULE		= locale
 EXPORTS		= \
 		nsCollationCID.h \
 		nsDateTimeFormatCID.h \
-		nsICollation.h \
 		nsIDateTimeFormat.h \
 		nsILanguageAtomService.h \
 		nsIMacLocale.h \

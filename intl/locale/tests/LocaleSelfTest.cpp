@@ -106,7 +106,7 @@ static char g_usage[] = " usage:\n-date\tdate time format test\n-col\tcollation 
 
 // Create a collation key, the memory is allocated using new which need to be deleted by a caller.
 //
-static nsresult CreateCollationKey(nsICollation *t, nsCollationStrength strength, 
+static nsresult CreateCollationKey(nsICollation *t, PRInt32 strength, 
                                    nsString& stringIn, PRUint8 **aKey, PRUint32 *keyLength)
 {
   nsresult res;
@@ -232,20 +232,20 @@ static void TestCollation(nsILocale *locale)
       DebugDump(string4);
 
       printf("Test 2 - CompareString():\n");
-      res = t->CompareString(kCollationCaseInSensitive, string1, string2, &result);
+      res = t->CompareString(nsICollation::kCollationCaseInSensitive, string1, string2, &result);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
       printf("case insensitive comparison (string1 vs string2): %d\n", result);
 
-      res = t->CompareString(kCollationCaseSensitive, string1, string2, &result);
+      res = t->CompareString(nsICollation::kCollationCaseSensitive, string1, string2, &result);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
       printf("case sensitive comparison (string1 vs string2): %d\n", result);
 
       printf("Test 3 - GetSortKeyLen():\n");
-      res = t->GetSortKeyLen(kCollationCaseSensitive, string2, &keyLength1);
+      res = t->GetSortKeyLen(nsICollation::kCollationCaseSensitive, string2, &keyLength1);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
@@ -256,7 +256,7 @@ static void TestCollation(nsILocale *locale)
       if (NULL == aKey1) {
         printf("\tFailed!! memory allocation failed.\n");
       }
-      res = t->CreateRawSortKey(kCollationCaseSensitive, string2, aKey1, &keyLength1);
+      res = t->CreateRawSortKey(nsICollation::kCollationCaseSensitive, string2, aKey1, &keyLength1);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
@@ -271,7 +271,7 @@ static void TestCollation(nsILocale *locale)
       }
       printf("\n");
 
-      res = CreateCollationKey(t, kCollationCaseInSensitive, string2, &aKey2, &keyLength2);
+      res = CreateCollationKey(t, nsICollation::kCollationCaseInSensitive, string2, &aKey2, &keyLength2);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
@@ -287,7 +287,7 @@ static void TestCollation(nsILocale *locale)
       printf("\n");
 
       printf("Test 5 - CompareRawSortKey():\n");
-      res = CreateCollationKey(t, kCollationCaseSensitive, string1, &aKey3, &keyLength3);
+      res = CreateCollationKey(t, nsICollation::kCollationCaseSensitive, string1, &aKey3, &keyLength3);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
@@ -316,15 +316,15 @@ static void TestCollation(nsILocale *locale)
       if (NULL != aKey3)
         delete[] aKey3; 
 
-      res = CreateCollationKey(t, kCollationCaseSensitive, string1, &aKey1, &keyLength1);
+      res = CreateCollationKey(t, nsICollation::kCollationCaseSensitive, string1, &aKey1, &keyLength1);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
-      res = CreateCollationKey(t, kCollationCaseSensitive, string3, &aKey2, &keyLength2);
+      res = CreateCollationKey(t, nsICollation::kCollationCaseSensitive, string3, &aKey2, &keyLength2);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
-      res = CreateCollationKey(t, kCollationCaseSensitive, string4, &aKey3, &keyLength3);
+      res = CreateCollationKey(t, nsICollation::kCollationCaseSensitive, string4, &aKey3, &keyLength3);
       if(NS_FAILED(res)) {
         printf("\tFailed!! return value != NS_OK\n");
       }
@@ -360,7 +360,7 @@ static void TestCollation(nsILocale *locale)
 //
 
 static nsICollation *g_collationInst = NULL;
-static nsCollationStrength g_CollationStrength= kCollationCaseInSensitive;
+static PRInt32 g_CollationStrength= nsICollation::kCollationCaseInSensitive;
 
 
 static void TestSortPrint1(nsString *string_array, int len)
@@ -555,12 +555,12 @@ static void SortTestFile(nsICollation* collationInst, FILE* fp)
 
 // Use nsICollation for qsort.
 //
-static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, FILE *fp)
+static void TestSort(nsILocale *locale, PRInt32 collationStrength, FILE *fp)
 {
   nsresult res;
   nsICollationFactory *factoryInst;
   nsICollation *collationInst;
-  nsCollationStrength strength;
+  PRInt32 strength;
   collation_rec key_array[5];
   PRUint8 *aKey;
   PRUint32 aLength;
@@ -1028,12 +1028,12 @@ int main(int argc, char** argv) {
   if (NS_FAILED(res) || locale == nsnull) printf("GetApplicationLocale failed\n");
   
   // --------------------------------------------
-    nsCollationStrength strength = kCollationCaseInSensitive;
+    PRInt32 strength = nsICollation::kCollationCaseInSensitive;
     FILE *fp = NULL;
 
   if (argc == 1) {
     TestCollation(locale);
-    TestSort(locale, kCollationCaseInSensitive, NULL);
+    TestSort(locale, nsICollation::kCollationCaseInSensitive, NULL);
     TestDateTimeFormat(locale);
   }
   else {
@@ -1059,7 +1059,7 @@ int main(int argc, char** argv) {
     }
     s = find_option(argc, argv, "-case");
     if (s) {
-      strength = kCollationCaseSensitive;
+      strength = nsICollation::kCollationCaseSensitive;
     }
     s = get_option(argc, argv, "-locale");
     if (s) {

@@ -524,7 +524,7 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
           nsresult rv = NS_ERROR_FAILURE;
           nsDependentString lstr(luni), rstr(runi);
           if (gCollation)
-            rv = gCollation->CompareString(kCollationCaseInSensitive, lstr, rstr, &sortOrder);
+            rv = gCollation->CompareString(nsICollation::kCollationCaseInSensitive, lstr, rstr, &sortOrder);
           if (NS_FAILED(rv))
             sortOrder = Compare(lstr, rstr, nsCaseInsensitiveStringComparator());
           return NS_OK;

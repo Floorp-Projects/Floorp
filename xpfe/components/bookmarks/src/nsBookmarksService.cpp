@@ -2726,7 +2726,7 @@ nsBookmarksService::Compare(const void* aElement1, const void* aElement2, void* 
             literal2->GetValueConst(&value2);
 
             if (gCollation) {
-                gCollation->CompareString(kCollationCaseInSensitive,
+                gCollation->CompareString(nsICollation::kCollationCaseInSensitive,
                                           nsDependentString(value1),
                                           nsDependentString(value2),
                                           &result);

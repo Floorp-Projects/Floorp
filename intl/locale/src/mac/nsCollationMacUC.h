@@ -54,38 +54,26 @@ const PRUint32 kCollationValueSizeFactor = 5;
 class nsCollationMacUC : public nsICollation {
 
 public: 
+  nsCollationMacUC();
+  ~nsCollationMacUC(); 
+
+  // nsISupports interface
   NS_DECL_ISUPPORTS
 
-  nsCollationMacUC();
-  virtual ~nsCollationMacUC(); 
-    
-  NS_IMETHOD CompareString(const nsCollationStrength strength, 
-                           const nsAString& string1, 
-                           const nsAString& string2, 
-                           PRInt32* result) ;
-
-  NS_IMETHOD AllocateRawSortKey(const nsCollationStrength strength, 
-                                const nsAString& stringIn, 
-                                PRUint8** key, PRUint32* outLen);
-
-  NS_IMETHOD CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
-                               const PRUint8* key2, const PRUint32 len2, 
-                               PRInt32* result);
-
-  NS_IMETHOD Initialize(nsILocale* locale);
-
+  // nsICollation interface
+  NS_DECL_NSICOLLATION
 
 protected:
   nsresult ConvertLocale(nsILocale* aNSLocale, LocaleRef* aMacLocale);
-  nsresult StrengthToOptions(const nsCollationStrength aStrength,
+  nsresult StrengthToOptions(const PRInt32 aStrength,
                              UCCollateOptions* aOptions);
-  nsresult EnsureCollator(const nsCollationStrength newStrength);
+  nsresult EnsureCollator(const PRInt32 newStrength);
 
 private:
   PRPackedBool mInit;
   PRPackedBool mHasCollator;
   LocaleRef mLocale;
-  nsCollationStrength mLastStrength;
+  PRInt32 mLastStrength;
   CollatorRef mCollator;
   void *mBuffer; // temporary buffer to generate collation keys
   PRUint32 mBufferLen; // byte length of buffer
