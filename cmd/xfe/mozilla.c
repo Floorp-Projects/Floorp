@@ -1940,13 +1940,15 @@ build_user_agent_string(char *versionLocale)
 	strcat (buf, "FreeBSD");
 #elif defined(__NetBSD__)
 	strcat (buf, "NetBSD");
+#elif defined(__OpenBSD__)
+	strcat (buf, "OpenBSD");
 #elif defined(__386BSD__)
 	strcat (buf, "BSD/386");
 #elif defined(__bsdi__)
 	strcat (buf, "BSD/OS");
 #elif defined(__osf__)
-	strcat (buf, "OSF1");
-#elif defined(AIXV3)
+	strcat (buf, "OSF/1");
+#elif defined(AIX)
 	strcat (buf, "AIX");
 #elif defined(_HPUX_SOURCE)
 	strcat (buf, "HP-UX");
@@ -1961,11 +1963,13 @@ build_user_agent_string(char *versionLocale)
 #elif defined(nec_ews)
 	strcat (buf, "NEC/EWS-UX/V");
 #elif defined(SNI)
-	strcat (buf, "SINIX-N");
+	strcat (buf, "SINIX");
 #elif defined(DGUX)
         strcat (buf, "DG/UX");
 #elif defined(RHAPSODY)
         strcat (buf, "Rhapsody");
+#elif defined(QNX)
+        strcat (buf, "QNX");
 #else
 	ERROR!! run "uname -s" and put the result here.
 #endif

@@ -47,7 +47,7 @@
 #include "DragDrop.h"
 #include <Xm/DisplayP.h>
 
-#if defined(SOLARIS)||defined(AIX)||defined(UNIXWARE)
+#if defined(SOLARIS) || (defined(AIX) && !defined(AIX4_2)) || (defined(UNIXWARE) && !defined(UNIXWARE7))
 extern "C" int gethostname(char *, int);
 #endif
 

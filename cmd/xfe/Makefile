@@ -246,22 +246,14 @@ XFE_WIDGETS_CAPTION_LIB		= $(DIST)/lib/libXfeCaption.a
 XFE_WIDGETS_TOOL_BAR_LIB	= $(DIST)/lib/libXfeToolBar.a
 XFE_WIDGETS_TOOL_TIP_LIB	= $(DIST)/lib/libXfeToolTip.a
 
-ifneq ($(OS_ARCH),IRIX) 
-ifneq ($(OS_ARCH),FreeBSD)
-ifneq ($(OS_ARCH),Rhapsody)
-DYNAMIC_SYMBOLS_F	= -rdynamic # default
-endif
-endif
+DYNAMIC_SYMBOLS_F	=
+ifeq (,$(filter FreeBSD IRIX OpenBSD OSF1 QNX Rhapsody,$(OS_ARCH)))
+DYNAMIC_SYMBOLS_F	= -rdynamic
 endif
 ifeq ($(OS_ARCH),SunOS) 
 ifdef NS_USE_NATIVE
 DYNAMIC_SYMBOLS_F	= -Bdynamic
-else
-DYNAMIC_SYMBOLS_F	= # nothing for gcc
 endif
-endif
-ifeq ($(OS_ARCH),OSF1)
-DYNAMIC_SYMBOLS_F	=
 endif
 
 ifeq ($(OS_ARCH),AIX)

@@ -292,4 +292,8 @@ XfeDebugPrintfFunction(Widget w,char * func_name,char * format, ...)
 }
 /*----------------------------------------------------------------------*/
 
-#endif											/* endif DEBUG			*/
+#else
+#ifdef OSF1
+static int dumbcc = 0;  /* The 3.2 compiler aborts when there's "nothing to compile", and 4.0 warns.  This fixes both problems. */
+#endif
+#endif /* DEBUG */
