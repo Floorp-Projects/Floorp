@@ -28,7 +28,7 @@
           </columns>
           <rows>
             <row>
-              <text value="&accountName.label;"/>
+              <text class="label" value="&accountName.label;"/>
               <html:input type="text" size="30" name="server.prettyName" id="server.prettyName" flex="100%"/>
             </row>
           </rows>
@@ -44,19 +44,19 @@
     </columns>
     <rows>
       <row>
-        <text value="&name.label;"/>
+        <text class="label" value="&name.label;"/>
         <html:input name="identity.fullName" type="text" size="30"/>
       </row>
       <row>
-        <text value="&email.label;"/>
+        <text class="label" value="&email.label;"/>
         <html:input name="identity.email" type="text" maxwidth="200" size="30"/>
       </row>
       <row>
-        <text value="&replyTo.label;"/>
+        <text class="label" value="&replyTo.label;"/>
         <html:input name="identity.replyTo" type="text" maxwidth="200" size="30"/>
       </row>
       <row>
-        <text value="&organization.label;"/>
+        <text class="label" value="&organization.label;"/>
         <html:input name="identity.organization" type="text" size="30"/>
       </row>
     </rows>
@@ -87,10 +87,10 @@
 
 -->
 
-    <html:div>
+    <box>
         <html:input name="identity.composeHtml" id="identity.composeHtml" type="checkbox"/>
         <html:label for="identity.composeHtml">&useHtml.label;</html:label>
-    </html:div>
+    </box>
 
     <box orient="horizontal">
       <spring flex="100%"/>

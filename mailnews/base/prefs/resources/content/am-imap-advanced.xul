@@ -14,37 +14,44 @@
 
 <keyset id="keyset"/>
 
-<html:script src="am-imap-advanced.js"/>
+<script src="am-imap-advanced.js"/>
 
-<html:div>
-  <html:label for="serverDirectory">&serverDirectory.label;</html:label>
+<box>
+  <text value="&serverDirectory.label;"/>
   <html:input type="text" id="serverDirectory" name="serverDirectory"/>
-</html:div>
+</box>
 
-<html:div>
+<box>
   <html:input type="checkbox" id="usingSubscription" name="usingSubscription"/>
   <html:label for="usingSubscription">&usingSubscription.label;</html:label>
-</html:div>
-<html:div>
+</box>
+
+<box>
   <html:input type="checkbox" id="dualUseFolders" name="dualUseFolders"/>
   <html:label for="dualUseFolders">&dualUseFolders.label;</html:label>
-</html:div>
-<html:div>&namespaceDesc.label;</html:div>
-<html:table style="padding-left: 10px">
-  <html:tr>
-    <html:td><html:label for="personalNamespace">&personalNamespace.label;</html:label></html:td>
-    <html:td><html:input type="text" id="personalNamespace" name="personalNamespace"/></html:td>
-  </html:tr>
-  <html:tr>
-    <html:td><html:label for="publicNamespace">&publicNamespace.label;</html:label></html:td>
-    <html:td><html:input type="text" id="publicNamespace" name="publicNamespace"/></html:td>
-  </html:tr>
-  <html:tr>
-    <html:td><html:label for="otherUsersNamespace">&otherUsersNamespace.label;</html:label></html:td>
-    <html:td><html:input type="text" id="otherUsersNamespace" name="otherUsersNamespace"/></html:td>
-  </html:tr>
-</html:table>
-<html:div class="separator" align="horizontal"/>
+</box>
+<html>&namespaceDesc.label;</html>
+<grid style="padding-left: 10px">
+  <columns>
+    <column/>
+    <column/>
+  </columns>
+  <rows>
+    <row>
+      <text value="&personalNamespace.label;"/>
+      <box><html:input type="text" id="personalNamespace" name="personalNamespace"/></box>
+    </row>
+    <row>
+      <text value="&publicNamespace.label;"/>
+      <box><html:input type="text" id="publicNamespace" name="publicNamespace"/></box>
+    </row>
+    <row>
+      <text value="&otherUsersNamespace.label;"/>
+      <box><html:input type="text" id="otherUsersNamespace" name="otherUsersNamespace"/></box>
+    </row>
+  </rows>
+</grid>
+<separator class="groove"/>
 <box id="okCancelButtons"/>
 
 </window>

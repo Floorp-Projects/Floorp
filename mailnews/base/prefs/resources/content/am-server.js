@@ -110,17 +110,18 @@ function openImapAdvanced()
 function getImapServer() {
     var imapServer = new Array;
 
-    var controls = document.controls;
-
     // boolean prefs, need to do special convertion    
-    imapServer.dualUseFolders = (controls["imap.dualUseFolders"].value == "true" ? true : false);
-    imapServer.usingSubscription = (controls["imap.usingSubscription"].value == "true" ? true : false);
+    imapServer.dualUseFolders =
+        (document.getElementById("imap.dualUseFolders").value == "true" ?
+         true : false);
+    imapServer.usingSubscription =
+        (document.getElementById("imap.usingSubscription").value == "true" ? true : false);
 
     // string prefs
-    imapServer.personalNamespace = controls["imap.personalNamespace"].value;
-    imapServer.publicNamespace = controls["imap.publicNamespace"].value;
-    imapServer.serverDirectory = controls["imap.serverDirectory"].value;
-    imapServer.otherUsersNamespace = controls["imap.otherUsersNamespace"].value;
+    imapServer.personalNamespace = document.getElementById("imap.personalNamespace").value;
+    imapServer.publicNamespace = document.getElementById("imap.publicNamespace").value;
+    imapServer.serverDirectory = document.getElementById("imap.serverDirectory").value;
+    imapServer.otherUsersNamespace = document.getElementById("imap.otherUsersNamespace").value;
     return imapServer;
 }
 
@@ -129,14 +130,14 @@ function saveServerLocally(imapServer)
     var controls = document.controls;
 
     // boolean prefs, JS does the conversion for us
-    controls["imap.dualUseFolders"].value = imapServer.dualUseFolders;
-    controls["imap.usingSubscription"].value = imapServer.usingSubscription;
+    document.getElementById("imap.dualUseFolders").value = imapServer.dualUseFolders;
+    document.getElementById("imap.usingSubscription").value = imapServer.usingSubscription;
 
     // string prefs
-    controls["imap.personalNamespace"].value = imapServer.personalNamespace;
-    controls["imap.publicNamespace"].value = imapServer.publicNamespace;
-    controls["imap.serverDirectory"].value = imapServer.serverDirectory;
-    controls["imap.otherUsersNamespace"].value = imapServer.otherUsersNamespace;
+    document.getElementById("imap.personalNamespace").value = imapServer.personalNamespace;
+    document.getElementById("imap.publicNamespace").value = imapServer.publicNamespace;
+    document.getElementById("imap.serverDirectory").value = imapServer.serverDirectory;
+    document.getElementById("imap.otherUsersNamespace").value = imapServer.otherUsersNamespace;
 
 }
 

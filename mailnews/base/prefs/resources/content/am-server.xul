@@ -101,12 +101,12 @@
                     onclick="openImapAdvanced(event);"/>
     </box>
 
-    <html:input type="hidden" name="imap.dualUseFolders"/>
-    <html:input type="hidden" name="imap.usingSubscription"/>
-    <html:input type="hidden" name="imap.personalNamespace"/>
-    <html:input type="hidden" name="imap.publicNamespace"/>
-    <html:input type="hidden" name="imap.otherUsersNamespace"/>
-    <html:input type="hidden" name="imap.serverDirectory"/>
+    <html:input type="hidden" id="imap.dualUseFolders" name="imap.dualUseFolders"/>
+    <html:input type="hidden" id="imap.usingSubscription" name="imap.usingSubscription"/>
+    <html:input type="hidden" id="imap.personalNamespace" name="imap.personalNamespace"/>
+    <html:input type="hidden" id="imap.publicNamespace" name="imap.publicNamespace"/>
+    <html:input type="hidden" id="imap.otherUsersNamespace" name="imap.otherUsersNamespace"/>
+    <html:input type="hidden" id="imap.serverDirectory" name="imap.serverDirectory"/>
   </box>
 
   <!-- News -->
