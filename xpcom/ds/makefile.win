@@ -107,8 +107,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsProperties.obj              \
         .\$(OBJDIR)\nsPersistentProperties.obj    \
         .\$(OBJDIR)\nsQuickSort.obj               \
-        .\$(OBJDIR)\nsReadableUtils.obj           \
-        .\$(OBJDIR)\nsSharedBufferList.obj        \
         .\$(OBJDIR)\nsSizeOfHandler.obj           \
         .\$(OBJDIR)\nsStaticNameTable.obj         \
         .\$(OBJDIR)\nsStatistics.obj              \
