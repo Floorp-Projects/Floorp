@@ -103,7 +103,11 @@ CPPSRCS		= \
 		nsListBoxBodyFrame.cpp \
 		nsListItemFrame.cpp \
 		nsListBoxLayout.cpp \
+		nsNativeScrollbarFrame.cpp \
 		$(NULL)
+
+XPIDLSRCS=      nsIScrollbarMediator.idl                  \
+                ($NULL)
 
 include $(topsrcdir)/config/config.mk
 
