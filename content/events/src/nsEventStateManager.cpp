@@ -4695,6 +4695,19 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
     // Add better focusable test here later if necessary ... 
     if (nsHTMLAtoms::a == tag.get()) {
       *aIsSelectionWithFocus = PR_TRUE;
+    }
+    else {
+      *aIsSelectionWithFocus = testContent->HasAttr(kNameSpaceID_XLink, nsHTMLAtoms::href);
+      if (*aIsSelectionWithFocus) {
+        nsAutoString xlinkType;
+        testContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, xlinkType);
+        if (!xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
+          *aIsSelectionWithFocus = PR_FALSE;  // Xlink must be type="simple"
+        }
+      }
+    }
+
+    if (*aIsSelectionWithFocus) {
       FocusElementButNotDocument(testContent);
       return NS_OK;
     }
