@@ -27,20 +27,21 @@ XPIDLSRCS =										            \
 				.\nsIMsgComposeProgressParams.idl	\
 				.\nsIMsgComposeParams.idl		      \
 				.\nsIMsgComposeService.idl		    \
-				.\nsIMsgCompose.idl				        \
+				.\nsIMsgCompose.idl	        \
 				.\nsIMsgCompFields.idl			      \
-				.\nsIMsgQuote.idl				          \
+				.\nsIMsgQuote.idl		          \
 				.\nsIMsgSendListener.idl		      \
 				.\nsIMsgSendLaterListener.idl	    \
-				.\nsIMsgSend.idl				          \
-				.\nsIMsgSendLater.idl			        \
+				.\nsIMsgSend.idl	          \
+				.\nsIMsgSendLater.idl       \
 				.\nsIMsgSendReport.idl			      \
 				.\nsIMsgRecipientArray.idl		    \
-				.\nsIMsgDraft.idl				          \
-				.\nsISmtpServer.idl				        \
-				.\nsISmtpUrl.idl				          \
-				.\nsISmtpService.idl			        \
-				.\nsIURLFetcher.idl			          \
+				.\nsIMsgDraft.idl          \
+				.\nsISmtpServer.idl	        \
+				.\nsISmtpUrl.idl          \
+				.\nsISmtpService.idl        \
+				.\nsIURLFetcher.idl          \
+				.\nsIMsgComposeSecure.idl      \
 				$(NULL)
 
 ################################################################################

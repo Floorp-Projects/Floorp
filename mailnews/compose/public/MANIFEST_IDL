@@ -23,4 +23,4 @@
 nsISmtpServer.idl
 nsISmtpUrl.idl
 nsISmtpService.idl
-
+nsIMsgComposeSecure.idl
