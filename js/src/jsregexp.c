@@ -3506,8 +3506,11 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSString *opt, *str;
     JSRegExp *oldre, *re;
-    JSBool ok;
+    JSBool ok, ok2;
     JSObject *obj2;
+    size_t length, nbytes;
+    const jschar *cp, *start, *end;
+    jschar *nstart, *ncp, *tmp;
 
     if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
         return JS_FALSE;
@@ -3555,23 +3558,66 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 argv[1] = STRING_TO_JSVAL(opt);
             }
         }
+
+        /* Escape any naked slashes in the regexp source. */
+        length = JSSTRING_LENGTH(str);
+        start = JSSTRING_CHARS(str);
+        end = start + length;
+        nstart = ncp = NULL;
+        for (cp = start; cp < end; cp++) {
+            if (*cp == '/' && (cp == start || cp[-1] != '\\')) {
+                nbytes = (++length + 1) * sizeof(jschar);
+                if (!nstart) {
+                    nstart = (jschar *) JS_malloc(cx, nbytes);
+                    if (!nstart)
+                        return JS_FALSE;
+                    ncp = nstart + (cp - start);
+                    js_strncpy(nstart, start, cp - start);
+                } else {
+                    tmp = (jschar *) JS_realloc(cx, nstart, nbytes);
+                    if (!tmp) {
+                        JS_free(cx, nstart);
+                        return JS_FALSE;
+                    }
+                    ncp = tmp + (ncp - nstart);
+                    nstart = tmp;
+                }
+                *ncp++ = '\\';
+            }
+            if (nstart)
+                *ncp++ = *cp;
+        }
+
+        if (nstart) {
+            /* Don't forget to store the backstop after the new string. */
+            JS_ASSERT((size_t)(ncp - nstart) == length);
+            *ncp = 0;
+            str = js_NewString(cx, nstart, length, 0);
+            if (!str) {
+                JS_free(cx, nstart);
+                return JS_FALSE;
+            }
+            argv[0] = STRING_TO_JSVAL(str);
+        }
     }
+
     re = js_NewRegExpOpt(cx, NULL, str, opt, JS_FALSE);
 created:
     if (!re)
         return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
     oldre = (JSRegExp *) JS_GetPrivate(cx, obj);
-    ok = JS_SetPrivate(cx, obj, re) && js_SetLastIndex(cx, obj, 0);
+    ok = JS_SetPrivate(cx, obj, re);
+    ok2 = js_SetLastIndex(cx, obj, 0);
     JS_UNLOCK_OBJ(cx, obj);
     if (!ok) {
         js_DestroyRegExp(cx, re);
-    } else {
-        if (oldre)
-            js_DestroyRegExp(cx, oldre);
-        *rval = OBJECT_TO_JSVAL(obj);
+        return JS_FALSE;
     }
-    return ok;
+    if (oldre)
+        js_DestroyRegExp(cx, oldre);
+    *rval = OBJECT_TO_JSVAL(obj);
+    return ok2;
 }
 
 static JSBool
