@@ -1375,6 +1375,16 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   return doc->AppendChild(docType, getter_AddRefs(tmpNode));
 }
 
+NS_IMETHODIMP 
+nsXMLContentSink::SetDocumentCharset(nsAWritableString& aCharset)
+{
+  if (mDocument) {
+    return mDocument->SetDocumentCharacterSet(aCharset);
+  }
+  
+  return NS_OK;
+}
+
 nsresult
 nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 {

@@ -168,6 +168,12 @@ public:
    * is in sync with the state of the sink.
    */
   NS_IMETHOD FlushPendingNotifications()=0;
+
+  /**
+   * Set the document character set. This should be passed on to the
+   * document itself.
+   */
+  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset)=0;
 };
 
 #endif /* nsIContentSink_h___ */

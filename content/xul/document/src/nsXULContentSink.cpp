@@ -130,6 +130,7 @@ public:
     NS_IMETHOD NotifyError(const nsParserError* aError);
     NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
     NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
+    NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset);
 
     // nsIXMLContentSink
     NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);    
@@ -951,6 +952,17 @@ XULContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
     PR_LOG(gLog, PR_LOG_WARNING,
            ("xul: ignoring doctype decl at line %d", aNode.GetSourceLineNumber()));
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+XULContentSinkImpl::SetDocumentCharset(nsAWritableString& aCharset)
+{
+    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+    if (doc) {
+        return doc->SetDocumentCharacterSet(aCharset);
+    }
+  
     return NS_OK;
 }
 
