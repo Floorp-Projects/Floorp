@@ -41,6 +41,8 @@ Rights Reserved.
 <!ENTITY languages.label				  "Languages">
 <!ENTITY coding.label					  "Use the following character coding as the default for viewing messages:">
 <!ENTITY sendDefaultCharset.label         "Character Coding:">
+<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore charset specified by MIME header).">
+<!ENTITY forceCharsetOverride.accesskey   "i">
 <!ENTITY fixedWidth.label                 "Fixed width font">
 <!ENTITY fixedWidth.accesskey             "x">
 <!ENTITY variableWidth.label              "Variable width font">

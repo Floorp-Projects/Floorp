@@ -15,7 +15,7 @@
 
   <script language="javascript">
   <![CDATA[
-    _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "displayStruct", "mailCitationColor", "sendDefaultCharsetList"];
+    _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "displayStruct", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
 
     function Startup()
     {
@@ -130,6 +130,9 @@
       </template>
     </menulist>       
     </box>    
+  <checkbox id="forceCharsetOverride" value="&forceCharsetOverride.label;" accesskey="&forceCharsetOverride.accesskey;"
+            pref="true" preftype="bool" prefstring="mailnews.force_charset_override" 
+            prefattribute="checked"/>
 	</titledbox>
 	  
 </window>
