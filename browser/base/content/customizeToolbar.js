@@ -70,7 +70,6 @@ function buildDialog()
   var newToolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "toolbar");
   newToolbar.id = "cloneToolbar";
-  newToolbar.setAttribute("minheight", toolbar.boxObject.height);
 
   // Walk through and manually clone the children of the to-be-customized toolbar.
   // Make sure all buttons look enabled (and that textboxes are disabled).
@@ -149,7 +148,7 @@ function buildDialog()
 
     paletteBox.appendChild(currentRow);
   }
-
+  newToolbar.setAttribute("minheight", newToolbar.boxObject.height);
 }
 
 var dragObserver = {
@@ -195,8 +194,7 @@ var dropObserver = {
       for (var i = 0; i < paletteItems.length; ++i) {
         paletteItem = paletteItems[i];
         if (paletteItem.firstChild.id == newButtonId) {
-          item = paletteItem.cloneNode(true);
-          paletteItem.parentNode.removeChild(paletteItem);
+          item = paletteItem;
           break;
         }
       }
@@ -208,8 +206,7 @@ var dropObserver = {
       var toolbarItem = toolbar.firstChild;
       while (toolbarItem) {
         if (toolbarItem.firstChild.id == newButtonId) {
-          item = toolbarItem.cloneNode(true);
-          toolbar.removeChild(toolbarItem);
+          item = toolbarItem;
           break;
         }
         toolbarItem = toolbarItem.nextSibling;
