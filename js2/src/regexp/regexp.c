@@ -229,24 +229,6 @@ REbool parseDisjunction(REParseState *parseState);
 REbool parseAlternative(REParseState *parseState);
 REbool parseTerm(REParseState *parseState);
 
-/*
-1. If IgnoreCase is false, return ch.
-2. Let u be ch converted to upper case as if by calling 
-   String.prototype.toUpperCase on the one-character string ch.
-3. If u does not consist of a single character, return ch.
-4. Let cu be u's character.
-5. If ch's code point value is greater than or equal to decimal 128 and cu's
-   code point value is less than decimal 128, then return ch.
-6. Return cu.
-*/
-
-#define TOUPPER(c) (c & ~0x20)
-
-static REchar canonicalize(REchar ch)
-{
-    return (REchar)(TOUPPER(ch)); 
-}
-
 static REbool isASCIIHexDigit(REchar c, REuint32 *digit)
 {
     REuint32 cv = c;
@@ -395,6 +377,142 @@ static REint32 getDecimalValue(REchar c, REParseState *parseState)
     return value;
 }
 
+/* calculate the total size of the bitmap required for a class expression */
+static REbool calculateBitmapSize(REParseState *pState, RENode *target)
+{
+    REchar rangeStart;
+    const REchar *src = (const REchar *)(target->child);
+    const REchar *end = target->data.chclass.end;
+
+    REchar c;
+    REuint32 nDigits;
+    REuint32 i;
+    REuint32 max = 0;
+    bool inRange = false;
+
+    CharSet *charSet = (CharSet *)malloc(sizeof(CharSet));
+    if (!charSet) return false;
+    target->data.chclass.charSet = charSet;
+    charSet->length = 0;
+    charSet->bits = NULL;
+
+    if (src == end)
+        return true;
+
+    if (*src == '^')
+        ++src;
+    
+    while (src != end) {
+        REuint32 localMax = 0;
+        switch (*src) {
+        case '\\':
+            ++src;
+            c = *src++;
+            switch (c) {
+            case 'b':
+                localMax = 0x8;
+                break;
+            case 'f':
+                localMax = 0xC;
+                break;
+            case 'n':
+                localMax = 0xA;
+                break;
+            case 'r':
+                localMax = 0xD;
+                break;
+            case 't':
+                localMax = 0x9;
+                break;
+            case 'v':
+                localMax = 0xB;
+                break;
+            case 'c':
+                if (((src + 1) < end) && RE_ISLETTER(src[1]))
+                    localMax = (REchar)(*src++ & 0x1F);
+                else
+                    localMax = '\\';
+                break;
+            case 'x':
+                nDigits = 2;
+                goto lexHex;
+            case 'u':
+                nDigits = 4;
+lexHex:
+                {
+                    REuint32 n = 0;
+                    for (i = 0; (i < nDigits) && (src < end); i++) {
+                        REuint32 digit;
+                        c = *src++;
+                        if (!isASCIIHexDigit(c, &digit)) {
+                            /* back off to accepting the original 
+                             *'\' as a literal 
+                             */
+                            src -= (i + 1);
+                            n = '\\';
+                            break;
+                        }
+                        n = (n << 4) | digit;
+                    }
+                    localMax = n;
+                }
+                break;
+            case 'd':
+                if (inRange) {
+                    reportRegExpError(&pState->error, WRONG_RANGE);
+                    return false;
+                }
+                localMax = '9';
+                break;
+            case 'D':
+            case 's':
+            case 'S':
+            case 'w':
+            case 'W':
+                if (inRange) {
+                    reportRegExpError(&pState->error, WRONG_RANGE);
+                    return false;
+                }
+                charSet->length = 65536;
+                return true;
+            default:
+                localMax = c;
+                break;
+            }
+            break;
+        default:
+            localMax = *src++;
+            break;
+        }
+        if (inRange) {
+            if (rangeStart > localMax) {
+                reportRegExpError(&pState->error, WRONG_RANGE);
+                return false;
+            }
+            inRange = false;
+        }
+        else {
+            if (src < (end - 1)) {
+                if (*src == '-') {
+                    ++src;
+                    inRange = true;
+                    rangeStart = localMax;
+                    continue;
+                }
+            }
+        }
+        if (pState->flags & IGNORECASE) {
+            c = canonicalize(localMax);
+            if (c > localMax)
+                localMax = c;
+        }
+        if (localMax > max)
+            max = localMax;
+    }
+    charSet->length = max + 1;
+    return true;
+}
+
 REbool parseTerm(REParseState *parseState)
 {
     REchar c = *parseState->src++;
@@ -418,11 +536,11 @@ REbool parseTerm(REParseState *parseState)
             c = *parseState->src++;
             switch (c) {
             /* assertion escapes */
-            case 'B' :
+            case 'b' :
                 parseState->result = newRENode(parseState, REOP_WBND);
                 if (!parseState->result) return false;
                 break;
-            case 'b':
+            case 'B':
                 parseState->result = newRENode(parseState, REOP_UNWBND);
                 if (!parseState->result) return false;
                 break;
@@ -639,6 +757,8 @@ lexHex:
             }
             ++parseState->src;
         }
+        if (!calculateBitmapSize(parseState, parseState->result))
+            return false;
         break;
 
     case '.':
@@ -698,6 +818,8 @@ lexHex:
                         c = *parseState->src;
                     }
                 }
+                else
+                    max = min;
                 parseState->result->data.quantifier.min = min;
                 parseState->result->data.quantifier.max = max;
                 if (c == '}')
@@ -1014,126 +1136,26 @@ static void addCharacterRangeToCharSet(CharSet *cs, REchar c1, REchar c2)
 
     ASSERT((c2 <= cs->length) && (c1 <= c2));
 
-    cs->bits[byteIndex1] |= 0xFF << (c1 & 0x7);
-    for (i = byteIndex1 + 1; i < byteIndex2; i++)
-        cs->bits[i] = 0xFF;
-    cs->bits[byteIndex2] |= (uint8)(0xFF) >> (7 - (c2 & 0x7));
-}
+    c1 &= 0x7;
+    c2 &= 0x7;
 
-/* calculate the total size of the bitmap required for a class expression */
-static REbool calculateBitmapSize(RENode *target)
-{
-    const REchar *rangeStart;
-    const REchar *src = (const REchar *)(target->child);
-    const REchar *end = target->data.chclass.end;
-
-    REchar c;
-    REuint32 nDigits;
-    REuint32 i;
-    REuint32 max = 0;
-
-    CharSet *charSet = (CharSet *)malloc(sizeof(CharSet));
-    if (!charSet) return false;
-    target->data.chclass.charSet = charSet;
-    charSet->length = 0;
-
-    if (src == end)
-        return true;
-
-    if (*src == '^')
-        ++src;
-    
-    while (src != end) {
-        REuint32 localMax = 0;
-        switch (*src) {
-        case '\\':
-            ++src;
-            c = *src++;
-            switch (c) {
-            case 'b':
-                localMax = 0x8;
-                break;
-            case 'f':
-                localMax = 0xC;
-                break;
-            case 'n':
-                localMax = 0xA;
-                break;
-            case 'r':
-                localMax = 0xD;
-                break;
-            case 't':
-                localMax = 0x9;
-                break;
-            case 'v':
-                localMax = 0xB;
-                break;
-            case 'c':
-                if (((src + 1) < end) && RE_ISLETTER(src[1]))
-                    localMax = (REchar)(*src++ & 0x1F);
-                else
-                    localMax = '\\';
-                break;
-            case 'x':
-                nDigits = 2;
-                goto lexHex;
-            case 'u':
-                nDigits = 4;
-lexHex:
-                {
-                    REuint32 n = 0;
-                    for (i = 0; (i < nDigits) && (src < end); i++) {
-                        REuint32 digit;
-                        c = *src++;
-                        if (!isASCIIHexDigit(c, &digit)) {
-                            /* back off to accepting the original 
-                             *'\' as a literal 
-                             */
-                            src -= (i + 1);
-                            n = '\\';
-                            break;
-                        }
-                        n = (n << 4) | digit;
-                    }
-                    localMax = n;
-                }
-                break;
-            case 'd':
-                localMax = '9';
-                break;
-            case 'D':
-            case 's':
-            case 'S':
-            case 'w':
-            case 'W':
-                charSet->length = 65536;
-                return true;
-            default:
-                localMax = c;
-                break;
-            }
-            break;
-        default:
-            rangeStart = src++;
-            if ((src < (end - 1)) && (*src == '-')) {
-                ++src;
-                localMax = *src++;
-            }
-            else
-                localMax = *rangeStart;
-            break;
-        }
-        if (localMax > max)
-            max = localMax;
+    if (byteIndex1 == byteIndex2) {
+        cs->bits[byteIndex1] |= ((uint8)(0xFF) >> (7 - (c2 - c1))) << c1;
     }
-    charSet->length = max + 1;
-    return true;
+    else {
+        cs->bits[byteIndex1] |= 0xFF << c1;
+        for (i = byteIndex1 + 1; i < byteIndex2; i++)
+            cs->bits[i] = 0xFF;
+        cs->bits[byteIndex2] |= (uint8)(0xFF) >> (7 - c2);
+    }
 }
+
+
 
 /* Compile the source of the class into a CharSet */
-static REbool processCharSet(RENode *target)
+static REbool processCharSet(REGlobalData *globalData, RENode *target)
 {
-    const REchar *rangeStart;
+    REchar rangeStart, thisCh;
     const REchar *src = (const REchar *)(target->child);
     const REchar *end = target->data.chclass.end;
 
@@ -1142,9 +1164,8 @@ static REbool processCharSet(RENode *target)
     REint32 i;
     REuint32 length;
     CharSet *charSet;
+    bool inRange = false;
 
-    if (!calculateBitmapSize(target))
-        return false;
     charSet = target->data.chclass.charSet;
     length = (charSet->length / 8) + 1;
     charSet->bits = (uint8 *)malloc(length);
@@ -1168,29 +1189,30 @@ static REbool processCharSet(RENode *target)
             c = *src++;
             switch (c) {
             case 'b':
-                addCharacterToCharSet(charSet, 0x8);
+                thisCh = 0x8;
                 break;
             case 'f':
+                thisCh = 0xC;
                 addCharacterToCharSet(charSet, 0xC);
                 break;
             case 'n':
-                addCharacterToCharSet(charSet, 0xA);
+                thisCh = 0xA;
                 break;
             case 'r':
-                addCharacterToCharSet(charSet, 0xD);
+                thisCh = 0xD;
                 break;
             case 't':
-                addCharacterToCharSet(charSet, 0x9);
+                thisCh = 0x9;
                 break;
             case 'v':
-                addCharacterToCharSet(charSet, 0xB);
+                thisCh = 0xB;
                 break;
             case 'c':
                 if (((src + 1) < end) && RE_ISLETTER(src[1]))
-                    addCharacterToCharSet(charSet, (REchar)(*src++ & 0x1F));
+                    thisCh = (REchar)(*src++ & 0x1F);
                 else {
                     --src;
-                    addCharacterToCharSet(charSet, '\\');
+                    thisCh = '\\';
                 }
                 break;
             case 'x':
@@ -1214,51 +1236,82 @@ lexHex:
                         }
                         n = (n << 4) | digit;
                     }
-                    addCharacterToCharSet(charSet, (REchar)(n));
+                    thisCh = (REchar)(n);
                 }
                 break;
             case 'd':
                 addCharacterRangeToCharSet(charSet, '0', '9');
-                break;
+                continue;   /* don't need range processing */
             case 'D':
                 addCharacterRangeToCharSet(charSet, 0, '0' - 1);
                 addCharacterRangeToCharSet(charSet, (REchar)('9' + 1),
                                             (REchar)(charSet->length - 1));
-                break;
+                continue;
             case 's':
                 for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (RE_ISWS(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
-                break;
+                continue;
             case 'S':
                 for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (!RE_ISWS(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
-                break;
+                continue;
             case 'w':
                 for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (RE_ISLETDIG(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
-                break;
+                continue;
             case 'W':
                 for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (!RE_ISLETDIG(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
-                break;
+                continue;
             default:
-                addCharacterToCharSet(charSet, c);
+                thisCh = c;
                 break;
             }
             break;
         default:
-            rangeStart = src++;
-            if ((src < (end - 1)) && (*src == '-')) {
-                ++src;
-                addCharacterRangeToCharSet(charSet, *rangeStart, *src++);
+            thisCh = *src++;
+            break;
+        }
+
+        if (inRange) {
+            if (globalData->flags & IGNORECASE) {
+                REchar minch = (REchar)65535;
+                REchar maxch = 0;
+                /*
+
+                    yuk
+                
+                */
+                if (rangeStart < minch) minch = rangeStart;
+                if (thisCh < minch) minch = thisCh;
+                if (canonicalize(rangeStart) < minch) minch = canonicalize(rangeStart);
+                if (canonicalize(thisCh) < minch) minch = canonicalize(thisCh);
+
+                if (rangeStart > maxch) maxch = rangeStart;
+                if (thisCh > maxch) maxch = thisCh;
+                if (canonicalize(rangeStart) > maxch) maxch = canonicalize(rangeStart);
+                if (canonicalize(thisCh) > maxch) maxch = canonicalize(thisCh);
+                addCharacterRangeToCharSet(charSet, minch, maxch);
             }
             else
-                addCharacterToCharSet(charSet, *rangeStart);
-            break;
+                addCharacterRangeToCharSet(charSet, rangeStart, thisCh);
+            inRange = false;
+        }
+        else {
+            if (globalData->flags & IGNORECASE)
+                addCharacterToCharSet(charSet, canonicalize(thisCh));
+            addCharacterToCharSet(charSet, thisCh);
+            if (src < (end - 1)) {
+                if (*src == '-') {
+                    ++src;
+                    inRange = true;
+                    rangeStart = thisCh;
+                }
+            }
         }
     }
     return true;
@@ -1276,24 +1329,32 @@ static REState *classMatcher(REGlobalData *globalData, REState *x, RENode *targe
     REuint32 e = x->endIndex;
     if (e == globalData->length)
         return NULL;
-    if (target->data.chclass.charSet == NULL) {
-        if (!processCharSet(target))
+    if (target->data.chclass.charSet->bits == NULL) {
+        if (!processCharSet(globalData, target))
             return NULL;
     }
     charSet = target->data.chclass.charSet;
     ch = globalData->input[e];
+    if (globalData->flags & IGNORECASE) {
+        ch = canonicalize(ch);
+    }
     byteIndex = (REuint32)((ch / 8) + 1);
+    ch &= 0x7;
     if (target->data.chclass.sense) {
-        if ( (ch > charSet->length)
-                || ((charSet->bits[byteIndex - 1] & (1 << (ch & 0x7))) == 0) )
+        if ((charSet->length == 0) || 
+             ( (ch > charSet->length)
+                || ((charSet->bits[byteIndex - 1] & (1 << ch)) == 0) ))
             return NULL;
     }
     else {
-        if (! ( (ch > charSet->length)
-                || ((charSet->bits[byteIndex - 1] & (1 << (ch & 0x7))) == 0)) )
+        if (! ((charSet->length == 0) || 
+                 ( (ch > charSet->length)
+                    || ((charSet->bits[byteIndex - 1] & (1 << ch)) == 0) )))
             return NULL;
     }
-    x->endIndex++;
+
+    if (charSet->length)    /* match empty character */
+        x->endIndex++;
     return x;
 }
 
@@ -1600,7 +1661,8 @@ static REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
             continue;                       
         case REOP_MINIMALREPEAT:
             if (result == NULL) {
-                if (backTrackData->continuation.max > 0) {
+                if ((backTrackData->continuation.max == -1)
+                        || (backTrackData->continuation.max > 0)) {
                     for (k = 1; k <= t->data.quantifier.parenCount; k++)
                         x->parens[t->parenIndex + k].index = -1;
                     currentContinuation.node = t;
@@ -1686,7 +1748,9 @@ static REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
                     result = x;
                 else {
 		    recoverState(x, backTrackStack[backTrackStackTop].state);
+
                     result = NULL;
+
 		}
             }
             currentContinuation = t->continuation;
@@ -1876,7 +1940,7 @@ REState *REExecute(REParseState *parseState, const REchar *text,
         if (gData.error != NO_ERROR) return NULL;
         if (result == NULL) {
             i++;
-            if (i >= (REint32)length) {
+            if (i > (REint32)length) {
                 parseState->lastIndex = 0;
                 result = NULL;
                 free(x);

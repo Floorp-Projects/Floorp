@@ -2173,6 +2173,13 @@ static JSValue GenericError_Constructor(Context *cx, const JSValue& thisValue, J
     return v;
 }
 
+extern "C" char16 canonicalize(char16 ch)
+{
+    char16 cu = toUpper(ch);
+    if ((ch >= 128) && (cu < 128)) return ch;
+    return cu;
+}
+
 JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     JSValue thatValue = thisValue;

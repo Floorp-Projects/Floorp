@@ -65,6 +65,7 @@ typedef enum REError {
     UNCLOSED_CLASS,         /* '[' missing ']' */
     BACKREF_IN_CLASS,       /* used '\<digit>' in '[..]' */
     BAD_FLAG,               /* unrecognized flag (not i, g or m) */
+    WRONG_RANGE,            /* range lo > range hi */
     OUT_OF_MEMORY
 } REError;
 
@@ -116,3 +117,20 @@ REState *REExecute(REParseState *parseState, const REchar *text, REuint32 length
  *  Throw away the RegExp and all data associated with it.
  */
 void freeRegExp(REParseState *parseState);
+
+
+/*
+ *  Needs to be provided by the host, following these specs:
+ *
+ *
+ * [1. If IgnoreCase is false, return ch. - not necessary in implementation]
+ *
+ * 2. Let u be ch converted to upper case as if by calling 
+ *    String.prototype.toUpperCase on the one-character string ch.
+ * 3. If u does not consist of a single character, return ch.
+ * 4. Let cu be u's character.
+ * 5. If ch's code point value is greater than or equal to decimal 128 and cu's
+ *    code point value is less than decimal 128, then return ch.
+ * 6. Return cu.
+ */
+extern "C" REchar canonicalize(REchar ch);
