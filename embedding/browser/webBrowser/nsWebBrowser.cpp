@@ -593,6 +593,18 @@ NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIWebProgressListener* aList
    return mDocShellAsProgress->RemoveProgressListener(aListener);
 }
 
+NS_IMETHODIMP nsWebBrowser::GetDOMWindow(nsIDOMWindow **aResult)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  *aResult = nsnull;
+  if (mDocShell) {
+    rv = mDocShellAsProgress->GetDOMWindow(aResult);
+  }
+
+  return rv;
+}
+
 //*****************************************************************************
 // nsWebBrowser::nsIBaseWindow
 //*****************************************************************************
