@@ -25,7 +25,7 @@
 #include "prinrval.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
-#include "nsIByteBuffer.h"
+#include "nsIByteBufferInputStream.h"
 #include <stdio.h>
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -46,6 +46,7 @@ public:
 
         printf("running\n");
         PL_EventLoop(mEventQueue);
+        printf("quitting\n");
         return NS_OK;
     }
 
@@ -137,8 +138,7 @@ SerialReadTest()
     for (PRUint32 i = 0; i < 100; i++) {
         nsISupports* fs;
         nsIInputStream* fileStr = nsnull;
-        nsIByteBuffer* buf = nsnull;
-        nsIInputStream* inStr = nsnull;
+        nsIByteBufferInputStream* bufStr = nsnull;
         nsFileSpec spec("test.txt");
 
         rv = NS_NewTypicalInputFileStream(&fs, spec);
@@ -148,36 +148,33 @@ SerialReadTest()
         NS_ASSERTION(NS_SUCCEEDED(rv), "QI failed");
 
 #       define NS_FILE_TRANSPORT_BUFFER_SIZE (4*1024)
-        rv = NS_NewByteBuffer(&buf, nsnull, NS_FILE_TRANSPORT_BUFFER_SIZE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "new byte buffer failed");
 
-        rv = NS_NewByteBufferInputStream(buf, &inStr);
+        rv = NS_NewByteBufferInputStream(NS_FILE_TRANSPORT_BUFFER_SIZE, &bufStr);
         NS_ASSERTION(NS_SUCCEEDED(rv), "new byte buffer input stream failed");
 
-        PRUint32 count;
-        rv = fileStr->GetLength(&count);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "length failed");
-
-        while (count > 0) {
-            PRUint32 filledAmt = buf->Fill(&rv, fileStr, 0);
+        while (PR_TRUE) {
+            PRUint32 amt;
+            rv = bufStr->Fill(fileStr, &amt);
+            if (rv == NS_BASE_STREAM_EOF || amt == 0) {
+                rv = NS_OK;
+                break;
+            }
             NS_ASSERTION(NS_SUCCEEDED(rv), "fill failed");
 
-            PRUint32 bufLen = buf->GetLength();
             char buffer[1025];
-            while (bufLen > 0) {
-                PRUint32 amt;
-                rv = inStr->Read(buffer, 1024, &amt);
+            while (amt > 0) {
+                PRUint32 readAmt;
+                rv = bufStr->Read(buffer, 1024, &readAmt);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "read failed");
 
-                buffer[amt] = '\0';
-                printf(buffer);
+//                buffer[readAmt] = '\0';
+//                printf(buffer);
 
-                bufLen -= amt;
-                count -= amt;
+                amt -= readAmt;
             }
         }
-        rv = fileStr->Close();
-        NS_RELEASE(fileStr);
+        NS_IF_RELEASE(bufStr);
+        NS_IF_RELEASE(fileStr);
         NS_ASSERTION(NS_SUCCEEDED(rv), "close failed");
     }
     PRIntervalTime endTime = PR_IntervalNow();
@@ -218,8 +215,9 @@ main()
                             &trans);
     }
 
-//    readerThread->Join();     // doesn't work yet, so instead...
-    PR_Sleep(PR_SecondsToInterval(200));
+    fts->Shutdown();
+    readerThread->Interrupt();
+    readerThread->Join();
 
     printf("duration %d ms\n", PR_IntervalToMilliseconds(gDuration));
 

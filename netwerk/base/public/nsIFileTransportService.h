@@ -61,6 +61,7 @@ public:
                           const char* path,
                           nsITransport* *result) = 0;
 
+    NS_IMETHOD Shutdown() = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
