@@ -9,28 +9,27 @@ sub RemoveAll
 {
     my ($target) = @_;
     my $next = "";
-    my $dpeth = 0;
-    if( -e $target )
-    {
-        if ( -d $target ) {
-            chdir($target);
-            foreach ( <*> ) {
-                $next = $_;
-                if (-d $next ) {
-                    RemoveAll($next);
-                    rmdir($next);
-                } else {
-                    unlink($next);
-                }
-            }
-            $depth = tr/$target// + 1;
-#print "depth = $depth\n";
-            for ($i = 1; $i < $depth; $i++) { chdir(".."); }
-            rmdir($target);  #will this remove the whole directory tree or just then end dir?
-        } else {
-            unlink($target);
-        }
-    }
+    my $depth = 0;
+	if (-e $target)
+	{
+		if ( -d $target ) {
+			chdir($target);
+			foreach ( <*> ) {
+				$next = $_;
+				if (-d $next ) {
+					RemoveAll($next);
+					rmdir($next);
+				} else {
+					unlink($next);
+				}
+			}
+			$depth = ( $target =~ tr/\/// ) + 1; 
+			for ($i = 0; $i < $depth; $i++) { chdir(".."); }
+			rmdir($target);  
+		} else {
+			unlink($target);
+		}
+	}
 }
 
 sub cleanup
@@ -39,9 +38,9 @@ sub cleanup
     my $target = "";
     print "+++ removing temp files\n";
     foreach $target (keys %removeList) {
-        if ($target ) {
-#            RemoveAll($target);
-        }
+		if ($target) {
+			RemoveAll($target);
+		}
     }
 }
 
@@ -55,7 +54,7 @@ sub JarIt
 
 sub MkDirs
 {
-    my ($path, $created) = @_; 
+    my ($path) = @_; 
 
     if ($path =~ /([\w\d.\-]+)[\\\/](.*)/) {
         my $dir = $1;
@@ -63,24 +62,19 @@ sub MkDirs
 
         if (!-e $dir) {
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            $created = 1;
-#print "created = $created\n";
         } 
         chdir $dir;
-        MkDirs($path, $created);
+        MkDirs($path);
         chdir "..";
     }
     else {
         my $dir = $path;
-        if ($dir eq "") { return $created; } #print "returning $created\n"; return $created; } 
+        if ($dir eq "") { return 0; }
         if (!-e $dir) {
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
             $created = 1;
-#print "created = $created\n";
         }
     }
-#print "returning $created\n";
-    return $created;
 }
 
 sub CopyFile
@@ -100,7 +94,6 @@ sub EnsureFileInDir
     my ($destPath, $srcPath) = @_;
 
     if (!-e $destPath) {
-print "need to copy $destPath\n";
         my $dir = "";
         my $file;
         if ($destPath =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
@@ -118,15 +111,23 @@ print "need to copy $destPath\n";
         if (!-e $file) {
             die "error: file '$file' doesn't exist\n";
         }
-        if ( MkDirs($dir, 0) ) {
-            $removeList{$dir} = 1;        
-#print "adding dir $dir \n"; 
-        }
+        MkDirs($dir);
         CopyFile($file, $destPath);
 
-        if ( !$dir ) {
+        if ( $dir )
+        {
+            my $i = 0;
+            my $TLD = "";
+            @dirList = split(/\//,$dir);
+            @srcList = split(/\//,$srcPath);
+			while ( $srcList[$i] eq $dirList[$i] ) {
+				$TLD = "$TLD$dirList[$i]/";
+				$i++;
+			} 
+			$TLD = "$TLD$dirList[$i]";
+            $removeList{$TLD} = 1;
+        } else {
             $removeList{$destPath} = 1;
-#print "adding file $destPath \n";
         }
         return 1;
     }
