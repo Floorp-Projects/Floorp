@@ -74,7 +74,7 @@ NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create body pseudo frame
-  NS_NewBodyFrame(mContent, this, mFirstChild, PR_FALSE);
+  NS_NewBodyFrame(mContent, this, mFirstChild, PR_TRUE);
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
