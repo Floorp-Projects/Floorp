@@ -18,7 +18,6 @@ ProgramFolderName=
 CreateReadmeIcon=0
 CreateLicenseIcon=0
 ReadMeFile=%Root%Configs\Default\Workspace\readme.txt
-LicenseFile=%Root%Configs\Default\Workspace\license.txt
 InstallerCustomBitmapPath=%Root%Configs\Default\Workspace\Installer\setup.bmp
 InstallerScreenText1=
 InstallerScreenText2=
