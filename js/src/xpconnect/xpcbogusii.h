@@ -76,13 +76,40 @@ public:
         T_INTERFACE     = 16,   /* SPECIAL_BIT | 0 */
         T_INTERFACE_IS  = 17    /* SPECIAL_BIT | 1 */
     };
+
+    uint8 WordCount() const 
+    {
+        static uint8 word_table[] = 
+        {
+            1, // T_I8    
+            1, // T_I16   
+            1, // T_I32   
+            2, // T_I64   
+            1, // T_U8    
+            1, // T_U16   
+            1, // T_U32   
+            2, // T_U64   
+            1, // T_FLOAT 
+            2, // T_DOUBLE
+            1, // T_BOOL  
+            1, // T_CHAR  
+            1  // T_WCHAR 
+        };
+        if(t & IS_POINTER)
+            return 1;
+        if(t & SPECIAL_BIT)
+        {
+            NS_ASSERTION(0,"net yet implemented");
+            return 1;
+        }
+        return word_table[t & TYPE_MASK];
+    }
 };
 
 class nsXPCVarient
 {
 public:
-    nsXPCType type;
-
+    // val must come first!
     union
     {
         int8    i8;
@@ -100,6 +127,8 @@ public:
         wchar_t wc;
         void*   p;
     } val;
+
+    nsXPCType type;
 };
 
 
@@ -109,13 +138,15 @@ public:
     // add ctor/dtor
     enum
     {
-        IS_IN  = 0x80,
-        IS_OUT = 0x40
+        IS_IN       = 0x80,
+        IS_OUT      = 0x40,
+        IS_RETVAL   = 0x20
     };
 
-    JSBool IsIn()  const {return (JSBool) (flags & IS_IN);}
-    JSBool IsOut() const {return (JSBool) (flags & IS_OUT);}
-    nsXPCType GetType() const {return type;}
+    JSBool IsIn()  const    {return (JSBool) (flags & IS_IN);}
+    JSBool IsOut() const    {return (JSBool) (flags & IS_OUT);}
+    JSBool IsRetval() const {return (JSBool) (flags & IS_RETVAL);}
+    const nsXPCType& GetType() const {return type;}
     uint8 GetInterfaceIsArgNumber() const
     {
         NS_PRECONDITION(type == nsXPCType::T_INTERFACE_IS,"not an interface_is");
@@ -155,12 +186,12 @@ public:
     JSBool IsConstructor() const {return (JSBool) (flags & IS_CONSTRUCTOR);}
     const char* GetName()  const {return mName;}
     uint8 GetParamCount()  const {return param_count;}
-    const nsXPCParamInfo* GetParam(uint8 index) const
+    const nsXPCParamInfo& GetParam(uint8 index) const
     {
         NS_PRECONDITION(index < param_count,"bad arg");
-        return &params[index];
+        return params[index];
     }
-    const nsXPCParamInfo* GetResult() const {return &result;}
+    const nsXPCParamInfo& GetResult() const {return result;}
 private:
     uint8 flags;
     char* mName;

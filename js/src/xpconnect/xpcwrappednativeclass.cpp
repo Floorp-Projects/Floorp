@@ -20,6 +20,8 @@
 
 #include "xpcprivate.h"
 
+static const char* XPC_VAL_STR = "val";
+
 NS_IMPL_ISUPPORTS(nsXPCWrappedNativeClass, NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID)
 
 // static
@@ -48,8 +50,11 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
            NS_SUCCEEDED(xpc->GetInterfaceInfo(aIID, &info)))
         {
             clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
-            // XXX check for full init
-            // if failed: NS_RELEASE(map) and set map = NULL
+            if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
+            {
+                NS_RELEASE(clazz);
+                clazz = NULL;
+            }
         }
     }
     return clazz;
@@ -59,7 +64,9 @@ nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID
                                                nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
       mIID(aIID),
-      mInfo(aInfo)
+      mInfo(aInfo),
+      mMemberCount(-1),
+      mMembers(NULL)
 {
     NS_ADDREF(mInfo);
 
@@ -67,18 +74,96 @@ nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID
     NS_ADDREF_THIS();
 
     mXPCContext->GetWrappedNativeClassMap()->Add(this);
-
-    // XXX Do other stuff...
+    if(!BuildMemberDescriptors())
+        mMemberCount = -1;
 }
 
 nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
 {
     mXPCContext->GetWrappedNativeClassMap()->Remove(this);
-
-    // XXX Cleanup other stuff...
-    // XXX e.g. mMembers
-    // XXX e.g. functon object of mbers
+    DestroyMemberDescriptors();
     NS_RELEASE(mInfo);
+}
+
+JSBool
+nsXPCWrappedNativeClass::BuildMemberDescriptors()
+{
+    int i;
+    int constCount;
+    int methodCount;
+    int totalCount;
+    JSContext* cx = GetJSContext();
+
+    if(NS_FAILED(mInfo->GetMethodCount(&methodCount))||
+       NS_FAILED(mInfo->GetConstantCount(&constCount)))
+        return JS_FALSE;
+
+    totalCount = methodCount+constCount;
+    if(!totalCount)
+    {
+        mMemberCount = 0;
+        return JS_TRUE;
+    }
+
+    mMembers = new XPCNativeMemberDescriptor[totalCount];
+    if(!mMembers)
+        return JS_FALSE;
+    mMemberCount = 0;
+
+    for(i = 0; i < methodCount; i++)
+    {
+        jsval idval;
+        jsid id;
+        XPCNativeMemberDescriptor* desc;
+        const nsXPCMethodInfo* info;
+        if(NS_FAILED(mInfo->GetMethodInfo(i, &info)))
+            return JS_FALSE;
+
+        idval = STRING_TO_JSVAL(JS_InternString(cx, info->GetName()));
+        JS_ValueToId(cx, idval, &id);
+        if(!id)
+        {
+            NS_ASSERTION(0,"bad method name");
+            return JS_FALSE;
+        }
+
+        if(info->IsSetter())
+        {
+            NS_ASSERTION(mMemberCount,"bad setter");
+            desc = &mMembers[mMemberCount-1];
+            NS_ASSERTION(desc->id == id,"bad setter");
+            NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::ATTRIB_RO,"bad setter");
+            desc->category == XPCNativeMemberDescriptor::ATTRIB_RW;
+            desc->index2 = i;
+        }
+        else
+        {
+            NS_ASSERTION(!LookupMemberByID(id),"duplicate method name");
+            desc = &mMembers[mMemberCount++];
+            desc->id = id;
+            if(info->IsGetter())
+                desc->category == XPCNativeMemberDescriptor::ATTRIB_RO;
+            else
+                desc->category == XPCNativeMemberDescriptor::METHOD;
+            desc->index = i;
+        }
+    }
+
+    // XXX do constants
+
+    return JS_TRUE;
+}
+
+void
+nsXPCWrappedNativeClass::DestroyMemberDescriptors()
+{
+    if(!mMembers)
+        return;
+    JSContext* cx = GetJSContext();
+    for(int i = 0; i < mMemberCount; i++)
+        if(mMembers[i].invokeFuncObj)
+            JS_RemoveRoot(cx, &mMembers[i].invokeFuncObj);
+    delete [] mMembers;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -139,6 +224,21 @@ nsXPCWrappedNativeClass::LookupMemberByID(jsid id) const
     return NULL;
 }
 
+static JSBool
+isConstructorID(JSContext *cx, jsid id)
+{
+    jsval idval;
+    const char *property_name;
+
+    if (JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
+        (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL) {
+        if (!strcmp(property_name, "constructor")) {
+            return JS_TRUE;
+        }
+    }
+    return JS_FALSE;
+}
+
 const char*
 nsXPCWrappedNativeClass::GetMethodName(int MethodIndex) const
 {
@@ -162,36 +262,27 @@ nsXPCWrappedNativeClass::SetDescriptorCounts(XPCNativeMemberDescriptor* desc)
         const nsXPCMethodInfo* info;
         if(NS_FAILED(mInfo->GetMethodInfo(desc->index, &info)))
             break;
-        uintN paramWords = 0;
-        uintN scratchWords = 0;
 
+        uintN scratchWords = 0;
         for(uint8 i = info->GetParamCount()-1 ; i >= 0; i--)
         {
-            const nsXPCParamInfo* param = info->GetParam(i);
-            nsXPCType type = param->GetType();
-
-            uintN thingSize =
-                    (type == nsXPCType::T_DOUBLE ||
-                     type == nsXPCType::T_I64 ||
-                     type == nsXPCType::T_U64) ? 2 : 1;
-            if(param->IsOut())
+            const nsXPCParamInfo& param = info->GetParam(i);
+            if(param.IsOut())
             {
-                paramWords++;
-                scratchWords += thingSize;
-            }
-            else
-            {
-                paramWords += thingSize;
+                // XXX what about space for IIDs?
+                scratchWords += param.GetType().WordCount();
             }
         }
-        desc->maxParamWordCount   = paramWords;
+        desc->maxParamCount = info->GetParamCount();
         desc->maxScratchWordCount = scratchWords;
+        break;
     }
     case XPCNativeMemberDescriptor::ATTRIB_RO:
     case XPCNativeMemberDescriptor::ATTRIB_RW:
-        // XXX just set these for the max possible...
-        desc->maxParamWordCount = 2;
+        // just set these for the max possible...
+        desc->maxParamCount = 1;
         desc->maxScratchWordCount = 2;
+        break;
     default:
         NS_ASSERTION(0,"bad category");
         break;
@@ -208,39 +299,158 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
 
 }
 
+void
+nsXPCWrappedNativeClass::ReportError(const XPCNativeMemberDescriptor* desc,
+                                     const char* msg)
+{
+    // XXX implement
+}
+
+
 JSBool
 nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
                                            const XPCNativeMemberDescriptor* desc,
                                            JSBool isAttributeSet,
                                            uintN argc, jsval *argv, jsval *vp)
 {
-#define PARAM_WORDS     32
+#define PARAM_COUNT     32
 #define SCRATCH_WORDS   32
 
-    uint32 paramBuffer[PARAM_WORDS];
+    nsXPCVarient paramBuffer[PARAM_COUNT];
     uint32 scratchBuffer[SCRATCH_WORDS];
     JSBool retval = JS_FALSE;
 
-    uint32* params = NULL;
+    nsXPCVarient* dispatchParams = NULL;
     uint32* scratch = NULL;
+    uint32 scratchIndex = 0;
+    JSContext* cx = GetJSContext();
+    uint8 i;
+    const nsXPCMethodInfo* info;
+    uint8 requiredArgs;
+    uint8 paramCount = info->GetParamCount();
+    jsval src;
+    jsdouble num;
+    uint8 vtblIndex;
+    nsresult invokeResult;
 
-    if(GetMaxParamWordCount(desc) > PARAM_WORDS)
-        params = new uint32[GetMaxParamWordCount(desc)];
+    // setup buffers
+
+    if(GetMaxParamCount(desc) > PARAM_COUNT)
+        dispatchParams = new nsXPCVarient[GetMaxParamCount(desc)];
     else
-        params = paramBuffer;
+        dispatchParams = paramBuffer;
 
     if(GetMaxScratchWordCount(desc) > SCRATCH_WORDS)
         scratch = new uint32[GetMaxScratchWordCount(desc)];
     else
-        scratch = paramBuffer;
-    if(!params || !scratch)
+        scratch = scratchBuffer;
+    if(!dispatchParams || !scratch)
+    {
+        ReportError(desc, "out of memeory");
         goto done;
+    }
 
-    // XXX implement
+    // make sure we have what we need
+
+    if(isAttributeSet)
+    {
+        // fail silently if trying to write a readonly attribute
+        if(desc->category != XPCNativeMemberDescriptor::ATTRIB_RW)
+            goto done;
+        vtblIndex = desc->index2;
+    }
+    else
+        vtblIndex = desc->index;
+
+    if(NS_FAILED(mInfo->GetMethodInfo(vtblIndex, &info)))
+    {
+        ReportError(desc, "can't get MethodInfo");
+        goto done;
+    }
+
+    // XXX ASSUMES that retval is last arg.
+    requiredArgs = paramCount -
+            (paramCount && info->GetParam(paramCount-1).IsRetval()) ? 0 : 1;
+    if(argc < requiredArgs)
+    {
+        ReportError(desc, "not enough arguments");
+        goto done;
+    }
 
     // iterate through the params doing conversions
+    for(i = 0; i < paramCount; i++)
+    {
+        const nsXPCParamInfo& param = info->GetParam(i);
+        const nsXPCType& type = param.GetType();
+
+        nsXPCVarient* dp;
+
+        dispatchParams[i].type = type;
+
+        if(param.IsOut())
+        {
+            dispatchParams[i].val.p = &scratch[scratchIndex];
+            scratchIndex += type.WordCount();
+            if(!param.IsIn())
+                continue;
+            dp = (nsXPCVarient*)dispatchParams[i].val.p;
+        }
+        else
+            dp = &dispatchParams[i];
+
+        // XXX fix this mess...
+
+        if(type & ~nsXPCType::TYPE_MASK)
+        {
+            NS_ASSERTION(0,"not supported");
+            continue;
+        }
+
+        // set 'src' to be the object from which we get the value
+
+        if(param.IsOut() /* implicit && param.IsIn() */ )
+            src = argv[i];
+        else if(!JSVAL_IS_OBJECT(argv[i]) ||
+                !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src))
+        {
+            ReportError(desc, "no out val");
+            goto done;
+        }
+
+        // XXX just ASSUME a number
+
+        if(!JS_ValueToNumber(cx, src, &num))
+        {
+            ReportError(desc, "could not convert argument to a number");
+            goto done;
+        }
+
+        switch(type)
+        {
+        case nsXPCType::T_I8     : dp->val.i8  = (int8)    num;  break;
+        case nsXPCType::T_I16    : dp->val.i16 = (int16)   num;  break;
+        case nsXPCType::T_I32    : dp->val.i32 = (int32)   num;  break;
+        case nsXPCType::T_I64    : dp->val.i64 = (int64)   num;  break;
+        case nsXPCType::T_U8     : dp->val.u8  = (uint8)   num;  break;
+        case nsXPCType::T_U16    : dp->val.u16 = (uint16)  num;  break;
+        case nsXPCType::T_U32    : dp->val.u32 = (uint32)  num;  break;
+        case nsXPCType::T_U64    : dp->val.u64 = (uint64)  num;  break;
+        case nsXPCType::T_FLOAT  : dp->val.f   = (float)   num;  break;
+        case nsXPCType::T_DOUBLE : dp->val.d   = (double)  num;  break;
+        case nsXPCType::T_BOOL   : dp->val.b   = (PRBool)  num;  break;
+        case nsXPCType::T_CHAR   : dp->val.c   = (char)    num;  break;
+        case nsXPCType::T_WCHAR  : dp->val.wc  = (wchar_t) num;  break;
+        default:
+            NS_ASSERTION(0, "bad type");
+            ReportError(desc, "could not convert argument to a number");
+            goto done;
+        }
+    }
 
     // do the invoke
+    invokeResult = xpc_InvokeNativeMethod(wrapper->GetNative(),vtblIndex,
+                                          paramCount, dispatchParams);
+
 
     // iterate through the params to gather the results
 
@@ -248,8 +458,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
 
 
 done:
-    if(params && params != paramBuffer)
-        delete [] params;
+    if(dispatchParams && dispatchParams != paramBuffer)
+        delete [] dispatchParams;
     if(scratch && scratch != scratchBuffer)
         delete [] scratch;
     return retval;
@@ -317,7 +527,15 @@ WrappedNative_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!wrapper)
+    {
+        if(isConstructorID(cx, id))
+        {
+            // silently fail when looking for constructor property
+            *vp = JSVAL_VOID;
+            return JS_TRUE;
+        }
         return JS_FALSE;
+    }
 
     nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
     NS_ASSERTION(clazz,"wrapper without class");
@@ -598,6 +816,7 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
 {
     JSContext* cx = GetXPCContext()->GetJSContext();
     JSObject* jsobj = JS_NewObject(cx, &WrappedNative_class, NULL, NULL);
+//                                   GetXPCContext()->GetGlobalObject());
     if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
         return NULL;
     return jsobj;

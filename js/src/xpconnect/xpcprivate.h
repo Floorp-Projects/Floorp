@@ -169,8 +169,13 @@ struct XPCNativeMemberDescriptor
     uintN           index; /* in InterfaceInfo for const, method, and get */
     uintN           index2; /* in InterfaceInfo for set */
     MemberCategory  category;
-    uintN           maxParamWordCount;
+    uintN           maxParamCount;
     uintN           maxScratchWordCount;
+
+    XPCNativeMemberDescriptor()
+        : invokeFuncObj(NULL), id(0),
+          maxParamCount(-1),
+          maxScratchWordCount(-1){}
 };
 
 // this interfaces exists just so we can refcount nsXPCWrappedNativeClass
@@ -243,11 +248,11 @@ private:
     const char* GetMethodName(int MethodIndex) const;
     JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
 
-    uintN GetMaxParamWordCount(const XPCNativeMemberDescriptor* desc)
+    uintN GetMaxParamCount(const XPCNativeMemberDescriptor* desc)
     {
-        if(-1 == desc->maxParamWordCount)
+        if(-1 == desc->maxParamCount)
             SetDescriptorCounts(NS_CONST_CAST(XPCNativeMemberDescriptor*,desc));
-        return desc->maxParamWordCount;
+        return desc->maxParamCount;
     }
 
     uintN GetMaxScratchWordCount(const XPCNativeMemberDescriptor* desc)
@@ -258,6 +263,9 @@ private:
     }
 
     void SetDescriptorCounts(XPCNativeMemberDescriptor* desc);
+    void ReportError(const XPCNativeMemberDescriptor* desc, const char* msg);
+    JSBool BuildMemberDescriptors();
+    void  DestroyMemberDescriptors();
 
 private:
     XPCContext* mXPCContext;
