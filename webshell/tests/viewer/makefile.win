@@ -43,7 +43,6 @@ OBJS =                                      \
 	.\$(OBJDIR)\nsPrintSetupDialog.obj     \
 	.\$(OBJDIR)\nsXPBaseWindow.obj     \
 	.\$(OBJDIR)\nsBrowserWindow.obj     \
-	.\$(OBJDIR)\nsEditorInterfaces.obj  \
 	.\$(OBJDIR)\nsEditorMode.obj        \
 	.\$(OBJDIR)\nsSetupRegistry.obj     \
 	.\$(OBJDIR)\nsViewerApp.obj         \
