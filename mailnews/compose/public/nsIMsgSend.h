@@ -37,7 +37,7 @@ class nsIMsgSend : public nsISupports {
   NS_IMETHOD Test() = 0;
 
   /* void SendMessage (in nsIMsgCompFields fields); */
-  NS_IMETHOD SendMessage(nsIMsgCompFields *fields) = 0;
+  NS_IMETHOD SendMessage(const nsIMsgCompFields *fields, const char *smtp) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

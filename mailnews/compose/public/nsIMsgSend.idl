@@ -24,6 +24,6 @@
 interface nsIMsgSend : nsISupports {
 
 	void Test();
-	void SendMessage(in nsIMsgCompFields fields);
+	void SendMessage(in nsIMsgCompFields fields, in string smtp);
 };
 
