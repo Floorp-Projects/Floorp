@@ -18,7 +18,7 @@
  */
 
 /* -*- Mode: C++; tab-width: 4 -*-
-   XmlFolderView.h -- class definition for XFE_XmlFolderView
+   XmlFolderView.h -- class definition for XFE_XmLFolderView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

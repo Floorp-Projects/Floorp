@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   AB2PaneView.h -- class definition for AB2PaneView
+   AB2PaneView.h -- class definition for XFE_AB2PaneView
    Created: Tao Cheng <tao@netscape.com>, 14-oct-97
  */
 

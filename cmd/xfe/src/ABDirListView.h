@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABDirListView.h -- class definition for ABDirListView
+   ABDirListView.h -- class definition for XFE_ABDirListView
    Created: Tao Cheng <tao@netscape.com>, 14-oct-97
  */
 

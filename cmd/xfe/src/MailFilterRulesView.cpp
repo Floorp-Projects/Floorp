@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   MailFilterRulesView.h -- view of user's mailfilters.
+   MailFilterRulesView.cpp -- view of user's mailfilters.
    Created: Chris Toshok <toshok@netscape.com>, 29-Aug-96.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ComposeFolderView.h -- class definition for ComposeFolderView
+   ComposeFolderView.h -- class definition for XFE_ComposeFolderView
    Created: Dora Hsu<dora@netscape.com>, 23-Sept-96.
  */
 

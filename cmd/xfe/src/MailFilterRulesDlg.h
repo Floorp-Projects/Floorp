@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   MailFilterRuelsDlg.h -- class definition for XFE_MailFilterDlg
+   MailFilterRulesDlg.h -- class definition for XFE_MailFilterDlg
    Created: Tao Cheng <tao@netscape.com>, 20-nov-96
  */
 

@@ -19,7 +19,7 @@
 
 
 /*
-   PrefsPageLIGeneral.cpp -- class for LI general preferences dialog.
+   PrefsPageLIGeneral.h -- class for LI general preferences dialog.
    Created: Daniel Malmer <malmer@netscape.com>
  */
 

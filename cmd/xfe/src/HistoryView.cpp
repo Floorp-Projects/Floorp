@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   HistoryView.h -- view of user's history
+   HistoryView.cpp -- view of user's history
    Created: Stephen Lamm <slamm@netscape.com>, 24-Feb-97.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   Menu -- class definition for menu bars.
+   Menu.h -- class definition for menu bars.
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   SubSearchView.h -- 4.x subscribe view, search tab.
+   SubSearchView.cpp -- 4.x subscribe view, search tab.
    Created: Chris Toshok <toshok@netscape.com>, 18-Oct-1996.
    */
 

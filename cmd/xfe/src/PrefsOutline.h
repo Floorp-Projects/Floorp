@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   outline.h --- includes for the outline widget hack.
+   PrefsOutline.h --- includes for the outline widget hack.
    Created: Terry Weissman <terry@netscape.com>, 24-Jun-95.
  */
 

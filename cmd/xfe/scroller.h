@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   scroller.c --- defines a subclass of XmScrolledWindow
+   scroller.h --- defines a subclass of XmScrolledWindow
    Created: Jamie Zawinski <jwz@netscape.com>, 23-Jul-94.
  */
 

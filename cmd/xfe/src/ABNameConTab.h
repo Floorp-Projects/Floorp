@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABNameConTabView.h -- class definition for ABNameConTabView
+   ABNameConTab.h -- class definition for XFE_ABNameConTabView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   Dialog.cpp -- implementation for Dialogs that can contain views.
+   ViewDialog.cpp -- implementation for Dialogs that can contain views.
    Created: Chris Toshok <toshok@netscape.com>, 16-Oct-96.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   RDFView.h -- view of rdf data
+   RDFView.cpp -- view of rdf data
    Created: Stephen Lamm <slamm@netscape.com>, 5-Nov-97.
  */
 

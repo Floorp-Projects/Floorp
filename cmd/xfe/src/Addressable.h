@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   Editable.h -- interface definition for editable views
+   Addressable.h -- interface definition for editable views
    Created: Dora Hsu<dora@netscape.com>, 27-Sept-96.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABNameFolderDlg.h -- class definition for ABNameFolderDlg
+   ABNameFolderDlg.h -- class definition for XFE_ABNameFolderDlg
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

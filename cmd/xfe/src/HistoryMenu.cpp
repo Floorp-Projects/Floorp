@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   History.cpp -- class for doing the dynamic history menus
+   HistoryMenu.cpp -- class for doing the dynamic history menus
    Created: Chris Toshok <toshok@netscape.com>, 19-Dec-1996.
  */
 

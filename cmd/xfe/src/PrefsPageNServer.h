@@ -19,7 +19,7 @@
 
 
 /*
-   PrefsDialog.cpp -- class for XFE preferences dialogs.
+   PrefsPageNServer.h -- class definition for XFE_PrefsPageNServer
    Created: Alec Flett <alecf@netscape.com>
  */
 

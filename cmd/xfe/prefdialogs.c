@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   dialogs.c --- Preference dialogs.
+   prefdialogs.c --- Preference dialogs.
    Created: Spence Murray <spence@netscape.com>, 30-Sep-95.
  */
 

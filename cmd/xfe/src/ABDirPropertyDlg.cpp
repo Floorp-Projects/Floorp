@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABDirPropertyDlg.cpp -- class definition for ABDirPropertyDlg
+   ABDirPropertyDlg.cpp -- class definition for XFE_ABDirPropertyDlg
    Created: Tao Cheng <tao@netscape.com>, 10-nov-97
  */
 

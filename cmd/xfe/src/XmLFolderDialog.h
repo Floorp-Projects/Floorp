@@ -18,7 +18,7 @@
  */
 
 /* -*- Mode: C++; tab-width: 4 -*-
-   XmLFolderDialog.h -- class definition for XmLFolderDialog
+   XmLFolderDialog.h -- class definition for XFE_XmLFolderDialog
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

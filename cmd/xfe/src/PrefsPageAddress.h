@@ -16,7 +16,7 @@
  * Reserved.
  */
 /*
-   PrefsDialog.cpp -- class for XFE preferences dialogs.
+   PrefsPageAddress.h -- class for XFE preferences dialogs.
    Created: Alec Flett <alecf@netscape.com>
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   PropertySheetDialog.h -- class definition for PropertySheetDialog
+   PropertySheetDialog.h -- class definition for XFE_PropertySheetDialog
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

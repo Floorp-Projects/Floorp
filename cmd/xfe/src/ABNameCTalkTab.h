@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABNameCTalkTabView.h -- class definition for ABNameCTalkTabView
+   ABNameCTalkTab.h -- class definition for XFE_ABNameCTalkTabView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

@@ -18,7 +18,7 @@
  */
 
 /* -*- Mode: C++; tab-width: 4 -*-
-   XmlTabView.h -- class definition for XFE_XmlTabView
+   XmlTabView.h -- class definition for XFE_XmLTabView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

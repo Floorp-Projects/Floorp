@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
- *   region.cpp --- FE specific region operations
+ *   region.c --- FE specific region operations
  */
 
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   BookmarkView.h -- class definition for BookmarkView
+   BookmarkView.h -- class definition for XFE_BookmarkView
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
  */
 

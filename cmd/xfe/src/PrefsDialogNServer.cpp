@@ -19,7 +19,7 @@
 
 /* -*- Mode: C++; tab-width: 4 -*- */
 /*
-   PrefsDialogMServer.cpp -- Multiple mail server preferences dialog
+   PrefsDialogNServer.cpp -- Multiple mail server preferences dialog
    Created: Alec Flett <alecf@netscape.com>
  */
 

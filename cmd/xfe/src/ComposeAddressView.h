@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ComposeView.h -- class definition for ComposeView
+   ComposeAddressView.h -- class definition for XFE_ComposeAddressView
    Created: Dora Hsu<dora@netscape.com>, 23-Sept-96.
  */
 

@@ -19,7 +19,7 @@
 
 
 /*
-   PrefsPageLIFiles.cpp -- class for LI file preferences dialog.
+   PrefsPageLIFiles.h -- class for LI file preferences dialog.
    Created: Daniel Malmer <malmer@netscape.com>
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   AddrBookView.h -- class definition for AddrBookView
+   AddrBookView.h -- class definition for XFE_AddrBookView
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
    Revised: Tao Cheng <tao@netscape.com>, 01-nov-96
  */

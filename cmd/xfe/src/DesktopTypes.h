@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   DesktopType.h -- class definitions for Netscape desktop data types
+   DesktopTypes.h -- class definitions for Netscape desktop data types
    Created: Alastair Gourlay(SGI) c/o Dora Hsu<dora@netscape.com>, 25 Jan 96
  */
 

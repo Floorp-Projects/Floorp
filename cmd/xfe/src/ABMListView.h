@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABSearchDlg.h -- class definition for XFE_ABSearchDlg
+   ABMListView.h -- class definition for XFE_ABSearchDlg
    Created: Tao Cheng <tao@netscape.com>, 11-nov-96
  */
 

@@ -19,7 +19,7 @@
 
 
 /*
-   PrefsPageSmartUpdate.cpp -- class for Smart Update preferences dialog.
+   PrefsPageSmartUpdate.h -- class for Smart Update preferences dialog.
    Created: Daniel Malmer <malmer@netscape.com>
  */
 

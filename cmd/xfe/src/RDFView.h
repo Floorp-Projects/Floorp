@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   RDFView.h -- class definition for RDFView
+   RDFView.h -- class definition for XFE_RDFView
    Created: Stephen Lamm <slamm@netscape.com>, 5-Nov-97.
  */
 

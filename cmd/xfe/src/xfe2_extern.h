@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   extern.h -- our C api -- things that get called from one directory up, and possibly from Frame.cpp.
+   xfe2_extern.h -- our C api -- things that get called from one directory up, and possibly from Frame.cpp.
    Created: Chris Toshok <toshok@netscape.com>, 12-Feb-97
  */
 

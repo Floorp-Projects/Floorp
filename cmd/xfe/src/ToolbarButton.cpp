@@ -18,8 +18,7 @@
  */
 
 /* -*- Mode: C++; tab-width: 4 -*-
-   ToolbarButton.cpp -- implementation file for buttons that can appear in 
-                        the toolbar
+   ToolbarButton.cpp -- implementation file for buttons that can appear in the toolbar
    Created: Chris Toshok <toshok@netscape.com>, 13-Aug-96.
  */
 

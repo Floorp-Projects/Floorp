@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   MailFilterRulesView.h -- class definition for MailFilterRulesView
+   MailFilterRulesView.h -- class definition for XFE_MailFilterRulesView
    Created: Tao Cheng <tao@netscape.com>, 31-jan-97
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   new_manage.c --- defines a subclass of XmManager
+   new_manage.h --- defines a subclass of XmManager
    Created: Eric Bina <ebina@netscape.com>, 17-Aug-94.
  */
 

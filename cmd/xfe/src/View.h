@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   XFEView.h -- class definition for XFEView
+   XFEView.h -- class definition for XFE_View
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
  */
 

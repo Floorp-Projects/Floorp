@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   TaskBar.cpp -- implementation file for TaskBar
+   TaskBar.cpp -- implementation file for XFE_TaskBar
    Created: Stephen Lamm <slamm@netscape.com>, 19-Nov-96.
  */
 

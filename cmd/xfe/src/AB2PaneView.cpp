@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABListSearchView.cpp -- view of user's mailfilters.
+   AB2PaneView.cpp -- view of user's mailfilters.
    Created: Tao Cheng <tao@netscape.com>, 14-oct-97
  */
 

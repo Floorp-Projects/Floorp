@@ -18,7 +18,7 @@
  */
 
 /* 
-   CategoryView.h -- class definition for CategoryView.
+   CategoryView.h -- class definition for XFE_CategoryView.
    
    Created: Chris Toshok <toshok@netscape.com>, 29-Aug-96.
  */

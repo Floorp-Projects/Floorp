@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   layout.c --- UI routines called by the layout module.
+   lay.c --- UI routines called by the layout module.
    Created: Jamie Zawinski <jwz@netscape.com>, 23-Jun-94.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   AddressAddressFolderView.h -- class definition for AddressAddressFolderView
+   AddressFolderView.h -- class definition for XFE_AddressFolderView
    Created: Dora Hsu<dora@netscape.com>, 23-Sept-96.
  */
 

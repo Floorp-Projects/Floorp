@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   Folder.cpp -- class for doing the dynamic folder menus
+   FolderMenu.cpp -- class for doing the dynamic folder menus
    Created: Chris Toshok <toshok@netscape.com>, 19-Dec-1996.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   PropertyTabView.cpp -- class definition for PropertyTabView
+   ABNameCTalkTab.cpp -- class definition for XFE_PropertyTabView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   BookmarkView.h -- view of user's bookmark's.
+   BookmarkView.cpp -- view of user's bookmark's.
    Created: Chris Toshok <toshok@netscape.com>, 9-Aug-96.
  */
 

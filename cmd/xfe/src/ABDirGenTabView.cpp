@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABDirGenTabView.cpp -- class definition for ABDirGenTabView
+   ABDirGenTabView.cpp -- class definition for XFE_ABDirGenTabView
    Created: Tao Cheng <tao@netscape.com>, 10-nov-97
  */
 

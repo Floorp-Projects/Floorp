@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   new_manage.c --- defines a subclass of XmScrolledWindow
+   new_manageP.h --- defines a subclass of XmScrolledWindow
    Created: Eric Bina <ebina@netscape.com>, 17-Aug-94.
  */
 

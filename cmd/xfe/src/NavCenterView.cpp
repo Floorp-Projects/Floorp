@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   NavCenterView.h - Aurora/NavCenter view class
+   NavCenterView.cpp - Aurora/NavCenter view class
    Created: Stephen Lamm <slamm@netscape.com>, 05-Nov-97.
  */
 

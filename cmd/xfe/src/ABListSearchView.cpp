@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABListSearchView.h -- view of user's mailfilters.
+   ABListSearchView.cpp -- view of user's mailfilters.
    Created: Tao Cheng <tao@netscape.com>, 17-dec-96
  */
 

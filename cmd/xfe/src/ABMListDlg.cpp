@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABMListDlg.cpp -- class definition for ABMListDlg
+   ABMListDlg.cpp -- class definition for XFE_ABMListDlg
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
    Revised: Tao Cheng <tao@netscape.com>, 19-nov-96
  */

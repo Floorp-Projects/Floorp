@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   AddressOutliner.h -- class definition for the AddressOutliner object
+   AddressOutliner.h -- class definition for the XFE_AddressOutliner object
    Created: Dora Hsu<dora@netscape.com>, Sept-30-96.
  */
 

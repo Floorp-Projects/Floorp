@@ -16,7 +16,7 @@
  * Reserved.
  */
 /*
-   pref_helpers.c --- Preference->Helper dialogs.
+   PrefsDialogAppl.cpp --- Preference->Helper dialogs.
    Created: Dora Hsu <dora@netscape.com>, 25-Mar-96.
 */
 

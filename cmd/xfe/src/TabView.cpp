@@ -18,7 +18,7 @@
  */
 
 /* 
-   XmLTabView.cpp -- class definition for XmLTabView
+   XmLTabView.cpp -- class definition for XFE_XmLTabView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   TextEditorView.h - anything that has a text editable area in it. 
+   TextEditorView.cpp - anything that has a text editable area in it. 
    Crreated: Dora Hsu <dora@netscape.com>, Sept-30-96.
  */
 

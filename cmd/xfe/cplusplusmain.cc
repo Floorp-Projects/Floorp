@@ -17,7 +17,7 @@
  */
 /* 
  *
- *  cplusplus.cc --- C++ main for compilers/linkers/link formats that require it.
+ *  cplusplusmain.cc --- C++ main for compilers/linkers/link formats that require it.
  *
  *  This file is required when you are linking in C++ code. Some older C++
  *  linkers (HP, COFF I think, etc) require main() to be in a C++ file for
@@ -27,7 +27,7 @@
  *
  *  Created: David Williams <djw@netscape.com>, May-26-1996
  *
- *  RCSID: "$Id: cplusplusmain.cc,v 3.1 1998/03/28 03:19:58 ltabb Exp $"
+ *  RCSID: "$Id: cplusplusmain.cc,v 3.2 1998/07/07 06:15:33 ramiro Exp $"
  */
 
 

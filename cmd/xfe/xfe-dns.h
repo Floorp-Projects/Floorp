@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
- * xfe_dns.h --- hooking X Mozilla into the portable nonblocking DNS code.
+ * xfe-dns.h --- hooking X Mozilla into the portable nonblocking DNS code.
  * Created: Jamie Zawinski <jwz@netscape.com>, 24-Dec-96.
  */
 

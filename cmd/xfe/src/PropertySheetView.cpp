@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   PropertySheetView.cpp -- class definition for PropertySheetView
+   PropertySheetView.cpp -- class definition for XFE_PropertySheetView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

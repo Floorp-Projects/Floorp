@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   SearchRuleView.h -- creates each rule statement.
+   SearchRuleView.cpp -- creates each rule statement.
    Created: Dora Hsu <dora@netscape.com>, 15-Dec-96 
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABNameGenTabView.cpp -- class definition for ABNameGenTabView
+   ABNameGenTab.cpp -- class definition for XFE_ABNameGenTabView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

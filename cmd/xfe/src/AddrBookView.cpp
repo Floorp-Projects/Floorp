@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   AddrBookView.h -- view of user's mailfilters.
+   AddrBookView.cpp -- view of user's mailfilters.
    Created: Chris Toshok <toshok@netscape.com>, 29-Aug-96.
    Revised: Tao Cheng <tao@netscape.com>, 01-nov-96
  */

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   XmlFolderView.h -- class definition for XFE_XmlFolderView
+   PropertySheetView.h -- class definition for XFE_PropertySheetView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ThreadView.h -- class definition for ThreadView
+   ThreadView.h -- class definition for XFE_ThreadView
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
  */
 

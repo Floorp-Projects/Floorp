@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   NavCenterFrame.cpp -- class definition for the NavCenter frame class
+   NavCenterFrame.h -- class definition for the NavCenter frame class
    Created: Stephen Lamm <slamm@netscape.com>, 05-Nov-97.
  */
 

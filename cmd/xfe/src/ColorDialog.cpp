@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ColorDialog.cpp -- class for XFE color dialog, packaged from fe_colorPicker
+   ColorDialog.cpp -- class for XFE color dialog, packaged from fe_ColorPicker
    Created: Linda Wei <lwei@netscape.com>, 08-Nov-96.
  */
 

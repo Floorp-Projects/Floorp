@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   IconGroup.c -- functions dealing with icon groups.
+   IconGroup.cpp -- functions dealing with icon groups.
    Created: Chris Toshok <toshok@netscape.com>, 13-Aug-96.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   View.cpp -- implementation file for View.
+   View.cpp -- implementation file for XFE_View.
    Created: Chris Toshok <toshok@netscape.com>, 17-Sep-96.
  */
 

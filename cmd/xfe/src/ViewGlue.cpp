@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ViewGlue.cpp -- glue to go from views to MWContexts, and back again.
+   ViewGlue.cpp -- glue to go from views to MWContext, and back again.
    Created: Chris Toshok <toshok@netscape.com>, 25-Sep-96
    */
 

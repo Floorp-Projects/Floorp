@@ -17,7 +17,7 @@
  */
 
 /*
- * plugin.c
+ * plugin.cpp
  *
  * Xfe implementation of unix plugins.
  *

@@ -19,7 +19,7 @@
 
 
 /*
-   PrefsPageLIServer.cpp -- class for LI server preferences dialog.
+   PrefsPageLIServer.h -- class for LI server preferences dialog.
    Created: Daniel Malmer <malmer@netscape.com>
  */
 

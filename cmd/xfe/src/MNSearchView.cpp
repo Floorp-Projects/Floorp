@@ -16,7 +16,7 @@
  * Reserved.
  */
 /*
-   MNSearchView.h -- user's mail search view.
+   MNSearchView.cpp -- user's mail search view.
    Created: Dora Hsu <dora@netscape.com>, 15-Dec-96.
 */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   TreeView.h -- class definition for TreeView
+   TreeView.h -- class definition for XFE_TreeView
    Created: spence murray <spence@netscape.com>, 3-Nov-97.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ThreePaneView.cpp -- class definition for ThreePaneView
+   ThreePaneView.cpp -- class definition for XFE_ThreePaneView
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
  */
 

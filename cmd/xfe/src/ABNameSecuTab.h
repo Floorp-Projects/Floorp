@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   ABNameSecueralTabView.h -- class definition for ABNameSecueralTabView
+   ABNameSecuTab.h -- class definition for XFE_ABNameSecuTabView
    Created: Tao Cheng <tao@netscape.com>, 12-nov-96
  */
 

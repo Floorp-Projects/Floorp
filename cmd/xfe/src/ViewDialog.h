@@ -16,7 +16,7 @@
  * Reserved.
  */
 /* 
-   Dialog.h -- class definitions for FE dialog windows that can contain views.
+   ViewDialog.h -- class definitions for FE dialog windows that can contain views.
    Created: Chris Toshok <toshok@netscape.com>, 16-Oct-96.
  */
 
