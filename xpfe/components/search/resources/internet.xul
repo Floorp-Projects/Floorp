@@ -34,7 +34,7 @@
 							<html:input type="checkbox" onclick="doCheck(this)" />
 						</treecell>
 						<treecell>
-							<titledbutton class="engine" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+							<titledbutton class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
 					</treerow>
 				</treeitem>
