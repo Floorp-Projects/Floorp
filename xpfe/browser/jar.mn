@@ -13,8 +13,6 @@ comm.jar:
         content/navigator/navigator.js                 (resources/content/navigator.js)
         content/navigator/navigatorDD.js               (resources/content/navigatorDD.js)
         content/navigator/tooltip.js                   (resources/content/tooltip.js)
-        content/navigator/askViewZoom.xul              (resources/content/askViewZoom.xul)
-        content/navigator/askViewZoom.js               (resources/content/askViewZoom.js)
 
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
@@ -24,4 +22,3 @@ en-US.jar:
         locale/en-US/navigator/pageInfo.dtd                 (resources/locale/en-US/pageInfo.dtd)
         locale/en-US/navigator/navigator.dtd                (resources/locale/en-US/navigator.dtd)
         locale/en-US/navigator/navigator.properties         (resources/locale/en-US/navigator.properties)
-        locale/en-US/navigator/askViewZoom.dtd              (resources/locale/en-US/askViewZoom.dtd)

@@ -34,56 +34,42 @@
  */
 
 var dialog;
-var retvals;
-var zoomMin;
-var zoomMax;
+var args;
 
 function onLoad() {
-  retvals = window.arguments[0].retvals;
-  zoomMin = window.arguments[0].zoomMin;
-  zoomMax = window.arguments[0].zoomMax;
+  args = window.arguments[0];
+  args.zoomOK = false;
 
-  dialog = new Object();
+  dialog = {};
   dialog.OKButton = document.getElementById("ok");
-  dialog.OKButton.setAttribute("disabled","true");
 
   dialog.input = document.getElementById("zoomValue");
-  dialog.input.value = retvals.zoom;
+  dialog.input.value = args.value;
   dialog.input.select();
-  doEnabling();
+  dialog.input.focus();
 
-  retvals.zoomOK = false;
-  doSetOKCancel(onOK, onCancel);
+  sizeToContent();
+  moveToAlertPosition();
+  doEnabling();
+  doSetOKCancel(onOK);
 }
 
 function onOK() {
   var zoom = parseInt(dialog.input.value);
-  if (!isNaN(zoom) && zoom >= zoomMin && zoom <= zoomMax) {
-    retvals.zoom = zoom;
-    retvals.zoomOK = true;
+  if (!isNaN(zoom) && zoom >= args.zoomMin && zoom <= args.zoomMax) {
+    args.value = zoom;
+    args.zoomOK = true;
   }
-  return retvals.zoomOK;
-}
-
-function onCancel() {
-  return true;
+  return args.zoomOK;
 }
 
 function doEnabling() {
   var enable = false;
-  if (dialog.input.value!="") {
+  if (dialog.input.value) {
     var zoom = parseInt(dialog.input.value);
-    if (!isNaN(zoom) && zoom >= zoomMin && zoom <= zoomMax)
+    if (!isNaN(zoom) && zoom >= args.zoomMin && zoom <= args.zoomMax)
       enable = true;
   }
 
-  if (enable) {
-    // enable OK
-    if (dialog.OKButton.getAttribute("disabled"))
-      dialog.OKButton.removeAttribute("disabled");
-  } else {
-    // disable OK
-    if (!dialog.OKButton.getAttribute("disabled"))
-      dialog.OKButton.setAttribute("disabled","true");
-  }
+  dialog.OKButton.disabled = !enable;
 }
