@@ -29,6 +29,7 @@
 #include "nsIMAPBodyShell.h"
 #include "nsImapServerResponseParser.h"
 #include "nspr.h"
+#include "plbase64.h"
 
 PRLogModuleInfo *IMAP;
 
@@ -150,20 +151,23 @@ nsImapProtocol::nsImapProtocol() :
     m_parser(*this), m_currentCommand(eOneByte, 0), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
 {
 	NS_INIT_REFCNT();
+	m_flags = 0;
 	m_runningUrl = nsnull; // initialize to NULL
 	m_transport = nsnull;
 	m_outputStream = nsnull;
+	m_inputStream = nsnull;
 	m_outputConsumer = nsnull;
 	m_urlInProgress = PR_FALSE;
 	m_socketIsOpen = PR_FALSE;
-	m_dataBuf = nsnull;
     m_connectionStatus = 0;
+	m_hostSessionList = nsnull;
     
     // ***** Thread support *****
     m_sinkEventQueue = nsnull;
     m_eventQueue = nsnull;
     m_thread = nsnull;
     m_dataAvailableMonitor = nsnull;
+	m_urlReadyToRunMonitor = nsnull;
 	m_pseudoInterruptMonitor = nsnull;
 	m_dataMemberMonitor = nsnull;
 	m_threadDeathMonitor = nsnull;
@@ -207,6 +211,14 @@ nsImapProtocol::nsImapProtocol() :
     m_hierarchyNameState = kNoOperationInProgress;
     m_onlineBaseFolderExists = PR_FALSE;
     m_discoveryStatus = eContinue;
+
+	// m_dataOutputBuf is used by Send Data
+	m_dataOutputBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
+	m_allocatedSize = OUTPUT_BUFFER_SIZE;
+
+	// used to buffer incoming data by ReadNextLineFromInput
+	m_dataInputBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
+
 	m_currentBiffState = nsMsgBiffState_Unknown;
 
 	// where should we do this? Perhaps in the factory object?
@@ -226,6 +238,24 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, P
     m_parser.SetHostSessionList(aHostSessionList);
     m_parser.SetFlagState(&m_flagState);
     NS_ADDREF (m_hostSessionList);
+
+	// Now initialize the thread for the connection and create appropriate monitors
+	if (m_thread == nsnull)
+    {
+        m_dataAvailableMonitor = PR_NewMonitor();
+		m_urlReadyToRunMonitor = PR_NewMonitor();
+		m_pseudoInterruptMonitor = PR_NewMonitor();
+		m_dataMemberMonitor = PR_NewMonitor();
+		m_threadDeathMonitor = PR_NewMonitor();
+        m_eventCompletionMonitor = PR_NewMonitor();
+		m_waitForBodyIdsMonitor = PR_NewMonitor();
+		m_fetchMsgListMonitor = PR_NewMonitor();
+
+        m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
+                                   this, PR_PRIORITY_HIGH, PR_LOCAL_THREAD,
+                                   PR_UNJOINABLE_THREAD, 0);
+        NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
+    }
 	return NS_OK;
 }
 
@@ -233,6 +263,7 @@ nsImapProtocol::~nsImapProtocol()
 {
 	// free handles on all networking objects...
 	NS_IF_RELEASE(m_outputStream); 
+	NS_IF_RELEASE(m_inputStream);
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
     NS_IF_RELEASE(m_server);
@@ -241,12 +272,13 @@ nsImapProtocol::~nsImapProtocol()
     NS_IF_RELEASE(m_imapMessage);
     NS_IF_RELEASE(m_imapExtension);
     NS_IF_RELEASE(m_imapMiscellaneous);
+	NS_IF_RELEASE(m_hostSessionList);
 
-	PR_FREEIF(m_dataBuf);
+	PR_FREEIF(m_dataOutputBuf);
+	PR_FREEIF(m_dataInputBuf);
 
     // **** We must be out of the thread main loop function
-    NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, 
-                 "Oops, thread is still running.\n");
+    NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, "Oops, thread is still running.\n");
     if (m_eventQueue)
     {
         PL_DestroyEventQueue(m_eventQueue);
@@ -258,6 +290,12 @@ nsImapProtocol::~nsImapProtocol()
         PR_DestroyMonitor(m_dataAvailableMonitor);
         m_dataAvailableMonitor = nsnull;
     }
+
+	if (m_urlReadyToRunMonitor)
+	{
+		PR_DestroyMonitor(m_urlReadyToRunMonitor);
+		m_urlReadyToRunMonitor = nsnull;
+	}
 	if (m_pseudoInterruptMonitor)
 	{
 		PR_DestroyMonitor(m_pseudoInterruptMonitor);
@@ -395,6 +433,9 @@ nsImapProtocol::SetupSinkProxy()
     }
 }
 
+// Setup With Url is intended to set up data which is held on a PER URL basis and not
+// a per connection basis. If you have data which is independent of the url we are currently
+// running, then you should put it in Initialize(). 
 void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
@@ -443,33 +484,6 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 	// register self as the consumer for the socket...
 	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register Imap instance as a consumer on the socket");
-
-	m_urlInProgress = PR_FALSE;
-	m_socketIsOpen = PR_FALSE;
-
-	// m_dataBuf is used by ReadLine and SendData
-	m_dataBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
-	m_allocatedSize = OUTPUT_BUFFER_SIZE;
-
-    // ******* Thread support *******
-    if (m_thread == nsnull)
-    {
-        m_dataAvailableMonitor = PR_NewMonitor();
-		m_pseudoInterruptMonitor = PR_NewMonitor();
-		m_dataMemberMonitor = PR_NewMonitor();
-		m_threadDeathMonitor = PR_NewMonitor();
-        m_eventCompletionMonitor = PR_NewMonitor();
-		m_waitForBodyIdsMonitor = PR_NewMonitor();
-		m_fetchMsgListMonitor = PR_NewMonitor();
-
-        m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
-                                   this, PR_PRIORITY_HIGH, PR_LOCAL_THREAD,
-                                   PR_UNJOINABLE_THREAD, 0);
-        NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
-
-        // *** setting up the sink proxy if needed
-        SetupSinkProxy();
-    }
 }
 
 void
@@ -555,18 +569,212 @@ nsImapProtocol::ImapThreadMainLoop()
     // ****** please implement PR_LOG 'ing ******
     while (ImapThreadIsRunning())
     {
-        PR_EnterMonitor(m_dataAvailableMonitor);
+        PR_EnterMonitor(m_urlReadyToRunMonitor);
 
-        PR_Wait(m_dataAvailableMonitor, PR_INTERVAL_NO_TIMEOUT);
+        PR_Wait(m_urlReadyToRunMonitor, PR_INTERVAL_NO_TIMEOUT);
 
         ProcessCurrentURL();
 
-        PR_ExitMonitor(m_dataAvailableMonitor);
+        PR_ExitMonitor(m_urlReadyToRunMonitor);
     }
 }
 
-void
-nsImapProtocol::ProcessCurrentURL()
+void nsImapProtocol::EstablishServerConnection()
+{
+	// mscott: I really haven't worried about how much of this establish server connection
+	// stuff we *REALLY* need. For now I just want to read out the greeting so I never bother
+	// the parser with it...
+	char * serverResponse = CreateNewLineFromSocket(); // read in the greeting
+	PR_FREEIF(serverResponse); // we don't care about the greeting yet...
+
+	// record the fact that we've received a greeting for this connection so we don't ever
+	// try to do it again..
+	SetFlag(IMAP_RECEIVED_GREETING);
+
+#ifdef UNREADY_CODE // mscott: I don't think we need to care about this stuff...
+    while (!DeathSignalReceived() && (GetConnectionStatus() == MK_WAITING_FOR_CONNECTION))
+    {
+        TImapFEEvent *feFinishConnectionEvent = 
+            new TImapFEEvent(FinishIMAPConnection,  // function to call
+                             this,                  // for access to current
+                                                    // entry and monitor
+                             nil,
+							 TRUE);
+        
+        fFEEventQueue->AdoptEventToEnd(feFinishConnectionEvent);
+        IMAP_YIELD(PR_INTERVAL_NO_WAIT);
+        
+        // wait here for the connection finish io to finish
+        WaitForFEEventCompletion();
+		if (!DeathSignalReceived() && (GetConnectionStatus() == MK_WAITING_FOR_CONNECTION))
+			WaitForIOCompletion();
+        
+    }       
+    
+	if (GetConnectionStatus() == MK_CONNECTED)
+    {
+        // get the one line response from the IMAP server
+        char *serverResponse = CreateNewLineFromSocket();
+        if (serverResponse)
+		{
+			if (!XP_STRNCASECMP(serverResponse, "* OK", 4))
+			{
+				SetConnectionStatus(0);
+				preAuthSucceeded = FALSE;
+				//if (!XP_STRNCASECMP(serverResponse, "* OK Netscape IMAP4rev1 Service 3.0", 35))
+				//	GetServerStateParser().SetServerIsNetscape30Server();
+			}
+			else if (!XP_STRNCASECMP(serverResponse, "* PREAUTH", 9))
+			{
+				// we've been pre-authenticated.
+				// we can skip the whole password step, right into the
+				// kAuthenticated state
+				GetServerStateParser().PreauthSetAuthenticatedState();
+
+				// tell the master that we're authenticated
+				XP_Bool loginSucceeded = TRUE;
+				TImapFEEvent *alertEvent = 
+					new TImapFEEvent(msgSetUserAuthenticated,  // function to call
+							 this,                // access to current entry
+							 (void *)loginSucceeded,
+							 TRUE);            
+				if (alertEvent)
+				{
+					fFEEventQueue->AdoptEventToEnd(alertEvent);
+				}
+				else
+					HandleMemoryFailure();
+
+				preAuthSucceeded = TRUE;
+           		if (fCurrentBiffState == MSG_BIFF_Unknown)
+           		{
+           			fCurrentBiffState = MSG_BIFF_NoMail;
+               		SendSetBiffIndicatorEvent(fCurrentBiffState);
+           		}
+
+				if (GetServerStateParser().GetCapabilityFlag() ==
+					kCapabilityUndefined)
+					Capability();
+
+				if ( !(GetServerStateParser().GetCapabilityFlag() & 
+						(kIMAP4Capability | 
+						 kIMAP4rev1Capability | 
+						 kIMAP4other) ) )
+				{
+					AlertUserEvent_UsingId(MK_MSG_IMAP_SERVER_NOT_IMAP4);
+					SetCurrentEntryStatus(-1);			
+					SetConnectionStatus(-1);        // stop netlib
+					preAuthSucceeded = FALSE;
+				}
+				else
+				{
+					ProcessAfterAuthenticated();
+					// the connection was a success
+					SetConnectionStatus(0);
+				}
+			}
+			else
+			{
+				preAuthSucceeded = FALSE;
+				SetConnectionStatus(MK_BAD_CONNECT);
+			}
+
+			fNeedGreeting = FALSE;
+			FREEIF(serverResponse);
+		}
+        else
+            SetConnectionStatus(MK_BAD_CONNECT);
+    }
+
+    if ((GetConnectionStatus() < 0) && !DeathSignalReceived())
+	{
+		if (!MSG_Biff_Master_NikiCallingGetNewMail())
+    		AlertUserEvent_UsingId(MK_BAD_CONNECT);
+	}
+#endif   
+}
+
+void nsImapProtocol::ProcessCurrentURL()
+{
+	PRBool	logonFailed = FALSE;
+    
+	// we used to check if the current running url was 
+	// Reinitialize the parser
+	GetServerStateParser().InitializeState();
+	GetServerStateParser().SetConnected(PR_TRUE);
+
+	// mscott - I believe whenever we get here that we will also have
+	// a connection. Why? Because when we load the url we open the 
+	// connection if it isn't open already....However, if we haven't received
+	// the greeting yet, we need to make sure we strip it out of the input
+	// before we start to do useful things...
+	if (!TestFlag(IMAP_RECEIVED_GREETING))
+		EstablishServerConnection();
+
+	// Update the security status for this URL
+#ifdef UNREADY_CODE
+	UpdateSecurityStatus();
+#endif
+
+	// Step 1: If we have not moved into the authenticated state yet then do so
+	// by attempting to logon.
+	if (!DeathSignalReceived() && (GetConnectionStatus() >= 0) &&
+            (GetServerStateParser().GetIMAPstate() == 
+			 nsImapServerResponseParser::kNonAuthenticated))
+    {
+		/* if we got here, the server's greeting should not have been PREAUTH */
+		if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
+				Capability();
+			
+		if ( !(GetServerStateParser().GetCapabilityFlag() & (kIMAP4Capability | kIMAP4rev1Capability | 
+					 kIMAP4other) ) )
+		{
+#ifdef UNREADY_CODE
+			AlertUserEvent_UsingId(MK_MSG_IMAP_SERVER_NOT_IMAP4);
+
+			SetCurrentEntryStatus(-1);			
+			SetConnectionStatus(-1);        // stop netlib
+#endif
+		}
+		else
+		{
+			logonFailed = !TryToLogon();
+	    }
+    } // if death signal not received
+
+    if (!DeathSignalReceived() && (GetConnectionStatus() >= 0))
+    {
+#if 0
+		FindMailboxesIfNecessary();
+#endif
+		nsIImapUrl::nsImapState imapState;
+		m_runningUrl->GetRequiredImapState(&imapState);
+		if (imapState == nsIImapUrl::nsImapAuthenticatedState)
+			ProcessAuthenticatedStateURL();
+	    else    // must be a url that requires us to be in the selected stae 
+			ProcessSelectedStateURL();
+
+		// The URL has now been processed
+        if (!logonFailed && GetConnectionStatus() < 0)
+            HandleCurrentUrlError();
+#ifdef UNREADY_CODE
+		if (GetServerStateParser().LastCommandSuccessful())
+			SetCurrentEntryStatus(0);
+#endif
+	    SetConnectionStatus(-1);        // stop netlib
+        if (DeathSignalReceived())
+           	HandleCurrentUrlError();
+	}
+    else if (!logonFailed)
+        HandleCurrentUrlError(); 
+
+	m_runningUrl->SetUrlState(PR_FALSE, NS_OK);  // we are done with this url.
+	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
+}
+
+
+#if 0
+void nsImapProtocol::ProcessCurrentURL()
 {
     nsresult res;
 
@@ -584,7 +792,7 @@ nsImapProtocol::ProcessCurrentURL()
         // **** temporary for now
         if (m_imapLog)
         {
-            m_imapLog->HandleImapLogData(m_dataBuf);
+            m_imapLog->HandleImapLogData(m_dataOutputBuf);
             // WaitForFEEventCompletion();
 
             // we are done running the imap log url so mark the url as done...
@@ -593,9 +801,9 @@ nsImapProtocol::ProcessCurrentURL()
         }
     }
 }
+#endif
 
-void
-nsImapProtocol::ParseIMAPandCheckForNewMail(char* commandString)
+void nsImapProtocol::ParseIMAPandCheckForNewMail(char* commandString)
 {
     if (commandString)
         GetServerStateParser().ParseIMAPServerResponse(commandString);
@@ -614,38 +822,29 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 {
     PR_CEnterMonitor(this);
 
-	// we would read a line from the stream and then parse it.....I think this function can
-	// effectively replace ReadLineFromSocket...
     nsIImapUrl *aImapUrl;
-    nsresult res = aURL->QueryInterface(nsIImapUrl::GetIID(),
-                                        (void**)&aImapUrl);
-    if (aLength >= m_allocatedSize)
-    {
-        m_dataBuf = (char*) PR_Realloc(m_dataBuf, aLength+1);
-        if (m_dataBuf)
-            m_allocatedSize = aLength+1;
-        else
-            m_allocatedSize = 0;
-    }
+    nsresult res = aURL->QueryInterface(nsIImapUrl::GetIID(), (void**)&aImapUrl);
 
-    if(NS_SUCCEEDED(res))
+    if(NS_SUCCEEDED(res) && aLength > 0)
     {
-        NS_PRECONDITION( m_runningUrl->Equals(aImapUrl), 
-                         "Oops... running a different imap url. Hmmm...");
-            
-        res = aIStream->Read(m_dataBuf, aLength, &m_totalDataSize);
-        if (NS_SUCCEEDED(res))
-        {
-            m_dataBuf[m_totalDataSize] = 0;
-            m_curReadIndex = 0;
-			PR_EnterMonitor(m_dataAvailableMonitor);
-            PR_Notify(m_dataAvailableMonitor);
-			PR_ExitMonitor(m_dataAvailableMonitor);
-            Log("OnDataAvailable", nsnull, m_dataBuf);
-        }
-        NS_RELEASE(aImapUrl);
-    }
+        NS_PRECONDITION( m_runningUrl->Equals(aImapUrl), "Oops... running a different imap url. Hmmm...");
+		// make sure m_inputStream is set to the right input stream...
+		if (m_inputStream == nsnull)
+		{
+			m_inputStream = aIStream;
+			NS_IF_ADDREF(aIStream);
+		}
 
+		NS_ASSERTION(m_inputStream == aIStream, "hmm somehow we got a different stream than we were expecting");
+
+        // if we received data, we need to signal the data available monitor...
+		// Read next line from input will actually read the data out of the stream
+		PR_EnterMonitor(m_dataAvailableMonitor);
+        PR_Notify(m_dataAvailableMonitor);
+		PR_ExitMonitor(m_dataAvailableMonitor);
+		NS_RELEASE(aImapUrl);
+	}
+     
     PR_CExitMonitor(this);
 
 	return res;
@@ -689,8 +888,6 @@ PRInt32 nsImapProtocol::SendData(const char * dataBuffer)
 		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
-			// notify the consumer that data has arrived
-			// HACK ALERT: this should really be m_runningUrl once we have NNTP url support...
 			nsIInputStream *inputStream = NULL;
 			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
 			if (inputStream)
@@ -711,21 +908,21 @@ PRInt32 nsImapProtocol::SendData(const char * dataBuffer)
 // Begin protocol state machine functions...
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+// LoadUrl takes a url, initializes all of our url specific data by calling SetupUrl.
+// If we don't have a connection yet, we open the connection. Finally, we signal the 
+// url to run monitor to let the imap main thread loop process the current url (it is waiting
+// on this monitor). There is a contract that the imap thread has already been started b4 we
+// attempt to load a url....
 nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
 	nsIImapUrl * imapUrl = nsnull;
 	if (aURL)
 	{
-		// mscott: I used to call SetupWithUrl from the constructor but we really need the url
-		// in order to properly intialize the protocol instance with a transport / host / port
-		// etc. So I'm going to experiment by saying every time we load a Url, we look to see
-		// if we need to initialize the protocol....I really need to check to make sure the host
-		// and port haven't changed if they have then we need to re-initialize in order to pick up
-		// a new connection to the imap server...
-
 		if (m_transport == nsnull) // i.e. we haven't been initialized yet....
-			SetupWithUrl(aURL);
+			SetupWithUrl(aURL); 
+
+		 SetupSinkProxy(); // generate proxies for all of the event sinks in the url
 		
 		if (m_transport && m_runningUrl)
 		{
@@ -736,12 +933,11 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
                 // m_urlInProgress = PR_TRUE;
 				rv = m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
 			}
-			else  // the connection is already open so we should begin processing our new url...
+			else  // the connection is already open so we should signal the monitor that a new url is ready to be processed.
 			{
-				// mscott - I think Imap urls always come in fresh for each Imap protocol connection
-				// so we should always be calling m_transport->open(our url)....
-				// NS_ASSERTION(0, "I don't think we should get here for imap
-                // urls");
+				// mscott: the following code segment is just a hack to test imap commands from the test
+				// harnesss. It should eventually be replaced by the code in the else clause which just signals
+				// the monitor for processing the url 
                 // ********** jefft ********* okay let's use ? search string
                 // for passing the raw command now.
                 m_urlInProgress = PR_TRUE;
@@ -758,10 +954,21 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
                         PR_Free(tmpBuffer);
                     }
                 }
-			}
+					 
+			} // if the connection was already open
+
+			// We now have a url to run so signal the monitor for url ready to be processed...
+			PR_EnterMonitor(m_urlReadyToRunMonitor);
+			PR_Notify(m_urlReadyToRunMonitor);
+			PR_ExitMonitor(m_urlReadyToRunMonitor);
+
 		} // if we have an imap url and a transport
-        if (aConsumer)
+        
+		if (aConsumer)
+		{
             m_consumer = aConsumer;
+			NS_ADDREF(m_consumer);
+		}
 	} // if we received a url!
 
 	return rv;
@@ -2339,6 +2546,11 @@ void nsImapProtocol::WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRU
     PR_ExitMonitor(m_fetchMsgListMonitor);
 }
 
+#if 0
+
+void nsImapProtocol::NotifyKeyList(PRUint32 *keys, PRUint32 keyCount)
+#endif
+
 // libmsg uses this to notify a running imap url about the message headers it should
 // download while opening a folder. Generally, the imap thread will be blocked 
 // in WaitForPotentialListOfMsgsToFetch waiting for this notification.
@@ -2836,15 +3048,97 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
 		HandleMemoryFailure();
 }
 
+// the design for this method has an inherit bug: if the length of the line is greater than the size of aDataBufferSize, 
+// then we'll never find the next line because we can't hold the whole line in memory. 
+char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataBufferSize, nsIInputStream * aInputStream)
+{
+	// try to extract a line from m_inputBuffer. If we don't have an entire line, 
+	// then read more bytes out from the stream. If the stream is empty then wait
+	// on the monitor for more data to come in.
+
+	do
+	{
+		char * endOfLine = nsnull;
+		PRUint32 numBytesInBuffer = PL_strlen(aDataBuffer);
+
+		if (numBytesInBuffer > 0) // any data in our internal buffer?
+		{
+			endOfLine = PL_strstr(aDataBuffer, CRLF); // see if we already have a line ending...
+		}
+
+		// it's possible that we got here before the first time we receive data from the server
+		// so m_inputStream will be nsnull...
+		if (!endOfLine && m_inputStream) // get some more data from the server
+		{
+			PRUint32 numBytesInStream = 0;
+			PRUint32 numBytesCopied = 0;
+			m_inputStream->GetLength(&numBytesInStream);
+			PRUint32 numBytesToCopy = PR_MIN(aDataBufferSize - numBytesInBuffer - 1, numBytesInStream);
+			// read the data into the end of our data buffer
+			if (numBytesToCopy > 0)
+			{
+				m_inputStream->Read(aDataBuffer + numBytesInBuffer, numBytesToCopy, &numBytesCopied);
+				Log("OnDataAvailable", nsnull, aDataBuffer + numBytesInBuffer);
+				aDataBuffer[numBytesCopied] = '\0';
+			}
+
+			// okay, now that we've tried to read in more data from the stream, look for another end of line 
+			// character 
+			endOfLine = PL_strstr(aDataBuffer, CRLF);
+		}
+
+		// okay, now check again for endOfLine.
+		if (endOfLine)
+		{
+			endOfLine += 2; // count for CRLF
+			// PR_CALLOC zeros out the allocated line
+			char* newLine = (char*) PR_CALLOC(endOfLine-aDataBuffer+1);
+			if (!newLine)
+				return nsnull;
+
+			nsCRT::memcpy(newLine, aDataBuffer, endOfLine-aDataBuffer); // copy the string into the new line buffer
+			// now we need to shift the rest of the data in the buffer down into the base
+			if (PL_strlen(endOfLine) <= 0) // if no more data in the buffer, then just zero out the buffer...
+				aDataBuffer[0] = '\0';
+			else
+			{
+				nsCRT::memcpy(aDataBuffer, endOfLine, PL_strlen(endOfLine)); 
+				aDataBuffer[PL_strlen(endOfLine)] = '\0';
+			}
+			return newLine;
+		}
+		else // we were unable to extract the next line and we now need to wait for data!
+		{
+
+			// mscott: this is bogus....fortunately we haven't gotten in this spot yet.
+			// we need to be pumping events here instead of just blocking on the on data available call.
+			// If we don't pump events how will we get the on data available signal?
+
+			// wait on the data available monitor!!
+			PR_EnterMonitor(m_dataAvailableMonitor);
+			// wait for data arrival
+			PR_Wait(m_dataAvailableMonitor, PR_INTERVAL_NO_TIMEOUT);
+			PR_ExitMonitor(m_dataAvailableMonitor);
+			// once data has arrived, recursively 
+		}
+	} while (!DeathSignalReceived()); // mscott - i'd like to have some way of dropping out of here if we aren't going to find a new line...
+
+	return nsnull; // if we somehow got here....
+}
+
 char* 
 nsImapProtocol::CreateNewLineFromSocket()
 {
-    NS_PRECONDITION(m_curReadIndex < m_totalDataSize && m_dataBuf, 
+	char * newLine = ReadNextLineFromInput(m_dataInputBuf, OUTPUT_BUFFER_SIZE, m_inputStream);
+	SetConnectionStatus(newLine ? PL_strlen(newLine) : 0);
+	return newLine;
+#if 0
+    NS_PRECONDITION(m_curReadIndex < m_totalDataSize && m_dataOutputBuf, 
                     "Oops ... excceeding total data size");
-    if (!m_dataBuf || m_curReadIndex >= m_totalDataSize)
+    if (!m_dataOutputBuf || m_curReadIndex >= m_totalDataSize)
         return nsnull;
 
-    char* startOfLine = m_dataBuf + m_curReadIndex;
+    char* startOfLine = m_dataOutputBuf + m_curReadIndex;
     char* endOfLine = PL_strstr(startOfLine, CRLF);
     
     // *** must have a canonical line format from the imap server ***
@@ -2858,11 +3152,11 @@ nsImapProtocol::CreateNewLineFromSocket()
 
     memcpy(newLine, startOfLine, endOfLine-startOfLine);
     // set the current read index
-    m_curReadIndex = endOfLine - m_dataBuf;
+    m_curReadIndex = endOfLine - m_dataOutputBuf;
 
     SetConnectionStatus(endOfLine-startOfLine);
-
     return newLine;
+#endif
 }
 
 PRInt32
@@ -2870,18 +3164,21 @@ nsImapProtocol::GetConnectionStatus()
 {
     // ***?? I am not sure we really to guard with monitor for 5.0 ***
     PRInt32 status;
-    PR_CEnterMonitor(this);
+	// mscott -- do we need these monitors? as i was debuggin this I continually
+	// locked when entering this monitor...control would never return from this
+	// function...
+//    PR_CEnterMonitor(this);
     status = m_connectionStatus;
-    PR_CExitMonitor(this);
+//    PR_CExitMonitor(this);
     return status;
 }
 
 void
 nsImapProtocol::SetConnectionStatus(PRInt32 status)
 {
-    PR_CEnterMonitor(this);
+//    PR_CEnterMonitor(this);
     m_connectionStatus = status;
-    PR_CExitMonitor(this);
+//    PR_CExitMonitor(this);
 }
 
 void
@@ -2925,9 +3222,8 @@ nsImapProtocol::GetSubscribingNow()
     return PR_TRUE;// ***** for now
 }
 
-	// Event handlers for the imap parser. 
 void
-nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
+nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)  
 {
 	// IMAP_LoadTrashFolderName(); **** needs to work on localization issues
 
@@ -3183,165 +3479,6 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString, PRBool
         return nsnull;
 }
 
-// any state commands
-void nsImapProtocol::Logout()
-{
-//	ProgressEventFunction_UsingId (MK_IMAP_STATUS_LOGGING_OUT);
-	IncrementCommandTagNumber();
-
-	nsString2 command(GetServerCommandTag(), eOneByte);
-
-	command.Append("logout" CRLF);
-
-	int                 ioStatus = SendData(command.GetBuffer());
-
-	// the socket may be dead before we read the response, so drop it.
-	ParseIMAPandCheckForNewMail();
-}
-
-void nsImapProtocol::Noop()
-{
-    //ProgressUpdateEvent("noop...");
-    IncrementCommandTagNumber();
-	nsString2 command(GetServerCommandTag(), eOneByte);
-    
-	command.Append("noop" CRLF);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-	ParseIMAPandCheckForNewMail();
-}
-
-
-void nsImapProtocol::Capability()
-{
-
-//    ProgressEventFunction_UsingId (MK_IMAP_STATUS_CHECK_COMPAT);
-    IncrementCommandTagNumber();
-	nsString2 command(GetServerCommandTag(), eOneByte);
-
-    command.Append(" capability" CRLF);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-	ParseIMAPandCheckForNewMail();
-}
-
-void nsImapProtocol::XServerInfo()
-{
-
-//    ProgressEventFunction_UsingId (MK_IMAP_GETTING_SERVER_INFO);
-    IncrementCommandTagNumber();
-  	nsString2 command(GetServerCommandTag(), eOneByte);
-  
-	command.Append(" XSERVERINFO MANAGEACCOUNTURL MANAGELISTSURL MANAGEFILTERSURL" CRLF);
-          
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-	ParseIMAPandCheckForNewMail();
-}
-
-void nsImapProtocol::XMailboxInfo(const char *mailboxName)
-{
-
-//    ProgressEventFunction_UsingId (MK_IMAP_GETTING_MAILBOX_INFO);
-    IncrementCommandTagNumber();
-  	nsString2 command(GetServerCommandTag(), eOneByte);
-
-	command.Append(" XMAILBOXINFO \"");
-	command.Append(mailboxName);
-	command.Append("\"  MANAGEURL POSTURL" CRLF);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-	ParseIMAPandCheckForNewMail();
-}
-
-void nsImapProtocol::Namespace()
-{
-
-//    ProgressEventFunction_UsingId (MK_IMAP_STATUS_GETTING_NAMESPACE);
-    IncrementCommandTagNumber();
-    
-	nsString2 command(GetServerCommandTag(), eOneByte);
-	command.Append(" namespace" CRLF);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-	ParseIMAPandCheckForNewMail();
-}
-
-
-void nsImapProtocol::MailboxData()
-{
-    IncrementCommandTagNumber();
-
-	nsString2 command(GetServerCommandTag(), eOneByte);
-	command.Append(" mailboxdata" CRLF);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-	ParseIMAPandCheckForNewMail();
-}
-
-
-void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
-{
-    IncrementCommandTagNumber();
-
-	nsString2 command(GetServerCommandTag(), eOneByte);
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
-    
-	command.Append(" myrights \"");
-	command.Append(escapedName);
-	command.Append("\"" CRLF);
-            
-    PR_FREEIF( escapedName);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-    ParseIMAPandCheckForNewMail();
-}
-
-void nsImapProtocol::GetACLForFolder(const char *mailboxName)
-{
-    IncrementCommandTagNumber();
-
-	nsString2 command(GetServerCommandTag(), eOneByte);
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
-    command.Append(" getacl \"");
-	command.Append(escapedName);
-	command.Append("\"" CRLF);
-            
-    PR_FREEIF( escapedName);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-    ParseIMAPandCheckForNewMail();
-}
-
-void nsImapProtocol::StatusForFolder(const char *mailboxName)
-{
-    IncrementCommandTagNumber();
-
-	nsString2 command(GetServerCommandTag(), eOneByte);
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
-    
-	command.Append(" STATUS \"");
-	command.Append(escapedName);
-	command.Append("\" (UIDNEXT MESSAGES UNSEEN)" CRLF);
-            
-    PR_FREEIF( escapedName);
-            
-    int                 ioStatus = SendData(command.GetBuffer());
-    
-    ParseIMAPandCheckForNewMail();
-
-    mailbox_spec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec(mailboxName);
-	if (new_spec && m_imapMailFolder)
-		m_imapMailFolder->UpdateImapMailboxStatus(this, new_spec);
-}
-
-
 	// imap commands issued by the parser
 void
 nsImapProtocol::Store(nsString2 &messageList, const char * messageData,
@@ -3380,7 +3517,786 @@ nsImapProtocol::Store(nsString2 &messageList, const char * messageData,
     	HandleMemoryFailure();
 }
 
+void
+nsImapProtocol::Expunge()
+{
+    ProgressEventFunctionUsingId (/***** fix me **** MK_IMAP_STATUS_EXPUNGING_MAILBOX */ -1);
+    IncrementCommandTagNumber();
 
+	nsString2 command(GetServerCommandTag(), eOneByte);
+    command.Append(" expunge"CRLF);
+    
+	SendData(command.GetBuffer());
+	ParseIMAPandCheckForNewMail(); // ??? do we really need to do this
+}
+
+void
+nsImapProtocol::HandleMemoryFailure()
+{
+    PR_CEnterMonitor(this);
+    // **** jefft fix me!!!!!! ******
+    // m_imapThreadIsRunning = PR_FALSE;
+    // SetConnectionStatus(-1);
+    PR_CExitMonitor(this);
+}
+
+void nsImapProtocol::HandleCurrentUrlError()
+{
+#ifdef UNREADY_CODE
+	if (fCurrentUrl->GetIMAPurlType() == TIMAPUrl::kSelectFolder)
+	{
+		// let the front end know the select failed so they
+		// don't leave the view without a database.
+		mailbox_spec *notSelectedSpec = (mailbox_spec *) XP_CALLOC(1, sizeof( mailbox_spec));
+		if (notSelectedSpec)
+		{
+			notSelectedSpec->allocatedPathName = fCurrentUrl->CreateCanonicalSourceFolderPathString();
+			notSelectedSpec->hostName = fCurrentUrl->GetUrlHost();
+			notSelectedSpec->folderSelected = FALSE;
+			notSelectedSpec->flagState = NULL;
+			notSelectedSpec->onlineVerified = FALSE;
+			UpdatedMailboxSpec(notSelectedSpec);
+		}
+	}
+	else if (fCurrentUrl->GetIMAPurlType() == TIMAPUrl::kOfflineToOnlineMove)
+	{
+		OnlineCopyCompleted(kFailedCopy);
+	}
+#endif
+}
+
+void nsImapProtocol::Capability()
+{
+
+//    ProgressEventFunction_UsingId (MK_IMAP_STATUS_CHECK_COMPAT);
+    IncrementCommandTagNumber();
+	nsString2 command(GetServerCommandTag(), eOneByte);
+
+    command.Append(" capability" CRLF);
+            
+    int ioStatus = SendData(command.GetBuffer());
+    
+	ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
+{
+
+#ifdef UNREADY_CODE
+    ProgressEventFunction_UsingId (MK_IMAP_STATUS_SENDING_LOGIN);
+#endif
+    IncrementCommandTagNumber();
+	nsString2 command (GetServerCommandTag(), eOneByte);
+	command.Append(" login \"");
+	command.Append(userName);
+	command.Append("\" \"");
+	command.Append(password);
+	command.Append("\""CRLF);
+
+	SendData(command.GetBuffer());
+
+    
+//    PR_snprintf(m_dataOutputBuf,  OUTPUT_BUFFER_SIZE, "%s login \"%s\" \"%s\"" CRLF,
+//				GetServerCommandTag(), userName,  password);
+
+//	SendData(m_dataOutputBuf);
+	ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag)
+{
+#ifdef UNREADY_CODE
+	ProgressEventFunction_UsingId (MK_IMAP_STATUS_SENDING_AUTH_LOGIN);
+#endif
+    IncrementCommandTagNumber();
+
+	const char *currentTagToken = GetServerCommandTag();
+	char * currentCommand;
+    
+	if (flag & kHasAuthPlainCapability)
+	{
+		PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s authenticate plain" CRLF, GetServerCommandTag());
+		SendData(m_dataOutputBuf);
+
+		currentCommand = PL_strdup(m_dataOutputBuf); /* StrAllocCopy(currentCommand, GetOutputBuffer()); */
+		ParseIMAPandCheckForNewMail();
+		if (GetServerStateParser().LastCommandSuccessful()) 
+		{
+			char plainstr[512]; // placeholder for "<NUL>userName<NUL>password"
+			int len = 1; // count for first <NUL> char
+			nsCRT::memset(plainstr, 0, 512);
+			PR_snprintf(&plainstr[1], 510, "%s", userName);
+			len += PL_strlen(userName);
+			len++;	// count for second <NUL> char
+			PR_snprintf(&plainstr[len], 511-len, "%s", password);
+			len += PL_strlen(password);
+		
+			char *base64Str = PL_Base64Encode(plainstr, len, nsnull);
+			if (base64Str)
+			{
+				PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
+				PR_Free(base64Str);
+				SendData(m_dataOutputBuf);
+				ParseIMAPandCheckForNewMail(currentCommand);
+				if (GetServerStateParser().LastCommandSuccessful())
+				{
+					PR_FREEIF(currentCommand);
+					return;
+				} // if the last command succeeded
+			} // if we got a base 64 encoded string
+		} // if the last command succeeded
+	} // if auth plain capability
+
+	else if (flag & kHasAuthLoginCapability)
+	{
+		PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s authenticate login" CRLF, GetServerCommandTag());
+		SendData(m_dataOutputBuf);
+
+		currentCommand = PL_strdup(m_dataOutputBuf);
+		ParseIMAPandCheckForNewMail();
+
+		if (GetServerStateParser().LastCommandSuccessful()) 
+		{
+			char *base64Str = PL_Base64Encode(userName, PL_strlen(userName), nsnull);
+			if(base64Str)
+			{
+				PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
+				PR_Free(base64Str);
+				SendData(m_dataOutputBuf);
+				ParseIMAPandCheckForNewMail(currentCommand);
+			}
+			if (GetServerStateParser().LastCommandSuccessful()) 
+			{
+				base64Str = PL_Base64Encode((char*)password, PL_strlen(password), nsnull);
+				PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
+				PR_FREEIF(base64Str);
+				SendData(m_dataOutputBuf);
+				ParseIMAPandCheckForNewMail(currentCommand);
+				if (GetServerStateParser().LastCommandSuccessful())
+				{
+					PR_FREEIF(currentCommand);
+					return;
+				}
+			} // if last command successful
+		} // if last command successful
+	} // if has auth login capability
+
+	// fall back to use InsecureLogin()
+	InsecureLogin(userName, password);
+	PR_FREEIF(currentCommand);
+}
+
+void nsImapProtocol::OnLSubFolders()
+{
+	// **** use to find out whether Drafts, Sent, & Templates folder
+	// exists or not even the user didn't subscribe to it
+	char *mailboxName = nsnull;
+	m_runningUrl->CreateServerSourceFolderPathString(&mailboxName);
+	if (mailboxName)
+	{
+		char *convertedName = CreateUtf7ConvertedString(mailboxName, PR_TRUE);
+		if (convertedName)
+		{
+			PR_Free(mailboxName);
+			mailboxName = convertedName;
+		}
+#ifdef UNREADY_CODE
+		ProgressEventFunction_UsingId(MK_IMAP_STATUS_LOOKING_FOR_MAILBOX);
+#endif
+		IncrementCommandTagNumber();
+		PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE,"%s list \"\" \"%s\"" CRLF, GetServerCommandTag(), mailboxName);
+		SendData(m_dataOutputBuf);
+#ifdef UNREADY_CODE
+		TimeStampListNow();
+#endif
+		ParseIMAPandCheckForNewMail();	
+		PR_Free(mailboxName);
+	}
+	else
+	{
+		HandleMemoryFailure();
+	}
+
+}
+
+void nsImapProtocol::OnGetMailAccount()
+{
+	NS_ASSERTION(0, "unimplemented feature");
+#ifdef UNREADY_CODE
+	if (GetServerStateParser().GetCapabilityFlag() & kHasXNetscapeCapability) 
+	{
+		Netscape();
+		if (GetServerStateParser().LastCommandSuccessful()) 
+		{
+			TImapFEEvent *alertEvent = 
+				new TImapFEEvent(msgSetMailAccountURL,  // function to call
+								 this,                // access to current entry
+								 (void *) fCurrentUrl->GetUrlHost(),
+								 PR_TRUE);
+			if (alertEvent)
+			{
+				fFEEventQueue->AdoptEventToEnd(alertEvent);
+				// WaitForFEEventCompletion();
+			}
+			else
+				HandleMemoryFailure();
+		}
+	}
+#endif
+}
+
+void nsImapProtocol::OnOfflineToOnlineMove()
+{
+	NS_ASSERTION(0, "unimplemented feature");
+#ifdef UNREADY_CODE
+    char *destinationMailbox = fCurrentUrl->CreateServerDestinationFolderPathString();
+    
+	if (destinationMailbox)
+	{
+		char *convertedName = CreateUtf7ConvertedString(destinationMailbox, TRUE);
+		XP_FREE(destinationMailbox);
+		destinationMailbox = convertedName;
+	}
+    if (destinationMailbox)
+    {
+        uint32 appendSize = 0;
+        do {
+            WaitForNextAppendMessageSize();
+            appendSize = GetAppendSize();
+            if (!DeathSignalReceived() && appendSize)
+            {
+                char messageSizeString[100];
+                sprintf(messageSizeString, "%ld",(long) appendSize);
+                AppendMessage(destinationMailbox, messageSizeString, GetAppendFlags());
+            }
+        } while (appendSize && GetServerStateParser().LastCommandSuccessful());
+        FREEIF( destinationMailbox);
+    }
+    else
+        HandleMemoryFailure();
+#endif
+}
+
+void nsImapProtocol::OnAppendMsgFromFile()
+{
+	NS_ASSERTION(0, "unimplemented feature");
+#ifdef UNREADY_CODE
+	char *sourceMessageFile =
+		XP_STRDUP(GetActiveEntry()->URL_s->post_data);
+    char *mailboxName =  
+        fCurrentUrl->CreateServerSourceFolderPathString();
+    
+	if (mailboxName)
+	{
+		char *convertedName = CreateUtf7ConvertedString(mailboxName, TRUE);
+		XP_FREE(mailboxName);
+		mailboxName = convertedName;
+	}
+    if (mailboxName)
+    {
+		UploadMessageFromFile(sourceMessageFile, mailboxName,
+							  kImapMsgSeenFlag);
+    }
+    else
+        HandleMemoryFailure();
+	FREEIF( sourceMessageFile );
+    FREEIF( mailboxName );
+#endif
+}
+
+//caller must free using PR_Free
+char * nsImapProtocol::OnCreateServerSourceFolderPathString()
+{
+	char *sourceMailbox = nsnull;
+	m_runningUrl->CreateServerSourceFolderPathString(&sourceMailbox);
+	if (sourceMailbox)
+	{
+		char *convertedName = CreateUtf7ConvertedString(sourceMailbox, PR_TRUE);
+		PR_Free(sourceMailbox);
+		sourceMailbox = convertedName;
+	}
+
+	return sourceMailbox;
+}
+
+void nsImapProtocol::OnCreateFolder(const char * aSourceMailbox)
+{
+	NS_ASSERTION(0, "on create folder is not implemented yet");
+#ifdef UNREADY_CODE
+           PR_Bool created = CreateMailboxRespectingSubscriptions(aSourceMailbox);
+            if (created)
+			{
+				List(aSourceMailbox, PR_FALSE);
+			}
+			else
+				FolderNotCreated(aSourceMailbox);
+#endif
+}
+
+void nsImapProtocol::OnSubscribe(const char * aSourceMailbox)
+{
+	NS_ASSERTION(0, "subscribe is not implemented yet");
+#ifdef UNREADY_CODE
+	Subscribe(sourceMailbox);
+#endif
+}
+
+void nsImapProtocol::OnUnsubscribe(const char * aSourceMailbox)
+{
+	// When we try to auto-unsubscribe from \Noselect folders,
+	// some servers report errors if we were already unsubscribed
+	// from them.
+#ifdef UNREADY_CODE
+	PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
+	GetServerStateParser().SetReportingErrors(FALSE);
+	Unsubscribe(sourceMailbox);
+	GetServerStateParser().SetReportingErrors(lastReportingErrors);
+#endif
+}
+
+void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
+{
+    IncrementCommandTagNumber();
+
+	nsString2 command(GetServerCommandTag(), eOneByte);
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+    command.Append(" getacl \"");
+	command.Append(escapedName);
+	command.Append("\"" CRLF);
+            
+    PR_FREEIF( escapedName);
+            
+    int ioStatus = SendData(command.GetBuffer());
+    
+    ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::OnRefreshAllACLs()
+{
+	// mscott - haven't ported this yet
+}
+
+// any state commands
+void nsImapProtocol::Logout()
+{
+//	ProgressEventFunction_UsingId (MK_IMAP_STATUS_LOGGING_OUT);
+	IncrementCommandTagNumber();
+
+	nsString2 command(GetServerCommandTag(), eOneByte);
+
+	command.Append("logout" CRLF);
+
+	int ioStatus = SendData(command.GetBuffer());
+
+	// the socket may be dead before we read the response, so drop it.
+	ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::Noop()
+{
+    //ProgressUpdateEvent("noop...");
+    IncrementCommandTagNumber();
+	nsString2 command(GetServerCommandTag(), eOneByte);
+    
+	command.Append("noop" CRLF);
+            
+    int ioStatus = SendData(command.GetBuffer());
+    
+	ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::XServerInfo()
+{
+
+//    ProgressEventFunction_UsingId (MK_IMAP_GETTING_SERVER_INFO);
+    IncrementCommandTagNumber();
+  	nsString2 command(GetServerCommandTag(), eOneByte);
+  
+	command.Append(" XSERVERINFO MANAGEACCOUNTURL MANAGELISTSURL MANAGEFILTERSURL" CRLF);
+          
+    int ioStatus = SendData(command.GetBuffer());
+    
+	ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::XMailboxInfo(const char *mailboxName)
+{
+
+//    ProgressEventFunction_UsingId (MK_IMAP_GETTING_MAILBOX_INFO);
+    IncrementCommandTagNumber();
+  	nsString2 command(GetServerCommandTag(), eOneByte);
+
+	command.Append(" XMAILBOXINFO \"");
+	command.Append(mailboxName);
+	command.Append("\"  MANAGEURL POSTURL" CRLF);
+            
+    int ioStatus = SendData(command.GetBuffer());
+    
+	ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::Namespace()
+{
+
+//    ProgressEventFunction_UsingId (MK_IMAP_STATUS_GETTING_NAMESPACE);
+    IncrementCommandTagNumber();
+    
+	nsString2 command(GetServerCommandTag(), eOneByte);
+	command.Append(" namespace" CRLF);
+            
+    int ioStatus = SendData(command.GetBuffer());
+    
+	ParseIMAPandCheckForNewMail();
+}
+
+
+void nsImapProtocol::MailboxData()
+{
+    IncrementCommandTagNumber();
+
+	nsString2 command(GetServerCommandTag(), eOneByte);
+	command.Append(" mailboxdata" CRLF);
+            
+    int ioStatus = SendData(command.GetBuffer());
+	ParseIMAPandCheckForNewMail();
+}
+
+
+void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
+{
+    IncrementCommandTagNumber();
+
+	nsString2 command(GetServerCommandTag(), eOneByte);
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+    
+	command.Append(" myrights \"");
+	command.Append(escapedName);
+	command.Append("\"" CRLF);
+            
+    PR_FREEIF( escapedName);
+            
+    int ioStatus = SendData(command.GetBuffer());
+    
+    ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
+{
+    IncrementCommandTagNumber();
+
+	nsString2 command(GetServerCommandTag(), eOneByte);
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+    
+	command.Append(" STATUS \"");
+	command.Append(escapedName);
+	command.Append("\" (UIDNEXT MESSAGES UNSEEN)" CRLF);
+            
+    PR_FREEIF( escapedName);
+            
+    int ioStatus = SendData(command.GetBuffer());
+    
+    ParseIMAPandCheckForNewMail();
+
+    mailbox_spec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec(mailboxName);
+#ifdef HAVE_PORT
+	if (new_spec)
+		UpdateMailboxStatus(new_spec);
+
+	if (new_spec && m_imapMailFolder)
+		m_imapMailFolder->UpdateImapMailboxStatus(this, new_spec);
+#endif
+}
+
+
+void nsImapProtocol::OnListFolder(const char * aSourceMailbox, PRBool aBool)
+{
+#ifdef UNREADY_CODE
+	ListFolder();
+#endif
+}
+
+void nsImapProtocol::OnUpgradeToSubscription()
+{
+#ifdef UNREADY_CODE
+	UpgradeToSubscription();
+#endif
+}
+
+void nsImapProtocol::OnDeleteFolder(const char * aSourceMailbox)
+{
+#ifdef UNREADY_CODE
+    PRBool deleted = DeleteSubFolders(sourceMailbox);
+    if (deleted)
+        deleted = DeleteMailboxRespectingSubscriptions(sourceMailbox);
+	if (deleted)
+		FolderDeleted(sourceMailbox);
+#endif
+}
+
+void nsImapProtocol::OnRenameFolder(const char * aSourceMailbox)
+{
+#ifdef UNREADY_CODE
+	char *destinationMailbox = nsnull;
+    m_runningUrl->CreateServerDestinationFolderPathString(&destinationMailbox);
+	if (destinationMailbox)
+	{
+		char *convertedName = CreateUtf7ConvertedString(destinationMailbox, PR_TRUE);
+		PR_Free(destinationMailbox);
+		destinationMailbox = convertedName;
+	}
+
+	if (destinationMailbox)
+	{
+		PRBool renamed = RenameHierarchyByHand(sourceMailbox, destinationMailbox);
+		if (renamed)
+			FolderRenamed(sourceMailbox, destinationMailbox);
+        
+		PR_Free( destinationMailbox);
+	}
+	else
+		HandleMemoryFailure();
+#endif
+}
+
+void nsImapProtocol::OnMoveFolderHierarchy(const char * aSourceMailbox)
+{
+#ifdef UNREADY_CODE
+	char *destinationMailbox = nsnull;
+	m_runningUrl->CreateServerDestinationFolderPathString(&destinationMailbox);
+    if (destinationMailbox)
+    {
+		char *convertedName = CreateUtf7ConvertedString(destinationMailbox, PR_TRUE);
+		PR_Free(destinationMailbox);
+		destinationMailbox = convertedName;
+
+        // worst case length
+        char *newBoxName = (char *) PR_ALLOC(PL_Strlen(destinationMailbox) + PL_Strlen(sourceMailbox) + 2);
+        if (newBoxName)
+        {
+            char onlineDirSeparator = fCurrentUrl->GetOnlineSubDirSeparator();
+            XP_STRCPY(newBoxName, destinationMailbox);
+            
+            char *leafSeparator = XP_STRRCHR(sourceMailbox, onlineDirSeparator);
+            if (!leafSeparator)
+                leafSeparator = sourceMailbox;	// this is a root level box
+            else
+                leafSeparator++;
+            
+            if ( *newBoxName && ( *(newBoxName + XP_STRLEN(newBoxName) - 1) != onlineDirSeparator))
+            {
+                char separatorStr[2];
+                separatorStr[0] = onlineDirSeparator;
+                separatorStr[1] = 0;
+                XP_STRCAT(newBoxName, separatorStr);
+            }
+            XP_STRCAT(newBoxName, leafSeparator);
+			XP_Bool renamed = RenameHierarchyByHand(sourceMailbox, newBoxName);
+	        if (renamed)
+	            FolderRenamed(sourceMailbox, newBoxName);
+        }
+    }
+#endif
+}
+
+void nsImapProtocol::ProcessAuthenticatedStateURL()
+{
+	nsIImapUrl::nsImapAction imapAction;
+	char * sourceMailbox = nsnull;
+	m_runningUrl->GetImapAction(&imapAction);
+
+	// switch off of the imap url action and take an appropriate action
+	switch (imapAction)
+	{
+		case nsIImapUrl::nsImapLsubFolders:
+			OnLSubFolders();
+			return;
+			break;
+		case nsIImapUrl::nsImapGetMailAccountUrl:
+			OnGetMailAccount();
+			return;
+			break;
+		default: 
+			break;
+	}
+
+	// all of the other states require the following extra step...
+    // even though we don't have to to be legal protocol, Close any select mailbox
+    // so we don't miss any info these urls might change for the selected folder
+    // (e.g. msg count after append)
+	if (GetServerStateParser().GetIMAPstate() == nsImapServerResponseParser::kFolderSelected)
+	{
+		// now we should be avoiding an implicit Close because it performs an implicit Expunge
+		// authenticated state urls should not use a cached connection that is in the selected state
+		// However, append message can happen either in a selected state or authenticated state
+		if (imapAction != nsIImapUrl::nsImapAppendMsgFromFile /* kAppendMsgFromFile */)
+		{
+			PR_ASSERT(FALSE);
+		}
+	}
+
+	switch (imapAction)
+	{
+		case nsIImapUrl::nsImapOfflineToOnlineMove:
+			OnOfflineToOnlineMove();
+			break;
+		case nsIImapUrl::nsImapAppendMsgFromFile:
+			OnAppendMsgFromFile();
+			break;
+		case nsIImapUrl::nsImapDiscoverAllBoxesUrl:
+#ifdef UNREADY_CODE
+			PR_ASSERT(!GetSubscribingNow());	// should not get here from subscribe UI
+			DiscoverMailboxList();
+#endif
+			break;
+		case nsIImapUrl::nsImapDiscoverAllAndSubscribedBoxesUrl:
+#ifdef UNREADY_CODE
+			PR_ASSERT(GetSubscribingNow());
+			DiscoverAllAndSubscribedBoxes();
+#endif
+			break;
+		case nsIImapUrl::nsImapCreateFolder:
+			sourceMailbox = OnCreateServerSourceFolderPathString();
+			OnCreateFolder(sourceMailbox);
+			break;
+		case nsIImapUrl::nsImapDiscoverChildrenUrl:
+#ifdef UNREADY_CODE
+            char *canonicalParent = fCurrentUrl->CreateServerSourceFolderPathString();
+            if (canonicalParent)
+            {
+				NthLevelChildList(canonicalParent, 2);
+                PR_Free(canonicalParent);
+            }
+#endif
+			break;
+		case nsIImapUrl::nsImapDiscoverLevelChildrenUrl:
+#ifdef UNREADY_CODE
+            char *canonicalParent = fCurrentUrl->CreateServerSourceFolderPathString();
+			int depth = fCurrentUrl->GetChildDiscoveryDepth();
+   			if (canonicalParent)
+			{
+				NthLevelChildList(canonicalParent, depth);
+				if (GetServerStateParser().LastCommandSuccessful())
+					ChildDiscoverySucceeded();
+				XP_FREE(canonicalParent);
+			}
+#endif
+			break;
+		case nsIImapUrl::nsImapSubscribe:
+			sourceMailbox = OnCreateServerSourceFolderPathString();
+			OnSubscribe(sourceMailbox); // used to be called subscribe
+			break;
+		case nsIImapUrl::nsImapUnsubscribe:	
+			sourceMailbox = OnCreateServerSourceFolderPathString();			
+			OnUnsubscribe(sourceMailbox);
+			break;
+		case nsIImapUrl::nsImapRefreshACL:
+			sourceMailbox = OnCreateServerSourceFolderPathString();	
+			OnRefreshACLForFolder(sourceMailbox);
+			break;
+		case nsIImapUrl::nsImapRefreshAllACLs:
+			OnRefreshAllACLs();
+			break;
+		case nsIImapUrl::nsImapListFolder:
+			sourceMailbox = OnCreateServerSourceFolderPathString();	
+			OnListFolder(sourceMailbox, PR_FALSE);
+			break;
+		case nsIImapUrl::nsImapUpgradeToSubscription:
+			OnUpgradeToSubscription();
+			break;
+		case nsIImapUrl::nsImapFolderStatus:
+			sourceMailbox = OnCreateServerSourceFolderPathString();	
+			OnStatusForFolder(sourceMailbox);
+			break;
+		case nsIImapUrl::nsImapRefreshFolderUrls:
+			sourceMailbox = OnCreateServerSourceFolderPathString();
+#ifdef UNREADY_CODE
+			XMailboxInfo(sourceMailbox);
+			if (GetServerStateParser().LastCommandSuccessful()) 
+				InitializeFolderUrl(sourceMailbox);
+#endif
+			break;
+		case nsIImapUrl::nsImapDeleteFolder:
+			sourceMailbox = OnCreateServerSourceFolderPathString();
+			OnDeleteFolder(sourceMailbox);
+			break;
+		case nsIImapUrl::nsImapRenameFolder:
+			sourceMailbox = OnCreateServerSourceFolderPathString();
+			OnRenameFolder(sourceMailbox);
+			break;
+		case nsIImapUrl::nsImapMoveFolderHierarchy:
+			sourceMailbox = OnCreateServerSourceFolderPathString();
+			OnMoveFolderHierarchy(sourceMailbox);
+			break;
+		default:
+			break;
+	}
+
+	PR_FREEIF(sourceMailbox);
+}
+
+
+void nsImapProtocol::ProcessAfterAuthenticated()
+{
+	// mscott: ignore admin url stuff for now...
+#ifdef UNREADY_CODE
+	// if we're a netscape server, and we haven't got the admin url, get it
+	if (!TIMAPHostInfo::GetHostHasAdminURL(fCurrentUrl->GetUrlHost()))
+	{
+		if (GetServerStateParser().GetCapabilityFlag() & kXServerInfoCapability)
+		{
+			XServerInfo();
+			if (GetServerStateParser().LastCommandSuccessful()) 
+			{
+				TImapFEEvent *alertEvent = 
+					new TImapFEEvent(msgSetMailServerURLs,  // function to call
+									 this,                // access to current entry
+									 (void *) fCurrentUrl->GetUrlHost(),
+									 TRUE);            
+				if (alertEvent)
+				{
+					fFEEventQueue->AdoptEventToEnd(alertEvent);
+					// WaitForFEEventCompletion();
+				}
+				else
+					HandleMemoryFailure();
+			}
+		}
+		else if (GetServerStateParser().GetCapabilityFlag() & kHasXNetscapeCapability)
+		{
+			Netscape();
+			if (GetServerStateParser().LastCommandSuccessful()) 
+			{
+				TImapFEEvent *alertEvent = 
+					new TImapFEEvent(msgSetMailAccountURL,  // function to call
+									 this,                // access to current entry
+									 (void *) fCurrentUrl->GetUrlHost(),
+									 TRUE);
+				if (alertEvent)
+				{
+					fFEEventQueue->AdoptEventToEnd(alertEvent);
+					// WaitForFEEventCompletion();
+				}
+				else
+					HandleMemoryFailure();
+			}
+		}
+	}
+#endif
+
+	if (GetServerStateParser().ServerHasNamespaceCapability())
+	{
+		PRBool nameSpacesOverridable = PR_FALSE;
+		PRBool haveNameSpacesForHost = PR_FALSE;
+		m_hostSessionList->GetNamespacesOverridableForHost(GetImapHostName(), GetImapUserName(), nameSpacesOverridable);
+		m_hostSessionList->GetGotNamespacesForHost(GetImapHostName(), GetImapUserName(), haveNameSpacesForHost); 
+
+	// mscott: VERIFY THIS CLAUSE!!!!!!!
+		if (nameSpacesOverridable && !haveNameSpacesForHost)
+		{
+			Namespace();
+		}
+	}
+}
 
 void nsImapProtocol::ProcessStoreFlags(const char *messageIds,
                                                  PRBool idsAreUids,
@@ -3437,7 +4353,7 @@ void nsImapProtocol::Close()
 
 	GetServerStateParser().ResetFlagInfo(0);
     
-    int                 ioStatus = SendData(command.GetBuffer());
+    int ioStatus = SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -3450,39 +4366,165 @@ void nsImapProtocol::Check()
 	nsString2 command(GetServerCommandTag(), eOneByte);
 	command.Append(" check" CRLF);
             
-    int                 ioStatus = SendData(command.GetBuffer());
+    int ioStatus = SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
 
-
-void
-nsImapProtocol::Expunge()
+PRBool nsImapProtocol::TryToLogon()
 {
-    ProgressEventFunctionUsingId (/***** fix me **** MK_IMAP_STATUS_EXPUNGING_MAILBOX */ -1);
-    IncrementCommandTagNumber();
-    
-    char *tmpBuffer = 
-    PR_smprintf("%s expunge" CRLF,     // format string
-                GetServerCommandTag()); // command tag
-    
-    if (tmpBuffer)
-    {
-        PRInt32 ioStatus = SendData(tmpBuffer);
-        PR_Free(tmpBuffer);
-    }
-    
-	 ParseIMAPandCheckForNewMail(); // ??? do we really need to do this
-}
 
-void
-nsImapProtocol::HandleMemoryFailure()
-{
-    PR_CEnterMonitor(this);
-    // **** jefft fix me!!!!!! ******
-    // m_imapThreadIsRunning = PR_FALSE;
-    // SetConnectionStatus(-1);
-    PR_CExitMonitor(this);
+	// mscott - for right now, I'm assuming the user name and password are in the
+	// incoming server...no prompt for password dialog yet...
+
+	PRInt32 logonTries = 0;
+	PRBool loginSucceeded = PR_FALSE;
+	char * password = nsnull;
+	char * userName = nsnull;
+
+	// get the password and user name for the current incoming server...
+	nsIMsgIncomingServer * server = nsnull;
+	nsresult rv = m_runningUrl->GetServer(&server);
+	if (NS_SUCCEEDED(rv) && server)
+	{
+		rv = server->GetPassword(&password);
+		rv = server->GetUserName(&userName);
+
+	}
+
+	do
+	{
+	    PRBool imapPasswordIsNew = PR_FALSE;
+	    PRBool setUserAuthenticatedIsSafe = PR_FALSE;
+
+	    if (userName && password)
+	    {
+			PRBool prefBool = PR_TRUE;
+
+			PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
+			GetServerStateParser().SetReportingErrors(FALSE);	// turn off errors - we'll put up our own.
+#ifdef UNREADY_CODE
+			PREF_GetBoolPref("mail.auth_login", &prefBool);
+#endif
+			if (prefBool) 
+			{
+				if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
+					Capability();
+
+				if (GetServerStateParser().GetCapabilityFlag() & kHasAuthPlainCapability)
+				{
+					AuthLogin (userName, password, kHasAuthPlainCapability);
+					logonTries++;
+				}
+				else if (GetServerStateParser().GetCapabilityFlag() & kHasAuthLoginCapability)
+				{
+					AuthLogin (userName, password,  kHasAuthLoginCapability); 
+					logonTries++;	// I think this counts against most
+									// servers as a logon try 
+				}
+				else
+					InsecureLogin(userName, password);
+			}
+			else
+				InsecureLogin(userName, password);
+
+			if (!GetServerStateParser().LastCommandSuccessful())
+	        {
+	            // login failed!
+	            // if we failed because of an interrupt, then do not bother the user
+	            if (!DeathSignalReceived())
+	            {
+#ifdef UNREADY_CODE
+					AlertUserEvent_UsingId(XP_MSG_IMAP_LOGIN_FAILED);
+#endif
+					// if we did get a password then remember so we don't have to prompt
+					// the user for it again
+		            if (password != nsnull)
+		            {
+						m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
+															  GetImapUserName(), password);
+						PR_FREEIF(password);
+		            }
+#ifdef UNREADY_CODE
+		            fCurrentBiffState = MSG_BIFF_Unknown;
+		            SendSetBiffIndicatorEvent(fCurrentBiffState);
+#endif
+				} // if we didn't receive the death signal...
+			} // if login failed
+	        else	// login succeeded
+	        {
+				rv = m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
+						  								   GetImapUserName(), password);
+				rv = m_hostSessionList->GetPasswordVerifiedOnline(GetImapHostName(), GetImapUserName(), imapPasswordIsNew);
+				if (NS_SUCCEEDED(rv) && imapPasswordIsNew)
+					m_hostSessionList->SetPasswordVerifiedOnline(GetImapHostName(), GetImapUserName());
+#ifdef UNREADY_CODE
+				NET_SetPopPassword2(passwordForHost); // bug 53380
+#endif
+				if (imapPasswordIsNew) 
+				{
+#ifdef UNREADY_CODE
+	                if (fCurrentBiffState == MSG_BIFF_Unknown)
+	                {
+	                	fCurrentBiffState = MSG_BIFF_NoMail;
+	                    SendSetBiffIndicatorEvent(fCurrentBiffState);
+	                }
+	                LIBNET_LOCK();
+	                if (!DeathSignalReceived())
+	                {
+	                	setUserAuthenticatedIsSafe = GetActiveEntry()->URL_s->msg_pane != NULL;
+						MWContext *context = GetActiveEntry()->window_id;
+						if (context)
+							FE_RememberPopPassword(context, SECNAV_MungeString(passwordForHost));
+					}
+					LIBNET_UNLOCK();
+#endif
+				}
+
+				loginSucceeded = PR_TRUE;
+			} // else if login succeeded
+			
+			GetServerStateParser().SetReportingErrors(lastReportingErrors);  // restore it
+
+			if (loginSucceeded && imapPasswordIsNew)
+			{
+				// let's record the user as authenticated.
+				m_imapExtension->SetUserAuthenticated(this, PR_TRUE);
+			}
+
+			if (loginSucceeded)
+			{
+				ProcessAfterAuthenticated();
+			}
+	    }
+	    else
+	    {
+			// The user hit "Cancel" on the dialog box
+	        //AlertUserEvent("Login cancelled.");
+			HandleCurrentUrlError();
+#ifdef UNREADY_CODE
+			SetCurrentEntryStatus(-1);
+	        SetConnectionStatus(-1);        // stop netlib
+#endif
+			break;
+	    }
+	}
+
+	while (!loginSucceeded && ++logonTries < 4);
+
+	PR_FREEIF(password);
+
+	if (!loginSucceeded)
+	{
+#ifdef UNREADY_CODE
+		fCurrentBiffState = MSG_BIFF_Unknown;
+		SendSetBiffIndicatorEvent(fCurrentBiffState);
+#endif
+		HandleCurrentUrlError();
+		SetConnectionStatus(-1);        // stop netlib
+	}
+
+	return loginSucceeded;
 }
 
 PRBool
