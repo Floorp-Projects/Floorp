@@ -973,7 +973,7 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
             unquotable_count++, in_quote = !in_quote;
 
         else if (  /* *in >= 127 || *in < 0  ducarroz: 8bits characters will be mime encoded therefore they are not a problem
-             ||*/ *in == ';' || *in == '$' || *in == '(' || *in == ')'
+             ||*/ (*in == ';' && !addr_p) || *in == '$' || *in == '(' || *in == ')'
                  || *in == '<' || *in == '>' || *in == '@' || *in == ',') 
             /* If the name contains control chars or Header specials, it needs to
              * be enclosed in quotes.  Double-quotes and backslashes will be dealt
@@ -990,6 +990,9 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
              * allow \ quoting but not "" quoting; and that sendmail uses self-
              * contradcitory quoting conventions that violate both RFCs 821 and
              * 822, so any address quoting on a sendmail system will lose badly.
+             *
+             * The ";" character in an address is a group delimiter, therefore it
+             * should not be quoted in that case.
              */
       quotable_count++;
 

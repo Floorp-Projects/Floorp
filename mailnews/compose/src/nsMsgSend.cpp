@@ -161,6 +161,97 @@ UseQuotedPrintable(void)
   return mime_use_quoted_printable_p;
 }
 
+/* This function will parse a list of email addresses and groups and just
+ * return a list of email addresses (recipient)
+ *
+ * The input could be:
+ *    [recipient | group] *[,recipient | group]
+ *
+ * The group syntax is:
+ *    group-name:[recipient *[,recipient]];
+ *
+ * the output will be:
+ *    recipient *[, recipient]
+ *
+ * As the result will always be equal or smaller than the input string,
+ * the extraction will be made in place. Don't need to create a new buffer.
+ */
+static nsresult StripOutGroupNames(char * addresses)
+{
+  char aChar;
+  char * readPtr = addresses;           // current read position
+  char * writePtr = addresses;          // current write position
+  char * startRecipient = addresses;    // begining of the current recipient (or potential group name)
+  char * previousSeparator = addresses; // remember last time we wrote a recipient separator
+  char * endPtr = addresses + PL_strlen(addresses);
+
+  PRBool quoted = PR_FALSE;   // indicate if we are between double quote
+  PRBool group = PR_FALSE;   // indicate if we found a group prefix
+  PRBool atFound = PR_FALSE;  // indicate if we found an @ in the current recipient. group name should not have an @
+
+  while (readPtr < endPtr)
+  {
+    aChar = *readPtr;
+    readPtr ++;
+    switch(aChar)
+    {
+      case '\\':
+        if (*readPtr == '"') //ignore escaped quote
+          readPtr ++;
+        continue;
+
+      case '"':
+        quoted = !quoted;
+        break;
+
+      case '@':
+        if (!quoted)
+          atFound = PR_TRUE;
+        break;
+
+      case ':':
+        if (!quoted && !atFound)
+        {
+          // ok, we found a group name
+          // let's backup the write cursor to remove the group name
+          writePtr = previousSeparator + 1;
+          group = PR_TRUE;
+          continue;
+        }
+        break;
+
+      case ';':
+        if (quoted || !group)
+          break;
+        else
+          group = PR_FALSE;
+          //end of the group, act like a recipient separator now...
+        /* NO BREAK */
+
+      case ',':
+        if (!quoted)
+        {
+          atFound = PR_FALSE;
+          //let check if we already have a comma separator in the output string
+          if (writePtr > addresses && *(writePtr - 1) == ',')
+            writePtr --;
+          *writePtr = ',';
+          previousSeparator = writePtr;
+          writePtr ++;
+          continue;
+        }
+        break;
+    }
+    *writePtr = aChar;
+    writePtr ++;
+  }
+
+  if (writePtr > addresses && *(writePtr - 1) == ',')
+    writePtr --;
+  *writePtr = '\0';
+
+  return NS_OK;
+}
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgComposeAndSend, nsIMsgSend)
@@ -3275,6 +3366,10 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     if (collectAddresses)
       addressCollecter->CollectAddress(mCompFields->GetBcc(), PR_TRUE);
   }
+
+  // We need undo groups to keep only the addresses
+  rv = StripOutGroupNames(buf);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Ok, now MIME II encode this to prevent 8bit problems...
   char *convbuf = nsMsgI18NEncodeMimePartIIStr(buf, PR_TRUE, 

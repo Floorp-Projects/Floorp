@@ -617,12 +617,35 @@ RRT_HEADER:
     hasDisclosedRecipient = PR_TRUE;
   }
 
-  // If we don't have disclosed recipient (only Bcc), address the message to the sender to
-  // prevent problem with some servers
+  // If we don't have disclosed recipient (only Bcc), address the message to
+  // undisclosed-recipients to prevent problem with some servers
   if (!hasDisclosedRecipient) {
-    const char* pBcc = fields->GetBcc(); //Do not free me!
-    if (pBcc && *pBcc)
-      ENCODE_AND_PUSH("To: ", PR_TRUE, pFrom, charset, usemime);
+    PRBool bAddUndisclosedRecipients = PR_TRUE;
+    prefs->GetBoolPref("mail.compose.add_undisclosed_recipients", &bAddUndisclosedRecipients);
+    if (bAddUndisclosedRecipients) {
+      const char* pBcc = fields->GetBcc(); //Do not free me!
+      if (pBcc && *pBcc) {
+        nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIStringBundle> composeStringBundle;
+          rv = stringService->CreateBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties", getter_AddRefs(composeStringBundle));
+          if (NS_SUCCEEDED(rv)) {
+            nsXPIDLString undisclosedRecipients;
+            rv = composeStringBundle->GetStringFromID(NS_MSG_UNDISCLOSED_RECIPIENTS, getter_Copies(undisclosedRecipients));
+            if (NS_SUCCEEDED(rv) && !undisclosedRecipients.IsEmpty()){
+              char * cstr = ToNewCString(undisclosedRecipients);
+              if (cstr) {
+                PUSH_STRING("To: ");
+                PUSH_STRING(cstr);
+                PUSH_STRING(":;");
+                PUSH_NEWLINE ();
+              }
+              PR_Free(cstr);
+            }
+          }
+        }
+      }
+    }
   }
 
   if (pSubject && *pSubject) {

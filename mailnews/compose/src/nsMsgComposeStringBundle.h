@@ -132,4 +132,7 @@ private:
 
 #define NS_ERROR_SMTP_SEND_FAILED                   NS_MSG_GENERATE_FAILURE(12565)
 
+#define NS_MSG_UNDISCLOSED_RECIPIENTS               12566
+
+
 #endif /* _nsMsgComposeStringBundle_H_ */
