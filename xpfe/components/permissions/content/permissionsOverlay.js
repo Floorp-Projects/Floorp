@@ -16,24 +16,35 @@
  * Reserved.
  *
  * Contributor(s):
+ *   Neil Rashbrook <neil@parkwaycc.co.uk>
  */
 
-var COOKIEPERMISSION = 0;
-var IMAGEPERMISSION = 1;
+function openCookieViewer(viewerType)
+{
+  const wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+  var enumerator = wm.getEnumerator("mozilla:cookieviewer");
+  while (enumerator.hasMoreElements()) {
+    var viewer = enumerator.getNext();
+    if (viewer.arguments[0] == viewerType) {
+      viewer.focus();
+      return;
+    }
+  }
+  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul",
+                    "_blank", "chrome,resizable", viewerType);
+}
 
 function viewImages() {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "chrome,resizable=yes", "imageManager" );
+  openCookieViewer("imageManager");
 }
 
 function viewCookies() {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "chrome,resizable=yes", "cookieManager");
+  openCookieViewer("cookieManager");
 }  
 
 function viewCookiesFromIcon() {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "chrome,resizable=yes", "cookieManagerFromIcon");
+  openCookieViewer("cookieManagerFromIcon");
 }  
 
 function viewP3P() {

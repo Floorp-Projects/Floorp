@@ -32,6 +32,7 @@
         buttons="accept,help"
         title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        windowtype="mozilla:cookieviewer"
         style="width: 30em;"
         onload="Startup()"
         onunload="Shutdown()"
