@@ -157,6 +157,7 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
     if ( input && input.length == 1 )
     {
 	    input[0].setAttribute("value", inputValue);
+	    input[0].value = inputValue;
 	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
 	}
     var select = newNode.getElementsByTagName(awSelectElementName());
