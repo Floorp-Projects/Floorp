@@ -34,6 +34,7 @@ DIRS= \
     related \
     xfer \
     shistory \
+    timebomb \
     console \
     autocomplete \
     download-manager \
