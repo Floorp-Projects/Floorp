@@ -473,6 +473,8 @@
         <![CDATA[
           try {
             var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+          } catch(e) {}
+          try {
             var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
           } catch(e) {}
           if (popupSetBox)
@@ -487,6 +489,8 @@
         <![CDATA[
           try {
             var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+          } catch(e) {}
+          try {
             var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
           } catch(e) {}
           if (popupSetBox)
@@ -501,6 +505,8 @@
           <![CDATA[
             try {
               var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            } catch(e) {}
+            try {
               var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
             } catch(e) {}
             if (popupSetBox)
@@ -514,6 +520,8 @@
           <![CDATA[
             try {
               var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            } catch(e) {}
+            try {
               var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
             } catch(e) {}
             if (popupSetBox)
