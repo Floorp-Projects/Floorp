@@ -47,7 +47,8 @@ Rights Reserved.
 							<treecell allowevents="true">
 							    <menulist id="msgRecipientType#1"
 								    onclick="awNotAnEmptyArea(event)"
-								    oncommand="contentChanged=true;">
+								    oncommand="contentChanged=true;
+								               awDisableAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
 							        <menupopup>
 							            <menuitem data="addr_to" value="&toAddr.label;"/>
 							            <menuitem data="addr_cc" value="&ccAddr.label;"/>

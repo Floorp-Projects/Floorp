@@ -77,7 +77,6 @@ function Recipients2CompFields(msgCompFields)
 	    {
 	    	fieldValue = inputField.value;
 	    	fieldValue2 = inputField.getAttribute("value");
-dump("AW: inputField=" + inputField + ", fieldValue=" + fieldValue + ", fieldValue2=" + fieldValue2 + "\n");
 	    	if (fieldValue != "")
 	    	{
 			    switch (awGetPopupElement(i).selectedItem.getAttribute("data"))
@@ -163,6 +162,8 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
     {
         select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(popupValue)];
 	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
+	    if (input)
+            _awDisableAutoComplete(select[0], input[0]);
 	}
 }
 
@@ -262,6 +263,8 @@ function awAppendNewRow(setFocus)
         {
             select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
     	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
+    	    if (input)
+                _awDisableAutoComplete(select[0], input[0]);
     	}
 
 		// focus on new input widget
@@ -512,4 +515,18 @@ function DropRecipient(recipient)
     var lastInput = awGetInputElement(top.MAX_RECIPIENTS); 
     lastInput.value = recipient; 
     awAppendNewRow(true); 
+}
+
+function _awDisableAutoComplete(selectElem, inputElem)
+{
+    if (selectElem.data == 'addr_newsgroups' || selectElem.data == 'addr_followup')
+        inputElem.disableAutocomplete = true;
+    else
+        inputElem.disableAutocomplete = false;
+}
+function awDisableAutoComplete(rowNumber)
+{
+    inputElem = awGetInputElement(rowNumber);
+    selectElem = awGetPopupElement(rowNumber);
+    _awDisableAutoComplete(selectElem, inputElem)
 }
