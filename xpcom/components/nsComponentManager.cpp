@@ -610,7 +610,7 @@ PLDHashTableEnumeratorImpl::IsDone()
 NS_IMETHODIMP
 PLDHashTableEnumeratorImpl::HasMoreElements(PRBool *_retval)
 {
-    if (!mCount || (mCurrent == mCount))
+    if (!mCount || (mCurrent >= mCount - 1))
         *_retval = PR_FALSE;
     else
         *_retval = PR_TRUE;
