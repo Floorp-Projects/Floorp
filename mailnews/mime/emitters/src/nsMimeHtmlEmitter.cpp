@@ -177,7 +177,6 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   // convert our UTF-8 header values into unicode before 
   // broadcasting them....
   nsXPIDLString unicodeHeaderValue;
-  nsAutoString charset; charset.AssignWithConversion("UTF-8");
 
   for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
   {
@@ -188,15 +187,9 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 
     if (headerSink)
     {
-        // this interface for DecodeMimePartIIStr requires us to pass in nsStrings by reference
-        // we should remove the nsString requirements from the interface....
-        if (mUnicodeConverter)
-  			  rv = mUnicodeConverter->DecodeMimePartIIStr(NS_ConvertASCIItoUCS2(headerInfo->value), charset, getter_Copies(unicodeHeaderValue));
-        else {
-          nsAutoString headerValue; headerValue.AssignWithConversion(headerInfo->value);
-          *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
-            nsXPIDLString::Copy(headerValue.GetUnicode());
-        }
+        // Convert UTF-8 to UCS2
+        *((PRUnichar **)getter_Copies(unicodeHeaderValue)) = nsXPIDLString::Copy(NS_ConvertUTF8toUCS2(headerInfo->value).GetUnicode());
+
         if (NS_SUCCEEDED(rv))
           headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue);
     }
