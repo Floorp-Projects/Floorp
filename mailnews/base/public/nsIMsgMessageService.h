@@ -10,6 +10,7 @@
 class nsIURL; /* forward decl */
 class nsIUrlListener; /* forward decl */
 class nsIStreamListener; /* forward decl */
+class nsIFileSpec; /* forward decl */
 
 /* starting interface:    nsIMsgMessageService */
 
@@ -54,6 +55,19 @@ class nsIMsgMessageService : public nsISupports {
 
   /* void DisplayMessage (in string aMessageURI, in nsISupports aDisplayConsumer, in nsIUrlListener aUrlListener, out nsIURL aURL); */
   NS_IMETHOD DisplayMessage(const char *aMessageURI, nsISupports *aDisplayConsumer, nsIUrlListener *aUrlListener, nsIURL **aURL) = 0;
+     /////////////////////////////////////////////////////////////////////
+     // SaveMessageToDisk: When you want to spool a message out to a file
+	 // on disk. This is an asynch operation of course. You must pass in a
+	 // url listener in order to figure out when the operation is done.
+	 // aMessageURI--> uri representing the message to spool out to disk.
+	 // aFile - the file you want the message saved to
+	 // aAppendToFile --> usually FALSE. Set to TRUE if you want the msg
+	 //					  appended at the end of the file. 
+     ///////////////////////////////////////////////////////////////////
+
+
+  /* void SaveMessageToDisk (in string aMessageURI, in nsIFileSpec aFile, in boolean aAppendToFile, in nsIUrlListener aUrlListener, out nsIURL aURL); */
+  NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL) = 0;
 };
 
 #endif /* __gen_nsIMsgMessageService_h__ */

@@ -23,6 +23,7 @@
 interface nsIURL;
 interface nsIUrlListener;
 interface nsIStreamListener;
+interface nsIFileSpec;
 
 [scriptable, uuid(F11009C1-F697-11d2-807F-006008128C4E)]
 interface nsIMsgMessageService : nsISupports {
@@ -65,4 +66,18 @@ interface nsIMsgMessageService : nsISupports {
 	void DisplayMessage(in string aMessageURI, in nsISupports aDisplayConsumer, 
 							  in nsIUrlListener aUrlListener, out nsIURL aURL);
 
+%{ C++
+
+     /////////////////////////////////////////////////////////////////////
+     // SaveMessageToDisk: When you want to spool a message out to a file
+	 // on disk. This is an asynch operation of course. You must pass in a
+	 // url listener in order to figure out when the operation is done.
+	 // aMessageURI--> uri representing the message to spool out to disk.
+	 // aFile - the file you want the message saved to
+	 // aAppendToFile --> usually FALSE. Set to TRUE if you want the msg
+	 //					  appended at the end of the file. 
+     ///////////////////////////////////////////////////////////////////
+%}
+	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile, in boolean aAppendToFile, 
+							in nsIUrlListener aUrlListener, out nsIURL aURL);
 };
