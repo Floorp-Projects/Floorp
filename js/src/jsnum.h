@@ -48,15 +48,27 @@
 
 JS_BEGIN_EXTERN_C
 
+/*
+ * Stefan Hanske <sh990154@mail.uni-greifswald.de> reports:
+ *  ARM is a little endian architecture but 64 bit double words are stored
+ * differently: the 32 bit words are in little endian byte order, the two words
+ * are stored in big endian`s way.
+ */
+
+#if defined(__arm) || defined(__arm32__) || defined(_arm26__)
+#define CPU_IS_ARM
+#endif
+
 #if __GNUC__ >= 2
-/* This version of the macros is safe for the alias optimizations
+/*
+ * This version of the macros is safe for the alias optimizations
  * that gcc does, but uses gcc-specific extensions.
  */
 
 typedef union {
     jsdouble value;
     struct {
-#ifdef IS_LITTLE_ENDIAN
+#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
         uint32 lsw;
         uint32 msw;
 #else
@@ -72,20 +84,34 @@ typedef union {
 #define JSDOUBLE_LO32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u;  \
                                              sh_u.value = (x);                \
                                              sh_u.parts.lsw; }))
+#define JSDOUBLE_SET_HI32(x, y)  (__extension__ ({                            \
+                                             js_ieee_double_shape_type sh_u;  \
+                                             sh_u.value = (x);                \
+                                             sh_u.parts.msw = (y);            \
+                                             (x) = sh_u.value; }))
+#define JSDOUBLE_SET_LO32(x, y)  (__extension__ ({                            \
+                                             js_ieee_double_shape_type sh_u;  \
+                                             sh_u.value = (x);                \
+                                             sh_u.parts.lsw = (y);            \
+                                             (x) = sh_u.value; }))
 
 #else /* GNUC */
 
-/* We don't know of any non-gcc compilers that perform alias optimization,
+/*
+ * We don't know of any non-gcc compilers that perform alias optimization,
  * so this code should work.
  */
 
-#ifdef IS_LITTLE_ENDIAN
+#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
 #define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[0])
 #else
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[0])
 #define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[1])
 #endif
+
+#define JSDOUBLE_SET_HI32(x, y) (JSDOUBLE_HI32(x)=(y))
+#define JSDOUBLE_SET_LO32(x, y) (JSDOUBLE_LO32(x)=(y))
 
 #endif /* GNUC */
 
