@@ -76,6 +76,7 @@ public:
 
 class PermanentAtomImpl : public AtomImpl {
 public:
+  PermanentAtomImpl() : AtomImpl() {}
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
