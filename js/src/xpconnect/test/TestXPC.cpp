@@ -235,9 +235,9 @@ int main()
 
             char* txt[] = {
                 "print('foo = '+foo);",
-                "foo.toString = function(){return 'foo_baby';}",
+                "foo.toString = new Function('return \"foo_baby\";')",
                 "print('foo = '+foo);",
-                "print('foo = '+foo.toString());",
+                "print('foo.toString() = '+foo.toString());",
                 "print('foo.five = '+ foo.five);",
                 "print('foo.six = '+ foo.six);",
                 "print('foo.bogus = '+ foo.bogus);",
@@ -250,6 +250,8 @@ int main()
 //                "bar.Test(5,7);",
                 "function QI(iid){print('QueryInterface called in JS with iid = '+iid); return  this;}",
                 "bar.QueryInterface = QI;",
+                "print('foo properties:');",
+                "for(i in foo)print('  foo.'+i+' = '+foo[i]);",
                 0,
             };
 
