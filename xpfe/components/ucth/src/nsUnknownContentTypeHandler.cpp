@@ -24,6 +24,8 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 
+#include "nsIWebShell.h"  // Not sure why we need this? --law & mcafee
+
 // {42770B50-03E9-11d3-8068-00600811A9C3}
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
     { 0x42770b50, 0x3e9, 0x11d3, { 0x80, 0x68, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
