@@ -62,7 +62,7 @@ Rights Reserved.
       <treecol id="c"/>
         
       <treechildren>
-        <treeitem>
+        <treeitem id="filterListItem">
           <treerow>
             <treecell allowevents="true">
               <searchattribute id="searchAttr" for="searchOp,searchValue" flex="1"/>
