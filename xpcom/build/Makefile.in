@@ -33,7 +33,7 @@ REQUIRES	= libreg unicharutil string
 CPPSRCS		= nsXPComInit.cpp
 
 ifdef XPCOM_USE_LEA
-CPPSRCS += malloc.c
+CSRCS += malloc.c
 endif
 
 SHARED_LIBRARY_LIBS = \
