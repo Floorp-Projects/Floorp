@@ -194,6 +194,9 @@ var DefaultController =
 			case "cmd_markAsFlagged":
 			case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
+      case "cmd_applyFilters":
+      case "cmd_runJunkControls":
+      case "cmd_deleteJunk":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -309,6 +312,18 @@ var DefaultController =
       case "button_file":
       case "cmd_file":
         return (GetNumSelectedMessages() > 0 );
+      case "cmd_applyFilters":
+        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.applyFilters, enabled, checkStatus);
+        return enabled.value;
+      case "cmd_runJunkControls":
+        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.runJunkControls, enabled, checkStatus);
+        return enabled.value;
+      case "cmd_deleteJunk":
+        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.deleteJunk, enabled, checkStatus);
+        return enabled.value;
       case "button_mark":
       case "cmd_markAsRead":
       case "cmd_markThreadAsRead":
@@ -562,7 +577,7 @@ var DefaultController =
 				MsgMarkThreadAsRead();
 				return;
 			case "cmd_markAllRead":
-                gDBView.doCommand(nsMsgViewCommandType.markAllRead);
+        gDBView.doCommand(nsMsgViewCommandType.markAllRead);
 				return;
       case "button_junk":
         MsgJunk();
@@ -574,11 +589,20 @@ var DefaultController =
 				MsgMarkAsFlagged(null);
 				return;
 			case "cmd_markAsJunk":
-                                JunkSelectedMessages(true);
+        JunkSelectedMessages(true);
 				return;
 			case "cmd_markAsNotJunk":
-                                JunkSelectedMessages(false);
+        JunkSelectedMessages(false);
 				return;
+      case "cmd_applyFilters":
+        MsgApplyFilters(null);
+        return;
+      case "cmd_runJunkControls":
+        analyzeFolderForJunk();
+        return;
+      case "cmd_deleteJunk":
+        deleteJunkInFolder();
+        return;
       case "cmd_label0":
         gDBView.doCommand(nsMsgViewCommandType.label0);
  				return;

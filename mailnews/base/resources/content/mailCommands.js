@@ -525,3 +525,55 @@ function JunkSelectedMessages(setAsJunk)
     gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
                       : nsMsgViewCommandType.unjunk);
 }
+
+function deleteJunkInFolder()
+{
+  var view = GetDBView();
+
+  // need to expand all threads, so we find everything
+  view.doCommand(nsMsgViewCommandType.expandAll);
+
+  var treeView = view.QueryInterface(Components.interfaces.nsITreeView);
+  var count = treeView.rowCount;
+  if (!count)
+    return;
+
+  var treeSelection = treeView.selection;
+
+  var clearedSelection = false;
+  
+  // select the junk messages
+  for (var i = 0; i < count; i++) 
+  {
+    var messageUri = view.getURIForViewIndex(i);
+    var msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+    var junkScore = msgHdr.getStringProperty("junkscore"); 
+    var isJunk = ((junkScore != "") && (junkScore != "0"));
+    // if the message is junk, select it.
+    if (isJunk) 
+    {
+      // only do this once
+      if (!clearedSelection)
+      {
+        // clear the current selection
+        // since we will be deleting all selected messages
+        treeSelection.clearSelection();
+        clearedSelection = true;
+      }
+      treeSelection.rangedSelect(i, i, true /* augment */);
+    }
+  }
+
+  // if we didn't clear the selection
+  // there was no junk, so bail.
+  if (!clearedSelection)
+    return;
+
+  // delete the selected messages
+  //
+  // XXX todo
+  // should we try to set next message after delete 
+  // to the the previous selected message, if it was not junk?
+  SetNextMessageAfterDelete();  
+  view.doCommand(nsMsgViewCommandType.deleteMsg);
+}

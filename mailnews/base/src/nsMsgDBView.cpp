@@ -2012,6 +2012,25 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
         *selectable_p = haveSelection;
     }
     break;
+  case nsMsgViewCommandType::applyFilters:
+    // can't manually run news filters yet
+    // disable if no messages
+    // XXX todo, check that we have filters, and at least one is enabled
+    *selectable_p = GetSize() && !mIsNews; 
+    break;
+  case nsMsgViewCommandType::runJunkControls:
+    // disable if no messages
+    // no JMC on news yet
+    // XXX todo, check that we have JMC enabled?
+    *selectable_p = GetSize() && !mIsNews; 
+    break;
+  case nsMsgViewCommandType::deleteJunk:
+    {
+      // disable if no messages, or if we can't delete (like news and certain imap folders)
+      PRBool canDelete;
+      *selectable_p = GetSize() && (m_folder && NS_SUCCEEDED(m_folder->GetCanDeleteMessages(&canDelete)) && canDelete);
+    }
+    break;
   case nsMsgViewCommandType::markMessagesRead:
   case nsMsgViewCommandType::markMessagesUnread:
   case nsMsgViewCommandType::toggleMessageRead:

@@ -239,7 +239,6 @@ function IsCurrentLoadedFolder(folder)
 function OnLoadMessageWindow()
 {
 	HideMenus();
-  DisableMenus();
   AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
@@ -421,15 +420,6 @@ function HideMenus()
 	var trashSeparator = document.getElementById('trashMenuSeparator');
 	if (trashSeparator)
 		trashSeparator.setAttribute("hidden", "true");
-}
-
-function DisableMenus()
-{
-  var filtersApply = document.getElementById("filtersApply");
-  filtersApply.setAttribute("disabled","true");
-  
-  var runJunkControls = document.getElementById("runJunkControls");
-  runJunkControls.setAttribute("disabled","true");
 }
 
 function OnUnloadMessageWindow()
@@ -688,6 +678,9 @@ var MessageWindowController =
 			case "cmd_markAsFlagged":
 			case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
+      case "cmd_applyFilters":
+      case "cmd_runJunkControls":
+      case "cmd_deleteJunk":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -801,7 +794,11 @@ var MessageWindowController =
         return loadedFolder.server.canSearchMessages; 
       case "cmd_undo":
       case "cmd_redo":
-                return SetupUndoRedoCommand(command);
+        return SetupUndoRedoCommand(command);
+      case "cmd_applyFilters":
+      case "cmd_runJunkControls":
+      case "cmd_deleteJunk":
+        return false;
 			default:
 				return false;
 		}
@@ -923,10 +920,10 @@ var MessageWindowController =
 				MsgMarkAsFlagged(null);
 				return;
 			case "cmd_markAsJunk":
-                                JunkSelectedMessages(true);
+        JunkSelectedMessages(true);
 				return;
 			case "cmd_markAsNotJunk":
-                                JunkSelectedMessages(false);
+        JunkSelectedMessages(false);
 				return;
       case "cmd_label0":
         gDBView.doCommand(nsMsgViewCommandType.label0);

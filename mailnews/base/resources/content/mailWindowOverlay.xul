@@ -273,8 +273,14 @@ Rights Reserved.
     <command id="cmd_label5" oncommand="goDoCommand('cmd_label5');" disabled="true"/>
 </commandset>
 
-<commandset id="tasksCommands">
+<commandset id="tasksCommands"
+              commandupdater="true"
+              events="create-menu-tasks"
+              oncommandupdate="goUpdateMailMenuItems(this)">
   <command id="cmd_searchMsgs" oncommand="MsgSearchMessages();"/>
+  <command id="cmd_applyFilters" oncommand="goDoCommand('cmd_applyFilters');" disabled="true"/>
+  <command id="cmd_runJunkControls" oncommand="goDoCommand('cmd_runJunkControls');" disabled="true"/>
+  <command id="cmd_deleteJunk" oncommand="goDoCommand('cmd_deleteJunk');" disabled="true"/>
 </commandset>
 
 <keyset id="mailKeys">
@@ -1518,7 +1524,7 @@ Rights Reserved.
 </menu>
 
 <menu id="tasksMenu">
-  <menupopup id="taskPopup">
+  <menupopup id="taskPopup" onpopupshowing="document.commandDispatcher.updateCommands('create-menu-tasks')">
     <menuitem label="&searchMailCmd.label;" 
               key="key_searchMail" 
               accesskey="&searchMailCmd.accesskey;" 
@@ -1530,10 +1536,10 @@ Rights Reserved.
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
-    <menuitem id="filtersApply"
+    <menuitem id="applyFilters"
               label="&filtersApply.label;"
               accesskey="&filtersApply.accesskey;"
-              oncommand="MsgApplyFilters(null);"/>
+              observes="cmd_applyFilters"/>
     <menuseparator/>
     <menuitem label="&junkMailCmd.label;" 
               accesskey="&junkMailCmd.accesskey;" 
@@ -1541,7 +1547,11 @@ Rights Reserved.
     <menuitem id="runJunkControls"
         label="&runJunkControls.label;"
 	      accesskey="&runJunkControls.accesskey;"
-	      oncommand="analyzeFolderForJunk();"/>
+	      observes="cmd_runJunkControls"/>
+    <menuitem id="deleteJunk"
+        label="&deleteJunk.label;"
+	      accesskey="&deleteJunk.accesskey;"
+	      observes="cmd_deleteJunk"/>
     <menuseparator/>
     <menuitem label="&importCmd.label;" 
               accesskey="&importCmd.accesskey;" 

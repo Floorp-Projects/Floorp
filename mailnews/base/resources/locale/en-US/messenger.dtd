@@ -526,6 +526,9 @@ Rights Reserved.
 <!ENTITY runJunkControls.label "Run Junk Mail Controls on Folder">
 <!ENTITY runJunkControls.accesskey "u">
 
+<!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
+<!ENTITY deleteJunk.accesskey "e">
+
 <!-- junk bar -->
 <!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
 <!ENTITY notJunkButton.label "This is Not Junk">
