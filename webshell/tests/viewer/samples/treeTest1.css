@@ -14,6 +14,7 @@ tree {
 
 treeitem {
 	display: table-row;
+    visibility: collapse; 
 }
 
 treehead {
@@ -21,9 +22,19 @@ treehead {
 }
 
 treebody {
-	display: table-row-group;
-	
+	display: table-row-group;	
 }
+
+treehead > treeitem { 
+    visibility: visible; 
+} 
+treeitem[open] > treechildren > treeitem { 
+    visibility: visible; 
+}
+treebody > treeitem { 
+    visibility: visible; 
+} 
+
 
 treecell {
 	display: table-cell;
@@ -47,3 +58,5 @@ treeicon {
 treecell[selectedcell] {
 	background-color: lightBlue;
 }
+
+
