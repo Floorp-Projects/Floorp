@@ -52,7 +52,7 @@ close(LOG);
 &compress_log_file;
 &unlink_log_file;
 
-#$err = system("./buildwho.pl $tree");
+$err = system("./buildwho.pl $tree");
 
 #
 # This routine will scan through log looking for 'tinderbox:' variables
