@@ -59,6 +59,11 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
     mCombinedArea.width = 0;
     mCombinedArea.height = 0;
   }
+
+  void AddBorderPaddingToMaxElementSize(const nsMargin& aBorderPadding) {
+    maxElementSize->width += aBorderPadding.left + aBorderPadding.right;
+    maxElementSize->height += aBorderPadding.top + aBorderPadding.bottom;
+  }
 };
 
 // Carried out margin flags
