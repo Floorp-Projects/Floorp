@@ -343,6 +343,8 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
 /* Given a string and a length, removes any "Re:" strings from the front.
    It also deals with that dumbass "Re[2]:" thing that some losing mailers do.
 
+   If mailnews.localizedRe is set, it will also remove localized "Re:" strings.
+
    Returns PR_TRUE if it made a change, PR_FALSE otherwise.
 
    The string is not altered: the pointer to its head is merely advanced,
@@ -357,10 +359,21 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP, char **modifiedSub
   NS_ASSERTION(stringP, "bad null param");
   if (!stringP) return PR_FALSE;
 
+  // get localizedRe pref
+  nsresult rv;
+  nsXPIDLCString localizedRe;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv))
+    prefBranch->GetCharPref("mailnews.localizedRe", getter_Copies(localizedRe));
+    
+  // hardcoded "Re" so that noone can configure Mozilla standards incompatible 
+  nsCAutoString checkString("Re,RE,re,rE");
+  if (!localizedRe.IsEmpty()) 
+    checkString.Append(NS_LITERAL_CSTRING(",") + localizedRe);
+
   // decode the string
   nsXPIDLCString decodedString;
   nsCOMPtr<nsIMimeConverter> mimeConverter;
-  nsresult rv;
   // we cannot strip "Re:" for MIME encoded subject without modifying the original
   if (modifiedSubject && strstr(*stringP, "=?"))
   {
@@ -380,36 +393,45 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP, char **modifiedSub
   while (s < s_end && IS_SPACE(*s))
 	s++;
 
-  if (s < (s_end-2) &&
-	  (s[0] == 'r' || s[0] == 'R') &&
-	  (s[1] == 'e' || s[1] == 'E'))
-	{
-	  if (s[2] == ':')
-		{
-		  s = s+3;			/* Skip over "Re:" */
-		  result = PR_TRUE;	/* Yes, we stripped it. */
-		  goto AGAIN;		/* Skip whitespace and try again. */
-		}
-	  else if (s[2] == '[' || s[2] == '(')
-		{
-		  const char *s2 = s+3;		/* Skip over "Re[" */
+  const char *tokPtr = checkString.get();
+  while (*tokPtr)
+  {
+    //tokenize the comma separated list
+    PRSize tokenLength = 0;
+    while (*tokPtr && *tokPtr != ',') {
+      tokenLength++; 
+      tokPtr++;
+    }
+    //check if the beginning of s is the actual token
+    if (tokenLength && !strncmp(s, tokPtr - tokenLength, tokenLength))
+    {
+      if (s[tokenLength] == ':')
+      {
+        s = s + tokenLength + 1; /* Skip over "Re:" */
+        result = PR_TRUE;        /* Yes, we stripped it. */
+        goto AGAIN;              /* Skip whitespace and try again. */
+      }
+      else if (s[tokenLength] == '[' || s[tokenLength] == '(')
+      {
+        const char *s2 = s + tokenLength + 1; /* Skip over "Re[" */
+        
+        /* Skip forward over digits after the "[". */
+        while (s2 < (s_end - 2) && IS_DIGIT(*s2))
+          s2++;
 
-		  /* Skip forward over digits after the "[". */
-		  while (s2 < (s_end-2) && IS_DIGIT(*s2))
-			s2++;
-
-		  /* Now ensure that the following thing is "]:"
-			 Only if it is do we alter `s'.
-		   */
-		  if ((s2[0] == ']' || s2[0] == ')') && s2[1] == ':')
-			{
-			  s = s2+2;			/* Skip over "]:" */
-			  result = PR_TRUE;	/* Yes, we stripped it. */
-			  goto AGAIN;		/* Skip whitespace and try again. */
-			}
-		}
-	}
-
+        /* Now ensure that the following thing is "]:"
+           Only if it is do we alter `s'. */
+        if ((s2[0] == ']' || s2[0] == ')') && s2[1] == ':')
+        {
+          s = s2 + 2;       /* Skip over "]:" */
+          result = PR_TRUE; /* Yes, we stripped it. */
+          goto AGAIN;       /* Skip whitespace and try again. */
+        }
+      }
+    } 
+    tokPtr++;
+  }
+  
   if (decodedString)
   {
     // encode the string back if any modification is made
