@@ -62,6 +62,7 @@ nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
   // we do all of this before our base class releases it's hold on the
   // view.
   for (nsIFrame* child = mFirstChild; child; ) {
+    mFirstChild = nsnull;  // XXX hack until HandleEvent is not called until after destruction
     nsIFrame* nextChild;
      
     child->GetNextSibling(nextChild);

@@ -665,10 +665,14 @@ inline nsReflowState::nsReflowState(nsIFrame*      aFrame,
                                     const nsSize&  aMaxSize)
 {
   NS_PRECONDITION(aReason != eReflowReason_Incremental, "unexpected reflow reason");
+// the following was removed because framesets need to force a reflow on themselves and didn't
+// have nsReflowState parentage available
+#if 0
 #ifdef NS_DEBUG
   nsIFrame* parent;
   aFrame->GetGeometricParent(parent);
   NS_PRECONDITION(nsnull == parent, "not root frame");
+#endif
 #endif
   reason = aReason;
   reflowCommand = nsnull;
