@@ -609,27 +609,21 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 
 static SECStatus
 ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
-          PRBool raw, PRBool ascii, PRFileDesc *outfile, char *passFile)
+          PRBool raw, PRBool ascii, PRFileDesc *outfile, secuPWData *pwdata)
 {
     SECStatus rv;
-    secuPWData pwdata = { PW_NONE, 0 };
-
-    if (passFile) {
-        pwdata.source = PW_FROMFILE;
-        pwdata.data = passFile;
-    }
 
     if (slot == NULL) {
 	PK11SlotList *list;
 	PK11SlotListElement *le;
 
 	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,
-						PR_FALSE,PR_FALSE,&pwdata);
+						PR_FALSE,PR_FALSE,pwdata);
 	if (list) for (le = list->head; le; le = le->next) {
-	    rv = listCerts(handle,name,le->slot,raw,ascii,outfile,&pwdata);
+	    rv = listCerts(handle,name,le->slot,raw,ascii,outfile,pwdata);
 	}
     } else {
-	rv = listCerts(handle,name,slot,raw,ascii,outfile,&pwdata);
+	rv = listCerts(handle,name,slot,raw,ascii,outfile,pwdata);
     }
     return rv;
 }
@@ -898,15 +892,9 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 
 static SECStatus
 ListKeys(PK11SlotInfo *slot, char *keyname, int index, 
-         KeyType keyType, PRBool dopriv, char *passFile)
+         KeyType keyType, PRBool dopriv, secuPWData *pwdata)
 {
     SECStatus rv = SECSuccess;
-    secuPWData pwdata = { PW_NONE, 0 };
-
-    if (passFile) {
-        pwdata.source = PW_FROMFILE;
-        pwdata.data = passFile;
-    }
 
 #ifdef notdef
     if (keyname) {
@@ -925,12 +913,12 @@ ListKeys(PK11SlotInfo *slot, char *keyname, int index,
 	PK11SlotList *list;
 	PK11SlotListElement *le;
 
-	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,PR_FALSE,PR_FALSE,&pwdata);
+	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,PR_FALSE,PR_FALSE,pwdata);
 	if (list) for (le = list->head; le; le = le->next) {
-	    rv = listKeys(le->slot,keyType,&pwdata);
+	    rv = listKeys(le->slot,keyType,pwdata);
 	}
     } else {
-	rv = listKeys(slot,keyType,&pwdata);
+	rv = listKeys(slot,keyType,pwdata);
     }
     return rv;
 }
@@ -1270,7 +1258,7 @@ static void LongUsage(char *progName)
 	"   -6 ");
     FPS "\n");
 
-    exit(-1);
+    exit(1);
 #undef FPS
 }
 
@@ -2220,7 +2208,7 @@ main(int argc, char **argv)
 	    PR_fprintf(PR_STDERR, 
                        "%s -g:  Keysize must be between %d and %d.\n",
 	               MIN_KEY_BITS, MAX_KEY_BITS);
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2243,7 +2231,7 @@ main(int argc, char **argv)
 	} else {
 	    PR_fprintf(PR_STDERR, "%s -k:  %s is not a recognized type.\n",
 	               progName, certutil.options[opt_KeyType].arg);
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2253,7 +2241,7 @@ main(int argc, char **argv)
 	if (serialNumber < 0) {
 	    PR_fprintf(PR_STDERR, "%s -m:  %s is not a valid serial number.\n",
 	               progName, certutil.options[opt_SerialNumber].arg);
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2266,7 +2254,7 @@ main(int argc, char **argv)
 	if (keytype != dsaKey) {
 	    PR_fprintf(PR_STDERR, "%s -q: PQG file is for DSA key (-k dsa).\n)",
 	               progName);
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2276,7 +2264,7 @@ main(int argc, char **argv)
 	if (!subject) {
 	    PR_fprintf(PR_STDERR, "%s -s: improperly formatted name: \"%s\"\n",
 	               progName, certutil.options[opt_Subject].arg);
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2286,7 +2274,7 @@ main(int argc, char **argv)
 	if (validitylength < 0) {
 	    PR_fprintf(PR_STDERR, "%s -v: incorrect validity period: \"%s\"\n",
 	               progName, certutil.options[opt_Validity].arg);
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2303,7 +2291,7 @@ main(int argc, char **argv)
 	    PR_fprintf(PR_STDERR, "%s -y: incorrect public exponent %d.", 
 	                           progName, publicExponent);
 	    PR_fprintf(PR_STDERR, "Must be 3, 17, or 65537.\n");
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2325,7 +2313,7 @@ main(int argc, char **argv)
 		PR_fprintf(PR_STDERR, " -%c", certutil.commands[i].flag);
 	}
 	PR_fprintf(PR_STDERR, "\n");
-	return -1;
+	return 255;
     }
     if (commandsEntered == 0) {
 	PR_fprintf(PR_STDERR, "%s: you must enter a command!\n", progName);
@@ -2343,7 +2331,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR, 
 	          "%s -%c: nickname is required for this command (-n).\n",
 	           progName, commandToRun);
-	return -1;
+	return 255;
     }
 
     /*  -A, -E, -M, -S require trust  */
@@ -2355,7 +2343,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR, 
 	          "%s -%c: trust is required for this command (-t).\n",
 	           progName, commandToRun);
-	return -1;
+	return 255;
     }
 
     /*  if -L is given raw or ascii mode, it must be for only one cert.  */
@@ -2366,7 +2354,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR, 
 	        "%s: nickname is required to dump cert in raw or ascii mode.\n",
 	           progName);
-	return -1;
+	return 255;
     }
     
     /*  -L can only be in (raw || ascii).  */
@@ -2376,7 +2364,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR, 
 	           "%s: cannot specify both -r and -a when dumping cert.\n",
 	           progName);
-	return -1;
+	return 255;
     }
 
     /*  For now, deny -C -x combination */
@@ -2385,7 +2373,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR,
 	           "%s: self-signing a cert request is not supported.\n",
 	           progName);
-	return -1;
+	return 255;
     }
 
     /*  If making a cert request, need a subject.  */
@@ -2395,7 +2383,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR, 
 	           "%s -%c: subject is required to create a cert request.\n",
 	           progName, commandToRun);
-	return -1;
+	return 255;
     }
 
     /*  If making a cert, need a serial number.  */
@@ -2413,7 +2401,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR, 
 	           "%s -V: specify a usage to validate the cert for (-u).\n",
 	           progName);
-	return -1;
+	return 255;
     }
     
     /*  To make a cert, need either a issuer or to self-sign it.  */
@@ -2423,7 +2411,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR,
 	           "%s -S: must specify issuer (-c) or self-sign (-x).\n",
 	           progName);
-	return -1;
+	return 255;
     }
 
     /*  Using slotname == NULL for listing keys and certs on all slots, 
@@ -2433,7 +2421,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR,
 	           "%s -%c: cannot use \"-h all\" for this command.\n",
 	           progName, commandToRun);
-	return -1;
+	return 255;
     }
 
     /*  Using keytype == nullKey for list all key types, but only that.  */
@@ -2441,7 +2429,7 @@ main(int argc, char **argv)
 	PR_fprintf(PR_STDERR,
 	           "%s -%c: cannot use \"-k all\" for this command.\n",
 	           progName, commandToRun);
-	return -1;
+	return 255;
     }
 
     /*  -S  open outFile, temporary file for cert request.  */
@@ -2452,7 +2440,7 @@ main(int argc, char **argv)
 		       "%s -o: unable to open \"%s\" for writing (%ld, %ld)\n",
 		       progName, certreqfile,
 		       PR_GetError(), PR_GetOSError());
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2464,7 +2452,7 @@ main(int argc, char **argv)
 	               "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
 	               progName, certutil.options[opt_InputFile].arg,
 	               PR_GetError(), PR_GetOSError());
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2477,7 +2465,7 @@ main(int argc, char **argv)
 	               "%s:  unable to open \"%s\" for writing (%ld, %ld).\n",
 	               progName, certutil.options[opt_OutputFile].arg,
 	               PR_GetError(), PR_GetOSError());
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2491,7 +2479,7 @@ main(int argc, char **argv)
                         "secmod.db", 0);
     if (rv != SECSuccess) {
 	SECU_PrintPRandOSError(progName);
-	return -1;
+	return 255;
     }
     certHandle = CERT_GetDefaultCertDB();
 
@@ -2517,52 +2505,46 @@ main(int argc, char **argv)
 	rv = ListCerts(certHandle, name, slot,
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated, 
-                       (outFile) ? outFile : PR_STDOUT,
-		       certutil.options[opt_PasswordFile].arg);
-	return !rv - 1;
+                       (outFile) ? outFile : PR_STDOUT, &pwdata);
+	return (!rv - 1) % 255;
     }
     /*  XXX needs work  */
     /*  List keys (-K)  */
     if (certutil.commands[cmd_ListKeys].activated) {
 	rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/,
-		       certutil.options[opt_PasswordFile].arg);
-	return !rv - 1;
+	              &pwdata);
+	return (!rv - 1) % 255;
     }
     /*  List modules (-U)  */
     if (certutil.commands[cmd_ListModules].activated) {
 	rv = ListModules();
-	return !rv - 1;
+	return (!rv - 1) % 255;
     }
     /*  Delete cert (-D)  */
     if (certutil.commands[cmd_DeleteCert].activated) {
 	rv = DeleteCert(certHandle, name);
-	return !rv - 1;
+	return (!rv - 1) % 255;
     }
     /*  Delete key (-F)  */
     if (certutil.commands[cmd_DeleteKey].activated) {
 	rv = DeleteKey(name, &pwdata);
-	return !rv - 1;
+	return (!rv - 1) % 255;
     }
     /*  Modify trust attribute for cert (-M)  */
     if (certutil.commands[cmd_ModifyCertTrust].activated) {
 	rv = ChangeTrustAttributes(certHandle, name, 
 	                           certutil.options[opt_Trust].arg);
-	return !rv - 1;
+	return (!rv - 1) % 255;
     }
     /*  Change key db password (-W) (future - change pw to slot?)  */
     if (certutil.commands[cmd_ChangePassword].activated) {
 	rv = SECU_ChangePW(slot, 0, certutil.options[opt_PasswordFile].arg);
-	return !rv - 1;
+	return (!rv - 1) % 255;
     }
     /*  Check cert validity against current time (-V)  */
     if (certutil.commands[cmd_CheckCertValidity].activated) {
 	/* XXX temporary hack for fips - must log in to get priv key */
 	if (certutil.options[opt_VerifySig].activated) {
-	    secuPWData pwdata = { PW_NONE, 0 };
-	    if (certutil.options[opt_PasswordFile].arg) {
-		pwdata.source = PW_FROMFILE;
-		pwdata.data = certutil.options[opt_PasswordFile].arg;
-	    }
 	    if (PK11_NeedLogin(slot))
 		PK11_Authenticate(slot, PR_TRUE, &pwdata);
 	}
@@ -2572,7 +2554,7 @@ main(int argc, char **argv)
 			  certutil.options[opt_VerifySig].activated,
 			  certutil.options[opt_DetailedInfo].activated,
 	                  &pwdata);
-	return !rv - 1;
+	return (!rv - 1) % 255;
     }
 
     /*
@@ -2590,10 +2572,10 @@ main(int argc, char **argv)
 	                                certutil.options[opt_NoiseFile].arg,
 	                                &pubkey, 
 	                                certutil.options[opt_PQGFile].arg,
-	                                certutil.options[opt_PasswordFile].arg);
+	                                &pwdata);
 	if (privkey == NULL) {
 	    SECU_PrintError(progName, "unable to generate key(s)\n");
-	    return -1;
+	    return 255;
 	}
 	privkey->wincx = &pwdata;
 	PORT_Assert(pubkey != NULL);
@@ -2616,7 +2598,7 @@ main(int argc, char **argv)
 	             certutil.options[opt_ASCIIForIO].activated,
 		     outFile ? outFile : PR_STDOUT);
 	if (rv) 
-	    return -1;
+	    return 255;
 	privkey->wincx = &pwdata;
     }
 
@@ -2633,13 +2615,13 @@ main(int argc, char **argv)
 	if (!inFile) {
 	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
                        certreqfile, PR_GetError(), PR_GetOSError());
-	    return -1;
+	    return 255;
 	}
 	outFile = PR_Open(certfile, PR_RDWR | PR_CREATE_FILE, 00660);
 	if (!outFile) {
 	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
                        certfile, PR_GetError(), PR_GetOSError());
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2659,7 +2641,7 @@ main(int argc, char **argv)
 	                certutil.options[opt_AddCRLDistPtsExt].activated,
 	                certutil.options[opt_AddNSCertTypeExt].activated);
 	if (rv) 
-	    return -1;
+	    return 255;
     }
 
     /* 
@@ -2673,7 +2655,7 @@ main(int argc, char **argv)
 	if (!inFile) {
 	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
                        certfile, PR_GetError(), PR_GetOSError());
-	    return -1;
+	    return 255;
 	}
     }
 
@@ -2686,7 +2668,7 @@ main(int argc, char **argv)
 	             certutil.options[opt_ASCIIForIO].activated,
 	             certutil.commands[cmd_AddEmailCert].activated);
 	if (rv) 
-	    return -1;
+	    return 255;
     }
 
     if (certutil.commands[cmd_CreateAndAddCert].activated) {

@@ -306,14 +306,13 @@ SECKEYPrivateKey *
 CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
 			    int publicExponent, char *noise, 
 			    SECKEYPublicKey **pubkeyp, char *pqgFile,
-                            char *passFile)
+                            secuPWData *pwdata)
 {
     CK_MECHANISM_TYPE mechanism;
     SECOidTag algtag;
     PK11RSAGenParams rsaparams;
     PQGParams *dsaparams = NULL;
     void *params;
-    secuPWData pwdata = { PW_NONE, 0 };
     PRArenaPool *dsaparena;
 
     /*
@@ -366,12 +365,7 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
     if (slot == NULL)
 	return NULL;
 
-    if (passFile) {
-	pwdata.source = PW_FROMFILE;
-	pwdata.data = passFile;
-    }
-
-    if (PK11_Authenticate(slot, PR_TRUE, &pwdata) != SECSuccess)
+    if (PK11_Authenticate(slot, PR_TRUE, pwdata) != SECSuccess)
 	return NULL;
 
     fprintf(stderr, "\n\n");
@@ -379,7 +373,7 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
 
     return PK11_GenerateKeyPair(slot, mechanism, params, pubkeyp,
 				PR_TRUE /*isPerm*/, PR_TRUE /*isSensitive*/, 
-				&pwdata /*wincx*/);
+				pwdata /*wincx*/);
 }
 
 /*
