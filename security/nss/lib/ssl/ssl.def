@@ -105,11 +105,11 @@ NSSSSL_VersionCheck;
 ;+    local:
 ;+*;
 ;+};
-;+NSS_3.3 {         # NSS 3.3   release
+;+NSS_3.4 {         # NSS 3.4   release
 ;+    global:
 ;+#   We have not yet decided whether these functions will be exported
-;-#   in the final 3.3 release, so please treat them as exported private
-;-#   functions for now.
+;+#   in the final 3.4 release, so please treat them as exported private
+;+#   functions for now.
 SSL_GetMaxServerCacheLocks;
 SSL_SetMaxServerCacheLocks;
 ;+    local:
