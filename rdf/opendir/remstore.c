@@ -36,7 +36,7 @@ Assertion
 makeNewAssertion (RDFT r, RDF_Resource u, RDF_Resource s, void* v, 
 			    RDF_ValueType type, int tv)
 {
-  Assertion newAs = (Assertion) getMem(sizeof(RDF_AssertionStruct));
+  Assertion newAs = (Assertion) fgetMem(sizeof(RDF_AssertionStruct));
   newAs->u = u;
   newAs->s = s;
   newAs->value = v;
@@ -54,12 +54,6 @@ addToAssertionList (RDFT f, Assertion as)
 			       (sizeof(Assertion*) *
 				    (f->assertionListSize = 
 				     f->assertionListSize + GROW_LIST_INCR)));
-    /*   Assertion* old = f->assertionList;    
-    f->assertionListSize = f->assertionListSize + GROW_LIST_INCR;
-    f->assertionList = (Assertion*)getMem(f->assertionListSize);
-    if (old) memcpy(f->assertionList, old, 
-		    (f->assertionListSize - GROW_LIST_INCR) * sizeof(Assertion*));
-    freeMem(old); */
   }
   *(f->assertionList + f->assertionListCount++) = as;
 }
@@ -78,33 +72,15 @@ Assertion
 remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, 
 			  RDF_ValueType type, int tv)
 {
-  Assertion nextAs, prevAs, newAs; 
-  nextAs = prevAs = u->rarg1;
+  Assertion  newAs = makeNewAssertion(mcf, u, s, v, type, tv);
+  newAs->next = u->rarg1;
+  u->rarg1 = newAs;
 
-  while (nextAs != null) {
-    if (asEqual(mcf, nextAs, u, s, v, type)) return null;
-    prevAs = nextAs;
-    nextAs = nextAs->next;
-  }
-  newAs = makeNewAssertion(mcf, u, s, v, type, tv);
-  if (prevAs == null) {
-    u->rarg1 = newAs;
-  } else {
-    prevAs->next = newAs;
-  }
   if (type == RDF_RESOURCE_TYPE) {
-    nextAs = prevAs = ((RDF_Resource)v)->rarg2;
-    while (nextAs != null) {
-      prevAs = nextAs;
-      nextAs = nextAs->invNext;
-    }
-    if (prevAs == null) {
-      ((RDF_Resource)v)->rarg2 = newAs;
-    } else {
-      prevAs->invNext = newAs;
-    }
+    RDF_Resource iu = (RDF_Resource)v;
+    newAs->invNext  = iu->rarg2;
+    iu->rarg2       = newAs;
   }
-  addToAssertionList(mcf, newAs);
   return newAs;
 }
 

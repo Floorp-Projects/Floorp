@@ -42,8 +42,11 @@ hashKey (HashTable ht, char* key) {
     size_t len = strlen(key);
     int    sum = 0;
     size_t    n = 0;
+	int ans;
     for (n = 0; n < len; n++) sum = sum + (int)key[n];
-    return sum & ht->size;
+    ans = sum & ht->size;
+	if (ans == ht->size) ans = ans-1;
+	return ans; 
 }
 
 HashTable 
@@ -82,7 +85,7 @@ HashAdd (HashTable ht, char* key, void* value) {
 	prev = he;
 	he = he->next;
     }
-    he = (HashEntry) getMem(sizeof(HashEntryStruct));
+    he = (HashEntry) fgetMem(sizeof(HashEntryStruct));
     he->value = value;
     he->key   = key;
     if (prev) {

@@ -30,7 +30,8 @@ WriteClient (void* obj, char* buffer) {
 }
 
 void AnswerOpenDirQuery(WriteClientProc callBack, void* obj, char* query);
-#define PREFIX "<html><body>"
+#define PREFIX "<html><body><a href=\"/\"><center><img src=\"http://directory.mozilla.org/img/opendir.gif\" width=396 height=79 border=\"0\"></center></a>"
+
 #define POSTFIX "</body><html>"
 
 long
@@ -113,10 +114,11 @@ int main(int argc, char **argv)
 	obj = WAIcreateWebAppService("OpenDir", Run, 0, 0);
 #endif
 	WAIregisterService(obj, host);
-	     RDF_Initialize();
-        RDF_ReadFile("opendir.rdf");
+        RDF_Initialize();
+        RDF_ReadFile("excite.rdf");
  
         printf("done");
+
 	WAIimplIsReady();
     
 	return 0;

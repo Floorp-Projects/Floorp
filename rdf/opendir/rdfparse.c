@@ -17,8 +17,6 @@
  */
 
 
-
-
 #include "rdf-int.h"
 
 char* error_string = NULL;
@@ -32,8 +30,8 @@ getResource (char* key, int createp) {
   if (existing) {
     return existing;
   } else if (createp){
-    existing = (RDF_Resource)getMem(sizeof(RDF_ResourceStruct));
-    existing->url = copyString(key);
+    existing = (RDF_Resource)fgetMem(sizeof(RDF_ResourceStruct));
+    existing->url = fcopyString(key);
     HashAdd(resourceHash, existing->url, existing);
     return existing;
   } else return NULL;
@@ -44,21 +42,51 @@ RDF_ResourceID (RDF_Resource u) {
   return u->url;
 }
 
+static char* MemBlock = 0;
+size_t allocated = 0;
+#define MEM_BLOCK_SIZE 10000
+
+char*
+fgetMem (size_t size) {
+  char* ans = 0;
+  if (!MemBlock || (size >= (MEM_BLOCK_SIZE  - allocated))) {
+	  MemBlock = getMem(MEM_BLOCK_SIZE);
+	  allocated = 0;
+  }
+  ans = MemBlock;
+  MemBlock = MemBlock + size;
+  allocated = allocated + size;
+  return ans;
+}
+
 void readRDFFile (char* file) {
   FILE* f = fopen(file, "r");	
   if (f) {
+	RDFT rf = (RDFT)getRDFT(file, 1) ; 
+    int ok = 1;
     char* buff  = malloc(100 * 1024);
     int len ;
+	int i = 0;
     memset(buff, '\0', (100 * 1024));
-    len = fread(buff, 1, (100 * 1024) -1, f);
-    buff[len] = '\0';
-    if (!RDF_Consume(file, buff, len)) {
-      printf("Error in RDF File\n");
-    } else {
-      printf("Finished reading %s\n", file);
+	memset(rf, '\0', sizeof(RDF_FileStruct));
+    rf->line = (char*)getMem(RDF_BUF_SIZE);
+    rf->holdOver = (char*)getMem(RDF_BUF_SIZE);
+    rf->depth = 1;
+    rf->lastItem = rf->stack[0] ;
+    while ((len = fread(buff, 1, (100 * 1024) -1, f)) > 0) {
+      buff[len] = '\0';
+	  printf("[%i] ", i++);
+      if (!(ok = parseNextRDFXMLBlobInt(rf, buff, len))) {
+        printf("Error in RDF File\n");
+      }
     }
+    printf("Finished reading %s\n", file); 
+	freeMem(rf->line);
+    rf->line = NULL;
+    freeMem(rf->holdOver);
+    rf->holdOver = NULL;
     free(buff);
-  }
+  } else  printf("Could not find %s\n", file);    
 }
 
 static HashTable rdftHash = NULL;
@@ -70,7 +98,7 @@ getRDFT (char* key, int createp) {
     return existing;
   } else if (createp){
     existing = (RDFT)getMem(sizeof(RDF_FileStruct));
-    existing->url = copyString(key);
+    existing->url = fcopyString(key);
     HashAdd(rdftHash, existing->url, existing);
     return existing;
   } else return NULL;
@@ -93,11 +121,9 @@ rdf_DigestNewStuff (char* url, char* data, int len) {
   rf->line = (char*)getMem(RDF_BUF_SIZE);
   rf->holdOver = (char*)getMem(RDF_BUF_SIZE);
   rf->depth = 1;
-  rf->lastItem = rf->stack[0] ;
-  u = RDF_GetResource("Top/Computers/AI", 0);
-  ok = parseNextRDFXMLBlobInt(rf, data, len); 
-  u = RDF_GetResource("Top/Computers/AI", 0);
-  if (!ok) unloadRDFT(rf);
+  rf->lastItem = rf->stack[0] ; 
+  ok = parseNextRDFXMLBlobInt(rf, data, len);  
+  /* if (!ok) unloadRDFT(rf); */
   freeMem(rf->line);
   rf->line = NULL;
   freeMem(rf->holdOver);
@@ -148,7 +174,7 @@ char *
 copyStringIgnoreWhiteSpace(char* string)
 {
    int len = strlen(string);
-   char* buf = (char*)getMem(len + 1);
+   char* buf = (char*)fgetMem(len + 1);
    int inWhiteSpace = 1;
    int buffIndex = 0;
    int stringIndex = 0;
@@ -212,7 +238,7 @@ parseNextRDFXMLBlobInt(RDFT f, char* blob, int size) {
       somethingseenp = 1;
       memset(f->holdOver, '\0', RDF_BUF_SIZE-1);
     }   
-    while ((n < size) && (wsCharp(c))) {
+    while ((n < size) && (wsCharp(c))  && (!somethingseenp)) {
       c = blob[++n]; 
       if ((c == '\n') || (c == '\r')) lineNumber++;
     }
@@ -265,6 +291,16 @@ copyString (char* str) {
   } else return NULL;
 }
 
+char* 
+fcopyString (char* str) {
+  char* ans = fgetMem(strlen(str)+1);
+  if (ans) {
+    memcpy(ans, str, strlen(str));
+    return ans;
+  } else return NULL;
+}
+
+
 void
 addElementProps (char** attlist, char* elementName, RDFT f, RDF_Resource obj)
 {
@@ -299,6 +335,7 @@ parseNextRDFToken (RDFT f, char* token)
       RDF_Resource s = f->stack[f->depth-1];
       char* val      = copyStringIgnoreWhiteSpace(token);
       remoteStoreAdd(f, u, s, val , RDF_STRING_TYPE, 1);
+	  return 1;
     } else  {
       sprintf(error_string, "Did not expect \n\"%s\".\n Was expecting a tag.", token);
       return 0;
@@ -317,15 +354,12 @@ parseNextRDFToken (RDFT f, char* token)
     return 1;
   } else if ((f->status == 0) && (startsWith("<RDF:RDF", token) || 
                                   startsWith("<RDF>", token))) {
-    f->tagStack[f->tagDepth++] = copyString("RDF"); 
     f->status = EXPECTING_OBJECT;
     return 1;
   } else {
     int emptyElementp = (token[strlen(token)-2] == '/');  
     if ((f->status != EXPECTING_OBJECT) && (f->status != EXPECTING_PROPERTY)) return 1;
     if (!tokenizeElement(token, attlist, &elementName)) return 0;
-    if (!emptyElementp) 
-		f->tagStack[f->tagDepth++] = copyString(elementName);
     if (f->status == EXPECTING_OBJECT) {
       char* url = NULL;
       RDF_Resource obj;
@@ -333,8 +367,7 @@ parseNextRDFToken (RDFT f, char* token)
       url = getID(attlist);
       if (!url) {
         if (f->tagDepth > 2) {
-          sprintf(error_string, "Unbalanced tags : Expecting </%s>, found %s", 
-                  f->tagStack[f->tagDepth-2], token);
+          sprintf(error_string, "Unbalanced tags ");
         } else {
           sprintf(error_string, "Require a \"about\" attribute on %s", token);
         }
@@ -344,7 +377,7 @@ parseNextRDFToken (RDFT f, char* token)
       addElementProps (attlist, elementName, f, obj) ;
       if (!stringEquals(elementName, "RDF:Description")) {
           RDF_Resource eln = getResource(elementName, 1);
-          remoteStoreAdd(f, obj, getResource("instanceOf", 1), 
+          remoteStoreAdd(f, obj, getResource("type", 1), 
                        eln, RDF_RESOURCE_TYPE, 
                        1);        
       }
