@@ -32,7 +32,7 @@
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
 #include "nsIEnumerator.h"
-
+#include <Appearance.h>
 
 NS_IMPL_ADDREF(ChildWindow);
 NS_IMPL_RELEASE(ChildWindow);
@@ -379,22 +379,36 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   nsBaseWidget::SetCursor(aCursor);
 	
   // mac specific cursor manipulation
-  switch ( aCursor ) {
-    case eCursor_standard:
-      ::InitCursor();
-      break;
-    case eCursor_wait:
-      ::SetCursor(*(::GetCursor(watchCursor)));
-       break;
-    case eCursor_select:
-      ::SetCursor(*(::GetCursor(iBeamCursor)));
-      break;
-    case eCursor_hyperlink:    
-      //¥¥¥ For now. We need a way to get non-os cursors here.
-      ::SetCursor(*(::GetCursor(plusCursor))); 
-      break;
+	//¥TODO: We need a way to get non-os cursors here.
+	if (nsToolkit::HasAppearanceManager())
+	{
+		short cursor = -1;
+	  switch (aCursor)
+	  {
+	    case eCursor_standard:	cursor = kThemeArrowCursor;		break;
+	    case eCursor_wait:			cursor = kThemeWatchCursor;		break;
+	    case eCursor_select:		cursor = kThemeIBeamCursor;		break;
+	    case eCursor_hyperlink:	cursor = kThemePointingHandCursor;		break;
+			case eCursor_sizeWE:		cursor = kThemeResizeLeftRightCursor;	break;
+			case eCursor_sizeNS:		cursor = kThemeResizeLeftRightCursor;	break;	//¥TODO: bad id
+	  }
+	  if (cursor >= 0)
+	  	::SetThemeCursor(cursor);
   }
-  
+  else
+  {
+		short cursor = -1;
+	  switch (aCursor)
+	  {
+	    case eCursor_standard:	::InitCursor();					break;
+	    case eCursor_wait:			cursor = watchCursor;		break;
+	    case eCursor_select:		cursor = iBeamCursor;		break;
+	    case eCursor_hyperlink:	cursor = plusCursor;		break;
+	  }
+	  if (cursor > 0)
+	  	::SetCursor(*(::GetCursor(cursor)));
+  }
+ 
   return NS_OK;
   
 } // nsWindow :: SetCursor
