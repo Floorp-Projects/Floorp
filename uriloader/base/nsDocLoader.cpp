@@ -19,41 +19,28 @@
  *
  * Contributor(s): 
  */
+
 #include "nspr.h"
 #include "prlog.h"
 
-#include "nsIDocumentLoader.h"
-#include "nsString.h"
-#include "nsISupportsArray.h"
-#include "nsIURL.h"
-#include "nsIFactory.h"
 #include "nsIDocumentLoaderObserver.h"
-#include "nsVoidArray.h"
+#include "nsDocLoader.h"
+#include "nsCURILoader.h"
+#include "nsNetUtil.h"
+
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 
-#include "nsILoadGroup.h"
-
-#include "nsNetUtil.h"
-#include "nsIChannel.h"
-
-#include "nsIGenericFactory.h"
+#include "nsIURL.h"
+#include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsCom.h"
-
-#include "nsWeakReference.h"
-
-#include "nsIURILoader.h"
-#include "nsCURILoader.h"
-#include "nsIIOService.h"
 
 // XXX ick ick ick
 #include "nsIContentViewerContainer.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
-#include "nsHTTPEnums.h"
 
 #if defined(PR_LOGGING)
 //
@@ -72,114 +59,10 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 
 
 /* Define IIDs... */
-static NS_DEFINE_IID(kIStreamObserverIID,          NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderIID,          NS_IDOCUMENTLOADER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
-
+static NS_DEFINE_IID(kIDocumentLoaderIID,          NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
-static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
-/****************************************************************************
- * nsDocLoaderImpl implementation...
- ****************************************************************************/
-
-class nsDocLoaderImpl : public nsIDocumentLoader, 
-                        public nsIStreamObserver,
-                        public nsSupportsWeakReference
-{
-public:
-
-    nsDocLoaderImpl();
-
-    nsresult Init(nsDocLoaderImpl* aParent);
-
-    // for nsIGenericFactory:
-    static NS_IMETHODIMP Create(nsISupports *aOuter, const nsIID &aIID, void **aResult);
-
-    NS_DECL_ISUPPORTS
-
-    // nsIDocumentLoader interface
-    NS_IMETHOD LoadDocument(nsIURI * aUri, 
-                            const char *aCommand,
-                            nsISupports* aContainer,
-                            nsIInputStream* aPostDataStream = nsnull,
-                            nsISupports* aExtraInfo = nsnull,
-                            nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                            const PRUint32 aLocalIP = 0,
-                            const PRUnichar* aReferrer = nsnull);
-
-    NS_IMETHOD Stop(void);
-
-    NS_IMETHOD IsBusy(PRBool& aResult);
-
-    NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance);
-
-    NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver);
-    NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver);
-
-    NS_IMETHOD SetContainer(nsISupports* aContainer);
-    NS_IMETHOD GetContainer(nsISupports** aResult);
-
-    // XXX: this method is evil and should be removed.
-    NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
-                                         nsIContentViewerContainer** aResult);
-
-    NS_IMETHOD GetLoadGroup(nsILoadGroup** aResult);
-
-    NS_IMETHOD Destroy();
-
-    // nsIStreamObserver methods: (for observing the load group)
-    NS_DECL_NSISTREAMOBSERVER
-
-    // Implementation specific methods...
-protected:
-    virtual ~nsDocLoaderImpl();
-
-    nsresult RemoveChildGroup(nsDocLoaderImpl *aLoader);
-    void DocLoaderIsEmpty(nsresult aStatus);
-
-    void FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                 nsIURI* aURL);
-
-    void FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                               nsIChannel *aDocChannel,
-                               nsresult aStatus);
-							   
-    void FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                            nsIChannel* channel);
-
-    void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                          nsIChannel* channel, nsresult aStatus);
-
-protected:
-
-    // IMPORTANT: The ownership implicit in the following member
-    // variables has been explicitly checked and set using nsCOMPtr
-    // for owning pointers and raw COM interface pointers for weak
-    // (ie, non owning) references. If you add any members to this
-    // class, please make the ownership explicit (pinkerton, scc).
-  
-    nsCOMPtr<nsIChannel>       mDocumentChannel;       // [OWNER] ???compare with document
-    nsVoidArray                mDocObservers;
-    nsISupports*               mContainer;             // [WEAK] it owns me!
-
-    nsDocLoaderImpl*           mParent;                // [WEAK]
-
-    nsCString                  mCommand;
-
-    /*
-     * This flag indicates that the loader is loading a document.  It is set
-     * from the call to LoadDocument(...) until the OnConnectionsComplete(...)
-     * notification is fired...
-     */
-    PRBool mIsLoadingDocument;
-
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
-    nsCOMPtr<nsISupportsArray>  mChildList;
-};
 
 
 nsDocLoaderImpl::nsDocLoaderImpl()
@@ -202,7 +85,14 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 }
 
 nsresult
-nsDocLoaderImpl::Init(nsDocLoaderImpl *aParent)
+nsDocLoaderImpl::SetDocLoaderParent(nsDocLoaderImpl *aParent)
+{
+  mParent = aParent;
+  return NS_OK; 
+}
+
+nsresult
+nsDocLoaderImpl::Init()
 {
     nsresult rv;
 
@@ -216,10 +106,8 @@ nsDocLoaderImpl::Init(nsDocLoaderImpl *aParent)
 ///    if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewISupportsArray(getter_AddRefs(mChildList));
-    if (NS_FAILED(rv)) return rv;
-
-    mParent = aParent;
-    return NS_OK;
+    
+    return rv;
 }
 
 nsDocLoaderImpl::~nsDocLoaderImpl()
@@ -254,59 +142,26 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 NS_IMPL_ADDREF(nsDocLoaderImpl);
 NS_IMPL_RELEASE(nsDocLoaderImpl);
 
-
-NS_IMETHODIMP
-nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    if (aIID.Equals(kIDocumentLoaderIID)) {
-        *aInstancePtr = (void*)(nsIDocumentLoader*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(kIStreamObserverIID)) {
-        *aInstancePtr = (void*)(nsIStreamObserver*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
-        *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*,this);
-        NS_ADDREF_THIS();
-        return NS_OK;        
-    }
-    return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIDocumentLoader)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
 {
-  nsDocLoaderImpl* newLoader = nsnull;
+
   nsresult rv = NS_OK;
-
-  /* Check for initial error conditions... */
-  if (nsnull == anInstance) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *anInstance = nsnull;
-  NS_NEWXPCOM(newLoader, nsDocLoaderImpl);
-  if (nsnull == newLoader) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  //
-  // The QI causes the new document laoder to get AddRefed...  So now
-  // its refcount is 1.
-  //
-  rv = newLoader->QueryInterface(kIDocumentLoaderIID, (void**)anInstance);
-  if (NS_FAILED(rv)) {
-    delete newLoader;
-    return rv;
-  }
+  nsDocLoaderImpl * newLoader = new nsDocLoaderImpl();
+  NS_ENSURE_TRUE(newLoader, NS_ERROR_OUT_OF_MEMORY);
+  
+  NS_ADDREF(newLoader);
+  newLoader->Init();
 
   // Initialize now that we have a reference
-  rv = newLoader->Init(this);
+  rv = newLoader->SetDocLoaderParent(this);
   if (NS_SUCCEEDED(rv)) {
     //
     // XXX this method incorrectly returns a bool    
@@ -314,95 +169,9 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
     rv = mChildList->AppendElement((nsIDocumentLoader*)newLoader) 
        ? NS_OK : NS_ERROR_FAILURE;
   }
-
-  // Delete the new document loader if any error occurs during initialization
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(*anInstance);
-  }
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsDocLoaderImpl::LoadDocument(nsIURI * aUri, 
-                              const char* aCommand,
-                              nsISupports* aContainer,
-                              nsIInputStream* aPostDataStream,
-                              nsISupports* aExtraInfo,
-                              nsLoadFlags aType,
-                              const PRUint32 aLocalIP,
-                              const PRUnichar* aReferrer)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (aUri) {
-    nsXPIDLCString aUrlScheme;
-    aUri->GetScheme(getter_Copies(aUrlScheme));
-
-    nsCOMPtr<nsISupports> openContext = do_QueryInterface(mLoadGroup);
-
-    // first, create a channel for the protocol....
-    nsCOMPtr<nsIIOService> pNetService = do_GetService(kIOServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIChannel> pChannel;
-      nsCOMPtr<nsIInterfaceRequestor> requestor (do_QueryInterface(aContainer));
-
-      // Create a referrer URI
-      nsCOMPtr<nsIURI> referrer;
-      if (aReferrer) {
-        nsAutoString tempReferrer(aReferrer);
-        char* referrerStr = tempReferrer.ToNewCString();
-        pNetService->NewURI(referrerStr, nsnull, getter_AddRefs(referrer));
-        Recycle(referrerStr);
-      }
-
-      rv = pNetService->NewChannelFromURI(aCommand, aUri, mLoadGroup, requestor,
-                                          aType, referrer /* referring uri */, 0, 0,
-                                          getter_AddRefs(pChannel));
-      if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
-      
-      // figure out if we need to set the post data stream on the channel...right now, 
-      // this is only done for http channels.....
-      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(pChannel));
-      if (httpChannel && aPostDataStream)
-      {
-        httpChannel->SetRequestMethod(HM_POST);
-        httpChannel->SetPostDataStream(aPostDataStream);
-      }
-
-      // now let's pass the channel into the uri loader
-      nsCOMPtr<nsIURILoader> pURILoader = do_GetService(NS_URI_LOADER_PROGID, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      /*
-       * Set the flag indicating that the document loader is in the process of
-       *  loading a document.  This flag will remain set until the 
-       * OnConnectionsComplete(...) notification is fired for the loader...
-       */
-    
-      mIsLoadingDocument = PR_TRUE;
-
-      nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
-      if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
-        loadCmd = nsIURILoader::viewUserClick;
-      else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
-        loadCmd = nsIURILoader::viewSource;
-
-      rv = pURILoader->OpenURI(pChannel, loadCmd, nsnull /* window target */, 
-                               aContainer,
-                               mLoadGroup, 
-                               getter_AddRefs(openContext));
-
-// I think that this is wrong...  Do *not* destroy the loadGroup assosicated
-// with a DocLoader if the URI is retargeted!!  The DocLoader does not care.
-//
-///    if (openContext) {
-///      mLoadGroup = do_QueryInterface(openContext);
-///    }
-    } // if we have a channel
-  }  // if we have a uri to load
-
+  
+  rv = newLoader->QueryInterface(NS_GET_IID(nsIDocumentLoader), (void **) anInstance);
+  NS_RELEASE(newLoader);
   return rv;
 }
 
@@ -436,7 +205,7 @@ nsDocLoaderImpl::Stop(void)
 
 
 NS_IMETHODIMP
-nsDocLoaderImpl::IsBusy(PRBool& aResult)
+nsDocLoaderImpl::IsBusy(PRBool * aResult)
 {
   nsresult rv;
 
@@ -446,16 +215,16 @@ nsDocLoaderImpl::IsBusy(PRBool& aResult)
   //   1. It is currently loading a document (ie. one or more URIs)
   //   2. One of it's child document loaders is busy...
   //
-  aResult = PR_FALSE;
+  *aResult = PR_FALSE;
 
   /* Is this document loader busy? */
   if (mIsLoadingDocument) {
-    rv = mLoadGroup->IsPending(&aResult);
+    rv = mLoadGroup->IsPending(aResult);
     if (NS_FAILED(rv)) return rv;
   }
 
   /* Otherwise, check its child document loaders... */
-  if (!aResult) {
+  if (!*aResult) {
     PRUint32 count, i;
 
     rv = mChildList->Count(&count);
@@ -470,7 +239,7 @@ nsDocLoaderImpl::IsBusy(PRBool& aResult)
         (void) loader->IsBusy(aResult);
         NS_RELEASE(loader);
 
-        if (aResult) break;
+        if (*aResult) break;
       }
     }
   }
@@ -705,7 +474,7 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
        alive long enough to survive this function call. */
     nsCOMPtr<nsIDocumentLoader> kungFuDeathGrip(this);
 
-    IsBusy(busy);
+    IsBusy(&busy);
     if (!busy) {
       PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
              ("DocLoader:%p: Is now idle...\n", this));
@@ -960,77 +729,3 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
     mParent->FireOnEndURLLoad(aLoadInitiator, aChannel, aStatus);
   }
 }
-
-
-
-
-/*******************************************
- *  nsDocLoaderServiceFactory
- *******************************************/
-static nsDocLoaderImpl* gServiceInstance = nsnull;
-
-NS_IMETHODIMP
-nsDocLoaderImpl::Create(nsISupports *aOuter, const nsIID &aIID, void **aResult)
-{
-  nsresult rv;
-  nsDocLoaderImpl* inst;
-
-  // Parameter validation...
-  if (NULL == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-    goto done;
-  }
-  // Do not support aggregatable components...
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
-
-  if (NULL == gServiceInstance) {
-    // Create a new instance of the component...
-    NS_NEWXPCOM(gServiceInstance, nsDocLoaderImpl);
-    if (NULL == gServiceInstance) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto done;
-    }
-  }
-
-  // If the QI fails, the component will be destroyed...
-  //
-  // Use a local copy so the NS_RELEASE() will not null the global
-  // pointer...
-  inst = gServiceInstance;
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_SUCCEEDED(rv)) {
-    rv = inst->Init(nsnull);
-  }
-  NS_RELEASE(inst);
-
-done:
-  return rv;
-}
-
-// Entry point to create nsDocLoaderService factory instances...
-
-nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIGenericFactory* factory;
-  rv = nsComponentManager::CreateInstance(kGenericFactoryCID, nsnull, 
-                                          nsIGenericFactory::GetIID(),
-                                          (void**)&factory);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = factory->SetConstructor(nsDocLoaderImpl::Create);
-  if (NS_FAILED(rv)) {
-      NS_RELEASE(factory);
-      return rv;
-  }
-
-  *aResult = factory;
-  return rv;
-}
-
