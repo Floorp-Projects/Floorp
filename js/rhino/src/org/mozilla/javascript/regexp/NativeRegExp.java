@@ -296,8 +296,6 @@ System.out.println("flat = \"" + str + "\"");
         regexp.program = new byte[state.progLength + 1];
         if (state.classCount != 0) {
             regexp.classList = new RECharSet[state.classCount];
-            for (int i = 0; i < state.classCount; i++)
-                regexp.classList[i] = new RECharSet();
             regexp.classCount = state.classCount;
         }
         int endPC = emitREBytecode(state, regexp, 0, state.result);
@@ -1155,7 +1153,6 @@ if (regexp.anchorCh >= 0) {
     {
         RENode nextAlt;
         int nextAltFixup, nextTermFixup;
-        RECharSet charSet;
         byte[] program = re.program;
 
         while (t != null) {
@@ -1267,11 +1264,8 @@ if (regexp.anchorCh >= 0) {
                 break;
             case REOP_CLASS:
                 pc = addIndex(program, pc, t.index);
-                charSet = re.classList[t.index];
-                charSet.converted = false;
-                charSet.length = t.bmsize;
-                charSet.startIndex = t.startIndex;
-                charSet.strlength = t.kidlen;
+                re.classList[t.index] = new RECharSet(t.bmsize, t.startIndex,
+                                                      t.kidlen);
                 break;
             default:
                 break;
@@ -1435,6 +1429,18 @@ if (regexp.anchorCh >= 0) {
     /* Compile the source of the class into a RECharSet */
     private static void
     processCharSet(REGlobalData gData, RECharSet charSet)
+    {
+        synchronized (charSet) {
+            if (!charSet.converted) {
+                processCharSetImpl(gData, charSet);
+                charSet.converted = true;
+            }
+        }
+    }
+
+
+    private static void
+    processCharSetImpl(REGlobalData gData, RECharSet charSet)
     {
         int src = charSet.startIndex;
         int end = src + charSet.strlength;
@@ -1625,7 +1631,6 @@ if (regexp.anchorCh >= 0) {
     {
         if (!charSet.converted) {
             processCharSet(gData, charSet);
-            charSet.converted = true;
         }
 
         int byteIndex = ch / 8;
@@ -2560,7 +2565,7 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
 
 };       // class NativeRegExp
 
-class RECompiled
+class RECompiled implements Serializable
 {
     char []source;          /* locked source string, sans // */
     int parenCount;         /* number of parenthesized submatches */
@@ -2725,13 +2730,22 @@ class REGlobalData {
  * use of the class converts the source representation into a bitmap.
  *
  */
-class RECharSet {
-    boolean converted;
-    boolean sense;
+final class RECharSet implements Serializable
+{
+    RECharSet(int length, int startIndex, int strlength)
+    {
+        this.length = length;
+        this.startIndex = startIndex;
+        this.strlength = strlength;
+    }
+
     int length;
-    byte[] bits;
     int startIndex;
     int strlength;
+
+    volatile transient boolean converted;
+    volatile transient boolean sense;
+    volatile transient byte[] bits;
 }
 
 
