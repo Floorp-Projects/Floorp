@@ -282,13 +282,6 @@ nsFTPChannel::OpenOutputStream(nsIOutputStream **result)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    NS_NOTREACHED("nsFTPChannel::AsyncOpen");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsFTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;

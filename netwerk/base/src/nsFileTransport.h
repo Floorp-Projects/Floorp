@@ -101,9 +101,6 @@ protected:
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
 
-    nsCOMPtr<nsIStreamObserver>         mOpenObserver;
-    nsCOMPtr<nsISupports>               mOpenContext;
-
     nsCOMPtr<nsISupports>               mContext;
     State                               mState;
     Command                             mCommand;

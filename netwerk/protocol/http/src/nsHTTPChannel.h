@@ -125,8 +125,6 @@ protected:
 
 public:
     nsHTTPResponse*                     mResponse;
-    nsCOMPtr<nsIStreamObserver>         mOpenObserver;
-    nsCOMPtr<nsISupports>               mOpenContext;
 
     nsHTTPHandler*                      mHandler;
     nsHTTPRequest*                      mRequest;

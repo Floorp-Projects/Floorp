@@ -217,8 +217,6 @@ protected:
     PRUint32                        mLoadAttributes;
     PRMonitor*                      mMonitor;
     PRNetAddr                       mNetAddress;
-    nsCOMPtr<nsISupports>           mOpenContext;
-    nsCOMPtr<nsIStreamObserver>     mOpenObserver;
     nsSocketOperation               mOperation;
     nsCOMPtr<nsISupports>           mOwner;
     nsCOMPtr<nsISupports>           mSecurityInfo;

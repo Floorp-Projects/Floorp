@@ -348,13 +348,6 @@ nsJARChannel::OpenOutputStream(nsIOutputStream* *result)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsJARChannel::AsyncOpen(nsIStreamObserver* observer, nsISupports* ctxt)
-{
-	NS_NOTREACHED("nsJARChannel::AsyncOpen");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 static nsresult
 ReadJARElement(nsJARChannel* jarChannel, void* closure)
 {

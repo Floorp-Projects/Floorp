@@ -356,39 +356,6 @@ nsFileTransport::OpenOutputStream(nsIOutputStream **result)
 }
 
 NS_IMETHODIMP
-nsFileTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    nsAutoMonitor mon(mMonitor);
-
-    nsresult rv = NS_OK;
-
-    if (mState != CLOSED)
-        return NS_ERROR_IN_PROGRESS;
-
-    NS_ASSERTION(observer, "need to supply an nsIStreamObserver");
-    rv = NS_NewAsyncStreamObserver(getter_AddRefs(mOpenObserver),
-                                   observer, NS_CURRENT_EVENTQ);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(mOpenContext == nsnull, "context not released");
-    mOpenContext = ctxt;
-
-    mState = OPENING;
-    NS_ASSERTION(mCommand == NONE, "out of sync");
-
-    PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
-           ("nsFileTransport: AsyncOpen [this=%x %s]",
-            this, mStreamName.GetBuffer()));
-
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = fts->DispatchRequest(this);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFileTransport::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsAutoMonitor mon(mMonitor);
@@ -509,9 +476,6 @@ nsFileTransport::Process(void)
                ("nsFileTransport: OPENING [this=%x %s]",
                 this, mStreamName.GetBuffer()));
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
-        if (mOpenObserver) {
-            mStatus = mOpenObserver->OnStartRequest(this, mOpenContext);
-        }
         switch (mCommand) {
           case INITIATE_READ:
             mState = NS_FAILED(mStatus) ? END_READ : START_READ;
@@ -849,12 +813,6 @@ nsFileTransport::DoClose(void)
            ("nsFileTransport: CLOSING [this=%x %s] status=%x",
             this, mStreamName.GetBuffer(), mStatus));
 
-    if (mOpenObserver) {
-        (void)mOpenObserver->OnStopRequest(this, mOpenContext, 
-                                           mStatus, nsnull);  // XXX fix error message
-        mOpenObserver = null_nsCOMPtr();
-        mOpenContext = null_nsCOMPtr();
-    }
     if (mStreamIO) {
         nsresult rv = mStreamIO->Close(mStatus);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected Close failure");

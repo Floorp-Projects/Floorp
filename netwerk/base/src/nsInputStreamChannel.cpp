@@ -257,30 +257,6 @@ nsStreamIOChannel::SetURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    if (mFileTransport)
-        return NS_ERROR_IN_PROGRESS;
-
-    nsresult rv;
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = fts->CreateTransportFromStreamIO(mStreamIO, getter_AddRefs(mFileTransport));
-    if (NS_FAILED(rv)) return rv;
-    if (mBufferSegmentSize > 0) {
-        rv = mFileTransport->SetBufferSegmentSize(mBufferSegmentSize);
-        if (NS_FAILED(rv)) return rv;
-    }
-    if (mBufferMaxSize > 0) {
-        rv = mFileTransport->SetBufferMaxSize(mBufferMaxSize);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    return mFileTransport->AsyncOpen(observer, ctxt);
-}
-
-NS_IMETHODIMP
 nsStreamIOChannel::OpenInputStream(nsIInputStream **result)
 {
     return mStreamIO->GetInputStream(result);

@@ -436,197 +436,186 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
     // an AsyncRead, we just want to pass the OnData() notifications
     // straight through to the consumer.
     //
-    // .... otherwise...
+
+    if (mSimpleResponse && mHeaderBuffer.Length ())
+    {
+
+        const char * cp = mHeaderBuffer.GetBuffer ();
+        nsCOMPtr<nsIByteArrayInputStream>   is;
+
+        nsresult rv1 = 
+            NS_NewByteArrayInputStream (getter_AddRefs (is), strdup (cp), mHeaderBuffer.Length ());            
+        
+        if (NS_SUCCEEDED (rv1))
+            mResponseDataListener -> OnDataAvailable (mChannel, 
+                    mChannel -> mResponseContext, is, 0, mHeaderBuffer.Length ());
+        
+        mSimpleResponse = PR_FALSE;
+    }
+
     //
-    // if we were AsyncOpened, we want to increment our internal byte count
-    // so when we finally push the stream to the consumer via AsyncRead,
-    // we're sure to pass him all the data that has queued up.
+    // Abort the connection if the consumer has been released.  This will 
+    // happen if a redirect has been processed...
+    //
+    if (!mResponseDataListener) {
+        // XXX: What should the return code be?
+        rv = NS_BINDING_ABORTED;
+    }
 
-    if (mChannel->mOpenObserver && !mResponseDataListener) {
-        mBytesReceived += i_Length;
-        mDataStream = i_pStream;
-    } else {
+    if (NS_SUCCEEDED(rv)) {
+        if (i_Length) {
 
-        if (mSimpleResponse && mHeaderBuffer.Length ())
-        {
+            if (!mCompressHeaderChecked)
+            {
+                nsXPIDLCString compressHeader;
+                rv = mResponse -> GetHeader (nsHTTPAtoms::Content_Encoding, getter_Copies (compressHeader));
+                mCompressHeaderChecked = PR_TRUE;
 
-            const char * cp = mHeaderBuffer.GetBuffer ();
-            nsCOMPtr<nsIByteArrayInputStream>   is;
-
-            nsresult rv1 = 
-                NS_NewByteArrayInputStream (getter_AddRefs (is), strdup (cp), mHeaderBuffer.Length ());            
-            
-            if (NS_SUCCEEDED (rv1))
-                mResponseDataListener -> OnDataAvailable (mChannel, 
-                        mChannel -> mResponseContext, is, 0, mHeaderBuffer.Length ());
-            
-            mSimpleResponse = PR_FALSE;
-        }
-
-        //
-        // Abort the connection if the consumer has been released.  This will 
-        // happen if a redirect has been processed...
-        //
-        if (!mResponseDataListener) {
-            // XXX: What should the return code be?
-            rv = NS_BINDING_ABORTED;
-        }
-
-        if (NS_SUCCEEDED(rv)) {
-            if (i_Length) {
-
-                if (!mCompressHeaderChecked)
+                if (NS_SUCCEEDED (rv) && compressHeader)
                 {
-                    nsXPIDLCString compressHeader;
-                    rv = mResponse -> GetHeader (nsHTTPAtoms::Content_Encoding, getter_Copies (compressHeader));
-                    mCompressHeaderChecked = PR_TRUE;
+    				NS_WITH_SERVICE (nsIStreamConverterService, 
+                            StreamConvService, kStreamConverterServiceCID, &rv);
+					if (NS_FAILED(rv)) return rv;
 
-                    if (NS_SUCCEEDED (rv) && compressHeader)
+					nsString fromStr; fromStr.AssignWithConversion ( compressHeader );
+					nsString toStr;     toStr.AssignWithConversion ( "uncompressed" );
+				
+                    nsCOMPtr<nsIStreamListener> converterListener;
+					rv = StreamConvService->AsyncConvertData(
+                            fromStr.GetUnicode(), 
+                            toStr.GetUnicode(), 
+                            mResponseDataListener, 
+                            channel, 
+                            getter_AddRefs (converterListener));
+					if (NS_FAILED(rv)) return rv;
+					mResponseDataListener = converterListener;
+                }
+            }
+
+            if (!mChunkHeaderChecked)
+            {
+                mChunkHeaderChecked = PR_TRUE;
+                
+                nsXPIDLCString chunkHeader;
+                rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
+                
+                nsXPIDLCString trailerHeader;
+                rv = mResponse -> GetHeader (nsHTTPAtoms::Trailer, getter_Copies (trailerHeader));
+
+                if (NS_SUCCEEDED (rv) && chunkHeader)
+                {
+    				NS_WITH_SERVICE (nsIStreamConverterService, 
+                            StreamConvService, kStreamConverterServiceCID, &rv);
+		    		if (NS_FAILED(rv)) return rv;
+
+			    	nsString fromStr; fromStr.AssignWithConversion ( chunkHeader );
+				    nsString toStr;     toStr.AssignWithConversion ( "unchunked" );
+
+                    mChunkHeaderCtx.SetEOF (PR_FALSE);
+                    if (trailerHeader)
                     {
-    					NS_WITH_SERVICE (nsIStreamConverterService, 
-                                StreamConvService, kStreamConverterServiceCID, &rv);
-					    if (NS_FAILED(rv)) return rv;
+                        nsCString ts (trailerHeader);
+                        ts.StripWhitespace ();
 
-					    nsString fromStr; fromStr.AssignWithConversion ( compressHeader );
-					    nsString toStr;     toStr.AssignWithConversion ( "uncompressed" );
-				    
-                        nsCOMPtr<nsIStreamListener> converterListener;
-					    rv = StreamConvService->AsyncConvertData(
-                                fromStr.GetUnicode(), 
-                                toStr.GetUnicode(), 
-                                mResponseDataListener, 
-                                channel, 
-                                getter_AddRefs (converterListener));
-					    if (NS_FAILED(rv)) return rv;
-					    mResponseDataListener = converterListener;
+                        char *cp = ts;
+
+                        while (*cp)
+                        {
+                            char * pp = PL_strchr (cp , ',');
+                            if (pp == NULL)
+                            {
+                                mChunkHeaderCtx.AddTrailerHeader (cp);
+                                break;
+                            }
+                            else
+                            {
+                                *pp = 0;
+                                mChunkHeaderCtx.AddTrailerHeader (cp);
+                                *pp = ',';
+                                cp = pp + 1;
+                            }
+                        }
+                    }
+
+                    nsCOMPtr<nsIStreamListener> converterListener;
+					rv = StreamConvService->AsyncConvertData(
+                            fromStr.GetUnicode(), 
+                            toStr.GetUnicode(), 
+                            mResponseDataListener, 
+                            mChunkHeaderEOF,
+                            getter_AddRefs (converterListener));
+					if (NS_FAILED(rv)) return rv;
+					mResponseDataListener = converterListener;
+                }
+			}
+
+            rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
+
+            PRInt32 cl = -1;
+			mResponse -> GetContentLength (&cl);
+
+            mBodyBytesReceived += i_Length;
+
+            // Report progress
+            rv = mChannel->ReportProgress(mBodyBytesReceived, cl);
+            if (NS_FAILED(rv)) return rv;
+
+            PRBool eof = mChunkHeaderCtx.GetEOF ();
+
+            if (mPipelinedRequest
+                && (cl != -1 && cl - mBodyBytesReceived == 0 || eof))
+            {
+                if (eof && mResponse)
+                {
+                    nsVoidArray *mh = mChunkHeaderCtx.GetAllHeaders ();
+
+                    for (int i = mh -> Count () - 1; i >= 0; i--)
+                    {
+                        nsHTTPChunkConvHeaderEntry *he = (nsHTTPChunkConvHeaderEntry *) mh -> ElementAt (i);
+                        if (he)
+                        {
+                            nsCOMPtr<nsIAtom> hAtom = dont_AddRef (NS_NewAtom (he -> mName));
+                            mResponse -> SetHeader (hAtom, he -> mValue);
+                        }
                     }
                 }
+                nsresult rv1 = mPipelinedRequest -> AdvanceToNextRequest ();
 
-                if (!mChunkHeaderChecked)
+                if (NS_FAILED (rv1))
                 {
-                    mChunkHeaderChecked = PR_TRUE;
-                    
-                    nsXPIDLCString chunkHeader;
-                    rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
-                    
-                    nsXPIDLCString trailerHeader;
-                    rv = mResponse -> GetHeader (nsHTTPAtoms::Trailer, getter_Copies (trailerHeader));
+                    mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
+                    mPipelinedRequest = nsnull;
 
-                    if (NS_SUCCEEDED (rv) && chunkHeader)
-                    {
-    					NS_WITH_SERVICE (nsIStreamConverterService, 
-                                StreamConvService, kStreamConverterServiceCID, &rv);
-		    			if (NS_FAILED(rv)) return rv;
+                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv1);
 
-			    		nsString fromStr; fromStr.AssignWithConversion ( chunkHeader );
-				    	nsString toStr;     toStr.AssignWithConversion ( "unchunked" );
+                    // XXX/ruslan: will be replaced with the new Cancel (code)
+                    if (NS_SUCCEEDED (rv1))
+			    		trans -> SetBytesExpected (0);
 
-                        mChunkHeaderCtx.SetEOF (PR_FALSE);
-                        if (trailerHeader)
-                        {
-                            nsCString ts (trailerHeader);
-                            ts.StripWhitespace ();
-
-                            char *cp = ts;
-
-                            while (*cp)
-                            {
-                                char * pp = PL_strchr (cp , ',');
-                                if (pp == NULL)
-                                {
-                                    mChunkHeaderCtx.AddTrailerHeader (cp);
-                                    break;
-                                }
-                                else
-                                {
-                                    *pp = 0;
-                                    mChunkHeaderCtx.AddTrailerHeader (cp);
-                                    *pp = ',';
-                                    cp = pp + 1;
-                                }
-                            }
-                        }
-
-                        nsCOMPtr<nsIStreamListener> converterListener;
-					    rv = StreamConvService->AsyncConvertData(
-                                fromStr.GetUnicode(), 
-                                toStr.GetUnicode(), 
-                                mResponseDataListener, 
-                                mChunkHeaderEOF,
-                                getter_AddRefs (converterListener));
-					    if (NS_FAILED(rv)) return rv;
-					    mResponseDataListener = converterListener;
-                    }
-				}
-
-                rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
-
-                PRInt32 cl = -1;
-				mResponse -> GetContentLength (&cl);
-
-                mBodyBytesReceived += i_Length;
-
-                // Report progress
-                rv = mChannel->ReportProgress(mBodyBytesReceived, cl);
-                if (NS_FAILED(rv)) return rv;
-
-                PRBool eof = mChunkHeaderCtx.GetEOF ();
-
-                if (mPipelinedRequest
-                    && (cl != -1 && cl - mBodyBytesReceived == 0 || eof))
+                }
+                else
                 {
-                    if (eof && mResponse)
+                    PRUint32 status = 0;
+                    if (mResponse)
+                        mResponse -> GetStatus(&status);
+
+                    if (status != 304 || !mChannel -> mCachedResponse)
                     {
-                        nsVoidArray *mh = mChunkHeaderCtx.GetAllHeaders ();
-
-                        for (int i = mh -> Count () - 1; i >= 0; i--)
-                        {
-                            nsHTTPChunkConvHeaderEntry *he = (nsHTTPChunkConvHeaderEntry *) mh -> ElementAt (i);
-                            if (he)
-                            {
-                                nsCOMPtr<nsIAtom> hAtom = dont_AddRef (NS_NewAtom (he -> mName));
-                                mResponse -> SetHeader (hAtom, he -> mValue);
-                            }
-                        }
+                        mChannel -> ResponseCompleted (mResponseDataListener, NS_OK, nsnull);
+                        mChannel -> mHTTPServerListener = 0;
                     }
-                    nsresult rv1 = mPipelinedRequest -> AdvanceToNextRequest ();
 
-                    if (NS_FAILED (rv1))
-                    {
-                        mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
-                        mPipelinedRequest = nsnull;
+                    OnStartRequest (nsnull, nsnull);
+                    
+                    PRUint32 streamLen = 0;
+                    i_pStream -> Available (&streamLen);
 
-                        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv1);
-
-                        // XXX/ruslan: will be replaced with the new Cancel (code)
-                        if (NS_SUCCEEDED (rv1))
-			    		    trans -> SetBytesExpected (0);
-
-                    }
-                    else
-                    {
-                        PRUint32 status = 0;
-                        if (mResponse)
-                            mResponse -> GetStatus(&status);
-
-                        if (status != 304 || !mChannel -> mCachedResponse)
-                        {
-                            mChannel -> ResponseCompleted (mResponseDataListener, NS_OK, nsnull);
-                            mChannel -> mHTTPServerListener = 0;
-                        }
-
-                        OnStartRequest (nsnull, nsnull);
-                        
-                        PRUint32 streamLen = 0;
-                        i_pStream -> Available (&streamLen);
-
-                        if (streamLen > 0)
-                            OnDataAvailable (channel, context, i_pStream, 0, streamLen);
-                    }
-				}
-            }
-        } 
-    } // end !mChannel->mOpenObserver
+                    if (streamLen > 0)
+                        OnDataAvailable (channel, context, i_pStream, 0, streamLen);
+                }
+			}
+        }
+    } 
 
     return rv;
 }
