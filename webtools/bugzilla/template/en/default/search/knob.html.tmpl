@@ -1,0 +1,95 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+  
+<table>
+  <tr>
+    <td colspan="2">
+
+    [% IF NOT userid %]
+      <input type="hidden" name="cmdtype" value="doit">
+    [% ELSE %]
+      <br>
+      <input type="radio" name="cmdtype" value="doit" checked> Run this query
+      <br>
+
+      [% IF namedqueries.size > 0 %]
+        <p>
+        <table cellspacing="0" cellpadding="0">
+          <tr>
+           <td>
+             <input type="radio" name="cmdtype" value="editnamed">
+             Load my remembered query:
+           </td>
+           <td rowspan="3">
+             <select name="namedcmd">
+             [% FOREACH query = namedqueries %]
+               <option value="[% query FILTER html %]">[% query FILTER html %]</option>
+             [% END %]
+             </select>
+            </td>
+          </tr>  
+          <tr>
+            <td>
+              <input type="radio" name="cmdtype" value="runnamed">
+              Run my remembered query:
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <input type="radio" name="cmdtype" value="forgetnamed">
+              Forget my remembered query:
+            </td>
+          </tr>
+        </table>
+        </p>
+      [% END %]
+
+      <input type="radio" name="cmdtype" value="asdefault">
+      Remember this as my default query
+      <br>
+      <input type="radio" name="cmdtype" value="asnamed">
+      Remember this query, and name it:
+      <input type="text" name="newqueryname">
+      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="tofooter" value="1">
+          and put it in my page footer
+      <br>
+    [% END %]
+      <br>
+      <div>
+      Sort results by:
+      <select name="order">
+      [% FOREACH order = orders %]
+        <option value="[% order FILTER html %]"
+          [% " selected" IF default.order.0 == order %]>[% order FILTER html %]</option> 
+      [% END %]
+      </select>
+
+      <input type="submit" value="[% button_name %]">
+      [% IF userdefaultquery %]
+         <p>
+           <a href="query.cgi?nukedefaultquery=1">
+             Set my default query back to the system default</a>
+         </p>
+      [% END %]
+      </div>
+    </td>
+  </tr>
+</table>  
