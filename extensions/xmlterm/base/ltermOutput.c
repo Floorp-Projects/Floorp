@@ -958,8 +958,8 @@ static int ltermPromptLocate(struct lterms *lts)
     promptLen = 0;
 
   } else {
-    /* Skip any spaces following the delimiter */
-    const UNICHAR spaceStr[2] = {U_SPACE, U_NUL};
+    /* Skip any whitespace following the delimiter */
+    const UNICHAR spaceStr[3] = {U_SPACE, U_TAB, U_NUL};
     int spaceCount = ucsspn(lto->outputLine+prefixCount+1, spaceStr);
 
     promptLen = prefixCount + 1 + spaceCount;
