@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "DEBUG" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "DEBUG" /D "NEW_PARSER" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG" /d "DEBUG"
 BSC32=bscmake.exe
@@ -191,7 +191,15 @@ SOURCE=..\icode.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\icodeasm.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\icodegenerator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\icodemap.h
 # End Source File
 # Begin Source File
 
