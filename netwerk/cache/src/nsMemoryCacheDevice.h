@@ -48,7 +48,7 @@ public:
                                            nsCacheAccessMode mode,
                                            nsITransport **transport );
 
-    virtual nsresult OnDataSizeChanged( nsCacheEntry * entry );
+    virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize );
  
 private:
     nsCacheEntryHashTable   mInactiveEntries;
