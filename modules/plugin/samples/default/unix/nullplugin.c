@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+#include <gdk/gdkkeysyms.h>
 
 /* Xlib/Xt stuff */
 #include <X11/Xlib.h>
@@ -118,6 +119,20 @@ static void
 DialogCancelClicked (GtkButton *button, gpointer data) 
 {
     destroyWidget((PluginInstance*) data);
+}
+
+/* function that closes the dialog if ESC is pressed */
+static gboolean
+DialogEscapePressed (GtkWidget *widget, GdkEventKey *event, gpointer data)
+{
+    if (event->keyval == GDK_Escape)
+    {
+        gtk_signal_emit_stop_by_name (GTK_OBJECT (widget), "key_press_event");
+        gtk_object_destroy (GTK_OBJECT (widget));
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /* a handy procedure to add a widget and pack it as well */
@@ -265,6 +280,9 @@ makeWidget(PluginInstance *This)
                    GTK_DIALOG(dialogWindow)->action_area);
     gtk_object_set_data(GTK_OBJECT(okButton), DIALOGID, dialogWindow);
 
+    GTK_WIDGET_SET_FLAGS (okButton, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(okButton);
+
     cancelButton= AddWidget(gtk_button_new_with_label (CANCEL_BUTTON), 
                    GTK_DIALOG(dialogWindow)->action_area);
 
@@ -273,6 +291,9 @@ makeWidget(PluginInstance *This)
 
     gtk_signal_connect (GTK_OBJECT(cancelButton),  "clicked",
                         GTK_SIGNAL_FUNC(DialogCancelClicked), This);
+
+    gtk_signal_connect(GTK_OBJECT(dialogWindow), "key_press_event",
+                        GTK_SIGNAL_FUNC (DialogEscapePressed), NULL);
 
     /* hookup to when the dialog is destroyed */
     gtk_signal_connect(GTK_OBJECT(dialogWindow), "destroy",
