@@ -456,6 +456,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 			if (folderName && nsCRT::strcasecmp(folderName, name)==0)
 			{
 				*aChild = folder;
+				NS_ADDREF( *aChild);
 				delete[] folderName;
 				return NS_OK;
 			}
