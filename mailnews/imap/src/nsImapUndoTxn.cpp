@@ -103,6 +103,14 @@ nsImapMoveCopyMsgTxn::Undo(void)
                                           m_dstMsgIdString.GetBuffer(),
                                           kImapMsgDeletedFlag,
                                           m_idsAreUids);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIMsgDatabase> dstDB;
+            rv = m_dstFolder->GetMsgDatabase(getter_AddRefs(dstDB));
+            if (NS_SUCCEEDED(rv))
+                dstDB->DeleteMessages(&m_dstKeyArray, nsnull);
+        }
+        
     }
 	return rv;
 }
@@ -122,6 +130,13 @@ nsImapMoveCopyMsgTxn::Redo(void)
 										  m_srcMsgIdString.GetBuffer(),
 										  kImapMsgDeletedFlag,
 										  m_idsAreUids);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIMsgDatabase> srcDB;
+            rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+            if (NS_SUCCEEDED(rv))
+                srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
+        }
     }
     if (m_dstKeyArray.GetSize() > 0)
     {
