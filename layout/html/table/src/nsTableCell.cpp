@@ -19,6 +19,7 @@
 #include "nsTableCellFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
@@ -232,6 +233,14 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     MapBackgroundAttributesInto(aContext, aPresContext);
+
+    // nowrap
+    GetAttribute(nsHTMLAtoms::nowrap, value);
+    if (value.GetUnit() == eHTMLUnit_Empty)
+    {
+      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      text->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
+    }
 
     // width: pixel
     float p2t = aPresContext->GetPixelsToTwips();

@@ -1066,7 +1066,6 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   }
   else if ( aAttribute == nsHTMLAtoms::cols)
   { // it'll either be empty, or have an integer value
-    nsHTMLValue val;
     nsAutoString tmp(aValue);
     tmp.StripWhitespace();
     if (0 == tmp.Length()) {
@@ -1080,7 +1079,6 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   }
   else if ( aAttribute == nsHTMLAtoms::border)
   {
-    nsHTMLValue val;
     nsAutoString tmp(aValue);
     tmp.StripWhitespace();
     if (0 == tmp.Length()) {
@@ -1107,10 +1105,16 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     return;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    nsHTMLValue val;
     if (ParseTableAlignParam(aValue, val)) {
       nsHTMLTagContent::SetAttribute(aAttribute, val);
     }
+    return;
+  }
+  /* HTML 4 attributes */
+  // TODO: only partially implemented
+  else if (aAttribute == nsHTMLAtoms::summary) {
+    val.SetStringValue(aValue);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
 }
@@ -1147,8 +1151,8 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() != eHTMLUnit_Null) {
     NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
-    nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetMutableStyleData(eStyleStruct_Display);
 
+    nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetMutableStyleData(eStyleStruct_Display);
     switch (value.GetIntValue()) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;
