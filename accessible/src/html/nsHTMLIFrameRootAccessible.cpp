@@ -106,10 +106,7 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccState(PRUint32 *aAccState)
-{
-  return nsDocAccessibleMixin::GetAccState(aAccState);
-}
+// ------- nsIAccessibleDocument Methods (5) ---------------
 
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetURL(nsAWritableString& aURL)
 {
