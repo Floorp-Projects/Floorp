@@ -150,12 +150,12 @@ NS_IMETHODIMP nsXULCommand::SetEnabled(PRBool aIsEnabled)
   PRInt32 i, n = mSrcWidgets.Count();
   for (i = 0; i < n; i++) {
     nsCOMPtr<nsIDOMNode> node = dont_AddRef(NS_STATIC_CAST(nsIDOMNode*,mSrcWidgets.ElementAt(i)));
-    nsCOMPtr<nsIDOMHTMLInputElement> input ( node );
+    nsCOMPtr<nsIDOMHTMLInputElement> input ( do_QueryInterface(node) );
     //*** rewrite this part to set an attribute on a nsIDOMElement
     if ( input ) {
       input->SetDisabled(aIsEnabled);
     } else {
-      nsCOMPtr<nsIDOMHTMLButtonElement> btn ( node );
+      nsCOMPtr<nsIDOMHTMLButtonElement> btn ( do_QueryInterface(node) );
       if ( btn )
         btn->SetDisabled(!aIsEnabled);
     }
@@ -330,7 +330,7 @@ nsresult nsXULCommand::KeyUp(nsIDOMEvent* aKeyEvent)
   if (nsIDOMEvent::VK_RETURN != type) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDOMHTMLInputElement> input ( mDOMElement );
+  nsCOMPtr<nsIDOMHTMLInputElement> input ( do_QueryInterface(mDOMElement) );
   if ( input ) {
     nsAutoString value;
     input->GetValue(value);

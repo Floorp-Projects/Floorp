@@ -388,7 +388,7 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * a
   if (!element)
     return node;
 
-  nsCOMPtr<nsIDOMNode> parent(element);
+  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(element));
   if (!parent)
     return node;
 
@@ -571,7 +571,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
   aDOMDoc->GetDocumentElement(getter_AddRefs(element));
   if (!element)
     return;
-  nsCOMPtr<nsIDOMNode> window(element);
+  nsCOMPtr<nsIDOMNode> window(do_QueryInterface(element));
 
   nsresult rv;
   int endCount = 0;
@@ -593,7 +593,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
       nsCOMPtr<nsIDOMNode> menuNode;
       menubarNode->GetFirstChild(getter_AddRefs(menuNode));
       while (menuNode) {
-        nsCOMPtr<nsIDOMElement> menuElement(menuNode);
+        nsCOMPtr<nsIDOMElement> menuElement(do_QueryInterface(menuNode));
         if (menuElement) {
           nsString menuNodeType;
           nsString menuName;
@@ -618,7 +618,8 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
               nsCOMPtr<nsIDOMNode> menuitemNode;
               menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
               while (menuitemNode) {
-                nsCOMPtr<nsIDOMElement> menuitemElement(menuitemNode);
+                nsCOMPtr<nsIDOMElement> 
+                  menuitemElement(do_QueryInterface(menuitemNode));
                 if (menuitemElement) {
                   nsString menuitemNodeType;
                   nsString menuitemName;
@@ -789,7 +790,7 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::GetParentNodeFromDOMDoc(nsIDOMDocument * 
   nsCOMPtr<nsIDOMElement> element;
   aDOMDoc->GetDocumentElement(getter_AddRefs(element));
   if (element)
-    return nsCOMPtr<nsIDOMNode>(element);
+    return nsCOMPtr<nsIDOMNode>(do_QueryInterface(element));
   return node;
 } // nsWebShellWindow::GetParentNodeFromDOMDoc
 
@@ -809,14 +810,14 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
   if (!cv)
     return domDoc;
    
-  nsCOMPtr<nsIDocumentViewer> docv(cv);
+  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
   if (!docv)
     return domDoc;
 
   nsCOMPtr<nsIDocument> doc;
   docv->GetDocument(*getter_AddRefs(doc));
   if (doc)
-    return nsCOMPtr<nsIDOMDocument>(doc);
+    return nsCOMPtr<nsIDOMDocument>(do_QueryInterface(doc));
 
   return domDoc;
 } // nsWebShellWindow::GetNamedDOMDoc
@@ -925,7 +926,7 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
   nsCOMPtr<nsIDOMNode> statusNode(FindNamedDOMNode(nsAutoString("#text"), parent, count, 7));
   if (!statusNode)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMCharacterData> charData(statusNode);
+  nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(statusNode));
   if (!charData)
     return NS_ERROR_FAILURE;
   mStatusText = charData;
@@ -988,17 +989,17 @@ nsWebShellWindow::GetDOMNodeFromWebShell(nsIWebShell *aShell)
   nsCOMPtr<nsIContentViewer> cv;
   aShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDocumentViewer> docv(cv);
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
     if (docv) {
       nsCOMPtr<nsIDocument> doc;
       docv->GetDocument(*getter_AddRefs(doc));
       if (doc) {
-        nsCOMPtr<nsIDOMDocument> domdoc(doc);
+        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
         if (domdoc) {
           nsCOMPtr<nsIDOMElement> element;
           domdoc->GetDocumentElement(getter_AddRefs(element));
           if (element)
-            node = element;
+            node = do_QueryInterface(element);
         }
       }
     }
@@ -1021,7 +1022,7 @@ void nsWebShellWindow::LoadCommandsInWebShell(nsIWebShell *aShell)
   nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(aShell);
   if (!webshellNode)
     return;
-  nsCOMPtr<nsIDOMElement> webshellElement(webshellNode);
+  nsCOMPtr<nsIDOMElement> webshellElement(do_QueryInterface(webshellNode));
   if (!webshellElement)
     return;
 
@@ -1035,7 +1036,7 @@ void nsWebShellWindow::LoadCommandsInWebShell(nsIWebShell *aShell)
       nsCOMPtr<nsIDOMNode> commandRoot;
       if (NS_FAILED(commandRootList->Item(rootCtr, getter_AddRefs(commandRoot))))
         break;
-      nsCOMPtr<nsIDOMElement> commandRootElement(commandRoot);
+      nsCOMPtr<nsIDOMElement> commandRootElement(do_QueryInterface(commandRoot));
       if (!commandRootElement)
         break;
 
@@ -1073,7 +1074,7 @@ void nsWebShellWindow::LoadCommandsInWebShell(nsIWebShell *aShell)
 void
 nsWebShellWindow::MakeOneCommand(nsIWebShell *aShell, nsCOMPtr<nsIDOMNode> aCommand)
 {
-  nsCOMPtr<nsIDOMElement> cmdElement(aCommand);
+  nsCOMPtr<nsIDOMElement> cmdElement(do_QueryInterface(aCommand));
   if (!cmdElement)
     return;
 
@@ -1112,7 +1113,7 @@ nsWebShellWindow::ConnectCommandsToWidgetsByType(nsIWebShell *aShell, nsString &
   nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(aShell);
   if (!webshellNode)
     return;
-  nsCOMPtr<nsIDOMElement> webshellElement(webshellNode);
+  nsCOMPtr<nsIDOMElement> webshellElement(do_QueryInterface(webshellNode));
   if (!webshellElement)
     return;
 
