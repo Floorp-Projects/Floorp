@@ -27,6 +27,6 @@
 <!ENTITY  encryptEnabled.accesskey    "n">
 
 <!ENTITY  convertEncrypted.label      "Encrypt existing stored data">
-<!ENTITY  convertObscurred.label      "Obscur existing stored data">
+<!ENTITY  convertObscurred.label      "Obscure existing stored data">
 <!ENTITY  convertEncrypted.accesskey  "p">
 <!ENTITY  convertObscurred.accesskey  "o">
