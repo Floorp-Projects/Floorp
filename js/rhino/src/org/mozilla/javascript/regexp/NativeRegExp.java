@@ -176,6 +176,24 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                      Object[] args, Function funObj)
     {
         NativeRegExp thisObj = (NativeRegExp) thisVal; // XXX check cast
+        if (args[0] instanceof NativeRegExp) {
+            if (args.length > 1) {
+                // report error
+                throw NativeGlobal.constructError(
+                             cx, "TypeError",
+                             "only one argument may be specified " +
+                               "if the first argument is a RegExp object",
+                             funObj);
+            }
+            NativeRegExp thatObj = (NativeRegExp) args[0];
+            thisObj.source = thatObj.source; 
+            thisObj.lastIndex = thatObj.lastIndex;
+            thisObj.parenCount = thatObj.parenCount;
+            thisObj.flags = thatObj.flags;
+            thisObj.program = thatObj.program;
+            thisObj.ren = thatObj.ren;
+            return thisObj;
+        }
         String s = args.length == 0 ? "" : ScriptRuntime.toString(args[0]);
         String global = args.length > 1 ? ScriptRuntime.toString(args[1])
                                         : null;
