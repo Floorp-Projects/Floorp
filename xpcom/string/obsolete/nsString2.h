@@ -547,8 +547,25 @@ class NS_COM NS_ConvertASCIItoUCS2
     */
   {
     public:
-      explicit NS_ConvertASCIItoUCS2( const char* );
-      NS_ConvertASCIItoUCS2( const char*, PRUint32 );
+      explicit
+      NS_ConvertASCIItoUCS2( const nsACString& aCString );
+
+      explicit
+      NS_ConvertASCIItoUCS2( const nsAFlatCString& aCString )
+        {
+          Init( aCString.get(), aCString.Length() );
+        }
+
+      explicit
+      NS_ConvertASCIItoUCS2( const char* aCString )
+        {
+          Init( aCString, ~PRUint32(0) /* MAXINT */ );
+        }
+
+      NS_ConvertASCIItoUCS2( const char* aCString, PRUint32 aLength )
+        {
+          Init( aCString, aLength );
+        }
 
 #if 0
       operator const nsDependentString() const
@@ -556,6 +573,9 @@ class NS_COM NS_ConvertASCIItoUCS2
           return nsDependentString(mUStr, mLength);
         }
 #endif
+
+    protected:
+      void Init( const char* aCString, PRUint32 aLength );
 
     private:
         // NOT TO BE IMPLEMENTED
@@ -567,18 +587,24 @@ class NS_COM NS_ConvertUTF8toUCS2
   {
     public:
       explicit
+      NS_ConvertUTF8toUCS2( const nsACString& aCString )
+        {
+          Init( aCString );
+        }
+
+      explicit
       NS_ConvertUTF8toUCS2( const char* aCString )
         {
-          Init( aCString, ~PRUint32(0) /* MAXINT */ );
+          Init( nsDependentCString( aCString ) );
         }
 
       NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
         {
-          Init( aCString, aLength );
+          Init( nsDependentCString( aCString, aLength ) );
         }
 
     protected:
-      void Init( const char* aCString, PRUint32 aLength );
+      void Init( const nsACString& aCString );
 
     private:
       NS_ConvertUTF8toUCS2( PRUnichar );
