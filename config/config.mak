@@ -436,8 +436,5 @@ CURDIR=$(MAKEDIR)^\
 XPIDL_PROG=$(DIST)\bin\xpidl
 XPTLINK_PROG=$(DIST)\bin\xpt_link
 
-XPIDL_GEN_DIR=.\_xpidlgen
-XPIDL_GEN_MAKEFILE=$(XPIDL_GEN_DIR)\makefile.win
-
 !endif # CONFIG_CONFIG_MAK
 
