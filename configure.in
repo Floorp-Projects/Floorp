@@ -2615,10 +2615,15 @@ dnl =
 dnl = Support for demangling undefined symbols
 dnl = 
 dnl ========================================================
+AC_CHECK_LIB(iberty, cplus_demangle, [HAVE_DEMANGLE=1],
+             HAVE_DEMANGLE=, "-liberty")
+
 MOZ_DEMANGLE_SYMBOLS=
 
-case "$target" in
-	*-linux*)
+if test "$HAVE_DEMANGLE"
+then
+  case "$target" in
+    *-linux*)
         # Demangle only for debug builds
         if test "$MOZ_DEBUG"
         then
@@ -2626,7 +2631,8 @@ case "$target" in
             AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
         fi
 	;;
-esac
+  esac
+fi
 
 AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
 
