@@ -141,8 +141,14 @@ class HTMLContentSink : public nsIHTMLContentSink {
 public:
   void* operator new(size_t size) {
     void* rv = ::operator new(size);
-    nsCRT::zero(rv, size);
-    return (void*) rv;
+    if (rv) {
+      nsCRT::zero(rv, size);
+    }
+    return rv;
+  }
+
+  void operator delete(void* ptr, size_t size) {
+    ::operator delete(ptr);
   }
 
   HTMLContentSink();
