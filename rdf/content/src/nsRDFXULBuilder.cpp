@@ -1299,75 +1299,96 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
         return rv;
     }
 
-    {
-        // Force the document to be set _here_. Many of the
-        // AppendChildTo() implementations do not recursively ensure
-        // that the child's doc is the same as the parent's.
-        nsCOMPtr<nsIDocument> doc;
-        if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc)))) {
-            NS_ERROR("uh, this isn't a document!");
+    // Force the document to be set _here_. Many of the
+    // AppendChildTo() implementations do not recursively ensure
+    // that the child's doc is the same as the parent's.
+    nsCOMPtr<nsIDocument> doc;
+    if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc)))) {
+        NS_ERROR("uh, this isn't a document!");
+        return rv;
+    }
+
+    if (NS_FAILED(rv = element->SetDocument(doc, PR_FALSE))) {
+        NS_ERROR("couldn't set document on the element");
+        return rv;
+    }
+
+    // Make sure our ID is set. Unlike XUL elements, we want to make sure
+    // that our ID is relative if possible.
+    const char* uri;
+    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+        return rv;
+
+    nsString fullURI(uri);
+    nsIURL* docURL = nsnull;
+    doc->GetBaseURL(docURL);
+    if (docURL) {
+        const char* url;
+        docURL->GetSpec(&url);
+        rdf_PossiblyMakeRelative(url, fullURI);
+        NS_RELEASE(docURL);
+    }
+       
+    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, fullURI, PR_FALSE)))
+        return rv;
+
+    // XXX Do we add ourselves to the map here? If so, this is non-dynamic! 
+    // If the HTML element's ID changes, we won't adjust
+    // the map.  XUL elements do this in the SetAttribute call, but we don't have
+    // access to that for HTML elements.  Should they even be in the map?
+    // For now the answer is NO.
+
+    // Now iterate through all the properties and add them as
+    // attributes on the element.  First, create a cursor that'll
+    // iterate through all the properties that lead out of this
+    // resource.
+    nsCOMPtr<nsIRDFArcsOutCursor> properties;
+    if (NS_FAILED(rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties)))) {
+        NS_ERROR("unable to create arcs-out cursor");
+        return rv;
+    }
+
+    // Advance that cursor 'til it runs outta steam
+    while (NS_SUCCEEDED(rv = properties->Advance())) {
+        nsCOMPtr<nsIRDFResource> property;
+
+        if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property)))) {
+            NS_ERROR("unable to get property from cursor");
             return rv;
         }
 
-        if (NS_FAILED(rv = element->SetDocument(doc, PR_FALSE))) {
-            NS_ERROR("couldn't set document on the element");
+        // These are special beacuse they're used to specify the tree
+        // structure of the XUL: ignore them b/c they're not attributes
+        if ((property.get() == kRDF_instanceOf) ||
+            (property.get() == kRDF_nextVal) ||
+            (property.get() == kRDF_type) ||
+            (rdf_IsOrdinalProperty(property)))
+            continue;
+
+        // For each property, get its value: this will be the value of
+        // the new attribute.
+        nsCOMPtr<nsIRDFNode> value;
+        if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
+            NS_ERROR("unable to get value for property");
+            return rv;
+        }
+
+        // Add the attribute to the newly constructed element
+        if (NS_FAILED(rv = AddAttribute(element, property, value))) {
+            NS_ERROR("unable to add attribute to element");
             return rv;
         }
     }
 
-    {
-        // Now iterate through all the properties and add them as
-        // attributes on the element.  First, create a cursor that'll
-        // iterate through all the properties that lead out of this
-        // resource.
-        nsCOMPtr<nsIRDFArcsOutCursor> properties;
-        if (NS_FAILED(rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties)))) {
-            NS_ERROR("unable to create arcs-out cursor");
-            return rv;
-        }
-
-        // Advance that cursor 'til it runs outta steam
-        while (NS_SUCCEEDED(rv = properties->Advance())) {
-            nsCOMPtr<nsIRDFResource> property;
-
-            if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property)))) {
-                NS_ERROR("unable to get property from cursor");
-                return rv;
-            }
-
-            // These are special beacuse they're used to specify the tree
-            // structure of the XUL: ignore them b/c they're not attributes
-            if ((property.get() == kRDF_instanceOf) ||
-                (property.get() == kRDF_nextVal) ||
-                (property.get() == kRDF_type) ||
-                (rdf_IsOrdinalProperty(property)))
-                continue;
-
-            // For each property, get its value: this will be the value of
-            // the new attribute.
-            nsCOMPtr<nsIRDFNode> value;
-            if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
-                NS_ERROR("unable to get value for property");
-                return rv;
-            }
-
-            // Add the attribute to the newly constructed element
-            if (NS_FAILED(rv = AddAttribute(element, property, value))) {
-                NS_ERROR("unable to add attribute to element");
-                return rv;
-            }
-        }
-
-        if (rv == NS_ERROR_RDF_CURSOR_EMPTY) {
-            rv = NS_OK;
-        }
-        else if (NS_FAILED(rv)) {
-            // uh oh...
-            NS_ERROR("problem iterating properties");
-            return rv;
-        }
+    if (rv == NS_ERROR_RDF_CURSOR_EMPTY) {
+        rv = NS_OK;
     }
-
+    else if (NS_FAILED(rv)) {
+        // uh oh...
+        NS_ERROR("problem iterating properties");
+        return rv;
+    }
+   
     // Create the children NOW, because we can't do it lazily.
     if (NS_FAILED(rv = CreateHTMLContents(element, aResource))) {
         NS_ERROR("error creating child contents");
@@ -1432,12 +1453,6 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
         NS_ERROR("unable to create new content element");
         return rv;
     }
-
-    // Set the document for this XUL element.  It must be set now
-    // in order for event handlers to be detected in the subsequent
-    // SetAttribute calls.
-    nsCOMPtr<nsIDocument> document( do_QueryInterface(mDocument) );
-    element->SetDocument(document, PR_FALSE);
 
     // Now iterate through all the properties and add them as
     // attributes on the element.  First, create a cursor that'll
@@ -1757,6 +1772,12 @@ RDFXULBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     nsCOMPtr<nsIContent> result;
     if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
         return rv;
+
+    // Set the document for this resource element.  It must be set now
+    // in order for event handlers to be detected in the subsequent
+    // SetAttribute calls (and in the ID-setting call below).
+    nsCOMPtr<nsIDocument> document( do_QueryInterface(mDocument) );
+    result->SetDocument(document, PR_FALSE);
 
     const char* uri;
     if (NS_FAILED(rv = aResource->GetValue(&uri)))
