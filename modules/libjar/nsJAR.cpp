@@ -1140,9 +1140,8 @@ public:
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
 
 nsZipReaderCache::nsZipReaderCache()
-  : mZips(nsZipCacheEntry::Clone, nsnull,
-          nsZipCacheEntry::Delete, nsnull),
-    mLock(nsnull),
+  : mLock(nsnull),
+    mZips(nsZipCacheEntry::Clone, nsnull, nsZipCacheEntry::Delete, nsnull),
     mFreeCount(0)
 {
   NS_INIT_REFCNT();
