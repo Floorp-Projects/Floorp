@@ -852,6 +852,12 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
         }
         details= details->mNext;
       }
+	  if (!mInit && mTypes) //we have details but none that we care about.
+	  {
+        delete mTypes;
+		mTypes = nsnull;
+		mDone = PR_TRUE;//we are finished
+	  }
     }
     else if (details->mStart == details->mEnd)//no collapsed selections here!
     {
@@ -897,7 +903,10 @@ DrawSelectionIterator::FillCurrentData()
   {
     mCurrentIdx+=mCurrentLength;//advance to this chunk
     if (mCurrentIdx >= mLength)
+    {
+      mDone = PR_TRUE;
       return;
+    }
     uint8 typevalue = mTypes[mCurrentIdx];
     while (typevalue == mTypes[mCurrentIdx+mCurrentLength] && (mCurrentIdx+mCurrentLength) <mLength)
     {
@@ -1740,46 +1749,39 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
       //while we have substrings...
-      if (details)
+      PRBool drawn = PR_FALSE;
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
+      if (!iter.IsDone() && iter.First())
       {
-        DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
-        if (iter.First())
+        nscoord currentX = dx;
+        nscoord newWidth;//temp
+        while (!iter.IsDone())
         {
-          nscoord currentX = dx;
-          nscoord newWidth;//temp
-          while (!iter.IsDone())
+          PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
+          PRUint32   currentlength= iter.CurrentLength();
+          TextStyle &currentStyle = iter.CurrentStyle();
+          nscolor    currentFGColor = iter.CurrentForeGroundColor();
+          nscolor    currentBKColor;
+
+          if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
           {
-            PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
-            PRUint32   currentlength= iter.CurrentLength();
-            TextStyle &currentStyle = iter.CurrentStyle();
-            nscolor    currentFGColor = iter.CurrentForeGroundColor();
-            nscolor    currentBKColor;
-
-            if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
-            {
-              if (iter.CurrentBackGroundColor(currentBKColor))
-              {//DRAW RECT HERE!!!
-                aRenderingContext.SetColor(currentBKColor);
-                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
-								currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
-              }
+            if (iter.CurrentBackGroundColor(currentBKColor))
+            {//DRAW RECT HERE!!!
+              aRenderingContext.SetColor(currentBKColor);
+              aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+							currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
-            else
-              newWidth =0;
-            
-
-            aRenderingContext.SetColor(currentFGColor);
-            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
-
-            currentX+=newWidth;//increment twips X start
-
-            iter.Next();
           }
-        }
-        else
-        {
-          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
-          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+          else
+            newWidth =0;
+          
+
+          aRenderingContext.SetColor(currentFGColor);
+          aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
+
+          currentX+=newWidth;//increment twips X start
+
+          iter.Next();
         }
       }
       else
@@ -1800,7 +1802,6 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     }
   }
 }
-
 
 //measure Spaced Textvoid
 nsresult
@@ -2202,48 +2203,40 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      if (details)
-      {
-        DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
-        if (iter.First())
-        {
-          nscoord currentX = dx;
-          nscoord newWidth;//temp
-          while (!iter.IsDone())
-          {
-            PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
-            PRUint32   currentlength= iter.CurrentLength();
-            TextStyle &currentStyle = iter.CurrentStyle();
-            nscolor    currentFGColor = iter.CurrentForeGroundColor();
-            nscolor    currentBKColor;
-            GetWidth(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newWidth);
-            if (newWidth)
-            {
-              if (iter.CurrentBackGroundColor(currentBKColor))
-              {//DRAW RECT HERE!!!
-                aRenderingContext.SetColor(currentBKColor);
-                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
-								currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
-              }
-            }
-            else
-              newWidth =0;
-            
-            aRenderingContext.SetColor(currentFGColor);
-            RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
-                          currentlength, currentX, dy, width, details);
-            //increment twips X start but remember to get ready for next draw by reducing current x by letter spacing amount
-            currentX+=newWidth;// + aTextStyle.mLetterSpacing;
 
-            iter.Next();
-          }
-        }
-        else
-        {
-          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
-          RenderString(aRenderingContext,aStyleContext, aTextStyle, text, 
-                        PRUint32(textLength), dx, dy, width, details);
-        }
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
+      if (!iter.IsDone() && iter.First())
+      {
+	      nscoord currentX = dx;
+	      nscoord newWidth;//temp
+	      while (!iter.IsDone())
+	      {
+	      PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
+	      PRUint32   currentlength= iter.CurrentLength();
+	      TextStyle &currentStyle = iter.CurrentStyle();
+	      nscolor    currentFGColor = iter.CurrentForeGroundColor();
+	      nscolor    currentBKColor;
+	      GetWidth(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newWidth);
+	      if (newWidth)
+	      {
+		      if (iter.CurrentBackGroundColor(currentBKColor))
+		      {//DRAW RECT HERE!!!
+		      aRenderingContext.SetColor(currentBKColor);
+		      aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+						      currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
+		      }
+	      }
+	      else
+		      newWidth =0;
+    
+	      aRenderingContext.SetColor(currentFGColor);
+	      RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
+					      currentlength, currentX, dy, width, details);
+	      //increment twips X start but remember to get ready for next draw by reducing current x by letter spacing amount
+	      currentX+=newWidth;// + aTextStyle.mLetterSpacing;
+
+	      iter.Next();
+	      }
       }
       else
       {
@@ -2354,45 +2347,37 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      if (details)
+      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
+      if (!iter.IsDone() && iter.First())
       {
-        DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
-        if (iter.First())
+        nscoord currentX = dx;
+        nscoord newWidth;//temp
+        while (!iter.IsDone())
         {
-          nscoord currentX = dx;
-          nscoord newWidth;//temp
-          while (!iter.IsDone())
+          char *currenttext  = iter.CurrentTextCStrPtr();
+          PRUint32   currentlength= iter.CurrentLength();
+          TextStyle &currentStyle = iter.CurrentStyle();
+          nscolor    currentFGColor = iter.CurrentForeGroundColor();
+          nscolor    currentBKColor;
+
+          if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
           {
-            char *currenttext  = iter.CurrentTextCStrPtr();
-            PRUint32   currentlength= iter.CurrentLength();
-            TextStyle &currentStyle = iter.CurrentStyle();
-            nscolor    currentFGColor = iter.CurrentForeGroundColor();
-            nscolor    currentBKColor;
-
-            if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
-            {
-              if (iter.CurrentBackGroundColor(currentBKColor))
-              {//DRAW RECT HERE!!!
-                aRenderingContext.SetColor(currentBKColor);
-                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
-								currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
-              }
+            if (iter.CurrentBackGroundColor(currentBKColor))
+            {//DRAW RECT HERE!!!
+              aRenderingContext.SetColor(currentBKColor);
+              aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+							currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
-            else
-              newWidth =0;
-            
-            aRenderingContext.SetColor(currentFGColor);
-            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
-
-            currentX+=newWidth;//increment twips X start
-
-            iter.Next();
           }
-        }
-        else
-        {
-          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
-          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+          else
+            newWidth =0;
+          
+          aRenderingContext.SetColor(currentFGColor);
+          aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
+
+          currentX+=newWidth;//increment twips X start
+
+          iter.Next();
         }
       }
       else
