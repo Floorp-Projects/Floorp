@@ -880,6 +880,7 @@ PRBool NET_RegisterAboutProtocol(const char *token,
         return PR_FALSE;
     }
     PL_HashTableAdd(net_AboutTable, token, callback);
+    return PR_TRUE;
 }
 
 PRIVATE int32
