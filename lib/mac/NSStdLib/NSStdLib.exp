@@ -727,9 +727,9 @@ __nwa__FUl
 
 ### Environment::
 #{code}
-__ct__11EnvironmentFv
-get__11EnvironmentFPCc
-__dt__11EnvironmentFv
+#__ct__11EnvironmentFv
+#get__11EnvironmentFPCc
+#__dt__11EnvironmentFv
 
 ### FixedMemoryBlock::
 #{data}
