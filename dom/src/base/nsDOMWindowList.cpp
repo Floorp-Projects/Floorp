@@ -70,7 +70,7 @@ nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell)
 NS_IMETHODIMP 
 nsDOMWindowList::GetLength(PRUint32* aLength)
 {
-  nsresult ret;
+  nsresult ret = NS_OK;
   PRInt32 length;
 
   *aLength = 0;
