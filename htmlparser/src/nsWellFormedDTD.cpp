@@ -320,9 +320,13 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifyS
  * @return
  */
 nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
-  nsITokenizer* theTokenizer=GetTokenizer();
-  if(theTokenizer)
+  nsITokenizer* theTokenizer=0;
+  
+  nsresult result=GetTokenizer(theTokenizer);
+
+  if (NS_SUCCEEDED(result)) {
     return theTokenizer->GetTokenRecycler();
+  }
   return 0;
 }
 
@@ -341,18 +345,21 @@ nsresult  CWellFormedDTD::Terminate(void)
     return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
+
 /**
  * Retrieve the preferred tokenizer for use by this DTD.
- * @update	gess12/28/98
+ * @update  gess12/28/98
  * @param   none
  * @return  ptr to tokenizer
  */
-nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
+nsresult CWellFormedDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
+  nsresult result=NS_OK;
   if(!mTokenizer) {
     mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer(&mFilename);
     NS_IF_ADDREF(mTokenizer);
   }
-  return mTokenizer;
+  aTokenizer=mTokenizer;
+  return result;
 }
 
 /**

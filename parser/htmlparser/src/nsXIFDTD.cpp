@@ -1217,17 +1217,20 @@ nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
   return result;
 }
 
+
 /**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
+ * Retrieve the preferred tokenizer for use by this DTD.
+ * @update  gess12/28/98
+ * @param   none
+ * @return  ptr to tokenizer
  */
-nsITokenizer* nsXIFDTD::GetTokenizer(void){
+nsresult nsXIFDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
+  nsresult result=NS_OK;
   if(!mTokenizer) {
-    nsresult result=NS_NewXMLTokenizer(&mTokenizer);
+    result=NS_NewXMLTokenizer(&mTokenizer);
   }
-  return mTokenizer;
+  aTokenizer=mTokenizer;
+  return result;
 }
 
 
@@ -1238,9 +1241,13 @@ nsITokenizer* nsXIFDTD::GetTokenizer(void){
  * @return
  */
 nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
-  nsITokenizer* theTokenizer=GetTokenizer();
-  if(theTokenizer)
+  nsITokenizer* theTokenizer=0;
+  
+  nsresult result=GetTokenizer(theTokenizer);
+
+  if (NS_SUCCEEDED(result)) {
     return theTokenizer->GetTokenRecycler();
+  }
   return 0;
 }
 

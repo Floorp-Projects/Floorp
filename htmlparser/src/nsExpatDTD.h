@@ -165,7 +165,7 @@ class nsExpatDTD : public nsIDTD {
      * @param 
      * @return
      */
-    nsITokenizer* GetTokenizer(void);
+    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer);
 
     /**
      * 

@@ -626,13 +626,13 @@ PRInt32 CCDATASectionToken::GetTokenType(void) {
 /*
  *  Consume as much marked test from scanner as possible.
  *
- *  @update  vidur 11/12/98
+ *  @update  rgess 12/15/99: had to handle case: "<![ ! IE 5]>", in addition to "<![..[..]]>".
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
 nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  static    const char* theTerminals="\r]";
+  static const char* theTerminals="\r]";
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
@@ -659,26 +659,18 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
           } //switch
         } //if
       }
-      else if (kRightSquareBracket==aChar) {
+      else if (']'==aChar) {        
         result=aScanner.GetChar(aChar); //strip off the ]
+        mTextValue.Append(aChar);
         result=aScanner.Peek(aChar);    //then see what's next.
         if((NS_OK==result) && (kRightSquareBracket==aChar)) {
           result=aScanner.GetChar(aChar);    //strip off the second ]
+          mTextValue.Append(aChar);
           result=aScanner.Peek(aChar);    //then see what's next.
-          if(NS_OK==result) {
-            if (kGreaterThan==aChar) {
-              result=aScanner.GetChar(aChar); //strip off the >
-              done=PR_TRUE;
-            }
-            else {
-              // This isn't the end of the CDATA section so go on
-              mTextValue.Append("]");
-            }
-          }//if
         }
-        else {
-          // This isn't the end of the CDATA section so go on
-          mTextValue.Append("]");
+        if((NS_OK==result) && (kGreaterThan==aChar)) {
+          result=aScanner.GetChar(aChar); //strip off the >
+          done=PR_TRUE;
         }
       }
       else done=PR_TRUE;
@@ -991,10 +983,11 @@ nsString& CNewlineToken::GetStringValueXXX(void) {
  */
 nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
 
-#if 0
+#if 1
   mTextValue=kNewLine;  //This is what I THINK we should be doing.
-#endif
+#else
   mTextValue=aChar;
+#endif
 
 /*******************************************************************
 

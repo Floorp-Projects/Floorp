@@ -294,13 +294,15 @@ NS_IMETHODIMP CRtfDTD::DidBuildModel(nsresult anErrorCode,PRInt32 aLevel,nsIPars
 }
 
 /**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
+ * Retrieve the preferred tokenizer for use by this DTD.
+ * @update  gess12/28/98
+ * @param   none
+ * @return  ptr to tokenizer
  */
-nsITokenizer* CRtfDTD::GetTokenizer(void){
-  return 0;
+nsresult CRtfDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
+  nsresult result=NS_OK;
+  aTokenizer=0;
+  return result;
 }
 
 /**

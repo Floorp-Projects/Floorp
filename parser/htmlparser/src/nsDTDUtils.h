@@ -44,18 +44,6 @@
 
 class nsIParserNode;
 
-/***************************************************************
-  Before digging into the NavDTD, we'll define a helper 
-  class called CTagStack.
-
-  Simply put, we've built ourselves a little data structure that
-  serves as a stack for htmltags (and associated bits). 
-  What's special is that if you #define rickgdebug 1, the stack
-  size can grow dynamically (like you'ld want in a release build.)
-  If you don't #define rickgdebug 1, then the stack is a fixed size,
-  equal to the eStackSize enum. This makes debugging easier, because
-  you can see the htmltags on the stack if its not dynamic.
- ***************************************************************/
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
@@ -97,7 +85,7 @@ public:
   eHTMLTags       Last() const;
   void            Empty(void); 
 
-  inline PRInt32 FindFirst(eHTMLTags aTag) const {
+  inline PRInt32 FirstOf(eHTMLTags aTag) const {
     PRInt32 index=-1;
     
     if(0<mCount) {
@@ -110,7 +98,7 @@ public:
     return kNotFound;
   }
 
-  inline PRInt32 FindLast(eHTMLTags aTag) const {
+  inline PRInt32 LastOf(eHTMLTags aTag) const {
     PRInt32 index=mCount;
     while(--index>=0) {
         if(aTag==mEntries[index].mTag) {
@@ -126,6 +114,9 @@ public:
 };
 
 
+//*********************************************************************************************
+//*********************************************************************************************
+
 class nsDTDContext {
 public:
                 nsDTDContext();
@@ -135,13 +126,16 @@ public:
   nsIParserNode*  Pop(nsEntryStack*& aChildStack);
   eHTMLTags       First(void) const;
   eHTMLTags       Last(void) const;
+  nsTagEntry*     LastEntry(void) const;
   eHTMLTags       TagAt(PRInt32 anIndex) const;
   eHTMLTags       operator[](PRInt32 anIndex) const {return TagAt(anIndex);}
   PRBool          HasOpenContainer(eHTMLTags aTag) const;
-  PRInt32         GetTopmostIndexOf(eHTMLTags aTag) const;
+  PRInt32         FirstOf(eHTMLTags aTag) const {return mStack.FirstOf(aTag);}
+  PRInt32         LastOf(eHTMLTags aTag) const {return mStack.LastOf(aTag);}
 
   void            Empty(void); 
-  PRInt32         GetCount(void);
+  PRInt32         GetCount(void) {return mStack.mCount;}
+  PRInt32         GetResidualStyleCount(void) {return mResidualStyleCount;}
   nsEntryStack*   GetStylesAt(PRInt32 anIndex) const;
   void            PushStyle(const nsIParserNode* aNode);
   void            PushStyles(nsEntryStack *theStyles);
@@ -149,6 +143,7 @@ public:
   nsIParserNode*  PopStyle(eHTMLTags aTag);
 
   nsEntryStack    mStack; //this will hold a list of tagentries...
+  PRInt32         mResidualStyleCount;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
@@ -331,6 +326,52 @@ public:
   nsresult          mResult; 
   const PRUnichar*  mTagName; 
 };
+
+
+//*********************************************************************************************
+//*********************************************************************************************
+
+
+struct TagList {
+  PRUint32    mCount;
+  eHTMLTags   mTags[10];
+};
+
+/**
+ * 
+ * @update	gess 01/04/99
+ * @param  
+ * @return
+ */
+inline PRInt32 LastOf(nsDTDContext& aContext,TagList& aTagList){
+  int max = aContext.GetCount();
+  int index;
+  for(index=max-1;index>=0;index--){
+    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
+    if(result) {
+      return index;
+    }
+  }
+  return kNotFound;
+}
+ 
+/**
+ * 
+ * @update	gess 01/04/99
+ * @param 
+ * @return
+ */
+inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTagList){
+  int max = aContext.GetCount();
+  int index;
+  for(index=aStartOffset;index<max;index++){
+    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
+    if(result) {
+      return index;
+    }
+  }
+  return kNotFound;
+}
 
 #endif
 

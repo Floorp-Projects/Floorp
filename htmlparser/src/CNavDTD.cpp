@@ -19,6 +19,13 @@
  *
  * Contributor(s): 
  */     
+
+//#define ENABLE_CRC
+//#define RICKG_DEBUG 
+#define ENABLE_RESIDUALSTYLE  
+#ifdef  RICKG_DEBUG
+#include  <fstream.h>  
+#endif
      
 #include "nsDebug.h" 
 #include "nsIDTDDebug.h"  
@@ -48,13 +55,6 @@
 #include <direct.h> //this is here for debug reasons...
 #endif
 #include "prmem.h"
-
-//#define ENABLE_RESIDUALSTYLE  
-//#define RICKG_DEBUG 
-//#define ENABLE_CRC
-#ifdef  RICKG_DEBUG
-#include  <fstream.h>  
-#endif
 
 
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
@@ -247,10 +247,10 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
     InitializeElementTable();
   }
 
-//  DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
 #ifdef  RICKG_DEBUG
-  nsHTMLElement::DebugDumpContainment("c:/temp/rules.new","ElementTable Rules");
-  nsHTMLElement::DebugDumpMembership("c:/temp/table.out");
+  //DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
+  nsHTMLElement::DebugDumpContainment("c:/temp/contain.new","ElementTable Rules");
+  nsHTMLElement::DebugDumpMembership("c:/temp/membership.out");
   nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
 #endif
 
@@ -311,6 +311,40 @@ void CNavDTD::RecycleNode(nsCParserNode* aNode) {
   }
 }
 
+/**
+ * This method recycles the nodes on a nodestack.
+ * NOTE: Unlike recycleNode(), we force the usecount
+ *       to 0 of all nodes, then force them to recycle.
+ * @update  gess1/8/99
+ * @param   aNodeStack
+ * @return  nothing
+ */
+void CNavDTD::RecycleNodes(nsEntryStack *aNodeStack) {
+  if(aNodeStack) {
+    PRInt32 theCount=aNodeStack->mCount;
+    PRInt32 theIndex=0;
+
+    for(theIndex=0;theIndex<theCount;theIndex++) {
+      nsCParserNode* theNode=(nsCParserNode*)aNodeStack->NodeAt(theIndex);
+      if(theNode) {
+
+        theNode->mUseCount=0;
+        if(theNode->mToken) {
+          theNode->mToken->mUseCount=0;
+          mTokenRecycler->RecycleToken(theNode->mToken); 
+        } 
+
+        CToken* theToken=0;
+        while((theToken=(CToken*)theNode->PopAttributeToken())){
+          theNode->mToken->mUseCount=0;
+          mTokenRecycler->RecycleToken(theToken); 
+        }
+
+        mSharedNodes.Push(theNode);
+      } //if
+    } //while
+  } //if
+}
 
 /**
  * 
@@ -517,6 +551,17 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
         }
 
         while(NS_SUCCEEDED(result)){
+
+#if 0
+          int n=aTokenizer->GetCount();
+          if(n>50) n=50;
+          for(int i=0;i<n;i++){
+            CToken* theToken=aTokenizer->GetTokenAt(i);
+            printf("\nToken[%i],%p",i,theToken);
+          }
+          printf("\n");
+#endif
+
           if(mDTDState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
             CToken* theToken=mTokenizer->PopToken();
             if(theToken) { 
@@ -545,9 +590,12 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
  */
 nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
+
   if(aSink) { 
 
     if((NS_OK==anErrorCode) && (!mHadBody) && (!mHadFrameset)) { 
+
+      mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
 
       CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,"body");
       mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
@@ -625,8 +673,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           else result = aSink->DidBuildModel(0); 
         } 
         else result=aSink->DidBuildModel(0); 
-#else
-        result=aSink->DidBuildModel(0); 
 #endif
 
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
@@ -636,8 +682,12 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           mDTDDebug->DumpVectorRecord(); 
         } 
       } 
-    } 
-  }
+    } //if aparser
+
+      //No matter what, you need to call did build model.
+    result=aSink->DidBuildModel(0); 
+
+  } //if asink
   return result;
 }
 
@@ -877,6 +927,23 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
   return result;
 } 
  
+/**
+ *  Determine whether the given tag is open anywhere
+ *  in our context stack.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   eHTMLTags tag to be searched for in stack
+ *  @return  topmost index of tag on stack
+ */
+PRInt32 CNavDTD::LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
+  int theIndex=0;
+  for(theIndex=mBodyContext->GetCount()-1;theIndex>=0;theIndex--){
+    if(FindTagInSet((*mBodyContext)[theIndex],aTagSet,aCount)) { 
+      return theIndex;
+    } 
+  } 
+  return kNotFound;
+}
 
 /**
  *  Call this to find the index of a given child, or (if not found)
@@ -889,19 +956,21 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
  */
 static
 PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
-  PRInt32 theChildIndex=aContext.GetTopmostIndexOf(aChildTag);
+  PRInt32 theChildIndex=aContext.LastOf(aChildTag);
   if(kNotFound==theChildIndex) {
     TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
     if(theSynTags) {
-      theChildIndex=GetTopmostIndexOf(aContext,*theSynTags);
+      theChildIndex=LastOf(aContext,*theSynTags);
     } 
     else{
-      theChildIndex=aContext.GetCount();
       PRInt32 theGroup=nsHTMLElement::GetSynonymousGroups(aChildTag);
-      while(-1<--theChildIndex) {
-        eHTMLTags theTag=aContext[theChildIndex];
-        if(gHTMLElements[theTag].IsMemberOf(theGroup)) {
-          break;   
+      if(theGroup) {
+        theChildIndex=aContext.GetCount();
+        while(-1<--theChildIndex) {
+          eHTMLTags theTag=aContext[theChildIndex];
+          if(gHTMLElements[theTag].IsMemberOf(theGroup)) {
+            break;   
+          }
         }
       }
     }
@@ -937,8 +1006,8 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
     TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
     TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
     if(theRootTags) {
-      PRInt32 theRootIndex=GetTopmostIndexOf(aContext,*theRootTags);
-      PRInt32 theSPIndex=(theSpecialParents) ? GetTopmostIndexOf(aContext,*theSpecialParents) : kNotFound;  
+      PRInt32 theRootIndex=LastOf(aContext,*theRootTags);
+      PRInt32 theSPIndex=(theSpecialParents) ? LastOf(aContext,*theSpecialParents) : kNotFound;  
       PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aContext,aChildTag);
       PRInt32 theBaseIndex=(theRootIndex>theSPIndex) ? theRootIndex : theSPIndex;
 
@@ -1372,16 +1441,16 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
  */
 static
 PRBool HasCloseablePeerAboveRoot(TagList& aRootTagList,nsDTDContext& aContext,eHTMLTags aTag,PRBool anEndTag) {
-  PRInt32   theRootIndex=GetTopmostIndexOf(aContext,aRootTagList);  
+  PRInt32   theRootIndex=LastOf(aContext,aRootTagList);  
   TagList*  theCloseTags=(anEndTag) ? gHTMLElements[aTag].GetAutoCloseEndTags() : gHTMLElements[aTag].GetAutoCloseStartTags();
   PRInt32 theChildIndex=-1;
 
   if(theCloseTags) {
-    theChildIndex=GetTopmostIndexOf(aContext,*theCloseTags);
+    theChildIndex=LastOf(aContext,*theCloseTags);
   }
   else {
     if((anEndTag) || (!gHTMLElements[aTag].CanContainSelf()))
-      theChildIndex=aContext.GetTopmostIndexOf(aTag);
+      theChildIndex=aContext.LastOf(aTag);
   }
     // I changed this to theRootIndex<=theChildIndex so to handle this case:
     //  <SELECT><OPTGROUP>...</OPTGROUP>
@@ -1560,8 +1629,9 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
           PopStyle(theChildTag);
         }
         else {
+          eHTMLTags theParentTag=mBodyContext->Last();
           if((kNotFound==GetIndexOfChildOrSynonym(*mBodyContext,theChildTag)) ||
-             (!gHTMLElements[theChildTag].CanAutoCloseTag(mBodyContext->Last()))) {
+             (!gHTMLElements[theChildTag].CanAutoCloseTag(theParentTag))) {
 
             PopStyle(theChildTag);
 
@@ -1571,7 +1641,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
               PRBool theParentContains=-1; //set to -1 to force canomit to recompute.
-              if(!CanOmit(mBodyContext->Last(),theChildTag,theParentContains)) {
+              if(!CanOmit(theParentTag,theChildTag,theParentContains)) {
                 mTokenizer->PushTokenFront(aToken); //put this end token back...
                 CHTMLToken* theToken = (CHTMLToken*)mTokenRecycler->CreateTokenOfType(eToken_start,theChildTag);
                 mTokenizer->PushTokenFront(theToken); //put this new token onto stack...
@@ -1994,7 +2064,7 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
   mLineNumber += aNode.mSkippedContent.CountChar(kNewLine);
   return NS_OK;
 }
-           
+            
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
   ***********************************************************************************/
@@ -2032,49 +2102,52 @@ NS_IMETHODIMP CNavDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* 
 }
 
 /**
- *  This method is called to determine whether or not 
+ *  This method is called to determine whether or not
  *  the necessary intermediate tags should be propagated
  *  between the given parent and given child.
- *  
+ *
  *  @update  gess 4/8/98
  *  @param   aParent -- tag enum of parent container
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if propagation should occur
  */
-PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag,PRBool aParentContains) const {
-  PRBool result=PR_FALSE;
-  PRBool theParentContains=(-1==aParentContains) ? CanContain(aParentTag,aChildTag) : aParentContains;
+PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag,PRBool aParentContains)  {
+  PRBool    result=PR_FALSE;
+  PRBool    theParentContains=(-1==aParentContains) ? CanContain(aParentTag,aChildTag) : aParentContains;
   eHTMLTags theTempTag=eHTMLTag_unknown;
 
   if(aParentTag==aChildTag) {
     return result;
   }
 
-  int thePropLevel=0;
   if(nsHTMLElement::IsContainer(aChildTag)){
+    mScratch.Truncate();
     if(!gHTMLElements[aChildTag].HasSpecialProperty(kNoPropagate)){
       if(nsHTMLElement::IsBlockParent(aParentTag) || (gHTMLElements[aParentTag].GetSpecialChildren())) {
-        theTempTag=aChildTag;
-        while(eHTMLTag_unknown!=aChildTag) {
-          if(theParentContains){
-            if(!CanOmit(aParentTag,aChildTag,theParentContains))
-              result=PR_TRUE;
-            break;
-          }//if
-          TagList* theTagList=gHTMLElements[aChildTag].GetRootTags();
-          aChildTag=GetTagAt(0,*theTagList);
-          if(aChildTag==theTempTag) break;
-          theParentContains=CanContain(aParentTag,aChildTag);
-          ++thePropLevel;
-        }//while
+
+        result=ForwardPropagate(mScratch,aParentTag,aChildTag);
+
+        if(PR_FALSE==result){
+
+          if(eHTMLTag_unknown!=aParentTag) {
+            if(aParentTag!=aChildTag) //dont even bother if we're already inside a similar element...
+              result=BackwardPropagate(mScratch,aParentTag,aChildTag);
+          } //if
+          else result=BackwardPropagate(mScratch,eHTMLTag_html,aChildTag);
+
+        } //elseif
+
       }//if
     }//if
-    if(thePropLevel>gHTMLElements[aParentTag].mPropagateRange)
+    if(mScratch.Length()-1>gHTMLElements[aParentTag].mPropagateRange)
       result=PR_FALSE;
   }//if
   else result=theParentContains;
+
+
   return result;
-}     
+}
+
 
 /**
  *  This method gets called to determine whether a given 
@@ -2086,7 +2159,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag,PRBool aPa
  *  @param   aParentContains
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) const {
+PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains)  {
 
   eHTMLTags theAncestor=gHTMLElements[aChild].mExcludingAncestor;
   if(eHTMLTag_unknown!=theAncestor){
@@ -2123,7 +2196,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContai
     return PR_FALSE;
   }
 
-  if(nsHTMLElement::IsBlockEntity(aParent)) {
+  if(gHTMLElements[aParent].IsBlockEntity()) {
     if(nsHTMLElement::IsInlineEntity(aChild)) {  //feel free to drop inlines that a block doesn't contain.
       return PR_TRUE;
     }
@@ -2225,7 +2298,7 @@ PRBool CNavDTD::BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTML
   do {
     TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
     if(theRootTags) {
-      theParentTag=GetTagAt(0,*theRootTags);
+      theParentTag=theRootTags->mTags[0];
       if(CanContain(theParentTag,aChildTag)) {
         //we've found a complete sequence, so push the parent...
         aChildTag=theParentTag;
@@ -2294,25 +2367,6 @@ eHTMLTags CNavDTD::GetTopNode() const {
   return mBodyContext->Last();
 }
 
-
-/**
- *  Determine whether the given tag is open anywhere
- *  in our context stack.
- *  
- *  @update  gess 4/2/98
- *  @param   eHTMLTags tag to be searched for in stack
- *  @return  topmost index of tag on stack
- */
-PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
-  int theIndex=0;
-  for(theIndex=mBodyContext->GetCount()-1;theIndex>=0;theIndex--){
-    if(FindTagInSet((*mBodyContext)[theIndex],aTagSet,aCount)) {
-      return theIndex;
-    }
-  }
-  return kNotFound;
-}
-
 /*********************************************
   Here comes code that handles the interface
   to our content sink.
@@ -2335,39 +2389,47 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
 
   //later, change this so that transients only open in containers that get leaked in to.
 
-  if(mStyleHandlingEnabled) {
+  if(mStyleHandlingEnabled  && (eHTMLTag_newline!=aChildTag)) {
 
 #ifdef  ENABLE_RESIDUALSTYLE
 
-    eHTMLTags theParentTag=mBodyContext->Last();
-
     if(CanContain(eHTMLTag_font,aChildTag)) {
-      if(!gHTMLElements[theParentTag].HasSpecialProperty(kNoStyleLeaksIn)) {
-          //the following code builds the set of style tags to be opened...
-        PRUint32 theCount=mBodyContext->GetCount();
-        PRUint32 theLevel=0;
-        for(theLevel=0;theLevel<theCount;theLevel++){
-          nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
-          if(theStack){
 
-            PRUint32 scount=theStack->mCount;
-            PRUint32 sindex=0;
+      PRUint32 theCount=mBodyContext->GetCount();
+      PRUint32 theLevel=theCount;
 
-            nsTagEntry *theEntry=theStack->mEntries;
-            for(sindex=0;sindex<scount;sindex++){            
-              if(!theEntry->mParent) {
-                theEntry->mParent=theStack;  //we do this too, because this entry differs from the new one we're pushing...
-                nsIParserNode* theNode=theEntry->mNode;
-                if(theNode) {
-                  result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE,theStack);
-                }
-              }
-              theEntry++;
-            } //for
-          } //if
-        } //for
-      } //if
-    }
+        //this first loop is used to determine how far up the containment
+        //hierarchy we go looking for residual styles.
+      while ( 1<theLevel) {
+        eHTMLTags theParentTag = mBodyContext->TagAt(--theLevel);
+        if(gHTMLElements[theParentTag].HasSpecialProperty(kNoStyleLeaksIn)) {
+          break;
+        }
+      }
+
+      mStyleHandlingEnabled=PR_FALSE;
+      for(;theLevel<theCount;theLevel++){
+        nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
+        if(theStack){
+
+          PRUint32 scount=theStack->mCount;
+          PRUint32 sindex=0;
+
+          nsTagEntry *theEntry=theStack->mEntries;
+          for(sindex=0;sindex<scount;sindex++){            
+            nsCParserNode* theNode=(nsCParserNode*)theEntry->mNode;
+            if(1==theNode->mUseCount) {
+              theEntry->mParent=theStack;  //we do this too, because this entry differs from the new one we're pushing...              
+              result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE,theStack);
+            }
+            theEntry++;
+          } //for
+        } //if
+      } //for
+      mStyleHandlingEnabled=PR_TRUE;
+
+    } //if
+
 #endif
   }//if
   return result;
@@ -2422,7 +2484,7 @@ nsresult CNavDTD::PopStyle(eHTMLTags aTag){
 
   if(mStyleHandlingEnabled) {
 #ifdef  ENABLE_RESIDUALSTYLE
-    if(nsHTMLElement::IsStyleTag(aTag)) {
+    if(nsHTMLElement::IsResidualStyleTag(aTag)) {
       nsCParserNode* theNode=(nsCParserNode*)mBodyContext->PopStyle(aTag);
       if(theNode) {
         RecycleNode(theNode);
@@ -2551,7 +2613,7 @@ nsresult CNavDTD::OpenBody(const nsIParserNode *aNode){
   PRBool theBodyIsOpen=HasOpenContainer(eHTMLTag_body);
   if(!theBodyIsOpen){
     //body is not already open, but head may be so close it
-    PRInt32 theHTMLPos=mBodyContext->GetTopmostIndexOf(eHTMLTag_html);
+    PRInt32 theHTMLPos=mBodyContext->LastOf(eHTMLTag_html);
     result=CloseContainersTo(theHTMLPos+1,eHTMLTag_body,PR_TRUE);  //close current stack containers.
   }
 
@@ -2766,6 +2828,10 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
   nsresult   result=NS_OK; 
   PRBool     isDefaultNode=PR_FALSE;
 
+
+  if (nsHTMLElement::IsResidualStyleTag(aTag))
+    OpenTransientStyles(aTag); 
+
 #ifdef ENABLE_CRC
   #define K_OPENOP 100
   CRCStruct theStruct(aTag,K_OPENOP);
@@ -2925,93 +2991,126 @@ CNavDTD::CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aClo
 nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aClosedByStartTag){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
-  eHTMLTags theTag=eHTMLTag_unknown;
+  
 
   if((anIndex<mBodyContext->GetCount()) && (anIndex>=0)) {
+
     while(mBodyContext->GetCount()>anIndex) {
 
-      theTag=mBodyContext->Last();
-
-      nsEntryStack *theChildStyleStack=0;
-
-      nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyleStack);
-      result=CloseContainer(theNode,aTarget,aClosedByStartTag);
+      nsEntryStack  *theChildStyleStack=0;      
+      eHTMLTags     theTag=mBodyContext->Last();
+      nsCParserNode *theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyleStack);
+      eHTMLTags     theParent=mBodyContext->Last();
 
       if(theNode) {
+        result=CloseContainer(theNode,aTarget,aClosedByStartTag);
         
 #ifdef  ENABLE_RESIDUALSTYLE
-        PRBool theTagIsStyle=nsHTMLElement::IsStyleTag(theTag);
 
-        if(mStyleHandlingEnabled) {
-          if(aClosedByStartTag && (0==theNode->mUseCount)) {
+        PRBool theTagIsStyle=nsHTMLElement::IsResidualStyleTag(theTag);
+        PRBool theTargetTagIsStyle=nsHTMLElement::IsResidualStyleTag(aTarget);
+        PRBool theStyleDoesntLeakOut=gHTMLElements[theParent].HasSpecialProperty(kNoStyleLeaksOut);
 
+        if(mStyleHandlingEnabled && theTagIsStyle) {
 
-            /***************************************************************************
+          if(aClosedByStartTag) { 
+
+            /***********************************************************
+              Handle closure due to new start tag.          
+
               The cases we're handing here:
                 1. <body><b><DIV>       //<b> gets pushed onto <body>.mStyles.
+                2. <body><a>text<a>     //in this case, the target matches, so don't push style
              ***************************************************************************/
 
-            if(theTagIsStyle) {
-              if(theChildStyleStack) {
-                theChildStyleStack->PushFront(theNode);
-                mBodyContext->PushStyles(theChildStyleStack);
+            if(0==theNode->mUseCount){
+              if(theTag!=aTarget) {
+                  //don't push if thechild==theTarget
+                if(theChildStyleStack) {
+                  theChildStyleStack->PushFront(theNode);
+                }
+                else mBodyContext->PushStyle(theNode);
               }
-              else mBodyContext->PushStyle(theNode);
             } 
+            if(theChildStyleStack) {
+              mBodyContext->PushStyles(theChildStyleStack);
+            }
           }
-          else {
-            //if you're here, then we're dealing with the closure of tags
-            //caused by a close tag (as opposed to an open tag).
-            //At a minimum, we should consider pushing residual styles up 
-            //up the stack or popping and recycling displaced nodes.
+          else { //Handle closure due to another close tag.      
 
-            /***************************************************************************
-              There are 2 cases: 
+            /***********************************************************             
+              if you're here, then we're dealing with the closure of tags
+              caused by a close tag (as opposed to an open tag).
+              At a minimum, we should consider pushing residual styles up 
+              up the stack or popping and recycling displaced nodes.
+
+              Known cases: 
                 1. <body><b><div>text</DIV> 
                       Here the <b> will leak into <div> (see case given above), and 
                       when <div> closes the <b> is dropped since it's already residual.
+
                 2. <body><div><b>text</div>
                       Here the <b> will leak out of the <div> and get pushed onto
                       the RS stack for the <body>, since it originated in the <div>.
+
+                3. <body><span><b>text</span>
+                      In this case, the the <b> get's pushed onto the style stack.
+                      Later we deal with RS styles stored on the <span>
+
+                4. <body><span><b>text</i>
+                      Here we the <b>is closed by a (synonymous) style tag. 
+                      In this case, the <b> is simply closed.
              ***************************************************************************/
 
-            if(theTagIsStyle) {
-              if(theChildStyleStack) {
-                theChildStyleStack->PushFront(theNode);
+            if(theChildStyleStack) {
+              if(!theStyleDoesntLeakOut) {
+                if(theTag!=aTarget) {
+                  if (0==theNode->mUseCount) {
+                    theChildStyleStack->PushFront(theNode);
+                  }
+                }
                 mBodyContext->PushStyles(theChildStyleStack);
               }
-              else if (0==theNode->mUseCount) {
-                if(theTag!=aTarget) {
-                  mBodyContext->PushStyle(theNode);
-                } //otherwise just let the node recycle, because it was explicty closed
-                  //and does not live on a style stack.
-              } 
-              else {
-                //Ah, at last, the final case. If you're here, then we just popped a 
-                //style tag that got onto that tag stack from a stylestack somewhere.
-                //The the target==theTag, then pop it from the stylestack.
-                if(theTag==aTarget) {
-                  theNode=(nsCParserNode*)mBodyContext->PopStyle(theTag);
-                }
+              else{
+                //add code here to recycle styles...
+                RecycleNodes(theChildStyleStack);
               }
+            }
+            else if (0==theNode->mUseCount) {
+
+              if(!theTargetTagIsStyle) {
+                mBodyContext->PushStyle(theNode);
+              } //otherwise just let the node recycle, because it was explicty closed
+                //and does not live on a style stack.
             } 
-            else if(theChildStyleStack) {
-              mBodyContext->PushStyles(theChildStyleStack);
+            else {
+              //Ah, at last, the final case. If you're here, then we just popped a 
+              //style tag that got onto that tag stack from a stylestack somewhere.
+              //Pop it from the stylestack if the target is also a style tag.
+              if(theTargetTagIsStyle) {
+                theNode=(nsCParserNode*)mBodyContext->PopStyle(theTag);
+              }
             }
           }
         } //if
         else {
-          //since stylehandling is disabled, let's recycle the associated nodes here...
+          
+          if(theChildStyleStack) {
+            if(theStyleDoesntLeakOut) {
+              RecycleNodes(theChildStyleStack);
+            }
+            else mBodyContext->PushStyles(theChildStyleStack);
+          }
         }
 #endif
-      }//if
+      }//if anode
       RecycleNode(theNode);
     }
 
 
     if(eParseMode_quirks==mParseMode) {
 
-#ifdef  ENABLE_RESIDUALSTYLE
+#if 0 
 
       //This code takes any nodes in style stack for at this level and reopens
       //then where they were originally.
@@ -3052,7 +3151,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
 nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
 
-  PRInt32 pos=mBodyContext->GetTopmostIndexOf(aTarget);
+  PRInt32 pos=mBodyContext->LastOf(aTarget);
 
   if(kNotFound!=pos) {
     //the tag is indeed open, so close it.
@@ -3061,7 +3160,7 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
 
   eHTMLTags theTopTag=mBodyContext->Last();
 
-  PRBool theTagIsSynonymous=((nsHTMLElement::IsStyleTag(aTarget)) && (nsHTMLElement::IsStyleTag(theTopTag)));
+  PRBool theTagIsSynonymous=((nsHTMLElement::IsResidualStyleTag(aTarget)) && (nsHTMLElement::IsResidualStyleTag(theTopTag)));
   if(!theTagIsSynonymous){
     theTagIsSynonymous=((nsHTMLElement::IsHeadingTag(aTarget)) && (nsHTMLElement::IsHeadingTag(theTopTag)));  
   }
@@ -3071,7 +3170,7 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
     //but a different (synonymous) one is actually open. Because this is NAV4x
     //compatibililty mode, we must close the one that's really open.
     aTarget=theTopTag;    
-    pos=mBodyContext->GetTopmostIndexOf(aTarget);
+    pos=mBodyContext->LastOf(aTarget);
     if(kNotFound!=pos) {
       //the tag is indeed open, so close it.
       return CloseContainersTo(pos,aTarget,aClosedByStartTag);
@@ -3080,8 +3179,8 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
   
   nsresult result=NS_OK;
   TagList* theRootTags=gHTMLElements[aTarget].GetRootTags();
-  eHTMLTags theParentTag=GetTagAt(0,*theRootTags);
-  pos=mBodyContext->GetTopmostIndexOf(theParentTag);
+  eHTMLTags theParentTag=(theRootTags) ? theRootTags->mTags[0] : eHTMLTag_unknown;
+  pos=mBodyContext->LastOf(theParentTag);
   if(kNotFound!=pos) {
     //the parent container is open, so close it instead
     result=CloseContainersTo(pos+1,aTarget,aClosedByStartTag);
@@ -3293,6 +3392,21 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   return result;
 }
 
+/**
+ * Retrieve the preferred tokenizer for use by this DTD.
+ * @update  gess12/28/98
+ * @param   none
+ * @return  ptr to tokenizer
+ */
+nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
+  nsresult result=NS_OK;
+  if(!mTokenizer) {
+    result=NS_NewHTMLTokenizer(&mTokenizer);
+  }
+  aTokenizer=mTokenizer;
+  return result;
+}
+
 
 /**
  * 
@@ -3302,23 +3416,12 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
  */
 nsITokenRecycler* CNavDTD::GetTokenRecycler(void){
   if(!mTokenRecycler) {
-    mTokenizer=GetTokenizer();
-    mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+    nsresult result=GetTokenizer(mTokenizer);
+    if (NS_SUCCEEDED(result)) {
+      mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+    }
   }
   return mTokenRecycler;
-}
-
-/**
- * Retrieve the preferred tokenizer for use by this DTD.
- * @update  gess12/28/98
- * @param   none
- * @return  ptr to tokenizer
- */
-nsITokenizer* CNavDTD::GetTokenizer(void) {
-  if(!mTokenizer) {
-    nsresult result=NS_NewHTMLTokenizer(&mTokenizer);
-  }
-  return mTokenizer;
 }
 
 /**

@@ -141,14 +141,12 @@ class nsIDTD : public nsISupports {
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser)=0;
 
     /**
-     *  Cause the tokenizer to consume and create the next token, and 
-     *  return an error result.
-     *
-     *  @update  gess 3/25/98
-  	 *  @param   aToken -- will contain newly created and consumed token
-	   *  @return	 error code (usually 0)
+     * 
+     * @update	gess 12/20/99
+     * @param   ptr-ref to (out) tokenizer
+     * @return  nsresult
      */
-    virtual nsITokenizer* GetTokenizer(void)=0;
+    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer)=0;
 
 
     virtual  nsITokenRecycler* GetTokenRecycler(void)=0;

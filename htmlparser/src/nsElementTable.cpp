@@ -28,57 +28,7 @@
  */ 
 
 #include "nsElementTable.h"
- 
-
-/**
- * 
- * @update	gess 01/04/99
- * @param  
- * @return
- */
-PRInt32 GetTopmostIndexOf(nsDTDContext& aContext,TagList& aTagList){
-  int max = aContext.GetCount();
-  int index;
-  for(index=max-1;index>=0;index--){
-    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
-    if(result) {
-      return index;
-    }
-  }
-  return kNotFound;
-}
-
-/**
- * 
- * @update	gess 01/04/99
- * @param 
- * @return
- */
-PRInt32 GetBottommostIndexOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTagList){
-  int max = aContext.GetCount();
-  int index;
-  for(index=aStartOffset;index<max;index++){
-    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
-    if(result) {
-      return index;
-    }
-  }
-  return kNotFound;
-}
-
-/**
- * 
- * @update	gess 01/04/99
- * @param 
- * @return
- */
-eHTMLTags GetTagAt(PRUint32 anIndex,TagList& aTagList) {
-  eHTMLTags result=eHTMLTag_unknown;
-  if(anIndex<aTagList.mCount){
-    result=aTagList.mTags[anIndex];
-  }
-  return result;
-}
+#include <fstream.h> 
 
 
 /***************************************************************************** 
@@ -108,7 +58,7 @@ TagList  gLegendParents={1,{eHTMLTag_fieldset}};
 TagList  gAreaParent={1,{eHTMLTag_map}};
 TagList  gParamParents={2,{eHTMLTag_applet,eHTMLTag_object}};
 TagList  gTRParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
-TagList  gTREndParents={6,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_td,eHTMLTag_th}};
+TagList  gTREndParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
 
 
 //*********************************************************************************************
@@ -121,7 +71,8 @@ TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
 TagList  gContainsParam={1,{eHTMLTag_param}};
 TagList  gColgroupKids={1,{eHTMLTag_col}}; 
 TagList  gAddressKids={1,{eHTMLTag_p}};
-TagList  gBodyKids={6,{eHTMLTag_del,eHTMLTag_ins,eHTMLTag_noscript,eHTMLTag_nolayer,eHTMLTag_script,eHTMLTag_li}};
+TagList  gBodyKids={8, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
+                        eHTMLTag_noscript,eHTMLTag_nolayer,eHTMLTag_script,eHTMLTag_li}};
 TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
 TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
 TagList  gDTKids={1,{eHTMLTag_dt}};
@@ -182,11 +133,6 @@ TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
 TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
 TagList  gULCloseTags={1,{eHTMLTag_li}};
 
-//*********************************************************************************************
-// The following tag lists are used to define the non-autoclose properties of the html elements...
-//*********************************************************************************************
-
-TagList  gDontAutoClose={1,{eHTMLTag_td}};
 
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
@@ -431,7 +377,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kBlock, (kInlineEntity|kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -476,7 +422,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
+      /*parent,incl,exclgroups*/          kDLChild, kFlowEntity-kHeading, kNone,	
       /*special props, prop-range*/       kNoPropagate|kMustCloseSelf,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
@@ -520,7 +466,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_dl,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*autoclose starttags and endtags*/ &gDLKids,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
       /*special props, prop-range*/       kOmitWS, kNoPropRange,
       /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown);
@@ -530,7 +476,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
+      /*parent,incl,exclgroups*/          kDLChild, kFlowEntity-kHeading, kNone,	
       /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
@@ -575,7 +521,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kSpecial|kFontStyle, (kSelf|kInlineEntity), kNone,	
+      /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gFontKids,eHTMLTag_unknown);
 
@@ -810,7 +756,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,	
       /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kBlockEntity, kFlowEntity, kSelf,	
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kSelf,	        //changed this from blockentity to block during RS cleanup
       /*special props, prop-range*/       kNoPropagate, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown);
 
@@ -953,7 +899,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_p,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,&gDontAutoClose,
+      /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	  //this used to contain FLOW. But it's really an inline container.
       /*special props, prop-range*/       0,kDefaultPropRange,                      //otherwise it tries to contain things like H1..H6
       /*special parents,kids,skip*/       0,&gInP,eHTMLTag_unknown);
@@ -1151,16 +1097,16 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gInBody,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),	
-      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn), 2,
+      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), 2,
       /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_tbody,
       /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
-      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
+      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, (kSelf|kInlineEntity),	
-      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kDefaultPropRange,
+      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), kDefaultPropRange,
       /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -1169,7 +1115,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
       /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,0,
       /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
-      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special props, prop-range*/       kNoStyleLeaksIn|kNoStyleLeaksOut, kDefaultPropRange,
       /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -1185,9 +1131,9 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_tfoot,
       /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
-      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
+      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), kNoPropRange,
       /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -1196,16 +1142,16 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
       /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,0,
       /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
-      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special props, prop-range*/       (kNoStyleLeaksIn|kNoStyleLeaksOut), kDefaultPropRange,
       /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_thead,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
-      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
+      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), kNoPropRange,
       /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -1223,7 +1169,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gTRParents,&gTREndParents,	
       /*autoclose starttags and endtags*/ &gTRCloseTags,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kInlineEntity,	
-      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), kNoPropRange,
       /*special parents,kids,skip*/       &gTRParents,&gTRKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -1386,18 +1332,6 @@ int nsHTMLElement::GetSynonymousGroups(eHTMLTags aTag) {
 
 /**
  * 
- * @update	gess 01/04/99
- * @param 
- * @return
- */
-inline PRBool TestBits(int aBitset,int aTest) {
-  PRInt32 result=aBitset & aTest;
-  return (aTest) ? PRBool(result==aTest) : PR_FALSE;  //was aTest
-}
-
-
-/**
- * 
  * @update	gess1/21/99
  * @param 
  * @return
@@ -1412,7 +1346,7 @@ PRBool nsHTMLElement::HasSpecialProperty(PRInt32 aProperty) const{
  * @update	gess12/13/98
  * @param 
  * @return
- */
+ */ 
 PRBool nsHTMLElement::IsContainer(eHTMLTags aChild) {
   PRBool result=(eHTMLTag_unknown==aChild);
 
@@ -1423,23 +1357,23 @@ PRBool nsHTMLElement::IsContainer(eHTMLTags aChild) {
 }
 
 /**
- * 
- * @update	gess 01/04/99
+ * This tests whether all the bits in the parentbits
+ * are included in the given set. It may be too 
+ * broad a question for most cases.
+ *
+ * @update	gess12/13/98
  * @param 
  * @return
  */
-PRBool nsHTMLElement::IsBlockEntity(eHTMLTags aTag){
-  PRBool result=PR_FALSE;
-
-  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
-    result=TestBits(gHTMLElements[aTag].mParentBits,kBlockEntity);
-  } 
+PRBool nsHTMLElement::IsMemberOf(PRInt32 aSet) const{
+  PRBool result=TestBits(aSet,mParentBits);
   return result;
 }
 
-/**
+/** 
+ * This method determines whether the given tag closes other blocks.
  * 
- * @update	gess 01/04/99
+ * @update	gess 12/20/99 -- added H1..H6 to this list.
  * @param 
  * @return
  */
@@ -1448,8 +1382,9 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
     
   if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
 
-//    result=IsFlowElement(aTag);
-    result=gHTMLElements[aTag].IsMemberOf(kBlockEntity);  //was kFlowEntity...
+    result=(gHTMLElements[aTag].IsBlock() || 
+            gHTMLElements[aTag].IsBlockEntity() ||
+            (kHeading==gHTMLElements[aTag].mParentBits));
     if(!result) {
 
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
@@ -1658,7 +1593,7 @@ PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) 
 
   if(theRootTags){
     if(!FindTagInSet(mTagID,theRootTags->mTags,theRootTags->mCount)){
-      eHTMLTags theRootBase=GetTagAt(0,*theRootTags);
+      eHTMLTags theRootBase=theRootTags->mTags[0];
       if((eHTMLTag_unknown!=theRootBase) && (allowDepthSearch))
         result=SectionContains(theRootBase,allowDepthSearch);
     }
@@ -1673,7 +1608,7 @@ PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) 
  * @param 
  * @return
  */
-PRBool nsHTMLElement::IsStyleTag(eHTMLTags aChild) {
+PRBool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
   PRBool result=PR_FALSE;
   switch(aChild) {
     case eHTMLTag_a:       
@@ -1697,7 +1632,7 @@ PRBool nsHTMLElement::IsStyleTag(eHTMLTags aChild) {
     case eHTMLTag_s:       
 //    case eHTMLTag_samp:      
     case eHTMLTag_small:
-    case eHTMLTag_span:    
+//    case eHTMLTag_span:    
     case eHTMLTag_strike:    
 //    case eHTMLTag_strong:
     case eHTMLTag_sub:     
@@ -1732,17 +1667,6 @@ PRBool nsHTMLElement::IsHeadingTag(eHTMLTags aChild) {
 PRBool nsHTMLElement::CanContainType(PRInt32 aType) const{
   PRInt32 answer=mInclusionBits & aType;
   PRBool  result=PRBool(0!=answer);
-  return result;
-}
-
-/**
- * 
- * @update	gess12/13/98
- * @param 
- * @return
- */
-PRBool nsHTMLElement::IsMemberOf(PRInt32 aSet) const{
-  PRBool result=(aSet && TestBits(aSet,mParentBits));
   return result;
 }
 
@@ -1807,7 +1731,7 @@ PRBool nsHTMLElement::CanContainSelf(void) const {
  */
 PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
   PRBool result=PR_TRUE;
-  if((mTagID>=eHTMLTag_unknown) && (mTagID<=eHTMLTag_userdefined)) {
+  if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)) {
     TagList* theTagList=gHTMLElements[mTagID].mDontAutocloseEnd;
     if(theTagList) {
       result=!FindTagInSet(aTag,theTagList->mTags,theTagList->mCount);
@@ -1847,8 +1771,10 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
-        if(gHTMLElements[theTag].IsMemberOf(kSpecial) ||
-           gHTMLElements[theTag].IsMemberOf(kFontStyle)){
+
+        if(gHTMLElements[theTag].IsSpecialEntity() || gHTMLElements[theTag].IsFontStyleEntity()) {
+//        if(TestBits(gHTMLElements[theTag].mParentBits,kSpecial) || 
+//           TestBits(gHTMLElements[theTag].mParentBits,kFontStyle)) {
         }
         else {
           break; //it's not something I can close
@@ -1870,13 +1796,13 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
       else {
         result=theTag; //stop because you just found yourself on the stack
-        break;
+        break; 
       }
     }
   }
-  else if(IsStyleTag(mTagID)){
+  else if(IsResidualStyleTag(mTagID)){
     eHTMLTags theTag=aContext.Last();
-    if(IsStyleTag(theTag)) {
+    if(IsResidualStyleTag(theTag)) {
       result=theTag;
     }
   }
@@ -1909,7 +1835,7 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
         return PR_FALSE;
     }
 
-    if(nsHTMLElement::IsBlockEntity(aChild)){
+    if(gHTMLElements[aChild].IsBlockEntity()){
       if(nsHTMLElement::IsBlockParent(mTagID)){
         return PR_TRUE;
       }
@@ -1948,6 +1874,10 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
   return PR_FALSE;
 }
 
+//#define RICKG_DEBUG
+#ifdef RICKG_DEBUG
+#include <fstream.h>
+#endif
 
 void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitle){
 #ifdef  RICKG_DEBUG
@@ -2000,11 +1930,12 @@ void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitl
       linenum++;
     }
   } //for
-#endif
+#endif 
 }
 
+
 void nsHTMLElement::DebugDumpMembership(const char* aFilename){
-#ifdef  RICKG_DEBUG
+#ifdef RICKG_DEBUG
 
   const char* prefix="             ";
   const char* suffix="       ";
@@ -2062,6 +1993,7 @@ void nsHTMLElement::DebugDumpMembership(const char* aFilename){
 }
 
 void nsHTMLElement::DebugDumpContainType(const char* aFilename){
+#define RICKG_DEBUG
 #ifdef RICKG_DEBUG
 
   const char* prefix="             ";
