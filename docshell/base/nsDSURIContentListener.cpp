@@ -61,6 +61,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsDSURIContentListener)
 NS_INTERFACE_MAP_BEGIN(nsDSURIContentListener)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
     NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -70,8 +71,10 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
-    if(mParentContentListener)
-        return mParentContentListener->OnStartURIOpen(aURI, aAbortOpen);
+    nsCOMPtr<nsIURIContentListener> parentListener;
+    GetParentContentListener(getter_AddRefs(parentListener));
+    if (parentListener)
+        return parentListener->OnStartURIOpen(aURI, aAbortOpen);
 
     return NS_OK;
 }
@@ -130,8 +133,10 @@ nsDSURIContentListener::IsPreferred(const char* aContentType,
     // the docshell has no idea if it is the preferred content provider or not.
     // It needs to ask it's parent if it is the preferred content handler or not...
 
-    if(mParentContentListener) {
-        return mParentContentListener->IsPreferred(aContentType,
+    nsCOMPtr<nsIURIContentListener> parentListener;
+    GetParentContentListener(getter_AddRefs(parentListener));
+    if (parentListener) {
+        return parentListener->IsPreferred(aContentType,
                                                    aDesiredContentType,
                                                    aCanHandle);
     }
@@ -201,8 +206,17 @@ NS_IMETHODIMP
 nsDSURIContentListener::GetParentContentListener(nsIURIContentListener**
                                                  aParentListener)
 {
-    *aParentListener = mParentContentListener;
-    NS_IF_ADDREF(*aParentListener);
+    if (mWeakParentContentListener)
+    {
+        nsCOMPtr<nsIURIContentListener> tempListener =
+            do_QueryReferent(mWeakParentContentListener);
+        *aParentListener = tempListener;
+        NS_IF_ADDREF(*aParentListener);
+    }
+    else {
+        *aParentListener = mParentContentListener;
+        NS_IF_ADDREF(*aParentListener);
+    }
     return NS_OK;
 }
 
@@ -210,8 +224,22 @@ NS_IMETHODIMP
 nsDSURIContentListener::SetParentContentListener(nsIURIContentListener* 
                                                  aParentListener)
 {
-    // Weak Reference, don't addref
-    mParentContentListener = aParentListener;
+    if (aParentListener)
+    {
+        // Store the parent listener as a weak ref. Parents not supporting
+        // nsISupportsWeakReference assert but may still be used.
+        mParentContentListener = nsnull;
+        mWeakParentContentListener = getter_AddRefs(NS_GetWeakReference(aParentListener));
+        if (!mWeakParentContentListener)
+        {
+            mParentContentListener = aParentListener;
+        }
+    }
+    else
+    {
+        mWeakParentContentListener = nsnull;
+        mParentContentListener = nsnull;
+    }
     return NS_OK;
 }
 
