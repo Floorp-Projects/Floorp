@@ -153,13 +153,27 @@ NS_NewIProperties(nsIProperties* *result)
 #include "nsProperties.h"
 #include "pratom.h"
 
+static PLHashNumber
+HashKey(const PRUnichar *aString)
+{
+  return (PLHashNumber) nsCRT::HashValue(aString);
+}
+
+static PRIntn
+CompareKeys(const PRUnichar *aStr1, const PRUnichar *aStr2)
+{
+  return nsCRT::strcmp(aStr1, aStr2) == 0;
+}
+
 nsPersistentProperties::nsPersistentProperties()
 {
   NS_INIT_REFCNT();
 
   mIn = nsnull;
   mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
-  mTable = nsnull;
+  mTable = PL_NewHashTable(8, (PLHashFunction) HashKey,
+    (PLHashComparator) CompareKeys,
+    (PLHashComparator) nsnull, nsnull, nsnull);
 }
 
 PR_STATIC_CALLBACK(PRIntn)
@@ -272,18 +286,6 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   return NS_OK;
 }
 
-static PLHashNumber
-HashKey(const PRUnichar *aString)
-{
-  return (PLHashNumber) nsCRT::HashValue(aString);
-}
-
-static PRIntn
-CompareKeys(const PRUnichar *aStr1, const PRUnichar *aStr2)
-{
-  return nsCRT::strcmp(aStr1, aStr2) == 0;
-}
-
 NS_IMETHODIMP
 nsPersistentProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   nsString& aOldValue)
@@ -294,12 +296,7 @@ nsPersistentProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   cout << "will add " << aKey.ToNewCString() << "=" << aNewValue.ToNewCString() << endl;
 #endif
   if (!mTable) {
-    mTable = PL_NewHashTable(8, (PLHashFunction) HashKey,
-      (PLHashComparator) CompareKeys,
-      (PLHashComparator) nsnull, nsnull, nsnull);
-    if (!mTable) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    return NS_ERROR_FAILURE;
   }
 
   const PRUnichar *key = aKey.GetUnicode();  // returns internal pointer (not a copy)
@@ -342,6 +339,11 @@ NS_IMETHODIMP
 nsPersistentProperties::GetProperty(const nsString& aKey, nsString& aValue)
 {
   const PRUnichar *key = aKey.GetUnicode();
+
+  if (!mTable) {
+    return NS_ERROR_FAILURE;
+  }
+
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
