@@ -62,6 +62,7 @@
 #include "prefs.h"
 #include "ocsp.h"
 #include "msgthread.h"
+#include "nlslayer.h"
 
 #ifdef XP_MAC
 #include "macshell.h"
@@ -995,10 +996,14 @@ SSM_SetSMIMEExport(void)
 }
 
 #ifdef XP_MAC
-#define LOADABLE_CERTS_MODULE "System:NSSckbiDebug.shlb"
+#ifdef DEBUG
+#define LOADABLE_CERTS_MODULE ":Essential Files:NSSckbiDebug.shlb"
+#else
+#define LOADABLE_CERTS_MODULE ":Essential Files:NSSckbi.shlb"
+#endif /*DEBUG*/ 
 #else
 #define LOADABLE_CERTS_MODULE "nssckbi.dll"
-#endif
+#endif /*XP_MAC*/
 
 SECStatus
 SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
@@ -1009,7 +1014,7 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
     PK11SlotList *slotList = NULL;
     PK11SlotListElement *listElement;
     SSMTextGenContext *cx = NULL;
-    char *modName=NULL;
+    char *modName=NULL, *processDir = NULL, *fullModuleName=NULL;
     SSMStatus srv;
 
     PR_EnterMonitor(policySetLock);
@@ -1084,10 +1089,22 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 	    srv = SSM_FindUTF8StringInBundles(cx, "root_certificates", &modName);
 	    if (srv != SSM_SUCCESS) {
 	        SSM_DEBUG("Couldn't get the value for \"root_certificates\" "
-	                  "from properties file");
+	                  "from properties file\n");
 	        goto loser;          
 	    }
-	    SECMOD_AddNewModule(modName, LOADABLE_CERTS_MODULE, 0, 0);
+#ifdef XP_MAC
+        processDir = xpcomGetProcessDir();
+        if (processDir == NULL) {
+            goto loser;
+        }
+        SSM_DEBUG("I think the process lives in <%s>\n", processDir);
+        fullModuleName = PR_smprintf("%s%s", processDir, LOADABLE_CERTS_MODULE);
+        fullModuleName = SSM_ConvertMacPathToUnix(fullModuleName);
+#endif
+        SSM_DEBUG("Will try to load <%s> for root certs.\n");
+	    if (SECMOD_AddNewModule(modName, fullModuleName, 0, 0) != SECSuccess) {
+	        SSM_DEBUG("Couldn't load the module at <%s>",fullModuleName);
+	    }
 	}
 
 loser:
