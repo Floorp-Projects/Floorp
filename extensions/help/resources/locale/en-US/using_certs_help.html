@@ -46,9 +46,9 @@
 
 <P>Much like a credit card or a driver's license, a certificate is a form of identification you can use to identify yourself over the Internet and other networks. Like other commonly used personal IDs, a certificate is typically issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <b>certificate authority (CA).</b> 
 
-<p>You can obtain certificates that identify you from public CAs, from system administrators or special CAs within your organization, or from web sites offering specialized services that require a means of identification more reliable that your name and password. 
+<p>You can obtain certificates that identify you from public CAs, from system administrators or special CAs within your organization, or from websites offering specialized services that require a means of identification more reliable that your name and password. 
 
-<p>Just as the requirements for a driver's license vary depending on the type of vehicle you want to drive, the requirements for obtaining a certificate vary depending on what you want to use it for. In some cases getting a certificate may be as easy as going to a web site, entering some personal information, and automatically downloading the certificate into your browser. In other cases you may have to go through more complicated procedures. 
+<p>Just as the requirements for a driver's license vary depending on the type of vehicle you want to drive, the requirements for obtaining a certificate vary depending on what you want to use it for. In some cases getting a certificate may be as easy as going to a website, entering some personal information, and automatically downloading the certificate into your browser. In other cases you may have to go through more complicated procedures. 
 
 <p>You can obtain a certificate today by visiting the URL for a certificate authority and following the on-screen instructions. For a list of certificate authorities, see the online document <a href="https://certs.netscape.com/" TARGET="_blank">Client Certificates</a>. </p>
 
@@ -90,7 +90,7 @@
 
 <p>The Security tab for Page Info provides two kinds of information:
 <ul>
-	<li>The top half describes whether the web site displaying the page has been verified. (For information on certificate verification, see <a href="#using_certs_validation">Controlling Validation</a>.)</li>
+	<li>The top half describes whether the website displaying the page has been verified. (For information on certificate verification, see <a href="#using_certs_validation">Controlling Validation</a>.)</li>
 	<li>The bottom half describes whether the contents of the page you are viewing is protected by encryption while in transit over the network.</li>
 </ul>
 <p><b>Important:</b> The lock icon describes only the encryption status of the page while it was being received by your computer. To be notified before you send or receive information without encryption, select the appropriate SSL warning options. See <a href="ssl_help.xhtml">Privacy &amp; Security Preferences - SSL</a> for details.
@@ -123,7 +123,7 @@
 <p>In this section:</p>
 <p><a HREF="#using_certs_my">Managing Certificates that Identify You</a></p>
 <p><a HREF="#using_certs_others">Managing Certificates that Identify Others</a></p>
-<p><a HREF="#using_certs_sites">Managing Certificates that Identify Web Sites</a></p>
+<p><a HREF="#using_certs_sites">Managing Certificates that Identify Websites</a></p>
 <p><a HREF="#using_certs_cas">Managing Certificates that Identify Certificate Authorities</a></p>
 </td>
 </tr>
@@ -181,19 +181,19 @@
  
 <p>&nbsp;</p>
 <a NAME="using_certs_sites"></a><a NAME="certificates:web_siteIDX"></a>
-<H2>Managing Certificates that Identify Web Sites</H2>
+<H2>Managing Certificates that Identify Websites</H2>
 
-<p>Some web sites use certificates to identify themselves. Such identification is required before the web site can encrypt information transferred between the site and your computer (or vice versa), so that no one can read the data while in transit. 
+<p>Some websites use certificates to identify themselves. Such identification is required before the website can encrypt information transferred between the site and your computer (or vice versa), so that no one can read the data while in transit. 
 
-<p>If the URL for a web site begins with <tt>https://</tt>, the web site has a certificate. If you visit such a web site and its certificate was issued by a CA that the Certificate Manager doesn't know about or doesn't trust, you will be asked whether you want to accept the web site's certificate. When you accept a new web site certificate, the Certificate Manager adds it to its list of web site certificates.
+<p>If the URL for a website begins with <tt>https://</tt>, the website has a certificate. If you visit such a website and its certificate was issued by a CA that the Certificate Manager doesn't know about or doesn't trust, you will be asked whether you want to accept the website's certificate. When you accept a new website certificate, the Certificate Manager adds it to its list of website certificates.
 
-<p>To view all the web site certificates available to your browser, click the Web Sites tab at the top of the Certificate Manager window. 
+<p>To view all the website certificates available to your browser, click the Websites tab at the top of the Certificate Manager window. 
 
-<p>To perform an action on one or more web site certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the corresponding action. 
+<p>To perform an action on one or more website certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the corresponding action. 
 
-<p>The Edit button allows you to specify whether your browser will trust the selected web site certificates in the future.
+<p>The Edit button allows you to specify whether your browser will trust the selected website certificates in the future.
 
-<p>For more details, see <a href="certs_help.xhtml#web_site_certificates">Web Site Certificates</a>.
+<p>For more details, see <a href="certs_help.xhtml#web_site_certificates">Website Certificates</a>.
 
 
 
@@ -420,7 +420,7 @@
 
 <p>If the CA certificate is not itself present, the <a href="glossary.xhtml#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified is currently marked as trusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
 
-<p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate may be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
+<p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate may be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or website) to pretend to be the certificate owner.
 
 <p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) as part of the verification process (see <a href="#Managing_CRLs">Managing CRLs</a>, below). Typically, you download a CRL to your browser by clicking a link. If a CRL is present, Certificate Manager checks any certificate issued by the same CA against the list as part of the verification process. 
 

@@ -289,7 +289,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates:web_site"
-         nc:name="web site identity"
+         nc:name="website identity"
 	 nc:link="using_certs_help.html#certificates:web_siteIDX"/>
      </rdf:li>
      <rdf:li>
