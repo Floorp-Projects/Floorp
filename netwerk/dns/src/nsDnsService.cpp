@@ -572,7 +572,7 @@ nsDNSLookup::InitiateLookup(void)
 
     if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
              
-    return CompletedLookup(rv);
+    return CompleteLookup(rv);
 #elif defined(XP_PC)
     mMsgID = nsDNSService::gService->AllocMsgID();
     if (mMsgID == 0)
