@@ -1042,7 +1042,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, 
   // Check if the coordinates are actually in our visible space.
   PRInt32 rowCount;
   mView->GetRowCount(&rowCount);
-  if (*aRow < mTopRowIndex || *aRow >= PR_MIN(mTopRowIndex+mPageCount, rowCount)) {
+  if (*aRow < mTopRowIndex || *aRow > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1)) {
     *aRow = -1;
     return NS_OK;
   }
