@@ -380,7 +380,7 @@ nsXIFConverter::AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
   }
   else if (aStr)
   {
-    aStr->Append(NS_LITERAL_STRING("&") + *str + NS_LITERAL_STRING(";"));
+    aStr->Append(NS_READABLE_CAST(PRUnichar, NS_LITERAL_STRING("&")) + *str + NS_LITERAL_STRING(";"));
   }
   return NS_OK;
 }
