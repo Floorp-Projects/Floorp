@@ -40,13 +40,6 @@ var globalMap;
 var doAltTextError = true;
 var actualWidth = "";
 var actualHeight = "";
-var gPreviewImage;
-var timeoutId = -1;
-// msec between attempts to load image
-var interval = 200;
-var intervalSum = 0;
-// After this many msec, give up trying to load image
-var intervalLimit = 60000;
 
 // These must correspond to values in EditorDialog.css for each theme
 // (unfortunately, setting "style" attribute here doesn't work!)
@@ -98,6 +91,7 @@ function Startup()
   dialog.editImageMap      = document.getElementById( "editImageMap" );
   dialog.removeImageMap    = document.getElementById( "removeImageMap" );
   dialog.ImageHolder       = document.getElementById( "preview-image-holder" );
+  dialog.PreviewImage      = document.getElementById( "preview-image" );
   dialog.PreviewBox        = document.getElementById( "preview-image-box" );
   dialog.PreviewWidth      = document.getElementById( "PreviewWidth" );
   dialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
@@ -146,7 +140,6 @@ function Startup()
       globalMap = imageMap;
       canRemoveImageMap = true;
       insertNewIMap = false;
-      dump(imageMap.childNodes.length+"\n");
     }
     else
     {
@@ -263,12 +256,12 @@ function chooseFile()
 
 function PreviewImageLoaded()
 {
-  if (gPreviewImage)
+  if (dialog.PreviewImage)
   {
     // Image loading has completed -- we can get actual width
-    actualWidth  = gPreviewImage.naturalWidth;
-    actualHeight = gPreviewImage.naturalHeight;
-//dump("*** actualWidth = "+actualWidth+", actualHeight = "+actualHeight+"\n");
+    actualWidth  = dialog.PreviewImage.naturalWidth;
+    actualHeight = dialog.PreviewImage.naturalHeight;
+
     if (actualWidth && actualHeight)
     {
       // Use actual size or scale to fit preview if either dimension is too large
@@ -287,8 +280,8 @@ function PreviewImageLoaded()
       if (actualWidth > gPreviewImageWidth || actualHeight > gPreviewImageHeight)
       {
         // Resize image to fit preview frame
-        gPreviewImage.setAttribute("width", width);
-        gPreviewImage.setAttribute("height", height);
+        dialog.PreviewImage.setAttribute("width", width);
+        dialog.PreviewImage.setAttribute("height", height);
       }
 
       dialog.PreviewWidth.setAttribute("value", actualWidth);
@@ -309,34 +302,12 @@ function GetImageFromURL()
 {
   dialog.PreviewSize.setAttribute("collapsed", "true");
 
-  // Remove existing preview image
-  // (other attempts to just change "src" fail;
-  //  once we fail to load, further setting of src fail)
-  if (dialog.ImageHolder.firstChild)
-  {
-    dialog.ImageHolder.removeChild(dialog.ImageHolder.firstChild);
-  }
-
   var imageSrc = dialog.srcInput.value;
   if (imageSrc) imageSrc = imageSrc.trimString();
   if (!imageSrc) return;
+
   if (IsValidImage(imageSrc))
-  {
-    if (!dialog.ImageHolder.firstChild)
-    {
-      // Append an image to the dialog to trigger image loading
-      //   and also serves as a preview
-      gPreviewImage = editorShell.CreateElementWithDefaults("img");
-
-      if (!gPreviewImage) return;
-      dialog.ImageHolder.appendChild(gPreviewImage);
-
-      gPreviewImage.onload = "PreviewImageLoaded();";
-      gPreviewImage.src = imageSrc;
-    }
-
-    // Get the origin width from the image or setup timer to get later
-  }
+    dialog.PreviewImage.src = imageSrc;
 }
 
 function SetActualSize()
@@ -346,17 +317,6 @@ function SetActualSize()
   dialog.heightInput.value = actualHeight ? actualHeight : "";
   dialog.heightUnitsMenulist.selectedIndex = 0;
   doDimensionEnabling();
-}
-
-function CancelTimer()
-{
-  if (timeoutId != -1)
-  {
-    //dump("*** CancelTimer\n");
-    window.clearInterval(timeoutId);
-    timeoutId = -1;
-  }
-  intervalSum = 0;
 }
 
 function ChangeImageSrc()
@@ -398,9 +358,6 @@ function doDimensionEnabling()
 {
   // Enabled only if "Custom" is checked
   var enable = (dialog.customSizeRadio.checked);
-
-  if ( !dialog.customSizeRadio.checked && !dialog.actualSizeRadio.checked)
-    dump("BUG!  neither radio button is checked!!!! \n");
 
   // BUG 74145: After input field is disabled,
   //   setting it enabled causes blinking caret to appear
@@ -623,7 +580,6 @@ function onOK()
     if ( globalMap )
     {
       var mapName = globalMap.getAttribute("name");
-      dump("mapName = "+mapName+"\n");
       if (mapName != "")
       {
         globalElement.setAttribute("usemap", ("#"+mapName));
@@ -656,7 +612,7 @@ function onOK()
         // 'true' means delete the selection before inserting
         editorShell.InsertElementAtSelection(imageElement, true);
       } catch (e) {
-        dump("Exception occured in InsertElementAtSelection\n");
+        dump(e);
       }
     }
 
@@ -671,15 +627,7 @@ function onOK()
     editorShell.InsertElementAtSelection(test, false);*/
 
     SaveWindowLocation();
-    CancelTimer();
     return true;
   }
   return false;
 }
-
-function onImageCancel()
-{
-  CancelTimer();
-  onCancel();
-}
-
