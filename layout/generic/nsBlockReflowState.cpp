@@ -776,6 +776,8 @@ nsBaseIBFrame::Reflow(nsIPresContext&          aPresContext,
       case nsIReflowCommand::StyleChanged:
         rv = PrepareStyleChangedReflow(state);
         break;
+      case nsIReflowCommand::ReflowDirty:
+        break;
       default:
         // Map any other incremental operations into full reflows
         rv = PrepareResizeReflow(state);
@@ -2921,8 +2923,15 @@ nsBaseIBFrame::AppendFrames(nsIPresContext& aPresContext,
                             nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
 {
+  if (nsnull != aListName) {
+    // XXX temporary until area frame code is updated
+    return nsFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  }
   nsresult rv = AppendNewFrames(aPresContext, aFrameList);
   if (NS_SUCCEEDED(rv)) {
+//    RenumberLists(aState);
+//    rv = ComputeTextRuns(aState);
+
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
@@ -3077,12 +3086,16 @@ nsBaseIBFrame::InsertFrames(nsIPresContext& aPresContext,
                             nsIFrame*       aPrevFrame,
                             nsIFrame*       aFrameList)
 {
+  if (nsnull != aListName) {
+    // XXX temporary until area frame code is updated
+    return nsFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+  }
   nsresult rv = InsertNewFrames(aPresContext, aFrameList, aPrevFrame);
   if (NS_SUCCEEDED(rv)) {
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 nsIReflowCommand::FrameInserted,
+                                 nsIReflowCommand::ReflowDirty,
                                  nsnull);
     if (NS_SUCCEEDED(rv)) {
       if (nsnull != aListName) {
@@ -3258,12 +3271,16 @@ nsBaseIBFrame::RemoveFrame(nsIPresContext& aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
 {
+  if (nsnull != aListName) {
+    // XXX temporary until area frame code is updated
+    return nsFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  }
   nsresult rv = DoRemoveFrame(aPresContext, aOldFrame);
   if (NS_SUCCEEDED(rv)) {
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 nsIReflowCommand::FrameRemoved,
+                                 nsIReflowCommand::ReflowDirty,
                                  nsnull);
     if (NS_SUCCEEDED(rv)) {
       if (nsnull != aListName) {
