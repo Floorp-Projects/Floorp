@@ -71,6 +71,7 @@ all:	FORCE
 
 	@echo "   VENDOR_NAME=string	SDK vendor name (default $(DEFAULT_VENDOR_NAME))"
 	@echo "   VENDOR_VERSION=#	vendor specific version number * 100 (default $(DEFAULT_VENDOR_VERSION))"
+	@echo "   HAVE_SVRCORE=1	for building with svrcore"
 	@echo 
 	@echo Internal options
 	@echo
@@ -80,7 +81,6 @@ all:	FORCE
 	@echo
 	@echo "   HAVE_LIBNLS=1	for building/linking with LIBNLS"
 	@echo "   HAVE_CCONF=1		for building with components"
-	@echo "   HAVE_SVRCORE=1	for building with svrcore"
 	@echo "   DONT_REPULL=1	for not repulling components"
 	@echo "   PKG_PRIVATE_HDRS=0	do not ship private headers"
 	@echo "   PKG_PRIVATE_LIBS=0	do not ship private libraries"
