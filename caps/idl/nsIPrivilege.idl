@@ -35,7 +35,7 @@ interface nsIPrivilege : nsISupports
 	void GetState(out short state);
 	void SetState(in short state);
 	void GetDuration(out short duration);
-	void SetDuration(in	short duration);
+	void SetDuration(in short duration);
 	void SameState(in nsIPrivilege other, out boolean res);
 	void SameDuration(in nsIPrivilege other, out boolean res);
 	void IsAllowed(out boolean result);
