@@ -48,7 +48,7 @@
 #
 
 CWD		:= $(shell pwd)
-ifeq (mozilla, $(notdir $(CWD)))
+ifneq (, $(wildcard client.mk))
 ROOTDIR		:= $(shell dirname $(CWD))
 TOPSRCDIR       := $(CWD)
 else
@@ -215,6 +215,7 @@ real_checkout:
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
 	  echo "$$conflicts" ;\
 	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
+	  exit 1; \
 	else true; \
 	fi; \
 	if test -f cvs-failed.tmp ; then \
