@@ -17,6 +17,10 @@
  */
 
 #include "prtypes.h"
+#include "plarena.h"
+#include "seccomon.h"
+#include "mcom_db.h"
+#include "certt.h"
 
 PR_BEGIN_EXTERN_C
 
