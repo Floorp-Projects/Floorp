@@ -1962,6 +1962,13 @@
 (setf (styled-text-depictor :annotated-expr) #'depict-styled-text-annotated-expr)
 
 
+; (:keyword <keyword-symbol>)
+(defun depict-keyword (markup-stream keyword-symbol)
+  (depict-semantic-keyword markup-stream keyword-symbol nil))
+
+(setf (styled-text-depictor :keyword) #'depict-keyword)
+
+
 ; (:type <type-expression>)
 (defun depict-styled-text-type (markup-stream type-expression)
   (depict-type-expr markup-stream *styled-text-world* type-expression))
