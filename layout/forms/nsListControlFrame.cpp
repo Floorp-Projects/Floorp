@@ -766,15 +766,11 @@ nsListControlFrame :: CaptureMouseEvents(PRBool aGrabMouseEvents)
 
   if (view) {
     view->GetViewManager(*getter_AddRefs(viewMan));
-//    nsIWidget* widget = nsnull;
-//    view->GetWidget(widget);
     if (viewMan) {
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
-//        widget->CaptureMouse(PR_TRUE);
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
-//        widget->CaptureMouse(PR_FALSE);
       }
     }
   }
