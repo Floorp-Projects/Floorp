@@ -48,22 +48,26 @@ function Init()
 {
     debug("directory.js: Init()\n");
 
+    var tree = document.getElementById('tree');
+
     // Initialize the tree's base URL to whatever the HTTPIndex is rooted at
     var baseURI = HTTPIndex.BaseURL;
 
-    // fix bug # 37102: if its a FTP directory
-    // ensure it ends with a trailing slash
-    if (baseURI && (baseURI.indexOf("ftp://") == 0) &&
-    	(baseURI.substr(baseURI.length - 1) != "/"))
+    if (baseURI && (baseURI.indexOf("ftp://") == 0))
     {
-    	debug("append traiing slash to FTP directory URL\n");
-    	baseURI += "/";
-    }
-    debug("base URL = " + baseURI + "\n");
+        // fix bug # 37102: if its a FTP directory
+        // ensure it ends with a trailing slash
+    	if (baseURI.substr(baseURI.length - 1) != "/")
+    	{
+        	debug("append traiing slash to FTP directory URL\n");
+        	baseURI += "/";
+        }
 
-    // Note: Add the HTTPIndex datasource into the tree
-    var tree = document.getElementById('tree');
-    tree.database.AddDataSource(HTTPIndex.DataSource);
+        // Note: DON'T add the HTTPIndex datasource into the tree
+        // for file URLs, only do it for FTP URLs; the "rdf:files"
+        // datasources handles file URLs
+        tree.database.AddDataSource(HTTPIndex.DataSource);
+    }
 
     // Note: set encoding BEFORE setting "ref" (important!)
     var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
