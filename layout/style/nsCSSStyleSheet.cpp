@@ -2846,9 +2846,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     // we hold no ref to the content...
     mContent = aContent;
 
-    // get the namespace
-    mNameSpaceID = aContent->GetNameSpaceID();
-
     // get the tag and parent
     mContentTag = aContent->Tag();
     mParentContent = aContent->GetParent();
@@ -2866,8 +2863,17 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     mHasAttributes = aContent->GetAttrCount() > 0;
 
     // check for HTMLContent and Link status
-    if (aContent->IsContentOfType(nsIContent::eHTML)) 
+    if (aContent->IsContentOfType(nsIContent::eHTML)) {
       mIsHTMLContent = PR_TRUE;
+      // Note that we want to treat non-XML HTML content as XHTML for namespace
+      // purposes, since html.css has that namespace declared.
+      mNameSpaceID = kNameSpaceID_XHTML;
+    } else {
+      // get the namespace
+      mNameSpaceID = aContent->GetNameSpaceID();
+    }
+
+
 
     // if HTML content and it has some attributes, check for an HTML link
     // NOTE: optimization: cannot be a link if no attributes (since it needs an href)

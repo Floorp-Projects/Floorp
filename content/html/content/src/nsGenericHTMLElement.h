@@ -174,7 +174,6 @@ public:
   // Implementation for nsIContent
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
-  virtual PRInt32 GetNameSpaceID() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {

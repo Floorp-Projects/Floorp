@@ -1607,15 +1607,6 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
   return NS_OK;
 }
 
-PRInt32
-nsGenericHTMLElement::GetNameSpaceID() const
-{
-  // XXX
-  // XXX This is incorrect!!!!!!!!!!!!!!!!
-  // XXX
-  return kNameSpaceID_XHTML;
-}
-
 nsresult
 nsGenericHTMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                               nsIAtom* aPrefix, const nsAString& aValue,
