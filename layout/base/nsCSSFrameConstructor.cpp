@@ -1006,26 +1006,21 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
                                         nsIPresContext  *aPresContext,
                                         nsIContent      *aContent, 
                                         nsIFrame        *&aFrame,
-                                        nsIStyleContext *aStyleContext,
-                                        PRBool          &aIsButton)
+                                        nsIStyleContext *aStyleContext)
 {
   nsresult  rv;
-  aIsButton = PR_FALSE;
 
   // Figure out which type of input frame to create
   nsAutoString  val;
   if (NS_OK == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, val)) {
     if (val.EqualsIgnoreCase("submit")) {
       rv = ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
-      aIsButton = PR_TRUE;
     }
     else if (val.EqualsIgnoreCase("reset")) {
       rv = ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
-      aIsButton = PR_TRUE;
     }
     else if (val.EqualsIgnoreCase("button")) {
       rv = ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
-      aIsButton = PR_TRUE;
     }
     else if (val.EqualsIgnoreCase("checkbox")) {
       rv = ConstructCheckboxControlFrame(aPresShell, aPresContext, aFrame);
@@ -2821,59 +2816,6 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*        aPresS
   return rv;
 }
 
-nsresult 
-nsCSSFrameConstructor::ConstructButtonLabelFrame(nsIPresShell*        aPresShell, 
-                                                 nsIPresContext *aPresContext,
-                                              nsIContent     *aContent,
-												                      nsIFrame       *&aFrame, 
-												                      nsFrameConstructorState& aState,
-												                      nsFrameItems&  aFrameItems)
-{
-    // Construct a button label using generated content specified
-    // through style. A style rule of following form must be
-    // present in ua.css or other style sheet 
-    //   input[type=button][value]:-moz-buttonlabel {
-    //      content:attr(value);
-    //   }
-    // The default for the label is specified with a rule similar to
-    // the following:
-    //   input[type=reset]:-moz-buttonlabel {
-    //      content:"Reset";
-    //   }
-   nsresult rv = NS_OK;
-   nsCOMPtr<nsIStyleContext>  styleContext;
-   nsIFrame* generatedFrame = nsnull;
-
-     // Probe for generated content before
-   aFrame->GetStyleContext(getter_AddRefs(styleContext));
-   if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
-                                   styleContext, nsCSSAtoms::buttonLabelPseudo,
-                                   PR_FALSE, &generatedFrame)) {
-      // Add the generated frame to the child list
-     aFrameItems.AddChild(generatedFrame);
-   }
-   return rv;
-}
-
-nsresult 
-nsCSSFrameConstructor::ConstructButtonFrames(nsIPresShell*        aPresShell, 
-                                             nsIPresContext  *aPresContext,
-                                              nsIContent     *aContent,
-												                      nsIFrame       *&aFrame, 
-												                      nsFrameConstructorState& aState,
-												                      nsFrameItems&  aFrameItems)
-{
-	 // Construct button label frame using generated content
-   // Get the first area frame to insert the button as a child.
-  nsIFrame* areaFrame = nsnull;
-  aFrame->FirstChild(aPresContext, nsnull, &areaFrame); 
-  NS_ASSERTION(areaFrame != nsnull, "Button does not have an area frame");
-	nsresult rv = ConstructButtonLabelFrame(aPresShell, aPresContext, aContent, areaFrame, aState, aFrameItems);
-  return rv;
-}
-
-
-
 nsresult
 nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresShell*        aPresShell, 
                                                    nsIPresContext*     		aPresContext,
@@ -3645,7 +3587,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
   PRBool    isReplaced = PR_FALSE;
   PRBool    addToHashTable = PR_TRUE;
   nsresult  rv = NS_OK;
-  PRBool    isButton = PR_FALSE;
 
   if (nsLayoutAtoms::textTagName == aTag) {
     rv = NS_NewTextFrame(aPresShell, &newFrame);
@@ -3699,7 +3640,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
       }
       else if (nsHTMLAtoms::input == aTag) {
         isReplaced = PR_TRUE;
-        rv = CreateInputFrame(aPresShell, aPresContext, aContent, newFrame, aStyleContext, isButton);
+        rv = CreateInputFrame(aPresShell, aPresContext, aContent, newFrame, aStyleContext);
       }
       else if (nsHTMLAtoms::textarea == aTag) {
         isReplaced = PR_TRUE;
@@ -3814,16 +3755,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
                              PR_TRUE, childItems, PR_FALSE);
       }
 
-        // Create button label frames.
-        // This must be done after the Init so 
-        // the button label frames get the proper
-        // parent style context.
-        // XXX: Need to reorganize nsCSSFrameConstructor
-        // so we don't have to special case buttons here.
-      if (isButton) {
-        rv = ConstructButtonFrames(aPresShell, aPresContext, aContent, newFrame, aState, childItems);
-      }
-   
       // if there are any anonymous children create frames for them
       CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
                             childItems);
