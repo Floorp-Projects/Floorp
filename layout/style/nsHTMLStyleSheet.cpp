@@ -1988,11 +1988,12 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         if ((NS_STYLE_FLOAT_NONE != display->mFloats) ||
             (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)) {
 
-          // If it can contain children then wrap it in a BODY frame
+          // If it can contain children then wrap it in a BODY frame.
+          // XxX Don't wrap tables...
           PRBool  isContainer;
           aContent->CanContainChildren(isContainer);
 
-          if (isContainer) {
+          if ((NS_STYLE_DISPLAY_TABLE != display->mDisplay) && isContainer) {
             // The body wrapper frame gets the original style context
             NS_NewBodyFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
             wrapperFrame->Init(*aPresContext, aContent, aParentFrame, styleContext);
