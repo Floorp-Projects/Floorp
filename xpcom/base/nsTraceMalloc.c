@@ -1099,7 +1099,7 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 
 PR_IMPLEMENT(void) NS_TraceMallocShutdown()
 {
-    logfile *fp, *next;
+    logfile *fp;
 
     if (tmstats.backtrace_failures) {
         fprintf(stderr,
@@ -1108,18 +1108,23 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
                 (unsigned long) tmstats.btmalloc_failures,
                 (unsigned long) tmstats.dladdr_failures);
     }
-    for (fp = logfile_list; fp; fp = next) {
-        next = fp->next;
+    while ((fp = logfile_list) != NULL) {
+        logfile_list = fp->next;
         log_tmstats(fp);
         flush_logfile(fp);
         if (fp->fd >= 0) {
             close(fp->fd);
             fp->fd = -1;
         }
+        if (fp != &default_logfile) {
+            if (fp == logfp)
+                logfp = &default_logfile;
+            free((void*) fp);
+        }
     }
     if (tmmon) {
         PR_DestroyMonitor(tmmon);
-        tmmon = 0;
+        tmmon = NULL;
     }
 }
 
