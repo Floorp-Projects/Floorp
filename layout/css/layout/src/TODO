@@ -1,0 +1,139 @@
+todo for AOL August 1st deadline:
+---------------------------------
+
+x scroll to #ref
+
+o fast scroll to #ref for a link targeted at the same document as is
+currently showing
+
+force-refresh needs to get the nsIScrollableView and update that view,
+not the root view
+
+Viewer:
+  make the print-preview menu item work
+  select-all and copy menu items
+  fix link-over status
+
+fix floating tables
+  x need to update floating-frames lists on LineData's as the placeholders move
+  o current-line floaters need to go in previous line's bcl list; if first line
+    then they go in the block-frame's pending floater list
+  o <block><floater>... we need a place to hang current-line floaters!!!
+  o http://www.news.com
+  o http://www.usatoday.com/ 
+
+o block-frame: DidReflow and content-appended can be smarter; right now
+  we did-reflow the whole caboodle whereas we could keep a bit in the
+  line that indicates where the dirty lines were so that when the
+  block's parent comes along and does a did-reflow it can propogate it
+  down to only the affected lines.
+
+o fix blocks inside of inlines; need to find the block's inline-layout
+  state and see where the block child is with respect to the left edge
+  of the line.
+
+iframe on infoseek
+
+x table tag is closing paragraphs
+
+mark/insert-at-mark for parser???
+
+www.cnn.com: crash
+
+performance:
+  o people.netscape.com
+
+initial black reflow bug
+
+slide show resize bug
+
+fix assertion on LCIC in nscssblockframe::content-inserted when
+running rotate.html/js test
+
+----------------------------------------------------------------------
+
+have michael fix up the scrolling-view code so that if a document is
+scrolled and grown the relative scroll position is maintained so that
+the view doesn't jump around. Then re-enable the html content sink
+scroll-to-ref code in the incremental reflow cases.
+
+parser calls WillInterrupt at the *wrong time*
+
+pseudo-frame whackage
+
+factories for html etc. so that viewer no longer links against the dll
+
+async style sheet loading
+async script src= loading
+  need blocking model in content sink and parser
+
+o Get rid of XXX::NewFrame methods
+o ListTag(nsString& aResult) instead of FILE*
+o style attributes of BODY tag
+o style attributes of HTML tag
+o turn noisy code in nsContainerFrame into NS_FRAME_TRACE calls
+
+----------------------------------------
+
+Underlines across font/style changes look like cr*p. We should draw a
+single underline that's the same size.
+
+----------------------------------------
+
+www.excite.com; crash
+people.netscape.com/paquin/temple.html; crash
+people.netscape.com/kipp - Hickman breaking bug
+block-margins.html: margin after block & before text is lost
+
+----------------------------------------
+
+Content objects for: FORM, /FORM, MAP, AREA, SCRIPT, STYLE
+
+width/height sizing stuff into body/block/inline code
+
+ebina margin bugs:
+  BR tags
+  line-height adjustment (sometimes; see test0.html and the large font)
+  P's in LI's
+  f:/html/bug3.html (yikes!)
+  f:/html/bug6.html 
+
+image-map.html: top border is black; why?
+
+css2 cursors into raptor
+
+load UA style sheet ONCE
+
+1 pass build on windows
+
+----------------------------------------
+
+async dns slow mode
+
+o write a combinatoric test case of the all the different variations on
+  url parsing and compare with navigator; get nsURL.cpp to agree with it.
+
+security dialog support code using raptor
+
+nspr log module list online
+
+----------------------------------------
+
+css parser keeping comments
+
+----------------------------------------
+
+DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE 
+
+src= setting for images (keep frame size when changing url's)
+
+headings in lists
+
+dup DidReflow's; one in the root, one in the root content
+
+x move the script context code into nsWebShell and out of nsIBrowserWindow
+x make the -q option on the viewer work
+x make the Open... menu item work
+x maps are broken yet again
+x fix *bleeping* title again
+x missing space after entity on yahoo home page, again
