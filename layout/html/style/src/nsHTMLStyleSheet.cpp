@@ -858,25 +858,17 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                 }
               }
               else {
-                nsIURI* docURL = nsnull;
-
                 nsIHTMLContent* htmlContent;
                 if (NS_SUCCEEDED(styledContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-                  htmlContent->GetBaseURL(docURL);
+                  
+                  nsCOMPtr<nsIURI> baseURI;
+                  htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
                
-                  nsAutoString absURLSpec;
-                  nsresult rv;
-                  nsIURI *baseUri = nsnull;
-                  rv = docURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
-                  if (NS_FAILED(rv)) return 0;
-
-                  rv = NS_MakeAbsoluteURI(absURLSpec, href, baseUri);
-
-                  NS_RELEASE(baseUri);
-                  NS_IF_RELEASE(docURL);
+                  nsCOMPtr<nsIURI> linkURI;
+                  (void) NS_NewURI(getter_AddRefs(linkURI), href, baseURI);
 
                   nsLinkState  state;
-                  if (NS_OK == linkHandler->GetLinkState(absURLSpec.GetUnicode(), state)) {
+                  if (NS_OK == linkHandler->GetLinkState(linkURI, state)) {
                     switch (state) {
                       case eLinkState_Unvisited:
                         if (nsnull != mLinkRule) {
