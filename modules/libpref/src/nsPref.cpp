@@ -268,7 +268,7 @@ nsresult nsPref::useDefaultPrefFile()
 	    // locator couldn't find where to put it. So put it in the cwd (NB, viewer comes here.)
 	    prefsFile = NS_CreateFileSpec();
 	    if (!prefsFile)
-	    	return rv;
+	    	return NS_ERROR_FAILURE;
 	    prefsFile->SetUnixStyleFilePath("default_prefs.js"); // in default working directory.
     }
     if (Exists(prefsFile))
@@ -910,16 +910,10 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
     {
         // nsPersistentFileDescriptor requires an existing
         // object. Make it first. COM makes this difficult, of course...
-	    nsIFileSpec* tmp;
-	    nsresult rv = nsComponentManager::CreateInstance(
-	    	"component://netscape/filespec",
-	    	(nsISupports*)nsnull,
-	    	nsIFileSpec::GetIID(),
-	    	(void**)&tmp);
-	    if (NS_FAILED(rv))
-	    	return rv;
+	    nsIFileSpec* tmp = NS_CreateFileSpec();
 	    if (!tmp)
-	      return NS_ERROR_OUT_OF_MEMORY;
+	      return NS_ERROR_FAILURE;
+		tmp->fromFileSpec(value);
         tmp->createDir();
         NS_RELEASE(tmp);
     }
@@ -1322,7 +1316,6 @@ extern "C" JSBool pref_InitInitialObjects()
 {
     JSBool funcResult;
     nsresult rv;
-    JSBool worked = PR_FALSE;
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv))
     	return JS_TRUE;
@@ -1340,14 +1333,12 @@ extern "C" JSBool pref_InitInitialObjects()
 	,	"unix.js"
 #endif
 	};
-    // Parse all the random files that happen to be in the components directory.
-    nsIDirectoryIterator* i;
-    rv = nsComponentManager::CreateInstance(
-    	"component://netscape/directoryiterator",
-    	(nsISupports*)nsnull,
-    	nsIDirectoryIterator::GetIID(),
-    	(void**)&i);
-    if (NS_FAILED(i->Init(componentsDir)))
+    
+	int k;
+	JSBool worked = JS_FALSE;
+	// Parse all the random files that happen to be in the components directory.
+    nsIDirectoryIterator* i = NS_CreateDirectoryIterator();
+    if (!i || NS_FAILED(i->Init(componentsDir)))
     	return JS_FALSE;
 
 	// Get any old child of the components directory.
@@ -1403,7 +1394,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		}
 	}
 	// Finally, parse any other special files (platform-specific ones).
-	for (int k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
+	for (k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
 	{
 	    if (NS_FAILED(specialChild->SetLeafName((char*)specialFiles[k])))
 	    	continue;
