@@ -251,6 +251,14 @@ struct nsINetService : public nsISupports
 	*/
      
 	NS_IMETHOD CreateSocketTransport(nsITransport **aTransport, PRUint32 aPortToUse, const char * aHostName) = 0;
+
+	/**
+	* Protocol connection pools should use this call into the service manager to produce
+	* a transport interface to a file based socket. You need to pass in the name of the file
+	* you want to associate with the socket transport
+	*/
+
+	NS_IMETHOD CreateFileSocketTransport(nsITransport **aTransport, const char * aFileName) = 0;
     
     NS_IMETHOD AreThereActiveConnections(void) = 0;
 };
