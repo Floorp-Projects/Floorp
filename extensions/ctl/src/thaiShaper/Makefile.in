@@ -55,5 +55,5 @@ EXTRA_DSO_LDOPTS += \
 		-L$(DIST)/lib \
 		$(EXTRA_DSO_LIBS) \
 		$(GLIB_LIBS) \
-		-lgmodule \
+		$(GLIB_GMODULE_LIBS) \
 		$(NULL)
