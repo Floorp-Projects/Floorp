@@ -35,6 +35,7 @@ XPIDLSRCS	= \
 		nsIDocShellTreeItem.idl	\
 		nsIDocShellTreeNode.idl	\
 		nsIDocShellTreeOwner.idl	\
+    nsIDocShellHistory.idl \
 		nsIMarkupDocumentViewer.idl	\
 		nsIScrollable.idl		\
 		nsITextScroll.idl		\

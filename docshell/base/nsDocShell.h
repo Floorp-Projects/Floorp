@@ -69,6 +69,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsISHContainer.h"
 #include "nsIDocShellLoadInfo.h"
+#include "nsIDocShellHistory.h"
 
 //*****************************************************************************
 //***    nsRefreshTimer
@@ -114,6 +115,7 @@ public:
 class nsDocShell : public nsIDocShell,
                    public nsIDocShellTreeItem, 
                    public nsIDocShellTreeNode,
+                   public nsIDocShellHistory,
                    public nsIWebNavigation,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
@@ -136,6 +138,7 @@ public:
    NS_DECL_NSIDOCSHELL
    NS_DECL_NSIDOCSHELLTREEITEM
    NS_DECL_NSIDOCSHELLTREENODE
+   NS_DECL_NSIDOCSHELLHISTORY
    NS_DECL_NSIWEBNAVIGATION
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
