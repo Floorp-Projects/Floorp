@@ -162,7 +162,7 @@ endif
 	@echo ln -s -f "$$"MOZILLA_FIVE_HOME/javadev/lib/libjavadom.so "$$"MOZILLA_FIVE_HOME/components/libjavadom.so >> runem_unix_commercial
 	@echo setenv CLASSPATH "$$"MOZILLA_FIVE_HOME/javadev/lib/$(LIBRARY_NAME)_$(PACKAGE_VER).jar>> runem_unix_commercial
 	@echo setenv LD_LIBRARY_PATH "$$"MOZILLA_FIVE_HOME'"':'"'"$$"MOZILLA_FIVE_HOME/components'"':'"'"$$"MOZILLA_FIVE_HOME/javadev/lib'"':'"'"$$"LD_LIBRARY_PATH>> runem_unix_commercial
-	@echo "$$"JDKHOME/bin/java org.mozilla.webclient.test.EmbeddedMozilla "$$"MOZILLA_FIVE_HOME "$$"1 >> runem_unix_commercial
+	@echo "$$"JDKHOME/bin/java org.mozilla.webclient.test.EmbeddedMozillaImpl "$$"MOZILLA_FIVE_HOME "$$"1 >> runem_unix_commercial
 	mkdir -p $(PACKAGE_EXAMPLE)
 	chmod 775 $(PACKAGE_EXAMPLE)
 	cp -f $(DIST)/bin/lib$(LIBRARY_NAME).so $(PACKAGE_LIB)
@@ -187,7 +187,7 @@ ifeq ($(PACKAGE_BUILD),)
 	@echo +++ Creating runem.  Use this to run the test browser.
 	rm -f runem
 	@echo #!/bin/sh > runem
-	@echo $(PERL) ../src_share/runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
+	@echo $(PERL) ../src_share/runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
 	chmod 755 runem
 else
 	@echo +++ Commercial Packaging - Copying runem_solaris. Used to run test

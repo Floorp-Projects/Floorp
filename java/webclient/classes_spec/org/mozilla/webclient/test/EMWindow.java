@@ -57,7 +57,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.29 2001/05/08 21:57:53 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.30 2001/05/23 22:26:51 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -310,7 +310,6 @@ private UniversalDialog           uniDialog = null;
                                               "network.cookie.warnAboutCookies",
                                               "This IS the Closure!");
             prefs.setPref("network.cookie.warnAboutCookies", "true");
-            prefs.setPref("browser.cache.disk_cache_size", "0");
      
             // pull out the proxies, and make java aware of them
             Properties prefsProps = prefs.getPrefs();
@@ -416,6 +415,11 @@ public void delete()
     controlPanel = null;
     buttonsPanel = null;
     currentDocument = null;
+}
+
+public BrowserControl getBrowserControl()
+{
+    return browserControl;
 }
 
 

@@ -54,6 +54,15 @@ images:
 	@mkdir $(HTML_ROOT_DIR)\images
 	@copy $(SRC)\images\*.gif  $(HTML_ROOT_DIR)\images
 
+stress:
+	@echo compiling stress tests
+	$(JDKHOME)\bin\javac -g -d $(MOZ_SRC)\mozilla\dist\classes -classpath $(MOZ_SRC)\mozilla\dist\classes ..\src\classes\manual\stress\*.java
+	@echo +++ Creating stress.bat.  Use this to run the stress browser.
+	rm -f stress.bat
+	@echo set XPCOM_CHECK_THREADSAFE=0 >> stress.bat
+	@echo perl $(MOZ_SRC)\mozilla\java\webclient\src_share\runem.pl WCRandom $(MOZ_SRC)\mozilla %1% >> stress.bat
+
+
 cgi: 
 	@echo Proceed CGI scripts ...
 	@perl $(UTILS)\configurator.pl $(CONFIG)/CommonProperties $(CGI_BIN_ROOT_DIR)/results.cgi $(SRC)/cgi/results.cgi

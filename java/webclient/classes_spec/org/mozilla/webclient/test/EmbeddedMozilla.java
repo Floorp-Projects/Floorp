@@ -38,69 +38,17 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.5 2001/04/02 21:13:48 ashuk%eng.sun.com Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.6 2001/05/23 22:26:52 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
  */
 
-public class EmbeddedMozilla 
+public interface EmbeddedMozilla 
 {
 
-public static String binDir;
-public static String url;
-public static int count = 0;
-public EMWindow[] EMWindow_Arr;
-
-public static void printUsage()
-{
-    System.out.println("usage: java org.mozilla.webclient.test.EmbeddedMozilla <path> [url]");
-    System.out.println("       <path> is the absolute path to the native browser bin directory, ");
-    System.out.println("       including the bin.");
-}
-	
-public EmbeddedMozilla() 
-{
-  CreateEMWindow();
-}
- 
-public void CreateEMWindow()
-{
-  System.out.println("Creating new EmbeddedMozilla window");
-  EMWindow aEMWindow ;
-  aEMWindow = new EMWindow("EmbeddedMozila#" + (int)(count+1),
-                                 binDir, url, count, this);
-  count++;
-}
-
-public void DestroyEMWindow(int winNumber) {
-  count--;
-  if (count == 0) {
-    System.out.println("closing application");
-    try {
-        BrowserControlFactory.appTerminate();
-    }
-    catch(Exception e) {
-        System.out.println("got Exception on exit: " + e.getMessage());
-     }
-    System.exit(0);
-  }
-}
-
-public static void main(String [] arg)
-{
-    if (1 > arg.length) {
-        printUsage();
-        System.exit(-1);
-    }
-    String urlArg =(2 == arg.length) ? arg[1] : "http://www.mozilla.org/projects/blackwood/webclient/";
-
-    // set class vars used in EmbeddedMozilla ctor 
-    binDir = arg[0];
-    url = urlArg;
-
-    EmbeddedMozilla em = new EmbeddedMozilla();
-}
+public void CreateEMWindow();
+public void DestroyEMWindow(int winNumber);
 
 }
 

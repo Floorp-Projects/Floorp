@@ -138,7 +138,7 @@ buildRunems:
 !else
 	@echo +++ Creating runem.bat.  Use this to run the test browser.
 	rm -f runem.bat
-	@echo $(PERL) ..\src_share\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem.bat
+	@echo $(PERL) ..\src_share\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem.bat
 !endif
 
 install:: $(DLL) buildRunems 
