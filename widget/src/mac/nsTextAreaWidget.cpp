@@ -17,308 +17,561 @@
  */
 
 #include "nsTextAreaWidget.h"
+#include "nsMacWindow.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsXtEventHandler.h"
 
-#include <Xm/Text.h>
 
 #define DBG 0
 
-//-------------------------------------------------------------------------
-//
-// nsTextAreaWidget constructor
-//
-//-------------------------------------------------------------------------
-nsTextAreaWidget::nsTextAreaWidget(nsISupports *aOuter) : nsWindow(aOuter),
-  mMakeReadOnly(PR_FALSE)
+NS_IMPL_ADDREF(nsTextAreaWidget);
+NS_IMPL_RELEASE(nsTextAreaWidget);
+
+
+/**-------------------------------------------------------------------------------
+ * nsTextAreaWidget Constructor
+ * @update  dc 09/10/98
+ */
+nsTextAreaWidget::nsTextAreaWidget(): nsWindow()
 {
+  NS_INIT_REFCNT();
+  mIsPasswordCallBacksInstalled = PR_FALSE;
+  mMakeReadOnly=PR_FALSE;
+  mMakePassword=PR_FALSE;
+  mTE_Data = nsnull;
+  strcpy(gInstanceClassName, "nsTextAreaWidget");
   //mBackground = NS_RGB(124, 124, 124);
 }
 
-//-------------------------------------------------------------------------
-//
-// nsTextAreaWidget destructor
-//
-//-------------------------------------------------------------------------
+
+/**-------------------------------------------------------------------------------
+ * The create method for a nsTextAreaWidget, using a nsIWidget as the parent
+ * @update  dc 09/10/98
+ * @param  aParent -- the widget which will be this widgets parent in the tree
+ * @param  aRect -- The bounds in parental coordinates of this widget
+ * @param  aHandleEventFunction -- Procedures to be executed for this widget
+ * @param  aContext -- device context to be used by this widget
+ * @param  aAppShell -- 
+ * @param  aToolkit -- toolkit to be used by this widget
+ * @param  aInitData -- Initialization data used by frames
+ * @return -- NS_OK if everything was created correctly
+ */ 
+NS_IMETHODIMP nsTextAreaWidget::Create(nsIWidget *aParent,const nsRect &aRect,EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,nsIAppShell *aAppShell,nsIToolkit *aToolkit, nsWidgetInitData *aInitData) 
+{
+LongRect		destRect,viewRect;
+PRUint32		teFlags=0;
+GrafPtr			curport;
+PRInt32			offx,offy;
+
+	nsWindow::Create(aParent, aRect, aHandleEventFunction,
+						aContext, aAppShell, aToolkit, aInitData);
+
+	mWindowPtr = nsnull;
+	if (aParent)
+		mWindowPtr = (WindowPtr)aParent->GetNativeData(NS_NATIVE_DISPLAY);
+	else if (aAppShell)
+		mWindowPtr = (WindowPtr)aAppShell->GetNativeData(NS_NATIVE_SHELL);
+  
+	  // Initialize the TE record
+	  CalcOffset(offx,offy);
+	  
+	  viewRect.left = aRect.x;
+	  viewRect.top = aRect.y;
+	  viewRect.right = aRect.x+aRect.width;
+	  viewRect.bottom = aRect.y+aRect.height;
+	  destRect = viewRect;
+	  ::GetPort(&curport);
+	  ::SetPort(mWindowPtr);
+	  //::SetOrigin(-offx,-offy);
+		WENew(&destRect,&viewRect,teFlags,&mTE_Data);
+		//::SetOrigin(0,0);
+		::SetPort(curport);
+		
+	return NS_OK;
+}
+
+/**-------------------------------------------------------------------------------
+ * Destuctor for the nsTextAreaWidget
+ * @update  dc 08/31/98
+ */ 
 nsTextAreaWidget::~nsTextAreaWidget()
 {
+	if(mTE_Data!=nsnull)
+		WEDispose(mTE_Data);
 }
 
-//-------------------------------------------------------------------------
-void nsTextAreaWidget::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData) 
+/**-------------------------------------------------------------------------------
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @update  dc 08/31/98
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */ 
+nsresult nsTextAreaWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  aParent->AddChild(this);
-  Widget parentWidget = nsnull;
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
-  if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
-  mWidget = ::XtVaCreateManagedWidget("button",
-                                    xmTextWidgetClass, 
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
-                                    XmNeditMode, XmMULTI_LINE_EDIT,
-                                    XmNeditable, mMakeReadOnly?False:True,
-		                    XmNx, aRect.x,
-		                    XmNy, aRect.y, 
-                                    nsnull);
-  mHelper = new nsTextHelper(mWidget);
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks("nsTextAreaWidget");
-
-  if (mMakeReadOnly) {
-    SetReadOnly(PR_TRUE);
-  }
-
-}
-
-//-------------------------------------------------------------------------
-void nsTextAreaWidget::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsTextAreaWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
-{
-  static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
   static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 
-  if (aIID.Equals(kITextWidgetIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
   if (aIID.Equals(kITextAreaWidgetIID)) {
     AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
+    *aInstancePtr = (void**)(nsITextAreaWidget*)this;
     return NS_OK;
   }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+
+  return nsWindow::QueryInterface(aIID, aInstancePtr);
 }
 
-
 //-------------------------------------------------------------------------
-//
-// paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
+/**
+ * The onPaint handler for a nsTextAreaWidget -- this may change, inherited from windows
+ * @param aEvent -- The paint event to respond to
+ * @return -- PR_TRUE if painted, false otherwise
+ */ 
 PRBool nsTextAreaWidget::OnPaint(nsPaintEvent & aEvent)
 {
+PRInt32							offx,offy;
+nsRect							therect;
+Rect								macrect;
+GrafPtr							theport;
+RgnHandle						thergn;
+	
+	CalcOffset(offx,offy);
+	::GetPort(&theport);
+	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
+	GetBounds(therect);
+	nsRectToMacRect(therect,macrect);
+	thergn = ::NewRgn();
+	::GetClip(thergn);
+	::ClipRect(&macrect);
+	::EraseRect(&macrect);
+	::PenSize(1,1);
+	WEActivate(mTE_Data);
+	WEUpdate(nsnull,mTE_Data);
+	::FrameRect(&macrect);
+	::SetClip(thergn);
+	::SetOrigin(0,0);
+	::SetPort(theport);
+	
   return PR_FALSE;
 }
 
-
-//--------------------------------------------------------------
-PRBool nsTextAreaWidget::OnResize(nsSizeEvent &aEvent)
+//-------------------------------------------------------------------------
+/**
+ * The Keydown handler for a nsTextAreaWidget
+ * @param aKey -- the key pressed
+ * @param aModifiers -- the modifiers of the key pressed, like command, shift, etc.
+ * @return -- PR_TRUE if painted, false otherwise
+ */ 
+void nsTextAreaWidget::PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers)
 {
-  return PR_FALSE;
+PRBool 		result=PR_TRUE;
+GrafPtr		thePort;
+RgnHandle	theRgn;
+nsRect		theRect;
+Rect			macRect;
+PRInt32		offX,offY;
+
+	CalcOffset(offX,offY);
+	::GetPort(&thePort);
+	::SetPort(mWindowPtr);
+
+	GetBounds(theRect);
+	nsRectToMacRect(theRect,macRect);
+	theRgn = ::NewRgn();
+	::GetClip(theRgn);
+	::ClipRect(&macRect);
+	WEKey(aKey,aModifiers,mTE_Data);
+	::SetClip(theRgn);
+	::DisposeRgn(theRgn);
+	::SetPort(thePort);
+	
 }
 
-//--------------------------------------------------------------
-void nsTextAreaWidget::SetPassword(PRBool aIsPassword)
+/**-------------------------------------------------------------------------------
+ * DispatchMouseEvent handle an event for this nsTextAreaWidget
+ * @update  dc 10/10/98
+ * @Param aEvent -- The mouse event to respond to for this button
+ * @return -- True if the event was handled, PR_FALSE if we did not handle it.
+ */ 
+PRBool nsTextAreaWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
+PRBool 		result=PR_TRUE;
+Point			mouseLoc;
+PRInt16 	modifiers=0;
+nsRect		therect;
+Rect			macrect;
+PRInt32		offx,offy;
+GrafPtr		theport;
+	
+	switch (aEvent.message){
+		case NS_MOUSE_LEFT_BUTTON_DOWN:
+			CalcOffset(offx,offy);
+			::GetPort(&theport);
+			::SetPort(mWindowPtr);
+			GetBounds(therect);
+			nsRectToMacRect(therect,macrect);
+			::ClipRect(&macrect);
+			mouseLoc.h = aEvent.point.x;
+			mouseLoc.v = aEvent.point.y;
+			WEClick(mouseLoc,modifiers,aEvent.time,mTE_Data);
+			::SetPort(theport);
+			result = PR_FALSE;
+			break;
+		case NS_MOUSE_LEFT_BUTTON_UP:
+			break;
+		case NS_MOUSE_EXIT:
+			break;
+		case NS_MOUSE_ENTER:
+			break;
+	}
+	return result;
 }
 
-//--------------------------------------------------------------
-PRBool  nsTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag)
+//-------------------------------------------------------------------------
+PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &event)
 {
-  if (mWidget == nsnull && aReadOnlyFlag) {
-    mMakeReadOnly = PR_TRUE;
-    return PR_TRUE;
+	PRBool keyHandled = nsWindow::DispatchWindowEvent(event);
+
+	if (! keyHandled)
+	{
+	  if (event.eventStructType == NS_KEY_EVENT)
+	  {
+	  	if (event.message == NS_KEY_DOWN)
+	  	{
+	  		char theChar;
+	  		short theModifiers;
+	  		EventRecord* theOSEvent = (EventRecord*)event.nativeMsg;
+	  		if (theOSEvent)
+	  		{
+	  			theChar = (theOSEvent->message & charCodeMask);
+	  			theModifiers = theOSEvent->modifiers;
+	  		}
+	  		else
+	  		{
+	  			nsKeyEvent* keyEvent = (nsKeyEvent*)&event;
+	  			theChar = keyEvent->keyCode;
+	  			if (keyEvent->isShift)
+	  				theModifiers = shiftKey;
+	  			if (keyEvent->isControl)
+	  				theModifiers |= controlKey;
+	  			if (keyEvent->isAlt)
+	  				theModifiers |= optionKey;
+	  		}
+	  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextAreaWidget is a single line editor
+	  		{
+	  			PrimitiveKeyDown(theChar, theModifiers);
+	  			keyHandled = PR_TRUE;
+	  		}
+	  	}
+	  }
+	}
+
+	return (keyHandled);
+}
+
+/**-------------------------------------------------------------------------------
+ * Sets the password flag.  If true, asteriks are the onlything displayed
+ * @update  dc 10/10/98
+ * @Param aIsPassword -- if true, password attribute is used.
+ * @return -- if everything is ok
+ */ 
+NS_METHOD nsTextAreaWidget::SetPassword(PRBool aIsPassword)
+{
+  if ( aIsPassword) {
+    mMakePassword = PR_TRUE;
+    return NS_OK;
   }
-  return mHelper->SetReadOnly(aReadOnlyFlag);
+  
+	return NS_OK;
 }
 
-//--------------------------------------------------------------
-void nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars)
+/**-------------------------------------------------------------------------------
+ * Sets the readonly flag.  If true, you can only read the text
+ * @update  dc 10/10/98
+ * @Param aReadOnlyFlag -- if true, readoly attribute is used.
+ * @Param aOldFlag -- the old setting
+ * @return -- if everything is ok
+ */ 
+NS_METHOD  nsTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 {
-  mHelper->SetMaxTextLength(aChars);
+	aOldFlag = mMakeReadOnly;
+  mMakeReadOnly = aReadOnlyFlag;
+	return NS_OK;  	
 }
 
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-  return mHelper->GetText(aTextBuffer, aBufferSize);
+/**-------------------------------------------------------------------------------
+ * Sets the maximum number of characters allowed.
+ * @update  dc 10/10/98
+ * @Param aChars -- number of characters allowed
+ * @return -- if everything is ok
+ */ 
+NS_METHOD nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars)
+{
+  return NS_OK;
 }
 
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::SetText(const nsString& aText)
+/**-------------------------------------------------------------------------------
+ * Gets the text from this widget
+ * @update  dc 10/10/98
+ * @Param aTextBuffer -- string to fill in
+ * @Param aBufferSize -- size of the buffer passed in
+ * @Param aSize -- size of the string passed out
+ * @return -- if everything is ok
+ */ 
+NS_METHOD  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aSize) 
+{
+Handle				thetext;
+PRInt32 			len,i;
+char					*str;
+
+  thetext = WEGetText(mTE_Data);
+  len = WEGetTextLength(mTE_Data);
+  
+  //HLock(thetext);
+  str = new char[len+1];
+
+  for(i=0;i<len;i++)
+  	str[i] = (*thetext)[i];
+  str[len] = 0;
+  //HUnlock(thetext);	
+  
+  aTextBuffer.SetLength(0);
+  aTextBuffer.Append(str);
+	aSize = aTextBuffer.Length();
+	
+	delete [] str;
+	return NS_OK;
+}
+
+/**-------------------------------------------------------------------------------
+ * Resize this widget
+ * @update  dc 10/01/98
+ * @param   aWidth -- x offset in widget local coordinates
+ * @param   aHeight -- y offset in widget local coordinates
+ * @param   aRepaint -- indicates if a repaint is needed.
+ * @return  PR_TRUE if the pt is contained in the widget
+ */ 
+NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+nsSizeEvent 	event;
+nsEventStatus	eventStatus;
+LongRect			macRect;
+
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  
+   if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+	
+	if(mTE_Data != nsnull){
+		macRect.top = mBounds.y;
+		macRect.left = mBounds.x;
+		macRect.bottom = mBounds.y+mBounds.height;
+		macRect.right = mBounds.x+mBounds.width;
+		WESetDestRect(&macRect,mTE_Data);
+		WESetViewRect(&macRect,mTE_Data);
+	}
+			 
+  if (aRepaint){
+  	//¥TODO
+  }
+  
+  event.message = NS_SIZE;
+  event.point.x = 0;
+  event.point.y = 0;
+  event.windowSize = &mBounds;
+  event.eventStructType = NS_SIZE_EVENT;
+  event.widget = this;
+ 	//this->DispatchEvent(&event, eventStatus);
+	return NS_OK;
+}
+
+/**-------------------------------------------------------------------------------
+ * Resize this widget
+ * @update dc 10/01/98
+ * @param  aX -- left part of rectangle
+ * @param  aY -- top of rectangle
+ * @param  aWidth -- x offset in widget local coordinates
+ * @param  aHeight -- y offset in widget local coordinates
+ * @param  aW
+ * @return  PR_TRUE
+ */ 
+NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+nsSizeEvent 	event;
+nsEventStatus	eventStatus;
+LongRect			macRect;
+
+  mBounds.x      = aX;
+  mBounds.y      = aY;
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+
+	if(mTE_Data != nsnull){
+		macRect.top = mBounds.y;
+		macRect.left = mBounds.x;
+		macRect.bottom = mBounds.y+mBounds.height;
+		macRect.right = mBounds.x+mBounds.width;
+		WESetDestRect(&macRect,mTE_Data);
+		WESetViewRect(&macRect,mTE_Data);
+	}
+
+  if (aRepaint){
+  	//¥TODO
+  }
+  
+  event.message = NS_SIZE;
+  event.point.x = 0;
+  event.point.y = 0;
+  event.windowSize = &mBounds;
+  event.widget = this;
+  event.eventStructType = NS_SIZE_EVENT;
+ 	//this->DispatchEvent(&event, eventStatus);
+	return NS_OK;
+}
+
+
+/**-------------------------------------------------------------------------------
+ * Set the text for this widget
+ * @update  dc 10/01/98
+ * @param   aText -- Text to use in this widget
+ * @param   aSize -- size of the text to use here
+ * @return  PR_TRUE 
+ */ 
+PRUint32  nsTextAreaWidget::SetText(const nsString& aText, PRUint32& aSize)
 { 
-  return mHelper->SetText(aText);
+char 			buffer[256];
+PRInt32 	len;
+PRInt32		offx,offy;
+GrafPtr		theport;
+
+	CalcOffset(offx,offy);
+	::GetPort(&theport);
+	::SetPort(mWindowPtr);
+	//::SetOrigin(-offx,-offy);
+ 
+ 	this->RemoveText();
+	aText.ToCString(buffer,255);
+	len = strlen(buffer);
+
+	WEInsert(buffer,len,0,0,mTE_Data);
+
+	aSize = len;
+	//::SetOrigin(0,0);
+	::SetPort(theport);
+  return NS_OK;
 }
 
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
+/**-------------------------------------------------------------------------------
+ * insert text into this widget
+ * @update dc 10/01/98
+ * @param aText -- Text to use in this widget
+ * @param aStartPos - Starting position
+ * @param aEndtPos - Ending position
+ * @param aSize -- size of the text to use here
+ * @return PR_TRUE
+ */ 
+PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aSize)
 { 
-  return mHelper->InsertText(aText, aStartPos, aEndPos);
+char 			buffer[256];
+PRInt32 	len;
+PRInt32		offX,offY;
+GrafPtr		thePort;
+
+	CalcOffset(offX,offY);
+	::GetPort(&thePort);
+	::SetPort(mWindowPtr);
+	//::SetOrigin(-offx,-offy);
+
+	aText.ToCString(buffer,255);
+	len = strlen(buffer);
+	
+	WEInsert(buffer,len,0,0,mTE_Data);
+	aSize = len;
+	//::SetOrigin(0,0);
+	::SetPort(thePort);
+  return NS_OK;
 }
 
-//--------------------------------------------------------------
-void  nsTextAreaWidget::RemoveText()
+/**-------------------------------------------------------------------------------
+ * Remove all the text for this widget
+ * @update  dc 10/01/98
+ * @return  PR_TRUE
+ */ 
+NS_METHOD  nsTextAreaWidget::RemoveText()
 {
-  mHelper->RemoveText();
+	WESetSelection(0, 32000,mTE_Data);
+	WEDelete(mTE_Data);
+  return NS_OK;
 }
 
-//--------------------------------------------------------------
-void nsTextAreaWidget::SelectAll()
+/**-------------------------------------------------------------------------------
+ * Select all the text for this widget
+ * @update  dc 10/01/98
+ * @return  PR_TRUE
+ */ 
+NS_METHOD nsTextAreaWidget::SelectAll()
 {
-  mHelper->SelectAll();
+	WESetSelection(0, 32000,mTE_Data);
+  return NS_OK;
 }
 
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
+/**-------------------------------------------------------------------------------
+ * Set the text for this widget
+ * @update  dc 10/01/98
+ * @param   aStartSel -- start index of the text
+ * @param   aEndSel -- end index of the text
+ * @return  PR_TRUE 
+ */ 
+NS_METHOD  nsTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
-  mHelper->SetSelection(aStartSel, aEndSel);
+  WESetSelection(aStartSel, aEndSel,mTE_Data);
+  return NS_OK;
 }
 
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
+/**-------------------------------------------------------------------------------
+ * Get the text for this widget
+ * @update  dc 10/01/98
+ * @param   aStartSel -- start index of the text
+ * @param   aEndSel -- end index of the text
+ * @return  PR_TRUE
+ */ 
+NS_METHOD  nsTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
-  mHelper->GetSelection(aStartSel, aEndSel);
+	WEGetSelection((long*)aStartSel,(long*)aEndSel,mTE_Data);
+  return NS_OK;
 }
 
-//--------------------------------------------------------------
-void  nsTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
+/**-------------------------------------------------------------------------------
+ * Set the caret position for this widget
+ * @update  dc 10/01/98
+ * @param   aPosition -- postition of text
+ * @return  PR_TRUE 
+ */ 
+NS_METHOD  nsTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
 {
-  mHelper->SetCaretPosition(aPosition);
+  //mHelper->SetCaretPosition(aPosition);
+  return NS_OK;
 }
 
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::GetCaretPosition()
+/**-------------------------------------------------------------------------------
+ * Get the caret position for this widget
+ * @update  dc 10/01/98
+ * @param   aPosition -- postition of text
+ * @return  PR_TRUE if the pt is contained in the widget
+ */ 
+NS_METHOD nsTextAreaWidget::GetCaretPosition(PRUint32& aPos)
 {
-  return mHelper->GetCaretPosition();
+  //return mHelper->GetCaretPosition();
+  return NS_OK;
 }
-
-//--------------------------------------------------------------
-PRBool nsTextAreaWidget::AutoErase()
-{
-  return mHelper->AutoErase();
-}
-
-
-
-//--------------------------------------------------------------
-#define GET_OUTER() ((nsTextAreaWidget*) ((char*)this - nsTextAreaWidget::GetOuterOffset()))
-
-
-//--------------------------------------------------------------
-void nsTextAreaWidget::AggTextAreaWidget::SetMaxTextLength(PRUint32 aChars)
-{
-  GET_OUTER()->SetMaxTextLength(aChars);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-  return GET_OUTER()->GetText(aTextBuffer, aBufferSize);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::SetText(const nsString& aText)
-{ 
-  return GET_OUTER()->SetText(aText);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
-{ 
-  return GET_OUTER()->InsertText(aText, aStartPos, aEndPos);
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::RemoveText()
-{
-  GET_OUTER()->RemoveText();
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::SetPassword(PRBool aIsPassword)
-{
-  GET_OUTER()->SetPassword(aIsPassword);
-}
-
-//--------------------------------------------------------------
-PRBool  nsTextAreaWidget::AggTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag)
-{
-  return GET_OUTER()->SetReadOnly(aReadOnlyFlag);
-}
-
-//--------------------------------------------------------------
-void nsTextAreaWidget::AggTextAreaWidget::SelectAll()
-{
-  GET_OUTER()->SelectAll();
-}
-
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
-{
-  GET_OUTER()->SetSelection(aStartSel, aEndSel);
-}
-
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
-{
-  GET_OUTER()->GetSelection(aStartSel, aEndSel);
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
-{
-  GET_OUTER()->SetCaretPosition(aPosition);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::GetCaretPosition()
-{
-  return GET_OUTER()->GetCaretPosition();
-}
-
-PRBool nsTextAreaWidget::AggTextAreaWidget::AutoErase()
-{
-  return GET_OUTER()->AutoErase();
-}
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsTextAreaWidget, AggTextAreaWidget);
 
