@@ -61,6 +61,9 @@ struct pk11argSlotFlagTable {
     unsigned long value;
 };
 
+#define PK11_DEFAULT_CIPHER_ORDER 0
+#define PK11_DEFAULT_TRUST_ORDER 50
+
 
 #define PK11_ARG_ENTRY(arg,flag) \
 { #arg , sizeof(#arg)-1, flag }
@@ -381,12 +384,17 @@ pk11_argDecodeNumber(char *num)
 }
 
 static long
-pk11_argReadLong(char *label,char *params)
+pk11_argReadLong(char *label,char *params, long defValue, PRBool *isdefault)
 {
     char *value;
     long retValue;
+    if (isdefault) *isdefault = PR_FALSE; 
 
     value = pk11_argGetParamValue(label,params);
+    if (value == NULL) {
+	if (isdefault) *isdefault = PR_TRUE;
+	return defValue;
+    }
     retValue = pk11_argDecodeNumber(value);
     if (value) PORT_Free(value);
 
@@ -427,7 +435,7 @@ pk11_argDecodeSingleSlotInfo(char *name,char *params,PK11PreSlotInfo *slotInfo)
 
     slotInfo->slotID=pk11_argDecodeNumber(name);
     slotInfo->defaultFlags=pk11_argSlotFlags("slotFlags",params);
-    slotInfo->timeout=pk11_argReadLong("timeout",params);
+    slotInfo->timeout=pk11_argReadLong("timeout",params, 0, NULL);
 
     askpw = pk11_argGetParamValue("askpw",params);
     slotInfo->askpw = 0;
@@ -796,8 +804,10 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
 	/* for now only the internal module is critical */
     ciphers = pk11_mkCipherFlags(ssl0, ssl1);
 
-    trustOrderPair=pk11_formatIntPair("trustOrder",trustOrder,0);
-    cipherOrderPair=pk11_formatIntPair("cipherOrder",cipherOrder,0);
+    trustOrderPair=pk11_formatIntPair("trustOrder",trustOrder,
+					PK11_DEFAULT_TRUST_ORDER);
+    cipherOrderPair=pk11_formatIntPair("cipherOrder",cipherOrder,
+					PK11_DEFAULT_CIPHER_ORDER);
     slotPair=pk11_formatPair("slotParams",slotParams,'{'); /* } */
     if (slotParams) PORT_Free(slotParams);
     cipherPair=pk11_formatPair("ciphers",ciphers,'\'');
