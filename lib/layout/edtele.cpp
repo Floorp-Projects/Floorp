@@ -7026,11 +7026,11 @@ void CEditContainerElement::PrintEnd( CPrintState *pPrintState ){
             pPrintState->m_pOut->Printf( space );
             pPrintState->m_iCharPos += XP_STRLEN(space);
         }
-        if( (GetAlignment() == ED_ALIGN_RIGHT && !IsEmpty() )&& (!pNextContainer || !CompareAlignments(pNextContainer->GetAlignment(),GetAlignment())) ) {
+        if( (GetAlignment() == ED_ALIGN_RIGHT && !IsEmpty() )&& (!pNextContainer || pNextContainer->GetType() != P_NSDT || !CompareAlignments(pNextContainer->GetAlignment(),GetAlignment())) ) {
             pPrintState->m_pOut->Printf( "</DIV>"); 
             bNeedReturn = TRUE;
         }
-        else if(( GetAlignment() == ED_ALIGN_ABSCENTER && !IsEmpty() ) && (!pNextContainer || !CompareAlignments(pNextContainer->GetAlignment(),GetAlignment())) ) {
+        else if(( GetAlignment() == ED_ALIGN_ABSCENTER && !IsEmpty() ) && (!pNextContainer || pNextContainer->GetType() != P_NSDT || !CompareAlignments(pNextContainer->GetAlignment(),GetAlignment())) ) {
             pPrintState->m_pOut->Printf( "</CENTER>"); 
             bNeedReturn = TRUE;
         }
