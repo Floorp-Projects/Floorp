@@ -91,6 +91,6 @@ build-plugin: resources
 _%.rsrc: %.rsrc
 	$(ASDECODE) $< $@
 
-clean clobber::
+clean clobber distclean::
 	rm -f $(RESOURCE_FILES)
 	rm -rf build
