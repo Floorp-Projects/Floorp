@@ -83,5 +83,6 @@ export::
 		    $(NSINSTALL) -m 444 $$file crypto; \
 		fi; \
 	    done;  \
+		$(NSINSTALL) -m 444 crypto/nscertinit.c certdb; \
 	fi
 endif
