@@ -28,6 +28,9 @@ Contributor(s): ______________________________________. -->
   align="vertical"
   title="Embedding">
 
+<!-- attach the browser key set to the content window -->
+<keyset/>
+
   <box flex="1" >
     <box id="appcontent" flex="100%">
       <!-- this box is temporary, pending XBLified <browser> -->
