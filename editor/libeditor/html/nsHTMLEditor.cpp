@@ -390,12 +390,6 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     }
   }
 
-  // Init the rules system
-  // XXX: ERROR CHECKING should InitRules return an error, and then we could check it here?
-  InitRules();
-
-  EnableUndo(PR_TRUE);
- 
   // Set up a DTD    XXX XXX 
   // HACK: This should have happened in a document specific way
   //       in nsEditor::Init(), but we dont' have a way to do that yet
@@ -403,6 +397,12 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
                                           nsIDTD::GetIID(), getter_AddRefs(mDTD));
   if (!mDTD) result = NS_ERROR_FAILURE;
 
+  // Init the rules system
+  // XXX: ERROR CHECKING should InitRules return an error, and then we could check it here?
+  InitRules();
+
+  EnableUndo(PR_TRUE);
+ 
   return result;
 }
 
@@ -1349,97 +1349,99 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 
   nsCOMPtr<nsIDOMSelection>selection;
 
-  // Call the rules code in case there's anything we need to do first
-  // (e.g. delete the bogus node):
-  // Call the rules code in case there's anything we need to do first
-  // (e.g. delete the bogus node):
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
 
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
-  PRBool cancel, handled;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(res)) return res;
-
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offsetOfNewNode;
   res = DeleteSelectionAndPrepareToCreateNode(parentNode, offsetOfNewNode);
+  if (NS_FAILED(res)) return res;
 
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
+  // give rules a chance to handle or cancel
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  PRBool cancel, handled;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(res)) return res;
+  if (cancel) return NS_OK; // rules canceled the operation
+  if (!handled)
+  {
     // Get the first range in the selection, for context:
-  nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(0, getter_AddRefs(range));
-  if (NS_FAILED(res))
-    return res;
-
-  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-  if (!nsrange)
-    return NS_ERROR_NO_INTERFACE;
-
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = nsrange->CreateContextualFragment(aInputString,
-                                          getter_AddRefs(docfrag));
-  if (NS_FAILED(res))
-  {
-#ifdef DEBUG
-    printf("Couldn't create contextual fragment: error was %d\n", res);
-#endif
-    return res;
-  }
-
-#if defined(DEBUG_akkana_verbose)
-  printf("============ Fragment dump :===========\n");
-
-  nsCOMPtr<nsIContent> fragc (do_QueryInterface(docfrag));
-  if (!fragc)
-    printf("Couldn't get fragment is nsIContent\n");
-  else
-    fragc->List(stdout);
-#endif
-
-  // Insert the contents of the document fragment:
-  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
-
-  // Loop over the contents of the fragment:
-  nsCOMPtr<nsIDOMNode> child;
-  res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
-  if (NS_FAILED(res))
-  {
-    printf("GetFirstChild failed!\n");
-    return res;
-  }
-  while (child)
-  {
-#if defined(DEBUG_akkana_verbose)
-    printf("About to try to insert this node:\n");
-    nsCOMPtr<nsIContent> nodec (do_QueryInterface(child));
-    if (nodec) nodec->List(stdout);
-    printf("-----\n");
-#endif
-    // Get the next sibling before inserting the node;
-    // when we insert the node, it moves into the main doc tree
-    // so we'll no longer be able to get the siblings in the doc frag.
-    nsCOMPtr<nsIDOMNode> nextSib;
-    child->GetNextSibling(getter_AddRefs(nextSib));
-    // Ignore the return value, we'll check child when we loop around again.
-
-    // Now we can insert the node.
-    res = InsertNode(child, parentNode, offsetOfNewNode++);
+    nsCOMPtr<nsIDOMRange> range;
+    res = selection->GetRangeAt(0, getter_AddRefs(range));
     if (NS_FAILED(res))
-      break;
-    child = nextSib;
+      return res;
+
+    nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+    if (!nsrange)
+      return NS_ERROR_NO_INTERFACE;
+
+    nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+    res = nsrange->CreateContextualFragment(aInputString,
+                                            getter_AddRefs(docfrag));
+    if (NS_FAILED(res))
+    {
+#ifdef DEBUG
+      printf("Couldn't create contextual fragment: error was %d\n", res);
+#endif
+      return res;
+    }
+
+#if defined(DEBUG_akkana_verbose)
+    printf("============ Fragment dump :===========\n");
+
+    nsCOMPtr<nsIContent> fragc (do_QueryInterface(docfrag));
+    if (!fragc)
+      printf("Couldn't get fragment is nsIContent\n");
+    else
+      fragc->List(stdout);
+#endif
+
+    // Insert the contents of the document fragment:
+    nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
+
+    // Loop over the contents of the fragment:
+    nsCOMPtr<nsIDOMNode> child;
+    res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
+    if (NS_FAILED(res))
+    {
+      printf("GetFirstChild failed!\n");
+      return res;
+    }
+    while (child)
+    {
+#if defined(DEBUG_akkana_verbose)
+      printf("About to try to insert this node:\n");
+      nsCOMPtr<nsIContent> nodec (do_QueryInterface(child));
+      if (nodec) nodec->List(stdout);
+      printf("-----\n");
+#endif
+      // Get the next sibling before inserting the node;
+      // when we insert the node, it moves into the main doc tree
+      // so we'll no longer be able to get the siblings in the doc frag.
+      nsCOMPtr<nsIDOMNode> nextSib;
+      child->GetNextSibling(getter_AddRefs(nextSib));
+      // Ignore the return value, we'll check child when we loop around again.
+
+      // Now we can insert the node.
+      res = InsertNode(child, parentNode, offsetOfNewNode++);
+      if (NS_FAILED(res))
+        break;
+      child = nextSib;
+    }
+    if (NS_FAILED(res))
+      return res;
+
+    // Now collapse the selection to the end of what we just inserted:
+    selection->Collapse(parentNode, offsetOfNewNode);
   }
-  if (NS_FAILED(res))
-    return res;
-
-  // Now collapse the selection to the end of what we just inserted:
-  selection->Collapse(parentNode, offsetOfNewNode);
-
+  
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
   return res;
 }
 
