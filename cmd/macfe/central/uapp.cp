@@ -185,6 +185,12 @@ PREventQueue *mozilla_event_queue = NULL;
 
 #include "privacy.h"
 
+//#define BUILD_NSL_SUPPORT 1		// Are we using Apple's NSL support code?
+#ifdef BUILD_NSL_SUPPORT
+#define	kNSLGetURLRequestStringID	800
+#include "NSLStandardURL.h"
+#endif
+
 // HERE ONLY UNTIL NAV SERVICES CODE MERGED INTO TIP
 Boolean SimpleOpenDlog ( short numTypes, const OSType typeList[], FSSpec* outFSSpec ) ;
 
@@ -4189,6 +4195,25 @@ CFrontApp::ProcessNextEvent()
 
 void CFrontApp::DoOpenURLDialog(void)
 {
+#ifdef BUILD_NSL_SUPPORT
+	if ( NSLStandardLibraryPresent() )			// if the NSL dialog shared lib is available use it!
+	{
+		char*		returnedURL = NULL;
+		Str255		serviceList;
+		
+		::GetIndString( serviceList, kNSLGetURLRequestStringID, 1 );
+		p2cstr( serviceList );
+		
+		if ( NSLStandardGetURL( NULL, (char*)serviceList, true, &returnedURL ) )
+			{
+			// ok the user clicked ok and has returned a url.  Use it and dispose...
+			DoGetURL(returnedURL);
+			::DisposePtr(returnedURL);
+			}
+	}
+	else										// otherwise just do what we used to and make the user type it in
+	{
+#endif
 	StBlockingDialogHandler	theHandler(liLoadItemWind, this);
 	LWindow* theDialog = theHandler.GetDialog();
 	LEditField* theEdit = (LEditField*)theDialog->FindPaneByID('edit');
@@ -4209,6 +4234,9 @@ void CFrontApp::DoOpenURLDialog(void)
 		curl = (unsigned char*)purl;
 		DoGetURL(curl);
 		}
+#ifdef BUILD_NSL_SUPPORT
+	}
+#endif
 }
 
 
