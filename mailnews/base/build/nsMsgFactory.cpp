@@ -58,7 +58,7 @@
 #include "nsCopyMessageStreamListener.h"
 #include "nsMsgCopyService.h"
 
-#ifdef DEBUG_bienvenu
+#ifdef DOING_FILTERS
 #include "nsMsgFilterService.h"
 #endif
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -274,7 +274,7 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
   else if (mClassID.Equals(kMsgServerDataSourceCID)) {
     rv = NS_NewMsgServerDataSource(aIID, aResult);
   }
-#ifdef DEBUG_bienvenu
+#ifdef DOING_FILTERS
   else if (mClassID.Equals(kMsgFilterServiceCID)) {
     rv = NS_NewMsgFilterService(aIID, aResult);
   }
@@ -462,7 +462,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-#ifdef DEBUG_bienvenu  
+#ifdef DOING_FILTERS  
   printf("register filter service\n");
   rv = compMgr->RegisterComponent(kMsgFilterServiceCID,
                                   "Message Filter Service",
@@ -535,7 +535,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kMsgServerDataSourceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
-#ifdef DEBUG_bienvenu
+#ifdef DOING_FILTERS
   rv = compMgr->UnregisterComponent(kMsgFilterServiceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
 #endif
