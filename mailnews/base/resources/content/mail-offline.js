@@ -243,5 +243,6 @@ function MailCheckBeforeOfflineChange()
         break;
     }
   }
+  return true;
 }
 
