@@ -1437,9 +1437,11 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	 * Allocate a string to hold the concatenated arguments, including room
 	 * for a terminating 0.
 	 */
-	cp = collected_args = (jschar *) JS_malloc(cx, (args_length + 1) *
-						   sizeof(jschar));
-	/* Concatenate the arguments into the new string, separated by commas. */
+	cp = collected_args = JS_malloc(cx, (args_length + 1) * sizeof(jschar));
+
+	/*
+	 * Concatenate the arguments into the new string, separated by commas.
+	 */
 	for (i = 0; i < n; i++) {
 	    arg = JSVAL_TO_STRING(argv[i]);
 	    (void)js_strncpy(cp, arg->chars, arg->length);
@@ -1448,27 +1450,27 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    *(cp++) = (i + 1 < n) ? ',' : 0;
 	}
 
-	/* Make a tokenstream that reads from the given string. */
-	ts = js_NewTokenStream(cx, collected_args, args_length, filename, lineno,
-			       principals);
+	/*
+	 * Make a tokenstream that reads from the given string.
+	 */
+	ts = js_NewTokenStream(cx, collected_args, args_length, filename,
+			       lineno, principals);
 	if (!ts) {
 	    JS_free(cx, collected_args);
 	    return JS_FALSE;
 	}
 
-	tt = js_GetToken(cx, ts);
 	/* The argument string may be empty or contain no tokens. */
+	tt = js_GetToken(cx, ts);
 	if (tt != TOK_EOF) {
 	    while (1) {
 		/*
 		 * Check that it's a name.  This also implicitly guards against
-		 * TOK_ERROR.
+		 * TOK_ERROR, which was already reported.
 		 */
-		if (tt != TOK_NAME) {
-		    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-					 JSMSG_NO_FORMAL);
-		    goto badargs;
-		}
+		if (tt != TOK_NAME)
+		    goto bad_formal;
+
 		/*
 		 * Get the atom corresponding to the name from the tokenstream;
 		 * we're assured at this point that it's a valid identifier.
@@ -1476,32 +1478,32 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		atom = ts->token.t_atom;
 		if (!js_LookupProperty(cx, obj, (jsid)atom, &obj2,
 				       (JSProperty **)&sprop)) {
-		    goto badargs;
+		    goto bad_formal;
 		}
 		if (sprop && obj2 == obj) {
 #ifdef CHECK_ARGUMENT_HIDING
 		    PR_ASSERT(sprop->getter == js_GetArgument);
 		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
 		    JS_ReportErrorNumber(cx, JSREPORT_WARNING,
-		    			 JSMSG_SAME_FORMAL, ATOM_BYTES(atom));
-		    goto badargs;
+					 JSMSG_SAME_FORMAL, ATOM_BYTES(atom));
+		    goto bad_formal;
 #else
-		/*
-		 * A duplicate parameter name. We create a dummy symbol
-		 * entry with property id of the parameter number and set
-		 * the id to the name of the parameter.
-		 * The decompiler will know to treat this case specially.
-		 */
-		jsid oldArgId = (jsid) sprop->id;
-		OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-		sprop = NULL;
-		if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
-				       js_GetArgument, js_SetArgument,
-				       JSPROP_ENUMERATE | JSPROP_PERMANENT,
-				       (JSProperty **)&sprop)) {
-		    goto badargs;
-		}
-		sprop->id = (jsid) atom;
+		    /*
+		     * A duplicate parameter name. We create a dummy symbol
+		     * entry with property id of the parameter number and set
+		     * the id to the name of the parameter.  See jsopcode.c:
+		     * the decompiler knows to treat this case specially.
+		     */
+		    jsid oldArgId = (jsid) sprop->id;
+		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+		    sprop = NULL;
+		    if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
+					   js_GetArgument, js_SetArgument,
+					   JSPROP_ENUMERATE | JSPROP_PERMANENT,
+					   (JSProperty **)&sprop)) {
+			goto bad_formal;
+		    }
+		    sprop->id = (jsid) atom;
 #endif
 		}
 		if (sprop)
@@ -1510,26 +1512,25 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 				       js_GetArgument, js_SetArgument,
 				       JSPROP_ENUMERATE | JSPROP_PERMANENT,
 				       (JSProperty **)&sprop)) {
-		    goto badargs;
+		    goto bad_formal;
 		}
 		PR_ASSERT(sprop);
 		sprop->id = INT_TO_JSVAL(fun->nargs++);
 		OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
 
-		/* Done with the NAME; get the next token. */
+		/*
+		 * Get the next token.  Stop on end of stream.  Otherwise
+		 * insist on a comma, get another name, and iterate.
+		 */
 		tt = js_GetToken(cx, ts);
-		/* Stop if we've reached the end of the string. */
 		if (tt == TOK_EOF)
 		    break;
-
-		/*
-		 * If a comma is seen, get the next token.  Otherwise, let the
-		 * loop catch the error.
-		 */
-		if (tt == TOK_COMMA)
-		    tt = js_GetToken(cx, ts);
+		if (tt != TOK_COMMA)
+		    goto bad_formal;
+		tt = js_GetToken(cx, ts);
 	    }
 	}
+
 	/* Clean up. */
 	JS_free(cx, collected_args);
 	if (!js_CloseTokenStream(cx, ts))
@@ -1565,7 +1566,14 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_ParseFunctionBody(cx, ts, fun) &&
 	   js_CloseTokenStream(cx, ts);
 
-badargs:
+bad_formal:
+    /*
+     * Report "malformed formal parameter" iff no illegal char or similar
+     * scanner error was already reported.
+     */
+    if (!(ts->flags & TSF_ERROR))
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_FORMAL);
+
     /*
      * Clean up the arguments string and tokenstream if we failed to parse
      * the arguments.
