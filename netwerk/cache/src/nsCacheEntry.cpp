@@ -296,7 +296,7 @@ nsCacheEntryHashTable::nsCacheEntryHashTable()
 
 nsCacheEntryHashTable::~nsCacheEntryHashTable()
 {
-    //** maybe we should finalize the table...
+    PL_DHashTableFinish(&table);
 }
 
 
@@ -410,8 +410,19 @@ nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
 }
 
 void
-nsCacheEntryHashTable::Finalize(PLDHashTable * /* table */)
+nsCacheEntryHashTable::Finalize(PLDHashTable * table)
 {
-    //** gee, if there's anything left in the table, maybe we should get rid of it.
+    (void) PL_DHashTableEnumerate(table, FreeCacheEntries, nsnull);
 }
 
+
+PLDHashOperator
+nsCacheEntryHashTable::FreeCacheEntries(PLDHashTable *table,
+                              PLDHashEntryHdr *hdr,
+                              PRUint32 number,
+                              void *arg)
+{
+    nsCacheEntryHashTableEntry *entry = (nsCacheEntryHashTableEntry *)hdr;
+    delete entry->cacheEntry;
+    return PL_DHASH_NEXT;
+}

@@ -202,6 +202,12 @@ private:
 
     static void           Finalize( PLDHashTable *table);
 
+    static
+    PLDHashOperator       FreeCacheEntries(PLDHashTable *    table,
+                                           PLDHashEntryHdr * hdr,
+                                           PRUint32          number,
+                                           void *            arg);
+
     // member variables
     static PLDHashTableOps ops;
     PLDHashTable           table;
