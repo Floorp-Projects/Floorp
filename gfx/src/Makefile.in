@@ -131,6 +131,15 @@ EXPORTS += \
         $(NULL)
 endif
 
+ifdef MOZ_ENABLE_POSTSCRIPT
+CPPSRCS += \
+        ps/nsPaperPS.cpp \
+        $(NULL)
+EXPORTS += \
+        ps/nsPaperPS.h \
+        $(NULL)
+endif
+
 EXTRA_DSO_LDOPTS = \
         $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
         $(MOZ_UNICHARUTIL_LIBS) \
