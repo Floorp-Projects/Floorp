@@ -6,6 +6,14 @@
    CHANGES REVIEWED BY hyatt@netscape.com.
 **/
 
+/* import the widget style sheets */
+
+@import url(chrome://global/skin/button.css);
+@import url(chrome://global/skin/checkbox.css);
+@import url(chrome://global/skin/radio.css);
+@import url(chrome://global/skin/menubutton.css);
+@import url(chrome://global/skin/menulist.css);
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
 
@@ -1333,6 +1341,10 @@ treeitem > treerow > treecell > .twisty {
  user-focus:ignore;
 }
 
+treeitem[selected="true"] > treerow > treecell > .twisty {
+  list-style-image: url("chrome://global/skin/closedtwisty-selected.gif");
+}
+
 .twisty:hover {
  text-decoration: none;
 }
@@ -1351,6 +1363,10 @@ treeitem > treerow > treecell > .twisty[disabled="true"] {
 
 treeitem[container="true"][open="true"] > treerow > treecell > .twisty {
  list-style-image: url("chrome://global/skin/opentwisty.gif");
+}
+
+treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .twisty {
+  list-style-image: url("chrome://global/skin/opentwisty-selected.gif");
 }
 
 
@@ -1996,168 +2012,6 @@ toolbarseparator.line {
   background-color: #99CCCC;
 }
 
-
-
-/* NEW WIDGET LANDING: <button> */
-button {
-  border: 1px solid #CCCCCC;
-  -moz-border-radius: 3px 2px 2px 3px;
-  min-width: 5em;
-  margin: 1px 5px 2px 5px;
-}
-
-button > .internal-box {
-  vertical-align: middle;
-  border: 1px outset #CCCCCC;
-  padding: 2px 10px 2px 10px; /* bend over, bitch */
-}
-
-button:active {
-  border: 1px solid #000000;
-}
-
-/* button:active rules */
-button:active > .internal-box {
-  border: 1px inset #CCCCCC;
-  padding: 3px 9px 1px 11px; 
-}
-
-button:hover {
-  border: 1px solid #000000;
-}
-
-/* disabled rules */
-button[disabled]:hover, 
-button[disabled]:active {
-  border: 1px solid #CCCCCC;
-}
-
-button[disabled] > .internal-box,
-button[disabled]:hover > .internal-box,
-button[disabled]:active > .internal-box {
-  border: 1px solid #999999;
-  color: #999999;
-  padding: 2px;
-}
-
-/* align text in standard buttons to center in the available space */
-button > .internal-box > .text-container,
-button.right > .internal-box > .text-container,
-button.left > .internal-box > .text-container {
-  text-align: center;
-}
-
-button.top > .internal-box > .text-container,
-button.bottom > .internal-box > .text-container {
-  vertical-align: middle;
-}
-
-/* special classes for buttons where the text is aligned to one side */
-button.text-left {
-  text-align: left;
-}
-
-button.text-right {
-  text-align: right;
-}
-
-/* button text formatting rules */
-button > .internal-box > .text-container > text,
-button.left > .internal-box > .text-container > text,
-button.right > .internal-box > .text-container > text {
-  padding: 0px 2px 0px 2px;
-}
-
-button.top > .internal-box > .text-container > text,
-button.bottom > .internal-box > .text-container > text {
-  padding: 2px 0px 2px 0px;
-}
-
-button[default] {
-  behavior: url(resource:/chrome/xulBindings.xml#buttonright);
-  font-weight: bold;
-	list-style-image: url("chrome://global/skin/return.gif");
-}
-
-button[default] > .internal-box > image {
-  margin-left: 3px;
-}
-
-/* NEW WIDGET LANDING: <checkbox> */
-checkbox {
-}
-checkbox[checked="true"] {
-  list-style-image: url(chrome://global/skin/check-check.gif);
-}
-
-checkbox > .internal-box > .checkmark-box {
-  border: 1px solid #CCCCCC;
-}
-checkbox > .internal-box > .checkmark-box > image {
-  border: 1px outset #CCCCCC;
-  width: 8px;
-  height: 8px;
-}
-checkbox > .internal-box > html {
-  margin-left: 5px;
-  /*border: 1px solid #CCCCCC;*/
-}
-
-
-/* mouseover rules */
-checkbox:hover > .internal-box > .checkmark-box {
-  border: 1px solid #000000;
-}
-
-/* mousedown rules */
-checkbox:hover:active > .internal-box > .checkmark-box > image {
-  border: 1px inset #CCCCCC;
-}
-
-/* focus rules 
-checkbox:focus > .internal-box > html {
-  border: 1px dotted #000000;
-}*/
-
-/* NEW WIDGET LANDING: <radio> */
-radio {
-  margin: 0px 5px 0px 5px;
-}
-radio[checked="true"] > .internal-box > .checkmark-box > image {
-  list-style-image: url(chrome://global/skin/check-radio.gif);
-}
-
-radio > .internal-box > .checkmark-box {
-  border: 1px solid #CCCCCC;
-  -moz-border-radius: 8px;
-}
-radio > .internal-box > .checkmark-box > image {
-  border: 1px outset #CCCCCC;
-  width: 10px;
-  height: 10px;
-  -moz-border-radius: 8px;
-}
-radio > .internal-box > html {
-  margin-left: 5px;
-  /*border: 1px solid #CCCCCC;*/
-}
-
-
-/* mouseover rules */
-radio:hover > .internal-box > .checkmark-box {
-  border: 1px solid #000000;
-}
-
-/* mousedown rules */
-radio:hover:active > .internal-box > .checkmark-box > image {
-  border: 1px inset #CCCCCC;
-}
-
-/* focus rules 
-radio:focus > .internal-box > html {
-  border: 1px dotted #000000;
-}*/
-
 /* NEW WIDGET LANDING: <separator> */
 separator, separator[orient="horizontal"] {
   height: 1.5em;
@@ -2211,136 +2065,6 @@ box[autostretch="never"], box[autostretch="never"][orient="horizontal"] {
 text.label {
   margin: 0px;
   padding: 5px 3px 5px 4px;
-}
-
-/* NEW WIDGET LANDING: <treecell> popup */
-treecell#popupCell > menu#popupMenu {
-  list-style-image: url(chrome://global/skin/treecolpopup.gif);
-}
-
-treecell#popupCell {
-  padding-left: 2px;
-  padding-right: 2px;
-}
-
-/* NEW WIDGET LANDING: <menulist> popup */
-menulist, menubutton {
-  padding: 0px;
-  border: 1px solid #CCCCCC;
-  -moz-border-radius: 3px 2px 2px 3px;
-}
-
-menulist > .menu-text {
-  padding-left: 4px;
-  padding-right: 4px;
-  border-top: 1px inset #CCCCCC;
-  border-bottom: 1px inset #CCCCCC;
-  margin-right: 0px;
-}
-
-menulist > .menu-icon {
-  border-left: 1px inset #CCCCCC;
-  border-top: 1px inset #CCCCCC;
-  border-bottom: 1px inset #CCCCCC;
-}
-
-menulist > .menu-dropmarker {
-  border-top: 1px outset #CCCCCC;
-  border-right: 1px outset #CCCCCC;
-  border-bottom: 1px outset #CCCCCC;
-  border-left: 1px outset #CCCCCC;
-  list-style-image: url("chrome://global/skin/scroll-down.gif");
-  padding: 0px 2px 0px 2px;
-}
-
-menulist[menuactive="true"] {
-  border: 1px solid #000000;
-}
-
-/* open rules */
-menulist[open="true"] {
-  border: 1px solid #000000;
-}
-
-menulist[open="true"] > .menu-icon {
-  border-left: 1px inset #CCCCCC;
-  border-top: 1px inset #CCCCCC;
-  border-bottom: 1px solid #CCCCCC;
-}
-
-menulist[open="true"] > .menu-text {
-  border-top: 1px inset #CCCCCC;
-  border-bottom: 1px solid #CCCCCC;
-}
-
-menulist[open="true"] > .menu-dropmarker {
-  border-top: 1px inset #CCCCCC;
-  border-right: 1px inset #CCCCCC;
-  border-bottom: 1px solid #CCCCCC;
-  border-left: 1px solid #CCCCCC;
-  padding: 1px 2px -1px 2px;
-}
-
-menubutton > .menu-button {
-  border: 1px outset #CCCCCC;
-  padding: 2px;
-}
-
-menubutton > .menu-button:active {
-  border: 1px inset #CCCCCC;
-  padding: 3px 1px 1px 3px;
-}
-
-
-menubutton > .menu-dropmarker {
-  border: 1px outset #CCCCCC;
-  list-style-image: url("chrome://global/skin/scroll-down.gif");
-  padding: 0px 2px 0px 2px;
-}
-
-menubutton[open="true"] > .menu-dropmarker {
-  border: 1px inset #CCCCCC;
-  padding: 1px 1px -1px 3px;
-}
-
-menubutton menupopup, menulist menupopup {
-  border-left: 1px solid #000000;
-  border-right: 1px solid #000000;
-  border-bottom: 1px solid #000000;
-}
-
-menulist[editable="true"] {
-  padding: 0px;
-}
-
-menulist[editable="true"] > .menu-text {
-  border-left: none;
-  border-top: 1px inset #CCCCCC;
-  border-right: 1px inset #CCCCCC;
-  border-bottom: 1px inset #CCCCCC;
-  margin: 0px 2px 0px 0px;
-}
-
-menulist[editable="true"] > .menu-dropmarker {
-  border: 1px outset #CCCCCC;
-}
-
-menulist[editable="true"][open="true"] > .menu-dropmarker {
-  border: 1px inset #CCCCCC;
-}
-
-menulist[editable="true"] > .menu-icon {
-  list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
-  background-color: white;
-  padding: 1px;
-  border-left: 1px inset #CCCCCC;
-  border-top: 1px inset #CCCCCC;
-  border-right: none;
-  border-bottom: 1px inset #CCCCCC;
-}
-
-menulist menupopup > menuseparator {
-  border-bottom: 2px groove #CCCCCC;
 }
 
 progressmeter {

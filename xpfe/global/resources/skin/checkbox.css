@@ -1,0 +1,36 @@
+/* NEW WIDGET LANDING: <checkbox> */
+checkbox {
+}
+checkbox[checked="true"] {
+  list-style-image: url(chrome://global/skin/check-check.gif);
+}
+
+checkbox > .internal-box > .checkmark-box {
+  border: 1px solid #CCCCCC;
+}
+checkbox > .internal-box > .checkmark-box > image {
+  border: 1px outset #CCCCCC;
+  width: 8px;
+  height: 8px;
+}
+checkbox > .internal-box > html {
+  margin-left: 5px;
+  /*border: 1px solid #CCCCCC;*/
+}
+
+
+/* mouseover rules */
+checkbox:hover > .internal-box > .checkmark-box {
+  border: 1px solid #000000;
+}
+
+/* mousedown rules */
+checkbox:hover:active > .internal-box > .checkmark-box > image {
+  border: 1px inset #CCCCCC;
+}
+
+/* focus rules 
+checkbox:focus > .internal-box > html {
+  border: 1px dotted #000000;
+}*/
+
