@@ -1,2 +1,5 @@
 <!ENTITY helpContents.label       "Help Contents">
 <!ENTITY helpContents.accesskey   "h">
+
+<!ENTITY helpForIEUsers.label     "For Internet Explorer Users">
+<!ENTITY helpForIEUsers.accesskey  "i">

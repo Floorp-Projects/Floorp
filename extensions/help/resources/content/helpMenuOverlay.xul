@@ -14,6 +14,10 @@
       accesskey="&helpContents.accesskey;" 
       position="1" id="help"
       oncommand="openHelp();" />   
+    <menuitem label="&helpForIEUsers.label;"
+      accesskey="&helpForIEUsers.accesskey;"
+      position="2"
+      oncommand="openHelp('ieusers');" />
   </menupopup>
   
 </overlay>
