@@ -63,8 +63,6 @@ PRBool nsMacMessageSink::DispatchOSEvent(
   return eventHandled;
 }
 
-
-#if USE_MENUSELECT
 //-------------------------------------------------------------------------
 //
 // DispatchMenuCommand
@@ -77,6 +75,7 @@ PRBool nsMacMessageSink::DispatchMenuCommand(
 {
 	PRBool		eventHandled = PR_FALSE;
 
+#if USE_MENUSELECT
 	nsMacWindow* raptorWindow = GetNSWindowFromMacWindow(aWindow);
 	// prevent the window being deleted while we're in its methods
 	nsCOMPtr<nsIWidget>   kungFuDeathGrip(NS_STATIC_CAST(nsIWidget*, raptorWindow));
@@ -84,9 +83,10 @@ PRBool nsMacMessageSink::DispatchMenuCommand(
 	{
 		eventHandled = raptorWindow->HandleMenuCommand(anEvent, menuResult);
 	}
+#endif
+
   return eventHandled;
 }
-#endif
 
 
 #pragma mark -
