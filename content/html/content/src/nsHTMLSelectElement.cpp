@@ -64,6 +64,7 @@
 #include "nsGUIEvent.h"
 #include "nsIBoxObject.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentEvent.h"
 
 // PresState
 #include "nsVoidArray.h"
@@ -1326,8 +1327,23 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   }
 
   // Let the caller know whether anything was changed
-  if (aChangedSomething && (optionsSelected || optionsDeselected)) {
-    *aChangedSomething = PR_TRUE;
+  if (optionsSelected || optionsDeselected) {
+    if (aChangedSomething)
+      *aChangedSomething = PR_TRUE;
+
+    // Dispatch an event to notify the subcontent that the selected item has changed
+    nsCOMPtr<nsIDocument> document;
+    GetDocument(*getter_AddRefs(document));
+    nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(document);
+    if (domDoc) {
+      nsCOMPtr<nsIDOMEvent> selectEvent;
+      domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(selectEvent));
+      selectEvent->InitEvent(NS_LITERAL_STRING("selectedItemChanged"),
+                             PR_TRUE, PR_TRUE);
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this)));
+      PRBool noDefault;
+      target->DispatchEvent(selectEvent, &noDefault);
+    }
   }
 
   return NS_OK;
