@@ -27,7 +27,7 @@
 interface nsIDOMHTMLOptionElement;
 
 
-[scriptable, uuid(a6cf9114-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(409bbf14-1dd2-11b2-91de-8d672d406276)]
 interface nsIDOMNSHTMLOptionCollection : nsISupports
 {
            attribute unsigned long    length;
