@@ -735,11 +735,13 @@ nsListControlFrame::GetSelectedIndexFromContent(nsIContent *aContent)
 
     PRUint32 inx;
     for (inx = 0; inx < numOptions; inx++) {
-      nsCOMPtr<nsIContent> option = getter_AddRefs(GetOptionAsContent(options, inx));
-      if (option) {
-        if (option.get() == aContent) {
+      nsIContent * option = GetOptionAsContent(options, inx);
+      if (option != nsnull) {
+        if (option == aContent) {
+          NS_RELEASE(option);
           return inx;
         }
+        NS_RELEASE(option);
       }
     }
   }
@@ -1950,8 +1952,8 @@ nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
     // Should we send an event here or not?
     if (nsnull != mComboboxFrame && mIsAllFramesHere) {
       rv = mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, aIndex); // don't dispatch event
-    } else {
-      InitSelectionCache(-1);
+    //} else {
+    //  InitSelectionCache(-1);
     }
   }
   return rv;
@@ -2128,7 +2130,7 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, co
           // check to see if it is the currect selection
           // if it is, then do nothing
           if (mSelectedIndex != selectedIndex) {
-            SetOptionSelected(selectedIndex, PR_TRUE);
+            ToggleSelected(selectedIndex); // sets mSelectedIndex
             if (nsnull != mComboboxFrame && mIsAllFramesHere) {
               mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
             //} else {
@@ -2950,7 +2952,7 @@ nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
     if (thisVal) {
       res = thisVal->GetData(&j);
       if (NS_SUCCEEDED(res)) {
-        res = SetOptionSelected(j, PR_TRUE);
+        res = SetOptionSelected(j, PR_TRUE); // might want to use ToggleSelection
       }
     } else {
       res = NS_ERROR_UNEXPECTED;
