@@ -44,6 +44,7 @@ var gDownloadViewChildren = null;
 var gDownloadManager = null;
 var gRDFService = null;
 var gNC_File = null;
+var gStatusBar = null;
 
 function NODE_ID(aElement)
 {
@@ -84,6 +85,13 @@ function openPropertiesDialog()
   gDownloadManager.openProgressDialogFor(selection[0].id, window);
 }
 
+function onSelect(aEvent) {
+  if (!gStatusBar)
+    gStatusBar = document.getElementById("statusbar-text");
+  gStatusBar.label = gDownloadView.selectedItems[0].id;
+  window.updateCommands("tree-select");
+}
+  
 var downloadViewController = {
   supportsCommand: function dVC_supportsCommand (aCommand)
   {
