@@ -1,5 +1,5 @@
 echo off
-REM  Check out and build the CCK stuff
+REM  Check out, build and deliever the CCK stuff
 REM  3/16/99 Frank Petitta   Netscape Communications Corp.
 REM
 REM  Basic operation outline:
@@ -9,8 +9,10 @@ REM    6.0 is the standard so the build will not happen if _MSC_VER is
 REM    any value other than 1200!
 REM    System var MOZ_DEBUG is used to detemine Debug or Non-Debug builds
 REM
+REM  * I hate this Batch CRAP, I going to use this as a temp and write this again in PERL!!!*
+REM
 
-echo on
+REM echo on
 
 :SetUp
 
@@ -32,18 +34,19 @@ echo y | rd /s mozilla
 REM check out mozilla/cck
 cvs co mozilla/cck
 
-REM  Copy the E-mail notification files to the build directory
+REM  Copy the build files to the build directory
 C:
 cd\cckscripts
-copy *.txt D:\builds\mozilla\cck\driver
-copy *.dep D:\builds\mozilla\cck\driver
-copy *.mak D:\builds\mozilla\cck\driver
+copy WizardMachine.dep D:\builds\mozilla\cck\driver
+copy WizardMachine.mak D:\builds\mozilla\cck\driver
 
 D:
 cd\builds\mozilla\cck\driver
 
 REM Send Pull completion notification
-blat Build.txt -t page-petitta@netscape.com -s "CCK Pull Notification" -i Undertaker
+echo.CCK source pull complete.  >> tempfile.txt
+REM blat tempfile.txt  -t page-petitta@netscape.com -s "CCK Pull Notification" -i Undertaker
+if exist tempfile.txt del tempfile.txt
 
 REM build the damn thing, then send notification if the exe is there.
 if "%MOZ_DEBUG%"=="1" NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 Debug"
@@ -54,46 +57,47 @@ if "%MOZ_DEBUG%"=="1" if exist D:\builds\mozilla\cck\driver\debug\wizardmachine.
 if "%MOZ_DEBUG%"=="0" if exist D:\builds\mozilla\cck\driver\release\wizardmachine.exe set BuildGood=1
 
 REM If the target is there then do the right thing, Mail notification then upload it.
-if "%BuildGood%"=="1" blat Done.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
+echo.CCK build complete and verified.  >> tempfile.txt
+REM if "%BuildGood%"=="1" blat tempfile.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
+if exist tempfile.txt del tempfile.txt
 
 REM Houston we have a problem, abort, abort!!!!!
-if "%BuildGood%" =="0" blat Error.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
+if "%BuildGood%" =="0" echo.CCK build died, casualty assesment.  >> tempfile.txt
+REM if "%BuildGood%" =="0" blat tempfile.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
+if exist tempfile.txt del tempfile.txt
 if "%BuildGood%" =="0" set ErrorType=2
 if "%BuildGood%" =="0" goto Errors
 
-
-REM Get the date to label the folder we create on upload.
+:BuildNumber
+REM Get the build date to label the folder we create on upload.
+C:
 Perl C:\CCKScripts\date.pl
 call C:\CCKScripts\bdate.bat
-if "%BuildID%" < "1" goto set ErrorType = 3
-if "%BuildID%" < "1" goto EndOfScript
+if "%BuildID%" == "" goto set ErrorType = 3
+if "%BuildID%" == "" goto EndOfScript
 O:
 if "%MOZ_DEBUG%"=="1" md \products\client\cck\cck50\debug\"%BuildID%"
 if "%MOZ_DEBUG%"=="0" md \products\client\cck\cck50\release\"%BuildID%"
 
 REM  Put it where we all can get it.
-UploadIt:
+:UploadIt
 if "%MOZ_DEBUG%"=="1" goto DebugUpLoad
 if "%MOZ_DEBUG%"=="0" goto ReleaseUpload
 
 :DebugUpLoad
-    O:
-    cd:\products\client\cck\cck50\debug
     D:
     cd\builds\mozilla\cck\driver\Debug
-    copy *.exe O:
+    copy *.exe O:\products\client\cck\cck50\debug\"%BuildID%"
     cd\builds\mozilla\cck\cckwiz\inifiles
-    copy cck.ini O:
+    copy cck.ini O:\products\client\cck\cck50\debug\"%BuildID%"
     goto EndOfScript
 	
 :ReleaseUpload
-    O:
-    cd:\products\client\cck\cck50\release
     D:
     cd\builds\mozilla\cck\driver\Release
-    copy *.exe O:
+    copy *.exe O:\products\client\cck\cck50\release\"%BuildID%"
     cd\builds\mozilla\cck\cckwiz\inifiles
-    copy cck.ini O:
+    copy cck.ini O:\products\client\cck\cck50\release\"%BuildID%"
     goto EndOfScript
 
 goto EndOfScript
