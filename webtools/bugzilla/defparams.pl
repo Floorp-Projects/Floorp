@@ -418,6 +418,12 @@ DefParam("allowbugdeletion",
          0);
 
 
+DefParam("allowuserdeletion",
+         q{The pages to edit users can also let you delete a user.  But there is no code that goes and cleans up any references to that user in other tables, so such deletions are kinda scary.  So, you have to turn on this option before any such deletions will ever happen.},
+         "b",
+         0);
+
+
 DefParam("strictvaluechecks",
          "Do stricter integrity checking on both form submission values and values read in from the database.",
          "b",

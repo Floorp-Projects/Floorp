@@ -838,6 +838,9 @@ sub GetCommandMenu {
             $html .= ", <a href=editparams.cgi>parameters</a>";
             $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
         }
+        if (UserInGroup("editusers")) {
+            $html .= ", <a href=editusers.cgi>users</a>";
+        }
         if (UserInGroup("editcomponents")) {
             $html .= ", <a href=editproducts.cgi>components</a>";
         }

@@ -741,6 +741,7 @@ sub AddGroup ($$)
 #
 
 AddGroup 'tweakparams',      'Can tweak operating parameters';
+AddGroup 'editusers',      'Can edit or disable users';
 AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
 AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';

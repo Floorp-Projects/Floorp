@@ -73,9 +73,9 @@ sub CheckUser ($)
 # Displays the form to edit a user parameters
 #
 
-sub EmitFormElements ($$$$)
+sub EmitFormElements ($$$$$)
 {
-    my ($user, $password, $realname, $groupset) = @_;
+    my ($user, $password, $realname, $groupset, $emailnotification) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
     print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"user\" VALUE=\"$user\"></TD>\n";
@@ -88,16 +88,29 @@ sub EmitFormElements ($$$$)
     print "  <TH ALIGN=\"right\">Password:</TH>\n";
     print "  <TD><INPUT SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
 
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Email notification:</TH>\n";
+    print qq{<TD><SELECT NAME="emailnotification">};
+    foreach my $i (["ExcludeSelfChanges", "All qualifying bugs except those which I change"],
+                   ["CConly", "Only those bugs which I am listed on the CC line"],
+                   ["All", "All qualifying bugs"]) {
+        my ($tag, $desc) = (@$i);
+        my $selectpart = "";
+        if ($tag eq $emailnotification) {
+            $selectpart = " SELECTED";
+        }
+        print qq{<OPTION$selectpart VALUE="$tag">$desc\n};
+    }
+    print "</SELECT></TD>\n";
 
-    SendSQL("SELECT bit,name,description
+    SendSQL("SELECT bit,name,description,bit & $groupset != 0
 	     FROM groups
 	     ORDER BY name");
     while (MoreSQLData()) {
-	my($bit,$name,$description) = FetchSQLData();
+	my ($bit,$name,$description,$checked) = FetchSQLData();
 	print "</TR><TR>\n";
-        $bit = $bit+0; # this strange construct coverts a string to a number
 	print "  <TH ALIGN=\"right\">", ucfirst($name), ":</TH>\n";
-	my $checked = ($groupset & $bit) ? "CHECKED" : "";
+	$checked = ($checked) ? "CHECKED" : "";
 	print "  <TD><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"> $description</TD>\n";
     }
 
@@ -142,9 +155,9 @@ confirm_login();
 
 print "Content-type: text/html\n\n";
 
-unless (UserInGroup("tweakparams")) {
+unless (UserInGroup("editusers")) {
     PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'tweakparams' group.\n";
+    print "Sorry, you aren't a member of the 'editusers' group.\n";
     print "And so, you aren't allowed to add, modify or delete users.\n";
     PutTrailer();
     exit;
@@ -158,25 +171,63 @@ unless (UserInGroup("tweakparams")) {
 my $user    = trim($::FORM{user}   || '');
 my $action  = trim($::FORM{action} || '');
 my $localtrailer = "<A HREF=\"editusers.cgi\">edit</A> more users";
+my $candelete = Param('allowuserdeletion');
 
 
 
 #
-# action='' -> Show nice list of users
+# action='' -> Ask for match string for users.
 #
 
 unless ($action) {
-    PutHeader("Select user");
+    PutHeader("Select match string");
+    print qq{
+<FORM METHOD=POST ACTION="editusers.cgi">
+<INPUT TYPE=HIDDEN NAME="action" VALUE="list">
+List users with login name matching: 
+<INPUT SIZE=32 NAME="matchstr">
+<SELECT NAME="matchtype">
+<OPTION VALUE="substr" SELECTED>case-insensitive substring
+<OPTION VALUE="regexp" SELECTED>case-sensitive regexp
+<OPTION VALUE="notregexp" SELECTED>not (case-sensitive regexp)
+</SELECT>
+<BR>
+<INPUT TYPE=SUBMIT VALUE="Submit">
+};
+    PutTrailer();
+    exit;
+}
 
-    SendSQL("SELECT login_name,realname
-	     FROM profiles
-	     ORDER BY login_name");
+
+#
+# action='list' -> Show nice list of matching users
+#
+
+if ($action eq 'list') {
+    PutHeader("Select user");
+    my $query = "SELECT login_name,realname FROM profiles WHERE login_name ";
+    if ($::FORM{'matchtype'} eq 'substr') {
+        $query .= "like";
+        $::FORM{'matchstr'} = '%' . $::FORM{'matchstr'} . '%';
+    } elsif ($::FORM{'matchtype'} eq 'regexp') {
+        $query .= "regexp";
+    } elsif ($::FORM{'matchtype'} eq 'notregexp') {
+        $query .= "not regexp";
+    } else {
+        die "Unknown match type";
+    }
+    $query .= SqlQuote($::FORM{'matchstr'}) . " ORDER BY login_name";
+
+    SendSQL($query);
     my $count = 0;
     my $header = "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">
 <TH ALIGN=\"left\">Edit user ...</TH>
 <TH ALIGN=\"left\">Real name</TH>
-<TH ALIGN=\"left\">Action</TH>\n
-</TR>";
+";
+    if ($candelete) {
+        $header .= "<TH ALIGN=\"left\">Action</TH>\n";
+    }
+    $header .= "</TR>\n";
     print $header;
     while ( MoreSQLData() ) {
         $count++;
@@ -188,15 +239,22 @@ unless ($action) {
 	print "<TR>\n";
 	print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$user</B></A></TD>\n";
 	print "  <TD VALIGN=\"top\">$realname</TD>\n";
-	print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=del&user=", url_quote($user), "\">Delete</A></TD>\n";
+        if ($candelete) {
+            print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=del&user=", url_quote($user), "\">Delete</A></TD>\n";
+        }
 	print "</TR>";
     }
     print "<TR>\n";
-    print "  <TD VALIGN=\"top\" COLSPAN=2>Add a new user</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><FONT SIZE =-1><A HREF=\"editusers.cgi?action=add\">Add</A></FONT></TD>\n";
+    my $span = $candelete ? 3 : 2;
+    print qq{
+<TD VALIGN="top" COLSPAN=$span ALIGN="right">
+    <A HREF=\"editusers.cgi?action=add\">Add a new user</A>
+</TD>
+};
     print "</TR></TABLE>\n";
+    print "$count users found.\n";
 
-    PutTrailer();
+    PutTrailer($localtrailer);
     exit;
 }
 
@@ -212,12 +270,10 @@ unless ($action) {
 if ($action eq 'add') {
     PutHeader("Add user");
 
-    #print "This page lets you add a new product to bugzilla.\n";
-
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0);
+    EmitFormElements('', '', '', 0, 'ExcludeSelfChanges');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -269,11 +325,11 @@ if ($action eq 'new') {
         exit;
     }
 
-    my $bits = 0;
+    my $bits = "0";
     foreach (keys %::FORM) {
 	next unless /^bit_/;
 	#print "$_=$::FORM{$_}<br>\n";
-	$bits |= $::FORM{$_};
+	$bits .= "+ $::FORM{$_}";
     }
     
 
@@ -306,9 +362,13 @@ if ($action eq 'new') {
 
 if ($action eq 'del') {
     PutHeader("Delete user");
+    if (!$candelete) {
+        print "Sorry, deleting users isn't allowed.";
+        PutTrailer();
+    }
     CheckUser($user);
 
-    # display some data about the product
+    # display some data about the user
     SendSQL("SELECT realname, groupset, emailnotification, login_name
 	     FROM profiles
 	     WHERE login_name=" . SqlQuote($user));
@@ -431,6 +491,10 @@ if ($action eq 'del') {
 
 if ($action eq 'delete') {
     PutHeader("Deleting user");
+    if (!$candelete) {
+        print "Sorry, deleting users isn't allowed.";
+        PutTrailer();
+    }
     CheckUser($user);
 
     SendSQL("SELECT userid
@@ -469,7 +533,8 @@ if ($action eq 'edit') {
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($user, $password, $realname, $groupset);
+    EmitFormElements($user, $password, $realname, $groupset,
+                     $emailnotification);
     
     print "</TR></TABLE>\n";
 
@@ -505,11 +570,11 @@ if ($action eq 'update') {
     my $emailnotificationold  = trim($::FORM{emailnotificationold} || '');
     my $groupsetold           = trim($::FORM{groupsetold}          || '');
 
-    my $groupset = 0;
+    my $groupset = "0";
     foreach (keys %::FORM) {
 	next unless /^bit_/;
 	#print "$_=$::FORM{$_}<br>\n";
-	$groupset |= $::FORM{$_};
+	$groupset .= "+ $::FORM{$_}";
     }
 
     CheckUser($userold);
@@ -524,20 +589,17 @@ if ($action eq 'update') {
 	print "Updated permissions.\n";
     }
 
-=for me
-
     if ($emailnotification ne $emailnotificationold) {
         SendSQL("UPDATE profiles
-		 SET emailnotification=" . $emailnotification . "
+		 SET emailnotification=" . SqlQuote($emailnotification) . "
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated email notification.<BR>\n";
     }
 
-=cut
-
     if ($password ne $passwordold) {
+        my $q = SqlQuote($password);
         SendSQL("UPDATE profiles
-		 SET password=" . SqlQuote($password) . "
+		 SET password= $q, cryptpassword = ENCRYPT($q)
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated password.<BR>\n";
     }
