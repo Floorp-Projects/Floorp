@@ -36,7 +36,8 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
 		width="500" height="500"
 		onload="parent.wizardPageLoaded('content1_1');"> 
-      	    
+
+<html:div flex="100%" style="width: 100%; height: 100%;">
 <html:div style="width: 300px;">&heading;</html:div>
 <html:br/>
 
@@ -50,6 +51,6 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 <html:div>&para.three;</html:div>
 <html:br/>
 <html:div>&para.four;</html:div>
-
+</html:div>
 
 </window>
