@@ -25,6 +25,9 @@ contains more errors after an upgrade, it doesn't necessarily
 mean there are more errors in your database, as it is likely
 they weren't being checked for in the old version.
 
+Failure to do this may mean that bugzilla will not
+work correctly.
+
 Administrators must make sure that certain files are
 inaccessible or confidential information might become
 available to enterprising individuals.  This includes the
@@ -33,12 +36,12 @@ see the Bugzilla Guide for more information.
 
 *** Dependency Requirements ***
 
-MySQL v???
-Perl v???
+MySQL v3.22.5
+Perl v5.005
 DBI v1.13
 DBD::MySQL v1.2209
 AppConfig v1.52
-Template v2.06
+Template Toolkit v2.06
 Text::Wrap v20001.0131
 Data::Dumper, Date::Parse, CGI::Carp (any)
 GD v1.19 (optional)
@@ -47,7 +50,14 @@ XML::Parser (any)
 
 *** Deprecated Features ***
 
-???
+- This is the last stable release of bugzilla which will support mysql version
+  3.22. Future releases will require at least version 3.23.x. The exact minimum
+  version number required has not yet been decided (bug 87958)
+- The use of bugzilla to maintain the shadowdb will be removed before the
+  next stable release. The replacement (using mysql's built in replication) is
+  not supported in 2.16, but we expect that very few sites use this feature.
+  If this would cause a problem for you, please comment in bug 124589
+- ??? Anything else?
 
 *** Outstanding Issues Of Note ***
 
