@@ -118,7 +118,7 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.open( inChromeURL, "_blank","chrome,menubar,toolbar,location,status,resizable" );
+		window.open(  );
 	}
 }
 
@@ -175,7 +175,5 @@ function OpenTaskURL( inURL )
 {
 	dump("loading "+inURL+"\n");
 	
-	window.content.location.href= inURL;
-	dump(window.content.location.href+"\n");
-    RefreshUrlbar();
+	window.open( inURL );
 }
