@@ -86,6 +86,7 @@ class nsNativeDragTarget : public IDropTarget
     // Native Stuff
     ULONG            m_cRef;      // reference count
     HWND             mHWnd;
+    PRBool           mCanMove;
 
     // Gecko Stuff
     nsIWidget      * mWindow;
