@@ -181,8 +181,7 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(nsFileProtocolHandler* handler,
-                  const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
-                  nsIEventQueue* queue);
+                  const char* verb, nsIURI* uri, nsIEventSinkGetter* getter);
 
     void Process(void);
 

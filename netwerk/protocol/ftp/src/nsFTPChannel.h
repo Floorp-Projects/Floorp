@@ -92,8 +92,7 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
-                  nsIEventQueue* queue);
+    nsresult Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter);
 
 protected:
     nsIURI*                 mUrl;

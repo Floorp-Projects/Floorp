@@ -121,7 +121,6 @@ NS_IMPL_ADDREF(nsHTTPHandler);
 NS_METHOD
 nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                           nsIEventSinkGetter *eventSinkGetter,
-                          nsIEventQueue *i_eventQueue,
                           nsIChannel **o_Instance)
 {
     nsresult rv;

@@ -131,7 +131,6 @@ nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                    nsIEventSinkGetter* eventSinkGetter,
-                                   nsIEventQueue* eventQueue,
                                    nsIChannel* *result)
 {
     // about:what you ask?
@@ -156,8 +155,7 @@ nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsCRT::free(progIDStr);
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
-        return aboutMod->NewChannel(verb, uri, eventSinkGetter, 
-                                    eventQueue, result);
+        return aboutMod->NewChannel(verb, uri, eventSinkGetter, result);
     }
 
     // mumble...

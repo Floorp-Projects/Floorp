@@ -39,7 +39,6 @@ public:
                       nsIURI **_retval);
     NS_IMETHOD NewChannel(const char* verb, nsIURI* url,
                           nsIEventSinkGetter *eventSinkGetter,
-                          nsIEventQueue *eventQueue,
                           nsIChannel **_retval);
 
     // nsFtpProtocolHandler methods:

@@ -28,8 +28,7 @@ interface nsIAboutModule : nsISupports
 {
     nsIChannel NewChannel(in string verb,
                           in nsIURI aURI,
-                          in nsIEventSinkGetter eventSinkGetter,
-                          in nsIEventQueue eventQueue);
+                          in nsIEventSinkGetter eventSinkGetter);
 };
 
 %{C++

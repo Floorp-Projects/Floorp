@@ -31,7 +31,6 @@ NS_IMETHODIMP
 nsAboutBlank::NewChannel(const char *verb,
                          nsIURI *aURI,
                          nsIEventSinkGetter *eventSinkGetter,
-                         nsIEventQueue *eventQueue,
                          nsIChannel **result)
 {
     nsresult rv;
