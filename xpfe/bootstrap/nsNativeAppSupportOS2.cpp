@@ -1526,11 +1526,18 @@ HDDEDATA nsNativeAppSupportOS2::CreateDDEData( DWORD value ) {
 void
 nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // Parse command line.
-    
+
     nsCOMPtr<nsICmdLineService> args;
     nsresult rv;
 
     rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
+    if (NS_FAILED(rv)) return;
+
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+    if (NS_FAILED(rv)) return;
+
+    nsCOMPtr<nsINativeAppSupport> nativeApp;
+    rv = appShell->GetNativeAppSupport(getter_AddRefs( nativeApp ));
     if (NS_FAILED(rv)) return;
 
     // first see if there is a url
@@ -1541,7 +1548,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching browser on url [%s]...\n", (const char*)arg );
 #endif
-      if (NS_SUCCEEDED(EnsureProfile(args)))
+      if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
         (void)OpenBrowserWindow( arg );
       return;
     }
@@ -1554,7 +1561,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching chrome url [%s]...\n", (const char*)arg );
 #endif
-      if (NS_SUCCEEDED(EnsureProfile(args)))
+      if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
         (void)OpenWindow( arg, "" );
       return;
     }
@@ -1562,7 +1569,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // try using the command line service to get the url
     nsCString taskURL;
     rv = GetStartupURL(args, taskURL);
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(EnsureProfile(args))) {
+    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->EnsureProfile(args))) {
       (void)OpenWindow(taskURL, "");
       return;
     }
@@ -1594,7 +1601,6 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
       return;
     }
 
-
     // ok, no idea what the param is. 
 #if MOZ_DEBUG_DDE
     printf( "Unknown request [%s]\n", (char*) request );
@@ -1605,7 +1611,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
     if (NS_FAILED(rv)) return;
     
-    rv = EnsureProfile(args);
+    rv = nativeApp->EnsureProfile(args);
     if (NS_FAILED(rv)) return;
       
     nsXPIDLString defaultArgs;
