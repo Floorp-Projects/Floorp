@@ -336,6 +336,18 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 	/* Create a pointer region */
      mIsGrabbing = PR_TRUE;
      mGrabWindow = this;
+
+     if (gRollupScreenRegion)
+     {
+       /* Position the region on the current console*/
+       PhPoint_t pos = nsToolkit::GetConsoleOffset();
+       PtArg_t    args[2]; 
+
+        PtSetArg( &args[0],  Pt_ARG_POS,  &pos, 0 );
+        PtSetResources( gRollupScreenRegion, 1, args );
+   }
+
+
   }
   else
   {
@@ -697,7 +709,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative  gRollupScreenRegion = <%p>\n",  gRollupScreenRegion));
       }
-        
+
         callback.event_f = PopupMenuRegionCallback;
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_PARENT,  gRollupScreenRegion->rid, 0 );
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FIELDS,   fields, fields );
@@ -1418,7 +1430,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Damage Tiles List:\n"));
   do {
     PhRect_t   rect = top->rect;    
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, to*WÔ  ));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next));
 //    printf("nsWindow::%p RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", pWidget,index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next);
     top=top->next;
   } while (top);
@@ -1841,7 +1853,7 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
       if( PtGetResources( mWidget, 1, &arg ) == 0 )
       {
         nsRect rect( area->pos.x, area->pos.x, area->size.w, area->size.h );
-        *WÕ  ntClippedArea( rect );
+        GetParentClippedArea( rect );
 
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetSiblingClippedRegion 2\n"));
 
@@ -2399,7 +2411,7 @@ void nsWindow::RemoveResizeWidget()
 
 //        NS_RELEASE( dqe->inst );
 
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,("ns*WÖ  :RemoveResizeWidget this=(%p) dqe=<%p>\n", this, dqe));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::RemoveResizeWidget this=(%p) dqe=<%p>\n", this, dqe));
 
         delete dqe;
         mIsResizing = PR_FALSE;
@@ -2663,6 +2675,8 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
      aY -= offset.y;  
   
   }
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move this=(%p) after console offset to (%ld,%ld) \n", this, aX, aY ));
 
   /* Call my base class */
   nsresult res = nsWidget::Move(aX, aY);
