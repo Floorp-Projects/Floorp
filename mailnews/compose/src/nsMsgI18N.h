@@ -42,6 +42,8 @@ nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset,
 
 const char *nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec);
 
+nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString);
+
 NS_END_EXTERN_C
 
 #endif /* _nsMsgI18N_H_ */

@@ -30,10 +30,12 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsMsgMimeCID.h"
+#include "nsIEntityConverter.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
 //
 // International functions necessary for composition
@@ -289,6 +291,30 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
 
   return charset; 
 } 
+
+nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
+{
+  nsresult res;
+
+  outString->SetString("");
+
+  NS_WITH_SERVICE(nsIEntityConverter, entityConv, kEntityConverterCID, &res); 
+  if(NS_SUCCEEDED(res) && (NULL != entityConv)) {
+    for (PRInt32 i = 0; i < inString.Length(); i++) {
+      PRUnichar *entity = NULL;
+      res = entityConv->ConvertToEntity(inString[i], &entity);
+      if (NS_SUCCEEDED(res) && NULL != entity) {
+        outString->Append(entity);
+        nsAllocator::Free(entity);
+      }
+      else {
+        outString->Append(inString[i]);
+      }
+    }
+  }
+
+  return NS_OK; // ignore error since the converter returns error for non entities
+}
 
 // RICHIE - not sure about this one?? need to see what it did in the old
 // world.
