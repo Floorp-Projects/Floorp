@@ -1223,18 +1223,38 @@ PRBool nsRegion::IsEqual (const nsRegion& aRegion) const
 }
 
 
-void nsRegion::MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
+void nsRegion::MoveBy (nsPoint aPt)
 {
-  if (aXOffset || aYOffset)
+  if (aPt.x || aPt.y)
   {
     RgnRect* pRect = mRectListHead.next;
 
     while (pRect != &mRectListHead)
     {
-      pRect->MoveBy (aXOffset, aYOffset);
+      pRect->MoveBy (aPt.x, aPt.y);
       pRect = pRect->next;
     }
 
-    mBoundRect.MoveBy (aXOffset, aYOffset);
+    mBoundRect.MoveBy (aPt.x, aPt.y);
   }
+}
+
+void nsRegion::SimplifyOutward (PRUint32 aMaxRects)
+{
+  NS_ASSERTION(aMaxRects >= 1, "Invalid max rect count");
+  
+  if (mRectCount <= aMaxRects)
+    return;
+
+  *this = GetBounds();
+}
+
+void nsRegion::SimplifyInward (PRUint32 aMaxRects)
+{
+  NS_ASSERTION(aMaxRects >= 1, "Invalid max rect count");
+
+  if (mRectCount <= aMaxRects)
+    return;
+
+  SetEmpty();
 }

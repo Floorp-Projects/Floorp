@@ -1564,19 +1564,23 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView)
 
   if (aView->HasWidget()) {
     aView->ResetWidgetBounds(PR_FALSE, PR_FALSE, PR_TRUE);
-
-    nsCOMPtr<nsIRegion> dirtyRegion;
-    aView->GetDirtyRegion(*getter_AddRefs(dirtyRegion));
-    if (dirtyRegion && !dirtyRegion->IsEmpty()) {
-      aView->GetWidget()->InvalidateRegion(dirtyRegion, PR_FALSE);
-      dirtyRegion->Init();
-    }
   }
 
   // process pending updates in child view.
   for (nsView* childView = aView->GetFirstChild(); childView;
        childView = childView->GetNextSibling()) {
     ProcessPendingUpdates(childView);
+  }
+
+  if (aView->HasNonEmptyDirtyRegion()) {
+    // Push out updates after we've processed the children; ensures that
+    // damage is applied based on the final widget geometry
+    NS_ASSERTION(mRefreshEnabled, "Cannot process pending updates with refresh disabled");
+    nsRegion* dirtyRegion = aView->GetDirtyRegion();
+    if (dirtyRegion) {
+      UpdateWidgetArea(aView, *dirtyRegion, nsnull);
+      dirtyRegion->SetEmpty();
+    }
   }
 }
 
@@ -1626,24 +1630,52 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
     return;
   }
 
-  UpdateWidgetArea(RootViewManager()->GetRootView(), damageRect, view);
+  UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damageRect), view);
 
   Composite();
 }
 
-// Returns true if this view's widget(s) completely cover the rectangle
-// The specified rectangle, relative to aWidgetView, is invalidated in every widget child of aWidgetView,
-// plus aWidgetView's own widget
-// If non-null, the aIgnoreWidgetView's widget and its children are not updated.
-PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamagedRect, nsView* aIgnoreWidgetView)
+/**
+ * @param aDamagedRegion this region, relative to aWidgetView, is invalidated in
+ * every widget child of aWidgetView, plus aWidgetView's own widget
+ * @param aIgnoreWidgetView if non-null, the aIgnoreWidgetView's widget and its
+ * children are not updated.
+ * @param aCoveredRegion if non-null, is set to PR_TRUE whenever the aWidgetView's
+ * widget completely covers the region. Must be null when refresh is disabled.
+ */
+void
+nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion,
+                                nsView* aIgnoreWidgetView, PRBool* aCoveredRegion)
 {
-  // If the bounds don't overlap at all, there's nothing to do
-  nsRect bounds;
-  aWidgetView->GetDimensions(bounds);
+  if (!IsRefreshEnabled()) {
+    NS_ASSERTION(!aCoveredRegion, "aCoveredRegion is not computed when refresh is disabled");
 
-  PRBool overlap = bounds.IntersectRect(bounds, aDamagedRect);
-  if (!overlap) {
-    return PR_FALSE;
+    // accumulate this rectangle in the view's dirty region, so we can
+    // process it later.
+    nsRegion* dirtyRegion = aWidgetView->GetDirtyRegion();
+    if (!dirtyRegion) return;
+
+    dirtyRegion->Or(*dirtyRegion, aDamagedRegion);
+    // Don't let dirtyRegion grow beyond 8 rects
+    dirtyRegion->SimplifyOutward(8);
+    nsViewManager* rootVM = RootViewManager();
+    rootVM->mHasPendingInvalidates = PR_TRUE;
+    rootVM->IncrementUpdateCount();
+    return;
+    // this should only happen at the top level, and this result
+    // should not be consumed by top-level callers, so it doesn't
+    // really matter what we return
+  }
+
+  if (aCoveredRegion) {
+    *aCoveredRegion = PR_FALSE;
+  }
+
+  // If the bounds don't overlap at all, there's nothing to do
+  nsRegion intersection;
+  intersection.And(aWidgetView->GetDimensions(), aDamagedRegion);
+  if (intersection.IsEmpty()) {
+    return;
   }
 
   // If the widget is hidden, it don't cover nothing
@@ -1657,14 +1689,16 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
       NS_ASSERTION(!visible, "View is hidden but widget is visible!");
     }
 #endif
-    return PR_FALSE;
+    return;
   }
 
-  PRBool noCropping = bounds == aDamagedRect;
   if (aWidgetView == aIgnoreWidgetView) {
     // the widget for aIgnoreWidgetView (and its children) should be treated as already updated.
     // We still need to report whether this widget covers the rectangle.
-    return noCropping;
+    if (aCoveredRegion) {
+      *aCoveredRegion = intersection.IsEqual(aDamagedRegion);
+    }
+    return;
   }
 
   nsIWidget* widget = aWidgetView->GetNearestWidget(nsnull);
@@ -1672,7 +1706,11 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
     // The root view or a scrolling view might not have a widget
     // (for example, during printing). We get here when we scroll
     // during printing to show selected options in a listbox, for example.
-    return PR_FALSE;
+    return;
+  }
+
+  if (aCoveredRegion) {
+    *aCoveredRegion = intersection.IsEqual(aDamagedRegion);
   }
 
   PRBool childCovers = PR_FALSE;
@@ -1681,15 +1719,19 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
        childWidget = childWidget->GetNextSibling()) {
     nsView* view = nsView::GetViewFor(childWidget);
     if (nsnull != view) {
-      nsRect damage = bounds;
       nsView* vp = view;
+      nsPoint offset(0, 0);
       while (vp != aWidgetView && nsnull != vp) {
-        vp->ConvertFromParentCoords(&damage.x, &damage.y);
+        offset -= vp->GetPosition();
         vp = vp->GetParent();
       }
             
       if (nsnull != vp) { // vp == nsnull means it's in a different hierarchy so we ignore it
-        if (UpdateWidgetArea(view, damage, aIgnoreWidgetView)) {
+        nsRegion damage = intersection;
+        damage.MoveBy(offset);
+        PRBool covers;
+        UpdateWidgetArea(view, damage, aIgnoreWidgetView, &covers);
+        if (covers) {
           childCovers = PR_TRUE;
         }
       }
@@ -1697,21 +1739,15 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
   }
 
   if (!childCovers) {
-    nsViewManager* vm = aWidgetView->GetViewManager();
-    nsViewManager* rootVM = RootViewManager();
-    rootVM->IncrementUpdateCount();
+    NS_ASSERTION(IsRefreshEnabled(), "Can only get here with refresh enabled, I hope");
 
-    if (!IsRefreshEnabled()) {
-      // accumulate this rectangle in the view's dirty region, so we can process it later.
-      vm->AddRectToDirtyRegion(aWidgetView, bounds);
-      rootVM->mHasPendingInvalidates = PR_TRUE;
-    } else {
+    const nsRect* r;
+    for (nsRegionRectIterator iter(intersection); (r = iter.Next());) {
+      nsRect bounds = *r;
       ViewToWidget(aWidgetView, aWidgetView, bounds);
       widget->Invalidate(bounds, PR_FALSE);
     }
   }
-
-  return noCropping;
 }
 
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
@@ -1752,7 +1788,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
       widgetParent = widgetParent->GetParent();
     }
 
-    UpdateWidgetArea(widgetParent, damagedRect, nsnull);
+    UpdateWidgetArea(widgetParent, nsRegion(damagedRect), nsnull);
   } else {
     // Propagate the update to the root widget of the root view manager, since
     // iframes, for example, can overlap each other and be translucent.  So we
@@ -1760,7 +1796,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
     // lying about.
     damagedRect.MoveBy(ComputeViewOffset(view));
 
-    UpdateWidgetArea(RootViewManager()->GetRootView(), damagedRect, nsnull);
+    UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damagedRect), nsnull);
   }
 
   RootViewManager()->IncrementUpdateCount();
@@ -3204,25 +3240,6 @@ nsViewManager::CreateRenderingContext(nsView &aView)
     }
 
   return cx;
-}
-
-void nsViewManager::AddRectToDirtyRegion(nsView* aView, const nsRect &aRect) const
-{
-  // Find a view with an associated widget. We'll transform this rect from the
-  // current view's coordinate system to a "heavyweight" parent view, then convert
-  // the rect to pixel coordinates, and accumulate the rect into that view's dirty region.
-  nsView* widgetView = GetWidgetView(aView);
-  if (widgetView != nsnull) {
-    nsRect widgetRect = aRect;
-    ViewToWidget(aView, widgetView, widgetRect);
-
-    // Get the dirty region associated with the widget view
-    nsCOMPtr<nsIRegion> dirtyRegion;
-    if (NS_SUCCEEDED(widgetView->GetDirtyRegion(*getter_AddRefs(dirtyRegion)))) {
-      // add this rect to the widget view's dirty region.
-      dirtyRegion->Union(widgetRect.x, widgetRect.y, widgetRect.width, widgetRect.height);
-    }
-  }
 }
 
 NS_IMETHODIMP nsViewManager::DisableRefresh(void)

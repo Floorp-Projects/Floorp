@@ -473,15 +473,19 @@ PRBool nsScrollPortView::CannotBitBlt(nsView* aScrolledView)
 }
 
 
-void nsScrollPortView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags)
+void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoint aPixDelta,
+                              float aT2P)
 {
-  if ((aDx != 0) || (aDy != 0))
+  if (aTwipsDelta.x != 0 || aTwipsDelta.y != 0)
   {
-    // Since we keep track of the dirty region as absolute screen coordintes,
+    // Since we keep track of the dirty region as absolute coordinates,
     // we need to offset it by the amount we scrolled.
-    nsCOMPtr<nsIRegion> dirtyRegion;
-    GetDirtyRegion(*getter_AddRefs(dirtyRegion));
-    dirtyRegion->Offset(aDx, aDy);
+    if (HasNonEmptyDirtyRegion()) {
+      nsRegion* rgn = GetDirtyRegion();
+      if (rgn) {
+        rgn->MoveBy(aTwipsDelta);
+      }
+    }
 
     nsIWidget *scrollWidget = GetWidget();
  
@@ -494,7 +498,7 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
       // may include area that's not supposed to be scrolled. We need
       // to invalidate to ensure that any such area is properly
       // repainted back to the right rendering.
-      AdjustChildWidgets(aScrolledView, offsetToWidget, scale, PR_TRUE);
+      AdjustChildWidgets(aScrolledView, offsetToWidget, aT2P, PR_TRUE);
       // If we don't have a scroll widget then we must just update.
       // We should call this after fixing up the widget positions to be
       // consistent with the view hierarchy.
@@ -506,15 +510,15 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
       nsRect bounds(GetBounds());
       nsPoint topLeft(bounds.x, bounds.y);
       AdjustChildWidgets(aScrolledView,
-                         GetPosition() - topLeft, scale, PR_FALSE);
+                         GetPosition() - topLeft, aT2P, PR_FALSE);
       // We should call this after fixing up the widget positions to be
       // consistent with the view hierarchy.
       mViewManager->UpdateView(this, 0);
     } else { // if we can blit and have a scrollwidget then scroll.
       // Scroll the contents of the widget by the specfied amount, and scroll
       // the child widgets
-      scrollWidget->Scroll(aDx, aDy, nsnull);
-      mViewManager->UpdateViewAfterScroll(this, aDx, aDy);
+      scrollWidget->Scroll(aPixDelta.x, aPixDelta.y, nsnull);
+      mViewManager->UpdateViewAfterScroll(this, aTwipsDelta.x, aTwipsDelta.y);
     }
   }
 }
@@ -618,11 +622,13 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
   mOffsetXpx = aXpx;
   mOffsetYpx = aYpx;
       
+  nsPoint twipsDelta(aX - mOffsetX, aY - mOffsetY);
+
   // store the new position
   mOffsetX = aX;
   mOffsetY = aY;
   
-  Scroll(scrolledView, dxPx, dyPx, t2p, 0);
+  Scroll(scrolledView, twipsDelta, nsPoint(dxPx, dyPx), t2p);
 
   mViewManager->SynthesizeMouseMove(PR_TRUE);
   
