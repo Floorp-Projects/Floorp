@@ -747,7 +747,7 @@ xlib_rgb_set_gray_cmap (Colormap cmap)
 void
 xlib_rgb_init (Display *display, Screen *screen)
 {
-  int prefDepth = -1;            // let the function do the visual scoring
+  int prefDepth = -1;            /* let the function do the visual scoring */
   xlib_rgb_init_with_depth(display, screen, prefDepth);
 }
 
