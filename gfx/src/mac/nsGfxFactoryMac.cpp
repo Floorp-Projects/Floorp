@@ -50,14 +50,15 @@
 #include "nsScriptableRegion.h"
 #if TARGET_CARBON
 #include "nsDeviceContextSpecX.h"
+#include "nsPrintOptionsX.h"
 #else
 #include "nsDeviceContextSpecMac.h"
+#include "nsPrintOptionsMac.h"
 #endif
 #include "nsDeviceContextSpecFactoryM.h"
 #include "nsScreenManagerMac.h"
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
-#include "nsPrintOptionsMac.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -154,7 +155,11 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
         inst = dcSpec;
 	}
   else if (mClassID.Equals(kCPrintOptions)) {
+#if TARGET_CARBON
+    NS_NEWXPCOM(inst, nsPrintOptionsX);
+#else
     NS_NEWXPCOM(inst, nsPrintOptionsMac);
+#endif
   }
  	else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
 		NS_NEWXPCOM(inst, nsDeviceContextSpecFactoryMac);

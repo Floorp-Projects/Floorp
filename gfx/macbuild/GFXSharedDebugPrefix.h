@@ -20,6 +20,5 @@
  * Contributor(s): 
  */
 
-#define _IMPL_NS_GFX 1
-
 #include "MacPrefix_debug.h"
+#include "GFXConfig.h"

@@ -180,6 +180,42 @@ protected:
 
 };
 
+
+
+/** ------------------------------------------------------------
+ *	Utility class stack-based handle ownership
+ */
+
+class StHandleOwner
+{
+public:
+                    StHandleOwner(Handle inHandle)
+                    : mHandle(inHandle)
+                    {
+                    }
+
+                    ~StHandleOwner()
+                    {
+                      if (mHandle)
+                        ::DisposeHandle(mHandle);
+                    }
+
+  Handle            GetHandle() { return mHandle; }
+
+  void              ClearHandle(Boolean disposeIt = false)
+                    {
+                      if (disposeIt)
+                        ::DisposeHandle(mHandle);
+                      
+                      mHandle = nsnull;
+                    }
+
+protected:
+
+  Handle            mHandle;
+
+};
+
 /** ------------------------------------------------------------
  *	Utility class for saving, locking, and restoring handle state
  *  Ok with null handle
