@@ -22,6 +22,7 @@
 #include "CStandardFlexTable.h"
 #include "UGraphicGizmos.h"
 
+
 //----------------------------------------------------------------------------------------
 CTableToolTipAttachment::CTableToolTipAttachment(LStream* inStream)
 //----------------------------------------------------------------------------------------
@@ -110,7 +111,17 @@ void CTableToolTipPane::CalcFrameWithRespectTo(
 		+ mTextDrawingStuff.mTextFontInfo.descent
 		+ mTextDrawingStuff.mTextFontInfo.leading
 		+ (2 * 2);
-	Int16 theTextWidth = ::StringWidth(mTip) + 4; //(2 * ::CharWidth(char_Space));
+	// Int16 theTextWidth = ::StringWidth(mTip) + 4; //(2 * ::CharWidth(char_Space));
+	Int16 theTextWidth ;
+
+	if(mTextDrawingStuff.encoding == CStandardFlexTable::TextDrawingStuff::eDefault)
+	{
+		theTextWidth = ::StringWidth(mTip) + 4;
+	}
+	else
+	{
+		theTextWidth = UGraphicGizmos::GetUTF8TextWidth(mTip, mTip.Length()) + 4;
+	}
 
 	inOwningWindow->FocusDraw();	
 
