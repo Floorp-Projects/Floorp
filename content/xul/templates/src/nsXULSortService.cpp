@@ -20,9 +20,9 @@
  * Original Author(s):
  *   Robert John Churchill    <rjc@netscape.com>
  *   Chris Waterson           <waterson@netscape.com>
- *   Scott Putterman          <putterman@netscape.com>
  *
  * Contributor(s): 
+ *   Scott Putterman          <putterman@netscape.com>
  *   Pierre Phaneuf           <pp@ludusdesign.com>
  *
  *
@@ -109,7 +109,6 @@
 #include "nsILocaleService.h"
 
 
-#define TEST_SORT 1
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -210,6 +209,10 @@ protected:
 
 private:
 	static nsrefcnt		gRefCnt;
+	static nsIAtom		*kTemplateAtom;
+	static nsIAtom		*kStaticHintAtom;
+	static nsIAtom		*kStaticsSortLastHintAtom;
+	static nsIAtom		*kBoxAtom;
 	static nsIAtom		*kTreeAtom;
 	static nsIAtom		*kTreeCellAtom;
 	static nsIAtom		*kTreeChildrenAtom;
@@ -285,6 +288,10 @@ nsrefcnt XULSortServiceImpl::gRefCnt = 0;
 
 nsIXULContentUtils      *XULSortServiceImpl::gXULUtils = nsnull;
 
+nsIAtom* XULSortServiceImpl::kTemplateAtom;
+nsIAtom* XULSortServiceImpl::kStaticHintAtom;
+nsIAtom* XULSortServiceImpl::kStaticsSortLastHintAtom;
+nsIAtom* XULSortServiceImpl::kBoxAtom;
 nsIAtom* XULSortServiceImpl::kTreeAtom;
 nsIAtom* XULSortServiceImpl::kTreeCellAtom;
 nsIAtom* XULSortServiceImpl::kTreeChildrenAtom;
@@ -323,6 +330,10 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 	NS_INIT_REFCNT();
 	if (gRefCnt == 0)
 	{
+	        kTemplateAtom 	           	= NS_NewAtom("template");
+	        kStaticHintAtom 	        = NS_NewAtom("staticHint");
+	        kStaticsSortLastHintAtom 	= NS_NewAtom("sortStaticsLast");
+	        kBoxAtom            		= NS_NewAtom("box");
 	        kTreeAtom            		= NS_NewAtom("tree");
 	        kTreeCellAtom        		= NS_NewAtom("treecell");
 		kTreeChildrenAtom    		= NS_NewAtom("treechildren");
@@ -432,6 +443,10 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	--gRefCnt;
 	if (gRefCnt == 0)
 	{
+		NS_IF_RELEASE(kTemplateAtom);
+		NS_IF_RELEASE(kStaticHintAtom);
+		NS_IF_RELEASE(kStaticsSortLastHintAtom);
+		NS_IF_RELEASE(kBoxAtom);
 		NS_IF_RELEASE(kTreeAtom);
 		NS_IF_RELEASE(kTreeCellAtom);
 	        NS_IF_RELEASE(kTreeChildrenAtom);
@@ -1724,7 +1739,8 @@ static contentSortInfo * CreateContentSortInfo(nsIContent *content, nsIRDFResour
 	return info;
 }
 
-#ifdef TEST_SORT
+
+
 nsresult
 XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 {
@@ -1737,12 +1753,12 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 
 	nsCOMPtr<nsIDocument> doc;
 	container->GetDocument(*getter_AddRefs(doc));
+	if (!doc)	return(NS_ERROR_UNEXPECTED);
 
 	// Note: This is a straight allocation (not a COMPtr) so we
 	// can't return out of this routine until/unless we free it!
 	contentSortInfo ** contentSortInfoArray = new contentSortInfo*[numChildren + 1];
-	if(!contentSortInfoArray) return NS_ERROR_OUT_OF_MEMORY;
-
+	if(!contentSortInfoArray)	return(NS_ERROR_OUT_OF_MEMORY);
 
 	// Note: walk backwards (and add nodes into the array backwards) because
 	// we also remove the nodes in this loop [via RemoveChildAt()] and if we
@@ -1858,149 +1874,6 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 
 	return(NS_OK);
 }
-
-#else
-nsresult
-XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
-{
-	PRInt32			childIndex = 0, loop, numChildren = 0, numElements = 0, currentElement, nameSpaceID;
-        nsCOMPtr<nsIContent>	child;
-	nsresult		rv;
-
-	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-	if (numChildren < 1)	return(NS_OK);
-
-	nsCOMPtr<nsIDocument> doc;
-	container->GetDocument(*getter_AddRefs(doc));
-
-	// Note: This is a straight allocation (not a COMPtr) so we
-	// can't return out of this routine until/unless we free it!
-	nsIContent ** flatArray = new nsIContent*[numChildren + 1];
-	if (!flatArray)	return(NS_ERROR_OUT_OF_MEMORY);
-
-	// Note: walk backwards (and add nodes into the array backwards) because
-	// we also remove the nodes in this loop [via RemoveChildAt()] and if we
-	// were to do this in a forward-looking manner it would be harder
-	// (since we also skip over non XUL:treeitem nodes)
-
-	nsCOMPtr<nsIAtom> tag;
-	currentElement = numChildren;
-	for (childIndex=numChildren-1; childIndex >= 0; childIndex--)
-	{
-		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	continue;
-		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	continue;
-		if (nameSpaceID == kNameSpaceID_XUL)
-		{
-			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	continue;
-			if (tag.get() == kTreeItemAtom)
-			{
-				--currentElement;
-				flatArray[currentElement] = child;
-				NS_ADDREF(flatArray[currentElement]);		// Note: addref it here
-
-				// Bug 6665. This is a hack to "addref" the resources
-				// before we remove them from the content model. This
-				// keeps them from getting released, which causes
-				// performance problems for some datasources.
-				nsIRDFResource	*resource;
-				gXULUtils->GetElementResource(flatArray[currentElement], &resource);
-				// Note: we don't release; see part deux below...
-
-				++numElements;
-
-				// immediately remove the child node, and ignore any errors
-				container->RemoveChildAt(childIndex, PR_FALSE);
-			}
-		}
-	}
-	if (numElements > 0)
-	{
-		/* smart sorting (sort within separators) on name column */
-		if (sortInfo->inbetweenSeparatorSort == PR_TRUE)
-		{
-			PRInt32	startIndex=currentElement;
-			nsAutoString	type;
-			for (loop=currentElement; loop< currentElement + numElements; loop++)
-			{
-				if (NS_SUCCEEDED(rv = flatArray[loop]->GetAttribute(kNameSpaceID_None, kRDF_type, type))
-					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
-				{
-					if (type.Equals(kURINC_BookmarkSeparator))
-					{
-						if (loop > startIndex+1)
-						{
-							NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex,
-								sizeof(nsIContent *), inplaceSortCallback, (void *)sortInfo);
-							startIndex = loop+1;
-						}
-					}
-				}
-			}
-			if (loop > startIndex+1)
-			{
-				NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
-					inplaceSortCallback, (void *)sortInfo);
-				startIndex = loop+1;
-			}
-		}
-		else
-		{
-			NS_QuickSort((void *)(&flatArray[currentElement]), numElements, sizeof(nsIContent *),
-				inplaceSortCallback, (void *)sortInfo);
-		}
-
-		nsCOMPtr<nsIContent>	parentNode;
-		nsAutoString		value;
-		PRInt32			childPos = 0;
-		// recurse on grandchildren
-		for (loop=currentElement; loop < currentElement + numElements; loop++)
-		{
-			nsIContent* kid = NS_STATIC_CAST(nsIContent*, flatArray[loop]);
-
-			// Because InsertChildAt() only does a
-			// "shallow" SetDocument(), we need to do a
-			// "deep" one now...
-			kid->SetDocument(doc, PR_TRUE);
-
-			container->InsertChildAt(kid, childPos++, PR_FALSE);
-
-			// Bug 6665, part deux. The Big Hack.
-			nsIRDFResource	*resource;
-			gXULUtils->GetElementResource(flatArray[loop], &resource);
-			nsrefcnt	refcnt;
-			NS_RELEASE2(resource, refcnt);
-			NS_RELEASE(resource);
-
-			parentNode = (nsIContent *)flatArray[loop];
-			NS_RELEASE(flatArray[loop]);			// Note: release it here
-
-			// if its a container, find its treechildren node, and sort those
-			if (NS_FAILED(rv = parentNode->GetAttribute(kNameSpaceID_None, kContainerAtom, value)) ||
-				(rv != NS_CONTENT_ATTR_HAS_VALUE) || (!value.EqualsIgnoreCase(trueStr)))
-				continue;
-			if (NS_FAILED(rv = parentNode->ChildCount(numChildren)))	continue;
-
-			for (childIndex=0; childIndex<numChildren; childIndex++)
-			{
-				if (NS_FAILED(rv = parentNode->ChildAt(childIndex, *getter_AddRefs(child))))
-					continue;
-				if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	continue;
-				if (nameSpaceID != kNameSpaceID_XUL)	continue;
-
-				if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	continue;
-				if (tag.get() != kTreeChildrenAtom)	continue;
-
-				sortInfo->parentContainer = parentNode;
-				SortTreeChildren(child, sortInfo);
-			}
-		}
-	}
-	delete [] flatArray;
-	flatArray = nsnull;
-
-	return(NS_OK);
-}
-#endif
 
 NS_IMETHODIMP
 XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSortState *sortState, nsIContent *root,
@@ -2185,12 +2058,13 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
 			if (NS_FAILED(rv = trueParent->GetTag(*getter_AddRefs(tag))))
 				return(rv);
-			if (tag.get() == kTreeAtom)
+
+			// XXX hmmm... currently, if we just check for ref on "boxes" before
+			// checking for id, this gives the sidebar huge fits.  So, for the
+			// moment, until the solution is determined, let's restrict checking
+			// for ref before id if we have a "box"
+			if (tag.get() != kBoxAtom)
 			{
-				// XXX hmmm... currently, if we just check for ref on anything before
-				// checking for id, this gives the sidebar huge fits.  So, for the
-				// moment, until the solution is determined, let's restrict checking
-				// for ref before id to only the root node of trees
 				rv = trueParent->GetAttribute(kNameSpaceID_None, kRefAtom, id);
 			}
 			if (id.Length() == 0)
@@ -2217,12 +2091,67 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 		((sortInfo.naturalOrderSort == PR_TRUE) &&
 		(isContainerRDFSeq == PR_TRUE)))
 	{
-		// figure out where to insert the node when a sort order is being imposed
+	        nsCOMPtr<nsIContent>	child;
 		PRInt32			numChildren = 0;
 		if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+
+		// rjc says: determine where static XUL ends and generated XUL/RDF begins
+		PRInt32			staticCount = 0;
+
+		nsAutoString		staticValue;
+		if (NS_SUCCEEDED(rv = container->GetAttribute(kNameSpaceID_None, kStaticHintAtom, staticValue))
+			&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
+		{
+			// found "static" XUL element count hint
+			PRInt32		strErr=0;
+			staticCount = staticValue.ToInteger(&strErr);
+			if (strErr)	staticCount = 0;
+		}
+		else
+		{
+			// compute the "static" XUL element count
+			nsAutoString	valueStr;
+			for (PRInt32 childLoop=0; childLoop<numChildren; childLoop++)
+			{
+				container->ChildAt(childLoop, *getter_AddRefs(child));
+				if (!child)	break;
+
+				if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kTemplateAtom, valueStr))
+					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
+				{
+					break;
+				}
+				else
+				{
+					++staticCount;
+				}
+			}
+			if (NS_SUCCEEDED(rv = container->GetAttribute(kNameSpaceID_None, kStaticsSortLastHintAtom, valueStr))
+				&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (valueStr.EqualsIgnoreCase(trueStr)))
+			{
+				// indicate that static XUL comes after RDF-generated content by making negative
+				staticCount = -staticCount;
+			}
+
+			// save the "static" XUL element count hint
+			valueStr.Truncate();
+			valueStr.AppendInt(staticCount);
+			container->SetAttribute(kNameSpaceID_None, kStaticHintAtom, valueStr, PR_FALSE);
+		}
+
+		if (staticCount <= 0)
+		{
+			staticCount = 0;
+		}
+		else if (staticCount > numChildren)
+		{
+			staticCount = numChildren;
+		}
+		numChildren -= staticCount;
+
+		// figure out where to insert the node when a sort order is being imposed
 		if (numChildren > 0)
 		{
-		        nsCOMPtr<nsIContent>	child;
 		        nsIContent		*temp;
 		        PRInt32			direction;
 
@@ -2231,12 +2160,12 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
 			if (sortState->lastWasFirst == PR_TRUE)
 			{
-				container->ChildAt(0, *getter_AddRefs(child));
+				container->ChildAt(staticCount, *getter_AddRefs(child));
 				temp = child.get();
 				direction = inplaceSortCallback(&node, &temp, &sortInfo);
 				if (direction < 0)
 				{
-					container->InsertChildAt(node, 0, aNotify);
+					container->InsertChildAt(node, staticCount, aNotify);
 					childAdded = PR_TRUE;
 				}
 				else
@@ -2246,7 +2175,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 			}
 			else if (sortState->lastWasLast == PR_TRUE)
 			{
-				container->ChildAt(numChildren-1, *getter_AddRefs(child));
+				container->ChildAt(staticCount+numChildren-1, *getter_AddRefs(child));
 				temp = child.get();
 				direction = inplaceSortCallback(&node, &temp, &sortInfo);
 				if (direction > 0)
@@ -2260,8 +2189,8 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				}
 			}
 
-		        PRInt32			left = 1, right = numChildren, x;
-		        while ((childAdded == PR_FALSE) && (right >= 1))
+		        PRInt32			left = staticCount+1, right = staticCount+numChildren, x;
+		        while ((childAdded == PR_FALSE) && (right >= left))
 		        {
 		        	x = (left + right) / 2;
 				container->ChildAt(x-1, *getter_AddRefs(child));
@@ -2278,7 +2207,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 					childAdded = PR_TRUE;
 					
 					sortState->lastWasFirst = (thePos == 0) ? PR_TRUE: PR_FALSE;
-					sortState->lastWasLast = (thePos >= numChildren) ? PR_TRUE: PR_FALSE;
+					sortState->lastWasLast = (thePos >= staticCount+numChildren) ? PR_TRUE: PR_FALSE;
 					
 					break;
 				}
