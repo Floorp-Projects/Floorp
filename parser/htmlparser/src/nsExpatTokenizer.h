@@ -31,7 +31,7 @@
 #include "prtypes.h"
 
 // Enable unicode characters in expat.
-#define XML_UNICODE_WCHAR_T
+#define UNICODE
 #include "xmlparse.h"
 
 #define NS_EXPATTOKENIZER_IID      \
