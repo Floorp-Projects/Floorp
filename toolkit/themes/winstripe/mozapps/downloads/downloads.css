@@ -95,7 +95,7 @@ download[state="5"], download[state="6"] {
 }
 
 #saveToFolder {
-  padding: 0px 6px 3px 5px; 
+  padding: 1px 6px 3px 5px; 
 }
 
 #saveToFolder .toolbarbutton-text {
