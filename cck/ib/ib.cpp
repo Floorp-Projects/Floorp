@@ -21,6 +21,7 @@ CString iniDstPath;
 CString iniSrcPath;
 CString scriptPath;
 CString nscpxpiPath;
+CString cdshellPath;
 
 WIDGET *tempWidget;
 int selCount;
@@ -399,7 +400,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 	rootPath	= GetGlobal("Root");
 	configName	= GetGlobal("CustomizationList");
 	configPath  = rootPath + "Configs\\" + configName;
-	cdPath 		= configPath + "\\Output";
+	cdPath 		= configPath + "\\Output\\Core";
+	cdshellPath	= configPath + "\\Output\\Shell";
 	networkPath = configPath + "\\Network";
 	tempPath 	= configPath + "\\Temp";
 	iniDstPath	= cdPath + "\\config.ini";
@@ -494,7 +496,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	// Didn't work...
 	CreateRshell ();
 	CString shellPath = workspacePath + "\\Autorun\\Shell\\";
-	CopyDir(shellPath, cdPath, NULL, FALSE);
+	CopyDir(shellPath, cdshellPath, NULL, FALSE);
 
 	invisible();
 
@@ -504,7 +506,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 	SetCurrentDirectory(olddir);
 
-
 	return rv;
+
 }
 
