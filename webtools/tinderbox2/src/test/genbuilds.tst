@@ -8,8 +8,8 @@
 # URL.
 
 
-# $Revision: 1.15 $ 
-# $Date: 2003/02/11 00:27:47 $ 
+# $Revision: 1.16 $ 
+# $Date: 2003/04/20 20:19:29 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -157,6 +157,15 @@ sub rand_status {
 }
 
 
+sub rand_num_errors {
+
+  my ($num) = rand 300;
+  $num =~ s/\..*//;
+
+  return $num;
+}
+
+
 
 
 # This is just like rand_status except that the first status in any
@@ -212,7 +221,7 @@ sub gen_rnd_build {
       
 
 sub write_update_record {
-  my ($tree, $build, $status, $begin, $end,) = @_;
+  my ($tree, $build, $status, $num_errors, $begin, $end,) = @_;
 
       # put the localtimes in the update file to ease debugging.
       
@@ -227,6 +236,7 @@ sub write_update_record {
               'starttime' => $begin,
 #  starttime: '$local_starttime', endtime: '$local_endtime', buildname: '$build',
               'timenow' => $end,
+              'errors' => $num_errors,
 
 # this link does not point to real log files, it is only to help give
 # an idea of what the real link will look like and acts as a comment to make debugging easier.
@@ -268,9 +278,10 @@ foreach $tree (@TREES) {
     $starttime = $begin;
     
     my ($status) = rand_initial_status(); 
+    my ($num_errors) = rand_num_errors();
 
     ($status eq 'not_running') ||
-      write_update_record($tree, $build, $status, $begin, $end,);
+      write_update_record($tree, $build, $status, $num_errors, $begin, $end,);
 
     foreach $i (0 .. 45) {
       
@@ -278,7 +289,7 @@ foreach $tree (@TREES) {
       $starttime = $begin;
 
       my ($status) = rand_status(); 
-      write_update_record($tree, $build, $status, $begin, $end,);
+      write_update_record($tree, $build, $status, $num_errors, $begin, $end,);
     } # $i
     
   } # $build
