@@ -678,6 +678,14 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
         START_TIMER();
 
+          //Now make sure the misplaced content list is empty,
+          //by forcefully recycling any tokens we might find there.
+
+        CToken* theToken=0;
+        while(theToken=(CToken*)mMisplacedContent.Pop()) {
+          mTokenRecycler->RecycleToken(theToken);
+        }
+
         if(mDTDDebug) { 
           mDTDDebug->DumpVectorRecord(); 
         } 
@@ -746,18 +754,28 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
      */
     if(!execSkipContent) {
 
-      static eHTMLTags passThru[]= {
-        eHTMLTag_html,eHTMLTag_comment,eHTMLTag_newline,
-        eHTMLTag_whitespace,eHTMLTag_script,
-        eHTMLTag_markupDecl,eHTMLTag_userdefined
-      };
+      switch(theTag) {
+        case eHTMLTag_html:
+        case eHTMLTag_comment:
+        case eHTMLTag_newline:
+        case eHTMLTag_whitespace:
+        case eHTMLTag_script:
+        case eHTMLTag_markupDecl:
+        case eHTMLTag_userdefined:
+          break;  //simply pass these through to token handler without further ado...
 
-      if(!FindTagInSet(theTag,passThru,sizeof(passThru)/sizeof(eHTMLTag_unknown))){
-        if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
-          if((!mHadBody) && (!mHadFrameset)){
-            if(mHasOpenHead) { 
-              //just fall through and handle current token
-              if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag)){
+        default:
+          if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
+            if((!mHadBody) && (!mHadFrameset)){
+
+              //For bug examples from this code, see bugs: 18928, 20989.
+
+              //At this point we know the body/frameset aren't open. 
+              //If the child belongs in the head, then handle it (which may open the head);
+              //otherwise, push it onto the misplaced stack.
+
+              PRBool theChildBelongsInHead=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag);
+              if(!theChildBelongsInHead) {
 
                 //If you're here then we found a child of the body that was out of place.
                 //We're going to move it to the body by storing it temporarily on the misplaced stack.
@@ -765,19 +783,11 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 aToken->mUseCount++;
                 return result;
               }
-            }
-            else {
-              if(gHTMLElements[eHTMLTag_body].SectionContains(theTag,PR_TRUE)){
-                mTokenizer->PushTokenFront(aToken); //put this token back...
-                mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
-                theToken=(CHTMLToken*)mTokenRecycler->CreateTokenOfType(eToken_start,theTag=eHTMLTag_body,"body");
-                theType=eToken_start;
-                //now open a body...
-              }
-            }
-          } 
-        } //if
-      } //if
+
+            } //if
+          } //if
+      }//switch
+
     } //if
     
     if(theToken){
@@ -1092,9 +1102,6 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
                -------------------------------------------------------------------------------------*/
 
                 theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
-                if(!theChildAgrees) {
-                  int x=10;
-                }
               } //if
             } //if
           } //if
@@ -3015,7 +3022,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
       nsEntryStack  *theChildStyleStack=0;      
       eHTMLTags     theTag=mBodyContext->Last();
       nsCParserNode *theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyleStack);
-      eHTMLTags     theParent=mBodyContext->Last();
+//      eHTMLTags     theParent=mBodyContext->Last();
 
       if(theNode) {
         result=CloseContainer(theNode,aTarget,aClosedByStartTag);
