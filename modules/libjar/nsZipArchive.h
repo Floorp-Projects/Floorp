@@ -155,8 +155,8 @@ private:
 class nsZipFind
 {
   friend class nsZipArchive;
-  friend PR_EXTERN(PRInt32) ZIP_FindNext( void*, char*, PRUint16 );
-  friend PR_EXTERN(PRInt32) ZIP_FindFree( void* );
+  friend PRInt32 ZIP_FindNext( void*, char*, PRUint16 );
+  friend PRInt32 ZIP_FindFree( void* );
 public:
   const PRInt32       kMagic;
 
