@@ -119,8 +119,11 @@ dnl =
 dnl ========================================================
 dist_prefix='${MOD_DEPTH}/dist'
 dist_bindir='${dist_prefix}/bin'
-dist_includedir='${dist_prefix}/include'
+dist_includedir='${dist_prefix}/include/nspr'
 dist_libdir='${dist_prefix}/lib'
+if test "${includedir}" = '${prefix}/include'; then
+    includedir='${prefix}/include/nspr'
+fi
 
 AC_ARG_WITH(dist-prefix,
     [  --with-dist-prefix=DIST_PREFIX
@@ -133,7 +136,7 @@ AC_ARG_WITH(dist-bindir,
 
 AC_ARG_WITH(dist-includedir,
     [  --with-dist-includedir=DIR
-                          build include files in DIR [DIST_PREFIX/include]],
+                          build include files in DIR [DIST_PREFIX/include/nspr]],
     dist_includedir=$withval)
 
 AC_ARG_WITH(dist-libdir,
