@@ -9,6 +9,7 @@ nsIDataFlavor.h
 nsITransferable.h
 nsIGenericTransferable.h
 nsIDragService.h
+nsIDragSession.h
 nsui.h
 nsIWidget.h
 nsIButton.h
