@@ -31,10 +31,13 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../html/base/src \
 	-I$(srcdir)/../../../html/forms/src \
 	-I$(srcdir)/../../content/src \
+	-I$(srcdir)/../../../html/content/src \
 	$(NULL)
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
+    nsTabFrame.cpp \
+    nsDeckFrame.cpp \
     nsBoxFrame.cpp \
     nsProgressMeterFrame.cpp \
 	nsTitledButtonFrame.cpp \

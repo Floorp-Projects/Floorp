@@ -75,6 +75,12 @@
 #include "nsTreeCellFrame.h"
 
 nsresult
+NS_NewTabFrame ( nsIFrame*& aNewFrame );
+
+nsresult
+NS_NewDeckFrame ( nsIFrame*& aNewFrame );
+
+nsresult
 NS_NewProgressMeterFrame ( nsIFrame*& aNewFrame );
 
 nsresult
@@ -1578,7 +1584,11 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treeindentation == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
-        (nsXULAtoms::box             == tag.get())  ||
+        (nsXULAtoms::deck            == tag.get())  ||
+        (nsXULAtoms::tabcontrol      == tag.get())  ||
+        (nsXULAtoms::tabbox          == tag.get())  ||
+        (nsXULAtoms::tabpanel        == tag.get())  ||
+        (nsXULAtoms::tabpage         == tag.get())  ||
         (nsXULAtoms::progressmeter   == tag.get()  )) {
     return PR_TRUE;
   }
@@ -2650,7 +2660,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
     // End of PROGRESS METER CONSTRUCTION logic
 
     // BOX CONSTRUCTION
-    else if (aTag == nsXULAtoms::box) {
+    else if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewBoxFrame(newFrame);
@@ -2664,6 +2674,22 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewTitledButtonFrame(newFrame);
     }
     // End of TITLED BUTTON CONSTRUCTION logic
+
+    // DECK CONSTRUCTION
+    else if (aTag == nsXULAtoms::deck || aTag == nsXULAtoms::tabpanel) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewDeckFrame(newFrame);
+    }
+    // End of DECK CONSTRUCTION logic
+
+    // TAB CONSTRUCTION
+    else if (aTag == nsXULAtoms::tab) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewTabFrame(newFrame);
+    }
+    // End of TAB CONSTRUCTION logic
 
   }
 

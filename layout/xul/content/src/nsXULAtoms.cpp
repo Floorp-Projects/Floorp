@@ -57,6 +57,14 @@ nsIAtom* nsXULAtoms::mode;
 nsIAtom* nsXULAtoms::box;
 nsIAtom* nsXULAtoms::flex;
 
+nsIAtom* nsXULAtoms::tabcontrol;
+nsIAtom* nsXULAtoms::tabbox;
+nsIAtom* nsXULAtoms::tab;
+nsIAtom* nsXULAtoms::tabpanel;
+nsIAtom* nsXULAtoms::tabpage;
+nsIAtom* nsXULAtoms::deck;
+
+
 nsIAtom* nsXULAtoms::widget;
 nsIAtom* nsXULAtoms::window;
 
@@ -108,6 +116,14 @@ void nsXULAtoms::AddrefAtoms() {
 	box = NS_NewAtom("box");
 	flex = NS_NewAtom("flex");
 
+  deck = NS_NewAtom("deck");
+  tabcontrol = NS_NewAtom("tabcontrol");
+  tab = NS_NewAtom("tab");
+  tabpanel = NS_NewAtom("tabpanel");
+  tabpage = NS_NewAtom("tabpage");
+  tabbox = NS_NewAtom("tabbox");
+
+
     widget = NS_NewAtom("widget");
     window = NS_NewAtom("window");
   }
@@ -149,6 +165,13 @@ void nsXULAtoms::ReleaseAtoms() {
 	NS_RELEASE(box);
 	NS_RELEASE(flex);
 
+
+ 	NS_RELEASE(deck);
+ 	NS_RELEASE(tabcontrol);
+ 	NS_RELEASE(tab);
+ 	NS_RELEASE(tabbox);
+ 	NS_RELEASE(tabpanel);
+ 	NS_RELEASE(tabpage);
 
 	NS_RELEASE(widget);
     NS_RELEASE(window);

@@ -187,6 +187,11 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
       nsReflowReason reason = aReflowState.reason;
       PRBool shouldReflow = PR_TRUE;
 
+      // if no incremental child. And we are incremental make us
+      // make our reflow reason resize.
+      if (nsnull == incrementalChild && reason == eReflowReason_Incremental)
+           reason = eReflowReason_Resize;
+
       if (nsnull != incrementalChild && incrementalChild != childFrame) {
               // if we are flowing because of incremental and this is not
               // the child then see if the size is already what we want.
@@ -215,8 +220,8 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
              if (currentSize.width == size.width && currentSize.height == size.height)
                     shouldReflow = PR_FALSE;
               else 
-                    reason = eReflowReason_StyleChange;
- 
+                    reason = eReflowReason_Resize;
+
       } 
       
       if (shouldReflow) {
@@ -330,7 +335,22 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   // get the child and only reflow it
   nsIFrame* incrementalChild = nsnull;
   if ( aReflowState.reason == eReflowReason_Incremental ) {
-    aReflowState.reflowCommand->GetNext(incrementalChild);
+    nsIFrame* targetFrame;
+    
+    // See if it's targeted at us
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+
+    if (this == targetFrame) {
+       incrementalChild = this;
+    } else {
+       aReflowState.reflowCommand->GetNext(incrementalChild);
+
+       // ensure that the child's parent is us. If its not
+       // something very bad has happened.
+       nsIFrame* parent;
+       incrementalChild->GetParent(&parent);
+       NS_ASSERTION(this == parent,"incremental reflow error!");
+    }
   } 
 
   // ------ first pass build springs -------
@@ -495,9 +515,10 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
       }
  
       // only flow if fixed and width or height was not set
+      
       if (springs[count].springConstant == 0.0 && (wunit != eStyleUnit_Coord || hunit != eStyleUnit_Coord)) 
       {
-            FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize, incrementalChild);
+            FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize, nsnull);
 
             // if it got bigger that expected set that as our min size
             if (mHorizontal) {
@@ -522,7 +543,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
            preferredSize.width = desiredSize.width;
            preferredSize.height = desiredSize.height;
       }
-
+      
       // make sure the preferred size is not instrinic
       if (NS_INTRINSICSIZE == preferredSize.width)
          preferredSize.width = 0;
