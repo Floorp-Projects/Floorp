@@ -387,9 +387,17 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
 
         if (mImageLoader.IsImageSizeKnown()) {
           nsIImage* image = mImageLoader.GetImage();
-          if (image && image->GetWidth() == mImageRect.width && image->GetHeight() == mImageRect.height) {
-             reflow = PR_FALSE;
-             Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+          if ( image ) {
+            // imageLib stores width/height in pixels and we store it in twips. do the conversion
+            // before comparing.
+		    float p2t = 0.0;
+            aPresContext.GetScaledPixelsToTwips(&p2t);
+            int imageWidth = NSIntPixelsToTwips(image->GetWidth(), p2t);
+            int imageHeight = NSIntPixelsToTwips(image->GetHeight(), p2t);
+            if ( imageWidth == mImageRect.width && imageHeight == mImageRect.height ) {
+              reflow = PR_FALSE;
+              Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+            }
           }
         } 
 
