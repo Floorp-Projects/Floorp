@@ -196,7 +196,6 @@ NS_IMETHODIMP  nsFileWidget::GetSelectedType(PRInt16& theType)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
-  Show();
   nsFilePath filePath(mFile);
   nsFileSpec fileSpec(filePath);
 
