@@ -113,7 +113,11 @@ xptc_invoke_copy_to_stack_keeper (void)
 
 __asm__ (
 	".text\n\t"
+#ifdef __EMX__
+	".align 8\n\t"
+#else
 	".align 16\n\t"
+#endif
 	".globl " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
 	".type  " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex,@function\n"
 	SYMBOL_UNDERSCORE "XPTC_InvokeByIndex:\n\t"

@@ -29,15 +29,22 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
 
-ifeq ($(MOZ_OS2_TOOLS),EMX)
-CPPSRCS		= xptcinvoke_emx.cpp 
-endif
-
-CPPSRCS		+= xptcstubs_os2.cpp
-
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
+ifdef GNU_CXX
+CPPSRCS		= \
+		../unix/xptcinvoke_gcc_x86_unix.cpp \
+		../unix/xptcstubs_gcc_x86_unix.cpp \
+		$(NULL)
+LOCAL_INCLUDES	= -I$(srcdir)/../unix
+DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
+else
+CPPSRCS		= xptcstubs_os2.cpp
 ASFILES		= xptcinvoke_vacpp.asm xptcstubs_vacpp.asm
 endif
+
+# Force use of PIC
+FORCE_USE_PIC	= 1
+
+include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

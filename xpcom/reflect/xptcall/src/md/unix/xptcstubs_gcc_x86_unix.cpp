@@ -129,53 +129,53 @@ xptc_PrepareAndDispatch_keeper (void)
 #if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
 // gcc3 mangling tends to insert the length of the method name
 #define STUB_ENTRY(n) \
-asm(".section	\".text\"\n\t" \
+asm(".text\n\t" \
     ".align	2\n\t" \
     ".if	" #n " < 10\n\t" \
-    ".globl	_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
-    ".type	_ZN14nsXPTCStubBase5Stub" #n "Ev,@function\n" \
-    "_ZN14nsXPTCStubBase5Stub" #n "Ev:\n\t" \
+    ".globl	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
+    ".type	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev,@function\n" \
+    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev:\n\t" \
     ".elseif	" #n " < 100\n\t" \
-    ".globl	_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
-    ".type	_ZN14nsXPTCStubBase6Stub" #n "Ev,@function\n" \
-    "_ZN14nsXPTCStubBase6Stub" #n "Ev:\n\t" \
+    ".globl	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
+    ".type	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev,@function\n" \
+    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev:\n\t" \
     ".elseif    " #n " < 1000\n\t" \
-    ".globl     _ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
-    ".type      _ZN14nsXPTCStubBase7Stub" #n "Ev,@function\n" \
-    "_ZN14nsXPTCStubBase7Stub" #n "Ev:\n\t" \
+    ".globl     " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
+    ".type      " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev,@function\n" \
+    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev:\n\t" \
     ".else\n\t" \
     ".err	\"stub number " #n " >= 1000 not yet supported\"\n\t" \
     ".endif\n\t" \
     "movl	$" #n ", %eax\n\t" \
-    "jmp	SharedStub\n\t" \
+    "jmp	" SYMBOL_UNDERSCORE "SharedStub\n\t" \
     ".if	" #n " < 10\n\t" \
-    ".size	_ZN14nsXPTCStubBase5Stub" #n "Ev,.-_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
+    ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
     ".elseif	" #n " < 100\n\t" \
-    ".size	_ZN14nsXPTCStubBase6Stub" #n "Ev,.-_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
+    ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
     ".else\n\t" \
-    ".size	_ZN14nsXPTCStubBase7Stub" #n "Ev,.-_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
+    ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
     ".endif");
 #else
 #define STUB_ENTRY(n) \
-asm(".section   \".text\"\n\t" \
+asm(".text\n\t" \
     ".align	2\n\t" \
-    ".globl	Stub" #n "__14nsXPTCStubBase\n\t" \
-    ".type	Stub" #n "__14nsXPTCStubBase,@function\n" \
-    "Stub" #n "__14nsXPTCStubBase:\n\t" \
+    ".globl	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase\n\t" \
+    ".type	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase,@function\n" \
+    SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase:\n\t" \
     "movl	$" #n ", %eax\n\t" \
-    "jmp	SharedStub\n\t" \
-    ".size	Stub" #n "__14nsXPTCStubBase,.-Stub" #n "__14nsXPTCStubBase");
+    "jmp	" SYMBOL_UNDERSCORE "SharedStub\n\t" \
+    ".size	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase,.-" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase");
 #endif
 
 // static nsresult SharedStub(PRUint32 methodIndex) __attribute__((regparm(1)))
-asm(".section	\".text\"\n\t"
+asm(".text\n\t"
     ".align	2\n\t"
-    ".type	SharedStub,@function\n\t"
-    "SharedStub:\n\t"
+    ".type	" SYMBOL_UNDERSCORE "SharedStub,@function\n\t"
+    SYMBOL_UNDERSCORE "SharedStub:\n\t"
     "leal	0x08(%esp), %ecx\n\t"
     "movl	0x04(%esp), %edx\n\t"
-    "jmp	PrepareAndDispatch\n\t"
-    ".size	SharedStub,.-SharedStub");
+    "jmp	" SYMBOL_UNDERSCORE "PrepareAndDispatch\n\t"
+    ".size	" SYMBOL_UNDERSCORE "SharedStub,.-" SYMBOL_UNDERSCORE "SharedStub");
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
@@ -185,6 +185,11 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 }
 
 #include "xptcstubsdef.inc"
+
+void
+xptc_dummy()
+{
+}
 
 #else
 #error "can't find a compiler to use"
