@@ -1200,6 +1200,7 @@ nsSpaceManager::BandRect::Length() const
 void
 nsSpaceManager::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
+  NS_PRECONDITION(aResult, "null OUT parameter pointer");
   *aResult = sizeof(*this);
 
   // Add in the size of the band data. Don't count the header which has

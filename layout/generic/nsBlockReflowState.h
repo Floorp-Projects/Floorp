@@ -5605,12 +5605,16 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   // Add in size of each line object
   nsLineBox* line = mLines;
   while (line) {
-    aHandler->AddSize(nsLayoutAtoms::lineBox, sizeof(nsLineBox));
+    PRUint32  lineBoxSize;
+    line->SizeOf(aHandler, &lineBoxSize);
+    aHandler->AddSize(nsLayoutAtoms::lineBox, lineBoxSize);
     line = line->mNext;
   }
   line = mOverflowLines;
   while (line) {
-    aHandler->AddSize(nsLayoutAtoms::lineBox, sizeof(nsLineBox));
+    PRUint32  lineBoxSize;
+    line->SizeOf(aHandler, &lineBoxSize);
+    aHandler->AddSize(nsLayoutAtoms::lineBox, lineBoxSize);
     line = line->mNext;
   }
 
