@@ -27,6 +27,7 @@
 #define nsReadableUtils_h___
 
 #include "nsAReadableString.h"
+#include "nsAWritableString.h"
 
 
   /**
