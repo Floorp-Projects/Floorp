@@ -34,7 +34,6 @@
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
 #include "nsTextWidget.h"
-#include "nsTextAreaWidget.h"
 #include "nsFilePicker.h"
 #include "nsFileWidget.h"
 #include "nsLookAndFeel.h"
@@ -61,7 +60,6 @@ static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCFilePicker,    NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
@@ -183,9 +181,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
         inst = (nsISupports*)(nsWindow *)new nsScrollbar(PR_TRUE);
-    }
-    else if (mClassID.Equals(kCTextArea)) {
-        inst = (nsISupports*)(nsWindow *)new nsTextAreaWidget();
     }
     else if (mClassID.Equals(kCTextField)) {
         inst = (nsISupports*)(nsWindow *)new nsTextWidget();

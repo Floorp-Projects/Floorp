@@ -27,7 +27,7 @@
 #include "nsWindow.h"
 
 /**
- * Base class for nsTextAreaWidget and nsTextWidget
+ * Base class for nsTextAreaWidget (obsolete) and nsTextWidget
  */
 
 class nsTextHelper :  public nsWindow, 

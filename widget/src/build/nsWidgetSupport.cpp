@@ -23,7 +23,6 @@
 
 #include "nsWidgetSupport.h"
 #include "nsRect.h"
-#include "nsITextAreaWidget.h"
 #include "nsIFileWidget.h"
 #include "nsIAppShell.h"
 #include "nsIButton.h"
@@ -126,36 +125,6 @@ NS_CreateLabel( nsISupports* aParent,
 }
 
 
-
-NS_WIDGET nsresult 
-NS_CreateTextAreaWidget(nsISupports* aParent, 
-									nsITextAreaWidget* aWidget, 
-									const nsRect& aRect, 
-									EVENT_CALLBACK aHandleEventFunction,
-									const nsFont* aFont)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
-
-  nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    if (aFont != nsnull)
-	  	widget->SetFont(*aFont);
-    NS_IF_RELEASE(widget);
-	}
-  else
-  {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
-  }
-
-	if (aParent)
-	  NS_IF_RELEASE(parent);
-
-  return NS_OK;
-}
 
 NS_WIDGET nsresult 
 NS_CreateTextWidget(nsISupports* aParent, 
