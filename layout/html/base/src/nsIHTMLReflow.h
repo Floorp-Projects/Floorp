@@ -335,12 +335,12 @@ protected:
                                 nscoord&                 aComputedLeftMargin,
                                 nscoord&                 aComputedRightMargin);
 
-  static void ComputeHorizontalValue(const nsHTMLReflowState& aReflowState,
+  static void ComputeHorizontalValue(nscoord aContainingBlockWidth,
                                      nsStyleUnit aUnit,
                                      const nsStyleCoord& aCoord,
                                      nscoord& aResult);
 
-  static void ComputeVerticalValue(const nsHTMLReflowState& aReflowState,
+  static void ComputeVerticalValue(nscoord aContainingBlockHeight,
                                    nsStyleUnit aUnit,
                                    const nsStyleCoord& aCoord,
                                    nscoord& aResult);
