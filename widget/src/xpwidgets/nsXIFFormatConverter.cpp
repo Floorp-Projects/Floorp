@@ -235,9 +235,7 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromS
 
   nsIHTMLContentSink* sink = nsnull;
 
-//  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
-//  Changed to do plain text only for Dogfood -- gpk 3/14/99
-  rv = NS_New_HTMLToTXT_SinkStream(&sink);
+  rv = NS_New_HTMLToTXT_SinkStream(&sink,&aToStr);
 
   if (NS_OK == rv) {
     parser->SetContentSink(sink);
@@ -250,8 +248,6 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromS
       parser->Parse(str, 0, "text/xif",PR_FALSE,PR_TRUE);           
     }
     NS_IF_RELEASE(dtd);
-
-    ((nsHTMLToTXTSinkStream*)sink)->GetStringBuffer(aToStr);
   }
   NS_IF_RELEASE(sink);
   NS_RELEASE(parser);
@@ -277,11 +273,8 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromS
 
   nsIHTMLContentSink* sink = nsnull;
 
-  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+  rv = NS_New_HTML_ContentSinkStream(&sink,&aToStr);
 
-  ostrstream* copyStream = new ostrstream;
-
-  ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
   if (NS_OK == rv) {
     parser->SetContentSink(sink);
 	
@@ -296,15 +289,6 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromS
   }
   NS_IF_RELEASE(sink);
   NS_RELEASE(parser);
-
-  PRInt32 len = copyStream->pcount();
-  char* str = (char*)copyStream->str();
-
-  if (str) {
-    aToStr.SetString(str, len);
-    delete[] str;
-  }
-
   return NS_OK;
 }
 
