@@ -427,6 +427,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
                                       nsIPref::GetIID(), 
                                       (nsISupports **)&prefs);
     if (NS_SUCCEEDED(rv)) {
+        prefs->ReadUserPrefs();
         // Set the prefs in the outermost webshell.
         initContext->webShell->SetPrefs(prefs);
         nsServiceManager::ReleaseService(kPrefCID, prefs);
