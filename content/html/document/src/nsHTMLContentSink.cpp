@@ -153,6 +153,7 @@
 #include "nsIFrameManager.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIDocShellTreeItem.h"
+#include "plevent.h"
 
 
 #include "nsEscape.h"
@@ -2860,6 +2861,12 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // reference.
   NS_IF_RELEASE(mParser);
 
+  if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
+    // Reset the performance hint which was set to FALSE
+    // when NS_SINK_FLAG_DYNAMIC_LOWER_VALUE was set. 
+    PL_FavorPerformanceHint(TRUE , 0);
+  }
+
   if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
     // Note: Don't return value from RemoveDummyParserRequest,
     // If RemoveDummyParserRequests fails it should not affect
@@ -4114,15 +4121,27 @@ HTMLContentSink::DidProcessAToken(void)
     if ((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) {
       if ((currentTime - eventTime) <
           NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
-        // lower the dynamic values to favor application
-        // responsiveness over page load time.
+    
+        if (! (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE)) {
+          // lower the dynamic values to favor application
+          // responsiveness over page load time.
+          mFlags |= NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
+          // Set the performance hint to prevent event starvation when
+          // dispatching PLEvents. This improves application responsiveness 
+          // during page loads.
+          PL_FavorPerformanceHint(FALSE, 0);
+        }
 
-        mFlags |= NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
       } else {
-        // raise the content notification and MaxTokenProcessing time
-        // to favor overall page load speed over responsiveness
+      
+        if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
+          // raise the content notification and MaxTokenProcessing time
+          // to favor overall page load speed over responsiveness.
+          mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
+          // Reset the hint that to favoring performance for PLEvent dispatch.
+          PL_FavorPerformanceHint(TRUE, 0);
+        }
 
-        mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
       }
     }
 
