@@ -36,6 +36,10 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsIDOMCSSRule.h"
+
+#include "nsContentUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -63,7 +67,8 @@ NS_IMETHODIMP _class::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresCont
 // nsICSSCharsetRule
 //
 class CSSCharsetRuleImpl : public nsCSSRule,
-                           public nsICSSCharsetRule 
+                           public nsICSSCharsetRule,
+                           public nsIDOMCSSRule
 {
 public:
   CSSCharsetRuleImpl(void);
@@ -88,6 +93,9 @@ public:
   // nsICSSCharsetRule methods
   NS_IMETHOD  GetEncoding(nsString& aEncoding) const;
 
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+  
 protected:
   nsString  mEncoding;
 };
@@ -111,38 +119,20 @@ CSSCharsetRuleImpl::~CSSCharsetRuleImpl(void)
 NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, nsCSSRule);
 
-nsresult 
-CSSCharsetRuleImpl::QueryInterface(const nsIID& aIID,
-                                   void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSCharsetRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSCharsetRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
-    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsICSSCharsetRule *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+// XPConnect interface list for CSSCharsetRuleImpl
+NS_CLASSINFO_MAP_BEGIN(CSSCharsetRule)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+NS_CLASSINFO_MAP_END
+
+// QueryInterface implementation for CSSCharsetRuleImpl
+NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
+  NS_INTERFACE_MAP_ENTRY(nsICSSCharsetRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSCharsetRule)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSCharsetRule)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 CSSCharsetRuleImpl::Init(const nsString& aEncoding)
@@ -246,12 +236,52 @@ NS_NewCSSCharsetRule(nsICSSCharsetRule** aInstancePtrResult, const nsString& aEn
   return it->QueryInterface(NS_GET_IID(nsICSSCharsetRule), (void **) aInstancePtrResult);
 }
 
+NS_IMETHODIMP
+CSSCharsetRuleImpl::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::CHARSET_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSCharsetRuleImpl::GetCssText(nsAWritableString& aCssText)
+{
+  aCssText.Assign(NS_LITERAL_STRING("@charset \""));
+  aCssText.Append(mEncoding);
+  aCssText.Append(NS_LITERAL_STRING("\";"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSCharsetRuleImpl::SetCssText(const nsAReadableString& aCssText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CSSCharsetRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  if (mSheet) {
+    return CallQueryInterface(mSheet, aSheet);
+  }
+  *aSheet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 
 // -------------------------------------------
 // nsICSSImportRule
 //
 class CSSImportRuleImpl : public nsCSSRule,
-                          public nsICSSImportRule 
+                          public nsICSSImportRule,
+                          public nsIDOMCSSRule
 {
 public:
   CSSImportRuleImpl(void);
@@ -277,6 +307,9 @@ public:
 
   NS_IMETHOD SetMedia(const nsString& aMedia);
   NS_IMETHOD GetMedia(nsString& aMedia) const;
+  
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
 
 protected:
   nsString  mURLSpec;
@@ -304,38 +337,20 @@ CSSImportRuleImpl::~CSSImportRuleImpl(void)
 NS_IMPL_ADDREF_INHERITED(CSSImportRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSImportRuleImpl, nsCSSRule);
 
-nsresult 
-CSSImportRuleImpl::QueryInterface(const nsIID& aIID,
-                                  void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSImportRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSImportRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
-    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsICSSImportRule *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+// XPConnect interface list for CSSImportRuleImpl
+NS_CLASSINFO_MAP_BEGIN(CSSImportRule)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+NS_CLASSINFO_MAP_END
+
+// QueryInterface implementation for CSSImportRuleImpl
+NS_INTERFACE_MAP_BEGIN(CSSImportRuleImpl)
+  NS_INTERFACE_MAP_ENTRY(nsICSSImportRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSImportRule)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSImportRule)
+NS_INTERFACE_MAP_END
 
 IMPL_STYLE_RULE_INHERIT(CSSImportRuleImpl, nsCSSRule);
 
@@ -464,11 +479,53 @@ NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
   return it->QueryInterface(NS_GET_IID(nsICSSImportRule), (void **) aInstancePtrResult);
 }
 
+NS_IMETHODIMP
+CSSImportRuleImpl::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::IMPORT_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportRuleImpl::GetCssText(nsAWritableString& aCssText)
+{
+  aCssText.Assign(NS_LITERAL_STRING("@import url("));
+  aCssText.Append(mURLSpec);
+  aCssText.Append(NS_LITERAL_STRING(") "));
+  aCssText.Append(mMedia);
+  aCssText.Append(NS_LITERAL_STRING(";"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportRuleImpl::SetCssText(const nsAReadableString& aCssText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CSSImportRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  if (mSheet) {
+    return CallQueryInterface(mSheet, aSheet);
+  }
+  *aSheet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 // -------------------------------------------
 // nsICSSMediaRule
 //
 class CSSMediaRuleImpl : public nsCSSRule,
-                         public nsICSSMediaRule 
+                         public nsICSSMediaRule,
+                         public nsIDOMCSSRule
 {
 public:
   CSSMediaRuleImpl(void);
@@ -498,6 +555,9 @@ public:
   NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
 
   NS_IMETHOD  EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * aData) const;
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
 
 protected:
   nsISupportsArray* mMedia;
@@ -554,38 +614,20 @@ CSSMediaRuleImpl::~CSSMediaRuleImpl(void)
 NS_IMPL_ADDREF_INHERITED(CSSMediaRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSMediaRuleImpl, nsCSSRule);
 
-nsresult 
-CSSMediaRuleImpl::QueryInterface(const nsIID& aIID,
-                                 void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSMediaRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSMediaRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
-    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsICSSMediaRule *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+// XPConnect interface list for CSSMediaRuleImpl
+NS_CLASSINFO_MAP_BEGIN(CSSMediaRule)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+NS_CLASSINFO_MAP_END
+
+// QueryInterface implementation for CSSMediaRuleImpl
+NS_INTERFACE_MAP_BEGIN(CSSMediaRuleImpl)
+  NS_INTERFACE_MAP_ENTRY(nsICSSMediaRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSMediaRule)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSMediaRule)
+NS_INTERFACE_MAP_END
 
 IMPL_STYLE_RULE_INHERIT2(CSSMediaRuleImpl, nsCSSRule);
 
@@ -818,12 +860,85 @@ NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult)
   return it->QueryInterface(NS_GET_IID(nsICSSMediaRule), (void **) aInstancePtrResult);
 }
 
+NS_IMETHODIMP
+CSSMediaRuleImpl::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::MEDIA_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::GetCssText(nsAWritableString& aCssText)
+{
+  PRUint32 index;
+  PRUint32 count;
+  aCssText.Assign(NS_LITERAL_STRING("@media "));
+  // get all the media
+  if (mMedia) {
+    mMedia->Count(&count);
+    for (index = 0; index < count; index++) {
+      nsCOMPtr<nsIAtom> medium (do_QueryInterface(mMedia->ElementAt(index)));
+      if (medium) {
+        nsAutoString tempString;
+        if (index > 0)
+          aCssText.Append(NS_LITERAL_STRING(", "));
+        medium->ToString(tempString);
+        aCssText.Append(tempString);
+      }
+    }
+  }
+
+  aCssText.Append(NS_LITERAL_STRING(" {\n"));
+
+  // get all the rules
+  if (mRules) {
+    mRules->Count(&count);
+    for (index = 0; index < count; index++) {
+      nsCOMPtr<nsIDOMCSSRule> rule (do_QueryInterface(mRules->ElementAt(index)));
+      if (rule) {
+        nsAutoString tempString;
+        rule->GetCssText(tempString);
+        aCssText.Append(NS_LITERAL_STRING("  "));
+        aCssText.Append(tempString);
+        aCssText.Append(NS_LITERAL_STRING("\n"));
+      }
+    }
+  }
+
+  aCssText.Append(NS_LITERAL_STRING("}"));
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::SetCssText(const nsAReadableString& aCssText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  if (mSheet) {
+    return CallQueryInterface(mSheet, aSheet);
+  }
+  *aSheet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 // -------------------------------------------
 // nsICSSNameSpaceRule
 //
 class CSSNameSpaceRuleImpl : public nsCSSRule,
-                             public nsICSSNameSpaceRule 
+                             public nsICSSNameSpaceRule,
+                             public nsIDOMCSSRule
 {
 public:
   CSSNameSpaceRuleImpl(void);
@@ -850,6 +965,9 @@ public:
   NS_IMETHOD GetURLSpec(nsString& aURLSpec) const;
   NS_IMETHOD SetURLSpec(const nsString& aURLSpec);
 
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+  
 protected:
   nsIAtom*  mPrefix;
   nsString  mURLSpec;
@@ -878,38 +996,20 @@ CSSNameSpaceRuleImpl::~CSSNameSpaceRuleImpl(void)
 NS_IMPL_ADDREF_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule);
 
-nsresult 
-CSSNameSpaceRuleImpl::QueryInterface(const nsIID& aIID,
-                                     void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSNameSpaceRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSNameSpaceRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
-    *aInstancePtrResult = (void*) ((nsICSSRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
-    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsICSSNameSpaceRule *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+// XPConnect interface list for CSSNameSpaceRuleImpl
+NS_CLASSINFO_MAP_BEGIN(CSSNameSpaceRule)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+NS_CLASSINFO_MAP_END
+
+// QueryInterface implementation for CSSNameSpaceRuleImpl
+NS_INTERFACE_MAP_BEGIN(CSSNameSpaceRuleImpl)
+  NS_INTERFACE_MAP_ENTRY(nsICSSNameSpaceRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSNameSpaceRule)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSNameSpaceRule)
+NS_INTERFACE_MAP_END
 
 IMPL_STYLE_RULE_INHERIT(CSSNameSpaceRuleImpl, nsCSSRule);
 
@@ -1046,3 +1146,47 @@ NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult,
   return it->QueryInterface(NS_GET_IID(nsICSSNameSpaceRule), (void **) aInstancePtrResult);
 }
 
+NS_IMETHODIMP
+CSSNameSpaceRuleImpl::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::UNKNOWN_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSNameSpaceRuleImpl::GetCssText(nsAWritableString& aCssText)
+{
+  aCssText.Assign(NS_LITERAL_STRING("@namespace "));
+  if (mPrefix) {
+    nsString atomStr;
+    mPrefix->ToString(atomStr);
+    aCssText.Append(atomStr);
+    aCssText.Append(NS_LITERAL_STRING(" "));
+  }
+  aCssText.Append(NS_LITERAL_STRING("url("));
+  aCssText.Append(mURLSpec);
+  aCssText.Append(NS_LITERAL_STRING(");"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSNameSpaceRuleImpl::SetCssText(const nsAReadableString& aCssText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CSSNameSpaceRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  if (mSheet) {
+    return CallQueryInterface(mSheet, aSheet);
+  }
+  *aSheet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSNameSpaceRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
