@@ -146,6 +146,10 @@ public:
   static nsresult FindFactory(const nsCID &aClass,
                               nsIFactory **aFactory);
 
+  // Finds a class ID for a specific Program ID
+  static nsresult ProgIDToCLSID(const char *aProgID,
+                              nsCID *aClass);
+
   // Creates a class instance for a specific class ID
   static nsresult CreateInstance(const nsCID &aClass, 
                                  nsISupports *aDelegate,
@@ -172,12 +176,24 @@ public:
                                   PRBool aReplace,
                                   PRBool aPersist);
 
+  // Manually register a dynamically loaded component.
+  static nsresult RegisterComponent(const nsCID &aClass,
+                                  const char *aClassName,
+                                  const char *aProgID,
+                                  const char *aLibrary,
+                                  PRBool aReplace,
+                                  PRBool aPersist);
+
   // Manually unregister a factory for a class
   static nsresult UnregisterFactory(const nsCID &aClass,
                                     nsIFactory *aFactory);
 
   // Manually unregister a dynamically loaded factory for a class
   static nsresult UnregisterFactory(const nsCID &aClass,
+                                    const char *aLibrary);
+
+  // Manually unregister a dynamically loaded component
+  static nsresult UnregisterComponent(const nsCID &aClass,
                                     const char *aLibrary);
 
   // Unload dynamically loaded factories that are not in use
