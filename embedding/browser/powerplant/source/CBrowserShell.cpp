@@ -288,23 +288,16 @@ void CBrowserShell::ListenToMessage(MessageT			inMessage,
 
 NS_IMETHODIMP CBrowserShell::SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWindow)
 {
-	// Get the required interfaces from the chrome
-   nsCOMPtr<nsIWebProgressListener> windowAsProgListener(do_GetInterface(aTopLevelWindow));
-   NS_ENSURE_TRUE(windowAsProgListener, NS_ERROR_INVALID_ARG);
-   
-   nsCOMPtr<nsIDocumentLoaderObserver> windowAsObserver(do_GetInterface(aTopLevelWindow));
-   NS_ENSURE_TRUE(windowAsObserver, NS_ERROR_INVALID_ARG);
-	
    mWebBrowser->SetTopLevelWindow(aTopLevelWindow);  
-   mWebBrowserAsProgress->AddProgressListener(windowAsProgListener);
-      
-   // Get the docshell - we need to do some things directly to it   
+   
+   /*
+   In case we needed to do something with the underlying docshell...   
+
    nsCOMPtr<nsIDocShell>    aDocShell;
    mWebBrowser->GetDocShell(getter_AddRefs(aDocShell));
    NS_ENSURE_TRUE(aDocShell, NS_ERROR_FAILURE);
-   	
- 	aDocShell->SetDocLoaderObserver(windowAsObserver);
- 	  
+ 	*/
+ 	 
    return NS_OK;
 }
 
