@@ -63,7 +63,14 @@ public:
 
   void          VerticallyAlignChild(nsIPresContext* aPresContext);
 
+  /** return the mapped cell's row span.  Always >= 1. */
   virtual PRInt32 GetRowSpan();
+
+  /** return the mapped cell's col span.  Always >= 1. */
+  virtual PRInt32 GetColSpan();
+
+  /** return the mapped cell's column index (starting at 0 for the first column) */
+  virtual PRInt32 GetColIndex();
 
   virtual ~nsTableCellFrame();
 

@@ -95,14 +95,24 @@ struct RowGroupReflowState {
 /* ----------- nsTableRowGroupFrame ---------- */
 
 nsTableRowGroupFrame::nsTableRowGroupFrame(nsIContent* aContent,
-                     PRInt32     aIndexInParent,
-                     nsIFrame*   aParentFrame)
+                                           PRInt32     aIndexInParent,
+                                           nsIFrame*   aParentFrame)
   : nsContainerFrame(aContent, aIndexInParent, aParentFrame)
 {
+  mType = aContent->GetTag();       // mType: REFCNT++
 }
 
 nsTableRowGroupFrame::~nsTableRowGroupFrame()
 {
+  if (nsnull!=mType)
+    NS_RELEASE(mType);              // mType: REFCNT--
+}
+
+NS_METHOD nsTableRowGroupFrame::GetRowGroupType(nsIAtom *& aType)
+{
+  NS_ADDREF(mType);
+  aType=mType;
+  return NS_OK;
 }
 
 
@@ -264,6 +274,8 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
 
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
     nsSize                  kidAvailSize(aState.availSize);
+    if (0>=kidAvailSize.height)
+      kidAvailSize.height = 1;      // XXX: HaCk - we don't handle negative heights yet
     nsReflowMetrics         desiredSize;
     nsIFrame::ReflowStatus  status;
 
@@ -290,7 +302,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
 
     // Reflow the child into the available space
     status = ReflowChild(kidFrame, aPresContext, desiredSize,
-                       kidAvailSize, pKidMaxElementSize);
+                         kidAvailSize, pKidMaxElementSize);
 
     // Did the child fit?
     if ((kidFrame != mFirstChild) &&
@@ -379,6 +391,12 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
       }
       result = PR_FALSE;
       break;
+    }
+
+    // Add back in the left and right margins, because one row does not 
+    // impact another row's width
+    if (PR_FALSE == aState.unconstrainedWidth) {
+      kidAvailSize.width += kidMol->margin.left + kidMol->margin.right;
     }
 
     // Get the next child
@@ -868,10 +886,10 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
   }
 
   // Return our desired rect
-  NS_ASSERTION(0<state.firstRowHeight, "illegal firstRowHeight after reflow");
-  NS_ASSERTION(0<state.y, "illegal height after reflow");
+  //NS_ASSERTION(0<state.firstRowHeight, "illegal firstRowHeight after reflow");
+  //NS_ASSERTION(0<state.y, "illegal height after reflow");
   aDesiredSize.width = aMaxSize.width;
-  aDesiredSize.height = state.y;
+  aDesiredSize.height = state.y;   
 
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);

@@ -21,6 +21,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 
+struct RowReflowState;
+
 
 /**
  * nsTableRowFrame is the frame that maps table rows 
@@ -110,12 +112,60 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-    nsTableRowFrame(nsIContent* aContent,
-                  PRInt32 aIndexInParent,
-					        nsIFrame* aParentFrame);
+  nsTableRowFrame(nsIContent* aContent,
+                PRInt32 aIndexInParent,
+					      nsIFrame* aParentFrame);
 
-    /** destructor */
-    virtual ~nsTableRowFrame();
+  /** destructor */
+  virtual ~nsTableRowFrame();
+
+  nscoord GetTopMarginFor(nsIPresContext*   aCX,
+                          RowReflowState&   aState,
+                          nsStyleMolecule*  aKidMol);
+
+  void          PlaceChild( nsIPresContext* aPresContext,
+                            RowReflowState& aState,
+                            nsIFrame*       aKidFrame,
+                            const nsRect&   aKidRect,
+                            nsSize*         aMaxElementSize,
+                            nsSize&         aKidMaxElementSize);
+
+  /**
+   * Reflow the frames we've already created
+   *
+   * @param   aPresContext presentation context to use
+   * @param   aState current inline state
+   * @return  true if we successfully reflowed all the mapped children and false
+   *            otherwise, e.g. we pushed children to the next in flow
+   */
+  PRBool        ReflowMappedChildren(nsIPresContext* aPresContext,
+                                     RowReflowState& aState,
+                                     nsSize*         aMaxElementSize);
+
+  /**
+   * Try and pull-up frames from our next-in-flow
+   *
+   * @param   aPresContext presentation context to use
+   * @param   aState current inline state
+   * @return  true if we successfully pulled-up all the children and false
+   *            otherwise, e.g. child didn't fit
+   */
+  PRBool        PullUpChildren(nsIPresContext* aPresContext,
+                               RowReflowState& aState,
+                               nsSize*         aMaxElementSize);
+
+  /**
+   * Create new frames for content we haven't yet mapped
+   *
+   * @param   aPresContext presentation context to use
+   * @param   aState current inline state
+   * @return  frComplete if all content has been mapped and frNotComplete
+   *            if we should be continued
+   */
+  ReflowStatus  ReflowUnmappedChildren(nsIPresContext* aPresContext,
+                                       RowReflowState& aState,
+                                       nsSize*         aMaxElementSize);
+
 
 private:
   PRInt32 mTallestCell; // not my height, but the height of my tallest child

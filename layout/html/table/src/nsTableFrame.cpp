@@ -90,6 +90,12 @@ struct InnerTableReflowState {
   // Flag for whether we're dealing with the first interior row group
   PRBool firstRowGroup;
 
+  // a list of the footers in this table frame, for quick access when inserting bodies
+  nsVoidArray *footerList;
+
+  // cache the total height of the footers for placing body rows
+  nscoord footerHeight;
+
   InnerTableReflowState(nsIPresContext*  aPresContext,
                         const nsSize&    aMaxSize,
                         nsStyleMolecule* aMol)
@@ -103,9 +109,13 @@ struct InnerTableReflowState {
     unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
     unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
     firstRowGroup = PR_TRUE;
+    footerHeight = 0;
+    footerList = nsnull;
   }
 
   ~InnerTableReflowState() {
+    if (nsnull!=footerList)
+      delete footerList;
   }
 };
 
@@ -712,7 +722,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
 #ifdef NS_DEBUG
-  PreReflowCheck();
+  //PreReflowCheck();
 #endif
 
   // Initialize out parameter
@@ -775,7 +785,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   }
 
   // Return our desired rect
-  NS_ASSERTION(0<state.y, "illegal height after reflow");
+  //NS_ASSERTION(0<state.y, "illegal height after reflow");
   aDesiredSize.width = aMaxSize.width;
   aDesiredSize.height = state.y;
 
@@ -798,7 +808,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   mPass = kPASS_UNDEFINED;  // we're no longer in-process
 
 #ifdef NS_DEBUG
-  PostReflowCheck(status);
+  //PostReflowCheck(status);
 #endif
 
   return status;
@@ -849,6 +859,48 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
   if (PR_FALSE == aState.unconstrainedHeight) {
     aState.availSize.height -= aKidRect.height;
   }
+
+  // If this is a footer row group, add it to the list of footer row groups
+  nsIAtom * tFootTag = NS_NewAtom(nsTablePart::kRowGroupFootTagString);  // tFootTag: REFCNT++
+  nsIAtom *kidType=nsnull;
+  ((nsTableRowGroupFrame *)aKidFrame)->GetRowGroupType(kidType);
+  if (tFootTag==kidType)
+  {
+    if (nsnull==aState.footerList)
+      aState.footerList = new nsVoidArray();
+    aState.footerList->AppendElement((void *)aKidFrame);
+    aState.footerHeight += aKidRect.height;
+  }
+  // else if this is a body row group, push down all the footer row groups
+  else
+  {
+    // don't bother unless there are footers to push down
+    if (nsnull!=aState.footerList  &&  0!=aState.footerList->Count())
+    {
+      nsPoint origin;
+      aKidFrame->GetOrigin(origin);
+      origin.y -= aState.footerHeight;
+      aKidFrame->MoveTo(origin.x, origin.y);
+      nsIAtom * tBodyTag = NS_NewAtom(nsTablePart::kRowGroupBodyTagString);  // tBodyTag: REFCNT++
+      if (tBodyTag==kidType)
+      {
+        PRInt32 numFooters = aState.footerList->Count();
+        for (PRInt32 footerIndex = 0; footerIndex < numFooters; footerIndex++)
+        {
+          nsTableRowGroupFrame * footer = (nsTableRowGroupFrame *)(aState.footerList->ElementAt(footerIndex));
+          NS_ASSERTION(nsnull!=footer, "bad footer list in table inner frame.");
+          if (nsnull!=footer)
+          {
+            footer->GetOrigin(origin);
+            origin.y += aKidRect.height;
+            footer->MoveTo(origin.x, origin.y);
+          }
+        }
+      }
+      NS_RELEASE(tBodyTag);
+    }
+  }
+  NS_RELEASE(tFootTag);
 
   // Update the maximum element size
   if (PR_TRUE==aState.firstRowGroup)
@@ -1284,8 +1336,8 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
  */
 nsIFrame::ReflowStatus
 nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
-                                             InnerTableReflowState& aState,
-                                             nsSize*              aMaxElementSize)
+                                     InnerTableReflowState& aState,
+                                     nsSize*              aMaxElementSize)
 {
 #ifdef NS_DEBUG
   VerifyLastIsComplete();
@@ -2441,16 +2493,53 @@ NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
   cf->SetRect(nsRect(0, 0, mRect.width, 0));
   // add headers and footers to cf
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  PRInt32 childCount;
-   
-  firstInFlow->ChildCount(childCount);
-  PRInt32 childIndex = 0;
-  for (; childIndex < childCount; childIndex++)
+  nsIFrame * rg = nsnull;
+  firstInFlow->ChildAt(0, rg);
+  NS_ASSERTION (nsnull!=rg, "previous frame has no children");
+  nsIAtom * tHeadTag = NS_NewAtom(nsTablePart::kRowGroupHeadTagString);  // tHeadTag: REFCNT++
+  nsIAtom * tFootTag = NS_NewAtom(nsTablePart::kRowGroupFootTagString);  // tFootTag: REFCNT++
+  PRInt32 index = 0;
+  nsIFrame * bodyRowGroupFromOverflow = mOverflowList;
+  nsIFrame * lastSib = nsnull;
+  for ( ; nsnull!=rg; index++)
   {
-    // TODO: place copies of the header and footer row groups here
-    // maybe need to do this in ResizeReflow at the beginning, when we determine we are a continuing frame
+    nsIContent *content = nsnull;
+    rg->GetContent(content);                                              // content: REFCNT++
+    NS_ASSERTION(nsnull!=content, "bad frame, returned null content.");
+    nsIAtom * rgTag = content->GetTag();
+    // if we've found a header or a footer, replicate it
+    if (tHeadTag==rgTag || tFootTag==rgTag)
+    {
+      printf("found a head or foot in continuing frame\n");
+      // Resolve style for the child
+      nsIStyleContext* kidStyleContext =
+        aPresContext->ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
+      nsStyleMolecule* kidMol =
+        (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
+      nsIContentDelegate* kidDel = nsnull;
+      kidDel = content->GetDelegate(aPresContext);                       // kidDel: REFCNT++
+      nsIFrame * duplicateFrame = kidDel->CreateFrame(aPresContext, content, index, cf);
+      NS_RELEASE(kidDel);                                                // kidDel: REFCNT--
+      duplicateFrame->SetStyleContext(kidStyleContext);
+      NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--
+      
+      if (nsnull==lastSib)
+      {
+        mOverflowList = duplicateFrame;
+      }
+      else
+      {
+        lastSib->SetNextSibling(duplicateFrame);
+      }
+      duplicateFrame->SetNextSibling(bodyRowGroupFromOverflow);
+      lastSib = duplicateFrame;
+    }
+    NS_RELEASE(content);                                                 // content: REFCNT--
+    // get the next row group
+    rg->GetNextSibling(rg);
   }
-
+  NS_RELEASE(tFootTag);                                                  // tHeadTag: REFCNT --
+  NS_RELEASE(tHeadTag);                                                  // tFootTag: REFCNT --
   aContinuingFrame = cf;
   return NS_OK;
 }

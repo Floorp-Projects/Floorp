@@ -305,7 +305,13 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
   //NS_ASSERTION(0<state.y, "illegal height after reflow");
   //NS_ASSERTION(0<state.innerTableMaxSize.width, "illegal width after reflow");
   aDesiredSize.width  = state.innerTableMaxSize.width;
-  aDesiredSize.height = state.y;
+  /* if we're incomplete, take up all the remaining height so we don't waste time
+   * trying to lay out in a slot that we know isn't tall enough to fit our minimum.
+   * otherwise, we're as tall as our kids want us to be */
+  if (frNotComplete == aStatus)
+    aDesiredSize.height = aMaxSize.height;
+  else 
+    aDesiredSize.height = state.y;
 
   if (gsDebug==PR_TRUE) 
   {
@@ -486,7 +492,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
 
     // Did the child fit?
     if ((kidSize.height > aState.availSize.height) && (kidFrame != mFirstChild)) {
-      // The child is too wide to fit in the available space, and it's
+      // The child is too tall to fit in the available space, and it's
       // not our first child
 
       // Since we are giving the next-in-flow our last child, we
@@ -518,8 +524,6 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     // Update mLastContentIsComplete now that this kid fits
     mLastContentIsComplete = PRBool(status == frComplete);
 
-    // Is the child complete?
-    mLastContentIsComplete = PRBool(status == frComplete);
     if (frNotComplete == status) {
       // No, the child isn't complete
       nsIFrame* kidNextInFlow;
@@ -555,6 +559,21 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
       kidFrame->GetNextSibling(nextSibling);
       if (nsnull != nextSibling) {
         PushChildren(nextSibling, kidFrame, lastContentIsComplete);
+        /* debug */
+        /*
+        printf ("having just pushed children, here is the frame hierarchy.\n");
+        nsIFrame *p;
+        GetGeometricParent(p);
+        nsIFrame *root;
+        while (nsnull!=p)
+        {
+          root = p;
+          p->GetGeometricParent(p);
+        }
+        root->List();
+        fflush(stdout);
+        */
+        /* end debug */
         SetLastContentOffset(prevKidFrame);
       }
       result = PR_FALSE;

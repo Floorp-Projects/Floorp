@@ -593,7 +593,7 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
       // if aContent is a body and the current child is a footer, stop, we've found the spot
       else if (tBodyTag==rowGroupTag && tFootTag==tableChildTag)
       {
-        break;
+        continue;
       }
       // if aContent is a body and we've gotten this far, keep going
       else if (tBodyTag==rowGroupTag)
