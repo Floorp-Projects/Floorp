@@ -40,6 +40,7 @@
 #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
 #define READTYPE  PRInt32
 #else
+#include "windows.h"
 #include "zipstub.h"
 #undef NETSCAPE       // undoes prtypes damage in zlib.h
 #define ZFILE_CREATE  "wb"
@@ -653,6 +654,10 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   PRBool      bRead;
   PRBool      bWrote;
 
+#ifdef STANDALONE 
+  MSG msg;
+#endif /* STANDALONE */
+
   PR_ASSERT( aItem != 0 && aOutname != 0 );
 
   //-- allocate deflation buffers
@@ -746,6 +751,13 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
     else
       zerr = Z_STREAM_END;
 
+#ifdef STANDALONE 
+    while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+    {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+#endif /* STANDALONE */
   } // while
 
   //-- write last inflated bit to disk
