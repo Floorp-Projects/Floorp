@@ -1,8 +1,0 @@
-Makefile
-gtkmozilla.lo
-GtkMozillaContainer.lo
-GtkMozillaInputStream.lo
-nsSetupRegistry.lo
-.libs
-libgtkmozilla.la
-nsNewTimer.lo

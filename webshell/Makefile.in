@@ -28,10 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src
 
-ifdef MOZ_ENABLE_GTK_MOZILLA
-DIRS		+= embed
-endif
-
 ifdef ENABLE_TESTS
 DIRS += tests
 endif
