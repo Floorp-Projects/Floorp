@@ -516,17 +516,16 @@ print "
  <A HREF=\"show_activity.cgi?id=$id\">View Bug Activity</A>
  &nbsp; | &nbsp;
  <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
-</B></FONT><BR>
+</B></FONT>
 ";
 
 if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
-  print "
-<P>
-<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"" 
-       . Param("move-button-text") . "\">";
+  print "&nbsp; <FONT size=\"+1\"><B> | </B></FONT> &nbsp;"
+       ."<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"" 
+       . Param("move-button-text") . "\">\n";
 }
 
-print "</FORM>";
+print "<BR></FORM>";
 
 print "
 <table><tr><td align=left><B>Description:</B></td>
