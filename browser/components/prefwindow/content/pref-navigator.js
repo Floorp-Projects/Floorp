@@ -213,7 +213,7 @@ function saveFontPrefs()
   }
 }
 
-#ifdef XP_WIN
+#ifdef HAVE_SHELL_SERVICE
 function checkNow()
 {
   var shell = getShellService();
