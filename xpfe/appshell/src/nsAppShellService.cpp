@@ -69,8 +69,6 @@ public:
 
   NS_IMETHOD Initialize(void);
   NS_IMETHOD Run(void);
-  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWebShellWindow* aWindow, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
-  NS_IMETHOD DispatchNativeEvent(void * aEvent);
   NS_IMETHOD Shutdown(void);
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
@@ -174,22 +172,6 @@ NS_IMETHODIMP
 nsAppShellService::Run(void)
 {
   return mAppShell->Run();
-}
-
-NS_IMETHODIMP
-nsAppShellService::GetNativeEvent(void *& aEvent, nsIWebShellWindow* aWindow, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
-{
-  nsIWidget *windowWidget = nsnull;
-  if (aWindow != nsnull)
-    if (NS_FAILED(aWindow->GetWidget(windowWidget)))
-      windowWidget = nsnull;
-  return mAppShell->GetNativeEvent(aEvent, windowWidget, aIsInWindow, aIsMouseEvent);
-}
-
-NS_IMETHODIMP
-nsAppShellService::DispatchNativeEvent(void * aEvent)
-{
-  return mAppShell->DispatchNativeEvent(aEvent);
 }
 
 NS_IMETHODIMP

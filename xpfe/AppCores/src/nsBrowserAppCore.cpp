@@ -805,91 +805,37 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
 NS_IMETHODIMP    
 nsBrowserAppCore::DoDialog()
 {
-  nsresult rv;
-  nsString controllerCID;
+  /* (adapted from nsToolkitCore. No one's using this function, are they!?)
+  */
+  nsresult           rv;
+  nsString           controllerCID;
+  nsIAppShellService *appShell;
+  nsIWebShellWindow  *window;
 
-  char * urlstr = nsnull;
+  window = nsnull;
 
-  nsIAppShellService* appShell = nsnull;
+  nsCOMPtr<nsIURL> urlObj;
+  rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/Password.html");
+  if (NS_FAILED(rv))
+    return rv;
 
-  urlstr = "resource:/res/samples/Password.html";
+  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
+                                    (nsISupports**) &appShell);
+  if (NS_FAILED(rv))
+    return rv;
 
-  /*
-   * Create the Application Shell instance...
-   */
-  rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
-                                    (nsISupports**)&appShell);
-  if (!NS_SUCCEEDED(rv)) {
-    goto done;
-  }
-
-  /*
-   * Initialize the Shell...
-   */
-  rv = appShell->Initialize();
-  if (!NS_SUCCEEDED(rv)) {
-    goto done;
-  }
- 
-  /*
-   * Post an event to the shell instance to load the AppShell 
-   * initialization routines...  
-   * 
-   * This allows the application to enter its event loop before having to 
-   * deal with GUI initialization...
-   */
-  ///write me...
-  nsIURL* url;
-  nsIWebShellWindow* newWindow;
-  
-  rv = NS_NewURL(&url, urlstr);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-
-
-  /*
-   * XXX: Currently, the CID for the "controller" is passed in as an argument 
-   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
-   *      components this will be specified in the XUL description...
-   */
+  // hardwired temporary hack.  See nsAppRunner.cpp at main()
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateDialogWindow(mWebShellWin, url, controllerCID, newWindow,
-              (nsIStreamObserver *)this, nsnull, 516, 650);
-//  newWindow->Resize(300, 200, PR_TRUE); (until Resize gets moved into nsIWebShellWindow)
-  NS_RELEASE(url);
-  
-   /*
-    * Start up the main event loop...
-    */
-  rv = NS_OK;
-  while (rv == NS_OK) {
-    void * data;
-    PRBool inWin;
-    PRBool isMouseEvent;
-    rv = appShell->GetNativeEvent(data, newWindow, inWin, isMouseEvent);
-    //if (rv == NS_OK) {
-    //  if (APP_DEBUG) printf("In win %d   is mouse %d\n", inWin, isMouseEvent);
-    //} 
-    if (rv == NS_OK && (inWin || (!inWin && !isMouseEvent))) {
-      appShell->DispatchNativeEvent(data);
-    }
-  }
 
-  /*
-   * Shut down the Shell instance...  This is done even if the Run(...)
-   * method returned an error.
-   */
-  (void) appShell->Shutdown();
+  appShell->CreateDialogWindow(mWebShellWin, urlObj, controllerCID, window,
+                               nsnull, nsnull, 615, 650);
+  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+//  window->Resize(300, 200, PR_TRUE); (until Resize gets moved into nsIWebShellWindow)
 
-done:
+  if (window != nsnull)
+    window->ShowModal();
 
-  /* Release the shell... */
-  if (nsnull != appShell) {
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

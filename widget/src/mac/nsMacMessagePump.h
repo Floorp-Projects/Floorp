@@ -60,6 +60,9 @@ public:
 	virtual 		~nsMacMessagePump();
   
 	void			DoMessagePump();
+	PRBool			GetEvent(EventRecord &theEvent);
+	void			DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
+	void			StartRunning() {mRunning = PR_TRUE;}
 	void			StopRunning() {mRunning = PR_FALSE;}
 
 private:

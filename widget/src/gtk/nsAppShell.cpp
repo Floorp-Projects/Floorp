@@ -134,6 +134,31 @@ NS_METHOD nsAppShell::Create(int *argc, char **argv)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Spinup - do any preparation necessary for running a message loop
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::Spinup()
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Spindown - do any cleanup necessary for finishing a message loop
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::Spindown()
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// GetNativeData
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Run()
 {
 
@@ -214,16 +239,14 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
-// XXX temporary code for Dialog investigation
-nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
+NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 {
-  aIsInWindow   = PR_FALSE;
-  aIsMouseEvent = PR_FALSE;
-
+  aRealEvent = PR_FALSE;
+  aEvent = 0;
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
+NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
   return NS_ERROR_FAILURE;
 }

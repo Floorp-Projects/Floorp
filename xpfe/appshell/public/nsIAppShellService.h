@@ -45,8 +45,6 @@ public:
 
   NS_IMETHOD Initialize(void) = 0;
   NS_IMETHOD Run(void) = 0;
-  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWebShellWindow* aWindow, PRBool &aIsInWindow, PRBool &aIsMouseEvent) = 0;
-  NS_IMETHOD DispatchNativeEvent(void * aEvent) = 0;
   NS_IMETHOD Shutdown(void) = 0;
 
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
