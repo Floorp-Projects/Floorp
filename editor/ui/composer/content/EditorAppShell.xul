@@ -45,7 +45,7 @@
     <key id="inserthtmlkb" disabled="false" shift="false" command="true" alt="true" key="i" onkeypress="EditorInsertHTML()"/>
     <key id="pastequotationkb" disabled="false" shift="false" command="true" alt="true" key="v" onkeypress="EditorPasteAsQuotation()" />
 
-    <key id="removestyleskb" disabled="false" shift="true" command="true" alt="false" key="k" onkeypress="RemoveStyles()" />
+    <key id="removestyleskb" disabled="false" shift="true" command="true" alt="false" key="k" onkeypress="EditorRemoveStyle('all')" />
     <key id="decreasefontsizekb" disabled="false" shift="true" command="true" alt="false" key="[" onkeypress="DecreaseFontSize()" />
     <key id="increasefontsizekb" disabled="false" shift="true" command="true" alt="false" key="]" onkeypress="IncreaseFontSize()" />
 
@@ -322,7 +322,7 @@
              accesskey="&inserttable.accesskey;"
 				     onaction="EditorInsertTable()"/>
 		  <menuitem value="&insertHTMLSourceCmd.label;"
-             accesskey="&insertsource.accesskey;"
+             accesskey="&insertsource.accesskey;" key="inserthtmlkb"
 				     onaction="EditorInsertHTML()"/>
 		  <menuseparator />
 		  <menuitem value="&insertLineBreakCmd.label;"
@@ -384,13 +384,13 @@
       <menu value="&fontStyleMenu.label;" accesskey="&formatstylemenu.accesskey;">
 			<menupopup>
 			<menuitem value="&styleBoldCmd.label;"
-             accesskey="&stylebold.accesskey;"
+             accesskey="&stylebold.accesskey;" key="boldkb"
 				     onaction="EditorApplyStyle('b')"/>
 			<menuitem value="&styleItalicCmd.label;"
-             accesskey="&styleitalic.accesskey;"
+             accesskey="&styleitalic.accesskey;" key="italickb"
 				     onaction="EditorApplyStyle('i')"/>
 			<menuitem value="&styleUnderlineCmd.label;"
-             accesskey="&styleunderline.accesskey;"
+             accesskey="&styleunderline.accesskey;" key="underlinekb"
 				     onaction="EditorApplyStyle('u')"/>
 			<menuitem value="&styleStrikeThruCmd.label;"
              accesskey="&stylestrikethru.accesskey;"
@@ -478,7 +478,7 @@
 			</menupopup>
 		  </menu>
 		  <menuitem value="&removeAllStylesCmd.label;"
-             accesskey="&formatremovestyles.accesskey;"
+             accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
 				     onaction="EditorRemoveStyle('all')"/>
 		  <menuitem value="&removeLinksCmd.label;"
              accesskey="&formatremovelinks.accesskey;"
@@ -626,7 +626,7 @@
 				      onaction="EditorNewPlaintext()"/>
       <menuseparator />
       <menuitem value="&checkSpellingCmd.label;"
-              accesskey="&toolspellcheck.accesskey;"
+              accesskey="&toolspellcheck.accesskey;" key="checkspellingkb"
 				      onaction="CheckSpelling()"/>
       <menuitem value="&setFocusCmd.label;"
               accesskey="&toolsetfocus.accesskey;"
