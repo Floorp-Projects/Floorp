@@ -52,8 +52,12 @@
 
 #include "xpgetstr.h"
 
-#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(SCO_SV) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC)
+#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC)
 #include <sys/statvfs.h> /* for statvfs() */
+#define STATFS statvfs
+#elif defined(SCO_SV)
+#define _SVID3		  /* for statvfs.h */
+#include <sys/statvfs.h>  /* for statvfs() */
 #define STATFS statvfs
 #elif defined(HPUX) 
 #include <sys/vfs.h>      /* for statfs() */
