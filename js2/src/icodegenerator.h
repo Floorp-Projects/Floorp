@@ -140,12 +140,12 @@ namespace JavaScript {
 
     class Return : public Instruction_1<Register> {
     public:
-        Return(Register source) : Instruction_1(RETURN, source) {}
+        Return(Register source) : Instruction_1<Register>(RETURN, source) {}
     };
 
     class NewObject : public Instruction_1<Register> {
     public:
-        NewObject(Register dest) : Instruction_1(NEW_OBJECT, dest) {}
+        NewObject(Register dest) : Instruction_1<Register>(NEW_OBJECT, dest) {}
     };
 
     typedef std::vector<Instruction *> InstructionStream;
