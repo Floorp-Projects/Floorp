@@ -1558,61 +1558,55 @@ NS_IMETHODIMP nsScrollingView::GetLineHeight(nscoord *aHeight)
 
 NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY)
 {
-	nsIWidget* widget = nsnull;
-  PRUint32 newPosX = 0, newPosY = 0;
+  nsCOMPtr<nsIWidget> widget;
+  nscoord newPosX = 0, newPosY = 0;
 
   if (aNumLinesX != 0) {
-	  if (mHScrollBarView->GetWidget(widget) == NS_OK) {
-		  nsIScrollbar* scrollh = nsnull;
-		  if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh) == NS_OK) {
-			  PRUint32  oldPos  = 0;
-			  PRUint32  lineInc;
+    if (mHScrollBarView->GetWidget(*getter_AddRefs(widget)) == NS_OK) {
+      nsCOMPtr<nsIScrollbar> scrollh( do_QueryInterface(widget) );
+      if (scrollh) {
+        PRUint32  oldPos  = 0;
+        PRUint32  lineInc;
 
-			  scrollh->GetPosition(oldPos);
-			  scrollh->GetLineIncrement(lineInc);
-			  NS_RELEASE(scrollh);
-			  
-			  newPosX = oldPos + lineInc * aNumLinesX;
-		  }
-		  NS_RELEASE(widget);
-	  }
+        scrollh->GetPosition(oldPos);
+        scrollh->GetLineIncrement(lineInc);
+
+        newPosX = oldPos + lineInc * aNumLinesX;
+      }
+    }
   }
   if (aNumLinesY != 0) {
-	  if (mVScrollBarView->GetWidget(widget) == NS_OK) {
-		  nsIScrollbar* scrollv = nsnull;
-		  if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv) == NS_OK) {
-			  PRUint32  oldPos  = 0;
-			  PRUint32  lineInc;
+    if (mVScrollBarView->GetWidget(*getter_AddRefs(widget)) == NS_OK) {
+      nsCOMPtr<nsIScrollbar> scrollv( do_QueryInterface(widget) );
+      if (scrollv) {
+        PRUint32  oldPos  = 0;
+        PRUint32  lineInc;
 
-			  scrollv->GetPosition(oldPos);
-			  scrollv->GetLineIncrement(lineInc);
-			  NS_RELEASE(scrollv);
-			  
-			  newPosY = oldPos + lineInc * aNumLinesY;
-		  }
-		  NS_RELEASE(widget);
-	  }
+        scrollv->GetPosition(oldPos);
+        scrollv->GetLineIncrement(lineInc);
+
+        newPosY = oldPos + lineInc * aNumLinesY;
+      }
+    }
   }
 
-	nsSize    clipSize;
-	mClipView->GetDimensions(&clipSize.width, &clipSize.height);
-	
+  nsSize    clipSize;
+  mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+
   //sanity check values
-	if (newPosX > (mSizeX - clipSize.height))
-		newPosX = mSizeX - clipSize.height;
-	if (newPosX < 0)
-		newPosX = 0;
+  if (newPosX > (mSizeX - clipSize.height))
+    newPosX = mSizeX - clipSize.height;
+  else if (newPosX < 0)
+    newPosX = 0;
 
   if (newPosY > (mSizeY - clipSize.height))
-		newPosY = mSizeY - clipSize.height;
-	if (newPosY < 0)
-		newPosY = 0;
+    newPosY = mSizeY - clipSize.height;
+  else if (newPosY < 0)
+    newPosY = 0;
 
-  if (newPosX || newPosY) {
-	  ScrollTo(newPosX, newPosY, 0);
-  }
+  ScrollTo(newPosX, newPosY, 0);
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::ScrollByPages(PRInt32 aNumPages)
