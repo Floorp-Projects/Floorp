@@ -67,6 +67,7 @@ pref("mail.imap.auto_unsubscribe_from_noselect_folders",    true);
 pref("mail.imap.allow_multiple_folder_connections",     false);
 pref("mail.imap.cleanup_inbox_on_exit",     false);
 pref("mail.imap.mime_parts_on_demand",      false);
+pref("mail.imap.mime_parts_on_demand_max_depth", 15);
 pref("mail.imap.mime_parts_on_demand_threshold", 15000);
 pref("mail.imap.optimize_header_dl",        false);
 pref("mail.use_altmail",                    false);
