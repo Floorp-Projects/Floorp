@@ -109,7 +109,7 @@ js_DisablePropertyCache(JSContext *cx)
 {
     JS_ASSERT(!cx->runtime->propertyCache.disabled);
     cx->runtime->propertyCache.disabled = JS_TRUE;
-}        
+}
 
 void
 js_EnablePropertyCache(JSContext *cx)
@@ -948,6 +948,20 @@ out:
 }
 
 JSBool
+js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
+                    JSAccessMode mode, uintN argc, jsval *argv, jsval *rval)
+{
+    JS_ASSERT(mode == JSACC_READ || mode == JSACC_WRITE);
+    if (cx->runtime->checkObjectAccess &&
+        !cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode,
+                                        &fval)) {
+        return JS_FALSE;
+    }
+
+    return js_InternalCall(cx, obj, fval, argc, argv, rval);
+}
+
+JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN special, jsval *result)
 {
@@ -1178,10 +1192,13 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     if (report != JSREPORT_ERROR) {
         /*
          * Allow redeclaration of variables and functions, but insist that the
-         * new value is not a getter or setter -- or if it is, insist that the
-         * property being replaced is not permanent.
+         * new value is not a getter if the old value was, ditto for setters --
+         * unless prop is impermanent (in which case anyone could delete it and
+         * redefine it, willy-nilly).
          */
         if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
+            return JS_TRUE;
+        if ((~(oldAttrs ^ attrs) & (JSPROP_GETTER | JSPROP_SETTER)) == 0)
             return JS_TRUE;
         if (!(oldAttrs & JSPROP_PERMANENT))
             return JS_TRUE;
