@@ -1384,7 +1384,7 @@ PRBool BasicTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
     return PR_FALSE; // XXX add cases where table has coord width and cell is constrained
   }
 
-  PRBool desChanged = PR_FALSE;
+  PRBool desChanged = PR_TRUE;
   if (((cellDes > aPrevCellDes) && (cellDes <= colDes)) ||
       ((cellDes <= aPrevCellDes) && (aPrevCellDes <= colDes))) {
     desChanged = PR_FALSE;
