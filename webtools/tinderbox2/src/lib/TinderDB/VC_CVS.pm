@@ -134,7 +134,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.24 $ )[1];
+$VERSION = ( qw $Revision: 1.25 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -599,9 +599,6 @@ sub status_table_row {
          HTMLPopUp::text_browser_color_string($cell_color, $char);
   }
   
-  my ($query_links) = '';
-  $query_links.=  "\t\t".$text_browser_color_string."\n";
-
   if ( scalar(%authors) ) {
     
     # find the times which bound the cell so that we can set up a
@@ -740,8 +737,11 @@ sub status_table_row {
     
   } else {
     
+      my $cell_contents = $text_browser_color_string ||
+          $HTMLPopUp::EMPTY_TABLE_CELL;
+
     @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
-               "<td align=center $cell_color>$text_browser_color_string</td>\n");
+               "<td align=center $cell_color>$cell_contents</td>\n");
   }
   
   

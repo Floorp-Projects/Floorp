@@ -143,7 +143,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.8 $ )[1];
+$VERSION = ( qw $Revision: 1.9 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -507,9 +507,12 @@ sub status_table_row {
                "");
         
   } else {
-    
+
+      my $cell_contents = $text_browser_color_string ||
+          $HTMLPopUp::EMPTY_TABLE_CELL;
+
     @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
-               "<td align=center $cell_options>$text_browser_color_string</td>\n");
+               "<td align=center $cell_options>$cell_contents</td>\n");
   }
   
   

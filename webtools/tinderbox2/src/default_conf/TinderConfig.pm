@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.26 $ 
-# $Date: 2002/05/01 02:54:12 $ 
+# $Revision: 1.27 $ 
+# $Date: 2002/05/01 03:07:20 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -134,6 +134,14 @@ $PopUpImpl = (
 	      # 'HTMLPopUp::None',
 	      # 'HTMLPopUp::PortableLayers',
 	     );
+
+# Which string should be used in empty table cells?  If this string is
+set to "&nbsp;" then all cell squares will have borders on them, If
+this string is set to "" then many cells may be missing borders.
+
+
+#$EMPTY_TABLE_CELL = "&nbsp;";
+$EMPTY_TABLE_CELL = "";
 
 
 # Use the DB implementations you wish to use.
