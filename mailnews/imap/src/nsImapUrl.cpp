@@ -419,6 +419,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 	{
 		m_imapAction   					 = nsImapMsgFetch;
 		ParseUidChoice();
+		PR_FREEIF(m_sourceCanonicalFolderPathSubString);
 		ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
 		ParseListOfMessageIds();
 	}
