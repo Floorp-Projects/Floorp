@@ -483,7 +483,9 @@ nsresult
 nsServiceManager::ShutdownGlobalServiceManager(nsIServiceManager* *result)
 {
     if (mGlobalServiceManager != NULL) {
-        NS_RELEASE(mGlobalServiceManager);
+        nsrefcnt cnt;
+        NS_RELEASE2(mGlobalServiceManager, cnt);
+        NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
         mGlobalServiceManager = NULL;
     }
     return NS_OK;
