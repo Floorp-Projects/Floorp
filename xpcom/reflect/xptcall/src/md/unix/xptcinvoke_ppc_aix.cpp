@@ -43,61 +43,6 @@
 #error "This code is for PowerPC only"
 #endif
 
-typedef unsigned nsXPCVariant;
-
-extern "C" PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
-{
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
-    {
-        if(s->IsPtrData())
-        {
-            result++;
-            continue;
-        }
-        switch(s->type)
-        {
-            case nsXPTType::T_I8     :
-            case nsXPTType::T_I16    :
-            case nsXPTType::T_I32    :
-                result++;
-                break;
-            case nsXPTType::T_I64    :
-                result+=2;
-                break;
-            case nsXPTType::T_U8     :
-            case nsXPTType::T_U16    :
-            case nsXPTType::T_U32    :
-                result++;
-                break;
-            case nsXPTType::T_U64    :
-                result+=2;
-                break;
-            case nsXPTType::T_FLOAT  :
-                result++;
-                break;
-            case nsXPTType::T_DOUBLE :
-                result+=2;
-                break;
-            case nsXPTType::T_BOOL   :
-            case nsXPTType::T_CHAR   :
-            case nsXPTType::T_WCHAR  :
-                result++;
-                break;
-            default:
-                // all the others are plain pointer types
-                result++;
-                break;
-        }
-    }
-    // nuts, I know there's a cooler way of doing this, but it's late
-    // now and it'll probably come to me in the morning.
-    if (result & 0x3) 
-        result += 4 - (result & 0x3);     // ensure q-word alignment
-    return result;
-}
-
 extern "C" void
 invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double *fprData)
 {
