@@ -790,7 +790,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 		return(NS_ERROR_FAILURE);
 
 	nsCOMPtr<nsIAtom>	containmentAtom = NS_NewAtom(templateContainmentValue);
-	if (nsnull == containmentAtom)
+	if (!containmentAtom)
 		return(NS_ERROR_OUT_OF_MEMORY);
 
 	for (PRInt32 loop=0; loop<count; loop++)
@@ -996,7 +996,7 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aP
 		return(rv);
 
 	if (NS_SUCCEEDED(rv = FindTemplateForElement(tempNode, getter_AddRefs(aTemplate))) &&
-		(nsnull != aTemplate))
+		(aTemplate))
 	{
 		nsCOMPtr<nsIContent>	children = do_QueryInterface(aElement);
 
@@ -1007,7 +1007,7 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aP
                               kSubcontainmentAtom, attrValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 		{
 			nsCOMPtr<nsIAtom>	childrenAtom = NS_NewAtom(attrValue);
-			if (nsnull != childrenAtom)
+			if (childrenAtom)
 			{
 				if (NS_SUCCEEDED(rv = EnsureElementHasGenericChild(aElement, kNameSpaceID_XUL,
 							childrenAtom, getter_AddRefs(children))))
