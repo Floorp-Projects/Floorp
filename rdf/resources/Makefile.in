@@ -27,11 +27,11 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES = \
-	article.gif                     \
-	customize.css                   \
-	customize.js                    \
-	customize.xul                   \
-	document.gif			\
+	article.gif \
+	document.gif \
+	folder-closed.gif \
+	folder-open.gif \
+	loading.gif \
 	dom-test-1.xul			\
 	dom-test-2.xul			\
 	dom-test-3.xul			\
@@ -41,28 +41,7 @@ FILES = \
 	dom-test-6.xul			\
 	dom-test-7.xul			\
 	dom-test-8.xul			\
-	dummy-flash.rdf			\
-	flash-registry.rdf		\
-	flash.css			\
-	flash.js			\
-	flash.xul			\
-	flames.gif			\
-	folder-closed.gif		\
-	folder-open.gif			\
 	ignore-test.xul			\
-	list-down.gif                   \
-	list-down-dis.gif               \
-	list-up.gif                     \
-	list-up-dis.gif                 \
-	loading.gif			\
-	online.gif			\
-	sidebar.css			\
-	sidebar.js			\
-	sidebar-browser.rdf		\
-	sidebar-browser.xul		\
-	sidebar-registry.rdf            \
-	stock.gif			\
-	unread.gif			\
 	xpidl-test-1.xul		\
 	$(NULL)
 
