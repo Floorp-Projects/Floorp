@@ -35,14 +35,8 @@ var pref = Components.classes["@mozilla.org/preferences;1"]
 
 var appCore = null;
 
-//cached elements/fields
+//cached elements
 var gBrowser = null;
-var statusTextFld = null;
-var statusMeter = null;
-var throbberElement = null;
-var stopButton = null;
-var stopMenu = null;
-var stopContext = null;
 
 // focused frame URL
 var gFocusedURL = null;
@@ -128,217 +122,6 @@ function UpdateInternetSearchResults(event)
     } catch (ex) {
     }
   }
-}
-
-function nsXULBrowserWindow()
-{
-  this.defaultStatus = gNavigatorBundle.getString("defaultStatus");
-}
-
-nsXULBrowserWindow.prototype =
-{
-  useRealProgressFlag : false,
-  totalRequests : 0,
-  finishedRequests : 0,
-
-  // Stored Status, Link and Loading values
-  status : "",
-  defaultStatus : "",
-  jsStatus : "",
-  jsDefaultStatus : "",
-  overLink : "",
-  startTime : 0,
-
-  statusTimeoutInEffect : false,
-
-  hideAboutBlank : true,
-
-  QueryInterface : function(iid)
-  {
-    if (iid.equals(Components.interfaces.nsIXULBrowserWindow))
-      return this;
-    throw Components.results.NS_NOINTERFACE;
-  },
-
-  setJSStatus : function(status)
-  {
-    this.jsStatus = status;
-    this.updateStatusField();
-    // set empty so defaults show up next change
-    this.jsStatus = "";
-  },
-
-  setJSDefaultStatus : function(status)
-  {
-    this.jsDefaultStatus = status;
-    this.updateStatusField();
-  },
-
-  setDefaultStatus : function(status)
-  {
-    this.defaultStatus = status;
-    this.updateStatusField();
-  },
-
-  setOverLink : function(link, b)
-  {
-    this.overLink = link;
-    this.updateStatusField();
-    // set empty so defaults show up next change
-    this.overLink = "";
-  },
-
-  updateStatusField : function()
-  {
-    var text = this.overLink || this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
-
-    if (!statusTextFld)
-      statusTextFld = document.getElementById("statusbar-display");
-
-    // check the current value so we don't trigger an attribute change
-    // and cause needless (slow!) UI updates
-    if (statusTextFld.label != text) {
-      statusTextFld.label = text;
-    }
-  },
-
-  onProgress : function (request, current, max)
-  {
-    if (!this.useRealProgressFlag && request)
-      return;
-
-    if (!statusMeter)
-      statusMeter = document.getElementById("statusbar-icon");
-
-    if (max > 0) {
-      statusMeter.mode = "normal";
-
-      // This is highly optimized.  Don't touch this code unless
-      // you are intimately familiar with the cost of setting
-      // attrs on XUL elements. -- hyatt
-      var percentage = (current * 100) / max ;
-      statusMeter.value = percentage;
-    } else {
-      statusMeter.mode = "undetermined";
-    }
-  },
-
-  onStateChange : function(request, state)
-  {
-    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-
-    if (!throbberElement)
-      throbberElement = document.getElementById("navigator-throbber");
-    if (!statusMeter)
-      statusMeter = document.getElementById("statusbar-icon");
-    if (!stopButton)
-      stopButton = document.getElementById("stop-button");
-    if (!stopMenu)
-      stopMenu = document.getElementById("menuitem-stop");
-    if (!stopContext)
-      stopContext = document.getElementById("context-stop");
-
-    if (state & nsIWebProgressListener.STATE_START) {
-      if (state & nsIWebProgressListener.STATE_IS_NETWORK) {
-        // Remember when loading commenced.
-        this.startTime = (new Date()).getTime();
-
-        // Turn progress meter on.
-        statusMeter.mode = "undetermined";
-        throbberElement.setAttribute("busy", true);
-
-        // XXX: These need to be based on window activity...
-        stopButton.setAttribute("disabled", false);
-        stopMenu.setAttribute("disabled", false);
-        stopContext.setAttribute("disabled", false);
-
-        // Initialize the progress stuff...
-        this.useRealProgressFlag = false;
-        this.totalRequests = 0;
-        this.finishedRequests = 0;
-      }
-
-      if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
-        this.totalRequests += 1;
-      }
-    }
-    else if (state & nsIWebProgressListener.STATE_STOP) {
-      if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
-        this.finishedRequests += 1;
-        if (!this.useRealProgressFlag)
-          this.onProgress(null, this.finishedRequests, this.totalRequests);
-      }
-      if (state & nsIWebProgressListener.STATE_IS_NETWORK) {
-        var channel = request.QueryInterface(Components.interfaces.nsIChannel);
-        var location = channel.URI.spec;
-        var msg = "";
-        if (location != "about:blank") {
-          // Record page loading time.
-          var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
-          msg = gNavigatorBundle.getString("nv_done");
-          msg = msg.replace(/%elapsed%/, elapsed);
-        }
-        this.status = "";
-        this.setDefaultStatus(msg);
-
-        // Turn progress meter off.
-        statusMeter.mode = "normal";
-        statusMeter.value = 0;  // be sure to clear the progress bar
-        throbberElement.removeAttribute("busy");
-
-        // XXX: These need to be based on window activity...
-        stopButton.setAttribute("disabled", true);
-        stopMenu.setAttribute("disabled", true);
-        stopContext.setAttribute("disabled", true);
-      }
-    }
-    else if (state & nsIWebProgressListener.STATE_TRANSFERRING) {
-      if (state & nsIWebProgressListener.STATE_IS_DOCUMENT) {
-        var channel = request.QueryInterface(Components.interfaces.nsIChannel);
-        var ctype=channel.contentType;
-
-        if (ctype != "text/html")
-          this.useRealProgressFlag = true;
-
-        statusMeter.mode = "normal";
-      }
-
-      if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
-        if (!this.useRealProgressFlag)
-          this.onProgress(null, this.finishedRequests, this.totalRequests);
-      }
-    }
-  },
-
-  onLocationChange : function(location)
-  {
-    if (this.hideAboutBlank) {
-      this.hideAboutBlank = false;
-      if (location == "about:blank")
-        location = "";
-    }
-
-    // We should probably not do this if the value has changed since the user
-    // searched
-    gURLBar.value = location;
-
-    UpdateBackForwardButtons();
-  },
-
-  onStatus : function(request, status, msg)
-  {
-    if (!this.statusTimeoutInEffect) {
-      this.statusTimeoutInEffect = true;
-      this.status = msg;
-      this.updateStatusField();
-      setTimeout(updateStatus, 400);
-    }
-  }
-}
-
-function updateStatus()
-{
-  window.XULBrowserWindow.statusTimeoutInEffect = false;
 }
 
 function getBrowser()
@@ -463,7 +246,7 @@ function Startup()
   }
 
   // initialize observers and listeners
-  window.XULBrowserWindow = new nsXULBrowserWindow();
+  window.XULBrowserWindow = new nsBrowserStatusHandler();
   window.buttonPrefListener = new nsButtonPrefListener();
 
   // XXXjag hack for directory.xul/js
@@ -499,7 +282,7 @@ function Startup()
   // hook up UI through progress listener
   var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-  webProgress.addProgressListener(appCore);
+  webProgress.addProgressListener(window.XULBrowserWindow);
 
   // XXXjag see bug 68662
   getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", appCore);
@@ -558,9 +341,12 @@ function Shutdown()
   try {
     var interfaceRequestor = browser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-    webProgress.removeProgressListener(appCore);
+    webProgress.removeProgressListener(window.XULBrowserWindow);
   } catch (ex) {
   }
+
+  window.XULBrowserWindow.destroy();
+  window.XULBrowserWindow = null;
 
   try {
     // If bookmarks are dirty, flush 'em to disk

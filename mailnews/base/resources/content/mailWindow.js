@@ -253,33 +253,16 @@ nsMsgStatusFeedback.prototype =
   setJSDefaultStatus : function(status)
     {
     },
-  setDefaultStatus : function(status)
-    {
-    },
   setOverLink : function(link)
     {
       this.showStatusString(link);
     },
-  onProgress : function (channel, current, max)
-    {
-    },
-  onStateChange : function (progress, request, state, status)
-    {
-    },
-  onStatus : function(channel, url, message)
-    {
-    },
-  onLocationChange : function(location)
-    {
-    },
   QueryInterface : function(iid)
-   {
-     if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
-     return this;
-     if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
-      return this;
-    throw Components.results.NS_NOINTERFACE;
-     return null;
+    {
+      if (iid.equals(Components.interfaces.nsIMsgStatusFeedback) ||
+          iid.equals(Components.interfaces.nsIXULBrowserWindow))
+        return this;
+      throw Components.results.NS_NOINTERFACE;
     },
 
   // nsIMsgStatusFeedback implementation.
