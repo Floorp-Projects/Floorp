@@ -221,7 +221,7 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
 
     if (aType == TYPE_UNIVERSAL) {
         // Create buttons based on the flags passed in.
-        for (int i = 0; i < MAX_BUTTONS; ++i) {
+        for (int i = 0; i < EMBED_MAX_BUTTONS; ++i) {
             if (!mButtonLabels[i].IsEmpty())
                 gtk_dialog_add_button(GTK_DIALOG(mWindow),
                                       mButtonLabels[i].get(), i);

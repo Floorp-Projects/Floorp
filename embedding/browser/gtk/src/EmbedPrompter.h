@@ -25,6 +25,8 @@
 #include <nsString.h>
 #include <gtk/gtk.h>
 
+#define EMBED_MAX_BUTTONS 3
+
 class EmbedPrompter {
 
 public:
@@ -43,8 +45,6 @@ public:
         TYPE_SELECT,
         TYPE_UNIVERSAL
     };
-
-    static const int MAX_BUTTONS = 3;
 
     nsresult Create(PromptType aType, GtkWindow* aParentWindow);
     void     SetTitle(const PRUnichar *aTitle);
@@ -80,7 +80,7 @@ private:
     PRBool       mCheckValue;
     nsCString    mUser;
     nsCString    mPass;
-    nsCString    mButtonLabels[MAX_BUTTONS];
+    nsCString    mButtonLabels[EMBED_MAX_BUTTONS];
     nsCString   *mItemList;
     PRUint32     mItemCount;
 
