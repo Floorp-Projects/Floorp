@@ -221,26 +221,26 @@ class nsInstall
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
-        PRInt32    FileOpDirCreate(nsFileSpec& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpDirGetParent(nsFileSpec& aTarget, nsFileSpec* aReturn);
-        PRInt32    FileOpDirRemove(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
-        PRInt32    FileOpDirRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpFileCopy(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpFileDelete(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
-        PRInt32    FileOpFileExists(nsFileSpec& aTarget, PRBool* aReturn);
-        PRInt32    FileOpFileExecute(nsFileSpec& aTarget, nsString& aParams, PRInt32* aReturn);
-        PRInt32    FileOpFileGetNativeVersion(nsFileSpec& aTarget, nsString* aReturn);
-        PRInt32    FileOpFileGetDiskSpaceAvailable(nsFileSpec& aTarget, PRInt64* aReturn);
-        PRInt32    FileOpFileGetModDate(nsFileSpec& aTarget, nsFileSpec::TimeStamp* aReturn);
-        PRInt32    FileOpFileGetSize(nsFileSpec& aTarget, PRUint32* aReturn);
-        PRInt32    FileOpFileIsDirectory(nsFileSpec& aTarget, PRBool* aReturn);
-        PRInt32    FileOpFileIsFile(nsFileSpec& aTarget, PRBool* aReturn);
-        PRInt32    FileOpFileModDateChanged(nsFileSpec& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn);
-        PRInt32    FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpDirCreate(nsInstallFolder& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpDirGetParent(nsInstallFolder& aTarget, nsFileSpec* aReturn);
+        PRInt32    FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileCopy(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileDelete(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileExists(nsInstallFolder& aTarget, PRBool* aReturn);
+        PRInt32    FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRInt32* aReturn);
+        PRInt32    FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aReturn);
+        PRInt32    FileOpFileGetDiskSpaceAvailable(nsInstallFolder& aTarget, PRInt64* aReturn);
+        PRInt32    FileOpFileGetModDate(nsInstallFolder& aTarget, nsFileSpec::TimeStamp* aReturn);
+        PRInt32    FileOpFileGetSize(nsInstallFolder& aTarget, PRUint32* aReturn);
+        PRInt32    FileOpFileIsDirectory(nsInstallFolder& aTarget, PRBool* aReturn);
+        PRInt32    FileOpFileIsFile(nsInstallFolder& aTarget, PRBool* aReturn);
+        PRInt32    FileOpFileModDateChanged(nsInstallFolder& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn);
+        PRInt32    FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutPath, nsString& aDescription, nsFileSpec& aWorkingPath, nsString& aParams, nsFileSpec& aIcon, PRInt32 aIconId, PRInt32* aReturn);
         PRInt32    FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt32* aReturn);
-        PRInt32    FileOpFileUnixLink(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileUnixLink(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
 
         void       LogComment(nsString& aComment);
 
