@@ -24,6 +24,9 @@ import java.io.*;
 import java.util.*;
 
 public class JavaAdapter extends ScriptableObject {
+    public boolean equals(Object obj) {
+    	return super.equals(obj);
+    }
     
     public String getClassName() {
         return "JavaAdapter";
@@ -88,8 +91,9 @@ public class JavaAdapter extends ScriptableObject {
         
         Hashtable generatedOverrides = new Hashtable();
         Hashtable generatedMethods = new Hashtable();
+        Hashtable generatedSupers = new Hashtable();
         
-        // if abstract class was specified, then generate appropriate overrides.
+        // generate methods to satisfy all specified interfaces.
         for (int i = 0; i < interfacesCount; i++) {
             Method[] methods = interfaces[i].getMethods();
             for (int j = 0; j < methods.length; j++) {
@@ -99,10 +103,11 @@ public class JavaAdapter extends ScriptableObject {
                     continue;
                 // make sure to generate only one instance of a particular 
                 // method/signature.
-            	String methodKey = getMethodSignature(method);
+                String methodName = method.getName();
+            	String methodKey = methodName + getMethodSignature(method);
             	if (! generatedOverrides.containsKey(methodKey)) {
-                    Class[] parms = method.getParameterTypes();
-                    generateMethod(cfw, adapterName, method.getName(), parms, 
+                    generateMethod(cfw, adapterName, methodName,
+                                   method.getParameterTypes(),
                                    method.getReturnType());
                     generatedOverrides.put(methodKey, methodKey);
                     generatedMethods.put(method.getName(), Boolean.TRUE);
@@ -115,6 +120,7 @@ public class JavaAdapter extends ScriptableObject {
 
         // generate any additional overrides that the object might contain.
         Method[] methods = superClass.getMethods();
+        String superName = superClass.getName().replace('.', '/');
         for (int j = 0; j < methods.length; j++) {
             Method method = methods[j];
             int mods = method.getModifiers();
@@ -123,18 +129,30 @@ public class JavaAdapter extends ScriptableObject {
             // if a method is marked abstract, must implement it or the 
             // resulting class won't be instantiable. otherwise, if the object 
             // has a property of the same name, then an override is intended.
-            if (Modifier.isAbstract(mods) || 
+            boolean isAbstractMethod = Modifier.isAbstract(mods);
+            if (isAbstractMethod || 
                 (jsObj != null && jsObj.has(method.getName(), jsObj)))
             {
                 // make sure to generate only one instance of a particular 
                 // method/signature.
-                String methodKey = getMethodSignature(method);
+                String methodName = method.getName();
+                String methodSignature = getMethodSignature(method);
+                String methodKey = methodName + methodSignature;
                 if (! generatedOverrides.containsKey(methodKey)) {
-                    Class[] parms = method.getParameterTypes();
-                    generateMethod(cfw, adapterName, method.getName(), parms, 
+                    generateMethod(cfw, adapterName, methodName,
+                                   method.getParameterTypes(),
                                    method.getReturnType());
                     generatedOverrides.put(methodKey, method);
-                    generatedMethods.put(method.getName(), Boolean.TRUE);
+                    generatedMethods.put(methodName, Boolean.TRUE);
+                }
+                // if a method was overridden, generate a "protected" method
+                // that lets the delegate call the superclass' version
+                if (!isAbstractMethod && !generatedSupers.containsKey(methodKey)) {
+                    generateSuper(cfw, adapterName, superName,
+                                  methodName, methodSignature,
+                                  method.getParameterTypes(),
+                                  method.getReturnType());
+                    generatedSupers.put(methodKey, method);
                 }
             }
         }
@@ -568,6 +586,117 @@ public class JavaAdapter extends ScriptableObject {
         }
         cfw.stopMethod((short)(scopeLocal + 1), null);
     }
+
+    /**
+     * Generates code to push typed parameters onto the operand stack
+     * prior to a direct Java method call.
+     */
+    private static int generatePushParam(ClassFileWriter cfw, int paramOffset, 
+                                         Class paramType) 
+    {
+        String typeName = paramType.getName();
+        switch (typeName.charAt(0)) {
+        case 'z':
+        case 'b':
+        case 'c':
+        case 's':
+        case 'i':
+            // load an int value, convert to double.
+            cfw.add(ByteCode.ILOAD, paramOffset++);
+            break;
+        case 'l':
+            // load a long, convert to double.
+            cfw.add(ByteCode.LLOAD, paramOffset);
+            paramOffset += 2;
+            break;
+        case 'f':
+            // load a float, convert to double.
+            cfw.add(ByteCode.FLOAD, paramOffset++);
+            break;
+        case 'd':
+            cfw.add(ByteCode.DLOAD, paramOffset);
+            paramOffset += 2;
+            break;
+        }
+        return paramOffset;
+    }
+
+    /**
+     * Generates code to return a Java type, after calling a Java method
+     * that returns the same type.
+     * Generates the appropriate RETURN bytecode.
+     */
+    private static void generatePopResult(ClassFileWriter cfw, 
+                                          Class retType) 
+    {
+        if (retType.isPrimitive()) {
+            String typeName = retType.getName();
+            switch (typeName.charAt(0)) {
+            case 'b':
+            case 'c':
+            case 's':
+            case 'i':
+            case 'z':
+                cfw.add(ByteCode.IRETURN);
+                break;
+            case 'l':
+                cfw.add(ByteCode.LRETURN);
+                break;
+            case 'f':
+                cfw.add(ByteCode.FRETURN);
+                break;
+            case 'd':
+                cfw.add(ByteCode.DRETURN);
+                break;
+            }
+        } else {
+            cfw.add(ByteCode.ARETURN);
+        }
+    }
+
+	/**
+	 * Generates a method called "super$methodName()" which can be called
+	 * from JavaScript that is equivalent to calling "super.methodName()"
+	 * from Java. Eventually, this may be supported directly in JavaScript.
+	 */
+    private static void generateSuper(ClassFileWriter cfw,
+                                      String genName, String superName,
+                                      String methodName, String methodSignature,
+                                      Class[] parms, Class returnType)
+    {
+        cfw.startMethod("super$" + methodName, methodSignature, 
+                        ClassFileWriter.ACC_PUBLIC);
+        
+		// push "this"
+        cfw.add(ByteCode.ALOAD, 0);
+
+		// push the rest of the parameters.
+        int paramOffset = 1;
+        for (int i = 0; i < parms.length; i++) {
+            if (parms[i].isPrimitive()) {
+                paramOffset = generatePushParam(cfw, paramOffset, parms[i]);
+            } else {
+                cfw.add(ByteCode.ALOAD, paramOffset++);
+            }
+        }
+        
+        // split the method signature at the right parentheses.
+        int rightParen = methodSignature.indexOf(')');
+        
+        // call the superclass implementation of the method.
+        cfw.add(ByteCode.INVOKESPECIAL,
+                superName,
+                methodName,
+                methodSignature.substring(0, rightParen + 1),
+                methodSignature.substring(rightParen + 1));
+
+		// now, handle the return type appropriately.        
+        Class retType = returnType;
+        if (!retType.equals(Void.TYPE)) {
+            generatePopResult(cfw, retType);
+        }
+        cfw.stopMethod((short)(paramOffset + 1), null);
+    }
     
     /**
      * Returns a fully qualified method name concatenated with its signature.
@@ -575,7 +704,6 @@ public class JavaAdapter extends ScriptableObject {
     private static String getMethodSignature(Method method) {
         Class[] parms = method.getParameterTypes();
         StringBuffer sb = new StringBuffer();
-        sb.append(method.getName());
         sb.append('(');
         for (int i = 0; i < parms.length; i++) {
             Class type = parms[i];
