@@ -263,7 +263,8 @@ pics_hash_password(char *pw)
         SECStatus status;
         unsigned char result[SHA1_LENGTH];
 
-        status = SHA1_HashBuf(result, (unsigned char *)pw, XP_STRLEN(pw));
+        status = HASH_HashBuf(HASH_AlgSHA1, result,
+                              (unsigned char *)pw, XP_STRLEN(pw));
 
 	if (status != SECSuccess)
 		return NULL;

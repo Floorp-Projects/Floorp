@@ -114,6 +114,33 @@ void
 SHA1_End(SHA1Context *cx, unsigned char *digest,
 	 unsigned int *digestLen, unsigned int maxDigestLen);
 
+/*
+ * Generic hash api.  In the future this should be the only public
+ * API.
+ */
+
+extern unsigned int HASH_ResultLen(HASH_HashType type);
+
+extern unsigned int HASH_ResultLenContext(HASHContext *context);
+
+extern SECStatus HASH_HashBuf(HASH_HashType type, unsigned char *dest,
+			      unsigned char *src, uint32 src_len);
+
+extern HASHContext *HASH_Create(HASH_HashType type);
+
+extern HASHContext *HASH_Clone(HASHContext *context);
+
+extern void HASH_Destroy(HASHContext *context);
+
+extern void HASH_Begin(HASHContext *context);
+
+extern void HASH_Update(HASHContext *context, const unsigned char *src,
+			unsigned int len);
+
+extern void HASH_End(HASHContext *context, unsigned char *result,
+		     unsigned int *result_len, unsigned int max_result_len);
+
+
 char *
 BTOA_DataToAscii(const unsigned char *data, unsigned int len);
 

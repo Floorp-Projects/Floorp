@@ -30,9 +30,18 @@ typedef struct CERTCertificateStr CERTCertificate;
 typedef struct _certdb CERTCertDBHandle;
 typedef struct _md5context MD5Context;
 typedef struct _sha1context SHA1Context;
+typedef struct HASHContextStr HASHContext;
 
 #define MD5_LENGTH	16
 #define SHA1_LENGTH	20
+
+typedef enum {
+    HASH_AlgNULL,
+    HASH_AlgMD2,
+    HASH_AlgMD5,
+    HASH_AlgSHA1,
+    HASH_AlgTOTAL
+} HASH_HashType;
 
 typedef enum _SECStatus {
     SECWouldBlock = -2,

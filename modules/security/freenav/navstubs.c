@@ -671,3 +671,60 @@ ATOB_AsciiToData(const char *string, unsigned int *lenp)
 }
 
 
+unsigned int
+HASH_ResultLen(HASH_HashType type)
+{
+    return 0;
+}
+
+unsigned int
+HASH_ResultLenContext(HASHContext *context)
+{
+    return 0;
+}
+
+SECStatus
+HASH_HashBuf(HASH_HashType type, unsigned char *dest, unsigned char *src,
+	     uint32 src_len)
+{
+    return SECFailure;
+}
+
+HASHContext *
+HASH_Create(HASH_HashType type)
+{
+    return NULL;
+}
+
+HASHContext *
+HASH_Clone(HASHContext *context)
+{
+    return NULL;
+}
+
+void
+HASH_Destroy(HASHContext *context)
+{
+    return;
+}
+
+void
+HASH_Begin(HASHContext *context)
+{
+    return;
+}
+
+void
+HASH_Update(HASHContext *context, const unsigned char *src, unsigned int len)
+{
+    return;
+}
+
+void
+HASH_End(HASHContext *context, unsigned char *result, unsigned int *result_len,
+	 unsigned int max_result_len)
+{
+    *result_len = 0;
+    return;
+}
+
