@@ -594,7 +594,6 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
   char*           theElement;
   PRInt32         numPrefs;
   PRInt32         dwIndex;
-  nsresult        rv = NS_OK;
   EnumerateData   ed;
   nsAutoVoidArray prefArray;
 
@@ -653,7 +652,6 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
   NS_ENSURE_ARG_POINTER(aObserver);
 
   if (!mObservers) {
-    nsresult rv = NS_OK;
     mObservers = new nsAutoVoidArray();
     if (nsnull == mObservers)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -725,25 +723,23 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
 
       if (pCallback->pObserver == observerRef) {
         mObserverDomains.CStringAt(i, domain);
-        if (domain.Equals(aDomain))
-          break;
+        if (domain.Equals(aDomain)) {
+          // We must pass a fully qualified preference name to remove the callback
+          pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
+          rv = _convertRes(PREF_UnregisterCallback(pref, NotifyObserver, pCallback));
+          if (NS_SUCCEEDED(rv)) {
+            NS_RELEASE(pCallback->pObserver);
+            nsMemory::Free(pCallback);
+            mObservers->RemoveElementAt(i);
+            mObserverDomains.RemoveCStringAt(i);
+          }
+          return rv;
+        }
       }
     }
   }
 
-  if (i == count)             // not found, just return
-    return NS_OK;
-
-  // We must pass a fully qualified preference name to remove the callback
-  pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
-  rv = _convertRes(PREF_UnregisterCallback(pref, NotifyObserver, pCallback));
-  if (NS_SUCCEEDED(rv)) {
-    NS_RELEASE(pCallback->pObserver);
-    nsMemory::Free(pCallback);
-    mObservers->RemoveElementAt(i);
-    mObserverDomains.RemoveCStringAt(i);
-  }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
