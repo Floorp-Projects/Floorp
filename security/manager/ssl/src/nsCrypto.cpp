@@ -1968,6 +1968,8 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       CERT_ImportCAChain(derCerts, numCAs, certUsageUserCertImport);
       nsMemory::Free(derCerts);
     }
+    
+    CERT_DestroyCertList(caPubs);
   }
 
   if (aDoForcedBackup) {
