@@ -109,7 +109,9 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
 
     aImage->bits = img->GetBits();
     aImage->client_data = img;
-    NS_ADDREF(img);
+    // We don't need to add a reference here, because we're already holding
+    // a reference, because of the call above to the repository to create the
+    // nsIImage*
     aImage->header.width = aWidth;
     aImage->header.height = aHeight;
     aImage->header.widthBytes = img->GetLineStride();
@@ -117,6 +119,9 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
     if (aMask) {
         aMask->bits = img->GetAlphaBits();
         aMask->client_data = img;
+        // Make sure you add another reference here, because when the mask's
+        // pixmap is destroyed the reference will be released
+        NS_ADDREF(img);
         aMask->header.width = aWidth;
         aMask->header.height = aHeight;
     }
