@@ -1547,7 +1547,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
 	*new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value_unix_style) -1); 
 
 #ifndef XP_UNIX
-	PR_FREEIF(mail_directory_unix_style);
+	PR_FREEIF(mail_directory_value_unix_style);
 #endif /* !XP_UNIX */
   }
   else {
