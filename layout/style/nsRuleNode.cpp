@@ -3517,8 +3517,8 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct,
   }
 
   // list-style-image: url, none, inherit
-  if (eCSSUnit_URL == listData.mImage.GetUnit()) {
-    list->mListStyleImage = listData.mImage.GetURLValue();
+  if (eCSSUnit_Image == listData.mImage.GetUnit()) {
+    list->mListStyleImage = listData.mImage.GetImageValue();
   }
   else if (eCSSUnit_None == listData.mImage.GetUnit()) {
     list->mListStyleImage = nsnull;
