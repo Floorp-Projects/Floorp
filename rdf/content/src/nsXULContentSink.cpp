@@ -1106,7 +1106,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
     
     nsresult rv;
 
-    mDocument    = NS_GetWeakReference(aDocument);
+    mDocument    = getter_AddRefs(NS_GetWeakReference(aDocument));
     mPrototype   = aPrototype;
 
     rv = mPrototype->GetURI(getter_AddRefs(mDocumentURL));
