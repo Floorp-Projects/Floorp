@@ -2005,7 +2005,7 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
     float aItalicSlope;
     mFontMetrics->GetItalicSlope(aItalicSlope);
     if (aItalicSlope) {
-      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
       ABC abc;
       if (GetCharABCWidths(mDC, aString[aLength-1], aString[aLength-1], &abc)) {
         if (abc.abcC < 0) {
