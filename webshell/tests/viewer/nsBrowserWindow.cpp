@@ -54,6 +54,12 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsEditorMode.h"
 
+// Needed for "Find" GUI
+#include "nsIDialog.h"
+#include "nsICheckButton.h"
+#include "nsIRadioButton.h"
+#include "nsILabel.h"
+
 #include "resources.h"
 
 #if defined(WIN32)
@@ -105,6 +111,10 @@ static NS_DEFINE_IID(kTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
+static NS_DEFINE_IID(kDialogCID, NS_DIALOG_CID);
+static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
+static NS_DEFINE_IID(kRadioButtonCID, NS_RADIOBUTTON_CID);
+static NS_DEFINE_IID(kLabelCID, NS_LABEL_CID);
 
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
@@ -118,6 +128,10 @@ static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
+static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
+static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
+static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 
 
 static const char* gsAOLFormat = "AOLMAIL";
@@ -310,6 +324,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoSelectAll();
     break;
 
+  case VIEWER_EDIT_FINDINPAGE:
+    DoFind();
+    break;
+
   case VIEWER_DEMO0:
   case VIEWER_DEMO1:
   case VIEWER_DEMO2:
@@ -435,6 +453,217 @@ nsBrowserWindow::DoFileOpen()
     LoadURL(nsString(lpszFileURL));
     delete lpszFileURL;
   }
+}
+
+#define DIALOG_FONT      "Helvetica"
+#define DIALOG_FONT_SIZE 10
+
+/**--------------------------------------------------------------------------------
+ * Main Handler
+ *--------------------------------------------------------------------------------
+ */
+nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
+{
+  //printf("HandleEvent aEvent->message %d\n", aEvent->message);
+  nsEventStatus result = nsEventStatus_eIgnore;
+  if (aEvent == nsnull ||  aEvent->widget == nsnull) {
+    return result;
+  }
+
+  if (aEvent->message == 301 || aEvent->message == 302) {
+    int x = 0;
+  }
+
+  void * data;
+  aEvent->widget->GetClientData(data);
+
+  if (data == nsnull) {
+    nsIWidget * parent = aEvent->widget->GetParent();
+    if (parent != nsnull) {
+      parent->GetClientData(data);
+      NS_RELEASE(parent);
+    }
+  }
+  
+  if (data != nsnull) {
+    nsBrowserWindow * browserWindow = (nsBrowserWindow *)data;
+    result = browserWindow->ProcessDialogEvent(aEvent);
+  }
+
+  return result;
+}
+/**--------------------------------------------------------------------------------
+ * Main Handler
+ *--------------------------------------------------------------------------------
+ */
+nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
+{ 
+  nsEventStatus result = nsEventStatus_eIgnore;
+
+	  //printf("aEvent->message %d\n", aEvent->message);
+    switch(aEvent->message) {
+
+        case NS_MOUSE_LEFT_BUTTON_UP: {
+          if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mCancelBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+            mDialog->Show(PR_FALSE);
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mFindBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+
+            PRBool matchCase   = mMatchCheckBtn->GetState();
+            PRBool findDwn     = mDwnRadioBtn->GetState();
+            nsString searchStr;
+            mTextField->GetText(searchStr, 255);
+
+            nsIPresShell* shell = GetPresShell();
+            if (nsnull != shell) {
+              nsIDocument* doc = shell->GetDocument();
+              if (nsnull != doc) {
+                PRBool foundIt = PR_FALSE;
+                doc->FindNext(searchStr, matchCase, findDwn, foundIt);
+                if (!foundIt) {
+                  // Display Dialog here
+                }
+                ForceRefresh();
+                NS_RELEASE(doc);
+              }
+              NS_RELEASE(shell);
+            }
+
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mUpRadioBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+            mUpRadioBtn->SetState(PR_TRUE);
+            mDwnRadioBtn->SetState(PR_FALSE);
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mDwnRadioBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+            mDwnRadioBtn->SetState(PR_TRUE);
+            mUpRadioBtn->SetState(PR_FALSE);
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mMatchCheckBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+            mMatchCheckBtn->SetState(!mMatchCheckBtn->GetState());
+          }
+          } break;
+        
+        case NS_PAINT: 
+#ifndef XP_UNIX
+              // paint the background
+            if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mDialog->GetNativeData(NS_NATIVE_WIDGET) ) {
+                nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
+                drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
+                drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
+
+                return nsEventStatus_eIgnore;
+            }
+#endif
+            break;
+        default:
+            result = nsEventStatus_eIgnore;
+    }
+    //printf("result: %d = %d\n", result, PR_FALSE);
+
+    return result;
+}
+
+
+void
+nsBrowserWindow::DoFind()
+{
+  if (mDialog != nsnull) {
+    mDialog->Show(PR_TRUE);
+    return;
+  }
+
+  nsIDeviceContext* dc = mWindow->GetDeviceContext();
+  float t2d;
+  dc->GetTwipsToDevUnits(t2d);
+  nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+              NS_FONT_WEIGHT_NORMAL, 0,
+              nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
+  NS_RELEASE(dc);
+
+  // create a Dialog
+  //
+  nsRect rect;
+  rect.SetRect(0, 0, 380, 110);  
+
+  NSRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
+  mDialog->Create(mWindow, rect, HandleEvent, NULL);
+  mDialog->SetLabel("Find");
+  mDialog->SetClientData(this);
+
+  nscoord xx = 5;
+  // Create Label
+  rect.SetRect(xx, 8, 75, 24);  
+  NSRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
+  mLabel->SetAlignment(eAlign_Right);
+  mLabel->Create(mDialog, rect, HandleEvent, NULL);
+  mLabel->SetLabel("Find what:");
+  mLabel->Show(PR_TRUE);
+  mLabel->SetFont(font);
+  mLabel->SetClientData(this);
+  xx += 75 + 5;
+
+  // Create TextField
+  rect.SetRect(xx, 5, 200, 24);  
+  NSRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
+  mTextField->Create(mDialog, rect, HandleEvent, NULL);
+  mTextField->SetBackgroundColor(NS_RGB(255,255,255));
+  mTextField->SetFont(font);
+  mTextField->Show(PR_TRUE);
+  mTextField->SetClientData(this);
+  xx += 200 + 5;
+  
+  nscoord w = 65;
+  nscoord x = 205+80-w;
+  nscoord y = 29 + 5;
+  nscoord h = 19;
+
+  // Create Up RadioButton
+  rect.SetRect(x, y, w, h);  
+  NSRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
+  mUpRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
+  mUpRadioBtn->SetLabel("Up");
+  mUpRadioBtn->SetFont(font);
+  mUpRadioBtn->Show(PR_TRUE);
+  mUpRadioBtn->SetClientData(this);
+  y += h + 2;
+  
+  // Create Up RadioButton
+  rect.SetRect(x, y, w, h);  
+  NSRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
+  mDwnRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
+  mDwnRadioBtn->SetLabel("Down");
+  mDwnRadioBtn->SetFont(font);
+  mDwnRadioBtn->Show(PR_TRUE);
+  mDwnRadioBtn->SetClientData(this);
+  
+  // Create Match CheckButton
+  rect.SetRect(5, y, 125, 24);  
+  NSRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
+  mMatchCheckBtn->Create(mDialog, rect, HandleEvent, NULL);
+  mMatchCheckBtn->SetLabel("Match Case");
+  mMatchCheckBtn->SetFont(font);
+  mMatchCheckBtn->Show(PR_TRUE);
+  mMatchCheckBtn->SetClientData(this);
+
+  mUpRadioBtn->SetState(PR_FALSE);
+  mDwnRadioBtn->SetState(PR_TRUE);
+  
+  // Create Find Next Button
+  rect.SetRect(xx, 5, 75, 24);  
+  NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
+  mFindBtn->Create(mDialog, rect, HandleEvent, NULL);
+  mFindBtn->SetLabel("Find Next");
+  mFindBtn->SetFont(font);
+  mFindBtn->Show(PR_TRUE);
+  mFindBtn->SetClientData(this);
+  
+  // Create Cancel Button
+  rect.SetRect(xx, 35, 75, 24);  
+  NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
+  mCancelBtn->Create(mDialog, rect, HandleEvent, NULL);
+  mCancelBtn->SetLabel("Cancel");
+  mCancelBtn->SetFont(font);
+  mCancelBtn->Show(PR_TRUE);
+  mCancelBtn->SetClientData(this);
+  
+  mDialog->Show(PR_TRUE);
+
 }
 
 void
@@ -590,6 +819,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   // Now lay it all out
   Layout(r.width, r.height);
+
 
   return NS_OK;
 }
