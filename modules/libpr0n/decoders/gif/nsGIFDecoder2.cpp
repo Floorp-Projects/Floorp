@@ -436,7 +436,7 @@ int nsGIFDecoder2::HaveDecodedRow(
       bgColor |= cmap[bgIndex + 2] << 16;
       decoder->mImageFrame->SetBackgroundColor(bgColor);
     }
-    if(decoder->mGIFStruct->local_colormap) {
+    if (decoder->mGIFStruct->is_local_colormap_defined) {
       cmapsize = decoder->mGIFStruct->local_colormap_size;
       cmap = decoder->mGIFStruct->local_colormap;
     }

@@ -125,6 +125,7 @@ typedef struct gif_struct {
     int tpixel;                 /* Index of transparent pixel */
     int is_transparent;         /* TRUE, if tpixel is valid */
     int control_extension;      /* TRUE, if image control extension present */
+    int is_local_colormap_defined;
     gdispose disposal_method;   /* Restore to background, leave in place, etc.*/
     PRUint8 *local_colormap;    /* Per-image colormap */
     int local_colormap_size;    /* Size of local colormap array. */
