@@ -88,7 +88,7 @@ static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
 // Drag & Drop, Clipboard
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kCGenericTransferable,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
@@ -252,7 +252,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCDataFlavor)) {
         inst = (nsISupports*)new nsDataFlavor();
     }
-    else if (mClassID.Equals(kCTransferable)) {
+    else if (mClassID.Equals(kCGenericTransferable)) {
         inst = (nsISupports*)new nsTransferable();
     }
 #ifdef NEW_CLIPBOARD_SUPPORT
