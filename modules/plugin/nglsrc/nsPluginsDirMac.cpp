@@ -140,10 +140,14 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 	const FSSpec& spec = fileSpec;
 	OSErr result = FSpGetFInfo(&spec, &info);
 	if (result == noErr && ((info.fdType == 'shlb' && info.fdCreator == 'MOSS') ||
-	                         info.fdType == 'NSPL' || info.fdType == 'BRPL'))
+	                         info.fdType == 'NSPL'))
 	    return PR_TRUE;
 
 #if TARGET_CARBON
+	// Some additional plugin types for Carbon/Mac OS X
+	if (result == noErr && (info.fdType == 'BRPL' || info.fdType == 'IEPL'))
+	    return PR_TRUE;
+
   // for Mac OS X bundles.
   CFBundleRef bundle = getPluginBundle(spec);
   if (bundle) {
