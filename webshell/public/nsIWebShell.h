@@ -30,10 +30,10 @@ class nsIFactory;
 class nsIPostData;
 class nsIStreamObserver;
 class nsIDocumentLoader;
+class nsIDocumentLoaderObserver;
 class nsIWebShell;
 class nsIWebShellContainer;
 class nsIPref;
-class nsIURLListener;
 
 // Interface ID for nsIWebShell
 #define NS_IWEB_SHELL_IID \
@@ -62,24 +62,24 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_CONTAINER_IID; return iid; }
 
   // History control
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
+   NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
+                          const PRUnichar* aURL,
+                          nsLoadType aReason) = 0;
+ 
+   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
+                           const PRUnichar* aURL) = 0;
+ 
+
+   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
+                              const PRUnichar* aURL,
+                              PRInt32 aProgress,
+                              PRInt32 aProgressMax) = 0;
+ 
+   NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
                          const PRUnichar* aURL,
-                         nsLoadType aReason) = 0;
-
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
-                          const PRUnichar* aURL) = 0;
-
-  // XXX not yet implemented; should we?
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
-                             const PRUnichar* aURL,
-                             PRInt32 aProgress,
-                             PRInt32 aProgressMax) = 0;
-
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
-                        const PRUnichar* aURL,
-                        PRInt32 aStatus) = 0;
-
-  //instances
+                         PRInt32 aStatus) = 0;
+ 
+ //instances
 
   // XXX kipp sez: I don't think that this method should be a part of
   // this interface.
@@ -181,23 +181,13 @@ public:
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
 
   /**
-   * Set the nsIURLListener for the WebShell.
-   */
-  NS_IMETHOD SetURLListener(nsIURLListener* anUrlListener) = 0;
-
-  /**
    * Return the current nsIWebShellContainer.
    */
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
 
   /**
-   * Return the current nsIURLListener.
-   */
-  NS_IMETHOD GetURLListener(nsIURLListener*& aResult) = 0;
-
-  /**
    * Set the nsIStreamObserver which receives all notifications from URLs 
-   * loaded by the document.
+   * in the old fashion.
    */
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver) = 0;
 
@@ -205,6 +195,17 @@ public:
    * Return the current nsIStreamObserver.
    */
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult) = 0;
+
+  /**
+   * Set the DocLoaderObserver which receives all notifications from URLs 
+   * loaded by the document.
+   */
+  NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver) = 0;
+
+  /**
+   * Return the current nsIDocLoadeObserver
+   */
+  NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult) = 0;
 
   /**
    * Set the nsIPref used to get/set preference values...
