@@ -1449,7 +1449,7 @@ static REGERR nr_RemoveName(char *path)
  * --------------------------------------------------------------------
  */
 static REGERR nr_Find(REGFILE *reg, REGOFF offParent, char *pPath,
-    REGDESC *pDesc, REGOFF *pPrev, REGOFF *pParent, Bool raw);
+    REGDESC *pDesc, REGOFF *pPrev, REGOFF *pParent, XP_Bool raw);
 
 static REGERR nr_FindAtLevel(REGFILE *reg, REGOFF offFirst, char *pName,
     REGDESC *pDesc, REGOFF *pOffPrev);
@@ -1469,7 +1469,7 @@ static REGERR nr_Find(REGFILE *reg,
             REGDESC *pDesc,
             REGOFF *pPrev,
             REGOFF *pParent,
-            Bool raw)
+            XP_Bool raw)
 {
 
     REGERR  err;
@@ -2237,30 +2237,43 @@ static REGERR nr_RegClose( HREG hReg )
 {
     REGERR      err = REGERR_OK;
     REGHANDLE*  reghnd = (REGHANDLE*)hReg;
+    REGFILE*    reg;
+    XP_Bool     needDelete = FALSE;
 
     XP_ASSERT( regStartCount > 0 );
 
     /* verify handle */
     err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = reghnd->pReg;
+
+    err = nr_Lock( reg );
     if ( err == REGERR_OK )
     {
-        XP_ASSERT( VALID_FILEHANDLE(reghnd->pReg->fh) );
+        XP_ASSERT( VALID_FILEHANDLE(reg->fh) );
 
         /* lower REGFILE user count */
-        reghnd->pReg->refCount--;
+        reg->refCount--;
 
         /* if registry is no longer in use */
-        if ( reghnd->pReg->refCount < 1 ) {
+        if ( reg->refCount < 1 ) 
+        {
             /* ...then close the file */
-            if ( reghnd->pReg->hdrDirty ) {
-                nr_WriteHdr( reghnd->pReg );
+            if ( reg->hdrDirty ) {
+                nr_WriteHdr( reg );
             }
-            nr_CloseFile( &(reghnd->pReg->fh) );
-            /* ...and delete REGFILE node from list */
-            nr_DeleteNode( reghnd->pReg );
+            nr_CloseFile( &(reg->fh) );
+            needDelete = TRUE;
         }
 
         reghnd->magic = 0;    /* prevent accidental re-use */  
+        nr_Unlock( reg );
+
+        if ( needDelete )
+            nr_DeleteNode( reg );
+
         XP_FREE( reghnd );
     }
 
