@@ -619,6 +619,10 @@ nsHttpTransaction::ParseHead(char *buf,
         // tolerate some junk before the status line
         char *p = LocateHttpStart(buf, PR_MIN(count, 8));
         if (!p) {
+            // Treat any 0.9 style response of a put as a failure.
+            if (mRequestHead->Method() == nsHttp::Put)
+                return NS_ERROR_ABORT;
+
             mResponseHead->ParseStatusLine("");
             mHaveStatusLine = PR_TRUE;
             mHaveAllHeaders = PR_TRUE;
