@@ -367,9 +367,9 @@ nsFileBufferT<charT, traits>::int_type nsFileBufferT<charT, traits>::overflow(in
 //----------------------------------------------------------------------------------------
 {
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG    
-    const ofacet_type& ft=use_facet<ofacet_type>(loc);
+    const ofacet_type& ft=use_facet<ofacet_type>(getloc());
 #else
-    const ofacet_type& ft=use_facet(loc, (ofacet_type*)0);
+    const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0);
 #endif
     char_type ch = traits_type::to_char_type(c);
     if (!mFileDesc)
@@ -424,7 +424,7 @@ streamsize nsFileBufferT<charT, traits>::xsputn(const char_type* s, streamsize n
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG
     const ofacet_type& ft=use_facet<ofacet_type>(loc);
 #else
-    const ofacet_type& ft=use_facet(loc, (ofacet_type*)0);
+    const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0);
 #endif
     if (!mFileDesc || !n) 
        return 0;
@@ -440,10 +440,10 @@ streamsize nsFileBufferT<charT, traits>::xsputn(const char_type* s, streamsize n
        char* ebuf;
         result conv;
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG     
-        if ((conv=use_facet<ofacet_type>(loc).
+        if ((conv=use_facet<ofacet_type>(getloc()).
             out(fst, s, s+n, end, buf, buf+7, ebuf))==codecvt_base::noconv)
 #else
-        if ((conv=use_facet(loc, (ofacet_type*)0).
+        if ((conv=use_facet(getloc(), (ofacet_type*)0).
             out(fst, s, s+n, end, buf, buf+7, ebuf))==codecvt_base::noconv)
 #endif
             return (streamsize)PR_Write(mFileDesc, s, sizeof(char) * size_t(n));
@@ -495,12 +495,16 @@ template<class charT, class traits>
 inline void nsFileBufferT<charT, traits>::imbue(const locale& loc_arg)
 //----------------------------------------------------------------------------------------
 {
-    loc = loc_arg;
+#ifdef XP_MAC
+   loc = loc_arg;
+#endif
 }
 
+//----------------------------------------------------------------------------------------
 template<class charT, class traits> 
 inline streamsize
 nsFileBufferT<charT, traits>::showmanyc()
+//----------------------------------------------------------------------------------------
 {
     return (streamsize)PR_Available(mFileDesc);
 }

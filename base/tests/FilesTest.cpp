@@ -1,7 +1,12 @@
 #include "nsFileSpec.h"
-#include <iostream.h>
-
 #include "nsFileStream.h"
+
+#ifdef NS_USING_NAMESPACE
+#include <iostream>
+	using namespace std;
+#else
+#include <iostream.h>
+#endif
 
 NS_NAMESPACE FileTest
 {
