@@ -27,7 +27,6 @@ MODULE		= prefmigr
 EXPORTS		= nsPrefMigrationCIDs.h
 
 XPIDLSRCS	= \
-		nsIPrefMigrationProgress.idl \
 		nsIPrefMigration.idl \
 		$(NULL)
 
