@@ -48,6 +48,7 @@ CPPSRCS		= \
 		nsWindowMediator.cpp \
 		nsAbout.cpp \
 		nsAppShellFactory.cpp \
+		nsTimingService.cpp \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
