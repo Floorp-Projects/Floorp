@@ -5305,6 +5305,11 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, margin,
                                 isAdjacentWithTop,
                                 aComputedOffsetsResult, aReflowStatus);
+  // An incomplete reflow status means we should split the floater 
+  // if the height is constrained (bug 145305). 
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && (NS_UNCONSTRAINEDSIZE == availHeight)) 
+    aReflowStatus = NS_FRAME_COMPLETE;
+
   if (NS_SUCCEEDED(rv) && isAutoWidth) {
     nscoord maxElementWidth = brc.GetMaxElementSize().width;
     if (maxElementWidth > availSpace.width) {
