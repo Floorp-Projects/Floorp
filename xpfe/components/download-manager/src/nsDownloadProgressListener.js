@@ -59,7 +59,7 @@ nsDownloadProgressListener.prototype = {
     {
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       {
-        var aDownloadID = aDownload.target.persistentDescriptor;
+        var aDownloadID = aDownload.target.path;
         var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
 
         var timeRemainingCol = elt.nextSibling.nextSibling.nextSibling;
@@ -95,7 +95,7 @@ nsDownloadProgressListener.prototype = {
       else
         rate = 0;
 
-      var aDownloadID = aDownload.target.persistentDescriptor;
+      var aDownloadID = aDownload.target.path
       var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
       if (this.doc.getElementById("TimeElapsed").getAttribute("hidden") != "true") {
         elapsedCol = elt.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling;

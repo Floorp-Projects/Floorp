@@ -428,12 +428,14 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   internalDownload->SetSource(aSource);
 
   // the persistent descriptor of the target is the unique identifier we use
-  nsCAutoString path;
-  rv = aTarget->GetNativePath(path);
+  nsAutoString path;
+  rv = aTarget->GetPath(path);
   if (NS_FAILED(rv)) return rv;
 
+  NS_ConvertUCS2toUTF8 utf8Path(path);
+  
   nsCOMPtr<nsIRDFResource> downloadRes;
-  gRDFService->GetResource(path.get(), getter_AddRefs(downloadRes));
+  gRDFService->GetResource(utf8Path.get(), getter_AddRefs(downloadRes));
 
   nsCOMPtr<nsIRDFNode> node;
 
@@ -471,7 +473,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
 
   // Assert file information
   nsCOMPtr<nsIRDFResource> fileResource;
-  gRDFService->GetResource(path.get(), getter_AddRefs(fileResource));
+  gRDFService->GetResource(utf8Path.get(), getter_AddRefs(fileResource));
   rv = mDataSource->Assert(downloadRes, gNC_File, fileResource, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
   
@@ -505,7 +507,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     aPersist->SetProgressListener(listener);
   }
 
-  nsCStringKey key(path);
+  nsCStringKey key(utf8Path);
   if (mCurrDownloads.Exists(&key))
     mCurrDownloads.Remove(&key);
 
@@ -835,17 +837,19 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     nsCOMPtr<nsILocalFile> target;
     dialog->GetTarget(getter_AddRefs(target));
     
-    nsCAutoString path;
-    rv = target->GetNativePath(path);
+    nsAutoString path;
+    rv = target->GetPath(path);
     if (NS_FAILED(rv)) return rv;
+
+    NS_ConvertUCS2toUTF8 utf8Path(path);
     
-    nsCStringKey key(path);
+    nsCStringKey key(utf8Path);
     if (mCurrDownloads.Exists(&key)) {
       // unset dialog since it's closing
       nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
       download->SetDialog(nsnull);
       
-      return CancelDownload(path.get());  
+      return CancelDownload(utf8Path.get());  
     }
   }
   else if (nsCRT::strcmp(aTopic, "quit-application") == 0) {
@@ -890,11 +894,11 @@ nsDownload::nsDownload():mDownloadState(NOTSTARTED),
 
 nsDownload::~nsDownload()
 {  
-  nsCAutoString path;
-  nsresult rv = mTarget->GetNativePath(path);
+  nsAutoString path;
+  nsresult rv = mTarget->GetPath(path);
   if (NS_FAILED(rv)) return;
 
-  mDownloadManager->AssertProgressInfoFor(path.get());
+  mDownloadManager->AssertProgressInfoFor(NS_ConvertUCS2toUTF8(path).get());
 }
 
 nsresult
@@ -1016,12 +1020,12 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   mLastUpdate = now;
 
   if (mDownloadState == NOTSTARTED) {
-    nsCAutoString path;
-    nsresult rv = mTarget->GetNativePath(path);
+    nsAutoString path;
+    nsresult rv = mTarget->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
     mDownloadState = DOWNLOADING;
-    mDownloadManager->DownloadStarted(path.get());
+    mDownloadManager->DownloadStarted(NS_ConvertUCS2toUTF8(path).get());
   }
 
   if (aMaxTotalProgress > 0)
@@ -1081,10 +1085,10 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
 {   
   if (NS_FAILED(aStatus)) {
     mDownloadState = FAILED;
-    nsCAutoString path;
-    nsresult rv = mTarget->GetNativePath(path);
+    nsAutoString path;
+    nsresult rv = mTarget->GetPath(path);
     if (NS_SUCCEEDED(rv))
-      mDownloadManager->DownloadEnded(path.get(), aMessage);
+      mDownloadManager->DownloadEnded(NS_ConvertUCS2toUTF8(path).get(), aMessage);
   }
 
   if (mListener)
@@ -1158,11 +1162,11 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       mCurrBytes = mMaxBytes;
       mPercentComplete = 100;
 
-      nsCAutoString path;
-      nsresult rv = mTarget->GetNativePath(path);
+      nsAutoString path;
+      nsresult rv = mTarget->GetPath(path);
       if (NS_FAILED(rv)) return rv;
 
-      mDownloadManager->DownloadEnded(path.get(), nsnull);
+      mDownloadManager->DownloadEnded(NS_ConvertUCS2toUTF8(path).get(), nsnull);
     }
 
     // break the cycle we created in AddDownload
@@ -1218,11 +1222,11 @@ nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
 
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
   nsCOMPtr<nsIRDFResource> res;
-  nsCAutoString path;
-  nsresult rv = mTarget->GetNativePath(path);
+  nsAutoString path;
+  nsresult rv = mTarget->GetPath(path);
   if (NS_FAILED(rv)) return rv;
 
-  gRDFService->GetResource(path.get(), getter_AddRefs(res));
+  gRDFService->GetResource(NS_ConvertUCS2toUTF8(path).get(), getter_AddRefs(res));
   
   gRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
   ds->Assert(res, gNC_Name, nameLiteral, PR_TRUE);

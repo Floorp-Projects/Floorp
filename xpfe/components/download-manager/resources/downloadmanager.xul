@@ -27,9 +27,6 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-
 <!DOCTYPE window [
 <!ENTITY % downloadManagerDTD SYSTEM "chrome://communicator/locale/downloadmanager/downloadmanager.dtd">
 %downloadManagerDTD;
@@ -44,8 +41,8 @@
         width="500" height="300" screenX="10" screenY="10"
         persist="width height screenX screenY"
         title="&downloadManager.title;"
-        onload="Startup();"
-        onunload="Shutdown();">
+        onload="DLManagerStartup();"
+        onunload="DLManagerShutdown();">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
