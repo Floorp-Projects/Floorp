@@ -46,7 +46,7 @@ CONFIG_DIR = $(shell pwd)
 ABS_topsrcdir = $(shell cd $(topsrcdir) && pwd)
 ABS_depth = $(shell cd $(DEPTH) && pwd)
 
-installer: installer.cfg
+installer: installer.cfg firefox.manifest
 ifneq ($(ABS_topsrcdir),$(ABS_depth))
 	ln -sf $(srcdir)/*.jst $(srcdir)/*.it $(srcdir)/packages* .
 endif
@@ -60,5 +60,11 @@ endif
 
 installer.cfg: installer.cfg.in
 	sed -e 's/\$$INSTALLER_NAME\$$/$(INSTALLER_NAME)/' $^ > $@
+
+# Create a manifest for use with codesighs, by stripping "bin/" off of the
+# beginning of lines in the packages file.
+
+firefox.manifest: packages-static
+	grep "^bin/" $^ | sed "s?^bin/??" > $@
 
 include $(topsrcdir)/config/rules.mk
