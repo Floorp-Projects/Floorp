@@ -58,6 +58,7 @@
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 #include "nsIEventStateManager.h"
+#include "nsIEventListenerManager.h"
 #include "nsIDOMNode.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsISupportsArray.h"
@@ -2379,12 +2380,28 @@ nsComboboxControlFrame::OnOptionSelected(nsPresContext* aPresContext,
   } else {
     if (aSelected) {
       RedisplayText(aIndex);
+      FireValueChangeEvent();
     } else {
       RedisplaySelectedText();
     }
   }
 
   return NS_OK;
+}
+
+void nsComboboxControlFrame::FireValueChangeEvent()
+{
+  // Fire ValueChange event to indicate data value of combo box has changed
+  nsCOMPtr<nsIDOMEvent> event;
+  nsCOMPtr<nsIEventListenerManager> manager;
+  mContent->GetListenerManager(getter_AddRefs(manager));
+  nsPresContext* presContext = GetPresContext();
+  if (manager &&
+      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+    event->InitEvent(NS_LITERAL_STRING("ValueChange"), PR_TRUE, PR_TRUE);
+    PRBool noDefault;
+    presContext->EventStateManager()->DispatchNewEvent(mContent, event, &noDefault);
+  }
 }
 
 NS_IMETHODIMP

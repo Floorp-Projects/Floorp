@@ -246,6 +246,7 @@ protected:
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
   void InitTextStr();
   void CheckFireOnChange();
+  void FireValueChangeEvent();
   nsresult RedisplayText(PRInt32 aIndex);
   nsresult ActuallyDisplayText(nsAString& aText, PRBool aNotify);
   nsresult GetPrimaryComboFrame(nsPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);

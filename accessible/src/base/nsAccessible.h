@@ -127,8 +127,8 @@ protected:
                                 const nsAString *aId);
   static nsIContent *GetXULLabelContent(nsIContent *aForNode);
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
-  nsresult GetHTMLName(nsAString& _retval);
-  nsresult GetXULName(nsAString& _retval);
+  nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
+  nsresult GetXULName(nsAString& aName, PRBool aCanAggregateSubtree = PR_TRUE);
   // For accessibles that are not lists of choices, the name of the subtree should be the 
   // sum of names in the subtree
   nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
