@@ -159,7 +159,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    nsresult Bind(nsIURI* aURL, nsIStreamListener* aListener, nsIInputStream *postDataStream = nsnull);
+    nsresult Bind(nsIURI* aURL, nsIStreamListener* aListener, nsIInputStream *postDataStream = nsnull, const PRUnichar* aReferrer=nsnull);
 
     nsresult Bind(nsIStreamListener *aListener);
 
@@ -223,7 +223,8 @@ public:
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
                             nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                            const PRUint32 aLocalIP = 0);
+                            const PRUint32 aLocalIP = 0,
+                            const PRUnichar* aReferrer = nsnull);
 
     NS_IMETHOD LoadSubDocument(nsIURI * aUri,
                                nsISupports* aExtraInfo = nsnull,
@@ -409,11 +410,13 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 #endif
 }
 
+
 /*
  * Implementation of ISupports methods...
  */
 NS_IMPL_ADDREF(nsDocLoaderImpl);
 NS_IMPL_RELEASE(nsDocLoaderImpl);
+
 
 NS_IMETHODIMP
 nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -546,7 +549,8 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
                               nsISupports* aExtraInfo,
                               nsIStreamObserver* anObserver,
                               nsLoadFlags aType,
-                              const PRUint32 aLocalIP)
+                              const PRUint32 aLocalIP,
+                              const PRUnichar* aReferrer)
 {
   nsresult rv = NS_OK;
   nsDocumentBindInfo* loader = nsnull;
@@ -588,7 +592,7 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
 
   mStreamObserver = dont_QueryInterface(anObserver);
 
-  rv = loader->Bind(aUri, nsnull, aPostDataStream);
+  rv = loader->Bind(aUri, nsnull, aPostDataStream, aReferrer);
 
 done:
   NS_RELEASE(loader);
@@ -630,7 +634,7 @@ nsDocLoaderImpl::LoadSubDocument(nsIURI *aUri,
                mStreamObserver);    // Observer
 
 
-  rv = loader->Bind(aUri, nsnull, nsnull);
+  rv = loader->Bind(aUri, nsnull, nsnull, nsnull);
   NS_RELEASE(loader);
   return rv;
 }
@@ -779,6 +783,16 @@ NS_IMETHODIMP
 nsDocLoaderImpl::Destroy()
 {
     Stop();
+#if 0
+    if (nsnull != mParent) {
+#ifdef NECKO
+        mParent->RemoveChildGroup(GetLoadGroup());
+#else
+        mParent->RemoveChildGroup(this);
+#endif
+        NS_RELEASE(mParent);
+    }
+#endif
     NS_IF_RELEASE(mDocumentChannel);
 
     return NS_OK;
@@ -1576,7 +1590,7 @@ private:
 // XXXbe second arg is unnecessary given first; hidden static IID in macro... scc help!
 NS_IMPL_ISUPPORTS(nsWebShellEventSinkGetter, nsCOMTypeInfo<nsIEventSinkGetter>::GetIID())
 
-nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener, nsIInputStream *postDataStream)
+nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener, nsIInputStream *postDataStream, const PRUnichar* aReferrer)
 {
   nsresult rv = NS_OK;
 
@@ -1603,13 +1617,21 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener, ns
   rv = NS_OpenURI(getter_AddRefs(channel), aURL, loadGroup, eventSinkGetter);
   if (NS_FAILED(rv)) return rv;
 
-  if (postDataStream)
+  if (postDataStream || aReferrer)
   {
       nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
       if (httpChannel)
       {
-          httpChannel->SetRequestMethod(HM_POST);
-          httpChannel->SetPostDataStream(postDataStream);
+          if (postDataStream) {
+              httpChannel->SetRequestMethod(HM_POST);
+              httpChannel->SetPostDataStream(postDataStream);
+          }
+          if (aReferrer) {
+              // Referer - misspelled, but per the HTTP spec
+              nsCAutoString str = aReferrer;
+              nsCOMPtr<nsIAtom> key = NS_NewAtom("referer");
+              httpChannel->SetRequestHeader(key, str.GetBuffer());
+          }
       }
   }
   m_DocLoader->SetDocumentChannel(channel);
