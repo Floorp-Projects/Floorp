@@ -1,7 +1,7 @@
 <!-- XXXBlake This should be in mozilla/browser -->
 
 <!ENTITY  lang.version          "1.3a">
-<!ENTITY  brandShortName        "Phoenix">
-<!ENTITY  version               "0.5">
-<!ENTITY  vendorShortName       "Phoenix">
+<!ENTITY  brandShortName        "Firebird&#8482;  Browser">
+<!ENTITY  version               "0.6">
+<!ENTITY  vendorShortName       "Firebird&#8482;  Browser">
 <!ENTITY  releaseURL            "http://www.mozilla.org/projects/phoenix/phoenix-release-notes.html">
