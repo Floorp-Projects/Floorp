@@ -1,5 +1,0 @@
-<!-- extracted from sidebar-messenger.rdf -->
-
-<!ENTITY sidebar.folders.label        "Messenger Folders">
-<!-- LOCALIZATION NOTES (sidebar.flash.label) : do not translate below line -->
-<!ENTITY sidebar.flash.label          "Flashes">
