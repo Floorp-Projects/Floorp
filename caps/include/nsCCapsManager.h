@@ -113,9 +113,6 @@ public:
     NS_IMETHOD
     Initialize(PRBool *result);
 
-    NS_IMETHOD
-    InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface);
-
     /**
      * Registers the given Principal with the system.
      *
@@ -211,9 +208,6 @@ public:
 
     NS_IMETHOD
     NewPrincipalArray(PRUint32 count, void* *result);
-
-    NS_IMETHOD
-    CreateMixedPrincipalArray(void *zig, char* name, const char* codebase, void** result);
 
     NS_IMETHOD
     FreePrincipalArray(void *prinArray);

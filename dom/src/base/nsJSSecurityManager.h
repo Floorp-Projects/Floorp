@@ -19,52 +19,18 @@
 #define nsJSSecurityManager_h___
 
 #include "nsIScriptSecurityManager.h"
-#include "nsICapsSecurityCallbacks.h"
 #include "nsIScriptContext.h"
 #include "jsapi.h"
-#include "jsdbgapi.h"
 
-class nsICapsManager;
 class nsIPref;
 
-typedef struct nsJSFrameIterator {
-    JSStackFrame *fp;
-    JSContext *cx;
-    void *intersect;
-    PRBool sawEmptyPrincipals;
-} nsJSFrameIterator;
-
-enum Signedness {
-    HAS_NO_SCRIPTS,
-    HAS_UNSIGNED_SCRIPTS,
-    HAS_SIGNED_SCRIPTS
-};
-
-typedef struct nsJSPrincipalsData {
-    JSPrincipals principals;
-    void* principalsArrayRef;
-    nsIURI *url;
-    char* name;
-    void* zip; //ns_zip_t
-    uint32 externalCapturePrincipalsCount;
-    nsString* untransformed;
-    nsString* transformed;
-    PRBool needUnlock;
-    char* codebaseBeforeSettingDomain;
-    enum Signedness signedness;
-    void* pNSISecurityContext;
-//    nsJSSecurityManager* secManager;
-} nsJSPrincipalsData;
-
-class nsJSSecurityManager : public nsIScriptSecurityManager,
-                            public nsICapsSecurityCallbacks {
+class nsJSSecurityManager : public nsIScriptSecurityManager {
 public:
   nsJSSecurityManager();
   virtual ~nsJSSecurityManager();
 
   NS_DECL_ISUPPORTS
 
-  //nsIScriptSecurityManager interface
   NS_IMETHOD Init();
 
   NS_IMETHOD CheckScriptAccess(nsIScriptContext* aContext, 
@@ -72,87 +38,7 @@ public:
                                const char* aProp, 
                                PRBool* aResult);
 
-  //XXX From lib/libmocha/lm.h
-  NS_IMETHOD GetSubjectOriginURL(JSContext *aCx, nsString* aOrigin);
-  NS_IMETHOD GetObjectOriginURL(JSContext *aCx, JSObject *object, nsString* aOrigin);
-  NS_IMETHOD GetPrincipalsFromStackFrame(JSContext *aCx, JSPrincipals** aPrincipals);
-  NS_IMETHOD GetCompilationPrincipals(nsIScriptContext *aContext, nsIScriptGlobalObject* aGlobal, 
-                                      JSPrincipals *aLayoutPrincipals, JSPrincipals** aPrincipals);
-  NS_IMETHOD CanAccessTarget(JSContext *aCx, eJSTarget target, PRBool* aReturn);
-  NS_IMETHOD CheckPermissions(JSContext *aCx, JSObject *aObj, eJSTarget target, PRBool* aReturn);
-  NS_IMETHOD CheckContainerAccess(JSContext *aCx, JSObject *aObj, eJSTarget aTarget, PRBool* aReturn);
-  NS_IMETHOD GetContainerPrincipals(JSContext *aCx, JSObject *aContainer, JSPrincipals** aPrincipals);
-  NS_IMETHOD SetContainerPrincipals(JSContext *aCx, JSObject *aContainer, JSPrincipals* aPrincipals);
-  NS_IMETHOD CanCaptureEvent(JSContext *aCx, JSFunction *aFun, JSObject *aEventTarget, PRBool* aReturn);
-  NS_IMETHOD SetExternalCapture(JSContext *aCx, JSPrincipals* aPrincipals, PRBool aBool);
-  NS_IMETHOD CheckSetParentSlot(JSContext *aCx, JSObject *aObj, jsval id, jsval *vp, PRBool* aReturn);
-  NS_IMETHOD SetDocumentDomain(JSContext *aCx, JSPrincipals *principals, 
-                               nsString* newDomain, PRBool* aReturn);
-  NS_IMETHOD DestroyPrincipalsList(JSContext *aCx, nsJSPrincipalsList *list);
-  //XXX End from lib/libmocha/lm.h
-
-  //XXX From include/libmocha.h
-  NS_IMETHOD NewJSPrincipals(nsIURI *aURL, nsString* aName, nsString* aCodebase, JSPrincipals** aPrincipals);
-#ifdef DO_JAVA_STUFF
-  NS_IMETHOD ExtractFromPrincipalsArchive(JSPrincipals *aPrincipals, char *aName, 
-                                uint *aLength, char** aReturn);
-  NS_IMETHOD SetUntransformedSource(JSPrincipals *principals, char *original, 
-                          char *transformed, PRBool* aReturn);
-  NS_IMETHOD GetJSPrincipalsFromJavaCaller(JSContext *aCx, void *principalsArray, void *pNSISecurityContext, JSPrincipals** aPrincipals);
-#endif
-#if 0
-  NS_IMETHOD CanAccessTargetStr(JSContext *aCx, const char *target, PRBool* aReturn);
-#endif
-  NS_IMETHOD RegisterPrincipals(nsIScriptContext *aContext, nsIScriptGlobalObject* aGlobal, JSPrincipals *aPrincipals, 
-                      nsString* aName, nsString* aSrc, JSPrincipals** aRetPrincipals);
-  //XXX End from include/libmocha.h
-
-
-  //nsICapsSecurityCallbacks interface
-  NS_IMETHOD NewNSJSJavaFrameWrapper(void *aContext, struct nsFrameWrapper ** aWrapper);
-  NS_IMETHOD FreeNSJSJavaFrameWrapper(struct nsFrameWrapper *aWrapper);
-  NS_IMETHOD GetStartFrame(struct nsFrameWrapper *aWrapper);
-  NS_IMETHOD IsEndOfFrame(struct nsFrameWrapper *aWrapper, PRBool* aReturn);
-  NS_IMETHOD IsValidFrame(struct nsFrameWrapper *aWrapper, PRBool* aReturn);
-  NS_IMETHOD GetNextFrame(struct nsFrameWrapper *aWrapper, int *aDepth, void** aReturn);
-  NS_IMETHOD OJIGetPrincipalArray(struct nsFrameWrapper *aWrapper, void** aReturn);
-  NS_IMETHOD OJIGetAnnotation(struct nsFrameWrapper *aWrapper, void** aReturn);
-  NS_IMETHOD OJISetAnnotation(struct nsFrameWrapper *aWrapper, void *aPrivTable,  void** aReturn);
-
 private:
-  void PrintToConsole(const char *data);
-  void PrintPrincipalsToConsole(JSContext *cx, JSPrincipals *principals);
-
-  PRUint32 GetPrincipalsCount(JSContext *aCx, JSPrincipals *aPrincipals);
-  PRBool PrincipalsCanAccessTarget(JSContext *cx, eJSTarget target);
-  void InvalidateCertPrincipals(JSContext *cx, JSPrincipals *principals);
-
-  //Helper funcs for RegisterPrincipals
-#ifdef EARLY_ACCESS_STUFF
-  PRBool CheckEarlyAccess(MochaDecoder *decoder, JSPrincipals *principals);
-#endif
-  PRBool IntersectPrincipals(JSContext *aCx, JSPrincipals *principals,
-                     JSPrincipals *newPrincipals);
-  PRBool PrincipalsEqual(JSContext *aCx, JSPrincipals *aA, JSPrincipals *aB);
-
-  PRBool IsExternalCaptureEnabled(JSContext *cx, JSPrincipals *principals);
-  PRBool CanExtendTrust(JSContext *cx, void *from, void *to);
-  char* GetJavaCodebaseFromOrigin(const char *origin);
-
-  nsString* GetOriginFromSourceURL(nsString* sourceURL);
-  char* FindOriginURL(JSContext *aCx, JSObject *aGlobal);
-
-  PRBool SameOrigins(JSContext *aCx, const char* aOrigin1, const char* aOrigin2);
-  PRBool SameOriginsStr(JSContext *aCx, nsString* aOrigin1, nsString* aOrigin2);
-  nsString* GetCanonicalizedOrigin(JSContext *cx, nsString* aUrlString);
-
-  // Glue code for JS stack crawling callbacks
-  nsJSFrameIterator* NewJSFrameIterator(void *aContext);
-  PRBool NextJSJavaFrame(struct nsJSFrameIterator *aIterator);
-  PRBool NextJSFrame(struct nsJSFrameIterator **aIterator);
-
-  void InitCaps(void);
-
   //Helper funcs
   char* AddSecPolicyPrefix(JSContext *cx, char *pref_str);
   char* GetSitePolicy(const char *org);
@@ -167,8 +53,14 @@ private:
 
   //Local vars
   nsIPref* mPrefs;
-  nsICapsManager* mCapsManager;
 };
+
+
+#define NS_SECURITY_FLAG_SAME_ORIGINS 0x0001
+#define NS_SECURITY_FLAG_NO_ACCESS    0x0002
+#define NS_SECURITY_FLAG_READ_ONLY    0x0004
+//xxx break into privilege levels
+#define NS_SECURITY_FLAG_SIGNED       0x0008
 
 //XXX temporarily bit flags for determining what we want to parse from the URL
 #define GET_ALL_PARTS               127

@@ -32,8 +32,6 @@
 #include "nsIJSScriptObject.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsGUIEvent.h"
-#include "nsFrameList.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsDOMWindowList.h"
 #include "nsIDOMEventTarget.h"
 
@@ -59,8 +57,8 @@ class ScreenImpl;
 class HistoryImpl;
 
 // Global object for scripting
-class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
-                         public nsIJSScriptObject, public nsIDOMEventCapturer, public nsIScriptGlobalObjectData
+class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow,
+                         public nsIJSScriptObject, public nsIDOMEventCapturer
 {
 public:
   GlobalWindowImpl();
@@ -203,11 +201,6 @@ public:
   virtual PRBool    Convert(JSContext *aContext, jsval aID);
   virtual void      Finalize(JSContext *aContext);
   
-  // nsIScriptGlobalObjectData interface
-  NS_IMETHOD       GetPrincipals(void** aPrincipals);
-  NS_IMETHOD       SetPrincipals(void* aPrincipals);
-  NS_IMETHOD       GetOrigin(nsString* aOrigin);
-
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
 
 protected:
@@ -244,8 +237,6 @@ protected:
   HistoryImpl *mHistory;
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
-  JSPrincipals *mPrincipals;
-
   BarPropImpl *mMenubar;
   BarPropImpl *mToolbar;
   BarPropImpl *mLocationbar;

@@ -19,7 +19,6 @@
 #include "nsJSEnvironment.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -48,7 +47,6 @@ const size_t gStackSize = 8192;
 static NS_DEFINE_IID(kIScriptContextIID, NS_ISCRIPTCONTEXT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_CID(kXPConnectCID,              NS_XPCONNECT_CID);
@@ -129,23 +127,10 @@ nsJSContext::EvaluateString(const nsString& aScript,
                             PRBool* aIsUndefined)
 {
   jsval val;
-  nsIScriptGlobalObject *global = GetGlobalObject();
-  nsIScriptGlobalObjectData *globalData;
-  JSPrincipals* principals = nsnull;
-
-  if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData))) {
-    if (NS_FAILED(globalData->GetPrincipals((void**)&principals))) {
-      NS_RELEASE(global);
-      NS_RELEASE(globalData);
-      return NS_ERROR_FAILURE;
-    }
-    NS_RELEASE(globalData);
-  }
-  NS_IF_RELEASE(global);
 
   PRBool ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
                                                   JS_GetGlobalObject(mContext),
-                                                  principals,
+                                                  nsnull,
                                                   (jschar*)aScript.GetUnicode(), 
                                                   aScript.Length(),
                                                   aURL, 
