@@ -21,7 +21,8 @@
 #include "nsDeviceContextSpecMac.h"
 #include "nsString.h"
 #include "nsHashtable.h"
-
+#include <TextEncodingConverter.h>
+#include <TextCommon.h>
 #include <StringCompare.h>
 #include <Fonts.h>
 #include "il_util.h"
@@ -250,6 +251,14 @@ NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 
 //------------------------------------------------------------------------
 
+NS_IMETHODIMP nsDeviceContextMac :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+{
+  aPixel = aColor;
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
 NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   nsresult result = NS_OK;
@@ -394,6 +403,124 @@ NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 #pragma mark -
 
 //------------------------------------------------------------------------
+
+nsHashtable* nsDeviceContextMac :: gFontInfoList = nsnull;
+
+class FontNameKey : public nsHashKey
+{
+public:
+  FontNameKey(const nsString& aString);
+
+  virtual PRUint32 HashValue(void) const;
+  virtual PRBool Equals(const nsHashKey *aKey) const;
+  virtual nsHashKey *Clone(void) const;
+
+  nsAutoString  mString;
+};
+
+FontNameKey::FontNameKey(const nsString& aString)
+{
+	aString.ToUpperCase(mString);
+}
+
+PRUint32 FontNameKey::HashValue(void) const
+{
+	return nsCRT::HashValue(mString);
+}
+
+PRBool FontNameKey::Equals(const nsHashKey *aKey) const
+{
+  return mString.Equals(((FontNameKey*)aKey)->mString);
+}
+
+nsHashKey* FontNameKey::Clone(void) const
+{
+  return new FontNameKey(mString);
+}
+
+#pragma mark -
+
+//------------------------------------------------------------------------
+
+void nsDeviceContextMac :: InitFontInfoList()
+{
+
+	OSStatus err;
+	if (!gFontInfoList) 
+	{
+		gFontInfoList = new nsHashtable();
+		if (!gFontInfoList)
+			return;
+
+		short numFONDs = ::CountResources('FOND');
+		TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
+															kTextEncodingDefaultVariant,
+													 		kTextEncodingDefaultFormat);
+		TECObjectRef converter = nil;
+		ScriptCode lastscript = smUninterp;
+		for (short i = 1; i <= numFONDs ; i++)
+		{
+			Handle fond = ::GetIndResource('FOND', i);
+			if (fond)
+			{
+				short	fondID;
+				OSType	resType;
+				Str255	fontName;
+				::GetResInfo(fond, &fondID, &resType, fontName); 
+
+				ScriptCode script = ::FontToScript(fondID);
+				if (script != lastscript)
+				{
+					lastscript = script;
+
+					TextEncoding sourceEncoding;
+					err = ::UpgradeScriptInfoToTextEncoding(script, kTextLanguageDontCare, 
+								kTextRegionDontCare, NULL, &sourceEncoding);
+							
+					if (converter)
+						err = ::TECDisposeConverter(converter);
+
+					err = ::TECCreateConverter(&converter, sourceEncoding, unicodeEncoding);
+					if (err != noErr)
+						converter = nil;
+				}
+
+				if (converter)
+				{
+					PRUnichar unicodeFontName[sizeof(fontName)];
+					ByteCount actualInputLength, actualOutputLength;
+					err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
+												(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
+					unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
+
+	        		FontNameKey key(unicodeFontName);
+					gFontInfoList->Put(&key, (void*)fondID);
+				}
+				::ReleaseResource(fond);
+			}
+		}
+		if (converter)
+			err = ::TECDisposeConverter(converter);				
+	}
+}
+
+
+
+//------------------------------------------------------------------------
+
+bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aFontNum)
+{
+	//¥TODO?: Maybe we shouldn't call that function so often. If nsFont could store the
+	//				fontNum, nsFontMetricsMac::SetFont() wouldn't need to call this at all.
+	InitFontInfoList();
+    FontNameKey key(aFontName);
+	aFontNum = (short)gFontInfoList->Get(&key);
+
+	return (aFontNum != 0);
+}
+
+
+//------------------------------------------------------------------------
 // Override to tweak font settings
 nsresult nsDeviceContextMac::CreateFontAliasTable()
 {
@@ -429,54 +556,3 @@ nsresult nsDeviceContextMac::CreateFontAliasTable()
   }
   return result;
 }
-
-//------------------------------------------------------------------------
-//#define FONT_CACHE
-
-bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aFontNum)
-{
-	Str255 		systemFontName;
-	Str255		aStr;
-	bool			fontExists;
-
-	//¥TODO?: Maybe we shouldn't call that function so often. If nsFont could store the
-	//				fontNum, nsFontMetricsMac::SetFont() wouldn't need to call this at all.
-#ifdef FONT_CACHE
-	static nsString		lastFontName;
-	static short			lastFontNum;
-	static bool				lastFontExists;
-
-	if (lastFontName == aFontName){
-		aFontNum = lastFontNum;
-		return lastFontExists;
-	}
-#endif
-
-	aStr[0] = aFontName.Length();
-	aFontName.ToCString((char*)&aStr[1], sizeof(aStr)-1);
-
-	::GetFNum(aStr, &aFontNum);
-	if (aFontNum == 0){
-		// Either we didn't find the font, or we were looking for the system font
-		::GetFontName(0, systemFontName);
-		fontExists = ::EqualString(aStr, systemFontName, FALSE, FALSE );
-	}else
-		fontExists = true;
-
-#ifdef FONT_CACHE
-	lastFontExists = fontExists;
-	lastFontNum = aFontNum;
-	lastFontName = aFontName;
-#endif
-
-	return fontExists;
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsDeviceContextMac :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-{
-  aPixel = aColor;
-  return NS_OK;
-}
-

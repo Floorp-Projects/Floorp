@@ -73,7 +73,9 @@ protected:
   nsIDeviceContextSpec  *mSpec;
   GrafPtr								mOldPort;
 
-
+  // InitFontInfoList and nsHashTable are static because GetMacFontNumber is static
+  static void InitFontInfoList();
+  static nsHashtable* gFontInfoList;
 public:
   static bool GetMacFontNumber(const nsString& aFontName, short &fontNum);
 };
