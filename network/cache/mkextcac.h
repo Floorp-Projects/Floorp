@@ -19,4 +19,9 @@
 #ifndef MKEXTCACHE_H
 #define MKEXTCACHE_H
 
+PUBLIC void NET_OpenExtCacheFAT(MWContext *ctxt, char * cache_name, char * instructions);
+MODULE_PRIVATE int NET_FindURLInExtCache(URL_Struct * URL_s, MWContext *ctxt);
+MODULE_PRIVATE void CACHE_CloseAllOpenSARCache();
+MODULE_PRIVATE void CACHE_OpenAllSARCache();
+
 #endif /* MKEXTCACHE_H */
