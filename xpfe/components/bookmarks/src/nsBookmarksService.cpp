@@ -2616,21 +2616,33 @@ NS_IMPL_QUERY_INTERFACE8(nsBookmarksService,
 
 ////////////////////////////////////////////////////////////////////////
 // nsIBookmarksService
-
 nsresult
-nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName, 
-                                            nsIRDFResource* aParentFolder, PRInt32 aIndex,
-                                            nsIRDFResource** aResult, PRBool aIsGroup)
+nsBookmarksService::InsertResource(nsIRDFResource* aResource,
+                                   nsIRDFResource* aParentFolder, PRInt32 aIndex)
 {
   nsresult rv;
+  // Add to container if the parent folder is non null 
+  if (aParentFolder) {
+    nsCOMPtr<nsIRDFContainer> container(do_GetService("@mozilla.org/rdf/container;1", &rv));
+    if (NS_FAILED(rv)) 
+      return rv;
+    rv = container->Init(this, aParentFolder);
+    if (NS_FAILED(rv)) 
+      return rv;
+    // if the index in the js call is null or undefined, aIndex will be equal to 0
+    if (aIndex > 0) 
+      rv = container->InsertElementAt(aResource, aIndex, PR_TRUE);
+    else
+      rv = container->AppendElement(aResource);
+  }
+  return rv;
+}
 
-  nsCOMPtr<nsIRDFContainer> container(do_GetService("@mozilla.org/rdf/container;1", &rv));
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  rv = container->Init(this, aParentFolder);
-  if (NS_FAILED(rv)) 
-    return rv;
+NS_IMETHODIMP
+nsBookmarksService::CreateFolder(const PRUnichar* aName, 
+                                 nsIRDFResource** aResult)
+{
+  nsresult rv;
 
   // Resource: Folder ID
   nsCOMPtr<nsIRDFResource> folderResource;
@@ -2673,18 +2685,6 @@ nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName,
   if (NS_FAILED(rv)) 
     return rv;
 
-  if (aIsGroup) {
-    rv = mInner->Assert(folderResource, kNC_FolderGroup, kTrueLiteral, PR_TRUE);
-    if (NS_FAILED(rv)) 
-      return rv;
-  }
-
-  // Add to container. 
-  if (aIndex >= 0) 
-    rv = container->InsertElementAt(folderResource, !aIndex ? 1 : aIndex, PR_TRUE);
-  else
-    rv = container->AppendElement(folderResource);
-
   *aResult = folderResource;
   NS_ADDREF(*aResult);
 
@@ -2692,60 +2692,44 @@ nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName,
 }
 
 NS_IMETHODIMP
-nsBookmarksService::CreateFolder(const PRUnichar* aName, 
-                                 nsIRDFResource* aParentFolder,
-                                 nsIRDFResource** aResult)
-{
-  return CreateFolderWithDetails(aName, aParentFolder, -1, aResult, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName, 
+nsBookmarksService::CreateFolderInContainer(const PRUnichar* aName, 
                                             nsIRDFResource* aParentFolder, PRInt32 aIndex,
                                             nsIRDFResource** aResult)
 {
-  return CreateFolderWithDetails(aName, aParentFolder, aIndex, aResult, PR_FALSE);
+  nsresult rv = CreateFolder(aName, aResult);
+  if (NS_SUCCEEDED(rv))
+    rv = InsertResource(*aResult, aParentFolder, aIndex);
+  return rv;
 }
 
 NS_IMETHODIMP
 nsBookmarksService::CreateGroup(const PRUnichar* aName, 
-                                nsIRDFResource* aParentFolder,
                                 nsIRDFResource** aResult)
 {
-  return CreateFolderWithDetails(aName, aParentFolder, -1, aResult, PR_TRUE);
+  nsresult rv;
+  rv = CreateFolderInContainer(aName, nsnull, nsnull, aResult);
+  if (NS_SUCCEEDED(rv))
+    rv = mInner->Assert(*aResult, kNC_FolderGroup, kTrueLiteral, PR_TRUE);
+  return rv;
 }
 
 NS_IMETHODIMP
-nsBookmarksService::CreateGroupWithDetails(const PRUnichar* aName, 
+nsBookmarksService::CreateGroupInContainer(const PRUnichar* aName, 
                                            nsIRDFResource* aParentFolder, PRInt32 aIndex,
                                            nsIRDFResource** aResult)
 {
-  return CreateFolderWithDetails(aName, aParentFolder, aIndex, aResult, PR_TRUE);
+  nsresult rv = CreateGroup(aName, aResult);
+  if (NS_SUCCEEDED(rv))
+    rv = InsertResource(*aResult, aParentFolder, aIndex);
+  return rv;
 }
 
 NS_IMETHODIMP
 nsBookmarksService::CreateBookmark(const PRUnichar* aName, const char* aURL, 
-                                   nsIRDFResource* aParentFolder, 
+                                   const PRUnichar* aDocCharSet, 
                                    nsIRDFResource** aResult)
 {
-  return CreateBookmarkWithDetails(aName, aURL, nsnull, aParentFolder, -1, aResult);
-}
-
-NS_IMETHODIMP
-nsBookmarksService::CreateBookmarkWithDetails(const PRUnichar* aName, const char* aURL, 
-                                              const PRUnichar* aDocCharSet, 
-                                              nsIRDFResource* aParentFolder, PRInt32 aIndex,
-                                              nsIRDFResource** aResult)
-{
   nsresult rv;
-
-  nsCOMPtr<nsIRDFContainer> container(do_GetService("@mozilla.org/rdf/container;1", &rv));
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  rv = container->Init(this, aParentFolder);
-  if (NS_FAILED(rv)) 
-    return rv;
 
   // Resource: Bookmark ID
   nsCOMPtr<nsIRDFResource> bookmarkResource;
@@ -2797,19 +2781,47 @@ nsBookmarksService::CreateBookmarkWithDetails(const PRUnichar* aName, const char
     rv = gRDF->GetLiteral(aDocCharSet, getter_AddRefs(charsetLiteral));
     if (NS_FAILED(rv)) 
       return rv;
-
     rv = mInner->Assert(bookmarkResource, kWEB_LastCharset, charsetLiteral, PR_TRUE);
     if (NS_FAILED(rv)) 
       return rv;
   }
 
-  // Add to container. 
-  if (aIndex >= 0) 
-    rv = container->InsertElementAt(bookmarkResource, !aIndex ? 1 : aIndex, PR_TRUE);
-  else
-    rv = container->AppendElement(bookmarkResource);
-
   *aResult = bookmarkResource;
+  NS_ADDREF(*aResult);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::CreateBookmarkInContainer(const PRUnichar* aName, const char* aURL, 
+                                              const PRUnichar* aDocCharSet, 
+                                              nsIRDFResource* aParentFolder, PRInt32 aIndex,
+                                              nsIRDFResource** aResult)
+{
+  nsresult rv = CreateBookmark(aName, aURL, aDocCharSet, aResult);
+  if (NS_SUCCEEDED(rv))
+    rv = InsertResource(*aResult, aParentFolder, aIndex);
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::CreateSeparator(nsIRDFResource** aResult)
+{
+  nsresult rv;
+
+  // create the anonymous resource for the separator
+  nsCOMPtr<nsIRDFResource> separatorResource;
+  rv = BookmarkParser::CreateAnonymousResource(getter_AddRefs(separatorResource));
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  // Assert the separator type arc
+  rv = mInner->Assert(separatorResource, kRDF_type, kNC_BookmarkSeparator, PR_TRUE);
+  if (NS_FAILED(rv))
+    return rv;
+
+  *aResult = separatorResource;
   NS_ADDREF(*aResult);
 
   return rv;
@@ -2840,7 +2852,7 @@ nsBookmarksService::AddBookmarkImmediately(const char *aURI,
     return rv;
 
   nsCOMPtr<nsIRDFResource> bookmark;
-  return CreateBookmarkWithDetails(aTitle, aURI, aCharset, destinationFolder, -1, 
+  return CreateBookmarkInContainer(aTitle, aURI, aCharset, destinationFolder, -1, 
                                    getter_AddRefs(bookmark));
 }
 
@@ -3256,7 +3268,7 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
     currFile->IsDirectory(&isDir);
     if (isDir) {
       nsCOMPtr<nsIRDFResource> folder;
-      rv = CreateFolder(bookmarkName.get(), aParentResource, getter_AddRefs(folder));
+      rv = CreateFolderInContainer(bookmarkName.get(), aParentResource, -1, getter_AddRefs(folder));
       if (NS_FAILED(rv)) 
         continue;
 
@@ -3281,7 +3293,7 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
       ResolveShortcut(path, getter_Copies(url));
 
       nsCOMPtr<nsIRDFResource> bookmark;
-      rv = CreateBookmark(name.get(), url.get(), aParentResource, getter_AddRefs(bookmark));
+      rv = CreateBookmarkInContainer(name.get(), url.get(), nsnull, aParentResource, -1, getter_AddRefs(bookmark));
       if (NS_FAILED(rv)) 
         continue;
     }
@@ -4825,8 +4837,8 @@ nsBookmarksService::LoadBookmarks()
     bookmarksPrefs->GetBoolPref("import_system_favorites", &useDynamicSystemBookmarks);
 #endif
 
-  char* systemBookmarksURL = nsnull;
 #if defined(XP_WIN) || defined(XP_BEOS)
+  char* systemBookmarksURL = nsnull;
   nsCOMPtr<nsIRDFResource> systemFavoritesFolder;
 #endif
 
