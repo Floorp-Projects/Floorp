@@ -1,25 +1,39 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
+ * The Original Code is Mozilla Progress Dialog.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
- * Corporation.  Portions created by Netscape are 
- * Copyright (C) 2001 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
  *
- * Contributors:
- *  Bill Law    <law@netscape.com>
- */
+ * Contributor(s):
+ *   Bill Law <law@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* This file implements the nsIProgressDialog interface.  See nsIProgressDialog.idl
  *
@@ -30,13 +44,6 @@
  *
  * In addition, this file implements an nsIModule object that registers the
  * nsProgressDialog component.
- */
-
-/* NOTE: The current implementation uses the existing "helper app launcher download dialog"
- * (see http://lxr.mozilla.org/seamonkey/source/xpfe/components/ucth/resources) and
- * implements only a subset of the capabilities envisioned for this component.
- *
- * See the .idl file for details.
  */
 
 /* ctor
@@ -110,7 +117,7 @@ nsProgressDialog.prototype = {
     get rate()              { return this.mRate; },
     get kRate()             { return this.mRate / 1024; },
 
-    // These setters use funcitons that update the dialog.
+    // These setters use functions that update the dialog.
     set paused(newval)      { return this.setPaused(newval); },
     set request(newval)     { return this.setRequest(newval); },
     set completed(newval)   { return this.setCompleted(newval); },
@@ -218,8 +225,7 @@ nsProgressDialog.prototype = {
         // Update time remaining.
         if ( this.rate && ( aMaxTotalProgress > 0 ) ) {
             // Calculate how much time to download remaining at this rate.
-            var rem = ( aMaxTotalProgress - aCurTotalProgress ) / this.rate;
-            rem = parseInt( rem + .5 );
+            var rem = Math.round( ( aMaxTotalProgress - aCurTotalProgress ) / this.rate );
             this.setValue( "timeLeft", this.formatSeconds( rem ) );
         } else {
             // We don't know how much time remains.
