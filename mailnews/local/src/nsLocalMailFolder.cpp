@@ -2239,6 +2239,19 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
   // we are the destination folder for a move/copy
   nsresult rv = copySucceeded ? NS_OK : NS_ERROR_FAILURE;
+  if (!mCopyState) return NS_OK;
+  if (!copySucceeded)
+  {
+    if (mCopyState->m_fileStream)
+      mCopyState->m_fileStream->close();
+    nsCOMPtr <nsIFileSpec> pathSpec;
+    rv = GetPath(getter_AddRefs(pathSpec));
+    if (NS_SUCCEEDED(rv) && pathSpec)
+      pathSpec->Truncate(mCopyState->m_curDstKey);
+    ClearCopyState(PR_FALSE);
+    return NS_OK;
+  }
+     
   nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
   nsCOMPtr<nsIMsgWindow> msgWindow;
   PRBool multipleCopiesFinished = (mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount);

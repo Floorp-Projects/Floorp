@@ -329,12 +329,6 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
 	// is coming from netlib so they are never going to ping us again with on data available. This means
 	// we'll never be going through the Process loop...
 
-  /* mscott - the NS_BINDING_ABORTED is a hack to get around a problem I have
-     with the necko code...it returns this and treats it as an error when
-	 it really isn't an error! I'm trying to get them to change this.
-   */
-	if (aStatus == NS_BINDING_ABORTED)
-		aStatus = NS_OK;
   if (m_multipleMsgMoveCopyStream)
   {
     m_multipleMsgMoveCopyStream->Close();
