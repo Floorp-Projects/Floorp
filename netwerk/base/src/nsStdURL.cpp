@@ -1322,17 +1322,10 @@ nsStdURL::GetFile(nsIFile * *aFile)
         path.Cut(0, 1);
 #endif
 
-    // we need to make sure that the filepath is unescaped! 
-	PRUint32 size;
-
-	path.SizeOf(nsnull, &size);
-	char* escapedPath = (char*) nsAllocator::Clone((void*)(const char*)path,size);
-	nsUnescape(escapedPath);
+    nsUnescape((char*)path.GetBuffer());
 
     nsCOMPtr<nsILocalFile> localFile;
-    rv = NS_NewLocalFile(escapedPath, getter_AddRefs(localFile));
-
-	nsAllocator::Free(escapedPath);
+    rv = NS_NewLocalFile(path, getter_AddRefs(localFile));
 
     mFile = localFile;
 	*aFile = mFile;
