@@ -179,6 +179,14 @@ NS_METHOD nsMenuBar::GetNativeData(void *& aData)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::SetNativeData(void * aData)
+{
+  // Temporary hack for MacOS. Will go away when nsMenuBar handles it's own
+  // construction
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Paint()
 {
   return NS_OK;
@@ -198,3 +206,4 @@ nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
 }
+

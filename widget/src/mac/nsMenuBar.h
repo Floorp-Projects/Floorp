@@ -56,6 +56,7 @@ public:
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD Paint();
+  NS_IMETHOD SetNativeData(void* aData);
 protected:
   PRUint32     mNumMenus;
   nsVoidArray mMenuVoidArray;

@@ -99,6 +99,12 @@ class nsIMenuBar : public nsISupports {
     NS_IMETHOD  GetNativeData(void*& aData) = 0;
 
    /**
+    * Sets Native MenuHandle. Temporary hack for mac until 
+    * nsMenuBar does it's own construction
+    */
+    NS_IMETHOD  SetNativeData(void* aData) = 0;
+    
+   /**
     * Draw the menubar
     *
     */

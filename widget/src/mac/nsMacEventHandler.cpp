@@ -308,10 +308,20 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			nsWindow*	focusedWidget = mTopLevelWidget;
 			toolkit->SetFocus(focusedWidget);
 			nsIMenuBar* menuBar = focusedWidget->GetMenuBar();
-
-					//¥TODO:	if the focusedWidget doesn't have a menubar,
-					//				look all the way up to the window
-					//				until one of the parents has a menubar
+			if(menuBar)
+			{
+			  void* menuHandle = nsnull;
+			  
+			  menuBar->GetNativeData(menuHandle);
+			  ::SetMenuBar((Handle)menuHandle);
+			  menuBar->Paint();
+			}
+			else
+			{
+			  //¥TODO:	if the focusedWidget doesn't have a menubar,
+			  //				look all the way up to the window
+			  //				until one of the parents has a menubar
+			}
 
 			//¥TODO: set the menu bar here
 		}
@@ -319,6 +329,11 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		{
 			//¥TODO: save the focused widget for that window
 			toolkit->SetFocus(nsnull);
+	
+			Handle menuBar = ::GetMenuBar(); // Get a copy of the menu list
+			
+			nsIMenuBar* menuBarInterface = mTopLevelWidget->GetMenuBar();
+			menuBarInterface->SetNativeData((void*)menuBar);
 		}
 	}
 	return PR_TRUE;
