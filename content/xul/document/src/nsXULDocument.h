@@ -444,13 +444,12 @@ protected:
                            nsRDFDOMNodeList* aElements);
 
     nsresult
-    ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt32& aNameSpaceID);
+    ParseTagString(const nsString& aTagName, nsIAtom*& aName,
+                   nsIAtom*& aPrefix);
 
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
-    nsresult CreateElement(PRInt32 aNameSpaceID,
-                           nsIAtom* aTag,
-                           nsIContent** aResult);
+    nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult);
 
     nsresult PrepareToLoad(nsISupports* aContainer,
                            const char* aCommand,
