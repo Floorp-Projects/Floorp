@@ -143,7 +143,12 @@ ldap_perror( LDAP *ld, const char *s )
 	}
 
 	if ( ld == NULL ) {
-		sprintf( msg, "%s%s%s", s, separator,
+#ifdef HAVE_SNPRINTF
+		snprintf( msg, sizeof(msg),
+#else
+		sprintf( msg,
+#endif
+		    "%s%s%s", s, separator,
 		    nsldapi_safe_strerror( errno ) );
 		ber_err_print( msg );
 		return;
@@ -153,8 +158,13 @@ ldap_perror( LDAP *ld, const char *s )
 	err = LDAP_GET_LDERRNO( ld, &matched, &errmsg );
 	for ( i = 0; ldap_errlist[i].e_code != -1; i++ ) {
 		if ( err == ldap_errlist[i].e_code ) {
-			sprintf( msg, "%s%s%s", s, separator,
-				    ldap_errlist[i].e_reason );
+#ifdef HAVE_SNPRINTF
+			snprintf( msg, sizeof(msg),
+#else
+			sprintf( msg,
+#endif
+			    "%s%s%s", s, separator,
+			    ldap_errlist[i].e_reason );
 			ber_err_print( msg );
 			if ( err == LDAP_CONNECT_ERROR ) {
 				ber_err_print( " - " );
@@ -163,12 +173,22 @@ ldap_perror( LDAP *ld, const char *s )
 			}
 			ber_err_print( "\n" );
 			if ( matched != NULL && *matched != '\0' ) {
-				sprintf( msg, "%s%smatched: %s\n",
+#ifdef HAVE_SNPRINTF
+				snprintf( msg, sizeof(msg),
+#else
+				sprintf( msg,
+#endif
+				    "%s%smatched: %s\n",
 				    s, separator, matched );
 				ber_err_print( msg );
 			}
 			if ( errmsg != NULL && *errmsg != '\0' ) {
-				sprintf( msg, "%s%sadditional info: %s\n",
+#ifdef HAVE_SNPRINTF
+				snprintf( msg, sizeof(msg),
+#else
+				sprintf( msg,
+#endif
+				    "%s%sadditional info: %s\n",
 				    s, separator, errmsg );
 				ber_err_print( msg );
 			}
@@ -176,7 +196,12 @@ ldap_perror( LDAP *ld, const char *s )
 			return;
 		}
 	}
-	sprintf( msg, "%s%sNot an LDAP errno %d\n", s, separator, err );
+#ifdef HAVE_SNPRINTF
+	snprintf( msg, sizeof(msg),
+#else
+	sprintf( msg,
+#endif
+	    "%s%sNot an LDAP errno %d\n", s, separator, err );
 	ber_err_print( msg );
 	LDAP_MUTEX_UNLOCK( ld, LDAP_ERR_LOCK );
 }
