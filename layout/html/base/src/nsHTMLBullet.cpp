@@ -264,6 +264,18 @@ BulletFrame::Reflow(nsIPresContext*      aCX,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+
+  // Get cached state for containing block frame
+  nsBlockReflowState* state =
+    nsBlockFrame::FindBlockReflowState(aCX, this);
+  if (nsnull != state) {
+    nsLineLayout* lineLayoutState = state->mCurrentLine;
+    if (nsnull != lineLayoutState) {
+      lineLayoutState->mReflowResult =
+        NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
+    }
+  }
+
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
