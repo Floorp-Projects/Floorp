@@ -200,12 +200,6 @@ nsTypeAheadFind::Init()
   mFind->SetCaseSensitive(PR_FALSE);
   mFind->SetWordBreaker(nsnull);
 
-  nsCOMPtr<nsIWindowWatcher> windowWatcher =
-    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  windowWatcher->RegisterNotification(this);
-
   return rv;
 }
 
@@ -263,6 +257,14 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
       typeAheadFind->CancelFind();
     }
     else if (!typeAheadFind->mStringBundle) {
+      // Get ready to watch windows
+      nsresult rv;
+      nsCOMPtr<nsIWindowWatcher> windowWatcher =
+        do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      windowWatcher->RegisterNotification(typeAheadFind);
+
       // Initialize string bundle
       nsCOMPtr<nsIStringBundleService> stringBundleService =
         do_GetService(kStringBundleServiceCID);
