@@ -63,7 +63,7 @@ LIBS = \
 	-lxpcom \
 	-lxp \
 	-lraptorhtmlpars \
-	$(DIST)/bin/components/libraptorhtml.so \
+	$(DIST)/bin/components/libraptorhtml.$(DLL_SUFFIX) \
 	-lexpat \
 	-lxmltok \
 	-ljsurl \
