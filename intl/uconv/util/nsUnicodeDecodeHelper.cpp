@@ -135,7 +135,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(const char * aSrc,
                                                      uShiftTable ** aShiftTable, 
                                                      uMappingTable ** aMappingTable)
 {
-  const char * src = aSrc;
+  PRUint8 * src = (PRUint8 *)aSrc;
   PRInt32 srcLen = *aSrcLength;
   PRUnichar * dest = aDest;
   PRUnichar * destEnd = aDest + *aDestLength;
@@ -155,7 +155,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(const char * aSrc,
       break;
     }
 
-    if (!uScan(aShiftTable[i], NULL, (PRUint8 *)src, &med, srcLen, 
+    if (!uScan(aShiftTable[i], NULL, src, &med, srcLen, 
     (PRUint32 *)&bcr)) {
       res = NS_OK_UDEC_MOREINPUT;
       break;
@@ -178,7 +178,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(const char * aSrc,
 
   if ((srcLen > 0) && (res == NS_OK)) res = NS_OK_UDEC_MOREOUTPUT;
 
-  *aSrcLength = src - aSrc;
+  *aSrcLength = src - (PRUint8 *)aSrc;
   *aDestLength  = dest - aDest;
   return res;
 }
