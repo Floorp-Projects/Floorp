@@ -654,7 +654,7 @@ nsHTTPHandler::Init()
 #elif defined (XP_MAC)
     mAppOSCPU = "PPC";
 #elif defined (XP_BEOS)
-    mAppOSCPU = "BeOS"
+    mAppOSCPU = "BeOS";
 #endif
 
     rv = BuildUserAgent();

@@ -93,6 +93,8 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 #define MAX_NAME_LENGTH 128
 #elif defined (XP_UNIX)
 #define MAX_NAME_LENGTH 1024 //got this one from nsComponentManager.h
+#elif defined (XP_BEOS)
+#define MAX_NAME_LENGTH MAXNAMLEN
 #endif
 
 MOZ_DECL_CTOR_COUNTER(nsInstallInfo);

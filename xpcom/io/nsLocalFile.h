@@ -34,7 +34,7 @@
 #ifdef XP_PC
 #include "nsLocalFileWin.h"
 #else
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include "nsLocalFileUnix.h"
 #else
 #ifdef XP_MAC
