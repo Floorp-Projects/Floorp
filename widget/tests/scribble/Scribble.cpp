@@ -38,6 +38,9 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
+#include "nsIImageManager.h"
+#include "nsIImageRequest.h"
+#include "nsIImageObserver.h"
 
 ScribbleApp scribbleData;
 
@@ -58,6 +61,12 @@ ScribbleApp scribbleData;
 #define GFX_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
 #endif
+
+
+
+static nsIImage		*gImage = nsnull;
+static PRBool			gInstalledColorMap = PR_FALSE;
+static nsIWidget	*gWindow = nsnull;
 
 
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
@@ -219,8 +228,7 @@ nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
             if (scribbleData.isDrawing) {
             
                 nsIRenderingContext *drawCtx = aEvent->widget->GetRenderingContext();
-                //drawCtx->SetColor(aEvent->widget->GetForegroundColor());
-                drawCtx->SetColor(NS_RGB(255, 0, 0));
+                drawCtx->SetColor(aEvent->widget->GetForegroundColor());
                 drawCtx->DrawLine(scribbleData.mousePos.x, 
                                   scribbleData.mousePos.y,
                                   ((nsGUIEvent*)aEvent)->point.x,
@@ -322,6 +330,7 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
 
                         nsString circles("Circles");
                         nsString rects("Rectangles");
+                        nsString image("Image");
                         if (buf.Equals(circles)) {
                             for (int i = 0; i < 100; i++) {
                                 drawCtx->SetColor((nscolor)rand());
@@ -342,6 +351,17 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                                 drawCtx->DrawRect(rect);
                             }
                         }
+                        else 
+                        	if (buf.Equals(image)) 
+	                        	{
+	                        	rect.SizeTo(50,50);
+	                        	for(int i=0;i<100;i++)
+			                       	{
+			                        drawCtx->SetColor((nscolor)rand());
+			                        rect.MoveTo(x+2*i,y+2*i);
+			                        drawCtx->DrawRect(rect);
+			                        }
+	                        	}
 
                         NS_RELEASE(drawCtx);
                     }
@@ -554,6 +574,17 @@ nsresult CreateApplication(int * argc, char ** argv)
     checkButton->Show(PR_TRUE);
     NS_RELEASE(checkButton);
 
+    // create the "Images" check button
+    rect.SetRect(50, 250, 100, 25);  
+
+    nsRepository::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void **)&checkButton);
+    checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
+    nsString cbLabel4("Image");
+    checkButton->SetLabel(cbLabel4);
+    //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    checkButton->Show(PR_TRUE);
+    NS_RELEASE(checkButton);
+
     //
     // Add the color section
     //
@@ -622,3 +653,95 @@ nsresult CreateApplication(int * argc, char ** argv)
     return(appShell->Run());
 }
 
+//=================================================================
+
+class MyObserver : public nsIImageRequestObserver
+{
+public:
+	MyObserver();
+	~MyObserver();
+	
+	NS_DECL_ISUPPORTS
+	
+	virtual void	Notify(nsIImageRequest *aImageRequest,nsIImage *aImage,nsImageNotification aNotificationType,
+											PRInt32 aParam1,PRInt32 aParam2,void *aParam3);
+											
+	virtual void NotifyError(nsIImageRequest *aImageRequest,nsImageError aErrorType);
+	
+};
+
+//=================================================================
+
+MyObserver::MyObserver()
+{
+}
+
+//=================================================================
+
+MyObserver::~MyObserver()
+{
+
+}
+
+//=================================================================
+
+static NS_DEFINE_IID(kIImageObserverIID,NS_IIMAGEREQUESTOBSERVER_IID);
+NS_IMPL_ISUPPORTS(MyObserver,kIImageObserverIID)
+
+void
+MyObserver::Notify(nsIImageRequest *aImageRequest,
+									 nsIImage *aImage,
+									 nsImageNotification aNotificationType,
+									 PRInt32 aParam1,PRInt32 aParam2,void *aParam3)
+{
+
+	switch (aNotificationType) 
+	  { 
+	   case nsImageNotification_kDimensions: 
+	    { 
+	    char buffer[40]; 
+	    sprintf(buffer, "Image:%d x %d", aParam1, aParam2); 
+	    } 
+	   break; 
+
+	   case nsImageNotification_kPixmapUpdate: 
+	   case nsImageNotification_kImageComplete: 
+	   case nsImageNotification_kFrameComplete: 
+	    { 
+	    if (gImage == nsnull && aImage) 
+	      { 
+	      gImage = aImage; 
+	      NS_ADDREF(aImage); 
+	      } 
+
+	    if (!gInstalledColorMap && gImage) 
+	      { 
+	      nsColorMap *cmap = gImage->GetColorMap(); 
+
+	      if (cmap != nsnull && cmap->NumColors > 0) 
+	        { 
+	        gWindow->SetColorMap(cmap); 
+	        } 
+	      gInstalledColorMap = PR_TRUE; 
+	      } 
+	    nsRect *rect = (nsRect *)aParam3; 
+	    nsIRenderingContext *drawCtx = gWindow->GetRenderingContext(); 
+
+	    if (gImage) 
+	      { 
+	      drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight()); 
+	      } 
+	   } 
+	   break; 
+	} 
+} 
+
+//------------------------------------------------------------ 
+
+void 
+MyObserver::NotifyError(nsIImageRequest *aImageRequest, 
+                        nsImageError aErrorType) 
+{ 
+  //::MessageBox(NULL, "Image loading error!",class1Name, MB_OK); 
+} 
+  
