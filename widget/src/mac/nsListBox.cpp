@@ -17,6 +17,7 @@
  */
 
 #include "nsListBox.h"
+#include "nsMacResources.h"
 #include <StringCompare.h>
 #include <Resources.h>
 #include <Folders.h>
@@ -94,65 +95,14 @@ NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
-		short			sysVRefNum;
-		long			sysDirID;
-		short			fRefNum;
-		short			saveResFile;
-		Handle		resH;
+	#define kLDESRsrcID 128 // The Appearance Manager needs a 'ldes' resource to create list controls
 
-	#define kFinderLDESRsrcID 128
+	nsMacResources::OpenLocalResourceFile();
 
-	{	//---
-		// Hack: the list control needs a 'ldes' resource to initialize properly but
-		// we don't have any global resource file that we could use to store one as a 
-		// resource template so we temporarily borrow the resource that exists in the Finder.
-		//
-		//¥REVISIT: this hack is probably a big performance hit because the Finder rsrc fork
-		// is accessed each time a list box is created. Amongst possible solutions:
-		//	- Switch to GFX widgets. Problem: maybe we'll still want to keep the native widgets.
-		//	- Define a Mozilla resource file that all the applications (internal + embedding)
-		//		will have to include. Problem: risk of rsrc ID conflicts with embedding apps.
-		//	- Keep this hack but have a global refNum for the Finder. Problem: well...
-		//	- Stop using the Appearance Manager control for list boxes: use LNew directly.
-		saveResFile = ::CurResFile();
-		::FindFolder(kOnSystemDisk, kSystemFolderType, kDontCreateFolder, &sysVRefNum, &sysDirID);
-		fRefNum = HOpenResFile(sysVRefNum, sysDirID, ::LMGetFinderName(), fsRdPerm);
-		if (fRefNum != -1)
-		{
-			::UseResFile(fRefNum);
+		mValue = kLDESRsrcID;
+		nsresult res = Inherited::Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 
-			resH = ::GetResource(kControlListDescResType, kFinderLDESRsrcID);
-			if (resH)
-			{
-				ldesRsrc** ldesH = (ldesRsrc**)resH;
-				(*ldesH)->version 		= 0;
-				(*ldesH)->rows 				= 0;
-				(*ldesH)->cols 				= 1;
-				(*ldesH)->cellHeight 	= 0;
-				(*ldesH)->cellWidth 	= 0;
-				(*ldesH)->vertScroll 	= 1;
-				(*ldesH)->horizScroll	= 0;
-				(*ldesH)->ldefID 			= 0;
-				(*ldesH)->hasGrow 		= 0;
-			}
-		}
-	}
-
-	mValue = kFinderLDESRsrcID;
-	nsresult res = Inherited::Create(aParent, aRect, aHandleEventFunction,
-						aContext, aAppShell, aToolkit, aInitData);
-
-	{	//---
-		// Hack: part 2 - see above
-		if (fRefNum != -1)
-		{
-			if (resH)
-				::ReleaseResource(resH);
-
-			::CloseResFile(fRefNum);
-			::UseResFile(saveResFile);
-		}
-	}
+	nsMacResources::CloseLocalResourceFile();
 
 	if (res == NS_OK)
 	{
