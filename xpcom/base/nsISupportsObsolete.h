@@ -37,9 +37,7 @@
 #ifndef nsISupportsObsolete_h__
 #define nsISupportsObsolete_h__
 
-#if defined(NS_MT_SUPPORTED)
 #include "prcmon.h"
-#endif  /* NS_MT_SUPPORTED */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -258,20 +256,10 @@ NS_IMPL_SETTER_STR(_class::Set##_postfix, _member)
   { 0x88210890, 0x47a6, 0x11d2,                                               \
     {0xbe, 0xc3, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
 
-
-#if defined(NS_MT_SUPPORTED)
-
 #define NS_LOCK_INSTANCE()                                                    \
   PR_CEnterMonitor((void*)this)
 #define NS_UNLOCK_INSTANCE()                                                  \
   PR_CExitMonitor((void*)this)
-
-#else
-
-#define NS_LOCK_INSTANCE()
-#define NS_UNLOCK_INSTANCE()
-
-#endif
 
 /**
  * This implements query interface with two assumptions: First, the

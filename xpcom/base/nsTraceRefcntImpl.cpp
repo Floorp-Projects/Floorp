@@ -99,17 +99,12 @@ NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 #include "plhash.h"
 #include "prmem.h"
 
-#if defined(NS_MT_SUPPORTED)
 #include "prlock.h"
 
 static PRLock* gTraceLock;
 
 #define LOCK_TRACELOG()   PR_Lock(gTraceLock)
 #define UNLOCK_TRACELOG() PR_Unlock(gTraceLock)
-#else /* ! NT_MT_SUPPORTED */
-#define LOCK_TRACELOG()
-#define UNLOCK_TRACELOG()
-#endif /* ! NS_MT_SUPPORTED */
 
 static PLHashTable* gBloatView;
 static PLHashTable* gTypesToLog;
@@ -843,10 +838,7 @@ static void InitTraceLog(void)
     gLogging = PR_TRUE;
   }
 
-#if defined(NS_MT_SUPPORTED)
   gTraceLock = PR_NewLock();
-#endif /* NS_MT_SUPPORTED */
-
 }
 
 #endif

@@ -4583,10 +4583,6 @@ if test "$MOZ_LDAP_XPCOM"; then
     fi
 fi
 
-dnl make sure that we compile in multi-processor support
-NS_MT_SUPPORTED=1
-AC_DEFINE(NS_MT_SUPPORTED)
-
 if test "$SUNCTL"; then
     dnl older versions of glib do not seem to have gmodule which ctl needs
     _SAVE_CFLAGS=$CFLAGS
