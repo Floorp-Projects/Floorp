@@ -1063,20 +1063,22 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
 // When the style context changes, make sure that all of our styles are still up to date.
 //
 NS_IMETHODIMP
-nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
+nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
+                                               PRInt32 aParentChange, nsStyleChangeList* aChangeList,
+                                               PRInt32* aLocalChange)
 {
-
-  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
-  
   // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange,
+                                               aChangeList, aLocalChange); 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  mRenderer.ReResolveStyles(*aPresContext);
+  if (NS_COMFALSE != rv) {
+    mRenderer.ReResolveStyles(*aPresContext);
+  }
   
-  return NS_OK;
+  return rv;
   
 } // ReResolveStyleContext
 

@@ -603,7 +603,7 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext&          aPresContext,
                             nsReflowStatus&          aStatus)
 {
 
-  ReResolveStyleContext(&aPresContext, mStyleContext);
+  ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
 	
   if (mUndetermined)
      gStripeAnimator->AddFrame(this);
@@ -765,22 +765,22 @@ nsProgressMeterFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
 // When the style context changes, make sure that all of our styles are still up to date.
 //
 NS_IMETHODIMP
-nsProgressMeterFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
+nsProgressMeterFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
+                                                PRInt32 aParentChange, nsStyleChangeList* aChangeList, 
+                                                PRInt32* aLocalChange)
 {
-  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
-  
   // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange, aChangeList, aLocalChange); 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if ( old.get() != mStyleContext ) {
+  if (NS_COMFALSE != rv) {
     nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
     RefreshStyleContext(aPresContext, barPseudo, &mBarStyle, mContent, mStyleContext);
   }
   
-  return NS_OK;
+  return rv;
   
 } // ReResolveStyleContext
 

@@ -59,7 +59,10 @@ public:
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext);
+                                   nsIStyleContext* aParentContext,
+                                   PRInt32 aParentChange,
+                                   nsStyleChangeList* aChangeList,
+                                   PRInt32* aLocalChange);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
