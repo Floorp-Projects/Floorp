@@ -26,6 +26,7 @@
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
+#include "nsMsgBaseCID.h"
 
 #include "nsSmtpUrl.h"
 #include "nsSmtpProtocol.h"
