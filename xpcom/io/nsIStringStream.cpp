@@ -152,11 +152,10 @@ class ConstCharImpl
 //========================================================================================
 {
     public:
-                                        ConstCharImpl(const char* inString)
-                                            : mConstString(inString)
-                                            , mLength(inString ? strlen(inString) : 0)
-                                        {
-                                        }
+                                        ConstCharImpl(const char* inString, PRInt32 inLength = -1)
+                                            : mConstString(inString),
+                                            mLength(inLength == -1 ?
+                                                    (inString ? strlen(inString) : 0) : inLength) {}
                                        
     protected:
     
@@ -191,8 +190,8 @@ class CharImpl
     enum { kAllocQuantum = 256 };
     
     public:
-                                        CharImpl(char** inString)
-                                            : ConstCharImpl(*inString)
+                                        CharImpl(char** inString, PRInt32 inLength = -1)
+                                            : ConstCharImpl(*inString, inLength)
                                             , mString(*inString)
                                             , mAllocLength(mLength + 1)
                                             , mOriginalLength(mLength)
@@ -227,11 +226,7 @@ class CharImpl
                                             PRInt32 maxCount = mAllocLength - 1 - mOffset;
                                             if ((PRInt32)aCount > maxCount)
                                             {
-                                                
-                                                do {
-                                                    maxCount += kAllocQuantum;
-                                                } while ((PRInt32)aCount > maxCount);
-                                                mAllocLength = maxCount + 1 + mOffset;
+                                                mAllocLength = aCount + 1 + mOffset + kAllocQuantum;
                                                 char* newString = new char[mAllocLength];
 	                                            if (!newString)
 	                                            {
@@ -264,7 +259,8 @@ class ConstStringImpl
 {
     public:
                                         ConstStringImpl(const nsString& inString)
-                                            : ConstCharImpl(inString.ToNewCString())
+                                            : ConstCharImpl(inString.ToNewCString(),
+                                                            inString.Length())
                                         {
                                         }
 
@@ -302,13 +298,16 @@ class StringImpl
                                             // Clone our string as chars
                                             char* cstring = mString.ToNewCString();
                                             // Make a CharImpl and do the write
-                                            CharImpl chars(&cstring);
+                                            CharImpl chars(&cstring, mString.Length());
                                             chars.Seek(PR_SEEK_SET, mOffset);
                                             // Get the bytecount and result from the CharImpl
                                             PRInt32 result = chars.write(buf,count);
                                             mLastResult = chars.get_result();
                                             // Set our string to match the new chars
-                                            mString = cstring;
+                                            chars.Seek(PR_SEEK_SET, 0);
+                                            size_t newLength;
+                                            chars.Available(&newLength);
+                                            mString.Assign(cstring, newLength);
                                             // Set our const string also...
                                             delete [] (char*)mConstString;
                                             mConstString = cstring;
@@ -316,7 +315,7 @@ class StringImpl
                                         }
     protected:
     
-        nsString&                        mString;
+        nsString&                       mString;
         
 }; // class StringImpl
 
