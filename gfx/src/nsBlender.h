@@ -83,10 +83,10 @@ public:
     * @param aDLSpan number of bytes per line for the destination bytes
     * @param aMLSpan number of bytes per line for the Mask bytes
     * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-    * @param aSaveBlendArea informs routine if the area affected area will be save first
     */
   void Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+                 PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
   /** --------------------------------------------------------------------------
    * Blend two 24 bit image arrays using an 8 bit alpha mask
@@ -99,10 +99,9 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
 
  /** --------------------------------------------------------------------------
    * Blend two 24 bit image arrays using a passed in blend value
@@ -115,10 +114,10 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+                 PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
 
  /** --------------------------------------------------------------------------
@@ -132,10 +131,10 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+                 PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
  /** --------------------------------------------------------------------------
    * Blend two 8 bit image arrays using an 8 bit alpha mask
@@ -148,10 +147,9 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
 
  /** --------------------------------------------------------------------------
    * Blend two 8 bit image arrays using a passed in blend value
@@ -164,16 +162,13 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+                PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,
+                nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
 
-  PRUint8             *mSaveBytes;    // place to save bits
-  PRInt32             mSaveLS;
   nsIDeviceContext    *mTheDeviceCon;
-
 };
 
 #endif
