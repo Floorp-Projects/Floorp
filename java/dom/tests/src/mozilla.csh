@@ -13,5 +13,5 @@ setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${MOZILLA_FIVE_HOME}
 setenv PATH ${JAVA_HOME}/bin:${PATH}
 setenv PATH ${PATH}:${MOZILLA_FIVE_HOME}:${PREFIX}/bin
 
-setenv CLASSPATH ${JAVADOM_HOME}/classes:${MOZILLA_FIVE_HOME}/classes:${PREFIX}/xml/xml.jar:.
+setenv CLASSPATH ${JAVADOM_HOME}/classes:${MOZILLA_FIVE_HOME}/../classes:${PREFIX}/xml/xml.jar:.
 setenv CLASSPATH ${TEST_PATH}/classes:${CLASSPATH}

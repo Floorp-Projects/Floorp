@@ -29,7 +29,7 @@ set TEST_URL=file:
 set PATH=%JAVA_HOME%\bin;%PATH%
 set PATH=%MOZILLA_FIVE_HOME%;%PATH%
 
-set CLASSPATH=%TEST_PATH%\..\classes;%JAVADOM_HOME%\classes;%MOZILLA_FIVE_HOME%\classes;%CLASSPATH%
+set CLASSPATH=%TEST_PATH%\..\classes;%JAVADOM_HOME%\classes;%MOZILLA_FIVE_HOME%\..\classes;%CLASSPATH%
 
 
 rem creating new console window with these variables being set
