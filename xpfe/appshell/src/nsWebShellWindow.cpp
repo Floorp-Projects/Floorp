@@ -1354,19 +1354,63 @@ NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
                                                      nsIWebShell*& aResult)
 {
   nsresult rv = NS_OK;
+  nsString nameStr(aName);
 
   // Zero result (in case we fail).
   aResult = nsnull;
 
-  // Search for named frame within our root webshell.  This will
-  // bypass the .xul document (and rightfully so).  We need to be
-  // careful not to give that documents child frames names!
-  //
-  // This will need to be enhanced to search for (owned?) named
-  // windows at some point.
-  if ( mWebShell ) {
-      rv = mWebShell->FindChildWithName( aName, aResult );
-  }
+  // look for open windows with the given name
+  /*   Note: this would more or less work if the window mediator were
+     functional and hooked up, of which it's neither at time of writing.
+     By "more or less," I mean the code in this function works as you'd
+     expect, but the end effect is wrong.
+       The webshell that catches the name given from a JavaScript window.open
+     call is the content, not the chrome, so it's the content that's replaced
+     in a new window.open.  Also, there's a visual problem where the window
+     position is reset.
+       So when two or three bad things get cleared up, this next bit will be
+     helpful.  As it is, it's not too. */
+
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
+      PRBool more;
+
+      // get the (main) webshell for each window in the enumerator
+      windowEnumerator->HasMoreElements(&more);
+      while (more) {
+        nsCOMPtr<nsISupports> protoWindow;
+        nsCOMPtr<nsIWebShell> webshell;
+        rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
+        if (NS_SUCCEEDED(rv) && protoWindow) {
+          nsCOMPtr<nsIWebShellWindow> window(do_QueryInterface(protoWindow));
+          if (window) {
+            if (NS_SUCCEEDED(window->GetWebShell(*getter_AddRefs(webshell)))) {
+
+              // check the webshell, and then its children, for a name match
+              const PRUnichar *name;
+              if (NS_SUCCEEDED(webshell->GetName(&name)) && nameStr.Equals(name)) {
+                aResult = webshell;
+                NS_ADDREF(aResult);
+                break;
+              }
+              // Search for named frame within our root webshell.  This will
+              // bypass the .xul document (and rightfully so).  We need to be
+              // careful not to give that documents child frames names!
+              if (NS_SUCCEEDED(webshell->FindChildWithName(aName, aResult)) && aResult)
+                break;
+            }
+          }
+        }
+        windowEnumerator->HasMoreElements(&more);
+      }
+    }
+  } else
+    // someday, the window mediator will be hooked up and this will be redundant
+    if (mWebShell)
+      rv = mWebShell->FindChildWithName(aName, aResult);
 
   return rv;
 }
@@ -2378,23 +2422,23 @@ NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
     webshellElement = do_QueryInterface(webshellNode);
   if (webshellElement )
   	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
-   nsString title( aTitle );
-   title += windowTitleModifier;
+  nsString title( aTitle );
+  title += windowTitleModifier;
       
-   if (windowWidget)
-     windowWidget->SetTitle(title);
+  if (windowWidget)
+    windowWidget->SetTitle(title);
      
-     // Tell the window mediator that a title has changed
-   #if 1 
-   {
-   	  nsIWindowMediator* service;
-  		if (NS_FAILED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
-    		return NS_OK;
-  		service->UpdateWindowTitle( this, title );
-	 		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
-   }
-   #endif // Window Mediation
-   return NS_OK;
+  // Tell the window mediator that a title has changed
+  #if 1 
+  {
+    nsIWindowMediator* service;
+    if (NS_FAILED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+      return NS_OK;
+    service->UpdateWindowTitle( this, title );
+    nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+  }
+  #endif // Window Mediation
+  return NS_OK;
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetTitle(const PRUnichar** aResult)
