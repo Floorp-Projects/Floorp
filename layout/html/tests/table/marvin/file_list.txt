@@ -40,7 +40,7 @@ file://s:/mozilla/layout/html/tests/table/marvin/tables_border_0.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_border_1.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_border_2.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_border_3.html
-file://s:/mozilla/layout/html/tests/table/marvin/tables_caption_align_bottom.html
+file://s:/mozilla/layout/html/tests/table/marvin/tables_caption_align_bot.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_caption_align_left.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_caption_align_right.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_caption_align_top.html
