@@ -1134,7 +1134,6 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
 {
-#if !defined(XP_MAC)
   nsIFrame * child = mFrames.FirstChild();
   if(child != NULL) //This is an image
   {
@@ -1142,6 +1141,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
+#if !defined(XP_MAC)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
     aRenderingContext.SetColor(NS_RGB(192, 192, 192));
@@ -1179,7 +1179,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
   }
 #else
   // delegate all painting to the plugin instance.
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && nsnull != mInstanceOwner) {
     mInstanceOwner->Paint(aDirtyRect);
   }
 #endif /* !XP_MAC */
