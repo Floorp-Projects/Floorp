@@ -71,9 +71,17 @@
           <description id="dialog-header" class="header"/>
         </vbox>
 
+        <hbox id="acceptSessionContainer">
+          <checkbox id="acceptSession"
+                    label="&dialog.acceptSession.label;" 
+                    accesskey="&dialog.acceptSession.accesskey;"
+                    persist="checked"/>
+        </hbox>
+        
         <hbox id="checkboxContainer">
           <checkbox id="persistDomainAcceptance"
-                    label="&dialog.remember.label;" accesskey="&dialog.remember.accesskey;"
+                    label="&dialog.remember.label;" 
+                    accesskey="&dialog.remember.accesskey;"
                     persist="checked"/>
         </hbox>
       </vbox>

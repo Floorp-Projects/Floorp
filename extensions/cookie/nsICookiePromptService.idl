@@ -46,26 +46,30 @@ interface nsICookie;
 [scriptable, uuid(CE002B28-92B7-4701-8621-CC925866FB87)]
 interface nsICookiePromptService : nsISupports
 {
+  const PRUint32 DENY_COOKIE = 0;
+  const PRUint32 ACCEPT_COOKIE = 1;
+  const PRUint32 ACCEPT_SESSION_COOKIE = 2;
 
   /* Open a dialog that asks for permission to accept a cookie
-   * Returns true when the permission is given.
-   * return values are not modified when something fails.
    * 
    * @param parent
    * @param cookie
    * @param hostname          the host that wants to set the cookie, 
    *                           not the domain: part of the cookie
    * @param cookiesFromHost   the number of cookies there are already for this host
-   * @param aChangingCookie   are we changing this cookie?
-   * @param checkValue        is the decision remembered?
+   * @param changingCookie    are we changing this cookie?
+   * @param rememberDecision  should we set the matching permission for this host?
+   * @returns                 0 == deny cookie
+   *                          1 == accept cookie
+   *                          2 == accept cookie for current session
    */
 
-  boolean cookieDialog(in nsIDOMWindow parent,
-                       in nsICookie cookie,
-                       in ACString hostname,
-                       in long cookiesFromHost,
-                       in boolean changingCookie,
-                       out boolean rememberDecision);
+  long cookieDialog(in nsIDOMWindow parent,
+                    in nsICookie cookie,
+                    in ACString hostname,
+                    in long cookiesFromHost,
+                    in boolean changingCookie,
+                    out boolean rememberDecision);
 };
 
 %{C++
