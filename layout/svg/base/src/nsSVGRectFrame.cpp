@@ -23,6 +23,7 @@
  *   William Cook <william.cook@crocodile-clips.com> (original author)
  *   Håkan Waara <hwaara@chello.se>
  *   Alex Fritze <alex.fritze@crocodile-clips.com>
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,20 +40,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
+#include "nsISVGRendererPathBuilder.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGRectElement.h"
-#include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGSVGElement.h"
-
-#include "nsISVGRendererPathBuilder.h"
+#include "nsINameSpaceManager.h"
+#include "nsSVGAtoms.h"
 
 class nsSVGRectFrame : public nsSVGPathGeometryFrame
 {
 protected:
   friend nsresult
-  NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent,
+                     nsIFrame** aNewFrame);
 
   virtual ~nsSVGRectFrame();
   virtual nsresult Init();
@@ -78,20 +78,19 @@ private:
 // Implementation
 
 nsresult
-NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent,
+                   nsIFrame** aNewFrame)
 {
   *aNewFrame = nsnull;
 
   nsCOMPtr<nsIDOMSVGRectElement> Rect = do_QueryInterface(aContent);
   if (!Rect) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGRectFrame for a content element that doesn't support the right interfaces\n");
-#endif
-    return NS_ERROR_FAILURE;
+    NS_ASSERTION(Rect != nsnull, "wrong content element");
+    return NS_ERROR_NO_INTERFACE;
   }
 
   nsSVGRectFrame* it = new (aPresShell) nsSVGRectFrame;
-  if (nsnull == it)
+  if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aNewFrame = it;
@@ -118,17 +117,18 @@ nsSVGRectFrame::~nsSVGRectFrame()
 nsresult nsSVGRectFrame::Init()
 {
   nsresult rv = nsSVGPathGeometryFrame::Init();
-  if (NS_FAILED(rv)) return rv;
-  
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCOMPtr<nsIDOMSVGRectElement> Rect = do_QueryInterface(mContent);
-  NS_ASSERTION(Rect,"wrong content element");
 
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetX(getter_AddRefs(length));
     length->GetBaseVal(getter_AddRefs(mX));
     NS_ASSERTION(mX, "no x");
-    if (!mX) return NS_ERROR_FAILURE;
+    if (!mX)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
     if (value)
       value->AddObserver(this);
@@ -139,7 +139,8 @@ nsresult nsSVGRectFrame::Init()
     Rect->GetY(getter_AddRefs(length));
     length->GetBaseVal(getter_AddRefs(mY));
     NS_ASSERTION(mY, "no y");
-    if (!mY) return NS_ERROR_FAILURE;
+    if (!mY)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
     if (value)
       value->AddObserver(this);
@@ -150,7 +151,8 @@ nsresult nsSVGRectFrame::Init()
     Rect->GetWidth(getter_AddRefs(length));
     length->GetBaseVal(getter_AddRefs(mWidth));
     NS_ASSERTION(mWidth, "no width");
-    if (!mWidth) return NS_ERROR_FAILURE;
+    if (!mWidth)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mWidth);
     if (value)
       value->AddObserver(this);
@@ -160,7 +162,8 @@ nsresult nsSVGRectFrame::Init()
     Rect->GetHeight(getter_AddRefs(length));
     length->GetBaseVal(getter_AddRefs(mHeight));
     NS_ASSERTION(mHeight, "no height");
-    if (!mHeight) return NS_ERROR_FAILURE;
+    if (!mHeight)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mHeight);
     if (value)
       value->AddObserver(this);
@@ -171,7 +174,8 @@ nsresult nsSVGRectFrame::Init()
     Rect->GetRx(getter_AddRefs(length));
     length->GetBaseVal(getter_AddRefs(mRx));
     NS_ASSERTION(mRx, "no rx");
-    if (!mRx) return NS_ERROR_FAILURE;
+    if (!mRx)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRx);
     if (value)
       value->AddObserver(this);
@@ -182,7 +186,8 @@ nsresult nsSVGRectFrame::Init()
     Rect->GetRy(getter_AddRefs(length));
     length->GetBaseVal(getter_AddRefs(mRy));
     NS_ASSERTION(mRy, "no ry");
-    if (!mRy) return NS_ERROR_FAILURE;
+    if (!mRy)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRy);
     if (value)
       value->AddObserver(this);
@@ -203,7 +208,7 @@ nsSVGRectFrame::DidModifySVGObservable(nsISVGValue* observable,
     UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
     return NS_OK;
   }
-  // else
+
   return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
 }
 
@@ -211,7 +216,8 @@ nsSVGRectFrame::DidModifySVGObservable(nsISVGValue* observable,
 // nsISVGPathGeometrySource methods:
 
 /* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
-NS_IMETHODIMP nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+NS_IMETHODIMP
+nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
   float x, y, width, height, rx, ry;
 
@@ -224,35 +230,44 @@ NS_IMETHODIMP nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
 
   /* In a perfect world, this would be handled by the DOM, and 
      return a DOM exception. */
-  if (width == 0 || height == 0 || ry < 0 || rx < 0)
+  if (width <= 0 || height <= 0 || ry < 0 || rx < 0)
     return NS_OK;
 
-  /* If any of the attributes are not set, we need to set it to the corresponding
-     attribute's value (e.g. if rx is not set, assign ry's value to rx). */
-  if (!rx || !ry)
-  {
-    if (rx < ry)
-      rx = ry;
-    else
-      ry = rx;
-  }
+  /* Clamp rx and ry to half the rect's width and height respectively. */
+  float halfWidth  = width/2;
+  float halfHeight = height/2;
+  if (rx > halfWidth)
+    rx = halfWidth;
+  if (ry > halfHeight)
+    ry = halfHeight;
 
-  // Rx/ry must not be values higher than half the rectangle's width/height
-  if (rx > (width/2))
-    rx = width/2;
+  /* If either the 'rx' or the 'ry' attribute isn't set in the markup, then we
+     have to set it to the value of the other. We do this after clamping rx and
+     ry since omiting one of the attributes implicitly means they should both
+     be the same. */
+  PRBool hasRx = mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::rx);
+  PRBool hasRy = mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::ry);
+  if (hasRx && !hasRy)
+    ry = rx;
+  else if (hasRy && !hasRx)
+    rx = ry;
 
-  if (ry > (height/2))
-    ry = height/2;
+  /* However, we may now have made rx > width/2 or else ry > height/2. (If this
+     is the case, we know we must be giving rx and ry the same value.) */
+  if (rx > halfWidth)
+    rx = ry = halfWidth;
+  else if (ry > halfHeight)
+    rx = ry = halfHeight;
 
   pathBuilder->Moveto(x+rx, y);
   pathBuilder->Lineto(x+width-rx, y);
-  pathBuilder->Arcto(x+width, y+ry , rx, ry, 0.0, 0, 1);
+  pathBuilder->Arcto(x+width, y+ry , rx, ry, 0.0f, PR_FALSE, PR_TRUE);
   pathBuilder->Lineto(x+width, y+height-ry);
-  pathBuilder->Arcto(x+width-rx, y+height , rx, ry, 0.0, 0, 1);
+  pathBuilder->Arcto(x+width-rx, y+height , rx, ry, 0.0f, PR_FALSE, PR_TRUE);
   pathBuilder->Lineto(x+rx,y+height);
-  pathBuilder->Arcto(x, y+height-ry , rx, ry, 0.0, 0, 1);
+  pathBuilder->Arcto(x, y+height-ry , rx, ry, 0.0f, PR_FALSE, PR_TRUE);
   pathBuilder->Lineto(x,y+ry);
-  pathBuilder->Arcto(x+rx, y, rx, ry, 0.0, 0, 1);
+  pathBuilder->Arcto(x+rx, y, rx, ry, 0.0f, PR_FALSE, PR_TRUE);
   pathBuilder->ClosePath(&x,&y);
 
   return NS_OK;
