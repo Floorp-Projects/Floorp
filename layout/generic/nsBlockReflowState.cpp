@@ -64,7 +64,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
-    mLastFloaterY(0),
     mPrevBottomMargin(),
     mLineNumber(0),
     mFlags(0),
@@ -519,7 +518,6 @@ nsBlockReflowState::RecoverFloaters(nsLineList::iterator aLine,
       }
 #endif
       mSpaceManager->AddRectRegion(floater, fc->mRegion);
-      mLastFloaterY = fc->mRegion.y;
       fc = fc->Next();
     }
   } else if (aLine->IsBlock()) {
@@ -779,6 +777,8 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
           xa = mAvailSpaceRect.XMost() - aFloaterRect.width;
 
           // In case the floater is too big, don't go past the left edge
+          // XXXldb This seems wrong, but we might want to fix bug 6976
+          // first.
           if (xa < mAvailSpaceRect.x) {
             xa = mAvailSpaceRect.x;
           }
@@ -868,10 +868,9 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   floater->GetRect(oldRegion);
   oldRegion.Inflate(aFloaterCache->mMargins);
 
-  // Advance mY to mLastFloaterY (if it's not past it already) to
-  // enforce 9.5.1 rule [2]; i.e., make sure that a float isn't
+  // Enforce CSS2 9.5.1 rule [2], i.e., make sure that a float isn't
   // ``above'' another float that preceded it in the flow.
-  mY = NS_MAX(mLastFloaterY, mY);
+  mY = NS_MAX(mSpaceManager->GetLowestRegionTop(), mY);
 
   // See if the floater should clear any preceeding floaters...
   if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
@@ -1134,9 +1133,6 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
     SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
   }
 
-  // Remember the y-coordinate of the floater we've just placed
-  mLastFloaterY = mY;
-
   // Now restore mY
   mY = saveY;
 
@@ -1160,6 +1156,8 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
 {
   nsFloaterCache* fc = aList.Head();
   while (fc) {
+    NS_ASSERTION(!fc->mIsCurrentLineFloater,
+                 "A cl floater crept into the bcl floater list.");
     if (!fc->mIsCurrentLineFloater) {
 #ifdef DEBUG
       if (nsBlockFrame::gNoisyReflow) {

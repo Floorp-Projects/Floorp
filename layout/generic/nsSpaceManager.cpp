@@ -107,6 +107,7 @@ MOZ_DECL_CTOR_COUNTER(nsSpaceManager)
 nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
   : mFrame(aFrame),
     mXMost(0),
+    mLowestTop(NSCOORD_MIN),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
 {
   MOZ_COUNT_CTOR(nsSpaceManager);
@@ -817,6 +818,9 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
   if (xmost > mXMost)
     mXMost = xmost;
 
+  if (rect.y > mLowestTop)
+    mLowestTop = rect.y;
+
   // Create a frame info structure
   frameInfo = CreateFrameInfo(aFrame, rect);
   if (nsnull == frameInfo) {
@@ -838,58 +842,6 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
   // Insert the band rect
   InsertBandRect(bandRect);
   return NS_OK;
-}
-
-nsresult
-nsSpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
-                                 nscoord      aDeltaWidth,
-                                 nscoord      aDeltaHeight,
-                                 AffectedEdge aEdge)
-{
-  // Get the frame info associated with with aFrame
-  FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
-
-  if (nsnull == frameInfo) {
-    NS_WARNING("no region associated with aFrame");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Compute new rect
-  nsRect  rect(frameInfo->mRect);
-  rect.SizeBy(aDeltaWidth, aDeltaHeight);
-  if (aEdge == LeftEdge) {
-    rect.x += aDeltaWidth;
-  }
-
-  // For the time being just remove it and add it back in. Because
-  // AddRectRegion() operates relative to the local coordinate space,
-  // translate from world coordinates to the local coordinate space
-  rect.MoveBy(-mX, -mY);
-  RemoveRegion(aFrame);
-  return AddRectRegion(aFrame, rect);
-}
-
-nsresult
-nsSpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy)
-{
-  // Get the frame info associated with with aFrame
-  FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
-
-  if (nsnull == frameInfo) {
-    NS_WARNING("no region associated with aFrame");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Compute new rect
-  nsRect  rect(frameInfo->mRect);
-  rect.MoveBy(aDx, aDy);
-
-  // For the time being just remove it and add it back in. Because
-  // AddRectRegion() operates relative to the local coordinate space,
-  // translate from world coordinates to the local coordinate space
-  rect.MoveBy(-mX, -mY);
-  RemoveRegion(aFrame);
-  return AddRectRegion(aFrame, rect);
 }
 
 nsresult
@@ -1038,6 +990,7 @@ nsSpaceManager::PushState()
   state->mX = mX;
   state->mY = mY;
   state->mXMost = mXMost;
+  state->mLowestTop = mLowestTop;
 
   if (mFrameInfoMap) {
     state->mLastFrame = mFrameInfoMap->mFrame;
@@ -1082,6 +1035,7 @@ nsSpaceManager::PopState()
   mX = mSavedStates->mX;
   mY = mSavedStates->mY;
   mXMost = mSavedStates->mXMost;
+  mLowestTop = mSavedStates->mLowestTop;
 
   // Now that we've restored our state, pop the topmost
   // state and delete it.
@@ -1089,6 +1043,14 @@ nsSpaceManager::PopState()
   SpaceManagerState *state = mSavedStates;
   mSavedStates = mSavedStates->mNext;
   delete state;
+}
+
+nscoord
+nsSpaceManager::GetLowestRegionTop()
+{
+  if (mLowestTop == NSCOORD_MIN)
+    return mLowestTop;
+  return mLowestTop - mY;
 }
 
 #ifdef DEBUG

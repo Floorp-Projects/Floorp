@@ -184,10 +184,6 @@ public:
   // The combined area of all floaters placed so far
   nsRect mFloaterCombinedArea;
 
-  // The y-coordinate of the last floater placed. We keep this around
-  // to enforce 9.5.1 rule [2]
-  nscoord mLastFloaterY;
-
   nsFloaterCacheFreeList mFloaterCacheFreeList;
 
   // Previous child. This is used when pulling up a frame to update
