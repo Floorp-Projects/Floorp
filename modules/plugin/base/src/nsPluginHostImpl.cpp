@@ -57,6 +57,8 @@
 #include "nsIScriptablePlugin.h"
 #include "nsICachingChannel.h"
 
+#include "nsIJVMPlugin.h"
+
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
 #undef None
@@ -758,7 +760,7 @@ nsPluginTag::nsPluginTag(const char* aName,
 
 nsPluginTag::~nsPluginTag()
 {
-  TryUnloadPlugin();
+  TryUnloadPlugin(PR_TRUE);
 
   if (nsnull != mName) {
     delete[] (mName);
@@ -801,8 +803,13 @@ nsPluginTag::~nsPluginTag()
   }
 }
 
-void nsPluginTag::TryUnloadPlugin()
+void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
 {
+  // XXX This is a hack to keep Java around, see bug 76936
+  nsCOMPtr<nsIJVMPlugin> isJava = do_QueryInterface(mEntryPoint);
+
+  if (isJava && !aForceShutdown) return;
+
   if (mEntryPoint)
   {
     mEntryPoint->Shutdown();
