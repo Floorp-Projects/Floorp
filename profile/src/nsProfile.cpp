@@ -764,7 +764,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 			        int numKeys=0;
 					rv = enumKeys->First();
 
-			        while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
+			        while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
 					{
 						nsCOMPtr<nsISupports> base;
 
@@ -891,7 +891,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 					// Go to beginning.
 					rv = enumKeys->First();
 
-			        while(NS_SUCCEEDED(rv)&& !enumKeys->IsDone() ) 
+			        while(NS_SUCCEEDED(rv)&& (NS_OK != enumKeys->IsDone()) ) 
 					{
 						nsCOMPtr<nsISupports> base;
 						rv = enumKeys->CurrentItem(getter_AddRefs(base));
@@ -1612,7 +1612,7 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 						rv = enumKeys->First();
                     
 						// Enumerate subkeys till done.
-						while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
+						while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
 						{
 							nsCOMPtr<nsISupports> base;
 							rv = enumKeys->CurrentItem(getter_AddRefs(base));
@@ -1820,7 +1820,7 @@ void nsProfile::GetAllProfiles()
                     rv = enumKeys->First();
 
                     // Enumerate subkeys till done.
-                    while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
+                    while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
                     {
 						nsCOMPtr<nsISupports> base;
 						rv = enumKeys->CurrentItem(getter_AddRefs(base));
@@ -2078,7 +2078,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 					rv = enumKeys->First();
                     
 					// Enumerate subkeys till done.
-                    while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
+                    while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
                     {
 						nsCOMPtr<nsISupports> base;
 						rv = enumKeys->CurrentItem(getter_AddRefs(base));
@@ -2776,7 +2776,7 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 			        int numKeys=0;
 					rv = enumKeys->First();
 
-			        while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
+			        while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
 					{
 						nsCOMPtr<nsISupports> base;
 

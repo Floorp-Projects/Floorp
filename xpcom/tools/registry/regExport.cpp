@@ -138,7 +138,7 @@ void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
         // Set enumerator to beginning.
         rv = keys->First();
         // Enumerate subkeys till done.
-        while( NS_SUCCEEDED( rv ) && !keys->IsDone() ) {
+        while( NS_SUCCEEDED( rv ) && (NS_OK != keys->IsDone()) ) {
             nsISupports *base;
             rv = keys->CurrentItem( &base );
             // Test result.
@@ -211,7 +211,7 @@ static void displayValues( nsIRegistry *reg, nsIRegistry::Key root ) {
         rv = values->First();
 
         // Enumerate values till done.
-        while( rv == NS_OK && !values->IsDone() ) {
+        while( rv == NS_OK && (NS_OK != values->IsDone()) ) {
             nsISupports *base;
             rv = values->CurrentItem( &base );
             // Test result.

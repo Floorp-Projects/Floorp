@@ -1232,7 +1232,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
   // go ahead and enumerate through.
   nsCAutoString actualProgID;
   rv = components->First();
-  while (NS_SUCCEEDED(rv) && !components->IsDone()) 
+  while (NS_SUCCEEDED(rv) && (NS_OK != components->IsDone()))
   {
     nsISupports *base = nsnull;
     

@@ -751,7 +751,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     if (NS_FAILED(rv)) return rv;
 
     rv = cidEnum->First();
-    for (; NS_SUCCEEDED(rv) && !cidEnum->IsDone(); (rv = cidEnum->Next()))
+    for (; NS_SUCCEEDED(rv) && (cidEnum->IsDone() != NS_OK); (rv = cidEnum->Next()))
     {
         nsCOMPtr<nsISupports> base;
         rv = cidEnum->CurrentItem(getter_AddRefs(base));
@@ -804,7 +804,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     if (NS_FAILED(rv)) return rv;
 
     rv = progidEnum->First();
-    for (; NS_SUCCEEDED(rv) && !progidEnum->IsDone(); (rv = progidEnum->Next()))
+    for (; NS_SUCCEEDED(rv) && (progidEnum->IsDone() != NS_OK); (rv = progidEnum->Next()))
     {
         nsCOMPtr<nsISupports> base;
         rv = progidEnum->CurrentItem(getter_AddRefs(base));
@@ -1968,7 +1968,7 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFileSpec *inDirSpec)
     if (NS_FAILED(rv))
         return rv;
 
-    for (; NS_SUCCEEDED(rv) && !loaderEnum->IsDone();
+    for (; NS_SUCCEEDED(rv) && (loaderEnum->IsDone() != NS_OK);
          (rv = loaderEnum->Next())) {
         nsCOMPtr<nsISupports> base;
         rv = loaderEnum->CurrentItem(getter_AddRefs(base));

@@ -452,7 +452,7 @@ nsresult nsImportService::DoDiscover( void)
 	char *pNodeName;
 	nsIID nodeIID = NS_IREGISTRYNODE_IID;
 	rv = enumerator->First();
-	while ( NS_SUCCEEDED(rv) && !enumerator->IsDone()) { 
+	while ( NS_SUCCEEDED(rv) && (NS_OK != enumerator->IsDone())) { 
 		nsISupports *base;
 		rv = enumerator->CurrentItem( &base );		
 		if (NS_SUCCEEDED( rv)) {
