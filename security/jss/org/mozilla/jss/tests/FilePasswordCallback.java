@@ -54,11 +54,11 @@ public class FilePasswordCallback implements PasswordCallback {
     /**
      */
 	public Password getPasswordFirstAttempt(PasswordCallbackInfo info)
-		throws GiveUpException
+		throws PasswordCallback.GiveUpException
     {
         String pw = passwords.getProperty(info.getName());
         if( pw == null ) {
-            throw new GiveUpException();
+            throw new PasswordCallback.GiveUpException();
         } else {
             System.out.println("***FilePasswordCallback returns " + pw);
             return new Password(pw.toCharArray());
@@ -68,8 +68,8 @@ public class FilePasswordCallback implements PasswordCallback {
     /**
      */
     public Password getPasswordAgain(PasswordCallbackInfo info)
-        throws GiveUpException
+        throws PasswordCallback.GiveUpException
     {
-        throw new GiveUpException();
+        throw new PasswordCallback.GiveUpException();
     }
 }
