@@ -327,7 +327,7 @@ $vars->{'priority'} = \@legal_priority;
 $default{'priority'} = formvalue('priority', Param('defaultpriority'));
 
 $vars->{'bug_severity'} = \@legal_severity;
-$default{'bug_severity'} = formvalue('bug_severity', 'normal');
+$default{'bug_severity'} = formvalue('bug_severity', Param('defaultseverity'));
 
 $vars->{'rep_platform'} = \@legal_platform;
 $default{'rep_platform'} = pickplatform();

@@ -66,6 +66,16 @@ sub check_priority {
     return "";
 }
 
+sub check_severity {
+    my ($value) = (@_);
+    &::GetVersionTable();
+    if (lsearch(\@::legal_severity, $value) < 0) {
+        return "Must be a legal severity value: one of " .
+            join(", ", @::legal_severity);
+    }
+    return "";
+}
+
 sub check_platform {
     my ($value) = (@_);
     &::GetVersionTable();
@@ -758,6 +768,14 @@ You will get this message once a day until you\'ve dealt with these bugs!
    type => 't',
    default => 'P2',
    checker => \&check_priority
+  },
+
+  {
+   name => 'defaultseverity',
+   desc => 'This is the severity that newly entered bugs are set to.',
+   type => 't',
+   default => 'normal',
+   checker => \&check_severity
   },
 
   {
