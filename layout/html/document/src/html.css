@@ -463,7 +463,7 @@ input {
 	background-color: white;
   box-sizing: border-box;
   font-family:-moz-fixed;
-  behavior: url("resource:/chrome/platformHTMLBindings.xml#inputFields");
+  behavior: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
 	cursor: text;
 }
 
@@ -1061,7 +1061,7 @@ textarea {
   margin-bottom: 1px;
   margin-left:   0px;
   margin-right:  0px;
-  behavior: url("resource:/chrome/platformHTMLBindings.xml#textAreas");
+  behavior: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
 }
 
 textarea[disabled] {
