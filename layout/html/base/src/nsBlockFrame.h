@@ -69,6 +69,8 @@ struct nsBlockReflowState {
 
   nsBlockFrame* mBlock;
   PRBool mBlockIsPseudo;
+  PRBool mBlockIsListItem;
+  PRBool mListPositionOutside;
 
   // Current line being reflowed
   nsLineLayout* mCurrentLine;
