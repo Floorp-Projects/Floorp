@@ -3864,7 +3864,7 @@ nsFontMetricsXlib::FindStyleSheetGenericFont(PRUnichar aChar)
         }
         if (western_font) {
           NS_ASSERTION(western_font->SupportsChar(aChar), "font supposed to support this char");
-          return font;
+          return western_font;
         }
         else if (sub_font) {
           if (FONT_HAS_GLYPH(sub_font->mMap, aChar))
