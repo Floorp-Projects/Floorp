@@ -949,11 +949,6 @@ protected:
   PRBool              mHasGfxScrollbars;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
-
-#ifdef NS_DEBUG
-  PRBool              mVerifyFastFindFrame; // if true, run both the old and new find frame code
-                                            // to validate that both ways get the same answer
-#endif
 };
 
 #endif /* nsCSSFrameConstructor_h___ */
