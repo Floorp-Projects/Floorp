@@ -253,7 +253,7 @@ nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());
-  tmp.Insert(mTarget, 0);
+  tmp.Insert(mTarget.GetUnicode(), 0);
   fputs(tmp, out);
 
   fputs(">\n", out);
