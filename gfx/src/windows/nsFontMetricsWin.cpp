@@ -169,24 +169,23 @@ nsFontMetricsWin::RealizeFont()
 {
   // Fill in logFont structure; stolen from awt
   LOGFONT logFont;
-  logFont.lfWidth          = 0;
+  logFont.lfWidth          = 0; 
   logFont.lfEscapement     = 0;
   logFont.lfOrientation    = 0;
-  logFont.lfUnderline      =
+  logFont.lfUnderline      = 
     (mFont->decorations & NS_FONT_DECORATION_UNDERLINE)
-    ? TRUE : FALSE;
+    ? TRUE : FALSE; 
   logFont.lfStrikeOut      =
     (mFont->decorations & NS_FONT_DECORATION_LINE_THROUGH)
-    ? TRUE : FALSE;
+    ? TRUE : FALSE; 
   logFont.lfCharSet        = DEFAULT_CHARSET;
   logFont.lfOutPrecision   = OUT_DEFAULT_PRECIS;
   logFont.lfClipPrecision  = CLIP_DEFAULT_PRECIS;
   logFont.lfQuality        = DEFAULT_QUALITY;
   logFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-  logFont.lfWeight = (mFont->weight > NS_FONT_WEIGHT_NORMAL)  // XXX ??? this should be smarter
-    ? FW_BOLD : FW_NORMAL;
-  logFont.lfItalic = (mFont->style & NS_FONT_STYLE_ITALIC)
-    ? TRUE : FALSE;
+  logFont.lfWeight = ((400 < mFont->weight) ? FW_BOLD : FW_NORMAL);  // XXX could be smarter
+  logFont.lfItalic = (mFont->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE))
+    ? TRUE : FALSE;   // XXX need better oblique support
   float app2dev, app2twip;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
   mDeviceContext->GetDevUnitsToTwips(app2twip);
@@ -220,15 +219,40 @@ nsFontMetricsWin::RealizeFont()
   // Get font metrics
   float dev2app;
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
-  TEXTMETRIC metrics;
-  ::GetTextMetrics(dc, &metrics);
-  mHeight = nscoord(metrics.tmHeight * dev2app);
-  mAscent = nscoord(metrics.tmAscent * dev2app);
-  mDescent = nscoord(metrics.tmDescent * dev2app);
-  mLeading = nscoord(metrics.tmInternalLeading * dev2app);
-  mMaxAscent = nscoord(metrics.tmAscent * dev2app);
-  mMaxDescent = nscoord(metrics.tmDescent * dev2app);
-  mMaxAdvance = nscoord(metrics.tmMaxCharWidth * dev2app);
+  OUTLINETEXTMETRIC oMetrics;
+  TEXTMETRIC&  metrics = oMetrics.otmTextMetrics;
+
+  if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
+    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * dev2app);
+    mSuperscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * dev2app);
+    mSubscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * dev2app);
+
+    mStrikeoutSize = NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app);
+    mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
+    mUnderlineSize = NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app);
+    mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
+  }
+  else {
+    // Make a best-effort guess at extended metrics
+    // this is based on general typographic guidelines
+    ::GetTextMetrics(dc, &metrics);
+    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 56% of ascent
+    mSuperscriptOffset = mXHeight;     // XXX temporary code!
+    mSubscriptOffset = mXHeight;     // XXX temporary code!
+
+    mStrikeoutSize = NSToCoordRound(1 * dev2app); // XXX this is a guess
+    mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0f); // 50% of xHeight
+    mUnderlineSize = NSToCoordRound(1 * dev2app); // XXX this is a guess
+    mUnderlineOffset = -NSToCoordRound((float)metrics.tmDescent * dev2app * 0.30f); // 30% of descent
+  }
+
+  mHeight = NSToCoordRound(metrics.tmHeight * dev2app);
+  mAscent = NSToCoordRound(metrics.tmAscent * dev2app);
+  mDescent = NSToCoordRound(metrics.tmDescent * dev2app);
+  mLeading = NSToCoordRound(metrics.tmInternalLeading * dev2app);
+  mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
+  mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
+  mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
 
   ::ReleaseDC(win, dc);
 }
@@ -236,21 +260,37 @@ nsFontMetricsWin::RealizeFont()
 NS_IMETHODIMP
 nsFontMetricsWin :: GetXHeight(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = mXHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsWin :: GetSuperscriptOffset(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = mSuperscriptOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsWin :: GetSubscriptOffset(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = mSubscriptOffset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
+{
+  aOffset = mStrikeoutOffset;
+  aSize = mStrikeoutSize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetUnderline(nscoord& aOffset, nscoord& aSize)
+{
+  aOffset = mUnderlineOffset;
+  aSize = mUnderlineSize;
   return NS_OK;
 }
 
@@ -298,7 +338,7 @@ nsFontMetricsWin :: GetWidth(const char* aString,
   float  dev2app;
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
 
-  aWidth = nscoord(float(size.cx) * dev2app);
+  aWidth = NSToCoordRound(float(size.cx) * dev2app);
   return NS_OK;
 }
 
@@ -330,7 +370,7 @@ nsFontMetricsWin :: GetWidth(const PRUnichar *aString,
   float  dev2app;
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
 
-  aWidth = nscoord(float(size.cx) * dev2app);
+  aWidth = NSToCoordRound(float(size.cx) * dev2app);
   return NS_OK;
 }
 
