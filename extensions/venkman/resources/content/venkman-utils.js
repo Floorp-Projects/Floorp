@@ -373,6 +373,16 @@ function getRandomElement (ary)
 
 }
 
+function zeroPad (num, decimals)
+{
+    var rv = String(num);
+    var len = rv.length;
+    for (var i = 0; i < decimals - len; ++i)
+        rv = "0" + rv;
+    
+    return rv;
+}
+    
 function roundTo (num, prec)
 {
 
