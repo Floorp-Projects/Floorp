@@ -48,6 +48,11 @@
 #include "uapp.h" // for CFrontApp::sHRes and CFrontApp::sVRes
 #include "intl_csi.h"
 
+#if defined(SMOOTH_PROGRESS)
+#include "progress.h"
+#include "nsITransferListener.h"
+#endif
+
 #include "mkhelp.h"
 
 // FIX ME -- write a CopyAlloc like function that takes a CString
@@ -181,6 +186,12 @@ CNSContext::CNSContext(const CNSContext& inOriginal)
 	mProgress = inOriginal.mProgress;
 	if (mProgress != NULL)
 		mProgress->AddUser(this);
+		
+#if defined(SMOOTH_PROGRESS)
+	mContext.progressManager = inOriginal.mContext.progressManager;
+	if (mContext.progressManager)
+		mContext.progressManager->AddRef();
+#endif
 
 	mRequiresClone = false;
 // FIX ME!!! need to make sure all things inited in the default ctor are done here
@@ -219,7 +230,10 @@ CNSContext::~CNSContext()
 		XP_FREE(mContext.name);
 		mContext.name = NULL;
 		}
-		
+	
+#if defined(SMOOTH_PROGRESS)
+	PM_ReleaseProgressManager(*this);
+#endif	
 
 	/* EA: Remove any help information associated with this context */	
  	if ((HelpInfoStruct *) mContext.pHelpInfo != NULL) {
@@ -1011,6 +1025,10 @@ void CNSContext::AllConnectionsComplete(void)
 		mProgress->RemoveUser(this);
 		mProgress = NULL;
 	}
+	
+#if defined(SMOOTH_PROGRESS)
+	PM_ReleaseProgressManager(*this);
+#endif
 	
 	XP_RefreshAnchors();
 	BroadcastMessage(msg_NSCAllConnectionsComplete);

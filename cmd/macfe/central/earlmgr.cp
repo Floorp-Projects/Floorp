@@ -33,6 +33,10 @@
 	// utilities
 #include "PascalString.h"
 
+#if defined(SMOOTH_PROGRESS)
+#include "progress.h"
+#endif
+
 #ifdef JAVA
 extern "C" {
 #include "nsn.h"
@@ -79,6 +83,9 @@ void EarlManager::DoCancelLoad (MWContext *context)
 int EarlManager::StartLoadURL (URL_Struct * request, MWContext *context,
 					FO_Present_Types output_format)
 {
+#if defined(SMOOTH_PROGRESS)
+	PM_EnsureProgressManager(context);
+#endif
 	if (request->referer && (strlen(request->referer) == 0))
 	{
 		XP_FREE(request->referer);
