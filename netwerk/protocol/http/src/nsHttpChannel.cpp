@@ -427,13 +427,21 @@ nsHttpChannel::SetupTransaction()
         // no proxy is configured since we might be talking with a transparent
         // proxy, i.e. one that operates at the network level.  See bug #14772.
         mRequestHead.SetHeader(nsHttp::Pragma, "no-cache");
-        mRequestHead.SetHeader(nsHttp::Cache_Control, "no-cache");
+        // If we're configured to speak HTTP/1.1 then also send 'Cache-control:
+        // no-cache'
+        if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
+            mRequestHead.SetHeader(nsHttp::Cache_Control, "no-cache");
     }
     else if ((mLoadFlags & VALIDATE_ALWAYS) && (mCacheAccess & nsICache::ACCESS_READ)) {
         // We need to send 'Cache-Control: max-age=0' to force each cache along
         // the path to the origin server to revalidate its own entry, if any,
         // with the next cache or server.  See bug #84847.
-        mRequestHead.SetHeader(nsHttp::Cache_Control, "max-age=0");
+        //
+        // If we're configured to speak HTTP/1.0 then just send 'Pragma: no-cache'
+        if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
+            mRequestHead.SetHeader(nsHttp::Cache_Control, "max-age=0");
+        else
+            mRequestHead.SetHeader(nsHttp::Pragma, "no-cache");
     }
 
     return mTransaction->SetupRequest(&mRequestHead, mUploadStream, mUploadStreamHasHeaders);
