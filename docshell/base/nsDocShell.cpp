@@ -2748,6 +2748,9 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI,
 
 NS_IMETHODIMP nsDocShell::AddToGlobalHistory(nsIURI* aURI)
 {
+   if(NS_FAILED(EnsureGlobalHistory()))
+      return NS_ERROR_FAILURE;  // XXX REMOVE THIS!!!!
+
    NS_ENSURE_SUCCESS(EnsureGlobalHistory(), NS_ERROR_FAILURE);
 
    nsXPIDLCString spec;
