@@ -59,7 +59,8 @@ XPIDLSRCS =                         \
         .\nsILocalFile.idl          \
         .\nsIDirectoryService.idl   \
         .\nsIByteArrayInputStream.idl  \
-        $(NULL)
+        .\nsIInputStreamTee.idl \
+		$(NULL)
 
 ################################################################################
 ## library
@@ -97,7 +98,8 @@ CPP_OBJS =                                       \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
         .\$(OBJDIR)\nsByteArrayInputStream.obj	 \
         .\$(OBJDIR)\nsAppFileLocationProvider.obj \
-        $(NULL)
+        .\$(OBJDIR)\nsInputStreamTee.obj \
+		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
