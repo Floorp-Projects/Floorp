@@ -325,6 +325,9 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         JSBool *warningp, JSBool charArgs, va_list ap);
 #endif
 
+extern void
+js_ReportOutOfMemory(JSContext *cx, JSErrorCallback errorCallback);
+
 /*
  * Report an exception using a previously composed JSErrorReport.
  * XXXbe remove from "friend" API

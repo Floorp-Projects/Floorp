@@ -330,6 +330,54 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
 #endif
 }
 
+/*
+ * We don't post an exception in this case, since doing so runs into 
+ * complications of pre-allocating an exception object which required
+ * running the Exception class initializer early etc.
+ * Instead we just invoke the errorReporter with an "Out Of Memory"
+ * type message, and then hope the process ends swiftly.
+ */
+void
+js_ReportOutOfMemory(JSContext *cx, JSErrorCallback errorCallback)
+{
+    JSStackFrame *fp = cx->fp;
+    JSErrorReport report;
+    JSErrorReporter onError = cx->errorReporter;
+    /* Get the message for this error, but we won't expand any arguments. */
+    const JSErrorFormatString *fmtData = (*errorCallback)(NULL, NULL, JSMSG_OUT_OF_MEMORY);
+    const char *msg = fmtData ? fmtData->format : "Out Of Memory";
+
+    memset(&report, 0, sizeof (struct JSErrorReport));
+    /* Fill out the report, but don't do anything that requires an allocation. */
+    report.errorNumber = JSMSG_OUT_OF_MEMORY;
+    report.flags = JSREPORT_ERROR;
+
+    /* Walk stack until we find a frame that is associated with
+       some script rather than a native frame. */
+    while (fp && (!fp->script || !fp->pc))
+        fp = fp->down;
+
+    if (fp) {
+        report.filename = fp->script->filename;
+        report.lineno = js_PCToLineNumber(fp->script, fp->pc);
+    }
+
+    /*
+     * If debugErrorHook is present then we give it a chance to veto
+     * sending the error on to the regular ErrorReporter.
+     */
+    if (onError) {
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
+        if (hook &&
+            !hook(cx, msg, &report, cx->runtime->debugErrorHookData)) {
+            onError = NULL;
+        }
+    }
+    
+    if (onError)
+        (*onError)(cx, msg, &report);
+}
+
 JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
@@ -349,8 +397,8 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     memset(reportp, 0, sizeof (struct JSErrorReport));
     report.flags = flags;
     if (fp) {
-	report.filename = fp->script->filename;
-	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
+        report.filename = fp->script->filename;
+        report.lineno = js_PCToLineNumber(fp->script, fp->pc);
 	/* XXX should fetch line somehow */
     }
     last = JS_vsmprintf(format, ap);
@@ -410,99 +458,122 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                  * null it out to act as the caboose when we free the
                  * pointers later.
 		 */
-		reportp->messageArgs = (const jschar **)
+                reportp->messageArgs = (const jschar **)
                     JS_malloc(cx, sizeof(jschar *) * (argCount + 1));
-		if (!reportp->messageArgs)
-		    return JS_FALSE;
+                if (!reportp->messageArgs)
+                    return JS_FALSE;
                 reportp->messageArgs[argCount] = NULL;
                 for (i = 0; i < argCount; i++) {
                     if (charArgs) {
                         char *charArg = va_arg(ap, char *);
-		        reportp->messageArgs[i]
+                        reportp->messageArgs[i]
                             = js_InflateString(cx, charArg, strlen(charArg));
+                        if (!reportp->messageArgs[i])
+                            goto error;
                     }
                     else
-		        reportp->messageArgs[i] = va_arg(ap, jschar *);
+                        reportp->messageArgs[i] = va_arg(ap, jschar *);
                     argLengths[i] = js_strlen(reportp->messageArgs[i]);
                     totalArgsLength += argLengths[i];
                 }
                 /* NULL-terminate for easy copying. */
                 reportp->messageArgs[i] = NULL;
-	    }
+            }
 	    /*
 	     * Parse the error format, substituting the argument X
 	     * for {X} in the format.
 	     */
-	    if (argCount > 0) {
-		if (fmtData->format) {
-		    const char *fmt;
+            if (argCount > 0) {
+                if (fmtData->format) {
+                    const char *fmt;
                     const jschar *arg;
-		    jschar *out;
-		    int expandedArgs = 0;
-		    size_t expandedLength
-			= strlen(fmtData->format)
-			  - (3 * argCount) /* exclude the {n} */
-                          + totalArgsLength;
+                    jschar *out;
+                    int expandedArgs = 0;
+                    size_t expandedLength
+                        = strlen(fmtData->format)
+                            - (3 * argCount) /* exclude the {n} */
+                            + totalArgsLength;
 		    /*
 		     * Note - the above calculation assumes that each argument
 		     * is used once and only once in the expansion !!!
 		     */
-		    reportp->ucmessage = out = (jschar *)
+                    reportp->ucmessage = out = (jschar *)
                         JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
-		    if (!out) {
-			if (reportp->messageArgs) {
-			    JS_free(cx, (void *)reportp->messageArgs);
-			    reportp->messageArgs = NULL;
-			}
-			return JS_FALSE;
-		    }
-		    fmt = fmtData->format;
-		    while (*fmt) {
-			if (*fmt == '{') {	/* balance} */
-			    if (isdigit(fmt[1])) {
-				int d = JS7_UNDEC(fmt[1]);
-				JS_ASSERT(expandedArgs < argCount);
-				arg = reportp->messageArgs[d];
-				js_strncpy(out, arg, argLengths[d]);
-				out += argLengths[d];
-				fmt += 3;
-				expandedArgs++;
-				continue;
-			    }
-			}
+                    if (!out)
+                        goto error;
+                    fmt = fmtData->format;
+                    while (*fmt) {
+                        if (*fmt == '{') {	/* balance} */
+                            if (isdigit(fmt[1])) {
+                                int d = JS7_UNDEC(fmt[1]);
+                                JS_ASSERT(expandedArgs < argCount);
+                                arg = reportp->messageArgs[d];
+                                js_strncpy(out, arg, argLengths[d]);
+                                out += argLengths[d];
+                                fmt += 3;
+                                expandedArgs++;
+                                continue;
+                            }
+                        }
                         /*
                          * is this kosher?
                          */
-			*out++ = (unsigned char)(*fmt++);
-		    }
-		    JS_ASSERT(expandedArgs == argCount);
-		    *out = 0;
+                        *out++ = (unsigned char)(*fmt++);
+                    }
+                    JS_ASSERT(expandedArgs == argCount);
+                    *out = 0;
                     *messagep =
-			js_DeflateString(cx, reportp->ucmessage,
-					 (size_t)(out - reportp->ucmessage));
+                        js_DeflateString(cx, reportp->ucmessage,
+		                         (size_t)(out - reportp->ucmessage));
+                    if (!*messagep)
+                        goto error;
 		}
             } else {
-            	/*
-            	 * Zero arguments: the format string (if it exists) is the
-            	 * entire message.
-            	 */
+                /*
+                 * Zero arguments: the format string (if it exists) is the
+                 * entire message.
+                 */
                 if (fmtData->format) {
-		    *messagep = JS_strdup(cx, fmtData->format);
+                    *messagep = JS_strdup(cx, fmtData->format);
+                    if (!*messagep)
+                        goto error;
                     reportp->ucmessage
                         = js_InflateString(cx, *messagep, strlen(*messagep));
+                    if (!reportp->ucmessage)
+                        goto error;
                 }
-	    }
+            }
 	}
     }
     if (*messagep == NULL) {
-	/* where's the right place for this ??? */
-	const char *defaultErrorMessage
-	    = "No error message available for error number %d";
-	size_t nbytes = strlen(defaultErrorMessage) + 16;
-	*messagep = (char *)JS_malloc(cx, nbytes);
-	JS_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
+        /* where's the right place for this ??? */
+        const char *defaultErrorMessage
+            = "No error message available for error number %d";
+        size_t nbytes = strlen(defaultErrorMessage) + 16;
+        *messagep = (char *)JS_malloc(cx, nbytes);
+        if (!*messagep)
+            goto error;
+        JS_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
     }
     return JS_TRUE;
+
+error:
+    if (reportp->messageArgs) {
+        i = 0;
+        while (reportp->messageArgs[i])
+            JS_free(cx, (void *)reportp->messageArgs[i++]);
+        JS_free(cx, (void *)reportp->messageArgs);
+        reportp->messageArgs = NULL;
+    }
+    if (reportp->ucmessage) {
+        JS_free(cx, (void *)reportp->ucmessage);
+        reportp->ucmessage = NULL;
+    }
+    if (*messagep) {
+        JS_free(cx, (void *)*messagep);
+        *messagep = NULL;
+    }
+    return JS_FALSE;
 }
 
 JSBool
@@ -579,29 +650,28 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
     JSErrorReporter onError;
 
     if (!message)
-	return;
+        return;
 
     if (cx->lastMessage)
-	free(cx->lastMessage);
+        free(cx->lastMessage);
     cx->lastMessage = JS_strdup(cx, message);
     if (!cx->lastMessage)
-	return;
+        return;
     onError = cx->errorReporter;
 
     /*
      * If debugErrorHook is present then we give it a chance to veto
      * sending the error on to the regular ErrorReporter.
      */
-    if (cx->runtime->debugErrorHook && onError) {
+    if (onError) {
         JSDebugErrorHook hook = cx->runtime->debugErrorHook;
-        /* test local in case debugErrorHook changed on another thread */
-        if (hook && !hook(cx, message, reportp,
-                          cx->runtime->debugErrorHookData)) {
+        if (hook &&
+            !hook(cx, cx->lastMessage, reportp, cx->runtime->debugErrorHookData)) {
             onError = NULL;
         }
     }
     if (onError)
-	(*onError)(cx, cx->lastMessage, reportp);
+        (*onError)(cx, cx->lastMessage, reportp);
 }
 
 void
