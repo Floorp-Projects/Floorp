@@ -985,14 +985,11 @@ void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aC
       // Rectangle B. Subtract this from rectangle A
       const nscoord bx  = aRect.x;
       const nscoord bxm = aRect.XMost ();
-      const nscoord bw  = aRect.width;
       const nscoord by  = aRect.y;
       const nscoord bym = aRect.YMost ();
-      const nscoord bh  = aRect.height;
       // Rectangle I. Area where rectangles A and B intersect
       const nscoord ix  = TmpRect.x;
       const nscoord ixm = TmpRect.XMost ();
-      const nscoord iw  = TmpRect.width;
       const nscoord iy  = TmpRect.y;
       const nscoord iym = TmpRect.YMost ();
       const nscoord ih  = TmpRect.height;
