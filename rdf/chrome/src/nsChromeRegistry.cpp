@@ -452,6 +452,9 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
       mChromeDataSource = nsnull;
       AddToCompositeDataSource(PR_TRUE);
 
+      // We have to flush the chrome cache!
+      RefreshSkins();
+
       LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
       // This must always be the last line of profile initialization!
 
