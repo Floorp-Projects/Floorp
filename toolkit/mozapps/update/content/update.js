@@ -43,7 +43,6 @@ const nsIUpdateItem       = Components.interfaces.nsIUpdateItem;
 const nsIUpdateService    = Components.interfaces.nsIUpdateService;
 const nsIExtensionManager = Components.interfaces.nsIExtensionManager;
 
-const PREF_APP_ID                               = "app.id";
 const PREF_UPDATE_APP_UPDATESAVAILABLE          = "app.update.updatesAvailable";
 const PREF_UPDATE_APP_PERFORMED                 = "app.update.performed";
 

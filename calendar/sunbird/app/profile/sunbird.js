@@ -47,16 +47,6 @@ pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallCo
 pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
 pref("xpinstall.dialog.progress.type", "Download:Manager");
 
-// This is this application's unique identifier used by the Extension System to identify
-// this application as an extension target, and by the SmartUpdate system to identify
-// this application to the Update server.
-pref("app.id", "{718e30fb-e89b-41dd-9da7-e25a45638b28}");
-pref("app.version", 
-#expand __APP_VERSION__
-);
-pref("app.build_id", 
-#expand __BUILD_ID__
-);
 pref("app.extensions.version", 
 #expand __APP_VERSION__
 );

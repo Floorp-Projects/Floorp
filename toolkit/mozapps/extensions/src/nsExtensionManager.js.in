@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@bengoodger.com>
+ *  Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,10 +40,7 @@ const nsIExtensionManager             = Components.interfaces.nsIExtensionManage
 const nsIUpdateService                = Components.interfaces.nsIUpdateService;
 const nsIUpdateItem                   = Components.interfaces.nsIUpdateItem;
 
-const PREF_EM_APP_ID                  = "app.id";
-const PREF_EM_APP_VERSION             = "app.version";
 const PREF_EM_APP_EXTENSIONS_VERSION  = "app.extensions.version";
-const PREF_EM_APP_BUILDID             = "app.build_id";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
@@ -87,6 +85,7 @@ const ERROR_INVALID_VERSION           = -1;
 const ERROR_PHONED_HOME               = -2;
 const ERROR_EXTENSION_IS_THEME        = -3;
 
+var gApp            = null;
 var gPref           = null;
 var gRDF            = null;
 var gOS             = null;
@@ -528,7 +527,7 @@ function getItemMetadata(aDS, aResult)
   }
   
   // Target App Name and Version
-  var appID = gPref.getCharPref(PREF_EM_APP_ID);
+  var appID = gApp.ID;
 
   var targets = aDS.GetTargets(manifestRoot, gRDF.GetResource(EM_NS("targetApplication")), true);
   var idRes = gRDF.GetResource(EM_NS("id"));
@@ -1522,6 +1521,8 @@ nsThemeUninstaller.prototype = {
 //
 function nsExtensionManager()
 {
+  gApp = Components.classes["@mozilla.org/xre/app-info;1"]
+                  .getService(Components.interfaces.nsIXULAppInfo);
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch);
   gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -2022,7 +2023,7 @@ nsExtensionManager.prototype = {
       // and do version checking. Time hit here doesn't matter since this 
       // doesn't happen all that often.
       this._ensureDS();
-      var currAppID = gPref.getCharPref(PREF_EM_APP_ID);
+      var currAppID = gApp.ID;
       var items = this._ds.getIncompatibleItemList(currAppID, currAppVersion,
                                                    nsIUpdateItem.TYPE_ADDON);
       if (items.length > 0) {
@@ -2186,7 +2187,7 @@ nsExtensionManager.prototype = {
     var compat = getFile(KEY_PROFILEDIR, [FILE_COMPAT_MANIFEST]);
     fos.init(compat, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0644, 0);
 
-    var currAppBuildID = gPref.getCharPref(PREF_EM_APP_BUILDID);
+    var currAppBuildID = gApp.appBuildID;
 
     var val = aComponentListUpdated ? 1 : 0;
     var lines = ["[Compatibility]\r\n",
@@ -2633,7 +2634,7 @@ nsExtensionManager.prototype = {
   
   update: function nsExtensionManager_update (aItems, aItemCount, aVersionUpdateOnly)
   {
-    var appID = gPref.getCharPref(PREF_EM_APP_ID);
+    var appID = gApp.ID;
     var appVersion = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
 
     if (aItems.length == 0) {
@@ -3429,7 +3430,7 @@ nsExtensionsDataSource.prototype = {
       return true;
       
     var appVersion = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
-    var appID = gPref.getCharPref(PREF_EM_APP_ID);
+    var appID = gApp.ID;
     
     var targets = aDS.GetTargets(aSource, this._emR("targetApplication"), true);
     var idRes = this._emR("id");
@@ -3606,7 +3607,7 @@ nsExtensionsDataSource.prototype = {
       return { minVersion: ver, maxVersion: ver };
     }
 
-    var appID = gPref.getCharPref(PREF_EM_APP_ID);
+    var appID = gApp.ID;
     var r = gRDF.GetResource(getItemPrefix(aType) + aExtensionID);
     var targetApps = aDataSource.GetTargets(r, this._emR("targetApplication"), true);
     if (!targetApps.hasMoreElements()) {
@@ -3639,7 +3640,7 @@ nsExtensionsDataSource.prototype = {
     if (!targetDataSource)
       targetDataSource = this;
       
-    var appID = gPref.getCharPref(PREF_EM_APP_ID);
+    var appID = gApp.ID;
     var r = gRDF.GetResource(getItemPrefix(aType) + aExtensionID);
     var targetApps = targetDataSource.GetTargets(r, this._emR("targetApplication"), true);
     if (!targetApps.hasMoreElements()) {

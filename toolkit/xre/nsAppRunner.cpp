@@ -382,7 +382,7 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
 static const nsXREAppData* LoadAppData(const char* appDataFile)
 {
   static char vendor[256], name[256], version[32], buildID[32], copyright[512];
-  static nsXREAppData data = { vendor, name, version, buildID, copyright, 0 };
+  static nsXREAppData data = { vendor, name, version, buildID, {0,0,0,{0,0,0,0,0,0,0,0}}, copyright, 0 };
   
   nsCOMPtr<nsILocalFile> lf;
   NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
@@ -399,6 +399,15 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   if (NS_FAILED(rv) || xreVersion[0] != '0' || xreVersion[1] != '.') {
     fprintf(stderr, "Error: XRE version requirement not met.\n");
     return nsnull;
+  }
+
+  // Read the app ID, if specified
+  char id[38] = "";
+  rv = parser.GetString("App", "ID", id, sizeof(id));
+  if (NS_SUCCEEDED(rv)) {
+    if(!data.id.Parse(id)) {
+      memset(&data.id, 0, sizeof(data.id));
+    }
   }
 
   PRUint32 i;
@@ -882,6 +891,18 @@ NS_IMETHODIMP
 nsXULAppInfo::GetName(nsACString& aResult)
 {
   aResult.Assign(gAppData->appName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetID(nsID** aResult)
+{
+  *aResult = (nsID*) NS_Alloc(sizeof(nsID));
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  **aResult = gAppData->id;
 
   return NS_OK;
 }

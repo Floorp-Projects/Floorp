@@ -42,16 +42,6 @@ pref("general.useragent.vendorSub",
 pref("general.useragent.locale", "en-US");
 pref("general.skins.selectedSkin", "classic/1.0");
 
-// This is this application's unique identifier used by the Extension System to identify
-// this application as an extension target, and by the SmartUpdate system to identify
-// this application to the Update server.
-pref("app.id", "{3550f703-e582-4d05-9a08-453d09bdfdc6}");
-pref("app.version", 
-#expand __APP_VERSION__
-);
-pref("app.build_id", 
-#expand __BUILD_ID__
-);
 pref("app.extensions.version", "0.6");
 
 #ifdef XP_MACOSX

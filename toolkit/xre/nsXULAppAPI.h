@@ -41,6 +41,7 @@
 #define _nsXULAppAPI_h__
 
 #include "prtypes.h"
+#include "nsID.h"
 
 /**
  * This API is "not even kinda frozen yet"
@@ -90,6 +91,12 @@ struct nsXREAppData
    * The application's build identifier, e.g. "2004051604"
    */
   const char *appBuildID;
+
+  /**
+   * The application's UUID. Used by the extension manager to determine
+   * compatible extensions.
+   */
+  nsID id;
 
   /**
    * The copyright information to print for the -h commandline flag,

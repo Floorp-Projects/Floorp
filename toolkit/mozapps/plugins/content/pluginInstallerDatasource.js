@@ -7,12 +7,16 @@ function nsRDFItemUpdater(aClientOS, aChromeLocale){
   this._os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
 
-  var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
-  this.appID = prefBranch.getCharPref("app.id");
-  this.buildID = prefBranch.getCharPref("app.build_id");
+  var app = Components.classes["@mozilla.org/xre/app-info;1"]
+                      .getService(Components.interfaces.nsIXULAppInfo);
+  this.appID = app.ID;
+  this.buildID = app.geckoBuildID;
+
   this.clientOS = aClientOS;
   this.chromeLocale = aChromeLocale;
+
+  var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
   this.dsURI = prefBranch.getComplexValue("pfs.datasource.url",
                                      Components.interfaces.nsIPrefLocalizedString).data;
 }
