@@ -72,7 +72,8 @@
             toolbar.setAttribute("mode", this.getAttribute("mode"));
             toolbar.setAttribute("iconsize", this.getAttribute("iconsize"));
             toolbar.setAttribute("context", this.toolbarset.getAttribute("context"));
-                        
+            toolbar.setAttribute("class", "chromeclass-toolbar");
+            
             this.insertBefore(toolbar, this.toolbarset);
             return toolbar;
           ]]>
