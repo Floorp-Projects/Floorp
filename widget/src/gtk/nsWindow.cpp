@@ -327,7 +327,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
   // call the event callback
   if (mEventCallback) {
 
-#ifndef HAVE_GTK_BETTER_THAN_1_1_13
+#ifndef GTK_HAVE_FEATURES_1_1_14
     nsRect rr ;
     /*
      * Maybe  ... some day ... somone will pull the invalid rect
@@ -339,7 +339,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     rr.y = 0;
 
     event.rect = &rr;
-#endif /* HAVE_GTK_BETTER_THAN_1_1_13 */
+#endif
 
     event.renderingContext = nsnull;
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
