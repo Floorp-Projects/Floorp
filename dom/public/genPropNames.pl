@@ -21,6 +21,8 @@
 #  Norris Boyd
 # 
 
+print "Running...\n";
+
 open(IN, "nsDOMPropEnums.h") || 
 	die("Error opening 'nsDOMPropEnums.h': $!\n");
 
@@ -96,3 +98,4 @@ print OUT <<EOF;
 #endif // nsDOMPropNames_h__
 EOF
 
+print "Done\n";

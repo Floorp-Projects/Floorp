@@ -662,6 +662,8 @@
     "image.height", \
     "image.hspace", \
     "image.lowsrc", \
+    "image.naturalheight", \
+    "image.naturalwidth", \
     "image.vspace", \
     "image.width", \
     "javascript.enabled", \

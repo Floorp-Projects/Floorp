@@ -56,6 +56,10 @@ public:
 
   NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
   NS_IMETHOD    SetWidth(PRInt32 aWidth)=0;
+
+  NS_IMETHOD    GetNaturalHeight(PRInt32* aNaturalHeight)=0;
+
+  NS_IMETHOD    GetNaturalWidth(PRInt32* aNaturalWidth)=0;
 };
 
 
@@ -73,6 +77,8 @@ public:
   NS_IMETHOD    SetVspace(PRInt32 aVspace);  \
   NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
   NS_IMETHOD    SetWidth(PRInt32 aWidth);  \
+  NS_IMETHOD    GetNaturalHeight(PRInt32* aNaturalHeight);  \
+  NS_IMETHOD    GetNaturalWidth(PRInt32* aNaturalWidth);  \
 
 
 
@@ -90,6 +96,8 @@ public:
   NS_IMETHOD    SetVspace(PRInt32 aVspace) { return _to SetVspace(aVspace); } \
   NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
   NS_IMETHOD    SetWidth(PRInt32 aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetNaturalHeight(PRInt32* aNaturalHeight) { return _to GetNaturalHeight(aNaturalHeight); } \
+  NS_IMETHOD    GetNaturalWidth(PRInt32* aNaturalWidth) { return _to GetNaturalWidth(aNaturalWidth); } \
 
 
 #endif // nsIDOMImage_h__

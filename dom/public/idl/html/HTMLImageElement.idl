@@ -33,4 +33,8 @@ interface Image {
             attribute  long                 hspace;
             attribute  long                 vspace;
             attribute  long                 width;
+
+            readonly attribute long         naturalHeight;
+            readonly attribute long         naturalWidth;
 };
+
