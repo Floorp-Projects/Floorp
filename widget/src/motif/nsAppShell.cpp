@@ -113,19 +113,11 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 //
 //-------------------------------------------------------------------------
 
-// static void event_processor_callback(gpointer data,
-//                                      gint source,
-//                                      GdkInputCondition condition)
-// {
-//   nsIEventQueue *eventQueue = (nsIEventQueue*)data;
-//   eventQueue->ProcessPendingEvents();
-// }
-
-static void nsUnixEventProcessorCallback(XtPointer       aClosure, 
-                                         int *           aFd, 
-                                         XtIntervalId *  aId) 
+static void event_processor_callback(XtPointer       aClosure,
+                                     int *           aFd,
+                                     XtIntervalId *  aId)
 {
-//   NS_ASSERTION(*aFd==PR_GetEventQueueSelectFD(gUnixMainEventQueue), "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
+//   NS_ASSERTION(*aFd==PR_GetEventQueueSelectFD(gUnixMainEventQueue), "Error in nsAppShell.cpp:event_processor_callback");
 //   PR_ProcessPendingEvents(gUnixMainEventQueue);
 
   nsIEventQueue *eventQueue = (nsIEventQueue*) aClosure;
@@ -195,7 +187,7 @@ done:
   XtAppAddInput(gAppContext, 
                 EQueue->GetEventQueueSelectFD(),
                 (XtPointer)(XtInputReadMask), 
-                nsUnixEventProcessorCallback, 
+                event_processor_callback, 
                 0);
 
   XtRealizeWidget(mTopLevel);

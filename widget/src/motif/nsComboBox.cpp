@@ -143,21 +143,21 @@ PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
   NS_ALLOC_STR_BUF(val, aItem, 256);
 
   int i;
-  PRInt32 index = -1;
-  for (i=0;i<mNumItems && index == -1;i++) {
+  PRInt32 inx = -1;
+  for (i=0;i<mNumItems && inx == -1;i++) {
     XmString str;
     XtVaGetValues(mItems[i], XmNlabelString, &str, nsnull);
     char * text;
     if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
       if (!strcmp(text, val)) {
-        index = i;
+        inx = i;
       }
       XtFree(text);
     }
   }
   NS_FREE_STR_BUF(val);
 
-  return index;
+  return inx;
 }
 
 //-------------------------------------------------------------------------

@@ -83,4 +83,4 @@ private:
 
 };
 
-#endif // nsScrollbar_
+#endif // nsScrollbar_h__

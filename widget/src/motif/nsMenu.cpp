@@ -215,29 +215,8 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-  // Create nsMenuItem
-  nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(
-    kMenuItemCID, nsnull, nsIMenuItem::GetIID(), (void**)&pnsMenuItem);
-  if (NS_OK == rv) {
-    nsString tmp = "separator";
-    nsISupports * supports = nsnull;
-    QueryInterface(kISupportsIID, (void**) &supports);
-    pnsMenuItem->Create(supports, tmp, PR_TRUE);
-    NS_RELEASE(supports);
-
-    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
-    AddItem(supports); // Parent should now own menu item
-    NS_RELEASE(supports);
-
-    NS_RELEASE(pnsMenuItem);
-  }
+  XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass, mMenu, NULL);
   return NS_OK;
-
-//XXX:Delete this.
-//  Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
-//                                          mMenu,
-//                                          NULL);
 }
 
 //-------------------------------------------------------------------------

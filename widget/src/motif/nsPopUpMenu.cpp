@@ -92,9 +92,7 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddSeparator() 
 {
-  Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
-                                          mMenu,
-                                          NULL);
+  XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass, mMenu, NULL);
   return NS_OK;
 }
 
