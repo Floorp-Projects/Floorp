@@ -2,11 +2,12 @@
 # This is a list of local files which get copied to the mozilla:dist:idl directory
 #
 
-nsIFileLocator.idl
-nsIWindowMediator.idl
 nsIAppShellService.idl
+nsICmdLineService.idl
 nsICommonDialogs.idl
 nsIDialogParamBlock.idl
-nsICmdLineService.idl
+nsIFileLocator.idl
 nsISessionHistory.idl
+nsIWindowMediator.idl
+nsIXULWindow.idl
 

@@ -26,15 +26,15 @@ MODULE=raptor
 XPIDL_MODULE=appshell 
 
 XPIDLSRCS =                        \
-        .\nsIXULWindow.idl       \
-        .\nsIFileLocator.idl       \
-        .\nsIAppShellService.idl   \
-       	.\nsIWindowMediator.idl	   \
-       	.\nsICommonDialogs.idl  \
-		    .\nsIDialogParamBlock.idl \
-	      .\nsICmdLineService.idl	\
-        .\nsISessionHistory.idl \
-        $(NULL)
+		.\nsIAppShellService.idl   \
+		.\nsICmdLineService.idl	\
+		.\nsICommonDialogs.idl  \
+		.\nsIDialogParamBlock.idl \
+		.\nsIFileLocator.idl       \
+		.\nsISessionHistory.idl \
+		.\nsIWindowMediator.idl	   \
+		.\nsIXULWindow.idl       \
+		$(NULL)
 
 EXPORTS =                         \
         nsIWebShellWindow.h       \
