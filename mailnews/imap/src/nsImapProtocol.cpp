@@ -2677,7 +2677,7 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
   res = m_runningUrl->GetImapAction(&imapAction);
   // if we've selected a mailbox, and we're not going to do an update because of the
   // url type, but don't have the flags, go get them!
-  if (NS_SUCCEEDED(res) &&
+  if (GetServerStateParser().LastCommandSuccessful() && NS_SUCCEEDED(res) &&
     imapAction != nsIImapUrl::nsImapSelectFolder && imapAction != nsIImapUrl::nsImapExpungeFolder 
     && imapAction != nsIImapUrl::nsImapLiteSelectFolder &&
     imapAction != nsIImapUrl::nsImapDeleteAllMsgs && 
