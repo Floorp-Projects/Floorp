@@ -393,11 +393,11 @@ public:
   NS_IMETHOD InsertNoneditableTextNode(nsIDOMNode* aParent, PRInt32 aOffset,
                                        nsString& aStr) = 0;
   /** 
-   * InsertFormattingForNode() inserts formatting before and/or after a node.
+   * InsertFormattingForNode() sets a special dirty attribute on the node.
    * Usually this will be called immediately after creating a new node.
    * @param aNode      The node for which to insert formatting.
    */
-  NS_IMETHOD InsertFormattingForNode(nsIDOMNode* aNode) = 0;
+  NS_IMETHOD MarkNodeDirty(nsIDOMNode* aNode) = 0;
 
   /* ------------ Output methods -------------- */
 
