@@ -87,6 +87,9 @@
 #elif defined(AIX)
 #define JS_USE_FDLIBM_MATH 1
 
+#elif defined(XP_OS2_VACPP)
+#define JS_USE_FDLIBM_MATH 1
+
 #else
 #define JS_USE_FDLIBM_MATH 0
 #endif
@@ -102,11 +105,7 @@
 #define fd_atan atan
 #define fd_atan2 atan2
 #define fd_ceil ceil
-#ifdef XP_OS2_VACPP    /* OS2TODO */
-#define fd_copysign 
-#else
 #define fd_copysign copysign
-#endif
 #define fd_cos cos
 #define fd_exp exp
 #define fd_fabs fabs
@@ -271,6 +270,27 @@ extern double fd_atan __P((double));
 extern double fd_ceil __P((double));
 extern double fd_pow __P((double,double));
 extern double fd_tan __P((double));
+
+#elif defined(XP_OS2_VACPP)
+
+#define fd_acos acos
+#define fd_asin asin
+#define fd_atan2 atan2
+#define fd_cos cos
+#define fd_exp exp
+#define fd_fabs fabs
+#define fd_floor floor
+#define fd_fmod fmod
+#define fd_log log
+#define fd_sin sin
+#define fd_sqrt sqrt
+#define fd_atan atan
+#define fd_ceil ceil
+#define fd_pow pow
+#define fd_tan tan
+
+/* OS2 lacks copysign */
+extern double fd_copysign __P((double, double));
 
 #else /* other platform.. generic paranoid slow fdlibm */
 
