@@ -24,6 +24,8 @@
 #define DEBUG_XMLENCODING
 #define XMLENCODING_PEEKBYTES 64
 //#define TEST_DOCTYPES 
+//#define DISABLE_TRANSITIONAL_MODE
+
 
 #include "nsParser.h"
 #include "nsIContentSink.h" 
@@ -466,6 +468,108 @@ nsDTDMode nsParser::GetParseMode(void){
 }
 
 
+
+class CWordTokenizer {
+public:
+  CWordTokenizer(nsString& aString,PRInt32 aStartOffset,PRInt32 aMaxOffset) {
+    mLength=0;
+    mOffset=aStartOffset;
+    mMaxOffset=aMaxOffset;
+    mBuffer=aString.GetUnicode();
+    mEndBuffer=mBuffer+mMaxOffset;
+  }
+
+  //********************************************************************************
+  // Get offset of nth word in string.
+  // We define words as: 
+  //    1) sequence of alphanum; 
+  //    2) quoted substring
+  //    3) SGML comment -- ... -- 
+  // Returns offset of nth word, or -1 (if out of words).
+  //********************************************************************************
+  
+  PRInt32 GetNextWord() {
+
+    const PRUnichar *cp=mBuffer+mOffset+mLength;  //skip last word
+
+    mLength=0;  //reset this
+    mOffset=-1; //reset this        
+
+    //now skip whitespace...
+
+    PRUnichar target=0;
+    PRBool    done=PR_FALSE;
+
+    while((!done) && (cp++<mEndBuffer)) {
+      switch(*cp) {
+        case kSpace:  case kNewLine:
+        case kCR:     case kTab:
+          continue;
+
+        case kQuote:
+        case kMinus:
+          target=*cp;
+          done=true;
+          break;
+
+        default:
+          done=true;
+          break;
+      }
+    }
+
+    if(cp<mEndBuffer) {  
+
+      const PRUnichar *firstcp=cp; //hang onto this...      
+      PRInt32 theDashCount=2;
+
+      cp++; //just skip first letter to simplify processing...
+
+      //ok, now find end of this word
+      while(cp++<mEndBuffer) {
+        if(kQuote==target) {
+          if(kQuote==*cp) {
+            cp++;
+            break; //we found our end...
+          }
+        }
+        else if(kMinus==target) {
+          //then let's look for SGML comments
+          if(kMinus==*cp) {
+            if(4==++theDashCount) {
+              cp++;
+              break;
+            }
+          }
+        }
+        else {
+          if((kSpace==*cp) ||
+             (kNewLine==*cp) ||
+             (kGreaterThan==*cp) ||
+             (kQuote==*cp) ||
+             (kCR==*cp) ||
+             (kTab==*cp)) {
+            break;
+          }
+        }
+      }
+
+      mLength=cp-firstcp;
+      mOffset = (0<mLength) ? firstcp-mBuffer : -1;
+
+    }
+
+    return mOffset;
+  }
+
+  PRInt32     mOffset;
+  PRInt32     mMaxOffset;
+  PRInt32     mLength;
+  const PRUnichar*  mBuffer;
+  const PRUnichar*  mEndBuffer;
+};
+
+
 /*************************************************************************************************
   First, let's define our modalities:
 
@@ -475,7 +579,7 @@ nsDTDMode nsParser::GetParseMode(void){
 
   Assume the doctype is in the following form:
     <!DOCTYPE [Top Level Element] [Availability] "[Registration]// [Owner-ID]     //  [Type] [desc-text] // [Language]" "URI|text-identifier"> 
-              [HTML]              [PUBLIC|...]    [+|-]            [W3C|IETF|...]     [DTD]  "..."          [EN]|...]   "..."  
+              [HTML]              [PUBLIC|SYTEM]  [+|-]            [W3C|IETF|...]     [DTD]  "..."          [EN]|...]   "..."  
 
 
   Here are the new rules for DTD handling; comments welcome:
@@ -502,7 +606,241 @@ nsDTDMode nsParser::GetParseMode(void){
        All other doctypes (<4.0), and documents without a doctype are handled in compatibility-mode.
 
 *****************************************************************************************************/
- 
+
+static 
+PRBool IsLoosePI(nsString& aBuffer,PRInt32 anOffset,PRInt32 aCount) {
+  PRBool result=PR_FALSE;
+
+  if((aBuffer.Find("TRANSITIONAL",PR_TRUE,anOffset,aCount)>kNotFound)||
+     (aBuffer.Find("LOOSE",PR_TRUE,anOffset,aCount)>kNotFound)       ||
+     (aBuffer.Find("FRAMESET",PR_TRUE,anOffset,aCount)>kNotFound)    ||
+     (aBuffer.Find("LATIN1", PR_TRUE,anOffset,aCount) >kNotFound)    ||
+     (aBuffer.Find("SYMBOLS",PR_TRUE,anOffset,aCount) >kNotFound)    ||
+     (aBuffer.Find("SPECIAL",PR_TRUE,anOffset,aCount) >kNotFound)) {
+
+    result=PR_TRUE;
+
+  }
+  return result;
+}
+
+/**
+ *  This is called when it's time to find out 
+ *  what mode the parser/DTD should run for this document.
+ *  (Each parsercontext can have it's own mode).
+ *  
+ *  @update  gess 06/24/00
+ *  @return  parsermode (define in nsIParser.h)
+ */
+static 
+void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& aDocType,const nsString& aMimeType) {
+  const char* theModeStr= PR_GetEnv("PARSE_MODE");
+
+  aParseMode=eDTDMode_quirks;
+  aDocType=eHTML3Text;
+
+
+    //let's eliminate non-HTML as quickly as possible...
+
+  PRInt32 theIndex=aBuffer.Find("?XML",PR_TRUE,0,128);      
+  if(kNotFound!=theIndex) {
+    aParseMode=eDTDMode_strict;
+    if(aMimeType.EqualsWithConversion(kHTMLTextContentType)) {
+      //this is here to prevent a crash if someone gives us an XML document,
+      //but necko tells us it's a text/html mimetype. 
+      aDocType=eHTML4Text;
+      aParseMode=eDTDMode_strict;
+    }
+    else aDocType=eXMLText;
+    return;
+
+  }
+  else if(aMimeType.EqualsWithConversion(kPlainTextContentType)) {
+    aDocType=ePlainText;
+    aParseMode=eDTDMode_quirks;
+    return;
+  }
+  else if(aMimeType.EqualsWithConversion(kRTFTextContentType)) {
+    aDocType=ePlainText;
+    aParseMode=eDTDMode_quirks;
+    return;
+  }
+
+
+  //now let's see if we have HTML or XHTML...
+
+  PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan);
+  
+  if(kNotFound!=theGTPos) {
+
+    const PRUnichar*  theBuffer=aBuffer.GetUnicode();
+    CWordTokenizer theTokenizer(aBuffer,1,theGTPos);
+    PRInt32 theOffset=theTokenizer.GetNextWord();  //try to find ?xml, !doctype, etc...
+
+    if((kNotFound!=theOffset) && 
+       (0==nsCRT::strncasecmp(theBuffer+theOffset,"DOCTYPE",theTokenizer.mLength))) {             
+      
+      //Ok -- so assume it's (X)HTML; now figure out the flavor...
+        
+      PRInt32   theIter=0;      //prevent infinite loops...
+      PRBool    done=PR_FALSE;  //use this to quit if we find garbage...
+      PRBool    readSystemID=PR_FALSE;
+      nsDTDMode thePublicID=eDTDMode_quirks;
+      nsDTDMode theSystemID=eDTDMode_unknown;
+
+      theOffset=theTokenizer.GetNextWord();
+
+      while((kNotFound!=theOffset) && (!done)) {  
+
+        PRUnichar theChar=*(theBuffer+theTokenizer.mOffset);
+        if(kQuote==theChar) {
+
+          if(readSystemID) {
+
+            PRInt32 thePrefix=aBuffer.Find("http://www.w3.org/tr/",PR_TRUE,theOffset,5);  //find the prefix
+
+            if(kNotFound!=thePrefix) {
+              thePrefix+=20;
+              if(IsLoosePI(aBuffer,thePrefix,25)) { //find loose.dtd
+                theSystemID=eDTDMode_transitional;
+              }
+              else if(kNotFound!=aBuffer.Find("strict.dtd",PR_TRUE,thePrefix,25)) {  //find strict.dtd
+                theSystemID=eDTDMode_strict;
+              }
+            }
+
+          }
+          
+          else { //the public ID...
+
+            readSystemID=PR_TRUE;
+
+            PRInt32 theDTDPos=aBuffer.Find("//DTD",PR_TRUE,theOffset,theTokenizer.mLength);
+            if(theDTDPos) {
+
+                //first, let's see if it's XHML...
+              PRInt32 theMLTagPos=aBuffer.Find("XHTML",PR_TRUE,theOffset,theTokenizer.mLength);  
+              if(kNotFound!=theMLTagPos) {
+                aDocType=eXHTMLText;
+                if(IsLoosePI(aBuffer,theMLTagPos+4,20)) 
+                  thePublicID=eDTDMode_transitional;
+                else thePublicID=eDTDMode_strict;
+              }
+
+              else {
+
+                  //now check for strict ISO/IEC OWNER...
+                if(kNotFound!=aBuffer.Find("15445:1999",PR_FALSE,theOffset,theDTDPos-theTokenizer.mOffset)) {
+                  thePublicID=eDTDMode_strict;  //this ISO/IEC DTD is always strict.
+                  aDocType=eHTML4Text;
+                }
+
+                else {
+
+                    //for W3C DTD's, let's make sure it's HTML...
+                  PRInt32 theMLTagPos=aBuffer.Find("HTML",PR_TRUE,theOffset,theTokenizer.mLength);  
+                  if(kNotFound==theMLTagPos) {
+                    theMLTagPos=aBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theOffset,theTokenizer.mLength);  
+                  }
+
+                  if(kNotFound!=theMLTagPos) {
+                    //and now check the version number...
+
+                    PRInt32 theVersionPos=aBuffer.FindCharInSet("1234567890",theMLTagPos);
+                    PRInt32 theMajorVersion=3;
+
+                    if((0<=theVersionPos) && (theVersionPos<theGTPos)) {
+                      nsAutoString theNum;
+                      PRInt32 theTerminal=aBuffer.FindCharInSet(" />",theVersionPos+1);
+                      if(theTerminal) {
+                        aBuffer.Mid(theNum,theVersionPos,theTerminal-theVersionPos);
+                      }
+                      else aBuffer.Mid(theNum,theVersionPos,3);
+                      PRInt32 theErr=0;
+                      theMajorVersion=theNum.ToInteger(&theErr);
+
+                      if((0==theErr) && (3<theMajorVersion) && (theMajorVersion<100)) {
+                        if(IsLoosePI(aBuffer,theVersionPos+2,20)) 
+                          thePublicID=eDTDMode_transitional;
+                        else thePublicID=eDTDMode_strict;
+                        aDocType=eHTML4Text;
+                      }               
+                    } //if
+                  } //if
+                } //else
+                    
+              } //else
+            }
+
+          } //if publicID
+
+        } //if quote
+        
+        else if(kMinus==theChar) {
+          //explicitly skip comments...
+        }
+        
+        else { //handle an id
+          if(0==nsCRT::strncasecmp(theBuffer+theOffset,"SYSTEM",theTokenizer.mLength)) 
+            readSystemID=PR_TRUE;
+          else if(0==nsCRT::strncasecmp(theBuffer+theOffset,"HTML",theTokenizer.mLength)) 
+            readSystemID=PR_FALSE;
+        }
+
+        theOffset=theTokenizer.GetNextWord();
+        if(++theIter>10) done=PR_TRUE; //prevent infinite loops...
+      } //while
+
+
+      if(theSystemID==thePublicID) 
+        aParseMode=thePublicID;
+      else if(eDTDMode_unknown==theSystemID){
+        aParseMode=thePublicID;
+        if(eHTML4Text==aDocType) {
+          if (eDTDMode_transitional==thePublicID)
+            aParseMode=eDTDMode_quirks;  //degrade because the systemID is missing.
+        }
+      }
+      else {
+        //ack! The doctype is badly formed (system and public ID's contradict).
+        //let's switch back to default compatibility mode...
+          aParseMode=eDTDMode_unknown;
+      }
+    } 
+  }
+
+  if(eDTDMode_unknown==aParseMode) {
+      //nothing left to do but fail gracefully...
+    if(eXHTMLText==aDocType) {
+      aParseMode=eDTDMode_transitional;
+    }
+    if(eHTML4Text==aDocType) {
+      aDocType=eHTML3Text;
+      aParseMode=eDTDMode_quirks;
+    }
+  }
+
+#ifdef  DISABLE_TRANSITIONAL_MODE
+
+  /********************************************************************************************
+      The following code is here because to deal with a nasty backward compatibility problem. 
+      The composer product emits <doctype HTML 4.0 Transitional> for the documents it creates, 
+      but the documents aren't really compliant. To prevent lots of pages from breaking, well 
+      disable proper handling of Transitional doctypes and use quirks mode instead. If lucky, 
+      we'll get to add a pref to allow power users to get the right answer.
+   ********************************************************************************************/
+
+  if(eDTDMode_transitional==aParseMode) {
+    if(eHTML4Text==aDocType)
+      aParseMode=eDTDMode_quirks;
+    else if(eXHTMLText==aDocType)
+      aParseMode=eDTDMode_strict;
+  }
+#endif
+
+
+}
+
 /**
  *  This is called when it's time to find out 
  *  what mode the parser/DTD should run for this document.
@@ -512,16 +850,17 @@ nsDTDMode nsParser::GetParseMode(void){
  *  @return  parsermode (define in nsIParser.h)
  */
 static 
-void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& aDocType,const nsString& aMimeType) {
+void DetermineParseMode2(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& aDocType,const nsString& aMimeType) {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
 
   aParseMode = eDTDMode_unknown;
-    
+
+  PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan);
+
   PRInt32 theIndex=aBuffer.Find("DOCTYPE",PR_TRUE,0,100);
   if(kNotFound<theIndex) {
   
     //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
-    PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan,theIndex+1);
     PRInt32 theEnd=(kNotFound==theGTPos) ? 512 : MinInt(512,theGTPos);
     PRInt32 theSubIndex=aBuffer.Find("//DTD",PR_TRUE,theIndex+8,theEnd-(theIndex+8));  //skip to the type and desc-text...
     PRInt32 theErr=0;
@@ -551,6 +890,8 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
       }
 
       if(kNotFound<theSubIndex) {
+
+        //grab the next word
 
         PRInt32 theHTMLTagPos=aBuffer.Find("HTML",PR_TRUE,theStartPos,theCount);  
         if(kNotFound==theHTMLTagPos) {
@@ -860,22 +1201,19 @@ nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 #ifdef TEST_DOCTYPES
 static const char* doctypes[] = {
 
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">",
+    //here are the XHTML doctypes we'll treat accordingly...
 
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\">",
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" >",
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">",
+  "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Strict//EN\">",
+  "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Transitional//EN\">",
+  "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Frameset//EN\">",
   
     //here are a few HTML doctypes we'll treat as strict...
 
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">",
-
-  "<!DOCTYPE HTML PUBLIC PublicID SystemID>",
-  "<!DOCTYPE HTML SYSTEM SystemID>",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
 
   "<!DOCTYPE \"-//W3C//DTD HTML 4.0//EN\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.01//EN\">",
@@ -888,17 +1226,13 @@ static const char* doctypes[] = {
   "<!DOCTYPE \"-//SoftQuad Software//DTD HoTMetaL PRO 6.::19990601::extensions to HTML 4.//EN\">", 
 
   "<!DOCTYPE \"-//W3C//DTD HTML 5.0//EN\">",
-  "<!DOCTYPE \"-//W3C//DTD HTML 6.01 Transitional//EN\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 6.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
 
-    //here are the XHTML doctypes we'll treat as strict...
-  "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Strict//EN\">",
-  "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Transitional//EN\">",
-  "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Frameset//EN\">",
   
-    //these we treat as compatible (no quirks if possible)...
+    //these we treat as transitional (unless it's disabled)...
 
-  "<!DOCTYPE \"-//W3C//DTD HTML Experimental 19960712//EN\">", 
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.01 Transitional//EN\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.1 Frameset//EN\">", 
   "<!DOCTYPE \"-//W3C//DTD HTML 4.0 Transitional//EN\">", 
@@ -910,6 +1244,11 @@ static const char* doctypes[] = {
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">",
 
     //these we treat as compatible with quirks... (along with any other we encounter)...
+
+  "<!DOCTYPE \"-//W3C//DTD HTML 6.01 Transitional//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" >",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">",
+  "<!DOCTYPE \"-//W3C//DTD HTML Experimental 19960712//EN\">", 
   "<!DOCTYPE \"-//W3O//DTD W3 HTML 3.0//EN//\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML//EN//3.\">", 
   "<!DOCTYPE \"-//W3C//DTD W3 HTML 3.0//EN//\">", 
@@ -925,7 +1264,6 @@ static const char* doctypes[] = {
   "<!DOCTYPE \"-//W3C//DTD W3 HTML Strict 3//EN//\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML Strict Level 3//EN\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML Strict Level 3//EN//3.0\">", 
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
 
   "<!DOCTYPE \"HTML\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML//EN\">", 
@@ -1020,22 +1358,6 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       
       nsString& theBuffer=mParserContext->mScanner->GetBuffer();
       DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType,mParserContext->mMimeType);
-
-#define DISABLE_TRANSITIONAL_MODE
-#ifdef  DISABLE_TRANSITIONAL_MODE
-
-      /********************************************************************************************
-          The following code is here because to deal with a nasty backward compatibility problem. 
-          The composer product emits <doctype HTML 4.0 Transitional> for the documents it creates, 
-          but the documents aren't really compliant. To prevent lots of pages from breaking, well 
-          disable proper handling of Transitional doctypes and use quirks mode instead. If lucky, 
-          we'll get to add a pref to allow power users to get the right answer.
-       ********************************************************************************************/
-
-      if(eDTDMode_transitional==mParserContext->mDTDMode) {
-        mParserContext->mDTDMode=eDTDMode_quirks;
-      }
-#endif
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
         mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);
