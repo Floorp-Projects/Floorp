@@ -94,7 +94,7 @@
                 prefattribute="checked"/>
       <checkbox class="iconic small-margin" id="displayGlyph" label="&convertEmoticons.label;"
                 pref="true" preftype="bool" prefstring="mail.display_glyph"
-                prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertEmoticons.tooltip;"/>   
+                prefattribute="checked"/>   
       <hbox autostretch="never" class="indent">
            <text value="&example1.label;" class="label"/>
            <image class="smileface"/>

@@ -56,8 +56,3 @@ Rights Reserved.
 <!ENTITY convertEmoticons.accesskey       "d">
 <!ENTITY example1.label                   "For example, display ' :-) ' as">
 <!ENTITY example2.label                   ".">
-
-<!-- Tooltips  -->  
-<!ENTITY convertEmoticons.tooltip "Convert Emoticons">  
-
-
