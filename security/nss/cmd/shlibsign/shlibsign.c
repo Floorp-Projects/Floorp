@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.10 2003/04/01 19:09:41 bishakhabanerjee%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.11 2003/04/01 22:47:46 wtc%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -140,7 +140,7 @@ main (int argc, char **argv)
     PRBool      verbose = PR_FALSE;
     SECKEYPrivateKey *privk = NULL;
     SECKEYPublicKey *pubk = NULL;
-    PK11SlotInfo *slot;
+    PK11SlotInfo *slot = NULL;
     PRFileDesc *fd;
     int bytesRead;
     int bytesWritten;
@@ -148,7 +148,7 @@ main (int argc, char **argv)
     unsigned char hash_buf[SHA1_LENGTH];
     unsigned char sign_buf[40]; /* DSA_LENGTH */
     SECItem hash,sign;
-    PK11Context *hashcx;
+    PK11Context *hashcx = NULL;
     int ks, count=0;
     int keySize = 1024;
     PQGParams *pqgParams = NULL;
@@ -405,6 +405,18 @@ main (int argc, char **argv)
     retval = 0;
 
 loser:
+    if (hashcx) {
+        PK11_DestroyContext(hashcx, PR_TRUE);
+    }
+    if (privk) {
+        SECKEY_DestroyPrivateKey(privk);
+    }
+    if (pubk) {
+        SECKEY_DestroyPublicKey(pubk);
+    }
+    if (slot) {
+        PK11_FreeSlot(slot);
+    }
     if (NSS_Shutdown() != SECSuccess) {
 	exit(1);
     }
