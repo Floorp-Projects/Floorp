@@ -34,7 +34,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["browserEnableKeepAlive", "browserEnablePipelining",
-                       "httpVersionString", "acceptEncodingString"];
+                       "dirGenerateHtml", "httpVersionString", "acceptEncodingString"];
   ]]>
   </script>
         
@@ -51,6 +51,9 @@
                 prefattribute="checked"/>
       <checkbox id="browserEnablePipelining" label="&debugEnablePipelining.label;"
                 pref="true" preftype="bool" prefstring="network.http.pipelining"
+                prefattribute="checked"/>
+      <checkbox id="dirGenerateHtml" label="&debugEnableHTML.label;"
+                pref="true" preftype="bool" prefstring="network.dir.generate_html"
                 prefattribute="checked"/>
     </vbox>
     <text class="label" value="&httpVersion.label;"  for="httpVersionString"/>
