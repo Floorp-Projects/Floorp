@@ -79,7 +79,7 @@
 #include "nsBarProps.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSContextStack.h"
-#include "nsIIOService.h"
+#include "nsIHTTPProtocolHandler.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsRDFCID.h"
@@ -89,7 +89,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsEscape.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 #include "nsIJVMManager.h"
 
@@ -3550,7 +3550,7 @@ NS_IMETHODIMP
 NavigatorImpl::GetUserAgent(nsString& aUserAgent)
 {
   nsresult res;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIHTTPProtocolHandler, service, kHTTPHandlerCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *ua = nsnull;
     res = service->GetUserAgent(&ua);
@@ -3565,10 +3565,10 @@ NS_IMETHODIMP
 NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
 {
   nsresult res;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIHTTPProtocolHandler, service, kHTTPHandlerCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *appName = nsnull;
-    res = service->GetAppCodeName(&appName);
+    res = service->GetAppName(&appName);
     aAppCodeName = appName;
     Recycle(appName);
   }
@@ -3580,12 +3580,29 @@ NS_IMETHODIMP
 NavigatorImpl::GetAppVersion(nsString& aAppVersion)
 {
   nsresult res;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIHTTPProtocolHandler, service, kHTTPHandlerCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    PRUnichar *appVer = nsnull;
-    res = service->GetAppVersion(&appVer);
-    aAppVersion = appVer;
-    Recycle(appVer);
+    PRUnichar *str = nsnull;
+    res = service->GetAppVersion(&str);
+    aAppVersion = str;
+    Recycle(str);
+
+    aAppVersion += " (";
+    res = service->GetPlatform(&str);
+    if (NS_FAILED(res)) return res;
+
+    aAppVersion += str;
+    Recycle(str);
+
+    aAppVersion += "; ";
+
+    res = service->GetLanguage(&str);
+    if (NS_FAILED(res)) return res;
+
+    aAppVersion += str;
+    Recycle(str);
+
+    aAppVersion += ')';
   }
 
   return res;
@@ -3594,23 +3611,19 @@ NavigatorImpl::GetAppVersion(nsString& aAppVersion)
 NS_IMETHODIMP
 NavigatorImpl::GetAppName(nsString& aAppName)
 {
-  nsresult res;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-  if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    PRUnichar *appName = nsnull;
-    res = service->GetAppName(&appName);
-    aAppName = appName;
-    Recycle(appName);
-  }
-
-  return res;
+  // This is hardcoded for backwards compatibility reasons.
+  // Existing JS sniffers use this method to get "Netscape" out
+  // of our products. The internal semantics of our User Agent
+  // component implemetation do not include a "Netscape" string.
+  aAppName = "Netscape";
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetLanguage(nsString& aLanguage)
 {
   nsresult res;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIHTTPProtocolHandler, service, kHTTPHandlerCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *lang = nsnull;
     res = service->GetLanguage(&lang);
@@ -3625,7 +3638,7 @@ NS_IMETHODIMP
 NavigatorImpl::GetPlatform(nsString& aPlatform)
 {
   nsresult res;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIHTTPProtocolHandler, service, kHTTPHandlerCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *plat = nsnull;
     res = service->GetPlatform(&plat);

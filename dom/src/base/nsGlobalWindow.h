@@ -337,36 +337,10 @@ public:
   virtual ~NavigatorImpl();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_IDOMNAVIGATOR
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName);
-
-  NS_IMETHOD    GetAppName(nsString& aAppName);
-
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion);
-
-  NS_IMETHOD    GetLanguage(nsString& aLanguage);
-
-  NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes);
-
-  NS_IMETHOD    GetPlatform(nsString& aPlatform);
-
-  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
-
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);
-
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent);
-
-  NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled);
-
-  NS_IMETHOD    JavaEnabled(PRBool* aReturn);
-
-  NS_IMETHOD    TaintEnabled(PRBool* aReturn);
-
-  NS_IMETHOD    Preference(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);
-
 protected:
   void *mScriptObject;
   nsIDOMMimeTypeArray* mMimeTypes;
