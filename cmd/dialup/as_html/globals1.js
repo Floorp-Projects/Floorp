@@ -311,7 +311,7 @@ function loadGlobalData()
 			var oneStepModeFlag = parent.parent.globals.GetNameValuePair( acctSetupFile, "Mode Selection", "OneStepMode" );
 			oneStepModeFlag = oneStepModeFlag.toLowerCase();
 			if ( oneStepModeFlag == "yes" )
-				document.vars.oneStepMode = "yes";
+				document.vars.oneStepMode.value = "yes";
 						
 			if ( document.vars.debugMode.value.toLowerCase() != "yes" && ( document.vars.editMode.value.toLowerCase() != "yes" ) )
 				if (checkPluginExists( "application/x-netscape-autoconfigure-dialer", false ) )
