@@ -155,7 +155,8 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
   mWidget = nsnull;
-  nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
+  //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
+
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -166,7 +167,7 @@ nsHTMLInputElement::~nsHTMLInputElement()
     mForm->RemoveElement(this, PR_FALSE); 
     NS_RELEASE(mForm);
   }
-  nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
+  //nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
 }
 
 // nsISupports
@@ -174,7 +175,7 @@ nsHTMLInputElement::~nsHTMLInputElement()
 NS_IMETHODIMP_(nsrefcnt) 
 nsHTMLInputElement::AddRef(void)
 {
-  nsTraceRefcnt::AddRef((nsIFormControl*)this, mRefCnt+1, __FILE__, __LINE__);
+  //nsTraceRefcnt::AddRef((nsIFormControl*)this, mRefCnt+1, __FILE__, __LINE__);
   PRInt32 refCnt = mRefCnt;  // debugging 
   return ++mRefCnt; 
 }
@@ -200,7 +201,7 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLInputElement::Release()
 {
-  nsTraceRefcnt::Release((nsIFormControl*)this, mRefCnt-1, __FILE__, __LINE__);
+  //nsTraceRefcnt::Release((nsIFormControl*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
 	if (mRefCnt <= 0) {
     delete this;                                       
@@ -242,8 +243,41 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, value)
-NS_IMPL_BOOL_ATTR(nsHTMLInputElement, DefaultChecked, defaultchecked)
+NS_IMETHODIMP 
+nsHTMLInputElement::GetDefaultValue(nsString& aDefaultValue)
+{
+  return mInner.GetAttribute(nsHTMLAtoms::value, aDefaultValue);
+}
+
+NS_IMETHODIMP 
+nsHTMLInputElement::SetDefaultValue(const nsString& aDefaultValue)
+{
+  return mInner.SetAttribute(nsHTMLAtoms::value, aDefaultValue, PR_TRUE); 
+}
+
+NS_IMETHODIMP 
+nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
+{
+  nsHTMLValue val;                                                 
+  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::checked, val);       
+  *aDefaultChecked = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
+  return NS_OK;                                                     
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
+{
+  nsAutoString empty;                                               
+  if (aDefaultChecked) {                                                     
+    return mInner.SetAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
+  } else {                                                            
+    mInner.UnsetAttribute(nsHTMLAtoms::checked, PR_TRUE);             
+    return NS_OK;                                                   
+  }                                                                 
+}
+  
+//NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, defaultvalue)
+//NS_IMPL_BOOL_ATTR(nsHTMLInputElement, DefaultChecked, defaultchecked)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
@@ -299,7 +333,6 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
         PRUint32 size;
         text->SetText(aValue,size); 
         NS_RELEASE(text);
-        return NS_OK;
       }
     }
   }
@@ -330,12 +363,9 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
         return NS_OK;
       }
     }
-  } 
+  }
   
-  nsHTMLValue val;                                                 
-  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::checked, val);       
-  *aValue = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
-  return NS_OK;                                                     
+  return GetDefaultChecked(aValue);
 }
 
 
@@ -344,33 +374,13 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
 {
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_CHECKBOX == type) {
-    if (nsnull != mWidget) {
-      nsICheckButton* checkbox = nsnull;
-      if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkbox)) {
-        checkbox->SetState(aValue); 
-        NS_RELEASE(checkbox);
-        return NS_OK;
-      }
-    }
-  } else if (NS_FORM_INPUT_RADIO == type) {
-    if (nsnull != mWidget) {
-      nsIRadioButton* radio = nsnull;
-      if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
-        radio->SetState(aValue); 
-        NS_RELEASE(radio);
-        return NS_OK;
-      }
-    }
+  if ((NS_FORM_INPUT_CHECKBOX == type) || (NS_FORM_INPUT_RADIO == type)) {
+    nsAutoString value;
+    value = (aValue) ? "1" : "0";
+    mInner.SetAttribute("checked", value, PR_TRUE);
   } 
-  
-  nsAutoString empty;                                               
-  if (aValue) {                                                     
-    return mInner.SetAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
-  } else {                                                            
-    mInner.UnsetAttribute(nsHTMLAtoms::checked, PR_TRUE);             
-    return NS_OK;                                                   
-  }                                                                 
+
+  return SetDefaultChecked(aValue);
 }
 
 NS_IMETHODIMP

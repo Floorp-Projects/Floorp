@@ -37,6 +37,7 @@ CPPSRCS =				\
 	nsLegendFrame.cpp   \
 	nsHTMLButtonControlFrame.cpp   \
 	nsLabelFrame.cpp   \
+	nsImageControlFrame.cpp \
 	$(NULL)
 
 MODULE = raptor

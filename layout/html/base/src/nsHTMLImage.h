@@ -18,6 +18,7 @@
 #ifndef nsHTMLImage_h___
 #define nsHTMLImage_h___
 
+#include "nsLeafFrame.h"
 #include "nslayout.h"
 #include "nsIFrameImageLoader.h"
 #include "nsString.h"
@@ -25,6 +26,7 @@ class nsIFrame;
 class nsIFrameImageLoader;
 class nsIPresContext;
 class nsISizeOfHandler;
+class nsIImageMap;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
@@ -89,6 +91,68 @@ protected:
   PRPackedBool mLoadBrokenImageFailed;
   nsString* mURLSpec;
   nsString* mBaseHREF;
+};
+
+
+#define ImageFrameSuper nsLeafFrame
+class ImageFrame : public ImageFrameSuper {
+public:
+  ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
+  NS_METHOD HandleEvent(nsIPresContext& aPresContext,
+                        nsGUIEvent* aEvent,
+                        nsEventStatus& aEventStatus);
+  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
+                         const nsPoint& aPoint,
+                         nsIFrame** aFrame,
+                         nsIContent** aContent,
+                         PRInt32& aCursor);
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
+
+protected:
+  virtual ~ImageFrame();
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              nsHTMLReflowMetrics& aDesiredSize);
+
+  nsIImageMap* GetImageMap();
+
+  nsHTMLImageLoader mImageLoader;
+  nsIImageMap* mImageMap;
+  PRBool mSizeFrozen;
+
+  void TriggerLink(nsIPresContext& aPresContext,
+                   const nsString& aURLSpec,
+                   const nsString& aTargetSpec,
+                   PRBool aClick);
+
+  PRBool IsServerImageMap();
+  PRIntn GetSuppress();
+
+  nscoord MeasureString(const PRUnichar*     aString,
+                        PRInt32              aLength,
+                        nscoord              aMaxWidth,
+                        PRUint32&            aMaxFit,
+                        nsIRenderingContext& aContext);
+
+  void DisplayAltText(nsIPresContext&      aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsString&      aAltText,
+                      const nsRect&        aRect);
+
+  void DisplayAltFeedback(nsIPresContext&      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          PRInt32              aIconId);
 };
 
 #endif /* nsHTMLImage_h___ */

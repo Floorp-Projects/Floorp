@@ -30,14 +30,14 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
-#include "nsITextWidget.h"
+#include "nsITextAreaWidget.h"
 #include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 
 class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
                               public nsIScriptObjectOwner,
@@ -237,8 +237,8 @@ NS_IMETHODIMP
 nsHTMLTextAreaElement::Select() // XXX not tested
 {
   if (nsnull != mWidget) {
-    nsITextWidget *textWidget;
-    if (NS_OK == mWidget->QueryInterface(kITextWidgetIID, (void**)&textWidget)) {
+    nsITextAreaWidget *textWidget;
+    if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID, (void**)&textWidget)) {
       textWidget->SelectAll();
       NS_RELEASE(textWidget);
     }
@@ -265,15 +265,33 @@ nsHTMLTextAreaElement::GetType(nsString& aType)
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::GetValue(nsString& aValue)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull != mWidget) {
+    nsITextAreaWidget* text = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&text)) {
+      PRUint32 size;
+      text->GetText(aValue,0,size); 
+      NS_RELEASE(text);
+      return NS_OK;
+    }
+  } 
+
+  return mInner.GetAttribute(nsHTMLAtoms::value, aValue);
 }
+
 
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsString& aValue)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull != mWidget) {
+    nsITextAreaWidget* text = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&text)) {
+      PRUint32 size;
+      text->SetText(aValue,size); 
+      NS_RELEASE(text);
+    }
+  }
+
+  return mInner.SetAttribute(nsHTMLAtoms::value, aValue, PR_TRUE); 
 }
 
 NS_IMETHODIMP
@@ -290,7 +308,10 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
   static char whitespace[] = " \r\n\t";
   nsString value(aDefaultValue);
   value.Trim(whitespace, PR_TRUE, PR_FALSE);
-  return mInner.SetAttribute(nsHTMLAtoms::defaultvalue, value, PR_TRUE);
+  mInner.SetAttribute(nsHTMLAtoms::defaultvalue, value, PR_TRUE);
+  mInner.SetAttribute(nsHTMLAtoms::value, value, PR_TRUE);
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP

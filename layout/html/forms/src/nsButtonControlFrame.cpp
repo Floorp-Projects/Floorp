@@ -37,15 +37,12 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormControl.h"
-#include "nsIImage.h"
-#include "nsHTMLImage.h"
 #include "nsStyleUtil.h"
 #include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsFormFrame.h"
-#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
@@ -86,8 +83,6 @@ nsButtonControlFrame::GetMaxNumValues()
   GetType(&type);
   if ((NS_FORM_INPUT_SUBMIT == type) || (NS_FORM_INPUT_HIDDEN == type)) {
     return 1;
-  } else if (NS_FORM_INPUT_IMAGE == type) {
-    return 2;
   } else {
     return 0;
   }
@@ -106,38 +101,17 @@ nsButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 
   PRInt32 type;
   GetType(&type);
-  nsAutoString value;
-  nsresult valResult = GetValue(&value);
 
-  if ((NS_FORM_INPUT_IMAGE == type) || (NS_FORM_INPUT_BUTTON == type)) {
-    char buf[20];
-    aNumValues = 2;
-
-    aValues[0].SetLength(0);
-    sprintf(&buf[0], "%d", mLastClickPoint.x);
-    aValues[0].Append(&buf[0]);
-
-    aNames[0] = name;
-    aNames[0].Append(".x");
-
-    aValues[1].SetLength(0);
-    sprintf(&buf[0], "%d", mLastClickPoint.y);
-    aValues[1].Append(&buf[0]);
-
-    aNames[1] = name;
-    aNames[1].Append(".y");
-
-    return PR_TRUE;
-  }
-  else if (((NS_FORM_INPUT_SUBMIT == type) || (NS_FORM_INPUT_HIDDEN == type)) &&
-            (NS_CONTENT_ATTR_HAS_VALUE == valResult)) {
+  if (NS_FORM_INPUT_RESET == type) {
+    aNumValues = 0;
+    return PR_FALSE;
+  } else {
+    nsAutoString value;
+    nsresult valResult = GetValue(&value);
     aValues[0] = value;
     aNames[0]  = name;
     aNumValues = 1;
     return PR_TRUE;
-  } else {
-    aNumValues = 0;
-    return PR_FALSE;
   }
 }
 
@@ -214,6 +188,34 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
 #endif
 }
 
+
+NS_IMETHODIMP
+nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                       nsIContent*     aChild,
+                                       nsIAtom*        aAttribute,
+                                       PRInt32         aHint)
+{
+  nsresult result = NS_OK;
+  PRInt32 type;
+  GetType(&type);
+  if (mWidget) {
+    if (nsHTMLAtoms::value == aAttribute) {
+      nsIButton* button = nsnull;
+      result = mWidget->QueryInterface(kIButtonIID, (void**)&button);
+      if ((NS_SUCCEEDED(result)) && (nsnull != button)) {
+        nsString value;
+        nsresult result = GetValue(&value);
+        button->SetLabel(value);
+        NS_RELEASE(button);
+        nsFormFrame::StyleChangeReflow(aPresContext, this);
+      }
+    } else if (nsHTMLAtoms::size == aAttribute) {
+      nsFormFrame::StyleChangeReflow(aPresContext, this);
+    }
+  }
+  return result;
+}
+                                     
 NS_METHOD 
 nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
@@ -226,24 +228,7 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
-    // let super do processing if there is no image
-    if (NS_FORM_INPUT_IMAGE != type) {
-      return nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-    }
-
-    // First paint background and borders
-    nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-
-    nsIImage* image = mImageLoader.GetImage();
-    if (nsnull == image) {
-      // No image yet
-      return NS_OK;
-    }
-
-    // Now render the image into our inner area (the area without the
-    nsRect inner;
-    GetInnerArea(&aPresContext, inner);
-    aRenderingContext.DrawImage(image, inner);
+    return nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
 
   return NS_OK;
@@ -254,27 +239,30 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
 {
   PRInt32 type;
   GetType(&type);
-  if (nsnull != mFormFrame) {
-    if (NS_FORM_INPUT_RESET == type) {
-      //Send DOM event
-      nsEventStatus mStatus;
-      nsEvent mEvent;
-      mEvent.eventStructType = NS_EVENT;
-      mEvent.message = NS_FORM_RESET;
-      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
 
-      mFormFrame->OnReset();
-    } 
-    else if ((NS_FORM_INPUT_SUBMIT == type) || 
-             ((NS_FORM_INPUT_IMAGE == type) && !nsFormFrame::GetDisabled(this))) {
-      //Send DOM event
-      nsEventStatus mStatus;
-      nsEvent mEvent;
-      mEvent.eventStructType = NS_EVENT;
-      mEvent.message = NS_FORM_SUBMIT;
-      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
+    nsEventStatus status;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
 
-      mFormFrame->OnSubmit(aPresContext, this);
+    switch(type) {
+    case NS_FORM_INPUT_BUTTON:
+      event.message = NS_MOUSE_LEFT_CLICK;
+      mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+      break;
+    case NS_FORM_INPUT_RESET:
+      event.message = NS_FORM_RESET;
+      mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+      if (nsEventStatus_eConsumeNoDefault != status) {
+        mFormFrame->OnReset();
+      }
+      break;
+    case NS_FORM_INPUT_SUBMIT:
+      event.message = NS_FORM_SUBMIT;
+      mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+      if (nsEventStatus_eConsumeNoDefault != status) {
+        mFormFrame->OnSubmit(aPresContext, this);
+      }
     }
   } else if ((NS_FORM_BROWSE == type) && mFileControlFrame) {
     mFileControlFrame->MouseClicked(aPresContext);
@@ -306,28 +294,6 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   }
 }
 
-// XXX This is a copy of the code in nsImageFrame.cpp
-static nsresult
-UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
-                 PRIntn aStatus)
-{
-  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    // Now that the size is available, trigger a content-changed reflow
-    nsIContent* content = nsnull;
-    aFrame->GetContent(content);
-    if (nsnull != content) {
-      nsIDocument* document = nsnull;
-      content->GetDocument(document);
-      if (nsnull != document) {
-        document->ContentChanged(content, nsnull);
-        NS_RELEASE(document);
-      }
-      NS_RELEASE(content);
-    }
-  }
-  return NS_OK;
-}
-
 void 
 nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
@@ -343,35 +309,25 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredLayoutSize.ascent = 0;
     aDesiredLayoutSize.descent = 0;
   } else {
-    if (NS_FORM_INPUT_IMAGE == type) { // there is an image
-      // Setup url before starting the image load
-      nsAutoString src;
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
-        mImageLoader.SetURL(src);
-      }
-      mImageLoader.GetDesiredSize(aPresContext, aReflowState, this, UpdateImageFrame,
-                                  aDesiredLayoutSize);
-    } else {  // there is a widget
-      nsSize styleSize;
-      GetStyleSize(*aPresContext, aReflowState, styleSize);
-      // a browse button shares is style context with its parent nsInputFile
-      // it uses everything from it except width
-      if (NS_FORM_BROWSE == type) {
-        styleSize.width = CSS_NOTSET;
-      }
-      nsSize size;
-      PRBool widthExplicit, heightExplicit;
-      PRInt32 ignore;
-      nsAutoString defaultLabel;
-      GetDefaultLabel(defaultLabel);
-      nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 
-                                &defaultLabel, 1, PR_FALSE, nsnull, 1);
-      CalculateSize(aPresContext, this, styleSize, spec, size, 
-                    widthExplicit, heightExplicit, ignore,
-                    aReflowState.rendContext);
-      aDesiredLayoutSize.width = size.width;
-      aDesiredLayoutSize.height= size.height;
+    nsSize styleSize;
+    GetStyleSize(*aPresContext, aReflowState, styleSize);
+    // a browse button shares is style context with its parent nsInputFile
+    // it uses everything from it except width
+    if (NS_FORM_BROWSE == type) {
+      styleSize.width = CSS_NOTSET;
     }
+    nsSize size;
+    PRBool widthExplicit, heightExplicit;
+    PRInt32 ignore;
+    nsAutoString defaultLabel;
+    GetDefaultLabel(defaultLabel);
+    nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 
+                              &defaultLabel, 1, PR_FALSE, nsnull, 1);
+    CalculateSize(aPresContext, this, styleSize, spec, size, 
+                  widthExplicit, heightExplicit, ignore,
+                  aReflowState.rendContext);
+    aDesiredLayoutSize.width = size.width;
+    aDesiredLayoutSize.height= size.height;
     aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
     aDesiredLayoutSize.descent = 0;
   }

@@ -20,7 +20,6 @@
 #define nsButtonControlFrame_h___
 
 #include "nsFormControlFrame.h"
-#include "nsHTMLImage.h"
 class nsFileControlFrame;
 
 class nsButtonControlFrame : public nsFormControlFrame {
@@ -35,6 +34,11 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
@@ -72,7 +76,6 @@ protected:
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
-  nsHTMLImageLoader   mImageLoader;
   nsFileControlFrame* mFileControlFrame; // for browse buttons only
 };
 

@@ -35,6 +35,11 @@ public:
                                 nscoord& aWidth,
                                 nscoord& aHeight);
 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
+
   virtual PRBool GetChecked(PRBool aGetInitialValue);
   virtual void   SetChecked(PRBool aValue, PRBool aSetInitialValue);
 
@@ -57,8 +62,6 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
-  PRBool *mInitialChecked;
-  PRBool  mForcedChecked;   
 };
 
 // nsRadioControlGroup
