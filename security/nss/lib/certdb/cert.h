@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.9 2001/04/11 22:28:08 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.10 2001/05/22 22:01:32 wtc%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -614,7 +614,7 @@ CERT_ImportCAChain (SECItem *certs, int numcerts, SECCertUsage certUsage);
 **	"f" is the callback function
 **	"arg" is the callback argument
 */
-typedef SECStatus (*CERTImportCertificateFunc)
+typedef SECStatus (PR_CALLBACK *CERTImportCertificateFunc)
    (void *arg, SECItem **certs, int numcerts);
 
 extern SECStatus
