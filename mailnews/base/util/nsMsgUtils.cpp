@@ -23,7 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth)
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_NS_MsgHashIfNecessary 1
 #endif
 
