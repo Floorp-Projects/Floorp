@@ -82,7 +82,7 @@ protected:
   nsresult RevertTextValue();
 
   nsresult CompleteDefaultIndex(PRInt32 aSearchIndex);
-  nsresult CompleteValue(nsString &aValue);
+  nsresult CompleteValue(nsString &aValue, PRBool selectDifference);
   nsresult GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly, nsAString & _retval);
 
   nsresult ClearResults();
