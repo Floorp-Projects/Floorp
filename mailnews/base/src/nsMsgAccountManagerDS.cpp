@@ -715,11 +715,6 @@ nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
     do_QueryInterface(serverFolder,&rv);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_alecf
-  nsXPIDLCString serverUri;
-  serverResource->GetValue(getter_Copies(serverUri));
-  printf("nsMsgAccountManagerDataSource::OnServerUnloaded(%s)\n", (const char*)serverUri);
-#endif
   
   NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, PR_FALSE, PR_FALSE);
   NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, PR_FALSE, PR_FALSE);
