@@ -42,6 +42,7 @@
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
 #include "nsTabWidget.h"
+#include "nsFontRetrieverService.h"
 
 #include "nsImageButton.h"
 #include "nsMenuButton.h"
@@ -81,6 +82,7 @@ static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
 static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
+static NS_DEFINE_IID(kCFontRetrieverService,    NS_FONTRETRIEVERSERVICE_CID);
 
 // Drag & Drop, Clipboard
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
@@ -254,6 +256,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCXIFFormatConverter)) {
         inst = (nsISupports*)new nsXIFFormatConverter();
+    }
+    else if (mClassID.Equals(kCFontRetrieverService)) {
+        inst = (nsISupports*)(nsIFontRetrieverService *) new nsFontRetrieverService();
     }
 #if 0
     else if (mClassID.Equals(kCDragService)) {
