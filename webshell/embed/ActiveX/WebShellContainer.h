@@ -99,14 +99,8 @@ public:
     NS_IMETHOD OnStartRequest(nsIChannel* aChannel, nsISupports* aContext);
     NS_IMETHOD OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg);
 
-	// nsIDocumentLoaderObserver 
-	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-	NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-	NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
-	NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
-	NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-	NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
+	// nsIDocumentLoaderObserver
+   NS_DECL_NSIDOCUMENTLOADEROBSERVER
 };
 
 #endif
