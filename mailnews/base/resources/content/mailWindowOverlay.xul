@@ -794,7 +794,7 @@ Rights Reserved.
 			<menuseparator/>
 			<!-- overlayed from viewZoomOverlay.xul -->
 			<menu id="menu_textZoom"/>
-			<menuseparator/>
+			<menuseparator><observes element="menu_textZoom" attribute="hidden"/></menuseparator>
 			<menuitem value="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
 			<menuitem id="stopMenuitem" value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
 			<menuseparator/>
