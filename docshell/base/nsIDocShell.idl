@@ -103,7 +103,7 @@ interface nsIDocShell : nsISupports
    * of an nsIDocShellLoadInfo object...
    *
    * @param aURI            - The URI to load.
-   * @param aReferrer       - Refering URI
+   * @param aReferrer       - Referring URI
    * @param aOwner          - Owner (security principal) 
    * @param aInheritOwner   - Flag indicating whether the owner of the current
    *                          document should be inherited if aOwner is null.

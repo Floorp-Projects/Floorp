@@ -129,8 +129,8 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 		case ID_INTERFACES_NSIWEBNAV_GETCURRENTURI :
 			GetCurrentURITest(2);
 			break ;
-		case ID_INTERFACES_NSIWEBNAV_GETREFERINGURI:
-			GetReferingURITest(2);
+		case ID_INTERFACES_NSIWEBNAV_GETREFERRINGURI:
+			GetReferringURITest(2);
 			break;
 		case ID_INTERFACES_NSIWEBNAV_GETSESSIONHISTORY :
 			GetSHTest(2);
@@ -189,7 +189,7 @@ void CNsIWebNav::RunAllTests()
    
    // uri test
    GetCurrentURITest(1);
-   GetReferingURITest(1);
+   GetReferringURITest(1);
 
    // session history test
    SetSHTest(1);
@@ -442,7 +442,7 @@ void CNsIWebNav::GetCurrentURITest(PRInt16 displayMode)
    FormatAndPrintOutput("the nsIWebNav uri = ", uriString, displayMode);
 }
 
-void CNsIWebNav::GetReferingURITest(PRInt16 displayMode)
+void CNsIWebNav::GetReferringURITest(PRInt16 displayMode)
 {
    nsCOMPtr<nsIURI> theURI;
    nsCAutoString uriString;
@@ -456,7 +456,7 @@ void CNsIWebNav::GetReferingURITest(PRInt16 displayMode)
 	  else
 		 QAOutput("We DIDN'T GET the URI.", 1);
 	  rv = qaWebNav->GetReferringURI(getter_AddRefs(theURI));
-	  RvTestResult(rv, "GetReferingURI() test", displayMode);
+	  RvTestResult(rv, "GetReferringURI() test", displayMode);
 //	  rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
 //								myDialog.m_flagvalue, theURI, nsnull, nsnull);
    }

@@ -717,7 +717,7 @@ void CBrowserView::OpenURL(const PRUnichar* pUrl)
     if(mWebNav)
         mWebNav->LoadURI(pUrl,                              // URI string
                          nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
-                         nsnull,                            // Refering URI
+                         nsnull,                            // Referring URI
                          nsnull,                            // Post data
                          nsnull);                           // Extra headers
 }

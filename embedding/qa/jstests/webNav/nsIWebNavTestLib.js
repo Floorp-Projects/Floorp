@@ -236,9 +236,9 @@ function  testCurrentURI(webNav)
 
 /*  not implemented yet  
 // *************************************************************************
-// testReferingURI() gets the referring URI. It accepts the webNav
+// testReferringURI() gets the referring URI. It accepts the webNav
 // object for the parameter.
-function testReferingURI(webNav)
+function testReferringURI(webNav)
 {
   if (!webNav) {
     alert("Didn't get web navigation object");
@@ -246,7 +246,7 @@ function testReferingURI(webNav)
   } 
     // Get the refering URI
   getRefURI = webNav.referringURI;
- // alert("The refering uri = " + getRefURI.spec);
+ // alert("The referring uri = " + getRefURI.spec);
 
   return getRefURI;     
 } 
