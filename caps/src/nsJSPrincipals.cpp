@@ -35,6 +35,9 @@ nsGlobalPrivilegesEnabled(JSContext *cx , struct JSPrincipals *jsprin)
 PR_STATIC_CALLBACK(void)
 nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin) {
     nsJSPrincipals *nsjsprin = (nsJSPrincipals *)jsprin;
+    // We need to destroy the nsIPrincipal. We'll do this by adding
+    // to the refcount and calling release
+    nsjsprin->refcount++;
     NS_IF_RELEASE(nsjsprin->nsIPrincipalPtr);
     // The nsIPrincipal that we release owns the JSPrincipal struct,
     // so we don't need to worry about "codebase"

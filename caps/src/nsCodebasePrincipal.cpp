@@ -46,7 +46,13 @@ nsCodebasePrincipal::Release(void)
     NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
     --mJSPrincipals.refcount;
     NS_LOG_RELEASE(this, mJSPrincipals.refcount, "nsCodebasePrincipal");
-    if (mJSPrincipals.refcount == 0) {                                 
+    if (mJSPrincipals.refcount == 0) {
+#ifdef DEBUG_norris
+        char *spec;
+        mURI->GetSpec(&spec);
+        fprintf(stderr, "Releasing principal for %s\n", spec);
+        delete spec;
+#endif
         NS_DELETEXPCOM(this);
         return 0;
     }  
