@@ -33,32 +33,31 @@ MODULE		= string
 EXPORTS		=				\
 		nsAFlatString.h			\
 		nsAlgorithm.h			\
-		nsAPromiseString.h			\
-		nsAReadableString.h			\
+		nsAPromiseString.h		\
+		nsAReadableString.h		\
 		nsAString.h			\
-		nsAStringGenerator.h			\
-		nsAWritableString.h			\
-		nsBufferHandle.h			\
-		nsBufferHandleUtils.h			\
+		nsAStringGenerator.h		\
+		nsAWritableString.h		\
+		nsBufferHandle.h		\
+		nsBufferHandleUtils.h		\
 		nsCharTraits.h			\
-		nsDependentConcatenation.h			\
-		nsDependentString.h			\
-		nsDependentSubstring.h			\
-		nsFragmentedString.h			\
-		nsLiteralString.h			\
-		nsPrintfCString.h			\
-		nsPrivateSharableString.h			\
-		nsPromiseFlatString.h			\
-		nsReadableUtils.h			\
-		nsSharableString.h			\
-		nsSharedBufferList.h			\
-		nsSlidingString.h			\
-		nsStringDefines.h			\
-		nsStringFragment.h			\
+		nsDependentConcatenation.h	\
+		nsDependentString.h		\
+		nsDependentSubstring.h		\
+		nsFragmentedString.h		\
+		nsLiteralString.h		\
+		nsPrintfCString.h		\
+		nsPromiseFlatString.h		\
+		nsReadableUtils.h		\
+		nsSharableString.h		\
+		nsSharedBufferList.h		\
+		nsSlidingString.h		\
+		nsStringDefines.h		\
+		nsStringFragment.h		\
 		nsStringFwd.h			\
-		nsStringIterator.h			\
-		nsStringIteratorUtils.h			\
-		nsStringTraits.h			\
+		nsStringIterator.h		\
+		nsStringIteratorUtils.h		\
+		nsStringTraits.h		\
 		nsXPIDLString.h			\
 		$(NULL)			
 

@@ -85,6 +85,35 @@ Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& a
       return 0;
   }
 
+
+const nsSharedBufferHandle<PRUnichar>*
+nsAString::GetSharedBufferHandle() const
+  {
+    return 0;
+  }
+
+const nsBufferHandle<PRUnichar>*
+nsAString::GetFlatBufferHandle() const
+  {
+    return GetSharedBufferHandle();
+  }
+
+const nsBufferHandle<PRUnichar>*
+nsAString::GetBufferHandle() const
+  {
+    return GetSharedBufferHandle();
+  }
+
+PRUint32
+nsAString::GetImplementationFlags() const
+  {
+    PRUint32 flags = 0;
+    const nsSharedBufferHandle<char_type>* handle = GetSharedBufferHandle();
+    if ( handle )
+      flags = handle->GetImplementationFlags();
+    return flags;
+  }
+
 PRBool
 nsAString::IsVoid() const
   {
@@ -558,6 +587,35 @@ Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator
       return 1;
     else
       return 0;
+  }
+
+
+const nsSharedBufferHandle<char>*
+nsACString::GetSharedBufferHandle() const
+  {
+    return 0;
+  }
+
+const nsBufferHandle<char>*
+nsACString::GetFlatBufferHandle() const
+  {
+    return GetSharedBufferHandle();
+  }
+
+const nsBufferHandle<char>*
+nsACString::GetBufferHandle() const
+  {
+    return GetSharedBufferHandle();
+  }
+
+PRUint32
+nsACString::GetImplementationFlags() const
+  {
+    PRUint32 flags = 0;
+    const nsSharedBufferHandle<char_type>* handle = GetSharedBufferHandle();
+    if ( handle )
+      flags = handle->GetImplementationFlags();
+    return flags;
   }
 
 PRBool

@@ -36,13 +36,12 @@ REQUIRES	= xpcom \
 
 CPPSRCS		=				\
 		nsAFlatString.cpp		\
-		nsAString.cpp		\
-		nsDependentConcatenation.cpp		\
+		nsAString.cpp			\
+		nsDependentConcatenation.cpp	\
 		nsDependentString.cpp		\
-		nsDependentSubstring.cpp		\
+		nsDependentSubstring.cpp	\
 		nsFragmentedString.cpp		\
 		nsPrintfCString.cpp		\
-		nsPrivateSharableString.cpp		\
 		nsPromiseFlatString.cpp		\
 		nsReadableUtils.cpp		\
 		nsSharableString.cpp		\
