@@ -6130,9 +6130,12 @@ nsXULDocument::AddPrototypeSheets()
         rv = GetCSSLoader(*getter_AddRefs(loader));
         NS_ENSURE_SUCCESS(rv, rv);
         rv = loader->LoadAgentSheet(uri, getter_AddRefs(sheet));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        AddStyleSheet(sheet, 0);
+        // XXXldb We need to prevent bogus sheets from being held in the
+        // prototype's list, but until then, don't propagate the failure
+        // from LoadAgentSheet (and thus exit the loop).
+        if (NS_SUCCEEDED(rv)) {
+            AddStyleSheet(sheet, 0);
+        }
     }
 
     return NS_OK;
