@@ -66,7 +66,7 @@ public:
   NS_DECL_IMGIDECODER
 
   nsGIFDecoder2();
-  virtual ~nsGIFDecoder2();
+  ~nsGIFDecoder2();
   
   nsresult ProcessData(unsigned char *data, PRUint32 count, PRUint32 *_retval);
 
@@ -116,6 +116,8 @@ private:
   
   PRUint8 *mAlphaLine;
   PRUint8 *mRGBLine;
+  PRUint32 mRGBLineMaxSize;
+  PRUint32 mAlphaLineMaxSize;
   PRUint8 mBackgroundRGBIndex;
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
