@@ -74,7 +74,7 @@
 <!ENTITY  itemCache.label             "Cache">
 <!ENTITY  cache.intro                 "Pages you view are stored in the cache for faster viewing later on.">
 <!ENTITY  cacheUseUpTo.label          "Use up to:">
-<!ENTITY  cacheUseUpTo.accesskey      ":">
+<!ENTITY  cacheUseUpTo.accesskey      "p">
 <!ENTITY  cacheSize.label             "MB of disk space for the cache.">
 <!ENTITY  clearCache.label            "Clear Cache Now">
 <!ENTITY  clearCache.accesskey        "h">
