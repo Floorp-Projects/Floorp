@@ -84,11 +84,6 @@ MOZ_PURIFY=C:\Pure\Purify
 MOZ_PURIFYCACHE=$(FULL_OUTDIR)\PurifyCache
 !endif
 
-# No security means no patcher required.
-!if "$(NO_SECURITY)" == "1"
-MOZ_NO_PATCHER=1
-!endif
-
 !IF "$(OS)" == "Windows_NT"
 NULL=
 !ELSE
@@ -436,7 +431,7 @@ LINK_LIBS= \
 !endif
 !endif
 #!endif
-!ifndef NO_SECURITY
+!ifdef MOZ_SECURITY
     $(DIST)\lib\jar.lib \
     $(DIST)\lib\secmocha.lib \
     $(DIST)\lib\secnav32.lib \
@@ -451,7 +446,7 @@ LINK_LIBS= \
     $(BINREL_DIST)\lib\secutil.lib \
     $(BINREL_DIST)\lib\hash.lib \
 !endif
-!ifdef NO_SECURITY
+!ifndef MOZ_SECURITY
     $(DIST)\lib\secfreenav32.lib \
 !endif
     $(DIST)\lib\htmldg32.lib \
@@ -513,7 +508,7 @@ LINK_LIBS= \
     $(DIST)\lib\softup32.lib \
 !endif
 !ifdef JAVA_OR_NSJVM
-!ifndef NO_SECURITY
+!ifdef MOZ_SECURITY
     $(DIST)\lib\jsl32.lib \
 !endif
 !endif
@@ -756,7 +751,7 @@ CDISTINCLUDES3= \
 CDISTINCLUDES2= \
     /I$(XPDIST)\public \
     /I$(XPDIST)\public\coreincl \
-!ifndef NO_SECURITY
+!ifdef MOZ_SECURITY
     /I$(XPDIST)\public\jar \
 !endif
 !if defined(MOZ_NGLAYOUT)
@@ -782,9 +777,6 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !endif
 !else
 	/DNSPR20 \
-!endif
-!ifdef NO_SECURITY
-    /DNO_SECURITY \
 !endif
 !if defined(MOZ_OJI)
     /DOJI \
@@ -1528,7 +1520,7 @@ $(DEPTH)\cmd\winfe\mkfiles32\makedep.exe: $(DEPTH)\cmd\winfe\mkfiles32\makedep.c
 !ELSE
 
 ALL : $(OUTDIR)\mozilla.dep "$(OUTDIR)" prebuild $(OUTDIR)\resdll.dll $(OUTDIR)\appicon.res $(OUTDIR)\mozilla.exe $(OUTDIR)\mozilla.tlb install rebase \
-!if !defined(MOZ_NO_PATCHER)
+!if defined(MOZ_SECURITY)
 # Allow building without patcher. You get intl security, but faster build time
 "$(OUTDIR)\netsc_us.exe" "$(OUTDIR)\netsc_fr.exe"
 !else
@@ -2585,7 +2577,7 @@ LINK_CL:
     $(DIST)\lib\libnjs16.lib +
 !endif
 !ifdef JAVA_OR_NSJVM
-!ifndef NO_SECURITY
+!ifdef MOZ_SECURITY
     $(DIST)\lib\jsl16.lib +
 !endif
 !endif
