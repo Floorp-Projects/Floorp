@@ -49,7 +49,7 @@
 
 #include "nntpCore.h"
 #include "nsNNTPProtocol.h"
-#include "nsNntpUrl.h"
+#include "nsINntpUrl.h"
 
 // include the event sinks for the protocol you are testing
 #include "nsINNTPHost.h"
@@ -58,11 +58,12 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
+#include "nsIUrlListener.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
-#define NEWS_DLL   "msgnews.dll"
+#define NEWS_DLL	"msgnews.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -153,11 +154,17 @@ static void strip_nonprintable(char *string) {
 // would be asked to process it....right now it is just NNTP specific....
 ///////////////////////////////////////////////////////////////////////////////////
 
-class nsNntpTestDriver
+class nsNntpTestDriver : public nsIUrlListener
 {
 public:
 	nsNntpTestDriver(nsINetService * pService, PLEventQueue *queue);
 	virtual ~nsNntpTestDriver();
+	
+	NS_DECL_ISUPPORTS
+
+	// nsIUrlListener support
+	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
 
 	// run driver initializes the instance, lists the commands, runs the command and when
 	// the command is finished, it reads in the next command and continues...theoretically,
@@ -195,7 +202,8 @@ protected:
 	nsNNTPProtocol * m_nntpProtocol; // running protocol instance
 	nsITransport * m_transport; // a handle on the current transport object being used with the protocol binding...
 
-	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
+	PRBool		m_runningURL;
+	PRBool		m_runTestHarness;
 
 	nsresult InitializeProtocol(const char * urlSpec);
     nsresult SetupUrl(char *group);
@@ -205,11 +213,14 @@ protected:
 nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
                                    PLEventQueue *queue)
 {
+	NS_INIT_REFCNT();
+
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_url = nsnull;
 	m_protocolInitialized = PR_FALSE;
-	m_runningURL = PR_TRUE;
+	m_runTestHarness = PR_TRUE;
+	m_runningURL = PR_FALSE;
     m_eventQueue = queue;
 	
 	InitializeTestDriver(); // prompts user for initialization information...
@@ -225,16 +236,17 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
     nsresult rv = NS_OK;
 
 	// this is called when we don't have a url nor a protocol instance yet...
-    rv = nsServiceManager::GetService(kNntpUrlCID,
-                                      nsINntpUrl::GetIID(),
-                                      (nsISupports**)&m_url);
+	rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **) &m_url);
 
-	if (NS_FAILED(rv) || (m_url == nsnull)) { 
+	if (NS_FAILED(rv) || (m_url == nsnull)) 
+	{ 
         printf("InitializeProtocol failed\n");
         return rv;
     }
 
     m_url->SetSpec(urlString);
+
+	m_url->RegisterListener(this);
 
 	// now create a protocol instance...
 	m_nntpProtocol = new nsNNTPProtocol(m_url, m_transport);
@@ -245,33 +257,50 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
 
 nsNntpTestDriver::~nsNntpTestDriver()
 {
+	if (m_url)
+		m_url->UnRegisterListener(this);
+
 	NS_IF_RELEASE(m_url);
 	NS_IF_RELEASE(m_transport);
+
 	if (m_nntpProtocol) delete m_nntpProtocol;
+}
+
+NS_IMPL_ISUPPORTS(nsNntpTestDriver, nsIUrlListener::GetIID())
+
+NS_IMETHODIMP nsNntpTestDriver::OnStartRunningUrl(nsIURL * aUrl)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	m_runningURL = PR_TRUE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsNntpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	nsresult rv = NS_OK;
+	m_runningURL = PR_FALSE;
+	return NS_OK;
 }
 
 nsresult nsNntpTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
 
-
-	while (m_runningURL)
+	while (m_runTestHarness)
 	{
-		// if we haven't gotten started (and created a protocol) or
-		// if the protocol instance is currently not busy, then read in a new command
-		// and process it...
-		if ((!m_nntpProtocol) || m_nntpProtocol->IsRunningUrl() == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
+		if (m_runningURL == PR_FALSE) // can we run and dispatch another command?
 		{
-			status = ReadAndDispatchCommand();	
-		}  // if running url
+			status = ReadAndDispatchCommand();	 // run a new url
+		}
+
+	 // if running url
 #ifdef XP_UNIX
 
-        printf("processing...");
         PL_ProcessPendingEvents(m_eventQueue);
 
 #endif
 #ifdef XP_PC	
-        printf("processing...");
 		MSG msg;
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
 		{
@@ -416,7 +445,7 @@ nsresult nsNntpTestDriver::ListCommands()
 nsresult nsNntpTestDriver::OnExit()
 {
 	printf("Terminating NNTP test harness....\n");
-	m_runningURL = PR_FALSE; // next time through the test driver loop, we'll kick out....
+	m_runTestHarness = PR_FALSE; // next time through the test driver loop, we'll kick out....
 	return NS_OK;
 }
 
@@ -726,9 +755,10 @@ int main()
 	nsNntpTestDriver * driver = new nsNntpTestDriver(pNetService,queue);
 	if (driver)
 	{
+		NS_ADDREF(driver);
 		driver->RunDriver();
 		// when it kicks out...it is done....so delete it...
-		delete driver;
+		NS_RELEASE(driver);
 	}
 
 	// shut down:
