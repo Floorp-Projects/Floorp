@@ -371,6 +371,7 @@ nsXULElement::~nsXULElement()
 nsresult
 nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                      nsIDocument* aDocument,
+                     PRBool aIsScriptable,
                      nsIContent** aResult)
 {
     // Create an nsXULElement from a prototype
@@ -401,30 +402,32 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     element->mPrototype = aPrototype;
     element->mDocument = aDocument;
 
-    // Check each attribute on the prototype to see if we need to do
-    // any additional processing and hookup that would otherwise be
-    // done 'automagically' by SetAttribute().
-    for (PRInt32 i = 0; i < aPrototype->mNumAttributes; ++i) {
-        nsXULPrototypeAttribute* attr = &(aPrototype->mAttributes[i]);
+    if (aIsScriptable) {
+        // Check each attribute on the prototype to see if we need to do
+        // any additional processing and hookup that would otherwise be
+        // done 'automagically' by SetAttribute().
+        for (PRInt32 i = 0; i < aPrototype->mNumAttributes; ++i) {
+            nsXULPrototypeAttribute* attr = &(aPrototype->mAttributes[i]);
 
-        if (attr->mNameSpaceID == kNameSpaceID_None) {
-            // Check for an event handler
-            nsIID iid;
-            PRBool found;
-            rv = gXULUtils->GetEventHandlerIID(attr->mName, &iid, &found);
-            if (NS_FAILED(rv)) return rv;
-
-            if (found) {
-                rv = element->AddScriptEventListener(attr->mName, attr->mValue, iid);
+            if (attr->mNameSpaceID == kNameSpaceID_None) {
+                // Check for an event handler
+                nsIID iid;
+                PRBool found;
+                rv = gXULUtils->GetEventHandlerIID(attr->mName, &iid, &found);
                 if (NS_FAILED(rv)) return rv;
-            }
 
-            // Check for popup attributes
-            if ((attr->mName.get() == kPopupAtom) ||
-                (attr->mName.get() == kTooltipAtom) ||
-                (attr->mName.get() == kContextAtom)) {
-                rv = element->AddPopupListener(attr->mName);
-                if (NS_FAILED(rv)) return rv;
+                if (found) {
+                    rv = element->AddScriptEventListener(attr->mName, attr->mValue, iid);
+                    if (NS_FAILED(rv)) return rv;
+                }
+
+                // Check for popup attributes
+                if ((attr->mName.get() == kPopupAtom) ||
+                    (attr->mName.get() == kTooltipAtom) ||
+                    (attr->mName.get() == kContextAtom)) {
+                    rv = element->AddPopupListener(attr->mName);
+                    if (NS_FAILED(rv)) return rv;
+                }
             }
         }
     }
