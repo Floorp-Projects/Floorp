@@ -762,7 +762,7 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsIAtom* aPseudoTag,
                                    nsISupportsArray* aRules, 
                                    nsIPresContext* aPresContext)
-  : mParent((StyleContextImpl*)aParent), // weak ref
+  : mParent((StyleContextImpl*)aParent),
     mChild(nsnull),
     mEmptyChild(nsnull),
     mPseudoTag(aPseudoTag),
@@ -784,6 +784,7 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   mNextSibling = this;
   mPrevSibling = this;
   if (nsnull != mParent) {
+    NS_ADDREF(mParent);
     mParent->AppendChild(this);
   }
 
@@ -802,13 +803,11 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
 
 StyleContextImpl::~StyleContextImpl()
 {
-  mParent = nsnull; // weak ref
+  NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
-  while (nsnull != mChild) {
-    RemoveChild(mChild);
-  }
-  while (nsnull != mEmptyChild) {
-    RemoveChild(mEmptyChild);
+  if (nsnull != mParent) {
+    mParent->RemoveChild(this);
+    NS_RELEASE(mParent);
   }
 
   NS_IF_RELEASE(mPseudoTag);
@@ -884,7 +883,6 @@ void StyleContextImpl::AppendChild(StyleContextImpl* aChild)
       mChild->mPrevSibling = aChild;
     }
   }
-  NS_ADDREF(aChild);
 }
 
 void StyleContextImpl::RemoveChild(StyleContextImpl* aChild)
@@ -923,7 +921,6 @@ void StyleContextImpl::RemoveChild(StyleContextImpl* aChild)
   aChild->mNextSibling->mPrevSibling = aChild->mPrevSibling;
   aChild->mNextSibling = aChild;
   aChild->mPrevSibling = aChild;
-  NS_RELEASE(aChild);
 }
 
 nsISupportsArray* StyleContextImpl::GetStyleRules(void) const
