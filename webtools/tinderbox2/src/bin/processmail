@@ -11,8 +11,8 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2000/10/18 20:24:06 $ 
+# $Revision: 1.9 $ 
+# $Date: 2000/10/27 15:29:52 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
@@ -45,6 +45,7 @@ use File::Basename;
 use Sys::Hostname;
 use File::stat;
 use Getopt::Long;
+use Time::Local;
 
 # Tinderbox libraries
 use lib '#tinder_libdir#';
