@@ -163,7 +163,7 @@ function verifyAccounts(wizardcallback) {
           var pref = Components.classes["@mozilla.org/preferences-service;1"]
                                  .getService(Components.interfaces.nsIPrefBranch);
           try {
-            adminUrl = pref.GetCharPref("autoadmin.global_config_url");
+            adminUrl = pref.getCharPref("autoadmin.global_config_url");
           }
           catch (ex) {}
           if (!adminUrl)
