@@ -827,7 +827,7 @@ function addBookmarkForTabBrowser(aTabBrowser, aSelect)
       currentTabInfo = tabsInfo[i];
   }
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             "centerscreen,chrome,dialog=yes,resizable=no,dependent",
+             "centerscreen,chrome,dialog,resizable,dependent",
              currentTabInfo.name, currentTabInfo.url, null,
              currentTabInfo.charset, "addGroup" + (aSelect ? ",group" : ""), tabsInfo);
 }
@@ -3427,7 +3427,7 @@ function asyncOpenWebPanel(event)
          // you to add a sidebar panel.  We support the Opera convention here.  The link's
          // title attribute contains the title that should be used for the sidebar panel.
          openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                    "centerscreen,chrome,dialog=yes,resizable=no,dependent",
+                    "centerscreen,chrome,dialog,resizable,dependent",
                     linkNode.getAttribute("title"), 
                     linkNode.href, null, null, null, null, true);
          event.preventDefault();
