@@ -52,6 +52,7 @@
 
 #ifdef MOZ_ENABLE_PANGO
 #include "nsFontMetricsPango.h"
+#include "prenv.h"
 #endif
 
 #include "nsFontMetricsUtils.h"
