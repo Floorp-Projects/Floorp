@@ -73,7 +73,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
 #include "nsIComponentManager.h"
-#include "nsDoubleHashtable.h"
+#include "nsCheapSets.h"
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
@@ -147,17 +147,40 @@ private:
   nsHTMLSelectElement* mSelect;
 };
 
+
 /**
  * The restore state used by select
  */
 class nsSelectState : public nsISupports {
-  public:
-    nsSelectState() { NS_INIT_ISUPPORTS(); mValues.Init(10); }
-    virtual ~nsSelectState() { }
+public:
+  nsSelectState()
+  {
+    NS_INIT_ISUPPORTS();
+  }
+  virtual ~nsSelectState()
+  {
+  }
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    nsStringHashSet mValues;
+  void PutOption(PRInt32 aIndex, const nsAString& aValue)
+  {
+    // If the option is empty, store the index.  If not, store the value.
+    if (aValue.IsEmpty()) {
+      mIndices.Put(aIndex);
+    } else {
+      mValues.Put(aValue);
+    }
+  }
+
+  PRBool ContainsOption(PRInt32 aIndex, const nsAString& aValue)
+  {
+    return mValues.Contains(aValue) || mIndices.Contains(aIndex);
+  }
+
+private:
+  nsCheapStringSet mValues;
+  nsCheapInt32Set mIndices;
 };
 
 NS_IMPL_ISUPPORTS0(nsSelectState)
@@ -1955,7 +1978,7 @@ nsHTMLSelectElement::SaveState()
       if (isSelected) {
         nsAutoString value;
         option->GetValue(value);
-        state->mValues.Put(value);
+        state->PutOption(optIndex, value);
       }
     }
   }
@@ -2028,7 +2051,7 @@ nsHTMLSelectElement::RestoreStateTo(nsSelectState* aNewSelected)
     if (option) {
       nsAutoString value;
       option->GetValue(value);
-      if (aNewSelected->mValues.Contains(value)) {
+      if (aNewSelected->ContainsOption(i, value)) {
         SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
       }
     }
