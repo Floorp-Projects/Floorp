@@ -57,8 +57,11 @@ EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
         mkutils.h mktrace.h
 
 ifdef MOZ_MAIL_NEWS
-EXPORT += mkcertld.h mkmailbx.h mknews.h mknewsgr.h \
+EXPORTS += mkmailbx.h mknews.h mknewsgr.h \
 	mkpop3.h mkimap4.h mkldap.h
+ifdef MOZ_SECURITY
+EXPORTS += mkcertld.h
+endif # MOZ_SECURITY
 endif # MOZ_MAIL_NEWS
 
 
