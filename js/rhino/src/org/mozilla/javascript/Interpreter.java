@@ -1917,7 +1917,9 @@ public class Interpreter extends LabelTable {
                         lhs = stack[stackTop];    
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         if (lhs == undefined) {
-                            lhs = strings[getShort(iCode, pc + 1)];
+                            i = getShort(iCode, pc + 1);
+                            if (i != -1)
+                                lhs = strings[i];
                         }
                         Scriptable calleeScope = scope;
                         if (theData.itsNeedsActivation) {
