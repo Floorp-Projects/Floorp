@@ -30,20 +30,20 @@
      *
      *  Tests:  12.6.2 step 6.
      */
-    function DoWhile_1() {
+     function dowhile() {
+        result = "pass";
+
+        while (true) {
+            return result;
+            result = "fail: hit code after return statement";
+            break;
+        }
+    }
+
+   function DoWhile_1() {
         description = "return statement in a while block";
 
         result = dowhile();
-
-        function dowhile() {
-            result = "pass";
-
-            while (true) {
-                return result;
-                result = "fail: hit code after return statement";
-                break;
-            }
-        }
 
         testcases[tc++] = new TestCase(
             SECTION,
