@@ -335,13 +335,17 @@ public:
    *  output a color postscript image
    *	@update 2/1/99 dwc
    */
-  void colorimage(nsIImage *aImage,int aX, int aY, int aWidth, int aHeight);
+  void colorimage(nsIImage *aImage,
+                  int aSX, int aSY, int aSWidth, int aSHeight,
+                  int aDX, int aDY, int aDWidth, int aDHeight);
 
   /** ---------------------------------------------------
    *  output a grayscale postscript image
    *	@update 9/1/99 dwc
    */
-  void grayimage(nsIImage *aImage,int aX, int aY, int aWidth, int aHeight);
+  void grayimage(nsIImage *aImage,
+                 int aSX, int aSY, int aSWidth, int aSHeight,
+                 int aDX, int aDY, int aDWidth, int aDHeight);
 
   /** ---------------------------------------------------
    *  ???

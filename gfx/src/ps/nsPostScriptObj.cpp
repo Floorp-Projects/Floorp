@@ -2559,19 +2559,17 @@ nsPostScriptObj::translate(int x, int y)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::grayimage(nsIImage *aImage,int aX,int aY, int aWidth,int aHeight)
+nsPostScriptObj::grayimage(nsIImage *aImage,
+                            int aSX, int aSY, int aSWidth, int aSHeight,
+                            int aDX, int aDY, int aDWidth, int aDHeight)
 {
-PRInt32 rowData,bytes_Per_Pix,x,y;
-PRInt32 width,height,bytewidth,cbits,n;
-PRUint8 *theBits,*curline;
-PRBool isTopToBottom;
-PRInt32 sRow, eRow, rStep; 
+  PRInt32 rowData, x, y;
+  PRInt32 width, height, bytewidth, cbits, n;
+  PRUint8 *theBits, *curline;
+  PRBool isTopToBottom;
+  PRInt32 sRow, eRow, rStep; 
 
   XL_SET_NUMERIC_LOCALE();
-  bytes_Per_Pix = aImage->GetBytesPix();
-
-  if(bytes_Per_Pix == 1)
-    return ;
 
   aImage->LockImagePixels(PR_FALSE);
   theBits = aImage->GetBits();
@@ -2586,38 +2584,38 @@ PRInt32 sRow, eRow, rStep;
   rowData = aImage->GetLineStride();
   height = aImage->GetHeight();
   width = aImage->GetWidth();
-  bytewidth = 3*width;
+  bytewidth = 3*aSWidth;
   cbits = 8;
 
   FILE *f = mPrintContext->prSetup->tmpBody;
   fprintf(f, "gsave\n");
-  fprintf(f, "/rowdata %d string def\n",bytewidth/3);
-  translate(aX, aY + aHeight);
+  fprintf(f, "/rowdata %d string def\n", bytewidth/3);
+  translate(aDX, aDY + aDHeight);
   fprintf(f, "%g %g scale\n",
-          PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
-  fprintf(f, "%d %d ", width, height);
+          PAGE_TO_POINT_F(aDWidth), PAGE_TO_POINT_F(aDHeight));
+  fprintf(f, "%d %d ", aSWidth, aSHeight);
   fprintf(f, "%d ", cbits);
-  fprintf(f, "[%d 0 0 %d 0 0]\n", width,height);
+  fprintf(f, "[%d 0 0 %d 0 0]\n", aSWidth, aSHeight);
   fprintf(f, " { currentfile rowdata readhexstring pop }\n");
   fprintf(f, " image\n");
 
   n = 0;
   if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
-	sRow = height - 1;
-        eRow = 0;
-        rStep = -1;
+    sRow = aSY + aSHeight - 1;
+    eRow = aSY;
+    rStep = -1;
   } else {
-	sRow = 0;
-        eRow = height;
-        rStep = 1;
+	sRow = aSY;
+    eRow = aSY + aSHeight;
+    rStep = 1;
   }
 
   y = sRow;
   while ( 1 ) {
-    curline = theBits + (y*rowData);
-    for(x=0;x<bytewidth;x+=3){
+    curline = theBits + y * rowData + 3 * aSX;
+    for(x=0; x < bytewidth; x+=3) {
       if (n > 71) {
-          fprintf(mPrintContext->prSetup->tmpBody,"\n");
+          fprintf(mPrintContext->prSetup->tmpBody, "\n");
           n = 0;
       }
       fprintf(mPrintContext->prSetup->tmpBody, "%02x", (int) (0xff & *curline));
@@ -2641,30 +2639,29 @@ PRInt32 sRow, eRow, rStep;
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::colorimage(nsIImage *aImage,int aX,int aY, int aWidth,int aHeight)
+nsPostScriptObj::colorimage(nsIImage *aImage, 
+                            int aSX, int aSY, int aSWidth, int aSHeight,
+                            int aDX, int aDY, int aDWidth, int aDHeight)
 {
-PRInt32 rowData,bytes_Per_Pix,x,y;
-PRInt32 width,height,bytewidth,cbits,n;
-PRUint8 *theBits,*curline;
-PRBool isTopToBottom;
-PRInt32 sRow, eRow, rStep; 
+  PRInt32 rowData, x, y;
+  PRInt32 width, height, bytewidth, cbits, n;
+  PRUint8 *theBits, *curline;
+  PRBool isTopToBottom;
+  PRInt32 sRow, eRow, rStep; 
 
   // No point in scaling images to 0--some printers choke on it (bug 191684)
-  if (aWidth == 0 || aHeight == 0) {
+  if (aDWidth == 0 || aDHeight == 0) {
     return;
   }
 
   XL_SET_NUMERIC_LOCALE();
 
   if(mPrintSetup->color == PR_FALSE ){
-    this->grayimage(aImage,aX,aY,aWidth,aHeight);
+    this->grayimage(aImage,
+                    aSX, aSY, aSWidth, aSHeight,
+                    aDX, aDY, aDWidth, aDHeight);
     return;
   }
-
-  bytes_Per_Pix = aImage->GetBytesPix();
-
-  if(bytes_Per_Pix == 1)
-    return ;
 
   aImage->LockImagePixels(PR_FALSE);
   theBits = aImage->GetBits();
@@ -2679,38 +2676,38 @@ PRInt32 sRow, eRow, rStep;
   rowData = aImage->GetLineStride();
   height = aImage->GetHeight();
   width = aImage->GetWidth();
-  bytewidth = 3*width;
+  bytewidth = 3*aSWidth;
   cbits = 8;
 
   FILE *f = mPrintContext->prSetup->tmpBody;
   fprintf(f, "gsave\n");
-  fprintf(f, "/rowdata %d string def\n",bytewidth);
-  translate(aX, aY + aHeight);
+  fprintf(f, "/rowdata %d string def\n", bytewidth);
+  translate(aDX, aDY + aDHeight);
   fprintf(f, "%g %g scale\n",
-          PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
-  fprintf(f, "%d %d ", width, height);
+          PAGE_TO_POINT_F(aDWidth), PAGE_TO_POINT_F(aDHeight));
+  fprintf(f, "%d %d ", aSWidth, aSHeight);
   fprintf(f, "%d ", cbits);
-  fprintf(f, "[%d 0 0 %d 0 0]\n", width,height);
+  fprintf(f, "[%d 0 0 %d 0 0]\n", aSWidth, aSHeight);
   fprintf(f, " { currentfile rowdata readhexstring pop }\n");
   fprintf(f, " false 3 colorimage\n");
 
   n = 0;
   if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
-	sRow = height - 1;
-        eRow = 0;
-        rStep = -1;
+	sRow = aSY + aSHeight - 1;
+    eRow = aSY;
+    rStep = -1;
   } else {
-	sRow = 0;
-        eRow = height;
-        rStep = 1;
+	sRow = aSY;
+    eRow = aSY + aSHeight;
+    rStep = 1;
   }
 
   y = sRow;
   while ( 1 ) {
-    curline = theBits + (y*rowData);
-    for(x=0;x<bytewidth;x++){
+    curline = theBits + y * rowData + 3 * aSX;
+    for(x=0; x < bytewidth; x++) {
       if (n > 71) {
-          fprintf(f,"\n");
+          fprintf(f, "\n");
           n = 0;
       }
       fprintf(f, "%02x", (int) (0xff & *curline++));
