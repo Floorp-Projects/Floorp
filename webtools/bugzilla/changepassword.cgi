@@ -19,9 +19,6 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
-
 require "CGI.pl";
 
 confirm_login();
