@@ -59,6 +59,7 @@
 XUL_ATOM(button, "button")
 XUL_ATOM(spinner, "spinner")
 XUL_ATOM(scrollbar, "scrollbar")
+XUL_ATOM(nativescrollbar, "nativescrollbar")
 XUL_ATOM(slider, "slider")
 XUL_ATOM(palettename, "palettename")
 XUL_ATOM(fontpicker, "fontpicker")
