@@ -473,7 +473,7 @@ case "$target" in
 	   ;;
  	esac
     if test "$GNU_CC"; then
-	    AS='$(CC) -x assembler-with-cpp -D_ASM -mips2'
+	    AS='$(CC) -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
 	    CFLAGS="$CFLAGS -Wall -Wno-format"
 	    _OPTIMIZE_FLAGS="-O6"
     else
@@ -516,21 +516,18 @@ case "$target" in
 	    AC_DEFINE(IRIX5_3)
     fi
     case "${target_os}" in
-	irix5*)
-	    ;;
-	*)
-	    AC_DEFINE(_PR_HAVE_SGI_PRDA_PROCMASK)
-	    ;;
-	esac
-    case "${target_os}" in
 	irix6.5*)
-	    ;;
-	*)
 	    if test -z "$GNU_CC"; then
 		    CFLAGS="$CFLAGS -mips3"
 	    fi
 	    AC_DEFINE(_PR_HAVE_GETPROTO_R)
 	    AC_DEFINE(_PR_HAVE_GETPROTO_R_POINTER)
+	    AC_DEFINE(_PR_HAVE_SGI_PRDA_PROCMASK)
+	    ;;
+	irix5*)
+	    ;;
+	*)
+	    AC_DEFINE(_PR_HAVE_SGI_PRDA_PROCMASK)
 	    ;;
 	esac
     case "${target_cpu}" in
