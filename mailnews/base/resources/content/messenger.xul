@@ -42,7 +42,7 @@ Rights Reserved.
 
   <broadcaster id="Messenger:Throbber" busy="false"/>
   <broadcaster id="Messenger:Status"/>
-
+  <broadcaster id="Messenger:LoadingProgress"/>
   <toolbox>
      <menubar>
     <menu value="&fileMenu.label;">
