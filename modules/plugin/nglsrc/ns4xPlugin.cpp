@@ -861,7 +861,10 @@ ns4xPlugin::_setvalue(NPP npp, NPPVariable variable, void *result)
     switch (variable)
     {
       case NPPVpluginWindowBool:
-        return inst->SetWindowless(*((NPBool *)result));
+      {
+        NPBool bWindowless = !(*((NPBool *)result));
+        return inst->SetWindowless(bWindowless);
+      }
 
       case NPPVpluginTransparentBool:
         return inst->SetTransparent(*((NPBool *)result));
