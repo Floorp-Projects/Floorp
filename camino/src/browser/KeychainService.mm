@@ -439,6 +439,7 @@ static KeychainDenyList *sDenyListInstance = nil;
 {
   [self writeToDisk];
   [mDenyList release];
+  [super dealloc];
 }
 
 //
