@@ -93,7 +93,15 @@ class nsInstallInfo
     nsCOMPtr<nsIXPINotifier>    mNotifier;
 };
 
-
+#ifdef XP_PC
+#define FILESEP '\\'
+#elif defined XP_MAC
+#define FILESEP ':'
+#elif defined XP_BEOS
+#define FILESEP '/'
+#else
+#define FILESEP '/'
+#endif
 
 class nsInstall
 {
