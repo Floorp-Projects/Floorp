@@ -48,7 +48,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= src/fdlibm src
 
 ifdef MOZ_JSDEBUGGER
-DIRS        += jsd
+#DIRS        += jsd
 endif
 
 ifdef MOZ_JAVA
