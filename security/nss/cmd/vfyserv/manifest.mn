@@ -45,7 +45,7 @@ REQUIRES = seccmd dbm
 # DIRS = 
 
 CSRCS	= vfyserv.c  vfyutil.c
-DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\" -I../SSLSample
+DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
 PROGRAM	= vfyserv
 

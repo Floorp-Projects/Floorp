@@ -107,7 +107,11 @@ void errWarn(char *function);
 
 void exitErr(char *function);
 
-void printSecurityInfo(PRFileDesc *fd);
+void printSecurityInfo(FILE *outfile, PRFileDesc *fd);
+
+void printCertProblems(FILE *outfile, CERTCertDBHandle *handle, 
+	CERTCertificate *cert, PRBool checksig, 
+	SECCertUsage certUsage, void *pinArg);
 
 /* Some simple thread management routines. */
 

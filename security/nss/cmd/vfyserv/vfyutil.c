@@ -32,7 +32,10 @@
  */
 
 #include "vfyserv.h"
-#include "sslerror.h" /* go find the real one in libutil! */
+#include "secerr.h"
+#include "sslerr.h"
+#include "nspr.h"
+#include "secutil.h"
 
 /* Declare SSL cipher suites. */
 
@@ -127,6 +130,8 @@ myAuthCertificate(void *arg, PRFileDesc *socket,
 
 	/* If this is a server, we're finished. */
 	if (isServer || secStatus != SECSuccess) {
+		printCertProblems(stderr, (CERTCertDBHandle *)arg, cert, 
+					checksig, certUsage, pinArg);
 		CERT_DestroyCertificate(cert);
 		return secStatus;
 	}
@@ -204,7 +209,7 @@ myBadCertHandler(void *arg, PRFileDesc *socket)
 	break;
     }
 
-	printf("Bad certificate: %d, %s\n", err, SSL_Strerror(err));
+    fprintf(stderr, "Bad certificate: %d, %s\n", err, SECU_Strerror(err));
 
     return secStatus;
 }
@@ -311,7 +316,7 @@ myGetClientAuthData(void *arg,
 SECStatus 
 myHandshakeCallback(PRFileDesc *socket, void *arg) 
 {
-    printf("Handshake has completed, ready to send data securely.\n");
+    fprintf(stderr,"Handshake Complete: SERVER CONFIGURED CORRECTLY\n");
     return SECSuccess;
 }
 
@@ -334,7 +339,8 @@ disableAllSSLCiphers(void)
 	PRUint16 suite = cipherSuites[i];
         rv = SSL_CipherPrefSetDefault(suite, PR_FALSE);
 	if (rv != SECSuccess) {
-	    printf("SSL_CipherPrefSetDefault didn't like value 0x%04x (i = %d)\n",
+	    fprintf(stderr,
+		"SSL_CipherPrefSetDefault didn't like value 0x%04x (i = %d)\n",
 	    	   suite, i);
 	    errWarn("SSL_CipherPrefSetDefault");
 	    exit(2);
@@ -352,9 +358,9 @@ void
 errWarn(char *function)
 {
 	PRErrorCode  errorNumber = PR_GetError();
-	const char * errorString = SSL_Strerror(errorNumber);
+	const char * errorString = SECU_Strerror(errorNumber);
 
-	printf("Error in function %s: %d\n - %s\n",
+	fprintf(stderr, "Error in function %s: %d\n - %s\n",
 			function, errorNumber, errorString);
 }
 
@@ -369,7 +375,7 @@ exitErr(char *function)
 }
 
 void 
-printSecurityInfo(PRFileDesc *fd)
+printSecurityInfo(FILE *outfile, PRFileDesc *fd)
 {
 	char * cp;	/* bulk cipher name */
 	char * ip;	/* cert issuer DN */
@@ -380,17 +386,23 @@ printSecurityInfo(PRFileDesc *fd)
 	int    result;
 	SSL3Statistics * ssl3stats = SSL_GetStatistics();
 
+	if (!outfile) {
+	    outfile = stdout;
+	}
+
 	result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
 	if (result != SECSuccess)
 		return;
-	printf("bulk cipher %s, %d secret key bits, %d key bits, status: %d\n"
-		   "subject DN: %s\n"
-	   "issuer	DN: %s\n", cp, kp1, kp0, op, sp, ip);
+	fprintf(outfile,
+	 "   bulk cipher %s, %d secret key bits, %d key bits, status: %d\n"
+	 "   subject DN:\n %s\n"
+	 "   issuer  DN:\n %s\n", cp, kp1, kp0, op, sp, ip);
 	PR_Free(cp);
 	PR_Free(ip);
 	PR_Free(sp);
 
-	printf("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
+	fprintf(outfile,
+	  "   %ld cache hits; %ld cache misses, %ld cache not reusable\n",
 		ssl3stats->hch_sid_cache_hits, ssl3stats->hch_sid_cache_misses,
 	ssl3stats->hch_sid_cache_not_ok);
 
@@ -585,4 +597,104 @@ lockedVars_AddToCount(lockedVars * lv, int addend)
 	}
 	PR_Unlock(lv->lock);
 	return rv;
+}
+
+static char *
+bestCertName(CERTCertificate *cert) {
+    if (cert->nickname) {
+	return cert->nickname;
+    }
+    if (cert->emailAddr) {
+	return cert->emailAddr;
+    }
+    return cert->subjectName;
+}
+
+void
+printCertProblems(FILE *outfile, CERTCertDBHandle *handle, 
+	CERTCertificate *cert, PRBool checksig, 
+	SECCertUsage certUsage, void *pinArg)
+{
+    CERTVerifyLog log;
+    CERTVerifyLogNode *node = NULL;
+    unsigned int depth = (unsigned int)-1;
+    unsigned int flags = 0;
+    char *errstr = NULL;
+
+    log.arena = PORT_NewArena(512);
+    log.head = log.tail = NULL;
+    log.count = 0;
+    CERT_VerifyCert(handle, cert, checksig, certUsage,
+	PR_Now(), pinArg, &log);
+
+    if (log.count > 0) {
+	fprintf(outfile,"PROBLEM WITH THE CERT CHAIN:\n");
+	for (node = log.head; node; node = node->next) {
+	    if (depth != node->depth) {
+		depth = node->depth;
+		fprintf(outfile,"CERT %d. %s %s:\n", depth,
+				 bestCertName(node->cert), 
+			  	 depth ? "[Certificate Authority]": "");
+	    }
+	    fprintf(outfile,"  ERROR %d: %s\n", node->error,
+						SECU_Strerror(node->error));
+	    errstr = NULL;
+	    switch (node->error) {
+	    case SEC_ERROR_INADEQUATE_KEY_USAGE:
+		flags = (unsigned int)node->arg;
+		switch (flags) {
+		case KU_DIGITAL_SIGNATURE:
+		    errstr = "Cert cannot sign.";
+		    break;
+		case KU_KEY_ENCIPHERMENT:
+		    errstr = "Cert cannot encrypt.";
+		    break;
+		case KU_KEY_CERT_SIGN:
+		    errstr = "Cert cannot sign other certs.";
+		    break;
+		default:
+		    errstr = "[unknown usage].";
+		    break;
+		}
+	    case SEC_ERROR_INADEQUATE_CERT_TYPE:
+		flags = (unsigned int)node->arg;
+		switch (flags) {
+		case NS_CERT_TYPE_SSL_CLIENT:
+		case NS_CERT_TYPE_SSL_SERVER:
+		    errstr = "Cert cannot be used for SSL.";
+		    break;
+		case NS_CERT_TYPE_SSL_CA:
+		    errstr = "Cert cannot be used as an SSL CA.";
+		    break;
+		case NS_CERT_TYPE_EMAIL:
+		    errstr = "Cert cannot be used for SMIME.";
+		    break;
+		case NS_CERT_TYPE_EMAIL_CA:
+		    errstr = "Cert cannot be used as an SMIME CA.";
+		    break;
+		case NS_CERT_TYPE_OBJECT_SIGNING:
+		    errstr = "Cert cannot be used for object signing.";
+		    break;
+		case NS_CERT_TYPE_OBJECT_SIGNING_CA:
+		    errstr = "Cert cannot be used as an object signing CA.";
+		    break;
+		default:
+		    errstr = "[unknown usage].";
+		    break;
+		}
+	    case SEC_ERROR_UNKNOWN_ISSUER:
+	    case SEC_ERROR_UNTRUSTED_ISSUER:
+	    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+		errstr = node->cert->issuerName;
+		break;
+	    default:
+		break;
+	    }
+	    if (errstr) {
+		fprintf(stderr,"    %s\n",errstr);
+	    }
+	    CERT_DestroyCertificate(node->cert);
+	}    
+    }
+    return ;
 }
