@@ -60,7 +60,15 @@
 #include "nsIParser.h"
 #include "nsHTMLContentSinkStream.h"
 #include "nsGUIEvent.h"
-//#include "nsEditorMode.h"
+
+#ifdef NGEDITOR
+#include "nsIEditor.h"
+//these defines are for use with the experimental autopointers. 
+//they WILL NOT be permanent
+#define NOT_PRODUCTION_CODE
+#define USE_EXPERIMENTAL_SMART_POINTERS
+#include "COM_auto_ptr.h"
+#endif //NGEDITOR
 
 // Needed for "Find" GUI
 #include "nsIDialog.h"
@@ -2763,37 +2771,55 @@ nsBrowserWindow::DoJSConsole()
 void
 nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
 {
-  /*PRInt32 i, n;
-  if (nsnull != aWebShell) {
-  nsIContentViewer* mCViewer;
-  aWebShell->GetContentViewer(mCViewer);
-  if (nsnull != mCViewer) {
-    nsIDocumentViewer* mDViewer;
-    if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
-    nsIDocument* mDoc;
-    mDViewer->GetDocument(mDoc);
-    if (nsnull != mDoc) {
-      nsIDOMDocument* mDOMDoc;
-      if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) {
-      NS_InitEditorMode(mDOMDoc);
-      NS_RELEASE(mDOMDoc);
+#ifdef NGEDITOR
+  PRInt32 i, n;
+  if (nsnull != aWebShell) 
+  {
+    COM_auto_ptr<nsIContentViewer> cViewer;
+    aWebShell->GetContentViewer(*func_AddRefs(cViewer));//returns an addreffed viewer  dereference it because it accepts a reference to a * not a **
+    if (cViewer) 
+    {
+      COM_auto_ptr<nsIDocumentViewer>  dViewer;
+      if (NS_SUCCEEDED(cViewer->QueryInterface(kIDocumentViewerIID, func_AddRefs(dViewer)))) 
+      { //returns an addreffed document viewer
+        COM_auto_ptr<nsIDocument>  doc;
+        dViewer->GetDocument(*func_AddRefs(doc)); //returns an addreffed document
+        if (doc) 
+        {
+          COM_auto_ptr<nsIDOMDocument> domDoc;
+          if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, func_AddRefs(domDoc))))
+          { //returns an addreffed domdocument
+            COM_auto_ptr<nsIEditor>  editor;
+            if (NS_SUCCEEDED(NS_InitEditor(func_AddRefs(editor), domDoc.get())))  //how do we translate from a COM_auto_ptr to a *? we use get
+            {
+              AddEditor(editor.get()); //new call to set the editor interface this will addref
+            }
+          }
+        }
       }
-      NS_RELEASE(mDoc);
     }
-    NS_RELEASE(mDViewer);
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      COM_auto_ptr<nsIWebShell>  child;
+      aWebShell->ChildAt(i, *func_AddRefs(child));
+      DoEditorMode(child); //doesnt addref
     }
-    NS_RELEASE(mCViewer);
   }
-  
-  aWebShell->GetChildCount(n);
-  for (i = 0; i < n; i++) {
-    nsIWebShell* mChild;
-    aWebShell->ChildAt(i, mChild);
-    DoEditorMode(mChild);
-    NS_RELEASE(mChild);
-  }
-  }*/
+#endif //NGEDITOR
 }
+
+
+
+#ifdef NGEDITOR
+void
+nsBrowserWindow::AddEditor(nsIEditor *aEditor)
+{
+  if (!mEditor)//THIS FUNCTION REALLY NEEDS HELP
+    mEditor = aEditor;
+}
+#endif //NGEDITOR
+
+
 
 #ifdef NS_DEBUG
 #include "nsIContent.h"
@@ -3297,6 +3323,9 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
   {"Debug Robot",   "R", VIEWER_DEBUGROBOT},
   {"-", NULL, 0},
   {"Show Content Quality",   ".", VIEWER_SHOW_CONTENT_QUALITY},
+#ifdef NGEDITOR
+    {"Editor",   "E", EDITOR_MODE},
+#endif
   {NULL, NULL, 0}
   };
 

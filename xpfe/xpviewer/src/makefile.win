@@ -22,6 +22,10 @@ MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\xpviewer.exe
 RESFILE = xpviewer.res
 
+!if defined(NGEDITOR)
+LCFLAGS		= $(LCFLAGS)  -DNGEDITOR
+!endif
+
 MISCDEP=                        \
  $(DIST)\lib\raptorweb.lib      \
  $(DIST)\lib\xpcom32.lib        \
@@ -47,6 +51,9 @@ LINCS=	\
   -I$(PUBLIC)\netlib \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
+!if defined(NGEDITOR)
+  -I$(PUBLIC)\editor \
+!endif
   -I$(PUBLIC)\pref
 
 MYLIBS=                         \
@@ -62,6 +69,9 @@ MYLIBS=                         \
  $(DIST)\lib\libplc21.lib       \
  $(DIST)\lib\netlib.lib \
  $(DIST)\lib\jsdom.lib          \
+!if defined(NGEDITOR)
+ $(DIST)\lib\ender.lib          \
+!endif
  comdlg32.lib                   \
  $(NULL)
 
