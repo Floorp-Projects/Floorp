@@ -292,6 +292,59 @@ BOOL CInterpret::IterateListBox(char *parms)
 	return TRUE;
 }
 
+// The function goes through all widgets with a showinsection attribute set, and hides
+// those which don't match the selected name from this listbox and unhides those
+// which do match.
+BOOL CInterpret::ShowSection(WIDGET *curWidget)
+{
+	if (!curWidget)
+		return FALSE;
+
+	if (curWidget->type != "ListBox")
+		return FALSE;
+
+	if (!curWidget->control)
+		return FALSE;
+
+	// Get the selected text from the list box.
+	int sel = ((CListBox*)curWidget->control)->GetCurSel();
+	if (sel < 0)
+		return FALSE;
+
+	CString Section;
+	((CListBox*)curWidget->control)->GetText(sel, Section);
+	if (Section.IsEmpty())
+		return FALSE;
+
+	// Search all widgets for ones with ShowInSection tags, which means they
+	// belong in some section.
+	for (int i = 0; i < GlobalArrayIndex; i++)
+	{
+		// If the control is created and the ShowInSection tag exists, hide or unhide the control.
+		if (GlobalWidgetArray[i].control && !GlobalWidgetArray[i].showinsection.IsEmpty()) 
+		{
+			// Belongs in this section.
+			if (GlobalWidgetArray[i].showinsection.Compare(Section) == 0)
+			{
+				if (!GlobalWidgetArray[i].control->IsWindowVisible())
+					GlobalWidgetArray[i].control->ShowWindow(SW_SHOW);
+			}
+			else	// Belongs in another section.
+			{
+				if (GlobalWidgetArray[i].control->IsWindowVisible())
+					GlobalWidgetArray[i].control->ShowWindow(SW_HIDE);
+			}
+
+			// Cause a repaint so the show/hide takes effect.
+			curWidget->control->GetParent()->GetParent()->Invalidate();
+		}
+	}
+	
+	
+	
+	return TRUE;
+}
+
 BOOL CInterpret::GetRegistryKey( HKEY key, const char *subkey, char *retdata )
 { 
 	long retval;
@@ -1140,6 +1193,18 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 								p2 = strchr(parms1, ',');
 						}
 					}
+				}
+				else if (strcmp(pcmd, "ShowSection") == 0)
+				{
+					// ShowSection is a way to use a listbox to choose a subset of widgets to display.
+					// To use, create a listbox widget, and fill it will sectionnames.
+					// Set its onCommand=ShowSection.
+					// Then give the widgets you want in each section a "ShowInSection=sectionname". 
+					// When "sectionname" is selected in the listbox, all widgets with matching ShowInSection
+					// are shown, and all widgets with some other sectiion are hidden. Widgets without
+					// the ShowInSection attribute are left alone.
+					
+					ShowSection(curWidget);					
 				}
 			}
 			// This is an extra free...

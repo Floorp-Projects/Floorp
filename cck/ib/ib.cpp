@@ -14,6 +14,7 @@
 #define MAX_SIZE 1024
 #define CRVALUE 0x0D
 #define BUF_SIZE 4096
+
 // Required disk space for Win build
 #define WDISK_SPACE 27577549
 // Required disk space for Linux build
@@ -144,6 +145,24 @@ int findJAR(CString jarname, CString filename)
 	return found;
 }
 
+// Decrypt a file to another file.
+int UnHash(CString HashedFile, CString ClearTextFile)
+{
+	CString command = quotes + rootPath + "parse_cfg.exe" + quotes + " -Y -input " + HashedFile + " -output " + ClearTextFile;
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+
+	return TRUE;
+}
+
+// Encrypt a file to another file.
+int Hash(CString ClearTextFile, CString HashedFile)
+{
+	CString command = quotes + rootPath + "make_cfg.exe" + quotes + " -Y -input " + ClearTextFile + " -output " + HashedFile;
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+
+	return TRUE;
+}
+
 int ExtractJARFile(CString xpiname, CString jarname, CString xpifile)
 {
 //	AfxMessageBox("The xpiname is "+xpiname+" and the jar name is "+jarname+" and the file is "+xpifile,MB_OK);
@@ -236,7 +255,8 @@ int ReplaceINIFile()
 	return TRUE;
 }
 
-void ModifyPref(char *buffer, CString entity, CString newvalue)
+
+void ModifyPref(char *buffer, CString entity, CString newvalue, BOOL bLockPref)
 {
 	CString buf(buffer);
 	
@@ -257,6 +277,13 @@ void ModifyPref(char *buffer, CString entity, CString newvalue)
 
 	buf.Delete(i, j-i+1);
 	buf.Insert(i, newvalue);
+
+	if (bLockPref)
+	{
+		// If it's not lock_pref( already.
+		if (buf.Find("lock_pref(") < 0)
+			buf.Replace("pref(", "lock_pref(");
+	}
 
 	strcpy(buffer, (char *)(LPCTSTR) buf);
 	prefDoesntExist = FALSE;
@@ -299,7 +326,7 @@ int ModifyProperties(CString xpifile, CString entity, CString newvalue)
 	rename(tempFile, xpifile);
 	return rv;
 }
-void AddPref(CString xpifile, CString entity, CString newvalue)
+void AddPref(CString xpifile, CString entity, CString newvalue, BOOL bUseQuotes, BOOL bLockPref)
 {
 
 	int rv = TRUE;
@@ -315,8 +342,6 @@ void AddPref(CString xpifile, CString entity, CString newvalue)
 		return;
 	}
 
-	tf<< "pref("<< entity <<", \""<< newvalue <<"\");\n";
-
 	ifstream pf(prefFile);
 	if (!pf)
 	{
@@ -330,6 +355,11 @@ void AddPref(CString xpifile, CString entity, CString newvalue)
 		pf.getline(properties,400);
 		tf <<properties<<"\n";
 	}
+
+	CString Quote = bUseQuotes? quotes : "";
+	CString FuncName = bLockPref? "lockpref(" : "pref(";
+	tf<< FuncName << entity << ", " << Quote << newvalue << Quote << ");\n";
+
 	pf.close();
 	tf.close();
 	remove(xpifile);
@@ -337,10 +367,11 @@ void AddPref(CString xpifile, CString entity, CString newvalue)
 	return;
 }
 
-int ModifyJS(CString xpifile, CString entity, CString newvalue)
+
+int ModifyJS(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 {
-	CString newfile = xpifile + ".new";
 	int rv = TRUE;
+	CString newfile = xpifile + ".new";
 	char *fgetsrv;
 
 	// Read in DTD file and make substitutions
@@ -354,6 +385,7 @@ int ModifyJS(CString xpifile, CString entity, CString newvalue)
 		rv = FALSE;
 	else
 	{
+		prefDoesntExist = TRUE;
 		int done = FALSE;
 		while (!done)
 		{
@@ -366,7 +398,7 @@ int ModifyJS(CString xpifile, CString entity, CString newvalue)
 					rv = FALSE;
 					break;
 				}
-				ModifyPref(buffer, entity, newvalue);
+				ModifyPref(buffer, entity, newvalue, bLockPref);
 				fputs(buffer, dstf);
 			}
 		}
@@ -377,7 +409,7 @@ int ModifyJS(CString xpifile, CString entity, CString newvalue)
 	remove(xpifile);
 	rename(newfile, xpifile);
 	if (prefDoesntExist)
-		AddPref(xpifile,entity,newvalue);
+		AddPref(xpifile,entity,newvalue, TRUE, bLockPref);
 
 	return TRUE;
 }
@@ -443,7 +475,7 @@ int ModifyDTD(CString xpifile, CString entity, CString newvalue)
 	return TRUE;
 }
 
-void ModifyEntity1(char *buffer, CString entity, CString newvalue)
+void ModifyEntity1(char *buffer, CString entity, CString newvalue, BOOL bLockPref)
 {
 	CString buf(buffer);
 	entity = entity + "\"";
@@ -462,10 +494,17 @@ void ModifyEntity1(char *buffer, CString entity, CString newvalue)
 	buf.Delete(j, i-j);
 	buf.Insert(j, newvalue);
 
+	if (bLockPref)
+	{
+		// If it's not LockPref( already, change Pref( to LockPref(.
+		if (buf.Find("lock_pref(") < 0)
+			buf.Replace("pref(", "lock_pref(");
+	}
+
 	strcpy(buffer, (char *)(LPCTSTR) buf);
 }
 
-int ModifyJS1(CString xpifile, CString entity, CString newvalue)
+int ModifyJS1(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 {
 	CString newfile = xpifile + ".new";
 	int rv = TRUE;
@@ -490,7 +529,7 @@ int ModifyJS1(CString xpifile, CString entity, CString newvalue)
 					rv = FALSE;
 					break;
 				}
-				ModifyEntity1(buffer, entity, newvalue);
+				ModifyEntity1(buffer, entity, newvalue, bLockPref);
 				fputs(buffer, dstf);
 			}
 		}
@@ -505,7 +544,7 @@ int ModifyJS1(CString xpifile, CString entity, CString newvalue)
 	return TRUE;
 }
 
-void ModifyEntity2(char *buffer, CString entity, CString newvalue)
+void ModifyEntity2(char *buffer, CString entity, CString newvalue, BOOL bLockPref)
 {
 	CString buf(buffer);
 	newvalue = "              " + newvalue;
@@ -524,10 +563,18 @@ void ModifyEntity2(char *buffer, CString entity, CString newvalue)
 	buf.Delete(j+1, i-j-1);
 	buf.Insert(j+1, newvalue);
 
+	if (bLockPref)
+	{
+		// If it's not LockPref( already.
+		if (buf.Find("lock_pref(") < 0)
+			buf.Replace("pref(", "lock_pref(");
+	}
+
 	strcpy(buffer, (char *)(LPCTSTR) buf);
+	prefDoesntExist = FALSE;
 }
 
-int ModifyJS2(CString xpifile, CString entity, CString newvalue)
+int ModifyJS2(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 {
 	CString newfile = xpifile + ".new";
 	int rv = TRUE;
@@ -540,6 +587,7 @@ int ModifyJS2(CString xpifile, CString entity, CString newvalue)
 		rv = FALSE;
 	else
 	{
+		prefDoesntExist = TRUE;
 		int done = FALSE;
 		while (!done)
 		{
@@ -552,7 +600,7 @@ int ModifyJS2(CString xpifile, CString entity, CString newvalue)
 					rv = FALSE;
 					break;
 				}
-				ModifyEntity2(buffer, entity, newvalue);
+				ModifyEntity2(buffer, entity, newvalue, bLockPref);
 				fputs(buffer, dstf);
 			}
 		}
@@ -563,9 +611,86 @@ int ModifyJS2(CString xpifile, CString entity, CString newvalue)
 
 	remove(xpifile);
 	rename(newfile, xpifile);
+	if (prefDoesntExist)
+	{
+		// AddPref expects pref name to be surrounded in quotes. 
+		CString prefName = "\"" + entity + "\"";
+		AddPref(xpifile, prefName, newvalue, FALSE, bLockPref);
+	}
 
 	return TRUE;
 }
+
+BOOL FileExists(CString file)
+{
+	WIN32_FIND_DATA data;
+	HANDLE d = FindFirstFile((const char *) file, &data);
+	return (d != INVALID_HANDLE_VALUE);
+}
+
+BOOL CreateNewFile(CString& Filename, CString Contents)
+{
+		FILE *f = fopen(Filename, "w");
+		if (!f)
+			return FALSE;
+		fprintf(f,Contents);
+		fclose(f);
+
+		return TRUE;
+}
+
+// Modifies a preference in a hashed prefs file.
+// Specify whether the pref value should be "string", "bool", or "int".
+// Adds the pref if it is missing.
+// Creates the file if missing.
+// Returns TRUE if OK, or FALSE on error.
+int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefValue, CString PrefType, BOOL bLockPref)
+{
+	// Unhash the prefs file to a plain text file. If there is no hashed file yet,
+	// create a plaintext file with only a comment.
+	CString PlainTextPrefsFile = HashedPrefsFile + ".js";
+	if (FileExists(HashedPrefsFile))
+	{
+		if (!UnHash(HashedPrefsFile, PlainTextPrefsFile))
+			return FALSE;
+	}
+	else
+	{
+		// Create a plain text prefs with only a comment.
+		CreateNewFile(PlainTextPrefsFile, "/* protected prefs */\n");
+	}
+	
+	// Modify the pref.
+	if (PrefType.CompareNoCase("string") == 0)
+	{
+		if (!ModifyJS(PlainTextPrefsFile, PrefName, NewPrefValue, bLockPref))
+			return FALSE;
+	}
+	else if (PrefType.CompareNoCase("int") == 0)
+	{
+		if (NewPrefValue.IsEmpty())
+			NewPrefValue = "0";
+
+		if (!ModifyJS2(PlainTextPrefsFile, PrefName, NewPrefValue, bLockPref))
+			return FALSE;
+	}
+	else if (PrefType.CompareNoCase("bool") == 0)
+	{
+		if (NewPrefValue.IsEmpty())
+			NewPrefValue = "FALSE";
+
+		if (!ModifyJS2(PlainTextPrefsFile, PrefName, NewPrefValue, bLockPref))
+			return FALSE;
+	}
+
+	// And rehash it.
+	if (!Hash(PlainTextPrefsFile, HashedPrefsFile))
+		return FALSE;
+
+	return TRUE;
+}
+
+
 
 int interpret(char *cmd)
 {
@@ -701,7 +826,10 @@ int interpret(char *cmd)
 			(strcmp(cmdname, "modifyJS") == 0) ||
 			(strcmp(cmdname, "modifyJS1") == 0) ||
 			(strcmp(cmdname, "modifyJS2") == 0) ||
-			(strcmp(cmdname, "modifyProperties") == 0))
+			(strcmp(cmdname, "modifyProperties") == 0) ||
+			(strcmp(cmdname, "modifyHashedPrefString") == 0) ||
+			(strcmp(cmdname, "modifyHashedPrefInt") == 0) ||
+			(strcmp(cmdname, "modifyHashedPrefBool") == 0))
 	{
 		char *xpiname	= strtok(NULL, ",)");
 		char *jname		= strtok(NULL, ",)");
@@ -720,22 +848,38 @@ int interpret(char *cmd)
 			*t = '\0';
 			newvalue = (char *)(LPCTSTR) GetGlobal(value);
 		}
+
+		// Search for a locked pref variable for this pref name.
+		// It will be a global with name: "lockpref."+prefname
+		CString LockPrefGlobalName;
+		LockPrefGlobalName.Format("lockpref.%s", value);
+		CString LockedPrefCheckboxVal = GetGlobal(LockPrefGlobalName);
+		BOOL bLockPref = (LockedPrefCheckboxVal.Compare("1") == 0);	// "1" if locked
+
+
+
 		if (!xpiname || !xpifile || !entity || !newvalue)
 			return TRUE;//*** Changed FALSE to TRUE
 		//check to see if it is a jar and then do accordingly
 		if (jarname.CompareNoCase("no.jar")==0)
-		ExtractXPIFile(xpiname, xpifile);
+			ExtractXPIFile(xpiname, xpifile);
 		else 
-		ExtractJARFile(xpiname, jarname, xpifile);
+			ExtractJARFile(xpiname, jarname, xpifile);
 
-		if(strcmp(cmdname, "modifyJS") == 0)
-			ModifyJS(xpifile,entity,newvalue);
+		if (strcmp(cmdname, "modifyHashedPrefString") == 0)
+			ModifyHashedPref(xpifile,entity,newvalue, "string", bLockPref);
+		else if (strcmp(cmdname, "modifyHashedPrefInt") == 0)
+			ModifyHashedPref(xpifile,entity,newvalue, "int", bLockPref);
+		else if (strcmp(cmdname, "modifyHashedPrefInt") == 0)
+			ModifyHashedPref(xpifile,entity,newvalue, "bool", bLockPref);
+		else if (strcmp(cmdname, "modifyJS") == 0)
+			ModifyJS(xpifile,entity,newvalue, bLockPref);
 		else if (strcmp(cmdname, "modifyProperties") == 0)
 			ModifyProperties(xpifile,entity,newvalue);
 		else if (strcmp(cmdname, "modifyJS1") == 0)
-			ModifyJS1(xpifile,entity,newvalue);
+			ModifyJS1(xpifile,entity,newvalue, bLockPref);
 		else if (strcmp(cmdname, "modifyJS2") == 0)
-			ModifyJS2(xpifile,entity,newvalue);
+			ModifyJS2(xpifile,entity,newvalue, bLockPref);
 		else
 		{
 			// If the browser window's title bar text field is empty, 
@@ -1123,7 +1267,7 @@ void CopyDirectory(CString source, CString dest, BOOL subdir)
 	{
 		bWorking = finder.FindNextFile();
 		CString newPath=dest + "\\";
-	
+
 		if (finder.IsDots()) continue;
 		if (finder.IsDirectory()) 
 		{
@@ -1136,7 +1280,7 @@ void CopyDirectory(CString source, CString dest, BOOL subdir)
 				DWORD e = GetLastError();
 			continue; 
 		}
-		
+
 		newPath += finder.GetFileName();
 		CString source = finder.GetFilePath();
 		if (!CopyFile(source,newPath,0))
@@ -1201,7 +1345,7 @@ void CreateLinuxInstaller()
 	fclose(fout);
 	DeleteFile(templinuxPath+"\\Config.ini");
 	rename(templinuxPath+"\\config.tmp",templinuxPath+"\\config.ini");	
-	
+
 	_chdir(outputPath);
 	templinuxPath = tempPath;
 	templinuxPath.Replace("\\", "/");
@@ -1258,7 +1402,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	networkPath = configPath + "\\Network";
 	tempPath 	= configPath + "\\Temp";
 	iniDstPath	= cdPath + "\\config.ini";
-	scriptPath	= rootPath + "\\script.ib";
+	scriptPath	= rootPath + "script.ib";
 	workspacePath = configPath + "\\Workspace";
 	xpiDstPath	= cdPath;
 	// initializing variables for CCK linux build
@@ -1292,7 +1436,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 		CString tPath = nscpxpiPath;
 		tPath.Replace(xpiDir,"");
 		CopyDirectory(tPath, templinuxPath, FALSE);
-		
+	
 		// get rid of this ugly code when bugzilla bug 105351 is fixed
 		CopyFile(nscpxpiPath+"\\full.start", 
 			templinuxPath+"\\xpi\\full.start", FALSE);
@@ -1302,7 +1446,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 			templinuxPath+"\\xpi\\recommended.start", FALSE);
 		CopyFile(nscpxpiPath+"\\recommended.end",
 			templinuxPath+"\\xpi\\recommended.end", FALSE);
-		
+
 		_chdir(currentdir);
 	}
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
@@ -1338,15 +1482,20 @@ int StartIB(CString parms, WIDGET *curWidget)
 //checking to see if the AnimatedLogoURL has a http:// appended in front of it 
 //if not then we have to append it;
 
-//Check to see if the User Agent string exists and if so then append -CCK to it ;
+//Check to see if the User Agent string exists and if so then prefix with -CK
+//(-CK can be replaced with a string UserAgentPrefix global.)
+	CString userAgentPrefix = GetGlobal("UserAgentPrefix");
+	if (userAgentPrefix.IsEmpty())
+		userAgentPrefix = "CK-";
 	CString userAgent = GetGlobal("OrganizationName");
     if (userAgent)
     {
         CString templeft = userAgent.Left(3);
-        if ((templeft.CompareNoCase("CK-")) != 0)
-            userAgent = "CK-" + userAgent;
+        if ((templeft.CompareNoCase(userAgentPrefix)) != 0)
+            userAgent = userAgentPrefix + userAgent;
     }
     SetGlobal("OrganizationName",userAgent);
+
 
 // check to see if the bmp for rshell background is bigger than 302KB;
 	HANDLE hFile;
@@ -1571,15 +1720,15 @@ int StartIB(CString parms, WIDGET *curWidget)
 	else
 	{
 		invisible();
-	
+
 		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
 
 		AddThirdParty();
-
+		
 		dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
-
+		
 		ReplaceINIFile();
-	
+		
 		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	}
 	SetCurrentDirectory(olddir);

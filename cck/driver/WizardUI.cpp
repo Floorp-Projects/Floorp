@@ -389,6 +389,8 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 
 			if (curWidget->numOfOptDesc > 0)
 				SetDescription(curWidget);
+
+			
 		}
 		break;
 	}

@@ -42,6 +42,7 @@ public:
 	CString BrowseDir(WIDGET *curWidget);
 	void GenerateList(CString action, WIDGET* curWidget, CString ext);
 	BOOL Progress();  // Not actually used right now
+	BOOL ShowSection(WIDGET *curWidget);
 	BOOL IterateListBox(char *parms);
 	CString replaceVars(CString str, char *listval);
 	CString replaceVars(char *str, char *listval);

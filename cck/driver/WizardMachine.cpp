@@ -532,7 +532,7 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	NewNode->images = (IMAGE **) GlobalAlloc(0, 20 * sizeof(IMAGE *));
 	NewNode->numImages = 0;
 	
-	char sectionBuffer[MID_SIZE];
+	char sectionBuffer[MAX_SIZE];
 	GetPrivateProfileString(NULL, NULL, "", sectionBuffer, MAX_SIZE, iniFile);
 	char iniSection[MID_SIZE];
 
@@ -1110,7 +1110,10 @@ BOOL CWizardMachineApp::FileExists(CString file)
 	if (! (f = fopen(file, "r") ))
 		return FALSE;
 	else
+	{
+		fclose(f);
 		return TRUE;
+	}
 }
 
 BOOL CWizardMachineApp::FillGlobalWidgetArray(CString file)
@@ -1377,6 +1380,11 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 	aWidget->action.onInit = buffer;
 	GetPrivateProfileString(iniSection, "onCommand", "", buffer, MAX_SIZE, iniFile);
 	aWidget->action.onCommand = buffer;
+
+	// Used in the ShowSection command to show and hide widgets based on selection in a listbox.
+	GetPrivateProfileString(iniSection, "ShowInSection", "", buffer, MAX_SIZE, iniFile);
+	aWidget->showinsection = buffer;
+
 
 	/// Dynamic ID allocation
 	aWidget->widgetID = pageBaseIndex + idCounter;

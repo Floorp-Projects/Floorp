@@ -53,7 +53,8 @@ typedef struct WIDGET
 	CString title;
 	CString group;
 	CString target;
-	CString description;
+	CString description;	
+	CString showinsection;	// Used in the ShowSection command to show and hide widgets based on selection in a listbox.
 	POINT location;
 	DIMENSION size;
 	FIELDLEN fieldlen;
