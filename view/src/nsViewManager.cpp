@@ -1907,7 +1907,26 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
 										//printf("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
 										// Refresh the view
-										Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
+										if (mRefreshEnabled) {
+											Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
+										}
+										else {
+											// since we got an NS_PAINT event we need to draw something so we don't get blank areas.
+											nsCOMPtr<nsIWidget> widget;
+											GetWidgetForView(view, getter_AddRefs(widget));
+											if (widget) {
+												nsCOMPtr<nsIRenderingContext> context;
+												context = getter_AddRefs(CreateRenderingContext(*view));
+												if (context) {
+													nscolor bgColor = 0;
+													SystemAttrStruct info;
+													info.mColor = &bgColor;
+													mContext->GetSystemAttribute(eSystemAttr_Color_WindowBackground, &info);
+													context->SetColor(bgColor);
+													context->FillRect(damrect);
+												}
+											}
+										}
 									}
 							}
 
