@@ -39,8 +39,8 @@ sub GeneratePersonInput {
 }
 
 sub GeneratePeopleInput {
-    my ($field, $def_value) = (@_);
-    return "<INPUT NAME=\"$field\" SIZE=45 VALUE=\"$def_value\">";
+    my ($field, $size, $def_value) = (@_);
+    return "<INPUT NAME=\"$field\" SIZE=\"$size\" VALUE=\"$def_value\">";
 }
 
 
@@ -187,15 +187,15 @@ sub make_options {
 	    }
             $last = $item;
             if ($isregexp ? $item =~ $default : $default eq $item) {
-                $popup .= "<OPTION SELECTED VALUE=\"$item\">$item";
+                $popup .= "  <OPTION SELECTED VALUE=\"" . url_quote($item) . "\">" . url_decode($item) . "\n";
                 $found = 1;
             } else {
-		$popup .= "<OPTION VALUE=\"$item\">$item";
+		$popup .= "  <OPTION VALUE=\"" . url_quote($item) . "\">" . url_decode($item) . "\n";
             }
         }
     }
     if (!$found && $default ne "") {
-	$popup .= "<OPTION SELECTED>$default";
+	$popup .= "  <OPTION SELECTED>$default\n";
     }
     return $popup;
 }
@@ -203,9 +203,9 @@ sub make_options {
 
 sub make_popup {
     my ($name,$src,$default,$listtype,$onchange) = (@_);
-    my $popup = "<SELECT NAME=$name";
+    my $popup = "<SELECT NAME=\"$name\"";
     if ($listtype > 0) {
-        $popup .= " SIZE=5";
+        $popup .= " SIZE=\"5\"";
         if ($listtype == 2) {
             $popup .= " MULTIPLE";
         }
@@ -246,7 +246,8 @@ sub confirm_login {
 	if ($enteredlogin !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
             print "Content-type: text/html\n\n";
 
-            print "<H1>Invalid e-mail address entered.</H1>\n";
+	    PutHeader("Invalid e-mail address entered");
+
             print "The e-mail address you entered\n";
             print "(<b>$enteredlogin</b>) didn't match our minimal\n";
             print "syntax checking for a legal email address.  A legal\n";
@@ -302,7 +303,7 @@ To use the wonders of bugzilla, you can use the following:
 	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
         if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
             print "Content-type: text/html\n\n";
-            print "<H1>Login failed.</H1>\n";
+	    PutHeader("Login failed.");
             print "The username or password you entered is not valid.\n";
             print "Please click <b>Back</b> and try again.\n";
             exit;
@@ -344,7 +345,7 @@ To use the wonders of bugzilla, you can use the following:
 
     if ($loginok ne "1") {
         print "Content-type: text/html\n\n";
-        print "<H1>Please log in.</H1>\n";
+        PutHeader("Please log in.");
         print "I need a legitimate e-mail address and password to continue.\n";
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and

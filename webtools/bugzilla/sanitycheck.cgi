@@ -18,6 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
@@ -42,7 +43,7 @@ sub Alert {
 
 sub BugLink {
     my ($id) = (@_);
-    return "<a href='show_bug.cgi?id=$id'>$id</a>";
+    return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
 }
 
 

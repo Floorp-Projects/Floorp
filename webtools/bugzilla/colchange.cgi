@@ -24,8 +24,6 @@ use strict;
 
 require "CGI.pl";
 
-print "Content-type: text/html\n";
-
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
 
@@ -49,8 +47,8 @@ if (defined $::FORM{'rememberedquery'}) {
     my $list = join(" ", @collist);
     print "Set-Cookie: COLUMNLIST=$list ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
-    print "\n";
-    print "<TITLE>What a hack.</TITLE>\n";
+    print "Content-type: text/html\n\n";
+    PutHeader("What a hack");
     print "Resubmitting your query with new columns...\n";
     exit;
 }
@@ -61,6 +59,9 @@ if (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = @::default_column_list;
 }
 
+print "Content-type: text/html\n\n";
+
+PutHeader("Column Change");
 
 my %desc;
 foreach my $i (@masterlist) {
@@ -71,12 +72,11 @@ $desc{'summary'} = "Summary (first 60 characters)";
 $desc{'summaryfull'} = "Full Summary";
 
 
-print "\n";
 print "Check which columns you wish to appear on the list, and then click\n";
 print "on submit.\n";
 print "<p>\n";
-print "<FORM ACTION=colchange.cgi>\n";
-print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
+print "<FORM ACTION=\"colchange.cgi\">\n";
+print "<INPUT TYPE=\"HIDDEN\" NAME=\"rememberedquery\" VALUE=\"$::buffer\">\n";
 
 foreach my $i (@masterlist) {
     my $c;
@@ -85,13 +85,13 @@ foreach my $i (@masterlist) {
     } else {
         $c = '';
     }
-    print "<INPUT TYPE=checkbox NAME=column_$i $c>$desc{$i}<br>\n";
+    print "<INPUT TYPE=\"checkbox\" NAME=\"column_$i\" $c>$desc{$i}<br>\n";
 }
 print "<P>\n";
 print "<INPUT TYPE=\"submit\" VALUE=\"Submit\">\n";
 print "</FORM>\n";
-print "<FORM ACTION=colchange.cgi>\n";
-print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
-print "<INPUT TYPE=HIDDEN NAME=resetit VALUE=1>\n";
+print "<FORM ACTION=\"colchange.cgi\">\n";
+print "<INPUT TYPE=\"HIDDEN\" NAME=\"rememberedquery\" VALUE=\"$::buffer\">\n";
+print "<INPUT TYPE=\"HIDDEN\" NAME=\"resetit\" VALUE=\"1\">\n";
 print "<INPUT TYPE=\"submit\" VALUE=\"Reset to Bugzilla default\">\n";
 print "</FORM>\n";

@@ -18,6 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 
 use diagnostics;
@@ -34,17 +35,19 @@ $zz = $zz . $zz;
 
 confirm_login();
 
-print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-print "Set-Cookie: VERSION-$::FORM{'product'}=$::FORM{'version'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+my $platform = url_quote($::FORM{'product'});
+my $version = url_quote($::FORM{'version'});
+
+print "Set-Cookie: PLATFORM=$platform ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+print "Set-Cookie: VERSION-$platform=$version ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
 print "Content-type: text/html\n\n";
 
 if (defined $::FORM{'maketemplate'}) {
-    print "<TITLE>Bookmarks are your friend.</TITLE>\n";
-    print "<H1>Template constructed.</H1>\n";
+    PutHeader("Bookmarks are your friend.", "Template constructed.");
     
     my $url = "enter_bug.cgi?$::buffer";
 
-    print "If you put a bookmark <a href=\"$url\">to this link</a>, it will\n";
+    print "If you put a bookmark <A HREF=\"$url\">to this link</A>, it will\n";
     print "bring up the submit-a-new-bug page with the fields initialized\n";
     print "as you've requested.\n";
     exit;
@@ -118,6 +121,8 @@ foreach my $person (keys %ccids) {
 print "<H2>Changes Submitted</H2>\n";
 print "<A HREF=\"show_bug.cgi?id=$id\">Show BUG# $id</A>\n";
 print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
+print "<BR><A HREF=\"enter_bug.cgi?product=" . url_quote($::FORM{'product'}). "\">Enter a new bug</A>\n";
+
 
 system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
 exit;

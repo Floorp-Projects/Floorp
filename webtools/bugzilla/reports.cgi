@@ -156,11 +156,12 @@ FIN
 sub most_doomed
 	{
 	my $when = localtime (time);
+	my $product = url_decode($::FORM{'product'});
 
 	print <<FIN;
 <center>
 <h1>
-Bug Report for $::FORM{'product'}
+Bug Report for $product
 </h1>
 $when<p>
 FIN
@@ -179,7 +180,7 @@ from   bugs,
        versions projector
 where  bugs.assigned_to = assign.userid
 and    bugs.reporter = report.userid
-and    bugs.product='$::FORM{'product'}'
+and    bugs.product='$product'
 and 	 
 	( 
 	bugs.bug_status = 'NEW' or 
@@ -393,13 +394,13 @@ sub header
 FIN
 	}
 
-sub show_chart
-	{
-  my $when = localtime (time);
+sub show_chart {
+    my $when = localtime (time);
+    my $product = url_decode($::FORM{'product'});
 
-	if (! is_legal_product ($::FORM{'product'}))
+	if (! is_legal_product($product))
 		{
-		&die_politely ("Unknown product: $::FORM{'product'}");
+		&die_politely ("Unknown product: $product");
 		}
 
   print <<FIN;
@@ -454,7 +455,7 @@ FIN
 
 	my %settings =
 		(
-		"title" => "Bug Charts for $::FORM{'product'}",
+		"title" => "Bug Charts for $product",
 		"x_label" => "Dates",
 		"y_label" => "Bug Count",
 		"legend_labels" => \@labels,
@@ -476,6 +477,7 @@ FIN
 sub die_politely
 	{
 	my $msg = shift;
+	my $product = url_decode($::FORM{'product'});
 
 	print <<FIN;
 <p>
@@ -484,7 +486,7 @@ sub die_politely
 <td align=center>
 <font color=blue>Sorry, but ...</font>
 <p>
-There is no graph available for <b>$::FORM{'product'}</b><p>
+There is no graph available for <b>$product</b><p>
 
 <font size=-1>
 $msg
