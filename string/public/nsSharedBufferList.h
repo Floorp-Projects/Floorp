@@ -53,11 +53,11 @@ class nsSharedBufferList
     public:
 
       class Buffer
-          : public nsXXXBufferHandle<PRUnichar>
+          : public nsFlexBufferHandle<PRUnichar>
         {
           public:
             Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageStart, PRUnichar* aStorageEnd, PRBool aIsSingleAllocation=PR_FALSE )
-                : nsXXXBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageStart, aStorageEnd)
+                : nsFlexBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageStart, aStorageEnd)
               {
                 if ( aIsSingleAllocation )
                   this->mFlags |= this->kIsSingleAllocationWithBuffer;
