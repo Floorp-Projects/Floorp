@@ -122,6 +122,7 @@ protected:
   nsIWindowMediator* mWindowMediator;
   nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
   PRBool mDeleteCalled;
+  PRBool mQuiting;
 };
 
 nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
@@ -132,6 +133,7 @@ nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
   mWindowList   = nsnull;
   mCmdLineService = nsnull;
   mDeleteCalled		= PR_FALSE;
+  mQuiting	= PR_FALSE;
 }
 
 nsAppShellService::~nsAppShellService()
@@ -453,20 +455,14 @@ nsAppShellService::Run(void)
   return mAppShell->Run();
 }
 
-NS_IMETHODIMP
-nsAppShellService::Shutdown(void)
+
+NS_IMETHODIMP nsAppShellService::Quit()
 {
-#if 0
-  // Shutdown all components.
-  EnumerateComponents( &nsAppShellService::ShutdownComponent );
-  mAppShell->Exit(); // this is rude, and gtk complains
-#else
-  nsresult rv;
-
-  // Shutdown all components.
-  EnumerateComponents(&nsAppShellService::ShutdownComponent);
-
-  // now step through all opened registered windows and close them.
+	if ( mQuiting )
+		return NS_OK;
+ nsresult rv;
+ mQuiting = true;
+	// now step through all opened registered windows and close them.
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
@@ -487,8 +483,17 @@ nsAppShellService::Shutdown(void)
         windowEnumerator->HasMoreElements(&more);
       }
     }
-  }
-#endif
+   }
+   
+  return mAppShell->Exit();
+}
+
+NS_IMETHODIMP
+nsAppShellService::Shutdown(void)
+{
+  // Shutdown all components.
+  EnumerateComponents(&nsAppShellService::ShutdownComponent);
+
   return NS_OK;
 }
 
@@ -747,7 +752,20 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
   rv = mWindowList->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   if (0 == cnt)
-    mAppShell->Exit();
+  {
+  #if XP_MAC
+  	// Given hidden window the focus so it puts up the menu
+ 	nsIWidget* widget = NULL;
+ 	mHiddenWindow->GetWidget( widget );
+ 	if( widget )
+ 	{
+ 		widget->SetFocus();
+  		widget->Release();
+  	}
+  #else
+  	  Quit();
+  #endif 
+  }
   return rv;
 }
 
