@@ -3148,6 +3148,8 @@ then
     _SAVE_LDFLAGS=$LDFLAGS
     QT_LDFLAGS=-L${QTDIR}/lib
     LDFLAGS="$LDFLAGS $QT_LDFLAGS"
+    AC_LANG_SAVE
+    AC_LANG_CPLUSPLUS
     AC_CHECK_LIB(qt, main, QT_LIB=-lqt,
       AC_CHECK_LIB(qt-mt, main, QT_LIB=-lqt-mt)
     )
@@ -3158,8 +3160,6 @@ dnl      AC_MSG_ERROR(Test for QT failed.))
 
     MOZ_QT_LDFLAGS=$QT_LIBS
     MOZ_QT_CFLAGS=$QT_CFLAGS
-
-    AC_LANG_CPLUSPLUS
 
     _SAVE_CXXFLAGS=$CXXFLAGS
     _SAVE_LIBS=$LIBS
@@ -3182,7 +3182,7 @@ dnl      AC_MSG_ERROR(Test for QT failed.))
     CXXFLAGS=$_SAVE_CXXFLAGS
     LIBS=$_SAVE_LIBS
 
-    AC_LANG_C
+    AC_LANG_RESTORE
 fi
 
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
