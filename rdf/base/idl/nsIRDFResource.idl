@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIRDFNode.idl"
+
+
+// An nsIRDFResource is an object that has unique identity in the 
+// RDF data model. The object's identity is determined by its URI.
+[scriptable, uuid(E0C493D1-9542-11d2-8EB8-00805F29F370)]
+interface nsIRDFResource : nsIRDFNode {
+    // The single-byte string value of the resource
+    readonly attribute string Value;
+
+    // This method is called by the nsIRDFService after constructing
+    // a resource object to initialize it's URI. You would not normally
+    // call this method directly
+    void Init(in string uri);
+
+    // Determine if two resources are identical.
+    boolean EqualsResource(in nsIRDFResource aResource);
+
+    // Determine if the resource has the given URI.
+    boolean EqualsString(in string aURI);
+};
+
