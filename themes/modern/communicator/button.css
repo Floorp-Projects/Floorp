@@ -56,7 +56,7 @@
   .button-toolbar[toggled="true"]
     {
       border                : 1px solid 0x003366;
-      background-color      : #99CCCC;
+      background-color      : #AAAAAA;
       -moz-border-radius    : 4px;
     }    
 
@@ -64,7 +64,6 @@
   .button-toolbar[disabled="true"]:hover,
   .button-toolbar[disabled="true"]:hover:active
     {
-/*      background-color      : #DDDDDD; */
       border                : 1px solid transparent;
     }
 
