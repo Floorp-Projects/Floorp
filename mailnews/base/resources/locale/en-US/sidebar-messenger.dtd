@@ -1,6 +1,0 @@
-<!-- extracted from sidebar-messenger.xul -->
-
-<!-- LOCALIZATION NOTE (sidebar.title.label) : do not translate below line -->
-<!ENTITY sidebar.title.label         "Sidebar">
-<!ENTITY sidebar.reload.label        "Reload">
-<!ENTITY sidebar.customize.label     "Customize">

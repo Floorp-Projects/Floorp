@@ -6,8 +6,6 @@ folderProps.dtd
 newFolderNameDialog.dtd
 subscribe.dtd
 subscribe.properties
-sidebar-messenger.dtd
-sidebar-messenger-rdf.dtd
 msgFolderPickerOverlay.dtd
 msgHdrViewOverlay.dtd
 mailTasksOverlay.dtd

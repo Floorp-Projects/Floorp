@@ -52,7 +52,6 @@ CHROME_CONTENT = \
 	.\shareglue.js \
 	.\subscribe.xul \
 	.\subscribe.js \
-	.\sidebar-messenger.rdf \
 	.\msgViewNavigation.js \
 	.\msgMail3PaneWindow.js \
 	.\mail3PaneWindowCommands.js \
