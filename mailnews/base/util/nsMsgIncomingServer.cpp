@@ -1701,7 +1701,8 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
       rv = passwordMgrInt->FindPasswordEntry(currServerUri, nsString(), nsString(),
                                              hostFound, userNameFound, passwordFound);
       if (NS_FAILED(rv)) {
-        return rv;
+        *isAuthenticated = PR_FALSE;
+        return NS_OK;
       }
 
       // If a match is found, password element is filled in. Convert the
