@@ -118,6 +118,7 @@ public:
 
   NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
   NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+  NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) { *aResult = nsnull; return NS_OK; };
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }

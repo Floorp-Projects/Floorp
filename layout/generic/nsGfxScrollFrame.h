@@ -137,6 +137,9 @@ public:
   NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
                                     PRBool aVerticalVisible,
                                     PRBool aHorizontalVisible);
+
+  NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
+
   NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
                          nscoord *aWidth, 
                          nscoord *aHeight) const;

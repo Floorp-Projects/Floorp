@@ -362,6 +362,12 @@ nsGfxScrollFrame::SetScrollbarVisibility(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGfxScrollFrame::GetScrollbarBox(PRBool aVertical, nsIBox** aResult)
+{
+  *aResult = aVertical ? mInner->mVScrollbarBox : mInner->mHScrollbarBox;
+  return NS_OK;
+}
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
 
