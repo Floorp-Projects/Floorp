@@ -3196,7 +3196,8 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           }
           else
             doneLooping = PR_TRUE; //do not continue with while loop
-          if (NS_SUCCEEDED(result) && aPos->mResultFrame){
+          if (NS_SUCCEEDED(result) && aPos->mResultFrame && blockFrame != aPos->mResultFrame)// make sure block element is not the same as the one we had before.
+          {
             result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
             if (NS_SUCCEEDED(result) && it)//we have struck another block element!
             {
