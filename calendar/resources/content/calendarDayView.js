@@ -157,29 +157,17 @@ DayView.prototype.refreshEvents = function( )
          
          for ( j = 0; j < dayEventList.length; j++ ) 
          {
-            //thisCalendarEventDisplay = dayEventList[j];
-            calendarEventDisplayToMatch = dayEventList[j];
-            
-            calendarEventToMatchHours = calendarEventDisplayToMatch.displayDate.getHours();
-            calendarEventToMatchMinutes = calendarEventDisplayToMatch.displayDate.getMinutes();
-            calendarEventDisplayHours = calendarEventDisplay.displayDate.getHours();
-            calendarEventDisplayMinutes = calendarEventDisplay.displayDate.getMinutes();
-            calendarEventEndHours = calendarEventDisplay.event.end.hour;
-            calendarEventEndMinutes = calendarEventDisplay.event.end.hour;
-
-            calendarEventDisplayToMatch.displayDateTime = new Date( 2000, 1, 1, calendarEventToMatchHours, calendarEventToMatchMinutes, 0 );
-            calendarEventDisplay.displayDateTime = new Date( 2000, 1, 1, calendarEventDisplayHours, calendarEventDisplayMinutes, 0 );
-            calendarEventDisplayToMatch.endTime = new Date( 2000, 1, 1, calendarEventToMatchHours, calendarEventEndMinutes, 0 );
-
+            thisCalendarEventDisplay = dayEventList[j];
+   
             //if this event overlaps with another event...
-            if ( ( ( calendarEventDisplayToMatch.displayDateTime >= calendarEventDisplay.displayDateTime &&
-                 calendarEventDisplayToMatch.displayDateTime < calendarEventDisplay.endTime ) ||
-                  ( calendarEventDisplay.displayDateTime >= calendarEventDisplayToMatch.displayDateTime &&
-                 calendarEventDisplay.displayDateTime < calendarEventDisplayToMatch.endTime ) ) &&
-                 calendarEventDisplay.event.id != calendarEventDisplayToMatch.event.id )
+            if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
+                 thisCalendarEventDisplay.displayDate.getTime() < calendarEventDisplay.event.end.getTime() ) ||
+                  ( calendarEventDisplay.displayDate >= thisCalendarEventDisplay.displayDate &&
+                 calendarEventDisplay.displayDate.getTime() < thisCalendarEventDisplay.event.end.getTime() ) ) &&
+                 calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id )
             {
-               //get the spot that this event will go in.
-               var ThisSpot = calendarEventDisplayToMatch.CurrentSpot;
+                  //get the spot that this event will go in.
+               var ThisSpot = thisCalendarEventDisplay.CurrentSpot;
                
                calendarEventDisplay.OtherSpotArray.push( ThisSpot );
                ThisSpot++;
