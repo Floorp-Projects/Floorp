@@ -520,7 +520,9 @@ namespace JavaScript {
 
     struct ExprStmtNode: StmtNode {
         ExprNode *expr;     // The expression statement's expression. May be nil for default: or return-with-no-expression statements.
+#ifdef DIKDIK
         uint32 label;       // Used for case statements' code generation
+#endif
 
         ExprStmtNode(size_t pos, Kind kind, ExprNode *expr): StmtNode(pos, kind), expr(expr) {}
 

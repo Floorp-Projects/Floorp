@@ -219,6 +219,23 @@ namespace MetaData {
                 targetList.pop_back();
             }
             break;
+        case StmtNode::Switch:
+            {
+                SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
+                ValidateExpression(cxt, env, sw->expr);
+                StmtNode *s = sw->statements;
+                while (s) {
+                    if (s->getKind() == StmtNode::Case) {
+                        ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
+                        if (c->expr)
+                            ValidateExpression(cxt, env, c->expr);
+                    }
+                    else
+                        ValidateStmt(cxt, env, s);
+                    s = s->next;
+                }
+            }
+            break;
         case StmtNode::While:
         case StmtNode::DoWhile:
             {
@@ -829,6 +846,58 @@ namespace MetaData {
                 else
                     bCon->emitBranch(eBranch, loopTop, p->pos);
                 bCon->setLabel(f->breakLabelID);
+            }
+            break;
+        case StmtNode::Switch:
+/*
+            <swexpr>        
+            eLexicalWrite    <switchTemp>
+            Pop
+
+        // test sequence in source order except 
+        // the default is moved to end.
+
+            eLexicalRead    <switchTemp>
+            <case1expr>
+            Equal
+            BranchTrue --> case1StmtLabel
+            eLexicalRead    <switchTemp>
+            <case2expr>
+            Equal
+            BranchTrue --> case2StmtLabel
+            Branch --> default, if there is one, or break label
+
+    case1StmtLabel:
+            <stmt>
+    case2StmtLabel:
+            <stmt>
+    defaultLabel:
+            <stmt>
+    case3StmtLabel:
+            <stmt>
+            ..etc..     // all in source order
+    
+    breakLabel:
+*/
+            {
+                SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
+
+                Reference *r = EvalExprNode(env, phase, sw->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+
+                StmtNode *s = sw->statements;
+                while (s) {
+                    if (s->getKind() == StmtNode::Case) {
+                        ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
+                        if (c->expr) {
+                            Reference *r = EvalExprNode(env, phase, c->expr);
+                            if (r) r->emitReadBytecode(bCon, p->pos);
+                        }
+                    }
+                    else
+                        EvalStmt(env, phase, s);
+                    s = s->next;
+                }
             }
             break;
         case StmtNode::While:
