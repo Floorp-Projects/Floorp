@@ -157,12 +157,12 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 
 	m_mdbTokensInitialized = PR_FALSE;
 
+	m_mdb = mdb;
 	if (mdb)
 	{
 		mdb_err err;
 
 //		mdb->AddRef();
-		m_mdb = mdb;
 		err = m_mdb->GetStore()->StringToToken(mdb->GetEnv(), kDBFolderInfoScope, &m_rowScopeToken); 
 		if (err == NS_OK)
 		{
