@@ -65,7 +65,6 @@
   <groupbox id="imagesArea">
     <checkbox id="networkImageDisableImagesInMailNews"
               label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
-              observes="haveImageBlocking"
               pref="true" preftype="bool" prefstring="mailnews.message_display.disable_remote_image"
               prefattribute="checked" insertafter="networkImagesBehaviorSeparator"/>
   </groupbox>
