@@ -32,7 +32,9 @@
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
 #include "nsIEnumerator.h"
+
 #include <Appearance.h>
+#include <Timer.h>
 
 #include "nsplugindefs.h"
 #include "nsMacEventHandler.h"
@@ -823,6 +825,19 @@ NS_IMETHODIMP	nsWindow::Update()
 	return NS_OK;
 }
 
+static Boolean control_key_down()
+{
+	EventRecord event;
+	::OSEventAvail(0, &event);
+	return (event.modifiers & controlKey) != 0;
+}
+
+static long long microseconds()
+{
+	unsigned long long micros;
+	Microseconds((UnsignedWide*)&micros);
+	return micros;
+}
 
 //-------------------------------------------------------------------------
 //	HandleUpdateEvent
@@ -874,8 +889,23 @@ nsresult nsWindow::HandleUpdateEvent()
 			::OffsetRect(&macRect, -bounds.x, -bounds.y);
 			rect.SetRect(macRect.left, macRect.top, macRect.right - macRect.left, macRect.bottom - macRect.top);
 
+#if DEBUG
+			// measure the time it takes to refresh the window, if the control key is down.
+			unsigned long long start, finish;
+			Boolean measure_duration = control_key_down();
+			if (measure_duration)
+				start = microseconds();
+#endif
+
 			// update the widget
 			UpdateWidget(rect, renderingContext);
+
+#if DEBUG
+			if (measure_duration) {
+				finish = microseconds();
+				printf("update took %g microseconds.\n", double(finish - start));
+			}
+#endif
 
 			NS_RELEASE(renderingContext);
 		}
