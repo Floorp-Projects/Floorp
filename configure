@@ -2777,7 +2777,7 @@ $PERL -e 'use File::stat;'
 _perl_res=$?
 if test $_perl_res != 0; then
     echo "$ac_t""no" 1>&6
-    echo "configure: warning: Perl module File::stat not available. Make sure that you have a complete perl installation. Disabling jar packaging." 1>&2
+    { echo "configure: error: Perl module File::stat not available. Make sure that you have a complete perl installation." 1>&2; exit 1; }
     MOZ_DISABLE_JAR_PACKAGING=1
 else
     echo "$ac_t""yes" 1>&6
