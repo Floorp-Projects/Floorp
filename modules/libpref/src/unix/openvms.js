@@ -55,4 +55,5 @@ pref("print.print_command", "print");
 pref("print.print_color", false);
 
 pref("browser.cache.disk.capacity", 4000);
+pref("plugin.soname.list", "");
 
