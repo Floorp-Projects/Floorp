@@ -58,6 +58,7 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
@@ -215,6 +216,11 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIJSScriptObjectIID)) {
+    *aInstancePtr = (void*)(nsIJSScriptObject*)this;
     AddRef();
     return NS_OK;
   }
@@ -948,11 +954,34 @@ PRBool    nsDocument::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 
 PRBool    nsDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-  return PR_TRUE;
+  PRBool result = PR_TRUE;
+
+  if (JSVAL_IS_STRING(aID) && 
+      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+    if (nsnull != mScriptContextOwner) {
+      nsIScriptGlobalObject *global;
+      mScriptContextOwner->GetScriptGlobalObject(&global);
+      if (nsnull != global) {
+        nsIJSScriptObject *window;
+        if (NS_OK == global->QueryInterface(kIJSScriptObjectIID, (void **)&window)) {
+          result = window->GetProperty(aContext, aID, aVp);
+          NS_RELEASE(window);
+        }
+        else {
+          result = PR_FALSE;
+        }
+        NS_RELEASE(global);
+      }
+    }
+  }
+
+  return result;
 }
 
 PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+  PRBool result = PR_TRUE;
+
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsAutoString mPropName, mPrefix;
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
@@ -1019,7 +1048,26 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       NS_IF_RELEASE(mManager);
     }
   }
-  return PR_TRUE;
+  else if (JSVAL_IS_STRING(aID) && 
+      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+    if (nsnull != mScriptContextOwner) {
+      nsIScriptGlobalObject *global;
+      mScriptContextOwner->GetScriptGlobalObject(&global);
+      if (nsnull != global) {
+        nsIJSScriptObject *window;
+        if (NS_OK == global->QueryInterface(kIJSScriptObjectIID, (void **)&window)) {
+          result = window->SetProperty(aContext, aID, aVp);
+          NS_RELEASE(window);
+        }
+        else {
+          result = PR_FALSE;
+        }
+        NS_RELEASE(global);
+      }
+    }
+  }
+
+  return result;
 }
 
 PRBool    nsDocument::EnumerateProperty(JSContext *aContext)
