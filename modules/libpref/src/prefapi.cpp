@@ -64,6 +64,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "nsQuickSort.h"
+#include "nsString.h"
 
 #ifdef XP_OS2
 #define INCL_DOS
@@ -85,6 +86,7 @@ clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
         PR_FREEIF(pref->userPref.stringVal);
     }
     PL_strfree((char*)pref->key);
+    memset(entry, 0, table->entrySize);
 }
 
 PRBool PR_CALLBACK
@@ -517,18 +519,16 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
     return ok;
 }
 
-static char * str_escape(const char * original)
+// note that this appends to aResult, and does not assign!
+void str_escape(const char * original, nsAFlatCString& aResult)
 {
     const char *p;
-    char * ret_str, *q;
-
-    if (original == NULL)
-        return NULL;
     
-    ret_str = (char*)malloc(2 * PL_strlen(original) + 1);
+    if (original == NULL)
+        return;
+
     /* Paranoid worst case all slashes will free quickly */
     p = original;
-    q = ret_str;
     while (*p)
     {
         switch (*p)
@@ -536,15 +536,13 @@ static char * str_escape(const char * original)
             case '\\':
             case '\"':
             case '\n':
-                *q++ = '\\';
+                aResult.Append('\\');
                 break;
             default:
                 break;
         }
-        *q++ = *p++;
+        aResult.Append(*p++);
     }
-    *q = 0;
-    return ret_str;
 }
 
 /*
@@ -706,62 +704,41 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
     if (!pref)
         return PL_DHASH_NEXT;
 
+    nsCAutoString prefValue;
+
+    // where we're getting our pref from
+    PrefValue* sourcePref;
+
     if (PREF_HAS_USER_VALUE(pref) && 
         pref_ValueChanged(pref->defaultPref, 
                           pref->userPref, 
                           (PrefType) PREF_TYPE(pref)))
-    {
-        char *prefEntry = nsnull;
+        sourcePref = &pref->userPref;
+    else if (PREF_IS_LOCKED(pref))
+        sourcePref = &pref->defaultPref;
+    else
+        // do not save default prefs that haven't changed
+        return PL_DHASH_NEXT;
 
-        if (pref->flags & PREF_STRING)
-        {
-            char *tmp_str = str_escape(pref->userPref.stringVal);
-
-            if (tmp_str)
-            {
-                prefEntry = PR_smprintf("user_pref(\"%s\", \"%s\");",
-                                        pref->key, tmp_str);
-                PR_Free(tmp_str);
-            }
-        }
-        else if (pref->flags & PREF_INT)
-        {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", pref->key,
-                            (long) pref->userPref.intVal);
-        }
-        else if (pref->flags & PREF_BOOL)
-        {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", pref->key,
-                            (pref->userPref.boolVal) ? "true" : "false");
-        }
-
-        prefArray[i] = prefEntry;
+    // strings are in quotes!
+    if (pref->flags & PREF_STRING) {
+        prefValue = '\"';
+        str_escape(sourcePref->stringVal, prefValue);
+        prefValue += '\"';
     }
-    else if (pref && PREF_IS_LOCKED(pref))
-    {
-        char *prefEntry = nsnull;
 
-        if (pref->flags & PREF_STRING)
-        {
-            char *tmp_str = str_escape(pref->defaultPref.stringVal);
-            if (tmp_str) {
-                prefEntry = PR_smprintf("user_pref(\"%s\", \"%s\");",
-                                        pref->key, tmp_str);
-                PR_Free(tmp_str);
-            }
-        }
-        else if (pref->flags & PREF_INT)
-        {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", pref->key,
-                            (long) pref->defaultPref.intVal);
-        }
-        else if (pref->flags & PREF_BOOL)
-        {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", pref->key,
-                (pref->defaultPref.boolVal) ? "true" : "false");
-        }
-        prefArray[i] = prefEntry;
-    }
+    else if (pref->flags & PREF_INT)
+        prefValue.AppendInt(sourcePref->intVal);
+
+    else if (pref->flags & PREF_BOOL)
+        prefValue = (sourcePref->boolVal) ? "true" : "false";
+
+
+    prefArray[i] = ToNewCString(NS_LITERAL_CSTRING("user_pref(\"") +
+                                nsDependentCString(pref->key) +
+                                NS_LITERAL_CSTRING("\", ") +
+                                prefValue +
+                                NS_LITERAL_CSTRING(");"));
     return PL_DHASH_NEXT;
 }
 
@@ -1054,7 +1031,6 @@ pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg
 PrefResult
 PREF_DeleteBranch(const char *branch_name)
 {
-    char* branch_dot;
     int len = (int)PL_strlen(branch_name);
 
     if (!gHashTable.ops)
@@ -1066,19 +1042,12 @@ PREF_DeleteBranch(const char *branch_name)
      * does not. When nsIPref goes away this function should be fixed to 
      * never add the period at all.
      */
-    if ((len > 1) && (branch_name[len - 1] == '.'))
-        branch_dot = (char *)branch_name;
-    else
-    {
-        branch_dot = PR_smprintf("%s.", branch_name);
-        if (!branch_dot)
-            return PREF_OUT_OF_MEMORY;
-    }
+    nsCAutoString branch_dot(branch_name);
+    if ((len > 1) && branch_name[len - 1] != '.')
+        branch_dot += '.';
 
-    pref_HashTableEnumerateEntries(pref_DeleteItem, (void*) branch_dot);
+    pref_HashTableEnumerateEntries(pref_DeleteItem, (void*) branch_dot.get());
     
-    if (branch_dot != branch_name)
-        PR_Free(branch_dot);
     return PREF_NOERROR;
 }
 
@@ -1129,78 +1098,6 @@ PREF_ClearAllUserPrefs()
     return PREF_OK;
 }
 
-/* Prototype Admin Kit support */
-PrefResult
-PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
-    int indx, const char *field)
-{
-    PR_ASSERT( PR_FALSE );
-    return PREF_ERROR;
-}
-
-/*
- * Administration Kit support 
- */
-PrefResult
-PREF_CopyConfigString(const char *obj_name, char **return_buffer)
-{
-    PrefResult success = PREF_ERROR;
-    PrefHashEntry* pref = pref_HashTableLookup(obj_name);
-    
-    if (pref && (pref->flags & PREF_STRING))
-    {
-        if (return_buffer)
-            *return_buffer = PL_strdup(pref->defaultPref.stringVal);
-        success = PREF_NOERROR;
-    }
-    return success;
-}
-
-PrefResult
-PREF_CopyIndexConfigString(const char *obj_name,
-    int indx, const char *field, char **return_buffer)
-{
-    PrefResult success = PREF_ERROR;
-    PrefHashEntry* pref;
-    char* setup_buf = PR_smprintf("%s_%d.%s", obj_name, indx, field);
-
-    pref = pref_HashTableLookup(setup_buf);
-    
-    if (pref && (pref->flags & PREF_STRING))
-    {
-        if (return_buffer)
-            *return_buffer = PL_strdup(pref->defaultPref.stringVal);
-        success = PREF_NOERROR;
-    }
-    PR_FREEIF(setup_buf);
-    return success;
-}
-
-PrefResult
-PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
-{
-    PrefResult success = PREF_ERROR;
-    PrefHashEntry* pref = pref_HashTableLookup(obj_name);
-    if (pref && (pref->flags & PREF_INT))
-    {
-        *return_int = pref->defaultPref.intVal;
-        success = PREF_NOERROR;
-    }
-
-    return success;
-}
-
-PrefResult
-PREF_GetConfigBool(const char *obj_name, PRBool *return_bool)
-{
-    PrefHashEntry* pref = pref_HashTableLookup(obj_name);  
-    if (pref && (pref->flags & PREF_BOOL))
-    {
-        *return_bool = pref->defaultPref.boolVal;
-        return PREF_NOERROR;
-    }
-    return PREF_ERROR;
-}
 
 PrefResult pref_UnlockPref(const char *key)
 {
@@ -2080,127 +1977,3 @@ static int pref_CountListMembers(char* list)
     return members;
 }
 
-
-/*--------------------------------------------------------------------------------------*/
-PrefResult PREF_GetListPref(const char* pref, char*** list, PRBool isDefault)
-/* Splits a comma separated string into an array of strings.
- * The array of strings is actually just an array of pointers into a copy
- * of the value returned by PREF_CopyCharPref().  So, we don't have to
- * allocate each string separately.
-----------------------------------------------------------------------------------------*/
-{
-    char* value;
-    char** p;
-    int nugmembers;
-    char* nextstr;
-
-    *list = NULL;
-
-    if ( PREF_CopyCharPref(pref, &value, isDefault) != PREF_OK || value == NULL )
-        return PREF_ERROR;
-
-    nugmembers = pref_CountListMembers(value);
-
-    p = *list = (char**) PR_MALLOC((nugmembers+1) * sizeof(char**));
-    if ( *list == NULL ) return PREF_ERROR;
-
-    for ( *p = PL_strtok_r(value, ",", &nextstr);
-          *p != NULL;
-          *(++p) = PL_strtok_r(nextstr, ",", &nextstr) ) /* Empty body */ ;
-
-    /* Copy each entry so that users can free them. */
-    for ( p = *list; *p != NULL; p++ )
-        *p = PL_strdup(*p);
-
-    PR_Free(value);
-
-    return PREF_OK;
-}
-
-
-/*--------------------------------------------------------------------------------------*/
-PrefResult PREF_SetListPref(const char* pref, char** list)
-/* TODO: Call Javascript callback to make sure user is allowed to make this
- * change.
-----------------------------------------------------------------------------------------*/
-{
-    PrefResult status;
-    int len;
-    char** p;
-    char* value = NULL;
-
-    if ( pref == NULL || list == NULL ) return PREF_ERROR;
-
-    for ( len = 0, p = list; p != NULL && *p != NULL; p++ )
-        len+= (PL_strlen(*p)+1); /* The '+1' is for a comma or '\0' */
-
-    if ( len <= 0 || (value = (char*)PR_MALLOC((PRUint32)len)) == NULL )
-        return PREF_ERROR;
-
-    (void) PL_strcpy(value, *list);
-    for ( p = list+1; p != NULL && *p != NULL; p++ )
-    {
-        (void) PL_strcat(value, ",");
-        (void) PL_strcat(value, *p);
-    }
-
-    status = PREF_SetCharPref(pref, value);
-
-    PR_FREEIF(value);
-
-    return status;  
-}
-
-/*--------------------------------------------------------------------------------------*/
-PrefResult
-PREF_AppendListPref(const char* pref, const char* value)
-/*--------------------------------------------------------------------------------------*/
-{
-    char *pListPref = NULL, *pNewList = NULL;
-    int nPrefLen = 0;
-
-    PREF_CopyCharPref(pref, &pListPref, PR_FALSE);
-
-    if (pListPref)
-    {
-        nPrefLen = PL_strlen(pListPref);
-    }
-
-    if (nPrefLen == 0)
-        PREF_SetCharPref(pref, value);
-    else
-    {
-        pNewList = (char *) PR_MALLOC((nPrefLen + PL_strlen(value) + 2));
-        if (pNewList)
-        {
-            PL_strcpy(pNewList, pListPref);
-            PL_strcat(pNewList, ",");
-            PL_strcat(pNewList, value);
-            PREF_SetCharPref(pref, pNewList);
-            PR_Free(pNewList);
-        }
-
-    }
-
-    PR_FREEIF(pListPref);
-
-    return PREF_NOERROR;
-}
-
-/*--------------------------------------------------------------------------------------*/
-PrefResult
-PREF_FreeListPref(char*** list)
-/* Free each element in the list, then free the list, then NULL the
- * list out.
- *--------------------------------------------------------------------------------------*/
-{
-    char** p;
-    if (!list)
-        return PREF_ERROR;
-
-    for ( p = *list; *p != NULL; p++ )
-        PR_Free(*p);
-
-    PR_FREEIF(*list);
-    return PREF_OK;
-}
