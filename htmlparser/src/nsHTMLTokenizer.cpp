@@ -343,6 +343,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
           result=ConsumeStartTag(aChar,aToken,aScanner);
         else if(kEOF!=aChar) {
           nsAutoString temp("<");
+          temp.Append(aChar);
           result=ConsumeText(temp,aToken,aScanner);
         }
     } //switch
@@ -457,14 +458,14 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
        */
       if(NS_SUCCEEDED(result))
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
-        nsAutoString endTag("</");
-        endTag.Append(NS_EnumToTag(theTag));
-        endTag.Append(">");
+        nsAutoString endTag(NS_EnumToTag(theTag));
         CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
+        CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
+        endTag.Insert("</",0,2);
+        endTag.Append(">");        
         CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag,endTag);
         result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(eHTMLTag_style==theTag),aScanner,endTag);  //tell new token to finish consuming text...    
         AddToken(textToken,result,mTokenDeque,theRecycler);
-        CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag);
         AddToken(endToken,result,mTokenDeque,theRecycler);
       }
  
