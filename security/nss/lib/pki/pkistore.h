@@ -35,7 +35,7 @@
 #define PKISTORE_H
 
 #ifdef DEBUG
-static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.4 $ $Date: 2002/11/06 18:53:54 $ $Name:  $";
+static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.5 $ $Date: 2003/01/08 21:48:45 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -72,7 +72,7 @@ nssCertificateStore_Create
   NSSArena *arenaOpt
 );
 
-NSS_EXTERN void
+NSS_EXTERN PRStatus
 nssCertificateStore_Destroy
 (
   nssCertificateStore *store

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.46 $ $Date: 2002/09/23 21:32:35 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.47 $ $Date: 2003/01/08 21:48:45 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -116,6 +116,7 @@ NSSTrustDomain_Destroy (
   NSSTrustDomain *td
 )
 {
+    PRStatus status = PR_SUCCESS;
     if (--td->refCount == 0) {
 	/* Destroy each token in the list of tokens */
 	if (td->tokens) {
@@ -123,11 +124,14 @@ NSSTrustDomain_Destroy (
 	    nssList_Clear(td->tokenList, token_destructor);
 	    nssList_Destroy(td->tokenList);
 	}
-	nssTrustDomain_DestroyCache(td);
+	status = nssTrustDomain_DestroyCache(td);
+	if (status == PR_FAILURE) {
+	    return status;
+	}
 	/* Destroy the trust domain */
 	nssArena_Destroy(td->arena);
     }
-    return PR_SUCCESS;
+    return status;
 }
 
 /* XXX uses tokens until slot list is in place */

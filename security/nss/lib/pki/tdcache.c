@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.34 $ $Date: 2002/11/06 18:53:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.35 $ $Date: 2003/01/08 21:48:45 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -234,12 +234,20 @@ loser:
  * clean shutdown, it is necessary for there to be no certs in the cache.
  */
 
+extern const NSSError NSS_ERROR_INTERNAL_ERROR;
+extern const NSSError NSS_ERROR_BUSY;
+
 NSS_IMPLEMENT PRStatus
 nssTrustDomain_DestroyCache (
   NSSTrustDomain *td
 )
 {
     if (!td->cache) {
+	nss_SetError(NSS_ERROR_INTERNAL_ERROR);
+	return PR_FAILURE;
+    }
+    if (nssHash_Count(td->cache->issuerAndSN) > 0) {
+	nss_SetError(NSS_ERROR_BUSY);
 	return PR_FAILURE;
     }
     PZ_DestroyLock(td->cache->lock);
