@@ -111,6 +111,17 @@ public:
   
 protected:
 		
+
+  nsresult          SlowTile(nsIRenderingContext &aContext,
+                                        nsDrawingSurface aSurface,
+                                        PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                        const nsRect &aTileRect);
+                		
+  nsresult          DrawTileQuickly(nsIRenderingContext &aContext,
+                                        nsDrawingSurface aSurface,
+                                        PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                        const nsRect &aTileRect);
+
 	static OSErr			CreatePixMap(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, CTabHandle aColorTable,
 																				PixMap& ioPixMap, Handle& ioBitsHandle);
 	static OSErr			AllocateBitsHandle(PRInt32 imageSizeBytes, Handle *outHandle);
@@ -119,6 +130,11 @@ protected:
 	static void				ClearGWorld(GWorldPtr);
 	static OSErr			AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld);
 	
+	static void       CopyBitsWithMask(BitMap* srcBits, BitMap* maskBits, PRInt16 maskDepth, BitMap* destBits,
+	                          const Rect& srcRect, const Rect& maskRect, const Rect& destRect);
+	
+	static PRBool     RenderingToPrinter(nsIRenderingContext &aContext);
+
 private:
 
 	PixMap					mImagePixmap;

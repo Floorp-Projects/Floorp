@@ -142,13 +142,17 @@ public:
 				
 										StPixelLocker(PixMapHandle thePixMap)
 										:	mPixMap(thePixMap)
+										,	mPixelState(0)
 										{
+											if (mPixMap) {
 											mPixelState = ::GetPixelsState(mPixMap);
 											::LockPixels(mPixMap);
+										}
 										}
 										
 										~StPixelLocker()
 										{
+											if (mPixMap)
 											::SetPixelsState(mPixMap, mPixelState);
 										}
 

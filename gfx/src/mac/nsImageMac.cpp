@@ -24,15 +24,10 @@
 #include "nsDeviceContextMac.h"
 #include "nsCarbonHelpers.h"
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <QuickDraw.h>
 
 #include "nsGfxUtils.h"
-
-#include "nspr.h"
-
-#define IsFlagSet(a,b) (a & b)
-
 
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
@@ -264,14 +259,11 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 	nsresult		rv = surface->GetGrafPtr((GrafPtr *)&destPort);
 	if (NS_FAILED(rv)) return rv;
 	
-	PixMapHandle		destPixels = GetGWorldPixMap(destPort);
+	PixMapHandle		destPixels = ::GetGWorldPixMap(destPort);
 	NS_ASSERTION(destPixels, "No dest pixels!");
 	
 	// can only do this if we are NOT printing
-	nsCOMPtr<nsIDeviceContext> dc;                   // (this screams for a private interface, sigh!
-	aContext.GetDeviceContext(*getter_AddRefs(dc));
-  nsDeviceContextMac* theDevContext = NS_REINTERPRET_CAST(nsDeviceContextMac*, dc.get());
-	if (theDevContext->IsPrinter())		// we are printing
+	if (RenderingToPrinter(aContext))		// we are printing
 	{
 		if (!mMaskBitsHandle)
 		{
@@ -291,7 +283,7 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 			  // erase it to white
 				ClearGWorld(tempGWorld);
 
-				PixMapHandle		tempPixMap = GetGWorldPixMap(tempGWorld);
+				PixMapHandle		tempPixMap = ::GetGWorldPixMap(tempGWorld);
 				if (tempPixMap)
 				{
 					StPixelLocker		tempPixLocker(tempPixMap);			// locks the pixels
@@ -314,18 +306,11 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 		}
 	}
 	else	// not printing
-	{	
-		if (!mMaskBitsHandle)
-		{
-			::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
-		}
-		else
-		{
-			if (mAlphaDepth > 1)
-				::CopyDeepMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
-			else
-				::CopyMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect);
-		}
+  {
+    CopyBitsWithMask((BitMap*)(&mImagePixmap),
+        mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
+        (BitMap*)(*destPixels),
+        srcRect, maskRect, dstRect);
 	}
 	
 	return NS_OK;
@@ -357,8 +342,8 @@ NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt3
     return NS_ERROR_FAILURE;
 
   // lock and set up bits handles
-  this->LockImagePixels(PR_FALSE);
-  this->LockImagePixels(PR_TRUE);
+  LockImagePixels(PR_FALSE);
+  LockImagePixels(PR_TRUE);
 
   ::SetRect(&srcRect, 0, 0, mWidth, mHeight);
   maskRect = srcRect;
@@ -377,26 +362,20 @@ NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt3
   dstMacImage->GetPixMap(&destPixels);
   NS_ASSERTION(destPixels, "No dest pixels!");
           
-  if (!mMaskBitsHandle)
-  {
-    ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)destPixels, &srcRect, &dstRect, srcCopy, nsnull);
-  }
-  else
-  {
-    if (mAlphaDepth > 1)
-      ::CopyDeepMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
-    else
-      ::CopyMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)destPixels, &srcRect, &maskRect, &dstRect);
-  }
+  CopyBitsWithMask((BitMap*)(&mImagePixmap),
+      mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
+      (BitMap*)(destPixels), srcRect, maskRect, dstRect);
+  
   aDstImage->UnlockImagePixels(PR_FALSE);
   aDstImage->UnlockImagePixels(PR_TRUE);
-  this->UnlockImagePixels(PR_FALSE);
-  this->UnlockImagePixels(PR_TRUE);
+  UnlockImagePixels(PR_FALSE);
+  UnlockImagePixels(PR_TRUE);
   
   return NS_OK;
 }
 #endif // USE_IMG2
   
+
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
  *	@update 
@@ -713,6 +692,33 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
 	return memFullErr;
 }
 
+void nsImageMac::CopyBitsWithMask(BitMap* srcBits, BitMap* maskBits, PRInt16 maskDepth, BitMap* destBits,
+        const Rect& srcRect, const Rect& maskRect, const Rect& destRect)
+{
+  if (maskBits)
+  {
+    if (maskDepth > 1)
+      ::CopyDeepMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect, srcCopy, nsnull);
+    else
+      ::CopyMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect);
+  }
+  else
+  {
+    ::CopyBits(srcBits, destBits, &srcRect, &destRect, srcCopy, nsnull);
+  }
+}
+
+
+PRBool nsImageMac::RenderingToPrinter(nsIRenderingContext &aContext)
+{
+  nsCOMPtr<nsIDeviceContext> dc;                   // (this screams for a private interface, sigh!)
+  aContext.GetDeviceContext(*getter_AddRefs(dc));
+  // a weird and wonderful world of scanky casts and oddly-named intefaces.
+  nsDeviceContextMac* theDevContext = NS_REINTERPRET_CAST(nsDeviceContextMac*, dc.get());
+  return theDevContext && theDevContext->IsPrinter();
+}
+
+
 
 #pragma mark -
 
@@ -738,7 +744,7 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
     // erase it to white
   	ClearGWorld(tempGWorld);
 
-  	PixMapHandle tempPixMap = GetGWorldPixMap(tempGWorld);
+  	PixMapHandle tempPixMap = ::GetGWorldPixMap(tempGWorld);
   	if (tempPixMap) {
   		StPixelLocker tempPixLocker(tempPixMap);			// locks the pixels
   	
@@ -751,18 +757,9 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
         mMaskPixmap.baseAddr = *mMaskBitsHandle;
 
   		// copy from the destination into our temp GWorld, to get the background
-  		if (mMaskBitsHandle) {
-    		if (mAlphaDepth > 1)
-    			::CopyDeepMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap, 
-    			                  &picFrame, &maskFrame, &picFrame, srcCopy, nsnull);
-    		else
-    			::CopyMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap,
-    			              &picFrame, &maskFrame, &picFrame);
-      }
-      else
-        ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*tempPixMap,
-  		               &picFrame, &picFrame, srcCopy, nsnull);
-
+      CopyBitsWithMask((BitMap*)(&mImagePixmap),
+          mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
+          (BitMap*)(*tempPixMap), picFrame, maskFrame, picFrame);
       
   		// now copy into the picture
   		GWorldPtr currPort;
@@ -812,12 +809,11 @@ nsImageMac::GetPixMap ( PixMap** aPixMap )
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
+nsresult nsImageMac::SlowTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aTileRect)
 {
-  // XXX this code below is quite slow.  need to make it faster
   PRInt32
     validX = 0,
     validY = 0,
@@ -848,9 +844,298 @@ NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
 
   for (PRInt32 y = aY0; y < aY1; y += mHeight)
     for (PRInt32 x = aX0; x < aX1; x += mWidth)
+    {
       Draw(aContext, aSurface,
-           0, 0, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y),
-           x, y, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y));
+           0, 0, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y),     // src coords
+           x, y, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y));    // dest coords
+    }
 
   return NS_OK;
 }
+
+
+
+// Fast tiling algorithm that uses successive doubling of the tile in a GWorld
+// to scale it up. This code does not deal with images whose masks are a different
+// size to the image (currently never happens), nor does it deal with partially
+// decoded images. Because we allocate our image bits handles zero'd out, I don't
+// think this matters.
+//
+// This code is not called for printing (because all the CopyDeepMask stuff doesn't
+// work when printing).
+
+nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
+{
+  // lock and set up bits handles
+  StHandleLocker  imageBitsLocker(mImageBitsHandle);
+  StHandleLocker  maskBitsLocker(mMaskBitsHandle);    // ok with nil handle
+
+  mImagePixmap.baseAddr = *mImageBitsHandle;
+  if (mMaskBitsHandle)
+    mMaskPixmap.baseAddr = *mMaskBitsHandle;
+
+	Rect	imageRect;
+	imageRect.left = 0;
+	imageRect.top = 0;
+	imageRect.right = mWidth;
+	imageRect.bottom = mHeight;
+
+  // set up the dest port
+  ::ForeColor(blackColor);
+  ::BackColor(whiteColor);
+  
+  // this code assumes that, if we have a mask, it's the same size as the image
+  NS_ASSERTION((mMaskBitsHandle == nsnull) || (mAlphaWidth == mWidth && mAlphaHeight == mHeight), "Mask should be same dimensions as image");
+  
+  // get the destination pix map
+  nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+  CGrafPtr    destPort;
+  nsresult    rv = surface->GetGrafPtr((GrafPtr *)&destPort);
+  if (NS_FAILED(rv)) return rv;
+  PixMapHandle    destPixels = ::GetGWorldPixMap(destPort);
+  StPixelLocker   destPixLocker(destPixels);
+  
+  // How many tiles will we need? Allocating GWorlds is expensive,
+  // so if only a few tilings are required, the old way is preferable.
+  const PRInt32	kTilingCopyThreshold = 64;
+  
+  PRInt32	tilingBoundsWidth 	= aSXOffset + aTileRect.width;
+  PRInt32	tilingBoundsHeight 	= aSYOffset + aTileRect.height;
+
+  PRInt32	tiledRows = (tilingBoundsHeight + mHeight - 1) / mHeight;   // round up
+  PRInt32	tiledCols = (tilingBoundsWidth + mWidth - 1) / mWidth;      // round up
+
+  PRInt32	numTiles = tiledRows * tiledCols;
+  if (numTiles <= kTilingCopyThreshold)
+  {
+    // the outside bounds of the tiled area
+    PRInt32 aY0 = aTileRect.y - aSYOffset,
+            aX0 = aTileRect.x - aSXOffset,
+            aY1 = aTileRect.y + aTileRect.height,
+            aX1 = aTileRect.x + aTileRect.width;
+
+  	for (PRInt32 y = aY0; y < aY1; y += mHeight)
+  	{
+	    for (PRInt32 x = aX0; x < aX1; x += mWidth)
+  		{
+	  		Rect		imageDestRect = imageRect;
+	  		::OffsetRect(&imageDestRect, x, y);
+	  		
+	  		// CopyBits will do the truncation for us at the edges
+        CopyBitsWithMask((BitMap*)(&mImagePixmap),
+            mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
+            (BitMap*)(*destPixels), imageRect, imageRect, imageDestRect);
+	  	}
+  	}
+  
+  	return NS_OK;
+  }
+
+  Rect  tileDestRect;   // aTileRect as a Mac rect
+  tileDestRect.left   = aTileRect.x;
+  tileDestRect.top    = aTileRect.y;
+  tileDestRect.bottom = tileDestRect.top  + aTileRect.height;
+  tileDestRect.right  = tileDestRect.left + aTileRect.width;
+
+  Rect  tileRect = tileDestRect;
+  ::OffsetRect(&tileRect, -tileRect.left, -tileRect.top);   // offset to {0, 0}
+  GWorldPtr   tilingGWorld = nsnull;
+  OSErr err = AllocateGWorld(mImagePixmap.pixelSize, nsnull, tileRect, &tilingGWorld);
+  if (err != noErr) return NS_ERROR_OUT_OF_MEMORY;
+  
+  GWorldPtr   maskingGWorld = nsnull;
+  if (mMaskBitsHandle)
+  {
+    err = AllocateGWorld(mMaskPixmap.pixelSize, nsnull, tileRect, &maskingGWorld);
+    if (err != noErr) {
+      ::DisposeGWorld(tilingGWorld);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    ClearGWorld(maskingGWorld);
+  }  
+  
+  PixMapHandle    tilingPixels = ::GetGWorldPixMap(tilingGWorld);
+  PixMapHandle    maskingPixels = (maskingGWorld) ? ::GetGWorldPixMap(maskingGWorld) : nsnull;
+
+  {   // scope for locks
+    StPixelLocker   tempPixLocker(tilingPixels);
+    StPixelLocker   tempMaskLocker(maskingPixels);   // OK will null pixels
+
+    // our strategy here is to avoid allocating a GWorld which is bigger than the destination
+    // area, by creating a tileable area in the top left of the GWorld by taking parts of
+    // our tiled image. If aXOffset and aYOffset are 0, this tile is simply the image. If not, it
+    // is a composite of 2 or 4 segments of the image.
+    // Then we double up that tile as necessary.
+
+/*
+
+     +---------+
+     |         |
+     | X |  Y  |
+     |         |
+     | - +-------------------------+
+     | Z |  W  | Z |               |
+     +---|-----+---          |     |
+         |     |   |    1          |
+         |  Y  | X |         |     |
+         |     |   |               |
+         |---------+ - - - - +   3 |
+         |                         |
+         |                   |     |
+         |         2               |
+         |                   |     |
+         |                         |
+         | - - - - - - - - - + - - |
+         |                         |
+         |            4            |
+         |                         |
+         +-------------------------+
+
+*/
+    
+    Rect    tilePartRect = imageRect;
+
+    // top left of offset tile (W)
+    Rect    offsetTileSrc = tilePartRect;
+    offsetTileSrc.left  = aSXOffset;
+    offsetTileSrc.top   = aSYOffset;
+
+    Rect    offsetTileDest = {0};
+    offsetTileDest.right  = tilePartRect.right - aSXOffset;
+    offsetTileDest.bottom = tilePartRect.bottom - aSYOffset;
+    
+    ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*tilingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);
+    if (maskingPixels)
+      ::CopyBits((BitMap*)&mMaskPixmap, (BitMap*)*maskingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);
+
+    // top right of offset tile (Z)
+    if (aSXOffset > 0)
+    {
+      offsetTileSrc = tilePartRect;
+      offsetTileSrc.right = aSXOffset;
+      offsetTileSrc.top   = aSYOffset;
+      
+      offsetTileDest = tilePartRect;
+      offsetTileDest.left   = tilePartRect.right - aSXOffset;
+      offsetTileDest.bottom = tilePartRect.bottom - aSYOffset;
+
+      ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*tilingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);
+      if (maskingPixels)
+        ::CopyBits((BitMap*)&mMaskPixmap, (BitMap*)*maskingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);    
+    }
+    
+    if (aSYOffset > 0)
+    {
+      // bottom left of offset tile (Y)
+      offsetTileSrc = tilePartRect;
+      offsetTileSrc.left    = aSXOffset;
+      offsetTileSrc.bottom  = aSYOffset;
+      
+      offsetTileDest = tilePartRect;
+      offsetTileDest.right  = tilePartRect.right - aSXOffset;
+      offsetTileDest.top    = tilePartRect.bottom - aSYOffset;
+
+      ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*tilingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);
+      if (maskingPixels)
+        ::CopyBits((BitMap*)&mMaskPixmap, (BitMap*)*maskingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);      
+    }
+    
+    if (aSXOffset > 0 && aSYOffset > 0)
+    {
+      // bottom right of offset tile (X)
+      offsetTileSrc = tilePartRect;
+      offsetTileSrc.right   = aSXOffset;
+      offsetTileSrc.bottom  = aSYOffset;
+      
+      offsetTileDest = tilePartRect;
+      offsetTileDest.left   = tilePartRect.right - aSXOffset;
+      offsetTileDest.top    = tilePartRect.bottom - aSYOffset;
+
+      ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*tilingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);
+      if (maskingPixels)
+        ::CopyBits((BitMap*)&mMaskPixmap, (BitMap*)*maskingPixels, &offsetTileSrc, &offsetTileDest, srcCopy, nsnull);
+    }
+
+    // now double up this tile to cover the area
+    PRBool doneWidth = PR_FALSE, doneHeight = PR_FALSE;
+    
+    Rect srcRect, dstRect;
+    PRInt32 tileWidth  = mWidth;
+    PRInt32 tileHeight = mHeight;
+    while (!doneWidth || !doneHeight)
+    {
+      if (tileWidth < tileRect.right)
+      {
+        srcRect.left = 0; srcRect.top = 0;
+        srcRect.bottom = tileHeight; srcRect.right = tileWidth;
+
+        dstRect.left = tileWidth; dstRect.top = 0;
+        dstRect.bottom = tileHeight; dstRect.right = tileWidth + tileWidth;
+        
+        ::CopyBits((BitMap*)*tilingPixels, (BitMap*)*tilingPixels, &srcRect, &dstRect, srcCopy, nsnull);
+        if (maskingPixels)
+          ::CopyBits((BitMap*)*maskingPixels, (BitMap*)*maskingPixels, &srcRect, &dstRect, srcCopy, nsnull);
+
+        tileWidth *= 2;
+      }
+      else
+        doneWidth = PR_TRUE;
+    
+      if (tileHeight < tileRect.bottom)
+      {
+        srcRect.left = 0; srcRect.top = 0;
+        srcRect.bottom = tileHeight; srcRect.right = tileWidth;
+
+        dstRect.left = 0; dstRect.top = tileHeight;
+        dstRect.bottom = tileHeight + tileHeight; dstRect.right = tileWidth;
+        
+        ::CopyBits((BitMap*)*tilingPixels, (BitMap*)*tilingPixels, &srcRect, &dstRect, srcCopy, nsnull);
+        if (maskingPixels)
+          ::CopyBits((BitMap*)*maskingPixels, (BitMap*)*maskingPixels, &srcRect, &dstRect, srcCopy, nsnull);
+      
+        tileHeight *= 2;
+      }
+      else
+        doneHeight = PR_TRUE;
+    }
+    
+    // We could optimize this a little more by making the temp GWorld 1/4 the size of the dest, 
+    // and doing 4 final blits directly to the destination.
+    
+    // finally, copy to the destination
+    CopyBitsWithMask((BitMap*)(*tilingPixels),
+        maskingPixels ? (BitMap*)(*maskingPixels) : nsnull, mAlphaDepth,
+        (BitMap*)(*destPixels), tileRect, tileRect, tileDestRect);
+    
+  } // scope for locks
+
+  // clean up  
+  ::DisposeGWorld(tilingGWorld);
+  if (maskingGWorld)
+    ::DisposeGWorld(maskingGWorld);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  
+	if (!RenderingToPrinter(aContext))
+    rv = DrawTileQuickly(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
+
+  if (NS_FAILED(rv))
+    rv = SlowTile(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
+    
+  return rv;
+}
+
+
