@@ -2051,8 +2051,10 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 #ifdef DEBUG
 	if (NS_FAILED(rv)) {
 		*aResult = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-		*aResult += "res";
-		*aResult += "samples";
+		*aResult += "chrome";
+		*aResult += "bookmarks";
+		*aResult += "content";
+		*aResult += "default";
 		*aResult += "bookmarks.html";
 		rv = NS_OK;
 	}
