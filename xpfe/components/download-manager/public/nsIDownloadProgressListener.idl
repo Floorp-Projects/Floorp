@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   Blake Ross <blakeross@telocity.com> 
- *   Ben Goodger <ben@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -40,49 +39,11 @@
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 
-interface nsIDOMXULDocument;
 interface nsIDownloadItem;
+interface nsIDOMXULDocument;
 
-[scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
-interface nsIDownloadManager : nsISupports {
-
-  /**
-  * addItem
-  * Adds an item to be managed by the download manager.
-  */
-  
-  void addItem(in nsIDownloadItem item);
-
-  /**
-  * getItem
-  * Used to retrieve a download managed by the download manager.
-  */
-
-  nsIDownloadItem getItem(in string id);
-  
-  void notifyDownloadEnded(in string id);
-
-  /**
-  * initializeUI
-  * Called by the download manager FE to signify that the manager
-  * should begin forwarding progress notifications to the ui listener.
-  */
-  void initializeUI(in nsIDOMXULDocument document);
-
-  /**
-  * uninitializeUI
-  * Called by the download manager FE to signify that that the manager
-  * should stop forwarding progress notifications to the ui listener because
-  * the FE is no longer being displayed.
-  */
-  void uninitializeUI();
+[scriptable, uuid(09cddbea-1dd2-11b2-aa15-c41ffea19d79)]
+interface nsIDownloadProgressListener : nsIWebProgressListener {
+  attribute nsIDownloadItem downloadItem;
+  attribute nsIDOMXULDocument document;
 };
-
-
-%{C++
-#define NS_DOWNLOADMANAGER_CONTRACTID "@mozilla.org/download-manager;1"
-#define NS_DOWNLOADMANAGER_CLASSNAME "Mozilla Download Manager"
-// {EDB0490E-1DD1-11B2-83B8-DBF8D85906A6}
-#define NS_DOWNLOADMANAGER_CID \
-    { 0xedb0490e, 0x1dd1, 0x11b2, { 0x83, 0xb8, 0xdb, 0xf8, 0xd8, 0x59, 0x06, 0xa6 } }
-%}

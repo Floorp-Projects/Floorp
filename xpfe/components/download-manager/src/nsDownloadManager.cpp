@@ -64,7 +64,7 @@
  * 2. InitializeUI/UnitializeUI is lame...would like to keep manager separate from FE as
      much as possible. The document arg is also lame but the listener needs it to update the UI.
  * 3. Error handling? Holding off on this until law is done with his changes.
- * 4. NotifyDownloadEnded should not be on nsIDownloadManager
+ * 4. NotifyDownloadEnded and internalListener should not be on nsIDownloadManager
  */
   
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);

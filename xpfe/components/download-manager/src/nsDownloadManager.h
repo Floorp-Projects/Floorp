@@ -39,16 +39,17 @@
  
 #ifndef downloadmanager___h___
 #define downloadmanager___h___
+
 #include "nsIDownloadManager.h"
+#include "nsIDownloadProgressListener.h"
+#include "nsIDownloadItem.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFService.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIRDFContainerUtils.h"
-#include "nsIObserver.h"
 #include "nsIWebProgressListener.h"
-#include "nsIWebBrowserPersist.h"
-#include "nsIRequestObserver.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
 #include "nsHashtable.h"
@@ -59,7 +60,7 @@ class nsDownloadManager : public nsIDownloadManager,
 {
 public:
   NS_DECL_NSIRDFDATASOURCE
-	NS_DECL_NSIRDFREMOTEDATASOURCE
+  NS_DECL_NSIRDFREMOTEDATASOURCE
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
 
@@ -71,41 +72,42 @@ public:
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
-
-
-protected:
   nsCOMPtr<nsIRDFDataSource> mInner;
-  nsCOMPtr<nsISupportsArray> mObservers;
-  nsCOMPtr<nsIRDFService> mRDFService;
+  nsCOMPtr<nsIDOMXULDocument> mDocument;
+  nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
-
-  nsHashtable* mDownloadItems;
+  nsHashtable* mCurrDownloadItems;
 };
 
-
- 
-class DownloadItem : public nsIWebProgressListener
+class DownloadItem : public nsIWebProgressListener,
+                     public nsIDownloadItem
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIDOWNLOADITEM
   NS_DECL_ISUPPORTS
-  DownloadItem();
-  virtual ~DownloadItem();
 
-  nsresult Init(nsIRDFResource* aDownloadItem, 
-                nsIRDFDataSource* aDataSource,
-                nsIURI* aURI, nsIInputStream* aPostData, nsILocalFile* aFile);
+  DownloadItem();
+  DownloadItem(const PRUnichar* aPrettyName, nsILocalFile* aTarget, nsIURI* aSource);
+  virtual ~DownloadItem();
 
 protected:
   nsresult UpdateProgressInfo();
 
-protected:
-  nsCOMPtr<nsIWebBrowserPersist> mWebBrowserPersist;
-  nsCOMPtr<nsIRequestObserver> mRequestObserver;
   nsIRDFResource* mDownloadItem;
   nsIRDFDataSource* mDataSource;
 
+  nsString mPrettyName;
+  nsCOMPtr<nsILocalFile> mTarget;
+  nsCOMPtr<nsIURI> mSource;
+  nsCOMPtr<nsIWebProgressListener> mListener;
+  nsCOMPtr<nsIDownloadProgressListener> mInternalListener;
+  nsCOMPtr<nsIWebProgressListener> mPropertiesListener;
+
   PRInt32 mCurTotalProgress;
   PRInt32 mMaxTotalProgress;
+  PRInt32 mPercentComplete;
+  PRInt64 mTimeStarted;
 };
+
 #endif
