@@ -53,6 +53,9 @@ public:
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 
   NS_IMETHOD  Clone(nsICSSStyleSheet*& aClone) const = 0;
+
+  NS_IMETHOD  IsUnmodified(void) const = 0; // NS_OK if not modified since construct/last reset, NS_COMFALSE otherwise
+  NS_IMETHOD  SetModified(PRBool aModified) = 0;
 };
 
 // XXX for backwards compatibility and convenience
