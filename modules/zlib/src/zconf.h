@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: zconf.h,v 3.1 1998/03/28 03:36:16 ltabb Exp $ */
+/* $Id: zconf.h,v 3.2 1999/08/26 00:10:18 briano%netscape.com Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H
@@ -172,7 +172,7 @@ typedef uLong FAR uLongf;
    typedef Byte     *voidp;
 #endif
 
-#ifndef NETSCAPE
+#ifndef MOZILLA_CLIENT
 /* Compile with -DZLIB_DLL for Windows DLL support */
 #if (defined(_WINDOWS) || defined(WINDOWS)) && defined(ZLIB_DLL)
 #  include <windows.h>

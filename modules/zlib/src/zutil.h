@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* $Id: zutil.h,v 3.1 1998/03/28 03:36:18 ltabb Exp $ */
+/* $Id: zutil.h,v 3.2 1999/08/26 00:10:19 briano%netscape.com Exp $ */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H
@@ -133,7 +133,7 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
          /* functions */
 
 #ifdef HAVE_STRERROR
-#ifndef NETSCAPE
+#ifndef MOZILLA_CLIENT
    extern char *strerror OF((int));
 #endif
 #  define zstrerror(errnum) strerror(errnum)

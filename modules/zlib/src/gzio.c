@@ -4,7 +4,7 @@
  */
 /* This file was modified since it was taken from the zlib distribution */
 
-/* $Id: gzio.c,v 3.1 1998/03/28 03:36:11 ltabb Exp $ */
+/* $Id: gzio.c,v 3.2 1999/08/26 00:10:17 briano%netscape.com Exp $ */
 
 #include <stdio.h>
 
@@ -146,7 +146,7 @@ local gzFile gz_open (path, mode, fd)
 /* ===========================================================================
      Opens a gzip (.gz) file for reading or writing.
 */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern gzFile) gzopen  (const char *path, const char *mode)
 #else
 extern gzFile EXPORT gzopen  OF((const char *path, const char *mode))
@@ -159,7 +159,7 @@ extern gzFile EXPORT gzopen  OF((const char *path, const char *mode))
      Associate a gzFile with the file descriptor fd. fd is not dup'ed here
    to mimic the behavio(u)r of fdopen.
 */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern gzFile) gzdopen  (int fd, const char *mode)
 #else
 extern gzFile EXPORT gzdopen  OF((int fd, const char *mode))
@@ -287,7 +287,7 @@ local int destroy (s)
      Reads the given number of uncompressed bytes from the compressed file.
    gzread returns the number of bytes actually read (0 for end of file).
 */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzread  (gzFile file, voidp buf, unsigned len)
 #else
 extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len))
@@ -367,7 +367,7 @@ extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len))
      Writes the given number of uncompressed bytes into the compressed file.
    gzwrite returns the number of bytes actually written (0 in case of error).
 */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzwrite (gzFile file, const voidp buf, unsigned len)
 #else
 extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len))
@@ -405,7 +405,7 @@ extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len))
      gzflush should be called only when strictly necessary because it can
    degrade compression.
 */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzflush (gzFile file, int flush)
 #else
 extern int EXPORT    gzflush OF((gzFile file, int flush))
@@ -479,7 +479,7 @@ local uLong getLong (s)
      Flushes all pending output if necessary, closes the compressed file
    and deallocates all the (de)compression state.
 */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzclose (gzFile file)
 #else
 extern int EXPORT    gzclose OF((gzFile file))
@@ -508,7 +508,7 @@ extern int EXPORT    gzclose OF((gzFile file))
    errnum is set to Z_ERRNO and the application may consult errno
    to get the exact error code.
 */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern const char *) gzerror (gzFile file, int *errnum)
 #else
 extern const char * EXPORT gzerror OF((gzFile file, int *errnum))

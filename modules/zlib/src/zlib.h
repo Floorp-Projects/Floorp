@@ -169,7 +169,7 @@ typedef z_stream FAR *z_streamp;
 
                         /* basic functions */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern const char *) zlibVersion (void);
 #else
 extern const char * EXPORT zlibVersion OF((void));
@@ -203,7 +203,7 @@ extern int EXPORT deflateInit OF((z_streamp strm, int level));
 */
 
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) deflate (z_streamp strm, int flush);
 #else
 extern int EXPORT deflate OF((z_streamp strm, int flush));
@@ -276,7 +276,7 @@ extern int EXPORT deflate OF((z_streamp strm, int flush));
 */
 
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) deflateEnd (z_streamp strm);
 #else
 extern int EXPORT deflateEnd OF((z_streamp strm));
@@ -310,7 +310,7 @@ extern int EXPORT inflateInit OF((z_streamp strm));
 */
 
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) inflate (z_streamp strm, int flush);
 #else
 extern int EXPORT inflate OF((z_streamp strm, int flush));
@@ -369,7 +369,7 @@ extern int EXPORT inflate OF((z_streamp strm, int flush));
 */
 
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) inflateEnd (z_streamp strm);
 #else
 extern int EXPORT inflateEnd OF((z_streamp strm));
@@ -449,7 +449,7 @@ extern int EXPORT deflateInit2 OF((z_streamp strm,
    deflate(). 
 */
                             
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) deflateSetDictionary (z_streamp strm,
                                            const Bytef *dictionary,
 				           uInt  dictLength);
@@ -484,7 +484,7 @@ extern int EXPORT deflateSetDictionary OF((z_streamp strm,
    be done by deflate(). 
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) deflateCopy (z_streamp dest, z_streamp source);
 #else
 extern int EXPORT deflateCopy OF((z_streamp dest, z_streamp source));
@@ -510,7 +510,7 @@ extern int EXPORT deflateCopy OF((z_streamp dest, z_streamp source));
    destination.
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) deflateReset (z_streamp strm);
 #else
 extern int EXPORT deflateReset OF((z_streamp strm));
@@ -525,7 +525,7 @@ extern int EXPORT deflateReset OF((z_streamp strm));
    stream state was inconsistent (such as zalloc or state being NULL).
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) deflateParams (z_streamp strm, int level, int strategy);
 #else
 extern int EXPORT deflateParams OF((z_streamp strm, int level, int strategy));
@@ -582,7 +582,7 @@ extern int EXPORT inflateInit2 OF((z_streamp strm,
    inflate().
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) inflateSetDictionary (z_streamp strm,
 				           const Bytef *dictionary,
 					   uInt  dictLength);
@@ -607,7 +607,7 @@ extern int EXPORT inflateSetDictionary OF((z_streamp strm,
    inflate().
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) inflateSync (z_streamp strm);
 #else
 extern int EXPORT inflateSync OF((z_streamp strm));
@@ -626,7 +626,7 @@ extern int EXPORT inflateSync OF((z_streamp strm));
   until success or end of the input data.
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) inflateReset (z_streamp strm);
 #else
 extern int EXPORT inflateReset OF((z_streamp strm));
@@ -651,7 +651,7 @@ extern int EXPORT inflateReset OF((z_streamp strm));
    utility functions can easily be modified if you need special options.
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) compress (Bytef *dest,   uLongf *destLen,
 			       const Bytef *source, uLong sourceLen);
 #else
@@ -671,7 +671,7 @@ extern int EXPORT compress OF((Bytef *dest,   uLongf *destLen,
    buffer.
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) uncompress (Bytef *dest,   uLongf *destLen,
 				 const Bytef *source, uLong sourceLen);
 #else
@@ -697,7 +697,7 @@ extern int EXPORT uncompress OF((Bytef *dest,   uLongf *destLen,
 
 typedef voidp gzFile;
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern gzFile) gzopen  (const char *path, const char *mode);
 #else
 extern gzFile EXPORT gzopen  OF((const char *path, const char *mode));
@@ -713,7 +713,7 @@ extern gzFile EXPORT gzopen  OF((const char *path, const char *mode));
    zlib error is Z_MEM_ERROR).
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern gzFile) gzdopen  (int fd, const char *mode);
 #else
 extern gzFile EXPORT gzdopen  OF((int fd, const char *mode));
@@ -730,7 +730,7 @@ extern gzFile EXPORT gzdopen  OF((int fd, const char *mode));
    the (de)compression state.
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzread  (gzFile file, voidp buf, unsigned len);
 #else
 extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len));
@@ -742,7 +742,7 @@ extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len));
      gzread returns the number of uncompressed bytes actually read (0 for
    end of file, -1 for error). */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzwrite (gzFile file, const voidp buf, unsigned len);
 #else
 extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len));
@@ -753,7 +753,7 @@ extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len));
    (0 in case of error).
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzflush (gzFile file, int flush);
 #else
 extern int EXPORT    gzflush OF((gzFile file, int flush));
@@ -767,7 +767,7 @@ extern int EXPORT    gzflush OF((gzFile file, int flush));
    degrade compression.
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int)    gzclose (gzFile file);
 #else
 extern int EXPORT    gzclose OF((gzFile file));
@@ -778,7 +778,7 @@ extern int EXPORT    gzclose OF((gzFile file));
    error number (see function gzerror below).
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern const char *) gzerror (gzFile file, int *errnum);
 #else
 extern const char * EXPORT gzerror OF((gzFile file, int *errnum));
@@ -799,7 +799,7 @@ extern const char * EXPORT gzerror OF((gzFile file, int *errnum));
    compression library.
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern uLong) adler32 (uLong adler, const Bytef *buf, uInt len);
 #else
 extern uLong EXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
@@ -820,7 +820,7 @@ extern uLong EXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
      if (adler != original_adler) error();
 */
 
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern uLong) crc32   (uLong crc, const Bytef *buf, uInt len);
 #else
 extern uLong EXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
@@ -846,7 +846,7 @@ extern uLong EXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
 /* deflateInit and inflateInit are macros to allow checking the zlib version
  * and the compiler's view of z_stream:
  */
-#ifdef NETSCAPE
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(extern int) deflateInit_ (z_streamp strm, int level, const char *version, 
 					int stream_size);
 PR_PUBLIC_API(extern int) inflateInit_ (z_streamp strm, const char *version, 
@@ -866,7 +866,7 @@ extern int EXPORT deflateInit2_ OF((z_streamp strm, int  level, int  method,
 				    const char *version, int stream_size));
 extern int EXPORT inflateInit2_ OF((z_streamp strm, int  windowBits, 
 				    const char *version, int stream_size));
-#endif /* NETSCAPE */
+#endif /* MOZILLA_CLIENT */
 
 
 #define deflateInit(strm, level) \
