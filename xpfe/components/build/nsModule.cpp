@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsIGenericFactory.h"
+#include "nsICategoryManager.h"
 #include "nsAutoComplete.h"
 #include "nsBookmarksService.h"
 #include "nsDirectoryViewer.h"
@@ -29,6 +30,7 @@
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsTimeBomb.h"
 #include "nsUrlbarHistory.h"
+#include "nsXPIDLString.h"
 #if defined(XP_WIN)
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
@@ -51,6 +53,46 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
 
+
+static nsresult
+RegisterProc(nsIComponentManager *aCompMgr,
+             nsIFile *aPath,
+             const char *registryLocation,
+             const char *componentType,
+             const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // add the MIME types layotu can handle to the handlers category.
+    // this allows users of layout's viewers (the docshell for example)
+    // to query the types of viewers layout can create.
+    nsXPIDLCString previous;
+    rv = catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format",
+                                   NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format",
+                                   PR_TRUE, 
+                                   PR_TRUE, 
+                                   getter_Copies(previous));
+    return rv;
+}
+static nsresult 
+UnregisterProc(nsIComponentManager *aCompMgr,
+               nsIFile *aPath,
+               const char *registryLocation,
+               const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString prevEntry;
+    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers", "application/http-index-format", PR_TRUE,
+                                     getter_Copies(prevEntry));
+
+    return NS_OK;
+}
+
 static nsModuleComponentInfo components[] = {
     { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
       nsAutoCompleteResultsConstructor},
@@ -62,7 +104,7 @@ static nsModuleComponentInfo components[] = {
       nsBookmarksServiceConstructor },
     { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format",
-      nsDirectoryViewerFactoryConstructor },
+      nsDirectoryViewerFactoryConstructor, RegisterProc, UnregisterProc  },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_CONTRACTID,
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
