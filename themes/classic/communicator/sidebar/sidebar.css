@@ -28,18 +28,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
   
-/* ::::: sidebar toggle button (on personal toolbar) ::::: */
-
-#sidebar-button[sbopen="true"] {
-  list-style-image: url("chrome://communicator/skin/sidebar/sb-open.gif");
-}
-
-#sidebar-button[sbopen="false"] {
-  list-style-image: url("chrome://communicator/skin/sidebar/sb-closed.gif");
-}
-
-/* ::::: sidebar container ::::: */
-
 #sidebar-box {
   border-left: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;

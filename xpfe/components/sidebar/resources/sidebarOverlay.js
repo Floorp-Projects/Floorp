@@ -704,15 +704,9 @@ function refresh_all_sidebars() {
 // Sidebar Init
 //////////////////////////////////////////////////////////////
 function sidebar_overlay_init() {
-
-  // do we have a sidebar?
-  if (!document.getElementById("sidebar-panels-splitter-box")) 
-    return;
-
   if (sidebar_is_collapsed() && !gAboutToUncollapse)
     return;
   gMustInit = false;
-  
   sidebarObj.panels = new sbPanelList('sidebar-panels');
   sidebarObj.datasource_uri = get_sidebar_datasource_uri();
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
@@ -738,9 +732,6 @@ function sidebar_overlay_init() {
 
     if (sidebarObj.never_built) {
       sidebarObj.never_built = false;
-
-      // set personal toolbar sidebar icon to correct state
-      SidebarToggleIcon();
 
       debug("sidebar = " + sidebarObj);
       debug("sidebarObj.resource = " + sidebarObj.resource);
@@ -789,14 +780,9 @@ function sidebar_overlay_init() {
 }
 
 function sidebar_overlay_destruct() {
-
-  // do we have a sidebar?
-  if (!document.getElementById("sidebar-panels-splitter-box")) 
-    return;
-
-  var panels = document.getElementById('sidebar-panels');
-  debug("Removing observer from database.");
-  panels.database.RemoveObserver(panel_observer);
+    var panels = document.getElementById('sidebar-panels');
+    debug("Removing observer from database.");
+    panels.database.RemoveObserver(panel_observer);
 }
 
 function sidebar_open_default_panel(wait, tries) {
@@ -1105,7 +1091,6 @@ function sidebar_is_collapsed() {
 }
 
 function SidebarExpandCollapse() {
-  SidebarToggleIcon();
   var sidebar_splitter = document.getElementById('sidebar-splitter');
   var sidebar_box = document.getElementById('sidebar-box');
   if (sidebar_splitter.getAttribute('state') == 'collapsed') {
@@ -1132,7 +1117,6 @@ function sidebar_is_hidden() {
 // Show/Hide the entire sidebar.
 // Invoked by the "View / Sidebar" menu option.
 function SidebarShowHide() {
-  SidebarToggleIcon();
   var sidebar_box = document.getElementById('sidebar-box');
   var title_box = document.getElementById('sidebar-title-box');
   var sidebar_panels_splitter = document.getElementById('sidebar-panels-splitter');
@@ -1313,27 +1297,6 @@ function SidebarTogglePanel(panel_menuitem) {
 
   // Write the modified panels out.
   sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
-}
-
-function SidebarToggleIcon()
-{
-  var sidebarButton = document.getElementById("sidebar-button");
-  if (sidebarButton)
-  {
-    var newValue = false;
-    if (sidebarButton.getAttribute("sbopen") == "false")
-      newValue = true;
-
-    sidebarButton.setAttribute("sbopen", newValue);
-
-    var tooltipText;
-    if (newValue) // it's open so show action ``<== Close Sidebar''
-      tooltipText = sidebarButton.getAttribute("sbclosetooltip");
-    else // it's closed so show action ``==> Open Sidebar''
-      tooltipText = sidebarButton.getAttribute("sbopentooltip");
-
-    sidebarButton.setAttribute("tooltiptext", tooltipText);
-  }
 }
 
 function SidebarNavigate(aDirection)
