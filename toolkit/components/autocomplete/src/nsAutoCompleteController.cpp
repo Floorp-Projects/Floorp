@@ -237,6 +237,7 @@ nsAutoCompleteController::HandleEscape(PRBool *_retval)
   mInput->GetPopupOpen(_retval);
   
   ClearSearchTimer();
+  ClearResults();
   RevertTextValue();
   ClosePopup();
 
@@ -794,11 +795,9 @@ nsAutoCompleteController::RevertTextValue()
   if (!cancel)
     mInput->SetTextValue(oldValue);
   
-  nsAutoString value;
-  mInput->GetTextValue(value);
-  mSearchString.Assign(value);
-  
+  mSearchString.Truncate(0);
   mNeedToComplete = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -921,7 +920,7 @@ nsresult
 nsAutoCompleteController::CompleteValue(nsString &aValue)
 {
   PRInt32 findIndex = aValue.Find(mSearchString, PR_FALSE);
-  if (findIndex == 0) {
+  if (findIndex == 0 || mSearchString.IsEmpty()) {
     // The textbox value matches the beginning of the default value, so we can just
     // append the latter portion
     mInput->SetTextValue(aValue);
