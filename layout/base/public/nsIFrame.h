@@ -127,12 +127,12 @@ enum nsFramePaintLayer {
 enum nsSelectionAmount {
   eCharacter = 0,
   eWord      = 1,
-  eLine      = 2,  //previous drawn line in flow.
+  eLine      = 2  //previous drawn line in flow.
 };
 
 enum nsDirection {
   eNext    = 0,
-  ePrevious= 1,
+  ePrevious= 1
 };
 
 //----------------------------------------------------------------------
