@@ -34,6 +34,7 @@
 <!ENTITY viewImageCmd.accesskey       "w">
 <!ENTITY viewBGImageCmd.label         "View Background Image">
 <!ENTITY viewBGImageCmd.accesskey     "w">
+<!ENTITY setWallpaperCmd.label        "Set As Wallpaper">
 <!ENTITY bookmarkPageCmd.label        "Bookmark this Page">
 <!ENTITY bookmarkPageCmd.accesskey    "b">
 <!ENTITY bookmarkLinkCmd.label        "File Bookmark for Link...">

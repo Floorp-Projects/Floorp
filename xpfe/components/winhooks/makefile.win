@@ -28,6 +28,13 @@ REQUIRES	= xpcom \
 		  intl \
 		  appshell \
 		  necko \
+		  layout \
+		  content \
+		  widget \
+		  imglib2 \
+		  gfx \
+		  gfx2 \
+		  locale \
 		  $(NULL)
 DEPTH=..\..\..
 

@@ -62,6 +62,20 @@
 #include <shlobj.h>
 #include <shlguid.h>
 
+// for set as wallpaper
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsIFrame.h"
+#include "nsIPresShell.h"
+#include "nsIImageFrame.h"
+#include "imgIRequest.h"
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIFileStream.h"
+#include "nsFileSpec.h"
+
 // Objects that describe the Windows registry entries that we need to tweak.
 static ProtocolRegistryEntry
     http( "http" ),
@@ -682,6 +696,151 @@ NS_IMETHODIMP nsWindowsHooks::StartupTurboDisable()
     res = ::RegDeleteValue( hKey, NS_QUICKLAUNCH_RUN_KEY );
     ::RegCloseKey( hKey );
     return NS_OK;
+}
+
+nsresult
+WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
+{
+  PRInt32 width, height;
+  aImage->GetWidth(&width);
+  aImage->GetHeight(&height);
+  
+  PRUint8* bits;
+  PRUint32 length;
+  aImage->GetImageData(&bits, &length);
+  if (!bits) return NS_ERROR_FAILURE;
+  
+  PRUint32 bpr;
+  aImage->GetImageBytesPerRow(&bpr);
+  PRInt32 bitCount = bpr/width;
+  
+  // initialize these bitmap structs which we will later
+  // serialize directly to the head of the bitmap file
+  LPBITMAPINFOHEADER bmi = (LPBITMAPINFOHEADER)new BITMAPINFO;
+  bmi->biSize = sizeof(BITMAPINFOHEADER);
+  bmi->biWidth = width;
+  bmi->biHeight = height;
+  bmi->biPlanes = 1;
+  bmi->biBitCount = (WORD)bitCount*8;
+  bmi->biCompression = BI_RGB;
+  bmi->biSizeImage = 0; // don't need to set this if bmp is uncompressed
+  bmi->biXPelsPerMeter = 0;
+  bmi->biYPelsPerMeter = 0;
+  bmi->biClrUsed = 0;
+  bmi->biClrImportant = 0;
+  
+  BITMAPFILEHEADER bf;
+  bf.bfType = 0x4D42; // 'BM'
+  bf.bfReserved1 = 0;
+  bf.bfReserved2 = 0;
+  bf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+  bf.bfSize = bf.bfOffBits + bmi->biSizeImage;
+
+  // get a file output stream
+  nsFileSpec path(aPath);
+  nsCOMPtr<nsISupports> streamSupports;
+  NS_NewTypicalOutputFileStream(getter_AddRefs(streamSupports), path);
+  nsCOMPtr<nsIOutputStream> stream = do_QueryInterface(streamSupports);
+
+  // write the bitmap headers and rgb pixel data to the file
+  nsresult rv = NS_ERROR_FAILURE;
+  PRUint32 written;
+  stream->Write((const char*)&bf, sizeof(BITMAPFILEHEADER), &written);
+  if (written == sizeof(BITMAPFILEHEADER)) {
+    stream->Write((const char*)bmi, sizeof(BITMAPINFOHEADER), &written);
+    if (written == sizeof(BITMAPINFOHEADER)) {
+      stream->Write((const char*)bits, length, &written);
+      if (written == length)
+        rv = NS_OK;
+    }
+  }
+  
+  stream->Close();
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackground)
+{
+  nsresult rv;
+  
+  // get the document so we can get the presShell from it
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  rv = aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) return rv;
+
+  // get the presShell so we can get the frame from it
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = doc->GetShellAt(0, getter_AddRefs(presShell));
+  if (!presShell) return rv;
+
+  nsCOMPtr<gfxIImageFrame> gfxFrame;
+  if (aUseBackground) {
+    // XXX write background loading stuff!
+  } else {
+    // get the frame for the image element
+    nsIFrame* frame = nsnull;
+    nsCOMPtr<nsIContent> imageContent = do_QueryInterface(aElement);
+    rv = presShell->GetPrimaryFrameFor(imageContent, &frame);
+    if (!frame) return rv;
+    
+    // if it was an html:img element, it will QI to nsIImageFrame
+    void* voidFrame;
+    frame->QueryInterface(NS_GET_IID(nsIImageFrame), &voidFrame);
+    nsIImageFrame* imageFrame = NS_STATIC_CAST(nsIImageFrame*, voidFrame);
+    if (!imageFrame) return NS_ERROR_FAILURE;
+    
+    // get the image container
+    nsCOMPtr<imgIRequest> request;
+    rv = imageFrame->GetImageRequest(getter_AddRefs(request));
+    if (!request) return rv;
+    nsCOMPtr<imgIContainer> container;
+    rv = request->GetImage(getter_AddRefs(container));
+    if (!request) return rv;
+    
+    // get the current frame, which holds the image data
+    container->GetCurrentFrame(getter_AddRefs(gfxFrame));
+  }  
+  
+  if (!gfxFrame)
+    return NS_ERROR_FAILURE;
+
+  // get the windows directory ('c:\windows' usually)
+  char winDir[256];
+  ::GetWindowsDirectory(winDir, sizeof(winDir));
+  nsAutoString winPath;
+  winPath.AssignWithConversion(winDir);
+  
+  // get the product brand name from localized strings
+  nsXPIDLString brandName;
+  nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
+  if (bundleService) {
+    nsCOMPtr<nsIStringBundle> brandBundle;
+    rv = bundleService->CreateBundle("chrome://global/locale/brand.properties",
+                                     getter_AddRefs(brandBundle));
+    if (NS_SUCCEEDED(rv) && brandBundle) {
+      if (NS_FAILED(rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                            getter_Copies(brandName))))
+        return rv;                              
+    }
+  }
+  
+  // build the file name
+  winPath.Append(NS_LITERAL_STRING("\\").get());
+  winPath.Append(brandName);
+  winPath.Append(NS_LITERAL_STRING(" Wallpaper.bmp").get());
+  
+  // write the bitmap to a file in the windows dir
+  rv = WriteBitmap(winPath, gfxFrame);
+
+  // if the file was written successfully, set it as the system wallpaper
+  if (NS_SUCCEEDED(rv))
+    ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, ToNewCString(winPath), SPIF_UPDATEINIFILE);
+
+  return rv;
 }
 
 #if (_MSC_VER == 1100)

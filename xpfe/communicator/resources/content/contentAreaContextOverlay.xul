@@ -141,6 +141,9 @@
       <menuitem id="context-saveimage"
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveImage();"/>
+      <menuitem id="context-setWallpaper"
+                label="&setWallpaperCmd.label;"
+                oncommand="gContextMenu.setWallpaper();"/>
       <menuseparator id="context-sep-save"/>
       <!-- Application Integration ================= -->
       <menuseparator id="context-sep-apps"/>
