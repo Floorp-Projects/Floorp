@@ -158,6 +158,8 @@ protected:
 
 	virtual const char* GetIncomingServerType() {return "pop3";}
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
+  nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
+                         PRBool isMove);
 
 protected:
 	nsNativeFileSpec *mPath;

@@ -1169,9 +1169,10 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           if (NS_FAILED(rv)) return rv;
           for(PRUint32 i = 0; i < messageCount; i++)
           {
-              nsCOMPtr<nsISupports> msgSupports =
-                  getter_AddRefs(messages->ElementAt(i));
-              nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
+              nsCOMPtr<nsISupports> msgSupports;
+              nsCOMPtr<nsIMessage> message;
+              msgSupports = getter_AddRefs(messages->ElementAt(i));
+              message = do_QueryInterface(msgSupports, &rv);
               if(message)
               {
                   DeleteMessage(message, txnMgr, deleteStorage);
@@ -1191,6 +1192,56 @@ nsMsgLocalMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
   return rv;
 }
 
+nsresult
+nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport, 
+                                    nsISupportsArray* messages,
+                                    PRBool isMove)
+{
+  nsresult rv = NS_OK;
+	nsFileSpec path;
+	nsCOMPtr<nsIFileSpec> pathSpec;
+
+  if (mCopyState) return NS_ERROR_FAILURE; // already has a  copy in progress
+
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	rv = pathSpec->GetFileSpec(&path);
+  if (NS_FAILED(rv)) return rv;
+
+	mCopyState = new nsLocalMailCopyState();
+	if(!mCopyState)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+	//Before we continue we should verify that there is enough diskspace.
+	//XXX How do we do this?
+	mCopyState->fileStream = new nsOutputFileStream(path, PR_WRONLY |
+                                                  PR_CREATE_FILE);
+	if(!mCopyState->fileStream)
+	{
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto done;
+  }
+	//The new key is the end of the file
+	mCopyState->fileStream->seek(PR_SEEK_END, 0);
+  mCopyState->srcSupport = do_QueryInterface(aSupport, &rv);
+  if (NS_FAILED(rv)) goto done;
+  mCopyState->messages = do_QueryInterface(messages, &rv);
+  if (NS_FAILED(rv)) goto done;
+  mCopyState->curCopyIndex = 0;
+  mCopyState->isMove = isMove;
+  rv = messages->Count(&mCopyState->totalMsgCount);
+
+done:
+
+  if (NS_FAILED(rv))
+  {
+    delete mCopyState;
+    mCopyState = nsnull;
+  }
+  return rv;
+}
+                                    
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
                                    messages, PRBool isMove,
@@ -1210,39 +1261,10 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 		return NS_MSG_FOLDER_BUSY;
 
 	nsresult rv;
-	nsFileSpec path;
-	nsCOMPtr<nsIFileSpec> pathSpec;
-
-	rv = GetPath(getter_AddRefs(pathSpec));
-	if (NS_FAILED(rv)) goto done;
-
-	rv = pathSpec->GetFileSpec(&path);
-	if (NS_FAILED(rv)) goto done;
-
-	mCopyState = new nsLocalMailCopyState();
-	if(!mCopyState)
-  {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
-	//Before we continue we should verify that there is enough diskspace.
-	//XXX How do we do this?
-	mCopyState->fileStream = new nsOutputFileStream(path, PR_WRONLY |
-                                                  PR_CREATE_FILE);
-	if(!mCopyState->fileStream)
-	{
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
-	//The new key is the end of the file
-	mCopyState->fileStream->seek(PR_SEEK_END, 0);
-  mCopyState->srcSupport = do_QueryInterface(srcFolder, &rv);
+  nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) goto done;
-  mCopyState->messages = do_QueryInterface(messages, &rv);
-  if (NS_FAILED(rv)) goto done;
-  mCopyState->curCopyIndex = 0;
-  mCopyState->isMove = isMove;
-  rv = messages->Count(&mCopyState->totalMsgCount);
+
+  rv = InitCopyState(aSupport, messages, isMove);
   if (NS_FAILED(rv)) goto done;
 
   // undo stuff
@@ -1274,7 +1296,8 @@ done:
     aSupport = getter_AddRefs(messages->ElementAt(0));
     if (aSupport)
     {
-      nsCOMPtr<nsIMessage> aMessage(do_QueryInterface(aSupport, &rv));
+      nsCOMPtr<nsIMessage> aMessage;
+      aMessage = do_QueryInterface(aSupport, &rv);
       if(NS_SUCCEEDED(rv))
         rv = CopyMessageTo(aMessage, this, isMove);
     }
@@ -1296,10 +1319,10 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
                                              PRBool deleteStorage)
 {
 	nsresult rv = NS_OK;
+#if 0
 	PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
 	if(!deleteStorage && !isTrashFolder)
 	{
-#if 0
 		nsCOMPtr<nsIMsgFolder> rootFolder;
 		rv = GetRootFolder(getter_AddRefs(rootFolder));
 		if(NS_SUCCEEDED(rv))
@@ -1312,9 +1335,11 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
 				rv = CopyMessageTo(message, trashFolder, PR_TRUE);
 			}
 		}
-#endif
 	}
 	else
+#else
+  if (deleteStorage)
+#endif
 	{
 		nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
 		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
