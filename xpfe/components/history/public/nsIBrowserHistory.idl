@@ -77,6 +77,17 @@ interface nsIBrowserHistory : nsISupports
      */
     readonly attribute string lastPageVisited;
 
+
+    /**
+     * hidePage
+     * Hide the specified URL from being enumerated (and thus
+     * displayed in the UI)
+     *
+     * if the page hasn't been visited yet, then it will be added
+     * as if it was visited, and then marked as hidden
+     */
+
+    void hidePage(in string url);
 };
 
 %{ C++
