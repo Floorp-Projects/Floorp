@@ -25,8 +25,12 @@ BODY {
   cursor: default;
   display: block;
   line-height: normal;
+
+//XXX Note: see the code in nsHTMLBodyElement that hacks away at the padding
+//XXX when body margin attributes are used
 //XXX not yet...  margin: 8px;
   padding: 8px;
+
   overflow: auto;
 }
 
