@@ -30,6 +30,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
+#include "prenv.h"
 
 #if defined(XP_MAC) /* || defined(XP_MACOSX) REMIND HACKING FOR MACOS X!!! */
 #include <Folders.h>
@@ -48,7 +49,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/param.h>
-#include <prenv.h>
 #elif defined(XP_BEOS)
 #include <sys/param.h>
 #include <kernel/image.h>
@@ -74,6 +74,8 @@
 #define DEFAULT_PRODUCT_DIR ".mozilla"
 #endif
 
+// Locally defined keys used by nsAppDirectoryEnumerator
+#define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH
 
 #if XP_MAC
 #define DEFAULTS_DIR_NAME           "Defaults"
@@ -182,6 +184,12 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(PLUGINS_DIR_NAME);
+    }
+    else if (nsCRT::strcmp(prop, NS_ENV_PLUGINS_DIR) == 0)
+    {
+        const char *pathVar = PR_GetEnv("MOZ_PLUGIN_PATH");
+        if (pathVar)
+            rv = NS_NewLocalFile(pathVar, PR_TRUE, getter_AddRefs(localFile));
     }
     else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
@@ -373,8 +381,12 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
 
     NS_IMETHOD HasMoreElements(PRBool *result) 
     {
-        *result = (mCurrentIndex < mMaxIndex) &&
-                  (mKeyList && mKeyList[mCurrentIndex]);
+        while (!mNext && (mCurrentIndex < mMaxIndex))
+        {
+            PRBool dontCare;
+            (void)mProvider->GetFile(mKeyList[mCurrentIndex++], &dontCare, getter_AddRefs(mNext));
+        }
+        *result = mNext != nsnull;
         return NS_OK;
     }
 
@@ -387,16 +399,11 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
         HasMoreElements(&hasMore);
         if (!hasMore)
             return NS_ERROR_FAILURE;
-
-        PRBool dontCare;
-        nsCOMPtr<nsIFile> newFile;
-        nsresult rv = mProvider->GetFile(mKeyList[mCurrentIndex++], &dontCare, getter_AddRefs(newFile));
-        if (NS_FAILED(rv))
-            return rv;
-
-        *result = newFile;
-        NS_ADDREF(*result);
-
+            
+        *result = mNext;
+        NS_IF_ADDREF(*result);
+        mNext = nsnull;
+        
         return *result ? NS_OK : NS_ERROR_FAILURE;
     }
 
@@ -408,6 +415,7 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
     nsIDirectoryServiceProvider *mProvider;
     const char** mKeyList;
     PRInt32      mCurrentIndex, mMaxIndex;
+    nsCOMPtr<nsIFile> mNext;
 };
 
 NS_IMPL_ISUPPORTS1(nsAppDirectoryEnumerator, nsISimpleEnumerator)
@@ -421,7 +429,11 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
     
     if (!nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR_LIST))
     {
+#ifdef XP_MAC
         static const char* keys[] = { NS_APP_PLUGINS_DIR };
+#else
+        static const char* keys[] = { NS_ENV_PLUGINS_DIR, NS_APP_PLUGINS_DIR };
+#endif
 
         *_retval = new nsAppDirectoryEnumerator(this, keys, sizeof(keys) / sizeof(keys[0]));
         NS_IF_ADDREF(*_retval);
