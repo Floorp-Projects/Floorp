@@ -136,14 +136,18 @@ void nsRegionGTK::Union(const nsIRegion &aRegion)
 {
   nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
 
-  if (pRegion->mRegion) {
+  if (pRegion->mRegion && !::gdk_region_empty(pRegion->mRegion)) {
     if (mRegion) {
-      GdkRegion *nRegion = ::gdk_regions_union(mRegion, pRegion->mRegion);
-      ::gdk_region_destroy(mRegion);
-      mRegion = nRegion;
-    } else {
+      if (::gdk_region_empty(mRegion)) {
+        ::gdk_region_destroy(mRegion);
+        mRegion = gdk_region_copy(pRegion->mRegion);
+      } else {
+        GdkRegion *nRegion = ::gdk_regions_union(mRegion, pRegion->mRegion);
+        ::gdk_region_destroy(mRegion);
+        mRegion = nRegion;
+      }
+    } else
       mRegion = gdk_region_copy(pRegion->mRegion);
-    }
   }
 }
 
@@ -157,9 +161,16 @@ void nsRegionGTK::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
     grect.width = aWidth;
     grect.height = aHeight;
 
-    GdkRegion *nRegion = ::gdk_region_union_with_rect(mRegion, &grect);
-    ::gdk_region_destroy(mRegion);
-    mRegion = nRegion;
+    if (grect.width > 0 && grect.height > 0) {
+      if (::gdk_region_empty(mRegion)) {
+        ::gdk_region_destroy(mRegion);
+        mRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
+      } else {
+        GdkRegion *nRegion = ::gdk_region_union_with_rect(mRegion, &grect);
+        ::gdk_region_destroy(mRegion);
+        mRegion = nRegion;
+      }
+    }
   } else {
     mRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
   }
