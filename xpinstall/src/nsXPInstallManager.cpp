@@ -1029,13 +1029,11 @@ nsXPInstallManager::OnCertAvailable(nsIURI *aURI,
                                     nsresult aStatus, 
                                     nsIPrincipal *aPrincipal)
 {
-    if (NS_FAILED(aStatus)) {
-        // if there was a failure for whatever reason, we will treat 
-        // the install as unsigned.  An error here could me that the 
-        // location of the install is unreachable or that the install
-        // is currupt.  In either case, we want to ensure that the 
-        // nsIPrincipal is nsnull (although it already should be 
-        // -- we are just being paranoid here.
+    if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED) {
+        // Check for a bad status.  The only acceptable failure status code we accept 
+        // is NS_BINDING_ABORTED.  For all others we want to ensure that the 
+        // nsIPrincipal is nsnull.
+
         NS_ASSERTION(aPrincipal == nsnull, "There has been an error, but we have a principal!");
         aPrincipal = nsnull;
     }
