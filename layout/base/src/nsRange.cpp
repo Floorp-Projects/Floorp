@@ -85,20 +85,26 @@ public:
   NS_IMETHOD    ToString(nsString& aReturn);
 
 private:
-  PRBool mIsPositioned;
-  nsIDOMNode* mStartParent;
-  PRInt32 mStartOffset;
-  nsIDOMNode* mEndParent;
-  PRInt32 mEndOffset;
+  PRBool       mIsPositioned;
+  nsIDOMNode   *mStartParent;
+  nsIDOMNode   *mEndParent;
+  PRInt32      mStartOffset;
+  PRInt32      mEndOffset;
+  nsVoidArray  *mStartAncestors;
+  nsVoidArray  *mEndAncestors;
+  nsVoidArray  *mStartAncestorOffsets;
+  nsVoidArray  *mEndAncestorOffsets;
 
-  PRBool        IsIncreasing(nsIDOMNode* sParent, PRInt32 sOffset,
-                       nsIDOMNode* eParent, PRInt32 eOffset);
+  PRBool        IsIncreasing();
                        
   PRBool        IsPointInRange(nsIDOMNode* pParent, PRInt32 pOffset);
   
   PRInt32       IndexOf(nsIDOMNode* aNode);
   
   PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
+  
+  PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
+                        nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
   
   nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
 
@@ -115,17 +121,27 @@ NS_NewRange(nsIDOMRange** aInstancePtrResult)
  * constructor/destructor
  ******************************************************/
  
-nsRange::nsRange() {
+nsRange::nsRange() 
+{
   NS_INIT_REFCNT();
 
   mIsPositioned = PR_FALSE;
-  nsIDOMNode* mStartParent = NULL;
+  nsIDOMNode* mStartParent = nsnull;
   PRInt32 mStartOffset = 0;
-  nsIDOMNode* mEndParent = NULL;
+  nsIDOMNode* mEndParent = nsnull;
   PRInt32 mEndOffset = 0;
+  mStartAncestors = nsnull;
+  mEndAncestors = nsnull;
+  mStartAncestorOffsets = nsnull;
+  mEndAncestorOffsets = nsnull;
 } 
 
-nsRange::~nsRange() {
+nsRange::~nsRange() 
+{
+	delete mStartAncestors;
+	delete mEndAncestors;
+	delete mStartAncestorOffsets;
+	delete mEndAncestorOffsets;
 } 
 
 /******************************************************
@@ -159,12 +175,61 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
 /******************************************************
  * Private helper routines
  ******************************************************/
- 
-PRBool nsRange::IsIncreasing(nsIDOMNode* sParent, PRInt32 sOffset,
-                              nsIDOMNode* eParent, PRInt32 eOffset)
+
+PRBool nsRange::IsIncreasing()
 {
-  // XXX NEED IMPLEMENTATION!
-  return PR_TRUE;
+  PRInt32 numStartAncestors = 0;
+  PRInt32 numEndAncestors = 0;
+  PRInt32 commonNodeStartOffset = 0;
+  PRInt32 commonNodeEndOffset = 0;
+  
+  // no trivial cases please
+  if (!mStartParent || !mEndParent) return PR_FALSE;
+  
+  // check common case first
+  if (mStartParent==mEndParent)
+  {
+  	 if (mStartOffset>mEndOffset) return PR_FALSE;
+  	 else  return PR_TRUE;
+  }
+  
+  // lazy refreshing of cached ancestor data
+  if (!mStartAncestors)
+  {
+  	mStartAncestors = new nsVoidArray();
+  	mStartAncestorOffsets = new nsVoidArray();
+    numStartAncestors = GetAncestorsAndOffsets(mStartParent,mStartOffset,mStartAncestors,mStartAncestorOffsets);
+  }
+  else numStartAncestors = mStartAncestors->Count();
+  
+  if (!mEndAncestors)
+  {
+  	mEndAncestors = new nsVoidArray();
+  	mEndAncestorOffsets = new nsVoidArray();
+    numEndAncestors = GetAncestorsAndOffsets(mEndParent,mEndOffset,mEndAncestors,mEndAncestorOffsets);
+  }
+  else numEndAncestors = mEndAncestors->Count();
+  
+  // first different ancestor found.
+  --numStartAncestors; // adjusting for 0-based counting 
+  --numEndAncestors; 
+  // back through the ancestors, starting from the root, until first non-matching ancestor found
+  while (mStartAncestors->ElementAt(numStartAncestors) == mEndAncestors->ElementAt(numEndAncestors))
+  {
+    --numStartAncestors;
+    --numEndAncestors;
+    if (numStartAncestors<0) break; // this will only happen if one endpoint's node is the common ancestor of the other
+    if (numEndAncestors<0) break;
+  }
+  // now back up one and that's the last common ancestor from the root,
+  // or the first common ancestor from the leaf perspective
+  numStartAncestors++;
+  numEndAncestors++;
+  commonNodeStartOffset = (PRInt32)mStartAncestorOffsets->ElementAt(numStartAncestors);
+  commonNodeEndOffset   = (PRInt32)mEndAncestorOffsets->ElementAt(numEndAncestors);
+  
+  if (commonNodeStartOffset>commonNodeEndOffset) return PR_FALSE;
+  else  return PR_TRUE;
 }
 
 PRBool nsRange::IsPointInRange(nsIDOMNode* pParent, PRInt32 pOffset)
@@ -200,17 +265,22 @@ PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::IndexOf");
+    NS_IF_RELEASE(contentParent);
     return 0;
   }
   res = aChildNode->QueryInterface(kIContentIID, (void**)&contentChild);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::IndexOf");
+    NS_IF_RELEASE(contentParent);
+    NS_IF_RELEASE(contentChild);
     return 0;
   }
   
   // finally we get the index
-  res = contentParent->IndexOf(contentChild,theIndex);  // why is theIndex passed by reference?  why hide that theIndex is changing?
+  res = contentParent->IndexOf(contentChild,theIndex); 
+  NS_IF_RELEASE(contentParent);
+  NS_IF_RELEASE(contentChild);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::IndexOf");
@@ -222,7 +292,6 @@ PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
 PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode)
 {
   PRInt32    i=0;
-  nsresult   res;
   nsIDOMNode *node = aNode;
   
   // callers responsibility to make sure args are non-null and proper type
@@ -232,17 +301,55 @@ PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode)
   
   // insert all the ancestors
   // not doing all the inserts at location 0, that would make for lots of memcopys in the voidArray::InsertElementAt implementation
-  while(1)
+  node->GetParentNode(&node);  
+  while(node)
   {
     ++i;
-    res = node->GetParentNode(&node);
-  	// should be able to remove this error check later
-    if (!NS_SUCCEEDED(res))
-    {
-      NS_NOTREACHED("nsRange::FillArrayWithAncestors");
-      return -1;  // poor man's error code
-    }
-    if (!node) break;
+    aArray->InsertElementAt((void*)node,i);
+    node->GetParentNode(&node);
+  }
+  
+  return i;
+}
+
+PRInt32 nsRange::GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
+                        nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets)
+{
+  PRInt32    i=0;
+  PRInt32    nodeOffset;
+  nsresult   res;
+  nsIContent *contentNode;
+  nsIContent *contentParent;
+  
+  // callers responsibility to make sure args are non-null and proper type
+
+  res = aNode->QueryInterface(kIContentIID, (void**)&contentNode);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::GetAncestorsAndOffsets");
+    NS_IF_RELEASE(contentNode);
+    return -1;  // poor man's error code
+  }
+  
+  // insert node itself
+  aAncestorNodes->InsertElementAt((void*)contentNode,i);
+  aAncestorOffsets->InsertElementAt((void*)aOffset,i);
+  
+  // insert all the ancestors
+  // not doing all the inserts at location 0, that would make for lots of memcopys in the voidArray::InsertElementAt implementation
+  // NOTE: this implementation implicitly assumes that the nsIContent pointers are also nsIDOMNode pointers,
+  // since the consumers of these arrays are going to treat the aAncestorNodes array as an array of nsIDOMNode pointers.
+  contentNode->GetParent(contentParent);
+  while(contentParent)
+  {
+    if (!contentParent) break;
+    contentParent->IndexOf(contentNode, nodeOffset);
+    ++i;
+    aAncestorNodes->InsertElementAt((void*)contentParent,i);
+    aAncestorOffsets->InsertElementAt((void*)nodeOffset,i);
+    contentNode->GetParent(contentParent);
+    NS_IF_RELEASE(contentNode);
+    contentNode = contentParent;
   }
   
   return i;
@@ -306,10 +413,12 @@ nsIDOMNode* nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
   
   // back through the ancestors, starting from the root, until
   // first different ancestor found.  
-  while (array1->ElementAt(i) != array2->ElementAt(j))
+  while (array1->ElementAt(i) == array2->ElementAt(j))
   {
     --i;
     --j;
+    if (i<0) break; // this will only happen if one endpoint's node is the common ancestor of the other
+    if (j<0) break;
   }
   // now back up one and that's the last common ancestor from the root,
   // or the first common ancestor from the leaf perspective
@@ -351,8 +460,7 @@ nsresult nsRange::SetStartParent(nsIDOMNode* aStartParent)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing(aStartParent, mStartOffset,
-                    mEndParent, mEndOffset))
+  if (!IsIncreasing())
     return NS_ERROR_ILLEGAL_VALUE;
 
   NS_IF_RELEASE(mStartParent);
@@ -375,8 +483,7 @@ nsresult nsRange::SetStartOffset(PRInt32 aStartOffset)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing(mStartParent, aStartOffset,
-                    mEndParent, mEndOffset))
+  if (!IsIncreasing())
     return NS_ERROR_ILLEGAL_VALUE;
 
   mStartOffset = aStartOffset;
@@ -399,8 +506,7 @@ nsresult nsRange::SetEndParent(nsIDOMNode* aEndParent)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing(mStartParent, mStartOffset,
-                    aEndParent, mEndOffset))
+  if (!IsIncreasing())
     return NS_ERROR_ILLEGAL_VALUE;
 
   NS_IF_RELEASE(mEndParent);
@@ -423,8 +529,7 @@ nsresult nsRange::SetEndOffset(PRInt32 aEndOffset)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing(mStartParent, mStartOffset,
-                    mEndParent, aEndOffset))
+  if (!IsIncreasing())
     return NS_ERROR_ILLEGAL_VALUE;
 
   mEndOffset = aEndOffset;
