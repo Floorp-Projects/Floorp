@@ -793,7 +793,19 @@
 
 ; Return true if char can be a part of an RTF control word.
 (defun rtf-control-word-char? (char)
-  (and (char>= char #\a) (char<= char #\z)))
+  (or (and (char>= char #\a) (char<= char #\z))
+      (and (char>= char #\A) (char<= char #\Z))))
+
+
+; Intern str, reversing the case of its characters.  If str had any upper-case characters,
+; set the 'rtf-control-word property of the new symbol to the original string.
+(defun intern-rtf-control-word (str)
+  (if (some #'(lambda (char) (char<= char #\Z)) str)
+    (let* ((new-str (map 'string #'(lambda (char) (code-char (logxor (char-code char) 32))) str))
+           (symbol (intern new-str)))
+      (setf (get symbol 'rtf-control-word) str)
+      symbol)
+    (intern (string-upcase str))))
 
 
 ; Read RTF from the character stream and return it in list form.
@@ -855,7 +867,7 @@
        (let ((char (read)))
          (if (rtf-control-word-char? char)
            (let* ((control-string (read-control-word (list char)))
-                  (control-symbol (intern (string-upcase control-string)))
+                  (control-symbol (intern-rtf-control-word control-string))
                   (char (read)))
              (case char
                (#\space (list control-symbol))
@@ -866,7 +878,7 @@
                (t (unread-char char stream)
                   (list control-symbol))))
            (let* ((control-string (string char))
-                  (control-symbol (intern (string-upcase control-string))))
+                  (control-symbol (intern control-string)))
              (if (eq control-symbol '\')
                (list control-symbol (read-hex 2))
                (list control-symbol))))))
@@ -948,7 +960,7 @@
            (write-escaped-rtf stream first-rtf 0))
           ((symbolp first-rtf)
            (write-char #\\ stream)
-           (write first-rtf :stream stream)
+           (write (get first-rtf 'rtf-control-word first-rtf) :stream stream)
            (cond
             ((alpha-char-p (char (symbol-name first-rtf) 0))
              (when (integerp (first rest-rtf))
@@ -1176,7 +1188,153 @@
   (funcall emitter rtf-stream))
 
 
+;;; ------------------------------------------------------------------------------------------------------
+;;; RTF EDITING
+
+
+(defun each-rtf-tag (rtf tag f)
+  (unless (endp rtf)
+    (let ((first (first rtf)))
+      (cond
+       ((eq first tag) (funcall f rtf))
+       ((consp first) (each-rtf-tag first tag f))))
+    (each-rtf-tag (rest rtf) tag f)))
+
+
+(defun find-rtf-tag (rtf tag)
+  (let ((n-found 0)
+        (found nil))
+    (each-rtf-tag rtf tag #'(lambda (rtf)
+                              (incf n-found)
+                              (setq found rtf)))
+    (unless (= n-found 1)
+      (error "Rtf tag ~S isn't unique" tag))
+    found))
+
+
+(defun delete-unused-rtf-data (rtf label table-label)
+  (let ((histogram (make-hash-table)))
+    (each-rtf-tag rtf label #'(lambda (rtf)
+                                (let ((n (second rtf)))
+                                  (unless (integerp n)
+                                    (error "Bad ~S: ~S" label n))
+                                  (incf (gethash n histogram 0)))))
+    (let ((sorted-ns (sort (hash-table-keys histogram) #'<))
+          (new-n 0))
+      (dolist (n sorted-ns)
+        (if (> (gethash n histogram) 1)
+          (progn
+            (setf (gethash n histogram) (incf new-n))
+            (format *terminal-io* "~S -> ~S~%" n new-n))
+          (setf (gethash n histogram) t))))
+    (let ((table (find-rtf-tag rtf table-label)))
+      (setf (cdr table)
+            (delete-if #'(lambda (listoverride)
+                           (let* ((n (second (find-rtf-tag listoverride label)))
+                                  (action (gethash n histogram)))
+                             (assert-true action)
+                             (eq action t)))
+                       (cdr table))))
+    (each-rtf-tag rtf label #'(lambda (rtf)
+                                (let* ((n (second rtf))
+                                       (action (gethash n histogram)))
+                                  (assert-true (integerp action))
+                                  (setf (second rtf) action))))))
+
+
+(defun delete-datafields (rtf)
+  (each-rtf-tag
+   rtf 'fldinst
+   #'(lambda (rtf)
+       (setf (cdr rtf)
+             (delete-if
+              #'(lambda (r)
+                  (and (consp r)
+                       (progn
+                         (when (eq (first r) 'fs)
+                           (setq r (cddr r)))
+                         (let ((df (first r)))
+                           (and (consp df) (eq (first df) '*) (eq (second df) 'datafield))))))
+              (cdr rtf)))))
+  (each-rtf-tag rtf 'datafield #'(lambda (df) (warn "Datafield not removed: ~S" df))))
+
+
+(defun field-kind-and-data (field-rtf)
+  (unless (consp field-rtf)
+    (error "Can't find field code in ~S" field-rtf))
+  (let ((item (first field-rtf)))
+    (cond
+     ((consp item)
+      (field-kind-and-data item))
+     ((stringp item)
+      (setq item (string-trim '(#\space) item))
+      (let ((i (position #\space item)))
+        (values (subseq item 0 i)
+                (and i (string-left-trim '(#\space) (subseq item (1+ i)))))))
+     (t (field-kind-and-data (rest field-rtf))))))
+
+
+(defun collect-fields (rtf)
+  (let ((fields (make-hash-table :test #'equal)))
+    (each-rtf-tag
+     rtf 'fldinst
+     #'(lambda (rtf)
+         (multiple-value-bind (field-kind field-data) (field-kind-and-data rtf)
+           (cond
+            ((member field-kind '("PAGE" "SAVEDATE" "SEQ" "SYMBOL") :test #'equal))
+            ((equal field-kind "REF")
+             (when (position #\space field-data)
+               (error "Bad REF field: ~S" rtf))
+             (incf (gethash field-data fields 0))
+             (print field-data))
+            (t (error "Unrecognized field kind ~S" field-kind))))))
+    fields))
+
+
+(defun delete-unused-fields (rtf)
+  (let ((fields (collect-fields rtf)))
+    (labels
+      ((delete (rtf rev)
+         (if (endp rtf)
+           (nreverse rev)
+           (let ((first (first rtf))
+                 (rest (rest rtf)))
+             (cond
+              ((and (consp first)
+                    (eq (first first) '*)
+                    (member (second first) '(bkmkstart bkmkend))
+                    (not (gethash (third first) fields)))
+               (unless (and (stringp (third first)) (null (cdddr first)))
+                 (error "Unknown bookmark format: ~S" first))
+               (delete rest rev))
+              ((consp first)
+               (delete rest (cons (delete first nil) rev)))
+              (t (delete rest (cons first rev))))))))
+      (delete rtf nil))))
+       
+
+
+(defun delete-unused-rtf-list-overrides (rtf)
+  (delete-unused-rtf-data rtf 'ls 'listoverridetable))
+
+(defun delete-unused-rtf-lists (rtf)
+  (delete-unused-rtf-data rtf 'listid 'listtable))
+
+
 #|
-(setq r (read-rtf-from-local-file "SampleStyles.rtf"))
-(write-rtf-to-local-file "Y.rtf" r)
+(declaim (optimize (debug 1))) ;*****
+
+(setq r (read-rtf-from-local-file ":private:Edition4a.rtf"))
+(delete-unused-rtf-list-overrides r)
+(delete-unused-rtf-lists r)
+(delete-datafields r)
+(setq r (delete-unused-fields r))
+(write-rtf-to-local-file ":private:Edition4a.rtf" r)
+
+(setq r (read-rtf-from-local-file ":private:Edition4b.rtf"))
+
+
+(each-rtf-tag r 'listid #'(lambda (rtf)
+                        (assert-true (integerp (second rtf)))
+                        (print (list (first rtf) (second rtf)))))
 |#
