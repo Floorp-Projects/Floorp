@@ -24,6 +24,8 @@
 #include "nsXPComCIID.h"
 #include <stdlib.h>
 
+#include "nsIWidget.h"
+
 //#define CMDLINEARGS
 
 #ifdef CMDLINEARGS
@@ -45,7 +47,7 @@ static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
   mDispatchListener = 0;
 }
 
@@ -123,12 +125,13 @@ NS_METHOD nsAppShell::Create(int *argc, char **argv)
   gdk_rgb_init();
 
   home = g_get_home_dir();
-  path = g_strdup_printf("%s%c%s", home, G_DIR_SEPARATOR, ".gtkrc");
-  gtk_rc_parse(path);
-  g_free(home);
-  g_free(path);
-
-//  gtk_rc_init();
+  if ( (char *) NULL != home ) {
+	path = g_strdup_printf("%s%c%s", home, G_DIR_SEPARATOR, ".gtkrc");
+	if ( (char *) NULL != path ) {
+		gtk_rc_parse(path);
+		g_free( path );
+	}
+  }
 
   return NS_OK;
 }
@@ -160,7 +163,7 @@ NS_METHOD nsAppShell::Spindown()
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Run()
 {
-
+  NS_ADDREF_THIS();
   nsresult   rv = NS_OK;
   nsIEventQueue * EQueue = nsnull;
 
@@ -197,15 +200,15 @@ NS_METHOD nsAppShell::Run()
 
 
 done:
-  printf("Calling gdk_input with event queue\n");
+  printf("Calling gdk_input_add with event queue\n");
   gdk_input_add(EQueue->GetEventQueueSelectFD(),
                 GDK_INPUT_READ,
                 event_processor_callback,
                 EQueue);
-
   gtk_main();
 
   NS_IF_RELEASE(EQueue);
+  Release();
   return NS_OK;
 }
 
@@ -241,22 +244,66 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 {
-  aRealEvent = PR_FALSE;
+  GdkEvent *event;
+
   aEvent = 0;
-  return NS_ERROR_FAILURE;
+  aRealEvent = PR_FALSE;
+  event = gdk_event_peek();
+  if ( (GdkEvent *) NULL != event ) { 
+	aRealEvent = PR_TRUE;
+	aEvent = event;
+  } else 
+        g_main_iteration (TRUE);
+  return NS_OK;
 }
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-  return NS_ERROR_FAILURE;
+	if ( aRealEvent == PR_TRUE )
+        	g_main_iteration (TRUE);
+	return NS_OK;
 }
 
 NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
     nsIWidget *aWidget, PRBool *aForWindow)
 {
-  *aForWindow = PR_TRUE;
+  PRBool isInWindow, isMouseEvent;
+  GdkEventAny *msg = (GdkEventAny *) aEvent;
+
+  if (aRealEvent == PR_FALSE) {
+     *aForWindow = PR_FALSE;
+     return NS_OK;
+  }
+
+  isInWindow = PR_FALSE;
+  if (aWidget != nsnull) {
+     // Get Native Window for dialog window
+     GdkWindow *win;
+     win = (GdkWindow *)aWidget->GetNativeData(NS_NATIVE_WINDOW);
+
+     // Find top most window of event window
+     GdkWindow *eWin = msg->window;
+     if (NULL != eWin) {
+       if (win == eWin) {
+         isInWindow = PR_TRUE;
+       }
+     }
+  }
+
+  isMouseEvent = PR_FALSE;
+  switch (msg->type) {
+     case GDK_MOTION_NOTIFY:
+     case GDK_BUTTON_PRESS:
+     case GDK_2BUTTON_PRESS:
+     case GDK_3BUTTON_PRESS:
+     case GDK_BUTTON_RELEASE:
+       isMouseEvent = PR_TRUE;
+  }
+
+  *aForWindow = isInWindow == PR_TRUE || 
+	isMouseEvent == PR_FALSE ? PR_TRUE : PR_FALSE;
+
+  gdk_event_free( (GdkEvent *) aEvent );
   return NS_OK;
 }
-
-
 
