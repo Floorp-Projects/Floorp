@@ -224,8 +224,8 @@ nsBrowserAppCore::Forward()
 //#define WALLET_EDITOR_URL "http://peoplestage/morse/wallet/walleted.html"
 #define WALLET_EDITOR_URL "http://people.netscape.com/morse/wallet/walleted.html"
 
-#define WALLET_SAMPLES_URL "http://people.netscape.com/morse/wallet/samples"
-//#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples"
+#define WALLET_SAMPLES_URL "http://people.netscape.com/morse/wallet/samples/"
+//#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples/"
 
 PRInt32
 newWindow(char* urlName) {
