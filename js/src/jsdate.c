@@ -2020,4 +2020,4 @@ js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
                               msFromTime(local));
     *date = UTC(local);
 }
-          
+
