@@ -3494,6 +3494,7 @@ PK11_ParamFromAlgid(SECAlgorithmID *algid)
 
     mech = (SECItem *) PORT_Alloc(sizeof(SECItem));
     if (mech == NULL) return NULL;
+    mech->type = siBuffer;
 
 
     /* handle the complicated cases */
@@ -3803,6 +3804,7 @@ PK11_GenerateNewParam(CK_MECHANISM_TYPE type, PK11SymKey *key) {
     if (mech == NULL) return NULL;
 
     rv = SECSuccess;
+    mech->type = siBuffer;
     switch (type) {
     case CKM_RC4:
     case CKM_AES_ECB:

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.58 $ $Date: 2002/06/25 22:58:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.59 $ $Date: 2002/06/28 03:00:06 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -262,8 +262,10 @@ nss3certificate_getIssuerIdentifier(nssDecodedCert *dc)
 	}
 	issuerSN.derIssuer.data = caName->data;
 	issuerSN.derIssuer.len = caName->len;
+	issuerSN.derIssuer.type = siBuffer;
 	issuerSN.serialNumber.data = cAuthKeyID->authCertSerialNumber.data;
 	issuerSN.serialNumber.len = cAuthKeyID->authCertSerialNumber.len;
+	issuerSN.serialNumber.type = siBuffer;
 	issuer = PK11_FindCertByIssuerAndSN(NULL, &issuerSN, NULL);
 	if (issuer) {
 	    rvID = nssItem_Create(NULL, NULL, issuer->subjectKeyID.len, 

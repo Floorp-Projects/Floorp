@@ -861,12 +861,14 @@ pk11_handleSMimeObject(PK11Session *session,PK11Object *object)
 	PORT_Assert(subject);
 	derSubj.data = (unsigned char *)subject->attrib.pValue;
 	derSubj.len = subject->attrib.ulValueLen ;
+	derSubj.type = 0;
 
 	/* lookup VALUE */
 	profile = pk11_FindAttribute(object,CKA_VALUE);
 	if (profile) {
 	    rawProfile.data = (unsigned char *)profile->attrib.pValue;
 	    rawProfile.len = profile->attrib.ulValueLen ;
+	    rawProfile.type = siBuffer;
 	    pRawProfile = &rawProfile;
 	}
 
@@ -875,6 +877,7 @@ pk11_handleSMimeObject(PK11Session *session,PK11Object *object)
 	if (time) {
 	    rawTime.data = (unsigned char *)time->attrib.pValue;
 	    rawTime.len = time->attrib.ulValueLen ;
+	    rawTime.type = siBuffer;
 	    pRawTime = &rawTime;
 	}
 
@@ -3643,6 +3646,7 @@ pk11_key_collect(DBT *key, DBT *data, void *arg)
 
     tmpDBKey.data = key->data;
     tmpDBKey.len = key->size;
+    tmpDBKey.type = siBuffer;
 
     PORT_Assert(slot->keyDB);
     if (!keyData->strict && keyData->id) {
@@ -4032,6 +4036,7 @@ pk11_searchSMime(PK11Slot *slot, SECItem *email, PK11SearchResults *handles,
 
 	    emailKey.data = (unsigned char *)tmp_name;
 	    emailKey.len = PORT_Strlen(tmp_name)+1;
+	    emailKey.type = 0;
 	    pk11_addHandle(handles,
 		pk11_mkHandle(slot,&emailKey,PK11_TOKEN_TYPE_SMIME));
 	    nsslowcert_DestroyDBEntry((certDBEntry *)entry);
