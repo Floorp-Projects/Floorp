@@ -783,6 +783,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
         // been synched up, and we can now remove our element and
         // pass the content chain inwards.
         InitSubContentChain((nsTreeRowGroupFrame*)mTopFrame);
+        return mTopFrame;
       }
       else mLinkupFrame = mTopFrame; // We have some frames that we'll eventually catch up with.
                                      // Cache the pointer to the first of these frames, so
