@@ -131,6 +131,7 @@ nsFileControlFrame::Destroy(nsIPresContext* aPresContext)
     nsCOMPtr<nsITextControlElement> fileInput = do_QueryInterface(mContent);
     fileInput->TakeTextFrameValue(value);
   }
+  mTextFrame = nsnull;
   return nsAreaFrame::Destroy(aPresContext);
 }
 
@@ -324,6 +325,11 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   if (mode == nsIFilePicker::returnCancel)
     return NS_OK;
 
+  if (!mTextFrame) {
+    // We got destroyed while the filepicker was up.  Don't do anything here.
+    return NS_OK;
+  }
+  
   // Set property
   nsCOMPtr<nsILocalFile> localFile;
   result = filePicker->GetFile(getter_AddRefs(localFile));
