@@ -260,13 +260,6 @@ protected:
 
   nsresult ReconstructFrames(void);
 
-  // turn the caret on and off.
-  nsresult RefreshCaret(nsIView *aView,
-  									nsIRenderingContext& aRendContext,
-  									const nsRect& aDirtyRect);
-  nsresult SuspendCaret();
-  nsresult ResumeCaret();
-   
   PRBool	mCaretEnabled;
   
 #ifdef NS_DEBUG
@@ -805,7 +798,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
   nsIContent* root = nsnull;
 
-  SuspendCaret();
+  StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
+  
   EnterReflowLock();
 
   if (mPresContext) {
@@ -871,7 +865,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   ExitReflowLock();
-  ResumeCaret();
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -879,7 +872,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
-  SuspendCaret();
+  StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
   EnterReflowLock();
 
   if (mPresContext) {
@@ -933,7 +926,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #endif
   }
   ExitReflowLock();
-  ResumeCaret();
   
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -975,14 +967,6 @@ NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
   if (!outCaret || !mCaret)
     return NS_ERROR_NULL_POINTER;
   return mCaret->QueryInterface(kICaretIID,(void **)outCaret);
-}
-
-nsresult PresShell::RefreshCaret(nsIView *aView, nsIRenderingContext& aRendContext, const nsRect& aDirtyRect)
-{
-  if (mCaret)
-  	mCaret->Refresh(aView, aRendContext, aDirtyRect);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
@@ -1033,20 +1017,6 @@ NS_IMETHODIMP PresShell::NotifySelectionChanged()
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
   return NS_ERROR_NULL_POINTER;
-}
-
-nsresult PresShell::SuspendCaret()
-{
-	if (mCaret)
-		return mCaret->SetCaretVisible(PR_FALSE);
-	return NS_OK;
-}
-
-nsresult PresShell::ResumeCaret()
-{
-	if (mCaret && mCaretEnabled)
-		return mCaret->SetCaretVisible(PR_TRUE);
-	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1872,14 +1842,19 @@ PresShell::Paint(nsIView              *aView,
 
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
+      
+  if (nsnull != frame)
+  {
+    StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
 
-  if (nsnull != frame) {
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_BACKGROUND);
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_FLOATERS);
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_FOREGROUND);
+                      
+               
 #ifdef NS_DEBUG
     // Draw a border around the frame
     if (nsIFrame::GetShowFrameBorders()) {
@@ -1890,9 +1865,8 @@ PresShell::Paint(nsIView              *aView,
     }
 #endif
 
-	// ensure the caret gets redrawn
-    RefreshCaret(aView, aRenderingContext, aDirtyRect);
   }
+
   return rv;
 }
 
