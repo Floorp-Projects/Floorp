@@ -18,52 +18,51 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/BypassShell.h>										*/
-/* Description:	XfeBypassShell widget public header file.				*/
+/* Name:		<Xfe/ToolTipStringDefs.h>								*/
+/* Description:	XfeToolTip string definitions.							*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeBypassShell_h_						/* start BypassShell.h	*/
-#define _XfeBypassShell_h_
-
-#include <Xfe/Xfe.h>
-#include <Xfe/Manager.h>
-
-XFE_BEGIN_CPLUSPLUS_PROTECTION
+#ifndef _XfeToolTipStringDefs_h_			/* start ToolTipStringDefs.h*/
+#define _XfeToolTipStringDefs_h_
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox class names													*/
+/* Callback Names														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-externalref WidgetClass xfeBypassShellWidgetClass;
-
-typedef struct _XfeBypassShellClassRec *		XfeBypassShellWidgetClass;
-typedef struct _XfeBypassShellRec *				XfeBypassShellWidget;
+#define XmNtoolTipCallback				"toolTipCallback"
+								   
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Resource Names														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNdocumentationString			"documentationString"
+#define XmNtipString					"tipString"
+#define XmNtoolTipPlacement				"toolTipPlacement"
+#define XmNtoolTipTimeout				"toolTipTimeout"
+#define XmNtoolTipType					"toolTipType"
+#define XmNtoolTipLabel					"toolTipLabel"
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox subclass test macro											*/
+/* Class Names															*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XfeIsBypassShell(w)	XtIsSubclass(w,xfeBypassShellWidgetClass)
+#define XmCDocumentationString			"DocumentationString"
+#define XmCTipString					"TipString"
+#define XmCToolTipPlacement				"ToolTipPlacement"
+#define XmCToolTipTimeout				"ToolTipTimeout"
+#define XmCToolTipType					"ToolTipType"
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBypassShell public methods										*/
+/* Representation Types													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-extern Widget
-XfeCreateBypassShell			(Widget		pw,
-								 String		name,
-								 Arg *		av,
-								 Cardinal	ac);
-/*----------------------------------------------------------------------*/
-extern void
-XfeBypassShellUpdateSize		(Widget		w);
-/*----------------------------------------------------------------------*/
+#define XmRToolTipPlacement				"ToolTipPlacement"
+#define XmRToolTipType					"ToolTipType"
 
-XFE_END_CPLUSPLUS_PROTECTION
-
-#endif											/* end BypassShell.h	*/
+#endif										/* end ToolTipStringDefs.h	*/

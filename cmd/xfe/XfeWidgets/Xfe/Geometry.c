@@ -639,7 +639,7 @@ _XfeLiberalGeometryManager(Widget				child,
 {
 	Widget w = XtParent(child);
 
-	assert( XfeIsManager(w) );
+/* 	assert( XfeIsManager(w) ); */
 
 	if (request->request_mode & XtCWQueryOnly)
 	{
@@ -673,11 +673,18 @@ _XfeLiberalGeometryManager(Widget				child,
 	 * a lot more efficient. -re
 	 */
 
-	/* Layout the components */
-	_XfeManagerLayoutComponents(w);
-	
-	/* Layout the children */
-	_XfeManagerLayoutChildren(w);
+	if (XfeIsManager(w))
+	{
+		/* Layout the components */
+		_XfeManagerLayoutComponents(w);
+		
+		/* Layout the children */
+		_XfeManagerLayoutChildren(w);
+	}
+	else
+	{
+		XfeResize(w);
+	}
 
 	return XtGeometryYes;
 }

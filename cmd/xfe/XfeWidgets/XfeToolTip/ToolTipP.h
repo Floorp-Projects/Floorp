@@ -18,52 +18,42 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/BypassShell.h>										*/
-/* Description:	XfeBypassShell widget public header file.				*/
+/* Name:		<Xfe/ToolTipP.h>										*/
+/* Description:	XfeToolTip - Tool tip and doc string support.			*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeBypassShell_h_						/* start BypassShell.h	*/
-#define _XfeBypassShell_h_
+#ifndef _XfeToolTipP_h_						/* start ToolTipP.h	*/
+#define _XfeToolTipP_h_
 
-#include <Xfe/Xfe.h>
-#include <Xfe/Manager.h>
+#include <Xfe/ToolTip.h>
+#include <Xfe/XfeP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox class names													*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-externalref WidgetClass xfeBypassShellWidgetClass;
-
-typedef struct _XfeBypassShellClassRec *		XfeBypassShellWidgetClass;
-typedef struct _XfeBypassShellRec *				XfeBypassShellWidget;
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeBox subclass test macro											*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define XfeIsBypassShell(w)	XtIsSubclass(w,xfeBypassShellWidgetClass)
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeBypassShell public methods										*/
+/* XfeToolTip Private Methods											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Widget
-XfeCreateBypassShell			(Widget		pw,
-								 String		name,
-								 Arg *		av,
-								 Cardinal	ac);
+_XfeToolTipGetShell				(Widget			w);
+/*----------------------------------------------------------------------*/
+extern Widget
+_XfeToolTipGetLabel				(Widget			w);
+/*----------------------------------------------------------------------*/
+extern void						
+_XfeToolTipLock					(void);
 /*----------------------------------------------------------------------*/
 extern void
-XfeBypassShellUpdateSize		(Widget		w);
+_XfeToolTipUnlock				(void);
+/*----------------------------------------------------------------------*/
+extern Boolean
+_XfeToolTipIsLocked				(void);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION
 
-#endif											/* end BypassShell.h	*/
+#endif											/* end ToolTipP.h		*/
+

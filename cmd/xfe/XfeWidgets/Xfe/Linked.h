@@ -66,105 +66,105 @@ typedef struct _XfeLinkNodeRec *		XfeLinkNode;
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Cardinal			
-XfeLinkedCount					(XfeLinked				list);
+XfeLinkedCount					(XfeLinked					list);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedHead					(XfeLinked				list);
+XfeLinkedHead					(XfeLinked					list);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedTail					(XfeLinked				list);
+XfeLinkedTail					(XfeLinked					list);
 /*----------------------------------------------------------------------*/
 extern XfeLinked	
 XfeLinkedConstruct				(void);
 /*----------------------------------------------------------------------*/
 extern void				
-XfeLinkedDestroy				(XfeLinked				list,
-								 XfeLinkedApplyProc		proc,
+XfeLinkedDestroy				(XfeLinked					list,
+								 XfeLinkedApplyProc			proc,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern void				
-XfeLinkedApply					(XfeLinked				list,
-								 XfeLinkedApplyProc		proc,
+XfeLinkedApply					(XfeLinked					list,
+								 XfeLinkedApplyProc			proc,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedInsertAfter			(XfeLinked				list,
+XfeLinkedInsertAfter			(XfeLinked					list,
 								 XfeLinkNode				node,
 								 XtPointer					item);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedInsertBefore			(XfeLinked				list,
+XfeLinkedInsertBefore			(XfeLinked					list,
 								 XfeLinkNode				node,
 								 XtPointer					item);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedInsertAtTail			(XfeLinked				list,
+XfeLinkedInsertAtTail			(XfeLinked					list,
 								 XtPointer					item);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedInsertAtHead			(XfeLinked				list,
+XfeLinkedInsertAtHead			(XfeLinked					list,
 								 XtPointer					item);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedInsertOrdered			(XfeLinked				list,
-								 XfeLinkedCompareFunc	func,
+XfeLinkedInsertOrdered			(XfeLinked					list,
+								 XfeLinkedCompareFunc		func,
 								 XtPointer					item,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XtPointer		
-XfeLinkedRemoveNode				(XfeLinked				list,
+XfeLinkedRemoveNode				(XfeLinked					list,
 								 XfeLinkNode				node);
 /*----------------------------------------------------------------------*/
 extern void				
-XfeLinkedClear					(XfeLinked				list,
-								 XfeLinkedApplyProc		proc,
+XfeLinkedClear					(XfeLinked					list,
+								 XfeLinkedApplyProc			proc,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedFindLT					(XfeLinked				list,
-								 XfeLinkedCompareFunc	func,
+XfeLinkedFindLT					(XfeLinked					list,
+								 XfeLinkedCompareFunc		func,
 								 XtPointer					item,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedFindGT					(XfeLinked				list,
-								 XfeLinkedCompareFunc	func,
+XfeLinkedFindGT					(XfeLinked					list,
+								 XfeLinkedCompareFunc		func,
 								 XtPointer					item,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedFindLE					(XfeLinked				list,
-								 XfeLinkedCompareFunc	func,
+XfeLinkedFindLE					(XfeLinked					list,
+								 XfeLinkedCompareFunc		func,
 								 XtPointer					item,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedFindGE					(XfeLinked				list,
-								 XfeLinkedCompareFunc	func,
+XfeLinkedFindGE					(XfeLinked					list,
+								 XfeLinkedCompareFunc		func,
 								 XtPointer					item,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedFindEQ					(XfeLinked				list,
-								 XfeLinkedCompareFunc	func,
+XfeLinkedFindEQ					(XfeLinked					list,
+								 XfeLinkedCompareFunc		func,
 								 XtPointer					item,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedFind					(XfeLinked				list,
-								 XfeLinkedTestFunc		func,
+XfeLinkedFind					(XfeLinked					list,
+								 XfeLinkedTestFunc			func,
 								 XtPointer					data);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedFindItem				(XfeLinked				list,
+XfeLinkedFindNodeByItem			(XfeLinked					list,
 								 XtPointer					item);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedIndex					(XfeLinked				list,
+XfeLinkedIndex					(XfeLinked					list,
 								 Cardinal					i);
 /*----------------------------------------------------------------------*/
 extern Boolean			
-XfeLinkedPosition				(XfeLinked				list,
+XfeLinkedPosition				(XfeLinked					list,
 								 XtPointer					item,
 								 Cardinal *					pos);
 /*----------------------------------------------------------------------*/

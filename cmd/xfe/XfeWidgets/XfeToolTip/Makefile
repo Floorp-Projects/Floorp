@@ -1,4 +1,4 @@
-#! gmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -19,35 +19,38 @@
 ##########################################################################
 #
 # Name:			Makefile
-# Description:	Makefile for Xfe Widgets and related libraries
+# Description:	Makefile for XfeToolTip library
 # Author:		Ramiro Estrugo <ramiro@netscape.com>
 #
 ##########################################################################
 
-DEPTH			= ../../..
 
-ifdef XFE_WIDGETS_BUILD_TESTS
-TEST_DIRS		= \
-				XfeTest \
-				tests \
+DEPTH			= ../../../..
+
+# XfeWidgets headers are exported to dist/public/XfeToolTip/Xfe.  We use
+# the 'Xfe' directory to avoid the hasstle of having to remember yet another
+# include prefix.
+MODULE			= XfeToolTip/Xfe
+
+LIBRARY_NAME	= XfeToolTip
+
+CSRCS			= \
+				ToolTip.c \
+				ToolTipShell.c \
 				$(NULL)
-endif
 
-ifdef XFE_WIDGETS_BUILD_UNUSED
-UNUSED_DIRS		= \
-				XfeCaption \
-				XfeComboBox \
+REQUIRES		= \
 				XfeToolTip \
-				$(NULL)
-endif
+				XfeWidgets
 
-DIRS			= \
-				Xfe \
-				XfeBm \
-				$(UNUSED_DIRS) \
-				$(TEST_DIRS)
+
+EXPORTS			= \
+				ToolTip.h \
+				ToolTipP.h \
+				ToolTipShell.h \
+				ToolTipShellP.h \
+				ToolTipStringDefs.h \
+				$(NULL)
+
 
 include $(DEPTH)/config/rules.mk
-
-tests::
-	@$(MAKE) all XFE_WIDGETS_BUILD_TESTS=1

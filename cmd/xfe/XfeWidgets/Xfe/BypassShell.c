@@ -170,7 +170,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeBypassShellRec , xfe_bypass_shell . shadow_thickness),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_SHADOW_THICKNESS 
+		(XtPointer)  XfeDEFAULT_SHADOW_THICKNESS 
 	},
 	{ 
 		XmNshadowType,
@@ -201,7 +201,7 @@ static XtResource resources[] =
 		sizeof(Boolean),
 		XtOffsetOf(XfeBypassShellRec , xfe_bypass_shell . ignore_exposures),
 		XmRImmediate, 
-		(XtPointer) True
+		(XtPointer) False
 	},
 
 	/* Override Shell resources */
@@ -314,7 +314,7 @@ _XFE_WIDGET_CLASS_RECORD(bypassshell,BypassShell) =
     
     /* Composite Part */
     {
-		XtInheritGeometryManager,				/* geometry_manager		*/
+		_XfeLiberalGeometryManager,				/* geometry_manager		*/
 		ChangeManaged,							/* change_managed		*/
 		XtInheritInsertChild,					/* insert_child			*/
 		XtInheritDeleteChild,					/* delete_child			*/
@@ -503,7 +503,7 @@ ChangeManaged(Widget w)
 	Widget					new_managed_child = NULL;
 	Widget					old_managed_child = bp->managed_child;
 
-	for(i = 0; i < _XfemNumChildren(w); i++)
+	for (i = 0; i < _XfemNumChildren(w); i++)
 	{
 		Widget child = _XfeChildrenIndex(w,i);
 
@@ -523,18 +523,27 @@ ChangeManaged(Widget w)
 	{
 		/* Assign the new managed child */
 		bp->managed_child = new_managed_child;
+
+		/*
+		 * Request that we be resized to the new geometry.
+		 *
+		 */
+		_XfeMakeGeometryRequest(w,
+                                _XfeWidth(bp->managed_child) + 2 * bp->shadow_thickness,
+                                _XfeHeight(bp->managed_child) + 2 * bp->shadow_thickness);
+        
 		
 		/* Invoke before change managed Callbacks */
 		_XfeInvokeCallbacks(w,bp->change_managed_callback,
 							XmCR_CHANGE_MANAGED,NULL,False);
-		
-		_XfeConfigureWidget(bp->managed_child,
-							bp->shadow_thickness,
-							bp->shadow_thickness,
-							_XfeWidth(w) - 2 * bp->shadow_thickness,
-							_XfeHeight(w) - 2 * bp->shadow_thickness);
 
-		if (_XfeIsRealized(bp->managed_child))
+        /* Place the managed child in the center of the shell */
+		_XfeMoveWidget(bp->managed_child,
+                       bp->shadow_thickness,
+                       bp->shadow_thickness);
+
+        /* Raise the managed child's window to the top if needed */
+		if (XtIsWidget(w) && _XfeIsRealized(bp->managed_child))
 		{
 			XRaiseWindow(XtDisplay(w),_XfeWindow(bp->managed_child));
 		}
@@ -544,9 +553,45 @@ ChangeManaged(Widget w)
 static XtGeometryResult
 GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 {
-	XtGeometryResult	result;
+	Widget					w = XtParent(child);
+    XfeBypassShellPart *	bp = _XfeBypassShellPart(w);
 
-	return result;
+	printf("GeometryManager(w = %s,child = %s)\n",XtName(w),XtName(child));
+
+	if (request->request_mode & XtCWQueryOnly)
+	{
+		return XtGeometryYes;
+	}
+	
+	if (request->request_mode & CWX)
+	{
+		_XfeX(child) = request->x;
+	}
+	if (request->request_mode & CWY)
+	{
+		_XfeY(child) = request->y;
+	}
+	if (request->request_mode & CWWidth)
+	{
+		_XfeWidth(child) = request->width;
+	}
+	if (request->request_mode & CWHeight)
+	{
+		_XfeHeight(child) = request->height;
+	}
+	if (request->request_mode & CWBorderWidth)
+	{
+		_XfeBorderWidth(child) = request->border_width;
+	}
+
+	_XfeMakeGeometryRequest(w,
+							_XfeWidth(bp->managed_child) + 2 * bp->shadow_thickness,
+							_XfeHeight(bp->managed_child) + 2 * bp->shadow_thickness);
+	
+
+	XfeResize(w);
+
+	return XtGeometryYes;
 }
 /*----------------------------------------------------------------------*/
 
@@ -680,5 +725,24 @@ _XfeBypassShellGlobalInitialize(Widget pw,char * name,Arg * av,Cardinal ac)
 XfeCreateBypassShell(Widget pw,char * name,Arg * av,Cardinal ac)
 {
 	return XtCreatePopupShell(name,xfeBypassShellWidgetClass,pw,av,ac);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeBypassShellUpdateSize(Widget w)
+{
+    XfeBypassShellPart *	bp = _XfeBypassShellPart(w);
+
+	assert( XfeIsBypassShell(w) );
+
+	printf("XfeBypassShellUpdateSize(%s)\n",XtName(w));
+
+ 	if (_XfeIsAlive(bp->managed_child))
+ 	{
+		_XfeMakeGeometryRequest(w,
+								_XfeWidth(bp->managed_child) + 2 * bp->shadow_thickness,
+								_XfeHeight(bp->managed_child) + 2 * bp->shadow_thickness);
+ 	}
+
+	XfeResize(w);
 }
 /*----------------------------------------------------------------------*/
