@@ -1057,6 +1057,7 @@ PRBool CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode, nsICSSDeclaration* a
 #define VARIANT_AHI  (VARIANT_AH | VARIANT_INTEGER)
 #define VARIANT_AHK  (VARIANT_AH | VARIANT_KEYWORD)
 #define VARIANT_AHL  (VARIANT_AH | VARIANT_LENGTH)
+#define VARIANT_HK   (VARIANT_INHERIT | VARIANT_KEYWORD)
 #define VARIANT_HL   (VARIANT_INHERIT | VARIANT_LENGTH)
 #define VARIANT_HLP  (VARIANT_HL | VARIANT_PERCENT)
 #define VARIANT_HLPN (VARIANT_HLP | VARIANT_NUMBER)
@@ -1243,7 +1244,6 @@ static PRInt32 kVerticalAlignKTable[] = {
 };
 
 static PRInt32 kVisibilityKTable[] = {
-  KEYWORD_INHERIT, NS_STYLE_VISIBILITY_INHERIT,
   KEYWORD_VISIBLE, NS_STYLE_VISIBILITY_VISIBLE,
   KEYWORD_HIDDEN, NS_STYLE_VISIBILITY_HIDDEN,
   -1
@@ -1671,7 +1671,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KP,
                         kVerticalAlignKTable);
   case PROP_VISIBILITY:
-    return ParseEnum(aErrorCode, aDeclaration, aName, kVisibilityKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_HK, kVisibilityKTable);
   case PROP_WHITE_SPACE:
     return ParseEnum(aErrorCode, aDeclaration, aName, kWhitespaceKTable);
   case PROP_WIDTH:

@@ -415,24 +415,6 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   fputs(buffer, out);
 }
 
-const nsID& nsCSSDisplay::GetID(void)
-{
-  return kCSSDisplaySID;
-}
-
-void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mDirection.AppendToString(buffer, PROP_DIRECTION);
-  mDisplay.AppendToString(buffer, PROP_DISPLAY);
-  mFloat.AppendToString(buffer, PROP_FLOAT);
-  mClear.AppendToString(buffer, PROP_CLEAR);
-  fputs(buffer, out);
-}
-
 void nsCSSRect::List(FILE* out, PRInt32 aPropID, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -448,6 +430,44 @@ void nsCSSRect::List(FILE* out, PRInt32 aPropID, PRInt32 aIndent) const
   mRight.AppendToString(buffer);
   mBottom.AppendToString(buffer); 
   mLeft.AppendToString(buffer);
+  fputs(buffer, out);
+}
+
+nsCSSDisplay::nsCSSDisplay(void)
+  : mClip(nsnull)
+{
+}
+
+nsCSSDisplay::~nsCSSDisplay(void)
+{
+  if (nsnull != mClip) {
+    delete mClip;
+  }
+}
+
+const nsID& nsCSSDisplay::GetID(void)
+{
+  return kCSSDisplaySID;
+}
+
+void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  mDirection.AppendToString(buffer, PROP_DIRECTION);
+  mDisplay.AppendToString(buffer, PROP_DISPLAY);
+  mFloat.AppendToString(buffer, PROP_FLOAT);
+  mClear.AppendToString(buffer, PROP_CLEAR);
+  mVisibility.AppendToString(buffer, PROP_VISIBILITY);
+  mFilter.AppendToString(buffer, PROP_FILTER);
+  fputs(buffer, out);
+  if (nsnull != mClip) {
+    mClip->List(out, PROP_CLIP);
+  }
+  buffer.SetLength(0);
+  mOverflow.AppendToString(buffer, PROP_OVERFLOW);
   fputs(buffer, out);
 }
 
@@ -501,18 +521,6 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   }
 }
 
-nsCSSPosition::nsCSSPosition(void)
-  : mClip(nsnull)
-{
-}
-
-nsCSSPosition::~nsCSSPosition(void)
-{
-  if (nsnull != mClip) {
-    delete mClip;
-  }
-}
-
 const nsID& nsCSSPosition::GetID(void)
 {
   return kCSSPositionSID;
@@ -529,15 +537,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
   mHeight.AppendToString(buffer, PROP_HEIGHT);
   mLeft.AppendToString(buffer, PROP_LEFT);
   mTop.AppendToString(buffer, PROP_TOP);
-  fputs(buffer, out);
-  if (nsnull != mClip) {
-    mClip->List(out, PROP_CLIP);
-  }
-  buffer.SetLength(0);
-  mOverflow.AppendToString(buffer, PROP_OVERFLOW);
   mZIndex.AppendToString(buffer, PROP_Z_INDEX);
-  mVisibility.AppendToString(buffer, PROP_VISIBILITY);
-  mFilter.AppendToString(buffer, PROP_FILTER);
   fputs(buffer, out);
 }
 
@@ -981,10 +981,7 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
     case PROP_HEIGHT:
     case PROP_LEFT:
     case PROP_TOP:
-    case PROP_OVERFLOW:
     case PROP_Z_INDEX:
-    case PROP_VISIBILITY:
-    case PROP_FILTER:
       if (nsnull == mPosition) {
         mPosition = new nsCSSPosition();
       }
@@ -995,38 +992,7 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_HEIGHT:     mPosition->mHeight = aValue;     break;
           case PROP_LEFT:       mPosition->mLeft = aValue;       break;
           case PROP_TOP:        mPosition->mTop = aValue;        break;
-          case PROP_OVERFLOW:   mPosition->mOverflow = aValue;   break;
           case PROP_Z_INDEX:    mPosition->mZIndex = aValue;     break;
-          case PROP_VISIBILITY: mPosition->mVisibility = aValue; break;
-          case PROP_FILTER:     mPosition->mFilter = aValue;     break;
-        }
-      }
-      else {
-        result = NS_ERROR_OUT_OF_MEMORY;
-      }
-      break;
-
-    case PROP_CLIP_TOP:
-    case PROP_CLIP_RIGHT:
-    case PROP_CLIP_BOTTOM:
-    case PROP_CLIP_LEFT:
-      if (nsnull == mPosition) {
-        mPosition = new nsCSSPosition();
-      }
-      if (nsnull != mPosition) {
-        if (nsnull == mPosition->mClip) {
-          mPosition->mClip = new nsCSSRect();
-        }
-        if (nsnull != mPosition->mClip) {
-          switch(aProperty) {
-            case PROP_CLIP_TOP:     mPosition->mClip->mTop = aValue;     break;
-            case PROP_CLIP_RIGHT:   mPosition->mClip->mRight = aValue;   break;
-            case PROP_CLIP_BOTTOM:  mPosition->mClip->mBottom = aValue;  break;
-            case PROP_CLIP_LEFT:    mPosition->mClip->mLeft = aValue;    break;
-          }
-        }
-        else {
-          result = NS_ERROR_OUT_OF_MEMORY;
         }
       }
       else {
@@ -1058,6 +1024,9 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
     case PROP_CLEAR:
     case PROP_DISPLAY:
     case PROP_DIRECTION:
+    case PROP_VISIBILITY:
+    case PROP_OVERFLOW:
+    case PROP_FILTER:
       if (nsnull == mDisplay) {
         mDisplay = new nsCSSDisplay();
       }
@@ -1066,7 +1035,38 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_FLOAT:      mDisplay->mFloat = aValue;      break;
           case PROP_CLEAR:      mDisplay->mClear = aValue;      break;
           case PROP_DISPLAY:    mDisplay->mDisplay = aValue;    break;
-          case PROP_DIRECTION:  mDisplay->mDirection = aValue;    break;
+          case PROP_DIRECTION:  mDisplay->mDirection = aValue;  break;
+          case PROP_VISIBILITY: mDisplay->mVisibility = aValue; break;
+          case PROP_OVERFLOW:   mDisplay->mOverflow = aValue;   break;
+          case PROP_FILTER:     mDisplay->mFilter = aValue;     break;
+        }
+      }
+      else {
+        result = NS_ERROR_OUT_OF_MEMORY;
+      }
+      break;
+
+    case PROP_CLIP_TOP:
+    case PROP_CLIP_RIGHT:
+    case PROP_CLIP_BOTTOM:
+    case PROP_CLIP_LEFT:
+      if (nsnull == mDisplay) {
+        mDisplay = new nsCSSDisplay();
+      }
+      if (nsnull != mDisplay) {
+        if (nsnull == mDisplay->mClip) {
+          mDisplay->mClip = new nsCSSRect();
+        }
+        if (nsnull != mDisplay->mClip) {
+          switch(aProperty) {
+            case PROP_CLIP_TOP:     mDisplay->mClip->mTop = aValue;     break;
+            case PROP_CLIP_RIGHT:   mDisplay->mClip->mRight = aValue;   break;
+            case PROP_CLIP_BOTTOM:  mDisplay->mClip->mBottom = aValue;  break;
+            case PROP_CLIP_LEFT:    mDisplay->mClip->mLeft = aValue;    break;
+          }
+        }
+        else {
+          result = NS_ERROR_OUT_OF_MEMORY;
         }
       }
       else {
@@ -1277,10 +1277,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_HEIGHT:
     case PROP_LEFT:
     case PROP_TOP:
-    case PROP_OVERFLOW:
     case PROP_Z_INDEX:
-    case PROP_VISIBILITY:
-    case PROP_FILTER:
       if (nsnull != mPosition) {
         switch (aProperty) {
           case PROP_POSITION:   aValue = mPosition->mPosition;   break;
@@ -1288,27 +1285,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_HEIGHT:     aValue = mPosition->mHeight;     break;
           case PROP_LEFT:       aValue = mPosition->mLeft;       break;
           case PROP_TOP:        aValue = mPosition->mTop;        break;
-          case PROP_OVERFLOW:   aValue = mPosition->mOverflow;   break;
           case PROP_Z_INDEX:    aValue = mPosition->mZIndex;     break;
-          case PROP_VISIBILITY: aValue = mPosition->mVisibility; break;
-          case PROP_FILTER:     aValue = mPosition->mFilter;     break;
-        }
-      }
-      else {
-        aValue.Reset();
-      }
-      break;
-
-    case PROP_CLIP_TOP:
-    case PROP_CLIP_RIGHT:
-    case PROP_CLIP_BOTTOM:
-    case PROP_CLIP_LEFT:
-      if ((nsnull != mPosition) && (nsnull != mPosition->mClip)) {
-        switch(aProperty) {
-          case PROP_CLIP_TOP:     aValue = mPosition->mClip->mTop;     break;
-          case PROP_CLIP_RIGHT:   aValue = mPosition->mClip->mRight;   break;
-          case PROP_CLIP_BOTTOM:  aValue = mPosition->mClip->mBottom;  break;
-          case PROP_CLIP_LEFT:    aValue = mPosition->mClip->mLeft;    break;
         }
       }
       else {
@@ -1337,12 +1314,35 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_CLEAR:
     case PROP_DISPLAY:
     case PROP_DIRECTION:
+    case PROP_VISIBILITY:
+    case PROP_OVERFLOW:
+    case PROP_FILTER:
       if (nsnull != mDisplay) {
         switch (aProperty) {
           case PROP_FLOAT:      aValue = mDisplay->mFloat;      break;
           case PROP_CLEAR:      aValue = mDisplay->mClear;      break;
           case PROP_DISPLAY:    aValue = mDisplay->mDisplay;    break;
           case PROP_DIRECTION:  aValue = mDisplay->mDirection;  break;
+          case PROP_VISIBILITY: aValue = mDisplay->mVisibility; break;
+          case PROP_OVERFLOW:   aValue = mDisplay->mOverflow;   break;
+          case PROP_FILTER:     aValue = mDisplay->mFilter;     break;
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+
+    case PROP_CLIP_TOP:
+    case PROP_CLIP_RIGHT:
+    case PROP_CLIP_BOTTOM:
+    case PROP_CLIP_LEFT:
+      if ((nsnull != mDisplay) && (nsnull != mDisplay->mClip)) {
+        switch(aProperty) {
+          case PROP_CLIP_TOP:     aValue = mDisplay->mClip->mTop;     break;
+          case PROP_CLIP_RIGHT:   aValue = mDisplay->mClip->mRight;   break;
+          case PROP_CLIP_BOTTOM:  aValue = mDisplay->mClip->mBottom;  break;
+          case PROP_CLIP_LEFT:    aValue = mDisplay->mClip->mLeft;    break;
         }
       }
       else {

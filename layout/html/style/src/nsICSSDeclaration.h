@@ -247,16 +247,6 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mWhiteSpace;
 };
 
-struct nsCSSDisplay : public nsCSSStruct  {
-  const nsID& GetID(void);
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  nsCSSValue mDirection;
-  nsCSSValue mDisplay;
-  nsCSSValue mFloat;
-  nsCSSValue mClear;
-};
-
 struct nsCSSRect {
   void List(FILE* out = 0, PRInt32 aPropID = -1, PRInt32 aIndent = 0) const;
 
@@ -264,6 +254,22 @@ struct nsCSSRect {
   nsCSSValue mRight;
   nsCSSValue mBottom;
   nsCSSValue mLeft;
+};
+
+struct nsCSSDisplay : public nsCSSStruct  {
+  nsCSSDisplay(void);
+  ~nsCSSDisplay(void);
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mDirection;
+  nsCSSValue mDisplay;
+  nsCSSValue mFloat;
+  nsCSSValue mClear;
+  nsCSSRect* mClip;
+  nsCSSValue mOverflow;
+  nsCSSValue mVisibility;
+  nsCSSValue mFilter;
 };
 
 struct nsCSSMargin : public nsCSSStruct  {
@@ -280,8 +286,6 @@ struct nsCSSMargin : public nsCSSStruct  {
 };
 
 struct nsCSSPosition : public nsCSSStruct  {
-  nsCSSPosition(void);
-  ~nsCSSPosition(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -290,11 +294,7 @@ struct nsCSSPosition : public nsCSSStruct  {
   nsCSSValue  mHeight;
   nsCSSValue  mLeft;
   nsCSSValue  mTop;
-  nsCSSRect*  mClip;
-  nsCSSValue  mOverflow;
   nsCSSValue  mZIndex;
-  nsCSSValue  mVisibility;
-  nsCSSValue  mFilter;
 };
 
 struct nsCSSList : public nsCSSStruct  {
