@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2002/05/01 02:31:22 $ 
+# $Revision: 1.5 $ 
+# $Date: 2002/05/01 02:35:15 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -45,6 +45,7 @@
 
 use lib '#tinder_libdir#';
 
+use TreeData;
 use HTMLPopUp;
 use FileStructure;
 
@@ -52,14 +53,14 @@ use FileStructure;
 
 #       Main        
 {
-    $tree = '';
-    $url = FileStructure::get_filename($tree, 'tree_URL').
-        
+    $tree = 'Project_A';
+    $url = FileStructure::get_filename($tree, 'tree_URL');
 
-  HTMLPopUp::regenerate_HTML_pages();
+    HTMLPopUp::regenerate_HTML_pages();
 
     $out = <<EOF;
 Content-type: text/html
+
 <TITLE>tinderbox</TITLE>
 <META HTTP-EQUIV="Refresh" CONTENT="0; URL=$url">
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
