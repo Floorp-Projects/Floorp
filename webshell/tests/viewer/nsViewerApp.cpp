@@ -110,7 +110,7 @@
 #include "ngprefs.h"
 #endif
 #endif
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
 #include <crtdbg.h>
 #endif
 
@@ -460,7 +460,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
       if (PL_strcmp(argv[i], "-x") == 0) {
         mJustShutdown = PR_TRUE;
       }
-#if defined(NS_DEBUG) && defined(XP_WIN)
+#if defined(NS_DEBUG) && defined(XP_WIN) && !defined(__MINGW32__)
       else if (PL_strcmp(argv[i], "-md") == 0) {
         int old = _CrtSetDbgFlag(0);
         old |= _CRTDBG_CHECK_ALWAYS_DF;
