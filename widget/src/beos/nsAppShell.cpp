@@ -17,6 +17,8 @@
  */
 
 #include "nsAppShell.h"
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
 #include "nsIWidget.h"
 #include "nsIAppShell.h"
 #include "nsWindow.h"
@@ -57,6 +59,7 @@ static sem_id my_find_sem(const char *name)
 //
 //-------------------------------------------------------------------------
 NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
+NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 
 static bool GetAppSig(char *sig)
@@ -266,6 +269,46 @@ NS_METHOD nsAppShell::Spinup()
 NS_METHOD nsAppShell::Spindown()
 {
   return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// PushThreadEventQueue - begin processing events from a new queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on beos.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PushThreadEventQueue()
+{
+  nsresult rv;
+
+  // push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PushThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// PopThreadEventQueue - stop processing on a previously pushed event queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on beos.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PopThreadEventQueue()
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PopThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
 }
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)

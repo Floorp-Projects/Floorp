@@ -28,6 +28,8 @@
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
 #include "nsIWidget.h"
 #include "nsMacMessageSink.h"
 #include "nsMacMessagePump.h"
@@ -53,6 +55,8 @@ PRBool nsAppShell::mInitializedToolbox = PR_FALSE;
 //
 //-------------------------------------------------------------------------
 NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
+NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
 NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
@@ -175,6 +179,42 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+}
+
+//-------------------------------------------------------------------------
+//
+// PushThreadEventQueue - begin processing events from a new queue
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PushThreadEventQueue()
+{
+  nsresult rv;
+
+  // push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PushThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// PopThreadEventQueue - stop processing on a previously pushed event queue
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PopThreadEventQueue()
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PopThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
 }
 
 //-------------------------------------------------------------------------

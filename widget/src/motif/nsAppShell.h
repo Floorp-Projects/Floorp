@@ -44,6 +44,8 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD        Run();
     NS_IMETHOD        Spinup();
     NS_IMETHOD        Spindown();
+    NS_IMETHOD        PushThreadEventQueue();
+    NS_IMETHOD        PopThreadEventQueue();
     NS_IMETHOD        GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
     NS_IMETHOD        DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
     NS_IMETHOD        Exit();

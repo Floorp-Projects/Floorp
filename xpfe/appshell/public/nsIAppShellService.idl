@@ -66,6 +66,17 @@ interface nsIAppShellService : nsISupports
   void Shutdown();
 
   /**
+   * Push a new event queue onto the stack of queues and begin processing
+   * messages from it.
+   */
+  void PushThreadEventQueue();
+
+  /**
+   * Pop the last pushed event queue and stop processing messages from it.
+   */
+  void PopThreadEventQueue();
+
+  /**
    * Create a window.
    * @param aParent the parent window.  Can be null.
    * @param aUrl the contents of the new window.

@@ -21,6 +21,10 @@
 
 #include "nsAppShell.h"
 #include "nsHashtable.h"
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
+
+NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // Appshell manager.  Same threads must get the same appshell object,
 // or else the message queue will be taken over by the second (nested)
@@ -201,6 +205,46 @@ nsAppShell::~nsAppShell()
 {
    WinDestroyMsgQueue( mHmq);
    WinTerminate( mHab);
+}
+
+//-------------------------------------------------------------------------
+//
+// PushThreadEventQueue - begin processing events from a new queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on os/2.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PushThreadEventQueue()
+{
+  nsresult rv;
+
+  // push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PushThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// PopThreadEventQueue - stop processing on a previously pushed event queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on os/2.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PopThreadEventQueue()
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PopThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
 }
 
 // These are for modal dialogs and also tres weird.

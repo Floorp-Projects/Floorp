@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "prmon.h"
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 #include "nsIServiceManager.h"
@@ -35,6 +36,70 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
+// a linked, ordered list of event queues and their tokens
+class EventQueueToken {
+public:
+  EventQueueToken(const nsIEventQueue *aQueue, const gint aToken);
+
+  const nsIEventQueue *mQueue;
+  gint mToken;
+  EventQueueToken *next;
+};
+EventQueueToken::EventQueueToken(const nsIEventQueue *aQueue, const gint aToken) {
+  mQueue = aQueue;
+  mToken = aToken;
+  next = 0;
+}
+class EventQueueTokenQueue {
+public:
+  EventQueueTokenQueue();
+  virtual ~EventQueueTokenQueue();
+  void PushToken(nsIEventQueue *aQueue, gint aToken);
+  PRBool PopToken(nsIEventQueue *aQueue, gint *aToken);
+
+private:
+  EventQueueToken *mHead;
+};
+EventQueueTokenQueue::EventQueueTokenQueue() {
+  mHead = 0;
+}
+EventQueueTokenQueue::~EventQueueTokenQueue() {
+  NS_ASSERTION(!mHead, "event queue token deleted when not empty");
+  // and leak. it's an error, anyway
+}
+void EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken) {
+  EventQueueToken *newToken = new EventQueueToken(aQueue, aToken);
+  NS_ASSERTION(newToken, "couldn't allocate token queue element");
+  if (newToken) {
+    newToken->next = mHead;
+    mHead = newToken;
+  }
+}
+PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
+  EventQueueToken *token, *lastToken;
+  PRBool          found = PR_FALSE;
+  NS_ASSERTION(mHead, "attempt to retrieve event queue token from empty queue");
+  if (mHead)
+    NS_ASSERTION(mHead->mQueue == aQueue, "retrieving event queue from past head of queue queue");
+
+  token = mHead;
+  lastToken = 0;
+  while (token && token->mQueue != aQueue) {
+    lastToken = token;
+    token = token->next;
+  }
+  if (token) {
+    if (lastToken)
+      lastToken->next = token->next;
+    else
+      mHead = token->next;
+    found = PR_TRUE;
+    *aToken = token->mToken;
+    delete token;
+  }
+  return found;
+}
+
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
@@ -44,6 +109,11 @@ nsAppShell::nsAppShell()
 {
   NS_INIT_REFCNT();
   mDispatchListener = 0;
+  mLock = PR_NewLock();
+  mEventQueueTokens = new EventQueueTokenQueue();
+  // throw on error would really be civilized here
+  NS_ASSERTION(mLock, "couldn't obtain lock in appshell");
+  NS_ASSERTION(mEventQueueTokens, "couldn't allocate event queue token queue");
 }
 
 //-------------------------------------------------------------------------
@@ -53,7 +123,8 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-
+  PR_DestroyLock(mLock);
+  delete mEventQueueTokens;
 }
 
 //-------------------------------------------------------------------------
@@ -187,6 +258,64 @@ NS_METHOD nsAppShell::Spindown()
 
 //-------------------------------------------------------------------------
 //
+// PushThreadEventQueue
+//
+//-------------------------------------------------------------------------
+NS_METHOD
+nsAppShell::PushThreadEventQueue()
+{
+  nsresult      rv;
+  gint          inputToken;
+  nsIEventQueue *eQueue;
+
+  // push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    PR_Lock(mLock);
+    rv = eventQService->PushThreadEventQueue();
+    if (NS_SUCCEEDED(rv)) {
+      eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &eQueue);
+      inputToken = gdk_input_add(eQueue->GetEventQueueSelectFD(),
+                                 GDK_INPUT_READ,
+                                 event_processor_callback,
+                                 eQueue);
+      mEventQueueTokens->PushToken(eQueue, inputToken);
+    }
+    PR_Unlock(mLock);
+  } else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// PopThreadEventQueue
+//
+//-------------------------------------------------------------------------
+NS_METHOD
+nsAppShell::PopThreadEventQueue()
+{
+  nsresult      rv;
+  nsIEventQueue *eQueue;
+
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    gint queueToken;
+    PR_Lock(mLock);
+    eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &eQueue);
+    eventQService->PopThreadEventQueue();
+    if (mEventQueueTokens->PopToken(eQueue, &queueToken))
+      gdk_input_remove(queueToken);
+    PR_Unlock(mLock);
+    NS_IF_RELEASE(eQueue);
+  } else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
 // Run
 //
 //-------------------------------------------------------------------------
@@ -238,6 +367,7 @@ done:
                 GDK_INPUT_READ,
                 event_processor_callback,
                 EQueue);
+
   gtk_main();
 
   NS_IF_RELEASE(EQueue);

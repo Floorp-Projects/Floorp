@@ -98,8 +98,10 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Initialize(nsICmdLineService*aCmdLineService);
-  NS_IMETHOD Run(void);
-  NS_IMETHOD Shutdown(void);
+  NS_IMETHOD Run();
+  NS_IMETHOD Shutdown();
+  NS_IMETHOD PushThreadEventQueue();
+  NS_IMETHOD PopThreadEventQueue();
 
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow *aParent,
                                   nsIURI *aUrl, 
@@ -499,6 +501,16 @@ nsAppShellService::Shutdown(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAppShellService::PushThreadEventQueue() {
+  return mAppShell->PushThreadEventQueue();
+}
+
+NS_IMETHODIMP
+nsAppShellService::PopThreadEventQueue() {
+  return mAppShell->PopThreadEventQueue();
+}
+
 /*
  * Create a new top level window and display the given URL within it...
  */
@@ -640,25 +652,18 @@ nsAppShellService::RunModalDialog(
 {
   nsresult          rv;
   nsIWebShellWindow *theWindow;
+  PRBool            pushedQueue;
 
-#ifdef XP_PC // XXX: Won't work with any other platforms yet.
-  // First push a nested event queue for event processing from netlib
-  // onto our UI thread queue stack.
-  // nsCOMPtr<nsIEventQueue> innerQueue;
-  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("RunModalDialog unable to obtain eventqueue service.");
-    return rv;
-  }
-  eQueueService->PushThreadEventQueue();
-#endif
-
+  pushedQueue = PR_FALSE;
   if (aWindow && *aWindow) {
     theWindow = *aWindow; // and rv is already some success indication
     NS_ADDREF(theWindow);
-  } else
+  } else {
+    pushedQueue = PR_TRUE;
+    PushThreadEventQueue();
     rv = CreateTopLevelWindow(aParent, aUrl, PR_TRUE, aChromeMask,
             aCallbacks, aInitialWidth, aInitialHeight, &theWindow);
+  }
 
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWidget> parentWindowWidgetThing;
@@ -682,10 +687,8 @@ nsAppShellService::RunModalDialog(
       NS_RELEASE(theWindow);   // can't return it; let it go
   }
 
-	// Release the event queue 
-#ifdef XP_PC // XXX Won't work on other platforms yet
-  eQueueService->PopThreadEventQueue();
-#endif
+  if (pushedQueue)
+    PopThreadEventQueue();
 
   return rv;
 }
