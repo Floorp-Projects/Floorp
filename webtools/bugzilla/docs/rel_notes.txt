@@ -108,30 +108,6 @@ XML::Parser (any)
   installation time.
   (bug 140674)
 
-- This release of Bugzilla uses the Template Toolkit.  For speed,
-  compiled templates are cached on disk.  If you modify the templates
-  in order to customise the look and feel of your Bugzilla installation,
-  the toolkit will normally detect the changes, and recompile the
-  changed templates.
-
-  However, if you do not set a webservergroup in the localconfig file, 
-  (a generally unwise thing on a production installation of Bugzilla)
-  the template directory would have to be world-writable for automatic
-  recompilation to happen.
-
-  Doing that would be a security risk.  So, if you modify templates locally 
-  and do not have a webservergroup set, you will have to rerun checksetup.pl
-  to recompile the templates manually.  If you do not do this, the changes 
-  you make will not appear, and an error message will be reported.
-
-  Adding new directories anywhere inside the template directory may cause 
-  permission errors.  If you see these, rerun checksetup.pl as root.  If you
-  do not have root access, or cannot get someone who does to do this for you,
-  you can rename the data/template directory to data/template.old (or any
-  other name Bugzilla doesn't use).  Then rerun checksetup.pl to regenerate
-  the compiled templates.
-  (bug 97832)
-
 - Querying on CC takes too long on big databases.
   (bug 127200)
 
@@ -176,10 +152,10 @@ XML::Parser (any)
 *** IMPORTANT CHANGES ***
 
 - 2.16 introduces "templatisation", a new feature that allows
-  administrators to easily customise the HTML output of Bugzilla
-  without altering Perl code.  Bugzilla uses the "Template Toolkit"
-  for this.  Please see the "Template Customisation" section of the
-  Bugzilla Guide for more details.
+  administrators to easily customise the HTML output (the "look and feel")
+  of Bugzilla without altering Perl code.  Bugzilla uses the
+  "Template Toolkit" for this.  Please see the "Template Customisation"
+  section of the Bugzilla Guide for more details.
 
   Administrators who ran the 2.15 development version and customised
   templates should check the templates are still valid, as file names
@@ -187,7 +163,19 @@ XML::Parser (any)
 
   Most output is now templatised.  This process will be complete next
   milestone.
-  (bug 86168)
+
+  For speed, compiled templates are cached on disk.  If you modify the
+  templates, the toolkit will normally detect the changes, and recompile the
+  changed templates.
+
+  Adding new directories anywhere inside the template directory may cause 
+  permission errors if you don't have a webservergroup specified in
+  localconfig.  If you see these, rerun checksetup.pl as root.  If you do not
+  have root access, or cannot get someone who does to do this for you, you can
+  rename the data/template directory to data/template.old (or any other name
+  Bugzilla doesn't use).  Then rerun checksetup.pl to regenerate the compiled
+  templates.
+  (bug 86168, 97832)
 
 - Administrators can now configure maximum attachment sizes.  These
   should remain below the maximum size for your MySQL server, or you
@@ -238,9 +226,18 @@ XML::Parser (any)
   errorhtml, bannerhtml, blurbhtml, mostfreqhtml, entryheaderhtml) have now
   been moved to Template Toolkit templates.  If you have modified these
   parameters you will need to make corresponding changes to the corresponding
-  templates.  Most of these now sit in the en/global template subdirectory.
-  Your old parameter values will be moved to a file called old-params.txt by
-  checksetup.pl.
+  templates.  Your old parameter values will be moved to a file called
+  old-params.txt by checksetup.pl.
+
+  The old parameters correspond to files in template/en/default as follows:
+
+  headerhtml:      global/header.html.tmpl
+  footerhtml:      global/footer.html.tmpl
+  bannerhtml:      global/banner.html.tmpl
+  blurbhtml:       global/banner.html.tmpl
+  mostfreqhtml:    reports/duplicates*.html.tmpl
+  entryheaderhtml: bug/create/user-message.html.tmpl
+
   (bug 140437)
 
 *** Other changes of note ***
