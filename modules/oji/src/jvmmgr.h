@@ -24,6 +24,7 @@
 #include "nsCom.h"
 #include "nsError.h"	/* for nsresult */
 #include "jni.h"
+#include "jsdbgapi.h"
 
 struct nsJVMMgr;
 
@@ -40,6 +41,8 @@ typedef enum nsJVMStatus {
 #include "nsAgg.h"
 #include "jsjava.h"
 #include "nsVector.h"
+#include "nsIThreadManager.h"
+#include "nsISecurityContext.h"
 
 class nsIPluginTagInfo2;
 class nsSymantecDebugManager;
@@ -48,6 +51,15 @@ struct ThreadLocalStorageAtIndex0 {
  PRUint32 refcount;
 };
 typedef struct ThreadLocalStorageAtIndex0 ThreadLocalStorageAtIndex0;
+typedef struct ThreadLocalStorageAtIndex1 ThreadLocalStorageAtIndex1;
+struct ThreadLocalStorageAtIndex1 {
+  void        **pNSIPrincipaArray;
+  int           numPrincipals;
+  void         *pNSISecurityContext;
+  JSStackFrame *pJavaToJSSFrame;
+  ThreadLocalStorageAtIndex1 *next;
+  ThreadLocalStorageAtIndex1 *prev;
+};
 
 /*******************************************************************************
  * JVMMgr is the interface to the JVM manager that the browser sees. All
@@ -55,12 +67,72 @@ typedef struct ThreadLocalStorageAtIndex0 ThreadLocalStorageAtIndex0;
  * nsIJVMManager is the more limited interface what the JVM plugin sees.
  ******************************************************************************/
 
-struct nsJVMMgr : public nsIJVMManager {
+struct nsJVMMgr : public nsIJVMManager, public nsIThreadManager {
 public:
 
     NS_DECL_AGGREGATED
     
     /* from nsIJVMManager: */
+    
+    /**
+     * Creates a proxy JNI for a given secure environment.
+     */
+	NS_IMETHOD
+	CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv);
+    
+    /* from nsIThreadManager: */
+    
+	/**
+	 * Returns a unique identifier for the "current" system thread.
+	 */
+	NS_IMETHOD
+	GetCurrentThread(PRUint32* threadID);
+
+	/**
+	 * Pauses the current thread for the specified number of milliseconds.
+	 * If milli is zero, then merely yields the CPU if another thread of
+	 * greater or equal priority.
+	 */
+	NS_IMETHOD
+	Sleep(PRUint32 milli = 0);
+
+	/**
+	 * Creates a unique monitor for the specified address, and makes the
+	 * current system thread the owner of the monitor.
+	 */
+	NS_IMETHOD
+	EnterMonitor(void* address);
+	
+	/**
+	 * Exits the monitor associated with the address.
+	 */
+	NS_IMETHOD
+	ExitMonitor(void* address);
+	
+	/**
+	 * Waits on the monitor associated with the address (must be entered already).
+	 * If milli is 0, wait indefinitely.
+	 */
+	NS_IMETHOD
+	Wait(void* address, PRUint32 milli = 0);
+
+	/**
+	 * Notifies a single thread waiting on the monitor associated with the address (must be entered already).
+	 */
+	NS_IMETHOD
+	Notify(void* address);
+
+	/**
+	 * Notifies all threads waiting on the monitor associated with the address (must be entered already).
+	 */
+	NS_IMETHOD
+	NotifyAll(void* address);
+	
+	/**
+	 * Thread creation primitives.
+	 */
+	NS_IMETHOD
+	CreateThread(PRUint32* threadID, nsIRunnable* runnable);
 
     /* JVMMgr specific methods: */
 
@@ -232,6 +304,22 @@ JVM_IsLiveConnectEnabled(void);
 
 PR_EXTERN(nsJVMStatus)
 JVM_ShutdownJVM(void);
+
+PR_EXTERN(PRBool)
+JVM_NSISecurityContextImplies(JSStackFrame  *pCurrentFrame, const char* target, const char* action);
+
+PR_EXTERN(JSPrincipals*)
+JVM_GetJavaPrincipalsFromStack(JSStackFrame  *pCurrentFrame);
+
+PR_EXTERN(JSStackFrame*)
+JVM_GetStartJSFrameFromParallelStack();
+
+PR_EXTERN(JSStackFrame*)
+JVM_GetEndJSFrameFromParallelStack(JSStackFrame  *pCurrentFrame);
+
+typedef struct nsISecurityContext nsISecurityContext;
+PR_EXTERN(nsISecurityContext*) 
+JVM_GetJSSecurityContext();
 
 PR_END_EXTERN_C
 

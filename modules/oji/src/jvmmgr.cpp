@@ -33,10 +33,15 @@
 #include "plstr.h"
 #include "jni.h"
 #include "jsjava.h"
+#include "jsdbgapi.h"
 #include "libmocha.h"
 #include "libevent.h"
 #include "nsCCapsManager.h"
-
+#include "prinrval.h"
+#include "ProxyJNI.h"
+#include "prcmon.h"
+#include "nsCSecurityContext.h"
+#include "nsISecurityContext.h"
 #include "xpgetstr.h"
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
@@ -54,10 +59,13 @@ void stopAsyncCursors(void);
 }
 #endif // XP_MAC
 
-static PRUintn tlsIndex_g = 0;
+static PRUintn tlsIndex1_g = 0;
+PRUintn tlsIndex2_g = 0;
+PRUintn tlsIndex3_g = 0;
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
+static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
 static NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
 static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
 static NS_DEFINE_IID(kIJVMPluginInstanceIID, NS_IJVMPLUGININSTANCE_IID);
@@ -66,10 +74,90 @@ static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIJVMConsoleIID, NS_IJVMCONSOLE_IID);
 static NS_DEFINE_IID(kISymantecDebuggerIID, NS_ISYMANTECDEBUGGER_IID);
+static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_AGGREGATED(nsJVMMgr);
+
+extern "C" {
+static nsIJVMPlugin* GetRunningJVM(void);
+}
+
+NS_METHOD
+nsJVMMgr::CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv)
+{
+    nsIJVMPlugin* jvmPlugin = GetRunningJVM();
+	if (jvmPlugin != NULL) {
+		*outProxyEnv = ::CreateProxyJNI(jvmPlugin, inSecureEnv);
+		return NS_OK;
+	}
+	return NS_ERROR_FAILURE;
+}
+
+// nsIThreadManager:
+
+NS_METHOD
+nsJVMMgr::GetCurrentThread(PRUint32* threadID)
+{
+	*threadID = PRUint32(PR_GetCurrentThread());
+	return NS_OK;
+}
+
+NS_METHOD
+nsJVMMgr::Sleep(PRUint32 milli)
+{
+	PRIntervalTime ticks = (milli > 0 ? PR_MillisecondsToInterval(milli) : PR_INTERVAL_NO_WAIT);
+	return (PR_Sleep(ticks) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE);
+}
+
+NS_METHOD
+nsJVMMgr::EnterMonitor(void* address)
+{
+	return (PR_CEnterMonitor(address) != NULL ? NS_OK : NS_ERROR_FAILURE);
+}
+
+NS_METHOD
+nsJVMMgr::ExitMonitor(void* address)
+{
+	return (PR_CExitMonitor(address) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE);
+}
+
+NS_METHOD
+nsJVMMgr::Wait(void* address, PRUint32 milli)
+{
+	PRIntervalTime timeout = (milli > 0 ? PR_MillisecondsToInterval(milli) : PR_INTERVAL_NO_TIMEOUT);
+	return (PR_CWait(address, timeout) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE);
+}
+
+NS_METHOD
+nsJVMMgr::Notify(void* address)
+{
+	return (PR_CNotify(address) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE);
+}
+
+NS_METHOD
+nsJVMMgr::NotifyAll(void* address)
+{
+	return (PR_CNotifyAll(address) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE);
+}
+
+static void thread_starter(void* arg)
+{
+	nsIRunnable* runnable = (nsIRunnable*) arg;
+	if (runnable != NULL) {
+		runnable->Run();
+	}
+}
+
+NS_METHOD
+nsJVMMgr::CreateThread(PRUint32* outThreadID, nsIRunnable* runnable)
+{
+	PRThread* thread = PR_CreateThread(PR_USER_THREAD, &thread_starter, (void*) runnable,
+									PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+	*outThreadID = (PRUint32) thread;
+	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
+}
 
 NS_METHOD
 nsJVMMgr::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
@@ -90,7 +178,9 @@ nsJVMMgr::nsJVMMgr(nsISupports* outer)
       fClassPathAdditions(new nsVector())
 {
     NS_INIT_AGGREGATED(outer);
-    PR_NewThreadPrivateIndex(&tlsIndex_g, NULL);
+    PR_NewThreadPrivateIndex(&tlsIndex1_g, NULL);
+    PR_NewThreadPrivateIndex(&tlsIndex2_g, NULL);
+    PR_NewThreadPrivateIndex(&tlsIndex3_g, NULL);
 }
 
 nsJVMMgr::~nsJVMMgr()
@@ -114,11 +204,16 @@ nsJVMMgr::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         AddRef();
         return NS_OK;
     }
+    if (aIID.Equals(kIThreadManagerIID)) {
+        *aInstancePtr = (void*) (nsIThreadManager*) this;
+        AddRef();
+        return NS_OK;
+    }
 #ifdef XP_PC
     // Aggregates...
     if (fDebugManager == NULL) {
         nsresult rslt =
-            nsSymantecDebugManager::Create(this, kISupportsIID,
+            nsSymantecDebugManager::Create((nsIJVMManager *)this, kISupportsIID,
                                            (void**)&fDebugManager, this);
         if (rslt != NS_OK) return rslt;
     }
@@ -164,7 +259,6 @@ static JSContext* PR_CALLBACK
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
 {
     JSContext *cx    = LM_GetCrippledContext();
-    PRBool    jvmMochaPrefsEnabled = PR_FALSE;
 
     *errp = NULL;
 #if 0    
@@ -248,6 +342,7 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 
 	jsj_env = JSJ_AttachCurrentThreadToJava(js_jvm, NULL, NULL);
 	localThreadState.set(jsj_env);
+ PR_SetThreadPrivate(tlsIndex3_g, (void *)cx);
 
 	return jsj_env;
 }
@@ -307,7 +402,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pNSIPluginInstanceIn, char 
                     }
                     pJVMPIT->Release();
                 }
-                pPIT->Release();
+                // pPIT->Release();	// pNSIPluginInstanceIn is passed-in.
             }
             // pJVMPI->Release(); // GetJVMPlugin no longer calls AddRef
         }
@@ -445,54 +540,78 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
 }
 
 static JSBool PR_CALLBACK
-enter_js_from_java_impl(JNIEnv *jEnv, char **errp)
+enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
+                        void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext)
 {
     MWContext *cx = XP_FindSomeContext();   /* XXXMLM */
-
-#ifdef OJI
-    ThreadLocalStorageAtIndex0 *priv = NULL;
-    if ( PR_GetCurrentThread() == NULL )
+    JSContext *pJSCX = (JSContext *)PR_GetThreadPrivate(tlsIndex3_g);
+    if (pJSCX == NULL)
     {
-        PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
-        priv = (ThreadLocalStorageAtIndex0 *)malloc(sizeof(ThreadLocalStorageAtIndex0));
-        priv->refcount=1;
-        PR_SetThreadPrivate(tlsIndex_g, (void *)priv);
+       pJSCX = LM_GetCrippledContext();
     }
-    else
+
+    // Setup tls to maintain a stack of security contexts.
+    if(  (pNSIPrincipaArray   != NULL)
+       &&(pNSISecurityContext != NULL)
+      )
     {
-        priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g);
-        if(priv != NULL)
-        {
-            priv->refcount++;
-        }
+      ThreadLocalStorageAtIndex1 *pSecInfoNew = NULL;
+      pSecInfoNew = (ThreadLocalStorageAtIndex1 *)malloc(sizeof(ThreadLocalStorageAtIndex1));
+      pSecInfoNew->pNSIPrincipaArray   = pNSIPrincipaArray;
+      pSecInfoNew->numPrincipals       = numPrincipals;
+      pSecInfoNew->pNSISecurityContext = pNSISecurityContext;
+      pSecInfoNew->prev                = pSecInfoNew;
+      pSecInfoNew->next                = pSecInfoNew;
+      JSStackFrame *fp                 = NULL;
+      pSecInfoNew->pJavaToJSSFrame            = JS_FrameIterator(pJSCX, &fp);
+      ThreadLocalStorageAtIndex1 *pSecInfoTop = NULL;
+      pSecInfoTop = (ThreadLocalStorageAtIndex1 *)PR_GetThreadPrivate(tlsIndex1_g);
+      if (pSecInfoTop == NULL)
+      {
+        PR_SetThreadPrivate(tlsIndex1_g, (void *)pSecInfoNew);
+      }
+      else
+      {
+        pSecInfoTop->prev->next = pSecInfoNew;
+        pSecInfoNew->prev       = pSecInfoTop->prev;
+        pSecInfoNew->next       = pSecInfoTop;
+        pSecInfoTop->prev       = pSecInfoNew;
+      }
     }
 
     return LM_LockJS(cx, errp);
-#else
-    return JS_TRUE;
-#endif
 }
 
 static void PR_CALLBACK
 exit_js_impl(JNIEnv *jEnv)
 {
     MWContext *cx = XP_FindSomeContext();   /* XXXMLM */
-    ThreadLocalStorageAtIndex0 *priv = NULL;
 
     LM_UnlockJS(cx);
 
-    if (   (PR_GetCurrentThread() != NULL )
-           && ((priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g)) != NULL)
-        )
+    // Pop the security context stack
+    ThreadLocalStorageAtIndex1 *pSecInfoTop = NULL;
+    pSecInfoTop = (ThreadLocalStorageAtIndex1 *)PR_GetThreadPrivate(tlsIndex1_g);
+    if (pSecInfoTop != NULL)
     {
-        priv->refcount--;
-        if(priv->refcount == 0)
-        {
-            PR_SetThreadPrivate(tlsIndex_g, NULL);
-            PR_DetachThread();
-            free(priv);
-        }
+      if(pSecInfoTop->next == pSecInfoTop)
+      {
+        PR_SetThreadPrivate(tlsIndex1_g, NULL);
+        pSecInfoTop->next        = NULL;            
+        pSecInfoTop->prev        = NULL;            
+        free(pSecInfoTop);
+      }
+      else
+      {
+        ThreadLocalStorageAtIndex1 *tail = pSecInfoTop->prev;
+        tail->next        = NULL;            
+        pSecInfoTop->prev = tail->prev;        
+        tail->prev->next  = pSecInfoTop;
+        tail->prev        = NULL;
+        free(tail);
+      }
     }
+
     return;
 }
 
@@ -981,6 +1100,7 @@ nsJVMMgr::AddToClassPath(const char* dirPath)
     return NS_OK;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsJVMPluginTagInfo
 ////////////////////////////////////////////////////////////////////////////////
@@ -1189,7 +1309,7 @@ JVM_GetJVMMgr(void)
 }
 
 static nsIJVMPlugin*
-GetRunningJVM(void)
+GetRunningJVM()
 {
     nsIJVMPlugin* jvm = NULL;
     nsJVMMgr* jvmMgr = JVM_GetJVMMgr();
@@ -1326,50 +1446,53 @@ JVM_StartDebugger(void)
     }
 }
 
-#if 0
-static void PR_CALLBACK detach_JNIEnv(void* env)
+static void PR_CALLBACK detach_ProxyJNI(void* env)
 {
-	JNIEnv* jenv = (JNIEnv*)env;
-	JavaVM* vm = NULL;
-	jenv->GetJavaVM(&vm);
-	vm->DetachCurrentThread();
+	JNIEnv* proxyEnv = (JNIEnv*)env;
+	if (proxyEnv != NULL)
+		DeleteProxyJNI(proxyEnv);
 }
-#endif
 
 PR_IMPLEMENT(JNIEnv*)
 JVM_GetJNIEnv(void)
 {
-    JNIEnv* env = NULL;
 	/* Use NSPR thread private data to manage the per-thread JNIEnv* association. */
-#ifdef NOT_YET /* Talked to patrick about it and he said it was ok to remove it
-                  for now. This code should be in the jvm plugin code which should also*/
-	static ThreadLocalStorage<JNIEnv*> localEnv(&detach_JNIEnv);
+	static ThreadLocalStorage<JNIEnv*> localEnv(&detach_ProxyJNI);
 
-    env = localEnv.get();
+    JNIEnv* env = localEnv.get();
 	if (env != NULL)
 		return env;
-#endif
+
+#if 0
     nsIJVMPlugin* jvm = GetRunningJVM();
     if (jvm) {
         (void)jvm->GetJNIEnv(&env);
         // jvm->Release(); // GetRunningJVM no longer calls AddRef
     }
+#else
+	// Create a Proxy JNI to associate with this NSPR thread.
+    nsIJVMPlugin* jvmPlugin = GetRunningJVM();
+	if (jvmPlugin != NULL)
+		env = CreateProxyJNI(jvmPlugin);
+#endif
 
-#ifdef NOT_YET
 	/* Associate the JNIEnv with the current thread. */
 	localEnv.set(env);
-#endif
+
     return env;
 }
 
 PR_IMPLEMENT(void)
 JVM_ReleaseJNIEnv(JNIEnv* env)
 {
+// this is now done when the NSPR thread is shutdown.
+#if 0
     nsIJVMPlugin* jvm = GetRunningJVM();
     if (jvm) {
         (void)jvm->ReleaseJNIEnv(env);
         // jvm->Release(); // GetRunningJVM no longer calls AddRef
     }
+#endif
 }
 
 PR_IMPLEMENT(nsresult)
@@ -1434,6 +1557,121 @@ JVM_ShutdownJVM(void)
     }
     return status;
 }
+
+ThreadLocalStorageAtIndex1 *
+findPrevNode(JSStackFrame  *pCurrentFrame)
+{
+    ThreadLocalStorageAtIndex1 *pSecInfoTop = NULL;
+    pSecInfoTop = (ThreadLocalStorageAtIndex1 *)PR_GetThreadPrivate(tlsIndex1_g);
+    if (pSecInfoTop == NULL)
+    {
+       return NULL;
+    }
+
+    ThreadLocalStorageAtIndex1 *pSecInfoTail = pSecInfoTop->prev;
+    if (pCurrentFrame == NULL)
+    {
+       return pSecInfoTail;
+    }
+    if ( pSecInfoTop->pJavaToJSSFrame == pCurrentFrame )
+    {
+       return NULL;
+    }
+    ThreadLocalStorageAtIndex1 *pTempSecNode = pSecInfoTail;
+
+    while( pTempSecNode->pJavaToJSSFrame != pCurrentFrame )
+    {
+       pTempSecNode = pTempSecNode->prev;
+       if ( pTempSecNode == pSecInfoTail )
+       {
+          break;
+       }
+    }
+    if( pTempSecNode->pJavaToJSSFrame == pCurrentFrame )
+    {
+      return pTempSecNode;
+    }
+    return NULL;
+}
+
+PR_IMPLEMENT(PRBool)
+JVM_NSISecurityContextImplies(JSStackFrame  *pCurrentFrame, const char* target, const char* action)
+{
+    ThreadLocalStorageAtIndex1 *pSecInfo = findPrevNode(pCurrentFrame);
+
+    if (pSecInfo == NULL)
+    {
+       return PR_FALSE;
+    }
+
+    nsISecurityContext *pNSISecurityContext = (nsISecurityContext *)pSecInfo->pNSISecurityContext;
+    PRBool bAllowedAccess = PR_FALSE;
+    if (pNSISecurityContext != NULL)
+    {
+       pNSISecurityContext->Implies(target, action, &bAllowedAccess);
+    }
+    return bAllowedAccess;
+}
+
+PR_IMPLEMENT(JSPrincipals*)
+JVM_GetJavaPrincipalsFromStack(JSStackFrame  *pCurrentFrame)
+{
+    ThreadLocalStorageAtIndex1 *pSecInfo = findPrevNode(pCurrentFrame);
+
+    if (pSecInfo == NULL)
+    {
+       return NULL;
+    }
+
+    JSPrincipals  *principals = NULL;
+    JSContext *pJSCX = (JSContext *)PR_GetThreadPrivate(tlsIndex3_g);
+    if (pJSCX == NULL)
+    {
+       pJSCX = LM_GetCrippledContext();
+    }
+
+    principals = get_JSPrincipals_from_java_caller_impl(NULL, pJSCX, pSecInfo->pNSIPrincipaArray, 
+                                   pSecInfo->numPrincipals, pSecInfo->pNSISecurityContext);
+    return principals;
+}
+
+PR_IMPLEMENT(JSStackFrame*)
+JVM_GetEndJSFrameFromParallelStack(JSStackFrame  *pCurrentFrame)
+{
+    ThreadLocalStorageAtIndex1 *pSecInfo = findPrevNode(pCurrentFrame);
+
+    if (pSecInfo == NULL)
+    {
+       return NULL;
+    }
+    return pSecInfo->pJavaToJSSFrame;
+}
+
+PR_IMPLEMENT(JSStackFrame*)
+JVM_GetStartJSFrameFromParallelStack()
+{
+    JSStackFrame *pJSStartFrame = (JSStackFrame *)PR_GetThreadPrivate(tlsIndex2_g);
+    return pJSStartFrame;
+}
+
+PR_IMPLEMENT(nsISecurityContext*) 
+JVM_GetJSSecurityContext()
+{
+   nsCSecurityContext *pNSCSecurityContext = new nsCSecurityContext();
+   nsISecurityContext *pNSISecurityContext = NULL;
+   nsresult err = NS_OK;
+   err = pNSCSecurityContext->QueryInterface(kISecurityContextIID,
+                                             (void**)&pNSISecurityContext);
+   if(err != NS_OK)
+   {
+     return NULL; 
+   }
+   return pNSISecurityContext;
+}
+
+
+
+
 
 PR_END_EXTERN_C
 
