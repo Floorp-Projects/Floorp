@@ -15,15 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef CACTIVESITE_H
-#define CACTIVESITE_H
+#ifndef CONTROLSITE_H
+#define CONTROLSITE_H
 
 class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 						public IOleClientSite,
 						public IOleInPlaceSiteWindowless,
 						public IOleControlSite,
 						public IAdviseSinkEx,
-						public IOleItemContainer,
 						public IDispatch
 {
 	// Handle to parent window
@@ -63,8 +62,6 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	CLSID m_clsid;
 	// Parameter list
 	PropertyList m_ParameterList;
-	// List of controls
-	static std::list<CControlSite *> m_cControlList;
 
 	// Double buffer drawing variables used for windowless controls
 	
@@ -113,10 +110,10 @@ BEGIN_COM_MAP(CControlSite)
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx)
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx)
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx)
-	COM_INTERFACE_ENTRY_IID(IID_IParseDisplayName, IOleItemContainer)
-	COM_INTERFACE_ENTRY_IID(IID_IOleContainer, IOleItemContainer)
-	COM_INTERFACE_ENTRY_IID(IID_IOleItemContainer, IOleItemContainer)
 END_COM_MAP()
+
+	// List of controls
+	static std::list<CControlSite *> m_cControlList;
 
 	virtual HRESULT Create(REFCLSID clsid, PropertyList &pl, const tstring szName = _T(""));
 	virtual HRESULT Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInitStream);
@@ -223,18 +220,6 @@ END_COM_MAP()
 	virtual HRESULT STDMETHODCALLTYPE TranslateAccelerator(/* [in] */ MSG __RPC_FAR *pMsg, /* [in] */ DWORD grfModifiers);
 	virtual HRESULT STDMETHODCALLTYPE OnFocus(/* [in] */ BOOL fGotFocus);
 	virtual HRESULT STDMETHODCALLTYPE ShowPropertyFrame( void);
-
-	// IParseDisplayName implementation
-	virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(/* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ LPOLESTR pszDisplayName, /* [out] */ ULONG __RPC_FAR *pchEaten, /* [out] */ IMoniker __RPC_FAR *__RPC_FAR *ppmkOut);
-
-	// IOleContainer implementation
-	virtual HRESULT STDMETHODCALLTYPE EnumObjects(/* [in] */ DWORD grfFlags, /* [out] */ IEnumUnknown __RPC_FAR *__RPC_FAR *ppenum);
-	virtual HRESULT STDMETHODCALLTYPE LockContainer(/* [in] */ BOOL fLock);
-
-	// IOleItemContainer implementation
-	virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetObject(/* [in] */ LPOLESTR pszItem, /* [in] */ DWORD dwSpeedNeeded, /* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ REFIID riid, /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-	virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetObjectStorage(/* [in] */ LPOLESTR pszItem, /* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ REFIID riid, /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvStorage);
-	virtual HRESULT STDMETHODCALLTYPE IsRunning(/* [in] */ LPOLESTR pszItem);  
 };
 
 typedef CComObject<CControlSite> CControlSiteInstance;
