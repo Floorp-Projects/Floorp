@@ -72,37 +72,44 @@ nsNoIncomingServer::~nsNoIncomingServer()
 nsresult
 nsNoIncomingServer::GetLocalStoreType(char **type)
 {
-    NS_ENSURE_ARG_POINTER(type);
-    *type = nsCRT::strdup("mailbox");
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(type);
+  *type = nsCRT::strdup("mailbox");
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsNoIncomingServer::GetAccountManagerChrome(nsAString& aResult)
 {
-    aResult.AssignLiteral("am-serverwithnoidentities.xul");
-    return NS_OK;
+  aResult.AssignLiteral("am-serverwithnoidentities.xul");
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
 {
-    nsCOMPtr<nsIMsgFolder> rootFolder;
-    nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIMsgLocalMailFolder> localFolder =
-        do_QueryInterface(rootFolder, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIMsgLocalMailFolder> localFolder =
+      do_QueryInterface(rootFolder, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // "none" doesn't have an inbox, but it does have a queue (unsent messages)
-    localFolder->SetFlagsOnDefaultMailboxes(MSG_FOLDER_FLAG_SENTMAIL |
-                                            MSG_FOLDER_FLAG_DRAFTS |
-                                            MSG_FOLDER_FLAG_TEMPLATES |
-                                            MSG_FOLDER_FLAG_TRASH |
-                                            MSG_FOLDER_FLAG_JUNK |
-                                            MSG_FOLDER_FLAG_QUEUE);
-    return NS_OK;
+  PRUint32 mailboxFlags = MSG_FOLDER_FLAG_SENTMAIL |
+                          MSG_FOLDER_FLAG_DRAFTS |
+                          MSG_FOLDER_FLAG_TEMPLATES |
+                          MSG_FOLDER_FLAG_TRASH |
+                          MSG_FOLDER_FLAG_JUNK |
+                          MSG_FOLDER_FLAG_QUEUE;
+ 
+  // "none" may have a inbox if it is getting deferred to.
+  PRBool isDeferredTo;
+  if (NS_SUCCEEDED(GetIsDeferredTo(&isDeferredTo)) && isDeferredTo)
+    mailboxFlags |= MSG_FOLDER_FLAG_INBOX;
+
+  localFolder->SetFlagsOnDefaultMailboxes(mailboxFlags);
+
+  return NS_OK;
 }	
 
 NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDisk, nsIFileSpec *parentDir)
