@@ -1252,15 +1252,15 @@ nsMsgAccountManagerDataSource::OnServerLoaded(nsIMsgIncomingServer* aServer)
   printf("nsMsgAccountmanagerDataSource::OnServerLoaded(%s)\n", (const char*)serverUri);
 #endif
 
-  NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, PR_TRUE, PR_FALSE);
-  NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, PR_TRUE, PR_FALSE);
+  NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, nsnull, PR_TRUE, PR_FALSE);
+  NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, nsnull, PR_TRUE, PR_FALSE);
 
   PRBool fakeAccountServer;
   IsIncomingServerForFakeAccount(aServer, &fakeAccountServer);
 
   if (fakeAccountServer) {
-    NotifyObservers(kNC_AccountRoot, kNC_Child, kNC_PageTitleFakeAccount, PR_FALSE, PR_FALSE);
-    NotifyObservers(kNC_AccountRoot, kNC_Settings, kNC_PageTitleFakeAccount, PR_FALSE, PR_FALSE);
+    NotifyObservers(kNC_AccountRoot, kNC_Child, kNC_PageTitleFakeAccount, nsnull, PR_FALSE, PR_FALSE);
+    NotifyObservers(kNC_AccountRoot, kNC_Settings, kNC_PageTitleFakeAccount, nsnull, PR_FALSE, PR_FALSE);
   }
 
   return NS_OK;
@@ -1277,8 +1277,8 @@ nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
   if (NS_FAILED(rv)) return rv;
 
 
-  NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, PR_FALSE, PR_FALSE);
-  NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, PR_FALSE, PR_FALSE);
+  NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, nsnull, PR_FALSE, PR_FALSE);
+  NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, nsnull, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
@@ -1327,7 +1327,7 @@ nsMsgAccountManagerDataSource::OnItemBoolPropertyChanged(nsIRDFResource *aItem,
                                                          PRBool aNewValue)
 {
   if (aProperty == kDefaultServerAtom)
-    NotifyObservers(aItem, kNC_IsDefaultServer, kTrueLiteral, aNewValue, PR_FALSE);
+    NotifyObservers(aItem, kNC_IsDefaultServer, kTrueLiteral, nsnull, aNewValue, PR_FALSE);
   return NS_OK;
 }
 
@@ -1425,8 +1425,8 @@ nsMsgAccountManagerDataSource::Observe(nsISupports *aSubject, const char *aTopic
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsDependentString prefName(aData);
     if (prefName.EqualsLiteral(PREF_SHOW_FAKE_ACCOUNT)) {
-      NotifyObservers(kNC_AccountRoot, kNC_Child, kNC_PageTitleFakeAccount, PR_FALSE, PR_FALSE);
-      NotifyObservers(kNC_AccountRoot, kNC_Settings, kNC_PageTitleFakeAccount, PR_FALSE, PR_FALSE);
+      NotifyObservers(kNC_AccountRoot, kNC_Child, kNC_PageTitleFakeAccount, nsnull, PR_FALSE, PR_FALSE);
+      NotifyObservers(kNC_AccountRoot, kNC_Settings, kNC_PageTitleFakeAccount, nsnull, PR_FALSE, PR_FALSE);
     }
   }
   else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {

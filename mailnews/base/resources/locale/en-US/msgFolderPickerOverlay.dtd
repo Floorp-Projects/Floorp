@@ -46,3 +46,4 @@
 <!ENTITY filemessagesclickhere.label			"click here to choose a folder">
 <!ENTITY chooseaccountclickhere.label			"Click here to select an account">
 <!ENTITY choosefolderclickhere.label			"Click here to select a folder">
+<!ENTITY chooseserverToDeferTo.label      "click here to select an account to use for storing messages">

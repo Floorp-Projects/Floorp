@@ -127,6 +127,8 @@ nsIAtom * nsMsgFolderDataSource::kFolderSizeAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kSynchronizeAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kOpenAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kIsDeferredAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kCanFileMessagesAtom = nsnull;
 
 static const PRUint32 kDisplayBlankCount = 0xFFFFFFFE;
 static const PRUint32 kDisplayQuestionCount = 0xFFFFFFFF;
@@ -197,6 +199,8 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     kNameAtom                    = NS_NewAtom("Name");
     kSynchronizeAtom             = NS_NewAtom("Synchronize");
     kOpenAtom                    = NS_NewAtom("open");
+    kIsDeferredAtom              = NS_NewAtom("isDeferred");
+    kCanFileMessagesAtom         = NS_NewAtom("canFileMessages");
   }
   
   CreateLiterals(rdf);
@@ -267,6 +271,8 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kNameAtom);
     NS_RELEASE(kSynchronizeAtom);
     NS_RELEASE(kOpenAtom);
+    NS_RELEASE(kIsDeferredAtom);
+    NS_RELEASE(kCanFileMessagesAtom);
   }
 }
 
@@ -407,8 +413,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetSources(nsIRDFResource* property,
                                                 PRBool tv,
                                                 nsISimpleEnumerator** sources)
 {
-  NS_ASSERTION(PR_FALSE, "not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_RDF_NO_VALUE;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
@@ -846,7 +851,7 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsIRDFResource *parentItem,
   nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item));
   if (itemNode)
   {
-    NotifyObservers(parentItem, kNC_Child, itemNode, added, PR_FALSE);
+    NotifyObservers(parentItem, kNC_Child, itemNode, nsnull, added, PR_FALSE);
   }
   return NS_OK;
 }
@@ -905,15 +910,17 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsIRDFResource *resource,
 {
   if (newValue != oldValue) {
     nsIRDFNode* literalNode = newValue?kTrueLiteral:kFalseLiteral;
-    if (kNewMessagesAtom == property) {
+    nsIRDFNode* oldLiteralNode = oldValue?kTrueLiteral:kFalseLiteral;
+    if (kNewMessagesAtom == property)
       NotifyPropertyChanged(resource, kNC_NewMessages, literalNode); 
-    }
-    else if (kSynchronizeAtom == property) {
+    else if (kSynchronizeAtom == property)
       NotifyPropertyChanged(resource, kNC_Synchronize, literalNode); 
-    }
-    else if (kOpenAtom == property) {
+    else if (kOpenAtom == property)
       NotifyPropertyChanged(resource, kNC_Open, literalNode);
-    }
+    else if (kIsDeferredAtom == property) 
+      NotifyPropertyChanged(resource, kNC_IsDeferred, literalNode, oldLiteralNode);
+    else if (kCanFileMessagesAtom == property)
+      NotifyPropertyChanged(resource, kNC_CanFileMessages, literalNode, oldLiteralNode);
   } 
 
   return NS_OK;

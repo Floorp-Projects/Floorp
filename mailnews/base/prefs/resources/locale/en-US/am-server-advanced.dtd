@@ -26,3 +26,13 @@
 <!ENTITY otherUsersNamespace.accesskey "O">
 <!ENTITY overrideNamespaces.label "Allow server to override these namespaces">
 <!ENTITY overrideNamespaces.accesskey "A">
+<!ENTITY pop3Desc.label "When downloading pop3 mail for this server, you can store it in the Global Inbox (the INBOX in the Local Folders Account), in the INBOX for this account, or in the INBOX for another POP3 account" >
+<!ENTITY folderStorage.label "Where to store mail">
+<!ENTITY globalInbox.label "Global Inbox (Local Folders Account)">
+<!ENTITY globalInbox.accesskey "G">
+<!ENTITY accountDirectory.label "Inbox for this server's account">
+<!ENTITY accountDirectory.accesskey "S">
+<!ENTITY deferToServer.label "Inbox for different account">
+<!ENTITY deferToServer.accesskey "D">
+<!ENTITY deferGetNewMail.label "Include this server when getting new mail">
+<!ENTITY deferGetNewMail.accesskey "I">

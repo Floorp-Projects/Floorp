@@ -1,7 +1,7 @@
 <!-- Entities for AccountWizard -->
 
 <!ENTITY windowTitle.label "Account Wizard">
-<!ENTITY accountWizard.size "width: 40em; height: 30em;">
+<!ENTITY accountWizard.size "width: 40em; height: 38em;">
 
 <!-- Entities for Account Type page -->
 
@@ -117,4 +117,6 @@
 <!ENTITY smtpServerNamePrefix.label "Outgoing Server Name (SMTP):">
 <!ENTITY newsServerNamePrefix.label "News Server Name (NNTP):">
 <!ENTITY downloadOnLogin.label "Download messages now">
+<!ENTITY deferStorageDesc.label "Uncheck this checkbox to store mail for this account in its own directory. That will make this account appear as a top-level account. Otherwise, it will be part of the Local Folders Global Inbox account.">
+<!ENTITY deferStorage.label "Use Global Inbox (store mail in Local Folders)">
 <!ENTITY clickFinish.label "Click Finish to save these settings and exit the Account Wizard.">

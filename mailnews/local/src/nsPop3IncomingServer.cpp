@@ -55,6 +55,10 @@
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
 class nsPop3GetMailChainer : public nsIUrlListener
@@ -126,13 +130,85 @@ NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
                         "num_days_to_leave_on_server")
 
 
-NS_IMPL_SERVERPREF_STR(nsPop3IncomingServer, 
-                          DeferredToAccount,
-                          "deferred_to_account")
-
 NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                             DeferGetNewMail,
                             "defer_get_new_mail")
+
+NS_IMETHODIMP nsPop3IncomingServer::GetDeferredToAccount(char **aRetVal)
+{
+  return GetCharValue("deferred_to_account", aRetVal);
+}
+
+NS_IMETHODIMP nsPop3IncomingServer::SetDeferredToAccount(const char *aAccountKey)
+{
+  nsXPIDLCString deferredToAccount;
+  GetDeferredToAccount(getter_Copies(deferredToAccount));
+  //Notify listeners who listen to every folder
+
+  nsresult rv =  SetCharValue("deferred_to_account", aAccountKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIFolderListener> folderListenerManager =
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+
+    nsCOMPtr<nsIMsgFolder> rootFolder;
+    // use GetRootFolder, because that returns the real
+    // root, not the deferred to root.
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (rootFolder)
+    {
+      // if isDeferred state has changed, send notification
+      if (((aAccountKey && *aAccountKey)  == deferredToAccount.IsEmpty())) 
+      {
+        
+        nsCOMPtr <nsIRDFResource> folderRes = do_QueryInterface(rootFolder);
+        nsCOMPtr <nsIAtom> deferAtom = getter_AddRefs(NS_NewAtom("isDeferred"));
+        nsCOMPtr <nsIAtom> canFileAtom = getter_AddRefs(NS_NewAtom("CanFileMessages"));
+        folderListenerManager->OnItemBoolPropertyChanged(folderRes, deferAtom, 
+                  !deferredToAccount.IsEmpty(), deferredToAccount.IsEmpty());
+        folderListenerManager->OnItemBoolPropertyChanged(folderRes, canFileAtom, 
+                  deferredToAccount.IsEmpty(), !deferredToAccount.IsEmpty());
+
+        // this hack causes the account manager ds to send notifications to the
+        // xul content builder that make the changed acct appear or disappear
+        // from the folder pane and related menus.
+        nsCOMPtr<nsIMsgAccountManager> acctMgr = 
+                            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
+        if (acctMgr)
+        {
+          acctMgr->NotifyServerUnloaded(this);
+          acctMgr->NotifyServerLoaded(this);
+          // check if this newly deferred to account is the local folders account
+          // and needs to have a newly created INBOX.
+          if (aAccountKey)
+          {
+            nsCOMPtr <nsIMsgAccount> account;
+            acctMgr->GetAccount(aAccountKey, getter_AddRefs(account));
+            if (account)
+            {
+              nsCOMPtr <nsIMsgIncomingServer> server;
+              account->GetIncomingServer(getter_AddRefs(server));
+              if (server)
+              {
+                nsCOMPtr <nsILocalMailIncomingServer> incomingLocalServer = do_QueryInterface(server);
+                if (incomingLocalServer)
+                {
+                  nsCOMPtr <nsIMsgFolder> rootFolder;
+                  rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+                  NS_ENSURE_SUCCESS(rv, rv);
+                  // this will fail if it already exists, which is fine.
+                  rootFolder->CreateSubfolder(NS_LITERAL_STRING("Inbox").get(), nsnull);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rv;  
+}
 
 //NS_IMPL_GETSET(nsPop3IncomingServer, Authenticated, PRBool, m_authenticated);
 
@@ -167,7 +243,7 @@ nsresult
 nsPop3IncomingServer::GetLocalStoreType(char **type)
 {
     NS_ENSURE_ARG_POINTER(type);
-    *type = nsCRT::strdup("mailbox");
+    *type = strdup("mailbox");
     return NS_OK;
 }
 
@@ -345,6 +421,18 @@ nsPop3IncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServe
   nsXPIDLCString deferredToAccount;
   GetDeferredToAccount(getter_Copies(deferredToAccount));
   *aCanFileMessagesOnServer = deferredToAccount.IsEmpty();
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsPop3IncomingServer::GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer)
+{
+  NS_ENSURE_ARG_POINTER(aCanCreateFoldersOnServer);
+
+  nsXPIDLCString deferredToAccount;
+  GetDeferredToAccount(getter_Copies(deferredToAccount));
+  *aCanCreateFoldersOnServer = deferredToAccount.IsEmpty();
   return NS_OK;
 }
 

@@ -108,6 +108,7 @@ nsIAtom* nsMsgDBFolder::kStatusAtom=nsnull;
 nsIAtom* nsMsgDBFolder::kNameAtom=nsnull;
 nsIAtom* nsMsgDBFolder::kSynchronizeAtom=nsnull;
 nsIAtom* nsMsgDBFolder::kOpenAtom=nsnull;
+nsIAtom* nsMsgDBFolder::kIsDeferred=nsnull;
 
 nsICollation * nsMsgDBFolder::gCollationKeyGenerator = nsnull;
 
@@ -145,6 +146,7 @@ const nsStaticAtom nsMsgDBFolder::folder_atoms[] = {
   { "Flagged", &nsMsgDBFolder::kFlaggedAtom },
   { "Synchronize", &nsMsgDBFolder::kSynchronizeAtom },
   { "open", &nsMsgDBFolder::kOpenAtom },
+  { "isDeferred", &nsMsgDBFolder::kIsDeferred }
 };
 
 nsMsgDBFolder::nsMsgDBFolder(void)

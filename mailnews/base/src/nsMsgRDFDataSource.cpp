@@ -365,18 +365,20 @@ nsMsgRDFDataSource::getRDFService()
 }
 
 nsresult nsMsgRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
-													  nsIRDFNode *newNode)
+                                                   nsIRDFResource *propertyResource,
+                                                   nsIRDFNode *newNode,
+                                                   nsIRDFNode *oldNode /* = nsnull */)
 {
 
-	NotifyObservers(resource, propertyResource, newNode, PR_FALSE, PR_TRUE);
-	return NS_OK;
+  NotifyObservers(resource, propertyResource, newNode, oldNode, PR_FALSE, PR_TRUE);
+  return NS_OK;
 
 }
 
 nsresult nsMsgRDFDataSource::NotifyObservers(nsIRDFResource *subject,
                                                 nsIRDFResource *property,
-                                                nsIRDFNode *object,
+                                                nsIRDFNode *newObject,
+                                                nsIRDFNode *oldObject,
                                                 PRBool assert, PRBool change)
 {
     NS_ASSERTION(!(change && assert),
@@ -384,7 +386,7 @@ nsresult nsMsgRDFDataSource::NotifyObservers(nsIRDFResource *subject,
     
 	if(mObservers)
 	{
-		nsMsgRDFNotification note = { this, subject, property, object };
+		nsMsgRDFNotification note = { this, subject, property, newObject, oldObject };
 		if(change)
 			mObservers->EnumerateForwards(changeEnumFunc, &note);
 		else if (assert)
@@ -404,7 +406,7 @@ nsMsgRDFDataSource::assertEnumFunc(nsISupports *aElement, void *aData)
   observer->OnAssert(note->datasource,
                      note->subject,
                      note->property,
-                     note->object);
+                     note->newObject);
   return PR_TRUE;
 }
 
@@ -417,7 +419,7 @@ nsMsgRDFDataSource::unassertEnumFunc(nsISupports *aElement, void *aData)
   observer->OnUnassert(note->datasource,
                        note->subject,
                        note->property,
-                       note->object);
+                       note->newObject);
   return PR_TRUE;
 }
 
@@ -430,7 +432,7 @@ nsMsgRDFDataSource::changeEnumFunc(nsISupports *aElement, void *aData)
   observer->OnChange(note->datasource,
                      note->subject,
                      note->property,
-                     nsnull, note->object);
+                     note->oldObject, note->newObject);
   return PR_TRUE;
 }
 nsresult 

@@ -39,6 +39,8 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+
 <!DOCTYPE dialog SYSTEM "chrome://messenger/locale/am-server-advanced.dtd">
 
 <dialog
@@ -49,11 +51,13 @@
         ondialogaccept="return onOk();">
 
   <script type="application/x-javascript" src="am-server-advanced.js"/>
+  <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
 
   <tabbox id="tabbox" flex="1">
     <tabs id="tabs">
       <tab id="smtpTab" label="SMTP"/>
       <tab id="imapTab" label="IMAP"/>
+      <tab id="pop3Tab" label="POP"/>
     </tabs>
     <tabpanels id="tabpanels" flex="1">
 
@@ -160,6 +164,38 @@
           </row>
         </rows>
       </grid>
+    </vbox>
+    <!-- POP3 Tab -->
+    <vbox id="pop3TabPanel">
+      <description style="width: 20em; ">&pop3Desc.label;</description>
+      <separator class="thin"/>
+      <hbox align="center">
+      <radiogroup id="folderStorage"
+                  orient="horizontal" amsa_persist="true">
+      <rows>
+         <row align = "center">
+          <radio value="0" id = "globalInbox" label="&globalInbox.label;"
+                 oncommand="updateInboxAccount(false, true)" 
+                 accesskey="&globalInbox.accesskey;"/>
+         </row>
+         <row>
+            <radio value="1" id = "accountDirectory" label="&accountDirectory.label;"
+                 accesskey="&accountDirectory.accesskey;"
+                 oncommand="updateInboxAccount(false, false)" />
+         </row>
+         <row>
+            <radio value="2" id = "deferToServer" label="&deferToServer.label;"
+                 accesskey="&deferToServer.accesskey;"
+                 oncommand="updateInboxAccount(true, true)" 
+                 />
+  	        <menulist id="deferedServerFolderPicker" />
+         </row>
+        </rows>
+        </radiogroup>
+      </hbox>
+      <checkbox amsa_persist="true" id="deferGetNewMail"
+              label="&deferGetNewMail.label;"
+              accesskey="&deferGetNewMail.accesskey;"/>
     </vbox>
     </tabpanels>
   </tabbox>

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,11 +38,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 // pull stuff out of window.arguments
-var server = window.arguments[0];
+var gServerSettings = window.arguments[0];
 
 var serverList;
 
-// initialize the controls with the "server" argument
+var gAccountManager;
+var gFirstDeferredAccount;
+// initialize the controls with the "gServerSettings" argument
 
 var gControls;
 function getControls()
@@ -51,45 +54,149 @@ function getControls()
   return gControls;
 }
 
+function getLocalFoldersAccount()
+{
+  var localFoldersServer = gAccountManager.localFoldersServer;
+  return gAccountManager.FindAccountForServer(localFoldersServer);
+}
+
 function onLoad()
 {
-  if (server.serverType == "imap")
+  if (gServerSettings.serverType == "imap")
+  {
     document.getElementById("tabbox").selectedTab = document.getElementById("imapTab");
+    document.getElementById("pop3Tab").hidden = true;
+    // don't hide panel - it hides all subsequent panels
+  }
+  else if (gServerSettings.serverType == "pop3")
+  {
+    var radioGroup = document.getElementById("folderStorage");
+    document.getElementById("tabbox").selectedTab = document.getElementById("pop3Tab");
+    document.getElementById("imapTab").hidden = true;
+    // just hide the tab, don't hide panel - it hides all subsequent panels
+    gAccountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+    gFirstDeferredAccount = gServerSettings.deferredToAccount;
+    var localFoldersAccount = getLocalFoldersAccount();
+    if (gFirstDeferredAccount.length)
+    {
+      var account = gAccountManager.getAccount(gFirstDeferredAccount);
+      if (account)
+      {
+        var thisServer = account.incomingServer;
+        SetFolderPicker(thisServer.serverURI, 'deferedServerFolderPicker');
+      }
+      if (gFirstDeferredAccount == localFoldersAccount.key)
+      {
+        radioGroup.selectedItem = document.getElementById("globalInbox");
+        SetFolderPicker(localFoldersAccount.incomingServer.serverURI, 'deferedServerFolderPicker');
+        updateInboxAccount(false, true);
+      }
+      else
+      {
+        radioGroup.selectedItem = document.getElementById("deferToServer");
+        SetFolderPicker(account.incomingServer.serverURI, 'deferedServerFolderPicker');
+        updateInboxAccount(true, true);
+      }
+    }
+    else
+    {
+      radioGroup.selectedItem = document.getElementById("accountDirectory");
+
+      // we should find out if there's another pop3/movemail server to defer to,
+      // perhaps by checking the number of elements in the picker. For now, 
+      // just use the local folders account
+      SetFolderPicker(localFoldersAccount.incomingServer.serverURI, 'deferedServerFolderPicker');
+
+      updateInboxAccount(false, false);
+
+    }
+  }
   else
   {
     document.getElementById("imapTab").hidden = true;
-    document.getElementById("imapTabPanel").hidden = true;
+    document.getElementById("pop3Tab").hidden = true;
   }
-
   var controls = getControls();
 
   for (var i = 0; i < controls.length; i++)
   {
     var slot = controls[i].id;
-    if (slot in server)
+    if (slot in gServerSettings)
     {
       if (controls[i].localName == "checkbox")
-        controls[i].checked = server[slot];
+        controls[i].checked = gServerSettings[slot];
       else
-        controls[i].value = server[slot];
+        controls[i].value = gServerSettings[slot];
     }
   }
 }
 
-// save the controls back to the "server" array
+// save the controls back to the "gServerSettings" array
 function onOk()
 {
   var controls = getControls();
 
+  radioGroup = document.getElementById("folderStorage");
+  gPrefsBundle = document.getElementById("bundle_prefs");
+
+  // if this account wasn't deferred, and is now...
+  if (radioGroup.value != 1 && !gFirstDeferredAccount.length)
+  {
+     var confirmDeferAccount =
+        gPrefsBundle.getString("confirmDeferAccount");
+
+      var confirmTitle = gPrefsBundle.getString("confirmDeferAccountTitle");
+
+      var promptService =
+        Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+                   getService(Components.interfaces.nsIPromptService);
+      if (!promptService ||
+          !promptService.confirm(window, confirmTitle, confirmDeferAccount))
+        return;
+  }
+  switch (radioGroup.value)
+  {
+    case "0":
+      gServerSettings['deferredToAccount'] = getLocalFoldersAccount().key;
+      break;
+    case "1":
+      gServerSettings['deferredToAccount'] = "";
+      break;
+    case "2":
+      picker = document.getElementById("deferedServerFolderPicker");
+      var server = GetMsgFolderFromUri(picker.getAttribute("uri"), false).server;
+      var account = gAccountManager.FindAccountForServer(server);
+      gServerSettings['deferredToAccount'] = account.key;
+      break;
+  }
+
   for (var i = 0; i < controls.length; i++)
   {
     var slot = controls[i].id;
-    if (slot in server)
+    if (slot in gServerSettings)
     {
       if (controls[i].localName == "checkbox")
-        server[slot] = controls[i].checked;
+        gServerSettings[slot] = controls[i].checked;
       else
-        server[slot] = controls[i].value;
+        gServerSettings[slot] = controls[i].value;
     }
   }
+}
+
+
+// Set radio element choices and picker states
+function updateInboxAccount(showPicker, showDeferGetNewMail, event)
+{
+    var picker = document.getElementById('deferedServerFolderPicker');
+    if (showPicker)
+    {
+      picker.hidden = false;
+      picker.removeAttribute("disabled");
+    }
+    else
+    {
+      picker.hidden = true;
+    }
+    var deferCheckbox = document.getElementById('deferGetNewMail');
+    deferCheckbox.hidden = !showDeferGetNewMail;
 }

@@ -173,6 +173,17 @@
               accesskey="&deleteOnServer.accesskey;"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
+
+  <!-- hidden elements for data transfer to and from advanced... dialog -->
+  <hbox flex="1" hidefor="imap,nntp,movemail" hidden="true">
+    <checkbox hidden="true" wsm_persist="true" id="pop3.deferGetNewMail"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.deferGetNewMail"/>
+    <label hidden="true" wsm_persist="true" id="pop3.deferredToAccount"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.deferredToAccount"/>
+
+  </hbox>
   </vbox>
   <!-- IMAP -->
   <hbox align="center" id="imap.deleteModel.box" hidefor="pop3,nntp,movemail">

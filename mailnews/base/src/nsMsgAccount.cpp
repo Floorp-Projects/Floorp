@@ -185,9 +185,15 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
 
   m_incomingServer = aIncomingServer;
 
+  PRBool serverValid;
+  (void) aIncomingServer->GetValid(&serverValid);
+  // only notify server loaded if server is valid so 
+  // account manager only gets told about finished accounts.
+  if (serverValid) 
+  {
   nsCOMPtr<nsIMsgAccountManager> accountManager =
     do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
     accountManager->NotifyServerLoaded(aIncomingServer);
   }
   return NS_OK;

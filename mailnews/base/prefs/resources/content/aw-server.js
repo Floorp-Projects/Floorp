@@ -147,6 +147,7 @@ function serverPageInit() {
       serverTypeRadioGroup.selectedItem = pop3RadioItem;
     }
     setServerType();
+    setDeferStorage(); // set the initial value correctly
   }
 
   gPrefsBundle = document.getElementById("bundle_prefs");
@@ -201,5 +202,16 @@ function setServerType()
 {
   var pageData = parent.GetPageData();
   var serverType = (document.getElementById("servertype")).selectedItem.value;
+  var deferStorageBox = document.getElementById("deferStorageBox");
+  deferStorageBox.hidden = serverType == "imap";
   setPageData(pageData, "server", "servertype", serverType);
 }
+
+function setDeferStorage()
+{
+  var pageData = parent.GetPageData();
+  var deferStorage = (document.getElementById("deferStorage")).checked;
+  setPageData(pageData, "server", "deferStorage", deferStorage);
+}
+
+

@@ -67,6 +67,7 @@ public:
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
     NS_IMETHOD GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder);
     NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
+    NS_IMETHOD GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer);
     NS_IMETHOD GetNewMessages(nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWindow, 
                       nsIUrlListener *aUrlListener);
 

@@ -59,7 +59,7 @@
       <rule>
         <conditions>
           <content uri="?container"/>
-          <member container="?container" child="?member" />
+          <member container="?container" child="?member" isDeferred="?isDeferred" />
           <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#IsDeferred" object="false"/>
         </conditions>
 
@@ -118,6 +118,9 @@
           <binding subject="?member"
                    predicate="http://home.netscape.com/NC-rdf#PageTitleFakeAccount"
                    object="?fakeAccount" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsDeferred"
+                   object="?isDeferred" />
         </bindings>
 
         <action>

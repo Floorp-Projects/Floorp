@@ -238,6 +238,7 @@ protected:
   static nsIAtom* kNameAtom;
   static nsIAtom* kSynchronizeAtom;
   static nsIAtom* kOpenAtom;
+  static nsIAtom* kIsDeferred;
   static nsICollation* gCollationKeyGenerator;
 
 #ifdef MSG_FASTER_URI_PARSING

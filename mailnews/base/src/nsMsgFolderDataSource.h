@@ -278,10 +278,11 @@ protected:
   static nsIAtom* kNameAtom;
   static nsIAtom* kSynchronizeAtom;
   static nsIAtom* kOpenAtom;
-
+  static nsIAtom* kIsDeferredAtom;
   static nsrefcnt gFolderResourceRefCnt;
-
-	nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;
+  static nsIAtom* kCanFileMessagesAtom;
+  
+  nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;
 
 };
 

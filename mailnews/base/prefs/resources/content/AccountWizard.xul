@@ -160,6 +160,14 @@
                    accesskey="&incomingServerLabel.accesskey;" control="incomingServer"/>
             <textbox wsm_persist="true" id="incomingServer" flex="1" class="uri-element"/>
           </hbox>
+        </vbox>
+        <separator class="groove"/>
+        <vbox id="deferStorageBox">
+            <description> &deferStorageDesc.label;</description>
+            <hbox>
+              <checkbox id="deferStorage" label="&deferStorage.label;" checked="true"
+                wsm_persist="true" oncommand="setDeferStorage();"/> 
+            </hbox>
           <separator/>
         </vbox>
 

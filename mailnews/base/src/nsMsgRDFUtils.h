@@ -49,7 +49,8 @@ typedef struct _nsMsgRDFNotification {
   nsIRDFDataSource *datasource;
   nsIRDFResource *subject;
   nsIRDFResource *property;
-  nsIRDFNode *object;
+  nsIRDFNode *newObject;
+  nsIRDFNode *oldObject;
 } nsMsgRDFNotification;
 
 //Some property declarations
