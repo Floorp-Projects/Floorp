@@ -1430,6 +1430,9 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
 
+  nsCOMPtr<nsIDOMNode> bogusNodeParent (bodyNode);
+  PRInt32 bogusNodeOffset = 0;
+
   // now we've got the body tag.
   // iterate the body tag, looking for editable content
   // if no editable content is found, insert the bogus node
@@ -1447,11 +1450,38 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
     bodyChild->GetNextSibling(getter_AddRefs(temp));
     bodyChild = do_QueryInterface(temp);
   }
+
+  // Also, if we just inserted a non-text node, and if there's
+  // no editable content after the newly inserted node, then
+  // we need a bogus node at the end of the document:
+  if (!needsBogusContent)
+  {
+    nsCOMPtr<nsIDOMNode> focusParent;
+    aSelection->GetFocusNode(getter_AddRefs(focusParent));
+    if (focusParent && !mEditor->IsTextNode(focusParent))
+    {
+      PRInt32 focusOffset;
+      if (NS_SUCCEEDED(aSelection->GetFocusOffset(&focusOffset)))
+      {
+        nsCOMPtr<nsIDOMNode> child = mEditor->GetChildAt(focusParent,
+                                                         focusOffset+1);
+
+        if (!child || !mEditor->IsEditable(child))
+        {
+          needsBogusContent = PR_TRUE;
+          bogusNodeParent = focusParent;
+          bogusNodeOffset = focusOffset;
+        }
+      }
+    }
+  }
+
   if (needsBogusContent)
   {
     // set mBogusNode to be the newly created <br>
-    res = mEditor->CreateNode(nsAutoString("br"), bodyNode, 0, 
-                                 getter_AddRefs(mBogusNode));
+    res = mEditor->CreateNode(nsAutoString("br"),
+                              bogusNodeParent, bogusNodeOffset,
+                              getter_AddRefs(mBogusNode));
     if (NS_FAILED(res)) return res;
     if (!mBogusNode) return NS_ERROR_NULL_POINTER;
 
@@ -1466,7 +1496,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
     }
     
     // set selection
-    aSelection->Collapse(bodyNode,0);
+    aSelection->Collapse(bogusNodeParent, bogusNodeOffset);
   }
   return res;
 }
