@@ -6,7 +6,7 @@ browser.jar:
         content/browser/aboutFooter.png               (content/aboutFooter.png)
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
-*	content/browser/aboutDialog.css               (content/aboutDialog.css)
+*       content/browser/aboutDialog.css               (content/aboutDialog.css)
         content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
