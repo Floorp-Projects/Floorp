@@ -21,6 +21,7 @@
 #include "nsVoidArray.h"
 
 class nsTreeCellFrame;
+class nsTreeRowGroupFrame;
 
 class nsTreeFrame : public nsTableFrame
 {
@@ -35,10 +36,12 @@ public:
   void MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
-  void MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame);
+  void MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col);
     
   PRBool IsSlatedForReflow() { return mSlatedForReflow; };
   void SlateForReflow() { mSlatedForReflow = PR_TRUE; };
+
+  void GetTreeBody(nsTreeRowGroupFrame** aResult);
 
   // Overridden methods
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);

@@ -54,6 +54,8 @@ public:
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer);
 
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+
   PRBool ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height);
 
   PRBool IsFull() { return mIsFull; };
@@ -109,9 +111,32 @@ protected:
                              nsIContent** aResult);
   void GetFirstRowContent(nsIContent** aRowContent);
 
-  void GetVisibleRowCount(PRInt32& rowCount, nsIContent* aParent);
+  void ComputeVisibleRowCount(PRInt32& rowCount, nsIContent* aParent);
 
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+public:
+  // Helpers that allow access to info. The tree is the primary consumer of this
+  // info.
+
+  // Tells you the row and index of a cell (given only the content node).
+  // This method is expensive.
+  void IndexOfCell(nsIContent* aCellContent, PRInt32& aRowIndex, PRInt32& aColIndex);
+  
+  // Tells you the row index of a row (given only the content node).
+  // This method is expensive.
+  void IndexOfRow(nsIContent* aRowContent, PRInt32& aRowIndex);
+
+  // Whether or not the row is valid. This is a cheap method, since the total row count
+  // is cached.
+  PRBool IsValidRow(PRInt32 aRowIndex);
+
+  // This method ensures that a row is onscreen.  It will scroll the tree widget such
+  // that the row is at the top of the screen (if the row was offscreen to start with).
+  void EnsureRowIsVisible(PRInt32 aRowIndex);
+
+  // This method retrieves a cell at a given index. The intent of this method is that it be
+  // cheap.  It should not cause frames to be built, so this should only be called when the
+  // cell is onscreen (use EnsureRowIsVisible to guarantee this).
+  void GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex, nsTreeCellFrame** aResult);
 
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.

@@ -26,6 +26,7 @@
 #include "nsCellMap.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsINameSpaceManager.h"
+#include "nsXULAtoms.h"
 
 //
 // NS_NewTreeOuterFrame
@@ -65,7 +66,22 @@ nsTreeOuterFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_KEY_DOWN) {
-    printf("YES!\n");
+    // Retrieve the tree frame.
+    nsIFrame* curr = mFrames.FirstChild();
+    while (curr) {
+      nsCOMPtr<nsIContent> content;
+      curr->GetContent(getter_AddRefs(content));
+      if (content) {
+        nsCOMPtr<nsIAtom> tag;
+        content->GetTag(*getter_AddRefs(tag));
+        if (tag && tag.get() == nsXULAtoms::tree) {
+          // This is our actual tree frame.
+          return curr->HandleEvent(aPresContext, aEvent, aEventStatus);
+        }
+      }
+
+      curr->GetNextSibling(&curr);
+    }
   }
   return NS_OK;
 }
