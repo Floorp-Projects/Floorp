@@ -2393,7 +2393,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     prefs->GetIntPref("content.notify.interval", &mNotificationInterval);
   }
 
-  mMaxTextRun = 8192;
+  // Changed from 8192 to greatly improve page loading performance on large
+  // pages.  See bugzilla bug 77540.
+  mMaxTextRun = 8191;
   if (prefs) {
     prefs->GetIntPref("content.maxtextrun", &mMaxTextRun);
   }
