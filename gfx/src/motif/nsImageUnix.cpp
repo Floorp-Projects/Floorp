@@ -236,9 +236,9 @@ void nsImageUnix::AllocConvertedBits(PRUint32 aSize)
 void nsImageUnix::ConvertImage(nsDrawingSurface aDrawingSurface)
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aDrawingSurface;
-PRUint8			*tempbuffer,*cursrc,*curdest;
-PRInt32			x,y;
-PRInt16			red,green,blue,*cur16;
+PRUint8                 *tempbuffer,*cursrc,*curdest;
+PRInt32                 x,y;
+PRUint16                red,green,blue,*cur16;
 
   mBitsForCreate = mImageBits;
 
@@ -301,9 +301,10 @@ PRInt16			red,green,blue,*cur16;
 
       for(x=0;x<mOriginalRowBytes;x++)
         {
-        red = mColorMap->Index[(3*(*cursrc))+2];  // red
+        blue = mColorMap->Index[(3*(*cursrc))+2];  // red
         green = mColorMap->Index[(3*(*cursrc))+1];  // green
-        blue = mColorMap->Index[(3*(*cursrc))];  // blue
+        red = mColorMap->Index[(3*(*cursrc))];  // blue
+        cursrc++;
         *cur16 = ((red&0xf8)<<8)|((green&0xfc)<<3)| ((blue&0xf8)>>3);	
         cur16++;
         } 
