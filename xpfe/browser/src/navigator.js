@@ -102,6 +102,7 @@
                 		startpage = "about:blank";
     	  }
             }
+	    dump("startpage = " + startpage + "\n");
             document.getElementById("args").setAttribute("value", startpage);
         }
         appCore.loadInitialPage();
