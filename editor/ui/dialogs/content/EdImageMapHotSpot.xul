@@ -92,12 +92,12 @@
                 </menulist>
 
           <!-- 
-		  <html:select name="common_targets" id="commonInput" size="4" oncommand="changeTarget()" onchange="changeTarget()">
-            <html:option value="_self">Same Frame</html:option>
-            <html:option value="_top">Whole Page</html:option>
-            <html:option value="_blank">New Window</voption>
-            <html:option value="_parent">Parent Frame</html:option>
-          </html:select> 
+		  <html s e l e c t name="common_targets" id="commonInput" size="4" oncommand="changeTarget()" onchange="changeTarget()">
+            <html o p t i o n value="_self">Same Frame</html o p t i o n>
+            <html o p t i o n value="_top">Whole Page</html o p t i o n>
+            <html o p t i o n value="_blank">New Window</html o p t i o n>
+            <html o p t i o n value="_parent">Parent Frame</html o p t i o n>
+          </html s e l e c t> 
 		  -->
 
 		  </row>
