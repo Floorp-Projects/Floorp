@@ -1035,7 +1035,8 @@ cookie_P3PDecision(nsIURI *aHostURI, nsIURI *aFirstURI, nsIHttpChannel *aHttpCha
     3. tokens and values have looser restrictions on allowed characters than
        spec. This is also due to certain characters being in common use inside
        values. We allow only '=' to separate token/value pairs, and ';' to
-       terminate tokens or values.
+       terminate tokens or values. <LWS> is allowed within tokens and values
+       (see bug 206022).
 
     4. where appropriate, full <OCTET>s are allowed, where the spec dictates to
        reject control chars or non-ASCII chars. This is erring on the loose
@@ -1052,7 +1053,7 @@ cookie_P3PDecision(nsIURI *aHostURI, nsIURI *aFirstURI, nsIHttpChannel *aHttpCha
     quoted-string = ( <"> *( qdtext | quoted-pair ) <"> )
     qdtext        = <any allowed-chars except <">>             ; CR | LF removed by necko
     quoted-pair   = "\" <any OCTET except NUL or cookie-sep>   ; CR | LF removed by necko
-    separators    = ";" | "=" | LWS
+    separators    = ";" | "="
     value-sep     = ";"
     cookie-sep    = CR | LF
     allowed-chars = <any OCTET except NUL or cookie-sep>
@@ -1087,7 +1088,7 @@ PRIVATE inline PRBool iswhitespace     (char c) { return c == ' '  || c == '\t';
 PRIVATE inline PRBool isterminator     (char c) { return c == '\n' || c == '\r'; }
 PRIVATE inline PRBool isquoteterminator(char c) { return isterminator(c) || c == '"'; }
 PRIVATE inline PRBool isvalueseparator (char c) { return isterminator(c) || c == ';'; }
-PRIVATE inline PRBool istokenseparator (char c) { return isvalueseparator(c) || iswhitespace(c) || c == '='; }
+PRIVATE inline PRBool istokenseparator (char c) { return isvalueseparator(c) || c == '='; }
 
 // Parse a single token/value pair.
 // Returns PR_TRUE if a cookie terminator is found, so caller can parse new cookie.
@@ -1098,21 +1099,25 @@ cookie_GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter,
                      nsDependentSingleFragmentCSubstring &aTokenValue,
                      PRBool                              &aEqualsFound)
 {
-  nsASingleFragmentCString::const_char_iterator start;
+  nsASingleFragmentCString::const_char_iterator start, lastSpace;
   // initialize value string to clear garbage
   aTokenValue.Rebind(aIter, aIter);
 
-  // find <token>
+  // find <token>, including any <LWS> between the end-of-token and the
+  // token separator. we'll remove trailing <LWS> next
   while (aIter != aEndIter && iswhitespace(*aIter))
     ++aIter;
   start = aIter;
   while (aIter != aEndIter && !istokenseparator(*aIter))
     ++aIter;
-  aTokenString.Rebind(start, aIter);
 
-  // now expire whitespace to see if '=' awaits us
-  while (aIter != aEndIter && iswhitespace(*aIter)) // skip over spaces at end of cookie name
-    ++aIter;
+  // remove trailing <LWS>; first check we're not at the beginning
+  lastSpace = aIter;
+  if (lastSpace != start) {
+    while (--lastSpace != start && iswhitespace(*lastSpace));
+    ++lastSpace;
+  }
+  aTokenString.Rebind(start, lastSpace);
 
   aEqualsFound = (*aIter == '=');
   if (aEqualsFound) {
@@ -1150,7 +1155,7 @@ cookie_GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter,
 
       // remove trailing <LWS>; first check we're not at the beginning
       if (aIter != start) {
-        nsASingleFragmentCString::const_char_iterator lastSpace = aIter;
+        lastSpace = aIter;
         while (--lastSpace != start && iswhitespace(*lastSpace));
         aTokenValue.Rebind(start, ++lastSpace);
       }
