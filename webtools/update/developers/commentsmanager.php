@@ -262,7 +262,7 @@ echo"<h2>Submitting Comment, please wait...</h2>\n";
         $type="themes";
     }
     
-    $name = "<a href=\"/$type/authorprofiles?id=$_SESSION[uid]\">$_SESSION[name]</a>";
+    $name = "<a href=\"/$type/authorprofiles.php?id=$_SESSION[uid]\">$_SESSION[name]</a>";
 
     $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$id', '$name', NULL, '$title', '$comments', NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
