@@ -395,6 +395,22 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Do we actually need to do anything?
+  { // scope to make sure |request| can't be used later
+    imgIRequest* request = mPendingRequest ? mPendingRequest : mCurrentRequest;
+    if (request) {
+      nsCOMPtr<nsIURI> existingURI;
+      request->GetURI(getter_AddRefs(existingURI));
+      if (existingURI) {
+        PRBool equal;
+        rv = existingURI->Equals(imageURI, &equal);
+        if (NS_SUCCEEDED(rv) && equal) {
+          // It's the same URI as we already have; don't bother to do anything
+          return NS_OK;
+        }
+      }
+    }
+  }
   
   // If we'll be loading a new image, we want to cancel our existing
   // requests; the question is what reason to pass in.  If everything
