@@ -87,9 +87,8 @@
 		style="width:100%;height:100%"> 
   
 
-<html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
-<html:script language="JavaScript" src="MsgComposeCommands.js"/>
-<html:script language="JavaScript" src="resource:/res/mailnews/addrbook/addressbook.js"/>
+<html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"> </html:script>
+<html:script language="JavaScript" src="MsgComposeCommands.js"> </html:script>
 
 <broadcaster id="args" value="editorType=default"/>
 
