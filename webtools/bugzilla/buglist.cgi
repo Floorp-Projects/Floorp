@@ -1302,11 +1302,13 @@ if ($order) {
     # by which to sort the results.
     ORDER: for ($order) {
         /\./ && do {
+            my @columnnames = map($columns->{lc($_)}->{'name'}, keys(%$columns));
             # A custom list of columns.  Make sure each column is valid.
-            foreach my $fragment (split(/[,\s]+/, $order)) {
-                next if $fragment =~ /^asc|desc$/i;
-                my @columnnames = map($columns->{lc($_)}->{'name'}, keys(%$columns));
-                if (!grep($_ eq $fragment, @columnnames)) {
+            foreach my $fragment (split(/,/, $order)) {
+                $fragment = trim($fragment);
+                # Accept an order fragment matching a column name, with
+                # asc|desc optionally following (to specify the direction)
+                if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames)) {
                     my $qfragment = html_quote($fragment);
                     my $error = "The custom sort order you specified in your "
                               . "form submission contains an invalid column "
