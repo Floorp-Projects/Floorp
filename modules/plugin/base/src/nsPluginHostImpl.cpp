@@ -1238,8 +1238,11 @@ private:
   nsIPluginInstanceOwner  *mOwner;
   nsIPluginInstance       *mInstance;
   nsIPluginStreamListener *mPStreamListener;
-  nsPluginStreamInfo	  *mPluginStreamInfo;
-  PRBool		  mSetUpListener;
+  nsPluginStreamInfo      *mPluginStreamInfo;
+  PRPackedBool             mSetUpListener;
+
+  // Set to PR_TRUE if we request failed (like with a HTTP response of 404)
+  PRPackedBool            mRequestFailed;
 
   /*
    * Set to PR_TRUE after nsIPluginInstancePeer::OnStartBinding() has
@@ -1684,6 +1687,7 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mStartBinding = PR_FALSE;
   mLocalFile = nsnull;
   mAbort = PR_FALSE;
+  mRequestFailed = PR_FALSE;
 
   mPendingRequests = 0;
   mHaveFiredOnStartRequest = PR_FALSE;
@@ -1953,9 +1957,11 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
     PRUint32 responseCode = 0;
     rv = httpChannel->GetResponseStatus(&responseCode);
     if (NS_FAILED(rv) || responseCode > 206) { // not normal
-      // NPP_Notyfy() will be called from OnStopRequest
+      // NPP_Notify() will be called from OnStopRequest
       // in ns4xPluginStreamListener::CleanUpStream
       // return error will cancel this request
+      // ...and we also need to tell the plugin that
+      mRequestFailed = PR_TRUE;
       return NS_ERROR_FAILURE;
     }
 
@@ -2335,6 +2341,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
 
   if (aContentType)
     mPluginStreamInfo->SetContentType(aContentType);
+
+  // set error status if stream failed so we notify the plugin
+  if (mRequestFailed)
+    aStatus = NS_ERROR_FAILURE;
 
   // on error status cleanup the stream
   if (mStartBinding || NS_FAILED(aStatus))
