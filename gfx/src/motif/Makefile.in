@@ -36,7 +36,7 @@ CPPSRCS		= \
 		nsImageMotif.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb -L/usr/X11R6/lib -lXm -lXt -lXext -lX11
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(TK_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
