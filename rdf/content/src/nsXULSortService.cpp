@@ -908,10 +908,6 @@ XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, P
 
 
 
-// crap
-
-
-
 NS_IMETHODIMP
 XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
                            const nsString& sortDirection)
@@ -925,12 +921,13 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = FindTreeElement(contentNode, &treeNode)))	return(rv);
 
 	nsAutoString currentSortDirection;
+	nsAutoString currentSortResource(sortResource);
 
 	sortInfo.db = nsnull;
 	sortInfo.sortProperty = nsnull;
-	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, (nsString &)sortResource, (nsString &)currentSortDirection)))
+	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, currentSortResource, currentSortDirection)))
 	{
-		char *uri = sortResource.ToNewCString();
+		char *uri = currentSortResource.ToNewCString();
 		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
 		delete [] uri;
 		if (NS_FAILED(rv))	return(rv);
