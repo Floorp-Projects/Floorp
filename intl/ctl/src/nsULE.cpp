@@ -209,7 +209,7 @@ nsULE::NextCluster(const PRUnichar *aString,
     return NS_OK;
   }
 
-  if (aIndex >= aLength) {
+  if (PRUint32(aIndex) >= aLength) {
     *aNextOffset = aLength;
     return NS_OK;
   }
