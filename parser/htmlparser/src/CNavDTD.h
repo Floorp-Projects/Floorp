@@ -415,6 +415,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult    HandleScriptToken(nsCParserNode& aNode);
     nsresult    HandleStyleToken(CToken* aToken);
     nsresult    HandleProcessingInstructionToken(CToken* aToken);
+    nsresult    HandleDocTypeDeclToken(CToken* aToken);
 
 
     //*************************************************

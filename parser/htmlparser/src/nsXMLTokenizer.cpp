@@ -193,23 +193,11 @@ nsresult ConsumeConditional(nsScanner& aScanner,const nsString& aMatchString,PRB
  */
 nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
   nsresult result=NS_OK;
-  nsAutoString CDATAString("[CDATA[");
-  PRBool isCDATA = PR_FALSE;
-
-  result = ConsumeConditional(aScanner, CDATAString, isCDATA);
   CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
   
   if(theRecycler) {
-    if (NS_OK == result) {
-      nsAutoString  theEmpty;
-      if (isCDATA) {
-        aToken=theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,theEmpty);
-      }
-      else {
-        aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
-      }
-    }
-
+    nsAutoString  theEmpty;
+    aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
     if(aToken) {
       result=aToken->Consume(aChar,aScanner);
       AddToken(aToken,result,mTokenDeque,theRecycler);
@@ -219,6 +207,47 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanne
   return result;
 }
 
+/**
+ *  This method is called just after a "<!" has been consumed.
+ *  NOTE: Here we might consume CDATA and "special" comments. 
+ * 
+ *  
+ *  @update harishd 09/02/99
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+nsresult nsXMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+  nsresult result=NS_OK;
+  CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
+
+  if(theRecycler) {
+    PRUnichar theChar;
+    aScanner.Peek(theChar);
+    PRBool isComment=PR_TRUE; 
+    nsAutoString  theEmpty;
+    if(theChar==kLeftSquareBracket) {
+      nsAutoString CDATAString("[CDATA[");
+      PRBool isCDATA = PR_FALSE;
+      result = ConsumeConditional(aScanner, CDATAString, isCDATA);
+      if (NS_OK == result) {
+        if (isCDATA) {
+           aToken=theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,theEmpty);
+           isComment=PR_FALSE;
+        }
+      }
+    }
+    
+    if(isComment) aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
+ 
+    if(aToken) {
+      result=aToken->Consume(aChar,aScanner);
+      AddToken(aToken,result,mTokenDeque,theRecycler);
+    }
+  }
+  return result;
+}
 
 
 /**

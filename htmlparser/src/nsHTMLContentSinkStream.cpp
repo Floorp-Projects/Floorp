@@ -873,6 +873,12 @@ void nsHTMLContentSinkStream::AddIndent()
 void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
+
+  if(tag==eHTMLTag_mdo) { 
+    Write("<!"); // mdo => Markup Declaration Open.
+    return;
+  }
+
   const nsString&   name = aNode.GetText();
   nsString          tagName;
 
@@ -959,6 +965,13 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   else if (tag == eHTMLTag_comment)
   {
     tagName = "--";
+  }
+  else if(tag == eHTMLTag_mdo) 
+  {
+    // mod => Markup Declaration Open, i.e., "<!"
+    Write(kGreaterThan);
+    Write(NS_LINEBREAK);
+    return;
   }
   else
   {
@@ -1169,6 +1182,8 @@ nsHTMLContentSinkStream::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMod
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
+   
+  Write("<!");
 
   return NS_OK;
 }

@@ -85,6 +85,8 @@ nsXIFTagEntry gXIFTagTable[] =
   {"leaf",                  eXIFTag_leaf},
   {"link",                  eXIFTag_link},
 
+  {"markup_declaration",    eXIFTag_mdo},
+
   {"section",               eXIFTag_section},
   {"section_body",          eXIFTag_section_body}, 
   {"section_head",          eXIFTag_section_head}, 
@@ -714,6 +716,10 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
         AddCSSDeclaration(node);
       break;
 
+      case eXIFTag_mdo:
+        mSink->OpenContainer(node);
+        break;
+
       default:
       break;
     }
@@ -769,11 +775,13 @@ nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
       EndCSSStyleRule(node);
     break;
 
-
     case eXIFTag_css_declaration_list:
       mInContent = PR_FALSE;
       EndCSSDeclarationList(node);
     break;
+
+    case eXIFTag_mdo:
+      mSink->CloseContainer(node);
 
     default:
     break;
@@ -1441,7 +1449,6 @@ void nsXIFDTD::AddEndCommentTag(const nsIParserNode& aNode)
   // close the container 
   mSink->CloseContainer(node); 
 }
-
 
 /**
  * This method does two things: 1st, help construct

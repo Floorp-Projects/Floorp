@@ -81,6 +81,7 @@ protected:
   virtual nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeText(const nsString& aString,CToken*& aToken,nsScanner& aScanner);
+  virtual nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,CTokenRecycler* aRecycler);
