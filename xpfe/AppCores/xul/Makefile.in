@@ -132,7 +132,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(NULL)
 
 EXPORT_RESOURCE_THROBBER = \
-	$(srcdir)/resources/thobbingN.gif \
+	$(srcdir)/resources/throbbingN.gif \
 	$(NULL)
 
 install:: 
