@@ -40,6 +40,10 @@ imgContainerMNG::imgContainerMNG() :
   mObserver(0),
   mDecoder(0),
   mAnimationMode(0),
+  mBuffer(0),
+  image(0),
+  alpha(0),
+  mHandle(0),
   mFrozen(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
@@ -53,8 +57,10 @@ imgContainerMNG::~imgContainerMNG()
     mTimer = nsnull; 
   }
 
-  mng_display_freeze(mHandle);
-  mng_cleanup(&mHandle);
+  if (mHandle) {
+    mng_display_freeze(mHandle);
+    mng_cleanup(&mHandle);
+  }
   if (alpha)
     nsMemory::Free(alpha);
   if (image)
