@@ -47,6 +47,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "nsHTMLAtoms.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -1154,15 +1155,21 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
    
   aFrame->GetContent(frameContent);
   if (frameContent == aContent) {
-    // XXX Sleazy hack to check whether this is a placeholder frame.
-    // If it is, we skip it and go on to (hopefully) find the 
-    // absolutely positioned frame.
-    const nsStylePosition*  position;
+    nsIStyleContext*  styleContext;
+    nsIAtom*          pseudoTag;
+    PRBool            isPlaceholder = PR_FALSE;
 
-    aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-    if ((NS_STYLE_POSITION_ABSOLUTE != position->mPosition) ||
-        !IsZeroSizedFrame(aFrame)) {
-      NS_RELEASE(frameContent);
+    // If it's a placeholder frame, then ignore it and keep looking for the
+    // primary frame
+    aFrame->GetStyleContext(styleContext);
+    styleContext->GetPseudoType(pseudoTag);
+    if (pseudoTag == nsHTMLAtoms::placeholderPseudo) {
+      isPlaceholder = PR_TRUE;
+    }
+    NS_RELEASE(styleContext);
+    NS_IF_RELEASE(pseudoTag);
+
+    if (!isPlaceholder) {
       return aFrame;
     }
   }
