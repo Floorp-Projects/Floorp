@@ -44,7 +44,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIIOService.h"
-#include "nsIFile.h"
+#include "nsITimer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,6 +63,16 @@ public:
   nsCookieService();
   virtual ~nsCookieService(void);
   nsresult Init();
+
+protected:
+  // Use LazyWrite to save the cookies file on a timer. It will write
+  // the file only once if repeatedly hammered quickly.
+  void LazyWrite(PRBool aForce);
+  static void DoLazyWrite(nsITimer *aTimer, void *aClosure);
+
+  nsCOMPtr<nsITimer> mWriteTimer;
+  PRUint32           mLoadCount;
+  PRBool             mWritePending;
 };
 
 #endif /* nsCookieService_h__ */

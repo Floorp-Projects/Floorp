@@ -55,6 +55,9 @@
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
+static const PRUint32 kLazyWriteLoadingTimeout = 10000; //msec
+static const PRUint32 kLazyWriteFinishedTimeout = 1000; //msec
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -66,12 +69,16 @@ NS_IMPL_ISUPPORTS4(nsCookieService, nsICookieService,
 
 PRBool gCookieIconVisible = PR_FALSE;
 
-nsCookieService::nsCookieService()
+nsCookieService::nsCookieService() :
+  mLoadCount(0),
+  mWritePending(PR_FALSE)
 {
 }
 
 nsCookieService::~nsCookieService(void)
 {
+  if (mWriteTimer)
+    mWriteTimer->Cancel();
   COOKIE_RemoveAll();
 }
 
@@ -97,12 +104,43 @@ nsresult nsCookieService::Init()
     nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService));
     if (progress)
         (void) progress->AddProgressListener((nsIWebProgressListener*)this,
-                                             nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+                            nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                            nsIWebProgress::NOTIFY_STATE_NETWORK);
   } else {
     NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
   }
 
   return NS_OK;
+}
+
+void
+nsCookieService::LazyWrite(PRBool aForce)
+{
+  // !aForce resets the timer at load end, but only if a write is pending
+  if (!aForce && !mWritePending)
+    return;
+
+  PRUint32 timeout = mLoadCount > 0 ? kLazyWriteLoadingTimeout :
+                                      kLazyWriteFinishedTimeout;
+  if (mWriteTimer) {
+    mWriteTimer->SetDelay(timeout);
+    mWritePending = PR_TRUE;
+  } else {
+    mWriteTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mWriteTimer) {
+      mWriteTimer->InitWithFuncCallback(DoLazyWrite, this, timeout,
+                                        nsITimer::TYPE_ONE_SHOT);
+      mWritePending = PR_TRUE;
+    }
+  }
+}
+
+void
+nsCookieService::DoLazyWrite(nsITimer *aTimer, void *aClosure)
+{
+  nsCookieService *service = NS_REINTERPRET_CAST(nsCookieService *, aClosure);
+  service->mWritePending = PR_FALSE;
+  COOKIE_Write();
 }
 
 // nsIWebProgressListener implementation
@@ -124,10 +162,22 @@ nsCookieService::OnStateChange(nsIWebProgress* aWebProgress,
                                PRUint32 progressStateFlags, 
                                nsresult aStatus)
 {
-    if ((progressStateFlags & STATE_IS_DOCUMENT) && (progressStateFlags & STATE_STOP)) {
-      COOKIE_Notify();
+  if (progressStateFlags & STATE_IS_NETWORK) {
+    if (progressStateFlags & STATE_START)
+      ++mLoadCount;
+    if (progressStateFlags & STATE_STOP) {
+      if (mLoadCount > 0) // in case we missed STATE_START
+        --mLoadCount;
+      if (mLoadCount == 0)
+        LazyWrite(PR_FALSE);
     }
-    return NS_OK;
+  }
+
+  if ((progressStateFlags & STATE_IS_DOCUMENT) &&
+      (progressStateFlags & STATE_STOP))
+    COOKIE_Notify();
+
+  return NS_OK;
 }
 
 
@@ -180,6 +230,7 @@ NS_IMETHODIMP
 nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * aCookie, nsIHttpChannel* aHttpChannel) {
 
   COOKIE_SetCookieString(aURL, aPrompt, aCookie, aHttpChannel);
+  LazyWrite(PR_TRUE);
   return NS_OK;
 }
 
@@ -193,6 +244,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPro
 
   COOKIE_SetCookieStringFromHttp(
     aURL, firstURL, aPrompter, aCookie, (char *)aExpires, aHttpChannel);
+  LazyWrite(PR_TRUE);
   return NS_OK;
 }
 
@@ -209,6 +261,8 @@ NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
+    if (mWriteTimer)
+      mWriteTimer->Cancel();
     COOKIE_Write();
     COOKIE_RemoveAll();
 
