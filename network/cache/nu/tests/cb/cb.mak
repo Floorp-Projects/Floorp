@@ -148,11 +148,12 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "..\..\..\..\..\dist\public\cache" /I "..\..\..\..\..\dist\win32_d.obj\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR /Yu"stdafx.h" /V"ERBOSE:lib" /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "..\..\..\..\..\dist\public\cache" /I "..\..\..\..\..\dist\win32_d.obj\include" /I "..\..\..\..\..\dist\public\dbm" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR /Yu"stdafx.h" /V"ERBOSE:lib" /c
 CPP_PROJ=/nologo /MDd /W3 /Gm /GX /Zi /Od /I "..\..\..\..\..\dist\public\cache"\
- /I "..\..\..\..\..\dist\win32_d.obj\include" /D "WIN32" /D "_DEBUG" /D\
- "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)/" /Fp"$(INTDIR)/cb.pch"\
- /Yu"stdafx.h" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /V"ERBOSE:lib" /c 
+ /I "..\..\..\..\..\dist\win32_d.obj\include" /I\
+ "..\..\..\..\..\dist\public\dbm" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D\
+ "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)/" /Fp"$(INTDIR)/cb.pch" /Yu"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /V"ERBOSE:lib" /c 
 CPP_OBJS=.\Debug/
 CPP_SBRS=.\Debug/
 # ADD BASE MTL /nologo /D "_DEBUG" /win32
@@ -180,12 +181,14 @@ BSC32_SBRS= \
 
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386
-# ADD LINK32 ..\..\..\..\..\dist\win32_d.obj\lib\cachelib.lib;..\..\..\..\..\dist\win32_d.obj\lib\libnspr21.lib /nologo /subsystem:windows /debug /machine:I386
+# ADD LINK32 ..\..\..\..\..\dist\win32_d.obj\lib\libnspr21.lib ..\..\..\..\..\dist\win32_d.obj\lib\libplc21.lib ..\..\..\..\..\dist\win32_d.obj\lib\dbm32.lib ..\..\..\..\..\dist\win32_d.obj\lib\cachelib.lib /nologo /subsystem:windows /debug /machine:I386
 # SUBTRACT LINK32 /nodefaultlib
-LINK32_FLAGS=\
-..\..\..\..\..\dist\win32_d.obj\lib\cachelib.lib;..\..\..\..\..\dist\win32_d.obj\lib\libnspr21.lib\
- /nologo /subsystem:windows /incremental:yes /pdb:"$(OUTDIR)/cb.pdb" /debug\
- /machine:I386 /out:"$(OUTDIR)/cb.exe" 
+LINK32_FLAGS=..\..\..\..\..\dist\win32_d.obj\lib\libnspr21.lib\
+ ..\..\..\..\..\dist\win32_d.obj\lib\libplc21.lib\
+ ..\..\..\..\..\dist\win32_d.obj\lib\dbm32.lib\
+ ..\..\..\..\..\dist\win32_d.obj\lib\cachelib.lib /nologo /subsystem:windows\
+ /incremental:yes /pdb:"$(OUTDIR)/cb.pdb" /debug /machine:I386\
+ /out:"$(OUTDIR)/cb.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\CacheTreeView.obj" \
 	"$(INTDIR)\cb.obj" \
@@ -293,9 +296,10 @@ BuildCmds= \
 
 BuildCmds= \
 	$(CPP) /nologo /MDd /W3 /Gm /GX /Zi /Od /I "..\..\..\..\..\dist\public\cache"\
- /I "..\..\..\..\..\dist\win32_d.obj\include" /D "WIN32" /D "_DEBUG" /D\
- "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)/" /Fp"$(INTDIR)/cb.pch"\
- /Yc"stdafx.h" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /V"ERBOSE:lib" /c $(SOURCE) \
+ /I "..\..\..\..\..\dist\win32_d.obj\include" /I\
+ "..\..\..\..\..\dist\public\dbm" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D\
+ "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)/" /Fp"$(INTDIR)/cb.pch" /Yc"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /V"ERBOSE:lib" /c $(SOURCE) \
 	
 
 "$(INTDIR)\StdAfx.obj" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
@@ -380,24 +384,29 @@ SOURCE=.\cbView.cpp
 !IF  "$(CFG)" == "cb - Win32 Release"
 
 DEP_CPP_CBVIE=\
+	"..\..\..\..\..\dist\public\cache\nsBkgThread.h"\
+	"..\..\..\..\..\dist\public\cache\nsCacheBkgThd.h"\
 	"..\..\..\..\..\dist\public\cache\nsCacheManager.h"\
 	"..\..\..\..\..\dist\public\cache\nsCacheModule.h"\
 	"..\..\..\..\..\dist\public\cache\nsCacheObject.h"\
+	"..\..\..\..\..\dist\public\cache\nsCachePref.h"\
 	"..\..\..\..\..\dist\public\cache\nsDiskModule.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemCacheObject.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemModule.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\obsolete\protypes.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prcpucfg.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prinrval.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prthread.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prtypes.h"\
 	".\cb.h"\
 	".\cbDoc.h"\
 	".\cbView.h"\
 	".\MainFrm.h"\
+	".\nsTimeIt.h"\
 	".\StdAfx.h"\
 	
 NODEP_CPP_CBVIE=\
-	"..\..\..\..\..\dist\public\cache\nsISupports.h"\
+	"..\..\..\..\..\dist\public\cache\mcom_db.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\protypes.h"\
 	
 
@@ -408,24 +417,35 @@ NODEP_CPP_CBVIE=\
 !ELSEIF  "$(CFG)" == "cb - Win32 Debug"
 
 DEP_CPP_CBVIE=\
+	"..\..\..\..\..\dist\public\cache\nsBkgThread.h"\
+	"..\..\..\..\..\dist\public\cache\nsCacheBkgThd.h"\
 	"..\..\..\..\..\dist\public\cache\nsCacheManager.h"\
 	"..\..\..\..\..\dist\public\cache\nsCacheModule.h"\
 	"..\..\..\..\..\dist\public\cache\nsCacheObject.h"\
+	"..\..\..\..\..\dist\public\cache\nsCachePref.h"\
 	"..\..\..\..\..\dist\public\cache\nsDiskModule.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemCacheObject.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemModule.h"\
+	"..\..\..\..\..\dist\public\dbm\cdefs.h"\
+	"..\..\..\..\..\dist\public\dbm\mcom_db.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\obsolete\protypes.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prcpucfg.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prinrval.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prthread.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prtypes.h"\
 	".\cb.h"\
 	".\cbDoc.h"\
 	".\cbView.h"\
 	".\MainFrm.h"\
+	".\nsTimeIt.h"\
 	".\StdAfx.h"\
+	{$(INCLUDE)}"\sys\STAT.H"\
+	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\nsISupports.h"\
+	"..\..\..\..\..\dist\public\dbm\prmacos.h"\
+	"..\..\..\..\..\dist\public\dbm\xp_mcom.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\protypes.h"\
 	
 

@@ -16,52 +16,31 @@
  * Reserved.
  */
 
-#include <xp_core.h>
-#include <xp_str.h>
+#ifndef nsCacheBkgThd_h__
+#define nsCacheBkgThd_h__
 
-#include "nsCacheModule.h"
-#include "nsCacheTrace.h"
+#include "nsBkgThread.h"
 
-
-/* 
- * nsCacheModule
- *
- * Gagan Saksena 02/02/98
- * 
- */
-
-
-#define DEFAULT_SIZE 10*0x100000L
-
-nsCacheModule::nsCacheModule(const PRUint32 i_size=DEFAULT_SIZE):
-    m_Size(i_size),
-    m_pNext(0),
-    m_Entries(0)
+class nsCacheBkgThd: public nsBkgThread
 {
-}
 
-nsCacheModule::~nsCacheModule()
-{
-    if (m_pNext)
-    {
-        delete m_pNext;
-        m_pNext = 0;
-    }
-}
+public:
+            nsCacheBkgThd(PRIntervalTime iSleepTime);
+    virtual ~nsCacheBkgThd();
+/*
+    NS_IMETHOD              QueryInterface(const nsIID& aIID, 
+                                           void** aInstancePtr);
+    NS_IMETHOD_(nsrefcnt)   AddRef(void);
+    NS_IMETHOD_(nsrefcnt)   Release(void);
+*/
+    void        Run(void);
 
-void nsCacheModule::GarbageCollect(void) 
-{
-}
+protected:
 
-const char* nsCacheModule::Trace() const
-{
-    char linebuffer[128];
-    char* total;
+private:
+    nsCacheBkgThd(const nsCacheBkgThd& o);
+    nsCacheBkgThd& operator=(const nsCacheBkgThd& o);
+};
 
-    sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
+#endif // nsCacheBkgThd_h__
 
-    total = new char[strlen(linebuffer) + 1];
-    strcpy(total, linebuffer);
-
-    return total;
-}

@@ -25,7 +25,9 @@ DLLNAME = cachelib
 
 LIBRARY_NAME=cachelib
 
+#
 # Remember to change libplc21 to $whatever it is...
+#
 LLIBS =				 \
 	$(LIBNSPR)		 \
 	$(DIST)\lib\libplc21.lib \
@@ -46,6 +48,9 @@ OBJS =						\
 	.\$(OBJDIR)\nsCacheManager.obj 		\
 	.\$(OBJDIR)\nsCachePref.obj 		\
 	.\$(OBJDIR)\nsMemCacheObject.obj 	\
+	.\$(OBJDIR)\nsBkgThread.obj	 	\
+	.\$(OBJDIR)\nsCacheBkgThd.obj	 	\
+	.\$(OBJDIR)\CacheStubs.obj	 	\
 	$(NULL)
 
 #	.\$(OBJDIR)\nsHash.obj 			\
@@ -53,6 +58,7 @@ OBJS =						\
 LINCS = 			\
 	-I$(PUBLIC)\xpcom	\
 	-I$(PUBLIC)\dbm		\
+	-I$(PUBLIC)\pref	\
 	-I..\public		\
 	-I..\include		\
 	$(NULL)

@@ -68,10 +68,13 @@ public:
     /* Read and write info about this cache object */
     void*       Info(void) const;
     PRBool      Info(void*);
+
     PRUint32    InfoSize(void) const;
 
     PRBool      IsExpired(void) const;
+
     PRBool      IsPartial(void) const;
+
     PRIntervalTime
                 LastAccessed(void) const;
 

@@ -16,52 +16,27 @@
  * Reserved.
  */
 
-#include <xp_core.h>
-#include <xp_str.h>
+#include <prtypes.h>
+#include <prio.h>
+#include <plstr.h>
+#include "nsFlatFile.h"
+#include "nsTOC.h"
 
-#include "nsCacheModule.h"
-#include "nsCacheTrace.h"
-
-
-/* 
- * nsCacheModule
- *
- * Gagan Saksena 02/02/98
- * 
- */
-
-
-#define DEFAULT_SIZE 10*0x100000L
-
-nsCacheModule::nsCacheModule(const PRUint32 i_size=DEFAULT_SIZE):
-    m_Size(i_size),
-    m_pNext(0),
-    m_Entries(0)
+int main()
 {
-}
+    PRFileDesc* pfd = PR_GetSpecialFD(PR_StandardOutput);
+    
+    nsFlatFile tf("CACHE.DAT");
+    nsTOC toc("Cache.TOC", &tf);
 
-nsCacheModule::~nsCacheModule()
-{
-    if (m_pNext)
+    if (tf.IsValid() && toc.IsValid())
     {
-        delete m_pNext;
-        m_pNext = 0;
+        PR_Write(pfd, tf.Filename(), PL_strlen(tf.Filename()));
+        PR_Write(pfd, "  ", 2);
+        PR_Write(pfd, toc.Filename(), PL_strlen(toc.Filename()));
+
     }
-}
 
-void nsCacheModule::GarbageCollect(void) 
-{
-}
 
-const char* nsCacheModule::Trace() const
-{
-    char linebuffer[128];
-    char* total;
-
-    sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
-
-    total = new char[strlen(linebuffer) + 1];
-    strcpy(total, linebuffer);
-
-    return total;
+    return 1;
 }

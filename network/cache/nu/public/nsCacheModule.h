@@ -48,14 +48,21 @@ public:
 
     virtual 
         PRBool          AddObject(nsCacheObject* i_pObject)=0;
-        virtual
+    
+    virtual
         PRBool          Contains(const char* i_url) const=0;
     virtual 
         PRBool          Contains(nsCacheObject* i_pObject) const=0;
+    
     void                Enable(PRBool i_Enable);
-    const PRUint32      Entries() const;
+    
+    const PRUint32      Entries(void) const;
 
-    nsCacheObject*      GetFirstObject() const ;//TODO-?/
+    //TODO move to own interface for both Garbage Collection and Revalidation
+    virtual
+        void            GarbageCollect(void);
+
+    nsCacheObject*      GetFirstObject(void) const ;//TODO-?/
 
     virtual
         nsCacheObject*  GetObject(const char* i_url) const=0;
@@ -63,15 +70,27 @@ public:
     virtual
         nsCacheObject*  GetObject(const PRUint32 i_index) const =0;
 
-    PRBool              IsEnabled() const;
+    PRBool              IsEnabled(void) const;
 
-    nsCacheModule*      Next() const;
+    /* Cant do additions, deletions, validations, expirations */
+    PRBool              IsReadOnly(void) const; 
+
+    nsCacheModule*      Next(void) const;
     void                Next(nsCacheModule*);
 
-    const PRUint32      Size() const;
+    virtual
+        PRBool          Remove(const char* i_url) = 0;
+
+    virtual
+        PRBool          Remove(const PRUint32 i_index) = 0;
+
+    virtual
+        PRBool          Revalidate(void) = 0;
+
+    const PRUint32      Size(void) const;
     void                Size(const PRUint32 i_size);
 
-    const char*         Trace() const;
+    const char*         Trace(void) const;
 
 protected:
 
@@ -92,11 +111,6 @@ inline void nsCacheModule::Enable(PRBool i_Enable)
     m_Enabled = i_Enable;
 }
 
-inline PRBool nsCacheModule::IsEnabled() const
-{
-    return m_Enabled;
-}
-
 inline const PRUint32 nsCacheModule::Entries() const 
 {
     return m_Entries;
@@ -107,7 +121,17 @@ inline nsCacheObject* nsCacheModule::GetFirstObject() const
     return this->GetObject((PRUint32)0);
 }
 
-inline nsCacheModule* nsCacheModule::Next() const 
+inline PRBool nsCacheModule::IsEnabled(void) const
+{
+    return m_Enabled;
+}
+
+inline PRBool nsCacheModule::IsReadOnly(void) const
+{
+    return PR_FALSE;
+}
+
+inline nsCacheModule* nsCacheModule::Next(void) const 
 {
     return m_pNext;
 }

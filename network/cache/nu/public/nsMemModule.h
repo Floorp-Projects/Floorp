@@ -52,11 +52,20 @@ public:
     NS_IMETHOD_(nsrefcnt)   Release(void);
 
 */
-	PRBool          AddObject(nsCacheObject* io_pObject);
-	PRBool          Contains(nsCacheObject* io_pObject) const;
+    PRBool          AddObject(nsCacheObject* io_pObject);
+    
+    PRBool          Contains(nsCacheObject* io_pObject) const;
     PRBool          Contains(const char* i_url) const;
-	nsCacheObject*	GetObject(const PRUint32 i_index) const;
-	nsCacheObject*	GetObject(const char* i_url) const;
+    
+    void            GarbageCollect(void);
+
+    nsCacheObject*  GetObject(const PRUint32 i_index) const;
+    nsCacheObject*  GetObject(const char* i_url) const;
+
+    PRBool          Remove(const char* i_url);
+    PRBool          Remove(const PRUint32 i_index);
+
+    PRBool          Revalidate(void);
 
     // Start of nsMemModule specific stuff...
     // Here is a sample implementation using linked list
@@ -85,5 +94,12 @@ private:
     };
 */    
 };
+
+inline
+PRBool nsMemModule::Revalidate(void)
+{
+    /* Mem module elements are never revalidated */
+    return PR_FALSE; 
+}
 
 #endif

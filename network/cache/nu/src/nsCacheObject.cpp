@@ -44,7 +44,7 @@ ERROR! Must have a byte order
 #endif
 
 #ifdef IS_LITTLE_ENDIAN
-#define COPY_INT32(_a,_b)  memcpy(_a, _b, sizeof(int32));
+#define COPY_INT32(_a,_b)  memcpy(_a, _b, sizeof(int32))
 #else
 #define COPY_INT32(_a,_b)  /* swap */                   \
     do {                                                \
@@ -164,8 +164,8 @@ nsCacheObject::~nsCacheObject()
 
 nsCacheObject::nsCacheObject(const nsCacheObject& another):
     m_Flags(another.m_Flags),
-    m_Url(new char[strlen(another.m_Url)+1]), 
-    m_Etag(new char[strlen(another.m_Etag)+1]),
+    m_Url(new char[PL_strlen(another.m_Url)+1]), 
+    m_Etag(new char[PL_strlen(another.m_Etag)+1]),
     m_pInfo(0)
 {
     strcpy(m_Url, another.m_Url);

@@ -26,6 +26,7 @@
 #include <prtypes.h>
 #include <prmem.h>
 #include <plstr.h>
+#include <prlog.h>
 
 #include "nsDiskModule.h"
 #include "nsCacheObject.h"
@@ -128,6 +129,11 @@ PRBool nsDiskModule::Contains(const char* i_url) const
 
 }
 
+void nsDiskModule::GarbageCollect(void)
+{
+    PR_ASSERT(PR_TRUE);
+}
+
 nsCacheObject* nsDiskModule::GetObject(const PRUint32 i_index) const
 {
     if (!m_pDB)
@@ -192,5 +198,36 @@ PRBool nsDiskModule::InitDB(void)
     if (!m_pDB)
         return PR_FALSE;
 
+    /* Open and read in the number of existing entries */
+    m_Entries = 0;
+    int status;
+    DBT key, data;
+    if(!(status = (*m_pDB->seq)(m_pDB, &key, &data, R_FIRST)))
+    {
+        while(!(status = (*m_pDB->seq) (m_pDB, &key, &data, R_NEXT)))
+        {
+            m_Entries++;
+        }
+    }
+
+    if (status < 0)
+        return PR_FALSE;
+
     return PR_TRUE;
 }
+
+PRBool nsDiskModule::Remove(const char* i_url)
+{
+    return PR_FALSE;
+}
+
+PRBool nsDiskModule::Remove(const PRUint32 i_index)
+{
+    return PR_FALSE;
+}
+
+PRBool nsDiskModule::Revalidate(void)
+{
+    return PR_FALSE;
+}
+
