@@ -60,9 +60,6 @@ public:
   static JSBool GetCallingLocation(JSContext* aContext, const char* *aFilename,
                                    PRUint32 *aLineno);
 
-  static JSBool ReportError(JSContext* aContext, JSObject* aObj,
-                            nsresult aResult, const char* aMessage=nsnull);
-
   static void ConvertStringToJSVal(const nsString& aProp, JSContext* aContext,
                                    jsval* aReturn);
 
@@ -86,20 +83,6 @@ public:
 
   static nsresult GetDynamicScriptContext(JSContext *aContext,
                                           nsIScriptContext** aScriptContext);
-
-  static JSBool PR_CALLBACK CheckAccess(JSContext *cx, JSObject *obj,
-                                        jsid id, JSAccessMode mode, jsval *vp);
-
-  static nsIScriptSecurityManager *GetSecurityManager(JSContext *cx,
-                                                      JSObject *obj);
-
-  static void ClearCachedSecurityManager();
-
-protected:
-  static PRBool NameAndFormatForNSResult(nsresult rv, const char** name,
-                                         const char** format);
-
-  static nsIScriptSecurityManager *mCachedSecurityManager;
 };
 
 #endif /* nsJSUtils_h__ */

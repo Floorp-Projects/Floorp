@@ -61,7 +61,9 @@ public:
   virtual ~nsExceptionService();
 
   /* additional members */
-  nsresult DoGetExceptionFromProvider( nsresult errCode, nsIException **_richError );
+  nsresult DoGetExceptionFromProvider(nsresult errCode,
+                                      nsIException *defaultException,
+                                      nsIException **_richError);
   void Shutdown();
 
 

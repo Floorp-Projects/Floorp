@@ -67,12 +67,3 @@ interface nsIDOMDOMException : nsISupports
   readonly attribute unsigned long   code;
 };
 
-[scriptable, uuid(6c88a337-68d3-4409-b0ed-9df34c562cc1)]
-interface nsIDOMNSDOMException : nsISupports
-{
-  readonly attribute unsigned long   result;
-  readonly attribute DOMString       message;
-  readonly attribute DOMString       name;
-
-  DOMString toString();
-};

@@ -39,188 +39,285 @@
 
 #include "nsIDOMDOMException.h"
 #include "nsDOMError.h"
+#include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "prprf.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsReadableUtils.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-class nsDOMException : public nsIDOMNSDOMException
+#define DOM_MSG_DEF(val, message) {(val), #val, message},
+
+static struct ResultStruct
+{
+  nsresult mNSResult;
+  const char* mName;
+  const char* mMessage;
+} gDOMErrorMsgMap[] = {
+#include "domerr.msg"
+  {0, nsnull, nsnull}   // sentinel to mark end of array
+};
+
+#undef DOM_MSG_DEF
+
+
+static const ResultStruct *
+NSResultToResultStruct(nsresult aNSResult)
+{
+  ResultStruct* result_struct = gDOMErrorMsgMap;
+
+  while (result_struct->mName) {
+    if (aNSResult == result_struct->mNSResult) {
+      return result_struct;
+    }
+
+    ++result_struct;
+  }
+
+  NS_WARNING("Huh, someone is throwing non-DOM errors using the DOM module!");
+
+  return nsnull;
+}
+
+
+class nsDOMException : public nsIException,
+                       public nsIDOMDOMException
 {
 public:
-  nsDOMException(nsresult aResult,
-                 const char* aName,
-                 const char* aMessage,
-                 const char* aLocation);
+  nsDOMException(nsresult aNSResult, nsIException* aInner);
   virtual ~nsDOMException();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMEXCEPTION
-  NS_DECL_NSIDOMNSDOMEXCEPTION
+
+  // nsIException
+  NS_DECL_NSIEXCEPTION
 
 protected:
   nsresult mResult;
-  char* mName;
-  char* mMessage;
-  char* mLocation;
+  nsCOMPtr<nsIException> mInner;
 };
 
-nsresult 
-NS_NewDOMException(nsIDOMDOMException** aException,
-                   nsresult aResult, 
-                   const char* aName, 
-                   const char* aMessage,
-                   const char* aLocation)
+nsresult
+NS_NewDOMException(nsresult aNSResult, nsIException* aDefaultException,
+                   nsIException** aException)
 {
-  NS_PRECONDITION(nsnull != aException, "null ptr");
-  if (nsnull == aException) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  *aException = new nsDOMException(aNSResult, aDefaultException);
+  NS_ENSURE_TRUE(*aException, NS_ERROR_OUT_OF_MEMORY);
 
-  nsDOMException* it = new nsDOMException(aResult,
-                                          aName,
-                                          aMessage,
-                                          aLocation);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return it->QueryInterface(NS_GET_IID(nsIDOMDOMException),
-                            (void**)aException);
+  NS_ADDREF(*aException);
+
+  return NS_OK;
 }
 
 
-nsDOMException::nsDOMException(nsresult aResult,
-                               const char* aName,
-                               const char* aMessage,
-                               const char* aLocation)
-  : mResult(aResult),
-    mName(nsnull),
-    mMessage(nsnull),
-    mLocation(nsnull)
+nsDOMException::nsDOMException(nsresult aNSResult, nsIException* aInner)
+  : mResult(aNSResult), mInner(aInner)
 {
   NS_INIT_ISUPPORTS();
-
-  if (aName) {
-    mName = nsCRT::strdup(aName);
-  }
-  
-  if (aMessage) {
-    mMessage = nsCRT::strdup(aMessage);
-  }
-
-  if (aLocation) {
-    mLocation = nsCRT::strdup(aLocation);
-  }
 }
 
 nsDOMException::~nsDOMException()
 {
-  if (mName) {
-    nsCRT::free(mName);
-  }
-
-  if (mMessage) {
-    nsCRT::free(mMessage);
-  }
-
-  if (mLocation) {
-    nsCRT::free(mLocation);
-  }
 }
+
+// XPConnect interface list for nsDOMException
+NS_CLASSINFO_MAP_BEGIN(DOMException)
+  NS_CLASSINFO_MAP_ENTRY(nsIException)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDOMException)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsDOMException
+NS_INTERFACE_MAP_BEGIN(nsDOMException)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
+  NS_INTERFACE_MAP_ENTRY(nsIException)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMException)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMException)
+NS_INTERFACE_MAP_END
+
 
 NS_IMPL_ADDREF(nsDOMException)
 NS_IMPL_RELEASE(nsDOMException)
 
-NS_IMETHODIMP
-nsDOMException::QueryInterface(const nsIID& aIID,
-                               void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMDOMException))) {
-    *aInstancePtrResult = (void*) ((nsIDOMDOMException*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMDOMException*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsDOMException::GetCode(PRUint32* aCode)
 {
   if (NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM) {
     *aCode = NS_ERROR_GET_CODE(mResult);
-  }
-  else {
+  } else {
+    NS_WARNING("Non DOM nsresult passed to a DOM exception!");
+
     *aCode = (PRUint32)mResult;
   }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
+nsDOMException::GetMessage(char **aMessage)
+{
+  const ResultStruct *rs = NSResultToResultStruct(mResult);
+
+  if (rs) {
+    *aMessage = nsCRT::strdup(rs->mMessage);
+  } else {
+    *aMessage = nsnull;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMException::GetResult(PRUint32* aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
+
   *aResult = mResult;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsDOMException::GetMessage(nsAWritableString& aMessage)
+NS_IMETHODIMP
+nsDOMException::GetName(char **aName)
 {
-  if (mMessage) {
-    CopyASCIItoUCS2(nsDependentCString(mMessage), aMessage);
+  NS_ENSURE_ARG_POINTER(aName);
+
+  const ResultStruct *rs = NSResultToResultStruct(mResult);
+
+  if (rs) {
+    *aName = nsCRT::strdup(rs->mName);
+  } else {
+    *aName = nsnull;
   }
-  else {
-    aMessage.Truncate();
-  }
-  
+
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsDOMException::GetName(nsAWritableString& aName)
+NS_IMETHODIMP
+nsDOMException::GetFilename(char **aFilename)
 {
-  if (mName) {
-    CopyASCIItoUCS2(nsDependentCString(mName), aName);
+  if (mInner) {
+    return mInner->GetFilename(aFilename);
   }
-  else {
-    aName.Truncate();
-  }
-  
+
+  NS_ENSURE_ARG_POINTER(aFilename);
+
+  *aFilename = nsnull;
+
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsDOMException::ToString(nsAWritableString& aReturn)
+NS_IMETHODIMP
+nsDOMException::GetLineNumber(PRUint32 *aLineNumber)
 {
+  if (mInner) {
+    return mInner->GetLineNumber(aLineNumber);
+  }
+
+  NS_ENSURE_ARG_POINTER(aLineNumber);
+
+  *aLineNumber = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMException::GetColumnNumber(PRUint32 *aColumnNumber)
+{
+  if (mInner) {
+    return mInner->GetColumnNumber(aColumnNumber);
+  }
+
+  NS_ENSURE_ARG_POINTER(aColumnNumber);
+
+  *aColumnNumber = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMException::GetLocation(nsIStackFrame **aLocation)
+{
+  if (mInner) {
+    return mInner->GetLocation(aLocation);
+  }
+
+  NS_ENSURE_ARG_POINTER(aLocation);
+
+  *aLocation = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMException::GetInner(nsIException **aInner)
+{
+  NS_ENSURE_ARG_POINTER(aInner);
+
+  *aInner = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMException::GetData(nsISupports **aData)
+{
+  if (mInner) {
+    return mInner->GetData(aData);
+  }
+
+  NS_ENSURE_ARG_POINTER(aData);
+
+  *aData = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMException::ToString(char **aReturn)
+{
+  *aReturn = nsCRT::strdup("foo");
+
+  const ResultStruct *rs = NSResultToResultStruct(mResult);
+
   static const char defaultMsg[] = "<no message>";
   static const char defaultLocation[] = "<unknown>";
   static const char defaultName[] = "<unknown>";
   static const char format[] =
     "[Exception... \"%s\"  code: \"%d\" nsresult: \"0x%x (%s)\"  location: \"%s\"]";
-  
-  const char* msg = mMessage ? mMessage : defaultMsg;
-  const char* location = mLocation ? mLocation : defaultLocation;
-  const char* resultName = mName ? mName : defaultName;
+
+  nsCAutoString location;
+
+  if (mInner) {
+    nsXPIDLCString filename;
+
+    mInner->GetFilename(getter_Copies(filename));
+
+    if (!filename.IsEmpty()) {
+      PRUint32 line_nr = 0;
+
+      mInner->GetLineNumber(&line_nr);
+
+      char *temp = PR_smprintf("%s Line: %d", filename.get(), line_nr);
+      if (temp) {
+        location.Assign(temp);
+        PR_smprintf_free(temp);
+      }
+    }
+  }
+
+  if (location.IsEmpty()) {
+    location = defaultLocation;
+  }
+
+  const char* msg = rs ? rs->mMessage : defaultMsg;
+  const char* resultName = rs ? rs->mName : defaultName;
   PRUint32 code;
 
   GetCode(&code);
-  char* temp = PR_smprintf(format, msg, code, mResult, resultName, location);
-  if (temp) {
-    CopyASCIItoUCS2(nsDependentCString(temp), aReturn);
-    PR_smprintf_free(temp);
-  }
 
-  return NS_OK;
+  *aReturn = PR_smprintf(format, msg, code, mResult, resultName,
+                         location.get());
+
+  return *aReturn ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
