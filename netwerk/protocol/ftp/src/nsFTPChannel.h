@@ -28,6 +28,7 @@
 #include "nsString2.h"
 #include "nsIEventQueue.h"
 
+class nsIEventSinkGetter;
 class nsIProgressEventSink;
 
 class nsFTPChannel : public nsIFTPChannel,
@@ -78,7 +79,13 @@ public:
     nsFTPChannel();
     virtual ~nsFTPChannel();
 
-    nsresult Init(nsIURI* aURL, nsIProgressEventSink* aEventSink, nsIEventQueue* aEventQueue);
+    // Define a Create method to be used with a factory:
+    static NS_METHOD
+    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+    
+    nsresult Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
+                  nsIEventQueue* queue);
+
     NS_IMETHOD GetContentType(char* *contentType);
 
 protected:
