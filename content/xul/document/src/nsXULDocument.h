@@ -34,8 +34,10 @@
 #include "nsIContent.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentStyle.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
+#include "nsIDOMStyleSheetList.h"
 #include "nsISelection.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
@@ -70,7 +72,6 @@
 
 class nsIAtom;
 class nsIElementFactory;
-class nsIDOMStyleSheetList;
 class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
@@ -96,6 +97,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIDOMDocumentView,
                       public nsIDOMDocumentXBL,
                       public nsIDOMNSDocument,
+                      public nsIDOMDocumentStyle,
                       public nsIDOMEventCapturer,
                       public nsIJSScriptObject,
                       public nsIHTMLContentContainer,
@@ -137,6 +139,8 @@ public:
     NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
 
     NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
+
+    NS_IMETHOD GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
 
     NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharSetID);
 
@@ -481,6 +485,7 @@ protected:
     nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER]
     nsIDocument*               mParentDocument;     // [WEAK]
+    nsCOMPtr<nsIDOMStyleSheetList>          mDOMStyleSheets;      // [OWNER]
     nsIScriptGlobalObject*     mScriptGlobalObject; // [WEAK]
     void*                      mScriptObject;       // ????
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
