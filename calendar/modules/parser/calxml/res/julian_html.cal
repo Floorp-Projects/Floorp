@@ -3,11 +3,11 @@
 <Calendar>
 
 <panel name="HTMLCanvas"> 
-  <object class="htmlcanvas" src="resource://res/samples/test1.html" weightminor="0" weightmajor="0"/>
+  <object class="htmlcanvas" src="resource://res/samples/test1.html" weightminor="1" weightmajor="1"/>
 </panel> 
 
 <rootpanel id="MainCalendarPanel" label="Calendar UI"> 
-  <control id="uhr" rule="HTMLCanvas" layout="xbox" weightminor="0" weightmajor="0"/>
+  <control id="uhr" rule="HTMLCanvas" layout="xbox" weightminor="1" weightmajor="1"/>
   <ctx id="StartContext" majorinterval="PT01H" minorinterval="PT15M" default="today"/>
 </rootpanel> 
 
