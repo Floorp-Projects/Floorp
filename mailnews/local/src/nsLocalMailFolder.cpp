@@ -48,7 +48,7 @@ static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
-  : nsMsgFolder(), mPath(nsnull), mExpungedBytes(0), 
+  : nsMsgFolder(), mPath(""), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mMailDatabase(nsnull)
 {
