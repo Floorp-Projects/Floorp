@@ -37,36 +37,29 @@ static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 class GraphicsState
 {
 public:
-   GraphicsState();
-  ~GraphicsState();
+  GraphicsState();
+  virtual ~GraphicsState();
 
   nsTransform2D  *mMatrix;
-  nsRect          mLocalClip;
   nsRegionGTK    *mClipRegion;
   nscolor         mColor;
   nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;
-  GdkFont        *mFont;
 };
 
 GraphicsState::GraphicsState()
 {
   mMatrix = nsnull;
-  mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mClipRegion = nsnull;
   mColor = NS_RGB(0, 0, 0);
   mLineStyle = nsLineStyle_kSolid;
   mFontMetrics = nsnull;
-  mFont = nsnull;
 }
 
 GraphicsState::~GraphicsState()
 {
   NS_IF_RELEASE(mClipRegion);
   NS_IF_RELEASE(mFontMetrics);
-
-  if (mFont)
-    ::gdk_font_unref(mFont);
 }
 
 
@@ -93,35 +86,28 @@ nsRenderingContextGTK::nsRenderingContextGTK()
 
 nsRenderingContextGTK::~nsRenderingContextGTK()
 {
-  delete mRegion;
-
-  mTMatrix = nsnull;
-
   // Destroy the State Machine
-  if (nsnull != mStateCache)
+  if (mStateCache)
   {
     PRInt32 cnt = mStateCache->Count();
 
     while (--cnt >= 0)
     {
-      GraphicsState *state = (GraphicsState *)mStateCache->ElementAt(cnt);
-      mStateCache->RemoveElementAt(cnt);
-
-      if (nsnull != state)
-        delete state;
+      PRBool  clipstate;
+      PopState(clipstate);
     }
 
     delete mStateCache;
     mStateCache = nsnull;
   }
 
-  // Destroy the front buffer and it's GC if one was allocated for it
-  if (nsnull != mOffscreenSurface) {
-    delete mOffscreenSurface;
-  }
-
+  if (mTMatrix)
+    delete mTMatrix;
+  NS_IF_RELEASE(mRegion);
+  NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
+
   if (nsnull != mDrawStringBuf) {
     delete [] mDrawStringBuf;
   }
@@ -345,8 +331,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
 {
   nsRect trect = aRect;
   GdkRegion *rgn;
-
-//  mStates->mLocalClip = aRect;
 
   mTMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
