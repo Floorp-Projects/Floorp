@@ -74,7 +74,7 @@ nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding *aEncoding)
 {
   nsAutoString style;
   nsresult rc = aEncoding->GetStyleURI(style);
-  NS_ASSERTION(rc, "nsSOAPEncoding Regsitry constructed without style");
+  NS_ASSERTION(!style.IsEmpty(), "nsSOAPEncoding Regsitry constructed without style");
 
   nsStringKey styleKey(style);
   mEncodings.Put(&styleKey, aEncoding);
