@@ -239,19 +239,6 @@
       </field>
 
       <field name="_mStrBundle">null</field>
-      <field name="_AUTOSCROLL_SPEED">3</field>
-      <field name="_AUTOSCROLL_SNAP">10</field>
-      <field name="_clientFrameDoc">null</field>
-      <field name="_clientFrameBody">null</field>
-      <field name="_isScrolling">false</field>
-      <field name="_autoScrollMarkerImage">null</field>
-      <field name="_snapOn">false</field>
-      <field name="_scrollCount">0</field>
-      <field name="_startX">null</field>
-      <field name="_startY">null</field>
-      <field name="_clientX">null</field>
-      <field name="_clientY">null</field>
-      <field name="_f">false</field>
 
       <property name="mStrBundle">
         <getter>
@@ -449,7 +436,22 @@
           ]]>
         </body>
       </method>
-      
+
+#ifdef XP_WIN
+      <field name="_AUTOSCROLL_SPEED">3</field>
+      <field name="_AUTOSCROLL_SNAP">10</field>
+      <field name="_clientFrameDoc">null</field>
+      <field name="_clientFrameBody">null</field>
+      <field name="_isScrolling">false</field>
+      <field name="_autoScrollMarkerImage">null</field>
+      <field name="_snapOn">false</field>
+      <field name="_scrollCount">0</field>
+      <field name="_startX">null</field>
+      <field name="_startY">null</field>
+      <field name="_clientX">null</field>
+      <field name="_clientY">null</field>
+      <field name="_f">false</field>
+
       <method name="stopScroll">
         <body>
           <![CDATA[
@@ -542,7 +544,7 @@
          ]]>
        </body>
      </method>
-
+#endif
     </implementation>
 
     <handlers>
@@ -592,6 +594,7 @@
           }
         ]]>
       </handler>
+#ifdef XP_WIN
       <handler event="mouseup">
         <![CDATA[
           if (!this._snapOn)
@@ -646,6 +649,7 @@
           }
         ]]>
       </handler>
+#endif
     </handlers>
 
   </binding>
