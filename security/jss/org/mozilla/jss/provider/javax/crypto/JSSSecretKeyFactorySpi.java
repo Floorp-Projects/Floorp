@@ -384,6 +384,11 @@ class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
             super(KeyGenAlgorithm.RC4);
         }
     }
+    public static class RC2 extends JSSSecretKeyFactorySpi {
+        public RC2() {
+            super(KeyGenAlgorithm.RC2);
+        }
+    }
     public static class PBE_MD5_DES_CBC extends JSSSecretKeyFactorySpi {
         public PBE_MD5_DES_CBC() {
             super(PBEAlgorithm.PBE_MD5_DES_CBC);

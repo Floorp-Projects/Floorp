@@ -212,4 +212,6 @@ public class Algorithm {
     protected static final short CKM_AES_ECB=33;
     protected static final short CKM_AES_CBC=34;
     protected static final short CKM_AES_CBC_PAD=35;
+    protected static final short CKM_RC2_CBC_PAD=36;
+    protected static final short CKM_RC2_KEY_GEN=37;
 }

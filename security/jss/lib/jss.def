@@ -266,3 +266,9 @@ Java_org_mozilla_jss_SecretDecoderRing_KeyManager_deleteKeyNative;
 ;+    local:
 ;+       *;
 ;+};
+;+JSS_3.4 {       # JSS 3.4 release
+;+    global:
+Java_org_mozilla_jss_pkcs11_PK11Cipher_initContextWithKeyBits;
+;+    local:
+;+       *;
+;+};

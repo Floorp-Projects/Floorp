@@ -92,7 +92,9 @@ JSS_AlgInfo JSS_AlgTable[NUM_ALGS] = {
 /* 32 */    {CKM_AES_KEY_GEN, PK11_MECH},
 /* 33 */    {CKM_AES_ECB, PK11_MECH},
 /* 34 */    {CKM_AES_CBC, PK11_MECH},
-/* 35 */    {CKM_AES_CBC_PAD, PK11_MECH}
+/* 35 */    {CKM_AES_CBC_PAD, PK11_MECH},
+/* 36 */    {CKM_RC2_CBC_PAD, PK11_MECH},
+/* 37 */    {CKM_RC2_KEY_GEN, PK11_MECH}
 
 /* REMEMBER TO UPDATE NUM_ALGS!!! */
 };

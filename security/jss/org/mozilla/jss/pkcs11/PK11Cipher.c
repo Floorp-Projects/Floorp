@@ -55,6 +55,15 @@ Java_org_mozilla_jss_pkcs11_PK11Cipher_initContext
     (JNIEnv *env, jclass clazz, jboolean encrypt, jobject keyObj,
         jobject algObj, jbyteArray ivBA)
 {
+    return Java_org_mozilla_jss_pkcs11_PK11Cipher_initContextWithKeyBits
+        ( env, clazz, encrypt, keyObj, algObj, ivBA, 0);
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_pkcs11_PK11Cipher_initContextWithKeyBits
+    (JNIEnv *env, jclass clazz, jboolean encrypt, jobject keyObj,
+        jobject algObj, jbyteArray ivBA, jint keyBits)
+{
     CK_MECHANISM_TYPE mech;
     PK11SymKey *key=NULL;
     SECItem *param=NULL;
@@ -95,12 +104,11 @@ Java_org_mozilla_jss_pkcs11_PK11Cipher_initContext
     }
     param = PK11_ParamFromIV(mech, iv);
 
-    /* HACK! The previous function doesn't know the key size, so it can't
-     * set the RC2 effective key length correctly.  We have to set it by
-     * hand in this case. */
+    /*
+     * Set RC2 effective key length.
+     */
     if( mech == CKM_RC2_CBC || mech == CKM_RC2_CBC_PAD ) {
-        ((CK_RC2_CBC_PARAMS*)param->data)->ulEffectiveBits =
-                PK11_GetKeyStrength(key, NULL);
+        ((CK_RC2_CBC_PARAMS*)param->data)->ulEffectiveBits = keyBits;
     }
         
 

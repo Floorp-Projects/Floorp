@@ -83,7 +83,7 @@ public interface SymmetricKey {
             new Type("DESede", KeyGenAlgorithm.DES3);
         public static final Type DESede = DES3;
         public static final Type RC4 = new Type("RC4", KeyGenAlgorithm.RC4);
-        public static final Type RC2 = new Type("RC2", null);
+        public static final Type RC2 = new Type("RC2", KeyGenAlgorithm.RC2);
         public static final Type SHA1_HMAC = new Type("SHA1_HMAC",
             KeyGenAlgorithm.PBA_SHA1_HMAC);
         public static final Type AES = new Type("AES", KeyGenAlgorithm.AES);

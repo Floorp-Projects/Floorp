@@ -45,6 +45,7 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.RC2ParameterSpec;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.SecretKey;
 import org.mozilla.jss.crypto.KeyWrapper;
@@ -279,8 +280,13 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
     }
 
     public byte[] engineGetIV() {
-        if( params != null && params instanceof IvParameterSpec) {
+        if( params == null ) {
+            return null;
+        }
+        if( params instanceof IvParameterSpec) {
             return ((IvParameterSpec)params).getIV();
+        } else if( params instanceof RC2ParameterSpec ) {
+            return ((RC2ParameterSpec)params).getIV();
         } else {
             return null;
         }
@@ -518,6 +524,11 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
     static public class RSA extends JSSCipherSpi {
         public RSA() {
             super("RSA");
+        }
+    }
+    static public class RC2 extends JSSCipherSpi {
+        public RC2() {
+            super("RC2");
         }
     }
 

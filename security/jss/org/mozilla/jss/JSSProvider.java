@@ -118,6 +118,8 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$RC4");
         put("Cipher.RSA",
             "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$RSA");
+        put("Cipher.RC2",
+            "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$RC2");
 
         /////////////////////////////////////////////////////////////
         // KeyGenerator
@@ -131,6 +133,8 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$AES");
         put("KeyGenerator.RC4",
             "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$RC4");
+        put("KeyGenerator.RC2",
+            "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$RC2");
         put("KeyGenerator.HmacSHA1",
            "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$HmacSHA1");
         put("KeyGenerator.PBAHmacSHA1",
@@ -148,6 +152,8 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$AES");
         put("SecretKeyFactory.RC4",
             "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$RC4");
+        put("SecretKeyFactory.RC2",
+            "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$RC2");
         put("SecretKeyFactory.HmacSHA1",
             "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$HmacSHA1");
         put("SecretKeyFactory.PBAHmacSHA1",

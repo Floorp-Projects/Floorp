@@ -223,7 +223,8 @@ final class KeyType {
     static public final KeyType
     RC2     = new KeyType(new Algorithm[]
                             {
-                            EncryptionAlgorithm.RC2_CBC
+                            EncryptionAlgorithm.RC2_CBC,
+                            EncryptionAlgorithm.RC2_CBC_PAD
                             },
                             "RC2"
                         );

@@ -99,6 +99,8 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
         try {
             if( params instanceof IvParameterSpec ) {
                 IV = ((IvParameterSpec)params).getIV();
+            } else if( params instanceof RC2ParameterSpec ) {
+                IV = ((RC2ParameterSpec)params).getIV();
             }
         } catch(NoClassDefFoundError e) {
             // javax.crypto.spec.IvParameterSpec was introduced in JDK 1.4.
@@ -122,7 +124,12 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
         this.parameters = parameters;
         state = ENCRYPT;
 
-        contextProxy = initContext( true, key, algorithm, IV );
+        if( parameters instanceof RC2ParameterSpec ) {
+            contextProxy = initContextWithKeyBits( true, key, algorithm, IV,
+                ((RC2ParameterSpec)parameters).getEffectiveKeyBits() );
+        } else {
+            contextProxy = initContext( true, key, algorithm, IV );
+        }
     }
 
     public void initDecrypt(SymmetricKey key, AlgorithmParameterSpec parameters)
@@ -139,7 +146,12 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
         this.parameters = parameters;
         state = DECRYPT;
 
-        contextProxy = initContext(false, key, algorithm, IV);
+        if( parameters instanceof RC2ParameterSpec ) {
+            contextProxy = initContextWithKeyBits(false, key, algorithm, IV,
+                ((RC2ParameterSpec)parameters).getEffectiveKeyBits() );
+        } else {
+            contextProxy = initContext(false, key, algorithm, IV);
+        }
     }
 
     public byte[] update(byte[] bytes)
@@ -204,8 +216,14 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
     }
 
     private static native CipherContextProxy
-    initContext( boolean encrypt, SymmetricKey key, EncryptionAlgorithm alg,
+    initContext(boolean encrypt, SymmetricKey key, EncryptionAlgorithm alg,
                  byte[] IV)
+        throws TokenException;
+
+    // This version accepts the number of effective key bits for RC2 CBC.
+    private static native CipherContextProxy
+    initContextWithKeyBits(boolean encrypt, SymmetricKey key,
+                EncryptionAlgorithm alg, byte[] IV, int keyBits)
         throws TokenException;
 
     private static native byte[]

@@ -124,6 +124,11 @@ class JSSKeyGeneratorSpi extends javax.crypto.KeyGeneratorSpi {
             super(KeyGenAlgorithm.RC4);
         }
     }
+    public static class RC2 extends JSSKeyGeneratorSpi {
+        public RC2() {
+            super(KeyGenAlgorithm.RC2);
+        }
+    }
 
     /**
      * @deprecated This class name is misleading. This algorithm

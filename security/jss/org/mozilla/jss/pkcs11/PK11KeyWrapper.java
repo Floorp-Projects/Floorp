@@ -529,9 +529,11 @@ final class PK11KeyWrapper implements KeyWrapper {
             return EncryptionAlgorithm.DES_ECB;
         } else if( type == SymmetricKey.DES3 ) {
             return EncryptionAlgorithm.DES3_ECB;
-        } else {
-            Assert._assert( type == SymmetricKey.RC4 );
+        } else if( type == SymmetricKey.RC4 ) {
             return EncryptionAlgorithm.RC4;
+        } else {
+            Assert._assert( type == SymmetricKey.RC2 );
+            return EncryptionAlgorithm.RC2_CBC;
         }
     }
 

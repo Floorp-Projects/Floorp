@@ -36,6 +36,7 @@ package org.mozilla.jss.crypto;
 import java.security.NoSuchAlgorithmException;
 import org.mozilla.jss.asn1.*;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.RC2ParameterSpec;
 import java.util.*;
 
 /**
@@ -374,7 +375,15 @@ public class EncryptionAlgorithm extends Algorithm {
 
     public static final EncryptionAlgorithm
     RC2_CBC = new EncryptionAlgorithm(SEC_OID_RC2_CBC, Alg.RC2, Mode.CBC,
-        Padding.NONE, IVParameterSpecClasses, 8,
+        Padding.NONE, RC2ParameterSpec.class, 8,
+        null, 0); // no oid, see comment below
+
+    // Which algorithm should be associated with this OID, RC2_CBC or
+    // RC2_CBC_PAD? NSS says RC2_CBC, but PKCS #5 v2.0 says RC2_CBC_PAD.
+    // See NSS bug 202925.
+    public static final EncryptionAlgorithm
+    RC2_CBC_PAD = new EncryptionAlgorithm(CKM_RC2_CBC_PAD, Alg.RC2, Mode.CBC,
+        Padding.PKCS5, RC2ParameterSpec.class, 8,
         OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(2), 0);
 
     public static final OBJECT_IDENTIFIER AES_ROOT_OID = 

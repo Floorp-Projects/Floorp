@@ -143,4 +143,13 @@ public class KeyGenAlgorithm extends Algorithm {
                     return strength==128 || strength==192 || strength==256;
                 }
             }, null, null);
+    //////////////////////////////////////////////////////////////
+    public static final KeyGenAlgorithm
+    RC2 = new KeyGenAlgorithm(CKM_RC2_KEY_GEN, "RC2", 
+            new KeyStrengthValidator() {
+                public boolean isValidKeyStrength(int strength) {
+                    // 1 byte - 128 bytes
+                    return strength>=8 && strength <= (128*8);
+                }
+            }, null, null);
 }
