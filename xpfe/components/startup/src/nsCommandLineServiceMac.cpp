@@ -376,7 +376,7 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
 	if (NS_FAILED(rv))
 		return errAEEventNotHandled;
 	
-	(void)appShellService->Quit();
+	(void)appShellService->Quit(nsIAppShellService::eAttemptQuit);
 	return noErr;
 }
 

@@ -138,7 +138,7 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
             nsCOMPtr<nsIAppShellService> appShellService =
                 do_GetService("@mozilla.org/appshell/appShellService;1");
             if (appShellService)
-                appShellService->Quit();
+                appShellService->Quit(nsIAppShellService::eAttemptQuit);
         }
     }
     return rv;

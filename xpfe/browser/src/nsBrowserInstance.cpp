@@ -234,7 +234,7 @@ public:
                                                 appShellServ, PROXY_ASYNC | PROXY_ALWAYS,
                                                 getter_AddRefs(appShellProxy));
 
-      (void)appShellProxy->Quit();
+      (void)appShellProxy->Quit(nsIAppShellService::eAttemptQuit);
       return NS_ERROR_FAILURE;
     }
   }
