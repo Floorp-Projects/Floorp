@@ -31,6 +31,7 @@
 # Contributor(s):
 #  Robert Ginda <rginda@netscape.com>, Initial development.
 #  Pavel Hlavnicka <pavel@gingerall.cz>, seperate tocs, param linking.
+#  Petr Cimprich <petr@gingerall.cz>, nested frameset fix.
 #
 
 use strict;
