@@ -125,7 +125,7 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
         case eHTMLOutput:
         {
-            *aHandler = new txMozillaXMLOutput(nsString(),
+            *aHandler = new txMozillaXMLOutput(EmptyString(),
                                                kNameSpaceID_None,
                                                aFormat, mSourceDocument,
                                                mResultDocument, mObserver);

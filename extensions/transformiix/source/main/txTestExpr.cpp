@@ -96,12 +96,14 @@ static void doTest(const nsASingleFragmentString& aExpr)
         cout << NS_LossyConvertUTF16toASCII(StringTail(aExpr, aExpr.Length()-ct.mOff)).get();
         cout << endl << endl;
     }
+#ifdef TX_TO_STRING
     else {
         nsAutoString expr;
         expression->toString(expr);
         cout << "parsed expression: ";
         cout << NS_LossyConvertUTF16toASCII(expr).get() << endl << endl;
     }
+#endif
 }
 
 int main(int argc, char** argv)

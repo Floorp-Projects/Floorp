@@ -83,7 +83,7 @@ Attr::Attr(const nsAString& aNamespaceURI,
  if (aNamespaceURI.IsEmpty())
     mNamespaceID = kNameSpaceID_None;
   else
-    mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
+    mNamespaceID = txStandaloneNamespaceManager::getNamespaceID(aNamespaceURI);
 
   mLocalName = do_GetAtom(XMLUtils::getLocalPart(nodeName));
 }

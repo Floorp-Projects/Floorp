@@ -203,13 +203,3 @@ nsresult Document::getBaseURI(nsAString& aURI)
   aURI = documentBaseURI;
   return NS_OK;
 }
-
-PRInt32 Document::namespaceURIToID(const nsAString& aNamespaceURI)
-{
-  return txNamespaceManager::getNamespaceID(aNamespaceURI);
-}
-
-void Document::namespaceIDToURI(PRInt32 aNamespaceID, nsAString& aNamespaceURI)
-{
-  txNamespaceManager::getNamespaceURI(aNamespaceID, aNamespaceURI);
-}

@@ -532,7 +532,6 @@ txXPathNodeUtils::getNamespaceID(const txXPathNode& aNode)
 void
 txXPathNodeUtils::getNamespaceURI(const txXPathNode& aNode, nsAString& aURI)
 {
-    extern nsINameSpaceManager* gTxNameSpaceManager;
     gTxNameSpaceManager->GetNameSpaceURI(getNamespaceID(aNode), aURI);
 }
 
@@ -984,7 +983,6 @@ txXPathNativeNode::getNode(const txXPathNode& aNode, nsIDOMNode** aResult)
                                   getter_AddRefs(prefix));
 
     nsAutoString namespaceURI, localname;
-    extern nsINameSpaceManager* gTxNameSpaceManager;
     gTxNameSpaceManager->GetNameSpaceURI(namespaceID, namespaceURI);
     name->ToString(localname);
 

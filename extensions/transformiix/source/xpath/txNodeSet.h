@@ -51,9 +51,6 @@
 class txNodeSet : public txAExprResult
 {
 public:
-    // XXX TEMP
-    txNodeSet();
-
     /**
      * Creates a new empty NodeSet
      */

@@ -165,13 +165,9 @@ txAttribute::execute(txExecutionState& aEs)
             exprRes->stringValue(nspace);
 
             if (!nspace.IsEmpty()) {
-#ifdef TX_EXE
                 nsId = txNamespaceManager::getNamespaceID(nspace);
-#else
-                NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
-                rv = gTxNameSpaceManager->RegisterNameSpace(nspace, nsId);
-                NS_ENSURE_SUCCESS(rv, rv);
-#endif
+                NS_ENSURE_FALSE(nsId == kNameSpaceID_Unknown,
+                                NS_ERROR_FAILURE);
             }
         }
         else if (prefix) {
@@ -937,13 +933,9 @@ txStartElement::execute(txExecutionState& aEs)
             exprRes->stringValue(nspace);
 
             if (!nspace.IsEmpty()) {
-#ifdef TX_EXE
                 nsId = txNamespaceManager::getNamespaceID(nspace);
-#else
-                NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
-                rv = gTxNameSpaceManager->RegisterNameSpace(nspace, nsId);
-                NS_ENSURE_SUCCESS(rv, rv);
-#endif
+                NS_ENSURE_FALSE(nsId == kNameSpaceID_Unknown,
+                                NS_ERROR_FAILURE);
             }
         }
         else {
@@ -953,7 +945,7 @@ txStartElement::execute(txExecutionState& aEs)
             }
             nsId = mMappings->lookupNamespace(prefix);
             if (nsId == kNameSpaceID_Unknown) {
-                // tunkate name to indicate failure
+                // truncate name to indicate failure
                 name.Truncate();
             }
         }
