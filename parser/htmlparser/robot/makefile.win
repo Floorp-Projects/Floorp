@@ -21,6 +21,8 @@ MAKE_OBJ_TYPE	= DLL
 
 DEPTH=..\..
 
+include <$(DEPTH)\config\config.mak>
+
 LLIBS=				\
  $(DIST)\lib\raptorhtmlpars.lib	\
  $(DIST)\lib\xpcom.lib	\
