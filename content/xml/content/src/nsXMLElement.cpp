@@ -231,7 +231,7 @@ nsXMLElement::SetBinding(nsIXBLBinding* aBinding)
 NS_IMETHODIMP
 nsXMLElement::GetBinding(nsIXBLBinding** aResult)
 {
-  *aResult = mBinding;
+  *aResult = mBinding.get();
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
