@@ -47,8 +47,11 @@
 #include "nsSupportsArray.h"
 #include "nsINameSpace.h"
 #include "nsXBLService.h"
+#include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsFixedSizeAllocator.h"
+#include "xptinfo.h"
+#include "nsIInterfaceInfoManager.h"
 
 // Helper Classes =====================================================================
 
@@ -117,7 +120,9 @@ nsIAtom* nsXBLPrototypeBinding::kContentAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kHTMLAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kValueAtom = nsnull;
-
+nsIAtom* nsXBLPrototypeBinding::kXBLTextAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kImplementationAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kImplementsAtom = nsnull;
 nsFixedSizeAllocator nsXBLPrototypeBinding::kPool;
 
 static const size_t kBucketSizes[] = {
@@ -140,7 +145,8 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
   mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
   mAttributeTable(nsnull), 
-  mInsertionPointTable(nsnull)
+  mInsertionPointTable(nsnull),
+  mInterfaceTable(nsnull)
 {
   NS_INIT_REFCNT();
   
@@ -160,6 +166,9 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
     kInheritsAtom = NS_NewAtom("inherits");
     kHTMLAtom = NS_NewAtom("html");
     kValueAtom = NS_NewAtom("value");
+    kXBLTextAtom = NS_NewAtom("xbl:text");
+    kImplementationAtom = NS_NewAtom("implementation");
+    kImplementsAtom = NS_NewAtom("implements");
   }
 
   // These all use atoms, so we have to do these ops last to ensure
@@ -178,6 +187,11 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
     ConstructAttributeTable(content);
     ConstructInsertionTable(content);
   }
+
+  nsCOMPtr<nsIContent> impl;
+  GetImmediateChild(kImplementationAtom, getter_AddRefs(impl));
+  if (impl)
+    ConstructInterfaceTable(impl);
 }
 
 
@@ -185,6 +199,7 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
 {
   delete mAttributeTable;
   delete mInsertionPointTable;
+  delete mInterfaceTable;
   gRefCnt--;
   if (gRefCnt == 0) {
     NS_RELEASE(kInheritStyleAtom);
@@ -195,6 +210,9 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kHTMLAtom);
     NS_RELEASE(kValueAtom);
+    NS_RELEASE(kXBLTextAtom);
+    NS_RELEASE(kImplementationAtom);
+    NS_RELEASE(kImplementsAtom);
   }
 }
 
@@ -389,20 +407,35 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
     if (aRemoveFlag)
       realElement->UnsetAttribute(aNameSpaceID, dstAttr, PR_TRUE);
     else {
+      PRBool attrPresent = PR_TRUE;
       nsAutoString value;
-      nsresult result = aChangedElement->GetAttribute(aNameSpaceID, aAttribute, value);
-      PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                            result == NS_CONTENT_ATTR_HAS_VALUE);
+      // Check to see if the src attribute is xbl:text.  If so, then we need to obtain the 
+      // children of the real element and get the text nodes' values.
+      if (aAttribute == kXBLTextAtom) {
+        nsXBLBinding::GetTextData(aChangedElement, value);
+        value.StripChar('\n');
+        value.StripChar('\r');
+        nsAutoString stripVal(value);
+        stripVal.StripWhitespace();
+        if (stripVal.IsEmpty()) 
+          attrPresent = PR_FALSE;
+      }    
+      else {
+        nsresult result = aChangedElement->GetAttribute(aNameSpaceID, aAttribute, value);
+        attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                       result == NS_CONTENT_ATTR_HAS_VALUE);
+      }
 
       if (attrPresent)
         realElement->SetAttribute(aNameSpaceID, dstAttr, value, PR_TRUE);
     }
 
     // See if we're the <html> tag in XUL, and see if value is being
-    // set or unset on us.
+    // set or unset on us.  We may also be a tag that is having
+    // xbl:text set on us.
     nsCOMPtr<nsIAtom> tag;
     realElement->GetTag(*getter_AddRefs(tag));
-    if ((tag.get() == kHTMLAtom) && (dstAttr.get() == kValueAtom)) {
+    if (dstAttr.get() == kXBLTextAtom || (tag.get() == kHTMLAtom) && (dstAttr.get() == kValueAtom)) {
       // Flush out all our kids.
       PRInt32 childCount;
       realElement->ChildCount(childCount);
@@ -425,6 +458,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
         }
       }
     }
+
     nsCOMPtr<nsIXBLAttributeEntry> tmpAttr = xblAttr;
     tmpAttr->GetNext(getter_AddRefs(xblAttr));
   }
@@ -521,6 +555,23 @@ nsXBLPrototypeBinding::GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXBLPrototypeBinding::ImplementsInterface(REFNSIID aIID, PRBool* aResult)
+{
+  // Init the answer to FALSE.
+  *aResult = PR_FALSE;
+
+  // Now check our IID table.
+  if (mInterfaceTable) {
+    nsIIDKey key(aIID);
+    nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, 
+                                                                   mInterfaceTable->Get(&key)));
+    *aResult = supports != nsnull;
+  }
+
+  return NS_OK;
+}
+
 // Internal helpers ///////////////////////////////////////////////////////////////////////
 
 void
@@ -601,9 +652,23 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
   entry->GetSrcAttribute(getter_AddRefs(src));
 
   nsAutoString value;
-  nsresult result = changeData->mBoundElement->GetAttribute(kNameSpaceID_None, src, value);
-  PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                        result == NS_CONTENT_ATTR_HAS_VALUE);
+  PRBool attrPresent = PR_TRUE;
+  if (src.get() == nsXBLPrototypeBinding::kXBLTextAtom) {
+    nsXBLBinding::GetTextData(changeData->mBoundElement, value);
+    value.StripChar('\n');
+    value.StripChar('\r');
+    nsAutoString stripVal(value);
+    stripVal.StripWhitespace();
+
+    if (stripVal.IsEmpty()) 
+      attrPresent = PR_FALSE;
+  }
+  else {
+    nsresult result = changeData->mBoundElement->GetAttribute(kNameSpaceID_None, src, value);
+    attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                   result == NS_CONTENT_ATTR_HAS_VALUE);
+  }
+
   if (attrPresent) {
     nsCOMPtr<nsIContent> content;
     changeData->mProto->GetImmediateChild(nsXBLPrototypeBinding::kContentAtom, getter_AddRefs(content));
@@ -621,7 +686,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
         realElement->SetAttribute(kNameSpaceID_None, dst, value, PR_FALSE);
         nsCOMPtr<nsIAtom> tag;
         realElement->GetTag(*getter_AddRefs(tag));
-        if ((tag.get() == nsXBLPrototypeBinding::kHTMLAtom) && (dst.get() == nsXBLPrototypeBinding::kValueAtom) && !value.IsEmpty()) {
+        if (dst.get() == nsXBLPrototypeBinding::kXBLTextAtom ||
+           (tag.get() == nsXBLPrototypeBinding::kHTMLAtom) && (dst.get() == nsXBLPrototypeBinding::kValueAtom) && !value.IsEmpty()) {
           nsCOMPtr<nsIDOMText> textNode;
           nsCOMPtr<nsIDocument> doc;
           changeData->mBoundElement->GetDocument(*getter_AddRefs(doc));
@@ -649,6 +715,21 @@ nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIConten
     nsXBLAttrChangeData data(this, aBoundElement, aAnonymousContent);
     mAttributeTable->Enumerate(SetAttrs, (void*)&data);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::ShouldBuildChildFrames(PRBool* aResult)
+{
+  *aResult = PR_TRUE;
+  if (mAttributeTable) {
+    nsISupportsKey key(kXBLTextAtom);
+    nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, 
+                                                                   mAttributeTable->Get(&key)));
+
+    *aResult = !supports.get();
+  }
+
   return NS_OK;
 }
 
@@ -804,6 +885,55 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
   }
 }
 
+void
+nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent* aElement)
+{
+  nsAutoString impls;
+  aElement->GetAttribute(kNameSpaceID_None, kImplementsAtom, impls);
+  if (!impls.IsEmpty()) {
+    // Obtain the interface info manager that can tell us the IID
+    // for a given interface name.
+    nsCOMPtr<nsIInterfaceInfoManager> infoManager = getter_AddRefs(XPTI_GetInterfaceInfoManager());
+    if (!infoManager)
+      return;
+
+    // Create the table.
+    if (!mInterfaceTable)
+      mInterfaceTable = new nsSupportsHashtable(4);
+
+    // The user specified at least one attribute.
+    char* str = impls.ToNewCString();
+    char* newStr;
+    // XXX We should use a strtok function that tokenizes PRUnichars
+    // so that we don't have to convert from Unicode to ASCII and then back
+
+    char* token = nsCRT::strtok( str, ", ", &newStr );
+    while( token != NULL ) {
+      // Take the name and try obtain an IID.
+      nsIID* iid = nsnull;
+      infoManager->GetIIDForName(token, &iid);
+      if (iid) {
+        // We found a valid iid.  Add it to our table.
+        nsIIDKey key(*iid);
+        mInterfaceTable->Put(&key, mBinding);
+        nsMemory::Free(iid);
+      }
+
+      token = nsCRT::strtok( newStr, ", ", &newStr );
+    }
+
+    nsMemory::Free(str);
+  }
+
+  // Recur into our children.
+  PRInt32 childCount;
+  aElement->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aElement->ChildAt(i, *getter_AddRefs(child));
+    ConstructAttributeTable(child);
+  }
+}
 
 void
 nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray** aList)

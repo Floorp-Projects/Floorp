@@ -41,6 +41,7 @@ class nsIXBLBindingAttachedHandler;
 class nsIXBLDocumentInfo;
 class nsIAtom;
 class nsIStreamListener;
+class nsIXPConnectWrappedJS;
 
 // {55D70FE0-C8E5-11d3-97FB-00400553EEF0}
 #define NS_IBINDING_MANAGER_IID \
@@ -53,6 +54,9 @@ public:
 
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) = 0;
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding) = 0;
+
+  NS_IMETHOD GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult) = 0;
+  NS_IMETHOD SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult) = 0;
 
   /**
    * Notify the binding manager that an element
@@ -100,6 +104,10 @@ public:
 
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult) = 0;
   NS_IMETHOD FlushChromeBindings() = 0;
+
+  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult)=0;
+
+  NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult) = 0;
 };
 
 #endif // nsIBinding_Manager_h__

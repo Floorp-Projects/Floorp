@@ -128,6 +128,7 @@ public:
   static PRUint32 gClassLRUListQuota;        // Quota on class LRU list.
 
   // XBL Atoms
+  static nsIAtom* kDisplayAtom;
   static nsIAtom* kExtendsAtom;
   static nsIAtom* kEventAtom;
   static nsIAtom* kScrollbarAtom;

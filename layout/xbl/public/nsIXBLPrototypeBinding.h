@@ -84,6 +84,10 @@ public:
 
   NS_IMETHOD GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aTag)=0;
   NS_IMETHOD SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag)=0;
+
+  NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult)=0;
+
+  NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult)=0;
 };
 
 extern nsresult
