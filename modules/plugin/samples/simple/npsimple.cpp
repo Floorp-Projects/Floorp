@@ -509,7 +509,7 @@ NSRegisterSelf(nsISupports *aServMgr, const char *path)
 
     char buf[255];    // todo: use a const
 
-    nsString2 progID(NS_INLINE_PLUGIN_PROGID_PREFIX);
+    nsString progID(NS_INLINE_PLUGIN_PROGID_PREFIX);
 
     // We will use the service manager to obtain the component
     // manager, which will enable us to register a component

@@ -600,8 +600,8 @@ DoRFC822toHTMLConversion(char *filename, int numArgs, int outFormat)
   nsIChannel    *tChannel = nsnull;
 
   NewChannel(&tChannel, theURI);
-  mimeParser->AsyncConvertData(nsString2("message/rfc822").GetUnicode(), 
-                               nsString2("text/xul").GetUnicode(),
+  mimeParser->AsyncConvertData(nsString("message/rfc822").GetUnicode(), 
+                               nsString("text/xul").GetUnicode(),
                                out, tChannel);
 
 //  rv = mimeParser->Init(theURI, out, nsnull);
