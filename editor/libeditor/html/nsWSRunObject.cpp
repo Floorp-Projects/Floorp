@@ -60,11 +60,6 @@ static PRBool IsBlockNode(nsIDOMNode* node)
   return isBlock;
 }
 
-static PRBool IsInlineNode(nsIDOMNode* node)
-{
-  return !IsBlockNode(node);
-}
-
 //- constructor / destructor -----------------------------------------------
 nsWSRunObject::nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, PRInt32 aOffset) :
 mNode(aNode)
