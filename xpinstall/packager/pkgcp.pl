@@ -397,7 +397,7 @@ sub do_wildcard
 		if ($os eq "MacOS") {
 			warn "Warning: globbing on Mac not supported.\nWorkaround is to copy entire directory.\n";
 			@list = <$entry>;
-		elsif ( $os eq "OS2"){
+		} elsif ( $os eq "OS2") {
  			#warn "Warning: globbing on OS/2 not supported.\nWorkaround is to copy entire directory.\n";
 			@list = $entry;
 			chop($list[0]);
