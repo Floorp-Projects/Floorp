@@ -38,17 +38,17 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EdHLineProps.js \
 	$(srcdir)/EdSpellCheck.xul \
 	$(srcdir)/EdSpellCheck.js \
-  $(srcdir)/EdDictionary.xul \
-  $(srcdir)/EdDictionary.js \
-  $(srcdir)/EdNamedAnchorProps.xul \
-  $(srcdir)/EdNamedAnchorProps.js  \
-  $(srcdir)/EdInsertTable.xul \
-  $(srcdir)/EdInsertTable.js \
-  $(srcdir)/EdTableProps.xul \
-  $(srcdir)/EdTableProps.js \
-  $(srcdir)/EdMessage.xul \
-  $(srcdir)/EdMessage.js \
-  $(srcdir)/EdDialogOverlay.xul \
+	$(srcdir)/EdDictionary.xul \
+	$(srcdir)/EdDictionary.js \
+	$(srcdir)/EdNamedAnchorProps.xul \
+	$(srcdir)/EdNamedAnchorProps.js  \
+	$(srcdir)/EdInsertTable.xul \
+	$(srcdir)/EdInsertTable.js \
+	$(srcdir)/EdTableProps.xul \
+	$(srcdir)/EdTableProps.js \
+	$(srcdir)/EdMessage.xul \
+	$(srcdir)/EdMessage.js \
+	$(srcdir)/EdDialogOverlay.xul \
 	$(NULL)
 
 install::
