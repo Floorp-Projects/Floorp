@@ -44,8 +44,3 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 .autocomplete-search-engine {
   -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-search-engine");
 }
-
-#page-proxy-button[pageproxystate="invalid"] {
-  visibility: hidden;
-}
-
