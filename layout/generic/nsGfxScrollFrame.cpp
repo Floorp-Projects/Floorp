@@ -97,7 +97,7 @@ NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIs
 
 nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
   : nsBoxFrame(aShell, aIsRoot),
-    mInner(this)
+    mInner(this, aIsRoot)
 {
     SetLayoutManager(nsnull);
 }
@@ -583,7 +583,7 @@ NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsR
 
 nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
   : nsBoxFrame(aShell, aIsRoot),
-    mInner(this)
+    mInner(this, aIsRoot)
 {
     SetLayoutManager(nsnull);
 }
@@ -1034,7 +1034,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 //-------------------- Inner ----------------------
 
-nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsBoxFrame* aOuter)
+nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsBoxFrame* aOuter, PRBool aIsRoot)
   : mScrollableView(nsnull),
     mHScrollbarBox(nsnull),
     mVScrollbarBox(nsnull),
@@ -1054,7 +1054,8 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsBoxFrame* aOuter)
     mFrameInitiatedScroll(PR_FALSE),
     mDidHistoryRestore(PR_FALSE),
     mHorizontalOverflow(PR_FALSE),
-    mVerticalOverflow(PR_FALSE)
+    mVerticalOverflow(PR_FALSE),
+    mIsRoot(aIsRoot)
 {
 }
 
@@ -1160,11 +1161,7 @@ nsGfxScrollFrameInner::ScrollbarStyles
 nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 {
   ScrollbarStyles result;
-  nsIFrame* parent = mOuter->GetParent();
-  if (parent && parent->GetType() == nsLayoutAtoms::viewportFrame &&
-      // Make sure we're actually the root scrollframe
-      parent->GetFirstChild(nsnull) ==
-        NS_STATIC_CAST(const nsIFrame*, mOuter)) {
+  if (mIsRoot) {
     nsPresContext *presContext = mOuter->GetPresContext();
     result = presContext->GetViewportOverflowOverride();
 
@@ -1318,6 +1315,20 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   nsIScrollableFrame *scrollable;
   CallQueryInterface(mOuter, &scrollable);
 
+  // At this stage in frame construction, the document element and/or
+  // BODY overflow styles have not yet been propagated to the
+  // viewport. So GetScrollbarStylesFromFrame called here will only
+  // take into account the scrollbar preferences set on the docshell.
+  // Thus if no scrollbar preferences are set on the docshell, we will
+  // always create scrollbars, which means later dynamic changes to
+  // propagated overflow styles will show or hide scrollbars on the
+  // viewport without requiring frame reconstruction of the viewport
+  // (good!).
+
+  // XXX On the other hand, if scrolling="no" is set on the container
+  // we won't create scrollbars here so no scrollbars will ever be
+  // created even if the container's scrolling attribute is later
+  // changed. However, this has never been supported.
   ScrollbarStyles styles = scrollable->GetScrollbarStyles();
   PRBool canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
   PRBool canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;

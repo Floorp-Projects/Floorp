@@ -61,7 +61,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  nsGfxScrollFrameInner(nsBoxFrame* aOuter);
+  nsGfxScrollFrameInner(nsBoxFrame* aOuter, PRBool aIsRoot);
 
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
   ScrollbarStyles GetScrollbarStylesFromFrame() const;
@@ -165,6 +165,8 @@ public:
   PRPackedBool mDidHistoryRestore:1;
   PRPackedBool mHorizontalOverflow:1;
   PRPackedBool mVerticalOverflow:1;
+  // Is this the scrollframe for the document's viewport?
+  PRPackedBool mIsRoot:1;
 };
 
 /**
