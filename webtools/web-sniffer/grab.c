@@ -26,7 +26,7 @@
 
 static char *limitURLs[] =
 {
-	"http://www.w3.org/TR/REC-CSS2/",
+	NULL,
 	NULL
 };
 
@@ -41,7 +41,7 @@ addURLFunc(App *app, URL *url)
 }
 
 static void
-grab(unsigned char *url, HTTP *http)
+grab(char *dir, unsigned char *url, HTTP *http)
 {
 	char	*add;
 	int	baseLen;
@@ -66,13 +66,16 @@ grab(unsigned char *url, HTTP *http)
 		add = "";
 	}
 
-	str = calloc(strlen((char *) url + baseLen) + strlen(add) + 1, 1);
+	str = calloc(strlen(dir) + 1 + strlen((char *) url + baseLen) +
+		strlen(add) + 1, 1);
 	if (!str)
 	{
 		fprintf(stderr, "cannot calloc string\n");
 		exit(0);
 	}
-	strcpy(str, (char *) url + baseLen);
+	strcpy(str, dir);
+	strcat(str, "/");
+	strcat(str, (char *) url + baseLen);
 	p = strchr(str, '#');
 	if (p)
 	{
@@ -113,10 +116,19 @@ grab(unsigned char *url, HTTP *http)
 	free(str);
 }
 
+static void
+usage(char *prog)
+{
+	fprintf(stderr, "%s [ -d dir ] [ -u uri ]\n", prog);
+	exit(0);
+}
+
 int
 main(int argc, char *argv[])
 {
+	char	*dir;
 	HTTP	*http;
+	int	i;
 	char	*prog;
 	URL	*url;
 
@@ -139,17 +151,43 @@ main(int argc, char *argv[])
 		prog = argv[0];
 	}
 
-	switch (argc)
+	dir = NULL;
+	for (i = 1; i < argc; i++)
 	{
-	case 1:
-		break;
-	case 2:
-		limitURLs[0] = argv[1];
-		break;
-	default:
-		fprintf(stderr, "usage: %s [ http://www.foo.com/bar/ ]\n",
-			prog);
-		return 1;
+		if (!strcmp(argv[i], "-d"))
+		{
+			if ((++i < argc) && (!dir))
+			{
+				dir = argv[i];
+			}
+			else
+			{
+				usage(prog);
+			}
+		}
+		else if (!strcmp(argv[i], "-u"))
+		{
+			if ((++i < argc) && (!limitURLs[0]))
+			{
+				limitURLs[0] = argv[i];
+			}
+			else
+			{
+				usage(prog);
+			}
+		}
+		else
+		{
+			usage(prog);
+		}
+	}
+	if (!dir)
+	{
+		dir = "test/grab";
+	}
+	if (!limitURLs[0])
+	{
+		limitURLs[0] = "http://sniffuri.org/";
 	}
 
 	addURLInit(addURLFunc, limitURLs, NULL);
@@ -166,7 +204,7 @@ main(int argc, char *argv[])
 			switch (http->status)
 			{
 			case 200: /* OK */
-				grab(url->url, http);
+				grab(dir, url->url, http);
 				break;
 			case 302: /* Moved Temporarily */
 				break;
