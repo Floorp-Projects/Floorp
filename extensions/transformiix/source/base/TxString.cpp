@@ -170,7 +170,7 @@ PRInt32 String::indexOf(UNICODE_CHAR aData,
 
   PRInt32 searchIndex = aOffset;
 
-  while (searchIndex < mLength) {
+  while (searchIndex < (PRInt32)mLength) {
     if (mBuffer[searchIndex] == aData) {
       return searchIndex;
     }
