@@ -267,7 +267,7 @@ void ElementReference::emitCodeSequence(ByteCodeGen *bcg)
 void ElementReference::emitDelete(ByteCodeGen *bcg) 
 {
     bcg->addOpAdjustDepth(DeleteElementOp, -mDepth);
-    bcg->addByte(mDepth);
+    bcg->addShort(mDepth);
 }
 
 

@@ -343,7 +343,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     const String &fnStr = s.getString();
                     std::string str(fnStr.length(), char());
                     std::transform(fnStr.begin(), fnStr.end(), str.begin(), narrow);
-                    int len = strlen(str.c_str());
+                    uint32 len = strlen(str.c_str());
                     printFormat(stdOut, "%.30s+%.4d%*c%d        ", str.c_str(), (pc - mCurModule->mCodeBase), (len > 30) ? 0 : (len - 30), ' ', stackSize());
                 }
                 else
