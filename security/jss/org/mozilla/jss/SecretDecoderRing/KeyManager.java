@@ -57,7 +57,7 @@ public class KeyManager {
         KeyGenAlgorithm.DES3;
 
     /**
-     * The default key size. This is only relevant for algorithms
+     * The default key size (in bytes). This is only relevant for algorithms
      * with variable-length keys, such as AES.
      */
     public static final int DEFAULT_KEYSIZE = 0;
@@ -69,6 +69,9 @@ public class KeyManager {
      * @param token The token on which this KeyManager operates.
      */
     public KeyManager(CryptoToken token) {
+        if( token == null ) {
+            throw new NullPointerException("token is null");
+        }
         this.token = token;
     }
 
@@ -87,6 +90,9 @@ public class KeyManager {
 
     /**
      * Generates an SDR key with the given algorithm and key size.
+     * @param keySize Length of key in bytes. This is only relevant for
+     *  algorithms that take more than one key size. Otherwise it can just
+     *  be set to 0.
      * @return The keyID of the generated key. A random keyID will be chosen
      *  that is not currently used on the token. The keyID must be stored
      *  by the application in order to use this key for encryption in the
@@ -95,11 +101,17 @@ public class KeyManager {
     public byte[] generateKey(KeyGenAlgorithm alg, int keySize)
             throws TokenException
     {
+        if( alg == null ) {
+            throw new NullPointerException("alg is null");
+        }
         byte[] keyID = generateUnusedKeyID();
         generateKeyNative(token, alg, keyID, keySize);
         return keyID;
     }
 
+    /**
+     * @param keySize Key length in bytes.
+     */
     private native void generateKeyNative(CryptoToken token,
         KeyGenAlgorithm alg, byte[] keyID, int keySize);
 
@@ -140,6 +152,9 @@ public class KeyManager {
     public SecretKey lookupKey(EncryptionAlgorithm alg, byte[] keyid)
         throws TokenException
     {
+        if( alg == null || keyid == null ) {
+            throw new NullPointerException();
+        }
         SymmetricKey k = lookupKeyNative(token, alg, keyid);
         if( k == null ) {
             return null;
@@ -169,6 +184,9 @@ public class KeyManager {
     public void deleteKey(SecretKey key) throws TokenException,
             InvalidKeyException
     {
+        if( key == null ) {
+            throw new NullPointerException();
+        }
         if( ! (key instanceof SecretKeyFacade) ) {
             throw new InvalidKeyException("Key must be a JSS key");
         }
