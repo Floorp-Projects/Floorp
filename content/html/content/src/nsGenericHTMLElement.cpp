@@ -4659,7 +4659,14 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
   }
 
   if (aDoFocus) {
-    return SetFocus(presContext);
+    nsresult rv = SetFocus(presContext);
+    NS_ENSURE_SUCCESS(rv,rv);
+    nsCOMPtr<nsIEventStateManager> esm;
+    rv = presContext->GetEventStateManager(getter_AddRefs(esm));
+    if (esm) {
+      rv = esm->MoveCaretToFocus();
+    }
+    return rv;
   }
 
   return RemoveFocus(presContext);
