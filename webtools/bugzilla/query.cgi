@@ -428,7 +428,7 @@ function selectProduct(f) {
         if (doit) {
             var l = f.component.length;
             f.component[l] = new Option(c, c);
-            if (csel[c]) {
+            if (csel.length && csel[c]) {
                 f.component[l].selected = true;
             }
         }
@@ -445,13 +445,13 @@ function selectProduct(f) {
 
     for (v in vers) {
         if (typeof(vers[v]) == 'function') continue;
-        var doit = doall;
+        doit = doall;
         for (i=0 ; !doit && i<f.product.length ; i++) {
             if (f.product[i].selected) {
-                var p = f.product[i].value;
+                p = f.product[i].value;
                 for (j in vers[v]) {
                     if (typeof(vers[v][j]) == 'function') continue;
-                    var p2 = vers[v][j];
+                    p2 = vers[v][j];
                     if (p2 == p) {
                         doit = true;
                         break;
@@ -460,15 +460,15 @@ function selectProduct(f) {
             }
         }
         if (doit) {
-            var l = f.version.length;
+            l = f.version.length;
             f.version[l] = new Option(v, v);
-            if (vsel[v]) {
+            if (vsel.length && vsel[v]) {
                 f.version[l].selected = true;
             }
         }
     }
 
-    if (f.target_milestone) {
+    if ("target_milestone" in f) {
         var tmsel = new Array();
         for (i=0 ; i<f.target_milestone.length ; i++) {
             if (f.target_milestone[i].selected) {
@@ -480,13 +480,13 @@ function selectProduct(f) {
     
         for (tm in tms) {
             if (typeof(tms[v]) == 'function') continue;
-            var doit = doall;
+            doit = doall;
             for (i=0 ; !doit && i<f.product.length ; i++) {
                 if (f.product[i].selected) {
-                    var p = f.product[i].value;
+                    p = f.product[i].value;
                     for (j in tms[tm]) {
                         if (typeof(tms[tm][j]) == 'function') continue;
-                        var p2 = tms[tm][j];
+                        p2 = tms[tm][j];
                         if (p2 == p) {
                             doit = true;
                             break;
@@ -495,9 +495,9 @@ function selectProduct(f) {
                 }
             }
             if (doit) {
-                var l = f.target_milestone.length;
+                l = f.target_milestone.length;
                 f.target_milestone[l] = new Option(tm, tm);
-                if (tmsel[tm]) {
+                if (tmsel.length && tmsel[tm]) {
                     f.target_milestone[l].selected = true;
                 }
             }
