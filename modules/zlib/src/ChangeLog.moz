@@ -21,3 +21,10 @@ Mozilla.org changes:
 - 21 September 2004
   applied patch for DoS vulnerabililty in inflate.c
   see bug #258009
+
+- 02 November 2004
+  Sync'ed with 1.2.2 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  Our patches of 24, 25 June and 21 Sept are now in the zlib
+  distribution.
+  See bug #248644
