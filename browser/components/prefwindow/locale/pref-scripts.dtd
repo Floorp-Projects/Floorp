@@ -1,13 +1,10 @@
 <!-- extracted from content/pref-scripts.xul -->
 
-<!--LOCALIZATION NOTE : FILE The 'Scripts & Plugins' preferences dialog -->
-<!ENTITY lHeader "Scripts &amp; Plugins">
+<!ENTITY lHeader "Scripts &amp; Windows">
 
 <!--LOCALIZATION NOTE (enableJsCheck.label): 'JavaScript' should never be translated -->
-<!ENTITY navigator.label             "Navigator">
-<!ENTITY navigator.accesskey         "r">
-
-<!ENTITY enableJavaScript.label          "Enable JavaScript for">
+<!ENTITY enableJavaScript.label          "Enable JavaScript">
+<!ENTITY enableJavaScript.accesskey      "J">
 <!ENTITY allowScripts.label              "Allow scripts to:">
 <!ENTITY allowWindowOpen.label           "Open unrequested windows">
 <!ENTITY allowWindowMoveResize.label     "Move or resize existing windows">
@@ -17,5 +14,3 @@
 <!ENTITY allowDocumentCookieSet.label    "Create or change cookies">
 <!ENTITY allowDocumentCookieGet.label    "Read cookies">
 <!ENTITY allowHideStatusBar.label        "Hide the status bar">
-
-<!ENTITY enablePlugin.label              "Enable Plugins for">
