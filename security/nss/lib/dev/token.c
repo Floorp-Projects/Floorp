@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.5 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.6 $ $Date: 2001/09/20 20:38:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -46,6 +46,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.5 $ $Date:
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
+
+#ifndef NSSPKI_H
+#include "nsspki.h"
+#endif /* NSSPKI_H */
 
 #ifndef PKI_H
 #include "pki.h"
@@ -128,6 +132,7 @@ nssToken_Create
 	 */
 	rvToken->arena = arena;
     }
+    rvToken->refCount = 1;
     rvToken->slot = parent;
     rvToken->name = tokenName;
     rvToken->ckFlags = tokenInfo.flags;
@@ -192,7 +197,7 @@ examine_cert_callback(NSSToken *t, nssSession *session,
     NSSCertificate *cert;
     struct certCallbackStr *ccb = (struct certCallbackStr *)arg;
     /* maybe it should be nssToken_CreateCertificate(token, handle); */
-    cert = NSSCertificate_CreateFromHandle(h, session, t->slot);
+    cert = NSSCertificate_CreateFromHandle(NULL, h, session, t->slot);
     if (!cert) {
 	goto loser;
     }
@@ -200,22 +205,37 @@ examine_cert_callback(NSSToken *t, nssSession *session,
     if (cbrv != PR_SUCCESS) {
 	goto loser;
     }
+    NSSCertificate_Destroy(cert);
     return PR_SUCCESS;
 loser:
     return PR_FAILURE;
 }
+
+extern const NSSError NSS_ERROR_MAXIMUM_FOUND;
+
+struct collect_arg_str
+{
+    NSSArena *arena;
+    nssList *list;
+    PRUint32 maximum;
+};
 
 static PRStatus
 collect_certs_callback(NSSToken *t, nssSession *session,
                        CK_OBJECT_HANDLE h, void *arg)
 {
     NSSCertificate *cert;
-    nssList *certList = (nssList *)arg;
-    cert = NSSCertificate_CreateFromHandle(h, session, t->slot);
+    struct collect_arg_str *ca = (struct collect_arg_str *)arg;
+    cert = NSSCertificate_CreateFromHandle(ca->arena, h, session, t->slot);
     if (!cert) {
 	goto loser;
     }
-    nssList_AddElement(certList, (void *)cert);
+    nssList_AddElement(ca->list, (void *)cert);
+    if (ca->maximum > 0 && nssList_Count(ca->list) >= ca->maximum) {
+	/* signal the end of collection) */
+	nss_SetError(NSS_ERROR_MAXIMUM_FOUND);
+	return PR_FAILURE;
+    }
     return PR_SUCCESS;
 loser:
     return PR_FAILURE;
@@ -256,6 +276,12 @@ nsstoken_TraverseObjects
 	}
 	cbrv = (*callback)(tok, session, object, arg);
 	if (cbrv != PR_SUCCESS) {
+	    NSSError e;
+	    if ((e = NSS_GetError()) == NSS_ERROR_MAXIMUM_FOUND) {
+		/* The maximum number of elements have been found, exit. */
+		nss_ClearErrorStack();
+		break;
+	    }
 	    goto loser;
 	}
     }
@@ -293,12 +319,12 @@ nssToken_TraverseCertificates
     return rvstack;
 }
 
-NSS_IMPLEMENT NSSCertificate **
+NSS_IMPLEMENT PRStatus
 nssToken_FindCertificatesByTemplate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
-  NSSCertificate *rvOpt[],
+  nssList *certList,
   PRUint32 maximumOpt,
   NSSArena *arenaOpt,
   CK_ATTRIBUTE_PTR cktemplate,
@@ -309,45 +335,22 @@ nssToken_FindCertificatesByTemplate
     PRStatus nssrv;
     nssSession *session;
     PRUint32 count;
-    NSSCertificate **certArray;
-    nssList *certList = NULL;
+    struct collect_arg_str collectArgs;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
-    certList = nssList_Create(PR_FALSE);
-    if (!certList) {
-	return (NSSCertificate **)NULL;
-    }
+    collectArgs.arena = arenaOpt;
+    collectArgs.list = certList;
+    collectArgs.maximum = maximumOpt;
     nssSession_EnterMonitor(session);
     rvstack = nsstoken_TraverseObjects(tok, session, cktemplate, ctsize,
                                        collect_certs_callback,
-                                       (void *)certList);
+                                       (void *)&collectArgs);
     nssSession_ExitMonitor(session);
     if (rvstack) {
 	/* examine the errors */
 	goto loser;
     }
-    count = nssList_GetNumElements(certList);
-    if (count == 0) {
-	goto loser;
-    }
-    if (maximumOpt > 0 && maximumOpt < count) {
-	count = maximumOpt;
-    }
-    if (rvOpt) {
-	certArray = rvOpt;
-    } else {
-	certArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
-    }
-    if (!certArray) {
-	goto loser;
-    }
-    nssrv = nssList_GetArray(certList, (void **)certArray, count);
-    if (nssrv != PR_SUCCESS) {
-	goto loser;
-    }
-    nssList_Destroy(certList);
-    return certArray;
+    return PR_SUCCESS;
 loser:
-    if (certList) nssList_Destroy(certList);
-    return (NSSCertificate **)NULL;
+    return PR_FAILURE;
 }
 

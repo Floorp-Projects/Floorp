@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.6 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.7 $ $Date: 2001/09/20 20:38:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -176,7 +176,7 @@ nssSlot_Destroy
 )
 {
     if (--slot->refCount == 0) {
-	/*NSSToken_Destroy(slot->token);*/
+	nssToken_Destroy(slot->token);
 	return NSSArena_Destroy(slot->arena);
     }
     return PR_SUCCESS;
