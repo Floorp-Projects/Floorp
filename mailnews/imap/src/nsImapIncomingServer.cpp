@@ -1595,14 +1595,19 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 		{
 			nsXPIDLCString password;
 			nsXPIDLCString userName;
+      PRBool requiresPassword = PR_TRUE;
 
 			GetUsername(getter_Copies(userName));
-			GetPassword(getter_Copies(password));
+      m_logonRedirector->RequiresPassword(userName, &requiresPassword);
+      if (requiresPassword)
+      {
+  			GetPassword(getter_Copies(password));
 
-			if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
-				PromptForPassword(getter_Copies(password), aMsgWindow);
-			if (password)
-				rv = m_logonRedirector->Logon(userName, password, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
+			  if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
+				  PromptForPassword(getter_Copies(password), aMsgWindow);
+      }
+
+  		rv = m_logonRedirector->Logon(userName, password, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
 		}
 	}
 
