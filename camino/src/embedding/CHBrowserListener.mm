@@ -315,7 +315,15 @@ nsCocoaBrowserListener::SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRIn
     NSPoint origin;
     origin.x = (float)x;
     origin.y = (float)y;
-    [window setFrameOrigin:origin];
+    
+    // websites assume the origin is the topleft of the window and that the screen origin
+    // is "topleft" (quickdraw coordinates). As a result, we have to convert it.
+    GDHandle screenDevice = ::GetMainDevice();
+    Rect screenRect = (**screenDevice).gdRect;
+    short screenHeight = screenRect.bottom - screenRect.top;
+    origin.y = screenHeight - origin.y;
+    
+    [window setFrameTopLeftPoint:origin];
   }
 
   if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
