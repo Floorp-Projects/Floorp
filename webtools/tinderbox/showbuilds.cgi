@@ -762,7 +762,7 @@ sub do_express {
 # This is essentially do_express but it outputs a different format
 sub do_panel {
     my $bonsai_tree = '';
-    require "$tree/treedata.pl";
+    require "$form{tree}/treedata.pl";
     if ($bonsai_tree ne "") {
       print "The tree is", tree_open() ? "OPEN" : "CLOSED", "<br>\n";
     }
