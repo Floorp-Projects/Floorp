@@ -1632,14 +1632,33 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!fun)
         return JS_FALSE;
 
-    if ((fp = cx->fp) != NULL && (fp = fp->down) != NULL && fp->script) {
-        filename = fp->script->filename;
-        lineno = js_PCToLineNumber(fp->script, fp->pc);
-        principals = fp->script->principals;
-    } else {
-        filename = NULL;
-        lineno = 0;
-        principals = NULL;
+    /*
+     * Function is static and not called directly by other functions in this
+     * file, therefore it is callable only as a native function by js_Invoke.
+     * Find the scripted caller, possibly skipping other native frames such as
+     * are built for Function.prototype.call or .apply activations that invoke
+     * Function indirectly from a script.
+     */
+    fp = cx->fp;
+    JS_ASSERT(!fp->script && fp->fun && fp->fun->native == Function);
+    for (;;) {
+        fp = fp->down;
+        if (!fp) {
+            filename = NULL;
+            lineno = 0;
+            principals = NULL;
+            break;
+        }
+        if (fp->script) {
+            /*
+             * Load fp->script->* before calling js_PCToLineNumber, to avoid
+             * a pessimal reload of fp->script.
+             */
+            principals = fp->script->principals;
+            filename = fp->script->filename;
+            lineno = js_PCToLineNumber(fp->script, fp->pc);
+            break;
+        }
     }
 
     n = argc ? argc - 1 : 0;
@@ -1792,31 +1811,6 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (argv) {
         /* Use the last arg (or this if argc == 0) as a local GC root. */
         argv[(intn)(argc-1)] = STRING_TO_JSVAL(str);
-    }
-
-    /*
-     * Function is static and not called directly by other functions in this
-     * file, therefore it is callable only as a native function by js_Invoke.
-     * Find the scripted caller, possibly skipping other native frames such as
-     * are built for Function.prototype.call or .apply activations that invoke
-     * Function indirectly from a script.
-     */
-    fp = cx->fp;
-    JS_ASSERT(!fp->script && fp->fun && fp->fun->native == Function);
-    for (;;) {
-        fp = fp->down;
-        if (!fp) {
-            filename = NULL;
-            lineno = 0;
-            principals = NULL;
-            break;
-        }
-        if (fp->script) {
-            filename = fp->script->filename;
-            lineno = js_PCToLineNumber(fp->script, fp->pc);
-            principals = fp->script->principals;
-            break;
-        }
     }
 
     mark = JS_ARENA_MARK(&cx->tempPool);
