@@ -5,7 +5,7 @@
 %browserDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;
-<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
+<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
 %charsetDTD;
 ]>
 

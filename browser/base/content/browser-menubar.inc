@@ -198,7 +198,7 @@
                             <menuseparator />
                         </menupopup>
                     </menu>
-                    <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+                    <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://global/content/customizeCharset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
                     </menupopup>
                 </menu>
                 <menuseparator/>

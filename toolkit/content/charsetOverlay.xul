@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE  window SYSTEM "chrome://global/locale/charset.dtd">
+<!DOCTYPE  window SYSTEM "chrome://global/locale/charsetOverlay.dtd">
 
 <overlay id="charsetOverlay"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -102,7 +102,7 @@
                 <menuseparator />
             </menupopup>
         </menu>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://global/content/customizeCharset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
         </menupopup>
     </menu>
 
@@ -200,7 +200,7 @@
                 <menuseparator />
             </menupopup>
         </menu>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://global/content/customizeCharset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
         </menupopup>
     </menu>
 
@@ -215,7 +215,7 @@
         </template>
 
         <menupopup>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'mailedit')"/>
+        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://global/content/customizeCharset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'mailedit')"/>
         <menuseparator />
         </menupopup>
     </menu>
@@ -314,7 +314,7 @@
                 <menuseparator />
             </menupopup>
         </menu>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://global/content/customizeCharset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
         </menupopup>
     </menu>
 
