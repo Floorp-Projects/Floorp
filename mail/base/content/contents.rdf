@@ -13,7 +13,7 @@
         chrome:displayName="Messenger"
         chrome:author="mozilla.org"
         chrome:name="messenger"
-        chrome:localeVersion="1.5b"
+        chrome:localeVersion="1.6a"
         chrome:skinVersion="1.5">
   </RDF:Description>
 
