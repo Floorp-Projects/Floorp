@@ -53,7 +53,7 @@ XPIDLSRCS = \
 
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
-	nsOSHelperAppService.cpp	\
+	$(OSDIR)/nsOSHelperAppService.cpp	\
 	$(NULL)
 
 
