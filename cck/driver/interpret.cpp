@@ -220,11 +220,12 @@ CString CInterpret::replaceVars(char *str, char *listval)
 BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
 {
 	// When searching for DLL info, the m_DLLs is a dummy object
-	// with its names set to the null string so it will never
-	// match.  This simplifies the handling of the linked list.
+	// that only exists to hold the head of the list.  This simplifies 
+	// the handling of the linked list by allowing us to otherwise
+	// ignore the difference in the first node.
 	
-	DLLINFO *dllp = &m_DLLs;
-	DLLINFO *last = NULL;
+	DLLINFO *last = &m_DLLs;
+	DLLINFO *dllp = m_DLLs.next;
 	int found = FALSE;
 	while (!found && dllp)
 	{
@@ -243,7 +244,11 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
 		dllp->dllName = CString(dll);
 		dllp->procName = CString(proc);
 		VERIFY(dllp->hDLL = ::LoadLibrary(dll));
+		if (!dllp->hDLL)
+			return FALSE;
 		VERIFY(dllp->procAddr = (DLLPROC *) ::GetProcAddress(dllp->hDLL, proc));
+		if (!dllp->procAddr)
+			return FALSE;
 		dllp->next = NULL;
 
 		last->next = dllp;
