@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: unix_err.c,v 1.2 2000/09/18 19:53:59 nelsonb%netscape.com Exp $
+ * $Id: unix_err.c,v 1.3 2001/03/13 19:02:05 relyea%netscape.com Exp $
  */
 
 #if 0
@@ -46,6 +46,10 @@
 #else
 #define _PR_POLL_AVAILABLE 1
 #include "prerror.h"
+#endif
+
+#if defined (__bsdi__)
+#undef _PR_POLL_AVAILABLE
 #endif
 
 #if defined(_PR_POLL_AVAILABLE)
