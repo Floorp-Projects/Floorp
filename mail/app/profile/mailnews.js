@@ -499,3 +499,6 @@ pref("mail.purge.min_delay",480);
 // "mail.purge.timer_interval", fire the purge timer every 5 minutes, starting 5 minutes after we load accounts
 pref("mail.purge.timer_interval",5);
 pref("mailnews.view.last",0); // 0 == "all" view
+
+// require a password before showing imap or local headers in thread pane
+pref("mail.password_protect_local_cache", false);
