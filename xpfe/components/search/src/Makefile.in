@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= appcomps
 LIBRARY_NAME	= search_s
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  rdf \
 		  necko \

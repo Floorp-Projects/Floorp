@@ -36,7 +36,6 @@ PACKAGE_FILE = appcomps.pkg
 PACKAGE_VARS += MOZ_PHOENIX
 
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  content \
 		  rdf \
@@ -145,7 +144,6 @@ endif
 EXTRA_DSO_LDOPTS = \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NULL)

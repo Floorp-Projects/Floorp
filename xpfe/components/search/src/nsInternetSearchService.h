@@ -47,7 +47,6 @@
 #include "nsWeakReference.h"
 #include "nsIRDFService.h"
 #include "nsITimer.h"
-#include "nsIFileSpec.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIPref.h"
@@ -156,7 +155,7 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  GetSearchEngineList(nsIFile *spec, PRBool isSystemSearchFile, PRBool checkMacFileType);
   nsresult  GetCategoryList();
   nsresult  GetSearchFolder(nsIFile **spec);
-  nsresult  ReadFileContents(const nsFileSpec &baseFilename, nsString & sourceContents);
+  nsresult  ReadFileContents(nsILocalFile *baseFilename, nsString & sourceContents);
   nsresult  DecodeData(const char *aCharset, const PRUnichar *aInString, PRUnichar **aOutString);
   nsresult  GetData(const PRUnichar *data, const char *sectionToFind, PRUint32 sectionNum, const char *attribToFind, nsString &value);
   nsresult  GetNumInterpretSections(const PRUnichar *data, PRUint32 &numInterpretSections);
