@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -255,9 +255,7 @@ js_LiveContext(JSRuntime *rt, JSContext *cx)
         if (cl == &cx->links)
             return JS_TRUE;
     }
-#ifdef DEBUG
-    JS_ATOMIC_INCREMENT(&rt->deadContexts);
-#endif
+    JS_RUNTIME_METER(rt, deadContexts);
     return JS_FALSE;
 }
 
@@ -312,7 +310,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
 }
 
 /*
- * We don't post an exception in this case, since doing so runs into 
+ * We don't post an exception in this case, since doing so runs into
  * complications of pre-allocating an exception object which required
  * running the Exception class initializer early etc.
  * Instead we just invoke the errorReporter with an "Out Of Memory"
@@ -354,7 +352,7 @@ js_ReportOutOfMemory(JSContext *cx, JSErrorCallback errorCallback)
             onError = NULL;
         }
     }
-    
+
     if (onError)
         (*onError)(cx, msg, &report);
 }

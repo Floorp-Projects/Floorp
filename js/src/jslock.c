@@ -246,12 +246,6 @@ js_unlog_scope(JSScope *scope)
 
 #endif /* DEBUG_SCOPE_COUNT */
 
-#ifdef DEBUG
-# define METER_LOCK_EVENT(rt, which) JS_ATOMIC_INCREMENT(&(rt)->which)
-#else
-# define METER_LOCK_EVENT(rt, which) /* nothing */
-#endif
-
 /*
  * Return true if scope's ownercx, or the ownercx of a single-threaded scope
  * for which ownercx is waiting to become multi-threaded and shared, is cx.
@@ -268,7 +262,7 @@ WillDeadlock(JSScope *scope, JSContext *cx)
     do {
         ownercx = scope->ownercx;
         if (ownercx == cx) {
-            METER_LOCK_EVENT(cx->runtime, deadlocksAvoided);
+            JS_RUNTIME_METER(cx->runtime, deadlocksAvoided);
             return JS_TRUE;
         }
     } while (ownercx && (scope = ownercx->scopeToShare) != NULL);
@@ -276,8 +270,11 @@ WillDeadlock(JSScope *scope, JSContext *cx)
 }
 
 /*
- * Make scope multi-threaded, i.e. shared its ownership among contexts in rt
- * using a "thin" or (if necessary due to contention) "fat" lock.
+ * Make scope multi-threaded, i.e. share its ownership among contexts in rt
+ * using a "thin" or (if necessary due to contention) "fat" lock.  Called only
+ * from ClaimScope, immediately below, when we detect deadlock were we to wait
+ * for scope's lock, because its ownercx is waiting on a scope owned by the
+ * calling cx.
  *
  * (i) rt->gcLock held
  */
@@ -295,9 +292,32 @@ ShareScope(JSRuntime *rt, JSScope *scope)
         JS_NOTIFY_ALL_CONDVAR(rt->scopeSharingDone);
     }
     js_InitLock(&scope->lock);
-    scope->u.count = 0;
+    if (scope == rt->setSlotScope) {
+        /*
+         * Nesting locks on another thread that's using scope->ownercx: give
+         * the held lock a reentrancy count of 1 and set its lock.owner field
+         * directly (no compare-and-swap needed while scope->ownercx is still
+         * non-null).  See below in ClaimScope, before the ShareScope call,
+         * for more on why this is necessary.
+         *
+         * If NSPR_LOCK is defined, we cannot deadlock holding rt->gcLock and
+         * acquiring scope->lock.fat here, against another thread holding that
+         * fat lock and trying to grab rt->gcLock.  This is because no other
+         * thread can attempt to acquire scope->lock.fat until scope->ownercx
+         * is null *and* our thread has released rt->gcLock, which interlocks
+         * scope->ownercx's transition to null against tests of that member
+         * in ClaimScope.
+         */
+        scope->lock.owner = scope->ownercx->thread;
+#ifdef NSPR_LOCK
+        JS_ACQUIRE_LOCK((JSLock*)scope->lock.fat);
+#endif
+        scope->u.count = 1;
+    } else {
+        scope->u.count = 0;
+    }
     scope->ownercx = NULL;  /* NB: set last, after lock init */
-    METER_LOCK_EVENT(rt, sharedScopes);
+    JS_RUNTIME_METER(rt, sharedScopes);
 }
 
 /*
@@ -317,7 +337,7 @@ ClaimScope(JSScope *scope, JSContext *cx)
     PRStatus stat;
 
     rt = cx->runtime;
-    METER_LOCK_EVENT(rt, claimAttempts);
+    JS_RUNTIME_METER(rt, claimAttempts);
     JS_LOCK_GC(rt);
 
     /* Reload in case ownercx went away while we blocked on the lock. */
@@ -343,7 +363,7 @@ ClaimScope(JSScope *scope, JSContext *cx)
             JS_ASSERT(scope->u.count == 0);
             scope->ownercx = cx;
             JS_UNLOCK_GC(rt);
-            METER_LOCK_EVENT(rt, claimedScopes);
+            JS_RUNTIME_METER(rt, claimedScopes);
             return JS_TRUE;
         }
 
@@ -357,10 +377,18 @@ ClaimScope(JSScope *scope, JSContext *cx)
          * could hold locks on scope, we would need to keep reentrancy counts
          * for all such "flyweight" (ownercx != NULL) locks, so that control
          * would unwind properly once these locks became "thin" or "fat".
+         * Apart from the js_SetProtoOrParent exception, the engine promotes
+         * a scope from exclusive to shared access only when locking, never
+         * when holding or unlocking.
          *
-         * In the case of js_SetProtoOrParent, we ensure that the "outer"
-         * scope's lock is not flyweight before that function tries to hold
-         * the inner scope's lock.
+         * If ownercx's thread is calling js_SetProtoOrParent, trying to lock
+         * the inner scope (the scope of the object being set as the prototype
+         * of the outer object), ShareScope will find the outer object's scope
+         * at rt->setSlotScope.  If it's the same as scope, we give it a lock
+         * held by ownercx's thread with reentrancy count of 1, then we return
+         * here and break.  After that we unwind to js_[GS]etSlotThreadSafe or
+         * js_LockScope (our caller), where we wait on the newly-fattened lock
+         * until ownercx's thread unwinds from js_SetProtoOrParent.
          */
         if (ownercx->scopeToShare &&
             WillDeadlock(ownercx->scopeToShare, cx)) {
@@ -889,19 +917,6 @@ js_UnlockRuntime(JSRuntime *rt)
     rt->rtLockOwner = 0;
 #endif
     PR_Unlock(rt->rtLock);
-}
-
-void
-js_PromoteScopeLock(JSContext *cx, JSScope *scope)
-{
-    JSRuntime *rt;
-
-    JS_ASSERT(cx == scope->ownercx);
-    rt = cx->runtime;
-    JS_LOCK_GC(rt);
-    ShareScope(rt, scope);
-    JS_UNLOCK_GC(rt);
-    js_LockScope(cx, scope);
 }
 
 void

@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -152,7 +152,6 @@ extern void js_LockRuntime(JSRuntime *rt);
 extern void js_UnlockRuntime(JSRuntime *rt);
 extern void js_LockObj(JSContext *cx, JSObject *obj);
 extern void js_UnlockObj(JSContext *cx, JSObject *obj);
-extern void js_PromoteScopeLock(JSContext *cx, JSScope *scope);
 extern void js_LockScope(JSContext *cx, JSScope *scope);
 extern void js_UnlockScope(JSContext *cx, JSScope *scope);
 extern int js_SetupLocks(int,int);

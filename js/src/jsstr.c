@@ -2298,8 +2298,40 @@ js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag)
         return NULL;
     str->length = length;
     str->chars = chars;
+#ifdef DEBUG
+  {
+    JSRuntime *rt = cx->runtime;
+    JS_RUNTIME_METER(rt, liveStrings);
+    JS_RUNTIME_METER(rt, totalStrings);
+    JS_LOCK_RUNTIME_VOID(rt,
+        (rt->lengthSum += (double)length,
+         rt->lengthSquaredSum += (double)length * (double)length));
+  }
+#endif
     return str;
 }
+
+#ifdef DEBUG
+#include <math.h>
+
+void printJSStringStats(JSRuntime *rt) {
+    double mean = 0., var = 0., sigma = 0.;
+    jsrefcount count = rt->totalStrings;
+    if (count > 0 && rt->lengthSum >= 0) {
+        mean = rt->lengthSum / count;
+        var = count * rt->lengthSquaredSum - rt->lengthSum * rt->lengthSum;
+        if (var < 0.0 || count <= 1)
+            var = 0.0;
+        else
+            var /= count * (count - 1);
+
+        /* Windows says sqrt(0.0) is "-1.#J" (?!) so we must test. */
+        sigma = (var != 0.) ? sqrt(var) : 0.;
+    }
+    fprintf(stderr, "%lu total strings, mean length %g (sigma %g)\n",
+            (unsigned long)count, mean, sigma);
+}
+#endif
 
 JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n, uintN gcflag)
@@ -2349,6 +2381,7 @@ js_FinalizeString(JSContext *cx, JSString *str)
     JSHashNumber hash;
     JSHashEntry *he, **hep;
 
+    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
     if (str->chars) {
         JS_free(cx, str->chars);
         str->chars = NULL;

@@ -1161,7 +1161,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 	bytes = JS_GetStringBytes(str);
 	if (strcmp(bytes, "arena") == 0) {
-#ifdef ARENAMETER
+#ifdef JS_ARENAMETER
 	    JS_DumpArenaStats(stdout);
 #endif
 	} else if (strcmp(bytes, "atom") == 0) {

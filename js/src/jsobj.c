@@ -230,7 +230,6 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
      *      rt->setSlotLock < pobj's grand-proto-or-parent's scope lock;
      *      etc...
      * (2)  rt->setSlotLock < obj's scope lock < pobj's scope lock.
-     *      rt->setSlotLock < obj's scope lock < rt->gcLock
      *
      * We avoid AB-BA deadlock by restricting obj from being on pobj's parent
      * or proto chain (pobj may already be on obj's parent or proto chain; it
@@ -275,14 +274,13 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
             } else if (OBJ_IS_NATIVE(pobj) && OBJ_SCOPE(pobj) != scope) {
 #ifdef JS_THREADSAFE
                 /*
-                 * Avoid deadlock by never nesting a scope lock (for pobj, in
-                 * this case) within a "flyweight" scope lock (for obj).  Give
-                 * scope a non-flyweight lock, allowing it to be shared among
-                 * multiple threads.  See ClaimScope in jslock.c.
+                 * We are about to nest scope locks.  Help jslock.c:ShareScope
+                 * keep scope->u.count balanced for the JS_UNLOCK_SCOPE, while
+                 * avoiding deadlock, by recording scope in rt->setSlotScope.
                  */
                 if (scope->ownercx) {
-                    JS_ASSERT(scope->ownercx == cx);                
-                    js_PromoteScopeLock(cx, scope);
+                    JS_ASSERT(scope->ownercx == cx);
+                    rt->setSlotScope = scope;
                 }
 #endif
 
@@ -293,6 +291,9 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
                 js_DropObjectMap(cx, &scope->map, obj);
                 JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
                 scope = newscope;
+#ifdef JS_THREADSAFE
+                rt->setSlotScope = NULL;
+#endif
             }
         }
         LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(pobj));
