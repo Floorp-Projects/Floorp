@@ -734,12 +734,12 @@ END
 
 IDD_DEFAULT_BROWSER DIALOG DISCARDABLE  0, 0, 256, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Mozilla Communicator [Default Browser Check]"
+CAPTION "Mozilla Default Browser Check"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Mozilla is not registered to handle some file types or Internet Shortcuts you asked it to.  Do you want to register it to handle those now?",
+    LTEXT           "Some of your Desktop integration preferences are no longer in effect.  Do you want to re-apply your preferences now?",
                     IDC_STATIC,36,8,206,30
-    CONTROL         "Do not perform this check in the future.",
+    CONTROL         "Perform this check each time the browser is started.",
                     IDC_IGNORE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | 
                     WS_TABSTOP,14,35,242,16
     DEFPUSHBUTTON   "&Yes",IDOK,70,60,50,14,WS_GROUP
