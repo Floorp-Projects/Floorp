@@ -166,12 +166,6 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 #endif
 }
 
-JS_STATIC_DLL_CALLBACK(void) detach_jsjava_thread_state(void* env)
-{
-    JSJavaThreadState *jsj_env = NS_REINTERPRET_CAST(JSJavaThreadState*, env);
-    JSJ_DetachCurrentThreadFromJava(jsj_env);
-}
-
 /*
 ** This callback is called to map a JSContext to a JSJavaThreadState which
 ** is a wrapper around JNIEnv. Hence this callback essentially maps a JSContext

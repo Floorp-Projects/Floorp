@@ -1349,7 +1349,7 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   current = origin;
 
   PRUnichar theChar;
-  nsresult  result=Peek(theChar);
+  Peek(theChar);
   
   while (current != mEndPosition) {
     if (aTerminalChar == theChar) {

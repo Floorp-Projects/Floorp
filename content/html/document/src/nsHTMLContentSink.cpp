@@ -3977,10 +3977,6 @@ NS_IMETHODIMP
 HTMLContentSink::DidProcessAToken(void)
 {
   if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
-#ifdef NS_DEBUG
-    PRInt32 oldMaxTokenProcessingTime = GetMaxTokenProcessingTime();
-#endif
-
     // There is both a high frequency interrupt mode and a low
     // frequency interupt mode controlled by the flag
     // NS_SINK_FLAG_DYNAMIC_LOWER_VALUE The high frequency mode
@@ -4089,17 +4085,6 @@ HTMLContentSink::DidProcessAToken(void)
 
       }
     }
-
-#ifdef NS_DEBUG
-#if 0
-    PRInt32 newMaxTokenProcessingTime = GetMaxTokenProcessingTime();
-
-    if (newMaxTokenProcessingTime != oldMaxTokenProcessingTime) {
-      printf("Changed dynamic interval : MaxTokenProcessingTime %d\n",
-             GetMaxTokenProcessingTime());
-    }
-#endif
-#endif
 
     if ((currentTime - mDelayTimerStart) >
         NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
