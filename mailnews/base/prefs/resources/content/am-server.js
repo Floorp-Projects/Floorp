@@ -122,6 +122,10 @@ function getImapServer() {
     imapServer.publicNamespace = document.getElementById("imap.publicNamespace").value;
     imapServer.serverDirectory = document.getElementById("imap.serverDirectory").value;
     imapServer.otherUsersNamespace = document.getElementById("imap.otherUsersNamespace").value;
+
+    // boolean prefs, need to do special convertion    
+    imapServer.overrideNamespaces =
+        (document.getElementById("imap.overrideNamespaces").value == "true" ? true : false);
     return imapServer;
 }
 
@@ -138,6 +142,9 @@ function saveServerLocally(imapServer)
     document.getElementById("imap.publicNamespace").value = imapServer.publicNamespace;
     document.getElementById("imap.serverDirectory").value = imapServer.serverDirectory;
     document.getElementById("imap.otherUsersNamespace").value = imapServer.otherUsersNamespace;
+
+    // boolean prefs, JS does the conversion for us
+    document.getElementById("imap.overrideNamespaces").value = imapServer.overrideNamespaces;
 
 }
 

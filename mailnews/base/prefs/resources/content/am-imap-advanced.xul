@@ -51,6 +51,10 @@
     </row>
   </rows>
 </grid>
+<box>
+  <html:input type="checkbox" id="overrideNamespaces" name="overrideNamespaces"/>
+  <html:label for="overrideNamespaces">&overrideNamespaces.label;</html:label>
+</box>
 <separator class="groove"/>
 <box id="okCancelButtons"/>
 

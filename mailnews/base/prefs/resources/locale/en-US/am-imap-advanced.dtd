@@ -5,4 +5,4 @@
 <!ENTITY personalNamespace.label "Personal namespace:">
 <!ENTITY publicNamespace.label   "Public (shared):">
 <!ENTITY otherUsersNamespace.label    "Other Users:">
-<!ENTITY allowNamespaceOverride.label "Allow server to override these namespaces">
+<!ENTITY overrideNamespaces.label "Allow server to override these namespaces">
