@@ -57,6 +57,7 @@ CPPSRCS		= \
 		nsQuickSort.cpp \
 		nsReadableUtils.cpp \
 		nsSizeOfHandler.cpp \
+		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
 		nsStr.cpp \
 		nsString.cpp \
@@ -95,6 +96,7 @@ EXPORTS		= \
 		nsAWritableString.h \
 		nsReadableUtils.h \
 		nsSharedString.h \
+		nsStaticNameTable.h \
 		nsStatistics.h \
 		nsStr.h \
 		nsString.h \
