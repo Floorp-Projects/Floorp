@@ -89,7 +89,6 @@ nsNNTPNewsgroup::nsNNTPNewsgroup()
 	m_prettyName = nsnull;
 	m_password = nsnull;
 	m_userName = nsnull;
-	m_newsgroupList;
 	m_needsExtraInfo = PR_FALSE;
 	m_category = PR_FALSE;
 }
