@@ -478,7 +478,7 @@ var gCookiesWindow = {
                "expires"];
     if (aItem && !aItem.container && seln.count > 0) {
       properties = { name: aItem.name, value: aItem.value, host: aItem.host,
-                     path: aItem.path, expires: aItem.expires, 
+                     path: aItem.path, expires: this.formatExpiresString(aItem.expires),
                      isDomain: aItem.isDomain ? this._bundle.getString("domainColon")
                                               : this._bundle.getString("hostColon"),
                      isSecure: aItem.isSecure ? this._bundle.getString("forSecureOnly")
