@@ -1473,9 +1473,6 @@ case "$target" in
     *-nto*) 
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
-    *-darwin*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
-        ;;
 esac
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
