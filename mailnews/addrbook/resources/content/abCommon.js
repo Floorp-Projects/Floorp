@@ -669,35 +669,35 @@ function CloseAbView()
   }
 }
 
-function SetAbView(uri, searchView, sortColumn, sortDirection)
+function SetAbView(uri, searchView)
 {
-  var actualSortColumn;
-  if (gAbView && gCurDirectory == GetSelectedDirectory())
+  var sortColumn = kDefaultSortColumn;
+  var sortDirection = kDefaultAscending;
+
+  if (gAbView) {
+    sortColumn = gAbView.sortColumn;
+    sortDirection = gAbView.sortDirection;
+  }
+  else {
+    if (document.getElementById("abResultsTree").hasAttribute("sortCol"))
+      sortColumn = document.getElementById("abResultsTree").getAttribute("sortCol");
+    if (document.getElementById(sortColumn).hasAttribute("sortDirection"))
+      sortDirection = document.getElementById(sortColumn).getAttribute("sortDirection");
+  }
+
+  if (!gAbView || (gCurDirectory != GetSelectedDirectory()))
   {
-    // re-init the view
-    actualSortColumn = gAbView.init(uri, searchView, GetAbViewListener(), sortColumn, sortDirection);
-  }
-  else
-{
-  CloseAbView();
-
+    CloseAbView();
     gCurDirectory = GetSelectedDirectory();
-  if (!sortColumn)
-    sortColumn = kDefaultSortColumn;
 
-  if (!sortDirection)
-    sortDirection = kDefaultAscending;
-
-  gAbView = Components.classes["@mozilla.org/addressbook/abview;1"].createInstance(Components.interfaces.nsIAbView);
-
-    actualSortColumn = gAbView.init(uri, searchView, GetAbViewListener(), sortColumn, sortDirection);
+    gAbView = Components.classes["@mozilla.org/addressbook/abview;1"].createInstance(Components.interfaces.nsIAbView);
   }
-  var boxObject = GetAbResultsBoxObject();
-  boxObject.view = gAbView.QueryInterface(Components.interfaces.nsITreeView);
 
-  UpdateSortIndicators(sortColumn, sortDirection);
-  
-  return actualSortColumn;
+  var actualSortColumn = gAbView.init(uri, searchView, GetAbViewListener(), sortColumn, sortDirection);
+
+  GetAbResultsBoxObject().view = gAbView.QueryInterface(Components.interfaces.nsITreeView);
+
+  UpdateSortIndicators(actualSortColumn, sortDirection);
 }
 
 function GetAbView()
@@ -723,10 +723,7 @@ function ChangeDirectoryByURI(uri)
   if (gAbView && GetAbViewURI() == uri)
     return;
   
-  var sortColumn = gAbResultsTree.getAttribute("sortCol");
-  var sortDirection = document.getElementById(sortColumn).getAttribute("sortDirection");
-  var actualSortColumn = SetAbView(uri, false, sortColumn, sortDirection);
-  UpdateSortIndicators(actualSortColumn, sortDirection);
+  SetAbView(uri, false);
   
   // only select the first card if there is a first card
   if (gAbView && gAbView.getCardFromRow(0)) {

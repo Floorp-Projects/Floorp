@@ -627,9 +627,6 @@ function onEnterInSearchBar()
   var searchURI = GetSelectedDirectory();
   if (!searchURI) return;
 
-  var sortColumn = gAbView.sortColumn;
-  var sortDirection = gAbView.sortDirection;
-
   /*
    XXX todo, handle the case where the LDAP url
    already has a query, like 
@@ -641,7 +638,7 @@ function onEnterInSearchBar()
     searchURI += gQueryURIFormat.replace(/@V/g, encodeURIComponent(gSearchInput.value));
   }
 
-  SetAbView(searchURI, gSearchInput.value != "", sortColumn, sortDirection);
+  SetAbView(searchURI, gSearchInput.value != "");
   
   // XXX todo 
   // this works for synchronous searches of local addressbooks, 

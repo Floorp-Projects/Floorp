@@ -439,17 +439,13 @@ function onEnterInSearchBar()
                                               Components.interfaces.nsIPrefLocalizedString).data;
   }
   
-  var sortColumn = selectedNode.getAttribute("sortColumn");
-  var sortDirection = selectedNode.getAttribute("sortDirection");
   var searchURI = selectedNode.getAttribute("id");
 
   if (gSearchInput.value != "") {
     searchURI += gQueryURIFormat.replace(/@V/g, encodeURIComponent(gSearchInput.value));
   }
 
-  if (!sortColumn.Length)
-    sortColumn = "GeneratedName";
-  SetAbView(searchURI, true, sortColumn, sortDirection);
+  SetAbView(searchURI, true);
   
   SelectFirstCard();
 }
