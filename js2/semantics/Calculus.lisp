@@ -41,8 +41,9 @@
 
 
 #+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
-                             (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
-                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2) (:narrow . 1) (:select . 1)
+                             (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
+                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
+                             (set-field . 1) (:narrow . 1) (:select . 1)
                              (let-local-var . 2)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
@@ -1839,6 +1840,17 @@
   (apply #'make-union-type world (mapcar #'(lambda (type-expr)
                                              (scan-type world type-expr allow-forward-references))
                                          type-exprs)))
+
+
+; (type-diff <type1> <type2>)
+; Does not allow forward references in either operand.
+(defun scan-type-diff (world allow-forward-references type-expr1 type-expr2)
+  (declare (ignore allow-forward-references))
+  (let ((type1 (scan-type world type-expr1 nil))
+        (type2 (scan-type world type-expr2 nil)))
+    (multiple-value-bind (subtype1 subtype2) (type-difference world type1 type2)
+      (declare (ignore subtype1))
+      subtype2)))
 
 
 ; (writable-cell <element-type>)
@@ -3861,8 +3873,9 @@
              (annotated-fields nil))
         (unless (> n-fields n-replaced-fields)
           (error "set-field replaces all fields in the tuple or record"))
-        (dotimes (i n-fields)
-          (push (gen-nth-code (+ i (if mutable 2 1)) record-var) replacements))
+        (do ((i n-fields (1- i)))
+            ((zerop i))
+          (push (gen-nth-code (+ i (if mutable 1 0)) record-var) replacements))
         (when mutable
           (push '(incf *record-counter*) replacements))
         (push (list 'quote (tag-name tag)) replacements)
@@ -3882,7 +3895,7 @@
         (values
          (cons 'list replacements)
          record-type
-         (list* 'expr-annotation:special-form special-form record-type record-annotated-expr annotated-fields))))))
+         (list* 'expr-annotation:special-form special-form record-type record-annotated-expr (nreverse annotated-fields)))))))
 
 
 
@@ -4942,7 +4955,7 @@
      ;;Tuples and Records
      (new scan-new depict-new)
      (& scan-& depict-&)
-     #|(set-field scan-set-field depict-set-field)|#
+     (set-field scan-set-field depict-set-field)
      
      ;;Unions
      (in scan-in depict-in)
@@ -4966,6 +4979,7 @@
      (range-set scan-range-set depict-set)
      (tag scan-tag-type depict-tag-type)
      (union scan-union depict-union)
+     (type-diff scan-type-diff depict-type-diff)
      (writable-cell scan-writable-cell depict-writable-cell))))
 
 

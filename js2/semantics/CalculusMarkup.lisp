@@ -240,7 +240,7 @@
 (def-partial-order-element *type-level* %%primary%%)                              ;id, tuple, (type)
 (def-partial-order-element *type-level* %%suffix%% %%primary%%)                   ;type[], type{}
 (def-partial-order-element *type-level* %%function%% %%suffix%%)                  ;type x type -> type
-(def-partial-order-element *type-level* %%type%% %%function%%)                    ;type U type
+(def-partial-order-element *type-level* %%type%% %%function%%)                    ;type U type, type - type
 
 
 ; Emit markup for the name of a type, which must be a symbol.
@@ -341,6 +341,18 @@
                      :indent 0
                      :separator '(" " :union-10)
                      :break 1)))))
+
+
+; (type-diff <type1> <type2>)
+;   "<type1> - <type2>"
+(defun depict-type-diff (markup-stream world level type-expr1 type-expr2)
+  (depict-type-parentheses (markup-stream level %%type%%)
+    (depict-logical-block (markup-stream 0)
+      (depict-type-expr markup-stream world type-expr1 %%function%%)
+      (depict-space markup-stream)
+      (depict markup-stream :minus)
+      (depict-break markup-stream 1)
+      (depict-type-expr markup-stream world type-expr2 %%function%%))))
 
 
 ; (writable-cell <element-type>)
@@ -863,8 +875,6 @@
 
 ;;; Tuples and Records
 
-(defparameter *depict-tag-labels* nil)
-
 ; (new <type> <field-expr1> ... <field-exprn>)
 (defun depict-new (markup-stream world level type type-name &rest annotated-exprs)
   (let* ((tag (type-tag type))
@@ -879,12 +889,10 @@
              (depict-list markup-stream
                           #'(lambda (markup-stream parameter)
                               (let ((field (pop fields)))
-                                (if (and mutable *depict-tag-labels*)
-                                  (depict-logical-block (markup-stream 4)
-                                    (depict-label-name markup-stream (symbol-type (tag-name tag)) (field-label field) :reference)
-                                    (depict markup-stream " " :label-assign-10)
-                                    (depict-break markup-stream 1)
-                                    (depict-expression markup-stream world parameter %expr%))
+                                (depict-logical-block (markup-stream 4)
+                                  (depict-label-name markup-stream type (field-label field) nil)
+                                  (depict markup-stream ":")
+                                  (depict-break markup-stream 1)
                                   (depict-expression markup-stream world parameter %expr%))))
                           annotated-exprs
                           :indent 4
@@ -910,14 +918,43 @@
     (depict-label-name markup-stream record-type label :reference)))
 
 
-#|
 ; (set-field <expr> <label> <field-expr> ... <label> <field-expr>)
-(defun depict-set-field (markup-stream world level record-type record-annotated-expr annotated-fields)
-  (depict-expr-parentheses (markup-stream level %prefix%)
-    (depict-logical-block (markup-stream 4)
-      (depict-semantic-keyword markup-stream 'copy :after))))
-***** Not implemented yet.
-|#
+(defun depict-set-field (markup-stream world level record-type record-annotated-expr &rest annotated-fields)
+  (let* ((type-name (type-name record-type))
+         (tag (type-tag record-type))
+         (mutable (tag-mutable tag)))
+    (unless type-name
+      (error "set-field on anonymous type"))
+    (flet
+      ((depict-tag-and-args (markup-stream)
+         (depict-type-name markup-stream type-name :reference)
+         (depict-list markup-stream
+                      #'(lambda (markup-stream parameter)
+                          (depict-logical-block (markup-stream 4)
+                            (if parameter
+                              (let ((label (first parameter))
+                                    (field-annotated-expr (second parameter)))
+                                (depict-label-name markup-stream record-type label nil)
+                                (depict markup-stream ":")
+                                (depict-break markup-stream 1)
+                                (depict-expression markup-stream world field-annotated-expr %expr%))
+                              (progn
+                                (depict markup-stream "other fields from")
+                                (depict-break markup-stream 1)
+                                (depict-expression markup-stream world record-annotated-expr %expr%)))))
+                      (append annotated-fields '(nil))
+                      :indent 4
+                      :prefix (if mutable :record-begin :tuple-begin)
+                      :suffix (if mutable :record-end :tuple-end)
+                      :separator ","
+                      :break 1)))
+      
+      (if mutable
+        (depict-expr-parentheses (markup-stream level %prefix%)
+          (depict-logical-block (markup-stream 4)
+            (depict-semantic-keyword markup-stream 'new :after)
+            (depict-tag-and-args markup-stream)))
+        (depict-tag-and-args markup-stream)))))
 
 
 ;;; Unions
