@@ -1,5 +1,4 @@
 nsICharsetAlias.h
-nsICharsetConverterInfo.h
 nsICharsetConverterManager.h
 nsIPlatformCharset.h
 nsIUnicodeDecodeUtil.h
