@@ -110,6 +110,7 @@ protected:
   nsIImageRequest*  mIcons[NS_NUMBER_OF_ICONS];
   nsHashtable*      mFontAliasTable;
   IL_ColorSpace*    mColorSpace;
+  float             mCPixelScale;
 
 public:
   nsNativeWidget    mWidget;
