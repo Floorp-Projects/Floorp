@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 TARGETS	=\
-        run-mozilla.sh
+        run-mozilla.sh \
         $(NULL)
 
 include $(topsrcdir)/config/config.mk
