@@ -21,18 +21,24 @@
  *   Pete Collins
  *   Brian King
  *   Ben Goodger
+ *   Charles Manske (cmanske@netscape.com)
+ *   Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
 var gAnchorElement = null;
 var gOriginalHref = "";
-var gHNodeArray = [];
+var gHNodeArray = {};
 
 // dialog initialization code
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   ImageStartup();
   gDialog.hrefInput        = document.getElementById("hrefInput");
@@ -52,13 +58,17 @@ function Startup()
   else
   {
     // First check for <input type="image">
-    imageElement = editorShell.GetSelectedElement("input");
-    if (!imageElement || imageElement.getAttribute("type") != "image") {
-      // Get a single selected image element
-      imageElement = editorShell.GetSelectedElement(tagName);
-      if (imageElement)
-        gAnchorElement = editorShell.GetElementOrParentByTagName("href", imageElement);
-    }
+    try {
+      imageElement = editor.getSelectedElement("input");
+
+      if (!imageElement || imageElement.getAttribute("type") != "image") {
+        // Get a single selected image element
+        imageElement = editor.getSelectedElement(tagName);
+        if (imageElement)
+          gAnchorElement = editor.getElementOrParentByTagName("href", imageElement);
+      }
+    } catch (e) {}
+
   }
 
   if (imageElement)
@@ -77,15 +87,19 @@ function Startup()
 
     // We don't have an element selected,
     //  so create one with default attributes
+    try {
+      imageElement = editor.createElementWithDefaults(tagName);
+    } catch(e) {}
 
-    imageElement = editorShell.CreateElementWithDefaults(tagName);
     if (!imageElement)
     {
       dump("Failed to get selected element or create a new one!\n");
       window.close();
       return;
     }
-    gAnchorElement = editorShell.GetSelectedElement(tagName);
+    try {
+      gAnchorElement = editor.getSelectedElement("href");
+    } catch (e) {}
   }
 
   // Make a copy to use for AdvancedEdit
@@ -178,7 +192,9 @@ function onAccept()
       return true;
     }
 
-    editorShell.BeginBatchChanges();
+    var editor = GetCurrentEditor();
+
+    editor.beginTransaction();
 
     try
     {
@@ -187,13 +203,22 @@ function onAccept()
         globalElement.removeAttribute("usemap");
         if (gImageMap)
         {
-          editorShell.DeleteElement(gImageMap);
+          editor.deleteNode(gImageMap);
           gInsertNewIMap = true;
           gImageMap = null;
         }
       }
       else if (gImageMap)
       {
+        // un-comment to see that inserting image maps does not work!
+        gImageMap = editor.createElementWithDefaults("map");
+        gImageMap.setAttribute("name", "testing");
+        var testArea = editor.createElementWithDefaults("area");
+        testArea.setAttribute("shape", "circle");
+        testArea.setAttribute("coords", "86,102,52");
+        testArea.setAttribute("href", "test");
+        gImageMap.appendChild(testArea);
+
         // Assign to map if there is one
         var mapName = gImageMap.getAttribute("name");
         if (mapName != "")
@@ -202,19 +227,13 @@ function onAccept()
           if (globalElement.getAttribute("border") == "")
             globalElement.setAttribute("border", 0);
         }
-
-        if (gInsertNewIMap)
-        {
-          editorShell.editorDocument.body.appendChild(gImageMap);
-        //editorShell.InsertElementAtSelection(gImageMap, false);
-        }
       }
 
       // Create or remove the link as appropriate
       var href = gDialog.hrefInput.value;
       if (href != gOriginalHref)
       {
-        if (href)
+        if (href && !gInsertNewImage)
           EditorSetTextProperty("a", "href", href);
         else
           EditorRemoveTextProperty("href", "");
@@ -233,48 +252,52 @@ function onAccept()
           globalElement.setAttribute("border", "0");
       }
 
-      // All values are valid - copy to actual element in doc or
-      //   element created to insert
-      editorShell.CloneAttributes(imageElement, globalElement);
       if (gInsertNewImage)
       {
-        // 'true' means delete the selection before inserting
-        editorShell.InsertElementAtSelection(imageElement, true);
-        // Also move the insertion point out of the link
-        if (href)
-          setTimeout(editorShell.RemoveTextProperty, 0, "href", "");
+        if (href) {
+          var linkElement = editor.createElementWithDefaults("a");
+          linkElement.setAttribute("href", href);
+          linkElement.appendChild(imageElement);
+          editor.insertElementAtSelection(linkElement, true);
+        }
+        else
+          // 'true' means delete the selection before inserting
+          editor.insertElementAtSelection(imageElement, true);
       }
 
       // Check to see if the link was to a heading
       // Do this last because it moves the caret (BAD!)
-      var index = gDialog.hrefInput.selectedIndex;
-      if (index in gHNodeArray && gHNodeArray[index])
+      if (href in gHNodeArray)
       {
-        var anchorNode = editorShell.editorDocument.createElement("a");
+        var anchorNode = editor.createElementWithDefaults("a");
         if (anchorNode)
         {
           anchorNode.name = href.substr(1);
-          // Remember to use editorShell method so it is undoable!
-          editorShell.InsertElement(anchorNode, gHNodeArray[index], 0, false);
+          // Remember to use editor method so it is undoable!
+          editor.insertNode(anchorNode, gHNodeArray[href], 0, false);
         }
       }
+      // All values are valid - copy to actual element in doc or
+      //   element we just inserted
+      editor.cloneAttributes(imageElement, globalElement);
 
-      // un-comment to see that inserting image maps does not work!
-      /*test = editorShell.CreateElementWithDefaults("map");
-      test.setAttribute("name", "testing");
-      testArea = editorShell.CreateElementWithDefaults("area");
-      testArea.setAttribute("shape", "circle");
-      testArea.setAttribute("coords", "86,102,52");
-      testArea.setAttribute("href", "test");
-      test.appendChild(testArea);
-      editorShell.InsertElementAtSelection(test, false);*/
+      // If document is empty, the map element won't insert,
+      //  so always insert the image first
+      if (gImageMap && gInsertNewIMap)
+      {
+        // Insert the ImageMap element at beginning of document
+        var body = editor.rootElement;
+        editor.setShouldTxnSetSelection(false);
+        editor.insertNode(gImageMap, body, 0);
+        editor.setShouldTxnSetSelection(true);
+      }
     }
     catch (e)
     {
       dump(e);
     }
 
-    editorShell.EndBatchChanges();
+    editor.endTransaction();
 
     SaveWindowLocation();
     return true;

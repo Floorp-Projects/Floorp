@@ -232,8 +232,11 @@ function GetImageMap()
   {
     gCanRemoveImageMap = true;
     var mapname = usemap.substring(1, usemap.length);
-    var mapCollection = editorShell.editorDocument.getElementsByName(mapname);
-    if (mapCollection[0] != null)
+    var mapCollection;
+    try {
+      mapCollection = GetCurrentEditor().document.getElementsByName(mapname);
+    } catch (e) {}
+    if (mapCollection && mapCollection[0] != null)
     {
       gInsertNewIMap = false;
       return mapCollection[0];
@@ -474,7 +477,11 @@ function editImageMap()
 {
   // Create an imagemap for image map editor
   if (gInsertNewIMap)
-    gImageMap = editorShell.CreateElementWithDefaults("map");
+  {
+    try {
+      gImageMap = GetCurrentEditor().createElementWithDefaults("map");
+    } catch (e) {}
+  }
 
   // Note: We no longer pass in a copy of the global ImageMap. ImageMap editor should create a copy and manage onOk and onCancel behavior
   window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close,titlebar,modal", globalElement, gImageMap);
@@ -497,6 +504,10 @@ function SwitchToValidatePanel()
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateImage()
 {
+  var editor = GetCurrentEditor();
+  if (!editor)
+    return false;
+
   gValidateTab = gDialog.tabLocation;
   if (!gDialog.srcInput.value)
   {
@@ -560,12 +571,12 @@ function ValidateImage()
   if (width)
     globalElement.setAttribute("width", width);
   else if (srcChanged)
-    gEditor.removeAttributeOrEquivalent(globalElement, "width", true);
+    editor.removeAttributeOrEquivalent(globalElement, "width", true);
 
   if (height)
     globalElement.setAttribute("height", height);
   else if (srcChanged) 
-    gEditor.removeAttributeOrEquivalent(globalElement, "height", true);
+    editor.removeAttributeOrEquivalent(globalElement, "height", true);
 
   // spacing attributes
   gValidateTab = gDialog.tabBorder;
@@ -598,7 +609,9 @@ function ValidateImage()
       globalElement.setAttribute( "align", gDialog.alignTypeSelect.value );
       break;
     default:
-      gEditor.removeAttributeOrEquivalent(globalElement, "align", true);
+      try {
+        editor.removeAttributeOrEquivalent(globalElement, "align", true);
+      } catch (e) {}
   }
 
   return true;

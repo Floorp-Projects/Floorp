@@ -41,8 +41,12 @@ var textareaElement;
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog = {
     accept:             document.documentElement.getButton("accept"),
@@ -61,7 +65,7 @@ function Startup()
 
   // Get a single selected text area element
   var tagName = "textarea";
-  textareaElement = editorShell.GetSelectedElement(tagName);
+  textareaElement = editor.getSelectedElement(tagName);
 
   if (textareaElement) {
     // We found an element and don't need to insert one
@@ -76,7 +80,7 @@ function Startup()
     // We don't have an element selected,
     //  so create one with default attributes
 
-    textareaElement = editorShell.CreateElementWithDefaults(tagName);
+    textareaElement = editor.createElementWithDefaults(tagName);
     if (!textareaElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -156,28 +160,30 @@ function onAccept()
   //   element created to insert
   ValidateData();
 
-  editorShell.BeginBatchChanges();
+  var editor = GetCurrentEditor();
+
+  editor.beginTransaction();
 
   try {
     // undoably set value
     var initialText = gDialog.textareaValue.value;
     if (initialText != textareaElement.value) {
       while (textareaElement.hasChildNodes())
-        editorShell.editor.deleteNode(textareaElement.firstChild);
+        editor.deleteNode(textareaElement.lastChild);
       if (initialText) {
-        var textNode = editorShell.editorDocument.createTextNode(initialText);
-        editorShell.editor.insertNode(textNode, textareaElement, 0);
+        var textNode = editor.document.createTextNode(initialText);
+        editor.insertNode(textNode, textareaElement, 0);
       }
     }
 
     if (insertNew)
-      editorShell.InsertElementAtSelection(textareaElement, true);
+      editor.insertElementAtSelection(textareaElement, true);
     else
-      editorShell.SelectElement(textareaElement);
+      editor.selectElement(textareaElement);
 
-    editorShell.CloneAttributes(textareaElement, globalElement);
+    editor.cloneAttributes(textareaElement, globalElement);
   } finally {
-    editorShell.EndBatchChanges();
+    editor.endTransaction();
   }
 
   SaveWindowLocation();

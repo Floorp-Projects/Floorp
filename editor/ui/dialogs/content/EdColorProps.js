@@ -32,7 +32,7 @@
 
 //Cancel() is in EdDialogCommon.js
 
-var BodyElement;
+var gBodyElement;
 var prefs;
 var gBackgroundImage;
 
@@ -67,8 +67,12 @@ var gHaveDocumentUrl = false;
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog.ColorPreview = document.getElementById("ColorPreview");
   gDialog.NormalText = document.getElementById("NormalText");
@@ -80,15 +84,18 @@ function Startup()
   gDialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
   gDialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
 
-  BodyElement = editorShell.editorDocument.body;
-  if (!BodyElement)
+  try {
+    gBodyElement = editor.rootElement;
+  } catch (e) {}
+
+  if (!gBodyElement)
   {
     dump("Failed to get BODY element!\n");
     window.close();
   }
 
   // Set element we will edit
-  globalElement = BodyElement.cloneNode(false);
+  globalElement = gBodyElement.cloneNode(false);
 
   // Initialize default colors from browser prefs
   var browserColors = GetDefaultBrowserColors();
@@ -365,47 +372,50 @@ function ValidateAndPreviewImage(ShowErrorMessage)
 
 function ValidateData()
 {
-  // Colors values are updated as they are picked, no validation necessary
-  if (gDialog.DefaultColorsRadio.selected)
-  {
-    gEditor.removeAttributeOrEquivalent(globalElement, textStr, true);
-    globalElement.removeAttribute(linkStr);
-    globalElement.removeAttribute(vlinkStr);
-    globalElement.removeAttribute(alinkStr);
-    gEditor.removeAttributeOrEquivalent(globalElement, bgcolorStr, true);
-  }
-  else
-  {
-    //Do NOT accept the CSS "WindowsOS" color strings!
-    // Problem: We really should try to get the actual color values
-    //  from windows, but I don't know how to do that!
-    var tmpColor = customTextColor.toLowerCase();
-    if (tmpColor != "windowtext")
-      globalElement.setAttribute(textStr,    customTextColor);
+  var editor = GetCurrentEditor();
+  try {
+    // Colors values are updated as they are picked, no validation necessary
+    if (gDialog.DefaultColorsRadio.selected)
+    {
+      editor.removeAttributeOrEquivalent(globalElement, textStr, true);
+      globalElement.removeAttribute(linkStr);
+      globalElement.removeAttribute(vlinkStr);
+      globalElement.removeAttribute(alinkStr);
+      editor.removeAttributeOrEquivalent(globalElement, bgcolorStr, true);
+    }
     else
-      gEditor.removeAttributeOrEquivalent(globalElement, textStr, true);
+    {
+      //Do NOT accept the CSS "WindowsOS" color strings!
+      // Problem: We really should try to get the actual color values
+      //  from windows, but I don't know how to do that!
+      var tmpColor = customTextColor.toLowerCase();
+      if (tmpColor != "windowtext")
+        globalElement.setAttribute(textStr,    customTextColor);
+      else
+        editor.removeAttributeOrEquivalent(globalElement, textStr, true);
 
-    tmpColor = customBackgroundColor.toLowerCase();
-    if (tmpColor != "window")
-      globalElement.setAttribute(bgcolorStr, customBackgroundColor);
-    else
-      gEditor.removeAttributeOrEquivalent(globalElement, bgcolorStr, true);
+      tmpColor = customBackgroundColor.toLowerCase();
+      if (tmpColor != "window")
+        globalElement.setAttribute(bgcolorStr, customBackgroundColor);
+      else
+        editor.removeAttributeOrEquivalent(globalElement, bgcolorStr, true);
 
-    globalElement.setAttribute(linkStr,    customLinkColor);
-    globalElement.setAttribute(vlinkStr,   customVisitedColor);
-    globalElement.setAttribute(alinkStr,   customActiveColor);
-  }
+      globalElement.setAttribute(linkStr,    customLinkColor);
+      globalElement.setAttribute(vlinkStr,   customVisitedColor);
+      globalElement.setAttribute(alinkStr,   customActiveColor);
+    }
 
-  if (ValidateAndPreviewImage(true))
-  {
-    // A valid image may be null for no image
-    if (gBackgroundImage)
-      globalElement.setAttribute(backgroundStr, gBackgroundImage);
-    else
-      gEditor.removeAttributeOrEquivalent(globalElement, backgroundStr, true);
+    if (ValidateAndPreviewImage(true))
+    {
+      // A valid image may be null for no image
+      if (gBackgroundImage)
+        globalElement.setAttribute(backgroundStr, gBackgroundImage);
+      else
+        editor.removeAttributeOrEquivalent(globalElement, backgroundStr, true);
   
-    return true;
-  }  
+      return true;
+    }  
+  } catch (e) {}
   return false;
 }
 
@@ -414,7 +424,9 @@ function onAccept()
   if (ValidateData())
   {
     // Copy attributes to element we are changing
-    editorShell.CloneAttributes(BodyElement, globalElement);
+    try {
+      GetCurrentEditor().cloneAttributes(gBodyElement, globalElement);
+    } catch (e) {}
 
     SaveWindowLocation();
     return true; // do close the window

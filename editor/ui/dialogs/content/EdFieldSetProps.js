@@ -43,8 +43,12 @@ var legendElement;
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog.editText = document.getElementById("EditText");
   gDialog.legendText = document.getElementById("LegendText");
@@ -53,11 +57,11 @@ function Startup()
 
   // Get a single selected field set element
   var tagName = "fieldset";
-  fieldsetElement = editorShell.GetSelectedElement(tagName);
+  fieldsetElement = editor.getSelectedElement(tagName);
   if (!fieldsetElement)
-    fieldsetElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.anchorNode);
+    fieldsetElement = editor.getElementOrParentByTagName(tagName, editor.selection.anchorNode);
   if (!fieldsetElement)
-    fieldsetElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.focusNode);
+    fieldsetElement = editor.getElementOrParentByTagName(tagName, editor.selection.focusNode);
 
   if (fieldsetElement)
     // We found an element and don't need to insert one
@@ -69,7 +73,7 @@ function Startup()
     // We don't have an element selected,
     //  so create one with default attributes
 
-    fieldsetElement = editorShell.CreateElementWithDefaults(tagName);
+    fieldsetElement = editor.createElementWithDefaults(tagName);
     if (!fieldsetElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -77,15 +81,17 @@ function Startup()
       return;
     }
     // Hide button removing existing fieldset
-    gDialog.RemoveFieldSet.setAttribute("hidden", "true");
+    gDialog.RemoveFieldSet.hidden = true;
   }
 
   legendElement = fieldsetElement.firstChild;
   if (legendElement && legendElement.localName == "LEGEND")
   {
     newLegend = false;
-    editorShell.SelectElement(legendElement);
-    gDialog.legendText.value = GetSelectionAsText();
+    var range = editor.document.createRange();
+    range.setStart(legendElement, 0);
+    range.setEnd(legendElement, legendElement.childNodes.length);
+    gDialog.legendText.value = range.toString();
     if (/</.test(legendElement.innerHTML))
     {
       gDialog.editText.checked = false;
@@ -104,7 +110,7 @@ function Startup()
     // We don't have an element selected,
     //  so create one with default attributes
 
-    legendElement = editorShell.CreateElementWithDefaults("legend");
+    legendElement = editor.createElementWithDefaults("legend");
     if (!legendElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -135,15 +141,16 @@ function onEditText()
 
 function RemoveFieldSet()
 {
-  editorShell.BeginBatchChanges();
+  var editor = GetCurrentEditor();
+  editor.beginTransaction();
   try {
     if (!newLegend)
-      editorShell.DeleteElement(legendElement);
+      editor.DeleteNode(legendElement);
     // This really needs to call the C++ function RemoveBlockContainer
     // which inserts any <BR>s needed
     RemoveElementKeepingChildren(fieldsetElement);
   } finally {
-    editorShell.EndBatchChanges();
+    editorShell.endTransaction();
   }
   SaveWindowLocation();
   window.close();
@@ -163,33 +170,34 @@ function onAccept()
   // All values are valid - copy to actual element in doc
   ValidateData();
 
-  editorShell.BeginBatchChanges();
+  var editor = GetCurrentEditor();
+
+  editor.beginTransaction();
 
   try {
     if (gDialog.editText.checked)
     {
       if (gDialog.legendText.value)
       {
-        var editor = editorShell.editor;
         if (newLegend)
-          editorShell.InsertElement(legendElement, fieldsetElement, 0, true);
+          editor.insertNode(legendElement, fieldsetElement, 0, true);
         else while (legendElement.firstChild)
-          editor.deleteNode(legendElement.firstChild);
-        editor.insertNode(editorShell.editorDocument.createTextNode(gDialog.legendText.value), legendElement, 0);
+          editor.deleteNode(legendElement.lastChild);
+        editor.insertNode(editor.document.createTextNode(gDialog.legendText.value), legendElement, 0);
       }
       else if (!newLegend)
-        editorShell.DeleteElement(legendElement);
+        editor.DeleteNode(legendElement);
     }
  
     if (insertNew)
       InsertElementAroundSelection(fieldsetElement);
     else
-      editorShell.SelectElement(fieldsetElement);
+      editor.selectElement(fieldsetElement);
 
-    editorShell.CloneAttributes(legendElement, globalElement);
+    editor.cloneAttributes(legendElement, globalElement);
   }
   finally {
-    editorShell.EndBatchChanges();
+    editor.endTransaction();
   }
 
   SaveWindowLocation();

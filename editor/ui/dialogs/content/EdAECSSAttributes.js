@@ -20,6 +20,8 @@
  * Contributor(s):
  *   Ben "Count XULula" Goodger
  *   Daniel Glazman <glazman@netscape.com>
+ *   Charles Manske (cmanske@netscape.com)
+ *   Neil Rashbrook <neil@parkwaycc.co.uk>
  */
 
 // build attribute list in tree form from element attributes
@@ -28,8 +30,11 @@ function BuildCSSAttributeTable()
   // we can't trust DOM 2 ElementCSSInlineStyle because gElement can be
   // outside of the document's tree
   var styleAttr = gElement.getAttribute("style");
-  var editor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  var styleRule = editor.parseStyleAttrIntoCSSRule(styleAttr);
+  var styleRule;
+  try {
+    var editor = GetCurrentEditor();
+    styleRule = editor.parseStyleAttrIntoCSSRule(styleAttr);
+  } catch(ex) {}
   
   if (styleRule == undefined)
   {

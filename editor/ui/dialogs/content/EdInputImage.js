@@ -38,8 +38,12 @@
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog = {
     inputName:      document.getElementById( "InputName" ),
@@ -51,7 +55,9 @@ function Startup()
 
   // Get a single selected input element
   var tagName = "input";
-  imageElement = editorShell.GetSelectedElement(tagName);
+  try {
+    imageElement = editor.getSelectedElement(tagName);
+  } catch (e) {}
 
   if (imageElement)
   {
@@ -64,16 +70,21 @@ function Startup()
 
     // We don't have an element selected,
     //  so create one with default attributes
+    try {
+      imageElement = editor.createElementWithDefaults(tagName);
+    } catch(e) {}
 
-    imageElement = editorShell.CreateElementWithDefaults(tagName);
-    if( !imageElement )
+    if (!imageElement )
     {
       dump("Failed to get selected element or create a new one!\n");
       window.close();
       return;
     }
+    var imgElement;
+    try {
+      imgElement = editor.getSelectedElement("img");
+    } catch(e) {}
 
-    var imgElement = editorShell.GetSelectedElement("img");
     if (imgElement)
     {
       // We found an image element, convert it to an input type="image"
@@ -143,57 +154,53 @@ function onAccept()
   if (ValidateData())
   {
 
-    editorShell.BeginBatchChanges();
+    var editor = GetCurrentEditor();
+    editor.beginTransaction();
 
-    if (gRemoveImageMap)
-    {
-      globalElement.removeAttribute("usemap");
-      if (gImageMap)
+    try {
+      if (gRemoveImageMap)
       {
-        editorShell.DeleteElement(gImageMap);
-        gInsertNewIMap = true;
-        gImageMap = null;
-      }
-    }
-    else if (gImageMap)
-    {
-      // Assign to map if there is one
-      var mapName = gImageMap.getAttribute("name");
-      if (mapName != "")
-      {
-        globalElement.setAttribute("usemap", ("#"+mapName));
-        if (globalElement.getAttribute("border") == "")
-          globalElement.setAttribute("border", 0);
-      }
-
-      if (gInsertNewIMap)
-      {
-        try
+        globalElement.removeAttribute("usemap");
+        if (gImageMap)
         {
-          editorShell.editorDocument.body.appendChild(gImageMap);
-        //editorShell.InsertElementAtSelection(gImageMap, false);
-        }
-        catch (e)
-        {
-          dump("Exception occured in InsertElementAtSelection\n");
+          editor.deleteNode(gImageMap);
+          gInsertNewIMap = true;
+          gImageMap = null;
         }
       }
-    }
+      else if (gImageMap)
+      {
+        // Assign to map if there is one
+        var mapName = gImageMap.getAttribute("name");
+        if (mapName != "")
+        {
+          globalElement.setAttribute("usemap", ("#"+mapName));
+          if (globalElement.getAttribute("border") == "")
+            globalElement.setAttribute("border", 0);
+        }
+      }
 
-    editorShell.CloneAttributes(imageElement, globalElement);
-
-    if (gInsertNewImage)
-    {
-      try {
+      if (gInsertNewImage)
+      {
         // 'true' means delete the selection before inserting
         // in case were are converting an image to an input type="image"
-        editorShell.InsertElementAtSelection(imageElement, true);
-      } catch (e) {
-        dump(e);
+        editor.insertElementAtSelection(imageElement, true);
       }
-    }
+      editor.cloneAttributes(imageElement, globalElement);
 
-    editorShell.EndBatchChanges();
+      // If document is empty, the map element won't insert,
+      //  so always insert the image element first
+      if (gImageMap && gInsertNewIMap)
+      {
+        // Insert the ImageMap element at beginning of document
+        var body = editor.rootElement;
+        editor.setShouldTxnSetSelection(false);
+        editor.insertNode(gImageMap, body, 0);
+        editor.setShouldTxnSetSelection(true);
+      }
+    } catch (e) {}
+
+    editor.endTransaction();
 
     SaveWindowLocation();
 
