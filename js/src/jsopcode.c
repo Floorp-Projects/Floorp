@@ -195,13 +195,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 	high = GET_JUMP_OFFSET(pc2);
 	pc2 += JUMP_OFFSET_LEN;
 	fprintf(fp, " defaultOffset %d low %d high %d", off, low, high);
-	if (pc2 + 1 < end) {
-	    for (i = low; i <= high; i++) {
-		off = GET_JUMP_OFFSET(pc2);
-		fprintf(fp, "\n\t%d: %d", i, off);
-		pc2 += JUMP_OFFSET_LEN;
-	    }
-	}
+        for (i = low; i <= high; i++) {
+            off = GET_JUMP_OFFSET(pc2);
+            fprintf(fp, "\n\t%d: %d", i, off);
+            pc2 += JUMP_OFFSET_LEN;
+        }
 	len = 1 + pc2 - pc;
 	break;
       }
@@ -209,14 +207,14 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
       case JOF_LOOKUPSWITCH:
       {
 	jsbytecode *pc2 = pc;
-	uintN npairs;
+	jsint npairs;
 	jsval key;
 
 	off = GET_JUMP_OFFSET(pc2);
 	pc2 += JUMP_OFFSET_LEN;
-	npairs = (uintN) GET_ATOM_INDEX(pc2);
+	npairs = (jsint) GET_ATOM_INDEX(pc2);
 	pc2 += ATOM_INDEX_LEN;
-	fprintf(fp, " offset %d npairs %u", off, npairs);
+	fprintf(fp, " offset %d npairs %u", off, (uintN) npairs);
 	while (npairs) {
 	    atom = GET_ATOM(cx, script, pc2);
 	    pc2 += ATOM_INDEX_LEN;
@@ -965,16 +963,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    js_printf(jp, "\t}\n");
 		    break;
 
-		  case SRC_TRYFIN:
-		    if (js_GetSrcNoteOffset(sn, 0) == 0) {
-			js_printf(jp, "\ttry {\n");
-		    } else {
-			jp->indent -= 4;
-			js_printf(jp, "\t} finally {\n");
-		    }
-		    jp->indent += 4;
-		    break;
-
 		  case SRC_CATCH:
 		    jp->indent -= 4;
 		    sn = js_GetSrcNote(jp->script, pc);
@@ -1040,6 +1028,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		break;
 
 #if JS_HAS_EXCEPTIONS
+              case JSOP_TRY:
+                js_printf(jp, "\ttry {\n");
+                jp->indent += 4;
+                break;
+
+              case JSOP_FINALLY:
+                jp->indent -= 4;
+                js_printf(jp, "\t} finally {\n");
+                jp->indent += 4;
+                break;
+
 	      case JSOP_GOSUB:
 	      case JSOP_RETSUB:
 	      case JSOP_SETSP:
@@ -1452,7 +1451,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      case JSOP_NEW:
 	      case JSOP_CALL:
 	      case JSOP_EVAL:
+#if JS_HAS_LVALUE_RETURN
 	      case JSOP_SETCALL:
+#endif
 		saveop = op;
 		op = JSOP_NOP;           /* turn off parens */
 		argc = GET_ARGC(pc);
@@ -1509,11 +1510,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		if (!ok)
 		    return JS_FALSE;
 		op = saveop;
+#if JS_HAS_LVALUE_RETURN
                 if (op == JSOP_SETCALL) {
                     if (!PushOff(ss, todo, op))
                         return JS_FALSE;
                     todo = Sprint(&ss->sprinter, "");
                 }
+#endif
 		break;
 
 	      case JSOP_DELNAME:
@@ -1795,12 +1798,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		high = GET_JUMP_OFFSET(pc2);
 
 		n = high - low + 1;
-		table = (TableEntry *) JS_malloc(cx, (size_t)n * sizeof *table);
-		if (!table)
-		    return JS_FALSE;
-		if (pc2 + JUMP_OFFSET_LEN + 1 >= end) {
+                if (n == 0) {
+                    table = NULL;
 		    j = 0;
-		} else {
+                } else {
+                    table = (TableEntry *)
+                            JS_malloc(cx, (size_t)n * sizeof *table);
+                    if (!table)
+                        return JS_FALSE;
 		    for (i = j = 0; i < n; i++) {
 			pc2 += JUMP_OFFSET_LEN;
 			off2 = GET_JUMP_OFFSET(pc2);
@@ -1809,8 +1814,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 			    table[j++].offset = off2;
 			}
 		    }
+                    js_qsort(table, (size_t)j, sizeof *table, CompareOffsets,
+                             NULL);
 		}
-		js_qsort(table, (size_t)j, sizeof *table, CompareOffsets, NULL);
 
 		ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off,
 				     JS_FALSE);
@@ -2442,8 +2448,12 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
 	    } else if (mode == JOF_ELEM) {
 		tmp[off] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
 	    } else {
+#if JS_HAS_LVALUE_RETURN
                 JS_ASSERT(op == JSOP_SETCALL);
                 tmp[off] = JSOP_CALL;
+#else
+                JS_ASSERT(0);
+#endif
             }
 	}
 	begin = tmp;

@@ -158,6 +158,13 @@ struct JSRuntime {
     /* Used to serialize cycle checks when setting __proto__ or __parent__. */
     PRLock              *setSlotLock;
 #endif
+
+#ifdef DEBUG
+    jsword              inlineCalls;
+    jsword              nativeCalls;
+    jsword              nonInlineCalls;
+    jsword              constructs;
+#endif
 };
 
 #define JS_ENABLE_GC(rt)    JS_ATOMIC_ADDREF(&(rt)->gcDisabled, -1);
@@ -235,6 +242,7 @@ struct JSContext {
     jsrefcount          requestDepth;
 #endif
 
+#if JS_HAS_LVALUE_RETURN
     /*
      * Secondary return value from native method called on the left-hand side
      * of an assignment operator.  The native should store the object in which
@@ -243,6 +251,7 @@ struct JSContext {
      */
     jsval               rval2;
     JSPackedBool        rval2set;
+#endif
 
     /* Exception state (NB: throwing packs with rval2set, above). */
     JSPackedBool        throwing;           /* is there a pending exception? */

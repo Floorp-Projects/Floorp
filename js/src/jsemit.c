@@ -543,28 +543,27 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
 }
 
 /* A macro for inlining at the top of js_EmitTree (whence it came). */
-#define UPDATE_LINENO_NOTES(cx, cg, pn)                                     \
-    JS_BEGIN_MACRO                                                          \
-    uintN lineno, delta;                                                    \
-    lineno = pn->pn_pos.begin.lineno;                                       \
-    delta = lineno - cg->currentLine;                                       \
-    cg->currentLine = lineno;                                               \
-    if (delta) {                                                            \
-        /*                                                                  \
-         * Encode any change in the current source line number by using     \
-         * either several SRC_NEWLINE notes or one SRC_SETLINE note,        \
-         * whichever consumes less space.                                   \
-         */                                                                 \
-        if (delta >= (uintN)(2 + ((lineno > SN_3BYTE_OFFSET_MASK) << 1))) { \
-            if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)lineno) < 0) \
-                return JS_FALSE;                                            \
-        } else {                                                            \
-            do {                                                            \
-                if (js_NewSrcNote(cx, cg, SRC_NEWLINE) < 0)                 \
-                    return JS_FALSE;                                        \
-            } while (--delta != 0);                                         \
-        }                                                                   \
-    }                                                                       \
+#define UPDATE_LINENO_NOTES(cx, cg, pn)                                       \
+    JS_BEGIN_MACRO                                                            \
+        uintN _line = (pn)->pn_pos.begin.lineno;                              \
+        uintN _delta = _line - (cg)->currentLine;                             \
+        (cg)->currentLine = _line;                                            \
+        if (_delta) {                                                         \
+            /*                                                                \
+             * Encode any change in the current source line number by using   \
+             * either several SRC_NEWLINE notes or one SRC_SETLINE note,      \
+             * whichever consumes less space.                                 \
+             */                                                               \
+            if (_delta >= (uintN)(2 + ((_line > SN_3BYTE_OFFSET_MASK)<<1))) { \
+                if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)_line) < 0)\
+                    return JS_FALSE;                                          \
+            } else {                                                          \
+                do {                                                          \
+                    if (js_NewSrcNote(cx, cg, SRC_NEWLINE) < 0)               \
+                        return JS_FALSE;                                      \
+                } while (--_delta != 0);                                      \
+            }                                                                 \
+        }                                                                     \
     JS_END_MACRO
 
 /* A function, so that we avoid macro-bloating all the other callsites. */
@@ -868,9 +867,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         pn2 = pn->pn_kid2;
         ncases = pn2->pn_count;
 
-        if (pn2->pn_count == 0) {
-            low = high = 0;
-            tablen = 0;
+        if (ncases == 0 ||
+            (ncases == 1 &&
+             (hasDefault = (pn2->pn_head->pn_type == TOK_DEFAULT)))) {
+            ncases = 0;
+            low = 0;
+            high = -1;
             ok = JS_TRUE;
         } else {
             low  = JSVAL_INT_MAX;
@@ -997,14 +999,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /*
              * 3 offsets (len, low, high) before the table, 1 per entry.
              */
-            switchsize = (size_t)(6 + 2 * tablen);
+            switchsize = (size_t)(JUMP_OFFSET_LEN * (3 + tablen));
         } else {
             /*
              * JSOP_LOOKUPSWITCH:
              * 1 offset (len) and 1 atom index (npairs) before the table,
              * 1 atom index and 1 jump offset per entry.
              */
-            switchsize = (size_t)(4 + 4 * ncases);
+            switchsize = (size_t)(JUMP_OFFSET_LEN + ATOM_INDEX_LEN +
+                                  (ATOM_INDEX_LEN + JUMP_OFFSET_LEN) * ncases);
         }
 
         /* Emit switchop and switchsize bytes of jump or lookup table. */
@@ -1085,7 +1088,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pc = CG_CODE(cg, top);
             if (!js_SetJumpOffset(cx, cg, pc, off))
                 return JS_FALSE;
-            pc += 2;
+            pc += JUMP_OFFSET_LEN;
         }
 
         /* Set the SRC_SWITCH note's offset operand to tell end of switch. */
@@ -1097,10 +1100,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /* Fill in jump table. */
             if (!js_SetJumpOffset(cx, cg, pc, low))
                 return JS_FALSE;
-            pc += 2;
+            pc += JUMP_OFFSET_LEN;
             if (!js_SetJumpOffset(cx, cg, pc, high))
                 return JS_FALSE;
-            pc += 2;
+            pc += JUMP_OFFSET_LEN;
             if (tablen) {
                 /* Avoid bloat for a compilation unit with many switches. */
                 mark = JS_ARENA_MARK(&cx->tempPool);
@@ -1124,14 +1127,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     off = pn3 ? pn3->pn_offset - top : 0;
                     if (!js_SetJumpOffset(cx, cg, pc, off))
                         return JS_FALSE;
-                    pc += 2;
+                    pc += JUMP_OFFSET_LEN;
                 }
                 JS_ARENA_RELEASE(&cx->tempPool, mark);
             }
         } else if (switchop == JSOP_LOOKUPSWITCH) {
             /* Fill in lookup table. */
             SET_ATOM_INDEX(pc, ncases);
-            pc += 2;
+            pc += ATOM_INDEX_LEN;
 
             for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                 if (pn3->pn_type == TOK_DEFAULT)
@@ -1143,12 +1146,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!ale)
                     return JS_FALSE;
                 SET_ATOM_INDEX(pc, ALE_INDEX(ale));
-                pc += 2;
+                pc += ATOM_INDEX_LEN;
 
                 off = pn3->pn_offset - top;
                 if (!js_SetJumpOffset(cx, cg, pc, off))
                     return JS_FALSE;
-                pc += 2;
+                pc += JUMP_OFFSET_LEN;
             }
         }
 
@@ -1503,11 +1506,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         depth = cg->stackDepth;
 
         /* Mark try location for decompilation, then emit try block. */
-        if (js_NewSrcNote2(cx, cg, SRC_TRYFIN, 0) < 0 ||
-            js_Emit1(cx, cg, JSOP_NOP) < 0)
+        if (js_Emit1(cx, cg, JSOP_TRY) < 0)
             return JS_FALSE;
         start = CG_OFFSET(cg);
-        if(!js_EmitTree(cx, cg, pn->pn_kid1))
+        if (!js_EmitTree(cx, cg, pn->pn_kid1))
             return JS_FALSE;
 
         /* Emit (hidden) jump over catch and/or finally. */
@@ -1660,10 +1662,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /*
-         * we use a [leavewith],[gosub],rethrow block for rethrowing
-         * when there's no unguarded catch, and also for
-         * running finally code while letting an uncaught exception
-         * pass through
+         * We use a [leavewith],[gosub],rethrow block for rethrowing
+         * when there's no unguarded catch, and also for running finally
+         * code while letting an uncaught exception pass through.
          */
         if (pn->pn_kid3 ||
             (catchjmp != -1 && iter->pn_kid1->pn_expr)) {
@@ -1677,7 +1678,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (catchjmp != -1 && iter->pn_kid1->pn_expr) {
                 CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, catchjmp);
             }
-            /* last discriminant jumps to rethrow if none match */
+
+            /* Last discriminant jumps to rethrow if none match. */
             if ((uintN)++cg->stackDepth > cg->maxStackDepth)
                 cg->maxStackDepth = cg->stackDepth;
             if (pn->pn_kid2 &&
@@ -1699,28 +1701,30 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /*
-         * If we've got a finally, it goes here, and we have to fix up
-         * the gosubs that might have been emitted before non-local jumps.
+         * If we have a finally, it belongs here, and we have to fix up the
+         * gosubs that might have been emitted before non-local jumps.
          */
         if (pn->pn_kid3) {
             if (!PatchGotos(cx, cg, &stmtInfo, stmtInfo.gosub, CG_NEXT(cg),
-                            JSOP_GOSUB))
+                            JSOP_GOSUB)) {
                 return JS_FALSE;
+            }
             js_PopStatementCG(cx, cg);
             if (!UpdateLinenoNotes(cx, cg, pn->pn_kid3))
                 return JS_FALSE;
-            if (js_NewSrcNote2(cx, cg, SRC_TRYFIN, 1) < 0 ||
-                js_Emit1(cx, cg, JSOP_NOP) < 0 ||
+            if (js_Emit1(cx, cg, JSOP_FINALLY) < 0 ||
                 !js_EmitTree(cx, cg, pn->pn_kid3) ||
-                js_Emit1(cx, cg, JSOP_RETSUB) < 0)
+                js_Emit1(cx, cg, JSOP_RETSUB) < 0) {
                 return JS_FALSE;
+            }
         } else {
             js_PopStatementCG(cx, cg);
         }
 
         if (js_NewSrcNote(cx, cg, SRC_ENDBRACE) < 0 ||
-            js_Emit1(cx, cg, JSOP_NOP) < 0)
+            js_Emit1(cx, cg, JSOP_NOP) < 0) {
             return JS_FALSE;
+        }
 
         /* Fix up the end-of-try/catch jumps to come here. */
         if (!PatchGotos(cx, cg, &stmtInfo, stmtInfo.catchJump, CG_NEXT(cg),
@@ -1930,10 +1934,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!js_EmitTree(cx, cg, pn2->pn_right))
                 return JS_FALSE;
             break;
+#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
             break;
+#endif
           default:
             JS_ASSERT(0);
         }
@@ -1962,7 +1968,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 EMIT_ATOM_INDEX_OP(JSOP_GETPROP, atomIndex);
                 break;
               case TOK_LB:
+#if JS_HAS_LVALUE_RETURN
               case TOK_LP:
+#endif
                 if (js_Emit1(cx, cg, JSOP_DUP2) < 0)
                     return JS_FALSE;
                 if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
@@ -2001,7 +2009,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
             break;
           case TOK_LB:
+#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
+#endif
             if (js_Emit1(cx, cg, JSOP_SETELEM) < 0)
                 return JS_FALSE;
             break;
@@ -2105,7 +2115,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_THROW:
 #endif
       case TOK_UNARYOP:
-        /* Unary op, including unary +/-/&. */
+        /* Unary op, including unary +/-. */
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
         if (js_Emit1(cx, cg, pn->pn_op) < 0)
@@ -2470,12 +2480,8 @@ JS_FRIEND_DATA(const char *) js_SrcNoteName[] = {
     "cont2label",
     "switch",
     "funcdef",
-    "tryfin",
     "catch",
     "const",
-    "reserved1",
-    "reserved2",
-    "reserved3",
     "newline",
     "setline",
     "xdelta"
@@ -2502,12 +2508,8 @@ uint8 js_SrcNoteArity[] = {
     1,  /* SRC_CONT2LABEL */
     2,  /* SRC_SWITCH */
     1,  /* SRC_FUNCDEF */
-    1,  /* SRC_TRYFIN */
     1,  /* SRC_CATCH */
     0,  /* SRC_CONST */
-    0,  /* SRC_RESERVED1 */
-    0,  /* SRC_RESERVED2 */
-    0,  /* SRC_RESERVED3 */
     0,  /* SRC_NEWLINE */
     1,  /* SRC_SETLINE */
     0   /* SRC_XDELTA */

@@ -271,14 +271,14 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
  * Source notes generated along with bytecode for decompiling and debugging.
  * A source note is a uint8 with 5 bits of type and 3 of offset from the pc of
  * the previous note.  If 3 bits of offset aren't enough, extended delta notes
- * (SRC_XDELTA) consisting of 3 set high order bits followed by 5 offset bits
+ * (SRC_XDELTA) consisting of 2 set high order bits followed by 6 offset bits
  * are emitted before the next note.  Some notes have operand offsets encoded
  * immediately after them, in note bytes or byte-triples.
  *
  *                 Source Note               Extended Delta
  *              +7-6-5-4-3+2-1-0+           +7-6-5+4-3-2-1-0+
- *              |note-type|delta|           |1 1 1|ext-delta|
- *              +---------+-----+           +-----+---------+
+ *              |note-type|delta|           |1 1| ext-delta |
+ *              +---------+-----+           +---+-----------+
  *
  * At most one "gettable" note (i.e., a note of type other than SRC_NEWLINE,
  * SRC_SETLINE, and SRC_XDELTA) applies to a given bytecode.
@@ -311,20 +311,16 @@ typedef enum JSSrcNoteType {
     SRC_SWITCH      = 18,       /* JSOP_*SWITCH with offset to end of switch,
 				   2nd off to first JSOP_CASE if condswitch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
-    SRC_TRYFIN	    = 20,       /* JSOP_NOP for try or finally section */
-    SRC_CATCH       = 21,       /* catch block has guard */
-    SRC_CONST       = 22,       /* JSOP_SETCONST in a const decl */
-    SRC_RESERVED1   = 23,       /* reserved for future use */
-    SRC_RESERVED2   = 24,       /* reserved for future use */
-    SRC_RESERVED3   = 25,       /* reserved for future use */
-    SRC_NEWLINE     = 26,       /* bytecode follows a source newline */
-    SRC_SETLINE     = 27,       /* a file-absolute source line number note */
-    SRC_XDELTA      = 28        /* 28-31 are for extended delta notes */
+    SRC_CATCH       = 20,       /* catch block has guard */
+    SRC_CONST       = 21,       /* JSOP_SETCONST in a const decl */
+    SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
+    SRC_SETLINE     = 23,       /* a file-absolute source line number note */
+    SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 } JSSrcNoteType;
 
 #define SN_TYPE_BITS            5
 #define SN_DELTA_BITS           3
-#define SN_XDELTA_BITS          5
+#define SN_XDELTA_BITS          6
 #define SN_TYPE_MASK            (JS_BITMASK(SN_TYPE_BITS) << SN_DELTA_BITS)
 #define SN_DELTA_MASK           ((ptrdiff_t)JS_BITMASK(SN_DELTA_BITS))
 #define SN_XDELTA_MASK          ((ptrdiff_t)JS_BITMASK(SN_XDELTA_BITS))
