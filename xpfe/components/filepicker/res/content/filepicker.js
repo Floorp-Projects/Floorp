@@ -28,6 +28,11 @@ const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
 const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/file/directory_service;1";
 const nsIOutlinerBoxObject = Components.interfaces.nsIOutlinerBoxObject;
+const nsIFileView = Components.interfaces.nsIFileView;
+const nsFileView_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
+const nsIOutlinerView = Components.interfaces.nsIOutlinerView;
+const nsILocalFile = Components.interfaces.nsILocalFile;
+const nsLocalFile_CONTRACTID = "@mozilla.org/file/local;1";
 
 var sfile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
 var retvals;
@@ -45,8 +50,7 @@ function filepickerLoad() {
 
   textInput = document.getElementById("textInput");
   okButton = document.documentElement.getButton("accept");
-  outlinerView = new nsFileView();
-  outlinerView.selectionCallback = onSelect;
+  outlinerView = Components.classes[nsFileView_CONTRACTID].createInstance(nsIFileView);
 
   if (window.arguments) {
     var o = window.arguments[0];
@@ -334,13 +338,13 @@ function convertColumnIDtoSortType(columnID) {
   
   switch (columnID) {
   case "FilenameColumn":
-    sortKey = nsFileView.SORTTYPE_NAME;
+    sortKey = nsIFileView.sortName;
     break;
   case "FileSizeColumn":
-    sortKey = nsFileView.SORTTYPE_SIZE;
+    sortKey = nsIFileView.sortSize;
     break;
   case "LastModifiedColumn":
-    sortKey = nsFileView.SORTTYPE_DATE;
+    sortKey = nsIFileView.sortDate;
     break;
   default:
     dump("unsupported sort column: " + columnID + "\n");
@@ -354,7 +358,7 @@ function convertColumnIDtoSortType(columnID) {
 function handleColumnClick(columnID) {
   var sortType = convertColumnIDtoSortType(columnID);
   var sortOrder = (outlinerView.sortType == sortType) ? !outlinerView.reverseSort : false;
-  outlinerView.sort(sortType, sortOrder, false);
+  outlinerView.sort(sortType, sortOrder);
   
   // set the sort indicator on the column we are sorted by
   var sortedColumn = document.getElementById(columnID);
@@ -376,10 +380,6 @@ function handleColumnClick(columnID) {
       currCol = currCol.nextSibling;
     }
   }
-}
-
-function doSort(sortType) {
-  outlinerView.sort(sortType, false);
 }
 
 function onKeypress(e) {
@@ -406,7 +406,7 @@ function doEnabling() {
 
 function onOutlinerFocus(event) {
   // Reset the button label and enabled/disabled state.
-  onSelect(outlinerView.getSelectedFile());
+  onFileSelected(outlinerView.getSelectedFile());
 }
 
 function getOKAction(file) {
@@ -434,7 +434,11 @@ function getOKAction(file) {
   return buttonLabel;
 }
 
-function onSelect(file) {
+function onSelect(event) {
+  onFileSelected(outlinerView.getSelectedFile());
+}
+
+function onFileSelected(file) {
   if (file) {
     var path = file.unicodeLeafName;
     
@@ -515,10 +519,10 @@ function gotoDirectory(directory) {
   addToHistory(directory.unicodePath);
 
   window.setCursor("wait");
-  outlinerView.setDirectory(directory.unicodePath);
+  outlinerView.setDirectory(directory);
   window.setCursor("auto");
 
-  outlinerView.selection.clearSelection();
+  outlinerView.QueryInterface(nsIOutlinerView).selection.clearSelection();
   textInput.focus();
   sfile = directory;
 }

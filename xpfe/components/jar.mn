@@ -173,4 +173,3 @@ toolkit.jar:
     content/global/autocomplete.css                             (autocomplete/resources/content/autocomplete.css)
     content/global/filepicker.js				(filepicker/res/content/filepicker.js)
     content/global/filepicker.xul				(filepicker/res/content/filepicker.xul)
-    content/global/nsFileView.js				(filepicker/res/content/nsFileView.js)

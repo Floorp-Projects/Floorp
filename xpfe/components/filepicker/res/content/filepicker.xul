@@ -40,7 +40,6 @@
   persist="screenX screenY">
 
 <stringbundle id="bundle_filepicker" src="chrome://global/locale/filepicker.properties"/>
-<script type="application/x-javascript" src="chrome://global/content/nsFileView.js"/>
 <script type="application/x-javascript" src="chrome://global/content/filepicker.js"/>
 
 <hbox align="center">
@@ -66,7 +65,7 @@
     <outlinercol id="LastModifiedColumn" label="&lastModified.label;" flex="1"
                  class="outlinercol-header outlinercell-inset-header sortDirectionIndicator"/>
 
-    <outlinerbody flex="1" onselect="this.parentNode.outlinerBoxObject.view.selectionChanged()"/>
+    <outlinerbody flex="1" onselect="onSelect(event);"/>
    </outliner>
 </hbox>
 

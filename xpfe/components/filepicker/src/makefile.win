@@ -21,6 +21,22 @@
 
 DEPTH=..\..\..\..
 
+MODULE       = filepicker
+REQUIRES     =  xpcom \
+		layout \
+		dom \
+		string \
+		locale \
+		$(NULL)
+
+include <$(DEPTH)\config\config.mak>
+
+LIBRARY_NAME=fileview
+MODULE_NAME=nsFileViewModule
+
+CPP_OBJS = .\$(OBJDIR)\nsFileView.obj \
+	   .\$(OBJDIR)\nsWildCard.obj \
+	   $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
