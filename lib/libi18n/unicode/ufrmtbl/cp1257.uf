@@ -104,17 +104,14 @@ End of Item 0005
 
 Begin of Item 0006
  Format 2
-  srcBegin = 2122
-  destBegin = 0099
+  srcBegin = 20AC
+  destBegin = 0080
 End of Item 0006 
 
 Begin of Item 0007
- Format 1
-  srcBegin = F8FC
-  srcEnd = F8FD
-  mappingOffset = 010A
- Mapping  = 
-  00A1 00A5 
+ Format 2
+  srcBegin = 2122
+  destBegin = 0099
 End of Item 0007 
 
 ========================================================*/
@@ -132,11 +129,11 @@ End of Item 0007
 /*-------------------------------------------------------*/
 /*       Offset=0x0004   Start of Format Array */ 
 /*	Total of Format 0 : 0x0002			 */
-/*	Total of Format 1 : 0x0004			 */
-/*	Total of Format 2 : 0x0002			 */
+/*	Total of Format 1 : 0x0003			 */
+/*	Total of Format 2 : 0x0003			 */
 /*	Total of Format 3 : 0x0000			 */
 
-0x2100, 0x1211, 0x0000, 
+0x2100, 0x2211, 0x0000, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0007   Start of MapCell Array */ 
 /* 0000 */    0x0000, 0x007F, 0x0000, 
@@ -145,8 +142,8 @@ End of Item 0007
 /* 0003 */    0x02C7, 0x0000, 0x008E, 
 /* 0004 */    0x02D9, 0x02DB, 0x00DF, 
 /* 0005 */    0x2013, 0x203A, 0x00E2, 
-/* 0006 */    0x2122, 0x0000, 0x0099, 
-/* 0007 */    0xF8FC, 0xF8FD, 0x010A, 
+/* 0006 */    0x20AC, 0x0000, 0x0080, 
+/* 0007 */    0x2122, 0x0000, 0x0099, 
 /*-------------------------------------------------------*/
 /*       Offset=0x001F   Start of MappingTable */ 
 
@@ -183,5 +180,5 @@ End of Item 0007
 /* 00F0 */    0x0087, 0x0095, 0xFFFD, 0xFFFD, 0xFFFD, 0x0085, 0xFFFD, 0xFFFD, 
 /* 00F8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x0089, 
 /* 0100 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0108 */    0x008B, 0x009B, 0x00A1, 0x00A5, 
-/*	End of table Total Length = 0x012B * 2 */
+/* 0108 */    0x008B, 0x009B, 
+/*	End of table Total Length = 0x0129 * 2 */

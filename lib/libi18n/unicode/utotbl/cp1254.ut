@@ -61,14 +61,14 @@ End of Item 0004
 
 Begin of Item 0005
  Format 1
-  srcBegin = 0082
+  srcBegin = 0080
   srcEnd = 009F
   mappingOffset = 0000
  Mapping  = 
-  201A 0192 201E 2026 2020 2021 02C6 2030 
-  0160 2039 0152 FFFD FFFD FFFD FFFD 2018 
-  2019 201C 201D 2022 2013 2014 02DC 2122 
-  0161 203A 0153 FFFD FFFD 0178 
+  20AC FFFD 201A 0192 201E 2026 2020 2021 
+  02C6 2030 0160 2039 0152 FFFD FFFD FFFD 
+  FFFD 2018 2019 201C 201D 2022 2013 2014 
+  02DC 2122 0161 203A 0153 FFFD FFFD 0178 
 End of Item 0005 
 
 Begin of Item 0006
@@ -81,7 +81,7 @@ Begin of Item 0007
  Format 1
   srcBegin = 00DD
   srcEnd = 00DE
-  mappingOffset = 001E
+  mappingOffset = 0020
  Mapping  = 
   0130 015E 
 End of Item 0007 
@@ -96,7 +96,7 @@ Begin of Item 0009
  Format 1
   srcBegin = 00FD
   srcEnd = 00FF
-  mappingOffset = 0020
+  mappingOffset = 0022
  Mapping  = 
   0131 015F 00FF 
 End of Item 0009 
@@ -128,17 +128,17 @@ End of Item 0009
 /* 0002 */    0x00D1, 0x00DC, 0x00D1, 
 /* 0003 */    0x00DF, 0x00EF, 0x00DF, 
 /* 0004 */    0x00F1, 0x00FC, 0x00F1, 
-/* 0005 */    0x0082, 0x009F, 0x0000, 
+/* 0005 */    0x0080, 0x009F, 0x0000, 
 /* 0006 */    0x00D0, 0x0000, 0x011E, 
-/* 0007 */    0x00DD, 0x00DE, 0x001E, 
+/* 0007 */    0x00DD, 0x00DE, 0x0020, 
 /* 0008 */    0x00F0, 0x0000, 0x011F, 
-/* 0009 */    0x00FD, 0x00FF, 0x0020, 
+/* 0009 */    0x00FD, 0x00FF, 0x0022, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0025   Start of MappingTable */ 
 
-/* 0000 */    0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 
-/* 0008 */    0x0160, 0x2039, 0x0152, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2018, 
-/* 0010 */    0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 
-/* 0018 */    0x0161, 0x203A, 0x0153, 0xFFFD, 0xFFFD, 0x0178, 0x0130, 0x015E, 
-/* 0020 */    0x0131, 0x015F, 0x00FF, 
-/*	End of table Total Length = 0x0048 * 2 */
+/* 0000 */    0x20AC, 0xFFFD, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 
+/* 0008 */    0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0010 */    0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
+/* 0018 */    0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0xFFFD, 0xFFFD, 0x0178, 
+/* 0020 */    0x0130, 0x015E, 0x0131, 0x015F, 0x00FF, 
+/*	End of table Total Length = 0x004A * 2 */

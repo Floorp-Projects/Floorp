@@ -132,32 +132,38 @@ End of Item 000D
 
 Begin of Item 000E
  Format 2
+  srcBegin = 20AC
+  destBegin = 0080
+End of Item 000E 
+
+Begin of Item 000F
+ Format 2
   srcBegin = 2122
   destBegin = 0099
-End of Item 000E 
+End of Item 000F 
 
 ========================================================*/
 /* Offset=0x0000  ItemOfList */
-  0x000F,
+  0x0010,
 /*-------------------------------------------------------*/
 /* Offset=0x0001  offsetToFormatArray */
   0x0004,
 /*-------------------------------------------------------*/
 /* Offset=0x0002  offsetToMapCellArray */ 
-  0x0008,
+  0x0009,
 /*-------------------------------------------------------*/
 /* Offset=0x0003  offsetToMappingTable */ 
-  0x0035,
+  0x0039,
 /*-------------------------------------------------------*/
 /*       Offset=0x0004   Start of Format Array */ 
 /*	Total of Format 0 : 0x0005			 */
 /*	Total of Format 1 : 0x0004			 */
-/*	Total of Format 2 : 0x0006			 */
+/*	Total of Format 2 : 0x0007			 */
 /*	Total of Format 3 : 0x0000			 */
 
-0x0000, 0x1120, 0x2221, 0x0212, 
+0x0000, 0x1120, 0x2221, 0x2212, 0x0000, 
 /*-------------------------------------------------------*/
-/*       Offset=0x0008   Start of MapCell Array */ 
+/*       Offset=0x0009   Start of MapCell Array */ 
 /* 0000 */    0x0000, 0x007F, 0x0000, 
 /* 0001 */    0x00A0, 0x00CF, 0x00A0, 
 /* 0002 */    0x00D1, 0x00DC, 0x00D1, 
@@ -172,9 +178,10 @@ End of Item 000E
 /* 000B */    0x02C6, 0x0000, 0x0088, 
 /* 000C */    0x02DC, 0x0000, 0x0098, 
 /* 000D */    0x2013, 0x203A, 0x0014, 
-/* 000E */    0x2122, 0x0000, 0x0099, 
+/* 000E */    0x20AC, 0x0000, 0x0080, 
+/* 000F */    0x2122, 0x0000, 0x0099, 
 /*-------------------------------------------------------*/
-/*       Offset=0x0035   Start of MappingTable */ 
+/*       Offset=0x0039   Start of MappingTable */ 
 
 /* 0000 */    0x00D0, 0x00F0, 0x00DD, 0x00FD, 0x008C, 0x009C, 0xFFFD, 0xFFFD, 
 /* 0008 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
@@ -184,4 +191,4 @@ End of Item 000E
 /* 0028 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0030 */    0xFFFD, 0x0089, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0038 */    0xFFFD, 0xFFFD, 0x008B, 0x009B, 
-/*	End of table Total Length = 0x0071 * 2 */
+/*	End of table Total Length = 0x0075 * 2 */

@@ -34,20 +34,20 @@ End of Item 0000
 Begin of Item 0001
  Format 0
   srcBegin = 00A0
-  srcEnd = 00FF
+  srcEnd = 00DB
   destBegin = 00A0
 End of Item 0001 
 
 Begin of Item 0002
  Format 1
-  srcBegin = 0082
+  srcBegin = 0080
   srcEnd = 009F
   mappingOffset = 0000
  Mapping  = 
-  201A 0192 201E 2026 2020 2021 02C6 2030 
-  0160 2039 0152 FFFD FFFD FFFD FFFD 2018 
-  2019 201C 201D 2022 2013 2014 02DC 2122 
-  0161 203A 0153 FFFD FFFD 0178 
+  20AC FFFD 201A 0192 201E 2026 2020 2021 
+  02C6 2030 0160 2039 0152 FFFD 017D FFFD 
+  FFFD 2018 2019 201C 201D 2022 2013 2014 
+  02DC 2122 0161 203A 0153 FFFD 017E 0178 
 End of Item 0002 
 
 ========================================================*/
@@ -73,13 +73,13 @@ End of Item 0002
 /*-------------------------------------------------------*/
 /*       Offset=0x0005   Start of MapCell Array */ 
 /* 0000 */    0x0000, 0x007F, 0x0000, 
-/* 0001 */    0x00A0, 0x00FF, 0x00A0, 
-/* 0002 */    0x0082, 0x009F, 0x0000, 
+/* 0001 */    0x00A0, 0x00DB, 0x00A0, 
+/* 0002 */    0x0080, 0x009F, 0x0000, 
 /*-------------------------------------------------------*/
 /*       Offset=0x000E   Start of MappingTable */ 
 
-/* 0000 */    0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 
-/* 0008 */    0x0160, 0x2039, 0x0152, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2018, 
-/* 0010 */    0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 
-/* 0018 */    0x0161, 0x203A, 0x0153, 0xFFFD, 0xFFFD, 0x0178, 
-/*	End of table Total Length = 0x002C * 2 */
+/* 0000 */    0x20AC, 0xFFFD, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 
+/* 0008 */    0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0xFFFD, 0x017D, 0xFFFD, 
+/* 0010 */    0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
+/* 0018 */    0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0xFFFD, 0x017E, 0x0178, 
+/*	End of table Total Length = 0x002E * 2 */
