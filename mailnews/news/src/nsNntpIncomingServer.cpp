@@ -574,6 +574,13 @@ nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 	return NS_OK;
 }
 
+// remove this when news supports filters
+NS_IMETHODIMP
+nsNntpIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP 
 nsNntpIncomingServer::GetNumGroupsNeedingCounts(PRInt32 *aNumGroupsNeedingCounts)
 {

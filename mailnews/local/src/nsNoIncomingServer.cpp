@@ -255,3 +255,12 @@ NS_IMETHODIMP nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlLis
 	// do nothing, there is no new mail for this incoming server, ever.
 	return NS_OK;
 }
+
+// the "none" server does not support filters, because
+// it doesn't support incoming messages!
+NS_IMETHODIMP
+nsNoIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
+{
+    *aResult = nsnull;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

@@ -44,6 +44,7 @@ public:
     virtual ~nsNoIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
+    NS_IMETHOD GetFilterList(nsIMsgFilterList **aResult);
 };
 
 

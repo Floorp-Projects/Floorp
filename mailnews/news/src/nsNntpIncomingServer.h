@@ -69,6 +69,7 @@ public:
     NS_IMETHOD CloseCachedConnections();
 	NS_IMETHOD PerformBiff();
     NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
+    NS_IMETHOD GetFilterList(nsIMsgFilterList **aResult);
 
 	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
