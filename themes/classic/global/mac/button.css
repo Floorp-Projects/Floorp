@@ -29,7 +29,7 @@
 
 button {
 	-moz-user-focus     : ignore;
-    margin              : 4px 5px 5px 5px;
+  margin              : 5px 6px;
 	min-width           : 60px;
 	min-height          : 20px;
 	background-color    : transparent;
@@ -220,7 +220,7 @@ button:hover:active > .box-inherit > .button-box-right > .button-right-btm[disab
 /* .......... default normal state .......... */
 
 button[default="true"] {
-  margin              : 2px;
+  margin              : 2px 3px ;
   min-height          : 26px;
   min-width           : 66px;
 }
@@ -315,11 +315,6 @@ button[default="true"] {
 
 /* .......... default disabled state (the same as normal disabled) .......... */
 
-button[default="true"][disabled="true"] {
-  margin-top          : 3px;
-  margin-bottom       : 3px;
-}
-
 :hover:active > .box-inherit > .button-box-left > .button-left-top[disabled="true"][default="true"],
 .button-left-top[disabled="true"][default="true"] {
   background-image    : url("chrome://global/skin/button-def-dis-left-top.gif");
@@ -345,11 +340,6 @@ button[default="true"][disabled="true"] {
 .button-left-btm[disabled="true"][default="true"] {
   background-image    : url("chrome://global/skin/button-def-dis-left-btm.gif");
   height              : 7px;
-}
-
-:hover:active > .box-inherit > .button-stack > .button-box-mid[disabled="true"][default="true"],
-.button-box-mid[disabled="true"][default="true"] {
-  background-color    : #DDDDDD;
 }
 
 :hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
@@ -394,11 +384,6 @@ button[default="true"][disabled="true"] {
 
 button.exit-dialog {
   font: menu;
-  margin: 4px 5px 5px 5px;
-}
-
-button.exit-dialog[default="true"] {
-  margin: 1px 5px 2px 5px;
 }
 
 /* ::::: plain buttons ::::: */
