@@ -1431,35 +1431,43 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   // turn on selection and caret
   if (mEditor)
   {
-    nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
-    if (editor)
-    {
-      nsCOMPtr<nsIPresShell>ps;
-      editor->GetPresShell(getter_AddRefs(ps));
-      if (ps)
+    PRUint32 flags;
+    mEditor->GetFlags(&flags);
+    if (! (flags & TEXT_EDITOR_FLAG_DISABLED))
+    { // only enable caret and selection if the editor is not disabled
+      nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
+      if (editor)
       {
-        ps->SetCaretEnabled(PR_TRUE);
-
-        nsCOMPtr<nsIDOMDocument>domDoc;
-        editor->GetDocument(getter_AddRefs(domDoc));
-        if (domDoc)
+        nsCOMPtr<nsIPresShell>ps;
+        editor->GetPresShell(getter_AddRefs(ps));
+        if (ps)
         {
-          nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-          if (doc)
+          if (! (flags & TEXT_EDITOR_FLAG_READONLY))
+          { // only enable caret if the editor is not readonly
+            ps->SetCaretEnabled(PR_TRUE);
+          }
+
+          nsCOMPtr<nsIDOMDocument>domDoc;
+          editor->GetDocument(getter_AddRefs(domDoc));
+          if (domDoc)
           {
-            doc->SetDisplaySelection(PR_TRUE);
+            nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+            if (doc)
+            {
+              doc->SetDisplaySelection(PR_TRUE);
+            }
           }
-        }
-// begin hack repaint
-        nsCOMPtr<nsIViewManager> viewmgr;
-        ps->GetViewManager(getter_AddRefs(viewmgr));
-        if (viewmgr) {
-          nsIView* view;
-          viewmgr->GetRootView(view);			// views are not refCounted
-          if (view) {
-            viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
+  // begin hack repaint
+          nsCOMPtr<nsIViewManager> viewmgr;
+          ps->GetViewManager(getter_AddRefs(viewmgr));
+          if (viewmgr) {
+            nsIView* view;
+            viewmgr->GetRootView(view);			// views are not refCounted
+            if (view) {
+              viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
+            }
+  // end hack repaint
           }
-// end hack repaint
         }
       }
     }
