@@ -161,13 +161,14 @@ protected:
 
   nsresult NotifyContentObjectWrapper();
 
-  nsresult GetWindowOriginInPixels(nsIPresContext * aPresContext, nsPoint* aOrigin);
+  nsresult GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindoless, nsPoint* aOrigin);
 
 private:
   nsPluginInstanceOwner *mInstanceOwner;
   nsIURI                *mFullURL;
   nsIFrame              *mFirstChild;
   nsIWidget             *mWidget;
+  nsRect                mWindowlessRect;
 };
 
 
