@@ -33,9 +33,7 @@ DEPTH= ..\..\..
 include <$(DEPTH)/config/config.mak>
 
 !ifdef JAVA_OR_OJI
-!ifdef REGENERATE
 DIRS = classes
-!endif
 !endif
 
 

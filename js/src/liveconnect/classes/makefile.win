@@ -44,13 +44,15 @@ all::
 
 MODULE=java 
 JMODS=netscape/javascript
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_NSJVM
 JDIRS=$(JMODS) 
 JAR_JSJ_CLASSES=$(JMODS) 
 JAR_NAME = jsj10.jar
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef JAVA_OR_NSJVM
 install:: 
 	cd $(JAVA_DESTPATH)
 	@echo +++ building/updating $(JAR_NAME)
@@ -63,6 +65,7 @@ install::
 	@echo +++ updating $(DEPTH)\nav-java\stubs\classes\$(JAR_NAME) for checkin
 	-for %i in ($(JAR_JSJ_CLASSES:/=\)) do @$(ZIP_PROG) $(ZIP_FLAGS) ..\..\nav-java\stubs\classes\$(JAR_NAME) %i\*.class
 	cd $(MAKEDIR)
+!endif
 !endif
 
 javadoc:
