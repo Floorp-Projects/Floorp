@@ -46,6 +46,7 @@ public:
   ~nsHashtable();
 
   PRInt32 Count(void) { return hashtable->nentries; }
+  PRBool Exists(nsHashKey *aKey);
   void *Put(nsHashKey *aKey, void *aData);
   void *Get(nsHashKey *aKey);
   void *Remove(nsHashKey *aKey);
@@ -139,26 +140,47 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsProgIDKey: Where keys are ProgIDs (char[64])
-// This same thing is used for hashing filenames too in nsComponentManager.cpp
+// nsCStringKey: Where keys are char*'s
+// Some uses: hashing ProgIDs, filenames, URIs
 
 #include "plstr.h"
 
-class nsProgIDKey : public nsHashKey {
+class nsCStringKey : public nsHashKey {
 private:
-  char  mProgIDBuf[64];
-  char* mProgID;
+  char  mBuf[64];
+  char* mStr;
 
 public:
-  nsProgIDKey(const char* aProgID);
+  nsCStringKey(const char* str)
+    : mStr(mBuf)
+  {
+    PRInt32 len = PL_strlen(str);
+    if (len >= sizeof(mBuf)) {
+      mStr = PL_strdup(str);
+      NS_ASSERTION(mStr, "out of memory");
+    }
+    else {
+      PL_strcpy(mStr, str);
+    }
+  }
 
-  virtual ~nsProgIDKey(void);
+  ~nsCStringKey(void) {
+    if (mStr != mBuf)
+      PL_strfree(mStr);
+  }
 
-  virtual PRUint32 HashValue(void) const;
+  PRUint32 HashValue(void) const {
+    return (PRUint32) PL_HashString((const void*) mStr);
+  }
 
-  virtual PRBool Equals(const nsHashKey* aKey) const;
+  PRBool Equals(const nsHashKey* aKey) const {
+    return PL_strcmp( ((nsCStringKey*)aKey)->mStr, mStr ) == 0;
+  }
 
-  virtual nsHashKey* Clone() const;
+  nsHashKey* Clone() const {
+    return new nsCStringKey(mStr);
+  }
+
 };
 
 #endif
