@@ -72,23 +72,7 @@ class nsIWebShellContainer : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_CONTAINER_IID; return iid; }
 
-  // History control
-   NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
-                          const PRUnichar* aURL,
-                          nsLoadType aReason) = 0;
- 
-   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
-                           const PRUnichar* aURL) = 0;
- 
-
-   NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
-                         const PRUnichar* aURL,
-                         nsresult aStatus) = 0;
- 
 };
-
-// Return value from WillLoadURL
-#define NS_WEB_SHELL_CANCEL_URL_LOAD      0xC0E70000
 
 //----------------------------------------------------------------------
 
