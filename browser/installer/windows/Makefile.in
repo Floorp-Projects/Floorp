@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
+#  Chase Phillips <cmp@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -84,7 +85,7 @@ include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.m
 
 installer:
 	$(NSINSTALL) -D instgen
-	$(INSTALL) $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/,$(LOCALIZED_FILES)) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
+	$(INSTALL) $(addprefix $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/,$(LOCALIZED_FILES)) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
 	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(topsrcdir)/browser/locales/$(AB_CD)/installer/installer.inc > instgen/installer.inc
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
