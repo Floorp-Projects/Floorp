@@ -53,7 +53,7 @@ nsFontMetricsMotif :: ~nsFontMetricsMotif()
 
 NS_IMPL_ISUPPORTS(nsFontMetricsMotif, kIFontMetricsIID)
 
-NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aContext)
+NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aCX)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
