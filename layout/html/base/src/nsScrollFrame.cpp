@@ -91,7 +91,7 @@ nsScrollViewFrame::Reflow(nsIPresContext&          aPresContext,
     // member function instead of here. Problem is the other frame code
     // would have to do the same...
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, this,
-                                             nsnull, PR_TRUE);
+                                             mStyleContext, PR_TRUE);
   }
 
   // Scroll frame handles the border, and we handle the padding and background
