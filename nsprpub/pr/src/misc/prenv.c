@@ -59,7 +59,7 @@ static PRLock *_pr_envLock = NULL;
 
 /************************************************************************/
 
-void _PR_InitEnv()
+void _PR_InitEnv(void)
 {
 	_PR_NEW_LOCK_ENV();
 }

@@ -1451,7 +1451,7 @@ void _MD_EarlyInit(void)
     _MD_IrixIntervalInit();
 }  /* _MD_EarlyInit */
 
-void _MD_IrixInit()
+void _MD_IrixInit(void)
 {
 #if !defined(_PR_PTHREADS)
     struct sigaction sigact;
@@ -1567,7 +1567,7 @@ static PRUint32 pr_ticks_per_second = 0;
 extern PRIntervalTime _PR_UNIX_GetInterval(void);
 extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
-static void _MD_IrixIntervalInit()
+static void _MD_IrixIntervalInit(void)
 {
     /*
      * As much as I would like, the service available through this
@@ -1634,12 +1634,12 @@ static void _MD_IrixIntervalInit()
     }
 }  /* _MD_IrixIntervalInit */
 
-PRIntervalTime _MD_IrixIntervalPerSec()
+PRIntervalTime _MD_IrixIntervalPerSec(void)
 {
     return pr_ticks_per_second;
 }
 
-PRIntervalTime _MD_IrixGetInterval()
+PRIntervalTime _MD_IrixGetInterval(void)
 {
     if (mmem_fd != -1)
     {

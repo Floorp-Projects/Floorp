@@ -1059,7 +1059,7 @@ static PRBool pt_solaris_sendfile_cont(pt_Continuation *op, PRInt16 revents)
 }
 #endif  /* SOLARIS */
 
-void _PR_InitIO()
+void _PR_InitIO(void)
 {
 #if defined(DEBUG)
     memset(&pt_debug, 0, sizeof(PTDebug));
@@ -3086,27 +3086,27 @@ static PRFileDesc *pt_SetMethods(
     return fd;
 }  /* pt_SetMethods */
 
-PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods(void)
 {
     return &_pr_file_methods;
 }  /* PR_GetFileMethods */
 
-PR_IMPLEMENT(const PRIOMethods*) PR_GetPipeMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetPipeMethods(void)
 {
     return &_pr_pipe_methods;
 }  /* PR_GetPipeMethods */
 
-PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods(void)
 {
     return &_pr_tcp_methods;
 }  /* PR_GetTCPMethods */
 
-PR_IMPLEMENT(const PRIOMethods*) PR_GetUDPMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetUDPMethods(void)
 {
     return &_pr_udp_methods;
 }  /* PR_GetUDPMethods */
 
-static const PRIOMethods* PR_GetSocketPollFdMethods()
+static const PRIOMethods* PR_GetSocketPollFdMethods(void)
 {
     return &_pr_socketpollfd_methods;
 }  /* PR_GetSocketPollFdMethods */
@@ -4017,14 +4017,14 @@ PR_IMPLEMENT(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags)
     return &dir->d;
 }  /* PR_ReadDir */
 
-PR_IMPLEMENT(PRFileDesc*) PR_NewUDPSocket()
+PR_IMPLEMENT(PRFileDesc*) PR_NewUDPSocket(void)
 {
     PRIntn domain = PF_INET;
 
     return PR_Socket(domain, SOCK_DGRAM, 0);
 }  /* PR_NewUDPSocket */
 
-PR_IMPLEMENT(PRFileDesc*) PR_NewTCPSocket()
+PR_IMPLEMENT(PRFileDesc*) PR_NewTCPSocket(void)
 {
     PRIntn domain = PF_INET;
 
@@ -4122,7 +4122,7 @@ PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
         {
             return PR_FAILURE;
         }
-        fd->secret->inheritable = inheritable;
+        fd->secret->inheritable = (_PRTriStateBool) inheritable;
     }
     return PR_SUCCESS;
 }

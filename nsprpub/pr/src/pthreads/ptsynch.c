@@ -1041,7 +1041,7 @@ PR_IMPLEMENT(PRStatus) PRP_TryLock(PRLock *lock)
     return (PT_TRYLOCK_SUCCESS == rv) ? PR_SUCCESS : PR_FAILURE;
 }  /* PRP_TryLock */
 
-PR_IMPLEMENT(PRCondVar*) PRP_NewNakedCondVar()
+PR_IMPLEMENT(PRCondVar*) PRP_NewNakedCondVar(void)
 {
     PRCondVar *cv;
 

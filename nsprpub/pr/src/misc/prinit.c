@@ -161,7 +161,7 @@ static void _pr_SetNativeThreadsOnlyMode(void)
 #endif
 
 #if !defined(_PR_INET6) || defined(_PR_INET6_PROBE)
-extern PRStatus _pr_init_ipv6();
+extern PRStatus _pr_init_ipv6(void);
 #endif
 
 static void _PR_InitStuff(void)
@@ -251,7 +251,7 @@ static void _PR_InitStuff(void)
     _PR_MD_FINAL_INIT();
 }
 
-void _PR_ImplicitInitialization()
+void _PR_ImplicitInitialization(void)
 {
 	_PR_InitStuff();
 
@@ -778,7 +778,7 @@ static struct {
     PRCondVar *cv;
 } mod_init;
 
-static void _PR_InitCallOnce() {
+static void _PR_InitCallOnce(void) {
     mod_init.ml = PR_NewLock();
     PR_ASSERT(NULL != mod_init.ml);
     mod_init.cv = PR_NewCondVar(mod_init.ml);

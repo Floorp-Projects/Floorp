@@ -66,7 +66,7 @@
 #include <sys/utsname.h>
 #endif
 
-PR_IMPLEMENT(char) PR_GetDirectorySeparator()
+PR_IMPLEMENT(char) PR_GetDirectorySeparator(void)
 {
     return PR_DIRECTORY_SEPARATOR;
 }  /* PR_GetDirectorySeparator */
@@ -74,7 +74,7 @@ PR_IMPLEMENT(char) PR_GetDirectorySeparator()
 /*
 ** OBSOLETE -- the function name is misspelled.
 */
-PR_IMPLEMENT(char) PR_GetDirectorySepartor()
+PR_IMPLEMENT(char) PR_GetDirectorySepartor(void)
 {
 #if defined(DEBUG)
     static PRBool warn = PR_TRUE;

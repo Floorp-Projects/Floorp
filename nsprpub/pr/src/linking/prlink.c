@@ -342,7 +342,7 @@ PR_IMPLEMENT(PRStatus) PR_SetLibraryPath(const char *path)
 ** Return the library path for finding shared libraries.
 */
 PR_IMPLEMENT(char *) 
-PR_GetLibraryPath()
+PR_GetLibraryPath(void)
 {
     char *ev;
     char *copy = NULL;  /* a copy of _pr_currentLibPath */
