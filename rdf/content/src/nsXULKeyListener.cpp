@@ -510,10 +510,10 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   // Locate the key node and execute the JS on a match.
   PRBool handled = PR_FALSE;
   
-  nsCAutoString browserFile = "chrome://global/content/browserBindings.xul";
-  nsCAutoString editorFile = "chrome://global/content/editorBindings.xul";
-  nsCAutoString browserPlatformFile = "chrome://global/content/platformBrowserBindings.xul";
-  nsCAutoString editorPlatformFile = "chrome://global/content/platformEditorBindings.xul";
+  nsCAutoString browserFile = "chrome://communicator/content/browserBindings.xul";
+  nsCAutoString editorFile = "chrome://communicator/content/editorBindings.xul";
+  nsCAutoString browserPlatformFile = "chrome://communicator/content/platformBrowserBindings.xul";
+  nsCAutoString editorPlatformFile = "chrome://communicator/content/platformEditorBindings.xul";
 
   nsresult result;
   nsCOMPtr<nsIDOMXULDocument> document;
