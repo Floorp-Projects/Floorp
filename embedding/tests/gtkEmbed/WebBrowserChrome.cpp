@@ -29,6 +29,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
+#include "nsIDOMWindow.h"
 #include "nsCWebBrowser.h"
 #include "nsWidgetsCID.h"
 #include "nsIWebBrowserSetup.h"
@@ -69,7 +70,13 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP WebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-   return QueryInterface(aIID, aInstancePtr);
+  *aInstancePtr = 0;
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
+    if (mWebBrowser)
+      return mWebBrowser->GetContentDOMWindow((nsIDOMWindow **) aInstancePtr);
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  return QueryInterface(aIID, aInstancePtr);
 }
 
 //*****************************************************************************
