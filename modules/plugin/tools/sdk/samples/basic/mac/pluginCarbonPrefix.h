@@ -21,3 +21,4 @@
  */
 
 #define XP_MAC 1
+#define TARGET_CARBON 1

@@ -52,17 +52,22 @@ public:
   NPError SetWindow(NPWindow* pNPWindow);
   uint16  HandleEvent(void* event);
 
+private:
   // locals
   const char * getVersion();
   void DoDraw();
-  NPWindow * mWindow;
-
-private:
   NPBool StartDraw(NPWindow* window);
   void EndDraw(NPWindow* window);
+  void DrawString(const unsigned char* text, short width, short height, short centerX, Rect drawRect);
 
+  NPWindow * mWindow;
   NPP mInstance;
   NPBool mInitialized;
+  GrafPtr mSavePort;
+  RgnHandle mSaveClip;
+  Rect mRevealedRect;
+  short mSavePortTop;
+  short mSavePortLeft;
 };
 
 #endif // __PLUGIN_H__

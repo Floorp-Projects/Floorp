@@ -35,9 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "plugin.h"
 
 #include <string.h>
-#include "plugin.h"
+
+#if !TARGET_API_MAC_CARBON
+extern QDGlobals*	gQDPtr;
+#endif
 
 
 //////////////////////////////////////
@@ -94,6 +98,7 @@ NPBool nsPluginInstance::init(NPWindow* aWindow)
   
   mWindow = aWindow;
   mInitialized = TRUE;
+  mSaveClip = NewRgn();
   return TRUE;
 }
 
@@ -113,16 +118,51 @@ const char * nsPluginInstance::getVersion()
   return NPN_UserAgent(mInstance);
 }
 
-CGrafPort gSavePort;
-CGrafPtr  gOldPort;
+/////////////////////////////////////////////////////////////
+//
+// DrawString
+//
+void
+nsPluginInstance::DrawString(const unsigned char* text, 
+                             short width, 
+                             short height, 
+                             short centerX, 
+                             Rect drawRect)
+{
+	short length, textHeight, textWidth;
+ 
+	if(text == NULL)
+		return;
+	
+	length = strlen((char*)text);
+	TextFont(1);
+	TextFace(bold);
+	TextMode(srcCopy);
+	TextSize(12);
+	
+	FontInfo fontInfo;
+	GetFontInfo(&fontInfo);
 
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * DoDraw
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
+	textHeight = fontInfo.ascent + fontInfo.descent + fontInfo.leading;
+	textWidth = TextWidth(text, 0, length);
+		
+	if (width > textWidth && height > textHeight)
+	{
+		MoveTo(centerX - (textWidth >> 1), height >> 1);
+		DrawText(text, 0, length);
+	}		
+}
+
+/////////////////////////////////////////////////////////////
+//
+// DoDraw - paint
+//
 void 
 nsPluginInstance::DoDraw(void)
 {
 	Rect drawRect;
+  RGBColor	black = { 0x0000, 0x0000, 0x0000 };
+  RGBColor	white = { 0xFFFF, 0xFFFF, 0xFFFF };
 	SInt32		height = mWindow->height;
 	SInt32		width = mWindow->width;
 	SInt32		centerX = (width) >> 1;
@@ -131,23 +171,32 @@ nsPluginInstance::DoDraw(void)
 	const char * ua = getVersion();
 	char* pascalString = (char*) NPN_MemAlloc(strlen(ua) + 1);
 	strcpy(pascalString, ua);
-	
+	UInt8		*pTheText = (unsigned char*) ua;
+
 	drawRect.top = 0;
 	drawRect.left = 0;
 	drawRect.bottom = drawRect.top + height;
 	drawRect.right = drawRect.left + width;
-	
-	EraseRect(&drawRect);
+
+  PenNormal();
+  RGBForeColor(&black);
+  RGBBackColor(&white);
+
+#if !TARGET_API_MAC_CARBON
+  FillRect(&drawRect, &(gQDPtr->white));
+#else
+  Pattern qdWhite;
+  FillRect(&drawRect, GetQDGlobalsWhite(&qdWhite));
+#endif
+
 	FrameRect(&drawRect);
-	MoveTo( centerX - 0.5 * StringWidth(c2pstr(pascalString)), centerY );
-	DrawString(c2pstr(pascalString));
+  DrawString(pTheText, width, height, centerX, drawRect);
 }
 
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * PlatformSetWindow
- *
- * Perform platform-specific window operations
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
+/////////////////////////////////////////////////////////////
+//
+// SetWindow
+//
 NPError
 nsPluginInstance::SetWindow(NPWindow* window)
 {
@@ -159,11 +208,10 @@ nsPluginInstance::SetWindow(NPWindow* window)
 	return NPERR_NO_ERROR;
 }
 
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * PlatformHandleEvent
- *
- * Handle platform-specific events.
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
+/////////////////////////////////////////////////////////////
+//
+// HandleEvent
+//
 uint16
 nsPluginInstance::HandleEvent(void* event)
 {
@@ -192,70 +240,56 @@ nsPluginInstance::HandleEvent(void* event)
 	return eventHandled;
 }
 
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * StartDraw
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
+/////////////////////////////////////////////////////////////
+//
+// StartDraw - setup port state
+//
 NPBool
 nsPluginInstance::StartDraw(NPWindow* window)
 {
-	NP_Port* port;
-	Rect clipRect;
-	RGBColor  col;
+	if (mWindow == NULL)
+		return false;
+		
+	NP_Port* npport = (NP_Port*) mWindow->window;
+	CGrafPtr ourPort = npport->port;
 	
-	if (window == NULL)
-		return FALSE;
-	port = (NP_Port*) window->window;
-	if (window->clipRect.left < window->clipRect.right)
+	if (mWindow->clipRect.left < mWindow->clipRect.right)
 	{
-	/* Preserve the old port */
-		GetPort((GrafPtr*)&gOldPort);
-		SetPort((GrafPtr)port->port);
-	/* Preserve the old drawing environment */
-		gSavePort.portRect = port->port->portRect;
-		gSavePort.txFont = port->port->txFont;
-		gSavePort.txFace = port->port->txFace;
-		gSavePort.txMode = port->port->txMode;
-		gSavePort.rgbFgColor = port->port->rgbFgColor;
-		gSavePort.rgbBkColor = port->port->rgbBkColor;
-		GetClip(gSavePort.clipRgn);
-	/* Setup our drawing environment */
-		clipRect.top = window->clipRect.top + port->porty;
-		clipRect.left = window->clipRect.left + port->portx;
-		clipRect.bottom = window->clipRect.bottom + port->porty;
-		clipRect.right = window->clipRect.right + port->portx;
-		SetOrigin(port->portx,port->porty);
-		ClipRect(&clipRect);
-		clipRect.top = clipRect.left = 0;
-		TextSize(12);
-		TextFont(20);
-		TextMode(srcCopy);
-		col.red = col.green = col.blue = 0;
-		RGBForeColor(&col);
-		col.red = col.green = col.blue = 65000;
-		RGBBackColor(&col);
-		return TRUE;
+		GetPort(&mSavePort);
+		SetPort((GrafPtr) ourPort);
+    Rect portRect;
+#if !TARGET_API_MAC_CARBON
+    portRect = ourPort->portRect;
+#else
+    GetPortBounds(ourPort, &portRect);
+#endif
+		mSavePortTop = portRect.top;
+		mSavePortLeft = portRect.left;
+		GetClip(mSaveClip);
+		
+		mRevealedRect.top = mWindow->clipRect.top + npport->porty;
+		mRevealedRect.left = mWindow->clipRect.left + npport->portx;
+		mRevealedRect.bottom = mWindow->clipRect.bottom + npport->porty;
+		mRevealedRect.right = mWindow->clipRect.right + npport->portx;
+		SetOrigin(npport->portx, npport->porty);
+		ClipRect(&mRevealedRect);
+
+		return true;
 	}
 	else
-		return FALSE;
+		return false;
 }
 
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * EndDraw
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
+/////////////////////////////////////////////////////////////
+//
+// EndDraw - restore port state
+//
 void
 nsPluginInstance::EndDraw(NPWindow* window)
 {
-	CGrafPtr myPort;
-	NP_Port* port = (NP_Port*) window->window;
-	SetOrigin(gSavePort.portRect.left, gSavePort.portRect.top);
-	SetClip(gSavePort.clipRgn);
-	GetPort((GrafPtr*)&myPort);
-	myPort->txFont = gSavePort.txFont;
-	myPort->txFace = gSavePort.txFace;
-	myPort->txMode = gSavePort.txMode;
-	RGBForeColor(&gSavePort.rgbFgColor);
-	RGBBackColor(&gSavePort.rgbBkColor);
-	SetPort((GrafPtr)gOldPort);
+	SetOrigin(mSavePortLeft, mSavePortTop);
+	SetClip(mSaveClip);
+	SetPort(mSavePort);
 }
 
 
