@@ -121,6 +121,7 @@ interface nsIMsgAccountManager : nsISupports {
 
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
+  void CloseCachedConnections();
   /* search for 4.x mailnews prefs, and migrate to 5.0 prefs */
   void UpgradePrefs();
 };

@@ -124,6 +124,14 @@ NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderC
 }
 
 NS_IMETHODIMP
+nsMsgIncomingServer::CloseCachedConnections()
+{
+	// derived class should override if they cache connections.
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsMsgIncomingServer::GetServerURI(char **)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -53,6 +53,7 @@ nsMsgMailSession::~nsMsgMailSession()
   {
 //	  if (m_msgFolderCache)
 //		m_accountManager->WriteToFolderCache(m_msgFolderCache);
+	  m_accountManager->CloseCachedConnections();
 	  m_accountManager->UnloadAccounts();
   }
 

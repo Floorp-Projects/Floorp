@@ -398,6 +398,7 @@ private:
 
   // write out the server's cache through the given folder cache
   static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
+  static PRBool closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
 
   // methods for migration / upgrading
   nsresult MigrateIdentity(nsIMsgIdentity *identity);
@@ -474,7 +475,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
 
 nsMsgAccountManager::~nsMsgAccountManager()
 {
-  
+  CloseCachedConnections();
   if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
   UnloadAccounts();
   NS_IF_RELEASE(m_accounts);
@@ -842,6 +843,16 @@ PRBool nsMsgAccountManager::writeFolderCache(nsHashKey *aKey, void *aData,
 	return PR_TRUE;
 }
 
+// enumaration for closing cached connections.
+PRBool nsMsgAccountManager::closeCachedConnections(nsHashKey *aKey, void *aData,
+                                             void *closure)
+{
+    nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
+
+	server->CloseCachedConnections();
+	return PR_TRUE;
+}
+
 
 /* readonly attribute nsISupportsArray accounts; */
 NS_IMETHODIMP
@@ -1094,6 +1105,12 @@ nsMsgAccountManager::UnloadAccounts()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgAccountManager::CloseCachedConnections()
+{
+	m_incomingServers.Enumerate(closeCachedConnections, nsnull);
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 nsMsgAccountManager::WriteToFolderCache(nsIMsgFolderCache *folderCache)

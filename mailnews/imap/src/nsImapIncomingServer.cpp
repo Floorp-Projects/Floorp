@@ -74,6 +74,7 @@ public:
 	NS_DECL_NSIIMAPSERVERSINK
     
 	NS_IMETHOD PerformBiff();
+	NS_IMETHOD CloseCachedConnections();
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
@@ -524,6 +525,30 @@ NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 	return rv;
 }
     
+NS_IMETHODIMP
+nsImapIncomingServer::CloseCachedConnections()
+{
+
+	nsCOMPtr<nsIImapProtocol> connection;
+    PR_CEnterMonitor(this);
+
+	// iterate through the connection cache closing open connections.
+	PRUint32 cnt;
+    nsCOMPtr<nsISupports> aSupport;
+
+    nsresult rv = m_connectionCache->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; i++) 
+	{
+        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+        connection = do_QueryInterface(aSupport);
+		if (connection)
+			rv = connection->TellThreadToDie(PR_TRUE);
+	}
+    
+    PR_CExitMonitor(this);
+	return rv;
+}
 
 nsresult NS_NewImapIncomingServer(const nsIID& iid,
                                   void **result)
@@ -1323,7 +1348,6 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aFolder
 	PRBool canRunUrl = PR_FALSE;
     PRBool hasToWait = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
-    nsCOMPtr<nsIImapProtocol> freeConnection;
     PRBool isBusy = PR_FALSE;
     PRBool isInboxConnection = PR_FALSE;
 

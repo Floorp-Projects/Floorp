@@ -83,6 +83,9 @@ interface nsIMsgIncomingServer : nsISupports {
 
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
+  // either we're going offline, or shutting down.
+  void CloseCachedConnections();
+
   /* access to generic attributes */
   boolean getBoolValue(in string attr);
   void setBoolValue(in string attr, in boolean value);
