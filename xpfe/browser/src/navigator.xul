@@ -234,7 +234,7 @@
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999052803">
+<!ENTITY  buildId.label "Build ID: 1999060414">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->
@@ -465,7 +465,7 @@
 
 	<template>
 		<rule iscontainer="true">
-			<menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" open="true" />
+			<menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
 		</rule>
 		<rule>
 			<menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" onclick="OpenBookmarkURL(event.target)" />
