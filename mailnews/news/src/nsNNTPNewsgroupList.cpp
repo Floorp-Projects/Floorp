@@ -547,6 +547,14 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 
 #define NEWS_ART_DISPLAY_FREQ		10
 
+#if 0
+nsresult
+nsNNTPNewsgroupList::ParseLine(const char *line, PRUint32 * message_number) {
+	*message_number = 500;
+	return NS_OK;
+}
+#endif
+
 nsresult
 nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 {
@@ -554,11 +562,18 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	PRUint32 message_number=0;
 	//  PRInt32 lines;
 	PRBool read_p = PR_FALSE;
+	nsresult rv = NS_OK;
 
 	PR_ASSERT (line);
 	if (!line)
       return NS_ERROR_NULL_POINTER;
-    
+#if 0    
+	rv = ParseLine(line, &message_number);
+	if (NS_FAILED(rv)) {
+		return rv;
+	}
+#endif
+
 #ifdef HAVE_DBVIEW
 	if (m_msgDBView != NULL)
 	{
