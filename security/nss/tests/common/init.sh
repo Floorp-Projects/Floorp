@@ -152,6 +152,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     TESTDIR=${TESTDIR-${MOZILLA_ROOT}/tests_results/security}
     OBJDIR=`(cd $COMMON; gmake objdir_name)`
     OS_ARCH=`(cd $COMMON; gmake os_arch)`
+    DLL_PREFIX=`(cd $COMMON; gmake dll_prefix)`
+    DLL_SUFFIX=`(cd $COMMON; gmake dll_suffix)`
     OS_NAME=`uname -s | sed -e "s/-[0-9]*\.[0-9]*//"`
 
 #in case of backward comp. tests the calling scripts set the
