@@ -83,7 +83,7 @@ static nsMsgRuleActionType GetActionForFilingStr(nsCString &actionStr);
 protected:
 	nsMsgFilterTypeType m_type;
 	PRBool			m_enabled;
-	nsCString		m_filterName;
+	nsString		m_filterName;
 	nsCString		m_scriptFileName;	// iff this filter is a script.
 	nsCString		m_description;
     PRBool         m_dontFileMe;

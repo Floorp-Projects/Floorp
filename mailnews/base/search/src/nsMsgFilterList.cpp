@@ -23,6 +23,8 @@
 
 // this file implements the nsMsgFilterList interface 
 
+#include "nsTextFormatter.h"
+
 #include "msgCore.h"
 #include "nsMsgFilterList.h"
 #include "nsMsgFilter.h"
@@ -30,6 +32,13 @@
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
 #include "nsMsgSearchTerm.h"
+
+// unicode "%s" format string
+static const PRUnichar unicodeFormatter[] = {
+    (PRUnichar)'%',
+    (PRUnichar)'s',
+    (PRUnichar)0,
+};
 
 
 nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
@@ -61,7 +70,7 @@ NS_IMETHODIMP nsMsgFilterList::QueryInterface(REFNSIID aIID, void** aResult)
     return NS_NOINTERFACE;
 }   
 
-NS_IMETHODIMP nsMsgFilterList::CreateFilter(const char *name,class nsIMsgFilter **aFilter)
+NS_IMETHODIMP nsMsgFilterList::CreateFilter(const PRUnichar *name,class nsIMsgFilter **aFilter)
 {
 	if (!aFilter)
 		return NS_ERROR_NULL_POINTER;
@@ -431,7 +440,11 @@ nsresult nsMsgFilterList::LoadTextFilters()
 				break;
 			}
 			filter->SetFilterList(NS_STATIC_CAST(nsIMsgFilterList*,this));
-			filter->SetFilterName(value.GetBuffer());
+
+            PRUnichar *unicodeString =
+                nsTextFormatter::smprintf(unicodeFormatter, value.GetBuffer());
+			filter->SetFilterName(unicodeString);
+            nsTextFormatter::smprintf_free(unicodeString);
 			m_curFilter = filter;
 			m_filters->AppendElement(filter);
 		}
@@ -601,6 +614,16 @@ nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttribValue attrib, PRBoo
 {
 	nsCString strToWrite((boolVal) ? "yes" : "no");
 	return WriteStrAttr(attrib, strToWrite);
+}
+
+nsresult
+nsMsgFilterList::WriteWstrAttr(nsMsgFilterFileAttribValue attrib,
+                               const PRUnichar *aFilterName)
+{
+    char* utf8Name = nsAutoString(aFilterName).ToNewUTF8String();
+    WriteStrAttr(attrib, utf8Name);
+    ::Recycle(utf8Name);
+    return NS_OK;
 }
 
 nsresult nsMsgFilterList::SaveTextFilters()

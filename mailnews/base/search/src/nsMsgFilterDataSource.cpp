@@ -341,9 +341,10 @@ nsMsgFilterDataSource::getFilterTarget(nsIMsgFilter *aFilter,
 {
 
     if (aProperty == kNC_Name.get()) {
-        nsXPIDLCString filterName;
+        nsXPIDLString filterName;
         aFilter->GetFilterName(getter_Copies(filterName));
-        return createNode((const char*)filterName, aResult, getRDFService());
+        return createNode((const PRUnichar*)filterName, aResult,
+                          getRDFService());
         
     } else if (aProperty == kNC_Enabled.get()) {
         PRBool enabled;

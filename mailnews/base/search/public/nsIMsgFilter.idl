@@ -33,7 +33,7 @@ interface nsOutputStream;
 interface nsIMsgFilter : nsISupports {
     readonly attribute nsMsgFilterTypeType filterType;
     attribute boolean enabled;
-    attribute string filterName;
+    attribute wstring filterName;
     attribute string filterDesc;
 
     readonly attribute nsIMsgFilterList filterList; // owning filter list

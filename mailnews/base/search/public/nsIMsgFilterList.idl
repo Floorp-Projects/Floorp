@@ -69,7 +69,7 @@ interface nsIMsgFilterList : nsISupports {
 
     attribute boolean loggingEnabled;
 
-    nsIMsgFilter createFilter(in string name);
+    nsIMsgFilter createFilter(in wstring name);
 
     void saveToFile(in nsIOFileStream stream);
 
@@ -88,6 +88,7 @@ interface nsIMsgFilterList : nsISupports {
 	// IO routines, used by filter object filing code.
     void writeIntAttr(in nsMsgFilterFileAttribValue attrib, in long value);
     void writeStrAttr(in nsMsgFilterFileAttribValue attrib, in string value);
+    void writeWstrAttr(in nsMsgFilterFileAttribValue attrib, in wstring value);
     void writeBoolAttr(in nsMsgFilterFileAttribValue attrib, in boolean value);
 };
 

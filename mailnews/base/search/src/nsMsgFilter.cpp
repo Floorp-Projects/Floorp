@@ -101,15 +101,15 @@ NS_IMETHODIMP nsMsgFilter::SetEnabled(PRBool enabled)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::GetFilterName(char **name)
+NS_IMETHODIMP nsMsgFilter::GetFilterName(PRUnichar **name)
 {
     NS_ENSURE_ARG_POINTER(name);
     
-    *name = m_filterName.ToNewCString();
+    *name = m_filterName.ToNewUnicode();
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::SetFilterName(const char *name)
+NS_IMETHODIMP nsMsgFilter::SetFilterName(const PRUnichar *name)
 {
     m_filterName.Assign(name);
 	return NS_OK;
@@ -273,7 +273,6 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
 
 NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHdr)
 {
-	char	*filterName = "";
 	PRTime	date;
 	char	dateStr[40];	/* 30 probably not enough */
 	nsMsgRuleActionType actionType;
@@ -281,8 +280,9 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
     
 	nsXPIDLCString	author;
 	nsXPIDLCString	subject;
+    nsXPIDLString filterName;
 
-	GetFilterName(&filterName);
+	GetFilterName(getter_Copies(filterName));
 	GetAction(&actionType);
 	nsresult res;
     res = msgHdr->GetDate(&date);
@@ -294,8 +294,12 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 	msgHdr->GetSubject(getter_Copies(subject));
 	if (stream)
 	{
+        char *utf8name = nsAutoString(filterName).ToNewUTF8String();
+        
 		*stream << "Applied filter \"";
-		*stream << filterName;
+		*stream << utf8name;
+        ::Recycle(utf8name);
+        
 		*stream << "\" to message from ";
 		*stream << (const char*)author;
 		*stream << " - ";
@@ -315,6 +319,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
         } else {
             *stream << "";
         }
+        
 		*stream << "\n\n";
 //		XP_FilePrintf(*m_logFile, "Action = %s %s\n\n", actionStr, actionValue);
 		if (actionType == nsMsgFilterAction::MoveToFolder)
@@ -454,7 +459,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 
 nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *stream)
 {
-	nsresult err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribName, m_filterName);
+	nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.GetUnicode());
 	err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled);
 	err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description);
 	err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type);
