@@ -127,22 +127,20 @@ nsSocketTransportService::AttachSocket(PRFileDesc *fd, nsASocketHandler *handler
 {
     LOG(("nsSocketTransportService::AttachSocket [handler=%x]\n", handler));
 
-    NS_ENSURE_TRUE(mServicingEventQ, NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(mIdleCount < NS_SOCKET_MAX_COUNT, NS_ERROR_UNEXPECTED);
+    SocketContext sock;
+    sock.mFD = fd;
+    sock.mHandler = handler;
 
-    SocketContext *sock = &mIdleList[mIdleCount];
-    sock->mFD = fd;
-    sock->mHandler = handler;
-    NS_ADDREF(handler);
-
-    mIdleCount++;
-    return NS_OK;
+    nsresult rv = AddToIdleList(&sock);
+    if (NS_SUCCEEDED(rv))
+        NS_ADDREF(handler);
+    return rv;
 }
 
 nsresult
-nsSocketTransportService::DetachSocket_Internal(SocketContext *sock)
+nsSocketTransportService::DetachSocket(SocketContext *sock)
 {
-    LOG(("nsSocketTransportService::DetachSocket_Internal [handler=%x]\n", sock->mHandler));
+    LOG(("nsSocketTransportService::DetachSocket [handler=%x]\n", sock->mHandler));
 
     // inform the handler that this socket is going away
     sock->mHandler->OnSocketDetached(sock->mFD);
@@ -151,9 +149,9 @@ nsSocketTransportService::DetachSocket_Internal(SocketContext *sock)
     sock->mFD = nsnull;
     NS_RELEASE(sock->mHandler);
 
-    // find out what list this is on...
-    PRInt32 index = sock - mActiveList;
-    if (index > 0 && index <= NS_SOCKET_MAX_COUNT)
+    // find out what list this is on.
+    PRUint32 index = sock - mActiveList;
+    if (index < NS_SOCKET_MAX_COUNT)
         RemoveFromPollList(sock);
     else
         RemoveFromIdleList(sock);
@@ -167,9 +165,14 @@ nsSocketTransportService::AddToPollList(SocketContext *sock)
 {
     LOG(("nsSocketTransportService::AddToPollList [handler=%x]\n", sock->mHandler));
 
-    NS_ASSERTION(mActiveCount < NS_SOCKET_MAX_COUNT, "too many active sockets");
+    if (mActiveCount == NS_SOCKET_MAX_COUNT) {
+        NS_ERROR("too many active sockets");
+        return NS_ERROR_UNEXPECTED;
+    }
 
-    memcpy(&mActiveList[++mActiveCount], sock, sizeof(SocketContext));
+    mActiveList[mActiveCount] = *sock;
+    mActiveCount++;
+
     mPollList[mActiveCount].fd = sock->mFD;
     mPollList[mActiveCount].in_flags = sock->mHandler->mPollFlags;
     mPollList[mActiveCount].out_flags = 0;
@@ -184,13 +187,13 @@ nsSocketTransportService::RemoveFromPollList(SocketContext *sock)
     LOG(("nsSocketTransportService::RemoveFromPollList [handler=%x]\n", sock->mHandler));
 
     PRUint32 index = sock - mActiveList;
-    NS_ASSERTION(index > 0 && index <= NS_SOCKET_MAX_COUNT, "invalid index");
+    NS_ASSERTION(index < NS_SOCKET_MAX_COUNT, "invalid index");
 
     LOG(("  index=%u mActiveCount=%u\n", index, mActiveCount));
 
-    if (index != mActiveCount) {
-        memcpy(&mActiveList[index], &mActiveList[mActiveCount], sizeof(SocketContext));
-        memcpy(&mPollList[index], &mPollList[mActiveCount], sizeof(PRPollDesc));
+    if (index != mActiveCount-1) {
+        mActiveList[index] = mActiveList[mActiveCount-1];
+        mPollList[index+1] = mPollList[mActiveCount];
     }
     mActiveCount--;
 
@@ -202,8 +205,12 @@ nsSocketTransportService::AddToIdleList(SocketContext *sock)
 {
     LOG(("nsSocketTransportService::AddToIdleList [handler=%x]\n", sock->mHandler));
 
-    NS_ASSERTION(mIdleCount < NS_SOCKET_MAX_COUNT, "too many idle sockets");
-    memcpy(&mIdleList[mIdleCount], sock, sizeof(SocketContext));
+    if (mIdleCount == NS_SOCKET_MAX_COUNT) {
+        NS_ERROR("too many idle sockets");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    mIdleList[mIdleCount] = *sock;
     mIdleCount++;
 
     LOG(("  active=%u idle=%u\n", mActiveCount, mIdleCount));
@@ -215,14 +222,34 @@ nsSocketTransportService::RemoveFromIdleList(SocketContext *sock)
 {
     LOG(("nsSocketTransportService::RemoveFromIdleList [handler=%x]\n", sock->mHandler));
 
-    PRInt32 index = sock - &mIdleList[0];
-    NS_ASSERTION(index >= 0 && index < NS_SOCKET_MAX_COUNT, "invalid index");
+    PRUint32 index = sock - &mIdleList[0];
+    NS_ASSERTION(index < NS_SOCKET_MAX_COUNT, "invalid index");
 
-    if (index != (PRInt32) mIdleCount - 1)
-        memcpy(&mIdleList[index], &mIdleList[mIdleCount - 1], sizeof(SocketContext));
+    if (index != mIdleCount-1)
+        mIdleList[index] = mIdleList[mIdleCount-1];
     mIdleCount--;
 
     LOG(("  active=%u idle=%u\n", mActiveCount, mIdleCount));
+}
+
+void
+nsSocketTransportService::MoveToIdleList(SocketContext *sock)
+{
+    nsresult rv = AddToIdleList(sock);
+    if (NS_FAILED(rv))
+        DetachSocket(sock);
+    else
+        RemoveFromPollList(sock);
+}
+
+void
+nsSocketTransportService::MoveToPollList(SocketContext *sock)
+{
+    nsresult rv = AddToPollList(sock);
+    if (NS_FAILED(rv))
+        DetachSocket(sock);
+    else
+        RemoveFromIdleList(sock);
 }
 
 PRInt32
@@ -233,13 +260,14 @@ nsSocketTransportService::Poll()
     PRIntervalTime pollTimeout;
 
     if (mPollList[0].fd) {
+        mPollList[0].out_flags = 0;
         pollList = mPollList;
-        pollCount = PollCount();
+        pollCount = mActiveCount + 1;
         pollTimeout = NS_SOCKET_POLL_TIMEOUT;
     }
     else {
         // no pollable event, so busy wait...
-        pollCount = PollCount() - 1;
+        pollCount = mActiveCount;
         if (pollCount)
             pollList = &mPollList[1];
         else
@@ -268,7 +296,6 @@ nsSocketTransportService::ServiceEventQ()
         keepGoing = mInitialized;
     }
     // service the event queue
-    mServicingEventQ = PR_TRUE;
     while (head) {
         head->mHandler->OnSocketEvent(head->mType,
                                       head->mUparam,
@@ -278,7 +305,6 @@ nsSocketTransportService::ServiceEventQ()
         delete head;
         head = event;
     }
-    mServicingEventQ = PR_FALSE;
     return keepGoing;
 }
 
@@ -491,16 +517,10 @@ nsSocketTransportService::Run()
     PL_DHashTableInit(&mHostDB, &ops, nsnull, sizeof(nsHostEntry), 0);
 
     //
-    // setup thread
+    // add thread event to poll list (mThreadEvent may be NULL)
     //
-    if (mThreadEvent) {
-        mPollList[0].fd = mThreadEvent;
-        mPollList[0].in_flags = PR_POLL_READ;
-    }
-    else {
-        mPollList[0].fd = nsnull;
-        mPollList[0].in_flags = 0;
-    }
+    mPollList[0].fd = mThreadEvent;
+    mPollList[0].in_flags = PR_POLL_READ;
 
     PRInt32 i, count;
 
@@ -509,51 +529,44 @@ nsSocketTransportService::Run()
     //
     PRBool active = PR_TRUE;
     while (active) {
-        // clear out flags for pollable event
-        mPollList[0].out_flags = 0;
-
         //
         // walk active list backwards to see if any sockets should actually be
         // idle, then walk the idle list backwards to see if any idle sockets
-        // should become active.  take care to only check idle sockets that
+        // should become active.  take care to check only idle sockets that
         // were idle to begin with ;-)
         //
         count = mIdleCount;
-        if (mActiveCount) {
-            for (i=mActiveCount; i>=1; --i) {
-                //---
-                LOG(("  active [%d] { handler=%x condition=%x pollflags=%hu }\n", i,
-                    mActiveList[i].mHandler,
-                    mActiveList[i].mHandler->mCondition,
-                    mActiveList[i].mHandler->mPollFlags));
-                //---
-                if (NS_FAILED(mActiveList[i].mHandler->mCondition))
-                    DetachSocket_Internal(&mActiveList[i]);
+        for (i=mActiveCount-1; i>=0; --i) {
+            //---
+            LOG(("  active [%u] { handler=%x condition=%x pollflags=%hu }\n", i,
+                mActiveList[i].mHandler,
+                mActiveList[i].mHandler->mCondition,
+                mActiveList[i].mHandler->mPollFlags));
+            //---
+            if (NS_FAILED(mActiveList[i].mHandler->mCondition))
+                DetachSocket(&mActiveList[i]);
+            else {
+                PRUint16 in_flags = mActiveList[i].mHandler->mPollFlags;
+                if (in_flags == 0)
+                    MoveToIdleList(&mActiveList[i]);
                 else {
-                    PRUint16 in_flags = mActiveList[i].mHandler->mPollFlags;
-                    if (in_flags == 0)
-                        MoveToIdleList(&mActiveList[i]);
-                    else {
-                        // update poll flags
-                        mPollList[i].in_flags = in_flags;
-                        mPollList[i].out_flags = 0;
-                    }
+                    // update poll flags
+                    mPollList[i+1].in_flags = in_flags;
+                    mPollList[i+1].out_flags = 0;
                 }
             }
         }
-        if (count) {
-            for (i=count-1; i>=0; --i) {
-                //---
-                LOG(("  idle [%d] { handler=%x condition=%x pollflags=%hu }\n", i,
-                    mIdleList[i].mHandler,
-                    mIdleList[i].mHandler->mCondition,
-                    mIdleList[i].mHandler->mPollFlags));
-                //---
-                if (NS_FAILED(mIdleList[i].mHandler->mCondition))
-                    DetachSocket_Internal(&mIdleList[i]);
-                else if (mIdleList[i].mHandler->mPollFlags != 0)
-                    MoveToPollList(&mIdleList[i]);
-            }
+        for (i=count-1; i>=0; --i) {
+            //---
+            LOG(("  idle [%u] { handler=%x condition=%x pollflags=%hu }\n", i,
+                mIdleList[i].mHandler,
+                mIdleList[i].mHandler->mCondition,
+                mIdleList[i].mHandler->mPollFlags));
+            //---
+            if (NS_FAILED(mIdleList[i].mHandler->mCondition))
+                DetachSocket(&mIdleList[i]);
+            else if (mIdleList[i].mHandler->mPollFlags != 0)
+                MoveToPollList(&mIdleList[i]);
         }
 
         LOG(("  calling PR_Poll [active=%u idle=%u]\n", mActiveCount, mIdleCount));
@@ -564,16 +577,14 @@ nsSocketTransportService::Run()
             active = PR_FALSE;
         }
         else if (n > 0) {
-            count = PollCount();
-
             //
             // service "active" sockets...
             //
-            for (i=1; i<count; ++i) {
-                if (mPollList[i].out_flags != 0) {
+            for (i=0; i<PRInt32(mActiveCount); ++i) {
+                PRPollDesc &desc = mPollList[i+1];
+                if (desc.out_flags != 0) {
                     nsASocketHandler *handler = mActiveList[i].mHandler;
-                    handler->OnSocketReady(mPollList[i].fd,
-                                           mPollList[i].out_flags);
+                    handler->OnSocketReady(desc.fd, desc.out_flags);
                 }
             }
 
@@ -581,9 +592,9 @@ nsSocketTransportService::Run()
             // check for "dead" sockets and remove them (need to do this in
             // reverse order obviously).
             //
-            for (i=count-1; i>=1; --i) {
+            for (i=mActiveCount-1; i>=0; --i) {
                 if (NS_FAILED(mActiveList[i].mHandler->mCondition))
-                    DetachSocket_Internal(&mActiveList[i]);
+                    DetachSocket(&mActiveList[i]);
             }
 
             //
@@ -611,10 +622,10 @@ nsSocketTransportService::Run()
     LOG(("shutting down socket transport thread...\n"));
 
     // detach any sockets
-    for (i=mActiveCount; i>=1; --i)
-        DetachSocket_Internal(&mActiveList[i]);
+    for (i=mActiveCount-1; i>=0; --i)
+        DetachSocket(&mActiveList[i]);
     for (i=mIdleCount-1; i>=0; --i)
-        DetachSocket_Internal(&mIdleList[i]);
+        DetachSocket(&mIdleList[i]);
 
     // clear the hostname database
     PL_DHashTableFinish(&mHostDB);
