@@ -1063,7 +1063,6 @@ nsRuleNode::GetUIResetData(nsStyleContext* aContext)
   ruleData.mUserInterfaceData = &uiData;
 
   const nsStyleStruct* res = WalkRuleTree(eStyleStruct_UIReset, aContext, &ruleData, &uiData);
-  uiData.mKeyEquivalent = nsnull;
   return res;
 }
 
