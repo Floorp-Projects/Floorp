@@ -26,7 +26,7 @@
 /* ::::: formatting buttons ::::: */
 
 #FormatToolbar > toolbarbutton {
-  min-width: 3em;
+  min-width: 32px;
 }
  
 #FormatToolbar > toolbarbutton > .toolbarbutton-text {
