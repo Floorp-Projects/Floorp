@@ -127,10 +127,6 @@ NS_METHOD nsAppShell::Create(int *argc, char **argv)
 
 //  gtk_rc_init();
 
-  // Create the selection manager
-  if (!mSelectionMgr)
-      NS_NewSelectionMgr(&mSelectionMgr);
-
   return NS_OK;
 }
 
