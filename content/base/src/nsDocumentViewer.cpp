@@ -232,10 +232,6 @@ static PRUint32 gDumpLOFileNameCnt = 0;
 #endif
 
 #define PRT_YESNO(_p) ((_p)?"YES":"NO")
-static const char * gFrameTypesStr[]       = {"eDoc", "eFrame", "eIFrame", "eFrameSet"};
-static const char * gPrintFrameTypeStr[]   = {"kNoFrames", "kFramesAsIs", "kSelectedFrame", "kEachFrameSep"};
-static const char * gFrameHowToEnableStr[] = {"kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
-static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection", "kRangeFocusFrame"};
 #else
 #define PRT_YESNO(_p)
 #define PR_PL(_p1)
