@@ -429,6 +429,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
   char *urlCString = nsnull;
   char * unescapedDisplayName = nsnull;
   nsCOMPtr<nsIURI> aURL;
+  nsAutoString tempStr;
   
   NS_WITH_SERVICE(nsIStreamConverterService,
                   streamConverterService,  
@@ -459,7 +460,6 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
      The display name is in UTF-8 because it has been escaped from JS
   */ 
   
-  nsAutoString tempStr;
   rv = ConvertToUnicode("UTF-8", unescapedDisplayName, tempStr);
   if (NS_SUCCEEDED(rv))
   {
