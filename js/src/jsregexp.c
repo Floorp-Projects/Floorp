@@ -1227,10 +1227,10 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     if (!re)
 	goto out;
     re->nrefs = 1;
-    re->source = str;
-    re->lastIndex = 0;
     re->parenCount = state.parenCount;
     re->flags = flags;
+    re->lastIndex = 0;
+    re->source = str;
 #ifdef JS_THREADSAFE
     re->owningThread = 0;
     re->lastIndexes = NULL;
@@ -1247,14 +1247,14 @@ out:
 typedef struct LastIndexEntry {
     JSDHashEntryHdr     hdr;
     jsword              thread;
-    uintN               index;
+    double              index;
 } LastIndexEntry;
 #endif
 
 /*
  * NB: Get and SetLastIndex must be called with re's owning object locked.
  */
-static uintN
+static double
 GetLastIndex(JSContext *cx, JSRegExp *re)
 {
 #ifdef JS_THREADSAFE
@@ -1279,7 +1279,7 @@ GetLastIndex(JSContext *cx, JSRegExp *re)
 }
 
 static JSBool
-SetLastIndex(JSContext *cx, JSRegExp *re, uintN lastIndex)
+SetLastIndex(JSContext *cx, JSRegExp *re, double lastIndex)
 {
 #ifdef JS_THREADSAFE
     if (!re->owningThread) {
@@ -2440,7 +2440,7 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         JS_LOCK_OBJ(cx, obj);
         re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
         if (re)
-            ok = SetLastIndex(cx, re, (uintN)d);
+            ok = SetLastIndex(cx, re, d);
         JS_UNLOCK_OBJ(cx, obj);
     }
     return ok;
