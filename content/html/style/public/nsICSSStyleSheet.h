@@ -24,6 +24,7 @@
 class nsICSSRule;
 class nsIDOMNode;
 class nsINameSpace;
+class nsICSSStyleRuleProcessor;
 
 // IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_SHEET_IID     \
@@ -62,6 +63,8 @@ public:
 
   NS_IMETHOD  IsUnmodified(void) const = 0; // NS_OK if not modified since construct/last reset, NS_COMFALSE otherwise
   NS_IMETHOD  SetModified(PRBool aModified) = 0;
+
+  NS_IMETHOD  DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor) = 0;
 };
 
 // XXX for backwards compatibility and convenience

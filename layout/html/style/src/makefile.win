@@ -29,6 +29,7 @@ EXPORTS =			\
 	nsCSSProps.h 		\
 	nsCSSPropList.h 		\
 	nsCSSValue.h 		\
+	nsICSSStyleRuleProcessor.h 		\
 	nsICSSRule.h 	\
 	nsICSSGroupRule.h 	\
 	nsICSSStyleRule.h 	\

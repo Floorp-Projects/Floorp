@@ -29,6 +29,7 @@ class nsIPresContext;
 class nsIContent;
 class nsIDocument;
 class nsIStyleContext;
+class nsIStyleRuleProcessor;
 
 // IID for the nsIStyleSheet interface {8c4a80a0-ad6a-11d1-8031-006008159b5a}
 #define NS_ISTYLE_SHEET_IID     \
@@ -54,22 +55,9 @@ public:
   NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const = 0; // may be null
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument) = 0;
 
-  // populate supports array with nsIStyleRule*
-  // rules are ordered, those with higher precedence come last
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aContent,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults) = 0;
-
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aParentContent,
-                                nsIAtom* aPseudoTag,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults) = 0;
-
-  // Test if style is dependent on content state
-  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
-                                     nsIContent*     aContent) = 0;
+  // style rule processor access
+  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                   nsIStyleRuleProcessor* aPrevProcessor) = 0;
 
   // XXX style rule enumerations
 

@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
+#include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
 #include "nsIStyleContext.h"
 #include "nsISupportsArray.h"
@@ -174,15 +175,22 @@ private:
 protected:
   virtual ~StyleSetImpl();
   PRBool EnsureArray(nsISupportsArray** aArray);
+  void RecycleArray(nsISupportsArray** aArray);
+  void  ClearRuleProcessors(void);
+  nsresult  GatherRuleProcessors(void);
+
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIStyleContext* aParentContext, 
                               nsIAtom* aPseudoTag, nsISupportsArray* aRules, PRBool aForceUnique, 
                               PRBool& aUsedRules);
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
   void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
 
-  nsISupportsArray* mOverrideSheets;
-  nsISupportsArray* mDocSheets;
-  nsISupportsArray* mBackstopSheets;
+  nsISupportsArray* mOverrideSheets;  // most significant first
+  nsISupportsArray* mDocSheets;       // " "
+  nsISupportsArray* mBackstopSheets;  // " "
+
+  nsISupportsArray* mRuleProcessors;  // least significant first
+
   nsISupportsArray* mRecycler;
 
   nsIStyleFrameConstruction* mFrameConstructor;
@@ -198,6 +206,7 @@ StyleSetImpl::StyleSetImpl()
   : mOverrideSheets(nsnull),
     mDocSheets(nsnull),
     mBackstopSheets(nsnull),
+    mRuleProcessors(nsnull),
     mRecycler(nsnull),
     mFrameConstructor(nsnull)
 {
@@ -211,6 +220,7 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mOverrideSheets);
   NS_IF_RELEASE(mDocSheets);
   NS_IF_RELEASE(mBackstopSheets);
+  NS_IF_RELEASE(mRuleProcessors);
   NS_IF_RELEASE(mFrameConstructor);
   NS_IF_RELEASE(mRecycler);
 }
@@ -224,12 +234,93 @@ NS_IMPL_ISUPPORTS2(StyleSetImpl, nsIStyleSet, nsITimeRecorder)
 PRBool StyleSetImpl::EnsureArray(nsISupportsArray** aArray)
 {
   if (nsnull == *aArray) {
-    if (NS_OK != NS_NewISupportsArray(aArray)) {
-      return PR_FALSE;
+    (*aArray) = mRecycler;
+    mRecycler = nsnull;
+    if (nsnull == *aArray) {
+      if (NS_OK != NS_NewISupportsArray(aArray)) {
+        return PR_FALSE;
+      }
     }
   }
   return PR_TRUE;
 }
+
+void
+StyleSetImpl::RecycleArray(nsISupportsArray** aArray)
+{
+  if (! mRecycler) {
+    mRecycler = *aArray;  // take ref
+    mRecycler->Clear();
+    *aArray = nsnull; 
+  }
+  else {  // already have a recycled array
+    NS_RELEASE(*aArray);
+  }
+}
+
+void  
+StyleSetImpl::ClearRuleProcessors(void)
+{
+  if (mRuleProcessors) {
+    RecycleArray(&mRuleProcessors);
+  }
+}
+  
+struct RuleProcessorData {
+  RuleProcessorData(nsISupportsArray* aRuleProcessors) 
+    : mRuleProcessors(aRuleProcessors),
+      mPrevProcessor(nsnull)
+  {}
+
+  nsISupportsArray*       mRuleProcessors;
+  nsIStyleRuleProcessor*  mPrevProcessor;
+};
+
+static PRBool
+EnumRuleProcessor(nsISupports* aSheet, void* aData)
+{
+  nsIStyleSheet*  sheet = (nsIStyleSheet*)aSheet;
+  RuleProcessorData* data = (RuleProcessorData*)aData;
+
+  nsIStyleRuleProcessor* processor = nsnull;
+  nsresult result = sheet->GetStyleRuleProcessor(processor, data->mPrevProcessor);
+  if (NS_SUCCEEDED(result) && processor) {
+    if (processor != data->mPrevProcessor) {
+      data->mRuleProcessors->AppendElement(processor);
+      data->mPrevProcessor = processor; // ref is held by array
+    }
+    NS_RELEASE(processor);
+  }
+  return PR_TRUE;
+}
+
+nsresult
+StyleSetImpl::GatherRuleProcessors(void)
+{
+  nsresult result = NS_ERROR_OUT_OF_MEMORY;
+  if (EnsureArray(&mRuleProcessors)) {
+    RuleProcessorData data(mRuleProcessors);
+    if (mBackstopSheets) {
+      mBackstopSheets->EnumerateBackwards(EnumRuleProcessor, &data);
+    }
+    if (mDocSheets) {
+      data.mPrevProcessor = nsnull;
+      mDocSheets->EnumerateBackwards(EnumRuleProcessor, &data);
+    }
+    if (mOverrideSheets) {
+      data.mPrevProcessor = nsnull;
+      mOverrideSheets->EnumerateBackwards(EnumRuleProcessor, &data);
+    }
+    result = NS_OK;
+    PRUint32 count;
+    mRuleProcessors->Count(&count);
+    if (0 == count) {
+      RecycleArray(&mRuleProcessors);
+    }
+  }
+  return result;
+}
+
 
 // ----- Override sheets
 
@@ -239,6 +330,7 @@ void StyleSetImpl::AppendOverrideStyleSheet(nsIStyleSheet* aSheet)
   if (EnsureArray(&mOverrideSheets)) {
     mOverrideSheets->RemoveElement(aSheet);
     mOverrideSheets->AppendElement(aSheet);
+    ClearRuleProcessors();
   }
 }
 
@@ -250,6 +342,7 @@ void StyleSetImpl::InsertOverrideStyleSheetAfter(nsIStyleSheet* aSheet,
     mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aAfterSheet);
     mOverrideSheets->InsertElementAt(aSheet, ++index);
+    ClearRuleProcessors();
   }
 }
 
@@ -261,6 +354,7 @@ void StyleSetImpl::InsertOverrideStyleSheetBefore(nsIStyleSheet* aSheet,
     mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aBeforeSheet);
     mOverrideSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
+    ClearRuleProcessors();
   }
 }
 
@@ -270,6 +364,7 @@ void StyleSetImpl::RemoveOverrideStyleSheet(nsIStyleSheet* aSheet)
 
   if (nsnull != mOverrideSheets) {
     mOverrideSheets->RemoveElement(aSheet);
+    ClearRuleProcessors();
   }
 }
 
@@ -325,6 +420,7 @@ void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocumen
     if (nsnull == mFrameConstructor) {
       aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
     }
+    ClearRuleProcessors();
   }
 }
 
@@ -334,6 +430,7 @@ void StyleSetImpl::RemoveDocStyleSheet(nsIStyleSheet* aSheet)
 
   if (nsnull != mDocSheets) {
     mDocSheets->RemoveElement(aSheet);
+    ClearRuleProcessors();
   }
 }
 
@@ -365,6 +462,7 @@ void StyleSetImpl::AppendBackstopStyleSheet(nsIStyleSheet* aSheet)
   if (EnsureArray(&mBackstopSheets)) {
     mBackstopSheets->RemoveElement(aSheet);
     mBackstopSheets->AppendElement(aSheet);
+    ClearRuleProcessors();
   }
 }
 
@@ -376,6 +474,7 @@ void StyleSetImpl::InsertBackstopStyleSheetAfter(nsIStyleSheet* aSheet,
     mBackstopSheets->RemoveElement(aSheet);
     PRInt32 index = mBackstopSheets->IndexOf(aAfterSheet);
     mBackstopSheets->InsertElementAt(aSheet, ++index);
+    ClearRuleProcessors();
   }
 }
 
@@ -387,6 +486,7 @@ void StyleSetImpl::InsertBackstopStyleSheetBefore(nsIStyleSheet* aSheet,
     mBackstopSheets->RemoveElement(aSheet);
     PRInt32 index = mBackstopSheets->IndexOf(aBeforeSheet);
     mBackstopSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
+    ClearRuleProcessors();
   }
 }
 
@@ -396,6 +496,7 @@ void StyleSetImpl::RemoveBackstopStyleSheet(nsIStyleSheet* aSheet)
 
   if (nsnull != mBackstopSheets) {
     mBackstopSheets->RemoveElement(aSheet);
+    ClearRuleProcessors();
   }
 }
 
@@ -429,8 +530,7 @@ struct RulesMatchingData {
       mMedium(aMedium),
       mContent(aContent),
       mParentContext(aParentContext),
-      mResults(aResults),
-      mCount(0)
+      mResults(aResults)
   {
   }
   nsIPresContext*   mPresContext;
@@ -438,20 +538,16 @@ struct RulesMatchingData {
   nsIContent*       mContent;
   nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
-  PRInt32           mCount;
-
 };
 
 static PRBool
-EnumRulesMatching(nsISupports* aSheet, void* aData)
+EnumRulesMatching(nsISupports* aProcessor, void* aData)
 {
-  nsIStyleSheet*  sheet = (nsIStyleSheet*)aSheet;
+  nsIStyleRuleProcessor*  processor = (nsIStyleRuleProcessor*)aProcessor;
   RulesMatchingData* data = (RulesMatchingData*)aData;
 
-  if (NS_OK == sheet->UseForMedium(data->mMedium)) {
-    data->mCount += sheet->RulesMatching(data->mPresContext, data->mContent, 
-                                         data->mParentContext, data->mResults);
-  }
+  processor->RulesMatching(data->mPresContext, data->mMedium, data->mContent, 
+                           data->mParentContext, data->mResults);
   return PR_TRUE;
 }
 
@@ -483,7 +579,7 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
 }
 
 // XXX for now only works for strength 0 & 1
-static void SortRulesByStrength(nsISupportsArray* aRules, PRInt32& aBackstopRuleCount)
+static void SortRulesByStrength(nsISupportsArray* aRules)
 {
   PRUint32 cnt;
   nsresult rv = aRules->Count(&cnt);
@@ -500,9 +596,6 @@ static void SortRulesByStrength(nsISupportsArray* aRules, PRInt32& aBackstopRule
         aRules->RemoveElementAt(index);
         aRules->AppendElement(rule);
         count--;
-        if (index < aBackstopRuleCount) {
-          aBackstopRuleCount--;
-        }
       }
       else {
         index++;
@@ -534,47 +627,39 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   NS_ASSERTION(aPresContext, "must have pres context");
 
   if (aContent && aPresContext) {
-    nsISupportsArray*  rules = mRecycler;
-    mRecycler = nsnull;
-    if (nsnull == rules) {
-      NS_NewISupportsArray(&rules);
+    if (! mRuleProcessors) {
+      GatherRuleProcessors();
     }
+    if (mRuleProcessors) {
+      nsISupportsArray*  rules = nsnull;
+      if (EnsureArray(&rules)) {
+        nsIAtom* medium = nsnull;
+        aPresContext->GetMedium(&medium);
+        RulesMatchingData data(aPresContext, medium, aContent, aParentContext, rules);
+        mRuleProcessors->EnumerateForwards(EnumRulesMatching, &data);
 
-    if (nsnull != rules) {
-      nsIAtom* medium = nsnull;
-      aPresContext->GetMedium(&medium);
-      RulesMatchingData data(aPresContext, medium, aContent, aParentContext, rules);
-      if (mBackstopSheets) {
-        mBackstopSheets->EnumerateBackwards(EnumRulesMatching, &data);
-      }
-      PRInt32 backstopRules = data.mCount;
-      if (mDocSheets) {
-        mDocSheets->EnumerateBackwards(EnumRulesMatching, &data);
-      }
-      if (mOverrideSheets) {
-        mOverrideSheets->EnumerateBackwards(EnumRulesMatching, &data);
-      }
-
-      PRBool usedRules = PR_FALSE;
-      if (0 < data.mCount) {
-        SortRulesByStrength(rules, backstopRules);
-        result = GetContext(aPresContext, aParentContext, nsnull, rules, aForceUnique, usedRules);
-        if (usedRules) {
-          NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-          NS_RELEASE(rules);
+        PRBool usedRules = PR_FALSE;
+        PRUint32 ruleCount = 0;
+        rules->Count(&ruleCount);
+        if (0 < ruleCount) {
+          SortRulesByStrength(rules);
+          result = GetContext(aPresContext, aParentContext, nsnull, rules, aForceUnique, usedRules);
+          if (usedRules) {
+            NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
+            NS_RELEASE(rules);
+          }
+          else {
+            NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
+            RecycleArray(&rules);
+          }
         }
         else {
           NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-          rules->Clear();
-          mRecycler = rules;
+          RecycleArray(&rules);
+          result = GetContext(aPresContext, aParentContext, nsnull, nsnull, aForceUnique, usedRules);
         }
+        NS_RELEASE(medium);
       }
-      else {
-        NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-        mRecycler = rules;
-        result = GetContext(aPresContext, aParentContext, nsnull, nsnull, aForceUnique, usedRules);
-      }
-      NS_RELEASE(medium);
     }
   }
 
@@ -594,8 +679,7 @@ struct PseudoRulesMatchingData {
       mParentContent(aParentContent),
       mPseudoTag(aPseudoTag),
       mParentContext(aParentContext),
-      mResults(aResults),
-      mCount(0)
+      mResults(aResults)
   {
   }
   nsIPresContext*   mPresContext;
@@ -604,21 +688,17 @@ struct PseudoRulesMatchingData {
   nsIAtom*          mPseudoTag;
   nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
-  PRInt32           mCount;
-
 };
 
 static PRBool
-EnumPseudoRulesMatching(nsISupports* aSheet, void* aData)
+EnumPseudoRulesMatching(nsISupports* aProcessor, void* aData)
 {
-  nsIStyleSheet*  sheet = (nsIStyleSheet*)aSheet;
+  nsIStyleRuleProcessor*  processor = (nsIStyleRuleProcessor*)aProcessor;
   PseudoRulesMatchingData* data = (PseudoRulesMatchingData*)aData;
 
-  if (NS_OK == sheet->UseForMedium(data->mMedium)) {
-    data->mCount += sheet->RulesMatching(data->mPresContext, data->mParentContent, 
-                                         data->mPseudoTag, 
-                                         data->mParentContext, data->mResults);
-  }
+  processor->RulesMatching(data->mPresContext, data->mMedium,
+                           data->mParentContent, data->mPseudoTag, 
+                           data->mParentContext, data->mResults);
   return PR_TRUE;
 }
 
@@ -635,48 +715,41 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
   NS_ASSERTION(aPresContext, "must have pres context");
 
   if (aPseudoTag && aPresContext) {
-    nsISupportsArray*  rules = mRecycler;
-    mRecycler = nsnull;
-    if (nsnull == rules) {
-      NS_NewISupportsArray(&rules);
+    if (! mRuleProcessors) {
+      GatherRuleProcessors();
     }
+    if (mRuleProcessors) {
+      nsISupportsArray*  rules = nsnull;
+      if (EnsureArray(&rules)) {
+        nsIAtom* medium = nsnull;
+        aPresContext->GetMedium(&medium);
+        PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                     aPseudoTag, aParentContext, rules);
+        mRuleProcessors->EnumerateForwards(EnumPseudoRulesMatching, &data);
 
-    if (nsnull != rules) {
-      nsIAtom* medium = nsnull;
-      aPresContext->GetMedium(&medium);
-      PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                   aPseudoTag, aParentContext, rules);
-      if (mBackstopSheets) {
-        mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-      }
-      PRInt32 backstopRules = data.mCount;
-      if (mDocSheets) {
-        mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-      }
-      if (mOverrideSheets) {
-        mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-      }
-
-      PRBool usedRules = PR_FALSE;
-      if (0 < data.mCount) {
-        SortRulesByStrength(rules, backstopRules);
-        result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
-        if (usedRules) {
-          NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-          NS_RELEASE(rules);
+        PRBool usedRules = PR_FALSE;
+        PRUint32 ruleCount = 0;
+        rules->Count(&ruleCount);
+        if (0 < ruleCount) {
+          SortRulesByStrength(rules);
+          result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
+          if (usedRules) {
+            NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
+            NS_RELEASE(rules);
+          }
+          else {
+            NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
+            rules->Clear();
+            RecycleArray(&rules);
+          }
         }
         else {
           NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-          rules->Clear();
-          mRecycler = rules;
+          RecycleArray(&rules);
+          result = GetContext(aPresContext, aParentContext, aPseudoTag, nsnull, aForceUnique, usedRules);
         }
+        NS_IF_RELEASE(medium);
       }
-      else {
-        NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-        mRecycler = rules;
-        result = GetContext(aPresContext, aParentContext, aPseudoTag, nsnull, aForceUnique, usedRules);
-      }
-      NS_IF_RELEASE(medium);
     }
   }
 
@@ -697,47 +770,40 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   NS_ASSERTION(aPresContext, "must have pres context");
 
   if (aPseudoTag && aPresContext) {
-    nsISupportsArray*  rules = mRecycler;
-    mRecycler = nsnull;
-    if (nsnull == rules) {
-      NS_NewISupportsArray(&rules);
+    if (! mRuleProcessors) {
+      GatherRuleProcessors();
     }
+    if (mRuleProcessors) {
+      nsISupportsArray*  rules = nsnull;
+      if (EnsureArray(&rules)) {
+        nsIAtom* medium = nsnull;
+        aPresContext->GetMedium(&medium);
+        PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                     aPseudoTag, aParentContext, rules);
+        mRuleProcessors->EnumerateForwards(EnumPseudoRulesMatching, &data);
 
-    if (nsnull != rules) {
-      nsIAtom* medium = nsnull;
-      aPresContext->GetMedium(&medium);
-      PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                   aPseudoTag, aParentContext, rules);
-      if (mBackstopSheets) {
-        mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-      }
-      PRInt32 backstopRules = data.mCount;
-      if (mDocSheets) {
-        mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-      }
-      if (mOverrideSheets) {
-        mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-      }
-
-      PRBool usedRules = PR_FALSE;
-      if (0 < data.mCount) {
-        SortRulesByStrength(rules, backstopRules);
-        result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
-        if (usedRules) {
-          NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-          NS_RELEASE(rules);
+        PRBool usedRules = PR_FALSE;
+        PRUint32 ruleCount;
+        rules->Count(&ruleCount);
+        if (0 < ruleCount) {
+          SortRulesByStrength(rules);
+          result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
+          if (usedRules) {
+            NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
+            NS_RELEASE(rules);
+          }
+          else {
+            NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
+            rules->Clear();
+            RecycleArray(&rules);
+          }
         }
         else {
           NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-          rules->Clear();
-          mRecycler = rules;
+          RecycleArray(&rules);
         }
+        NS_IF_RELEASE(medium);
       }
-      else {
-        NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-        mRecycler = rules;
-      }
-      NS_IF_RELEASE(medium);
     }
   }
 
@@ -780,12 +846,7 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
       else {  // need to make one in the new parent
         nsISupportsArray*  newRules = nsnull;
         if (rules) {
-          newRules = mRecycler;
-          mRecycler = nsnull;
-          if (! newRules) {
-            result = NS_NewISupportsArray(&newRules);
-          }
-          if (newRules) {
+          if (EnsureArray(&newRules)) {
             newRules->AppendElements(rules);
           }
         }
@@ -804,21 +865,24 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
 }
 
 struct StatefulData {
-  StatefulData(nsIPresContext* aPresContext, nsIContent* aContent)
+  StatefulData(nsIPresContext* aPresContext, nsIAtom* aMedium, nsIContent* aContent)
     : mPresContext(aPresContext),
+      mMedium(aMedium),
       mContent(aContent),
       mStateful(PR_FALSE)
   {}
   nsIPresContext* mPresContext;
+  nsIAtom*        mMedium;
   nsIContent*     mContent;
   PRBool          mStateful;
 }; 
 
-static PRBool SheetHasStatefulStyle(nsISupports* aElement, void *aData)
+static PRBool SheetHasStatefulStyle(nsISupports* aProcessor, void *aData)
 {
-  nsIStyleSheet* sheet = (nsIStyleSheet*)aElement;
+  nsIStyleRuleProcessor* processor = (nsIStyleRuleProcessor*)aProcessor;
   StatefulData* data = (StatefulData*)aData;
-  if (NS_OK == sheet->HasStateDependentStyle(data->mPresContext, data->mContent)) {
+  if (NS_OK == processor->HasStateDependentStyle(data->mPresContext, data->mMedium,
+                                                 data->mContent)) {
     data->mStateful = PR_TRUE;
     return PR_FALSE;  // stop iteration
   }
@@ -830,17 +894,18 @@ NS_IMETHODIMP
 StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
                                      nsIContent*     aContent)
 {
-  StatefulData data(aPresContext, aContent);
-  if (mBackstopSheets) {
-    mBackstopSheets->EnumerateForwards(SheetHasStatefulStyle, &data);
+  if (! mRuleProcessors) {
+    GatherRuleProcessors();
   }
-  if (mDocSheets && (! data.mStateful)) {
-    mDocSheets->EnumerateForwards(SheetHasStatefulStyle, &data);
+  if (mRuleProcessors) {
+    nsIAtom* medium = nsnull;
+    aPresContext->GetMedium(&medium);
+    StatefulData data(aPresContext, medium, aContent);
+    mRuleProcessors->EnumerateForwards(SheetHasStatefulStyle, &data);
+    NS_IF_RELEASE(medium);
+    return ((data.mStateful) ? NS_OK : NS_COMFALSE);
   }
-  if (mOverrideSheets && (! data.mStateful)) {
-    mOverrideSheets->EnumerateForwards(SheetHasStatefulStyle, &data);
-  }
-  return ((data.mStateful) ? NS_OK : NS_COMFALSE);
+  return NS_COMFALSE;
 }
 
 
