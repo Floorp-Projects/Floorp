@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: emulate.c,v 1.3 2001/12/07 01:36:22 relyea%netscape.com Exp $
+ * $Id: emulate.c,v 1.4 2001/12/07 02:04:24 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -533,7 +533,7 @@ ssl_EmulateSendFile(PRFileDesc *sd, PRSendFileData *sfd,
      * negative or  SENDFILE_MMAP_CHUNK is less than pagesize). Just assert 
      * that this is the case so we catch problems in debug builds.
      */
-    PORT_Assert(len >= 0);
+    PR_ASSERT(len >= 0);
 
     /*
      * Map in (part of) file. Take care of zero-length files.
