@@ -48,6 +48,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/scrollbars.css \
 		$(srcdir)/tasksOverlay.css \
 		$(srcdir)/textfield.css \
+		$(srcdir)/tabcontrol.css \
 		$(srcdir)/toolbar.css \
 		$(srcdir)/tree.css \
 		$(srcdir)/wizardOverlay.css \

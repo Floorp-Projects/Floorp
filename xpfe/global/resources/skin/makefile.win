@@ -35,6 +35,7 @@ install::
 	$(MAKE_INSTALL) global.css $(DISTBROWSER)
 	$(MAKE_INSTALL) splitter.css $(DISTBROWSER)
 	$(MAKE_INSTALL) button.css $(DISTBROWSER)
+	$(MAKE_INSTALL) tabcontrol.css $(DISTBROWSER)
 	$(MAKE_INSTALL) textfield.css $(DISTBROWSER)
 	$(MAKE_INSTALL) formatting.css $(DISTBROWSER)
 	$(MAKE_INSTALL) box.css $(DISTBROWSER)
