@@ -86,3 +86,14 @@ $(OBJDIR)/pk11slot.o: pk11slot.c
 endif
 endif
 endif
+
+# Bugzilla Bug 209827: disable optimization to work around what appears
+# to be a VACPP optimizer bug.
+ifdef XP_OS2_VACPP
+$(OBJDIR)/pk11skey.obj: pk11skey.c
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call abspath,$<)
+$(OBJDIR)/pk11slot.obj: pk11slot.c
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call abspath,$<)
+endif
