@@ -23,6 +23,7 @@
  *      Kin Blas <kin@netscape.com>
  *      Akkana Peck <akkana@netscape.com>
  *      Charley Manske <cmanske@netscape.com>
+ *      Neil Deakin <neil@mozdevgroup.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -237,6 +238,17 @@ nsEditorSpellCheck::CheckCurrentWord(const PRUnichar *aSuggestedWord,
   DeleteSuggestedWordList();
   return mSpellChecker->CheckWord(nsDependentString(aSuggestedWord),
                                   aIsMisspelled, &mSuggestedWordList);
+}
+
+NS_IMETHODIMP    
+nsEditorSpellCheck::CheckCurrentWordNoSuggest(const PRUnichar *aSuggestedWord,
+                                              PRBool *aIsMisspelled)
+{
+  if (!mSpellChecker)
+    return NS_NOINTERFACE;
+
+  return mSpellChecker->CheckWord(nsDependentString(aSuggestedWord),
+                                  aIsMisspelled, nsnull);
 }
 
 NS_IMETHODIMP    

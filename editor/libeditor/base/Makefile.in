@@ -53,12 +53,14 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  txmgr \
+		  txtsvc \
 		  htmlparser \
 		  necko \
 		  pref \
 		  view \
 		  gfx \
 		  widget \
+		  lwbrk \
 		  unicharutil \
 		  commandhandler \
 		  docshell \

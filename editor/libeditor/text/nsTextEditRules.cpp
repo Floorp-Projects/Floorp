@@ -49,7 +49,9 @@
 #include "nsIDOMNodeList.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
+#include "nsISelectionController.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMNSRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -58,6 +60,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
+#include "nsIWordBreakerFactory.h"
+#include "nsLWBrkCIID.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"
@@ -196,6 +200,15 @@ nsTextEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   nsAutoLockRulesSniffing lockIt(this);
   mDidExplicitlySetInterline = PR_FALSE;
   
+  // get the selection and cache the position before editing
+  nsCOMPtr<nsISelection> selection;
+  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) 
+    return res;
+
+  selection->GetAnchorNode(getter_AddRefs(mCachedSelectionNode));
+  selection->GetAnchorOffset(&mCachedSelectionOffset);
+
   if (!mActionNesting)
   {
     // let rules remember the top level action
@@ -221,13 +234,21 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     res = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
   
+    res = mEditor->HandleInlineSpellCheck(action, selection,
+                                          mCachedSelectionNode, mCachedSelectionOffset,
+                                          nsnull, 0, nsnull, 0);
+    if (NS_FAILED(res)) 
+      return res;
+
     // detect empty doc
     res = CreateBogusNodeIfNeeded(selection);
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) 
+      return res;
     
     // insure trailing br node
     res = CreateTrailingBRIfNeeded();
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) 
+      return res;
     
     /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
      * This is difficult, because we cannot know what the level is until after the Bidi algorithm

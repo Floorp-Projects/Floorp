@@ -51,6 +51,7 @@
 #include "nsTSDNotifier.h"
 #include "nsISelectionController.h"
 #include "nsITextServicesFilter.h"
+#include "nsWeakReference.h"
 
 class nsIWordBreaker;
 class nsIRangeUtils;
@@ -97,7 +98,7 @@ private:
 
   nsCOMPtr<nsIDOMDocument>        mDOMDocument;
   nsCOMPtr<nsISelectionController>mSelCon;
-  nsCOMPtr<nsIEditor>             mEditor;
+  nsWeakPtr                       mEditor;  // avoid a cycle with the spell checker and editor
   nsCOMPtr<nsIContentIterator>    mIterator;
   TSDIteratorStatus               mIteratorStatus;
   nsCOMPtr<nsIContent>            mPrevTextBlock;
@@ -159,6 +160,7 @@ public:
   NS_IMETHOD DeleteSelection();
   NS_IMETHOD InsertText(const nsString *aText);
   NS_IMETHOD SetDisplayStyle(TSDDisplayStyle aStyle);
+  NS_IMETHOD GetDOMRangeFor(PRInt32 aOffset, PRInt32 aLength, nsIDOMRange** aRange);
 
   /* nsIEditActionListener method implementations. */
   nsresult InsertNode(nsIDOMNode * aNode,

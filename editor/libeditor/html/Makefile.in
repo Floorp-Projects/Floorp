@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  content \
 		  txmgr \
+		  txtsvc \
 		  htmlparser \
 		  necko \
 		  pref \
