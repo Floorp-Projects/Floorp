@@ -267,6 +267,12 @@ sub filter {
     $self->{'filters'}->{$filter} = $value;
 }
 
+sub expand {
+    my $self = shift;
+    my($line) = @_;
+    $line =~ s/__(\w+)__/$self->get($1)/gose;
+    return $line;
+}
 
 ########################################################################
 
@@ -378,16 +384,15 @@ sub error {
     my $stack = shift;
     return if $stack->disabled;
     die "argument expected\n" unless @_;
-    local $" = ' ';
-    die "@_\n";
+    my $line = $stack->expand(@_);
+    die "$line\n";
 }
 
 sub expand {
     my $stack = shift;
     return if $stack->disabled;
     die "argument expected\n" unless @_;
-    my $line = shift;
-    $line =~ s/__(\w+)__/$stack->get($1)/gose;
+    my $line = $stack->expand(@_);
     print "$line\n";
 }
 
