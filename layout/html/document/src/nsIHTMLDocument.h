@@ -71,6 +71,10 @@ public:
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode) = 0;
   NS_IMETHOD SetDTDMode(nsDTDMode aMode) = 0;
 
+  /*
+   * Returns true if document.domain was set for this document
+   */
+  NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet) = 0;
 };
 
 #endif /* nsIHTMLDocument_h___ */

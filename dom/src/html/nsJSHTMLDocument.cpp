@@ -75,8 +75,7 @@ enum HTMLDocument_slots {
   NSHTMLDOCUMENT_BGCOLOR = -17,
   NSHTMLDOCUMENT_FGCOLOR = -18,
   NSHTMLDOCUMENT_LASTMODIFIED = -19,
-  NSHTMLDOCUMENT_EMBEDS = -20,
-  NSHTMLDOCUMENT_DOMAINSET = -21
+  NSHTMLDOCUMENT_EMBEDS = -20
 };
 
 /***********************************************************************/
@@ -411,25 +410,6 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case NSHTMLDOCUMENT_DOMAINSET:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_DOMAINSET, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          nsIDOMNSHTMLDocument* b;
-          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-            rv = b->GetDomainSet(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            *vp = BOOLEAN_TO_JSVAL(prop);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
       default:
         checkNamedItem = PR_TRUE;
     }
@@ -672,7 +652,6 @@ static JSPropertySpec HTMLDocumentProperties[] =
   {"fgColor",    NSHTMLDOCUMENT_FGCOLOR,    JSPROP_ENUMERATE},
   {"lastModified",    NSHTMLDOCUMENT_LASTMODIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"embeds",    NSHTMLDOCUMENT_EMBEDS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"domainSet",    NSHTMLDOCUMENT_DOMAINSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

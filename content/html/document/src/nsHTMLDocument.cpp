@@ -286,7 +286,7 @@ nsHTMLDocument::nsHTMLDocument()
     //NS_WITH_SERVICE(nsIRDFService, gRDF, kRDFServiceCID, &rv);
   }
 
-  mDomainSet = PR_FALSE; // Bug 13871: Frameset spoofing
+  mDomainWasSet = PR_FALSE; // Bug 13871: Frameset spoofing
 }
 
 nsHTMLDocument::~nsHTMLDocument()
@@ -1815,16 +1815,16 @@ nsHTMLDocument::SetDomain(const nsAReadableString& aDomain)
 
   // Bug 13871: Frameset spoofing - note that document.domain was set
   if (NS_SUCCEEDED(rv))
-    mDomainSet = PR_TRUE;
+    mDomainWasSet = PR_TRUE;
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetDomainSet(PRBool* aValue)
+nsHTMLDocument::WasDomainSet(PRBool* aDomainWasSet)
 {
-  NS_ENSURE_ARG_POINTER(aValue);
-  *aValue = mDomainSet;
+  NS_ENSURE_ARG_POINTER(aDomainWasSet);
+  *aDomainWasSet = mDomainWasSet;
   return NS_OK;
 }
 

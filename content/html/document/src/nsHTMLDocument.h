@@ -149,6 +149,11 @@ public:
   virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
 
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+
+  /*
+   * Returns true if document.domain was set for this document
+   */
+  NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet);
 protected:
   nsresult GetPixelDimensions(nsIPresShell* aShell,
                               PRInt32* aWidth,
@@ -196,7 +201,7 @@ protected:
   /*
    * Bug 13871: Frameset spoofing - find out if document.domain was set
    */
-  PRBool       mDomainSet;
+  PRBool       mDomainWasSet;
 
 protected:
   void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);

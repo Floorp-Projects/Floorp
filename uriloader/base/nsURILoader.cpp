@@ -59,7 +59,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsICodebasePrincipal.h"
-#include "nsIDOMNSHTMLDocument.h"
+#include "nsIHTMLDocument.h"
 
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -644,13 +644,14 @@ PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem*
   rv = targetCodebasePrincipal->GetURI(getter_AddRefs(targetPrincipalURI));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipalURI, PR_TRUE);
 
-  // Find out if document.domain was set
-  nsCOMPtr<nsIDOMNSHTMLDocument> targetDOMNSHTMLDocument(do_QueryInterface(targetDocument));
-  NS_ENSURE_TRUE(targetDOMNSHTMLDocument, NS_ERROR_FAILURE);
+  // Find out if document.domain was set for HTML documents
+  PRBool documentDomainSet = PR_FALSE;
+  nsCOMPtr<nsIHTMLDocument> targetHTMLDocument(do_QueryInterface(targetDocument));
 
-  PRBool documentDomainSet;
-  rv = targetDOMNSHTMLDocument->GetDomainSet(&documentDomainSet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If we don't have an HTML document, fall through with documentDomainSet false
+  if (targetHTMLDocument) {
+    targetHTMLDocument->WasDomainSet(&documentDomainSet);
+  }
 
   // Is origin same principal or a subdomain of target's document.domain
   // Compare actual URI of origin document, not origin principal's URI. (Per Nav 4.x)

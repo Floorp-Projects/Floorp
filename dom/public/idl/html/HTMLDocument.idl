@@ -47,6 +47,4 @@
      void captureEvents(in long eventFlags);
      void releaseEvents(in long eventFlags);
      void routeEvent(in Event evt);
-
-     readonly attribute boolean domainSet;
    };
