@@ -20,6 +20,7 @@
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsString.h"
 #include "nsIContent.h"
 #include "nsIStyleSet.h"
@@ -146,6 +147,7 @@ nsDocument::nsDocument()
   mArena = nsnull;
   mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
+  mDocumentURLGroup = nsnull;
   mCharacterSet = eCharSetID_IsoLatin1;
   mParentDocument = nsnull;
   mRootContent = nsnull;
@@ -180,6 +182,7 @@ nsDocument::~nsDocument()
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentURLGroup);
 
   mParentDocument = nsnull;
 
@@ -286,6 +289,12 @@ nsIURL* nsDocument::GetDocumentURL() const
 {
   NS_IF_ADDREF(mDocumentURL);
   return mDocumentURL;
+}
+
+nsIURLGroup* nsDocument::GetDocumentURLGroup() const
+{
+  NS_IF_ADDREF(mDocumentURLGroup);
+  return mDocumentURLGroup;
 }
 
 nsCharSetID nsDocument::GetDocumentCharacterSet() const

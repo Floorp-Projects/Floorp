@@ -36,6 +36,7 @@ class nsIStreamObserver;
 class nsIStyleSet;
 class nsIStyleSheet;
 class nsIURL;
+class nsIURLGroup;
 class nsIViewManager;
 class nsString;
 class nsIScriptContextOwner;
@@ -87,6 +88,11 @@ public:
    * Return the URL for the document. May return null.
    */
   virtual nsIURL* GetDocumentURL() const = 0;
+
+  /**
+   * Return the URLGroup for the document. May return null.
+   */
+  virtual nsIURLGroup* GetDocumentURLGroup() const = 0;
 
   /**
    * Return a standard name for the document's character set. This will
