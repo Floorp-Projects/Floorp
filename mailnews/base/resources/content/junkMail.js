@@ -83,6 +83,8 @@ function setupForAccountFromFolder(aURI)
   var abList = document.getElementById("whiteListAbURI");
   menuitems = abList.getElementsByAttribute("id", obj.settings.whiteListAbURI);
   abList.selectedItem = menuitems[0];
+
+  conditionallyEnableUI(null);
 }
 
 function junkLog()
@@ -120,6 +122,32 @@ function storeSettings(aSettings, aLoggingEnabled)
   aSettings.useWhiteList = document.getElementById("useWhiteList").checked;
   aSettings.whiteListAbURI = document.getElementById("whiteListAbURI").selectedItem.getAttribute("id");
   aSettings.loggingEnabled = aLoggingEnabled;
+}
+
+function conditionallyEnableUI(id)
+{
+  var enabled;
+
+  if (!id || id == "moveOnSpam") {
+    enabled = document.getElementById("moveOnSpam").checked;
+    document.getElementById("moveTargetMode").disabled = !enabled;
+
+    var choice = document.getElementById("moveTargetMode").selectedItem.getAttribute("value");
+ 
+    document.getElementById("actionTargetAccount").disabled = !enabled || (choice == 1);
+    document.getElementById("actionTargetFolder").disabled = !enabled || (choice == 0);
+  }
+
+  if (!id || id == "purge") {
+    enabled = document.getElementById("purge").checked;
+    document.getElementById("purgeInterval").disabled = !enabled;
+    document.getElementById("purgeLabel").disabled = !enabled;
+  }
+
+  if (!id || id == "useWhiteList") {
+    enabled = document.getElementById("useWhiteList").checked;
+    document.getElementById("whiteListAbURI").disabled = !enabled;
+  }
 }
 
 function doHelpButton()

@@ -74,7 +74,7 @@
   <vbox align="start">
     <label value="&action.label;"/>
 
-    <checkbox id="moveOnSpam" label="&move.label;"/>
+    <checkbox id="moveOnSpam" oncommand="conditionallyEnableUI('moveOnSpam')" label="&move.label;"/>
 
     <radiogroup id="moveTargetMode">
       <grid class="specialFolderPickerGrid">
@@ -84,12 +84,12 @@
         </columns>
         <rows>
           <row align="center">
-            <radio id="moveTargetMode0" 
+            <radio id="moveTargetMode0" oncommand="conditionallyEnableUI('moveOnSpam')"
                    value="0" label="&junkFolderOn.label;"/> 
   	        <menulist id="actionTargetAccount" flex="1"/>
           </row> 
           <row align="center">
-            <radio id="moveTargetMode1" 
+            <radio id="moveTargetMode1" oncommand="conditionallyEnableUI('moveOnSpam')"
 	           value="1" label="&otherFolder.label;"/>
   	        <menulist id="actionTargetFolder"/>
           </row>
@@ -99,13 +99,13 @@
   </vbox>
 
   <hbox autostretch="never" align="center">
-    <checkbox id="purge" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
+    <checkbox id="purge" oncommand="conditionallyEnableUI('purge')" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
     <textbox size="3" id="purgeInterval" />
-    <label value="&purge2.label;"/>
+    <label id="purgeLabel" value="&purge2.label;"/>
   </hbox>
 
   <hbox align="center">
-    <checkbox id="useWhiteList" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+    <checkbox id="useWhiteList" oncommand="conditionallyEnableUI('useWhiteList')" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
     <menulist id="whiteListAbURI">
      <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
         datasources="rdf:addressdirectory">
