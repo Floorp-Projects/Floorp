@@ -80,7 +80,7 @@ function sidebarOverlayInit(usersidebar)
     sidebar = defaultsidebar;
   else {
     dump("usersidebar = " + usersidebar + "\n");
-    sidebar.db = usersidebar;
+    sidebar.db = usersidebar.db;
   }
 
   dump("sidebar.db = " + sidebar.db + "\n");
