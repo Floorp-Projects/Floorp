@@ -895,18 +895,25 @@ NS_IMETHODIMP PresShell :: Paint(nsIView              *aView,
 {
   void*     clientData;
   nsIFrame* frame;
-  nsresult  rv;
+  nsresult  rv = NS_OK;
 
   NS_ASSERTION(!(nsnull == aView), "null view");
 
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
 
-  if (nsnull != frame)
+  if (nsnull != frame) {
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect);
-  else
-    rv = NS_OK;
-
+#ifdef NS_DEBUG
+    // Draw a border around the frame
+    if (nsIFrame::GetShowFrameBorders()) {
+      nsRect r;
+      frame->GetRect(r);
+      aRenderingContext.SetColor(NS_RGB(0,0,255));
+      aRenderingContext.DrawRect(0, 0, r.width, r.height);
+    }
+#endif
+  }
   return rv;
 }
 
