@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.9 2002/12/18 02:06:01 wtc%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.10 2003/01/17 02:49:07 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -406,7 +406,7 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
     NSSCMSOriginatorIdentifierOrKey *oiok;
     CERTSubjectPublicKeyInfo *spki, *freeSpki = NULL;
     PLArenaPool *poolp;
-    NSSCMSKeyTransRecipientInfoEx *extra;
+    NSSCMSKeyTransRecipientInfoEx *extra = NULL;
     PRBool usesSubjKeyID;
 
     poolp = ri->cmsg->poolp;
@@ -443,6 +443,7 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
  	    if (rv != SECSuccess)
 		break;
 	} else if (usesSubjKeyID) {
+	    PORT_Assert(extra != NULL);
 	    rv = NSS_CMSUtil_EncryptSymKey_RSAPubKey(poolp, extra->pubKey,
 	                         bulkkey, &ri->ri.keyTransRecipientInfo.encKey);
  	    if (rv != SECSuccess)

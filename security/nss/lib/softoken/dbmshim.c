@@ -34,7 +34,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.8 2002/11/26 22:14:55 relyea%netscape.com Exp $
+ * $Id: dbmshim.c,v 1.9 2003/01/17 02:49:10 wtc%netscape.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -365,7 +365,7 @@ dbs_readBlob(DBS *dbsp, DBT *data)
     PRFileMap *mapfile = NULL;
     unsigned char *addr = NULL;
     int error;
-    int len;
+    int len = -1;
 
     file = dbs_getBlobFilePath(dbsp->blobdir, data);
     if (!file) {
@@ -405,9 +405,10 @@ loser:
     error = PR_GetError();
     if (addr) {
 	if (mapfile) {
+	    PORT_Assert(len != -1);
 	    PR_MemUnmap(addr,len);
 	} else {
-	     PORT_Free(addr);
+	    PORT_Free(addr);
 	}
     }
     if (mapfile) {

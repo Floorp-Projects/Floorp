@@ -1590,7 +1590,7 @@ AddSubjectAltNames(void *extHandle, const char *names, CERTGeneralNameType type)
 {
     SECItem item = { 0, NULL, 0 };
     CERTGeneralName *nameList = NULL;
-    CERTGeneralName *current;
+    CERTGeneralName *current = NULL;
     PRCList *prev = NULL;
     PRArenaPool *arena;
     const char *cp;

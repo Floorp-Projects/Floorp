@@ -1985,7 +1985,7 @@ pk11_IsWeakKey(unsigned char *key,CK_KEY_TYPE key_type)
 static NSSLOWKEYPrivateKey *
 pk11_mkSecretKeyRep(PK11Object *object)
 {
-    NSSLOWKEYPrivateKey *privKey;
+    NSSLOWKEYPrivateKey *privKey = 0;
     PLArenaPool *arena = 0;
     CK_RV crv;
     SECStatus rv;

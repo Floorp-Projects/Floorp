@@ -314,7 +314,7 @@ ProcessTag(FileBuffer* fb, char **errStr)
 	int curchar;
 	TagItem *ti=NULL;
 	AVPair *curPair=NULL;
-	char quotechar;
+	char quotechar='\0';
 	unsigned int linenum;
 	unsigned int startline;
 
@@ -530,12 +530,14 @@ ProcessTag(FileBuffer* fb, char **errStr)
 				/* quoted value.  Start recording the value inside the quote*/
 				startID = FB_GetPointer(fb);
 				state = GET_QUOTED_VAL_STATE;
+				PORT_Assert(quotechar == '\0');
 				quotechar = curchar; /* look for matching quote type */
 			} else {
 				/* just more value */
 			}
 			break;
 		case GET_QUOTED_VAL_STATE:
+			PORT_Assert(quotechar != '\0');
 			if(curchar == quotechar) {
 				/* end of quoted value */
 				curPos = FB_GetPointer(fb)-2;
@@ -547,6 +549,7 @@ ProcessTag(FileBuffer* fb, char **errStr)
 					/* empty value, leave it as NULL */
 				}
 				state = GET_ATT_STATE;
+				quotechar = '\0';
 				startID = FB_GetPointer(fb);
 			} else {
 				/* more quoted value, continue */

@@ -2261,7 +2261,7 @@ pk11_AllFindCertObjectByRecipient(PK11SlotInfo **slotPtr,
 							void *wincx) {
     PK11SlotList *list;
     PK11SlotListElement *le;
-    CERTCertificate * cert;
+    CERTCertificate * cert = NULL;
     PK11SlotInfo *slot = NULL;
     SECStatus rv;
 
@@ -2297,6 +2297,7 @@ pk11_AllFindCertObjectByRecipient(PK11SlotInfo **slotPtr,
 	return NULL;
     }
     *slotPtr = slot;
+    PORT_Assert(cert != NULL);
     return cert;
 }
 

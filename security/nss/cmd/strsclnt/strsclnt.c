@@ -385,8 +385,7 @@ launch_thread(
     	PR_WaitCondVar(threadStartQ, PR_INTERVAL_NO_TIMEOUT);
     }
     for (i = 0; i < numUsed; ++i) {
-	slot = threads + i;
-    	if (slot->running == rs_idle) 
+    	if (threads[i].running == rs_idle) 
 	    break;
     }
     if (i >= numUsed) {
@@ -398,9 +397,9 @@ launch_thread(
 	}
 	++numUsed;
 	PORT_Assert(numUsed == i + 1);
-	slot = threads + i;
     }
 
+    slot = threads + i;
     slot->a = a;
     slot->b = b;
     slot->c = c;
