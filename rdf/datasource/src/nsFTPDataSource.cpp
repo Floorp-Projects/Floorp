@@ -912,7 +912,7 @@ FTPDataSource::Assert(nsIRDFResource *source,
                        nsIRDFNode *target,
                        PRBool tv)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -922,7 +922,7 @@ FTPDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFResource *property,
                          nsIRDFNode *target)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_RDF_ASSERTION_REJECTED;
 }
 
 
