@@ -36,7 +36,7 @@ localDefPref("editor.hrule.height",         2);
 localDefPref("editor.hrule.width",          100);
 pref("editor.hrule.width_percent",          true);
 pref("editor.hrule.shading",                true);
-pref("editor.hrule.align",                  0);         // match types in edttypes.h ED_ALIGN_CENTER
+pref("editor.hrule.align",                  1); // center
 
 pref("editor.table.maintain_structure", true);
 pref("editor.table.delete_key", 0);
