@@ -31,6 +31,16 @@
 // (onpopuphiding).
 function RestoreSelectionWithoutContentLoad(tree)
 {
+    // If a delete or move command had been issued, then we should
+    // reset gRightMouseButtonDown and gThreadPaneDeleteOrMoveOccurred
+    // and return (see bug 142065).
+    if(gThreadPaneDeleteOrMoveOccurred)
+    {
+      gRightMouseButtonDown = false;
+      gThreadPaneDeleteOrMoveOccurred = false;
+      return;
+    }
+
     var treeBoxObj = tree.treeBoxObject;
     var treeSelection = treeBoxObj.selection;
 
@@ -49,7 +59,7 @@ function RestoreSelectionWithoutContentLoad(tree)
         if(tree.id == "threadTree")
           gThreadPaneCurrentSelectedIndex = treeSelection.currentIndex;
     }
-    else if(!gThreadPaneDeleteOrMoveOccurred && (treeSelection.currentIndex < 0))
+    else if(treeSelection.currentIndex < 0)
         // Clear the selection in the case of when a folder has just been
         // loaded where the message pane does not have a message loaded yet.
         // When right-clicking a message in this case and dismissing the

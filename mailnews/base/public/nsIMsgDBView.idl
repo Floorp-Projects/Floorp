@@ -308,6 +308,7 @@ interface nsIMsgDBView : nsISupports
     readonly attribute boolean supportsThreading;
 
     attribute nsIMsgSearchSession searchSession;
+    readonly attribute boolean removeRowOnMoveOrDelete; 
 
 	nsMsgViewIndex findIndexFromKey(in nsMsgKey aMsgKey, in boolean aExpand);
 };

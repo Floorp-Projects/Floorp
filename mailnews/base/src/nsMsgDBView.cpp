@@ -5242,6 +5242,24 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsMsgDBView::GetRemoveRowOnMoveOrDelete(PRBool *aRemoveRowOnMoveOrDelete)
+{
+  NS_ENSURE_ARG_POINTER(aRemoveRowOnMoveOrDelete);
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+  if (!imapFolder) {
+    *aRemoveRowOnMoveOrDelete = PR_TRUE;
+    return NS_OK;
+  }
+
+  // need to update the imap-delete model, can change more than once in a session.
+  GetImapDeleteModel(nsnull);
+
+  // unlike the other imap delete models, "mark as deleted" does not remove rows on delete (or move)
+  *aRemoveRowOnMoveOrDelete = (mDeleteModel != nsMsgImapDeleteModels::IMAPDelete);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP 
 nsMsgDBView::GetCurrentlyDisplayedMessage(nsMsgViewIndex *currentlyDisplayedMessage)

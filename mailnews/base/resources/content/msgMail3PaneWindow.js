@@ -1328,22 +1328,42 @@ function GetCompositeDataSource(command)
 	return null;
 }
 
+// Figures out how many messages are selected (hilighted - does not necessarily
+// have the dotted outline) above a given index row value in the thread pane.
+function NumberOfSelectedMessagesAboveCurrentIndex(index)
+{
+  var numberOfMessages = 0;
+  var indicies = GetSelectedIndices(gDBView);
+
+  if (indicies && indicies.length)
+  {
+    for (var i = 0; i < indicies.length; i++)
+    {
+      if (indicies[i] < index)
+        ++numberOfMessages;
+      else
+        break;
+    }
+  }
+  return numberOfMessages;
+}
+
 function SetNextMessageAfterDelete()
 {
   var treeSelection = GetThreadTree().treeBoxObject.selection;
 
-  gThreadPaneDeleteOrMoveOccurred = true;
-  if (treeSelection.isSelected(treeSelection.currentIndex))
-    gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
-  else if (treeSelection.currentIndex > gThreadPaneCurrentSelectedIndex)
-    // Since the currentIndex (the row with the outline/dotted line) is greater
-    // than the currently selected row (the row that is highlighted), we need to
-    // make sure that upon a Delete or Move of the selected row, the highlight
-    // returns to the currentIndex'ed row.  It is necessary to subtract 1
-    // because the row being deleted is above the row with the currentIndex.
-    // If the subtraction is not done, then the highlight will end up on the
-    // row listed after the currentIndex'ed row.
-    gNextMessageViewIndexAfterDelete = treeSelection.currentIndex - 1;
+  // Only set gThreadPaneDeleteOrMoveOccurred to true if the message was
+  // truly moved to the trash or deleted, as opposed to an IMAP delete
+  // (where it is only "marked as deleted".  This will prevent bug 142065.
+  //
+  // If it's an IMAP delete, then just set gNextMessageViewIndexAfterDelete
+  // to treeSelection.currentIndex (where the outline is at) because nothing
+  // was moved or deleted from the folder.
+  if(gDBView.removeRowOnMoveOrDelete)
+  {
+    gThreadPaneDeleteOrMoveOccurred = true;
+    gNextMessageViewIndexAfterDelete = treeSelection.currentIndex - NumberOfSelectedMessagesAboveCurrentIndex(treeSelection.currentIndex);
+  }
   else
     gNextMessageViewIndexAfterDelete = treeSelection.currentIndex;
 }
