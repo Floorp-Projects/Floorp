@@ -296,7 +296,8 @@ oeICalImpl::~oeICalImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::~oeICalImpl()\n" );
 #endif
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+    unsigned int i;
+    for( i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->Release();
     }
     m_observerlist.clear();
@@ -764,7 +765,8 @@ oeICalImpl::SetServer( const char *str ) {
     
     icalfileset_free(stream);
     
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+    unsigned int i;
+    for( i=0; i<m_observerlist.size(); i++ ) {
         nsresult rv;
         rv = m_observerlist[i]->OnLoad();
         #ifdef ICAL_DEBUG
@@ -815,7 +817,8 @@ NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
         
         // tell observers about the change
 
-        for( unsigned int i=0; i<m_observerlist.size(); i++ ) 
+        unsigned int i;
+        for( i=0; i<m_observerlist.size(); i++ ) 
         {
             if( m_batchMode ) {
                 nsresult rv;
@@ -2478,3 +2481,24 @@ NS_IMETHODIMP oeICalFilter::SetPercent(PRInt16 aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP oeICalFilter::AddAttachment(nsIMsgAttachment *attachment)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::RemoveAttachment(nsIMsgAttachment *attachment)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::RemoveAttachments()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetAttachmentsArray(nsISupportsArray * *aAttachmentsArray)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

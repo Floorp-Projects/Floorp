@@ -42,6 +42,8 @@
 #include "oeICalEventImpl.h"
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
+#include "plbase64.h"
+#include "nsMsgCompCID.h"
 
 #define strcasecmp strcmp
 
@@ -169,6 +171,7 @@ oeICalEventImpl::oeICalEventImpl()
     SetAlarmUnits( "minutes" );
     SetRecurUnits( "weeks" );
     SetSyncId( "" );
+    NS_NewISupportsArray(getter_AddRefs(m_attachments));
 }
 
 oeICalEventImpl::~oeICalEventImpl()
@@ -1191,6 +1194,83 @@ NS_IMETHODIMP oeICalEventImpl::Clone( oeIICalEvent **ev )
     return NS_OK;
 }
 
+NS_IMETHODIMP oeICalEventImpl::GetAttachmentsArray(nsISupportsArray * *aAttachmentsArray)
+{
+  NS_ENSURE_ARG_POINTER(aAttachmentsArray);
+  *aAttachmentsArray = m_attachments;
+  NS_IF_ADDREF(*aAttachmentsArray);
+  return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::AddAttachment(nsIMsgAttachment *attachment)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalEventImpl::AddAttachment()\n" );
+#endif
+  PRUint32 i;
+  PRUint32 attachmentCount = 0;
+  m_attachments->Count(&attachmentCount);
+
+  //Don't add twice the same attachment.
+  nsCOMPtr<nsIMsgAttachment> element;
+  PRBool sameUrl;
+  for (i = 0; i < attachmentCount; i ++)
+  {
+    m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
+    if (element)
+    {
+      element->EqualsUrl(attachment, &sameUrl);
+      if (sameUrl)
+        return NS_OK;
+    }
+  }
+
+  return m_attachments->InsertElementAt(attachment, attachmentCount);
+}
+
+NS_IMETHODIMP oeICalEventImpl::RemoveAttachment(nsIMsgAttachment *attachment)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalEventImpl::RemoveAttachment()\n" );
+#endif
+  PRUint32 i;
+  PRUint32 attachmentCount = 0;
+  m_attachments->Count(&attachmentCount);
+
+  nsCOMPtr<nsIMsgAttachment> element;
+  PRBool sameUrl;
+  for (i = 0; i < attachmentCount; i ++)
+  {
+    m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
+    if (element)
+    {
+      element->EqualsUrl(attachment, &sameUrl);
+      if (sameUrl)
+      {
+        m_attachments->DeleteElementAt(i);
+        break;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::RemoveAttachments()
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalEventImpl::RemoveAttachments()\n" );
+#endif
+  PRUint32 i;
+  PRUint32 attachmentCount = 0;
+  m_attachments->Count(&attachmentCount);
+
+  for (i = 0; i < attachmentCount; i ++)
+    m_attachments->DeleteElementAt(0);
+
+  return NS_OK;
+}
+
 bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 {
 #ifdef ICAL_DEBUG_ALL
@@ -1529,6 +1609,25 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             m_snoozetimes.push_back( snoozetimeinms );
         }
     }
+
+    //attachments
+    for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
+            prop != 0 ;
+            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+            if ( tmppar != 0 ) {
+                tmpstr = icalparameter_get_member( tmppar );
+                if( strcmp( tmpstr, "Attachment" ) == 0 ) {
+                    nsresult rv;
+                    tmpstr = (char *)icalproperty_get_value_as_string( prop );
+                    nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
+                    if ( NS_SUCCEEDED(rv) && attachment ) {
+                        attachment->SetUrl( tmpstr );
+                        AddAttachment( attachment );
+                    }
+                }
+            }
+    }
     return true;
 }
 
@@ -1836,7 +1935,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //snoozetimes
     icalcomponent *tmpcomp=NULL;
-    for( unsigned int i=0; i<m_snoozetimes.size(); i++ ) {
+    unsigned int i;
+    for( i=0; i<m_snoozetimes.size(); i++ ) {
         if( tmpcomp == NULL )
             tmpcomp = icalcomponent_new( ICAL_X_COMPONENT );
         icaltimetype snoozetime = ConvertFromPrtime( m_snoozetimes[i] );
@@ -1845,6 +1945,41 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
     if( tmpcomp )
         icalcomponent_add_component( vevent, tmpcomp );
+
+    PRUint32 attachmentCount = 0;
+    m_attachments->Count(&attachmentCount);
+    nsCOMPtr<nsIMsgAttachment> element;
+    for (i = 0; i < attachmentCount; i ++) {
+        m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
+        if (element)
+        {
+            char *url;
+            element->GetUrl( &url );
+            icalparameter *tmppar = icalparameter_new_member( "Attachment" );
+            prop = icalproperty_new_x( url );
+            icalproperty_add_parameter( prop, tmppar );
+            icalcomponent_add_property( vevent, prop );
+/*            icalattach *attach= icalattach_new_from_url( url );
+            if( attach ) {
+                char tst[100]= "testing";
+                char *buffer;
+                buffer = PL_Base64Encode( tst, strlen(tst), nsnull );
+
+//                strcpy( buffer, "salam" );
+//                icalattachtype_set_base64( attachtype, buffer, 0 );
+                prop = icalproperty_new_attach( attach );
+
+//                tmppar = icalparameter_new_fmttype( url );
+//                icalproperty_add_parameter( prop, tmppar );
+//                tmppar = icalparameter_new_encoding( ICAL_ENCODING_BASE64 );
+//                icalproperty_add_parameter( prop, tmppar );
+
+                icalcomponent_add_property( vevent, prop );
+            }*/
+            nsMemory::Free( url );
+        }
+    }
+
 
     //add event to newcalendar
     icalcomponent_add_component( newcalendar, vevent );

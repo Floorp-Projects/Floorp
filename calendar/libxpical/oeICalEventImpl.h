@@ -41,6 +41,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsSupportsPrimitives.h"
+#include "nsISupportsArray.h"
 #include <vector>
 
 extern "C" {
@@ -117,6 +118,7 @@ private:
     std::vector<PRTime> m_snoozetimes;
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
+    nsCOMPtr<nsISupportsArray> m_attachments;
 };
 
 /*******************************************************************************************/

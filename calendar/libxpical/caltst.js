@@ -35,6 +35,7 @@
  * 
 */
 
+const DEFAULT_SERVER="file:///tmp/.oecalendar";
 const DEFAULT_TITLE="Lunch Time";
 const DEFAULT_DESCRIPTION = "Will be out for one hour";
 const DEFAULT_LOCATION = "Restaurant";
@@ -49,6 +50,7 @@ const DEFAULT_RECUR = true;
 const DEFAULT_RECURINTERVAL = 7;
 const DEFAULT_RECURUNITS = "days";
 const DEFAULT_RECURFOREVER = true;
+const DEFAULT_ATTACHMENT = DEFAULT_SERVER
 
 var iCalLib = null;
 var gObserver = null;
@@ -101,7 +103,7 @@ function Test()
       iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
    }
     
-   iCalLib.setServer( "/tmp/.oecalendar" );
+   iCalLib.setServer( DEFAULT_SERVER );
    iCalLib.Test();
    alert( "Finished Test" );
 }
@@ -121,7 +123,7 @@ function TestAll()
 	   gTodoObserver = new Observer();
 	   iCalLib.addTodoObserver( gTodoObserver );
    }
-   iCalLib.setServer( "/tmp/.oecalendar" );
+   iCalLib.setServer( DEFAULT_SERVER );
    var id = TestAddEvent();
    if( id == 0 ) {
 	   alert( "Stopped Test" );
@@ -183,6 +185,10 @@ function TestAddEvent()
 
     var snoozetime = new Date();
     iCalEvent.setSnoozeTime( snoozetime );
+
+	Attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance( Components.interfaces.nsIMsgAttachment );
+	Attachment.url = DEFAULT_ATTACHMENT;
+	iCalEvent.addAttachment( Attachment );
 
     var id = iCalLib.addEvent( iCalEvent );
     
@@ -323,7 +329,15 @@ function TestFetchEvent( id )
 		alert( "TestFetchEvent(): Invalid Recur Forever" );
 		return null;
 	}
-
+	if( !iCalEvent.attachmentsArray.Count() ) {
+		alert( "TestFetchEvent(): No attachment found" );
+		return null;
+	}
+	attachment = iCalEvent.attachmentsArray.QueryElementAt( 0, Components.interfaces.nsIMsgAttachment );
+	if ( attachment.url != DEFAULT_ATTACHMENT ) {
+		alert( "TestFetchEvent(): Invalid attachment" );
+		return null;
+	}
     //TODO: Check for start and end date
 
     return iCalEvent;
