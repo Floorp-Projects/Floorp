@@ -69,6 +69,7 @@
 // Class Methods & shutdown stuff
 + (void)startBookmarksManager:(RunLoopMessenger *)mainThreadRunLoopMessenger;
 + (BookmarkManager*)sharedBookmarkManager;
++ (NSString*)managerStartedNotification;
 - (void)shutdown;
 
 // Getters/Setters

@@ -139,6 +139,7 @@ typedef enum
   NSToolbarItem*                mBookmarkToolbarItem;
 
   BOOL mInitialized;
+  BOOL mBookmarkViewControllerInitialized;       // have we fully set up the bookmarks view, done lazily
   NSString* mPendingURL;
   NSString* mPendingReferrer;
   BOOL mPendingActivate;

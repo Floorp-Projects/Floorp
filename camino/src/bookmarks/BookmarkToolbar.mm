@@ -60,7 +60,7 @@
 - (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender;
 - (NSRect)insertionRectForButton:(NSView*)aButton position:(int)aPosition;
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem;
-
+- (void)managerStarted:(NSNotification*)inNotify;
 @end
 
 @implementation BookmarkToolbar
@@ -81,6 +81,12 @@
     [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
+    
+    // register for notifications of when the BM manager starts up. Since it does it on a separate thread,
+    // it can be created after we are and if we don't update ourselves, the bar will be blank. This
+    // happens most notably when the app is launched with a 'odoc' or 'GURL' appleEvent.
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managerStarted:)
+        name:[BookmarkManager managerStartedNotification] object:nil];
   }
   return self;
 }
@@ -90,6 +96,16 @@
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [mButtons release];
   [super dealloc];
+}
+
+//
+// - managerStarted:
+//
+// Notification callback from the bookmark manager. Build the button list.
+//
+- (void)managerStarted:(NSNotification*)inNotify
+{
+  [self buildButtonList];
 }
 
 - (void)drawRect:(NSRect)aRect

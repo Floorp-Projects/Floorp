@@ -103,6 +103,11 @@ static unsigned gFirstUserCollection = 0;
   return theManager;
 }
 
++ (NSString*)managerStartedNotification
+{
+  return @"BookmarkManagerStartedNotification";
+}
+
 //
 // Init, dealloc - better get inited on background thread.
 //
@@ -110,7 +115,7 @@ static unsigned gFirstUserCollection = 0;
 {
   if ((self = [super init]))
   {
-    BookmarkFolder* root = [[BookmarkFolder alloc] init];
+BookmarkFolder* root = [[BookmarkFolder alloc] init];
     [root setParent:self];
     [root setIsRoot:YES];
     [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
@@ -158,6 +163,7 @@ static unsigned gFirstUserCollection = 0;
     [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
     [nc addObserver:self selector:@selector(writeBookmarks:) name:WriteBookmarkNotification object:nil];
   }
+  
   return self;
 }
 
@@ -177,6 +183,11 @@ static unsigned gFirstUserCollection = 0;
   [super dealloc];
 }
 
+//
+// -delayedStartupItems
+//
+// Perform additional setup items on the main thread.
+//
 - (void)delayedStartupItems
 {
   [[NSApp delegate] setupBookmarkMenus:gBookmarksManager];
@@ -198,8 +209,9 @@ static unsigned gFirstUserCollection = 0;
       [[allBookmarks objectAtIndex:i] performSelector:@selector(refreshIcon) withObject:nil afterDelay:delay];
     }
   }
-  // make sure bookmark toolbar was built (only a concern on startup from apple event)
-  [[[[[NSApp delegate] getFrontmostBrowserWindow] windowController] bookmarkToolbar] buildButtonList];
+
+  // broadcast to everyone interested that we're loaded and ready for public consumption
+  [[NSNotificationCenter defaultCenter] postNotificationName:[BookmarkManager managerStartedNotification] object:nil];
 }
 
 - (void)shutdown;

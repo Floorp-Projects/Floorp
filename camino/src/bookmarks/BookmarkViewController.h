@@ -69,6 +69,7 @@
     
   IBOutlet HistoryDataSource* mHistorySource; //can swap to this for history data
 
+  BOOL mSetupComplete;                      // have we been fully initialized?
   NSMutableDictionary *mExpandedStatus;
   NSString* mCachedHref;
   BookmarkFolder *mActiveRootCollection;
@@ -110,7 +111,7 @@
 
 -(void)deleteCollection:(id)aSender;
 -(void) focus;
--(void) windowDidLoad;
+-(void) completeSetup;
 -(void) ensureBookmarks;
 
 @end

@@ -77,6 +77,21 @@ const long kMinSearchPaneHeight = 80;
 
 @implementation BookmarkViewController
 
+- (id)init
+{
+  if (self = [super init]) {
+    mCachedHref = nil;
+    mRootBookmarks = nil;
+    mActiveRootCollection = nil;
+    mExpandedStatus = nil;
+    mSearchResultArray = nil;
+    mOpenActionFlag = 0;
+    
+    // wait for |-completeSetup| to be called to lazily complete our setup
+    mSetupComplete = NO;
+  }
+}
+
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -88,12 +103,20 @@ const long kMinSearchPaneHeight = 80;
   [super dealloc];
 }
 
-
-- (void)windowDidLoad
+//
+// - managerStarted:
+//
+// Notification callback from the bookmark manager. Reload all the table data, but
+// only if we think we've fully initalized ourselves.
+//
+- (void)managerStarted:(NSNotification*)inNotify
 {
-  mCachedHref = nil;
-  mRootBookmarks = nil;
-  mOpenActionFlag = 0;
+  if (mSetupComplete)
+    [self ensureBookmarks];
+}
+
+- (void)completeSetup
+{
   [self setSearchResultArray:[NSMutableArray array]];
   // the standard table item doesn't handle text and icons. Replace it
   // with a custom cell that does.
@@ -131,6 +154,11 @@ const long kMinSearchPaneHeight = 80;
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
   [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
 
+  // register for notifications of when the BM manager starts up. Since it does it on a separate thread,
+  // it can be created after we are and if we don't update ourselves, the bar will be blank. This
+  // happens most notably when the app is launched with a 'odoc' or 'GURL' appleEvent.
+  [nc addObserver:self selector:@selector(managerStarted:) name:[BookmarkManager managerStartedNotification] object:nil];
+
   // register for dragged types
   [mContainerPane registerForDraggedTypes:[NSArray arrayWithObjects:@"MozBookmarkType",@"MozURLType", NSURLPboardType, NSStringPboardType, nil]];
 
@@ -145,12 +173,25 @@ const long kMinSearchPaneHeight = 80;
   [mItemPane setAutosaveTableColumns:YES];
   [mSearchPane setAutosaveTableColumns:YES];
   [mContainerPane setAutosaveTableColumns:YES];
+  
+  mSetupComplete = YES;
 }
 
+//
+// ensureBookmarks
+//
+// Setup the connections for the bookmark manager and tell the tables to reload their
+// data. This routine may be called more than once safely. Note that if the bookmark manager
+// has not yet been fully initialized by the time we get here, bail until we hear back later.
+//
 -(void)ensureBookmarks
 {
   if (!mRootBookmarks) {
-    mRootBookmarks = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] retain];
+    BookmarkFolder* manager = [[BookmarkManager sharedBookmarkManager] rootBookmarks];
+    if (![manager count])     // not initialized yet, try again later (from start notifiation)
+      return;
+
+    mRootBookmarks = [manager retain];
     [mContainerPane setTarget:self];
     [mContainerPane setDeleteAction:@selector(deleteCollection:)];
     [mContainerPane reloadData];
@@ -161,9 +202,6 @@ const long kMinSearchPaneHeight = 80;
     [mSearchPane setTarget: self];
     [mSearchPane setDoubleAction: @selector(openBookmark:)];
     [self restoreFolderExpandedStates];
-    [mItemPane setAutosaveTableColumns:YES];
-    [mSearchPane setAutosaveTableColumns:YES];
-    [mContainerPane setAutosaveTableColumns:YES];
   }
 }
 

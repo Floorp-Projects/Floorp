@@ -270,6 +270,7 @@ static NSArray* sToolbarDefaults = nil;
     mBookmarkToolbarItem = nil;
     mSidebarToolbarItem = nil;
     mSavedTitle = nil;
+    mBookmarkViewControllerInitialized = NO;
   
     // register for services
     NSArray* sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
@@ -456,6 +457,12 @@ static NSArray* sToolbarDefaults = nil;
   [super dealloc];
 }
 
+//
+// windowDidLoad
+//
+// setup all the things we can't do in the nib. Note that we defer the setup of
+// the bookmarks view until the user actually displays it the first time.
+//
 - (void)windowDidLoad
 {
     [super windowDidLoad];
@@ -618,9 +625,6 @@ static NSArray* sToolbarDefaults = nil;
         [[self window] setFrameTopLeftPoint:topLeft];
       }
     }
-    
-    // let the in-window bookmark controller finish up some initialization
-    [mBookmarkViewController windowDidLoad];
 }
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
@@ -2659,6 +2663,12 @@ static NSArray* sToolbarDefaults = nil;
 //
 - (void)toggleBookmarkManager:(id)sender
 {
+  // lazily init the setup of the view's controller
+  if (!mBookmarkViewControllerInitialized) {
+    [mBookmarkViewController completeSetup];
+    mBookmarkViewControllerInitialized = YES;
+  }
+  
   // deactivate any gecko view that might think it has focus
   if ([self isResponderGeckoView:[[self window] firstResponder]]) {
     CHBrowserView* browserView = [mBrowserView getBrowserView];
