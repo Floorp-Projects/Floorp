@@ -1592,6 +1592,7 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     if (mSelectedIndex >= 0) {
       nsAutoString value;
       GetOptionValue(*options, mSelectedIndex, value);
+      value.CompressWhitespace();
       aNumValues = 1;
       aNames[0]  = name;
       aValues[0] = value;
@@ -2232,7 +2233,7 @@ nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
 
   if (visibility != disp->mVisible) {
-    view->SetVisibility(NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible ?nsViewVisibility_kShow:nsViewVisibility_kHide); 
+    //view->SetVisibility(NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible ?nsViewVisibility_kShow:nsViewVisibility_kHide); 
   }
 
   return NS_OK;
