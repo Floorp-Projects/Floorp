@@ -215,7 +215,7 @@
     <vbox id="securityPanel" flex="1">
       <label id="security-identity" class="header"/>
       <description id="security-identity-text" flex="1"/>
-      <hbox>
+      <hbox align="center">
         <button id="security-view-cert" label="&pageInfo.view.label;" 
                 oncommand="security.viewCert();"/>
         <description id="security-view-text" flex="1"/>

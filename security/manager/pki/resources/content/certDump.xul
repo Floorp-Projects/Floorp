@@ -38,16 +38,17 @@
     </treecols>
   </tree>
   
+  <label class="header" value="&certmgr.details.label;"/>
   <tree id="prettyDumpTree" style="height: 15em"
             onselect="displaySelected();" hidecolumnpicker="true">
     <treecols>
-      <treecol flex ="1" id="certDataCol" label="&certmgr.details.label;" class="header" primary="true"/>
+      <treecol flex="1" id="certDataCol" primary="true" hideheader="true"/>
     </treecols>
     <treechildren/>
   </tree>
   
   <label class="header" value="&certmgr.fields.label;"/>
-  <textbox class="inset" id="certDumpVal"  multiline="true" rows="8"
+  <textbox id="certDumpVal"  multiline="true" rows="8"
            readonly="true" style="font-family: -moz-fixed;"/>
 </vbox>
 </overlay>
