@@ -129,6 +129,10 @@ public:
     return PL_strdup(str);
   }
 
+  static void free(char* str) {
+    PL_strfree(str);
+  }
+
   /**
     How to use this fancy (thread-safe) version of strtok: 
 
@@ -178,6 +182,10 @@ public:
   // Note: uses new[] to allocate memory, so you must use delete[] to
   // free the memory
   static PRUnichar* strdup(const PRUnichar* str);
+
+  static void free(PRUnichar* str) {
+    delete[] str;
+  }
 
   /// Compute a hashcode for a ucs2 string
   static PRUint32 HashValue(const PRUnichar* s1);
