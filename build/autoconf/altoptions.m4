@@ -100,8 +100,8 @@ AC_DEFUN(MOZ_READ_MOZCONFIG,
 [AC_REQUIRE([AC_INIT_BINSH])dnl
 # Read in '.mozconfig' script to set the initial options.
 # See the load-mozconfig.sh script for more details.
-_topsrcdir=`dirname [$]0`
-. $_topsrcdir/build/autoconf/load-mozconfig.sh])
+_AUTOCONF_TOOLS_DIR=`dirname [$]0`/[$1]/build/autoconf
+. $_AUTOCONF_TOOLS_DIR/mozconfig2configure])
 
 dnl This gets inserted at the top of the configure script
-MOZ_READ_MOZCONFIG
+MOZ_READ_MOZCONFIG(MOZ_TOPSRCDIR)
