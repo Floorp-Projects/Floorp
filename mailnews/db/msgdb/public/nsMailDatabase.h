@@ -69,6 +69,7 @@ public:
     NS_IMETHOD				SetSummaryValid(PRBool valid);
 	
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
+    virtual nsresult        CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage **result, PRBool createKeyFromHeader);
 #ifdef DEBUG	// strictly for testing purposes
 	virtual	nsresult		PrePopulate();
 #endif

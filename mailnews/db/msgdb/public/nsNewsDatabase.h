@@ -40,8 +40,8 @@ public:
   NS_IMETHOD				Close(PRBool forceCommit);
   NS_IMETHOD				ForceClosed();
   NS_IMETHOD				Commit(nsMsgDBCommitType commitType);
-
-  virtual PRUint32				GetCurVersion();
+  virtual nsresult          CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage **result, PRBool createKeyFromHeader = PR_FALSE);
+  virtual PRUint32          GetCurVersion();
   
   // methods to get and set docsets for ids.
   NS_IMETHOD				MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
@@ -79,9 +79,11 @@ public:
   // void               OnFolderFilterListChanged(MSG_FolderInfo *folder);
   // caller needs to free
   static char			*GetGroupNameFromURL(const char *url);
+  virtual nsresult      PrePopulate();
 protected:
   virtual PRBool	    ThreadBySubjectWithoutRe() ;
 
+  nsFileSpec            *m_newsgroupSpec;
   char                  *m_groupURL;
   //	MSG_FilterList*		m_filterList;
   
