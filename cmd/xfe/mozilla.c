@@ -4709,12 +4709,6 @@ fe_AbortCallback (Widget widget, XtPointer closure, XtPointer call_data)
 {
   MWContext *context = (MWContext *) closure;
   XP_InterruptContext (context);
-
-  /* If we were downloading, cleanup the file we downloaded to. */
-  if (context->type == MWContextSaveToDisk) {
-    char *filename = fe_GetTextField (CONTEXT_DATA(context)->url_label);
-    XP_FileRemove(filename, xpTemporary);
-  }
 }
 
 
@@ -4934,7 +4928,7 @@ fe_add_session_manager(MWContext *context)
                                 &WM_SAVE_YOURSELF,1);
         XmAddWMProtocolCallback(shell,
                 WM_SAVE_YOURSELF,
-                fe_wm_save_self_cb, someGlobalContext);
+                fe_wm_save_self_cb, (XtPointer)someGlobalContext);
 	return True;
 }
 
