@@ -18,8 +18,6 @@
 DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
 
-LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews
-
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=mork
