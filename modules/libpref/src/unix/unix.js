@@ -181,4 +181,3 @@ pref("taskbar.horizontal", false);
 pref("taskbar.ontop", false);
 pref("taskbar.button_style", -1);
 
-config("menu.help.item_1.url", "http://home.netscape.com/eng/mozilla/5.0/relnotes/unix-5.0.html");
