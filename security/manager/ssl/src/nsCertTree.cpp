@@ -359,7 +359,7 @@ nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
   if (mTreeArray) {
     FreeCertArray();
     delete [] mTreeArray;
-    mTreeArray = NULL;
+    mTreeArray = nsnull;
     mNumRows = 0;
   }
   nsresult rv = InitCompareHash();
@@ -378,7 +378,7 @@ nsCertTree::LoadCerts(PRUint32 aType)
   if (mTreeArray) {
     FreeCertArray();
     delete [] mTreeArray;
-    mTreeArray = NULL;
+    mTreeArray = nsnull;
     mNumRows = 0;
   }
   nsresult rv = InitCompareHash();
@@ -399,6 +399,9 @@ nsCertTree::UpdateUIContents()
   if (NS_FAILED(rv)) return rv;
   mNumOrgs = CountOrganizations();
   mTreeArray = new treeArrayEl[mNumOrgs];
+  if (!mTreeArray)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   PRUint32 j = 0;
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));
   nsCOMPtr<nsIX509Cert> orgCert = do_QueryInterface(isupport);
@@ -449,7 +452,7 @@ nsCertTree::RemoveCert(PRUint32 index)
       RemoveCacheEntry(isupport);
       mCertArray->RemoveElementAt(certIndex);
       delete [] mTreeArray;
-      mTreeArray = NULL;
+      mTreeArray = nsnull;
       return UpdateUIContents();
     }
     if (mTreeArray[i].open)
@@ -485,6 +488,8 @@ nsCertTree::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
 NS_IMETHODIMP 
 nsCertTree::GetRowCount(PRInt32 *aRowCount)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
   PRUint32 count = 0;
   for (PRInt32 i=0; i<mNumOrgs; i++) {
     if (mTreeArray[i].open) {
@@ -545,6 +550,8 @@ nsCertTree::GetColumnProperties(const PRUnichar *colID,
 NS_IMETHODIMP 
 nsCertTree::IsContainer(PRInt32 index, PRBool *_retval)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
   treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el) {
     *_retval = PR_TRUE;
@@ -558,6 +565,8 @@ nsCertTree::IsContainer(PRInt32 index, PRBool *_retval)
 NS_IMETHODIMP 
 nsCertTree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
   treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el && el->open) {
     *_retval = PR_TRUE;
@@ -571,7 +580,7 @@ nsCertTree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 NS_IMETHODIMP 
 nsCertTree::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = !mTreeArray;
   return NS_OK;
 }
 
@@ -587,6 +596,8 @@ nsCertTree::IsSeparator(PRInt32 index, PRBool *_retval)
 NS_IMETHODIMP 
 nsCertTree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
   int i, idx = 0;
   for (i = 0; i < mNumOrgs && idx < rowIndex; i++, idx++) {
     if (mTreeArray[i].open) {
@@ -606,6 +617,9 @@ NS_IMETHODIMP
 nsCertTree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
                                PRBool *_retval)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
+
   int i, idx = 0;
   for (i = 0; i < mNumOrgs && idx <= rowIndex; i++, idx++) {
     if (mTreeArray[i].open) {
@@ -624,6 +638,8 @@ nsCertTree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex,
 NS_IMETHODIMP 
 nsCertTree::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
   treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el) {
     *_retval = 0;
@@ -638,6 +654,7 @@ NS_IMETHODIMP
 nsCertTree::GetImageSrc(PRInt32 row, const PRUnichar *colID, 
                             nsAString& _retval)
 {
+  _retval.Truncate();
   return NS_OK;
 }
 
@@ -653,6 +670,7 @@ NS_IMETHODIMP
 nsCertTree::GetCellValue(PRInt32 row, const PRUnichar *colID, 
                              nsAString& _retval)
 {
+  _retval.Truncate();
   return NS_OK;
 }
 
@@ -661,6 +679,9 @@ NS_IMETHODIMP
 nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID, 
                         nsAString& _retval)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
+
   nsresult rv;
   _retval.Truncate();
   NS_ConvertUCS2toUTF8 aUtf8ColID(colID);
@@ -780,6 +801,8 @@ nsCertTree::SetTree(nsITreeBoxObject *tree)
 NS_IMETHODIMP 
 nsCertTree::ToggleOpenState(PRInt32 index)
 {
+  if (!mTreeArray)
+    return NS_ERROR_NOT_INITIALIZED;
   treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el) el->open = !el->open;
   PRInt32 fac = (el->open) ? 1 : -1;
