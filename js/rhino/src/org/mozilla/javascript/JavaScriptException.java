@@ -64,7 +64,7 @@ public class JavaScriptException extends Exception
     public JavaScriptException(Object value, String sourceName, int lineNumber)
     {
         super(EvaluatorException.generateErrorMessage(
-                  ScriptRuntime.toString(value), sourceName, lineNumber));
+                toMessage(value), sourceName, lineNumber));
         this.lineNumber = lineNumber;
         this.sourceName = sourceName;
         this.value = value;
@@ -94,6 +94,15 @@ public class JavaScriptException extends Exception
     public int getLineNumber()
     {
         return lineNumber;
+    }
+
+    private static String toMessage(Object object)
+    {
+        if (object instanceof Scriptable) {
+            // to prevent potential of evaluation and throwing more exceptions
+            return ScriptRuntime.defaultObjectToString((Scriptable)object);
+        }
+        return ScriptRuntime.toString(object);
     }
 
     private Object value;

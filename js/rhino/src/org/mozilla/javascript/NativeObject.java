@@ -56,7 +56,7 @@ public class NativeObject extends IdScriptable
 
     public String toString()
     {
-        return NativeObjectPrototype.toString(this);
+        return ScriptRuntime.defaultObjectToString(this);
     }
 
     protected int mapNameToId(String s) { return 0; }
@@ -118,7 +118,7 @@ final class NativeObjectPrototype extends NativeObject
                     }
                     return s;
                 }
-                return toString(thisObj);
+                return ScriptRuntime.defaultObjectToString(thisObj);
             }
 
             case Id_valueOf:
@@ -165,11 +165,6 @@ final class NativeObjectPrototype extends NativeObject
                 return toSource(cx, scope, thisObj, args);
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
-    }
-
-    static String toString(Scriptable thisObj)
-    {
-        return "[object " + thisObj.getClassName() + "]";
     }
 
     private static String toSource(Context cx, Scriptable scope,

@@ -544,6 +544,11 @@ public class ScriptRuntime {
         }
     }
 
+    static String defaultObjectToString(Scriptable obj)
+    {
+        return "[object " + obj.getClassName() + "]";
+    }
+
     public static String toString(Object[] args, int index) {
         return (index < args.length) ? toString(args[index]) : "undefined";
     }
