@@ -1526,12 +1526,17 @@ typedef basic_nsPromiseFlatString<char>       nsPromiseFlatCString;
 
 
 #ifdef HAVE_CPP_2BYTE_WCHAR_T
-  #define NS_LITERAL_STRING(s)          nsLiteralString(L##s, (sizeof(L##s)/sizeof(wchar_t))-1)
-  #define NS_NAMED_LITERAL_STRING(n,s)  nsLiteralString n(L##s, (sizeof(L##s)/sizeof(wchar_t))-1)
+  #define NS_L(s)                                 L##s
+  #define NS_MULTILINE_LITERAL_STRING(s)          nsLiteralString(s, (sizeof(s)/sizeof(wchar_t))-1)
+  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsLiteralString n(s, (sizeof(s)/sizeof(wchar_t))-1)
 #else
-  #define NS_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, sizeof(s)-1)
-  #define NS_NAMED_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, sizeof(s)-1)
+  #define NS_L(s)                                 s
+  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, sizeof(s)-1))
+  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, sizeof(s)-1)
 #endif
+
+#define NS_LITERAL_STRING(s)            NS_MULTILINE_LITERAL_STRING(NS_L(s))
+#define NS_NAMED_LITERAL_STRING(n,s)    NS_NAMED_MULTILINE_LITERAL_STRING(n,NS_L(s))
 
 #define NS_LITERAL_CSTRING(s)           nsLiteralCString(s, sizeof(s)-1)
 #define NS_NAMED_LITERAL_CSTRING(n,s)   nsLiteralCString n(s, sizeof(s)-1)
