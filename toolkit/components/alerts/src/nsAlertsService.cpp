@@ -65,7 +65,7 @@ nsAlertsService::~nsAlertsService()
 NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, const PRUnichar * aAlertTitle, 
                                                      const PRUnichar * aAlertText, PRBool aAlertTextClickable,
                                                      const PRUnichar * aAlertCookie,
-                                                     nsIAlertListener * aAlertListener)
+                                                     nsIObserver * aAlertListener)
 {
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIDOMWindow> newWindow;
@@ -113,11 +113,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
 
     nsCOMPtr<nsISupports> iSupports (do_QueryInterface(aAlertListener));
     ifptr->SetData(iSupports);
-    ifptr->SetDataIID(&NS_GET_IID(nsISupports));
+    ifptr->SetDataIID(&NS_GET_IID(nsIObserver));
     argsArray->AppendElement(ifptr);
-#if 0
-    argsArray->AppendElement(aAlertListener);
-#endif
   }
   
   rv = wwatch->OpenWindow(0, ALERT_CHROME_URL, "_blank",

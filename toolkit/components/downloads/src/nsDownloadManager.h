@@ -76,18 +76,12 @@ class nsDownload;
 class nsDownloadManager : public nsIDownloadManager,
                           public nsIXPInstallManagerUI,
                           public nsIObserver
-#ifdef XP_WIN
-                          , public nsIAlertListener
-#endif
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
   NS_DECL_NSIXPINSTALLMANAGERUI
   NS_DECL_NSIOBSERVER
-#ifdef XP_WIN
-  NS_DECL_NSIALERTLISTENER
-#endif
 
   nsresult Init();
 
