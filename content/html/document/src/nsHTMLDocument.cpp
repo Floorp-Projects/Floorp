@@ -1353,8 +1353,8 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
   if (mCSSLoader) {
     mCSSLoader->SetQuirkMode(PRBool(eDTDMode_strict!= mDTDMode));
   }
-  nsIPresShell* shell = (nsIPresShell*) mPresShells.SafeElementAt(0);
-  if (nsnull != shell) {
+  nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
+  if (shell) {
     nsCOMPtr<nsIPresContext> pc;
     shell->GetPresContext(getter_AddRefs(pc));
     if (pc) {
@@ -1523,7 +1523,9 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
   if (aFlushReflows) {
     PRInt32 i = 0, n = mPresShells.Count();
     while ((i < n) && (isSafeToFlush)) {
-      nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+      nsCOMPtr<nsIPresShell> shell =
+        NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+
       if (shell) {
         shell->IsSafeToFlush(isSafeToFlush);
       }
@@ -2443,7 +2445,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     nsCOMPtr<nsIWebShell> webShell;
 
     // Get the webshell of our primary presentation shell
-    nsIPresShell* shell = (nsIPresShell*) mPresShells.SafeElementAt(0);
+    nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
     if (shell) {
       nsCOMPtr<nsIPresContext> cx;
       shell->GetPresContext(getter_AddRefs(cx));
@@ -3253,7 +3255,7 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
 
-  nsIPresShell* shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
+  nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
 
   if (!shell) {
     return NS_OK;
