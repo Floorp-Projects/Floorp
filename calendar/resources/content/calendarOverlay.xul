@@ -57,14 +57,6 @@
 <commandset id="tasksCommands">
   <command id="Tasks:Calendar" oncommand="openCalendar();"/>
 </commandset>
-<menupopup id="taskPopup">
-   <menuitem
-      position="3"
-      label="&calendarCmd.label;"
-      accesskey="&calendarCmd.accesskey;"
-      key="key_calendar"
-      command="Tasks:Calendar"/>
-</menupopup>
 
 <menupopup id="windowPopup">
   <menuitem
