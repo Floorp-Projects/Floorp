@@ -59,6 +59,11 @@ interface nsIMessenger : nsISupports {
 	void MarkAllMessagesRead(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
 	void NewFolder(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
 				   in string name);
+
+    void RenameFolder(in nsIRDFCompositeDataSource db, 
+                      in nsIDOMXULElement folder, in string name);
+    void CompactFolder(in nsIRDFCompositeDataSource db, in nsIDOMXULElement folder);
+
     void Undo();
     void Redo();
 	void SendUnsentMessages();
