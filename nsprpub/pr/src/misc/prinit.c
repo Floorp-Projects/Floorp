@@ -446,6 +446,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
          * Ideally, for each _PR_InitXXX(), there should be a corresponding
          * _PR_XXXCleanup() that we can call here.
          */
+        _PR_CleanupThreads();
         _PR_CleanupStacks();
         _PR_CleanupBeforeExit();
         _pr_initialized = PR_FALSE;
