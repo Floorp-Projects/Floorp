@@ -215,7 +215,6 @@ bin/chrome/skins/*
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin/defaults/pref/*
-bin/defaults/profile/*
 ; this is only here if you have plugins -blizzard
 ; bin/plugins/*
 bin/res/entityTables/*
