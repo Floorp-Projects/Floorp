@@ -51,6 +51,7 @@
 #include "nsIWebProgress.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIFileChannel.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
@@ -291,6 +292,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest, &res));
   if (NS_FAILED(res))
     return NS_OK;
+
+  // We are only interested in HTTP and file requests.
+  nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(aRequest));
+  nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(aRequest));
+  if (!httpRequest && !fileRequest) {
+    return NS_OK;
+  }
   
   nsCOMPtr<nsIInterfaceRequestor> requestor;
   nsCOMPtr<nsISecurityEventSink> eventSink;
@@ -331,13 +339,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
     // Sometimes URI is null, so ignore.
     if (aURI == nsnull) {
-      return NS_OK;
-    }
-
-    // We are only interested in HTTP requests.
-    nsCOMPtr<nsIHttpChannel> channel;
-    channel = do_QueryInterface(aRequest);
-    if (channel == nsnull) {
       return NS_OK;
     }
 
