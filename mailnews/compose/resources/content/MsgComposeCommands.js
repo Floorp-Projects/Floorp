@@ -2256,7 +2256,7 @@ var attachmentBucketObserver = {
       var rawData = aData.data;
       switch (aData.flavour.contentType) {
       case "text/x-moz-url":
-      case "text/nsmessage":
+      case "text/nsmessageOrFolder":
         var separator = rawData.indexOf("\n");
         if (separator != -1) {
           prettyName = rawData.substr(separator+1);
@@ -2299,7 +2299,7 @@ var attachmentBucketObserver = {
     {
       var flavourSet = new FlavourSet();
       flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/nsmessage");
+      flavourSet.appendFlavour("text/nsmessageOrFolder");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }
