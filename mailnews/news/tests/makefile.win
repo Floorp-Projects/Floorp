@@ -27,8 +27,6 @@ REQUIRES=xpcom js nspr netlib
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-DIRS = nntp
-
 CPPSRCS=    \
 			nsNNTPCategoryContainerStub.cpp	\
 			nsNNTPHostStub.cpp				\
@@ -46,7 +44,13 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPCategoryContainerStub.obj	  \
 EXPORTS=	\
             $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
+LINCS=-I$(PUBLIC)\xpcom				\
+	  -I$(PUBLIC)\mailnews			\
+	  -I$(PUBLIC)\raptor			\
+	  -I$(PUBLIC)\netlib			\
+	  -I$(PUBLIC)\security			\
+	  -I$(PUBLIC)\rdf				\
+	  $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
