@@ -28,6 +28,7 @@
 #include "nsIServiceManager.h"
 #include "nsResourceSet.h"
 #include "nsConflictSet.h"
+#include "nsString.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING

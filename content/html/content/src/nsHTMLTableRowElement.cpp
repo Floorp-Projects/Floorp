@@ -21,9 +21,8 @@
  */
 #include "nsIDOMHTMLTableRowElement.h"
 #include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableSectionElement.h"
+#include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDOMHTMLTableCellElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
@@ -154,16 +153,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTableRowElement
-  NS_DECL_IDOMHTMLTABLEROWELEMENT
+  NS_DECL_NSIDOMHTMLTABLEROWELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -256,9 +255,20 @@ nsHTMLTableRowElement::~nsHTMLTableRowElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLTableRowElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableRowElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLTableRowElement,
-                       nsGenericHTMLContainerElement,
-                       nsIDOMHTMLTableRowElement);
+
+// XPConnect interface list for nsHTMLTableRowElement
+NS_CLASSINFO_MAP_BEGIN(HTMLTableRowElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableRowElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLTableRowElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableRowElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableRowElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableRowElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -367,71 +377,6 @@ nsHTMLTableRowElement::GetRowIndex(PRInt32* aValue)
   return result;
 }
 
-// this tells the table to delete a row and then insert it in a
-// different place. This will generate 2 reflows until things get
-// fixed at a higher level (e.g. DOM batching).
-NS_IMETHODIMP
-nsHTMLTableRowElement::SetRowIndex(PRInt32 aValue)
-{
-  PRInt32 oldIndex;
-  nsresult result = GetRowIndex(&oldIndex);
-
-  if ((-1 == oldIndex) || (oldIndex == aValue) || (NS_OK != result)) {
-    return result;
-  }
-
-  nsCOMPtr<nsIDOMHTMLTableElement> table;
-
-  result = GetTable(getter_AddRefs(table));
-
-  if (NS_FAILED(result) || !table) {
-    return result;
-  }
-
-  nsCOMPtr<nsIDOMHTMLCollection> rows;
-
-  table->GetRows(getter_AddRefs(rows));
-
-  PRUint32 numRowsU;
-  rows->GetLength(&numRowsU);
-  PRInt32 numRows = numRowsU; // numRows will be > 0 since this must be a row
-
-  // check if it really moves
-  if (!(((0 == oldIndex) && (aValue <= 0)) ||
-        ((numRows-1 == oldIndex) && (aValue >= numRows-1)))) {
-    nsCOMPtr<nsIDOMNode> section;
-    nsCOMPtr<nsIDOMNode> refRow;
-
-    PRInt32 refIndex = aValue;
-
-    if (aValue < numRows) {
-      refIndex = 0;
-    } else {
-      refIndex = numRows-1;
-    }
-
-    rows->Item(refIndex, getter_AddRefs(refRow));
-
-    refRow->GetParentNode(getter_AddRefs(section));
-
-    nsCOMPtr<nsISupports> kungFuDeathGrip(NS_STATIC_CAST(nsIContent *, this));
-
-    table->DeleteRow(oldIndex);     // delete this from the table
-
-    nsCOMPtr<nsIDOMNode> returnNode;
-
-    if (aValue >= numRows) {
-      // add this back into the table
-      section->AppendChild(this, getter_AddRefs(returnNode));
-    } else {
-      // add this back into the table
-      section->InsertBefore(this, refRow, getter_AddRefs(returnNode));
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
 {
@@ -465,65 +410,6 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
   return NS_OK;
 }
 
-// this generates 2 reflows like SetRowIndex
-NS_IMETHODIMP
-nsHTMLTableRowElement::SetSectionRowIndex(PRInt32 aValue)
-{
-  PRInt32 oldIndex;
-  nsresult result = GetRowIndex(&oldIndex);
-
-  if ((-1 == oldIndex) || (oldIndex == aValue) || (NS_OK != result)) {
-    return result;
-  }
-
-  nsCOMPtr<nsIDOMHTMLTableSectionElement> section;
-
-  result = GetSection(getter_AddRefs(section));
-
-  if (NS_FAILED(result) || (nsnull == section)) {
-    return result;
-  }
-
-  nsCOMPtr<nsIDOMHTMLCollection> rows;
-  section->GetRows(getter_AddRefs(rows));
-
-  PRUint32 numRowsU;
-  rows->GetLength(&numRowsU);
-  PRInt32 numRows = numRowsU; 
-
-  // check if it really moves
-  if (!(((0 == oldIndex) && (aValue <= 0)) ||
-        ((numRows-1 == oldIndex) && (aValue >= numRows-1)))) {
-    nsCOMPtr<nsISupports> kungFuDeathGrip(NS_STATIC_CAST(nsIContent *, this));
-
-    section->DeleteRow(oldIndex);     // delete this from the section
-    numRows--;
-
-    nsCOMPtr<nsIDOMNode> returnNode;
-    if ((numRows <= 0) || (aValue >= numRows)) {
-      // add this back into the section
-      section->AppendChild(this, getter_AddRefs(returnNode));
-    } else {
-      PRInt32 newIndex = aValue;
-
-      if (aValue <= 0) {
-        newIndex = 0;
-      } else if (aValue > oldIndex) {
-        // since this got removed before GetLength was called
-        newIndex--;
-      }
-
-      nsCOMPtr<nsIDOMNode> refNode;
-      rows->Item(newIndex, getter_AddRefs(refNode));
-
-      // add this back into the section
-      section->InsertBefore(this, refNode, getter_AddRefs(returnNode));
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 {
@@ -539,38 +425,6 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsHTMLTableRowElement::SetCells(nsIDOMHTMLCollection* aValue)
-{
-  nsCOMPtr<nsIDOMHTMLCollection> cells;
-  GetCells(getter_AddRefs(cells));
-
-  PRUint32 numCells;
-  cells->GetLength(&numCells);
-
-  PRUint32 i;
-
-  for (i = 0; i < numCells; i++) {
-    DeleteCell(i);
-  }
-
-  numCells = 0;
-  if (aValue) {
-    aValue->GetLength(&numCells);
-  }
-
-  for (i = 0; i < numCells; i++) {
-    nsCOMPtr<nsIDOMNode> node;
-    cells->Item(i, getter_AddRefs(node));
-
-    nsCOMPtr<nsIDOMNode> retChild;
-    AppendChild(node, getter_AddRefs(retChild));
-  }
-
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)

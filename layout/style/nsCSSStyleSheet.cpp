@@ -58,8 +58,6 @@
 #include "nsIDOMNode.h"
 #include "nsDOMError.h"
 #include "nsIPresShell.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
 #include "nsCSSAtoms.h"
 #include "nsINameSpaceManager.h"
@@ -75,6 +73,8 @@
 #ifdef MOZ_XUL
 #include "nsIXULContent.h"
 #endif
+
+#include "nsContentUtils.h"
 
 //#define DEBUG_RULES
 //#define EVENT_DEBUG
@@ -504,8 +504,8 @@ class CSSRuleListImpl;
 class DOMMediaListImpl;
 
 class CSSStyleSheetImpl : public nsICSSStyleSheet, 
-                          public nsIDOMCSSStyleSheet, 
-                          public nsIScriptObjectOwner {
+                          public nsIDOMCSSStyleSheet
+{
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
@@ -582,14 +582,10 @@ public:
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
   // nsIDOMStyleSheet interface
-  NS_DECL_IDOMSTYLESHEET
+  NS_DECL_NSIDOMSTYLESHEET
 
   // nsIDOMCSSStyleSheet interface
-  NS_DECL_IDOMCSSSTYLESHEET
-
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  NS_DECL_NSIDOMCSSSTYLESHEET
 
 private: 
   // These are not supported and are not implemented! 
@@ -621,7 +617,6 @@ protected:
   nsIDOMNode*           mOwningNode;
   PRBool                mDisabled;
   PRBool                mDirty; // has been modified 
-  void*                 mScriptObject;
 
   CSSStyleSheetInner*   mInner;
 
@@ -634,8 +629,7 @@ friend class CSSRuleProcessor;
 // -------------------------------
 // Style Rule List for the DOM
 //
-class CSSRuleListImpl : public nsIDOMCSSRuleList,
-                        public nsIScriptObjectOwner 
+class CSSRuleListImpl : public nsIDOMCSSRuleList
 {
 public:
   CSSRuleListImpl(CSSStyleSheetImpl *aStyleSheet);
@@ -646,17 +640,12 @@ public:
   NS_IMETHOD    GetLength(PRUint32* aLength); 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn); 
 
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-  
   void DropReference() { mStyleSheet = nsnull; }
 
 protected:
   virtual ~CSSRuleListImpl();
 
   CSSStyleSheetImpl*  mStyleSheet;
-  void*               mScriptObject;
 public:
   PRBool              mRulesAccessed;
 };
@@ -667,7 +656,6 @@ CSSRuleListImpl::CSSRuleListImpl(CSSStyleSheetImpl *aStyleSheet)
   // Not reference counted to avoid circular references.
   // The style sheet will tell us when its going away.
   mStyleSheet = aStyleSheet;
-  mScriptObject = nsnull;
   mRulesAccessed = PR_FALSE;
 }
 
@@ -675,14 +663,22 @@ CSSRuleListImpl::~CSSRuleListImpl()
 {
 }
 
+// XPConnect interface list for CSSStyleRuleImpl
+NS_CLASSINFO_MAP_BEGIN(CSSRuleList)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for CSSRuleList
+NS_INTERFACE_MAP_BEGIN(CSSRuleListImpl)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSRuleList)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(CSSRuleListImpl);
 NS_IMPL_RELEASE(CSSRuleListImpl);
-
-NS_INTERFACE_MAP_BEGIN(CSSRuleListImpl)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSRuleList)
-NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP    
@@ -724,44 +720,12 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
   return result;
 }
 
-NS_IMETHODIMP
-CSSRuleListImpl::GetScriptObject(nsIScriptContext *aContext, 
-                                            void** aScriptObject)
-{
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsIDOMCSSRuleList *)this;
-
-    // XXX Should be done through factory
-    res = NS_NewScriptCSSRuleList(aContext, 
-                                             supports,
-                                             (nsISupports *)(nsICSSStyleSheet*)mStyleSheet, 
-                                             (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-NS_IMETHODIMP 
-CSSRuleListImpl::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
 class DOMMediaListImpl : public nsIDOMMediaList,
-                         public nsIScriptObjectOwner,
                          public nsISupportsArray
 {
   NS_DECL_ISUPPORTS
 
-  NS_DECL_IDOMMEDIALIST
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, 
-                             void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  NS_DECL_NSIDOMMEDIALIST
 
   NS_FORWARD_NSISUPPORTSARRAY(mArray->)
   NS_FORWARD_NSICOLLECTION(mArray->);
@@ -782,21 +746,30 @@ class DOMMediaListImpl : public nsIDOMMediaList,
 private:
   nsCOMPtr<nsISupportsArray> mArray;
   CSSStyleSheetImpl*         mStyleSheet;
-  void*                      mScriptObject;
 };
+
+
+// XPConnect interface list for CSSStyleSheetStyleRuleImpl
+NS_CLASSINFO_MAP_BEGIN(MediaList)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMMediaList)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for CSSStyleRuleImpl
+NS_INTERFACE_MAP_BEGIN(DOMMediaListImpl)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaList)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MediaList)
+NS_INTERFACE_MAP_END
+
 
 NS_IMPL_ADDREF(DOMMediaListImpl);
 NS_IMPL_RELEASE(DOMMediaListImpl);
 
-NS_INTERFACE_MAP_BEGIN(DOMMediaListImpl)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaList)
-NS_INTERFACE_MAP_END
 
 DOMMediaListImpl::DOMMediaListImpl(nsISupportsArray *aArray,
                                    CSSStyleSheetImpl *aStyleSheet)
-  : mArray(aArray), mStyleSheet(aStyleSheet), mScriptObject(nsnull)
+  : mArray(aArray), mStyleSheet(aStyleSheet)
 {
   NS_INIT_REFCNT();
 
@@ -805,33 +778,6 @@ DOMMediaListImpl::DOMMediaListImpl(nsISupportsArray *aArray,
 
 DOMMediaListImpl::~DOMMediaListImpl()
 {
-}
-
-NS_IMETHODIMP
-DOMMediaListImpl::GetScriptObject(nsIScriptContext *aContext, 
-                                  void** aScriptObject)
-{
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsIDOMMediaList *)this;
-
-    // XXX Should be done through factory
-    res = NS_NewScriptMediaList(aContext, 
-                                supports,
-                                (nsISupports *)(nsIDOMMediaList*)mStyleSheet, 
-                                (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-NS_IMETHODIMP 
-DOMMediaListImpl::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -973,8 +919,7 @@ DOMMediaListImpl::Append(const nsAReadableString& aNewMedium)
 // -------------------------------
 // Imports Collection for the DOM
 //
-class CSSImportsCollectionImpl : public nsIDOMStyleSheetList,
-                                 public nsIScriptObjectOwner 
+class CSSImportsCollectionImpl : public nsIDOMStyleSheetList
 {
 public:
   CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet);
@@ -985,17 +930,12 @@ public:
   NS_IMETHOD    GetLength(PRUint32* aLength); 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn); 
 
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-  
   void DropReference() { mStyleSheet = nsnull; }
 
 protected:
   virtual ~CSSImportsCollectionImpl();
 
   nsICSSStyleSheet*  mStyleSheet;
-  void*              mScriptObject;
 };
 
 CSSImportsCollectionImpl::CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet)
@@ -1004,47 +944,32 @@ CSSImportsCollectionImpl::CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet
   // Not reference counted to avoid circular references.
   // The style sheet will tell us when its going away.
   mStyleSheet = aStyleSheet;
-  mScriptObject = nsnull;
 }
 
 CSSImportsCollectionImpl::~CSSImportsCollectionImpl()
 {
 }
 
+
+// XPConnect interface list for CSSImportsCollectionImpl
+NS_CLASSINFO_MAP_BEGIN(StyleSheetList)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for CSSImportsCollectionImpl
+NS_INTERFACE_MAP_BEGIN(CSSImportsCollectionImpl)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(StyleSheetList)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(CSSImportsCollectionImpl);
 NS_IMPL_RELEASE(CSSImportsCollectionImpl);
 
-nsresult 
-CSSImportsCollectionImpl::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
 
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsIDOMStyleSheetList))) {
-    nsIDOMStyleSheetList *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    nsIScriptObjectOwner *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMStyleSheetList *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP    
+NS_IMETHODIMP
 CSSImportsCollectionImpl::GetLength(PRUint32* aLength)
 {
   if (nsnull != mStyleSheet) {
@@ -1077,34 +1002,6 @@ CSSImportsCollectionImpl::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   
   return result;
 }
-
-NS_IMETHODIMP
-CSSImportsCollectionImpl::GetScriptObject(nsIScriptContext *aContext, 
-                                            void** aScriptObject)
-{
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsIDOMStyleSheetList *)this;
-
-    // XXX Should be done through factory
-    res = NS_NewScriptStyleSheetList(aContext, 
-                                     supports,
-                                     (nsISupports *)mStyleSheet, 
-                                     (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-NS_IMETHODIMP 
-CSSImportsCollectionImpl::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
 
 // -------------------------------
 // CSS Style Sheet Inner Data Container
@@ -1414,7 +1311,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mOwningNode(nsnull),
     mDisabled(PR_FALSE),
     mDirty(PR_FALSE),
-    mScriptObject(nsnull),
     mRuleProcessors(nsnull)
 {
   NS_INIT_REFCNT();
@@ -1435,7 +1331,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mOwningNode(aCopy.mOwningNode),
     mDisabled(aCopy.mDisabled),
     mDirty(PR_FALSE),
-    mScriptObject(nsnull),
     mInner(aCopy.mInner),
     mRuleProcessors(nsnull)
 {
@@ -1507,54 +1402,27 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
   }
 }
 
+
+// XPConnect interface list for CSSStyleSheetImpl
+NS_CLASSINFO_MAP_BEGIN(CSSStyleSheet)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for CSSStyleSheetImpl
+NS_INTERFACE_MAP_BEGIN(CSSStyleSheetImpl)
+  NS_INTERFACE_MAP_ENTRY(nsICSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleSheet)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSStyleSheet)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(CSSStyleSheetImpl)
 NS_IMPL_RELEASE(CSSStyleSheetImpl)
 
-nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
-                                           void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsICSSStyleSheet))) {
-    *aInstancePtrResult = (void*) ((nsICSSStyleSheet*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleSheet))) {
-    *aInstancePtrResult = (void*) ((nsIStyleSheet*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMStyleSheet))) {
-    nsIDOMStyleSheet *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMCSSStyleSheet))) {
-    nsIDOMCSSStyleSheet *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    nsIScriptObjectOwner *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsICSSStyleSheet *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
@@ -2544,34 +2412,6 @@ CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
 
   return result;
 }
-
-NS_IMETHODIMP 
-CSSStyleSheetImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-
-  if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsICSSStyleSheet *)this;
-    // XXX Should be done through factory
-    res = NS_NewScriptCSSStyleSheet(aContext, 
-                                    supports,
-                                    (nsISupports *)global, 
-                                    (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  NS_RELEASE(global);
-  return res;
-}
-
-NS_IMETHODIMP 
-CSSStyleSheetImpl::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
 
 // XXX for backwards compatibility and convenience
 NS_HTML nsresult

@@ -22,19 +22,16 @@
 
 
 #include "nsIDOMNotation.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsGenericElement.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
 #include "nsIXMLContent.h"
 
 
 class nsXMLNotation : public nsIDOMNotation,
-                      public nsIScriptObjectOwner,
                       public nsIContent
 {
 public:
@@ -47,15 +44,11 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMNotation
   NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId);
   NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId);
-
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
@@ -71,7 +64,6 @@ protected:
   nsString mName;
   nsString mPublicId;
   nsString mSystemId;
-  void* mScriptObject;
 };
 
 nsresult
@@ -98,63 +90,30 @@ nsXMLNotation::nsXMLNotation(const nsAReadableString& aName,
   mName(aName), mPublicId(aPublicId), mSystemId(aSystemId)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
 }
 
 nsXMLNotation::~nsXMLNotation()
 {
 }
 
+
+// XPConnect interface list for nsXMLNotation
+NS_CLASSINFO_MAP_BEGIN(Notation)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNotation)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsXMLNotation
+NS_INTERFACE_MAP_BEGIN(nsXMLNotation)
+  NS_INTERFACE_MAP_ENTRY_DOM_DATA()
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNotation)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Notation)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsXMLNotation)
 NS_IMPL_RELEASE(nsXMLNotation)
 
-nsresult 
-nsXMLNotation::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {                          
-    nsIDOMNotation* tmp = this;                                
-    nsISupports* tmp2 = tmp;                                
-    *aInstancePtrResult = (void*) tmp2;                                  
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {                           
-    nsIDOMNode* tmp = this;                                
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {                  
-    nsCOMPtr<nsIEventListenerManager> man;
-    if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){
-      return man->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void**)aInstancePtrResult);
-    }     
-    return NS_NOINTERFACE;
-  }                                                         
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {                 
-    nsIScriptObjectOwner* tmp = this;                      
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(NS_GET_IID(nsIContent))) {                           
-    nsIContent* tmp = this;                                
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNotation))) {
-    nsIDOMNotation* tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 NS_IMETHODIMP    
 nsXMLNotation::GetPublicId(nsAWritableString& aPublicId)
@@ -171,38 +130,6 @@ nsXMLNotation::GetSystemId(nsAWritableString& aSystemId)
 
   return NS_OK;
 }
-
-NS_IMETHODIMP 
-nsXMLNotation::GetScriptObject(nsIScriptContext* aContext, 
-                               void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-    
-    res = factory->NewScriptNotation(aContext, 
-                                     (nsISupports*)(nsIDOMNotation*)this,
-                                     mInner.mParent, 
-                                     (void**)&mScriptObject);
-
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-NS_IMETHODIMP 
-nsXMLNotation::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP 
 nsXMLNotation::GetTag(nsIAtom*& aResult) const
@@ -307,6 +234,12 @@ NS_IMETHODIMP
 nsXMLNotation::SetContentID(PRUint32 aID) 
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsXMLNotation::IsContentOfType(PRUint32 aFlags)
+{
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

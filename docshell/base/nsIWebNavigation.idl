@@ -21,7 +21,9 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
+
+interface nsIDOMDocument;
+
 
 /**
  * The nsIWebNavigation interface defines an interface for navigating the web.

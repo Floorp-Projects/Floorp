@@ -118,6 +118,10 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) {
+    return !(aFlags & ~eTEXT);
+  }
+
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAReadableString& aValue,
                           PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,

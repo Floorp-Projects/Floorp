@@ -31,7 +31,6 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIXMLDocument.h"
 #include "nsIXMLContent.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsIRefreshURI.h"

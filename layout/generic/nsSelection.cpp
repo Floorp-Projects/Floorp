@@ -63,6 +63,8 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsIDOMText.h"
 
+#include "nsContentUtils.h"
+
 //included for desired x position;
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -83,9 +85,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIDocument.h"
 
 #include "nsISelectionController.h"//for the enums
-
-/*included so html can call into nsISelection code with no security issues*/
-#include "nsISecurityCheckedComponent.h"
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 //#define DEBUG_TABLE 1
@@ -141,11 +140,10 @@ class nsSelectionIterator;
 class nsSelection;
 class nsAutoScrollTimer;
 
-class nsTypedSelection : public nsISelection , 
-                         public nsISelectionPrivate, 
-                         public nsSupportsWeakReference, 
-                         public nsIIndependentSelection,
-                         public nsISecurityCheckedComponent
+class nsTypedSelection : public nsISelection,
+                         public nsISelectionPrivate,
+                         public nsSupportsWeakReference,
+                         public nsIIndependentSelection
 {
 public:
   nsTypedSelection();
@@ -191,9 +189,6 @@ public:
   NS_IMETHOD    SelectionLanguageChange(PRBool aLangRTL);
 
 /*END nsISelection interface implementations*/
-/* nsISecurityCheckedComponent  */
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
-/*END nsISecurityCheckedComponent*/
 
   // utility methods for scrolling the selection into view
   nsresult      GetPresContext(nsIPresContext **aPresContext);
@@ -4443,13 +4438,26 @@ nsTypedSelection::~nsTypedSelection()
 }
 
 
+// XPConnect interface list for nsTypedSelection
+NS_CLASSINFO_MAP_BEGIN(Selection)
+  NS_CLASSINFO_MAP_ENTRY(nsISelection)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsRange
+NS_INTERFACE_MAP_BEGIN(nsTypedSelection)
+  NS_INTERFACE_MAP_ENTRY(nsISelection)
+  NS_INTERFACE_MAP_ENTRY(nsISelectionPrivate)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIIndependentSelection)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelection)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Selection)
+NS_INTERFACE_MAP_END
+
 
 NS_IMPL_ADDREF(nsTypedSelection)
-
 NS_IMPL_RELEASE(nsTypedSelection)
 
-NS_IMPL_QUERY_INTERFACE5(nsTypedSelection, nsISelection, nsISelectionPrivate, nsISupportsWeakReference, nsIIndependentSelection, nsISecurityCheckedComponent)
- 
 
 NS_IMETHODIMP
 nsTypedSelection::SetPresShell(nsIPresShell *aPresShell)
@@ -7550,55 +7558,6 @@ nsTypedSelection::DeleteFromDocument()
   if (!mFrameSelection)
     return NS_OK;//nothing to do
   return mFrameSelection->DeleteFromDocument();
-}
-
-
-static const char* kAllAccess = "AllAccess";
-static const char* kNoAccess = "NoAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsTypedSelection::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISelection))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-  else
-    *_retval = nsCRT::strdup(kNoAccess);
-
-  return NS_OK;
-}
- 
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsTypedSelection::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISelection))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsTypedSelection::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISelection))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsTypedSelection::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISelection))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-  return NS_OK;
 }
 
 /** SelectionLanguageChange modifies the cursor Bidi level after a change in keyboard direction

@@ -51,9 +51,9 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD RemoveAccessibleEventListener(nsIAccessibleEventListener *aListener);
 
     // ----- nsIDOMEventListener --------
-    virtual nsresult HandleEvent(nsIDOMEvent* anEvent);
-    virtual nsresult Focus(nsIDOMEvent* aEvent);
-    virtual nsresult Blur(nsIDOMEvent* aEvent);
+    NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent);
+    NS_IMETHOD Focus(nsIDOMEvent* aEvent);
+    NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 
 protected:
   virtual nsIFrame* GetFrame();

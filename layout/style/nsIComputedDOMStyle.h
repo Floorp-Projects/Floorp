@@ -23,7 +23,7 @@
 #define nsIComputedDOMStyle_h___
 
 #include "nslayout.h"
-#include "nsIDOMCSS2Properties.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 
 class nsIDOMElement;
 class nsIPresShell;

@@ -20,13 +20,12 @@
  * Contributor(s): 
  */
 
-#include "nsISecurityCheckedComponent.idl"
 #include "nsIController.idl"
 
 interface nsIDOMXULCommandDispatcher;
 
 [scriptable, uuid(A5ED3A01-7CC7-11d3-BF87-00105A1B0627)]
-interface nsIControllers : nsISecurityCheckedComponent
+interface nsIControllers : nsISupports
 {
 	attribute nsIDOMXULCommandDispatcher commandDispatcher;
 

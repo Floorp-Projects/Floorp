@@ -21,7 +21,6 @@
  */
 #include "nsIDOMComment.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
 #include "nsLayoutAtoms.h"
@@ -31,9 +30,12 @@
 #include "nsIEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMRange.h"
+#include "nsString.h"
+
+#include "nsContentUtils.h"
+
 
 class nsCommentNode : public nsIDOMComment,
-                      public nsIScriptObjectOwner,
                       public nsITextContent
 {
 public:
@@ -44,15 +46,12 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMCharacterData
-  NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMComment
-
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIContent
   //NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
@@ -180,6 +179,10 @@ public:
     return mInner.SetBindingParent(aParent);
   }
 
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) {
+    return PR_FALSE;
+  }
+
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;
@@ -241,28 +244,28 @@ nsCommentNode::~nsCommentNode()
 {
 }
 
-NS_IMPL_ADDREF(nsCommentNode)
 
+// XPConnect interface list for nsCommentNode
+NS_CLASSINFO_MAP_BEGIN(Comment)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMComment)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsCommentNode
+NS_INTERFACE_MAP_BEGIN(nsCommentNode)
+  NS_INTERFACE_MAP_ENTRY_DOM_DATA()
+  NS_INTERFACE_MAP_ENTRY(nsITextContent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMComment)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Comment)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsCommentNode)
 NS_IMPL_RELEASE(nsCommentNode)
 
-NS_IMETHODIMP
-nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMComment))) {
-    nsIDOMComment* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsITextContent))) {
-    nsITextContent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 NS_IMETHODIMP 
 nsCommentNode::GetTag(nsIAtom*& aResult) const

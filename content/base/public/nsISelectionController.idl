@@ -23,7 +23,6 @@
 
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 #include "nsISelection.idl"
 
 %{C++
@@ -31,8 +30,9 @@
 class nsISelection;
 typedef short SelectionType;
 typedef short SelectionRegion;
-class nsIDOMNode;
 %}
+
+interface nsIDOMNode;
 
 
 [scriptable, uuid(D2D1D179-85A7-11d3-9932-00108301233C)]

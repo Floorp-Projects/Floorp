@@ -54,7 +54,7 @@ class nsPrivateTextRangeList: public nsIPrivateTextRangeList
 	NS_DECL_ISUPPORTS
 public:
 	
-	nsPrivateTextRangeList(PRUint16 aLength,nsIPrivateTextRange** aList);
+	nsPrivateTextRangeList(PRUint16 aLength, nsIPrivateTextRange** aList);
 	virtual ~nsPrivateTextRangeList(void);
 
 	NS_IMETHOD    GetLength(PRUint16* aLength);

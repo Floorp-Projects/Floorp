@@ -54,10 +54,6 @@ public:
 
   NS_IMETHOD RemoveImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
-  NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm) = 0;
-
-  NS_IMETHOD GetForms(nsIDOMHTMLCollection** aForms) = 0;
-
   NS_IMETHOD SetLastModified(const nsAReadableString& aLastModified) = 0;
   NS_IMETHOD SetReferrer(const nsAReadableString& aReferrer) = 0;
 

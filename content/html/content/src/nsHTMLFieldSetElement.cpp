@@ -21,7 +21,6 @@
  */
 #include "nsIDOMHTMLFieldSetElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -47,13 +46,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMHTMLFieldSetElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
@@ -108,9 +107,20 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLFieldSetElement,
-                       nsGenericHTMLContainerFormElement,
-                       nsIDOMHTMLFieldSetElement);
+
+// XPConnect interface list for nsHTMLFieldSetElement
+NS_CLASSINFO_MAP_BEGIN(HTMLFieldSetElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFieldSetElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLFieldSetElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFieldSetElement,
+                                    nsGenericHTMLContainerFormElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFieldSetElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFieldSetElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 // nsIDOMHTMLFieldSetElement

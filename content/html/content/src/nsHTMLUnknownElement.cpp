@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  */
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -51,13 +50,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsAReadableString& aValue, PRBool aNotify);
@@ -103,8 +102,19 @@ nsHTMLUnknownElement::~nsHTMLUnknownElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLUnknownElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLUnknownElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI0(nsHTMLUnknownElement,
-                        nsGenericHTMLContainerElement);
+
+// XPConnect interface list for nsHTMLUnknownElement
+NS_CLASSINFO_MAP_BEGIN(HTMLUnknownElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLUnknownElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLUnknownElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

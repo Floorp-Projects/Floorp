@@ -1,4 +1,3 @@
 nsIController.idl
 nsIControllerCommand.idl
 nsIControllers.idl
-xulstubs.idl

@@ -25,7 +25,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -65,10 +64,9 @@ protected:
 };
 
 // Attribute helper class used to wrap up an attribute with a dom
-// object that implements nsIDOMAttr and nsIDOMNode and
-// nsIScriptObjectOwner
-class nsDOMAttribute : public nsIDOMAttr, 
-                       public nsIScriptObjectOwner, 
+// object that implements nsIDOMAttr and nsIDOMNode
+class nsDOMAttribute : public nsIDOMAttr,
+                       public nsIDOM3Node,
                        public nsIDOMAttributePrivate
 {
 public:
@@ -78,15 +76,15 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
+  // nsIDOMNode interface
+  NS_DECL_NSIDOMNODE
+
+  // nsIDOM3Node interface
+  NS_DECL_NSIDOM3NODE
 
   // nsIDOMAttr interface
-  NS_DECL_IDOMATTR
+  NS_DECL_NSIDOMATTR
  
-  // nsIDOMNode interface
-  NS_DECL_IDOMNODE
-
   // nsIDOMAttributePrivate interface
   NS_IMETHOD DropReference();
   NS_IMETHOD SetContent(nsIContent* aContent);
@@ -100,7 +98,6 @@ private:
   // element representing the value
   nsIDOMText* mChild;
   nsAttributeChildList* mChildList;
-  void* mScriptObject;
 };
 
 

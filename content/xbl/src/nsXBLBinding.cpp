@@ -49,10 +49,10 @@
 #include "nsIDOMText.h"
 #include "nsSupportsArray.h"
 #include "nsINameSpace.h"
-#include "nsJSUtils.h"
-#include "nsIJSRuntimeService.h"
+#include "jsapi.h"
 #include "nsXBLService.h"
 #include "nsIXBLInsertionPoint.h"
+#include "nsIXPConnect.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"
@@ -1408,19 +1408,36 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
           nsCOMPtr<nsIScriptContext> context;
           global->GetContext(getter_AddRefs(context));
           if (context) {
-            JSObject* scriptObject;
-            nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mBoundElement));
-            owner->GetScriptObject(context, (void**)&scriptObject);
-            if (scriptObject) {
-              // XXX Stay in sync! What if a layered binding has an <interface>?!
-    
-              // XXX Sanity check to make sure our class name matches
-              // Pull ourselves out of the proto chain.
-              JSContext* jscontext = (JSContext*)context->GetNativeContext();
-              JSObject* ourProto = ::JS_GetPrototype(jscontext, scriptObject);
-              JSObject* grandProto = ::JS_GetPrototype(jscontext, ourProto);
-              ::JS_SetPrototype(jscontext, scriptObject, grandProto);
-            }
+            JSContext *jscontext = (JSContext *)context->GetNativeContext();
+ 
+            nsresult rv;
+            nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(),
+                                                     &rv));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+
+            rv = xpc->WrapNative(jscontext, ::JS_GetGlobalObject(jscontext),
+                                 mBoundElement, NS_GET_IID(nsISupports),
+                                 getter_AddRefs(wrapper));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            JSObject* scriptObject = nsnull;
+            rv = wrapper->GetJSObject(&scriptObject);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            // XXX Stay in sync! What if a layered binding has an
+            // <interface>?!
+
+            // XXX Sanity check to make sure our class name matches
+            // Pull ourselves out of the proto chain.
+            JSObject* ourProto = ::JS_GetPrototype(jscontext, scriptObject);
+            JSObject* grandProto = ::JS_GetPrototype(jscontext, ourProto);
+            ::JS_SetPrototype(jscontext, scriptObject, grandProto);
+
+            // Don't remove the reference from the document to the
+            // wrapper here since it'll be removed by the element
+            // itself when that's taken out of the document.
           }
         }
       }
@@ -1432,7 +1449,8 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     if (anonymous) {
       // Also kill the default content within all our insertion points.
       if (mInsertionPointTable)
-        mInsertionPointTable->Enumerate(ChangeDocumentForDefaultContent, nsnull);
+        mInsertionPointTable->Enumerate(ChangeDocumentForDefaultContent,
+                                        nsnull);
 
       // To make XUL templates work (and other XUL-specific stuff),
       // we'll need to notify it using its add & remove APIs. Grab the
@@ -1534,24 +1552,37 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
   *aClassObject = nsnull;
   *aScriptObject = nsnull;
 
-  // Obtain the bound element's current script object.
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mBoundElement));
-  owner->GetScriptObject(aContext, aScriptObject);
-  if (!(*aScriptObject))
-    return NS_ERROR_FAILURE;
+  nsresult rv;
 
-  JSObject* object = (JSObject*)(*aScriptObject);
+  // Obtain the bound element's current script object.
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+
+  JSObject* global = ::JS_GetGlobalObject(jscontext);
+
+  rv = xpc->WrapNative(jscontext, global, mBoundElement,
+                       NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject* object = nsnull;
+
+  rv = wrapper->GetJSObject(&object);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aScriptObject = object;
 
   // First ensure our JS class is initialized.
-  JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
-  JSObject* global = ::JS_GetGlobalObject(jscontext);
   jsval vp;
   JSObject* proto;
 
   if ((! ::JS_LookupProperty(jscontext, global, aClassName, &vp)) ||
       JSVAL_IS_PRIMITIVE(vp)) {
     // We need to initialize the class.
-    
+
     nsXBLJSClass* c;
     void* classObject;
     nsCStringKey key(aClassName);
@@ -1622,6 +1653,20 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
 
   // Set the prototype of our object to be the new class.
   ::JS_SetPrototype(jscontext, object, proto);
+
+  // Root mBoundElement so that it doesn't loose it's binding
+  nsCOMPtr<nsIDocument> doc;
+
+  mBoundElement->GetDocument(*getter_AddRefs(doc));
+
+  if (doc) {
+    nsCOMPtr<nsIXPConnectWrappedNative> native_wrapper =
+      do_QueryInterface(wrapper);
+
+    if (native_wrapper) {
+      doc->AddReference(mBoundElement, native_wrapper);
+    }
+  }
 
   return NS_OK;
 }
@@ -1697,7 +1742,8 @@ nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
 }
     
 NS_IMETHODIMP
-nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue)
+nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName,
+                                     const nsString& aValue)
 {
   nsAutoString val;
   aName->ToString(val);
@@ -1732,11 +1778,8 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const
   rv = receiver->GetListenerManager(getter_AddRefs(manager));
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIScriptObjectOwner> scriptOwner(do_QueryInterface(receiver));
-  if (!scriptOwner)
-    return NS_OK;
-
-  rv = manager->AddScriptEventListener(context, scriptOwner, eventName, aValue, PR_FALSE);
+  rv = manager->AddScriptEventListener(context, receiver, eventName,
+                                       aValue, PR_FALSE);
 
   return rv;
 }

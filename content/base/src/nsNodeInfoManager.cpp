@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIAtom.h"
+#include "nsIDocument.h"
 
 nsNodeInfoManager* nsNodeInfoManager::gAnonymousNodeInfoManager = nsnull;
 PRUint32 nsNodeInfoManager::gNodeManagerCount = 0;
@@ -44,7 +45,7 @@ nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult)
 
 
 nsNodeInfoManager::nsNodeInfoManager()
-  : mNameSpaceManager(nsnull)
+  : mDocument(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -101,12 +102,23 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsNodeInfoManager,
 // nsINodeInfoManager
 
 NS_IMETHODIMP
-nsNodeInfoManager::Init(nsINameSpaceManager *aNameSpaceManager)
+nsNodeInfoManager::Init(nsIDocument *aDocument,
+                        nsINameSpaceManager *aNameSpaceManager)
 {
   NS_ENSURE_ARG_POINTER(aNameSpaceManager);
   NS_ENSURE_TRUE(mNodeInfoHash, NS_ERROR_OUT_OF_MEMORY);
 
+  mDocument = aDocument;
   mNameSpaceManager = aNameSpaceManager;
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNodeInfoManager::DropDocumentReference()
+{
+  mDocument = nsnull;
 
   return NS_OK;
 }
@@ -258,6 +270,17 @@ nsNodeInfoManager::GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager)
 
   aNameSpaceManager = mNameSpaceManager;
   NS_ADDREF(aNameSpaceManager);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNodeInfoManager::GetDocument(nsIDocument*& aDocument)
+{
+  aDocument = mDocument;
+
+  NS_IF_ADDREF(aDocument);
 
   return NS_OK;
 }

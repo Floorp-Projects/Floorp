@@ -44,7 +44,7 @@ public:
   virtual ~nsXBLMutationHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
   NS_IMETHOD SubtreeModified(nsIDOMEvent* aEvent);
   NS_IMETHOD AttrModified(nsIDOMEvent* aEvent);

@@ -44,10 +44,10 @@ public:
   virtual ~nsXBLFocusHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
-  virtual nsresult Focus(nsIDOMEvent* aMouseEvent);
-  virtual nsresult Blur(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD Focus(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD Blur(nsIDOMEvent* aMouseEvent);
    
   NS_DECL_ISUPPORTS_INHERITED
 

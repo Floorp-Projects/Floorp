@@ -24,10 +24,9 @@
 #include "nsDOMAttribute.h"
 #include "nsGenericElement.h"
 #include "nsIContent.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
-
+#include "nsContentUtils.h"
 
 //----------------------------------------------------------------------
 
@@ -35,7 +34,6 @@ nsDOMAttributeMap::nsDOMAttributeMap(nsIContent* aContent)
   : mContent(aContent)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
   // We don't add a reference to our content. If it goes away,
   // we'll be told to drop our reference
 }
@@ -50,44 +48,22 @@ nsDOMAttributeMap::DropReference()
   mContent = nsnull;
 }
 
+
+// XPConnect interface list for nsDOMAttributeMap
+NS_CLASSINFO_MAP_BEGIN(NamedNodeMap)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsDOMAttributeMap
 NS_INTERFACE_MAP_BEGIN(nsDOMAttributeMap)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNamedNodeMap)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NamedNodeMap)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDOMAttributeMap)
 NS_IMPL_RELEASE(nsDOMAttributeMap)
-
-nsresult
-nsDOMAttributeMap::GetScriptObject(nsIScriptContext *aContext,
-                                   void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    res = factory->NewScriptNamedNodeMap(aContext,
-                                         (nsISupports *)(nsIDOMNamedNodeMap *)this,
-                                         (nsISupports *)mContent,
-                                         (void**)&mScriptObject);
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult
-nsDOMAttributeMap::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
 
 nsresult
 nsDOMAttributeMap::GetNamedItem(const nsAReadableString& aAttrName,

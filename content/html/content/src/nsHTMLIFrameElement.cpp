@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLIFrameElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -51,16 +50,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLIFrameElement
-  NS_DECL_IDOMHTMLIFRAMEELEMENT
+  NS_DECL_NSIDOMHTMLIFRAMEELEMENT
 
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
@@ -117,8 +116,21 @@ nsHTMLIFrameElement::~nsHTMLIFrameElement()
 NS_IMPL_ADDREF(nsHTMLIFrameElement);
 NS_IMPL_RELEASE(nsHTMLIFrameElement);
 
-NS_IMPL_HTMLCONTENT_QI2(nsHTMLIFrameElement, nsGenericHTMLContainerElement,
-                        nsIDOMHTMLIFrameElement, nsIChromeEventHandler);
+
+// XPConnect interface list for nsHTMLIFrameElement
+NS_CLASSINFO_MAP_BEGIN(HTMLIFrameElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLIFrameElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLIFrameElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLIFrameElement)
+  NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLIFrameElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -194,13 +206,7 @@ nsHTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 
   return NS_OK;
 }
-  
-NS_IMETHODIMP
-nsHTMLIFrameElement::SetContentDocument(nsIDOMDocument* aContentDocument)
-{   
-  return NS_ERROR_DOM_INVALID_MODIFICATION_ERR;
-} 
-    
+
 NS_IMETHODIMP
 nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                        const nsAReadableString& aValue,

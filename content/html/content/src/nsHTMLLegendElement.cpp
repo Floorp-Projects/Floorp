@@ -21,7 +21,6 @@
  */
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -47,16 +46,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLLegendElement
-  NS_DECL_IDOMHTMLLEGENDELEMENT
+  NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
@@ -111,9 +110,20 @@ nsHTMLLegendElement::~nsHTMLLegendElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLLegendElement,
-                       nsGenericHTMLContainerFormElement,
-                       nsIDOMHTMLLegendElement);
+
+// XPConnect interface list for nsHTMLLegendElement
+NS_CLASSINFO_MAP_BEGIN(HTMLLegendElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLegendElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLLegendElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLegendElement,
+                                    nsGenericHTMLContainerFormElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLLegendElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLLegendElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

@@ -58,7 +58,7 @@ public:
     if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
   }
 
-  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
+  static nsresult GetTextData(nsIContent *aParent, nsAWritableString& aResult);
 
 protected:
   static PRUint32 gRefCnt;

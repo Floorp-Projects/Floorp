@@ -23,11 +23,11 @@
 #include "nsContentList.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsGenericElement.h"
+
+#include "nsContentUtils.h"
 
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
@@ -36,7 +36,6 @@
 #include "nsIDOMHTMLFormElement.h"
 
 nsBaseContentList::nsBaseContentList()
-  : mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -48,14 +47,23 @@ nsBaseContentList::~nsBaseContentList()
 }
 
 
+// XPConnect interface list for nsBaseContentList
+NS_CLASSINFO_MAP_BEGIN(NodeList)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsBaseContentList
+NS_INTERFACE_MAP_BEGIN(nsBaseContentList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsBaseContentList)
 NS_IMPL_RELEASE(nsBaseContentList)
 
-NS_INTERFACE_MAP_BEGIN(nsBaseContentList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
-NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsBaseContentList::GetLength(PRUint32* aLength)
@@ -78,41 +86,6 @@ nsBaseContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   }
 
   return CallQueryInterface(tmp, aReturn);
-}
-
-NS_IMETHODIMP 
-nsBaseContentList::GetScriptObject(nsIScriptContext *aContext,
-                                   void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-
-  if (!mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-
-    res = factory->NewScriptNodeList(aContext,
-                                     NS_STATIC_CAST(nsIDOMNodeList *, this),
-                                     global, &mScriptObject);
-    NS_RELEASE(factory);
-  }
-
-  *aScriptObject = mScriptObject;
-
-  NS_RELEASE(global);
-
-  return res;
-}
-
-NS_IMETHODIMP 
-nsBaseContentList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -387,12 +360,24 @@ nsContentList::~nsContentList()
   delete mData;
 }
 
+
+// XPConnect interface list for nsContentList
+NS_CLASSINFO_MAP_BEGIN(HTMLCollection)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsContentList
 NS_INTERFACE_MAP_BEGIN(nsContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLCollection)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
+
 
 NS_IMPL_ADDREF_INHERITED(nsContentList, nsBaseContentList)
 NS_IMPL_RELEASE_INHERITED(nsContentList, nsBaseContentList)
+
 
 NS_IMETHODIMP 
 nsContentList::GetLength(PRUint32* aLength)
@@ -418,10 +403,10 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       // Flush pending content changes Bug 4891
       mDocument->FlushPendingNotifications(PR_FALSE);
     }
-      
+
     nsISupports *element = NS_STATIC_CAST(nsISupports *,
                                           mElements.ElementAt(aIndex));
-    
+
     if (element) {
       result = CallQueryInterface(element, aReturn);
     }
@@ -429,15 +414,15 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       *aReturn = nsnull;
     }
   }
-  
+
   return result;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 {
   nsresult result = CheckDocumentExistence();
-  
+
   if (NS_SUCCEEDED(result)) {
     if (mDocument) {
       mDocument->FlushPendingNotifications(PR_FALSE); // Flush pending content changes Bug 4891
@@ -466,35 +451,6 @@ nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-nsContentList::GetScriptObject(nsIScriptContext *aContext,
-                               void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-
-  if (!mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-
-    res = factory->NewScriptHTMLCollection(aContext,
-                                           NS_STATIC_CAST(nsIDOMNodeList *,
-                                                          this),
-                                           global, &mScriptObject);
-    NS_RELEASE(factory);
-  }
-
-  *aScriptObject = mScriptObject;
-
-  NS_RELEASE(global);
-
-  return res;
-}
-
-NS_IMETHODIMP
 nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {

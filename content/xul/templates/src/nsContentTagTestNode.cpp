@@ -23,6 +23,7 @@
 
 #include "nsContentTagTestNode.h"
 #include "nsISupportsArray.h"
+#include "nsString.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING

@@ -44,7 +44,7 @@ public:
   virtual ~nsXBLScrollHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
   NS_IMETHOD Overflow(nsIDOMEvent* aEvent);
   NS_IMETHOD Underflow(nsIDOMEvent* aEvent);

@@ -44,18 +44,15 @@
 #include "nsINodeInfo.h"
 #include "nsICSSParser.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsXULAttributes.h"
 #include "nsLayoutCID.h"
 #include "nsReadableUtils.h"
+#include "nsContentUtils.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
-static NS_DEFINE_CID(kICSSParserIID, NS_ICSS_PARSER_IID);
 
 
 //----------------------------------------------------------------------
@@ -206,7 +203,6 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                nsINodeInfo* aNodeInfo,
                                const nsAReadableString& aValue)
     : mContent(aContent),
-      mScriptObject(nsnull),
       mNodeInfo(aNodeInfo)
 {
     NS_INIT_REFCNT();
@@ -248,33 +244,26 @@ nsXULAttribute::Create(nsIContent* aContent,
 }
 
 // nsISupports interface
+
+// XPConnect interface list for nsXULAttribute
+NS_CLASSINFO_MAP_BEGIN(XULAttr)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsXULAttribute
+NS_INTERFACE_MAP_BEGIN(nsXULAttribute)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMAttr)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+    NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(XULAttr, Attr)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsXULAttribute);
 NS_IMPL_RELEASE(nsXULAttribute);
 
-NS_IMETHODIMP
-nsXULAttribute::QueryInterface(REFNSIID aIID, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aIID.Equals(NS_GET_IID(nsIDOMAttr)) ||
-        aIID.Equals(NS_GET_IID(nsIDOMNode)) ||
-        aIID.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsIDOMAttr*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-        *aResult = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else {
-        *aResult = nsnull;
-        return NS_NOINTERFACE;
-    }
-}
 
 // nsIDOMNode interface
 
@@ -462,14 +451,12 @@ nsXULAttribute::IsSupported(const nsAReadableString& aFeature,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if 0
 NS_IMETHODIMP
 nsXULAttribute::GetBaseURI(nsAWritableString &aURI)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
 
 // nsIDOMAttr interface
 
@@ -512,43 +499,6 @@ nsXULAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
 }
 
 
-// nsIScriptObjectOwner interface
-
-NS_IMETHODIMP
-nsXULAttribute::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
-{
-    nsresult rv = NS_OK;
-    if (! mScriptObject) {
-        nsIDOMScriptObjectFactory *factory;
-    
-        rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          NS_GET_IID(nsIDOMScriptObjectFactory),
-                                          (nsISupports **)&factory);
-
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = factory->NewScriptAttr(aContext, 
-                                    (nsISupports*)(nsIDOMAttr*) this,
-                                    (nsISupports*) mContent,
-                                    (void**) &mScriptObject);
-
-        nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
-    }
-
-    *aScriptObject = mScriptObject;
-    return rv;
-}
-
-
-NS_IMETHODIMP
-nsXULAttribute::SetScriptObject(void *aScriptObject)
-{
-    mScriptObject = aScriptObject;
-    return NS_OK;
-}
-
-
 // Implementation methods
 
 void
@@ -580,8 +530,7 @@ nsXULAttribute::GetValueAsAtom(nsIAtom** aResult)
 nsXULAttributes::nsXULAttributes(nsIContent* aContent)
     : mContent(aContent),
       mClassList(nsnull),
-      mStyleRule(nsnull),
-      mScriptObject(nsnull)
+      mStyleRule(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -615,32 +564,23 @@ nsXULAttributes::Create(nsIContent* aContent, nsXULAttributes** aResult)
 
 // nsISupports interface
 
+// XPConnect interface list for nsXULAttributes
+NS_CLASSINFO_MAP_BEGIN(XULNamedNodeMap)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsXULAttributes
+NS_INTERFACE_MAP_BEGIN(nsXULAttributes)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNamedNodeMap)
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(XULNamedNodeMap,
+                                                       NamedNodeMap)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsXULAttributes);
 NS_IMPL_RELEASE(nsXULAttributes);
-
-NS_IMETHODIMP
-nsXULAttributes::QueryInterface(REFNSIID aIID, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aIID.Equals(NS_GET_IID(nsIDOMNamedNodeMap)) ||
-        aIID.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsIDOMNamedNodeMap*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-        *aResult = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else {
-        *aResult = nsnull;
-        return NS_NOINTERFACE;
-    }
-}
 
 
 // nsIDOMNamedNodeMap interface
@@ -752,42 +692,6 @@ nsXULAttributes::RemoveNamedItemNS(const nsAReadableString& aNamespaceURI,
 }
 
 
-
-// nsIScriptObjectOwner interface
-
-NS_IMETHODIMP
-nsXULAttributes::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
-{
-    nsresult rv = NS_OK;
-    if (! mScriptObject) {
-        nsIDOMScriptObjectFactory *factory;
-    
-        rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          NS_GET_IID(nsIDOMScriptObjectFactory),
-                                          (nsISupports **)&factory);
-
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = factory->NewScriptNamedNodeMap(aContext, 
-                                            (nsISupports*)(nsIDOMNamedNodeMap*) this, 
-                                            (nsISupports*) mContent,
-                                            (void**) &mScriptObject);
-
-        nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
-    }
-
-    *aScriptObject = mScriptObject;
-    return rv;
-}
-
-NS_IMETHODIMP
-nsXULAttributes::SetScriptObject(void *aScriptObject)
-{
-    mScriptObject = aScriptObject;
-    return NS_OK;
-}
-
 // Implementation methods
 
 nsresult 
@@ -828,11 +732,9 @@ nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAReadableStri
       return NS_OK;
     }
 
-    nsCOMPtr<nsICSSParser> css;
-    nsresult result = nsComponentManager::CreateInstance(kCSSParserCID,
-                                                         nsnull,
-                                                         kICSSParserIID,
-                                                         getter_AddRefs(css));
+    nsresult result = NS_OK;
+
+    nsCOMPtr<nsICSSParser> css(do_CreateInstance(kCSSParserCID, &result));
     if (NS_OK != result) {
       return result;
     }

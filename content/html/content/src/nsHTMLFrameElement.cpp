@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLFrameElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -50,16 +49,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLFrameElement
-  NS_DECL_IDOMHTMLFRAMEELEMENT
+  NS_DECL_NSIDOMHTMLFRAMEELEMENT
 
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
@@ -112,8 +111,21 @@ nsHTMLFrameElement::~nsHTMLFrameElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLFrameElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLFrameElement, nsGenericElement);
 
-NS_IMPL_HTMLCONTENT_QI2(nsHTMLFrameElement, nsGenericHTMLLeafElement,
-                        nsIDOMHTMLFrameElement, nsIChromeEventHandler);
+
+// XPConnect interface list for nsHTMLFrameElement
+NS_CLASSINFO_MAP_BEGIN(HTMLFrameElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFrameElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLFrameElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement,
+                                    nsGenericHTMLLeafElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameElement)
+  NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFrameElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -186,12 +198,6 @@ nsHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
   NS_IF_ADDREF(*aContentDocument);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElement::SetContentDocument(nsIDOMDocument* aContentDocument)
-{
-  return NS_ERROR_DOM_INVALID_MODIFICATION_ERR;
 }
 
 NS_IMETHODIMP

@@ -25,20 +25,18 @@
 
 #include "nsISupports.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIScriptObjectOwner.h"
 
 /**
  * This is a base class for a generic HTML collection. The base class
- * provides implementations for nsISupports and nsIScriptObjectOwner,
- * but it is up to the subclass to implement the core HTML collection
+ * provides implementations for nsISupports, but it is up to the
+ * subclass to implement the core HTML collection
+ *
  * methods:
  *   GetLength
  *   Item
  *   NamedItem
- *
- */
-class nsGenericDOMHTMLCollection : public nsIDOMHTMLCollection, 
-                                   public nsIScriptObjectOwner 
+ * */
+class nsGenericDOMHTMLCollection : public nsIDOMHTMLCollection
 {
 public:
   nsGenericDOMHTMLCollection();
@@ -46,17 +44,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
   // The following need to be defined in the subclass
   // nsIDOMHTMLCollection interface
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
   NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)=0;
-
-protected:
-  void*        mScriptObject;
 };
 
 #endif // nsGenericDOMHTMLCollection_h__

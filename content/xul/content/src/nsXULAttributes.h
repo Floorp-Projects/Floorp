@@ -32,7 +32,6 @@
 
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIStyleRule.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -96,7 +95,7 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 class nsXULAttribute : public nsIDOMAttr,
-                       public nsIScriptObjectOwner
+                       public nsIDOM3Node
 {
 protected:
     static PRInt32 gRefCnt;
@@ -130,14 +129,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDOMNode interface
-    NS_DECL_IDOMNODE
+    NS_DECL_NSIDOMNODE
+
+    // nsIDOM3Node interface
+    NS_DECL_NSIDOM3NODE
 
     // nsIDOMAttr interface
-    NS_DECL_IDOMATTR
-
-    // nsIScriptObjectOwner interface
-    NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void *aScriptObject);
+    NS_DECL_NSIDOMATTR
 
     // Implementation methods
     void GetQualifiedName(nsAWritableString& aAttributeName);
@@ -152,7 +150,6 @@ protected:
         nsXULAttribute* mNext;  // For objects on the freelist
     };
 
-    void*        mScriptObject; // The attribute's script object, if reified
     nsINodeInfo* mNodeInfo;     // The attribute name
     nsXULAttributeValue        mValue;        // The attribute value; either an nsIAtom* or PRUnichar*,
                                 // with the low-order bit tagging its type
@@ -161,8 +158,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
-class nsXULAttributes : public nsIDOMNamedNodeMap,
-                        public nsIScriptObjectOwner
+class nsXULAttributes : public nsIDOMNamedNodeMap
 {
 public:
     static nsresult
@@ -172,11 +168,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDOMNamedNodeMap interface
-    NS_DECL_IDOMNAMEDNODEMAP
-
-    // nsIScriptObjectOwner interface
-    NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void *aScriptObject);
+    NS_DECL_NSIDOMNAMEDNODEMAP
 
     // Implementation methods
     // VoidArray Helpers
@@ -204,7 +196,6 @@ protected:
     nsClassList*           mClassList;
     nsCOMPtr<nsIStyleRule> mStyleRule;
     nsAutoVoidArray        mAttributes;
-    void*                  mScriptObject;
 };
 
 

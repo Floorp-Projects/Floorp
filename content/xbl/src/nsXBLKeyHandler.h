@@ -42,17 +42,18 @@ class nsXBLKeyHandler : public nsIDOMKeyListener,
                         public nsXBLEventHandler
 {
 public:
-  nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver,
+                  nsIXBLPrototypeHandler* aHandler);
 
   virtual ~nsXBLKeyHandler();
-  
+
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
-  
-  virtual nsresult KeyUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult KeyDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult KeyPress(nsIDOMEvent* aMouseEvent);
-   
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+
+  NS_IMETHOD KeyUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aMouseEvent);
+
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
@@ -66,7 +67,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLKeyHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLKeyHandler(nsIDOMEventReceiver* aEventReceiver,
+                    nsIXBLPrototypeHandler* aHandlerElement, 
                     nsXBLKeyHandler** aResult);
 
 

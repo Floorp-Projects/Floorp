@@ -39,12 +39,12 @@ public:
   virtual ~nsXBLWindowDragHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
-  virtual nsresult DragGesture(nsIDOMEvent* aMouseEvent) ;
-  virtual nsresult DragOver(nsIDOMEvent* aMouseEvent) ;
-  virtual nsresult DragEnter(nsIDOMEvent* aMouseEvent) ;
-  virtual nsresult DragExit(nsIDOMEvent* aMouseEvent) ;
-  virtual nsresult DragDrop(nsIDOMEvent* aMouseEvent) ;
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent) ;
+  NS_IMETHOD DragOver(nsIDOMEvent* aMouseEvent) ;
+  NS_IMETHOD DragEnter(nsIDOMEvent* aMouseEvent) ;
+  NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent) ;
+  NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent) ;
    
   NS_DECL_ISUPPORTS
 

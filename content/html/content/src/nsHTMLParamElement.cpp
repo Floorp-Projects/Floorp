@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLParamElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -43,16 +42,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLParamElement
-  NS_DECL_IDOMHTMLPARAMELEMENT
+  NS_DECL_NSIDOMHTMLPARAMELEMENT
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
@@ -96,8 +95,20 @@ nsHTMLParamElement::~nsHTMLParamElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLParamElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLParamElement, nsGenericElement);
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLParamElement, nsGenericHTMLLeafElement,
-                       nsIDOMHTMLParamElement);
+
+// XPConnect interface list for nsHTMLParamElement
+NS_CLASSINFO_MAP_BEGIN(HTMLParamElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLParamElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLParamElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLParamElement,
+                                    nsGenericHTMLLeafElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLParamElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLParamElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

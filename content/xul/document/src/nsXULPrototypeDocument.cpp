@@ -35,20 +35,27 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsIURI.h"
 #include "nsIXULPrototypeDocument.h"
-#include "nsJSUtils.h"
+#include "jsapi.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXULElement.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsIDOMScriptObjectFactory.h"
+#include "nsDOMCID.h"
 
-class nsXULPDGlobalObject : public nsIScriptObjectOwner,
-                            public nsIScriptGlobalObject,
+
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
+                     NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+
+
+class nsXULPDGlobalObject : public nsIScriptGlobalObject,
                             public nsIScriptObjectPrincipal
 {
 public:
@@ -56,10 +63,6 @@ public:
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
-
-    // nsIScriptObjectOwner methods
-    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void **aObject);
-    NS_IMETHOD SetScriptObject(void *aObject);
 
     // nsIScriptGlobalObject methods
     NS_IMETHOD SetContext(nsIScriptContext *aContext);
@@ -75,6 +78,8 @@ public:
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
+    NS_IMETHOD_(JSObject *) GetGlobalJSObject();
+    NS_IMETHOD OnFinalize(JSObject *aObject);
 
     // nsIScriptObjectPrincipal methods
     NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
@@ -83,7 +88,7 @@ protected:
     virtual ~nsXULPDGlobalObject();
 
     nsCOMPtr<nsIScriptContext> mScriptContext;
-    JSObject *mScriptObject;    // XXX JS language rabies bigotry badness
+    JSObject *mJSObject;    // XXX JS language rabies bigotry badness
 
     nsIScriptGlobalObjectOwner* mGlobalObjectOwner; // weak reference
 
@@ -140,11 +145,45 @@ protected:
     NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 };
 
+
+
+void PR_CALLBACK
+nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
+{
+    nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
+
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeThis));
+
+    if (sgo) {
+        sgo->OnFinalize(obj);
+    }
+
+    // The addref was part of JSObject construction
+    NS_RELEASE(nativeThis);
+}
+
+
+JSBool PR_CALLBACK
+nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
+{
+    if (JSVAL_IS_STRING(id)) {
+        JSString *str = JSVAL_TO_STRING(id);
+
+        jschar *s = ::JS_GetStringChars(str);
+    }
+
+    JSBool did_resolve = JS_FALSE;
+
+    return JS_ResolveStandardClass(cx, obj, id, &did_resolve);
+}
+
+
 JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
     "nsXULPrototypeScript compilation scope",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  nsJSUtils::nsGenericFinalize
+    JS_EnumerateStub, nsXULPDGlobalObject_resolve,  JS_ConvertStub,
+    nsXULPDGlobalObject_finalize
 };
 
 
@@ -403,7 +442,7 @@ nsXULPrototypeDocument::ReportScriptError(nsIScriptError *errorObject)
 //
 
 nsXULPDGlobalObject::nsXULPDGlobalObject()
-    : mScriptObject(nsnull),
+    : mJSObject(nsnull),
       mGlobalObjectOwner(nsnull)
 {
     NS_INIT_REFCNT();
@@ -418,58 +457,10 @@ NS_IMPL_ADDREF(nsXULPDGlobalObject)
 NS_IMPL_RELEASE(nsXULPDGlobalObject)
 
 NS_INTERFACE_MAP_BEGIN(nsXULPDGlobalObject)
-    NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
     NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
     NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
 NS_INTERFACE_MAP_END
-
-//----------------------------------------------------------------------
-//
-// nsIScriptObjectOwner methods
-//
-
-NS_IMETHODIMP
-nsXULPDGlobalObject::GetScriptObject(nsIScriptContext *aContext, void **aObject)
-{
-    // The prototype document has its own special secret script object
-    // that can be used to compile scripts and event handlers.
-    nsresult rv;
-
-    nsCOMPtr<nsIScriptContext> context;
-
-    if (mScriptContext && aContext != mScriptContext.get()) {
-        rv = GetContext(getter_AddRefs(context));
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        context = aContext;
-    }
-
-    if (! mScriptObject) {
-        JSContext* cx = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
-        if (! cx)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        mScriptObject = JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
-        if (! mScriptObject)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        // Add an owning reference from JS back to us. This'll be
-        // released when the JSObject is finalized.
-        ::JS_SetPrivate(cx, mScriptObject, this);
-        NS_ADDREF(this);
-    }
-
-    *aObject = mScriptObject;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULPDGlobalObject::SetScriptObject(void *aObject)
-{
-    mScriptObject = (JSObject *)aObject;
-    return NS_OK;
-}
 
 //----------------------------------------------------------------------
 //
@@ -490,9 +481,27 @@ nsXULPDGlobalObject::GetContext(nsIScriptContext **aContext)
     // This whole fragile mess is predicated on the fact that
     // GetContext() will be called before GetScriptObject() is.
     if (! mScriptContext) {
-        nsresult rv;
-        rv = NS_CreateScriptContext(this, getter_AddRefs(mScriptContext));
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIDOMScriptObjectFactory> factory =
+            do_GetService(kDOMScriptObjectFactoryCID);
+        NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+
+        nsresult rv =
+            factory->NewScriptContext(nsnull, getter_AddRefs(mScriptContext));
+        if (NS_FAILED(rv))
+            return rv;
+
+        JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
+
+        mJSObject = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
+        if (!mJSObject)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        ::JS_SetGlobalObject(cx, mJSObject);
+
+        // Add an owning reference from JS back to us. This'll be
+        // released when the JSObject is finalized.
+        ::JS_SetPrivate(cx, mJSObject, this);
+        NS_ADDREF(this);
     }
 
     *aContext = mScriptContext;
@@ -559,6 +568,33 @@ nsXULPDGlobalObject::HandleDOMEvent(nsIPresContext* aPresContext,
 {
     NS_NOTREACHED("waaah!");
     return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP_(JSObject *)
+nsXULPDGlobalObject::GetGlobalJSObject()
+{
+    // The prototype document has its own special secret script object
+    // that can be used to compile scripts and event handlers.
+
+    if (!mScriptContext)
+        return nsnull;
+
+    JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
+                                        mScriptContext->GetNativeContext());
+    if (!cx)
+        return nsnull;
+
+    return ::JS_GetGlobalObject(cx);
+}
+
+NS_IMETHODIMP
+nsXULPDGlobalObject::OnFinalize(JSObject *aObject)
+{
+    NS_ASSERTION(aObject == mJSObject, "Wrong object finalized!");
+
+    mJSObject = nsnull;
+
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------

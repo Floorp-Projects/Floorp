@@ -21,11 +21,8 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
-%{C++
-class nsIDOMDocument;
-%}
+interface nsIDOMDocument;
 interface nsISelection;
 
 [scriptable, uuid(A6CF90E2-15B3-11d2-932E-00805F8ADD32)]

@@ -50,6 +50,7 @@
 #include "nsIContent.h"
 #include "plhash.h"
 #include "pldhash.h"
+#include "nsCRT.h"
 
 class nsIRDFResource;
 class nsIRDFNode;

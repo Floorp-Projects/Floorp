@@ -32,21 +32,16 @@
 #include "nsDOMError.h"
 
 
-class nsROCSSPrimitiveValue : public nsIDOMCSSPrimitiveValue,
-                              public nsIScriptObjectOwner
+class nsROCSSPrimitiveValue : public nsIDOMCSSPrimitiveValue
 {
 public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMCSSPrimitiveValue
-  NS_DECL_IDOMCSSPRIMITIVEVALUE
+  NS_DECL_NSIDOMCSSPRIMITIVEVALUE
 
   // nsIDOMCSSValue
-  NS_DECL_IDOMCSSVALUE
-
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  NS_DECL_NSIDOMCSSVALUE
 
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue(nsISupports *aOwner, float aP2T);
@@ -78,8 +73,6 @@ private:
   nsISupports *mOwner;
 
   float mT2P;
-
-  void* mScriptObject;
 };
 
 #endif /* nsROCSSPrimitiveValue_h___ */

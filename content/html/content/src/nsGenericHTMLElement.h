@@ -28,12 +28,10 @@
 #include "nsIContent.h"
 #include "nsHTMLValue.h"
 #include "nsVoidArray.h"
-#include "nsIJSScriptObject.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 #include "nsIFormControl.h"
 
 #include "nsIStatefulFrame.h"
-
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -46,7 +44,6 @@ class nsIHTMLContent;
 class nsIMutableStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
-class nsIDOMScriptObjectFactory;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
@@ -56,6 +53,8 @@ class nsIForm;
 class nsIPresState;
 class nsIPluginInstance;
 
+extern void GetGenericHTMLElementIIDs(nsVoidArray& aArray);
+
 class nsGenericHTMLElement : public nsGenericElement {
 public:
   nsGenericHTMLElement();
@@ -63,8 +62,8 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  static nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement,
-                                    REFNSIID aIID, void **aInstancePtr);
+  nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement, REFNSIID aIID,
+                             void **aInstancePtr);
 
   NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
                         nsGenericHTMLElement* aDest,
@@ -137,6 +136,7 @@ public:
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
   nsresult HandleDOMEventForAnchors(nsIContent* aOuter,
                                     nsIPresContext* aPresContext,
@@ -349,15 +349,9 @@ public:
 protected:
   nsresult SetElementFocus(PRBool aDoFocus);
 
-  nsresult GetPluginInstance(nsIPluginInstance** aPluginInstance);
-
-  nsresult GetPluginScriptObject(nsIScriptContext* aContext,
-                                 void** aScriptObject);
-  PRBool GetPluginProperty(JSContext *aContext, JSObject *aObj, jsval aID,
-                           jsval *aVp);
-
   PRBool IsEventName(nsIAtom* aName);
 };
+
 
 //----------------------------------------------------------------------
 
@@ -501,6 +495,8 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
@@ -518,8 +514,6 @@ public:
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
 
 protected:
   nsIForm* mForm;
@@ -536,6 +530,8 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
@@ -553,7 +549,6 @@ public:
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
 
 protected:
   nsIForm* mForm;
@@ -809,5 +804,46 @@ _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)                    \
     nsHTMLValue value(aValue, eHTMLUnit_Integer);                   \
     return NS_STATIC_CAST(nsIHTMLContent *, this)->SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE); \
   }
+
+
+/**
+ * QueryInterface() implementation helper macros
+ */
+
+#define NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(_class, _base)                    \
+  NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
+  {                                                                           \
+    NS_ENSURE_ARG_POINTER(aInstancePtr);                                      \
+                                                                              \
+    *aInstancePtr = nsnull;                                                   \
+                                                                              \
+    nsresult rv;                                                              \
+                                                                              \
+    rv = _base::QueryInterface(aIID, aInstancePtr);                           \
+                                                                              \
+    if (NS_SUCCEEDED(rv))                                                     \
+      return rv;                                                              \
+                                                                              \
+    rv = DOMQueryInterface(this, aIID, aInstancePtr);                         \
+                                                                              \
+    if (NS_SUCCEEDED(rv))                                                     \
+      return rv;                                                              \
+                                                                              \
+    nsISupports *foundInterface = nsnull;
+
+
+#define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
+    {                                                                         \
+      return NS_NOINTERFACE;                                                  \
+    }                                                                         \
+                                                                              \
+    NS_ADDREF(foundInterface);                                                \
+                                                                              \
+    *aInstancePtr = foundInterface;                                           \
+                                                                              \
+    return NS_OK;                                                             \
+  }
+
+
 
 #endif /* nsGenericHTMLElement_h___ */

@@ -73,7 +73,7 @@
 #include "nsITreeFrame.h"
 #include "nsIOutlinerBoxObject.h"
 #include "nsIScrollableViewProvider.h"
-#include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentRange.h"
 
 #include "nsIDOMRange.h"
 #include "nsICaret.h"
@@ -1057,8 +1057,8 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
   if(!rootWindow) return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsIDOMWindowInternal> windowContent;
-  rootWindow->Get_content(getter_AddRefs(windowContent));
+  nsCOMPtr<nsIDOMWindow> windowContent;
+  rootWindow->GetContent(getter_AddRefs(windowContent));
   if(!windowContent) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -1090,7 +1090,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 
   float textzoom;
   mv->GetTextZoom(&textzoom);
-  textzoom += 0.1*change;
+  textzoom += ((float)change) / 10;
   if (textzoom > 0 && textzoom <= 20)
     mv->SetTextZoom(textzoom);
 
@@ -3705,7 +3705,7 @@ nsresult nsEventStateManager::MoveCaretToFocus()
     mPresContext->GetShell(getter_AddRefs(shell));
     if (shell) {
       // rangeDoc is a document interface we can create a range with
-      nsCOMPtr<nsIDOMNSDocument> rangeDoc(do_QueryInterface(mDocument));
+      nsCOMPtr<nsIDOMDocumentRange> rangeDoc(do_QueryInterface(mDocument));
       nsCOMPtr<nsIDOMNode> currentFocusNode(do_QueryInterface(mCurrentFocus));
       nsCOMPtr<nsIFrameSelection> frameSelection;
       shell->GetFrameSelection(getter_AddRefs(frameSelection));
@@ -3717,7 +3717,7 @@ nsresult nsEventStateManager::MoveCaretToFocus()
           getter_AddRefs(domSelection));
         if (domSelection) {
           // First clear the selection
-          domSelection ->RemoveAllRanges();
+          domSelection->RemoveAllRanges();
           nsCOMPtr<nsIDOMRange> newRange;
           nsresult rv = rangeDoc->CreateRange(getter_AddRefs(newRange));
           if (NS_SUCCEEDED(rv)) {

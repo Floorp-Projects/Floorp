@@ -26,10 +26,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIXMLContent.h"
-#include "nsIJSScriptObject.h"
 #include "nsGenericElement.h"
 #include "nsIStyledContent.h"
 
@@ -49,13 +47,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericContainerElement::)
-
-  // nsIScriptObjectOwner methods
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+  NS_FORWARD_NSIDOMELEMENT(nsGenericContainerElement::)
 
   // nsIXMLContent
   NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);

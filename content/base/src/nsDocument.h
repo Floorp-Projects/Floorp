@@ -31,14 +31,13 @@
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentStyle.h"
+#include "nsIDOMDocumentRange.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDiskDocument.h"
 #include "nsIDOMStyleSheetList.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIJSScriptObject.h"
 #include "nsIContent.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsIPrincipal.h"
@@ -49,6 +48,7 @@
 #include "nsHashtable.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsILineBreakerFactory.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 
 class nsIEventListenerManager;
@@ -56,6 +56,7 @@ class nsDOMStyleSheetList;
 class nsIOutputStream;
 class nsDocument;
 class nsIDTD;
+
 
 #if 0
 class nsPostData : public nsIPostData {
@@ -120,7 +121,6 @@ protected:
 
 
 class nsDOMStyleSheetList : public nsIDOMStyleSheetList,
-                            public nsIScriptObjectOwner,
                             public nsIDocumentObserver
 {
 public:
@@ -128,7 +128,8 @@ public:
   virtual ~nsDOMStyleSheetList();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IDOMSTYLESHEETLIST
+
+  NS_DECL_NSIDOMSTYLESHEETLIST
   
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
@@ -185,10 +186,6 @@ public:
                               nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
 protected:
   PRInt32       mLength;
   nsIDocument*  mDocument;
@@ -202,9 +199,10 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentEvent,
                    public nsIDOMDocumentStyle,
                    public nsIDOMDocumentView,
+                   public nsIDOMDocumentRange,
                    public nsIDOMDocumentXBL,
+                   public nsIDOM3Node,
                    public nsIDiskDocument,
-                   public nsIJSScriptObject,
                    public nsSupportsWeakReference,
                    public nsIDOMEventReceiver,
                    public nsIScriptObjectPrincipal
@@ -309,8 +307,10 @@ public:
    * Access HTTP header data (this may also get set from other sources, like
    * HTML META tags).
    */
-  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsAWritableString& aData) const;
-  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsAReadableString& aData);
+  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField,
+                           nsAWritableString& aData) const;
+  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField,
+                           const nsAReadableString& aData);
 
   /**
    * Create a new presentation shell that will use aContext for
@@ -362,11 +362,13 @@ public:
   virtual void AddStyleSheet(nsIStyleSheet* aSheet);
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
   
-  NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets);
+  NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets,
+                               nsISupportsArray* aNewSheets);
   virtual void AddStyleSheetToStyleSets(nsIStyleSheet* aSheet);
   virtual void RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet);
 
-  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex,
+                                PRBool aNotify);
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool mDisabled);
 
@@ -435,74 +437,47 @@ public:
   NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
 
-  /**
-    * Finds text in content
-   */
-  NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
-
   NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE);
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
+  NS_IMETHOD AddReference(void *aKey, nsISupports *aReference);
+  NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
 
 public:
   
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
+  // nsIDOMNode
+  NS_DECL_NSIDOMNODE
 
-  // nsIDOMDocument interface
-  NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype);
-  NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation);
-  NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement);
+  // nsIDOM3Node
+  NS_DECL_NSIDOM3NODE
 
-  NS_IMETHOD    CreateElement(const nsAReadableString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    CreateTextNode(const nsAReadableString& aData, nsIDOMText** aReturn);
-  NS_IMETHOD    CreateComment(const nsAReadableString& aData, nsIDOMComment** aReturn);
-  NS_IMETHOD    CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASection** aReturn);
-  NS_IMETHOD    CreateProcessingInstruction(const nsAReadableString& aTarget, const nsAReadableString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateAttribute(const nsAReadableString& aName, nsIDOMAttr** aReturn);
-  NS_IMETHOD    CreateEntityReference(const nsAReadableString& aName, nsIDOMEntityReference** aReturn);
-  NS_IMETHOD    GetElementsByTagName(const nsAReadableString& aTagname, nsIDOMNodeList** aReturn);
-  NS_IMETHOD    GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNodeList** aReturn);
-  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
-  NS_IMETHOD    GetCharacterSet(nsAWritableString& aCharacterSet);
-  NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
-                           PRBool aDeep,
-                           nsIDOMNode** aReturn);
-  NS_IMETHOD    GetLocation(jsval* aLocation);
-  NS_IMETHOD    SetLocation(jsval aLocation);
-  NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
-  NS_IMETHOD    Load (const nsAReadableString& aUrl);
-  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
-  NS_IMETHOD    GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult);
-  NS_IMETHOD    SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject);
+  // nsIDOMDocument
+  NS_DECL_NSIDOMDOCUMENT
 
-  /**
-   *  Retrieve the "direction" property of the document.
-   */
-  NS_IMETHOD    GetDir(nsAWritableString& aDirection);
-
-  /**
-   *  Set the "direction" property of the document.
-   */
-  NS_IMETHOD    SetDir(const nsAReadableString& aDirection);
- 
-  // nsIDOMNode interface
-  NS_DECL_IDOMNODE
-
-  // nsIDOMDocumentView
-  NS_DECL_IDOMDOCUMENTVIEW
-
-  // nsIDOMDocumentXBL
-  NS_DECL_IDOMDOCUMENTXBL
+  // nsIDOMNSDocument
+  NS_DECL_NSIDOMNSDOCUMENT
 
   // nsIDOMDocumentEvent
-  NS_DECL_IDOMDOCUMENTEVENT
+  NS_DECL_NSIDOMDOCUMENTEVENT
+
+  // nsIDOMDocumentStyle
+  NS_DECL_NSIDOMDOCUMENTSTYLE
+
+  // nsIDOMDocumentView
+  NS_DECL_NSIDOMDOCUMENTVIEW
+
+  // nsIDOMDocumentRange
+  NS_DECL_NSIDOMDOCUMENTRANGE
+
+  // nsIDOMDocumentXBL
+  NS_DECL_NSIDOMDOCUMENTXBL
 
   // nsIDOMEventReceiver interface
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID);
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
@@ -511,9 +486,11 @@ public:
   NS_DECL_NSIDISKDOCUMENT
 
   // nsIDOMEventTarget interface
-  NS_IMETHOD AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
+  NS_IMETHOD AddEventListener(const nsAReadableString& aType,
+                              nsIDOMEventListener* aListener, 
                               PRBool aUseCapture);
-  NS_IMETHOD RemoveEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
+  NS_IMETHOD RemoveEventListener(const nsAReadableString& aType,
+                                 nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
@@ -527,43 +504,23 @@ public:
   NS_IMETHOD_(PRBool) EventCaptureRegistration(PRInt32 aCapturerIncrement);
 
 
-  // nsIJSScriptObject interface
-  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
-                                jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, 
-                                JSObject *aObj, jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
-                                jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
-                                jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                            PRBool *aDidDefineProperty);
-  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
-
   virtual nsresult SetDocumentURL(nsIURI* aURI);
 
 protected:
-  nsIContent* FindContent(const nsIContent* aStartNode,
-                          const nsIContent* aTest1, 
-                          const nsIContent* aTest2) const;
   NS_IMETHOD GetDTD(nsIDTD** aDTD) const;
 
 protected:
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hooks for sheet ordering
-  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
-
-  virtual PRBool InternalRegisterCompileEventHandler(JSContext* aContext, jsval aPropName, 
-                                                     jsval *aVp, PRBool aCompile);
+  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
+                                          PRInt32 aIndex);
 
   nsDocument();
   virtual ~nsDocument(); 
   nsresult Init();
 
   nsIArena* mArena;
-  nsString* mDocumentTitle;
+  nsString mDocumentTitle;
   nsIURI* mDocumentURL;
   nsCOMPtr<nsIURI> mDocumentBaseURL;
   nsIPrincipal* mPrincipal;
@@ -578,7 +535,6 @@ protected:
                             // mChildren, or null if no such element exists.
   nsVoidArray mStyleSheets;
   nsVoidArray mObservers;
-  void* mScriptObject;
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
   nsIEventListenerManager* mListenerManager;
   PRBool mInDestructor;
@@ -606,6 +562,8 @@ protected:
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
   nsSupportsHashtable* mBoxObjectTable;
   PRInt32 mNumCapturers; //Number of capturing event handlers in doc.  Used to optimize event delivery.
+
+  nsSupportsHashtable mContentWrapperHash;
 
 private:
   // These are not implemented and not supported.

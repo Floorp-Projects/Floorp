@@ -42,7 +42,6 @@
 #include "nsISizeOfHandler.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMText.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIScriptGlobalObject.h"
 #include "prprf.h"
 #include "nsCOMPtr.h"
@@ -54,7 +53,6 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
 {
   mDocument = nsnull;
   mParent = nsnull;
-  mScriptObject = nsnull;
   mListenerManager = nsnull;
   mRangeList = nsnull;
 }
@@ -207,14 +205,16 @@ nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 nsresult
 nsGenericDOMDataNode::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 {
-  aNamespaceURI.Truncate();
+  SetDOMStringToNull(aNamespaceURI);
+
   return NS_OK;
 }
 
 nsresult
 nsGenericDOMDataNode::GetPrefix(nsAWritableString& aPrefix)
 {
-  aPrefix.Truncate();
+  SetDOMStringToNull(aPrefix);
+
   return NS_OK;
 }
 
@@ -222,6 +222,14 @@ nsresult
 nsGenericDOMDataNode::SetPrefix(const nsAReadableString& aPrefix)
 {
   return NS_ERROR_DOM_NAMESPACE_ERR;
+}
+
+nsresult
+nsGenericDOMDataNode::GetLocalName(nsAWritableString& aLocalName)
+{
+  SetDOMStringToNull(aLocalName);
+
+  return NS_OK;
 }
 
 nsresult
@@ -244,7 +252,7 @@ nsGenericDOMDataNode::GetBaseURI(nsAWritableString& aURI)
   aURI.Truncate();
   nsresult rv = NS_OK;
   // DOM Data Node inherits the base from its parent element/document
-  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOM3Node> node;
   if (mParent) {
     node = do_QueryInterface(mParent);
   } else if (mDocument) {
@@ -314,14 +322,14 @@ nsGenericDOMDataNode::SetData(nsIContent *aOuterContent, const nsAReadableString
   return result;
 }
 
-nsresult    
+nsresult
 nsGenericDOMDataNode::GetLength(PRUint32* aLength)
 {
   *aLength = mText.GetLength();
   return NS_OK;
 }
 
-nsresult    
+nsresult
 nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
                                     PRUint32 aCount,
                                     nsAWritableString& aReturn)
@@ -486,55 +494,6 @@ nsGenericDOMDataNode::ReplaceData(nsIContent *aOuterContent, PRUint32 aOffset,
 
 //----------------------------------------------------------------------
 
-// nsIScriptObjectOwner implementation
-
-nsresult
-nsGenericDOMDataNode::GetScriptObject(nsIContent *aOuterContent,
-                                      nsIScriptContext* aContext,
-                                      void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-    
-    nsIDOMNode* node;
-    PRUint16 nodeType;
-
-    res = aOuterContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    node->GetNodeType(&nodeType);
-    res = factory->NewScriptCharacterData(nodeType,
-                                          aContext, aOuterContent,
-                                          mParent, (void**)&mScriptObject);
-    if (nsnull != mDocument) {
-      aContext->AddNamedReference((void *)&mScriptObject,
-                                  mScriptObject,
-                                  "nsGenericDOMDataNode::mScriptObject");
-    }
-    NS_RELEASE(node);
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult
-nsGenericDOMDataNode::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
 nsresult
 nsGenericDOMDataNode::GetListenerManager(nsIContent* aOuterContent, nsIEventListenerManager** aResult)
 {
@@ -618,14 +577,16 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool a
   // If we were part of a document, make sure we get rid of the
   // script context reference to our script object so that our
   // script object can be freed (or collected).
-  if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
+  if (mDocument) {
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if (globalObject) {
       nsCOMPtr<nsIScriptContext> context;
       if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
-        context->RemoveReference((void *)&mScriptObject,
-                                 mScriptObject);
+        //        context->RemoveReference((void *)&mScriptObject,
+        //                                 mScriptObject);
+
+        // XXX: UnRoot!
       }
     }
   }
@@ -636,15 +597,17 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool a
   // to a document, make sure that the script context adds a 
   // reference to our script object. This will ensure that it
   // won't be freed (or collected) out from under us.
-  if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
+  if (mDocument) {
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if (globalObject) {
       nsCOMPtr<nsIScriptContext> context;
       if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
-        context->AddNamedReference((void *)&mScriptObject,
-                                   mScriptObject,
-                                   "Text");
+        //        context->AddNamedReference((void *)&mScriptObject,
+        //                                   mScriptObject,
+        //                                   "Text");
+
+        // XXX: Root!
       }
     }
   }

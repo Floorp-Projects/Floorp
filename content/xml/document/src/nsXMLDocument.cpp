@@ -76,13 +76,15 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsDOMAttribute.h"
-static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 
+#include "nsContentUtils.h"
+
+static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -188,11 +190,11 @@ nsXMLDocument::nsXMLDocument()
 nsXMLDocument::~nsXMLDocument()
 {
   NS_IF_RELEASE(mParser);  
-  if (nsnull != mAttrStyleSheet) {
+  if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mAttrStyleSheet);
   }
-  if (nsnull != mInlineStyleSheet) {
+  if (mInlineStyleSheet) {
     mInlineStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mInlineStyleSheet);
   }
@@ -202,42 +204,33 @@ nsXMLDocument::~nsXMLDocument()
   }
 }
 
-NS_IMETHODIMP 
-nsXMLDocument::QueryInterface(REFNSIID aIID,
-                              void** aInstancePtr)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-  nsISupports *inst = nsnull;
+// XPConnect interface list for nsXMLDocument
+NS_CLASSINFO_MAP_BEGIN(Document)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+NS_CLASSINFO_MAP_END
 
-  if (aIID.Equals(NS_GET_IID(nsIXMLDocument))) {
-    inst = NS_STATIC_CAST(nsIXMLDocument *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIHTMLContentContainer))) {
-    inst = NS_STATIC_CAST(nsIHTMLContentContainer *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIInterfaceRequestor))) {
-    inst = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIHTTPEventSink))) {
-    inst = NS_STATIC_CAST(nsIHTTPEventSink *, this);
-  } else {
-    return nsDocument::QueryInterface(aIID, aInstancePtr);
-  }
 
-  NS_ADDREF(inst);
+// QueryInterface implementation for nsHTMLAnchorElement
+NS_INTERFACE_MAP_BEGIN(nsXMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIHTTPEventSink)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Document)
+NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
-  *aInstancePtr = inst;
 
-  return NS_OK;
-}
+NS_IMPL_ADDREF_INHERITED(nsXMLDocument, nsDocument)
+NS_IMPL_RELEASE_INHERITED(nsXMLDocument, nsDocument)
 
-nsrefcnt nsXMLDocument::AddRef()
-{
-  return nsDocument::AddRef();
-}
-
-nsrefcnt nsXMLDocument::Release()
-{
-  return nsDocument::Release();
-}
 
 NS_IMETHODIMP 
 nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)

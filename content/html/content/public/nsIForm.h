@@ -23,26 +23,32 @@
 #define nsIForm_h___
 
 #include "nsISupports.h"
-#include "nsString.h"
+#include "nsAReadableString.h"
+
 class nsIFormControl;
 class nsISizeOfHandler;
+
 
 #define NS_FORM_METHOD_GET  0
 #define NS_FORM_METHOD_POST 1
 #define NS_FORM_ENCTYPE_URLENCODED 0
 #define NS_FORM_ENCTYPE_MULTIPART  1
 
+
 // IID for the nsIFormManager interface
 #define NS_IFORM_IID    \
 { 0xb7e94510, 0x4c19, 0x11d2,  \
   { 0x80, 0x3f, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
+
 
 /**
  * This interface provides a complete set of methods dealing with
  * elements which belong to a form element. When nsIDOMHTMLCollection
  * allows write operations
  */
-class nsIForm : public nsISupports {
+
+class nsIForm : public nsISupports
+{
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
 
@@ -60,7 +66,8 @@ public:
     * attributes.  The name or id attributes of the form control
     * are used as a key into the table.
     */
-  NS_IMETHOD AddElementToTable(nsIFormControl* aElement, const nsAReadableString& aName) = 0;
+  NS_IMETHOD AddElementToTable(nsIFormControl* aElement,
+                               const nsAReadableString& aName) = 0;
 
   /**
     * Get the element at a specified index position
@@ -84,7 +91,7 @@ public:
     */
   NS_IMETHOD RemoveElement(nsIFormControl* aElement) = 0;
 
-  /**    
+  /**
     * Remove an element from the lookup table mainted by the form.
     * We can't fold this method into RemoveElement() because when
     * RemoveElement() is called it doesn't know if the element is
@@ -95,7 +102,20 @@ public:
     * @param aName the name or id of the element to remove
     * @return NS_OK if the element was successfully removed.
     */
-  NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement, const nsAReadableString& aName) = 0;
+  NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement,
+                                    const nsAReadableString& aName) = 0;
+
+  /**
+    * Resolve a name in the scope of the form object, this means find
+    * form controls in this form with the correct value in the name
+    * attribute.
+    *
+    * @param aElement the element to remove
+    * @param aName the name or id of the element to remove
+    * @return NS_OK if the element was successfully removed.  */
+  NS_IMETHOD ResolveName(const nsAReadableString& aName,
+                         nsISupports **aResult) = 0;
+  
 
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
 };

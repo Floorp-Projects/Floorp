@@ -40,7 +40,6 @@ LLIBS =                              \
  $(DIST)\lib\xpcom.lib		           \
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\gkgfxwin.lib	           \
- $(DIST)\lib\jsdom.lib	           \
  $(LIBNSPR)
 
 include <$(DEPTH)\config\config.mak>

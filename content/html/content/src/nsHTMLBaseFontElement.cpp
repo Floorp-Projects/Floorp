@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLBaseFontElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -43,16 +42,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLBaseElement
-  NS_DECL_IDOMHTMLBASEFONTELEMENT
+  NS_DECL_NSIDOMHTMLBASEFONTELEMENT
 
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
@@ -98,8 +97,20 @@ nsHTMLBaseFontElement::~nsHTMLBaseFontElement()
 NS_IMPL_ADDREF(nsHTMLBaseFontElement)
 NS_IMPL_RELEASE(nsHTMLBaseFontElement)
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLBaseFontElement, nsGenericHTMLLeafElement,
-                       nsIDOMHTMLBaseFontElement)
+
+// XPConnect interface list for nsHTMLBaseFontElement
+NS_CLASSINFO_MAP_BEGIN(HTMLBaseFontElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLBaseFontElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLBaseFontElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBaseFontElement,
+                                    nsGenericHTMLLeafElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLBaseFontElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLBaseFontElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

@@ -21,14 +21,11 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 /* THIS IS A PUBLIC INTERFACE */
 
-%{C++
-class nsIDOMNode;
-class nsIDOMRange;
-%}
+interface nsIDOMNode;
+interface nsIDOMRange;
 
 /**
  * Interface for manipulating and querying the current selected range

@@ -25,6 +25,8 @@
 #define nsContentTagTestNode_h__
 
 #include "nsRuleNetwork.h"
+#include "nsIAtom.h"
+
 class nsConflictSet;
 
 class nsContentTagTestNode : public TestNode

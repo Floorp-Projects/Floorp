@@ -95,48 +95,58 @@ public:
   * Sets events listeners of all types. 
   * @param an event listener
   */
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID, PRInt32 aFlags);
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID, PRInt32 aFlags);
+  NS_IMETHOD AddEventListenerByType(nsIDOMEventListener *aListener,
+                                    const nsAReadableString& type,
+                                    PRInt32 aFlags);
+  NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
+                                       const nsAReadableString& type,
+                                       PRInt32 aFlags) ;
+  NS_IMETHOD AddScriptEventListener(nsIScriptContext*aContext,
+                                    nsISupports *aObject,
+                                    nsIAtom *aName,
+                                    const nsAReadableString& aFunc,
+                                    PRBool aDeferCompilation); 
+  NS_IMETHOD RegisterScriptEventListener(nsIScriptContext *aContext,
+                                         nsISupports *aObject,
+                                         nsIAtom* aName);
+  NS_IMETHOD RemoveScriptEventListener(nsIAtom *aName);
+  NS_IMETHOD CompileScriptEventListener(nsIScriptContext *aContext,
+                                        nsISupports *aObject,
+                                        nsIAtom* aName, PRBool *aDidCompile);
 
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags);
-  virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsAReadableString& type, PRInt32 aFlags);
-  virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsAReadableString& type, PRInt32 aFlags) ;
+  NS_IMETHOD CaptureEvent(PRInt32 aEventTypes);
+  NS_IMETHOD ReleaseEvent(PRInt32 aEventTypes);
 
-  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext, 
-                                          nsIScriptObjectOwner *aScriptObjectOwner, 
-                                          nsIAtom *aName, 
-                                          const nsAReadableString& aFunc, 
-                                          PRBool aDeferCompilation); 
-  virtual nsresult RemoveScriptEventListener(nsIAtom *aName);
-  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, 
-                                               nsIScriptObjectOwner *aScriptObjectOwner, 
-                                               nsIAtom* aName);
-  virtual nsresult CompileScriptEventListener(nsIScriptContext *aContext, 
-                                               nsIScriptObjectOwner *aScriptObjectOwner, 
-                                               nsIAtom* aName);
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+                         nsEvent* aEvent, 
+                         nsIDOMEvent** aDOMEvent,
+                         nsIDOMEventTarget* aCurrentTarget,
+                         PRUint32 aFlags,
+                         nsEventStatus* aEventStatus);
 
+  NS_IMETHOD CreateEvent(nsIPresContext* aPresContext, 
+                         nsEvent* aEvent,
+                         const nsAReadableString& aEventType,
+                         nsIDOMEvent** aDOMEvent);
 
-  virtual nsresult CaptureEvent(PRInt32 aEventTypes);
-  virtual nsresult ReleaseEvent(PRInt32 aEventTypes);
+  NS_IMETHOD RemoveAllListeners(PRBool aScriptOnly);
 
-  virtual nsresult HandleEvent(nsIPresContext* aPresContext, 
-                               nsEvent* aEvent, 
-                               nsIDOMEvent** aDOMEvent,
-                               nsIDOMEventTarget* aCurrentTarget,
-                               PRUint32 aFlags,
-                               nsEventStatus* aEventStatus);
+  NS_IMETHOD SetListenerTarget(nsISupports* aTarget);
 
-  virtual nsresult CreateEvent(nsIPresContext* aPresContext, 
-                               nsEvent* aEvent,
-                               const nsAReadableString& aEventType,
-                               nsIDOMEvent** aDOMEvent);
+  NS_IMETHOD HasMutationListeners(PRBool* aListener)
+  {
+    *aListener = (GetListenersByType(eEventArrayType_Mutation, nsnull,
+                                     PR_FALSE) != nsnull);
+    return NS_OK;
+  }
 
-  virtual nsresult RemoveAllListeners(PRBool aScriptOnly);
-
-  virtual nsresult SetListenerTarget(nsISupports* aTarget);
-
-  virtual nsresult HasMutationListeners(PRBool* aListener) { *aListener = (GetListenersByType(eEventArrayType_Mutation, nsnull, PR_FALSE) != nsnull); return NS_OK; };
-
-  static nsresult GetIdentifiersForType(nsIAtom* aType, EventArrayType* aArrayType, PRInt32* aSubType);
+  static nsresult GetIdentifiersForType(nsIAtom* aType,
+                                        EventArrayType* aArrayType,
+                                        PRInt32* aSubType);
 
   // nsIDOMEventTarget interface
   NS_IMETHOD AddEventListener(const nsAReadableString& aType, 
@@ -148,8 +158,10 @@ public:
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
   // nsIDOMEventReceiver interface
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID);
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
@@ -161,12 +173,14 @@ protected:
                               PRUint32 aSubType,
                               PRUint32 aPhaseFlags);
   nsresult CompileEventHandlerInternal(nsIScriptContext *aContext,
-                                       nsIScriptObjectOwner *aScriptObjectOwner,
+                                       nsISupports *aObject,
                                        nsIAtom *aName,
                                        nsListenerStruct *aListenerStruct,
                                        PRUint32 aSubType);
   nsListenerStruct* FindJSEventListener(EventArrayType aType);
-  nsresult SetJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner, nsIAtom* aName, PRBool aIsString);
+  nsresult SetJSEventListener(nsIScriptContext *aContext,
+                              nsISupports *aObject, nsIAtom* aName,
+                              PRBool aIsString);
   nsresult AddEventListener(nsIDOMEventListener *aListener, 
                             EventArrayType aType, 
                             PRInt32 aSubType,

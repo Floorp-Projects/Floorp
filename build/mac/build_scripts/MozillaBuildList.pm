@@ -702,16 +702,20 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:view:public:MANIFEST",                           "$distdirectory:view:");
 
     #DOM
-    InstallFromManifest(":mozilla:dom:public:MANIFEST",                            "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",                        "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:base:MANIFEST_IDL",               "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:core:MANIFEST_IDL",               "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:css:MANIFEST_IDL",                "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:events:MANIFEST_IDL",             "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:html:MANIFEST_IDL",               "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:range:MANIFEST_IDL",              "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:stylesheets:MANIFEST_IDL",        "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:views:MANIFEST_IDL",              "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:xbl:MANIFEST_IDL",                "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:xul:MANIFEST_IDL",                "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:MANIFEST",                            "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:public:base:MANIFEST",                       "$distdirectory:dom:");
-    InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",                    "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",                 "$distdirectory:dom:");
-    InstallFromManifest(":mozilla:dom:public:events:MANIFEST",                     "$distdirectory:dom:");
-    InstallFromManifest(":mozilla:dom:public:range:MANIFEST",                      "$distdirectory:dom:");
-    InstallFromManifest(":mozilla:dom:public:html:MANIFEST",                       "$distdirectory:dom:");
-    InstallFromManifest(":mozilla:dom:public:css:MANIFEST",                        "$distdirectory:dom:");
-    InstallFromManifest(":mozilla:dom:public:xul:MANIFEST",                        "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",                         "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:src:base:MANIFEST",                          "$distdirectory:dom:");
 
@@ -1051,6 +1055,16 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.mcp",                     "oji");
     BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp",                        "xpconnect");
     BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp",                             "dom");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_baseIDL.mcp",                        "dom_base");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_coreIDL.mcp",                        "dom_core");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_cssIDL.mcp",                         "dom_css");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_eventsIDL.mcp",                      "dom_events");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_htmlIDL.mcp",                        "dom_html");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_rangeIDL.mcp",                       "dom_range");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_stylesheetsIDL.mcp",                 "dom_stylesheets");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_viewsIDL.mcp",                       "dom_views");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_xblIDL.mcp",                         "dom_xbl");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_xulIDL.mcp",                         "dom_xul");
 
     BuildIDLProject(":mozilla:dom:src:jsurl:macbuild:JSUrlDL.mcp",                  "jsurl");
     
@@ -1538,7 +1552,7 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",              "htmlparser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 #    BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfx.mcp",            "gfx$C$D.shlb", "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     # Static library shared between different content- and layout-related libraries

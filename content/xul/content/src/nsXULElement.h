@@ -46,7 +46,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsIEventListenerManager.h"
-#include "nsIJSScriptObject.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -246,7 +245,7 @@ public:
     nsCOMPtr<nsIURI>         mSrcURI;
     PRBool                   mSrcLoading;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
-    JSObject*                mScriptObject;
+    JSObject*                mJSObject;
     const char*              mLangVersion;
 };
 
@@ -315,7 +314,6 @@ class nsXULElement : public nsIXULContent,
                      public nsIDOMXULElement,
                      public nsIDOMEventReceiver,
                      public nsIScriptEventHandlerOwner,
-                     public nsIJSScriptObject,
                      public nsIChromeEventHandler
 {
 public:
@@ -330,7 +328,8 @@ protected:
 
 public:
     static nsresult
-    Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument, PRBool aIsScriptable, nsIContent** aResult);
+    Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,
+           PRBool aIsScriptable, nsIContent** aResult);
 
     static nsresult
     Create(nsINodeInfo* aNodeInfo, nsIContent** aResult);
@@ -386,7 +385,8 @@ public:
 
     NS_IMETHOD GetBindingParent(nsIContent** aContent);
     NS_IMETHOD SetBindingParent(nsIContent* aParent);
-  
+    NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+
     // nsIXMLContent
     NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
     NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
@@ -413,13 +413,13 @@ public:
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
     
     // nsIDOMNode (from nsIDOMElement)
-    NS_DECL_IDOMNODE
+    NS_DECL_NSIDOMNODE
   
     // nsIDOMElement
-    NS_DECL_IDOMELEMENT
+    NS_DECL_NSIDOMELEMENT
 
     // nsIDOMXULElement
-    NS_DECL_IDOMXULELEMENT
+    NS_DECL_NSIDOMXULELEMENT
 
     // nsIDOMEventTarget interface (from nsIDOMEventReceiver)
     NS_IMETHOD AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
@@ -435,10 +435,6 @@ public:
     NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
     NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
-    // nsIScriptObjectOwner
-    NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void *aScriptObject);
-
     // nsIScriptEventHandlerOwner
     NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
                                    void* aTarget,
@@ -447,22 +443,7 @@ public:
                                    void** aHandler);
     NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
 
-    // nsIJSScriptObject
-    virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj, 
-                            jsval aID, jsval *aVp);
-    virtual PRBool DeleteProperty(JSContext *aContext, JSObject *aObj, 
-                            jsval aID, jsval *aVp);
-    virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj, 
-                            jsval aID, jsval *aVp);
-    virtual PRBool SetProperty(JSContext *aContext, JSObject *aObj, 
-                            jsval aID, jsval *aVp);
-    virtual PRBool EnumerateProperty(JSContext *aContext, JSObject *aObj);
-    virtual PRBool Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                           PRBool *aDidDefineProperty);
-    virtual PRBool Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-    virtual void   Finalize(JSContext *aContext, JSObject *aObj);
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+    virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
     
     // nsIChromeEventHandler
     NS_DECL_NSICHROMEEVENTHANDLER
@@ -508,7 +489,6 @@ protected:
     nsIContent*                         mParent;             // [WEAK]
     nsVoidArray                         mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
-    void*                               mScriptObject;       // [OWNER]
 #ifdef DEBUG
     PRBool                              mIsScriptObjectRooted;
 #endif

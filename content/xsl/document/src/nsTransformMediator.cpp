@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsTransformMediator.h"
 #include "nsIComponentManager.h"
+#include "nsString.h"
 
 const char* kTransformerContractIDPrefix = "@mozilla.org/document-transformer;1?type=";
 

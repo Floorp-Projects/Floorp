@@ -74,7 +74,6 @@ LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\gkgfxwin.lib		\
  $(DIST)\lib\timer_s.lib \
- $(DIST)\lib\jsdom.lib		        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_PERF)
  $(DIST)\lib\util.lib		        \
@@ -88,7 +87,7 @@ install:: gbdate.h $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f gbdate.h
 

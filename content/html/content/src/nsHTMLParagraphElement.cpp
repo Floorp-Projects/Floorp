@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLParagraphElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -46,16 +45,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLParagraphElement
-  NS_DECL_IDOMHTMLPARAGRAPHELEMENT
+  NS_DECL_NSIDOMHTMLPARAGRAPHELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -109,8 +108,20 @@ nsHTMLParagraphElement::~nsHTMLParagraphElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLParagraphElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement);
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLParagraphElement, nsGenericHTMLContainerElement,
-                       nsIDOMHTMLParagraphElement);
+
+// XPConnect interface list for nsHTMLParagraphElement
+NS_CLASSINFO_MAP_BEGIN(HTMLParagraphElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLParagraphElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLParagraphElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLParagraphElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLParagraphElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLParagraphElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

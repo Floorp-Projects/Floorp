@@ -64,6 +64,7 @@
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIWeakReference.h"
 
+#include "jsapi.h"
 #include "nsIXPConnect.h"
 
 // Static IIDs/CIDs. Try to minimize these.
@@ -182,7 +183,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNodeList interface
-  NS_DECL_IDOMNODELIST
+  NS_DECL_NSIDOMNODELIST
 
   // nsIAnonymousContentList
   NS_IMETHOD GetInsertionPointCount(PRUint32* aCount);
@@ -338,7 +339,7 @@ public:
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD FlushChromeBindings();
 
-  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult);
+  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
 
   NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
 
@@ -1065,7 +1066,8 @@ nsBindingManager::FlushChromeBindings()
 }
 
 NS_IMETHODIMP
-nsBindingManager::GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult)
+nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
+                                           void** aResult)
 {
   *aResult = nsnull;
   nsCOMPtr<nsIXBLBinding> binding;
@@ -1082,7 +1084,6 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, void* aScriptOb
 
       // We have never made a wrapper for this implementation.
       // Create an XPC wrapper for the script object and hand it back.
-      JSObject* jsobj = (JSObject*)aScriptObject;
 
       nsCOMPtr<nsIDocument> doc;
       aContent->GetDocument(*getter_AddRefs(doc));
@@ -1107,8 +1108,22 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, void* aScriptOb
       if (!xpConnect)
         return NS_NOINTERFACE;
 
-      nsISupports* nativeThis = (nsISupports*)JS_GetPrivate(jscontext, jsobj);
-      nsresult rv = xpConnect->WrapJSAggregatedToNative(nativeThis, jscontext, jsobj, aIID, aResult);
+      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+
+      xpConnect->GetWrappedNativeOfNativeObject(jscontext,
+                                                JS_GetGlobalObject(jscontext),
+                                                aContent,
+                                                NS_GET_IID(nsISupports),
+                                                getter_AddRefs(wrapper));
+      NS_ENSURE_TRUE(wrapper, NS_NOINTERFACE);
+
+      JSObject* jsobj = nsnull;
+
+      wrapper->GetJSObject(&jsobj);
+      NS_ENSURE_TRUE(jsobj, NS_NOINTERFACE);
+
+      nsresult rv = xpConnect->WrapJSAggregatedToNative(aContent, jscontext,
+                                                        jsobj, aIID, aResult);
       if (NS_FAILED(rv))
         return rv;
 

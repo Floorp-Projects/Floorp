@@ -148,7 +148,7 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener(nsIAccessibleEvent
 }
 
 
-nsresult nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
+NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 {
   if (mListener) {
      nsCOMPtr<nsIDOMEventTarget> t;
@@ -185,12 +185,12 @@ nsresult nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-nsresult nsRootAccessible::Focus(nsIDOMEvent* aEvent) 
+NS_IMETHODIMP nsRootAccessible::Focus(nsIDOMEvent* aEvent) 
 { 
   return NS_OK; 
 }
 
-nsresult nsRootAccessible::Blur(nsIDOMEvent* aEvent) 
+NS_IMETHODIMP nsRootAccessible::Blur(nsIDOMEvent* aEvent) 
 { 
   return NS_OK;
 }

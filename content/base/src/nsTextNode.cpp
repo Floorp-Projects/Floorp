@@ -21,7 +21,6 @@
  */
 
 #include "nsIDOMText.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
@@ -29,11 +28,12 @@
 #include "nsIDocument.h"
 #include "nsCRT.h"
 #include "nsLayoutAtoms.h"
+#include "nsString.h"
+#include "nsContentUtils.h"
 
 
-class nsTextNode : public nsIDOMText,
-                   public nsIScriptObjectOwner,
-                   public nsITextContent
+class nsTextNode : public nsITextContent,
+                   public nsIDOMText
 {
 public:
   nsTextNode();
@@ -43,16 +43,13 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMCharacterData
-  NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMText
-  NS_IMPL_IDOMTEXT_USING_GENERIC_DOM_DATA(mInner)
-
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMTEXT_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
@@ -97,24 +94,24 @@ nsTextNode::~nsTextNode()
 NS_IMPL_ADDREF(nsTextNode)
 NS_IMPL_RELEASE(nsTextNode)
 
-NS_IMETHODIMP
-nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMText))) {
-    nsIDOMText* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsITextContent))) {
-    nsITextContent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+
+// XPConnect interface list for nsTextNode
+NS_CLASSINFO_MAP_BEGIN(Text)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMText)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsTextNode
+NS_INTERFACE_MAP_BEGIN(nsTextNode)
+  NS_INTERFACE_MAP_ENTRY_DOM_DATA()
+  NS_INTERFACE_MAP_ENTRY(nsITextContent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMText)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Text)
+NS_INTERFACE_MAP_END
+
 
 NS_IMETHODIMP 
 nsTextNode::GetTag(nsIAtom*& aResult) const
@@ -265,3 +262,8 @@ nsTextNode::SetContentID(PRUint32 aID)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsTextNode::IsContentOfType(PRUint32 aFlags)
+{
+  return !(aFlags & ~eTEXT);
+}

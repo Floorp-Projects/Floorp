@@ -32,7 +32,6 @@ XPIDLSRCS	= \
 		nsIController.idl \
 		nsIControllers.idl \
 		nsIControllerCommand.idl \
-		xulstubs.idl \
 		$(NULL)
 
 EXPORTS		= \

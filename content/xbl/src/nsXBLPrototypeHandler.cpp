@@ -30,7 +30,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -55,8 +54,13 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsXULAtoms.h"
+#include "nsIXPConnect.h"
+#include "nsIDOMScriptObjectFactory.h"
+#include "nsDOMCID.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
+                     NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 PRUint32 nsXBLPrototypeHandler::gRefCnt = 0;
 
@@ -185,7 +189,8 @@ nsXBLPrototypeHandler::InitAccessKeys()
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEvent* aEvent)
+nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
+                                      nsIDOMEvent* aEvent)
 {
   if (!mHandlerElement)
     return NS_ERROR_FAILURE;
@@ -245,7 +250,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     // element and call doCommand on it.
     nsCOMPtr<nsIController> controller;
     nsCOMPtr<nsIFocusController> focusController;
-    
+
     nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aReceiver));
     if (windowRoot) {
       windowRoot->GetFocusController(getter_AddRefs(focusController));
@@ -257,10 +262,10 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
         nsCOMPtr<nsIDocument> doc;
         if (elt)
           elt->GetDocument(*getter_AddRefs(doc));
-      
+
         if (!doc)
           doc = do_QueryInterface(aReceiver);
-      
+
         if (!doc)
           return NS_ERROR_FAILURE;
 
@@ -359,7 +364,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     boundGlobal = do_QueryInterface(rootWin);
   }
   else boundGlobal = do_QueryInterface(aReceiver);
-  
+
   if (!boundGlobal) {
     nsCOMPtr<nsIDocument> boundDocument(do_QueryInterface(aReceiver));
     if (!boundDocument) {
@@ -378,23 +383,44 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   nsCOMPtr<nsIScriptContext> boundContext;
   boundGlobal->GetContext(getter_AddRefs(boundContext));
 
-  nsCOMPtr<nsIScriptObjectOwner> owner;
-  if (winRoot)
-    owner = do_QueryInterface(boundGlobal);
-  else owner = do_QueryInterface(aReceiver);
-  
-  void* scriptObject;
-  owner->GetScriptObject(boundContext, &scriptObject);
-  
+  JSObject* scriptObject = nsnull;
+
+  if (winRoot) {
+    scriptObject = boundGlobal->GetGlobalJSObject();
+  } else {
+    JSObject *global = boundGlobal->GetGlobalJSObject();
+    JSContext *cx = (JSContext *)boundContext->GetNativeContext();
+
+    nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+
+    // root
+    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+
+    // XXX: Don't use the global object!
+    rv = xpc->WrapNative(cx, global, aReceiver, NS_GET_IID(nsISupports),
+                         getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = wrapper->GetJSObject(&scriptObject);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   boundContext->CompileEventHandler(scriptObject, onEventAtom, handlerText,
-                               PR_TRUE, &handler);
+                                    PR_TRUE, &handler);
 
   // Temporarily bind it to the bound element
   boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, handler);
 
   // Execute it.
+  nsCOMPtr<nsIDOMScriptObjectFactory> factory =
+    do_GetService(kDOMScriptObjectFactoryCID);
+  NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIDOMEventListener> eventListener;
-  NS_NewJSEventListener(getter_AddRefs(eventListener), boundContext, owner);
+
+  factory->NewJSEventListener(boundContext, aReceiver,
+                              getter_AddRefs(eventListener));
 
   nsCOMPtr<nsIJSEventListener> jsListener(do_QueryInterface(eventListener));
   jsListener->SetEventName(onEventAtom);

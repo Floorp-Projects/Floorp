@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsIAtom.h"
 #include "nsIEventListenerManager.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIWebShell.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
@@ -48,7 +47,6 @@
 #include "nsIXBLService.h"
 #include "nsIXBLBinding.h"
 #include "nsIBindingManager.h"
-#include "nsIScriptGlobalObject.h"
 
 
 nsresult
@@ -119,6 +117,15 @@ nsXMLElement::~nsXMLElement()
   NS_IF_RELEASE(mNameSpace);
 }
 
+
+// XPConnect interface list for nsXMLElement
+NS_CLASSINFO_MAP_BEGIN(Element)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsXMLElement
 NS_IMETHODIMP 
 nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -138,6 +145,14 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     inst = NS_STATIC_CAST(nsIDOMElement *, this);
   } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
     inst = NS_STATIC_CAST(nsIXMLContent *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
+    inst = new nsNode3Tearoff(this);
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+  } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+    inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id,
+                                                GetElementIIDs,
+                                                "Element");
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else {
     return NS_NOINTERFACE;
   }
@@ -149,8 +164,10 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_OK;
 }
 
+
 NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
+
 
 static inline nsresult MakeURI(const char *aSpec, nsIURI *aBase, nsIURI **aURI)
 {
@@ -546,6 +563,7 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
+#if 0
 NS_IMETHODIMP
 nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 {
@@ -629,6 +647,7 @@ nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
   *aScriptObject = slots->mScriptObject;
   return res;
 }
+#endif
 
 NS_IMETHODIMP
 nsXMLElement::SetContainingNameSpace(nsINameSpace* aNameSpace)

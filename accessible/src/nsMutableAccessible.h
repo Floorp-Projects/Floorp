@@ -23,10 +23,9 @@
 #ifndef _nsMutableAccessible_H_
 #define _nsMutableAccessible_H_
 
+#include "nsIMutableAccessible.h"
 #include "nsAccessible.h"
 #include "nsString.h"
-
-#include "nsIMutableAccessible.h"
 
 class nsMutableAccessible : public nsIMutableAccessible
 {
@@ -40,8 +39,8 @@ public:
 
 private:
   nsCOMPtr<nsISupports> mNode;
-  nsAutoString mName;
-  nsAutoString mRole;
+  nsString mName;
+  nsString mRole;
   nsCOMPtr<nsIAtom> mNameAttribute;
   PRPackedBool mNameNodeValue;
   PRPackedBool mNameStringSet;

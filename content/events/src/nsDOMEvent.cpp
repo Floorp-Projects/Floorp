@@ -42,6 +42,7 @@
 #include "prmem.h"
 #include "nsLayoutAtoms.h"
 #include "nsMutationEvent.h"
+#include "nsContentUtils.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMutationEvent.h"
 
@@ -125,11 +126,15 @@ nsDOMEvent::operator delete(void* aPtr)
 
 
 
-nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAReadableString& aEventType) 
+nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+                       const nsAReadableString& aEventType) 
 {
+  NS_INIT_REFCNT();
+
   mPresContext = aPresContext;
-  if (mPresContext)
-    NS_ADDREF(mPresContext);
+
+  NS_IF_ADDREF(mPresContext);
+
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
     mEvent = aEvent;
@@ -158,6 +163,7 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
       mEvent->eventStructType = NS_EVENT;
     }
   }
+
   mTarget = nsnull;
   mCurrentTarget = nsnull;
   mOriginalTarget = nsnull;
@@ -170,33 +176,46 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
 	  //
 	  // extract the IME composition string
 	  //
-	  mText = new nsString(((nsTextEvent*)aEvent)->theText);
-	  //
-	  // build the range list -- ranges need to be DOM-ified since the IME transaction
-	  //  will hold a ref, the widget representation isn't persistent
-	  //
-	  nsIPrivateTextRange** tempTextRangeList = new nsIPrivateTextRange*[((nsTextEvent*)aEvent)->rangeCount];
-	  if (tempTextRangeList!=nsnull) {
-		for(PRUint16 i=0;i<((nsTextEvent*)aEvent)->rangeCount;i++) {
-			nsPrivateTextRange* tempPrivateTextRange = new nsPrivateTextRange((((nsTextEvent*)aEvent)->rangeArray[i]).mStartOffset,
-														(((nsTextEvent*)aEvent)->rangeArray[i]).mEndOffset,
-														(((nsTextEvent*)aEvent)->rangeArray[i]).mRangeType);
-			if (tempPrivateTextRange!=nsnull) {
-				tempPrivateTextRange->AddRef();
-				tempTextRangeList[i] = (nsIPrivateTextRange*)tempPrivateTextRange;
-			}
-		}
-		
-	  }
-	  // We need to create mTextRange even rangeCount is 0. 
-	  // if rangeCount is 0, mac carbon will return 0 for new and tempTextRangeList will be null. but we should still
-	  // create mTextRange, otherwise, we will crash it later when some code call GetInputRange and AddRef to the result
-	mTextRange = (nsIPrivateTextRangeList*) new nsPrivateTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
-	if (mTextRange!=nsnull)  
-		mTextRange->AddRef();
-  }
 
-  NS_INIT_REFCNT();
+    nsTextEvent *te = (nsTextEvent*)aEvent;
+
+	  mText = new nsString(te->theText);
+
+	  //
+	  // build the range list -- ranges need to be DOM-ified since the
+	  // IME transaction will hold a ref, the widget representation
+	  // isn't persistent
+	  //
+	  nsIPrivateTextRange** tempTextRangeList =
+      new nsIPrivateTextRange*[te->rangeCount];
+
+	  if (tempTextRangeList) {
+      PRUint16 i;
+
+      for(i = 0; i < te->rangeCount; i++) {
+        nsPrivateTextRange* tempPrivateTextRange = new
+          nsPrivateTextRange(te->rangeArray[i].mStartOffset,
+                             te->rangeArray[i].mEndOffset,
+                             te->rangeArray[i].mRangeType);
+
+        if (tempPrivateTextRange) {
+          NS_ADDREF(tempPrivateTextRange);
+
+          tempTextRangeList[i] = (nsIPrivateTextRange*)tempPrivateTextRange;
+        }
+      }
+	  }
+
+	  // We need to create mTextRange even rangeCount is 0. 
+	  // If rangeCount is 0, mac carbon will return 0 for new and
+	  // tempTextRangeList will be null. but we should still create
+	  // mTextRange, otherwise, we will crash it later when some code
+	  // call GetInputRange and AddRef to the result
+
+    mTextRange = new nsPrivateTextRangeList(te->rangeCount ,tempTextRangeList);
+
+		NS_IF_ADDREF(mTextRange);
+  }
 }
 
 nsDOMEvent::~nsDOMEvent() 
@@ -228,6 +247,13 @@ nsDOMEvent::~nsDOMEvent()
 NS_IMPL_ADDREF(nsDOMEvent)
 NS_IMPL_RELEASE(nsDOMEvent)
 
+// XPConnect interface list for nsDOMEvent
+NS_CLASSINFO_MAP_BEGIN(Event)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMKeyEvent)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSUIEvent)
+NS_CLASSINFO_MAP_END
+
 NS_INTERFACE_MAP_BEGIN(nsDOMEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMMouseEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMUIEvent, nsIDOMMouseEvent)
@@ -237,8 +263,8 @@ NS_INTERFACE_MAP_BEGIN(nsDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateTextEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateCompositionEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseEvent)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
 
 // nsIDOMEventInterface
@@ -1385,33 +1411,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     break;
   }
   return nsnull;
-}
-
-NS_IMETHODIMP
-nsDOMEvent::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptObject) {
-    if (mEvent && mEvent->eventStructType == NS_MUTATION_EVENT) {
-      nsISupports *supports = (nsISupports *)(nsIDOMMutationEvent *)this;
-      res = NS_NewScriptMutationEvent(aContext, supports, nsnull, (void**)&mScriptObject);
-    }
-    else {
-      nsISupports *supports = (nsISupports *)(nsIDOMMouseEvent *)this;
-      res = NS_NewScriptKeyEvent(aContext, supports, nsnull, (void**)&mScriptObject);
-    }
-  }
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-NS_IMETHODIMP
-nsDOMEvent::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
 }
 
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,

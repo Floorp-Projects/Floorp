@@ -29,7 +29,7 @@
 
 class nsIPresContext;
 class nsIDOMEventListener;
-class nsIScriptObjectOwner;
+class nsIScriptContext;
 class nsIDOMEventTarget;
 
 /*
@@ -43,116 +43,123 @@ class nsIDOMEventTarget;
 class nsIEventListenerManager : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IEVENTLISTENERMANAGER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTLISTENERMANAGER_IID)
 
   /**
   * Sets events listeners of all types.
   * @param an event listener
   */
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 flags) = 0;
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID, PRInt32 flags) = 0;
 
   /**
   * Removes events listeners of all types.
   * @param an event listener
   */
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 flags) = 0;
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID, PRInt32 flags) = 0;
 
   /**
   * Sets events listeners of all types.
   * @param an event listener
   */
-  virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsAReadableString& type, PRInt32 flags) = 0;
+  NS_IMETHOD AddEventListenerByType(nsIDOMEventListener *aListener,
+                                    const nsAReadableString& type,
+                                    PRInt32 flags) = 0;
 
   /**
   * Removes events listeners of all types.
   * @param an event listener
   */
-  virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsAReadableString& type, PRInt32 flags) = 0;
+  NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
+                                       const nsAReadableString& type,
+                                       PRInt32 flags) = 0;
 
   /**
-  * Creates a script event listener for the given script object with name aName and function
-  * body aFunc.
+  * Creates a script event listener for the given script object with
+  * name aName and function body aFunc.
   * @param an event listener
   */
-  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext,
-                                          nsIScriptObjectOwner *aScriptObjectOwner,
-                                          nsIAtom *aName,
-                                          const nsAReadableString& aFunc,
-                                          PRBool aDeferCompilation) = 0;
+  NS_IMETHOD AddScriptEventListener(nsIScriptContext*aContext,
+                                    nsISupports *aObject,
+                                    nsIAtom *aName,
+                                    const nsAReadableString& aFunc,
+                                    PRBool aDeferCompilation) = 0;
 
 
-  virtual nsresult RemoveScriptEventListener(nsIAtom *aName) = 0;
+  NS_IMETHOD RemoveScriptEventListener(nsIAtom *aName) = 0;
 
   /**
-  * Registers an event listener that already exists on the given script object with the event
-  * listener manager.
+  * Registers an event listener that already exists on the given
+  * script object with the event listener manager.
   * @param an event listener
   */
-  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext,
-                                               nsIScriptObjectOwner *aScriptObjectOwner,
-                                               nsIAtom* aName) = 0;
+  NS_IMETHOD RegisterScriptEventListener(nsIScriptContext *aContext,
+                                         nsISupports *aObject,
+                                         nsIAtom* aName) = 0;
 
   /**
-  * Compiles any event listeners that already exists on the given script object for a given
-  * event type.
-  * @param an event listener
-  */
-  virtual nsresult CompileScriptEventListener(nsIScriptContext *aContext,
-                                               nsIScriptObjectOwner *aScriptObjectOwner,
-                                               nsIAtom* aName) = 0;
+  * Compiles any event listeners that already exists on the given
+  * script object for a given event type.
+  * @param an event listener */
+  NS_IMETHOD CompileScriptEventListener(nsIScriptContext *aContext,
+                                        nsISupports *aObject,
+                                        nsIAtom* aName,
+                                        PRBool *aDidCompile) = 0;
 
   /**
   * Causes a check for event listeners and processing by them if they exist.
   * Event flags live in nsGUIEvent.h
   * @param an event listener
   */
-  virtual nsresult HandleEvent(nsIPresContext* aPresContext,
-                               nsEvent* aEvent,
-                               nsIDOMEvent** aDOMEvent,
-                               nsIDOMEventTarget* aCurrentTarget,
-                               PRUint32 aFlags,
-                               nsEventStatus* aEventStatus) = 0;
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
+                         nsEvent* aEvent,
+                         nsIDOMEvent** aDOMEvent,
+                         nsIDOMEventTarget* aCurrentTarget,
+                         PRUint32 aFlags,
+                         nsEventStatus* aEventStatus) = 0;
 
   /**
   * Creates a DOM event that can subsequently be passed into HandleEvent.
   * (used rarely in the situation where methods on the event need to be
   * invoked prior to the processing of the event).
   */
-  virtual nsresult CreateEvent(nsIPresContext* aPresContext,
-                               nsEvent* aEvent,
-                               const nsAReadableString& aEventType,
-                               nsIDOMEvent** aDOMEvent) = 0;
+  NS_IMETHOD CreateEvent(nsIPresContext* aPresContext,
+                         nsEvent* aEvent,
+                         const nsAReadableString& aEventType,
+                         nsIDOMEvent** aDOMEvent) = 0;
 
   /**
-  * Changes script listener of specified event types from bubbling listeners to capturing listeners.
-  * @param event types
-  */
-  virtual nsresult CaptureEvent(PRInt32 aEventTypes) = 0;
+  * Changes script listener of specified event types from bubbling
+  * listeners to capturing listeners.
+  * @param event types */
+  NS_IMETHOD CaptureEvent(PRInt32 aEventTypes) = 0;
 
   /**
-  * Changes script listener of specified event types from capturing listeners to bubbling listeners.
-  * @param event types
-  */
-  virtual nsresult ReleaseEvent(PRInt32 aEventTypes) = 0;
-
-  /**
-  * Removes all event listeners registered by this instance of the listener
-  * manager.
-  */
-  virtual nsresult RemoveAllListeners(PRBool aScriptOnly) = 0;
+  * Changes script listener of specified event types from capturing
+  * listeners to bubbling listeners.
+  * @param event types */
+  NS_IMETHOD ReleaseEvent(PRInt32 aEventTypes) = 0;
 
   /**
   * Removes all event listeners registered by this instance of the listener
   * manager.
   */
-  virtual nsresult SetListenerTarget(nsISupports* aTarget) = 0;
+  NS_IMETHOD RemoveAllListeners(PRBool aScriptOnly) = 0;
+
+  /**
+  * Removes all event listeners registered by this instance of the listener
+  * manager.
+  */
+  NS_IMETHOD SetListenerTarget(nsISupports* aTarget) = 0;
 
   /**
   * Allows us to quickly determine if we have mutation listeners registered.
   */
-  virtual nsresult HasMutationListeners(PRBool* aListener) = 0;
+  NS_IMETHOD HasMutationListeners(PRBool* aListener) = 0;
 };
 
-extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);
+extern nsresult
+NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
 #endif // nsIEventListenerManager_h__

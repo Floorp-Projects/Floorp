@@ -1,5 +1,7 @@
 #include "nsISupports.idl"
-#include "domstubs.idl"
+
+interface nsIDOMDocument;
+
 
 %{ C++
 #include "nsIWidget.h"

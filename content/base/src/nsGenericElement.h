@@ -33,25 +33,22 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsVoidArray.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIJSScriptObject.h"
 #include "nsILinkHandler.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsIEventListenerManager.h"
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
+#include "nsContentUtils.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIFrame;
 class nsISupportsArray;
-class nsIDOMScriptObjectFactory;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsDOMAttributeMap;
 class nsIURI;
 class nsINodeInfo;
-
 
 // Class that holds the child list of a content element and also
 // implements the nsIDOMNodeList interface.
@@ -62,7 +59,7 @@ public:
   virtual ~nsChildContentList();
 
   // nsIDOMNodeList interface
-  NS_DECL_IDOMNODELIST
+  NS_DECL_NSIDOMNODELIST
   
   void DropReference();
 
@@ -117,7 +114,6 @@ private:
 // in a side structure that's only allocated when the content is
 // accessed through the DOM.
 typedef struct {
-  void *mScriptObject;
   nsChildContentList *mChildNodes;
   nsDOMCSSDeclaration *mStyle;
   nsDOMAttributeMap* mAttributeMap;
@@ -127,8 +123,25 @@ typedef struct {
                               // that created us. [Weak]
 } nsDOMSlots;
 
-class nsGenericElement : public nsIHTMLContent,
-                         public nsIJSScriptObject
+
+class nsNode3Tearoff : public nsIDOM3Node
+{
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOM3NODE
+
+  nsNode3Tearoff(nsIContent *aContent) : mContent(aContent)
+  {
+    NS_INIT_ISUPPORTS();
+  }
+  virtual ~nsNode3Tearoff() {};
+
+private:
+  nsCOMPtr<nsIContent> mContent;
+};
+
+
+class nsGenericElement : public nsIHTMLContent
 {
 public:
   nsGenericElement();
@@ -196,6 +209,7 @@ public:
   NS_IMETHOD RemoveFocus(nsIPresContext* aContext);
   NS_IMETHOD GetBindingParent(nsIContent** aContent);
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
   // nsIStyledContent interface methods
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
@@ -230,27 +244,6 @@ public:
   NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const;
   NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const;
 
-
-  // nsIScriptObjectOwner interface methods
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  // nsIJSScriptObject interface methods
-  virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj, 
-                             jsval aID, jsval *aVp);
-  virtual PRBool DeleteProperty(JSContext *aContext, JSObject *aObj, 
-                                jsval aID, jsval *aVp);
-  virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj, 
-                             jsval aID, jsval *aVp);
-  virtual PRBool SetProperty(JSContext *aContext, JSObject *aObj, 
-                             jsval aID, jsval *aVp);
-  virtual PRBool EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                         PRBool *aDidDefineProperty);
-  virtual PRBool Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  virtual void Finalize(JSContext *aContext, JSObject *aObj);
-
-
   // nsIDOMNode method implementation
   NS_IMETHOD GetNodeName(nsAWritableString& aNodeName);
   NS_IMETHOD GetLocalName(nsAWritableString& aLocalName);
@@ -269,7 +262,6 @@ public:
   NS_IMETHOD IsSupported(const nsAReadableString& aFeature,
                          const nsAReadableString& aVersion, PRBool* aReturn);
   NS_IMETHOD HasAttributes(PRBool* aHasAttributes);
-  NS_IMETHOD GetBaseURI(nsAWritableString& aURI);
 
   // nsIDOMElement method implementation
   NS_IMETHOD GetTagName(nsAWritableString& aTagName);
@@ -333,10 +325,6 @@ public:
   static void SetDocumentInChildrenOf(nsIContent* aContent, 
 				      nsIDocument* aDocument, PRBool aCompileEventHandlers);
 
-  static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aFactory);
-
-  static nsIDOMScriptObjectFactory *gScriptObjectFactory;
-
   static nsresult InternalIsSupported(const nsAReadableString& aFeature,
                                       const nsAReadableString& aVersion,
                                       PRBool* aReturn);
@@ -346,8 +334,6 @@ public:
 
 protected:
   virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
-  virtual PRBool InternalRegisterCompileEventHandler(JSContext* aContext, jsval aPropName,
-                                                     jsval *aVp, PRBool aCompile);
 
   nsDOMSlots *GetDOMSlots();
   void MaybeClearDOMSlots();
@@ -450,7 +436,7 @@ protected:
 };
 
 
-#define NS_FORWARD_IDOMNODE_NO_CLONENODE(_to)  \
+#define NS_FORWARD_NSIDOMNODE_NO_CLONENODE(_to)  \
   NS_IMETHOD    GetNodeName(nsAWritableString& aNodeName) { return _to GetNodeName(aNodeName); } \
   NS_IMETHOD    GetNodeValue(nsAWritableString& aNodeValue) { return _to GetNodeValue(aNodeValue); } \
   NS_IMETHOD    SetNodeValue(const nsAReadableString& aNodeValue) { return _to SetNodeValue(aNodeValue); } \
@@ -475,7 +461,12 @@ protected:
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);  \
   NS_IMETHOD    Normalize() { return _to Normalize(); }  \
   NS_IMETHOD    IsSupported(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn) { return _to IsSupported(aFeature, aVersion, aReturn); }  \
-  NS_IMETHOD    HasAttributes(PRBool* aReturn) { return _to HasAttributes(aReturn); }  \
-  NS_IMETHOD    GetBaseURI(nsAWritableString& aURI) { return _to GetBaseURI(aURI); }  \
+  NS_IMETHOD    HasAttributes(PRBool* aReturn) { return _to HasAttributes(aReturn); }
+
+#define NS_INTERFACE_MAP_ENTRY_TEAROFF(_iid, _tearoff)                        \
+  if (aIID.Equals(NS_GET_IID(_iid))) {                                        \
+    foundInterface = new _tearoff;                                            \
+    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
+  } else
 
 #endif /* nsGenericElement_h___ */

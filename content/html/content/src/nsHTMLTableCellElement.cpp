@@ -23,7 +23,6 @@
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
@@ -48,16 +47,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTableCellElement
-  NS_DECL_IDOMHTMLTABLECELLELEMENT
+  NS_DECL_NSIDOMHTMLTABLECELLELEMENT
 
   // nsIHTMLTableCellElement
   NS_METHOD GetColIndex (PRInt32* aColIndex);
@@ -124,10 +123,21 @@ nsHTMLTableCellElement::~nsHTMLTableCellElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI2(nsHTMLTableCellElement,
-                        nsGenericHTMLContainerElement,
-                        nsIDOMHTMLTableCellElement,
-                        nsIHTMLTableCellElement);
+
+// XPConnect interface list for nsHTMLTableCellElement
+NS_CLASSINFO_MAP_BEGIN(HTMLTableCellElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableCellElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLTableCellElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableCellElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableCellElement)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLTableCellElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableCellElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -222,70 +232,6 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
       *aCellIndex = i;
       found = PR_TRUE;
     }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLTableCellElement::SetCellIndex(PRInt32 aCellIndex)
-{
-  PRInt32 oldIndex;
-  nsresult result = GetCellIndex(&oldIndex);
-
-  if ((-1 == oldIndex) || (oldIndex == aCellIndex) || NS_FAILED(result)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMHTMLTableRowElement> row;
-
-  GetRow(getter_AddRefs(row));
-
-  if (!row) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMHTMLCollection> cells;
-
-  row->GetCells(getter_AddRefs(cells));
-
-  if (!cells) {
-    return NS_OK;
-  }
-
-  PRUint32 numCellsU;
-  cells->GetLength(&numCellsU);
-
-  PRInt32 numCells = numCellsU;
-
-  // check if it really moves
-  if (!(((0 == oldIndex) && (aCellIndex <= 0)) ||
-        ((numCells-1 == oldIndex) && (aCellIndex >= numCells-1)))) {
-    nsCOMPtr<nsISupports> kungFuDeathGrip(NS_STATIC_CAST(nsIContent *, this));
-
-    row->DeleteCell(oldIndex);       // delete this from the row
-
-    numCells--;
-    nsCOMPtr<nsIDOMNode> returnNode;
-
-    if ((numCells <= 0) || (aCellIndex >= numCells)) {
-      // add this back into the row
-      row->AppendChild(this, getter_AddRefs(returnNode));
-		} else {
-      PRInt32 newIndex = aCellIndex;
-
-      if (aCellIndex <= 0) {
-        newIndex = 0;
-			} else if (aCellIndex > oldIndex) {
-        newIndex--;
-			}
-
-      nsCOMPtr<nsIDOMNode> refNode;
-      cells->Item(newIndex, getter_AddRefs(refNode));
-
-      // add this back into the row
-      row->InsertBefore(this, refNode, getter_AddRefs(returnNode));
-		}
   }
 
   return NS_OK;
