@@ -254,7 +254,7 @@ nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName)
                                fontName, &lWant, 0, 0);
   if (lFonts > 0) {
     font = new nsFontOS2();
-    aName->ToCString(font->mName, sizeof(font->mName));
+    strcpy(font->mName, fontName);
   }
   return font;
 }
@@ -979,8 +979,8 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
     for (int i=0; i < lNumFonts; i++) {
       BOOL fAlreadyFound = FALSE;
       for (int j = 0; j < gGlobalFontsCount && !fAlreadyFound; j++) {
-        if (!strcmp(gGlobalFonts[j].fontMetrics.szFamilyname,
-                 pFontMetrics[i].szFamilyname)) {
+        if (!strcmp(gGlobalFonts[j].fontMetrics.szFacename,
+                 pFontMetrics[i].szFacename)) {
               fAlreadyFound = TRUE;
          }
       }
@@ -996,13 +996,16 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
       }
 #endif
       // XXX ignore vertical fonts
-      if (pFontMetrics[i].szFamilyname[0] == '@') {
+      if ((pFontMetrics[i].szFacename[0] == '@') ||
+          (strstr(pFontMetrics[i].szFacename, "Bold")) ||
+          (strstr(pFontMetrics[i].szFacename, "Italic")))
+      {
         continue;
       }
 
 #ifdef OLDCODE
       for (int j = 0; j < nsFontMetricsOS2::gGlobalFontsCount; j++) {
-        if (!strcmp(gGlobalFonts[i].logFont.szFamilyname,
+        if (!strcmp(gGlobalFonts[i].logFont.szFacename,
                  logFont->lfFaceName)) {
 
           //work-around for Win95/98 problem 
@@ -1034,8 +1037,8 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
 
       PRUnichar name[FACESIZE];
       name[0] = 0;
-      MultiByteToWideChar(0, pFontMetrics[i].szFamilyname,
-         strlen(pFontMetrics[i].szFamilyname) + 1, name, sizeof(name)/sizeof(name[0]));
+      MultiByteToWideChar(0, pFontMetrics[i].szFacename,
+         strlen(pFontMetrics[i].szFacename) + 1, name, sizeof(name)/sizeof(name[0]));
       font->name = new nsString(name);
       if (!font->name) {
         gGlobalFontsCount--;
