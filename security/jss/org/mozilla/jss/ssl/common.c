@@ -33,6 +33,7 @@
 
 #include <nspr.h>
 #include <jni.h>
+#include <pk11func.h>
 #include <ssl.h>
 #include <sslerr.h>
 
@@ -281,6 +282,7 @@ JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD,
     sockdata->certApprovalCallback = NULL;
     sockdata->clientCertSelectionCallback = NULL;
     sockdata->clientCert = NULL;
+    sockdata->clientCertSlot = NULL;
     sockdata->jsockPriv = priv;
     sockdata->closed = PR_FALSE;
 
@@ -345,6 +347,9 @@ JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd)
     }
     if( sd->clientCert != NULL ) {
         CERT_DestroyCertificate(sd->clientCert);
+    }
+    if( sd->clientCertSlot != NULL ) {
+        PK11_FreeSlot(sd->clientCertSlot);
     }
     PR_Free(sd);
 }
@@ -591,6 +596,7 @@ Java_org_mozilla_jss_ssl_SocketBase_setClientCert(
     JSSL_SocketData *sock = NULL;
     SECStatus status;
     CERTCertificate *cert = NULL;
+    PK11SlotInfo *slot = NULL;
 
     if( certObj == NULL ) {
         JSS_throw(env, NULL_POINTER_EXCEPTION);
@@ -600,15 +606,22 @@ Java_org_mozilla_jss_ssl_SocketBase_setClientCert(
     if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
 
     /*
-     * Store the cert in the SocketData.
+     * Store the cert and slot in the SocketData.
      */
     if( JSS_PK11_getCertPtr(env, certObj, &cert) != PR_SUCCESS ) {
+        goto finish;
+    }
+    if( JSS_PK11_getCertSlotPtr(env, certObj, &slot) != PR_SUCCESS ) {
         goto finish;
     }
     if( sock->clientCert != NULL ) {
         CERT_DestroyCertificate(sock->clientCert);
     }
+    if( sock->clientCertSlot != NULL ) {
+        PK11_FreeSlot(sock->clientCertSlot);
+    }
     sock->clientCert = CERT_DupCertificate(cert);
+    sock->clientCertSlot = PK11_ReferenceSlot(slot);
 
     /*
      * Install the callback.

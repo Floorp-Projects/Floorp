@@ -48,7 +48,7 @@ public final class PK11TokenCert extends PK11Cert implements TokenCertificate
         return super.getOwningToken();
     }
 
-    PK11TokenCert(byte[] pointer) {
-        super(pointer);
+    PK11TokenCert(byte[] certPtr, byte[] slotPtr) {
+        super(certPtr, slotPtr);
     }
 }

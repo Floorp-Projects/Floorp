@@ -131,6 +131,7 @@ JSSL_CallCertSelectionCallback(    void * arg,
             SECKEYPrivateKey ** pRetKey)
 {
     CERTCertificate *  cert;
+    PK11SlotInfo *  slot;
     SECKEYPrivateKey * privkey;
     jobject             nicknamecallback = (jobject)arg;
     SECStatus          rv         = SECFailure;
@@ -197,7 +198,10 @@ JSSL_CallCertSelectionCallback(    void * arg,
     if (names != NULL) {
         for (i = 0; i < names->numnicknames; i++) {
         if (debug_cc) { PR_fprintf(PR_STDOUT,"checking nn: %s\n",names->nicknames[i]); }
-        cert = PK11_FindCertFromNickname(names->nicknames[i],NULL /*pinarg*/);
+        cert = JSS_PK11_findCertAndSlotFromNickname(
+                names->nicknames[i],
+                NULL /*pinarg*/,
+                &slot);
         if ( !cert )
             continue;
 
@@ -206,13 +210,14 @@ JSSL_CallCertSelectionCallback(    void * arg,
                  != secCertTimeValid ) {
         if (debug_cc) { PR_fprintf(PR_STDOUT,"  not valid\n"); }
             CERT_DestroyCertificate(cert);
+            PK11_FreeSlot(slot);
             continue;
         }
         rv = secCmpCertChainWCANames(cert, caNames);
         if ( rv == SECSuccess ) {
             if (debug_cc) { PR_fprintf(PR_STDOUT,"  matches ca name\n"); }
 
-            privkey = PK11_FindKeyByAnyCert(cert, NULL /*pinarg*/);
+            privkey = PK11_FindPrivateKeyFromCert(slot, cert, NULL /*pinarg*/);
 
             /* just test if we have the private key */
             if ( privkey )  {
@@ -237,6 +242,7 @@ JSSL_CallCertSelectionCallback(    void * arg,
             
         }
         CERT_DestroyCertificate(cert);
+        PK11_FreeSlot(slot);
         }
         CERT_FreeNicknames(names);
     }
@@ -259,7 +265,9 @@ JSSL_CallCertSelectionCallback(    void * arg,
         &chosen_nickname_cleanup);
 
     if (debug_cc) { PR_fprintf(PR_STDOUT,"  chosen nickname: %s\n",chosen_nickname_for_c); }
-    cert = PK11_FindCertFromNickname(chosen_nickname_for_c,NULL /*pinarg*/);
+    cert = JSS_PK11_findCertAndSlotFromNickname(chosen_nickname_for_c,
+        NULL /*pinarg*/,
+        &slot);
 
     if (debug_cc) { PR_fprintf(PR_STDOUT,"  found certificate\n"); }
 
@@ -275,7 +283,8 @@ JSSL_CallCertSelectionCallback(    void * arg,
         goto loser;
     }
 
-        privkey = PK11_FindKeyByAnyCert(cert, NULL /*pinarg*/);
+        privkey = PK11_FindPrivateKeyFromCert(slot, cert, NULL /*pinarg*/);
+        PK11_FreeSlot(slot);
         if ( privkey == NULL )  {
         CERT_DestroyCertificate(cert);
         rv = SECFailure;
@@ -624,15 +633,13 @@ JSSL_GetClientAuthData( void * arg,
     sock = (JSSL_SocketData*) arg;
 
     if (sock->clientCert) {
-        privkey = PK11_FindKeyByAnyCert(sock->clientCert, NULL /*pinarg*/);
+        privkey = PK11_FindPrivateKeyFromCert(sock->clientCertSlot,
+            sock->clientCert, NULL /*pinarg*/);
         if ( privkey ) {
             rv = SECSuccess;
+            *pRetCert = CERT_DupCertificate(sock->clientCert); 
+            *pRetKey  = privkey;
         }
-    }
-    
-    if (rv == SECSuccess) {
-        *pRetCert = CERT_DupCertificate(sock->clientCert); 
-        *pRetKey  = privkey;
     }
     
     return rv;

@@ -66,23 +66,21 @@ Java_org_mozilla_jss_CryptoManager_findCertByNicknameNative
     char *nick=NULL;
     jobject certObject=NULL;
     CERTCertificate *cert=NULL;
+    PK11SlotInfo *slot=NULL;
 
     PR_ASSERT(env!=NULL && this!=NULL && nickname!=NULL);
 
     nick = (char*) (*env)->GetStringUTFChars(env, nickname, NULL);
     PR_ASSERT(nick!=NULL);
 
-    cert = PK11_FindCertFromNickname(nick, NULL);
+    cert = JSS_PK11_findCertAndSlotFromNickname(nick, NULL, &slot);
 
     if(cert == NULL) {
-        cert = CERT_FindCertByNickname( CERT_GetDefaultCertDB(), nick );
-        if( cert == NULL ) {
-            JSS_nativeThrow(env, OBJECT_NOT_FOUND_EXCEPTION);
-            goto finish;
-        }
+        JSS_nativeThrow(env, OBJECT_NOT_FOUND_EXCEPTION);
+        goto finish;
     }
 
-    certObject = JSS_PK11_wrapCert(env, &cert);
+    certObject = JSS_PK11_wrapCertAndSlot(env, &cert, &slot);
 
 finish:
     if(nick != NULL) {
@@ -90,6 +88,9 @@ finish:
     }
     if(cert != NULL) {
         CERT_DestroyCertificate(cert);
+    }
+    if(slot != NULL) {
+        PK11_FreeSlot(slot);
     }
     return certObject;
 }
@@ -104,6 +105,7 @@ Java_org_mozilla_jss_CryptoManager_findCertsByNicknameNative
   (JNIEnv *env, jobject this, jstring nickname)
 {
     CERTCertList *list =NULL;
+    PK11SlotInfo *slot =NULL;
     jobjectArray certArray=NULL;
     CERTCertListNode *node;
     const char *nickChars=NULL;
@@ -119,7 +121,8 @@ Java_org_mozilla_jss_CryptoManager_findCertsByNicknameNative
     }
 
     /* get the list of certs with the given nickname */
-    list = PK11_FindCertsFromNickname( (char*)nickChars, NULL /*wincx*/);
+    list = JSS_PK11_findCertsAndSlotFromNickname( (char*)nickChars,
+        NULL /*wincx*/, &slot);
     if( list == NULL ) {
         count = 0;
     } else {
@@ -153,11 +156,13 @@ Java_org_mozilla_jss_CryptoManager_findCertsByNicknameNative
             node = CERT_LIST_NEXT(node), i++       )     {
 
         CERTCertificate *cert;
+        PK11SlotInfo *slotCopy;
         jobject certObj;
 
         /* Create a Java certificate object from the current CERTCertificate */
         cert = CERT_DupCertificate(node->cert);
-        certObj = JSS_PK11_wrapCert(env, &cert);
+        slotCopy = PK11_ReferenceSlot(slot);
+        certObj = JSS_PK11_wrapCertAndSlot(env, &cert, &slotCopy);
         if( certObj == NULL ) {
             goto finish;
         }
@@ -176,6 +181,9 @@ Java_org_mozilla_jss_CryptoManager_findCertsByNicknameNative
 finish:
     if(list) {
         CERT_DestroyCertList(list);
+    }
+    if(slot) {
+        PK11_FreeSlot(slot);
     }
     if( nickChars && charsAreCopied ) {
         (*env)->ReleaseStringUTFChars(env, nickname, nickChars);
@@ -221,16 +229,11 @@ Java_org_mozilla_jss_CryptoManager_findCertByIssuerAndSerialNumberNative
     /* lookup with PKCS #11 first, then use cert database */
     cert = PK11_FindCertByIssuerAndSN(&slot, &issuerAndSN, NULL /*wincx*/);
     if( cert == NULL ) {
-        cert = CERT_FindCertByIssuerAndSN(
-                        CERT_GetDefaultCertDB(),
-                        &issuerAndSN);
-        if( cert == NULL ) {
-            JSS_nativeThrow(env, OBJECT_NOT_FOUND_EXCEPTION);
-            goto finish;
-        }
+        JSS_nativeThrow(env, OBJECT_NOT_FOUND_EXCEPTION);
+        goto finish;
     }
 
-    certObject = JSS_PK11_wrapCert(env, &cert);
+    certObject = JSS_PK11_wrapCertAndSlot(env, &cert, &slot);
 
 finish:
     if(slot) {
@@ -259,6 +262,7 @@ Java_org_mozilla_jss_CryptoManager_findPrivKeyByCertNative
 {
     PRThread *pThread;
     CERTCertificate *cert;
+    PK11SlotInfo *slot;
     SECKEYPrivateKey *privKey=NULL;
     jobject Key = NULL;
 
@@ -275,8 +279,17 @@ Java_org_mozilla_jss_CryptoManager_findPrivKeyByCertNative
         JSS_throw(env, OBJECT_NOT_FOUND_EXCEPTION);
         goto finish;
     }
+    if( JSS_PK11_getCertSlotPtr(env, Cert, &slot) != PR_SUCCESS) {
+        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
+        goto finish;
+    }
+    if(slot==NULL) {
+        PR_ASSERT(PR_FALSE);
+        JSS_throw(env, OBJECT_NOT_FOUND_EXCEPTION);
+        goto finish;
+    }
 
-    privKey = PK11_FindKeyByAnyCert(cert, NULL);
+    privKey = PK11_FindPrivateKeyFromCert(slot, cert, NULL);
     if(privKey == NULL) {
         JSS_throw(env, OBJECT_NOT_FOUND_EXCEPTION);
         goto finish;
@@ -547,6 +560,7 @@ Java_org_mozilla_jss_CryptoManager_importCertToPermNative
     char *nickname=NULL;
     CERTCertificate **certArray = NULL;
     SECItem *derCertArray[1];
+    PK11SlotInfo *slot;
 
     /* first, get the NSS cert pointer from the 'cert' object */
 
@@ -570,7 +584,8 @@ Java_org_mozilla_jss_CryptoManager_importCertToPermNative
                 " into permanent database");
         goto finish;
     }
-    result = JSS_PK11_wrapCert(env, &certArray[0]);
+    slot = PK11_GetInternalKeySlot();  /* the permanent database token */
+    result = JSS_PK11_wrapCertAndSlot(env, &certArray[0], &slot);
 
 finish:
     /* this checks for NULL */
@@ -1011,25 +1026,17 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
 
     /***************************************************
      * Now lookup the leaf cert and make it into a Java object.
-     * Apparently, the PK11 lookup checks external tokens first,
-     * while the CERT lookup checks the database first.  If the leaf is
-     * a CA cert, we want to return the copy in the internal database
-     * rather than the copy on the token, so we use the CERT call.  We
-     * use the PK11 call for user certs that aren't expected to be CAs
-     * by the caller.
      ***************************************************/
-    if(slot && !leafIsCA) {
+    if(slot) {
         PK11_FreeSlot(slot);
-        leafCert = PK11_FindCertByIssuerAndSN(&slot, &issuerAndSN, NULL);
-    } else {
-        leafCert = CERT_FindCertByIssuerAndSN(certdb, &issuerAndSN);
     }
+    leafCert = PK11_FindCertByIssuerAndSN(&slot, &issuerAndSN, NULL);
     if( leafCert == NULL ) {
         JSS_throwMsgPrErr(env, TOKEN_EXCEPTION,
             "Failed to find certificate that was just imported");
         goto finish;
     }
-    leafObject = JSS_PK11_wrapCert(env, &leafCert);
+    leafObject = JSS_PK11_wrapCertAndSlot(env, &leafCert, &slot);
 
 finish:
     if(slot!=NULL) {

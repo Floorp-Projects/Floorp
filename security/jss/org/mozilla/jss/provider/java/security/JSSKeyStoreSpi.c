@@ -543,6 +543,7 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getCertObject
     (JNIEnv *env, jobject this, jstring alias)
 {
     CERTCertificate *cert = NULL;
+    PK11SlotInfo *slot = NULL;
     jobject certObj = NULL;
 
     cert = lookupCertByNickname(env, this, alias);
@@ -550,11 +551,20 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getCertObject
         goto finish;
     }
 
-    certObj = JSS_PK11_wrapCert(env, &cert);
+    if( getTokenSlotPtr(env, this, &slot) != PR_SUCCESS ) {
+        /* exception was thrown */
+        goto finish;
+    }
+    slot = PK11_ReferenceSlot(slot);
+
+    certObj = JSS_PK11_wrapCertAndSlot(env, &cert, &slot);
 
 finish:
     if( cert != NULL ) {
         CERT_DestroyCertificate(cert);
+    }
+    if( slot != NULL ) {
+        PK11_FreeSlot(slot);
     }
     if( certObj == NULL ) {
         PR_ASSERT( (*env)->ExceptionOccurred(env) );

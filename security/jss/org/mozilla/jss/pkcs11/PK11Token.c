@@ -852,11 +852,17 @@ Java_org_mozilla_jss_pkcs11_TokenProxy_releaseNativeResources
         PR_ASSERT( PR_FALSE );
         goto finish;
     }
-    PR_ASSERT(slot != NULL);
 
-    /* this actually only frees the data structure if we were the last
-     * reference to it */
-    PK11_FreeSlot(slot);
+    /*
+     * PK11Token never stores a null pointer in its TokenProxy member,
+     * but PK11Cert may store a null pointer in its TokenProxy member.
+     * (A temporary certificate has a null slot pointer.)
+     */
+    if(slot != NULL) {
+        /* this actually only frees the data structure if we were the last
+         * reference to it */
+        PK11_FreeSlot(slot);
+    }
 
 finish:
     return;
@@ -904,6 +910,7 @@ Java_org_mozilla_jss_pkcs11_PK11Token_doesAlgorithm
 		PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
 		goto finish;
 	}
+	PR_ASSERT(slot != NULL);
 
     mech = JSS_getPK11MechFromAlg(env, alg);
     PR_ASSERT( mech != CKM_INVALID_MECHANISM );
@@ -937,6 +944,7 @@ Java_org_mozilla_jss_pkcs11_PK11Token_isWritable
     if( JSS_PK11_getTokenSlotPtr(env, this, &slot) != PR_SUCCESS) {
         return JNI_FALSE; /* an exception was thrown, so it doesn't matter */
     }
+    PR_ASSERT(slot != NULL);
 
     return ! PK11_IsReadOnly(slot);
 }

@@ -249,6 +249,27 @@ JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr)
 			CERT_PROXY_SIG, (void**)ptr);
 }
 
+/******************************************************************
+ *
+ * J S S _ P K 1 1 _ g e t C e r t S l o t P t r
+ *
+ * Given a Certificate object, extracts the PK11SlotInfo* and
+ * stores it at the given address.
+ *
+ * certObject: A JNI reference to a JSS Certificate object.
+ * ptr: Address of a PK11SlotInfo* that will receive the pointer.
+ * Returns: PR_SUCCESS for success, PR_FAILURE if an exception was thrown.
+ */
+PRStatus
+JSS_PK11_getCertSlotPtr(JNIEnv *env, jobject certObject, PK11SlotInfo **ptr)
+{
+	PR_ASSERT(env!=NULL && certObject!=NULL && ptr!=NULL);
+
+	/* Get the pointer from the token proxy */
+	return JSS_getPtrFromProxyOwner(env, certObject, PK11TOKEN_PROXY_FIELD,
+			PK11TOKEN_PROXY_SIG, (void**)ptr);
+}
+
 /*
  * This is a shady way of deciding if the cert is a user cert.
  * Hopefully it will work. What we used to do was check for cert->slot.
@@ -260,24 +281,146 @@ JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr)
 
 /****************************************************************
  *
- * J S S _ P K 1 1 _ w r a p C e r t
+ * f i n d S l o t B y T o k e n N a m e A n d C e r t
  *
- * Builds a Certificate wrapper around a CERTCertificate.
+ * Find the slot containing the token with the given name
+ * and cert.
+ */
+static PK11SlotInfo *
+findSlotByTokenNameAndCert(char *name, CERTCertificate *cert)
+{
+    PK11SlotList *list;
+    PK11SlotListElement *le;
+    PK11SlotInfo *slot = NULL;
+
+    list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, NULL);
+    if(list == NULL) {
+        return NULL;
+    }
+
+    for(le = list->head; le; le = le->next) {
+        if( (PORT_Strcmp(PK11_GetTokenName(le->slot),name) == 0) &&
+                (PK11_FindCertInSlot(le->slot,cert,NULL) !=
+                CK_INVALID_HANDLE)) {
+            slot = PK11_ReferenceSlot(le->slot);
+            break;
+        }
+    }
+    PK11_FreeSlotList(list);
+
+    if(slot == NULL) {
+        PORT_SetError(SEC_ERROR_NO_TOKEN);
+    }
+
+    return slot;
+}
+
+
+/*************************************************************************
+ *
+ * J S S _ P K 1 1 _ f i n d C e r t A n d S l o t F r o m N i c k n a m e
+ *
+ * A variant of NSS's PK11_FindCertFromNickname function that also
+ * returns a PK11SlotInfo* in *ppSlot.
+ *
+ * If nickname is of the format "token:nickname", the slot that
+ * contains the specified token is returned.  Otherwise the internal
+ * key slot (which contains the permanent database token) is returned.
+ */
+CERTCertificate *
+JSS_PK11_findCertAndSlotFromNickname(char *nickname, void *wincx,
+    PK11SlotInfo **ppSlot)
+{
+    CERTCertificate *cert;
+
+    cert = PK11_FindCertFromNickname(nickname, wincx);
+    if(cert == NULL) {
+        return NULL;
+    }
+    if( PORT_Strchr(nickname, ':')) {
+        char* tokenname = PORT_Strdup(nickname);
+        char* colon = PORT_Strchr(tokenname, ':');
+        *colon = '\0';
+        *ppSlot = findSlotByTokenNameAndCert(tokenname, cert);
+        PORT_Free(tokenname);
+        if(*ppSlot == NULL) {
+            /* The token containing the cert was just removed. */
+            CERT_DestroyCertificate(cert);
+            return NULL;
+        }
+    } else {
+        *ppSlot = PK11_GetInternalKeySlot();
+    }
+    return cert;
+}
+
+
+/***************************************************************************
+ *
+ * J S S _ P K 1 1 _ f i n d C e r t s A n d S l o t F r o m N i c k n a m e
+ *
+ * A variant of NSS's PK11_FindCertsFromNickname function that also
+ * returns a PK11SlotInfo* in *ppSlot.
+ *
+ * If nickname is of the format "token:nickname", the slot that
+ * contains the specified token is returned.  Otherwise the internal
+ * key slot (which contains the permanent database token) is returned.
+ */
+CERTCertList *
+JSS_PK11_findCertsAndSlotFromNickname(char *nickname, void *wincx,
+    PK11SlotInfo **ppSlot)
+{
+    CERTCertList *certList;
+
+    certList = PK11_FindCertsFromNickname(nickname, wincx);
+    if(certList == NULL) {
+        return NULL;
+    }
+    if( PORT_Strchr(nickname, ':')) {
+        char* tokenname = PORT_Strdup(nickname);
+        char* colon = PORT_Strchr(tokenname, ':');
+        CERTCertListNode *head = CERT_LIST_HEAD(certList);
+        *colon = '\0';
+        *ppSlot = findSlotByTokenNameAndCert(tokenname, head->cert);
+        PORT_Free(tokenname);
+        if(*ppSlot == NULL) {
+            /* The token containing the certs was just removed. */
+            CERT_DestroyCertList(certList);
+            return NULL;
+        }
+    } else {
+        *ppSlot = PK11_GetInternalKeySlot();
+    }
+    return certList;
+}
+
+
+/****************************************************************
+ *
+ * J S S _ P K 1 1 _ w r a p C e r t A n d S l o t
+ *
+ * Builds a Certificate wrapper around a CERTCertificate and a
+ *		PK11SlotInfo.
  * cert: Will be eaten and erased whether the wrap was successful or not.
- * returns: a new PK11Cert wrapping the CERTCertificate, or NULL if an
- * 		exception was thrown.
+ * slot: Will be eaten and erased whether the wrap was successful or not.
+ * returns: a new PK11Cert wrapping the CERTCertificate and PK11SlotInfo,
+ *		or NULL if an exception was thrown.
  */
 jobject
-JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **cert)
+JSS_PK11_wrapCertAndSlot(JNIEnv *env, CERTCertificate **cert,
+    PK11SlotInfo **slot)
 {
 	jclass certClass;
 	jmethodID constructor;
-	jbyteArray byteArray;
+	jbyteArray certPtr;
+	jbyteArray slotPtr;
 	jobject Cert=NULL;
 
-	PR_ASSERT(env!=NULL && cert!=NULL && *cert!=NULL);
+	PR_ASSERT(env!=NULL && cert!=NULL && *cert!=NULL
+		&& slot!=NULL);
 
-	byteArray = JSS_ptrToByteArray(env, *cert);
+	certPtr = JSS_ptrToByteArray(env, *cert);
+	slotPtr = JSS_ptrToByteArray(env, *slot);
 
 	certClass = (*env)->FindClass(env, INTERNAL_TOKEN_CERT_CLASS_NAME);
 	if(certClass == NULL) {
@@ -296,7 +439,7 @@ JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **cert)
 	}
 
 	/* Call the constructor */
-	Cert = (*env)->NewObject(env, certClass, constructor, byteArray);
+	Cert = (*env)->NewObject(env, certClass, constructor, certPtr, slotPtr);
 	if(Cert==NULL) {
 		goto finish;
 	}
@@ -304,9 +447,36 @@ JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **cert)
 finish:
 	if(Cert==NULL) {
 		CERT_DestroyCertificate(*cert);
+		if(*slot!=NULL) {
+			PK11_FreeSlot(*slot);
+		}
 	}
 	*cert = NULL;
+	*slot = NULL;
 	return Cert;
+}
+
+/****************************************************************
+ *
+ * J S S _ P K 1 1 _ w r a p C e r t
+ *
+ * Builds a Certificate wrapper around a CERTCertificate.
+ * cert: Will be eaten and erased whether the wrap was successful or not.
+ * returns: a new PK11Cert wrapping the CERTCertificate, or NULL if an
+ * 		exception was thrown.
+ *
+ * Use JSS_PK11_wrapCertAndSlot instead if it is important for the PK11Cert
+ * object to have the correct slot pointer or the slot pointer is readily
+ * available.
+ */
+jobject
+JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **cert)
+{
+	PK11SlotInfo *slot = (*cert)->slot;
+	if(slot != NULL) {
+		slot = PK11_ReferenceSlot(slot);
+	}
+	return JSS_PK11_wrapCertAndSlot(env, cert, &slot);
 }
 
 /**********************************************************************
@@ -316,20 +486,17 @@ JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11Cert_getOwningToken
     (JNIEnv *env, jobject this)
 {
-    PK11SlotInfo *slot = NULL;
-    CERTCertificate *cert;
+    PK11SlotInfo *slot;
     jobject token = NULL;
 
     PR_ASSERT(env!=NULL && this!=NULL);
 
-    /* get the C Certificate structure */
-    if( JSS_PK11_getCertPtr(env, this, &cert) != PR_SUCCESS) {
+    /* get the C PK11SlotInfo structure */
+    if( JSS_PK11_getCertSlotPtr(env, this, &slot) != PR_SUCCESS) {
         PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
         goto finish;
     }
 
-    /* extract the slot from the certificate */
-    slot = cert->slot;
     PR_ASSERT(slot != NULL);
 
     /* wrap the slot in a Java PK11Token */

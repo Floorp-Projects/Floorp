@@ -209,6 +209,7 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_setServerCert(
 {
     JSSL_SocketData *sock;
     CERTCertificate* cert=NULL;
+    PK11SlotInfo* slot=NULL;
     SECKEYPrivateKey* privKey=NULL;
     SECStatus status;
 
@@ -223,8 +224,12 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_setServerCert(
         goto finish;
     }
     PR_ASSERT(cert!=NULL); /* shouldn't happen */
+    if( JSS_PK11_getCertSlotPtr(env, certObj, &slot) != PR_SUCCESS ) {
+        goto finish;
+    }
+    PR_ASSERT(slot!=NULL); /* shouldn't happen */
 
-    privKey = PK11_FindKeyByAnyCert(cert, NULL);
+    privKey = PK11_FindPrivateKeyFromCert(slot, cert, NULL);
     if (privKey != NULL) {
         status = SSL_ConfigSecureServer(sock->fd, cert, privKey, kt_rsa);
         if( status != SECSuccess) {

@@ -40,6 +40,7 @@ struct JSSL_SocketData {
     jobject certApprovalCallback; /* global ref */
     jobject clientCertSelectionCallback; /* global ref */
     CERTCertificate *clientCert;
+    PK11SlotInfo *clientCertSlot;
     PRFilePrivate *jsockPriv;
     PRBool closed;
 };

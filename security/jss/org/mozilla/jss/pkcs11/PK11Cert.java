@@ -138,15 +138,19 @@ public class PK11Cert implements org.mozilla.jss.crypto.X509Certificate {
 	//	this.certProxy = proxy;
 	//}
 
-	PK11Cert(byte[] pointer) {
-        Assert._assert(pointer!=null);
-		certProxy = new CertProxy(pointer);
+	PK11Cert(byte[] certPtr, byte[] slotPtr) {
+        Assert._assert(certPtr!=null);
+        Assert._assert(slotPtr!=null);
+		certProxy = new CertProxy(certPtr);
+		tokenProxy = new TokenProxy(slotPtr);
 	}
 
 	/////////////////////////////////////////////////////////////
 	// private data
 	/////////////////////////////////////////////////////////////
 	protected CertProxy certProxy;
+
+	protected TokenProxy tokenProxy;
 }
 
 class CertProxy extends org.mozilla.jss.util.NativeProxy {

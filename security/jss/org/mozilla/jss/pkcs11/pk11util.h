@@ -147,6 +147,75 @@ PRStatus
 JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr);
 
 
+/******************************************************************
+ *
+ * J S S _ P K 1 1 _ g e t C e r t S l o t P t r
+ *
+ * Given a PK11Cert object, extracts the PK11SlotInfo* and
+ * stores it at the given address.
+ *
+ * certObject: A JNI reference to a JSS Certificate object.
+ * ptr: Address of a PK11SlotInfo* that will receive the pointer.
+ * Returns: PR_SUCCESS for success, PR_FAILURE if an exception was thrown.
+ */
+PRStatus
+JSS_PK11_getCertSlotPtr(JNIEnv *env, jobject certObject, PK11SlotInfo **ptr);
+
+
+/*************************************************************************
+ *
+ * J S S _ P K 1 1 _ f i n d C e r t A n d S l o t F r o m N i c k n a m e
+ *
+ * A variant of NSS's PK11_FindCertFromNickname function that also
+ * returns a PK11SlotInfo* in *ppSlot.
+ *
+ * If nickname is of the format "token:nickname", the slot that
+ * contains the specified token is returned.  Otherwise the internal
+ * key slot (which contains the permanent database token) is returned.
+ */
+CERTCertificate *
+JSS_PK11_findCertAndSlotFromNickname(char *nickname, void *wincx,
+    PK11SlotInfo **ppSlot);
+
+
+/***************************************************************************
+ *
+ * J S S _ P K 1 1 _ f i n d C e r t s A n d S l o t F r o m N i c k n a m e
+ *
+ * A variant of NSS's PK11_FindCertsFromNickname function that also
+ * returns a PK11SlotInfo* in *ppSlot.
+ *
+ * If nickname is of the format "token:nickname", the slot that
+ * contains the specified token is returned.  Otherwise the internal
+ * key slot (which contains the permanent database token) is returned.
+ */
+CERTCertList *
+JSS_PK11_findCertsAndSlotFromNickname(char *nickname, void *wincx,
+    PK11SlotInfo **ppSlot);
+
+
+/****************************************************************
+ *
+ * J S S _ P K 1 1 _ w r a p C e r t A n d S l o t
+ *
+ * Builds a PK11Cert object from a CERTCertificate and a PK11SlotInfo.
+ * ppCert: Pointer to pointer to CERTCertificate.  The CERTCertificate
+ *      will be wrapped in a Java certificate.  If this fails, it
+ *      will be deleted.  In any case, the caller should never worry about,
+ *      or use, this CERTCertificate again. To enforce this, *ppCert
+ *      will be set to NULL whether the functions fails or succeeds.
+ * ppSlot: Pointer to pointer to PK11SlotInfo.  The PK11SlotInfo
+ *      will be wrapped in a Java certificate.  If this fails, it
+ *      will be deleted.  In any case, the caller should never worry about,
+ *      or use, this PK11SlotInfo again. To enforce this, *ppSlot
+ *      will be set to NULL whether the functions fails or succeeds.
+ * Returns: a new Java PK11Cert object, or NULL if an exception was thrown.
+ */
+jobject
+JSS_PK11_wrapCertAndSlot(JNIEnv *env, CERTCertificate **ppCert,
+    PK11SlotInfo **ppSlot);
+
+
 /****************************************************************
  *
  * J S S _ P K 1 1 _ w r a p C e r t
@@ -158,6 +227,10 @@ JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr);
  *      or use, this CERTCertificate again. To enforce this, *ppCert
  *      will be set to NULL whether the functions fails or succeeds.
  * Returns: a new Java PK11Cert object, or NULL if an exception was thrown.
+ *
+ * Use JSS_PK11_wrapCertAndSlot instead if it is important for the PK11Cert
+ * object to have the correct slot pointer or the slot pointer is readily
+ * available.
  */
 jobject
 JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **ppCert);

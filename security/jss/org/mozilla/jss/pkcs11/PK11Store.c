@@ -143,6 +143,7 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putCertsInVector
     (JNIEnv *env, jobject this, jobject certVector)
 {
     PK11SlotInfo *slot;
+    PK11SlotInfo *slotCopy;
     jclass vectorClass;
     jmethodID addElement;
     CERTCertList *certList = NULL;
@@ -197,7 +198,8 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putCertsInVector
         * Wrap the object
         ***************************************************/
         certCopy = CERT_DupCertificate(node->cert);
-        object = JSS_PK11_wrapCert(env, &certCopy);
+        slotCopy = PK11_ReferenceSlot(slot);
+        object = JSS_PK11_wrapCertAndSlot(env, &certCopy, &slotCopy);
         if(object == NULL) {
             PR_ASSERT( (*env)->ExceptionOccurred(env) );
             goto finish;

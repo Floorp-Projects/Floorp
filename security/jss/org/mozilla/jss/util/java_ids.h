@@ -159,7 +159,7 @@ PR_BEGIN_EXTERN_C
  */
 #define CERT_CLASS_NAME "org/mozilla/jss/pkcs11/PK11Cert"
 #define CERT_CONSTRUCTOR_NAME "<init>"
-#define CERT_CONSTRUCTOR_SIG "([B)V"
+#define CERT_CONSTRUCTOR_SIG "([B[B)V"
 #define CERT_PROXY_FIELD "certProxy"
 #define CERT_PROXY_SIG "Lorg/mozilla/jss/pkcs11/CertProxy;"
 
