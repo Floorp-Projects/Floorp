@@ -159,9 +159,13 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
     ? FW_BOLD : FW_NORMAL;
   logFont.lfItalic = (mFont->style & NS_FONT_STYLE_ITALIC)
     ? TRUE : FALSE;
-  float t2p = aContext->GetAppUnitsToDevUnits();
-  float rounded = (float)NS_POINTS_TO_TWIPS_INT(NS_TWIPS_TO_POINTS_INT(mFont->size));
-  logFont.lfHeight = (LONG)(-rounded * t2p);  // this ugly rounding is to make ours compatible with Nav 4.0
+  float app2dev = aContext->GetAppUnitsToDevUnits();
+  float app2twip = app2dev * aContext->GetDevUnitsToTwips();
+
+  float rounded = NS_POINTS_TO_TWIPS_FLOAT(NS_TWIPS_TO_POINTS_INT(mFont->size * app2twip)) / app2twip;
+    // round font size off to floor point size to be windows compatible
+//  logFont.lfHeight = - NS_TO_INT_ROUND(rounded * app2dev);  // this is proper (windows) rounding
+  logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
   strncpy(logFont.lfFaceName,
           MapFamilyToFont(mFont->name),
           LF_FACESIZE);
@@ -176,16 +180,16 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   HFONT oldfont = ::SelectObject(dc, (HGDIOBJ) mFontHandle);
 
   // Get font metrics
-  float p2t = aContext->GetDevUnitsToAppUnits();
+  float dev2app = aContext->GetDevUnitsToAppUnits();
   TEXTMETRIC metrics;
   ::GetTextMetrics(dc, &metrics);
-  mHeight = nscoord(metrics.tmHeight * p2t);
-  mAscent = nscoord(metrics.tmAscent * p2t);
-  mDescent = nscoord(metrics.tmDescent * p2t);
-  mLeading = nscoord(metrics.tmInternalLeading * p2t);
-  mMaxAscent = nscoord(metrics.tmAscent * p2t);
-  mMaxDescent = nscoord(metrics.tmDescent * p2t);
-  mMaxAdvance = nscoord(metrics.tmMaxCharWidth * p2t);
+  mHeight = nscoord(metrics.tmHeight * dev2app);
+  mAscent = nscoord(metrics.tmAscent * dev2app);
+  mDescent = nscoord(metrics.tmDescent * dev2app);
+  mLeading = nscoord(metrics.tmInternalLeading * dev2app);
+  mMaxAscent = nscoord(metrics.tmAscent * dev2app);
+  mMaxDescent = nscoord(metrics.tmDescent * dev2app);
+  mMaxAdvance = nscoord(metrics.tmMaxCharWidth * dev2app);
 #if 0
   fprintf(stderr, "fontmetrics: height=%d ascent=%d descent=%d leading=%d\n",
           fHeight, fAscent, fDescent, fLeading);
@@ -198,7 +202,7 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   int* fp = widths;
   int* end = fp + 256;
   while (fp < end) {
-    *tp++ = nscoord( *fp++ * p2t );
+    *tp++ = nscoord( *fp++ * dev2app);
   }
 
   ::ReleaseDC(win, dc);
