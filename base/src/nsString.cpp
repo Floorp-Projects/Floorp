@@ -588,6 +588,9 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
       result=-result;
       break;
     }
+    else if('+'==theChar) {
+      break;
+    }
     else{
       *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
       result=0;
