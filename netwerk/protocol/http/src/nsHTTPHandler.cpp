@@ -124,7 +124,7 @@ nsHTTPHandler::nsHTTPHandler():mProxy(nsnull)
         printf("Read HTTP proxy = %s:%d\n", (const char*)proxyServer,proxyPort);
 #endif
 
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && (proxyPort>0)) // currently a bug in IntPref
         {
             if (NS_FAILED(SetProxyHost(proxyServer)))
                 NS_ERROR("Failed to set the HTTP proxy server");
