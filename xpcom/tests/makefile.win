@@ -91,7 +91,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
-xoclobber::
+clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 $(PROG1): $(OBJDIR) TestFactory.cpp

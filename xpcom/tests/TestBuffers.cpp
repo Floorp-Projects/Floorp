@@ -18,6 +18,7 @@
 
 #include "nsIBuffer.h"
 #include "nsIThread.h"
+#include "nsIBaseStream.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsAutoLock.h"
@@ -27,6 +28,8 @@
 #include "prmem.h"
 #include "prinrval.h"
 #include <stdio.h>
+
+PRBool gVerbose = PR_FALSE;
 
 class Reader : public nsIRunnable {
 public:
@@ -56,12 +59,15 @@ public:
                 if (NS_FAILED(rv)) return rv;
             }
             else {
-//                buf[readCnt] = 0;
-//                printf(buf);
+                if (gVerbose) {
+                    buf[readCnt] = 0;
+                    printf(buf);
+                }
                 mBytesRead += readCnt;
             }
         }
-//        printf("reader done\n");
+        if (gVerbose)
+            printf("reader done\n");
         return rv;
     }
 
@@ -73,7 +79,8 @@ public:
 
     virtual ~Reader() {
         NS_RELEASE(mReadBuffer);
-        printf("bytes read = %d\n", mBytesRead);
+        if (gVerbose)
+            printf("bytes read = %d\n", mBytesRead);
     }
 
     void SetEOF() {
@@ -251,14 +258,108 @@ TestSearch(const char* delim, PRUint32 segDataSize)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_METHOD
+FailingReader(void* closure,
+              char* toRawSegment,
+              PRUint32 fromOffset,
+              PRUint32 count,
+              PRUint32 *readCount)
+{
+    nsresult* rv = (nsresult*)closure;
+    *readCount = 0;
+    return *rv;
+}
+
+nsresult
+TestWriteSegments(nsresult error)
+{
+    nsresult rv;
+    nsIBuffer* buffer;
+    printf("WriteSegments Test: error %x\n", error);
+    rv = NS_NewBuffer(&buffer, 10, 10, nsnull);
+    if (NS_FAILED(rv)) {
+        printf("failed to create buffer\n");
+        return rv;
+    }
+
+    PRUint32 writeCount;
+    rv = buffer->WriteSegments(FailingReader, &error, 1, &writeCount);
+    NS_ASSERTION(rv == error, "WriteSegments failed");
+
+    NS_RELEASE(buffer);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_METHOD
+FailingWriter(void* closure,
+              const char* fromRawSegment,
+              PRUint32 toOffset,
+              PRUint32 count,
+              PRUint32 *writeCount)
+{
+    nsresult* rv = (nsresult*)closure;
+    *writeCount = 0;
+    return *rv;
+}
+
+nsresult
+TestReadSegments(nsresult error)
+{
+    nsresult rv;
+    nsIBuffer* buffer;
+    printf("ReadSegments Test: error %x\n", error);
+    rv = NS_NewBuffer(&buffer, 10, 10, nsnull);
+    if (NS_FAILED(rv)) {
+        printf("failed to create buffer\n");
+        return rv;
+    }
+
+    PRUint32 writeCount;
+    rv = buffer->Write("x", 1, &writeCount);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && writeCount == 1, "Write failed");
+
+    PRUint32 readCount;
+    rv = buffer->ReadSegments(FailingWriter, &error, 1, &readCount);
+    NS_ASSERTION(rv == error, "ReadSegments failed");
+
+    NS_RELEASE(buffer);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int
-main()
+main(int argc, char* argv[])
 {
     nsresult rv;
     nsIServiceManager* servMgr;
 
+    if (argc >= 2 && nsCRT::strcmp(argv[1], "-verbose") == 0) {
+        gVerbose = PR_TRUE;
+    }
+
     rv = NS_InitXPCOM(&servMgr);
     if (NS_FAILED(rv)) return rv;
+
+    rv = TestWriteSegments(NS_OK);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
+    rv = TestWriteSegments(NS_ERROR_FAILURE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
+    rv = TestWriteSegments(NS_BASE_STREAM_EOF);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
+    rv = TestWriteSegments(NS_BASE_STREAM_WOULD_BLOCK);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
+
+    rv = TestReadSegments(NS_OK);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");
+    rv = TestReadSegments(NS_ERROR_FAILURE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");
+//    rv = TestReadSegments(NS_BASE_STREAM_EOF);
+//    NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");
+    rv = TestReadSegments(NS_BASE_STREAM_WOULD_BLOCK);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");
 
     rv = TestMallocBuffers(1, 1);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestMallocBuffers failed");
