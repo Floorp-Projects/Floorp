@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: BasicNodeExpr.cpp,v 1.3 2001/04/11 15:00:57 axel%pike.org Exp $
+ * $Id: BasicNodeExpr.cpp,v 1.4 2001/05/14 14:22:46 axel%pike.org Exp $
  */
 
 #include "Expr.h"
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2001/04/11 15:00:57 $
+ * @version $Revision: 1.4 $ $Date: 2001/05/14 14:22:46 $
 **/
 
 //- Constructors -/
@@ -66,10 +66,11 @@ BasicNodeExpr::~BasicNodeExpr() {};
 ExprResult* BasicNodeExpr::evaluate(Node* context, ContextState* cs) {
     NodeSet* nodeSet = new NodeSet();
     if ( !context ) return nodeSet;
-    NodeList* nl = context->getChildNodes();
-    for (UInt32 i = 0; i < nl->getLength(); i++ ) {
-        Node* node = nl->item(i);
-        if (matches(node, context, cs)) nodeSet->add(node);
+    Node* node = context->getFirstChild();
+    while (node) {
+        if (matches(node, context, cs))
+            nodeSet->add(node);
+        node = node->getNextSibling();
     }
     return nodeSet;
 } //-- evaluate

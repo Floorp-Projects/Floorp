@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.12 2001/04/03 12:37:44 peterv%netscape.com Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.13 2001/05/14 14:22:41 axel%pike.org Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.12 $ $Date: 2001/04/03 12:37:44 $
+ * @version $Revision: 1.13 $ $Date: 2001/05/14 14:22:41 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -44,7 +44,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
 
     //-- make sure owner exists if we are copying nodes other than
     //-- document nodes
-    if ((nodeType != Node::DOCUMENT_NODE) && (!owner)) return 0;
+    if (nodeType != Node::DOCUMENT_NODE && !owner) return 0;
     Node* newNode = 0;
     UInt32 i = 0;
     switch ( nodeType ) {
@@ -76,9 +76,10 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
         case Node::DOCUMENT_FRAGMENT_NODE :
         {
             newNode = owner->createDocumentFragment();
-            NodeList* nl = node->getChildNodes();
-            for (i = 0; i < nl->getLength(); i++) {
-                newNode->appendChild(copyNode(nl->item(i), owner, resolver));
+            Node* tmpNode = node->getFirstChild();
+            while (tmpNode) {
+                newNode->appendChild(copyNode(tmpNode, owner, resolver));
+                tmpNode = tmpNode->getNextSibling();
             }
             break;
         }
@@ -108,9 +109,10 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
                 }
             }
             //-- copy children
-            NodeList* nl = element->getChildNodes();
-            for (i = 0; i < nl->getLength(); i++) {
-                newElement->appendChild(copyNode(nl->item(i), owner, resolver));
+            Node* tmpNode = element->getFirstChild();
+            while (tmpNode) {
+                newElement->appendChild(copyNode(tmpNode, owner, resolver));
+                tmpNode = tmpNode->getNextSibling();
             }
             newNode = newElement;
             break;
@@ -143,7 +145,6 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
 
     int nodeType = node->getNodeType();
     Element* element = 0;
-    NodeList* nl = 0;
 
     switch ( nodeType ) {
         case Node::ATTRIBUTE_NODE :
@@ -155,15 +156,15 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
         case Node::DOCUMENT_FRAGMENT_NODE :
         case Node::ELEMENT_NODE :
         {
-            nl = node->getChildNodes();
-            for (UInt32 i = 0; i < nl->getLength(); i++) {
-                nodeType = nl->item(i)->getNodeType();
-                if ((nodeType == Node::TEXT_NODE) ||
-                    (nodeType == Node::ELEMENT_NODE) ||
-                    (nodeType == Node::CDATA_SECTION_NODE))
-                    {
-                        getNodeValue(nl->item(i),target);
-                    }
+            Node* tmpNode = node->getFirstChild();
+            while (tmpNode) {
+                nodeType = tmpNode->getNodeType();
+                if (nodeType == Node::TEXT_NODE ||
+                    nodeType == Node::ELEMENT_NODE ||
+                    nodeType == Node::CDATA_SECTION_NODE) {
+                    getNodeValue(tmpNode,target);
+                };
+                tmpNode = tmpNode->getNextSibling();
             }
             break;
         }

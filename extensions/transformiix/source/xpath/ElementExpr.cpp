@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: ElementExpr.cpp,v 1.5 2001/04/08 14:37:18 peterv%netscape.com Exp $
+ * $Id: ElementExpr.cpp,v 1.6 2001/05/14 14:22:46 axel%pike.org Exp $
  */
 
 #include "Expr.h"
@@ -68,11 +68,11 @@ ExprResult* ElementExpr::evaluate(Node* context, ContextState* cs) {
 
     if ( !context ) return nodeSet;
 
-    NodeList* nl = context->getChildNodes();
-
-    for (UInt32 i = 0; i < nl->getLength(); i++ ) {
-        Node* node = nl->item(i);
-        if (matches(node, context, cs)) nodeSet->add(node);
+    Node* node = context->getFirstChild();
+    while (node) {
+        if (matches(node, context, cs))
+            nodeSet->add(node);
+        node = node->getNextSibling();
     }
     return nodeSet;
 } //-- evaluate

@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: XMLPrinter.cpp,v 1.7 2000/09/07 03:40:24 kvisco%ziplink.net Exp $
+ * $Id: XMLPrinter.cpp,v 1.8 2001/05/14 14:22:45 axel%pike.org Exp $
  */
 
 #include "printers.h"
@@ -36,7 +36,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2000/09/07 03:40:24 $
+ * @version $Revision: 1.8 $ $Date: 2001/05/14 14:22:45 $
 **/
 
 /**
@@ -194,8 +194,6 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
 
     //-- if (node == null) return false;
 
-    NodeList* nl;
-
     switch(node->getNodeType()) {
 
         //-- print Document Node
@@ -206,9 +204,10 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
             out << version;
             out << DOUBLE_QUOTE << PI_END << endl;
             //-- printDoctype(doc.getDoctype());
-            nl = doc->getChildNodes();
-            for (int i = 0; i < nl->getLength(); i++) {
-                print(nl->item(i),currentIndent);
+            Node *node = doc->getFirstChild();
+            while (node) {
+                print(node,currentIndent);
+                node = node->getNextSibling();
             }
             break;
         }
@@ -250,9 +249,8 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
                 }
             }
 
-            NodeList* childList = element->getChildNodes();
-            int size = childList->getLength();
-            if ((size == 0) && (useEmptyElementShorthand))
+            Node* child = element->getFirstChild();
+            if (!child && (useEmptyElementShorthand))
             {
                 out << FORWARD_SLASH << R_ANGLE_BRACKET;
                 if (useFormat) {
@@ -264,35 +262,35 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
                 // Either children, or no shorthand
                 MBool newLine = MB_FALSE;
                 out << R_ANGLE_BRACKET;
-                if ((useFormat) && (size > 0)) {
+                if (useFormat && child) {
                     // Fix formatting of PCDATA elements by Peter Marks and
                     // David King Lassman
                     // -- add if statement to check for text node before
                     //    adding line break
-                    if (childList->item(0)->getNodeType() != Node::TEXT_NODE) {
+                    if (child->getNodeType() != Node::TEXT_NODE) {
                         out << endl;
                         newLine = MB_TRUE;
                     }
                 }
 
-                Node* child = 0;
                 String newIndent(indent);
                 newIndent.append(currentIndent);
-                for (int i = 0; i < size; i++) {
-                    child = childList->item(i);
-                    if ((useFormat) && newLine)
-                    {
+                Node *lastChild = child;
+                while (child) {
+                    if (useFormat && newLine) {
                         out << newIndent;
                     }
                     newLine = print(child,newIndent);
+                    lastChild = child;
+                    child = child->getNextSibling();
                 }
                 if (useFormat) {
                     // Fix formatting of PCDATA elements by Peter Marks and
                     // David King Lassman
                     // -- add if statement to check for text node before
                     //    adding line break
-                    if (child) {
-                        if (child->getNodeType() != Node::TEXT_NODE) {
+                    if (lastChild) {
+                        if (lastChild->getNodeType() != Node::TEXT_NODE) {
                             out << currentIndent;
                         }
                     }
@@ -302,8 +300,8 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
                 out << R_ANGLE_BRACKET;
                 if (useFormat) {
                     Node* sibling = node->getNextSibling();
-                    if ((!sibling) ||
-                        (sibling->getNodeType() != Node::TEXT_NODE))
+                    if (!sibling ||
+                        sibling->getNodeType() != Node::TEXT_NODE)
                     {
                         out<<endl;
                         return MB_TRUE;
@@ -479,7 +477,7 @@ void XMLPrinter::printComment(const String& data) {
     for (int i = 0; i < data.length(); i++) {
         currChar = data.charAt(i);
 
-        if ((currChar == DASH) && (prevChar == DASH))
+        if (currChar == DASH && prevChar == DASH)
             *ostreamPtr << SPACE << DASH;
         else
             printUTF8Char(currChar);

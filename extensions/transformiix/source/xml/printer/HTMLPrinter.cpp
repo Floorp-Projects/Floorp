@@ -21,7 +21,7 @@
  *
  * Michel Casabianca, casa@sdv.fr
  *    -- added additional empty elements to the HTML tag list
- * $Id: HTMLPrinter.cpp,v 1.5 2001/04/08 14:37:24 peterv%netscape.com Exp $
+ * $Id: HTMLPrinter.cpp,v 1.6 2001/05/14 14:22:44 axel%pike.org Exp $
  */
 
 #include "printers.h"
@@ -34,7 +34,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2001/04/08 14:37:24 $
+ * @version $Revision: 1.6 $ $Date: 2001/05/14 14:22:44 $
 **/
   //---------------/
  //- Contructors -/
@@ -120,8 +120,6 @@ MBool HTMLPrinter::print(Node* node, String& currentIndent) {
 
     //-- if (node == null) return false;
 
-    NodeList* nl;
-
     switch(node->getNodeType()) {
 
         //-- print Document Node
@@ -131,9 +129,10 @@ MBool HTMLPrinter::print(Node* node, String& currentIndent) {
             out <<endl<< "    \"http://www.w3.org/TR/REC-html40/loose.dtd\">" <<endl;
             Document* doc = (Document*)node;
             //-- printDoctype(doc.getDoctype());
-            nl = doc->getChildNodes();
-            for (int i = 0; i < nl->getLength(); i++) {
-                print(nl->item(i),currentIndent);
+            Node* tmpNode = doc->getFirstChild();
+            while (tmpNode) {
+                print(tmpNode,currentIndent);
+                tmpNode = tmpNode->getNextSibling();
             }
             break;
         }
@@ -166,27 +165,25 @@ MBool HTMLPrinter::print(Node* node, String& currentIndent) {
                     }
                 }
                 out << R_ANGLE_BRACKET;
-                NodeList* nl = element->getChildNodes();
+                Node* child = element->getFirstChild();
                 if (useFormat) out<<endl;
-                for (i = 0; i < nl->getLength(); i++) {
-		  Node* child = nl->item(i);
-		  switch(child->getNodeType()) {
-		      case Node::COMMENT_NODE:
-		      {
-                          out << COMMENT_START;
-                          out << ((CharacterData*)child)->getData();
-                          out << COMMENT_END;
-                          break;
-		      }
-		      case Node::TEXT_NODE:
-                      case Node::CDATA_SECTION_NODE:
-                      {
-			  out << ((Text*)child)->getData();
-                          break;
-                      }
-		      default:
-			  break;
-		  }
+                while (child) {
+                    switch(child->getNodeType()) {
+                        case Node::COMMENT_NODE: {
+                            out << COMMENT_START;
+                            out << ((CharacterData*)child)->getData();
+                            out << COMMENT_END;
+                            break;
+                        }
+                        case Node::TEXT_NODE:
+                        case Node::CDATA_SECTION_NODE: {
+                            out << ((Text*)child)->getData();
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                    child = child->getNextSibling();
                 }
                 out << flush;
                 if (useFormat) {
