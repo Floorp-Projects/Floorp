@@ -28,7 +28,6 @@ CPPSRCS =				\
 	nsByteBuffer.cpp		\
 	nsCRT.cpp			\
 	nsDeque.cpp		\
-	nsInputStream.cpp		\
   nsRBTree.cpp \
 	nsString.cpp			\
 	nsUnicharBuffer.cpp		\
