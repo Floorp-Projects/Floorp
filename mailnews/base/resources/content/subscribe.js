@@ -6,6 +6,7 @@ var RDF = null;
 var gSubscribeDS = null;
 var gStatusBar = null;
 var gNameField = null;
+var gFolderDelimiter = ".";
 
 function Stop()
 {
@@ -90,7 +91,7 @@ function SubscribeOnLoad()
 {
 	dump("SubscribeOnLoad()\n");
 	
-   	gSubscribeTree = document.getElementById('subscribetree');
+  gSubscribeTree = document.getElementById('subscribetree');
 	gStatusBar = document.getElementById('statusbar-icon');
 	gNameField = document.getElementById('namefield');
 
@@ -127,6 +128,8 @@ function SubscribeOnLoad()
 	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 		
 	gSubscribeDS = RDF.GetDataSource("rdf:subscribe");
+  
+  gNameField.focus();
 }
 
 function subscribeOK()
@@ -262,3 +265,54 @@ function RefreshList()
 	dump("refresh list\n");
 }
 
+function trackGroupInTree()
+{
+  var portion = gNameField.value;
+  selectNodeByName( portion );  
+}
+
+function selectNodeByName( aMatchString )
+{
+  var lastDot = aMatchString.lastIndexOf(gFolderDelimiter);
+  var nodeValue = lastDot != -1 ? aMatchString.substring(0, lastDot) : aMatchString;
+  
+  var chain = aMatchString.split(gFolderDelimiter);
+  if( chain.length == 1 ) {
+    var node = getTreechildren(gSubscribeTree);
+    if( !node )
+      return;
+  }
+  else {
+    var node = gSubscribeTree.getElementsByAttribute("name",nodeValue)[0];
+    if( node.getAttribute("container") == "true" && 
+        node.getAttribute("open") != "true" )
+      node.setAttribute("open","true");
+    node = getTreechildren(node);
+    dump("*** node = " + node.nodeName + "\n");
+  }
+  
+  for( var i = 0; i < node.childNodes.length; i++ )
+  {
+    var currItem = node.childNodes[i];
+    dump("*** chain = " + chain[chain.length-1] + "\n");
+    if( !currItem.getAttribute("name").indexOf( aMatchString ) ) {
+      gSubscribeTree.selectItem( currItem );
+      gSubscribeTree.ensureElementIsVisible( currItem );
+      return;
+    }
+  }      
+}
+
+function getTreechildren( aTreeNode )
+{
+  if( aTreeNode.childNodes ) 
+    {
+      for( var i = 0; i < aTreeNode.childNodes.length; i++ )
+      {
+        if( aTreeNode.childNodes[i].nodeName.toLowerCase() == "treechildren" )
+          return aTreeNode.childNodes[i];
+      }
+      return aTreeNode;
+    }
+  return null;
+}

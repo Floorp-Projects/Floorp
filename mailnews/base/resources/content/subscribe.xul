@@ -56,7 +56,7 @@ Rights Reserved.
           
           <rows>
             <row>
-              <text class="label" value="&server.label;"/>
+              <text class="label" value="&server.label;" for="serverMenu"/>
               <menulist oncommand="onServerClick(event);" id="serverMenu"
                         rdf:datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                         rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
@@ -72,8 +72,8 @@ Rights Reserved.
               </menulist>
             </row>
             <row>
-          		<text class="label" id="foldertextlabel" value="..." for="name"/>
-          		<textfield id="namefield" flex="1"/>
+          		<text class="label" id="foldertextlabel" value="..." for="namefield"/>
+          		<textfield id="namefield" flex="1" oninput="trackGroupInTree();"/>
             </row>
           </rows>
         </grid>
