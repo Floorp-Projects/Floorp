@@ -37,6 +37,7 @@
 
 static NS_DEFINE_IID(kIStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 
 nsContainerFrame::nsContainerFrame(nsIContent* aContent,
                                    PRInt32     aIndexInParent,
@@ -451,29 +452,54 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   // nsBlockFrame since it already has band data, and it's probably the only
   // one who calls this routine anyway
   nsBandData        bandData;
-  nsBandTrapezoid   trapezoids[7];
-  nsBandTrapezoid*  availSpace = trapezoids;
+  nsBandTrapezoid   trapezoids[12];
+  nsBandTrapezoid*  trapezoid = trapezoids;
+  nsRect            availBand;
   nsSize            availSize = aMaxSize;
 
   bandData.trapezoids = trapezoids;
-  bandData.size = 7;
+  bandData.size = 12;
   aSpaceManager->GetBandData(0, aMaxSize, bandData);
 
-  // If there's more than one trapezoid then figure out which one determines the
-  // available reflow area
-  if (bandData.count == 2) {
-    nsRect  r0, r1;
+  if (bandData.count > 1) {
+    // If there's more than one trapezoid that means there are floaters
+    PRInt32 i;
 
-    trapezoids[0].GetRect(r0);
-    trapezoids[1].GetRect(r1);
+    // Stop when we get to space occupied by a right floater
+    for (i = 0; i < bandData.count; i++) {
+      nsBandTrapezoid*  trapezoid = &trapezoids[i];
 
-    // Either a left or right floater. Use whichever space is larger
-    if (r1.width > r0.width) {
-      availSpace = &trapezoids[1];
+      if (trapezoid->state != nsBandTrapezoid::smAvailable) {
+        nsStyleDisplay* display;
+      
+        // XXX Handle the case of multiple frames
+        trapezoid->frame->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+        if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+          break;
+        }
+      }
     }
-  } else if (bandData.count == 3) {
-    // Assume there are floaters on the left and right, and use the middle rect
-    availSpace = &trapezoids[1];
+
+    if (i > 0) {
+      trapezoid = &trapezoids[i - 1];
+    }
+  }
+
+  if (nsBandTrapezoid::smAvailable == trapezoid->state) {
+    // The trapezoid is available
+    trapezoid->GetRect(availBand);
+  } else {
+    nsStyleDisplay* display;
+
+    // The trapezoid is occupied. That means there's no available space
+    trapezoid->GetRect(availBand);
+
+    // XXX Handle the case of multiple frames
+    trapezoid->frame->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+    if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
+      availBand.x = availBand.XMost();
+    }
+    availBand.width = 0;
   }
 
   // Does the child frame want to do continuation-based runaround?
@@ -482,20 +508,17 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   aKidFrame->IsSplittable(isSplittable);
   if (isSplittable == frSplittableNonRectangular) {
     // Reduce the max height to the band height.
-    availSize.height = availSpace->yBottom - availSpace->yTop;
+    availSize.height = availBand.height;
   }
 
-  // Get the bounding rect of the available trapezoid
-  nsRect  rect;
-  nsIStyleContext* kidSC;
-  aKidFrame->GetStyleContext(aPresContext, kidSC);
-  nsStyleSpacing* spacing = (nsStyleSpacing*)kidSC->GetData(kIStyleSpacingSID);
+  nsStyleSpacing* spacing;
 
-  availSpace->GetRect(rect);
+  aKidFrame->GetStyleData(kIStyleSpacingSID, (nsStyleStruct*&)spacing);
+
   if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-    if ((rect.x > 0) || (rect.XMost() < aMaxSize.width)) {
+    if ((availBand.x > 0) || (availBand.XMost() < aMaxSize.width)) {
       // There are left/right floaters.
-      availSize.width = rect.width;
+      availSize.width = availBand.width;
     }
   
     // Reduce the available width by the kid's left/right margin
@@ -505,7 +528,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   // Does the child frame support interface nsIRunaround?
   if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
     // Yes, the child frame wants to interact directly with the space manager.
-    nscoord tx = rect.x + spacing->mMargin.left;
+    nscoord tx = availBand.x + spacing->mMargin.left;
 
     // Translate the local coordinate space to the current left edge plus any
     // left margin the child wants
@@ -513,7 +536,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
 
     reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, availSize,
                                   aDesiredRect, aMaxElementSize, status);
-    aDesiredRect.x += rect.x;
+    aDesiredRect.x += availBand.x;
 
     // Translate back
     aSpaceManager->Translate(-tx, 0);
@@ -526,7 +549,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
                             aMaxElementSize, status);
 
     // Return the desired rect
-    aDesiredRect.x = rect.x;
+    aDesiredRect.x = availBand.x;
     aDesiredRect.y = 0;
     aDesiredRect.width = desiredSize.width;
     aDesiredRect.height = desiredSize.height;
@@ -547,7 +570,6 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     }
   }
 
-  NS_RELEASE(kidSC);
   return status;
 }
 
