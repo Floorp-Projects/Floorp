@@ -119,9 +119,7 @@ Contributor(s): ______________________________________. -->
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
     <command id="Browser:Open" oncommand="ShowAndSelectContentsOfURLBar();"/>
-    <command id="Browser:PrintSetup" oncommand="BrowserPrintSetup();"/>
     <command id="Browser:Print" oncommand="BrowserPrint();"/>
-    <command id="Browser:PrintPreview" oncommand="BrowserPrintPreview();"/>
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
@@ -156,9 +154,6 @@ Contributor(s): ______________________________________. -->
     <command id="cmd_copyImageLocation"
              oncommand="goDoCommand('cmd_copyImageLocation')"
              disabled="false"/>
-    <command id="cmd_copyImageContents"
-             oncommand="goDoCommand('cmd_copyImageContents')"
-             disabled="false"/>
 
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
@@ -181,7 +176,6 @@ Contributor(s): ______________________________________. -->
     <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
-    <commandset id="tasksCommands"/>
     <command id="cmd_history" oncommand="toHistory();"/>
   </commandset>
 
@@ -452,8 +446,8 @@ Contributor(s): ______________________________________. -->
             <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
             <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
             <menuseparator/>
-            <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="Browser:PrintSetup"/>
-            <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>
+            <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
+            <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>
             <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
             <menuseparator/>
             <menuitem id="offlineGoOfflineCmd"

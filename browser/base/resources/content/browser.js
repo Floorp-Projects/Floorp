@@ -47,9 +47,7 @@ var gProxyDeck = null;
 var gBookmarksService = null;
 var gSearchService = null;
 var gNavigatorBundle;
-var gBrandBundle;
 var gNavigatorRegionBundle;
-var gBrandRegionBundle;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
@@ -443,9 +441,7 @@ function Startup()
 {
   // init globals
   gNavigatorBundle = document.getElementById("bundle_navigator");
-  gBrandBundle = document.getElementById("bundle_brand");
   gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
-  gBrandRegionBundle = document.getElementById("bundle_brand_region");
 
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
