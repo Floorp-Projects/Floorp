@@ -202,6 +202,7 @@ viewer:Components:nsXmlRpcClient.js
 viewer:Components:xmlextras.xpt
 viewer:Components:xmlextras.shlb
 viewer:Components:xmlsoap.xpt
+viewer:Components:xmlschema.xpt
 viewer:Components:nsHelperAppDlg.js
 viewer:Components:nsProgressDialog.js
 viewer:Components:nsDownloadProgressListener.js
