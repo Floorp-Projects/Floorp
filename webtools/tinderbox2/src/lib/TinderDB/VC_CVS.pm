@@ -129,7 +129,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.11 $ )[1];
+$VERSION = ( qw $Revision: 1.12 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -139,6 +139,81 @@ $VERSION = ( qw $Revision: 1.11 $ )[1];
 
 push @TinderDB::HTML_COLUMNS, TinderDB::VC->new();
 
+
+
+$CURRENT_YEAR = 1900 + (gmtime(time()))[5];
+
+
+
+sub parse_cvs_time { 
+  # convert cvs times into unix times.
+  my ($date, $time) = @_;
+
+  # Can you believe that some CVS versions gives no information about
+  # the YEAR?
+
+  # We do not even  get a two digit year.
+  # Luckally for us we are only interested in history in our recent
+  # past, within the last year.
+
+  my ($year, $mon, $mday, $hours, $min,) = ();
+
+  # some versions of CVS give data in the format:
+  #        2001-01-04
+  # others use:
+  #        01/04
+
+  if ( $date =~ m/-/ ) {
+    ($year, $mon, $mday,) = split(/-/, $date);
+  } else {
+    $year = $CURRENT_YEAR;
+    ($mon, $mday,) = split(/\//, $date);
+  }
+
+  ($hours, $min,) = split(/:/, $time);
+  
+  # The perl conventions for these variables is 0 origin while the
+  # "display" convention for these variables is 1 origin.  
+  $mon--;
+  
+  # This calculation may use the wrong year.
+  my $sec = 0;
+
+  my ($time) = timegm($sec,$min,$hours,$mday,$mon,$year);    
+
+  # This fix is needed every year on Jan 1. On that day $time is
+  # nearly a year in the future so is much bigger then $main::TIME.
+
+  if ( ($time - $main::TIME) > $main::SECONDS_PER_MONTH) {
+    $time = timegm($sec,$min,$hours,$mday,$mon,$year - 1);    
+  }
+
+  # check that the result is reasonable.
+
+  if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
+       (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
+    die("CVS reported time: $time ".scalar(gmtime($time)).
+        " which is more then a year away from now or in the future.\n");
+  }
+
+  return $time;
+}
+
+
+sub time2cvsformat {
+  # convert time() format to cvs input format
+  my ($time) = @_;
+
+  my ($sec,$min,$hour,$mday,$mon,
+      $year,$wday,$yday,$isdst) =
+        gmtime($time);
+  $mon++;
+  $year += 1900;
+  $cvs_date_str = sprintf("%02u/%02u/%04u %02u:%02u:%02u GMT",
+                          $mon, $mday, $year, $hour, $min, $sec);
+
+  return $cvs_date_str;
+}
 
 
 # remove all records from the database which are older then last_time.
@@ -184,7 +259,7 @@ sub apply_db_updates {
     # for debuging and for "redundancy". Only delete duplicates during
     # the list hour.  Notice we are still removing 90% of the duplicates.
 
-    ( ($main::TIME - $time) < $SECONDS_PER_HOUR ) &&
+    ( ($main::TIME - $time) < $main::SECONDS_PER_HOUR ) &&
     ($DATABASE{$tree}{$time}{'treestate'}) &&
     ($DATABASE{$tree}{$time}{'treestate'} eq $tree_state) &&
       delete $DATABASE{$tree}{$time}{'treestate'};
@@ -200,32 +275,9 @@ sub apply_db_updates {
   ($last_data) ||
    ($last_data = $main::TIME - $TinderDB::TRIM_SECONDS );
   
-
-  my $cvs_date_str = "";
-  {
-    # convert $last_data to cvs input format
-    
-    my ($sec,$min,$hour,$mday,$mon,
-        $year,$wday,$yday,$isdst) =
-          gmtime($last_data);
-    $mon++;
-    $year += 1900;
-    $cvs_date_str = sprintf("%02u/%02u/%04u %02u:%02u:%02u GMT",
-                            $mon, $mday, $year, $hour, $min, $sec)
-  }   
+  my $cvs_date_str = time2cvsformat($last_data);
 
   my $num_updates = 0;
-  my $sec_per_day = 60*60*24;
-  my $sec_per_month = $sec_per_day*30;
-  my $sec_per_year  = $sec_per_day*365;
-
-  # Can you believe that CVS gives no information about the YEAR?
-  # We do not even  get a two digit year.
-  # Luckally for us we are only interested in history in our recent
-  # past, within the last year.
-
-  my $year = 1900 + (gmtime(time()))[5];
-  my $sec = 0;
 
   # see comments about CVS history at the top of this file for details
   # about this commmand and limitations in CVS.
@@ -251,6 +303,20 @@ sub apply_db_updates {
   if ($cvs_output[0] !~  m/^No records selected.\n/) {
 
     foreach $line (@cvs_output) {
+
+      # we are now parsing lines which look like this:
+      # (Duplicate whitespace trimmed and lines wrapped for clarity.)
+
+      # M 01/03 20:25 +0000 cporto  1.1.2.2 serviceagreement.txt              
+      #     html/docs  == <remote>
+      # A 01/05 20:42 +0000 tha 1.1  Makefile 
+      #    storedprocedure/gwbulk == <remote>
+
+      # some versions of CVS give data in the format:
+      #        2001-01-04
+      # others use:
+      #        01/04
+
 
       my ($rectype, $date, $time, $tzone, $author, 
           $revision, $file, $repository_dir, $eqeq, $dest_dir)
@@ -278,26 +344,8 @@ sub apply_db_updates {
 
       ( $rectype =~ m/^([AMR])$/ ) || next;
       
-      { 
-        # convert cvs times into unix times.
-        
-        my ($mon, $mday) = split(/\//, $date);
-        my ($hours, $min,) = split(/:/, $time);
-        
-        # The perl conventions for these variables is 0 origin while the
-        # "display" convention for these variables is 1 origin.
-        
-        $mon--;
-        
-        # Can you believe that CVS gives no information about the YEAR?
-        # We set $sec to zero.
-        $time = timegm($sec,$min,$hours,$mday,$mon,$year);    
+      $time = parse_cvs_time($date, $time);
 
-        # This fix needs to be corrected every year on Jan 1,
-        if ( ($main::TIME - $time) > $sec_per_month) {
-          $time = timegm($sec,$min,$hours,$mday,$mon,$year - 1);    
-        }
-      }
       {
         
         # double check that we understand the format, and untaint our
@@ -319,8 +367,8 @@ sub apply_db_updates {
         }
         $rectype = $1;
         
-        if ( (($main::TIME - $sec_per_year) > $time) || 
-             (($main::TIME + $sec_per_year) < $time) ) {
+        if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
+             (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
           die("CVS reported time: $time ".gmtime($time).
               " which is more then a year away from now.\n")
         }
