@@ -634,7 +634,9 @@
       </method>
 
       <method name="onPopupClick">
+        <parameter name="aEvent"/>
         <body><![CDATA[
+          this.mInput.mEnterEvent = aEvent;
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
           controller.handleEnter();
         ]]></body>
@@ -684,7 +686,7 @@
     
     <handlers>
       <handler event="mouseout" action="this.parentNode.currentIndex = -1;"/>
-      <handler event="mouseup" action="this.parentNode.parentNode.onPopupClick();"/>
+      <handler event="mouseup" action="this.parentNode.parentNode.onPopupClick(event);"/>
 
       <handler event="mousemove"><![CDATA[
         if (new Date() - this.mLastMoveTime > 30) {
