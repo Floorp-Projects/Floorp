@@ -6,6 +6,7 @@
 #define __nsIMsgNewsHost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
 
 /* starting interface nsIMsgNewsHost */
 
@@ -77,14 +78,14 @@ class nsIMsgNewsHost : public nsISupports {
   /* void DisplaySubscribedGroup(in string groupname, in  first_message, in  last_message, in  total_messages, in boolean visit_now); */
   NS_IMETHOD DisplaySubscribedGroup(const char *groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRBool visit_now) = 0;
 
-  /* string GetFirstGroupNeedingExtraInfo(); */
-  NS_IMETHOD GetFirstGroupNeedingExtraInfo(char **_retval) = 0;
+  /* nsIMsgNewsgroup GetFirstGroupNeedingExtraInfo(); */
+  NS_IMETHOD GetFirstGroupNeedingExtraInfo(nsIMsgNewsgroup **_retval) = 0;
 
   /* void SetGroupNeedsExtraInfo(in string groupname, in boolean needsExtraInfo); */
   NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool needsExtraInfo) = 0;
 
-  /* void GetNewsGroupAndNumberOfID(in string message_id, out string groupname, out  message_number); */
-  NS_IMETHOD GetNewsGroupAndNumberOfID(const char *message_id, char **groupname, PRInt32 *message_number) = 0;
+  /* void GetNewsGroupAndNumberOfID(in string message_id, out nsIMsgNewsgroup group, out unsigned  message_number); */
+  NS_IMETHOD GetNewsGroupAndNumberOfID(const char *message_id, nsIMsgNewsgroup **group, PRUint32 *message_number) = 0;
 
   /* void AddPrettyName(in string groupName, in string prettyName); */
   NS_IMETHOD AddPrettyName(const char *groupName, const char *prettyName) = 0;

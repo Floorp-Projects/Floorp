@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsISupports.idl"
+#include "nsIMsgNewsgroup.idl"
 
 [object, uuid(2F5041B0-939E-11d2-B7EA-00805F05FFA5)]
 interface nsIMsgNewsHost : nsISupports {
@@ -77,7 +78,7 @@ interface nsIMsgNewsHost : nsISupports {
                               in long total_messages,
                               in boolean visit_now);
 
-  string GetFirstGroupNeedingExtraInfo();
+  nsIMsgNewsgroup GetFirstGroupNeedingExtraInfo();
   void SetGroupNeedsExtraInfo(in string groupname, in boolean needsExtraInfo);
 
   
@@ -87,8 +88,8 @@ interface nsIMsgNewsHost : nsISupports {
      thead or message pane, this routine will fail.
   */
   void GetNewsGroupAndNumberOfID(in string message_id,
-                                 out string groupname,
-                                 out long message_number);
+                                 out nsIMsgNewsgroup group,
+                                 out unsigned long message_number);
 
 
   void AddPrettyName(in string groupName, in string prettyName);
