@@ -300,6 +300,9 @@ pref("mime.table.allow_remove", true);
 pref("browser.registration.enable", false);
 pref("browser.registration.url", "");
 pref("browser.registration.domain", "");
+pref("browser.registration.acceptdomain", "");
+pref("browser.registration.mailservername", "");
+pref("browser.registration.mailservertype", "");
 
 pref("signed.applets.codebase_principal_support", false);
 
