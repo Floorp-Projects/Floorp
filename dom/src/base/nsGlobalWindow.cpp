@@ -1252,8 +1252,9 @@ GlobalWindowImpl::Open(JSContext *cx,
                        nsIDOMWindow** aReturn)
 {
   PRUint32 mChrome = 0;
-  PRInt32 mWidth, mHeight;
-  PRInt32 mLeft, mTop;
+  PRInt32 mWidth = 0, mHeight = 0;
+  PRInt32 mLeft = 0, mTop = 0;
+  nsRect mDefaultBounds;
   nsAutoString mAbsURL, name;
   JSString* str;
   *aReturn = nsnull;
@@ -1296,13 +1297,18 @@ GlobalWindowImpl::Open(JSContext *cx,
     name.SetString("");
   }
 
-  char *options;
+  /* set default location/size of new window. */
+  nsIBrowserWindow *mBrowser;
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->GetWindowBounds(mDefaultBounds);
+    NS_RELEASE(mBrowser);
+  }
   
   if (argc > 2) {
     if (!(str = JS_ValueToString(cx, argv[2]))) {
       return NS_ERROR_FAILURE;
     }
-    options = JS_GetStringBytes(str);
+    char *options = JS_GetStringBytes(str);
 
     mChrome |= WinHasOption(options, "toolbar") ? NS_CHROME_TOOL_BAR_ON : 0;
     mChrome |= WinHasOption(options, "location") ? NS_CHROME_LOCATION_BAR_ON : 0;
@@ -1380,10 +1386,14 @@ GlobalWindowImpl::Open(JSContext *cx,
   }
 
   if (nsnull != newWindow && nsnull != newWebShell) {
-    //How should we do default size/pos
-    newWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
-    newWindow->MoveTo(mLeft, mTop);
-    newWindow->Show();
+    // beard: don't resize/reposition the window if it is the same web shell.
+    if (newWebShell != mWebShell) {
+      // How should we do default size/pos?
+      // How about inheriting from the current window?
+      newWindow->SizeTo(mWidth ? mWidth : mDefaultBounds.width, mHeight ? mHeight : mDefaultBounds.height);
+      newWindow->MoveTo(mLeft ? mLeft : mDefaultBounds.x, mTop ? mTop : mDefaultBounds.y);
+      newWindow->Show();
+    }
 
     /* Get win obj */
     nsIScriptContextOwner *newContextOwner = nsnull;
