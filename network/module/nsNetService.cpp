@@ -62,6 +62,11 @@ static HINSTANCE g_hInst = NULL;
 #include <image.h>
 #endif
 
+#ifdef XP_UNIX
+#include <sys/utsname.h>
+#endif  /* XP_UNIX  */
+
+
 /*
 ** Define TIMEBOMB_ON for beta builds.
 ** Undef TIMEBOMB_ON for release builds.
@@ -216,7 +221,12 @@ nsNetlibService::nsNetlibService()
     XP_AppPlatform = PL_strdup("BeOS");
 #elif defined(XP_UNIX)
     /* XXX: Need to differentiate between various Unisys */
-    XP_AppPlatform = PL_strdup("Unix");
+    struct utsname    name;
+    int ret = uname(&name);
+    if (ret >= 0) {
+       XP_AppPlatform = PL_strdup((char *) name.sysname);
+    }
+
 #endif
 
     /* XXXXX TEMPORARY TESTING HACK XXXXX */
