@@ -32,15 +32,24 @@
  */
 package org.mozilla.jss.provider.java.security;
 
+/*
 import java.security.SecureRandom;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.NoSuchProviderException;
+import java.security.InvalidKeySpecException;
+*/
+import org.mozilla.jss.crypto.PrivateKey;
+import java.security.*;
+import java.security.spec.*;
 import org.mozilla.jss.crypto.*;
+/*
 import java.security.SignatureException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidParameterException;
+*/
 
 class JSSSignatureSpi extends java.security.SignatureSpi {
 
@@ -101,7 +110,28 @@ class JSSSignatureSpi extends java.security.SignatureSpi {
             CryptoToken token =
               TokenSupplierManager.getTokenSupplier().getThreadToken();
             sig = token.getSignatureContext(alg);
+
+            // convert the public key into a JSS public key if necessary
+            if( ! (publicKey instanceof org.mozilla.jss.pkcs11.PK11PubKey) ) {
+                KeyFactory fact = KeyFactory.getInstance(
+                    publicKey.getAlgorithm(), "Mozilla-JSS");
+                if( ! publicKey.getFormat().equalsIgnoreCase("X.509") ) {
+                    throw new NoSuchAlgorithmException(
+                        "Unsupported public key format: " +
+                        publicKey.getFormat());
+                }
+                X509EncodedKeySpec encodedKey =
+                    new X509EncodedKeySpec(publicKey.getEncoded());
+                publicKey = fact.generatePublic(encodedKey);
+            }
+
             sig.initVerify(publicKey);
+        } catch(NoSuchProviderException e) {
+            throw new InvalidKeyException("Unable to convert non-JSS key " +
+                "to JSS key");
+        } catch(java.security.spec.InvalidKeySpecException e) {
+            throw new InvalidKeyException("Unable to convert non-JSS key " +
+                "to JSS key");
         } catch(java.security.NoSuchAlgorithmException e) {
             throw new InvalidKeyException("Algorithm not supported");
         } catch(TokenException e) {
