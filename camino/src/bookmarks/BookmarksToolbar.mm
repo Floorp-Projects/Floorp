@@ -308,10 +308,47 @@
   }
 }
 
+- (BOOL)dropDestinationValid:(NSPasteboard*)draggingPasteboard
+{
+  NSArray*  types = [draggingPasteboard types];
+
+  if ([types containsObject: @"MozBookmarkType"]) 
+  {
+    NSArray *draggedIDs = [draggingPasteboard propertyListForType: @"MozBookmarkType"];
+    
+    nsCOMPtr<nsIContent> destinationContent;
+    int index = 0;
+    
+    if (mDragInsertionPosition == BookmarksService::CHInsertInto)						// drop onto folder
+    {
+      nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
+      destinationContent = do_QueryInterface(parentElt);
+      index = 0;
+    }
+    else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
+             mDragInsertionPosition == BookmarksService::CHInsertAfter)		// drop onto toolbar
+    {
+      nsCOMPtr<nsIDOMElement> toolbarRoot = BookmarksService::gToolbarRoot;
+      destinationContent = do_QueryInterface(toolbarRoot);
+      index = [mButtons indexOfObject: mDragInsertionButton];
+    }
+
+    BookmarkItem* toolbarFolderItem = BookmarksService::GetWrapperFor(destinationContent);
+    if (!BookmarksService::IsBookmarkDropValid(toolbarFolderItem, index, draggedIDs)) {
+      return NO;
+    }
+  }
+  
+  return YES;
+}
+
 // NSDraggingDestination ///////////
 
 - (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
 {
+  if (![self dropDestinationValid:[sender draggingPasteboard]])
+    return NSDragOperationNone;
+  
   return NSDragOperationGeneric;
 }
 
@@ -328,6 +365,9 @@
 {
   if (mDragInsertionPosition)
     [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
+
+  if (![self dropDestinationValid:[sender draggingPasteboard]])
+    return NSDragOperationNone;
 
   [self setButtonInsertionPoint:[sender draggingLocation]];
   
