@@ -103,7 +103,6 @@ public:
 private:
 	// Individual interface Objects
 
-//	CUrlDialog myDialog;
 	CQaFindDlg myDialog;
 
 protected:
