@@ -320,6 +320,11 @@ NS_IMETHODIMP nsMsgProtocol::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 
 NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
 {
+  // as url dispatching matures, we'll be intelligent and actually start
+  // opening the url before specifying the content type. This will allow
+  // us to optimize the case where the message url actual refers to  
+  // a part in the message that has a content type that is not message/rfc822
+
 	*aContentType = nsCRT::strdup("message/rfc822");
 	return NS_OK;
 }
