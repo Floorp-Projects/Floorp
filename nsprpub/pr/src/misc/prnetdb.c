@@ -1022,8 +1022,7 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
     if ((PRUint32) -1 == addr->inet.ip)
     {
         /*
-         * Either the af argument is not AF_INET, or the string argument
-         * is a malformed address string.
+         * The string argument is a malformed address string.
          */
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         status = PR_FAILURE;
