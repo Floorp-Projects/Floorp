@@ -83,6 +83,7 @@ export::
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\Installer
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\ISetup\NCIFiles
 
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Output
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Output
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\AnimLogo
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\bmps
@@ -93,6 +94,7 @@ export::
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Installer
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup\NCIFiles
 
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Output
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\AnimLogo
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\Bkmarks
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\CustInst
