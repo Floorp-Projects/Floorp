@@ -44,6 +44,10 @@
 #endif
 
 #include "prthread.h"
+/* This is a private NSPR header - cls */
+#ifdef OJI
+#include "private/pprthred.h"
+#endif
 #include "prtypes.h"
 #include "nsHashtable.h"
 #include "nsMalloc.h"
