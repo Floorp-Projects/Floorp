@@ -54,7 +54,7 @@ public:
 	// override nsIExternalHelperAppService methods....
 	NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
 
-	already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char * aFileExt);
+	already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char * aFileExt, PRBool *aFound);
 
 	// override nsIExternalProtocolService methods
 	NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);

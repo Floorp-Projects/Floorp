@@ -46,7 +46,7 @@ public:
   NS_IMETHOD LoadUrl(nsIURI * aURL);
 
   // method overrides for windows registry look up steps....
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt, PRBool *aFound);
 
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 

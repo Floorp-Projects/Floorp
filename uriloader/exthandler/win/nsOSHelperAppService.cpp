@@ -445,8 +445,9 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetByExtension(const char *a
   return nsnull;
 }
 
-already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt) 
+already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt, PRBool *aFound)
 {
+  *aFound = PR_TRUE;
   nsCAutoString fileExtension;
   /* XXX The strcasecmp is a gross hack to wallpaper over the most common Win32
    * extension issues caused by the fix for bug 116938.  See bug
@@ -492,10 +493,22 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
   if (!mi || !hasDefault) {
     nsCOMPtr<nsIMIMEInfo> miByExt = GetByExtension(aFileExt, aMIMEType);
     LOG(("Ext. lookup for '%s' found 0x%p\n", aFileExt, miByExt.get()));
-    if (!miByExt)
+    if (!miByExt && mi)
       return mi;
-    if (!mi) {
+    if (miByExt && !mi) {
       miByExt.swap(mi);
+      return mi;
+    }
+    if (!miByExt && !mi) {
+      *aFound = PR_FALSE;
+      CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mi);
+      if (mi) {
+        if (aMIMEType && *aMIMEType)
+          mi->SetMIMEType(aMIMEType);
+        if (aFileExt && *aFileExt)
+          mi->AppendExtension(aFileExt);
+      }
+      
       return mi;
     }
 

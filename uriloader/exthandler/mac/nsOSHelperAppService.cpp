@@ -201,9 +201,11 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const char * aType, 
 
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
-                                        const char * aFileExt)
+                                        const char * aFileExt,
+                                        PRBool * aFound)
 {
   nsIMIMEInfo* mimeInfo = nsnull;
+  *aFound = PR_TRUE;
 
   // ask the internet config service to look it up for us...
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
@@ -241,6 +243,19 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
       miByType.swap(mimeInfo);
     else if (miByExt)
       miByExt.swap(mimeInfo);
+  }
+
+  if (!mimeInfo) {
+    *aFound = PR_FALSE;
+    PR_LOG(mLog, PR_LOG_DEBUG, ("Creating new mimeinfo\n"));
+    CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mimeInfo);
+    if (!mimeInfo)
+      return nsnull;
+
+    if (aMIMEType && *aMIMEType)
+      mimeInfo->SetMIMEType(aType);
+    if (aFileExt && *aFileExt)
+      mimeInfo->AppendExtension(aFileExt);
   }
   
   return mimeInfo;
