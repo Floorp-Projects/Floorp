@@ -5,8 +5,6 @@
 
 <body>
 <script>
-var strBundleService = null;
-
 var sample = Components.classes["component://netscape/sample/sample-world"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 dump("sample = " + sample + "\n");
@@ -34,77 +32,16 @@ function write()
 {
   sample.WriteValue("here is what I'm writing!");
 
-  strBundleService =
-    Components.classes["component://netscape/intl/stringbundle"].createInstance(); 
+  var Bundle = JS_GetStrBundle("resource:/res/strres.properties", null);
+  var	ostr1 = Bundle.GetStringFromName("file");
+  dump("\n--** strBundle GetStringFromName file=" + ostr1 + " **--\n");
+  var	ostr2 = Bundle.GetStringFromID(123);
+  dump("\n--** strBundle GetStringFromID 123=" + ostr2 + " **--\n");
 
-  if (strBundleService) {
-/*
-    dump("\n--** strBundleService createInstance 1 succeeded **--\n");
-    dump("strBundleService = " + strBundleService + "\n");
-*/
-    strBundleService = 
-      strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-
-    if (strBundleService) {
-/*
-      dump("\n--** strBundleService createInstance 2 succeeded **--\n");
-      dump("strBundleService = " + strBundleService + "\n\n");
-    */
-	var strval = "TAO";
-	strBundleService.StrVal = "TAO";
-/*
-	  dump("\n--** strBundleService.StrVal = " + strBundleService.StrVal + " **--\n");
-*/
-      var strbundle = strBundleService.CreateBundle("resource:/res/strres.properties", 
-									null); 
-      
-      if (strbundle) {
-        dump("\n--** JS strbundle  createInstance succeeded **--\n");
-		var	ostr1 = strbundle.GetStringFromName("file");
-        dump("\n--** strbundle GetStringFromName file=" + ostr1 + " **--\n");
-		var	ostr2 = strbundle.GetStringFromID(123);
-        dump("\n--** strbundle GetStringFromID 123=" + ostr2 + " **--\n");
-		var field = document.getElementById('writeBtn');
-		field.value = ostr2;
-		dump("\n--** writeBtn GetStringFromID 123=" + ostr2 + " **--\n");
-
-      }
-      else {
-        dump("\n--** strbundle  createInstance failed **--\n");
-      }
-
-      var strXPCbundle = strBundleService.CreateXPCBundle("resource:/res/strres.properties", 
-									"en-US"); 
-      
-      if (strXPCbundle) {
-        dump("\n--** JS strXPCbundle  createInstance succeeded **--\n");
-		var	ostr1 = strXPCbundle.GetStringFromName("back");
-        dump("\n--** strXPCbundle GetStringFromName back=" + ostr1 + " **--\n");
-		var field1 = document.getElementById('getBtn');
-		field1.value = ostr1;
-		dump("\n--** getBtn GetStringFromName back=" + ostr1 + " **--\n");
-		var	ostr2 = strXPCbundle.GetStringFromID(123);
-        dump("\n--** strXPCbundle GetStringFromID 123=" + ostr2 + " **--\n");
-		var field = document.getElementById('writeBtn');
-		field.value = ostr2;
-		dump("\n--** writeBtn GetStringFromID 123=" + ostr2 + " **--\n");
-
-      }
-      else {
-        dump("\n--** strXPCbundle  createInstance failed **--\n");
-      }
-
-    }
-    else {
-      dump("\n--** strBundleService createInstance 2 **--\n");
-    }
-  }
-  else {
-    dump("\n--** strBundleService createInstance 1 **--\n");
-  }
-  dump("\n--** StrresTest end **--\n");
-
+  var field = document.getElementById('writeBtn');
+  field.value = ostr2;
 }
+
 </script>
 
 <form name="form">
