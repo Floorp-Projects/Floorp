@@ -250,6 +250,31 @@ private:
   nsMargin            mBorderPadding;
   PRUint32            mNaturalImageWidth, 
                       mNaturalImageHeight;
+
+  /* loading / broken image icon support */
+
+  // LoadIcons: initiate the loading of the static icons used to show loading / broken images
+  nsresult LoadIcons(nsIPresContext *aPresContext);
+  // HandleIconLoads: See if the request is for an Icon load. If it is, handle it and return TRUE
+  // otherwise, return FALSE (aCompleted is an input arg telling the routine if the request has completed)
+  PRBool HandleIconLoads(imgIRequest* aRequest, PRBool aCompleted);
+  void InvalidateIcon(nsIPresContext *aPresContext);
+
+  class IconLoad {
+    // private class that wraps the data and logic needed for 
+    // broken image and loading image icons
+  public:
+    IconLoad(nsIPresContext *aPresContext):mRefCount(0),mIconsLoaded(PR_FALSE) { GetAltModePref(aPresContext); }
+    void AddRef(void) { ++mRefCount; }
+    PRBool Release(void) { return --mRefCount == 0; }
+    void GetAltModePref(nsIPresContext *aPresContext);
+
+    PRUint32         mRefCount;
+    struct ImageLoad mIconLoads[2];   // 0 is for the 'loading' icon, 1 is for the 'broken' icon
+    PRPackedBool     mIconsLoaded;
+    PRPackedBool     mPrefForceInlineAltText;
+  };
+  static IconLoad* mIconLoad; // singleton patern: one LoadIcons instance is used
 };
 
 #endif /* nsImageFrame_h___ */

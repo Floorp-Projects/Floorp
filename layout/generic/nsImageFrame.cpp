@@ -93,12 +93,15 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
-
+#include "nsCSSFrameConstructor.h"
+#include "nsIPref.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
+#undef NOISY_ICON_LOADING
 #else
 #undef NOISY_IMAGE_LOADING
+#undef NOISY_ICON_LOADING
 #endif
 
 
@@ -108,13 +111,39 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #define SUPPRESS         2
 #define DEFAULT_SUPPRESS 3
 
+// values for image loading icons
+#define NS_ICON_LOADING_IMAGE (0)
+#define NS_ICON_BROKEN_IMAGE  (1)
+
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
 
+// static icon information: initialized in Init and de-initialized in Destroy
+// - created if null, deleted if refcount goes to 0
+nsImageFrame::IconLoad* nsImageFrame::mIconLoad = nsnull;
+
+// test if the width and height are fixed, looking at the style data
+static PRBool HaveFixedSize(const struct nsStylePosition& aStylePosition)
+{
+  // check the width and height values in the reflow state's style struct
+  // - if width and height are specified as either coord or percentage, then
+  //   the size of the image frame is constrained
+  nsStyleUnit widthUnit = aStylePosition.mWidth.GetUnit();
+  nsStyleUnit heightUnit = aStylePosition.mHeight.GetUnit();
+
+  return ((widthUnit  == eStyleUnit_Coord ||
+           widthUnit  == eStyleUnit_Percent) &&
+          (heightUnit == eStyleUnit_Coord ||
+           heightUnit == eStyleUnit_Percent));
+}
 // use the data in the reflow state to decide if the image has a constrained size
 // (i.e. width and height that are based on the containing block size and not the image size) 
 // so we can avoid animated GIF related reflows
-static void HaveFixedSize(const nsHTMLReflowState& aReflowState, PRPackedBool& aConstrainedSize);
+inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
+{ 
+  NS_ASSERTION(aReflowState.mStylePosition, "crappy reflowState - null stylePosition");
+  return HaveFixedSize(*(aReflowState.mStylePosition)); 
+}
 
 nsresult
 NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -236,6 +265,21 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
 
   mListener = nsnull;
 
+   // check / cleanup the IconLoads singleton
+   if (mIconLoad) {
+#ifdef NOISY_ICON_LOADING
+     printf( "Releasing IconLoad (%p)\n", this);
+#endif
+     if (mIconLoad->Release()) {
+#ifdef NOISY_ICON_LOADING
+       printf( "Deleting IconLoad (%p)\n", this);
+#endif
+       delete mIconLoad;
+       mIconLoad = nsnull;
+     }
+   }
+ 
+
   return nsSplittableFrame::Destroy(aPresContext);
 }
 
@@ -269,6 +313,8 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   mInitialLoadCompleted = PR_FALSE;
   mCanSendLoadEvent = PR_TRUE;
 
+  LoadIcons(aPresContext);
+
   mLoads[0].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
   rv = LoadImage(src, aPresContext, mLoads[0].mRequest); // if the image was found in the cache,
                                                          // it is possible that LoadImage will result in
@@ -288,6 +334,11 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
   if (!aImage) return NS_ERROR_INVALID_ARG;
 
   mInitialLoadCompleted = PR_TRUE;
+
+  // handle iconLoads first...
+  if (HandleIconLoads(aRequest, PR_FALSE)) {
+    return NS_OK;
+  }
 
   int whichLoad = GetImageLoad(aRequest);
   if (whichLoad == -1) return NS_ERROR_FAILURE;
@@ -349,6 +400,14 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
 
   if (!aRect)
     return NS_ERROR_NULL_POINTER;
+
+  // handle iconLoads first...
+  if (HandleIconLoads(aRequest, PR_FALSE)) {
+    if (!aRect->IsEmpty()) {
+      Invalidate(aPresContext, *aRect, PR_FALSE);
+    }
+    return NS_OK;
+  }
 
   int whichLoad = GetImageLoad(aRequest);
   if (whichLoad == -1) return NS_ERROR_FAILURE;
@@ -533,6 +592,11 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
   // check to see if an image error occurred
   PRBool imageFailedToLoad = PR_FALSE;
 
+  // handle iconLoads first...
+  if (HandleIconLoads(aRequest, NS_SUCCEEDED(aStatus))) {
+    return NS_OK;
+  }
+
   int whichLoad = GetImageLoad(aRequest);
 
   if (whichLoad == -1) return NS_ERROR_FAILURE;
@@ -564,7 +628,9 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
         nsSize s;
         GetSize(s);
         nsRect r(0,0, s.width, s.height);
-        Invalidate(aPresContext, r, PR_FALSE);
+        if (!r.IsEmpty()) {
+          Invalidate(aPresContext, r, PR_FALSE);
+        }
       }
 
     } else {
@@ -579,14 +645,42 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
 
   }
 
-  // if src failed then notify the PresShell
+  // if src failed to load, determine how to handle it: 
+  //  - either render the ALT text in this frame, or let the presShell handle it
   if (imageFailedToLoad && presShell) {
     if (mFailureReplace) {
+      // first check for image map
       nsAutoString usemap;
       mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
-      // We failed to load the image. Notify the pres shell if we aren't an image map
       if (usemap.IsEmpty()) {
-        presShell->CantRenderReplacedElement(aPresContext, this);
+        // check if we want to honor the ALT text in the IMG frame, or let the preShell make it into inline text
+        //  - if QuirksMode, and the IMG has a size, then render the ALT text in the ING frame
+        //    UNLESS there is a pref set to force inline alt text
+        PRBool useSizedBox = PR_FALSE;
+        PRBool prefForceInlineAltText = mIconLoad ? mIconLoad->mPrefForceInlineAltText : PR_FALSE;
+
+        // check if we have fixed size
+        const nsStylePosition* stylePosition =
+          (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+        NS_ASSERTION(stylePosition, "null style position: frame is corrupted");
+        
+        // check for quirks mode
+        nsCompatibility mode;
+        aPresContext->GetCompatibilityMode(&mode);
+        
+        // wrap it all up
+        useSizedBox = !prefForceInlineAltText &&
+                      HaveFixedSize(*stylePosition) && 
+                      mode == eCompatibility_NavQuirks;
+
+        if (!useSizedBox) {
+          // let the presShell handle converting this into the inline alt text frame
+          presShell->CantRenderReplacedElement(aPresContext, this);
+        } else {
+          // we are handling it
+          // invalidate the icon area (it may change states)   
+          InvalidateIcon(aPresContext);
+        }
       }
     }
     mFailureReplace = PR_TRUE;
@@ -627,8 +721,9 @@ NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresConte
     r.height = NSIntPixelsToTwips(r.height, p2t);
 
     mLoads[0].mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
-
-    Invalidate(aPresContext, r, PR_FALSE);
+    if (!r.IsEmpty()) {
+      Invalidate(aPresContext, r, PR_FALSE);
+    }
   }
   return NS_OK;
 }
@@ -816,7 +911,7 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // see if we have a frozen size (i.e. a fixed width and height)
-  HaveFixedSize(aReflowState, mSizeConstrained);
+  mSizeConstrained = HaveFixedSize(aReflowState);
 
   if (aReflowState.reason == eReflowReason_Initial)
     mGotInitialReflow = PR_TRUE;
@@ -1005,6 +1100,10 @@ struct nsRecessedBorder : public nsStyleBorder {
   }
 };
 
+#define ICON_SIZE        (16)
+#define ICON_PADDING     (6)
+#define ALT_BORDER_WIDTH (1)
+
 void
 nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -1018,7 +1117,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   float   p2t;
   nscoord borderEdgeWidth;
   aPresContext->GetScaledPixelsToTwips(&p2t);
-  borderEdgeWidth = NSIntPixelsToTwips(1, p2t);
+  borderEdgeWidth = NSIntPixelsToTwips(ALT_BORDER_WIDTH, p2t);
 
   // Make sure we have enough room to actually render the border within
   // our frame bounds
@@ -1033,7 +1132,8 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
 
   // Adjust the inner rect to account for the one pixel recessed border,
   // and a six pixel padding on each edge
-  inner.Deflate(NSIntPixelsToTwips(7, p2t), NSIntPixelsToTwips(7, p2t));
+  inner.Deflate(NSIntPixelsToTwips(ICON_PADDING+ALT_BORDER_WIDTH, p2t), 
+                NSIntPixelsToTwips(ICON_PADDING+ALT_BORDER_WIDTH, p2t));
   if (inner.IsEmpty()) {
     return;
   }
@@ -1043,34 +1143,61 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   aRenderingContext.PushState();
   aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect, clipState);
 
-  // Display the icon
-#ifdef USE_IMG2
-  // XXX
-#else
-  nsIDeviceContext* dc;
-  aRenderingContext.GetDeviceContext(dc);
-  nsIImage*         icon;
+  PRInt32 size = NSIntPixelsToTwips(ICON_SIZE, p2t);
 
-  if (NS_SUCCEEDED(dc->LoadIconImage(aIconId, icon)) && icon) {
-    aRenderingContext.DrawImage(icon, inner.x, inner.y);
+  PRBool iconUsed = PR_FALSE;
 
-    // Reduce the inner rect by the width of the icon, and leave an
-    // additional six pixels padding
-    PRInt32 iconWidth = NSIntPixelsToTwips(icon->GetWidth() + 6, p2t);
-    inner.x += iconWidth;
-    inner.width -= iconWidth;
+  // see if the icon images are present...
+  if (mIconLoad && mIconLoad->mIconsLoaded) {
+    // pick the correct image
+    NS_ASSERTION( aIconId == NS_ICON_LOADING_IMAGE ||
+                  aIconId == NS_ICON_BROKEN_IMAGE, "Invalid Icon ID in DisplayAltFeedback");
 
-    NS_RELEASE(icon);
+    nsCOMPtr<imgIContainer> imgCon;
+    if (mIconLoad->mIconLoads[aIconId].mRequest) {
+      mIconLoad->mIconLoads[aIconId].mRequest->GetImage(getter_AddRefs(imgCon));
+    }
+    if (imgCon) { 
+      // draw it
+      nsPoint p(inner.x, inner.y);
+      nsRect r(0,0,size,size);
+      r.x -= mBorderPadding.left;
+      r.y -= mBorderPadding.top;
+      aRenderingContext.DrawImage(imgCon, &r, &p);
+      iconUsed = PR_TRUE;
+    }
   }
 
-  NS_RELEASE(dc);
-#endif
+  // if we could not draw the image, then just draw some grafitti
+  if (!iconUsed) {
+    nscolor oldColor;
+    aRenderingContext.DrawRect(0,0,size,size);
+    aRenderingContext.GetColor(oldColor);
+    aRenderingContext.SetColor( aIconId == NS_ICON_BROKEN_IMAGE ? NS_RGB(0xFF,0,0) : NS_RGB(0,0xFF,0));
+    aRenderingContext.FillEllipse(NS_STATIC_CAST(int,size/2),NS_STATIC_CAST(int,size/2),
+                                  NS_STATIC_CAST(int,(size/2)-(2*p2t)),NS_STATIC_CAST(int,(size/2)-(2*p2t)));
+    aRenderingContext.SetColor(oldColor);
+  }  
+
+  // Reduce the inner rect by the width of the icon, and leave an
+  // additional ICON_PADDING pixels for padding
+  PRInt32 iconWidth = NSIntPixelsToTwips(ICON_SIZE + ICON_PADDING, p2t);
+  inner.x += iconWidth;
+  inner.width -= iconWidth;
 
   // If there's still room, display the alt-text
   if (!inner.IsEmpty()) {
-    nsAutoString altText;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::alt, altText)) {
-      DisplayAltText(aPresContext, aRenderingContext, altText, inner);
+    nsCOMPtr<nsIContent> content;
+    nsCOMPtr<nsIAtom>    tag;
+    nsAutoString         altText;
+
+    GetContent(getter_AddRefs(content));
+    if (content) {
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag) {
+        nsCSSFrameConstructor::GetAlternateTextFor(content, tag, altText);
+        DisplayAltText(aPresContext, aRenderingContext, altText, inner);
+      }
     }
   }
 
@@ -1132,14 +1259,16 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
     if (loadStatus & imgIRequest::STATUS_ERROR || !imgCon) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
+#ifndef SUPPRESS_LOADING_ICON
+      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+#else
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
-          !mInitialLoadCompleted) {
-        DisplayAltFeedback(aPresContext, aRenderingContext, 0);
-#ifndef USE_IMG2
+          mInitialLoadCompleted) {
+#endif
+        DisplayAltFeedback(aPresContext, aRenderingContext, 
                            (loadStatus & imgIRequest::STATUS_ERROR)
                            ? NS_ICON_BROKEN_IMAGE
                            : NS_ICON_LOADING_IMAGE);
-#endif
       }
     }
     else {
@@ -1711,21 +1840,6 @@ nsImageFrame::IsImageComplete(PRBool* aComplete)
   return NS_OK;
 }
 
-void HaveFixedSize(const nsHTMLReflowState& aReflowState, PRPackedBool& aConstrainedSize)
-{
-  // check the width and height values in the reflow state's style struct
-  // - if width and height are specified as either coord or percentage, then
-  //   the size of the image frame is constrained
-  nsStyleUnit widthUnit = aReflowState.mStylePosition->mWidth.GetUnit();
-  nsStyleUnit heightUnit = aReflowState.mStylePosition->mHeight.GetUnit();
-
-  aConstrainedSize = 
-    ((widthUnit  == eStyleUnit_Coord ||
-      widthUnit  == eStyleUnit_Percent) &&
-     (heightUnit == eStyleUnit_Coord ||
-      heightUnit == eStyleUnit_Percent));
-}
-
 nsresult
 nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest)
 {
@@ -1920,7 +2034,119 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
   return shouldLoad;
 }
 
+nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)
+{
+  // XXX
+  // XXX: change these icons!
+  // XXX
+  nsAutoString loadingSrc(NS_LITERAL_STRING("chrome://editor/content/images/undecided_n.gif")); 
+  nsAutoString brokenSrc(NS_LITERAL_STRING("chrome://editor/content/images/tongue_n.gif")); 
 
+  nsresult rv = NS_OK;
+  PRBool doLoad = PR_FALSE;  // only load icons once...
+
+  // see if the first instance and we need to create the icon loader
+  if (!mIconLoad) {
+#ifdef NOISY_ICON_LOADING
+      printf( "Allocating IconLoad (%p)\n", this);
+#endif
+    mIconLoad = new IconLoad(aPresContext);
+    if (!mIconLoad) 
+      return NS_ERROR_OUT_OF_MEMORY;
+    doLoad = PR_TRUE;
+  }
+  // always addref
+  mIconLoad->AddRef();
+
+#ifdef NOISY_ICON_LOADING
+   printf( "IconLoad AddRef'd(%p)\n", this);
+#endif
+
+  // if already loaded, we are done
+  if (mIconLoad->mIconsLoaded) return rv;
+
+  if (doLoad) {
+    // create a loader and load the images
+    mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
+    if (mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest) {
+#ifdef NOISY_ICON_LOADING
+      printf( "Loading request %p\n", mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest.get() );
+#endif
+      rv = LoadImage(loadingSrc, aPresContext, mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest);
+      if (NS_SUCCEEDED(rv)) {
+        mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
+        if (mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest) {
+#ifdef NOISY_ICON_LOADING
+          printf( "Loading request %p\n", mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest.get() );
+#endif
+          rv = LoadImage(brokenSrc, aPresContext, mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest);
+          // ImageLoader will callback into OnStartContainer, which will handle the mIconsLoaded flag
+        }
+      }
+    }
+  }
+  return rv;
+}
+
+PRBool nsImageFrame::HandleIconLoads(imgIRequest* aRequest, PRBool aLoaded)
+{
+  PRBool result = PR_FALSE;
+
+  if( mIconLoad ) {
+    // check which image it is
+    if (aRequest == mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest.get()) {
+      result = PR_TRUE;
+    } else if (aRequest == mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest.get()) {
+      result = PR_TRUE;
+    }
+    if (result) {
+      mIconLoad->mIconsLoaded = aLoaded;
+    }
+
+#ifdef NOISY_ICON_LOADING
+    if (mIconLoad->mIconsLoaded && result) {
+      printf( "Icons Loaded: request for %s\n", aRequest == mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest ?
+                                                "NS_ICON_LOADING_IMAGE" : "NS_ICON_BROKEN_IMAGE" );
+    }
+#endif
+  }
+#ifdef NOISY_ICON_LOADING
+  printf( "HandleIconLoads returned %s (%p)\n", result ? "TRUE" : "FALSE", this);
+#endif
+
+  return result;
+}
+
+void nsImageFrame::InvalidateIcon(nsIPresContext *aPresContext)
+{
+  NS_ASSERTION(aPresContext, "null presContext in InvalidateIcon");
+  float   p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nsRect inner;
+  GetInnerArea(aPresContext, inner);
+
+  nsRect rect(inner.x,
+              inner.y,
+              NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t),
+              NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t));
+  Invalidate(aPresContext, rect, PR_FALSE);
+}
+
+void nsImageFrame::IconLoad::GetAltModePref(nsIPresContext *aPresContext)
+{
+  NS_ASSERTION(aPresContext, "null presContext is not allowed in GetAltModePref");
+  // NOTE: the presContext could be used to fetch a cached pref if needed, but is not for now
+
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (prefs) {
+    PRBool boolPref;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display.force_inline_alttext", &boolPref))) {
+      mPrefForceInlineAltText = boolPref;
+    } else {
+      mPrefForceInlineAltText = PR_FALSE;
+    }
+  }
+}
 
 #ifdef DEBUG
 NS_IMETHODIMP
