@@ -39,6 +39,11 @@
 
 #include "nsComponentManager.h"
 
+#ifdef XP_BEOS
+#include <FindDirectory.h>
+#include <Path.h>
+#endif
+
 /* extra locking for the paranoid */
 /* #define EXTRA_THREADSAFE */
 #ifndef EXTRA_THREADSAFE
