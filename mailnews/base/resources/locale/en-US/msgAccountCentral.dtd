@@ -27,7 +27,7 @@ Contributor(s):
 <!ENTITY composeMsgLink.label         "Compose a new message"> 
 
 <!ENTITY newsSectionHdr.label         "Newsgroups"> 
-<!ENTITY subscribeNewsLink.label      "Subscribe to newsgroups"> 
+<!ENTITY subscribeNewsLink.label      "Manage newsgroup subscriptions"> 
 
 <!ENTITY accountsSectionHdr.label     "Accounts"> 
 <!ENTITY subscribeImapFolders.label   "Subscribe to folders"> 
