@@ -329,7 +329,7 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
 #elif defined(XP_OS2)
     NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    rv = directoryService->Get(NS_OS2_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
 #elif defined(XP_PC)
     NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
