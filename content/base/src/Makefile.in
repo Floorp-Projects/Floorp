@@ -50,7 +50,7 @@ REQUIRES	= xpcom \
 		  util \
 		  unicharutil \
 		  content_xsl \
-		  content_xul \
+		  xuldoc \
 		  intl \
 		  windowwatcher \
 		  imglib2 \
