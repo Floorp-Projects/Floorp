@@ -73,6 +73,7 @@
 #define NS_PARSER_FLAG_PENDING_CONTINUE_EVENT 0x00000008
 #define NS_PARSER_FLAG_CAN_INTERRUPT          0x00000010
 #define NS_PARSER_FLAG_FLUSH_TOKENS           0x00000020
+#define NS_PARSER_FLAG_CAN_TOKENIZE           0x00000040
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
@@ -310,7 +311,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;;
   mCommand=eViewNormal;
-  mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED | NS_PARSER_FLAG_PARSER_ENABLED;
+  mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED | NS_PARSER_FLAG_PARSER_ENABLED | NS_PARSER_FLAG_CAN_TOKENIZE;
  
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   MOZ_TIMER_RESET(mParseTime);  
@@ -1224,7 +1225,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
         nsITokenizer* tokenizer;
         mParserContext->GetTokenizer(mParserContext->mDTD->GetType(), tokenizer);
-        mParserContext->mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
+        result = mParserContext->mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
       }//if        
     }//if
   } 
@@ -1705,6 +1706,11 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
     MOZ_TIMER_START(mParseTime);
 
     result=WillBuildModel(mParserContext->mScanner->GetFilename());
+    if (NS_FAILED(result)) {
+      mFlags &= ~NS_PARSER_FLAG_CAN_TOKENIZE;
+      return result;
+    }
+
     if(mParserContext->mDTD) {
 
       mParserContext->mDTD->WillResumeParse(mSink);
@@ -1727,7 +1733,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
         //Only allow parsing to be interuptted in the subsequent call
         //to build model.
         SetCanInterrupt(aCanInterrupt); 
-        nsresult theTokenizerResult = Tokenize(aIsFinalChunk);   // kEOF==2152596456
+        nsresult theTokenizerResult = mFlags & NS_PARSER_FLAG_CAN_TOKENIZE ? Tokenize(aIsFinalChunk) : NS_OK;   // kEOF==2152596456
         result=BuildModel(); 
 
         if(result==NS_ERROR_HTMLPARSER_INTERRUPTED) {
