@@ -185,10 +185,10 @@ EmbedPrivate::Init(PtWidget_t *aOwningWidget)
 		if (pref)
 		{
 			sPrefs = pref.get();
-			NS_ADDREF(sPrefs);
-			//sPrefs->ResetPrefs();
-			rv = sPrefs->ReadUserPrefs(nsnull);
-			if( ! NS_SUCCEEDED( rv ) ) mozilla_set_default_pref( pref );
+			NS_ADDREF( sPrefs );
+			extern int sProfileDirCreated;
+			if( sProfileDirCreated ) mozilla_set_default_pref( pref );
+			sPrefs->ReadUserPrefs( nsnull );
 		}
 	}
 
@@ -932,6 +932,8 @@ static void mozilla_set_default_pref( nsIPref *pref )
 	nsIPref *pref = moz->EmbedRef->GetPrefs();
 */
 
+/* ATENTIE */ printf( "In mozilla_set_default_pref\n" );
+
 	/* translation set = Western European (ISO 8859-1) */
 	pref->SetUnicharPref( "intl.charset.default", NS_ConvertASCIItoUCS2("iso8859-1").get());
 
@@ -941,12 +943,19 @@ static void mozilla_set_default_pref( nsIPref *pref )
 	pref->SetUnicharPref( "browser.display.foreground_color", NS_ConvertASCIItoUCS2("#000000").get() );
 	pref->SetUnicharPref( "browser.display.background_color", NS_ConvertASCIItoUCS2("#ffffff").get() );
 
+	pref->SetCharPref( "font.name.serif.x-western", "serif" );
+	pref->SetCharPref( "font.name.sans-serif.x-western", "sans-serif" );
+	pref->SetCharPref( "font.name.monospace.x-western", "monospace" );
+	pref->SetCharPref( "font.name.cursive.x-western", "cursive" );
+	pref->SetCharPref( "font.name.fantasy.x-western", "fantasy" );
+
 	pref->SetBoolPref( "browser.display.use_document_colors", PR_TRUE );
 	pref->SetBoolPref( "browser.underline_anchors", PR_TRUE );
-	pref->SetIntPref( "font.size.variable.x-western", VOYAGER_TEXTSIZE2 );
+	pref->SetIntPref( "font.size.variable.x-western", 14 );
+	pref->SetIntPref( "font.size.fixed.x-western", 12 );
 	pref->SetIntPref( "browser.history_expire_days", 4 );
 	pref->SetIntPref( "browser.sessionhistory.max_entries", 50 );
-	pref->SetIntPref( "browser.cache.check_doc_frequency", 2 );
+//	pref->SetIntPref( "browser.cache.check_doc_frequency", 2 );
 	pref->SetBoolPref( "browser.cache.disk.enable", PR_TRUE );
 	pref->SetIntPref( "browser.cache.disk.capacity", 5000 );
 	pref->SetIntPref( "network.http.connect.timeout", 2400 );

@@ -84,6 +84,7 @@ NS_IMPL_ISUPPORTS2(CPromptService, nsIPromptService, nsPIPromptService)
 
 CPromptService::CPromptService() :
 	mWWatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1")) {
+	NS_INIT_ISUPPORTS();
 	}
 
 CPromptService::~CPromptService() {
@@ -385,6 +386,7 @@ NS_IMPL_ISUPPORTS1(CPromptServiceFactory, nsIFactory)
 
 CPromptServiceFactory::CPromptServiceFactory() {
 
+  NS_INIT_ISUPPORTS();
 }
 
 CPromptServiceFactory::~CPromptServiceFactory() {

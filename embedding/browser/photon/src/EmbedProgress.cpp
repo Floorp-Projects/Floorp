@@ -39,6 +39,8 @@
 #include <netCore.h>
 #include "nsGfxCIID.h"
 
+#include "nsIDOMWindow.h"
+
 #include "EmbedWindow.h"
 #include "EmbedPrivate.h"
 
@@ -47,6 +49,7 @@
 
 EmbedProgress::EmbedProgress(void)
 {
+	NS_INIT_ISUPPORTS();
   mOwner = nsnull;
   mSkipOnState = mDownloadDocument = 0;
 }
@@ -97,7 +100,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 		memset( &cbw, 0, sizeof( PtWebErrorCallback_t ) );
 		strcpy(cbw.url, (const char *)uriString);
 
-		cbw.type = WWW_ERROR_TOPVIEW;
+		cbw.type = Pt_WEB_ERROR_TOPVIEW;
 		switch( aStatus ) 
 		{
 			case NS_ERROR_UNKNOWN_HOST:				
@@ -180,10 +183,23 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			cbinfo.reason = Pt_CB_MOZ_COMPLETE;
 			cbinfo.cbdata = &cbcomplete;
 			memset( &cbcomplete, 0, sizeof( PtWebCompleteCallback_t ) );
-			REMOVE_WHEN_NEW_PT_WEB_strcpy(cbcomplete.url, (const char *)uriString);
+			cbcomplete.url = strdup( uriString );
 
 			if( ( cb = moz->complete_cb ) )
 				PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
+
+			free( cbcomplete.url );
+
+			if( moz->text_zoom != moz->actual_text_zoom ) {
+				nsCOMPtr<nsIDOMWindow> domWindow;
+				moz->EmbedRef->mWindow->mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+				if(domWindow) {
+					domWindow->SetTextZoom( moz->text_zoom/100. );
+					float vv;
+					domWindow->GetTextZoom( &vv );
+					moz->actual_text_zoom = (int) ( vv * 100 );
+					}
+				}
     	}
 	}
 
