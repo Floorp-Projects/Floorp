@@ -2796,7 +2796,6 @@ nsBrowserStatusHandler.prototype =
 
   init : function()
   {
-    this.urlBar          = document.getElementById("urlbar");
     this.throbberElement = document.getElementById("navigator-throbber");
     this.statusMeter     = document.getElementById("statusbar-icon");
     this.stopCommand     = document.getElementById("Browser:Stop");
@@ -2811,7 +2810,6 @@ nsBrowserStatusHandler.prototype =
   destroy : function()
   {
     // XXXjag to avoid leaks :-/, see bug 60729
-    this.urlBar          = null;
     this.throbberElement = null;
     this.statusMeter     = null;
     this.stopCommand     = null;
@@ -2864,7 +2862,7 @@ nsBrowserStatusHandler.prototype =
       gProxyFavIcon.setAttribute("src", aHref);
 
       // update any bookmarks with new icon reference
-      BMSVC.updateBookmarkIcon(this.urlBar.value, aHref);
+      BMSVC.updateBookmarkIcon(gURLBar.value, aHref);
     }
   },
 
@@ -2986,13 +2984,13 @@ nsBrowserStatusHandler.prototype =
     if (aWebProgress.DOMWindow == content) {
       //XXXBlake don't we have to reinit this.urlBar, etc.
       //         when the toolbar changes?
-      if (this.urlBar && !this.userTyped.value) {
+      if (gURLBar && !this.userTyped.value) {
         // If the url has "wyciwyg://" as the protocol, strip it off.
         // Nobody wants to see it on the urlbar for dynamically generated
         // pages. 
         if (/^\s*wyciwyg:\/\/\d+\//.test(location))
           location = RegExp.rightContext;
-        this.urlBar.value = location;
+        gURLBar.value = location;
         // the above causes userTyped.value to become true, reset it
         this.userTyped.value = false;
       }
