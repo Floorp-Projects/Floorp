@@ -540,7 +540,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   PRUint32 situation = NOT_SHRINK_TO_FIT;
   while (1) {
     nsHTMLReflowMetrics kidDesiredSize(nsnull);
-    if (situation == NOT_SHRINK_TO_FIT) {
+    if (situation == NOT_SHRINK_TO_FIT &&
+        !(aKidFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT)) {
       // CSS2.1 10.3.7 width:auto and at least one of left/right is auto...
       const nsStylePosition* stylePosition = aKidFrame->GetStylePosition();
       if (eStyleUnit_Auto == stylePosition->mWidth.GetUnit() &&
