@@ -5660,7 +5660,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.41 2003/04/21 07:26:05 alecf%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.42 2003/05/22 20:59:55 alecf%flett.org Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
@@ -5781,7 +5781,7 @@ int serverMode(void)
                 /*
                 ** Output a little message saying we are receiving.
                 */
-                PR_snprintf(message, sizeof(message), "server accepting connections on port %u....", globals.mCommandLineOptions.mHttpdPort);
+                PR_snprintf(message, sizeof(message), "server accepting connections at http://localhost:%u/", globals.mCommandLineOptions.mHttpdPort);
                 REPORT_INFO(message);
 
                 PR_fprintf(PR_STDOUT, "Peak memory used: %s bytes\n", FormatNumber(globals.mPeakMemoryUsed));
