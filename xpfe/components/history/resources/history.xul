@@ -21,30 +21,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="history.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-
-<!ENTITY fileMenu.label "File">
-<!ENTITY newWinCmd.label "New Window">
-<!ENTITY closeCmd.label ".Close">
-<!ENTITY editMenu.label "Edit">
-<!ENTITY undoCmd.label "Undo">
-<!ENTITY redoCmd.label "Redo">
-<!ENTITY cutCmd.label "Cut">
-<!ENTITY copyCmd.label "Copy">
-<!ENTITY pasteCmd.label "Paste">
-<!ENTITY deleteCmd.label "Delete">
-<!ENTITY selAllCmd.label "Select All">
-<!ENTITY findHisCmd.label "Find in History...">
-<!ENTITY findAgainCmd.label "Find Again...">
-<!ENTITY historyBySite.label "History By Site">
-<!ENTITY historyByDate.label "History By Date">
-<!ENTITY historyWindowTitle.label "History">
-<!ENTITY name.column.label        "Title">
-<!ENTITY url.column.label         "URL">
-<!ENTITY lastvisited.column.label "Last Visited">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/history.dtd" >
 <window title="&historyWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
