@@ -96,12 +96,6 @@ public:
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, nsresult /*aStatus*/)
   													{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */ };
 
-  NS_IMETHOD HandleUnknownContentType( nsIDocumentLoader* /*loader*/,
-                             nsIChannel* /*channel*/,
-                             const char */*aContentType*/,
-                             const char */*aCommand*/ )
-                           	{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
-
 
 	// nsIWebShellContainer
 	NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
