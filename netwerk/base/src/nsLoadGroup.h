@@ -72,6 +72,8 @@ protected:
     nsCOMPtr<nsIChannel>        mDefaultLoadChannel;
 
     nsWeakPtr                   mGroupListenerFactory;
+
+    nsresult                      mStatus;
 };
 
 #endif // nsLoadGroup_h__

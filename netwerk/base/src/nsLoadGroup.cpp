@@ -56,7 +56,8 @@ PRLogModuleInfo* gLoadGroupLog = nsnull;
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
       mForegroundCount(0),
-      mChannels(nsnull)
+      mChannels(nsnull),
+      mStatus(NS_OK)
 {
     NS_INIT_AGGREGATED(outer);
 
@@ -186,7 +187,10 @@ nsLoadGroup::IsPending(PRBool *aResult)
 NS_IMETHODIMP
 nsLoadGroup::GetStatus(nsresult *status)
 {
-    *status = NS_OK;
+    if (NS_SUCCEEDED(mStatus) && mDefaultLoadChannel)
+      return mDefaultLoadChannel->GetStatus(status);
+
+    *status = mStatus;
     return NS_OK; 
 }
 
@@ -196,6 +200,11 @@ nsLoadGroup::Cancel(nsresult status)
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv, firstError;
     PRUint32 count;
+
+    // set the load group status to our cancel status while we cancel 
+    // all our requests...once the cancel is done, we'll reset it...
+
+    mStatus = status;
 
     rv = mChannels->Count(&count);
     if (NS_FAILED(rv)) return rv;
@@ -262,6 +271,7 @@ nsLoadGroup::Cancel(nsresult status)
 #endif /* DEBUG */
     }
 
+    mStatus = NS_OK;
     return firstError;
 }
 
