@@ -306,12 +306,6 @@
         
         this.showMonth(this.mEditorDate);
         
-        if (this.mSelected) {
-          this.mSelected.removeAttribute("selected");
-        }
-        
-        this.value = this.mEditorDate;
-
         if (this.onmonthchange) this.onmonthchange();
 	
 			]]></body>
