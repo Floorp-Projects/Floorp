@@ -652,19 +652,6 @@ protected:
                   nsIFrame*            aKidFrame,
                   nsHTMLReflowMetrics& aDesiredSize);
 
-  /**
-   * Try and pull-up frames from our next-in-flow
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aReflowState current reflow state
-   * @return  true if we successfully pulled-up all the children and false
-   *            otherwise, e.g. child didn't fit
-   */
-  NS_IMETHOD PullUpChildren(nsIPresContext*      aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            nsTableReflowState&  aReflowState,
-                            nsReflowStatus&      aStatus);
-
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  
     * @param aPresContext     the presentation context
@@ -863,6 +850,11 @@ public:
 
   nsAutoVoidArray mColFrames; // XXX temporarily public 
 
+#ifdef DEBUG
+  static void DumpTableFrames(nsIPresContext* aPresContext,
+                              nsIFrame*       aFrame);
+#endif
+
 protected:
   void DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aChildFrame);
   void DebugPrintCount() const; // Debugging routine
@@ -900,6 +892,7 @@ protected:
   PRInt16   mNumDescendantReflowsPending;
   // the number of timeout incremental reflow commands targeted below this table
   PRInt16   mNumDescendantTimeoutReflowsPending;
+
 
   // DEBUG REFLOW 
 #if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING

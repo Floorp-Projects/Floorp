@@ -278,6 +278,12 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   nsRect  adjSize;
   aPresContext->GetPageDim(&pageSize, &adjSize);
 
+  // XXX remove these 4 lines when bug 101264 is fixed. See also bug 101264 in nsDocumentViewer::ReflowPrintObject
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+    pageSize.height = NS_UNCONSTRAINEDSIZE;
+    adjSize.height  = NS_UNCONSTRAINEDSIZE;
+  }
+
   PRBool suppressLeftMargin   = PR_FALSE;
   PRBool suppressRightMargin  = PR_FALSE;
   PRBool suppressTopMargin    = PR_FALSE;
@@ -304,7 +310,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   // put it keeps it from page breaking in the middle of your print of the selection
   // (see also nsDocumentViewer.cpp)
   if (mIsPrintingSelection) {
-    pageSize.height = 0x0FFFFFFF;
+    pageSize.height = NS_UNCONSTRAINEDSIZE;
   }
 
   // only use this local margin for sizing, 
@@ -335,7 +341,12 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
                                        availSize, reflowReason);
       nsReflowStatus  status;
       kidReflowState.availableWidth  = pageSize.width - margin.left - margin.right;
-      kidReflowState.availableHeight = pageSize.height - margin.top - margin.bottom;
+      // XXX remove these 3 lines when bug 101264 is fixed. See also bug 101264 in nsDocumentViewer::ReflowPrintObject
+      if (NS_UNCONSTRAINEDSIZE != pageSize.height) {
+        kidReflowState.availableHeight = pageSize.height - margin.top - margin.bottom;
+      }
+      //kidReflowState.availableHeight = pageSize.height - margin.top - margin.bottom;
+
       kidReflowState.mComputedWidth  = kidReflowState.availableWidth;
       //kidReflowState.mComputedHeight = kidReflowState.availableHeight;
 

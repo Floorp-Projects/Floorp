@@ -2872,7 +2872,12 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   }
 
   aPO->mPresContext->SetPageDim(&adjRect);
-  rv = aPO->mPresShell->InitialReflow(width, height);
+  // XXX replace this line with the commented one below when bug 101264 is fixed
+  // By doing an intitial reflow with an unconstrained height, we avoid doing a 
+  // resize reflow where frames have already been split and avoid buggy pull up code.
+  // See also bug 101264 in nsSimplePageSequencer::Reflow.
+  rv = aPO->mPresShell->InitialReflow(width, NS_MAXSIZE);
+  //rv = aPO->mPresShell->InitialReflow(width, height);
 
   if (NS_SUCCEEDED(rv)) {
     // Transfer Selection Ranges to the new Print PresShell
@@ -2922,7 +2927,8 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   aPO->mPresShell->EndObservingDocument();
   // EndObserving document no longer does a reflow.. which history needs.. or we 
   // get a blank page for text fields.  this will reflow.. fixes bug 84017.
-  aPO->mPresShell->ResizeReflow(width,height);
+  // XXX remove this line when bug 101264 is fixed
+  aPO->mPresShell->ResizeReflow(width, height);
 
   return rv;
 }

@@ -439,43 +439,6 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
   return rv;
 }
 
-/**
- * Pull-up all the row frames from our next-in-flow
- */
-NS_METHOD 
-nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext* aPresContext)
-{
-  if (mNextInFlow) {
-    nsTableRowGroupFrame* nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
-  
-    while (nextInFlow) {
-      // Any frames on the next-in-flow's overflow list?
-      nsIFrame* nextOverflowFrames = nextInFlow->GetOverflowFrames(aPresContext,
-                                                                   PR_TRUE);
-      if (nextOverflowFrames) {
-        // Yes, append them to its child list
-        nextInFlow->mFrames.AppendFrames(nextInFlow, nextOverflowFrames);
-      }
-
-      // Any row frames?
-      if (nextInFlow->mFrames.NotEmpty()) {
-        // When pushing and pulling frames we need to check for whether any
-        // views need to be reparented.
-        for (nsIFrame* f = nextInFlow->GetFirstFrame(); f; GetNextFrame(f, &f)) {
-          nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, nextInFlow, this);
-        }
-        // Append them to our child list
-        mFrames.AppendFrames(this, nextInFlow->mFrames);
-      }
-
-      // Move to the next-in-flow        
-      nextInFlow->GetNextInFlow((nsIFrame**)&nextInFlow);
-    }
-  }
-
-  return NS_OK;
-}
-
 void 
 nsTableRowGroupFrame::GetNextRowSibling(nsIFrame** aRowFrame)
 {
@@ -930,7 +893,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsIPresContext&          aPresContext,
       }
       else if ((cellHeight > cellAvailHeight) && aContRowFrame) {
         // put the cell on the continuing row frame to give it more space      
-        aRowFrame.RemoveCellFrame(cellFrame);
+        parentFrame->RemoveCellFrame(cellFrame);
         aContRowFrame->InsertCellFrame(cellFrame, colX);
         prevCellFrame = cellFrame;
       }
@@ -1067,6 +1030,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
+
   nsresult rv=NS_OK;
   aStatus = NS_FRAME_COMPLETE;
 
@@ -1084,12 +1048,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     // Check for an overflow list
     MoveOverflowToChildList(aPresContext);
   
-    // Reflow the existing frames. Before we do, pull-up any row frames from
-    // our next-in-flow.
-    // XXX It would be more efficient to do this if we have room left after
-    // reflowing the frames we have, the problem is we don't know if we have
-    // room left until after we call CalculateRowHeights()...
-    PullUpAllRowFrames(aPresContext);
+    // Reflow the existing frames. 
     rv = ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
                         nsnull, PR_FALSE);
   
