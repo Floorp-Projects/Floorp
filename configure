@@ -9005,7 +9005,7 @@ if test "${with_extensions+set}" = set; then
         MOZ_EXTENSIONS="cookie irc wallet"
     elif test "$withval" = "no" || test "$withval" = "none"; then
         MOZ_EXTENSIONS=""
-    elif "$withval" != ""; then
+    elif test "$withval" != ""; then
         MOZ_EXTENSIONS=`echo $withval | sed 's/,/ /g'`
     fi  
 fi
