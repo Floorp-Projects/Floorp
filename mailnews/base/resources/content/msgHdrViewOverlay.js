@@ -195,6 +195,11 @@ function OnLoadMsgHeaderPane()
   gCollectNewsgroup = pref.GetBoolPref("mail.collect_email_address_newsgroup");
   gShowUserAgent = pref.GetBoolPref("mailnews.headers.showUserAgent");
   initializeHeaderViewTables();
+
+  var toggleHeaderView = document.getElementById("msgHeaderView");
+  var initialCollapsedSetting = toggleHeaderView.getAttribute("state");
+  if (initialCollapsedSetting == "true")
+    gCollapsedHeaderViewMode = true;   
 }
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
@@ -379,6 +384,7 @@ function ToggleHeaderView ()
 {
   var expandedNode = document.getElementById("expandedHeaderView");
   var collapsedNode = document.getElementById("collapsedHeaderView");
+  var toggleHeaderView = document.getElementById("msgHeaderView");
 
   if (gCollapsedHeaderViewMode)
   {          
@@ -404,6 +410,11 @@ function ToggleHeaderView ()
     collapsedNode.removeAttribute("collapsed");
     expandedNode.setAttribute("collapsed", "true");
   }  
+
+  if (gCollapsedHeaderViewMode)
+    toggleHeaderView.setAttribute("state", "true");
+  else
+    toggleHeaderView.setAttribute("state", "false");
 }
 
 // Clear Email Field takes the passed in div and removes all the child nodes!

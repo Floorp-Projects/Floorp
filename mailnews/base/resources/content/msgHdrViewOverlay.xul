@@ -47,7 +47,7 @@ Rights Reserved.
   <menuitem label="&saveAllAttachmentsCmd.label;" oncommand="SaveAllAttachments();"/>
 </popup>
 
-<box id="msgHeaderView">
+<box id="msgHeaderView" persist="state">
 <grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
   <columns>
     <column class="collapsedToggleHdrBox" autostretch="never" >
