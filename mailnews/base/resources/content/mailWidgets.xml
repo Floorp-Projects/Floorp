@@ -10,14 +10,14 @@
   <binding id="mail-emailaddress" extends="xul:box">
     <content>
       <xul:box inherits="orient" autostretch="never" flex="1">
-        <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value,crop"/>
-        <xul:image class="emailDisplayImage" context="emailAddressPopup" inherits="value,crop"/>
+        <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value=label,crop"/>
+        <xul:image class="emailDisplayImage" context="emailAddressPopup" inherits="label,crop"/>
       </xul:box>
     </content>
     
     <implementation>  
-      <property name="value"      onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('value',val);"
-                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('value');"/>
+      <property name="label"      onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('label',val);"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('label');"/>
       <property name="crop"       onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('crop',val);"
                                   onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('crop');"/>
       <property name="disabled"   onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('disabled',val);"
