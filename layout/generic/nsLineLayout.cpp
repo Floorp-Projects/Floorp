@@ -2144,8 +2144,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   spanFrame->GetPrevInFlow(&spanPrevInFlow);
   PRBool emptyContinuation = spanPrevInFlow && !spanNextInFlow &&
     (0 == spanFramePFD->mBounds.width) && (0 == spanFramePFD->mBounds.height);
-  NS_ASSERTION(!emptyContinuation,
-               "we shouldn't have empty continuations anymore");
 
 #ifdef NOISY_VERTICAL_ALIGN
   printf("[%sSpan]", (psd == mRootSpan)?"Root":"");
