@@ -193,6 +193,7 @@ public:
   static nsIAtom* p;
   static nsIAtom* pagex;
   static nsIAtom* pagey;
+  static nsIAtom* param;
   static nsIAtom* pointSize;
   static nsIAtom* pre;
   static nsIAtom* profile;

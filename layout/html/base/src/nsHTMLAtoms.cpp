@@ -161,6 +161,7 @@ nsIAtom* nsHTMLAtoms::overflow;
 nsIAtom* nsHTMLAtoms::p;
 nsIAtom* nsHTMLAtoms::pagex;
 nsIAtom* nsHTMLAtoms::pagey;
+nsIAtom* nsHTMLAtoms::param;
 nsIAtom* nsHTMLAtoms::pointSize;
 nsIAtom* nsHTMLAtoms::pre;
 nsIAtom* nsHTMLAtoms::profile;
@@ -369,6 +370,7 @@ void nsHTMLAtoms::AddrefAtoms()
     p = NS_NewAtom("P");
     pagex = NS_NewAtom("PAGEX");
     pagey = NS_NewAtom("PAGEY");
+    param = NS_NewAtom("PARAM");
     pointSize = NS_NewAtom("POINT-SIZE");
     pre = NS_NewAtom("PRE");
     profile = NS_NewAtom("PROFILE");
@@ -571,6 +573,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(p);
     NS_RELEASE(pagex);
     NS_RELEASE(pagey);
+    NS_RELEASE(param);
     NS_RELEASE(pointSize);
     NS_RELEASE(pre);
     NS_RELEASE(profile);
