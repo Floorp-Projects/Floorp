@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+# This  shell script  takes care  of starting  and stopping  the build
+# process on  dedicated build  machines. It lives  in /etc/rc.d/init.d
+# and follows the RedHat Linux  conventions for rc scripts.  Modify it
+# to suit your local conventions.
+#
+# chkconfig: 2345 99 01
+# description: Daemon Build process for buildmachines, will send mail \
+#		to Tinderbox
+
+TREE=B-NEON-1-2
+BUILDSCRIPT=/home/tinderbox2/clientbin/build_shellscript
+BUILDCF=/home/tinderbox2/local_conf/reefedge.buildcf
+LOCKFILE=/var/lock/subsys/build
+
+
+build_args="--daemonize --buildcf $BUILDCF"
+build_args="$build_args --build construct -- --tree $TREE"
+
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+[ -x $BUILDSCRIPT ] || exit 0
+[ -r $BUILDCF ] || exit 0
+
+RETVAL=0
+
+start () {
+	echo -n $"Starting Build: "
+        daemon --user build $BUILDSCRIPT $build_args
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && touch $LOCKFILE
+}
+
+test () {
+	# print out the build script for examination
+        $BUILDSCRIPT --test $build_args
+	RETVAL=$?
+	echo
+}
+
+stop () {
+	echo -n $"Stopping Build: "
+	killproc $BUILDSCRIPT
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && rm -f $LOCKFILE
+}
+	
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+    start)
+	start
+	;;
+    
+    stop)
+	stop
+	;;
+  
+    test)
+	test
+	;;
+  
+    restart|reload)
+    	restart
+	;;
+    
+    condrestart)
+	[ -f /var/lock/subsys/build ] && restart || :
+	;;
+
+    status)
+    	status build
+	;;
+    *)
+    	echo $"Usage: build {start|stop|restart|reload|condrestart|status|test}"
+	exit 1
+esac
+
+exit $RETVAL
+
+
