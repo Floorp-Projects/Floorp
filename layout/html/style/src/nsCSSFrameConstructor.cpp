@@ -10680,7 +10680,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   // check for inline style.  we need to clear the data at the style
   // context's rule node whenever the inline style property changes.
 
-  nsStyleContext* styleContext = nsnull;
+  nsRefPtr<nsStyleContext> styleContext;
   nsCOMPtr<nsIStyleRule> rule;
   PRBool inlineStyle = PR_FALSE;
   if (aAttribute == nsHTMLAtoms::style) {
