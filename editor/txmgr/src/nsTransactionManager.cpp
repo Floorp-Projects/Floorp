@@ -194,6 +194,22 @@ nsTransactionManager::Undo()
 
   LOCK_TX_MANAGER(this);
 
+  // It is illegal to call Undo() while the transaction manager is
+  // executing a  transaction's Do() method! If this happens, the Undo()
+  // request is ignored, and we return NS_ERROR_FAILURE.
+
+  result = mDoStack.Peek(&tx);
+
+  if (!NS_SUCCEEDED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  if (tx) {
+    UNLOCK_TX_MANAGER(this);
+    return NS_ERROR_FAILURE;
+  }
+
   // Peek at the top of the undo stack. Don't remove the transaction
   // until it has successfully completed.
   result = mUndoStack.Peek(&tx);
@@ -228,6 +244,22 @@ nsTransactionManager::Redo()
   nsTransactionItem *tx = 0;
 
   LOCK_TX_MANAGER(this);
+
+  // It is illegal to call Redo() while the transaction manager is
+  // executing a  transaction's Do() method! If this happens, the Redo()
+  // request is ignored, and we return NS_ERROR_FAILURE.
+
+  result = mDoStack.Peek(&tx);
+
+  if (!NS_SUCCEEDED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  if (tx) {
+    UNLOCK_TX_MANAGER(this);
+    return NS_ERROR_FAILURE;
+  }
 
   // Peek at the top of the redo stack. Don't remove the transaction
   // until it has successfully completed.
