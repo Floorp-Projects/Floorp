@@ -1494,6 +1494,11 @@ lm_CanAccessTarget(JSContext *cx, JSTarget target)
     JSPrincipals *principals;
 
     principals = lm_GetPrincipalsFromStackFrame(cx);
+
+	if ((nsCapsGetRegistrationModeFlag()) && principals && 
+        (NET_URL_Type(principals->codebase) == FILE_TYPE_URL))
+		return JS_TRUE;
+
     if (principals && !globalPrivilegesEnabled(cx, principals)) {
         return JS_FALSE;
     }
