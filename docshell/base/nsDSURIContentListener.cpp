@@ -42,8 +42,8 @@ nsDSURIContentListener::~nsDSURIContentListener()
 // nsDSURIContentListener::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ADDREF(nsDSURIContentListener)
-NS_IMPL_RELEASE(nsDSURIContentListener)
+NS_IMPL_THREADSAFE_ADDREF(nsDSURIContentListener)
+NS_IMPL_THREADSAFE_RELEASE(nsDSURIContentListener)
 
 NS_INTERFACE_MAP_BEGIN(nsDSURIContentListener)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
