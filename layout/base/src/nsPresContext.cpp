@@ -608,19 +608,18 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     mShell->SetPreferenceStyleRules(PR_TRUE);
   }
 
-  if (mDeviceContext) {
-    mDeviceContext->FlushFontCache();
-    nsPresContext::ClearStyleDataAndReflow();
-  }
+  mDeviceContext->FlushFontCache();
+  nsPresContext::ClearStyleDataAndReflow();
 }
 
 NS_IMETHODIMP
 nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 {
   NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
+  NS_ENSURE_ARG(aDeviceContext);
 
   mDeviceContext = aDeviceContext;
-  NS_IF_ADDREF(mDeviceContext);
+  NS_ADDREF(mDeviceContext);
 
   // Get the look and feel service here; default colors will be initialized
   // from calling GetUserPreferences() below.
@@ -743,10 +742,9 @@ nsPresContext::Observe(nsISupports* aSubject,
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
     UpdateCharSet(NS_LossyConvertUCS2toASCII(aData).get());
-    if (mDeviceContext) {
-      mDeviceContext->FlushFontCache();
-      nsPresContext::ClearStyleDataAndReflow();
-    }
+    mDeviceContext->FlushFontCache();
+    nsPresContext::ClearStyleDataAndReflow();
+
     return NS_OK;
   }
 
@@ -872,13 +870,11 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
   NS_PRECONDITION(aResult, "null out param");
 
   nsIFontMetrics* metrics = nsnull;
-  if (mDeviceContext) {
-    nsCOMPtr<nsIAtom> langGroup;
-    if (mLanguage) {
-      mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-    }
-    mDeviceContext->GetMetricsFor(aFont, langGroup, metrics);
+  nsCOMPtr<nsIAtom> langGroup;
+  if (mLanguage) {
+    mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
   }
+  mDeviceContext->GetMetricsFor(aFont, langGroup, metrics);
   *aResult = metrics;
   return NS_OK;
 }
@@ -940,10 +936,8 @@ nsPresContext::GetPixelsToTwips(float* aResult) const
 {
   NS_PRECONDITION(aResult, "null out param");
 
-  float p2t = 1.0f;
-  if (mDeviceContext) {
-    mDeviceContext->GetDevUnitsToAppUnits(p2t);
-  }
+  float p2t;
+  mDeviceContext->GetDevUnitsToAppUnits(p2t);
   *aResult = p2t;
   return NS_OK;
 }
@@ -953,11 +947,7 @@ nsPresContext::GetTwipsToPixels(float* aResult) const
 {
   NS_PRECONDITION(aResult, "null out param");
 
-  float app2dev = 1.0f;
-  if (mDeviceContext) {
-    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  }
-  *aResult = app2dev;
+  mDeviceContext->GetAppUnitsToDevUnits(*aResult);
   return NS_OK;
 }
 
@@ -969,24 +959,22 @@ nsPresContext::GetTwipsToPixelsForFonts(float* aResult) const
     return NS_ERROR_NULL_POINTER;
   }
 
-  float app2dev = 1.0f;
-  if (mDeviceContext) {
+  float app2dev;
 #ifdef NS_PRINT_PREVIEW
-    // If an alternative DC is available we want to use
-    // it to get the scaling factor for fonts. Usually, the AltDC
-    // is a printing DC so therefore we need to get the printers
-    // scaling values for calculating the font heights
-    nsCOMPtr<nsIDeviceContext> altDC;
-    mDeviceContext->GetAltDevice(getter_AddRefs(altDC));
-    if (altDC) {
-      altDC->GetAppUnitsToDevUnits(app2dev);
-    } else {
-      mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-    }
-#else
+  // If an alternative DC is available we want to use
+  // it to get the scaling factor for fonts. Usually, the AltDC
+  // is a printing DC so therefore we need to get the printers
+  // scaling values for calculating the font heights
+  nsCOMPtr<nsIDeviceContext> altDC;
+  mDeviceContext->GetAltDevice(getter_AddRefs(altDC));
+  if (altDC) {
+    altDC->GetAppUnitsToDevUnits(app2dev);
+  } else {
     mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-#endif
   }
+#else
+  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+#endif
   *aResult = app2dev;
   return NS_OK;
 }
@@ -998,24 +986,14 @@ nsPresContext::GetScaledPixelsToTwips(float* aResult) const
 {
   NS_PRECONDITION(aResult, "null out param");
 
-  float scale = 1.0f;
-  if (mDeviceContext)
-  {
-    float p2t;
-    mDeviceContext->GetDevUnitsToAppUnits(p2t);
-    mDeviceContext->GetCanonicalPixelScale(scale);
-    scale = p2t * scale;
-  }
-  *aResult = scale;
-  return NS_OK;
-}
+  float scale;
+  float p2t;
 
-NS_IMETHODIMP
-nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
-{
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mDeviceContext;
-  NS_IF_ADDREF(*aResult);
+  mDeviceContext->GetDevUnitsToAppUnits(p2t);
+  mDeviceContext->GetCanonicalPixelScale(scale);
+  scale = p2t * scale;
+
+  *aResult = scale;
   return NS_OK;
 }
 

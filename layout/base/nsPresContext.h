@@ -325,8 +325,7 @@ public:
    */
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const = 0;
 
-  NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const = 0;
-  nsIDeviceContext* GetDeviceContext() { return mDeviceContext; }
+  nsIDeviceContext* DeviceContext() { return mDeviceContext; }
 
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
   nsIEventStateManager* GetEventStateManager();

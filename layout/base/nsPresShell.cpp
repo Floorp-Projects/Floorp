@@ -3909,17 +3909,13 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
     view->GetViewManager()->GetWidgetForView(view, getter_AddRefs(widget));
   }
 
-  nsCOMPtr<nsIDeviceContext> dx;
-
   nsIRenderingContext* result = nsnull;
-  rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
-  if (NS_SUCCEEDED(rv) && dx) {
-    if (nsnull != widget) {
-      rv = dx->CreateRenderingContext(widget.get(), result);
-    }
-    else {
-      rv = dx->CreateRenderingContext(result);
-    }
+  nsIDeviceContext *deviceContext = mPresContext->DeviceContext();
+  if (widget) {
+    rv = deviceContext->CreateRenderingContext(widget.get(), result);
+  }
+  else {
+    rv = deviceContext->CreateRenderingContext(result);
   }
   *aResult = result;
 
@@ -7032,8 +7028,7 @@ PresShell::VerifyIncrementalReflow()
   }
 
   NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create presentation context");
-  nsCOMPtr<nsIDeviceContext> dc;
-  mPresContext->GetDeviceContext(getter_AddRefs(dc));
+  nsIDeviceContext *dc = mPresContext->DeviceContext();
   rv = cx->Init(dc);
   NS_ENSURE_SUCCESS(rv, rv);
 

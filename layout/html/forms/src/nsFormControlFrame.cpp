@@ -862,30 +862,25 @@ nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 }
 
 nsresult 
-nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeight)
+nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext,
+                                    nscoord& aHeight)
 {
-  aHeight = 0;
-  nsCOMPtr<nsIDeviceContext> context;
-  aPresContext->GetDeviceContext( getter_AddRefs(context) );
-  if ( context ) {
-    nsRect screen;
+  nsRect screen;
 
-    PRBool dropdownCanOverlapOSBar = PR_FALSE;
-    nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar,
-                           dropdownCanOverlapOSBar);
-    if ( dropdownCanOverlapOSBar )
-      context->GetRect ( screen );
-    else
-      context->GetClientRect(screen);
+  nsIDeviceContext *context = aPresContext->DeviceContext();
+  PRBool dropdownCanOverlapOSBar = PR_FALSE;
+  nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
+  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar,
+                         dropdownCanOverlapOSBar);
+  if ( dropdownCanOverlapOSBar )
+    context->GetRect ( screen );
+  else
+    context->GetClientRect(screen);
       
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-    aHeight = NSToIntRound(float(screen.height) / devUnits );
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  float devUnits;
+  context->GetDevUnitsToAppUnits(devUnits);
+  aHeight = NSToIntRound(float(screen.height) / devUnits );
+  return NS_OK;
 }
 
 // Calculate a frame's position in screen coordinates

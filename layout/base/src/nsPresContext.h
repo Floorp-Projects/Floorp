@@ -100,7 +100,6 @@ public:
   NS_IMETHOD GetTwipsToPixels(float* aResult) const;
   NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const;
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
-  NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
   nsIEventStateManager* GetEventStateManager() {
     return nsIPresContext::GetEventStateManager();

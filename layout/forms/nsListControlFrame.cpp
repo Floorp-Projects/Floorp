@@ -1184,11 +1184,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         nsStyleContext* optStyle = optFrame->GetStyleContext();
         if (optStyle) {
           const nsStyleFont* styleFont = optStyle->GetStyleFont();
-          nsCOMPtr<nsIDeviceContext> deviceContext;
-          aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-          NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
           nsIFontMetrics * fontMet;
-          result = deviceContext->GetMetricsFor(styleFont->mFont, fontMet);
+          result = aPresContext->DeviceContext()->
+            GetMetricsFor(styleFont->mFont, fontMet);
           if (NS_SUCCEEDED(result) && fontMet != nsnull) {
             if (fontMet) {
               fontMet->GetHeight(heightOfARow);

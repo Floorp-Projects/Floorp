@@ -343,17 +343,10 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   if (NS_FAILED(err))
     return err;
   
-  // ... then get a device context
-  nsCOMPtr<nsIDeviceContext>    dx;
-  err = presContext->GetDeviceContext(getter_AddRefs(dx));
-  if (NS_FAILED(err))
-    return err;
-  if (!dx)
-    return NS_ERROR_UNEXPECTED;
-
   // ... then tell it to make a rendering context
   nsCOMPtr<nsIRenderingContext> rendContext;  
-  err = dx->CreateRenderingContext(drawingView, *getter_AddRefs(rendContext));            
+  err = presContext->DeviceContext()->
+    CreateRenderingContext(drawingView, *getter_AddRefs(rendContext));
   if (NS_FAILED(err))
     return err;
   if (!rendContext)
@@ -984,11 +977,10 @@ void nsCaret::GetCaretRectAndInvert()
   {
     mRendContext = nsnull;    // free existing one if we have one
     
-    nsCOMPtr<nsIDeviceContext>    dx;
-    if (NS_FAILED(presContext->GetDeviceContext(getter_AddRefs(dx))) || !dx)
-      return;
-      
-    if (NS_FAILED(dx->CreateRenderingContext(drawingView, *getter_AddRefs(mRendContext))) || !mRendContext)
+    nsresult rv = presContext->DeviceContext()->
+      CreateRenderingContext(drawingView, *getter_AddRefs(mRendContext));
+
+    if (NS_FAILED(rv) || !mRendContext)
       return;      
   }
 
@@ -1037,11 +1029,8 @@ void nsCaret::GetCaretRectAndInvert()
 
     if (mCaretTwipsWidth < 0)    // need to re-compute the pixel width
     {
-      float tDevUnitsToTwips = 15;
-      nsCOMPtr<nsIDeviceContext> dx;
-      presContext->GetDeviceContext(getter_AddRefs(dx));
-      if (dx)
-        dx->GetDevUnitsToTwips(tDevUnitsToTwips);
+      float tDevUnitsToTwips;
+      presContext->DeviceContext()->GetDevUnitsToTwips(tDevUnitsToTwips);
       mCaretTwipsWidth  = (nscoord)(tDevUnitsToTwips * (float)mCaretPixelsWidth);
     }
     caretRect.width = mCaretTwipsWidth;

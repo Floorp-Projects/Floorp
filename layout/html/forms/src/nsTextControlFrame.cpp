@@ -1410,24 +1410,17 @@ nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
     float p2t;
     aPresContext->GetPixelsToTwips(&p2t);
 
-    nscoord scrollbarWidth  = 0;
-    nscoord scrollbarHeight = 0;
-    nsCOMPtr<nsIDeviceContext> dx;
-    aPresContext->GetDeviceContext(getter_AddRefs(dx));
-    if (dx) {
-      float   scale;
-      dx->GetCanonicalPixelScale(scale);
+    nsIDeviceContext *dx = aPresContext->DeviceContext();
 
-      float sbWidth;
-      float sbHeight;
-      dx->GetScrollBarDimensions(sbWidth, sbHeight);
-      scrollbarWidth  = PRInt32(sbWidth * scale);
-      scrollbarHeight = PRInt32(sbHeight * scale);
-    } else {
-      NS_WARNING("Dude!  No DeviceContext!  Not cool!");
-      scrollbarWidth  = nsFormControlFrame::GetScrollbarWidth(p2t);
-      scrollbarHeight = scrollbarWidth;
-    }
+    float   scale;
+    dx->GetCanonicalPixelScale(scale);
+
+    float sbWidth;
+    float sbHeight;
+    dx->GetScrollBarDimensions(sbWidth, sbHeight);
+
+    nscoord scrollbarWidth  = PRInt32(sbWidth * scale);
+    nscoord scrollbarHeight = PRInt32(sbHeight * scale);
 
     aDesiredSize.height += scrollbarHeight;
     minSize.height      += scrollbarHeight;

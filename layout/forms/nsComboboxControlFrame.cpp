@@ -805,11 +805,8 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
 {
   //printf("*****************\n");
   const nsStyleFont* dspFont = mDisplayFrame->GetStyleFont();
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-  NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
   nsIFontMetrics * fontMet;
-  deviceContext->GetMetricsFor(dspFont->mFont, fontMet);
+  aPresContext->DeviceContext()->GetMetricsFor(dspFont->mFont, fontMet);
 
   nscoord visibleHeight;
   //nsCOMPtr<nsIFontMetrics> fontMet;
@@ -1242,15 +1239,10 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // the default size of the of scrollbar
   // that will be the default width of the dropdown button
   // the height will be the height of the text
-  nscoord scrollbarWidth = 0;
-  nsCOMPtr<nsIDeviceContext> dx;
-  aPresContext->GetDeviceContext(getter_AddRefs(dx));
-  if (dx) { 
-    float w, h;
-    // Get the width in Device pixels times p2t
-    dx->GetScrollBarDimensions(w, h);
-    scrollbarWidth = NSToCoordRound(w);
-  }
+  float w, h;
+  // Get the width in Device pixels times p2t
+  aPresContext->DeviceContext()->GetScrollBarDimensions(w, h);
+  nscoord scrollbarWidth = NSToCoordRound(w);
   
   // set up a new reflow state for use throughout
   nsHTMLReflowState firstPassState(aReflowState);

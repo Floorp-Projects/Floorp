@@ -1371,15 +1371,11 @@ nsEventStateManager::GenerateDragGesture(nsIPresContext* aPresContext,
     // figure out the delta in twips, since that is how it is in the event.
     // Do we need to do this conversion every time?
     // Will the pres context really change on us or can we cache it?
-    nsCOMPtr<nsIDeviceContext> devContext;
-    aPresContext->GetDeviceContext (getter_AddRefs(devContext));
-    nscoord thresholdX = 0, thresholdY = 0;
-    if (devContext) {
-      float pixelsToTwips = 0.0;
-      devContext->GetDevUnitsToTwips(pixelsToTwips);
-      thresholdX = NSIntPixelsToTwips(pixelThresholdX, pixelsToTwips);
-      thresholdY = NSIntPixelsToTwips(pixelThresholdY, pixelsToTwips);
-    }
+    float pixelsToTwips;
+    aPresContext->DeviceContext()->GetDevUnitsToTwips(pixelsToTwips);
+
+    nscoord thresholdX = NSIntPixelsToTwips(pixelThresholdX, pixelsToTwips);
+    nscoord thresholdY = NSIntPixelsToTwips(pixelThresholdY, pixelsToTwips);
  
     // fire drag gesture if mouse has moved enough
     if (abs(aEvent->point.x - mGestureDownPoint.x) > thresholdX ||

@@ -1697,8 +1697,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDeviceContext> dx;
-  mPresContext->GetDeviceContext(getter_AddRefs(dx));
+  nsIDeviceContext *dx = mPresContext->DeviceContext();
 
   nsRect tbounds = aBounds;
   float p2t;

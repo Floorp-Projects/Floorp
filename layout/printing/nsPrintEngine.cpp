@@ -726,7 +726,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
 #endif
 
     nsCOMPtr<nsIDeviceContextSpec> devspec;
-    nsCOMPtr<nsIDeviceContext> dx;
     mPrt->mPrintDC = nsnull; // XXX why?
 
 #ifdef NS_DEBUG
@@ -806,183 +805,182 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
 
     CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_NODEVSPEC, rv, NS_ERROR_FAILURE);
     if (NS_SUCCEEDED(rv)) {
-      rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
+      rv = mPresContext->DeviceContext()->
+        GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
       if (NS_SUCCEEDED(rv)) {
-        rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
-        if (NS_SUCCEEDED(rv)) {
-          // Get the Original PixelScale incase we need to start changing it
-          mPrt->mPrintDC->GetCanonicalPixelScale(mPrt->mOrigDCScale);
-          // Shrink to Fit over rides and scaling values
-          if (!mPrt->mShrinkToFit) {
-            double scaling;
-            mPrt->mPrintSettings->GetScaling(&scaling);
-            mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
-          }
+        // Get the Original PixelScale incase we need to start changing it
+        mPrt->mPrintDC->GetCanonicalPixelScale(mPrt->mOrigDCScale);
+        // Shrink to Fit over rides and scaling values
+        if (!mPrt->mShrinkToFit) {
+          double scaling;
+          mPrt->mPrintSettings->GetScaling(&scaling);
+          mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
+        }
 
-          if(webContainer) {
+        if(webContainer) {
 #ifdef DEBUG_dcone
-            float   a1,a2;
-            PRInt32 i1,i2;
+          float   a1,a2;
+          PRInt32 i1,i2;
 
-            printf("CRITICAL PRINTING INFORMATION\n");
+          printf("CRITICAL PRINTING INFORMATION\n");
 
-            // DEVICE CONTEXT INFORMATION from PresContext
-            printf("DeviceContext of Presentation Context(%x)\n",dx);
-            dx->GetDevUnitsToTwips(a1);
-            dx->GetTwipsToDevUnits(a2);
-            printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-            dx->GetAppUnitsToDevUnits(a1);
-            dx->GetDevUnitsToAppUnits(a2);
-            printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
-            dx->GetCanonicalPixelScale(a1);
-            printf("    GetCanonicalPixelScale = %f\n",a1);
-            dx->GetScrollBarDimensions(a1, a2);
-            printf("    ScrollBar x = %f y = %f\n",a1,a2);
-            dx->GetZoom(a1);
-            printf("    Zoom = %f\n",a1);
-            dx->GetDepth((PRUint32&)i1);
-            printf("    Depth = %d\n",i1);
-            dx->GetDeviceSurfaceDimensions(i1,i2);
-            printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+          // DEVICE CONTEXT INFORMATION from PresContext
+          nsIDeviceContext *dx = mPresContext->DeviceContext();
+          printf("DeviceContext of Presentation Context(%x)\n", dx);
+          dx->GetDevUnitsToTwips(a1);
+          dx->GetTwipsToDevUnits(a2);
+          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+          dx->GetAppUnitsToDevUnits(a1);
+          dx->GetDevUnitsToAppUnits(a2);
+          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+          dx->GetCanonicalPixelScale(a1);
+          printf("    GetCanonicalPixelScale = %f\n",a1);
+          dx->GetScrollBarDimensions(a1, a2);
+          printf("    ScrollBar x = %f y = %f\n",a1,a2);
+          dx->GetZoom(a1);
+          printf("    Zoom = %f\n",a1);
+          dx->GetDepth((PRUint32&)i1);
+          printf("    Depth = %d\n",i1);
+          dx->GetDeviceSurfaceDimensions(i1,i2);
+          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 
-            // DEVICE CONTEXT INFORMATION
-            printf("DeviceContext created for print(%x)\n",mPrt->mPrintDC);
-            mPrt->mPrintDC->GetDevUnitsToTwips(a1);
-            mPrt->mPrintDC->GetTwipsToDevUnits(a2);
-            printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-            mPrt->mPrintDC->GetAppUnitsToDevUnits(a1);
-            mPrt->mPrintDC->GetDevUnitsToAppUnits(a2);
-            printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
-            mPrt->mPrintDC->GetCanonicalPixelScale(a1);
-            printf("    GetCanonicalPixelScale = %f\n",a1);
-            mPrt->mPrintDC->GetScrollBarDimensions(a1, a2);
-            printf("    ScrollBar x = %f y = %f\n",a1,a2);
-            mPrt->mPrintDC->GetZoom(a1);
-            printf("    Zoom = %f\n",a1);
-            mPrt->mPrintDC->GetDepth((PRUint32&)i1);
-            printf("    Depth = %d\n",i1);
-            mPrt->mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
-            printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+          // DEVICE CONTEXT INFORMATION
+          printf("DeviceContext created for print(%x)\n",mPrt->mPrintDC);
+          mPrt->mPrintDC->GetDevUnitsToTwips(a1);
+          mPrt->mPrintDC->GetTwipsToDevUnits(a2);
+          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+          mPrt->mPrintDC->GetAppUnitsToDevUnits(a1);
+          mPrt->mPrintDC->GetDevUnitsToAppUnits(a2);
+          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+          mPrt->mPrintDC->GetCanonicalPixelScale(a1);
+          printf("    GetCanonicalPixelScale = %f\n",a1);
+          mPrt->mPrintDC->GetScrollBarDimensions(a1, a2);
+          printf("    ScrollBar x = %f y = %f\n",a1,a2);
+          mPrt->mPrintDC->GetZoom(a1);
+          printf("    Zoom = %f\n",a1);
+          mPrt->mPrintDC->GetDepth((PRUint32&)i1);
+          printf("    Depth = %d\n",i1);
+          mPrt->mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
+          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 #endif /* DEBUG_dcone */
 
-            // Always check and set the print settings first and then fall back
-            // onto the PrintService if there isn't a PrintSettings
-            //
-            // Posiible Usage values:
-            //   nsIPrintSettings::kUseInternalDefault
-            //   nsIPrintSettings::kUseSettingWhenPossible
-            //
-            // NOTE: The consts are the same for PrintSettings and PrintSettings
-            PRInt16 printFrameTypeUsage = nsIPrintSettings::kUseSettingWhenPossible;
-            mPrt->mPrintSettings->GetPrintFrameTypeUsage(&printFrameTypeUsage);
+          // Always check and set the print settings first and then fall back
+          // onto the PrintService if there isn't a PrintSettings
+          //
+          // Posiible Usage values:
+          //   nsIPrintSettings::kUseInternalDefault
+          //   nsIPrintSettings::kUseSettingWhenPossible
+          //
+          // NOTE: The consts are the same for PrintSettings and PrintSettings
+          PRInt16 printFrameTypeUsage = nsIPrintSettings::kUseSettingWhenPossible;
+          mPrt->mPrintSettings->GetPrintFrameTypeUsage(&printFrameTypeUsage);
 
-            // Ok, see if we are going to use our value and override the default
-            if (printFrameTypeUsage == nsIPrintSettings::kUseSettingWhenPossible) {
-              // Get the Print Options/Settings PrintFrameType to see what is preferred
-              PRInt16 printFrameType = nsIPrintSettings::kEachFrameSep;
-              mPrt->mPrintSettings->GetPrintFrameType(&printFrameType);
+          // Ok, see if we are going to use our value and override the default
+          if (printFrameTypeUsage == nsIPrintSettings::kUseSettingWhenPossible) {
+            // Get the Print Options/Settings PrintFrameType to see what is preferred
+            PRInt16 printFrameType = nsIPrintSettings::kEachFrameSep;
+            mPrt->mPrintSettings->GetPrintFrameType(&printFrameType);
 
-              // Don't let anybody do something stupid like try to set it to
-              // kNoFrames when we are printing a FrameSet
-              if (printFrameType == nsIPrintSettings::kNoFrames) {
-                mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
+            // Don't let anybody do something stupid like try to set it to
+            // kNoFrames when we are printing a FrameSet
+            if (printFrameType == nsIPrintSettings::kNoFrames) {
+              mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
+              mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
+            } else {
+              // First find out from the PrinService what options are available
+              // to us for Printing FrameSets
+              PRInt16 howToEnableFrameUI;
+              mPrt->mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
+              if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
+                switch (howToEnableFrameUI) {
+                case nsIPrintSettings::kFrameEnableAll:
+                  mPrt->mPrintFrameType = printFrameType;
+                  break;
+
+                case nsIPrintSettings::kFrameEnableAsIsAndEach:
+                  if (printFrameType != nsIPrintSettings::kSelectedFrame) {
+                    mPrt->mPrintFrameType = printFrameType;
+                  } else { // revert back to a good value
+                    mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
+                  }
+                  break;
+                } // switch
                 mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
-              } else {
-                // First find out from the PrinService what options are available
-                // to us for Printing FrameSets
+              }
+            }
+          } else {
+            mPrt->mPrintSettings->GetPrintFrameType(&mPrt->mPrintFrameType);
+          }
+
+#ifdef MOZ_LAYOUTDEBUG
+          {
+            // This is a special debugging regression tool section
+            PRUnichar* tempFileName = nsnull;
+            if (nsPrintEngine::IsDoingRuntimeTesting()) {
+              // Here we check for a special filename (the destination for the print job)
+              // and sets into the print settings if there is a name then we want to 
+              // print to a file. if not, let it print normally.
+              if (NS_SUCCEEDED(mLayoutDebugObj->GetPrintFileName(&tempFileName)) && tempFileName) {
+                if (*tempFileName) {
+                  mPrt->mPrintSettings->SetPrintToFile(PR_TRUE);
+                  mPrt->mPrintSettings->SetToFileName(tempFileName);
+                }
+                nsMemory::Free(tempFileName);
+              }
+
+              // Here we check to see how we should print a frameset (if there is one)
+              PRBool asIs = PR_FALSE;
+              if (NS_SUCCEEDED(mLayoutDebugObj->GetPrintAsIs(&asIs))) {
                 PRInt16 howToEnableFrameUI;
                 mPrt->mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
                 if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-                  switch (howToEnableFrameUI) {
-                    case nsIPrintSettings::kFrameEnableAll:
-                      mPrt->mPrintFrameType = printFrameType;
-                      break;
-
-                    case nsIPrintSettings::kFrameEnableAsIsAndEach:
-                      if (printFrameType != nsIPrintSettings::kSelectedFrame) {
-                        mPrt->mPrintFrameType = printFrameType;
-                      } else { // revert back to a good value
-                        mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
-                      }
-                      break;
-                  } // switch
+                  mPrt->mPrintFrameType = asIs?nsIPrintSettings::kFramesAsIs:nsIPrintSettings::kEachFrameSep;
                   mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
                 }
               }
-            } else {
-              mPrt->mPrintSettings->GetPrintFrameType(&mPrt->mPrintFrameType);
             }
-
-#ifdef MOZ_LAYOUTDEBUG
-            {
-              // This is a special debugging regression tool section
-              PRUnichar* tempFileName = nsnull;
-              if (nsPrintEngine::IsDoingRuntimeTesting()) {
-                // Here we check for a special filename (the destination for the print job)
-                // and sets into the print settings if there is a name then we want to 
-                // print to a file. if not, let it print normally.
-                if (NS_SUCCEEDED(mLayoutDebugObj->GetPrintFileName(&tempFileName)) && tempFileName) {
-                  if (*tempFileName) {
-                    mPrt->mPrintSettings->SetPrintToFile(PR_TRUE);
-                    mPrt->mPrintSettings->SetToFileName(tempFileName);
-                  }
-                  nsMemory::Free(tempFileName);
-                }
-
-                // Here we check to see how we should print a frameset (if there is one)
-                PRBool asIs = PR_FALSE;
-                if (NS_SUCCEEDED(mLayoutDebugObj->GetPrintAsIs(&asIs))) {
-                  PRInt16 howToEnableFrameUI;
-                  mPrt->mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
-                  if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-                    mPrt->mPrintFrameType = asIs?nsIPrintSettings::kFramesAsIs:nsIPrintSettings::kEachFrameSep;
-                    mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
-                  }
-                }
-              }
-            }
+          }
 #endif
 
-           // Get the Needed info for Calling PrepareDocument
-            PRUnichar* fileName = nsnull;
-            // check to see if we are printing to a file
-            PRBool isPrintToFile = PR_FALSE;
-            mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
-            if (isPrintToFile) {
-              // On some platforms The PrepareDocument needs to know the name of the file
-              // and it uses the PrintService to get it, so we need to set it into the PrintService here
-              mPrt->mPrintSettings->GetToFileName(&fileName);
+          // Get the Needed info for Calling PrepareDocument
+          PRUnichar* fileName = nsnull;
+          // check to see if we are printing to a file
+          PRBool isPrintToFile = PR_FALSE;
+          mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
+          if (isPrintToFile) {
+            // On some platforms The PrepareDocument needs to know the name of the file
+            // and it uses the PrintService to get it, so we need to set it into the PrintService here
+            mPrt->mPrintSettings->GetToFileName(&fileName);
+          }
+
+          PRUnichar * docTitleStr;
+          PRUnichar * docURLStr;
+
+          GetDisplayTitleAndURL(mPrt->mPrintObject, mPrt->mPrintSettings, mPrt->mBrandName, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
+          PR_PL(("Title: %s\n", docTitleStr?NS_LossyConvertUCS2toASCII(docTitleStr).get():""));
+          PR_PL(("URL:   %s\n", docURLStr?NS_LossyConvertUCS2toASCII(docURLStr).get():""));
+
+          rv = mPrt->mPrintDC->PrepareDocument(docTitleStr, fileName);
+
+          if (docTitleStr) nsMemory::Free(docTitleStr);
+          if (docURLStr) nsMemory::Free(docURLStr);
+
+          CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_PREPAREDOC, rv, NS_ERROR_FAILURE);
+          if (NS_FAILED(rv)) {
+            return CleanupOnFailure(rv, PR_TRUE);
+          }
+
+          PRBool doNotify;
+          ShowPrintProgress(PR_TRUE, doNotify);
+
+          if (!doNotify) {
+            // Print listener setup...
+            if (mPrt != nsnull) {
+              mPrt->OnStartPrinting();    
             }
-
-            PRUnichar * docTitleStr;
-            PRUnichar * docURLStr;
-
-            GetDisplayTitleAndURL(mPrt->mPrintObject, mPrt->mPrintSettings, mPrt->mBrandName, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
-            PR_PL(("Title: %s\n", docTitleStr?NS_LossyConvertUCS2toASCII(docTitleStr).get():""));
-            PR_PL(("URL:   %s\n", docURLStr?NS_LossyConvertUCS2toASCII(docURLStr).get():""));
-
-            rv = mPrt->mPrintDC->PrepareDocument(docTitleStr, fileName);
-
-            if (docTitleStr) nsMemory::Free(docTitleStr);
-            if (docURLStr) nsMemory::Free(docURLStr);
-
-            CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_PREPAREDOC, rv, NS_ERROR_FAILURE);
-            if (NS_FAILED(rv)) {
-              return CleanupOnFailure(rv, PR_TRUE);
-            }
-
-            PRBool doNotify;
-            ShowPrintProgress(PR_TRUE, doNotify);
-
-            if (!doNotify) {
-              // Print listener setup...
-              if (mPrt != nsnull) {
-                mPrt->OnStartPrinting();    
-              }
-              rv = DocumentReadyForPrinting();
-            }
+            rv = DocumentReadyForPrinting();
           }
         }
       }

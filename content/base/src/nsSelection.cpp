@@ -6957,16 +6957,6 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
   if (!presContext)
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-
-  rv = presContext->GetDeviceContext(getter_AddRefs(deviceContext));
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!deviceContext)
-    return NS_ERROR_NULL_POINTER;
-
   //
   // Now get the closest view with a widget so we can create
   // a rendering context.
@@ -6999,7 +6989,8 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
 
   nsCOMPtr<nsIRenderingContext> rendContext;
 
-  rv = deviceContext->CreateRenderingContext(closestView, *getter_AddRefs(rendContext));
+  rv = presContext->DeviceContext()->
+    CreateRenderingContext(closestView, *getter_AddRefs(rendContext));
   
   if (NS_FAILED(rv))
     return rv;
