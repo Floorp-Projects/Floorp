@@ -18,6 +18,7 @@
     <em:locked>true</em:locked>
 
     <!-- Front End Integration Hooks (used by Theme Manager)-->
+    <!-- XXXben - preprocess this file to use different info for mac version -->
     <em:creator>Arvid Axelsson</em:creator>
     <em:contributor>Mozilla Contributors</em:contributor>
 
