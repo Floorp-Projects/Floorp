@@ -67,4 +67,9 @@
 /* hide goto menu bug #47633 */ 
 #taskbarGotoMenuBox{
 	display:none;	
-}   
+}
+
+#security-button {
+  /** override securityOverlay.css for windows which has no growbox yet **/
+  margin-right: 0px !important;
+}
