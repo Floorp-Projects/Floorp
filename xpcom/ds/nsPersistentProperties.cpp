@@ -159,7 +159,6 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
                  value.AppendWithConversion('\r');
                  break;
                default:
-                 value.AppendWithConversion('\\');
                  value.Append((PRUnichar) c);
              } // switch(c)
            } else {
