@@ -40,6 +40,7 @@
 
 #include "nsIWindowWatcher.h"
 #include "nsIServiceManagerUtils.h"
+#include "nsIWebBrowserSetup.h"
 
 #include "CBrowserShell.h"
 #include "CBrowserWindow.h"
@@ -209,7 +210,16 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
     ThrowIfNil_(aShell);
     aShell->AddAttachments();
     aShell->PutInside(theWindow, false);
-   
+    
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
+    {
+        nsCOMPtr<nsIWebBrowser> browser;
+        aShell->GetWebBrowser(getter_AddRefs(browser));
+        nsCOMPtr<nsIWebBrowserSetup> setup(do_QueryInterface(browser));
+        if (setup)
+          setup->SetProperty(nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER, PR_TRUE);
+    }
+       
     if (chromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR)
     {
         LView::SetDefaultView(theWindow);

@@ -95,6 +95,16 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
 
     /**
+     * A value of PR_TRUE makes the browser a chrome wrapper.
+     * Default is PR_FALSE.
+     *
+     * @since mozilla1.0
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_IS_CHROME_WRAPPER     = 7;
+
+    /**
      * Sets a property on the new web browser object.
      *
      * @param aId The identifier of the property to be set.
