@@ -238,6 +238,7 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
 }
 
+
 nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 {
 	nsresult rv = NS_OK;
