@@ -23,10 +23,12 @@
 
 #import <AppKit/AppKit.h>
 #import "BrowserWindowController.h"
+#import "CHAutoCompleteDataSource.h"
 
 @interface CHAutoCompleteTableView : NSTableView {
   IBOutlet NSTextField* mURLBar;
   IBOutlet BrowserWindowController* mWindowController;
+  CHAutoCompleteDataSource* mDataSource;
 }
 
 @end
