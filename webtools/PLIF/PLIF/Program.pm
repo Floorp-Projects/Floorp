@@ -59,9 +59,11 @@ sub run {
             # see constructor above
             if ($self->verifyInput()) {
                 if ($self->input->command) {
+                    $self->dump(8, 'Command: ' . ($self->input->command));
                     $self->command($self->input->command);
                     $self->dispatch($self->input->command);
                 } else {
+                    $self->dump(8, 'Command: (none)');
                     $self->command('');
                     $self->noCommand();
                 }
@@ -95,6 +97,7 @@ sub initInput {
     my $self = shift;
     my $input = $self->getServiceInstance('input');
     if ($input) {
+        $self->dump(8, "Input: $input");
         $self->input($input);
     } else {
         $self->noInput();
