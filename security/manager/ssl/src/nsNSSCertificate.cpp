@@ -4390,17 +4390,42 @@ loser:
 NS_IMETHODIMP
 nsNSSCertificateDB::GetCertByEmailAddress(nsIPK11Token *aToken, const char *aEmailAddress, nsIX509Cert **_retval)
 {
+#ifdef NSS_3_4
+  CERTCertificate *any_cert = CERT_FindCertByNicknameOrEmailAddr(CERT_GetDefaultCertDB(), (char*)aEmailAddress);
+  if (!any_cert)
+    return NS_ERROR_FAILURE;
+
+  CERTCertificateCleaner certCleaner(any_cert);
+    
+  // any_cert now contains a cert with the right subject, but it might not have the correct usage
+  CERTCertList *certlist = CERT_CreateSubjectCertList(
+    nsnull, CERT_GetDefaultCertDB(), &any_cert->derSubject, PR_Now(), PR_TRUE);
+  if (!certlist)
+    return NS_ERROR_FAILURE;  
+
+  CERTCertListCleaner listCleaner(certlist);
+
+  if (SECSuccess != CERT_FilterCertListByUsage(certlist, certUsageEmailRecipient, PR_FALSE))
+    return NS_ERROR_FAILURE;
+  
+  if (CERT_LIST_END(CERT_LIST_HEAD(certlist), certlist))
+    return NS_ERROR_FAILURE;
+  
+  nsNSSCertificate *nssCert = new nsNSSCertificate(CERT_LIST_HEAD(certlist)->cert);
+  if (!nssCert)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(nssCert);
+  *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+  return NS_OK;
+#else
   CERTCertList *certList = nsnull;
   SECStatus sec_rv;
   nsresult rv = NS_OK;
 
-#ifdef NSS_3_4
-  // fix this... rjr
-  certList = nsnull;
-#else
   certList = CERT_CreateEmailAddrCertList(nsnull, CERT_GetDefaultCertDB(),
           (char*)aEmailAddress, PR_Now(), PR_TRUE);
-#endif
+
   if (certList == nsnull) {
     rv = NS_ERROR_FAILURE;
     goto loser;
@@ -4423,6 +4448,7 @@ loser:
   }
 
   return rv;
+#endif
 }
 
 /* nsIX509Cert constructX509FromBase64 (in string base64); */
