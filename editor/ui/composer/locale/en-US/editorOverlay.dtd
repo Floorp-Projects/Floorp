@@ -35,8 +35,8 @@
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY fileopen.accesskey "o">
 <!ENTITY fileopen.keybinding "o">
-<!ENTITY openremoteCmd.label "Open Web Location...">
-<!ENTITY fileopenremote.accesskey "l">
+<!ENTITY openremoteCmd.label "Open Address...">
+<!ENTITY fileopenremote.accesskey "r">
 <!ENTITY fileopenremote.keybinding "l">
 <!ENTITY fileRecentMenu.label "Recent Pages">
 <!ENTITY filerecentmenu.accesskey "r">
