@@ -5408,6 +5408,15 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
       rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
       if (NS_FAILED(rv)) return rv;
+      /* Creating a range to store insert position because when
+         we delete the selection, range gravity will make sure the insertion
+         point is in the correct place */
+      nsCOMPtr<nsIDOMRange> destinationRange;
+      rv = CreateRange(newSelectionParent, newSelectionOffset,newSelectionParent, newSelectionOffset, getter_AddRefs(destinationRange));
+      if (NS_FAILED(rv))
+        return rv;
+      if(!destinationRange)
+        return NS_ERROR_FAILURE;
 
       // We never have to delete if selection is already collapsed
       PRBool deleteSelection = PR_FALSE;
@@ -5476,9 +5485,17 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       if (!(deleteSelection && srcdomdoc != destdomdoc))
       {
         // Move the selection to the point under the mouse cursor
+        rv = destinationRange->GetStartContainer(getter_AddRefs(newSelectionParent));
+        if (NS_FAILED(rv))
+          return rv;
+        if(!newSelectionParent)
+          return NS_ERROR_FAILURE;
+       
+        rv = destinationRange->GetStartOffset(&newSelectionOffset);
+        if (NS_FAILED(rv))
+          return rv;
         selection->Collapse(newSelectionParent, newSelectionOffset);
-      }
-      
+      }      
       // We have to figure out whether to delete and relocate caret only once
       doPlaceCaret = PR_FALSE;
     }
