@@ -180,10 +180,10 @@
   #define HAVE_CPP_ACCESS_CHANGING_USING
 
   #if (_MSC_VER<1100)
-      // before 5.0, VC++ couldn't handle explicit
+      /* before 5.0, VC++ couldn't handle explicit */
     #undef HAVE_CPP_EXPLICIT
   #elif (_MSC_VER==1100)
-      // VC++5.0 has an internal compiler error (sometimes) without this
+      /* VC++5.0 has an internal compiler error (sometimes) without this */
     #undef HAVE_CPP_ACCESS_CHANGING_USING
   #endif
 
