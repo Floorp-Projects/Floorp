@@ -36,6 +36,7 @@
 #include "nsIBlender.h"
 
 class nsISupportsArray;
+struct DisplayListElement2;
 
 class nsViewManager2 : public nsIViewManager {
 public:
@@ -151,12 +152,21 @@ private:
 	             const nsRect *rect, PRUint32 aUpdateFlags);
 	void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
 					 PRBool &aResult);
+
 	void RenderView(nsIView *aView, nsIRenderingContext &aRC,
 					const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
+
+    void RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC);
+
+	void PaintView(nsIView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
+				  const nsRect &aDamageRect);
+    
+    nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
+					
 	PRBool CreateDisplayList(nsIView *aView, PRInt32 *aIndex, nscoord aOriginX, nscoord aOriginY,
 	                       nsIView *aRealView, const nsRect *aDamageRect = nsnull,
 	                       nsIView *aTopView = nsnull, nscoord aX = 0, nscoord aY = 0);
-	PRBool AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags);
+	PRBool AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags);
 	nsresult OptimizeDisplayList(const nsRect& aDamageRect);
 	void ShowDisplayList(PRInt32 flatlen);
 	void ComputeViewOffset(nsIView *aView, nsPoint *aOrigin, PRInt32 aFlag);
@@ -185,6 +195,8 @@ private:
 
 private:
   nsIDeviceContext  *mContext;
+  float				mTwipsToPixels;
+  float				mPixelsToTwips;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
   PRIntervalTime    mLastRefresh;
@@ -198,6 +210,8 @@ private:
   nsVoidArray       *mDisplayList;
   PRInt32			mDisplayListCount;
   PRInt32			mOpaqueViewCount;
+  PRInt32			mTranslucentViewCount;
+  nsRect			mTranslucentBounds;
   nsIScrollableView *mRootScrollable;
 
   //from here to public should be static and locked... MMP
