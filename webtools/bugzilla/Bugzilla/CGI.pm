@@ -23,7 +23,7 @@ use strict;
 
 package Bugzilla::CGI;
 
-use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers);
+use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers SERVER_PUSH);
 use CGI::Util qw(rearrange);
 
 use base qw(CGI);
@@ -111,13 +111,21 @@ sub canonicalise_query {
     return join("&", @parameters);
 }
 
-# CGI.pm makes this nph, but apache doesn't like that
+# Overwrite to handle nph parameter. This should stay here until perl 5.8.1 CGI
+# has been fixed to support -nph as a parameter
+#
 sub multipart_init {
-    my $self = shift;
-
-    unshift(@_, '-nph' => undef);
-
-    return $self->SUPER::multipart_init(@_);
+    my($self,@p) = @_;
+    my($boundary,$nph,@other) = rearrange(['BOUNDARY','NPH'],@p);
+    $boundary = $boundary || '------- =_aaaaaaaaaa0';
+    $self->{'separator'} = "\r\n--$boundary$\r\n";
+    $self->{'final_separator'} = "\r\n--$boundary--\r\n";
+    my $type = SERVER_PUSH($boundary);
+    return $self->header(
+	-nph => 0,
+	-type => $type,
+	(map { split "=", $_, 2 } @other),
+    ) . "WARNING: YOUR BROWSER DOESN'T SUPPORT THIS SERVER-PUSH TECHNOLOGY." . $self->multipart_end;
 }
 
 # Override header so we can add the cookies in
