@@ -27,9 +27,7 @@
 
 #include <LTextColumn.h>
 
-#if 0	//еее don't activate QAP in Mozilla yet
-
-#include <QAP_Assist.h>
+#include "QAP_Assist.h"
 
 class	CTextColumn : public LTextColumn, public CQAPartnerTableMixin
 {
@@ -50,8 +48,5 @@ public:
 #endif //QAP_BUILD
 };
 
-#else //0
-#define CTextColumn	LTextColumn
-#endif //0	//еее don't activate QAP in Mozilla yet
 
 #endif //CTextColumn_H

@@ -73,7 +73,7 @@ extern "C"
 #include <LGACheckbox.h>
 #include <LGARadioButton.h>
 
-//#include <QAP_Assist.h>
+#include <QAP_Assist.h>
 
 
 //#include <ICAPI.h>

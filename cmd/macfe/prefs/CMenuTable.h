@@ -19,7 +19,7 @@
 #pragma once
 
 #include <LTextHierTable.h>
-//#include <QAP_Assist.h>
+#include <QAP_Assist.h>
 
 //========================================================================================
 class CMenuTable
@@ -30,7 +30,7 @@ class CMenuTable
 //========================================================================================
 : 	public LTextHierTable
 ,	public LBroadcaster
-//,	public CQAPartnerTableMixin
+,	public CQAPartnerTableMixin
 {
 	public:
 		enum
@@ -50,10 +50,10 @@ class CMenuTable
 		virtual void		HiliteCellInactively(const STableCell	&inCell, Boolean inHilite);
 		virtual void		ClickSelf(const SMouseDownEvent &inMouseDown);
 				TableIndexT	FindMessage( MessageT message );
-//#if defined(QAP_BUILD)		
-//		virtual void		QapGetListInfo (PQAPLISTINFO pInfo);
-//		virtual Ptr			QapAddCellToBuf(Ptr pBuf, Ptr pLimit, const STableCell& sTblCell);
-//#endif
+#if defined(QAP_BUILD)		
+		virtual void		QapGetListInfo (PQAPLISTINFO pInfo);
+		virtual Ptr			QapAddCellToBuf(Ptr pBuf, Ptr pLimit, const STableCell& sTblCell);
+#endif
 	protected:
 		ResIDT				mMenuID;
 

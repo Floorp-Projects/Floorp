@@ -21,8 +21,6 @@
 //
 // It should be used everywhere in place of LTextColumn.
 
-#if 0	//еее don't activate QAP in Mozilla yet
-
 #ifdef PowerPlant_PCH
 #include PowerPlant_PCH
 #endif
@@ -56,6 +54,8 @@ CTextColumn::~CTextColumn()
 #pragma mark -
 #if defined(QAP_BUILD)
 
+#include <LScrollerView.h>
+
 //-----------------------------------
 void CTextColumn::QapGetListInfo(PQAPLISTINFO pInfo)
 //-----------------------------------
@@ -69,11 +69,14 @@ void CTextColumn::QapGetListInfo(PQAPLISTINFO pInfo)
 
 	// fetch vertical scrollbar Macintosh control
 	ControlHandle macVScroll = NULL;
-	LScroller *myScroller = dynamic_cast<LScroller *>(GetSuperView());
+	LScrollerView *myScroller = dynamic_cast<LScrollerView *>(GetSuperView());
 	if (myScroller != NULL)
 	{
+#if 0
+// LScrollerView does not provide public access to its scrollbars (pinkerton)
 		if (myScroller->GetVScrollbar() != NULL)
 			macVScroll = myScroller->GetVScrollbar()->GetMacControl();
+#endif
 	}
 
 	pInfo->itemCount	= (short)outRows;
@@ -120,5 +123,3 @@ Ptr CTextColumn::QapAddCellToBuf(Ptr pBuf, Ptr pLimit, const STableCell& sTblCel
 }
 
 #endif //QAP_BUILD
-
-#endif //0	//еее don't activate QAP in Mozilla yet

@@ -29,7 +29,7 @@
 
 #include <LCommander.h>
 #include <LListener.h>
-//#include <QAP_Assist.h>
+#include <QAP_Assist.h>
 
 #include "NetscapeDragFlavors.h"
 #include "LTableViewHeader.h"
@@ -72,7 +72,7 @@ class CStandardFlexTable
 ,	public LCommander
 ,	public LBroadcaster
 ,	public CKeyUpReceiver
-//,	public CQAPartnerTableMixin
+,	public CQAPartnerTableMixin
 {
 private:
 	typedef CSpecialTableView Inherited;

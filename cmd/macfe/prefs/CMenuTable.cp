@@ -28,7 +28,7 @@
 #include <LTableSingleSelector.h>
 #include <LTableArrayStorage.h>
 #include <LDropFlag.h>
-//#include <QAP_Assist.h>
+#include <QAP_Assist.h>
 
 #include "CPrefsMediator.h"
 
@@ -45,7 +45,7 @@ struct CellData
 //----------------------------------------------------------------------------------------
 CMenuTable::CMenuTable(LStream *inStream)
 : 		LTextHierTable(inStream)
-//,		CQAPartnerTableMixin(this)
+,		CQAPartnerTableMixin(this)
 //----------------------------------------------------------------------------------------
 {
 	*inStream >> mLeafTextTraits;
@@ -455,6 +455,8 @@ void CMenuTable::ClickSelf(const SMouseDownEvent &inMouseDown)
 #pragma mark -
 #if defined(QAP_BUILD)
 
+#include <LScrollerView.h>
+
 //-----------------------------------
 void CMenuTable::QapGetListInfo(PQAPLISTINFO pInfo)
 //-----------------------------------
@@ -479,8 +481,11 @@ void CMenuTable::QapGetListInfo(PQAPLISTINFO pInfo)
 	LScrollerView *myScroller = dynamic_cast<LScrollerView *>(GetSuperView());
 	if (myScroller != NULL)
 	{
+#if 0
+// LScrollerView does not provide public access to the scrollbars (pinkerton)
 		if (myScroller->GetVScrollbar() != NULL)
 			macVScroll = myScroller->GetVScrollbar()->GetMacControl();
+#endif
 	}
 
 	pInfo->itemCount	= (short)outRows;

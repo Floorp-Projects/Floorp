@@ -298,7 +298,7 @@ CStandardFlexTable::CStandardFlexTable(LStream *inStream)
 ,	LDragAndDrop(GetMacPort(), this)
 ,	LCommander()
 ,	LBroadcaster()
-//,	CQAPartnerTableMixin(this)
+,	CQAPartnerTableMixin(this)
 ,	mTableHeaderListener(this)
 ,	mTableHeader(NULL)
 ,	mSelectionList(NULL)
@@ -2643,6 +2643,7 @@ CStandardFlexTable :: RowIsContainer( const TableIndexT & inRow, Boolean* outIsE
 
 #pragma mark -
 #if defined(QAP_BUILD)
+#include <LScrollerView.h>
 
 //----------------------------------------------------------------------------------------
 void CStandardFlexTable::QapGetListInfo(PQAPLISTINFO pInfo)
@@ -2666,13 +2667,16 @@ void CStandardFlexTable::QapGetListInfo(PQAPLISTINFO pInfo)
 	LScrollerView *myScroller = dynamic_cast<LScrollerView *>(GetSuperView());
 	if (myScroller != NULL)
 	{
+#if 0
+// there is no public access to the scrollbars in PowerPlant's LScrollerView (pinkerton)
 		if (myScroller->GetVScrollbar() != NULL)
 			macVScroll = myScroller->GetVScrollbar()->GetMacControl();
+#endif
 	}
 
 	pInfo->itemCount	= (short)outRows;
 	pInfo->topIndex 	= topLeftCell.row - 1;	// must start at 0 even though in QAP-script, Select("#1") selects the first line
-	pInfo->topOffset	= 0;
+//	pInfo->topOffset	= 0;
 	pInfo->itemHeight 	= GetRowHeight(0);
 	pInfo->visibleCount = botRightCell.row - topLeftCell.row + 1;
 	pInfo->vScroll 		= macVScroll;
