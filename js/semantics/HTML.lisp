@@ -347,6 +347,42 @@
       html-source)))
 
 
+; Coalesce an A element immediately containing or contained in a SPAN element into one if their attributes
+; are disjoint.  Also coalesce SUB and SUP elements immediately containing SPAN elements into one.
+(defun coalesce-elements (html-source)
+  (if (consp html-source)
+    (let ((tag (first html-source))
+          (contents (mapcar #'coalesce-elements (rest html-source))))
+      (cond
+       ((and (consp tag)
+             (member (first tag) '(a span))
+             contents
+             (null (cdr contents))
+             (consp (car contents))
+             (let ((tag2 (caar contents)))
+               (and (consp tag2)
+                    (member (first tag2) '(a span))
+                    (not (eq tag tag2))
+                    (null (intersection (rest tag) (rest tag2) :key #'car)))))
+        (cons
+         (cons 'a
+               (if (eq (first tag) 'a)
+                 (append (rest tag) (rest (caar contents)))
+                 (append (rest (caar contents)) (rest tag))))
+         (cdar contents)))
+       ((and (member tag '(sub sup))
+             contents
+             (null (cdr contents))
+             (consp (car contents))
+             (consp (caar contents))
+             (eq (caaar contents) 'span))
+        (cons
+         (cons tag (rest (caar contents)))
+         (cdar contents)))
+       (t (cons tag contents))))
+    html-source))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; HTML MAPPINGS
 
@@ -388,30 +424,30 @@
     ((:left-triangle-bracket-10 1) (:script "document.write(U_lang)"))  ;#x2329
     ((:right-triangle-bracket-10 1) (:script "document.write(U_rang)")) ;#x232A
     
-    ((:alpha 1) (:symbol "a"))
-    ((:beta 1) (:symbol "b"))
-    ((:chi 1) (:symbol "c"))
-    ((:delta 1) (:symbol "d"))
-    ((:epsilon 1) (:symbol "e"))
-    ((:phi 1) (:symbol "f"))
-    ((:gamma 1) (:symbol "g"))
-    ((:eta 1) (:symbol "h"))
-    ((:iota 1) (:symbol "i"))
-    ((:kappa 1) (:symbol "k"))
-    ((:lambda 1) (:symbol "l"))
-    ((:mu 1) (:symbol "m"))
-    ((:nu 1) (:symbol "n"))
-    ((:omicron 1) (:symbol "o"))
-    ((:pi 1) (:symbol "p"))
-    ((:theta 1) (:symbol "q"))
-    ((:rho 1) (:symbol "r"))
-    ((:sigma 1) (:symbol "s"))
-    ((:tau 1) (:symbol "t"))
-    ((:upsilon 1) (:symbol "u"))
-    ((:omega 1) (:symbol "w"))
-    ((:xi 1) (:symbol "x"))
-    ((:psi 1) (:symbol "y"))
-    ((:zeta 1) (:symbol "z"))
+    ((:alpha 1) (:script "document.write(U_alpha)"))
+    ((:beta 1) (:script "document.write(U_beta)"))
+    ((:chi 1) (:script "document.write(U_chi)"))
+    ((:delta 1) (:script "document.write(U_delta)"))
+    ((:epsilon 1) (:script "document.write(U_epsilon)"))
+    ((:phi 1) (:script "document.write(U_phi)"))
+    ((:gamma 1) (:script "document.write(U_gamma)"))
+    ((:eta 1) (:script "document.write(U_eta)"))
+    ((:iota 1) (:script "document.write(U_iota)"))
+    ((:kappa 1) (:script "document.write(U_kappa)"))
+    ((:lambda 1) (:script "document.write(U_lambda)"))
+    ((:mu 1) (:script "document.write(U_mu)"))
+    ((:nu 1) (:script "document.write(U_nu)"))
+    ((:omicron 1) (:script "document.write(U_omicron)"))
+    ((:pi 1) (:script "document.write(U_pi)"))
+    ((:theta 1) (:script "document.write(U_theta)"))
+    ((:rho 1) (:script "document.write(U_rho)"))
+    ((:sigma 1) (:script "document.write(U_sigma)"))
+    ((:tau 1) (:script "document.write(U_tau)"))
+    ((:upsilon 1) (:script "document.write(U_upsilon)"))
+    ((:omega 1) (:script "document.write(U_omega)"))
+    ((:xi 1) (:script "document.write(U_xi)"))
+    ((:psi 1) (:script "document.write(U_psi)"))
+    ((:zeta 1) (:script "document.write(U_zeta)"))
     
     ;Block Styles
     (:body-text p)
@@ -434,7 +470,7 @@
     (:character-literal-control (span (class "control")))
     (:terminal (span (class "terminal")))
     (:terminal-keyword (code (class "terminal-keyword")))
-    (:nonterminal (var (class "nonterminal")))
+    (:nonterminal (span (class "nonterminal")))
     (:nonterminal-attribute (span (class "nonterminal-attribute")))
     (:nonterminal-argument (span (class "nonterminal-argument")))
     (:semantic-keyword (span (class "semantic-keyword")))
@@ -542,8 +578,9 @@
 ; Return the markup accumulated in the markup-stream after expanding all of its macros.
 ; The markup-stream is closed after this function is called.
 (defmethod markup-stream-output ((html-stream html-stream))
-  (unnest-html-source
-   (markup-env-expand (markup-stream-env html-stream) (markup-stream-unexpanded-output html-stream) '(:none :nowrap :wrap :nest))))
+  (coalesce-elements
+   (unnest-html-source
+    (markup-env-expand (markup-stream-env html-stream) (markup-stream-unexpanded-output html-stream) '(:none :nowrap :wrap :nest)))))
 
 
 
