@@ -25,17 +25,18 @@
 #include "CContextMenuAttachment.h"
 #include "Netscape_constants.h"
 
+#include "UGAColorRamp.h"
+
 
 #pragma mark -- CNavCenterSelectorPane methods --
 
-
-const RGBColor CNavCenterSelectorPane::mBGColor = { 0xDDDD, 0xDDDD, 0xDDDD };
 
 
 CNavCenterSelectorPane::CNavCenterSelectorPane( LStream* inStream )
 		: LView(inStream), LDragAndDrop ( GetMacPort(), this ),
 			mIsEmbedded(false), mHTPane(nil), mTooltipIndex(-1), mMouseIsInsidePane(false),
-			mImageMode(0L), mCellHeight(25), mCachedWorkspace(NULL)
+			mImageMode(0L), mCellHeight(25), mCachedWorkspace(NULL), mDropRow(LArray::index_Last),
+			mDropPreposition(kDropOn)
 {
 	// nothing else to do here.
 }
@@ -79,7 +80,7 @@ CNavCenterSelectorPane::DrawSelf()
 	
 	// erase the background
 	StColorState saved;
-	::RGBBackColor(&mBGColor);
+	::RGBBackColor(&UGAColorRamp::GetColor(colorRamp_Gray2));
 	::EraseRect(&cellBounds);
 	
 	// find the bounds of the first cell
@@ -327,10 +328,17 @@ CNavCenterSelectorPane :: EnterDropArea ( DragReference /* inDragRef */, Boolean
 // Reset our counter
 //
 void
-CNavCenterSelectorPane :: LeaveDropArea ( DragReference /* inDragRef */ )
+CNavCenterSelectorPane :: LeaveDropArea ( DragReference inDragRef )
 {
+	if ( mDropRow != LArray::index_Last )
+		DrawDividingLine ( mDropRow, mDropPreposition );
+		
 	mDragAndDropTickCount = 0L;
-
+	mDropRow = LArray::index_Last;
+	mDropPreposition = kDropOn;
+	
+	LDragAndDrop::LeaveDropArea ( inDragRef );
+	
 } // LeaveDropArea
 
 
@@ -357,13 +365,41 @@ CNavCenterSelectorPane :: InsideDropArea ( DragReference inDragRef )
 		::GetDragMouse(inDragRef, &mouseLoc, NULL);
 		::GlobalToLocal(&mouseLoc);
 
-		// if the user has dragged down into a place where there are no
-		// workspaces, don't do anything.
-		HT_View newSelection = FindSelectorForPoint(mouseLoc);
-		if ( !newSelection ) {
+		// find which view the user is hovering over and what part of the cell the mouse is in.
+		// If it is in the top or bottom regions, they want to do a drop to create a new workspace,
+		// so do the drop feedback. If they are hovering over the middle, then proceed with
+		// the pane switching behavior.
+		EDropLocation newDropPrep;
+		TableIndexT newDropRow;
+		HT_View newSelection = FindSelectorForPoint(mouseLoc, newDropPrep, newDropRow);
+		if ( newDropPrep != kDropOn ) {						// do drag feedback
+							
+			if ( newDropRow != mDropRow || newDropPrep != mDropPreposition ) {
+			
+				// erase old line
+				DrawDividingLine ( mDropRow, mDropPreposition );
+			
+				mDropRow = newDropRow;
+				mDropPreposition = newDropPrep;
+				
+				// draw new line
+				DrawDividingLine ( newDropRow, newDropPrep );
+			
+			} // if something has changed
+			
 			mDragAndDropTickCount = ::TickCount();		// see comment below
+			
+			// we don't want to continue through the rest of the routine because it is for
+			// switching views on the fly....
 			return;
-		}
+			
+		} // if mouse not over middle of cell
+		
+		// clear out any old divider lines now that we're dropping on and set d&d members
+		// for any drop on this workspace.
+		DrawDividingLine ( mDropRow, mDropPreposition );
+		mDropRow = newDropRow;
+		mDropPreposition = kDropOn;
 			
 		// if the user hasn't sat here long enough, don't do anything...
 		if ( ::TickCount() - mDragAndDropTickCount < kPaneSwitchDelay )
@@ -437,6 +473,34 @@ CNavCenterSelectorPane :: FindIndexForPoint ( const Point & inMouseLoc ) const
 
 
 //
+// FindIndexForPoint
+//
+// Used to tell not only which cell the user is hovering over, but also what part of that cell.
+// This info can be combined with drag feedback to allow for inserting before/after the cell the
+// mouse is over. The cell is divided horizontally into 3 parts, with the middle being the largest
+// area.
+//
+size_t
+CNavCenterSelectorPane :: FindIndexForPoint ( const Point & inMouseLoc, EDropLocation & outWhere ) const
+{
+	TableIndexT cell = inMouseLoc.v / mCellHeight;					// remember: 0-based
+	Uint32 distFromMouseToPrevCell = inMouseLoc.v % mCellHeight;
+	
+	// the cell is divided into 3 parts: 7 pixels at top & bottom, remaining space in the middle
+	const Uint8 kCellDividerSize = 7;
+	if ( distFromMouseToPrevCell <= kCellDividerSize )
+		outWhere = kDropBefore;
+	else if ( distFromMouseToPrevCell >= mCellHeight - kCellDividerSize )
+		outWhere = kDropAfter;
+	else
+		outWhere = kDropOn;
+
+	return cell;
+
+} // FindIndexForPoint
+
+
+//
 // FindSelectorForPoint
 //
 // Grabs the view where the user clicked from HT and returns it.
@@ -446,6 +510,31 @@ CNavCenterSelectorPane :: FindSelectorForPoint ( const Point & inMouseLoc ) cons
 {
 	return HT_GetNthView ( GetHTPane(), FindIndexForPoint(inMouseLoc) );
 	
+} // FindSelectorForPoint
+
+
+//
+// FindSelectorForPoint
+//
+// Returns the view, row#, and a relative indicator (before, after, middle) for where the
+// new workspace will be created if the drop is at the current mouse location.
+//
+HT_View
+CNavCenterSelectorPane :: FindSelectorForPoint ( const Point & inMouseLoc,
+													EDropLocation & outWhere,
+													TableIndexT & outRow ) const
+{
+	outRow = FindIndexForPoint ( inMouseLoc, outWhere );
+	
+	// If the row we've calculated is > then number of rows, the user has dragged below all the 
+	// existing workspaces, so translate this to a drop after the last row.
+	Uint32 numViews = HT_GetViewListCount(GetHTPane());
+	if ( outRow > numViews - 1 ) {
+		outRow = numViews - 1;
+		outWhere = kDropAfter;
+	}
+	return HT_GetNthView ( GetHTPane(), outRow );
+		
 } // FindSelectorForPoint
 
 
@@ -463,6 +552,44 @@ CNavCenterSelectorPane :: FindCommandStatus ( CommandT inCommand, Boolean &outEn
 	
 } // FindCommandStatus
 
+
+//
+// DrawDividingLine
+//
+// Draws a horizontal black line before or after the given row in the bar (or undraws if one
+// is already there) depending on the value of |inPrep|. Used during drag and drop for drop
+// feedback.
+//
+void
+CNavCenterSelectorPane :: DrawDividingLine( TableIndexT inRow, EDropLocation inPrep )
+{
+	if ( inRow == LArray::index_Last || inPrep == kDropOn )
+		return;
+		
+	Uint32 numItems = HT_GetViewListCount(GetHTPane());
+	if ( !numItems )			// don't draw anything if toolbar empty
+		return;
+	
+	// find the boundary of the line we are going to draw. This will be relative to
+	// the given row as specified (before or after) by inPrep.
+	Uint32 frameTop;
+	frameTop = inRow * mCellHeight;
+	if ( inPrep == kDropAfter )
+		frameTop += mCellHeight;
+	
+	// Focus the pane and get the table and cell frames.
+	if ( FocusDraw() ) {
+		StColorPenState	theDrawState;
+
+		// Setup the color and pen state then draw the line
+		::ForeColor( blackColor );
+		::PenMode( patXor );
+		::PenSize ( 2, 2 );
+		::MoveTo( 0, frameTop );
+		::LineTo( mFrameSize.width, frameTop );	
+	}
+
+} // DrawDividingLine
 
 #pragma mark --- struct SelectorData ---
 
@@ -534,7 +661,7 @@ TitleImage :: DrawInCurrentView( const Rect& inBounds, unsigned long inMode ) co
 {
 	StColorState saved;
 	
-	::RGBBackColor(&CNavCenterSelectorPane::mBGColor);
+	::RGBBackColor(&UGAColorRamp::GetColor(colorRamp_Gray2));
 	::EraseRect(&inBounds);
 	
 	Rect iconRect = inBounds;

@@ -118,10 +118,9 @@ public:
 	void SetActiveWorkspace ( HT_View inNewWorkspace ) ;
 	HT_View GetActiveWorkspace ( ) const { return mCachedWorkspace; }
 	
-	static const RGBColor mBGColor;
-	
 protected:
-
+	enum EDropLocation { kDropBefore, kDropOn, kDropAfter  } ;
+	
 		// PowerPlant overrides
 	virtual void DrawSelf();
 	virtual void ClickSelf( const SMouseDownEvent& );
@@ -134,7 +133,10 @@ protected:
 	
 		// click handling
 	size_t FindIndexForPoint ( const Point & inMouseLoc ) const;
+	size_t FindIndexForPoint ( const Point & inMouseLoc, EDropLocation & outWhere ) const ;
 	HT_View FindSelectorForPoint ( const Point & inMouseLoc ) const;
+	HT_View FindSelectorForPoint ( const Point & inMouseLoc, EDropLocation & outWhere,
+										TableIndexT & outRowBefore ) const;
 
 		// stuff for dynamic tooltips
 	virtual void FindTooltipForMouseLocation ( const EventRecord& inMacEvent, StringPtr outTip ) ;
@@ -146,14 +148,19 @@ protected:
 	virtual void	InsideDropArea ( DragReference inDragRef ) ;
 	virtual void	EnterDropArea ( DragReference inDragRef, Boolean inDragHasLeftSender ) ;
 	virtual void	LeaveDropArea ( DragReference inDragRef ) ;
+	virtual void DrawDividingLine( TableIndexT inRow, EDropLocation inPrep ) ;
 	
 	bool				mIsEmbedded;			// is this embedded in chrome or standalone window?
 	HT_Pane				mHTPane;
 	HT_View				mCachedWorkspace;		// which view is currently active?
 	short				mTooltipIndex;			// which item is mouse hovering over
 	bool				mMouseIsInsidePane;		// is the mouse in the pane?
-	Uint32				mDragAndDropTickCount;	// used only during d&d as a timer
 
+	Uint32				mDragAndDropTickCount;	// used only during d&d as a timer
+	TableIndexT			mDropRow;				// row mouse is over during a drop.
+												//	holds |LArray::index_Last| when invalid
+	EDropLocation		mDropPreposition;		// where does drop go, in relation to mDropRow?
+	
 	unsigned long		mImageMode;
 	size_t				mCellHeight;
 
