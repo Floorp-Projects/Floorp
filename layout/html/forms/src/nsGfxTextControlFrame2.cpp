@@ -74,12 +74,12 @@ static void RemoveNewlines(nsString &aString)
 
 
 
-class nsTextAreaSelectionImpl : public nsISelectionController
+class nsTextAreaSelectionImpl : public nsSupportsWeakReference, public nsISelectionController
 {
 public:
   NS_DECL_ISUPPORTS
 
-  nsTextAreaSelectionImpl(nsIFrameSelection *aSel){  NS_INIT_REFCNT(); mFrameSelection = aSel;}
+  nsTextAreaSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter);
   ~nsTextAreaSelectionImpl(){}
 
   
@@ -104,10 +104,30 @@ public:
   NS_IMETHOD SelectAll(void){return NS_OK;}
 private:
   nsCOMPtr<nsIFrameSelection> mFrameSelection;
+  nsCOMPtr<nsIContent>        mLimiter;
 };
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS1(nsTextAreaSelectionImpl, nsISelectionController)
+NS_IMPL_ISUPPORTS2(nsTextAreaSelectionImpl, nsISelectionController, nsISupportsWeakReference)
+
+
+
+// BEGIN nsTextAreaSelectionImpl
+
+nsTextAreaSelectionImpl::nsTextAreaSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter)
+{
+  NS_INIT_REFCNT();
+  if (aSel && aShell)
+  {
+    mFrameSelection = aSel;//we are the owner now!
+    nsCOMPtr<nsIFocusTracker> tracker = do_QueryInterface(aShell);
+    mLimiter = aLimiter;
+    mFrameSelection->Init(tracker, mLimiter);
+  }
+}
+
+// END   nsTextAreaSelectionImpl
+
 
 
 nsresult
@@ -208,20 +228,21 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       return rv;
     if (!mEditor) 
       return NS_ERROR_OUT_OF_MEMORY;
-//create selection
-    nsCOMPtr<nsIFrameSelection> frameSel;
-    rv = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
-                                                   NS_GET_IID(nsIFrameSelection),
-                                                   getter_AddRefs(frameSel));
-//create selection controller
-    nsTextAreaSelectionImpl * textSelImpl = new nsTextAreaSelectionImpl(frameSel);
-    mSelCon =  do_QueryInterface((nsISupports *)textSelImpl);//this will addref it once
 
 //get the presshell
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_FAILED(rv) || !shell)
       return rv?rv:NS_ERROR_FAILURE;
+//create selection
+    nsCOMPtr<nsIFrameSelection> frameSel;
+    rv = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
+                                                   NS_GET_IID(nsIFrameSelection),
+                                                   getter_AddRefs(frameSel));
+//create selection controller
+    nsTextAreaSelectionImpl * textSelImpl = new nsTextAreaSelectionImpl(frameSel,shell,content);
+    mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)textSelImpl);//this will addref it once
+
 //get the document
     nsCOMPtr<nsIDocument> doc;
     rv = shell->GetDocument(getter_AddRefs(doc));
@@ -240,7 +261,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
 
 //initialize the editor
-    mEditor->Init(domdoc, shell, mSelCon, 0);
+    mEditor->Init(domdoc, shell, mSelCon, editorFlags);
   }
   return NS_OK;
 }
@@ -258,16 +279,44 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
                                    availSize);
-
   kidReflowState.mComputedWidth = aReflowState.mComputedWidth;
   kidReflowState.mComputedHeight = aReflowState.mComputedHeight;
+
+
+  if (kidReflowState.mComputedWidth != NS_INTRINSICSIZE)
+      kidReflowState.mComputedWidth -= kidReflowState.mComputedBorderPadding.left + kidReflowState.mComputedBorderPadding.right;
+
+  if (kidReflowState.mComputedHeight != NS_INTRINSICSIZE)
+      kidReflowState.mComputedHeight -= kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom;
 
   if (aReflowState.reason == eReflowReason_Incremental)
   {
     if (aReflowState.reflowCommand) {
-       nsIFrame* incrementalChild = nsnull;
-       aReflowState.reflowCommand->GetNext(incrementalChild);
-       NS_ASSERTION(incrementalChild == child, "Child is not in our list!!");
+      nsIFrame* incrementalChild = nsnull;
+      aReflowState.reflowCommand->GetNext(incrementalChild);
+
+      NS_ASSERTION(incrementalChild == child || !incrementalChild, "Child is not in our list!!");
+
+      if (!incrementalChild) {
+        nsIFrame* target;
+        aReflowState.reflowCommand->GetTarget(target);
+        NS_ASSERTION(target == this, "Not our target!");
+
+        nsIReflowCommand::ReflowType  type;
+        aReflowState.reflowCommand->GetType(type);
+        switch (type) {
+          case nsIReflowCommand::StyleChanged:
+            kidReflowState.reason = eReflowReason_StyleChange;
+            kidReflowState.reflowCommand = nsnull;
+          break;
+          case nsIReflowCommand::ReflowDirty:
+            kidReflowState.reason = eReflowReason_Dirty;
+            kidReflowState.reflowCommand = nsnull;
+          break;
+          default:
+            NS_ERROR("Unknown incremental reflow type");
+        }
+      }
     }
   }
 
