@@ -38,6 +38,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderFactory.h"
 #include "nsIDocumentViewer.h"
 #include "nsIEnumerator.h"
 #include "nsIGenericFactory.h"
