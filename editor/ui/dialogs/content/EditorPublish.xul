@@ -30,6 +30,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPublish.dtd">
 
+
 <dialog title="&windowTitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()"
@@ -49,6 +50,14 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
 
+  <popupset id="tooltipSet">
+    <tooltip id="publishTooltip" noautohide="true">
+      <description width="200">
+        &siteNameTip.label;
+      </description>
+    </tooltip>
+  </popupset>
+
   <tabbox>
     <tabs flex="1">
       <tab id="PublishTab" oncommand="SelectPublishTab()" label="&publishTab.label;"/>
@@ -62,31 +71,36 @@
           <columns><column/><column/><column/></columns>
           <rows>
             <row align="center">
-              <label value="&siteList.label;"/>
+              <label value="&siteName.label;"
+                     accesskey="&siteNameList.accessKey;" control="SiteList"/>
               <!-- Contents filled in at runtime -->
               <menulist id="SiteList" 
                 style="min-width:18em; max-width:18em;" crop="right"
                 oncommand="SelectSiteList();"/>
               <hbox>
-                <button label="&newSiteButton.label;" oncommand="AddNewSite();"/>
+                <button label="&newSiteButton.label;"
+                        accesskey="&newSiteButton.accessKey;" oncommand="AddNewSite();"/>
                 <spacer flex="1"/>
               </hbox>
             </row>
             <spacer class="spacer"/>
             <row align="center">
-              <label value="&pageTitle.label;"/>
+              <label value="&pageTitle.label;"
+                     accesskey="&pageTitle.accessKey;" control="PageTitleInput"/>
               <textbox id="PageTitleInput" class="minWidth15"/>
               <label value="&pageTitleExample.label;"/>
             </row>
             <row align="center">
-              <label value="&filename.label;"/>
+              <label value="&filename.label;"
+                     accesskey="&filename.accessKey;" control="FilenameInput"/>
               <textbox id="FilenameInput" class="minWidth15"/>
               <label value="&filenameExample.label;"/>
             </row>
           </rows>
         </grid>
         <spacer class="spacer"/>
-        <label value="&docDirList.label;"/>
+        <label value="&docDirList.label;"
+               accesskey="&docDirList.accessKey;" control="DocDirList"/>
         <hbox align="center">
           <!-- Contents filled in at runtime -->
           <menulist id="DocDirList" class="minWidth20" editable="true"  flex="1"
@@ -98,17 +112,20 @@
         <spacer class="spacer"/>
         <groupbox>
           <caption>
-            <checkbox id="OtherDirCheckbox" label="&publishImgCheckbox.label;" oncommand="doEnabling();"/>
+            <checkbox id="OtherDirCheckbox" label="&publishImgCheckbox.label;"
+                      accesskey="&publishImgCheckbox.accessKey;" oncommand="doEnabling();"/>
           </caption>
           <vbox>
           <radiogroup id="OtherDirRadiogroup">
             <hbox>
               <spacer class="checkbox-spacer"/>
-              <radio id="SameLocationRadio" label="&sameLocationRadio.label;" oncommand="doEnabling();"/>
+              <radio id="SameLocationRadio" label="&sameLocationRadio.label;"
+                     accesskey="&sameLocationRadio.accessKey;" oncommand="doEnabling();"/>
             </hbox>
             <hbox>
               <spacer class="checkbox-spacer"/>
-              <radio id="UseSubdirRadio" label="&useSubdirRadio.label;" oncommand="doEnabling();"/>
+              <radio id="UseSubdirRadio" label="&useSubdirRadio.label;"
+                     accesskey="&useSubdirRadio.accessKey;" oncommand="doEnabling();"/>
             </hbox>
           </radiogroup>
           </vbox>
@@ -119,7 +136,8 @@
             <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
                       oninput="onInputSettings();"/>
 <!-- 
-            <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
+            <button label="&chooseDirButton.label;"
+                    accesskey="&chooseDirButton.accessKey;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
 -->
           </hbox>
         </groupbox>

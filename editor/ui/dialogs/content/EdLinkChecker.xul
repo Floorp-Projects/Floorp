@@ -19,6 +19,7 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
+   -   Charles Manske (cmanske@netscape.com)
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
@@ -44,16 +45,15 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
 
-  <label value="&urlsNotFound.label;"/>
-  <label value="&notFoundKey.label;"/>
-  <tree id="NamedAnchorList" hidecolumnpicker="true"
-        style="min-height: 8em; min-width: 20em">
-    <treecols>
-      <treecol id="AnchorCol1" hideheader="true"/>
-      <treecol id="AnchorCol2" flex="1" hideheader="true"/>
-    </treecols>
-    <treechildren/>
-  </tree>
-  <spacer class="spacer"/>
-  <button id="ChangeURL" label="&changeUrlButton.label;" oncommand="ChangeUrl();"/>
+  <listbox rows="8" id="LinksList" class="MinWidth20" flex="1"/>
+  <hbox align="center">
+    <spacer class="bigspacer"/>
+    <image class="progressitem" progress="done"/>
+    <label value="&succeeded.label;"/>
+    <spacer class="bigspacer"/>
+    <spacer class="bigspacer"/>
+    <image class="progressitem" progress="failed"/>
+    <label value="&failed.label;"/>
+  </hbox>
+  <separator class="groove"/>
 </dialog>

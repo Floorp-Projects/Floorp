@@ -42,6 +42,9 @@
 
   <broadcaster id="args" value=""/>
 
+  <stringbundle id="languageBundle" src="chrome://global/locale/languageNames.properties"/>
+  <stringbundle id="regionBundle" src="chrome://global/locale/regionNames.properties"/>
+
   <grid>
     <columns>
       <column class="spell-check"/>
