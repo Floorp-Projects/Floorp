@@ -87,7 +87,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	if (aClass.Equals(kLocaleFactoryCID))
 	{
 		factoryInstance = new nsLocaleFactory();
-		res = factoryInstance->QueryInterface(kILocaleFactoryIID, (void **) aFactory);
+		res = CallQueryInterface(factoryInstance, aFactory);
 
 		if (NS_FAILED(res))
 		{
@@ -100,7 +100,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 
 	if (aClass.Equals(kLocaleServiceCID)) {
 		factoryInstance = new nsLocaleServiceFactory();
-		res = factoryInstance->QueryInterface(kIFactoryIID,(void**)aFactory);
+		res = CallQueryInterface(factoryInstance, aFactory);
 		if (NS_FAILED(res)) { *aFactory=NULL; delete factoryInstance; }
 		return res;
 	}
@@ -110,7 +110,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	if (aClass.Equals(kWin32LocaleFactoryCID))
 	{
 		factoryInstance = new nsIWin32LocaleFactory();
-		res = factoryInstance->QueryInterface(kIFactoryIID,(void**)aFactory);
+		res = CallQueryInterface(factoryInstance, aFactory);
 		if (NS_FAILED(res))
 		{
 			*aFactory=NULL;
@@ -129,7 +129,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 		return NS_ERROR_OUT_OF_MEMORY;  
 	}
 
-	res = factoryInstance->QueryInterface(kIFactoryIID, (void**)aFactory);
+	res = CallQueryInterface(factoryInstance, aFactory);
 	if (NS_FAILED(res))
 	{
 		*aFactory = NULL;
