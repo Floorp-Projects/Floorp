@@ -50,6 +50,12 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute wstring prettyName;
 
   /**
+  * helper function to construct the pretty name in a server type
+  * specific way - e.g., mail for foo@test.com, news on news.mozilla.org
+  */
+  readonly attribute wstring constructedPrettyName;
+
+  /**
    * hostname of the server
    */
   attribute string hostName;

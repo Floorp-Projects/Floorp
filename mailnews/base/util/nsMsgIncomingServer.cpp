@@ -506,30 +506,11 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
   nsresult rv = GetUnicharValue("name", getter_Copies(val));
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString prettyName(val);
-  
   // if there's no name, then just return the hostname
-  if (prettyName.IsEmpty()) {
-    
-    nsXPIDLCString username;
-    rv = GetUsername(getter_Copies(username));
-    if (NS_FAILED(rv)) return rv;
-    if ((const char*)username &&
-        PL_strcmp((const char*)username, "")!=0) {
-      prettyName.AssignWithConversion(username);
-      prettyName.AppendWithConversion(" on ");
-    }
-    
-    nsXPIDLCString hostname;
-    rv = GetHostName(getter_Copies(hostname));
-    if (NS_FAILED(rv)) return rv;
-
-
-    prettyName.AppendWithConversion(hostname);
-  }
-
-  *retval = prettyName.ToNewUnicode();
-  
+  if (nsCRT::strlen(val) == 0) 
+    return GetConstructedPrettyName(retval);
+  else
+    *retval = nsCRT::strdup(val);
   return NS_OK;
 }
 
@@ -545,6 +526,35 @@ nsMsgIncomingServer::SetPrettyName(const PRUnichar *value)
         rootFolder->SetPrettyName(value);
 
     return NS_OK;
+}
+
+
+// construct the pretty name to show to the user if they haven't
+// specified one. This should be overridden for news and mail.
+NS_IMETHODIMP
+nsMsgIncomingServer::GetConstructedPrettyName(PRUnichar **retval) 
+{
+    
+  nsXPIDLCString username;
+  nsAutoString prettyName;
+  nsresult rv = GetUsername(getter_Copies(username));
+  if (NS_FAILED(rv)) return rv;
+  if ((const char*)username &&
+      PL_strcmp((const char*)username, "")!=0) {
+    prettyName.AssignWithConversion(username);
+    prettyName.AppendWithConversion(" on ");
+  }
+  
+  nsXPIDLCString hostname;
+  rv = GetHostName(getter_Copies(hostname));
+  if (NS_FAILED(rv)) return rv;
+
+
+  prettyName.AppendWithConversion(hostname);
+
+  *retval = prettyName.ToNewUnicode();
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -33,6 +33,8 @@
 
 #include "nsIMAPHostSessionList.h"
 #include "nsImapIncomingServer.h"
+#include "nsIMsgAccountManager.h"
+#include "nsIMsgIdentity.h"
 #include "nsIImapUrl.h"
 #include "nsIUrlListener.h"
 #include "nsIEventQueue.h"
@@ -158,6 +160,73 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
                                                kOtherUsersNamespace);
   return rv;
 }
+
+// construct the pretty name to show to the user if they haven't
+// specified one. This should be overridden for news and mail.
+NS_IMETHODIMP
+nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval) 
+{
+    
+  nsXPIDLCString username;
+  nsXPIDLCString hostName;
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISupportsArray> identities;
+  rv = accountManager->GetIdentitiesForServer(this,
+                                              getter_AddRefs(identities));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMsgIdentity> identity;
+
+  rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
+                                  (void **)getter_AddRefs(identity));
+
+  nsAutoString emailAddress;
+
+  if (NS_SUCCEEDED(rv) && identity)
+  {
+    nsXPIDLCString identityEmailAddress;
+    identity->GetEmail(getter_Copies(identityEmailAddress));
+    emailAddress.AssignWithConversion(identityEmailAddress);
+  }
+  else
+  {
+    rv = GetUsername(getter_Copies(username));
+    if (NS_FAILED(rv)) return rv;
+    rv = GetHostName(getter_Copies(hostName));
+    if (NS_FAILED(rv)) return rv;
+    if ((const char*)username && (const char *) hostName &&
+        PL_strcmp((const char*)username, "")!=0) {
+      emailAddress.AssignWithConversion(username);
+      emailAddress.AppendWithConversion("@");
+      emailAddress.AppendWithConversion(hostName);
+
+    }
+  }
+  rv = GetStringBundle();
+	if (m_stringBundle)
+  {
+    nsXPIDLString prettyName;
+    const PRUnichar *formatStrings[] =
+    {
+        emailAddress.GetUnicode(),
+    };
+    rv = m_stringBundle->FormatStringFromID(IMAP_DEFAULT_ACCOUNT_NAME,
+                                    formatStrings, 1,
+                                    getter_Copies(prettyName));
+    *retval = nsCRT::strdup(prettyName);
+    return NS_OK;
+  }
+  else
+    return rv;
+}
+
 
 NS_IMETHODIMP nsImapIncomingServer::GetLocalStoreType(char ** type)
 {
@@ -1488,11 +1557,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define IMAP_MSGS_URL       "chrome://messenger/locale/imapMsgs.properties"
 
-NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
+nsresult nsImapIncomingServer::GetStringBundle()
 {
-	nsAutoString	resultString; resultString.AssignWithConversion("???");
-	nsresult res = NS_OK;
-
+  nsresult res;
 	if (!m_stringBundle)
 	{
 		char*       propertyURL = NULL;
@@ -1507,6 +1574,15 @@ NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar
 			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
 		}
 	}
+  return (m_stringBundle) ? NS_OK : res;
+}
+
+NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
+{
+	nsAutoString	resultString; resultString.AssignWithConversion("???");
+	nsresult res = NS_OK;
+
+  GetStringBundle();
 	if (m_stringBundle)
 	{
 		PRUnichar *ptrv = nsnull;

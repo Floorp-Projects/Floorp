@@ -61,6 +61,7 @@ public:
 	NS_IMETHOD PerformBiff();
 	NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
 	NS_IMETHOD CloseCachedConnections();
+  NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
@@ -72,6 +73,7 @@ protected:
 	PRBool NoDescendentsAreVerified(nsIFolder *parentFolder);
 	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
 
+  nsresult GetStringBundle();
 private:
 	nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
   nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
