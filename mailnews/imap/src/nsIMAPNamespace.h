@@ -56,7 +56,7 @@ public:
 
 	static nsIMAPNamespaceList *CreatensIMAPNamespaceList();
 
-	void ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBool deleteServerAdvertisedNamespaces);
+	void ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBool deleteServerAdvertisedNamespaces, PRBool reallyDelete);
 	int	GetNumberOfNamespaces();
 	int	GetNumberOfNamespaces(EIMAPNamespaceType);
 	nsIMAPNamespace *GetNamespaceNumber(int nodeIndex);

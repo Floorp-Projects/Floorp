@@ -30,17 +30,18 @@ class nsIMAPHostInfo
 public:
 	friend class nsIMAPHostSessionList;
 
-	nsIMAPHostInfo(const char *hostName);
+	nsIMAPHostInfo(const char *hostName, const char *userName);
 	~nsIMAPHostInfo();
 protected:
 	char			*fHostName;
+	char			*fUserName;
 	char			*fCachedPassword;
 	nsIMAPHostInfo	*fNextHost;
 	PRUint32		fCapabilityFlags;
 	char			*fHierarchyDelimiters;	// string of top-level hierarchy delimiters
 	PRBool			fHaveWeEverDiscoveredFolders;
 	char			*fCanonicalOnlineSubDir;
-	nsIMAPNamespaceList			*fNamespaceList;
+	nsIMAPNamespaceList			*fNamespaceList, *fTempNamespaceList;
 	PRBool			fNamespacesOverridable;
 	PRBool			fUsingSubscription;
 	PRBool			fOnlineTrashFolderExists;
@@ -60,64 +61,64 @@ public:
 	nsIMAPHostSessionList();
 	virtual ~nsIMAPHostSessionList();
 	// Host List
-	 NS_IMETHOD	AddHostToList(const char *hostName);
+	 NS_IMETHOD	AddHostToList(const char *hostName, const char *userName);
 	 NS_IMETHOD ResetAll();
 
 	// Capabilities
-	 NS_IMETHOD	GetCapabilityForHost(const char *hostName, PRUint32 &result);
-	 NS_IMETHOD	SetCapabilityForHost(const char *hostName, PRUint32 capability);
-	 NS_IMETHOD	GetHostHasAdminURL(const char *hostName, PRBool &result);
-	 NS_IMETHOD	SetHostHasAdminURL(const char *hostName, PRBool hasAdminUrl);
+	 NS_IMETHOD	GetCapabilityForHost(const char *hostName, const char *userName, PRUint32 &result);
+	 NS_IMETHOD	SetCapabilityForHost(const char *hostName, const char *userName, PRUint32 capability);
+	 NS_IMETHOD	GetHostHasAdminURL(const char *hostName, const char *userName, PRBool &result);
+	 NS_IMETHOD	SetHostHasAdminURL(const char *hostName, const char *userName, PRBool hasAdminUrl);
 	// Subscription
-	 NS_IMETHOD	GetHostIsUsingSubscription(const char *hostName, PRBool &result);
-	 NS_IMETHOD	SetHostIsUsingSubscription(const char *hostName, PRBool usingSubscription);
+	 NS_IMETHOD	GetHostIsUsingSubscription(const char *hostName, const char *userName, PRBool &result);
+	 NS_IMETHOD	SetHostIsUsingSubscription(const char *hostName, const char *userName, PRBool usingSubscription);
 
 	// Passwords
-	 NS_IMETHOD	GetPasswordForHost(const char *hostName, nsString &result);
-	 NS_IMETHOD	SetPasswordForHost(const char *hostName, const char *password);
-	 NS_IMETHOD GetPasswordVerifiedOnline(const char *hostName, PRBool &result);
-	 NS_IMETHOD	SetPasswordVerifiedOnline(const char *hostName);
+	 NS_IMETHOD	GetPasswordForHost(const char *hostName, const char *userName, nsString &result);
+	 NS_IMETHOD	SetPasswordForHost(const char *hostName, const char *userName, const char *password);
+	 NS_IMETHOD GetPasswordVerifiedOnline(const char *hostName, const char *userName, PRBool &result);
+	 NS_IMETHOD	SetPasswordVerifiedOnline(const char *hostName, const char *userName);
 
 	// Folders
-	 NS_IMETHOD	SetHaveWeEverDiscoveredFoldersForHost(const char *hostName, PRBool discovered);
-	 NS_IMETHOD	GetHaveWeEverDiscoveredFoldersForHost(const char *hostName, PRBool &result);
+	 NS_IMETHOD	SetHaveWeEverDiscoveredFoldersForHost(const char *hostName, const char *userName, PRBool discovered);
+	 NS_IMETHOD	GetHaveWeEverDiscoveredFoldersForHost(const char *hostName, const char *userName, PRBool &result);
 
 	// Trash Folder
-	 NS_IMETHOD	SetOnlineTrashFolderExistsForHost(const char *hostName, PRBool exists);
-	 NS_IMETHOD	GetOnlineTrashFolderExistsForHost(const char *hostName, PRBool &result);
+	 NS_IMETHOD	SetOnlineTrashFolderExistsForHost(const char *hostName, const char *userName, PRBool exists);
+	 NS_IMETHOD	GetOnlineTrashFolderExistsForHost(const char *hostName, const char *userName, PRBool &result);
 	
 	// INBOX
-	 NS_IMETHOD		GetOnlineInboxPathForHost(const char *hostName, nsString &result);
-	 NS_IMETHOD		GetShouldAlwaysListInboxForHost(const char *hostName, PRBool &result);
-	 NS_IMETHOD		SetShouldAlwaysListInboxForHost(const char *hostName, PRBool shouldList);
+	 NS_IMETHOD		GetOnlineInboxPathForHost(const char *hostName, const char *userName, nsString &result);
+	 NS_IMETHOD		GetShouldAlwaysListInboxForHost(const char *hostName, const char *userName, PRBool &result);
+	 NS_IMETHOD		SetShouldAlwaysListInboxForHost(const char *hostName, const char *userName, PRBool shouldList);
 
 	// Namespaces
-	 NS_IMETHOD		GetNamespaceForMailboxForHost(const char *hostName, const char *mailbox_name, nsIMAPNamespace &result);
-	 NS_IMETHOD		AddNewNamespaceForHost(const char *hostName, nsIMAPNamespace *ns);
-	 NS_IMETHOD		ClearServerAdvertisedNamespacesForHost(const char *hostName);
-	 NS_IMETHOD		ClearPrefsNamespacesForHost(const char *hostName);
-	 NS_IMETHOD		GetDefaultNamespaceOfTypeForHost(const char *hostName, EIMAPNamespaceType type, nsIMAPNamespace &result);
-	 NS_IMETHOD		SetNamespacesOverridableForHost(const char *hostName, PRBool overridable);
-	 NS_IMETHOD		GetNamespacesOverridableForHost(const char *hostName,PRBool &result);
-	 NS_IMETHOD		GetNumberOfNamespacesForHost(const char *hostName, PRUint32 &result);
-	 NS_IMETHOD		GetNamespaceNumberForHost(const char *hostName, PRInt32 n, nsIMAPNamespace &result);
+	 NS_IMETHOD		GetNamespaceForMailboxForHost(const char *hostName, const char *userName, const char *mailbox_name, nsIMAPNamespace *&result);
+	 NS_IMETHOD		AddNewNamespaceForHost(const char *hostName, const char *userName, nsIMAPNamespace *ns);
+	 NS_IMETHOD		ClearServerAdvertisedNamespacesForHost(const char *hostName, const char *userName);
+	 NS_IMETHOD		ClearPrefsNamespacesForHost(const char *hostName, const char *userName);
+	 NS_IMETHOD		GetDefaultNamespaceOfTypeForHost(const char *hostName, const char *userName, EIMAPNamespaceType type, nsIMAPNamespace *&result);
+	 NS_IMETHOD		SetNamespacesOverridableForHost(const char *hostName, const char *userName, PRBool overridable);
+	 NS_IMETHOD		GetNamespacesOverridableForHost(const char *hostName, const char *userName,PRBool &result);
+	 NS_IMETHOD		GetNumberOfNamespacesForHost(const char *hostName, const char *userName, PRUint32 &result);
+	 NS_IMETHOD		GetNamespaceNumberForHost(const char *hostName, const char *userName, PRInt32 n, nsIMAPNamespace * &result);
 	 // ### dmb hoo boy, how are we going to do this?
-	 // NS_IMETHOD		CommitNamespacesForHost(const char *hostName, MSG_Master *master);
-
+	 NS_IMETHOD		CommitNamespacesForHost(const char *hostName, const char *userName);
+	 NS_IMETHOD		FlushUncommittedNamespacesForHost(const char *hostName, const char *userName, PRBool &result);
 
 	// Hierarchy Delimiters
-	 NS_IMETHOD		AddHierarchyDelimiter(const char *hostName, char delimiter);
-	 NS_IMETHOD		GetHierarchyDelimiterStringForHost(const char *hostName, nsString &result);
-	 NS_IMETHOD		SetNamespaceHierarchyDelimiterFromMailboxForHost(const char *hostName, const char *boxName, char delimiter);
+	 NS_IMETHOD		AddHierarchyDelimiter(const char *hostName, const char *userName, char delimiter);
+	 NS_IMETHOD		GetHierarchyDelimiterStringForHost(const char *hostName, const char *userName, nsString &result);
+	 NS_IMETHOD		SetNamespaceHierarchyDelimiterFromMailboxForHost(const char *hostName, const char *userName, const char *boxName, char delimiter);
 
 	// Message Body Shells
-	 NS_IMETHOD		AddShellToCacheForHost(const char *hostName, nsIMAPBodyShell *shell);
-	 NS_IMETHOD		FindShellInCacheForHost(const char *hostName, const char *mailboxName, const char *UID, nsIMAPBodyShell	&result);
+	 NS_IMETHOD		AddShellToCacheForHost(const char *hostName, const char *userName, nsIMAPBodyShell *shell);
+	 NS_IMETHOD		FindShellInCacheForHost(const char *hostName, const char *userName, const char *mailboxName, const char *UID, nsIMAPBodyShell	&result);
 
 	PRMonitor		*gCachedHostInfoMonitor;
 	nsIMAPHostInfo	*fHostInfoList;
 protected:
-	nsIMAPHostInfo *FindHost(const char *hostName);
+	nsIMAPHostInfo *FindHost(const char *hostName, const char *userName);
 };
 
 #endif

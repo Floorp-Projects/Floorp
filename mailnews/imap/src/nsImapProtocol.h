@@ -139,6 +139,7 @@ public:
 	void ShowProgress() {}
 	void ProgressEventFunctionUsingId(PRUint32 aMsgId) {}
 	void ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const char * aExtraInfo) {}
+	void PercentProgressUpdateEvent(char *message, PRInt32 percent);
 
 	// utility function calls made by the server
 	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool aConvertToUtf7Imap) { return nsnull;}

@@ -671,6 +671,70 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(const char **result) const
 
 }
 
+NS_IMETHODIMP nsImapUrl::AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const
+{
+	NS_LOCK_INSTANCE();
+#if 0 // here's the old code.
+	char delimiterToUse = onlineDelimiter;
+	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown ||
+		onlineDelimiter == 0)
+		delimiterToUse = GetOnlineSubDirSeparator();
+
+	XP_ASSERT(serverPath);
+	if (!serverPath)
+		return NULL;
+
+	// First we have to check to see if we should strip off an online server subdirectory
+	// If this host has an online server directory configured
+	char *currentPath = (char *) serverPath;
+	char *onlineDir = TIMAPHostInfo::GetOnlineDirForHost(GetUrlHost());
+	if (currentPath && onlineDir)
+	{
+#ifdef DEBUG
+		// This invariant should be maintained by libmsg when reading/writing the prefs.
+		// We are only supporting online directories whose online delimiter is /
+		// Therefore, the online directory must end in a slash.
+		XP_ASSERT(onlineDir[XP_STRLEN(onlineDir) - 1] == '/');
+#endif
+
+		// By definition, the online dir must be at the root.
+		int len = XP_STRLEN(onlineDir);
+		if (!XP_STRNCMP(onlineDir, currentPath, len))
+		{
+			// This online path begins with the server sub directory
+			currentPath += len;
+
+			// This might occur, but it's most likely something not good.
+			// Basically, it means we're doing something on the online sub directory itself.
+			XP_ASSERT(*currentPath);
+			// Also make sure that the first character in the mailbox name is not '/'.
+			XP_ASSERT(*currentPath != '/');
+		}
+	}
+
+	if (!currentPath)
+		return NULL;
+
+	// Now, start the conversion to canonical form.
+	char *canonicalPath = ReplaceCharsInCopiedString(currentPath, delimiterToUse , '/');
+	
+	// eat any escape characters for escaped dir separators
+	if (canonicalPath)
+	{
+		char *currentEscapeSequence = XP_STRSTR(canonicalPath, "\\/");
+		while (currentEscapeSequence)
+		{
+			XP_STRCPY(currentEscapeSequence, currentEscapeSequence+1);
+			currentEscapeSequence = XP_STRSTR(currentEscapeSequence+1, "\\/");
+		}
+	}
+
+	return canonicalPath;
+#endif // 0
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // End of functions which should be made obsolete after modifying nsIURL
 ////////////////////////////////////////////////////////////////////////////////////

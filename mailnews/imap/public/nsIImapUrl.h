@@ -108,6 +108,9 @@ public:
 
 	NS_IMETHOD GetImapAction(nsImapAction * aImapAction) = 0;
 	NS_IMETHOD SetImapAction(nsImapAction aImapAction) = 0;
+
+	NS_IMETHOD GetImapPartToFetch(const char **resultPart) const = 0;
+	NS_IMETHOD AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const = 0;
 };
 
 #endif /* nsIImapUrl_h___ */

@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"  // for pre-compiled headers
+#include "net.h" /* should be defined into msgCore.h? - need MESSAGE_RFC822 */
 
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"
@@ -42,7 +43,6 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
 	fSelectedMailboxName(nil),
 	fFlagState(nil),
 	fCurrentLineContainedFlagInfo(PR_FALSE),
-	fZeroLengthMessageUidString(nil),
 	fReportingErrors(PR_TRUE),
 	fLastChunk(PR_FALSE),
 	fServerIsNetscape3xServer(PR_FALSE),
@@ -66,7 +66,6 @@ nsImapServerResponseParser::~nsImapServerResponseParser()
 	PR_FREEIF( fCurrentCommandTag );
 	//delete fFlagState;	// not our object
 	delete fSearchResults; 
-	PR_FREEIF( fZeroLengthMessageUidString );
 	PR_FREEIF( fMailAccountUrl );
 	PR_FREEIF( fFolderAdminUrl );
 	PR_FREEIF( fNetscapeServerVersionString );
@@ -243,7 +242,7 @@ void nsImapServerResponseParser::HandleMemoryFailure()
 #ifdef DEBUG_chrisf
 	XP_ASSERT(PR_FALSE);
 #endif
-	fServerConnection.AlertUserEvent(XP_GetString(kImapOutOfMemory));
+	fServerConnection.AlertUserEventUsingId(kImapOutOfMemory);
 	nsIMAPGenericParser::HandleMemoryFailure();
 }
 
@@ -368,15 +367,14 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 	}
 	else if (!PL_strcasecmp(commandToken, "FETCH"))
 	{
-		if (fZeroLengthMessageUidString)
+		if (fZeroLengthMessageUidString.Length())
 		{
 			// "Deleting zero length message");
-			fServerConnection.Store(fZeroLengthMessageUidString, "+Flags (\\Deleted)", PR_TRUE);
+			fServerConnection.Store(fZeroLengthMessageUidString.GetBuffer(), "+Flags (\\Deleted)", PR_TRUE);
 			if (LastCommandSuccessful())
 				fServerConnection.Expunge();
 
-			PR_FREEIF( fZeroLengthMessageUidString );
-			fZeroLengthMessageUidString = nil;
+			fZeroLengthMessageUidString.Truncate();
 		}
 	}
 	if (GetFillingInShell())
@@ -386,9 +384,12 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 		if (!m_shell->IsBeingGenerated())
 		{
 			nsImapProtocol *navCon = &fServerConnection;
-			NS_ASSERTION(navCon, "no connection for imap parser");	// we should always have this
 
-			m_shell->Generate(navCon ? navCon->GetCurrentUrl()->GetImapPartToFetch() : (char *)nsnull);
+			char *imapPart = nsnull;
+
+			fServerConnection.GetCurrentUrl()->GetImapPartToFetch(&imapPart);
+			m_shell->Generate(imapPart);
+			PR_FREEIF(imapPart);
 
 			if ((navCon && navCon->GetPseudoInterrupted())
 				|| fServerConnection.DeathSignalReceived())
@@ -408,7 +409,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 				if (!m_shell->IsShellCached())	// cache is responsible for destroying it
 				{
 					PR_LOG(IMAP, PR_LOG_ALWAYS, ("BODYSHELL:  Adding shell to cache."));
-					GetHostSessionList()->AddShellToCacheForHost(fServerConnection.GetHostName(), m_shell);
+					GetHostSessionList()->AddShellToCacheForHost(fServerConnection.GetHostName(), nsnull /* userName */, m_shell);
 				}
 			}
 			else
@@ -798,10 +799,11 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
     if (boxname)
     {
 		// should the namespace check go before or after the Utf7 conversion?
-		GetHostSessionList()->SetNamespaceHierarchyDelimiterFromMailboxForHost(fServerConnection.GetHostName(), boxname, boxSpec->hierarchySeparator);
+		GetHostSessionList()->SetNamespaceHierarchyDelimiterFromMailboxForHost(fServerConnection.GetHostName(), nsnull /* userName */, boxname, boxSpec->hierarchySeparator);
 
 		
-		nsIMAPNamespace *ns = GetHostSessionList()->GetNamespaceForMailboxForHost(fServerConnection.GetHostName(),boxname);
+		nsIMAPNamespace *ns = nsnull;
+		GetHostSessionList()->GetNamespaceForMailboxForHost(fServerConnection.GetHostName(), nsnull /* userName */,boxname, ns);
 		if (ns)
 		{
 			switch (ns->GetType())
@@ -837,7 +839,7 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 		NS_ASSERTION(boxSpec->connection->GetCurrentUrl(), "box spec has connection with null url");
 		//boxSpec->hostName = nsnull;
 		//if (boxSpec->connection && boxSpec->connection->GetCurrentUrl())
-		boxSpec->allocatedPathName = boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator);
+		boxSpec->connection->GetCurrentUrl()->AllocateCannonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
 		boxSpec->connection->GetCurrentUrl()->GetHost(&boxSpec->hostName);
 		PR_FREEIF( boxname);
 		// storage for the boxSpec is now owned by server connection
@@ -1069,12 +1071,12 @@ void nsImapServerResponseParser::msg_fetch()
 					char uidString[100];
 					sprintf(uidString, "%ld", (long)CurrentResponseUID());
 					
-					if (!fZeroLengthMessageUidString)
-						fZeroLengthMessageUidString = PL_strdup(uidString);
+					if (!fZeroLengthMessageUidString.Length())
+						fZeroLengthMessageUidString = uidString;
 					else
 					{
-						StrAllocCat(fZeroLengthMessageUidString, ",");
-						StrAllocCat(fZeroLengthMessageUidString, uidString);
+						fZeroLengthMessageUidString += ",";
+						fZeroLengthMessageUidString += uidString;
 					}
 				}
 				
@@ -1629,7 +1631,7 @@ void nsImapServerResponseParser::capability_data()
 			 !at_end_of_line() &&
 			 ContinueParse());
 
-	GetHostSessionList()->SetCapabilityForHost(fServerConnection.GetHostName(), fCapabilityFlag);
+	GetHostSessionList()->SetCapabilityForHost(fServerConnection.GetHostName(), nsnull /* userName */, fCapabilityFlag);
 	nsImapProtocol *navCon = &fServerConnection;
 	NS_ASSERTION(navCon, "null imap protocol connection while parsing capability response");	// we should always have this
 	if (navCon)
@@ -1747,7 +1749,7 @@ void nsImapServerResponseParser::namespace_data()
 						nsIMAPNamespace *newNamespace = new nsIMAPNamespace(namespaceType, namespacePrefix, namespaceDelimiter, PR_FALSE);
 						// add it to a temporary list in the host
 						if (newNamespace)
-							GetHostSessionList()->AddNewUncommittedNamespaceForHost(fServerConnection.GetHostName(), newNamespace);
+							GetHostSessionList()->AddNewNamespaceForHost(fServerConnection.GetHostName(), nsnull /* userName */, newNamespace);
 
 						skip_to_close_paren();	// Ignore any extension data
 	
@@ -1791,7 +1793,10 @@ void nsImapServerResponseParser::namespace_data()
 	skip_to_CRLF();
 
 	if (!namespacesCommitted)
-		GetHostSessionList()->FlushUncommittedNamespacesForHost(fServerConnection.GetHostName());
+	{
+		PRBool success;
+		GetHostSessionList()->FlushUncommittedNamespacesForHost(fServerConnection.GetHostName(), nsnull /* userName */, success);
+	}
 
 }
 
@@ -2011,7 +2016,7 @@ void	nsImapServerResponseParser::UseCachedShell(nsIMAPBodyShell *cachedShell)
 
 void nsImapServerResponseParser::ResetCapabilityFlag() 
 {
-	nsGetHostSessionList()->SetCapabilityForHost(fServerConnection.GetHostName(), kCapabilityUndefined); 
+	GetHostSessionList()->SetCapabilityForHost(fServerConnection.GetHostName(), nsnull /* userName */, kCapabilityUndefined); 
 }
 
 /*
@@ -2051,8 +2056,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 		{
 			if (lastCRLFwasCRCRLF && (*fCurrentLine == CR))
 			{
-				char *usableCurrentLine = 0;
-				StrAllocCopy(usableCurrentLine, fCurrentLine + 1);
+				char *usableCurrentLine = PL_strdup(fCurrentLine + 1);
 				PR_FREEIF(fCurrentLine);
 				if (usableCurrentLine)
 					fCurrentLine = usableCurrentLine;
@@ -2166,14 +2170,22 @@ PRBool nsImapServerResponseParser::IsNumericString(const char *string)
 
 struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const char *mailboxName /* = nsnull */)
 {
-	mailbox_spec *returnSpec = (mailbox_spec *) XP_CALLOC(1, sizeof(mailbox_spec) );
+	mailbox_spec *returnSpec = (mailbox_spec *) PR_Calloc(1, sizeof(mailbox_spec) );
 	if (returnSpec)
 	{	
 		char *convertedMailboxName = nsnull;
 		const char *mailboxNameToConvert = (mailboxName) ? mailboxName : fSelectedMailboxName;
 	    if (mailboxNameToConvert)
 	    {
-			nsIMAPNamespace *ns = GetHostSessionList()->GetNamespaceForMailboxForHost(fServerConnection.GetCurrentUrl()->GetUrlHost(), mailboxNameToConvert);	// for delimiter
+			const char *host = nsnull;
+				
+			fServerConnection.GetCurrentUrl()->GetHost(&host);
+			nsIMAPNamespace *ns = nsnull;
+			if (host != nsnull)
+			{
+				GetHostSessionList()->GetNamespaceForMailboxForHost(host, nsnull /* userName */, mailboxNameToConvert, ns);	// for delimiter
+			}
+
 			if (ns)
 				returnSpec->hierarchySeparator = ns->GetDelimiter();
 			else
@@ -2182,7 +2194,7 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 			char *convertedName = fServerConnection.CreateUtf7ConvertedString(mailboxNameToConvert, PR_FALSE);
 			if (convertedName)
 	    	{
-	    		convertedMailboxName = fServerConnection.GetCurrentUrl()->AllocateCanonicalPath(convertedName, returnSpec->hierarchySeparator);
+	    		fServerConnection.GetCurrentUrl()->AllocateCannonicalPath(convertedName, returnSpec->hierarchySeparator, &convertedMailboxName);
 	    		PR_Free(convertedName);
 	    	}
 	    }
@@ -2196,7 +2208,7 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 		returnSpec->box_flags = kNoFlags;	// stub
 		returnSpec->onlineVerified = PR_FALSE;	// we're fabricating this.  The flags aren't verified.
 		returnSpec->allocatedPathName = convertedMailboxName;
-		returnSpec->connection = fServerConnection;
+		returnSpec->connection = &fServerConnection;
 		if (returnSpec->connection)
 			returnSpec->connection->GetCurrentUrl()->GetHost(&returnSpec->hostName);
 		else

@@ -22,12 +22,14 @@
 #include "nsImapCore.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsImapSearchResults.h"
+#include "nsString2.h"
 
 class nsIMAPNamespace;
 class nsIMAPNamespaceList;
 class nsIMAPBodyShell;
 class nsImapSearchResultIterator;
 class nsImapFlagAndUidState;
+class nsString2;
 
 #include "nsIMAPGenericParser.h"
 
@@ -199,7 +201,7 @@ private:
     
     char                     *fCurrentCommandTag;
     
-    char					 *fZeroLengthMessageUidString;
+    nsString2					 fZeroLengthMessageUidString;
 
     char                     *fSelectedMailboxName;
     

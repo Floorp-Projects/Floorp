@@ -83,6 +83,7 @@ public:
     NS_IMETHOD ToString(PRUnichar* *aString) const;
 
 	NS_IMETHOD GetImapPartToFetch(const char **result) const;
+	NS_IMETHOD AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const;
 	// nsImapUrl
 	nsImapUrl();
 	virtual ~nsImapUrl();

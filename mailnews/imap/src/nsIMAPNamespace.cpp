@@ -151,11 +151,11 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetDefaultNamespaceOfType(EIMAPNamespaceTy
 
 nsIMAPNamespaceList::~nsIMAPNamespaceList()
 {
-	ClearNamespaces(TRUE, TRUE);
+	ClearNamespaces(TRUE, TRUE, TRUE);
 }
 
 // ClearNamespaces removes and deletes the namespaces specified, and if there are no namespaces left,
-void nsIMAPNamespaceList::ClearNamespaces(XP_Bool deleteFromPrefsNamespaces, XP_Bool deleteServerAdvertisedNamespaces)
+void nsIMAPNamespaceList::ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBool deleteServerAdvertisedNamespaces, PRBool reallyDelete)
 {
 	int nodeIndex = 0;
 	
@@ -167,13 +167,15 @@ void nsIMAPNamespaceList::ClearNamespaces(XP_Bool deleteFromPrefsNamespaces, XP_
 			if (deleteFromPrefsNamespaces)
 			{
 				m_NamespaceList.RemoveElement(ns);
-				delete ns;
+				if (reallyDelete)
+					delete ns;
 			}
 		}
 		else if (deleteServerAdvertisedNamespaces)
 		{
 			m_NamespaceList.RemoveElement(ns);
-			delete ns;
+			if (reallyDelete)
+				delete ns;
 		}
 	}
 }

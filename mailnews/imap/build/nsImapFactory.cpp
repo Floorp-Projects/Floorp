@@ -31,6 +31,8 @@
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCImapUrl, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCImapProtocol, NS_IMAPPROTOCOL_CID);
+static NS_DEFINE_CID(kCImapHostSessionList, NS_IMAPPROTOCOL_CID);
+
 
 ////////////////////////////////////////////////////////////
 //
