@@ -955,7 +955,7 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
   	  	 						bufLen, &processBytes, &outLen, 
   	  	                        (LogicalAddress)buf);
   	  	   	  	 
-  	  	 // no mater if failed or not, as long as it convert some text, we process it.
+  	  	 // no matter if failed or not, as long as it convert some text, we process it.
   	  	 if(outLen > 0)
   	  	 {
 			DrawScriptText(buf, outLen, x, y, thisWidth);
@@ -1076,99 +1076,101 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: GetWidth(const PRUnichar *aString, PR
 }
 
 #define IS_FORMAT_CONTROL_CHARS(c) 	((0x2000==((c)&0xFFF0))||(0x2028==((c)&0xFFF8)))
-#define IS_CONTEXTUAL_CHARS(c) 		((0x0600<=(c))&&((c)<0x1000))
-#define IS_COMBINING_CHARS(c) 		((0x0300<=(c))&&((c)<0x0370))
+#define IS_CONTEXTUAL_CHARS(c) 		  ((0x0600<=(c))&&((c)<0x1000))
+#define IS_COMBINING_CHARS(c) 		  ((0x0300<=(c))&&((c)<0x0370))
 //------------------------------------------------------------------------
 NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
- 	nsresult res = NS_OK;
-    nsFontMetricsMac *metrics = (nsFontMetricsMac*) mGS->mFontMetrics;
-    nsUnicodeFontMappingMac* fontmap = metrics->GetUnicodeFontMapping();
-    	
-	PRInt32 x = aX;
-	PRInt32 y = aY;	
+  nsresult res = NS_OK;
+  nsFontMetricsMac *metrics = (nsFontMetricsMac*) mGS->mFontMetrics;
+  nsUnicodeFontMappingMac* fontmap = metrics->GetUnicodeFontMapping();
+
+  PRInt32 x = aX;
+
+  // offset to baseline
+  nscoord ascent = 0;
+  mGS->mFontMetrics->GetMaxAscent(ascent);    // ascent is twips
+
+  PRInt32 transformedY = aY + ascent;
+  mGS->mTMatrix.TransformCoord(&x, &transformedY);
+
+  PRUint32 i;
+  PRInt32 currentX = aX;
+  PRUint32 thisWidth = 0;
+  const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
 	
-	nscoord ascent = 0;
-	mGS->mFontMetrics->GetMaxAscent(ascent);
-	y += ascent;
+  if (aSpacing)
+  {
+    for (i = 0; i < aLength; )
+    {
+      PRUint32 drawLen;
+      short curFontNum = fontmap->GetFontID(aString[i]);
 
-    mGS->mTMatrix.TransformCoord(&x,&y);
+      for (drawLen = 1; (i + drawLen) < aLength; drawLen++)
+      {
+        PRUnichar uc = aString[i+drawLen];
+      	if(! (IS_CONTEXTUAL_CHARS(uc) || 
+      		    IS_FORMAT_CONTROL_CHARS(uc) ||
+      	      IS_COMBINING_CHARS(uc)) ) {
+      	  break;
+      	}
+      }
 
-    PRUint32 i;
-	PRInt32 currentX = x;
-	PRUint32 thisWidth = 0;
-    const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
-	
-    if(aSpacing) {
-		int buffer[STACK_TREASHOLD];
-		int* spacing = (aLength <= STACK_TREASHOLD ? buffer : new int[aLength]);
-		if (spacing)
-		{
-			mGS->mTMatrix.ScaleXCoords(aSpacing, aLength, spacing);
-		    for(i =0; i < aLength; )
-		    {
-		       PRUint32 j,drawLen;
-		       short curFontNum = fontmap->GetFontID(aString[i]);
-		       for(drawLen = 1; ((i+drawLen) < aLength);drawLen++) {
-		       	    PRUnichar uc = aString[i+drawLen];
-		       		if(! ( IS_CONTEXTUAL_CHARS(uc) || 
-		       			   IS_FORMAT_CONTROL_CHARS(uc) ||
-		       		       IS_COMBINING_CHARS(uc)) ) {
-		       		       break;
-		       		}
-		       }
-		       res = DrawTextSegment(aString+i, drawLen, curFontNum, scriptFallbackFonts, currentX, y, thisWidth);
-			   if(NS_FAILED(res)) {
-			    	if (spacing != buffer)
-						delete[] spacing;
-			 		goto end_of_func;
-		       }
-		       for(j=0;j<drawLen;j++)
-			   		currentX += spacing[i++];
-		    }
-	    	if (spacing != buffer)
-				delete[] spacing;
-		}
-		else {
-			res =  NS_ERROR_OUT_OF_MEMORY;	
- 			goto end_of_func;
-		}
-    } else {
-    	short thisFont, nextFont;
-    	thisFont=fontmap->GetFontID(aString[0]);;	
-    	PRUint32 start;
-    	for(i =1, start=0; i < aLength; i++)
-    	{
-    		PRUnichar uch = aString[i];
-    		if(! IS_FORMAT_CONTROL_CHARS(uch))
-    		{
-    			nextFont = fontmap->GetFontID(uch);
-    			if(thisFont != nextFont) 
-		        {  // start new font run...
-		       
-		       		res = DrawTextSegment(aString+start, i-start, thisFont, scriptFallbackFonts, 
-		          						currentX, y, thisWidth);
-				  	if(NS_FAILED(res))
-				 		goto end_of_func;
-					currentX += thisWidth;
-					start = i;
-					thisFont = nextFont;
-    			}
-    		}
-	    }
-
-    	res = DrawTextSegment(aString+start, aLength-start, thisFont, 
-    							scriptFallbackFonts, currentX, y, thisWidth);
-		if(NS_FAILED(res))
-			goto end_of_func;
+      PRInt32 transformedX = currentX, ignoreY = 0;
+      mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+      res = DrawTextSegment(aString+i, drawLen, curFontNum, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+	    if (NS_FAILED(res))
+	 		  return res;
+      
+      for (PRUint32 j = 0; j < drawLen; j++)
+	   	  currentX += aSpacing[i + j];
+	   	  
+	   	i += drawLen;
     }
-    
-end_of_func:
+  }
+  else    // no spacing array
+  {
+    short thisFont, nextFont;
+    thisFont = fontmap->GetFontID(aString[0]);
+    PRUint32 start;
 
-	return res;        
+    for (i = 1, start = 0; i < aLength; i++)
+    {
+    	PRUnichar uch = aString[i];
+    	if(! IS_FORMAT_CONTROL_CHARS(uch))
+    	{
+    		nextFont = fontmap->GetFontID(uch);
+    		if (thisFont != nextFont) 
+        {  // start new font run...
+         
+
+          PRInt32 transformedX = currentX, ignoreY = 0;
+           mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+          
+          res = DrawTextSegment(aString + start, i - start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+    	  	if (NS_FAILED(res))
+    	 		  return res;
+    	 		
+    		  currentX += thisWidth;
+    		  start = i;
+    		  thisFont = nextFont;
+    		}
+    	}
+    }
+
+    PRInt32 transformedX = currentX, ignoreY = 0;
+    mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+    res = DrawTextSegment(aString+start, aLength-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+    if (NS_FAILED(res))
+      return res;
+  }
+  
+	return NS_OK;
 }
+
+
 //------------------------------------------------------------------------
 NS_IMETHODIMP nsUnicodeRenderingToolkit :: PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort)
 {
