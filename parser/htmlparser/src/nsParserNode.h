@@ -146,6 +146,13 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual void SetSkippedContent(CToken* aToken);
 
+    /**
+     * This getter retrieves the line number from the input source where
+     * the token occured. Lines are interpreted as occuring between \n characters.
+     * @update	gess7/24/98
+     * @return  int containing the line number the token was found on
+     */
+    virtual PRUint16 GetSourceLineNumber(void);
               
   protected:
     PRInt32   mAttributeCount;    

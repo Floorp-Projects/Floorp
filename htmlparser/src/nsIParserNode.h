@@ -119,6 +119,15 @@ class nsIParserNode {
      * @return  int (unicode char or unicode index from table)
      */
     virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const = 0;
+
+    /**
+     * This getter retrieves the line number from the input source where
+     * the token occured. Lines are interpreted as occuring between \n characters.
+     * @update	gess7/24/98
+     * @return  int containing the line number the token was found on
+     */
+    virtual PRUint16 GetSourceLineNumber(void)=0;
+
 };
 
 #endif

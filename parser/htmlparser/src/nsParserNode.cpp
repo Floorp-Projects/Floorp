@@ -203,4 +203,13 @@ PRInt32 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
   return -1;
 }
 
+/**
+ * This getter retrieves the line number from the input source where
+ * the token occured. Lines are interpreted as occuring between \n characters.
+ * @update	gess7/24/98
+ * @return  int containing the line number the token was found on
+ */
+PRUint16 nsCParserNode::GetSourceLineNumber(void){
+  return mToken->GetSourceLineNumber();
+}
 
