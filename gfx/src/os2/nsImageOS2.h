@@ -208,7 +208,7 @@ public:
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
 
   void CreateBitmaps( nsDrawingSurfaceOS2 *surf);
-  void DrawBitmap( HPS hps, LONG cPts, PPOINTL pPts, LONG lRop, PRBool bMsk);
+  void DrawBitmap( HPS hps, PPOINTL pPts, LONG lRop, PRBool bMsk);
 };
 
 #endif

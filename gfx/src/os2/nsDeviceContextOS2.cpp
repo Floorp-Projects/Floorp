@@ -35,8 +35,6 @@
 
 #include "nsGfxDefs.h"
 
-#define RGB_PRINTING 1 // Makes most things work
-
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
 
@@ -65,6 +63,7 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   mSpec = nsnull;
   mCachedClientRect = PR_FALSE;
   mCachedFullRect = PR_FALSE;
+  mSupportsRasterFonts = PR_FALSE;
 #ifdef XP_OS2
   mPrintState = nsPrintState_ePreBeginDoc;
 #endif
@@ -106,13 +105,6 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
      PrnCloseDC(mPrintDC);
   }
 
-#ifndef RGB_PRINTING
-  if (!mPaletteInfo.isPaletteDevice) {
-     free(mPaletteInfo.palette);
-     mPaletteInfo.palette = nsnull;
-  }
-#endif
-
   NS_IF_RELEASE(mSpec);
 }
 
@@ -120,7 +112,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 {
   nsresult retval = DeviceContextImpl::Init(aWidget);
 
-  CommonInit(WinOpenWindowDC((HWND)aWidget));
+  CommonInit(::WinOpenWindowDC((HWND)aWidget));
 
   return retval;
 }
@@ -182,7 +174,7 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
 {
   LONG alArray[CAPS_DEVICE_POLYSET_POINTS];
 
-  ::DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray);
+  GFX (::DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray), FALSE);
 
 // This change breaks opening and closing of sidebar
 //  mTwipsToPixels = (float)alArray [CAPS_VERTICAL_RESOLUTION] / (float)NS_METERS_TO_TWIPS (1);
@@ -216,6 +208,8 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
     if ( !sNumberOfScreens )
       mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
   } // if this dc is not a print device
+
+  mSupportsRasterFonts = !!(alArray[CAPS_RASTER_CAPS] & CAPS_RASTER_FONTS);
 
   DeviceContextImpl::CommonInit();
 }
@@ -656,11 +650,7 @@ NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   if (nsnull == mColorSpace) {
     // See if we're dealing with an 8-bit palette device
-#ifndef RGB_PRINTING
-    if (8 == mDepth) {
-#else
     if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
-#endif
       // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
       // than DIB_RGB_COLORS, so make sure the indexes match that of the
       // GDI physical palette
@@ -718,22 +708,22 @@ typedef struct _MYRGB
 
 MYRGB sysColors[NUM_SYS_COLORS] =
 {
-    0xFF, 0xFF, 0xFF,   // CLR_WHITE
     0x00, 0x00, 0x00,   // CLR_BLACK
-    0x00, 0x00, 0xFF,   // CLR_BLUE
-    0xFF, 0x00, 0x00,   // CLR_RED
-    0xFF, 0x00, 0xFF,   // CLR_PINK
-    0x00, 0xFF, 0x00,   // CLR_GREEN
-    0x00, 0xFF, 0xFF,   // CLR_CYAN
-    0xFF, 0xFF, 0x00,   // CLR_YELLOW
-    0x80, 0x80, 0x80,   // CLR_DARKGRAY
     0x00, 0x00, 0x80,   // CLR_DARKBLUE
-    0x80, 0x00, 0x00,   // CLR_DARKRED
-    0x80, 0x00, 0x80,   // CLR_DARKPINK
     0x00, 0x80, 0x00,   // CLR_DARKGREEN
     0x00, 0x80, 0x80,   // CLR_DARKCYAN
+    0x80, 0x00, 0x00,   // CLR_DARKRED
+    0x80, 0x00, 0x80,   // CLR_DARKPINK
     0x80, 0x80, 0x00,   // CLR_BROWN
+    0x80, 0x80, 0x80,   // CLR_DARKGRAY
     0xCC, 0xCC, 0xCC,   // CLR_PALEGRAY
+    0x00, 0x00, 0xFF,   // CLR_BLUE
+    0x00, 0xFF, 0x00,   // CLR_GREEN
+    0x00, 0xFF, 0xFF,   // CLR_CYAN
+    0xFF, 0x00, 0x00,   // CLR_RED
+    0xFF, 0x00, 0xFF,   // CLR_PINK
+    0xFF, 0xFF, 0x00,   // CLR_YELLOW
+    0xFE, 0xFE, 0xFE,   // CLR_OFFWHITE - can only use white at index 255
 
     0xC0, 0xC0, 0xC0,   // Gray (Windows)
     0xFF, 0xFB, 0xF0,   // Pale Yellow (Windows)
@@ -746,32 +736,25 @@ MYRGB sysColors[NUM_SYS_COLORS] =
 
 NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 {
+  static PRBool fPaletteInitialized = PR_FALSE;
+  static ULONG aulTable[256];
+
   aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
+  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
   aPaletteInfo.numReserved = mPaletteInfo.numReserved;
 
-  if (NULL == mPaletteInfo.palette) {
-    IL_ColorSpace*  colorSpace;
-    GetILColorSpace(colorSpace);
+  if ((mPaletteInfo.isPaletteDevice) && (NULL == mPaletteInfo.palette)) {
+    if (!fPaletteInitialized) {
+      IL_ColorSpace*  colorSpace;
+      GetILColorSpace(colorSpace);
 
-    if (NI_PseudoColor == colorSpace->type) {
       // Create a logical palette
-      ULONG ulCount = COLOR_CUBE_SIZE+NUM_SYS_COLORS;
-#ifndef RGB_PRINTING
-      PULONG aulTable;
-      aulTable = (PULONG)malloc(ulCount*sizeof(ULONG));
-#else
-      ULONG aulTable[COLOR_CUBE_SIZE+NUM_SYS_COLORS];
-#endif
-
-      PRInt32 i, j;
-      // First ten system colors
-      for (i = 0; i < 10; i++) {
+      ULONG ulCount;
+  
+      PRInt32 i,j;
+      // system colors
+      for (i = 0; i < NUM_SYS_COLORS; i++) {
         aulTable[i] = MK_RGB(sysColors[i].red, sysColors[i].green, sysColors[i].blue);
-      }
-
-      // Last six system colors + 5 Windows specific colors
-      for (i = 10, j = COLOR_CUBE_SIZE+10; i < NUM_SYS_COLORS; i++, j++) {
-        aulTable[j] = MK_RGB( sysColors[i].red, sysColors[i].green, sysColors[i].blue);
       }
   
       // Now set the color cube entries.
@@ -781,29 +764,46 @@ NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
       NI_RGB*       map = colorSpace->cmap.map + 10;
 #endif
 
-      for (i = 10; i < COLOR_CUBE_SIZE+10; i++, map++) {
-        aulTable[i] = MK_RGB( map->red, map->green, map->blue);
-      }
+      PRInt32 k = NUM_SYS_COLORS;
+      for (i = 0; i < COLOR_CUBE_SIZE; i++, map++) {
+        aulTable[k] = MK_RGB(map->red, map->green, map->blue);
+        for (j = 0;j < NUM_SYS_COLORS; j++) {
+           if (aulTable[k] == aulTable[j]) {
+              aulTable[k] = 0;
+              break;
+           } /* endif */
+        } /* endfor */
+        if (j == NUM_SYS_COLORS) {
+           k++;
+        } /* endif */
+      } /* endfor */
   
-      if (mPaletteInfo.isPaletteDevice) {
-        // Create a GPI palette
-        mPaletteInfo.palette = (void*)GFX (::GpiCreatePalette ((HAB)0, NULL,
-                                           LCOLF_CONSECRGB, ulCount, aulTable),
-                                           GPI_ERROR);
-#ifndef RGB_PRINTING
-        free(aulTable);
-      } else {
-        mPaletteInfo.palette = (void*)aulTable;
-        mPaletteInfo.sizePalette = ulCount;
-#endif
-      }
-    }
+      ulCount = (k-1);
+  
+      // This overwrites the last entry in the cube (white)
+      for (i=ulCount;i<256 ;i++ ) {
+         aulTable[i] = MK_RGB(254,254,254);
+      } /* endfor */
+  
+      aulTable[255] = MK_RGB(255, 255, 255); // Entry 255 must be white
+      fPaletteInitialized = PR_TRUE;
 
-    IL_ReleaseColorSpace(colorSpace);
-  }
+      IL_ReleaseColorSpace(colorSpace);
+
+#ifdef DEBUG
+      for (i=0;i<256 ;i++ )
+         printf("Entry[%d] in table is %x\n", i, aulTable[i]);
+#endif
+
+    } /* endif */
+    // Create a GPI palette
+    mPaletteInfo.palette =
+      (void*)GFX (::GpiCreatePalette ((HAB)0, NULL,
+                                      LCOLF_CONSECRGB, 256, aulTable),
+                                      GPI_ERROR);
+  } /* endif */
 
   aPaletteInfo.palette = mPaletteInfo.palette;
-  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
   return NS_OK;
 }
 
@@ -967,4 +967,8 @@ BOOL nsDeviceContextOS2::isPrintDC()
 
    else
       return 1;
+}
+PRBool nsDeviceContextOS2::SupportsRasterFonts()
+{
+   return mSupportsRasterFonts;
 }
