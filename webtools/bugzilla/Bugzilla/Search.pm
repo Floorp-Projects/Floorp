@@ -453,9 +453,9 @@ sub init {
                  $chartseq = "CC$sequence";
                  $sequence++;
              }
-             push(@supptables, "LEFT JOIN cc cc_$chartseq 
-                                  ON bugs.bug_id = cc_$chartseq.bug_id 
-                                  AND cc_$chartseq.who = $match");
+             push(@supptables, "LEFT JOIN cc cc_$chartseq "
+                               . "ON bugs.bug_id = cc_$chartseq.bug_id "
+                               . "AND cc_$chartseq.who = $match");
              $term = "cc_$chartseq.who IS NOT NULL";
          },
          "^cc,(?:notequals),(%\\w+%)" => sub {
@@ -465,9 +465,9 @@ sub init {
                  $chartseq = "CC$sequence";
                  $sequence++;
              }
-             push(@supptables, "LEFT JOIN cc cc_$chartseq 
-                                  ON bugs.bug_id = cc_$chartseq.bug_id 
-                                  AND cc_$chartseq.who = $match");
+             push(@supptables, "LEFT JOIN cc cc_$chartseq "
+                               . "ON bugs.bug_id = cc_$chartseq.bug_id "
+                               . "AND cc_$chartseq.who = $match");
              $term = "cc_$chartseq.who IS NULL";
          },
          "^cc,(anyexact|substring)" => sub {
@@ -603,9 +603,9 @@ sub init {
              if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
                  $extra = "AND $table.isprivate < 1";
              }
-             push(@supptables, "LEFT JOIN longdescs $table 
-                                  ON $table.bug_id = bugs.bug_id $extra 
-                                  AND $table.who IN ($match)");
+             push(@supptables, "LEFT JOIN longdescs $table "
+                               . "ON $table.bug_id = bugs.bug_id $extra "
+                               . "AND $table.who IN ($match)");
              $term = "$table.who IS NOT NULL";
          },
          "^commenter," => sub {
