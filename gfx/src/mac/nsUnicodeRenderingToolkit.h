@@ -34,7 +34,7 @@ class nsUnicodeRenderingToolkit
 {
 public:
 	nsUnicodeRenderingToolkit() {};
-	~nsUnicodeRenderingToolkit() {};
+	virtual ~nsUnicodeRenderingToolkit() {};
 
   NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort);
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,

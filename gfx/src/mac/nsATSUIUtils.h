@@ -53,7 +53,7 @@ class nsATSUIToolkit
 {
 public:
 	nsATSUIToolkit();
-	~nsATSUIToolkit() {};
+	virtual ~nsATSUIToolkit() {};
 
 	void        		PrepareToDraw(GrafPtr aPort, nsIDeviceContext* aContext);
  
