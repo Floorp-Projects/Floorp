@@ -492,7 +492,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
     DWORD extendedStyle = WindowExStyle();
     if (nsnull != aInitData) {
-      if (aInitData->mBorderStyle == eBorderStyle_dialog) {
+      if (aInitData->mBorderStyle == eBorderStyle_dialog ||
+          aInitData->mBorderStyle == eBorderStyle_none) {
         extendedStyle = 0;
       } else if (aInitData->mBorderStyle == eBorderStyle_3DChildWindow) {
         extendedStyle |= WS_EX_CLIENTEDGE;
