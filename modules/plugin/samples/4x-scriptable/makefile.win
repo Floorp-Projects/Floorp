@@ -21,7 +21,7 @@ include <$(DEPTH)/config/config.mak>
 MODULE = np4xscr
 
 XPIDLSRCS = 				      \
-	.\nsI4xScrPlugin.idl    \
+	.\nsI4xScriptablePlugin.idl    \
 	$(NULL)
 
 MAKE_OBJ_TYPE	= DLL
@@ -39,6 +39,11 @@ OBJS =                     \
 	$(NULL)
 
 WIN_LIBS = version.lib
+
+#uncomment if you are building the nsScriptablePeer1 version
+#LLIBS=	$(LIBNSPR)	\
+#		$(DIST)\lib\xpcom.lib	\
+#		$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

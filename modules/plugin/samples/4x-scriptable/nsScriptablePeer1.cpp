@@ -44,7 +44,8 @@ nsScriptablePeer::~nsScriptablePeer()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsScriptablePeer, nsI4xScrPlugin, nsISecurityCheckedComponent)
+// Notice that we expose our claim to implement nsIClassInfo.
+NS_IMPL_ISUPPORTS2(nsScriptablePeer, nsI4xScriptablePlugin, nsIClassInfo)
 
 //
 // the following two methods will be callable from JavaScript
@@ -61,68 +62,6 @@ NS_IMETHODIMP nsScriptablePeer::Clear()
 {
   if (mPlugin)
     mPlugin->clear();
-
-  return NS_OK;
-}
-
-//
-// the purpose of the rest of the code is to get succesfully 
-// through the Mozilla Security Manager
-//
-static const char gAllAccess[] = "AllAccess";
-
-NS_IMETHODIMP nsScriptablePeer::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptablePeer::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptablePeer::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptablePeer::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
 
   return NS_OK;
 }

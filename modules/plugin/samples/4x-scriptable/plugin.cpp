@@ -121,7 +121,7 @@ void CPlugin::clear()
 // ==============================
 //
 // this method will return the scriptable object (and create it if necessary)
-nsI4xScrPlugin* CPlugin::getScriptablePeer()
+nsI4xScriptablePlugin* CPlugin::getScriptablePeer()
 {
   if (!m_pScriptablePeer) {
     m_pScriptablePeer = new nsScriptablePeer(this);

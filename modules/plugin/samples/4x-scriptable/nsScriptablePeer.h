@@ -30,17 +30,41 @@
 #ifndef __nsScriptablePeer_h__
 #define __nsScriptablePeer_h__
 
-#include "nsI4xScrPlugin.h"
-#include "nsISecurityCheckedComponent.h"
+#include "nsI4xScriptablePlugin.h"
+#include "nsIClassInfo.h"
 
 class CPlugin;
 
-// we should add nsISecurityCheckedComponent because the
-// Mozilla Security Manager will ask scriptable object about 
-// priveleges the plugin requests in order to allow calls
-// from JavaScript
-class nsScriptablePeer : public nsI4xScrPlugin,
-                         public nsISecurityCheckedComponent
+// We must implement nsIClassInfo because it signals the
+// Mozilla Security Manager to allow calls from JavaScript.
+
+class nsClassInfoMixin : public nsIClassInfo
+{
+  // These flags are used by the DOM and security systems to signal that 
+  // JavaScript callers are allowed to call this object's scritable methods.
+  NS_IMETHOD GetFlags(PRUint32 *aFlags)
+    {*aFlags = nsIClassInfo::PLUGIN_OBJECT | nsIClassInfo::DOM_OBJECT;
+     return NS_OK;}
+  NS_IMETHOD GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+    {*aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+     return NS_OK;}
+  // The rest of the methods can safely return error codes...
+  NS_IMETHOD GetInterfaces(PRUint32 *count, nsIID * **array)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetContractID(char * *aContractID)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetClassDescription(char * *aClassDescription)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetClassID(nsCID * *aClassID)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+};
+
+class nsScriptablePeer : public nsI4xScriptablePlugin,
+                         public nsClassInfoMixin
 {
 public:
   nsScriptablePeer(CPlugin* plugin);
@@ -59,12 +83,6 @@ public:
   // native methods callable from JavaScript
   NS_IMETHOD ShowVersion(); 
   NS_IMETHOD Clear();
-
-  // methods from nsISecurityCheckedComponent
-  NS_IMETHOD CanCreateWrapper(const nsIID * iid, char **_retval); 
-  NS_IMETHOD CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval); 
-  NS_IMETHOD CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval); 
-  NS_IMETHOD CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval);
 
 protected:
   CPlugin* mPlugin;

@@ -132,11 +132,11 @@ NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
   if(pPlugin == NULL)
     return NPERR_GENERIC_ERROR;
 
-  static nsIID scriptableIID = NS_I4XSCRPLUGIN_IID;
+  static nsIID scriptableIID = NS_I4XSCRIPTABLEPLUGIN_IID;
   
   if (variable == NPPVpluginScriptableInstance) {
     // addref happens in getter, so we don't addref here
-    nsI4xScrPlugin * scriptablePeer = pPlugin->getScriptablePeer();
+    nsI4xScriptablePlugin * scriptablePeer = pPlugin->getScriptablePeer();
     *(nsISupports **)value = scriptablePeer;
   }
   else if (variable == NPPVpluginScriptableIID) {
