@@ -57,11 +57,8 @@ public:
 
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              nsIAtom* aAttribute,
-                              PRInt32 aHint);
 
+  virtual void UpdateAttributes(nsIPresContext&  aPresContext);
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
@@ -118,10 +115,7 @@ protected:
   nsTitledButtonFrame();
   virtual void CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
   virtual void GetTextSize(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize);
-  virtual void setTitle(nsAutoString aTitle);
-  virtual void setAlignment(nsAutoString aAlign);
   virtual void SetDisabled(nsAutoString aDisabled);
-  virtual void ImageMayHaveChanged(nsIPresContext* aPresContext);
 
 private:
 
