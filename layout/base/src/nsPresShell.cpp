@@ -30,6 +30,7 @@
 #include "plhash.h"
 
 #undef NOISY
+#define TEMPORARY_CONTENT_APPENDED_HACK
 
 static PLHashNumber
 HashKey(nsIFrame* key)
@@ -198,7 +199,9 @@ protected:
   PRUint32 mUpdateCount;
   nsVoidArray mReflowCommands;
   PRUint32 mReflowLockCount;
-  PRUint32 mResizeReflows;              // XXX temporary
+#ifdef TEMPORARY_CONTENT_APPENDED_HACK
+  PRUint32 mResizeReflows;
+#endif
 };
 
 //----------------------------------------------------------------------
@@ -312,19 +315,19 @@ NS_METHOD
 PresShell::ExitReflowLock()
 {
   printf("exit reflow lock\n");
-  if (--mReflowLockCount == 0) {
+  PRUint32 newReflowLockCount = mReflowLockCount - 1;
+  if (newReflowLockCount == 0) {
+#ifdef TEMPORARY_CONTENT_APPENDED_HACK
     if (0 != mResizeReflows) {
       mResizeReflows = 0;
-
-      // Temporary code: when we receive a content changed request just do
-      // a complete reflow.
-      if (nsnull != mRootFrame) {
-        nsRect r;
-        mRootFrame->GetRect(r);
-        ResizeReflow(r.width, r.height);
-      }
+      nsRect r;
+      mRootFrame->GetRect(r);
+      ResizeReflow(r.width, r.height);
     }
+#endif
+    ProcessReflowCommands();
   }
+  mReflowLockCount = newReflowLockCount;
   return NS_OK;
 }
 
@@ -524,13 +527,21 @@ PresShell::ContentChanged(nsIContent* aContent,
                           nsISupports* aSubContent)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
+  NS_PRECONDITION(0 != mReflowLockCount, "unlocked reflow");
 
+#ifdef TEMPORARY_CONTENT_APPENDED_HACK
+  mResizeReflows++;
+#else
   // Notify the first frame that maps the content. It will generate a reflow
   // command
   nsIFrame* frame = FindFrameWithContent(aContent);
   NS_PRECONDITION(nsnull != frame, "null frame");
   frame->ContentChanged(this, mPresContext, aContent, aSubContent);
-  ProcessReflowCommands();
+
+  if (1 == mReflowLockCount) {
+    ProcessReflowCommands();
+  }
+#endif
 }
 
 void
