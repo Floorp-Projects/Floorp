@@ -1,0 +1,54 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+PROGRAM	=	TestStreamConv
+MODULE  = 	TestStreamConv
+
+REQUIRES	= libreg xpcom
+
+CPPSRCS		= 			\
+		Converters.cpp 		\
+		TestStreamConv.cpp 	\
+		$(NULL)
+
+ifdef NO_LD_ARCHIVE_FLAGS
+LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
+endif
+
+LIBS		= \
+		-lxpcom \
+		$(LOST_SYM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+# hack until necko lands
+ifndef NECKO
+PUBLIC		= $(DEPTH)/netwerk/dist/include
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DUSE_NSREG
