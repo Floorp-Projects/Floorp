@@ -160,7 +160,9 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsXPFCDataCollectionManager();
   } else if (mClassID.Equals(kCSMTPServiceCID)) {
     inst = (nsISupports *)new nsSMTPService();
-  } else if (mClassID.Equals(kCMIMEServiceCID)) {
+  }
+#if 0
+  else if (mClassID.Equals(kCMIMEServiceCID)) {
     inst = (nsISupports *)new nsMIMEService();
   } else if (mClassID.Equals(kCMessageCID)) {
     inst = (nsISupports *)new nsMessage();
@@ -171,6 +173,7 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
   } else if (mClassID.Equals(kCMIMEBasicBodyPartCID)) {
     inst = (nsISupports *)(nsIMIMEBodyPart*) new nsMIMEBasicBodyPart();
   }
+#endif
 
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
