@@ -72,6 +72,31 @@ NS_DEFINE_IID(kIFoo2IID, NS_ITESTXPC_FOO2_IID);
 
 
 /***************************************************************************/
+FILE *gOutFile = NULL;
+
+static JSBool
+Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    uintN i, n;
+    JSString *str;
+
+    for (i = n = 0; i < argc; i++) {
+        str = JS_ValueToString(cx, argv[i]);
+        if (!str)
+            return JS_FALSE;
+        fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
+    }
+    n++;
+    if (n)
+        fputc('\n', gOutFile);
+    return JS_TRUE;
+}
+
+static JSFunctionSpec glob_functions[] = {
+    {"print",           Print,          0},
+    {0}
+};
+
 static JSClass global_class = {
     "global", 0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -90,6 +115,7 @@ int main()
     JSContext *cx;
     JSObject *glob;
 
+    gOutFile = stdout;
 
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)
@@ -106,20 +132,20 @@ int main()
 
     if (!JS_InitStandardClasses(cx, glob))
         return 1;
+    if (!JS_DefineFunctions(cx, glob, glob_functions))
+        return 1;
 
     nsIXPConnect* xpc = XPC_GetXPConnect();
     nsIJSContext* xpccx = XPC_NewJSContext(cx);
     nsIJSObject* xpcglob = XPC_NewJSObject(xpccx, glob);
 
+    xpc->InitJSContext(xpccx, xpcglob);
 
     nsTestXPCFoo* foo = new nsTestXPCFoo();
 
     nsXPCVarient v[2];
     v[0].type = nsXPCType::T_I32; v[0].val.i32 = 1;
     v[1].type = nsXPCType::T_I32; v[1].val.i32 = 2;
-
-
-    uint32 p[2] = {1,2};
 
     XPC_TestInvoke(foo, 3, 2, v);
     XPC_TestInvoke(foo, 4, 0, NULL);
@@ -130,11 +156,23 @@ int main()
     {
         if(NS_SUCCEEDED(xpc->WrapNative(xpccx, foo, kIFoo2IID, &wrapper2)))
         {
+            JSObject* jsobj;
             nsIJSObject* obj;
             nsISupports* com_obj;
+            jsval rval;
 
             xpc->GetJSObjectOfWrappedNative(wrapper2, &obj);
             xpc->GetNativeOfWrappedNative(wrapper2, &com_obj);
+
+            obj->GetNative(&jsobj);
+
+            jsval v;
+            v = OBJECT_TO_JSVAL(jsobj);
+            JS_SetProperty(cx, glob, "foo", &v);
+
+            char txt[] = "print(foo)";
+
+            JS_EvaluateScript(cx, glob, txt, sizeof(txt)-1, "builtin", 1, &rval);
 
             NS_RELEASE(obj);
             NS_RELEASE(com_obj);
