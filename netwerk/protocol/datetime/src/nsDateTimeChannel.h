@@ -27,7 +27,7 @@
 #ifndef nsDateTimeChannel_h___
 #define nsDateTimeChannel_h___
 
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"

@@ -22,7 +22,7 @@
 
 #include "nsMIMEService.h"
 #include "nsVoidArray.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsMIMEInfoImpl.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
