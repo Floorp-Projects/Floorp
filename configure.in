@@ -2942,7 +2942,9 @@ MOZ_ARG_WITH_STRING(dbgrinfo-modules,
       dnl note that the list of module names is reversed as it is copied - this is
       dnl important, as it will allow config.mk to interpret stuff like
       dnl "^ALL_MODULES xpcom" properly
-
+      if test "$i" = "no"; then
+        i="^ALL_MODULES"
+      fi
       MOZ_DBGRINFO_MODULES="$i $MOZ_DBGRINFO_MODULES";
     done ])
 dnl ========================================================
