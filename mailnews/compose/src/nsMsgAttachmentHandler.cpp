@@ -468,7 +468,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       NS_RELEASE(mURL);
       mURL = nsnull;
 
-      char *tmpName = mAppleFileSpec->GetNativePathCString(); // don't free this!      
+      const char *tmpName = mAppleFileSpec->GetNativePathCString(); // don't free this!      
       char *newURLSpec = nsMsgPlatformFileToURL(tmpName);
 
       if ( (!tmpName) || (!newURLSpec) )
