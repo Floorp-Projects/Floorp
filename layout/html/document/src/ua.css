@@ -277,6 +277,9 @@ SMALL {
 ABBR, ACRONYM, DEL, DFN, INS, Q, SPAN {
   display: inline;
 }
+INS { text-decoration: underline; }
+DEL { text-decoration: strike-through; }
+DFN { font-style: italic; }
 SUB {
   display: inline;
   vertical-align: sub;
