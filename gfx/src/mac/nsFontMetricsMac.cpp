@@ -68,6 +68,9 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
     mContext->FontMetricsDeleted(this);
     mContext = nsnull;
   }
+  if (mFontMapping) {
+    delete mFontMapping;
+  }
 }
 
 //------------------------------------------------------------------------
@@ -124,7 +127,7 @@ nsUnicodeFontMappingMac* nsFontMetricsMac::GetUnicodeFontMapping()
       langGroup.Assign(NS_LITERAL_STRING("ja"));
       
   	nsString lang;
-  	mFontMapping = nsUnicodeFontMappingMac::GetCachedInstance(mFont, mContext, langGroup, lang);
+    mFontMapping = new nsUnicodeFontMappingMac(mFont, mContext, langGroup, lang);
   }
   
 	return mFontMapping;

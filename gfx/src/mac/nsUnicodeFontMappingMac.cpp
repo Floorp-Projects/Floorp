@@ -305,7 +305,9 @@ nsUnicodeFontMappingMac::nsUnicodeFontMappingMac(
 	nsFont* aFont, nsIDeviceContext *aDeviceContext, 
 	const nsString& aLangGroup, const nsString& aLANG) 
 {
-	PRInt32 i;
+  PRInt32 i;
+  if (!gUtil)
+    gUtil = nsUnicodeMappingUtil::GetSingleton();
 	for(i = kUnicodeBlockFixedScriptMax ; i < kUnicodeBlockSize; i++)
 	   mPrivBlockToScript[i - kUnicodeBlockFixedScriptMax] = BAD_SCRIPT;
 	for(i = 0 ; i < smPseudoTotalScripts; i++)
@@ -317,31 +319,6 @@ nsUnicodeFontMappingMac::nsUnicodeFontMappingMac(
 	InitDefaultScriptFonts();
 }
 //--------------------------------------------------------------------------
-
-nsUnicodeFontMappingMac* nsUnicodeFontMappingMac::GetCachedInstance(
-	nsFont* aFont, nsIDeviceContext *aDeviceContext, const nsString& aLangGroup, const nsString& aLANG) 
-{
-	if(! gUtil)
-		gUtil = nsUnicodeMappingUtil::GetSingleton();
-	
-	nsUnicodeFontMappingCache* fontMappingCache = gUtil->GetFontMappingCache();	
-  NS_ASSERTION(fontMappingCache, "Should have a fontMappingCache here");
-  if (!fontMappingCache) return nsnull;
-  
-	nsUnicodeFontMappingMac* obj = nsnull;
-	nsAutoString key(aFont->name);
-	key.Append(NS_LITERAL_STRING(":"));
-	key.Append(aLangGroup);
-	key.Append(NS_LITERAL_STRING(":"));
-	key.Append(aLANG);
-	if(! fontMappingCache->Get ( key, &obj )){
-		obj = new nsUnicodeFontMappingMac(aFont, aDeviceContext, aLangGroup, aLANG);
-		if( obj )
-			fontMappingCache->Set ( key, obj);
-	}
-	NS_PRECONDITION(nsnull !=  obj, "out of memory");
-	return obj;
-}
 //--------------------------------------------------------------------------
 
 PRBool nsUnicodeFontMappingMac::Equals(const nsUnicodeFontMappingMac& aMap)
