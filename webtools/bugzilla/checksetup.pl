@@ -3758,6 +3758,7 @@ if (!$series_exists) {
                                           $open_name, $::userid, 1, 
                                           $query_prod . $query, 1);
         $series->writeToDatabase();
+        $seriesids{$open_name} = $series->{'series_id'};
         
         # Now, we attempt to read in historical data, if any
         # Convert the name in the same way that collectstats.pl does
@@ -3772,20 +3773,33 @@ if (!$series_exists) {
         # The data files should be in a standard format, even for old 
         # Bugzillas, because of the conversion code further up this file.
         my %data;
+        my $last_date = "";
         
         while (<IN>) {
             if (/^(\d+\|.*)/) {
                 my @numbers = split(/\||\r/, $1);
+                
+                # Only take the first line for each date; it was possible to
+                # run collectstats.pl more than once in a day.
+                next if $numbers[0] eq $last_date;
+                
                 for my $i (0 .. $#fields) {
                     # $numbers[0] is the date
                     $data{$fields[$i]}{$numbers[0]} = $numbers[$i + 1];
+                    
+                    # Keep a total of the number of open bugs for this day
+                    if (IsOpenedState($fields[$i])) {
+                        $data{$open_name}{$numbers[0]} += $numbers[$i + 1];
+                    }
                 }
+                
+                $last_date = $numbers[0];
             }
         }
 
         close(IN);
 
-        foreach my $field (@fields) {            
+        foreach my $field (@fields, $open_name) {            
             # Insert values into series_data: series_id, date, value
             my %fielddata = %{$data{$field}};
             foreach my $date (keys %fielddata) {
