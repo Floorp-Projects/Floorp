@@ -375,7 +375,7 @@
 
   <!-- View Toggle Keys (F8/F9) -->
   <key id="key_toggleMessagePane" keycode="VK_F8" oncommand="MsgToggleMessagePane();"/>
-  <key id="key_toggleThreadPane" keycode="VK_F9" oncommand="MsgToggleSplitter('gray_vertical_splitter');"/>
+  <key id="key_toggleFolderPane" keycode="VK_F9" oncommand="MsgToggleSplitter('gray_vertical_splitter');"/>
 
   <!-- Label Keys -->
   <key id="key_label0" charcode="&labelCmd0.key;"  oncommand="goDoCommand('cmd_label0')"/>
@@ -1196,12 +1196,18 @@
            checked="true"/>
           <menuitem type="checkbox" id="menu_showTaskbar"/>
           <menuseparator id="menu_showSearch_showMessage_Separator"/>
-          <menuitem id="menu_showMessage"
+          <menuitem id="menu_showMessagePane"
            type="checkbox"
-           label="&showMessageCmd.label;"
-           accesskey="&showMessageCmd.accesskey;"
+           label="&showMessagePaneCmd.label;"
+           accesskey="&showMessagePaneCmd.accesskey;"
            key="key_toggleMessagePane"
            oncommand="MsgToggleMessagePane();"/>
+          <menuitem id="menu_showFolderPane"
+           type="checkbox"
+           label="&showFolderPaneCmd.label;"
+           accesskey="&showFolderPaneCmd.accesskey;"
+           key="key_toggleFolderPane"
+           oncommand="MsgToggleSplitter('gray_vertical_splitter');"/>
         </menupopup>
       </menu>
       <menuseparator id="viewMessagesMenuSeparator"/>

@@ -162,8 +162,10 @@
 
 <!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey "L">
-<!ENTITY showMessageCmd.label "Message Pane">
-<!ENTITY showMessageCmd.accesskey "M">
+<!ENTITY showMessagePaneCmd.label "Message Pane">
+<!ENTITY showMessagePaneCmd.accesskey "M">
+<!ENTITY showFolderPaneCmd.label "Folder Pane">
+<!ENTITY showFolderPaneCmd.accesskey "F">
 
 <!-- sortMenu is also used by addressbook -->
 <!ENTITY sortMenu.label "Sort by">

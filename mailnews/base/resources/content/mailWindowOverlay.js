@@ -160,6 +160,10 @@ function view_init()
       message_menuitem.setAttribute('disabled', gAccountCentralLoaded);
   }
 
+  var folderPane_menuitem = document.getElementById('menu_showFolderPane');
+  if (folderPane_menuitem && !folderPane_menuitem.hidden)
+    folderPane_menuitem.setAttribute('checked', !IsFolderPaneCollapsed());
+
   // Disable some menus if account manager is showing
   var sort_menuitem = document.getElementById('viewSortMenu');
   if (sort_menuitem) {

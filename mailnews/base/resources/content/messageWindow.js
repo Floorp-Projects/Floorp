@@ -403,9 +403,13 @@ function extractMsgKeyFromURI()
 
 function HideMenus()
 {
-	var message_menuitem=document.getElementById('menu_showMessage');
-	if (message_menuitem)
-		message_menuitem.setAttribute("hidden", "true");
+    var messagePaneMenuitem = document.getElementById('menu_showMessagePane');
+    if (messagePaneMenuitem)
+        messagePaneMenuitem.hidden = true;
+
+    var folderPaneMenuitem = document.getElementById('menu_showFolderPane');
+    if (folderPaneMenuitem)
+        folderPaneMenuitem.hidden = true;
 
 	var showSearchToolbar = document.getElementById('menu_showSearchToolbar');
 	if (showSearchToolbar)
