@@ -28,6 +28,8 @@ var gAccountManager = null;
 var gParentMsgWindow;
 var gMsgWindow;
 
+var gInitialFolderStates = {};
+
 // RDF needs to be defined for GetFolderAttribute in msgMail3PaneWindow.js
 var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService().QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -91,7 +93,15 @@ function selectOkButton()
 }
 
 function selectCancelButton()
-{	
+{	  
+    for (var resourceValue in gInitialFolderStates) {
+      var resource = RDF.GetResource(resourceValue);
+      var folder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+      if (gInitialFolderStates[resourceValue])
+        folder.setFlag(MSG_FOLDER_FLAG_OFFLINE);
+      else
+        folder.clearFlag(MSG_FOLDER_FLAG_OFFLINE);
+    }
     return true;
 }
 
@@ -171,7 +181,7 @@ function onSynchronizeClick(event)
         }
     }
     else {
-      if (col.value == "syncCol") {
+      if (col.value == "syncCol") {   
         UpdateNode(GetFolderResource(gSynchronizeOutliner, row.value), row.value);
       }
     }
@@ -184,6 +194,10 @@ function UpdateNode(resource, row)
     if (folder.isServer)
       return;
 
-    var oldFlag = folder.toggleFlag(MSG_FOLDER_FLAG_OFFLINE);
+    if (!(resource.Value in gInitialFolderStates)) {
+      gInitialFolderStates[resource.Value] = folder.getFlag(MSG_FOLDER_FLAG_OFFLINE);
+    }
+    
+    folder.toggleFlag(MSG_FOLDER_FLAG_OFFLINE);
 }
 
