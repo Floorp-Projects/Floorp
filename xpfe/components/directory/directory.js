@@ -129,7 +129,7 @@ function ReadDirectory(url)
 {
     debug('ReadDirectory(' + url + ')\n');
 
-    var ios = Components.classes['component://netscape/network/net-service'].getService();
+    var ios = Components.classes['component://netscape/network/io-service'].getService();
     ios = ios.QueryInterface(Components.interfaces.nsIIOService);
 
     var uri = ios.newURI(url, null);
