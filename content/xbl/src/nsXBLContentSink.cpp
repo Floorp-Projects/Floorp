@@ -600,6 +600,7 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
   const PRUnichar* phase          = nsnull;
   const PRUnichar* command        = nsnull;
   const PRUnichar* action         = nsnull;
+  const PRUnichar* group          = nsnull;
   const PRUnichar* preventdefault = nsnull;
 
   nsCOMPtr<nsIAtom> prefix, localName;
