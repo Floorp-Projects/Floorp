@@ -366,12 +366,16 @@ var homeButtonObserver = {
       var statusTextFld = document.getElementById("statusbar-display");
       statusTextFld.label = gNavigatorBundle.getString("droponhomebutton");
       aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+      var button = document.getElementById("home-button");
+      button.setAttribute("dragover", "true");
     },
 
   onDragExit: function (aEvent, aDragSession)
     {
       var statusTextFld = document.getElementById("statusbar-display");
       statusTextFld.label = "";
+      var button = document.getElementById("home-button");
+      button.removeAttribute("dragover");
     },
 
   getSupportedFlavours: function ()
