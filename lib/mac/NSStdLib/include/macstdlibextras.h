@@ -25,6 +25,14 @@
  ANSII headers.
 */
 
+#ifndef __MACTYPES__
+#include <MacTypes.h>
+#endif
+
+#ifndef __QUICKDRAW__
+#include <Quickdraw.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -39,6 +47,7 @@ extern void InitializeMacToolbox(void); // also calls InitializeSIOUX(false) if 
 
 #if DEBUG
 extern void InitializeSIOUX(unsigned char isStandAlone);
+extern Boolean IsSIOUXWindow(WindowPtr inWindow);
 #endif		/* DEBUG */
 
 #ifdef __cplusplus

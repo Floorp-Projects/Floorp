@@ -55,12 +55,12 @@ NS_EXPORT PRBool nsMacMessageSink::DispatchOSEvent(
 //-------------------------------------------------------------------------
 NS_EXPORT PRBool nsMacMessageSink::DispatchMenuCommand(
 													EventRecord 	&anEvent,
-													long					menuResult)
+													long					menuResult,
+													WindowPtr     aWindow)
 {
 	PRBool		eventHandled = PR_FALSE;
 
-	nsMacWindow* raptorWindow = GetNSWindowFromMacWindow(::FrontWindow());
-	
+	nsMacWindow* raptorWindow = GetNSWindowFromMacWindow(aWindow);
 	if (raptorWindow)
 	{
 		eventHandled = raptorWindow->HandleMenuCommand(anEvent, menuResult);

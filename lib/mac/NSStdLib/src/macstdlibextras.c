@@ -23,7 +23,7 @@
 #include "macstdlibextras.h"
 
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Memory.h>
 
 #include <stddef.h>
@@ -209,5 +209,10 @@ void InitializeSIOUX(unsigned char isStandAlone)
 	//InstallConsole();
 }
 
+
+Boolean IsSIOUXWindow(WindowPtr inWindow)
+{
+  return SIOUXIsAppWindow(inWindow);
+}
 
 #endif

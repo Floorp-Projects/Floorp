@@ -92,15 +92,8 @@ private:
 
 	PRBool		BrowserIsBusy();
 	
-private:
+	WindowPtr GetFrontApplicationWindow();
 
-	typedef void (*nsWindowlessMenuEventHandler) (PRInt32 menuResult);
-	static nsWindowlessMenuEventHandler gWindowlessMenuEventHandler;
-
-public:
-	static void SetWindowlessMenuEventHandler(nsWindowlessMenuEventHandler func)
-									{gWindowlessMenuEventHandler = func;}
-									
 };
 
 
