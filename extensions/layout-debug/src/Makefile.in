@@ -62,7 +62,7 @@ REQUIRES	= xpcom \
 		  view \
 		  pref \
 		  appshell \
-		  appstartup \
+		  appcomps \
 		  $(NULL)
 
 XPIDLSRCS	= \
