@@ -62,6 +62,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIBaseWindow.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMDocumentType.h"
@@ -376,6 +377,30 @@ nsXMLDocument::EvaluateXPointer(const nsAString& aExpression,
   return nsXPointer::Evaluate(this, aExpression, aResult);
 }
 
+nsresult 
+nsXMLDocument::GetLoadGroup(nsILoadGroup **aLoadGroup)
+{
+  NS_ENSURE_ARG_POINTER(aLoadGroup);
+  *aLoadGroup = nsnull;
+
+  if (mScriptContext) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    mScriptContext->GetGlobalObject(getter_AddRefs(global));
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
+    if (window) {
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      window->GetDocument(getter_AddRefs(domdoc));
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+      if (doc) {
+        doc->GetDocumentLoadGroup(aLoadGroup);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
@@ -440,7 +465,16 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   mCrossSiteAccessEnabled = crossSiteAccessEnabled;
 
   // Create a channel
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull, this);
+  // When we are called from JS we can find the load group for the page,
+  // and add ourselves to it. This way any pending requests
+  // will be automatically aborted if the user leaves the page.
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  GetLoadGroup(getter_AddRefs(loadGroup));
+
+  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
+  // which in turn keeps STOP button from becoming active  
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, loadGroup, this, 
+                     nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) return rv;
 
   // Set a principal for this document
@@ -471,7 +505,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   // Prepare for loading the XML document "into oneself"
   nsCOMPtr<nsIStreamListener> listener;
   if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel, 
-                                       nsnull, nsnull, 
+                                       loadGroup, nsnull, 
                                        getter_AddRefs(listener),
                                        PR_FALSE))) {
     NS_ERROR("nsXMLDocument::Load: Failed to start the document load.");

@@ -1969,8 +1969,6 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
   {
     mParserContext->SetMimeType(contentType);
   }
-  else
-    NS_NOTREACHED("parser needs a content type to find a dtd");
 
 #ifdef rickgdebug
   gOutFile= new fstream("c:/temp/out.file",ios::trunc);
