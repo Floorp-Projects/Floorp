@@ -208,6 +208,7 @@ public:
     aResult = PR_FALSE;
     return NS_OK;
   }
+  nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult GetTag(nsIAtom*& aResult) const;
   nsresult HandleDOMEvent(nsIPresContext& aPresContext,
                           nsEvent* aEvent,
@@ -483,6 +484,9 @@ public:
   }                                                                        \
   NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
     return _g.IsSynthetic(aResult);                                        \
+  }                                                                        \
+  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
+    return _g.GetNameSpaceID(aResult);                                     \
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \

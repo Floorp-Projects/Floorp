@@ -22,6 +22,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsGenericElement.h"
 #include "nsISizeOfHandler.h"
+#include "nsINameSpaceManager.h"
 
 class nsIDocument;
 
@@ -98,6 +99,11 @@ public:
     }
   NS_IMETHOD SetParent(nsIContent* aParent)
     { return NS_OK; }
+  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const
+    {
+      aResult = kNameSpaceID_None;
+      return NS_OK;
+    }
   NS_IMETHOD GetTag(nsIAtom*& aResult) const
     {
       aResult = nsnull;
