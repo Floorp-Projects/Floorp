@@ -25,6 +25,11 @@
 #include "prprf.h"
 #include "nsIOutputStream.h"
 
+#ifdef XP_PC
+#include "windows.h"
+#include "winbase.h"
+#endif
+
 nsPluginInstancePeerImpl :: nsPluginInstancePeerImpl()
 {
   NS_INIT_REFCNT();
@@ -755,7 +760,7 @@ printf("instance peer setwindowsize called\n");
 nsresult nsPluginInstancePeerImpl :: Initialize(nsIPluginInstanceOwner *aOwner,
                                                 const nsMIMEType aMIMEType)
 {
-  //don't add a ref to precent circular references... MMP
+  //don't add a ref to prevent circular references... MMP
   mOwner = aOwner;
 
   aOwner->GetInstance(mInstance);
@@ -782,5 +787,21 @@ nsresult nsPluginInstancePeerImpl :: GetOwner(nsIPluginInstanceOwner *&aOwner)
     return NS_OK;
   else
     return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP nsPluginInstancePeerImpl::InvalidateRect(nsPluginRect *invalidRect)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstancePeerImpl::InvalidateRegion(nsPluginRegion invalidRegion)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstancePeerImpl::ForceRedraw(void)
+{
+	return NS_OK;
 }
 

@@ -21,7 +21,6 @@
 #include "xp_core.h"
 #include "nsplugin.h"
 #include "ns4xPlugin.h"
-#include "nsIPluginStream.h"
 #include "ns4xPluginInstance.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -72,14 +71,44 @@ ns4xPlugin::CheckClassInitialized(void)
 };
 
 ////////////////////////////////////////////////////////////////////////
+// nsISupports stuff
 
+NS_IMPL_ADDREF(ns4xPlugin);
+NS_IMPL_RELEASE(ns4xPlugin);
 
+//static NS_DEFINE_IID(kILiveConnectPluginIID, NS_ILIVECONNECTPLUGIN_IID); 
+static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID); 
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
+static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
+static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID); 
+
+#ifndef NEW_PLUGIN_STREAM_API
+static NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER_IID);
+#endif
+
+////////////////////////////////////////////////////////////////////////
+
+#ifdef NEW_PLUGIN_STREAM_API
+ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsISupports* browserInterfaces)
+#else
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown)
+#endif
 {
     NS_INIT_REFCNT();
 
     memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
     fShutdownEntry = aShutdown;
+
+#ifdef NEW_PLUGIN_STREAM_API
+	 // set up the connections to the plugin manager
+	 if (nsnull == mPluginManager)
+		 browserInterfaces->QueryInterface(kIPluginManagerIID, (void **)&mPluginManager);
+
+	 if (nsnull == mMalloc)
+		 browserInterfaces->QueryInterface(kIMallocIID, (void **)&mMalloc);
+#endif
 }
 
 
@@ -87,19 +116,6 @@ ns4xPlugin::~ns4xPlugin(void)
 {
 }
 
-
-////////////////////////////////////////////////////////////////////////
-// nsISupports stuff
-
-NS_IMPL_ADDREF(ns4xPlugin);
-NS_IMPL_RELEASE(ns4xPlugin);
-
-static NS_DEFINE_IID(kILiveConnectPluginIID, NS_ILIVECONNECTPLUGIN_IID); 
-static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID); 
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
-static NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER_IID);
 
 nsresult
 ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
@@ -110,18 +126,6 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
     if (iid.Equals(kIPluginIID))
     {
         *instance = (void *)(nsIPlugin *)this;
-        AddRef();
-        return NS_OK;
-    }
-
-    if (iid.Equals(kILiveConnectPluginIID))
-    {
-        // Check the 4.x plugin callbacks to see if it supports
-        // LiveConnect...
-        if (fCallbacks.javaClass == NULL)
-            return NS_NOINTERFACE;
-
-        *instance = (void *)(nsILiveConnectPlugin *)this;
         AddRef();
         return NS_OK;
     }
@@ -143,12 +147,17 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
     return NS_NOINTERFACE;
 }
 
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
-static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID); 
 
 ////////////////////////////////////////////////////////////////////////
 // Static factory method.
 //
+
+/* 
+   CreatePlugin()
+   --------------
+   Handles the initialization of old, 4x style plugins.  Creates the ns4xPlugin object.
+   One ns4xPlugin object exists per Plugin (not instance).
+*/
 
 nsresult
 ns4xPlugin::CreatePlugin(PRLibrary *library,
@@ -180,7 +189,7 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
         (NP_PLUGINSHUTDOWN)PR_FindSymbol(library, "NP_Shutdown");
 
 	// create the new plugin handler
-    *result = new ns4xPlugin(&callbacks, pfnShutdown);
+    *result = new ns4xPlugin(&callbacks, pfnShutdown, browserInterfaces);
 
     NS_ADDREF(*result);
 
@@ -190,7 +199,11 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
 	// we must init here because the plugin may call NPN functions
 	// when we call into the NP_Initialize entry point - NPN functions
 	// require that mBrowserManager be set up
-	(*result)->Initialize(browserInterfaces);
+#ifdef NEW_PLUGIN_STREAM_API
+    (*result)->Initialize();
+#else
+    (*result)->Initialize(browserInterfaces);
+#endif
 
     // the NP_Initialize entry point was misnamed as NP_PluginInit,
     // early in plugin project development.  Its correct name is
@@ -214,6 +227,12 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
 
     return NS_OK;
 }
+
+/*
+   CreateInstance()
+   ----------------
+   Creates a ns4xPluginInstance object.
+*/
 
 nsresult ns4xPlugin :: CreateInstance(nsISupports *aOuter,  
                                       const nsIID &aIID,  
@@ -250,6 +269,7 @@ nsresult ns4xPlugin :: LockFactory(PRBool aLock)
   return NS_OK;
 }  
 
+#ifndef NEW_PLUGIN_STREAM_API
 nsresult
 ns4xPlugin::Initialize(nsISupports* browserInterfaces)
 {
@@ -265,6 +285,14 @@ ns4xPlugin::Initialize(nsISupports* browserInterfaces)
 
 	return rv;
 }
+#else
+nsresult
+ns4xPlugin::Initialize(void)
+{
+	return NS_OK;
+}
+#endif
+
 
 nsresult
 ns4xPlugin::Shutdown(void)
@@ -272,7 +300,7 @@ ns4xPlugin::Shutdown(void)
   if (nsnull != fShutdownEntry)
   {
 #ifdef NS_DEBUG
-printf("shutting down plugin %08x\n", this);
+	printf("shutting down plugin %08x\n", this);
 #endif
     fShutdownEntry();
     fShutdownEntry = nsnull;
@@ -287,7 +315,7 @@ printf("shutting down plugin %08x\n", this);
 nsresult
 ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
-printf("plugin getmimedescription called\n");
+  printf("plugin getmimedescription called\n");
   *resultingDesc = "";
   return NS_OK; // XXX make a callback, etc.
 }
@@ -296,13 +324,6 @@ nsresult
 ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
 {
 printf("plugin getvalue %d called\n", variable);
-  return NS_OK;
-}
-
-nsresult
-ns4xPlugin::GetJavaClass(jclass *resultingClass)
-{
-  *resultingClass = (jclass)fCallbacks.javaClass;
   return NS_OK;
 }
 
@@ -322,7 +343,15 @@ ns4xPlugin::_geturl(NPP npp, const char* relativeURL, const char* target)
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
+#ifdef NEW_PLUGIN_STREAM_API
+	nsIPluginStreamListener* listener = nsnull;
+	if(target == nsnull)
+		inst->NewStream(&listener);
+
+	return mPluginManager->GetURL(inst, relativeURL, target, listener);
+#else
     return mPluginManager->GetURL(inst, relativeURL, target);
+#endif
 }
 
 nsresult NP_EXPORT
@@ -337,8 +366,16 @@ ns4xPlugin::_geturlnotify(NPP npp, const char* relativeURL, const char* target,
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
+#ifdef NEW_PLUGIN_STREAM_API
+	nsIPluginStreamListener* listener = nsnull;
+	if(target == nsnull)
+		((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData);
+
+	return mPluginManager->GetURL(inst, relativeURL, target, listener);
+#else
     return mPluginManager->GetURL(inst, relativeURL, target,
                                   notifyData);
+#endif
 }
 
 
@@ -355,8 +392,16 @@ ns4xPlugin::_posturlnotify(NPP npp, const char* relativeURL, const char *target,
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
+#ifdef NEW_PLUGIN_STREAM_API
+	nsIPluginStreamListener* listener = nsnull;
+	if(target == nsnull)
+		((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData);
+
+	return mPluginManager->PostURL(inst, relativeURL, len, buf, file, target, listener);
+#else
     return mPluginManager->PostURL(inst, relativeURL, target,
                                    len, buf, file, notifyData);
+#endif
 }
 
 
@@ -372,8 +417,16 @@ ns4xPlugin::_posturl(NPP npp, const char* relativeURL, const char *target, uint3
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
+#ifdef NEW_PLUGIN_STREAM_API
+	nsIPluginStreamListener* listener = nsnull;
+	if(target == nsnull)
+		inst->NewStream(&listener);
+
+	return mPluginManager->PostURL(inst, relativeURL, len, buf, file, target, listener);
+#else
     return mPluginManager->PostURL(inst, relativeURL, target,
                                    len, buf, file);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -694,6 +747,7 @@ ns4xPlugin::_setvalue(NPP npp, NPPVariable variable, void *result)
 nsresult NP_EXPORT
 ns4xPlugin::_requestread(NPStream *pstream, NPByteRange *rangeList)
 {
+#ifndef NEW_PLUGIN_STREAM_API
     nsIPluginStreamPeer* streamPeer = (nsIPluginStreamPeer*) pstream->ndata;
 
     NS_ASSERTION(streamPeer != NULL, "null streampeer");
@@ -713,7 +767,7 @@ ns4xPlugin::_requestread(NPStream *pstream, NPByteRange *rangeList)
         NS_RELEASE(seekablePeer);
         return error;
     }
-
+#endif
     return NS_ERROR_UNEXPECTED;
 }
 
@@ -756,8 +810,6 @@ ns4xPlugin::_memalloc (uint32 size)
     return mMalloc->Alloc(size);
 }
 
-#if 1
-
 java_lang_Class* NP_EXPORT
 ns4xPlugin::_getJavaClass(void* handle)
 {
@@ -770,31 +822,8 @@ ns4xPlugin::_getJavaClass(void* handle)
 jref NP_EXPORT
 ns4xPlugin::_getJavaPeer(NPP npp)
 {
-#if 0
-    NPIPluginInstancePeer* peer = (NPIPluginInstancePeer*) npp->ndata;
-    PR_ASSERT(peer != NULL);
-    if (peer == NULL)
-        return NULL;
-
-    static NS_DEFINE_IID(kILiveConnectPluginInstancePeerIID,
-                         NP_ILIVECONNECTPLUGININSTANCEPEER_IID);
-
-    NPILiveConnectPluginInstancePeer* lcPeer = NULL;
-    if (peer->QueryInterface(kILiveConnectPluginInstancePeerIID,
-                             (void**) &lcPeer) == NS_OK) {
-        jobject result = lcPeer->GetJavaPeer();
-        lcPeer->Release();
-        return result;
-    }
-#endif
     return NULL;
 }
 
-#endif
 
-#if defined(XP_MAC) && !defined(powerc)
-#pragma pointers_in_A0
-#endif
-
-//
-////////////////////////////////////////////////////////////////////////
+// eof

@@ -37,9 +37,9 @@ OBJS =                              \
     .\$(OBJDIR)\nsPluginFactory.obj  \
     .\$(OBJDIR)\ns4xPlugin.obj  \
     .\$(OBJDIR)\ns4xPluginInstance.obj  \
-    .\$(OBJDIR)\ns4xPluginStream.obj  \
+#	.\$(OBJDIR)\ns4xPluginStream.obj \
     .\$(OBJDIR)\nsPluginInstancePeer.obj  \
-    .\$(OBJDIR)\nsPluginStreamPeer.obj  \
+#	.\$(OBJDIR)\nsPluginStreamPeer.obj \
     .\$(OBJDIR)\nsMalloc.obj  \
     $(NULL)
 

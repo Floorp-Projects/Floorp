@@ -167,3 +167,5 @@ nsresult nsPluginStreamPeer :: SetReason(nsPluginReason aReason)
   mReason = aReason;
   return NS_OK;
 }
+
+// eof

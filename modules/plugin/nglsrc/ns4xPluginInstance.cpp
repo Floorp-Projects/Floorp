@@ -17,11 +17,257 @@
  */
 
 #include "ns4xPluginInstance.h"
+
+#ifdef NEW_PLUGIN_STREAM_API
+#include "nsIPluginStreamListener.h"
+#else
 #include "ns4xPluginStream.h"
+#endif
+
 #include "prlog.h"
 
 ////////////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+class ns4xPluginStreamListener : public nsIPluginStreamListener {
+
+public:
+
+    NS_DECL_ISUPPORTS
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIPluginStreamListener:
+
+    NS_IMETHOD
+    OnStartBinding(const char* url, nsIPluginStreamInfo* pluginInfo);
+
+    NS_IMETHOD
+    OnDataAvailable(const char* url, nsIInputStream* input,
+                    PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo);
+
+    NS_IMETHOD
+    OnFileAvailable(const char* url, const char* fileName);
+
+    NS_IMETHOD
+    OnStopBinding(const char* url, nsresult status, nsIPluginStreamInfo* pluginInfo);
+
+	   NS_IMETHOD
+    GetStreamType(nsPluginStreamType *result);
+
+	   NS_IMETHOD
+	   OnNotify(const char* url, nsresult status);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // ns4xPluginStreamListener specific methods:
+
+    ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
+    virtual ~ns4xPluginStreamListener(void);
+
+protected:
+
+    void* mNotifyData;
+	   ns4xPluginInstance* mInst;
+	   NPStream mNPStream;
+	   PRUint32 mPosition;
+	   nsPluginStreamType mStreamType;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// ns4xPluginStreamListener Methods
+////////////////////////////////////////////////////////////////////////////////
+
+static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
+
+ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData)
+    : mNotifyData(notifyData)
+{
+    NS_INIT_REFCNT();
+	mInst = (ns4xPluginInstance*) inst;
+	mPosition = 0;
+
+    // Initialize the 4.x interface structure
+    memset(&mNPStream, 0, sizeof(mNPStream));
+
+	NS_IF_ADDREF(mInst);
+}
+
+ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
+{
+	NS_IF_RELEASE(mInst);
+}
+
+NS_IMPL_ISUPPORTS(ns4xPluginStreamListener, kIPluginStreamListenerIID);
+
+NS_IMETHODIMP
+ns4xPluginStreamListener::OnStartBinding(const char* url, nsIPluginStreamInfo* pluginInfo)
+{
+	NPP npp;
+	const NPPluginFuncs *callbacks;
+	PRBool seekable;
+	nsMIMEType contentType;
+
+
+    mNPStream.ndata        = (void*) this;
+    mNPStream.url          = url;
+	mNPStream.notifyData   = mNotifyData;
+ 
+	pluginInfo->GetLength((PRUint32*)&(mNPStream.end));
+    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+	pluginInfo->IsSeekable(&seekable);
+	pluginInfo->GetContentType(&contentType);
+
+    mInst->GetCallbacks(&callbacks);
+    mInst->GetNPP(&npp);
+
+    nsresult error
+        = (nsresult)CallNPP_NewStreamProc(callbacks->newstream,
+                                          npp,
+                                          (char *)contentType,
+                                          &mNPStream,
+                                          seekable,
+                                          (PRUint16*)&mStreamType);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ns4xPluginStreamListener::OnDataAvailable(const char* url, nsIInputStream* input,
+                                            PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo)
+{
+	const NPPluginFuncs *callbacks;
+    NPP                 npp;
+	PRUint32			numtowrite = 0;
+	PRUint32			amountRead = 0;
+	PRInt32				writeCount = 0;
+
+	mNPStream.url = url;
+    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+
+    mInst->GetCallbacks(&callbacks);
+    mInst->GetNPP(&npp);
+
+    if (callbacks->write == NULL)
+        return NS_OK; // XXX ?
+
+	// Get the data from the input stream
+	char* buffer = new char[length];
+    if (buffer) 
+        input->Read(buffer, offset, length, &amountRead);
+
+	// amountRead tells us how many bytes were put in the buffer
+	// WriteReady returns to us how many bytes the plugin is 
+	// ready to handle  - we have to keep calling WriteReady and
+	// Write until the buffer is empty
+    while (amountRead > 0)
+    {
+      if (callbacks->writeready != NULL)
+      {
+        numtowrite = CallNPP_WriteReadyProc(callbacks->writeready,
+                                            npp,
+                                            &mNPStream);
+
+        if (numtowrite > amountRead)
+          numtowrite = amountRead;
+      }
+      else // if WriteReady is not supported by the plugin, just write the whole buffer
+        numtowrite = length;
+
+
+      writeCount = CallNPP_WriteProc(callbacks->write,
+                                       npp,
+                                       &mNPStream, 
+                                       mPosition,
+                                       numtowrite,
+                                       (void *)buffer);
+	  if(writeCount < 0)
+		  return NS_ERROR_FAILURE;
+
+      amountRead -= numtowrite;
+	  mPosition += numtowrite;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ns4xPluginStreamListener::OnFileAvailable(const char* url, const char* fileName)
+{
+    const NPPluginFuncs *callbacks;
+    NPP                 npp;
+
+	mNPStream.url = url;
+
+    mInst->GetCallbacks(&callbacks);
+    mInst->GetNPP(&npp);
+
+    if (callbacks->asfile == NULL)
+        return NS_OK;
+
+    CallNPP_StreamAsFileProc(callbacks->asfile,
+                             npp,
+                             &mNPStream,
+                             fileName);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ns4xPluginStreamListener::OnStopBinding(const char* url, nsresult status, nsIPluginStreamInfo* pluginInfo)
+{
+    const NPPluginFuncs *callbacks;
+    NPP                 npp;
+
+	mNPStream.url = url;
+    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+
+    mInst->GetCallbacks(&callbacks);
+    mInst->GetNPP(&npp);
+
+    if (callbacks->destroystream != NULL)
+    {
+        CallNPP_DestroyStreamProc(callbacks->destroystream,
+                                  npp,
+                                  &mNPStream,
+                                  nsPluginReason_Done);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ns4xPluginStreamListener::GetStreamType(nsPluginStreamType *result)
+{
+  *result = mStreamType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ns4xPluginStreamListener::OnNotify(const char* url, nsresult status)
+{
+	const NPPluginFuncs *callbacks;
+    NPP                 npp;
+
+	mNPStream.url = url;
+
+    mInst->GetCallbacks(&callbacks);
+    mInst->GetNPP(&npp);
+
+	// check to see if we have a call back
+    if (callbacks->urlnotify != NULL && mNotifyData != nsnull)
+    {
+        CallNPP_URLNotifyProc(callbacks->urlnotify,
+                              npp,
+                              url,
+                              nsPluginReason_Done,
+                              mNotifyData);
+    }
+
+	return NS_OK;
+}
+
+#endif
 
 ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks)
     : fCallbacks(callbacks)
@@ -205,6 +451,34 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     return error;
 }
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+/* NOTE: the caller must free the stream listener */
+
+NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamListener** listener)
+{
+	nsISupports* stream = nsnull;
+	stream = (nsISupports *)(nsIPluginStreamListener *)new ns4xPluginStreamListener(this, nsnull);
+
+	if(stream == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	nsresult res = stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
+
+	// If we didn't get the right interface, clean up  
+	if (res != NS_OK)
+		delete stream;  
+
+	return res;
+}
+
+nsresult ns4xPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData)
+{
+	*listener = new ns4xPluginStreamListener(this, notifyData);
+	return NS_OK;
+}
+
+#else
 NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result)
 {
     (*result) = NULL;
@@ -229,6 +503,7 @@ NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPlugin
     (*result) = stream;
     return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 {
@@ -244,6 +519,7 @@ printf("instance handleevent called\n");
     return NS_OK;
 }
 
+#ifndef NEW_PLUGIN_STREAM_API
 NS_IMETHODIMP ns4xPluginInstance::URLNotify(const char* url, const char* target,
                                            nsPluginReason reason, void* notifyData)
 {
@@ -258,6 +534,7 @@ NS_IMETHODIMP ns4xPluginInstance::URLNotify(const char* url, const char* target,
 
     return NS_OK; //XXX this seems bad...
 }
+#endif
 
 NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable, void *value)
 {
@@ -280,15 +557,34 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable, 
   return rv;
 }
 
-NS_IMETHODIMP ns4xPluginInstance :: SetWindowless(PRBool aWindowless)
+nsresult ns4xPluginInstance::GetNPP(NPP* aNPP) 
+{
+	if(aNPP != nsnull)
+		*aNPP = &fNPP;
+	else
+		return NS_ERROR_NULL_POINTER;
+
+    return NS_OK;
+}
+
+nsresult ns4xPluginInstance::GetCallbacks(const NPPluginFuncs ** aCallbacks)
+{
+	if(aCallbacks != nsnull)
+		*aCallbacks = fCallbacks;
+	else
+		return NS_ERROR_NULL_POINTER;
+
+	return NS_OK;
+}
+
+nsresult ns4xPluginInstance :: SetWindowless(PRBool aWindowless)
 {
   mWindowless = aWindowless;
   return NS_OK;
 }
 
-NS_IMETHODIMP ns4xPluginInstance :: SetTransparent(PRBool aTransparent)
+nsresult ns4xPluginInstance :: SetTransparent(PRBool aTransparent)
 {
   mTransparent = aTransparent;
   return NS_OK;
 }
-
