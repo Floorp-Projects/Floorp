@@ -156,7 +156,7 @@ bin\components\nsAxSecurityPolicy.js
 bin\components\nsCloseAllWindows.js
 
 ; NegotiateAuth
-bin/components/negotiateauth.dll
+bin\components\negotiateauth.dll
 
 ; webservices
 bin\components\websrvcs.dll
