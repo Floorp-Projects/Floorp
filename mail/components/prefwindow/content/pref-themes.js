@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-var gShowDescription = false;
 var gData;
 
 try {
@@ -82,16 +81,6 @@ function Startup()
         break;
       }
     }      
-  }
-
-  var navbundle = document.getElementById("bundle_navigator");
-  var showSkinsDescription = navbundle.getString("showskinsdescription");
-  if( showSkinsDescription == "false" )
-  {
-    gShowDescription = false;
-    var description = document.getElementById("description");
-    while (description.hasChildNodes())
-      description.removeChild(description.firstChild);
   }
 }
 
@@ -193,13 +182,8 @@ function themeSelect()
     var nameField = document.getElementById("displayName");
     var author = document.getElementById("author");
     var image = document.getElementById("previewImage");
-    var descText = document.createTextNode(selectedItem.getAttribute("description"));
-    var description = document.getElementById("description");
     var uninstallButton = document.getElementById("uninstallSkin");
     var uninstallLabel = prefbundle.getString("uninstallThemePrefix");
-
-    while (description.hasChildNodes())
-      description.removeChild(description.firstChild);
 
     nameField.setAttribute("value", themeName);
     author.setAttribute("value", selectedItem.getAttribute("author"));
@@ -216,8 +200,6 @@ function themeSelect()
     catch (e) {
     }
     if (!oldTheme) {    
-      if( gShowDescription ) 
-        description.appendChild(descText);
 
       var locType = selectedItem.getAttribute("loctype");
       uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
@@ -238,10 +220,6 @@ function themeSelect()
       
       newText = newText.replace(/%brand%/g, brandbundle.getString("brandShortName"));
 
-      if( gShowDescription )  {
-        descText = document.createTextNode(newText);
-        description.appendChild(descText);
-      }
     }
   }
   else {

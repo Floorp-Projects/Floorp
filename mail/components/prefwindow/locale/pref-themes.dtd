@@ -3,7 +3,7 @@
 <!ENTITY  lHeader                 "Themes">
 
 <!ENTITY  skinIntro.label         "Selecting a new theme changes the look of buttons, dialog boxes, menus, toolbars, and other items. It does not change the way these items function.">
-<!ENTITY  installedThemes.label   "Theme to use:">
+<!ENTITY  installedThemes.label   "Select a theme to use:">
 
 <!ENTITY  selectSkin.label        "Apply Theme">
 <!ENTITY  selectSkin.accesskey    "a">
@@ -13,14 +13,14 @@
 
 <!ENTITY  general.label           "General">
 <!ENTITY  preview.label           "Preview Image">
-<!ENTITY  author.label            "Author">
+<!ENTITY  author.label            "Author:">
 
 <!ENTITY  newThemesCaption.label  "New Themes">
 
 <!ENTITY  getNewThemes.label      "Download new themes">
 
 <!ENTITY  newThemeDescription.label "In order to install a new theme for Mozilla Thunderbird, you must first download the theme using a browser." >
-<!ENTITY  installSkin.label        "Install Theme">
+<!ENTITY  installSkin.label        "Install New Theme">
 <!ENTITY  installSkin.accesskey    "I">
 
 <!ENTITY  installPicker.title      "Select a theme to install">

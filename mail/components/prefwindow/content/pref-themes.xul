@@ -82,18 +82,16 @@
 
       <hbox>
         <image style="margin-left: 4px; margin-bottom: 4px;" id="previewImage"/>
-        <spring flex="1"/>
-        <vbox>
-        <spring flex="1"/>
-        <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"
-                accesskey="&uninstallSkin.accesskey;"/>
-        </vbox>
       </hbox>
     </vbox>
-
   </hbox>
 
-  <label id="description"/>
+  <hbox>
+    <spring flex="1"/>
+    <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"
+            accesskey="&uninstallSkin.accesskey;"/>
+  </hbox>
+
   <separator class="thin"/>
   <description>&newThemeDescription.label;</description>
   <separator class="thin"/>
