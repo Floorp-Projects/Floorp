@@ -114,7 +114,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
                             &&                   //
                 (two == 'o' || two == 'O')       // "g[G]o[O] blah"
                             &&                   //
-                     (unescaped[12] == ' ') ) {      //
+                     (unescaped[2] == ' ') ) {      //
 
         query = unescaped+3;
     } else {
