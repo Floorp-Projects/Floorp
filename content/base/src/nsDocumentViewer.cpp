@@ -24,6 +24,8 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsISupports.h"
+#include "nsIContent.h"
+#include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
 
 #include "nsIImageGroup.h"
@@ -54,6 +56,9 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
+#include "nsIContentViewerEdit.h"
+#include "nsIContentViewerFile.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
 
 
@@ -71,6 +76,9 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 #endif
 
 class DocumentViewerImpl : public nsIDocumentViewer,
+                           public nsIContentViewerEdit,
+                           public nsIContentViewerFile,
+                           public nsIMarkupDocumentViewer,
                            public nsIImageGroupObserver
 {
 public:
@@ -97,8 +105,6 @@ public:
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
-  NS_IMETHOD Print(void);
-  NS_IMETHOD PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext);
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
@@ -109,6 +115,15 @@ public:
   NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
                                        nsIDocumentViewer*& aResult);
+
+  // nsIContentViewerEdit
+  NS_DECL_NSICONTENTVIEWEREDIT
+
+  // nsIContentViewerFile
+  NS_DECL_NSICONTENTVIEWERFILE
+
+  // nsIMarkupDocumentViewer
+  NS_DECL_NSIMARKUPDOCUMENTVIEWER
 
   // nsIImageGroupObserver interface...
   virtual void Notify(nsIImageGroup *aImageGroup,
@@ -166,6 +181,17 @@ protected:
   nsIViewManager    *mPrintVM;
   nsIView           *mPrintView;
 
+  // document management data
+  //   these items are specific to markup documents (html and xml)
+  //   may consider splitting these out into a subclass
+  PRBool   mAllowPlugins;
+  PRPackedBool mIsFrame;
+  /* character set member data */
+  nsString mDefaultCharacterSet;
+  nsString mHintCharset;
+  nsCharsetSource mHintCharsetSource;
+  nsString mForceCharacterSet;
+
 };
 
 // Class IDs
@@ -213,6 +239,11 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   : mPresContext(dont_QueryInterface(aPresContext))
 {
   NS_INIT_REFCNT();
+  mHintCharset = "";
+  mHintCharsetSource = kCharsetUninitialized;
+  mForceCharacterSet = "";
+  mAllowPlugins = PR_TRUE;
+  mIsFrame = PR_FALSE;
 }
 
 // ISupports implementation...
@@ -234,6 +265,12 @@ DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDocumentViewerIID)) {
     nsIDocumentViewer* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIMarkupDocumentViewer::GetIID())) {
+    nsIMarkupDocumentViewer* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -509,194 +546,31 @@ DocumentViewerImpl::Hide(void)
   return NS_OK;
 }
 
-static NS_DEFINE_IID(kIDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
-static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
-
-
-/** ---------------------------------------------------
- *  See documentation above in the DocumentViewerImpl class definition
- *	@update 07/09/99 dwc
- */
-NS_IMETHODIMP
-DocumentViewerImpl::Print(void)
-{
-nsCOMPtr<nsIWebShell>                 webContainer;
-nsCOMPtr<nsIDeviceContextSpecFactory> factory;
-PRInt32                               width,height;
-nsCOMPtr<nsIPref>                     prefs;
-
-  nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
-                                     nsnull,
-                                     kIDeviceContextSpecFactoryIID,
-                                     (void **)getter_AddRefs(factory));
-
-  if (factory) {
-
-#ifdef DEBUG_dcone
-    printf("PRINT JOB STARTING\n");
-#endif
-
-    nsIDeviceContextSpec *devspec = nsnull;
-    nsCOMPtr<nsIDeviceContext> dx;
-    mPrintDC = nsnull;
-
-    factory->CreateDeviceContextSpec(nsnull, devspec, PR_FALSE);
-    if (nsnull != devspec) {
-      mPresContext->GetDeviceContext(getter_AddRefs(dx));
-      nsresult rv = dx->GetDeviceContextFor(devspec, mPrintDC); 
-      if (NS_SUCCEEDED(rv)) {
-
-        NS_RELEASE(devspec);
-
-        // Get the webshell for this documentviewer
-        webContainer = do_QueryInterface(mContainer);
-        if(webContainer) {
-          // load the document and do the initial reflow on the entire document
-          rv = NS_NewPrintContext(&mPrintPC);
-          if(NS_FAILED(rv)){
-            return rv;
-          }
-
-          mPrintDC->GetDeviceSurfaceDimensions(width,height);
-          mPresContext->GetPrefs(getter_AddRefs(prefs));
-          mPrintPC->Init(mPrintDC,prefs);
-          CreateStyleSet(mDocument,&mPrintSS);
-
-          rv = NS_NewPresShell(&mPrintPS);
-          if(NS_FAILED(rv)){
-            return rv;
-          }
-          
-          rv = nsComponentManager::CreateInstance(kViewManagerCID,nsnull,kIViewManagerIID,(void**)&mPrintVM);
-          if(NS_FAILED(rv)) {
-            return rv;
-          }
-
-          rv = mPrintVM->Init(mPrintDC);
-          if(NS_FAILED(rv)) {
-            return rv;
-          }
-
-          rv = nsComponentManager::CreateInstance(kViewCID,nsnull,kIViewIID,(void**)&mPrintView);
-          if(NS_FAILED(rv)) {
-            return rv;
-          }
-          
-          nsRect  tbounds = nsRect(0,0,width,height);
-          rv = mPrintView->Init(mPrintVM,tbounds,nsnull);
-          if(NS_FAILED(rv)) {
-            return rv;
-          }
-
-          // setup hierarchical relationship in view manager
-          mPrintVM->SetRootView(mPrintView);
-          mPrintPS->Init(mDocument,mPrintPC,mPrintVM,mPrintSS);
-
-          nsCOMPtr<nsIImageGroup> imageGroup;
-          mPrintPC->GetImageGroup(getter_AddRefs(imageGroup));
-          if (imageGroup) {
-            imageGroup->AddObserver(this);
-          }
-
-          mPrintPS->InitialReflow(width,height);
-
-#ifdef DEBUG_dcone
-          float   a1,a2;
-          PRInt32 i1,i2;
-
-          printf("CRITICAL PRINTING INFORMATION\n");
-          printf("PRESSHELL(%x)  PRESCONTEXT(%x)\nVIEWMANAGER(%x) VIEW(%x)\n",
-              mPrintPS, mPrintPC,mPrintDC,mPrintVM,mPrintView);
-          
-          // DEVICE CONTEXT INFORMATION from PresContext
-          printf("DeviceContext of Presentation Context(%x)\n",dx);
-          dx->GetDevUnitsToTwips(a1);
-          dx->GetTwipsToDevUnits(a2);
-          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-          dx->GetAppUnitsToDevUnits(a1);
-          dx->GetDevUnitsToAppUnits(a2);
-          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
-          dx->GetCanonicalPixelScale(a1);
-          printf("    GetCanonicalPixelScale = %f\n",a1);
-          dx->GetScrollBarDimensions(a1, a2);
-          printf("    ScrollBar x = %f y = %f\n",a1,a2);
-          dx->GetZoom(a1);
-          printf("    Zoom = %f\n",a1);
-          dx->GetDepth((PRUint32&)i1);
-          printf("    Depth = %d\n",i1);
-          dx->GetDeviceSurfaceDimensions(i1,i2);
-          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
-
-
-          // DEVICE CONTEXT INFORMATION
-          printf("DeviceContext created for print(%x)\n",mPrintDC);
-          mPrintDC->GetDevUnitsToTwips(a1);
-          mPrintDC->GetTwipsToDevUnits(a2);
-          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-          mPrintDC->GetAppUnitsToDevUnits(a1);
-          mPrintDC->GetDevUnitsToAppUnits(a2);
-          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
-          mPrintDC->GetCanonicalPixelScale(a1);
-          printf("    GetCanonicalPixelScale = %f\n",a1);
-          mPrintDC->GetScrollBarDimensions(a1, a2);
-          printf("    ScrollBar x = %f y = %f\n",a1,a2);
-          mPrintDC->GetZoom(a1);
-          printf("    Zoom = %f\n",a1);
-          mPrintDC->GetDepth((PRUint32&)i1);
-          printf("    Depth = %d\n",i1);
-          mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
-          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
-
-#endif
-          //
-          // The mIsPrinting flag is set when the ImageGroup observer is
-          // notified that images must be loaded as a result of the 
-          // InitialReflow...
-          //
-          if(!mIsPrinting){
-            DocumentReadyForPrinting();
-#ifdef DEBUG_dcone
-            printf("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
-#endif
-          } else {
-            // use the observer mechanism to finish the printing
-#ifdef DEBUG_dcone
-            printf("PRINTING OBSERVER STARTED\n");
-#endif
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation above in the DocumentViewerImpl class definition
- *	@update 07/09/99 dwc
- */
 NS_IMETHODIMP
 DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext)
 {
-nsCOMPtr<nsIStyleSet>       ss;
-nsCOMPtr<nsIPref>           prefs;
-nsCOMPtr<nsIViewManager>    vm;
-PRInt32                     width, height;
-nsIView                     *view;
-nsresult                    rv;
-PRInt32                     count,i;
-nsIWebShell                 *childWebShell;
-nsIContentViewer            *viewer;
-  
+  NS_ENSURE_ARG_POINTER(aParent);
+  NS_ENSURE_ARG_POINTER(aDContext);
+
+  nsCOMPtr<nsIStyleSet>       ss;
+  nsCOMPtr<nsIPref>           prefs;
+  nsCOMPtr<nsIViewManager>    vm;
+  PRInt32                     width, height;
+  nsIView                     *view;
+  nsresult                    rv;
+  PRInt32                     count,i;
+  nsCOMPtr<nsIWebShell>       childWebShell;
+  nsCOMPtr<nsIContentViewer>  viewer;
 
   aParent->GetChildCount(count);
   if(count> 0) { 
     for(i=0;i<count;i++) {
-      aParent->ChildAt(i,childWebShell);
-      childWebShell->GetContentViewer(&viewer);
-      viewer->PrintContent(childWebShell,aDContext);
-      NS_RELEASE(childWebShell);
-      NS_RELEASE(viewer);
+      aParent->ChildAt(i, *(getter_AddRefs(childWebShell)));
+      childWebShell->GetContentViewer(getter_AddRefs(viewer));
+      nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+      if (viewerFile) {
+        NS_ENSURE_SUCCESS(viewerFile->PrintContent(childWebShell,aDContext), NS_ERROR_FAILURE);
+      }
     }
   } else {
     aDContext->BeginDocument();
@@ -1025,7 +899,8 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
     //
     // Send the document to the printer...
     //
-    PrintContent(webContainer,mPrintDC);
+    nsresult rv = PrintContent(webContainer, mPrintDC);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "bad result from PrintConent");
 
     // printing is complete, clean up now
     mIsPrinting = PR_FALSE;
@@ -1039,3 +914,590 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
   }
 }
 
+/* ========================================================================================
+ * nsIContentViewerFile
+ * ======================================================================================== */
+
+NS_IMETHODIMP DocumentViewerImpl::Search()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetSearchable(PRBool *aSearchable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::ClearSelection()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SelectAll()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::CopySelection()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::CutSelection()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetCutable(PRBool *aCutable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::Paste()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetPasteable(PRBool *aPasteable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* ========================================================================================
+ * nsIContentViewerEdit
+ * ======================================================================================== */
+NS_IMETHODIMP
+DocumentViewerImpl::Save()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetSaveable(PRBool *aSaveable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static NS_DEFINE_IID(kIDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
+static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
+
+
+/** ---------------------------------------------------
+ *  See documentation above in the DocumentViewerImpl class definition
+ *	@update 07/09/99 dwc
+ */
+NS_IMETHODIMP
+DocumentViewerImpl::Print()
+{
+nsCOMPtr<nsIWebShell>                 webContainer;
+nsCOMPtr<nsIDeviceContextSpecFactory> factory;
+PRInt32                               width,height;
+nsCOMPtr<nsIPref>                     prefs;
+
+  nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
+                                     nsnull,
+                                     kIDeviceContextSpecFactoryIID,
+                                     (void **)getter_AddRefs(factory));
+
+  if (factory) {
+
+#ifdef DEBUG_dcone
+    printf("PRINT JOB STARTING\n");
+#endif
+
+    nsIDeviceContextSpec *devspec = nsnull;
+    nsCOMPtr<nsIDeviceContext> dx;
+    mPrintDC = nsnull;
+
+    factory->CreateDeviceContextSpec(nsnull, devspec, PR_FALSE);
+    if (nsnull != devspec) {
+      mPresContext->GetDeviceContext(getter_AddRefs(dx));
+      nsresult rv = dx->GetDeviceContextFor(devspec, mPrintDC); 
+      if (NS_SUCCEEDED(rv)) {
+
+        NS_RELEASE(devspec);
+
+        // Get the webshell for this documentviewer
+        webContainer = do_QueryInterface(mContainer);
+        if(webContainer) {
+          // load the document and do the initial reflow on the entire document
+          rv = NS_NewPrintContext(&mPrintPC);
+          if(NS_FAILED(rv)){
+            return rv;
+          }
+
+          mPrintDC->GetDeviceSurfaceDimensions(width,height);
+          mPresContext->GetPrefs(getter_AddRefs(prefs));
+          mPrintPC->Init(mPrintDC,prefs);
+          CreateStyleSet(mDocument,&mPrintSS);
+
+          rv = NS_NewPresShell(&mPrintPS);
+          if(NS_FAILED(rv)){
+            return rv;
+          }
+          
+          rv = nsComponentManager::CreateInstance(kViewManagerCID,nsnull,kIViewManagerIID,(void**)&mPrintVM);
+          if(NS_FAILED(rv)) {
+            return rv;
+          }
+
+          rv = mPrintVM->Init(mPrintDC);
+          if(NS_FAILED(rv)) {
+            return rv;
+          }
+
+          rv = nsComponentManager::CreateInstance(kViewCID,nsnull,kIViewIID,(void**)&mPrintView);
+          if(NS_FAILED(rv)) {
+            return rv;
+          }
+          
+          nsRect  tbounds = nsRect(0,0,width,height);
+          rv = mPrintView->Init(mPrintVM,tbounds,nsnull);
+          if(NS_FAILED(rv)) {
+            return rv;
+          }
+
+          // setup hierarchical relationship in view manager
+          mPrintVM->SetRootView(mPrintView);
+          mPrintPS->Init(mDocument,mPrintPC,mPrintVM,mPrintSS);
+
+          nsCOMPtr<nsIImageGroup> imageGroup;
+          mPrintPC->GetImageGroup(getter_AddRefs(imageGroup));
+          if (imageGroup) {
+            imageGroup->AddObserver(this);
+          }
+
+          mPrintPS->InitialReflow(width,height);
+
+#ifdef DEBUG_dcone
+          float   a1,a2;
+          PRInt32 i1,i2;
+
+          printf("CRITICAL PRINTING INFORMATION\n");
+          printf("PRESSHELL(%x)  PRESCONTEXT(%x)\nVIEWMANAGER(%x) VIEW(%x)\n",
+              mPrintPS, mPrintPC,mPrintDC,mPrintVM,mPrintView);
+          
+          // DEVICE CONTEXT INFORMATION from PresContext
+          printf("DeviceContext of Presentation Context(%x)\n",dx);
+          dx->GetDevUnitsToTwips(a1);
+          dx->GetTwipsToDevUnits(a2);
+          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+          dx->GetAppUnitsToDevUnits(a1);
+          dx->GetDevUnitsToAppUnits(a2);
+          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+          dx->GetCanonicalPixelScale(a1);
+          printf("    GetCanonicalPixelScale = %f\n",a1);
+          dx->GetScrollBarDimensions(a1, a2);
+          printf("    ScrollBar x = %f y = %f\n",a1,a2);
+          dx->GetZoom(a1);
+          printf("    Zoom = %f\n",a1);
+          dx->GetDepth((PRUint32&)i1);
+          printf("    Depth = %d\n",i1);
+          dx->GetDeviceSurfaceDimensions(i1,i2);
+          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+
+
+          // DEVICE CONTEXT INFORMATION
+          printf("DeviceContext created for print(%x)\n",mPrintDC);
+          mPrintDC->GetDevUnitsToTwips(a1);
+          mPrintDC->GetTwipsToDevUnits(a2);
+          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+          mPrintDC->GetAppUnitsToDevUnits(a1);
+          mPrintDC->GetDevUnitsToAppUnits(a2);
+          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+          mPrintDC->GetCanonicalPixelScale(a1);
+          printf("    GetCanonicalPixelScale = %f\n",a1);
+          mPrintDC->GetScrollBarDimensions(a1, a2);
+          printf("    ScrollBar x = %f y = %f\n",a1,a2);
+          mPrintDC->GetZoom(a1);
+          printf("    Zoom = %f\n",a1);
+          mPrintDC->GetDepth((PRUint32&)i1);
+          printf("    Depth = %d\n",i1);
+          mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
+          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+
+#endif
+          //
+          // The mIsPrinting flag is set when the ImageGroup observer is
+          // notified that images must be loaded as a result of the 
+          // InitialReflow...
+          //
+          if(!mIsPrinting){
+            DocumentReadyForPrinting();
+#ifdef DEBUG_dcone
+            printf("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
+#endif
+          } else {
+            // use the observer mechanism to finish the printing
+#ifdef DEBUG_dcone
+            printf("PRINTING OBSERVER STARTED\n");
+#endif
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetPrintable(PRBool *aPrintable) 
+{
+  NS_ENSURE_ARG_POINTER(aPrintable);
+
+  *aPrintable = PR_TRUE;
+  return NS_OK;
+}
+
+
+//*****************************************************************************
+// nsIMarkupDocumentViewer
+//*****************************************************************************   
+
+NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
+{
+   NS_ENSURE_ARG(aNode);
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
+
+   // Get the nsIContent interface, because that's what we need to 
+   // get the primary frame
+   
+   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+
+   // Get the primary frame
+   nsIFrame* frame;  // Remember Frames aren't ref-counted.  They are in their 
+                     // own special little world.
+
+   NS_ENSURE_SUCCESS(presShell->GetPrimaryFrameFor(content, &frame),
+      NS_ERROR_FAILURE);
+
+   // tell the pres shell to scroll to the frame
+   NS_ENSURE_SUCCESS(presShell->ScrollFrameIntoView(frame, 
+                                                    NS_PRESSHELL_SCROLL_TOP, 
+                                                    NS_PRESSHELL_SCROLL_ANYWHERE), 
+                     NS_ERROR_FAILURE); 
+   return NS_OK; 
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetAllowPlugins(PRBool* aAllowPlugins)
+{
+   NS_ENSURE_ARG_POINTER(aAllowPlugins);
+
+   *aAllowPlugins = mAllowPlugins;
+   return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetAllowPlugins(PRBool aAllowPlugins)
+{
+   mAllowPlugins = aAllowPlugins;
+   return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetIsFrame(PRBool* aIsFrame)
+{
+  NS_ENSURE_ARG_POINTER(aIsFrame);
+
+  *aIsFrame = mIsFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetIsFrame(PRBool aIsFrame)
+{
+  mIsFrame = aIsFrame;
+  return NS_OK;
+}
+
+// XXX: SEMANTIC CHANGE! 
+//      returns a copy of the string.  Caller is responsible for freeing result
+//      using Recycle(aDefaultCharacterSet)
+NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
+  NS_ENSURE_STATE(mContainer);
+
+  static char *gDefCharset = nsnull;    // XXX: memory leak!
+
+  if (0 == mDefaultCharacterSet.Length()) 
+  {
+    if ((nsnull == gDefCharset) || (nsnull == *gDefCharset)) 
+    {
+      nsCOMPtr<nsIWebShell> webShell;
+      webShell = do_QueryInterface(mContainer);
+      if (webShell)
+      {
+        nsCOMPtr<nsIPref> prefs;
+        NS_ENSURE_SUCCESS(webShell->GetPrefs(*(getter_AddRefs(prefs))), NS_ERROR_FAILURE);
+        if(prefs)
+          prefs->CopyCharPref("intl.charset.default", &gDefCharset);
+      }
+    }
+    if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
+      mDefaultCharacterSet = "ISO-8859-1";
+    else
+      mDefaultCharacterSet = gDefCharset;
+  }
+  *aDefaultCharacterSet = mDefaultCharacterSet.ToNewUnicode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetDefaultCharacterSet(const PRUnichar* aDefaultCharacterSet)
+{
+  mDefaultCharacterSet = aDefaultCharacterSet;  // this does a copy of aDefaultCharacterSet
+  // now set the default char set on all children of mContainer
+  nsCOMPtr<nsIWebShell> webShell;
+  webShell = do_QueryInterface(mContainer);
+  if (webShell)
+  {
+    nsCOMPtr<nsIWebShell> childWebShell;
+    PRInt32 i;
+    PRInt32 n;
+    webShell->GetChildCount(n);
+    for (i=0; i < n; i++) 
+    {
+      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
+      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
+      if (childWebShell) 
+      {
+        nsCOMPtr<nsIContentViewer> childCV;
+        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        if (childCV) 
+        {
+          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+          if (markupCV) {
+            markupCV->SetDefaultCharacterSet(aDefaultCharacterSet);
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// XXX: SEMANTIC CHANGE! 
+//      returns a copy of the string.  Caller is responsible for freeing result
+//      using Recycle(aForceCharacterSet)
+NS_IMETHODIMP DocumentViewerImpl::GetForceCharacterSet(PRUnichar** aForceCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aForceCharacterSet);
+
+  nsAutoString emptyStr;
+  if (mForceCharacterSet.Equals(emptyStr)) {
+    *aForceCharacterSet = nsnull;
+  }
+  else {
+    *aForceCharacterSet = mForceCharacterSet.ToNewUnicode();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetForceCharacterSet(const PRUnichar* aForceCharacterSet)
+{
+  mForceCharacterSet = aForceCharacterSet;
+  // now set the force char set on all children of mContainer
+  nsCOMPtr<nsIWebShell> webShell;
+  webShell = do_QueryInterface(mContainer);
+  if (webShell)
+  {
+    nsCOMPtr<nsIWebShell> childWebShell;
+    PRInt32 i;
+    PRInt32 n;
+    webShell->GetChildCount(n);
+    for (i=0; i < n; i++) 
+    {
+      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
+      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
+      if (childWebShell) 
+      {
+        nsCOMPtr<nsIContentViewer> childCV;
+        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        if (childCV) 
+        {
+          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+          if (markupCV) {
+            markupCV->SetForceCharacterSet(aForceCharacterSet);
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// XXX: SEMANTIC CHANGE! 
+//      returns a copy of the string.  Caller is responsible for freeing result
+//      using Recycle(aHintCharacterSet)
+NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSet(PRUnichar * *aHintCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aHintCharacterSet);
+
+  if(kCharsetUninitialized == mHintCharsetSource) {
+    *aHintCharacterSet = nsnull;
+  } else {
+    *aHintCharacterSet = mHintCharset.ToNewUnicode();
+    // this can't possibly be right.  we can't set a value just because somebody got a related value!
+    //mHintCharsetSource = kCharsetUninitialized;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSetSource(PRInt32 *aHintCharacterSetSource)
+{
+  NS_ENSURE_ARG_POINTER(aHintCharacterSetSource);
+
+  *aHintCharacterSetSource = mHintCharsetSource;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
+{
+  mHintCharsetSource = (nsCharsetSource)aHintCharacterSetSource;
+  // now set the force char set on all children of mContainer
+  nsCOMPtr<nsIWebShell> webShell;
+  webShell = do_QueryInterface(mContainer);
+  if (webShell)
+  {
+    nsCOMPtr<nsIWebShell> childWebShell;
+    PRInt32 i;
+    PRInt32 n;
+    webShell->GetChildCount(n);
+    for (i=0; i < n; i++) 
+    {
+      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
+      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
+      if (childWebShell) 
+      {
+        nsCOMPtr<nsIContentViewer> childCV;
+        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        if (childCV) 
+        {
+          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+          if (markupCV) {
+            markupCV->SetHintCharacterSetSource(aHintCharacterSetSource);
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintCharacterSet)
+{
+  mHintCharset = aHintCharacterSet;
+  // now set the force char set on all children of mContainer
+  nsCOMPtr<nsIWebShell> webShell;
+  webShell = do_QueryInterface(mContainer);
+  if (webShell)
+  {
+    nsCOMPtr<nsIWebShell> childWebShell;
+    PRInt32 i;
+    PRInt32 n;
+    webShell->GetChildCount(n);
+    for (i=0; i < n; i++) 
+    {
+      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
+      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
+      if (childWebShell) 
+      {
+        nsCOMPtr<nsIContentViewer> childCV;
+        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        if (childCV) 
+        {
+          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+          if (markupCV) {
+            markupCV->SetHintCharacterSet(aHintCharacterSet);
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// XXX: poor error checking
+NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
+{
+
+  // XXX: for now, just call the webshell's SizeToContent
+  nsCOMPtr<nsIWebShell> webShell;
+  webShell = do_QueryInterface(mContainer);
+  if (webShell)  
+  {
+    return webShell->SizeToContent();
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+
+#ifdef NEW_DOCSHELL_INTERFACES
+
+  // get the presentation shell
+  nsCOMPtr<nsIPresShell> presShell;
+  NS_ENSURE_SUCCESS(GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  nsRect  shellArea;
+  PRInt32 width, height;
+  float   pixelScale;
+  NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE), 
+                    NS_ERROR_FAILURE);
+
+  // so how big is it?
+  nsCOMPtr<nsIPresContext> presContext;
+  NS_ENSURE_SUCCESS(GetPresContext(*(getter_AddRefs(presContext))), 
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  presContext->GetVisibleArea(shellArea);
+  presContext->GetTwipsToPixels(&pixelScale);
+  width = PRInt32((float)shellArea.width*pixelScale);
+  height = PRInt32((float)shellArea.height*pixelScale);
+
+  // if we're the outermost webshell for this window, size the window
+  /* XXX: how do we do this now?
+  if (mContainer) 
+  {
+    nsCOMPtr<nsIBrowserWindow> browser = do_QueryInterface(mContainer);
+    if (browser) 
+    {
+      nsCOMPtr<nsIDocShell> browserWebShell;
+      PRInt32 oldX, oldY, oldWidth, oldHeight,
+              widthDelta, heightDelta;
+      nsRect  windowBounds;
+
+      GetBounds(oldX, oldY, oldWidth, oldHeight);
+      widthDelta = width - oldWidth;
+      heightDelta = height - oldHeight;
+      browser->GetWindowBounds(windowBounds);
+      browser->SizeWindowTo(windowBounds.width + widthDelta,
+                            windowBounds.height + heightDelta);
+    }
+  }
+  */
+  NS_ASSERTION(PR_FALSE, "NOT YET IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+  //return NS_OK;
+
+#endif
+
+}

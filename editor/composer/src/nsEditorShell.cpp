@@ -25,6 +25,7 @@
 #include "nsEditorShell.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIContentViewerFile.h"
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
@@ -1570,16 +1571,18 @@ nsEditorShell::Print()
   if (!mContentAreaWebShell)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsIContentViewer *viewer = nsnull;
-
-  mContentAreaWebShell->GetContentViewer(&viewer);
-
-  if (nsnull != viewer) {
-    viewer->Print();
-    NS_RELEASE(viewer);
+  nsCOMPtr<nsIContentViewer> viewer;    
+  mContentAreaWebShell->GetContentViewer(getter_AddRefs(viewer));    
+  if (nsnull != viewer) 
+  {
+    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+    if (viewerFile) {
+      NS_ENSURE_SUCCESS(viewerFile->Print(), NS_ERROR_FAILURE);
+    }
   }
   return NS_OK;
 }
+
 // NO LONGER CALLED Global JS method goQuitApplication() is called instead
 NS_IMETHODIMP    
 nsEditorShell::Exit()

@@ -33,6 +33,7 @@
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIContentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsCRT.h"
@@ -2694,7 +2695,16 @@ HTMLContentSink::StartLayout()
     } 
     else if (mBody) {
       PRBool isFrameDoc = PR_FALSE;
-      mWebShell->GetIsFrame(isFrameDoc);
+      nsCOMPtr<nsIContentViewer> cv;
+      mWebShell->GetContentViewer(getter_AddRefs(cv));
+      if (cv)
+      {
+        nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);            
+        if (muCV)
+        {
+          muCV->GetIsFrame(&isFrameDoc);
+        }
+      }
       // a <frame> webshell will have its scrolling set by the parent nsFramesetFrame. 
       // a <body> webshell is reset here just for safety.
       if (!isFrameDoc) {

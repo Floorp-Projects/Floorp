@@ -15,3 +15,6 @@ nsIUrlDispatcher.h
 nsIWebShell.h
 nsIWebShellServices.h
 nsweb.h
+nsIContentViewerEdit.h
+nsIContentViewerFile.h
+nsIMarkupDocumentViewer.h

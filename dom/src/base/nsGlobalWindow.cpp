@@ -62,6 +62,7 @@
 #include "nsRect.h"
 #include "nsIPrompt.h"
 #include "nsIContentViewer.h"
+#include "nsIContentViewerFile.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
 #include "nsIScrollableView.h"
@@ -1411,13 +1412,13 @@ GlobalWindowImpl::Print()
 {
   nsresult result = NS_OK;
   if (nsnull != mWebShell) {
-    nsIContentViewer *viewer = nsnull;
-    
-    mWebShell->GetContentViewer(&viewer);
-    
+    nsCOMPtr<nsIContentViewer> viewer;    
+    mWebShell->GetContentViewer(getter_AddRefs(viewer));    
     if (nsnull != viewer) {
-      result = viewer->Print();
-      NS_RELEASE(viewer);
+      nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+      if (viewerFile) {
+        result = viewerFile->Print();
+      }
     }
   }
 
@@ -2616,18 +2617,19 @@ GlobalWindowImpl::GetBrowserWindowInterface(
                     nsIBrowserWindow*& aBrowser,
                     nsIWebShell *aWebShell)
 {
-   aBrowser = nsnull;
+  aBrowser = nsnull;
 
-   if (nsnull == aWebShell)
+  if (nsnull == aWebShell)
     aWebShell = mWebShell;
-   NS_ENSURE_TRUE(aWebShell, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(aWebShell, NS_ERROR_UNEXPECTED);
 
-   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+  NS_ENSURE_SUCCESS(aWebShell->GetTopLevelWindow(
+      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
 
-   aWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-   if(!topLevelWindow)
-      return NS_ERROR_FAILURE;
-   return topLevelWindow->QueryInterface(NS_GET_IID(nsIBrowserWindow), (void**)&aBrowser);
+  if(!topLevelWindow)
+    return NS_ERROR_FAILURE;
+  return topLevelWindow->QueryInterface(NS_GET_IID(nsIBrowserWindow), (void**)&aBrowser);
 }
 
 PRBool

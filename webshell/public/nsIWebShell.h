@@ -24,11 +24,11 @@
 
 #include "nsweb.h"
 #include "nsIWidget.h"
+#include "nsIParser.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIChannel.h"
 #include "nsIScrollableView.h"
-#include "nsIParser.h" // for nsCharsetSource only
 #include "nsISessionHistory.h"
 #include "nsIUrlDispatcher.h"
 
@@ -174,11 +174,6 @@ public:
    * Resize the WebShell to the given dimensions.
    */
   NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
-
-  /**
-   * Shrink-to-fit the WebShell to its contents
-   */
-  NS_IMETHOD SizeToContent() = 0;
 
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 
@@ -423,13 +418,20 @@ public:
   // SetStatusBar
 
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer) = 0;
-  // XXX these are here until there a better way to pass along info to a sub doc
-  NS_IMETHOD GetMarginWidth (PRInt32& aWidth)  = 0;
-  NS_IMETHOD SetMarginWidth (PRInt32  aWidth)  = 0;
-  NS_IMETHOD GetMarginHeight(PRInt32& aWidth)  = 0;
-  NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE)  = 0;
   NS_IMETHOD GetScrolling(PRInt32& aScrolling) = 0;
+
+
+
+  // XXX these are here until there a better way to pass along info to a sub doc
+  NS_IMETHOD GetMarginWidth (PRInt32* aWidth)  = 0;
+  NS_IMETHOD SetMarginWidth (PRInt32  aWidth)  = 0;
+  NS_IMETHOD GetMarginHeight(PRInt32* aWidth)  = 0;
+  NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
+  
+  /* ============ moved to nsIMarkupDocumentViewer =================== */
+  /*
+
   NS_IMETHOD SetIsFrame(PRBool aIsFrame)       = 0;
   NS_IMETHOD GetIsFrame(PRBool& aIsFrame)      = 0;
 
@@ -439,9 +441,15 @@ public:
   NS_IMETHOD GetForceCharacterSet (const PRUnichar** aForceCharacterSet) = 0;
   NS_IMETHOD SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)  = 0;
 
-  /* the following is the hacky access method */
+  // the following is the hacky access method
   NS_IMETHOD GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource) = 0;
   
+  
+  */
+
+  // XXX this will go away, replaced by a new content viewer method
+  NS_IMETHOD SizeToContent() = 0;
+
   /**
    * Set/Get the document scale factor
    */
