@@ -240,12 +240,15 @@ sub show_graph {
   print "</body>\n";
 }
 
-if(!$TESTNAME) {
-  print_testnames($TBOX, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS);
-} elsif(!$TBOX) {
-  print_machines($TESTNAME, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS);
-} else {
-  show_graph();
+# main
+{
+  if(!$TESTNAME) {
+    print_testnames($TBOX, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS);
+  } elsif(!$TBOX) {
+    print_machines($TESTNAME, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS);
+  } else {
+    show_graph();
+  }
 }
 
 
