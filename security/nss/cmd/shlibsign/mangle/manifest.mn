@@ -48,3 +48,5 @@ REQUIRES =
 
 PROGRAM = mangle
 
+USE_STATIC_LIBS = 1
+
