@@ -61,10 +61,7 @@ enum nsHTMLTag {
 
   /* The remaining enums are not for tags */
   eHTMLTag_text=113, eHTMLTag_whitespace=114, eHTMLTag_newline=115, 
-  eHTMLTag_comment=116, eHTMLTag_entity=117, eHTMLTag_userdefined=118, 
-  eHTMLTag_secret_h1style=119, eHTMLTag_secret_h2style=120, 
-  eHTMLTag_secret_h3style=121, eHTMLTag_secret_h4style=122, 
-  eHTMLTag_secret_h5style=123, eHTMLTag_secret_h6style=124
+  eHTMLTag_comment=116, eHTMLTag_entity=117, eHTMLTag_userdefined=118
 };
 #define NS_HTML_TAG_MAX 112
 
