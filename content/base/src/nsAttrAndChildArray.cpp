@@ -110,7 +110,7 @@ nsAttrAndChildArray::InsertChildAt(nsIContent* aChild, PRUint32 aPos)
     void** oldStart = mImpl->mBuffer + offset;
     memmove(newStart, oldStart, aPos * sizeof(nsIContent*));
     newStart[aPos] = aChild;
-    memmove(newStart[aPos + 1], oldStart[aPos],
+    memmove(&newStart[aPos + 1], &oldStart[aPos],
             (childCount - aPos) * sizeof(nsIContent*));
     NS_ADDREF(aChild);
 
