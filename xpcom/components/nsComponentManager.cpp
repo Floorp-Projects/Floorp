@@ -1358,12 +1358,13 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
         // storing in the registry, on first creation, the mapping will get
         // added.
 #ifdef USE_REGISTRY
-        if (aPersist != PR_TRUE)
+        if (aProgID && aPersist != PR_TRUE)
         {
             rv = HashProgID(aProgID, aClass);
         }
 #else /* USE_REGISTRY */
-        rv = HashProgID(aProgID, aClass);
+        if (aProgID)
+            rv = HashProgID(aProgID, aClass);
 #endif /* USE_REGISTRY */
     }
     
