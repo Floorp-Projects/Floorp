@@ -48,6 +48,8 @@ class nsIPresShell;
 class nsIFrame;
 class nsVoidArray;
 struct nsSize;
+struct nsHTMLReflowState;
+class nsIPresContext;
 
 #define NS_SPACE_MANAGER_CACHE_SIZE 4
 
@@ -436,6 +438,50 @@ private:
 
   nsSpaceManager(const nsSpaceManager&);  // no implementation
   void operator=(const nsSpaceManager&);  // no implementation
+};
+
+/**
+ * A helper class to manage maintenance of the space manager during
+ * nsBlockFrame::Reflow. It automatically restores the old space
+ * manager in the reflow state when the object goes out of scope.
+ */
+class nsAutoSpaceManager {
+public:
+  nsAutoSpaceManager(nsHTMLReflowState& aReflowState)
+    : mReflowState(aReflowState),
+#ifdef DEBUG
+      mOwns(PR_TRUE),
+#endif
+      mNew(nsnull),
+      mOld(nsnull) {}
+
+  ~nsAutoSpaceManager();
+
+  /**
+   * Create a new space manager for the specified frame. This will
+   * `remember' the old space manager, and install the new space
+   * manager in the reflow state.
+   */
+  nsresult
+  CreateSpaceManagerFor(nsIPresContext *aPresContext,
+                        nsIFrame *aFrame);
+
+#ifdef DEBUG
+  /**
+   * `Orphan' any space manager that the nsAutoSpaceManager created;
+   * i.e., make it so that we don't destroy the space manager when we
+   * go out of scope.
+   */
+  void DebugOrphanSpaceManager() { mOwns = PR_FALSE; }
+#endif
+
+protected:
+  nsHTMLReflowState &mReflowState;
+#ifdef DEBUG
+  PRBool mOwns;
+#endif
+  nsSpaceManager *mNew;
+  nsSpaceManager *mOld;
 };
 
 #endif /* nsSpaceManager_h___ */
