@@ -3824,13 +3824,15 @@ nsWindow::DispatchActivateEvent(void)
 {
     nsCommonWidget::DispatchActivateEvent();
 
-    nsCOMPtr<nsIAccessible> rootAcc;
-    GetRootAccessible(getter_AddRefs(rootAcc));
-    nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
-    if (privAcc) {
-        privAcc->FireToolkitEvent(
-                     nsIAccessibleEvent::EVENT_ATK_WINDOW_ACTIVATE,
-                     rootAcc, nsnull);
+    if (sAccessibilityEnabled) {
+        nsCOMPtr<nsIAccessible> rootAcc;
+        GetRootAccessible(getter_AddRefs(rootAcc));
+        nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
+        if (privAcc) {
+            privAcc->FireToolkitEvent(
+                         nsIAccessibleEvent::EVENT_ATK_WINDOW_ACTIVATE,
+                         rootAcc, nsnull);
+        }
     }
  }
 
@@ -3839,13 +3841,15 @@ nsWindow::DispatchDeactivateEvent(void)
 {
     nsCommonWidget::DispatchDeactivateEvent();
 
-    nsCOMPtr<nsIAccessible> rootAcc;
-    GetRootAccessible(getter_AddRefs(rootAcc));
-    nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
-    if (privAcc) {
-        privAcc->FireToolkitEvent(
-                     nsIAccessibleEvent::EVENT_ATK_WINDOW_DEACTIVATE,
-                     rootAcc, nsnull);
+    if (sAccessibilityEnabled) {
+        nsCOMPtr<nsIAccessible> rootAcc;
+        GetRootAccessible(getter_AddRefs(rootAcc));
+        nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
+        if (privAcc) {
+            privAcc->FireToolkitEvent(
+                         nsIAccessibleEvent::EVENT_ATK_WINDOW_DEACTIVATE,
+                         rootAcc, nsnull);
+        }
     }
 }
 #endif /* #ifdef ACCESSIBILITY */
