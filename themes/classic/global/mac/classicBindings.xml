@@ -80,13 +80,13 @@
 
   <binding id="scrollbar">
     <content>
-      <xul:scrollbarbutton type="decrement" inherits="align:sborient">
+      <xul:scrollbarbutton type="decrement" inherits="sborient=align">
           <xul:image inherits="src"/>
 	  </xul:scrollbarbutton>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,align">
       	<xul:thumb inherits="align,src" flex="1"/>
       </xul:slider>
-      <xul:scrollbarbutton type="increment" inherits="align:sborient">
+      <xul:scrollbarbutton type="increment" inherits="sborient=align">
       	  <xul:image inherits="src"/>
 	  </xul:scrollbarbutton>
     </content>

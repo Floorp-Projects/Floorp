@@ -74,11 +74,11 @@
 
   <binding id="scrollbar">
     <content>
-      <xul:scrollbarbutton type="decrement" inherits="align:sborient"/>
+      <xul:scrollbarbutton type="decrement" inherits="sborient=align"/>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
 	      <xul:thumb inherits="align,src" flex="1"/>
       </xul:slider>
-      <xul:scrollbarbutton type="increment" inherits="align:sborient"/>
+      <xul:scrollbarbutton type="increment" inherits="sborient=align"/>
     </content>
   </binding>
   
@@ -119,7 +119,7 @@
       </xul:box>
       <xul:spring class="menuitem-iconic-spring"/>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:text class="menu-iconic-accel" inherits="acceltext:value"/>
+      <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
   </binding>
 
@@ -128,8 +128,8 @@
       <xul:box class="largeheader-box" flex="1">
         <xul:box class="largeheader-text-container" orient="vertical">
           <xul:spring flex="1"/>
-          <xul:text class="largeheader-header-text" inherits="title:value" crop="right"/>
-          <xul:html class="largeheader-desc-text" inherits="description:value"/>
+          <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
+          <xul:html class="largeheader-desc-text" inherits="value=description"/>
           <xul:spring flex="1"/>
         </xul:box>
         <xul:box class="largeheader-icon-container" autostretch="never">
@@ -173,7 +173,7 @@
 <!--  
   <binding id="throbber" extends="xul:box">
     <content autostretch="never">
-      <button allowevents="true" class="throbber-button" inherits="throbberaction:oncommand,throbbertooltip:tooltip,throbbertooltiptext:tooltiptext"/>
+      <button allowevents="true" class="throbber-button" inherits="oncommand=throbberaction,tooltip=throbbertooltip,tooltiptext=throbbertooltiptext"/>
     </content>
   </binding>
 -->

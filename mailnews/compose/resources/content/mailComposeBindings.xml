@@ -10,7 +10,7 @@ extends="chrome://global/content/xulBindings.xml#menuitem">
     <content autostretch="never" excludes="template,observes,menupopup">
       <xul:text class="composemenu-text" inherits="value,accesskey,crop"
 crop="right"/>
-      <xul:text class="composemenu-text-2" inherits="accountname:value"
+      <xul:text class="composemenu-text-2" inherits="value=accountname"
 crop="right"/>
     </content>
   </binding>

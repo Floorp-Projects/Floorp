@@ -15,20 +15,20 @@
         </xul:box>
         <xul:box orient="vertical" flex="1">
           <xul:box autostretch="never" valign="top">
-            <xul:text class="label" inherits="typetext:value"/>
-            <xul:html inherits="msg:value" flex="1"/>
+            <xul:text class="label" inherits="value=typetext"/>
+            <xul:html inherits="value=msg" flex="1"/>
           </xul:box>
           <xul:box>
             <xul:text class="label" value="&url.label;"/>
-            <xul:text class="label" inherits="url:value" crop="right"/>
+            <xul:text class="label" inherits="value=url" crop="right"/>
           </xul:box>
           <xul:box>
             <xul:text class="label" value="&line.label;"/>
-            <xul:text class="label" inherits="line:value" flex="1"/>
+            <xul:text class="label" inherits="value=line" flex="1"/>
             <xul:text class="label" value="&col.label;"/>
-            <xul:text class="label" inherits="col:value" flex="1"/>
+            <xul:text class="label" inherits="value=col" flex="1"/>
           </xul:box>
-          <xul:html inherits="error:value"/>
+          <xul:html inherits="value=error"/>
         </xul:box>
       </xul:box>
     </content>

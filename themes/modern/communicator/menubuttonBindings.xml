@@ -9,7 +9,7 @@
     <content excludes="observes,template,menupopup">
       <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
-                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey,disabled"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
           <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
         </xul:box>
@@ -21,7 +21,7 @@
     <content excludes="observes,template,menupopup">
       <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-2 top" allowevents="true" 
-                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey,disabled"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
           <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
         </xul:box>

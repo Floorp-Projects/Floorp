@@ -8,7 +8,7 @@
     <content excludes="observes,template,menupopup">
 	   <xul:box class="classic-simplebutton-box" autostretch="never" flex="1">
 	      <xul:button class="classic-simplebutton" allowevents="true" flex="1"
-                  inherits="value,src,accesskey,crop,disabled,buttonaction:oncommand" 
+                  inherits="value,src,accesskey,crop,disabled,oncommand=buttonaction" 
                   onmousedown="this.parentNode.setAttribute('buttondown','true');"
                   onmouseup="this.parentNode.removeAttribute('buttondown');"
                   onmouseover="this.parentNode.setAttribute('buttonover','true');"

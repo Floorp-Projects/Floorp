@@ -196,10 +196,10 @@ Contributor(s):
 
   <binding id="toolbar" extends="xul:box">
     <content>
-      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
+      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
                          onclick="this.grippyClicked();" tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
-      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
+      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
         <children/>
       </xul:box>
     </content>
@@ -226,7 +226,7 @@ Contributor(s):
 
   <binding id="menubar" extends="xul:menubar">
     <content>
-      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
+      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
                          onclick="this.grippyClicked();" tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
       <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">

@@ -19,13 +19,13 @@
   </binding>
 
   <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
-  	<content inherits="false">
+  	<content>
   	  	<xul:box class="toolbar-primary-image-left">
-        	<xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
+        	<xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
            		                onclick="this.grippyClicked();" tbattr="toolbar-grippy"
             	                class="toolbar-primary-grippy"/>
     	</xul:box>	
-        <xul:box flex="1" class="toolbar-primary-image-middle toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
+        <xul:box flex="1" class="toolbar-primary-image-middle toolbar-holder" inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
         	  <children/>
         </xul:box>
         <xul:spring class="toolbar-primary-image-right"/>
