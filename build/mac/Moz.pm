@@ -31,7 +31,7 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject OpenErrorLog MakeAlias StopForErrors DontStopForErrors);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib);
 
 	use Cwd;
@@ -176,9 +176,9 @@ sub log_recent_errors($)
 			}
 	}
 
-sub BuildProject($;$)
+sub build_project($$$)
 	{
-		my ($project_path, $target_name) = @_;
+		my ($project_path, $target_name, $clean_build) = @_;
 		$project_path = full_path_to($project_path);
 
 		$project_path =~ m/.+:(.+)/;
@@ -188,7 +188,7 @@ sub BuildProject($;$)
 
 		$had_errors =
 MacPerl::DoAppleScript(<<END_OF_APPLESCRIPT);
-	tell (load script file "$CodeWarriorLib") to BuildProject("$project_path", "$project_name", "$target_name", "$recent_errors_file")
+	tell (load script file "$CodeWarriorLib") to BuildProject("$project_path", "$project_name", "$target_name", "$recent_errors_file", $clean_build)
 END_OF_APPLESCRIPT
 
 			# Append any errors to the globally accumulated log file
@@ -196,6 +196,18 @@ END_OF_APPLESCRIPT
 			{
 				log_recent_errors($project_path);
 			}
+	}
+
+sub BuildProject($;$)
+	{
+		my ($project_path, $target_name) = @_;
+		build_project($project_path, $target_name, "false");
+	}
+
+sub BuildProjectClean($;$)
+	{
+		my ($project_path, $target_name) = @_;
+		build_project($project_path, $target_name, "true");
 	}
 
 sub MakeAlias($;$)
