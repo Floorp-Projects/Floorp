@@ -64,7 +64,6 @@ pref("browser.startup.autoload_homepage",   true);
 
 pref("browser.cache.memory.capacity",       4096);
 
-
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.showPopup", true);
 pref("browser.urlbar.showSearch", true);
@@ -145,6 +144,21 @@ pref("offline.send.unsent_messages",            0);
 pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
 
+// Expose only select protocol handlers. All others should go                   
+// through the external protocol handler route.                                 
+pref("network.protocol-handler.expose-all", false);                             
+pref("network.protocol-handler.expose.mailto", true);
+pref("network.protocol-handler.expose.news", true);
+pref("network.protocol-handler.expose.snews", true);
+pref("network.protocol-handler.expose.nntp", true);
+pref("network.protocol-handler.expose.imap", true);
+pref("network.protocol-handler.expose.addbook", true);
+pref("network.protocol-handler.expose.pop", true);                                                                                                            
+pref("network.protocol-handler.expose.mailbox", true);  
+pref("network.protocols.useSystemDefaults",   false);  
+pref("network.hosts.smtp_server",           "mail");
+pref("network.hosts.pop_server",            "mail");
+
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("wallet.captureForms",                 true);
 pref("wallet.notified",                     false);
@@ -166,16 +180,17 @@ pref("imageblocker.enabled",                true);
 // -- folders (Mac: these are binary aliases.)
 pref("mail.signature_file",             "");
 pref("mail.directory",                  "");
-
 pref("news.directory",                  "");
-
 pref("autoupdate.enabled",              true);
-
 pref("browser.editor.disabled", false);
-
 pref("spellchecker.dictionary", "");
-
 pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
+// profile.migration_behavior determines how the profiles root is set
+// 0 - use NS_APP_USER_PROFILES_ROOT_DIR
+// 1 - create one based on the NS4.x profile root
+// 2 - use, if not empty, profile.migration_directory otherwise same as 0 
+pref("profile.migration_behavior",0);
+pref("profile.migration_directory", "");
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
