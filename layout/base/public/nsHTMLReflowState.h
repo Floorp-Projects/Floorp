@@ -246,10 +246,12 @@ struct nsHTMLReflowState {
   struct ReflowStateFlags {
     PRUint16 mSpecialHeightReflow:1; // used by tables to communicate special reflow (in process) to handle
                                      // percent height frames inside cells which may not have computed heights
+    PRUint16 mTableDerivedComputedWidth:1; // Computed width is due to a table cell's final width, not style
+                                           // on the frame itself. Restrictions apply.
     PRUint16 mIsTopOfPage:1;         // is the current context at the top of a page?
     PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
     PRUint16 mVisualBidiFormControl:1; // Keep track of descendants of form controls on Visual Bidi pages
-    PRUint16 mUnused:12;             // for future use             
+    PRUint16 mUnused:11;             // for future use             
   } mFlags;
 
 #ifdef IBMBIDI
