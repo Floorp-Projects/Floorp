@@ -27,6 +27,8 @@
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsTreeIndentationFrame.h"
+#include "nsCOMPtr.h"
+
 
 nsTreeIndentationFrame::nsTreeIndentationFrame()
 {
@@ -72,36 +74,31 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 	  
 	  // First climb out to the tree row level.
 	  nsIFrame* aFrame = this;
-	  nsIContent* pContent = nsnull;
-	  aFrame->GetContent(pContent);
-	  nsIAtom* pTag = nsnull;
-	  pContent->GetTag(pTag);
+	  nsCOMPtr<nsIContent> pContent;
+	  aFrame->GetContent(*getter_AddRefs(pContent));
+	  nsCOMPtr<nsIAtom> pTag;
+	  pContent->GetTag(*getter_AddRefs(pTag));
 	  if (pTag)
 	  {
 		  while (aFrame && pTag && pTag != nsXULAtoms::treerow)
 		  {
 			  aFrame->GetParent(aFrame);
 			  
-			  NS_IF_RELEASE(pContent);
-			  NS_IF_RELEASE(pTag);
-		
-			  aFrame->GetContent(pContent);
-			  pContent->GetTag(pTag);
+			  // nsCOMPtr correctly handles releasing the old |pContent| and |pTag|
+			  aFrame->GetContent(*getter_AddRefs(pContent));
+			  pContent->GetTag(*getter_AddRefs(pTag));
 		  }
 
 		  // We now have a tree row content node. Start counting our level of nesting.
-		  nsIContent* pParentContent;
+		  nsCOMPtr<nsIContent> pParentContent;
 		  while (pTag != nsXULAtoms::treebody && pTag != nsXULAtoms::treehead)
 		  {
-			  pContent->GetParent(pParentContent);
+			  pContent->GetParent(*getter_AddRefs(pParentContent));
 
-			  NS_IF_RELEASE(pContent);
-			  NS_IF_RELEASE(pTag);
-
-			  pParentContent->GetTag(pTag);
+			  pParentContent->GetTag(*getter_AddRefs(pTag));
 			  pContent = pParentContent;
 			  
-			  level++;
+			  ++level;
 		  }
 
 		  level = (level-1)/2;
