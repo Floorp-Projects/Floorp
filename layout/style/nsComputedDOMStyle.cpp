@@ -727,7 +727,7 @@ nsComputedDOMStyle::Item(PRUint32 aIndex, nsAString& aReturn)
   PRUint32 length;
   GetLength(&length);
   aReturn.Truncate();
-  if (aIndex >= 0 && aIndex < length) {
+  if (aIndex < length) {
     CopyASCIItoUCS2(nsCSSProps::GetStringValue(queryableProperties[aIndex]), aReturn);
   }
   return NS_OK;
