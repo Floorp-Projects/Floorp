@@ -6,14 +6,14 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.5 $ ';
+$Version = '$Revision: 1.6 $ ';
 
 
 sub PrintUsage {
-  die "usage: $0 --depend | --clobber [ --once --manual\n"
+  die "usage: $0 --depend --clobber --once --manual\n"
      ."          --classic --compress --example-config --noreport --notest\n"
      ."          --timestamp -tag TREETAG -t TREENAME\n"
-     ."          --configfile CONFIGFILENAME --version ]\n";
+     ."          --configfile CONFIGFILENAME --version\n";
 }
 
 &ParseArgs;
@@ -34,9 +34,9 @@ sub ParseArgs {
   
   &PrintUsage if $#ARGV == -1;
 
-  my $manArg = 0;
-
   while ($arg = shift @ARGV) {
+    $BuildDepend = 0   , next if $arg eq '--clobber';
+    $BuildDepend = 1   , next if $arg eq '--depend';
     $CVS = 'cvs -q -z3', next if $arg eq '--compress';
     &PrintExampleConfig, exit if $arg eq '--example-config';
     &PrintUsage        , exit if $arg eq '--help' or $arg eq '-h';
@@ -45,15 +45,7 @@ sub ParseArgs {
     $BuildOnce = 1     , next if $arg eq '--once';
     $UseTimeStamp = 1  , next if $arg eq '--timestamp';
 
-    if ($arg eq '--clobber') {
-      $BuildDepend = 0;
-      $manArg++;
-    }
-    elsif ($arg eq '--depend') {
-      $BuildDepend = 1;
-      $manArg++;
-    }
-    elsif ($arg eq '-tag') {
+    if ($arg eq '-tag') {
       $BuildTag = shift @ARGV;
       &PrintUsage if $BuildTag eq '' or $BuildTag eq '-t';
     }
@@ -71,9 +63,7 @@ sub ParseArgs {
       &PrintUsage;
     }
   }
-
   &PrintUsage if $BuildTree =~ /^\s+$/i;
-  &PrintUsage if $manArg == 0;
 }
 
 sub InitVars {
