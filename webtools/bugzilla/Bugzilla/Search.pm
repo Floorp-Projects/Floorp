@@ -626,9 +626,11 @@ sub init {
                  if ($w eq "---" && $f !~ /milestone/) {
                      $w = "";
                  }
-                 push(@list, "$ff = " . &::SqlQuote($w));
+                 push(@list, &::SqlQuote($w));
              }
-             $term = join(" OR ", @list);
+             if (@list) {
+                 $term = "$ff IN (" . join (',', @list) . ")";
+             }
          },
          ",anywordssubstr" => sub {
              $term = join(" OR ", @{GetByWordListSubstr($ff, $v)});
