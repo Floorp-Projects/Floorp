@@ -2101,7 +2101,7 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 	}
 	m_attachedFiles = newd;
 
-	XP_MEMCPY(newd + old_count,
+	memcpy(newd + old_count,
 			  attachments,
 			  sizeof(MSG_AttachedFile) * (new_count + 1));
 
@@ -2156,7 +2156,7 @@ msg_mid_truncate_string (const char *input, char *output, int max_length)
 {
 	int L = PL_strlen(input);
 	if (L <= max_length) {
-		XP_MEMCPY(output, input, L+1);
+		memcpy(output, input, L+1);
     } else {
 		int mid = (max_length - 3) / 2;
 		char *tmp = 0;
@@ -2166,12 +2166,12 @@ msg_mid_truncate_string (const char *input, char *output, int max_length)
 			*tmp = 0;
 			if (!output) return;
 		}
-		XP_MEMCPY(output, input, mid);
-		XP_MEMCPY(output + mid, "...", 3);
-		XP_MEMCPY(output + mid + 3, input + L - mid, mid + 1);
+		memcpy(output, input, mid);
+		memcpy(output + mid, "...", 3);
+		memcpy(output + mid + 3, input + L - mid, mid + 1);
 
 		if (tmp) {
-			XP_MEMCPY(tmp, output, max_length + 1);
+			memcpy(tmp, output, max_length + 1);
 			PR_Free(output);
 		}
     }
@@ -2331,7 +2331,7 @@ nsMsgCompose::GetAttachmentString()
 				while (s2 > ptr2 && *s2 != '/') s2--;
 				if (*s2 == ':' || *s2 == '/') s2++;
 				result = (char *) PR_Malloc (s - s2 + 1);
-				XP_MEMCPY (result, s2, s - s2);
+				memcpy (result, s2, s - s2);
 				result[s - s2] = 0;
 			} else {
 				/* The file name is ok; use it. */
@@ -3395,7 +3395,7 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
 
   memset (m_attachData, 0, (attachments_count +1) * sizeof (MSG_AttachmentData));
 
-  XP_MEMCPY ( m_attachData, attachmentData, 
+  memcpy ( m_attachData, attachmentData, 
 			  sizeof (MSG_AttachmentData) * attachments_count );
 	
   m_pendingAttachmentsCount = attachments_count;

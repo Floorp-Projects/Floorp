@@ -21,17 +21,6 @@
 #include "nsMsgCompFields.h"
 #include "nsMsgCompFieldsFact.h"
 
-/*JFD 
-#include "msg.h"
-#include "errcode.h"
-#include "dberror.h"
-
-#include "msgcflds.h"
-#include "prefapi.h"
-#include "ptrarray.h"
-#include "msgpane.h"
-JFD*/
-
 extern "C" {
 	extern int MK_OUT_OF_MEMORY;
 	extern int MK_MSG_INVALID_NEWS_HEADER;
@@ -579,7 +568,7 @@ PRInt16 nsMsgCompFields::AppendBody(char* value)
 	if (!m_body) {
 		return SetBody(value, NULL);
     } else {
-		char* tmp = (char*) PR_MALLOC(nsCRT::strlen(m_body) + nsCRT::strlen(value) + 1);
+		char* tmp = (char*) PR_Malloc(nsCRT::strlen(m_body) + nsCRT::strlen(value) + 1);
 		if (tmp) {
 			tmp = nsCRT::strdup(m_body);
 			PL_strcat(tmp, value);

@@ -38,25 +38,13 @@ char *				XP_StripLine (char *) {return NULL;}
 XP_File				XP_FileOpen (const char* name, XP_FileType type, const XP_FilePerm permissions) {return NULL;}
 int					XP_Stat(const char * name, XP_StatStruct * outStat, XP_FileType type) {return 0;}
 int					XP_FileTruncate(const char* name, XP_FileType type, int32 length) {return 0;}
-
-#if defined (XP_PC)
-char *				XP_AppVersion = "5.0 (Dogfood)";
-#else
-const char *  XP_AppVersion = "5.0 (Dogfood)";
-#endif
-
-XP_BEGIN_PROTOS int	XP_LocalZoneOffset() {return -480;} XP_END_PROTOS
-
 Bool				XP_IsContextBusy(MWContext * context) {return PR_FALSE;}
 
 const char *		MSG_GetSpecialFolderName(int ) {return NULL;}
 const char *		MSG_GetQueueFolderName() {return NULL;}
 MSG_Pane *			MSG_FindPane(MWContext* , MSG_PaneType ) {return NULL;}
-char *				MSG_ExtractRFC822AddressMailboxes (const char *) {return NULL;}
 int					MSG_ExplodeHeaderField(MSG_HEADER_SET,const char * ,MSG_HeaderEntry **) {return NULL;}
-int					MSG_ParseRFC822Addresses (const char *,char **, char **) {return NULL;}
 char *				MSG_MakeFullAddress (const char* , const char* ) {return NULL;}
-char *				MSG_ReformatRFC822Addresses (const char *line) {return PL_strdup(line);}
 void				MSG_MailCompositionAllConnectionsComplete (MSG_Pane* /*pane*/) {return;}
 
 
@@ -64,7 +52,7 @@ void				INTL_DestroyCharCodeConverter(CCCDataObject) {return;}
 unsigned char *		INTL_CallCharCodeConverter(CCCDataObject,const unsigned char *,int32) {return NULL;}
 int					INTL_GetCharCodeConverter(int16 ,int16 ,CCCDataObject) {return NULL;}
 CCCDataObject		INTL_CreateCharCodeConverter() {return NULL;}
-int16				INTL_GetCSIWinCSID(INTL_CharSetInfo) {return NULL;}
+int16				INTL_GetCSIWinCSID(INTL_CharSetInfo) {return 2;}
 INTL_CharSetInfo	LO_GetDocumentCharacterSetInfo(MWContext *) {return NULL;}
 int16				INTL_GetCSIDocCSID(INTL_CharSetInfo obj) {return 2;}
 int16				INTL_DefaultMailCharSetID(int16 csid) {return 2;}

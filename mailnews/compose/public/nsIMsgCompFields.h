@@ -32,9 +32,6 @@ class nsIMsgCompFields : public nsISupports {
     return iid;
   }
 
-  /* void Test (); */
-  NS_IMETHOD Test() = 0;
-
   /* void Copy (in nsIMsgCompFields pMsgCompFields); */
   NS_IMETHOD Copy(nsIMsgCompFields *pMsgCompFields) = 0;
 

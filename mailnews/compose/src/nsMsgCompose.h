@@ -66,9 +66,6 @@ public:
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-	/* this is just for testing purpose, must be removed before shipping */
-	NS_IMETHOD Test() {printf("nsMsgCompose: Test Succesfull\n"); return NS_OK;}
-
 #if 0 //JFD
 	NS_IMETHOD CreateAndInit(/*MWContext* */PRInt32 a_context, /* MWContext* */PRInt32 old_context,
 						/* MSG_Prefs* */PRInt32 prefs, const nsIMsgCompFields* initfields,

@@ -22,8 +22,6 @@
 [object, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
 interface nsIMsgCompFields : nsISupports {
 
-	void Test();
-
 	void Copy(in nsIMsgCompFields pMsgCompFields);
 
 	long SetHeader(in long header, in string value);

@@ -44,9 +44,6 @@ public:
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-	/* this is just for testing purpose, must be removed before shipping */
-	NS_IMETHOD Test() {printf("nsMsgCompField: Test Succesfull\n"); return NS_OK;}
-
 	NS_IMETHOD Copy(nsIMsgCompFields* pMsgCompFields);
 
 	NS_IMETHOD SetHeader(PRInt32 header, char *value, PRInt32 *_retval);

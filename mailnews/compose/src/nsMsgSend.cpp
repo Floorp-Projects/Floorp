@@ -11,15 +11,19 @@
 #include "secrng.h"	/* for RNG_GenerateGlobalRandomBytes() */
 #include "xp_time.h"
 #include "nsMsgSendFact.h"
-#include "nsMsgSend.h"
-
+#include "nsMsgBaseCID.h"
+#include "nsIMsgRFC822Parser.h"
+#include "nsINetService.h"
 #include "nsISmtpService.h"  // for actually sending the message...
+#include "nsMsgSend.h"
 
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
 static NS_DEFINE_IID(kIMsgSend, NS_IMSGSEND_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
+static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID); 
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 
 #if 0 //JFD
 #include "msg.h"
@@ -216,8 +220,8 @@ extern "C"
 #define GENERATE_CONTENT_BASE
 
 
-static PRBool mime_use_quoted_printable_p = TRUE;
-static PRBool mime_headers_use_quoted_printable_p = FALSE;
+static PRBool mime_use_quoted_printable_p = PR_TRUE;
+static PRBool mime_headers_use_quoted_printable_p = PR_FALSE;
 
 static const char* pSmtpServer = NULL;
 
@@ -225,7 +229,6 @@ static const char* pSmtpServer = NULL;
 
 XP_BEGIN_PROTOS
 extern OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec);
-extern char * mime_make_separator(const char *prefix);
 extern void MSG_MimeNotifyCryptoAttachmentKludge(NET_StreamClass *stream);
 XP_END_PROTOS
 
@@ -233,7 +236,7 @@ static char* NET_GetLocalFileFromURL(char *url)
 {
 	char * finalPath;
 	NS_ASSERTION(PL_strncasecmp(url, "file://", 7) == 0, "invalid url");
-	finalPath = (char*)PR_MALLOC(strlen(url));
+	finalPath = (char*)PR_Malloc(strlen(url));
 	if (finalPath == NULL)
 		return NULL;
 	strcpy(finalPath, url+6+1);
@@ -243,7 +246,7 @@ static char* NET_GetLocalFileFromURL(char *url)
 static char* NET_GetURLFromLocalFile(char *filename)
 {
     /*  file:///<path>0 */
-	char * finalPath = (char*)PR_MALLOC(strlen(filename) + 8 + 1);
+	char * finalPath = (char*)PR_Malloc(strlen(filename) + 8 + 1);
 	if (finalPath == NULL)
 		return NULL;
 	finalPath[0] = 0;
@@ -272,26 +275,24 @@ nsresult NS_NewMsgSend(nsIMsgSend** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-void
-MIME_ConformToStandard (PRBool conform_p)
+void MIME_ConformToStandard (PRBool conform_p)
 {
-  /* 
-   * If we are conforming to mime standard no matter what we set
-   * for the headers preference when generating mime headers we should 
-   * also conform to the standard. Otherwise, depends the preference
-   * we set. For now, the headers preference is not accessible from UI.
-   */
-  if (conform_p)
-	mime_headers_use_quoted_printable_p = TRUE;
-  else
-	PREF_GetBoolPref("mail.strictly_mime_headers", 
+	/* 
+	* If we are conforming to mime standard no matter what we set
+	* for the headers preference when generating mime headers we should 
+	* also conform to the standard. Otherwise, depends the preference
+	* we set. For now, the headers preference is not accessible from UI.
+	*/
+	if (conform_p)
+		mime_headers_use_quoted_printable_p = PR_TRUE;
+	else
+		PREF_GetBoolPref("mail.strictly_mime_headers", 
 					 &mime_headers_use_quoted_printable_p);
-  mime_use_quoted_printable_p = conform_p;
+	mime_use_quoted_printable_p = conform_p;
 }
 
 /* for right now, only for the XFE */
-PRBool
-Get_MIME_ConformToStandard()
+PRBool Get_MIME_ConformToStandard()
 {
   return mime_use_quoted_printable_p;
 }
@@ -302,13 +303,13 @@ nsMsgSendMimeDeliveryState::nsMsgSendMimeDeliveryState()
 	m_fe_data = NULL;		/* passed in and passed to callback */
 	m_fields = NULL;			/* Where to send the message once it's done */
 
-	m_dont_deliver_p = FALSE;
+	m_dont_deliver_p = PR_FALSE;
 	m_deliver_mode = MSG_DeliverNow;
 
-	m_attachments_only_p = FALSE;
-	m_pre_snarfed_attachments_p = FALSE;
-	m_digest_p = FALSE;
-	m_be_synchronous_p = FALSE;
+	m_attachments_only_p = PR_FALSE;
+	m_pre_snarfed_attachments_p = PR_FALSE;
+	m_digest_p = PR_FALSE;
+	m_be_synchronous_p = PR_FALSE;
 	m_crypto_closure = NULL;
 	m_attachment1_type = 0;
 	m_attachment1_encoding = 0;
@@ -330,12 +331,13 @@ nsMsgSendMimeDeliveryState::nsMsgSendMimeDeliveryState()
 	m_imapOutgoingParser = NULL;
 	m_imapLocalMailDB = NULL;
 
+
 	NS_INIT_REFCNT();
 }
 
 nsMsgSendMimeDeliveryState::~nsMsgSendMimeDeliveryState()
 {
-  Clear();
+	Clear();
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
@@ -359,8 +361,8 @@ nsresult nsMsgSendMimeDeliveryState::SendMessage(const nsIMsgCompFields *fields,
 		printf("subject: %s\n", ((nsMsgCompFields *)fields)->GetSubject());
 		printf("\n%s", pBody);
 
-		msg_StartMessageDeliveryWithAttachments (NULL, NULL, (nsMsgCompFields *)fields, PR_FALSE,
-			PR_FALSE, MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, NULL, NULL, NULL, smtp);
+		StartMessageDelivery(NULL, NULL, (nsMsgCompFields *)fields, PR_FALSE, PR_FALSE,
+			MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, 0, NULL, NULL, NULL);
 	}
 	return NS_OK;
 }
@@ -411,52 +413,53 @@ extern "C" void XFE_InitializePrintSetup (PrintSetup *p);
 
 MSG_DeliverMimeAttachment::MSG_DeliverMimeAttachment()
 {
-  m_url_string = NULL;
-  m_url = NULL;
-  m_done = FALSE;
-  m_type = NULL;
-  m_override_type = NULL;
-  m_override_encoding = NULL;
-  m_desired_type = NULL;
-  m_description = NULL;
-  m_x_mac_type = NULL;
-  m_x_mac_creator = NULL;
-  m_encoding = NULL;
-  m_real_name = NULL;
-  m_mime_delivery_state = NULL;
-  m_encoding = NULL;
-  m_already_encoded_p = FALSE;
-  m_file_name = NULL;
-  m_file = 0;
+	m_url_string = NULL;
+	m_url = NULL;
+	m_done = PR_FALSE;
+	m_type = NULL;
+	m_override_type = NULL;
+	m_override_encoding = NULL;
+	m_desired_type = NULL;
+	m_description = NULL;
+	m_x_mac_type = NULL;
+	m_x_mac_creator = NULL;
+	m_encoding = NULL;
+	m_real_name = NULL;
+	m_mime_delivery_state = NULL;
+	m_encoding = NULL;
+	m_already_encoded_p = PR_FALSE;
+	m_file_name = NULL;
+	m_file = 0;
 #ifdef XP_MAC
-  m_ap_filename = NULL;
+	m_ap_filename = NULL;
 #endif
-  m_decrypted_p = FALSE;
-  m_size = 0;
-  m_unprintable_count = 0;
-  m_highbit_count = 0;
-  m_ctl_count = 0;
-  m_null_count = 0;
-  m_current_column = 0;
-  m_max_column = 0;
-  m_lines = 0;
+	m_decrypted_p = PR_FALSE;
+	m_size = 0;
+	m_unprintable_count = 0;
+	m_highbit_count = 0;
+	m_ctl_count = 0;
+	m_null_count = 0;
+	m_current_column = 0;
+	m_max_column = 0;
+	m_lines = 0;
 
-  m_encoder_data = NULL;
+	m_encoder_data = NULL;
 
-//JFD  XP_MEMSET(&m_print_setup, 0, sizeof(m_print_setup));
-  m_graph_progress_started = FALSE;
+//JFD  memset(&m_print_setup, 0, sizeof(m_print_setup));
+	m_graph_progress_started = PR_FALSE;
 }
 
 MSG_DeliverMimeAttachment::~MSG_DeliverMimeAttachment()
 {
 }
 
-extern "C" char *
-mime_make_separator(const char *prefix)
+   
+extern "C" char * mime_make_separator(const char *prefix)
 {
-  unsigned char rand_buf[13]; 
-  RNG_GenerateGlobalRandomBytes((void *) rand_buf, 12);
-  return PR_smprintf("------------%s"
+	unsigned char rand_buf[13]; 
+	RNG_GenerateGlobalRandomBytes((void *) rand_buf, 12);
+
+	return PR_smprintf("------------%s"
 					 "%02X%02X%02X%02X"
 					 "%02X%02X%02X%02X"
 					 "%02X%02X%02X%02X",
@@ -466,8 +469,7 @@ mime_make_separator(const char *prefix)
 					 rand_buf[8], rand_buf[9], rand_buf[10], rand_buf[11]);
 }
 
-PRBool
-MSG_DeliverMimeAttachment::UseUUEncode_p(void)
+PRBool MSG_DeliverMimeAttachment::UseUUEncode_p(void)
 {
 	PRBool returnVal = (m_mime_delivery_state) && 
 	  					(m_mime_delivery_state->m_pane) &&
@@ -480,13 +482,13 @@ MSG_DeliverMimeAttachment::UseUUEncode_p(void)
 static void msg_escape_file_name (URL_Struct *m_url) 
 {
     NS_ASSERTION (m_url->address && !PL_strncasecmp(m_url->address, "file:", 5), "Invalid URL type");
-	if (!m_url->address ||
-		PL_strncasecmp(m_url->address, "file:", 5)) return;
+	if (!m_url->address || PL_strncasecmp(m_url->address, "file:", 5))
+		return;
 
-	char * new_address = NET_Escape(PL_strchr(m_url->address, ':')+1, 
-									URL_PATH);
+	char * new_address = NET_Escape(PL_strchr(m_url->address, ':') + 1, URL_PATH);
 	NS_ASSERTION(new_address, "null ptr");
-	if (!new_address) return;
+	if (!new_address)
+		return;
 
 	PR_FREEIF(m_url->address);
 	m_url->address = PR_smprintf("file:%s", new_address);
@@ -546,7 +548,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 	PRInt32 parmValueLen = 0;
 	PRInt32 charsetLen = 0;
 	PRInt32 languageLen = 0;
-	PRBool needEscape = FALSE;
+	PRBool needEscape = PR_FALSE;
 
 	NS_ASSERTION(parmName && *parmName && parmValue && *parmValue, "null parameters");
 	if (!parmName || !*parmName || !parmValue || !*parmValue)
@@ -554,7 +556,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 	if ((charset && *charset && PL_strcasecmp(charset, "us-ascii") != 0) || 
 		(language && *language && PL_strcasecmp(language, "en") != 0 &&
 		 PL_strcasecmp(language, "en-us") != 0))
-		needEscape = TRUE;
+		needEscape = PR_TRUE;
 
 	if (needEscape)
 		dupParm = NET_Escape(parmValue, URL_PATH);
@@ -580,7 +582,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 	if ((parmValueLen + parmNameLen + charsetLen + languageLen) <
 		PR_MAX_FOLDING_LEN)
 	{
-		StrAllocCopy(foldedParm, parmName);
+		foldedParm = PL_strdup(parmName);
 		if (needEscape)
 		{
 			StrAllocCat(foldedParm, "*=");
@@ -610,12 +612,11 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 		while (parmValueLen > 0)
 		{
 			curLineLen = 0;
-			if (counter == 0)
-			{
-				StrAllocCopy (foldedParm, parmName);
+			if (counter == 0) {
+				PR_FREEIF(foldedParm)
+				foldedParm = PL_strdup(parmName);
 			}
-			else
-			{
+			else {
 				if (needEscape)
 					StrAllocCat(foldedParm, "\r\n ");
 				else
@@ -714,7 +715,7 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
    */
    
 #ifdef XP_MAC
-  if (NET_IsLocalFileURL(m_url->address) &&	// do we need to add IMAP: to this list? NET_IsLocalFileURL returns FALSE always for IMAP - DMB
+  if (NET_IsLocalFileURL(m_url->address) &&	// do we need to add IMAP: to this list? NET_IsLocalFileURL returns PR_FALSE always for IMAP - DMB
 	  (PL_strncasecmp(m_url->address, "mailbox:", 8) != 0))
 	{
 	  /* convert the apple file to AppleDouble first, and then patch the
@@ -778,14 +779,13 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 		  }
 		  /* and also patch the types.
 		   */
-		  if (m_type)
-			PR_Free (m_type);
 
 		  XP_SPRINTF(tmp, MULTIPART_APPLEDOUBLE ";\r\n boundary=\"%s\"",
 					 separator);
 
 		  PR_FREEIF(separator);
 
+		PR_FREIF (m_type);
 		m_type = PL_strdup(tmp);
 		}
 	  else
@@ -801,7 +801,7 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 													XP_GetString(MK_MSG_MAC_PROMPT_UUENCODE)); 
 
 					// only want to do this once
-					((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p = TRUE;
+					((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p = PR_TRUE;
 					
 					if (! confirmed) // cancelled
 						return MK_INTERRUPTED;
@@ -818,9 +818,11 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 		  if (FSpGetFInfo (&fsSpec, &info) == noErr)
 			{
 			  XP_SPRINTF(filetype, "%X", info.fdType);
+			  PR_FREEIF(m_x_mac_type);
 			  m_x_mac_type    = PL_strdup(filetype);
 
 			  XP_SPRINTF(filetype, "%X", info.fdCreator);
+			  PR_FREEIF(m_x_mac_creator);
 			  m_x_mac_creator = PL_strdup(filetype);
 			  if (m_type == NULL ||
 				  !PL_strcasecmp (m_type, TEXT_PLAIN))
@@ -916,7 +918,7 @@ JFD */
       LO_SaveFormData(m_mime_delivery_state->GetContext());
 
       /* Hold on to the saved data. */
-      XP_MEMCPY(&saved_data, &m_url->savedData, sizeof(SHIST_SavedData));
+      memcpy(&saved_data, &m_url->savedData, sizeof(SHIST_SavedData));
 
 	  /* Conversion to postscript desired.
 	   */
@@ -928,7 +930,7 @@ JFD */
 	  m_print_setup.filename = NULL;
 	  m_print_setup.out = m_file;
 	  m_print_setup.eol = CRLF;
-      XP_MEMSET (&m_url->savedData, 0, sizeof (SHIST_SavedData));
+      memset (&m_url->savedData, 0, sizeof (SHIST_SavedData));
 	  XL_TranslatePostscript (m_mime_delivery_state->GetContext(),
 							  m_url, &saved_data,
 							  &m_print_setup);
@@ -942,14 +944,14 @@ JFD*/
 #endif /* XP_UNIX */
   else
 	{
-	  m_url->allow_content_change = FALSE;	// don't use modified content
+	  m_url->allow_content_change = PR_FALSE;	// don't use modified content
 
       if (NET_URL_Type (m_url->address) == NEWS_TYPE_URL && !m_url->msg_pane)
 		  m_url->msg_pane = m_mime_delivery_state->m_pane;
 
 /*JFD
 		  MSG_UrlQueue::AddUrlToPane(m_url, mime_attachment_url_exit,
-								 m_mime_delivery_state->m_pane, TRUE,
+								 m_mime_delivery_state->m_pane, PR_TRUE,
 								 FO_CACHE_AND_MAIL_TO);
 JFD*/
 	  return 0;
@@ -981,7 +983,7 @@ void MSG_DeliverMimeAttachment::UrlExit(URL_Struct *url, int status,
 
   if (m_graph_progress_started)
 	{
-	  m_graph_progress_started = FALSE;
+	  m_graph_progress_started = PR_FALSE;
 	  FE_GraphProgressDestroy (m_mime_delivery_state->GetContext(), m_url,
 							   m_url->content_length, m_size);
 	}
@@ -1007,7 +1009,7 @@ void MSG_DeliverMimeAttachment::UrlExit(URL_Struct *url, int status,
 	  PR_FREEIF(m_file_name);
   }
 
-  m_done = TRUE;
+  m_done = PR_TRUE;
 
   NS_ASSERTION (m_mime_delivery_state->m_attachment_pending_count > 0, "no more pending attachment");
   m_mime_delivery_state->m_attachment_pending_count--;
@@ -1166,7 +1168,7 @@ mime_attachment_stream_write (void *stream, const char *block, PRInt32 length)
 
   if (!ma->m_graph_progress_started)
 	{
-	  ma->m_graph_progress_started = TRUE;
+	  ma->m_graph_progress_started = PR_TRUE;
 	  FE_GraphProgressInit (ma->m_mime_delivery_state->GetContext(), ma->m_url,
 							ma->m_url->content_length);
 	}
@@ -1188,9 +1190,9 @@ mime_attachment_stream_write (void *stream, const char *block, PRInt32 length)
 		  PL_strcasecmp (ma->m_url->content_encoding, ENCODING_8BIT) &&
 		  PL_strcasecmp (ma->m_url->content_encoding, ENCODING_BINARY))
 		{
-		  if (ma->m_encoding) PR_Free (ma->m_encoding);
+		  PR_FREEIF (ma->m_encoding);
 		  ma->m_encoding = PL_strdup (ma->m_url->content_encoding);
-		  ma->m_already_encoded_p = TRUE;
+		  ma->m_already_encoded_p = PR_TRUE;
 		}
 
 	  /* Make sure there's a string in the type field.
@@ -1199,16 +1201,20 @@ mime_attachment_stream_write (void *stream, const char *block, PRInt32 length)
 		 as an anonymous binary type; "unknown" means that we will guess
 		 whether it is text or binary based on its contents.
 	   */
-	  if (!ma->m_type || !*ma->m_type)
-		StrAllocCopy (ma->m_type, UNKNOWN_CONTENT_TYPE);
+	  if (!ma->m_type || !*ma->m_type) {
+		PR_FREEIF(ma->m_type);
+		ma->m_type = PL_strdup(UNKNOWN_CONTENT_TYPE);
+	  }
 
 
 #if defined(XP_WIN) || defined(XP_OS2)
 	  /*  WinFE tends to spew out bogus internal "zz-" types for things
 		 it doesn't know, so map those to the "real" unknown type.
 	   */
-	  if (ma->m_type && !PL_strncasecmp (ma->m_type, "zz-", 3))
-		StrAllocCopy (ma->m_type, UNKNOWN_CONTENT_TYPE);
+	  if (ma->m_type && !PL_strncasecmp (ma->m_type, "zz-", 3)) {
+		PR_FREEIF(ma->m_type);
+		ma->m_type = PL_strdup(UNKNOWN_CONTENT_TYPE);
+	  }
 #endif /* XP_WIN */
 
 	  /* There are some of "magnus" types in the default
@@ -1217,8 +1223,10 @@ mime_attachment_stream_write (void *stream, const char *block, PRInt32 length)
 		 them, but they're getting attached to local .cgi files anyway.
 		 Remove them.
 	   */
-	  if (ma->m_type && !PL_strncasecmp (ma->m_type, "magnus-internal/", 16))
-		StrAllocCopy (ma->m_type, UNKNOWN_CONTENT_TYPE);
+	  if (ma->m_type && !PL_strncasecmp (ma->m_type, "magnus-internal/", 16)) {
+		PR_FREEIF(ma->m_type);
+		ma->m_type = PL_strdup (UNKNOWN_CONTENT_TYPE);
+	  }
 
 
 	  /* #### COMPLETE HORRIFIC KLUDGE
@@ -1244,17 +1252,21 @@ mime_attachment_stream_write (void *stream, const char *block, PRInt32 length)
 		  (!PL_strcasecmp (ma->m_encoding, ENCODING_COMPRESS) ||
 		   !PL_strcasecmp (ma->m_encoding, ENCODING_COMPRESS2)))
 		{
-		  StrAllocCopy (ma->m_type, APPLICATION_COMPRESS);
-		  StrAllocCopy (ma->m_encoding, ENCODING_BINARY);
-		  ma->m_already_encoded_p = FALSE;
+		  PR_FREEIF(ma->m_type);
+		  ma->m_type = PL_strdup(APPLICATION_COMPRESS);
+		  PR_FREEIF(ma->m_encoding);
+		  ma->m_encoding = PL_strdup(ENCODING_BINARY);
+		  ma->m_already_encoded_p = PR_FALSE;
 		}
 	  else if (ma->m_encoding &&
 			   (!PL_strcasecmp (ma->m_encoding, ENCODING_GZIP) ||
 				!PL_strcasecmp (ma->m_encoding, ENCODING_GZIP2)))
 		{
-		  StrAllocCopy (ma->m_type, APPLICATION_GZIP);
-		  StrAllocCopy (ma->m_encoding, ENCODING_BINARY);
-		  ma->m_already_encoded_p = FALSE;
+		  PR_FREEIF(ma->m_type);
+		  ma->m_type = PL_strdup (APPLICATION_GZIP);
+		  PR_FREEIF(ma->m_encoding);
+		  ma->m_encoding = PL_strdup (ENCODING_BINARY);
+		  ma->m_already_encoded_p = PR_FALSE;
 		}
 
 	  /* If the caller has passed in an overriding type for this URL,
@@ -1265,9 +1277,12 @@ mime_attachment_stream_write (void *stream, const char *block, PRInt32 length)
 	   */
 	  if (ma->m_override_type)
 		{
-		  StrAllocCopy (ma->m_type, ma->m_override_type);
-		  if (ma->m_override_encoding)
-			StrAllocCopy (ma->m_encoding, ma->m_override_encoding);
+		  PR_FREEIF(ma->m_type);
+		  ma->m_type = PL_strdup (ma->m_override_type);
+		  if (ma->m_override_encoding) {
+		    PR_FREEIF(ma->m_encoding);
+			ma->m_encoding = PL_strdup (ma->m_override_encoding);
+		  }
 		}
 
 	  char *mcType = msg_GetMissionControlledOutgoingMIMEType(ma->m_real_name, ma->m_x_mac_type, ma->m_x_mac_creator);	// returns an allocated string
@@ -1345,7 +1360,7 @@ mime_make_attachment_stream (int /*format_out*/, void * /*closure*/,
   if (stream == NULL)
 	return (NULL);
 
-  XP_MEMSET (stream, 0, sizeof (NET_StreamClass));
+  memset (stream, 0, sizeof (NET_StreamClass));
 
 /*JFD
   stream->name           = "attachment stream";
@@ -1388,7 +1403,7 @@ MSG_MimeNotifyCryptoAttachmentKludge(NET_StreamClass *stream)
 	}
 
   /* Well ok then. */
-  ma->m_decrypted_p = TRUE;
+  ma->m_decrypted_p = PR_TRUE;
   HJ97347
 }
 
@@ -1510,7 +1525,7 @@ MSG_RegisterConverters (void)
  									NULL, MIME_VCardConverter);
 
   /* Decoders from mimejul.c for text/calendar */
-  PRBool handle_calendar_mime = TRUE;
+  PRBool handle_calendar_mime = PR_TRUE;
   PREF_GetBoolPref("calendar.handle_text_calendar_mime_type", &handle_calendar_mime);
   if (handle_calendar_mime)
   {
@@ -1523,53 +1538,66 @@ MSG_RegisterConverters (void)
 }
 
 
-static PRBool
-mime_7bit_data_p (const char *string, PRUint32 size)
+static PRBool mime_7bit_data_p (const char *string, PRUint32 size)
 {
-  const unsigned char *s = (const unsigned char *) string;
-  const unsigned char *end = s + size;
-  if (s)
-	for (; s < end; s++)
-	  if (*s > 0x7F)
-		return FALSE;
-  return TRUE;
+	const unsigned char *s = (const unsigned char *) string;
+	const unsigned char *end = s + size;
+	if (s)
+		for (; s < end; s++)
+			if (*s > 0x7F)
+				return PR_FALSE;
+	return PR_TRUE;
 }
 
 
-static int
-mime_sanity_check_fields (const char *from,
-						  const char *reply_to,
-						  const char *to,
-						  const char *cc,
-						  const char *bcc,
-						  const char *fcc,
-						  const char *newsgroups,
-						  const char *followup_to,
-						  const char * /*subject*/,
-						  const char * /*references*/,
-						  const char * /*organization*/,
-						  const char * /*other_random_headers*/)
+static int mime_sanity_check_fields (
+					const char *from,
+					const char *reply_to,
+					const char *to,
+					const char *cc,
+					const char *bcc,
+					const char *fcc,
+					const char *newsgroups,
+					const char *followup_to,
+					const char * /*subject*/,
+					const char * /*references*/,
+					const char * /*organization*/,
+					const char * /*other_random_headers*/)
 {
-  if (from) while (XP_IS_SPACE (*from)) from++;
-  if (reply_to) while (XP_IS_SPACE (*reply_to)) reply_to++;
-  if (to) while (XP_IS_SPACE (*to)) to++;
-  if (cc) while (XP_IS_SPACE (*cc)) cc++;
-  if (bcc) while (XP_IS_SPACE (*bcc)) bcc++;
-  if (fcc) while (XP_IS_SPACE (*fcc)) fcc++;
-  if (newsgroups) while (XP_IS_SPACE (*newsgroups)) newsgroups++;
-  if (followup_to) while (XP_IS_SPACE (*followup_to)) followup_to++;
+	if (from)
+		while (XP_IS_SPACE (*from))
+			from++;
+	if (reply_to)
+		while (XP_IS_SPACE (*reply_to))
+			reply_to++;
+	if (to)
+		while (XP_IS_SPACE (*to))
+			to++;
+	if (cc)
+		while (XP_IS_SPACE (*cc))
+			cc++;
+	if (bcc)
+		while (XP_IS_SPACE (*bcc))
+			bcc++;
+	if (fcc)
+		while (XP_IS_SPACE (*fcc))
+			fcc++;
+	if (newsgroups)
+		while (XP_IS_SPACE (*newsgroups))
+			newsgroups++;
+	if (followup_to)
+		while (XP_IS_SPACE (*followup_to))
+			followup_to++;
 
-  /* #### sanity check other_random_headers for newline conventions */
-
-  if (!from || !*from)
-	return MK_MIME_NO_SENDER;
-  else if ((!to || !*to) &&
-		   (!cc || !*cc) &&
-		   (!bcc || !*bcc) &&
-		   (!newsgroups || !*newsgroups))
-	return MK_MIME_NO_RECIPIENTS;
-  else
-	return 0;
+	/* #### sanity check other_random_headers for newline conventions */
+	if (!from || !*from)
+		return MK_MIME_NO_SENDER;
+	else
+		if ((!to || !*to) && (!cc || !*cc) &&
+				(!bcc || !*bcc) && (!newsgroups || !*newsgroups))
+			return MK_MIME_NO_RECIPIENTS;
+	else
+		return 0;
 }
 
 
@@ -1578,97 +1606,98 @@ mime_sanity_check_fields (const char *from,
    If addr_p is true, the addresses will be parsed and reemitted as
    rfc822 mailboxes.
  */
-static char *
-mime_fix_header_1 (const char *string,
-				   PRBool addr_p, PRBool news_p)
+static char * mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_p)
 {
-  char *new_string;
-  const char *in;
-  char *out;
-  PRInt32 i, old_size, new_size;
-  if (!string || !*string)
-	return 0;
+	char *new_string;
+	const char *in;
+	char *out;
+	PRInt32 i, old_size, new_size;
 
-  if (addr_p)
-	{
-	  char *n = MSG_ReformatRFC822Addresses (string);
-	  if (n) return n;
+	if (!string || !*string)
+		return 0;
+
+	if (addr_p) {
+		nsIMsgRFC822Parser * pRfc822;
+		nsRepository::RegisterFactory(kMsgRFC822ParserCID, "mailnews.dll", PR_FALSE, PR_FALSE); //JFD - I should be able to remose this line soon...
+		nsresult rv = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
+                                               NULL, 
+                                               nsIMsgRFC822Parser::IID(), 
+                                               (void **) &pRfc822);
+		if (NS_SUCCEEDED(rv)) {
+			char *n;
+			pRfc822->ReformatRFC822Addresses(string, &n);
+			pRfc822->Release();
+			if (n)
+				return n;
+		}
 	}
 
-  old_size = PL_strlen (string);
-  new_size = old_size;
-  for (i = 0; i < old_size; i++)
-	if (string[i] == CR || string[i] == LF)
-	  new_size += 2;
+	old_size = PL_strlen (string);
+	new_size = old_size;
+	for (i = 0; i < old_size; i++)
+		if (string[i] == CR || string[i] == LF)
+			new_size += 2;
 
-  new_string = (char *) PR_MALLOC (new_size + 1);
-  if (! new_string)
-	return 0;
+	new_string = (char *) PR_Malloc (new_size + 1);
+	if (! new_string)
+		return 0;
 
-  in  = string;
-  out = new_string;
+	in  = string;
+	out = new_string;
 
-  /* strip leading whitespace. */
-  while (XP_IS_SPACE (*in))
-	in++;
+	/* strip leading whitespace. */
+	while (XP_IS_SPACE (*in))
+		in++;
 
-  /* replace CR, LF, or CRLF with CRLF-TAB. */
-  while (*in)
-	{
-	  if (*in == CR || *in == LF)
-		{
-		  if (*in == CR && in[1] == LF)
+	/* replace CR, LF, or CRLF with CRLF-TAB. */
+	while (*in) {
+		if (*in == CR || *in == LF) {
+			if (*in == CR && in[1] == LF)
+				in++;
 			in++;
-		  in++;
-		  *out++ = CR;
-		  *out++ = LF;
-		  *out++ = '\t';
+			*out++ = CR;
+			*out++ = LF;
+			*out++ = '\t';
 		}
-	  else if (news_p && *in == ',')
-		{
-		  *out++ = *in++;
-		  /* skip over all whitespace after a comma. */
-		  while (XP_IS_SPACE (*in))
-			in++;
-		}
-	  else
-		{
-		  *out++ = *in++;
-		}
+		else
+			if (news_p && *in == ',') {
+				*out++ = *in++;
+				/* skip over all whitespace after a comma. */
+				while (XP_IS_SPACE (*in))
+					in++;
+			}
+			else
+				*out++ = *in++;
 	}
-  *out = 0;
+	*out = 0;
 
-  /* strip trailing whitespace. */
-  while (out > in && XP_IS_SPACE (out[-1]))
-	*out-- = 0;
+	/* strip trailing whitespace. */
+	while (out > in && XP_IS_SPACE (out[-1]))
+		*out-- = 0;
 
-  /* If we ended up throwing it all away, use 0 instead of "". */
-  if (!*new_string)
-	{
-	  PR_Free (new_string);
-	  new_string = 0;
+	/* If we ended up throwing it all away, use 0 instead of "". */
+	if (!*new_string) {
+		PR_Free (new_string);
+		new_string = 0;
 	}
 
-  return new_string;
+	return new_string;
 }
 
 
-static char *
-mime_fix_header (const char *string)
+static char * mime_fix_header (const char *string)
 {
-  return mime_fix_header_1 (string, FALSE, FALSE);
+  return mime_fix_header_1 (string, PR_FALSE, PR_FALSE);
 }
 
-static char *
-mime_fix_addr_header (const char *string)
+static char * mime_fix_addr_header (const char *string)
 {
-  return mime_fix_header_1 (string, TRUE, FALSE);
+  return mime_fix_header_1 (string, PR_TRUE, PR_FALSE);
 }
 
-static char *
-mime_fix_news_header (const char *string)
+static char * mime_fix_news_header (const char *string)
 {
-  return mime_fix_header_1 (string, FALSE, TRUE);
+  return mime_fix_header_1 (string, PR_FALSE, PR_TRUE);
 }
 
 
@@ -1677,14 +1706,14 @@ static PRBool
 mime_type_conversion_possible (const char *from_type, const char *to_type)
 {
   if (! to_type)
-	return TRUE;
+	return PR_TRUE;
 
   if (! from_type)
-	return FALSE;
+	return PR_FALSE;
 
   if (!PL_strcasecmp (from_type, to_type))
 	/* Don't run text/plain through the text->html converter. */
-	return FALSE;
+	return PR_FALSE;
 
   if ((!PL_strcasecmp (from_type, INTERNAL_PARSER) ||
 	   !PL_strcasecmp (from_type, TEXT_HTML) ||
@@ -1692,7 +1721,7 @@ mime_type_conversion_possible (const char *from_type, const char *to_type)
 	  !PL_strcasecmp (to_type, TEXT_PLAIN))
 	/* Don't run UNKNOWN_CONTENT_TYPE through the text->html converter
 	   (treat it as text/plain already.) */
-	return TRUE;
+	return PR_TRUE;
 
 #ifdef XP_UNIX
   if ((!PL_strcasecmp (from_type, INTERNAL_PARSER) ||
@@ -1709,10 +1738,10 @@ mime_type_conversion_possible (const char *from_type, const char *to_type)
 	   !PL_strcasecmp (from_type, UNKNOWN_CONTENT_TYPE)
 	   ) &&
 	  !PL_strcasecmp (to_type, APPLICATION_POSTSCRIPT))
-	return TRUE;
+	return PR_TRUE;
 #endif /* XP_UNIX */
 
-  return FALSE;
+  return PR_FALSE;
 }
 #endif
 
@@ -1723,7 +1752,7 @@ mime_type_requires_b64_p (const char *type)
   if (!type || !PL_strcasecmp (type, UNKNOWN_CONTENT_TYPE))
 	/* Unknown types don't necessarily require encoding.  (Note that
 	   "unknown" and "application/octet-stream" aren't the same.) */
-	return FALSE;
+	return PR_FALSE;
 
   else if (!PL_strncasecmp (type, "image/", 6) ||
 		   !PL_strncasecmp (type, "audio/", 6) ||
@@ -1792,14 +1821,14 @@ mime_type_requires_b64_p (const char *type)
 	  const char **s;
 	  for (s = app_and_image_types_which_are_really_text; *s; s++)
 		if (!PL_strcasecmp (type, *s))
-		  return FALSE;
+		  return PR_FALSE;
 
 	  /* All others must be assumed to be binary formats, and need Base64. */
-	  return TRUE;
+	  return PR_TRUE;
 	}
 
   else
-	return FALSE;
+	return PR_FALSE;
 }
 
 #ifdef XP_OS2
@@ -1817,8 +1846,8 @@ int
 MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 {
   // use the boolean so we only have to test for uuencode vs base64 once
-  PRBool needsB64 = FALSE;
-  PRBool forceB64 = FALSE;
+  PRBool needsB64 = PR_FALSE;
+  PRBool forceB64 = PR_FALSE;
 
   if (m_already_encoded_p)
 	goto DONE;
@@ -1833,7 +1862,7 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 		 always use base64 (so that we don't get confused by newline
 		 conversions.)
 	   */
-		needsB64 = TRUE;
+		needsB64 = PR_TRUE;
 	}
   else
 	{
@@ -1844,27 +1873,27 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 	  PRBool encode_p;
 
 	  if (m_max_column > 900)
-		encode_p = TRUE;
+		encode_p = PR_TRUE;
 	  else if (mime_use_quoted_printable_p && m_unprintable_count)
-		encode_p = TRUE;
+		encode_p = PR_TRUE;
 
 	  else if (m_null_count)	/* If there are nulls, we must always encode,
 								   because sendmail will blow up. */
-		encode_p = TRUE;
+		encode_p = PR_TRUE;
 #if 0
 	  else if (m_ctl_count)	/* Should we encode if random other control
 								   characters are present?  Probably... */
-		encode_p = TRUE;
+		encode_p = PR_TRUE;
 #endif
 	  else
-		encode_p = FALSE;
+		encode_p = PR_FALSE;
 
 	  /* MIME requires a special case that these types never be encoded.
 	   */
 	  if (!PL_strncasecmp (m_type, "message", 7) ||
 		  !PL_strncasecmp (m_type, "multipart", 9))
 		{
-		  encode_p = FALSE;
+		  encode_p = PR_FALSE;
 		  if (m_desired_type && !PL_strcasecmp (m_desired_type, TEXT_PLAIN))
 			{
 			  PR_Free (m_desired_type);
@@ -1875,7 +1904,7 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 		Use 7 bit for other STATFUL ( e.g. CS_2022_KR) csid. */
 	  if ((mail_csid == CS_JIS) &&
 		  (PL_strcasecmp(m_type, TEXT_HTML) == 0))
-         needsB64 = TRUE;
+         needsB64 = PR_TRUE;
 	  else if((mail_csid & STATEFUL) &&
          ((PL_strcasecmp(m_type, TEXT_HTML) == 0) ||
           (PL_strcasecmp(m_type, TEXT_MDL) == 0) ||
@@ -1889,7 +1918,8 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
           (PL_strcasecmp(m_type, MESSAGE_RFC822) == 0) ||
           (PL_strcasecmp(m_type, MESSAGE_NEWS) == 0)))
       {
-        StrAllocCopy (m_encoding, ENCODING_7BIT);
+		PR_FREEIF(m_encoding);
+        m_encoding = PL_strdup (ENCODING_7BIT);
 	  }
 	  else if (encode_p &&
                m_size > 500 &&
@@ -1898,13 +1928,19 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 		   then that seems like a good candidate for base64 instead of
 		   quoted-printable.
 		 */
-		  needsB64 = TRUE;
-	  else if (encode_p)
-		StrAllocCopy (m_encoding, ENCODING_QUOTED_PRINTABLE);
-	  else if (m_highbit_count > 0)
-		StrAllocCopy (m_encoding, ENCODING_8BIT);
-	  else
-		StrAllocCopy (m_encoding, ENCODING_7BIT);
+		  needsB64 = PR_TRUE;
+	  else if (encode_p) {
+		PR_FREEIF(m_encoding);
+		m_encoding = PL_strdup (ENCODING_QUOTED_PRINTABLE);
+	  }
+	  else if (m_highbit_count > 0) {
+		PR_FREEIF(m_encoding);
+		m_encoding = PL_strdup (ENCODING_8BIT);
+	  }
+	  else {
+		PR_FREEIF(m_encoding);
+		m_encoding = PL_strdup (ENCODING_7BIT);
+	  }
 	}
 
   if (needsB64)
@@ -1913,10 +1949,11 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 		 ### mwelch We might have to uuencode instead of 
 		            base64 the binary data.
 	  */
+	  PR_FREEIF(m_encoding);
 	  if (UseUUEncode_p())
-		  StrAllocCopy (m_encoding, ENCODING_UUENCODE);
+		  m_encoding = PL_strdup (ENCODING_UUENCODE);
 	  else
-		  StrAllocCopy (m_encoding, ENCODING_BASE64);
+		  m_encoding = PL_strdup (ENCODING_BASE64);
   }
 
   /* Now that we've picked an encoding, initialize the filter.
@@ -1935,15 +1972,21 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 		if (m_url_string)
 		{
 		  	tailName = PL_strrchr(m_url_string, '/');
-		  	if (tailName)
+			if (tailName) {
+				char * tmp = tailName;
 		  		tailName = PL_strdup(tailName+1);
+				PR_FREEIF(tmp);
+			}
 		}
 		
 		if (m_url && !tailName)
 		{
 			tailName = PL_strrchr(m_url->address, '/');
-			if (tailName)
+			if (tailName) {
+				char * tmp = tailName;
 				tailName = PL_strdup(tailName+1);
+				PR_FREEIF(tmp);
+			}
 		}
 
 		  m_encoder_data = MimeUUEncoderInit(tailName ? tailName : "",
@@ -1988,14 +2031,15 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
  DONE:
   if (!m_type || !*m_type || !PL_strcasecmp(m_type, UNKNOWN_CONTENT_TYPE))
 	{
+	  PR_FREEIF(m_type);
 	  if (m_already_encoded_p)
-		StrAllocCopy (m_type, APPLICATION_OCTET_STREAM);
+		m_type = PL_strdup (APPLICATION_OCTET_STREAM);
 	  else if (m_encoding &&
 			   (!PL_strcasecmp(m_encoding, ENCODING_BASE64) ||
 				!PL_strcasecmp(m_encoding, ENCODING_UUENCODE)))
-		StrAllocCopy (m_type, APPLICATION_OCTET_STREAM);
+		m_type = PL_strdup (APPLICATION_OCTET_STREAM);
 	  else
-		StrAllocCopy (m_type, TEXT_PLAIN);
+		m_type = PL_strdup (TEXT_PLAIN);
 	}
   return 0;
 }
@@ -2003,25 +2047,23 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 
 /* Some types should have a "charset=" parameter, and some shouldn't.
    This is what decides. */
-PRBool
-mime_type_needs_charset (const char *type)
+PRBool mime_type_needs_charset (const char *type)
 {
-  /* Only text types should have charset. */
-  if (!type || !*type)
-	return FALSE;
-  else if (!PL_strncasecmp (type, "text", 4))
-	return TRUE;
-  else
-	return FALSE;
+	/* Only text types should have charset. */
+	if (!type || !*type)
+		return PR_FALSE;
+	else 
+		if (!PL_strncasecmp (type, "text", 4))
+			return PR_TRUE;
+		else
+			return PR_FALSE;
 }
 
 
-char*
-mime_get_stream_write_buffer(void)
+char* mime_get_stream_write_buffer(void)
 {
-	if (!mime_mailto_stream_write_buffer) {
-		mime_mailto_stream_write_buffer = (char *) PR_MALLOC(MIME_BUFFER_SIZE);
-	}
+	if (!mime_mailto_stream_write_buffer)
+		mime_mailto_stream_write_buffer = (char *) PR_Malloc(MIME_BUFFER_SIZE);
 	return mime_mailto_stream_write_buffer;
 }
 
@@ -2039,7 +2081,7 @@ int nsMsgSendMimeDeliveryState::InitImapOfflineDB(PRUint32 flag)
 		nsresult err = NS_OK;
 		char *dummyEnvelope = msg_GetDummyEnvelope();
 		NS_ASSERTION(!m_imapOutgoingParser && !m_imapLocalMailDB, "not-null ptr");
-		err = MailDB::Open(m_msg_file_name, TRUE, &m_imapLocalMailDB);
+		err = MailDB::Open(m_msg_file_name, PR_TRUE, &m_imapLocalMailDB);
 		if (err != NS_OK) 
 		{
 			if (m_imapLocalMailDB)
@@ -2061,7 +2103,7 @@ int nsMsgSendMimeDeliveryState::InitImapOfflineDB(PRUint32 flag)
 		m_imapOutgoingParser->SetOutFile(m_msg_file);
 */
 		m_imapOutgoingParser->SetMailDB(m_imapLocalMailDB);
-		m_imapOutgoingParser->SetWriteToOutFile(FALSE);
+		m_imapOutgoingParser->SetWriteToOutFile(PR_FALSE);
 		m_imapOutgoingParser->Init(0);
 		m_imapOutgoingParser->StartNewEnvelope(dummyEnvelope,
 											   PL_strlen(dummyEnvelope));
@@ -2084,13 +2126,13 @@ done:
  */
 int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 {
-	PRBool shouldDeleteDeliveryState = TRUE;
+	PRBool shouldDeleteDeliveryState = PR_TRUE;
 	PRInt32 status, i;
 	char *headers = 0;
 	char *separator = 0;
 	XP_File in_file = 0;
-	PRBool multipart_p = FALSE;
-	PRBool plaintext_is_mainbody_p = FALSE; // only using text converted from HTML?
+	PRBool multipart_p = PR_FALSE;
+	PRBool plaintext_is_mainbody_p = PR_FALSE; // only using text converted from HTML?
 	char *buffer = 0;
 	char *buffer_tail = 0;
 	char* error_msg = 0;
@@ -2099,136 +2141,125 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
   // to news is true if we have a m_field and we have a Newsgroup and it is not empty
 	PRBool tonews = PR_FALSE;
 	if (m_fields) {
-	  const char* pstrzNewsgroup = m_fields->GetNewsgroups();
-	  if (pstrzNewsgroup && *pstrzNewsgroup)
-		  tonews = PR_TRUE;
+		const char* pstrzNewsgroup = m_fields->GetNewsgroups();
+		if (pstrzNewsgroup && *pstrzNewsgroup)
+			tonews = PR_TRUE;
 	}
 
-  INTL_MessageSendToNews(tonews);	// hack to make Korean Mail/News work correctly 
-					// Look at libi18n/doc_ccc.c for details 
-					// temp solution for bug 30725
-  PRInt16 mail_csid 	 = tonews ?
-		INTL_DefaultNewsCharSetID(win_csid) :
-		INTL_DefaultMailCharSetID(win_csid);
+	INTL_MessageSendToNews(tonews);			// hack to make Korean Mail/News work correctly 
+											// Look at libi18n/doc_ccc.c for details 
+											// temp solution for bug 30725
 
-  nsMsgSendPart* toppart = NULL;	// The very top most container of the message
-								// that we are going to send.
-  nsMsgSendPart* mainbody = NULL;// The leaf node that contains the text of the
-								// message we're going to contain.
-  nsMsgSendPart* maincontainer = NULL;// The direct child of toppart that will
-									 // contain the mainbody.  If mainbody is
-									 // the same as toppart, then this is
-									 // also the same.  But if mainbody is
-									 // to end up somewhere inside of a
-									 // multipart/alternative or a
-									 // multipart/related, then this is that
-									 // multipart object.
+	PRInt16 mail_csid = tonews ? INTL_DefaultNewsCharSetID(win_csid) : INTL_DefaultMailCharSetID(win_csid);
 
-  nsMsgSendPart* plainpart = NULL;	// If we converted HTML into plaintext,
-  									// the message or child containing the plaintext
-  									// goes here. (Need to use this to determine
-  									// what headers to append/set to the main 
-  									// message body.)
-  char *hdrs = 0;
-  PRBool maincontainerISrelatedpart = FALSE;
+	nsMsgSendPart* toppart = NULL;			// The very top most container of the message
+											// that we are going to send.
 
-  INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(GetContext());
-  // Do we need to do this only for UTF-8?
-  if (CS_UTF8 == win_csid)
-  {
-  	mail_csid = INTL_DefaultMailCharSetID(INTL_GetCSIDocCSID(c));	// need to distinguish utf8 and utf7
-  }
+	nsMsgSendPart* mainbody = NULL;			// The leaf node that contains the text of the
+											// message we're going to contain.
 
+	nsMsgSendPart* maincontainer = NULL;	// The direct child of toppart that will
+											// contain the mainbody.  If mainbody is
+											// the same as toppart, then this is
+											// also the same.  But if mainbody is
+											// to end up somewhere inside of a
+											// multipart/alternative or a
+											// multipart/related, then this is that
+											// multipart object.
 
-  status = m_status;
-  if (status < 0)
-	goto FAIL;
+	nsMsgSendPart* plainpart = NULL;		// If we converted HTML into plaintext,
+											// the message or child containing the plaintext
+											// goes here. (Need to use this to determine
+											// what headers to append/set to the main 
+											// message body.)
+	char *hdrs = 0;
+	PRBool maincontainerISrelatedpart = PR_FALSE;
 
-  if (m_attachments_only_p)
+	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(GetContext());
+	// Do we need to do this only for UTF-8?
+	if (CS_UTF8 == win_csid)
+		mail_csid = INTL_DefaultMailCharSetID(INTL_GetCSIDocCSID(c));	// need to distinguish utf8 and utf7
+
+	status = m_status;
+	if (status < 0)
+		goto FAIL;
+
+	if (m_attachments_only_p)
 	{
-	  /* If we get here, we shouldn't have the "generating a message" cb. */
-	  NS_ASSERTION(!m_dont_deliver_p &&
-				!m_message_delivery_done_callback, "Shouldn't be here");
-	  if (m_attachments_done_callback)
-		{
-		  struct MSG_AttachedFile *attachments;
+		/* If we get here, we shouldn't have the "generating a message" cb. */
+		NS_ASSERTION(!m_dont_deliver_p && !m_message_delivery_done_callback, "Shouldn't be here");
+		if (m_attachments_done_callback) {
+			struct MSG_AttachedFile *attachments;
 
-		  NS_ASSERTION(m_attachment_count > 0, "not more attachment");
-		  if (m_attachment_count <= 0)
-			{
-			  m_attachments_done_callback (GetContext(),
-												m_fe_data, 0, 0,
-												0);
-			  m_attachments_done_callback = 0;
-			  Clear();
-			  goto FAIL;
+			NS_ASSERTION(m_attachment_count > 0, "not more attachment");
+			if (m_attachment_count <= 0) {
+				m_attachments_done_callback (GetContext(), m_fe_data, 0, 0, 0);
+				m_attachments_done_callback = 0;
+				Clear();
+				goto FAIL;
 			}
 
-		  attachments = (struct MSG_AttachedFile *)
-			PR_MALLOC((m_attachment_count + 1) * sizeof(*attachments));
+			attachments = (struct MSG_AttachedFile *)PR_Malloc((m_attachment_count + 1) * sizeof(*attachments));
 
-		  if (!attachments) goto FAILMEM;
-		  XP_MEMSET(attachments, 0, ((m_attachment_count + 1)
-									 * sizeof(*attachments)));
-		  for (i = 0; i < m_attachment_count; i++)
+			if (!attachments)
+				goto FAILMEM;
+			memset(attachments, 0, ((m_attachment_count + 1) * sizeof(*attachments)));
+			for (i = 0; i < m_attachment_count; i++)
 			{
-			  MSG_DeliverMimeAttachment *ma = &m_attachments[i];
+				MSG_DeliverMimeAttachment *ma = &m_attachments[i];
 
 #undef SNARF
 #define SNARF(x,y) do { if((y) && *(y) && !(x)) { ((x) = (y)); ((y) = 0); }} \
 				   while(0)
-			  /* Rather than copying the strings and dealing with allocation
+				/* Rather than copying the strings and dealing with allocation
 				 failures, we'll just "move" them into the other struct (this
 				 should be ok since this file uses PR_FREEIF when discarding
 				 the mime_attachment objects.) */
-			  SNARF(attachments[i].orig_url, ma->m_url_string);
-			  SNARF(attachments[i].file_name, ma->m_file_name);
-			  SNARF(attachments[i].type, ma->m_type);
-			  SNARF(attachments[i].encoding, ma->m_encoding);
-			  SNARF(attachments[i].description, ma->m_description);
-			  SNARF(attachments[i].x_mac_type, ma->m_x_mac_type);
-			  SNARF(attachments[i].x_mac_creator, ma->m_x_mac_creator);
+				SNARF(attachments[i].orig_url, ma->m_url_string);
+				SNARF(attachments[i].file_name, ma->m_file_name);
+				SNARF(attachments[i].type, ma->m_type);
+				SNARF(attachments[i].encoding, ma->m_encoding);
+				SNARF(attachments[i].description, ma->m_description);
+				SNARF(attachments[i].x_mac_type, ma->m_x_mac_type);
+				SNARF(attachments[i].x_mac_creator, ma->m_x_mac_creator);
 #undef SNARF
-			  attachments[i].size = ma->m_size;
-			  attachments[i].unprintable_count = ma->m_unprintable_count;
-			  attachments[i].highbit_count = ma->m_highbit_count;
-			  attachments[i].ctl_count = ma->m_ctl_count;
-			  attachments[i].null_count = ma->m_null_count;
-			  attachments[i].max_line_length = ma->m_max_column;
-			  HJ08239
+				attachments[i].size = ma->m_size;
+				attachments[i].unprintable_count = ma->m_unprintable_count;
+				attachments[i].highbit_count = ma->m_highbit_count;
+				attachments[i].ctl_count = ma->m_ctl_count;
+				attachments[i].null_count = ma->m_null_count;
+				attachments[i].max_line_length = ma->m_max_column;
+				HJ08239
 
-			  /* Doesn't really matter, but let's not lie about encoding
-				 in case it does someday. */
-			  if (attachments[i].highbit_count > 0 &&
-				  attachments[i].encoding &&
-				  !PL_strcasecmp(attachments[i].encoding, ENCODING_7BIT))
-				  attachments[i].encoding = ENCODING_8BIT;
+				/* Doesn't really matter, but let's not lie about encoding
+				   in case it does someday. */
+				if (attachments[i].highbit_count > 0 && attachments[i].encoding &&
+						!PL_strcasecmp(attachments[i].encoding, ENCODING_7BIT))
+					attachments[i].encoding = ENCODING_8BIT;
 			}
 
-		  m_attachments_done_callback (GetContext(),
-									   m_fe_data, 0, 0,
-									   attachments);
-		  PR_FREEIF(attachments);
-		  m_attachments_done_callback = 0;
-		  Clear();
+			m_attachments_done_callback(GetContext(), m_fe_data, 0, 0, attachments);
+			PR_FREEIF(attachments);
+			m_attachments_done_callback = 0;
+			Clear();
 		}
-	  goto FAIL;
+		goto FAIL;
 	}
 
 
-  /* If we get here, we're generating a message, so there shouldn't be an
-	 attachments callback. */
-  NS_ASSERTION(!m_attachments_done_callback, "shouldn't have an attachement callback!");
+	/* If we get here, we're generating a message, so there shouldn't be an
+	   attachments callback. */
+	NS_ASSERTION(!m_attachments_done_callback, "shouldn't have an attachement callback!");
 
+	if (!m_attachment1_type) {
+		m_attachment1_type = PL_strdup(TEXT_PLAIN);
+		if (!m_attachment1_type)
+			goto FAILMEM;
+	}
 
-  if (!m_attachment1_type) {
-	  m_attachment1_type = PL_strdup(TEXT_PLAIN);
-	  if (!m_attachment1_type) goto FAILMEM;
-  }
-
-  // If we have a text/html main part, and we need a plaintext attachment, then
-  // we'll do so now.  This is an asynchronous thing, so we'll kick it off and
-  // count on getting back here when it finishes.
+	/* If we have a text/html main part, and we need a plaintext attachment, then
+	   we'll do so now.  This is an asynchronous thing, so we'll kick it off and
+	   count on getting back here when it finishes. */
 
 	if (m_plaintext == NULL &&
 			(m_fields->GetForcePlainText() ||
@@ -2236,7 +2267,8 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 			m_attachment1_body && PL_strcmp(m_attachment1_type, TEXT_HTML) == 0)
 	{
 		m_html_filename = WH_TempName (xpFileToPost, "nsmail");
-		if (!m_html_filename) goto FAILMEM;
+		if (!m_html_filename)
+			goto FAILMEM;
 
 		nsFileSpec aPath(m_html_filename);
 		nsOutputFileStream tmpfile(aPath);
@@ -2245,39 +2277,45 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 			goto FAIL;
 		}
 
-	  status = tmpfile.write(m_attachment1_body, m_attachment1_body_length);
-	  if (status < int(m_attachment1_body_length)) {
-		  if (status >= 0) {
-			  status = MK_MIME_ERROR_WRITING_FILE;
-		  }
-		  goto FAIL;
-	  }
+		status = tmpfile.write(m_attachment1_body, m_attachment1_body_length);
+		if (status < int(m_attachment1_body_length)) {
+			if (status >= 0)
+				status = MK_MIME_ERROR_WRITING_FILE;
+			goto FAIL;
+		}
 
-	  if (tmpfile.failed()) goto FAIL;
+		if (tmpfile.failed()) goto FAIL;
 
-	  m_plaintext = new MSG_DeliverMimeAttachment;
-	  if (!m_plaintext) goto FAILMEM;
-	  m_plaintext->m_mime_delivery_state = this;
-	  char* temp = WH_FileName(m_html_filename, xpFileToPost);
-	  m_plaintext->m_url_string = XP_PlatformFileToURL(temp);
-	  if (temp) PR_Free(temp);
-	  if (!m_plaintext->m_url_string) goto FAILMEM;
-	  m_plaintext->m_url =
-		  NET_CreateURLStruct (m_plaintext->m_url_string, NET_DONT_RELOAD);
-	  if (!m_plaintext->m_url) goto FAILMEM;
-	  StrAllocCopy(m_plaintext->m_url->content_type, TEXT_HTML);
-	  StrAllocCopy(m_plaintext->m_type, TEXT_HTML);
-	  StrAllocCopy(m_plaintext->m_desired_type, TEXT_PLAIN);
-	  m_attachment_pending_count++;
-	  status = m_plaintext->SnarfAttachment();
-	  if (status < 0) goto FAIL;
-	  if (m_attachment_pending_count > 0) return 0;
-  }
+		m_plaintext = new MSG_DeliverMimeAttachment;
+		if (!m_plaintext)
+			goto FAILMEM;
+		m_plaintext->m_mime_delivery_state = this;
+		char* temp = WH_FileName(m_html_filename, xpFileToPost);
+		m_plaintext->m_url_string = XP_PlatformFileToURL(temp);
+		PR_FREEIF(temp);
+		if (!m_plaintext->m_url_string)
+			goto FAILMEM;
+		m_plaintext->m_url = NET_CreateURLStruct(m_plaintext->m_url_string, NET_DONT_RELOAD);
+		if (!m_plaintext->m_url)
+			goto FAILMEM;
+		PR_FREEIF(m_plaintext->m_url->content_type);
+		m_plaintext->m_url->content_type = PL_strdup(TEXT_HTML);
+		PR_FREEIF(m_plaintext->m_type);
+		m_plaintext->m_type = PL_strdup(TEXT_HTML);
+		PR_FREEIF(m_plaintext->m_desired_type);
+		m_plaintext->m_desired_type = PL_strdup(TEXT_PLAIN);
+		m_attachment_pending_count ++;
+		status = m_plaintext->SnarfAttachment();
+		if (status < 0)
+			goto FAIL;
+		if (m_attachment_pending_count > 0)
+			return 0;
+	}
 	  
-
 	/* Kludge to avoid having to allocate memory on the toy computers... */
 	buffer = mime_get_stream_write_buffer();
-	if (! buffer) goto FAILMEM;
+	if (! buffer)
+		goto FAILMEM;
 
 	buffer_tail = buffer;
 
@@ -2291,110 +2329,112 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	if (! m_msg_file_name)
 		goto FAILMEM;
 
-	{
+	{ //those brackets are needed, please to not remove it else VC++6 will complain
 		nsFileSpec msgPath(m_msg_file_name);
 		m_msg_file = new nsOutputFileStream(msgPath);
 	}
 	if (! m_msg_file->is_open()) {
-	  status = MK_UNABLE_TO_OPEN_TMP_FILE;
-	  error_msg = PR_smprintf(XP_GetString(status), m_msg_file_name);
-	  if (!error_msg)
-		  status = MK_OUT_OF_MEMORY;
-	  goto FAIL;
+		status = MK_UNABLE_TO_OPEN_TMP_FILE;
+		error_msg = PR_smprintf(XP_GetString(status), m_msg_file_name);
+		if (!error_msg)
+			status = MK_OUT_OF_MEMORY;
+		goto FAIL;
 	}
 
-  if (NET_IsOffline() && IsSaveMode())
-  {
-	  status = InitImapOfflineDB( m_deliver_mode == MSG_SaveAsTemplate ?
+	if (NET_IsOffline() && IsSaveMode()) {
+		status = InitImapOfflineDB( m_deliver_mode == MSG_SaveAsTemplate ?
 								  MSG_FOLDER_FLAG_TEMPLATES :
 								  MSG_FOLDER_FLAG_DRAFTS );
-	  if (status < 0)
-	  {
-		  StrAllocCopy (error_msg, XP_GetString(status));
-		  goto FAIL;
-	  }
-  }
+		if (status < 0) {
+			error_msg = PL_strdup (XP_GetString(status));
+			goto FAIL;
+		}
+	}
 	  
 #ifdef GENERATE_MESSAGE_ID
 	if (m_fields->GetMessageId() == NULL || *m_fields->GetMessageId() == 0)
 		m_fields->SetMessageId(msg_generate_message_id (), NULL);
 #endif /* GENERATE_MESSAGE_ID */
 
-  mainbody = new nsMsgSendPart(this, mail_csid);
-  if (!mainbody) goto FAILMEM;
+	mainbody = new nsMsgSendPart(this, mail_csid);
+	if (!mainbody)
+		goto FAILMEM;
   
-  mainbody->SetMainPart(TRUE);
-  mainbody->SetType(m_attachment1_type ? m_attachment1_type : TEXT_PLAIN);
+	mainbody->SetMainPart(PR_TRUE);
+	mainbody->SetType(m_attachment1_type ? m_attachment1_type : TEXT_PLAIN);
 
-  NS_ASSERTION(mainbody->GetBuffer() == NULL, "not-null buffer");
-  status = mainbody->SetBuffer(m_attachment1_body ? m_attachment1_body : " ");
-  if (status < 0) goto FAIL;
+	NS_ASSERTION(mainbody->GetBuffer() == NULL, "not-null buffer");
+	status = mainbody->SetBuffer(m_attachment1_body ? m_attachment1_body : " ");
+	if (status < 0)
+		goto FAIL;
 
 	/*	### mwelch 
 		Determine the encoding of the main message body before we free it.
 		The proper way to do this should be to test whatever text is in mainbody
 		just before writing it out, but that will require a fix that is less safe
 		and takes more memory. */
-  if ((mail_csid & STATEFUL) || /* CS_JIS or CS_2022_KR */
-		  mime_7bit_data_p (m_attachment1_body,
-						m_attachment1_body_length))
-	StrAllocCopy (m_attachment1_encoding, ENCODING_7BIT);
-  else if (mime_use_quoted_printable_p)
-	StrAllocCopy (m_attachment1_encoding, ENCODING_QUOTED_PRINTABLE);
-  else {
-	StrAllocCopy (m_attachment1_encoding, ENCODING_8BIT);
-  }
+	PR_FREEIF(m_attachment1_encoding);
+	if ((mail_csid & STATEFUL) || /* CS_JIS or CS_2022_KR */
+		  mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length))
+		m_attachment1_encoding = PL_strdup (ENCODING_7BIT);
+	else if (mime_use_quoted_printable_p)
+		m_attachment1_encoding = PL_strdup (ENCODING_QUOTED_PRINTABLE);
+	else
+		m_attachment1_encoding = PL_strdup (ENCODING_8BIT);
 
-  PR_FREEIF (m_attachment1_body);
+	PR_FREEIF (m_attachment1_body);
 
-  maincontainer = mainbody;
+	maincontainer = mainbody;
 
-  // If we were given a pre-saved collection of HTML and contained images,
-  // then we want mainbody to point to the HTML lump therein.
-  if (m_related_part)
-  {
-	  // If m_related_part is of type text/html, set both maincontainer
-	  // and mainbody to point to it. If m_related_part is multipart/related,
-	  // however, set mainbody to be the first child within m_related_part.
+	// If we were given a pre-saved collection of HTML and contained images,
+	// then we want mainbody to point to the HTML lump therein.
+	if (m_related_part)
+	{
+		// If m_related_part is of type text/html, set both maincontainer
+		// and mainbody to point to it. If m_related_part is multipart/related,
+		// however, set mainbody to be the first child within m_related_part.
 
-	  // To plug a memory leak, delete the original maincontainer/mainbody.
-	  // 
-	  // NOTE: We DO NOT want to do this to the HTML or multipart/related 
-	  // nsMsgSendParts because they are deleted at the end of message 
-	  // delivery by the TapeFileSystem object 
-	  // (MSG_MimeRelatedSaver / mhtmlstm.cpp).
-	  delete mainbody;
+		// To plug a memory leak, delete the original maincontainer/mainbody.
+		// 
+		// NOTE: We DO NOT want to do this to the HTML or multipart/related 
+		// nsMsgSendParts because they are deleted at the end of message 
+		// delivery by the TapeFileSystem object 
+		// (MSG_MimeRelatedSaver / mhtmlstm.cpp).
+		delete mainbody;
 
-	  // No matter what, maincontainer points to the outermost related part.
-	  maincontainer = m_related_part;
-	  maincontainerISrelatedpart = TRUE;
+		// No matter what, maincontainer points to the outermost related part.
+		maincontainer = m_related_part;
+		maincontainerISrelatedpart = PR_TRUE;
 
-	  const char *relPartType = m_related_part->GetType();
-	  if (relPartType && !strcmp(relPartType, MULTIPART_RELATED))
-		  // outer shell is m/related,
-		  // mainbody wants to be the HTML lump within
-		  mainbody = m_related_part->GetChild(0);
-	  else
-		  // outer shell is text/html, 
-		  // so mainbody wants to be the same lump
-		  mainbody = maincontainer;
+		const char *relPartType = m_related_part->GetType();
+		if (relPartType && !strcmp(relPartType, MULTIPART_RELATED))
+			// outer shell is m/related,
+			// mainbody wants to be the HTML lump within
+			mainbody = m_related_part->GetChild(0);
+		else
+			// outer shell is text/html, 
+			// so mainbody wants to be the same lump
+			mainbody = maincontainer;
 
-	  mainbody->SetMainPart(TRUE);
-  }
+		mainbody->SetMainPart(PR_TRUE);
+	}
 
-  if (m_plaintext) {
-	  // OK.  We have a plaintext version of the main body that we want to
-	  // send instead of or with the text/html.  Shove it in.
-	  
-	  plainpart = new nsMsgSendPart(this, mail_csid);
-	  if (!plainpart) goto FAILMEM;
-	  status = plainpart->SetType(TEXT_PLAIN);
-	  if (status < 0) goto FAIL;
-	  status = plainpart->SetFile(m_plaintext->m_file_name, xpFileToPost);
-	  if (status < 0) goto FAIL;
-	  m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
-	  m_plaintext->PickEncoding(mail_csid);
-	  hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
+	if (m_plaintext) {
+		// OK.  We have a plaintext version of the main body that we want to
+		// send instead of or with the text/html.  Shove it in.
+
+		plainpart = new nsMsgSendPart(this, mail_csid);
+		if (!plainpart)
+			goto FAILMEM;
+		status = plainpart->SetType(TEXT_PLAIN);
+		if (status < 0)
+			goto FAIL;
+		status = plainpart->SetFile(m_plaintext->m_file_name, xpFileToPost);
+		if (status < 0)
+			goto FAIL;
+		m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
+		m_plaintext->PickEncoding(mail_csid);
+		hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
 											  m_plaintext->m_encoding,
 											  m_plaintext->m_description,
 											  m_plaintext->m_x_mac_type,
@@ -2403,206 +2443,223 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 											  m_digest_p,
 											  m_plaintext,
 											  mail_csid);
-	  if (!hdrs) goto FAILMEM;
-	  status = plainpart->SetOtherHeaders(hdrs);
-	  PR_Free(hdrs);
-	  hdrs = NULL;
-	  if (status < 0) goto FAIL;
+		if (!hdrs)
+			goto FAILMEM;
+		status = plainpart->SetOtherHeaders(hdrs);
+		PR_Free(hdrs);
+		hdrs = NULL;
+		if (status < 0)
+			goto FAIL;
 
-	  
+		if (m_fields->GetUseMultipartAlternative()) {
+			nsMsgSendPart* htmlpart = maincontainer;
+			maincontainer = new nsMsgSendPart(this);
+			if (!maincontainer)
+				goto FAILMEM;
+			status = maincontainer->SetType(MULTIPART_ALTERNATIVE);
+			if (status < 0)
+				goto FAIL;
+			status = maincontainer->AddChild(plainpart);
+			if (status < 0)
+				goto FAIL;
+			status = maincontainer->AddChild(htmlpart);
+			if (status < 0)
+				goto FAIL;
 
-	  if (m_fields->GetUseMultipartAlternative()) {
-		  nsMsgSendPart* htmlpart = maincontainer;
-		  maincontainer = new nsMsgSendPart(this);
-		  if (!maincontainer) goto FAILMEM;
-		  status = maincontainer->SetType(MULTIPART_ALTERNATIVE);
-		  if (status < 0) goto FAIL;
-		  status = maincontainer->AddChild(plainpart);
-		  if (status < 0) goto FAIL;
-		  status = maincontainer->AddChild(htmlpart);
-		  if (status < 0) goto FAIL;
-		  
-		  // Create the encoder for the plaintext part here,
-		  // because we aren't the main part (attachment1).
-		  // (This, along with the rest of the routine, should really
-		  // be restructured so that no special treatment is given to
-		  // the main body text that came in. Best to put attachment1_text
-		  // etc. into a nsMsgSendPart, then reshuffle the parts. Sigh.)
-		  if (!PL_strcasecmp(m_plaintext->m_encoding, ENCODING_QUOTED_PRINTABLE))
-		  {
-		  	 MimeEncoderData *plaintext_enc = MimeQPEncoderInit(mime_encoder_output_fn, this);
-		  	 if (!plaintext_enc)
-		  	 {
-		  	 	status = MK_OUT_OF_MEMORY;
-		  	 	goto FAIL;
-		  	 }
-		  	 plainpart->SetEncoderData(plaintext_enc);
-		  }
-	  } else {
-		  delete maincontainer; //### mwelch ??? doesn't this cause a crash?!
-		  if (maincontainerISrelatedpart)
-			  m_related_part = NULL;
-		  maincontainer = plainpart;
-		  mainbody = maincontainer;
-		  PR_FREEIF(m_attachment1_type);
-		  m_attachment1_type = PL_strdup(TEXT_PLAIN);
-		  if (!m_attachment1_type) goto FAILMEM;
-		  
-		  /* Override attachment1_encoding here. */
-	 	  PR_FREEIF(m_attachment1_encoding);
-	 	  StrAllocCopy(m_attachment1_encoding, m_plaintext->m_encoding);
+			// Create the encoder for the plaintext part here,
+			// because we aren't the main part (attachment1).
+			// (This, along with the rest of the routine, should really
+			// be restructured so that no special treatment is given to
+			// the main body text that came in. Best to put attachment1_text
+			// etc. into a nsMsgSendPart, then reshuffle the parts. Sigh.)
+			if (!PL_strcasecmp(m_plaintext->m_encoding, ENCODING_QUOTED_PRINTABLE))
+			{
+				MimeEncoderData *plaintext_enc = MimeQPEncoderInit(mime_encoder_output_fn, this);
+				if (!plaintext_enc)
+				{
+					status = MK_OUT_OF_MEMORY;
+					goto FAIL;
+				}
+				plainpart->SetEncoderData(plaintext_enc);
+			}
+		}
+		else {
+			delete maincontainer; //### mwelch ??? doesn't this cause a crash?!
+			if (maincontainerISrelatedpart)
+				m_related_part = NULL;
+			maincontainer = plainpart;
+			mainbody = maincontainer;
+			PR_FREEIF(m_attachment1_type);
+			m_attachment1_type = PL_strdup(TEXT_PLAIN);
+			if (!m_attachment1_type)
+				goto FAILMEM;
 
-		  plaintext_is_mainbody_p = TRUE; // converted plaintext is mainbody
-	  }
-  }
+			/* Override attachment1_encoding here. */
+			PR_FREEIF(m_attachment1_encoding);
+			m_attachment1_encoding = PL_strdup(m_plaintext->m_encoding);
 
-  // ###tw  This used to be this more complicated thing, but for now, if it we
-  // have any attachments, we generate multipart.
-  //multipart_p = (m_attachment_count > 1 ||
-  //				 (m_attachment_count == 1 &&
-  //				  m_attachment1_body_length > 0));
-  multipart_p = (m_attachment_count > 0);
-
-  if (multipart_p) {
-	toppart = new nsMsgSendPart(this);
-	if (!toppart) goto FAILMEM;
-	status = toppart->SetType(m_digest_p ? MULTIPART_DIGEST : MULTIPART_MIXED);
-	if (status < 0) goto FAIL;
-	status = toppart->AddChild(maincontainer);
-	if (status < 0) goto FAIL;
-	if (!m_crypto_closure) {
-	  status = toppart->SetBuffer(XP_GetString (MK_MIME_MULTIPART_BLURB));
-	  if (status < 0) goto FAIL;
+			plaintext_is_mainbody_p = PR_TRUE; // converted plaintext is mainbody
+		}
 	}
-  } else {
-	toppart = maincontainer;
-  }
 
+	// ###tw  This used to be this more complicated thing, but for now, if it we
+	// have any attachments, we generate multipart.
+	// multipart_p = (m_attachment_count > 1 ||
+	//				 (m_attachment_count == 1 &&
+	//				  m_attachment1_body_length > 0));
+	multipart_p = (m_attachment_count > 0);
 
-  /* Write out the message headers.
-   * Use document charset ID in order to distinguish UTF-8 and UTF-7 (which share the same win_csid).
-   */
-  headers = mime_generate_headers (m_fields,
+	if (multipart_p) {
+		toppart = new nsMsgSendPart(this);
+		if (!toppart)
+			goto FAILMEM;
+		status = toppart->SetType(m_digest_p ? MULTIPART_DIGEST : MULTIPART_MIXED);
+		if (status < 0)
+			goto FAIL;
+		status = toppart->AddChild(maincontainer);
+		if (status < 0)
+			goto FAIL;
+		if (!m_crypto_closure) {
+			status = toppart->SetBuffer(XP_GetString (MK_MIME_MULTIPART_BLURB));
+			if (status < 0)
+				goto FAIL;
+		}
+	}
+	else
+		toppart = maincontainer;
+
+	/* Write out the message headers.
+	* Use document charset ID in order to distinguish UTF-8 and UTF-7 (which share the same win_csid).
+	*/
+	headers = mime_generate_headers (m_fields,
 								   (CS_UTF8 != win_csid) ? INTL_GetCSIWinCSID(c) : INTL_GetCSIDocCSID(c),
 								   m_deliver_mode);
-  if (!headers) goto FAILMEM;
+	if (!headers)
+		goto FAILMEM;
 
-  // ### mwelch
-  // If we converted HTML into plaintext, the plaintext part (plainpart)
-  // already has its content-type and content-transfer-encoding
-  // ("other") headers set. 
-  // 
-  // In the specific case where such a plaintext part is the 
-  // top level message part (iff an HTML message is being sent
-  // as text only and no other attachments exist) we want to 
-  // preserve the original plainpart headers, since they
-  // contain accurate transfer encoding and Mac type/creator 
-  // information.
-  // 
-  // So, in the above case we append the main message headers, 
-  // otherwise we overwrite whatever headers may have existed.
-  // 
-  /* reordering of headers will happen in nsMsgSendPart::Write */
-  if ((plainpart) && (plainpart == toppart))
-  	status = toppart->AppendOtherHeaders(headers);
-  else
-	status = toppart->SetOtherHeaders(headers);
-  PR_Free(headers);
-  headers = NULL;
-  if (status < 0) goto FAIL;
+	// ### mwelch
+	// If we converted HTML into plaintext, the plaintext part (plainpart)
+	// already has its content-type and content-transfer-encoding
+	// ("other") headers set. 
+	// 
+	// In the specific case where such a plaintext part is the 
+	// top level message part (iff an HTML message is being sent
+	// as text only and no other attachments exist) we want to 
+	// preserve the original plainpart headers, since they
+	// contain accurate transfer encoding and Mac type/creator 
+	// information.
+	// 
+	// So, in the above case we append the main message headers, 
+	// otherwise we overwrite whatever headers may have existed.
+	// 
+	/* reordering of headers will happen in nsMsgSendPart::Write */
+	if ((plainpart) && (plainpart == toppart))
+		status = toppart->AppendOtherHeaders(headers);
+	else
+		status = toppart->SetOtherHeaders(headers);
+	PR_Free(headers);
+	headers = NULL;
+	if (status < 0)
+		goto FAIL;
+
+	/* Set up the first part (user-typed.)  For now, do it even if the first
+	* part is empty; we need to add things to skip it if this part is empty.
+	* ###tw
+	*/
 
 
-  /* Set up the first part (user-typed.)  For now, do it even if the first
-   * part is empty; we need to add things to skip it if this part is empty.
-   * ###tw
-   */
-
-
-  /* Set up encoder for the first part (message body.)
-   */
-  NS_ASSERTION(!m_attachment1_encoder_data, "not-null m_attachment1_encoder_data");
-  if (!PL_strcasecmp(m_attachment1_encoding, ENCODING_BASE64))
+	/* Set up encoder for the first part (message body.)
+	*/
+	NS_ASSERTION(!m_attachment1_encoder_data, "not-null m_attachment1_encoder_data");
+	if (!PL_strcasecmp(m_attachment1_encoding, ENCODING_BASE64))
 	{
-	  m_attachment1_encoder_data =
-		MimeB64EncoderInit(mime_encoder_output_fn, this);
-	  if (!m_attachment1_encoder_data) goto FAILMEM;
+		m_attachment1_encoder_data = MimeB64EncoderInit(mime_encoder_output_fn, this);
+		if (!m_attachment1_encoder_data) goto FAILMEM;
 	}
-  else if (!PL_strcasecmp(m_attachment1_encoding,
-						ENCODING_QUOTED_PRINTABLE))
-	{
-	  m_attachment1_encoder_data =
-		MimeQPEncoderInit(mime_encoder_output_fn, this);
-	  if (!m_attachment1_encoder_data) goto FAILMEM;
-	}
+	else
+		if (!PL_strcasecmp(m_attachment1_encoding, ENCODING_QUOTED_PRINTABLE)) {
+			m_attachment1_encoder_data =
+			MimeQPEncoderInit(mime_encoder_output_fn, this);
+			if (!m_attachment1_encoder_data)
+				goto FAILMEM;
+		}
 
-  // ### mwelch
-  // If we converted HTML into plaintext, the plaintext part
-  // already has its type/encoding headers set. So, in the specific
-  // case where such a plaintext part is the main message body
-  // (iff an HTML message is being sent as text only)
-  // we want to avoid generating type/encoding/digest headers;
-  // in all other cases, generate such headers here.
-  //
-  // We really want to set up headers as a dictionary of some sort
-  // so that we need not worry about duplicate header lines.
-  //
-  if ((!plainpart) || (plainpart != mainbody))
-  {
-	  hdrs = mime_generate_attachment_headers (m_attachment1_type,
+	// ### mwelch
+	// If we converted HTML into plaintext, the plaintext part
+	// already has its type/encoding headers set. So, in the specific
+	// case where such a plaintext part is the main message body
+	// (iff an HTML message is being sent as text only)
+	// we want to avoid generating type/encoding/digest headers;
+	// in all other cases, generate such headers here.
+	//
+	// We really want to set up headers as a dictionary of some sort
+	// so that we need not worry about duplicate header lines.
+	//
+	if ((!plainpart) || (plainpart != mainbody))
+	{
+		hdrs = mime_generate_attachment_headers (m_attachment1_type,
 											   m_attachment1_encoding,
 											   0, 0, 0, 0, 0,
 											   m_digest_p,
 											   NULL, /* no "ma"! */
 											   mail_csid);
-	  if (!hdrs) goto FAILMEM;
-	  status = mainbody->AppendOtherHeaders(hdrs);
-	  if (status < 0) goto FAIL;
-  }
+		if (!hdrs)
+			goto FAILMEM;
+		status = mainbody->AppendOtherHeaders(hdrs);
+		if (status < 0)
+			goto FAIL;
+	}
 
-  PR_FREEIF(hdrs);
+	PR_FREEIF(hdrs);
 
-  status = mainbody->SetEncoderData(m_attachment1_encoder_data);
-  m_attachment1_encoder_data = NULL;
-  if (status < 0) goto FAIL;
+	status = mainbody->SetEncoderData(m_attachment1_encoder_data);
+	m_attachment1_encoder_data = NULL;
+	if (status < 0)
+		goto FAIL;
 
 
-  /* Set up the subsequent parts.
-   */
-  if (m_attachment_count > 0)
+	/* Set up the subsequent parts.
+	*/
+	if (m_attachment_count > 0)
 	{
-	  char *buffer;
+		char *buffer;
 
-	  /* Kludge to avoid having to allocate memory on the toy computers... */
-	  if (! mime_mailto_stream_read_buffer)
-		mime_mailto_stream_read_buffer = (char *) PR_MALLOC (MIME_BUFFER_SIZE);
-	  buffer = mime_mailto_stream_read_buffer;
-	  if (! buffer) goto FAILMEM;
-	  buffer_tail = buffer;
+		/* Kludge to avoid having to allocate memory on the toy computers... */
+		if (! mime_mailto_stream_read_buffer)
+			mime_mailto_stream_read_buffer = (char *) PR_Malloc (MIME_BUFFER_SIZE);
+		buffer = mime_mailto_stream_read_buffer;
+		if (! buffer)
+			goto FAILMEM;
+		buffer_tail = buffer;
 
-	  for (i = 0; i < m_attachment_count; i++)
+		for (i = 0; i < m_attachment_count; i++)
 		{
-		  MSG_DeliverMimeAttachment *ma = &m_attachments[i];
-		  char *hdrs = 0;
+			MSG_DeliverMimeAttachment *ma = &m_attachments[i];
+			char *hdrs = 0;
 
-		  nsMsgSendPart* part = NULL;
+			nsMsgSendPart* part = NULL;
 
-		  // If at this point we *still* don't have an content-type, then
-		  // we're never going to get one.
-		  if (ma->m_type == NULL) {
-			  ma->m_type = PL_strdup(UNKNOWN_CONTENT_TYPE);
-			  if (ma->m_type == NULL) goto FAILMEM;
-		  }
+			// If at this point we *still* don't have an content-type, then
+			// we're never going to get one.
+			if (ma->m_type == NULL) {
+				ma->m_type = PL_strdup(UNKNOWN_CONTENT_TYPE);
+				if (ma->m_type == NULL)
+					goto FAILMEM;
+			}
 
-		  ma->PickEncoding (mail_csid);
+			ma->PickEncoding (mail_csid);
 
-		  part = new nsMsgSendPart(this);
-		  if (!part) goto FAILMEM;
-		  status = toppart->AddChild(part);
-		  if (status < 0) goto FAIL;
-		  status = part->SetType(ma->m_type);
-		  if (status < 0) goto FAIL;
+			part = new nsMsgSendPart(this);
+			if (!part)
+				goto FAILMEM;
+			status = toppart->AddChild(part);
+			if (status < 0)
+				goto FAIL;
+			status = part->SetType(ma->m_type);
+			if (status < 0)
+				goto FAIL;
 
-		  hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
+			hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
 												   ma->m_description,
 												   ma->m_x_mac_type,
 												   ma->m_x_mac_creator,
@@ -2611,42 +2668,45 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 												   m_digest_p,
 												   ma,
 												   mail_csid);
-		  if (!hdrs) goto FAILMEM;
+			if (!hdrs)
+				goto FAILMEM;
 
-		  status = part->SetOtherHeaders(hdrs);
-		  PR_FREEIF(hdrs);
-		  if (status < 0) goto FAIL;
-		  status = part->SetFile(ma->m_file_name, xpFileToPost);
-		  if (status < 0) goto FAIL;
-		  if (ma->m_encoder_data) {
-			status = part->SetEncoderData(ma->m_encoder_data);
-			if (status < 0) goto FAIL;
-			ma->m_encoder_data = NULL;
-		  }
+			status = part->SetOtherHeaders(hdrs);
+			PR_FREEIF(hdrs);
+			if (status < 0)
+				goto FAIL;
+			status = part->SetFile(ma->m_file_name, xpFileToPost);
+			if (status < 0)
+				goto FAIL;
+			if (ma->m_encoder_data) {
+				status = part->SetEncoderData(ma->m_encoder_data);
+				if (status < 0)
+					goto FAIL;
+				ma->m_encoder_data = NULL;
+			}
 
-		  ma->m_current_column = 0;
+			ma->m_current_column = 0;
 
-		  if (ma->m_type &&
-			  (!PL_strcasecmp (ma->m_type, MESSAGE_RFC822) ||
-			   !PL_strcasecmp (ma->m_type, MESSAGE_NEWS))) {
-			status = part->SetStripSensitiveHeaders(TRUE);
-			if (status < 0) goto FAIL;
-		  }
-
+			if (ma->m_type &&
+					(!PL_strcasecmp (ma->m_type, MESSAGE_RFC822) ||
+					!PL_strcasecmp (ma->m_type, MESSAGE_NEWS))) {
+				status = part->SetStripSensitiveHeaders(PR_TRUE);
+				if (status < 0)
+					goto FAIL;
+			}
 		}
 	}
 
 	// OK, now actually write the structure we've carefully built up.
 	status = toppart->Write();
-	if (status < 0) goto FAIL;
+	if (status < 0)
+		goto FAIL;
 
 	HJ45609
 
-	if (m_msg_file)
-	{
+	if (m_msg_file) {
 		/* If we don't do this check...ZERO length files can be sent */
-		if (m_msg_file->failed())
-		{
+		if (m_msg_file->failed()) {
 			status = MK_MIME_ERROR_WRITING_FILE;
 			goto FAIL;
 		}
@@ -2654,69 +2714,63 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	}
 	m_msg_file = NULL;
 
-  if (m_imapOutgoingParser)
-  {
- 	  m_imapOutgoingParser->FinishHeader();
-	  NS_ASSERTION(m_imapOutgoingParser->m_newMsgHdr, "no new message header");
- 	  m_imapOutgoingParser->m_newMsgHdr->OrFlags(kIsRead);
- 	  m_imapOutgoingParser->m_newMsgHdr->SetMessageSize
- 		  (m_imapOutgoingParser->m_bytes_written);
-	  m_imapOutgoingParser->m_newMsgHdr->SetMessageKey(0);
- 	  m_imapLocalMailDB->AddHdrToDB(m_imapOutgoingParser->m_newMsgHdr,
- 								 NULL, TRUE);
-  }
-
-  FE_Progress(GetContext(), XP_GetString(MK_MSG_ASSEMB_DONE_MSG));
-
-  if (m_dont_deliver_p &&
-	  m_message_delivery_done_callback)
+	if (m_imapOutgoingParser)
 	{
-	  m_message_delivery_done_callback (GetContext(),
+		m_imapOutgoingParser->FinishHeader();
+		NS_ASSERTION(m_imapOutgoingParser->m_newMsgHdr, "no new message header");
+		m_imapOutgoingParser->m_newMsgHdr->OrFlags(kIsRead);
+		m_imapOutgoingParser->m_newMsgHdr->SetMessageSize (m_imapOutgoingParser->m_bytes_written);
+		m_imapOutgoingParser->m_newMsgHdr->SetMessageKey(0);
+		m_imapLocalMailDB->AddHdrToDB(m_imapOutgoingParser->m_newMsgHdr, NULL, PR_TRUE);
+	}
+
+	FE_Progress(GetContext(), XP_GetString(MK_MSG_ASSEMB_DONE_MSG));
+
+	if (m_dont_deliver_p && m_message_delivery_done_callback)
+	{
+		m_message_delivery_done_callback (GetContext(),
 											 m_fe_data, 0,
 											 PL_strdup (m_msg_file_name));
-	  /* Need to ditch the file name here so that we don't delete the
+		/* Need to ditch the file name here so that we don't delete the
 		 file, since in this case, the FE needs the file itself. */
-	  PR_FREEIF (m_msg_file_name);
-	  m_msg_file_name = 0;
-	  m_message_delivery_done_callback = 0;
-	  Clear();
+		PR_FREEIF (m_msg_file_name);
+		m_msg_file_name = 0;
+		m_message_delivery_done_callback = 0;
+		Clear();
 	}
-  else
+	else {
+		DeliverMessage();
+		shouldDeleteDeliveryState = PR_FALSE;
+	}
+
+FAIL:
+	if (toppart)
+		delete toppart;
+	toppart = NULL;
+	mainbody = NULL;
+	maincontainer = NULL;
+
+	PR_FREEIF(headers);
+	PR_FREEIF(separator);
+	if (in_file) {
+		XP_FileClose (in_file);
+		in_file = NULL;
+	}
+
+	if (shouldDeleteDeliveryState)
 	{
-	  DeliverMessage();
-	  shouldDeleteDeliveryState = FALSE;
+		if (status < 0) {
+			m_status = status;
+			Fail (status, error_msg);
+		}
+		delete this;
 	}
 
- FAIL:
-  if (toppart)
-	delete toppart;
-  toppart = NULL;
-  mainbody = NULL;
-  maincontainer = NULL;
-
-  if (headers) PR_Free (headers);
-  if (separator) PR_Free (separator);
-  if (in_file) {
-	XP_FileClose (in_file);
-	in_file = NULL;
-  }
-
-  if (shouldDeleteDeliveryState)
-  {
-	  if (status < 0)
-	  {
-		  m_status = status;
-		  Fail (status, error_msg);
-	  }
-
-	  delete this;
-  }
-
-  return status;
+	return status;
 
 FAILMEM:
-  status = MK_OUT_OF_MEMORY;
-  goto FAIL;
+	status = MK_OUT_OF_MEMORY;
+	goto FAIL;
 }
 
 
@@ -2773,42 +2827,38 @@ mime_encoder_output_fn (const char *buf, /*JFD PRInt32*/int32 size, void *closur
 
 char * msg_generate_message_id (void)
 {
-  time_t now = XP_TIME();
-  PRUint32 salt = 0;
-  const char *host = 0;
-  const char *from = FE_UsersMailAddress ();
+	time_t now = XP_TIME();
+	PRUint32 salt = 0;
+	const char *host = 0;
+	const char *from = FE_UsersMailAddress ();
 
-  RNG_GenerateGlobalRandomBytes((void *) &salt, sizeof(salt));
+	RNG_GenerateGlobalRandomBytes((void *) &salt, sizeof(salt));
 
-  if (from)
-	{
-	  host = PL_strchr (from, '@');
-	  if (host)
-	    {
-	      const char *s;
-	      for (s = ++host; *s; s++)
-		    if (!XP_IS_ALPHA(*s) && !XP_IS_DIGIT(*s) &&
-			    *s != '-' && *s != '_' && *s != '.')
-		      {
-			    host = 0;
-			    break;
-		      }
-	    }
+	if (from) {
+		host = PL_strchr (from, '@');
+		if (host) {
+			const char *s;
+			for (s = ++host; *s; s++)
+				if (!XP_IS_ALPHA(*s) && !XP_IS_DIGIT(*s) &&
+						*s != '-' && *s != '_' && *s != '.') {
+					host = 0;
+					break;
+				}
+		}
 	}
 
-  if (! host)
+	if (! host)
 	/* If we couldn't find a valid host name to use, we can't generate a
 	   valid message ID, so bail, and let NNTP and SMTP generate them. */
-	return 0;
+		return 0;
 
-  return PR_smprintf("<%lX.%lX@%s>",
+	return PR_smprintf("<%lX.%lX@%s>",
 					 (unsigned long) now, (unsigned long) salt, host);
 }
 
-static char *
-mime_generate_headers (nsMsgCompFields *fields,
-					   int csid,
-					   MSG_Deliver_Mode deliver_mode)
+static char * mime_generate_headers (nsMsgCompFields *fields,
+									int csid,
+									MSG_Deliver_Mode deliver_mode)
 {
 	int size = 0;
 	char *buffer = 0, *buffer_tail = 0;
@@ -2853,15 +2903,14 @@ mime_generate_headers (nsMsgCompFields *fields,
 	/* size += 2048; */
 	size += 2560;
 
-	buffer = (char *) PR_MALLOC (size);
+	buffer = (char *) PR_Malloc (size);
 	if (!buffer)
 		return 0; /* MK_OUT_OF_MEMORY */
 	
 	buffer_tail = buffer;
 
 #ifdef GENERATE_MESSAGE_ID
-	if (pMessageID && *pMessageID)
-	{
+	if (pMessageID && *pMessageID) {
 		char *convbuf = NULL;
 		PUSH_STRING ("Message-ID: ");
 		PUSH_STRING (pMessageID);
@@ -2883,13 +2932,11 @@ mime_generate_headers (nsMsgCompFields *fields,
 						  &receipt_header_type);
 			// 0 = MDN Disposition-Notification-To: ; 1 = Return-Receipt-To: ; 2 =
 			// both MDN DNT & RRT headers
-			if (receipt_header_type == 1)
-			{
+			if (receipt_header_type == 1) {
 				RRT_HEADER:
 				PUSH_STRING ("Return-Receipt-To: ");
 				convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid, mime_headers_use_quoted_printable_p);
-				if (convbuf)     /* MIME-PartII conversion */
-				{
+				if (convbuf) {    /* MIME-PartII conversion */
 					PUSH_STRING (convbuf);
 					PR_FREEIF(convbuf);
 				}
@@ -2897,64 +2944,46 @@ mime_generate_headers (nsMsgCompFields *fields,
 					PUSH_STRING (pFrom);
 				PUSH_NEWLINE ();
 			}
-			else 
-			{
-			  PUSH_STRING ("Disposition-Notification-To: ");
-			  convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid,
+			else  {
+				PUSH_STRING ("Disposition-Notification-To: ");
+				convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid,
 												mime_headers_use_quoted_printable_p);
-			  if (convbuf)     /* MIME-PartII conversion */
-			  {
-				  PUSH_STRING (convbuf);
-				  PR_FREEIF(convbuf);
-			  }
-			  else
-				  PUSH_STRING (pFrom);
-			  PUSH_NEWLINE ();
-			  if (receipt_header_type == 2)
-				  goto RRT_HEADER;
+				if (convbuf) {     /* MIME-PartII conversion */
+					PUSH_STRING (convbuf);
+					PR_FREEIF(convbuf);
+				}
+				else
+					PUSH_STRING (pFrom);
+				PUSH_NEWLINE ();
+				if (receipt_header_type == 2)
+					goto RRT_HEADER;
 			}
-	  }
+		}
 #ifdef SUPPORT_X_TEMPLATE_NAME
-	  if (deliver_mode == MSG_SaveAsTemplate)
-	  {
-		  PUSH_STRING ("X-Template: ");
-		  char * pStr = fields->GetTemplateName();
-		  if (pStr)
-		  {
-			  convbuf = IntlEncodeMimePartIIStr((char *)
+		if (deliver_mode == MSG_SaveAsTemplate) {
+			PUSH_STRING ("X-Template: ");
+			char * pStr = fields->GetTemplateName();
+			if (pStr) {
+				convbuf = IntlEncodeMimePartIIStr((char *)
 									 pStr,
 									 csid,
 									 mime_headers_use_quoted_printable_p);
-			  if (convbuf)
-			  {
+				if (convbuf) {
 				  PUSH_STRING (convbuf);
 				  PR_FREEIF(convbuf);
-			  }
-			  else
-			  {
+				}
+				else
 				  PUSH_STRING(pStr);
-			  }
-		  }
-		  PUSH_NEWLINE ();
-	  }
+			}
+			PUSH_NEWLINE ();
+		}
 #endif /* SUPPORT_X_TEMPLATE_NAME */
 	}
 #endif /* GENERATE_MESSAGE_ID */
 
-  {
-#if 0
-  /* Use strftime() to format the date, then figure out what our local
-	 GMT offset it, and append that (since strftime() can't do that.)
-	 Generate four digit years as per RFC 1123 (superceding RFC 822.)
-   */
-	time_t now = time ((time_t *) 0);
-	int gmtoffset = XP_LocalZoneOffset();
-	strftime (buffer_tail, 100, "Date: %a, %d %b %Y %H:%M:%S ",
-			  localtime (&now));
-#else
-	int gmtoffset = XP_LocalZoneOffset();
-    PRExplodedTime now;
+	PRExplodedTime now;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
+	int gmtoffset = now.tm_params.tp_gmt_offset / 60; /*We need the offset in minute and not in second! */
 
 	/* Use PR_FormatTimeUSEnglish() to format the date in US English format,
 	   then figure out what our local GMT offset is, and append it (since
@@ -2964,7 +2993,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 	PR_FormatTimeUSEnglish(buffer_tail, 100,
 						   "Date: %a, %d %b %Y %H:%M:%S ",
 						   &now);
-#endif
 
 	buffer_tail += PL_strlen (buffer_tail);
 	PR_snprintf(buffer_tail, buffer + size - buffer_tail,
@@ -2973,413 +3001,398 @@ mime_generate_headers (nsMsgCompFields *fields,
 				((gmtoffset >= 0 ? gmtoffset : -gmtoffset) / 60),
 				((gmtoffset >= 0 ? gmtoffset : -gmtoffset) % 60));
 	buffer_tail += PL_strlen (buffer_tail);
-  }
 
-  if (pFrom && *pFrom)
+	if (pFrom && *pFrom) {
+		char *convbuf;
+		PUSH_STRING ("From: ");
+		convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid,
+										mime_headers_use_quoted_printable_p);
+		if (convbuf) {    /* MIME-PartII conversion */
+			PUSH_STRING (convbuf);
+			PR_Free(convbuf);
+		}
+		else
+			PUSH_STRING (pFrom);
+		PUSH_NEWLINE ();
+	}
+
+	if (pReplyTo && *pReplyTo)
 	{
-	  char *convbuf;
-  	  PUSH_STRING ("From: ");
-	  convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid,
+		char *convbuf;
+		PUSH_STRING ("Reply-To: ");
+		convbuf = IntlEncodeMimePartIIStr((char *)pReplyTo, csid,
 										mime_headers_use_quoted_printable_p);
-	  if (convbuf)     /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (pFrom);
-      PUSH_NEWLINE ();
+		if (convbuf) {     /* MIME-PartII conversion */
+			PUSH_STRING (convbuf);
+			PR_Free(convbuf);
+		}
+		else
+			PUSH_STRING (pReplyTo);
+		PUSH_NEWLINE ();
 	}
 
-  if (pReplyTo && *pReplyTo)
+	if (pOrg && *pOrg)
 	{
-	  char *convbuf;
-	  PUSH_STRING ("Reply-To: ");
-	  convbuf = IntlEncodeMimePartIIStr((char *)pReplyTo, csid,
+		char *convbuf;
+		PUSH_STRING ("Organization: ");
+		convbuf = IntlEncodeMimePartIIStr((char *)pOrg, csid,
 										mime_headers_use_quoted_printable_p);
-	  if (convbuf)     /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (pReplyTo);
-	  PUSH_NEWLINE ();
+		if (convbuf) {     /* MIME-PartII conversion */
+			PUSH_STRING (convbuf);
+			PR_Free(convbuf);
+		}
+		else
+			PUSH_STRING (pOrg);
+		PUSH_NEWLINE ();
 	}
 
-  if (pOrg && *pOrg)
+	// X-Sender tag
+	if (fields->GetOwner())
 	{
-	  char *convbuf;
-	  PUSH_STRING ("Organization: ");
-	  convbuf = IntlEncodeMimePartIIStr((char *)pOrg, csid,
+		PRBool bUseXSender = PR_FALSE;
+
+		PREF_GetBoolPref("mail.use_x_sender", &bUseXSender);
+		if (bUseXSender) {
+			char *convbuf;
+			char tmpBuffer[256];
+			int bufSize = 256;
+
+			*tmpBuffer = 0;
+
+			PUSH_STRING ("X-Sender: ");
+
+			PUSH_STRING("\"");
+
+			PREF_GetCharPref("mail.identity.username", tmpBuffer, &bufSize);
+			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
 										mime_headers_use_quoted_printable_p);
-	  if (convbuf)     /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (pOrg);
-	  PUSH_NEWLINE ();
+			if (convbuf) {     /* MIME-PartII conversion */
+				PUSH_STRING (convbuf);
+				PR_Free(convbuf);
+			}
+			else
+				PUSH_STRING (tmpBuffer);
+
+			PUSH_STRING("\" <");
+
+			PREF_GetCharPref("mail.smtp_name", tmpBuffer, &bufSize);
+			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
+											mime_headers_use_quoted_printable_p);
+			if (convbuf) {     /* MIME-PartII conversion */
+				PUSH_STRING (convbuf);
+				PR_Free(convbuf);
+			}
+			else
+				PUSH_STRING (tmpBuffer);
+
+			PUSH_STRING ("@");
+
+			PREF_GetCharPref("network.hosts.smtp_server", tmpBuffer, &bufSize);
+			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
+											mime_headers_use_quoted_printable_p);
+			if (convbuf) {     /* MIME-PartII conversion */
+				PUSH_STRING (convbuf);
+				PR_Free(convbuf);
+			}
+			else
+				PUSH_STRING (tmpBuffer);
+
+			PUSH_STRING(">");
+
+			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
+											mime_headers_use_quoted_printable_p);
+
+			if (!fields->GetOwner()->GetMaster()->IsUserAuthenticated())
+				PUSH_STRING (" (Unverified)");
+			PUSH_NEWLINE ();
+		}
 	}
 
-  // X-Sender tag
-  if (fields->GetOwner())
-  {
-	PRBool bUseXSender = FALSE;
-	
-	PREF_GetBoolPref("mail.use_x_sender", &bUseXSender);
-	if (bUseXSender) {
-	  char *convbuf;
-	  char tmpBuffer[256];
-	  int bufSize = 256;
-	  
-	  *tmpBuffer = 0;
+	// X-Mozilla-Draft-Info
+	if (isDraft) {
+		char *htmlAction = 0;
+		char *lineWidth = 0; // force plain text hard line break info
 
-  	  PUSH_STRING ("X-Sender: ");
-
-	  PUSH_STRING("\"");
-
-	  PREF_GetCharPref("mail.identity.username", tmpBuffer, &bufSize);
-	  convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
-										mime_headers_use_quoted_printable_p);
-	  if (convbuf)     /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (tmpBuffer);
-
-	  PUSH_STRING("\" <");
-
-	  PREF_GetCharPref("mail.smtp_name", tmpBuffer, &bufSize);
-	  convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
-										mime_headers_use_quoted_printable_p);
-	  if (convbuf)     /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (tmpBuffer);
-
-	  PUSH_STRING ("@");
-
-	  PREF_GetCharPref("network.hosts.smtp_server", tmpBuffer, &bufSize);
-	  convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
-										mime_headers_use_quoted_printable_p);
-	  if (convbuf)     /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (tmpBuffer);
-
-	  PUSH_STRING(">");
-
-	  convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
-										mime_headers_use_quoted_printable_p);
-
-	  if (!fields->GetOwner()->GetMaster()->IsUserAuthenticated())
-		  PUSH_STRING (" (Unverified)");
-      PUSH_NEWLINE ();
-	}
-  }
-  // X-Mozilla-Draft-Info
-  if (isDraft) {
-	  char *htmlAction = 0;
-	  char *lineWidth = 0; // force plain text hard line break info
-
-	  PUSH_STRING(X_MOZILLA_DRAFT_INFO);
-	  PUSH_STRING(": internal/draft; ");
-	  if (fields->GetAttachVCard()) {
-		  PUSH_STRING("vcard=1");
-	  }
-	  else {
-		  PUSH_STRING("vcard=0");
-	  }
-	  PUSH_STRING("; ");
-	  if (fields->GetReturnReceipt()) {
-		  char *type = PR_smprintf("%d", (int) fields->GetReturnReceiptType());
-		  if (type)
-		  {
-			  PUSH_STRING("receipt=");
-			  PUSH_STRING(type);
-			  PR_FREEIF(type);
-		  }
-	  }
-	  else {
-		  PUSH_STRING("receipt=0");
-	  }
-	  PUSH_STRING("; ");
-	  if (fields->GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK)) {
+		PUSH_STRING(X_MOZILLA_DRAFT_INFO);
+		PUSH_STRING(": internal/draft; ");
+		if (fields->GetAttachVCard())
+			PUSH_STRING("vcard=1");
+		else
+			PUSH_STRING("vcard=0");
+		PUSH_STRING("; ");
+		if (fields->GetReturnReceipt()) {
+			char *type = PR_smprintf("%d", (int) fields->GetReturnReceiptType());
+			if (type)
+			{
+				PUSH_STRING("receipt=");
+				PUSH_STRING(type);
+				PR_FREEIF(type);
+			}
+		}
+		else
+			PUSH_STRING("receipt=0");
+		PUSH_STRING("; ");
+		if (fields->GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK))
 		  PUSH_STRING("uuencode=1");
-	  }
-	  else {
+		else
 		  PUSH_STRING("uuencode=0");
-	  }
 
-	  htmlAction = PR_smprintf("html=%d", 
+		htmlAction = PR_smprintf("html=%d", 
 		  ((nsMsgCompose*)fields->GetOwner())->GetHTMLAction());
-	  if (htmlAction)
-	  {
-	  	PUSH_STRING("; ");
-	  	PUSH_STRING(htmlAction);
-	  	PR_FREEIF(htmlAction);
-	  }
+		if (htmlAction) {
+			PUSH_STRING("; ");
+			PUSH_STRING(htmlAction);
+			PR_FREEIF(htmlAction);
+		}
 
-	  lineWidth = PR_smprintf("; linewidth=%d",
+		lineWidth = PR_smprintf("; linewidth=%d",
 		  ((nsMsgCompose*)fields->GetOwner())->GetLineWidth());
-	  if (lineWidth)
-	  {
-		  PUSH_STRING(lineWidth);
-		  PR_FREEIF(lineWidth);
-	  }
-	  PUSH_NEWLINE ();
-  }
+		if (lineWidth) {
+			PUSH_STRING(lineWidth);
+			PR_FREEIF(lineWidth);
+		}
+		PUSH_NEWLINE ();
+	}
 
-  PUSH_STRING ("X-Mailer: ");
-  PUSH_STRING (XP_AppCodeName);
-  PUSH_STRING (" ");
-  PUSH_STRING (XP_AppVersion);
-  PUSH_NEWLINE ();
-
-  /* for Netscape Server, Accept-Language data sent in Mail header */
-  char *acceptlang = INTL_GetAcceptLanguage();
-  if( (acceptlang != NULL) && ( *acceptlang != '\0') ){
-	  PUSH_STRING( "X-Accept-Language: " );
-	  PUSH_STRING( acceptlang );
-	  PUSH_NEWLINE();
-  }
-
-  PUSH_STRING ("MIME-Version: 1.0" CRLF);
-
-  if (pNewsGrp && *pNewsGrp)
+	nsINetService * pNetService;
+	nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, "netlib.dll", PR_FALSE, PR_FALSE); /*JFD - Should go away when netlib will register itself! */
+	nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::IID(), (nsISupports **)&pNetService);
+	if (NS_SUCCEEDED(rv) && pNetService)
 	{
-      /* turn whitespace into a comma list
-       */
-	  char *ptr, *ptr2;
-	  char *n2;
-	  char *convbuf;
+		nsString aNSStr;
+		char* sCStr;
 
-	  convbuf = IntlEncodeMimePartIIStr((char *)pNewsGrp, csid,
+		pNetService->GetAppCodeName(aNSStr);
+		sCStr = aNSStr.ToNewCString();
+		if (sCStr) {
+			PUSH_STRING ("X-Mailer: ");
+			PUSH_STRING(sCStr);
+			delete [] sCStr;
+
+			pNetService->GetAppVersion(aNSStr);
+			sCStr = aNSStr.ToNewCString();
+			if (sCStr) {
+				PUSH_STRING (" ");
+				PUSH_STRING(sCStr);
+				delete [] sCStr;
+			}
+			PUSH_NEWLINE ();
+		}
+
+		pNetService->Release();
+	}
+
+	/* for Netscape Server, Accept-Language data sent in Mail header */
+	char *acceptlang = INTL_GetAcceptLanguage();
+	if( (acceptlang != NULL) && ( *acceptlang != '\0') ){
+		PUSH_STRING( "X-Accept-Language: " );
+		PUSH_STRING( acceptlang );
+		PUSH_NEWLINE();
+	}
+
+	PUSH_STRING ("MIME-Version: 1.0" CRLF);
+
+	if (pNewsGrp && *pNewsGrp) {
+		/* turn whitespace into a comma list
+		*/
+		char *ptr, *ptr2;
+		char *n2;
+		char *convbuf;
+
+		convbuf = IntlEncodeMimePartIIStr((char *)pNewsGrp, csid,
 										mime_headers_use_quoted_printable_p);
-	  if (convbuf)
-	  	n2 = XP_StripLine (convbuf);
-	  else {
-		ptr = PL_strdup(pNewsGrp);
-		if (!ptr)
-		  {
-			PR_FREEIF(buffer);
-			return 0; /* MK_OUT_OF_MEMORY */
-		  }
-  	  	n2 = XP_StripLine(ptr);
-		NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is
-								   gonna choke badly. */
-	  }
+		if (convbuf)
+	  		n2 = XP_StripLine (convbuf);
+		else {
+			ptr = PL_strdup(pNewsGrp);
+			if (!ptr) {
+				PR_FREEIF(buffer);
+				return 0; /* MK_OUT_OF_MEMORY */
+			}
+  	  		n2 = XP_StripLine(ptr);
+			NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is
+													   gonna choke badly. */
+		}
 
-      for(ptr=n2; *ptr != '\0'; ptr++)
-        {
-          /* find first non white space */
-          while(!XP_IS_SPACE(*ptr) && *ptr != ',' && *ptr != '\0')
-              ptr++;
+		for(ptr=n2; *ptr != '\0'; ptr++) {
+			/* find first non white space */
+			while(!XP_IS_SPACE(*ptr) && *ptr != ',' && *ptr != '\0')
+				ptr++;
 
-          if(*ptr == '\0')
-              break;
+			if(*ptr == '\0')
+				break;
 
-          if(*ptr != ',')
-              *ptr = ',';
+			if(*ptr != ',')
+				*ptr = ',';
 
-          /* find next non white space */
-          ptr2 = ptr+1;
-          while(XP_IS_SPACE(*ptr2))
-              ptr2++;
+			/* find next non white space */
+			ptr2 = ptr+1;
+			while(XP_IS_SPACE(*ptr2))
+				ptr2++;
 
-          if(ptr2 != ptr+1)
-              PL_strcpy(ptr+1, ptr2);
-        }
+			if(ptr2 != ptr+1)
+				PL_strcpy(ptr+1, ptr2);
+		}
 
-	  PUSH_STRING ("Newsgroups: ");
-	  PUSH_STRING (n2);
-	  PR_Free (n2);
-	  PUSH_NEWLINE ();
+		PUSH_STRING ("Newsgroups: ");
+		PUSH_STRING (n2);
+		PR_Free (n2);
+		PUSH_NEWLINE ();
 	}
 
-  /* #### shamelessly duplicated from above */
-  if (pFollow && *pFollow)
-	{
-      /* turn whitespace into a comma list
-       */
-	  char *ptr, *ptr2;
-	  char *n2;
-	  char *convbuf;
+	/* #### shamelessly duplicated from above */
+	if (pFollow && *pFollow) {
+		/* turn whitespace into a comma list
+		*/
+		char *ptr, *ptr2;
+		char *n2;
+		char *convbuf;
 
-	  convbuf = IntlEncodeMimePartIIStr((char *)pFollow, csid,
+		convbuf = IntlEncodeMimePartIIStr((char *)pFollow, csid,
 										mime_headers_use_quoted_printable_p);
-	  if (convbuf)
-	  	n2 = XP_StripLine (convbuf);
-	  else {
-		ptr = PL_strdup(pFollow);
-		if (!ptr)
-		  {
-			PR_FREEIF(buffer);
-			return 0; /* MK_OUT_OF_MEMORY */
-		  }
-  	  	n2 = XP_StripLine (ptr);
-		NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is
-								   gonna choke badly. */
-	  }
+		if (convbuf)
+			n2 = XP_StripLine (convbuf);
+		else {
+			ptr = PL_strdup(pFollow);
+			if (!ptr) {
+				PR_FREEIF(buffer);
+				return 0; /* MK_OUT_OF_MEMORY */
+			}
+			n2 = XP_StripLine (ptr);
+			NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is
+													   gonna choke badly. */
+		}
 
-      for(ptr=n2; *ptr != '\0'; ptr++)
-        {
-          /* find first non white space */
-          while(!XP_IS_SPACE(*ptr) && *ptr != ',' && *ptr != '\0')
-              ptr++;
+		for (ptr=n2; *ptr != '\0'; ptr++) {
+			/* find first non white space */
+			while(!XP_IS_SPACE(*ptr) && *ptr != ',' && *ptr != '\0')
+				ptr++;
 
-          if(*ptr == '\0')
-              break;
+			if(*ptr == '\0')
+				break;
 
-          if(*ptr != ',')
-              *ptr = ',';
+			if(*ptr != ',')
+				*ptr = ',';
 
-          /* find next non white space */
-          ptr2 = ptr+1;
-          while(XP_IS_SPACE(*ptr2))
-              ptr2++;
+			/* find next non white space */
+			ptr2 = ptr+1;
+			while(XP_IS_SPACE(*ptr2))
+				ptr2++;
 
-          if(ptr2 != ptr+1)
-              PL_strcpy(ptr+1, ptr2);
-        }
+			if(ptr2 != ptr+1)
+				PL_strcpy(ptr+1, ptr2);
+		}
 
-	  PUSH_STRING ("Followup-To: ");
-	  PUSH_STRING (n2);
-	  PR_Free (n2);
-	  PUSH_NEWLINE ();
+		PUSH_STRING ("Followup-To: ");
+		PUSH_STRING (n2);
+		PR_Free (n2);
+		PUSH_NEWLINE ();
 	}
 
-  if (pTo && *pTo)
-	{
-	  char *convbuf;
-	  PUSH_STRING ("To: ");
-	  convbuf = IntlEncodeMimePartIIStr((char *)pTo, csid,
+	if (pTo && *pTo) {
+		char *convbuf;
+		PUSH_STRING ("To: ");
+		convbuf = IntlEncodeMimePartIIStr((char *)pTo, csid,
 										mime_headers_use_quoted_printable_p);
-	  if (convbuf)     /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (pTo);
+		if (convbuf) {     /* MIME-PartII conversion */
+			PUSH_STRING (convbuf);
+			PR_Free(convbuf);
+		}
+		else
+			PUSH_STRING (pTo);
 
-	  PUSH_NEWLINE ();
+		PUSH_NEWLINE ();
 	}
-  if (pCc && *pCc)
-	{
-	  char *convbuf;
-	  PUSH_STRING ("CC: ");
-	  convbuf = IntlEncodeMimePartIIStr((char *)pCc, csid,
+ 
+	if (pCc && *pCc) {
+		char *convbuf;
+		PUSH_STRING ("CC: ");
+		convbuf = IntlEncodeMimePartIIStr((char *)pCc, csid,
 										mime_headers_use_quoted_printable_p);
-	  if (convbuf)   /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (pCc);
-	  PUSH_NEWLINE ();
+		if (convbuf) {   /* MIME-PartII conversion */
+			PUSH_STRING (convbuf);
+			PR_Free(convbuf);
+		}
+		else
+			PUSH_STRING (pCc);
+		PUSH_NEWLINE ();
 	}
-  if (pSubject && *pSubject)
-	{
-	  char *convbuf;
-	  PUSH_STRING ("Subject: ");
-	  convbuf = IntlEncodeMimePartIIStr((char *)pSubject, csid,
-										mime_headers_use_quoted_printable_p);
-	  if (convbuf)  /* MIME-PartII conversion */
-	    {
-	  	  PUSH_STRING (convbuf);
-	  	  PR_Free(convbuf);
-	    }
-	  else
-	    PUSH_STRING (pSubject);
-	  PUSH_NEWLINE ();
-	}
-  if (pPriority && *pPriority)
-	{
-	  if (!strcasestr(pPriority, "normal"))
-	  {
-		  PUSH_STRING ("X-Priority: ");
-		  /* Important: do not change the order of the 
-		   * following if statements
-		   */
-		  if (strcasestr (pPriority, "highest"))
-			  PUSH_STRING("1 (");
-		  else if (strcasestr(pPriority, "high"))
-			  PUSH_STRING("2 (");
-		  else if (strcasestr(pPriority, "lowest"))
-			  PUSH_STRING("5 (");
-		  else if (strcasestr(pPriority, "low"))
-			  PUSH_STRING("4 (");
 
-		  PUSH_STRING (pPriority);
-		  PUSH_STRING(")");
-		  PUSH_NEWLINE ();
-	  }
+	if (pSubject && *pSubject) {
+		char *convbuf;
+		PUSH_STRING ("Subject: ");
+		convbuf = IntlEncodeMimePartIIStr((char *)pSubject, csid,
+										mime_headers_use_quoted_printable_p);
+		if (convbuf) {  /* MIME-PartII conversion */
+			PUSH_STRING (convbuf);
+			PR_Free(convbuf);
+		}
+		else
+			PUSH_STRING (pSubject);
+		PUSH_NEWLINE ();
 	}
-  if (pReference && *pReference)
-	{
-	  PUSH_STRING ("References: ");
-	  if (PL_strlen(pReference) >= 986)
-	  {
-		  char *references = PL_strdup(pReference);
-		  char *trimAt = PL_strchr(references+1, '<');
-		  char *ptr;
-		  // per sfraser, RFC 1036 - a message header line should not exceed
-		  // 998 characters including the header identifier
-		  // retiring the earliest reference one after the other
-		  // but keep the first one for proper threading
-		  while (references && PL_strlen(references) >= 986 && trimAt)
-		  {
-			  ptr = PL_strchr(trimAt+1, '<');
-			  if (ptr)
-			  {
+	
+	if (pPriority && *pPriority)
+		if (!strcasestr(pPriority, "normal")) {
+			PUSH_STRING ("X-Priority: ");
+			/* Important: do not change the order of the 
+			* following if statements
+			*/
+			if (strcasestr (pPriority, "highest"))
+				PUSH_STRING("1 (");
+			else if (strcasestr(pPriority, "high"))
+				PUSH_STRING("2 (");
+			else if (strcasestr(pPriority, "lowest"))
+				PUSH_STRING("5 (");
+			else if (strcasestr(pPriority, "low"))
+				PUSH_STRING("4 (");
+
+			PUSH_STRING (pPriority);
+			PUSH_STRING(")");
+			PUSH_NEWLINE ();
+		}
+
+	if (pReference && *pReference) {
+		PUSH_STRING ("References: ");
+		if (PL_strlen(pReference) >= 986) {
+			char *references = PL_strdup(pReference);
+			char *trimAt = PL_strchr(references+1, '<');
+			char *ptr;
+			// per sfraser, RFC 1036 - a message header line should not exceed
+			// 998 characters including the header identifier
+			// retiring the earliest reference one after the other
+			// but keep the first one for proper threading
+			while (references && PL_strlen(references) >= 986 && trimAt) {
+				ptr = PL_strchr(trimAt+1, '<');
+				if (ptr)
 				  XP_MEMMOVE(trimAt, ptr, PL_strlen(ptr)+1); // including the
-															 // NULL char
-			  }
-			  else
-			  {
+				else
 				  break;
-			  }
-		  }
-		  NS_ASSERTION(references, "null references");
-		  if (references)
-		  {
+			}
+			NS_ASSERTION(references, "null references");
+			if (references) {
 			  PUSH_STRING (references);
 			  PR_Free(references);
-		  }
-	  }
-	  else
-	  {
+			}
+		}
+		else
 		  PUSH_STRING (pReference);
-	  }
-	  PUSH_NEWLINE ();
+		PUSH_NEWLINE ();
 	}
 
-  if (pOtherHdr && *pOtherHdr)
-	{
-	  /* Assume they already have the right newlines and continuations
+	if (pOtherHdr && *pOtherHdr) {
+		/* Assume they already have the right newlines and continuations
 		 and so on. */
-	  PUSH_STRING (pOtherHdr);
+		PUSH_STRING (pOtherHdr);
 	}
 
-  if (buffer_tail > buffer + size - 1)
-	abort ();
+	if (buffer_tail > buffer + size - 1)
+		abort ();
 
-  /* realloc it smaller... */
-  buffer = (char*)XP_REALLOC (buffer, buffer_tail - buffer + 1);
+	/* realloc it smaller... */
+	buffer = (char*)PR_REALLOC (buffer, buffer_tail - buffer + 1);
 
-  return buffer;
+	return buffer;
 }
 
 
@@ -3388,8 +3401,7 @@ mime_generate_headers (nsMsgCompFields *fields,
    ignore headers which would be dangerous.  It may modify the URL
    (because of CC) so a new URL to actually post to is returned.
  */
-int
-MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
+int MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 									const char * /*referer*/,
 									char **new_post_url_return,
 									char **headers_return)
@@ -3397,8 +3409,8 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
   char *from = 0, *to = 0, *cc = 0, *body = 0, *search = 0;
   char *extra_headers = 0;
   char *s;
-  PRBool subject_p = FALSE;
-  PRBool sign_p = FALSE, encrypt_p = FALSE;
+  PRBool subject_p = PR_FALSE;
+  PRBool sign_p = PR_FALSE, encrypt_p = PR_FALSE;
   char *rest;
   int status = 0;
   nsMsgCompFields *fields = NULL;
@@ -3470,7 +3482,7 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 			}
 
 		  if (!PL_strcasecmp (token, "subject"))
-			subject_p = TRUE;
+			subject_p = PR_TRUE;
 
 		  if (value)
 			/* Don't allow newlines or control characters in the value. */
@@ -3487,7 +3499,8 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 				}
 			  else
 				{
-				  StrAllocCopy (to, value);
+				  PR_FREEIF(to);
+				  to = PL_strdup(value);
 				}
 			}
 		  else if (!PL_strcasecmp (token, "cc"))
@@ -3499,7 +3512,8 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 				}
 			  else
 				{
-				  StrAllocCopy (cc, value);
+				  PR_FREEIF(cc);
+				  cc = PL_strdup (value);
 				}
 			}
 		  else if (!PL_strcasecmp (token, "body"))
@@ -3511,7 +3525,8 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 				}
 			  else
 				{
-				  StrAllocCopy (body, value);
+				  PR_FREEIF(body);
+				  body = PL_strdup (value);
 				}
 			}
 		  else if (!PL_strcasecmp (token, "encrypt") ||
@@ -3529,21 +3544,21 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 		  else
 			{
 			  const char **fh = forbidden_headers;
-			  PRBool ok = TRUE;
+			  PRBool ok = PR_TRUE;
 			  while (*fh)
 				if (!PL_strcasecmp (token, *fh++))
 				  {
-					ok = FALSE;
+					ok = PR_FALSE;
 					break;
 				  }
 			  if (ok)
 				{
-				  PRBool upper_p = FALSE;
+				  PRBool upper_p = PR_FALSE;
 				  char *s;
 				  for (s = token; *s; s++)
 					{
 					  if (*s >= 'A' && *s <= 'Z')
-						upper_p = TRUE;
+						upper_p = PR_TRUE;
 					  else if (*s <= ' ' || *s >= '~' || *s == ':')
 						goto NOT_OK;  /* bad character in header! */
 					}
@@ -3621,8 +3636,7 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 
 
 
-static char *
-mime_generate_attachment_headers (const char *type, const char *encoding,
+static char * mime_generate_attachment_headers (const char *type, const char *encoding,
 								  const char *description,
 								  const char *x_mac_type,
 								  const char *x_mac_creator,
@@ -3632,239 +3646,229 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 								  MSG_DeliverMimeAttachment * /*ma*/,
 								  PRInt16 mail_csid)
 {
-  PRInt32 buffer_size = 2048 + (base_url ? 2*PL_strlen(base_url) : 0);
-  char *buffer = (char *) PR_MALLOC (buffer_size);
-  char *buffer_tail = buffer;
-  char charset[30];
+	PRInt32 buffer_size = 2048 + (base_url ? 2*PL_strlen(base_url) : 0);
+	char *buffer = (char *) PR_Malloc (buffer_size);
+	char *buffer_tail = buffer;
+	char charset[30];
 
-  if (! buffer)
-	return 0; /* MK_OUT_OF_MEMORY */
+	if (! buffer)
+		return 0; /* MK_OUT_OF_MEMORY */
 
-  NS_ASSERTION (encoding, "null encoding");
-  charset[0] = 0;
+	NS_ASSERTION (encoding, "null encoding");
+	charset[0] = 0;
 
-  PUSH_STRING ("Content-Type: ");
-  PUSH_STRING (type);
+	PUSH_STRING ("Content-Type: ");
+	PUSH_STRING (type);
 
-  if (mime_type_needs_charset (type))
-	{
+	if (mime_type_needs_charset (type)) {
+		/* push 7bit encoding out based on current default codeset */
+		INTL_CharSetIDToName (mail_csid, charset);
 
-	  /* push 7bit encoding out based on current default codeset */
-	  INTL_CharSetIDToName (mail_csid, charset);
+		/* If the characters are all 7bit, then it's better (and true) to
+		claim the charset to be US-ASCII rather than Latin1.  Should we
+		do this all the time, for all charsets?  I'm not sure.  But we
+		should definitely do it for Latin1. */
+		if (encoding &&
+				!PL_strcasecmp (encoding, "7bit") &&
+				!PL_strcasecmp (charset, "iso-8859-1"))
+			PL_strcpy (charset, "us-ascii");
 
-	  /* If the characters are all 7bit, then it's better (and true) to
-		 claim the charset to be US-ASCII rather than Latin1.  Should we
-		 do this all the time, for all charsets?  I'm not sure.  But we
-		 should definitely do it for Latin1. */
-	  if (encoding &&
-		  !PL_strcasecmp (encoding, "7bit") &&
- 		  !PL_strcasecmp (charset, "iso-8859-1"))
-		PL_strcpy (charset, "us-ascii");
-
-	  // If csid is JIS and and type is HTML
-	  // then no charset to be specified (apply base64 instead)
-	  // in order to avoid mismatch META_TAG (bug#104255).
-	  if ((mail_csid != CS_JIS) ||
-	     (PL_strcasecmp(type, TEXT_HTML) != 0) ||
-		 (PL_strcasecmp(encoding, ENCODING_BASE64) != 0))
-		{
-		PUSH_STRING ("; charset=");
-		PUSH_STRING (charset);
+		// If csid is JIS and and type is HTML
+		// then no charset to be specified (apply base64 instead)
+		// in order to avoid mismatch META_TAG (bug#104255).
+		if ((mail_csid != CS_JIS) ||
+				(PL_strcasecmp(type, TEXT_HTML) != 0) ||
+				(PL_strcasecmp(encoding, ENCODING_BASE64) != 0)) {
+			PUSH_STRING ("; charset=");
+			PUSH_STRING (charset);
 		}
 	}
 
-  if (x_mac_type && *x_mac_type)
-	{
-	  PUSH_STRING ("; x-mac-type=\"");
-	  PUSH_STRING (x_mac_type);
-	  PUSH_STRING ("\"");
-	}
-  if (x_mac_creator && *x_mac_creator)
-	{
-	  PUSH_STRING ("; x-mac-creator=\"");
-	  PUSH_STRING (x_mac_creator);
-	  PUSH_STRING ("\"");
+	if (x_mac_type && *x_mac_type) {
+		PUSH_STRING ("; x-mac-type=\"");
+		PUSH_STRING (x_mac_type);
+		PUSH_STRING ("\"");
 	}
 
-  PRInt32 parmFolding = 0;
-  PREF_GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
+	if (x_mac_creator && *x_mac_creator) {
+		PUSH_STRING ("; x-mac-creator=\"");
+		PUSH_STRING (x_mac_creator);
+		PUSH_STRING ("\"");
+	}
+
+	PRInt32 parmFolding = 0;
+	PREF_GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
 
 #ifdef EMIT_NAME_IN_CONTENT_TYPE
-  if (real_name && *real_name)
-	{
-	  if (parmFolding == 0 || parmFolding == 1)
-	  {
-		  PUSH_STRING (";\r\n name=\"");
-		  PUSH_STRING (real_name);
-		  PUSH_STRING ("\"");
-	  }
-	  else // if (parmFolding == 2)
-	  {
-		  char *rfc2231Parm = RFC2231ParmFolding("name", charset,
+	if (real_name && *real_name) {
+		if (parmFolding == 0 || parmFolding == 1) {
+			PUSH_STRING (";\r\n name=\"");
+			PUSH_STRING (real_name);
+			PUSH_STRING ("\"");
+		}
+		else // if (parmFolding == 2)
+		{
+			char *rfc2231Parm = RFC2231ParmFolding("name", charset,
 												 INTL_GetAcceptLanguage(), real_name);
-		  if (rfc2231Parm)
-		  {
-			  PUSH_STRING(";\r\n ");
-			  PUSH_STRING(rfc2231Parm);
-			  PR_Free(rfc2231Parm);
-		  }
-	  }
+			if (rfc2231Parm) {
+				PUSH_STRING(";\r\n ");
+				PUSH_STRING(rfc2231Parm);
+				PR_Free(rfc2231Parm);
+			}
+		}
 	}
 #endif /* EMIT_NAME_IN_CONTENT_TYPE */
 
-  PUSH_NEWLINE ();
+	PUSH_NEWLINE ();
 
-  PUSH_STRING ("Content-Transfer-Encoding: ");
-  PUSH_STRING (encoding);
-  PUSH_NEWLINE ();
+	PUSH_STRING ("Content-Transfer-Encoding: ");
+	PUSH_STRING (encoding);
+	PUSH_NEWLINE ();
 
-  if (description && *description)
-	{
-	  char *s = mime_fix_header (description);
-	  if (s)
-		{
-		  PUSH_STRING ("Content-Description: ");
-		  PUSH_STRING (s);
-		  PUSH_NEWLINE ();
-		  PR_Free(s);
+	if (description && *description) {
+		char *s = mime_fix_header (description);
+		if (s) {
+			PUSH_STRING ("Content-Description: ");
+			PUSH_STRING (s);
+			PUSH_NEWLINE ();
+			PR_Free(s);
 		}
 	}
 
-  if (real_name && *real_name)
-	{
-	  char *period = PL_strrchr(real_name, '.');
-	  PRInt32 pref_content_disposition = 0;
+	if (real_name && *real_name) {
+		char *period = PL_strrchr(real_name, '.');
+		PRInt32 pref_content_disposition = 0;
 
-	  PREF_GetIntPref("mail.content_disposition_type", 
-					  &pref_content_disposition);
+		PREF_GetIntPref("mail.content_disposition_type", &pref_content_disposition);
+		PUSH_STRING ("Content-Disposition: ");
 
-	  PUSH_STRING ("Content-Disposition: ");
-	 
-	  if (pref_content_disposition == 1)
-		PUSH_STRING ("attachment");
-	  else if (pref_content_disposition == 2 && 
-			   (!PL_strcasecmp(type, TEXT_PLAIN) || 
-				(period && !PL_strcasecmp(period, ".txt"))))
-		PUSH_STRING("attachment");
-	  /* If this document is an anonymous binary file or a vcard, 
-		 then always show it as an attachment, never inline. */
-	  else if (!PL_strcasecmp(type, APPLICATION_OCTET_STREAM) || 
-		   !PL_strcasecmp(type, TEXT_VCARD) ||
-		   !PL_strcasecmp(type, APPLICATION_DIRECTORY)) /* text/x-vcard synonym */
-	    PUSH_STRING ("attachment");
-	  else
-		PUSH_STRING ("inline");
+		if (pref_content_disposition == 1)
+			PUSH_STRING ("attachment");
+		else
+			if (pref_content_disposition == 2 && 
+					(!PL_strcasecmp(type, TEXT_PLAIN) || 
+					(period && !PL_strcasecmp(period, ".txt"))))
+				PUSH_STRING("attachment");
 
-	  if (parmFolding == 0 || parmFolding == 1)
-	  {
-		  PUSH_STRING (";\r\n filename=\"");
-		  PUSH_STRING (real_name);
-		  PUSH_STRING ("\"" CRLF);
-	  }
-	  else // if (parmFolding == 2)
-	  {
-		  char *rfc2231Parm = RFC2231ParmFolding("filename", charset,
-												 INTL_GetAcceptLanguage(), real_name);
-		  if (rfc2231Parm)
-		  {
-			  PUSH_STRING(";\r\n ");
-			  PUSH_STRING(rfc2231Parm);
-			  PUSH_NEWLINE ();
-			  PR_Free(rfc2231Parm);
-		  }
-	  }
+			/* If this document is an anonymous binary file or a vcard, 
+			then always show it as an attachment, never inline. */
+			else
+				if (!PL_strcasecmp(type, APPLICATION_OCTET_STREAM) || 
+						!PL_strcasecmp(type, TEXT_VCARD) ||
+						!PL_strcasecmp(type, APPLICATION_DIRECTORY)) /* text/x-vcard synonym */
+					PUSH_STRING ("attachment");
+				else
+					PUSH_STRING ("inline");
+
+		if (parmFolding == 0 || parmFolding == 1) {
+			PUSH_STRING (";\r\n filename=\"");
+			PUSH_STRING (real_name);
+			PUSH_STRING ("\"" CRLF);
+		}
+		else // if (parmFolding == 2)
+		{
+			char *rfc2231Parm = RFC2231ParmFolding("filename", charset,
+											 INTL_GetAcceptLanguage(), real_name);
+			if (rfc2231Parm) {
+				PUSH_STRING(";\r\n ");
+				PUSH_STRING(rfc2231Parm);
+				PUSH_NEWLINE ();
+				PR_Free(rfc2231Parm);
+			}
+		}
 	}
-  else if (type &&
-	       (!PL_strcasecmp (type, MESSAGE_RFC822) ||
-			!PL_strcasecmp (type, MESSAGE_NEWS)))
-	{
-	  PUSH_STRING ("Content-Disposition: inline" CRLF);
-	}
+	else
+		if (type &&
+				(!PL_strcasecmp (type, MESSAGE_RFC822) ||
+				!PL_strcasecmp (type, MESSAGE_NEWS)))
+			PUSH_STRING ("Content-Disposition: inline" CRLF);
   
 #ifdef GENERATE_CONTENT_BASE
-  /* If this is an HTML document, and we know the URL it originally
-	 came from, write out a Content-Base header. */
-  if (type &&
-	  (!PL_strcasecmp (type, TEXT_HTML) ||
-	   !PL_strcasecmp (type, TEXT_MDL)) &&
-	  base_url && *base_url)
+	/* If this is an HTML document, and we know the URL it originally
+	   came from, write out a Content-Base header. */
+	if (type &&
+			(!PL_strcasecmp (type, TEXT_HTML) ||
+			!PL_strcasecmp (type, TEXT_MDL)) &&
+			base_url && *base_url)
 	{
-	  PRInt32 col = 0;
-	  const char *s = base_url;
-	  const char *colon = PL_strchr (s, ':');
-    PRBool useContentLocation = FALSE;   /* rhp - add this  */
+		PRInt32 col = 0;
+		const char *s = base_url;
+		const char *colon = PL_strchr (s, ':');
+		PRBool useContentLocation = PR_FALSE;   /* rhp - add this  */
 
-	  if (!colon) goto GIVE_UP_ON_CONTENT_BASE;  /* malformed URL? */
+		if (!colon)
+			goto GIVE_UP_ON_CONTENT_BASE;  /* malformed URL? */
 
-	  /* Don't emit a content-base that points to (or into) a news or
-		 mail message. */
-	  if (!PL_strncasecmp (s, "news:", 5) ||
-		  !PL_strncasecmp (s, "snews:", 6) ||
-		  !PL_strncasecmp (s, "IMAP:", 5) ||
-      !PL_strncasecmp (s, "file:", 5) ||    /* rhp: fix targets from included HTML files */
-		  !PL_strncasecmp (s, "mailbox:", 8))
-		goto GIVE_UP_ON_CONTENT_BASE;
+		/* Don't emit a content-base that points to (or into) a news or
+		   mail message. */
+		if (!PL_strncasecmp (s, "news:", 5) ||
+				!PL_strncasecmp (s, "snews:", 6) ||
+				!PL_strncasecmp (s, "IMAP:", 5) ||
+				!PL_strncasecmp (s, "file:", 5) ||    /* rhp: fix targets from included HTML files */
+				!PL_strncasecmp (s, "mailbox:", 8))
+			goto GIVE_UP_ON_CONTENT_BASE;
 
-    /* rhp - Put in a pref for using Content-Location instead of Content-Base.
-             This will get tweaked to default to true in 5.0
-     */
-  	PREF_GetBoolPref("mail.use_content_location_on_send", &useContentLocation);
-    
-    if (useContentLocation)
-  	  PUSH_STRING ("Content-Location: \"");
-    else
-      PUSH_STRING ("Content-Base: \"");
-    /* rhp - Pref for Content-Location usage */
+		/* rhp - Put in a pref for using Content-Location instead of Content-Base.
+			     This will get tweaked to default to true in 5.0
+		*/
+		PREF_GetBoolPref("mail.use_content_location_on_send", &useContentLocation);
+
+		if (useContentLocation)
+			PUSH_STRING ("Content-Location: \"");
+		else
+			PUSH_STRING ("Content-Base: \"");
+		/* rhp - Pref for Content-Location usage */
 
 /* rhp: this is to work with the Content-Location stuff */
 CONTENT_LOC_HACK:
 
-	  while (*s != 0 && *s != '#')
+		while (*s != 0 && *s != '#')
 		{
-		  const char *ot = buffer_tail;
+			const char *ot = buffer_tail;
 
-		  /* URLs must be wrapped at 40 characters or less. */
-		  if (col >= 38)
-			{
-			  PUSH_STRING(CRLF "\t");
-			  col = 0;
+			/* URLs must be wrapped at 40 characters or less. */
+			if (col >= 38) {
+				PUSH_STRING(CRLF "\t");
+				col = 0;
 			}
 
-		  if (*s == ' ')       PUSH_STRING("%20");
-		  else if (*s == '\t') PUSH_STRING("%09");
-		  else if (*s == '\n') PUSH_STRING("%0A");
-		  else if (*s == '\r') PUSH_STRING("%0D");
-		  else
-			{
-			  *buffer_tail++ = *s;
-			  *buffer_tail = '\0';
+			if (*s == ' ')
+				PUSH_STRING("%20");
+			else if (*s == '\t')
+				PUSH_STRING("%09");
+			else if (*s == '\n')
+				PUSH_STRING("%0A");
+			else if (*s == '\r')
+				PUSH_STRING("%0D");
+			else {
+				*buffer_tail++ = *s;
+				*buffer_tail = '\0';
 			}
-		  s++;
-		  col += (buffer_tail - ot);
+			s++;
+			col += (buffer_tail - ot);
 		}
-	  PUSH_STRING ("\"" CRLF);
+		PUSH_STRING ("\"" CRLF);
 
-    /* rhp: this is to try to get around this fun problem with Content-Location */
-    if (!useContentLocation)
-    {
-      PUSH_STRING ("Content-Location: \"");
-      s = base_url;
-      col = 0;
-      useContentLocation = TRUE;
-      goto CONTENT_LOC_HACK;
-    }
-    /* rhp: this is to try to get around this fun problem with Content-Location */
+		/* rhp: this is to try to get around this fun problem with Content-Location */
+		if (!useContentLocation) {
+			PUSH_STRING ("Content-Location: \"");
+			s = base_url;
+			col = 0;
+			useContentLocation = PR_TRUE;
+			goto CONTENT_LOC_HACK;
+		}
+		/* rhp: this is to try to get around this fun problem with Content-Location */
 
-	GIVE_UP_ON_CONTENT_BASE:
-	  ;
+GIVE_UP_ON_CONTENT_BASE:
+		;
 	}
 #endif /* GENERATE_CONTENT_BASE */
 
 
-  /* realloc it smaller... */
-  buffer = (char*) XP_REALLOC (buffer, buffer_tail - buffer + 1);
+	/* realloc it smaller... */
+	buffer = (char*) PR_REALLOC (buffer, buffer_tail - buffer + 1);
 
-  return buffer;
+	return buffer;
 }
 
 
@@ -3905,7 +3909,7 @@ static char *
 msg_make_filename_qtext(const char *srcText, PRBool stripCRLFs)
 {
 	/* newString can be at most twice the original string (every char quoted). */
-	char *newString = (char *) PR_MALLOC(PL_strlen(srcText)*2 + 1);
+	char *newString = (char *) PR_Malloc(PL_strlen(srcText)*2 + 1);
 	if (!newString) return NULL;
 
 	const char *s = srcText;
@@ -4004,7 +4008,8 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, PRInt16 csid)
 	  
   if (s2) s = s2+1;
   /* Copy it into the attachment struct. */
-  StrAllocCopy (attachment->m_real_name, s);
+  PR_FREEIF(attachment->m_real_name);
+  attachment->m_real_name = PL_strdup (s);
   /* Now trim off any named anchors or search data. */
   s3 = PL_strchr (attachment->m_real_name, '?');
   if (s3) *s3 = 0;
@@ -4034,7 +4039,7 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, PRInt16 csid)
 	  char *qtextName = NULL;
 	  
 	  qtextName = msg_make_filename_qtext(attachment->m_real_name, 
-										  (parmFolding == 0 ? TRUE : FALSE));
+										  (parmFolding == 0 ? PR_TRUE : PR_FALSE));
 		  
 	  if (qtextName)
 	  {
@@ -4101,178 +4106,177 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, PRInt16 csid)
 }
 
 
-int
-nsMsgSendMimeDeliveryState::HackAttachments(
+int nsMsgSendMimeDeliveryState::HackAttachments(
 						  const struct MSG_AttachmentData *attachments,
 						  const struct MSG_AttachedFile *preloaded_attachments)
 {
-  INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(GetContext());
-  if (preloaded_attachments) NS_ASSERTION(!attachments, "not-null attachments");
-  if (attachments) NS_ASSERTION(!preloaded_attachments, "not-null preloaded attachments");
+	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(GetContext());
+	if (preloaded_attachments)
+		NS_ASSERTION(!attachments, "not-null attachments");
+	if (attachments)
+		NS_ASSERTION(!preloaded_attachments, "not-null preloaded attachments");
 
-  if (preloaded_attachments && preloaded_attachments[0].orig_url)
-	{
-	  /* These are attachments which have already been downloaded to tmp files.
-		 We merely need to point the internal attachment data at those tmp
-		 files.
-	   */
-	  PRInt32 i;
+	if (preloaded_attachments && preloaded_attachments[0].orig_url) {
+		/* These are attachments which have already been downloaded to tmp files.
+		We merely need to point the internal attachment data at those tmp
+		files.
+		*/
+		PRInt32 i;
 
-	  m_pre_snarfed_attachments_p = TRUE;
+		m_pre_snarfed_attachments_p = PR_TRUE;
 
-	  m_attachment_count = 0;
-	  while (preloaded_attachments[m_attachment_count].orig_url)
-		m_attachment_count++;
+		m_attachment_count = 0;
+		while (preloaded_attachments[m_attachment_count].orig_url)
+			m_attachment_count++;
 
-	  m_attachments = (MSG_DeliverMimeAttachment *)
+		m_attachments = (MSG_DeliverMimeAttachment *)
 		new MSG_DeliverMimeAttachment[m_attachment_count];
 
-	  if (! m_attachments)
-		return MK_OUT_OF_MEMORY;
+		if (! m_attachments)
+			return MK_OUT_OF_MEMORY;
 
-	  for (i = 0; i < m_attachment_count; i++)
-		{
-		  m_attachments[i].m_mime_delivery_state = this;
-		  /* These attachments are already "snarfed". */
-		  m_attachments[i].m_done = TRUE;
-		  NS_ASSERTION (preloaded_attachments[i].orig_url, "null url");
-		  StrAllocCopy (m_attachments[i].m_url_string,
-						preloaded_attachments[i].orig_url);
-		  StrAllocCopy (m_attachments[i].m_type,
-						preloaded_attachments[i].type);
-		  StrAllocCopy (m_attachments[i].m_description,
-						preloaded_attachments[i].description);
-		  StrAllocCopy (m_attachments[i].m_real_name,
-						preloaded_attachments[i].real_name);
-		  StrAllocCopy (m_attachments[i].m_x_mac_type,
-						preloaded_attachments[i].x_mac_type);
-		  StrAllocCopy (m_attachments[i].m_x_mac_creator,
-						preloaded_attachments[i].x_mac_creator);
-		  StrAllocCopy (m_attachments[i].m_encoding,
-						preloaded_attachments[i].encoding);
-		  StrAllocCopy (m_attachments[i].m_file_name,
-						preloaded_attachments[i].file_name);
+		for (i = 0; i < m_attachment_count; i++) {
+			m_attachments[i].m_mime_delivery_state = this;
+			/* These attachments are already "snarfed". */
+			m_attachments[i].m_done = PR_TRUE;
+			NS_ASSERTION (preloaded_attachments[i].orig_url, "null url");
+			PR_FREEIF(m_attachments[i].m_url_string);
+			m_attachments[i].m_url_string = PL_strdup (preloaded_attachments[i].orig_url);
+			PR_FREEIF(m_attachments[i].m_type);
+			m_attachments[i].m_type = PL_strdup (preloaded_attachments[i].type);
+			PR_FREEIF(m_attachments[i].m_description);
+			m_attachments[i].m_description = PL_strdup (preloaded_attachments[i].description);
+			PR_FREEIF(m_attachments[i].m_real_name);
+			m_attachments[i].m_real_name = PL_strdup (preloaded_attachments[i].real_name);
+			PR_FREEIF(m_attachments[i].m_x_mac_type);
+			m_attachments[i].m_x_mac_type = PL_strdup (preloaded_attachments[i].x_mac_type);
+			PR_FREEIF(m_attachments[i].m_x_mac_creator);
+			m_attachments[i].m_x_mac_creator = PL_strdup (preloaded_attachments[i].x_mac_creator);
+			PR_FREEIF(m_attachments[i].m_encoding);
+			m_attachments[i].m_encoding = PL_strdup (preloaded_attachments[i].encoding);
+			PR_FREEIF(m_attachments[i].m_file_name);
+			m_attachments[i].m_file_name = PL_strdup (preloaded_attachments[i].file_name);
 
-		  m_attachments[i].m_size = preloaded_attachments[i].size;
-		  m_attachments[i].m_unprintable_count =
+			m_attachments[i].m_size = preloaded_attachments[i].size;
+			m_attachments[i].m_unprintable_count =
 			preloaded_attachments[i].unprintable_count;
-		  m_attachments[i].m_highbit_count =
+			m_attachments[i].m_highbit_count =
 			preloaded_attachments[i].highbit_count;
-		  m_attachments[i].m_ctl_count = preloaded_attachments[i].ctl_count;
-		  m_attachments[i].m_null_count =
+			m_attachments[i].m_ctl_count = preloaded_attachments[i].ctl_count;
+			m_attachments[i].m_null_count =
 			preloaded_attachments[i].null_count;
-		  m_attachments[i].m_max_column =
+			m_attachments[i].m_max_column =
 			preloaded_attachments[i].max_line_length;
 
-		  /* If the attachment has an encoding, and it's not one of
-			 the "null" encodings, then keep it. */
-		  if (m_attachments[i].m_encoding &&
-			  PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_7BIT) &&
-			  PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_8BIT) &&
-			  PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_BINARY))
-			m_attachments[i].m_already_encoded_p = TRUE;
+			/* If the attachment has an encoding, and it's not one of
+			the "null" encodings, then keep it. */
+			if (m_attachments[i].m_encoding &&
+					PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_7BIT) &&
+					PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_8BIT) &&
+					PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_BINARY))
+				m_attachments[i].m_already_encoded_p = PR_TRUE;
 
-		  msg_pick_real_name(&m_attachments[i], INTL_GetCSIWinCSID(c));
+			msg_pick_real_name(&m_attachments[i], INTL_GetCSIWinCSID(c));
 		}
 	}
-  else if (attachments && attachments[0].url)
-	{
-	  /* These are attachments which have already been downloaded to tmp files.
-		 We merely need to point the internal attachment data at those tmp
-		 files.  We will delete the tmp files as we attach them.
-	   */
-	  PRInt32 i;
-	  int mailbox_count = 0, news_count = 0;
+	else 
+		if (attachments && attachments[0].url) {
+		/* These are attachments which have already been downloaded to tmp files.
+		We merely need to point the internal attachment data at those tmp
+		files.  We will delete the tmp files as we attach them.
+		*/
+		PRInt32 i;
+		int mailbox_count = 0, news_count = 0;
 
-	  m_attachment_count = 0;
-	  while (attachments[m_attachment_count].url)
-		m_attachment_count++;
+		m_attachment_count = 0;
+		while (attachments[m_attachment_count].url)
+			m_attachment_count++;
 
-	  m_attachments = (MSG_DeliverMimeAttachment *)
+		m_attachments = (MSG_DeliverMimeAttachment *)
 		new MSG_DeliverMimeAttachment[m_attachment_count];
 
-	  if (! m_attachments)
-		return MK_OUT_OF_MEMORY;
+		if (! m_attachments)
+			return MK_OUT_OF_MEMORY;
 
-	  for (i = 0; i < m_attachment_count; i++)
-		{
-		  m_attachments[i].m_mime_delivery_state = this;
-		  NS_ASSERTION (attachments[i].url, "null url");
-		  StrAllocCopy (m_attachments[i].m_url_string,
-						attachments[i].url);
-		  StrAllocCopy (m_attachments[i].m_override_type,
-						attachments[i].real_type);
-		  StrAllocCopy (m_attachments[i].m_override_encoding,
-						attachments[i].real_encoding);
-		  StrAllocCopy (m_attachments[i].m_desired_type,
-						attachments[i].desired_type);
-		  StrAllocCopy (m_attachments[i].m_description,
-						attachments[i].description);
-		  StrAllocCopy (m_attachments[i].m_real_name,
-						attachments[i].real_name);
-		  StrAllocCopy (m_attachments[i].m_x_mac_type,
-						attachments[i].x_mac_type);
-		  StrAllocCopy (m_attachments[i].m_x_mac_creator,
-						attachments[i].x_mac_creator);
-		  StrAllocCopy (m_attachments[i].m_encoding, "7bit");
-		  m_attachments[i].m_url =
+		for (i = 0; i < m_attachment_count; i++) {
+			m_attachments[i].m_mime_delivery_state = this;
+			NS_ASSERTION (attachments[i].url, "null url");
+			PR_FREEIF(m_attachments[i].m_url_string);
+			m_attachments[i].m_url_string = PL_strdup (attachments[i].url);
+			PR_FREEIF(m_attachments[i].m_override_type);
+			m_attachments[i].m_override_type = PL_strdup (attachments[i].real_type);
+			PR_FREEIF(m_attachments[i].m_override_encoding);
+			m_attachments[i].m_override_encoding = PL_strdup (attachments[i].real_encoding);
+			PR_FREEIF(m_attachments[i].m_desired_type);
+			m_attachments[i].m_desired_type = PL_strdup (attachments[i].desired_type);
+			PR_FREEIF(m_attachments[i].m_description);
+			m_attachments[i].m_description = PL_strdup (attachments[i].description);
+			PR_FREEIF(m_attachments[i].m_real_name);
+			m_attachments[i].m_real_name = PL_strdup (attachments[i].real_name);
+			PR_FREEIF(m_attachments[i].m_x_mac_type);
+			m_attachments[i].m_x_mac_type = PL_strdup (attachments[i].x_mac_type);
+			PR_FREEIF(m_attachments[i].m_x_mac_creator);
+			m_attachments[i].m_x_mac_creator = PL_strdup (attachments[i].x_mac_creator);
+			PR_FREEIF(m_attachments[i].m_encoding);
+			m_attachments[i].m_encoding = PL_strdup ("7bit");
+			PR_FREEIF(m_attachments[i].m_url);
+			m_attachments[i].m_url =
 			NET_CreateURLStruct (m_attachments[i].m_url_string,
-								 NET_DONT_RELOAD);
+						 NET_DONT_RELOAD);
 
-		  // real name is set in the case of vcard so don't change it.
-		  // m_attachments[i].m_real_name = 0;
+			// real name is set in the case of vcard so don't change it.
+			// m_attachments[i].m_real_name = 0;
 
-		  /* Count up attachments which are going to come from mail folders
-			 and from NNTP servers. */
-		  if (PL_strncasecmp(m_attachments[i].m_url_string, "mailbox:",8) ||
-			  PL_strncasecmp(m_attachments[i].m_url_string, "IMAP:",5))
-			mailbox_count++;
-		  else if (PL_strncasecmp(m_attachments[i].m_url_string, "news:",5) ||
-				   PL_strncasecmp(m_attachments[i].m_url_string, "snews:",6))
-			news_count++;
+			/* Count up attachments which are going to come from mail folders
+			and from NNTP servers. */
+			if (PL_strncasecmp(m_attachments[i].m_url_string, "mailbox:",8) ||
+					PL_strncasecmp(m_attachments[i].m_url_string, "IMAP:",5))
+				mailbox_count++;
+			else
+				if (PL_strncasecmp(m_attachments[i].m_url_string, "news:",5) ||
+						PL_strncasecmp(m_attachments[i].m_url_string, "snews:",6))
+					news_count++;
 
-		  msg_pick_real_name(&m_attachments[i], INTL_GetCSIWinCSID(c));
+			msg_pick_real_name(&m_attachments[i], INTL_GetCSIWinCSID(c));
 		}
 
-	  /* If there is more than one mailbox URL, or more than one NNTP url,
-		 do the load in serial rather than parallel, for efficiency.
-	   */
-	  if (mailbox_count > 1 || news_count > 1)
-		m_be_synchronous_p = TRUE;
+		/* If there is more than one mailbox URL, or more than one NNTP url,
+		do the load in serial rather than parallel, for efficiency.
+		*/
+		if (mailbox_count > 1 || news_count > 1)
+			m_be_synchronous_p = PR_TRUE;
 
-	  m_attachment_pending_count = m_attachment_count;
+		m_attachment_pending_count = m_attachment_count;
 
-	  /* Start the URL attachments loading (eventually, an exit routine will
-		 call the done_callback). */
+		/* Start the URL attachments loading (eventually, an exit routine will
+		call the done_callback). */
 
-	  if (m_attachment_count == 1)
-		FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNT));
-	  else
-		FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNTS));
+		if (m_attachment_count == 1)
+			FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNT));
+		else
+			FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNTS));
 
-	  for (i = 0; i < m_attachment_count; i++)
-		{
-		  /* This only returns a failure code if NET_GetURL was not called
-			 (and thus no exit routine was or will be called.) */
-		  int status = m_attachments [i].SnarfAttachment ();
-		  if (status < 0)
-			return status;
+		for (i = 0; i < m_attachment_count; i++) {
+			/* This only returns a failure code if NET_GetURL was not called
+			(and thus no exit routine was or will be called.) */
+			int status = m_attachments [i].SnarfAttachment();
+			if (status < 0)
+				return status;
 
-		  if (m_be_synchronous_p)
-			break;
+			if (m_be_synchronous_p)
+				break;
 		}
 	}
 
-  if (m_attachment_pending_count <= 0)
-	/* No attachments - finish now (this will call the done_callback). */
-	GatherMimeAttachments ();
+	if (m_attachment_pending_count <= 0)
+		/* No attachments - finish now (this will call the done_callback). */
+		GatherMimeAttachments ();
 
-  return 0;
+	return 0;
 }
 
 
-void
-nsMsgSendMimeDeliveryState::StartMessageDelivery(
+void nsMsgSendMimeDeliveryState::StartMessageDelivery(
 						  MSG_Pane   *pane,
 						  void       *fe_data,
 						  nsMsgCompFields *fields,
@@ -4293,42 +4297,34 @@ nsMsgSendMimeDeliveryState::StartMessageDelivery(
 								int status,
 								const char *error_message))
 {
-  int failure = 0;
-  nsMsgSendMimeDeliveryState	*state;
+	int failure = 0;
 
-  if (!attachment1_body || !*attachment1_body)
-	attachment1_type = attachment1_body = 0;
+	if (!attachment1_body || !*attachment1_body)
+		attachment1_type = attachment1_body = 0;
 
-  state = new nsMsgSendMimeDeliveryState;
-  if (! state)
-	{
-	  failure = MK_OUT_OF_MEMORY;
-	  goto FAIL;
-	}
 
-  failure = state->Init(pane, fe_data, fields, 
-						digest_p, dont_deliver_p, mode,
-						attachment1_type, attachment1_body,
-						attachment1_body_length,
-						attachments, preloaded_attachments,
+	failure = Init(pane, fe_data, fields, 
+					digest_p, dont_deliver_p, mode,
+					attachment1_type, attachment1_body,
+					attachment1_body_length,
+					attachments, preloaded_attachments,
 //#ifdef MSG_SEND_MULTIPART_RELATED
-						relatedPart,
+					relatedPart,
 //#endif
-						message_delivery_done_callback);
-  if (failure >= 0)
-	return;
+					message_delivery_done_callback);
+	if (failure >= 0)
+		return;
 
-FAIL:
-  char *err_msg = NET_ExplainErrorDetails (failure);
-  message_delivery_done_callback (pane->GetContext(), fe_data, failure,
+	char *err_msg = NET_ExplainErrorDetails (failure);
+	message_delivery_done_callback (pane->GetContext(), fe_data, failure,
 								  err_msg);
-  if (err_msg) PR_Free (err_msg);
-  delete state;
+	if (err_msg)
+		PR_Free (err_msg);
 }
 
 int nsMsgSendMimeDeliveryState::SetMimeHeader(MSG_HEADER_SET header, const char *value)
 {
-	char	*dupHeader = NULL;
+	char * dupHeader = NULL;
 	PRInt32	ret = MK_OUT_OF_MEMORY;
 
 	if (header & (MSG_FROM_HEADER_MASK | MSG_TO_HEADER_MASK | MSG_REPLY_TO_HEADER_MASK | MSG_CC_HEADER_MASK | MSG_BCC_HEADER_MASK))
@@ -4338,10 +4334,9 @@ int nsMsgSendMimeDeliveryState::SetMimeHeader(MSG_HEADER_SET header, const char 
 	else  if (header & (MSG_FCC_HEADER_MASK | MSG_ORGANIZATION_HEADER_MASK |  MSG_SUBJECT_HEADER_MASK | MSG_REFERENCES_HEADER_MASK | MSG_X_TEMPLATE_HEADER_MASK))
 		dupHeader = mime_fix_header(value);
 	else
-		NS_ASSERTION(FALSE, "invalid header");	// unhandled header mask - bad boy.
+		NS_ASSERTION(PR_FALSE, "invalid header");	// unhandled header mask - bad boy.
 
-	if (dupHeader)
-	{
+	if (dupHeader) {
 		m_fields->SetHeader(header, dupHeader, &ret);
 		PR_Free(dupHeader);
 	}
@@ -4373,149 +4368,139 @@ nsMsgSendMimeDeliveryState::Init(
 								int status,
 								const char *error_message))
 {
-  int failure = 0;
-  const char* pStr = NULL;
-  m_pane = pane;
-  m_fe_data = fe_data;
-  m_message_delivery_done_callback = message_delivery_done_callback;
+	int failure = 0;
+	const char* pStr = NULL;
+	m_pane = pane;
+	m_fe_data = fe_data;
+	m_message_delivery_done_callback = message_delivery_done_callback;
 
-//#ifdef MSG_SEND_MULTIPART_RELATED
-  m_related_part = relatedPart;
-  if (m_related_part)
-	  m_related_part->SetMimeDeliveryState(this);
-//#endif
+	m_related_part = relatedPart;
+	if (m_related_part)
+		m_related_part->SetMimeDeliveryState(this);
 
-  NS_ASSERTION (fields, "null fields");
-  if (!fields) return MK_OUT_OF_MEMORY; /* rb -1; */
+	NS_ASSERTION (fields, "null fields");
+	if (!fields)
+		return MK_OUT_OF_MEMORY; /* rb -1; */
 
-  if (m_fields)
-  {
-	  delete m_fields;
-  }
+	if (m_fields)
+		m_fields->Release();
 
-  m_fields = new nsMsgCompFields;
-  if (!m_fields)
-	  return MK_OUT_OF_MEMORY;
+	m_fields = new nsMsgCompFields;
+	if (m_fields)
+		m_fields->AddRef();
+	else
+		return MK_OUT_OF_MEMORY;
 
-  m_fields->SetOwner(pane);
+	m_fields->SetOwner(pane);
 
 #ifdef GENERATE_MESSAGE_ID
-  pStr = fields->GetMessageId();
-  if (pStr)
+	pStr = fields->GetMessageId();
+	if (pStr)
 	{
-	  m_fields->SetMessageId((char *) pStr, NULL);
-	  /* Don't bother checking for out of memory; if it fails, then we'll just
-		 let the server generate the message-id, and suffer with the
-		 possibility of duplicate messages.*/
+		m_fields->SetMessageId((char *) pStr, NULL);
+		/* Don't bother checking for out of memory; if it fails, then we'll just
+		   let the server generate the message-id, and suffer with the
+		   possibility of duplicate messages.*/
 	}
 #endif /* GENERATE_MESSAGE_ID */
 
-  /* Strip whitespace from beginning and end of body. */
-  if (attachment1_body)
+	/* Strip whitespace from beginning and end of body. */
+	if (attachment1_body)
 	{
 		/* BUG 115202 -- we used to strip out whitespaces from
 		   beginning of body. We are not doing that anymore. */
-	  while (attachment1_body_length > 0 &&
-			 XP_IS_SPACE (attachment1_body [attachment1_body_length - 1]))
+		while (attachment1_body_length > 0 &&
+			XP_IS_SPACE (attachment1_body [attachment1_body_length - 1]))
 		{
-		  attachment1_body_length--;
+			attachment1_body_length--;
 		}
-	  if (attachment1_body_length <= 0)
-		attachment1_body = 0;
+		if (attachment1_body_length <= 0)
+			attachment1_body = 0;
 
-	  if (attachment1_body)
+		if (attachment1_body)
 		{
-		  char *newb = (char *) PR_MALLOC (attachment1_body_length + 1);
-		  if (! newb)
-			{
-			  return MK_OUT_OF_MEMORY;
-			}
-		  XP_MEMCPY (newb, attachment1_body, attachment1_body_length);
-		  newb [attachment1_body_length] = 0;
-		  m_attachment1_body = newb;
-		  m_attachment1_body_length = attachment1_body_length;
+			char *newb = (char *) PR_Malloc (attachment1_body_length + 1);
+			if (! newb)
+				return MK_OUT_OF_MEMORY;
+			memcpy (newb, attachment1_body, attachment1_body_length);
+			newb [attachment1_body_length] = 0;
+			m_attachment1_body = newb;
+			m_attachment1_body_length = attachment1_body_length;
 		}
 	}
 
-  pStr = fields->GetNewspostUrl();
-  if (!pStr || !*pStr)
-  {
-	HJ41792
-  }
+	pStr = fields->GetNewspostUrl();
+	if (!pStr || !*pStr) {
+		HJ41792
+	}
 
-  m_fields->SetNewspostUrl((char *) fields->GetNewspostUrl(), NULL);
-  m_fields->SetDefaultBody((char *) fields->GetDefaultBody(), NULL);
-  StrAllocCopy (m_attachment1_type, attachment1_type);
-  StrAllocCopy (m_attachment1_encoding, "8bit");
+	m_fields->SetNewspostUrl((char *) fields->GetNewspostUrl(), NULL);
+	m_fields->SetDefaultBody((char *) fields->GetDefaultBody(), NULL);
+	PR_FREEIF(m_attachment1_type);
+	m_attachment1_type = PL_strdup (attachment1_type);
+	PR_FREEIF(m_attachment1_encoding);
+	m_attachment1_encoding = PL_strdup ("8bit");
 
-  /* strip whitespace from and duplicate header fields. */
+	/* strip whitespace from and duplicate header fields. */
+	SetMimeHeader(MSG_FROM_HEADER_MASK, fields->GetFrom());
+	SetMimeHeader(MSG_REPLY_TO_HEADER_MASK, fields->GetReplyTo());
+	SetMimeHeader(MSG_TO_HEADER_MASK, fields->GetTo());
+	SetMimeHeader(MSG_CC_HEADER_MASK, fields->GetCc());
+	SetMimeHeader(MSG_FCC_HEADER_MASK, fields->GetFcc());
+	SetMimeHeader(MSG_BCC_HEADER_MASK, fields->GetBcc());
+	SetMimeHeader(MSG_NEWSGROUPS_HEADER_MASK, fields->GetNewsgroups());
+	SetMimeHeader(MSG_FOLLOWUP_TO_HEADER_MASK, fields->GetFollowupTo());
+	SetMimeHeader(MSG_ORGANIZATION_HEADER_MASK, fields->GetOrganization());
+	SetMimeHeader(MSG_SUBJECT_HEADER_MASK, fields->GetSubject());
+	SetMimeHeader(MSG_REFERENCES_HEADER_MASK, fields->GetReferences());
+	SetMimeHeader(MSG_X_TEMPLATE_HEADER_MASK, fields->GetTemplateName());
 
-  SetMimeHeader(MSG_FROM_HEADER_MASK, fields->GetFrom());
-  SetMimeHeader(MSG_REPLY_TO_HEADER_MASK, fields->GetReplyTo());
-  SetMimeHeader(MSG_TO_HEADER_MASK, fields->GetTo());
-  SetMimeHeader(MSG_CC_HEADER_MASK, fields->GetCc());
-  SetMimeHeader(MSG_FCC_HEADER_MASK, fields->GetFcc());
-  SetMimeHeader(MSG_BCC_HEADER_MASK, fields->GetBcc());
-  SetMimeHeader(MSG_NEWSGROUPS_HEADER_MASK, fields->GetNewsgroups());
-  SetMimeHeader(MSG_FOLLOWUP_TO_HEADER_MASK, fields->GetFollowupTo());
-  SetMimeHeader(MSG_ORGANIZATION_HEADER_MASK, fields->GetOrganization());
-  SetMimeHeader(MSG_SUBJECT_HEADER_MASK, fields->GetSubject());
-  SetMimeHeader(MSG_REFERENCES_HEADER_MASK, fields->GetReferences());
-  SetMimeHeader(MSG_X_TEMPLATE_HEADER_MASK, fields->GetTemplateName());
+	pStr = fields->GetOtherRandomHeaders();
+	if (pStr)
+		m_fields->SetOtherRandomHeaders((char *) pStr, NULL);
 
-  pStr = fields->GetOtherRandomHeaders();
-  if (pStr)
-	m_fields->SetOtherRandomHeaders((char *) pStr, NULL);
+	pStr = fields->GetPriority();
+	if (pStr)
+		m_fields->SetPriority((char *) pStr, NULL);
 
-  pStr = fields->GetPriority();
-  if (pStr)
-	m_fields->SetPriority((char *) pStr, NULL);
+	int i, j = (int) MSG_LAST_BOOL_HEADER_MASK;
+	for (i = 0; i < j; i++) {
+		m_fields->SetBoolHeader((MSG_BOOL_HEADER_SET) i,
+		fields->GetBoolHeader((MSG_BOOL_HEADER_SET) i), NULL);
+	}
 
-  int i, j = (int) MSG_LAST_BOOL_HEADER_MASK;
-  for (i = 0; i < j; i++) {
-	  m_fields->SetBoolHeader((MSG_BOOL_HEADER_SET) i,
-		  fields->GetBoolHeader((MSG_BOOL_HEADER_SET) i), NULL);
-  }
-#if 0
-  m_fields->SetReturnReceipt(fields->GetReturnReceipt());
-  m_fields->SetEncrypted(fields->GetEncrypted());
-  m_fields->SetSigned(fields->GetSigned());
-  m_fields->SetAttachVCard(fields->GetAttachVCard());
-#endif
-  m_fields->SetForcePlainText(fields->GetForcePlainText());
-  m_fields->SetUseMultipartAlternative(fields->GetUseMultipartAlternative());
+	m_fields->SetForcePlainText(fields->GetForcePlainText());
+	m_fields->SetUseMultipartAlternative(fields->GetUseMultipartAlternative());
 
-  if (pane && m_fields->GetReturnReceipt())
-  {
-	  if (m_fields->GetReturnReceiptType() == 1 ||
-		  m_fields->GetReturnReceiptType() == 3)
-		  pane->SetRequestForReturnReceipt(TRUE);
-	  else
-		  pane->SetRequestForReturnReceipt(FALSE);
-  }
+	if (pane && m_fields->GetReturnReceipt()) {
+		if (m_fields->GetReturnReceiptType() == 1 ||
+				m_fields->GetReturnReceiptType() == 3)
+			pane->SetRequestForReturnReceipt(PR_TRUE);
+		else
+			pane->SetRequestForReturnReceipt(PR_FALSE);
+	}
 
-  /* Check the fields for legitimacy, and run the callback if they're not
-	 ok.  */
-  if ( mode != MSG_SaveAsDraft && mode != MSG_SaveAsTemplate ) {
-
-	failure = mime_sanity_check_fields (m_fields->GetFrom(), m_fields->GetReplyTo(),
+	/* Check the fields for legitimacy, and run the callback if they're not
+	   ok.  */
+	if (mode != MSG_SaveAsDraft && mode != MSG_SaveAsTemplate ) {
+		failure = mime_sanity_check_fields (m_fields->GetFrom(), m_fields->GetReplyTo(),
 										m_fields->GetTo(), m_fields->GetCc(),
 										m_fields->GetBcc(), m_fields->GetFcc(),
 										m_fields->GetNewsgroups(), m_fields->GetFollowupTo(),
 										m_fields->GetSubject(), m_fields->GetReferences(),
 										m_fields->GetOrganization(),
 										m_fields->GetOtherRandomHeaders());
-  }
-  if (failure)
+	}
+	if (failure)
+		return failure;
+
+	m_digest_p = digest_p;
+	m_dont_deliver_p = dont_deliver_p;
+	m_deliver_mode = mode;
+	// m_msg_file_name = WH_TempName (xpFileToPost, "nsmail");
+
+	failure = HackAttachments(attachments, preloaded_attachments);
 	return failure;
-
-  m_digest_p = digest_p;
-  m_dont_deliver_p = dont_deliver_p;
-  m_deliver_mode = mode;
-  // m_msg_file_name = WH_TempName (xpFileToPost, "nsmail");
-
-  failure = HackAttachments(attachments, preloaded_attachments);
-  return failure;
 }
 
 
@@ -4555,6 +4540,8 @@ nsMsgSendMimeDeliveryState::Init(
    negative, then `error_message' contains the file name (this is kind of
    a kludge...)
  */
+
+#if 0 //JFD - We shouldn't use it anymore...
 extern "C" void
 MSG_StartMessageDelivery (MSG_Pane *pane,
 						  void      *fe_data,
@@ -4623,6 +4610,7 @@ msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 #endif
 							  message_delivery_done_callback);
 }
+#endif //JFD
 
 extern "C" int
 msg_DownloadAttachments (MSG_Pane *pane,
@@ -4653,7 +4641,7 @@ msg_DownloadAttachments (MSG_Pane *pane,
 	}
   state->m_pane = pane;
   state->m_fe_data = fe_data;
-  state->m_attachments_only_p = TRUE;
+  state->m_attachments_only_p = PR_TRUE;
   state->m_attachments_done_callback =
 #ifdef XP_OS2
 //DSR040297 - see comment above about 'Casting away extern "C"'
@@ -4693,155 +4681,139 @@ HJ70669
 
 void nsMsgSendMimeDeliveryState::Clear()
 {
-  if (m_fields) {
-	  delete m_fields;
-	  m_fields = NULL;
-  }
-  PR_FREEIF (m_attachment1_type);
-  PR_FREEIF (m_attachment1_encoding);
-  PR_FREEIF (m_attachment1_body);
+	PR_FREEIF (m_attachment1_type);
+	PR_FREEIF (m_attachment1_encoding);
+	PR_FREEIF (m_attachment1_body);
 
-  if (m_attachment1_encoder_data)
-	{
-	  MimeEncoderDestroy(m_attachment1_encoder_data, TRUE);
-	  m_attachment1_encoder_data = 0;
+	if (m_fields) {
+		m_fields->Release();
+		m_fields = NULL;
 	}
 
-  if (m_plaintext) {
-	  if (m_plaintext->m_file)
-		  XP_FileClose(m_plaintext->m_file);
-	  XP_FileRemove(m_plaintext->m_file_name, xpFileToPost);
-	  PR_FREEIF(m_plaintext->m_file_name);
-	  delete m_plaintext;
-	  m_plaintext = NULL;
-  }
+	if (m_attachment1_encoder_data) {
+		MimeEncoderDestroy(m_attachment1_encoder_data, PR_TRUE);
+		m_attachment1_encoder_data = 0;
+	}
 
-  if (m_html_filename) {
-	  XP_FileRemove(m_html_filename, xpFileToPost);
-	  PR_FREEIF(m_html_filename);
-  }
+	if (m_plaintext) {
+		if (m_plaintext->m_file)
+			XP_FileClose(m_plaintext->m_file);
+		XP_FileRemove(m_plaintext->m_file_name, xpFileToPost);
+		PR_FREEIF(m_plaintext->m_file_name);
+		delete m_plaintext;
+		m_plaintext = NULL;
+	}
 
-  if (m_msg_file)
-	{
-	  delete m_msg_file;
-	  m_msg_file = 0;
-	  NS_ASSERTION (m_msg_file_name, "null file name");
+	if (m_html_filename) {
+		XP_FileRemove(m_html_filename, xpFileToPost);
+		PR_FREEIF(m_html_filename);
+	}
+
+	if (m_msg_file) {
+		delete m_msg_file;
+		m_msg_file = 0;
+		NS_ASSERTION (m_msg_file_name, "null file name");
 	}
 
 
-  if (m_imapOutgoingParser)
-	{
+	if (m_imapOutgoingParser) {
 		delete m_imapOutgoingParser;
 		m_imapOutgoingParser = NULL;
 	}
 
-  if(m_imapLocalMailDB)
-	{
+	if (m_imapLocalMailDB) {
 		m_imapLocalMailDB->Close();
 		m_imapLocalMailDB = NULL;
 		XP_FileRemove (m_msg_file_name, xpMailFolderSummary);
 	}
 
-  if (m_msg_file_name)
-	{
-	  XP_FileRemove (m_msg_file_name, xpFileToPost);
-	  PR_FREEIF (m_msg_file_name);
+	if (m_msg_file_name) {
+		XP_FileRemove (m_msg_file_name, xpFileToPost);
+		PR_FREEIF (m_msg_file_name);
 	}
 
 	HJ82388
 
-  if (m_attachments)
+	if (m_attachments)
 	{
-	  int i;
-	  for (i = 0; i < m_attachment_count; i++)
-		{
-		  if (m_attachments [i].m_encoder_data)
-			{
-			  MimeEncoderDestroy(m_attachments [i].m_encoder_data,
-								 TRUE);
-			  m_attachments [i].m_encoder_data = 0;
+		int i;
+		for (i = 0; i < m_attachment_count; i++) {
+			if (m_attachments [i].m_encoder_data) {
+				MimeEncoderDestroy(m_attachments [i].m_encoder_data, PR_TRUE);
+				m_attachments [i].m_encoder_data = 0;
 			}
 
-		  PR_FREEIF (m_attachments [i].m_url_string);
-		  if (m_attachments [i].m_url)
-			NET_FreeURLStruct (m_attachments [i].m_url);
-		  PR_FREEIF (m_attachments [i].m_type);
-		  PR_FREEIF (m_attachments [i].m_override_type);
-		  PR_FREEIF (m_attachments [i].m_override_encoding);
-		  PR_FREEIF (m_attachments [i].m_desired_type);
-		  PR_FREEIF (m_attachments [i].m_description);
-		  PR_FREEIF (m_attachments [i].m_x_mac_type);
-		  PR_FREEIF (m_attachments [i].m_x_mac_creator);
-		  PR_FREEIF (m_attachments [i].m_real_name);
-		  PR_FREEIF (m_attachments [i].m_encoding);
-		  if (m_attachments [i].m_file)
-			XP_FileClose (m_attachments [i].m_file);
-		  if (m_attachments [i].m_file_name)
-			{
-			  if (!m_pre_snarfed_attachments_p)
-				XP_FileRemove (m_attachments [i].m_file_name, xpFileToPost);
-			  PR_FREEIF (m_attachments [i].m_file_name);
+			PR_FREEIF (m_attachments [i].m_url_string);
+			if (m_attachments [i].m_url)
+				NET_FreeURLStruct (m_attachments [i].m_url);
+			PR_FREEIF (m_attachments [i].m_type);
+			PR_FREEIF (m_attachments [i].m_override_type);
+			PR_FREEIF (m_attachments [i].m_override_encoding);
+			PR_FREEIF (m_attachments [i].m_desired_type);
+			PR_FREEIF (m_attachments [i].m_description);
+			PR_FREEIF (m_attachments [i].m_x_mac_type);
+			PR_FREEIF (m_attachments [i].m_x_mac_creator);
+			PR_FREEIF (m_attachments [i].m_real_name);
+			PR_FREEIF (m_attachments [i].m_encoding);
+			if (m_attachments [i].m_file)
+				XP_FileClose (m_attachments [i].m_file);
+			if (m_attachments [i].m_file_name) {
+				if (!m_pre_snarfed_attachments_p)
+					XP_FileRemove (m_attachments [i].m_file_name, xpFileToPost);
+				PR_FREEIF (m_attachments [i].m_file_name);
 			}
 #ifdef XP_MAC
 		  /* remove the appledoubled intermediate file after we done all.
 		   */
-		  if (m_attachments [i].m_ap_filename)
-			{
-			  XP_FileRemove (m_attachments [i].m_ap_filename, xpFileToPost);
-			  PR_FREEIF (m_attachments [i].m_ap_filename);
+			if (m_attachments [i].m_ap_filename) {
+				XP_FileRemove (m_attachments [i].m_ap_filename, xpFileToPost);
+				PR_FREEIF (m_attachments [i].m_ap_filename);
 			}
 #endif /* XP_MAC */
 		}
-	  delete[] m_attachments;
-	  m_attachment_count = m_attachment_pending_count = 0;
-	  m_attachments = 0;
+		delete[] m_attachments;
+		m_attachment_count = m_attachment_pending_count = 0;
+		m_attachments = 0;
 	}
 }
 
 
-void
-nsMsgSendMimeDeliveryState::DeliverMessage ()
+void nsMsgSendMimeDeliveryState::DeliverMessage ()
 {
-  PRBool mail_p = ((m_fields->GetTo() && *m_fields->GetTo()) || 
+	PRBool mail_p = ((m_fields->GetTo() && *m_fields->GetTo()) || 
 					(m_fields->GetCc() && *m_fields->GetCc()) || 
 					(m_fields->GetBcc() && *m_fields->GetBcc()));
-  PRBool news_p = (m_fields->GetNewsgroups() && 
-				    *(m_fields->GetNewsgroups()) ? TRUE : FALSE);
+	PRBool news_p = (m_fields->GetNewsgroups() && 
+				    *(m_fields->GetNewsgroups()) ? PR_TRUE : PR_FALSE);
 
-  if ( m_deliver_mode != MSG_SaveAsDraft &&
-	   m_deliver_mode != MSG_SaveAsTemplate )
-	NS_ASSERTION(mail_p || news_p, "message without destination");
+	if ( m_deliver_mode != MSG_SaveAsDraft &&
+			m_deliver_mode != MSG_SaveAsTemplate )
+		NS_ASSERTION(mail_p || news_p, "message without destination");
 
-  if (m_deliver_mode == MSG_QueueForLater)
-	{
-	  QueueForLater();
-	  return;
+	if (m_deliver_mode == MSG_QueueForLater) {
+		QueueForLater();
+		return;
 	}
-  else if (m_deliver_mode == MSG_SaveAsDraft)
-	{
-	  SaveAsDraft();
-	  return;
+	else if (m_deliver_mode == MSG_SaveAsDraft) {
+		SaveAsDraft();
+		return;
 	}
-  else if (m_deliver_mode == MSG_SaveAsTemplate)
-  {
-	  SaveAsTemplate();
-	  return;
-  }
+	else if (m_deliver_mode == MSG_SaveAsTemplate) {
+		SaveAsTemplate();
+		return;
+	}
 
-#ifdef XP_UNIX
-  {
+#ifdef XP_UNIX //JFD - ???
+{
 	int status = msg_DeliverMessageExternally(GetContext(), m_msg_file_name);
-	if (status != 0)
-	  {
+	if (status != 0) {
 		if (status < 0)
-		  Fail (status, 0);
-		else
-		  {
+			Fail (status, 0);
+		else {
 			/* The message has now been delivered successfully. */
 			MWContext *context = GetContext();
 			if (m_message_delivery_done_callback)
-			  m_message_delivery_done_callback (context,
-												m_fe_data, 0, NULL);
+				m_message_delivery_done_callback (context, m_fe_data, 0, NULL);
 			m_message_delivery_done_callback = 0;
 
 			Clear();
@@ -4853,28 +4825,27 @@ nsMsgSendMimeDeliveryState::DeliverMessage ()
 			   the window ourself.  Ugh!!
 			 */
 			if (m_attachment_count == 0)
-			  MSG_MailCompositionAllConnectionsComplete(MSG_FindPane(context,
-																 MSG_ANYPANE));
-		  }
+				MSG_MailCompositionAllConnectionsComplete(MSG_FindPane(context, MSG_ANYPANE));
+		}
 		return;
-	  }
-  }
+	}
+}
 #endif /* XP_UNIX */
 
 
 #ifdef MAIL_BEFORE_NEWS
-  if (mail_p)
-	DeliverFileAsMail ();   /* May call ...as_news() next. */
-  else if (news_p)
-	DeliverFileAsNews ();
+	if (mail_p)
+		DeliverFileAsMail ();   /* May call ...as_news() next. */
+	else if (news_p)
+		DeliverFileAsNews ();
 #else  /* !MAIL_BEFORE_NEWS */
-  if (news_p)
-	DeliverFileAsNews ();   /* May call ...as_mail() next. */
-  else if (mail_p)
-	DeliverFileAsMail ();
+	if (news_p)
+		DeliverFileAsNews ();   /* May call ...as_mail() next. */
+	else if (mail_p)
+		DeliverFileAsMail ();
 #endif /* !MAIL_BEFORE_NEWS */
-  else
-	abort ();
+	else
+		abort ();
 }
 
 
@@ -4885,11 +4856,10 @@ static void mime_deliver_as_news_exit (URL_Struct *url, int status,
 void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 {
 	char *buf, *buf2;
-	URL_Struct *url;
 
 	FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_MAIL));
 
-	buf = (char *) PR_MALLOC ((m_fields->GetTo() ? PL_strlen (m_fields->GetTo())  + 10 : 0) +
+	buf = (char *) PR_Malloc ((m_fields->GetTo() ? PL_strlen (m_fields->GetTo())  + 10 : 0) +
 						   (m_fields->GetCc() ? PL_strlen (m_fields->GetCc())  + 10 : 0) +
 						   (m_fields->GetBcc() ? PL_strlen (m_fields->GetBcc()) + 10 : 0) +
 						   10);
@@ -4917,7 +4887,6 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 	nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::IID(), (nsISupports **)&smtpService);
 	if (NS_SUCCEEDED(rv) && smtpService)
 	{	
-		// mscott --> eventually we want to pass buf (minus the mailto: part) into here....
 		if (pSmtpServer)
 			rv = smtpService->SendMailMessage(filePath, pSmtpServer, m_fields->GetFrom(), buf, nsnull);
 		else
@@ -4929,37 +4898,35 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 }
 
 
-void
-nsMsgSendMimeDeliveryState::DeliverFileAsNews ()
+void nsMsgSendMimeDeliveryState::DeliverFileAsNews ()
 {
-  URL_Struct *url = NET_CreateURLStruct (m_fields->GetNewspostUrl(), NET_DONT_RELOAD);
-  if (! url)
-	{
-	  Fail (MK_OUT_OF_MEMORY, 0);
-	  return;
+	URL_Struct *url = NET_CreateURLStruct (m_fields->GetNewspostUrl(), NET_DONT_RELOAD);
+	if (! url) {
+		Fail (MK_OUT_OF_MEMORY, 0);
+		return;
 	}
 
-  FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_NEWS));
+	FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_NEWS));
 
-  /*  put the filename of the message into the post data field and set a flag
+	/*  put the filename of the message into the post data field and set a flag
 	  in the URL struct to specify that it is a file.
-   */
- 
-  url->post_data = PL_strdup(m_msg_file_name);
-  url->post_data_size = PL_strlen(url->post_data);
-  url->post_data_is_file = TRUE;
-  url->method = URL_POST_METHOD;
+	*/
+	PR_FREEIF(url->post_data);
+	url->post_data = PL_strdup(m_msg_file_name);
+	url->post_data_size = PL_strlen(url->post_data);
+	url->post_data_is_file = PR_TRUE;
+	url->method = URL_POST_METHOD;
 
-  url->fe_data = this;
-  url->internal_url = TRUE;
+	url->fe_data = this;
+	url->internal_url = PR_TRUE;
 
-  url->msg_pane = m_pane;
+	url->msg_pane = m_pane;
 
-  /* We can ignore the return value of NET_GetURL() because we have
+	/* We can ignore the return value of NET_GetURL() because we have
 	 handled the error in mime_deliver_as_news_exit(). */
 
 /*JFD
-  MSG_UrlQueue::AddUrlToPane (url, mime_deliver_as_news_exit, m_pane, TRUE);
+  MSG_UrlQueue::AddUrlToPane (url, mime_deliver_as_news_exit, m_pane, PR_TRUE);
 */
 }
 
@@ -5139,17 +5106,19 @@ mime_do_fcc_1 (MSG_Pane *pane,
   char *obuffer = 0;
   PRInt32 obuffer_size = 0, obuffer_fp = 0;
   PRInt32 n;
-  PRBool summaryWasValid = FALSE;
-  PRBool summaryIsValid = FALSE;
-  PRBool mark_as_read = TRUE;
+  PRBool summaryWasValid = PR_FALSE;
+  PRBool summaryIsValid = PR_FALSE;
+  PRBool mark_as_read = PR_TRUE;
   ParseOutgoingMessage *outgoingParser = NULL;
   MailDB	*mail_db = NULL;
   nsresult err = NS_OK;
   char *envelope;
   char *output_file_name = NET_ParseURL(output_name, GET_PATH_PART);
   
-  if (!output_file_name || !*output_file_name) // must be real file path
-	  StrAllocCopy(output_file_name, output_name);
+  if (!output_file_name || !*output_file_name) { // must be real file path
+	  PR_FREEIF(output_file_name);
+	  output_file_name = PL_strdup(output_name);
+  }
 
   if (mode == MSG_QueueForLater)
 	FE_Progress (pane->GetContext(), XP_GetString(MK_MSG_QUEUEING));
@@ -5163,7 +5132,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
   ibuffer = NULL;
   while (!ibuffer && (ibuffer_size >= 1024))
   {
-	  ibuffer = (char *) PR_MALLOC (ibuffer_size);
+	  ibuffer = (char *) PR_Malloc (ibuffer_size);
 	  if (!ibuffer)
 		  ibuffer_size /= 2;
   }
@@ -5196,7 +5165,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
   else
 	{
 	  pane->GetMaster()->FindMailFolder(output_file_name,
-										TRUE /*createIfMissing*/);
+										PR_TRUE /*createIfMissing*/);
 
 	  if (-1 == XP_Stat (output_file_name, &st, output_file_type))
 		FE_Alert (pane->GetContext(), XP_GetString(MK_MSG_CANT_CREATE_FOLDER));
@@ -5235,7 +5204,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 
   // set up database and outbound message parser to keep db up to date.
   outgoingParser = new ParseOutgoingMessage;
-  err = MailDB::Open(output_file_name, FALSE, &mail_db);
+  err = MailDB::Open(output_file_name, PR_FALSE, &mail_db);
 
   if (err != NS_OK)
 	mail_db = NULL;
@@ -5247,7 +5216,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	}
   outgoingParser->SetOutFile(out);
   outgoingParser->SetMailDB(mail_db);
-  outgoingParser->SetWriteToOutFile(FALSE);
+  outgoingParser->SetWriteToOutFile(PR_FALSE);
 
 
   /* Write a BSD mailbox envelope line to the file.
@@ -5294,7 +5263,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  char *buf = 0;
 	  PRUint16 flags = 0;
 
-	  mark_as_read = TRUE;
+	  mark_as_read = PR_TRUE;
 	  flags |= MSG_FLAG_READ;
 	  if (mode == MSG_QueueForLater )
 		flags |= MSG_FLAG_QUEUED;
@@ -5353,7 +5322,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  fcc_header && *fcc_header)
 	{
 	  PRInt32 L = PL_strlen(fcc_header) + 20;
-	  char *buf = (char *) PR_MALLOC (L);
+	  char *buf = (char *) PR_Malloc (L);
 	  if (!buf)
 		{
 		  status = MK_OUT_OF_MEMORY;
@@ -5373,7 +5342,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  )
 	{
 	  PRInt32 L = PL_strlen(bcc_header) + 20;
-	  char *buf = (char *) PR_MALLOC (L);
+	  char *buf = (char *) PR_Malloc (L);
 	  if (!buf)
 		{
 		  status = MK_OUT_OF_MEMORY;
@@ -5462,7 +5431,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  n = msg_LineBuffer (ibuffer, n,
 						  &obuffer, (PRUint32 *)&obuffer_size,
 						  (PRUint32*)&obuffer_fp,
-						  TRUE, msg_do_fcc_handle_line,
+						  PR_TRUE, msg_do_fcc_handle_line,
 						  outgoingParser);
 	  if (n < 0) /* write failed */
 		{
@@ -5489,9 +5458,9 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	{
 
 	  outgoingParser->FinishHeader();
-	  mail_db->AddHdrToDB(outgoingParser->m_newMsgHdr, NULL, TRUE);
+	  mail_db->AddHdrToDB(outgoingParser->m_newMsgHdr, NULL, PR_TRUE);
 	  if (summaryWasValid)
-		summaryIsValid = TRUE;
+		summaryIsValid = PR_TRUE;
 	}
 
  FAIL:
@@ -5541,7 +5510,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 		else {
 		  actionInfo = new MSG_PostDeliveryActionInfo((MSG_FolderInfo*)
 			pane->GetMaster()->
-			FindMailFolder(output_file_name, TRUE));
+			FindMailFolder(output_file_name, PR_TRUE));
 		  if (actionInfo) {
 			actionInfo->m_flags |= MSG_FLAG_EXPUNGED;
 			pane->SetPostDeliveryActionInfo(actionInfo);
@@ -5726,7 +5695,7 @@ nsMsgSendMimeDeliveryState::SaveAsOfflineOp()
 	MSG_IMAPFolderInfoMail *mailFolderInfo =
 		m_imapFolderInfo->GetIMAPFolderInfoMail();
 	NS_ASSERTION (mailFolderInfo, "null mail folder info");
-	err = MailDB::Open (mailFolderInfo->GetPathname(), FALSE, &mailDB);
+	err = MailDB::Open (mailFolderInfo->GetPathname(), PR_FALSE, &mailDB);
 	if (err == NS_OK)
 	{
 		MessageKey fakeId = mailDB->GetUnusedFakeId();
@@ -5748,7 +5717,7 @@ nsMsgSendMimeDeliveryState::SaveAsOfflineOp()
 					{
 						// we start with an existing draft and save it while offline 
 						// delete the old message and create a new message header
-						op = mailDB->GetOfflineOpForKey(msgKey, TRUE);
+						op = mailDB->GetOfflineOpForKey(msgKey, PR_TRUE);
 						if (op)
 						{
 							op->SetImapFlagOperation(op->GetNewMessageFlags() |
@@ -5799,7 +5768,7 @@ JFD */
 				
 				while (!ibuffer && (iSize >= 512))
 				{
-					ibuffer = (char *) PR_MALLOC(iSize);
+					ibuffer = (char *) PR_Malloc(iSize);
 					if (!ibuffer)
 						iSize /= 2;
 				}
@@ -5812,7 +5781,7 @@ JFD */
 												  mailDB->GetDB());
 
 					newMailMsgHdr->SetMessageKey(fakeId);
-					err = mailDB->AddHdrToDB(newMailMsgHdr, NULL, TRUE);
+					err = mailDB->AddHdrToDB(newMailMsgHdr, NULL, PR_TRUE);
 
 					// now write the offline message
 					numRead = XP_FileRead(ibuffer, iSize, fileId);
@@ -5829,7 +5798,7 @@ JFD */
 						mailDB->SetFolderInfo(mailFolderInfo);
 					NS_ASSERTION(mailDB->GetMaster(), "null master");
 					NeoOfflineImapOperation *op =
-						mailDB->GetOfflineOpForKey(fakeId, TRUE);
+						mailDB->GetOfflineOpForKey(fakeId, PR_TRUE);
 					if (op)
 					{
 						op->SetAppendMsgOperation(mailFolderInfo->GetOnlineName(),
@@ -5911,7 +5880,7 @@ nsMsgSendMimeDeliveryState::ImapAppendAddBccHeadersIfNeeded(URL_Struct *url)
 					
 					while (!tmpBuffer && (bSize >= 512))
 					{
-						tmpBuffer = (char *)PR_MALLOC(bSize);
+						tmpBuffer = (char *)PR_Malloc(bSize);
 						if (!tmpBuffer)
 							bSize /= 2;
 					}
@@ -5938,9 +5907,7 @@ nsMsgSendMimeDeliveryState::ImapAppendAddBccHeadersIfNeeded(URL_Struct *url)
 		}
 	}
 	else
-	{
 		post_data = PL_strdup(m_msg_file_name);
-	}
 
 	if (post_data)
 	{
@@ -5951,17 +5918,17 @@ nsMsgSendMimeDeliveryState::ImapAppendAddBccHeadersIfNeeded(URL_Struct *url)
 
 		url->post_data = post_data;
 		url->post_data_size = PL_strlen(post_data);
-		url->post_data_is_file = TRUE;
+		url->post_data_is_file = PR_TRUE;
 		url->method = URL_POST_METHOD;
 		url->fe_data = this;
-		url->internal_url = TRUE;
+		url->internal_url = PR_TRUE;
 		url->msg_pane = urlPane;
 		urlPane->GetContext()->imapURLPane = urlPane;
 		
 /*JFD
 		MSG_UrlQueue::AddUrlToPane 
 			(url, nsMsgSendMimeDeliveryState::PostSendToImapMagicFolder, urlPane,
-			 TRUE); 
+			 PR_TRUE); 
 */		
 	}
 	else
@@ -6009,8 +5976,10 @@ nsMsgSendMimeDeliveryState::SendToImapMagicFolder ( PRUint32 flag )
 			{
 /*JFD
 				MSG_IMAPHost *imapHost = m_pane->GetMaster()->GetIMAPHost(host);
-				if (imapHost)
-					StrAllocCopy(owner, imapHost->GetUserName());
+				if (imapHost) {
+					PR_FREEIF(owner)
+					owner = PL_strdup(imapHost->GetUserName());
+				}
 */
 			}
 		}
@@ -6019,7 +5988,7 @@ nsMsgSendMimeDeliveryState::SendToImapMagicFolder ( PRUint32 flag )
 		  m_imapFolderInfo = m_pane->GetMaster()->FindImapMailFolder(host,
 																	 name+1,
 																	 owner,
-																	 FALSE);
+																	 PR_FALSE);
 	}
 
 	if (m_imapFolderInfo)
@@ -6060,7 +6029,7 @@ nsMsgSendMimeDeliveryState::SendToImapMagicFolder ( PRUint32 flag )
 	{
 		if (m_pane->IMAPListMailboxExist())
 		{
-			m_pane->SetIMAPListMailboxExist(FALSE);
+			m_pane->SetIMAPListMailboxExist(PR_FALSE);
 			buf = CreateImapAppendMessageFromFileUrl
 				(host,
 				 name+1,
@@ -6104,14 +6073,14 @@ nsMsgSendMimeDeliveryState::SendToImapMagicFolder ( PRUint32 flag )
 					if (url)
 					{
 						url->fe_data = this;
-						url->internal_url = TRUE;
+						url->internal_url = PR_TRUE;
 						url->msg_pane = m_pane;
 						GetContext()->imapURLPane = m_pane;
 						m_pane->SetIMAPListMailbox(name+1);
-						m_pane->SetIMAPListMailboxExist(FALSE);
+						m_pane->SetIMAPListMailboxExist(PR_FALSE);
 						
 						MSG_UrlQueue::AddUrlToPane
-							(url, nsMsgSendMimeDeliveryState::PostListImapMailboxFolder, m_pane, TRUE);
+							(url, nsMsgSendMimeDeliveryState::PostListImapMailboxFolder, m_pane, PR_TRUE);
 						
 					}
 					else
@@ -6199,11 +6168,11 @@ nsMsgSendMimeDeliveryState::PostCreateImapMagicFolder (	URL_Struct *url,
 			MSG_IMAPHost *imapHost = 
 				state->m_pane->GetMaster()->GetIMAPHost(host);
 			if (imapHost)
-				StrAllocCopy(owner, imapHost->GetUserName());
+				owner = PL_strdup(imapHost->GetUserName());
 			
 			state->m_imapFolderInfo = 
 				state->m_pane->GetMaster()->FindImapMailFolder(host, name+1,
-															   owner, FALSE);
+															   owner, PR_FALSE);
 			NS_ASSERTION(state->m_imapFolderInfo, "null imap folder info");
 			
 			if (state->m_imapFolderInfo)
@@ -6366,14 +6335,14 @@ nsMsgSendMimeDeliveryState::PostListImapMailboxFolder (	URL_Struct *url,
 					if (imapSubscribeUrl)
 					{
 						imapSubscribeUrl->fe_data = state;
-						imapSubscribeUrl->internal_url = TRUE;
+						imapSubscribeUrl->internal_url = PR_TRUE;
 						imapSubscribeUrl->msg_pane = state->m_pane;
 						state->m_pane->GetContext()->imapURLPane = state->m_pane;
 						
 /*JFD
 						MSG_UrlQueue::AddUrlToPane(imapSubscribeUrl,
 												   PostSubscribeImapMailboxFolder,
-												   state->m_pane, TRUE);
+												   state->m_pane, PR_TRUE);
 */
 					}
 					else
@@ -6471,14 +6440,14 @@ nsMsgSendMimeDeliveryState::PostListImapMailboxFolder (	URL_Struct *url,
 						if (url_struct)
 						{
 							url_struct->fe_data = state;
-							url_struct->internal_url = TRUE;
+							url_struct->internal_url = PR_TRUE;
 							url_struct->msg_pane = state->m_pane;
 							state->GetContext()->imapURLPane = state->m_pane;
 							
 /*JFD
 							MSG_UrlQueue::AddUrlToPane (url_struct,
 														PostCreateImapMagicFolder,
-														state->m_pane, TRUE);
+														state->m_pane, PR_TRUE);
 */
 						}
 						else
@@ -6611,14 +6580,14 @@ nsMsgSendMimeDeliveryState::PostSendToImapMagicFolder (	URL_Struct *url,
 						state->m_imapFolderInfo->SetFolderLoadingContext(urlPane->GetContext());
 						urlPane->SetLoadingImapFolder(state->m_imapFolderInfo);
 						url_struct->fe_data = (void *) state->m_imapFolderInfo;
-						url_struct->internal_url = TRUE;
+						url_struct->internal_url = PR_TRUE;
 						url_struct->msg_pane = urlPane;
 						urlPane->GetContext()->imapURLPane = urlPane;
 
 /*JFD
 						MSG_UrlQueue::AddUrlToPane (url_struct, 
 													MSG_Pane::PostNoopExitFunc,
-													urlPane, TRUE);
+													urlPane, PR_TRUE);
 */
 					}
 					PR_FREEIF(url_string);
@@ -6630,7 +6599,7 @@ nsMsgSendMimeDeliveryState::PostSendToImapMagicFolder (	URL_Struct *url,
 			{
 				idArray->Add(0);	// add dummy message key
 				state->m_imapFolderInfo->UpdatePendingCounts(state->m_imapFolderInfo, 
-															 idArray, FALSE);
+															 idArray, PR_FALSE);
 				state->m_imapFolderInfo->SummaryChanged();
 				// make sure we close down the cached imap connection when we done
 				// with save draft; this is save draft then send case what about the closing

@@ -23,9 +23,9 @@ class MailDB
 public:
 	static nsresult			Open(const char * dbName, PRBool create, 
 								MailDB** pMessageDB,
-								PRBool upgrading = FALSE) {return -1;}
+								PRBool upgrading = PR_FALSE) {return -1;}
 	nsresult Close(void) {return 0;}
-	virtual nsresult		AddHdrToDB(void *newHdr, PRBool *newThread, PRBool notify = FALSE) {return PR_FALSE;}
+	virtual nsresult		AddHdrToDB(void *newHdr, PRBool *newThread, PRBool notify = PR_FALSE) {return PR_FALSE;}
 	unsigned long GetUnusedFakeId() {return 0;}
 };
 
@@ -158,7 +158,7 @@ public:
 	MSG_PostDeliveryActionInfo *GetPostDeliveryActionInfo () {return NULL;}
 	void SetPostDeliveryActionInfo(MSG_PostDeliveryActionInfo *) {;}
 	virtual void SetIMAPListMailbox(const char *name) {;}
-	virtual XP_Bool IMAPListMailboxExist() {return FALSE;}
+	virtual XP_Bool IMAPListMailboxExist() {return PR_FALSE;}
 };
 
 const int MK_MSG_OUTBOX_L10N_NAME_OLD = 0;

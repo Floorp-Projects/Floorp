@@ -33,9 +33,6 @@ class nsIMsgCompose : public nsISupports {
     return iid;
   }
 
-  /* void Test (); */
-  NS_IMETHOD Test() = 0;
-
 #if 0
   /* void CreateAndInit (in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master); */
   NS_IMETHOD CreateAndInit(PRInt32 a_context, PRInt32 old_context, PRInt32 prefs, nsIMsgCompFields *initfields, PRInt32 master) = 0;

@@ -23,7 +23,6 @@
 [object, uuid(9E9BD970-C5D6-11d2-8297-000000000000)]
 interface nsIMsgSend : nsISupports {
 
-	void Test();
 	void SendMessage(in nsIMsgCompFields fields, in string smtp);
 };
 

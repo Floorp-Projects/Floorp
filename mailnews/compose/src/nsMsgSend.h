@@ -47,6 +47,7 @@ class nsMsgCompFields;
 #define FCC_BLOCKING_SUCCESS	1
 #define FCC_ASYNC_SUCCESS		2
 
+#if 0 //JFD - We shouldn't use it anymore...
 extern "C" void
 msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 										 void      *fe_data,
@@ -68,6 +69,7 @@ msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 											   const char *error_message),
 										 const char *smtp
 											   );
+#endif //JFD
 
 class nsMsgSendMimeDeliveryState : public nsIMsgSend
 {
@@ -78,12 +80,9 @@ public:
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-	/* this is just for testing purpose, must be removed before shipping */
-	NS_IMETHOD Test() {printf("nsMsgSend: Test Succesfull\n"); return NS_OK;}
-
 	NS_IMETHOD SendMessage(const nsIMsgCompFields *fields, const char *smtp);
 
-  static void	StartMessageDelivery(MSG_Pane *pane,
+    void	StartMessageDelivery(MSG_Pane *pane,
 									 void      *fe_data,
 									 nsMsgCompFields *fields,
 									 PRBool digest_p,

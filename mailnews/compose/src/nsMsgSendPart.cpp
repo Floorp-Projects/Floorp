@@ -49,6 +49,9 @@ PRInt32 nsMsgSendPart::M_counter = 0;
 nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, PRInt16 part_csid)
 {
 	m_csid = part_csid;
+	m_children = NULL;
+	m_numchildren = 0;
+
 	SetMimeDeliveryState(state);
 
 	m_parent = NULL;
@@ -59,9 +62,6 @@ nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, PRInt16 part_csi
     m_other = NULL;
 	m_strip_sensitive_headers = PR_FALSE;
 	m_encoder_data = NULL;
-
-	m_children = NULL;
-	m_numchildren = 0;
 
     m_firstBlock = PR_FALSE;
     m_needIntlConversion = PR_FALSE;
@@ -75,7 +75,7 @@ nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, PRInt16 part_csi
 nsMsgSendPart::~nsMsgSendPart()
 {
 	if (m_encoder_data) {
-		MimeEncoderDestroy(m_encoder_data, FALSE);
+		MimeEncoderDestroy(m_encoder_data, PR_FALSE);
 		m_encoder_data = NULL;
 	}
 	for (int i=0 ; i < m_numchildren; i++)
@@ -92,15 +92,14 @@ nsMsgSendPart::~nsMsgSendPart()
 int nsMsgSendPart::CopyString(char** dest, const char* src)
 {
     NS_ASSERTION(src, "src null");
+
+	PR_FREEIF(*dest);
     if (!src)
-		src = "";
-	if (*dest)
-		delete [] *dest;
-    *dest = new char [PL_strlen(src) + 1];
-    if (!*dest)
-		return MK_OUT_OF_MEMORY;
-    PL_strcpy(*dest, src);
-    return 0;
+		*dest = PL_strdup("");
+	else
+		*dest = PL_strdup(src);
+
+    return *dest? 0 : MK_OUT_OF_MEMORY;
 }
 
 
@@ -108,7 +107,8 @@ int nsMsgSendPart::SetFile(const char* filename, XP_FileType type)
 {
     NS_ASSERTION(m_filename == NULL, "not-null m_filename");
     int status = CopyString(&m_filename, filename);
-    if (status < 0) return status;
+    if (status < 0)
+		return status;
     m_filetype = type;
     return status;
 }
@@ -139,7 +139,7 @@ int nsMsgSendPart::SetMimeDeliveryState(nsMsgSendMimeDeliveryState *state)
 	m_state = state;
 	if (GetNumChildren() > 0)
 	{
-		for(int i = 0; i < GetNumChildren(); i++)
+		for (int i = 0; i < GetNumChildren(); i++)
 		{
 			nsMsgSendPart *part = GetChild(i);
 			if (part) 
@@ -151,14 +151,21 @@ int nsMsgSendPart::SetMimeDeliveryState(nsMsgSendMimeDeliveryState *state)
 
 int nsMsgSendPart::AppendOtherHeaders(const char* more)
 {
-	if (!m_other) return SetOtherHeaders(more);
-	if (!more || !*more) return 0;
+	if (!m_other)
+		return SetOtherHeaders(more);
+
+	if (!more || !*more)
+		return 0;
+
 	char* tmp = new char[PL_strlen(m_other) + PL_strlen(more) + 2];
-	if (!tmp) return MK_OUT_OF_MEMORY;
+	if (!tmp)
+		return MK_OUT_OF_MEMORY;
+
 	PL_strcpy(tmp, m_other);
 	PL_strcat(tmp, more);
 	delete [] m_other;
 	m_other = tmp;
+
 	return 0;
 }
 
@@ -271,7 +278,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
 				}
 			}
 		}
-		m_firstBlock = FALSE;		/* No longer the first block */
+		m_firstBlock = PR_FALSE;		/* No longer the first block */
 	}
 
 	if (m_intlDocToMailConverter) {
@@ -304,7 +311,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
 
 		for (; in < end; in++) {
 			if (m_just_hit_CR) {
-				m_just_hit_CR = FALSE;
+				m_just_hit_CR = PR_FALSE;
 				if (*in == LF) {
 					// The last thing we wrote was a CRLF from hitting a CR.
 					// So, we don't want to do anything from a following LF;
@@ -323,7 +330,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
 				out = buffer;
 
 				if (*in == CR) {
-					m_just_hit_CR = TRUE;
+					m_just_hit_CR = PR_TRUE;
 				}
 
 				out = buffer;
@@ -373,125 +380,116 @@ static int divide_content_headers(const char *headers,
 								  char **content_headers,
 								  char **content_type_header)
 {
-  const char *tail;
-  char *message_tail, *content_tail, *type_tail;
-  int L = 0;
-  if (headers)
-	  L = PL_strlen(headers);
+	const char *tail;
+	char *message_tail, *content_tail, *type_tail;
+	int L = 0;
+	if (headers)
+		L = PL_strlen(headers);
 
-  if (L == 0)
-	return 0;
+	if (L == 0)
+		return 0;
 
-  *message_headers = (char *)PR_MALLOC(L+1);
-  if (!*message_headers)
-	return MK_OUT_OF_MEMORY;
+	*message_headers = (char *)PR_Malloc(L+1);
+	if (!*message_headers)
+		return MK_OUT_OF_MEMORY;
 
-  *content_headers = (char *)PR_MALLOC(L+1);
-  if (!*content_headers)
-	{
-	  PR_Free(*message_headers);
-	  return MK_OUT_OF_MEMORY;
+	*content_headers = (char *)PR_Malloc(L+1);
+	if (!*content_headers) {
+		PR_Free(*message_headers);
+		return MK_OUT_OF_MEMORY;
 	}
 
-  *content_type_header = (char *)PR_MALLOC(L+1);
-  if (!*content_type_header)
-	{
-	  PR_Free(*message_headers);
-	  PR_Free(*content_headers);
-	  return MK_OUT_OF_MEMORY;
+	*content_type_header = (char *)PR_Malloc(L+1);
+	if (!*content_type_header) {
+		PR_Free(*message_headers);
+		PR_Free(*content_headers);
+		return MK_OUT_OF_MEMORY;
 	}
 
-  message_tail = *message_headers;
-  content_tail = *content_headers;
-  type_tail    = *content_type_header;
-  tail = headers;
+	message_tail = *message_headers;
+	content_tail = *content_headers;
+	type_tail    = *content_type_header;
+	tail = headers;
 
-  while (*tail)
+	while (*tail)
 	{
-	  const char *head = tail;
-	  char **out;
-	  while(1)
-		{
-		  /* Loop until we reach a newline that is not followed by whitespace.
-		   */
-		  if (tail[0] == 0 ||
-			  ((tail[0] == CR || tail[0] == LF) &&
-			   !(tail[1] == ' ' || tail[1] == '\t' || tail[1] == LF)))
+		const char *head = tail;
+		char **out;
+		while(PR_TRUE) {
+			/* Loop until we reach a newline that is not followed by whitespace.
+			*/
+			if (tail[0] == 0 ||
+					((tail[0] == CR || tail[0] == LF) &&
+					!(tail[1] == ' ' || tail[1] == '\t' || tail[1] == LF)))
 			{
-			  /* Swallow the whole newline. */
-			  if (tail[0] == CR && tail[1] == LF)
-				tail++;
-			  if (*tail)
-				tail++;
-			  break;
+				/* Swallow the whole newline. */
+				if (tail[0] == CR && tail[1] == LF)
+					tail++;
+				if (*tail)
+					tail++;
+				break;
 			}
-		  tail++;
+			tail++;
 		}
 
-	  /* Decide which block this header goes into.
-	   */
-	  if (!PL_strncasecmp(head, "Content-Type:", 13))
-		out = &type_tail;
-	  else if (!PL_strncasecmp(head, "Content-", 8))
-		out = &content_tail;
-	  else
-		out = &message_tail;
+		/* Decide which block this header goes into.
+		*/
+		if (!PL_strncasecmp(head, "Content-Type:", 13))
+			out = &type_tail;
+		else
+			if (!PL_strncasecmp(head, "Content-", 8))
+				out = &content_tail;
+			else
+				out = &message_tail;
 
-	  XP_MEMCPY(*out, head, (tail-head));
-	  *out += (tail-head);
+		memcpy(*out, head, (tail-head));
+		*out += (tail-head);
 	}
 
-  *message_tail = 0;
-  *content_tail = 0;
-  *type_tail = 0;
+	*message_tail = 0;
+	*content_tail = 0;
+	*type_tail = 0;
 
-  if (!**message_headers)
-	{
-	  PR_Free(*message_headers);
-	  *message_headers = 0;
+	if (!**message_headers) {
+		PR_Free(*message_headers);
+		*message_headers = 0;
 	}
 
-  if (!**content_headers)
-	{
-	  PR_Free(*content_headers);
-	  *content_headers = 0;
+	if (!**content_headers) {
+		PR_Free(*content_headers);
+		*content_headers = 0;
 	}
 
-  if (!**content_type_header)
-	{
-	  PR_Free(*content_type_header);
-	  *content_type_header = 0;
+	if (!**content_type_header) {
+		PR_Free(*content_type_header);
+		*content_type_header = 0;
 	}
 
 #ifdef DEBUG
-  // ### mwelch	Because of the extreme difficulty we've had with
-  //			duplicate part headers, I'm going to put in an
-  //			ASSERT here which makes sure that no duplicate
-  //			Content-Type or Content-Transfer-Encoding headers
-  //			leave here undetected.
-  const char* tmp;
-  if (*content_type_header)
-  {
+	// ### mwelch	Because of the extreme difficulty we've had with
+	//			duplicate part headers, I'm going to put in an
+	//			ASSERT here which makes sure that no duplicate
+	//			Content-Type or Content-Transfer-Encoding headers
+	//			leave here undetected.
+	const char* tmp;
+	if (*content_type_header) {
 		tmp = PL_strstr(*content_type_header, "Content-Type");
-		if (tmp)
-		{
+		if (tmp) {
 			tmp++; // get past the first occurrence
-	  		NS_ASSERTION(!PL_strstr(tmp, "Content-Type"), "Content-part already present");
+			NS_ASSERTION(!PL_strstr(tmp, "Content-Type"), "Content-part already present");
 		}
-  }
+	}
 
-  if (*content_headers)
-  {
+	if (*content_headers) {
 		tmp = PL_strstr(*content_headers, "Content-Transfer-Encoding");
-		if (tmp)
-	 	{
-	  		tmp++; // get past the first occurrence
-	  		NS_ASSERTION(!PL_strstr(tmp, "Content-Transfer-Encoding"), "Content-Transfert already present");
+		if (tmp) {
+			tmp++; // get past the first occurrence
+			NS_ASSERTION(!PL_strstr(tmp, "Content-Transfer-Encoding"), "Content-Transfert already present");
 		}
-  }
+	}
 #endif // DEBUG
   
-  return 0;
+	return 0;
 }
 
 extern "C" {
@@ -500,12 +498,12 @@ extern char *mime_make_separator(const char *prefix);
 
 int nsMsgSendPart::Write()
 {
-    int status = 0;
-    char *separator = 0;
-    XP_File file = NULL;
+	int status = 0;
+	char *separator = 0;
+	XP_File file = NULL;
 
 #define PUSHLEN(str, length)									\
-    do {														\
+	do {														\
 		status = mime_write_message_body(m_state, str, length);	\
 		if (status < 0) goto FAIL;								\
     } while (0)													\
@@ -529,9 +527,11 @@ int nsMsgSendPart::Write()
 					XP_FileClose(file);
 					m_buffer[length] = '\0';
 					file = NULL;
-					if (m_filename) delete [] m_filename;
+					if (m_filename)
+						delete [] m_filename;
 					m_filename = NULL;
-				} else {
+				}
+				else {
 					delete [] m_buffer;
 					m_buffer = NULL;
 				}
@@ -547,15 +547,16 @@ int nsMsgSendPart::Write()
 	}
 
     if (m_parent && m_parent->m_type &&
-		!PL_strcasecmp(m_parent->m_type, MULTIPART_DIGEST) &&
-		m_type &&
-		(!PL_strcasecmp(m_type, MESSAGE_RFC822) ||
-		 !PL_strcasecmp(m_type, MESSAGE_NEWS))) {
+				!PL_strcasecmp(m_parent->m_type, MULTIPART_DIGEST) &&
+				m_type &&
+				(!PL_strcasecmp(m_type, MESSAGE_RFC822) ||
+				!PL_strcasecmp(m_type, MESSAGE_NEWS))) {
 		/* If we're in a multipart/digest, and this document is of type
 		   message/rfc822, then it's appropriate to emit no
 		   headers.
 		   */
-	} else {
+	}
+	else {
 	    char *message_headers = 0;
 		char *content_headers = 0;
 		char *content_type_header = 0;
@@ -564,113 +565,105 @@ int nsMsgSendPart::Write()
 										&content_headers,
 										&content_type_header);
 		if (status < 0)
-		  goto FAIL;
+			goto FAIL;
 
-		  /* First, write out all of the headers that refer to the message
-			 itself (From, Subject, MIME-Version, etc.)
-		   */
-		  if (message_headers)
-			{
-			  PUSH(message_headers);
-			  PR_Free(message_headers);
-			  message_headers = 0;
-			}
+		/* First, write out all of the headers that refer to the message
+		   itself (From, Subject, MIME-Version, etc.)
+		*/
+		if (message_headers) {
+			PUSH(message_headers);
+			PR_Free(message_headers);
+			message_headers = 0;
+		}
 
-		  /* Now allow the crypto library to (potentially) insert some text
-			 (it may want to wrap the body in an envelope.)
-		   */
-		  if (!m_parent)
-			{
-			  HJ67078
-			}
+		/* Now allow the crypto library to (potentially) insert some text
+		   (it may want to wrap the body in an envelope.)
+		*/
+		if (!m_parent) {
+			HJ67078
+		}
 		  
-		  /* Now make sure there's a Content-Type header.
-		   */
-		  if (!content_type_header)
-			{
-			  NS_ASSERTION(m_type && *m_type, "null ptr");
-			  PRBool needsCharset = mime_type_needs_charset(m_type ? m_type : TEXT_PLAIN);
-			  if (needsCharset)
-			  {
-			  	  char tmpCSName[64];
-			  	  tmpCSName[0] = '\0';
-			  	  INTL_CharSetIDToName(m_csid, tmpCSName);
-				  content_type_header =
-					PR_smprintf("Content-Type: %s; charset=%s" CRLF,
-								(m_type ? m_type : TEXT_PLAIN), tmpCSName);
-			  }
-			  else
-				  content_type_header =
+		/* Now make sure there's a Content-Type header.
+		*/
+		if (!content_type_header) {
+			NS_ASSERTION(m_type && *m_type, "null ptr");
+			PRBool needsCharset = mime_type_needs_charset(m_type ? m_type : TEXT_PLAIN);
+			if (needsCharset) {
+				char tmpCSName[64];
+				tmpCSName[0] = '\0';
+				INTL_CharSetIDToName(m_csid, tmpCSName);
+				content_type_header =
+				PR_smprintf("Content-Type: %s; charset=%s" CRLF,
+					(m_type ? m_type : TEXT_PLAIN), tmpCSName);
+			}
+			else
+				content_type_header =
 					PR_smprintf("Content-Type: %s" CRLF,
-								(m_type ? m_type : TEXT_PLAIN));
-			  if (!content_type_header)
-				{
-				  if (content_headers)
+					(m_type ? m_type : TEXT_PLAIN));
+
+			if (!content_type_header) {
+				if (content_headers)
 					PR_Free(content_headers);
-				  status = MK_OUT_OF_MEMORY;
-				  goto FAIL;
+				status = MK_OUT_OF_MEMORY;
+				goto FAIL;
+			}
+		}
+
+		/* If this is a compound object, tack a boundary string onto the
+		Content-Type header.
+		*/
+		if (m_numchildren > 0)
+		{
+			int L;
+			char *ct2;
+			NS_ASSERTION(m_type, "null ptr");
+			if (!separator) {
+				separator = mime_make_separator("");
+				if (!separator) {
+					status = MK_OUT_OF_MEMORY;
+					goto FAIL;
 				}
 			}
+			L = PL_strlen(content_type_header);
 
-		  /* If this is a compound object, tack a boundary string onto the
-			 Content-Type header.
-		   */
-		  if (m_numchildren > 0)
-			{
-			  int L;
-			  char *ct2;
-			  NS_ASSERTION(m_type, "null ptr");
-			  if (!separator)
-				{
-				  separator = mime_make_separator("");
-				  if (!separator)
-					{
-					  status = MK_OUT_OF_MEMORY;
-					  goto FAIL;
-					}
-				}
-			  L = PL_strlen(content_type_header);
-
-			  if (content_type_header[L-1] == LF)
+			if (content_type_header[L-1] == LF)
 				content_type_header[--L] = 0;
-			  if (content_type_header[L-1] == CR)
+			if (content_type_header[L-1] == CR)
 				content_type_header[--L] = 0;
 
-			  ct2 = PR_smprintf("%s;\r\n boundary=\"%s\"" CRLF,
-								content_type_header, separator);
-			  PR_Free(content_type_header);
-			  if (!ct2)
-				{
-				  if (content_headers)
+			ct2 = PR_smprintf("%s;\r\n boundary=\"%s\"" CRLF,
+					content_type_header, separator);
+			PR_Free(content_type_header);
+			if (!ct2) {
+				if (content_headers)
 					PR_Free(content_headers);
-				  status = MK_OUT_OF_MEMORY;
-				  goto FAIL;
-				}
-
-			  content_type_header = ct2;
+				status = MK_OUT_OF_MEMORY;
+				goto FAIL;
 			}
 
-		  /* Now write out the Content-Type header...
-		   */
-		  NS_ASSERTION(content_type_header && *content_type_header, "null ptr");
-		  PUSH(content_type_header);
-		  PR_Free(content_type_header);
-		  content_type_header = 0;
+			content_type_header = ct2;
+		}
 
-		  /* ...followed by all of the other headers that refer to the body of
-			 the message (Content-Transfer-Encoding, Content-Dispositon, etc.)
-		   */
-		  if (content_headers)
-			{
-			  PUSH(content_headers);
-			  PR_Free(content_headers);
-			  content_headers = 0;
-			}
+		/* Now write out the Content-Type header...
+		*/
+		NS_ASSERTION(content_type_header && *content_type_header, "null ptr");
+		PUSH(content_type_header);
+		PR_Free(content_type_header);
+		content_type_header = 0;
+
+		/* ...followed by all of the other headers that refer to the body of
+		the message (Content-Transfer-Encoding, Content-Dispositon, etc.)
+		*/
+		if (content_headers) {
+			PUSH(content_headers);
+			PR_Free(content_headers);
+			content_headers = 0;
+		}
 	}
 
 	PUSH(CRLF);					// A blank line, to mark the end of headers.
 	
-	m_firstBlock = TRUE;
+	m_firstBlock = PR_TRUE;
 	/* only convert if we need to tag charset */
 	m_needIntlConversion = mime_type_needs_charset(m_type);
 	m_intlDocToMailConverter = NULL;
@@ -679,23 +672,24 @@ int nsMsgSendPart::Write()
 	if (m_buffer) {
 		NS_ASSERTION(!m_filename, "not-null m_filename");
 		status = PushBody(m_buffer, PL_strlen(m_buffer));
-		if (status < 0) goto FAIL;
-	} else if (m_filename) {
+		if (status < 0)
+			goto FAIL;
+	}
+	else if (m_filename) {
 		file = XP_FileOpen(m_filename, m_filetype, XP_FILE_READ_BIN);
 		if (!file) {
-		  status = -1;			// ### Better error code for a temp file
+			status = -1;		// ### Better error code for a temp file
 								// mysteriously disappearing?
-		  goto FAIL;
+			goto FAIL;
 		}
 		/* Kludge to avoid having to allocate memory on the toy computers... */
 		if (!mime_mailto_stream_read_buffer) {
 			mime_mailto_stream_read_buffer = (char *)
-				PR_MALLOC(MIME_BUFFER_SIZE);
-			if (!mime_mailto_stream_read_buffer)
-			  {
+				PR_Malloc(MIME_BUFFER_SIZE);
+			if (!mime_mailto_stream_read_buffer) {
 				status = MK_OUT_OF_MEMORY;
 				goto FAIL;
-			  }
+			}
 		}
 		char* buffer = mime_mailto_stream_read_buffer;
 	
@@ -703,27 +697,25 @@ int nsMsgSendPart::Write()
 			/* We are attaching a message, so we should be careful to
 			   strip out certain sensitive internal header fields.
 			   */
-			PRBool skipping = FALSE;
+			PRBool skipping = PR_FALSE;
 			NS_ASSERTION(MIME_BUFFER_SIZE > 1000, "buffer size out of range"); /* SMTP (RFC821) limit */
 
 			while (1) {
 				char *line = XP_FileReadLine(buffer, MIME_BUFFER_SIZE-3, file);
-				if (!line) break;  /* EOF */
+				if (!line)
+					break;  /* EOF */
 
 				if (skipping) {
-					if (*line == ' ' || *line == '\t') {
+					if (*line == ' ' || *line == '\t')
 						continue;
-					} else {
-						skipping = FALSE;
-					}
+					else
+						skipping = PR_FALSE;
 				}
 
 				int hdrLen = PL_strlen(buffer);
-				if ((hdrLen < 2) || (buffer[hdrLen-2] != CR)) // if the line doesn't end with CRLF,
-				{
+				if ((hdrLen < 2) || (buffer[hdrLen-2] != CR)) { // if the line doesn't end with CRLF,
 					// ... make it end with CRLF.
-					if ( (hdrLen == 0) 
-						|| ((buffer[hdrLen-1] != CR) && (buffer[hdrLen-1] != LF)) )
+					if ( (hdrLen == 0) || ((buffer[hdrLen-1] != CR) && (buffer[hdrLen-1] != LF)) )
 						hdrLen++;
 					buffer[hdrLen-1] = '\015';
 					buffer[hdrLen] = '\012';
@@ -731,19 +723,19 @@ int nsMsgSendPart::Write()
 				}
 
 				if (!PL_strncasecmp(line, "BCC:", 4) ||
-					!PL_strncasecmp(line, "FCC:", 4) ||
-					!PL_strncasecmp(line, CONTENT_LENGTH ":",
+						!PL_strncasecmp(line, "FCC:", 4) ||
+						!PL_strncasecmp(line, CONTENT_LENGTH ":",
 								  CONTENT_LENGTH_LEN + 1) ||
-					!PL_strncasecmp(line, "Lines:", 6) ||
-					!PL_strncasecmp(line, "Status:", 7) ||
-					!PL_strncasecmp(line, X_MOZILLA_STATUS ":",
+						!PL_strncasecmp(line, "Lines:", 6) ||
+						!PL_strncasecmp(line, "Status:", 7) ||
+						!PL_strncasecmp(line, X_MOZILLA_STATUS ":",
 								  X_MOZILLA_STATUS_LEN+1) ||
-					!PL_strncasecmp(line, X_MOZILLA_NEWSHOST ":",
+						!PL_strncasecmp(line, X_MOZILLA_NEWSHOST ":",
 								  X_MOZILLA_NEWSHOST_LEN+1) ||
-					!PL_strncasecmp(line, X_UIDL ":", X_UIDL_LEN+1) ||
-					!PL_strncasecmp(line, "X-VM-", 5)) /* hi Kyle */
+						!PL_strncasecmp(line, X_UIDL ":", X_UIDL_LEN+1) ||
+						!PL_strncasecmp(line, "X-VM-", 5)) /* hi Kyle */
 					{
-						skipping = TRUE;
+						skipping = PR_TRUE;
 						continue;
 					}
 
@@ -756,34 +748,36 @@ int nsMsgSendPart::Write()
 		}
 
 
-		while (1) {
+		while (PR_TRUE) {
 			status = XP_FileRead(buffer, MIME_BUFFER_SIZE, file);
-			if (status < 0) {
+			if (status < 0)
 				goto FAIL;
-			} else if (status == 0) {
+			else if (status == 0)
 				break;
-			}
 
 			status = PushBody(buffer, status);
-			if (status < 0) goto FAIL;
+			if (status < 0)
+				goto FAIL;
 		}
 	}
 
 	if (m_encoder_data) {
-		status = MimeEncoderDestroy(m_encoder_data, FALSE);
+		status = MimeEncoderDestroy(m_encoder_data, PR_FALSE);
 		m_encoder_data = NULL;
-		if (status < 0) goto FAIL;
+		if (status < 0)
+			goto FAIL;
 	}
 
 	if (m_numchildren > 0) {
-	  NS_ASSERTION(separator, "Null separator");
-		for (int i=0 ; i<m_numchildren ; i++) {
+		NS_ASSERTION(separator, "Null separator");
+		for (int i = 0 ; i < m_numchildren ; i ++) {
 			PUSH(CRLF);
 			PUSH("--");
 			PUSH(separator);
 			PUSH(CRLF);
 			status = m_children[i]->Write();
-			if (status < 0) goto FAIL;
+			if (status < 0)
+				goto FAIL;
 		}
 		PUSH(CRLF);
 		PUSH("--");
@@ -796,11 +790,11 @@ int nsMsgSendPart::Write()
 
 FAIL:
 	PR_FREEIF(separator);
-    if (file) XP_FileClose(file);
+    if (file)
+		XP_FileClose(file);
 	if (m_intlDocToMailConverter) {
 		INTL_DestroyCharCodeConverter(m_intlDocToMailConverter);
 		m_intlDocToMailConverter = NULL;
 	}
     return status;
-
 }

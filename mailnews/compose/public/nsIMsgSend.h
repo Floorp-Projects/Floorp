@@ -33,9 +33,6 @@ class nsIMsgSend : public nsISupports {
     return iid;
   }
 
-  /* void Test (); */
-  NS_IMETHOD Test() = 0;
-
   /* void SendMessage (in nsIMsgCompFields fields); */
   NS_IMETHOD SendMessage(const nsIMsgCompFields *fields, const char *smtp) = 0;
 
