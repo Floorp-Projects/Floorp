@@ -616,6 +616,7 @@ sub ChangeResolution {
        ($str ne $::FORM{'dontchange'})) {
         DoComma();
         $::query .= "resolution = " . SqlQuote($str);
+        $::FORM{'resolution'} = $str; # Used later by CheckCanChangeField
     }
 }
 
