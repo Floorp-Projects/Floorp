@@ -43,25 +43,16 @@ public:
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results);
   NS_IMETHOD WALLET_FetchFromNetCenter();
 
-#ifdef xxx
-  NS_IMETHOD SI_PromptUsernameAndPassword
-      (char *prompt, char **username, char **password, char *URLName, PRBool &status);
-  NS_IMETHOD SI_PromptPassword
-      (char *prompt, char **password, char *URLName, PRBool pickFirstUser);
-  NS_IMETHOD SI_Prompt
-      (char *prompt, char **username, char *URLName);
-#endif
-
   NS_IMETHOD PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *_retval, char* urlname);
+     PRBool *_retval, const char* urlname);
   NS_IMETHOD PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *_retval, char* urlname);
+    (const PRUnichar *text, PRUnichar **pwd, PRBool *_retval, const char* urlname);
   NS_IMETHOD Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
-     PRBool *_retval, char* urlname);
+     PRBool *_retval, const char* urlname);
 
-  NS_IMETHOD SI_RemoveUser(char *URLName, char *userName);
+  NS_IMETHOD SI_RemoveUser(const char *URLName, char *userName);
 
 
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList);

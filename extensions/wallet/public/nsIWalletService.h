@@ -54,24 +54,15 @@ struct nsIWalletService : public nsISupports
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results) = 0;
   NS_IMETHOD WALLET_FetchFromNetCenter() = 0;
 
-#ifdef xxx
-  NS_IMETHOD SI_PromptUsernameAndPassword
-    (char *prompt, char **username, char **password, char *URLName, PRBool &status) = 0;
-  NS_IMETHOD SI_PromptPassword
-    (char *prompt, char **password, char *URLName, PRBool pickFirstUser) = 0;
-  NS_IMETHOD SI_Prompt
-    (char *prompt, char **username, char *URLName) = 0;
-#endif
-
   NS_IMETHOD PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *_retval, char* urlname) = 0;
+     PRBool *_retval, const char* urlname) = 0;
   NS_IMETHOD PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *_retval, char* urlname) = 0;
+    (const PRUnichar *text, PRUnichar **pwd, PRBool *_retval, const char* urlname) = 0;
   NS_IMETHOD Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
-     PRBool *_retval, char* urlname) = 0;
-  NS_IMETHOD SI_RemoveUser(char *URLName, char *userName) = 0;
+     PRBool *_retval, const char* urlname) = 0;
+  NS_IMETHOD SI_RemoveUser(const char *URLName, char *userName) = 0;
 
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList) = 0;
   NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList) = 0;

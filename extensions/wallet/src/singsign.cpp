@@ -793,7 +793,7 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
 
     nsCOMPtr<nsIURL> uri;
     nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
-    uri->SetSpec(URLName);
+    uri->SetSpec((char *)URLName);
 
     /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
@@ -902,8 +902,8 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
 }
 
 PUBLIC PRBool
-SINGSIGN_RemoveUser(char *URLName, char *userName) {
-  return si_RemoveUser(URLName, userName, PR_TRUE);
+SINGSIGN_RemoveUser(const char *URLName, char *userName) {
+  return si_RemoveUser((char *)URLName, userName, PR_TRUE);
 }
 
 /* Determine if a specified url/user exists */
@@ -2253,15 +2253,6 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password) 
   PR_Free(value_array[1]);
 }
 
-#ifdef xxx
-PUBLIC void
-SI_RememberSignonDataFromBrowser (char* URLName, char* username, char* password) {
-  if (si_OkToSave(URLName, username)) {
-    si_RememberSignonDataFromBrowser (URLName, username, password);
-  }
-}
-#endif
-
 /*
  * Check for remembered data from a previous browser-generated password dialog
  * restore it if so
@@ -2302,180 +2293,10 @@ si_RestoreOldSignonDataFromBrowser
   si_unlock_signon_list();
 }
 
-#ifdef xxx
-/* Browser-generated prompt for user-name and password */
-PUBLIC PRBool
-SINGSIGN_PromptUsernameAndPassword2
-    (char *prompt, char **username, char **password, char *URLName) {
-  PRBool status;
-  char *copyOfPrompt=0;
-
-  /* just for safety -- really is a problem in SINGSIGN_Prompt */
-  StrAllocCopy(copyOfPrompt, prompt);
-
-  /* do the FE thing if signon preference is not enabled */
-  if (!si_GetSignonRememberingPref()){
-    status = si_PromptUsernameAndPassword(copyOfPrompt, username, password);
-    PR_FREEIF(copyOfPrompt);
-    return status;
-  }
-
-  /* prefill with previous username/password if any */
-  si_RestoreOldSignonDataFromBrowser(URLName, PR_FALSE, username, password);
-
-  /* get new username/password from user */
-  status = si_PromptUsernameAndPassword(copyOfPrompt, username, password);
-
-  /* remember these values for next time */
-  if (status && si_OkToSave(URLName, *username)) {
-    si_RememberSignonDataFromBrowser (URLName, *username, *password);
-  }
-
-  /* cleanup and return */
-  PR_FREEIF(copyOfPrompt);
-  return status;
-}
-
-/* Browser-generated prompt for password */
-PUBLIC char *
-SINGSIGN_PromptPassword2
-    (char *prompt, char *URLName, PRBool pickFirstUser) {
-  char *password=0, *username=0, *copyOfPrompt=0, *result;
-  char *urlname = URLName;
-  char *s;
-
-  /* just for safety -- really is a problem in SINGSIGN_Prompt */
-  StrAllocCopy(copyOfPrompt, prompt);
-
-  /* do the FE thing if signon preference is not enabled */
-  if (!si_GetSignonRememberingPref()){
-    result = si_PromptPassword(copyOfPrompt);
-    PR_FREEIF(copyOfPrompt);
-    return result;
-  }
-
-  /* get host part of URL which is of form user@host */
-  s = URLName;
-  while (*s && (*s != '@')) {
-    s++;
-  }
-  if (*s) {
-    /* @ found, host is URL part following the @ */
-    urlname = s+1; /* urlname is part of URL after the @ */
-  }
-
-  /* get previous password used with this username */
-  si_RestoreOldSignonDataFromBrowser(urlname, pickFirstUser, &username, &password);
-
-  /* return if a password was found */
-  /*
-   * Note that we reject a password of " ".  It is a dummy password
-   * that was put in by a preceding call to SINGSIGN_Prompt.  This occurs
-   * in mknews which calls on SINGSIGN_Prompt to get the username and then
-   * SINGSIGN_PromptPassword to get the password (why they didn't simply
-   * call on SINGSIGN_PromptUsernameAndPassword is beyond me).  So the call
-   * to SINGSIGN_Prompt will save the username along with the dummy password.
-   * In this call to SI_Password, the real password gets saved in place
-   * of the dummy one.
-   */
-  if (password && PL_strlen(password) && PL_strcmp(password, " ")) {
-    PR_FREEIF(copyOfPrompt);
-    return password;
-  }
-
-  /* if no password found, get new password from user */
-  password = si_PromptPassword(copyOfPrompt);
-
-  /* if username wasn't even found, extract it from URLName */
-  if (!username) {
-    s = URLName;
-
-    /* get to @ in URL if any */
-    while (*s && (*s != '@')) {
-      s++;
-    }
-    if (*s) {
-      /* @ found, username is URL part preceding the @ */
-      *s = '\0';
-      StrAllocCopy(username, URLName);
-      *s = '@';
-    } else {
-      /* no @ found, use entire URL as uername */
-    StrAllocCopy(username, URLName);
-    }
-  }
-
-  /* remember these values for next time */
-  if (password && PL_strlen(password) && si_OkToSave(urlname, username)) {
-    si_RememberSignonDataFromBrowser (urlname, username, password);
-  }
-
-  /* cleanup and return */
-  PR_FREEIF(username);
-  PR_FREEIF(copyOfPrompt);
-  return password;
-}
-
-/* Browser-generated prompt for username */
-PUBLIC char *
-SINGSIGN_Prompt2 (char *prompt, char* defaultUsername, char *URLName)
-{
-  char *password=0, *username=0, *copyOfPrompt=0, *result;
-
-  /*
-   * make copy of prompt because it is currently in a temporary buffer in
-   * the caller (from GetString) which will be destroyed if GetString() is
-   * called again before prompt is used
-   */
-  StrAllocCopy(copyOfPrompt, prompt);
-
-  /* do the FE thing if signon preference is not enabled */
-  if (!si_GetSignonRememberingPref()){
-    result = si_Prompt(copyOfPrompt, defaultUsername);
-    PR_FREEIF(copyOfPrompt);
-    return result;
-  }
-
-  /* get previous username used */
-  if (!defaultUsername || !PL_strlen(defaultUsername)) {
-    si_RestoreOldSignonDataFromBrowser(URLName, PR_FALSE, &username, &password);
-  } else {
-     StrAllocCopy(username, defaultUsername);
-  }
-
-  /* prompt for new username */
-  result = si_Prompt(copyOfPrompt, username);
-
-  /* remember this username for next time */
-  if (result && PL_strlen(result)) {
-    if (username && (PL_strcmp(username, result) == 0)) {
-      /*
-       * User is re-using the same user name as from previous time
-       * so keep the previous password as well
-       */
-      si_RememberSignonDataFromBrowser (URLName, result, password);
-    } else {
-      /*
-       * We put in a dummy password of " " which we will test
-       * for in a following call to SINGSIGN_PromptPassword.  See comments
-       * in that routine.
-       */
-      si_RememberSignonDataFromBrowser (URLName, result, " ");
-    }
-  }
-
-  /* cleanup and return */
-  PR_FREEIF(username);
-  PR_FREEIF(password);
-  PR_FREEIF(copyOfPrompt);
-  return result;
-}
-#endif
-
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *returnValue, char* urlname) {
+     PRBool *returnValue, const char* urlname) {
 
   nsresult res;
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
@@ -2496,7 +2317,7 @@ SINGSIGN_PromptUsernameAndPassword
 
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
-  uri->SetSpec(urlname);
+  uri->SetSpec((char *)urlname);
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
@@ -2526,8 +2347,8 @@ SINGSIGN_PromptUsernameAndPassword
   /* remember these values for next time */
   username = nsString(*user).ToNewCString();
   password = nsString(*pwd).ToNewCString();
-  if (si_OkToSave(urlname, username)) {
-    si_RememberSignonDataFromBrowser (urlname, username, password);
+  if (si_OkToSave(host, username)) {
+    si_RememberSignonDataFromBrowser (host, username, password);
   }
 
   /* cleanup and return */
@@ -2541,7 +2362,7 @@ SINGSIGN_PromptUsernameAndPassword
 
 PUBLIC nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, char* urlname) {
+    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, const char* urlname) {
 
   nsresult res;
   char *password=0, *username=0;
@@ -2563,7 +2384,7 @@ SINGSIGN_PromptPassword
 
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
-  uri->SetSpec(urlname);
+  uri->SetSpec((char *)urlname);
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
@@ -2632,7 +2453,7 @@ SINGSIGN_PromptPassword
 PUBLIC nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText,
-     PRUnichar **resultText, PRBool *returnValue, char* urlname) {
+     PRUnichar **resultText, PRBool *returnValue, const char* urlname) {
   return NS_OK;
 }
 

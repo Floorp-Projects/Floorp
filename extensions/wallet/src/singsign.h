@@ -43,34 +43,22 @@ SINGSIGN_SignonViewerReturn(nsAutoString results);
 extern void
 SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value);
 
-#ifdef xxx
-extern PRBool
-SINGSIGN_PromptUsernameAndPassword2 
-    (char *prompt, char **username, char **password, char *URLName);
-
-extern char *
-SINGSIGN_PromptPassword2 (char *prompt, char *URLName, PRBool pickFirstUser);
-
-extern char *
-SINGSIGN_Prompt2 (char *prompt, char* defaultUsername, char *URLName);
-#endif
-
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *returnValue, char* urlname);
+     PRBool *returnValue, const char* urlname);
 
 extern nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, char* urlname);
+    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, const char* urlname);
 
 extern nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     PRBool *returnValue, char* urlname);
+     PRBool *returnValue, const char* urlname);
 
 extern PRBool
-SINGSIGN_RemoveUser(char *URLName, char *userName);
+SINGSIGN_RemoveUser(const char *URLName, char *userName);
 
 XP_END_PROTOS
 
