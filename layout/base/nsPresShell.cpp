@@ -1330,10 +1330,12 @@ protected:
   // such that it's safe to flush (i.e. mIsReflowing == PR_FALSE)
   // If we are not reflowing and ther are no load-crated reflow commands, then
   // the dummyLayoutRequest is removed
+  friend struct DummyLayoutRequestEvent;
+
   void DoneRemovingReflowCommands();
 
   nsresult AddDummyLayoutRequest(void);
-  nsresult RemoveDummyLayoutRequest(void);
+  nsresult RemoveDummyLayoutRequest(nsIRequest* aDummyLayoutRequest);
 
   void     WillCauseReflow() { ++mChangeNestCount; }
   nsresult DidCauseReflow();
@@ -6500,11 +6502,73 @@ PresShell::ReflowCommandRemoved(nsHTMLReflowCommand* aRC)
   return NS_OK;
 }
 
+struct DummyLayoutRequestEvent : public PLEvent {
+  DummyLayoutRequestEvent(PresShell* aPresShell);
+  ~DummyLayoutRequestEvent() { }
+
+  void HandleEvent() {
+    // Hold a ref here, just in case, since we can trigger DOM event dispatch
+    nsRefPtr<PresShell> presShell = NS_STATIC_CAST(PresShell*, owner);
+    presShell->RemoveDummyLayoutRequest(mDummyLayoutRequest);
+    mDummyLayoutRequest = nsnull;
+  }
+
+  nsCOMPtr<nsIRequest> mDummyLayoutRequest;
+};
+
+PR_STATIC_CALLBACK(void*)
+HandleDummyLayoutRequestPLEvent(PLEvent* aEvent)
+{
+  DummyLayoutRequestEvent* evt = NS_STATIC_CAST(DummyLayoutRequestEvent*,
+                                                aEvent);
+  evt->HandleEvent();
+  return nsnull;
+}
+
+PR_STATIC_CALLBACK(void)
+DestroyDummyLayoutRequestPLEvent(PLEvent* aEvent)
+{
+  DummyLayoutRequestEvent* evt = NS_STATIC_CAST(DummyLayoutRequestEvent*,
+                                                aEvent);
+
+  delete evt;
+}
+
+DummyLayoutRequestEvent::DummyLayoutRequestEvent(PresShell* aPresShell)
+{
+  NS_PRECONDITION(aPresShell, "Must have a presshell");
+  NS_PRECONDITION(aPresShell->mDummyLayoutRequest, "No layout request?");
+
+  PL_InitEvent(this, aPresShell, ::HandleDummyLayoutRequestPLEvent,
+               ::DestroyDummyLayoutRequestPLEvent);
+
+  // Steal the presshell's mDummyLayoutRequest so that we don't post this event
+  // multiple times.
+  aPresShell->mDummyLayoutRequest.swap(mDummyLayoutRequest);
+}
+
 void
 PresShell::DoneRemovingReflowCommands()
 {
   if (mRCCreatedDuringLoad == 0 && mDummyLayoutRequest && !mIsReflowing) {
-    RemoveDummyLayoutRequest();
+    // Post an event to remove mDummyLayoutRequest from the loadgroup
+    nsCOMPtr<nsIEventQueue> eventQueue;
+    mEventQueueService->
+      GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                           getter_AddRefs(eventQueue));
+    if (!eventQueue) {
+      return;
+    }
+
+    DummyLayoutRequestEvent* evt = new DummyLayoutRequestEvent(this);
+    if (!evt) {
+      return;
+    }
+
+    nsresult rv = eventQueue->PostEvent(evt);
+    if (NS_FAILED(rv)) {
+      PL_DestroyEvent(evt);
+    }
   }
 }
 
@@ -6535,7 +6599,7 @@ PresShell::AddDummyLayoutRequest(void)
 }
 
 nsresult
-PresShell::RemoveDummyLayoutRequest(void)
+PresShell::RemoveDummyLayoutRequest(nsIRequest* aRequest)
 {
   nsresult rv = NS_OK;
 
@@ -6544,14 +6608,12 @@ PresShell::RemoveDummyLayoutRequest(void)
     if (mDocument)
       loadGroup = mDocument->GetDocumentLoadGroup();
 
-    if (loadGroup && mDummyLayoutRequest) {
-      rv = loadGroup->RemoveRequest(mDummyLayoutRequest, nsnull, NS_OK);
-      if (NS_FAILED(rv)) return rv;
+    if (loadGroup && aRequest) {
+      rv = loadGroup->RemoveRequest(aRequest, nsnull, NS_OK);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       PR_LOG(gLog, PR_LOG_ALWAYS,
-             ("presshell=%p, Removed dummy layout request %p", this, mDummyLayoutRequest.get()));
-
-      mDummyLayoutRequest = nsnull;
+             ("presshell=%p, Removed dummy layout request %p", this, aRequest));
     }
   }
   return rv;
