@@ -218,6 +218,8 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
     rv = nsMemoryImpl::Startup();
     if (NS_FAILED(rv)) return rv;
 
+    NS_StartupLocalFile();
+
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
     if (gServiceManager == NULL)
@@ -664,6 +666,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     
     // Release the directory service
     NS_IF_RELEASE(gDirectoryService);
+
+    // Shutdown nsLocalFile string conversion
+    NS_ShutdownLocalFile();
 
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
