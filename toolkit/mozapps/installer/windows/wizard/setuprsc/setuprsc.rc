@@ -106,8 +106,6 @@ BEGIN
                     BS_MULTILINE | WS_TABSTOP,21,43,285,10
     CONTROL         "",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | BS_TOP | 
                     BS_MULTILINE | WS_TABSTOP,21,60,285,10
-    CONTROL         "",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | BS_TOP | 
-                    BS_MULTILINE | WS_TABSTOP,11,94,295,10
     LTEXT           "",IDC_MESSAGE0,11,11,295,8,NOT WS_GROUP
 END
 
@@ -381,7 +379,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SETUP               ICON    DISCARDABLE     "setup.ico"
-IDI_APP            	ICON    DISCARDABLE     APP_ICO
+IDI_APP                 ICON    DISCARDABLE     APP_ICO
 
 /////////////////////////////////////////////////////////////////////////////
 //

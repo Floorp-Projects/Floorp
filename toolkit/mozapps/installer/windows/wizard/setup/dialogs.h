@@ -25,9 +25,6 @@
 #ifndef _DIALOGS_H_
 #define _DIALOGS_H_
 
-#ifdef WINTEGRATION_PAGE
-#undef WINTEGRATION_PAGE
-#endif
 
 #ifdef STUB_INSTALLER
 #undef STUB_INSTALLER
@@ -41,9 +38,7 @@ LRESULT CALLBACK  DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
 LRESULT CALLBACK  DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-#ifdef WINTEGRATION_PAGE
 LRESULT CALLBACK  DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-#endif
 #ifdef STUB_INSTALLER
 LRESULT CALLBACK  DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 #endif

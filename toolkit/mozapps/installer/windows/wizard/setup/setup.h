@@ -414,10 +414,10 @@ typedef struct dlgWindowsIntegration
   LPSTR szTitle;
   LPSTR szSubTitle;
   LPSTR szMessage0;
+  LPSTR szRegistryKey;
   wiCBs wiCB0;
   wiCBs wiCB1;
   wiCBs wiCB2;
-  wiCBs wiCB3;
 } diWI;
 
 typedef struct dlgProgramFolder

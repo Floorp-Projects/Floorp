@@ -140,6 +140,17 @@ void InitSequence(HINSTANCE hInstance)
     pages[count++]        = CreatePropertySheetPage(&psp);
   }
 
+  // Windows Integration Page
+  if (diWindowsIntegration.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diWindowsIntegration.szTitle;
+    psp.pszHeaderSubTitle = diWindowsIntegration.szSubTitle;
+    psp.pfnDlgProc        = DlgProcWindowsIntegration;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WINDOWS_INTEGRATION);
+    
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
   if (diStartInstall.bShowDialog) {
     psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle    = diStartInstall.szTitle;
@@ -169,19 +180,6 @@ void InitSequence(HINSTANCE hInstance)
 
     pages[count++]        = CreatePropertySheetPage(&psp);
   }
-
-#if WINTEGRATION_PAGE
-  // Windows Integration Page
-  if (diWindowsIntegration.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diWindowsIntegration.szTitle;
-    psp.pszHeaderSubTitle = diWindowsIntegration.szSubTitle;
-    psp.pfnDlgProc        = DlgProcWindowsIntegration;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WINDOWS_INTEGRATION);
-    
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-#endif
 
   // Successful Install Page
   if (diInstallSuccessful.bShowDialog) {
@@ -1320,6 +1318,8 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   BOOL skipNext = FALSE;
   siC *currComponent, *mainComponent;
   HICON largeIcon, smallIcon;
+  DWORD result;
+  HKEY theKey;
 
   switch(msg) {
   case WM_INITDIALOG:
@@ -1360,6 +1360,23 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       else
         SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageDownload);
 #endif
+
+      // Update the registry keys that the installer scripts use to determine
+      // what shortcuts to create
+      result = RegOpenKeyEx(HKEY_CURRENT_USER, diWindowsIntegration.szRegistryKey, 0, KEY_READ | KEY_WRITE, &theKey);
+      if (result == ERROR_FILE_NOT_FOUND)
+        result = RegCreateKey(HKEY_CURRENT_USER, diWindowsIntegration.szRegistryKey, &theKey);
+      if (result == ERROR_SUCCESS) {
+        RegSetValueEx(theKey, "Create Desktop Shortcut", 0, REG_DWORD, 
+                      (LPBYTE)&(diWindowsIntegration.wiCB0.bCheckBoxState), 
+                      sizeof(DWORD));
+        RegSetValueEx(theKey, "Create Start Menu Shortcut", 0, REG_DWORD, 
+                      (LPBYTE)&(diWindowsIntegration.wiCB1.bCheckBoxState), 
+                      sizeof(DWORD));
+        RegSetValueEx(theKey, "Create Quick Launch Shortcut", 0, REG_DWORD, 
+                      (LPBYTE)&(diWindowsIntegration.wiCB2.bCheckBoxState), 
+                      sizeof(DWORD));
+      }
 
       // Show the components we're going to install
       szAddtlComps[0] = '\0';
@@ -1769,13 +1786,7 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
     initialized = TRUE;
 
     if (InstallFiles(hDlg)) {
-#if WINTEGRATION_PAGE
-      if (dwSetupType == ST_RADIO0) 
-        PropSheet_SetCurSelByID(parent, DLG_INSTALL_SUCCESSFUL);
-      else
-#endif
-        PropSheet_SetCurSelByID(parent, DLG_INSTALL_SUCCESSFUL);
-
+      PropSheet_SetCurSelByID(parent, DLG_INSTALL_SUCCESSFUL);
       break;
     }
     else {
@@ -1801,9 +1812,7 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
 
       // Disable the Cancel button. This leaves the button disabled for
       // this page (Installing) and the final page (Finish) because it 
-      // is meaningless and potentially damaging in both places. If we 
-      // ever bring back the Wintegration page we're going to have to 
-      // do something about it. 
+      // is meaningless and potentially damaging in both places. 
       EnumChildWindows(parent, DisableCancelButton, (LPARAM)parent);
 
       PropSheet_SetWizButtons(parent, 0);
@@ -1889,7 +1898,6 @@ BOOL InstallFiles(HWND hDlg)
   return err == WIZ_OK || err == 999;
 }
 
-#if WINTEGRATION_PAGE
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: WINTEGRATION
 //         Not actually used yet!
@@ -1901,8 +1909,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
 
   switch (msg) {
   case WM_INITDIALOG:
-    wsprintf(szBuf, diWindowsIntegration.szMessage0, sgProduct.szProductName);
-    SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+    SetDlgItemText(hDlg, IDC_MESSAGE0, diWindowsIntegration.szMessage0);
 
     if (diWindowsIntegration.wiCB0.bEnabled) {
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK0), SW_SHOW);
@@ -1925,14 +1932,6 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
     else
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK2), SW_HIDE);
 
-    if (diWindowsIntegration.wiCB3.bEnabled) {
-      ShowWindow(GetDlgItem(hDlg, IDC_CHECK3), SW_SHOW);
-      wsprintf(szBuf, diWindowsIntegration.wiCB3.szDescription, sgProduct.szProductName);
-      SetDlgItemText(hDlg, IDC_CHECK3, szBuf);
-    }
-    else
-      ShowWindow(GetDlgItem(hDlg, IDC_CHECK3), SW_HIDE);
-
     break;
 
   case WM_NOTIFY:
@@ -1949,24 +1948,17 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
                      diWindowsIntegration.wiCB1.bCheckBoxState);
       CheckDlgButton(hDlg, IDC_CHECK2, 
                      diWindowsIntegration.wiCB2.bCheckBoxState);
-      CheckDlgButton(hDlg, IDC_CHECK3, 
-                     diWindowsIntegration.wiCB3.bCheckBoxState);
 
-      // Don't show the back button here UNLESS the previous 
-      // page was Windows Integration - and that only happens on a custom
-      // install. 
-      PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT);
+      PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
       break;
 
     case PSN_WIZNEXT:
       diWindowsIntegration.wiCB0.bCheckBoxState = 
         IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
       diWindowsIntegration.wiCB1.bCheckBoxState = 
-        IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
+        IsDlgButtonChecked(hDlg, IDC_CHECK1) == BST_CHECKED;
       diWindowsIntegration.wiCB2.bCheckBoxState = 
-        IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
-      diWindowsIntegration.wiCB3.bCheckBoxState = 
-        IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
+        IsDlgButtonChecked(hDlg, IDC_CHECK2) == BST_CHECKED;
 
       break;
 
@@ -1979,7 +1971,6 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
 
   return 0;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: SUCCESSFUL INSTALL
@@ -2024,14 +2015,12 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
       // Don't show the back button here UNLESS the previous 
       // page was Windows Integration - and that only happens on a custom
       // install. 
-      // XXXben we've disabled the wintegration panel for now since its 
-      // functionality is duplicated elsewhere.
       PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_FINISH);
       break;
 
     case PSN_WIZBACK:
-      // Store the checkbox state in case the user goes back to the Wintegration
-      // page. 
+      // Store the checkbox state in case the user goes back to any post-install
+      // pages that we might add.
       launchAppChecked = IsDlgButtonChecked(hDlg, IDC_START_APP) == BST_CHECKED;
       
       break;
