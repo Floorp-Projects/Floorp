@@ -330,11 +330,12 @@ pref("mail.server.default.retainBy", 1);
 // for manual upgrades of certain UI features.
 // 1 -> 2 is for the folder pane outliner landing, to hide the
 // unread and total columns, see msgMail3PaneWindow.js
-pref("mail.ui.folderpane.version", 1);
+
+//If set to a number greater than 0, msg compose windows will be recycled in order to open them quickly
+pref("mail.compose.max_recycled_windows", 0); 
 
 // true makes it so we persist the open state of news server when starting up the 3 pane
 // this is costly, as it might result in network activity.
 // false makes it so we act like 4.x
 // see bug #103010 for details
 pref("news.persist_server_open_state_in_folderpane",false);
-
