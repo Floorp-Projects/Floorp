@@ -994,5 +994,8 @@ NS_IMPL_RELEASE_INHERITED(nsBoxToBlockAdaptor, nsBox);
 //
 NS_INTERFACE_MAP_BEGIN(nsBoxToBlockAdaptor)
   NS_INTERFACE_MAP_ENTRY(nsIBoxToBlockAdaptor)
+  if (NS_SUCCEEDED(mFrame->QueryInterface(aIID, aInstancePtr)))                             
+    return NS_OK;                 
+  else
 NS_INTERFACE_MAP_END_INHERITING(nsBox)
 

@@ -88,7 +88,7 @@ public:
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD  GetScrollPreference(nsScrollPref* aScrollPreference) const;
+  NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 
                                nscoord *aVbarWidth, 

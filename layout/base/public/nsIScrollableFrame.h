@@ -38,13 +38,13 @@ class nsIPresContext;
 class nsIScrollableFrame : public nsISupports {
 public:
 
-  typedef enum {
+  enum nsScrollPref {
     Auto = 0,
     NeverScroll,
     AlwaysScroll,
     AlwaysScrollVertical,
     AlwaysScrollHorizontal
-  } nsScrollPref;
+  };
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLE_FRAME_IID)
 
@@ -80,7 +80,7 @@ public:
    * only when necessary.
    * @return current scrollbar selection
    */
-  NS_IMETHOD  GetScrollPreference(nsScrollPref* aScrollPreference) const = 0;
+  NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const = 0;
 
   /**
   * Gets the size of the area that lies inside the scrollbars but clips the scrolled frame

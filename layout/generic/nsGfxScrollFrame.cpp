@@ -299,7 +299,7 @@ nsGfxScrollFrame::ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRU
  * @return current scrollbar selection
  */
 NS_IMETHODIMP
-nsGfxScrollFrame::GetScrollPreference(nsScrollPref* aScrollPreference) const
+nsGfxScrollFrame::GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const
 {
   const nsStyleDisplay* styleDisplay = nsnull;
 
