@@ -1924,6 +1924,7 @@ js_Interpret(JSContext *cx, jsval *result)
             } else {
                 /* This is not the first iteration. Recover iterator state. */
                 propobj = JSVAL_TO_OBJECT(rval);
+                JS_ASSERT(OBJ_GET_CLASS(cx, propobj) == &prop_iterator_class);
                 obj = JSVAL_TO_OBJECT(propobj->slots[JSSLOT_PARENT]);
                 iter_state = propobj->slots[JSSLOT_ITER_STATE];
             }
