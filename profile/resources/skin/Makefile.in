@@ -36,6 +36,7 @@ FILES		= \
 	profileSelection.css		\
 	profileicon-selected.gif	\
 	profileicon.gif			\
+	newProfile1_2.css		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

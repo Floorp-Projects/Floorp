@@ -1,44 +1,43 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://profile/skin/createProfileWizard.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/wizardOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/createProfileWizard.dtd">
 
-<window title="&window.title.label;" style="width: 100%; height: 100%" align="vertical"
+<window title="&window.title.label;" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	onload="loadPage('newProfile1_1.xul')">
+	onload="Startup('newProfile1_1','content');">
 
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
-	<html:script src="createProfileWizard.js" />
+	<html:script language="javascript" src="chrome://profile/content/createProfileWizard.js" />
+	<html:script language="javascript" src="chrome://global/content/wizardOverlay.js" />
+	<html:script language="javascript" src="chrome://global/content/wizardHandlerSet.js" />
+	<html:script language="javascript" src="chrome://global/content/wizardManager.js" />
+	<html:script language="javascript" src="chrome://global/content/widgetStateManager.js" />
 
-  <box id="header" align="vertical">
+  <box id="header" align="vertical" flex="100%">
     <box align="vertical">
       <html:div id="cplabel">&createprofile.heading;</html:div>
+      <html:div id="thatline"/>
       <html:div id="cpsubl">&createprofile.subheading;</html:div>
     </box>
   	<tabcontrol align="vertical"> 
 	  	<tabbox align="horizontal"> 
-  			<tab selected="true" onclick="loadPage('newProfile1_1.xul');">&newprofile.title;</tab> 
-		  	<!-- <tab onclick="loadPage('mailnews.xul');">&mailnews.title;</tab> -->
-			<spring flex="1"/>
+  			<tab class="selected" style="margin-top: -2px;">&newprofile.title;</tab> 
+		  	<!-- <tab class="nonselected" onclick="loadPage('mailnews.xul');">&mailnews.title;</tab> -->
+        <spring flex="100%"/>
+        <html:div id="progress"/>
 	    </tabbox> 
 	    <tabpanel flex="100%"/>
 	    <!-- <tabpanel flex="100%"/> -->
 	  </tabcontrol> 
   </box>
-
-  <box id="contentsink" flex="100%">
-  	<html:iframe src="about:blank" style="width: 100%;" name="content"  id="content" scrolling="auto" flex="100%"/>
+  <box id="contentsink" flex="100%" style="margin-top: -2px;">
+  	<html:iframe src="about:blank" style="width: 400px; height: 200px;" name="content"  id="content" scrolling="auto" flex="100%"/>
   </box>
-	<box align="horizontal" style="width: 450px;">
-    <spring flex="100%"/>
-		<titledbutton class="dialog push" id="cancel" value="&cancel.label;" onclick="onCancel()" align="left" style=" margin-top: 1em;"/>
-    <spring flex="20%"/>
-		<titledbutton class="dialog push" id="back" value="&back.label;" onclick="onBack()" align="left" style="margin-top: 1em;"/>
-		<titledbutton class="dialog push" id="next" value="&next.label;" onclick="onNext()" align="left" style="margin-top: 1em;"/>
-    <spring flex="5%"/>
-	</box>
+	<box id="wizardButtons" style="width: 450px; margin-top: -5px; margin-bottom: 3px; margin-right: -11px;"/>
 
 </window>
