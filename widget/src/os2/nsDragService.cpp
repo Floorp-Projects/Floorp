@@ -134,7 +134,10 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
         {
           holder.Left(url, lineIndex);
           holder.Mid ( linkName, lineIndex + 1, (len/2) - (lineIndex + 1) );
-          dragitem.hstrTargetName = DrgAddStrHandle(ToNewCString(linkName));
+          if (linkName.Length() > 0)
+            dragitem.hstrTargetName = DrgAddStrHandle(ToNewCString(linkName));
+          else
+            dragitem.hstrTargetName = DrgAddStrHandle(ToNewCString(url));
           dragitem.hstrSourceName = DrgAddStrHandle(ToNewCString(url)); 
         }
       }
