@@ -241,6 +241,7 @@ bin/components/filepicker.xpt
 bin/components/libuniversalchardet.so
 bin/components/typeaheadfind.xpt
 bin/components/libtypeaheadfind.so
+bin/components/nsCloseAllWindows.js
 ; LDAP components need to be in the browser for AutoConfig
 bin/libldap50.so
 bin/libprldap50.so
