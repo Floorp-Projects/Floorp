@@ -597,7 +597,7 @@ nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName,
                     (LPBYTE)aValue, nsDependentCString(aValue).Length());
   
   // Close the key we opened.
-  ::RegClosekey(theKey);
+  ::RegCloseKey(theKey);
 }
 
 NS_IMETHODIMP
