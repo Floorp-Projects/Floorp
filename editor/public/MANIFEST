@@ -17,4 +17,5 @@
 #
 
 nsIEditor.h
+nsEditorCID.h
 nsIContextLoader.h
