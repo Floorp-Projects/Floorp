@@ -467,10 +467,10 @@ if test "$GNU_CXX"; then
     	_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wshadow"
 	fi
 
-    _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
 else
-    _DEFINES_CXXFLAGS='$(ACDEFINES)'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT $(ACDEFINES)'
 fi
 
 dnl gcc can come with its own linker so it is better to use the pass-thru calls
