@@ -392,6 +392,15 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						_mkdir (tmpPath);
 					}
 				}
+				else if (strcmp(pcmd, "Message") ==0)
+				{
+					int rv = AfxMessageBox(parms,MB_YESNO);
+					if (rv == IDYES)
+						return TRUE;
+					if (rv == IDNO)
+						return FALSE;
+				}
+
 				else if (strcmp(pcmd, "DisplayImage") == 0)
 				{
 					// This is to dsiplay an image in a separate dialog

@@ -320,6 +320,8 @@ BOOL CWizardMachineApp::InitInstance()
 
 	if (PageReturnValue == IDCANCEL)
 	{
+		AfxMessageBox("All changed data excluding those on the current page will be saved", MB_OK);
+
 		theApp.CreateNewCache();
 	}
 	if (PageReturnValue == ID_HELP)
