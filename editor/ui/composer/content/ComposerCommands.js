@@ -183,29 +183,12 @@ var nsOpenCommand =
       dump("filePicker.chooseInputFile threw an exception\n");
     }
   
-    /* check for already open window and activate it... 
+    /* This checks for already open window and activates it... 
      * note that we have to test the native path length
      *  since fileURL.spec will be "file:///" if no filename picked (Cancel button used)
     */
     if (fp.file && fp.file.path.length > 0) {
-  
-      var found = FindAndSelectEditorWindowWithURL(fp.fileURL.spec);
-      if (!found)
-      {
-        // if the existing window is untouched, just load there
-        if (PageIsEmptyAndUntouched())
-        {
-          window.editorShell.LoadUrl(fp.fileURL.spec);
-        }
-        else
-        {
-  	      /* open new window */
-  	      window.openDialog("chrome://editor/content",
-  	                        "_blank",
-  	                        "chrome,dialog=no,all",
-  	                        fp.fileURL.spec);
-        }
-      }
+      EditorOpenUrl(fp.fileURL.spec);
     }
   }
 };
@@ -223,7 +206,7 @@ var nsSaveAsCharsetCommand =
     if(window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal"))
     {
        if( window.ok ) 
-         return editorShell.saveDocument(true, false);
+         return window.editorShell.saveDocument(true, false);
     }
     return false;
   }
@@ -235,14 +218,14 @@ var nsRevertCommand =
   {
     return (window.editorShell && 
             window.editorShell.documentModified &&
-            editorShell.editorDocument.location != "about:blank");
+            window.editorShell.editorDocument.location != "about:blank");
   },
 
   doCommand: function(aCommand)
   {
     if (window.editorShell && 
         window.editorShell.documentModified &&
-        editorShell.editorDocument.location != "about:blank")
+        window.editorShell.editorDocument.location != "about:blank")
     {
       // Confirm with the user to abandon current changes
       if (commonDialogsService)
@@ -250,20 +233,20 @@ var nsRevertCommand =
         var result = {value:0};
 
         // Put the page title in the message string
-        var title = editorShell.editorDocument.title;
+        var title = window.editorShell.editorDocument.title;
         if (!title || title.length == 0)
-          title = editorShell.GetTitle("untitled");
+          title = window.editorShell.GetTitle("untitled");
 
-        var msg = editorShell.GetString("AbandonChanges").replace(/%title%/,title);
+        var msg = window.editorShell.GetString("AbandonChanges").replace(/%title%/,title);
 
         commonDialogsService.UniversalDialog(
           window,
           null,
-          editorShell.GetString("RevertCaption"),
+          window.editorShell.GetString("RevertCaption"),
           msg,
           null,
-          editorShell.GetString("Revert"),
-          editorShell.GetString("Cancel"),
+          window.editorShell.GetString("Revert"),
+          window.editorShell.GetString("Cancel"),
           null,
           null,
           null,
@@ -280,7 +263,7 @@ var nsRevertCommand =
 
         // Reload page if first button (Rever) was pressed
         if(result.value == 0)
-          editorShell.LoadUrl(editorShell.editorDocument.location);
+          window.editorShell.LoadUrl(editorShell.editorDocument.location);
       }
     }
   }
@@ -330,7 +313,7 @@ var nsPreviewCommand =
 
   doCommand: function(aCommand)
   {
-	  if (!editorShell.CheckAndSaveDocument(editorShell.GetString("BeforePreview")))
+	  if (!editorShell.CheckAndSaveDocument(window.editorShell.GetString("BeforePreview")))
 	    return;
 
 	  var fileurl = "";
@@ -657,7 +640,7 @@ var nsObjectPropertiesCommand =
                element.nodeName == "table" ||
                element.nodeName == "td"    ||
                element.nodeName == "a"     ||
-               editorShell.GetSelectedElement("href")));
+               window.editorShell.GetSelectedElement("href")));
     }
     return false;
   },
@@ -667,7 +650,8 @@ var nsObjectPropertiesCommand =
     var element = GetSelectedElementOrParentCell();
     if (element)
     {
-      switch (element.nodeName)
+      var name = element.nodeName.toLowerCase();
+      switch (name)
       {
         case 'img':
           goDoCommand("cmd_image");
@@ -694,7 +678,7 @@ var nsObjectPropertiesCommand =
       }
     } else {
       // We get a partially-selected link if asked for specifically
-      element = editorShell.GetSelectedElement("href");
+      element = window.editorShell.GetSelectedElement("href");
       if (element)
         goDoCommand("cmd_link");
     }

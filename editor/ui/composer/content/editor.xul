@@ -170,30 +170,29 @@ END of Deprecated -->
   </toolbar>
   <toolbar id="FormatToolbar" persist="collapsed">
     <!-- We need this else menulists get stretched -->
-    <box autostretch="never" flex="1">
+    <box autostretch="never">
       <!-- from editorOverlay -->
       <menulist id="ParagraphSelect"/>
       <menulist id="FontFaceSelect"/>
-
       <stack id="ColorButtons"/>
-
-      <button id="DecreaseFontSizeButton"/>
-      <button id="IncreaseFontSizeButton"/>
-      <button id="boldButton"/>
-      <button id="italicButton"/>
-      <button id="underlineButton"/>
-      <spring class="separator_small"/>
-      <button id="ulButton"/>
-      <button id="olButton"/>
-      <button id="outdentButton"/>
-      <button id="indentButton"/>
-      <spring class="separator_small"/>
-      <!-- TODO: Change to a menulist? -->
-      <menu>
-        <button id="AlignPopupButton"/>
-        <menupopup id="AlignmentPopup"/>
-      </menu>
     </box>
+
+    <button id="DecreaseFontSizeButton"/>
+    <button id="IncreaseFontSizeButton"/>
+    <button id="boldButton"/>
+    <button id="italicButton"/>
+    <button id="underlineButton"/>
+    <spring class="separator_small"/>
+    <button id="ulButton"/>
+    <button id="olButton"/>
+    <button id="outdentButton"/>
+    <button id="indentButton"/>
+    <spring class="separator_small"/>
+    <!-- TODO: Change to a menulist? -->
+    <menu>
+      <button id="AlignPopupButton"/>
+      <menupopup id="AlignmentPopup"/>
+    </menu>
     <spring flex="1"/>
   </toolbar>
 </toolbox>
