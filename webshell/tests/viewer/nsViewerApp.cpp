@@ -73,6 +73,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsViewerApp::nsViewerApp()
 {
+  NS_INIT_REFCNT();
+
   char * text = PR_GetEnv("NGLAYOUT_HOME");
   mStartURL = text ? text : "resource:/res/samples/test0.html";
   mDelay = 1;
