@@ -150,6 +150,7 @@ nsIRDFResource		*kNC_PersonalToolbarFolder;
 nsIRDFResource		*kNC_ShortcutURL;
 nsIRDFResource		*kNC_URL;
 nsIRDFResource		*kRDF_type;
+nsIRDFResource		*kRDF_nextVal;
 nsIRDFResource		*kWEB_LastModifiedDate;
 nsIRDFResource		*kWEB_LastVisitDate;
 nsIRDFResource		*kWEB_Schedule;
@@ -203,6 +204,8 @@ bm_AddRefGlobals()
 		gRDF->GetResource(NC_NAMESPACE_URI "ShortcutURL",         &kNC_ShortcutURL);
 		gRDF->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
 		gRDF->GetResource(RDF_NAMESPACE_URI "type",               &kRDF_type);
+		gRDF->GetResource(RDF_NAMESPACE_URI "nextVal",            &kRDF_nextVal);
+
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastModifiedDate",   &kWEB_LastModifiedDate);
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastVisitDate",      &kWEB_LastVisitDate);
 
@@ -257,6 +260,7 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kNC_ShortcutURL);
 		NS_IF_RELEASE(kNC_URL);
 		NS_IF_RELEASE(kRDF_type);
+		NS_IF_RELEASE(kRDF_nextVal);
 		NS_IF_RELEASE(kWEB_LastModifiedDate);
 		NS_IF_RELEASE(kWEB_LastVisitDate);
 		NS_IF_RELEASE(kWEB_Schedule);
@@ -4027,6 +4031,7 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 			 (aProperty == kWEB_LastModifiedDate) ||
 			 (aProperty == kWEB_LastVisitDate) ||
 			 (aProperty == kNC_BookmarkAddDate) ||
+			 (aProperty == kRDF_nextVal) ||
 			 (aProperty == kWEB_Schedule))
 		{
 			canAcceptFlag = PR_TRUE;
