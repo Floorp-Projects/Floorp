@@ -8,6 +8,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsFileSpec.h"
 
 class nsPrefMigration: public nsIPrefMigration
 {
@@ -30,17 +31,17 @@ class nsPrefMigration: public nsIPrefMigration
                               char* newPath, 
                               char* oldPath);
 
-      nsresult Read4xFiles(char* ProfilePath, 
-                           char* fileArray[],
-                           PRUint32* fileTotal,
-                           PRUint32* sizeTotal);
+      nsresult GetSizes(nsFileSpec inputPath,
+                        PRBool readSubdirs,
+                        PRUint32* sizeTotal);
 
       nsresult CheckForSpace(char* newProfilePath, 
                              PRFloat64 requiredSpace);
 
-		  nsresult DoTheCopy(const char* oldPath, 
-                         const char* newPath, 
-                         char* fileArray[]);
+		  nsresult DoTheCopy(nsFileSpec oldPath, 
+                         nsFileSpec newPath,
+                         PRBool readSubdirs); 
+
 
 };
 
