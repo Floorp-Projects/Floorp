@@ -40,7 +40,7 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
 
-extern nsresult NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+//extern nsresult NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 
 nsresult NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -57,8 +57,9 @@ nsresult NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNew
 	if (NS_FAILED(result))
 	{ // can't properly initialized ender, probably it isn't installed
 		//delete *aNewFrame; XXX Very bad. You cannot be deleting frames, since they are recycled.
+    NS_ASSERTION(0, "We longer support native widgets");
 
-		result = NS_NewNativeTextControlFrame(aPresShell, aNewFrame);
+		//result = NS_NewNativeTextControlFrame(aPresShell, aNewFrame);
 	}
 
 	return result;
