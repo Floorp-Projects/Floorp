@@ -5632,29 +5632,21 @@ PRBool nsImapProtocol::FolderIsSelected(const char *mailboxName)
 
 void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
 {
-  // don't run status on selected folder, just do a noop.
-  if (FolderIsSelected(mailboxName))
-  {
-    Noop();
-  }
-  else
-  {
-    IncrementCommandTagNumber();
+  IncrementCommandTagNumber();
 
-    nsCAutoString command(GetServerCommandTag());
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
-    
-    command.Append(" STATUS \"");
-    command.Append(escapedName);
-    command.Append("\" (UIDNEXT MESSAGES UNSEEN RECENT)" CRLF);
-            
-    nsMemory::Free(escapedName);
+  nsCAutoString command(GetServerCommandTag());
+  char *escapedName = CreateEscapedMailboxName(mailboxName);
+  
+  command.Append(" STATUS \"");
+  command.Append(escapedName);
+  command.Append("\" (UIDNEXT MESSAGES UNSEEN RECENT)" CRLF);
           
-    nsresult rv = SendData(command.get());
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  nsMemory::Free(escapedName);
+        
+  nsresult rv = SendData(command.get());
+  if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail();
 
-  }
   if (GetServerStateParser().LastCommandSuccessful())
   {
     nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec(mailboxName);
