@@ -32,7 +32,7 @@
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
 #include "nsIFormatConverter.h"
-#include "nscoord.h"
+#include "nsCoord.h"
 
 
 class nsToolbarFrame;
