@@ -37,12 +37,12 @@
 }
 
 class imgRequestProxy : public imgIRequest,
-                            public imgIDecoderObserver
+                        public imgIDecoderObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
-  NS_DECL_NSIIMAGEDECODEROBSERVER
+  NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_GFXIIMAGECONTAINEROBSERVER
 
   imgRequestProxy();

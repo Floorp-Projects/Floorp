@@ -41,7 +41,7 @@ class imgLoader : public imgILoader
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGELOADER
+  NS_DECL_IMGILOADER
 
   imgLoader();
   virtual ~imgLoader();
