@@ -882,6 +882,40 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     mViewManager->InsertChild(this, mVScrollBarView, 3);
     rv = mVScrollBarView->CreateWidget(kCScrollbarIID, nsnull,
                                        mWindow ? nsnull : aNative);
+    nsIView *scrolledView;
+    GetScrolledView(scrolledView);
+
+#if 1 // MOUSE WHEEL TRACKER CODE
+
+    // XXX This code is to be reviewed by michealp
+    // It gets the Window for the view and the gets the widget
+    // for the vertical ScrollbarView and sets it into the window
+    // this is need for platforms where the window receives 
+    // scrollbar message that need to be sent to the vertical scrollbar
+    // For example, the Mouse Wheel Tracker on MS-Windows
+
+    // Find Parent view with window and remember the window
+    nsIWidget * win  = nsnull;
+    nsIView   * view = (nsIView *)this;
+    view->GetWidget(win);
+    while (win == nsnull) {
+      nsIView * parent;
+      view->GetParent(parent);
+      parent->GetWidget(win);
+      view = parent;
+    }
+      
+    // Set scrollbar widget into window
+    if (nsnull != win) {
+      nsIWidget * scrollbar;
+      mVScrollBarView->GetWidget(scrollbar);
+      if (nsnull != scrollbar) {
+        win->SetVerticalScrollbar(scrollbar);
+      }
+      NS_RELEASE(win);
+    }
+    // XXX done with the code that needs to be reviewed
+#endif
   }
 
   // Create a view for a horizontal scrollbar
