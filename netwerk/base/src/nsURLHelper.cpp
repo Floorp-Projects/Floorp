@@ -590,6 +590,10 @@ net_RFindCharNotInSet(const char *stop, const char *iter, const char *set)
 {
     --iter;
     --stop;
+
+    if (iter == stop)
+        return (char *) iter;
+
 repeat:
     for (const char *s = set; *s; ++s) {
         if (*iter == *s) {
