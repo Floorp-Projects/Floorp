@@ -117,8 +117,6 @@ nsWyciwygChannel::Cancel(nsresult aStatus)
   LOG(("nsWyciwygChannel::Cancel [this=%x status=%x]\n", this, aStatus));
   NS_ASSERTION(NS_FAILED(aStatus), "shouldn't cancel with a success code");
   
-  if (NS_FAILED(aStatus))
-    printf("status is failure\n");
   mStatus = aStatus;
   if (mCacheReadRequest)
     mCacheReadRequest->Cancel(aStatus);
