@@ -67,7 +67,7 @@ my %pubcmds = (
                "(hi|hello|lo|sup)" => \&bot_hi,
                "moon" => \&bot_moon,
                "up" => \&bot_up,
-               "trees" => \&bot_tinderbox,
+               "(trees|tree)" => \&bot_tinderbox,
                "debug" => \&bot_debug,
                "stocks" => \&bot_stocks,
                );
