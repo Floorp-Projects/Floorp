@@ -1712,7 +1712,6 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *mess
 NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey keyOfArticle)
 {
   nsresult rv = NS_OK;
-  PRBool commit = PR_FALSE;
   if (m_downloadMessageForOfflineUse && !m_offlineHeader)
   {
     GetMessageHeader(keyOfArticle, getter_AddRefs(m_offlineHeader));
@@ -1727,10 +1726,8 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
     {
       // end of article.
       if (m_offlineHeader)
-      {
         EndNewOfflineMessage();
-        commit = PR_TRUE;
-      }
+
       if (m_tempMessageStream && !m_downloadingMultipleMessages)
       {
         m_tempMessageStream->Close();
@@ -1748,8 +1745,6 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
     }
   }
                                                                                 
-  if (commit && mDatabase)
-    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   return rv;
 
 }

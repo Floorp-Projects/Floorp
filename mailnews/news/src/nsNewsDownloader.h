@@ -82,12 +82,14 @@ protected:
   PRPackedBool m_wroteAnyP;
   PRPackedBool m_summaryValidP;
   PRPackedBool m_abort;
-  PRInt32			m_numwrote;
+  PRInt32     m_numwrote;
   nsMsgKey    m_keyToDownload;
-  nsCOMPtr <nsIMsgWindow>		m_window;
+  nsCOMPtr <nsIMsgWindow> m_window;
   nsCOMPtr <nsIMsgStatusFeedback> m_statusFeedback;
   nsCOMPtr <nsIMsgSearchSession> m_searchSession;
-  nsresult				m_status;
+  PRInt32 m_lastPercent;
+  PRInt64 m_lastProgressTime;				
+  nsresult  m_status;
 };
 
 

@@ -87,6 +87,8 @@ nsNewsDownloader::nsNewsDownloader(nsIMsgWindow *window, nsIMsgDatabase *msgDB, 
   m_abort = PR_FALSE;
   m_listener = listener;
   m_window = window;
+  m_lastPercent = -1;
+  LL_I2L(m_lastProgressTime, 0);
   // not the perfect place for this, but I think it will work.
   if (m_window)
     m_window->SetStopped(PR_FALSE);
@@ -187,12 +189,27 @@ PRBool nsNewsDownloader::GetNextHdrToRetrieve()
   {
     if (m_numwrote >= (PRInt32) m_keysToDownload.GetSize())
       return PR_FALSE;
+
     m_keyToDownload = m_keysToDownload.GetAt(m_numwrote++);
-#ifdef DEBUG_bienvenu
-    //		XP_Trace("downloading %ld index = %ld\n", m_keyToDownload, m_numwrote);
-#endif
+    PRInt32 percent;
+    percent = (100 * m_numwrote) / (PRInt32) m_keysToDownload.GetSize();
+
+    PRInt64 nowMS = LL_ZERO;
+    if (percent < 100)  // always need to do 100%
+    {
+      int64 minIntervalBetweenProgress;
+
+      LL_I2L(minIntervalBetweenProgress, 750);
+      int64 diffSinceLastProgress;
+      LL_I2L(nowMS, PR_IntervalToMilliseconds(PR_IntervalNow()));
+      LL_SUB(diffSinceLastProgress, nowMS, m_lastProgressTime); // r = a - b
+      LL_SUB(diffSinceLastProgress, diffSinceLastProgress, minIntervalBetweenProgress); // r = a - b
+      if (!LL_GE_ZERO(diffSinceLastProgress))
+        return PR_TRUE;
+    }
+
+    m_lastProgressTime = nowMS;
     nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(m_folder);
-    //		PRInt32 stringID = (newsFolder ? MK_MSG_RETRIEVING_ARTICLE_OF : MK_MSG_RETRIEVING_MESSAGE_OF);
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIStringBundle> bundle;
@@ -211,10 +228,6 @@ PRBool nsNewsDownloader::GetNextHdrToRetrieve()
     const PRUnichar *formatStrings[3] = { firstStr.get(), totalStr.get(), (const PRUnichar *) prettiestName };
     rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingArticlesForOffline").get(), formatStrings, 3, getter_Copies(statusString));
     NS_ENSURE_SUCCESS(rv, rv);
-    // ### TODO set status string on window?
-    PRInt32 percent;
-    percent = (100 * m_numwrote) / (PRInt32) m_keysToDownload.GetSize();
-    // FE_SetProgressBarPercent (m_context, percent);
     ShowProgress(statusString, percent);
     return PR_TRUE;
   }
@@ -232,7 +245,11 @@ nsresult nsNewsDownloader::ShowProgress(const PRUnichar *progressString, PRInt32
   if (m_statusFeedback)
   {
     m_statusFeedback->ShowStatusString(progressString);
-    m_statusFeedback->ShowProgress(percent);
+    if (percent != m_lastPercent)
+    {
+      m_statusFeedback->ShowProgress(percent);
+      m_lastPercent = percent;
+    }
   }
   return NS_OK;
 }
