@@ -1986,10 +1986,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         if (NS_FAILED(rv)) return rv; // XXX translate error code?
     }
 
-    // Force the InterfaceInfoManager to do its AutoReg first.
     nsCOMPtr<nsIInterfaceInfoManager> iim = 
         dont_AddRef(XPTI_GetInterfaceInfoManager());
-
 
     if (!iim)
         return NS_ERROR_UNEXPECTED;    
@@ -2009,11 +2007,13 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         }
     }
 
-    rv = iim->AutoRegisterInterfaces();
-    if (NS_FAILED(rv)) return rv;
-
     /* do the native loader first, so we can find other loaders */
     rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
+    if (NS_FAILED(rv)) return rv;
+
+    /* do InterfaceInfoManager after native loader so it can use components. */
+    rv = iim->AutoRegisterInterfaces();
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICategoryManager> catman =
         do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
@@ -2090,7 +2090,7 @@ AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
                             &didRegister);
     
     if (NS_SUCCEEDED(closure->status) && didRegister)
-    return PR_FALSE; // Stop enumeration as we are done
+        return PR_FALSE; // Stop enumeration as we are done
     return PR_TRUE;
 }
 
