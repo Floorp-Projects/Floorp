@@ -29,14 +29,28 @@ treecell {
   vertical-align: middle;
   padding: 0px 0px 1px 2px;
 } 
+ 
 
 .treecell-header { 
   border: 1px outset #C2D0D0;
-  padding: 0px 0px 0px 4px;
   background-color: #C2D0D0; 
+  padding: 0px 0px 0px 4px;
   vertical-align: middle;
   color: #000000;
 } 
+
+/*
+tree.inset > treehead > treecell,
+tree.inset > treehead > treerow > treecell
+{
+  border: 1px outset #C2D0D0;
+  background-color: #C2D0D0; 
+  color: #000000;
+}
+*/
+treehead > treerow {
+  border: none;
+}
 
 .treecell-header-image {
   padding: 0px;
@@ -44,13 +58,6 @@ treecell {
 
 .treecell-image {
   padding: 0px;
-}
-
-.treecell-inset-header {
-  border-top: 1px solid white;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
 }
 
 tree.inset > treehead > treerow > treecell.sortable:active {
@@ -151,7 +158,6 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
 treecol[sortDirection="true"],
 treecol[sortActive="true"]
   {
-    background-color       : #DFDFDF;
   }
 
 .treecell-popup-icon
