@@ -1366,8 +1366,8 @@ typedef struct
 #ifdef MOZ_TASKBAR
   Boolean startup_component_bar;
 #endif
-#ifdef MOZ_MAIL_NEWS
   Boolean startup_composer;
+#ifdef MOZ_MAIL_NEWS
   Boolean startup_mail;
   Boolean startup_news;
 #endif

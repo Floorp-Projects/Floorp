@@ -139,7 +139,7 @@ extern int XFE_RESOURCES_NOT_INSTALLED_CORRECTLY;
 extern int XFE_USAGE_MSG1;
 extern int XFE_USAGE_MSG2;
 extern int XFE_USAGE_MSG3;
-#if defined(MOZ_MAIL_NEWS) && defined(EDITOR) && defined(MOZ_TASKBAR)
+#if defined(MOZ_MAIL_NEWS) || defined(EDITOR) || defined(MOZ_TASKBAR)
 extern int XFE_USAGE_MSG4;
 #endif
 extern int XFE_USAGE_MSG5;
@@ -334,11 +334,13 @@ static XrmOptionDescRec options [] = {
   /* Startup component flags */
   { "-component-bar",		".componentBar",	XrmoptionNoArg, "True" },
 #endif
-#ifdef MOZ_MAIL_NEWS
 
+#ifdef EDITOR
   { "-composer",			".composer",		XrmoptionNoArg, "True" },
   { "-edit",				".composer",		XrmoptionNoArg, "True" },
+#endif
 
+#ifdef MOZ_MAIL_NEWS
   { "-messenger",			".mail",			XrmoptionNoArg, "True" },
   { "-mail",				".mail",			XrmoptionNoArg, "True" },
 
@@ -726,11 +728,14 @@ XtResource fe_GlobalResources [] =
 	XtOffset (fe_GlobalData *, startup_component_bar), XtRImmediate,
 	(XtPointer) False },
 #endif
-#ifdef MOZ_MAIL_NEWS
+
+#ifdef EDITOR
   { "composer", XtCBoolean, XtRBoolean, sizeof(Boolean),
 	XtOffset (fe_GlobalData *, startup_composer), XtRImmediate,
 	(XtPointer) False },
+#endif
 
+#ifdef MOZ_MAIL_NEWS
   { "mail", XtCBoolean, XtRBoolean, sizeof(Boolean),
 	XtOffset (fe_GlobalData *, startup_mail), XtRImmediate,
 	(XtPointer) False },
@@ -830,7 +835,7 @@ usage (void)
 
   fprintf (stderr, XP_GetString( XFE_USAGE_MSG3 ) );
 
-#if defined(MOZ_MAIL_NEWS) && defined(MOZ_TASKBAR) && defined(EDITOR)
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_TASKBAR) || defined(EDITOR)
   fprintf (stderr, XP_GetString( XFE_USAGE_MSG4 ) );
 #endif
 
@@ -1111,7 +1116,7 @@ fe_EventLoop ()
 #ifdef QUANTIFY
 quantify_start_recording_data();
 #endif /* QUANTIFY */
-      NET_ProcessNet (-1, NET_EVERYTIME_TYPE);
+      NET_ProcessNet (0, NET_EVERYTIME_TYPE);
 #ifdef QUANTIFY
 quantify_stop_recording_data();
 #endif /* QUANTIFY */
@@ -1307,7 +1312,7 @@ plonk (MWContext *context)
 #ifdef QUANTIFY
 quantify_start_recording_data();
 #endif /* QUANTIFY */
-	    NET_ProcessNet (-1, NET_EVERYTIME_TYPE);
+	    NET_ProcessNet (0, NET_EVERYTIME_TYPE);
 #ifdef QUANTIFY
 quantify_stop_recording_data();
 #endif /* QUANTIFY */
@@ -2969,13 +2974,13 @@ main
 			  plonkp = True;
 #endif
 			  
-#ifdef MOZ_MAIL_NEWS
+#ifdef EDITOR
 			  if (fe_globalData.startup_composer)
 			  {
 				  type = MWContextEditor;
 			  }
 			  else
-#endif
+#endif /* EDITOR */
 			  {
 				  type = MWContextBrowser;
 			  }
@@ -2998,13 +3003,13 @@ main
 			  {
 				  MWContextType type;
 				  
-#ifdef MOZ_MAIL_NEWS
+#ifdef EDITOR
 				  if (fe_globalData.startup_composer)
 				  {
 					  type = MWContextEditor;
 				  }
 				  else
-#endif
+#endif /* EDITOR */
 				  {
 					  type = MWContextBrowser;
 				  }
@@ -3027,13 +3032,13 @@ main
 				fe_globalData.startup_iconic = TRUE;
 			  }
 #endif
-#ifdef MOZ_MAIL_NEWS
+#ifdef EDITOR
 				  if (fe_globalData.startup_composer)
 					{
 					  type = MWContextEditor;
 					}
 				  else
-#endif
+#endif /* EDITOR */
 					{
 					  type = MWContextBrowser;
 					}
@@ -3133,8 +3138,10 @@ main
 #ifdef MOZ_TASKBAR
 	          fe_globalData.startup_component_bar || 
 #endif
-#ifdef MOZ_MAIL_NEWS
+#ifdef EDITOR
 		  fe_globalData.startup_composer ||
+#endif
+#ifdef MOZ_MAIL_NEWS
 		  fe_globalData.startup_mail ||
 		  fe_globalData.startup_news ||
 #endif
@@ -3171,13 +3178,15 @@ main
 		  else
 #endif
 		  {
-#ifdef MOZ_MAIL_NEWS
+#ifdef EDITOR
 			  /* -composer: show the composer */
 			  if (fe_globalData.startup_composer)
 			  {
 				  fe_MakeWindow(toplevel, 0, NULL, NULL,MWContextEditor,FALSE);
 			  }
+#endif /* EDITOR */
 
+#ifdef MOZ_MAIL_NEWS
 			  /* -mail: show inbox */
 			  if (fe_globalData.startup_mail)
 			  {

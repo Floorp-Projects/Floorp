@@ -27,6 +27,8 @@
 #include "fonts.h"
 #include "felocale.h"
 #include "intl_csi.h"
+#include "selection.h"
+#include "rdf.h"
 #ifdef NSPR20
 #include "private/prpriv.h"	/* for PR_GetMonitorEntryCount */
 #endif /* NSPR20 */
@@ -1352,12 +1354,12 @@ fe_MakeNewWindow(Widget toplevel, MWContext *context_to_copy,
 
   /* Fix type */
   if (url && (type != MWContextSaveToDisk) && (type != MWContextBookmarks) &&
-	(type != MWContextAddressBook) && (type != MWContextDialog)) {
+	(type != MWContextAddressBook) && (type != MWContextDialog) &&
+        (type != MWContextEditor)) {
 #ifdef MOZ_MAIL_NEWS
     if (MSG_RequiresMailWindow (url->address) || MSG_RequiresNewsWindow(url->address))
       type = MWContextMail;
     else if (MSG_RequiresBrowserWindow (url->address)) {
-      if (type != MWContextEditor)
 #else
     {
 #endif
