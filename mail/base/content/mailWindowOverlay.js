@@ -2405,11 +2405,13 @@ function HandleMDNResponse(aUrl)
 
   var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
   var mimeHdr;
-  
+
   try {
-    mimeHdr = aUrl.mimeHeaders;  
-  } catch (ex) { return 0;}
-    
+    mimeHdr = aUrl.mimeHeaders;
+  } catch (ex) {
+    return;
+  }
+
   // If we didn't get the message id when we downloaded the message header,
   // we cons up an md5: message id. If we've done that, we'll try to extract
   // the message id out of the mime headers for the whole message.
