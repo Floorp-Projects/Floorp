@@ -334,12 +334,6 @@ nsIOService::NewLoadGroup(nsILoadGroup* parent, nsILoadGroup **result)
     rv = nsLoadGroup::Create(nsnull, nsCOMTypeInfo<nsILoadGroup>::GetIID(), 
                              (void**)&group);
     if (NS_FAILED(rv)) return rv;
-
-    rv = group->Init(parent);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(group);
-        return rv;
-    }
     *result = group;
     return NS_OK;
 }

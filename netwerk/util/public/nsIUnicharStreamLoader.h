@@ -31,6 +31,7 @@
 
 class nsIUnicharStreamLoader;
 class nsIURI;
+class nsILoadGroup;
 
 /**
  * Funtion registered with the stream loader. This function is called
@@ -42,9 +43,9 @@ class nsIURI;
  * @param aStatus the completion status of the stream
  */
 typedef void (*nsStreamCompleteFunc)(nsIUnicharStreamLoader* aLoader,
-				     nsString& aData,
-				     void* aRef,
-				     nsresult aStatus);
+                                     nsString& aData,
+                                     void* aRef,
+                                     nsresult aStatus);
 
 /**
  * The purpose of this interface is to provide a mechanism for a
@@ -75,7 +76,7 @@ public:
  *             function
  */
 extern nsresult NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
-                                          nsIURI* aURL,
+                                          nsIURI* aURL, nsILoadGroup* aLoadGroup,
                                           nsStreamCompleteFunc aFunc,
                                           void* aRef);
 

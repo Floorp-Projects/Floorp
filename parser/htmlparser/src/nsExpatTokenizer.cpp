@@ -500,7 +500,7 @@ nsExpatTokenizer::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
   ret = NS_NewURI(&uri, aURLStr);
   if (NS_FAILED(ret)) return ret;
 
-  ret = NS_OpenURI(&in, uri);
+  ret = NS_OpenURI(&in, uri, nsnull);   // XXX need to pass the document's nsILoadGroup here!
   NS_RELEASE(uri);
 #endif // NECKO
   return ret;

@@ -79,7 +79,7 @@ nsDownloadProgressDialog::OnStart() {
                       __FILE__, (int)__LINE__, (int)rv );
     }
 #else
-    nsresult rv = NS_OpenURI(this, mUrl);
+    nsresult rv = NS_OpenURI(this, nsnull, mUrl, nsnull);		// XXX need the nsILoadGroup here!
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnStart doesn't return rv!");
 #endif // NECKO
 }

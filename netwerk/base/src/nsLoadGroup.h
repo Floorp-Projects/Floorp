@@ -25,7 +25,7 @@
 
 class nsISupportsArray;
 
-class nsLoadGroup : public nsILoadGroup, public nsIStreamListener
+class nsLoadGroup : public nsILoadGroup
 {
 public:
     NS_DECL_AGGREGATED
@@ -48,9 +48,6 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsILoadGroup methods:
     
-    /* void Init (in nsILoadGroup parent); */
-    NS_IMETHOD Init(nsILoadGroup *parent);
-
     /* attribute unsigned long DefaultLoadAttributes; */
     NS_IMETHOD GetDefaultLoadAttributes(PRUint32 *aDefaultLoadAttributes);
     NS_IMETHOD SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes);
@@ -83,21 +80,6 @@ public:
     NS_IMETHOD GetSubGroups(nsISimpleEnumerator * *aSubGroups);
 
     ////////////////////////////////////////////////////////////////////////////
-    // nsIStreamObserver methods:
-
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                             nsresult status, const PRUnichar *errorMsg);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIStreamListener methods:
-
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
-                               nsIInputStream *inStr, 
-                               PRUint32 sourceOffset, 
-                               PRUint32 count);
-
-    ////////////////////////////////////////////////////////////////////////////
     // nsLoadGroup methods:
 
     nsLoadGroup(nsISupports* outer);
@@ -106,11 +88,11 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
+    friend class nsLoadGroupEntry;
+
 protected:
     typedef nsresult (*PropagateDownFun)(nsIRequest* request);
     nsresult PropagateDown(PropagateDownFun fun);
-    typedef nsresult (*PropagateUpFun)(nsIStreamObserver* obs, void* closure);
-    nsresult PropagateUp(PropagateUpFun fun, void* closure);
 
 protected:
     PRUint32                    mDefaultLoadAttributes;

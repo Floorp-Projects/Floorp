@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsNeckoUtil.h"
 #include "nsIProgressEventSink.h"
+#include "nsIDocument.h"
 #endif // NECKO
 
 #include "nsIServiceManager.h"
@@ -392,18 +393,18 @@ public:
   NS_DECL_ISUPPORTS
 
 #ifdef NECKO
-    // nsIProgressEventSink methods:
-    NS_IMETHOD OnProgress(nsIChannel* channel, nsISupports* context,
-                          PRUint32 Progress, PRUint32 ProgressMax);
-    NS_IMETHOD OnStatus(nsIChannel* channel, nsISupports* context,
-                        const PRUnichar* aMmsg);
-    // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                             nsresult status, const PRUnichar *errorMsg);
-    // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
-                               nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);  
+  // nsIProgressEventSink methods:
+  NS_IMETHOD OnProgress(nsIChannel* channel, nsISupports* context,
+                        PRUint32 Progress, PRUint32 ProgressMax);
+  NS_IMETHOD OnStatus(nsIChannel* channel, nsISupports* context,
+                      const PRUnichar* aMmsg);
+  // nsIStreamObserver methods:
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                           nsresult status, const PRUnichar *errorMsg);
+  // nsIStreamListener methods:
+  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
+                             nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);  
 
 #else
   //nsIStreamObserver interface
@@ -435,6 +436,10 @@ public:
   nsresult InitializeFullPage(nsIPluginInstance *aInstance);
 
   nsresult OnFileAvailable(const char* aFilename);
+
+#ifdef NECKO
+  nsILoadGroup* GetLoadGroup();
+#endif
 
 private:
 
@@ -1131,7 +1136,10 @@ nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURI* aURL)
 {
 	nsPluginCacheListener* cacheListener = new nsPluginCacheListener(this);
 #ifdef NECKO
-	return NS_OpenURI(cacheListener, aURL);
+    nsILoadGroup* loadGroup = GetLoadGroup();
+	nsresult rv = NS_OpenURI(cacheListener, nsnull, aURL, loadGroup);
+    NS_IF_RELEASE(loadGroup);
+    return rv;
 #else
 	return NS_OpenURL(aURL, cacheListener);
 #endif
@@ -1200,6 +1208,21 @@ nsPluginStreamListenerPeer::OnFileAvailable(const char* aFilename)
 	mCacheDone = PR_TRUE;
 	return rv;
 }
+
+#ifdef NECKO
+nsILoadGroup*
+nsPluginStreamListenerPeer::GetLoadGroup()
+{
+  nsILoadGroup* loadGroup = nsnull;
+  nsIDocument* doc;
+  nsresult rv = mOwner->GetDocument(&doc);
+  if (NS_SUCCEEDED(rv)) {
+    loadGroup = doc->GetDocumentLoadGroup();
+    NS_RELEASE(doc);
+  }
+  return loadGroup;
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2253,7 +2276,9 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
     if (NS_OK == rv) {
 #ifdef NECKO
-      rv = NS_OpenURI(listenerPeer, url);
+      nsILoadGroup* loadGroup = listenerPeer->GetLoadGroup();
+      rv = NS_OpenURI(listenerPeer, nsnull, url, loadGroup);
+      NS_IF_RELEASE(loadGroup);
 #else
       rv = NS_OpenURL(url, listenerPeer);
 #endif
@@ -2307,7 +2332,9 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
 
 	if (NS_OK == rv) {
 #ifdef NECKO
-	  rv = NS_OpenURI(listener, aURL);
+      nsILoadGroup* loadGroup = listener->GetLoadGroup();
+      rv = NS_OpenURI(listener, nsnull, aURL, loadGroup);
+      NS_IF_RELEASE(loadGroup);
 #else
 	  rv = NS_OpenURL(aURL, listener);
 #endif

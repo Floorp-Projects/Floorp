@@ -28,8 +28,6 @@ interface nsIStreamObserver;
 [scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
 interface nsILoadGroup : nsIRequest
 {
-    void Init(in nsILoadGroup parent);
-
     /**
      * Accesses the default load attributes for the group, returned as
      * a flag word. Setting the default load attributes will cause them
@@ -86,7 +84,6 @@ interface nsILoadGroup : nsIRequest
      * Enumerator element type: nsILoadGroup.
      */
     readonly attribute nsISimpleEnumerator SubGroups;
-
 };
 
 %{C++

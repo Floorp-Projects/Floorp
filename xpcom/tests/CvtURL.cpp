@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 #ifndef NECKO
   ec = NS_OpenURL(url, &in);
 #else
-  ec = NS_OpenURI(&in, url);
+  ec = NS_OpenURI(&in, url, nsnull);
 #endif // NECKO
   if (nsnull == in) {
     printf("open of url('%s') failed: error=%x\n", urlName, ec);

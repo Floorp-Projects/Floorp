@@ -50,8 +50,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 }
 
 nsresult
-NS_OpenURI(nsIChannel* *result, nsIURI* uri, 
-           nsILoadGroup* group)
+NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -73,8 +72,7 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri,
 }
 
 nsresult
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri, 
-           nsILoadGroup* group)
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri, nsILoadGroup* group)
 {
     nsresult rv;
     nsIChannel* channel;
@@ -92,27 +90,16 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
 }
 
 nsresult
-NS_OpenURI(nsIStreamListener* aConsumer, nsIURI* uri,
-           nsILoadGroup* group)
+NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, 
+           nsIURI* uri, nsILoadGroup* group)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
     nsIChannel* channel;
-    rv = serv->NewChannelFromURI("load", uri, nsnull, &channel);
+
+    rv = NS_OpenURI(&channel, uri, group);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->AsyncRead(0, -1, 
-                            channel, // channel as the context (the nsDocLoader expects this)
-                            aConsumer);
-    if (NS_FAILED(rv)) goto done;
-
-    if (group) {
-        rv = group->AddChannel(channel);
-        if (NS_FAILED(rv)) goto done;
-    }
-  done:
+    rv = channel->AsyncRead(0, -1, context, aConsumer);
     NS_RELEASE(channel);
     return rv;
 }

@@ -980,7 +980,8 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 			if (nsnull != callback)
 			{
 #ifdef NECKO
-				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), url);
+				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull,
+						url, nsnull);    // XXX need the nsILoadGroup here!
 #else
 				rv = NS_OpenURL(url, NS_STATIC_CAST(nsIStreamListener *, callback));
 #endif
