@@ -2757,7 +2757,11 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 
     // Only do this if we're not in document-before-content focus mode
 
-    if (!docHasFocus && !doFocusAvailDocShells && !docFocusFirst) {
+    if (docType == eChrome) {
+      // if we're a chrome document, act as if the doc has already been
+      // focused, so we will go back to the beginning.
+      docHasFocus = PR_TRUE;
+    } else if (!docHasFocus && !doFocusAvailDocShells && !docFocusFirst) {
       PRBool focusDoc = PR_TRUE;
 
       nsCOMPtr<nsIDocShell> docShell;
@@ -2775,7 +2779,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
       }
 
       // IFrame may or may not want the current document focused
-      if (focusDoc && (docType != eChrome)) {
+      if (focusDoc) {
         nsCOMPtr<nsIScriptGlobalObject> sgo;
         mDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
         nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
