@@ -57,7 +57,7 @@ public:
 
     NS_IMETHOD SetToolbarManager(nsIToolbarManager * aToolbarManager);
     NS_IMETHOD GetToolbarManager(nsIToolbarManager *& aToolbarManager);
-    NS_IMETHOD SetDrawFullBorder(PRBool aDoDrawFullBorder);
+    NS_IMETHOD SetBorderType(nsToolbarBorderType aBorderType);
 
     virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent);
 
@@ -100,6 +100,7 @@ public:
                                          PRInt32& aWidth,          PRInt32& aHeight);
 
 protected:
+  void GetMargins(PRInt32 &aX, PRInt32 &aY);
   void DoHorizontalLayout(const nsRect& aTBRect);
   void DoVerticalLayout(const nsRect& aTBRect);
   void AddTab(const nsString& aUpURL,
@@ -120,7 +121,7 @@ protected:
   PRInt32 mHGap;
   PRInt32 mVGap;
 
-  PRBool  mDoDrawFullBorder;
+  PRBool  mBorderType;
 
   PRBool  mWrapItems;
   PRBool  mDoHorizontalLayout;

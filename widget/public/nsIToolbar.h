@@ -33,6 +33,15 @@ class nsIToolbarItem;
  { 0xdeb24690, 0x35f8, 0x11d2, \
    {0x92, 0x48, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
 
+enum nsToolbarBorderType {   
+                  ///no border
+                eToolbarBorderType_none,
+                  ///draws partial border
+                eToolbarBorderType_partial,
+                  ///draws border on all sides
+                eToolbarBorderType_full,
+              }; 
+
 class nsIToolbar : public nsISupports
 {
 
@@ -129,7 +138,7 @@ public:
   * Tells the toolbar to draw the border on all 4 sides, instead of just top and bottom
   *
   */
-  NS_IMETHOD SetDrawFullBorder(PRBool aDoDrawFullBorder) = 0;
+  NS_IMETHOD SetBorderType(nsToolbarBorderType aBorderType) = 0;
 
  /**
   * Tells the toolbar to wrap

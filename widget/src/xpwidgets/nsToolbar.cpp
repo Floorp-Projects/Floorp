@@ -96,9 +96,9 @@ nsToolbar::nsToolbar() : ChildWindow(), nsIToolbar()
   mHGap       = 0;
   mVGap       = 0;
 
+  mBorderType               = eToolbarBorderType_partial;
   mLastItemIsRightJustified = PR_FALSE;
   mNextLastItemIsStretchy   = PR_FALSE;
-  mDoDrawFullBorder         = PR_FALSE;
   mWrapItems                = PR_FALSE;
   mDoHorizontalLayout       = PR_TRUE;
 
@@ -278,11 +278,39 @@ NS_METHOD nsToolbar::SetHorizontalLayout(PRBool aDoHorizontalLayout)
 }
 
 //--------------------------------------------------------------------
+void nsToolbar::GetMargins(PRInt32 &aX, PRInt32 &aY)
+{
+
+  switch (mBorderType) {
+    case eToolbarBorderType_none:
+      aX = 0;
+      aY = 0;
+      break;
+
+    case eToolbarBorderType_partial:
+      aX = 0;
+      aY = mMargin;
+      break;
+
+    case eToolbarBorderType_full:
+      aX = mMargin;
+      aY = mMargin;
+      break;
+
+    default:
+      aX = 0;
+      aY = 0;
+  } // switch 
+}
+
+//--------------------------------------------------------------------
 void nsToolbar::DoVerticalLayout(const nsRect& aTBRect)
 {
   PRInt32 i;
-  PRInt32 x = mDoDrawFullBorder ? mMargin : 0;
-  PRInt32 y = mMargin;
+  PRInt32 x;
+  PRInt32 y;
+
+  GetMargins(x, y);
 
   PRInt32 maxWidth = 0;
 
@@ -395,8 +423,10 @@ void nsToolbar::DoVerticalLayout(const nsRect& aTBRect)
 void nsToolbar::DoHorizontalLayout(const nsRect& aTBRect)
 {
   PRInt32 i;
-  PRInt32 x = mDoDrawFullBorder ? mMargin : 0;
-  PRInt32 y = mMargin;
+  PRInt32 x;
+  PRInt32 y;
+
+  GetMargins(x, y);
 
   PRInt32 maxHeight = 0;
 
@@ -619,9 +649,9 @@ NS_METHOD nsToolbar::SetMargin(PRInt32 aMargin)
 }
 
 //--------------------------------------------------------------------
-NS_METHOD nsToolbar::SetDrawFullBorder(PRBool aDoDrawFullBorder)
+NS_METHOD nsToolbar::SetBorderType(nsToolbarBorderType aBorderType)
 {
-  mDoDrawFullBorder = aDoDrawFullBorder;
+  mBorderType = aBorderType;
   return NS_OK;
 }
 
@@ -745,19 +775,21 @@ nsEventStatus nsToolbar::HandleEvent(nsGUIEvent *aEvent)
     drawCtx->FillRect(r);
     r.width--;
 
-    nsRect rect(r);
-    // draw top & left
-    drawCtx->SetColor(NS_RGB(255,255,255));
-    drawCtx->DrawLine(0,0,rect.width,0);
-    if (mDoDrawFullBorder) {
-      drawCtx->DrawLine(0,0,0,rect.height);
-    }
+    if (mBorderType != eToolbarBorderType_none) {
+      nsRect rect(r);
+      // draw top & left
+      drawCtx->SetColor(NS_RGB(255,255,255));
+      drawCtx->DrawLine(0,0,rect.width,0);
+      if (mBorderType == eToolbarBorderType_full) {
+        drawCtx->DrawLine(0,0,0,rect.height);
+      }
 
-    // draw bottom & right
-    drawCtx->SetColor(NS_RGB(128,128,128));
-    drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
-    if (mDoDrawFullBorder) {
-      drawCtx->DrawLine(rect.width,0,rect.width,rect.height);
+      // draw bottom & right
+      drawCtx->SetColor(NS_RGB(128,128,128));
+      drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
+      if (mBorderType == eToolbarBorderType_full) {
+        drawCtx->DrawLine(rect.width,0,rect.width,rect.height);
+      }
     }
   }
 
