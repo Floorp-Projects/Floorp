@@ -81,47 +81,27 @@ else
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 endif
 
+XPTYPELIBS=\
+	nsIRDFCompositeDataSource.xpt	\
+	nsIRDFContainer.xpt		\
+	nsIRDFContainerUtils.xpt	\
+	nsIRDFDataSource.xpt		\
+	nsIRDFLiteral.xpt		\
+	nsIRDFNode.xpt			\
+	nsIRDFObserver.xpt		\
+	nsIRDFPurgeableDataSource.xpt	\
+	nsIRDFResource.xpt		\
+	nsIRDFService.xpt		\
+	nsIRDFXMLDataSource.xpt		\
+	nsIRDFXMLSource.xpt		\
+	nsISimpleEnumerator.xpt		\
+	$(NULL)
+
+XPTYPELIBS := $(addprefix $(srcdir)/, $(XPTYPELIBS))
+
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/../resources/sidebar.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/sidebar.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/sidebarcontainer.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bm-props.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmarks.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmarks.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/history.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/history.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmarks.html $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmark-item.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmark-folder-closed.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmark-folder-open.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/personal-folder-closed.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/personal-folder-open.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/folder-open.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/folder-closed.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/document.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/iefavorite.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/History/h1.hst $(DIST)/bin/res/rdf/History
-	$(INSTALL) $(srcdir)/../resources/dom-test-1.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/dom-test-2.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/dom-test-3.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/dom-test-4.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/dom-test-5.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/dom-test-1.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/dom-test-4.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/xpidl-test-1.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/flash-registry.rdf $(DIST)/bin
-	$(INSTALL) $(srcdir)/../resources/flash.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/flash.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/flash.js  $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/remote-flash-1.rdf $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/remote-flash-2.rdf $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/remote-flash-3.rdf $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/stock.gif  $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/unread.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/online.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/nsISupports.xpt   $(DIST)/bin/components
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpccomponents.xpt $(DIST)/bin/components
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpcjsid.xpt       $(DIST)/bin/components
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpctest.xpt       $(DIST)/bin/components
-	$(INSTALL) $(srcdir)/nsRDFInterfaces.xpt                           $(DIST)/bin/components
-	$(INSTALL) $(srcdir)/nsISimpleEnumerator.xpt                       $(DIST)/bin/components
+	$(INSTALL) $(XPTYPELIBS) $(DIST)/bin/components
