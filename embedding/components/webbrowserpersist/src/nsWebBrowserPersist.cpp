@@ -30,6 +30,7 @@
 
 #include "nsNetUtil.h"
 #include "nsIFileTransportService.h"
+#include "nsIStorageStream.h"
 #include "nsIHttpChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsEscape.h"
@@ -42,9 +43,9 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDiskDocument.h"
 #include "nsIWebProgressListener.h"
 #include "nsIAuthPrompt.h"
+#include "nsIPrompt.h"
 
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -111,6 +112,20 @@ struct OutputData
     }
 };
 
+struct UploadData
+{
+    nsCOMPtr<nsIURI> mFile;
+    PRInt32 mSelfProgress;
+    PRInt32 mSelfProgressMax;
+
+    UploadData(nsIURI *aFile) :
+        mFile(aFile),
+        mSelfProgress(0),
+        mSelfProgressMax(10000)
+    {
+    }
+};
+
 // Default flags for persistence
 const PRUint32 kDefaultPersistFlags = 
     nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION;
@@ -122,9 +137,10 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mCancel(PR_FALSE),
     mJustStartedLoading(PR_TRUE),
     mCompleted(PR_FALSE),
+    mStartSaving(PR_FALSE),
+    mReplaceExisting(PR_TRUE),
     mPersistFlags(kDefaultPersistFlags),
     mPersistResult(NS_OK),
-    mReplaceExisting(PR_TRUE),
     mEncodingFlags(0),
     mWrapColumn(72),
     mCurrentThingsToPersist(0)
@@ -171,8 +187,17 @@ NS_IMETHODIMP nsWebBrowserPersist::GetInterface(const nsIID & aIID, void **aIFac
         return rv;
     }
     
-    if (mProgressListener && aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
+    if (mProgressListener && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) 
+                             || aIID.Equals(NS_GET_IID(nsIPrompt))))
     {
+        nsCOMPtr<nsISupports> sup = do_QueryInterface(mProgressListener);
+        if (sup)
+        {
+            sup->QueryInterface(aIID, aIFace);
+            if (*aIFace)
+                return NS_OK;
+        }
+
         nsCOMPtr<nsIInterfaceRequestor> req = do_QueryInterface(mProgressListener);
         if (req)
         {
@@ -356,7 +381,17 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
                     NS_OK);
             }
 
-            EndDownload(NS_OK);
+            rv = SaveDocuments();
+            if (NS_FAILED(rv))
+                EndDownload(rv);
+            else
+            {
+                // local files won't trigger OnStopRequest so we call EndDownload here
+                PRBool isFile = PR_FALSE;
+                fileAsURI->SchemeIs("file", &isFile);
+                if (isFile)
+                    EndDownload(NS_OK);
+            }
 
             // State stop notification
             if (mProgressListener)
@@ -377,6 +412,42 @@ NS_IMETHODIMP nsWebBrowserPersist::CancelSave()
 {
     mCancel = PR_TRUE;
     EndDownload(NS_BINDING_ABORTED);
+    return NS_OK;
+}
+
+
+nsresult
+nsWebBrowserPersist::StartUpload(nsIOutputStream *aOutStream, 
+    nsIURI *aDestinationURI, const char *aContentType)
+{
+    // if we don't have the right type of output stream then it's probably a local file
+    nsCOMPtr<nsIStorageStream> storStream(do_QueryInterface(aOutStream));
+    if (!storStream)
+      return NS_OK;
+ 
+     // setup the upload channel if the destination is not local
+    nsCOMPtr<nsIInputStream> inputstream;
+    nsresult rv = storStream->NewInputStream(0, getter_AddRefs(inputstream));
+    NS_ENSURE_TRUE(inputstream, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIChannel> destChannel;
+    rv = CreateChannelFromURI(aDestinationURI, getter_AddRefs(destChannel));
+    nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(destChannel));
+    NS_ENSURE_TRUE(uploadChannel, NS_ERROR_FAILURE);
+
+    // Set the upload stream
+    // NOTE: ALL data must be available in "inputstream"
+    rv = uploadChannel->SetUploadStream(inputstream, aContentType, -1);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    rv = destChannel->AsyncOpen(this, nsnull);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // add this to the upload list
+    nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(destChannel);
+    nsISupportsKey key(keyPtr);
+    mUploadList.Put(&key, new UploadData(aDestinationURI));
+
     return NS_OK;
 }
 
@@ -415,15 +486,33 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
         delete data;
         mOutputMap.Remove(&key);
     }
+    else
+    {
+        // if we didn't find the data in mOutputMap, try mUploadList
+        UploadData *upData = (UploadData *) mUploadList.Get(&key);
+        if (upData)
+        {
+            delete upData;
+            mUploadList.Remove(&key);
+        }
+    }
+    if (mOutputMap.Count() == 0 && !mCancel && !mStartSaving)
+    {
+        mStartSaving = PR_TRUE;
+        nsresult rv = SaveDocuments();
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    }
+
     PRBool completed = PR_FALSE;
-    if (mOutputMap.Count() == 0)
+    if (mOutputMap.Count() == 0 && (mUploadList.Count() == 0)
+        && mDocList.Count() == 0)
     {
         completed = PR_TRUE;
     }
 
     if (completed)
     {
-        // Save the documents now all the URIs are saved
+        // we're all done, do our cleanup
         EndDownload(NS_OK);
     }
 
@@ -469,6 +558,10 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         OutputData *data = (OutputData *) mOutputMap.Get(&key);
         if (!data)
         {
+            UploadData *upData = (UploadData *) mUploadList.Get(&key);
+            if (upData)
+                return NS_OK;
+
             // Redirect? Try and fixup the output table
             rv = FixRedirectedChannelEntry(channel);
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
@@ -489,7 +582,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
             {
                 CalculateAndAppendFileExt(data->mFile, channel);
             }
-            rv = MakeOutputStream(data->mFile,  channel, getter_AddRefs(data->mStream));
+            rv = MakeOutputStream(data->mFile, getter_AddRefs(data->mStream));
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
         }
 
@@ -517,6 +610,24 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
             {
                 // Disaster - can't read the bytes - broken link / file error?
                 cancel = PR_TRUE;
+            }
+        }
+
+        PRInt32 channelContentLength = -1;
+        rv = channel->GetContentLength(&channelContentLength);
+        if (NS_SUCCEEDED(rv) && channelContentLength != -1)
+        {
+            if ((channelContentLength - (aOffset + aLength)) == 0)
+            {
+                // we're done with this pass; see if we need to do upload
+                nsXPIDLCString contentType;
+                channel->GetContentType(getter_Copies(contentType));
+                PRBool isUpload = PR_FALSE;
+                rv = StartUpload(data->mStream, data->mFile, contentType.get());
+                if (NS_FAILED(rv))
+                {
+                    cancel = PR_TRUE;
+                }
             }
         }
     }
@@ -554,6 +665,15 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     {
         data->mSelfProgress = aProgress;
         data->mSelfProgressMax = aProgressMax;
+    }
+    else
+    {
+        UploadData *upData = (UploadData *) mUploadList.Get(&key);
+        if (upData)
+        {
+            upData->mSelfProgress = aProgress;
+            upData->mSelfProgressMax = aProgressMax;
+        }
     }
 
     // Notify listener of total progress
@@ -598,9 +718,17 @@ nsresult nsWebBrowserPersist::GetValidURIFromObject(nsISupports *aObject, nsIURI
     {
         PRBool isFile = PR_FALSE;
         objAsURI->SchemeIs("file", &isFile);
-        NS_ENSURE_TRUE(isFile, NS_ERROR_FAILURE);
-        nsCOMPtr<nsIFileURL> objAsFileURL = do_QueryInterface(objAsURI);
-        if (objAsURI)
+        if (isFile)
+        {
+            nsCOMPtr<nsIFileURL> objAsFileURL = do_QueryInterface(objAsURI);
+            if (objAsFileURL)
+            {
+                *aURI = objAsFileURL;
+                NS_ADDREF(*aURI);
+                return NS_OK;
+            }
+        }
+        else
         {
             *aURI = objAsURI;
             NS_ADDREF(*aURI);
@@ -618,7 +746,12 @@ nsresult nsWebBrowserPersist::GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **a
 
     *aLocalFile = nsnull;
     nsresult rv = NS_OK;
-    
+
+    PRBool isFile = PR_FALSE;
+    aURI->SchemeIs("file", &isFile);
+    if (!isFile)
+        return NS_OK;
+
     nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
     if (NS_FAILED(rv) || !fileURL)
     {
@@ -732,7 +865,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(inputChannel);
     nsISupportsKey key(keyPtr);
     mOutputMap.Put(&key, new OutputData(aFile, aCalcFileExt));
-    
+
     // Read from the input channel
     rv = inputChannel->AsyncOpen(this, nsnull);
     if (rv == NS_ERROR_NO_CONTENT)
@@ -759,12 +892,11 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
     // See if we can get the local file representation of this URI
     nsCOMPtr<nsILocalFile> localFile;
     nsresult rv = GetLocalFileFromURI(aFile, getter_AddRefs(localFile));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    // See if we can get the local file representation of this URI
     nsCOMPtr<nsILocalFile> localDataPath;
-    if (aDataPath)
+    if (NS_SUCCEEDED(rv) && aDataPath)
     {
+        // See if we can get the local file representation of this URI
         rv = GetLocalFileFromURI(aDataPath, getter_AddRefs(localDataPath));
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     }
@@ -785,11 +917,11 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
     {
         // Basic steps are these.
         //
-        // 1. Iterate throught the document (and subdocuments) building a list
+        // 1. Iterate through the document (and subdocuments) building a list
         //    of unique URIs.
         // 2. For each URI create an OutputData entry and open a channel to save
         //    it. As each URI is saved, discover the mime type and fix up the
-        //    local filename with the correcte extension.
+        //    local filename with the correct extension.
         // 3. Store the document in a list and wait for URI persistence to finish
         // 4. After URI persistence completes save the list of documents,
         //    fixing it up as it goes out to file.
@@ -808,7 +940,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // specified file, (e.g. c:\docs\htmldata is relative to
         // c:\docs\myfile.htm, but not to d:\foo\data.
 
-        // Starting with the data dir work back through it's parents
+        // Starting with the data dir work back through its parents
         // checking if one of them matches the base directory.
 
         if (localDataPath && localFile)
@@ -844,10 +976,32 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
                 dataDirParent = newDataDirParent;
             }
         }
+        else
+        {
+            // do a simple comparison to see if they are identical locations
+            nsCOMPtr<nsIURI> pathToFileParent;
+            rv = aFile->Clone(getter_AddRefs(pathToFileParent));
+            if (NS_SUCCEEDED(aFile->Clone(getter_AddRefs(pathToFileParent))))
+            {
+                nsCOMPtr<nsIURL> urlToChopOffFile = do_QueryInterface(pathToFileParent);
+                if (urlToChopOffFile)
+                {
+                    urlToChopOffFile->SetFileName("");
+                }
+                PRBool isEqual = PR_FALSE;
+                if (NS_SUCCEEDED(aDataPath->Equals(pathToFileParent, &isEqual))
+                    && isEqual)
+                {
+                    mCurrentDataPathIsRelative = PR_TRUE;
+                    nsXPIDLCString spec;  // empty spec; it's at same level
+                    mCurrentRelativePathToData = spec;
+                }
+            }
+        }
 
         // Store the document in a list so when URI persistence is done and the
         // filenames of saved URIs are known, the documents can be fixed up and
-        // saved,
+        // saved
 
         DocData *docData = new DocData;
         docData->mBaseURI = mCurrentBaseURI;
@@ -891,29 +1045,27 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // Set the document base to ensure relative links still work
         SetDocumentBase(aDocument, mCurrentBaseURI);
 
-        // Save the document
-        nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docAsNode);
-
-        nsAutoString contentType; 
+        nsCAutoString contentType; 
         if (mContentType.Length() > 0)
         {
-            contentType = mContentType;
+            contentType.AssignWithConversion(mContentType);
         }
         else
         {
             // TODO infer the other content type - from the DOM document maybe?
-            contentType = NS_LITERAL_STRING("text/html");
+            contentType.Assign("text/html");
         }
         nsAutoString charType; // Empty
 
-        rv = diskDoc->SaveFile(
+        nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(aDocument);
+        rv = SaveDocumentWithFixup(
+            docAsDoc,
+            nsnull,  // no dom fixup
             aFile,
             mReplaceExisting,
-            PR_TRUE, // save as a copy (i.e. don't change it's dirty status)
             contentType.get(),
-            charType.get(),
-            mEncodingFlags,
-            mWrapColumn);
+            charType,
+            mEncodingFlags);
     }
 
     mCurrentBaseURI = oldBaseURI;
@@ -937,7 +1089,6 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         mCurrentBaseURI = docData->mBaseURI;
 
         // Save the document, fixing it up with the new URIs as we do
-        nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docData->mDocument);
         nsAutoString charType; // Empty
         
         nsEncoderNodeFixup *nodeFixup;
@@ -949,15 +1100,15 @@ nsresult nsWebBrowserPersist::SaveDocuments()
 
         nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(docData->mDocument);
 
-        nsAutoString contentType;
+        nsCAutoString contentType;
         if (mContentType.Length() > 0)
         {
-            contentType = mContentType;
+            contentType.AssignWithConversion(mContentType);
         }
         else
         {
             // TODO infer the other content type - from the DOM document maybe?
-            contentType.AssignWithConversion("text/html");
+            contentType.Assign("text/html");
         }
 
         // Save the document, fixing up the links as it goes out
@@ -966,7 +1117,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
             nodeFixup,
             docData->mFile,
             mReplaceExisting,
-            contentType,
+            contentType.get(),
             charType,
             mEncodingFlags);
 
@@ -988,6 +1139,8 @@ void nsWebBrowserPersist::CleanUp()
     mURIMap.Reset();
     mOutputMap.Enumerate(EnumCleanupOutputMap, this);
     mOutputMap.Reset();
+    mUploadList.Enumerate(EnumCleanupUploadList, this);
+    mUploadList.Reset();
     PRInt32 i;
     for (i = 0; i < mDocList.Count(); i++)
     {
@@ -1009,10 +1162,6 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
         NS_ENSURE_TRUE(mMIMEService, NS_ERROR_FAILURE);
     }
 
-    nsCOMPtr<nsILocalFile> localFile;
-    GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
-    NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
-
     nsXPIDLCString contentType;
 
     // Get the content type from the channel
@@ -1033,10 +1182,16 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
         mMIMEService->GetFromMIMEType(
             contentType.get(), getter_AddRefs(mimeInfo));
 
+        nsCOMPtr<nsILocalFile> localFile;
+        GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
+
         if (mimeInfo)
         {
+            nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+            NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
+
             nsXPIDLCString fileName;
-            localFile->GetLeafName(getter_Copies(fileName));
+            url->GetFileName(getter_Copies(fileName));
 
             nsCString newFileName;
             newFileName.Assign(fileName);
@@ -1056,7 +1211,20 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
             {
                 newFileName.Append(".");
                 newFileName.Append(fileExt.get());
-                localFile->SetLeafName(newFileName.get());
+
+                if (localFile)
+                {
+                    localFile->SetLeafName(newFileName.get());
+
+                    // Resync the URI with the file after the extension has been appended
+                    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+                    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+                    fileURL->SetFile(localFile);  // this should recalculate uri
+                }
+                else
+                {
+                    url->SetFileName(newFileName.get());
+                }
             }
 
         }
@@ -1071,61 +1239,66 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 #endif            
     }
 
-    // Resync the URI with the file after the extension has been appended
-    
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-    fileURL->SetFile(localFile);
-
     return NS_OK;
 }
 
 nsresult
 nsWebBrowserPersist::MakeOutputStream(
-    nsIURI *aURI, nsIChannel *aChannel, nsIOutputStream **aOutputStream)
+    nsIURI *aURI, nsIOutputStream **aOutputStream)
 {
     NS_ENSURE_ARG_POINTER(aURI);
-    NS_ENSURE_ARG_POINTER(aChannel);
     NS_ENSURE_ARG_POINTER(aOutputStream);
 
-    nsCOMPtr<nsILocalFile> localFile;
-    GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
-    NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
+    PRBool isFile = PR_FALSE;
+    aURI->SchemeIs("file", &isFile);
+    
+    if (isFile)
+    {
+        nsCOMPtr<nsILocalFile> localFile;
+        GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
+        NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
 
-    nsresult rv = MakeOutputStreamFromFile(localFile, aChannel, aOutputStream);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+        nsresult rv = MakeOutputStreamFromFile(localFile, aOutputStream);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    }
+    else
+    {
+        nsresult res = MakeOutputStreamFromURI(aURI, aOutputStream);
+        NS_ENSURE_SUCCESS(res, NS_ERROR_FAILURE);
+    }
 
     return NS_OK;
 }
 
 nsresult
 nsWebBrowserPersist::MakeOutputStreamFromFile(
-    nsILocalFile *aFile, nsIChannel *aChannel, nsIOutputStream **aOutputStream)
+    nsILocalFile *aFile, nsIOutputStream **aOutputStream)
 {
     nsresult rv = NS_OK;
 
-    NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-    nsCOMPtr<nsIFileTransportService> fts =
-        do_GetService(kFileTransportServiceCID, &rv);
+    nsCOMPtr<nsIFileOutputStream> fileOutputStream =
+        do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    if (NS_FAILED(rv))
-    {
-        return NS_ERROR_FAILURE;
-    }
+    rv = fileOutputStream->Init(aFile, -1, -1);  // brade:  get the right flags here! XXX
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    // Open a channel on the local file
-    nsCOMPtr<nsITransport> outputChannel;
-    rv = fts->CreateTransport(aFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-        0664, getter_AddRefs(outputChannel));
-    if (NS_FAILED(rv))
-    {
-        return NS_ERROR_FAILURE;
-    }
+    NS_ENSURE_SUCCESS(CallQueryInterface(fileOutputStream, aOutputStream), NS_ERROR_FAILURE);
 
-    // Create an output stream to store the data
-    outputChannel->OpenOutputStream(0, -1, 0, aOutputStream);
-    NS_ENSURE_TRUE(*aOutputStream, NS_ERROR_FAILURE);
+    return NS_OK;
+}
 
+nsresult
+nsWebBrowserPersist::MakeOutputStreamFromURI(
+    nsIURI *aURI, nsIOutputStream  **aOutputStream)
+{
+    PRUint32 segsize = 8192;
+    PRUint32 maxsize = PRUint32(-1);
+    nsCOMPtr<nsIStorageStream> storStream;
+    nsresult rv = NS_NewStorageStream(segsize, maxsize, getter_AddRefs(storStream));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    
+    NS_ENSURE_SUCCESS(CallQueryInterface(storStream, aOutputStream), NS_ERROR_FAILURE);
     return NS_OK;
 }
 
@@ -1136,12 +1309,6 @@ nsWebBrowserPersist::EndDownload(nsresult aResult)
     if (NS_SUCCEEDED(mPersistResult) && NS_FAILED(aResult))
     {
         mPersistResult = aResult;
-    }
-
-    // Save the documents
-    if (NS_SUCCEEDED(aResult))
-    {
-        SaveDocuments();
     }
 
     // Cleanup the channels
@@ -1262,6 +1429,19 @@ nsWebBrowserPersist::EnumCalcProgress(nsHashKey *aKey, void *aData, void* closur
 }
 
 PRBool PR_CALLBACK
+nsWebBrowserPersist::EnumCalcUploadProgress(nsHashKey *aKey, void *aData, void* closure)
+{
+    if (aData && closure)
+    {
+        nsWebBrowserPersist *pthis = (nsWebBrowserPersist *) closure;
+        UploadData *data = (UploadData *) aData;
+        pthis->mTotalCurrentProgress += data->mSelfProgress;
+        pthis->mTotalMaxProgress += data->mSelfProgressMax;
+    }
+    return PR_TRUE;
+}
+
+PRBool PR_CALLBACK
 nsWebBrowserPersist::EnumCountURIsToPersist(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
@@ -1333,6 +1513,18 @@ PRBool PR_CALLBACK
 nsWebBrowserPersist::EnumCleanupURIMap(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
+    if (data)
+    {
+        delete data; // Delete data associated with key
+    }
+    return PR_TRUE;
+}
+
+
+PRBool PR_CALLBACK
+nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* closure)
+{
+    UploadData *data = (UploadData *) aData;
     if (data)
     {
         delete data; // Delete data associated with key
@@ -1596,6 +1788,7 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
         attrNode->GetNodeValue(oldValue);
         nsCString oldCValue; oldCValue.AssignWithConversion(oldValue);
 
+        // get the current location of the file (absolutized)
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), oldCValue.get(), mCurrentBaseURI);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
@@ -1618,22 +1811,30 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
             }
             nsAutoString newValue;
 
+            // reset node attribute 
             // Use relative or absolute links
-            nsCOMPtr<nsILocalFile> localFile;
-            GetLocalFileFromURI(fileAsURI, getter_AddRefs(localFile));
-            if (data->mDataPathIsRelative && localFile)
+            if (data->mDataPathIsRelative)
             {
+                nsCOMPtr<nsIURL> url(do_QueryInterface(fileAsURI));
+                NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
                 nsXPIDLCString filename;
-                localFile->GetLeafName(getter_Copies(filename));
+                url->GetFileName(getter_Copies(filename));
+
                 nsCAutoString rawPathURL;
                 rawPathURL.Assign(data->mRelativePathToData);
-                rawPathURL.Append(filename.get());
-                newValue.AssignWithConversion(nsEscape(rawPathURL.get(), url_Path));
+                rawPathURL.Append(filename);
+
+                nsCAutoString buf;
+                if (NS_EscapeURLPart(rawPathURL.get(), rawPathURL.Length(), 
+                    esc_Directory | esc_FileBaseName | esc_FileExtension, buf))
+                    newValue.AssignWithConversion(buf.get());
+                else
+                    newValue.AssignWithConversion(rawPathURL.get());
             }
             else
             {
                 nsXPIDLCString fileurl;
-                NS_GetURLSpecFromFile(localFile, getter_Copies(fileurl));
+                fileAsURI->GetSpec(getter_Copies(fileurl));
                 newValue.AssignWithConversion(fileurl);
             }
             if (data->mIsSubFrame)
@@ -1726,11 +1927,29 @@ nsWebBrowserPersist::SaveSubframeContent(
     return NS_OK;
 }
 
+nsresult
+nsWebBrowserPersist::CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel)
+{
+    nsresult rv = NS_OK;
+    *aChannel = nsnull;
+
+    nsCOMPtr<nsIIOService> ioserv;
+    ioserv = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ioserv->NewChannelFromURI(aURI, aChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_ARG_POINTER(*aChannel);
+
+    rv = (*aChannel)->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor *, this));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+} 
 
 nsresult
 nsWebBrowserPersist::SaveDocumentWithFixup(
     nsIDocument *aDocument, nsIDocumentEncoderNodeFixup *aNodeFixup,
-    nsIURI *aFile, PRBool aReplaceExisting, const nsString &aFormatType,
+    nsIURI *aFile, PRBool aReplaceExisting, const char *aFormatType,
     const nsString &aSaveCharset, PRUint32 aFlags)
 {
     // NOTE: This function is based off of nsDocument::SaveFile
@@ -1738,46 +1957,41 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     NS_ENSURE_ARG_POINTER(aFile);
     
     nsresult  rv = NS_OK;
-    nsCOMPtr<nsIOutputStream> outputStream;
-
     nsCOMPtr<nsILocalFile> localFile;
     GetLocalFileFromURI(aFile, getter_AddRefs(localFile));
-    NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
+    if (localFile)
+    {
+        // if we're not replacing an existing file but the file
+        // exists, something is wrong
+        PRBool fileExists = PR_FALSE;
+        rv = localFile->Exists(&fileExists);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    // if we're not replacing an existing file but the file
-    // exists, something is wrong
-    PRBool fileExists = PR_FALSE;
-    rv = localFile->Exists(&fileExists);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!aReplaceExisting && fileExists)
-      return NS_ERROR_FAILURE;				// where are the file I/O errors?
-
-    nsCOMPtr<nsIFileOutputStream> fileOutputStream =
-        do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = fileOutputStream->Init(localFile, -1, -1);
-    if (NS_FAILED(rv)) return rv;
-
-    outputStream = do_QueryInterface(fileOutputStream);
+        if (!aReplaceExisting && fileExists)
+            return NS_ERROR_FAILURE;				// where are the file I/O errors?
+    }
+    
+    nsCOMPtr<nsIOutputStream> outputStream;
+    rv = MakeOutputStream(aFile, getter_AddRefs(outputStream));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(outputStream, NS_ERROR_FAILURE);
 
     // Get a document encoder instance
     nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-    contractID.AppendWithConversion(aFormatType);
+    contractID.Append(aFormatType);
     
     nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID.get(), &rv);
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    rv = encoder->Init(aDocument, aFormatType, aFlags);
-    if (NS_FAILED(rv))
-    {
-        return rv;
-    }
+    nsAutoString newContentType; newContentType.AssignWithConversion(aFormatType);
+    rv = encoder->Init(aDocument, newContentType, aFlags);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // Set the node fixup callback
     encoder->SetNodeFixup(aNodeFixup);
+
+    if (mWrapColumn && (aFlags & ENCODE_FLAGS_WRAP))
+        encoder->SetWrapColumn(mWrapColumn);
 
     nsAutoString charsetStr(aSaveCharset);
     if (charsetStr.Length() == 0)
@@ -1791,11 +2005,19 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     encoder->SetCharset(charsetStr);
 
     rv = encoder->EncodeToStream(outputStream);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    
+    if (!localFile)
+    {
+        rv = StartUpload(outputStream, aFile, aFormatType);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    }
 
     return rv;
 }
 
 
+// we store the current location as the key (absolutized version of domnode's attribute's value)
 nsresult
 nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     const char *aURI, PRBool aNeedsPersisting, URIData **aData)
@@ -1836,6 +2058,7 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     data->mNeedsPersisting = aNeedsPersisting;
     data->mFilename = filename;
     data->mSaved = PR_FALSE;
+    data->mIsSubFrame = PR_FALSE;
     data->mDataPath = mCurrentDataPath;
     data->mDataPathIsRelative = mCurrentDataPathIsRelative;
     data->mRelativePathToData = mCurrentRelativePathToData;
@@ -1878,9 +2101,8 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
                  ;p++, length++)
             {
                 if (nsCRT::IsAsciiAlpha(*p) || nsCRT::IsAsciiDigit(*p)
-                    || *p == '.'
+                    || *p == '.' || *p == '-' ||  *p == '_'
 #ifdef WIN32
-                    || *p == '-'
                     || (*p == ' ' && length != kMaxFileNameLength - 1)
 #endif
                     )
