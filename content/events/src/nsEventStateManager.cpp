@@ -4113,6 +4113,13 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 
   nsCOMPtr<nsIContent> previousFocus = mCurrentFocus;
 
+  // Make sure previousFocus is in a document.  If it's not, then
+  // we should never abort firing events based on what happens when we
+  // send it a blur.
+
+  if (previousFocus && !previousFocus->GetDocument())
+    previousFocus = nsnull;
+
   if (nsnull != gLastFocusedPresContext) {
 
     nsCOMPtr<nsIContent> focusAfterBlur;
@@ -4192,7 +4199,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
         mFirstBlurEvent = nsnull;
       }
 
-      if (previousFocus != focusAfterBlur) {
+      if (previousFocus && previousFocus != focusAfterBlur) {
         // The content node's blur handler focused something else.
         // In this case, abort firing any more blur or focus events.
         return NS_OK;
@@ -4244,7 +4251,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       temp->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       pusher.Pop();
 
-      if (mCurrentFocus != previousFocus) {
+      if (previousFocus && mCurrentFocus != previousFocus) {
         // The document's blur handler focused something else.
         // Abort firing any additional blur or focus events.
         return NS_OK;
@@ -4253,7 +4260,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       pusher.Push(globalObject);
       globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
-      if (mCurrentFocus != previousFocus) {
+      if (previousFocus && mCurrentFocus != previousFocus) {
         // The window's blur handler focused something else.
         // Abort firing any additional blur or focus events.
         return NS_OK;
