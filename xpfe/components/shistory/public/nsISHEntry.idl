@@ -29,10 +29,10 @@
  */
 #include "nsISupports.idl"
 #include "nsIURI.idl"
-#include "domstubs.idl"
 #include "nsIInputStream.idl"
 
 interface nsILayoutHistoryState;
+interface nsIDOMDocument;
 
 [scriptable, uuid(65281BA1-988A-11d3-BDC7-0050040A9B44)]
 interface nsISHEntry : nsISupports 

@@ -1,22 +1,25 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Mozilla Public
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
+ * the License at http://www.mozilla.org/NPL/
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
- * The Original Code is the Mozilla browser.
- * 
+ *
+ * The Original Code is mozilla.org code.
+ *
  * The Initial Developer of the Original Code is Netscape
- * Communications, Inc.  Portions created by Netscape are
- * Copyright (C) 1999, Mozilla.  All Rights Reserved.
- * 
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
  * Contributor(s):
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ *   Johnny Stenback <jst@netscape.com>
  */
 
 #include "nsIDOMWindow.idl"
@@ -25,7 +28,6 @@ interface nsISidebar;
 interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
-interface nsISupportsArray;
 
 
 [scriptable, uuid(9c911860-7dd9-11d4-9a83-000064657374)]
@@ -37,39 +39,37 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   readonly attribute nsIDOMScreen                screen;
   readonly attribute nsIDOMHistory               history;
 
-  /* Wwhhhhhaaaaaaaaggghh, this is an invalid name in IDL
-   * [replaceable] _content;
-   */
+  /* [replaceable] content */
   readonly attribute nsIDOMWindow                content;
 
-  /* [replaceable] sidebar; */
+  /* [replaceable] sidebar */
   readonly attribute nsISidebar                  sidebar;
 
-  /* [replaceable] prompter; */
+  /* [replaceable] prompter */
   readonly attribute nsIPrompt                   prompter;
 
-  /* [replaceable] menubar; */
+  /* [replaceable] menubar */
   readonly attribute nsIDOMBarProp               menubar;
 
-  /* [replaceable] toolbar; */
+  /* [replaceable] toolbar */
   readonly attribute nsIDOMBarProp               toolbar;
 
-  /* [replaceable] locationbar; */
+  /* [replaceable] locationbar */
   readonly attribute nsIDOMBarProp               locationbar;
 
-  /* [replaceable] personalbar; */
+  /* [replaceable] personalbar */
   readonly attribute nsIDOMBarProp               personalbar;
 
-  /* [replaceable] statusbar; */
+  /* [replaceable] statusbar */
   readonly attribute nsIDOMBarProp               statusbar;
 
-  /* [replaceable] directories; */
+  /* [replaceable] directories */
   readonly attribute nsIDOMBarProp               directories;
   readonly attribute boolean                     closed;
   readonly attribute nsIDOMCrypto                crypto;
   readonly attribute nsIDOMPkcs11                pkcs11;
 
-  /* [replaceable] controllers; */
+  /* [replaceable] controllers */
   readonly attribute nsIControllers              controllers;
            attribute nsIDOMWindowInternal        opener;
            attribute DOMString                   status;
@@ -90,15 +90,17 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   readonly attribute long                        pageXOffset;
   readonly attribute long                        pageYOffset;
 
-  /* [replaceable] length; */
+  /* [replaceable] length */
   readonly attribute unsigned long               length;
 
-  // Make these 4 methods JS only? 
-  void                      dump(in DOMString str);
-  void                      alert(in DOMString text /*, ... */);
-  boolean                   confirm(in DOMString text /*, ... */);
+  void                      alert(in DOMString text);
+  boolean                   confirm(in DOMString text);
+
   // XXX prompt() should return a null string if cancel is pressed
-  DOMString                 prompt(in DOMString data /*, ... */);
+  DOMString                 prompt(in DOMString aMessage,
+                                   in DOMString aInitial,
+                                   in DOMString aTitle,
+                                   in unsigned long aSavePassword);
 
   void                      focus();
   void                      blur();
@@ -114,42 +116,33 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   void                      moveBy(in long xDif, in long yDif);
   void                      resizeTo(in long width, in long height);
   void                      resizeBy(in long widthDif, in long heightDif);
-  void                      sizeToContent();
   void                      GetAttention();
   void                      scroll(in long xScroll, in long yScroll);
 
   void                      clearTimeout(in long timerID);
   void                      clearInterval(in long timerID);
-  long                      setTimeout(/* ... */);
-  long                      setInterval(/* ... */);
+  //[noscript] long           setTimeout(/* in function,
+  //                                        in unsigned long timeout */);
+  //[noscript] long           setInterval(/* in function,
+  //                                        in unsigned long timeout */);
 
-  // This method is here for backwards compatibility with 4.x only,
-  // it's implementation is a nop
-  void                      setResizable(in boolean resizable);
-
-  void                      captureEvents(in long eventFlags);
-  void                      releaseEvents(in long eventFlags);
-  void                      routeEvent(in nsIDOMEvent evt);
-  void                      enableExternalCapture();
-  void                      disableExternalCapture();
   void                      setCursor(in DOMString cursor);
 
   [noscript] nsIDOMWindow   open(in DOMString url, in DOMString name,
                                  in DOMString options);
+  // This method works like open except that aExtraArgument gets
+  // converted into the array window.arguments in JS, if
+  // aExtraArgument is a nsISupportsArray then the individual items in
+  // the array are inserted into window.arguments, and primitive
+  // nsISupports (nsISupportsPrimitives) types are converted to native
+  // JS types when possible.
+  [noscript] nsIDOMWindow   openDialog(in DOMString url, in DOMString name,
+                                       in DOMString options,
+                                       in nsISupports aExtraArgument);
   void                      close();
 
   void                      updateCommands(in DOMString action);
 
   DOMString                 escape(in DOMString str);
   DOMString                 unescape(in DOMString str);
-};
-
-[scriptable, uuid(8aefcae2-1dd2-11b2-8967-a710b365f144)]
-interface nsIDOMWindowInternalEx : nsIDOMWindowInternal
-{
-  // This method is subject to change so *don't* use it unless you're
-  // prepared to change your code when this method changes.
-  [noscript] nsIDOMWindow   openDialog(in DOMString url, in DOMString name,
-                                       in DOMString options,
-                                       in nsISupportsArray argsArray);
 };

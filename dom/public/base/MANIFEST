@@ -20,26 +20,6 @@
 # This is a list of local files which get copied to the mozilla:dist:dom directory
 #
 
-nsIDOMWindow.h
-nsIDOMWindowInternal.h
-nsIDOMLocation.h
-nsIDOMNSLocation.h
-nsIDOMNavigator.h
-nsIDOMWindowCollection.h
-nsIDOMScreen.h
-nsIDOMHistory.h
-nsIDOMMimeType.h
-nsIDOMMimeTypeArray.h
-nsIDOMPlugin.h
-nsIDOMPluginArray.h
-nsIDOMBarProp.h
-nsIDOMDOMException.h
 nsPIDOMWindow.h
 nsPIWindowRoot.h
 nsIFocusController.h
-nsIDOMAbstractView.h
-nsIDOMCrypto.h
-nsIDOMCRMFObject.h
-nsIDOMPkcs11.h
-nsIDOMViewCSS.h
-nsIDOMWindowEventOwner.h

@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -34,13 +34,10 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIXPConnect.idl"
+#include "nsIClassInfo.idl"
 
 [ptr] native JSContext(JSContext);
-native jsid(jsid);
-[ref] native MethodInfo(MethodInfo);
-
-// forward decl...
-interface nsIInterfaceInfo;
 
 [uuid(31431440-f1ce-11d2-985a-006008962422)]
 interface nsIXPCSecurityManager : nsISupports
@@ -49,56 +46,53 @@ interface nsIXPCSecurityManager : nsISupports
     * These flags are used when calling nsIXPConnect::SetSecurityManager
     */
 
-    const short HOOK_CREATE_WRAPPER  = 1 << 0;
-    const short HOOK_CREATE_INSTANCE = 1 << 1;
-    const short HOOK_GET_SERVICE     = 1 << 2;
-    const short HOOK_CALL_METHOD     = 1 << 3;
-    const short HOOK_GET_PROPERTY    = 1 << 4;
-    const short HOOK_SET_PROPERTY    = 1 << 5;
+    const PRUint32 HOOK_CREATE_WRAPPER  = 1 << 0;
+    const PRUint32 HOOK_CREATE_INSTANCE = 1 << 1;
+    const PRUint32 HOOK_GET_SERVICE     = 1 << 2;
+    const PRUint32 HOOK_CALL_METHOD     = 1 << 3;
+    const PRUint32 HOOK_GET_PROPERTY    = 1 << 4;
+    const PRUint32 HOOK_SET_PROPERTY    = 1 << 5;
 
-    const short HOOK_ALL             = HOOK_CREATE_WRAPPER  |
-                                       HOOK_CREATE_INSTANCE |
-                                       HOOK_GET_SERVICE     |
-                                       HOOK_CALL_METHOD     |
-                                       HOOK_GET_PROPERTY    |
-                                       HOOK_SET_PROPERTY    ;
+    const PRUint32 HOOK_ALL             = HOOK_CREATE_WRAPPER  |
+                                          HOOK_CREATE_INSTANCE |
+                                          HOOK_GET_SERVICE     |
+                                          HOOK_CALL_METHOD     |
+                                          HOOK_GET_PROPERTY    |
+                                          HOOK_SET_PROPERTY    ;
 
     /**
     * For each of these hooks returning NS_OK means 'let the action continue'.
-    * Returning an error code means 'veto the action'. XPConnect will do its
-    * best to fail silently if the action is vetoed. The implementor of this
+    * Returning an error code means 'veto the action'. XPConnect will return
+    * JS_FALSE to the js engine if the action is vetoed. The implementor of this
     * interface is responsible for setting a JS exception into the JSContext
     * if that is appropriate.
     */
 
-    void CanCreateWrapper(in JSContext aJSContext,
+    void CanCreateWrapper(in JSContextPtr aJSContext,
                           in nsIIDRef aIID,
-                          in nsISupports aObj);
+                          in nsISupports aObj,
+                          in nsIClassInfo aClassInfo,
+                          inout voidPtr aPolicy);
 
-    void CanCreateInstance(in JSContext aJSContext,
+    void CanCreateInstance(in JSContextPtr aJSContext,
                            in nsCIDRef aCID);
 
-    void CanGetService(in JSContext aJSContext,
+    void CanGetService(in JSContextPtr aJSContext,
                        in nsCIDRef aCID);
 
-    void CanCallMethod(in JSContext aJSContext,
-                       in nsIIDRef aIID,
-                       in nsISupports aObj,
-                       in nsIInterfaceInfo aInterfaceInfo,
-                       in PRUint16 aMethodIndex,
-                       [const] in jsid aName);
+    /*
+     * Used for aAction below
+     */
+    const PRUint32 ACCESS_CALL_METHOD  = 0;
+    const PRUint32 ACCESS_GET_PROPERTY = 1;
+    const PRUint32 ACCESS_SET_PROPERTY = 2;
 
-    void CanGetProperty(in JSContext aJSContext,
-                        in nsIIDRef aIID,
-                        in nsISupports aObj,
-                        in nsIInterfaceInfo aInterfaceInfo,
-                        in PRUint16 aMethodIndex,
-                        [const] in jsid aName);
-
-    void CanSetProperty(in JSContext aJSContext,
-                        in nsIIDRef aIID,
-                        in nsISupports aObj,
-                        in nsIInterfaceInfo aInterfaceInfo,
-                        in PRUint16 aMethodIndex,
-                        [const] in jsid aName);
+    void CanAccess(in PRUint32 aAction,
+                   in nsIXPCNativeCallContext aCallContext,
+                   in JSContextPtr aJSContext,
+                   in JSObjectPtr aJSObject,
+                   in nsISupports aObj,
+                   in nsIClassInfo aClassInfo,
+                   in JSVal aName,
+                   inout voidPtr aPolicy);
 };

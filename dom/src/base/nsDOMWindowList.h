@@ -32,8 +32,7 @@ class nsIDocShellTreeNode;
 class nsIDocShell;
 class nsIDOMWindow;
 
-class nsDOMWindowList : public nsIDOMWindowCollection,
-                        public nsIScriptObjectOwner
+class nsDOMWindowList : public nsIDOMWindowCollection
 {
 public:
   nsDOMWindowList(nsIDocShell *aDocShell);
@@ -46,16 +45,11 @@ public:
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMWindow** aReturn);
   NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMWindow** aReturn);
 
-  //nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-  
   //local methods
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
 
 protected:
   nsIDocShellTreeNode* mDocShellNode; //Weak Reference
-  void *mScriptObject;
 };
 
 #endif // nsDOMWindowList_h___

@@ -386,7 +386,7 @@ public:
 
     uint16                      mMethodBaseIndex;
     uint16                      mConstantBaseIndex;
-    nsIInterfaceInfo*           mParent;
+    xptiInterfaceInfo*          mParent;
     XPTInterfaceDescriptor*     mDescriptor;
     xptiTypelib                 mTypelib;
     xptiWorkingSet*             mWorkingSet;
@@ -401,7 +401,8 @@ public:
             mTypelib(aTypelib),
             mWorkingSet(aWorkingSet) {}
 
-    ~xptiInterfaceGuts() {NS_IF_RELEASE(mParent);}
+    // method definition below to avoid use before declaring xptiInterfaceInfo
+    inline ~xptiInterfaceGuts();
 };
 
 /***************************************************************************/
@@ -750,5 +751,11 @@ private:
     PRLock*                 mResolveLock;
     PRLock*                 mAutoRegLock;
 };
+
+/***************************************************************************/
+//inlines...
+
+inline xptiInterfaceGuts::~xptiInterfaceGuts() {NS_IF_RELEASE(mParent);}
+
 
 #endif /* xptiprivate_h___ */

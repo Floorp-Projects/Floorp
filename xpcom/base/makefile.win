@@ -60,12 +60,15 @@ XPIDLSRCS =               \
         .\nsIMemory.idl \
         .\nsILeakDetector.idl \
         .\nsIInterfaceRequestor.idl \
+        .\nsIException.idl \
+        .\nsIExceptionService.idl \
         .\nsISupports.idl \
 #        .\nsISystemInfo.idl \
         .\nsIWeakReference.idl \
-	.\nsIConsoleService.idl \
-	.\nsIConsoleMessage.idl \
-	.\nsIConsoleListener.idl \
+        .\nsIConsoleService.idl \
+        .\nsIConsoleMessage.idl \
+        .\nsIConsoleListener.idl \
+        .\nsIProgrammingLanguage.idl \
         $(NULL)
 
 ################################################################################
@@ -107,6 +110,7 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsIInterfaceRequestor.obj \
 #        .\$(OBJDIR)\nsSystemInfo.obj  \
+        .\$(OBJDIR)\nsExceptionService.obj \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         .\$(OBJDIR)\nsWeakReference.obj \
         .\$(OBJDIR)\nsConsoleService.obj \

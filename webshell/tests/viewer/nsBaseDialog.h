@@ -25,6 +25,7 @@
 //#include "nsBrowserWindow.h"
 #include "nsIWindowListener.h"
 #include "nsIDOMElement.h"
+#include "nsString.h"
 
 class nsIXPBaseWindow;
 class nsBrowserWindow;

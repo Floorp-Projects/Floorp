@@ -29,6 +29,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
+#include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 

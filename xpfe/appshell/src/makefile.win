@@ -35,9 +35,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \
  .\$(OBJDIR)\nsCommandLineService.obj   \
- .\$(OBJDIR)\nsXPConnectFactory.obj    \
- .\$(OBJDIR)\nsJSXPConnectFactory.obj  \
- .\$(OBJDIR)\nsAppShellNameSet.obj     \
  .\$(OBJDIR)\nsFileLocations.obj        \
      .\$(OBJDIR)\nsWindowMediator.obj        \
 	.\$(OBJDIR)\nsAbout.obj \
@@ -45,22 +42,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsTimingService.obj \
  $(NULL)
 
-LINCS=-I$(PUBLIC)\raptor                \
-      -I$(PUBLIC)\xpcom                 \
-      -I$(PUBLIC)\chardet               \
-      -I$(PUBLIC)\base                  \
-      -I$(PUBLIC)\dom                   \
-      -I$(PUBLIC)\js                    \
-      -I$(PUBLIC)\pref                  \
-      -I$(PUBLIC)\profile               \
-      -I$(PUBLIC)\appcores              \
-!ifdef NECKO
-      -I$(PUBLIC)\necko		\
-!else
-      -I$(PUBLIC)\netlib		\
-!endif
-      -I$(PUBLIC)\rdf			\
-      -I$(PUBLIC)\xpfe\components \
+LINCS= \
 !ifdef MOZ_FULLCIRCLE
       -I$(MOZ_TOOLS)\include \
 !endif
@@ -81,8 +63,6 @@ LLIBS=                          \
  $(DIST)\lib\timer_s.lib    \
  $(DIST)\lib\gkgfxwin.lib   \
  $(DIST)\lib\js3250.lib        \
- $(DIST)\lib\jsdombase_s.lib   \
- $(DIST)\lib\jsdomevents_s.lib   \
  $(LIBNSPR)                     \
 !ifdef MOZ_FULLCIRCLE
  $(MOZ_TOOLS)\lib\fulls32.lib \

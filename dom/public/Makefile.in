@@ -28,34 +28,28 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 
-DIRS		= base coreDom coreEvents range events html css xul
+DIRS		= idl coreEvents base
 
-XPIDLSRCS	= domstubs.idl \
-				  nsIScriptContextOwner.idl \
-				  nsIScriptGlobalObjectOwner.idl \
-				  nsIEntropyCollector.idl \
-				  $(NULL)
+XPIDLSRCS	= nsIScriptContextOwner.idl \
+		  nsIScriptGlobalObjectOwner.idl \
+		  nsIEntropyCollector.idl \
+		  $(NULL)
 
-EXPORTS		= \
-		nsIScriptContext.h \
-		nsIJSScriptObject.h \
-		nsIJSNativeInitializer.h \
-		nsIScriptEventListener.h \
-		nsIScriptObjectOwner.h \
-		nsIScriptGlobalObject.h \
-		nsIDOMScriptObjectFactory.h \
-		nsIDOMNativeObjectRegistry.h \
-		nsDOMCID.h \
-		nsDOMPropEnums.h \
-		nsDOMPropNames.h \
-		nsIScriptNameSetRegistry.h \
-		nsIScriptExternalNameSet.h \
-		nsIScriptNameSpaceManager.h \
-		nsDOMError.h \
-		nsIJSEventListener.h \
-		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS=nsIScriptContext.h		\
+	nsIJSScriptObject.h		\
+	nsIJSNativeInitializer.h	\
+	nsIScriptObjectOwner.h		\
+	nsIScriptObjectPrincipal.h	\
+	nsIScriptGlobalObject.h		\
+	nsIScriptEventListener.h	\
+	nsIDOMScriptObjectFactory.h	\
+	nsDOMCID.h			\
+	nsIScriptExternalNameSet.h	\
+	nsIScriptNameSpaceManager.h	\
+	nsDOMError.h			\
+	nsIJSEventListener.h		\
+	nsIDOMClassInfo.h		\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

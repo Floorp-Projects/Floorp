@@ -47,8 +47,7 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
-	-I$(PUBLIC)\js -I..\html\base\src -I..\base\src \
+LINCS=  -I..\html\base\src -I..\base\src \
 	-I..\html\style\src \
 	-I..\xul\content\src \
 	-I..\xul\base\src \
@@ -58,7 +57,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 !ifdef MOZ_SVG
 	-I..\svg\content\src \
 !endif
-        -I$(PUBLIC)\rdf
+	$(NULL)
 
 # These are the libraries we need to link with to create the dll
 LLIBS=					\
@@ -82,7 +81,6 @@ LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\gkgfxwin.lib		\
  $(DIST)\lib\timer_s.lib \
- $(DIST)\lib\jsdom.lib		        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_PERF)
  $(DIST)\lib\util.lib		        \

@@ -18,8 +18,9 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
+ *   Mark Hammond <MarkH@ActiveState.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -33,7 +34,7 @@
  * file under either the NPL or the GPL.
  */
 
-/* An implementaion nsIXPCException. */
+/* An implementaion of nsIException. */
 
 #include "xpcprivate.h"
 
@@ -46,7 +47,7 @@
 *  in some more global way at runtime.
 */
 
-static struct ResultMap 
+static struct ResultMap
 {nsresult rv; const char* name; const char* format;} map[] = {
 #define XPC_MSG_DEF(val, format) \
     {(val), #val, format},
@@ -54,6 +55,8 @@ static struct ResultMap
 #undef XPC_MSG_DEF
     {0,0,0}   // sentinel to mark end of array
 };
+
+#define RESULT_COUNT ((sizeof(map) / sizeof(map[0]))-1)
 
 // static
 JSBool
@@ -101,15 +104,30 @@ nsXPCException::IterateNSResults(nsresult* rv,
     return p;
 }
 
+// static
+PRUint32
+nsXPCException::GetNSResultCount()
+{
+    return RESULT_COUNT;
+}
+
 /***************************************************************************/
 
+NS_INTERFACE_MAP_BEGIN(nsXPCException)
+  NS_INTERFACE_MAP_ENTRY(nsIException)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCException)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCDOMException)
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCException, 
-                              nsIXPCException, 
-                              nsISecurityCheckedComponent)
-#else
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCException, nsIXPCException)
+  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
 #endif
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
+  NS_IMPL_QUERY_CLASSINFO(nsXPCException)
+NS_INTERFACE_MAP_END_THREADSAFE
+
+NS_IMPL_THREADSAFE_ADDREF(nsXPCException)
+NS_IMPL_THREADSAFE_RELEASE(nsXPCException)
+
+NS_IMPL_CI_INTERFACE_GETTER2(nsXPCException, nsIXPCException, nsIXPCDOMException)
 
 nsXPCException::nsXPCException()
     : mMessage(nsnull),
@@ -117,13 +135,19 @@ nsXPCException::nsXPCException()
       mName(nsnull),
       mLocation(nsnull),
       mData(nsnull),
+      mFilename(nsnull),
+      mColumnNumber(0),
+      mLineNumber(0),
+      mInner(nsnull),
       mInitialized(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
+    MOZ_COUNT_CTOR(nsXPCException);
 }
 
 nsXPCException::~nsXPCException()
 {
+    MOZ_COUNT_DTOR(nsXPCException);
     Reset();
 }
 
@@ -140,8 +164,15 @@ nsXPCException::Reset()
         nsMemory::Free(mName);
         mName = nsnull;
     }
+    if(mFilename)
+    {
+        nsMemory::Free(mFilename);
+        mFilename = nsnull;
+    }
+    mLineNumber = mColumnNumber = (PRUint32)-1;
     NS_IF_RELEASE(mLocation);
     NS_IF_RELEASE(mData);
+    NS_IF_RELEASE(mInner);
 }
 
 /* readonly attribute string message; */
@@ -165,6 +196,21 @@ nsXPCException::GetResult(nsresult *aResult)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCException::GetCode(PRUint32* aCode)
+{
+    if(!aCode)
+        return NS_ERROR_NULL_POINTER;
+    if(!mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if(NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM)
+        *aCode = NS_ERROR_GET_CODE(mResult);
+    else
+        *aCode = (PRUint32) mResult;
+    return NS_OK;
+}
+
 /* readonly attribute string name; */
 NS_IMETHODIMP
 nsXPCException::GetName(char * *aName)
@@ -179,9 +225,39 @@ nsXPCException::GetName(char * *aName)
     XPC_STRING_GETTER_BODY(aName, name);
 }
 
-/* readonly attribute nsIJSStackFrameLocation location; */
+/* readonly attribute string filename; */
+NS_IMETHODIMP nsXPCException::GetFilename(char * *aFilename)
+{
+    if(!mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+    XPC_STRING_GETTER_BODY(aFilename, mFilename);
+}
+
+/* readonly attribute PRUint32 lineNumber; */
+NS_IMETHODIMP nsXPCException::GetLineNumber(PRUint32 *aLineNumber)
+{
+    if(!aLineNumber)
+        return NS_ERROR_NULL_POINTER;
+    if(!mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+    *aLineNumber = mLineNumber;
+    return NS_OK;
+}
+
+/* readonly attribute PRUint32 columnNumber; */
+NS_IMETHODIMP nsXPCException::GetColumnNumber(PRUint32 *aColumnNumber)
+{
+    if(!aColumnNumber)
+        return NS_ERROR_NULL_POINTER;
+    if(!mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+    *aColumnNumber = mColumnNumber;
+    return NS_OK;
+}
+
+/* readonly attribute nsIStackFrame location; */
 NS_IMETHODIMP
-nsXPCException::GetLocation(nsIJSStackFrameLocation * *aLocation)
+nsXPCException::GetLocation(nsIStackFrame * *aLocation)
 {
     if(!aLocation)
         return NS_ERROR_NULL_POINTER;
@@ -205,9 +281,22 @@ nsXPCException::GetData(nsISupports * *aData)
     return NS_OK;
 }
 
-/* void initialize (in string aMessage, in nsresult aResult, in string aName, in nsIJSStackFrameLocation aLocation, in nsISupports aData); */
+/* readonly attribute nsIException inner; */
 NS_IMETHODIMP
-nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIJSStackFrameLocation *aLocation, nsISupports *aData)
+nsXPCException::GetInner(nsIException* *aException)
+{
+    if(!aException)
+        return NS_ERROR_NULL_POINTER;
+    if(!mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+    *aException = mInner;
+    NS_IF_ADDREF(mInner);
+    return NS_OK;
+}
+
+/* void initialize (in string aMessage, in nsresult aResult, in string aName, in nsIStackFrame aLocation, in nsISupports aData, in nsIException aInner); */
+NS_IMETHODIMP
+nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner)
 {
     if(mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
@@ -234,6 +323,15 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
     {
         mLocation = aLocation;
         NS_ADDREF(mLocation);
+        // For now, fill in our location details from our stack frame.
+        // Later we may allow other locations?
+        nsresult rc;
+        if(NS_FAILED(rc = aLocation->GetFilename(&mFilename)))
+            return rc;
+        if(NS_FAILED(rc = aLocation->GetLineNumber(&mLineNumber)))
+            return rc;
+        if(NS_FAILED(rc = aLocation->GetLineNumber(&mColumnNumber)))
+            return rc;
     }
     else
     {
@@ -242,7 +340,6 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
         if(!xpc)
             return NS_ERROR_FAILURE;
         rv = xpc->GetCurrentJSStack(&mLocation);
-        NS_RELEASE(xpc);
         if(NS_FAILED(rv))
             return rv;
     }
@@ -251,6 +348,11 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
     {
         mData = aData;
         NS_ADDREF(mData);
+    }
+    if(aInner)
+    {
+        mInner = aInner;
+        NS_ADDREF(mInner);
     }
 
     mInitialized = PR_TRUE;
@@ -306,19 +408,35 @@ nsXPCException::ToString(char **_retval)
 
 
 // static
-nsXPCException*
+nsresult
 nsXPCException::NewException(const char *aMessage,
                              nsresult aResult,
-                             nsIJSStackFrameLocation *aLocation,
-                             nsISupports *aData)
+                             nsIStackFrame *aLocation,
+                             nsISupports *aData,
+                             nsIException** exceptn)
 {
+    // A little hack... The nsIGenericModule nsIClassInfo scheme relies on there
+    // having been at least one instance made via the factory. Otherwise, the
+    // shared factory/classinsance object never gets created and our QI getter
+    // for our instance's pointer to our nsIClassInfo will always return null.
+    // This is bad because it means that wrapped exceptions will never have a
+    // shared prototype. So... We force one to be created via the factory
+    // *once* and then go about our business.
+    static JSBool everMadeOneFromFactory = JS_FALSE;
+    if(!everMadeOneFromFactory)
+    {
+        nsCOMPtr<nsIXPCException> e =
+            do_CreateInstance(XPC_EXCEPTION_CONTRACTID);
+        everMadeOneFromFactory = JS_TRUE;
+    }
+
     nsresult rv;
     nsXPCException* e = new nsXPCException();
     if(e)
     {
         NS_ADDREF(e);
 
-        nsIJSStackFrameLocation* location;
+        nsIStackFrame* location;
         if(aLocation)
         {
             location = aLocation;
@@ -330,14 +448,13 @@ nsXPCException::NewException(const char *aMessage,
             if(!xpc)
             {
                 NS_RELEASE(e);
-                return nsnull;
+                return NS_ERROR_FAILURE;
             }
             rv = xpc->GetCurrentJSStack(&location);
-            NS_RELEASE(xpc);
             if(NS_FAILED(rv))
             {
                 NS_RELEASE(e);
-                return nsnull;
+                return NS_ERROR_FAILURE;
             }
             // it is legal for there to be no active JS stack, if C++ code
             // is operating on a JS-implemented interface pointer without
@@ -346,38 +463,48 @@ nsXPCException::NewException(const char *aMessage,
             // components are implemented in JS.
         }
         // We want to trim off any leading native 'dataless' frames
-        if (location)
-            while(1) {
-                PRBool  isJSFrame;
+        if(location)
+            while(1)
+            {
+                PRUint32 language;
                 PRInt32 lineNumber;
-                if(NS_FAILED(location->GetIsJSFrame(&isJSFrame)) || isJSFrame ||
-                   NS_FAILED(location->GetLineNumber(&lineNumber)) || lineNumber)
+                if(NS_FAILED(location->GetLanguage(&language)) ||
+                   language == nsIProgrammingLanguage::JAVASCRIPT ||
+                   NS_FAILED(location->GetLineNumber(&lineNumber)) ||
+                   lineNumber)
+                {
                     break;
-                nsIJSStackFrameLocation* caller;
-                if(NS_FAILED(location->GetCaller(&caller)) || !caller)
+                }
+                nsCOMPtr<nsIStackFrame> caller;
+                if(NS_FAILED(location->GetCaller(getter_AddRefs(caller))) || !caller)
                     break;
                 NS_RELEASE(location);
-                location = caller;
+                caller->QueryInterface(NS_GET_IID(nsIStackFrame), (void **)&location);
             }
         // at this point we have non-null location with one extra addref,
         // or no location at all
-        rv = e->Initialize(aMessage, aResult, nsnull, location, aData);
+        rv = e->Initialize(aMessage, aResult, nsnull, location, aData, nsnull);
         NS_IF_RELEASE(location);
         if(NS_FAILED(rv))
             NS_RELEASE(e);
     }
-    return e;
+
+    if(!e)
+        return NS_ERROR_FAILURE;
+
+    *exceptn = NS_STATIC_CAST(nsIXPCException*, e);
+    return NS_OK;
 }
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 static char* CloneAllAccess()
 {
     static const char allAccess[] = "AllAccess";
-    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));        
+    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
 }
 
 /* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCException::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // If you have to ask, then the answer is NO
@@ -386,11 +513,11 @@ nsXPCException::CanCreateWrapper(const nsIID * iid, char **_retval)
 }
 
 /* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
     static const NS_NAMED_LITERAL_STRING(s_toString, "toString");
-    
+
     const nsLiteralString name(methodName);
 
     if(name.Equals(s_toString))
@@ -401,7 +528,7 @@ nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, ch
 }
 
 /* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
     static const NS_NAMED_LITERAL_STRING(s_message, "message");
@@ -420,7 +547,7 @@ nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName,
 }
 
 /* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCException::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
     // If you have to ask, then the answer is NO

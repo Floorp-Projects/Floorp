@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -37,62 +37,43 @@
 
 #include "xpcprivate.h"
 
-XPCJSThrower::XPCJSThrower(JSBool Verbose /*= JS_FALSE*/)
-    : mVerbose(Verbose) {}
+JSBool XPCThrower::sVerbose = JS_TRUE;
 
-XPCJSThrower::~XPCJSThrower() {}
-
-#if 0
-char*
-XPCJSThrower::BuildCallerString(JSContext* cx)
-{
-    JSStackFrame* iter = nsnull;
-    JSStackFrame* fp;
-
-    while(nsnull != (fp = JS_FrameIterator(cx, &iter)) )
-    {
-        JSScript* script = JS_GetFrameScript(cx, fp);
-        jsbytecode* pc = JS_GetFramePC(cx, fp);
-
-        if(!script || !pc || JS_IsNativeFrame(cx, fp))
-            continue;
-
-        const char* filename = JS_GetScriptFilename(cx, script);
-        return JS_smprintf("{file: %s, line: %d}",
-                           filename ? filename : "<unknown>",
-                           JS_PCToLineNumber(cx, script, pc));
-    }
-    return nsnull;
-}
-#endif
-
+// static
 void
-XPCJSThrower::Verbosify(JSContext* cx,
-                        nsXPCWrappedNativeClass* clazz,
-                        const XPCNativeMemberDescriptor* desc,
-                        char** psz, PRBool own)
+XPCThrower::Throw(nsresult rv, JSContext* cx)
 {
-    char* sz = nsnull;
-
-    if(clazz && desc)
-        sz = JS_smprintf("%s [%s.%s]",
-                         *psz,
-                         clazz->GetInterfaceName(),
-                         clazz->GetMemberName(desc));
-    if(sz)
-    {
-        if(own)
-            JS_smprintf_free(*psz);
-        *psz = sz;
-    }
+    const char* format;
+    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+        format = "";
+    BuildAndThrowException(cx, rv, format);
 }
 
+// static
 void
-XPCJSThrower::ThrowBadResultException(nsresult rv,
-                                      JSContext* cx,
-                                      nsXPCWrappedNativeClass* clazz,
-                                      const XPCNativeMemberDescriptor* desc,
-                                      nsresult result)
+XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
+{
+    char* sz;
+    const char* format;
+
+    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+        format = "";
+
+    sz = (char*) format;
+
+    if(sz && sVerbose)
+        Verbosify(ccx, &sz, PR_FALSE);
+
+    BuildAndThrowException(ccx, rv, sz);
+
+    if(sz && sz != format)
+        JS_smprintf_free(sz);
+}
+
+
+// static
+void
+XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
 {
     char* sz;
     const char* format;
@@ -105,28 +86,24 @@ XPCJSThrower::ThrowBadResultException(nsresult rv,
     *  call. So we'll just throw that exception into our JS.
     */
 
-    nsIXPCException* e;
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    JSBool success = JS_FALSE;
     if(xpc)
     {
-        if(NS_SUCCEEDED(xpc->GetPendingException(&e)) && e)
+        nsCOMPtr<nsIException> e;
+        xpc->GetPendingException(getter_AddRefs(e));
+        if(e)
         {
             xpc->SetPendingException(nsnull);
+
             nsresult e_result;
-        
             if(NS_SUCCEEDED(e->GetResult(&e_result)) && e_result == result)
             {
-                if(!ThrowExceptionObject(cx, e))
-                    JS_ReportOutOfMemory(cx);
-                success = JS_TRUE;
+                if(!ThrowExceptionObject(ccx, e))
+                    JS_ReportOutOfMemory(ccx);
+                return;
             }
-            NS_RELEASE(e);
         }
     }
-    NS_IF_RELEASE(xpc);
-    if(success)
-        return;
 
     // else...
 
@@ -138,21 +115,18 @@ XPCJSThrower::ThrowBadResultException(nsresult rv,
     else
         sz = JS_smprintf("%s 0x%x", format, result);
 
-    if(sz && mVerbose)
-        Verbosify(cx, clazz, desc, &sz, PR_TRUE);
+    if(sz && sVerbose)
+        Verbosify(ccx, &sz, PR_TRUE);
 
-    BuildAndThrowException(cx, result, sz);
+    BuildAndThrowException(ccx, result, sz);
 
     if(sz)
         JS_smprintf_free(sz);
 }
 
+// static
 void
-XPCJSThrower::ThrowBadParamException(nsresult rv,
-                            JSContext* cx,
-                            nsXPCWrappedNativeClass* clazz,
-                            const XPCNativeMemberDescriptor* desc,
-                            uintN paramNum)
+XPCThrower::ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
 {
     char* sz;
     const char* format;
@@ -162,40 +136,43 @@ XPCJSThrower::ThrowBadParamException(nsresult rv,
 
     sz = JS_smprintf("%s arg %d", format, paramNum);
 
-    if(sz && mVerbose)
-        Verbosify(cx, clazz, desc, &sz, PR_TRUE);
+    if(sz && sVerbose)
+        Verbosify(ccx, &sz, PR_TRUE);
 
-    BuildAndThrowException(cx, rv, sz);
+    BuildAndThrowException(ccx, rv, sz);
 
     if(sz)
         JS_smprintf_free(sz);
 }
 
+
+// static
 void
-XPCJSThrower::ThrowException(nsresult rv,
-                    JSContext* cx,
-                    nsXPCWrappedNativeClass* clazz /* = nsnull */,
-                    const XPCNativeMemberDescriptor* desc /* = nsnull */)
+XPCThrower::Verbosify(XPCCallContext& ccx,
+                      char** psz, PRBool own)
 {
-    char* sz;
-    const char* format;
+    char* sz = nsnull;
 
-    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
-        format = "";
+    if(ccx.HasInterfaceAndMember())
+    {
+        XPCNativeInterface* interface = ccx.GetInterface();
+        sz = JS_smprintf("%s [%s.%s]",
+                         *psz,
+                         interface->GetNameString(),
+                         interface->GetMemberName(ccx, ccx.GetMember()));
+    }
 
-    sz = (char*) format;
-
-    if(sz && mVerbose)
-        Verbosify(cx, clazz, desc, &sz, PR_FALSE);
-
-    BuildAndThrowException(cx, rv, sz);
-
-    if(sz && sz != format)
-        JS_smprintf_free(sz);
+    if(sz)
+    {
+        if(own)
+            JS_smprintf_free(*psz);
+        *psz = sz;
+    }
 }
 
+// static
 void
-XPCJSThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
+XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
 {
     JSBool success = JS_FALSE;
 
@@ -203,32 +180,31 @@ XPCJSThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
     if(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO && JS_IsExceptionPending(cx))
         return;
 
-    nsIXPCException* e = nsXPCException::NewException(sz, rv, nsnull, nsnull);
+    nsCOMPtr<nsIException> e;
+    nsXPCException::NewException(sz, rv, nsnull, nsnull, getter_AddRefs(e));
 
     if(e)
-    {
         success = ThrowExceptionObject(cx, e);
-        NS_RELEASE(e);
-    }
     if(!success)
         JS_ReportOutOfMemory(cx);
 }
 
+// static
 JSBool
-XPCJSThrower::ThrowExceptionObject(JSContext* cx, nsIXPCException* e)
+XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
 {
     JSBool success = JS_FALSE;
     if(e)
     {
-        nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
+        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
         if(xpc)
         {
-            // XXX funky
+            // XXX funky JS_GetGlobalObject alert!
             JSObject* glob = JS_GetGlobalObject(cx);
-    
+
             nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-            nsresult rv = xpc->WrapNative(cx, glob, e, 
-                                          NS_GET_IID(nsIXPCException), 
+            nsresult rv = xpc->WrapNative(cx, glob, e,
+                                          NS_GET_IID(nsIException),
                                           getter_AddRefs(holder));
             if(NS_SUCCEEDED(rv) && holder)
             {
@@ -243,4 +219,3 @@ XPCJSThrower::ThrowExceptionObject(JSContext* cx, nsIXPCException* e)
     }
     return success;
 }
-

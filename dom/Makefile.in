@@ -28,9 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src
 
-ifdef BUILD_IDLC
-DIRS		+= tools
-endif
-
 include $(topsrcdir)/config/rules.mk
 

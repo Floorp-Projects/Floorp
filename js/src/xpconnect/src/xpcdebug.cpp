@@ -18,8 +18,8 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -53,14 +53,14 @@ static const char* JSVAL2String(JSContext* cx, jsval val, JSBool* isString)
         if(found && (value == found || value+1 == found || value+2 == found))
             value = "[function]";
     }
-   
+
     if(isString)
         *isString = JSVAL_IS_STRING(val);
     return value;
 }
 
 static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
-                           char* buf, int num, 
+                           char* buf, int num,
                            JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
     if(JS_IsNativeFrame(cx, fp))
@@ -125,14 +125,14 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     {
         for(uint32 i = 0; i < callProps.length; i++)
         {
-            JSPropertyDesc* desc = &callProps.array[i];        
+            JSPropertyDesc* desc = &callProps.array[i];
             if(desc->flags & JSPD_ARGUMENT)
             {
                 name = JSVAL2String(cx, desc->id, &isString);
                 if(!isString)
                     name = nsnull;
                 value = JSVAL2String(cx, desc->value, &isString);
-                
+
                 buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
                                         namedArgCount ? ", " : "",
                                         name ? name :"",
@@ -142,9 +142,9 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                                         isString ? "\"" : "");
                 if(!buf) goto out;
                 namedArgCount++;
-            }        
+            }
         }
-        
+
         // print any unnamed trailing args (found in 'arguments' object)
 
         if(JS_GetProperty(cx, callObj, "arguments", &val) &&
@@ -152,7 +152,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
         {
             uint32 argCount;
             JSObject* argsObj = JSVAL_TO_OBJECT(val);
-            if(JS_GetProperty(cx, argsObj, "length", &val) && 
+            if(JS_GetProperty(cx, argsObj, "length", &val) &&
                JS_ValueToECMAUint32(cx, val, &argCount) &&
                argCount > namedArgCount)
             {
@@ -181,7 +181,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     buf = JS_sprintf_append(buf, "%s [\"%s\":%d]\n",
                             fun ? ")" : "",
                             filename ? filename : "<unknown>",
-                            lineno);           
+                            lineno);
     if(!buf) goto out;
 
     // print local variables
@@ -190,23 +190,23 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     {
         for(uint32 i = 0; i < callProps.length; i++)
         {
-            JSPropertyDesc* desc = &callProps.array[i];        
+            JSPropertyDesc* desc = &callProps.array[i];
             if(desc->flags & JSPD_VARIABLE)
             {
                 name = JSVAL2String(cx, desc->id, nsnull);
                 value = JSVAL2String(cx, desc->value, &isString);
-                
+
                 if(name && value)
                 {
-                    buf = JS_sprintf_append(buf, TAB "%s = %s%s%s\n", 
-                                            name, 
+                    buf = JS_sprintf_append(buf, TAB "%s = %s%s%s\n",
+                                            name,
                                             isString ? "\"" : "",
                                             value,
                                             isString ? "\"" : "");
                     if(!buf) goto out;
                 }
-            }        
-        }    
+            }
+        }
     }
 
     // print the value of 'this'
@@ -232,7 +232,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
 
         for(uint32 i = 0; i < thisProps.length; i++)
         {
-            JSPropertyDesc* desc = &thisProps.array[i];        
+            JSPropertyDesc* desc = &thisProps.array[i];
             if(desc->flags & JSPD_ENUMERATE)
             {
 
@@ -240,15 +240,15 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                 value = JSVAL2String(cx, desc->value, &isString);
                 if(name && value)
                 {
-                    buf = JS_sprintf_append(buf, TAB "this.%s = %s%s%s\n", 
-                                            name, 
+                    buf = JS_sprintf_append(buf, TAB "this.%s = %s%s%s\n",
+                                            name,
                                             isString ? "\"" : "",
                                             value,
                                             isString ? "\"" : "");
                     if(!buf) goto out;
                 }
-            }        
-        }    
+            }
+        }
     }
 
 out:
@@ -257,10 +257,10 @@ out:
     if(thisProps.array)
         JS_PutPropertyDescArray(cx, &thisProps);
     return buf;
-}    
+}
 
 static char* FormatJSStackDump(JSContext* cx, char* buf,
-                               JSBool showArgs, JSBool showLocals, 
+                               JSBool showArgs, JSBool showLocals,
                                JSBool showThisProps)
 {
     JSStackFrame* fp;
@@ -270,16 +270,16 @@ static char* FormatJSStackDump(JSContext* cx, char* buf,
     while(nsnull != (fp = JS_FrameIterator(cx, &iter)))
     {
         buf = FormatJSFrame(cx, fp, buf, num, showArgs, showLocals, showThisProps);
-        num++;    
-    }   
-    
+        num++;
+    }
+
     if(!num)
         buf = JS_sprintf_append(buf, "JavaScript stack is empty\n");
-        
-    return buf;
-}    
 
-JSBool 
+    return buf;
+}
+
+JSBool
 xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
     char* buf;
@@ -302,7 +302,7 @@ xpcDumpEvalErrorReporter(JSContext *cx, const char *message,
                          JSErrorReport *report)
 {
     printf("Error: %s\n", message);
-}        
+}
 
 JSBool
 xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
@@ -314,7 +314,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
     if(!cx || !text)
     {
         printf("invalid params passed to xpc_DumpEvalInJSStackFrame!\n");
-        return JS_FALSE;        
+        return JS_FALSE;
     }
 
     printf("js[%d]> %s\n", frameno, text);
@@ -323,18 +323,18 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
     {
         if(num == frameno)
             break;
-        num++;    
-    }   
+        num++;
+    }
 
     if(!fp)
     {
         printf("invalid frame number!\n");
-        return JS_FALSE;        
+        return JS_FALSE;
     }
 
     JSExceptionState* exceptionState = JS_SaveExceptionState(cx);
     JSErrorReporter older = JS_SetErrorReporter(cx, xpcDumpEvalErrorReporter);
-    
+
     jsval rval;
     JSString* str;
     const char* chars;
@@ -345,26 +345,26 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
         printf("%s\n", chars);
     }
     else
-        printf("eval failed!\n");   
+        printf("eval failed!\n");
     JS_SetErrorReporter(cx, older);
     JS_RestoreExceptionState(cx, exceptionState);
-    return JS_TRUE;        
+    return JS_TRUE;
 }
 
 /***************************************************************************/
 
 JSTrapStatus JS_DLL_CALLBACK
-xpc_DebuggerKeywordHandler(JSContext *cx, JSScript *script, jsbytecode *pc, 
+xpc_DebuggerKeywordHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
                            jsval *rval, void *closure)
 {
-    static const char line[] = 
+    static const char line[] =
     "------------------------------------------------------------------------\n";
     printf(line);
     printf("Hit JavaScript \"debugger\" keyword. JS call stack...\n");
     xpc_DumpJSStack(cx, JS_TRUE, JS_TRUE, JS_FALSE);
     printf(line);
     return JSTRAP_CONTINUE;
-}        
+}
 
 JSBool xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt)
 {
@@ -376,23 +376,23 @@ JSBool xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt)
 // The following will dump info about an object to stdout...
 
 
-// Quick and dirty (debug only damnit!) class to track which JSObjects have 
+// Quick and dirty (debug only damnit!) class to track which JSObjects have
 // been visited as we traverse.
 
 class ObjectPile
 {
 public:
     enum result {primary, seen, overflow};
-    
+
     result Visit(JSObject* obj)
     {
-        if(member_count == max_count) 
+        if(member_count == max_count)
             return overflow;
-        for(int i = 0; i < member_count; i++) 
+        for(int i = 0; i < member_count; i++)
             if(array[i] == obj)
                 return seen;
         array[member_count++] = obj;
-        return primary;            
+        return primary;
     }
 
     ObjectPile() : member_count(0){}
@@ -405,14 +405,14 @@ private:
 
 
 static const int tab_width = 2;
-#define INDENT(_d) (_d)*tab_width, " " 
+#define INDENT(_d) (_d)*tab_width, " "
 
 static void PrintObjectBasics(JSObject* obj)
 {
     if(OBJ_IS_NATIVE(obj))
-        printf("%#x 'native' <%s>", 
-               (unsigned int) obj, 
-               ((JSClass*)(obj->slots[JSSLOT_CLASS]-1))->name);        
+        printf("%#x 'native' <%s>",
+               (unsigned int) obj,
+               ((JSClass*)(obj->slots[JSSLOT_CLASS]-1))->name);
     else
         printf("%#x 'host'", (unsigned int) obj);
 
@@ -427,10 +427,10 @@ static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
     case ObjectPile::primary:
         printf("\n");
         break;
-    case ObjectPile::seen:    
+    case ObjectPile::seen:
         printf(" (SEE ABOVE)\n");
         return;
-    case ObjectPile::overflow:    
+    case ObjectPile::overflow:
         printf(" (TOO MANY OBJECTS)\n");
         return;
     }

@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -40,22 +40,76 @@
 /***************************************************************************/
 // static shared...
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
-hash_root(const void *key)
+// Note this is returning the bit pattern of the first part of the nsID, not
+// the pointer to the nsID.
+
+static JSDHashNumber JS_DLL_CALLBACK
+HashIIDPtrKey(JSDHashTable *table, const void *key)
 {
-    return ((JSHashNumber) key) >> 2; /* help lame MSVC1.5 on Win16 */
+    return *((JSHashNumber*)key);
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
-hash_IID(const void *key)
+static JSBool JS_DLL_CALLBACK
+MatchIIDPtrKey(JSDHashTable *table,
+            const JSDHashEntryHdr *entry,
+            const void *key)
 {
-    return (JSHashNumber) *((PRUint32*)key);
+    return ((const nsID*)key)->
+                Equals(*((const nsID*)((JSDHashEntryStub*)entry)->key));
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
-compare_IIDs(const void *v1, const void *v2)
+static JSDHashNumber JS_DLL_CALLBACK
+HashNativeKey(JSDHashTable *table, const void *key)
 {
-    return ((const nsID*)v1)->Equals(*((const nsID*)v2));
+    XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
+
+    JSDHashNumber h = 0;
+
+    XPCNativeSet*       Set;
+    XPCNativeInterface* Addition;
+    PRUint16            Position;
+
+    if(Key->IsAKey())
+    {
+        Set      = Key->GetBaseSet();
+        Addition = Key->GetAddition();
+        Position = Key->GetPosition();
+    }
+    else
+    {
+        Set      = (XPCNativeSet*) Key;
+        Addition = nsnull;
+        Position = 0;
+    }
+
+    if(!Set)
+    {
+        NS_ASSERTION(Addition, "bad key");
+        h ^= (JSHashNumber) Addition;
+    }
+    else
+    {
+        XPCNativeInterface** Current = Set->GetInterfaceArray();
+        PRUint16 count = Set->GetInterfaceCount();
+        if(Addition)
+        {
+            count++;
+            for(PRUint16 i = 0; i < count; i++)
+            {
+                if(i == Position)
+                    h ^= (JSHashNumber) Addition;
+                else
+                    h ^= (JSHashNumber) *(Current++);
+            }
+        }
+        else
+        {
+            for(PRUint16 i = 0; i < count; i++)
+                h ^= (JSHashNumber) *(Current++);
+        }
+    }
+
+    return h;
 }
 
 /***************************************************************************/
@@ -66,23 +120,23 @@ JSContext2XPCContextMap*
 JSContext2XPCContextMap::newMap(int size)
 {
     JSContext2XPCContextMap* map = new JSContext2XPCContextMap(size);
-    if(map && map->mHashtable)
+    if(map && map->mTable)
         return map;
     delete map;
     return nsnull;
 }
 
+
 JSContext2XPCContextMap::JSContext2XPCContextMap(int size)
 {
-    mHashtable = JS_NewHashTable(size, hash_root,
-                                 JS_CompareValues, JS_CompareValues,
-                                 nsnull, nsnull);
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(Entry), size);
 }
 
 JSContext2XPCContextMap::~JSContext2XPCContextMap()
 {
-    if(mHashtable)
-        JS_HashTableDestroy(mHashtable);
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
 }
 
 /***************************************************************************/
@@ -93,7 +147,7 @@ JSObject2WrappedJSMap*
 JSObject2WrappedJSMap::newMap(int size)
 {
     JSObject2WrappedJSMap* map = new JSObject2WrappedJSMap(size);
-    if(map && map->mHashtable)
+    if(map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -101,15 +155,14 @@ JSObject2WrappedJSMap::newMap(int size)
 
 JSObject2WrappedJSMap::JSObject2WrappedJSMap(int size)
 {
-    mHashtable = JS_NewHashTable(size, hash_root,
-                                 JS_CompareValues, JS_CompareValues,
-                                 nsnull, nsnull);
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(Entry), size);
 }
 
 JSObject2WrappedJSMap::~JSObject2WrappedJSMap()
 {
-    if(mHashtable)
-        JS_HashTableDestroy(mHashtable);
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
 }
 
 /***************************************************************************/
@@ -120,7 +173,7 @@ Native2WrappedNativeMap*
 Native2WrappedNativeMap::newMap(int size)
 {
     Native2WrappedNativeMap* map = new Native2WrappedNativeMap(size);
-    if(map && map->mHashtable)
+    if(map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -128,26 +181,37 @@ Native2WrappedNativeMap::newMap(int size)
 
 Native2WrappedNativeMap::Native2WrappedNativeMap(int size)
 {
-    mHashtable = JS_NewHashTable(size, hash_root,
-                                 JS_CompareValues, JS_CompareValues,
-                                 nsnull, nsnull);
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(Entry), size);
 }
 
 Native2WrappedNativeMap::~Native2WrappedNativeMap()
 {
-    if(mHashtable)
-        JS_HashTableDestroy(mHashtable);
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
 }
 
 /***************************************************************************/
 // implement IID2WrappedJSClassMap...
+
+struct JSDHashTableOps IID2WrappedJSClassMap::Entry::sOps =
+{
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    JS_DHashGetKeyStub,
+    HashIIDPtrKey,
+    MatchIIDPtrKey,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub
+};
 
 // static
 IID2WrappedJSClassMap*
 IID2WrappedJSClassMap::newMap(int size)
 {
     IID2WrappedJSClassMap* map = new IID2WrappedJSClassMap(size);
-    if(map && map->mHashtable)
+    if(map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -155,40 +219,411 @@ IID2WrappedJSClassMap::newMap(int size)
 
 IID2WrappedJSClassMap::IID2WrappedJSClassMap(int size)
 {
-    mHashtable = JS_NewHashTable(size, hash_IID,
-                                 compare_IIDs, JS_CompareValues,
-                                 nsnull, nsnull);
+    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
 }
 
 IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
 {
-    if(mHashtable)
-        JS_HashTableDestroy(mHashtable);
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
 }
 
+
 /***************************************************************************/
-// implement IID2WrappedJSClassMap...
+// implement IID2NativeInterfaceMap...
+
+struct JSDHashTableOps IID2NativeInterfaceMap::Entry::sOps =
+{
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    JS_DHashGetKeyStub,
+    HashIIDPtrKey,
+    MatchIIDPtrKey,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub
+};
 
 // static
-IID2WrappedNativeClassMap*
-IID2WrappedNativeClassMap::newMap(int size)
+IID2NativeInterfaceMap*
+IID2NativeInterfaceMap::newMap(int size)
 {
-    IID2WrappedNativeClassMap* map = new IID2WrappedNativeClassMap(size);
-    if(map && map->mHashtable)
+    IID2NativeInterfaceMap* map = new IID2NativeInterfaceMap(size);
+    if(map && map->mTable)
         return map;
     delete map;
     return nsnull;
 }
 
-IID2WrappedNativeClassMap::IID2WrappedNativeClassMap(int size)
+IID2NativeInterfaceMap::IID2NativeInterfaceMap(int size)
 {
-    mHashtable = JS_NewHashTable(size, hash_IID,
-                                 compare_IIDs, JS_CompareValues,
-                                 nsnull, nsnull);
+    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
 }
 
-IID2WrappedNativeClassMap::~IID2WrappedNativeClassMap()
+IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
 {
-    if(mHashtable)
-        JS_HashTableDestroy(mHashtable);
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
 }
+
+/***************************************************************************/
+// implement ClassInfo2NativeSetMap...
+
+// static
+ClassInfo2NativeSetMap*
+ClassInfo2NativeSetMap::newMap(int size)
+{
+    ClassInfo2NativeSetMap* map = new ClassInfo2NativeSetMap(size);
+    if(map && map->mTable)
+        return map;
+    delete map;
+    return nsnull;
+}
+
+ClassInfo2NativeSetMap::ClassInfo2NativeSetMap(int size)
+{
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(Entry), size);
+}
+
+ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
+{
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
+}
+
+/***************************************************************************/
+// implement ClassInfo2WrappedNativeProtoMap...
+
+// static
+ClassInfo2WrappedNativeProtoMap*
+ClassInfo2WrappedNativeProtoMap::newMap(int size)
+{
+    ClassInfo2WrappedNativeProtoMap* map = new ClassInfo2WrappedNativeProtoMap(size);
+    if(map && map->mTable)
+        return map;
+    delete map;
+    return nsnull;
+}
+
+ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int size)
+{
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(Entry), size);
+}
+
+ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
+{
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
+}
+
+/***************************************************************************/
+// implement NativeSetMap...
+
+JSBool JS_DLL_CALLBACK
+NativeSetMap::Entry::Match(JSDHashTable *table,
+                           const JSDHashEntryHdr *entry,
+                           const void *key)
+{
+    XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
+
+    // See the comment in the XPCNativeSetKey declaration in xpcprivate.h.
+    if(!Key->IsAKey())
+    {
+        XPCNativeSet* Set1 = (XPCNativeSet*) key;
+        XPCNativeSet* Set2 = ((Entry*)entry)->key_value;
+
+        if(Set1 == Set2)
+            return JS_TRUE;
+
+        PRUint16 count = Set1->GetInterfaceCount();
+        if(count != Set2->GetInterfaceCount())
+            return JS_FALSE;
+
+        XPCNativeInterface** Current1 = Set1->GetInterfaceArray();
+        XPCNativeInterface** Current2 = Set2->GetInterfaceArray();
+        for(PRUint16 i = 0; i < count; i++)
+        {
+            if(*(Current1++) != *(Current2++))
+                return JS_FALSE;
+        }
+
+        return JS_TRUE;
+    }
+
+    XPCNativeSet*       SetInTable = ((Entry*)entry)->key_value;
+    XPCNativeSet*       Set        = Key->GetBaseSet();
+    XPCNativeInterface* Addition   = Key->GetAddition();
+
+    if(!Set)
+    {
+        // This is a special case to deal with the invariant that says:
+        // "All sets have exactly one nsISupports interface and it comes first."
+        // See XPCNativeSet::NewInstance for details.
+        //
+        // Though we might have a key that represents only one interface, we
+        // know that if that one interface were contructed into a set then
+        // it would end up really being a set with two interfaces (except for
+        // the case where the one interface happened to be nsISupports).
+
+        return ((SetInTable->GetInterfaceCount() == 1 &&
+                 SetInTable->GetInterfaceAt(0) == Addition) ||
+                (SetInTable->GetInterfaceCount() == 2 &&
+                 SetInTable->GetInterfaceAt(1) == Addition));
+    }
+
+    if(!Addition && Set == SetInTable)
+        return JS_TRUE;
+
+    PRUint16 count = Set->GetInterfaceCount() + (Addition ? 1 : 0);
+    if(count != SetInTable->GetInterfaceCount())
+        return JS_FALSE;
+
+    PRUint16 Position = Key->GetPosition();
+    XPCNativeInterface** CurrentInTable = SetInTable->GetInterfaceArray();
+    XPCNativeInterface** Current = Set->GetInterfaceArray();
+    for(PRUint16 i = 0; i < count; i++)
+    {
+        if(Addition && i == Position)
+        {
+            if(Addition != *(CurrentInTable++))
+                return JS_FALSE;
+        }
+        else
+        {
+            if(*(Current++) != *(CurrentInTable++))
+                return JS_FALSE;
+        }
+    }
+
+    return JS_TRUE;
+}
+
+struct JSDHashTableOps NativeSetMap::Entry::sOps =
+{
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    JS_DHashGetKeyStub,
+    HashNativeKey,
+    Match,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub
+};
+
+// static
+NativeSetMap*
+NativeSetMap::newMap(int size)
+{
+    NativeSetMap* map = new NativeSetMap(size);
+    if(map && map->mTable)
+        return map;
+    delete map;
+    return nsnull;
+}
+
+NativeSetMap::NativeSetMap(int size)
+{
+    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+}
+
+NativeSetMap::~NativeSetMap()
+{
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
+}
+
+/***************************************************************************/
+// implement IID2ThisTranslatorMap...
+
+const void* JS_DLL_CALLBACK
+IID2ThisTranslatorMap::Entry::GetKey(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    return &((Entry*)entry)->key;
+}
+
+JSBool JS_DLL_CALLBACK
+IID2ThisTranslatorMap::Entry::Match(JSDHashTable *table,
+                                    const JSDHashEntryHdr *entry,
+                                    const void *key)
+{
+    return ((const nsID*)key)->Equals(((Entry*)entry)->key);
+}
+
+void JS_DLL_CALLBACK
+IID2ThisTranslatorMap::Entry::Clear(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    NS_IF_RELEASE(((Entry*)entry)->value);
+    memset(entry, 0, table->entrySize);
+}
+
+struct JSDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
+{
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    GetKey,
+    HashIIDPtrKey,
+    Match,
+    JS_DHashMoveEntryStub,
+    Clear,
+    JS_DHashFinalizeStub
+};
+
+// static
+IID2ThisTranslatorMap*
+IID2ThisTranslatorMap::newMap(int size)
+{
+    IID2ThisTranslatorMap* map = new IID2ThisTranslatorMap(size);
+    if(map && map->mTable)
+        return map;
+    delete map;
+    return nsnull;
+}
+
+IID2ThisTranslatorMap::IID2ThisTranslatorMap(int size)
+{
+    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+}
+
+IID2ThisTranslatorMap::~IID2ThisTranslatorMap()
+{
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
+}
+
+/***************************************************************************/
+
+JSDHashNumber JS_DLL_CALLBACK
+XPCNativeScriptableSharedMap::Entry::Hash(JSDHashTable *table, const void *key)
+{
+    JSDHashNumber h;
+    const unsigned char *s;
+
+    XPCNativeScriptableShared* obj =
+        (XPCNativeScriptableShared*) key;
+
+    // hash together the flags and the classname string
+
+    h = (JSDHashNumber) obj->GetFlags();
+    for (s = (const unsigned char*) obj->GetJSClass()->name; *s != '\0'; s++)
+        h = (h >> (JS_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
+    return h;
+}
+
+JSBool JS_DLL_CALLBACK
+XPCNativeScriptableSharedMap::Entry::Match(JSDHashTable *table,
+                                         const JSDHashEntryHdr *entry,
+                                         const void *key)
+{
+    XPCNativeScriptableShared* obj1 =
+        ((XPCNativeScriptableSharedMap::Entry*) entry)->key;
+
+    XPCNativeScriptableShared* obj2 =
+        (XPCNativeScriptableShared*) key;
+
+    // match the flags and the classname string
+
+    if(obj1->GetFlags() != obj2->GetFlags())
+        return JS_FALSE;
+
+    const char* name1 = obj1->GetJSClass()->name;
+    const char* name2 = obj2->GetJSClass()->name;
+
+    if(!name1 || !name2)
+        return name1 == name2;
+
+    return 0 == strcmp(name1, name2);
+}
+
+struct JSDHashTableOps XPCNativeScriptableSharedMap::Entry::sOps =
+{
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    JS_DHashGetKeyStub,
+    Hash,
+    Match,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub
+};
+
+// static
+XPCNativeScriptableSharedMap*
+XPCNativeScriptableSharedMap::newMap(int size)
+{
+    XPCNativeScriptableSharedMap* map =
+        new XPCNativeScriptableSharedMap(size);
+    if(map && map->mTable)
+        return map;
+    delete map;
+    return nsnull;
+}
+
+XPCNativeScriptableSharedMap::XPCNativeScriptableSharedMap(int size)
+{
+    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+}
+
+XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
+{
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
+}
+
+JSBool
+XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
+                                           char* name,
+                                           XPCNativeScriptableInfo* si)
+{
+    NS_PRECONDITION(name,"bad param");
+    NS_PRECONDITION(si,"bad param");
+
+    XPCNativeScriptableShared key(flags, name);
+
+    Entry* entry = (Entry*)
+        JS_DHashTableOperate(mTable, &key, JS_DHASH_ADD);
+    if(!entry)
+        return JS_FALSE;
+
+    XPCNativeScriptableShared* shared = entry->key;
+
+    if(!shared)
+    {
+        entry->key = shared =
+            new XPCNativeScriptableShared(flags, key.TransferNameOwnership());
+        if(!shared)
+            return JS_FALSE;
+        shared->PopulateJSClass();
+    }
+    si->GetScriptableShared(shared);
+    return JS_TRUE;
+}
+
+/***************************************************************************/
+// implement XPCWrappedNativeProtoMap...
+
+// static
+XPCWrappedNativeProtoMap*
+XPCWrappedNativeProtoMap::newMap(int size)
+{
+    XPCWrappedNativeProtoMap* map = new XPCWrappedNativeProtoMap(size);
+    if(map && map->mTable)
+        return map;
+    delete map;
+    return nsnull;
+}
+
+XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap(int size)
+{
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(JSDHashEntryStub), size);
+}
+
+XPCWrappedNativeProtoMap::~XPCWrappedNativeProtoMap()
+{
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
+}
+
+/***************************************************************************/

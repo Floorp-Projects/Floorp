@@ -1181,20 +1181,8 @@ static void* GetItemsNativeData(nsISupports* aObject)
 //---------------------------------------------------------------
 NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      //PRBool foundIt = PR_FALSE;
-      doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
-      if (!aIsFound) {
-        // Display Dialog here
-      }
-      ForceRefresh();
-    }
-    NS_RELEASE(shell);
-  }
+  // Insert find code here.
+
   return NS_OK;
 }
 

@@ -6,3 +6,6 @@ nsIConsoleService.idl
 nsIConsoleMessage.idl
 nsIConsoleListener.idl
 nsIWeakReference.idl
+nsIException.idl
+nsIExceptionService.idl
+nsIProgrammingLanguage.idl

@@ -31,7 +31,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDeviceContext.h" 
 #include "nsIDOMHTMLCollection.h" 
-#include "nsIDOMNSHTMLOptionCollection.h"
+#include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsIDOMHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIComboboxControlFrame.h"

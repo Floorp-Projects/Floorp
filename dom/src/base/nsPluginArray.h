@@ -32,20 +32,20 @@ class nsIDOMNavigator;
 class nsIDocShell;
 struct nsIPluginHost;
 
-class PluginArrayImpl : public nsIScriptObjectOwner, public nsIDOMPluginArray {
+class PluginArrayImpl : public nsIDOMPluginArray,
+                        public nsIDOMJSPluginArray
+{
 public:
   PluginArrayImpl(nsIDOMNavigator* navigator, nsIDocShell *aDocShell);
   virtual ~PluginArrayImpl();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  // nsIDOMPluginArray
+  NS_DECL_NSIDOMPLUGINARRAY
 
-  NS_IMETHOD GetLength(PRUint32* aLength);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMPlugin** aReturn);
-  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMPlugin** aReturn);
-  NS_IMETHOD Refresh(PRBool aReloadDocuments);
+  // nsIDOMJSPluginArray
+  NS_DECL_NSIDOMJSPLUGINARRAY
 
   nsresult GetPluginHost(nsIPluginHost** aPluginHost);
 
@@ -56,7 +56,6 @@ public:
   void SetDocShell(nsIDocShell* aDocShell);
 
 protected:
-  void *mScriptObject;
   nsIDOMNavigator* mNavigator;
   nsCOMPtr<nsIPluginHost> mPluginHost;
   PRUint32 mPluginCount;
@@ -64,15 +63,13 @@ protected:
   nsIDocShell* mDocShell; // weak reference
 };
 
-class PluginElementImpl : public nsIScriptObjectOwner, public nsIDOMPlugin {
+class PluginElementImpl : public nsIDOMPlugin
+{
 public:
   PluginElementImpl(nsIDOMPlugin* plugin);
   virtual ~PluginElementImpl();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
 
   NS_IMETHOD GetDescription(nsAWritableString& aDescription);
   NS_IMETHOD GetFilename(nsAWritableString& aFilename);
@@ -85,7 +82,6 @@ private:
   nsresult GetMimeTypes();
 
 protected:
-  void *mScriptObject;
   nsIDOMPlugin* mPlugin;
   PRUint32 mMimeTypeCount;
   nsIDOMMimeType** mMimeTypeArray;

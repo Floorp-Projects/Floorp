@@ -26,6 +26,7 @@
 #define nsComposerCommands_h_
 
 #include "nsIControllerCommand.h"
+#include "nsString.h"
 
 // This is a virtual base class for commands registered with the composer controller.
 // Note that such commands are instantiated once per composer, so can store state.

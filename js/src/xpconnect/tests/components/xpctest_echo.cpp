@@ -59,6 +59,8 @@ public:
     virtual ~xpctestEcho();
 private:
     nsIEcho* mReceiver;
+    char*    mString;
+    PRInt32  mSomeValue;
 };
 
 /***************************************************************************/
@@ -70,7 +72,7 @@ NS_IMPL_ISUPPORTS1(xpctestEcho, nsIEcho);
 #endif // IMPLEMENT_TIMER_STUFF
 
 xpctestEcho::xpctestEcho()
-    : mReceiver(NULL)
+    : mReceiver(nsnull), mString(nsnull), mSomeValue(0)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -79,6 +81,8 @@ xpctestEcho::xpctestEcho()
 xpctestEcho::~xpctestEcho()
 {
     NS_IF_RELEASE(mReceiver);
+    if(mString)
+        nsMemory::Free(mString);
 }
 
 NS_IMETHODIMP xpctestEcho::SetReceiver(nsIEcho* aReceiver)
@@ -135,14 +139,14 @@ NS_IMETHODIMP xpctestEcho::In2OutOneString(const char* input, char** output)
     char* p;
     int len;
     if(input && output &&
-       (NULL != (p = (char*)nsMemory::Alloc(len=strlen(input)+1))))
+       (nsnull != (p = (char*)nsMemory::Alloc(len=strlen(input)+1))))
     {
         memcpy(p, input, len);
         *output = p;
         return NS_OK;
     }
     if(output)
-        *output = NULL;
+        *output = nsnull;
     return NS_ERROR_FAILURE;
 }
 
@@ -260,11 +264,11 @@ xpctestEcho::ReturnInterface(nsISupports *obj, nsISupports **_retval)
     return NS_OK;
 }
 
-/* nsIJSStackFrameLocation GetStack (); */
+/* nsIStackFrame GetStack (); */
 NS_IMETHODIMP
-xpctestEcho::GetStack(nsIJSStackFrameLocation **_retval)
+xpctestEcho::GetStack(nsIStackFrame **_retval)
 {
-    nsIJSStackFrameLocation* stack = nsnull;
+    nsIStackFrame* stack = nsnull;
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
@@ -272,10 +276,10 @@ xpctestEcho::GetStack(nsIJSStackFrameLocation **_retval)
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if(NS_SUCCEEDED(rv))
     {
-        nsIJSStackFrameLocation* jsstack;
+        nsIStackFrame* jsstack;
         if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)) && jsstack)
         {
-            xpc->CreateStackFrameLocation(JS_FALSE,
+            xpc->CreateStackFrameLocation(nsIProgrammingLanguage::CPLUSPLUS,
                                           __FILE__,
                                           "xpctestEcho::GetStack",
                                           __LINE__,
@@ -340,6 +344,32 @@ xpctestEcho::DebugDumpJSStack()
     }
     return rv;
 }        
+
+/* attribute string aString; */
+NS_IMETHODIMP 
+xpctestEcho::GetAString(char * *aAString)
+{
+    printf(">>>> xpctestEcho::GetAString called\n");
+    if(mString)
+        *aAString = (char*) nsMemory::Clone(mString, strlen(mString)+1);
+    else
+        *aAString = nsnull;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+xpctestEcho::SetAString(const char * aAString)
+{
+    printf("<<<< xpctestEcho::SetAString called\n");
+    if(mString)
+        nsMemory::Free(mString);
+    if(aAString)
+        mString = (char*) nsMemory::Clone(aAString, strlen(aAString)+1);
+    else
+        mString = nsnull;
+    return NS_OK;
+}
+
+
 
 /***************************************************/
 
@@ -473,6 +503,36 @@ xpctestEcho::GetThrowInGetter(PRInt16 *aThrowInGetter)
 {
     return NS_ERROR_FAILURE;
 }        
+
+/* void callFunction (in nsITestXPCFunctionCallback callback, in string s); */
+NS_IMETHODIMP 
+xpctestEcho::CallFunction(nsITestXPCFunctionCallback *callback, const char *s)
+{
+    return callback->Call(s);
+}
+
+/* void callFunction (in nsITestXPCFunctionCallback callback, in string s); */
+NS_IMETHODIMP 
+xpctestEcho::CallFunctionWithThis(nsITestXPCFunctionCallback *callback, nsISupports* self, const char *s)
+{
+    return callback->CallWithThis(self, s);
+}
+
+/* attribute PRInt32 SomeValue; */
+NS_IMETHODIMP 
+xpctestEcho::GetSomeValue(PRInt32 *aSomeValue)
+{
+    *aSomeValue = mSomeValue;
+    return NS_OK;
+}
+
+NS_IMETHODIMP xpctestEcho::SetSomeValue(PRInt32 aSomeValue)
+
+{
+    mSomeValue = aSomeValue;
+    return NS_OK;
+}
+
 
 /***************************************************/
 

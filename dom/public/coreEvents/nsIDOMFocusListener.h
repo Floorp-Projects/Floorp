@@ -36,8 +36,8 @@
 0x80974670, 0xded6, 0x11d1, \
 {0xbd, 0x85, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
 
-class nsIDOMFocusListener : public nsIDOMEventListener {
-
+class nsIDOMFocusListener : public nsIDOMEventListener
+{
 public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMFOCUSLISTENER_IID)
@@ -47,15 +47,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult Focus(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Focus(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes a blur event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Blur(nsIDOMEvent* aEvent) = 0;
-
+  NS_IMETHOD Blur(nsIDOMEvent* aEvent) = 0;
 };
 
 #endif // nsIDOMFocusListener_h__

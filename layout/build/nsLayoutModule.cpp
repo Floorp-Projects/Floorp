@@ -43,12 +43,7 @@
 #endif
 #include "nsLayoutAtoms.h"
 #include "nsDOMCID.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsINameSpaceManager.h"
-#include "nsIScriptNameSetRegistry.h"
-#include "nsIScriptNameSpaceManager.h"
-#include "nsIScriptExternalNameSet.h"
 
 #include "nsINodeInfo.h"
 
@@ -104,75 +99,6 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 
 //----------------------------------------------------------------------
 
-
-static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
-
-class LayoutScriptNameSet : public nsIScriptExternalNameSet {
-public:
-  LayoutScriptNameSet();
-  virtual ~LayoutScriptNameSet();
-
-  NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
-  NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
-};
-
-LayoutScriptNameSet::LayoutScriptNameSet()
-{
-  NS_INIT_REFCNT();
-}
-
-LayoutScriptNameSet::~LayoutScriptNameSet()
-{
-}
-
-NS_IMPL_ISUPPORTS(LayoutScriptNameSet, NS_GET_IID(nsIScriptExternalNameSet));
-
-NS_IMETHODIMP 
-LayoutScriptNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
-{
-  nsresult result = NS_OK;
-  nsIScriptNameSpaceManager* manager;
-  static NS_DEFINE_IID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
-  static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
-
-  result = aScriptContext->GetNameSpaceManager(&manager);
-  if (NS_OK == result) {
-    result = manager->RegisterGlobalName(NS_LITERAL_STRING("HTMLImageElement"),
-                                         NS_GET_IID(nsIScriptObjectOwner),
-                                         kHTMLImageElementCID,
-                                         PR_TRUE);
-    if (NS_FAILED(result)) {
-      NS_RELEASE(manager);
-      return result;
-    }
-
-    result = manager->RegisterGlobalName(NS_LITERAL_STRING("HTMLOptionElement"),
-                                         NS_GET_IID(nsIScriptObjectOwner),
-                                         kHTMLOptionElementCID,
-                                         PR_TRUE);
-    if (NS_FAILED(result)) {
-      NS_RELEASE(manager);
-      return result;
-    }
-        
-    NS_RELEASE(manager);
-  }
-  
-  return result;
-}
-
-//----------------------------------------------------------------------
-
-
-nsIScriptNameSetRegistry* nsLayoutModule::gRegistry;
 nsICSSStyleSheet* nsLayoutModule::gUAStyleSheet = nsnull;
 
 nsLayoutModule::nsLayoutModule()
@@ -221,17 +147,6 @@ nsLayoutModule::Initialize()
   nsSVGAtoms::AddRefAtoms();
 #endif
 
-  // XXX Initialize the script name set thingy-ma-jigger
-  if (!gRegistry) {
-    rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                      NS_GET_IID(nsIScriptNameSetRegistry),
-                                      (nsISupports**) &gRegistry);
-    if (NS_SUCCEEDED(rv)) {
-      LayoutScriptNameSet* nameSet = new LayoutScriptNameSet();
-      gRegistry->AddExternalNameSet(nameSet);
-    }
-  }
-
   rv = nsTextTransformer::Initialize();
   if (NS_FAILED(rv)) {
     return rv;
@@ -277,7 +192,6 @@ nsLayoutModule::Shutdown()
 
   nsTextTransformer::Shutdown();
 
-  NS_IF_RELEASE(gRegistry);
   NS_IF_RELEASE(gUAStyleSheet);
 }
 

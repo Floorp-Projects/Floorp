@@ -35,7 +35,6 @@
 #include "nsIAppShellService.h"
 #include "nsCommandLineService.h"  
 #include "nsAppShellService.h"
-#include "nsXPConnectFactory.h"
 #include "nsWindowMediator.h"
 #include "nsFileLocations.h"
 #include "nsTimingService.h"
@@ -51,11 +50,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService);
 
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
-nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService);
-NS_GENERIC_FACTORY_CONSTRUCTOR(XPConnectFactoryImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileLocator);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo);
@@ -72,11 +69,6 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_COMMANDLINE_SERVICE_CID,
     "@mozilla.org/appshell/commandLineService;1",
     nsCmdLineServiceConstructor,
-  },
-  { "XPConnect Factory?",
-    NS_XPCONNECTFACTORY_CID,
-    NULL,
-    XPConnectFactoryImplConstructor,
   },
   { "Window Mediator",
     NS_WINDOWMEDIATOR_CID,

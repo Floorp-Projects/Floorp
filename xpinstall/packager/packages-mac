@@ -34,7 +34,6 @@ viewer:defaults:profile:mimeTypes.rdf
 viewer:Components:libjar.shlb 
 viewer:Components:xpinstall.shlb 
 viewer:Components:unicharutil.shlb 
-viewer:Essential Files:dom.shlb 
 viewer:Essential Files:JavaScript.shlb 
 viewer:Essential Files:libreg.shlb 
 viewer:Essential Files:LiveConnect.shlb 
@@ -89,8 +88,18 @@ viewer:Components:Cookie.shlb
 viewer:Components:appcomps.shlb 
 viewer:Components:Directory.xpt 
 viewer:Components:docshell.xpt
+viewer:Components:dom.shlb 
 viewer:Components:dom.xpt 
-viewer:Components:DOMDataSource.shlb
+viewer:Components:dom_base.xpt
+viewer:Components:dom_core.xpt
+viewer:Components:dom_css.xpt
+viewer:Components:dom_events.xpt
+viewer:Components:dom_html.xpt
+viewer:Components:dom_range.xpt
+viewer:Components:dom_stylesheets.xpt
+viewer:Components:dom_views.xpt
+viewer:Components:dom_xbl.xpt
+viewer:Components:dom_xul.xpt
 viewer:Components:domds.xpt
 viewer:Components:editor.xpt 
 viewer:Components:EditorCore.shlb 

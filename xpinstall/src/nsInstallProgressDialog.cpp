@@ -267,7 +267,7 @@ nsInstallProgressDialog::GetCancelStatus(PRBool *_retval)
 // Utility to set element attribute.
 nsresult nsInstallProgressDialog::setDlgAttribute( const char *id,
                                                    const char *name,
-                                                   const nsString &value )
+                                                   const nsAReadableString &value )
 {
     nsresult rv = NS_OK;
 
@@ -307,7 +307,7 @@ nsresult nsInstallProgressDialog::setDlgAttribute( const char *id,
 // Utility to get element attribute.
 nsresult nsInstallProgressDialog::getDlgAttribute(  const char *id,
                                                     const char *name,
-                                                    nsString &value ) 
+                                                    nsAWritableString &value ) 
 {
     nsresult rv = NS_OK;
 

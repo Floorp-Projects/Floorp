@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -58,10 +58,8 @@ interface nsIJSIID : nsIJSID
 [scriptable, uuid(e3a24a60-d651-11d2-9843-006008962422)]
 interface nsIJSCID : nsIJSID
 {
-    // these are attributes that are made to be called
-    // as methods from JavaScript only.
-    readonly attribute nsISupports createInstance;
-    readonly attribute nsISupports getService;
+    nsISupports createInstance();
+    nsISupports getService();
 };
 
 /* this goes into the C++ header verbatim. */

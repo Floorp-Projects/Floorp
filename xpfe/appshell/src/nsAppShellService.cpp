@@ -170,34 +170,44 @@ nsresult
 nsAppShellService::SetXPConnectSafeContext()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIThreadJSContextStack> cxstack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCOMPtr<nsIDOMWindowInternal> junk;
   JSContext *cx;
   rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
-  if (NS_FAILED(rv)) return rv;
-  rv = xpc->SetSafeJSContextForCurrentThread(cx);
-  return rv;
+  if (NS_FAILED(rv))
+    return rv;
+
+  return cxstack->SetSafeJSContext(cx);
 }  
 
 nsresult nsAppShellService::ClearXPConnectSafeContext()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIThreadJSContextStack> cxstack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCOMPtr<nsIDOMWindowInternal> junk;
   JSContext *cx;
   rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
-  NS_WITH_SERVICE(nsIThreadJSContextStack, cxstack, 
-                  "@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv)) return rv;
   JSContext *safe_cx;
   rv = cxstack->GetSafeJSContext(&safe_cx);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
+
   if (cx == safe_cx)
-    rv = xpc->SetSafeJSContextForCurrentThread(nsnull);
+    rv = cxstack->SetSafeJSContext(nsnull);
+
   return rv;
 }
 

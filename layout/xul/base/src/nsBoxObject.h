@@ -31,11 +31,10 @@ class nsIBoxPaintManager;
 class nsIFrame;
 struct nsRect;
 
-class nsBoxObject : public nsIBoxObject, public nsPIBoxObject
+class nsBoxObject : public nsPIBoxObject
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBOXOBJECT
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
   nsBoxObject();

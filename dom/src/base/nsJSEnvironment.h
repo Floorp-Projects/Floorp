@@ -27,35 +27,11 @@
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
+#include "nsIScriptSecurityManager.h"
 
-class nsIScriptSecurityManager;
-// XXXbe vc5 sucks: must include nsIScriptNameSpaceManager.h to use nsCOMPtr with it
-#if 0
-class nsIScriptNameSpaceManager;
-#else
-#include "nsIScriptNameSpaceManager.h"
-#endif
-class nsIPrincipal;
 
-class nsJSContext : public nsIScriptContext {
-private:
-  JSContext *mContext;
-  nsCOMPtr<nsIScriptNameSpaceManager> mNameSpaceManager;
-  PRBool mIsInitialized;
-  PRUint32 mNumEvaluations;
-  nsIScriptSecurityManager* mSecurityManager; /* XXXbe nsCOMPtr to service */
-  nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
-  nsScriptTerminationFunc mTerminationFunc;
-  nsCOMPtr<nsISupports> mRef;
-  PRBool mScriptsEnabled;
-  PRUint32 mBranchCallbackCount;
-  void *mRootedScriptObject; // special case for the window script object
-  PRUint32 mDefaultJSOptions;
-
-  static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
-
-  static JSBool JS_DLL_CALLBACK DOMBranchCallback(JSContext *cx, JSScript *script);
-  
+class nsJSContext : public nsIScriptContext
+{
 public:
   nsJSContext(JSRuntime *aRuntime);
   virtual ~nsJSContext();
@@ -103,27 +79,21 @@ public:
                                             nsIAtom *aName,
                                             void *aHandler);
   NS_IMETHOD       CompileFunction(void* aTarget,
-                             const nsCString& aName,
-                             PRUint32 aArgCount,
-                             const char** aArgArray,
-                             const nsAReadableString& aBody,
-                             const char* aURL,
-                             PRUint32 aLineNo,
-                             PRBool aShared,
-                             void** aFunctionObject);
-
+                                   const nsCString& aName,
+                                   PRUint32 aArgCount,
+                                   const char** aArgArray,
+                                   const nsAReadableString& aBody,
+                                   const char* aURL,
+                                   PRUint32 aLineNo,
+                                   PRBool aShared,
+                                   void** aFunctionObject);
 
   NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
-  NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
-  NS_IMETHOD_(void*)                     GetNativeContext();
-  NS_IMETHOD     InitClasses();
-  NS_IMETHOD     InitContext(nsIScriptGlobalObject *aGlobalObject);
-  NS_IMETHOD     IsContextInitialized();
-  NS_IMETHOD     AddNamedReference(void *aSlot, void *aScriptObject,
-                                   const char *aName);
-  NS_IMETHOD     RemoveReference(void *aSlot, void *aScriptObject);
-  NS_IMETHOD     GC();
-  NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);
+  NS_IMETHOD_(nsIScriptGlobalObject*) GetGlobalObject();
+  NS_IMETHOD_(void *) GetNativeContext();
+  NS_IMETHOD InitContext(nsIScriptGlobalObject *aGlobalObject);
+  NS_IMETHOD IsContextInitialized();
+  NS_IMETHOD GC();
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
 
   NS_IMETHOD ScriptEvaluated(PRBool aTerminated);
@@ -131,12 +101,34 @@ public:
   NS_IMETHOD GetOwner(nsIScriptContextOwner** owner);
   NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef);
-  NS_IMETHOD SetRootedScriptObject(void *aObject);
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled);
   NS_IMETHOD SetScriptsEnabled(PRBool aEnabled);
 
+protected:
+  nsresult InitClasses();
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses();
+
+private:
+  JSContext *mContext;
+  PRUint32 mNumEvaluations;
+
+  nsCOMPtr<nsIScriptSecurityManager> mSecurityManager; // [OWNER]
+  nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
+  nsScriptTerminationFunc mTerminationFunc;
+
+  nsCOMPtr<nsISupports> mTerminationFuncArg;
+
+  PRPackedBool mIsInitialized;
+  PRPackedBool mScriptsEnabled;
+
+  PRUint32 mBranchCallbackCount;
+  PRUint32 mDefaultJSOptions;
+
+  static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
+
+  static JSBool JS_DLL_CALLBACK DOMBranchCallback(JSContext *cx,
+                                                  JSScript *script);
 };
 
 class nsIJSRuntimeService;

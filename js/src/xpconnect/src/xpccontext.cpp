@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -39,34 +39,6 @@
 
 /***************************************************************************/
 
-AutoPushCallingLangType::AutoPushCallingLangType(JSContext* cx, 
-                                                 XPCContext::LangType type)
-    : mXPCContext(nsXPConnect::GetContext(cx))
-{
-    ctorCommon(type);
-}
-
-AutoPushCallingLangType::AutoPushCallingLangType(XPCContext* xpcc, 
-                                                 XPCContext::LangType type)
-    : mXPCContext(xpcc)
-{
-    ctorCommon(type);
-}
-
-AutoPushCallingLangType::~AutoPushCallingLangType()
-{
-    if(mXPCContext)
-    {
-#ifdef DEBUG
-        XPCContext::LangType type;
-        type = mXPCContext->SetCallingLangType(mOldCallingLangType);
-        NS_ASSERTION(type == mDebugPushedCallingLangType,"call type mismatch");
-#else
-        mXPCContext->SetCallingLangType(mOldCallingLangType);
-#endif
-    }
-}
-
 // static
 XPCContext*
 XPCContext::newXPCContext(XPCJSRuntime* aRuntime,
@@ -74,9 +46,13 @@ XPCContext::newXPCContext(XPCJSRuntime* aRuntime,
 {
     NS_PRECONDITION(aRuntime,"bad param");
     NS_PRECONDITION(aJSContext,"bad param");
+    NS_ASSERTION(JS_GetRuntime(aJSContext) == aRuntime->GetJSRuntime(),
+                 "XPConnect can not be used on multiple JSRuntimes!");
 
-    return  new XPCContext(aRuntime, aJSContext);
+    return new XPCContext(aRuntime, aJSContext);
 }
+
+MOZ_DECL_CTOR_COUNTER(XPCContext)
 
 XPCContext::XPCContext(XPCJSRuntime* aRuntime,
                        JSContext* aJSContext)
@@ -90,7 +66,7 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
         mCallingLangType(LANG_UNKNOWN)
 {
     MOZ_COUNT_CTOR(XPCContext);
-    JS_AddArgumentFormatter(mJSContext, 
+    JS_AddArgumentFormatter(mJSContext,
                             XPC_ARG_FORMATTER_FORMAT_STR,
                             XPC_JSArgumentFormatter);
 }
@@ -121,8 +97,13 @@ XPCContext::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("mException @ %x", mException));
         if(depth && mException)
         {
-            // XXX show the exception here...                
+            // XXX show the exception here...
         }
+
+        XPC_LOG_ALWAYS(("mCallingLangType of %s",
+                         mCallingLangType == LANG_UNKNOWN ? "LANG_UNKNOWN" :
+                         mCallingLangType == LANG_JS      ? "LANG_JS" :
+                                                            "LANG_NATIVE"));
         XPC_LOG_OUTDENT();
 #endif
 }

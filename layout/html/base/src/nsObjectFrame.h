@@ -126,6 +126,8 @@ protected:
 
   PRBool IsHidden() const;
 
+  nsresult NotifyContentObjectWrapper();
+
 private:
   nsPluginInstanceOwner *mInstanceOwner;
   nsIURI                *mFullURL;

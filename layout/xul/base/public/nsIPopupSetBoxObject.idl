@@ -23,7 +23,9 @@
  */
 
 #include "nsIBoxObject.idl"
-#include "domstubs.idl"
+
+interface nsIDOMElement;
+
 
 [scriptable, uuid(A56A6F82-5BE4-4c47-930B-10BDB0F4F854)]
 interface nsIPopupSetBoxObject : nsISupports

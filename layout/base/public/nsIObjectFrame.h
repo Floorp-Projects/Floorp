@@ -22,8 +22,10 @@
 #ifndef nsIObjectFrame_h___
 #define nsIObjectFrame_h___
 
-class nsIPresContext;
+#include "nsIFrame.h"
+
 class nsIPluginInstance;
+
 
 // {6D10B07D-E75B-11d4-9885-00C04FA0CF4B}
 #define NS_IOBJECTFRAME_IID \

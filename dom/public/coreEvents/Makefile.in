@@ -28,34 +28,24 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 
-EXPORTS		= \
-		nsIDOMEvent.h \
-		nsIDOMUIEvent.h \
-		nsIDOMKeyEvent.h \
-		nsIDOMMouseEvent.h \
-    nsIDOMMutationEvent.h \
-		nsIDOMEventListener.h \
-		nsIDOMEventCapturer.h \
-		nsIDOMEventReceiver.h \
-		nsIDOMFocusListener.h \
-		nsIDOMFormListener.h \
-		nsIDOMKeyListener.h \
-		nsIDOMLoadListener.h \
-		nsIDOMMouseListener.h \
-		nsIDOMMouseMotionListener.h \
-    nsIDOMMutationListener.h \
-		nsIDOMPaintListener.h \
-		nsIDOMDragListener.h \
-		nsIDOMNSUIEvent.h \
-		nsIDOMEventTarget.h \
-		nsIDOMTextListener.h \
-		nsIDOMCompositionListener.h \
-		nsIDOMMenuListener.h \
-		nsIDOMScrollListener.h \
-		nsIDOMContextMenuListener.h \
-		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS =				\
+	nsIDOMEventCapturer.h		\
+	nsIDOMEventReceiver.h		\
+	nsIDOMFocusListener.h		\
+	nsIDOMFormListener.h		\
+	nsIDOMKeyListener.h		\
+	nsIDOMLoadListener.h		\
+	nsIDOMMouseListener.h		\
+	nsIDOMMouseMotionListener.h	\
+	nsIDOMMutationListener.h	\
+	nsIDOMPaintListener.h		\
+	nsIDOMDragListener.h		\
+	nsIDOMTextListener.h		\
+	nsIDOMCompositionListener.h	\
+	nsIDOMMenuListener.h		\
+	nsIDOMScrollListener.h		\
+	nsIDOMContextMenuListener.h	\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

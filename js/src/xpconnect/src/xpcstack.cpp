@@ -18,8 +18,8 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -33,80 +33,71 @@
  * file under either the NPL or the GPL.
  */
 
-/* Implements nsIJSStackFrameLocation */
+/* Implements nsIStackFrame. */
 
 #include "xpcprivate.h"
 
-class XPCJSStackFrame : public nsIJSStackFrameLocation
+class XPCJSStackFrame : public nsIStackFrame
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISTACKFRAME
 
-    /* readonly attribute boolean isJSFrame; */
-    NS_IMETHOD GetIsJSFrame(PRBool *aIsJSFrame);
+    static nsresult CreateStack(JSContext* cx, JSStackFrame* fp,
+                                XPCJSStackFrame** stack);
 
-    /* readonly attribute string filename; */
-    NS_IMETHOD GetFilename(char * *aFilename);
-
-    /* readonly attribute string function; */
-    NS_IMETHOD GetFunctionName(char * *aFunction);
-
-    /* readonly attribute PRInt32 lineNumber; */
-    NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber);
-
-    /* readonly attribute nsIJSStackFrameLocation caller; */
-    NS_IMETHOD GetCaller(nsIJSStackFrameLocation * *aCaller);
-
-    /* string toString (); */
-    NS_IMETHOD ToString(char **_retval);
-
-    static XPCJSStackFrame* CreateStack(JSContext* cx, JSStackFrame* fp);
-
-    static XPCJSStackFrame* CreateStackFrameLocation(
-                                        JSBool isJSFrame,
+    static nsresult CreateStackFrameLocation(
+                                        PRUint32 aLanguage,
                                         const char* aFilename,
                                         const char* aFunctionName,
                                         PRInt32 aLineNumber,
-                                        nsIJSStackFrameLocation* aCaller);
+                                        nsIStackFrame* aCaller,
+                                        XPCJSStackFrame** stack);
 
     XPCJSStackFrame();
     virtual ~XPCJSStackFrame();
 
+    JSBool IsJSFrame() const
+        {return mLanguage == nsIProgrammingLanguage::JAVASCRIPT;}
+
 private:
-    nsIJSStackFrameLocation* mCaller;
+    nsIStackFrame* mCaller;
 
     char* mFilename;
     char* mFunname;
     PRInt32 mLineno;
-    JSBool mJSFrame;
+    PRUint32 mLanguage;
 };
 
 /**********************************************/
 
 // static
-nsIJSStackFrameLocation*
-XPCJSStack::CreateStack(JSContext* cx)
+
+nsresult
+XPCJSStack::CreateStack(JSContext* cx, nsIStackFrame** stack)
 {
     if(!cx || !cx->fp)
-        return nsnull;
+        return NS_ERROR_FAILURE;
 
-    return XPCJSStackFrame::CreateStack(cx, cx->fp);
+    return XPCJSStackFrame::CreateStack(cx, cx->fp, (XPCJSStackFrame**) stack);
 }
 
 // static
-nsIJSStackFrameLocation*
-XPCJSStack::CreateStackFrameLocation(JSBool isJSFrame,
+nsresult
+XPCJSStack::CreateStackFrameLocation(PRUint32 aLanguage,
                                      const char* aFilename,
                                      const char* aFunctionName,
                                      PRInt32 aLineNumber,
-                                     nsIJSStackFrameLocation* aCaller)
+                                     nsIStackFrame* aCaller,
+                                     nsIStackFrame** stack)
 {
     return XPCJSStackFrame::CreateStackFrameLocation(
-                                        isJSFrame,
+                                        aLanguage,
                                         aFilename,
                                         aFunctionName,
                                         aLineNumber,
-                                        aCaller);
+                                        aCaller,
+                                        (XPCJSStackFrame**) stack);
 }
 
 
@@ -117,7 +108,7 @@ XPCJSStackFrame::XPCJSStackFrame()
         mFilename(nsnull),
         mFunname(nsnull),
         mLineno(0),
-        mJSFrame(JS_FALSE)
+        mLanguage(nsIProgrammingLanguage::UNKNOWN)
 {
     NS_INIT_REFCNT();
 }
@@ -128,14 +119,14 @@ XPCJSStackFrame::~XPCJSStackFrame()
         nsMemory::Free(mFilename);
     if(mFunname)
         nsMemory::Free(mFunname);
-    if(mCaller)
-        NS_RELEASE(mCaller);
+    NS_IF_RELEASE(mCaller);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSStackFrame, nsIJSStackFrameLocation)
+NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSStackFrame, nsIStackFrame)
 
-XPCJSStackFrame*
-XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)
+nsresult
+XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
+                             XPCJSStackFrame** stack)
 {
     XPCJSStackFrame* self = new XPCJSStackFrame();
     JSBool failed = JS_FALSE;
@@ -145,14 +136,17 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)
 
         if(fp->down)
         {
-            if(!(self->mCaller = CreateStack(cx, fp->down)))
+            if(NS_FAILED(CreateStack(cx, fp->down,
+                         (XPCJSStackFrame**) &self->mCaller)))
                 failed = JS_TRUE;
         }
 
         if(!failed)
         {
-            self->mJSFrame = !JS_IsNativeFrame(cx, fp);
-            if(self->mJSFrame)
+            self->mLanguage = JS_IsNativeFrame(cx, fp) ?
+                                nsIProgrammingLanguage::CPLUSPLUS :
+                                nsIProgrammingLanguage::JAVASCRIPT;
+            if(self->IsJSFrame())
             {
                 JSScript* script = JS_GetFrameScript(cx, fp);
                 jsbytecode* pc = JS_GetFramePC(cx, fp);
@@ -183,7 +177,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)
                 }
                 else
                 {
-                    self->mJSFrame = JS_FALSE;
+                    self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
                 }
             }
         }
@@ -191,16 +185,18 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)
             NS_RELEASE(self);
     }
 
-    return self;
+    *stack = self;
+    return self ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 // static
-XPCJSStackFrame*
-XPCJSStackFrame::CreateStackFrameLocation(JSBool isJSFrame,
+nsresult
+XPCJSStackFrame::CreateStackFrameLocation(PRUint32 aLanguage,
                                           const char* aFilename,
                                           const char* aFunctionName,
                                           PRInt32 aLineNumber,
-                                          nsIJSStackFrameLocation* aCaller)
+                                          nsIStackFrame* aCaller,
+                                          XPCJSStackFrame** stack)
 {
     JSBool failed = JS_FALSE;
     XPCJSStackFrame* self = new XPCJSStackFrame();
@@ -211,7 +207,7 @@ XPCJSStackFrame::CreateStackFrameLocation(JSBool isJSFrame,
 
     if(!failed)
     {
-        self->mJSFrame = isJSFrame;
+        self->mLanguage = aLanguage;
         self->mLineno = aLineNumber;
     }
 
@@ -243,17 +239,31 @@ XPCJSStackFrame::CreateStackFrameLocation(JSBool isJSFrame,
     {
         NS_RELEASE(self);   // sets self to nsnull
     }
-    return self;
+
+    *stack = self;
+    return self ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* readonly attribute boolean isJSFrame; */
-NS_IMETHODIMP XPCJSStackFrame::GetIsJSFrame(PRBool *aIsJSFrame)
+/* readonly attribute PRUint32 language; */
+NS_IMETHODIMP XPCJSStackFrame::GetLanguage(PRUint32 *aLanguage)
 {
-    if(!aIsJSFrame)
-        return NS_ERROR_NULL_POINTER;
-
-    *aIsJSFrame = mJSFrame;
+    *aLanguage = mLanguage;
     return NS_OK;
+}
+
+/* readonly attribute string languageName; */
+NS_IMETHODIMP XPCJSStackFrame::GetLanguageName(char * *aLanguageName)
+{
+    static const char js[] = "JavaScript";
+    static const char cpp[] = "C++";
+    char* temp;
+
+    if(IsJSFrame())
+        *aLanguageName = temp = (char*) nsMemory::Clone(js, sizeof(js));
+    else
+        *aLanguageName = temp = (char*) nsMemory::Clone(cpp, sizeof(cpp));
+
+    return temp ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* readonly attribute string filename; */
@@ -262,8 +272,8 @@ NS_IMETHODIMP XPCJSStackFrame::GetFilename(char * *aFilename)
     XPC_STRING_GETTER_BODY(aFilename, mFilename);
 }
 
-/* readonly attribute string function; */
-NS_IMETHODIMP XPCJSStackFrame::GetFunctionName(char * *aFunction)
+/* readonly attribute string name; */
+NS_IMETHODIMP XPCJSStackFrame::GetName(char * *aFunction)
 {
     XPC_STRING_GETTER_BODY(aFunction, mFunname);
 }
@@ -278,8 +288,17 @@ NS_IMETHODIMP XPCJSStackFrame::GetLineNumber(PRInt32 *aLineNumber)
     return NS_OK;
 }
 
-/* readonly attribute nsIJSStackFrameLocation caller; */
-NS_IMETHODIMP XPCJSStackFrame::GetCaller(nsIJSStackFrameLocation * *aCaller)
+/* readonly attribute string sourceLine; */
+NS_IMETHODIMP XPCJSStackFrame::GetSourceLine(char * *aSourceLine)
+{
+    if(!aSourceLine)
+        return NS_ERROR_NULL_POINTER;
+    *aSourceLine = nsnull;
+    return NS_OK;
+}
+
+/* readonly attribute nsIStackFrame caller; */
+NS_IMETHODIMP XPCJSStackFrame::GetCaller(nsIStackFrame * *aCaller)
 {
     if(!aCaller)
         return NS_ERROR_NULL_POINTER;
@@ -296,7 +315,7 @@ NS_IMETHODIMP XPCJSStackFrame::ToString(char **_retval)
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    const char* frametype = mJSFrame ? "JS" : "native";
+    const char* frametype = IsJSFrame() ? "JS" : "native";
     const char* filename = mFilename ? mFilename : "<unknown filename>";
     const char* funname = mFunname ? mFunname : "<TOP_LEVEL>";
     static const char format[] = "%s frame :: %s :: %s :: line %d";

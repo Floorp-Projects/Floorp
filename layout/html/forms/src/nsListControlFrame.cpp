@@ -31,7 +31,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDeviceContext.h" 
 #include "nsIDOMHTMLCollection.h" 
-#include "nsIDOMNSHTMLOptionCollection.h"
+#include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsIDOMHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIComboboxControlFrame.h"
@@ -210,7 +210,7 @@ if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
 
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame()
-:   mWeakReferent(this)
+  : mWeakReferent(this)
 {
   mSelectedIndex      = kNothingSelected;
   mComboboxFrame      = nsnull;
@@ -1688,20 +1688,16 @@ nsListControlFrame::GetOptionContent(PRInt32 aIndex)
 nsIDOMHTMLCollection* 
 nsListControlFrame::GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect)
 {
-  nsIDOMNSHTMLOptionCollection* optCol = nsnull;
   nsIDOMHTMLCollection* options = nsnull;
   if (!aSelect) {
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(aContent));
     if (selectElement) {
-      selectElement->GetOptions(&optCol);  // AddRefs (1)
+      selectElement->GetOptions(&options);  // AddRefs (1)
     }
   } else {
-    aSelect->GetOptions(&optCol); // AddRefs (1)
+    aSelect->GetOptions(&options); // AddRefs (1)
   }
-  if (optCol) {
-    nsresult res = optCol->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)&options); // AddRefs (2)
-    NS_RELEASE(optCol); // Release (1)
-  }
+
   return options;
 }
 

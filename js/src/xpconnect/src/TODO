@@ -1,96 +1,44 @@
-/* jband - 07/08/99 - stuff to do */
+/* jband - 03/06/01 - Stuff to do soon */
 
-**** DOCS ****
+- FIX these things:
+    ! FIX resolve in setProperty brendan bug 72354
+    - FIX nested enumerate with scriptable helper
+    - FIX xpccomponets.cpp use of scriptable to deal better with prototype use
 
-- Docs
+- FEATURES
+    - followup with shaver on classinfo maps (shared with table driven QI?)
+    - deal with shaver's string changes
+    ? add HasInstance (or whatever) to nsIClassInfo
 
-**** TESTING ****
+- VERIFY these things:
+    - VERIFY that locking work is DONE.
+    - VERIFY that scriptable flags are being honored
+    - VERIFY that we honor nsIClassInfo flags
+    - VERIFY cleanup of unused stuff
+    - VERIFY only share protos if scriptable flag says so.
 
-- for xpconnect
-- for xptcall
+- FOORPRINT & PERFORMANCE
+    ? look into optional hashtable in interface sets
+        FWIW, I'm thinking this is likely to not be a real win (and will 
+        certainly have a cost).
+        The JS engine caches the bulk of such lookups for us anyway.
 
-**** PORTS ****
+- CODE MAINTAINABILITY
+    - more code comments
 
-- additional xptcall ports
+- CODE INSTRUMENTATION
+    - improve DebugDump stuff
+    - more stats gathering/reporting code
+    ? debug code to point out *use* of potentially shadowed members
+    - add code to discover QIable interfaces not mentioned in nsIClassInfo
 
-**** GENERAL ****
+- TESTS - we need tests for:
+    - look into hooking up to JS test suite
+    - use what can be used from cbegle's xpconnect tests
+    - add multi-threaded tests
 
-- versioning 
-- binary compatibility
-- componentization
-- debugging
-
-
-**** FEATURES ****
-
-- namespaces
-    - xptinfo work
-    - XPConnect work
-
-- reimplement nsSJIID and nsJSCID using multiple inheritence
-
-- flattened component scheme
-    - xpidl extensions
-    - XPConnect support
-    - simple aggregatable interface for GetCID()
-    - coclass design
-    - registry 'merging'
-
-- work in JS engine to track more info when exceptions thrown so that
-  the uncaught exceptions will not be so mysterious (filename and lineno)
-
-- proto object per class
-
-- safer use of jsdoubles
-
-- refactor wrapper tracking based on JSRuntime no JSContext
-
-- Constants for WrappedJS objects? 
-    - Even for WrappedNatives the constants should (perhaps) be in the 
-      (as yet not created) class proto object rather than props of each object?
-      This makes then overwritable?
-
-- Add thread safety to xpconnect (and xptinfo)
-
-- JS examples emitted from xpidl compiler
-
-- Add support for further wrapping the component manager to allow
-registering services and factories implemented in JS.
-
-- XPJS
-
-- Add better error support - reflect more xpcom error codes into
-JS. I'd like to be able to declare xpcom error (and success)
-codes in idl
-
-- Improve exception scheme so that exceptions thrown by JS are
-not just strings, but instead are more interesting objects.
-
-- better debug and exception loocation support
-    - reflect js lcations and stacks as an xpcom service
-    - expose a debugger callable eval and dump stack
-
-- write better tests (for xpconnect *and* xptcall)
-
-- add coclass-like and flattened interfaces scheme. Needed for
-DOM. Requires xpidl and typelib extensions in addition to runtime
-support.
-
-- define and enforce data conversion limits; e.g. what happens
-when we try to coerce an out of range conversion, like converting
-1232.2 into an 8-bit signed value? Fail, truncate? etc.
-
-- possibly support opaque pointer typedefs and/or structs.
-
-- declare C arrays in xpidl and map to JS
-
-- cycle breaking issues
-    - recomended patterns?
-    - weak refs for JS -> native
-    - weak refs for native -> JS
-
-- We need better error reporting across the xpconnect boundary!
-    - xpconnect specific nsresult error codes ? 
-    - expose 'get last error details' to native xpcom?
-
-- a global object will need global namespace interface
+- DOCS
+    - update typelib spec ([astring] and [function])
+    - xpconnect api docs
+    - discussion of flattening and implications
+    - add to the faqs

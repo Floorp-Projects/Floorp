@@ -22,6 +22,7 @@
 #ifndef __EmbedWindow_h
 #define __EmbedWindow_h
 
+#include <nsString.h>
 #include <nsIWebBrowserChrome.h>
 #include <nsIWebBrowserChromeFocus.h>
 #include <nsIEmbeddingSiteWindow.h>

@@ -30,8 +30,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-class nsDOMException : public nsIDOMDOMException,
-                       public nsIScriptObjectOwner
+class nsDOMException : public nsIDOMNSDOMException
 {
 public:
   nsDOMException(nsresult aResult,
@@ -41,17 +40,14 @@ public:
   virtual ~nsDOMException();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IDOMDOMEXCEPTION
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  NS_DECL_NSIDOMDOMEXCEPTION
+  NS_DECL_NSIDOMNSDOMEXCEPTION
 
 protected:
   nsresult mResult;
   char* mName;
   char* mMessage;
   char* mLocation;
-  void *mScriptObject;
 };
 
 nsresult 
@@ -86,8 +82,7 @@ nsDOMException::nsDOMException(nsresult aResult,
   : mResult(aResult),
     mName(nsnull),
     mMessage(nsnull),
-    mLocation(nsnull),
-    mScriptObject(nsnull)
+    mLocation(nsnull)
 {
   NS_INIT_ISUPPORTS();
 
@@ -217,27 +212,4 @@ nsDOMException::ToString(nsAWritableString& aReturn)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetScriptObject(nsIScriptContext *aContext, 
-                                void** aScriptObject)
-{
-  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-    res = NS_NewScriptDOMException(aContext, (nsISupports *)(nsIDOMDOMException *)this, (nsISupports*)global, &mScriptObject);
-    NS_IF_RELEASE(global);
-  }
-  
-  *aScriptObject = mScriptObject;
-  return res;
 }

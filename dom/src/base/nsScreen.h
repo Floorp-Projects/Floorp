@@ -32,7 +32,8 @@ class nsIDocShell;
 class nsIDeviceContext;
 
 // Script "screen" object
-class ScreenImpl : public nsIScriptObjectOwner, public nsIDOMScreen {
+class ScreenImpl : public nsIDOMScreen
+{
 public:
   ScreenImpl( nsIDocShell* aDocShell );
   virtual ~ScreenImpl();
@@ -40,9 +41,6 @@ public:
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   NS_IMETHOD GetTop(PRInt32* aWidth);
   NS_IMETHOD GetLeft(PRInt32* aWidth);
@@ -59,7 +57,6 @@ public:
 protected:
 	nsIDeviceContext* GetDeviceContext();
 	
-  void *mScriptObject;
   nsIDocShell* mDocShell; // Weak Reference
 };
 

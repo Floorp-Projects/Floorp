@@ -22,13 +22,16 @@
 
 #include "nsISupports.idl"
 #include "nsIDialogParamBlock.idl"
-#include "domstubs.idl"
+
 %{C++
 class nsIFactory;
 
 #define NS_CommonDialog_CID \
 { 0xc01ad084, 0x4915, 0x11d3, { 0xb7, 0xa0, 0x85, 0xcf, 0x55, 0xc3, 0x52, 0x3c } }
 %}
+
+interface nsIDOMWindowInternal;
+
 
 [scriptable, uuid(c01ad082-4915-11d3-b7a0-85cf55c3523c)]
 interface nsICommonDialogs : nsISupports

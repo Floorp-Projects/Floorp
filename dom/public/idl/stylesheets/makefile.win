@@ -21,7 +21,8 @@
 
 DEPTH=..\..\..\..
 
-MODULE=dom_stylesheets
+MODULE=dom
+XPIDL_MODULE=dom_stylesheets
 
 XPIDLSRCS =					\
 	.\nsIDOMDocumentStyle.idl		\

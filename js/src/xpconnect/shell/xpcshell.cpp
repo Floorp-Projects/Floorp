@@ -680,7 +680,7 @@ FullTrustSecMan::FullTrustSecMan()
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj)
+FullTrustSecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIClassInfo *aClassInfo, void * *aPolicy)
 {
     return NS_OK;
 }
@@ -697,19 +697,9 @@ FullTrustSecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-FullTrustSecMan::CanCallMethod(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanGetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
-{
-    return NS_OK;
-}
-NS_IMETHODIMP
-FullTrustSecMan::CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+/* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
+NS_IMETHODIMP 
+FullTrustSecMan::CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy)
 {
     return NS_OK;
 }
@@ -742,6 +732,90 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int *
     *argc = 1;
     *argv = mac_argv;
 }
+#endif
+
+// #define TEST_InitClassesWithNewWrappedGlobal
+
+#ifdef TEST_InitClassesWithNewWrappedGlobal
+// XXX hacky test code...
+#include "xpctest.h"
+
+class TestGlobal : public nsIXPCTestNoisy, public nsIXPCScriptable
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCTESTNOISY
+    NS_DECL_NSIXPCSCRIPTABLE
+
+    TestGlobal(){NS_INIT_ISUPPORTS();}
+
+};
+
+NS_IMPL_ISUPPORTS2(TestGlobal, nsIXPCTestNoisy, nsIXPCScriptable)
+
+// The nsIXPCScriptable map declaration that will generate stubs for us...
+#define XPC_MAP_CLASSNAME           TestGlobal
+#define XPC_MAP_QUOTED_CLASSNAME   "TestGlobal"
+#define XPC_MAP_FLAGS               nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |\
+                                    nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |\
+                                    nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY
+#include "xpc_map_end.h" /* This will #undef the above */
+
+NS_IMETHODIMP TestGlobal::Squawk() {return NS_OK;}
+
+#endif
+
+// uncomment to install the test 'this' translator
+// #define TEST_TranslateThis
+
+#ifdef TEST_TranslateThis
+
+#include "xpctest.h"
+
+class nsXPCFunctionThisTranslator : public nsIXPCFunctionThisTranslator
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
+
+  nsXPCFunctionThisTranslator();
+  virtual ~nsXPCFunctionThisTranslator();
+  /* additional members */
+};
+
+/* Implementation file */
+NS_IMPL_ISUPPORTS1(nsXPCFunctionThisTranslator, nsIXPCFunctionThisTranslator)
+
+nsXPCFunctionThisTranslator::nsXPCFunctionThisTranslator()
+{
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+}
+
+nsXPCFunctionThisTranslator::~nsXPCFunctionThisTranslator()
+{
+  /* destructor code */
+#ifdef DEBUG_jband
+    printf("destroying nsXPCFunctionThisTranslator\n");
+#endif
+}
+
+/* nsISupports TranslateThis (in nsISupports aInitialThis, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, out PRBool aHideFirstParamFromJS, out nsIIDPtr aIIDOfResult); */
+NS_IMETHODIMP 
+nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis, 
+                                           nsIInterfaceInfo *aInterfaceInfo, 
+                                           PRUint16 aMethodIndex, 
+                                           PRBool *aHideFirstParamFromJS, 
+                                           nsIID * *aIIDOfResult, 
+                                           nsISupports **_retval)
+{
+    NS_IF_ADDREF(aInitialThis);
+    *_retval = aInitialThis;
+    *aHideFirstParamFromJS = JS_FALSE;
+    *aIIDOfResult = nsnull;
+    return NS_OK;
+}
+
 #endif
 
 int
@@ -802,6 +876,13 @@ main(int argc, char **argv)
     nsCOMPtr<nsIXPCSecurityManager> secman = 
         NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
     xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
+
+
+#ifdef TEST_TranslateThis
+    nsCOMPtr<nsIXPCFunctionThisTranslator> 
+        translator(new nsXPCFunctionThisTranslator);
+    xpc->SetFunctionThisTranslator(NS_GET_IID(nsITestXPCFunctionCallback), translator, nsnull);
+#endif
     
     nsCOMPtr<nsIJSContextStack> cxstack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
     if (!cxstack) {
@@ -830,6 +911,20 @@ main(int argc, char **argv)
     result = ProcessArgs(jscontext, glob, argv, argc);
 
 
+#ifdef TEST_InitClassesWithNewWrappedGlobal
+    // quick hacky test...
+
+    JSContext* foo = JS_NewContext(rt, 8192);
+    nsCOMPtr<nsIXPCTestNoisy> bar(new TestGlobal());
+    nsCOMPtr<nsIXPConnectJSObjectHolder> baz;
+    xpc->InitClassesWithNewWrappedGlobal(foo, bar, NS_GET_IID(nsIXPCTestNoisy),
+                                         PR_TRUE, getter_AddRefs(baz));
+    bar = nsnull;
+    baz = nsnull;
+    js_ForceGC(foo);
+    JS_DestroyContext(foo);
+#endif
+
 //#define TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN 1
 
 #ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
@@ -848,7 +943,6 @@ main(int argc, char **argv)
     js_ForceGC(jscontext);
     JS_DestroyContext(jscontext);
     xpc->SyncJSContexts();
-    xpc->DebugDump(4);
     xpc = nsnull;   // force nsCOMPtr to Release the service
     secman = nsnull;
     rtsvc = nsnull;

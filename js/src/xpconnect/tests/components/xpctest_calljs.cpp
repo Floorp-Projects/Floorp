@@ -42,7 +42,7 @@ class xpcTestCallJS : public nsIXPCTestCallJS, public nsIXPCScriptable {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCTESTCALLJS
-    XPC_DECLARE_IXPCSCRIPTABLE
+    NS_DECL_NSIXPCSCRIPTABLE
     xpcTestCallJS();
     virtual ~xpcTestCallJS();
 
@@ -53,7 +53,11 @@ private:
 
 NS_IMPL_ISUPPORTS2_CI(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable);
 
-XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(xpcTestCallJS);
+// The nsIXPCScriptable map declaration that will generate stubs for us...
+#define XPC_MAP_CLASSNAME           xpcTestCallJS
+#define XPC_MAP_QUOTED_CLASSNAME   "xpcTestCallJS"
+#define XPC_MAP_FLAGS               0
+#include "xpc_map_end.h" /* This will #undef the above */
 
 xpcTestCallJS :: xpcTestCallJS() {
     NS_INIT_REFCNT();

@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -35,11 +35,9 @@
 
 /* Debug Logging support. */
 
-#include <stdarg.h>
-#include <string.h>
-#include "prprf.h"
-#include "xpclog.h"
+#include "xpcprivate.h"
 
+// this all only works for DEBUG...
 #ifdef DEBUG
 
 #define SPACE_COUNT     200
@@ -69,10 +67,10 @@ static PRBool Init()
     return PR_TRUE;
 }
 
-void   
+void
 XPC_Log_Finish()
 {
-    if(g_InitState == 1) 
+    if(g_InitState == 1)
     {
         delete g_Spaces;
         // we'd like to properly cleanup the LogModule, but nspr owns that

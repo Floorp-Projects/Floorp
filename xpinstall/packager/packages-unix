@@ -33,7 +33,6 @@ bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
 
 [xpcom]
-bin/libjsdom.so
 bin/libmozjs.so
 bin/libnspr4.so
 bin/libplc4.so
@@ -78,7 +77,18 @@ bin/components/autocomplete.xpt
 bin/components/appshell.xpt
 bin/components/caps.xpt
 bin/components/cookie.xpt
+bin/components/libjsdom.so
 bin/components/dom.xpt
+bin/components/dom_base.xpt
+bin/components/dom_core.xpt
+bin/components/dom_css.xpt
+bin/components/dom_events.xpt
+bin/components/dom_html.xpt
+bin/components/dom_range.xpt
+bin/components/dom_stylesheets.xpt
+bin/components/dom_views.xpt
+bin/components/dom_xbl.xpt
+bin/components/dom_xul.xpt
 bin/components/editor.xpt
 bin/components/find.xpt
 bin/components/gfx.xpt

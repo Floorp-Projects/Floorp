@@ -22,13 +22,10 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 #include "mozILineTerm.idl"
 
-%{C++
-class nsILineTerm;
-class nsIDOMWindowInternal;
-%}
+interface nsIDOMWindowInternal;
+
 
 [scriptable, uuid(0eb82b30-43a2-11d3-8e76-006008948af5)]
 

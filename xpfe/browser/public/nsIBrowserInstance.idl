@@ -23,11 +23,12 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 interface nsIDocShell;
 interface nsIUrlbarHistory;
 interface nsIInputStream;
+interface nsIDOMWindowInternal;
+
 
 [scriptable, uuid(8AF0FA40-598D-11d3-806A-00600811A9C3)]
 interface nsIBrowserInstance : nsISupports {

@@ -27,6 +27,7 @@
 
 #include "IEHtmlElement.h"
 #include "IEHtmlElementCollection.h"
+#include "nsIDOMNSHTMLElement.h"
 
 CIEHtmlElement::CIEHtmlElement()
 {
@@ -449,7 +450,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetLeft(long __RPC_FAR *p)
         return E_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIDOMHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -469,7 +470,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetTop(long __RPC_FAR *p)
         return E_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIDOMHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -489,7 +490,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetWidth(long __RPC_FAR *p)
         return E_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIDOMHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -509,7 +510,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetHeight(long __RPC_FAR *p)
         return E_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIDOMHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -539,7 +540,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_innerHTML(BSTR __RPC_FAR *p)
             return E_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIDOMHTMLElement> elementHTML = do_QueryInterface(element);
+    nsCOMPtr<nsIDOMNSHTMLElement> elementHTML = do_QueryInterface(element);
     nsAutoString szTagName;
     elementHTML->GetInnerHTML(szTagName);
 

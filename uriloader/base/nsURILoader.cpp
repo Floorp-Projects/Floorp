@@ -734,43 +734,24 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel *channel, nsCString &aWindowTarg
 
   if (mustMakeNewWindow) {
       nsCOMPtr<nsIDOMWindowInternal> parentWindow;
-      JSContext* jsContext = nsnull;
 
       if (aWindowContext)
       {
         parentWindow = do_GetInterface(aWindowContext);
-        if (parentWindow)
+
+        if (!parentWindow)
         {
-          nsCOMPtr<nsIScriptGlobalObject> sgo;     
-          sgo = do_QueryInterface( parentWindow );
-          if (sgo)
-          {
-            nsCOMPtr<nsIScriptContext> scriptContext;
-            sgo->GetContext( getter_AddRefs( scriptContext ) );
-            if (scriptContext)
-              jsContext = (JSContext*)scriptContext->GetNativeContext();
-          }
-        }
-      }
-      if (!parentWindow || !jsContext)
-      {
           return NS_ERROR_FAILURE;
+        }
       }
 
       // Create a new window (context) so that the uri loader has a proper
       // target to push the content into.
 
-      void* mark;
-      jsval* argv;
-
-      nsAutoString uriValue; // Empty
-      argv = JS_PushArguments(jsContext, &mark, "Ws",
-          uriValue.GetUnicode(), aWindowTarget.get());
-      NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIDOMWindowInternal> newWindow;
-      parentWindow->Open(jsContext, argv, 2, getter_AddRefs(newWindow));
-      JS_PopArguments(jsContext, mark);
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      parentWindow->Open(NS_LITERAL_STRING(""),
+                         NS_ConvertASCIItoUCS2(aWindowTarget),
+                         nsLiteralString(nsnull) /* NULL string*/, getter_AddRefs(newWindow));
 
       nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(newWindow);
       nsIDocShell *docShell = nsnull;

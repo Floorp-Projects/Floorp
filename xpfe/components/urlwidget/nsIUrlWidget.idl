@@ -25,7 +25,9 @@
 //filename: nsIUrlWidget.idl
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
+
+interface nsIDOMWindowInternal;
+
 
 /* nsIUrlWidget
  *

@@ -634,29 +634,35 @@ nsresult NS_InitInstallTriggerGlobalClass(nsIScriptContext *aContext, void **aPr
 //
 // Method for creating a new InstallTriggerGlobal JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+nsresult
+NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aContext,
+                                 nsISupports *aSupports, nsISupports *aParent,
+                                 void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptInstallTriggerGlobal");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports &&
+                  nsnull != aReturn,
+                  "null argument to NS_NewScriptInstallTriggerGlobal");
+
   JSObject *proto;
-  JSObject *parent;
-  nsIScriptObjectOwner *owner;
+  JSObject *parent = nsnull;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMInstallTriggerGlobal *aInstallTriggerGlobal;
+  nsIDOMInstallTriggerGlobal *installTriggerGlobal;
 
-  if (nsnull == aParent) {
-    parent = nsnull;
-  }
-  else if (NS_OK == aParent->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
-                                            (void**)&owner)) {
+  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(aParent));
+
+  if (owner) {
     if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
-      NS_RELEASE(owner);
       return NS_ERROR_FAILURE;
     }
-    NS_RELEASE(owner);
-  }
-  else {
-    return NS_ERROR_FAILURE;
+  } else {
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aParent));
+
+    if (sgo) {
+      parent = sgo->GetGlobalJSObject();
+    } else {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   if (NS_OK != NS_InitInstallTriggerGlobalClass(aContext, (void **)&proto)) {
@@ -664,7 +670,7 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aC
   }
 
   result = aSupports->QueryInterface(NS_GET_IID(nsIDOMInstallTriggerGlobal),
-                                     (void **)&aInstallTriggerGlobal);
+                                     (void **)&installTriggerGlobal);
   if (NS_OK != result) {
     return result;
   }
@@ -673,10 +679,10 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aC
   *aReturn = JS_NewObject(jscontext, &InstallTriggerGlobalClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aInstallTriggerGlobal);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, installTriggerGlobal);
   }
   else {
-    NS_RELEASE(aInstallTriggerGlobal);
+    NS_RELEASE(installTriggerGlobal);
     return NS_ERROR_FAILURE; 
   }
 

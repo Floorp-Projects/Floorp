@@ -24,13 +24,13 @@
 */
 
 #include "nsISecurityManagerComponent.idl"
-#include "domstubs.idl"
 interface nsIPrincipal;
 
 %{C++
 #include "cmtcmn.h"
-#include "nsIDOMWindow.h"
 %}
+
+interface nsIDOMWindow;
 
 [ptr] native nsCMTControlStar(CMT_CONTROL);
 

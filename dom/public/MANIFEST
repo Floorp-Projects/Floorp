@@ -24,15 +24,13 @@ nsIScriptContext.h
 nsIJSScriptObject.h
 nsIJSNativeInitializer.h
 nsIScriptObjectOwner.h
+nsIScriptObjectPrincipal.h
 nsIScriptGlobalObject.h
 nsIScriptEventListener.h
 nsIDOMScriptObjectFactory.h
-nsIDOMNativeObjectRegistry.h
 nsDOMCID.h
-nsDOMPropEnums.h
-nsDOMPropNames.h
-nsIScriptNameSetRegistry.h
 nsIScriptExternalNameSet.h
 nsIScriptNameSpaceManager.h
 nsDOMError.h
 nsIJSEventListener.h
+nsIDOMClassInfo.h

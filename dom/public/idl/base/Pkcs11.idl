@@ -1,8 +1,0 @@
-      interface Pkcs11 {
-/* IID: {0x9fd42950, 0x25e7, 0x11d4, \
-       {0x8a, 0x7d, 0x00, 0x60, 0x08, 0xc8, 0x44, 0xc3}} */
-
-	long deletemodule(in DOMString moduleName);
-	long addmodule(in DOMString moduleName, in DOMString libraryFullPath, in long cryptoMechanismFlags, in long cipherFlags);
-      };
-

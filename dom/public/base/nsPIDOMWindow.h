@@ -38,39 +38,34 @@ class nsIChromeEventHandler;
 class nsIFocusController;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x3aa80781, 0x7e6a, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
+{ 0x3aa80781, 0x7e6a, 0x11d3, \
+ { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-class nsPIDOMWindow : public nsISupports {
+class nsPIDOMWindow : public nsISupports
+{
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_PIDOMWINDOW_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOW_IID)
 
-  NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult)=0;
-  NS_IMETHOD GetPrivateRoot(nsIDOMWindowInternal** aResult)=0;
+  NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult) = 0;
+  NS_IMETHOD GetPrivateRoot(nsIDOMWindowInternal** aResult) = 0;
 
-  NS_IMETHOD GetLocation(nsIDOMLocation** aLocation) = 0;
-
-  NS_IMETHOD SetObjectProperty(const PRUnichar* aProperty, nsISupports* aObject)=0;
-  NS_IMETHOD GetObjectProperty(const PRUnichar* aProperty, nsISupports** aObject)=0;
+  NS_IMETHOD GetObjectProperty(const PRUnichar* aProperty,
+                               nsISupports** aObject) = 0;
   
-  // This is private because activate/deactivate events are not part of the DOM spec.
+  // This is private because activate/deactivate events are not part
+  // of the DOM spec.
   NS_IMETHOD Activate() = 0;
   NS_IMETHOD Deactivate() = 0;
 
-  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aHandler)=0;
+  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aHandler) = 0;
 
-  NS_IMETHOD HasMutationListeners(PRUint32 aMutationEventType, PRBool* aResult)=0;
-  NS_IMETHOD SetMutationListeners(PRUint32 aType)=0;
+  NS_IMETHOD HasMutationListeners(PRUint32 aMutationEventType,
+                                  PRBool* aResult) = 0;
+  NS_IMETHOD SetMutationListeners(PRUint32 aType) = 0;
 
-  NS_IMETHOD GetRootFocusController(nsIFocusController** aResult)=0;
+  NS_IMETHOD GetRootFocusController(nsIFocusController** aResult) = 0;
 
-  /* from nsIBaseWindow */
-  /* void setPositionAndSize (in long x, in long y, in long cx, in long cy, in boolean fRepaint); */
-  NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint) = 0;
-
-  /* void getPositionAndSize (out long x, out long y, out long cx, out long cy); */
-  NS_IMETHOD GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) = 0;
-
-
+  NS_IMETHOD ReallyCloseWindow() = 0;
 };
 
 #endif // nsPIDOMWindow_h__

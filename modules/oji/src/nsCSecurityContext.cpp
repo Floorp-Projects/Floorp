@@ -44,7 +44,7 @@
 #include "nsCertificatePrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptObjectOwner.h"
+#include "nsIScriptObjectPrincipal.h"
 
 #include "nsTraceRefcnt.h"
 

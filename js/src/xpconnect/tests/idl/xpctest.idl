@@ -39,6 +39,13 @@
 // forward declaration (to test that such things work)
 interface nsITestXPCSomeUselessThing;
 
+// Note the use of [function] for this scriptable function callback declaration
+[scriptable, function, uuid(4407fc90-1e41-11d5-909d-0010a4e73d9a)]
+interface nsITestXPCFunctionCallback : nsISupports {
+    void call(in string s);
+    void callWithThis(in nsISupports self, in string s);
+};
+
 [scriptable, uuid(159E36D0-991E-11d2-AC3F-00C09300144B)]
 interface nsITestXPCFoo : nsISupports {
     long Test(in long p1, in long p2);
@@ -117,7 +124,7 @@ interface nsIEcho : nsISupports {
 
     nsISupports ReturnInterface(in nsISupports obj);
 
-    nsIJSStackFrameLocation GetStack();
+    nsIStackFrame GetStack();
     void SetReceiverReturnOldReceiver(inout nsIEcho aReceiver);
 
     void MethodWithForwardDeclaredParam(in nsITestXPCSomeUselessThing sut);
@@ -134,10 +141,18 @@ interface nsIEcho : nsISupports {
 
     readonly attribute short throwInGetter;
 
+    attribute string aString;
+    attribute PRInt32 SomeValue;
+
     const short one = 1;
     const short five = 5;
     const short six = 6;
+    const PRUint32 medium = 12345;
+    const PRUint32 big = 0xFFFFFFFF;
 
+    void callFunction(in nsITestXPCFunctionCallback callback, in string s);
+    void callFunctionWithThis(in nsITestXPCFunctionCallback callback, 
+                              in nsISupports self, in string s);
 };
 
 /***************************************************************************/

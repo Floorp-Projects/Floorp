@@ -96,7 +96,7 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 }
 
 NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
-                   nsSecureBrowserUI,
+                   nsISecureBrowserUI,
                    nsIWebProgressListener,
                    nsIFormSubmitObserver,
                    nsIObserver,
@@ -105,7 +105,7 @@ NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
 
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window,
+nsSecureBrowserUIImpl::Init(nsIDOMWindow *window,
                             nsIDOMElement *button)
 {
   nsresult rv = NS_OK;

@@ -1,9 +1,0 @@
-// Introduced in DOM Level 2:
-interface RGBColor {
- /* IID: { 0x6aff3102, 0x320d, 0x4986, \
-  { 0x97, 0x90, 0x12, 0x31, 0x6b, 0xb8, 0x7c, 0xf9 } } */
-
-  readonly attribute CSSPrimitiveValue  red;
-  readonly attribute CSSPrimitiveValue  green;
-  readonly attribute CSSPrimitiveValue  blue;
-};

@@ -229,7 +229,7 @@ MySecMan::MySecMan()
 }
 
 NS_IMETHODIMP
-MySecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj)
+MySecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIClassInfo *aClassInfo, void * *aPolicy)
 {
     switch(mMode)
     {
@@ -282,44 +282,9 @@ MySecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
     }
 }
 
-NS_IMETHODIMP
-MySecMan::CanCallMethod(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
-{
-    switch(mMode)
-    {
-        case OK_ALL:
-            return NS_OK;
-        case VETO_ALL:
-            JS_SetPendingException(aJSContext,
-                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
-                    "security exception")));
-            return NS_ERROR_FAILURE;
-        default:
-            NS_ASSERTION(0,"bad case");
-            return NS_OK;
-    }
-}
-
-NS_IMETHODIMP
-MySecMan::CanGetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
-{
-    switch(mMode)
-    {
-        case OK_ALL:
-            return NS_OK;
-        case VETO_ALL:
-            JS_SetPendingException(aJSContext,
-                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
-                    "security exception")));
-            return NS_ERROR_FAILURE;
-        default:
-            NS_ASSERTION(0,"bad case");
-            return NS_OK;
-    }
-}
-
-NS_IMETHODIMP
-MySecMan::CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+/* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
+NS_IMETHODIMP 
+MySecMan::CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy)
 {
     switch(mMode)
     {
@@ -350,7 +315,7 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     if(!sm || ! foo)
     {
         success = JS_FALSE;
-        printf("failed to create object!\n");
+        printf("FAILED to create object!\n");
         goto sm_test_done;
     }
 
@@ -361,7 +326,7 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
                                         nsIXPCSecurityManager::HOOK_ALL)))
     {
         success = JS_FALSE;
-        printf("SetSecurityManagerForJSContext failed!\n");
+        printf("SetSecurityManagerForJSContext FAILED!\n");
         goto sm_test_done;
     }
 
@@ -375,7 +340,7 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, NS_GET_IID(nsITestXPCFoo2), &wrapper)))
     {
         success = JS_FALSE;
-        printf("failed\n");
+        printf("FAILED\n");
         NS_RELEASE(wrapper);
     }
     else
@@ -402,66 +367,66 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     else
     {
         success = JS_FALSE;
-        printf("failed\n");
+        printf("FAILED\n");
     }
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  getService no veto: ");
-    t = "try{Components.classes['@mozilla.org/js/xpc/XPConnect;1'].getService(); print('passed');}catch(e){failed = true; print('failed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/XPConnect;1'].getService(); print('passed');}catch(e){failed = true; print('FAILED');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  getService with veto: ");
-    t = "try{Components.classes['@mozilla.org/js/xpc/XPConnect;1'].getService(); failed = true; print('failed');}catch(e){print('passed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/XPConnect;1'].getService(); failed = true; print('FAILED');}catch(e){print('passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  createInstance no veto: ");
-    t = "try{Components.classes['@mozilla.org/js/xpc/ID;1'].createInstance(Components.interfaces.nsIJSID); print('passed');}catch(e){failed = true; print('failed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/ID;1'].createInstance(Components.interfaces.nsIJSID); print('passed');}catch(e){failed = true; print('FAILED');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  getService with veto: ");
-    t = "try{Components.classes['@mozilla.org/js/xpc/ID;1'].createInstance(Components.interfaces.nsIJSID); failed = true; print('failed');}catch(e){print('passed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/ID;1'].createInstance(Components.interfaces.nsIJSID); failed = true; print('FAILED');}catch(e){print('passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  call method no veto: ");
-    t = "try{foo.Test2(); print(' : passed');}catch(e){failed = true; print(' : failed');}";
+    t = "try{foo.Test2(); print(' : passed');}catch(e){failed = true; print(' : FAILED');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  call method with veto: ");
-    t = "try{foo.Test2(); failed = true; print(' : failed');}catch(e){print(' : passed');}";
+    t = "try{foo.Test2(); failed = true; print(' : FAILED');}catch(e){print(' : passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  get attribute no veto: ");
-    t = "try{foo.Foo; print(' : passed');}catch(e){failed = true; print(' : failed');}";
+    t = "try{foo.Foo; print(' : passed');}catch(e){failed = true; print(' : FAILED');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  get attribute with veto: ");
-    t = "try{foo.Foo; failed = true; print(' : failed');}catch(e){print(' : passed');}";
+    t = "try{foo.Foo; failed = true; print(' : FAILED');}catch(e){print(' : passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  set attribute no veto: ");
-    t = "try{foo.Foo = 0; print(' : passed');}catch(e){failed = true; print(' : failed');}";
+    t = "try{foo.Foo = 0; print(' : passed');}catch(e){failed = true; print(' : FAILED');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  set attribute with veto: ");
-    t = "try{foo.Foo = 0; failed = true; print(' : failed');}catch(e){print(' : passed');}";
+    t = "try{foo.Foo = 0; failed = true; print(' : FAILED');}catch(e){print(' : passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 sm_test_done:
     success = success && JS_GetProperty(jscontext, glob, "failed", &rval) && JSVAL_TRUE != rval;
-    printf("SecurityManager tests : %s\n", success ? "passed" : "failed");
+    printf("SecurityManager tests : %s\n", success ? "passed" : "FAILED");
     NS_IF_RELEASE(foo);
     xpc->SetSecurityManagerForJSContext(jscontext, nsnull, 0);
 }
@@ -504,32 +469,32 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
                         if(!strcmp(a_in, a_out) && !strcmp(b_in, b_out))
                             printf("passed\n");
                         else
-                            printf(" conversion OK, but surrounding was mangled -- failed!\n");
+                            printf(" conversion OK, but surrounding was mangled -- FAILED!\n");
                     }
                     else
-                        printf(" JS to native returned wrong value -- failed!\n");
+                        printf(" JS to native returned wrong value -- FAILED!\n");
                     NS_RELEASE(foog);
                 }
                 else
                 {
-                    printf(" could not QI value JS to native returned -- failed!\n");
+                    printf(" could not QI value JS to native returned -- FAILED!\n");
                 }
                 NS_RELEASE(fooc);
             }
             else
             {
-                printf(" JS to native returned NULL -- failed!\n");
+                printf(" JS to native returned NULL -- FAILED!\n");
             }
         }
         else
         {
-            printf(" could not convert from JS to native -- failed!\n");
+            printf(" could not convert from JS to native -- FAILED!\n");
         }
         JS_PopArguments(jscontext, mark);
     }
     else
     {
-        printf(" could not convert from native to JS -- failed!\n");
+        printf(" could not convert from native to JS -- FAILED!\n");
     }
     NS_IF_RELEASE(foo);
 }
@@ -554,44 +519,44 @@ TestThreadJSContextStack(JSContext* jscontext)
         if(NS_SUCCEEDED(stack->GetCount(&base_count)))
             printf("\tstack->GetCount() : passed\n");
         else
-            printf("\tstack->GetCount() failed!\n");
+            printf("\tstack->GetCount() FAILED!\n");
 
         if(NS_FAILED(stack->Push(jscontext)))
-            printf("\tstack->Push() failed!\n");
+            printf("\tstack->Push() FAILED!\n");
         else
             printf("\tstack->Push() passed\n");
 
         if(NS_SUCCEEDED(stack->GetCount(&count)))
             printf("\tstack->GetCount() : %s\n",
-                    count == base_count+1 ? "passed" : "failed!");
+                    count == base_count+1 ? "passed" : "FAILED!");
         else
-            printf("\tstack->GetCount() failed!\n");
+            printf("\tstack->GetCount() FAILED!\n");
 
         JSContext* testCX;
         if(NS_FAILED(stack->Peek(&testCX)))
-            printf("\tstack->Peek() failed!\n");
+            printf("\tstack->Peek() FAILED!\n");
 
         if(jscontext == testCX)
             printf("\tstack->Push/Peek : passed\n");
         else
-            printf("\tstack->Push/Peek : failed\n");
+            printf("\tstack->Push/Peek : FAILED\n");
 
         if(NS_FAILED(stack->Pop(&testCX)))
-            printf("\tstack->Pop() failed!\n");
+            printf("\tstack->Pop() FAILED!\n");
 
         if(jscontext == testCX)
             printf("\tstack->Push/Pop : passed\n");
         else
-            printf("\tstack->Push/Pop : failed\n");
+            printf("\tstack->Push/Pop : FAILED\n");
 
         if(NS_SUCCEEDED(stack->GetCount(&count)))
             printf("\tstack->GetCount() : %s\n",
-                    count == base_count ? "passed" : "failed!");
+                    count == base_count ? "passed" : "FAILED!");
         else
-            printf("\tstack->GetCount() failed!\n");
+            printf("\tstack->GetCount() FAILED!\n");
     }
     else
-        printf("\tfailed to get nsThreadJSContextStack service!\n");
+        printf("\tFAILED to get nsThreadJSContextStack service!\n");
 }
 
 /***************************************************************************/
@@ -602,7 +567,7 @@ static void ShowXPCException()
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if(NS_SUCCEEDED(rv) && xpc)
     {
-        nsCOMPtr<nsIXPCException> e;
+        nsCOMPtr<nsIException> e;
         xpc->GetPendingException(getter_AddRefs(e));
         if(e)
         {
@@ -673,13 +638,13 @@ static void TestCategoryManmager()
             }
             else
             {
-                printf("e.GetNext() failed with result %0x\n", (int)rv);        
+                printf("e.GetNext() FAILED with result %0x\n", (int)rv);        
                 ShowXPCException();
             }
                         
         }
         else
-            printf("get of enumerator failed with result %0x\n", (int)rv);        
+            printf("get of enumerator FAILED with result %0x\n", (int)rv);        
     }
     else
         printf("!!! can't get category manager\n");    
@@ -715,24 +680,24 @@ int main()
     // get the JSRuntime from the runtime svc, if possible
     NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
     if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt)
-        DIE("failed to get a JSRuntime");
+        DIE("FAILED to get a JSRuntime");
 
     jscontext = JS_NewContext(rt, 8192);
     if(!jscontext) 
-        DIE("failed to create a JSContext");
+        DIE("FAILED to create a JSContext");
 
     JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if(!xpc) 
-        DIE("failed to get xpconnect service\n");
+        DIE("FAILED to get xpconnect service\n");
 
     NS_WITH_SERVICE(nsIJSContextStack, cxstack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
     if(NS_FAILED(rv)) 
-        DIE("failed to get the nsThreadJSContextStack service!\n");
+        DIE("FAILED to get the nsThreadJSContextStack service!\n");
 
     if(NS_FAILED(cxstack->Push(jscontext)))
-        DIE("failed to get push the current jscontext on the nsThreadJSContextStack service!\n");
+        DIE("FAILED to get push the current jscontext on the nsThreadJSContextStack service!\n");
 
     // XXX I'd like to replace this with code that uses a wrapped xpcom object
     // as the global object. The old TextXPC did this. The support for this 
@@ -740,13 +705,13 @@ int main()
 
     glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
     if (!glob)
-        DIE("failed to create global object");
+        DIE("FAILED to create global object");
     if (!JS_InitStandardClasses(jscontext, glob))
-        DIE("failed to init standard classes");
+        DIE("FAILED to init standard classes");
     if (!JS_DefineFunctions(jscontext, glob, glob_functions))
-        DIE("failed to define global functions");
+        DIE("FAILED to define global functions");
     if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
-        DIE("failed to init xpconnect classes");
+        DIE("FAILED to init xpconnect classes");
 
     /**********************************************/
     // run the tests...
@@ -769,7 +734,7 @@ int main()
     rtsvc   = nsnull;   // release service held by nsCOMPtr
 
     rv = NS_ShutdownXPCOM( NULL );
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM FAILED");
 
     return 0;
 }

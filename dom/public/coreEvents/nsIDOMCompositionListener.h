@@ -41,9 +41,9 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCOMPOSITIONLISTENER_IID)
 
-  virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent) = 0;
-  virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
-  virtual nsresult HandleQueryComposition(nsIDOMEvent* aCompositionEvent) = 0;
-  virtual nsresult HandleQueryReconversion(nsIDOMEvent* aCompositionEvent) = 0;
+  NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent) = 0;
+  NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
+  NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent) = 0;
+  NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aCompositionEvent) = 0;
 };
 #endif // nsIDOMCompositionListener_h__

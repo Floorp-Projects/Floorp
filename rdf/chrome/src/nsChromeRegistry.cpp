@@ -2569,8 +2569,9 @@ nsChromeRegistry::ReloadChrome()
       while (more) {
         nsCOMPtr<nsISupports> protoWindow;
         rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
-        if (NS_SUCCEEDED(rv) && protoWindow) {
-          nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryInterface(protoWindow);
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIDOMWindowInternal> domWindow =
+            do_QueryInterface(protoWindow);
           if (domWindow) {
             nsCOMPtr<nsIDOMLocation> location;
             domWindow->GetLocation(getter_AddRefs(location));

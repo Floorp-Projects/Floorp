@@ -609,15 +609,20 @@ nsresult NS_InitInstallVersionClass(nsIScriptContext *aContext, void **aPrototyp
 //
 // Method for creating a new InstallVersion JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptInstallVersion(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+nsresult
+NS_NewScriptInstallVersion(nsIScriptContext *aContext, nsISupports *aSupports,
+                           nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptInstallVersion");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports &&
+                  nsnull != aReturn,
+                  "null argument to NS_NewScriptInstallVersion");
+
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMInstallVersion *aInstallVersion;
+  nsIDOMInstallVersion *installVersion;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -638,7 +643,7 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallVersion(nsIScriptContext *aContext
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(NS_GET_IID(nsIDOMInstallVersion), (void **)&aInstallVersion);
+  result = aSupports->QueryInterface(NS_GET_IID(nsIDOMInstallVersion), (void **)&installVersion);
   if (NS_OK != result) {
     return result;
   }
@@ -647,10 +652,10 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallVersion(nsIScriptContext *aContext
   *aReturn = JS_NewObject(jscontext, &InstallVersionClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aInstallVersion);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, installVersion);
   }
   else {
-    NS_RELEASE(aInstallVersion);
+    NS_RELEASE(installVersion);
     return NS_ERROR_FAILURE; 
   }
 

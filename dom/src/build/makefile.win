@@ -26,13 +26,9 @@ DEFINES=-D_IMPL_NS_DOM
 INCLUDES=-I..\base
 
 CPPSRCS = nsDOMFactory.cpp      	\
-	  nsHTMLTagsEnums.cpp		\
-	  nsScriptNameSetRegistry.cpp	\
 	  nsScriptNameSpaceManager.cpp
 
 CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
-	   .\$(OBJDIR)\nsHTMLTagsEnums.obj		\
-	   .\$(OBJDIR)\nsScriptNameSetRegistry.obj 	\
 	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 
 MAKE_OBJ_TYPE = DLL
@@ -47,28 +43,19 @@ DLL_CFLAGS = \
 # These are the libraries we need to link with to create the dll
 LLIBS=							\
 	$(DIST)\lib\jsdombase_s.lib			\
-	$(DIST)\lib\jsdomcore_s.lib			\
 	$(DIST)\lib\jsdomevents_s.lib			\
-	$(DIST)\lib\jsdomrange_s.lib			\
-	$(DIST)\lib\jsdomhtml_s.lib			\
-	$(DIST)\lib\jsdomcss_s.lib			\
-!ifdef MOZ_XUL
-        $(DIST)\lib\jsdomxul_s.lib                      \
-!endif
 	$(DIST)\lib\gkgfxwin.lib			\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom.lib				\
 	$(DIST)\lib\caps.lib				\
-	$(DIST)\lib\oji.lib				\
-	$(DIST)\lib\timer_s.lib				\
 	$(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib

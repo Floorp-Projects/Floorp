@@ -1,9 +1,0 @@
- interface HTMLMetaElement : HTMLElement {
- /* IID: { 0xa6cf908a, 0x15b3, 0x11d2, \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
-
-            attribute  DOMString            content;
-            attribute  DOMString            httpEquiv;
-            attribute  DOMString            name;
-            attribute  DOMString            scheme;
- };

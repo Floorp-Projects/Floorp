@@ -29,15 +29,13 @@
 
 class nsIDOMNavigator;
 
-class MimeTypeArrayImpl : public nsIScriptObjectOwner, public nsIDOMMimeTypeArray {
+class MimeTypeArrayImpl : public nsIDOMMimeTypeArray
+{
 public:
 	MimeTypeArrayImpl(nsIDOMNavigator* navigator);
 	virtual ~MimeTypeArrayImpl();
 
 	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-	NS_IMETHOD SetScriptObject(void* aScriptObject);
 
 	NS_IMETHOD GetLength(PRUint32* aLength);
 	NS_IMETHOD Item(PRUint32 aIndex, nsIDOMMimeType** aReturn);
@@ -47,21 +45,18 @@ private:
 	nsresult GetMimeTypes();
 
 protected:
-	void *mScriptObject;
 	nsIDOMNavigator* mNavigator;
 	PRUint32 mMimeTypeCount;
 	nsIDOMMimeType** mMimeTypeArray;
 };
 
-class MimeTypeElementImpl : public nsIScriptObjectOwner, public nsIDOMMimeType {
+class MimeTypeElementImpl : public nsIDOMMimeType
+{
 public:
 	MimeTypeElementImpl(nsIDOMPlugin* aPlugin, nsIDOMMimeType* aMimeType);
 	virtual ~MimeTypeElementImpl();
 
 	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-	NS_IMETHOD SetScriptObject(void* aScriptObject);
 
 	NS_IMETHOD GetDescription(nsAWritableString& aDescription);
 	NS_IMETHOD GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin);
@@ -69,7 +64,6 @@ public:
 	NS_IMETHOD GetType(nsAWritableString& aType);
 
 protected:
-	void *mScriptObject;
 	nsIDOMPlugin* mPlugin;
 	nsIDOMMimeType* mMimeType;
 };

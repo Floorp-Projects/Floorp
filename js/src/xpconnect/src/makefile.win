@@ -46,9 +46,13 @@ MODULE=xpconnect
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API
 
+#use pre-compiled headers
+PCHFLAGS=-YX -Fp.\$(OBJDIR)\$(DLLNAME).pch
+
 OBJS=					\
+	.\$(OBJDIR)\nsScriptError.obj	\
 	.\$(OBJDIR)\nsXPConnect.obj	\
-	.\$(OBJDIR)\xpcarbitrary.obj	\
+	.\$(OBJDIR)\xpccallcontext.obj	\
 	.\$(OBJDIR)\xpccomponents.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
@@ -59,7 +63,6 @@ OBJS=					\
 	.\$(OBJDIR)\xpclog.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
 	.\$(OBJDIR)\xpcmodule.obj	\
-	.\$(OBJDIR)\xpcnativecallcontext.obj	\
 	.\$(OBJDIR)\xpcruntimesvc.obj  \
 	.\$(OBJDIR)\xpcstack.obj	\
 	.\$(OBJDIR)\xpcstring.obj \
@@ -68,10 +71,10 @@ OBJS=					\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
-	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
+	.\$(OBJDIR)\xpcwrappednativeinfo.obj	\
 	.\$(OBJDIR)\xpcwrappednativejsops.obj	\
+	.\$(OBJDIR)\xpcwrappednativeproto.obj	\
 	.\$(OBJDIR)\xpcwrappednativescope.obj	\
-	.\$(OBJDIR)\nsScriptError.obj	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \
@@ -80,6 +83,7 @@ LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
+        $(PCHFLAGS) \
 !ifdef XPC_TOOLS_SUPPORT
         -DXPC_TOOLS_SUPPORT \
 !endif

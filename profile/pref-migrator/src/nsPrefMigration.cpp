@@ -46,6 +46,7 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsIStringBundle.h"
+#include "nsISupportsPrimitives.h"
 #include "nsProxiedService.h"
 
 #include "nsNetUtil.h"
@@ -495,40 +496,26 @@ nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
 
     
     if ( NS_SUCCEEDED( rv ) ) 
-        ioParamBlock->SetInt(0,3); //set the Retry, CreateNew and Cancel buttons
+      ioParamBlock->SetInt(0,3); //set the Retry, CreateNew and Cancel buttons
 
- 
-    void* stackPtr;
-    jsval *argv = JS_PushArguments( jsContext,
-                                    &stackPtr,
-                                    "sss%ip",
-                                    PREF_MIGRATION_NO_SPACE_URL,
-                                    "_blank",
-                                    "chrome,modal",
-                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
-                                    (nsISupports*)ioParamBlock);
+    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+      do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-        if (argv)
-        {
-          nsCOMPtr<nsIDOMWindowInternal> newWindow;
-          rv = PMDOMWindow->OpenDialog(jsContext,
-                                       argv,
-                                       4,
-                                       getter_AddRefs(newWindow));
-          if (NS_SUCCEEDED(rv))
-          {
-            JS_PopArguments( jsContext, stackPtr);
-
-            //Now get which button was pressed from the ParamBlock
-            ioParamBlock->GetInt( 0, choice );
-          }
-          else
-            return NS_ERROR_FAILURE;
-        }
-        else
-          return NS_ERROR_FAILURE;      
+    ifptr->SetData(ioParamBlock);
+    ifptr->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+        
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = PMDOMWindow->OpenDialog(NS_ConvertASCIItoUCS2(PREF_MIGRATION_NO_SPACE_URL),
+                                 NS_LITERAL_STRING("_blank"),
+                                 NS_LITERAL_STRING("chrome,modal"),
+                                 ifptr, getter_AddRefs(newWindow));
+    if (NS_SUCCEEDED(rv)) {
+      //Now get which button was pressed from the ParamBlock
+      ioParamBlock->GetInt( 0, choice );
+    }
   
-   return NS_OK;
+    return rv;
 }
 
 

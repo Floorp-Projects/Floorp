@@ -66,14 +66,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
 
   /**
    * Processes a mouse up event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
 
   /**
    * Processes a mouse click event
@@ -81,7 +81,7 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    *
    */
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   /**
    * Processes a mouse click event
@@ -89,23 +89,23 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    *
    */
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   /**
    * Processes a mouse enter event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   /**
    * Processes a mouse leave event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
 
   NS_IMETHOD_(void) Notify(nsITimer *timer);
@@ -185,10 +185,10 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
 
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
   static PRInt32 GetCurrentPosition(nsIContent* content);
   static PRInt32 GetMaxPosition(nsIContent* content);

@@ -33,718 +33,168 @@
  *                               use in OS2
  */
 #include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsIGenericFactory.h"
 
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIGenericFactory.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIDOMNativeObjectRegistry.h"
-#include "nsScriptNameSetRegistry.h"
 #include "nsIScriptEventListener.h"
 #include "nsIJSEventListener.h"
 #include "nsIScriptContext.h"
-#include "nsHTMLTagsEnums.h"
-#include "nsIDOMAttr.h"
-#include "nsIDOMCDATASection.h"		   
-#include "nsIDOMComment.h"
-#include "nsIDOMDOMImplementation.h"			   
-#include "nsIDOMCharacterData.h"
-#include "nsIDOMDocument.h"		   
-#include "nsIDOMDocumentFragment.h"	   
-#include "nsIDOMDocumentType.h"
-#include "nsIDOMElement.h"			   
-#include "nsIDOMNamedNodeMap.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"		   
-#include "nsIDOMProcessingInstruction.h"	   
-#include "nsIDOMEntity.h"	   
-#include "nsIDOMNotation.h"	   
-#include "nsIDOMText.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLAppletElement.h"	   
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLBRElement.h"		   
-#include "nsIDOMHTMLBaseElement.h"
-#include "nsIDOMHTMLBaseFontElement.h"	   
-#include "nsIDOMHTMLBodyElement.h"
-#include "nsIDOMHTMLButtonElement.h"	   
-#include "nsIDOMHTMLCollection.h"
-#include "nsIDOMHTMLFormControlList.h"
-#include "nsIDOMHTMLDListElement.h"	   
-#include "nsIDOMHTMLDirectoryElement.h"	   
-#include "nsIDOMHTMLDivElement.h"
-#include "nsIDOMHTMLDocument.h"		   
-#include "nsIDOMHTMLElement.h"
-#include "nsIDOMHTMLEmbedElement.h"
-#include "nsIDOMHTMLFontElement.h"		   
-#include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMHTMLFrameElement.h"	   
-#include "nsIDOMHTMLFrameSetElement.h"
-#include "nsIDOMHTMLHRElement.h"		   
-#include "nsIDOMHTMLHeadElement.h"
-#include "nsIDOMHTMLHeadingElement.h"	   
-#include "nsIDOMHTMLHtmlElement.h"
-#include "nsIDOMHTMLIFrameElement.h"	   
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMHTMLInputElement.h"	   
-#include "nsIDOMHTMLIsIndexElement.h"	   
-#include "nsIDOMHTMLLIElement.h"
-#include "nsIDOMHTMLLabelElement.h"	   
-#include "nsIDOMHTMLLayerElement.h"	   
-#include "nsIDOMHTMLLegendElement.h"
-#include "nsIDOMHTMLLinkElement.h"		   
-#include "nsIDOMHTMLMapElement.h"
-#include "nsIDOMHTMLMenuElement.h"		   
-#include "nsIDOMHTMLMetaElement.h"
-#include "nsIDOMHTMLModElement.h"		   
-#include "nsIDOMHTMLOListElement.h"
-#include "nsIDOMHTMLObjectElement.h"	   
-#include "nsIDOMHTMLOptGroupElement.h"
-#include "nsIDOMHTMLOptionElement.h"	   
-#include "nsIDOMNSHTMLOptionCollection.h"
-#include "nsIDOMHTMLParagraphElement.h"
-#include "nsIDOMHTMLParamElement.h"	   
-#include "nsIDOMHTMLPreElement.h"
-#include "nsIDOMHTMLQuoteElement.h"	   
-#include "nsIDOMHTMLScriptElement.h"
-#include "nsIDOMHTMLSelectElement.h"	   
-#include "nsIDOMHTMLStyleElement.h"
-#include "nsIDOMHTMLTableCaptionElement.h"	   
-#include "nsIDOMHTMLTableCellElement.h"
-#include "nsIDOMHTMLTableColElement.h"	   
-#include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableRowElement.h"	   
-#include "nsIDOMHTMLTableSectionElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIDOMHTMLTitleElement.h"	   
-#include "nsIDOMHTMLUListElement.h"
-#include "nsIDOMNSHTMLDocument.h"		   
-#include "nsIDOMNSHTMLFormElement.h"
-#include "nsIDOMNavigator.h"
-#include "nsIDOMLocation.h"
-#include "nsIDOMStyleSheetList.h"
-#include "nsIDOMCSS2Properties.h"
-#include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSStyleRule.h"
-#include "nsIDOMCSSImportRule.h"
-#include "nsIDOMCSSMediaRule.h"
-#include "nsIDOMCSSRuleList.h"
-#include "nsIDOMRange.h"
-#include "nsIDOMMediaList.h"
-#include "nsIDOMCrypto.h"
-#include "nsIDOMCRMFObject.h"
-#include "nsIDOMPkcs11.h"
-#include "nsIDOMCSSPrimitiveValue.h"
-#include "nsIDOMXULCommandDispatcher.h" // XXX not really `XUL specific'
-#if defined(MOZ_XUL)
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMXULElement.h"
-#include "nsIDOMXULTreeElement.h"
-#endif
-#include "plhash.h"
-#include "nsIPref.h"
+#include "nsDOMClassInfo.h"
+#include "nsGlobalWindow.h"
+#include "nsIObserverService.h"
+#include "nsIJSContextStack.h"
 
-static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-class nsDOMNativeObjectRegistry : public nsIDOMNativeObjectRegistry {
+extern nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
+                                       nsIScriptContext **aContext);
+
+extern nsresult NS_NewJSEventListener(nsIDOMEventListener **aInstancePtrResult,
+                                      nsIScriptContext *aContext,
+                                      nsISupports *aObject);
+
+extern nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
+
+
+//////////////////////////////////////////////////////////////////////
+
+class nsDOMSOFactory : public nsIDOMScriptObjectFactory,
+                       public nsIObserver
+{
 public:
-  nsDOMNativeObjectRegistry();
-  virtual ~nsDOMNativeObjectRegistry();
+  nsDOMSOFactory();
+  virtual ~nsDOMSOFactory();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD RegisterFactory(const nsString& aClassName, const nsIID& aCID);
-  NS_IMETHOD GetFactoryCID(const nsString& aClassName, nsIID& aCID);
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
 
-private:
-  static PRIntn PR_CALLBACK RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
+  NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
+                              nsIScriptContext **aContext);
 
-  PLHashTable *mFactories;
+  NS_IMETHOD NewJSEventListener(nsIScriptContext *aContext,
+                                nsISupports* aObject,
+                                nsIDOMEventListener ** aInstancePtrResult);
+
+  NS_IMETHOD NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
+
+  NS_IMETHOD_(nsISupports *)
+    GetClassInfoInstance(nsDOMClassInfoID aID, GetDOMClassIIDsFnc aGetIIDsFptr,
+                         const char *aName);
 };
 
-nsDOMNativeObjectRegistry::nsDOMNativeObjectRegistry()
-{
-  NS_INIT_REFCNT();
-  mFactories = nsnull;
-}
-
-PRIntn 
-nsDOMNativeObjectRegistry::RemoveStrings(PLHashEntry *he, PRIntn i, void *arg)
-{
-  char *str = (char *)he->key;
-
-  nsCRT::free(str);
-  return HT_ENUMERATE_REMOVE;
-}
-
-nsDOMNativeObjectRegistry::~nsDOMNativeObjectRegistry()
-{
-  if (nsnull != mFactories) {
-    PL_HashTableEnumerateEntries(mFactories, RemoveStrings, nsnull);
-    PL_HashTableDestroy(mFactories);
-    mFactories = nsnull;
-  }
-}
-
-NS_IMPL_ISUPPORTS(nsDOMNativeObjectRegistry, kIDOMNativeObjectRegistry);
-
-NS_IMETHODIMP 
-nsDOMNativeObjectRegistry::RegisterFactory(const nsString& aClassName, 
-                                           const nsIID& aCID)
-{
-  if (nsnull == mFactories) {
-    mFactories = PL_NewHashTable(4, PL_HashString, PL_CompareStrings,
-                                 PL_CompareValues, nsnull, nsnull);
-  }
-
-  char *name = aClassName.ToNewCString();
-  PL_HashTableAdd(mFactories, name, (void *)&aCID);
-  
-  return NS_OK;
-}
- 
-NS_IMETHODIMP 
-nsDOMNativeObjectRegistry::GetFactoryCID(const nsString& aClassName, 
-                                         nsIID& aCID)
-{
-  if (nsnull == mFactories) {
-    return NS_ERROR_FAILURE;
-  }
-  
-  char *name = aClassName.ToNewCString();
-  nsIID *classId = (nsIID *)PL_HashTableLookup(mFactories, name);
-  nsCRT::free(name);
-
-  aCID = *classId;
-
-  return NS_OK;
-}
-
-
-//////////////////////////////////////////////////////////////////////
-
-static NS_DEFINE_IID(kIDOMScriptObjectFactory, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
-
-class nsDOMScriptObjectFactory : public nsIDOMScriptObjectFactory {
-public:  
-  nsDOMScriptObjectFactory();
-  virtual ~nsDOMScriptObjectFactory();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD    NewScriptAttr(nsIScriptContext *aContext, 
-                              nsISupports *aAttribute, 
-                              nsISupports *aParent, 
-                              void** aReturn);
-
-  NS_IMETHOD    NewScriptComment(nsIScriptContext *aContext, 
-                                 nsISupports *aComment,
-                                 nsISupports *aParent, 
-                                 void** aReturn);
-  
-  NS_IMETHOD    NewScriptDocument(const nsString &aDocType,
-                                  nsIScriptContext *aContext, 
-                                  nsISupports *aDocFrag, 
-                                  nsISupports *aParent, 
-                                  void** aReturn);
-  
-  NS_IMETHOD    NewScriptDocumentFragment(nsIScriptContext *aContext, 
-                                          nsISupports *aDocFrag, 
-                                          nsISupports *aParent, 
-                                          void** aReturn);
-  
-  NS_IMETHOD    NewScriptDocumentType(nsIScriptContext *aContext, 
-                                      nsISupports *aDocType, 
-                                      nsISupports *aParent, 
-                                      void** aReturn);
-  
-  NS_IMETHOD    NewScriptDOMImplementation(nsIScriptContext *aContext, 
-                                           nsISupports *aDOM, 
-                                           nsISupports *aParent, 
-                                           void** aReturn);
-  
-  NS_IMETHOD    NewScriptCharacterData(PRUint16 aNodeType,
-                                       nsIScriptContext *aContext, 
-                                       nsISupports *aData, 
-                                       nsISupports *aParent, 
-                                       void** aReturn);
-  
-  NS_IMETHOD    NewScriptElement(const nsString &aTagName, 
-                                 nsIScriptContext *aContext, 
-                                 nsISupports *aElement, 
-                                 nsISupports *aParent, 
-                                 void **aReturn);
-
-  NS_IMETHOD    NewScriptXMLElement(const nsString &aTagName, 
-                                    nsIScriptContext *aContext, 
-                                    nsISupports *aElement, 
-                                    nsISupports *aParent, 
-                                    void **aReturn);
-  
-  NS_IMETHOD    NewScriptXULElement(const nsString &aTagName, 
-                                    nsIScriptContext *aContext, 
-                                    nsISupports *aElement, 
-                                    nsISupports *aParent, 
-                                    void **aReturn);
-  
-  NS_IMETHOD    NewScriptHTMLCollection(nsIScriptContext *aContext, 
-                                        nsISupports *aCollection, 
-                                        nsISupports *aParent, 
-                                        void** aReturn);
-  
-  NS_IMETHOD    NewScriptNamedNodeMap(nsIScriptContext *aContext, 
-                                      nsISupports *aNodeMap, 
-                                      nsISupports *aParent, 
-                                      void** aReturn);
-
-  NS_IMETHOD    NewScriptNodeList(nsIScriptContext *aContext, 
-                                  nsISupports *aNodeList, 
-                                  nsISupports *aParent, 
-                                  void** aReturn);
-  
-  NS_IMETHOD    NewScriptProcessingInstruction(nsIScriptContext *aContext, 
-                                               nsISupports *aPI, 
-                                               nsISupports *aParent, 
-                                               void** aReturn);
-  
-  NS_IMETHOD    NewScriptEntity(nsIScriptContext *aContext, 
-                                nsISupports *aPI, 
-                                nsISupports *aParent, 
-                                void** aReturn);
-  
-  NS_IMETHOD    NewScriptNotation(nsIScriptContext *aContext, 
-                                  nsISupports *aPI, 
-                                  nsISupports *aParent, 
-                                  void** aReturn);
-
-  NS_IMETHOD    NewScriptCrypto(nsIScriptContext *aContext, 
-                                nsISupports *aPI, 
-                                nsISupports *aParent, 
-                                void** aReturn);
-
-  NS_IMETHOD    NewScriptCRMFObject(nsIScriptContext *aContext, 
-                                    nsISupports *aPI, 
-                                    nsISupports *aParent, 
-                                    void** aReturn);
-
-  NS_IMETHOD    NewScriptPkcs11(nsIScriptContext *aContext, 
-                                nsISupports *aPI, 
-                                nsISupports *aParent, 
-                                void** aReturn);
-
-  PRBool mUseXBLForms;
-};
-
-nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
+nsDOMSOFactory::nsDOMSOFactory()
 {
   NS_INIT_REFCNT();
 
-  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
-  if (prefService)
-    prefService->GetBoolPref("nglayout.debug.enable_xbl_forms", &mUseXBLForms);
-  else
-    mUseXBLForms = PR_FALSE;
-}
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
 
-nsDOMScriptObjectFactory::~nsDOMScriptObjectFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS(nsDOMScriptObjectFactory, kIDOMScriptObjectFactory);
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptAttr(nsIScriptContext *aContext, 
-                                        nsISupports *aAttribute, 
-                                        nsISupports *aParent, 
-                                        void** aReturn)
-{
-  return NS_NewScriptAttr(aContext, aAttribute, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptComment(nsIScriptContext *aContext,
-                                           nsISupports *aComment, 
-                                           nsISupports *aParent, 
-                                           void** aReturn)
-{
-  return NS_NewScriptComment(aContext, aComment, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptDocument(const nsString &aDocType,
-                                            nsIScriptContext *aContext, 
-                                            nsISupports *aDocFrag, 
-                                            nsISupports *aParent, 
-                                            void** aReturn)
-{
-  return NS_NewScriptHTMLDocument(aContext, aDocFrag, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptDocumentFragment(nsIScriptContext *aContext, 
-                                                    nsISupports *aDocFrag, 
-                                                    nsISupports *aParent, 
-                                                    void** aReturn)
-{
-  return NS_NewScriptDocumentFragment(aContext, aDocFrag, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptDocumentType(nsIScriptContext *aContext, 
-                                                nsISupports *aDocType, 
-                                                nsISupports *aParent,
-                                                void** aReturn)
-{
-  return NS_NewScriptDocumentType(aContext, aDocType, aParent, aReturn);  
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptDOMImplementation(nsIScriptContext *aContext, 
-                                                     nsISupports *aDOM, 
-                                                     nsISupports *aParent, 
-                                                     void** aReturn)
-{
-  return NS_NewScriptDOMImplementation(aContext, aDOM, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptCharacterData(PRUint16 aNodeType,
-                                                 nsIScriptContext *aContext, 
-                                                 nsISupports *aData, 
-                                                 nsISupports *aParent, 
-                                                 void** aReturn)
-{
-  if (aNodeType == nsIDOMNode::CDATA_SECTION_NODE) {
-    return NS_NewScriptCDATASection(aContext, aData, aParent, aReturn);
-  }
-  else if (aNodeType == nsIDOMNode::COMMENT_NODE) {
-    return NS_NewScriptComment(aContext, aData, aParent, aReturn);
-  }
-  else if (aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
-    return NS_NewScriptDocumentType(aContext, aData, aParent, aReturn);
-  }
-  else {
-    return NS_NewScriptText(aContext, aData, aParent, aReturn);
+  if (observerService) {
+    nsAutoString topic;
+    topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    observerService->AddObserver(this, topic.GetUnicode());
   }
 }
 
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName, 
-                                           nsIScriptContext *aContext, 
-                                           nsISupports *aElement, 
-                                           nsISupports *aParent, 
-                                           void **aReturn)
+nsDOMSOFactory::~nsDOMSOFactory()
 {
-  char *str = aTagName.ToNewCString();
-  nsDOMHTMLTag tag = NS_DOMTagToEnum(str);
-
-  if (str) {
-    nsCRT::free(str);
-  }
-
-  switch (tag) {
-    case DOMHTMLTag_a:
-      return NS_NewScriptHTMLAnchorElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_applet:
-      return NS_NewScriptHTMLAppletElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_area:
-      return NS_NewScriptHTMLAreaElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_br:
-      return NS_NewScriptHTMLBRElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_base:
-      return NS_NewScriptHTMLBaseElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_basefont:
-      return NS_NewScriptHTMLBaseFontElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_body:
-      return NS_NewScriptHTMLBodyElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_button:
-      if (mUseXBLForms)
-        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
-      else return NS_NewScriptHTMLButtonElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_dl:
-      return NS_NewScriptHTMLDListElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_dir:
-      return NS_NewScriptHTMLDirectoryElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_div:
-      return NS_NewScriptHTMLDivElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_font:
-      return NS_NewScriptHTMLFontElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_form:
-      return NS_NewScriptHTMLFormElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_frame:
-      return NS_NewScriptHTMLFrameElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_frameset:
-      return NS_NewScriptHTMLFrameSetElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_hr:
-      return NS_NewScriptHTMLHRElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_head:
-      return NS_NewScriptHTMLHeadElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_h1:
-    case DOMHTMLTag_h2:
-    case DOMHTMLTag_h3:
-    case DOMHTMLTag_h4:
-    case DOMHTMLTag_h5:
-    case DOMHTMLTag_h6:
-      return NS_NewScriptHTMLHeadingElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_html:
-      return NS_NewScriptHTMLHtmlElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_iframe:
-      return NS_NewScriptHTMLIFrameElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_img:
-      return NS_NewScriptHTMLImageElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_input:
-      return NS_NewScriptHTMLInputElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_isindex:
-      return NS_NewScriptHTMLIsIndexElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_li:
-      return NS_NewScriptHTMLLIElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_label:
-      if (mUseXBLForms)
-        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
-      else return NS_NewScriptHTMLLabelElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_legend:
-      if (mUseXBLForms)
-        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
-      else return NS_NewScriptHTMLLegendElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_link:
-      return NS_NewScriptHTMLLinkElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_map:
-      return NS_NewScriptHTMLMapElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_menu:
-      return NS_NewScriptHTMLMenuElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_meta:
-      return NS_NewScriptHTMLMetaElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_ins:
-    case DOMHTMLTag_del:
-      return NS_NewScriptHTMLModElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_ol:
-      return NS_NewScriptHTMLOListElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_object:
-      return NS_NewScriptHTMLObjectElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_embed:
-      return NS_NewScriptHTMLEmbedElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_optgroup:
-      if (mUseXBLForms)
-        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
-      else return NS_NewScriptHTMLOptGroupElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_option:
-      if (mUseXBLForms)
-        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
-      else return NS_NewScriptHTMLOptionElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_p:
-      return NS_NewScriptHTMLParagraphElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_param:
-      return NS_NewScriptHTMLParamElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_pre:
-      return NS_NewScriptHTMLPreElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_blockquote:
-    case DOMHTMLTag_q:
-      return NS_NewScriptHTMLQuoteElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_script:
-      return NS_NewScriptHTMLScriptElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_select:
-      if (mUseXBLForms)
-        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
-      else return NS_NewScriptHTMLSelectElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_style:
-      return NS_NewScriptHTMLStyleElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_caption:
-      return NS_NewScriptHTMLTableCaptionElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_th:
-    case DOMHTMLTag_td:
-      return NS_NewScriptHTMLTableCellElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_col:
-    case DOMHTMLTag_colgroup:
-      return NS_NewScriptHTMLTableColElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_table:
-      return NS_NewScriptHTMLTableElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_tr:
-      return NS_NewScriptHTMLTableRowElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_thead:
-    case DOMHTMLTag_tbody:
-    case DOMHTMLTag_tfoot:
-      return NS_NewScriptHTMLTableSectionElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_textarea:
-      return NS_NewScriptHTMLTextAreaElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_title:
-      return NS_NewScriptHTMLTitleElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_ul:
-      return NS_NewScriptHTMLUListElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_ilayer:
-    case DOMHTMLTag_layer:
-    case DOMHTMLTag_fieldset:
-    case DOMHTMLTag_multicol:
-    case DOMHTMLTag_spacer:
-    case DOMHTMLTag_wbr:
-      // XXX There should be a separate interface for these
-    default:
-      return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
-  }
 }
 
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptXMLElement(const nsString &aTagName, 
-                                              nsIScriptContext *aContext, 
-                                              nsISupports *aElement, 
-                                              nsISupports *aParent, 
-                                              void **aReturn)
+
+NS_INTERFACE_MAP_BEGIN(nsDOMSOFactory)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMScriptObjectFactory)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMScriptObjectFactory)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsDOMSOFactory);
+NS_IMPL_RELEASE(nsDOMSOFactory);
+
+
+NS_IMETHODIMP
+nsDOMSOFactory::NewScriptContext(nsIScriptGlobalObject *aGlobal,
+                                 nsIScriptContext **aContext)
 {
-  return NS_NewScriptElement(aContext, aElement, aParent, aReturn);
+  return NS_CreateScriptContext(aGlobal, aContext);
 }
 
 NS_IMETHODIMP
-nsDOMScriptObjectFactory::NewScriptXULElement(const nsString &aTagName, 
-                                              nsIScriptContext *aContext, 
-                                              nsISupports *aElement, 
-                                              nsISupports *aParent, 
-                                              void **aReturn)
+nsDOMSOFactory::NewJSEventListener(nsIScriptContext *aContext,
+                                   nsISupports *aObject,
+                                   nsIDOMEventListener **aInstancePtrResult)
 {
-#if defined(MOZ_XUL)
-  // XXX hyatt, fix this once you get <tree> into XBL
-  if (aTagName.Equals(NS_LITERAL_STRING("tree")))
-    return NS_NewScriptXULTreeElement(aContext, aElement, aParent, aReturn);
-  else return NS_NewScriptXULElement(aContext, aElement, aParent, aReturn);
-#else
-  NS_NOTREACHED("MOZ_XUL not defined");
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptHTMLCollection(nsIScriptContext *aContext, 
-                                                  nsISupports *aCollection, 
-                                                  nsISupports *aParent, 
-                                                  void** aReturn)
-{
-  return NS_NewScriptHTMLCollection(aContext, aCollection, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptNamedNodeMap(nsIScriptContext *aContext, 
-                                                nsISupports *aNodeMap, 
-                                                nsISupports *aParent, 
-                                                void** aReturn)
-{
-  return NS_NewScriptNamedNodeMap(aContext, aNodeMap, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptNodeList(nsIScriptContext *aContext, 
-                                            nsISupports *aNodeList, 
-                                            nsISupports *aParent, 
-                                            void** aReturn)
-{
-  return NS_NewScriptNodeList(aContext, aNodeList, aParent, aReturn);
-}
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptProcessingInstruction(nsIScriptContext *aContext, 
-                                                         nsISupports *aPI, 
-                                                         nsISupports *aParent, 
-                                                         void** aReturn)
-{
-  return NS_NewScriptProcessingInstruction(aContext, aPI, aParent, aReturn);
-}
-
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptEntity(nsIScriptContext *aContext, 
-                                          nsISupports *aPI, 
-                                          nsISupports *aParent, 
-                                          void** aReturn)
-{
-  return NS_NewScriptEntity(aContext, aPI, aParent, aReturn);
-}
-
-
-NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptNotation(nsIScriptContext *aContext, 
-                                            nsISupports *aPI, 
-                                            nsISupports *aParent, 
-                                            void** aReturn)
-{
-  return NS_NewScriptNotation(aContext, aPI, aParent, aReturn);
+  return NS_NewJSEventListener(aInstancePtrResult, aContext, aObject);
 }
 
 NS_IMETHODIMP
-nsDOMScriptObjectFactory::NewScriptCrypto(nsIScriptContext *aContext,
-                                          nsISupports *aPI,
-                                          nsISupports *aParent,
-                                          void** aReturn)
+nsDOMSOFactory::NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal)
 {
-  return NS_NewScriptCrypto(aContext, aPI, aParent, aReturn);
+  return NS_NewScriptGlobalObject(aGlobal);
+}
+
+NS_IMETHODIMP_(nsISupports *)
+nsDOMSOFactory::GetClassInfoInstance(nsDOMClassInfoID aID,
+                                     GetDOMClassIIDsFnc aGetIIDsFptr,
+                                     const char *aName)
+{
+  return nsDOMClassInfo::GetClassInfoInstance(aID, aGetIIDsFptr, aName);
 }
 
 NS_IMETHODIMP
-nsDOMScriptObjectFactory::NewScriptCRMFObject(nsIScriptContext *aContext,
-                                              nsISupports *aPI,
-                                              nsISupports *aParent,
-                                              void** aReturn)
+nsDOMSOFactory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
+                        const PRUnichar *someData)
 {
-  return NS_NewScriptCRMFObject(aContext, aPI, aParent, aReturn);
+  nsAutoString topic;
+  topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  if (topic.EqualsWithConversion(aTopic)) {
+    nsCOMPtr<nsIThreadJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      JSContext *cx = nsnull;
+
+      stack->GetSafeJSContext(&cx);
+
+      if (cx) {
+        // Do one final GC to clean things up before shutdown.
+
+        ::JS_GC(cx);
+      }
+    }
+
+    GlobalWindowImpl::ShutDown();
+    nsDOMClassInfo::ShutDown();
+  }
+
+  return NS_OK;
 }
-
-NS_IMETHODIMP
-nsDOMScriptObjectFactory::NewScriptPkcs11(nsIScriptContext *aContext,
-                                          nsISupports *aPI,
-                                          nsISupports *aParent,
-                                          void** aReturn)
-{
-  return NS_NewScriptPkcs11(aContext, aPI, aParent, aReturn);
-}
-
-
 //////////////////////////////////////////////////////////////////////
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSOFactory);
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMScriptObjectFactory);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMNativeObjectRegistry);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptNameSetRegistry);
-
-static nsModuleComponentInfo components[] = {
-  { "Script Object Factory", NS_DOM_SCRIPT_OBJECT_FACTORY_CID, nsnull,
-    nsDOMScriptObjectFactoryConstructor },
-  { "Native Object Registry", NS_DOM_NATIVE_OBJECT_REGISTRY_CID, nsnull,
-    nsDOMNativeObjectRegistryConstructor },
-  { "Script Name Set Registry", NS_SCRIPT_NAMESET_REGISTRY_CID, nsnull,
-    nsScriptNameSetRegistryConstructor }
+static nsModuleComponentInfo gDOMModuleInfo[] = {
+  { "Script Object Factory",
+    NS_DOM_SCRIPT_OBJECT_FACTORY_CID,
+    nsnull,
+    nsDOMSOFactoryConstructor
+  }
 };
 
-NS_IMPL_NSGETMODULE(DOM_components, components);
-
-void XXXDomNeverCalled();
-void XXXDomNeverCalled()
+void PR_CALLBACK
+DOMModuleDestructor(nsIModule *self)
 {
-  nsJSContext* jcx = new nsJSContext(0);
-  if (jcx) {
-    NS_NewScriptGlobalObject(0);
-    NS_NewScriptNavigator(0, 0, 0, 0);
-    NS_NewScriptLocation(0, 0, 0, 0);
-    NS_NewScriptEventListener(0, 0, 0, 0);
-    NS_NewJSEventListener(0, 0, 0);
-    NS_NewScriptCSS2Properties(0, 0, 0, 0);
-    NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
-    NS_NewScriptStyleSheetList(0, 0, 0, 0);
-    NS_NewScriptCSSStyleRule(0, 0, 0, 0);
-    NS_NewScriptCSSImportRule(0, 0, 0, 0);
-    NS_NewScriptCSSMediaRule(0, 0, 0, 0);
-    NS_NewScriptCSSRuleList(0, 0, 0, 0);
-    NS_NewScriptRange(0, 0, 0, 0);
-    NS_NewScriptHTMLFormControlList(0, 0, 0, 0);
-    NS_InitDocumentClass(nsnull, nsnull);
-    NS_NewScriptNSHTMLOptionCollection(0, 0, 0, 0);
-    NS_NewScriptMediaList(0, 0, 0, 0);
-    NS_NewScriptCSSPrimitiveValue(0, 0, 0, 0);
-    NS_NewScriptXULCommandDispatcher(0, 0, 0, 0);
-#if defined(MOZ_XUL)
-    NS_NewScriptXULDocument(0, 0, 0, 0);
-#endif
-  }
+  GlobalWindowImpl::ShutDown();
+  nsDOMClassInfo::ShutDown();
 }
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(DOM_components, gDOMModuleInfo,
+                              DOMModuleDestructor)
+
 
 #ifdef DEBUG
 /* These are here to be callable from a debugger */

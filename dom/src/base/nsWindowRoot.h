@@ -34,19 +34,20 @@ class nsIDOMEvent;
 #include "nsIEventListenerManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsIFocusController.h"
+#include "nsIDOMEventTarget.h"
 
 class nsWindowRoot : public nsIDOMEventReceiver, public nsIChromeEventHandler, public nsPIWindowRoot
 {
 public:
   nsWindowRoot(nsIDOMWindow* aWindow);
   virtual ~nsWindowRoot();
-   
+
   NS_DECL_ISUPPORTS
-  NS_DECL_IDOMEVENTTARGET
+  NS_DECL_NSIDOMEVENTTARGET
 
   NS_IMETHOD HandleChromeEvent(nsIPresContext* aPresContext,
-                               nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
-                               nsEventStatus* aEventStatus);
+                               nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                               PRUint32 aFlags, nsEventStatus* aEventStatus);
 
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);

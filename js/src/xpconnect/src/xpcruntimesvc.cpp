@@ -18,7 +18,8 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Mike Shaver <shaver@mozilla.org>
  *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -50,29 +51,33 @@ nsJSRuntimeServiceImpl::nsJSRuntimeServiceImpl() :
 }
 
 nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
-    if (mRuntime) {
+    if(mRuntime)
+    {
         JS_DestroyRuntime(mRuntime);
         JS_ShutDown();
 #ifdef DEBUG_shaver
-    fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mRuntime);
+        fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mRuntime);
 #endif
     }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSRuntimeServiceImpl, nsIJSRuntimeService);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsJSRuntimeServiceImpl,
+                              nsIJSRuntimeService,
+                              nsISupportsWeakReference);
 
 static nsJSRuntimeServiceImpl* gJSRuntimeService = nsnull;
 
 nsJSRuntimeServiceImpl*
 nsJSRuntimeServiceImpl::GetSingleton()
 {
-    if (!gJSRuntimeService) {
-	gJSRuntimeService = new nsJSRuntimeServiceImpl();
-        if (gJSRuntimeService) {
-	    NS_ADDREF(gJSRuntimeService);
-        }
+    if(!gJSRuntimeService)
+    {
+        gJSRuntimeService = new nsJSRuntimeServiceImpl();
+        // hold an extra reference to lock it down
+        NS_IF_ADDREF(gJSRuntimeService);
     }
     NS_IF_ADDREF(gJSRuntimeService);
+
     return gJSRuntimeService;
 }
 
@@ -88,12 +93,13 @@ const uint32 gGCSize = 4L * 1024L * 1024L; /* pref? */
 NS_IMETHODIMP
 nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
 {
-    if (!runtime)
-	return NS_ERROR_NULL_POINTER;
+    if(!runtime)
+        return NS_ERROR_NULL_POINTER;
 
-    if (!mRuntime) {
+    if(!mRuntime)
+    {
         mRuntime = JS_NewRuntime(gGCSize);
-        if (!mRuntime)
+        if(!mRuntime)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     *runtime = mRuntime;

@@ -23,7 +23,6 @@
 #define NS_IMPL_IDS
 #include "nsIAppShellService.h"
 #include "nsICmdLineService.h"
-#include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h"
 #include "nsIEditor.h"
 #include "nsIComponentManager.h"
@@ -45,7 +44,6 @@
 #define WEB_DLL         "WEBSHELL"
 #define PREF_DLL        "PREF"
 #define PARSER_DLL      "HTMLPARS"
-#define DOM_DLL         "JSDOM"
 #define LAYOUT_DLL      "NGLAYOUT"
 #define NETLIB_DLL      "NECKO"
 #define EDITOR_DLL      "ENDER"
@@ -82,7 +80,6 @@
 // Class IDs
 static NS_DEFINE_CID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_CID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_CID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
 #define NS_ABOUT_CID                    \

@@ -29,7 +29,6 @@
 
 class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
-class nsIScriptNameSpaceManager;
 class nsIScriptContextOwner;
 class nsIPrincipal;
 
@@ -227,12 +226,6 @@ public:
   NS_IMETHOD_(void*) GetNativeContext() = 0;
 
   /**
-   * Init all DOM classes.
-   *
-   **/
-  NS_IMETHOD InitClasses() = 0;
-
-  /**
    * Init this context.
    *
    * @param aGlobalObject the gobal object
@@ -252,43 +245,12 @@ public:
   NS_IMETHOD IsContextInitialized() = 0;
 
   /**
-   * Add a reference to a script object. For garbage collected systems
-   * the address of a slot to be used as a root is also provided. For
-   * reference counted systems, the object is provided.
-   *
-   * @param aSlot Slot to use as a root for garbage collected systems
-   * @param aScriptObject Script object being referenced
-   * @param aName Name of the reference (could be null)
-   *
-   * @return NS_OK if the method is successful
-   */
-  NS_IMETHOD AddNamedReference(void *aSlot, void *aScriptObject,
-                                     const char *aName) = 0;
-
-  /**
-   * Remove a reference to a script object. For garbage collected
-   * systems, this is equivalent to removing a root.
-   *
-   * @param aSlot Slot corresponding to the removed root
-   * @param aScriptObject script object to whom a reference is released
-   *
-   * @return NS_OK if the method is successful
-   */
-  NS_IMETHOD RemoveReference(void *aSlot, void *aScriptObject) = 0;
-
-  /**
    * For garbage collected systems, do a synchronous collection pass.
    * May be a no-op on other systems
    *
    * @return NS_OK if the method is successful
    */
   NS_IMETHOD GC() = 0;
-
-  /**
-   * Get the name space manager for this context.
-   * @return NS_OK if the method is successful
-   */
-  NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr) = 0;
 
   /**
    * Get the security manager for this context.
@@ -336,27 +298,11 @@ public:
                                     nsISupports* aRef) = 0;
 
   /**
-   * Store a single script object to be unrooted from the script garbage
-   * collector in the implementation's destructor. This obvious hack
-   * is used to delay the unrooting of an object until that point.
-   * (At time of writing, it's used only on the window script object).
-   * This should never be called twice (the stored object will never
-   * be replaced.)
-   */
-  NS_IMETHOD SetRootedScriptObject(void *aObject) = 0;
-
-  /**
    * Called to disable/enable script execution in this context.
    */
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled) = 0;
   NS_IMETHOD SetScriptsEnabled(PRBool aEnabled) = 0;
 };
-
-/**
- * Return a new Context
- *
- */
-extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext);
 
 #endif // nsIScriptContext_h__
 

@@ -30,44 +30,30 @@ MODULE		= dom
 LIBRARY_NAME	= jsdombase_s
 REQUIRES	= xpcom string webbrwsr js widget layout caps docshell xpconnect pref oji necko java locale uriloader sidebar xuldoc timer webshell view uconv shistory plugin windowwatcher gfx2
 
-CPPSRCS		= \
-		nsBarProps.cpp \
-		nsDOMException.cpp \
-		nsJSBarProp.cpp \
-		nsJSDOMException.cpp \
-		nsJSEnvironment.cpp \
-		nsJSWindow.cpp \
-		nsJSNavigator.cpp \
-		nsJSLocation.cpp \
-		nsJSWindowCollection.cpp \
-    nsFocusController.cpp \
-		nsGlobalWindow.cpp \
-		nsLocation.cpp \
-		nsDOMWindowList.cpp \
-		nsJSUtils.cpp \
-		nsScreen.cpp \
-		nsJSScreen.cpp \
-		nsHistory.cpp \
-		nsJSHistory.cpp \
-		nsJSPlugin.cpp \
-		nsJSPluginArray.cpp \
-		nsJSMimeTypeArray.cpp \
-		nsJSMimeType.cpp \
-		nsMimeTypeArray.cpp \
-		nsPluginArray.cpp \
-		nsJSCRMFObject.cpp \
-		nsJSCrypto.cpp \
-		nsJSPkcs11.cpp \
-    nsWindowRoot.cpp \
-		$(NULL)
-
-EXPORTS		= nsJSUtils.h
+CPPSRCS =			\
+	nsBarProps.cpp          \
+	nsDOMException.cpp 	\
+	nsJSEnvironment.cpp	\
+	nsFocusController.cpp	\
+	nsGlobalWindow.cpp      \
+	nsLocation.cpp		\
+	nsDOMWindowList.cpp	\
+	nsJSUtils.cpp		\
+	nsScreen.cpp		\
+	nsHistory.cpp		\
+	nsMimeTypeArray.cpp	\
+	nsPluginArray.cpp	\
+	nsWindowRoot.cpp	\
+	nsDOMClassInfo.cpp	\
+	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS        += -I$(srcdir)/../build
 
 DEFINES		+= -D_IMPL_NS_DOM
 

@@ -21,7 +21,8 @@
 
 DEPTH=..\..\..\..
 
-MODULE=dom_views
+MODULE=dom
+XPIDL_MODULE=dom_views
 
 XPIDLSRCS =					\
 	.\nsIDOMDocumentView.idl		\

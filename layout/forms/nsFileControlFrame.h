@@ -131,14 +131,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   /**
    * Processes a mouse up event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   /**
    * Processes a mouse click event
@@ -146,7 +146,7 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    *
    */
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent); // we only care when the button is clicked
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent); // we only care when the button is clicked
 
   /**
    * Processes a mouse click event
@@ -154,23 +154,23 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    *
    */
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   /**
    * Processes a mouse enter event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   /**
    * Processes a mouse leave event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);

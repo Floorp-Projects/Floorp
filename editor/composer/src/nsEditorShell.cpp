@@ -1661,8 +1661,8 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   //TODO: When publishing is done, we should support checking remote URL as well
   if (NS_FAILED(rv)) return NS_OK;
   
-  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-  inCheckWindow->Get_content(getter_AddRefs(contentWindow));
+  nsCOMPtr<nsIDOMWindow> contentWindow;
+  inCheckWindow->GetContent(getter_AddRefs(contentWindow));
   if (contentWindow)
   {
     // get the content doc

@@ -18,7 +18,7 @@
  * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Mike Shaver <shaver@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the
@@ -48,7 +48,6 @@
  */
 
 #include "xpcprivate.h"
-#include "nscore.h"
 
 /*
  * We require that STRING_TO_JSVAL(s) != (jsval)s, for tracking rootedness.
@@ -75,18 +74,18 @@ XPCReadableJSStringWrapper::~XPCReadableJSStringWrapper()
 }
 
 const nsSharedBufferHandle<PRUnichar>*
-XPCReadableJSStringWrapper::BufferHandle(JSBool shared) const 
+XPCReadableJSStringWrapper::BufferHandle(JSBool shared) const
 {
     XPCReadableJSStringWrapper * mutable_this =
         NS_CONST_CAST(XPCReadableJSStringWrapper *, this);
 
     if (!mBufferHandle)
     {
-        mutable_this->mBufferHandle = 
+        mutable_this->mBufferHandle =
             new WrapperBufferHandle(mutable_this, mStr);
 
     }
-    
+
     if (shared && !mHandleIsShared)
     {
         mutable_this->mBufferHandle->AcquireReference();
@@ -105,7 +104,7 @@ Deallocate(PRUnichar *) const
     {
         // unroot
         JSRuntime *rt;
-        nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+        nsCOMPtr<nsIJSRuntimeService> rtsvc =
             nsJSRuntimeServiceImpl::GetSingleton();
         if (rtsvc && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
         {
@@ -129,18 +128,18 @@ JSBool
 XPCReadableJSStringWrapper::WrapperBufferHandle::Allocator::RootString()
 {
     JSRuntime *rt;
-    nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+    nsCOMPtr<nsIJSRuntimeService> rtsvc =
         nsJSRuntimeServiceImpl::GetSingleton();
     JSBool ok = rtsvc &&
         NS_SUCCEEDED(rtsvc->GetRuntime(&rt)) &&
-        JS_AddNamedRootRT(rt, 
+        JS_AddNamedRootRT(rt,
                           NS_CONST_CAST(void **,
                                         NS_REINTERPRET_CAST(void * const *,
                                                             &mStr)),
                           "WrapperBufferHandle.mAllocator.mStr");
     if (ok)
     {
-        // Indicate that we've rooted the string by storing it as a 
+        // Indicate that we've rooted the string by storing it as a
         // string-tagged jsval
         mStr = STRING_TO_JSVAL(NS_REINTERPRET_CAST(JSString *, mStr));
     }
@@ -166,9 +165,9 @@ FinalizeDOMString(JSContext *cx, JSString *str)
 
     SharedStringEntry *entry =
         NS_STATIC_CAST(SharedStringEntry *,
-                       JS_DHashTableOperate(&DOMStringTable, str, 
+                       JS_DHashTableOperate(&DOMStringTable, str,
                                             JS_DHASH_LOOKUP));
-    
+
     // entry might be empty if we ran out of memory adding it to the hash
     if (JS_DHASH_ENTRY_IS_BUSY(entry))
     {
@@ -187,7 +186,7 @@ InitializeDOMStringFinalizer()
         return JS_FALSE;
     }
 
-    DOMStringFinalizerIndex = 
+    DOMStringFinalizerIndex =
         JS_AddExternalStringFinalizer(FinalizeDOMString);
 
     if (DOMStringFinalizerIndex == -1)
@@ -221,9 +220,9 @@ XPCStringConvert::ShutdownDOMStringFinalizer()
 
     // enumerate and release
     (void)JS_DHashTableEnumerate(&DOMStringTable, ReleaseHandleAndRemove, NULL);
-    
+
     JS_DHashTableFinish(&DOMStringTable);
-    DOMStringFinalizerIndex = 
+    DOMStringFinalizerIndex =
         JS_RemoveExternalStringFinalizer(FinalizeDOMString);
 
     DOMStringFinalizerIndex = -1;
@@ -244,12 +243,12 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
         // blech, have to copy.
         PRUint32 length = readable.Length();
         jschar *chars = NS_REINTERPRET_CAST(jschar *,
-                                            JS_malloc(cx, (length + 1) * 
+                                            JS_malloc(cx, (length + 1) *
                                                       sizeof(jschar)));
         if (!chars)
             return NULL;
-        
-        if (length && !CopyUnicodeTo(readable, 0, 
+
+        if (length && !CopyUnicodeTo(readable, 0,
                                      NS_REINTERPRET_CAST(PRUnichar *, chars),
                                      length))
         {
@@ -258,7 +257,7 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
         }
 
         chars[length] = 0;
-        
+
         str = JS_NewUCString(cx, chars, length);
         if (!str)
             JS_free(cx, chars);
@@ -269,18 +268,18 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
     if (DOMStringFinalizerIndex == -1 && !InitializeDOMStringFinalizer())
         return NULL;
 
-    str = JS_NewExternalString(cx, 
+    str = JS_NewExternalString(cx,
                                NS_CONST_CAST(jschar *,
                                              NS_REINTERPRET_CAST(const jschar *,
                                                           handle->DataStart())),
-                                             handle->DataLength(), 
+                                             handle->DataLength(),
                                              DOMStringFinalizerIndex);
     if (!str)
         return NULL;
 
     SharedStringEntry *entry =
         NS_STATIC_CAST(SharedStringEntry *,
-                       JS_DHashTableOperate(&DOMStringTable, str, 
+                       JS_DHashTableOperate(&DOMStringTable, str,
                                             JS_DHASH_ADD));
 
     if (!entry)

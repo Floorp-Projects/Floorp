@@ -57,8 +57,6 @@ LINCS= \
 LLIBS =                      \
     $(DIST)\lib\xpcom.lib    \
     $(DIST)\lib\js3250.lib        \
-    $(DIST)\lib\jsdombase_s.lib   \
-    $(DIST)\lib\jsdomevents_s.lib   \
     $(LIBNSPR)               \
     $(NULL)
 

@@ -23,8 +23,10 @@
 #define _nsCrypto_h_
 #include "nsIDOMCRMFObject.h"
 #include "nsIDOMCrypto.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMPkcs11.h"
+#include "nsString.h"
+#include "jsapi.h"
+#include "nsIPrincipal.h"
 
 #define NS_CRYPTO_CLASSNAME "Crypto JavaScript Class"
 #define NS_CRYPTO_CID \
@@ -38,16 +40,14 @@ class nsIPSMComponent;
 class nsIDOMScriptObjectFactory;
 
 
-class nsCRMFObject : public nsIDOMCRMFObject,
-                     public nsIScriptObjectOwner {
+class nsCRMFObject : public nsIDOMCRMFObject
+{
 public:
   nsCRMFObject();
   virtual ~nsCRMFObject();
-  NS_DECL_IDOMCRMFOBJECT
-  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  NS_DECL_NSIDOMCRMFOBJECT
+  NS_DECL_ISUPPORTS
 
   nsresult init();
 
@@ -55,51 +55,41 @@ public:
 private:
 
   nsString mBase64Request;
-  void *mScriptObject;
 };
 
 
-class nsCrypto: public nsIDOMCrypto,
-                public nsIScriptObjectOwner {
+class nsCrypto: public nsIDOMCrypto
+{
 public:
   nsCrypto();
   virtual ~nsCrypto();
   nsresult init();
   
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
   NS_DECL_ISUPPORTS
-  NS_DECL_IDOMCRYPTO
+  NS_DECL_NSIDOMCRYPTO
 
-  static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult);
-  static nsIDOMScriptObjectFactory *gScriptObjectFactory;
   static nsIPrincipal* GetScriptPrincipal(JSContext *cx);
   static const char *kPSMComponentContractID;
 
- private:
+private:
 
   nsIPSMComponent *mPSM;
   nsString         mVersionString;
   PRBool           mVersionStringSet;
-  void            *mScriptObject;
 };
 
-class nsPkcs11 : public nsIDOMPkcs11,
-                 public nsIScriptObjectOwner {
+class nsPkcs11 : public nsIDOMPkcs11
+{
 public:
   nsPkcs11();
   virtual ~nsPkcs11();
 
   nsresult init();
   NS_DECL_ISUPPORTS
-  NS_DECL_IDOMPKCS11
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  NS_DECL_NSIDOMPKCS11
 
 private:
   nsIPSMComponent *mPSM;
-  void            *mScriptObject;
 };
 
 nsresult

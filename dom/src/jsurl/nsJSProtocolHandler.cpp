@@ -54,8 +54,10 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
-static const char console_chrome_url[] = "chrome://global/content/console.xul";
-static const char console_window_options[] = "chrome,menubar,toolbar,resizable";
+#define CONSOLE_CHROME_URL \
+  NS_LITERAL_STRING("chrome://global/content/console.xul")
+#define CONSOLE_WINDOW_OPTIONS \
+  NS_LITERAL_STRING("chrome,menubar,toolbar,resizable")
 
 class nsJSThunk;
 
@@ -217,17 +219,10 @@ nsEvaluateStringProxy::BringUpConsole()
         nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(global, &rv);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-        JSContext *cx = (JSContext*) scriptContext->GetNativeContext();
-        void *mark;
-        jsval *argv = JS_PushArguments(cx, &mark, "sss",
-                                       console_chrome_url,
-                                       "_blank",
-                                       console_window_options);
-        if (!argv) return NS_ERROR_OUT_OF_MEMORY;
+        nsCOMPtr<nsIDOMWindow> tmp;
 
-        rv = window->OpenDialog(cx, argv, 3, getter_AddRefs(console));
-
-        JS_PopArguments(cx, mark);
+        rv = window->Open(CONSOLE_CHROME_URL, NS_LITERAL_STRING("_blank"),
+                          CONSOLE_WINDOW_OPTIONS, getter_AddRefs(tmp));
     }
     return rv;
 }

@@ -42,6 +42,7 @@
 #include "nsSupportsArray.h"
 #include "nsSupportsPrimitives.h"
 #include "nsConsoleService.h"
+#include "nsExceptionService.h"
 
 #include "nsComponentManager.h"
 #include "nsIServiceManager.h"
@@ -110,6 +111,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsInterfacePointerImpl)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
     
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM initialization
@@ -192,6 +194,7 @@ static nsModuleComponentInfo components[] = {
 
     COMPONENT(SUPPORTSARRAY, nsSupportsArray::Create),
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor),
+    COMPONENT(EXCEPTIONSERVICE, nsExceptionServiceConstructor),
     COMPONENT(ATOMSERVICE, nsAtomServiceConstructor),
     COMPONENT(OBSERVER, nsObserver::Create),
     COMPONENT(OBSERVERSERVICE, nsObserverService::Create),
