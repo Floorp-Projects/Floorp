@@ -111,7 +111,7 @@ function p3pSummarySavePage()
 
         persistor.saveDocument(getDocument(), fp.file, null, "text/html", 
           kIPersist.ENCODE_FLAGS_FORMATTED | 
-          kIPersist.ENCODE_FLAGS_ENCODE_ENTITIES, 0);
+          kIPersist.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES, 0);
     }
   }
   catch (ex)
