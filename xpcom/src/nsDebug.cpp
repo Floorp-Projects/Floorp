@@ -81,6 +81,8 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
   *__p = 0x7;
 #elif defined(XP_MAC)
   ExitToShell();
+#elif defined(XP_UNIX)
+  ::abort();
 #endif
 }
 
