@@ -78,6 +78,7 @@ protected:
                         PRInt32 aSpecWidth, PRInt32 aSpecHeight);
    PRBool     LoadPositionFromXUL();
    PRBool     LoadSizeFromXUL();
+   PRBool     LoadSizeStateFromXUL();
    NS_IMETHOD LoadTitleFromXUL();
    NS_IMETHOD LoadIconFromXUL();
    NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode);

@@ -760,6 +760,7 @@ void nsXULWindow::OnChromeLoaded()
 #endif
   if (positionSet)
     positionSet = LoadPositionFromXUL();
+  LoadSizeStateFromXUL();
 
   //LoadContentAreas();
 
@@ -887,22 +888,45 @@ PRBool nsXULWindow::LoadSizeFromXUL()
     mIntrinsicallySized = PR_FALSE;
     if (specWidth != currWidth || specHeight != currHeight)
       SetSize(specWidth, specHeight, PR_FALSE);
-
-    rv = windowElement->GetAttribute(NS_LITERAL_STRING("sizemode"), sizeString);
-    if (NS_SUCCEEDED(rv)) {
-      PRInt32 sizeMode = nsSizeMode_Normal;
-      /* ignore request to minimize, to not confuse novices
-      if (sizeString.Equals(SIZEMODE_MINIMIZED))
-        sizeMode = nsSizeMode_Minimized;
-      */
-      if (sizeString.Equals(SIZEMODE_MAXIMIZED))
-        sizeMode = nsSizeMode_Maximized;
-      // the widget had better be able to deal with not becoming visible yet
-      mWindow->SetSizeMode(sizeMode);
-    }
   }
 
   return gotSize;
+}
+
+PRBool nsXULWindow::LoadSizeStateFromXUL()
+{
+  nsresult rv;
+  PRBool   gotState = PR_FALSE;
+  
+  // if we're the hidden window, don't try to validate our size/position. We're
+  // special.
+  if (mIsHiddenWindow)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMElement> windowElement;
+  GetWindowDOMElement(getter_AddRefs(windowElement));
+  NS_ASSERTION(windowElement, "no xul:window");
+  if (!windowElement)
+    return PR_FALSE;
+
+  nsAutoString stateString;
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("sizemode"), stateString);
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 sizeMode = nsSizeMode_Normal;
+    /* ignore request to minimize, to not confuse novices
+    if (stateString.Equals(SIZEMODE_MINIMIZED))
+      sizeMode = nsSizeMode_Minimized;
+    */
+    if (stateString.Equals(SIZEMODE_MAXIMIZED)) {
+      mIntrinsicallySized = PR_FALSE;
+      sizeMode = nsSizeMode_Maximized;
+    }
+    // the widget had better be able to deal with not becoming visible yet
+    mWindow->SetSizeMode(sizeMode);
+    gotState = PR_TRUE;
+  }
+
+  return gotState;
 }
 
 /* Stagger windows of the same type so they don't appear on top of each other.
