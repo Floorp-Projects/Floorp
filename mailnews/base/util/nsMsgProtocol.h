@@ -26,6 +26,7 @@
 #include "nsIChannel.h"
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
+#include "nsIPrincipal.h"
 #include "nsCOMPtr.h"
 
 // This is a helper class used to encapsulate code shared between all of the
