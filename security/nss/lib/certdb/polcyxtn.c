@@ -34,7 +34,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: polcyxtn.c,v 1.3 2002/08/31 00:37:29 jpierre%netscape.com Exp $
+ * $Id: polcyxtn.c,v 1.4 2004/01/16 05:36:08 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -84,7 +84,7 @@ const SEC_ASN1Template CERT_PolicyInfoTemplate[] = {
 	  0, NULL, sizeof(CERTPolicyInfo) },
     { SEC_ASN1_OBJECT_ID,
 	  offsetof(CERTPolicyInfo, policyID) },
-    { SEC_ASN1_SEQUENCE_OF,
+    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_OPTIONAL,
 	  offsetof(CERTPolicyInfo, policyQualifiers),
 	  CERT_PolicyQualifierTemplate },
     { 0 }
