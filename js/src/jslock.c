@@ -100,7 +100,7 @@ js_CompareAndSwap(prword *w, prword ov, prword nv)
 #if defined(__GNUC__)
     unsigned int res;
 #ifndef ULTRA_SPARC
-    PR_ASSERT(nv >= 0);
+    PR_ASSERT(nv != -1);
     asm volatile ("
 swap [%1],%4
 1:  tst %4
@@ -132,7 +132,7 @@ mov 0,%0
 #else /* !__GNUC__ */
     extern int compare_and_swap(prword*,prword,prword);
 #ifndef ULTRA_SPARC
-    PR_ASSERT(nv >= 0);
+    PR_ASSERT(nv != -1);
 #else
     PR_ASSERT(ov != nv);
 #endif
