@@ -2067,6 +2067,13 @@ ImageRequestImpl::Init(void *, char const *, nsIImageRequestObserver *, unsigned
 __builtin_new
 ImageNetContextImpl::GetURL(ilIURL *, ImgCachePolicy, ilINetReader *, int)
 
+# il_group_notify() is really a call to a static rounting il_init_scaling()
+<imglib-scaling>
+PR_Malloc
+il_group_notify(_IL_GroupContext *, long)
+il_size(il_container_struct *)
+ImgDCallbk::ImgDCBImageSize(void)
+
 <imglib-gifdecode>
 PR_Calloc
 il_gif_write(il_container_struct *, unsigned char const *, int)
