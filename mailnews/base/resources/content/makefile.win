@@ -27,6 +27,8 @@ install::
 	$(MAKE_INSTALL) messenger.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) folderPane.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) threadPane.xul 			$(DIST)\bin\chrome\messenger\content\default
+  $(MAKE_INSTALL) msgHdrViewOverlay.xul 	$(DIST)\bin\chrome\messenger\content\default
+  $(MAKE_INSTALL) msgHdrViewOverlay.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) widgetglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) commandglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) shareglue.js			$(DIST)\bin\chrome\messenger\content\default
@@ -44,6 +46,8 @@ install::
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\messenger.xul
+  rm -f $(DIST)\chrome\messenger\content\default\msgHdrViewOverlay.xul
+  rm -f $(DIST)\chrome\messenger\content\default\msgHdrViewOverlay.js
 	rm -f $(DIST)\chrome\messenger\content\default\folderPane.xul
 	rm -f $(DIST)\chrome\messenger\content\default\threadPane.xul
 	rm -f $(DIST)\chrome\messenger\content\default\widgetglue.js
