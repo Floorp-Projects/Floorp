@@ -248,6 +248,7 @@ nsMimeXULEmitter::EndBody()
     tempOutfile.write(tmpBody, mBody.Length());
   tempOutfile.close();
 
+  nsAllocator::Free(tmpBody);
   return NS_OK;
 }
 
