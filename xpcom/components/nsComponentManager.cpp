@@ -816,7 +816,6 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     nsCOMPtr<nsIRegistryEnumerator> regEnum = do_QueryInterface(cidEnum, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = regEnum->First();
     for (rv = regEnum->First();
          NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
          rv = regEnum->Next())
@@ -868,7 +867,6 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     regEnum = do_QueryInterface(contractidEnum, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = regEnum->First();
     for (rv = regEnum->First();
          NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
          rv = regEnum->Next())
