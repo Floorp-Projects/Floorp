@@ -29,6 +29,10 @@
 #include <TextUtils.h>
 #endif
 
+// #if APPLE_MENU_HACK
+#include "nsMenu.h"				// need to get APPLE_MENU_HACK macro
+// #endif
+
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -189,6 +193,22 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
     mMenuVoidArray.AppendElement( supports );
   }
 
+#ifdef APPLE_MENU_HACK
+  if (mNumMenus == 0)
+  {
+  	Str32					menuStr = { 1, 0x14 };
+  	MenuHandle		appleMenu = ::NewMenu(kAppleMenuID, menuStr);
+
+		if (appleMenu)
+		{
+		  ::AppendMenu(appleMenu, "\pAbout ApprunnerÉ");
+		  ::AppendMenu(appleMenu, "\p-");
+		  ::AppendResMenu(appleMenu, 'DRVR');
+      ::InsertMenu(appleMenu, 0);
+    }
+  }
+#endif
+  
   MenuHandle menuHandle = nsnull;
   aMenu->GetNativeData(&menuHandle);
   
