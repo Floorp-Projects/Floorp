@@ -38,6 +38,7 @@
 #include "netCore.h"
 #include "nsXPIDLString.h"
 #include "nsIStreamListener.h"
+#include "nsAutoLock.h"
 
 class nsFTPChannel : public nsPIFTPChannel,
                      public nsIInterfaceRequestor,
@@ -104,6 +105,7 @@ protected:
     PRUint32                        mBufferMaxSize;
     nsCOMPtr<nsIChannel>            mProxyChannel; // a proxy channel
     nsXPIDLCString                  mHost;
+    PRLock*                         mLock;
 };
 
 #endif /* nsFTPChannel_h___ */

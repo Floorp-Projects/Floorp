@@ -31,6 +31,7 @@
 #include "nsIThreadPool.h"
 #include "nsIObserverService.h"
 #include "nsIProtocolProxyService.h"
+#include "nsAutoLock.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
@@ -49,7 +50,7 @@ public:
     NS_DECL_NSIPROXY
 
     // nsFtpProtocolHandler methods:
-    nsFtpProtocolHandler() { 
+    nsFtpProtocolHandler() {
         NS_INIT_REFCNT();
         mProxyPort = -1; 
     };
@@ -65,6 +66,7 @@ protected:
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
     nsCAutoString           mProxyHost;
     PRInt32                 mProxyPort;
+    PRLock*                 mLock; 
 };
 
 #define NS_FTP_MIN_CONNECTION_COUNT  1
