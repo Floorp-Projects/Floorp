@@ -71,7 +71,7 @@ function HistoryCommonInit()
             // there and the window is not re-used for bookmarks. 
             var windowNode = document.getElementById("history-window");
             windowNode.setAttribute("windowtype", "history:searchresults");
-            windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
+            document.title = gHistoryBundle.getString("search_results_title");
 
         }
         document.getElementById("groupingMenu").setAttribute("hidden", "true");

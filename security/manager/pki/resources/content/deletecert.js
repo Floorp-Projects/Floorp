@@ -99,10 +99,9 @@ function setWindowName()
   {
      return;
   }
-  var windowReference = document.getElementById('deleteCertificate');
   var confirReference = document.getElementById('confirm');
   var impactReference = document.getElementById('impact');
-  windowReference.setAttribute("title", title);
+  document.title = title;
   
   setText("confirm",confirm);
 

@@ -135,7 +135,7 @@ function Startup()
       document.getElementById("showaddgroup").hidden = true;
       document.getElementById("destinationSeparator").hidden = true;
       document.getElementById("nameseparator").hidden = true;
-      dialogElement.setAttribute("title", dialogElement.getAttribute("selectFolderTitle"));
+      document.title = dialogElement.getAttribute("selectFolderTitle");
       shouldSetOKButton = false;
       if (window.arguments[2])
         folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);

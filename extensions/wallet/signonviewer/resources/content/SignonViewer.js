@@ -136,7 +136,7 @@ function Startup() {
 
     // change title on window
     var wind = document.getElementById("signonviewer");
-    wind.setAttribute("title", wind.getAttribute("alttitle"));
+    document.title = wind.getAttribute("alttitle");
 
     // set initial form-manager tab
     element = document.getElementById("nopreviewsTab");

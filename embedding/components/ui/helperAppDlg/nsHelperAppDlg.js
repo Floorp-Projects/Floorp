@@ -234,7 +234,6 @@ nsHelperAppDialog.prototype = {
          prompt.firstChild.nodeValue = modified;
 
          // Put file name in window title.
-         var win   = this.dialogElement( "nsHelperAppDlg" );
          var suggestedFileName = this.mLauncher.suggestedFileName;
 
          // Some URIs do not implement nsIURL, so we can't just QI.
@@ -256,8 +255,8 @@ nsHelperAppDialog.prototype = {
            fname = suggestedFileName;
 
 
-         this.mTitle = this.replaceInsert( win.getAttribute( "title" ), 1, fname);
-         this.mDialog.title = this.mTitle;
+         this.mTitle = this.replaceInsert( this.mDialog.document.title, 1, fname);
+         this.mDialog.document.title = this.mTitle;
 
          // Put content type, filename and location into intro.
          this.initIntro(url, fname);
