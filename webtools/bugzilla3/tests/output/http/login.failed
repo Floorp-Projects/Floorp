@@ -13,9 +13,10 @@ COSES
 ]]></text>
 
 <if lvalue="(data.tried)" condition="=" rvalue="1"> The password or username you used is incorrect. </if>
-<text> If you would like to create a new account, </text>
-<if lvalue="(data.tried)" condition="=" rvalue="1"> or to have your password sent to you, </if>
-<text> fill in your e-mail address or other means of contact: </text>
+
+<text> If you would like to create a new account, or to have your
+password sent to you, fill in your e-mail address or other means of
+contact: </text>
 
 <text><![CDATA[
    </p>
