@@ -67,8 +67,7 @@
       </RDF:Description> 
     </content> 
 
-  </chrome>
-  
+  </chrome>  
   
   <chrome ID="chrome://editor/">
   
@@ -102,6 +101,25 @@
       </RDF:Description>
     </content> 
   </chrome>
+ 
+  <chrome ID="chrome://addressbook/"> 
+
+    <skin> 
+      <RDF:Description ID="chrome://addressbook/skin/">
+	    <base>resource:/res/mailnews/addrbook/</base>
+        <main>addrshell.css</main> 
+      </RDF:Description> 
+    </skin> 
+
+    <content> 
+      <RDF:Description ID="chrome://addressbook/content/">
+	    <base>resource:/res/mailnews/addrbook/</base>
+        <main>addrshell.xul</main> 
+      </RDF:Description> 
+    </content> 
+
+  </chrome> 
+
 </RDF:RDF> 
 
 
