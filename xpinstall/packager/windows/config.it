@@ -290,11 +290,11 @@ Message=Preparing SmartUpdate, please wait...
 ;Destination=[SETUP PATH]\program
 
 ;Copy FileX sections
-;[Copy File0]
-;Timing=post launchapp
-;Source=[JRE BIN PATH]\npjava*.dll
-;Destination=[SETUP PATH]\Plugins
-;Fail If Exists=FALSE
+[Copy File0]
+Timing=post launchapp
+Source=[JRE BIN PATH]\npjava*.dll
+Destination=[SETUP PATH]\Plugins
+Fail If Exists=FALSE
 
 ;[Copy File1]
 ;Timing=post launchapp
@@ -309,9 +309,9 @@ Message=Preparing SmartUpdate, please wait...
 ;Fail If Exists=
 
 ;Create DirectoryX sections
-;[Create Directory0]
-;Timing=post download
-;Destination=[SETUP PATH]\Plugins
+[Create Directory0]
+Timing=post download
+Destination=[SETUP PATH]\Plugins
 
 ;[Create Directory1]
 ;Timing=post download
