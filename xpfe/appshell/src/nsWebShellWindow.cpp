@@ -868,7 +868,7 @@ void nsWebShellWindow::DoContextMenu(
     if (NS_SUCCEEDED(rv) && pnsContextMenu) {
         nsISupports * supports;
         aParentWindow->QueryInterface(kISupportsIID, (void**) &supports);
-        pnsContextMenu->Create(supports);
+        pnsContextMenu->Create(supports, aPopupAlignment);
         NS_RELEASE(supports);
         pnsContextMenu->SetLocation(aX,aY);
         // Set webshell
