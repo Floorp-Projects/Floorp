@@ -4,10 +4,11 @@
 
 <!DOCTYPE window>
 
-<window style="background-color: #dddddd"
-	xmlns:html="http://www.w3.org/TR/REC-html40"
-	xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		align="vertical"
+		style="width:100%; height:100%; background-color: #dddddd">
 
 <box id="CardViewBox" align="vertical" style="width:100%; height:100%">
 	<box align="horizontal" style="width:100%">
