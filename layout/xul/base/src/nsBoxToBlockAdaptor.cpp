@@ -1002,13 +1002,7 @@ nsBoxToBlockAdaptor::PlaceChild(nsIPresContext* aPresContext, nsIFrame* aFrame, 
       // only if the origin changed
     if ((curOrigin.x != aX) || (curOrigin.y != aY)) {
         aFrame->MoveTo(aPresContext, aX, aY);
-
-        nsIView*  view;
-        aFrame->GetView(aPresContext, &view);
-        if (view) {
-            nsContainerFrame::PositionFrameView(aPresContext, aFrame, view);
-        } else
-            nsContainerFrame::PositionChildViews(aPresContext, aFrame);
+        nsContainerFrame::PositionFrameView(aPresContext, aFrame);
     }
 }
 

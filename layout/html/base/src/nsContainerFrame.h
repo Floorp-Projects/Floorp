@@ -30,8 +30,7 @@
 #define NS_FRAME_NO_MOVE_VIEW         0x0001
 #define NS_FRAME_NO_MOVE_FRAME        (0x0002 | NS_FRAME_NO_MOVE_VIEW)
 #define NS_FRAME_NO_SIZE_VIEW         0x0004
-#define NS_FRAME_NO_MOVE_CHILD_VIEWS  0x0008
-#define NS_FRAME_NO_VISIBILITY        0x0010
+#define NS_FRAME_NO_VISIBILITY        0x0008
 
 /**
  * Implementation of a container frame.
@@ -83,8 +82,7 @@ public:
 
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIPresContext* aPresContext,
-                                nsIFrame*       aKidFrame,
-                                nsIView*        aView);
+                                nsIFrame*       aKidFrame);
 
   // Sets several view attributes:
   // - if requested sizes the frame's view based on the current size and origin.
@@ -141,10 +139,6 @@ public:
    * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
    *    don't want to automatically sync the frame and view
    * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
-   * NS_FRAME_NO_MOVE_CHILD_VIEWS - don't move child views. This is for the case
-   *    where the frame's new position differs from its current position and the
-   *    frame itself doesn't have a view, so moving the frame would cause any child
-   *    views to be out of sync
    */
   static nsresult FinishReflowChild(nsIFrame*            aKidFrame,
                                     nsIPresContext*      aPresContext,

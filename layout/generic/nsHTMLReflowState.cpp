@@ -44,6 +44,18 @@
 // hack for bug 50695
 #include "nsIFormManager.h"
 
+#ifdef DEBUG
+const char*
+nsHTMLReflowState::ReasonToString(nsReflowReason aReason)
+{
+  static const char* reasons[] = {
+    "initial", "incremental", "resize", "style-change", "dirty"
+  };
+
+  return reasons[aReason];
+}
+#endif
+
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,

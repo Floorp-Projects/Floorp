@@ -134,15 +134,13 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext*      aPresContext,
     nsHTMLReflowState reflowState(aPresContext, root, *this,
                                   &aRendContext, aMaxSize);
     nsReflowStatus    status;
-    nsIView*          view;
 
     root->WillReflow(aPresContext);
-    root->GetView(aPresContext, &view);
-    if (view) {
-      nsContainerFrame::PositionFrameView(aPresContext, root, view);
-    }
+    nsContainerFrame::PositionFrameView(aPresContext, root);
     root->Reflow(aPresContext, aDesiredSize, reflowState, status);
     root->SizeTo(aPresContext, aDesiredSize.width, aDesiredSize.height);
+    nsIView* view;
+    root->GetView(aPresContext, &view);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, root, view,
                                                  nsnull);

@@ -409,12 +409,10 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   aKidFrame->MoveTo(aPresContext, 
                     x, border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
 
-  // Position its view
-  nsIView*  kidView;
-  aKidFrame->GetView(aPresContext, &kidView);
-  // Don't bother it doing it now if we haven't yet determined the left offset
+  // Position its view, but don't bother it doing it now if we haven't
+  // yet determined the left offset
   if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
-    nsContainerFrame::PositionFrameView(aPresContext, aKidFrame, kidView);
+    nsContainerFrame::PositionFrameView(aPresContext, aKidFrame);
   }
 
   // Do the reflow
@@ -454,6 +452,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Size and position the view and set its opacity, visibility, content
   // transparency, and clip
+  nsIView*  kidView;
+  aKidFrame->GetView(aPresContext, &kidView);
   nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
                                              &kidDesiredSize.mOverflowArea);
   aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);

@@ -354,9 +354,7 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
                     kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
   
   // Position its view
-  nsIView*  kidView;
-  aKidFrame->GetView(aPresContext, &kidView);
-  nsContainerFrame::PositionFrameView(aPresContext, aKidFrame, kidView);
+  nsContainerFrame::PositionFrameView(aPresContext, aKidFrame);
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
@@ -378,6 +376,8 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
 
   // Size and position the view and set its opacity, visibility, content
   // transparency, and clip
+  nsIView* kidView;
+  aKidFrame->GetView(aPresContext, &kidView);
   nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
                                              &kidDesiredSize.mOverflowArea);
   aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);

@@ -385,13 +385,7 @@ void
 nsTableFrame::RePositionViews(nsIPresContext* aPresContext,
                               nsIFrame*       aFrame)
 {
-  nsIView* view;
-  aFrame->GetView(aPresContext, &view);
-  if (view) {
-    nsContainerFrame::PositionFrameView(aPresContext, aFrame, view);
-  } else {
-    nsContainerFrame::PositionChildViews(aPresContext, aFrame);
-  }
+  nsContainerFrame::PositionFrameView(aPresContext, aFrame);
 }
 
 nsIPresShell*
