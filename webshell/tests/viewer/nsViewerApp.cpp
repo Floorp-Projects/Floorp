@@ -742,10 +742,13 @@ nsViewerApp::ViewSource(nsString& aURL)
 
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
-  bw->mDocShell->SetViewMode(nsIDocShell::viewSource);
   bw->SetTitle(NS_ConvertASCIItoUCS2("View Source").GetUnicode());
   bw->SetVisibility(PR_TRUE);
-  bw->GoTo(aURL.GetUnicode());
+
+  nsAutoString strUrl; strUrl.AppendWithConversion("view-source:");
+  strUrl.Append(aURL);
+  bw->GoTo(strUrl.GetUnicode());
+
   NS_RELEASE(bw);
 
   return NS_OK;
