@@ -914,11 +914,14 @@ sub report_failure {
 
     $failures_reported++;
 
+    $message =~ s/\n+/\n/g;
+
     if ($opt_console_failures) {
         print STDERR ("*-* Testcase $test failed:\n$message\n");
     }
 
     $message =~ s/\n/<br>\n/g;
+
     $html .= "<a name='failure$failures_reported'></a>";
     if ($opt_lxr_url) {
         $test =~ /\/?([^\/]+\/[^\/]+\/[^\/]+)$/;
@@ -964,7 +967,7 @@ sub int_handler {
     local $resp;
 
     do {
-        print ("\n** User Break: Just [Q]uit, Quit and [R]eport, [C]ontinue ?");
+        print ("\n*** User Break: Just [Q]uit, Quit and [R]eport, [C]ontinue ?");
         $resp = <STDIN>;
     } until ($resp =~ /[QqRrCc]/);
 

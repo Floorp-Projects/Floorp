@@ -1,3 +1,4 @@
+# Tests that are not applicable to Rhino.
 lc3/ConvertJSObject/ToBoolean-001.js
 lc3/ConvertJSObject/ToByte-001.js
 lc3/ConvertJSObject/ToByte-002.js
