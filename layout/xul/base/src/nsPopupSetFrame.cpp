@@ -252,24 +252,19 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
       ibox->GetBounds(bounds);
 
       nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
-      if (scrollframe) {
-        nsIScrollableFrame::nsScrollPref pref;
-        scrollframe->GetScrollPreference(aState.PresContext(), &pref);
+      if (scrollframe &&
+          scrollframe->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
+        // if our pref height
+        if (bounds.height < prefSize.height) {
+          // layout the child
+          ibox->Layout(aState);
 
-        if (pref == nsIScrollableFrame::Auto)  
-        {
-          // if our pref height
-          if (bounds.height < prefSize.height) {
-             // layout the child
-             ibox->Layout(aState);
-
-             nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
-             if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
-             {
-               bounds.width += scrollbars.left + scrollbars.right;
-               //printf("Width=%d\n",width);
-               ibox->SetBounds(aState, bounds);
-             }
+          nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
+          if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
+          {
+            bounds.width += scrollbars.left + scrollbars.right;
+            //printf("Width=%d\n",width);
+            ibox->SetBounds(aState, bounds);
           }
         }
       }

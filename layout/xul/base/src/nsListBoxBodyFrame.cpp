@@ -1473,14 +1473,11 @@ nsListboxScrollPortFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& 
   outer->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
   if (!sizeMode.IsEmpty()) {  
     nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(mParent));
-    if (scrollFrame) {
-      nsIScrollableFrame::nsScrollPref scrollPref;
-      scrollFrame->GetScrollPreference(aBoxLayoutState.PresContext(), &scrollPref);
-
-      if (scrollPref == nsIScrollableFrame::Auto) {
-        nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
-        aSize.width += scrollbars.left + scrollbars.right;
-      }
+    if (scrollFrame &&
+        scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
+      nsMargin scrollbars =
+        scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
+      aSize.width += scrollbars.left + scrollbars.right;
     }
   }
   else aSize.width = 0;
@@ -1510,14 +1507,10 @@ nsListboxScrollPortFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize&
     aSize.height = size*outer->GetRowHeightTwips();
    
   nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(mParent));
-  if (scrollFrame) {
-    nsIScrollableFrame::nsScrollPref scrollPref;
-    scrollFrame->GetScrollPreference(aBoxLayoutState.PresContext(), &scrollPref);
-
-    if (scrollPref == nsIScrollableFrame::Auto) {
-      nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
-      aSize.width += scrollbars.left + scrollbars.right;
-    }
+  if (scrollFrame &&
+      scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
+    nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
+    aSize.width += scrollbars.left + scrollbars.right;
   }
 
   AddMargin(child, aSize);
