@@ -70,6 +70,8 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
     rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("layoutdebug"),
                               PR_FALSE, &found);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (!found)
+      return NS_OK;
 
     nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
