@@ -7,9 +7,9 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2001/01/09 15:43:39 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.13 $ 
+# $Date: 2001/02/16 00:08:53 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
 
@@ -159,7 +159,8 @@ push @TinderDB::HTML_COLUMNS, TinderDB::Build->new();
 
 
 
-# find the name of each build 
+# Find the name of each build and the proper order to display them.
+# No part of the code should peek at keys %{ $DATABASE{$tree} } directly.
 
 
 sub build_names {
@@ -167,7 +168,7 @@ sub build_names {
   
   my @outrow = ();
   
-  foreach $buildname (sort keys %{ $DATABASE{$tree} } ){
+  foreach $buildname (keys %{ $DATABASE{$tree} } ){
     
     # skip this column?
     
@@ -177,6 +178,11 @@ sub build_names {
     
     push @outrow, $buildname;
   }
+
+  @outrow = TreeData::sort_tree_buildnames( 
+                                           $tree,
+                                           [@outrow],
+                                          );
 
   return @outrow;
 }
@@ -188,7 +194,11 @@ sub build_names {
 sub all_build_names {
   my ($self, $tree) = (@_);
   
-  my (@outrow) = sort keys %{ $DATABASE{$tree} };
+  my (@build_names) = keys %{ $DATABASE{$tree} };
+  my (@outrow) =  TreeData::sort_tree_buildnames( 
+                                                 $tree,
+                                                 [@build_names],
+                                                );
 
   return @outrow;
 }
@@ -202,14 +212,9 @@ sub latest_status {
   my ($tree) = (@_);
   
   my (@outrow) = ();
-  
-  foreach $buildname (sort keys %{ $DATABASE{$tree} } ){
-    
-    # skip this column?
+  my (@build_names) = build_names($tree);
 
-    (!($main::NOIGNORE))  &&
-      ($IGNORE_BUILDS{$tree}{$buildname}) && 
-        next;
+  foreach $buildname (@build_names) {
     
     my ($last_status);
     foreach $db_index (0 .. $#{ $DATABASE{$tree}{$buildname}{'recs'} }) {
@@ -217,10 +222,9 @@ sub latest_status {
       my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
       my ($buildstatus) = $rec->{'status'};
       
-      if ( ($buildstatus eq 'not_running') ||
-           ($buildstatus eq 'building') ) {
+      (BuildStatus::is_status_final($buildstatus))  ||
         next;
-      }
+
       $last_status = $buildstatus;
       last;
     } # foreach $db_index
@@ -274,13 +278,9 @@ sub gettree_header {
   my (@earliest_failure) = ();
   my (@recent_success) = ();
 
-  foreach $buildname (sort keys %{ $DATABASE{$tree} } ){
-    
-    # skip this column?
+  my (@build_names) = build_names($tree);
 
-    !($main::NOIGNORE)  &&
-      $IGNORE_BUILDS{$tree}{$buildname} && 
-        next;
+  foreach $buildname (@build_names){
     
     my $earliest_failure = undef;
 
@@ -289,10 +289,8 @@ sub gettree_header {
       my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
       my ($buildstatus) = $rec->{'status'};
 
-      if ( ($buildstatus eq 'not_running') ||
-           ($buildstatus eq 'building') ) {
-        next ;
-      }
+      (BuildStatus::is_status_final($buildstatus))  ||
+        next;
 
       if ($buildstatus eq 'success') {
         $earliest_failure = $rec->{'endtime'};
@@ -313,13 +311,8 @@ sub gettree_header {
 
   # find our best guess as to when the tree was last good.
   
-  foreach $buildname (sort keys %{ $DATABASE{$tree} } ){
-    
-    # skip this column?
-    
-    !($main::NOIGNORE)  &&
-      $IGNORE_BUILDS{$tree}{$buildname} && 
-        next;
+  my (@build_names) = build_names($tree);
+  foreach $buildname (@build_names) {
     
     my $recent_success = undef;
     foreach $db_index (0 .. $#{ $DATABASE{$tree}{$buildname}{'recs'} } ) {
@@ -333,10 +326,8 @@ sub gettree_header {
         next;
       }
       
-      if ( ($buildstatus eq 'not_running') ||
-           ($buildstatus eq 'building') ) {
-        next ;
-      }
+      (BuildStatus::is_status_final($buildstatus))  ||
+        next;
       
       if ($buildstatus eq 'success') {
         $recent_success = $starttime;
@@ -362,8 +353,8 @@ sub gettree_header {
 
     my ($link) = VCDisplay::query(
                                    'tree'=> $tree,
-                                   'mindate'=> $earliest_failure,
-                                   'maxdate'=> $recent_success,
+                                   'mindate'=> $recent_success,
+                                   'maxdate'=> $earliest_failure,
                                    'linktxt'=> $txt,
                                   );
     
@@ -432,7 +423,8 @@ sub trim_db_history {
   my (@run_times) = ();
   my (@dead_times) = ();
 
-  foreach $buildname (sort keys %{ $DATABASE{$tree} } ){
+  my (@all_build_names) = all_build_names($tree);
+  foreach $buildname (@all_build_names) {
 
     my ($last_index) = undef;
     my $recs = $DATABASE{$tree}{$buildname}{'recs'};
@@ -593,10 +585,7 @@ sub status_table_header {
     my $current_endtime = $DATABASE{$tree}{$buildname}{'recs'}[0]{'endtime'};
     my $current_status = $DATABASE{$tree}{$buildname}{'recs'}[0]{'status'};
     my $previous_endtime = $DATABASE{$tree}{$buildname}{'recs'}[1]{'endtime'};
-    my $current_finnished = (!(
-                               ($current_status eq 'not_running') ||
-                               ($current_status eq 'building')
-                            ));
+    my $current_finnished = BuildStatus::is_status_final($buildstatus);
 
     my $txt ='';    
     my $num_lines;
@@ -606,7 +595,7 @@ sub status_table_header {
 
     if ($current_endtime) {
       $txt .= "previous end_time: &nbsp;";
-      $txt .= &HTMLPopUp::timeHTML($current_endtime)."<br>";
+      $txt .= &HTMLPopUp::timeHTML($previous_endtime)."<br>";
     }
 
     my $earliest_failure = $DATABASE{$tree}{$buildname}{'earliest_failure'};
@@ -757,9 +746,7 @@ sub apply_db_updates {
     my ($starttime) = $record->{'starttime'};
     my ($timenow) =  $record->{'timenow'};
 
-    # The time which the previous build started
     my ($previous_rec) = $DATABASE{$tree}{$build}{'recs'}[0];
-
 
     # sanity check the record, taint checks are done in processmail.
     {
@@ -784,16 +771,9 @@ sub apply_db_updates {
 
    }  
 
-    # ignore updates which arrive out of order
-    # or which start too fast
+    # ignore updates which start too fast
 
     if ( defined($DATABASE{$tree}{$build}{'recs'}) ) {
-      
-      # Why are we ignoring out of order recipts?  This came from the
-      # original tinderbox?
-
-      ($record->{'starttime'} < $previous_rec->{'starttime'}) &&
-        next;
       
       # Keep the spacing between builds greater then our HTML grid
       # spacing.  There can be very frequent updates for any build
@@ -808,22 +788,32 @@ sub apply_db_updates {
       my ($different_builds) = ($record->{'starttime'} !=
                                 $previous_rec->{'starttime'});
          
-         ($different_builds) && 
-           ($separation < $safe_separation) && 
-             next;
+      ($different_builds) && 
+        ($separation < $safe_separation) && 
+          next;
     }
 
-    # Is this report an update to the current build? If so we do not
-    # want two entries for the same build. Remove old entry
-    
+    # Is this report for the same build as the [0] entry? If so we do not
+    # want two entries for the same build. Must throw out either
+    # update or record in the database.
+
     if ( defined($DATABASE{$tree}{$build}{'recs'}) &&
-         ($record->{'starttime'} == $previous_rec->{'starttime'})  
+         ($record->{'starttime'} == $previous_rec->{'starttime'})
        ) {
+
+      if (BuildStatus::is_status_final($previou_rec->{'status'})) {
+        # Ignore the new entry if old entry was final.
+        next;
+      }
+
+      # Remove old entry if it is not final.
       shift @{ $DATABASE{$tree}{$build}{'recs'} };
+      $previous_rec = $DATABASE{$tree}{$build}{'recs'}[0];
+
     }
-
-    # add the record to the datastructure
-
+    
+    # Add the record to the datastructure.
+    
     if ( defined( $DATABASE{$tree}{$build}{'recs'} ) ) {
       unshift @{ $DATABASE{$tree}{$build}{'recs'} }, $record;
     } else { 
@@ -929,7 +919,8 @@ sub status_table_start {
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
   my ($earliest_data) = $row_times->[0] + $first_cell_seconds;
   
-  foreach $buildname (sort keys %{ $DATABASE{$tree} } ) {
+  my (@all_build_names) = all_build_names($tree);
+  foreach $buildname (@all_build_names) {
     my ($db_index) = 0;
     my ($current_rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
     while ( 
@@ -960,17 +951,15 @@ sub status_table_row {
 
   my @outrow = ();
 
-  foreach $buildname (sort keys %{ $DATABASE{$tree} } ) {
+  my (@build_names) = build_names($tree);
+  foreach $buildname (@build_names) {
 
     my ($db_index) = $NEXT_DB{$tree}{$buildname};
     my ($current_rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
 
     # skip this column?
 
-    if (
-        ( (!($main::NOIGNORE)) && ($IGNORE_BUILDS{$tree}{$buildname}) ) || 
-        ( $NEXT_ROW{$tree}{$buildname} !=  $row_index )
-       ) {
+    if ( $NEXT_ROW{$tree}{$buildname} !=  $row_index ) {
       
       push @outrow, ("\t<!-- skipping: Build: ".
                      "tree: $tree, ".
@@ -1083,8 +1072,8 @@ sub status_table_row {
       # If the current build is broken, show what to see what has
       # changed in VC during the last build.
 
-      my ($mindate) = $current_rec->{'previousbuildtime'};
-      my ($maxdate) = $current_rec->{'starttime'};
+      my ($maxdate) = $current_rec->{'previousbuildtime'};
+      my ($mindate) = $current_rec->{'starttime'};
 
       $links .= (
                  "\n". 
