@@ -70,7 +70,8 @@ pk11_FindRSAPubKey(PK11SlotInfo *slot)
 
 PK11SymKey *
 pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
-		 	CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey)
+		 CK_ATTRIBUTE_TYPE operation, CK_FLAGS flags, 
+					PRBool isPerm, PK11SymKey *symKey)
 {
     PK11SymKey *newSymKey = NULL;
     SECStatus rv;
@@ -101,7 +102,7 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	    unsigned int     symKeyLength = PK11_GetKeyLength(symKey);
 	    PK11RSAGenParams rsaParams;
 
-	    if (symKeyLength > 60) /* bytes */ {
+	    if (symKeyLength > 53) /* bytes */ {
 		/* we'd have to generate an RSA key pair > 512 bits long,
 		** and that's too costly.  Don't even try. 
 		*/
@@ -109,7 +110,7 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 		goto rsa_failed;
 	    }
 	    rsaParams.keySizeInBits = 
-	        (symKeyLength > 28 || symKeyLength == 0) ? 512 : 256;
+	        (symKeyLength > 21 || symKeyLength == 0) ? 512 : 256;
 	    rsaParams.pe  = 0x10001;
 	    privKey = PK11_GenerateKeyPair(slot,CKM_RSA_PKCS_KEY_PAIR_GEN, 
 			    &rsaParams, &pubKey,PR_FALSE,PR_TRUE,symKey->cx);
@@ -137,8 +138,8 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	/* now wrap the keys in and out */
 	rv = PK11_PubWrapSymKey(CKM_RSA_PKCS, pubKey, symKey, &wrapData);
 	if (rv == SECSuccess) {
-	    newSymKey = PK11_PubUnwrapSymKey(privKey,&wrapData,type,operation,
-							symKey->size);
+	    newSymKey = PK11_PubUnwrapSymKeyWithFlagsPerm(privKey,
+			&wrapData,type,operation,0,flags,isPerm);
 	}
 rsa_failed:
 	if (wrapData.data != NULL) PORT_Free(wrapData.data);
@@ -161,7 +162,7 @@ rsa_failed:
 	SECItem Ra,wrap;
 
 	/* can only exchange skipjack keys */
-	if (type != CKM_SKIPJACK_CBC64) {
+	if ((type != CKM_SKIPJACK_CBC64) || (isPerm)) {
     	    PORT_SetError( SEC_ERROR_NO_MODULE );
 	    goto kea_failed;
 	}
@@ -207,8 +208,9 @@ rsa_failed:
 
 	rv = PK11_WrapSymKey(CKM_SKIPJACK_WRAP,NULL,tekSource,symKey,&wrap);
 	if (rv == SECSuccess) {
-	    newSymKey = PK11_UnwrapSymKey(tekTarget, CKM_SKIPJACK_WRAP, NULL,
-			&wrap, type, operation, symKey->size);
+	    newSymKey = PK11_UnwrapSymKeyWithFlags(tekTarget, 
+			CKM_SKIPJACK_WRAP, NULL,
+			&wrap, type, operation, flags, symKey->size);
 	}
 	PORT_Free(wrap.data);
 kea_failed:

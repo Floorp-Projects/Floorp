@@ -171,6 +171,8 @@ struct PK11DefaultArrayEntryStr {
 #define CKM_FAKE_RANDOM       0x80000efeL
 #define CKM_INVALID_MECHANISM 0xffffffffL
 #define CKA_DIGEST            0x81000000L
+#define CKA_FLAGS_ONLY        0 /* CKA_CLASS */
+
 
 /* Cryptographic module types */
 #define SECMOD_EXTERNAL	0	/* external module */
