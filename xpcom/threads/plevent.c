@@ -615,6 +615,8 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
     PR_EnterMonitor(queue->monitor);
 
     PR_ASSERT(!PR_CLIST_IS_EMPTY(&self->link));
+    if (queue->type == EventQueueIsNative)
+      _pl_AcknowledgeNativeNotify(queue);
     PR_REMOVE_AND_INIT_LINK(&self->link);
 
     PR_ExitMonitor(queue->monitor);
