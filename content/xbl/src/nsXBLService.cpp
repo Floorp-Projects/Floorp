@@ -1264,10 +1264,12 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
     // Add ourselves to the list of loading docs.
     nsCOMPtr<nsIBindingManager> bindingManager;
-    aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    if (aBoundDocument)
+      aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsXPIDLCString uri;
     aURI->GetSpec(getter_Copies(uri));
-    bindingManager->PutLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, uri)), xblListener);
+    if (bindingManager)
+      bindingManager->PutLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, uri)), xblListener);
 
     // Add our request.
     nsCAutoString bindingURI(uri);
