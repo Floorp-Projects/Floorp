@@ -30,9 +30,10 @@ class nsGraphicState;
 
 class nsUnicodeRenderingToolkit 
 {
+public:
 	nsUnicodeRenderingToolkit() {};
 	~nsUnicodeRenderingToolkit() {};
-public:
+
   NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort);
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
                       PRInt32 *aFontID);

@@ -42,8 +42,10 @@ EXTRA_DSO_LDOPTS= \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
+		-lmozjs \
 		-ljsdom \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -29,9 +29,11 @@
 #include "prtypes.h"
 #include "nscore.h"
 
+#ifndef RHAPSODY
 #include "FullPath.h"
 #include "FileCopy.h"
 #include "MoreFilesExtras.h"
+#endif
 
 #include <Aliases.h>
 #include <Folders.h>
@@ -44,6 +46,7 @@
 #include "nsEscape.h"
 
 
+#ifndef RHAPSODY
 const unsigned char* kAliasHavenFolderName = "\pnsAliasHaven";
 
 //========================================================================================
@@ -608,18 +611,22 @@ Clean:
 	return result;
 } // MacFileHelpers::PathNameFromFSSpec
 
+#endif
+
 #pragma mark -
 
 //========================================================================================
 //					  Macintosh nsFileSpec implementation
 //========================================================================================
 
+#ifndef RHAPSODY
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
 {
 	Clear();
 }
+#endif
 
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const FSSpec& inSpec, PRBool resolveAlias)
@@ -642,6 +649,7 @@ void nsFileSpec::operator = (const FSSpec& inSpec)
 	mError = NS_OK;
 }
 
+#ifndef RHAPSODY
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -1504,3 +1512,4 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
 	return *this;
 } // nsDirectoryIterator::operator ++
 
+#endif

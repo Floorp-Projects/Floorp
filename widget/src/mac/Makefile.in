@@ -1,0 +1,73 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.1 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= widget
+LIBRARY_NAME	= widget_mac
+IS_COMPONENT	= 1
+
+REQUIRES	= util img xpcom raptorgfx
+
+CPPSRCS         = nsAppShell.cpp \
+		nsButton.cpp \
+		nsChildWindow.cpp \
+		nsClipboard.cpp \
+		nsComboBox.cpp \
+		nsContextMenu.cpp \
+		nsDeleteObserver.cpp \
+		nsDragService.cpp \
+		nsFileWidget.cpp \
+		nsLabel.cpp \
+		nsListBox.cpp \
+		nsLookAndFeel.cpp \
+		nsMacControl.cpp \
+		nsMacEventHandler.cpp \
+		nsMacMessagePump.cpp \
+		nsMacMessageSink.cpp \
+		nsMacResources.cpp \
+		nsMacTSMMessagePump.cpp \
+		nsMacWindow.cpp \
+		nsMenu.cpp \
+		nsMenuBar.cpp \
+		nsMenuItem.cpp \
+		nsMimeMapper.cpp \
+		$(topsrcdir)/gfx/src/mac/nsRegionMac.cpp \
+		nsScrollbar.cpp \
+		nsSound.cpp \
+		nsTextWidget.cpp \
+		nsToolkit.cpp \
+		nsWidgetFactory.cpp \
+		nsWidgetSupport.cpp \
+		nsWindow.cpp
+
+include $(topsrcdir)/config/rules.mk
+
+EXTRA_DSO_LDOPTS += \
+                $(MOZ_TIMER_LIBS) \
+                $(DIST)/lib/libraptorbasewidget_s.a \
+                $(TK_LIBS) \
+                -lraptorgfx \
+                $(MOZ_COMPONENT_LIBS) \
+                $(NULL)
+
+INCLUDES	+= $(TK_CFLAGS) -I$(topsrcdir)/gfx/src/mac -I$(srcdir)/../xpwidgets

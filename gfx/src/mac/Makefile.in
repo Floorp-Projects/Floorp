@@ -1,0 +1,64 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.1 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+
+LIBRARY_NAME	= gfx_mac
+MODULE		= raptor
+IS_COMPONENT	= 1
+
+REQUIRES	= util img xpcom raptor netlib
+
+CPPSRCS = \
+		nsATSUIUtils.cpp \
+		nsDeviceContextMac.cpp \
+		nsDeviceContextSpecFactoryM.cpp \
+		nsDeviceContextSpecMac.cpp \
+		nsDrawingSurfaceMac.cpp \
+		nsFontMetricsMac.cpp \
+		nsGfxFactoryMac.cpp \
+		nsGraphicState.cpp \
+		nsImageMac.cpp \
+		nsRegionMac.cpp \
+		nsRenderingContextMac.cpp \
+		nsUnicodeFontMappingMac.cpp \
+		nsUnicodeMappingUtil.cpp \
+		nsUnicodeRenderingToolkit.cpp \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+                $(MKSHLIB_FORCE_ALL) \
+                $(MOZ_TIMER_LIBS) \
+                $(DIST)/lib/libimg_s.a \
+                $(DIST)/lib/libmozutil_s.a \
+		-lraptorgfx \
+                $(MKSHLIB_UNFORCE_ALL) \
+		$(TK_LIBS) \
+                $(MOZ_COMPONENT_LIBS) \
+                $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS        += $(TK_CFLAGS)
+CFLAGS          += $(TK_CFLAGS)
+INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..

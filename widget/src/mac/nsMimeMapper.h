@@ -51,6 +51,7 @@
 #define nsMimeMapper_h__
 
 #include <vector>
+#include <Types.h>
 #include "nsString.h"
 
 

@@ -51,9 +51,7 @@
 
 #ifdef HAVE_SYS_MOUNT_H
 #include <sys/mount.h>
-#ifdef __bsdi__
 #undef Free
-#endif
 #endif
 
 #ifdef HAVE_STATVFS

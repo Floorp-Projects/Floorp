@@ -681,7 +681,6 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     PRBool validExtension = PR_FALSE;
 
 #ifdef  XP_MAC  // sdagley dougt fix
-
     // rjc - on Mac, check the file's type code (skip checking the creator code)
 
 	nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(component);

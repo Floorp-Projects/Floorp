@@ -312,10 +312,6 @@ NS_SetupRegistry()
 
 #endif /* defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT) */
 
-
-  
-
-
   // WIDGET
   nsComponentManager::RegisterComponentLib(kCLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);

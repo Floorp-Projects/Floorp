@@ -33,6 +33,8 @@
 
 #include "nsBaseClipboard.h"
 
+#include "Types.h"
+
 class nsITransferable;
 
 

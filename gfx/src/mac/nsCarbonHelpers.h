@@ -141,8 +141,11 @@ inline Boolean IsRegionRectangular ( RgnHandle rgn )
 	return (**rgn).rgnSize == 10;
 }
 
+inline GrafPtr GetQDGlobalsThePort ( )
+{
+  return qd.thePort;
+}
 
 #endif /* !TARGET_CARBON */
-
 
 #endif /* CarbonHelpers_h__ */

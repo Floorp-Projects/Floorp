@@ -75,7 +75,7 @@ public:
 //----------------------------------------------------------------------
 // Class nsUnicodeEncodeHelper [implementation]
 
-NS_IMPL_ISUPPORTS(nsUnicodeEncodeHelper, kIUnicodeEncodeHelperIID);
+NS_IMPL_ISUPPORTS1(nsUnicodeEncodeHelper, nsIUnicodeEncodeHelper)
 
 nsUnicodeEncodeHelper::nsUnicodeEncodeHelper() 
 {

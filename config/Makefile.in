@@ -66,6 +66,10 @@ ifeq ($(OS_CONFIG),SunOS4.1)
 NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
+ifeq ($(OS_CONFIG),Rhapsody10.0)
+NSPR_CFLAGS	+= -DGETCWD_CANT_MALLOC
+endif
+
 export:: $(TARGETS)
 
 #update build number from within make script

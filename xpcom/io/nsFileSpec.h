@@ -141,9 +141,11 @@
 #endif
 //=========================== End Compiler-specific macros ===============================
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(RHAPSODY)
 #include <Files.h>
-#elif defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
+#endif
+// this can't be elif because rhapsody needs both headers
+#if defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS) || defined(RHAPSODY)
 #if defined(XP_OS2)
 #define INCL_DOS
 #define INCL_DOSERRORS
@@ -367,7 +369,7 @@ class NS_COM nsFileSpec
 
        PRBool                   IsChildOf(nsFileSpec &possibleParent);
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(RHAPSODY)
         // For Macintosh people, this is meant to be useful in its own right as a C++ version
         // of the FSSpec struct.        
                                 nsFileSpec(
@@ -563,7 +565,7 @@ class NS_COM nsFileSpec
                                 friend class nsFilePath;
                                 friend class nsFileURL;
                                 friend class nsDirectoryIterator;
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(RHAPSODY)
         FSSpec                  mSpec;
 #endif
         nsSimpleCharString      mPath;

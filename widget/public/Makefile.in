@@ -67,6 +67,7 @@ EXPORTS		= \
 		nsIFontRetrieverService.h \
 		nsIContextMenu.h \
 		nsIDragSessionGTK.h \
+		nsIDragSessionMac.h \
 		$(NULL)
 
 XPIDLSRCS	= \

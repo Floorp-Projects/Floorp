@@ -48,9 +48,16 @@ typedef MPARAM WPARAM,LPARAM;
 #include <kernel/OS.h>
 #endif
 
+#if defined(RHAPSODY)
+#undef XP_UNIX
+#define XP_MAC 1
+#endif
+
 #if defined(XP_MAC)
 #include <AppleEvents.h>
+#if !defined(RHAPSODY)
 #include "pprthred.h"
+#endif
 #else
 #include "private/pprthred.h"
 #endif /* XP_MAC */

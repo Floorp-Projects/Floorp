@@ -27,6 +27,9 @@
 
 #include <map>
 
+#include <Events.h>
+#include <Windows.h>
+
 class nsMacWindow;
 
 /*================================================

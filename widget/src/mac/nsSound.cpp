@@ -76,6 +76,7 @@ NS_METHOD nsSound::Beep()
 // this currently does no cacheing of the sound buffer. It should
 NS_METHOD nsSound::Play(nsIURI *aURI)
 {
+#if !TARGET_CARBON
   nsresult rv;
   nsCOMPtr<nsIInputStream> inputStream;
 
@@ -127,11 +128,13 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
   rv = PlaySound(dataHandle, writeOffset);
   
   ::DisposeHandle(dataHandle);
+#endif
   return NS_OK;
 }
 
 nsresult nsSound::PlaySound(Handle waveDataHandle, long waveDataSize)
 {
+#if !TARGET_CARBON
   Handle                  dataRef = nil;
   Movie                   movie = nil;
   MovieImportComponent    miComponent = nil;
@@ -194,4 +197,7 @@ bail:		// gasp, a goto label
     ::DisposeMovie(movie);
   
   return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
+#else
+  return NS_OK;
+#endif
 }

@@ -105,7 +105,7 @@ void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 
 #pragma mark -
 
-NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
 
 //-------------------------------------------------------------------------
 //

@@ -84,8 +84,13 @@ nsClipboard :: SetNativeClipboardData()
     return NS_ERROR_INVALID_ARG;
   
   nsMimeMapperMac theMapper;
+
+#if TARGET_CARBON
+  ::ClearCurrentScrap();
+#else
   ::ZeroScrap();
-  
+#endif
+
   // get flavor list that includes all flavors that can be written (including ones 
   // obtained through conversion)
   nsCOMPtr<nsISupportsArray> flavorList;
@@ -116,14 +121,20 @@ nsClipboard :: SetNativeClipboardData()
       nsCOMPtr<nsISupports> genericDataWrapper;
       errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(genericDataWrapper), &dataSize );
       nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
-      #ifdef NS_DEBUG
+#ifdef NS_DEBUG
         if ( NS_FAILED(errCode) ) printf("nsClipboard:: Error getting data from transferable\n");
-      #endif
+#endif
       
       // stash on clipboard
+#if TARGET_CARBON
+      ScrapRef scrap;
+      ::GetCurrentScrap(&scrap);
+      ::PutScrapFlavor(scrap, macOSFlavor, 0L/*???*/, dataSize, data);
+#else
       long numBytes = ::PutScrap ( dataSize, macOSFlavor, data );
       if ( numBytes != noErr )
         errCode = NS_ERROR_FAILURE;
+#endif
         
       // if the flavor was unicode, then we also need to put it on as 'TEXT' after
       // doing the conversion to the platform charset.
@@ -133,9 +144,15 @@ nsClipboard :: SetNativeClipboardData()
         PRInt32 plainTextLen = 0;
         nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataSize / 2, &plainTextData, &plainTextLen );
         if ( plainTextData ) {
+#if TARGET_CARBON
+          ScrapRef scrap;
+          ::GetCurrentScrap(&scrap);
+          ::PutScrapFlavor( scrap, 'TEXT', 0L/*???*/, plainTextLen, plainTextData );
+#else
           long numTextBytes = ::PutScrap ( plainTextLen, 'TEXT', plainTextData );
           if ( numTextBytes != noErr )
-            errCode = NS_ERROR_FAILURE;         
+            errCode = NS_ERROR_FAILURE;
+#endif
           nsAllocator::Free ( plainTextData ); 
         }      
       } // if unicode
@@ -149,9 +166,15 @@ nsClipboard :: SetNativeClipboardData()
   short mappingLen = 0;
   const char* mapping = theMapper.ExportMapping(&mappingLen);
   if ( mapping && mappingLen ) {
+#if TARGET_CARBON
+    ScrapRef scrap;
+    ::GetCurrentScrap(&scrap);
+    ::PutScrapFlavor(scrap, nsMimeMapperMac::MappingFlavor(), 0L/*???*/, mappingLen - 1, mapping);
+#else
     long numBytes = ::PutScrap ( mappingLen - 1, nsMimeMapperMac::MappingFlavor(), mapping );
     if ( numBytes != noErr )
       errCode = NS_ERROR_FAILURE;
+#endif
     nsCRT::free ( NS_CONST_CAST(char*, mapping) );
   }
   
@@ -184,7 +207,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   // create a mime mapper. It's ok for this to fail because the data may come from
   // another app which obviously wouldn't put our mime mapping data on the clipboard.
   char* mimeMapperData = nsnull;
-  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), &mimeMapperData, nsnull );
+  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
   nsMimeMapperMac theMapper ( mimeMapperData );
   nsCRT::free ( mimeMapperData );
  
@@ -241,9 +264,9 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
         nsCOMPtr<nsISupports> genericDataWrapper;
         nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );        
         errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
-        #ifdef NS_DEBUG
+#ifdef NS_DEBUG
           if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
-        #endif
+#endif
         nsAllocator::Free ( clipboardData );
         
         // we found one, get out of this loop!
@@ -268,6 +291,33 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
 
   // check if it is on the clipboard
   long offsetUnused = 0;
+
+#if TARGET_CARBON
+  ScrapRef scrap;
+  long dataSize;
+  OSStatus err;
+
+  err = ::GetCurrentScrap(&scrap);
+  if (err != noErr) return NS_ERROR_FAILURE;
+  err = ::GetScrapFlavorSize(scrap, inMacFlavor, &dataSize);
+  // check err??
+  if (dataSize > 0) {
+    char* dataBuff = new char[dataSize];
+    if ( !dataBuff )
+      return NS_ERROR_OUT_OF_MEMORY;
+    err = ::GetScrapFlavorData(scrap, inMacFlavor, &dataSize, dataBuff);
+    if (err != noErr) return NS_ERROR_FAILURE;
+
+    // put it into the transferable
+#ifdef NS_DEBUG
+    if ( err != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
+#endif
+
+    if ( outDataSize )
+      *outDataSize = dataSize;
+    *outData = dataBuff;
+  }
+#else
   long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
   if ( clipResult > 0 ) {
     Handle dataHand = ::NewHandle(0);
@@ -289,13 +339,13 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
       *outData = dataBuff;
     } 
     else {
-       #ifdef NS_DEBUG
+#ifdef NS_DEBUG
          printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
-       #endif
+#endif
        return NS_ERROR_FAILURE;
     }
   }
-  
+#endif /* TARGET_CARBON */
   return NS_OK;
   
 } // GetDataOffClipboard
@@ -319,7 +369,7 @@ nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * 
   // create a mime mapper. It's ok for this to fail because the data may come from
   // another app which obviously wouldn't put our mime mapping data on the clipboard.
   char* mimeMapperData = nsnull;
-  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), &mimeMapperData, nsnull );
+  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
   nsMimeMapperMac theMapper ( mimeMapperData );
   nsAllocator::Free ( mimeMapperData );
   
@@ -371,9 +421,23 @@ nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
 {
   PRBool retval = PR_FALSE;
   long offsetUnused = 0;
-  long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);    
+
+#if TARGET_CARBON
+  ScrapRef scrap;
+  long dataSize;
+  OSStatus err;
+
+  err = ::GetCurrentScrap(&scrap);
+  if (err != noErr) return NS_ERROR_FAILURE;
+  err = ::GetScrapFlavorSize(scrap, inMacFlavor, &dataSize);
+  // XXX ?
+  if ( dataSize > 0 )
+    retval = PR_TRUE;
+#else
+  long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
   if ( clipResult > 0 )   
     retval = PR_TRUE;   // we found one!
-    
+#endif
+
   return retval;
 } // CheckIfFlavorPresent

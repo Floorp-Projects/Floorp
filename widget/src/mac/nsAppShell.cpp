@@ -48,8 +48,9 @@
 
 #include <stdlib.h>
 
+#ifndef RHAPSODY
 #include "macstdlibextras.h"
-
+#endif
 PRBool nsAppShell::mInitializedToolbox = PR_FALSE;
 
 
@@ -60,7 +61,7 @@ PRBool nsAppShell::mInitializedToolbox = PR_FALSE;
 //-------------------------------------------------------------------------
 NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
@@ -170,7 +171,11 @@ NS_IMETHODIMP nsAppShell::Spindown(void)
 //
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
-{ 
+{
+
+#if TARGET_CARBON
+  mInitializedToolbox = PR_TRUE;
+#else 
   // The toolbox initialization code has moved to NSStdLib (InitializeToolbox)
   
   if (!mInitializedToolbox)
@@ -178,6 +183,7 @@ nsAppShell::nsAppShell()
     InitializeMacToolbox();
     mInitializedToolbox = PR_TRUE;
   }
+#endif
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
 }

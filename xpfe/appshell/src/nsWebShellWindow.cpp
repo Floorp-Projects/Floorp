@@ -107,12 +107,18 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
 // HACK for M4, should be removed by M5
-#ifdef XP_MAC
+// ... its now M15
+#if defined(XP_MAC) || defined(RHAPSODY)
 #include <Menus.h>
 #endif
 #include "nsIMenuItem.h"
 #include "nsIDOMXULDocument.h"
 // End hack
+
+#if defined(XP_MAC) || defined(RHAPSODY)
+#define USE_NATIVE_MENUS
+#endif
+
 
 #include "nsIWindowMediator.h"
 
@@ -356,7 +362,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 NS_METHOD
 nsWebShellWindow::Close()
 {
-#ifdef XP_MAC // Anyone still using native menus should add themselves here.
+#ifdef USE_NATIVE_MENUS
   // unregister as document listener
   // this is needed for menus
    nsCOMPtr<nsIContentViewer> cv;
@@ -910,7 +916,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
         nsMenuEvent fake;
         menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
 
-      #ifdef XP_MAC
+      #ifdef USE_NATIVE_MENUS
       #else
       // Resize around the menu.
       rv = NS_ERROR_FAILURE;
@@ -1017,7 +1023,8 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
         pnsMenuBar->Paint();
         
         // HACK for M4, should be removed by M5
-#ifdef XP_MAC
+        // ... it is now M15
+#ifdef USE_NATIVE_MENUS
         Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
 		pnsMenuBar->SetNativeData((void*)tempMenuBar);
 #endif
@@ -1255,7 +1262,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
   mLockedUntilChromeLoad = PR_FALSE;
 
-#ifdef XP_MAC // Anyone still using native menus should add themselves here.
+#ifdef USE_NATIVE_MENUS
   // register as document listener
   // this is needed for menus
   nsCOMPtr<nsIContentViewer> cv;
@@ -1277,7 +1284,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
   ExecuteStartupCode();
 
-#ifdef XP_MAC // Anyone still using native menus should add themselves here.
+#ifdef USE_NATIVE_MENUS
   ///////////////////////////////
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
   ///////////////////////////////
@@ -1298,7 +1305,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     DynamicLoadMenus(menubarDOMDoc, mWindow);
 #endif 
   }
-#endif // XP_MAC
+#endif // USE_NATIVE_MENUS
 
   OnChromeLoaded();
   LoadContentAreas();

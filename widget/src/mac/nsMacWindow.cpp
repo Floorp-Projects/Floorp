@@ -34,6 +34,7 @@
 #include "nsGUIEvent.h"
 #include "nsCarbonHelpers.h"
 
+#include <Quickdraw.h>
 
 // Define Class IDs -- i hate having to do this
 static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
@@ -61,9 +62,10 @@ const short kWindowMarginWidth = 6;
 const short kDialogTitleBarHeight = 26;
 const short kDialogMarginWidth = 6;
 
-
+#if !TARGET_CARBON
 DragTrackingHandlerUPP nsMacWindow::sDragTrackingHandlerUPP = NewDragTrackingHandlerProc(DragTrackingHandler);
 DragReceiveHandlerUPP nsMacWindow::sDragReceiveHandlerUPP = NewDragReceiveHandlerProc(DragReceiveHandler);
+#endif
 
 void SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers ) ; 
 
@@ -264,7 +266,8 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mMacEventHandler(nsnull)
 	, mAcceptsActivation(PR_TRUE)
 {
-	mMacEventHandler.reset(new nsMacEventHandler(this));
+  //mMacEventHandler.reset(new nsMacEventHandler(this));
+  mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
 	gInstanceClassName = "nsMacWindow";
 }
 
@@ -282,9 +285,10 @@ nsMacWindow::~nsMacWindow()
 			::DisposeWindow(mWindowPtr);
 		
 		// clean up DragManager stuff
+#if !TARGET_CARBON
 		::RemoveTrackingHandler ( sDragTrackingHandlerUPP, mWindowPtr );
 		::RemoveReceiveHandler ( sDragReceiveHandlerUPP, mWindowPtr );
-		
+#endif
 		nsMacMessageSink::RemoveRaptorWindowFromList(mWindowPtr);
 		mWindowPtr = nsnull;
 	}
@@ -410,11 +414,12 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		wRect.right --;
 		wRect.bottom --;
 #endif
+
 		if (eWindowType_popup != mWindowType)
 			::OffsetRect(&wRect, hOffset, vOffset + ::GetMBarHeight());
 		else
 			::OffsetRect(&wRect, hOffset, vOffset);
-		
+
 		// HACK!!!!! This really should be part of the window manager
 		// Make sure window bottom of window doesn't exceed max monitor size
 		Rect tempRect;
@@ -425,7 +430,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			bottomPinDelta = wRect.bottom - tempRect.bottom;
 			wRect.bottom -= bottomPinDelta;
 		}
-		
 		mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (WindowRef)-1, goAwayFlag, (long)nsnull);
 		mWindowMadeHere = PR_TRUE;
 	}
@@ -458,6 +462,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 
 	// register tracking and receive handlers with the native Drag Manager
+#if !TARGET_CARBON
 	if ( sDragTrackingHandlerUPP ) {
 		OSErr result = ::InstallTrackingHandler ( sDragTrackingHandlerUPP, mWindowPtr, this );
 		NS_ASSERTION ( result == noErr, "can't install drag tracking handler");
@@ -466,7 +471,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		OSErr result = ::InstallReceiveHandler ( sDragReceiveHandlerUPP, mWindowPtr, this );
 		NS_ASSERTION ( result == noErr, "can't install drag receive handler");
 	}
-	
+#endif
 	return NS_OK;
 }
 
@@ -588,6 +593,7 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		Rect portBounds;
 		::GetWindowPortBounds(mWindowPtr, &portBounds);
 		short windowWidth = portBounds.right - portBounds.left;
+
 		if (aX <= screenRect.left - windowWidth)
 	      aX = screenRect.left;
 		else if (aX >= screenWidth)

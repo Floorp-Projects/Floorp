@@ -64,8 +64,13 @@
 #include "nsIWebBrowserChrome.h"
 
 
-#ifndef XP_MAC
+#ifndef XP_MAC && !defined(RHAPSODY)
 #include "nsTimeBomb.h"
+#endif
+
+#ifdef RHAPSODY
+// XXX hack because we can't link against libraptorwebwidget (pav)
+#undef DETECT_WEBSHELL_LEAKS
 #endif
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
