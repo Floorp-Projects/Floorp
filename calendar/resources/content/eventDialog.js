@@ -276,7 +276,7 @@ function loadCalendarEventDialog()
    
    if( args.mode == "new" )
    {
-      if( args.server )
+      if( "server" in args )
       {
          setFieldValue( "server-field", args.server );
       }

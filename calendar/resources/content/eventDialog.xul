@@ -42,11 +42,8 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
-<?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 <?xml-stylesheet
  href="chrome://calendar/content/datetimepickers/datetimepicker.css" ?>
 
@@ -119,8 +116,6 @@
 
 <!-- Dialog content -->
 
-   <vbox id="standard-dialog-content"  flex="1">
-   
       <tabbox>
          <tabs>
             <tab label="&newevent.newevent.tab.label;"/>
@@ -662,6 +657,4 @@
          </tabpanel>
       </tabpanels>
    </tabbox>
-
-   </vbox> <!-- standard-dialog-content -->
 </dialog>
