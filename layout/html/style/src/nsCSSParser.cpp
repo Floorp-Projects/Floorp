@@ -31,6 +31,10 @@
 #include "nsVoidArray.h"
 #include "nsColor.h"
 
+// XXX TODO:
+// - rework aErrorCode stuff: switch over to nsresult
+// - bug: "color: red {fish};" emits a property for color instead of zapping it
+
 static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -186,13 +190,17 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual PRUint32 GetInfoMask();
+  NS_IMETHOD GetInfoMask(PRUint32& aResult);
 
-  virtual nsresult SetStyleSheet(nsIStyleSheet* aSheet);
+  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aSheet);
 
-  virtual nsIStyleSheet* Parse(PRInt32* aErrorCode,
-                               nsIUnicharInputStream* aInput,
-                               nsIURL* aInputURL);
+  NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
+                   nsIURL*                aInputURL,
+                   nsIStyleSheet*&        aResult);
+
+  NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
+                               nsIURL*         aBaseURL,
+                               nsIStyleRule*&  aResult);
 
 protected:
   PRBool GetToken(PRInt32* aErrorCode, PRBool aSkipWS);
@@ -202,7 +210,7 @@ protected:
   nsString* NextIdent(PRInt32* aErrorCode);
   void SkipUntil(PRInt32* aErrorCode, PRUnichar aStopSymbol);
   void SkipRuleSet(PRInt32* aErrorCode);
-  void SkipDeclaration(PRInt32* aErrorCode);
+  PRBool SkipDeclaration(PRInt32* aErrorCode, PRBool aCheckForBraces);
 
   PRBool ParseRuleSet(PRInt32* aErrorCode);
   PRBool ParseAtRule(PRInt32* aErrorCode);
@@ -211,8 +219,11 @@ protected:
   PRBool ParseSelectorGroup(PRInt32* aErrorCode, SelectorList* aListHead);
   PRBool ParseSelectorList(PRInt32* aErrorCode, SelectorList* aListHead);
   PRBool ParseSelector(PRInt32* aErrorCode, Selector* aSelectorResult);
-  nsICSSDeclaration* ParseDeclarationBlock(PRInt32* aErrorCode);
-  PRBool ParseDeclaration(PRInt32* aErrorCode, nsICSSDeclaration* aDeclaration);
+  nsICSSDeclaration* ParseDeclarationBlock(PRInt32* aErrorCode,
+                                           PRBool aCheckForBraces);
+  PRBool ParseDeclaration(PRInt32* aErrorCode,
+                          nsICSSDeclaration* aDeclaration,
+                          PRBool aCheckForBraces);
   PRBool ParseProperty(PRInt32* aErrorCode, const char* aName,
                        nsICSSDeclaration* aDeclaration);
   PRBool ParseProperty(PRInt32* aErrorCode, const char* aName,
@@ -313,12 +324,15 @@ CSSParserImpl::~CSSParserImpl()
   NS_IF_RELEASE(mSheet);
 }
 
-PRUint32 CSSParserImpl::GetInfoMask()
+NS_METHOD
+CSSParserImpl::GetInfoMask(PRUint32& aResult)
 {
-  return NS_CSS_GETINFO_CSS1 | NS_CSS_GETINFO_CSSP;
+  aResult = NS_CSS_GETINFO_CSS1 | NS_CSS_GETINFO_CSSP;
+  return NS_OK;
 }
 
-nsresult CSSParserImpl::SetStyleSheet(nsIStyleSheet* aSheet)
+NS_METHOD
+CSSParserImpl::SetStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null ptr");
   if (nsnull == aSheet) {
@@ -340,14 +354,16 @@ nsresult CSSParserImpl::SetStyleSheet(nsIStyleSheet* aSheet)
   return NS_OK;
 }
 
-nsIStyleSheet* CSSParserImpl::Parse(PRInt32* aErrorCode,
-                                    nsIUnicharInputStream* aInput,
-                                    nsIURL* aInputURL)
+NS_METHOD
+CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
+                     nsIURL*                aInputURL,
+                     nsIStyleSheet*&        aResult)
 {
   if (nsnull == mSheet) {
     NS_NewCSSStyleSheet(&mSheet, aInputURL);
   }
 
+  PRInt32 errorCode = NS_OK;
   mScanner = new nsCSSScanner();
   mScanner->Init(aInput);
   mURL = aInputURL;
@@ -358,11 +374,11 @@ nsIStyleSheet* CSSParserImpl::Parse(PRInt32* aErrorCode,
   nsCSSToken* tk = &mToken;
   for (;;) {
     // Get next non-whitespace token
-    if (!GetToken(aErrorCode, PR_TRUE)) {
+    if (!GetToken(&errorCode, PR_TRUE)) {
       break;
     }
     if (eCSSToken_AtKeyword == tk->mType) {
-      ParseAtRule(aErrorCode);
+      ParseAtRule(&errorCode);
       continue;
     } else if (eCSSToken_Symbol == tk->mType) {
       // Discard dangling semicolons. This is not part of the CSS1
@@ -373,15 +389,62 @@ nsIStyleSheet* CSSParserImpl::Parse(PRInt32* aErrorCode,
     }
     mInHead = PR_FALSE;
     UngetToken();
-    ParseRuleSet(aErrorCode);
+    ParseRuleSet(&errorCode);
   }
   delete mScanner;
   mScanner = nsnull;
   NS_IF_RELEASE(mURL);
 
-  nsIStyleSheet* rv = nsnull;
-  mSheet->QueryInterface(kIStyleSheetIID, (void**)&rv);
-  return rv;
+  nsIStyleSheet* sheet = nsnull;
+  mSheet->QueryInterface(kIStyleSheetIID, (void**)&sheet);
+  aResult = sheet;
+
+  return NS_OK;
+}
+
+NS_METHOD
+CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
+                                 nsIURL*         aBaseURL,
+                                 nsIStyleRule*&  aResult)
+{
+  nsString* str = new nsString(aDeclaration);
+  if (nsnull == str) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsIUnicharInputStream* input = nsnull;
+  nsresult rv = NS_NewStringUnicharInputStream(&input, str);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  mScanner = new nsCSSScanner();
+  mScanner->Init(input);
+  NS_RELEASE(input);
+
+  mURL = aBaseURL;
+  NS_IF_ADDREF(mURL);
+
+  mInHead = PR_FALSE;
+  PRInt32 errorCode = NS_OK;
+
+  nsICSSDeclaration* declaration = ParseDeclarationBlock(&errorCode, PR_FALSE);
+  if (nsnull != declaration) {
+    // Create a style rule for the delcaration
+    nsICSSStyleRule* rule = nsnull;
+    NS_NewCSSStyleRule(&rule, nsCSSSelector());
+    rule->SetDeclaration(declaration);
+    rule->SetWeight(0x7fffffff);
+    aResult = rule;
+  }
+  else {
+    aResult = nsnull;
+  }
+
+  delete mScanner;
+  mScanner = nsnull;
+  NS_IF_RELEASE(mURL);
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -529,9 +592,10 @@ void CSSParserImpl::ProcessImport(const nsString& aURLSpec)
 
         if (NS_OK == rv) {
           CSSParserImpl *parser = new CSSParserImpl();
-          nsIStyleSheet* childSheet = parser->Parse(&ec, uin, url);
+          nsIStyleSheet* childSheet;
+          rv = parser->Parse(uin, url, childSheet);
           NS_RELEASE(parser);
-          if (nsnull != childSheet) {
+          if ((NS_OK == rv) && (nsnull != childSheet)) {
             nsICSSStyleSheet* cssChild = nsnull;
             if (NS_OK == childSheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssChild)) {
               mSheet->AppendStyleSheet(cssChild);
@@ -569,21 +633,24 @@ void CSSParserImpl::SkipUntil(PRInt32* aErrorCode, PRUnichar aStopSymbol)
   }
 }
 
-void CSSParserImpl::SkipDeclaration(PRInt32* aErrorCode)
+PRBool
+CSSParserImpl::SkipDeclaration(PRInt32* aErrorCode, PRBool aCheckForBraces)
 {
   nsCSSToken* tk = &mToken;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
-      break;
+      return PR_FALSE;
     }
     if (eCSSToken_Symbol == tk->mType) {
       PRUnichar symbol = tk->mSymbol;
       if (';' == symbol) {
         break;
       }
-      if ('}' == symbol) {
-        UngetToken();
-        break;
+      if (aCheckForBraces) {
+        if ('}' == symbol) {
+          UngetToken();
+          break;
+        }
       }
       if ('{' == symbol) {
         SkipUntil(aErrorCode, '}');
@@ -594,6 +661,7 @@ void CSSParserImpl::SkipDeclaration(PRInt32* aErrorCode)
       }
     }
   }
+  return PR_TRUE;
 }
 
 void CSSParserImpl::SkipRuleSet(PRInt32* aErrorCode)
@@ -631,7 +699,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32* aErrorCode)
   }
 
   // Next parse the declaration block
-  nsICSSDeclaration* declaration = ParseDeclarationBlock(aErrorCode);
+  nsICSSDeclaration* declaration = ParseDeclarationBlock(aErrorCode, PR_TRUE);
   if (nsnull == declaration) {
     // XXX skip something here
     slist->Destroy();
@@ -880,22 +948,30 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
   return PR_TRUE;
 }
 
-nsICSSDeclaration* CSSParserImpl::ParseDeclarationBlock(PRInt32* aErrorCode)
+nsICSSDeclaration*
+CSSParserImpl::ParseDeclarationBlock(PRInt32* aErrorCode,
+                                     PRBool aCheckForBraces)
 {
-  if (!ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
-    return nsnull;
+  if (aCheckForBraces) {
+    if (!ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
+      return nsnull;
+    }
   }
   nsICSSDeclaration* declaration = nsnull;
   if (NS_OK == NS_NewCSSDeclaration(&declaration)) {
     PRInt32 count = 0;
     for (;;) {
-      if (ParseDeclaration(aErrorCode, declaration)) {
+      if (ParseDeclaration(aErrorCode, declaration, aCheckForBraces)) {
         count++;  // count declarations
       }
       else {
-        SkipDeclaration(aErrorCode);
-        if (ExpectSymbol(aErrorCode, '}', PR_TRUE)) {
+        if (!SkipDeclaration(aErrorCode, aCheckForBraces)) {
           break;
+        }
+        if (aCheckForBraces) {
+          if (ExpectSymbol(aErrorCode, '}', PR_TRUE)) {
+            break;
+          }
         }
         // Since the skipped declaration didn't end the block we parse
         // the next declaration.
@@ -988,7 +1064,8 @@ PRBool CSSParserImpl::ParseColorComponent(PRInt32* aErrorCode,
 
 PRBool
 CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
-                                nsICSSDeclaration* aDeclaration)
+                                nsICSSDeclaration* aDeclaration,
+                                PRBool aCheckForBraces)
 {
   // Get property name
   nsCSSToken* tk = &mToken;
@@ -1022,42 +1099,58 @@ CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
   // See if the declaration is followed by a "!important" declaration
   PRBool isImportant = PR_FALSE;
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    // Premature eof is not ok
-    return PR_FALSE;
+    if (aCheckForBraces) {
+      // Premature eof is not ok when proper termination is mandated
+      return PR_FALSE;
+    }
+    return PR_TRUE;
   }
-  if (eCSSToken_Symbol == tk->mType) {
-    if ('!' == tk->mSymbol) {
-      // Look for important ident
-      if (!GetToken(aErrorCode, PR_TRUE)) {
-        // Premature eof is not ok
-        return PR_FALSE;
+  else {
+    if (eCSSToken_Symbol == tk->mType) {
+      if ('!' == tk->mSymbol) {
+        // Look for important ident
+        if (!GetToken(aErrorCode, PR_TRUE)) {
+          // Premature eof is not ok
+          return PR_FALSE;
+        }
+        if ((eCSSToken_Ident != tk->mType) ||
+            !tk->mIdent.EqualsIgnoreCase("important")) {
+          UngetToken();
+          return PR_FALSE;
+        }
+        isImportant = PR_TRUE;
       }
-      if ((eCSSToken_Ident != tk->mType) ||
-          !tk->mIdent.EqualsIgnoreCase("important")) {
+      else {
+        // Not a !important declaration
         UngetToken();
-        return PR_FALSE;
       }
-      isImportant = PR_TRUE;
     }
     else {
       // Not a !important declaration
       UngetToken();
     }
   }
-  else {
-    // Not a !important declaration
-    UngetToken();
-  }
+  // XXX do something with isImportant flag
 
   // Make sure valid property declaration is terminated with either a
-  // semicolon or a right-curly-brace.
+  // semicolon or a right-curly-brace (when aCheckForBraces is true).
+  // When aCheckForBraces is false, proper termination is either
+  // semicolon or EOF.
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    // Premature eof is not ok
-    return PR_FALSE;
+    if (aCheckForBraces) {
+      // Premature eof is not ok
+      return PR_FALSE;
+    }
+    return PR_TRUE;
   } 
   if (eCSSToken_Symbol == tk->mType) {
     if (';' == tk->mSymbol) {
       return PR_TRUE;
+    }
+    if (!aCheckForBraces) {
+      // If we didn't hit eof and we didn't see a semicolon then the
+      // declaration is not properly terminated.
+      return PR_FALSE;
     }
     if ('}' == tk->mSymbol) {
       UngetToken();
