@@ -43,12 +43,13 @@ void CPrefElement::ReInit()
 {
   m_strUIName = "";
   m_strPrefValue = "";
+  m_strDefaultValue = "";
   m_strPrefName = "";
   m_strType = "";
   m_strDescription = "";
   m_bLocked = FALSE;
   m_bLockable = TRUE;
-  m_bManage = FALSE;
+  m_bRemoteAdmin = FALSE;
   m_bUserAdded = FALSE;
   m_iChoices = 0;
 }
@@ -85,6 +86,22 @@ CString CPrefElement::GetSelectedChoiceString()
   return "";
 
 }
+
+// Get the ui name of the default choice for this pref.
+CString CPrefElement::GetDefaultChoiceString()
+{
+  ASSERT( m_iChoices <= MAX_CHOICES);
+
+  for (int i = 0; i < m_iChoices; i++)
+  {
+    if (m_astrChoiceVal[i].CompareNoCase(m_strDefaultValue) == 0)
+      return m_astrChoiceName[i];
+  }
+
+  return "";
+
+}
+
 
 // Get the value from the choice string. See also GetSelectedChoiceString().
 CString CPrefElement::GetValueFromChoiceString(CString strChoiceString)
@@ -140,6 +157,8 @@ void CPrefElement::startElement(const char* name, const char** atts)
         m_strPrefName = attrVal;
       else if (stricmp(attrName, "type") == 0)
         m_strType = attrVal;
+      else if (stricmp(attrName, "default") == 0)
+        m_strDefaultValue = attrVal;
       else if (stricmp(attrName, "lockable") == 0)
         m_bLockable = (stricmp(attrVal, "true") == 0);
       else if (stricmp(attrName, "description") == 0)
@@ -196,7 +215,7 @@ void CPrefElement::startElement(const char* name, const char** atts)
       return;
 
   }
-  else if (stricmp(name, "MANAGE") == 0)
+  else if (stricmp(name, "REMOTEADMIN") == 0)
   {
     if (!m_bPrefOpen)
       return;
@@ -245,7 +264,7 @@ void CPrefElement::characterData(const char* s, int len)
     // Done with the data for this tag.
     m_strCurrentTag = "";
   }
-  else if (m_strCurrentTag.CompareNoCase("MANAGE") == 0)
+  else if (m_strCurrentTag.CompareNoCase("REMOTEADMIN") == 0)
   {
     CString tmp;
     char* p = tmp.GetBufferSetLength(len);
@@ -254,7 +273,7 @@ void CPrefElement::characterData(const char* s, int len)
     tmp.TrimLeft("\r\n");
     tmp.TrimRight("\r\n");
    
-    m_bManage = (tmp.CompareNoCase("true") == 0);
+    m_bRemoteAdmin = (tmp.CompareNoCase("true") == 0);
 
     // Done with the data for this tag.
     m_strCurrentTag = "";
@@ -268,6 +287,11 @@ void CPrefElement::endElement(const char* name)
   if (stricmp(name, "PREF") == 0)
   {
     m_bPrefOpen = FALSE;
+
+    // Minimal check for required attributes.
+    ASSERT(!m_strPrefName.IsEmpty());
+    ASSERT(!m_strType.IsEmpty());
+
   }
   else if (stricmp(name, "CHOICES") == 0)
   {
@@ -323,9 +347,10 @@ CString CPrefElement::XML(int iIndentSize, int iIndentLevel)
   int iIndentSpaces = iIndentSize * iIndentLevel;
 
   CString strRet;
-  strRet.Format("%*s<PREF uiname=\"%s\" prefname=\"%s\" type=\"%s\" lockable=\"%s\" description=\"%s\" useradded=\"%s\">\n", 
+  strRet.Format("%*s<PREF uiname=\"%s\" prefname=\"%s\" type=\"%s\" default=\"%s\" lockable=\"%s\" description=\"%s\" useradded=\"%s\">\n", 
     iIndentSpaces, " ", GetUIName(), GetPrefName(), GetPrefType(),
-    IsLockable()?"true":"false", GetPrefDescription(), IsUserAdded()?"true":"false");
+    GetDefaultValue(), IsLockable()?"true":"false", GetPrefDescription(), 
+    IsUserAdded()?"true":"false");
 
   CString strTmp;
   if (IsChoose())
@@ -349,7 +374,7 @@ CString CPrefElement::XML(int iIndentSize, int iIndentLevel)
   strTmp.Format("%*s<LOCKED>%s</LOCKED>\n", iIndentSpaces + iIndentSize, " ", IsLocked()?"true":"false");
   strRet += strTmp;
 
-  strTmp.Format("%*s<MANAGE>%s</MANAGE>\n", iIndentSpaces + iIndentSize, " ", IsManage()?"true":"false");
+  strTmp.Format("%*s<REMOTEADMIN>%s</REMOTEADMIN>\n", iIndentSpaces + iIndentSize, " ", IsRemoteAdmin()?"true":"false");
   strRet += strTmp;
 
   CString strCloseTag;
@@ -358,4 +383,9 @@ CString CPrefElement::XML(int iIndentSize, int iIndentLevel)
   strRet += strCloseTag;
 
   return strRet;
+}
+
+BOOL CPrefElement::IsDefault()
+{
+  return (m_strDefaultValue.Compare(m_strPrefValue) == 0); 
 }

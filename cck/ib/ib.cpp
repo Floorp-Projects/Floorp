@@ -44,6 +44,7 @@ CString nscpxpiPath;
 CString cdshellPath;
 CString outputPath; 
 CString xpiDstPath;
+CString remoteAdminFile;
 
 // variables for CCK Linux build
 CString curPlatform;
@@ -56,7 +57,8 @@ CString templinuxDir;
 CString tarfile;
 
 // For use with PrefsTree
-CString gstrPrefFile;
+CString gstrCFGPrefFile;
+CString gstrPlainPrefFile;
 CString gstrInstallFile;
 
 WIDGET *tempWidget;
@@ -731,31 +733,45 @@ void endElement(void *userData, const char *name)
   if (stricmp(name, "PREF") == 0)
   {
     
-    // Only write those prefs that have been marked as "Manage." Ignore all others.
-    BOOL bManage = ((CPrefElement*)userData)->IsManage();
-    if (!bManage)
-      return;
-
-    // Write the pref element to prefs file.
-    ExtractXPIFile(gstrInstallFile, gstrPrefFile);
-
+    // If locked, write to the .cfg file. Don't care if it's default or not.
     BOOL bLocked = ((CPrefElement*)userData)->IsLocked();
-
-    // Should go into a hashed file if prefs file is .cfg.
-    if (gstrPrefFile.Find(".cfg") > 0)
+    BOOL bDefault = ((CPrefElement*)userData)->IsDefault();
+    if (bLocked)
     {
-      // hashed
-      ModifyHashedPref(gstrPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), ((CPrefElement*)userData)->GetPrefType(), bLocked); 
-
+      // Write the pref element to prefs file.
+      ExtractXPIFile(gstrInstallFile, gstrCFGPrefFile);
+      ModifyHashedPref(gstrCFGPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), ((CPrefElement*)userData)->GetPrefType(), TRUE); 
     }
-    else
+
+    // If not locked, and not NS default, write to the .js file.
+    else if (!bDefault)
     {
-      // not hashed
+      ExtractXPIFile(gstrInstallFile, gstrPlainPrefFile);
+
       if ((((CPrefElement*)userData)->GetPrefType() == "int") || (((CPrefElement*)userData)->GetPrefType() == "bool"))
-        ModifyJS2(gstrPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), bLocked);
+        ModifyJS2(gstrPlainPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), FALSE);
 
       else  // string
-        ModifyJS(gstrPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), bLocked);
+        ModifyJS(gstrPlainPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), FALSE);
+    }
+
+    // If remote admin, write to the .jsc file.
+    BOOL bRemoteAdmin = ((CPrefElement*)userData)->IsRemoteAdmin();
+    if (bRemoteAdmin)
+    {
+      if (!FileExists(remoteAdminFile))
+      {
+        CString strURL = GetGlobal("RemoteAdminURL");
+        CString strComment;
+        strComment.Format("/* This Remote Admin file should be placed at %s */\n", strURL);
+        CreateNewFile(remoteAdminFile, strComment);
+      }
+
+      if ((((CPrefElement*)userData)->GetPrefType() == "int") || (((CPrefElement*)userData)->GetPrefType() == "bool"))
+        ModifyJS2(remoteAdminFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), TRUE);
+
+      else  // string
+        ModifyJS(remoteAdminFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), TRUE);
 
     }
   }
@@ -763,12 +779,11 @@ void endElement(void *userData, const char *name)
 }
 
 
-// Converts the strPrefFile (netscp6.cfg) to a plain text file (autoconfig.jsc) in the output directory, then sets the 
-// autoadmin.global_config_url in strPrefFile to strURL.
-BOOL ConvertToRemoteAdmin(CString strURL, CString strPrefFile, CString strRemoteAdminFile)
+// Sets the autoadmin.global_config_url in strPrefFile to strURL.
+BOOL ConfigureRemoteAdmin(CString strURL, CString strPrefFile)
 {
-  ASSERT(!strURL.IsEmpty() && !strPrefFile.IsEmpty() && !strRemoteAdminFile.IsEmpty());
-  if (strURL.IsEmpty() || strPrefFile.IsEmpty() || strRemoteAdminFile.IsEmpty())
+  ASSERT(!strURL.IsEmpty() && !strPrefFile.IsEmpty());
+  if (strURL.IsEmpty() || strPrefFile.IsEmpty())
     return FALSE;
 
   ASSERT(strPrefFile.Find(".cfg") > 0);
@@ -776,14 +791,6 @@ BOOL ConvertToRemoteAdmin(CString strURL, CString strPrefFile, CString strRemote
     return FALSE;
     
 
-  // Convert the strPrefFile to plain text remote admin file.
-  CString strPlainTextFile = outputPath + "\\" + strRemoteAdminFile;
-
-  if (!UnHash(strPrefFile, strPlainTextFile))
-    return FALSE;
-
-  // Delete the original pref file and replace it with a file with only remote admin entries.
-  DeleteFile(strPrefFile);
   ModifyHashedPref(strPrefFile, "autoadmin.global_config_url", strURL, "string", TRUE); 
 
   CString strFailoverCached = GetGlobal("RemoteAdminFailoverToCached");
@@ -805,12 +812,10 @@ BOOL ConvertToRemoteAdmin(CString strURL, CString strPrefFile, CString strRemote
 
 // This function can easily be rewriten to parse the XML file by hand if it 
 // needs to be ported to a non-MS OS. The XML is pretty simple.
-BOOL ProcessPrefsTree(CString strPrefsTreeFile, CString strPrefFile, CString strInstallFile)
+BOOL ProcessPrefsTree(CString strPrefsTreeFile)
 {
 
-  gstrPrefFile = strPrefFile;
-  gstrInstallFile = strInstallFile;
-
+  //AfxMessageBox("Pause", MB_OK);
   XML_Parser parser = XML_ParserCreate(NULL);
 
   XML_SetElementHandler(parser, startElement, endElement);
@@ -1252,14 +1257,6 @@ int interpret(char *cmd)
 			newvalue = (char *)(LPCTSTR) GetGlobal(value);
 		}
 
-		// Search for a locked pref variable for this pref name.
-		// It will be a global with name: "lockpref."+prefname
-		CString LockPrefGlobalName;
-		LockPrefGlobalName.Format("lockpref.%s", value);
-		CString LockedPrefCheckboxVal = GetGlobal(LockPrefGlobalName);
-		BOOL bLockPref = (LockedPrefCheckboxVal.Compare("1") == 0);	// "1" if locked
-
-
 
 		if (!xpiname || !xpifile || !entity || !newvalue)
 			return TRUE;//*** Changed FALSE to TRUE
@@ -1270,19 +1267,19 @@ int interpret(char *cmd)
 			ExtractJARFile(xpiname, jarname, xpifile);
 
 		if (strcmp(cmdname, "modifyHashedPrefString") == 0)
-			ModifyHashedPref(xpifile,entity,newvalue, "string", bLockPref);
+			ModifyHashedPref(xpifile,entity,newvalue, "string", TRUE);
 		else if (strcmp(cmdname, "modifyHashedPrefInt") == 0)
-			ModifyHashedPref(xpifile,entity,newvalue, "int", bLockPref);
+			ModifyHashedPref(xpifile,entity,newvalue, "int", TRUE);
 		else if (strcmp(cmdname, "modifyHashedPrefBool") == 0)
-			ModifyHashedPref(xpifile,entity,newvalue, "bool", bLockPref);
+			ModifyHashedPref(xpifile,entity,newvalue, "bool", TRUE);
 		else if (strcmp(cmdname, "modifyJS") == 0)
-			ModifyJS(xpifile,entity,newvalue, bLockPref);
+			ModifyJS(xpifile,entity,newvalue, FALSE);
 		else if (strcmp(cmdname, "modifyProperties") == 0)
 			ModifyProperties(xpifile,entity,newvalue);
 		else if (strcmp(cmdname, "modifyJS1") == 0)
-			ModifyJS1(xpifile,entity,newvalue, bLockPref);
+			ModifyJS1(xpifile,entity,newvalue, FALSE);
 		else if (strcmp(cmdname, "modifyJS2") == 0)
-			ModifyJS2(xpifile,entity,newvalue, bLockPref);
+			ModifyJS2(xpifile,entity,newvalue, FALSE);
 		else
 		{
 			// If the browser window's title bar text field is empty, 
@@ -1299,13 +1296,21 @@ int interpret(char *cmd)
   else if (strcmp(cmdname, "processPrefsTree") == 0)
   {
 
-	char *prefsTreeFile	= strtok(NULL, ",)");
-    char *installFile = strtok(NULL, ",)");
-    char *prefFile = strtok(NULL, ",)");
+	  char *prefsTreeFile	= strtok(NULL, ",)");
     CString fileWithPath = configPath + "\\" + prefsTreeFile;
-    ProcessPrefsTree(fileWithPath, prefFile, installFile);
+
+    char *installFile = strtok(NULL, ",)");
+    gstrInstallFile = installFile;
+
+    char *cfgPrefFile = strtok(NULL, ",)");
+    gstrCFGPrefFile = cfgPrefFile;
+
+    char *plainPrefFile = strtok(NULL, ",)");
+    gstrPlainPrefFile = plainPrefFile;
+
+    ProcessPrefsTree(fileWithPath);
   }
-  else if (strcmp(cmdname, "convertToRemoteAdmin") == 0)
+  else if (strcmp(cmdname, "configureRemoteAdmin") == 0)
   {
     char *vConvert = strtok(NULL, ",)");  // if set, then do the convert to remote admin
 		if (vConvert[0] == '%')
@@ -1336,12 +1341,11 @@ int interpret(char *cmd)
 		}
 
     char *prefFile = strtok(NULL, ",)");
-    char *remoteAdminFile = strtok(NULL, ",)");
     
-    if (!prefFile || !remoteAdminFile)
+    if (!prefFile)
       return TRUE;
 
-    ConvertToRemoteAdmin(url, prefFile, remoteAdminFile);
+    ConfigureRemoteAdmin(url, prefFile);
 
   }
   else if (strcmp(cmdname, "modifyUserJS") == 0)
@@ -1917,6 +1921,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	outputPath    = configPath + "\\Output";
 	cdPath        = configPath + "\\Output\\Core";
 	cdshellPath   = configPath + "\\Output\\Shell";
+  remoteAdminFile = outputPath + "\\autoconfig.jsc";
 	networkPath   = configPath + "\\Network";
 	tempPath      = configPath + "\\Temp";
 	iniDstPath    = cdPath + "\\config.ini";

@@ -21,23 +21,27 @@ public:
 
   CString GetPrettyNameValueString();
   CString GetSelectedChoiceString();
+  CString GetDefaultChoiceString();
   BOOL IsChoose();
   BOOL IsLockable() {return m_bLockable; };
   BOOL IsLocked() { return m_bLocked; };
   void SetLocked(BOOL bLocked) { m_bLocked = bLocked; };
-  BOOL IsManage() { return m_bManage; };
-  void SetManage(BOOL bManage) { m_bManage = bManage; };
+  BOOL IsRemoteAdmin() {return m_bRemoteAdmin; };
+  void SetRemoteAdmin(BOOL bRemoteAdmin) { m_bRemoteAdmin = bRemoteAdmin; };
   BOOL IsUserAdded() { return m_bUserAdded; };
   void SetUserAdded(BOOL bUserAdded) { m_bUserAdded = bUserAdded; };
   CString GetUIName() { return m_strUIName; };
   CString GetPrefValue() { return m_strPrefValue; };
   void SetPrefValue(CString strValue);
+  CString GetDefaultValue() { return m_strDefaultValue; };
+  void SetDefaultValue(CString strDefaultValue) { m_strDefaultValue = strDefaultValue; };
+  BOOL IsDefault();
   CString GetPrefName() { return m_strPrefName; };
   CString GetPrefType() { return m_strType; };
   CString GetPrefDescription() { return m_strDescription; };
   CString GetValueFromChoiceString(CString strChoiceString);
   BOOL FindString(CString strFind);
-  CString* GetChoiceStringArray() {return m_astrChoiceName; };
+  CString* GetChoiceStringArray() { return m_astrChoiceName; };
   CString XML(int iIndentSize, int iIndentLevel);
 
   // Called from XML parser.
@@ -58,11 +62,12 @@ private:
   CString m_strPrefName;
   CString m_strDescription;
   CString m_strType;
+  CString m_strDefaultValue;
 
   BOOL m_bLocked;
   BOOL m_bLockable;
-  BOOL m_bManage;
   BOOL m_bUserAdded;
+  BOOL m_bRemoteAdmin;
 
   CString m_astrChoiceName[MAX_CHOICES+1];  // Array of possible choice names. Last is empty string.
   CString m_astrChoiceVal[MAX_CHOICES+1];   // Matching values for the above names.

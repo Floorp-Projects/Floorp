@@ -22,6 +22,7 @@ public:
 	CString m_strTitle;
 	CDlgEditPrefStr(CWnd* pParent = NULL);   // standard constructor
   BOOL m_bChoose;
+  CString m_strDefault;
 
 // Dialog Data
 	//{{AFX_DATA(CDlgEditPrefStr)
@@ -29,14 +30,14 @@ public:
 	CComboBox	m_listValue;
 	CButton	m_checkValue;
 	CButton m_checkLocked;
-	CButton m_checkManage;
+	CButton m_checkRemoteAdmin;
 	CEdit	m_editValue;
 	CString	m_strDescription;
 	CString	m_strPrefName;
 	CString	m_strValue;
 	BOOL	m_bLocked;
 	BOOL	m_bValue;
-	BOOL  m_bManage;
+	BOOL  m_bRemoteAdmin;
   BOOL  m_bLockable;
 	//}}AFX_DATA
 
@@ -57,12 +58,10 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
-	afx_msg void OnManage();
+	afx_msg void OnResetDefault();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
-private:
-	void EnableControls(BOOL bEnable);
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -310,12 +310,13 @@ HTREEITEM CPrefEditView::InsertPrefElement(CPrefElement* pe, HTREEITEM group)
 
   int imageIndex = 0;     // tree ctrl images
   int imageIndexSel = bm_closedFolder;
-  if (!pe->IsManage())
+  if (pe->IsDefault())
     imageIndexSel = imageIndex = bm_unlockedPadGray;
-  else if (pe->IsLocked())
-    imageIndexSel = imageIndex = bm_lockedPad;
   else
     imageIndexSel = imageIndex = bm_unlockedPad;
+
+  if (pe->IsLocked())
+    imageIndexSel = imageIndex = bm_lockedPad;
 
   CTreeCtrl &treeCtrl = GetTreeCtrl();
   HTREEITEM hNewItem = treeCtrl.InsertItem(pe->GetPrettyNameValueString(), imageIndex, imageIndexSel, group, TVI_LAST);
@@ -723,9 +724,12 @@ void CPrefEditView::EditSelectedPrefsItem()
   dlg.m_pstrChoices = pe->GetChoiceStringArray();
   dlg.m_strSelectedChoice = pe->GetSelectedChoiceString();
   dlg.m_bChoose = pe->IsChoose();
-  dlg.m_bManage = pe->IsManage();
+  dlg.m_bRemoteAdmin = pe->IsRemoteAdmin();
   dlg.m_bLockable = pe->IsLockable();
-
+  if (pe->IsChoose())
+    dlg.m_strDefault = pe->GetDefaultChoiceString();
+  else
+    dlg.m_strDefault = pe->GetDefaultValue();
 
   if (dlg.DoModal() == IDOK)
   {
@@ -736,7 +740,7 @@ void CPrefEditView::EditSelectedPrefsItem()
     // set '0' or '1' or whatever the value for the selected choice.
     pe->SetPrefValue(dlg.m_strValue);
     pe->SetLocked(dlg.m_bLocked);
-    pe->SetManage(dlg.m_bManage);
+    pe->SetRemoteAdmin(dlg.m_bRemoteAdmin);
 
     // Adjust the tree control to reflect the changes.
     treeCtrl.SetItemText(hTreeCtrlItem, pe->GetPrettyNameValueString());
@@ -744,13 +748,13 @@ void CPrefEditView::EditSelectedPrefsItem()
     int imageIndex = 0;     // tree ctrl images
     int imageIndexSel = 0;
 
-    if (!pe->IsManage())
+    if (pe->IsDefault())
       imageIndexSel = imageIndex = bm_unlockedPadGray;
-    else if (pe->IsLocked())
-      imageIndexSel = imageIndex = bm_lockedPad;
     else
       imageIndexSel = imageIndex = bm_unlockedPad;
 
+    if (pe->IsLocked())
+      imageIndexSel = imageIndex = bm_lockedPad;
 
     treeCtrl.SetItemImage(hTreeCtrlItem, imageIndex, imageIndexSel);
    

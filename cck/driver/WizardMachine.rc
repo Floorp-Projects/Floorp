@@ -236,31 +236,31 @@ BEGIN
                     ES_READONLY | WS_VSCROLL,WS_EX_DLGMODALFRAME
 END
 
-IDD_EDITPREF DIALOG DISCARDABLE  0, 0, 294, 198
+IDD_EDITPREF DIALOG DISCARDABLE  0, 0, 294, 207
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Pref Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Manage this pref (save in .cfg or .jsc file)",
-                    IDC_MANAGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,102,
-                    245,10
+    GROUPBOX        "About",IDC_STATIC,7,7,280,74
     RTEXT           "Pref Name:",IDC_STATIC,15,18,68,8
     LTEXT           "",IDC_PREFNAME,93,18,184,8
     RTEXT           "Description:",IDC_STATIC,15,33,68,8
     LTEXT           "",IDC_DESCRIPTION,93,33,184,45
-    RTEXT           "Pref Value:",IDC_STATIC,15,127,68,8
+    GROUPBOX        "Properties",IDC_STATIC,7,86,280,91
     CONTROL         "",IDC_VALCHECK,"Button",BS_AUTOCHECKBOX | NOT 
-                    WS_VISIBLE | WS_TABSTOP,93,127,184,10
-    EDITTEXT        IDC_VALUE,93,124,184,14,ES_AUTOHSCROLL
-    COMBOBOX        IDC_VALLIST,93,124,184,67,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VISIBLE | WS_TABSTOP,20,102,184,10
+    EDITTEXT        IDC_VALUE,20,99,184,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_VALLIST,20,99,184,67,CBS_DROPDOWNLIST | CBS_SORT | 
                     NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    RTEXT           "Pref Lock:",IDC_STATIC,15,144,68,8
-    CONTROL         "Locked from user changes",IDC_LOCKED,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,93,144,184,10
-    DEFPUSHBUTTON   "OK",IDOK,88,177,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,154,177,50,14
-    GROUPBOX        "About",IDC_STATIC,7,7,280,74
-    GROUPBOX        "Properties",IDC_STATIC,7,86,280,81
+    PUSHBUTTON      "Reset to Netscape Default",IDC_DEFAULT,19,121,92,14
+    CONTROL         "Lock this setting (do not allow user to change)",
+                    IDC_LOCKED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,144,
+                    184,10
+    CONTROL         "Allow remote administration of this setting",
+                    IDC_REMOTEADMIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,
+                    160,184,10
+    DEFPUSHBUTTON   "OK",IDOK,88,186,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,154,186,50,14
 END
 
 IDD_ADDPREF DIALOG DISCARDABLE  0, 0, 294, 165
@@ -465,7 +465,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 287
         TOPMARGIN, 7
-        BOTTOMMARGIN, 191
+        BOTTOMMARGIN, 200
     END
 
     IDD_ADDPREF, DIALOG
