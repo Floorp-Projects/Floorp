@@ -45,6 +45,9 @@
 #include "nsJARChannel.h"
 #include "nsXPIDLString.h"
 #include "nsNetCID.h"
+#include "nsCExternalHandlerService.h"
+#include "nsIMIMEService.h"
+#include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kIOServiceCID,      NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kJARUriCID,         NS_JARURI_CID);
@@ -71,6 +74,15 @@ nsJARProtocolHandler::Init()
 
     rv = mJARCache->Init(NS_JAR_CACHE_SIZE);
     return rv;
+}
+
+nsIMIMEService* 
+nsJARProtocolHandler::GetCachedMimeService()
+{
+    if (!mMimeService) {
+        mMimeService = do_GetService(NS_MIMESERVICE_CONTRACTID);
+    }
+    return mMimeService.get();
 }
 
 nsJARProtocolHandler::~nsJARProtocolHandler()

@@ -121,7 +121,7 @@ nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
  
 nsresult 
-nsJARChannel::Init(nsIJARProtocolHandler* aHandler, nsIURI* uri)
+nsJARChannel::Init(nsJARProtocolHandler* aHandler, nsIURI* uri)
 {
     nsresult rv;
     mURI = do_QueryInterface(uri, &rv);
@@ -410,8 +410,8 @@ nsJARChannel::GetContentType(char* *aContentType)
             }
 
             if (ext) {
-                nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-                if (NS_SUCCEEDED(rv)) {
+                nsIMIMEService* mimeServ = mJARProtocolHandler->GetCachedMimeService();
+                if (mimeServ) {
                     rv = mimeServ->GetTypeFromExtension(ext, &mContentType);
                 }
             }

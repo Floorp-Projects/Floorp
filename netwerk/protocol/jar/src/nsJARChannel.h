@@ -54,6 +54,7 @@
 #include "prmon.h"
 #include "nsIDownloader.h"
 #include "nsIInputStream.h"
+#include "nsJARProtocolHandler.h"
 
 #ifdef DEBUG
 #include "prthread.h"
@@ -92,7 +93,7 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
-    nsresult Init(nsIJARProtocolHandler* aHandler, nsIURI* uri);
+    nsresult Init(nsJARProtocolHandler* aHandler, nsIURI* uri);
     nsresult EnsureJARFileAvailable();
     nsresult OpenJARElement();
     nsresult AsyncReadJARElement();
@@ -101,7 +102,7 @@ public:
     friend class nsJARDownloadObserver;
 
 protected:
-    nsCOMPtr<nsIJARProtocolHandler>     mJARProtocolHandler;
+    nsCOMPtr<nsJARProtocolHandler>      mJARProtocolHandler;
     nsCOMPtr<nsIJARURI>                 mURI;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
