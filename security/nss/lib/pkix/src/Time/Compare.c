@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/security/nss/lib/pkix/src/Time/Attic/Compare.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:14:32 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/security/nss/lib/pkix/src/Time/Attic/Compare.c,v $ $Revision: 1.2 $ $Date: 2003/02/27 14:49:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIX_H
@@ -50,7 +50,7 @@ NSS_IMPLEMENT PRInt32
 NSSPKIXTime_Compare
 (
   NSSPKIXTime *time1,
-  NSSPKIXTime *tiem2,
+  NSSPKIXTime *time2,
   PRStatus *statusOpt
 )
   nss_ClearErrorStack();
