@@ -46,7 +46,7 @@
 #include "nsCOMPtr.h"
 #endif
 
-class nsIFactory;
+#include "nsIFactory.h"
 
 
 NS_COM_GLUE nsresult

@@ -45,7 +45,6 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsIServiceManagerUtils.h"
-#include "nsIFactory.h"
 
 #ifdef MOZILLA_STRICT_API
 
