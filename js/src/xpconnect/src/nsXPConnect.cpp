@@ -757,7 +757,7 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs, PRBool showLocals, PRBool showThi
     JSContext* cx;
     nsresult rv;
     NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "nsThreadJSContextStack", &rv);
-    if(NS_FAILED(rv))
+    if(NS_FAILED(rv) || !stack)
         printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
         printf("failed to peek into nsIThreadJSContextStack service!\n");
@@ -777,7 +777,7 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
     JSContext* cx;
     nsresult rv;
     NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "nsThreadJSContextStack", &rv);
-    if(NS_FAILED(rv))
+    if(NS_FAILED(rv) || !stack)
         printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
         printf("failed to peek into nsIThreadJSContextStack service!\n");
@@ -797,7 +797,7 @@ void DumpJSStack()
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-    if(NS_SUCCEEDED(rv))
+    if(NS_SUCCEEDED(rv) && xpc)
         xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
     else    
         printf("failed to get XPConnect service!\n");
@@ -807,7 +807,7 @@ void DumpJSEval(PRUint32 frameno, const char* text)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-    if(NS_SUCCEEDED(rv))
+    if(NS_SUCCEEDED(rv) && xpc)
         xpc->DebugDumpEvalInJSStackFrame(frameno, text);
     else    
         printf("failed to get XPConnect service!\n");
