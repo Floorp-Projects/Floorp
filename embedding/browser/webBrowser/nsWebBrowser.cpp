@@ -1009,6 +1009,40 @@ NS_IMETHODIMP nsWebBrowser::SaveURI(
     return rv;
 }
 
+/* void saveChannel (in nsIChannel aChannel, in nsISupports aFile); */
+NS_IMETHODIMP nsWebBrowser::SaveChannel(
+    nsIChannel* aChannel, nsISupports *aFile)
+{
+    if (mPersist)
+    {
+        PRUint32 currentState;
+        mPersist->GetCurrentState(&currentState);
+        if (currentState == PERSIST_STATE_FINISHED)
+        {
+            mPersist = nsnull;
+        }
+        else
+        {
+            // You can't save again until the last save has completed
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    // Create a throwaway persistence object to do the work
+    nsresult rv;
+    mPersist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    mPersist->SetProgressListener(this);
+    mPersist->SetPersistFlags(mPersistFlags);
+    mPersist->GetCurrentState(&mPersistCurrentState);
+    rv = mPersist->SaveChannel(aChannel, aFile);
+    if (NS_FAILED(rv))
+    {
+        mPersist = nsnull;
+    }
+    return rv;
+}
+
 /* void saveDocument (in nsIDOMDocument document, in nsISupports aFile, in nsISupports aDataPath); */
 NS_IMETHODIMP nsWebBrowser::SaveDocument(
     nsIDOMDocument *aDocument, nsISupports *aFile, nsISupports *aDataPath,

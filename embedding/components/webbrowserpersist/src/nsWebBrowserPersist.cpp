@@ -388,6 +388,28 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
     return NS_FAILED(rv) ? rv : NS_OK;
 }
 
+/* void saveChannel (in nsIChannel aChannel, in nsISupports aFile); */
+NS_IMETHODIMP nsWebBrowserPersist::SaveChannel(
+    nsIChannel *aChannel, nsISupports *aFile)
+{
+    NS_ENSURE_TRUE(mFirstAndOnlyUse, NS_ERROR_FAILURE);
+    mFirstAndOnlyUse = PR_FALSE; // Stop people from reusing this object!
+
+    nsCOMPtr<nsIURI> fileAsURI;
+    nsresult rv;
+    rv = GetValidURIFromObject(aFile, getter_AddRefs(fileAsURI));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
+
+    rv = aChannel->GetURI(getter_AddRefs(mURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // SaveURI doesn't like broken uris.
+    mPersistFlags |= PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS;
+    rv = SaveChannelInternal(aChannel, fileAsURI, PR_FALSE);
+    return NS_FAILED(rv) ? rv : NS_OK;
+}
+
+
 /* void saveDocument (in nsIDOMDocument aDocument, in nsIURI aFileURI,
    in nsIURI aDataPathURI, in string aOutputContentType,
    in unsigned long aEncodingFlags, in unsigned long aWrapColumn); */
@@ -1238,9 +1260,17 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
             }
         }
     }
+    return SaveChannelInternal(inputChannel, aFile, aCalcFileExt);
+}
+
+nsresult nsWebBrowserPersist::SaveChannelInternal(
+    nsIChannel *aChannel, nsIURI *aFile, PRBool aCalcFileExt)
+{
+    NS_ENSURE_ARG_POINTER(aChannel);
+    NS_ENSURE_ARG_POINTER(aFile);
 
     // Read from the input channel
-    rv = inputChannel->AsyncOpen(this, nsnull);
+    nsresult rv = aChannel->AsyncOpen(this, nsnull);
     if (rv == NS_ERROR_NO_CONTENT)
     {
         // Assume this is a protocol such as mailto: which does not feed out
@@ -1260,9 +1290,9 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     else
     {
         // Add the output transport to the output map with the channel as the key
-        nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(inputChannel);
+        nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aChannel);
         nsISupportsKey key(keyPtr);
-        mOutputMap.Put(&key, new OutputData(aFile, aURI, aCalcFileExt));
+        mOutputMap.Put(&key, new OutputData(aFile, mURI, aCalcFileExt));
     }
 
     return NS_OK;
