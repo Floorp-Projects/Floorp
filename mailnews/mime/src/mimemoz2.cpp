@@ -1851,7 +1851,10 @@ static int DoLanguageSensitiveFont(MimeObject *obj, const char *prefixName, cons
       fontSize = fontSize * 72 / screenRes;
 
       char buf[256];
-      PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">\n", (const char *) fontName, fontSize);
+      if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
+        PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
+      else
+        PR_snprintf(buf, 256, "<pre style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
     
       status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
     }
@@ -1871,14 +1874,14 @@ int BeginMailNewsFont(MimeObject *obj)
   int status = -1;
   nsresult rv;
 
-  if (aPrefs) {
-    // check Content-Type:
-    PRBool bTEXT_HTML = PR_FALSE;
-    if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
-      bTEXT_HTML = PR_TRUE;
-    else if (nsCRT::strcasecmp(obj->content_type, TEXT_PLAIN))
-      goto done;  // not supported type
+  // check Content-Type:
+  PRBool bTEXT_HTML = PR_FALSE;
+  if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
+    bTEXT_HTML = PR_TRUE;
+  else if (nsCRT::strcasecmp(obj->content_type, TEXT_PLAIN))
+    goto done;  // not supported type
 
+  if (aPrefs) {
     // if indicated by the pref, do language sensitive font selection (slower)
     PRBool  languageSensitiveFont = PR_FALSE;
     rv = aPrefs->GetBoolPref("mailnews.language_sensitive_font", &languageSensitiveFont);
@@ -1926,22 +1929,31 @@ int BeginMailNewsFont(MimeObject *obj)
   
     char buf[256];
 
-    PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">\n", (const char *) fontName, fontSize);
+    if (bTEXT_HTML)
+      PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
+    else
+      PR_snprintf(buf, 256, "<pre style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
 
     status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
 
   }
 done:
   // if nothing has been written then write out just "<div>" to match with "</div>"
-  if (status == -1)
-    status = MimeObject_write(obj, "<div>\n", 6, PR_FALSE);
+  if (status == -1) {
+    if (bTEXT_HTML)
+      status = MimeObject_write(obj, "<div>", 5, PR_FALSE);
+    else
+      status = MimeObject_write(obj, "<pre>", 5, PR_FALSE);
+  }
   
   return status;
 }
 
 int EndMailNewsFont(MimeObject *obj)
 {
-  char buf[] = "</div>\n";
-  return MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+  if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
+    return MimeObject_write(obj, "</div>", 6, PR_FALSE);
+  else
+    return MimeObject_write(obj, "</pre>", 6, PR_FALSE);
 }
 
