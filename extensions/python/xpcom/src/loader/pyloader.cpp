@@ -42,25 +42,9 @@
 #undef HAVE_LONG_LONG
 #endif
 
-
-#ifdef XP_WIN
-// Can only assume dynamic loading on Windows.
-#define LOADER_LINKS_WITH_PYTHON
-#endif
-
-
-#ifdef LOADER_LINKS_WITH_PYTHON	
 #include "Python.h"
 
-static PyThreadState *ptsGlobal = nsnull;
 static char *PyTraceback_AsString(PyObject *exc_tb);
-
-#else // LOADER_LINKS_WITH_PYTHON	
-
-static PRBool find_xpcom_module(char *buf, size_t bufsize);
-
-#endif // LOADER_LINKS_WITH_PYTHON	
-
 
 #ifdef XP_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -85,7 +69,6 @@ pfnPyXPCOM_NSGetModule pfnEntryPoint = nsnull;
 static void LogError(const char *fmt, ...);
 static void LogDebug(const char *fmt, ...);
 
-#ifdef LOADER_LINKS_WITH_PYTHON
 // Ensure that any paths guaranteed by this package exist on sys.path
 // Only called once as we are first loaded into the process.
 void AddStandardPaths()
@@ -98,33 +81,29 @@ void AddStandardPaths()
 		LogError("The Python XPCOM loader could not locate the 'bin' directory\n");
 		return;
 	}
-    nsCAutoString python(NS_LITERAL_CSTRING("python"));
+	nsCAutoString python(NS_LITERAL_CSTRING("python"));
 	aFile->Append(python);
-    nsCAutoString path_string;
+	nsCAutoString path_string;
 	aFile->GetPath(path_string);
 	PyObject *obPath = PySys_GetObject("path");
 	if (!obPath) {
 		LogError("The Python XPCOM loader could not get the Python sys.path variable\n");
 		return;
 	}
-    LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", (const char *)path_string.get());
-//    DebugBreak();
+	LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", (const char *)path_string.get());
 	PyObject *newStr = PyString_FromString(path_string.get());
 	PyList_Insert(obPath, 0, newStr);
 	Py_XDECREF(newStr);
 }
-#endif
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
                                           nsIFile* location,
                                           nsIModule** result)
 {
-	// What to do for other platforms here?
-	// I tried using their nsDll class, but it wont allow
-	// a LoadLibrary() - it insists on a full path it can load.
-	// So if Im going to the trouble of locating the DLL on Windows,
-	// I may as well just do the whole thing myself.
-#ifdef LOADER_LINKS_WITH_PYTHON	
+#ifdef XP_UNIX
+	// *sob* - seems necessary to open the .so as RTLD_GLOBAL
+	dlopen(PYTHON_SO,RTLD_NOW | RTLD_GLOBAL);
+#endif
 	PRBool bDidInitPython = !Py_IsInitialized(); // well, I will next line, anyway :-)
 	if (bDidInitPython) {
 		Py_Initialize();
@@ -134,58 +113,56 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 		}
 #ifndef NS_DEBUG
 		Py_OptimizeFlag = 1;
-#endif
+#endif // NS_DEBUG
 		AddStandardPaths();
+		PyEval_InitThreads();
+	}
+	// Get the Python interpreter state
+	PyThreadState *threadStateCreated = NULL;
+	PyThreadState *threadState = PyThreadState_Swap(NULL);
+	if (threadState==NULL) {
+		// no thread-state - set one up.
+		// *sigh* - what I consider a bug is that Python
+		// will deadlock unless we own the lock before creating
+		// a new interpreter (it appear Py_NewInterpreter has
+		// really only been tested/used with no thread lock
+		PyEval_AcquireLock();
+		threadState = threadStateCreated = Py_NewInterpreter();
+		PyThreadState_Swap(NULL);
+	}
+	PyEval_ReleaseLock();
+	PyEval_AcquireThread(threadState);
+
+	if (pfnEntryPoint == nsnull) {
 		PyObject *mod = PyImport_ImportModule("xpcom._xpcom");
 		if (mod==NULL) {
 			LogError("Could not import the Python XPCOM extension\n");
 			return NS_ERROR_FAILURE;
 		}
-	}
-#endif // LOADER_LINKS_WITH_PYTHON	
-	if (pfnEntryPoint == nsnull) {
-
-#ifdef XP_WIN
-
-#ifdef DEBUG
-		const char *mod_name = "_xpcom_d.pyd";
-#else
-		const char *mod_name = "_xpcom.pyd";
-#endif
-		HMODULE hmod = GetModuleHandle(mod_name);
-		if (hmod==NULL) {
-			LogError("Could not get a handle to the Python XPCOM extension\n");
-			return NS_ERROR_FAILURE;
+		PyObject *obpfn = PyObject_GetAttrString(mod, "_NSGetModule_FuncPtr");
+		void *pfn = NULL;
+		if (obpfn) {
+			NS_ABORT_IF_FALSE(PyLong_Check(obpfn)||PyInt_Check(obpfn), "xpcom._NSGetModule_FuncPtr is not a long!");
+			pfn = PyLong_AsVoidPtr(obpfn);
 		}
-		pfnEntryPoint = (pfnPyXPCOM_NSGetModule)GetProcAddress(hmod, "PyXPCOM_NSGetModule");
-#endif // XP_WIN
-
-#ifdef XP_UNIX
-		static char module_path[1024];
-		if (!find_xpcom_module(module_path, sizeof(module_path)))
-			return NS_ERROR_FAILURE;
-
-		void *handle = dlopen(module_path, RTLD_GLOBAL | RTLD_LAZY);
-		if (handle==NULL) {
-			LogError("Could not open the Python XPCOM extension at '%s' - '%s'\n", module_path, dlerror());
-			return NS_ERROR_FAILURE;
-		}
-		pfnEntryPoint = (pfnPyXPCOM_NSGetModule)dlsym(handle, "PyXPCOM_NSGetModule");
-#endif // XP_UNIX
+		pfnEntryPoint = (pfnPyXPCOM_NSGetModule)pfn;
 	}
 	if (pfnEntryPoint==NULL) {
 		LogError("Could not load main Python entry point\n");
 		return NS_ERROR_FAILURE;
 	}
 	
-#ifdef LOADER_LINKS_WITH_PYTHON	
-	// We abandon the thread-lock, as the first thing Python does
-	// is re-establish the lock (the Python thread-state story SUCKS!!!
-
-	if (bDidInitPython)
-		ptsGlobal = PyEval_SaveThread();
-	// Note this is never restored, and Python is never finalized!
-#endif // LOADER_LINKS_WITH_PYTHON	
+	// Abandon the thread-lock, as the first thing Python does
+	// is re-establish the lock (the Python thread-state story SUCKS!!!)
+	if (threadStateCreated) {
+		Py_EndInterpreter(threadStateCreated);
+		PyEval_ReleaseLock(); // see Py_NewInterpreter call above 
+	} else {
+		PyEval_ReleaseThread(threadState);
+		PyThreadState *threadStateSave = PyThreadState_Swap(NULL);
+		if (threadStateSave)
+			PyThreadState_Delete(threadStateSave);
+	}
 	return (*pfnEntryPoint)(servMgr, location, result);
 }
 
@@ -213,7 +190,6 @@ static void LogError(const char *fmt, ...)
 	va_list marker;
 	va_start(marker, fmt);
 	VLogF("PyXPCOM Loader Error: ", fmt, marker);
-#ifdef LOADER_LINKS_WITH_PYTHON	
 	// If we have a Python exception, also log that:
 	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
 	PyErr_Fetch( &exc_typ, &exc_val, &exc_tb);
@@ -250,16 +226,15 @@ static void LogError(const char *fmt, ...)
 		LogMessage("PyXPCOM Exception:", string1);
 	}
 	PyErr_Restore(exc_typ, exc_val, exc_tb);
-#endif // LOADER_LINKS_WITH_PYTHON	
 }
-
+/*** - not currently used - silence compiler warning.
 static void LogWarning(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
 	VLogF("PyXPCOM Loader Warning: ", fmt, marker);
 }
-
+***/
 #ifdef DEBUG
 static void LogDebug(const char *fmt, ...)
 {
@@ -272,8 +247,6 @@ static void LogDebug(const char *fmt, ...)
 {
 }
 #endif
-
-#ifdef LOADER_LINKS_WITH_PYTHON	
 
 /* Obtains a string from a Python traceback.
    This is the exact same string as "traceback.print_exc" would return.
@@ -364,84 +337,3 @@ done:
 	Py_XDECREF(obResult);
 	return result;
 }
-
-#else // LOADER_LINKS_WITH_PYTHON	
-
-#ifdef XP_UNIX
-
-// From Python getpath.c
-#ifndef S_ISREG
-#define S_ISREG(x) (((x) & S_IFMT) == S_IFREG)
-#endif
-
-#ifndef S_ISDIR
-#define S_ISDIR(x) (((x) & S_IFMT) == S_IFDIR)
-#endif
-
-static int
-isfile(char *filename)		/* Is file, not directory */
-{
-    struct stat buf;
-    if (stat(filename, &buf) != 0)
-        return 0;
-    if (!S_ISREG(buf.st_mode))
-        return 0;
-    return 1;
-}
-
-
-static int
-isxfile(char *filename)		/* Is executable file */
-{
-    struct stat buf;
-    if (stat(filename, &buf) != 0)
-        return 0;
-    if (!S_ISREG(buf.st_mode))
-        return 0;
-    if ((buf.st_mode & 0111) == 0)
-        return 0;
-    return 1;
-}
-
-
-static int
-isdir(char *filename)			/* Is directory */
-{
-    struct stat buf;
-    if (stat(filename, &buf) != 0)
-        return 0;
-    if (!S_ISDIR(buf.st_mode))
-        return 0;
-    return 1;
-}
-
-
-PRBool find_xpcom_module(char *buf, size_t bufsize)
-{
-	char *pypath = getenv("PYTHONPATH");
-	char *searchPath = pypath ? strdup(pypath) : NULL;
-	char *tok = searchPath ? strtok(searchPath, ":") : NULL;
-	while (tok != NULL) {
-		int thissize = bufsize;
-		int baselen = strlen(tok);
-		strncpy(buf, tok, thissize);
-		thissize-=baselen;
-		if (thissize > 1 && buf[baselen-1] != '/') {
-			buf[baselen++]='/';
-		}
-		strncpy(buf+baselen, "xpcom/_xpcommodule.so", thissize);
-//		LogDebug("Python _xpcom module at '%s'?\n", buf);
-		if (isfile(buf)) {
-//			LogDebug("Found python _xpcom module at '%s'\n", buf);
-			return PR_TRUE;
-		}
-		tok = strtok(NULL, ":");
-	}
-	LogError("Failed to find a Python _xpcom module\n");
-	return PR_FALSE;
-}
-
-#endif // XP_UNIX
-
-#endif // LOADER_LINKS_WITH_PYTHON	
-
