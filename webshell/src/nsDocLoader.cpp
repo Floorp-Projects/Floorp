@@ -53,6 +53,8 @@
 #include "prlog.h"
 #include "prprf.h"
 
+#include <iostream.h>
+
 // XXX ick ick ick
 #include "nsIDocument.h"
 #include "nsIPresShell.h"

@@ -20,6 +20,8 @@
 #include "nsHTMLTags.h"
 #include "nsString.h"
 
+#include <iostream.h>
+
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
