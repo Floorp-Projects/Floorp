@@ -21,9 +21,25 @@
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
  */
+
+#include <string.h>
+
+#include "nscore.h"
+#include "pratom.h"
+#include "prmem.h"
+#include "prio.h"
+#include "plstr.h"
+#include "prlog.h"
+
+#include "xp_regexp.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+
 #include "nsJAR.h"
+#include "nsIJARFactory.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAR);
 
