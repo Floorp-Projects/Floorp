@@ -72,6 +72,10 @@
     <menuitem id="tasksMenuEditor" insertafter="tasksMenuMail"/>
     <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook" id="tasksMenuAddressBook" insertafter="tasksMenuEditor"/>
   </menupopup>
+
+  <menupopup id="toolsPopup">
+    <menuitem label="&importUtilCmd.label;" accesskey="&importUtilCmd.accesskey;" oncommand="toImport()" position="2"/>
+  </menupopup>
   
 </overlay>         
 
