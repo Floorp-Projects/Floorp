@@ -33,10 +33,12 @@ nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
 }
 
 /* static */ 
-nsresult	nsNewsDatabase::Open(const char * groupURL, MSG_Master *master,
-						 nsNewsDatabase** pMessageDB)
+nsresult	nsNewsDatabase::Open(nsFileSpec &newsgroupName,  PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
-	return 0;
+#ifdef DEBUG
+  printf("in nsNewsDatabase::Open()\n");
+#endif
+  return 0;
 }
 nsresult		nsNewsDatabase::Close(PRBool forceCommit)
 {
@@ -63,7 +65,7 @@ PRUint32		nsNewsDatabase::GetCurVersion()
 NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
 								nsIDBChangeListener *instigator)
 {
-	nsresult		err;
+	nsresult		err = NS_OK;
 #if 0
 	nsMsgKey messageKey = msgHdr->GetMessageKey();
 
@@ -76,7 +78,7 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
 	nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
 
 //	return (err >= 0) ? 0 : NS_ERROR_OUT_OF_MEMORY;
-	return 0;
+	return err;
 }
 
 NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
@@ -145,22 +147,53 @@ nsNewsDatabase	*nsNewsDatabase::GetNewsDB()
 }
 
 PRBool	nsNewsDatabase::PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo) { return PR_FALSE; };
-PRBool	nsNewsDatabase::IsCategory();
-nsresult nsNewsDatabase::SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *);
-nsresult nsNewsDatabase::SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
-nsresult nsNewsDatabase::SetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
-nsresult nsNewsDatabase::GetOfflineRetrievalInfo(MSG_RetrieveArtInfo *info);
-nsresult nsNewsDatabase::GetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
-nsresult nsNewsDatabase::GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
 
-	// used to handle filters editing on open news groups.
+PRBool	nsNewsDatabase::IsCategory() {
+  return PR_FALSE;
+}
+nsresult nsNewsDatabase::SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *)
+{
+  return NS_OK;
+}
+nsresult nsNewsDatabase::SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo)
+{
+  return NS_OK;
+}
+nsresult nsNewsDatabase::SetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo)
+{
+  return NS_OK;
+}
+nsresult nsNewsDatabase::GetOfflineRetrievalInfo(MSG_RetrieveArtInfo *info)
+{
+  return NS_OK;
+}
+nsresult nsNewsDatabase::GetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo)
+{
+  return NS_OK;
+}
+nsresult nsNewsDatabase::GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo)
+{
+  return NS_OK;
+}
+
+// used to handle filters editing on open news groups.
 //	static void				NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
-	void					nsNewsDatabase::ClearFilterList();	// filter was changed by user.
-	void					nsNewsDatabase::OpenFilterList();
-//	void					OnFolderFilterListChanged(MSG_FolderInfo *folder);
-	// caller needs to free
-/* static */ char				*nsNewsDatabase::GetGroupNameFromURL(const char *url);
-
+void nsNewsDatabase::ClearFilterList()
+{
+  // filter was changed by user.
+  return;
+}
+void nsNewsDatabase::OpenFilterList()
+{
+  return;
+}
+//void OnFolderFilterListChanged(MSG_FolderInfo *folder);
+//caller needs to free
+/* static */ 
+char *nsNewsDatabase::GetGroupNameFromURL(const char *url) 
+{
+  return nsnull;
+}
 
 // should we thread messages with common subjects that don't start with Re: together?
 // I imagine we might have separate preferences for mail and news, so this is a virtual method.
