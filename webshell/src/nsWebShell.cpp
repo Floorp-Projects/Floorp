@@ -31,6 +31,9 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "plevent.h"
+#include "nsplugin.h"
+#include "nsIPluginHost.h"
+#include "nsPluginsCID.h"
 
 #include "prlog.h"
 
@@ -154,6 +157,8 @@ public:
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
+  static nsresult CreatePluginHost(void);
+
 protected:
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
@@ -181,6 +186,9 @@ protected:
   nsScrollPreference mScrollPref;
 
   void ReleaseChildren();
+
+  static nsIPluginHost    *mPluginHost;
+  static nsIPluginManager *mPluginManager;
 };
 
 //----------------------------------------------------------------------
@@ -202,9 +210,38 @@ static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
+
+nsIPluginHost *nsWebShell::mPluginHost = nsnull;
+nsIPluginManager *nsWebShell::mPluginManager = nsnull;
+
+nsresult nsWebShell::CreatePluginHost(void)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (nsnull == mPluginManager)
+  {
+    rv = NSRepository::CreateInstance(kCPluginHostCID, nsnull,
+                                      kIPluginManagerIID,
+                                      (void**)&mPluginManager);
+    if (NS_OK == rv)
+    {
+      if (NS_OK == mPluginManager->QueryInterface(kIPluginHostIID,
+                                                  (void **)&mPluginHost))
+      {
+        mPluginHost->Init();
+        mPluginHost->LoadPlugins();
+      }
+    }
+  }
+
+  return rv;
+}
 
 //----------------------------------------------------------------------
 
@@ -309,6 +346,11 @@ nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
+
+  //XXX this seems a little wrong. MMP
+  if (nsnull != mPluginManager)
+    return mPluginManager->QueryInterface(aIID, aInstancePtr);
+
   return NS_NOINTERFACE;
 }
 
@@ -349,6 +391,11 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
                  const nsRect& aBounds,
                  nsScrollPreference aScrolling)
 {
+  //XXX make sure plugins have started up. this really needs to
+  //be associated with the nsIContentViewerContainer interfaces,
+  //not the nsIWebShell interfaces. this is a hack. MMP
+  CreatePluginHost();
+
   mScrollPref = aScrolling;
 
   WEB_TRACE(WEB_TRACE_CALLS,
