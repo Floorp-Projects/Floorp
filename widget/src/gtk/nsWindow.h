@@ -113,6 +113,7 @@ public:
   NS_IMETHOD           SetFocus(PRBool aRaise);
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
+  NS_IMETHOD           HideWindowChrome(PRBool aShouldHide);
 
   GdkCursor           *GtkCreateCursor(nsCursor aCursorType);
   virtual void         LoseFocus(void);
