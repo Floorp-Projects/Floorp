@@ -22,7 +22,7 @@
 <!ENTITY sidebar.panels.label        "My Sidebar">
 <!ENTITY sidebar.reload.label        "Reload">
 <!ENTITY sidebar.picker.label        "Add">
-<!ENTITY sidebar.customize.label     "Customize Sidebar...">
+<!ENTITY sidebar.customize.label     "Customize My Sidebar...">
 <!ENTITY sidebarCmd.label            "Sidebar">
 <!ENTITY sidebar.loading.label       "Loading...">
 
