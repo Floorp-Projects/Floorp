@@ -285,8 +285,8 @@ nsReadingIterator<CharT>::advance( difference_type n )
   // NOTE: need to break iterators out into their own file (as with many classes here), need
   //  these routines, but can't currently |#include "nsReadableUtils.h"|, this hack is bad
   //  but we need it to get OS2 building again.  Fix by splitting things into different files.
-extern size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
-extern size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
+NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
+NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
 
 template <class Iterator>
 inline

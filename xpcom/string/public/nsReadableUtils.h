@@ -35,9 +35,10 @@
 #include "nsAWritableString.h"
 #endif
 
+#if 0
 NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
 NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
-
+#endif
 
 
 NS_COM void CopyUCS2toASCII( const nsAReadableString& aSource, nsAWritableCString& aDest );
