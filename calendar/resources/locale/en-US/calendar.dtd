@@ -88,6 +88,11 @@
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >        
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
 
+<!ENTITY newevent.newevent.tab.label "New Event" >
+<!ENTITY newevent.recurrence.tab.label "Recurrence" >
+<!ENTITY newevent.contacts.tab.label "Contacts" >
+<!ENTITY newevent.files.tab.label "Files" >
+
 <!ENTITY newtodo.completed.label "Completed">
 <!ENTITY newtodo.duedate.label "Due Date">
 <!ENTITY newtodo.priority.label "Priority">
