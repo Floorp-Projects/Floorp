@@ -221,19 +221,23 @@ nsDocShell::~nsDocShell()
 NS_IMETHODIMP
 nsDocShell::DestroyChildren()
 {
-  PRInt32 i, n = mChildren.Count();
-  nsCOMPtr<nsIDocShellTreeItem> shell;
-  for (i = 0; i < n; i++) {
-    shell = dont_AddRef((nsIDocShellTreeItem *) mChildren.ElementAt(i));
-    if (!NS_WARN_IF_FALSE(shell, "docshell has null child"))
-      shell->SetParent(nsnull);
-      shell->SetTreeOwner(nsnull);
-      // just clear out the array.  When the nsFrameFrame that holds the subshell is
-      // destroyed, then the Destroy() method of that subshell will actually get
-      // called.
-  }
-  mChildren.Clear();
-  return NS_OK;
+    PRInt32 i, n = mChildren.Count();
+    nsCOMPtr<nsIDocShellTreeItem> shell;
+    for (i = 0; i < n; i++) {
+        shell = dont_AddRef((nsIDocShellTreeItem *) mChildren.ElementAt(i));
+        NS_WARN_IF_FALSE(shell, "docshell has null child");
+
+        if (shell) {
+            shell->SetParent(nsnull);
+            shell->SetTreeOwner(nsnull);
+            // just clear out the array.  When the nsFrameFrame that holds
+            // the subshell is destroyed, then the Destroy() method of
+            // that subshell will actually get called.
+        }
+    }
+
+    mChildren.Clear();
+    return NS_OK;
 }
 
 //*****************************************************************************

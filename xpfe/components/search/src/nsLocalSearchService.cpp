@@ -925,7 +925,13 @@ LocalSearchDataSource::RemoveObserver(nsIRDFObserver *n)
 	if (! mObservers)
 		return(NS_OK);
 
-	NS_VERIFY(mObservers->RemoveElement(n), "observer not present");
+#ifdef DEBUG
+	PRBool ok =
+#endif
+	mObservers->RemoveElement(n);
+
+	NS_ASSERTION(ok, "observer not present");
+
 	return(NS_OK);
 }
 

@@ -77,8 +77,8 @@ public:
    * The default behavior of this method is print a message to stderr
    * and to log an event in the NSPR log file.
    */
-  static NS_COM PRBool WarnIfFalse(const char* aStr, const char* aExpr,
-                                   const char* aFile, PRIntn aLine);
+  static NS_COM void WarnIfFalse(const char* aStr, const char* aExpr,
+                                 const char* aFile, PRIntn aLine);
 
   /**
    * Enable flying a warning message box (if the platform supports
@@ -181,35 +181,27 @@ public:
  * Note also that the non-debug version of this macro does <b>not</b>
  * evaluate the message argument.
  */
-#define NS_ABORT_IF_FALSE(_expr,_msg)                        \
-PR_BEGIN_MACRO                                               \
-  if (!(_expr)) {                                            \
-    nsDebug::AbortIfFalse(_msg, #_expr, __FILE__, __LINE__); \
-  }                                                          \
-PR_END_MACRO
+#define NS_ABORT_IF_FALSE(_expr, _msg)                        \
+  PR_BEGIN_MACRO                                              \
+    if (!(_expr)) {                                           \
+      nsDebug::AbortIfFalse(_msg, #_expr, __FILE__, __LINE__);\
+    }                                                         \
+  PR_END_MACRO
 
 /**
  * Warn if a given condition is false.
  *
  * Program execution continues past the usage of this macro.
  *
- * The macro returns a status value that can be used in an "if"
- * statement. For example:
- *
- *      if (NS_WARN_IF_FALSE(aPtr, "null pointer")) {
- *        return NS_ERROR_NULL_POINTER;
- *      }
- *
- * Note that the non-debug version of this macro <b>does</b> evaluate
- * the expression as this macro continues to return a boolean
- * value. Therefore side effect expressions will work
- * correctly. However, they are still "poor form" so don't do it!
- *
  * Note also that the non-debug version of this macro does <b>not</b>
  * evaluate the message argument.
  */
-#define NS_WARN_IF_FALSE(_e,_msg) \
-  (!(_e) ? nsDebug::WarnIfFalse(_msg, #_e, __FILE__, __LINE__) : PR_FALSE)
+#define NS_WARN_IF_FALSE(_expr,_msg)                          \
+  PR_BEGIN_MACRO                                              \
+    if (!(_expr)) {                                           \
+      nsDebug::WarnIfFalse(_msg, #_expr, __FILE__, __LINE__); \
+    }                                                         \
+  PR_END_MACRO
 
 // Note: Macros below this line are the old ones; please start using
 // the new ones. The old ones will be removed eventually!
@@ -220,102 +212,90 @@ PR_END_MACRO
  * Test a precondition for truth. If the expression is not true then
  * trigger a program failure.
  */
-#define NS_PRECONDITION(expr,str) \
-if (!(expr))                      \
-  nsDebug::PreCondition(str, #expr, __FILE__, __LINE__)
+#define NS_PRECONDITION(expr, str)                            \
+  PR_BEGIN_MACRO                                              \
+    if (!(expr)) {                                            \
+      nsDebug::PreCondition(str, #expr, __FILE__, __LINE__);  \
+    }                                                         \
+  PR_END_MACRO
 
 /**
  * Test an assertion for truth. If the expression is not true then
  * trigger a program failure.
  */
-#define NS_ASSERTION(expr,str) \
-if (!(expr))                   \
-  nsDebug::Assertion(str, #expr, __FILE__, __LINE__)
-
-/**
- * Test an assertion for truth. If the expression is not true then
- * trigger a program failure. The expression will still be
- * executed in release mode.
- */
-#define NS_VERIFY(expr,str) \
-if (!(expr))                \
-  nsDebug::Assertion(str, #expr, __FILE__, __LINE__)
+#define NS_ASSERTION(expr, str)                               \
+  PR_BEGIN_MACRO                                              \
+    if (!(expr)) {                                            \
+      nsDebug::Assertion(str, #expr, __FILE__, __LINE__);     \
+    }                                                         \
+  PR_END_MACRO
 
 /**
  * Test a post-condition for truth. If the expression is not true then
  * trigger a program failure.
  */
-#define NS_POSTCONDITION(expr,str) \
-if (!(expr))                       \
-  nsDebug::PostCondition(str, #expr, __FILE__, __LINE__)
+#define NS_POSTCONDITION(expr, str)                           \
+  PR_BEGIN_MACRO                                              \
+    if (!(expr)) {                                            \
+      nsDebug::PostCondition(str, #expr, __FILE__, __LINE__); \
+    }                                                         \
+  PR_END_MACRO
 
 /**
  * This macros triggers a program failure if executed. It indicates that
  * an attempt was made to execute some unimplimented functionality.
  */
-#define NS_NOTYETIMPLEMENTED(str) \
+#define NS_NOTYETIMPLEMENTED(str)                             \
   nsDebug::NotYetImplemented(str, __FILE__, __LINE__)
 
 /**
  * This macros triggers a program failure if executed. It indicates that
  * an attempt was made to execute some unimplimented functionality.
  */
-#define NS_NOTREACHED(str) \
+#define NS_NOTREACHED(str)                                    \
   nsDebug::NotReached(str, __FILE__, __LINE__)
 
 /**
  * Log an error message.
  */
-#define NS_ERROR(str) \
+#define NS_ERROR(str)                                         \
   nsDebug::Error(str, __FILE__, __LINE__)
 
 /**
  * Log a warning message.
  */
-#define NS_WARNING(str) \
+#define NS_WARNING(str)                                       \
   nsDebug::Warning(str, __FILE__, __LINE__)
 
 /**
  * Trigger an abort
  */
-#define NS_ABORT() \
+#define NS_ABORT()                                            \
   nsDebug::Abort(__FILE__, __LINE__)
 
 /**
  * Cause a break
  */
-#define NS_BREAK() \
+#define NS_BREAK()                                            \
   nsDebug::Break(__FILE__, __LINE__)
 
 #else /* NS_DEBUG */
 
 /**
- * The non-debug version of this macro does not evaluate the
+ * The non-debug version of these macros do not evaluate the
  * expression or the message arguments to the macro.
  */
-#define NS_ABORT_IF_FALSE(_expr,_msg) {}
-
-/**
- * Note that the non-debug version of this macro <b>does</b> evaluate
- * the expression as this macro continues to return a boolean
- * value.
- *
- * The non-debug version of this macro does <b>not</b> evaluate the
- * message argument.
- */
-#define NS_WARN_IF_FALSE(_e,_msg) \
-  (!(_e) ? PR_TRUE : PR_FALSE)
-
-#define NS_PRECONDITION(expr,str)  {}
-#define NS_ASSERTION(expr,str)     {}
-#define NS_VERIFY(expr,str)        expr
-#define NS_POSTCONDITION(expr,str) {}
-#define NS_NOTYETIMPLEMENTED(str)  {}
-#define NS_NOTREACHED(str)         {}
-#define NS_ERROR(str)              {}
-#define NS_WARNING(str)            {}
-#define NS_ABORT()                 {}
-#define NS_BREAK()                 {}
+#define NS_ABORT_IF_FALSE(_expr, _msg) /* nothing */
+#define NS_WARN_IF_FALSE(_expr, _msg)  /* nothing */
+#define NS_PRECONDITION(expr, str)     /* nothing */
+#define NS_ASSERTION(expr, str)        /* nothing */
+#define NS_POSTCONDITION(expr, str)    /* nothing */
+#define NS_NOTYETIMPLEMENTED(str)      /* nothing */
+#define NS_NOTREACHED(str)             /* nothing */
+#define NS_ERROR(str)                  /* nothing */
+#define NS_WARNING(str)                /* nothing */
+#define NS_ABORT()                     /* nothing */
+#define NS_BREAK()                     /* nothing */
 
 #endif /* ! NS_DEBUG */
 #endif /* __cplusplus */
@@ -325,13 +305,15 @@ if (!(expr))                       \
 // NS_DEBUG flag
 ///////////////////////////////////////////////////////////////////////////////
 
-#define NS_ENSURE_TRUE(x, ret)                                                \
-  PR_BEGIN_MACRO                                                              \
-   if(NS_WARN_IF_FALSE(x, "NS_ENSURE_TRUE(" #x ") failed"))                   \
-     return ret;                                                              \
+#define NS_ENSURE_TRUE(x, ret)                                \
+  PR_BEGIN_MACRO                                              \
+    if (!(x)) {                                               \
+       NS_WARNING("NS_ENSURE_TRUE(" #x ") failed");           \
+       return ret;                                            \
+    }                                                         \
   PR_END_MACRO
 
-#define NS_ENSURE_FALSE(x, ret) \
+#define NS_ENSURE_FALSE(x, ret)                               \
   NS_ENSURE_TRUE(!(x), ret)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -345,28 +327,28 @@ if (!(expr))                       \
 // Macros for checking state and arguments upon entering interface boundaries
 ///////////////////////////////////////////////////////////////////////////////
 
-#define NS_ENSURE_ARG(arg) \
+#define NS_ENSURE_ARG(arg)                                    \
   NS_ENSURE_TRUE(arg, NS_ERROR_INVALID_ARG)
 
-#define NS_ENSURE_ARG_POINTER(arg) \
+#define NS_ENSURE_ARG_POINTER(arg)                            \
   NS_ENSURE_TRUE(arg, NS_ERROR_INVALID_POINTER)
 
-#define NS_ENSURE_ARG_MIN(arg, min) \
+#define NS_ENSURE_ARG_MIN(arg, min)                           \
   NS_ENSURE_TRUE((arg) >= min, NS_ERROR_INVALID_ARG)
 
-#define NS_ENSURE_ARG_MAX(arg, max) \
+#define NS_ENSURE_ARG_MAX(arg, max)                           \
   NS_ENSURE_TRUE((arg) <= max, NS_ERROR_INVALID_ARG)
 
-#define NS_ENSURE_ARG_RANGE(arg, min, max) \
+#define NS_ENSURE_ARG_RANGE(arg, min, max)                    \
   NS_ENSURE_TRUE(((arg) >= min) && ((arg) <= max), NS_ERROR_INVALID_ARG)
 
-#define NS_ENSURE_STATE(state) \
+#define NS_ENSURE_STATE(state)                                \
   NS_ENSURE_TRUE(state, NS_ERROR_UNEXPECTED)
 
-#define NS_ENSURE_NO_AGGREGATION(outer) \
+#define NS_ENSURE_NO_AGGREGATION(outer)                       \
   NS_ENSURE_FALSE(outer, NS_ERROR_NO_AGGREGATION)
 
-#define NS_ENSURE_PROPER_AGGREGATION(outer, iid) \
+#define NS_ENSURE_PROPER_AGGREGATION(outer, iid)              \
   NS_ENSURE_FALSE(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
 
 ///////////////////////////////////////////////////////////////////////////////

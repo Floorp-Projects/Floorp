@@ -300,7 +300,8 @@ public:
     return (PRInt32) mFlags.mChildCount;
   }
   void SetChildCount(PRInt32 aNewCount) {
-    if (NS_WARN_IF_FALSE(aNewCount >= 0, "negative child count")) {
+    if (aNewCount < 0) {
+      NS_WARNING("negative child count");
       aNewCount = 0;
     }
     if (aNewCount > LINE_MAX_CHILD_COUNT) {

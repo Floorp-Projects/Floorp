@@ -431,7 +431,12 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
         // We have the origin in the coordinate space of the containing view,
         // but we need it in the coordinate space of the parent view so do a
         // view translation
-        NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
+#ifdef DEBUG
+        PRBool ok = 
+#endif
+        TranslatePointTo(origin, containingView, parentView);
+
+        NS_ASSERTION(ok, "translation failed");
       }
     }
 

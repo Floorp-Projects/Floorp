@@ -340,25 +340,37 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
     
     JSContext *cx = JSD_GetJSContext (jsdc, state);
     void *glob = NS_STATIC_CAST(void *, JS_GetGlobalObject (cx));
-    if (NS_WARN_IF_FALSE(glob, "No global in threadstate"))
+
+    if (!glob) {
+        NS_WARNING("No global in threadstate");
         return PR_TRUE;
+    }
     
     JSDStackFrameInfo *frame = JSD_GetStackFrame (jsdc, state);
-    if (NS_WARN_IF_FALSE(frame, "No frame in threadstate"))
+
+    if (!frame) {
+        NS_WARNING("No frame in threadstate");
         return PR_TRUE;
-    
+    }
+
     JSDScript *script = JSD_GetScriptForStackFrame (jsdc, state, frame);
-    if (NS_WARN_IF_FALSE(script, "No script in threadstate"))
+    if (!script) {
+        NS_WARNING("No script in threadstate");
         return PR_TRUE;
+    }
 
     jsuint pc = JSD_GetPCForStackFrame (jsdc, state, frame);
-    if (NS_WARN_IF_FALSE(pc, "No pc in threadstate"))
+    if (!pc) {
+        NS_WARNING("No pc in threadstate");
         return PR_TRUE;
-    
+    }
+
     PRUint32 currentLine = JSD_GetClosestLine (jsdc, script, pc);
-    if (NS_WARN_IF_FALSE(currentLine, "Can't convert pc to line"))
+    if (!currentLine) {
+        NS_WARNING("Can't convert pc to line");
         return PR_TRUE;
-    
+    }
+
     const char *url = nsnull;
     PRUint32 len = 0;
     FilterRecord *currentFilter = gFilters;
@@ -1075,8 +1087,10 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
 {
     ASSERT_VALID_SCRIPT;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
-    if (NS_WARN_IF_FALSE(cx, "No default context !?"))
+    if (!cx) {
+        NS_WARNING("No default context !?");
         return NS_ERROR_FAILURE;
+    }
     JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
     JSString *jsstr;
     if (fun)

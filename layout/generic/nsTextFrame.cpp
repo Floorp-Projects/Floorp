@@ -5159,7 +5159,8 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   // Setup text transformer to transform this frames text content
   nsCOMPtr<nsIDocument> doc;
   mContent->GetDocument(*getter_AddRefs(doc));
-  if (NS_WARN_IF_FALSE(doc, "Content has no document.")) { 
+  if (!doc) {
+    NS_WARNING("Content has no document.");
     return NS_ERROR_FAILURE; 
   }
   nsCOMPtr<nsILineBreaker> lb;

@@ -136,7 +136,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                     nsMemory::Free(iid);
                 }
                 
-                NS_VERIFY(isISupportsDescendent,"!isISupportsDescendent");
+                NS_ASSERTION(isISupportsDescendent, "!isISupportsDescendent");
 
                 if (isISupportsDescendent)  
                 {
