@@ -55,3 +55,11 @@
   list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
 }
   
+#navigator-throbber[toolbarmode="small"] {
+  margin: 0 5px 0 0;
+  list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif");
+}
+
+#navigator-throbber[toolbarmode="small"][busy="true"] {
+  list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif");
+}

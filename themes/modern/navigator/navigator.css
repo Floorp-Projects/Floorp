@@ -145,6 +145,173 @@
   display: none;
 }
 
+/* ::::: small primary toolbar buttons ::::: */
+
+.toolbarbutton-1[toolbarmode="small"] {
+  margin-top: 4px;
+  list-style-image: url("chrome://navigator/skin/icons/btn1-small.gif");
+}
+
+#back-button[toolbarmode="small"] {
+  -moz-image-region: rect(0 19px 19px 0);
+}
+
+#back-button[buttonover="true"][toolbarmode="small"] {
+  -moz-image-region: rect(0 38px 19px 19px);
+}
+
+#back-button[buttondown="true"][toolbarmode="small"] {
+  -moz-image-region: rect(0 57px 19px 38px);
+}
+
+#back-button[disabled="true"][toolbarmode="small"] {
+  -moz-image-region: rect(0 76px 19px 57px) !important;
+}
+
+#forward-button[toolbarmode="small"] {
+  -moz-image-region: rect(19px 19px 38px 0);
+}
+
+#forward-button[buttonover="true"][toolbarmode="small"] {
+  -moz-image-region: rect(19px 38px 38px 19px);
+}
+
+#forward-button[buttondown="true"][toolbarmode="small"] {
+  -moz-image-region: rect(19px 57px 38px 38px);
+}
+
+#forward-button[disabled="true"][toolbarmode="small"] {
+  -moz-image-region: rect(19px 76px 38px 57px) !important;
+}
+
+#reload-button[toolbarmode="small"] {
+  -moz-image-region: rect(38px 19px 57px 0);
+}
+  
+#reload-button:hover[toolbarmode="small"] {
+  -moz-image-region: rect(38px 38px 57px 19px);
+}
+
+#reload-button:hover:active[toolbarmode="small"] {
+  -moz-image-region: rect(38px 57px 57px 38px);
+}
+
+#reload-button[disabled="true"][toolbarmode="small"] {
+  -moz-image-region: rect(38px 76px 57px 57px) !important;
+}
+
+#stop-button[toolbarmode="small"] {
+  -moz-image-region: rect(57px 19px 76px 0);
+} 
+
+#stop-button:hover[toolbarmode="small"] {
+  -moz-image-region: rect(57px 38px 76px 19px);
+} 
+
+#stop-button:hover:active[toolbarmode="small"] {
+  -moz-image-region: rect(57px 57px 76px 38px);
+} 
+
+#stop-button[disabled="true"][toolbarmode="small"] {
+  -moz-image-region: rect(57px 76px 76px 57px) !important;
+} 
+
+#back-button[toolbarmode="small"] > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker,
+#forward-button[toolbarmode="small"] > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker
+{
+  margin: 8px 0px 0px 14px;
+}
+
+/* temporary - still don't have small print icons */
+#print-button[toolbarmode="small"] {
+  display: none;
+}
+
+#search-button[toolbarmode="small"] > .button-box > .button-text {
+  display: none;
+}
+
+#nav-bar[toolbarmode="small"] {
+  min-height: 0;
+}
+
+#nav-bar[toolbarmode="small"] > #nav-bar-inner {
+  margin: 0;
+  border: none;
+}
+
+#nav-bar[toolbarmode="small"] > #nav-bar-buttons {
+  -moz-box-align: center;
+}
+
+#nav-bar[toolbarmode="small"] > .toolbar-primary-grippy {
+  display: none;
+}
+
+#nav-bar[toolbarmode="small"] > .toolbar-primary-holder {
+  background: #D0D7DF;
+}
+
+/* ::::: fullscreen window controls ::::: */
+
+#window-controls {
+  -moz-box-align: center;
+  padding: 0 2px 0 4px;
+  background-color: #A9B2BD;
+  border-left: 2px solid;
+  -moz-border-left-colors: #B6BEC5 #DDE3E8;
+}
+
+#minimize-button {
+  -moz-image-region: rect(92px 15px 108px 0);
+} 
+
+#minimize-button:hover {
+  -moz-image-region: rect(92px 30px 108px 15px);
+} 
+
+#minimize-button:hover:active {
+  -moz-image-region: rect(92px 45px 108px 30px);
+} 
+
+#minimize-button[disabled="true"] {
+  -moz-image-region: rect(92px 60px 108px 45px) !important;
+} 
+
+#restore-button {
+  -moz-image-region: rect(76px 15px 92px 0);
+} 
+
+#restore-button:hover {
+  -moz-image-region: rect(76px 30px 92px 15px);
+} 
+
+#restore-button:hover:active {
+  -moz-image-region: rect(76px 45px 92px 30px);
+} 
+
+#restore-button[disabled="true"] {
+  -moz-image-region: rect(76px 60px 92px 45px) !important;
+} 
+
+#close-button {
+  -moz-image-region: rect(108px 15px 124px 0);
+} 
+
+#close-button:hover {
+  -moz-image-region: rect(108px 30px 124px 15px);
+} 
+
+#close-button:hover:active {
+  -moz-image-region: rect(108px 45px 124px 30px);
+} 
+
+#close-button[disabled="true"] {
+  -moz-image-region: rect(108px  60px 124px 45px) !important;
+} 
+
 /* ::::: special menubutton dropmarkers ::::: */
 
 /* ..... dropmarker box ..... */

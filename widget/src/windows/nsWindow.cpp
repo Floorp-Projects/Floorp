@@ -601,6 +601,8 @@ nsWindow::nsWindow() : nsBaseWidget()
     mIsInMouseWheelProcessing = PR_FALSE;
     mLastSize.width = 0;
     mLastSize.height = 0;
+    mOldStyle           = 0;
+    mOldExStyle         = 0;
 
 	  mIMEProperty		= 0;
 	  mIMEIsComposing		= PR_FALSE;
@@ -1032,6 +1034,10 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
         // any requests to activate the window while it is displayed. Windows 
         // will automatically activate the popup on the mousedown otherwise.
         if (!rollup) {
+          // if listener may request to be closed if its target was clicked
+          gRollupListener->ShouldRollupOnMouseActivate(&rollup);
+          if (rollup)
+            gRollupListener->Rollup();
           *outResult = MA_NOACTIVATE;
           return TRUE;
         }
@@ -2191,6 +2197,44 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       HCURSOR oldCursor = ::SetCursor(newCursor);
     }
   //}
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide) 
+{
+  HWND hwnd = (HWND)GetNativeData(NS_NATIVE_WINDOW);
+  
+  HWND parentWnd = ::GetParent(hwnd);
+  while (parentWnd) {
+    hwnd = parentWnd;
+    parentWnd = ::GetParent(parentWnd);
+    if (!parentWnd) break;
+  }
+
+  DWORD style, exStyle;
+  if (aShouldHide) {
+    DWORD tempStyle = ::GetWindowLong(hwnd, GWL_STYLE);
+    DWORD tempExStyle = ::GetWindowLong(hwnd, GWL_EXSTYLE);
+
+    style = WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
+    exStyle = 0;
+
+    mOldStyle = tempStyle;
+    mOldExStyle = tempExStyle;
+  }
+  else {
+    if (!mOldStyle || !mOldExStyle) {
+      mOldStyle = ::GetWindowLong(hwnd, GWL_STYLE);
+      mOldExStyle = ::GetWindowLong(hwnd, GWL_EXSTYLE);
+    }
+
+    style = mOldStyle;
+    exStyle = mOldExStyle;
+  }
+
+  ::SetWindowLong(hwnd, GWL_STYLE, style);
+  ::SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+
   return NS_OK;
 }
     

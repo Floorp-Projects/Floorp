@@ -607,6 +607,9 @@ protected:
     nsresult AddListenerFor(nsINodeInfo *aNodeInfo,
                             PRBool aCompileEventHandlers);
 
+    
+    nsresult HideWindowChrome(PRBool aShouldHide);
+
 protected:
     // Internal accessors. These shadow the 'Slots', and return
     // appropriate default values if there are no slots defined in the

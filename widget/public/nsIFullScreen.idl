@@ -19,7 +19,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,44 +34,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ==== brand.css ===========================================================
-   == Styles related to branding in the Communicator suite.
-   ========================================================================== */
+#include "nsISupports.idl"
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+interface nsISimpleEnumerator;
 
-#navigator-throbber {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#button-image");
-  -moz-user-focus: ignore !important;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  margin: 6px 10px 0px 8px;
-  border-top: 1px solid #B9BFC7;
-  border-right: 1px solid #A1AAB3;
-  border-bottom: 1px solid #DEE7EE;
-  border-left: 1px solid #A4ACB5;
-  -moz-border-top-colors: none;
-  -moz-border-right-colors: none;
-  -moz-border-bottom-colors: none;
-  -moz-border-left-colors: none;
-  min-width: 0px;
-  list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
-}
+[scriptable, uuid(9854976e-1dd1-11b2-8350-e6d35099fbce)]
+interface nsIFullScreen : nsISupports
+{
+  /**
+   * Hide all registered OS chrome components
+   */
+  void hideAllOSChrome();
 
-#navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
-}
+  /**
+   * Show all registered OS chrome components
+   */
+  void showAllOSChrome();
 
-#throbber-box {
-  -moz-box-align: start;
-  background: url("chrome://communicator/skin/toolbar/prtb-bg-noline.gif") #B1BDC9 repeat-x top;
-}
+  /**
+   * Return an enumerator of all registered OS chrome components
+   */
+  nsISimpleEnumerator getChromeItems();
+};
 
-#navigator-throbber[toolbarmode="small"] {
-  margin: 0 5px 0 0;
-  list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif");
-}
 
-#navigator-throbber[toolbarmode="small"][busy="true"] {
-  list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif");
-}
+[scriptable, uuid(ddd6790a-1dd1-11b2-a804-b522643903b9)]
+interface nsIOSChromeItem : nsISupports
+{
+  readonly attribute string name;
+
+  attribute boolean hidden;
+
+  readonly attribute long x;
+  readonly attribute long y;
+  readonly attribute long width;
+  readonly attribute long height;
+};
+

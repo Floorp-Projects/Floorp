@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  layout \
 		  layout_xul \
+		  view \
 		  gfx \
 		  content \
 		  $(NULL)

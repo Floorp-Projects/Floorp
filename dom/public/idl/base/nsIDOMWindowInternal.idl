@@ -112,6 +112,8 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   /* [replaceable] length */
   readonly attribute unsigned long               length;
 
+           attribute boolean                     fullScreen;
+
   void                      alert(in DOMString text);
   boolean                   confirm(in DOMString text);
 

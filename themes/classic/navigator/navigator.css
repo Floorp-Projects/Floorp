@@ -133,6 +133,52 @@
 #fullscreen-exit-button {
   list-style-image: none;
 }
+
+/* ::::: small primary toolbar buttons ::::: */
+
+.toolbarbutton-1[toolbarmode="small"] {
+  min-width: 0;
+}
+
+.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-menubutton-button
+    > .toolbarbutton-text,
+.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-text {
+  display: none;
+}
+
+#search-button[toolbarmode="small"] > .button-box > .button-text {
+  display: none;
+}
+
+#nav-bar[toolbarmode="small"] > #nav-bar-inner {
+  margin: 0;
+  border: none;
+}
+
+#nav-bar[toolbarmode="small"] > .toolbar-primary-grippy {
+  display: none;
+}
+
+/* ::::: fullscreen window controls ::::: */
+
+#window-controls {
+  -moz-box-align: center;
+  padding: 0 2px 0 4px;
+  border-left: 2px solid;
+  -moz-border-left-colors: ThreeDHighlight ThreeDShadow;
+}
+
+#minimize-button {
+  list-style-image: url("chrome://navigator/skin/icons/minimize.gif");
+} 
+
+#restore-button {
+  list-style-image: url("chrome://navigator/skin/icons/restore.gif");
+} 
+
+#close-button {
+  list-style-image: url("chrome://navigator/skin/icons/close.gif");
+} 
   
 /* ::::: nav-bar-inner ::::: */
   

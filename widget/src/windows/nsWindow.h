@@ -266,6 +266,7 @@ public:
     virtual nsIFontMetrics* GetFont(void);
     NS_IMETHOD              SetFont(const nsFont &aFont);
     NS_IMETHOD              SetCursor(nsCursor aCursor);
+    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
     NS_IMETHOD              Validate();
     NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
@@ -440,6 +441,10 @@ protected:
     PRInt32     mPreferredHeight;
 
     PRInt32       mMenuCmdId;
+
+    // Window styles used by this window before chrome was hidden
+    DWORD       mOldStyle;
+    DWORD       mOldExStyle;
 
 	// For Input Method Support
 	DWORD		mIMEProperty;

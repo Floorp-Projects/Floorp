@@ -19,7 +19,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -34,45 +33,53 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef fullscreen___h___
+#define fullscreen___h___
 
-/* ==== brand.css ===========================================================
-   == Styles related to branding in the Communicator suite.
-   ========================================================================== */
+#include "nsIFullScreen.h"
+#include "nsISupportsArray.h"
+#include "nsISimpleEnumerator.h"
+#include "nsString.h"
+#include <windows.h>
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+#define NS_FULLSCREEN_SERVICE_CONTRACTID "@mozilla.org/browser/fullscreen;1"
 
-#navigator-throbber {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#button-image");
-  -moz-user-focus: ignore !important;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  margin: 6px 10px 0px 8px;
-  border-top: 1px solid #B9BFC7;
-  border-right: 1px solid #A1AAB3;
-  border-bottom: 1px solid #DEE7EE;
-  border-left: 1px solid #A4ACB5;
-  -moz-border-top-colors: none;
-  -moz-border-right-colors: none;
-  -moz-border-bottom-colors: none;
-  -moz-border-left-colors: none;
-  min-width: 0px;
-  list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
-}
+// {F6DC257B-04F5-4d4c-B94F-88BCB52A9A46}
+#define NS_FULLSCREEN_SERVICE_CID \
+{ 0xf6dc257b, 0x4f5, 0x4d4c, { 0xb9, 0x4f, 0x88, 0xbc, 0xb5, 0x2a, 0x9a, 0x46 } }
 
-#navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
-}
+/* Header file */
+class nsFullScreen : public nsIFullScreen
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFULLSCREEN
 
-#throbber-box {
-  -moz-box-align: start;
-  background: url("chrome://communicator/skin/toolbar/prtb-bg-noline.gif") #B1BDC9 repeat-x top;
-}
+  nsFullScreen();
+  virtual ~nsFullScreen();
+  /* additional members */
 
-#navigator-throbber[toolbarmode="small"] {
-  margin: 0 5px 0 0;
-  list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif");
-}
+protected:
+  void HideAllOSChrome(PRBool aVisbility);
 
-#navigator-throbber[toolbarmode="small"][busy="true"] {
-  list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif");
-}
+protected:
+  nsCOMPtr<nsISupportsArray> mOSChromeItems;
+};
+
+/* Header file */
+class nsOSChromeItem : public nsIOSChromeItem
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOSCHROMEITEM
+
+  nsOSChromeItem(char* aName);
+  virtual ~nsOSChromeItem();
+
+protected:
+  nsCString mName;
+  PRBool mIsHidden;
+  RECT mItemRect;
+};
+
+#endif // fullscreen___h___

@@ -38,6 +38,7 @@ REQUIRES=	xpcom \
 			webshell \
 			docshell \
 			layout \
+			view \
 			$(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -70,6 +71,7 @@ CPP_OBJS =                             \
 	.\$(OBJDIR)\nsSound.obj          \
 	.\$(OBJDIR)\nsImageClipboard.obj \
 	.\$(OBJDIR)\nsBidiKeyboard.obj   \
+	.\$(OBJDIR)\nsFullScreen.obj   \
 	$(NULL)
 
 LINCS= \

@@ -79,6 +79,8 @@
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
 #include "nsIXPCScriptable.h"
+#include "nsPoint.h"
+#include "nsSize.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -281,8 +283,13 @@ protected:
   PRPackedBool                  mFirstDocumentLoad;
   PRPackedBool                  mIsScopeClear;
   PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
+  PRPackedBool                  mFullScreen;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
+
+  // state preservation for full screen mode
+  nsPoint*                     mOriginalPos;
+  nsSize*                      mOriginalSize;
 
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsIDocShell*                  mDocShell;  // Weak Reference

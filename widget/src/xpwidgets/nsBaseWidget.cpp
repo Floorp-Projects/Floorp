@@ -461,6 +461,21 @@ NS_IMETHODIMP nsBaseWidget::GetWindowType(nsWindowType& aWindowType)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsBaseWidget::SetWindowType(nsWindowType aWindowType) 
+{
+  mWindowType = aWindowType;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Hide window borders/decorations for this widget
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::HideWindowChrome(PRBool aShouldHide)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -541,13 +556,6 @@ void nsBaseWidget::OnDestroy()
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mToolkit);
   mAppShell = nsnull;     // clear out nsCOMPtr
-}
-
-
-NS_METHOD nsBaseWidget::SetWindowType(nsWindowType aWindowType) 
-{
-  mWindowType = aWindowType;
-  return NS_OK;
 }
 
 
