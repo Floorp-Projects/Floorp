@@ -1096,26 +1096,15 @@ public:
                                  PRBool               aCommandAdded) = 0;
 
   /**
-   * Called in style ReResolution to get the frame that contains the style context that is the
-   * parent style context for this frame. 
-   * @param aProviderFrame: set to the frame who's style context is to be used as the parent context
-   *                        in reresolving style for this frame. Note that this may or may not be the
-   *                        parent frame of this frame.
-   * @param aRelatioship : indicates how the provider frame relates to this frame: 
-   *                       i.e. if the parent context provider frame is a child of this frame, 
-   *                       then aRelationship must be set to eContextProvider_Descendant, 
-   *                       if a parent, grandparent etc. set to eContextProvider_Ancestor 
-   *                       (this is used to control recursion in style reresolution)
+   * Get the frame that is the primary frame associated with the content. 
+   * aProviderFrame == aFrame except in the case of an outer table, in
+   * which case it is the inner table.
    *
-   * if return value is NS_OK then aProvdierFrame must be set, otherwise it is ignored.
-   *
-   * PRECONDITIONS: aProviderFrame cannot be null
-   * POSTCONDITIONS: *aProfiderFrame will be a valid frame if this routine succeeds
-   *                 aRelationship will be set to a legal enum value indicating the correct relationship
+   * @param aPresContext:   PresContext
+   * @param aProviderFrame: Set to the primary frame associated with the content
    */
-  NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
-                                           nsIFrame** aProviderFrame, 
-                                           nsContextProviderRelationship& aRelationship) = 0;
+  NS_IMETHOD GetStyleContextProvider(nsIPresContext* aPresContext,
+                                     nsIFrame**      aProviderFrame) = 0;
 
   /**
    * Determines whether a frame is visible for painting
