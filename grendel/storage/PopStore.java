@@ -103,6 +103,7 @@ public class PopStore extends Store {
   }
 
   synchronized public boolean protocolConnect(String host,
+                                              int port,
                                               String user,
                                               String password)
     throws MessagingException
@@ -110,6 +111,7 @@ public class PopStore extends Store {
 
     if (fSocket != null) return true;   // Already connected.
     try {
+      if (port != -1) fPort = port;
       fSocket = new Socket(host, fPort);
       fInput = fSocket.getInputStream();
       fOutput = new DataOutputStream(fSocket.getOutputStream());

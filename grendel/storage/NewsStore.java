@@ -128,6 +128,7 @@ public class NewsStore extends Store {
 
 
   protected boolean protocolConnect(String host,
+                                    int port,
                                     String user,
                                     String password)
     throws MessagingException {
@@ -151,8 +152,6 @@ public class NewsStore extends Store {
     }
 
     nntp = new NNTPConnection();
-
-    int port = -1;     // #### override this from the url or something.
 
     try {
       boolean status = nntp.connect(host, port, user, password);
