@@ -226,6 +226,9 @@
 #ifdef MOZ_EXTRA_X11CONVERTERS
 #include "nsCP1046ToUnicode.h"
 #endif
+#ifdef XP_OS2
+#include "nsCP869ToUnicode.h"
+#endif
 #include "nsUnicodeToCP850.h"
 #include "nsUnicodeToCP852.h"
 #include "nsUnicodeToCP855.h"
@@ -235,6 +238,9 @@
 #include "nsUnicodeToCP864i.h"
 #ifdef MOZ_EXTRA_X11CONVERTERS
 #include "nsUnicodeToCP1046.h"
+#endif
+#ifdef XP_OS2
+#include "nsUnicodeToCP869.h"
 #endif
 
 // ucvja
@@ -408,6 +414,9 @@ NS_UCONV_REG_UNREG("IBM864", NS_CP864TOUNICODE_CID, NS_UNICODETOCP864_CID)
 NS_UCONV_REG_UNREG("IBM864i", NS_CP864ITOUNICODE_CID, NS_UNICODETOCP864I_CID)
 #ifdef MOZ_EXTRA_X11CONVERTERS
 NS_UCONV_REG_UNREG("x-IBM1046", NS_CP1046TOUNICODE_CID, NS_UNICODETOCP1046_CID)
+#endif
+#ifdef XP_OS2
+NS_UCONV_REG_UNREG("IBM869", NS_CP869TOUNICODE_CID, NS_UNICODETOCP869_CID)
 #endif
 
     // ucvja
@@ -1509,6 +1518,13 @@ static const nsModuleComponentInfo components[] =
     nsCP1046ToUnicodeConstructor ,
   },
 #endif
+#ifdef XP_OS2
+  {
+    DECODER_NAME_BASE "IBM869" , NS_CP869TOUNICODE_CID,
+    NS_UNICODEDECODER_CONTRACTID_BASE "IBM869",
+    nsCP869ToUnicodeConstructor ,
+  },
+#endif
   { 
     ENCODER_NAME_BASE "IBM850" , NS_UNICODETOCP850_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "IBM850",
@@ -1549,6 +1565,13 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "x-IBM1046" , NS_UNICODETOCP1046_CID,
     NS_UNICODEENCODER_CONTRACTID_BASE "x-IBM1046",
     nsUnicodeToCP1046Constructor,
+  },
+#endif
+#ifdef XP_OS2
+  {
+    ENCODER_NAME_BASE "IBM869" , NS_UNICODETOCP869_CID,
+    NS_UNICODEENCODER_CONTRACTID_BASE "IBM869",
+    nsUnicodeToCP869Constructor,
   },
 #endif
     // ucvja
