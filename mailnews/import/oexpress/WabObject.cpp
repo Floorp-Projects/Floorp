@@ -522,7 +522,7 @@ void CWAB::GetValueString( LPSPropValue pVal, nsString& val)
             for(j = 0; j < pVal->Value.MVszA.cValues; j++) {
 				CStrToUnicode( (const char *) (pVal->Value.MVszA.lppszA[j]), tmp);
                 val += tmp;
-                val += TR_OUTPUT_EOL;
+                val.AppendWithConversion(TR_OUTPUT_EOL);
             }
         }
         break;
@@ -530,7 +530,7 @@ void CWAB::GetValueString( LPSPropValue pVal, nsString& val)
             ULONG	j;
             for(j = 0; j < pVal->Value.MVszW.cValues; j++) {
                 val += (PRUnichar *) (pVal->Value.MVszW.lppszW[j]);
-                val += TR_OUTPUT_EOL;
+                val.AppendWithConversion(TR_OUTPUT_EOL);
             }
         }
         break;
