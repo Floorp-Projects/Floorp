@@ -282,8 +282,7 @@ npn_SetWindowSize(np_instance* instance, NPSize* pnpsz);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPluginManager : public nsIPluginManager2,
-                        public nsINetworkManager
+class nsPluginManager : public nsIPluginManager2
 {
 public:
 
