@@ -37,6 +37,187 @@ static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 
+class CSSFirstLineRule : public nsIStyleRule {
+public:
+  CSSFirstLineRule(nsIHTMLCSSStyleSheet* aSheet);
+  virtual ~CSSFirstLineRule();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+                          nsIPresContext* aPresContext);
+  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext);
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsIHTMLCSSStyleSheet*  mSheet;
+};
+
+CSSFirstLineRule::CSSFirstLineRule(nsIHTMLCSSStyleSheet* aSheet)
+  : mSheet(aSheet)
+{
+  NS_INIT_REFCNT();
+}
+
+CSSFirstLineRule::~CSSFirstLineRule()
+{
+}
+
+NS_IMPL_ISUPPORTS(CSSFirstLineRule, kIStyleRuleIID);
+
+NS_IMETHODIMP
+CSSFirstLineRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
+{
+  aResult = PRBool(this == aRule);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSFirstLineRule::HashValue(PRUint32& aValue) const
+{
+  aValue = (PRUint32)7;         // XXX got a better suggestion?
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSFirstLineRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  NS_IF_ADDREF(mSheet);
+  aSheet = mSheet;
+  return NS_OK;
+}
+
+// Strength is an out-of-band weighting, always 0 here
+NS_IMETHODIMP
+CSSFirstLineRule::GetStrength(PRInt32& aStrength) const
+{
+  aStrength = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSFirstLineRule::MapFontStyleInto(nsIStyleContext* aContext,
+                                   nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+// Fixup the style context so that all of the properties that don't
+// apply (CSS2 spec section 5.12.1) don't apply.
+//
+// The properties that apply: font-properties, color-properties,
+// backgorund-properties, word-spacing, letter-spacing,
+// text-decoration, vertical-align, text-transform, line-height,
+// text-shadow, and clear.
+//
+// Everything else doesn't apply.
+NS_IMETHODIMP
+CSSFirstLineRule::MapStyleInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext)
+{
+  nsIStyleContext* parentContext;
+  parentContext = aContext->GetParent();
+
+  // Disable border
+  nsStyleSpacing* spacing = (nsStyleSpacing*)
+    aContext->GetMutableStyleData(eStyleStruct_Spacing);
+  if (spacing) {
+    spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+    spacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+    spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+    spacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+  }
+
+  // Undo any change made to "direction"
+  nsStyleDisplay* display = (nsStyleDisplay*)
+    aContext->GetMutableStyleData(eStyleStruct_Display);
+  if (parentContext) {
+    const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
+      parentContext->GetStyleData(eStyleStruct_Display);
+    if (parentDisplay) {
+      display->mDirection = parentDisplay->mDirection;
+    }
+  }
+
+  // Undo any change made to "cursor"
+  nsStyleColor* color = (nsStyleColor*)
+    aContext->GetMutableStyleData(eStyleStruct_Color);
+  if (parentContext) {
+    const nsStyleColor* parentColor = (const nsStyleColor*)
+      parentContext->GetStyleData(eStyleStruct_Color);
+    if (parentColor) {
+      color->mCursor = parentColor->mCursor;
+    }
+  }
+
+  // Undo any change to quotes
+  nsStyleContent* content = (nsStyleContent*)
+    aContext->GetMutableStyleData(eStyleStruct_Content);
+  if (parentContext) {
+    const nsStyleContent* parentContent = (const nsStyleContent*)
+      parentContext->GetStyleData(eStyleStruct_Content);
+    if (parentContent) {
+      nsAutoString open, close;
+      PRUint32 i, n = parentContent->QuotesCount();
+      content->AllocateQuotes(n);
+      for (i = 0; i < n; i++) {
+        parentContent->GetQuotesAt(i, open, close);
+        content->SetQuotesAt(i, open, close);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSFirstLineRule::List(FILE* out, PRInt32 aIndent) const
+{
+  return NS_OK;
+}
+
+// -----------------------------------------------------------
+
+class CSSFirstLetterRule : public CSSFirstLineRule {
+public:
+  CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet);
+
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+                          nsIPresContext* aPresContext);
+};
+
+CSSFirstLetterRule::CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet)
+  : CSSFirstLineRule(aSheet)
+{
+}
+
+NS_IMETHODIMP
+CSSFirstLetterRule::MapStyleInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext)
+{
+  // These properties apply: font-properties, color-properties,
+  // backgorund-properties, word-spacing, letter-spacing,
+  // text-decoration, vertical-align, text-transform, line-height,
+  // text-shadow, and clear.
+  //
+  // Everything else doesn't apply.
+
+  // Disable border
+  nsStyleSpacing* spacing = (nsStyleSpacing*)
+    aContext->GetMutableStyleData(eStyleStruct_Spacing);
+  if (spacing) {
+    spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+    spacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+    spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+    spacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+  }
+  return NS_OK;
+}
+
+// -----------------------------------------------------------
 
 class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet {
 public:
@@ -99,6 +280,8 @@ protected:
 
   nsIURL*         mURL;
   nsIDocument*    mDocument;
+
+  CSSFirstLineRule* mFirstLineRule;
 };
 
 
@@ -141,7 +324,8 @@ void HTMLCSSStyleSheetImpl::operator delete(void* ptr)
 HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
   : nsIHTMLCSSStyleSheet(),
     mURL(nsnull),
-    mDocument(nsnull)
+    mDocument(nsnull),
+    mFirstLineRule(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -149,6 +333,10 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
 {
   NS_RELEASE(mURL);
+  if (nsnull != mFirstLineRule) {
+    mFirstLineRule->mSheet = nsnull;
+    NS_RELEASE(mFirstLineRule);
+  }
 }
 
 NS_IMPL_ADDREF(HTMLCSSStyleSheetImpl)
@@ -226,7 +414,21 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                              nsIStyleContext* aParentContext,
                                              nsISupportsArray* aResults)
 {
-  // no pseudo frame style...
+  if (aPseudoTag == nsHTMLAtoms::firstLinePseudo) {
+    if (aResults->Count()) { 
+      if (nsnull == mFirstLineRule) {
+        mFirstLineRule = new CSSFirstLineRule(this);
+        if (mFirstLineRule) {
+          NS_ADDREF(mFirstLineRule);
+        }
+      }
+      if (mFirstLineRule) {
+        aResults->AppendElement(mFirstLineRule); 
+        return 1; 
+      }
+    } 
+  }
+  // else no pseudo frame style... 
   return 0;
 }
 
@@ -262,6 +464,10 @@ HTMLCSSStyleSheetImpl::Reset(nsIURL* aURL)
   NS_IF_RELEASE(mURL);
   mURL = aURL;
   NS_ADDREF(mURL);
+  if (nsnull != mFirstLineRule) {
+    mFirstLineRule->mSheet = nsnull;
+    NS_RELEASE(mFirstLineRule);
+  }
   return NS_OK;
 }
 
