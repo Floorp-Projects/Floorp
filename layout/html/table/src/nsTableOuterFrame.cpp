@@ -2005,10 +2005,14 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
       nscoord availWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS, captionMargin,
                                                 ignorePadding, &innerSize.width, &innerMarginNoAuto, &innerMargin);
       nsHTMLReflowMetrics captionMet(PR_FALSE);
+      nsReflowReason reason = aOuterRS.reason;
+      if (eReflowReason_Initial == aOuterRS.reason) {
+        reason = eReflowReason_Resize; // we have already done the initial reflow
+      }
       nsReflowStatus capStatus; // don't let the caption cause incomplete
       rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, 
                             availWidth, captionSize, captionMargin, captionMarginNoAuto,
-                            ignorePadding, aOuterRS.reason, capStatus);
+                            ignorePadding, reason, capStatus);
       if (NS_FAILED(rv)) return rv;
 
       nsPoint captionOrigin;
