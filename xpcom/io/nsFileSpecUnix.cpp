@@ -29,7 +29,7 @@
 #include "nsError.h"
 #include "prio.h"   /* for PR_Rename */
 
-#if defined(SCO_SV)
+#if defined(_SCO_DS)
 #define _SVID3  /* for statvfs.h */
 #endif
 
