@@ -975,6 +975,7 @@ SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
     }
     /* { */SECU_Indent(out, level); fprintf(out, "}\n");
 }
+
 static void
 secu_PrintContextSpecific(FILE *out, SECItem *i, char *m, int level)
 {
@@ -987,7 +988,7 @@ secu_PrintContextSpecific(FILE *out, SECItem *i, char *m, int level)
     	fprintf(out, "%s: ", m);
     }
 
-    fprintf(out,"Option %d\n", type);
+    fprintf(out,"[%d]\n", type);
     start = 2;
     if (i->data[1] & 0x80) {
 	start = (i->data[1] & 0x7f) +1;
@@ -995,6 +996,42 @@ secu_PrintContextSpecific(FILE *out, SECItem *i, char *m, int level)
     tmp.data = &i->data[start];
     tmp.len = i->len -start;
     SECU_PrintAsHex(out, &tmp, m, level+1);
+}
+
+static void
+secu_PrintOctetString(FILE *out, SECItem *i, char *m, int level)
+{
+    SECItem tmp;
+    int start;
+
+    start = 2;
+    if (i->data[1] & 0x80) {
+	start = (i->data[1] & 0x7f) +1;
+    }
+    tmp.data = &i->data[start];
+    tmp.len = i->len - start;
+    SECU_PrintAsHex(out, &tmp, m, level);
+}
+
+static void
+secu_PrintBitString(FILE *out, SECItem *i, char *m, int level)
+{
+    SECItem tmp;
+    int start;
+    int unused_bits;
+
+    start = 2;
+    if (i->data[1] & 0x80) {
+	start = (i->data[1] & 0x7f) + 1;
+    }
+    unused_bits = i->data[start++];
+    tmp.data = &i->data[start];
+    tmp.len = i->len - start;
+    SECU_PrintAsHex(out, &tmp, m, level);
+    if (unused_bits) {
+	SECU_Indent(out, level + 1);
+	fprintf(out, "(%d least significant bits unused)\n", unused_bits);
+    }
 }
 
 static void
@@ -1032,7 +1069,12 @@ secu_PrintUniversal(FILE *out, SECItem *i, char *m, int level)
           case SEC_ASN1_SEQUENCE:
 	    SECU_PrintSet(out, i, m, level);
 	    break;
-	    
+	  case SEC_ASN1_OCTET_STRING:
+	    secu_PrintOctetString(out, i, m, level);
+	    break;
+	  case SEC_ASN1_BIT_STRING:
+	    secu_PrintBitString(out, i, m, level);
+	    break;
 	  default:
 	    SECU_PrintAsHex(out, i, m, level);
 	    break;
@@ -1472,6 +1514,7 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		case SEC_OID_X509_BASIC_CONSTRAINTS:
 		    secu_PrintBasicConstraints(out,tmpitem,"Data",level+1);
 		    break;
+
 		case SEC_OID_X509_SUBJECT_ALT_NAME:
 		case SEC_OID_X509_ISSUER_ALT_NAME:
 	      /*
@@ -1495,12 +1538,13 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		case SEC_OID_X509_POLICY_MAPPINGS:
 		case SEC_OID_X509_POLICY_CONSTRAINTS:
 		case SEC_OID_X509_AUTH_KEY_ID:
-            goto defualt;
-		case SEC_OID_X509_EXT_KEY_USAGE:
-            PrintExtKeyUsageExten(out, tmpitem, "", level+1);
-            break;
-		case SEC_OID_X509_AUTH_INFO_ACCESS:
+		    goto defualt;
 
+		case SEC_OID_X509_EXT_KEY_USAGE:
+		    PrintExtKeyUsageExten(out, tmpitem, "", level+1);
+		    break;
+
+		case SEC_OID_X509_AUTH_INFO_ACCESS:
 		case SEC_OID_X509_CRL_NUMBER:
 		case SEC_OID_X509_REASON_CODE:
 
@@ -1527,13 +1571,12 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		case SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT:
 		case SEC_OID_EXT_KEY_USAGE_TIME_STAMP:
 
-	      default:
+	        default:
           defualt:
-		/*SECU_PrintAsHex(out, tmpitem, "Data", level+1); */
 		secu_PrintAny(out, tmpitem, "Data", level+1);
 		break;
 	    }
-		    
+
 	    secu_Newline(out);
 	    extensions++;
 	}
@@ -1618,28 +1661,25 @@ SECU_PrintCertNickname(CERTCertificate *cert, void *data)
     return (SECSuccess);
 }
 
-int
+int  /* sometimes a PRErrorCode, other times a SECStatus.  Sigh. */
 SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
 {
-    PRArenaPool *arena = NULL;
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     CERTCertificateRequest *cr;
-    int rv;
+    int rv = SEC_ERROR_NO_MEMORY;
+
+    if (!arena) 
+	return rv;
 
     /* Decode certificate request */
-    cr = (CERTCertificateRequest*) PORT_ZAlloc(sizeof(CERTCertificateRequest));
+    cr = PORT_ArenaZNew(arena, CERTCertificateRequest);
     if (!cr)
-	return PORT_GetError();
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena)
-	return SEC_ERROR_NO_MEMORY;
-
-    rv = SEC_ASN1DecodeItem(arena, cr, 
-                            SEC_ASN1_GET(CERT_CertificateRequestTemplate), der);
-    if (rv) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return rv;
-    }
+	goto loser;
+    cr->arena = arena;
+    rv = SEC_QuickDERDecodeItem(arena, cr, 
+                           SEC_ASN1_GET(CERT_CertificateRequestTemplate), der);
+    if (rv) 
+	goto loser;
 
     /* Pretty print it out */
     SECU_Indent(out, level); fprintf(out, "%s:\n", m);
@@ -1647,40 +1687,36 @@ SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
     SECU_PrintName(out, &cr->subject, "Subject", level+1);
     rv = secu_PrintSubjectPublicKeyInfo(out, arena, &cr->subjectPublicKeyInfo,
 			      "Subject Public Key Info", level+1);
-    if (rv) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return rv;
-    }
+    if (rv) 
+	goto loser;
     if (cr->attributes)
 	secu_PrintAny(out, cr->attributes[0], "Attributes", level+1);
 
+loser:
     PORT_FreeArena(arena, PR_FALSE);
-    return 0;
+    return rv;
 }
 
 int
 SECU_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
 {
-    PRArenaPool *arena = NULL;
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     CERTCertificate *c;
-    int rv;
+    int rv = SEC_ERROR_NO_MEMORY;
     int iv;
     
-    /* Decode certificate */
-    c = (CERTCertificate*) PORT_ZAlloc(sizeof(CERTCertificate));
-    if (!c)
-	return PORT_GetError();
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena)
-	return SEC_ERROR_NO_MEMORY;
+	return rv;
 
+    /* Decode certificate */
+    c = PORT_ArenaZNew(arena, CERTCertificate);
+    if (!c)
+	goto loser;
+    c->arena = arena;
     rv = SEC_ASN1DecodeItem(arena, c, 
                             SEC_ASN1_GET(CERT_CertificateTemplate), der);
-    if (rv) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return rv;
-    }
+    if (rv)
+	goto loser;
 
     /* Pretty print it out */
     SECU_Indent(out, level); fprintf(out, "%s:\n", m);
@@ -1694,72 +1730,62 @@ SECU_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
     SECU_PrintName(out, &c->subject, "Subject", level+1);
     rv = secu_PrintSubjectPublicKeyInfo(out, arena, &c->subjectPublicKeyInfo,
 			      "Subject Public Key Info", level+1);
-    if (rv) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return rv;
-    }
+    if (rv)
+	goto loser;
     SECU_PrintExtensions(out, c->extensions, "Signed Extensions", level+1);
-
     SECU_PrintFingerprints(out, &c->derCert, "Fingerprint", level);
-    
+loser:
     PORT_FreeArena(arena, PR_FALSE);
-    return 0;
+    return rv;
 }
 
 int
 SECU_PrintPublicKey(FILE *out, SECItem *der, char *m, int level)
 {
-    PRArenaPool *arena = NULL;
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     SECKEYPublicKey key;
-    int rv;
+    int rv = SEC_ERROR_NO_MEMORY;
+
+    if (!arena)
+	return rv;
 
     PORT_Memset(&key, 0, sizeof(key));
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena)
-	return SEC_ERROR_NO_MEMORY;
-
     rv = SEC_ASN1DecodeItem(arena, &key, 
                             SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate), der);
-    if (rv) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return rv;
+    if (!rv) {
+	/* Pretty print it out */
+	secu_PrintRSAPublicKey(out, &key, m, level);
     }
 
-    /* Pretty print it out */
-    secu_PrintRSAPublicKey(out, &key, m, level);
-
     PORT_FreeArena(arena, PR_FALSE);
-    return 0;
+    return rv;
 }
 
 #ifdef HAVE_EPV_TEMPLATE
 int
 SECU_PrintPrivateKey(FILE *out, SECItem *der, char *m, int level)
 {
-    PRArenaPool *arena = NULL;
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     SECKEYEncryptedPrivateKeyInfo key;
-    int rv;
+    int rv = SEC_ERROR_NO_MEMORY;
+
+    if (!arena)
+	return rv;
 
     PORT_Memset(&key, 0, sizeof(key));
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena)
-	return SEC_ERROR_NO_MEMORY;
-
     rv = SEC_ASN1DecodeItem(arena, &key, 
 		SEC_ASN1_GET(SECKEY_EncryptedPrivateKeyInfoTemplate), der);
-    if (rv) {
-	PORT_FreeArena(arena, PR_TRUE);
-	return rv;
-    }
+    if (rv)
+	goto loser;
 
     /* Pretty print it out */
     SECU_Indent(out, level); fprintf(out, "%s:\n", m);
     SECU_PrintAlgorithmID(out, &key.algorithm, "Encryption Algorithm", 
 			  level+1);
     SECU_PrintAsHex(out, &key.encryptedData, "Encrypted Data", level+1);
-
+loser:
     PORT_FreeArena(arena, PR_TRUE);
-    return 0;
+    return rv;
 }
 #endif
 
@@ -1788,7 +1814,7 @@ SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m, int level)
     SECU_Indent(out, level);  fprintf(out, "%s (SHA1):\n", m);
     SECU_Indent(out, level+1); fprintf(out, "%s\n", fpStr);
     PORT_Free(fpStr);
-	fprintf(out, "\n");
+    fprintf(out, "\n");
     return 0;
 }
 
@@ -2130,23 +2156,17 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
 int
 SECU_PrintCrl (FILE *out, SECItem *der, char *m, int level)
 {
-    PRArenaPool *arena = NULL;
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     CERTCrl *c = NULL;
-    int rv;
+    int rv = SEC_ERROR_NO_MEMORY;
 
+    if (!arena)
+    	return rv;
     do {
 	/* Decode CRL */
-	c = (CERTCrl*) PORT_ZAlloc(sizeof(CERTCrl));
-	if (!c) {
-	    rv = PORT_GetError();
+	c = PORT_ArenaZNew(arena, CERTCrl);
+	if (!c)
 	    break;
-	}
-
-	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	if (!arena) {
-	    rv = SEC_ERROR_NO_MEMORY;
-	    break;
-	}
 
 	rv = SEC_ASN1DecodeItem(arena, c, SEC_ASN1_GET(CERT_CrlTemplate), der);
 	if (rv != SECSuccess)
@@ -2154,8 +2174,7 @@ SECU_PrintCrl (FILE *out, SECItem *der, char *m, int level)
 	SECU_PrintCRLInfo (out, c, m, level);
     } while (0);
     PORT_FreeArena (arena, PR_FALSE);
-    PORT_Free (c);
-    return (rv);
+    return rv;
 }
 
 
@@ -2333,40 +2352,35 @@ SECU_PrintTrustFlags(FILE *out, CERTCertTrust *trust, char *m, int level)
 int SECU_PrintSignedData(FILE *out, SECItem *der, char *m,
 			   int level, SECU_PPFunc inner)
 {
-    PRArenaPool *arena = NULL;
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     CERTSignedData *sd;
-    int rv;
+    int rv = SEC_ERROR_NO_MEMORY;
+
+    if (!arena)
+	return rv;
 
     /* Strip off the signature */
-    sd = (CERTSignedData*) PORT_ZAlloc(sizeof(CERTSignedData));
+    sd = PORT_ArenaZNew(arena, CERTSignedData);
     if (!sd)
-	return PORT_GetError();
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena)
-	return SEC_ERROR_NO_MEMORY;
+	goto loser;
 
     rv = SEC_ASN1DecodeItem(arena, sd, SEC_ASN1_GET(CERT_SignedDataTemplate), 
                             der);
-    if (rv) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return rv;
-    }
+    if (rv)
+	goto loser;
 
     SECU_Indent(out, level); fprintf(out, "%s:\n", m);
     rv = (*inner)(out, &sd->data, "Data", level+1);
-    if (rv) {
-	PORT_FreeArena(arena, PR_FALSE);
-	return rv;
-    }
+    if (rv) 
+	goto loser;
 
     SECU_PrintAlgorithmID(out, &sd->signatureAlgorithm, "Signature Algorithm",
 			  level+1);
     DER_ConvertBitString(&sd->signature);
     SECU_PrintAsHex(out, &sd->signature, "Signature", level+1);
-
+loser:
     PORT_FreeArena(arena, PR_FALSE);
-    return 0;
+    return rv;
 
 }
 
