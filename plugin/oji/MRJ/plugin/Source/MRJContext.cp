@@ -243,9 +243,14 @@ void MRJContext::processAppletTag()
 				if (pageAttributes.codeBase == NULL)
 					pageAttributes.codeBase = value;
 			} else
-			if (strcasecmp(name, "CODE") == 0) {
+			if (strcasecmp(name, "CODE") == 0 || strcasecmp(name, "java_CODE") == 0) {
 				status = ::JMNewTextRef(mSessionRef, &info.fAppletCode, kTextEncodingMacRoman, value, strlen(value));
-			} else 
+			} else
+			if (strcasecmp(name, "CLASSID") == 0) {
+				// bug 6591: <object> uses classid="java:classname"
+				value += 5;
+				status = ::JMNewTextRef(mSessionRef, &info.fAppletCode, kTextEncodingMacRoman, value, strlen(value));
+			} else
 			if (strcasecmp(name, "WIDTH") == 0) {
 				info.fWidth = ::atoi(value);
 			} else 
