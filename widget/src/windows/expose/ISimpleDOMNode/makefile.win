@@ -32,9 +32,9 @@ LCFLAGS =-DWIN$(MOZ_BITS) -DREGISTER_PROXY_DLL -D_WIN$(MOZ_BITS)_WINNT=0x400
 DEFFILE = ISimpleDOMNode.def
 
 OBJS =                \
-       dlldata.obj    \
-       ISimpleDOMNode_p.obj \
-       ISimpleDOMNode_i.obj \
+       .\$(OBJDIR)\dlldata.obj    \
+       .\$(OBJDIR)\ISimpleDOMNode_p.obj \
+       .\$(OBJDIR)\ISimpleDOMNode_i.obj \
        $(NULL)
 
 WIN_LIBS =                       \
