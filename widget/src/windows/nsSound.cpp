@@ -84,7 +84,7 @@ nsSound::~nsSound()
 void nsSound::PurgeLastSound() {
   if (mLastSound) {
     // Purge the current sound buffer.
-    ::PlaySound(mLastSound, NULL, SND_PURGE);  // This call halts the sound if it was still playing.
+    ::PlaySound(NULL, NULL, SND_PURGE);  // This call halts the sound if it was still playing.
   
     // Now delete the buffer.
     free(mLastSound);
