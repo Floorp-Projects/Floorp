@@ -139,8 +139,6 @@ protected:
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  nsresult                NotifyObservers( const nsString &aTopic, const nsString &someData );
-
   nsIWebShell*            mWebShell;
   PRBool                  mLockedUntilChromeLoad;
   PRBool                  mLoadDefaultPage;

@@ -1583,31 +1583,6 @@ nsWebShellWindow::ContentRemoved(nsIDocument *aDocument,
 {
 }
 
-// This should rightfully be somebody's CONTRACTID?
-// Will switch when the "app shell browser component" arrives.
-static const char *prefix = "@mozilla.org/appshell/component/browser/window;1";
-
-nsresult
-nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someData ) {
-    nsresult rv = NS_OK;
-    // Get observer service.
-    nsIObserverService *svc = 0;
-    rv = nsServiceManager::GetService( "@mozilla.org/observer-service;1",
-                                       NS_GET_IID(nsIObserverService),
-                                       (nsISupports**)&svc );
-    if ( NS_SUCCEEDED( rv ) && svc ) {
-        // Notify observers as instructed; the subject is "this" web shell window.
-        nsCAutoString topic; topic.Assign(prefix);
-        topic.Append(";");
-        topic.AppendWithConversion(aTopic);
-        rv = svc->NotifyObservers( (nsIWebShellWindow*)this, topic.get(), someData.get() );
-        // Release the service.
-        nsServiceManager::ReleaseService( "@mozilla.org/observer-service;1", svc );
-    } else {
-    }
-    return rv;
-}
-
 // nsIBaseWindow
 NS_IMETHODIMP nsWebShellWindow::Destroy()
 {
