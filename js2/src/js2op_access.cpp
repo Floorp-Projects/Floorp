@@ -233,7 +233,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            Frame *f = meta->env->getTopFrame();
+            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
             a = pop();
             (*f->temps)[slotIndex] = a;
         }
@@ -243,7 +243,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            Frame *f = meta->env->getTopFrame();
+            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
             push((*f->temps)[slotIndex]);
         }
         break;

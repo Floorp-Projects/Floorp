@@ -736,7 +736,7 @@ static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val
     if (argc > 1) {
         float64 farg1 = meta->toFloat64(argv[1]);
         if (JSDOUBLE_IS_NaN(farg1) || (farg1 < 0))
-            end = 0;
+            end = sourceLength;
         else {
             if (!JSDOUBLE_IS_FINITE(farg1))
                 end = sourceLength;

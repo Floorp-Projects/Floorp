@@ -90,7 +90,7 @@
                             PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
                             baseVal = OBJECT_TO_JS2VAL(pInst);
                             pFrame->thisObject = baseVal;
-                            pFrame->assignArguments(meta, base(argCount), argCount);
+                            pFrame->assignArguments(meta, obj, base(argCount), argCount);
                             jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal);   // seems out of order, but we need to catch the current top frame 
                             meta->env->addFrame(pFrame);
                             pFrame = NULL;
@@ -151,7 +151,7 @@
                     pFrame->thisObject = a;
     //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                     // XXX
-                    pFrame->assignArguments(meta, base(argCount), argCount);
+                    pFrame->assignArguments(meta, fObj, base(argCount), argCount);
                     jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(pFrame);
                     pFrame = NULL;
@@ -173,7 +173,7 @@
                     pFrame->instantiate(meta->env);
                     pFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                    pFrame->assignArguments(meta, base(argCount), argCount);
+                    pFrame->assignArguments(meta, fObj, base(argCount), argCount);
                     jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(meta->objectType(mc->thisObject));
                     meta->env->addFrame(pFrame);

@@ -86,6 +86,7 @@ namespace MetaData {
             js2val thatValue = OBJECT_TO_JS2VAL(new FunctionInstance(meta->functionClass->prototype, meta->functionClass));
             FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
             fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true));
+            fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
             return thatValue;
         }
     }

@@ -327,7 +327,7 @@ namespace MetaData {
                 JS2Object::RootIterator ri = JS2Object::addRoot(&runtimeFrame);
                 runtimeFrame->instantiate(env);
                 runtimeFrame->thisObject = thisValue;
-                runtimeFrame->assignArguments(this, argv, argc);
+                runtimeFrame->assignArguments(this, fnObj, argv, argc);
                 Frame *oldTopFrame = env->getTopFrame();
                 env->addFrame(runtimeFrame);
                 try {

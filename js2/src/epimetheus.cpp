@@ -233,7 +233,7 @@ js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ 
     return JS2VAL_UNDEFINED;
 }
 
-void printFrameBindings(Frame *f)
+void printFrameBindings(NonWithFrame *f)
 {
     stdOut << " Local Bindings:\n";                    
     for (LocalBindingIterator rsb = f->localReadBindings.begin(), rsend = f->localReadBindings.end(); (rsb != rsend); rsb++) {

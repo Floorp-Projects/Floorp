@@ -471,8 +471,20 @@ typedef InstanceBindingMap::iterator InstanceBindingIterator;
 class Frame : public JS2Object {
 public:
 
-    Frame(ObjectKind kind) : JS2Object(kind), temps(NULL), pluralFrame(NULL) { }
-    Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), temps(NULL), pluralFrame(pluralFrame) { }
+    Frame(ObjectKind kind) : JS2Object(kind) { }
+
+    virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }
+
+    virtual void markChildren()     { }
+    virtual ~Frame()                { }
+
+};
+
+class NonWithFrame : public Frame {
+public:
+
+    NonWithFrame(ObjectKind kind) : Frame(kind), temps(NULL), pluralFrame(NULL) { }
+    NonWithFrame(ObjectKind kind, NonWithFrame *pluralFrame) : Frame(kind), temps(NULL), pluralFrame(pluralFrame) { }
 
     LocalBindingMap localReadBindings;        // Map of qualified names to readable members defined in this frame
     LocalBindingMap localWriteBindings;       // Map of qualified names to writable members defined in this frame
@@ -482,11 +494,10 @@ public:
 
     virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }
 
-    Frame *pluralFrame;                         // for a singular frame, this is the plural frame from which it will be instantiated
+    NonWithFrame *pluralFrame;                // for a singular frame, this is the plural frame from which it will be instantiated
 
     virtual void markChildren();
-    virtual ~Frame()            { }
-
+    virtual ~NonWithFrame()                { }
 };
 
 class WithFrame : public Frame {
@@ -499,7 +510,7 @@ public:
     JS2Object *obj;
 };
 
-class JS2Class : public Frame {
+class JS2Class : public NonWithFrame {
 public:
     JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name);
 
@@ -541,9 +552,9 @@ public:
 
 };
 
-class GlobalObject : public Frame {
+class GlobalObject : public NonWithFrame {
 public:
-    GlobalObject(World &world) : Frame(GlobalObjectKind), internalNamespace(new Namespace(&world.identifiers["internal"])) { }
+    GlobalObject(World &world) : NonWithFrame(GlobalObjectKind), internalNamespace(new Namespace(&world.identifiers["internal"])) { }
 
     Namespace *internalNamespace;               // This global object's internal namespace
     DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
@@ -898,17 +909,17 @@ public:
 
 
 // The top-level frame containing predefined constants, functions, and classes.
-class SystemFrame : public Frame {
+class SystemFrame : public NonWithFrame {
 public:
-    SystemFrame() : Frame(SystemKind) { }
+    SystemFrame() : NonWithFrame(SystemKind) { }
     virtual ~SystemFrame()            { }
 };
 
 // Frames holding bindings for invoked functions
-class ParameterFrame : public Frame {
+class ParameterFrame : public NonWithFrame {
 public:
-    ParameterFrame(js2val thisObject, bool prototype) : Frame(ParameterKind), thisObject(thisObject), prototype(prototype), positional(NULL), positionalCount(0) { }    
-    ParameterFrame(ParameterFrame *pluralFrame) : Frame(ParameterKind, pluralFrame), thisObject(JS2VAL_UNDEFINED), prototype(pluralFrame->prototype), positional(NULL), positionalCount(0) { }
+    ParameterFrame(js2val thisObject, bool prototype) : NonWithFrame(ParameterKind), thisObject(thisObject), prototype(prototype), positional(NULL), positionalCount(0) { }    
+    ParameterFrame(ParameterFrame *pluralFrame) : NonWithFrame(ParameterKind, pluralFrame), thisObject(JS2VAL_UNDEFINED), prototype(pluralFrame->prototype), positional(NULL), positionalCount(0) { }
 
 //    Plurality plurality;
     js2val thisObject;              // The value of this; none if this function doesn't define this;
@@ -921,15 +932,15 @@ public:
     uint32 positionalCount;
 
     virtual void instantiate(Environment *env);
-    void assignArguments(JS2Metadata *meta, js2val *argBase, uint32 argCount);
+    void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount);
     virtual void markChildren();
     virtual ~ParameterFrame()           { }
 };
 
-class BlockFrame : public Frame {
+class BlockFrame : public NonWithFrame {
 public:
-    BlockFrame() : Frame(BlockKind) { }
-    BlockFrame(BlockFrame *pluralFrame) : Frame(BlockKind, pluralFrame) { }
+    BlockFrame() : NonWithFrame(BlockKind) { }
+    BlockFrame(BlockFrame *pluralFrame) : NonWithFrame(BlockKind, pluralFrame) { }
 
     Plurality plurality;
 
@@ -980,7 +991,7 @@ public:
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
     bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
 
-    void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);
+    void instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame);
 
     void markChildren();
 
@@ -1090,7 +1101,7 @@ public:
     bool hasType(js2val objVal, JS2Class *c);
     bool relaxedHasType(js2val objVal, JS2Class *c);
 
-    LocalMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
+    LocalMember *findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
     DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p);

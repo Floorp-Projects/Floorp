@@ -872,7 +872,7 @@ namespace MetaData {
 */
             {
                 SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
-                uint16 swVarIndex = env->getTopFrame()->allocateTemp();
+                uint16 swVarIndex = (checked_cast<NonWithFrame *>(env->getTopFrame()))->allocateTemp();
                 BytecodeContainer::LabelID defaultLabel = NotALabel;
 
                 Reference *r = SetupExprNode(env, phase, sw->expr, &exprType);
@@ -2060,7 +2060,11 @@ doUnary:
                 Multiname *multiname = &((LexicalReference *)returnRef)->variableMultiname;
                 FrameListIterator fi = env->getBegin();
                 while (fi != env->getEnd()) {
-                    Frame *pf = *fi;
+                    Frame *fr = *fi;
+                    if (fr->kind == WithFrameKind)
+                        // XXX unless it's provably not a dynamic object that been with'd??
+                        break;
+                    NonWithFrame *pf = checked_cast<NonWithFrame *>(*fi);
                     if (pf->kind != ClassKind) {
                         LocalMember *m = findFlatMember(pf, multiname, ReadAccess, CompilePhase);
                         if (m && m->kind == Member::Variable) {
@@ -2455,7 +2459,7 @@ doUnary:
     }
 
     // Clone the pluralFrame bindings into the singularFrame, instantiating new members for each binding
-    void Environment::instantiateFrame(Frame *pluralFrame, Frame *singularFrame)
+    void Environment::instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame)
     {
         LocalBindingIterator sbi, sbend;
         
@@ -2579,7 +2583,7 @@ doUnary:
         NamespaceList publicNamespaceList;
 
         FrameListIterator fi = env->getBegin();
-        Frame *localFrame = *fi;
+        NonWithFrame *localFrame = checked_cast<NonWithFrame *>(*fi);
         if ((overrideMod != Attribute::NoOverride) || (xplicit && localFrame->kind != PackageKind))
             reportError(Exception::definitionError, "Illegal definition", pos);
         if ((namespaces == NULL) || namespaces->empty()) {
@@ -2606,25 +2610,28 @@ doUnary:
         }
 
         // Check all frames below the current - up to the RegionalFrame - for a non-forbidden definition
-        Frame *regionalFrame = *(env->getRegionalFrame());
+        Frame *regionalFrame = *env->getRegionalFrame();
         if (localFrame != regionalFrame) {
             // The frame iterator is pointing at the top of the environment's
             // frame list, start at the one below that and continue to the frame
             // returned by 'getRegionalFrame()'.
             Frame *fr = *++fi;
             while (true) {
-                if (access & ReadAccess) {
-                    for (b = fr->localReadBindings.lower_bound(*id),
-                            end = fr->localReadBindings.upper_bound(*id); (b != end); b++) {
-                        if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
-                            reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                if (fr->kind != WithFrameKind) {
+                    NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
+                    if (access & ReadAccess) {
+                        for (b = nwfr->localReadBindings.lower_bound(*id),
+                                end = nwfr->localReadBindings.upper_bound(*id); (b != end); b++) {
+                            if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
+                                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                        }
                     }
-                }
-                if (access & WriteAccess) {
-                    for (b = fr->localWriteBindings.lower_bound(*id),
-                            end = fr->localWriteBindings.upper_bound(*id); (b != end); b++) {
-                        if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
-                            reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                    if (access & WriteAccess) {
+                        for (b = nwfr->localWriteBindings.lower_bound(*id),
+                                end = nwfr->localWriteBindings.upper_bound(*id); (b != end); b++) {
+                            if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
+                                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                        }
                     }
                 }
                 if (fr == regionalFrame)
@@ -2644,46 +2651,48 @@ doUnary:
             if (access & WriteAccess)
                 localFrame->localWriteBindings.insert(e);
         }
-        
         // Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
         // region if they haven't been marked as such already.
         if (localFrame != regionalFrame) {
             fi = env->getBegin();
             Frame *fr = *++fi;
             while (true) {
-                for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
-                    if (access & ReadAccess) {
-                        bool foundEntry = false;
-                        for (b = fr->localReadBindings.lower_bound(*id),
-                                end = fr->localReadBindings.upper_bound(*id); (b != end); b++) {        
-                            if (b->second->qname.nameSpace == *nli) {
-                                ASSERT(b->second->content->kind == LocalMember::Forbidden);
-                                foundEntry = true;
-                                break;
+                if (fr->kind != WithFrameKind) {
+                    NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
+                    for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
+                        if (access & ReadAccess) {
+                            bool foundEntry = false;
+                            for (b = nwfr->localReadBindings.lower_bound(*id),
+                                    end = nwfr->localReadBindings.upper_bound(*id); (b != end); b++) {        
+                                if (b->second->qname.nameSpace == *nli) {
+                                    ASSERT(b->second->content->kind == LocalMember::Forbidden);
+                                    foundEntry = true;
+                                    break;
+                                }
+                            }
+                            if (!foundEntry) {
+                                QualifiedName qName(*nli, id);
+                                LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
+                                const LocalBindingMap::value_type e(*id, sb);
+                                nwfr->localReadBindings.insert(e);
                             }
                         }
-                        if (!foundEntry) {
-                            QualifiedName qName(*nli, id);
-                            LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
-                            const LocalBindingMap::value_type e(*id, sb);
-                            fr->localReadBindings.insert(e);
-                        }
-                    }
-                    if (access & WriteAccess) {
-                        bool foundEntry = false;
-                        for (b = fr->localWriteBindings.lower_bound(*id),
-                                end = fr->localWriteBindings.upper_bound(*id); (b != end); b++) {        
-                            if (b->second->qname.nameSpace == *nli) {
-                                ASSERT(b->second->content->kind == LocalMember::Forbidden);
-                                foundEntry = true;
-                                break;
+                        if (access & WriteAccess) {
+                            bool foundEntry = false;
+                            for (b = nwfr->localWriteBindings.lower_bound(*id),
+                                    end = nwfr->localWriteBindings.upper_bound(*id); (b != end); b++) {        
+                                if (b->second->qname.nameSpace == *nli) {
+                                    ASSERT(b->second->content->kind == LocalMember::Forbidden);
+                                    foundEntry = true;
+                                    break;
+                                }
                             }
-                        }
-                        if (!foundEntry) {
-                            QualifiedName qName(*nli, id);
-                            LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
-                            const LocalBindingMap::value_type e(*id, sb);
-                            fr->localWriteBindings.insert(e);
+                            if (!foundEntry) {
+                                QualifiedName qName(*nli, id);
+                                LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
+                                const LocalBindingMap::value_type e(*id, sb);
+                                nwfr->localWriteBindings.insert(e);
+                            }
                         }
                     }
                 }
@@ -2871,9 +2880,10 @@ doUnary:
         DynamicVariable *result = NULL;
         QualifiedName qName(publicNamespace, id);
         FrameListIterator regionalFrameMark = env->getRegionalFrame();
-        Frame *regionalFrame = *regionalFrameMark;
+        // XXX can the regionalFrame be a WithFrame?
+        NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameMark);
         ASSERT((regionalFrame->kind == GlobalObjectKind) || (regionalFrame->kind == ParameterKind));
-    
+          
         // run through all the existing bindings, both read and write, to see if this
         // variable already exists.
         LocalBindingIterator b, end;
@@ -2914,7 +2924,7 @@ doUnary:
             }
             else { // ParameterFrame didn't have any bindings, scan the preceding 
                    // frame (should be the outermost function local block)
-                regionalFrame = *(regionalFrameMark - 1);
+                regionalFrame = checked_cast<NonWithFrame *>(*(regionalFrameMark - 1));
                 for (b = regionalFrame->localReadBindings.lower_bound(*id),
                         end = regionalFrame->localReadBindings.upper_bound(*id); (b != end); b++) {
                     if (b->second->qname == qName) {
@@ -2960,18 +2970,6 @@ doUnary:
         return result;
     }
 
-    static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
-    {
-        ASSERT(JS2VAL_IS_OBJECT(thisValue));
-        JS2Class *type = (checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type;
-        
-        // XXX objectType returns the ECMA4 type, not the [[class]] value, so returns class 'Prototype' for ECMA3 objects
-        //        JS2Class *type = meta->objectType(thisValue);
-
-        String s = "[object " + *type->getName() + "]";
-        return STRING_TO_JS2VAL(meta->engine->allocString(s));
-    }
-    
     static js2val GlobalObject_isNaN(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 /* argc */)
     {
         float64 d = meta->toFloat64(argv[0]);
@@ -3159,6 +3157,28 @@ static const uint8 urlCharType[256] =
         fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(length), DynamicPropertyValue::READONLY);
     }
 
+    static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        if (obj->kind == GlobalObjectKind) {
+            // special case this for now, ECMA3 test sanity...
+            return GlobalObject_toString(meta, thisValue, NULL, 0);
+        }
+        else {
+            // XXX insist on Prototype instances, but is toString going to be more
+            // generic - a member of the class Object? and hence available to all
+            // instances?
+            JS2Class *type = (checked_cast<PrototypeInstance *>(obj))->type;
+        
+            // XXX objectType returns the ECMA4 type, not the [[class]] value, so returns class 'Prototype' for ECMA3 objects
+            //        JS2Class *type = meta->objectType(thisValue);
+
+            String s = "[object " + *type->getName() + "]";
+            return STRING_TO_JS2VAL(meta->engine->allocString(s));
+        }
+    }
+    
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true; c->defaultValue = defaultVal;
 
     JS2Metadata::JS2Metadata(World &world) : JS2Object(MetaDataKind),
@@ -3763,12 +3783,17 @@ readClassProperty:
     bool JS2Metadata::readProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         if (container->kind != ClassKind) {
-            // Must be System, Global, Package, Parameter or Block
-            LocalMember *m = findFlatMember(container, multiname, ReadAccess, phase);
-            if (!m && (container->kind == GlobalObjectKind))
-                return readDynamicProperty(container, multiname, lookupKind, phase, rval);
-            else
-                return readLocalMember(m, phase, rval);
+            if (container->kind == WithFrameKind) {
+                return readDynamicProperty(checked_cast<WithFrame *>(container)->obj, multiname, lookupKind, phase, rval);
+            }
+            else {
+                // Must be System, Global, Package, Parameter or Block
+                LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, ReadAccess, phase);
+                if (!m && (container->kind == GlobalObjectKind))
+                    return readDynamicProperty(container, multiname, lookupKind, phase, rval);
+                else
+                    return readLocalMember(m, phase, rval);
+            }
         }
         else {
             // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
@@ -3870,12 +3895,17 @@ readClassProperty:
     bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag)
     {
         if (container->kind != ClassKind) {
-            // Must be System, Global, Package, Parameter or Block
-            LocalMember *m = findFlatMember(container, multiname, WriteAccess, phase);
-            if (!m && (container->kind == GlobalObjectKind))
-                return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
-            else
-                return writeLocalMember(m, newValue, phase, initFlag);
+            if (container->kind == WithFrameKind) {
+                return writeDynamicProperty(checked_cast<WithFrame *>(container)->obj, multiname, createIfMissing, newValue, phase);
+            }
+            else {
+                // Must be System, Global, Package, Parameter or Block
+                LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, WriteAccess, phase);
+                if (!m && (container->kind == GlobalObjectKind))
+                    return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
+                else
+                    return writeLocalMember(m, newValue, phase, initFlag);
+            }
         }
         else {
             // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
@@ -3946,12 +3976,17 @@ deleteClassProperty:
     {
         ASSERT(phase == RunPhase);
         if (container->kind != ClassKind) {
-            // Must be System, Global, Package, Parameter or Block
-            LocalMember *m = findFlatMember(container, multiname, ReadAccess, phase);
-            if (!m && (container->kind == GlobalObjectKind))
-                return deleteDynamicProperty(container, multiname, lookupKind, result);
-            else
-                return deleteLocalMember(m, result);
+            if (container->kind == WithFrameKind) {                
+                return deleteDynamicProperty(checked_cast<WithFrame *>(container)->obj, multiname, lookupKind, result);
+            }
+            else {
+                // Must be System, Global, Package, Parameter or Block
+                LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, ReadAccess, phase);
+                if (!m && (container->kind == GlobalObjectKind))
+                    return deleteDynamicProperty(container, multiname, lookupKind, result);
+                else
+                    return deleteLocalMember(m, result);
+            }
         }
         else {
             // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
@@ -4034,7 +4069,7 @@ deleteClassProperty:
 
     // Find a binding that matches the multiname and access.
     // It's an error if more than one such binding exists.
-    LocalMember *JS2Metadata::findFlatMember(Frame *container, Multiname *multiname, Access access, Phase /* phase */)
+    LocalMember *JS2Metadata::findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase /* phase */)
     {
         LocalMember *found = NULL;
         LocalBindingIterator b, end;
@@ -4270,7 +4305,7 @@ deleteClassProperty:
 
 
     JS2Class::JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name) 
-        : Frame(ClassKind), 
+        : NonWithFrame(ClassKind), 
             instanceInitOrder(NULL), 
             complete(false), 
             super(super), 
@@ -4291,7 +4326,7 @@ deleteClassProperty:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void JS2Class::markChildren()
     {
-        Frame::markChildren();
+        NonWithFrame::markChildren();
         GCMARKOBJECT(super)
         GCMARKOBJECT(prototype)
         GCMARKOBJECT(privateNamespace)
@@ -4487,7 +4522,7 @@ deleteClassProperty:
 
     // Allocate a new temporary variable in this frame and stick it
     // on the list (which may need to be created) for gc tracking.
-    uint16 Frame::allocateTemp()
+    uint16 NonWithFrame::allocateTemp()
     {
         if (temps == NULL)
             temps = new std::vector<js2val>;
@@ -4498,7 +4533,7 @@ deleteClassProperty:
 
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void Frame::markChildren()
+    void NonWithFrame::markChildren()
     {
         GCMARKOBJECT(pluralFrame)
         LocalBindingIterator sbi, end;
@@ -4524,7 +4559,7 @@ deleteClassProperty:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void GlobalObject::markChildren()
     {
-        Frame::markChildren();
+        NonWithFrame::markChildren();
         GCMARKOBJECT(internalNamespace)
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
             GCMARKVALUE(i->second.value);
@@ -4546,7 +4581,7 @@ deleteClassProperty:
     // Assume that instantiate has been called, the plural frame will contain
     // the cloned Variables assigned into this (singular) frame. Use the 
     // incoming values to initialize the positionals.
-    void ParameterFrame::assignArguments(JS2Metadata *meta, js2val *argBase, uint32 argCount)
+    void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount)
     {
         Multiname mn(NULL, meta->publicNamespace);
 
@@ -4554,31 +4589,32 @@ deleteClassProperty:
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        ArrayInstance *arrInst = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
-        js2val argumentsVal = OBJECT_TO_JS2VAL(arrInst);
+        PrototypeInstance *argsObj = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
 
         // Add the 'arguments' property
         QualifiedName qn(meta->publicNamespace, &meta->world.identifiers["arguments"]);
-        LocalBinding *sb = new LocalBinding(qn, new Variable(meta->arrayClass, argumentsVal, true));
+        LocalBinding *sb = new LocalBinding(qn, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true));
         const LocalBindingMap::value_type e(*qn.id, sb);
         localReadBindings.insert(e);
 
         uint32 i;
-        for (i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {
-            ASSERT(plural->positional[i]->cloneContent);
-            ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
-            (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
-
-            arrInst->writeProperty(meta, meta->engine->numberToString(i), argBase[i], 0);
+        for (i = 0; (i < argCount); i++) {
+            if (i < plural->positionalCount) {
+                ASSERT(plural->positional[i]->cloneContent);
+                ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
+                (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
+            }
+            argsObj->writeProperty(meta, meta->engine->numberToString(i), argBase[i], 0);
         }
-        setLength(meta, arrInst, i);
+        setLength(meta, argsObj, i);
+        argsObj->writeProperty(meta, &meta->world.identifiers["callee"], OBJECT_TO_JS2VAL(fnObj), 0);
     }
 
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void ParameterFrame::markChildren()
     {
-        Frame::markChildren();
+        NonWithFrame::markChildren();
         GCMARKVALUE(thisObject);
     }
 

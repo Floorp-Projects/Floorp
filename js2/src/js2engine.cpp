@@ -833,7 +833,7 @@ namespace MetaData {
         activationStackTop++;
         bCon = new_bCon;
         if ((int32)bCon->getMaxStack() >= (execStackLimit - sp)) {
-            uint32 curDepth = execStackLimit - sp;
+            uint32 curDepth = sp - execStack;
             uint32 newDepth = curDepth + bCon->getMaxStack();
             js2val *newStack = new js2val[newDepth];
             ::memcpy(newStack, execStack, curDepth * sizeof(js2val));
