@@ -56,6 +56,8 @@
 
 #include "fdlibm_ns.h"
 
+#include "regexp.h"
+
 // this is the AttributeList passed to the name lookup routines
 #define CURRENT_ATTR    (NULL)
 
@@ -81,6 +83,7 @@ JSType *Attribute_Type;
 JSType *NamedArgument_Type;
 JSArrayType *Array_Type;
 JSType *Date_Type;
+JSType *RegExp_Type;
 JSType *Error_Type;
 JSType *EvalError_Type;
 JSType *RangeError_Type;
@@ -247,8 +250,8 @@ void JSObject::defineTempVariable(Context *cx, Reference *&readRef, Reference *&
     sprintf(buf, "%%tempvar%%_%d", tempVarCount++);
     const String &name = cx->mWorld.identifiers[buf];
     /* Property *prop = */defineVariable(cx, name, (NamespaceList *)NULL, Property::NoAttribute, type);
-    readRef = new NameReference(name, Read, Object_Type, 0);
-    writeRef = new NameReference(name, Write, Object_Type, 0);
+    readRef = new NameReference(name, NULL, Read, Object_Type, 0);
+    writeRef = new NameReference(name, NULL, Write, Object_Type, 0);
 }
 
 
@@ -342,9 +345,9 @@ Reference *JSObject::genReference(bool hasBase, const String& name, NamespaceLis
         switch (prop->mFlag) {
         case ValuePointer:
             if (hasBase)
-                return new PropertyReference(name, acc, prop->mType, prop->mAttributes);
+                return new PropertyReference(name, names, acc, prop->mType, prop->mAttributes);
             else
-                return new NameReference(name, acc, prop->mType, prop->mAttributes);
+                return new NameReference(name, names, acc, prop->mType, prop->mAttributes);
         case FunctionPair:
             if (acc == Read)
                 return new GetterFunctionReference(prop->mData.fPair.getterF, prop->mAttributes);
@@ -542,7 +545,7 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
     else {
         PropertyIterator it = findNamespacedProperty(name, names);
         if (it == mProperties.end())
-            insertNewProperty(name, names, 0, Object_Type, v);
+            insertNewProperty(name, names, Property::Enumerable, Object_Type, v);
         else {
             Property *prop = PROPERTY(it);
             ASSERT(prop->mFlag == ValuePointer);
@@ -570,18 +573,21 @@ void JSStringInstance::getProperty(Context *cx, const String &name, NamespaceLis
 
 // construct an instance of a type
 // - allocate memory for the slots, load the instance variable names into the 
-// property map. 
+// property map - in order to provide dynamic access to those properties.
 void JSInstance::initInstance(Context *cx, JSType *type)
 {
     if (type->mVariableCount)
         mInstanceValues = new JSValue[type->mVariableCount];
 
-    // copy the instance variable names into the property map
+    // copy the instance variable names into the property map 
+    // but don't copy the prototype object (XXX others?)
     for (PropertyIterator pi = type->mProperties.begin(), 
                 end = type->mProperties.end();
-                (pi != end); pi++) {            
-        const PropertyMap::value_type e(PROPERTY_NAME(pi), NAMESPACED_PROPERTY(pi));
-        mProperties.insert(e);
+                (pi != end); pi++) {
+        if (PROPERTY_NAME(pi) != cx->Prototype_StringAtom) {
+            const PropertyMap::value_type e(PROPERTY_NAME(pi), NAMESPACED_PROPERTY(pi));
+            mProperties.insert(e);
+        }
     }
 
     // and then do the same for the super types
@@ -590,8 +596,10 @@ void JSInstance::initInstance(Context *cx, JSType *type)
         for (PropertyIterator i = t->mProperties.begin(), 
                     end = t->mProperties.end();
                     (i != end); i++) {            
-            const PropertyMap::value_type e(PROPERTY_NAME(i), NAMESPACED_PROPERTY(i));
-            mProperties.insert(e);            
+            if (PROPERTY_NAME(i) != cx->Prototype_StringAtom) {
+                const PropertyMap::value_type e(PROPERTY_NAME(i), NAMESPACED_PROPERTY(i));
+                mProperties.insert(e);
+            }
         }
         if (t->mInstanceInitializer)
             cx->invokeFunction(t->mInstanceInitializer, JSValue(this), NULL, 0);
@@ -654,9 +662,8 @@ JSInstance *JSStringType::newInstance(Context *cx)
 
 // don't add to instances etc., climb all the way down (likely to the global object)
 // and add the property there.
-void ScopeChain::setNameValue(Context *cx, const String& name, AttributeStmtNode *attr)
+void ScopeChain::setNameValue(Context *cx, const String& name, NamespaceList *names)
 {
-    NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     JSValue v = cx->topValue();
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++)
     {
@@ -676,12 +683,11 @@ void ScopeChain::setNameValue(Context *cx, const String& name, AttributeStmtNode
             return;
         }
     }
-    cx->getGlobalObject()->defineVariable(cx, name, attr, Object_Type, v);
+    cx->getGlobalObject()->defineVariable(cx, name, names, 0, Object_Type, v);
 }
 
-bool ScopeChain::deleteName(Context *, const String& name, AttributeStmtNode *attr)
+bool ScopeChain::deleteName(Context *, const String& name, NamespaceList *names)
 {
-    NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++)
     {
         PropertyIterator i;
@@ -693,9 +699,8 @@ bool ScopeChain::deleteName(Context *, const String& name, AttributeStmtNode *at
 
 inline char narrow(char16 ch) { return char(ch); }
 
-JSObject *ScopeChain::getNameValue(Context *cx, const String& name, AttributeStmtNode *attr)
+JSObject *ScopeChain::getNameValue(Context *cx, const String& name, NamespaceList *names)
 {
-    NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     uint32 depth = 0;
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++, depth++)
     {
@@ -1083,7 +1088,7 @@ void ScopeChain::collectNames(StmtNode *p)
                 JSType *theClass = topClass();
                 if (theClass == NULL)
                     m_cx->reportError(Exception::typeError, "Private can only be used inside a class");
-                vs->attributeValue->mNamespaceList = new NamespaceList(theClass->mPrivateNamespace, vs->attributeValue->mNamespaceList);
+                vs->attributeValue->mNamespaceList = new NamespaceList(*theClass->mPrivateNamespace, vs->attributeValue->mNamespaceList);
             }
 
             while (v)  {
@@ -1118,7 +1123,7 @@ void ScopeChain::collectNames(StmtNode *p)
             */
             if (!isPrototype
                     && (!isOperator)
-		    && isPossibleUncheckedFunction(f->function)) {
+                    && isPossibleUncheckedFunction(f->function)) {
                 isPrototype = true;
                 fnc->setIsUnchecked();
             }
@@ -1229,7 +1234,7 @@ void ScopeChain::collectNames(StmtNode *p)
         {
             NamespaceStmtNode *n = checked_cast<NamespaceStmtNode *>(p);
             Attribute *x = new Attribute(0, 0);
-            x->mNamespaceList = new NamespaceList(&n->name, x->mNamespaceList);
+            x->mNamespaceList = new NamespaceList(n->name, x->mNamespaceList);
             m_cx->getGlobalObject()->defineVariable(m_cx, n->name, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(x));            
         }
         break;
@@ -1275,22 +1280,6 @@ void JSType::completeClass(Context *cx, ScopeChain *scopeChain)
     }
 }
 
-/*
-// constructor functions are added as static methods
-// XXX is it worth just having a default constructor 
-// pointer in the class?
-JSFunction *JSType::getDefaultConstructor()
-{
-    PropertyIterator it;
-    if (hasOwnProperty(*mClassName, NULL, Read, &it)) {
-        ASSERT(PROPERTY_KIND(it) == ValuePointer);
-        JSValue c = *PROPERTY_VALUEPOINTER(it);
-        ASSERT(c.isFunction());
-        return c.function;
-    }
-    return NULL;
-}
-*/
 void JSType::defineMethod(Context *cx, const String& name, AttributeStmtNode *attr, JSFunction *f)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
@@ -1452,23 +1441,25 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *pro
     for (uint32 i = 0; i < OperatorCount; i++)
         mUnaryOperators[i] = NULL;
 
-    // every class gets a prototype object
+    // every class gets a prototype object (used to set the __proto__ value of new instances)
     if (protoObj)
         mPrototypeObject = protoObj;
-    else
+    else {
         mPrototypeObject = new JSObject(this);
-    // and that object is prototype-linked to the super-type's prototype object
-    if (mSuperType)
-        mPrototypeObject->mPrototype = mSuperType->mPrototypeObject;
+        // and that object is prototype-linked to the super-type's prototype object
+        if (mSuperType)
+            mPrototypeObject->mPrototype = mSuperType->mPrototypeObject;
+    }
 
     if (mSuperType)
         defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::ReadOnly | Property::DontDelete, Object_Type, JSValue(mPrototypeObject));
-    else  // must be Object_Type
+    else  // must be Object_Type being initialized
         defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::ReadOnly | Property::DontDelete, this, JSValue(mPrototypeObject));
 
+    // the __proto__ of a type is the super-type's prototype object, or for 'class Object' type object it's the Object's prototype object
     if (mSuperType)
         mPrototype = mSuperType->mPrototypeObject;
-    else // must be Object_Type
+    else // must be Object_Type being initialized
         mPrototype = mPrototypeObject;
 }
 
@@ -1545,7 +1536,7 @@ Reference *Activation::genReference(bool /* hasBase */, const String& name, Name
                 return new LocalVarReference(prop->mData.index, acc, prop->mType, prop->mAttributes);
 
         case ValuePointer:
-            return new NameReference(name, acc, prop->mType, prop->mAttributes);
+            return new NameReference(name, names, acc, prop->mType, prop->mAttributes);
 
         default:            
             NOT_REACHED("bad genRef call");
@@ -1945,7 +1936,7 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
 
 
         if (cx->mScopeChain->isPossibleUncheckedFunction(f->function)) {
-	    fnc->setIsPrototype(true);
+            fnc->setIsPrototype(true);
             fnc->setIsUnchecked();
         }
         cx->buildRuntimeForFunction(f->function, fnc);
@@ -2181,6 +2172,163 @@ static JSValue GenericError_Constructor(Context *cx, const JSValue& thisValue, J
     thisObj->defineVariable(cx, cx->Name_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(errType->mClassName));
     return v;
 }
+
+JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    JSValue thatValue = thisValue;
+    if (thatValue.isNull())
+        thatValue = RegExp_Type->newInstance(cx);
+    ASSERT(thatValue.isObject());
+    JSObject *thisObj = thatValue.object;
+
+    const String *regexpStr = &cx->Empty_StringAtom;
+    const String *flagStr = &cx->Empty_StringAtom;
+    if (argc > 0) {
+        if (argv[0].isObject() && (argv[0].object->mType == RegExp_Type)) {
+            if ((argc == 1) || argv[1].isUndefined()) {
+                ContextStackReplacement csr(cx);
+                argv[0].object->getProperty(cx, cx->Source_StringAtom, CURRENT_ATTR);
+                JSValue src = cx->popValue();
+                ASSERT(src.isString());
+                regexpStr = src.string;
+		REParseState *other = (REParseState *)(argv[0].object->mPrivate);
+		String *newFlagStr = new String;
+		if (other->flags & GLOBAL) *newFlagStr += "g";
+		if (other->flags & IGNORECASE) *newFlagStr += "i";
+		if (other->flags & MULTILINE) *newFlagStr += "m";
+		flagStr = newFlagStr;
+            }
+            else
+                cx->reportError(Exception::typeError, "Illegal RegExp constructor args");
+        }
+        else
+            regexpStr = argv[0].toString(cx).string;
+        if ((argc > 1) && !argv[1].isUndefined())
+            flagStr = argv[1].toString(cx).string;
+    }
+    REParseState *parseResult = REParse(regexpStr->c_str(), regexpStr->length(), flagStr->c_str(), flagStr->length(), false);
+    if (parseResult) {
+        thisObj->mPrivate = parseResult;
+// XXX ECMA spec says these are DONTENUM, but SpiderMonkey and test suite disagree
+/*
+        thisObj->defineVariable(cx, cx->Source_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), String_Type, JSValue(regexpStr));
+        thisObj->defineVariable(cx, cx->Global_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (parseResult->flags & GLOBAL) ? kTrueValue : kFalseValue);
+        thisObj->defineVariable(cx, cx->IgnoreCase_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (parseResult->flags & IGNORECASE) ? kTrueValue : kFalseValue);
+        thisObj->defineVariable(cx, cx->Multiline_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (parseResult->flags & MULTILINE) ? kTrueValue : kFalseValue);
+        thisObj->defineVariable(cx, cx->LastIndex_StringAtom, NULL, Property::DontDelete, Number_Type, kPositiveZero);
+*/
+        thisObj->defineVariable(cx, cx->Source_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), String_Type, JSValue(regexpStr));
+        thisObj->defineVariable(cx, cx->Global_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), Boolean_Type, (parseResult->flags & GLOBAL) ? kTrueValue : kFalseValue);
+        thisObj->defineVariable(cx, cx->IgnoreCase_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), Boolean_Type, (parseResult->flags & IGNORECASE) ? kTrueValue : kFalseValue);
+        thisObj->defineVariable(cx, cx->Multiline_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), Boolean_Type, (parseResult->flags & MULTILINE) ? kTrueValue : kFalseValue);
+        thisObj->defineVariable(cx, cx->LastIndex_StringAtom, NULL, (Property::DontDelete | Property::Enumerable), Number_Type, kPositiveZero);
+    }
+    else {
+        cx->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", *regexpStr + "/" + *flagStr);  // XXX error message?
+    }
+    return thatValue;
+}
+
+JSValue RegExp_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    if (argc > 0) {
+	if ((argv[0].isObject() && (argv[0].object->mType == RegExp_Type))
+		&& ((argc == 1) || argv[1].isUndefined()))
+	    return argv[0];
+    }
+    return RegExp_Constructor(cx, thisValue, argv, argc);
+}
+
+JSValue RegExp_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    ContextStackReplacement csr(cx);
+    ASSERT(thisValue.isObject());
+    JSObject *thisObj = thisValue.object;
+    if (thisObj->mType != RegExp_Type)
+        cx->reportError(Exception::typeError, "RegExp.toString can only be applied to RegExp objects");
+    thisObj->getProperty(cx, cx->Source_StringAtom, CURRENT_ATTR);
+    JSValue src = cx->popValue();
+    
+    // XXX not ever expected this except in the one case of RegExp.prototype, which isn't a fully formed
+    // RegExp instance, but has the appropriate type pointer.
+    if (src.isUndefined()) {
+        ASSERT(thisObj == RegExp_Type->mPrototypeObject);
+        return JSValue(&cx->Empty_StringAtom);
+    }
+
+    String *result = new String("/" + *src.toString(cx).string + "/");
+    REParseState *state = (REParseState *)thisObj->mPrivate;
+    if (state->flags & GLOBAL) *result += "g";
+    if (state->flags & IGNORECASE) *result += "i";
+    if (state->flags & MULTILINE) *result += "m";
+
+    return JSValue(result);
+}
+
+JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    ASSERT(thisValue.isObject());
+    JSObject *thisObj = thisValue.object;
+    if (thisObj->mType != RegExp_Type)
+        cx->reportError(Exception::typeError, "RegExp.exec can only be applied to RegExp objects");
+    JSValue result = kNullValue;
+    if (argc > 0) {
+        ContextStackReplacement csr(cx);
+
+        thisObj->getProperty(cx, cx->LastIndex_StringAtom, CURRENT_ATTR);
+        JSValue lastIndex = cx->popValue();
+
+        REParseState *parseResult = (REParseState *)(thisObj->mPrivate);
+        parseResult->lastIndex = (int)(lastIndex.toInteger(cx).f64);
+
+        const String *str = argv[0].toString(cx).string;
+        REState *regexp_result = REExecute(parseResult, str->c_str(), str->length());
+        if (regexp_result) {
+            JSArrayInstance *resultArray = (JSArrayInstance *)Array_Type->newInstance(cx);
+            String *matchStr = new String(str->substr(regexp_result->endIndex, regexp_result->length));
+            resultArray->setProperty(cx, *numberToString(0), NULL, JSValue(matchStr));
+            String *parenStr = &cx->Empty_StringAtom;
+            for (uint32 i = 0; i < regexp_result->n; i++) {
+                if (regexp_result->parens[i].index != -1) {
+                    String *parenStr = new String(str->substr(regexp_result->parens[i].index, regexp_result->parens[i].length));
+                    resultArray->setProperty(cx, *numberToString(i + 1), NULL, JSValue(parenStr));
+                }
+            }
+            // XXX SpiderMonkey also adds 'index' and 'input' properties to the result
+            resultArray->setProperty(cx, cx->Index_StringAtom, CURRENT_ATTR, JSValue((float64)(regexp_result->endIndex)));
+            resultArray->setProperty(cx, cx->Input_StringAtom, CURRENT_ATTR, JSValue(str));
+            result = JSValue(resultArray);
+
+            // XXX Set up the SpiderMonkey 'RegExp statics'
+            RegExp_Type->setProperty(cx, cx->LastMatch_StringAtom, CURRENT_ATTR, JSValue(matchStr));
+            RegExp_Type->setProperty(cx, cx->LastParen_StringAtom, CURRENT_ATTR, JSValue(parenStr));            
+            String *contextStr = new String(str->substr(0, regexp_result->endIndex));
+            RegExp_Type->setProperty(cx, cx->LeftContext_StringAtom, CURRENT_ATTR, JSValue(contextStr));
+            uint32 matchEnd = regexp_result->endIndex + regexp_result->length;
+            contextStr = new String(str->substr(matchEnd, str->length() - matchEnd));
+            RegExp_Type->setProperty(cx, cx->RightContext_StringAtom, CURRENT_ATTR, JSValue(contextStr));
+        }
+        thisObj->setProperty(cx, cx->LastIndex_StringAtom, CURRENT_ATTR, JSValue((float64)(parseResult->lastIndex)));
+
+    }
+    return result;
+}
+
+JSValue RegExp_test(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    ASSERT(thisValue.isObject());
+    JSObject *thisObj = thisValue.object;
+    if (thisObj->mType != RegExp_Type)
+        cx->reportError(Exception::typeError, "RegExp.test can only be applied to RegExp objects");
+    if (argc > 0) {
+        const String *str = argv[0].toString(cx).string;
+        REState *regexp_result = REExecute((REParseState *)(thisObj->mPrivate), str->c_str(), str->length());
+        if (regexp_result)
+            return kTrueValue;
+    }
+    return kFalseValue;
+}
+
 
 JSValue Error_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
@@ -2616,6 +2764,7 @@ void Context::initBuiltins()
         { "SyntaxError",    SyntaxError_Constructor,    &kNullValue          },
         { "TypeError",      TypeError_Constructor,      &kNullValue          },
         { "UriError",       UriError_Constructor,       &kNullValue          },
+        { "RegExp",         RegExp_Constructor,         &kNullValue          },
     };
 
     Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
@@ -2667,8 +2816,11 @@ void Context::initBuiltins()
     SyntaxError_Type    = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[18].name)], Error_Type);
     TypeError_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[19].name)], Error_Type);
     UriError_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[20].name)], Error_Type);
+    
+    // XXX RegExp.prototype is set to a RegExp instance, which isn't ECMA (it's supposed to be an Object instance) bu
+    // is SpiderMonkey compatible.
+    RegExp_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[21].name)], Object_Type);
 
-    String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(new JSFunction(this, String_fromCharCode, String_Type)));
 
 
     ProtoFunDef objectProtos[] = 
@@ -2716,6 +2868,14 @@ void Context::initBuiltins()
         { "toSource", String_Type, 0, Error_toString },
         { NULL }
     };
+    ProtoFunDef regexpProtos[] = 
+    {
+        { "toString", String_Type, 0, RegExp_toString },
+        { "toSource", String_Type, 0, RegExp_toString },
+        { "exec",     Array_Type,  0, RegExp_exec },
+        { "test",     Boolean_Type,0, RegExp_test },
+        { NULL }
+    };
 
     ASSERT(mGlobal);
     *mGlobal = Object_Type->newInstance(this);
@@ -2735,12 +2895,13 @@ void Context::initBuiltins()
     initClass(Date_Type,            &builtInClasses[12], getDateProtos() );
     initClass(Null_Type,            &builtInClasses[13], NULL);
     initClass(Error_Type,           &builtInClasses[14], new PrototypeFunctions(&errorProtos[0]));
-    initClass(EvalError_Type,       &builtInClasses[15], new PrototypeFunctions(&errorProtos[0]));
+    initClass(EvalError_Type,       &builtInClasses[15], new PrototypeFunctions(&errorProtos[0]));  // XXX shouldn't these be inherited from prototype?
     initClass(RangeError_Type,      &builtInClasses[16], new PrototypeFunctions(&errorProtos[0]));
     initClass(ReferenceError_Type,  &builtInClasses[17], new PrototypeFunctions(&errorProtos[0]));
     initClass(SyntaxError_Type,     &builtInClasses[18], new PrototypeFunctions(&errorProtos[0]));
     initClass(TypeError_Type,       &builtInClasses[19], new PrototypeFunctions(&errorProtos[0]));
     initClass(UriError_Type,        &builtInClasses[20], new PrototypeFunctions(&errorProtos[0]));
+    initClass(RegExp_Type,          &builtInClasses[21], new PrototypeFunctions(&regexpProtos[0]));
 
     Type_Type->defineUnaryOperator(Index, new JSFunction(this, arrayMaker, Type_Type));
     
@@ -2759,9 +2920,19 @@ void Context::initBuiltins()
     Date_Type->defineStaticMethod(this, widenCString("parse"), NULL, new JSFunction(this, Date_parse, Number_Type));
     Date_Type->defineStaticMethod(this, widenCString("UTC"), NULL, new JSFunction(this, Date_UTC, Number_Type));
 
+    String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(new JSFunction(this, String_fromCharCode, String_Type)));
     String_Type->mTypeCast = new JSFunction(this, String_TypeCast, String_Type);
 
     Error_Type->mTypeCast = new JSFunction(this, Error_Constructor, Error_Type);
+    RegExp_Type->mTypeCast = new JSFunction(this, RegExp_TypeCast, Error_Type);
+
+    // XXX these RegExp statics are not specified by ECMA, but implemented by SpiderMonkey
+    RegExp_Type->defineVariable(this, Input_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, LastMatch_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, LastParen_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, LeftContext_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, RightContext_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
+    
 
 }
 
@@ -2872,6 +3043,18 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
       SyntaxError_StringAtom    (world.identifiers["SyntaxError"]),
       TypeError_StringAtom      (world.identifiers["TypeError"]),
       UriError_StringAtom       (world.identifiers["UriError"]),
+      Source_StringAtom         (world.identifiers["source"]),
+      Global_StringAtom         (world.identifiers["global"]),
+      IgnoreCase_StringAtom     (world.identifiers["ignoreCase"]),
+      Multiline_StringAtom      (world.identifiers["multiline"]),
+      Input_StringAtom          (world.identifiers["input"]),
+      Index_StringAtom          (world.identifiers["index"]),
+      LastIndex_StringAtom      (world.identifiers["lastIndex"]),
+      LastMatch_StringAtom      (world.identifiers["lastMatch"]),
+      LastParen_StringAtom      (world.identifiers["lastParen"]),
+      LeftContext_StringAtom    (world.identifiers["leftContext"]),
+      RightContext_StringAtom   (world.identifiers["rightContext"]),
+      Dollar_StringAtom		(world.identifiers["$"]),
 
       mWorld(world),
       mScopeChain(NULL),
@@ -2884,6 +3067,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
       mStack(NULL),
       mStackTop(0),
       mStackMax(0),
+      mNamespaceList(NULL),
       mLocals(NULL),
       mArgumentBase(NULL),
       mReader(NULL),

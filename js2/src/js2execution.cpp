@@ -56,8 +56,6 @@
 
 #include "fdlibm_ns.h"
 
-// this is the AttributeList passed to the name lookup routines
-#define CURRENT_ATTR    (NULL)
 
 namespace JavaScript {    
 namespace JS2Runtime {
@@ -68,6 +66,7 @@ inline char narrow(char16 ch) { return char(ch); }
 JSValue Context::readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue)
 {
     JSValue result = kUndefinedValue;
+    NamespaceList *useOnceNamespace = NULL;
 
     Arena a;
     Parser p(mWorld, a, mFlags, str, fileName);
@@ -165,7 +164,7 @@ bool Context::executeOperator(Operator op, JSType *t1, JSType *t2)
     }
     else {
         mActivationStack.push(new Activation(mLocals, mStack, mStackTop - 2, mScopeChain,
-                                                mArgumentBase, mThis, mPC, mCurModule));
+                                                mArgumentBase, mThis, mPC, mCurModule, mNamespaceList));
         mThis = newThis;
         mCurModule = target->getByteCode();
         mArgumentBase = getBase(stackSize() - 2);
@@ -189,7 +188,7 @@ JSValue Context::invokeFunction(JSFunction *target, const JSValue& thisValue, JS
 JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeChain *scopeChain, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
 { 
     Activation *prev = new Activation(mLocals, mStack, mStackTop, mScopeChain,
-                                            mArgumentBase, mThis, NULL, mCurModule); // use NULL pc value to force interpret loop to exit
+                                            mArgumentBase, mThis, NULL, mCurModule, mNamespaceList); // use NULL pc value to force interpret loop to exit
     uint32 activationHeight = mActivationStack.size();
     mActivationStack.push(prev);   
     mThis = thisValue;
@@ -234,6 +233,7 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
         if (scopeChain == NULL)
             delete mScopeChain;
 
+        mNamespaceList = prev->mNamespaceList;
         mCurModule = prev->mModule;
         mStack = prev->mStack;
         mStackTop = 0;      // we're processing an exception, no need to preserve the stack
@@ -262,6 +262,7 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
     if (scopeChain == NULL)
         delete mScopeChain;
 
+    mNamespaceList = prev->mNamespaceList;
     mCurModule = prev->mModule;
     mStack = prev->mStack;
     mStackTop = prev->mStackTop;
@@ -430,6 +431,7 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
 
 JSValue Context::interpret(uint8 *pc, uint8 *endPC)
 {
+    bool useOnceNamespace = false;
     JSValue result = kUndefinedValue;
     while (pc != endPC) {
         mPC = pc;
@@ -674,7 +676,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         mActivationStack.push(new Activation(mLocals, mStack, mStackTop - (cleanUp + 1),
                                                                     mScopeChain,
                                                                     mArgumentBase, oldThis,
-                                                                    pc, mCurModule));
+                                                                    pc, mCurModule, mNamespaceList));
                         mScopeChain = target->getScopeChain();
                         mScopeChain->addScope(target->getParameterBarrel());
                         mScopeChain->addScope(target->getActivation());
@@ -702,7 +704,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         mActivationStack.push(new Activation(mLocals, mStack, mStackTop - (cleanUp + 1),
                                                                     mScopeChain,
                                                                     mArgumentBase, oldThis,
-                                                                    pc, mCurModule));
+                                                                    pc, mCurModule, mNamespaceList));
                         JSValue result = (target->getNativeCode())(this, mThis, argBase, argCount);
                         Activation *prev = mActivationStack.top();
                         delete prev;
@@ -732,6 +734,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     mScopeChain->popScope();
                     mScopeChain->popScope();
 
+                    mNamespaceList = prev->mNamespaceList;
                     mCurModule = prev->mModule;
                     pc = prev->mPC;
                     endPC = mCurModule->mCodeBase + mCurModule->mLength;
@@ -762,6 +765,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     mScopeChain->popScope();
                     mScopeChain->popScope();
 
+                    mNamespaceList = prev->mNamespaceList;
                     mCurModule = prev->mModule;
                     pc = prev->mPC;
                     endPC = mCurModule->mCodeBase + mCurModule->mLength;
@@ -818,12 +822,19 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             case LoadConstantZeroOp:
                 pushValue(kPositiveZero);
                 break;
+            case LoadConstantRegExpOp:
+                {
+                    JSObject *t = *((JSObject **)pc);
+                    pc += sizeof(JSObject *);
+                    pushValue(JSValue(t));
+                }
+                break;
             case DeleteNameOp:
                 {
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    const String &name = *mCurModule->getString(index);
-                    if (mScopeChain->deleteName(this, name, CURRENT_ATTR))
+                    const StringAtom &name = *mCurModule->getString(index);
+                    if (mScopeChain->deleteName(this, name, mNamespaceList))
                         pushValue(kTrueValue);
                     else
                         pushValue(kFalseValue);
@@ -839,10 +850,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         obj = base.object;
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    const String &name = *mCurModule->getString(index);
+                    const StringAtom &name = *mCurModule->getString(index);
                     PropertyIterator it;
-                    if (obj->hasOwnProperty(name, CURRENT_ATTR, Read, &it))
-                        if (obj->deleteProperty(name, CURRENT_ATTR))
+                    if (obj->hasOwnProperty(name, mNamespaceList, Read, &it))
+                        if (obj->deleteProperty(name, mNamespaceList))
                             pushValue(kTrueValue);
                         else
                             pushValue(kFalseValue);
@@ -930,7 +941,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         JSFunction *obj = t.function;                        
                         PropertyIterator i;
                         JSFunction *target = NULL;
-                        if (obj->hasProperty(HasInstance_StringAtom, CURRENT_ATTR, Read, &i)) {
+                        if (obj->hasProperty(HasInstance_StringAtom, mNamespaceList, Read, &i)) {
                             JSValue hi = obj->getPropertyValue(i);
                             if (hi.isFunction())
                                 target = hi.function;
@@ -958,10 +969,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    const String &name = *mCurModule->getString(index);
-                    JSObject *parent = mScopeChain->getNameValue(this, name, CURRENT_ATTR);
+                    const StringAtom &name = *mCurModule->getString(index);
+                    JSObject *parent = mScopeChain->getNameValue(this, name, mNamespaceList);
                     JSValue result = topValue();
-                    if (result.isFunction()) {
+                    if (result.isFunction() && !result.function->hasBoundThis()) {
                         popValue();
                         if (result.function->isConstructor())
                             // A constructor has to be called with a NULL 'this' in order to prompt it
@@ -970,31 +981,49 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         else
                             pushValue(JSValue((JSFunction *)(new JSBoundFunction(result.function, parent))));
                     }
+                    if (useOnceNamespace) {
+                        NamespaceList *t = mNamespaceList->mNext;
+                        delete mNamespaceList;
+                        useOnceNamespace = false;
+                        mNamespaceList = t;
+                    }                        
                 }
                 break;
             case SetNameOp:
                 {
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    const String &name = *mCurModule->getString(index);
+                    const StringAtom &name = *mCurModule->getString(index);
                     JSValue v = topValue();
                     if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
                         popValue();
                         pushValue(JSValue(v.function->getFunction()));
                     }
-                    mScopeChain->setNameValue(this, name, CURRENT_ATTR);
+                    mScopeChain->setNameValue(this, name, mNamespaceList);
+                    if (useOnceNamespace) {
+                        NamespaceList *t = mNamespaceList->mNext;
+                        delete mNamespaceList;
+                        useOnceNamespace = false;
+                        mNamespaceList = t;
+                    }                        
                 }
                 break;
             case GetTypeOfNameOp:
                 {
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    const String &name = *mCurModule->getString(index);
-                    if (mScopeChain->hasNameValue(name, CURRENT_ATTR)) {
-                        mScopeChain->getNameValue(this, name, CURRENT_ATTR);
+                    const StringAtom &name = *mCurModule->getString(index);
+                    if (mScopeChain->hasNameValue(name, mNamespaceList)) {
+                        mScopeChain->getNameValue(this, name, mNamespaceList);
                     }
                     else
                         pushValue(kUndefinedValue);
+                    if (useOnceNamespace) {
+                        NamespaceList *t = mNamespaceList->mNext;
+                        delete mNamespaceList;
+                        useOnceNamespace = false;
+                        mNamespaceList = t;
+                    }                        
                 }
                 break;
             case GetElementOp:
@@ -1050,7 +1079,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         JSValue index = popValue();
                         popValue();     // discard base
                         const String *name = index.toString(this).string;
-                        obj->getProperty(this, *name, CURRENT_ATTR);
+                        obj->getProperty(this, *name, mNamespaceList);
                     }
                     // if the result is a method of some kind, bind
                     // the base object to it
@@ -1122,7 +1151,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         JSValue index = popValue();
                         popValue();     // discard base
                         const String *name = index.toString(this).string;
-                        obj->setProperty(this, *name, CURRENT_ATTR, v);
+                        obj->setProperty(this, *name, mNamespaceList, v);
                         pushValue(v);                
                     }
                 }
@@ -1174,8 +1203,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         popValue();     // discard base
                         const String *name = index.toString(this).string;
                         PropertyIterator it;
-                        if (obj->hasOwnProperty(*name, CURRENT_ATTR, Read, &it))
-                            obj->deleteProperty(*name, CURRENT_ATTR);
+                        if (obj->hasOwnProperty(*name, mNamespaceList, Read, &it))
+                            obj->deleteProperty(*name, mNamespaceList);
                         pushValue(kTrueValue);
                     }
                 }
@@ -1191,8 +1220,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     mPC = pc;
-                    const String &name = *mCurModule->getString(index);
-                    obj->getProperty(this, name, CURRENT_ATTR);
+                    const StringAtom &name = *mCurModule->getString(index);
+                    obj->getProperty(this, name, mNamespaceList);
                     // if the result is a method of some kind, bind
                     // the base object to it
                     JSValue result = topValue();
@@ -1223,13 +1252,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pc += sizeof(uint32);
                     mPC = pc;
                     
-                    const String &name = *mCurModule->getString(index);
-
-//                    const String &name = *mCurModule->getIdentifierString(index);
-//                    AttributeList *attr = mCurModule->getIdentifierAttr(index);
-//                    attr->next = CURRENT_ATTR;
-
-                    obj->getProperty(this, name, CURRENT_ATTR);
+                    const StringAtom &name = *mCurModule->getString(index);
+                    obj->getProperty(this, name, mNamespaceList);
                 }
                 break;
             case SetPropertyOp:
@@ -1247,8 +1271,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     mPC = pc;
-                    const String &name = *mCurModule->getString(index);
-                    obj->setProperty(this, name, CURRENT_ATTR, v);
+                    const StringAtom &name = *mCurModule->getString(index);
+                    obj->setProperty(this, name, mNamespaceList, v);
                     pushValue(v);
                 }
                 break;
@@ -1269,7 +1293,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             mActivationStack.push(new Activation(mLocals, mStack, mStackTop - 1, 
                                                                     mScopeChain,
                                                                     mArgumentBase, mThis,
-                                                                    pc, mCurModule));
+                                                                    pc, mCurModule, mNamespaceList));
                             mThis = newThis;
                             mCurModule = target->getByteCode();
                             pc = mCurModule->mCodeBase;
@@ -1359,7 +1383,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             target = typeValue->function;
                             newThis = Object_Type->newInstance(this);
                             PropertyIterator i;
-                            if (target->hasProperty(Prototype_StringAtom, CURRENT_ATTR, Read, &i)) {
+                            if (target->hasProperty(Prototype_StringAtom, mNamespaceList, Read, &i)) {
                                 JSValue v = target->getPropertyValue(i);
                                 newThis.object->mPrototype = v.toObject(this).object;
                             }
@@ -1660,6 +1684,24 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pushValue(mapValueToType(v, toType));
                 }
                 break;
+            case UseOnceOp:
+                {
+                    uint32 index = *((uint32 *)pc);
+                    pc += sizeof(uint32);
+                    const StringAtom &nameSpace = *mCurModule->getString(index);
+                    ASSERT(useOnceNamespace == false);
+                    useOnceNamespace = true;
+                    mNamespaceList = new NamespaceList(nameSpace, mNamespaceList);
+                }
+                break;
+            case UseOp:
+                {
+                    uint32 index = *((uint32 *)pc);
+                    pc += sizeof(uint32);
+                    const StringAtom &nameSpace = *mCurModule->getString(index);
+                    mNamespaceList = new NamespaceList(nameSpace, mNamespaceList);
+                }
+                break;
 
             default:
                 reportError(Exception::internalError, "Bad Opcode");
@@ -1686,6 +1728,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     } while (hndlr->mActivation != curAct);
                     if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
                         x = popValue();
+                    mNamespaceList = prev->mNamespaceList;
                     mCurModule = prev->mModule;
                     endPC = mCurModule->mCodeBase + mCurModule->mLength;
                     mLocals = prev->mLocals;
@@ -2352,13 +2395,13 @@ JSValue JSValue::valueToString(Context *cx, const JSValue& value)
     if (obj) {
         JSFunction *target = NULL;
         PropertyIterator i;
-        if (obj->hasProperty(cx->ToString_StringAtom, CURRENT_ATTR, Read, &i)) {
+        if (obj->hasProperty(cx->ToString_StringAtom, NULL, Read, &i)) {
             JSValue v = obj->getPropertyValue(i);
             if (v.isFunction())
                 target = v.function;
         }
         if (target == NULL) {
-            if (obj->hasProperty(cx->ValueOf_StringAtom, CURRENT_ATTR, Read, &i)) {
+            if (obj->hasProperty(cx->ValueOf_StringAtom, NULL, Read, &i)) {
                 JSValue v = obj->getPropertyValue(i);
                 if (v.isFunction())
                     target = v.function;
@@ -2414,7 +2457,7 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
     }
 
 
-    if (obj->hasProperty(*first, CURRENT_ATTR, Read, &i)) {
+    if (obj->hasProperty(*first, NULL, Read, &i)) {
         JSValue v = obj->getPropertyValue(i);
         if (v.isFunction()) {
             target = v.function;
@@ -2425,7 +2468,7 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
             }
         }
     }
-    if (obj->hasProperty(*second, CURRENT_ATTR, Read, &i)) {
+    if (obj->hasProperty(*second, NULL, Read, &i)) {
         JSValue v = obj->getPropertyValue(i);
         if (v.isFunction()) {
             target = v.function;

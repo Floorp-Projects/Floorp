@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /GR /GX /O2 /Ob2 /D "_LIB" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "XP_PC" /YX /FD /c
+# ADD CPP /nologo /GR /GX /O2 /Ob2 /I "../../../js/src/fdlibm" /I "../../../regexp" /D "_LIB" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "XP_PC" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "DikDik___Win32_Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "../../../js/src/fdlibm" /D "_LIB" /D "DEBUG" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "XP_PC" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "../../../js/src/fdlibm" /I "../../../regexp" /D "_LIB" /D "DEBUG" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "XP_PC" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -89,9 +89,11 @@ SOURCE=..\bytecodegen.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -102,9 +104,11 @@ SOURCE=..\exception.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -115,9 +119,11 @@ SOURCE=..\fdlibm_ns.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -128,9 +134,11 @@ SOURCE=..\formatter.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -141,9 +149,11 @@ SOURCE=..\hash.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -151,6 +161,17 @@ SOURCE=..\hash.cpp
 # Begin Source File
 
 SOURCE=..\js2execution.cpp
+
+!IF  "$(CFG)" == "DikDik - Win32 Release"
+
+# ADD CPP /I "../../../js/src/fdlibm" /I "../../regexp"
+
+!ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -158,9 +179,11 @@ SOURCE=..\js2runtime.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -171,9 +194,11 @@ SOURCE=..\jsarray.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -181,6 +206,17 @@ SOURCE=..\jsarray.cpp
 # Begin Source File
 
 SOURCE=..\jsdate.cpp
+
+!IF  "$(CFG)" == "DikDik - Win32 Release"
+
+# ADD CPP /I "../../../js/src/fdlibm" /I "../../regexp"
+
+!ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -188,9 +224,11 @@ SOURCE=..\jsmath.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -201,9 +239,11 @@ SOURCE=..\jsstring.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -214,9 +254,11 @@ SOURCE=..\lexer.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -227,9 +269,11 @@ SOURCE=..\mem.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -240,9 +284,11 @@ SOURCE=..\numerics.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -253,9 +299,11 @@ SOURCE=..\parser.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -263,6 +311,17 @@ SOURCE=..\parser.cpp
 # Begin Source File
 
 SOURCE=..\prmjtime.cpp
+
+!IF  "$(CFG)" == "DikDik - Win32 Release"
+
+# ADD CPP /I "../../../js/src/fdlibm" /I "../../regexp"
+
+!ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -270,12 +329,18 @@ SOURCE=..\reader.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
 
+# ADD CPP /I "../../../regexp"
+
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE=..\regexpwrapper.cpp
 # End Source File
 # Begin Source File
 
@@ -283,9 +348,11 @@ SOURCE=..\strings.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -296,9 +363,11 @@ SOURCE=..\token.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -306,6 +375,17 @@ SOURCE=..\token.cpp
 # Begin Source File
 
 SOURCE=..\tracer.cpp
+
+!IF  "$(CFG)" == "DikDik - Win32 Release"
+
+# ADD CPP /I "../../../js/src/fdlibm" /I "../../regexp"
+
+!ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -313,9 +393,11 @@ SOURCE=..\utilities.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -326,9 +408,11 @@ SOURCE=..\world.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
 
-# ADD CPP /W4 /GR
+# ADD CPP /W4 /GR /I "../../../js/src/fdlibm" /I "../../regexp"
 
 !ELSEIF  "$(CFG)" == "DikDik - Win32 Debug"
+
+# ADD CPP /I "../../../regexp"
 
 !ENDIF 
 
@@ -412,6 +496,10 @@ SOURCE=..\property.h
 # Begin Source File
 
 SOURCE=..\reader.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\regexp\regexp.h
 # End Source File
 # Begin Source File
 

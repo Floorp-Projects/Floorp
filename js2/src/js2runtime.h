@@ -120,6 +120,7 @@ static const double two31 = 2147483648.0;
     extern JSType *NamedArgument_Type;
 
     extern JSType *Date_Type;
+    extern JSType *RegExp_Type;
 
 
     const String *numberToString(float64 number);
@@ -443,10 +444,11 @@ XXX ...couldn't get this to work...
     // the "we don't know any field by that name".
     class PropertyReference : public Reference {
     public:
-        PropertyReference(const String& name, Access acc, JSType *type, PropertyAttribute attr)
-            : Reference(type, attr), mAccess(acc), mName(name) { }
+        PropertyReference(const String& name, NamespaceList *nameSpace, Access acc, JSType *type, PropertyAttribute attr)
+            : Reference(type, attr), mAccess(acc), mName(name), mNameSpace(nameSpace) { }
         Access mAccess;
         const String& mName;
+        NamespaceList *mNameSpace;
         void emitCodeSequence(ByteCodeGen *bcg);
         void emitInvokeSequence(ByteCodeGen *bcg);
         uint16 baseExpressionDepth() { return 1; }
@@ -468,12 +470,13 @@ XXX ...couldn't get this to work...
     // so it's a scope chain lookup at runtime
     class NameReference : public Reference {
     public:
-        NameReference(const String& name, Access acc)
-            : Reference(Object_Type, 0), mAccess(acc), mName(name) { }
-        NameReference(const String& name, Access acc, JSType *type, PropertyAttribute attr)
-            : Reference(type, attr), mAccess(acc), mName(name) { }
+        NameReference(const String& name, NamespaceList *nameSpace, Access acc)
+            : Reference(Object_Type, 0), mAccess(acc), mName(name), mNameSpace(nameSpace) { }
+        NameReference(const String& name, NamespaceList *nameSpace, Access acc, JSType *type, PropertyAttribute attr)
+            : Reference(type, attr), mAccess(acc), mName(name), mNameSpace(nameSpace) { }
         Access mAccess;
         const String& mName;
+        NamespaceList *mNameSpace;
         void emitCodeSequence(ByteCodeGen *bcg);
         void emitTypeOf(ByteCodeGen *bcg);
         void emitDelete(ByteCodeGen *bcg);
@@ -777,6 +780,7 @@ XXX ...couldn't get this to work...
 
         // the 'vtable'
         MethodList          mMethods;
+
         const StringAtom    *mClassName;
         const StringAtom    *mPrivateNamespace;
 
@@ -796,7 +800,7 @@ XXX ...couldn't get this to work...
 
     class JSArrayInstance : public JSInstance {
     public:
-        JSArrayInstance(Context *cx, JSType * /*type*/) : JSInstance(cx, NULL), mLength(0) { mType = (JSType *)Array_Type; }
+        JSArrayInstance(Context *cx, JSType * /*type*/) : JSInstance(cx, NULL), mLength(0) { mType = (JSType *)Array_Type; mPrototype = Object_Type->mPrototypeObject; }
         virtual ~JSArrayInstance() { } // keeping gcc happy
 
 #ifdef DEBUG
@@ -918,14 +922,16 @@ XXX ...couldn't get this to work...
                         mStackTop(0),
                         mPC(0), 
                         mModule(NULL),
-                        mContainer(NULL) { }
+                        mNamespaceList(NULL),
+                        mContainer(NULL)       { }
 
         Activation(JSValue *locals, 
                         JSValue *stack, uint32 stackTop,
                         ScopeChain *scopeChain,
                         JSValue *argBase, JSValue curThis,
                         uint8 *pc, 
-                        ByteCodeModule *module )
+                        ByteCodeModule *module,
+                        NamespaceList *namespaceList )
                     : JSType(NULL), 
                         mLocals(locals), 
                         mStack(stack), 
@@ -935,6 +941,7 @@ XXX ...couldn't get this to work...
                         mThis(curThis), 
                         mPC(pc), 
                         mModule(module),
+                        mNamespaceList(namespaceList),
                         mContainer(NULL)       { }
 
         virtual ~Activation() { } // keeping gcc happy
@@ -964,6 +971,7 @@ XXX ...couldn't get this to work...
         uint8 *mPC;
         ByteCodeModule *mModule;
         JSFunction *mContainer;
+        NamespaceList *mNamespaceList;
 
         virtual JSFunction *getContainerFunction()      { return mContainer; }
 
@@ -1083,7 +1091,7 @@ XXX ...couldn't get this to work...
             return top->hasProperty(name, names, acc, p);
         }
 
-        bool deleteName(Context *cx, const String& name, AttributeStmtNode *attr);
+        bool deleteName(Context *cx, const String& name, NamespaceList *names);
 /*
         bool hasOwnProperty(const String& name, NamespaceList *names, Access acc, PropertyIterator *p)
         {
@@ -1104,7 +1112,7 @@ XXX ...couldn't get this to work...
         bool hasNameValue(const String& name, NamespaceList *names);
 
         // pushes the value of the name and returns it's container object
-        JSObject *getNameValue(Context *cx, const String& name, AttributeStmtNode *attr);
+        JSObject *getNameValue(Context *cx, const String& name, NamespaceList *names);
 
         // return the class on the top of the stack (or NULL if there
         // isn't one there).
@@ -1142,7 +1150,7 @@ XXX ...couldn't get this to work...
 
 
 
-        void setNameValue(Context *cx, const String& name, AttributeStmtNode *attr);
+        void setNameValue(Context *cx, const String& name, NamespaceList *names);
 
         // return the number of local vars used by all the 
         // Activations on the top of the chain
@@ -1398,7 +1406,6 @@ XXX ...couldn't get this to work...
 
 
 
-
     // provide access to the Error object constructors so that runtime exceptions
     // can be constructed for Javascript catches.
     extern JSValue Error_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
@@ -1408,6 +1415,12 @@ XXX ...couldn't get this to work...
     extern JSValue SyntaxError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
     extern JSValue TypeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
     extern JSValue UriError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+
+    // called by bytecodegen for RegExp literals
+    extern JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    
+    // called directly by String.match
+    extern JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
     class Attribute;
     
@@ -1494,6 +1507,18 @@ XXX ...couldn't get this to work...
         StringAtom& SyntaxError_StringAtom;
         StringAtom& TypeError_StringAtom;
         StringAtom& UriError_StringAtom;
+        StringAtom& Source_StringAtom;
+        StringAtom& Global_StringAtom;
+        StringAtom& IgnoreCase_StringAtom;
+        StringAtom& Multiline_StringAtom;
+        StringAtom& Input_StringAtom;
+        StringAtom& Index_StringAtom;
+        StringAtom& LastIndex_StringAtom;
+        StringAtom& LastMatch_StringAtom;
+        StringAtom& LastParen_StringAtom;
+        StringAtom& LeftContext_StringAtom;
+        StringAtom& RightContext_StringAtom;
+	StringAtom& Dollar_StringAtom;
 
         void initBuiltins();
         void initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef);
@@ -1545,6 +1570,8 @@ XXX ...couldn't get this to work...
         JSValue *mStack;
         uint32 mStackTop;
         uint32 mStackMax;
+
+        NamespaceList *mNamespaceList;
 
         void pushValue(const JSValue &v)
         {

@@ -284,11 +284,14 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
                 return static_cast<char16>(n);
             }
           default:
+/*
             if (!reader.getEof(ch)) {
                 CharInfo chi(ch);
                 if (!isAlphanumeric(chi) && !isLineBreak(chi))
                     return ch;
             }
+*/
+              return ch;
         }
   error:
     syntaxError("Bad escape code");

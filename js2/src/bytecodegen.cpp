@@ -46,9 +46,6 @@
 
 #include <string.h>
 
-// this is the IdentifierList passed to the name lookup routines
-#define CURRENT_ATTR    mNamespaceList
-
 namespace JavaScript {    
 namespace JS2Runtime {
 
@@ -215,6 +212,10 @@ void SetterFunctionReference::emitCodeSequence(ByteCodeGen *bcg)
 
 void NameReference::emitCodeSequence(ByteCodeGen *bcg) 
 {
+    if (mNameSpace) {
+        bcg->addOp(UseOnceOp);
+        bcg->addStringRef(mNameSpace->mName);
+    }
     if (mAccess == Read)
         bcg->addOp(GetNameOp);
     else
@@ -224,6 +225,10 @@ void NameReference::emitCodeSequence(ByteCodeGen *bcg)
 
 void NameReference::emitTypeOf(ByteCodeGen *bcg)
 {
+    if (mNameSpace) {
+        bcg->addOp(UseOnceOp);
+        bcg->addStringRef(mNameSpace->mName);
+    }
     bcg->addOp(GetTypeOfNameOp);
     bcg->addStringRef(mName); 
     bcg->addOp(TypeOfOp);
@@ -231,6 +236,10 @@ void NameReference::emitTypeOf(ByteCodeGen *bcg)
 
 void NameReference::emitDelete(ByteCodeGen *bcg)
 {
+    if (mNameSpace) {
+        bcg->addOp(UseOnceOp);
+        bcg->addStringRef(mNameSpace->mName);
+    }
     bcg->addOp(DeleteNameOp);
     bcg->addStringRef(mName); 
 }
@@ -286,6 +295,7 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { 1,        "LoadConstantZero", },
 { 1,        "LoadConstantNumber", },
 { 1,        "LoadConstantString", },
+{ 1,        "LoadConstantRegExp", },
 { 1,        "LoadThis", },
 { 1,        "LoadFunction", },
 { 1,        "LoadType", },
@@ -354,9 +364,10 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { 1,        "LoadGlobalObject", },
 { 0,        "PushScope", },
 { 0,        "PopScope", },
-{ 0,        "NewClosure" },
-{ -1,       "Juxtapose" },
-{ -1,       "NamedArgument" },
+{ 0,        "NewClosure", },
+{ -1,       "Juxtapose", },
+{ -1,       "NamedArgument", },
+{ -1,       "Use", },
 
 };
 
@@ -373,18 +384,28 @@ ByteCodeModule::ByteCodeModule(ByteCodeGen *bcg, JSFunction *f)
 
     mLocalsCount = bcg->mScopeChain->countVars();
     mStackDepth = toUInt32(bcg->mStackMax);
+
+    mErrorPos = 0;
+}
+
+ByteCodeModule::ByteCodeModule(size_t pos)
+{
+    mCodeBase = NULL;
+    mCodeMap = NULL;
+    mCodeMapLength = 0;
+    mErrorPos = pos;
 }
 
 ByteCodeModule::~ByteCodeModule()
 {
-    delete[] mCodeBase;
-    delete[] mCodeMap;
+    if (mCodeBase) delete[] mCodeBase;
+    if (mCodeMap) delete[] mCodeMap;
 }
 
 size_t ByteCodeModule::getPositionForPC(uint32 pc)
 {
     if (mCodeMapLength == 0)
-        return 0;
+        return mErrorPos;
 
     for (uint32 i = 0; i < (mCodeMapLength - 1); i++) {
         uint32 pos1 = mCodeMap[i].first;
@@ -849,6 +870,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             uint32 labelAtTestCondition = getLabel(); 
             uint32 labelAtEnd = getLabel(); 
 /*
+            if (object == null) goto end;
             iterator = object.forin()
             goto test
             top:
@@ -874,10 +896,16 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
 
 
                 genExpr(f->expr2);
+                addOp(DupOp);
+                addOp(LoadConstantNullOp);
+                addOp(DoOperatorOp);
+                addByte(Equal);
+                addOp(JumpTrueOp);
+                addFixup(labelAtEnd);
+
                 objectWriteRef->emitCodeSequence(this);
                 addOp(GetInvokePropertyOp);
-//              addIdentifierRef(widenCString("Iterator"), widenCString("forin"));
-                addStringRef(m_cx->Forin_StringAtom);
+                addStringRef(m_cx->Forin_StringAtom);   // XXX supposed to be in Iterator namespace
                 addOpAdjustDepth(InvokeOp, -1);
                 addLong(0);
                 addByte(Explicit);
@@ -893,7 +921,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 if (f->initializer->getKind() == StmtNode::Var) {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                     VariableBinding *v = vs->bindings;
-                    value = mScopeChain->getName(*v->name, CURRENT_ATTR, Write);
+                    value = mScopeChain->getName(*v->name, NULL, Write);
                 }
                 else {
                     if (f->initializer->getKind() == StmtNode::expression) {
@@ -920,7 +948,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             setLabel(labelAtIncrement);
                 objectReadRef->emitCodeSequence(this);
                 addOp(GetInvokePropertyOp);
-                addStringRef(m_cx->Next_StringAtom);
+                addStringRef(m_cx->Next_StringAtom);   // XXX supposed to be in Iterator namespace
                 iteratorReadRef->emitCodeSequence(this);
                 addOpAdjustDepth(InvokeOp, -2);
                 addLong(1);
@@ -941,7 +969,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             setLabel(breakLabel);
                 objectReadRef->emitCodeSequence(this);
                 addOp(GetInvokePropertyOp);
-                addStringRef(m_cx->Done_StringAtom);
+                addStringRef(m_cx->Done_StringAtom);   // XXX supposed to be in Iterator namespace
                 iteratorReadRef->emitCodeSequence(this);
                 addOpAdjustDepth(InvokeOp, -2);
                 addLong(1);
@@ -1232,17 +1260,30 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 throw exception             | 
                                             |
             catchLabel:                  <---
+
+                    the incoming exception is on the top of the stack at this point
+
                 catch (exception) { // catch handler label popped off
                         // any throw from in here must jump to the finallyInvoker
                         // (i.e. not the catch handler!)
-                    the incoming exception
-                    is on the top of the stack. it
-                    get stored into the variable
-                    we've associated with the catch clause
+
+                    Of the many catch clauses specified, only the one whose exception variable type
+                    matches the type of the incoming exception is executed...
+
+                    dup
+                    push type of exception-variable
+                    is
+                    jumpfalse-->next catch
+                    
+                    setlocalvar exception-variable
+                    pop
+                    <catch body>
+
 
                 }
                 // 'normal' fall thru from catch
                 jsr finally
+                jump finished
 
             finished:
 */
@@ -1303,25 +1344,34 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 ASSERT(mStackTop == 0);
                 mStackTop = 1;
                 if (mStackMax < 1) mStackMax = 1;
-                while (c) {
-                    Reference *ref = mScopeChain->getName(c->name, CURRENT_ATTR, Write);
+                uint32 nextCatch = NotALabel;
+                while (c) {                    
+                    if (c->next && c->type) {
+                        nextCatch = getLabel();
+                        addOp(DupOp);
+                        genCodeForExpression(c->type);
+                        addOp(IsOp);
+                        addOp(JumpFalseOp);
+                        addFixup(nextCatch);
+                    }
+                    Reference *ref = mScopeChain->getName(c->name, NULL, Write);
                     ref->emitImplicitLoad(this);
                     ref->emitCodeSequence(this);
                     delete ref;
+                    addOp(PopOp);
                     genCodeForStatement(c->stmt, static_cg, t_finallyLabel);
+                    if (t->finally) {
+                        addOp(JsrOp);
+                        addFixup(t_finallyLabel);
+                    }
                     c = c->next;
                     if (c) {
+						addOp(JumpOp);
+						addFixup(finishedLabel);
                         mStackTop = 1;
-                        Reference *ref = mScopeChain->getName(c->name, CURRENT_ATTR, Read);
-                        ref->emitCodeSequence(this);
-                        delete ref;
+                        if (nextCatch != NotABanana)
+                            setLabel(nextCatch);
                     }
-                }
-                addOp(PopOp);       // the exception object has persisted 
-                                    // on the top of the stack until here
-                if (t->finally) {
-                    addOp(JsrOp);
-                    addFixup(t_finallyLabel);
                 }
             }
             setLabel(finishedLabel);
@@ -1332,15 +1382,8 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             UseStmtNode *u = checked_cast<UseStmtNode *>(p);
             ExprList *eList = u->namespaces;
             while (eList) {
-                ExprNode *e = eList->expr;
-                if (e->getKind() == ExprNode::identifier) {
-                    NOT_REACHED("implement me");
-                    // ***** What is this supposed to do?  id is not used anywhere.
-                    // AttributeList *id = new(m_cx->mArena) AttributeList(e);
-                    // id->next = CURRENT_ATTR;
-                }
-                else
-                    NOT_REACHED("implement me");
+                genExpr(eList->expr);
+                addOp(UseOp);
                 eList = eList->next;
             }
 
@@ -1382,10 +1425,23 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
     case ExprNode::identifier:
         {
             const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-            Reference *ref = mScopeChain->getName(name, CURRENT_ATTR, acc);            
+            Reference *ref = mScopeChain->getName(name, NULL, acc);            
             if (ref == NULL)
-                ref = new NameReference(name, acc);
+                ref = new NameReference(name, NULL, acc);
             ref->emitImplicitLoad(this);
+            return ref;
+        }
+    case ExprNode::qualify:
+        {
+            QualifyExprNode *qe = checked_cast<QualifyExprNode *>(p);
+            const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
+            const StringAtom &qualifierName = checked_cast<IdentifierExprNode *>(qe->qualifier)->name;
+
+            NamespaceList *ns = new NamespaceList(qualifierName, NULL);
+            Reference *ref = mScopeChain->getName(name, ns, acc);            
+            if (ref == NULL)
+                ref = new NameReference(name, ns, acc);
+
             return ref;
         }
     case ExprNode::dot:
@@ -1421,24 +1477,19 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
                 const StringAtom &fieldName = checked_cast<IdentifierExprNode *>(b->op2)->name;
                 const StringAtom &qualifierName = checked_cast<IdentifierExprNode *>(qe->qualifier)->name;
 
-                NamespaceList *oldNS = mNamespaceList;
-                mNamespaceList = new NamespaceList(&qualifierName, mNamespaceList);
-
-                Reference *ref = lType->genReference(true, fieldName, mNamespaceList, acc, Property::NoAttribute);
+                NamespaceList *ns = new NamespaceList(qualifierName, NULL);
+                Reference *ref = lType->genReference(true, fieldName, ns, acc, Property::NoAttribute);
                 if (ref == NULL)
-                    ref = new PropertyReference(fieldName, acc, Object_Type, 0);
-
-                delete mNamespaceList;
-                mNamespaceList = oldNS;
+                    ref = new PropertyReference(fieldName, ns, acc, Object_Type, 0);
 
                 return ref;
             }
             else {
                 ASSERT(b->op2->getKind() == ExprNode::identifier);
                 const StringAtom &fieldName = checked_cast<IdentifierExprNode *>(b->op2)->name;
-                Reference *ref = lType->genReference(true, fieldName, CURRENT_ATTR, acc, 0);
+                Reference *ref = lType->genReference(true, fieldName, NULL, acc, 0);
                 if (ref == NULL)
-                    ref = new PropertyReference(fieldName, acc, Object_Type, Property::NoAttribute);
+                    ref = new PropertyReference(fieldName, NULL, acc, Object_Type, Property::NoAttribute);
                 return ref;
             }
 
@@ -1457,12 +1508,12 @@ void ByteCodeGen::genReferencePair(ExprNode *p, Reference *&readRef, Reference *
     case ExprNode::identifier:
         {
             const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-            readRef = mScopeChain->getName(name, CURRENT_ATTR, Read);            
+            readRef = mScopeChain->getName(name, NULL, Read);            
             if (readRef == NULL)
-                readRef = new NameReference(name, Read);
-            writeRef = mScopeChain->getName(name, CURRENT_ATTR, Write);            
+                readRef = new NameReference(name, NULL, Read);
+            writeRef = mScopeChain->getName(name, NULL, Write);            
             if (writeRef == NULL)
-                writeRef = new NameReference(name, Write);
+                writeRef = new NameReference(name, NULL, Write);
             readRef->emitImplicitLoad(this);
         }
         break;
@@ -1503,12 +1554,12 @@ void ByteCodeGen::genReferencePair(ExprNode *p, Reference *&readRef, Reference *
             }
             else {
                 const StringAtom &fieldName = checked_cast<IdentifierExprNode *>(b->op2)->name;
-                readRef = lType->genReference(true, fieldName, CURRENT_ATTR, Read, 0);
+                readRef = lType->genReference(true, fieldName, NULL, Read, 0);
                 if (readRef == NULL)
-                    readRef = new PropertyReference(fieldName, Read, Object_Type, Property::NoAttribute);
-                writeRef = lType->genReference(true, fieldName, CURRENT_ATTR, Write, 0);
+                    readRef = new PropertyReference(fieldName, NULL, Read, Object_Type, Property::NoAttribute);
+                writeRef = lType->genReference(true, fieldName, NULL, Write, 0);
                 if (writeRef == NULL)
-                    writeRef = new PropertyReference(fieldName, Write, Object_Type, Property::NoAttribute);
+                    writeRef = new PropertyReference(fieldName, NULL, Write, Object_Type, Property::NoAttribute);
             }
         }
         break;
@@ -2266,31 +2317,7 @@ BinaryOpEquals:
         {
             FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
             JSFunction *fnc = new JSFunction(m_cx, NULL, mScopeChain);
-
-            uint32 reqArgCount = 0;
-            uint32 optArgCount = 0;
-            uint32 namedArgCount = 0;
-/*
-            VariableBinding *b = f->function.parameters;
-            while (b != f->function.optParameters) {
-                reqArgCount++;
-                b = b->next;
-            }
-            while (b != f->function.restParameter) {
-                optArgCount++;
-                b = b->next;
-            }
-            b = f->function.namedParameters;
-            while (b) {
-                namedArgCount++;
-                b = b->next;
-            }
-            fnc->setArgCounts(m_cx, reqArgCount, optArgCount, namedArgCount,
-                              f->function.restParameter != f->function.namedParameters, f->function.restIsNamed);
-*/
             fnc->countParameters(m_cx, f->function);
-
-
 	    if (mScopeChain->isPossibleUncheckedFunction(f->function))
 		fnc->setIsPrototype(true);
 
@@ -2362,7 +2389,22 @@ BinaryOpEquals:
         }
         break;
     case ExprNode::regExp:
-        m_cx->reportError(Exception::internalError, "Regular expressions nyi", p->pos);
+        {
+            RegExpExprNode *v = checked_cast<RegExpExprNode *>(p);
+            JSValue reValue = kNullValue;
+            JSValue args[2];
+            args[0] = JSValue(&v->re);
+            args[1] = JSValue(&v->flags);
+            ByteCodeModule *curModule = m_cx->mCurModule;
+            ByteCodeModule errorHandlingModule(p->pos);
+            m_cx->mCurModule = &errorHandlingModule;
+            reValue = RegExp_Constructor(m_cx, reValue, args, 2);
+            m_cx->mCurModule = curModule;
+            ASSERT(reValue.isObject());
+            addOp(LoadConstantRegExpOp);
+            addPointer(reValue.object);
+            return RegExp_Type;
+        }
         break;
     default:
         NOT_REACHED("Not Implemented Yet");
@@ -2474,6 +2516,8 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
         i += 4;
         break;
 
+    case UseOp:
+    case UseOnceOp:
     case GetNameOp:
     case GetTypeOfNameOp:
     case SetNameOp:
@@ -2484,6 +2528,11 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case DeleteOp:
     case DeleteNameOp:
         f << *bcm.getString(bcm.getLong(i));
+        i += 4;
+        break;
+
+    case LoadConstantRegExpOp:
+        printFormat(f, "0x%X", bcm.getLong(i));
         i += 4;
         break;
 

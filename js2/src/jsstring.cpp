@@ -45,6 +45,7 @@
 #include "js2runtime.h"
 
 #include "jsstring.h"
+#include "regexp.h"
 
 namespace JavaScript {    
 namespace JS2Runtime {
@@ -105,6 +106,170 @@ static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /
 }
 
 
+static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    ContextStackReplacement csr(cx);
+
+    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
+    JSValue S = thisValue.toString(cx);
+
+    JSValue regexp = argv[0];
+    if ((argc == 0) || !regexp.isObject() || (regexp.object->mType != RegExp_Type)) {
+        regexp = kNullValue;
+        regexp = RegExp_Constructor(cx, regexp, argv, 1);
+    }
+
+    REParseState *parseResult = (REParseState *)(regexp.object->mPrivate);
+    if ((parseResult->flags & GLOBAL) == 0) {
+        return RegExp_exec(cx, regexp, &S, 1);                
+    }
+    else {
+        JSArrayInstance *A = (JSArrayInstance *)Array_Type->newInstance(cx);
+        parseResult->lastIndex = 0;
+        uint32 index = 0;
+        while (true) {
+            REState *regexp_result = REExecute(parseResult, S.string->c_str(), S.string->length());
+            if (regexp_result == NULL)
+                break;
+            if (parseResult->lastIndex == index)
+                parseResult->lastIndex++;
+            String *matchStr = new String(S.string->substr(regexp_result->endIndex, regexp_result->length));
+            A->setProperty(cx, *numberToString(index++), NULL, JSValue(matchStr));
+        }
+        regexp.object->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue((float64)(parseResult->lastIndex)));
+        return JSValue(A);
+    }
+}
+
+const String interpretDollar(Context *cx, const String *replaceStr, uint32 dollarPos, const String *searchStr, REState *regexp_result, uint32 &skip)
+{
+    skip = 2;
+    const char16 *dollarValue = replaceStr->c_str() + dollarPos + 1;
+    switch (*dollarValue) {
+    case '$':
+	return cx->Dollar_StringAtom;
+    case '&':
+	return searchStr->substr(regexp_result->endIndex, regexp_result->length);
+    case '`':
+	return searchStr->substr(0, regexp_result->endIndex);
+    case '\'':
+	{
+	    uint32 matchEndIndex = regexp_result->endIndex + regexp_result->length;
+	    return searchStr->substr(matchEndIndex, searchStr->length() - matchEndIndex);
+	}
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+	{
+	    uint32 num = *dollarValue - '0';
+	    if (num <= regexp_result->n) {
+		if ((dollarPos < (replaceStr->length() - 2))
+			&& (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
+		    uint32 tmp = (num * 10) + (dollarValue[1] - '0');
+		    if (tmp <= regexp_result->n) {
+			num = tmp;
+			skip = 3;
+		    }
+		}
+		return searchStr->substr(regexp_result->parens[num - 1].index, regexp_result->parens[num - 1].length);
+	    }
+	}
+	// fall thru
+    default:
+	skip = 1;
+	return cx->Dollar_StringAtom;
+    }
+}
+
+static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
+    JSValue S = thisValue.toString(cx);
+
+    JSValue searchValue;
+    JSValue replaceValue;
+
+    if (argc > 0) searchValue = argv[0];
+    if (argc > 1) replaceValue = argv[1];
+    const String *replaceStr = replaceValue.toString(cx).string;
+
+    if (searchValue.isObject() && (searchValue.object->mType == RegExp_Type)) {
+	REParseState *parseResult = (REParseState *)(searchValue.object->mPrivate);
+	REState *regexp_result;
+	uint32 m = parseResult->parenCount;
+	String newString;
+        uint32 index = 0;
+
+	while (true) {
+	    if (parseResult->flags & GLOBAL)
+		parseResult->lastIndex = index;
+            regexp_result = REExecute(parseResult, S.string->c_str(), S.string->length());
+	    if (regexp_result) {
+		String insertString;
+		uint32 start = 0;
+		while (true) {
+		    uint32 dollarPos = replaceStr->find('$', start);
+		    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
+			uint32 skip;
+			insertString += replaceStr->substr(start, dollarPos - start);
+			insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, regexp_result, skip);
+			start = dollarPos + skip;
+		    }
+		    else {
+			insertString += replaceStr->substr(start, replaceStr->length() - start);
+			break;
+		    }
+		}
+		newString += S.string->substr(index, regexp_result->endIndex - index);
+		newString += insertString;
+	    }
+	    else
+		break;
+	    index = regexp_result->endIndex + regexp_result->length;
+	    if ((parseResult->flags & GLOBAL) == 0)
+		break;
+	}
+	newString += S.string->substr(index, S.string->length() - index);
+	return JSValue(new String(newString));
+    }
+    else {
+	const String *searchStr = searchValue.toString(cx).string;
+	REState regexp_result;
+	regexp_result.endIndex = S.string->find(*searchStr, 0);
+	if (regexp_result.endIndex == String::npos)
+	    return JSValue(S.string);
+	regexp_result.length = searchStr->length();
+	regexp_result.n = 0;
+	String insertString;
+	String newString;
+	uint32 start = 0;
+	while (true) {
+	    uint32 dollarPos = replaceStr->find('$', start);
+	    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
+		uint32 skip;
+		insertString += replaceStr->substr(start, dollarPos - start);
+		insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, &regexp_result, skip);
+		start = dollarPos + skip;
+	    }
+	    else {
+		insertString += replaceStr->substr(start, replaceStr->length() - start);
+		break;
+	    }
+	}
+	newString += S.string->substr(0, regexp_result.endIndex);
+	newString += insertString;
+	uint32 index = regexp_result.endIndex + regexp_result.length;
+	newString += S.string->substr(index, S.string->length() - index);
+	return JSValue(new String(newString));
+    }
+}
 
 struct MatchResult {
     bool failure;
@@ -258,14 +423,16 @@ static JSValue String_indexOf(Context *cx, const JSValue& thisValue, JSValue *ar
     uint32 pos = 0;
 
     if (argc > 1) {
-        int32 arg1 = (int32)(argv[1].toInt32(cx).f64);
-        if (arg1 < 0)
+        float64 fpos = argv[1].toNumber(cx).f64;
+        if (JSDOUBLE_IS_NaN(fpos))
+            pos = 0;
+        if (fpos < 0)
             pos = 0;
         else
-            if ((uint32)arg1 >= str->size()) 
+            if (fpos >= str->size()) 
                 pos = str->size();
             else
-                pos = (uint32)arg1;
+                pos = (uint32)(fpos);
     }
     pos = str->find(*searchStr, pos);
     if (pos == String::npos)
@@ -447,6 +614,8 @@ Context::PrototypeFunctions *getStringProtos()
         { "indexOf",            Number_Type, 1, String_indexOf },
         { "lastIndexOf",        Number_Type, 2, String_lastIndexOf },   // XXX ECMA spec says 1, but tests want 2 XXX
         { "localeCompare",      Number_Type, 1, String_localeCompare },
+        { "match",              Array_Type,  1, String_match },
+        { "replace",            String_Type, 2, String_replace },
         { "slice",              String_Type, 2, String_slice },
         { "split",              Array_Type,  1, String_split },         // XXX ECMA spec says 2, but tests want 1 XXX
         { "substring",          String_Type, 2, String_substring },

@@ -76,6 +76,7 @@ typedef enum {
     LoadConstantZeroOp,     //                          --> <+0.0 value object>
     LoadConstantNumberOp,   // <poolindex>              --> <Number value object>
     LoadConstantStringOp,   // <poolindex>              --> <String value object>
+    LoadConstantRegExpOp,   // <poolindex>              --> <RegExp value object>
     LoadThisOp,             //                          --> <this object>      
     LoadFunctionOp,         // <pointer>        XXX !!! XXX
     LoadTypeOp,             // <pointer>        XXX !!! XXX
@@ -155,6 +156,8 @@ typedef enum {
     NewClosureOp,           //                          <function> --> <function>
     JuxtaposeOp,            //                          <attribute> <attribute> --> <attribute>
     NamedArgOp,             //                          <object> <string> --> <named arg object>
+    UseOp,                  //                          <object> -->
+    UseOnceOp,              //                          <object> -->
 
     OpCodeCount
 
@@ -173,6 +176,7 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
     public:
             
         ByteCodeModule(ByteCodeGen *bcg, JSFunction *f);
+        ByteCodeModule(size_t pos);
         ~ByteCodeModule();
 
 #ifdef DEBUG
@@ -183,7 +187,7 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
         uint32 getLong(uint32 index) const          { return *((uint32 *)&mCodeBase[index]); }
         uint16 getShort(uint32 index) const         { return *((uint16 *)&mCodeBase[index]); }
         int32 getOffset(uint32 index) const         { return *((int32 *)&mCodeBase[index]); }
-        const String *getString(uint32 index) const { return (const String *)(index); }
+        const StringAtom *getString(uint32 index) const { return (const StringAtom *)(index); }
         float64 getNumber(uint8 *p) const       { return *((float64 *)p); }
 
         void setSource(const String &source, const String &sourceLocation)
@@ -205,8 +209,10 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
 
         PC_Position *mCodeMap;
         uint32 mCodeMapLength;
+        size_t mErrorPos;
 
         size_t getPositionForPC(uint32 pc);
+
             
     };
     Formatter& operator<<(Formatter& f, const ByteCodeModule& bcm);
@@ -254,7 +260,6 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
                 mScopeChain(scopeChain), 
                 mPC_Map(new CodeMap),
                 m_cx(cx), 
-                mNamespaceList(NULL) ,
                 mStackTop(0),
                 mStackMax(0)
         { }
@@ -296,8 +301,6 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
         
         std::vector<Label> mLabelList;
         std::vector<uint32> mLabelStack;
-
-        NamespaceList *mNamespaceList;
 
         int32 mStackTop;        // keep these as signed so as to
         int32 mStackMax;        // track if they go negative.
