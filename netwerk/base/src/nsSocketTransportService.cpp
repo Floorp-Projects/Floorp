@@ -95,13 +95,6 @@ nsSocketTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aRes
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    PRBool offline;
-    rv = ios->GetOffline(&offline);
-    if (NS_FAILED(rv)) return rv;
-    if (offline) return NS_ERROR_FAILURE;
-
     nsSocketTransportService* trans = new nsSocketTransportService();
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -556,6 +549,14 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
                                                 nsIChannel** aResult)
 {
   nsresult rv = NS_OK;
+
+  NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  PRBool offline;
+  rv = ios->GetOffline(&offline);
+  if (NS_FAILED(rv)) return rv;
+  if (offline) return NS_ERROR_OFFLINE;
+
   nsSocketTransport* transport = nsnull;
 
   // Parameter validation...
