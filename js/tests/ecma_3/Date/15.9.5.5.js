@@ -48,7 +48,9 @@
     if its 'this' value is not a Date object. Therefore it cannot be transferred
     to other kinds of objects for use as a method.
 
-    Author:  pschwartau@netscape.com                             
+    Note: This test isn't supposed to work with a non-English locale per spec.
+
+    Author:  pschwartau@netscape.com
     Date:      14 november 2000
 */
 
