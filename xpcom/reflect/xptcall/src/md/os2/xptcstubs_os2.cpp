@@ -66,6 +66,7 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
 
     paramCount = info->GetParamCount();
 
+#ifdef XP_OS2_VACPP
     /* If paramCount is > 0, write out the EDX pointer to the
        space on the stack args[0]. args[-4] is the space on
        the stack where it was pushed */
@@ -79,6 +80,7 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
     if (paramCount > 1) {
         args[1] = args[-3];
     }
+#endif
 
     // setup variant array pointer
     if(paramCount > PARAM_BUFFER_COUNT)
