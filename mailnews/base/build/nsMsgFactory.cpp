@@ -440,7 +440,9 @@ struct Components {
 // The list of components we register
 static Components gComponents[] = {
     { "Netscape Messenger Bootstrapper", &kCMessengerBootstrapCID,
-      NS_MESSENGERBOOTSTRAP_PROGID,
+      NS_MESSENGERBOOTSTRAP_PROGID },
+    { "Mail Startup Handler", &kCMessengerBootstrapCID,
+      NS_MAILSTARTUPHANDLER_PROGID,
       nsMessengerBootstrap::RegisterProc,
       nsMessengerBootstrap::UnregisterProc },
     { "UrlListenerManager", &kCUrlListenerManagerCID,

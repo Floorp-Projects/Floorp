@@ -33,6 +33,9 @@
 #define NS_ADDRESSBOOK_PROGID \
   "component://netscape/addressbook"
 
+#define NS_ADDRESSBOOKSTARTUPHANDLER_PROGID \
+  "component://netscape/commandlinehander/general-startup-addressbook"
+
 #define NS_ADDRESSBOOK_CID							\
 { /* {D60B84F2-2A8C-11d3-9E07-00A0C92B5F0D} */		\
   0xd60b84f2, 0x2a8c, 0x11d3,						\

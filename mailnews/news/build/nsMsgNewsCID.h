@@ -74,6 +74,9 @@
   "component://netscape/messenger/messageservice;type=news" 
 #define NS_NNTPSERVICE_PROGID \
   "component://netscape/messenger/nntpservice"
+#define NS_NEWSSTARTUPHANDLER_PROGID \
+  "component://netscape/commandlinehander/general-startup-news"
+
 #define NS_NNTPSERVICE_CID                              \
 { /* 4C9F90E1-E19B-11d2-806E-006008128C4E */  		\
  0x4c9f90e1, 0xe19b, 0x11d2,                            \

@@ -65,7 +65,7 @@
 #include "nsTimeBomb.h"
 #endif
 
-#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_CMD_LINE
 #endif
 
@@ -278,11 +278,179 @@ static void DumpArbitraryHelp()
   return;    
 }
 
+static
+nsresult LaunchApplication(const char *progID, PRInt32 height, PRInt32 width)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr <nsICmdLineHandler> handler = do_GetService(progID, &rv);
+  if (NS_FAILED(rv)) return rv;
+        
+  if (!handler) return NS_ERROR_FAILURE;
+          
+  nsXPIDLCString chromeUrlForTask;
+  rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
+  if (NS_FAILED(rv)) return rv;
+          
+  PRBool handlesArgs = PR_FALSE;
+  rv = handler->GetHandlesArgs(&handlesArgs);
+  if (handlesArgs) {
+    PRUnichar *defaultArgs = nsnull;
+    rv = handler->GetDefaultArgs(&defaultArgs);
+    if (NS_FAILED(rv)) return rv;
+    rv = OpenWindow((const char *)chromeUrlForTask, defaultArgs);
+    Recycle(defaultArgs);
+  }
+  else {
+    rv = OpenChromURL((const char *)chromeUrlForTask, height, width);
+  }
+
+  return rv;
+}
+
+static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLineService *cmdLineArgs, const char *progID, PRInt32 height, PRInt32 width)
+{
+  nsresult rv;
+  if (!progID || !commandLineArg || !cmdLineArgs) return NS_ERROR_FAILURE;
+	nsXPIDLCString cmdResult;
+
+  nsCOMPtr <nsICmdLineHandler> handler = do_GetService(progID, &rv);
+  if (NS_FAILED(rv)) return rv;
+        
+  if (!handler) return NS_ERROR_FAILURE;
+          
+  nsXPIDLCString chromeUrlForTask;
+  rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
+  if (NS_FAILED(rv)) return rv;
+          
+#ifdef DEBUG_CMD_LINE
+  printf("XXX got this one:\t%s\n\t%s\n\n",commandLineArg,(const char *)chromeUrlForTask);
+#endif /* DEBUG_CMD_LINE */
+          
+  rv = cmdLineArgs->GetCmdLineValue(commandLineArg, getter_Copies(cmdResult));
+  if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG_CMD_LINE
+  printf("%s, cmdResult = %s\n",commandLineArg,(const char *)cmdResult);
+#endif /* DEBUG_CMD_LINE */
+
+  PRBool handlesArgs = PR_FALSE;
+  rv = handler->GetHandlesArgs(&handlesArgs);
+  if (handlesArgs) {
+    if ((const char *)cmdResult) {
+      if (PL_strcmp("1",(const char *)cmdResult)) {
+        PRBool openWindowWithArgs = PR_TRUE;
+        rv = handler->GetOpenWindowWithArgs(&openWindowWithArgs);
+        if (NS_FAILED(rv)) return rv;
+
+        if (openWindowWithArgs) {
+          nsString cmdArgs((const char *)cmdResult);
+#ifdef DEBUG_CMD_LINE
+          printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
+#endif /* DEBUG_CMD_LINE */
+          rv = OpenWindow((const char *)chromeUrlForTask, cmdArgs.GetUnicode());
+        }
+        else {
+#ifdef DEBUG_CMD_LINE
+          printf("opening %s with %s\n",(const char *)cmdResult,"OpenChromURL");
+#endif /* DEBUG_CMD_LINE */
+          rv = OpenChromURL((const char *)cmdResult,height, width);
+          if (NS_FAILED(rv)) return rv;
+        }
+      }
+      else {
+        PRUnichar *defaultArgs;
+        rv = handler->GetDefaultArgs(&defaultArgs);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = OpenWindow((const char *)chromeUrlForTask, defaultArgs);
+        Recycle(defaultArgs);
+        if (NS_FAILED(rv)) return rv;
+      }
+    }
+  }
+  else {
+    if (NS_SUCCEEDED(rv) && (const char*)cmdResult) {
+      if (PL_strcmp("1",(const char *)cmdResult) == 0) {
+        rv = OpenChromURL((const char *)chromeUrlForTask,height, width);
+        if (NS_FAILED(rv)) return rv;
+      }
+      else {
+        rv = OpenChromURL((const char *)cmdResult, height, width);
+        if (NS_FAILED(rv)) return rv;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+typedef struct
+{
+  nsIPref *prefs;
+  PRInt32 height;
+  PRInt32 width;
+} StartupClosure;
+
+static
+void startupPrefEnumerationFunction(const char *prefName, void *data)
+{
+  nsresult rv;
+  PRBool prefValue = PR_FALSE;
+
+  if (!data || !prefName) return;
+
+  StartupClosure *closure = (StartupClosure *)data;
+ 
+#ifdef DEBUG_CMD_LINE  
+  printf("getting %s\n", prefName);
+#endif /* DEBUG_CMD_LINE */
+
+  rv = closure->prefs->GetBoolPref(prefName, &prefValue);
+  if (NS_FAILED(rv)) return;
+
+#ifdef DEBUG_CMD_LINE  
+  printf("%s = %d\n", prefName, prefValue);
+#endif /* DEBUG_CMD_LINE */
+
+  PRUint32 prefixLen = PL_strlen(PREF_STARTUP_PREFIX);
+
+  // if the pref is "general.startup.", ignore it.
+  if (PL_strlen(prefName) <= prefixLen) return;
+ 
+  if (prefValue) {
+    // this is the progid prefix that all the command line handers register
+    nsCAutoString progID = "component://netscape/commandlinehander/general-startup-";
+    progID += (prefName + prefixLen);
+
+#ifdef DEBUG_CMD_LINE  
+    printf("progid = %s\n", (const char *)progID);
+#endif /* DEBUG_CMD_LINE */
+    rv = LaunchApplication((const char *)progID, closure->height, closure->width);
+  }
+  return;
+}
+
+static PRBool IsStartupCommand(const char *arg)
+{
+  if (!arg) return PR_FALSE;
+  
+  if (PL_strlen(arg) <= 1) return PR_FALSE;
+
+  // windows allows /mail or -mail
+  if ((arg[0] == '-') 
+#ifdef XP_PC 
+      || (arg[0] == '/')
+#endif /* XP_PC */
+      ) {
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
 {
-	char* cmdResult = nsnull;
 	nsresult rv;
-	PRBool forceLaunchTask = PR_FALSE;
 	PRInt32 height  = NS_SIZETOCONTENT;
 	PRInt32 width  = NS_SIZETOCONTENT;
 	char* tempString = NULL;
@@ -299,104 +467,53 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 	
 	if (tempString) PR_sscanf(tempString, "%d", &height);
   
-  NS_WITH_SERVICE(nsICategoryManager, catman, "mozilla.categorymanager.1", &rv);
-  if(NS_SUCCEEDED(rv) && catman) {
+  if (heedGeneralStartupPrefs) {
+#ifdef DEBUG_CMD_LINE
+    printf("XXX iterate over all the general.startup.* prefs\n");
+#endif /* DEBUG_CMD_LINE */
+    StartupClosure closure;
+
+    closure.prefs = prefs;
+    closure.height = height;
+    closure.width = width;
+
+    prefs->EnumerateChildren(PREF_STARTUP_PREFIX, startupPrefEnumerationFunction,(void *)(&closure));
+  }
+  else {
+    PRInt32 argc = 0;
+    rv = cmdLineArgs->GetArgc(&argc);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ASSERTION(argc > 1, "we shouldn't be here if there were no command line arguments");
+    if (argc <= 1) return NS_ERROR_FAILURE;
+
+    char **argv = nsnull;
+    rv = cmdLineArgs->GetArgv(&argv);
+    if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsISimpleEnumerator> e;
-    rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
-    if(NS_SUCCEEDED(rv) && e) {
-      while (PR_TRUE) {
-        nsCOMPtr<nsISupportsString> progid;
-        rv = e->GetNext(getter_AddRefs(progid));
-        if (NS_FAILED(rv) || !progid) break;
-
-       	nsXPIDLCString progidString;
-        progid->ToString(getter_Copies(progidString));
+    PRInt32 i = 0;
+    for (i=1;i<argc;i++) {
+#ifdef DEBUG_CMD_LINE
+      printf("XXX argv[%d] = %s\n",i,argv[i]);
+#endif /* DEBUG_CMD_LINE */
+      if (IsStartupCommand(argv[i])) {
+        nsCAutoString progID = "component://netscape/commandlinehander/general-startup-";
         
-#ifdef DEBUG_CMD_LINE
-        printf("cmd line hander progid = %s\n", (const char *)progidString);
-#endif /* DEBUG_CMD_LINE */
-        
-        nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)progidString, &rv);
-        if (NS_FAILED(rv)) continue;
-        
-        if (handler) {
-          
-          nsXPIDLCString commandLineArg;
-          rv = handler->GetCommandLineArgument(getter_Copies(commandLineArg));
-          if (NS_FAILED(rv)) continue;
-          
-          nsXPIDLCString chromeUrlForTask;
-          rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
-          if (NS_FAILED(rv)) continue;
-          
-          nsXPIDLCString prefNameForStartup;
-          rv = handler->GetPrefNameForStartup(getter_Copies(prefNameForStartup));
-          if (NS_FAILED(rv)) continue;
-          
-#ifdef DEBUG_CMD_LINE
-          printf("got this one:\t%s\n\t%s\n\t%s\n\n",(const char *)commandLineArg,(const char *)chromeUrlForTask,(const char *)prefNameForStartup);
-#endif /* DEBUG_CMD_LINE */
-          
-          if (heedGeneralStartupPrefs) {
-            rv = prefs->GetBoolPref((const char *)prefNameForStartup,&forceLaunchTask);
-            if (NS_FAILED(rv)) {
-              forceLaunchTask = PR_FALSE;
-            }
-          }  
-          
-          rv = cmdLineArgs->GetCmdLineValue((const char *)commandLineArg, &cmdResult);
-#ifdef DEBUG_CMD_LINE
-          printf("%s, cmdResult = %s\n",(const char *)commandLineArg,cmdResult);
-#endif /* DEBUG_CMD_LINE */
-
-          PRBool handlesArgs = PR_FALSE;
-          rv = handler->GetHandlesArgs(&handlesArgs);
-          if (handlesArgs) {
-            if (forceLaunchTask || cmdResult) {
-              if (cmdResult && PL_strcmp("1",cmdResult)) {
-                PRBool openWindowWithArgs = PR_TRUE;
-                rv = handler->GetOpenWindowWithArgs(&openWindowWithArgs);
-                if (openWindowWithArgs) {
-                   nsString cmdArgs(cmdResult);
-#ifdef DEBUG_CMD_LINE
-                    printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
-#endif /* DEBUG_CMD_LINE */
-                   OpenWindow((const char *)chromeUrlForTask, cmdArgs.GetUnicode());
-                }
-                else {
-#ifdef DEBUG_CMD_LINE
-                    printf("opening %s with %s\n",cmdResult,"OpenChromURL");
-#endif /* DEBUG_CMD_LINE */
-                    OpenChromURL(cmdResult,height, width);
-                }
-              }
-              else {
-                PRUnichar *defaultArgs;
-                rv = handler->GetDefaultArgs(&defaultArgs);
-                OpenWindow((const char *)chromeUrlForTask, defaultArgs);
-                Recycle(defaultArgs);
-              }
-            }
-          }
-          else {
-            if (forceLaunchTask) {
-              OpenChromURL((const char *)chromeUrlForTask,height, width);
-            }
-            else if (NS_SUCCEEDED(rv) && cmdResult) {
-              if (PL_strcmp("1",cmdResult) == 0) {
-                OpenChromURL((const char *)chromeUrlForTask,height, width);
-              }
-              else {
-                OpenChromURL(cmdResult, height, width);
-              }
-            }
-          }
+        // skip over the - (or / on windows)
+        char *command = argv[i] + 1;
+#ifdef XP_UNIX
+        // unix allows -mail and --mail
+        if ((argv[i][0] == '-') && (argv[i][1] == '-')) {
+          command = argv[i] + 2;
         }
+#endif /* XP_UNIX */ 
+        progID += (const char *)command;
+        // this can fail, as someone could do -foo, where -foo is not handled
+        rv = LaunchApplicationWithArgs((const char *)(argv[i]), cmdLineArgs, (const char *)progID, height, width);
       }
     }
   }
-  
+
   return NS_OK;    
 }
 
@@ -414,23 +531,17 @@ static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralSt
 
 static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 {
-    printf("XXX: OpenBrowserWindow()\n");
-
     nsresult rv;
-    NS_WITH_SERVICE(nsICmdLineHandler, handler, NS_IBROWSERCMDLINEHANDLER_PROGID, &rv);
+    NS_WITH_SERVICE(nsICmdLineHandler, handler, NS_BROWSERSTARTUPHANDLER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString chromeUrlForTask;
     rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
     if (NS_FAILED(rv)) return rv;
 
-    PRUnichar *defaultArgs;
-    rv = handler->GetDefaultArgs(&defaultArgs);
-    if (NS_FAILED(rv)) return rv;
-    rv = OpenWindow((const char *)chromeUrlForTask, defaultArgs);
+    rv = OpenChromURL((const char *)chromeUrlForTask, height, width );
     if (NS_FAILED(rv)) return rv;
 
-    Recycle(defaultArgs);
     return rv;
 }
 
@@ -468,11 +579,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       if (tempString)
         PR_sscanf(tempString, "%d", &height);
 				 
-#if 0
       rv = OpenBrowserWindow(height, width);
-#else
-      rv = OpenChromURL("chrome://navigator/content/", height, width );
-#endif
     }
 	}
 	return rv;
@@ -685,8 +792,9 @@ void DumpHelp(char *appname)
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #endif
 
-  // not working yet, because we handle -h too early, and components
-  // havent registered yet
+  // this works, but only after the components have registered.  so if you drop in a new command line hander, -help
+  // won't not until the second run.
+  // out of the bug, because we ship a component.reg file, it works correctly.
   DumpArbitraryHelp();
 }
 

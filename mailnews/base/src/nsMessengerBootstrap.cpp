@@ -50,14 +50,19 @@ nsresult
 nsMessengerBootstrap::Initialize(nsIAppShellService*,
                                  nsICmdLineService*)
 {
+#if 0
+    // not needed?
 	nsresult rv;
 
     nsCOMPtr<nsISupports> bootstrapper;
     rv = this->QueryInterface(kISupportsIID, getter_AddRefs(bootstrapper));
     if (NS_SUCCEEDED(rv) && bootstrapper) {
-      rv = nsServiceManager::RegisterService( "component://netscape/appshell/component/messenger", bootstrapper);
+      rv = nsServiceManager::RegisterService(NS_MESSENGERBOOTSTRAP_PROGID, bootstrapper);
     }
 	return rv;
+#else
+    return NS_OK;
+#endif
 }
 
 nsresult
@@ -68,4 +73,4 @@ nsMessengerBootstrap::Shutdown()
 }
 
 
-CMDLINEHANDLER_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","chrome://messenger/content/","Start with mail.",NS_MESSENGERBOOTSTRAP_PROGID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)
+CMDLINEHANDLER_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","chrome://messenger/content/","Start with mail.",NS_MAILSTARTUPHANDLER_PROGID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)

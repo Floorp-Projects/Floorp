@@ -65,9 +65,15 @@ static nsModuleComponentInfo components[] = {
     { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
       "component://netscape/editor/editorspellcheck", nsEditorShellConstructor, },
     { "Editor Service", NS_EDITORSERVICE_CID,
-      "component://netscape/editor/editorservice", nsEditorServiceConstructor,
+      "component://netscape/editor/editorservice", nsEditorServiceConstructor,},
+    { "Editor Startup Handler", NS_EDITORSERVICE_CID,
+      "component://netscape/commandlinehander/general-startup-editor",
+      nsEditorServiceConstructor,
       nsEditorService::RegisterProc,
       nsEditorService::UnregisterProc, },
+    { "Edit Startup Handler", NS_EDITORSERVICE_CID,
+      "component://netscape/commandlinehander/general-startup-edit",
+      nsEditorServiceConstructor, },
 };
 
 ////////////////////////////////////////////////////////////////////////

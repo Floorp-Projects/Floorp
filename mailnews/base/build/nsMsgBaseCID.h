@@ -235,6 +235,8 @@
 //
 #define NS_MESSENGERBOOTSTRAP_PROGID \
   "component://netscape/appshell/component/messenger"
+#define NS_MAILSTARTUPHANDLER_PROGID \
+  "component://netscape/commandlinehander/general-startup-mail"
 
 //
 // nsMessenger

@@ -2525,7 +2525,7 @@ nsBrowserContentHandler::~nsBrowserContentHandler()
 {
 }
 
-CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser.",NS_IBROWSERCMDLINEHANDLER_PROGID,"Browser Cmd Line Handler", PR_TRUE, PR_FALSE)
+CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser.",NS_BROWSERSTARTUPHANDLER_PROGID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
 
 NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs) 
 { 
@@ -2643,7 +2643,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
 static nsModuleComponentInfo components[] = {
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
-    NS_IBROWSERINSTANCE_PROGID, 
+    NS_BROWSERINSTANCE_PROGID, 
     nsBrowserInstanceConstructor
   },
   { "Browser Content Handler",
@@ -2651,13 +2651,19 @@ static nsModuleComponentInfo components[] = {
     NS_CONTENT_HANDLER_PROGID_PREFIX"text/html", 
     nsBrowserContentHandlerConstructor 
   },
-  { "Browser Cmd Line Handler",
+  { "Browser Startup Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_IBROWSERCMDLINEHANDLER_PROGID, 
+    NS_BROWSERSTARTUPHANDLER_PROGID, 
     nsBrowserContentHandlerConstructor,
     nsBrowserContentHandler::RegisterProc,
     nsBrowserContentHandler::UnregisterProc,
-    }
+  },
+  { "Chrome Startup Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    "component://netscape/commandlinehander/general-startup-chrome",
+    nsBrowserContentHandlerConstructor,
+  } 
+  
 };
 
 NS_IMPL_NSGETMODULE("nsBrowserModule", components)
