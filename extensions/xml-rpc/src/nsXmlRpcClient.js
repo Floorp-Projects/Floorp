@@ -15,14 +15,14 @@
  *
  * Contributor(s): Martijn Pieters <mj@digicool.com> (original author)
  *                 Samuel Sieb <samuel@sieb.net> brought it up to date with 
- *                                               current APIs
+ *                             current APIs and added authentication
  */
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.21 $
+ *  Version: $Revision: 1.22 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.21 2002/01/29 21:21:33 dougt%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.22 2002/02/12 23:57:12 samuel%sieb.net Exp $
  */
 
 /*
@@ -78,6 +78,8 @@ function nsXmlRpcClient() {}
 /* the nsXmlRpcClient class def */
 nsXmlRpcClient.prototype = {
     _serverUrl: null,
+    _useAuth: false,
+    _passwordTried: false,
 
     init: function(serverURL) {
         var oURL = createInstance('@mozilla.org/network/standard-url;1',
@@ -94,10 +96,23 @@ nsXmlRpcClient.prototype = {
         this._serverUrl = oURL;
     },
 
+    setAuthentication: function(username, password){
+        if ((typeof username == "string") &&
+            (typeof password == "string")){
+          this._useAuth = true;
+          this._username = username;
+          this._password = password;
+          this._passwordTried = false;
+        }
+    },
+
+    clearAuthentication: function(){
+        this._useAuth = false;
+    },
+
     get serverUrl() { return this._serverUrl; },
 
-    // Internal copy of the status, so's we can throw it to the syncnronous
-    // caller.
+    // Internal copy of the status
     _status: null,
     _errorMsg: null,
     _listener: null,
@@ -120,6 +135,7 @@ nsXmlRpcClient.prototype = {
         this._errorMsg = null;
         this._listener = listener;
         this._seenStart = false;
+        this._context = context;
         
         debug('Arguments: ' + methodArgs);
 
@@ -147,8 +163,6 @@ nsXmlRpcClient.prototype = {
             .QueryInterface(Components.interfaces.nsIHttpChannel);
 
         // Create a stream out of the request and attach it to the channel
-        // Note: pending bug #37773, an extra \r\n needs to be added.
-        request = "\r\n" + request;
         var upload = chann.QueryInterface(Components.interfaces.nsIUploadChannel);
         var postStream = createInstance('@mozilla.org/io/string-input-stream;1',
             'nsIStringInputStream');
@@ -158,6 +172,8 @@ nsXmlRpcClient.prototype = {
         // Set the request method. setUploadStream guesses the method,
         // so we gotta do this afterwards.
         chann.requestMethod = 'POST';
+
+        chann.notificationCallbacks = this;
 
         return chann;
     },
@@ -377,9 +393,43 @@ nsXmlRpcClient.prototype = {
             !iid.equals(XMLRPCCLIENT_IID) &&
             !iid.equals(Components.interfaces.nsIXmlRpcClientListener) &&
             !iid.equals(Components.interfaces.nsIRequestObserver) &&
-            !iid.equals(Components.interfaces.nsIStreamListener))
+            !iid.equals(Components.interfaces.nsIStreamListener) &&
+            !iid.equals(Components.interfaces.nsIInterfaceRequestor))
             throw Components.results.NS_ERROR_NO_INTERFACE;
         return this;
+    },
+
+    // nsIInterfaceRequester interface
+    getInterface: function(iid, result){
+        if (iid.equals(Components.interfaces.nsIAuthPrompt)){
+            return this;
+        }
+        return Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    // nsIAuthPrompt interface
+    _passwordTried: false,
+    promptUsernameAndPassword: function(dialogTitle, text, passwordRealm,
+                                        savePassword, user, pwd){
+
+        if (this._useAuth){
+            if (this._passwordTried){
+                try { 
+                    this._listener.onError(this, ctxt, 
+                        Components.results.NS_ERROR_FAIL, 
+                        'Server returned invalid Fault');
+                }
+                catch(ex) {
+                    debug('Exception in listener.onError: ' + ex);
+                }
+                return false;
+            }
+            user.value = this._username;
+            pwd.value = this._password;
+            this._passwordTried = true;
+            return true;
+        }
+        return false;
     },
 
     /* Generate the XML-RPC request body */
@@ -474,12 +524,12 @@ nsXmlRpcClient.prototype = {
                 obj = obj.QueryInterface(Components.interfaces.nsIDictionary);
                 writer.startElement('struct');
                 var keys = obj.getKeys({});
-                for (var i in keys) {
+                for (var k in keys) {
                     writer.startElement('member');
                     writer.startElement('name');
-                    writer.write(keys[i]);
+                    writer.write(keys[k]);
                     writer.endElement('name');
-                    this._generateArgumentBody(writer, obj.getValue(keys[i]));
+                    this._generateArgumentBody(writer, obj.getValue(keys[k]));
                     writer.endElement('member');
                 }
                 writer.endElement('struct');
@@ -572,37 +622,6 @@ nsXmlRpcClient.prototype = {
         return 'Unknown';
     },
 
-    /* Parse the XML-RPC response */
-    // Only on Sync calls.
-    _parseResponse: function(stream, length) {
-        debug('Creating parser ... ');
-        var parser = new SimpleXMLParser(stream, length);
-        parser.setDocumentHandler(this);
-
-        // Make sure state is clean
-        this._valueStack = [];
-        this._currValue = null;
-        this._cdata = null;
-        this._foundFault = false;
-        
-        debug('Cranking up the parser');
-        parser.parse(length);
-
-        if (this._foundFault) {
-            try {
-                this._fault = createInstance(XMLRPCFAULT_CONTRACTID,
-                    'nsIXmlRpcFault');
-                this._fault.init(this._result.getValue('faultCode').data,
-                    this._result.getValue('faultString').data);
-                this._result = null;
-            } catch(e) {
-                this._fault = null;
-                this._result = null;
-                throw Components.Exception('Could not parse response');
-            }
-        }
-    },
-
     // Response parsing state
     _valueStack: [],
     _currValue: null,
@@ -665,6 +684,7 @@ nsXmlRpcClient.prototype = {
     },
 
     endElement: function(name) {
+        var val;
         if (DEBUGPARSE) debug('End element ' + name);
         switch (name) {
             case 'value':
@@ -680,7 +700,7 @@ nsXmlRpcClient.prototype = {
                 var depth = this._valueStack.length;
                 if (depth < 2 || 
                     this._valueStack[depth - 2].type != this.STRUCT) {
-                    var val = this._currValue;
+                    val = this._currValue;
                     this._valueStack.pop();
 
                     if (depth < 2) {
@@ -698,7 +718,7 @@ nsXmlRpcClient.prototype = {
                 break;
                 
             case 'member':
-                var val = this._currValue;
+                val = this._currValue;
                 this._valueStack.pop();
                 this._currValue = this._valueStack[this._valueStack.length - 1];
                 this._currValue.appendValue(val.value);
@@ -931,6 +951,7 @@ SimpleXMLParser.prototype = {
             this._buff = this._buff.replace('\r', '\n');
             
             var startTag = this._buff.indexOf('<');
+            var endTag;
             if (startTag > -1) {
                 if (startTag > 0) { // We have character data.
                     var chars = this._buff.slice(0, startTag);
@@ -950,7 +971,7 @@ SimpleXMLParser.prototype = {
 
                 // Check for a PI
                 if (this._buff.charAt(1) == '?') {
-                    var endTag = this._buff.indexOf('?>');
+                    endTag = this._buff.indexOf('?>');
                     if (endTag > -1) this._buff = this._buff.slice(endTag + 2);
                     else {
                         // Make sure we don't miss '?' at the end of the buffer
@@ -964,7 +985,7 @@ SimpleXMLParser.prototype = {
 
                 // Check for a comment
                 if (this._buff.slice(0, 4) == '<!--') {
-                    var endTag = this._buff.indexOf('-->');
+                    endTag = this._buff.indexOf('-->');
                     if (endTag > -1) this._buff = this._buff.slice(endTag + 3);
                     else {
                         // Make sure we don't miss '--' at the end of the buffer
@@ -990,7 +1011,7 @@ SimpleXMLParser.prototype = {
                     if (this._buff.slice(0, 9) != '<![CDATA[')
                         throw Components.Exception('Error parsing response');
                     
-                    var endTag = this._buff.indexOf(']]>');
+                    endTag = this._buff.indexOf(']]>');
                     if (endTag > -1) {
                         this._buff = this._buff.slice(endTag + 3);
                         this._docHandler.characters(this._buff.slice(9, 
@@ -1044,7 +1065,7 @@ SimpleXMLParser.prototype = {
                         continue;
                     }
  
-                    var endTag = this._buff.indexOf('>');
+                    endTag = this._buff.indexOf('>');
                     if (endTag > -1) {
                         this._buff = this._buff.slice(endTag + 1);
                         this._killLeadingWS = true;
@@ -1055,7 +1076,7 @@ SimpleXMLParser.prototype = {
                     while(this._available()) {
                         this._buff = this._readUntil('>');
 
-                        var startBrace = this._buff.indexOf('[');
+                        startBrace = this._buff.indexOf('[');
                         if (startBrace > -1) {
                             this._unread(this._buff.slice(startBrace + 1));
                             this._buff = '';
@@ -1065,7 +1086,7 @@ SimpleXMLParser.prototype = {
                             continue ParseLoop;
                         }
 
-                        var endTag = this._buff.indexOf('>');
+                        endTag = this._buff.indexOf('>');
                         if (endTag > -1) {
                             this._buff = this._buff.slice(pos + 1);
                             this._killLeadingWS = true;
@@ -1079,7 +1100,7 @@ SimpleXMLParser.prototype = {
                     continue;
                 }
             
-                var endTag = this._buff.indexOf('>');
+                endTag = this._buff.indexOf('>');
                 if (endTag > -1) {
                     var tag = this._buff.slice(1, endTag);
                     this._buff = this._buff.slice(endTag + 1);
@@ -1151,12 +1172,13 @@ PushbackInputStream.prototype = {
     },
 
     read: function(length) {
+        var read;
         if (this._read_characters.length >= length) {
-            var read = this._read_characters.slice(0, length);
+            read = this._read_characters.slice(0, length);
             this._read_characters = this._read_characters.slice(length);
             return read;
         } else {
-            var read = this._read_characters;
+            read = this._read_characters;
             this._read_characters = '';
             return read + this._stream.read(length - read.length);
         }
@@ -1300,8 +1322,9 @@ const base64Pad = '=';
 function toBase64(data) {
     var result = '';
     var length = data.length;
+    var i;
     // Convert every three bytes to 4 ascii characters.
-    for (var i = 0; i < (length - 2); i += 3) {
+    for (i = 0; i < (length - 2); i += 3) {
         result += toBase64Table[data[i] >> 2];
         result += toBase64Table[((data[i] & 0x03) << 4) + (data[i+1] >> 4)];
         result += toBase64Table[((data[i+1] & 0x0f) << 2) + (data[i+2] >> 6)];
@@ -1310,7 +1333,7 @@ function toBase64(data) {
 
     // Convert the remaining 1 or 2 bytes, pad out to 4 characters.
     if (length%3) {
-        var i = length - (length%3);
+        i = length - (length%3);
         result += toBase64Table[data[i] >> 2];
         if ((length%3) == 2) {
             result += toBase64Table[((data[i] & 0x03) << 4) + (data[i+1] >> 4)];
