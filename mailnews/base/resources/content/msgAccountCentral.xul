@@ -92,7 +92,7 @@ Rights Reserved.
       <separator id="NewsHeader.separator" class="thin"/>
       <row id="SubscribeNewsgroups" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="SubscribeNewsgroups();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="Subscribe();"/> 
         </hbox> 
       </row>
       <separator id="SubscribeNewsgroups.separator" class="thin"/>
@@ -145,6 +145,12 @@ Rights Reserved.
       <row id="CreateFilters" class="acctCentralRow">
         <hbox> 
           <label class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
+        </hbox> 
+      </row>
+      <separator id="SubscribeImapFolders.separator" class="thin"/>
+      <row id="SubscribeImapFolders" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscribeImapFolders.label;" onclick="Subscribe();"/> 
         </hbox> 
       </row>
       <separator id="CreateFilters.separator" class="thin"/>

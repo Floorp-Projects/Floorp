@@ -113,6 +113,10 @@ separator.thin {
   list-style-image: url("chrome://messenger/skin/icons/acct-subscribe.gif");
 }
 
+#SubscribeImapFolders {
+  list-style-image: url("chrome://messenger/skin/icons/acct-subscribe.gif");
+}
+
 #SearchMessages {
   list-style-image: url("chrome://messenger/skin/icons/acct-search.gif");
 }

@@ -148,11 +148,16 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         var canHaveFilters = server.canHaveFilters;
         SetItemDisplay("CreateFilters", canHaveFilters);
 
+        // Subscribe to IMAP Folders
+        var canSubscribeImapFolders = msgFolder.canSubscribe && protocolInfo.canGetMessages;
+        SetItemDisplay("SubscribeImapFolders", canSubscribeImapFolders);
+
         // Offline Settings
         var supportsOffline = (server.offlineSupportLevel != 0);
         SetItemDisplay("OfflineSettings", supportsOffline);
             
-        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline;
+        var displayAdvFeatures = canSearchMessages || canHaveFilters ||
+                                 canSubscribeImapFolders|| supportsOffline;
         // Display Adv Features header, only if any of the items are displayed
         SetItemDisplay("AdvancedFeaturesHeader", displayAdvFeatures);
     
@@ -249,7 +254,7 @@ function CreateMsgFilters()
 } 
 
 // Open Subscribe dialog
-function SubscribeNewsgroups()
+function Subscribe()
 {
     window.parent.MsgSubscribe();
 } 
@@ -258,4 +263,4 @@ function SubscribeNewsgroups()
 function JunkSettings()
 {
     window.parent.MsgJunkMail();
-} 
+}
