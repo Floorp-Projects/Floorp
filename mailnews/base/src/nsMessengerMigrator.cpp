@@ -351,10 +351,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 NS_IMPL_ISUPPORTS2(nsMessengerMigrator, nsIMessengerMigrator, nsIObserver)
 
 nsMessengerMigrator::nsMessengerMigrator() :
-  m_haveShutdown(PR_FALSE),
-  m_oldMailType(-1),
-  m_alreadySetNntpDefaultLocalPath(PR_FALSE),
-  m_alreadySetImapDefaultLocalPath(PR_FALSE)
+  m_haveShutdown(PR_FALSE)
 {
 
   NS_INIT_REFCNT();
@@ -394,7 +391,7 @@ nsresult nsMessengerMigrator::Init()
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;   
 
-  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &m_oldMailType);
+  rv = ResetState();
   return rv;
 }
 
@@ -612,6 +609,20 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   return NS_OK;
 }
 
+nsresult
+nsMessengerMigrator::ResetState()
+{
+  m_alreadySetNntpDefaultLocalPath = PR_FALSE;
+  m_alreadySetImapDefaultLocalPath = PR_FALSE;
+
+  // Reset 'm_oldMailType' in case the prefs file has changed. This is possible in quick launch
+  // mode where the profile to be migrated is IMAP type but the current working profile is POP.
+  nsresult rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &m_oldMailType);
+  if (NS_FAILED(rv))
+    m_oldMailType = -1;
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMessengerMigrator::UpgradePrefs()
 {
@@ -619,6 +630,9 @@ nsMessengerMigrator::UpgradePrefs()
 
     rv = getPrefService();
     if (NS_FAILED(rv)) return rv;
+
+    // Reset some control vars, necessary in turbo mode.
+    ResetState();
 
     // because mail.server_type defaults to 0 (pop) it will look the user
     // has something to migrate, even with an empty prefs.js file
