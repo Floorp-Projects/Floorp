@@ -312,7 +312,7 @@ Message Install=Setup has enough information to start copying the program files.
 Message Download=Setup has enough information to start downloading and copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, make sure you are currently connected to the internet and click Install to begin downloading files.
 ; Turbo Mode values: TRUE, FALSE
 ; Defaults to FALSE if not set
-Turbo Mode=TRUE
+Turbo Mode=FALSE
 ; Turbo Mode Settings value: TRUE, FALSE
 ; Defaults to FALSE if not set.
 ; This will hide the turbo mode checkbox in the Start Install dialog
