@@ -60,9 +60,9 @@ static nsIUnicodeEncoder *encoderASCII = nsnull;
 #define DOC_BUNDLE		"resource:/psmdata/ui/psm_doc.properties"
 
 extern "C" {
-static nsIStringBundle* nlsCreateBundle(char* bundleURL);
-static char* nlsGetUTF8StringFromBundle(nsIStringBundle *bundle, const char *name);
-static nsIStringBundle * bundles[4] = {NULL, NULL, NULL, NULL};
+nsIStringBundle* nlsCreateBundle(char* bundleURL);
+char* nlsGetUTF8StringFromBundle(nsIStringBundle *bundle, const char *name);
+nsIStringBundle * bundles[4] = {NULL, NULL, NULL, NULL};
 }
 
 
