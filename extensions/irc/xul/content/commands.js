@@ -293,8 +293,10 @@ function dispatch(text, e, isInteractive, flags)
             if (e.server && e.server.isConnected &&
                 client.prefs["guessCommands"])
             {
-                return dispatch("quote", {inputData: e.commandText + " " +
-                                                     e.inputData});
+                /* Want to keep the source details. */
+                var e2 = getObjectDetails(e.sourceObject);
+                e2.inputData = e.commandText + " " + e.inputData;
+                return dispatch("quote", e2);
             }
 
             display(getMsg(MSG_NO_CMDMATCH, e.commandText), MT_ERROR);
