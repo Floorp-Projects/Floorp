@@ -62,7 +62,7 @@ public:
   NS_IMETHOD Update() ;
   NS_IMETHOD SetShellContainer(nsIShellInstance * aShellInstance,nsIWebViewerContainer * aWebViewerContainer)  ;
   NS_IMETHOD_(nsIXPFCMenuItem *) MenuItemFromID(PRUint32 aID) ;
-  NS_IMETHOD Action(nsIXPFCCommand * aCommand) ;
+  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand) ;
 
 private:
   NS_IMETHOD ProcessActionCommand(nsString& aAction);

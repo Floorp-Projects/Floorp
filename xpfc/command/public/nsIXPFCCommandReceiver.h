@@ -21,6 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIXPFCCommand.h"
+#include "nsGUIEvent.h"
 
 class nsIXPFCCommand;
 
@@ -36,7 +37,7 @@ public:
 
   NS_IMETHOD Init() = 0;
 
-  NS_IMETHOD Action(nsIXPFCCommand * aCommand) = 0;
+  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand) = 0;
 
 };
 
