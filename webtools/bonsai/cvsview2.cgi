@@ -460,8 +460,8 @@ sub do_directory {
 
     print "<TABLE BORDER CELLPADDING=2>\n";
 
-    foreach my $file (split(/\+/, $opt_files)) {
-        my ($path) = "$dir/$file,v";
+    foreach my $file (split(/:/, $opt_files)) {
+        my ($path) = "$dir/" . &url_decode($file) . ",v";
         my ($ufile) = url_quote($file);
 
         CheckHidden($path);
@@ -546,7 +546,7 @@ sub do_directory {
 
     if ( !$file && $opt_files ) {
         $file = $opt_files;
-        $file =~ s@\+.*@@;
+        $file =~ s@:.*@@;
     }
 
     print "\n<TABLE CELLPADDING=0 CELLSPACING=0><TR><TD>\n",

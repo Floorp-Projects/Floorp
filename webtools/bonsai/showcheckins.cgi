@@ -228,22 +228,26 @@ foreach $checkin (@list) {
      print "<br>$$info{notes}\n" if $$info{notes};
 
      $peoplearray{$$info{person}} = 1;
+     my @file_list;
+     foreach my $fn (split(/!NeXt!/, $$info{files})) {
+         push @file_list, &url_quote($fn);
+     }
      print "<TD>". GenerateUserLookUp($$info{person}) . "</TD>\n";
      print "<TD><a href=\"cvsview2.cgi?" . 
            "root=$::TreeInfo{$::TreeID}{repository}&" .
-           "subdir=$$info{dir}&" .
-           "files=" . join('+', split(/!NeXt!/, $$info{files})) . "&" .
-           "command=DIRECTORY$branchpart\">" .
-           BreakBig($$info{dir}) .
+           "subdir=" . &url_quote($$info{dir}) .
+           "&files=" . join(':', @file_list) .
+           "&command=DIRECTORY$branchpart\">" .
+           &BreakBig(&html_quote($$info{dir})) .
            "</a></TD>\n";
      print "<TD>\n";
      foreach my $file (split(/!NeXt!/, $$info{files})) {
           print "  <a href=\"cvsview2.cgi?" .
                 "root=$::TreeInfo{$::TreeID}{repository}&" .
-                "subdir=$$info{dir}&" .
-                "files=$file&" .
-                "command=DIRECTORY$branchpart\">" .
-                "$file</a>\n";
+                "subdir=" . &url_quote($$info{dir}) .
+                "&files=" . &url_quote($file) .
+                "&command=DIRECTORY$branchpart\">" .
+                &html_quote($file) . "</a>\n";
      }
      print "</td>\n";
 
