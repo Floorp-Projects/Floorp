@@ -1938,7 +1938,7 @@ GlobalWindowImpl::CheckSecurityIsChromeCaller(PRBool *aIsChrome)
 }
 
 void
-GlobalWindowImpl::MakeScriptDialogTitle(nsAReadableString &aInTitle, nsAWritableString &aOutTitle)
+GlobalWindowImpl::MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aOutTitle)
 {
   aOutTitle.Truncate(0);
 
