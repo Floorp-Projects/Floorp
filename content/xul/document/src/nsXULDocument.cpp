@@ -4413,3 +4413,4 @@ XULDocumentImpl::GetChannel(nsIChannel **aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
