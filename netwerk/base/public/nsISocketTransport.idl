@@ -48,7 +48,7 @@ native PRNetAddr(union PRNetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(1e372001-ca12-4507-8405-3267d4e0c1fd)]
+[scriptable, uuid(ee783990-c87c-4ace-87ca-54e5fcc477b0)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -62,10 +62,16 @@ interface nsISocketTransport : nsITransport
     readonly attribute long port;
 
     /** 
-     * Returns the IP address for the underlying socket connection.  This
-     * attribute is only defined once a connection has been established.
+     * Returns the IP address of the socket connection peer. This
+     * attribute is defined only once a connection has been established.
      */
-    [noscript] PRNetAddr getAddress();
+    [noscript] PRNetAddr getPeerAddr();
+
+    /** 
+     * Returns the IP address of the initiating end. This attribute
+     * is defined only once a connection has been established.
+     */
+    [noscript] PRNetAddr getSelfAddr();
 
     /**
      * Security info object returned from the secure socket provider.  This

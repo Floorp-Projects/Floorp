@@ -1671,7 +1671,7 @@ nsSocketTransport::GetPort(PRInt32 *port)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetAddress(PRNetAddr *addr)
+nsSocketTransport::GetPeerAddr(PRNetAddr *addr)
 {
     // once we are in the connected state, mNetAddr will not change.
     // so if we can verify that we are in the connected state, then
@@ -1682,6 +1682,33 @@ nsSocketTransport::GetAddress(PRNetAddr *addr)
 
     memcpy(addr, &mNetAddr, sizeof(mNetAddr));
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetSelfAddr(PRNetAddr *addr)
+{
+    // we must not call any PR methods on our file descriptor
+    // while holding mLock since those methods might re-enter
+    // socket transport code.
+
+    PRFileDesc *fd;
+    {
+        nsAutoLock lock(mLock);
+        fd = GetFD_Locked();
+    }
+
+    if (!fd)
+        return NS_ERROR_NOT_CONNECTED;
+
+    nsresult rv =
+        (PR_GetSockName(fd, addr) == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
+
+    {
+        nsAutoLock lock(mLock);
+        ReleaseFD_Locked(fd);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
