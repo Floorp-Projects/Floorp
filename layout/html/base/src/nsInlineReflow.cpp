@@ -775,13 +775,29 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   // Once we have finished the above abs(minYTop) represents the
   // maximum ascent of the line box.
 
-  // XXX what about positive minY?
+  // CSS2 spec section 10.8: the line box height is the distance
+  // between the uppermost box top (minYTop) and the lowermost box
+  // bottom (maxYBottom).
   nscoord lineHeight = maxYBottom - minYTop;
   if (lineHeight < maxHeight) {
     // This ensures that any object aligned top/bottom will update the
     // line height properly since they don't impact the minY or
-    // maxYBottom values.
+    // maxYBottom values computed above.
     lineHeight = maxHeight;
+  }
+
+  nscoord topEdge = mTopEdge;
+  if (0 != lineHeight) {
+    nscoord newLineHeight = CalcLineHeightFor(mPresContext, mOuterFrame,
+                                              lineHeight);
+    // If the newLineHeight is larger then just use; otherwise if the
+    // outer frame is an inline frame then use it as well (line-height
+    // on block frames specify the minimal height while on inline
+    // frames it specifies the precise height).
+    if ((newLineHeight > lineHeight) || !mOuterIsBlock) {
+      topEdge += (newLineHeight - lineHeight) / 2;
+      lineHeight = newLineHeight;
+    }
   }
   aLineBox.height = lineHeight;
   nscoord maxAscent = -minYTop;
@@ -797,19 +813,19 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       switch (verticalAlignEnum) {
       case NS_STYLE_VERTICAL_ALIGN_TOP:
         // XXX negative top margins on these will do weird things, maybe?
-        pfd->mBounds.y = mTopEdge + pfd->mMargin.top;
+        pfd->mBounds.y = topEdge + pfd->mMargin.top;
         break;
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        pfd->mBounds.y = mTopEdge + lineHeight - pfd->mBounds.height;
+        pfd->mBounds.y = topEdge + lineHeight - pfd->mBounds.height;
         break;
       default:
-        pfd->mBounds.y = mTopEdge + maxAscent + pfd->mBounds.y -
+        pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y -
           pfd->mMargin.top;
         break;
       }
     }
     else {
-      pfd->mBounds.y = mTopEdge + maxAscent + pfd->mBounds.y -
+      pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y -
         pfd->mMargin.top;
     }
     frame->SetRect(pfd->mBounds);
@@ -817,7 +833,6 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   aMaxAscent = maxAscent;
   aMaxDescent = lineHeight - maxAscent;
 
-  // XXX Now we can apply 1/2 the line-height...
   NS_RELEASE(fm);
 }
 
@@ -900,4 +915,77 @@ nsInlineReflow::RelativePositionFrames()
       kid->MoveTo(origin.x + dx, origin.y + dy);
     }
   }
+}
+
+// XXX performance todo: this computation can be cached in the
+// style-context
+nscoord
+nsInlineReflow::CalcLineHeightFor(nsIPresContext& aPresContext,
+                                  nsIFrame* aFrame,
+                                  nscoord aBaseLineHeight)
+{
+  nscoord lineHeight = aBaseLineHeight;
+
+  nsIStyleContext* sc;
+  aFrame->GetStyleContext(&aPresContext, sc);
+  const nsStyleFont* elementFont = nsnull;
+  if (nsnull != sc) {
+    elementFont = (const nsStyleFont*)sc->GetStyleData(eStyleStruct_Font);
+    for (;;) {
+      const nsStyleText* text = (const nsStyleText*)
+        sc->GetStyleData(eStyleStruct_Text);
+      if (nsnull != text) {
+        nsStyleUnit unit = text->mLineHeight.GetUnit();
+        if (eStyleUnit_Enumerated == unit) {
+          // Normal value; we use 1.0 for normal
+          // XXX could come from somewhere else
+          break;
+        } else if (eStyleUnit_Factor == unit) {
+          if (nsnull != elementFont) {
+            // CSS2 spec says that the number is inherited, not the
+            // computed value. Therefore use the font size of the
+            // element times the inherited number.
+            nscoord size = elementFont->mFont.size;
+            lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
+          }
+          break;
+        }
+        else if (eStyleUnit_Coord == unit) {
+          lineHeight = text->mLineHeight.GetCoordValue();
+          // CSS2 spec 10.8.1: negative length values are illegal.
+          if (lineHeight < 0) {
+            lineHeight = aBaseLineHeight;
+          }
+          break;
+        }
+        else if (eStyleUnit_Percent == unit) {
+          // XXX This could arguably be the font-metrics actual height
+          // instead since the spec says use the computed height.
+          const nsStyleFont* font = (const nsStyleFont*)
+            sc->GetStyleData(eStyleStruct_Font);
+          nscoord size = font->mFont.size;
+          lineHeight = nscoord(size * text->mLineHeight.GetPercentValue());
+          break;
+        }
+        else if (eStyleUnit_Inherit == unit) {
+          nsIStyleContext* parentSC;
+          parentSC = sc->GetParent();
+          if (nsnull == parentSC) {
+            // Note: Break before releasing to avoid double-releasing sc
+            break;
+          }
+          NS_RELEASE(sc);
+          sc = parentSC;
+        }
+        else {
+          // other units are not part of the spec so don't bother
+          // looping
+          break;
+        }
+      }
+    }
+    NS_RELEASE(sc);
+  }
+
+  return lineHeight;
 }
