@@ -44,12 +44,12 @@ public class Prefs {
   static final String kUserNamePre = "mail.identity.username.";
   static final String kOrganization = "mail.identity.organization.";
   static final String kEmailAddress = "mail.identity.email.";
-  static final String kSignatureFile = "mail.identity.signature.0";
+  static final String kSignatureFile = "mail.identity.signature.";
   static final String kPopLeaveOnServer = "pop.leaveMailOnServer";
   static final String kMailDirectory = "mail.directory";
   static final String kSMTPHost = "mail.identity-0.smtphost";
   static final String kStoreList = "mail.storelist";
-  static final String kUserName = "mail.identity.username.0";
+  static final String kUserName = "mail.identity.username.";
 
   static final String kLocalProtocol = "berkeley";
   static final String kUserPrefsCount = "mail.identities";
@@ -86,6 +86,8 @@ public class Prefs {
                                              "john@doe.com"));
     res.setUserOrganization(fPrefs.getString(kOrganization + count, 
                                              ""));
+    res.setSignatureFile(fPrefs.getString(kSignatureFile + count, 
+                                             ""));
 
     return res;    
   }  
@@ -101,7 +103,7 @@ public class Prefs {
     if (ids.contains(aPrefs)) {
       location = ids.indexOf(aPrefs);
     } else {
-      location = ids.size() - 1;
+      location = ids.size();
     }
     
     fPrefs.putString(kUserName + location,
