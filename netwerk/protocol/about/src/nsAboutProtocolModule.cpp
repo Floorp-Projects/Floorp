@@ -60,6 +60,12 @@ static nsModuleComponentInfo components[] =
      NS_ABOUT_MODULE_PROGID_PREFIX "mozilla",
      mzAboutMozilla::Create
    },	     
+
+   { "about:cache", 
+     NS_ABOUT_CACHE_MODULE_CID,
+     NS_ABOUT_MODULE_PROGID_PREFIX "cache", 
+     nsAboutCache::Create
+   },
 };
 
 NS_IMPL_NSGETMODULE("nsAboutProtocolModule", components);
