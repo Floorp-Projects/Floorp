@@ -367,7 +367,7 @@ void SaveWebPage(nsIWebBrowser *aWebBrowser)
     // Copy filename to a character buffer
 	char szFile[_MAX_PATH];
     memset(szFile, 0, sizeof(szFile));
-    fileName.ToCString(szFile, sizeof(szFile) - 1);
+    PL_strncpyz(szFile, fileName.get(), sizeof(szFile) - 1); // XXXldb probably should be just sizeof(szfile)
 
     // Initialize the file save as information structure
     OPENFILENAME saveFileNameInfo;
