@@ -207,12 +207,10 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
   
-#ifdef MOZ_PERF_METRICS
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
-  mParseTime.Reset();  
-  mDTDTime.Reset();  
-  mTokenizeTime.Reset();
-#endif
+  MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
+  MOZ_TIMER_RESET(mParseTime);  
+  MOZ_TIMER_RESET(mDTDTime);  
+  MOZ_TIMER_RESET(mTokenizeTime);
 }
 
  
@@ -660,7 +658,6 @@ nsresult nsParser::Terminate(void){
  *  @return  current state
  */
 nsresult nsParser::EnableParser(PRBool aState){
-  NS_START_STOPWATCH(mTotalTime)
   nsIParser* me = nsnull;
 
   // If the stream has already finished, there's a good chance
@@ -681,11 +678,9 @@ nsresult nsParser::EnableParser(PRBool aState){
       result=mInternalState;
   }
   else {
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: nsParser::EnableParser(), this=%p\n", this));
-    NS_STOP_STOPWATCH(mParseTime);
-  }
-
-  NS_STOP_STOPWATCH(mTotalTime)
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::EnableParser(), this=%p\n", this));
+    MOZ_TIMER_STOP(mParseTime);
+  }  
 
   // Release reference if we added one at the top of this routine
   NS_IF_RELEASE(me);
@@ -714,8 +709,7 @@ PRBool nsParser::IsParserEnabled() {
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,eParseMode aMode) {
-  NS_START_STOPWATCH(mTotalTime)
+nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,eParseMode aMode) {  
 
   NS_PRECONDITION(0!=aURL,kNullURL);
 
@@ -724,8 +718,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
   if(aURL) {
     char* spec;
     nsresult rv = aURL->GetSpec(&spec);
-    if (rv != NS_OK) {
-      NS_STOP_STOPWATCH(mTotalTime) 
+    if (rv != NS_OK) {      
       return rv;
     }
     nsAutoString theName(spec);
@@ -742,8 +735,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
     else{
       result=mInternalState=NS_ERROR_HTMLPARSER_BADCONTEXT;
     }
-  }
-  NS_STOP_STOPWATCH(mTotalTime)
+  }  
   return result;
 }
 
@@ -755,7 +747,6 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
  * @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aKey,eParseMode aMode){
-  NS_START_STOPWATCH(mTotalTime)
 
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
@@ -780,8 +771,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
   }
   else{
     result=mInternalState=NS_ERROR_HTMLPARSER_BADCONTEXT;
-  }
-  NS_STOP_STOPWATCH(mTotalTime)
+  }  
   return result;
 }
 
@@ -799,8 +789,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
 nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
  
   //NOTE: Make sure that updates to this method don't cause 
-  //      bug #2361 to break again!
-  NS_START_STOPWATCH(mTotalTime)
+  //      bug #2361 to break again!  
 
   nsresult result=NS_OK;
   nsParser* me = this;
@@ -824,8 +813,7 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
         mUnusedInput.Truncate(0);
       } 
       else {
-        NS_RELEASE(me);
-        NS_STOP_STOPWATCH(mTotalTime)
+        NS_RELEASE(me);        
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -847,8 +835,7 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
       delete pc;
     }//if
   }//if
-  NS_RELEASE(me);
-  NS_STOP_STOPWATCH(mTotalTime)
+  NS_RELEASE(me);  
   return result;
 }
 
@@ -951,8 +938,8 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
   nsresult result=NS_OK;
   if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
-    NS_START_STOPWATCH(mParseTime)
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
+    MOZ_TIMER_START(mParseTime);
 
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
     if(mParserContext->mDTD) {
@@ -966,36 +953,20 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
 
         if((!mParserContext->mMultipart) || (mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING) || 
           ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
-          DidBuildModel(mStreamStatus);
-          NS_STOP_STOPWATCH(mTotalTime);
-          RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
-          NS_STOP_STOPWATCH(mParseTime);
+          DidBuildModel(mStreamStatus);          
 
+          MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
+          MOZ_TIMER_STOP(mParseTime);
 
-#ifdef MOZ_PERF_METRICS
-          // XXX Don't print out Gecko layout time till I make the save/restore
-          // implementation use a stack.  We'll calculate page load + layout time
-          // in the webshell and print that out for now because that is more easy to
-          // measure.  There are cases where one can't simply use the parser as the
-          // place to calculate Gecko layout time because the parser can go away
-          // before the higher level layout processes finish.  I'll re-enable gecko layout
-          // time once we've identified the "best" way to isolate and measure it.
-          // printf("Total Time: ");
-          // mTotalTime.Print();
-          // printf("\n");
-          
-          RAPTOR_STOPWATCH_TRACE(("Parse Time (this=%p): ", this));
-          mParseTime.Print();
-          RAPTOR_STOPWATCH_TRACE(("\n"));
+          MOZ_TIMER_LOG(("Parse Time (this=%p): ", this));
+          MOZ_TIMER_PRINT(mParseTime);
 
-          RAPTOR_STOPWATCH_TRACE(("DTD Time: "));
-          mDTDTime.Print();
-          RAPTOR_STOPWATCH_TRACE(("\n"));
+          MOZ_TIMER_LOG(("DTD Time: "));
+          MOZ_TIMER_PRINT(mDTDTime);
 
-          RAPTOR_STOPWATCH_TRACE(("Tokenize Time: "));
-          mTokenizeTime.Print();
-          RAPTOR_STOPWATCH_TRACE(("\n"));
-#endif
+          MOZ_TIMER_LOG(("Tokenize Time: "));
+          MOZ_TIMER_PRINT(mTokenizeTime);
+
           return mInternalState;
         }
         else {
@@ -1015,8 +986,8 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
     }
   }//if
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
-  NS_STOP_STOPWATCH(mParseTime);
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
+  MOZ_TIMER_STOP(mParseTime);
 
   return result;
 }
@@ -1048,9 +1019,9 @@ nsresult nsParser::BuildModel() {
 
     nsIDTD* theRootDTD=theRootContext->mDTD;
     if(theRootDTD) {      
-      NS_START_STOPWATCH(mDTDTime);
+      MOZ_TIMER_START(mDTDTime);
       result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);      
-      NS_STOP_STOPWATCH(mDTDTime);
+      MOZ_TIMER_STOP(mDTDTime);
     }
   }
   else{
@@ -1271,15 +1242,6 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
 
   NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail==mParserContext->mStreamListenerState)),kOnStartNotCalled);
 
-#ifdef MOZ_PERF_METRICS
-  if (0 == sourceOffset) {
-    NS_RESET_AND_START_STOPWATCH(mTotalTime);
-  }
-  else {
-    NS_START_STOPWATCH(mTotalTime);
-  }
-#endif
-
   if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
     if(mParserContext->mScanner) {
       mParserContext->mScanner->GetBuffer().Truncate();
@@ -1336,8 +1298,7 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
     theStartPos+=theNumRead;
   }//while
 
-  result=ResumeParse();   
-  NS_STOP_STOPWATCH(mTotalTime);
+  result=ResumeParse();     
   return result;
 }
 
@@ -1351,8 +1312,7 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
  */
 nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
                                  nsresult status, const PRUnichar* aMsg)
-{
-  NS_START_STOPWATCH(mTotalTime)
+{  
 
   nsresult result=NS_OK;
   
@@ -1373,8 +1333,7 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
 
   mParserContext->mScanner->SetIncremental(PR_FALSE);
   result=ResumeParse(nsnull, PR_TRUE);
-
-  NS_STOP_STOPWATCH(mTotalTime)
+  
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
 
@@ -1436,7 +1395,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
 
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   if(theTokenizer){    
-    NS_START_STOPWATCH(mTokenizeTime);
+    MOZ_TIMER_START(mTokenizeTime);
 
     WillTokenize(aIsFinalChunk);
     while(NS_SUCCEEDED(result)) {
@@ -1455,7 +1414,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
     } 
     DidTokenize(aIsFinalChunk);
 
-    NS_STOP_STOPWATCH(mTokenizeTime);
+    MOZ_TIMER_STOP(mTokenizeTime);
 
   } 
   else{

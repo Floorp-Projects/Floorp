@@ -34,7 +34,7 @@
 #include "nsIDocument.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsLayoutAtoms.h"
-#include "stopwatch.h"
+#include "nsTimer.h"
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -200,9 +200,7 @@ protected:
 
   nsIStyleFrameConstruction* mFrameConstructor;
 
-#ifdef MOZ_PERF_METRICS
-  Stopwatch mStyleResolutionWatch;
-#endif
+  MOZ_TIMER_DECLARE(mStyleResolutionWatch);
 };
 
 StyleSetImpl::StyleSetImpl()
@@ -621,8 +619,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique)
 {
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
-  NS_START_STOPWATCH(mStyleResolutionWatch)
+  MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
+  MOZ_TIMER_START(mStyleResolutionWatch);
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aContent, "must have content");
@@ -665,8 +663,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     }
   }
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
-  NS_STOP_STOPWATCH(mStyleResolutionWatch)
+  MOZ_TIMER_DEBUGLOG(("Stop: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
+  MOZ_TIMER_STOP(mStyleResolutionWatch);
   return result;
 }
 
@@ -711,8 +709,8 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                                      nsIStyleContext* aParentContext,
                                                      PRBool aForceUnique)
 {
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
-  NS_START_STOPWATCH(mStyleResolutionWatch)
+  MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
+  MOZ_TIMER_START(mStyleResolutionWatch);
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
@@ -757,8 +755,8 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
     }
   }
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
-  NS_STOP_STOPWATCH(mStyleResolutionWatch)
+  MOZ_TIMER_DEBUGLOG(("Stop: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
+  MOZ_TIMER_STOP(mStyleResolutionWatch);
   return result;
 }
 
@@ -768,8 +766,8 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                    nsIStyleContext* aParentContext,
                                                    PRBool aForceUnique)
 {
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
-  NS_START_STOPWATCH(mStyleResolutionWatch)
+  MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
+  MOZ_TIMER_START(mStyleResolutionWatch);
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
@@ -813,8 +811,8 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     }
   }
   
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
-  NS_STOP_STOPWATCH(mStyleResolutionWatch)
+  MOZ_TIMER_DEBUGLOG(("Stop: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
+  MOZ_TIMER_STOP(mStyleResolutionWatch);
   return result;
 }
 
@@ -1107,7 +1105,7 @@ StyleSetImpl::ResetTimer(PRUint32 aTimerID)
   nsresult rv = NS_OK;
 
   if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    mStyleResolutionWatch.Reset();
+    MOZ_TIMER_RESET(mStyleResolutionWatch);
   }
   else 
     rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -1121,7 +1119,7 @@ StyleSetImpl::StartTimer(PRUint32 aTimerID)
   nsresult rv = NS_OK;
 
   if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    mStyleResolutionWatch.Start();
+    MOZ_TIMER_START(mStyleResolutionWatch);
   }
   else 
     rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -1135,7 +1133,7 @@ StyleSetImpl::StopTimer(PRUint32 aTimerID)
   nsresult rv = NS_OK;
 
   if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    mStyleResolutionWatch.Stop();
+    MOZ_TIMER_STOP(mStyleResolutionWatch);
   }
   else 
     rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -1149,7 +1147,7 @@ StyleSetImpl::PrintTimer(PRUint32 aTimerID)
   nsresult rv = NS_OK;
 
   if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    mStyleResolutionWatch.Print();
+    MOZ_TIMER_PRINT(mStyleResolutionWatch);
   }
   else 
     rv = NS_ERROR_NOT_IMPLEMENTED;

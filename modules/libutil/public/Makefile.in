@@ -29,7 +29,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= util
 XPIDL_MODULE	= util
 
-EXPORTS		= $(srcdir)/xp_obs.h $(srcdir)/stopwatch.h
+EXPORTS		= $(srcdir)/xp_obs.h \
+              $(srcdir)/stopwatch.h \
+			  $(srcdir)/nsTimer.h \
+			  $(srcdir)/nsStackBasedTimer.h
 
 XPIDLSRCS	= nsITimeRecorder.idl
 

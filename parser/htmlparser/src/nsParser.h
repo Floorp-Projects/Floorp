@@ -68,7 +68,7 @@
 #include "nsITokenizer.h"
 #include "nsHTMLTags.h"
 #include "nsDTDUtils.h"
-#include "stopwatch.h"
+#include "nsTimer.h"
 
 class IContentSink;
 class nsIDTD;
@@ -383,14 +383,10 @@ protected:
     nsresult            mInternalState;
     CObserverService    mObserverService;
 
-#ifdef MOZ_PERF_METRICS
-public:
-    Stopwatch           mTotalTime;
-    Stopwatch           mParseTime;
-    Stopwatch           mDTDTime;
-    Stopwatch           mTokenizeTime;
-#endif
-
+public:    
+    MOZ_TIMER_DECLARE(mParseTime);
+    MOZ_TIMER_DECLARE(mDTDTime);
+    MOZ_TIMER_DECLARE(mTokenizeTime);
 };
 
 #endif 
