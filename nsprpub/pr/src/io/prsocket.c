@@ -167,6 +167,7 @@ PR_IMPLEMENT(PRFileDesc *) PR_ImportTCPSocket(PRInt32 osfd)
 {
 PRFileDesc *fd;
 
+	if (!_pr_initialized) _PR_ImplicitInitialization();
 	fd = PR_AllocFileDesc(osfd, PR_GetTCPMethods());
 	if (fd != NULL)
 		_PR_MD_MAKE_NONBLOCK(fd);
@@ -179,6 +180,7 @@ PR_IMPLEMENT(PRFileDesc *) PR_ImportUDPSocket(PRInt32 osfd)
 {
 PRFileDesc *fd;
 
+	if (!_pr_initialized) _PR_ImplicitInitialization();
 	fd = PR_AllocFileDesc(osfd, PR_GetUDPMethods());
 	if (fd != NULL)
 		_PR_MD_MAKE_NONBLOCK(fd);
