@@ -747,7 +747,7 @@ public:
     CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
   }
 
-  CTextContainer(eHTMLTags aTag) : CElement(aTag), mText("") {
+  CTextContainer(eHTMLTags aTag) : CElement(aTag) {
     CTextContainer::Initialize(*this,aTag);
   }
 
@@ -804,7 +804,7 @@ public:
     CTextContainer::Initialize(anElement,aTag);
   }
 
-  CTitleElement() : CTextContainer(eHTMLTag_title), mText("") {
+  CTitleElement() : CTextContainer(eHTMLTag_title) {
     mGroup.mBits.mHeadMisc=1;
   }
 
