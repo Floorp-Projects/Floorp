@@ -1142,7 +1142,7 @@ endif
 #                  Top-level makefiles (the same one copying the rdf manifests
 #                  and generating the jar file) should define this macro.
 #                  This will notify the chrome registry of a new installation.
-ifeq ($(MOZ_DISABLE_JAR_PACKAGING),)
+ifneq ($(MOZ_ENABLE_JAR_PACKAGING),)
 
 JAR_MANIFEST := jar.mn
 install::
