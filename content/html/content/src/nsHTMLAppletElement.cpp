@@ -26,6 +26,17 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
+
+#if defined(OJI) && defined(XP_MAC)
+#include "nsIServiceManager.h"
+#include "nsIJVMManager.h"
+#include "nsILiveConnectManager.h"
+#include "nsIPluginInstance.h"
+#include "nsIJVMPluginInstance.h"
+#endif
 
 static NS_DEFINE_IID(kIDOMHTMLAppletElementIID, NS_IDOMHTMLAPPLETELEMENT_IID);
 
@@ -75,7 +86,9 @@ public:
   NS_IMETHOD SetWidth(const nsString& aWidth);
 
   // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
+                             void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMEventReceiver
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
@@ -88,6 +101,7 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
+  PRBool mReflectedApplet;
 };
 
 nsresult
@@ -108,6 +122,7 @@ nsHTMLAppletElement::nsHTMLAppletElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mReflectedApplet = PR_FALSE;
 }
 
 nsHTMLAppletElement::~nsHTMLAppletElement()
@@ -227,4 +242,83 @@ nsHTMLAppletElement::GetStyleHintForAttributeChange(
 {
   nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
+}
+
+#if defined(OJI) && defined(XP_MAC)
+extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance);
+#endif
+
+/**
+ * For backwards compatibility an applet element's JavaScript object should expose both the public 
+ * fields of the applet, and the attributes of the applet tag. The call to nsGenericElement::GetScriptObject
+ * takes case of the tag attributes. Here we generate a JavaScript reference to the applet object itself,
+ * and set its __proto__ property to the tag object. That way, if the Java applet has public fields that
+ * shadow the tag attributes, the applet's fields take precedence.
+ */
+NS_IMETHODIMP
+nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
+                                     void** aScriptObject)
+{
+#if defined(OJI) && defined(XP_MAC)
+	nsresult rv = NS_OK;
+	if (!mReflectedApplet) {
+		// 1. get the script object corresponding to the <APPLET> element itself.
+		JSObject* elementObject = nsnull;
+		rv = mInner.GetScriptObject(aContext, &elementObject);
+		if (NS_OK != rv)
+			return rv;
+	
+		// 2. get the plugin instance corresponding to this element.
+		nsIPresShell* shell = mInner.mDocument->GetShellAt(0);
+		nsIFrame* frame = nsnull;
+		shell->GetPrimaryFrameFor(mInner.mContent, &frame);
+
+		// 3. get the Java object corresponding to this applet, and reflect it into
+		// JavaScript using the LiveConnect manager.
+		JSContext* context = (JSContext*)aContext->GetNativeContext();
+		JSObject* wrappedAppletObject = nsnull;
+		nsIPluginInstance* pluginInstance = nsnull;
+		rv = NS_GetObjectFramePluginInstance(frame, pluginInstance);
+		if (nsnull != pluginInstance) {
+			nsIJVMPluginInstance* javaPluginInstance = nsnull;
+			if (pluginInstance->QueryInterface(nsIJVMPluginInstance::GetIID(), &javaPluginInstance) == NS_OK) {
+				jobject appletObject = nsnull;
+				rv = javaPluginInstance->GetJavaObject(&appletObject);
+				if (NS_OK == rv) {
+					nsILiveConnectManager* manager = NULL;
+					rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
+					                                  nsILiveConnectManager::GetIID(),
+					                                  (nsISupports **)&manager);
+					if (rv == NS_OK) {
+						rv = manager->WrapJavaObject(context, appletObject, &wrappedAppletObject);
+						nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
+					}
+				}
+				NS_RELEASE(javaPluginInstance);
+			}
+			NS_RELEASE(pluginInstance);
+		}
+		
+		// 4. set the __proto__ field of the applet object to be the element script object.
+		if (nsnull != wrappedAppletObject) {
+			JS_SetPrototype(context, wrappedAppletObject, elementObject);
+			mInner.SetScriptObject(wrappedAppletObject);
+			mReflectedApplet = PR_TRUE;
+		}
+		*aScriptObject = wrappedAppletObject;
+	} else {
+		rv = mInner.GetScriptObject(aContext, aScriptObject);
+	}
+	return rv;
+#else
+	return mInner.GetScriptObject(aContext, aScriptObject);
+#endif
+}
+
+// TODO: if this method ever gets called, it will destroy the prototype type chain.
+
+NS_IMETHODIMP
+nsHTMLAppletElement::SetScriptObject(void *aScriptObject)
+{
+	return mInner.SetScriptObject(aScriptObject);
 }
