@@ -182,7 +182,7 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	if (m_pIWebShell)
 	{
 		nsIContentViewer *pContentViewer = nsnull;
-		m_pIWebShell->GetContentViewer(pContentViewer);
+		m_pIWebShell->GetContentViewer(&pContentViewer);
 		if (nsnull != pContentViewer)
 		{
 			pContentViewer->Print();

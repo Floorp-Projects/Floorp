@@ -689,7 +689,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
   nsIPresShell* shell = nsnull;
   if (nsnull != mWebShell) {
     nsIContentViewer* cv = nsnull;
-    mWebShell->GetContentViewer(cv);
+    mWebShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);

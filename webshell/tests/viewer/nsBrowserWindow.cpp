@@ -178,7 +178,7 @@ GetPresShellFor(nsIWebShell* aWebShell)
   nsIPresShell* shell = nsnull;
   if (nsnull != aWebShell) {
     nsIContentViewer* cv = nsnull;
-    aWebShell->GetContentViewer(cv);
+    aWebShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
@@ -2203,7 +2203,7 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
 {
   nsIContentViewer* cv = nsnull;
   if (nsnull != mWebShell) {
-    if ((NS_OK == mWebShell->GetContentViewer(cv)) && (nsnull != cv)) {
+    if ((NS_OK == mWebShell->GetContentViewer(&cv)) && (nsnull != cv)) {
       nsIDocumentViewer* docv = nsnull;
       if (NS_OK == cv->QueryInterface(kIDocumentViewerIID, (void**)&docv)) {
 	      nsIPresContext* printContext;
@@ -2240,7 +2240,7 @@ void nsBrowserWindow::DoPrint(void)
 {
   nsIContentViewer *viewer = nsnull;
 
-  mWebShell->GetContentViewer(viewer);
+  mWebShell->GetContentViewer(&viewer);
 
   if (nsnull != viewer)
   {
@@ -2310,7 +2310,7 @@ nsIDOMDocument* nsBrowserWindow::GetDOMDocument(nsIWebShell *aWebShell)
   nsIDOMDocument* domDoc = nsnull;
   if (nsnull != aWebShell) {
     nsIContentViewer* mCViewer;
-    aWebShell->GetContentViewer(mCViewer);
+    aWebShell->GetContentViewer(&mCViewer);
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
@@ -2414,7 +2414,7 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
   PRInt32 i, n;
   if (nsnull != aWebShell) {
     nsIContentViewer* mCViewer;
-    aWebShell->GetContentViewer(mCViewer);
+    aWebShell->GetContentViewer(&mCViewer);
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
