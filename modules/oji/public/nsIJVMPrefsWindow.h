@@ -40,9 +40,14 @@
 class nsIJVMPrefsWindow : public nsIJVMWindow {
 public:
     
-    // QueryInterface on nsIJVMPlugin to get this.
+    NS_IMETHOD
+    Show(void) = 0;
 
-    // No additional methods yet.
+    NS_IMETHOD
+    Hide(void) = 0;
+
+    NS_IMETHOD
+    IsVisible(PRBool *result) = 0;
 
 };
 
