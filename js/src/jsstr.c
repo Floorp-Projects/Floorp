@@ -2395,6 +2395,19 @@ js_strncpy(jschar *t, const jschar *s, size_t n)
     return t;
 }
 
+#define INFLATE_STRING_BODY                                                   \
+    for (i = 0; i < length; i++)                                              \
+	chars[i] = (unsigned char) bytes[i];                                  \
+    chars[i] = 0;
+
+void
+js_InflateStringToBuffer(jschar *chars, const char *bytes, size_t length)
+{
+    size_t i;
+
+    INFLATE_STRING_BODY
+}
+
 jschar *
 js_InflateString(JSContext *cx, const char *bytes, size_t length)
 {
@@ -2404,9 +2417,9 @@ js_InflateString(JSContext *cx, const char *bytes, size_t length)
     chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
     if (!chars)
 	return NULL;
-    for (i = 0; i < length; i++)
-	chars[i] = (unsigned char) bytes[i];
-    chars[i] = 0;
+
+    INFLATE_STRING_BODY
+
     return chars;
 }
 
