@@ -168,25 +168,26 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    jsval iter_state = JSVAL_NULL;
+    jsval iter_state;
     jsid num_properties;
-    JSBool ok = JS_FALSE;
+    JSBool ok;
 
     /* Get the number of properties to enumerate. */
-    if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, &num_properties))
+    iter_state = JSVAL_NULL;
+    ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, &num_properties);
+    if (!ok)
 	goto out;
+
     if (!JSVAL_IS_INT(num_properties)) {
 	JS_ASSERT(0);
+        *vp = JSVAL_ZERO;
 	goto out;
     }
     *vp = num_properties;
-    ok = JS_TRUE;
 
- out:
-    if (iter_state != JSVAL_NULL &&
-	!OBJ_ENUMERATE(cx, obj, JSENUMERATE_DESTROY, &iter_state, 0))
-        ok = JS_FALSE;
-
+out:
+    if (iter_state != JSVAL_NULL)
+	ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_DESTROY, &iter_state, 0);
     return ok;
 }
 
@@ -2382,8 +2383,8 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 	if (proto_obj && (scope == (JSScope *)proto_obj->map)) {
 	    ida = js_NewIdArray(cx, 0);
 	    if (!ida) {
-	      JS_UNLOCK_OBJ(cx, obj);
-	      goto init_error;
+		JS_UNLOCK_OBJ(cx, obj);
+		goto init_error;
 	    }
 	} else {
 	    /* Object has a private scope; Enumerate all props in scope. */
