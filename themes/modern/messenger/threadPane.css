@@ -30,6 +30,10 @@
 
 /* ::::: thread decoration ::::: */
 
+outlinerbody:-moz-outliner-cell-text(read) {
+  font-weight: normal;
+}
+
 outlinerbody:-moz-outliner-cell-text(unread) {
   font-weight: bold;
 }
