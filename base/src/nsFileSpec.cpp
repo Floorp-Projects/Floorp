@@ -175,6 +175,9 @@ void nsSimpleCharString::Unescape()
 {
     if (!mData)
         return;
+    ReallocData(mData->mLength);
+    if (!mData)
+        return;
     nsUnescape(mData->mString);
     mData->mLength = strlen(mData->mString);       
 } // nsSimpleCharString::Unescape
