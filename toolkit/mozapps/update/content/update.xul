@@ -50,7 +50,8 @@
 <wizard id="migrationWizard"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;"
-        onload="gUpdateWizard.init()"
+        onload="gUpdateWizard.init();"
+        onunload="gUpdateWizard.uninit();"
         onwizardfinish="gUpdateWizard.onWizardFinish();"
         style="width: 40em;"
         buttons="accept,cancel">
@@ -62,6 +63,22 @@
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/update.properties"/>
   </stringbundleset>
 
+  <wizardpage id="version" pageid="version" next="checking"
+              label="&version.title;"
+              onpageshow="gVersionPage.onPageShow();">
+
+    <label>&version.intro.label;</label>
+    
+    <separator class="thin"/>
+    
+    <progressmeter id="version.progress"/>
+    <hbox align="center">
+      <image id="version.throbber" class="throbber"/>
+      <label id="version.status" flex="1" crop="right">&version.status;</label>
+    </hbox>
+    
+  </wizardpage>
+    
   <wizardpage id="mismatch" pageid="mismatch" next="checking"
               label="&mismatch.title;"
               onpageshow="gMismatchPage.onPageShow();">
@@ -87,9 +104,13 @@
 
     <label>&checking.intro.label;</label>
     
-    <separator/>
+    <separator class="thin"/>
     
     <progressmeter id="checking.progress"/>
+    <hbox align="center">
+      <image id="checking.throbber" class="throbber"/>
+      <label id="checking.status" flex="1" crop="right">&checking.status;</label>
+    </hbox>
     
   </wizardpage>
     

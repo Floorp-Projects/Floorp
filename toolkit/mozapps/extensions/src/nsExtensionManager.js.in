@@ -77,6 +77,9 @@ const KEY_APPDIR                      = "XCurProcD";
 const KEY_DEFAULTS                    = "ProfDefNoLoc";
 const KEY_DEFAULT_THEME               = "classic/1.0";
 
+const ERROR_INVALID_VERSION           = -1;
+const ERROR_PHONED_HOME               = -2;
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Utility Functions
@@ -1285,7 +1288,6 @@ nsThemeInstaller.prototype = {
         zipReader.extract(FILE_CHROME_MANIFEST, tempChromeManifest);
         var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                              .getService(Components.interfaces.nsIRDFService);
-        dumpFile(zipReader.file);
         showOldThemeError(rdfs.GetDataSourceBlocking(getURLSpecFromFile(tempChromeManifest)));
         tempChromeManifest.remove(false);
       }
@@ -2091,7 +2093,7 @@ nsExtensionManager.prototype = {
     return getDirNoCreate(getDirKey(aIsProfile), 
                           [DIR_EXTENSIONS, aExtensionID, DIR_COMPONENTS]);
   },
-  
+ 
   _getPreferencesDir: function nsExtensionManager__getPreferencesDir (aIsProfile, aExtensionID)
   {
     return getDirNoCreate(getDirKey(aIsProfile), 
@@ -2173,19 +2175,26 @@ nsExtensionManager.prototype = {
     //         components/ 
     //         defaults/
     //                  prefs/
+    var installProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
+
+    var tempDir = getDir(getDirKey(installProfile), [DIR_EXTENSIONS, DIR_TEMP]);
+    var fileName = getRandomFileName("temp", "xpi");
+    aXPIFile.copyTo(tempDir, fileName);
+    var xpiFile = tempDir.clone();
+    xpiFile.append(fileName);
+    
     var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
                               .createInstance(Components.interfaces.nsIZipReader);
-    zipReader.init(aXPIFile);
+    zipReader.init(xpiFile);
     zipReader.open();
     
-    var installProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
     var tempManifest = getFile(getDirKey(installProfile),
                                [DIR_EXTENSIONS, DIR_TEMP, getRandomFileName("install", "rdf")]);
     if (!tempManifest.exists())
       tempManifest.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0644);
     zipReader.extract(FILE_INSTALL_MANIFEST, tempManifest);
     
-    var extensionID = this.installExtensionInternal(tempManifest, installProfile);
+    var extensionID = this.installExtensionInternal(xpiFile, tempManifest, installProfile);
     if (extensionID) {
       // Then we stage the extension's XPI into a temporary directory so we 
       // can extract them after the next restart. 
@@ -2193,11 +2202,15 @@ nsExtensionManager.prototype = {
 
       this._writeComponentManifest(installProfile);
     }
+    
     zipReader.close();
     tempManifest.remove(false);
+    
+    if (extensionID != ERROR_PHONED_HOME)
+      xpiFile.remove(false);
   },
   
-  installExtensionInternal: function nsExtensionManager_installExtensionInternal (aManifest, aIsProfile)
+  installExtensionInternal: function nsExtensionManager_installExtensionInternal (aXPIFile, aManifest, aIsProfile)
   {
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                         .getService(Components.interfaces.nsIRDFService);
@@ -2209,34 +2222,172 @@ nsExtensionManager.prototype = {
     this._ensureDS();
     var extensionID = this.canInstallItem(ds);
     // |extensionID| must be a GUID string, not a number - a number means failure.
-    if (isNaN(parseInt(extensionID))) {
-      // Clear any "disabled" flags that may have been set by the mismatch 
-      // checking code at startup.
-      var props = { toBeDisabled  : null,
-                    disabled      : null,
-                    toBeInstalled : this._ds._emL("true"),
-                    name          : this.getManifestProperty(ds, "name"),
-                    version       : this.getManifestProperty(ds, "version") };
-      for (var p in props) {
-        this._ds.setItemProperty(extensionID, this._ds._emR(p),
-                                 props[p], aIsProfile,
-                                 nsIUpdateItem.TYPE_EXTENSION);
+    if (isNaN(parseInt(extensionID)))
+      this._configureForthcomingItem(ds, extensionID, aIsProfile);
+    else if (extensionID == 0) {
+      var io = new this.IncompatibleObserver(this);
+      var isChecking = io.checkForUpdates(ds, nsIUpdateItem.TYPE_EXTENSION,
+                                          aXPIFile, aIsProfile);
+      if (!isChecking)
+        showIncompatibleError(ds);
+      else {
+        extensionID = ERROR_PHONED_HOME; // caller uses this to distinguish 
+                                         // phone-home attempt.
       }
-
-      // Insert it into the child list NOW rather than later because:
-      // - extensions installed using the command line need to be a member
-      //   of a container during the install phase for the code to be able
-      //   to identify profile vs. global
-      // - extensions installed through the UI should show some kind of
-      //   feedback to indicate their presence is forthcoming (i.e. they
-      //   will be available after a restart).
-      this._ds.insertForthcomingItem(extensionID, nsIUpdateItem.TYPE_EXTENSION, 
-                                     aIsProfile);
     }
-    else if (extensionID == 0)
-      showIncompatibleError(ds);
     
     return extensionID;
+  },
+  
+  IncompatibleObserver: function nsExtensionManager_IncompatibleObserver (aEM) 
+  {
+    this._item = null;
+    this._em = aEM;
+    this._ds = null;
+    this._xpi = null;
+    this._extensionID = 0;
+    this._isProfile = true;
+    
+    this.checkForUpdates = function nsExtensionManager__iOcheckForUpdates (aDataSource, aType, 
+                                                                           aXPIFile, aIsProfile)
+    {
+      // Construct a nsIUpdateItem for this extension...
+      var item = this._em._getItemForIncompatibleID(aDataSource, aType);
+      if (item) {
+        this._item      = item;
+        this._ds        = aDataSource;
+        this._xpi       = aXPIFile;
+        this._isProfile = true;
+        
+        var os = Components.classes["@mozilla.org/observer-service;1"]
+                           .getService(Components.interfaces.nsIObserverService);
+        os.addObserver(this, "Version:Extension:Started", false);
+        os.addObserver(this, "Version:Extension:Item-Ended", false);
+        os.addObserver(this, "Version:Extension:Item-Error", false);
+        os.addObserver(this, "Version:Extension:Ended", false);
+
+        this._em.update([item], 1, nsIExtensionManager.UPDATE_MODE_VERSION, false);
+        
+        return true;
+      }
+      return false;
+    }
+    
+    this.observe = function nsExtensionManager__iOobserve (aSubject, aTopic, aData)
+    {
+      switch (aTopic) {
+      case "Version:Extension:Started":
+        break;
+      case "Version:Extension:Item-Ended":
+        if (aSubject) {
+          var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+          this._em._ds.setTargetApplicationInfo(item.id, 
+                                                item.minAppVersion,
+                                                item.maxAppVersion, 
+                                                this._ds, 
+                                                this._item.type);
+          this._extensionID = this._em.canInstallItem(this._ds);
+        }
+        break;
+      case "Version:Extension:Item-Error":
+        break;
+      case "Version:Extension:Ended":
+        var os = Components.classes["@mozilla.org/observer-service;1"]
+                           .getService(Components.interfaces.nsIObserverService);
+        os.removeObserver(this, "Version:Extension:Started");
+        os.removeObserver(this, "Version:Extension:Item-Ended");
+        os.removeObserver(this, "Version:Extension:Item-Error");
+        os.removeObserver(this, "Version:Extension:Ended");
+        
+        if (isNaN(this._extensionID)) {
+          var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                                    .createInstance(Components.interfaces.nsIZipReader);
+          zipReader.init(this._xpi);
+          zipReader.open();
+
+          // Add the item after all
+          this._em._configureForthcomingItem(this._ds, this._extensionID, 
+                                             this._isProfile);
+          this._em._stageExtensionXPI(zipReader, this._extensionID, this._isProfile);
+          this._em._writeComponentManifest(this._isProfile);
+          
+          zipReader.close();
+        }
+        else 
+          showIncompatibleError(this._ds);
+        
+        // Now really delete the temporary XPI file
+        this._xpi.remove(false);
+        break;
+      }
+    }
+  },
+  
+  _configureForthcomingItem: function nsExtensionManager__configureForthcomingItem (aDataSource, 
+                                                                                    aExtensionID, 
+                                                                                    aIsProfile)
+  {
+    // Clear any "disabled" flags that may have been set by the mismatch 
+    // checking code at startup.
+    var props = { toBeDisabled  : null,
+                  disabled      : null,
+                  toBeInstalled : this._ds._emL("true"),
+                  name          : this.getManifestProperty(aDataSource, "name"),
+                  version       : this.getManifestProperty(aDataSource, "version") };
+    for (var p in props) {
+      this._ds.setItemProperty(aExtensionID, this._ds._emR(p),
+                               props[p], aIsProfile,
+                               nsIUpdateItem.TYPE_EXTENSION);
+    }
+
+    // Insert it into the child list NOW rather than later because:
+    // - extensions installed using the command line need to be a member
+    //   of a container during the install phase for the code to be able
+    //   to identify profile vs. global
+    // - extensions installed through the UI should show some kind of
+    //   feedback to indicate their presence is forthcoming (i.e. they
+    //   will be available after a restart).
+    this._ds.insertForthcomingItem(aExtensionID, nsIUpdateItem.TYPE_EXTENSION, 
+                                   aIsProfile);
+  },
+  
+  _getItemForIncompatibleID: function nsExtensionManager__getItemForID (aDataSource, aType)
+  {
+    var newItem = null;
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+    var id, version, targetAppInfo, name;
+    var manifestRoot = rdf.GetResource("urn:mozilla:install-manifest");
+    try {
+      function getProperty (aDataSource, aSourceResource, aProperty)
+      {
+        var rv;
+        try {
+          var property = rdf.GetResource(EM_NS(aProperty));
+          rv = stringData(aDataSource.GetTarget(aSourceResource, property, true));
+          if (rv == "--")
+            throw Components.results.NS_ERROR_FAILURE;
+        }
+        catch (e) { }
+        return rv;
+      }
+      
+      var root = rdf.GetResource("urn:mozilla:install-manifest");
+      id            = getProperty(aDataSource, root, "id");
+      version       = getProperty(aDataSource, root, "version");
+      targetAppInfo = this._ds.getTargetApplicationInfo(id, aDataSource, aType);
+      name          = getProperty(aDataSource, root, "name");
+      
+      newItem = Components.classes["@mozilla.org/updates/item;1"]
+                          .createInstance(Components.interfaces.nsIUpdateItem);
+      newItem.init(id, version, targetAppInfo.minAppVersion, 
+                   targetAppInfo.maxAppVersion,
+                   name, -1, "", "", "", "", aType);
+    }
+    catch (e) {
+      return null;
+    }
+    return newItem;
   },
   
   canInstallItem: function nsExtensionManager_canInstallItem (aDataSource)
@@ -2253,7 +2404,7 @@ nsExtensionManager.prototype = {
       var name = rdf.GetResource(EM_NS("name"));
       var nameLiteral = stringData(aDataSource.GetTarget(manifestRoot, name, true));
       showInvalidVersionError(nameLiteral, versionLiteral);
-      return -1;
+      return ERROR_INVALID_VERSION;
     }
         
     // Check the target application range specified by the extension metadata.
@@ -2384,8 +2535,10 @@ nsExtensionManager.prototype = {
     // Update the Defaults Manifest
     this._writeDefaults(isProfile);
   },
-  
-  update: function nsExtensionManager_update (aItems, aItemCount)
+
+  update: function nsExtensionManager_update (aItems, aItemCount,
+                                              aUpdateMode,
+                                              aWriteVersionUpdates)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
@@ -2396,8 +2549,9 @@ nsExtensionManager.prototype = {
       var addonType = nsIUpdateItem.TYPE_ADDON;
       aItems = this.getItemList(null, addonType, { });
     }
-    var updater = new nsExtensionItemUpdater(aItems, appID, appVersion, this);
-    updater.checkForUpdates();
+    var updater = new nsExtensionItemUpdater(appID, appVersion, this);
+    updater.checkForUpdates(aItems, aItems.length, aUpdateMode, 
+                            aWriteVersionUpdates);
   },
   
   getItemList: function nsExtensionManager_getItemList (aItemID, aType, aCountRef)
@@ -2457,7 +2611,7 @@ nsExtensionManager.prototype = {
     for (var i = 0; i < aItemCount; ++i) {
       var currItem = aItems[i];
       var txnID = Math.round(Math.random() * 100);
-      txn.addDownload(currItem.name, currItem.updateURL, currItem.iconURL, 
+      txn.addDownload(currItem.name, currItem.xpiURL, currItem.iconURL, 
                       currItem.type, txnID);
       this._transactions.push(txn);
     }
@@ -2702,10 +2856,8 @@ nsItemDownloadTransaction.prototype = {
 //
 // nsExtensionItemUpdater
 //
-function nsExtensionItemUpdater(aItems, aTargetAppID, aTargetAppVersion, aEM) 
+function nsExtensionItemUpdater(aTargetAppID, aTargetAppVersion, aEM) 
 {
-  this._items = aItems;
-  this._count = aItems.length;
   this._appID = aTargetAppID;
   this._appVersion = aTargetAppVersion;
   this._emDS = aEM._ds;
@@ -2714,96 +2866,337 @@ function nsExtensionItemUpdater(aItems, aTargetAppID, aTargetAppVersion, aEM)
   this._os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
 
-  // This is the number of extensions/themes/etc that we found updates for.
-  this._updateCount = 0;
+  this._versionChecker = Components.classes["@mozilla.org/updates/version-checker;1"]
+                                   .getService(Components.interfaces.nsIVersionChecker);
+  this._goat = Math.round(Math.random() * 100000);
 }
 
 nsExtensionItemUpdater.prototype = {
+  _appID          : "",
+  _appVersion     : "",
+  _emDS           : null,
+  _em             : null,
+  _os             : null,
+  _versionChecker : null,
+  _prefix         : "",
+  _updateMode     : 0,
+  _items          : [],
+  
+  _getMessage: function nsExtensionItemUpdater_getMessage(aMessage)
+  {
+    return this._prefix + ":Extension:" + aMessage;
+  },
+  
   /////////////////////////////////////////////////////////////////////////////
   // nsIExtensionItemUpdater
-  checkForUpdates: function nsExtensionItemUpdater_checkForUpdates () 
+  checkForUpdates: function nsExtensionItemUpdater_checkForUpdates (aItems, aItemCount, 
+                                                                    aUpdateMode, 
+                                                                    aWriteVersionUpdates) 
   {
-    this._os.notifyObservers(null, "Update:Extension:Started", "");
-    var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
-                               .getService(Components.interfaces.nsIWebServiceProxyFactory);
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var wsdlURI = pref.getComplexValue(PREF_UPDATE_EXT_WSDL_URI,
-                                       Components.interfaces.nsIPrefLocalizedString).data;
-    wspFactory.createProxyAsync(wsdlURI, "VersionCheck", "", true, this);
+    this._prefix = (aUpdateMode == nsIExtensionManager.UPDATE_MODE_NORMAL) ? "Update" : "Version";
+    this._os.notifyObservers(null, this._getMessage("Started"), "");
+    this._updateMode = aUpdateMode;
+    this._items = aItems;
+    this._responseCount = aItemCount;
     
-    for (var i = 0; i < this._items.length; ++i) {
+    // Install-time updates are not written to the DS because there is no
+    // entry yet, EM just uses the notifications to ascertain (by hand)
+    // whether or not there is a remote maxVersion tweak that makes the 
+    // item being installed compatible.
+    this._writeVersionUpdates = aWriteVersionUpdates;
+
+    // This is the number of extensions/themes/etc that we found updates for.
+    this._updateCount = 0;
+
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);                         
+
+    var defaultRequest = false;
+    for (var i = 0; i < aItemCount; ++i) {
       var e = this._items[i];
-      if (e.updateRDF) {
-        var dsURI = e.updateRDF;
-        dsURI = dsURI.replace(/%ITEM_ID%/g, e.id);
-        dsURI = dsURI.replace(/%ITEM_VERSION%/g, e.version);
-        dsURI = dsURI.replace(/%APP_ID%/g, this._appID);
-        dsURI = dsURI.replace(/%APP_VERSION%/g, this._appVersion);
-        var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                            .getService(Components.interfaces.nsIRDFService);
-        var ds = rdf.GetDataSource(dsURI);
-        var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource)
-        if (rds.loaded)
-          this.onDatasourceLoaded(ds, e);
-        else {
-          var sink = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
-          sink.addXMLSinkObserver(new nsExtensionUpdateXMLRDFDSObserver(this, e));
-        }
+      this._os.notifyObservers(e, this._getMessage("Item-Started"), "");
+      if (e.updateRDF)
+        (new nsRDFItemUpdater(this)).checkForUpdates(e, this._updateMode);
+      else {
+        // Invoke a custom web service proxy, if the extension specifies one.
+        if (e.updateService)
+          this._checkForUpdatesAtServiceURI(e.updateService);
+        else
+          defaultRequest = true;
       }
     }
+
+    if (defaultRequest) {
+      var wsdlURI = pref.getComplexValue(PREF_UPDATE_EXT_WSDL_URI,
+                                         Components.interfaces.nsIPrefLocalizedString).data;
+      this._checkForUpdatesAtServiceURI(wsdlURI);
+    }
+  },
+  
+  _checkForUpdatesAtServiceURI: function nsExtensionItemUpdater__checkForUpdatesAtServiceURI (aServiceURI)
+  {
+    var proxy = new WSProxy(this, aServiceURI);
+    var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
+                               .getService(Components.interfaces.nsIWebServiceProxyFactory);
+    wspFactory.createProxyAsync(aServiceURI, "VersionCheck", "", true, proxy);
   },
   
   /////////////////////////////////////////////////////////////////////////////
   // nsExtensionItemUpdater
-  _proxy: null,
-  
-  _checkForUpdates: function nsExtensionItemUpdater__checkForUpdates ()
+  _applyVersionUpdates: function nsExtensionItemUpdater__applyVersionUpdates (aLocalItem, aRemoteItem)
   {
-    for (var i = 0; i < this._items.length; ++i) {
-      var e = this._items[i];
+    var r = this._emDS._getResourceForItem(aLocalItem.id);
+    if (!r) return;
+    var targetAppInfo = this._emDS.getTargetApplicationInfo(aLocalItem.id, this._emDS, 
+                                                            getItemType(r.Value));
+    if (this._versionChecker.compare(targetAppInfo.maxVersion, aRemoteItem.maxAppVersion) < 0) {
+      // Remotely specified maxVersion is newer than the maxVersion 
+      // for the installed Extension. Apply that change to the datasource.
+      this._emDS.setTargetApplicationInfo(aLocalItem.id, 
+                                          aRemoteItem.minAppVersion, 
+                                          aRemoteItem.maxAppVersion,
+                                          null, aLocalItem.type);
+      
+      // If we got here through |checkForMismatches|, this extension has
+      // already been disabled, re-enable it.
+      if (this._emDS.getItemProperty(aLocalItem.id, "disabled") == "true") 
+        this._em.enableExtension(aLocalItem.id);
+    }
+  },
+  
+  _isValidUpdate: function nsExtensionItemUpdater__isValidUpdate (aLocalItem, aRemoteItem) 
+  {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var appExtensionsVersion = pref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
+
+    // Check if the update will only run on a newer version of Firefox. 
+    if (aRemoteItem.minAppVersion && 
+        this._versionChecker.compare(appExtensionsVersion, aRemoteItem.minAppVersion) < 0) 
+      return false;
+
+    // Check if the update will only run on an older version of Firefox. 
+    if (aRemoteItem.maxAppVersion && 
+        this._versionChecker.compare(appExtensionsVersion, aRemoteItem.maxAppVersion) > 0) 
+      return false;
+    
+    return true;
+  },
+  
+  _checkForDone: function nsExtensionItemUpdater__checkForDone (aServiceURI)
+  {
+    if (--this._responseCount == 0) {
+      if (this._updateMode == nsIExtensionManager.UPDATE_MODE_NORMAL) {
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+        pref.setIntPref(PREF_UPDATE_COUNT, this._updateCount); 
+      }
+          
+      this._os.notifyObservers(null, this._getMessage("Ended"), "");
+    }
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function nsExtensionItemUpdater_QueryInterface (aIID) 
+  {
+    if (!aIID.equals(Components.interfaces.nsIExtensionItemUpdater) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }  
+};
+
+function WSProxy(aUpdater, aServiceURI)
+{
+  this._updater = aUpdater;
+  this._serviceURI = aServiceURI;
+
+  this._os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+}
+
+WSProxy.prototype = {
+  _updater              : null,
+  _serviceURI           : "",
+  _proxy                : null,
+  _pendingTransactions  : [],
+  _os                   : null,
+  
+  checkForUpdates: function nsExtensionItemUpdater__checkForUpdates (aUpdateMode)
+  {
+    if (!this._proxy) {
+      this._pendingTransactions.push(aUpdateMode);
+      return;
+    }
+    
+    for (var i = 0; i < this._updater._items.length; ++i) {
+      var e = this._updater._items[i];
       if (!e.updateRDF) {
-        this._os.notifyObservers(null, "Update:Extension:Item-Started", e.name + " " + e.version);
-        this._proxy.getNewestExtension(eval(e.objectSource), this._appID, this._appVersion);
+        if (e.updateService && e.updateService != this._serviceURI)
+          continue;
+        if (aUpdateMode == nsIExtensionManager.UPDATE_MODE_NORMAL) {
+          this._proxy.getNewestExtension(eval(e.objectSource), 
+                                         this._updater._appID, 
+                                         this._updater._appVersion,
+                                         "", "");
+        }
+        else {      
+          this._proxy.getVersionUpdate(eval(e.objectSource), 
+                                       this._updater._appID, 
+                                       this._updater._appVersion,
+                                       "", "");
+        }
       }
     }
   },
 
+  getNewestExtensionCallback: function nsExtensionItemUpdater_getNewestExtensionCallback (aResult)
+  {
+    var remoteItem = null;
+    try {
+      aResult.name.toString(); // XXXben This is a lame hack to cause an exception to be
+                               // thrown for null values when there is no newer extension
+                               // or something else bad happens on the server that we 
+                               // don't recognize.
+      remoteItem = Components.classes["@mozilla.org/updates/item;1"]
+                             .createInstance(Components.interfaces.nsIUpdateItem);
+      remoteItem.init(aResult.id, aResult.version, aResult.minAppVersion, 
+                      aResult.maxAppVersion, aResult.name, -1, 
+                      aResult.xpiURL, aResult.iconURL, "", "", 
+                      aResult.type); 
+      var localItem = this._updater._emDS.getItemForID(remoteItem.id);
+      if (!this._updater._isValidUpdate(localItem, remoteItem))
+        return;
+      else
+        ++this._updater._updateCount;
+    }
+    catch (e) { }
+
+    this._os.notifyObservers(remoteItem, 
+                             "Update:Extension:Item-Ended",
+                             "");
+    
+    this._updater._checkForDone(this._serviceURI);
+  },
+  
+  getVersionUpdateCallback: function nsExtensionItemUpdater_getVersionUpdateCallback (aResult)
+  {
+    var remoteItem = null;
+    try {
+      aResult.name.toString(); // XXXben see above for excuse-making.
+      remoteItem = Components.classes["@mozilla.org/updates/item;1"]
+                             .createInstance(Components.interfaces.nsIUpdateItem);
+      remoteItem.init(aResult.id, aResult.version, aResult.minAppVersion, 
+                      aResult.maxAppVersion, aResult.name, -1, 
+                      aResult.xpiURL, aResult.iconURL, "", "", 
+                      aResult.type); 
+      var localItem = this._updater._emDS.getItemForID(remoteItem.id);
+      if (this._updater._writeVersionUpdates)
+        this._updater._applyVersionUpdates(localItem, remoteItem);
+    }
+    catch (e) { }
+    
+    this._os.notifyObservers(remoteItem, 
+                             "Version:Extension:Item-Ended",
+                             "");
+    
+    this._updater._checkForDone(this._serviceURI);
+  },
+  
   /////////////////////////////////////////////////////////////////////////////
   // nsIWSDLLoadListener  
   onLoad: function nsExtensionItemUpdater_onLoad (aProxy)
   { 
     this._proxy = aProxy;
     this._proxy.setListener(this);
-    this._checkForUpdates();
+    this.checkForUpdates(this._updater._updateMode);
+    
+    // Also perform any queued operations that were waiting on the WSDL 
+    // proxy to load
+    for (var i = 0; i < this._pendingTransactions.length; ++i)
+      this.checkForUpdates(this._pendingTransactions);
   },
   
   onError: function nsExtensionItemUpdater_onError (aStatus, aMessage)
   {
-    this._os.notifyObservers(null, "Update:Extension:Item-Error", aStatus.toString());
+    dump("*** status = " + aStatus + ", message = " + aMessage + "\n");
+    this._os.notifyObservers(null, 
+                             this._updater._getMessage("Item-Error"), 
+                             aStatus.toString());
     
-    for (var i = 0; i < this._items.length; ++i) {
-      if (!this._items[i].updateRDF)
-        this._checkForDone();
+    for (var i = 0; i < this._updater._items.length; ++i) {
+      var item = this._updater._items[i];
+      if ((!item.updateRDF && !item.updateService) || 
+           (item.updateService == this._serviceURI)) {
+        this._updater._checkForDone(this._serviceURI);
+      }
+    }
+  }
+};
+
+function nsRDFItemUpdater(aUpdater)
+{
+  this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+  this._os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+  this._updater = aUpdater;
+}
+
+nsRDFItemUpdater.prototype = {
+  _rdf        : null,
+  _os         : null,
+  _updater    : null,
+  _updateMode : 0,
+  
+  checkForUpdates: function (aItem, aUpdateMode)
+  {
+    this._updateMode = aUpdateMode;
+  
+    var dsURI = aItem.updateRDF;
+    dsURI = dsURI.replace(/%ITEM_ID%/g, aItem.id);
+    dsURI = dsURI.replace(/%ITEM_VERSION%/g, aItem.version);
+    dsURI = dsURI.replace(/%APP_ID%/g, this._updater._appID);
+    dsURI = dsURI.replace(/%APP_VERSION%/g, this._updater._appVersion);
+    var ds = this._rdf.GetDataSource(dsURI);
+    var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource)
+    if (rds.loaded)
+      this.onDatasourceLoaded(ds, aItem);
+    else {
+      var sink = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
+      sink.addXMLSinkObserver(new nsExtensionUpdateXMLRDFDSObserver(this, aItem));
     }
   },
-  
+
   onDatasourceLoaded: function nsExtensionItemUpdater_onDatasourceLoaded (aDatasource, aLocalItem)
   {
     ///////////////////////////////////////////////////////////////////////////    
     // The extension update RDF file looks something like this:
-    // <RDF:Description about="urn:mozilla:extension:{EXTENSION GUID}">
-    //  <em:version>5.0</em:version>
-    //  <em:updateLink><XPI URL></em:updateLink>
-    //  <em:targetApplication>
-    //    <Description>
-    //      <em:id>{GUID}</em:id>
-    //      <em:minVersion>0.8</em:minVersion>
-    //      <em:maxVersion>1.0</em:maxVersion>
-    //      <em:updateLink><XPI URL></em:updateLink>
-    //    </Description>
-    //  </em:targetApplication>
-    // </RDF:Description>
+    //
+    //  <RDF:Description about="urn:mozilla:extension:{GUID}">
+    //    <em:updates>
+    //      <Seq>
+    //        <li resource="urn:mozilla:extension:{GUID}:4.9"/>
+    //        <li resource="urn:mozilla:extension:{GUID}:5.0"/>
+    //      </Seq>
+    //    </em:updates>
+    //    <!-- the version of the extension being offered -->
+    //    <em:version>5.0</em:version>
+    //    <em:updateLink>http://www.mysite.com/myext-50.xpi</em:updateLink>
+    //  </RDF:Description>
+    //
+    //  <RDF:Description about="urn:mozilla:extension:{GUID}:4.9">
+    //    <em:version>4.9</em:version>
+    //    <em:targetApplication>
+    //      <Description>
+    //        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+    //        <em:minVersion>0.9</em:minVersion>
+    //        <em:maxVersion>1.0</em:maxVersion>
+    //        <em:updateLink>http://www.mysite.com/myext-49.xpi</em:updateLink>
+    //      </Description>
+    //    </em:targetApplication>
+    //  </RDF:Description>  
     //
     // If we get here because the following happened:
     // 1) User was using Firefox 0.9 with ExtensionX 0.5 (minVersion 0.8, 
@@ -2820,212 +3213,183 @@ nsExtensionItemUpdater.prototype = {
     // installed ExtensionX (0.5) is freshened with the new maxVersion, 
     // and we advance to the next item WITHOUT any download/install 
     // updates.
-    // TODO: write logic to do this for the custom RDF case and for the
-    //       version check service case.
   
     // Parse the response RDF
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                        .getService(Components.interfaces.nsIRDFService);
-    var versionArc    = rdf.GetResource(EM_NS("version"));
-    var updateLinkArc = rdf.GetResource(EM_NS("updateLink"));
-    var targetAppArc  = rdf.GetResource(EM_NS("targetApplication"));
-    var minVersionArc = rdf.GetResource(EM_NS("minVersion"));
-    var maxVersionArc = rdf.GetResource(EM_NS("maxVersion"));
-    var idArc         = rdf.GetResource(EM_NS("id"));
-    var extensionRes  = rdf.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
+    function UpdateData() {}; 
+    UpdateData.prototype = { version: "0.0", updateLink: null, 
+                             minVersion: "0.0", maxVersion: "0.0" };
     
-    var version;
+    var versionUpdate = new UpdateData();
+    var newestUpdate  = new UpdateData();
+    
+    // Firefox 1.0RC1+ update.rdf format
+    if (this._updateMode == nsIExtensionManager.UPDATE_MODE_NORMAL) {
+      // Look for newer versions too
+      this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate, false);
+      if (!newestUpdate.updateLink) {
+        // Firefox 0.9 update.rdf format - does not contain any metadata
+        // that can be used for version updates, so performed in the "all updates"
+        // mode only. 
+        this._parseV10UpdateInfo(aDatasource, aLocalItem, newestUpdate);
+      }
+    }
+    else
+      this._parseV20UpdateInfo(aDatasource, aLocalItem, versionUpdate, true);
+
+    if (this._updateMode == nsIExtensionManager.UPDATE_MODE_VERSION) {
+      var remoteItem = null;
+      var result = this._updater._versionChecker.compare(versionUpdate.version, 
+                                                         aLocalItem.version);
+      if (result == 0) {
+        // Local version exactly matches the "Version Update" remote version, 
+        // Apply changes into local datasource.
+        remoteItem = Components.classes["@mozilla.org/updates/item;1"]
+                               .createInstance(Components.interfaces.nsIUpdateItem);
+        remoteItem.init(aLocalItem.id, 
+                        versionUpdate.version, 
+                        versionUpdate.minVersion, 
+                        versionUpdate.maxVersion, 
+                        aLocalItem.name, 
+                        -1, "", "", "", "", 
+                        aLocalItem.type);
+        if (this._updater._isValidUpdate(aLocalItem, remoteItem) && 
+            this._updater._writeVersionUpdates) {
+          this._updater._applyVersionUpdates(aLocalItem, remoteItem);
+          remoteItem = null;
+        }
+      }
+    }
+    else {
+      remoteItem = Components.classes["@mozilla.org/updates/item;1"]
+                             .createInstance(Components.interfaces.nsIUpdateItem);
+      remoteItem.init(aLocalItem.id, 
+                      newestUpdate.version, 
+                      newestUpdate.minVersion, 
+                      newestUpdate.maxVersion, 
+                      aLocalItem.name, 
+                      -1, newestUpdate.updateLink, "", "", "", 
+                      aLocalItem.type);
+      if (this._updater._isValidUpdate(aLocalItem, remoteItem))
+        ++this._updater._updateCount;
+      else
+        remoteItem = null;
+    }
+
+    this._os.notifyObservers(remoteItem, this._updater._getMessage("Item-Ended"), "");
+    
+    // Only one call of this._updater._checkForDone is needed for RDF 
+    // responses, since there is only one response per item.
+    this._updater._checkForDone(null);
+  },
+
+  // Parses Firefox 0.9 update.rdf format  
+  _parseV10UpdateInfo: function nsExtensionItemUpdater__parseV10UpdateInfo (aDataSource, aLocalItem, aUpdateData)
+  {
+    var extensionRes  = this._rdf.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
+    
+    aUpdateData.version     = this._getPropertyFromResource(aDataSource, extensionRes, 
+                                                            "version", aLocalItem);
+    aUpdateData.updateLink  = this._getPropertyFromResource(aDataSource, extensionRes, 
+                                                            "updateLink", aLocalItem);
+  },
+  
+  // Get a compulsory property from a resource. Reports an error if the 
+  // property was not present. 
+  _getPropertyFromResource: function nsExtensionItemUpdater__getPropertyFromResource (aDataSource,
+                                                                                      aSourceResource, 
+                                                                                      aProperty, 
+                                                                                      aLocalItem)
+  {
+    var rv;
     try {
-      version = stringData(aDatasource.GetTarget(extensionRes, versionArc, true));
-      if (version == "--") 
+      var property = this._rdf.GetResource(EM_NS(aProperty));
+      rv = stringData(aDataSource.GetTarget(aSourceResource, property, true));
+      if (rv == "--")
         throw Components.results.NS_ERROR_FAILURE;
     }
     catch (e) { 
       // Report an error if the update manifest is incomplete
       this.onDatasourceError(aLocalItem, "malformed-rdf");
-      // XXXben show console message
-      return;
+      // XXXben show console message "aProperty" not found on aSourceResource. 
+      return null;
     }
+    return rv;
+  },
+  
+  // Parses Firefox 1.0RC1+ update.rdf format
+  _parseV20UpdateInfo: function nsExtensionItemUpdater__parseV20UpdateInfo (aDataSource, 
+                                                                            aLocalItem, 
+                                                                            aUpdateData, 
+                                                                            aVersionUpdatesOnly)
+  {
+    var extensionRes  = this._rdf.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
 
-    var versionChecker = Components.classes["@mozilla.org/updates/version-checker;1"]
-                                   .getService(Components.interfaces.nsIVersionChecker);
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var appID = pref.getCharPref(PREF_EM_APP_ID);
-    var updateLink = null;
+    var updatesArc = this._rdf.GetResource(EM_NS("updates"));
+    var updates = aDataSource.GetTarget(extensionRes, updatesArc, true);
+    
     try {
-      var targetApps = aDatasource.GetTargets(extensionRes, targetAppArc, true);
-      while (targetApps.hasMoreElements()) {
-        var targetApp = targetApps.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        if (targetApp) {
-          var id = stringData(aDatasource.GetTarget(targetApp, idArc, true));
-          if (id != appID) // Different target application
-            continue;
-          
-          var minVersion = "";
-          var maxVersion = "";
-          try {
-            minVersion = stringData(aDatasource.GetTarget(targetApp, minVersionArc, true));
-          }
-          catch (e) { }
-          try {
-            maxVersion = stringData(aDatasource.GetTarget(targetApp, maxVersionArc, true));
-          }
-          catch (e) { };
+      updates = updates.QueryInterface(Components.interfaces.nsIRDFResource);
+    }
+    catch (e) { return; }
+    
+    var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                       .getService(Components.interfaces.nsIRDFContainerUtils);
+    if (cu.IsContainer(aDataSource, updates)) {
+      var c = Components.classes["@mozilla.org/rdf/container;1"]
+                        .getService(Components.interfaces.nsIRDFContainer);
+      c.Init(aDataSource, updates);
 
-          // Either the new version wasn't compatible with the installed version of 
-          // Firefox, or the version is the same and includes only a maxVersion rev.
-          var remoteItem = Components.classes["@mozilla.org/updates/item;1"]
-                                     .createInstance(Components.interfaces.nsIUpdateItem);
-          remoteItem.init(aLocalItem.id, version, minVersion, maxVersion, aLocalItem.name, 
-                          -1, "", "", "", aLocalItem.type);
-          if (!this._needsUpdate(aLocalItem, remoteItem)) {
-            return;
-          }
-          else {
-            // Get the update link for this target application...
-            updateLink = stringData(aDatasource.GetTarget(targetApp, updateLinkArc, true));
-          }
-        }
-      } 
-    }
-    catch (e) { 
-      dump("*** eee! " + e + "\n");
-      dump("*** nsExtensionItemUpdater::onDatasourceLoaded - falling back to 0.9 compatible update.rdf format...\n");
-      updateLink = null;
-    }
-        
-    if (!updateLink) {
-      try {
-        updateLink = stringData(aDatasource.GetTarget(extensionRes, updateLinkArc, true));
-        if (updateLink == "--") 
-          throw Components.results.NS_ERROR_FAILURE;
-      }
-      catch (e) { 
-        // Report an error if the update manifest is incomplete
-        this.onDatasourceError(aItem, "malformed-rdf");
-        // XXXben show console message
-        return;
+      // In "all update types" mode, we look for newer versions, starting with the 
+      // current installed version.
+      if (!aVersionUpdatesOnly) 
+        aUpdateData.version = aLocalItem.version;
+
+      var versions = c.GetElements();
+      while (versions.hasMoreElements()) {
+        // There are two different methodologies for collecting version 
+        // information depending on whether or not we've bene invoked in 
+        // "version updates only" mode or "version+newest" mode. 
+        var version = versions.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        this._parseV20Update(aDataSource, version, aLocalItem, aUpdateData, aVersionUpdatesOnly);
+        if (aVersionUpdatesOnly && aUpdateData.updateLink)
+          break;
       }
     }
-        
-    // Check to see if this is a newer version.
-    var versionChecker = Components.classes["@mozilla.org/updates/version-checker;1"]
-                                   .getService(Components.interfaces.nsIVersionChecker);
-    if (versionChecker.compare(aLocalItem.version, version) < 0) {
-      // Construct an update item and pass it to observers. 
-      var remoteItem = Components.classes["@mozilla.org/updates/item;1"]
-                                 .createInstance(Components.interfaces.nsIUpdateItem);
-      remoteItem.init(aLocalItem.id, version, "", "", aLocalItem.name, 
-                      -1, updateLink, "", "", aLocalItem.type);
-      this._os.notifyObservers(remoteItem, "Update:Extension:Item-Ended", "");
-      ++this._updateCount;
+  },
+  
+  _parseV20Update: function nsExtensionItemUpdater__parseV20Update (aDataSource,
+                                                                    aUpdateResource,
+                                                                    aLocalItem,
+                                                                    aUpdateData,
+                                                                    aVersionUpdatesOnly)
+  {
+    var version = this._getPropertyFromResource(aDataSource, aUpdateResource, 
+                                                "version", aLocalItem);
+    var taArc = this._rdf.GetResource(EM_NS("targetApplication"));
+    var targetApps = aDataSource.GetTargets(aUpdateResource, taArc, true);
+    while (targetApps.hasMoreElements()) {
+      var targetApp = targetApps.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var id = this._getPropertyFromResource(aDataSource, targetApp, "id", aLocalItem);
+      if (id != this._updater._appID)
+        continue;
+      
+      var result = this._updater._versionChecker.compare(version, aLocalItem.version);
+      if (aVersionUpdatesOnly ? result == 0 : result > 0) {
+        aUpdateData.version = version;
+        aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
+        aUpdateData.minVersion = this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem);
+        aUpdateData.maxVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
+      }
     }
-
-    this._checkForDone();
   },
   
   onDatasourceError: function nsExtensionItemUpdater_onDatasourceError (aItem, aError)
   {
-    this._os.notifyObservers(aItem, "Update:Extension:Item-Error", aError);
-
-    this._checkForDone();
-  },
-  
-  _needsUpdate: function nsExtensionItemUpdater__needsUpdate (aLocalItem, aRemoteItem) 
-  {
-    var versionChecker = Components.classes["@mozilla.org/updates/version-checker;1"]
-                                   .getService(Components.interfaces.nsIVersionChecker);
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var appID = pref.getCharPref(PREF_EM_APP_ID);
-    var appExtensionsVersion = pref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
-
-    // Check if the update will only run on a newer version of Firefox. 
-    if (aRemoteItem.minAppVersion && 
-        versionChecker.compare(appExtensionsVersion, aRemoteItem.minAppVersion) < 0) 
-      return false;
-
-    // Check if the update will only run on an older version of Firefox. 
-    if (aRemoteItem.maxAppVersion && 
-        versionChecker.compare(appExtensionsVersion, aRemoteItem.maxAppVersion) > 0) 
-      return false;
-    
-    // Locally installed Extension version matches remote extension 
-    // version, and new maxVersion remotely specified
-    if (aRemoteItem.maxAppVersion && 
-        versionChecker.compare(aLocalItem.version, aRemoteItem.version) == 0) {
-      var targetAppInfo = this._emDS.getTargetApplicationInfo(aLocalItem.id);
-      if (versionChecker.compare(targetAppInfo.maxVersion, aRemoteItem.maxAppVersion) < 0) {
-        // Remotely specified maxVersion is newer than the maxVersion 
-        // for the installed Extension. Apply that change to the datasource.
-        this._emDS.setTargetApplicationInfo(aLocalItem.id, 
-                                            aRemoteItem.minAppVersion, 
-                                            aRemoteItem.maxAppVersion);
-        
-        // If we got here through |checkForMismatches|, this extension has
-        // already been disabled, re-enable it.
-        if (this._emDS.getItemProperty(aLocalItem.id, "disabled") == "true") 
-          this._em.enableExtension(aLocalItem.id);
-        
-        // Notify that update is complete for this item, pass "" as the update
-        // link as there is no downloading to be done. 
-        this._os.notifyObservers(aRemoteItem, "Update:Extension:Item-Ended", "");
-        ++this._updateCount;
-        return false;
-      }
-    }
-    return true;
-  },
-  
-  getNewestExtensionCallback: function nsExtensionItemUpdater_getNewestExtensionCallback (aResult)
-  {
-    try {
-      aResult.name.toString(); // XXXben This is a lame hack to cause an exception to be
-                               // thrown for null values when there is no newer extension
-                               // or something else bad happens on the server that we 
-                               // don't recognize.
-      var remoteItem = Components.classes["@mozilla.org/updates/item;1"]
-                                 .createInstance(Components.interfaces.nsIUpdateItem);
-      remoteItem.init(aResult.id, aResult.version, aResult.minAppVersion, 
-                      aResult.maxAppVersion, aResult.name, -1, 
-                      aResult.updateURL, aResult.iconURL, "", 
-                      aResult.type); 
-      var localItem = this._emDS.getItemForID(remoteItem.id);
-      if (!this._needsUpdate(localItem, remoteItem)) {
-        return;
-      }
-      else {
-        this._os.notifyObservers(remoteItem, "Update:Extension:Item-Ended", "");
-        ++this._updateCount;
-      }
-    }
-    catch (e) {
-    }
-    
-    this._checkForDone();
-  },
-  
-  _checkForDone: function nsExtensionItemUpdater__checkForDone ()
-  {
-    if (--this._count == 0) {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-      pref.setIntPref(PREF_UPDATE_COUNT, this._updateCount); 
-    
-      this._os.notifyObservers(null, "Update:Extension:Ended", "");
-    }
-  },
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // nsISupports
-  QueryInterface: function nsExtensionItemUpdater_QueryInterface (aIID) 
-  {
-    if (!aIID.equals(Components.interfaces.nsIExtensionItemUpdater) &&
-        !aIID.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }  
+    this._os.notifyObservers(aItem, 
+                             this._updater._getMessage("Item-Error"), 
+                             aError);
+    this._updater._checkForDone(null);
+  }
 };
 
 
@@ -3106,7 +3470,7 @@ nsExtensionsDataSource.prototype = {
                          .getService(Components.interfaces.nsIPrefBranch);
     var appVersion = pref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
-
+    
     var targets = aDS.GetTargets(aSource, this._emR("targetApplication"), true);
     var idRes = this._emR("id");
     var minVersionRes = this._emR("minVersion");
@@ -3126,7 +3490,7 @@ nsExtensionsDataSource.prototype = {
     }
     return false;
   },
-
+  
   getIncompatibleItemList: function nsExtensionsDataSource_getIncompatibleItemList (aAppID, aAppVersion, aItemType)
   {
     var items = [];
@@ -3146,7 +3510,7 @@ nsExtensionsDataSource.prototype = {
                                .createInstance(Components.interfaces.nsIUpdateItem);
           item.init(id, this._getItemProperty(e, "version"), "", "",
                     this._getItemProperty(e, "name"),
-                    -1, "", "", this._getItemProperty(e, "updateURL"), 
+                    -1, "", "", this._getItemProperty(e, "updateURL"), "", 
                     itemType);
           items.push(item);
         }
@@ -3164,7 +3528,7 @@ nsExtensionsDataSource.prototype = {
       item.init(aItemID, this.getItemProperty(aItemID, "version"), "", "",
                 this.getItemProperty(aItemID, "name"),
                 -1, "", "", this.getItemProperty(aItemID, "updateURL"), 
-                aType); // XXXben - potential bug! discover real type!
+                "", aType); // XXXben - potential bug! discover real type!
       items.push(item);
     }
     else {
@@ -3183,8 +3547,8 @@ nsExtensionsDataSource.prototype = {
                                 .createInstance(Components.interfaces.nsIUpdateItem);
             item.init(id, this.getItemProperty(id, "version"), "", "",
                       this.getItemProperty(id, "name"),
-                      -1, "", "", 
-                      this.getItemProperty(id, "updateURL"), getItemType(roots[i]));
+                      -1, "", "", this.getItemProperty(id, "updateURL"), 
+                      "", getItemType(roots[i]));
             items.push(item);
           }
         }
@@ -3233,18 +3597,22 @@ nsExtensionsDataSource.prototype = {
   {
     var item = Components.classes["@mozilla.org/updates/item;1"]
                          .createInstance(Components.interfaces.nsIUpdateItem);
-    var targetAppInfo = this.getTargetApplicationInfo(aItemID);
+                         
     var r = this._getResourceForItem(aItemID);
+    if (!r)
+      return null;
+    
+    var targetAppInfo = this.getTargetApplicationInfo(aItemID, this, getItemType(r.Value));
     item.init(aItemID, 
-              this.getItemProperty(id, "version"), 
+              this.getItemProperty(aItemID, "version"), 
               targetAppInfo.minVersion,
               targetAppInfo.maxVersion,
-              this.getItemProperty(id, "name"),
+              this.getItemProperty(aItemID, "name"),
               -1, 
               "", /* XPI Update URL */
-              this.getItemProperty(id, "iconURL"), 
-              this.getItemProperty(id, "updateURL"), 
-              getItemType(r.Value));
+              this.getItemProperty(aItemID, "iconURL"), 
+              this.getItemProperty(aItemID, "updateURL"), 
+              "", getItemType(r.Value));
     return item;
   },
   
@@ -3290,46 +3658,68 @@ nsExtensionsDataSource.prototype = {
     return null;
   },
 
-  getTargetApplicationInfo: function nsExtensionsDataSource_getTargetApplicationInfo (aExtensionID)
+  getTargetApplicationInfo: function nsExtensionsDataSource_getTargetApplicationInfo (aExtensionID, aDataSource, aType)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
-    var r = this._getResourceForItem(aExtensionID);
-    var targetApps = this.GetTargets(r, this._emR("targetApplication"), true);
+    var r = this._rdf.GetResource(getItemPrefix(aType) + aExtensionID);
+    var targetApps = aDataSource.GetTargets(r, this._emR("targetApplication"), true);
+    if (!targetApps.hasMoreElements()) {
+      r = this._rdf.GetResource("urn:mozilla:install-manifest"); 
+      targetApps = aDataSource.GetTargets(r, this._emR("targetApplication"), true); 
+    }
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       if (targetApp) {
-        var id = stringData(this.GetTarget(targetApp, this._emR("id"), true));
-        if (id != appID) // Different target application
+        try {
+          var id = stringData(aDataSource.GetTarget(targetApp, this._emR("id"), true));
+          if (id != appID) // Different target application
+            continue;
+          
+          return { minVersion: stringData(aDataSource.GetTarget(targetApp, this._emR("minVersion"), true)),
+                   maxVersion: stringData(aDataSource.GetTarget(targetApp, this._emR("maxVersion"), true)) };
+        }
+        catch (e) { 
           continue;
-        
-        return { minVersion: stringData(this.GetTarget(targetApp, this._emR("minVersion"), true)),
-                 maxVersion: stringData(this.GetTarget(targetApp, this._emR("maxVersion"), true)) };
+        }
       }
     }
     return null;
   },
   
-  setTargetApplicationInfo: function nsExtensionsDataSource_setTargetApplicationInfo(aExtensionID, aMinVersion, aMaxVersion)
+  setTargetApplicationInfo: function nsExtensionsDataSource_setTargetApplicationInfo(aExtensionID, aMinVersion, 
+                                                                                     aMaxVersion, aDataSource, aType)
   {
+    var targetDataSource = aDataSource;
+    if (!targetDataSource)
+      targetDataSource = this;
+      
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
-    var r = this._getResourceForItem(aExtensionID);
-    var targetApps = this.GetTargets(r, this._emR("targetApplication"), true);
+    var r = this._rdf.GetResource(getItemPrefix(aType) + aExtensionID);
+    var targetApps = targetDataSource.GetTargets(r, this._emR("targetApplication"), true);
+    if (!targetApps.hasMoreElements()) {
+      r = this._rdf.GetResource("urn:mozilla:install-manifest"); 
+      targetApps = aDataSource.GetTargets(r, this._emR("targetApplication"), true); 
+    }
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       if (targetApp) {
-        var id = stringData(this.GetTarget(targetApp, this._emR("id"), true));
+        var id = stringData(targetDataSource.GetTarget(targetApp, this._emR("id"), true));
         if (id != appID) // Different target application
           continue;
         
-        var isProfile = this.isProfileItem(aExtensionID);
-        var ds = isProfile ? this._profileExtensions : this._appExtensions;
-        this._setProperty(ds, targetApp, this._emR("minVersion"), this._emL(aMinVersion));
-        this._setProperty(ds, targetApp, this._emR("maxVersion"), this._emL(aMaxVersion));
-        this._flush(isProfile);
+        if (!aDataSource) {
+          var isProfile = this.isProfileItem(aExtensionID);
+          targetDataSource = isProfile ? this._profileExtensions : this._appExtensions;
+        }
+        this._setProperty(targetDataSource, targetApp, this._emR("minVersion"), this._emL(aMinVersion));
+        this._setProperty(targetDataSource, targetApp, this._emR("maxVersion"), this._emL(aMaxVersion));
+        
+        if (!aDataSource)
+          this._flush(isProfile);
       }
     }
   },
@@ -3412,8 +3802,8 @@ nsExtensionsDataSource.prototype = {
     
     // Assert properties with single values
     var singleProps = ["version", "name", "description", "creator", "homepageURL", 
-                       "updateURL", "optionsURL", "aboutURL", "iconURL",
-                       "internalName"];
+                       "updateURL", "updateService", "optionsURL", "aboutURL", 
+                       "iconURL", "internalName"];
 
     // Global extensions and themes can also be locked (can't be removed or disabled).
     if (!aIsProfile)

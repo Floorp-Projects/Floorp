@@ -83,12 +83,20 @@ var gUpdateWizard = {
     this.shouldSuggestAutoChecking = (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) && 
                                       !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
 
-    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_USER) {
-      document.getElementById("mismatch").setAttribute("next", "checking");
-      document.documentElement.advance();
+    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
+      var version = document.getElementById("version")
+      version.setAttribute("next", "mismatch");
     }
     
     gMismatchPage.init();
+  },
+  
+  uninit: function ()
+  {
+    // Ensure all observers are unhooked, just in case something goes wrong or the
+    // user aborts. 
+    gVersionPage.uninit();
+    gUpdatePage.uninit();  
   },
   
   onWizardFinish: function ()
@@ -123,24 +131,8 @@ var gUpdateWizard = {
       url.data = updates.appUpdateURL;
       ary.AppendElement(url);
       
-      function obs(aWindow) 
-      { 
-        this._win = aWindow;
-      }
-      obs.prototype = {
-        _win: null,
-        notify: function (aTimer)
-        {
-          this._win.focus();
-        }
-      };
-      
-      var win = ww.openWindow(null, "chrome://browser/content/browser.xul",
-                              "_blank", "chrome,all,dialog=no", ary);
-      var timer = Components.classes["@mozilla.org/timer;1"]
-                            .createInstance(Components.interfaces.nsITimer);
-      timer.initWithCallback(new obs(win), 100, 
-                             Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+      ww.openWindow(null, "chrome://browser/content/browser.xul",
+                    "_blank", "chrome,all,dialog=no", ary);
 #endif
 
       // Clear the "app update available" pref as an interim amnesty assuming
@@ -257,6 +249,129 @@ var gUpdateWizard = {
   }
 };
 
+var gVersionPage = {
+  _completeCount: 0,
+  _messages: ["Version:Extension:Started", 
+              "Version:Extension:Ended", 
+              "Version:Extension:Item-Started", 
+              "Version:Extension:Item-Ended",
+              "Version:Extension:Item-Error"],
+  
+  onPageShow: function ()
+  {
+    gUpdateWizard.setButtonLabels(null, true, 
+                                  "nextButtonText", true, 
+                                  "cancelButtonText", true);
+    document.documentElement.getButton("next").focus();
+
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    for (var i = 0; i < this._messages.length; ++i)
+      os.addObserver(this, this._messages[i], false);
+
+    var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                       .getService(Components.interfaces.nsIExtensionManager);
+    em.update(gUpdateWizard.items, gUpdateWizard.items.length, 
+              nsIExtensionManager.UPDATE_MODE_VERSION, true);
+  },
+
+  _destroyed: false,  
+  uninit: function ()
+  {
+    if (this._destroyed)
+      return;
+  
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    for (var i = 0; i < this._messages.length; ++i)
+      os.removeObserver(this, this._messages[i]);
+
+    this._destroyed = true;
+  },
+
+  _totalCount: 0,
+  get totalCount()
+  {
+    if (!this._totalCount) {
+      this._totalCount = gUpdateWizard.items.length;
+      if (this._totalCount == 0) {
+        var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                            .getService(Components.interfaces.nsIExtensionManager);
+        var extensionCount = em.getItemList(null, nsIUpdateItem.TYPE_EXTENSION, {}).length;
+        var themeCount = em.getItemList(null, nsIUpdateItem.TYPE_THEME, {}).length;
+
+        this._totalCount = extensionCount + themeCount;
+      }
+    }
+    return this._totalCount;
+  },  
+  
+  observe: function (aSubject, aTopic, aData)
+  {
+    var canFinish = false;
+    switch (aTopic) {
+    case "Version:Extension:Started":
+      break;
+    case "Version:Extension:Item-Started":
+      break;
+    case "Version:Extension:Item-Ended":
+      if (aSubject) {
+        var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+        var updateStrings = document.getElementById("updateStrings");
+        var status = document.getElementById("checking.status");
+        var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
+        status.setAttribute("value", statusString);
+        
+        if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
+          // In mismatch mode it is sufficient to perform a version update
+          // on Extensions and Themes - a proper update check can occur later.
+          var ary = [];
+          for (var i = 0; i < gUpdateWizard.items.length; ++i) {
+            if (gUpdateWizard.items[i].id != item.id)
+              ary.push(gUpdateWizard.items[i]);
+          }
+          gUpdateWizard.items = ary;
+        }
+      }
+      ++this._completeCount;
+
+      // Update the Progress Bar            
+      var progress = document.getElementById("checking.progress");
+      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
+      
+      break;
+    case "Version:Extension:Item-Error":
+      ++this._completeCount;
+      var progress = document.getElementById("checking.progress");
+      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
+
+      break;
+    case "Version:Extension:Ended":
+      gVersionPage.uninit();
+      
+      if (gUpdateWizard.items.length == 0) {
+        // We've resolved all compatibilities in this Version Update, so
+        // close up.
+        var updateStrings = document.getElementById("updateStrings");
+        var status = document.getElementById("checking.status");
+        status.setAttribute("value", updateStrings.getString("versionUpdateComplete"));
+
+        var closeTimer = Components.classes["@mozilla.org/timer;1"]
+                                   .createInstance(Components.interfaces.nsITimer);
+        closeTimer.initWithCallback(this, 2000, 
+                                    Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+        break;
+      }
+      document.documentElement.advance();
+      break;
+    }
+  },
+  
+  notify: function (aTimer)
+  {
+    window.close();
+  }
+};
 
 var gMismatchPage = {
   init: function ()
@@ -308,14 +423,37 @@ var gUpdatePage = {
     updates.checkForUpdatesInternal(gUpdateWizard.items, gUpdateWizard.items.length, 
                                     gUpdateTypes, gSourceEvent);
   },
-  
+
+  _destroyed: false,  
   uninit: function ()
   {
+    if (this._destroyed)
+      return;
+  
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     for (var i = 0; i < this._messages.length; ++i)
       os.removeObserver(this, this._messages[i]);
+
+    this._destroyed = true;
   },
+
+  _totalCount: 0,
+  get totalCount()
+  {
+    if (!this._totalCount) {
+      this._totalCount = gUpdateWizard.items.length;
+      if (this._totalCount == 0) {
+        var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                            .getService(Components.interfaces.nsIExtensionManager);
+        var extensionCount = em.getItemList(null, nsIUpdateItem.TYPE_EXTENSION, {}).length;
+        var themeCount = em.getItemList(null, nsIUpdateItem.TYPE_THEME, {}).length;
+
+        this._totalCount = extensionCount + themeCount + 1;
+      }
+    }
+    return this._totalCount;
+  },  
   
   observe: function (aSubject, aTopic, aData)
   {
@@ -326,13 +464,20 @@ var gUpdatePage = {
     case "Update:Extension:Item-Started":
       break;
     case "Update:Extension:Item-Ended":
-      var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
-      gUpdateWizard.itemsToUpdate.push(item);
+      if (aSubject) {
+        var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+        gUpdateWizard.itemsToUpdate.push(item);
       
+        var updateStrings = document.getElementById("updateStrings");
+        var status = document.getElementById("checking.status");
+        var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
+        status.setAttribute("value", statusString);
+      }
       ++this._completeCount;
-      
+
+      // Update the Progress Bar            
       var progress = document.getElementById("checking.progress");
-      progress.value = Math.ceil(this._completeCount / gUpdateWizard.itemsToUpdate.length) * 100;
+      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
       
       break;
     case "Update:Extension:Item-Error":
@@ -346,6 +491,10 @@ var gUpdatePage = {
             gUpdateWizard.errorItems.push(gUpdateWizard.items[i]);
         }
       }
+      ++this._completeCount;
+      var progress = document.getElementById("checking.progress");
+      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
+
       break;
     case "Update:Extension:Ended":
       // If we were passed a set of extensions/themes/other to update, this
@@ -362,6 +511,9 @@ var gUpdatePage = {
       break;
     case "Update:App:Error":
       gUpdateWizard.errorOnApp = true;
+      ++this._completeCount;
+      var progress = document.getElementById("checking.progress");
+      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
       break;
     case "Update:App:Ended":
       // The "Updates Found" page of the update wizard needs to know if it there are app 
@@ -383,9 +535,13 @@ var gUpdatePage = {
                   "", "", 
                   brandShortName, -1, updates.appUpdateURL, 
                   "chrome://mozapps/skin/update/icon32.png", 
-                  "", nsIUpdateItem.TYPE_APP);
+                  "", "", nsIUpdateItem.TYPE_APP);
         gUpdateWizard.itemsToUpdate.splice(0, 0, item);
       }
+
+      ++this._completeCount;
+      var progress = document.getElementById("checking.progress");
+      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
       break;
     }
 
@@ -417,7 +573,7 @@ var gFoundPage = {
       
       var item = gUpdateWizard.itemsToUpdate[i];
       updateitem.name = item.name + " " + item.version;
-      updateitem.url = item.updateURL;
+      updateitem.url = item.xpiURL;
 
       // If we have an App entry in the list, check it and uncheck
       // the others since the two are mutually exclusive installs.

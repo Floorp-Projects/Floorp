@@ -64,9 +64,12 @@
       for (var i = 0; i < items.length; ++i) {
         if (items[i].error) {
           var listitem = document.createElement("listitem");
-          var errorString = xpinstallStrings.getString("error" + items[i].error);
-          var label = updateStrings.getFormattedString("installErrorItemFormat", 
-                                                       [items[i].name, errorString]);
+          try {
+            var errorString = xpinstallStrings.getString("error" + items[i].error);
+            var label = updateStrings.getFormattedString("installErrorItemFormat", 
+                                                         [items[i].name, errorString]);
+          }
+          catch (e) { label = items[i].name; }
           listitem.setAttribute("label", label);
           listbox.appendChild(listitem);
         }

@@ -10,6 +10,11 @@
 
 <!ENTITY  checking.title                  "Checking for Updates">
 <!ENTITY  checking.intro.label            "&brandShortName; is now checking for available updates...">
+<!ENTITY  checking.status                 "This may take a few minutes...">
+
+<!ENTITY  version.title                   "Checking for Compatibility Updates">
+<!ENTITY  version.intro.label             "&brandShortName; is now checking for compatibility updates to your Extensions and Themes...">
+<!ENTITY  version.status                  "This may take a few minutes...">
 
 <!ENTITY  found.title                     "Updates Found">
 <!ENTITY  found.intro.label               "&brandShortName; found the following available updates:">
@@ -64,3 +69,6 @@
 <!ENTITY  updateCheckError.label          "Details">
 <!ENTITY  updateCheckError.accesskey      "D">
 
+<!ENTITY  resolveMaxVersion.title         "Checking for Compatible Extensions and Themes...">
+<!ENTITY  resolveMaxVersion.intro1.label  "&brandShortName; is checking for compatibility updates to your Extensions and Themes...">
+    

@@ -13,7 +13,13 @@
         <parameter name="aStringKey"/>
         <body>
           <![CDATA[
-            return this.stringBundle.GetStringFromName(aStringKey);
+            try {
+              return this.stringBundle.GetStringFromName(aStringKey);
+            }
+            catch (e) {
+              dump("*** Failed to get string " + aStringKey + " in bundle: " + this.src + "\n");
+              throw e;
+            }
           ]]>
         </body>
       </method>
@@ -23,7 +29,13 @@
         <parameter name="aStringsArray"/>
         <body>
           <![CDATA[
-            return this.stringBundle.formatStringFromName(aStringKey, aStringsArray, aStringsArray.length);
+            try {
+              return this.stringBundle.formatStringFromName(aStringKey, aStringsArray, aStringsArray.length);
+            }
+            catch (e) {
+              dump("*** Failed to get string " + aStringKey + " in bundle: " + this.src + "\n");
+              throw e;
+            }
           ]]>
         </body>
       </method>

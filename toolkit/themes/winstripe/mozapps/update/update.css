@@ -79,3 +79,19 @@ updateitem {
 .updateIcon[severity="2"] {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
+
+.throbber {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  width: 16px;
+  height: 16px;
+  margin: 5px 2px 5px 5px;
+}
+
+#incompatibleAlert {
+  background-color: InfoBackground;
+  color: InfoText;
+  border: 1px outset InfoBackground;
+  margin-left: 3px;
+  margin-right: 3px;
+  padding: 5px;
+}
