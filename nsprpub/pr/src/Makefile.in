@@ -72,7 +72,11 @@ else	# 4.1.3_U1
 MAPFILE = $(OBJDIR)/nsprmap.sun
 GARBAGE += $(MAPFILE)
 ifdef NS_USE_GCC
+ifdef GCC_USE_GNU_LD
+MKSHLIB += -Wl,--version-script,$(MAPFILE)
+else
 MKSHLIB += -Wl,-M,$(MAPFILE)
+endif
 else
 MKSHLIB += -M $(MAPFILE)
 endif
