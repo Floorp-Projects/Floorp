@@ -271,7 +271,33 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_parentElement(IHTMLElement __RPC_F
         IDispatch *pDisp = reinterpret_cast<IDispatch *>(mParent);
         pDisp->QueryInterface(IID_IHTMLElement, (void **) p);
     }
-
+    else
+    {
+        nsCOMPtr<nsIDOMNode> parentNode;
+        mDOMNode->GetParentNode(getter_AddRefs(parentNode));
+        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(parentNode);
+        if (domElement)
+        {
+            CIEHtmlNode *pHtmlNode = NULL;
+            CIEHtmlElementInstance *pHtmlElement = NULL;
+            CIEHtmlElementInstance::FindFromDOMNode(parentNode, &pHtmlNode);
+            if (!pHtmlNode)
+            {
+                CIEHtmlElementInstance::CreateInstance(&pHtmlElement);
+                if (!pHtmlElement)
+                {
+                    NS_ASSERTION(0, "Could not create element");
+                    return E_OUTOFMEMORY;
+                }
+                pHtmlElement->SetDOMNode(parentNode);
+            }
+            else
+            {
+                pHtmlElement = (CIEHtmlElementInstance *) pHtmlNode;
+            }
+            pHtmlElement->QueryInterface(IID_IHTMLElement, (void **) p);
+        }
+    }
     return S_OK;
 }
 
