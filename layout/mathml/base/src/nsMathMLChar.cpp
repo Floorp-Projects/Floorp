@@ -987,11 +987,10 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 
     PRInt32 i;
 
-    // XXX hack! should vary when some parts are not there
-    // XXX another possibility is also to base the acceptance criteria on the
-    // amount of overlap between the bounding boxes that SHOW_BORDER presents
+    // XXX hack!
     float flex[3] = {0.7f, 0.3f, 0.7f};
 
+    nsGlyphCode chdata[4];
     nsBoundingMetrics bmdata[4];
     for (i = 0; i < 4; i++) {
       switch (i) {
@@ -1006,7 +1005,18 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
         return rv;
       }
+      chdata[i] = ch;
       bmdata[i] = bm;
+    }
+
+    // refine the flexibility depending on whether some parts are no there
+    if ((chdata[1] == chdata[0]) || // mid == top (or left) 
+        (chdata[1] == chdata[2]) || // mid == bot (or right)
+        (chdata[1] == chdata[3]))   // mid == glue
+    {
+      flex[0] = 0.5f;
+      flex[1] = 0.0f;
+      flex[2] = 0.5f;
     }
 
     if (aDirection == NS_STRETCH_DIRECTION_VERTICAL) {
