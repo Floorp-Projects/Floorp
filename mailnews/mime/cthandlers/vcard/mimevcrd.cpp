@@ -883,7 +883,10 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 							tString1 = VCardGetStringByID(VCARD_ADDR_HOSTNAMEIP);
 				}
 
-        status = WriteLineToStream (obj, tString1);
+	NS_ASSERTION(tString1,"don't write null line to stream");
+        if (tString1) {
+		status = WriteLineToStream (obj, tString1);
+	}
         PR_FREEIF(tString1);
 				PR_FREEIF (namestring);
 				if (status < 0) return status;
