@@ -1155,9 +1155,6 @@ nsresult NS_InitRangeClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
-      return NS_ERROR_FAILURE;
-    }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
