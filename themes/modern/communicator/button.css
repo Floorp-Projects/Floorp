@@ -209,7 +209,7 @@
     }
 
   .three-slice-button-image-left {
-	background			: url(chrome://global/skin/button-3slice-normal-left.png) no-repeat;
+	list-style-image	: url(chrome://global/skin/button-3slice-normal-left.png);
 	width				: 5px;
 	height				: 20px;
   }
@@ -226,7 +226,7 @@
   }
 
   .three-slice-button-image-right {
-	background			: url(chrome://global/skin/button-3slice-normal-right.png) no-repeat;
+	list-style-image	: url(chrome://global/skin/button-3slice-normal-right.png);
 	width				: 4px;
 	height				: 20px;
   }
@@ -244,7 +244,7 @@
   }
   
   button.button-toolbar-3:hover:active > .three-slice-button-image-left {
-	background			: url(chrome://global/skin/button-3slice-active-left.png) no-repeat;
+	list-style-image	: url(chrome://global/skin/button-3slice-active-left.png);
   }
 
   button.button-toolbar-3:hover:active > .three-slice-button-image-middle {
@@ -252,7 +252,7 @@
   }
 
   button.button-toolbar-3:hover:active > .three-slice-button-image-right {
-	background			: url(chrome://global/skin/button-3slice-active-right.png) no-repeat;
+	list-style-image	: url(chrome://global/skin/button-3slice-active-right.png);
   }
   
 /** Expanding Region Button **/

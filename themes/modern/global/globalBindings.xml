@@ -47,7 +47,7 @@
 
   <binding id="nav-bar-inner" extends="xul:box">
     <content>
- 		<xul:spring class="navbar-inner-groove-image-left"/>
+ 		<xul:image class="navbar-inner-groove-image-left"/>
  		<xul:box flex="1" class="navbar-inner-border-outer">
  			<xul:box flex="1" class="navbar-inner-border-middle">
  				<xul:box flex="1" class="navbar-inner-border-inner">
@@ -55,25 +55,25 @@
 	    		</xul:box>
 	    	</xul:box>
 	    </xul:box>
-      	<xul:spring class="navbar-inner-groove-image-right"/>
+      	<xul:image class="navbar-inner-groove-image-right"/>
     </content>
   </binding>
   
   <binding id="urlbar-group" extends="xul:box">
     <content>
-    	<xul:spring class="urlbar-image-left"/>
+    	<xul:image class="urlbar-image-left"/>
  		<xul:box flex="1" class="urlbar-border-outer">
  			<xul:box flex="1" class="urlbar-border-inner">
 		    	<children/>
 	    	</xul:box>
 	    </xul:box>
-      	<xul:spring class="urlbar-image-right"/>
+      	<xul:image class="urlbar-image-right"/>
     </content>
   </binding>
 
   <binding id="three-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-        <xul:spring class="three-slice-button-image-left" inherits="default,disabled"/>
+        <xul:image class="three-slice-button-image-left" inherits="default,disabled"/>
     	<xul:box flex="1" class="three-slice-button-image-middle" inherits="default,disabled" orient="vertical" align="center">
     	  	<xul:spring flex="1" class="three-slice-button-top-spring"/>
     	  	<xul:box flex="1">
@@ -84,7 +84,7 @@
     	    </xul:box>
 		    <xul:spring flex="1" class="three-slice-button-bottom-spring"/>
     	</xul:box>
-    	<xul:spring class="three-slice-button-image-right" inherits="default,disabled"/>
+    	<xul:image class="three-slice-button-image-right" inherits="default,disabled"/>
     </content>
   </binding>
 
@@ -100,8 +100,12 @@
   <binding id="taskbar-menu-box" extends="xul:box">
   	<content>
   		<xul:spring class="taskbar-mb-image-left"/>
-        <xul:box flex="1" class="taskbar-mb-image-middle">
-        	  <children/>
+        <xul:box flex="1" class="taskbar-mb-middle-border-outer">
+        	<xul:box flex="1" class="taskbar-mb-middle-border-middle">
+        		<xul:box flex="1" class="taskbar-mb-middle-border-inner">	
+        	  		<children/>
+        		</xul:box>
+        	</xul:box>
         </xul:box>
         <xul:spring class="taskbar-mb-image-right"/>
     </content>
