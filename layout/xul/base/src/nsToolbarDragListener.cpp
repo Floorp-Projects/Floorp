@@ -186,6 +186,7 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc)
 
   float p2t;
   mPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord xp = NSIntPixelsToTwips(x, p2t);
   nscoord yp = NSIntPixelsToTwips(y, p2t);
   nsPoint pnt(xp,yp);
@@ -248,7 +249,7 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc)
               xc = rect.x-tbRect.x;
               //printf("1st\n");
             } else if (pnt.x >= (rect.x + PRInt32(float(rect.width) *.75))) {
-              xc = rect.x-tbRect.x+rect.width-15;
+              xc = rect.x-tbRect.x+rect.width-onePixel;
               //printf("last\n");
             } else {
               //printf("no-op\n");
