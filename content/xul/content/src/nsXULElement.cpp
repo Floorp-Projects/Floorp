@@ -639,9 +639,6 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
     }
-    else if (iid.Equals(NS_GET_IID(nsIStyleRule))) {
-        *result = NS_STATIC_CAST(nsIStyleRule*, this);
-    }
     else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     }
@@ -3982,27 +3979,6 @@ nsXULElement::HasClass(nsIAtom* aClass) const
 NS_IMETHODIMP
 nsXULElement::GetContentStyleRules(nsISupportsArray* aRules)
 {
-    // For treecols, we support proportional widths using the WIDTH attribute.
-    if (NodeInfo()->Equals(kTreeColAtom)) {
-        // If the width attribute is set, then we should return ourselves as a style
-        // rule.
-        nsCOMPtr<nsIAtom> widthAtom = dont_AddRef(NS_NewAtom("width"));
-        nsAutoString width;
-        GetAttribute(kNameSpaceID_None, widthAtom, width);
-
-        nsCOMPtr<nsIAtom> hiddenAtom = dont_AddRef(NS_NewAtom("hidden"));
-        nsAutoString hidden;
-        GetAttribute(kNameSpaceID_None, hiddenAtom, hidden);
-
-        if (!width.IsEmpty() || !hidden.IsEmpty()) {
-            // XXX This should ultimately be factored out if we find that
-            // a bunch of XUL widgets are implementing attributes that need
-            // to be mapped into style.  I'm hoping treecol will be the only
-            // one that needs to do this though.
-            // QI ourselves to be an nsIStyleRule.
-            aRules->AppendElement((nsIStyleRule*)this);
-        }
-    }
     return NS_OK;
 }
     
@@ -4316,120 +4292,11 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-// nsIStyleRule interface
-NS_IMETHODIMP 
-nsXULElement::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-    nsresult rv = NS_OK;
-    aSheet = nsnull;
-    if (mDocument) {
-        nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(mDocument);
-        if (container) {
-            nsCOMPtr<nsIHTMLStyleSheet> htmlStyleSheet;
-            rv = container->GetAttributeStyleSheet(getter_AddRefs(htmlStyleSheet));
-            if (NS_FAILED(rv))
-                return rv;
-            nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(htmlStyleSheet);
-            aSheet = styleSheet;
-            NS_IF_ADDREF(aSheet);
-        }
-    }
-    return rv;
-}
-
-NS_IMETHODIMP 
-nsXULElement::GetStrength(PRInt32& aStrength) const
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXULElement::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
-{
-    if (NodeInfo()->Equals(kTreeColAtom)) {
-        // Should only get called if we had a width attribute set. Retrieve it.
-        nsAutoString widthVal;
-        nsAutoString hiddenVal;
-        GetAttribute(NS_ConvertASCIItoUCS2("width"), widthVal);
-        GetAttribute(NS_ConvertASCIItoUCS2("hidden"), hiddenVal);
-        if (!hiddenVal.IsEmpty())
-          widthVal.AssignWithConversion("0*");
-
-        if (!widthVal.IsEmpty()) {
-            PRInt32 intVal;
-            float floatVal;
-            nsHTMLUnit unit = eHTMLUnit_Null;
-            if (ParseNumericValue(widthVal, intVal, floatVal, unit)) {
-                // Success. Update the width for the style context.
-                nsStylePosition* position = (nsStylePosition*)
-                aContext->GetMutableStyleData(eStyleStruct_Position);
-                switch (unit) {
-                  case eHTMLUnit_Percent:
-                    position->mWidth.mUnit = eStyleUnit_Percent;
-                    position->mWidth.mValue.mFloat = floatVal;
-                    break;
-
-                  case eHTMLUnit_Pixel:
-                    float p2t;
-                    aPresContext->GetScaledPixelsToTwips(&p2t);
-                    position->mWidth.mUnit = eStyleUnit_Coord;
-                    position->mWidth.mValue.mInt = NSIntPixelsToTwips(intVal, p2t);
-                    break;
-
-                  case eHTMLUnit_Proportional:
-                    position->mWidth.mUnit = eStyleUnit_Proportional;
-                    position->mWidth.mValue.mInt = intVal;
-                    break;
-                  default:
-                    break;
-                }
-            }
-        }
-    }
-        
-    return NS_OK;
-}
-
 void nsXULElement::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 {
   // XXX - implement this if you want the sizes of XUL style rules 
   //       dumped during StyleSize dump
   return;
-}
-
-PRBool
-nsXULElement::ParseNumericValue(const nsString& aString,
-                                PRInt32& aIntValue,
-                                float& aFloatValue,
-                                nsHTMLUnit& aValueUnit)
-{
-    nsAutoString tmp(aString);
-    tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-    PRInt32 ec, val = tmp.ToInteger(&ec);
-    if (NS_OK == ec) {
-        if (val < 0) val = 0;
-        if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
-            if (val > 100) val = 100;
-            aFloatValue = (float(val)/100.0f);
-            aValueUnit = eHTMLUnit_Percent;
-        }
-        else if (tmp.Last() == '*') {
-            aIntValue = val;
-            aValueUnit = eHTMLUnit_Proportional;
-        }
-        else {
-            aIntValue = val;
-            aValueUnit = eHTMLUnit_Pixel;
-        }
-        return PR_TRUE;
-    }
-    return PR_FALSE;
 }
 
 

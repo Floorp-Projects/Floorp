@@ -52,7 +52,6 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIStyleRule.h"
 #include "nsIStyledContent.h"
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
@@ -319,7 +318,6 @@ class nsXULElement : public nsIStyledContent,
                      public nsIDOMEventReceiver,
                      public nsIScriptEventHandlerOwner,
                      public nsIJSScriptObject,
-                     public nsIStyleRule,
                      public nsIChromeEventHandler
 {
 public:
@@ -498,13 +496,6 @@ public:
     virtual PRBool Convert(JSContext *aContext, JSObject *aObj, jsval aID);
     virtual void   Finalize(JSContext *aContext, JSObject *aObj);
 
-    // nsIStyleRule interface. The node implements this to deal with attributes that
-    // need to be mapped into style contexts (e.g., width in treecols).
-    NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-    NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-    NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
-    NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
-
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
     
     // nsIChromeEventHandler
@@ -524,12 +515,6 @@ protected:
 
     static nsresult
     ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent);
-
-    // Used with treecol width attributes
-    static PRBool ParseNumericValue(const nsString& aString,
-                                  PRInt32& aIntValue,
-                                  float& aFloatValue,
-                                  nsHTMLUnit& aValueUnit);
 
     // Static helpers
     static nsresult
