@@ -50,8 +50,10 @@
 #include "nsIDocumentLoader.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,9 +78,10 @@ nsCookieService::~nsCookieService(void)
 nsresult nsCookieService::Init()
 {
   COOKIE_RegisterPrefCallbacks();
+  nsresult rv;
+  mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   COOKIE_Read();
 
-  nsresult rv;
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
@@ -156,7 +159,7 @@ nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) {
   nsXPIDLCString spec;
   nsresult rv = aURL->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
-  *aCookie = COOKIE_GetCookie((char *)(const char *)spec);
+  *aCookie = COOKIE_GetCookie((char *)(const char *)spec, mIOService);
   return NS_OK;
 }
 
@@ -172,9 +175,9 @@ nsCookieService::GetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, char *
     nsXPIDLCString firstSpec;
     rv = aFirstURL->GetSpec(getter_Copies(firstSpec));
     if (NS_FAILED(rv)) return rv;
-    *aCookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, (char *)(const char *)firstSpec);
+    *aCookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, (char *)(const char *)firstSpec, mIOService);
   } else {
-    *aCookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, nsnull);
+    *aCookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, nsnull, mIOService);
   }
   return NS_OK;
 }
@@ -185,7 +188,7 @@ nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * 
   nsresult result = aURL->GetSpec(&spec);
   NS_ASSERTION(result == NS_OK, "deal with this");
 
-  COOKIE_SetCookieString(spec, aPrompt, aCookie);
+  COOKIE_SetCookieString(spec, aPrompt, aCookie, mIOService);
   nsCRT::free(spec);
   return NS_OK;
 }
@@ -201,7 +204,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPro
     char *firstSpec = NULL;
     rv = aFirstURL->GetSpec(&firstSpec);
     if (NS_FAILED(rv)) return rv;
-    COOKIE_SetCookieStringFromHttp(spec, firstSpec, aPrompter, aCookie, (char *)aExpires);
+    COOKIE_SetCookieStringFromHttp(spec, firstSpec, aPrompter, aCookie, (char *)aExpires, mIOService);
     nsCRT::free(firstSpec);
   }
   nsCRT::free(spec);

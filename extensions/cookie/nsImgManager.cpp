@@ -43,6 +43,10 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,13 +70,15 @@ nsImgManager::~nsImgManager(void)
 nsresult nsImgManager::Init()
 {
     IMAGE_RegisterPrefCallbacks();
-    return NS_OK;
+    nsresult rv;
+    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    return rv;
 }
 
 
 NS_IMETHODIMP nsImgManager::Block(const char * imageURL)
 {
-    ::IMAGE_Block(imageURL);
+    ::IMAGE_Block(imageURL,mIOService);
     return NS_OK;
 }
 
