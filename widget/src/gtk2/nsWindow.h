@@ -234,7 +234,9 @@ public:
     void               SetNonXEmbedPluginFocus(void);
     void               LoseNonXEmbedPluginFocus(void);
 
-    Window              mOldFocusWindow;
+    Window             mOldFocusWindow;
+
+    static guint32     mLastButtonPressTime;
 
 #ifdef USE_XIM
     void               IMEComposeStart(void);
