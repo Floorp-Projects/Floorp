@@ -91,7 +91,7 @@
     </groupbox>    
     
     <groupbox id="diskspace.titlebox">
-      <caption label="&diskspaceGroupTitle.label;"/>
+      <caption label="&diskspaceGroupTitle.label;" hidefor="movemail,pop3,none"/>
 
     <description hidefor="pop3,movemail,none">&doNotDownload.label;</description>
     <description hidefor="imap,nntp,none">&doNotDownloadPop3Movemail.label;</description>
@@ -115,7 +115,7 @@
     </hbox>
 
     <vbox hidefor="movemail,pop3,imap" align="start">  
-    <separator/>
+    <separator hidefor="none"/>
     <description class="desc">&nntpCleanup.label;</description>
 
     <radiogroup wsm_persist="true" id="nntp.keepMsg" class="indent">
