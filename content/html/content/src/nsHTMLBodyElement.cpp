@@ -512,14 +512,15 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
     const nsStyleColor* parentStyleColor;
     parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
 
-    // See if it's 'transparent'
-    if (parentStyleColor->BackgroundIsTransparent()) {
+    // See if it's 'transparent' or set by us
+    if (parentStyleColor->BackgroundIsTransparent() || 
+        (NS_STYLE_BG_PROPOGATED == (parentStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPOGATED))) {
       // Have the parent (initial containing block) use the BODY's background
       nsStyleColor* mutableStyleColor;
       mutableStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
 
       mutableStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
-      mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags;
+      mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags | NS_STYLE_BG_PROPOGATED;
       mutableStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
       mutableStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
       mutableStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
