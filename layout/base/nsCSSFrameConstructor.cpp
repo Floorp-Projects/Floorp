@@ -8084,6 +8084,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
 
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
+      // XXXldb Why not check NS_FRAME_OUT_OF_FLOW state bit?
       const nsStyleDisplay* display;
       prevSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
@@ -8094,6 +8095,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
       if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
+        // XXXldb Was this supposed to be a null-check of placeholderFrame?
         if (prevSibling)
           prevSibling = placeholderFrame;
       }
@@ -10651,98 +10653,41 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
 #endif // INCLUDE_XUL
 
-  // check for inline style.  we need to clear the data at the style context's rule
-  // node whenever the inline style property changes.
+  // check for inline style.  we need to clear the data at the style
+  // context's rule node whenever the inline style property changes.
+
   nsCOMPtr<nsIStyleContext> styleContext;
   nsCOMPtr<nsIStyleRule> rule;
   PRBool inlineStyle = PR_FALSE;
   if (aAttribute == nsHTMLAtoms::style) {
-    nsCOMPtr<nsIHTMLContent> html(do_QueryInterface(aContent));
-    if (html) {
-      nsHTMLValue val;
-      html->GetHTMLAttribute(nsHTMLAtoms::style, val);
-      if (eHTMLUnit_ISupports == val.GetUnit()) {
-        inlineStyle = PR_TRUE;
+    nsCOMPtr<nsIStyledContent> scontent(do_QueryInterface(aContent));
+    scontent->GetInlineStyleRule(getter_AddRefs(rule));
+    if (rule) {
+      inlineStyle = PR_TRUE;
 
-        // This style rule exists and we need to blow away any computed data that this
-        // rule cached in the rule tree.
-        rule = getter_AddRefs((nsIStyleRule*)val.GetISupportsValue());
-        if (primaryStyleFrame)
-          primaryStyleFrame->GetStyleContext(getter_AddRefs(styleContext));
-        else {
-          // We might be in the undisplayed map.  Retrieve the style context from there.
-          nsCOMPtr<nsIFrameManager> frameManager;
-          shell->GetFrameManager(getter_AddRefs(frameManager));
-          frameManager->GetUndisplayedContent(aContent, getter_AddRefs(styleContext));
+      // This style rule exists and we need to blow away any computed
+      // data that this rule cached in the rule tree.
+      if (primaryStyleFrame)
+        primaryStyleFrame->GetStyleContext(getter_AddRefs(styleContext));
+      else {
+        // We might be in the undisplayed map.  Retrieve the style context from there.
+        nsCOMPtr<nsIFrameManager> frameManager;
+        shell->GetFrameManager(getter_AddRefs(frameManager));
+        frameManager->GetUndisplayedContent(aContent, getter_AddRefs(styleContext));
 #ifdef DEBUG
-          if (!styleContext) {
-            nsCOMPtr<nsIContent> parent;
-            aContent->GetParent(*getter_AddRefs(parent));
-            if (parent) {
-              nsIFrame* parentFrame;
-              shell->GetPrimaryFrameFor(parent, &parentFrame);
-              NS_ASSERTION(!parentFrame,
-                       "parent frame but no child frame or undisplayed entry");
-            }
-          }
-#endif
-        }
-      }
-    }
-#ifdef MOZ_SVG
-    else {     // XXX should check we're in SVG NS
-      nsCOMPtr<nsIDOMElement> domel(do_QueryInterface(aContent));
-      if (domel) {
-        // XXX there must be a better way of doing this
-        nsCOMPtr<nsIDOMAttr> attr;
-        domel->GetAttributeNode(NS_LITERAL_STRING("style"), getter_AddRefs(attr));
-        if (attr) {
-          nsCOMPtr<nsISVGAttribute> svgattr(do_QueryInterface(attr));
-          if (svgattr) {
-            nsCOMPtr<nsISVGValue> value;
-            svgattr->GetSVGValue(getter_AddRefs(value));
-            if (value) {
-              nsCOMPtr<nsISVGStyleValue> stylevalue(do_QueryInterface(value));
-              if (stylevalue) {
-                nsCOMPtr<nsIDocument> doc;
-                aContent->GetDocument(*getter_AddRefs(doc));
-                if (doc) {
-                  stylevalue->GetStyleRule(doc, getter_AddRefs(rule));
-                  if (rule) {
-                    inlineStyle = PR_TRUE;
-                    
-                    // ----
-                    if (primaryFrame)
-                      primaryFrame->GetStyleContext(getter_AddRefs(styleContext));
-                    else {
-                      // We might be in the undisplayed map.  Retrieve the style context from there.
-                      nsCOMPtr<nsIFrameManager> frameManager;
-                      shell->GetFrameManager(getter_AddRefs(frameManager));
-                      frameManager->GetUndisplayedContent(aContent, getter_AddRefs(styleContext));
-#ifdef DEBUG
-                      if (!styleContext) {
-                        nsCOMPtr<nsIContent> parent;
-                        aContent->GetParent(*getter_AddRefs(parent));
-                        if (parent) {
-                          nsIFrame* parentFrame;
-                          shell->GetPrimaryFrameFor(parent, &parentFrame);
-                          NS_ASSERTION(!parentFrame,
-                                       "parent frame but no child frame "
-                                       "or undisplayed entry");
-                        }
-                      }
-#endif
-                    }
-                    //-----
-                  }
-                }
-              }
-            }
+        if (!styleContext) {
+          nsCOMPtr<nsIContent> parent;
+          aContent->GetParent(*getter_AddRefs(parent));
+          if (parent) {
+            nsIFrame* parentFrame;
+            shell->GetPrimaryFrameFor(parent, &parentFrame);
+            NS_ASSERTION(!parentFrame,
+                     "parent frame but no child frame or undisplayed entry");
           }
         }
+#endif
       }
     }
-#endif
   }
 
   // first see if we need to manage the style system: 

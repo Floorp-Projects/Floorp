@@ -354,9 +354,13 @@ HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
 {
   nsIStyledContent *styledContent = aData->mStyledContent;
   
-  if (styledContent) 
+  if (styledContent) {
     // just get the one and only style rule from the content's STYLE attribute
-    styledContent->WalkInlineStyleRules(aData->mRuleWalker);
+    nsCOMPtr<nsIStyleRule> rule;
+    styledContent->GetInlineStyleRule(getter_AddRefs(rule));
+    if (rule)
+      aData->mRuleWalker->Forward(rule, PR_TRUE);
+  }
 
   return NS_OK;
 }

@@ -3858,23 +3858,19 @@ nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsXULElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
+nsXULElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 {
     // Fetch the cached style rule from the attributes.
-    nsresult result = NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIStyleRule> rule;
-    if (aRuleWalker) {
-        if (Attributes()) {
-            result = Attributes()->GetInlineStyleRule(*getter_AddRefs(rule));
-        }
-        else if (mPrototype && mPrototype->mInlineStyleRule) {
-            rule = mPrototype->mInlineStyleRule;
-            result = NS_OK;
-        }
+    nsresult result = NS_OK;
+    if (Attributes()) {
+        result = Attributes()->GetInlineStyleRule(*aStyleRule);
     }
-
-    if (rule)
-        aRuleWalker->Forward(rule, PR_TRUE);
+    else if (mPrototype) {
+        *aStyleRule = mPrototype->mInlineStyleRule;
+        NS_IF_ADDREF(*aStyleRule);
+    } else {
+        *aStyleRule = nsnull;
+    }
 
     return result;
 }
@@ -3901,13 +3897,6 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModTy
         aAttribute == nsXULAtoms::label || aAttribute == nsXULAtoms::mousethrough) {
       // VERY IMPORTANT! This has a huge positive performance impact!
       aHint = NS_STYLE_HINT_ATTRCHANGE;
-    }
-    else if (aAttribute == nsXULAtoms::style) {
-        // well, okay, "style=" maps to style. This is totally
-        // non-optimal, because it's very likely that the frame
-        // *won't* change. Oh well, you're a tool for setting the
-        // "style" attribute anyway.
-        aHint = NS_STYLE_HINT_FRAMECHANGE;
     }
     else if (NodeInfo()->Equals(nsXULAtoms::window) ||
              NodeInfo()->Equals(nsXULAtoms::page) ||

@@ -446,14 +446,9 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsSVGElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
+nsSVGElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 {
-  nsCOMPtr<nsIStyleRule> rule;
-  mStyle->GetStyleRule(mDocument, getter_AddRefs(rule));
-  if (aRuleWalker && rule) {
-    aRuleWalker->Forward(rule, PR_TRUE);
-  }
-  return NS_OK;
+  return mStyle->GetStyleRule(mDocument, aStyleRule);
 }
 
 NS_IMETHODIMP
