@@ -85,12 +85,6 @@ public:
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize) = 0;
 
-#if 0
-  NS_IMETHOD
-  GetDesiredStretchSize(nsIPresContext*      aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        nsBoundingMetrics&   aDesiredStretchSize) = 0;
-#endif
  /* Place :
   * This method is used before returning from Reflow(), or when a MathML frame
   * has just been stretched. It is called to fine-tune the positions of the elements.
