@@ -1108,9 +1108,14 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
               target_muCV = do_QueryInterface(target_cv);            
               if (muCV && target_muCV) {
                 nsXPIDLString defaultCharset;
+                nsXPIDLString prevDocCharset;
                 rv = muCV->GetDefaultCharacterSet(getter_Copies(defaultCharset));
                 if(NS_SUCCEEDED(rv)) {
                   target_muCV->SetDefaultCharacterSet(defaultCharset);
+                }
+                rv = muCV->GetPrevDocCharacterSet(getter_Copies(prevDocCharset));
+                if(NS_SUCCEEDED(rv)) {
+                  target_muCV->SetPrevDocCharacterSet(prevDocCharset);
                 }
               }
             } 
