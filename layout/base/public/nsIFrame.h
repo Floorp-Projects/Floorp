@@ -80,7 +80,6 @@ class nsIView;
 class nsIWidget;
 class nsIDOMRange;
 class nsISelectionController;
-class nsIPercentHeightObserver;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif

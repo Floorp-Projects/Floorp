@@ -1436,25 +1436,8 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
-  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) &&  !mPrevInFlow) {
-      // see if an extra reflow will be necessary when there is a pct height but no height basis 
-    if ( ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)  || 
-          (0                    == aReflowState.mComputedHeight)) && 
-         nsTableFrame::IsPctHeight(mStyleContext)) {
-      const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
-      if (parentRS && parentRS->frame) {
-        nsCOMPtr<nsIAtom> fType;
-        parentRS->frame->GetFrameType(getter_AddRefs(fType));
-        if (nsLayoutAtoms::tableRowGroupFrame == fType.get()) {
-          nscoord pctBasis = ((nsTableRowGroupFrame*)parentRS->frame)->GetHeightBasis(*parentRS);
-          if (0 == pctBasis) {
-            nsTableFrame::NotifyAncestorsOfSpecialReflow(*this);
-            SetNeedSpecialReflow(PR_TRUE);
-          }
-        }
-      }
-    }
-  }
+  // see if a special height reflow needs to occur due to having a pct height
+  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   switch (aReflowState.reason) {
   case eReflowReason_Initial:

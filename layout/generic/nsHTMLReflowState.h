@@ -225,6 +225,9 @@ struct nsHTMLReflowState {
   // reflow for percent height calculations 
   nsIPercentHeightObserver* mPercentHeightObserver;
 
+  // a frame (e.g. nsTableFrame) which initiates a special reflow for percent height calculations 
+  nsIFrame* mPercentHeightReflowInitiator;
+
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
   PRInt16 mReflowDepth;

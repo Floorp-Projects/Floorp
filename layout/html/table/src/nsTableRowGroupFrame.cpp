@@ -1180,18 +1180,24 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
 
-  nsresult rv=NS_OK;
-  aStatus = NS_FRAME_COMPLETE;
+  nsresult rv = NS_OK;
+  aStatus     = NS_FRAME_COMPLETE;
         
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+
+  // If this is a special height reflow, set our desired size to what is was previously and return
+  // if we will be getting another special height reflow. In paginated mode, SetNeedSpecialReflow(PR_TRUE) 
+  // may not have been called if reflow was a result of having a height on the containing table
+  if (nsTableFrame::IsPrematureSpecialHeightReflow(aReflowState, mRect, NeedSpecialReflow() || isPaginated, aDesiredSize)) 
+    return NS_OK;
+
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (!aPresContext || !tableFrame) return NS_ERROR_NULL_POINTER;
 
   nsRowGroupReflowState state(aReflowState, tableFrame);
   PRBool haveDesiredHeight = PR_FALSE;
-
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
 
   if (eReflowReason_Incremental == aReflowState.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);

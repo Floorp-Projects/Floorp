@@ -162,7 +162,7 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
   if (!HadSpecialReflow()) {
     // Only initiate a special reflow if we will be able to construct a computed height 
     // on the cell that will result in the frame getting a computed height. This can only 
-    // happen (but not sufficient) if there no computed height already set between the 
+    // happen (but not sufficient) if there is no computed height already set between the 
     // initiating frame and the cell.
     for (const nsHTMLReflowState* rs = aReflowState.parentReflowState; rs; rs = rs->parentReflowState) {
       if ((NS_UNCONSTRAINEDSIZE != rs->mComputedHeight) && (0 != rs->mComputedHeight)) {
@@ -170,8 +170,7 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
       }
       // stop when we reach the cell frame
       if (rs->frame == this) {
-        nsTableFrame::NotifyAncestorsOfSpecialReflow((nsIFrame&)*this);
-        SetNeedSpecialReflow(PR_TRUE);
+        nsTableFrame::RequestSpecialHeightReflow(*rs);
         return NS_OK;
       }
     }
@@ -798,14 +797,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsresult rv = NS_OK;
 
-  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)     &&
-      ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) || 
-       (0                    == aReflowState.mComputedHeight))  && 
-      !mPrevInFlow                                              && 
-      nsTableFrame::IsPctHeight(mStyleContext)) {
-    nsTableFrame::NotifyAncestorsOfSpecialReflow(*this);
-    SetNeedSpecialReflow(PR_TRUE);
-  }
+  // see if a special height reflow needs to occur due to having a pct height
+  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
+
   // this should probably be cached somewhere
   nsCompatibility compatMode;
   aPresContext->GetCompatibilityMode(&compatMode);
