@@ -47,7 +47,11 @@
 #define _PRSTR_DELBUF_C(c, x)	c::_PRSTR_DELBUF(x)
 #endif
 
+#ifndef XP_MAC
 class PR_IMPLEMENT(PRfilebuf): public streambuf
+#else
+__declspec(export) class PRfilebuf : public streambuf
+#endif
 {
 public:
     PRfilebuf();
@@ -57,7 +61,11 @@ public:
     virtual	int	overflow(int=EOF);
     virtual	int	underflow();
     virtual	streambuf *setbuf(char *buff, int bufflen);
+#ifndef XP_MAC
     virtual	streampos seekoff(streamoff, ios::seek_dir, int);
+#else
+    virtual	streampos seekoff(streamoff, ios_base::seekdir, int);
+#endif
     virtual int sync();
     PRfilebuf *open(const char *name, int mode, int flags);
    	PRfilebuf *attach(PRFileDesc *fd);
@@ -72,7 +80,11 @@ private:
 };
 
 
+#ifndef XP_MAC
 class PR_IMPLEMENT(PRofstream) : public ostream {
+#else
+__declspec(export) class PRofstream : public ostream {
+#endif
 public:
 	PRofstream();
 	PRofstream(const char *, int mode=ios::out, int flags = 0);
