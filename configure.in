@@ -166,10 +166,16 @@ alpha*-*-osf*)
     ;;
 
 *-openbsd*)
-    DSO_LDOPTS="-Bshareable -x -assert pure-text"
-    DSO_CFLAGS='-fPIC'
     DLL_SUFFIX="so.1.0"
+    DSO_CFLAGS='-fPIC'
+    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    if test -z "`$CC -E - -dM </dev/null | grep __ELF__`"; then
+	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
+    fi
+    if test -n "$LIBRUNPATH"; then
+	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
+    fi
     ;;
 
 *-hpux*)
