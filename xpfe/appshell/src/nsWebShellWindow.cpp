@@ -101,14 +101,12 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIWindowMediator.h"
 
-//hack for M8 should go away after NECKO lands
-#ifndef NECKO
-#include "nsIObserverService.h"
-#ifdef MOZ_MAIL_NEWS
-#include "nsIMsgComposeService.h"
-#include "nsMsgCompCID.h"
-#endif /* MOZ_MAIL_NEWS */
-#endif   /* NECKO  */
+// This is to bring up a MsgCompose window when a mailto link is clicked.
+// This is a temporary hack for M8 until NECKO lands when I can use their
+// Protocol registry
+#include "nsIDOMToolkitCore.h"
+#include "nsAppCoresCIDs.h"
+
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -124,6 +122,7 @@ static NS_DEFINE_IID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
 
 
 
@@ -2760,6 +2759,7 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
   nsString topic(aCommand);
   topic += ":";
   nsAutoString url(aURLSpec);
+  nsresult rv;
 
   PRInt32 offset = url.Find(":");
   if (offset <= 0)
@@ -2771,17 +2771,24 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
   if (offset2 == 0) {
     topic += "mailto";
 
-#ifndef NECKO
-#ifdef MOZ_MAIL_NEWS
-    //What a dirty hack. 
-    nsresult rv;
-    NS_WITH_SERVICE(nsIMsgComposeService, msgcompose, kMsgComposeServiceCID, &rv);
-    if (!NS_SUCCEEDED(rv)) {
-        return rv;
-    }
-    rv = msgcompose->OpenComposeWindow(nsnull, nsnull, 0, 0, nsnull);
-#endif /* MOZ_MAIL_NEWS */
-#endif  /* NECKO */
+	/* I know about all that is going on regarding using window.open
+     * instead of showWindowWithArgs(). But, I really don't have another
+     * option in this case to invoke the messenger compose window.
+     * This piece of code will eventually go away when I start using the 
+     * protocol registries in NECKO
+     */
+
+	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv)
+	if (NS_FAILED(rv))
+		return rv;
+  /* Messenger doesn't understand to:xyz@domain.com,subject="xyz" yet.
+   * So, just pass the type and mode info
+   */
+	rv = toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content",
+		                                    nsnull,
+		                                   "type=0,mode=0");
+	if (NS_FAILED(rv))
+		return rv;
   }
   else {
     topic += "browser";
