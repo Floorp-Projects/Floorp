@@ -45,7 +45,12 @@
 #include "nsIRDFObserver.h"
 #include "nsRepository.h"
 #include "nsVoidArray.h"
+#ifdef NS_DEBUG
 #include "prlog.h"
+#include "prprf.h"
+#include <stdio.h>
+PRLogModuleInfo* nsRDFLog = nsnull;
+#endif
 
 static NS_DEFINE_IID(kIRDFArcsInCursorIID,    NS_IRDFARCSINCURSOR_IID);
 static NS_DEFINE_IID(kIRDFArcsOutCursorIID,   NS_IRDFARCSOUTCURSOR_IID);
@@ -60,13 +65,8 @@ static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 // CompositeDataSourceImpl
 
 class CompositeDataSourceImpl : public nsIRDFCompositeDataSource,
-                 public nsIRDFObserver
+                                public nsIRDFObserver
 {
-protected:
-    nsVoidArray*  mObservers;
-        
-    virtual ~CompositeDataSourceImpl(void);
-
 public:
     CompositeDataSourceImpl(void);
     CompositeDataSourceImpl(char** dataSources);
@@ -156,6 +156,10 @@ public:
                             nsIRDFResource* property,
                             nsIRDFNode* target,
                             PRBool tv);
+protected:
+    nsVoidArray*  mObservers;
+        
+    virtual ~CompositeDataSourceImpl(void);
 };
 
 
@@ -163,14 +167,6 @@ public:
 class DBArcsInOutCursor : public nsIRDFArcsOutCursor,
                           public nsIRDFArcsInCursor
 {
-    CompositeDataSourceImpl* mCompositeDataSourceImpl;
-    nsIRDFResource*      mSource;
-    nsIRDFNode*          mTarget;
-    PRInt32              mCount;
-    nsIRDFArcsOutCursor* mOutCursor;
-    nsIRDFArcsInCursor*  mInCursor;
-    nsVoidArray          mResults;
-
 public:
     DBArcsInOutCursor(CompositeDataSourceImpl* db, nsIRDFNode* node, PRBool arcsOutp);
 
@@ -203,7 +199,14 @@ public:
                 mOutCursor->GetValue(aValue));
     }
 
-
+protected:
+    CompositeDataSourceImpl* mCompositeDataSourceImpl;
+    nsIRDFResource*      mSource;
+    nsIRDFNode*          mTarget;
+    PRInt32              mCount;
+    nsIRDFArcsOutCursor* mOutCursor;
+    nsIRDFArcsInCursor*  mInCursor;
+    nsVoidArray          mResults;
 };
 
         
@@ -286,8 +289,9 @@ DBArcsInOutCursor::Advance(void)
         
         while (NS_SUCCEEDED(result)) {
             nsIRDFNode* obj ;
-            GetValue(&obj);
-            if (mResults.IndexOf(obj) < 0) {
+            result = GetValue(&obj);
+            NS_ASSERTION(NS_SUCCEEDED(result), "Advance is broken");
+            if (NS_SUCCEEDED(result) && mResults.IndexOf(obj) < 0) {
                 mResults.AppendElement(obj);
                 return NS_OK;
             }
@@ -322,15 +326,6 @@ DBArcsInOutCursor::Advance(void)
 //
 class DBGetSTCursor : public nsIRDFAssertionCursor
 {
-private:
-    CompositeDataSourceImpl* mCompositeDataSourceImpl;
-    nsIRDFResource* mSource;
-    nsIRDFResource* mLabel;    
-    nsIRDFNode*     mTarget;
-    PRInt32         mCount;
-    PRBool          mTruthValue;
-    nsIRDFAssertionCursor* mCurrentCursor;
-
 public:
     DBGetSTCursor(CompositeDataSourceImpl* db, nsIRDFNode* u,  
                        nsIRDFResource* property, PRBool inversep, PRBool tv);
@@ -356,7 +351,13 @@ public:
     }
 
     NS_IMETHOD GetObject(nsIRDFNode** aObject) {
-        return mCurrentCursor->GetObject(aObject);
+        nsresult rv = mCurrentCursor->GetObject(aObject);
+#ifdef NS_DEBUG
+        if (NS_SUCCEEDED(rv)) {
+            Trace(mSource ? "GetTargets" : "GetSources", *aObject);
+        }
+#endif
+        return rv;
     }
 
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue) {
@@ -364,9 +365,63 @@ public:
     }
 
     NS_IMETHOD GetValue(nsIRDFNode** aValue) {
-        return mCurrentCursor->GetValue(aValue);
+        nsresult rv = mCurrentCursor->GetValue(aValue);
+#ifdef NS_DEBUG
+        if (NS_SUCCEEDED(rv)) {
+            Trace(mSource ? "GetTargets" : "GetSources", *aValue);
+        }
+#endif
+        return rv;
     }
 
+#ifdef NS_DEBUG
+    void Trace(const char* msg, nsIRDFNode* valueNode) {
+        if (PR_LOG_TEST(nsRDFLog, PR_LOG_ALWAYS)) {
+            nsresult rv;
+            nsIRDFResource* subRes;
+            nsIRDFResource* predRes;
+            nsIRDFResource* valRes;
+            const char* subject;
+            const char* predicate;
+            char* value;
+            nsIRDFDataSource* ds;
+
+            rv = GetDataSource(&ds);
+            if (NS_FAILED(rv)) return;
+            rv = GetSubject(&subRes);
+            if (NS_FAILED(rv)) return;
+            rv = subRes->GetValue(&subject);
+            if (NS_FAILED(rv)) return;
+            rv = GetPredicate(&predRes);
+            if (NS_FAILED(rv)) return;
+            rv = predRes->GetValue(&predicate);
+            if (NS_FAILED(rv)) return;
+            if (NS_SUCCEEDED(valueNode->QueryInterface(nsIRDFResource::IID(), (void**)&valRes))) {
+                rv = valRes->GetValue((const char**)&value);
+                if (NS_FAILED(rv)) return;
+                NS_RELEASE(valRes);
+                value = PR_smprintf("%s", value);   // freed below
+            }
+            else {
+                value = PR_smprintf("<nsIRDFNode 0x%x>", valueNode);
+            }
+            if (value == nsnull) return;
+            printf("RDF %s: datasource=0x%x\n  subject: %s\n     pred: %s\n    value: %s\n",
+                   msg, ds, subject, predicate, value);
+            NS_RELEASE(predRes);
+            NS_RELEASE(subRes);
+            PR_smprintf_free(value);
+        }
+    }
+#endif
+private:
+    CompositeDataSourceImpl* mCompositeDataSourceImpl;
+    nsIRDFResource* mSource;
+    nsIRDFResource* mLabel;    
+    nsIRDFNode*     mTarget;
+    PRInt32         mCount;
+    PRBool          mTruthValue;
+    nsIRDFAssertionCursor* mCurrentCursor;
 };
 
 //NS_IMPL_ISUPPORTS(DBGetSTCursor, kIRDFAssertionCursorIID);        
@@ -489,6 +544,11 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
     : mObservers(nsnull)
 {
     NS_INIT_REFCNT();
+#ifdef NS_DEBUG
+    if (nsRDFLog == nsnull) {
+        nsRDFLog = PR_NewLogModule("RDF");
+    }
+#endif
 }
 
 
@@ -762,7 +822,7 @@ CompositeDataSourceImpl::ArcLabelsIn(nsIRDFNode* node,
 
     nsIRDFArcsInCursor* result = new DBArcsInOutCursor(this, node, 0);
     if (! result)
-        return NS_ERROR_NULL_POINTER;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(result);
     *labels = result;
@@ -778,7 +838,7 @@ CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource* source,
 
     nsIRDFArcsOutCursor* result = new DBArcsInOutCursor(this, source, 1);
     if (! result)
-        return NS_ERROR_NULL_POINTER;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(result);
     *labels = result;
