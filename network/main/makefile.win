@@ -62,6 +62,7 @@ OBJS=   \
 	.\$(OBJDIR)\mkutils.obj		\
 	.\$(OBJDIR)\prefetch.obj	\
 	.\$(OBJDIR)\mkgeturl.obj	\
+	.\$(OBJDIR)\win-dns.obj		\
 	$(NULL)
 
 
@@ -91,6 +92,9 @@ CSRCS =	\
 	prefetch.c	\
 	$(NULL)
 
+CPPSRCS = \
+	win-dns.cpp	\
+	$(NULL)
 
 MODULE=network 
 
@@ -144,14 +148,15 @@ LINCS=-I$(PUBLIC)\jtools	\
     -I$(PUBLIC)\network		\
     -I$(PUBLIC)\ldap		\
     -I$(PUBLIC)\net		\
-    -I$(PUBLIC)\progress		\
+    -I$(PUBLIC)\progress	\
     -I$(PUBLIC)\ldapurl		\
-    -I$(PUBLIC)\imap4url		\
+    -I$(PUBLIC)\imap4url	\
     -I$(PUBLIC)\security        \
     -I$(PUBLIC)\nntpurl         \
     -I$(PUBLIC)\certurl         \
     -I$(PUBLIC)\pop3url         \
-    -I$(PUBLIC)\mailbxurl
+    -I$(PUBLIC)\mailbxurl	\
+    -I$(PUBLIC)\xpcom
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 
