@@ -484,7 +484,7 @@
       <handler event="keypress">
         <![CDATA[
          var c = this.currentIndex;
-         if (event.keyCode == ' '.charCodeAt(0)) {
+         if (event.charCode == ' '.charCodeAt(0)) {
            if (!this.view.selection.isSelected(c))
              this.view.selection.toggleSelect(c);
          }
