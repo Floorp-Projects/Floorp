@@ -111,9 +111,6 @@ table {
 td, th, tr {
   background: inherit;
 }
-td, th {
-  empty-cells: show;
-}
 
 /* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
 

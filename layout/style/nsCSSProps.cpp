@@ -349,8 +349,9 @@ const PRInt32 nsCSSProps::kElevationKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
-  eCSSKeyword_show,  NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
-  eCSSKeyword_hide,  NS_STYLE_TABLE_EMPTY_CELLS_HIDE,
+  eCSSKeyword_show,             NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
+  eCSSKeyword_hide,             NS_STYLE_TABLE_EMPTY_CELLS_HIDE,
+  eCSSKeyword_show_background,  NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND,
   -1,-1
 };
 
