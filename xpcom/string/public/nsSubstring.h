@@ -47,7 +47,7 @@
 
 // If some platform(s) can't handle our template that matches literal strings,
 // then we'll disable it on those platforms.
-#if !defined(NS_DISABLE_LITERAL_TEMPLATE) && defined(_MSC_VER)
+#if !defined(NS_DISABLE_LITERAL_TEMPLATE) && (defined(_MSC_VER) && _MSC_VER < 1310)
 #define NS_DISABLE_LITERAL_TEMPLATE
 #endif
 

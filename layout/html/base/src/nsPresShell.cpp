@@ -4394,7 +4394,7 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
         if (element) {
           NS_NAMED_LITERAL_STRING(xlinkNS,"http://www.w3.org/1999/xlink");
           element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("type"),xlinkType);
-          if (xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
+          if (xlinkType.EqualsLiteral("simple")) {
             element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("href"),anchorText);
             if (!anchorText.IsEmpty()) {
               // Resolve the full URI using baseURI property

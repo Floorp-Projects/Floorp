@@ -202,6 +202,11 @@ class nsTAString_CharT
          * wide strings.
          */
       NS_COM PRBool EqualsASCII( const char* data, size_type len ) const;
+    // EqualsLiteral must ONLY be applied to an actual literal string.
+    // Do not attempt to use it with a regular char* pointer, or with a char
+    // array variable.
+    // The template trick to acquire the array length at compile time without
+    // using a macro is due to Corey Kosak, with much thanks.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
       inline PRBool EqualsLiteral( const char* str ) const
         {

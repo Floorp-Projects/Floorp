@@ -2639,9 +2639,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
   if (charset.IsEmpty()) return NS_OK;
 
   // common charsets and those not requiring conversion first
-  if (charset == NS_LITERAL_CSTRING("us-acsii")) {
+  if (charset.EqualsLiteral("us-ascii")) {
     *result = PL_strdup("US_ASCII");
-  } else if (charset == NS_LITERAL_CSTRING("ISO-8859-1") ||
+  } else if (charset.EqualsLiteral("ISO-8859-1") ||
       !nsCRT::strncmp(PromiseFlatCString(charset).get(), "UTF", 3)) {
     *result = ToNewCString(charset);
   } else {
