@@ -254,12 +254,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // Hold the blur, wait for the focus so we can query the style of the focus
       // target as to what to do with the event. If appropriate we fire the blur
       // at that time.
-      NS_IF_RELEASE(mCurrentFocus);
-      mCurrentFocus = nsnull;
-      NS_IF_RELEASE(gLastFocusedDocument);
-      gLastFocusedDocument = mDocument;
-      gLastFocusedPresContext = aPresContext;
-      NS_IF_ADDREF(gLastFocusedDocument);
     }
     break;
     
@@ -801,6 +795,7 @@ nsEventStateManager::SetPresContext(nsIPresContext* aPresContext)
     if (mPresContext == gLastFocusedPresContext) {
       gLastFocusedPresContext = nsnull;
       NS_IF_RELEASE(gLastFocusedDocument);
+      NS_IF_RELEASE(gLastFocusedContent);
     }
   }
 
