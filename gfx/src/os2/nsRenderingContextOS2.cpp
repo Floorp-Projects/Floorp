@@ -1092,8 +1092,12 @@ void nsRenderingContextOS2::PMDrawRect( nsRect &rect, BOOL fill)
 
    if (rcl.xLeft == rcl.xRight || rcl.yTop == rcl.yBottom)
    {
-      SetupLineColorAndStyle ();
-      GFX (::GpiLine (mPS, ((PPOINTL)&rcl) + 1), GPI_ERROR);
+       // only draw line if it has a non-zero height and width
+      if( rect.width && rect.height )
+      {
+         SetupLineColorAndStyle ();
+         GFX (::GpiLine (mPS, ((PPOINTL)&rcl) + 1), GPI_ERROR);
+      }
    }
    else 
    {
