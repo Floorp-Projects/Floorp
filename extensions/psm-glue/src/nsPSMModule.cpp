@@ -35,6 +35,8 @@
 
 #include "nsSDR.h"
 
+#include "nsCURILoader.h"
+
 // Define SDR object constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecretDecoderRing, init)
 
@@ -46,6 +48,35 @@ static nsModuleComponentInfo components[] =
         PSM_COMPONENT_PROGID,   
         nsPSMComponent::CreatePSMComponent
     },
+    
+    { 
+        "PSM Content Handler - application/x-x509-ca-cert",  
+        NS_PSMCOMPONENT_CID, 
+        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-ca-cert",   
+        nsPSMComponent::CreatePSMComponent
+    },
+    
+    { 
+        "PSM Content Handler - application/x-x509-server-cert",  
+        NS_PSMCOMPONENT_CID, 
+        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-server-cert",   
+        nsPSMComponent::CreatePSMComponent
+    },
+
+    { 
+        "PSM Content Handler - application/x-x509-user-cert",  
+        NS_PSMCOMPONENT_CID, 
+        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-user-cert",   
+        nsPSMComponent::CreatePSMComponent
+    },
+    
+    { 
+        "PSM Content Handler - application/x-x509-email-cert",  
+        NS_PSMCOMPONENT_CID, 
+        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-email-cert",   
+        nsPSMComponent::CreatePSMComponent
+    },
+
 
     { 
         PSM_UI_HANLDER_CLASSNAME, 

@@ -50,12 +50,15 @@ public:
     nsresult SetControlPtr(CMT_CONTROL *aControlPtr);
     nsresult SetFileDescPtr(PRFileDesc *aControlPtr);
     nsresult SetHostName(char *aHostName);
+    nsresult SetPickledStatus();
 
 protected:
     CMT_CONTROL* mControl;
     CMSocket*    mSocket;
     PRFileDesc*  mFd;
     nsString     mHostName;
+    
+    unsigned char* mPickledStatus;
 };
 
 
@@ -167,11 +170,12 @@ nsSSLIOLayerClose(PRFileDesc *fd)
     
     infoObject->GetControlPtr(&control);
     infoObject->GetSocketPtr(&socket);
+    infoObject->SetPickledStatus();
 
     if (((PRStatus) CMT_GetSSLDataErrorCode(control, socket, &errorCode)) == PR_SUCCESS)
     {
         CMT_DestroyDataConnection(control, socket);
-        NS_RELEASE(infoObject);
+        NS_RELEASE(infoObject);  // if someone is interested in us, the better have an addref.
         fd->identity = PR_INVALID_IO_LAYER;
     }
     return (PRStatus)errorCode;
@@ -280,10 +284,12 @@ nsPSMSocketInfo::nsPSMSocketInfo()
     NS_INIT_REFCNT(); 
     mControl = nsnull; 
     mSocket = nsnull;
+    mPickledStatus = nsnull;
 }
 
 nsPSMSocketInfo::~nsPSMSocketInfo()
 {
+    PR_FREEIF(mPickledStatus);    
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPSMSocketInfo, nsIPSMSocketInfo);
@@ -346,32 +352,47 @@ nsPSMSocketInfo::SetHostName(char *aHostName)
     return NS_OK;
 }
 
+nsresult
+nsPSMSocketInfo::SetPickledStatus()
+{
+    PR_FREEIF(mPickledStatus);
+
+    long level;
+    CMTItem pickledStatus = {0, nsnull, 0};
+    unsigned char* ret    = nsnull;
+
+    if (CMT_GetSSLSocketStatus(mControl, mSocket, &pickledStatus, &level) != PR_FAILURE)
+    {        
+        ret = (unsigned char*) PR_Malloc( (SSMSTRING_PADDED_LENGTH(pickledStatus.len) + sizeof(int)) );
+        if (ret) 
+        {
+            *(int*)ret = pickledStatus.len;
+            memcpy(ret+sizeof(int), pickledStatus.data, *(int*)ret);
+        }
+
+        PR_FREEIF(pickledStatus.data);
+        mPickledStatus = ret;
+    }
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsPSMSocketInfo::GetPickledStatus(char * *pickledStatusString)
 {
-    *pickledStatusString = nsnull;
+    if (!mPickledStatus)
+        SetPickledStatus();
 
-    if (mSocket && mControl)
+    if (mPickledStatus)
     {
-        long level;
-        CMTItem pickledStatus = {0, nsnull, 0};
-        unsigned char* ret    = nsnull;
-
-        if (CMT_GetSSLSocketStatus(mControl, mSocket, &pickledStatus, &level) == PR_FAILURE)
-            return NS_ERROR_FAILURE;
-        
-        ret = (unsigned char*) PR_Malloc( (SSMSTRING_PADDED_LENGTH(pickledStatus.len) + sizeof(int)) );
-        if (!ret) 
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        *(int*)ret = pickledStatus.len;
-        memcpy(ret+sizeof(int), pickledStatus.data, *(int*)ret);
-    
-        PR_FREEIF(pickledStatus.data);
-    
-        *pickledStatusString = (char*) ret;
+        PRInt32 len = *(int*)mPickledStatus;
+        char *out = (char *)nsAllocator::Alloc(len);
+        memcpy(out, mPickledStatus, len);
+        *pickledStatusString = out;
+        return NS_OK;
     }
-    return NS_OK;
+    *pickledStatusString = nsnull;
+    return NS_ERROR_FAILURE;
 }
 
 nsresult

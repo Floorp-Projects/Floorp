@@ -59,7 +59,7 @@ extern "C" void CARTMAN_UIEventLoop(void *data);
 
 
 /* nsISupports Implementation for the class */
-NS_IMPL_ISUPPORTS1(nsPSMUIHandlerImpl, nsIPSMUIHandler)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPSMUIHandlerImpl, nsIPSMUIHandler)
 
 NS_METHOD
 nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, const char *urlStr)
