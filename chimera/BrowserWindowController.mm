@@ -79,6 +79,11 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
 static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
+// Cached toolbar defaults read in from a plist. If null, we'll use
+// hardcoded defaults.
+static NSArray* sToolbarDefaults = nil;
+
+
 @interface BrowserWindowController(Private)
 - (void)setupToolbar;
 - (void)setupSidebarTabs;
@@ -372,20 +377,38 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
                                         nil];
 }
 
+
+//
+// + toolbarDefaults
+//
+// Parse a plist called "ToolbarDefaults.plist" in our Resources subfolder. This
+// allows anyone to easily customize the default set w/out having to recompile. We
+// hold onto the list for the duration of the app to avoid reparsing it every
+// time.
+//
++ (NSArray*) toolbarDefaults
+{
+  if ( !sToolbarDefaults ) {
+    sToolbarDefaults = [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"ToolbarDefaults" ofType:@"plist"]];
+    [sToolbarDefaults retain];
+  }
+  return sToolbarDefaults;
+}
+
+
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-    return [NSArray arrayWithObjects:   BackToolbarItemIdentifier,
+  // try to get the defaults from the plist, but if not, hardcode something so
+  // the user always has a toolbar.
+  NSArray* defaults = [BrowserWindowController toolbarDefaults];
+  NS_ASSERTION(defaults, "Couldn't load toolbar defaults from plist");
+  return ( defaults ? defaults : [NSArray arrayWithObjects:   BackToolbarItemIdentifier,
                                         ForwardToolbarItemIdentifier,
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
-#if CORPORATE_BRANDING
-                                        SearchToolbarItemIdentifier,
-                                        ThrobberToolbarItemIdentifier,
-                                        NSToolbarSeparatorItemIdentifier,
-#endif
                                         SidebarToolbarItemIdentifier,
-                                        nil];
+                                        nil] );
 }
 
 // XXX use a dictionary to speed up the following?
@@ -447,12 +470,11 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
         [toolbarItem setLabel:@""];
         [toolbarItem setPaletteLabel:@"Progress"];
-        [toolbarItem setToolTip:@"http://www.netscape.com"];
+        [toolbarItem setToolTip:@"http://www.mozilla.org"];
         [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
         [toolbarItem setTarget:self];
         [toolbarItem setTag:'Thrb'];
-        // XXX change this to go somewhere appropriate.
-        [toolbarItem setAction:@selector(testThrobber:)];
+        [toolbarItem setAction:@selector(clickThrobber:)];
     } else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] ) {
         
         NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
@@ -633,7 +655,9 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (void)printPreview
 {
-  [[mBrowserView getBrowserView] printPreview];
+  NS_WARNING("Print Preview stopped in BrowserWindowController, not implemented");
+  //XXX there is no printPreview on CHBrowserView...so this isn't implemented
+  //[[mBrowserView getBrowserView] printPreview];
 }
 
 - (void)performSearch
@@ -697,14 +721,10 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 }
 
 
-// XXX this is just temporary for testing the throbber.
-
-- (void)testThrobber:(id)aSender
+- (void)clickThrobber:(id)aSender
 {
-  if (!mThrobberHandler)
-    [self startThrobber];
-  else
-    [self stopThrobber];
+  // need to pref this
+  [self loadURL:@"http://www.mozilla.org"];
 }
 
 - (void)startThrobber
