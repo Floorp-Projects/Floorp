@@ -21,6 +21,7 @@ nsMsgGroupRecord.h
 nsUInt32Array.h
 nsNewsSet.h
 nsMsgFolder.h
+nsMsgDBFolder.h
 nsLocalFolderSummarySpec.h
 nsMsgIdentity.h
 nsMsgIncomingServer.h

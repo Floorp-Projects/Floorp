@@ -200,9 +200,6 @@ public:
 
   NS_IMETHOD DisplayRecipients(PRBool *displayRecipients);
 
-   NS_IMETHOD ReadDBFolderInfo(PRBool force);
-
-
 	//For file contention
 	NS_IMETHOD AcquireSemaphore (nsISupports *semHolder);
 	NS_IMETHOD ReleaseSemaphore (nsISupports *semHolder);

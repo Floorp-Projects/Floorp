@@ -1016,49 +1016,6 @@ NS_IMETHODIMP nsMsgFolder::DisplayRecipients(PRBool *displayRecipients)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
-{
-	// Since it turns out to be pretty expensive to open and close
-	// the DBs all the time, if we have to open it once, get everything
-	// we might need while we're here
-
-	nsresult result= NS_OK;
-	if (force || !(mPrefFlags & MSG_FOLDER_PREF_CACHED))
-    {
-        nsCOMPtr<nsIDBFolderInfo> folderInfo;
-        nsIMsgDatabase       *db = nsnull; //Not making an nsCOMPtr because we want to call close, not release
-        result = NS_SUCCEEDED(GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), &db));
-        if(result)
-        {
-			mIsCachable = TRUE;
-            if (folderInfo)
-            {
-
-	            folderInfo->GetFlags(&mPrefFlags);
-                mPrefFlags |= MSG_FOLDER_PREF_CACHED;
-                folderInfo->SetFlags(mPrefFlags);
-
-				folderInfo->GetNumMessages(&mNumTotalMessages);
-				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
-
-				//These should be put in IMAP folder only.
-				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
-				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
-
-				// folderInfo->GetCSID(&mCsid);
-        
-				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
-					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
-            }
-
-        }
-        if (db)
-	        db->Close(PR_FALSE);
-    }
-
-	return result;
-	
-}
 
 NS_IMETHODIMP nsMsgFolder::AcquireSemaphore(nsISupports *semHolder)
 {

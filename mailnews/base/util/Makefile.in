@@ -31,6 +31,7 @@ EXPORTS = \
 	nsUInt32Array.h	\
 	nsNewsSet.h	\
 	nsMsgFolder.h	\
+	nsMsgDBFolder.h \
 	nsLocalFolderSummarySpec.h	\
 	nsNewsSummarySpec.h	\
 	nsMsgIdentity.h	\
@@ -43,6 +44,7 @@ CPPSRCS = \
 	nsMsgGroupRecord.cpp \
 	nsMsgLineBuffer.cpp	\
 	nsMsgFolder.cpp	\
+	nsMsgDBFolder.cpp \
 	nsUInt32Array.cpp	\
 	nsNewsSet.cpp	\
 	nsLocalFolderSummarySpec.cpp	\

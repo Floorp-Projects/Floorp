@@ -32,6 +32,7 @@ CPPSRCS=                     \
 	nsUInt32Array.cpp		\
 	nsNewsSet.cpp			\
 	nsMsgFolder.cpp			\
+	nsMsgDBFolder.cpp		\
 	nsLocalFolderSummarySpec.cpp	\
 	nsMsgIdentity.cpp		\
 	nsMsgIncomingServer.cpp	\
@@ -48,6 +49,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsUInt32Array.obj	\
 	.\$(OBJDIR)\nsNewsSet.obj			\
 	.\$(OBJDIR)\nsMsgFolder.obj			\
+	.\$(OBJDIR)\nsMsgDBFolder.obj		\
 	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
 	.\$(OBJDIR)\nsMsgIdentity.obj		\
 	.\$(OBJDIR)\nsMsgIncomingServer.obj	\
@@ -63,6 +65,7 @@ EXPORTS=                \
 	nsUInt32Array.h	\
 	nsNewsSet.h			\
 	nsMsgFolder.h			\
+	nsMsgDBFolder.h			\
 	nsLocalFolderSummarySpec.h	\
 	nsMsgIdentity.h			\
 	nsMsgIncomingServer.h	\
