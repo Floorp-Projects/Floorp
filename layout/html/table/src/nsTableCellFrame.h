@@ -91,6 +91,7 @@ protected:
   void      MapTextAttributes(nsIPresContext* aPresContext);
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
   void      MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth);
+  PRBool    ConvertToIntValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
 
  
