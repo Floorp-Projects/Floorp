@@ -29,6 +29,8 @@
 #include "nsICharsetConverterInfo.h"
 #include "nsUCvCnCID.h"
 #include "nsUCvCnDll.h"
+#include "nsHZToUnicode.h"
+#include "nsUnicodeToHZ.h"
 #include "nsGBKToUnicode.h"
 #include "nsUnicodeToGBK.h"
 #include "nsGB2312ToUnicodeV2.h"
@@ -116,6 +118,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToGBK::CreateInstance,
     "Unicode",
     "x-gbk"
+  },
+  {
+    &kHZToUnicodeCID,
+    nsHZToUnicode::CreateInstance,
+    "HZ-GB-2312",
+    "Unicode"
   },
   {
     &kUnicodeToGB2312GLCID,
