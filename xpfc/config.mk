@@ -44,6 +44,7 @@ AR_LIBS += \
               toolkit \
 			  widget \
               xpfc_user \
+			  xpfc_msg \
               $(NULL)
 
 OS_LIBS += $(GUI_LIBS) $(MATH_LIB)

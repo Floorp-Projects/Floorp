@@ -7,11 +7,15 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../..
-DEPTH  = ../..
+GDEPTH = ../../..
 
-DIRS = test
+EXPORTS = \
+	$(NULL)
 
-DIRS_EXPORT = public inc 
-DIRS_LIBS = src 
+PRIVATE_EXPORTS = \
+    nsSMTPService.h \
+	$(NULL)
 
+MODULE = xpfc
+
+REQUIRES = raptor
