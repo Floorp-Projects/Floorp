@@ -56,8 +56,8 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 	<box align="horizontal">	
 		<box align="vertical">	
 			<titledbutton value="&newCmd.label;"  onclick="openCreateProfile();" />
-			<titledbutton value="&renameCmd.label;"  onclick="openRename();" />
-			<titledbutton value="&deleteCmd.label;"  onclick="ConfirmDelete();" />
+			<titledbutton id="rename" disabled="true" value="&renameCmd.label;"  onclick="openRename();" />
+			<titledbutton id="delete" disabled="true" value="&deleteCmd.label;"  onclick="ConfirmDelete();" />
 		</box>
 		<!--<html:br></html:br>-->
 	
@@ -75,7 +75,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 				<html:br></html:br>
 			</box>
 			<box align="horizontal">
-				<titledbutton value="&startCmd.label;"  onclick="StartCommunicator();" />
+				<titledbutton id="start" disabled="true" value="&startCmd.label;"  onclick="StartCommunicator();" />
 				<titledbutton value="&exitCmd.label;"  onclick="onExit();" />
 			</box>
 		</box>
