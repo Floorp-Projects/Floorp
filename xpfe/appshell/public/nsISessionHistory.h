@@ -22,6 +22,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsILoadAttribs.h"
 
 //Forward declarations
 class nsHistoryEntry;
