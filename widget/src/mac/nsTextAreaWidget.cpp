@@ -246,9 +246,11 @@ PRBool nsTextAreaWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 			break;
 
 		case NS_MOUSE_EXIT:
+			SetCursor(eCursor_standard);
 			break;
 
 		case NS_MOUSE_ENTER:
+			SetCursor(eCursor_select);
 			break;
 	}
 	return result;

@@ -154,6 +154,14 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 				EndDraw();
 				eventHandled = PR_TRUE;
 				break;
+
+			case NS_MOUSE_ENTER:
+				SetCursor(eCursor_select);
+				break;
+
+			case NS_MOUSE_EXIT:
+				SetCursor(eCursor_standard);
+				break;
 		}
 	}
 	return (eventHandled);
