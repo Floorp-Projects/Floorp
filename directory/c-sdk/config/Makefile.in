@@ -52,11 +52,15 @@ DIST_GARBAGE	=
 
 include $(topsrcdir)/config/config.mk
 
-CSRCS	= nsinstall.c now.c
+ifndef MOZILLA_CLIENT
+CSRCS	= nsinstall.c 
+endif
+
+CSRCS	+= now.c
 
 PLSRCS	= nfspwd.pl
 
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
+ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -109,7 +113,7 @@ include $(topsrcdir)/config/rules.mk
 
 PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
 
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
+ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
 TARGETS = $(PROGS)
 else
 PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)

@@ -366,6 +366,11 @@ else
     DEFINES="$DEFINES -UDEBUG"
 fi
 
+# Use mozilla's nsinstall
+if test -n "$MOZILLA_CLIENT"; then
+   NSINSTALL='$(dist_bindir)/nsinstall'
+fi
+
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
@@ -379,12 +384,10 @@ if test "$target" != "$host"; then
     _SAVE_LDFLAGS="$LDFLAGS"
 
     AC_MSG_CHECKING([for $host compiler])
-    if test -z "$HOST_CC"; then
-	    AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc, "")
-	    if test -z "$HOST_CC"; then
-	        AC_MSG_ERROR([no acceptable cc found in \$PATH])
-	    fi
-    fi
+    AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc, "")
+	if test -z "$HOST_CC"; then
+	    AC_MSG_ERROR([no acceptable cc found in \$PATH])
+	fi
     AC_MSG_RESULT([$HOST_CC])
     if test -z "$HOST_CFLAGS"; then
 	    HOST_CFLAGS="$CFLAGS"
@@ -406,34 +409,18 @@ if test "$target" != "$host"; then
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
 
-    if test -z "$CC"; then
-	    AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", echo)
-    fi
+    AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", echo)
     unset ac_cv_prog_CC
     AC_PROG_CC
-    if test -z "$CXX"; then
-	    AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", echo)
-    fi
+    AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", echo)
     unset ac_cv_prog_CXX
     AC_PROG_CXX
-    if test -z "$RANLIB"; then
-	    AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", echo)
-    fi
-    if test -z "$AR"; then
-	    AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", echo)
-    fi
-    if test -z "$AS"; then
-	    AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", echo)
-    fi
-    if test -z "$LD"; then
-	    AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", echo)
-    fi
-    if test -z "$STRIP"; then
-	    AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", echo)
-    fi
-    if test -z "$WINDRES"; then
-	    AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", echo)
-    fi
+    AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", echo)
+    AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", echo)
+    AC_CHECK_PROGS(AS, $AS "${target_alias}-as" "${target}-as", echo)
+    AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", echo)
+    AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", echo)
+    AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", echo)
 
 else
     AC_PROG_CXX
@@ -537,9 +524,20 @@ AR_FLAGS='cr $@'
 AS='$(CC)'
 ASFLAGS='$(CFLAGS)'
 
-OS_ARCH=`uname -s | sed -e 's|/|_|g'`
-OS_RELEASE=`uname -r`
-OS_TEST=`uname -m`
+if test -n "$CROSS_COMPILE"; then
+    OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
+    OS_RELEASE=
+    OS_TEST="${target_cpu}"
+    case "${target_os}" in
+        linux*)       OS_ARCH=Linux ;;
+        solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
+        mingw*)     OS_ARCH=WINNT ;;
+    esac
+else
+    OS_ARCH=`uname -s | sed -e 's|/|_|g'`
+    OS_RELEASE=`uname -r`
+    OS_TEST=`uname -m`
+fi
 
 if test "$OS_ARCH" = "IRIX64"; then
     OS_ARCH=IRIX
@@ -677,6 +675,11 @@ dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    CYGWIN_WRAPPER='sh $(topsrcdir)/config/cygwin-wrapper'
+    NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
+    if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
+        PERL='$(CYGWIN_WRAPPER) perl'
+    fi
     ;;
 *-beos*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
@@ -1192,12 +1195,6 @@ case "$target" in
     PR_MD_ARCH_DIR=windows
     RESOLVE_LINK_SYMBOLS=1
     PROG_SUFFIX=.exe
-    CYGWIN_WRAPPER='sh $(topsrcdir)/config/cygwin-wrapper'
-    NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
-    if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
-        PERL='$(CYGWIN_WRAPPER) perl'
-    fi
-
     if test -n "$GNU_CC"; then
         CC="$CC -mno-cygwin"
         CXX="$CXX -mno-cygwin"
