@@ -26,6 +26,7 @@
 #include "nsIFileTransportService.h"    // XXX temporary
 #include "nsHttpProtocolHandler.h"
 #include "nsITransport.h"
+#include "nsIByteBufferInputStream.h"
 
 //static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);        // XXX temporary
@@ -35,7 +36,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHttpProtocolConnection::nsHttpProtocolConnection()
-    : mHandler(nsnull), mUrl(nsnull), mEventSink(nsnull), mState(UNCONNECTED)
+    : mHandler(nsnull), mUrl(nsnull), mEventSink(nsnull), mState(UNCONNECTED),
+      mEventQueue(nsnull)
 {
 }
 
@@ -71,7 +73,8 @@ nsHttpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 nsresult 
 nsHttpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink, 
-                               nsHttpProtocolHandler* handler)
+                               nsHttpProtocolHandler* handler,
+                               PLEventQueue* eventQueue)
 {
     nsresult rv;
 
@@ -82,6 +85,10 @@ nsHttpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink,
     NS_ADDREF(mUrl);
 
     rv = eventSink->QueryInterface(nsIHttpEventSink::GetIID(), (void**)&mEventSink);
+    if (NS_FAILED(rv)) return rv;
+
+    mEventQueue = eventQueue;
+    
     return rv;
 }
 
@@ -147,6 +154,7 @@ nsHttpProtocolConnection::Open(void)
     if (NS_FAILED(rv)) return rv;
     
     rv = mHandler->GetTransport(host, port, &mTransport);
+    mState = CONNECTED;
     return rv;
 }
 
@@ -199,17 +207,26 @@ NS_IMETHODIMP
 nsHttpProtocolConnection::Get(void)
 {
     nsresult rv;
-//    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
-//    if (NS_FAILED(rv)) return rv;
 
-    // XXX temporary:
-    NS_WITH_SERVICE(nsIFileTransportService, sts, kFileTransportServiceCID, &rv);
+    if (mState != CONNECTED)
+        return NS_ERROR_NOT_CONNECTED;
+
+    // write the http request to the server:
+    
+    nsIByteBufferInputStream* in;
+    rv = NS_NewByteBufferInputStream(&in);
     if (NS_FAILED(rv)) return rv;
-    const char* path = "y:/temp/foo.html";
 
-//    rv = sts->AsyncWrite();
-//    nsITransport* trans;
-//    rv = sts->AsyncRead(path, context, appEventQueue, this, &trans);
+    PRUint32 writeCnt;
+    PRUint32 requestLen = 3;
+    rv = in->Fill("GET", requestLen, &writeCnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(writeCnt == requestLen, "nsIByteBufferInputStream failed");
+    
+    rv = mTransport->AsyncWrite(in,
+                                NS_STATIC_CAST(nsIProtocolConnection*, this),
+                                mEventQueue, this);
+    NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 
     return rv;
@@ -247,8 +264,32 @@ nsHttpProtocolConnection::OnStopBinding(nsISupports* context,
                                         nsresult aStatus,
                                         nsIString* aMsg)
 {
-    // XXX switch from POSTING to GETTING state here, etc.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    switch (mState) {
+      case CONNECTED:
+        if (NS_SUCCEEDED(aStatus)) {
+            // read the reply
+            mState = WAITING_REPLY;
+            rv = mTransport->AsyncRead(NS_STATIC_CAST(nsIProtocolConnection*, this),
+                                       mEventQueue, this);
+            if (NS_FAILED(rv)) return rv;
+        }
+        break;
+        
+      case WAITING_REPLY:
+        // reply finished
+
+//        rv = mHandler->ReleaseTransport(mTransport);
+//        if (NS_FAILED(rv)) return rv;
+
+        mState = UNCONNECTED;
+
+        break;
+      default:
+        NS_NOTREACHED("bad state");
+        break;
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
