@@ -100,7 +100,7 @@ nsKillAll.prototype = {
       // close down all windows
 
       var windowManager =
-        Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
+        Components.classes['@mozilla.org/appshell/window-mediator;1']
         .getService(Components.interfaces.nsIWindowMediator);
       var enumerator = windowManager.getEnumerator(null);
       while(enumerator.hasMoreElements()) {
