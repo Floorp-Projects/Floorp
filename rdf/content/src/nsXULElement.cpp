@@ -2031,7 +2031,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
       }
     }
 
-    // Need to check for the SELECTED, SELECTEDROW, and SELECTEDCELL attributes
+    // Need to check for the SELECTED attribute
     // being set.  If we're a <treeitem>, <treerow>, or <treecell>, the act of
     // setting these attributes forces us to update our selected arrays.
     nsCOMPtr<nsIAtom> tag;
@@ -2314,7 +2314,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
         // XXX Some kind of special document update might need to happen here.
     }
 
-    // Need to check for the SELECTED, SELECTEDROW, and SELECTEDCELL attributes
+    // Need to check for the SELECTED attribute
     // being unset.  If we're a <treeitem>, <treerow>, or <treecell>, the act of
     // unsetting these attributes forces us to update our selected arrays.
     nsCOMPtr<nsIAtom> tag;
