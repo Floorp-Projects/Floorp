@@ -1367,6 +1367,29 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClie
 
 
 /////////////////////////////////////////////////////////////////////////////
+// IMozControlBridge
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetWebBrowser(/* [out] */ void __RPC_FAR *__RPC_FAR *aBrowser)
+{
+	if (!NgIsValidAddress(aBrowser, sizeof(void *)))
+	{
+		NG_ASSERT(0);
+		RETURN_E_INVALIDARG();
+	}
+
+    *aBrowser = NULL;
+    if (mWebBrowser)
+    {
+        nsIWebBrowser *browser = mWebBrowser.get();
+        NS_ADDREF(browser);
+        *aBrowser = (void *) browser;
+    }
+    return S_OK;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 // IWebBrowser
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)

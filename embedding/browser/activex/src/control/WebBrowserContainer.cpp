@@ -505,23 +505,32 @@ CWebBrowserContainer::ExitModalLoop(nsresult aStatus)
 NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
-	IDispatch *pDispNew = NULL;
-	VARIANT_BOOL bCancel = VARIANT_FALSE;
-	
-	// Test if the event sink can give us a new window to navigate into
-	m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
+  	IDispatch *pDispNew = NULL;
+  	VARIANT_BOOL bCancel = VARIANT_FALSE;
+
+    *aDocShellTreeItem = nsnull;
+
+  	// Test if the event sink can give us a new window to navigate into
+  	m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
 
 	if ((bCancel == VARIANT_FALSE) && pDispNew)
-	{
-		CMozillaBrowser *pBrowser = (CMozillaBrowser *) pDispNew;
-        // XXXX what the hell is this supposed to mean?
-		nsCOMPtr<nsIDocShell> docShell(do_GetInterface(pBrowser->mWebBrowser));
+  	{
+        CComQIPtr<IMozControlBridge, &IID_IMozControlBridge> cpBridge = pDispNew;
+        if (cpBridge)
+        {
+            nsIWebBrowser *browser = nsnull;
+            cpBridge->GetWebBrowser((void **) &browser);
+            if (browser)
+            {
+                nsCOMPtr<nsIDocShell> docshell = do_GetInterface(browser);
+                docshell->QueryInterface(NS_GET_IID(nsIDocShellTreeItem), (void **) aDocShellTreeItem);
+                NS_RELEASE(browser);
+            }
+        }
 		pDispNew->Release();
-		return NS_OK;
 	}
-
-	*aDocShellTreeItem = nsnull;
-	return NS_ERROR_FAILURE;
+  
+	return (*aDocShellTreeItem) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
