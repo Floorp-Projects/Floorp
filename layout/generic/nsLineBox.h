@@ -58,11 +58,11 @@ public:
     return mCarriedOutBottomMargin;
   }
 
-  nscoord GetCarriedOutMarginFlags() const {
-    return 0;/* XXX write me */
-  }
-
   nscoord GetHeight() const { return mBounds.height; }
+
+#ifdef NS_DEBUG
+  PRBool CheckIsBlock() const;
+#endif
 
   //----------------------------------------------------------------------
   // XXX old junk

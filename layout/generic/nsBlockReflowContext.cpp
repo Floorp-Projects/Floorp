@@ -71,10 +71,10 @@ nsBlockReflowContext::ComputeMarginsFor(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace)
+nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace,
+                                  nsReflowStatus& aFrameReflowStatus)
 {
-  nsReflowStatus reflowStatus;
-
+  nsresult rv = NS_OK;
   mFrame = aFrame;
   mSpace = aSpace;
 
@@ -127,8 +127,8 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace)
 
   // Let frame know that we are reflowing it
   nsIHTMLReflow* htmlReflow;
-  nsresult rv = aFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  if (!NS_SUCCEEDED(rv)) {
+  rv = aFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+  if (NS_FAILED(rv)) {
     return rv;
   }
   htmlReflow->WillReflow(mPresContext);
@@ -144,7 +144,8 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace)
   nscoord ty = y - mOuterReflowState.mBorderPadding.top;
   aFrame->MoveTo(x, y);
   mOuterReflowState.spaceManager->Translate(tx, ty);
-  htmlReflow->Reflow(mPresContext, mMetrics, reflowState, reflowStatus);
+  rv = htmlReflow->Reflow(mPresContext, mMetrics, reflowState,
+                          aFrameReflowStatus);
   mOuterReflowState.spaceManager->Translate(-tx, -ty);
 
   aFrame->GetFrameState(state);
@@ -163,12 +164,12 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace)
     aFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
   }
 
-  if (!NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
     // If frame is complete and has a next-in-flow, we need to delete
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up).
-    if (NS_FRAME_IS_COMPLETE(reflowStatus)) {
+    if (NS_FRAME_IS_COMPLETE(aFrameReflowStatus)) {
       nsIFrame* kidNextInFlow;
       aFrame->GetNextInFlow(kidNextInFlow);
       if (nsnull != kidNextInFlow) {
@@ -183,7 +184,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace)
     }
   }
 
-  return reflowStatus;
+  return rv;
 }
 
 /**

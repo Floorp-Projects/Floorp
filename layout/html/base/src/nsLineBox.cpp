@@ -18,6 +18,8 @@
  */
 #include "nsLineBox.h"
 #include "nsISpaceManager.h"
+#include "nsIStyleContext.h"
+#include "nsLineLayout.h"
 #include "prprf.h"
 
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
@@ -273,3 +275,19 @@ nsLineBox::UnplaceFloaters(nsISpaceManager* aSpaceManager)
     }
   }
 }
+
+#ifdef NS_DEBUG
+PRBool
+nsLineBox::CheckIsBlock() const
+{
+  nsIFrame* frame = mFirstChild;
+  const nsStyleDisplay* display;
+  frame->GetStyleData(eStyleStruct_Display,
+                      (const nsStyleStruct*&) display);
+  const nsStylePosition* position;
+  frame->GetStyleData(eStyleStruct_Position,
+                      (const nsStyleStruct*&) position);
+  PRBool isBlock = nsLineLayout::TreatFrameAsBlock(display, position);
+  return isBlock == IsBlock();
+}
+#endif
