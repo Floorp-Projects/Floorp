@@ -28,7 +28,7 @@ var gTotalFileCount = 0;
 var gSucceededCount = 0;
 var gFinishedCount = 0;
 var gFinished = false;
-var gFinalMessage;
+var gFinalMessage="";
 var gTimerID;
 
 function Startup()
