@@ -99,10 +99,10 @@ public:
                              PRInt32 aMaxLen);
 
   /// Compute a hashcode for a ucs2 string
-  static PRInt32 HashCode(const PRUnichar* s1);
+  static PRUint32 HashValue(const PRUnichar* s1);
 
   /// Same as above except that we return the length in s1len
-  static PRInt32 HashCode(const PRUnichar* s1, PRInt32* s1len);
+  static PRUint32 HashValue(const PRUnichar* s1, PRInt32* s1len);
 
   /// String to integer.
   static PRInt32 atoi( const PRUnichar *string );

@@ -366,9 +366,9 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
   return 0;
 }
 
-PRInt32 nsCRT::HashCode(const PRUnichar* us)
+PRUint32 nsCRT::HashValue(const PRUnichar* us)
 {
-  PRInt32 rv = 0;
+  PRUint32 rv = 0;
   if(us) {
     PRUnichar ch;
     while ((ch = *us++) != 0) {
@@ -379,9 +379,9 @@ PRInt32 nsCRT::HashCode(const PRUnichar* us)
   return rv;
 }
 
-PRInt32 nsCRT::HashCode(const PRUnichar* us, PRInt32* uslenp)
+PRUint32 nsCRT::HashValue(const PRUnichar* us, PRInt32* uslenp)
 {
-  PRInt32 rv = 0;
+  PRUint32 rv = 0;
   PRInt32 len = 0;
   PRUnichar ch;
   while ((ch = *us++) != 0) {
