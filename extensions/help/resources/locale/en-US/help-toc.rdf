@@ -83,6 +83,7 @@
         <rdf:li> <rdf:Description ID="nav-doc-searchprefs" nc:name="Setting Search Preferences" nc:link="chrome://help/locale/nav_help.html#nav_searchprefs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Internet Keywords" nc:link="chrome://help/locale/nav_help.html#nav_keywords"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-searchpage" nc:name="Searching Within a Page" nc:link="chrome://help/locale/nav_help.html#nav_searchpage"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-find_as_you_type" nc:name="Using Find-as-you-type" nc:link="chrome://help/locale/nav_help.html#find_as_you_type"/></rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-searchbookmark" nc:name="Searching the Bookmarks or History List" nc:link="chrome://help/locale/nav_help.html#nav_searchbookmark"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
