@@ -1276,17 +1276,17 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
         nscoord xx = x;
         nscoord yy = y;
         mTranMatrix->TransformCoord(&xx, &yy);
-        ::gdk_draw_text(mSurface->GetDrawable(), mCurrentFont,
-                        mGC,
-                        xx, yy, &ch, 1);
+        nsRenderingContextGTK::my_gdk_draw_text(mSurface->GetDrawable(), mCurrentFont,
+                                                mGC,
+                                                xx, yy, &ch, 1);
         x += *aSpacing++;
       }
     }
     else {
       mTranMatrix->TransformCoord(&x, &y);
-      ::gdk_draw_text (mSurface->GetDrawable(), mCurrentFont,
-                       mGC,
-                       x, y, aString, aLength);
+      nsRenderingContextGTK::my_gdk_draw_text (mSurface->GetDrawable(), mCurrentFont,
+                                               mGC,
+                                               x, y, aString, aLength);
     }
   }
 
@@ -1341,8 +1341,6 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
     nscoord x = aX;
     nscoord y;
 
-    UpdateGC();
-
     // Substract xFontStruct ascent since drawing specifies baseline
     mFontMetrics->GetMaxAscent(y);
     y += aY;
@@ -1374,6 +1372,12 @@ FoundFont:
           if (aSpacing) {
             const PRUnichar* str = &aString[start];
             const PRUnichar* end = &aString[i];
+
+            // save off mCurrentFont and set it so that we cache the GC's font correctly
+            GdkFont *oldFont = mCurrentFont;
+            mCurrentFont = prevFont->mFont;
+            UpdateGC();
+
             while (str < end) {
               x = aX;
               y = aY;
@@ -1382,10 +1386,15 @@ FoundFont:
               aX += *aSpacing++;
               str++;
             }
+            mCurrentFont = oldFont;
           }
           else {
+            GdkFont *oldFont = mCurrentFont;
+            mCurrentFont = prevFont->mFont;
+            UpdateGC();
             x += prevFont->DrawString(this, mSurface, x, y, &aString[start],
                                       i - start);
+            mCurrentFont = oldFont;
           }
           prevFont = currFont;
           start = i;
@@ -1398,6 +1407,11 @@ FoundFont:
     }
 
     if (prevFont) {
+
+      GdkFont *oldFont = mCurrentFont;
+      mCurrentFont = prevFont->mFont;
+      UpdateGC();
+    
       if (aSpacing) {
         const PRUnichar* str = &aString[start];
         const PRUnichar* end = &aString[i];
@@ -1409,10 +1423,13 @@ FoundFont:
           aX += *aSpacing++;
           str++;
         }
+
       }
       else {
         prevFont->DrawString(this, mSurface, x, y, &aString[start], i - start);
       }
+
+      mCurrentFont = oldFont;
     }
   }
 
@@ -1750,3 +1767,57 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
   return NS_OK;
 }
 #endif /* MOZ_MATHML */
+
+
+
+/* static */ void
+nsRenderingContextGTK::my_gdk_draw_text (GdkDrawable *drawable,
+                                         GdkFont     *font,
+                                         GdkGC       *gc,
+                                         gint         x,
+                                         gint         y,
+                                         const gchar *text,
+                                         gint         text_length)
+{
+  GdkWindowPrivate *drawable_private;
+  GdkFontPrivate *font_private;
+  GdkGCPrivate *gc_private;
+
+  g_return_if_fail (drawable != NULL);
+  g_return_if_fail (font != NULL);
+  g_return_if_fail (gc != NULL);
+  g_return_if_fail (text != NULL);
+
+  drawable_private = (GdkWindowPrivate*) drawable;
+  if (drawable_private->destroyed)
+    return;
+  gc_private = (GdkGCPrivate*) gc;
+  font_private = (GdkFontPrivate*) font;
+
+  if (font->type == GDK_FONT_FONT)
+  {
+    XFontStruct *xfont = (XFontStruct *) font_private->xfont;
+
+    // gdk does this... we don't need it..
+    //    XSetFont(drawable_private->xdisplay, gc_private->xgc, xfont->fid);
+
+    if ((xfont->min_byte1 == 0) && (xfont->max_byte1 == 0))
+    {
+      XDrawString (drawable_private->xdisplay, drawable_private->xwindow,
+                   gc_private->xgc, x, y, text, text_length);
+    }
+    else
+    {
+      XDrawString16 (drawable_private->xdisplay, drawable_private->xwindow,
+                     gc_private->xgc, x, y, (XChar2b *) text, text_length / 2);
+    }
+  }
+  else if (font->type == GDK_FONT_FONTSET)
+  {
+    XFontSet fontset = (XFontSet) font_private->xfont;
+    XmbDrawString (drawable_private->xdisplay, drawable_private->xwindow,
+                   fontset, gc_private->xgc, x, y, text, text_length);
+  }
+  else
+    g_error("undefined font type\n");
+}
