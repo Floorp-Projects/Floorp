@@ -318,134 +318,134 @@ int msg_UnHex(char C)
 void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet, 
 							  MsgFlags flag, nsIOFileStream **ppFileStream)
 {
-	static char buf[50];
-	nsIOFileStream *fileStream = (m_folderStream) ? m_folderStream : *ppFileStream;
-//#ifdef GET_FILE_STUFF_TOGETHER
+  static char buf[50];
+  nsIOFileStream *fileStream = (m_folderStream) ? m_folderStream : *ppFileStream;
+  //#ifdef GET_FILE_STUFF_TOGETHER
 #ifdef XP_MAC
-/* ducarroz: Do we still need this ??
-	// This is a horrible hack and we should make sure we don't need it anymore.
-	// It has to do with multiple people having the same file open, I believe, but the
-	// mac file system only has one handle, and they compete for the file position.
-	// Prevent closing the file from under the incorporate stuff. #82785.
-	int32 savedPosition = -1;
-	if (!fid && gIncorporatePath && !XP_STRCMP(m_folderSpec, gIncorporatePath))
-	{
+  /* ducarroz: Do we still need this ??
+  // This is a horrible hack and we should make sure we don't need it anymore.
+  // It has to do with multiple people having the same file open, I believe, but the
+  // mac file system only has one handle, and they compete for the file position.
+  // Prevent closing the file from under the incorporate stuff. #82785.
+  int32 savedPosition = -1;
+  if (!fid && gIncorporatePath && !XP_STRCMP(m_folderSpec, gIncorporatePath))
+  {
 		fid = gIncorporateFID;
-		savedPosition = ftell(gIncorporateFID); // so we can restore it.
-	}
-*/
+                savedPosition = ftell(gIncorporateFID); // so we can restore it.
+                }
+  */
 #endif // XP_MAC
-    PRUint32 offset;
-    (void)mailHdr->GetStatusOffset(&offset);
-	if (offset > 0) 
-	{
-		
-		if (fileStream == NULL) 
-		{
-			fileStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
-		}
-		if (fileStream) 
-		{
-            PRUint32 msgOffset;
-            (void)mailHdr->GetMessageOffset(&msgOffset);
-			PRUint32 position = offset + msgOffset;
-			PR_ASSERT(offset < 10000);
-			fileStream->seek(position);
-			buf[0] = '\0';
-			if (fileStream->readline(buf, sizeof(buf))) 
-			{
-				if (strncmp(buf, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN) == 0 &&
-					strncmp(buf + X_MOZILLA_STATUS_LEN, ": ", 2) == 0 &&
-					strlen(buf) >= X_MOZILLA_STATUS_LEN + 6) 
-				{
-                    PRUint32 flags;
-                    (void)mailHdr->GetFlags(&flags);
-					if (!(flags & MSG_FLAG_EXPUNGED))
-					{
-						int i;
-						char *p = buf + X_MOZILLA_STATUS_LEN + 2;
-					
-						for (i=0, flags = 0; i<4; i++, p++)
-						{
-							flags = (flags << 4) | msg_UnHex(*p);
-						}
-                        
-                        PRUint32 curFlags;
-                        (void)mailHdr->GetFlags(&curFlags);
-						flags = (flags & MSG_FLAG_QUEUED) |
-                          (curFlags & ~MSG_FLAG_RUNTIME_ONLY);
-					}
-					else
-					{
-						flags &= ~MSG_FLAG_RUNTIME_ONLY;
-					}
-					fileStream->seek(position);
-					// We are filing out old Cheddar flags here
-					PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT,
-                                flags & 0x0000FFFF);
-					fileStream->write(buf, PL_strlen(buf));
-					fileStream->flush();
-
-					// time to upate x-mozilla-status2
-					position = fileStream->tell();
-					fileStream->seek(position + MSG_LINEBREAK_LEN);
-					if (fileStream->readline(buf, sizeof(buf))) 
-					{
-						if (strncmp(buf, X_MOZILLA_STATUS2, X_MOZILLA_STATUS2_LEN) == 0 &&
-							strncmp(buf + X_MOZILLA_STATUS2_LEN, ": ", 2) == 0 &&
-							strlen(buf) >= X_MOZILLA_STATUS2_LEN + 10) 
-						{
-							PRUint32 dbFlags;
-                            (void)mailHdr->GetFlags(&dbFlags);
-							dbFlags &= (MSG_FLAG_MDN_REPORT_NEEDED | MSG_FLAG_MDN_REPORT_SENT | MSG_FLAG_TEMPLATE);
-							fileStream->seek(position + MSG_LINEBREAK_LEN);
-							PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
-							fileStream->write(buf, PL_strlen(buf));
-							fileStream->flush();
-						}
-					}
-				} else 
-				{
+  PRUint32 offset;
+  (void)mailHdr->GetStatusOffset(&offset);
+  if (offset > 0) 
+  {
+    
+    if (fileStream == NULL) 
+    {
+      fileStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
+    }
+    if (fileStream) 
+    {
+      PRUint32 msgOffset;
+      (void)mailHdr->GetMessageOffset(&msgOffset);
+      PRUint32 position = offset + msgOffset;
+      PR_ASSERT(offset < 10000);
+      fileStream->seek(position);
+      buf[0] = '\0';
+      if (fileStream->readline(buf, sizeof(buf))) 
+      {
+        if (strncmp(buf, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN) == 0 &&
+          strncmp(buf + X_MOZILLA_STATUS_LEN, ": ", 2) == 0 &&
+          strlen(buf) >= X_MOZILLA_STATUS_LEN + 6) 
+        {
+          PRUint32 flags;
+          (void)mailHdr->GetFlags(&flags);
+          if (!(flags & MSG_FLAG_EXPUNGED))
+          {
+            int i;
+            char *p = buf + X_MOZILLA_STATUS_LEN + 2;
+            
+            for (i=0, flags = 0; i<4; i++, p++)
+            {
+              flags = (flags << 4) | msg_UnHex(*p);
+            }
+            
+            PRUint32 curFlags;
+            (void)mailHdr->GetFlags(&curFlags);
+            flags = (flags & MSG_FLAG_QUEUED) |
+              (curFlags & ~MSG_FLAG_RUNTIME_ONLY);
+          }
+          else
+          {
+            flags &= ~MSG_FLAG_RUNTIME_ONLY;
+          }
+          fileStream->seek(position);
+          // We are filing out old Cheddar flags here
+          PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT,
+            flags & 0x0000FFFF);
+          fileStream->write(buf, PL_strlen(buf));
+          fileStream->flush();
+          
+          // time to upate x-mozilla-status2
+          position = fileStream->tell();
+          fileStream->seek(position + MSG_LINEBREAK_LEN);
+          if (fileStream->readline(buf, sizeof(buf))) 
+          {
+            if (strncmp(buf, X_MOZILLA_STATUS2, X_MOZILLA_STATUS2_LEN) == 0 &&
+              strncmp(buf + X_MOZILLA_STATUS2_LEN, ": ", 2) == 0 &&
+              strlen(buf) >= X_MOZILLA_STATUS2_LEN + 10) 
+            {
+              PRUint32 dbFlags;
+              (void)mailHdr->GetFlags(&dbFlags);
+              dbFlags &= 0xFFFF0000;
+              fileStream->seek(position + MSG_LINEBREAK_LEN);
+              PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
+              fileStream->write(buf, PL_strlen(buf));
+              fileStream->flush();
+            }
+          }
+        } else 
+        {
 #ifdef DEBUG
-					printf("Didn't find %s where expected at position %ld\n"
-						  "instead, found %s.\n",
-						  X_MOZILLA_STATUS, (long) position, buf);
+          printf("Didn't find %s where expected at position %ld\n"
+            "instead, found %s.\n",
+            X_MOZILLA_STATUS, (long) position, buf);
 #endif
-					SetReparse(PR_TRUE);
-				}			
-			} 
-			else 
-			{
+          SetReparse(PR_TRUE);
+        }			
+      } 
+      else 
+      {
 #ifdef DEBUG
-				printf("Couldn't read old status line at all at position %ld\n",
-						(long) position);
+        printf("Couldn't read old status line at all at position %ld\n",
+          (long) position);
 #endif
-				SetReparse(PR_TRUE);
-			}
+        SetReparse(PR_TRUE);
+      }
 #ifdef XP_MAC
-/* ducarroz: Do we still need this ??
-			// Restore the file position
-			if (savedPosition >= 0)
-				XP_FileSeek(fid, savedPosition, SEEK_SET);
-*/
+      /* ducarroz: Do we still need this ??
+      // Restore the file position
+      if (savedPosition >= 0)
+      XP_FileSeek(fid, savedPosition, SEEK_SET);
+      */
 #endif
-		}
-		else
-		{
+    }
+    else
+    {
 #ifdef DEBUG
-			printf("Couldn't open mail folder for update%s!\n",
-                   (const char*)m_folderSpec);
+      printf("Couldn't open mail folder for update%s!\n",
+        (const char*)m_folderSpec);
 #endif
-			PR_ASSERT(PR_FALSE);
-		}
-	}
-//#endif // GET_FILE_STUFF_TOGETHER
+      PR_ASSERT(PR_FALSE);
+    }
+  }
+  //#endif // GET_FILE_STUFF_TOGETHER
 #ifdef XP_MAC
-	if (!m_folderStream /*&& fid != gIncorporateFID*/)	/* ducarroz: Do we still need this ?? */
+  if (!m_folderStream /*&& fid != gIncorporateFID*/)	/* ducarroz: Do we still need this ?? */
 #else
-	if (!m_folderStream)
+    if (!m_folderStream)
 #endif
-		*ppFileStream = fileStream; // This tells the caller that we opened the file, and please to close it.
+      *ppFileStream = fileStream; // This tells the caller that we opened the file, and please to close it.
 }
 
 /* static */  nsresult nsMailDatabase::SetSummaryValid(PRBool valid)

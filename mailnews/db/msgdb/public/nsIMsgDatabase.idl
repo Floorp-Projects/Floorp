@@ -214,6 +214,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
                         in nsIDBChangeListener instigator);
   void MarkOffline(in nsMsgKey key, in boolean offline,
                          in nsIDBChangeListener instigator);
+  void SetLabel(in nsMsgKey key, in nsMsgLabelValue label);
 
   [noscript] void AllMsgKeysImapDeleted(in nsMsgKeyArrayPtr keys, out boolean allDeleted);
 

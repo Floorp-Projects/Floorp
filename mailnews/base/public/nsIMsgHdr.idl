@@ -119,6 +119,7 @@ interface nsIMsgHdr : nsISupports
     [noscript] void getRecipientsCollationKey(out octetPtr key, out unsigned long len);
     
 	attribute string Charset;
+	attribute nsMsgLabelValue label;
   readonly attribute nsIMsgFolder folder;
 };
 

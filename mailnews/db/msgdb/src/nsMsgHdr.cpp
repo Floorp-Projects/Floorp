@@ -545,6 +545,19 @@ NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriorityValue *result)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgHdr::SetLabel(nsMsgLabelValue label)
+{
+  SetUInt32Column((PRUint32) label, m_mdb->m_labelColumnToken);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgHdr::GetLabel(nsMsgLabelValue *result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+
+  return GetUInt32Column(m_mdb->m_labelColumnToken, result);
+}
+
 NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
 {
   NS_ENSURE_ARG(result);

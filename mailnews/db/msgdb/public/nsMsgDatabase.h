@@ -235,6 +235,7 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
 	mdb_token			m_messageSizeColumnToken;
 	mdb_token			m_flagsColumnToken;
 	mdb_token			m_priorityColumnToken;
+	mdb_token			m_labelColumnToken;
 	mdb_token			m_statusOffsetColumnToken;
 	mdb_token			m_numLinesColumnToken;
 	mdb_token			m_ccListColumnToken;

@@ -132,6 +132,7 @@ protected:
   nsresult FetchStatus(PRUint32 aFlags, PRUnichar ** aStatusString);
   nsresult FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString);
   nsresult FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityString);
+  nsresult FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString);
   nsresult CycleThreadedColumn(nsIDOMElement * aElement);
 
   // Save and Restore Selection are a pair of routines you should
@@ -220,6 +221,7 @@ protected:
   nsresult SetReadByIndex(nsMsgViewIndex index, PRBool read);
   nsresult SetThreadOfMsgReadByIndex(nsMsgViewIndex index, nsMsgKeyArray &keysMarkedRead, PRBool read);
   nsresult SetFlaggedByIndex(nsMsgViewIndex index, PRBool mark);
+  nsresult SetLabelByIndex(nsMsgViewIndex index, nsMsgLabelValue label);
   nsresult OrExtraFlag(nsMsgViewIndex index, PRUint32 orflag);
   nsresult AndExtraFlag(nsMsgViewIndex index, PRUint32 andflag);
   nsresult SetExtraFlag(nsMsgViewIndex index, PRUint32 extraflag);

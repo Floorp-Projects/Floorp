@@ -653,6 +653,7 @@ nsMsgDatabase::nsMsgDatabase()
       m_messageSizeColumnToken(0),
       m_flagsColumnToken(0),
       m_priorityColumnToken(0),
+      m_labelColumnToken(0),
       m_statusOffsetColumnToken(0),
       m_numLinesColumnToken(0),
       m_ccListColumnToken(0),
@@ -712,7 +713,7 @@ nsMsgDatabase::~nsMsgDatabase()
 	}
 	if (m_mdbEnv)
 	{
-		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
+		m_mdbEnv->CloseMdbObject(m_mdbEnv); //??? is this right?
 		m_mdbEnv = nsnull;
 	}
     if (m_ChangeListeners) 
@@ -996,37 +997,40 @@ nsresult nsMsgDatabase::CloseMDB(PRBool commit)
 // This is evil in the com world, but there are times we need to delete the file.
 NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 {
-	nsresult	err = NS_OK;
-    nsCOMPtr<nsIMsgDatabase> aDb(do_QueryInterface(this, &err));
-
-	// make sure someone has a reference so object won't get deleted out from under us.
-	AddRef();	
-	NotifyAnnouncerGoingAway();
-	// OK, remove from cache first and close the store.
-//	RemoveFromCache(this);
-	NS_IF_RELEASE(m_dbFolderInfo);
-        // clear out db ptr in folder info; it might have just become invalid
-        if (m_dbFolderInfo)
-          m_dbFolderInfo->m_mdb = nsnull;
-	m_dbFolderInfo = nsnull;
-
-	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
-	ClearHdrCache(PR_FALSE);
+  nsresult	err = NS_OK;
+  nsCOMPtr<nsIMsgDatabase> aDb(do_QueryInterface(this, &err));
+  
+  // make sure someone has a reference so object won't get deleted out from under us.
+  AddRef();	
+  NotifyAnnouncerGoingAway();
+  NS_IF_RELEASE(m_dbFolderInfo);
+  // clear out db ptr in folder info; it might have just become invalid
+  if (m_dbFolderInfo)
+    m_dbFolderInfo->m_mdb = nsnull;
+  m_dbFolderInfo = nsnull;
+  
+  err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
+  ClearHdrCache(PR_FALSE);
 #ifdef DEBUG_bienvenu
   if (m_headersInUse && m_headersInUse->entryCount > 0)
   {
-//    NS_ASSERTION(PR_FALSE, "leaking headers");
+    //    NS_ASSERTION(PR_FALSE, "leaking headers");
     printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
   }
 #endif
-	ClearUseHdrCache();
-	if (m_mdbStore)
-	{
-		m_mdbStore->CloseMdbObject(m_mdbEnv);
-		m_mdbStore = nsnull;
-	}
-	Release();
-	return err;
+  ClearUseHdrCache();
+  if (m_mdbAllMsgHeadersTable)
+  {
+    m_mdbAllMsgHeadersTable->Release();
+    m_mdbAllMsgHeadersTable = nsnull;
+  }
+  if (m_mdbStore)
+  {
+    m_mdbStore->CloseMdbObject(m_mdbEnv);
+    m_mdbStore = nsnull;
+  }
+  Release();
+  return err;
 }
 
 // caller must Release result.
@@ -1152,6 +1156,7 @@ const char *kDateColumnName = "date";
 const char *kMessageSizeColumnName = "size";
 const char *kFlagsColumnName = "flags";
 const char *kPriorityColumnName = "priority";
+const char *kLabelColumnName = "label";
 const char *kStatusOffsetColumnName = "statusOfset";
 const char *kNumLinesColumnName = "numLines";
 const char *kCCListColumnName = "ccList";
@@ -1271,6 +1276,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kMessageSizeColumnName, &m_messageSizeColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kFlagsColumnName, &m_flagsColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kPriorityColumnName, &m_priorityColumnToken);
+                        GetStore()->StringToToken(GetEnv(),  kLabelColumnName, &m_labelColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kStatusOffsetColumnName, &m_statusOffsetColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kNumLinesColumnName, &m_numLinesColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kCCListColumnName, &m_ccListColumnToken);
@@ -1777,6 +1783,23 @@ NS_IMETHODIMP nsMsgDatabase::MarkOffline(nsMsgKey key, PRBool offline,
 										nsIDBChangeListener *instigator)
 {
 	return SetKeyFlag(key, offline, MSG_FLAG_OFFLINE, instigator);
+}
+
+NS_IMETHODIMP nsMsgDatabase::SetLabel(nsMsgKey key, nsMsgLabelValue label)
+{
+  nsresult rv;
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+		
+  rv = GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
+  if (NS_FAILED(rv) || !msgHdr) 
+    return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+
+  msgHdr->SetLabel(label);
+  // set the flag in the x-mozilla-status2 line.
+  return SetKeyFlag(key, PR_TRUE, label << 25, nsnull);
+  // ### dmb need to use persistent flags in x-mozilla-status2 for this.
+  // so that we don't lose the labels when we reparse the folder.
+  // return SetKeyFlag(key, offline, MSG_FLAG_OFFLINE, instigator);
 }
 
 NS_IMETHODIMP
@@ -2387,7 +2410,7 @@ nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
 
 nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
 {
-	NS_IF_RELEASE(mTableCursor);
+  mTableCursor->CloseMdbObject(mDB->GetEnv());
 	NS_IF_RELEASE(mResultThread);
     NS_RELEASE(mDB);
 }

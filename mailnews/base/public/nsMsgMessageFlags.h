@@ -96,14 +96,14 @@ typedef PRInt32 MsgFlags;
                                        don't want to later deliver it! */
 #define MSG_FLAG_FORWARDED  0x1000  /* this message has been forwarded */
 #define MSG_FLAG_PRIORITIES 0xE000	/* These are used to remember the message
-									   priority in the mozilla status flags
-									   so we can regenerate a priority after a 
-									   rule (or user) has changed it. They are
-									   not returned in MSG_MessageLine.flags, 
-									   just in mozilla-status, so if you need
-									   more non-persistent flags, you could 
-									   share these bits. But it would be wrong.
-									.  */
+					   priority in the mozilla status flags
+					   so we can regenerate a priority after a 
+					   rule (or user) has changed it. They are
+					   not returned in MSG_MessageLine.flags, 
+					   just in mozilla-status, so if you need
+					   more non-persistent flags, you could 
+					   share these bits. But it would be wrong.
+					.  */
 
 #define MSG_FLAG_NEW		0x10000	/* This msg is new since the last time
 									   the folder was closed.
@@ -123,6 +123,15 @@ typedef PRInt32 MsgFlags;
 #define MSG_FLAG_TEMPLATE       0x1000000	/* this message is a template */
 #define MSG_FLAG_ATTACHMENT		0x10000000	/* this message has files attached to it */
 
+#define MSG_FLAG_LABELS 0xE000000	/* These are used to remember the message
+					   labels in the mozilla status2 flags
+					   so we can regenerate a priority after a 
+					   rule (or user) has changed it. They are
+					   not returned in nsMsgHdr.flags, 
+					   just in mozilla-status2, so if you need
+					   more non-persistent flags, you could 
+					   share these bits. But it would be wrong.
+					.  */
 // we're trying to reserve the high byte of the flags for view flags,
 // so, don't add flags to the high byte if possible.
 
