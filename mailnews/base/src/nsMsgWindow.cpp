@@ -218,7 +218,7 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
       if(rootAsShell)
          rootAsShell->SetParentURIContentListener(this);
 
-      nsAutoString childName("messagepane");
+      nsAutoString childName; childName.AssignWithConversion("messagepane");
       nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
       nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(rootAsItem));
       mRootWebShell = webShell;

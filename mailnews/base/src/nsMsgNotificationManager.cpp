@@ -291,10 +291,10 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	nsCOMPtr<nsIRDFLiteral> type, source, description, timeStamp, url;
 	nsString typeString, sourceString, descriptionString, timeStampString, urlString;
 
-	sourceString = "Messenger";
-	descriptionString = "You have mail";
-	timeStampString = "3:33pm";
-	urlString = "test";
+	sourceString.AssignWithConversion("Messenger");
+	descriptionString.AssignWithConversion("You have mail");
+	timeStampString.AssignWithConversion("3:33pm");
+	urlString.AssignWithConversion("test");
 
     nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInMemoryDataSourceISupports);
 
@@ -318,7 +318,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	if(NS_SUCCEEDED(rv))
 	{
 		char *str = PR_smprintf("%d new %s", newMessages, (newMessages == 1) ? "message" : "messages");
-		descriptionString = str;
+		descriptionString.AssignWithConversion(str);
 		PR_smprintf_free(str);
 	}
 	// if flash panel is going to ignore the source, I'm going to add it to the description for now
@@ -326,7 +326,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	rv = folder->GetPrettyName(getter_Copies(folderName));
 	if (NS_SUCCEEDED(rv) && folderName)
 	{
-		descriptionString += " in ";
+		descriptionString.AppendWithConversion(" in ");
 		descriptionString.Append(folderName);
 	}
 
@@ -341,7 +341,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	PR_ExplodeTime( PR_Now(), PR_LocalTimeParameters, &explode);
 	char buffer[128];
 	PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
-	timeStampString = buffer;
+	timeStampString.AssignWithConversion(buffer);
 	
 	rv = rdfService->GetLiteral(timeStampString.GetUnicode(), getter_AddRefs(timeStamp));
 	if(NS_SUCCEEDED(rv))

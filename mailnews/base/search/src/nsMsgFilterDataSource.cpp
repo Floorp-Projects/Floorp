@@ -80,7 +80,7 @@ nsMsgFilterDataSource::cleanupGlobalObjects()
 nsresult
 nsMsgFilterDataSource::initGlobalObjects(nsIRDFService *rdf)
 {
-    rdf->GetLiteral(nsAutoString("true").GetUnicode(),
+    rdf->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
                     getter_AddRefs(kTrueLiteral));
     
     rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));
@@ -305,7 +305,7 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
 
     PRUint32 i;
     for (i=0; i<filterCount; i++) {
-        filterUri.Append(PRInt32(i));
+        filterUri.AppendInt(PRInt32(i));
         
         nsCOMPtr<nsIRDFResource> filterResource;
         rv = getRDFService()->GetResource(filterUri.GetBuffer(),

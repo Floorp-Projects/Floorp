@@ -225,9 +225,9 @@ nsresult nsMsgFolderDataSource::Init()
 nsresult nsMsgFolderDataSource::CreateLiterals(nsIRDFService *rdf)
 {
 
-	nsAutoString str = "true";
+	nsAutoString str; str.AssignWithConversion("true");
 	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
-	str = "false";
+	str; str.AssignWithConversion("false");
 	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
 	return NS_OK;
 
@@ -992,7 +992,7 @@ nsresult nsMsgFolderDataSource::CreateNameSortString(nsIMsgFolder *folder, nsAut
 		return rv;
 
 	nsAutoString orderString;
-	orderString.Append(order);
+	orderString.AppendInt(order);
 
 	name.Insert(orderString, 0);
 
@@ -1004,9 +1004,9 @@ nsresult nsMsgFolderDataSource::CreateUnreadMessagesNameString(PRInt32 unreadMes
 	//Only do this if unread messages are positive
 	if(unreadMessages > 0)
 	{
-		nameString.Append(" (");
-		nameString.Append(unreadMessages);
-		nameString.Append(')');
+		nameString.AppendWithConversion(" (");
+		nameString.AppendInt(unreadMessages);
+		nameString.AppendWithConversion(')');
 	}
 	return NS_OK;
 }
@@ -1022,19 +1022,19 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
   nsAutoString specialFolderString;
   
   if(flags & MSG_FOLDER_FLAG_INBOX)
-    specialFolderString = "Inbox";
+    specialFolderString.AssignWithConversion("Inbox");
   else if(flags & MSG_FOLDER_FLAG_TRASH)
-    specialFolderString = "Trash";
+    specialFolderString.AssignWithConversion("Trash");
   else if(flags & MSG_FOLDER_FLAG_QUEUE)
-    specialFolderString = "Unsent Messages";
+    specialFolderString.AssignWithConversion("Unsent Messages");
   else if(flags & MSG_FOLDER_FLAG_SENTMAIL)
-    specialFolderString = "Sent";
+    specialFolderString.AssignWithConversion("Sent");
   else if(flags & MSG_FOLDER_FLAG_DRAFTS)
-    specialFolderString = "Drafts";
+    specialFolderString.AssignWithConversion("Drafts");
   else if(flags & MSG_FOLDER_FLAG_TEMPLATES)
-    specialFolderString = "Templates";
+    specialFolderString.AssignWithConversion("Templates");
   else
-    specialFolderString = "none";
+    specialFolderString.AssignWithConversion("none");
   
   createNode(specialFolderString, target, getRDFService());
   return NS_OK;
@@ -1235,7 +1235,7 @@ nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **targ
 	if(NS_SUCCEEDED(rv))
 		charsetStr = charset;
 	else
-		charsetStr ="";
+		charsetStr.SetLength(0);
 	createNode(charsetStr, target, getRDFService());
 	return NS_OK;
 
@@ -1398,12 +1398,12 @@ nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node
 		createNode(numMessages, node, getRDFService());
 	else if(numMessages == -1)
 	{
-		nsAutoString unknownMessages("???");
+		nsAutoString unknownMessages; unknownMessages.AssignWithConversion("???");
 		createNode(unknownMessages, node, getRDFService());
 	}
 	else
 	{
-		nsAutoString unknownMessages("");
+		nsAutoString unknownMessages;
 		createNode(unknownMessages, node, getRDFService());
 	}
 	return NS_OK;
@@ -1412,7 +1412,7 @@ nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node
 nsresult
 nsMsgFolderDataSource::createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target)
 {
-	nsAutoString unknownMessages("true");
+	nsAutoString unknownMessages; unknownMessages.AssignWithConversion("true");
 	createNode(unknownMessages, target, getRDFService());
 
 	return NS_OK;

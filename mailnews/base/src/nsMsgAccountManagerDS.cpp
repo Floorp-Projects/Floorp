@@ -214,7 +214,7 @@ nsMsgAccountManagerDataSource::Init()
       
       getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
 
-      getRDFService()->GetLiteral(nsAutoString("true").GetUnicode(),
+      getRDFService()->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
                                   &kTrueLiteral);
       
       // eventually these need to exist in some kind of array
@@ -253,7 +253,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   
   rv = NS_RDF_NO_VALUE;
 
-  nsAutoString str("");
+  nsAutoString str;
   if (property == kNC_Name || property == kNC_FolderTreeName) {
 
       rv = getStringBundle();
@@ -261,19 +261,19 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       
       nsXPIDLString pageTitle;
       if (source == kNC_PageTitleServer)
-          mStringBundle->GetStringFromName(nsAutoString("prefPanel-server").GetUnicode(),
+          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-server").GetUnicode(),
                                            getter_Copies(pageTitle));
       
       else if (source == kNC_PageTitleCopies)
-          mStringBundle->GetStringFromName(nsAutoString("prefPanel-copies").GetUnicode(),
+          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-copies").GetUnicode(),
                                            getter_Copies(pageTitle));
 
       else if (source == kNC_PageTitleAdvanced)
-          mStringBundle->GetStringFromName(nsAutoString("prefPanel-advanced").GetUnicode(),
+          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-advanced").GetUnicode(),
                                            getter_Copies(pageTitle));
 
       else if (source == kNC_PageTitleSMTP)
-          mStringBundle->GetStringFromName(nsAutoString("prefPanel-smtp").GetUnicode(),
+          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-smtp").GetUnicode(),
                                            getter_Copies(pageTitle));
 
       else {
@@ -290,15 +290,15 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   else if (property == kNC_PageTag) {
     // do NOT localize these strings. these are the urls of the XUL files
     if (source == kNC_PageTitleServer)
-      str = "am-server.xul";
+      str.AssignWithConversion("am-server.xul");
     else if (source == kNC_PageTitleCopies)
-      str = "am-copies.xul";
+      str.AssignWithConversion("am-copies.xul");
     else if (source == kNC_PageTitleAdvanced)
-      str = "am-advanced.xul";
+      str.AssignWithConversion("am-advanced.xul");
     else if (source == kNC_PageTitleSMTP) 
-      str = "am-smtp.xul";
+      str.AssignWithConversion("am-smtp.xul");
     else {
-      str = "am-main.xul";
+      str.AssignWithConversion("am-main.xul");
 
       /* if this is a server, with no identities, then we show a special panel */
       nsCOMPtr<nsIMsgIncomingServer> server;
@@ -307,7 +307,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
           PRBool hasIdentities;
           rv = serverHasIdentities(server, &hasIdentities);
           if (NS_SUCCEEDED(rv) && !hasIdentities) {
-            str = "am-serverwithnoidentities.xul";
+            str.AssignWithConversion("am-serverwithnoidentities.xul");
           }
       }
     }
@@ -332,7 +332,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     if (NS_FAILED(rv)) return rv;
     
     accountNum += 1000;
-    str.Append(accountNum);
+    str.AppendInt(accountNum);
   }
 
   // GetTargets() stuff - need to return a valid answer so that
@@ -346,7 +346,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     folder->GetIsServer(&isServer);
     // no need to localize this!
     if (isServer)
-      str = "ServerSettings";
+      str.AssignWithConversion("ServerSettings");
   }
 
   else if (property == kNC_IsDefaultServer) {
@@ -372,7 +372,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (isEqual)
-          str="true";
+          str.AssignWithConversion("true");
   }
   
   if (!str.IsEmpty())

@@ -72,7 +72,7 @@ nsMsgBiffManager::~nsMsgBiffManager()
 		NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{    
-			nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+			nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 			observerService->RemoveObserver(this, topic.GetUnicode());
 		}
 	}
@@ -95,7 +95,7 @@ nsresult nsMsgBiffManager::Init()
 	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{    
-		nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+		nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 		observerService->AddObserver(this, topic.GetUnicode());
 	}
 
@@ -205,7 +205,7 @@ NS_IMETHODIMP nsMsgBiffManager::OnServerUnloaded(nsIMsgIncomingServer *server)
 NS_IMETHODIMP nsMsgBiffManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
 	nsAutoString topicString(aTopic);
-	nsAutoString shutdownString(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+	nsAutoString shutdownString; shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
 	if(topicString == shutdownString)
 	{

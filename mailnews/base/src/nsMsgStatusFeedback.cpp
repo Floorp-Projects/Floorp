@@ -90,7 +90,7 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 		{
 		  // Kick start the throbber
       StartMeteors();
-      ShowStatusString(nsAutoString("Loading Document...").GetUnicode());
+      ShowStatusString(NS_ConvertASCIItoUCS2("Loading Document...").GetUnicode());
 		  // Enable the Stop buton
 		  // setAttribute( rootWebshell, "canStop", "disabled", "" );
 		}
@@ -129,7 +129,7 @@ nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* c
 		{
 		  // stop the throbber
       StopMeteors();
-      ShowStatusString(nsAutoString("Document: Done").GetUnicode());
+      ShowStatusString(NS_ConvertASCIItoUCS2("Document: Done").GetUnicode());
 		  // Disable the Stop buton
 		  //setAttribute( rootWebshell, "canStop", "disabled", "true" );
 		}
@@ -290,7 +290,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow 
      nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
      if (piDOMWindow)
      {
-        nsAutoString msgStatusFeedbackWinId("MsgStatusFeedback");
+        nsAutoString msgStatusFeedbackWinId; msgStatusFeedbackWinId.AssignWithConversion("MsgStatusFeedback");
         piDOMWindow->GetObjectProperty(msgStatusFeedbackWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
         mStatusFeedback = do_QueryInterface(xpConnectObj);
      }

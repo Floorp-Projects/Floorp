@@ -213,46 +213,48 @@ nsresult nsMsgMessageDataSource::Init()
 
 nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 {
+    // STRING USE WARNING: more of a suggestion, really -- perhaps using |NS_ConvertASCIItoUCS2| right in the |createNode| calls
+    //  would be cleaner.  It should generate identical code
 
-	nsAutoString str(" ");;
+	nsAutoString str; str.AssignWithConversion(" ");
 	createNode(str, getter_AddRefs(kEmptyStringLiteral), rdf);
-	str = "lowest";
+	str.AssignWithConversion("lowest");
 	createNode(str, getter_AddRefs(kLowestLiteral), rdf);
-	str = "low";
+	str.AssignWithConversion("low");
 	createNode(str, getter_AddRefs(kLowLiteral), rdf);
-	str = "high";
+	str.AssignWithConversion("high");
 	createNode(str, getter_AddRefs(kHighLiteral), rdf);
-	str = "highest";
+	str.AssignWithConversion("highest");
 	createNode(str, getter_AddRefs(kHighestLiteral), rdf);
-	str = "4";
+	str.AssignWithConversion("4");
 	createNode(str, getter_AddRefs(kLowestSortLiteral), rdf);
-	str = "3";
+	str.AssignWithConversion("3");
 	createNode(str, getter_AddRefs(kLowSortLiteral), rdf);
-	str = "2";
+	str.AssignWithConversion("2");
 	createNode(str, getter_AddRefs(kNormalSortLiteral), rdf);
-	str = "1";
+	str.AssignWithConversion("1");
 	createNode(str, getter_AddRefs(kHighSortLiteral), rdf);
-	str = "0";
+	str.AssignWithConversion("0");
 	createNode(str, getter_AddRefs(kHighestSortLiteral), rdf);
-	str = "flagged";
+	str.AssignWithConversion("flagged");
 	createNode(str, getter_AddRefs(kFlaggedLiteral), rdf);
-	str = "unflagged";
+	str.AssignWithConversion("unflagged");
 	createNode(str, getter_AddRefs(kUnflaggedLiteral), rdf);
-	str = "replied";
+	str.AssignWithConversion("replied");
 	createNode(str, getter_AddRefs(kRepliedLiteral), rdf);
-	str = "fowarded";
+	str.AssignWithConversion("fowarded");
 	createNode(str, getter_AddRefs(kForwardedLiteral), rdf);
-	str = "new";
+	str.AssignWithConversion("new");
 	createNode(str, getter_AddRefs(kNewLiteral), rdf);
-	str = "read";
+	str.AssignWithConversion("read");
 	createNode(str, getter_AddRefs(kReadLiteral), rdf);
-	str = "true";
+	str.AssignWithConversion("true");
 	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
-	str = "false";
+	str.AssignWithConversion("false");
 	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
-	str = "news";
+	str.AssignWithConversion("news");
 	createNode(str, getter_AddRefs(kNewsLiteral), rdf);
-	str = "mail";
+	str.AssignWithConversion("mail");
 	createNode(str, getter_AddRefs(kMailLiteral), rdf);
 	return NS_OK;
 }
@@ -353,11 +355,11 @@ nsresult nsMsgMessageDataSource::GetSenderName(const PRUnichar *sender, nsAutoSt
 			if(name)
 			{
 				PRUnichar *newSender;
-				nsAutoString fmt("%s");
+				nsAutoString fmt; fmt.AssignWithConversion("%s");
 				newSender = nsTextFormatter::smprintf(fmt.GetUnicode(),name);
 				if(newSender)
 				{
-					senderUserName->SetString(newSender);
+					senderUserName->Assign(newSender);
 					nsTextFormatter::smprintf_free(newSender);
 				}
 				nsCRT::free(name);
@@ -995,7 +997,7 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
       rv = message->GetFlags(&flags);
       if(NS_SUCCEEDED(rv) && (flags & MSG_FLAG_HAS_RE))
 			{
-					nsAutoString reStr="Re: ";
+					nsAutoString reStr; reStr.AssignWithConversion("Re: ");
 					reStr.Append(subject);
 					*((PRUnichar **)getter_Copies(subject)) = nsXPIDLString::Copy(reStr.GetUnicode());
 			}
@@ -1341,7 +1343,7 @@ nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message, nsIRDFNode **
 {
 	nsresult rv;
 	PRUint32 size;
-	nsAutoString sizeStr("");
+	nsAutoString sizeStr;
 	rv = message->GetMessageSize(&size);
 	if(NS_FAILED(rv))
 		return rv;
@@ -1354,7 +1356,7 @@ nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message, nsIRDFNode **
 		char * kbStr = PR_smprintf("%uKB", sizeInKB);
 		if(kbStr)
 		{
-			sizeStr =kbStr;
+			sizeStr.AssignWithConversion(kbStr);
 			PR_smprintf_free(kbStr);
 		}
 		rv = createNode(sizeStr, target, getRDFService());
@@ -1369,7 +1371,7 @@ nsresult nsMsgMessageDataSource::createMessageTotalNode(nsIMessage *message, nsI
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIMsgThread> thread;
 	nsresult rv;
-	nsAutoString emptyString("");
+	nsAutoString emptyString;
 
 	PRBool showThreads;
   GetIsThreaded(&showThreads);
@@ -1404,7 +1406,7 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIMsgThread> thread;
 	nsresult rv;
-	nsAutoString emptyString("");
+	nsAutoString emptyString;
 
 	PRBool showThreads;
   rv = GetIsThreaded(&showThreads);
@@ -1437,7 +1439,7 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 nsresult nsMsgMessageDataSource::GetUnreadChildrenNode(nsIMsgThread *thread, nsIRDFNode **target)
 {
 	nsresult rv;
-	nsAutoString emptyString("");
+	nsAutoString emptyString;
 	PRUint32 numUnread;
 	rv = thread->GetNumUnreadChildren(&numUnread);
 	if(NS_SUCCEEDED(rv))
@@ -1454,7 +1456,7 @@ nsresult nsMsgMessageDataSource::GetUnreadChildrenNode(nsIMsgThread *thread, nsI
 nsresult nsMsgMessageDataSource::GetTotalChildrenNode(nsIMsgThread *thread, nsIRDFNode **target)
 {
 	nsresult rv;
-	nsAutoString emptyString("");
+	nsAutoString emptyString;
 	PRUint32 numChildren;
 	rv = thread->GetNumChildren(&numChildren);
 	if(NS_SUCCEEDED(rv))

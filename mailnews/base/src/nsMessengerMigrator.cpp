@@ -348,7 +348,7 @@ nsMessengerMigrator::~nsMessengerMigrator()
     NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-      nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       observerService->RemoveObserver(this, topic.GetUnicode());
     }
   }     
@@ -361,7 +361,7 @@ nsresult nsMessengerMigrator::Init()
   NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     observerService->AddObserver(this, topic.GetUnicode());
   }    
 
@@ -402,7 +402,7 @@ nsMessengerMigrator::getPrefService()
 NS_IMETHODIMP nsMessengerMigrator::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
   nsAutoString topicString(aTopic);
-  nsAutoString shutdownString(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  nsAutoString shutdownString; shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
   if(topicString == shutdownString)
   {
@@ -476,7 +476,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
   // TODO:  get this from a string bundle, see bug #33852
-  nsAutoString localMailPrettyName(LOCAL_MAIL_PRETTY_NAME);
+  nsAutoString localMailPrettyName; localMailPrettyName.AssignWithConversion(LOCAL_MAIL_PRETTY_NAME);
   server->SetPrettyName(localMailPrettyName.GetUnicode());
 
   // notice, no identity for local mail
@@ -1054,7 +1054,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
-  nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+  nsAutoString localMailFakeHostName; localMailFakeHostName.AssignWithConversion(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.GetUnicode());
   
   // create the directory structure for old 4.x "Local Mail"

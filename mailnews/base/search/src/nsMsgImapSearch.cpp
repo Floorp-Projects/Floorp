@@ -272,7 +272,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArr
 	else
 		asciiOnly = PR_FALSE;
 
-  nsAutoString usAsciiCharSet = "us-ascii";
+  nsAutoString usAsciiCharSet; usAsciiCharSet.AssignWithConversion("us-ascii");
 	// Get the optional CHARSET parameter, in case we need it.
   char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.GetUnicode() : destCharset);
 

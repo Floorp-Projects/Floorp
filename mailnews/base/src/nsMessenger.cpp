@@ -170,7 +170,7 @@ ConvertBufToPlainText(nsString &aConBuf)
         if (NS_SUCCEEDED(rv)) 
         {
           parser->RegisterDTD(dtd);
-          rv = parser->Parse(aConBuf, 0, "text/html", PR_FALSE, PR_TRUE);           
+          rv = parser->Parse(aConBuf, 0, NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, PR_TRUE);           
         }
         NS_IF_RELEASE(dtd);
         NS_IF_RELEASE(sink);
@@ -290,7 +290,7 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 
   mMsgWindow = aMsgWindow;
 
-  nsAutoString  webShellName("messagepane");
+  nsAutoString  webShellName; webShellName.AssignWithConversion("messagepane");
   NS_IF_RELEASE(mWindow);
   mWindow = aWin;
   NS_ADDREF(aWin);
@@ -351,7 +351,7 @@ nsMessenger::InitializeDisplayCharset()
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   if (docShell) 
   {
-    nsAutoString aForceCharacterSet("UTF-8");
+    nsAutoString aForceCharacterSet; aForceCharacterSet.AssignWithConversion("UTF-8");
     nsCOMPtr<nsIContentViewer> cv;
     docShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
@@ -458,7 +458,7 @@ nsMessenger::OpenURL(const char * url)
       //If it's not something we know about, then just load the url.
       else
       {
-        nsAutoString urlStr(unescapedUrl);
+        nsAutoString urlStr; urlStr.AssignWithConversion(unescapedUrl);
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
         if(webNav)
           webNav->LoadURI(urlStr.GetUnicode());
@@ -509,9 +509,9 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   if (saveState)
       aListener->m_saveAllAttachmentsState = saveState;
 
-  urlString = unescapedUrl;
+  urlString.AssignWithConversion(unescapedUrl);
 
-  urlString.ReplaceSubstring("/;section", "?section");
+  urlString.ReplaceSubstring(NS_ConvertASCIItoUCS2("/;section"), NS_ConvertASCIItoUCS2("?section"));
   urlCString = urlString.ToNewCString();
 
   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -530,7 +530,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
     nsString mimePart;
 
     urlString.Right(mimePart, urlString.Length() - sectionPos);
-    fullMessageUri.Append(mimePart);
+    fullMessageUri.AppendWithConversion(mimePart);
    
     messageUri = fullMessageUri.GetBuffer();
   }
@@ -543,8 +543,8 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
                                   -1);
     if (NS_FAILED(rv)) goto done;
 
-    from = MESSAGE_RFC822;
-    to = "text/xul";
+    from.AssignWithConversion(MESSAGE_RFC822);
+    to.AssignWithConversion("text/xul");
   
     channelSupport = do_QueryInterface(aListener->m_channel);
 
@@ -608,7 +608,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
      The display name is in UTF-8 because it has been escaped from JS
   */ 
   
-  rv = ConvertToUnicode("UTF-8", unescapedDisplayName, tempStr);
+  rv = ConvertToUnicode(NS_ConvertASCIItoUCS2("UTF-8"), unescapedDisplayName, tempStr);
   if (NS_SUCCEEDED(rv))
   {
     char * tempCStr;
@@ -681,7 +681,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count, const char **urlArray,
         nsUnescape(unescapedUrl);
         unescapedName = PL_strdup(displayNameArray[0]);
         nsUnescape(unescapedName);
-        rv = ConvertToUnicode("UTF-8", unescapedName, tempStr);
+        rv = ConvertToUnicode(NS_ConvertASCIItoUCS2("UTF-8"), unescapedName, tempStr);
         if (NS_FAILED(rv)) goto done;
         rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
                                 &tempCStr);
@@ -757,7 +757,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
                                                 getter_AddRefs(fileWidget));
         if (NS_FAILED(rv)) goto done;
 
-        promptString = GetString(nsString("SaveMailAs").GetUnicode());
+        promptString = GetString(NS_ConvertASCIItoUCS2("SaveMailAs").GetUnicode());
             
         titles = new nsString[3];
         if (!titles)
@@ -774,19 +774,19 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         nextTitle = titles;
         nextFilter = filters;
         // The names of the file types are localizable
-        fileWidget->SetDefaultString(nsString(defaultFile));
+        fileWidget->SetDefaultString(NS_ConvertASCIItoUCS2(defaultFile));
 
-        HTMLFiles = GetString(nsString("HTMLFiles").GetUnicode());
-        TextFiles = GetString(nsString("TextFiles").GetUnicode());
+        HTMLFiles = GetString(NS_ConvertASCIItoUCS2("HTMLFiles").GetUnicode());
+        TextFiles = GetString(NS_ConvertASCIItoUCS2("TextFiles").GetUnicode());
         if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
             goto SkipFilters;
         
-        *nextTitle++ = GetString(nsString("EMLFiles").GetUnicode());
-        *nextFilter++ = "*.eml";
+        *nextTitle++ = GetString(NS_ConvertASCIItoUCS2("EMLFiles").GetUnicode());
+        (*nextFilter++).AssignWithConversion("*.eml");
         *nextTitle++ = HTMLFiles;
-        *nextFilter++ = "*.htm; *.html; *.shtml";
+        (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
         *nextTitle++ = TextFiles;
-        *nextFilter++ = "*.txt";
+        (*nextFilter++).AssignWithConversion("*.txt");
         fileWidget->SetFilterList(3, titles, filters);              
             
     SkipFilters:
@@ -870,16 +870,16 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             break;
         case 1:
         case 2:
-            urlString = url;
+            urlString.AssignWithConversion(url);
 
             // Setup the URL for a "Save As..." Operation...
             // For now, if this is a save as TEXT operation, then do
             // a "printing" operation
             //
             if (saveAsFileType == 1)
-                urlString += "?header=saveas";
+                urlString.AppendWithConversion("?header=saveas");
             else
-                urlString += "?header=print";
+                urlString.AppendWithConversion("?header=print");
             
             urlCString = urlString.ToNewCString();
             rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -894,18 +894,18 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
                                           -1);         // contentLength
             if (NS_FAILED(rv)) goto done;
 
-            aListener->m_outputFormat = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
+            aListener->m_outputFormat.AssignWithConversion(saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN);
             
             // Mark the fact that we need to do charset handling/text conversion!
-            if (aListener->m_outputFormat.Equals(TEXT_PLAIN))
+            if (aListener->m_outputFormat.EqualsWithConversion(TEXT_PLAIN))
                 aListener->m_doCharsetConversion = PR_TRUE;
             
             channelSupport = do_QueryInterface(aListener->m_channel);
             
-            rv = streamConverterService->AsyncConvertData(nsString(MESSAGE_RFC822).GetUnicode(),
+            rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(MESSAGE_RFC822).GetUnicode(),
             // RICHIE - we should be able to go RFC822 to TXT, but not until
             // Bug #1775 is fixed. aListener->m_outputFormat.GetUnicode() 
-                                                          nsString(TEXT_HTML).GetUnicode(), 
+                                                          NS_ConvertASCIItoUCS2(TEXT_HTML).GetUnicode(), 
                                                           aListener,
                                                           channelSupport,
                                                           getter_AddRefs(convertedListener));
@@ -967,7 +967,7 @@ nsresult
 nsMessenger::Alert(const char *stringName)
 {
     nsresult rv = NS_OK;
-    nsString errorMessage = GetString(nsString(stringName).GetUnicode());
+    nsString errorMessage = GetString(NS_ConvertASCIItoUCS2(stringName).GetUnicode());
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
     if (docShell)
     {
@@ -1455,9 +1455,6 @@ nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
 
     // rhp: for charset handling
     m_doCharsetConversion = PR_FALSE;
-    m_charset = "";
-    m_outputFormat = "";
-    m_msgBuffer = "";
     m_saveAllAttachmentsState = nsnull;
 }
 
@@ -1599,7 +1596,7 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
     // If we need text/plain, then we need to convert the HTML and then convert
     // to the systems charset
     //
-    if (m_outputFormat.Equals(TEXT_PLAIN))
+    if (m_outputFormat.EqualsWithConversion(TEXT_PLAIN))
     {
       ConvertBufToPlainText(m_msgBuffer);
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(nsMsgI18NFileSystemCharset()), 
@@ -1649,7 +1646,7 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
           nsUnescape(unescapedUrl);
           unescapedName = PL_strdup(state->m_displayNameArray[i]);
           nsUnescape(unescapedName);
-          rv = ConvertToUnicode("UTF-8", unescapedName, tempStr);
+          rv = ConvertToUnicode(NS_ConvertASCIItoUCS2("UTF-8"), unescapedName, tempStr);
           if (NS_FAILED(rv)) goto done;
           rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
                                   &tempCStr);
@@ -1710,10 +1707,10 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
       //
       if (NS_SUCCEEDED(rv))
       {
-        if ( (m_doCharsetConversion) && (m_outputFormat.Equals(TEXT_PLAIN)) )
+        if ( (m_doCharsetConversion) && (m_outputFormat.EqualsWithConversion(TEXT_PLAIN)) )
         {
           PRUnichar       *u = nsnull; 
-          nsAutoString    fmt("%s");
+          nsAutoString    fmt; fmt.AssignWithConversion("%s");
           
           u = nsTextFormatter::smprintf(fmt.GetUnicode(), m_dataBuffer); // this converts UTF-8 to UCS-2 
           if (u)
@@ -1723,7 +1720,7 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
             PR_FREEIF(u);
           }
           else
-            m_msgBuffer.Append(m_dataBuffer, readCount);
+            m_msgBuffer.AppendWithConversion(m_dataBuffer, readCount);
         }
         else
         {

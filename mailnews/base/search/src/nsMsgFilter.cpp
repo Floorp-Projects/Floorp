@@ -344,8 +344,8 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
         nsCOMPtr <nsIMsgFolder> msgFolder;
         msgFolder = do_QueryInterface(destIFolder);	
         destIFolder->GetURI(getter_Copies(folderUri));
-		    m_action.m_folderUri = folderUri;
-        moveValue = folderUri;
+		    m_action.m_folderUri.Assign(folderUri);
+        moveValue.Assign(folderUri);
       }
     }
 	  else
@@ -386,8 +386,8 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
           nsCOMPtr <nsIMsgFolder> msgFolder;
           msgFolder = do_QueryInterface(destIFolder);	
           destIFolder->GetURI(getter_Copies(folderUri));
-		      m_action.m_folderUri = folderUri;
-          moveValue = folderUri;
+		      m_action.m_folderUri.Assign(folderUri);
+          moveValue.Assign(folderUri);
         }
       }
     }

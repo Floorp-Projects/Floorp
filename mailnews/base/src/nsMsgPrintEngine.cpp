@@ -84,7 +84,7 @@ NS_IMETHODIMP
 nsMsgPrintEngine::OnStartDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *aURL, const char *aCommand)
 {
   // Tell the user we are loading...
-  PRUnichar *msg = GetString(nsString("LoadingMessageToPrint").GetUnicode());
+  PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("LoadingMessageToPrint").GetUnicode());
   SetStatusMessage( msg );
   PR_FREEIF(msg);
 
@@ -99,7 +99,7 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
   nsCOMPtr<nsIContentViewer> viewer;
 
   // Tell the user the message is loaded...
-  PRUnichar *msg = GetString(nsString("MessageLoaded").GetUnicode());
+  PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").GetUnicode());
   SetStatusMessage( msg );
   PR_FREEIF(msg);
 
@@ -137,7 +137,7 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
         rv = viewerFile->Print(PR_TRUE, nsnull, (nsIPrintListener *)this);
 
       // Tell the user we started printing...
-      PRUnichar *msg = GetString(nsString("PrintingMessage").GetUnicode());
+      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingMessage").GetUnicode());
       SetStatusMessage( msg );
       PR_FREEIF(msg);
     }
@@ -181,7 +181,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
   }
 
   mWindow = aWin;
-  nsAutoString  webShellName("printengine");
+  nsAutoString  webShellName; webShellName.AssignWithConversion("printengine");
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
@@ -195,7 +195,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
   nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
   docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
 
-  nsAutoString childName("printengine");
+  nsAutoString childName; childName.AssignWithConversion("printengine");
   nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
   NS_ENSURE_TRUE(rootAsNode, NS_ERROR_FAILURE);
 
@@ -249,7 +249,7 @@ nsMsgPrintEngine::StartNextPrintOperation()
     mWindow->Close();
 
     // Tell the user we are done...
-    PRUnichar *msg = GetString(nsString("PrintingComplete").GetUnicode());
+    PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingComplete").GetUnicode());
     SetStatusMessage( msg );
     PR_FREEIF(msg);
     
@@ -310,7 +310,7 @@ nsMsgPrintEngine::InitializeDisplayCharset()
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   if (docShell) 
   {
-    nsAutoString aForceCharacterSet("UTF-8");
+    nsAutoString aForceCharacterSet; aForceCharacterSet.AssignWithConversion("UTF-8");
     nsCOMPtr<nsIContentViewer> cv;
     docShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 

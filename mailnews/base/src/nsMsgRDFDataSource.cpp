@@ -52,7 +52,7 @@ nsMsgRDFDataSource::Init()
     nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
                                                      &rv);
     if (NS_FAILED(rv)) return rv;
-    nsAutoString topic = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
+    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), topic.GetUnicode());
     if (NS_FAILED(rv)) return rv;
 
@@ -342,7 +342,7 @@ nsresult nsMsgRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 													  const char *newValue)
 {
 	nsCOMPtr<nsIRDFNode> newValueNode;
-	nsAutoString newValueStr(newValue);
+	nsAutoString newValueStr; newValueStr.AssignWithConversion(newValue);
 	createNode(newValueStr, getter_AddRefs(newValueNode), getRDFService());
 	NotifyPropertyChanged(resource, propertyResource, newValueNode);
 	return NS_OK;

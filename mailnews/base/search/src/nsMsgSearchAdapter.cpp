@@ -307,7 +307,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 {
     nsresult rv;
 //  char *defaultCharset =   nsMsgI18NGetDefaultMailCharset();
-  nsAutoString defaultCharset = nsMsgI18NGetDefaultMailCharset();
+  nsAutoString defaultCharset; defaultCharset.AssignWithConversion(nsMsgI18NGetDefaultMailCharset());
 	srcCharset = defaultCharset;
 	dstCharset = defaultCharset;
 
@@ -323,7 +323,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
         {
             nsXPIDLString folderCharset;
             folder->GetCharset(getter_Copies(folderCharset));
-            dstCharset = folderCharset;
+            dstCharset.Assign(folderCharset);
         }
 	}
 
@@ -354,7 +354,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 		// If the dest csid is ISO Latin 1 or MacRoman, attempt to convert the 
 		// source text to US-ASCII. (Not for now.)
 		// if ((dst_csid == CS_LATIN1) || (dst_csid == CS_MAC_ROMAN))
-			dstCharset = "us-ascii";
+			dstCharset.AssignWithConversion("us-ascii");
 	}
 }
 

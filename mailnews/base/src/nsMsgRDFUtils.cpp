@@ -30,14 +30,16 @@
 static PRBool
 peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, const char *parameter)
 {
+    // STRING USE WARNING: is any conversion really required here at all?
+
 	char *r1Str, *r2Str;
 	nsAutoString r1nsStr, r2nsStr;
 
 	r1->GetValue(&r1Str);
 	r2->GetValue(&r2Str);
 
-	r2nsStr = r2Str;
-	r1nsStr = r1Str;
+	r2nsStr.AssignWithConversion(r2Str);
+	r1nsStr.AssignWithConversion(r1Str);
 	nsAllocator::Free(r2Str);
 	nsAllocator::Free(r1Str);
 
@@ -116,7 +118,7 @@ nsresult createNode(PRUint32 value, nsIRDFNode **node, nsIRDFService *rdfService
 {
 	nsresult rv;
 	nsAutoString str;
-  str.Append((PRInt32)value);
+  str.AppendInt((PRInt32)value);
 	rv = createNode(str, node, rdfService);
 	return rv;
 }
@@ -127,7 +129,7 @@ nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfSe
   // use nsString to convert to unicode
 	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFLiteral> value;
-  nsAutoString str(charstr);
+  nsAutoString str; str.AssignWithConversion(charstr);
   PRUnichar *ucharstr = str.ToNewUnicode();
   if (ucharstr)
   {

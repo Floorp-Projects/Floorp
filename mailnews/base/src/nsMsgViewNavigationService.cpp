@@ -58,29 +58,29 @@ static PRBool AnyMessageNavigationFunction(nsIDOMXULElement *message, navigation
 
 static PRBool UnreadMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
 {
-	nsAutoString unreadStr("IsUnread");
+	nsAutoString unreadStr; unreadStr.AssignWithConversion("IsUnread");
 	nsAutoString resultStr;
 
 	message->GetAttribute(unreadStr, resultStr);
-	return(resultStr.Equals("true"));
+	return(resultStr.EqualsWithConversion("true"));
 }
 
 static PRBool FlaggedMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
 {
-	nsAutoString flaggedStr("Flagged");
+	nsAutoString flaggedStr; flaggedStr.AssignWithConversion("Flagged");
 	nsAutoString resultStr;
 
 	message->GetAttribute(flaggedStr, resultStr);
-	return(resultStr.Equals("flagged"));
+	return(resultStr.EqualsWithConversion("flagged"));
 }
 
 static PRBool NewMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
 {
-	nsAutoString statusStr("Status");
+	nsAutoString statusStr; statusStr.AssignWithConversion("Status");
 	nsAutoString resultStr;
 
 	message->GetAttribute(statusStr, resultStr);
-	return(resultStr.Equals("new"));
+	return(resultStr.EqualsWithConversion("new"));
 }
 
 //resource functions
@@ -128,39 +128,39 @@ static PRBool UnreadMessageNavigationResourceFunction(nsIRDFResource *message, n
 {
 	nsresult rv;
 	nsAutoString isUnreadValue;
-	nsAutoString unreadProperty("http://home.netscape.com/NC-rdf#IsUnread");
+	nsAutoString unreadProperty; unreadProperty.AssignWithConversion("http://home.netscape.com/NC-rdf#IsUnread");
 
 	rv = GetMessageValue(message, unreadProperty, isUnreadValue, info);
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
-	return(isUnreadValue.Equals("true"));
+	return(isUnreadValue.EqualsWithConversion("true"));
 }
 
 static PRBool FlaggedMessageNavigationResourceFunction(nsIRDFResource *message, navigationInfoPtr info)
 {
 	nsresult rv;
 	nsAutoString flaggedValue;
-	nsAutoString flaggedProperty("http://home.netscape.com/NC-rdf#Flagged");
+	nsAutoString flaggedProperty; flaggedProperty.AssignWithConversion("http://home.netscape.com/NC-rdf#Flagged");
 
 	rv = GetMessageValue(message, flaggedProperty, flaggedValue, info);
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
-	return(flaggedValue.Equals("flagged"));
+	return(flaggedValue.EqualsWithConversion("flagged"));
 }
 
 static PRBool NewMessageNavigationResourceFunction(nsIRDFResource *message, navigationInfoPtr info)
 {
 	nsresult rv;
 	nsAutoString statusValue;
-	nsAutoString statusProperty("http://home.netscape.com/NC-rdf#Status");
+	nsAutoString statusProperty; statusProperty.AssignWithConversion("http://home.netscape.com/NC-rdf#Status");
 
 	rv = GetMessageValue(message, statusProperty, statusValue, info);
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
-	return(statusValue.Equals("new"));
+	return(statusValue.EqualsWithConversion("new"));
 }
 
 //Thread navigation functions.
@@ -168,7 +168,7 @@ static PRBool UnreadThreadNavigationFunction(nsIDOMXULElement *messageElement, n
 {
 	nsresult rv;
 
-	nsAutoString idAttribute("id");
+	nsAutoString idAttribute; idAttribute.AssignWithConversion("id");
 	nsAutoString idResult;
 
 	rv = messageElement->GetAttribute(idAttribute, idResult);
@@ -415,7 +415,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindFirstMessage(nsIDOMXULTreeElement 
 		if(NS_FAILED(rv))
 			return rv;
 
-		if(nodeName.Equals("treechildren"))
+		if(nodeName.EqualsWithConversion("treechildren"))
 		{
 			//Get the treechildren's first child.  This is the first message
 			nsCOMPtr<nsIDOMNode> firstChild;
@@ -606,7 +606,7 @@ nsresult nsMsgViewNavigationService::FindNextMessageInThreads(nsIDOMNode *startM
 		return rv;
 
 	//if we're on the top level and a thread function has been passed in, we might be able to search faster.
-	if(!parentNodeName.Equals("treeitem") && info->navThreadFunction)
+	if(!parentNodeName.EqualsWithConversion("treeitem") && info->navThreadFunction)
 	{
 		return GetNextMessageByThread(startElement, info, nextMessage);
 
@@ -674,14 +674,14 @@ nsresult nsMsgViewNavigationService::FindNextInChildren(nsIDOMNode *parent, navi
 		return NS_ERROR_FAILURE;
 
 	PRBool isParentOpen;
-	nsAutoString openAttr("open");
+	nsAutoString openAttr; openAttr.AssignWithConversion("open");
 	nsAutoString openResult;
 
 	rv = parentElement->GetAttribute(openAttr, openResult);
 	if(NS_FAILED(rv))
 		return rv;
 
-	isParentOpen = (openResult.Equals("true"));
+	isParentOpen = (openResult.EqualsWithConversion("true"));
 	//First we'll deal with the case where the parent is open.  In this case we can use DOM calls.
 	if(isParentOpen)
 	{
@@ -753,7 +753,7 @@ nsresult nsMsgViewNavigationService::FindNextInChildren(nsIDOMNode *parent, navi
 	else
 	{
 		//We need to traverse the graph in rdf looking for the next resource that fits what we're searching for.
-		nsAutoString idAttribute("id");
+		nsAutoString idAttribute; idAttribute.AssignWithConversion("id");
 		nsAutoString parentURI;
 
 		rv = parentElement->GetAttribute(idAttribute, parentURI);
@@ -786,7 +786,7 @@ nsresult nsMsgViewNavigationService::FindNextInChildren(nsIDOMNode *parent, navi
 					return rv;
 
 				nsCOMPtr<nsIDOMElement> nextElement;
-				rv = info->document->GetElementById((const char*)nextURI, getter_AddRefs(nextElement));
+				rv = info->document->GetElementById(NS_ConvertASCIItoUCS2((const char*)nextURI), getter_AddRefs(nextElement));
 				if(NS_FAILED(rv))
 					return rv;
 				if(nextElement)
@@ -865,9 +865,9 @@ NS_IMETHODIMP nsMsgViewNavigationService::OpenTreeitemAndDescendants(nsIDOMNode 
 	if(!treeitemElement)
 		return NS_ERROR_FAILURE;
 
-	nsAutoString openAttribute("open");
+	nsAutoString openAttribute; openAttribute.AssignWithConversion("open");
 	nsAutoString openResult;
-	nsAutoString trueValue("true");
+	nsAutoString trueValue; trueValue.AssignWithConversion("true");
 
 	rv = treeitemElement->GetAttribute(openAttribute, openResult);
 	if(NS_FAILED(rv))
@@ -891,7 +891,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::OpenTreeitemAndDescendants(nsIDOMNode 
 	//if there's only one child then there are no treechildren so close it.
 	if(numTreeitemChildren == 1)
 	{
-		rv = treeitemElement->SetAttribute(openAttribute, "");
+		rv = treeitemElement->SetAttribute(openAttribute, nsAutoString());
 		if(NS_FAILED(rv))
 			return rv;
 	}
@@ -909,7 +909,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::OpenTreeitemAndDescendants(nsIDOMNode 
 			if(NS_FAILED(rv))
 				return rv;
 
-			if(nodeName.Equals("treechildren"))
+			if(nodeName.EqualsWithConversion("treechildren"))
 			{
 				nsCOMPtr<nsIDOMNodeList> treechildrenChildNodes;
 				rv = treeitemChild->GetChildNodes(getter_AddRefs(treechildrenChildNodes));
@@ -930,7 +930,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::OpenTreeitemAndDescendants(nsIDOMNode 
 
 					nsAutoString treechildrenChildNodeName;
 					rv = treechildrenChild->GetNodeName(treechildrenChildNodeName);
-					if(treechildrenChildNodeName.Equals("treeitem"))
+					if(treechildrenChildNodeName.EqualsWithConversion("treeitem"))
 					{
 						nsCOMPtr<nsIDOMElement> childElement = do_QueryInterface(treechildrenChild);
 						if(!childElement)
@@ -1221,7 +1221,7 @@ nsresult nsMsgViewNavigationService::FindNextInAncestors(nsIDOMNode *startMessag
 	if(NS_FAILED(rv))
 		return rv;
 
-	while(parentNodeName.Equals("treeitem"))
+	while(parentNodeName.EqualsWithConversion("treeitem"))
 	{
 		nsCOMPtr<nsIDOMNode> nextSibling;
 		rv = parent->GetNextSibling(getter_AddRefs(nextSibling));
