@@ -37,8 +37,6 @@
 #include <stdlib.h>
 #include <mem.h>
 
-
-
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
 static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
@@ -82,7 +80,7 @@ int X,Y,DEPTH;
 int real_depth;
 int scale=1;
 
-static void do_bmp(char *ptr,int bpl,int x,int y);
+void do_bmp(char *ptr,int bpl,int x,int y);
 #endif
 
 #include <prlog.h>
@@ -165,15 +163,21 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
   
+
+  /* Go back to the default Photon DrawContext */
+  /* This allows the photon widgets under Viewer to work right */
+  PhDCSetCurrent(NULL);
+  PgSetGC(mPtGC);
+  PgSetRegion(mPtGC->rid);
+  
   if( mGC )
   {
-    //PgDestroyGC( mGC );
+    //PgDestroyGC( mGC );		/* this causes crashes */
     mGC = nsnull;
   }
 
-  /* Go back to the default GC */
-  //PgSetGC( NULL );
 
+  
   if (mPhotonFontName)
   {
     delete [] mPhotonFontName;
@@ -188,13 +192,24 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget aContext=<%p> aWindow=<%p>\n", aContext, aWindow));
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget 2 aContext=<%p> mContext=<%p>\n", aContext, mContext));
+
   nsresult res;
 
   mContext = aContext;
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget 3 aContext=<%p> mContext=<%p>\n", aContext, mContext));
+
   NS_IF_ADDREF(mContext);
 
-  NS_ASSERTION(mContext,"mContext is NULL 2");
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget 4 aContext=<%p> mContext=<%p>\n", aContext, mContext));
 
+  NS_ASSERTION(mContext,"mContext is NULL 2");
+  if (!mContext)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init mContext is NULL 2\n"));
+    abort();
+  }
+  
   mWidget = (PtWidget_t*) aWindow->GetNativeData( NS_NATIVE_WIDGET );
 
   if(!mWidget)
@@ -261,9 +276,9 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
                                            nsDrawingSurface aSurface)
 {
 
-  printf ("nsRenderingContextPh::Init  with a surface!!!! %p\n",aSurface);
+  //printf ("nsRenderingContextPh::Init  with a surface!!!! %p\n",aSurface);
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a Drawing Surface\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a Drawing Surface this=<%p> aContext=<%p> aSurface=<%p>\n", this, aContext, aSurface));
 
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
@@ -272,6 +287,8 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 
   mSurface = (nsDrawingSurfacePh *) aSurface;
   NS_ADDREF(mSurface);
+
+  mGC = mSurface->GetGC();
 
   mInitialized = PR_TRUE;
   return (CommonInit());
@@ -295,7 +312,7 @@ NS_IMETHODIMP nsRenderingContextPh::CommonInit()
 	{
       //mClipRegion->SetTo(0,0,0,0);
       PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CommonInit mSurface is null"));
-	  NS_ASSERTION(mSurface, "nsRenderingContextPh::CommonInit  Error no surface");
+	  //NS_ASSERTION(mSurface, "nsRenderingContextPh::CommonInit  Error no surface");
 	  //abort();
 	  //return NS_ERROR_FAILURE;
     }
@@ -543,7 +560,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
   nsRect     trect = aRect;
   PhRect_t  *rgn;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect this=<%p>  mTMatrix=<%p> mClipRegion=<%p> aCombine=<%d>\n", this, mTMatrix, mClipRegion, aCombine ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect this=<%p>  mTMatrix=<%p> mClipRegion=<%p> aCombine=<%d> mGC=<%p>\n", this, mTMatrix, mClipRegion, aCombine, mGC ));
 
   if ((mTMatrix) && (mClipRegion))
   {
@@ -1025,14 +1042,18 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(const nsRect& aRect)
 {
-  InvertRect( aRect.x, aRect.y, aRect.width, aRect.height );
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::InvertRect with nsRect\n"));
+  nsresult res;
+  
+  res = InvertRect( aRect.x, aRect.y, aRect.width, aRect.height );
 
-  return NS_OK;
+  return res;
 }
 
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::InvertRect rect=(%d,%d,%d,%d)\n", aX,aY,aWidth,aHeight));
 
  if (nsnull == mTMatrix || nsnull == mSurface) {
     return NS_ERROR_FAILURE;
@@ -1045,13 +1066,12 @@ nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
   w = aWidth;
   h = aHeight;
 
-  /* Kedl thinks this fixes the blinking cursor crash */
-  //if (!mSurface)
-  //	return NS_OK;		// kedl, error instead?
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::InvertRect after transform rect=(%d,%d,%d,%d)\n", x,y,w,h));
+
   SELECT(mSurface);
-  //printf ("invert rect: %d %d %d %d\n",x,y,w,h);
 
   PgSetFillColor(Pg_INVERT_COLOR);
   PgSetDrawMode(Pg_DRAWMODE_XOR);
@@ -1167,12 +1187,7 @@ NS_IMETHODIMP nsRenderingContextPh :: FillPolygon(const nsPoint aPoints[], PRInt
 	 return NS_ERROR_FAILURE;
   }  
 
-  //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon before PgFlush \n"));
-
   PgFLUSH();	//kedl
-
-  //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon after PgFlush \n"));
-
   return NS_OK;
 }
 
@@ -1622,23 +1637,36 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
 
  PgFLUSH();	//kedl
 
-#if 0
+#if 1
 #ifdef DEBUG
 {
-  mSurface->Flush();
+  //mSurface->Flush();
 
   PhImage_t *image;
   PRUint32  w, h;
   
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface to BMP\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface to BMP mSurface=<%p>\n", mSurface));
 
-  image = ((nsDrawingSurfacePh *)mSurface)->mPixmap;
-  ((nsDrawingSurfacePh *)mSurface)->GetDimensions(&w,&h);
+  if (mSurface)
+  {
+    image = ((nsDrawingSurfacePh *)mSurface)->mPixmap;
   
-  unsigned char *ptr;
-  ptr = image->image;  
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface image=<%p>\n", image));
 
-    do_bmp(ptr,image->bpl/3,w,h);
+	/* Make sure its an off screen surface */
+    if (image)
+	{
+      ((nsDrawingSurfacePh *)mSurface)->GetDimensions(&w,&h);
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface w,h=<%d,%d)\n", w,h));
+
+      unsigned char *ptr;
+      ptr = image->image;  
+
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface ptr=<%p>\n",ptr));
+      do_bmp(ptr,image->bpl/3,w,h);
+    }
+	
+  }
 }
 #endif
 #endif
@@ -1810,9 +1838,11 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
       destsurf->Flush();
 
+#if 1
 #ifdef DEBUG
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump offscreen-2-offscreen buffer\n"));
     do_bmp(ptr,image->bpl/3,size.w,size.h);
+#endif
 #endif
     }
   } 
@@ -1842,6 +1872,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
     destsurf->Flush();
 
+#if 1
 #ifdef DEBUG
   /* Ouput the source buffer as a bmp */
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump offscreen buffer as BMP\n"));
@@ -1866,6 +1897,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
       PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits destination buffer is NULL\n"));
 	}
   }
+#endif
 #endif
   }
 
@@ -1893,11 +1925,12 @@ void nsRenderingContextPh :: PushClipState(void)
 
 void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping gc=<%p> mClipRegion=<%p>\n", gc, mClipRegion));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping this=<%p> gc=<%p> mClipRegion=<%p>\n",this,  gc, mClipRegion));
 
   if (!gc)
   {
-	NS_WARNING("nsRenderingContextPh::ApplyClipping gc is NULL");
+	NS_ASSERTION(0,"nsRenderingContextPh::ApplyClipping gc is NULL");
+    abort(); /* Is this an error? Try Test10 */
 	return;
   }
 
@@ -2122,10 +2155,13 @@ void do_bmp(char *ptr, int bpl, int W, int H)
 	Y=H;
 	DEPTH=24;
 
+PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp 1\n"));
+
 	// don't write bmp file if not wanted
 	test = fopen ("/dev/shmem/grab","r");
 	if (test==0) 
 	  return;
+
 	fclose(test);
 
 	p = ptr;
