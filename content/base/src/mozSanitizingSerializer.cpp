@@ -257,7 +257,7 @@ mozSanitizingHTMLSerializer::AppendElementStart(nsIDOMElement *aElement,
     rv = DoOpenContainer(id);
   }
   else {
-    rv = DoAddLeaf(id, EmptyString());
+    rv = DoAddLeaf(id, nsString());
   }
 
   mContent = 0;

@@ -78,7 +78,7 @@ void
 nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
   if (aDisabled)
-    mFrame->GetContent()->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, EmptyString(),
+    mFrame->GetContent()->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, nsString(),
                                   notify);
   else
     mFrame->GetContent()->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, notify);

@@ -4303,7 +4303,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
     }
     nsCOMPtr<nsIDOMNode> newNode;
     nsCOMPtr<nsIDOMText> nodeAsText;
-    res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
+    res = aDoc->CreateTextNode(nsAutoString(), getter_AddRefs(nodeAsText));
     if (NS_FAILED(res)) return res;
     if (!nodeAsText) return NS_ERROR_NULL_POINTER;
     newNode = do_QueryInterface(nodeAsText);

@@ -1501,7 +1501,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
     if (!CanContainTag(selectedNode, tag)) return NS_OK;
 
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-    return mTypeInState->SetProp(atom, EmptyString(), EmptyString());
+    return mTypeInState->SetProp(atom, nsAutoString(), nsAutoString());
   }
   
   // wrap with txn batching, rules sniffing, and selection preservation code

@@ -155,7 +155,7 @@ void txMozillaXMLOutput::attribute(const nsAString& aName,
         // Outputting HTML as XHTML, lowercase attribute names
         nsAutoString lowerName;
         TX_ToLowerCase(aName, lowerName);
-        element->SetAttributeNS(EmptyString(), lowerName,
+        element->SetAttributeNS(nsString(), lowerName,
                                 aValue);
     }
     else {
@@ -202,7 +202,7 @@ void txMozillaXMLOutput::endDocument()
     if (mCreatingNewDocument && !mHaveTitleElement) {
         nsCOMPtr<nsIDOMNSDocument> domDoc = do_QueryInterface(mDocument);
         if (domDoc) {
-            domDoc->SetTitle(EmptyString());
+            domDoc->SetTitle(nsString());
         }
     }
 

@@ -2754,7 +2754,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 
 		// look for query option which is the string the user is searching for
 		nsAutoString	userVar, inputUnused;
-    if (NS_FAILED(rv = GetInputs(dataUni, userVar, EmptyString(), inputUnused, 0, 0, 0)))  return(rv);
+    if (NS_FAILED(rv = GetInputs(dataUni, userVar, nsAutoString(), inputUnused, 0, 0, 0)))  return(rv);
 		if (userVar.IsEmpty())	return(NS_RDF_NO_VALUE);
 
 		nsAutoString	queryStr;
@@ -2879,7 +2879,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		ClearResults(PR_FALSE);
 
 		// do the search
-		DoSearch(nsnull, engine, searchURL, EmptyString());
+		DoSearch(nsnull, engine, searchURL, nsAutoString());
 
 		*searchInProgress = PR_TRUE;
 	}
@@ -3206,7 +3206,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 
     if (doNetworkRequest)
 		{
-			DoSearch(source, engine, EmptyString(), text);
+			DoSearch(source, engine, nsAutoString(), text);
 			requestInitiated = PR_TRUE;
 		}
 	}

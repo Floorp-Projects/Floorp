@@ -49,7 +49,7 @@
 //Construct an Attribute object using the specified name and document owner
 //
 Attr::Attr(const nsAString& name, Document* owner):
-      NodeDefinition(Node::ATTRIBUTE_NODE, name, EmptyString(), owner)
+      NodeDefinition(Node::ATTRIBUTE_NODE, name, nsString(), owner)
 {
   int idx = nodeName.FindChar(':');
   if (idx == kNotFound) {
@@ -78,7 +78,7 @@ Attr::Attr(const nsAString& name, Document* owner):
 Attr::Attr(const nsAString& aNamespaceURI,
            const nsAString& aName,
            Document* aOwner) :
-    NodeDefinition(Node::ATTRIBUTE_NODE, aName, EmptyString(), aOwner)
+    NodeDefinition(Node::ATTRIBUTE_NODE, aName, nsString(), aOwner)
 {
  if (aNamespaceURI.IsEmpty())
     mNamespaceID = kNameSpaceID_None;
