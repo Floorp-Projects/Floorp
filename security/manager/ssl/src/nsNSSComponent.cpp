@@ -107,6 +107,10 @@ nsNSSComponent::~nsNSSComponent()
       
     mCertContentListener = nsnull;
   }
+  if (mPref)
+    mPref->UnregisterCallback("security.", nsNSSComponent::PrefChangedCallback,
+                              (void*) this);
+
   if (mNSSInitialized)
     NSS_Shutdown();  
 }
@@ -366,10 +370,20 @@ nsNSSComponent::InitializeNSS()
   NSS_SetDomesticPolicy();
   //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
     
-  // XXX should use prefs
-  SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_TRUE);
-  SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE);
-  SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE);
+  mPref = do_GetService(NS_PREF_CONTRACTID);
+
+  // Register a callback so we can inform NSS when these prefs change
+  mPref->RegisterCallback("security.", nsNSSComponent::PrefChangedCallback,
+                          (void*) this);
+
+  PRBool enabled;
+  mPref->GetBoolPref("security.enable_ssl2", &enabled);
+  SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
+  mPref->GetBoolPref("security.enable_ssl3", &enabled);
+  SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
+  mPref->GetBoolPref("security.enable_tls", &enabled);
+  SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
 }
@@ -470,6 +484,31 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 {
   PK11_RandomUpdate(entropy, bufLen);
   return NS_OK;
+}
+
+int
+nsNSSComponent::PrefChangedCallback(const char* aPrefName, void* data)
+{
+  nsNSSComponent* nss = NS_STATIC_CAST(nsNSSComponent*, data);
+  if (nss)
+    nss->PrefChanged(aPrefName);
+  return 0;
+}
+
+void
+nsNSSComponent::PrefChanged(const char* prefName)
+{
+  PRBool enabled;
+  if (!nsCRT::strcmp(prefName, "security.enable_ssl2")) {
+    mPref->GetBoolPref("security.enable_ssl2", &enabled);
+    SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
+  } else if (!nsCRT::strcmp(prefName, "security.enable_ssl3")) {
+    mPref->GetBoolPref("security.enable_ssl3", &enabled);
+    SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
+  } else if (!nsCRT::strcmp(prefName, "security.enable_tls")) {
+    mPref->GetBoolPref("security.enable_tls", &enabled);
+    SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+  }
 }
 
 static const char *kNSSDialogsContractId = NS_NSSDIALOGS_CONTRACTID;
