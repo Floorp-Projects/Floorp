@@ -312,6 +312,7 @@ protected:
 
   void ReleaseChildren();
   void DestroyChildren();
+  nsresult CreateScriptEnvironment();
 
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
@@ -1744,10 +1745,9 @@ nsIBrowserWindow* nsWebShell::GetBrowserWindow()
   return browserWindow;
 }
 
-nsresult 
-nsWebShell::GetScriptContext(nsIScriptContext** aContext)
+nsresult
+nsWebShell::CreateScriptEnvironment()
 {
-  NS_PRECONDITION(nsnull != aContext, "null arg");
   nsresult res = NS_OK;
 
   if (nsnull == mScriptGlobal) {
@@ -1760,13 +1760,23 @@ nsWebShell::GetScriptContext(nsIScriptContext** aContext)
 
   if (nsnull == mScriptContext) {
     res = NS_CreateContext(mScriptGlobal, &mScriptContext);
-    if (NS_OK != res) {
-      return res;
-    }
   }
 
-  *aContext = mScriptContext;
-  NS_ADDREF(mScriptContext);
+  return res;
+}
+
+nsresult 
+nsWebShell::GetScriptContext(nsIScriptContext** aContext)
+{
+  NS_PRECONDITION(nsnull != aContext, "null arg");
+  nsresult res = NS_OK;
+
+  res = CreateScriptEnvironment();
+
+  if (NS_OK == res) {
+    *aContext = mScriptContext;
+    NS_ADDREF(mScriptContext);
+  }
 
   return res;
 }
@@ -1777,16 +1787,12 @@ nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
   NS_PRECONDITION(nsnull != aGlobal, "null arg");
   nsresult res = NS_OK;
 
-  if (nsnull == mScriptGlobal) {
-    res = NS_NewScriptGlobalObject(&mScriptGlobal);
-    if (NS_OK != res) {
-      return res;
-    }
-    mScriptGlobal->SetWebShell(this);
-  }
+  res = CreateScriptEnvironment();
 
-  *aGlobal = mScriptGlobal;
-  NS_IF_ADDREF(mScriptGlobal);
+  if (NS_OK == res) {
+    *aGlobal = mScriptGlobal;
+    NS_IF_ADDREF(mScriptGlobal);
+  }
 
   return res;
 }
