@@ -263,7 +263,7 @@ PRInt32 StyleSetImpl::GetNumberOfOverrideStyleSheets()
 nsIStyleSheet* StyleSetImpl::GetOverrideStyleSheetAt(PRInt32 aIndex)
 {
   nsIStyleSheet* sheet = nsnull;
-  if (nsnull == mOverrideSheets) {
+  if (nsnull != mOverrideSheets) {
     sheet = (nsIStyleSheet*)mOverrideSheets->ElementAt(aIndex);
   }
   return sheet;
@@ -378,7 +378,7 @@ PRInt32 StyleSetImpl::GetNumberOfBackstopStyleSheets()
 nsIStyleSheet* StyleSetImpl::GetBackstopStyleSheetAt(PRInt32 aIndex)
 {
   nsIStyleSheet* sheet = nsnull;
-  if (nsnull == mBackstopSheets) {
+  if (nsnull != mBackstopSheets) {
     sheet = (nsIStyleSheet*)mBackstopSheets->ElementAt(aIndex);
   }
   return sheet;
