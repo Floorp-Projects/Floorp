@@ -1388,7 +1388,12 @@ backup:
   // Fallback to doing old access
   NS_ASSERTION(0, "Bad! Using backup stream generator. Email dp@netscape.com");
 backup_noassert:
-  return key.CharAt((PRInt32)(writeCount % key.Length()));
+  NS_ASSERTION(key.Length()>0, "Master Password was never established");
+  if (key.Length() > 0 ) {
+    return key.CharAt((PRInt32)(writeCount % key.Length()));
+  } else {
+    return '~'; /* What else can we do?  We can't recover from this. */
+  }
 }
 
 PUBLIC PRBool
