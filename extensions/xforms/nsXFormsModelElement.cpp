@@ -773,7 +773,12 @@ nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
 
   nsCOMPtr<nsIDOMNode> boundNode;
   aControl->GetBoundNode(getter_AddRefs(boundNode));
-  NS_ENSURE_TRUE(boundNode, NS_ERROR_FAILURE);
+  if (!boundNode) {
+    // if the control isn't bound to instance data, it doesn't make sense to 
+    // return a type.  It is perfectly valid for there to be no bound node,
+    // so no need to use an NS_ENSURE_xxx macro, either.
+    return NS_ERROR_FAILURE;
+  }
 
   nsAutoString schemaTypeName, schemaTypeNamespace;
   nsresult rv = GetTypeAndNSFromNode(boundNode, schemaTypeName, 
