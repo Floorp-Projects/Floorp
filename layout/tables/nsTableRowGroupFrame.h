@@ -204,17 +204,9 @@ protected:
                                      PRBool               aDoSiblings);
 
   /**
-   * Try and pull-up frames from our next-in-flow
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aReflowState current inline state
-   * @return  true if we successfully pulled-up all the children and false
-   *            otherwise, e.g. child didn't fit
+   * Pull-up all the row frames from our next-in-flow
    */
-  NS_METHOD     PullUpChildren(nsIPresContext&      aPresContext,
-                               nsHTMLReflowMetrics& aDesiredSize,
-                               RowGroupReflowState& aReflowState,
-                               nsReflowStatus&      aStatus);
+  NS_METHOD PullUpAllRowFrames(nsIPresContext& aPresContext);
 
   nsresult SplitRowGroup(nsIPresContext&          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,

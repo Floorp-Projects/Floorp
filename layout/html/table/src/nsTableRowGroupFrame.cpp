@@ -425,131 +425,50 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
 }
 
 /**
- * Try and pull-up frames from our next-in-flow
- *
- * @param   aPresContext presentation context to use
- * @param   aReflowState current inline state
- * @return  NS_FRAME_COMPLETE if there are no frames to pull-up or if we pulled
- *            up all the next-in-flow frames, and NS_FRAME_NOT_COMPLETE otherwise
+ * Pull-up all the row frames from our next-in-flow
  */
-NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext,
-                                               nsHTMLReflowMetrics& aDesiredSize,
-                                               RowGroupReflowState& aReflowState,
-                                               nsReflowStatus&      aStatus)
+NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
 {
-// XXX if this code is activated then fix the nsRowGroupFrame cast, it might be an nsScrollFrame
-  nsTableRowGroupFrame* nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
-  nsSize         kidMaxElementSize;
-  nsSize*        pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
-  nsIFrame*      prevKidFrame = mFrames.LastChild();
-  nsresult       rv = NS_OK;
-
-  aStatus = NS_FRAME_COMPLETE;
-  while (nsnull != nextInFlow) {
-    nsHTMLReflowMetrics kidSize(pKidMaxElementSize);
-    kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
-
-    // Get the next child
-    nsIFrame* kidFrame = nextInFlow->mFrames.FirstChild();
-
-    // Any more row frames?
-    if (nsnull == kidFrame) {
-      // No. Any frames on its overflow list?
-      if (nextInFlow->mOverflowFrames.NotEmpty()) {
-        // Move the overflow list to become the child list
-        nextInFlow->AppendChildren(nextInFlow->mOverflowFrames.FirstChild(), PR_TRUE);
-        nextInFlow->mOverflowFrames.SetFrames(nsnull);
-        kidFrame = nextInFlow->mFrames.FirstChild();
+  if (mNextInFlow) {
+    nsTableRowGroupFrame* nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
+    nsIFrame*             prevKidFrame = mFrames.LastChild();
+  
+    while (nsnull != nextInFlow) {
+      // Get the next child
+      nsIFrame* kidFrame = nextInFlow->mFrames.FirstChild();
+  
+      // Any more row frames?
+      if (nsnull == kidFrame) {
+        // No. Any frames on its overflow list?
+        if (nextInFlow->mOverflowFrames.NotEmpty()) {
+          // Move the overflow list to become the child list
+          nextInFlow->AppendChildren(nextInFlow->mOverflowFrames.FirstChild(), PR_TRUE);
+          nextInFlow->mOverflowFrames.SetFrames(nsnull);
+          kidFrame = nextInFlow->mFrames.FirstChild();
+        } else {
+          // We've pulled up all the children, so move to the next-in-flow.
+          nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
+          continue;
+        }
+      }
+  
+      // Remove the frame from its current parent
+      nextInFlow->mFrames.RemoveFirstChild();
+  
+      // Link the frame into our list of children
+      kidFrame->SetParent(this);
+      if (nsnull == prevKidFrame) {
+        mFrames.SetFrames(kidFrame);
       } else {
-        // We've pulled up all the children, so move to the next-in-flow.
-        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
-        continue;
+        prevKidFrame->SetNextSibling(kidFrame);
       }
-    }
+      kidFrame->SetNextSibling(nsnull);
 
-    // See if the child fits in the available space. If it fits or
-    // it's splittable then reflow it
-    nsSize            kidFrameSize;
-    nsSplittableType  kidIsSplittable;
-
-    kidFrame->GetSize(kidFrameSize);
-    kidFrame->IsSplittable(kidIsSplittable);
-    if ((kidFrameSize.height > aReflowState.availSize.height) &&
-        NS_FRAME_IS_NOT_SPLITTABLE(kidIsSplittable)) {
-      aStatus = NS_FRAME_NOT_COMPLETE;
-      break;
-    }
-    nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
-                                     aReflowState.reflowState, aReflowState.availSize,
-                                     eReflowReason_Resize);
-
-    rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
-
-    // Did the child fit?
-    if (kidSize.height > aReflowState.availSize.height) {
-      aStatus = NS_FRAME_NOT_COMPLETE;  // the child doesn't fit
-      break;
-    }
-
-    // Place the child
-    nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    kidRect.y += aReflowState.y;
-    PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize, *pKidMaxElementSize);
-
-    // Remove the frame from its current parent
-    // XXX We need to do this BEFORE we reflow the child; otherwise we're reflowing
-    // it without its geometric parent set properly...
-    nextInFlow->mFrames.RemoveFirstChild();
-
-    // Link the frame into our list of children
-    kidFrame->SetParent(this);
-
-    if (nsnull == prevKidFrame) {
-      mFrames.SetFrames(kidFrame);
-    } else {
-      prevKidFrame->SetNextSibling(kidFrame);
-    }
-    kidFrame->SetNextSibling(nsnull);
-
-    // Remember where we just were in case we end up pushing children
-    prevKidFrame = kidFrame;
-
-    // Is the child we just pulled up complete?
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-      // No the child isn't complete
-      nsIFrame* kidNextInFlow;
-       
-      kidFrame->GetNextInFlow(kidNextInFlow);
-      if (nsnull == kidNextInFlow) {
-        // The child doesn't have a next-in-flow so create a
-        // continuing frame. The creation appends it to the flow and
-        // prepares it for reflow.
-        nsIFrame* continuingFrame;
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(&kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
-                                        continuingFrame);
-        NS_RELEASE(kidSC);
-        NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
-
-        // Add the continuing frame to our sibling list and then push
-        // it to the next-in-flow. This ensures the next-in-flow's
-        // content offsets and child count are set properly. Note that
-        // we can safely assume that the continuation is complete so
-        // we pass PR_TRUE into PushChidren
-        kidFrame->SetNextSibling(continuingFrame);
-
-        PushChildren(continuingFrame, kidFrame);
-      }
-
-      // If the child isn't complete then it means that we've used up
-      // all of our available space.
-      aStatus = NS_FRAME_NOT_COMPLETE;
-      break;
+      prevKidFrame = kidFrame;
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 /* CalculateRowHeights provides default heights for all rows in the rowgroup.
@@ -905,21 +824,16 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     // Check for an overflow list
     MoveOverflowToChildList();
   
-    // Reflow the existing frames
+    // Reflow the existing frames. Before we do, pull-up any row frames from
+    // our next-in-flow.
+    // XXX It would be more efficient to do this if we have room left after
+    // reflowing the frames we have, the problem is we don't know if we have
+    // room left until after we call CalculateRowHeights()...
+    PullUpAllRowFrames(aPresContext);
     if (nsnull != mFrames.FirstChild()) {
       rv = ReflowMappedChildren(aPresContext, aDesiredSize, state, aStatus,
                                 nsnull, aReflowState.reason, PR_TRUE);
     }
-  
-    // XXX We need to figure out what to do about this...
-#if 0
-    // XXX if this code is activated then fix PullUpChildren to not case nsRowGroupFrame, it might be an nsScrollFrame
-    // Did we successfully reflow our mapped children?
-    if (NS_FRAME_COMPLETE==aStatus) {
-      // Try and pull-up some children from a next-in-flow
-      rv = PullUpChildren(aPresContext, aDesiredSize, state, aStatus);
-    }
-#endif
   
     // Return our desired rect
     aDesiredSize.width = aReflowState.availableWidth;
