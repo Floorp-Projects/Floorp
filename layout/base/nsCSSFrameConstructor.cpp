@@ -2907,18 +2907,16 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
 }
 
 PRBool 
-nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext* aPresContext,
-                                                nsIFrame*       aParentFrame,
-                                                nsIAtom*        aTag,
-                                                nsIContent*     aContent)
+nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext*  aPresContext,
+                                                nsIFrame*        aParentFrame,
+                                                nsIAtom*         aTag,
+                                                nsIContent*      aContent,
+                                                nsIStyleContext* aStyleContext)
 {
-  nsCOMPtr<nsIStyleContext> styleContext;
-
-  nsresult rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, aTag, getter_AddRefs(styleContext));
-  if (NS_FAILED(rv)) return PR_FALSE;
+  if (!aStyleContext) return PR_FALSE;
 
   const nsStyleDisplay* display = (const nsStyleDisplay*)
-    styleContext->GetStyleData(eStyleStruct_Display);
+    aStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (NS_STYLE_DISPLAY_NONE == display->mDisplay) return PR_FALSE;
     
@@ -2986,7 +2984,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
     }
   }
   // Do not construct pseudo frames for trees 
-  else if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent)) {
+  else if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent, aStyleContext)) {
     // this frame may have a pseudo parent, use block frame type to trigger foreign
     GetParentFrame(aPresShell, aPresContext, aTableCreator, *aParentFrameIn, 
                    nsLayoutAtoms::blockFrame, aState, parentFrame, aIsPseudoParent);
