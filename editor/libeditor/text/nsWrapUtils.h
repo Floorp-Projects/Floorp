@@ -30,11 +30,11 @@
 class nsWrapUtils
 {
 public:
-  static nsresult Rewrap(const nsString& aInString,
+  static nsresult Rewrap(const nsAReadableString& aInString,
                          PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                          PRBool aRespectNewlines,
-                         nsString aLineStartStr,
-                         nsString& aOutString);
+                         const nsAReadableString &aLineStartStr,
+                         nsAWritableString& aOutString);
 };
 
 #endif //nsWrapUtils_h__

@@ -101,8 +101,8 @@ static const PRBool gNoisy = PR_FALSE;
 
 
 NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty, 
-                                            const nsString *aAttribute,
-                                            const nsString *aValue)
+                            const nsAReadableString & aAttribute, 
+                            const nsAReadableString & aValue)
 {
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -120,7 +120,9 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   if (isCollapsed)
   {
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-    return mTypeInState->SetProp(aProperty, *aAttribute, *aValue);
+    nsString tAttr(aAttribute);//MJUDGE SCC NEED HELP
+    nsString tVal(aValue);//MJUDGE SCC NEED HELP
+    return mTypeInState->SetProp(aProperty, tAttr, tVal);
   }
   
   nsAutoEditBatch batchIt(this);
@@ -167,7 +169,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         range->GetStartOffset(&startOffset);
         range->GetEndOffset(&endOffset);
         nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
-        res = SetInlinePropertyOnTextNode(nodeAsText, startOffset, endOffset, aProperty, aAttribute, aValue);
+        res = SetInlinePropertyOnTextNode(nodeAsText, startOffset, endOffset, aProperty, &aAttribute, &aValue);
         if (NS_FAILED(res)) return res;
       }
       else
@@ -232,7 +234,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
           PRUint32 textLen;
           range->GetStartOffset(&startOffset);
           nodeAsText->GetLength(&textLen);
-          res = SetInlinePropertyOnTextNode(nodeAsText, startOffset, textLen, aProperty, aAttribute, aValue);
+          res = SetInlinePropertyOnTextNode(nodeAsText, startOffset, textLen, aProperty, &aAttribute, &aValue);
           if (NS_FAILED(res)) return res;
         }
         
@@ -244,7 +246,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         {
           isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
           node = do_QueryInterface(isupports);
-          res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
+          res = SetInlinePropertyOnNode(node, aProperty, &aAttribute, &aValue);
           if (NS_FAILED(res)) return res;
           arrayOfNodes->RemoveElementAt(0);
         }
@@ -257,7 +259,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
           nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(endNode);
           PRInt32 endOffset;
           range->GetEndOffset(&endOffset);
-          res = SetInlinePropertyOnTextNode(nodeAsText, 0, endOffset, aProperty, aAttribute, aValue);
+          res = SetInlinePropertyOnTextNode(nodeAsText, 0, endOffset, aProperty, &aAttribute, &aValue);
           if (NS_FAILED(res)) return res;
         }
       }
@@ -279,8 +281,8 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
                                             PRInt32 aStartOffset,
                                             PRInt32 aEndOffset,
                                             nsIAtom *aProperty, 
-                                            const nsString *aAttribute,
-                                            const nsString *aValue)
+                                            const nsAReadableString *aAttribute,
+                                            const nsAReadableString *aValue)
 {
   if (!aTextNode) return NS_ERROR_NULL_POINTER;
   
@@ -323,8 +325,8 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
 nsresult
 nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
                                        nsIAtom *aProperty, 
-                                       const nsString *aAttribute,
-                                       const nsString *aValue)
+                                       const nsAReadableString *aAttribute,
+                                       const nsAReadableString *aValue)
 {
   if (!aNode || !aProperty) return NS_ERROR_NULL_POINTER;
 
@@ -430,7 +432,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
 
 nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange, 
                                             nsIAtom *aProperty, 
-                                            const nsString *aAttribute)
+                                            const nsAReadableString *aAttribute)
 {
   if (!inRange) return NS_ERROR_NULL_POINTER;
   nsresult res;
@@ -474,7 +476,7 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
 nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                            PRInt32 *aOffset,
                                            nsIAtom *aProperty,          // null here means we split all properties
-                                           const nsString *aAttribute,
+                                           const nsAReadableString *aAttribute,
                                            nsCOMPtr<nsIDOMNode> *outLeftNode,
                                            nsCOMPtr<nsIDOMNode> *outRightNode)
 {
@@ -508,7 +510,7 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
   if (!IsContainer(aNode))  return PR_FALSE;
   if (!IsEditable(aNode))   return PR_FALSE;
   PRBool isBlock (PR_FALSE);
-  NodeIsBlock(aNode, isBlock);
+  NodeIsBlock(aNode, &isBlock);
   if (isBlock) return PR_FALSE;
   if (NodeIsType(aNode, nsIEditProperty::a)) return PR_FALSE;
   return PR_TRUE;
@@ -516,7 +518,7 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
 
 nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode, 
                                    nsIAtom *aProperty,   // null here means remove all properties
-                                   const nsString *aAttribute, 
+                                   const nsAReadableString *aAttribute, 
                                    PRBool aChildrenOnly)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
@@ -571,7 +573,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
 }
 
 PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode, 
-                                     const nsString *aAttribute)
+                                     const nsAReadableString *aAttribute)
 {
   if (!aNode || !aAttribute) return PR_FALSE;  // ooops
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -581,6 +583,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   nsCOMPtr<nsIAtom> attrName, prefix;
   content->GetAttributeCount(attrCount);
   
+  nsString tString(*aAttribute);//MJUDGE SCC NEED HELP
   for (i=0; i<attrCount; i++)
   {
     content->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
@@ -589,7 +592,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
     // if it's the attribute we know about, keep looking
-    if (attrString.EqualsIgnoreCase(*aAttribute)) continue;
+    if (attrString.EqualsIgnoreCase(tString)) continue;
     // if it's a special _moz... attribute, keep looking
     attrString.Left(tmp,4);
     if (tmp.EqualsWithConversion("_moz")) continue;
@@ -656,7 +659,7 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
 }
 
 PRBool nsHTMLEditor::HasAttr(nsIDOMNode *aNode, 
-                             const nsString *aAttribute)
+                             const nsAReadableString *aAttribute)
 {
   if (!aNode) return PR_FALSE;
   if (!aAttribute || aAttribute->IsEmpty()) return PR_TRUE;  // everybody has the 'null' attribute
@@ -674,8 +677,8 @@ PRBool nsHTMLEditor::HasAttr(nsIDOMNode *aNode,
 
 
 PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode, 
-                                const nsString *aAttribute, 
-                                const nsString *aValue)
+                                const nsAReadableString *aAttribute, 
+                                const nsAReadableString *aValue)
 {
   if (!aNode) return PR_FALSE;
   if (!aAttribute || aAttribute->IsEmpty()) return PR_TRUE;  // everybody has the 'null' attribute
@@ -700,7 +703,8 @@ PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode,
   attNode->GetValue(attrVal);
   
   // do values match?
-  if (attrVal.EqualsIgnoreCase(*aValue)) return PR_TRUE;
+  nsString tString(*aValue);//MJUDGE SCC NEED HELP
+  if (attrVal.EqualsIgnoreCase(tString)) return PR_TRUE;
   return PR_FALSE;
 }
 
@@ -792,23 +796,15 @@ PRBool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
   }
 }
 
-NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty, 
-                                              const nsString *aAttribute, 
-                                              const nsString *aValue,
-                                              PRBool &aFirst, 
-                                              PRBool &aAny, 
-                                              PRBool &aAll)
-{
-  return GetInlinePropertyWithAttrValue( aProperty, aAttribute, aValue, aFirst, aAny, aAll, nsnull);
-}
 
-NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
-                                              const nsString *aAttribute, 
-                                              const nsString *aValue,
-                                              PRBool &aFirst, 
-                                              PRBool &aAny, 
-                                              PRBool &aAll,
-                                              nsString *outValue)
+nsresult
+nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty, 
+                             const nsAReadableString *aAttribute,
+                             const nsAReadableString *aValue,
+                             PRBool *aFirst, 
+                             PRBool *aAny, 
+                             PRBool *aAll,
+                             nsAWritableString *outValue)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -823,9 +819,9 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
   }
 */
   nsresult result;
-  aAny=PR_FALSE;
-  aAll=PR_TRUE;
-  aFirst=PR_FALSE;
+  *aAny=PR_FALSE;
+  *aAll=PR_TRUE;
+  *aFirst=PR_FALSE;
   PRBool first=PR_TRUE;
   nsCOMPtr<nsISelection>selection;
   result = GetSelection(getter_AddRefs(selection));
@@ -863,12 +859,21 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
       // cache now current, use it!  But override it with typeInState results if any...
       PRBool isSet, theSetting;
       if (aAttribute)
-        mTypeInState->GetTypingState(isSet, theSetting, aProperty, *aAttribute, outValue);
+      {
+        nsString tString(*aAttribute); //MJUDGE SCC NEED HELP
+        nsString tOutString;//MJUDGE SCC NEED HELP
+        nsString *tPassString=nsnull;
+        if (outValue)
+            tPassString = &tOutString;
+        mTypeInState->GetTypingState(isSet, theSetting, aProperty, tString, &tOutString);
+        if (outValue)
+          outValue->Assign(tOutString);
+      }
       else
         mTypeInState->GetTypingState(isSet, theSetting, aProperty);
       if (isSet) 
       {
-        aFirst = aAny = aAll = theSetting;
+        *aFirst = *aAny = *aAll = theSetting;
         return NS_OK;
       }
       /*
@@ -877,11 +882,11 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
         mTypeInState->GetTypingState(isSet, theSetting, aProperty);
         if (isSet) 
         {
-          aFirst = aAny = aAll = theSetting;
+          *aFirst = *aAny = *aAll = theSetting;
         }
         else
         {
-          aFirst = aAny = aAll = mCachedBoldStyle;
+          *aFirst = *aAny = *aAll = mCachedBoldStyle;
         }
         return NS_OK;
       }
@@ -890,11 +895,11 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
         mTypeInState->GetTypingState(isSet, theSetting, aProperty);
         if (isSet) 
         {
-          aFirst = aAny = aAll = theSetting;
+          *aFirst = *aAny = *aAll = theSetting;
         }
         else
         {
-          aFirst = aAny = aAll = mCachedItalicStyle;
+          *aFirst = *aAny = *aAll = mCachedItalicStyle;
         }
         return NS_OK;
       }
@@ -903,11 +908,11 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
         mTypeInState->GetTypingState(isSet, theSetting, aProperty);
         if (isSet) 
         {
-          aFirst = aAny = aAll = theSetting;
+          *aFirst = *aAny = *aAll = theSetting;
         }
         else
         {
-          aFirst = aAny = aAll = mCachedUnderlineStyle;
+          *aFirst = *aAny = *aAll = mCachedUnderlineStyle;
         }
         return NS_OK;
       } */
@@ -975,7 +980,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
           if (first)
           {
             IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode), &firstValue);
-            aFirst = isSet;
+            *aFirst = isSet;
             first = PR_FALSE;
             if (outValue) *outValue = firstValue;
           }
@@ -983,14 +988,14 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
           {
             IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode), &theValue);
             if (firstValue != theValue)
-              aAll = PR_FALSE;
+              *aAll = PR_FALSE;
           }
           
           if (isSet) {
-            aAny = PR_TRUE;
+            *aAny = PR_TRUE;
           }
           else {
-            aAll = PR_FALSE;
+            *aAll = PR_FALSE;
           }
         }
       }
@@ -1000,12 +1005,51 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
       iter->CurrentNode(getter_AddRefs(content));
     }
   }
-  if (!aAny) 
+  if (!*aAny) 
   { // make sure that if none of the selection is set, we don't report all is set
-    aAll = PR_FALSE;
+    *aAll = PR_FALSE;
   }
-  //if (gNoisy) { printf("  returning first=%d any=%d all=%d\n", aFirst, aAny, aAll); }
+  //if (gNoisy) { printf("  returning first=%d any=%d all=%d\n", *aFirst, *aAny, *aAll); }
   return result;
+}
+
+
+NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty, 
+                                              const nsAReadableString &aAttribute, 
+                                              const nsAReadableString &aValue,
+                                              PRBool *aFirst, 
+                                              PRBool *aAny, 
+                                              PRBool *aAll)
+{
+  if (!aProperty || !aFirst || !aAny || !aAll)
+    return NS_ERROR_NULL_POINTER;
+  const nsAReadableString *att = nsnull;
+  if (aAttribute.Length())
+    att = &aAttribute;
+  const nsAReadableString *val = nsnull;
+  if (aValue.Length())
+    val = &aValue;
+  return GetInlinePropertyBase( aProperty, att, val, aFirst, aAny, aAll, nsnull);
+}
+
+
+NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
+                                              const nsAReadableString &aAttribute, 
+                                              const nsAReadableString &aValue,
+                                              PRBool *aFirst, 
+                                              PRBool *aAny, 
+                                              PRBool *aAll,
+                                              nsAWritableString &outValue)
+{
+  if (!aProperty || !aFirst || !aAny || !aAll)
+    return NS_ERROR_NULL_POINTER;
+  const nsAReadableString *att = nsnull;
+  if (aAttribute.Length())
+    att = &aAttribute;
+  const nsAReadableString *val = nsnull;
+  if (aValue.Length())
+    val = &aValue;
+  return GetInlinePropertyBase( aProperty, att, val, aFirst, aAny, aAll, &outValue);
 }
 
 
@@ -1014,12 +1058,12 @@ NS_IMETHODIMP nsHTMLEditor::RemoveAllInlineProperties()
   return RemoveInlinePropertyImpl(nsnull, nsnull);
 }
 
-NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute)
+NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsAReadableString &aAttribute)
 {
-  return RemoveInlinePropertyImpl(aProperty, aAttribute);
+  return RemoveInlinePropertyImpl(aProperty, &aAttribute);
 }
 
-nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsString *aAttribute)
+nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAReadableString *aAttribute)
 {
   if (!mRules)    return NS_ERROR_NOT_INITIALIZED;
   ForceCompositionEnd();
@@ -1041,7 +1085,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
     if (aProperty == nsIEditProperty::href)
       aProperty = nsIEditProperty::a;
 
-    if (aProperty) return mTypeInState->ClearProp(aProperty, *aAttribute);
+    if (aProperty) return mTypeInState->ClearProp(aProperty, nsAutoString(*aAttribute));
     else return mTypeInState->ClearAllProps();
   }
   nsAutoEditBatch batchIt(this);
@@ -1428,66 +1472,73 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFontFaceState(PRBool &aMixed, nsString &outFace)
+nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace)
 {
-  aMixed = PR_TRUE;
-  outFace.AssignWithConversion("");
-  
+  if (!aMixed)
+      return NS_ERROR_FAILURE;
+  *aMixed = PR_TRUE;
+  //outFace.AssignWithConversion("");
+  outFace.SetLength(0);
+
   nsresult res;
-  nsAutoString faceStr; faceStr.AssignWithConversion("face");
+  nsAutoString faceStr;
+  faceStr.AssignWithConversion("face");
   PRBool first, any, all;
   
-  res = GetInlinePropertyWithAttrValue(nsIEditProperty::font, &faceStr, nsnull, first, any, all, &outFace);
+  
+  res = GetInlinePropertyBase(nsIEditProperty::font, &faceStr, nsnull, &first, &any, &all, &outFace);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)
   {
-    aMixed = PR_FALSE;
+    *aMixed = PR_FALSE;
     return res;
   }
   
-  res = GetInlineProperty(nsIEditProperty::tt, nsnull, nsnull, first, any, all);
+  res = GetInlinePropertyBase(nsIEditProperty::tt, nsnull, nsnull, &first, &any, &all,nsnull);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)
   {
-    aMixed = PR_FALSE;
+    *aMixed = PR_FALSE;
     nsIEditProperty::tt->ToString(outFace);
   }
   
   if (!any)
   {
     // there was no font face attrs of any kind.  We are in normal font.
-    outFace.AssignWithConversion("");
-    aMixed = PR_FALSE;
+    outFace.SetLength(0);
+    *aMixed = PR_FALSE;
   }
   return res;
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFontColorState(PRBool &aMixed, nsString &aOutColor)
+nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
 {
-  aMixed = PR_TRUE;
-  aOutColor.AssignWithConversion("");
+  if (!aMixed)
+      return NS_ERROR_NULL_POINTER;
+  *aMixed = PR_TRUE;
+  aOutColor.SetLength(0);
   
   nsresult res;
   nsAutoString colorStr; colorStr.AssignWithConversion("color");
   PRBool first, any, all;
   
-  res = GetInlinePropertyWithAttrValue(nsIEditProperty::font, &colorStr, nsnull, first, any, all, &aOutColor);
+  res = GetInlinePropertyBase(nsIEditProperty::font, &colorStr, nsnull, &first, &any, &all, &aOutColor);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)
   {
-    aMixed = PR_FALSE;
+    *aMixed = PR_FALSE;
     return res;
   }
   
   if (!any)
   {
     // there was no font color attrs of any kind..
-    aOutColor.AssignWithConversion("");
-    aMixed = PR_FALSE;
+    aOutColor.SetLength(0);
+    *aMixed = PR_FALSE;
   }
   return res;
 }

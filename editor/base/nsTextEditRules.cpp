@@ -437,13 +437,14 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   return res;
 }
 
+
 nsresult
 nsTextEditRules::WillInsertText(PRInt32          aAction,
                                 nsISelection *aSelection, 
                                 PRBool          *aCancel,
                                 PRBool          *aHandled,
-                                const nsString  *inString,
-                                nsString        *outString,
+                                const nsAReadableString *inString,
+                                nsAWritableString *outString,
                                 PRInt32          aMaxLength)
 {  
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
@@ -528,17 +529,40 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
   {
     if (singleLineNewlineBehavior == eReplaceWithSpaces)
-      outString->ReplaceChar(CRLF, ' ');
+    {
+      nsString tString;
+      tString.Assign(*outString);
+      //nsAWritableString destString;
+      //NormalizeCRLF(outString,destString);
+
+      tString.ReplaceChar(CRLF, ' ');
+      outString->Assign(tString);
+    }
     else if (singleLineNewlineBehavior == eStripNewlines)
-      outString->StripChars(CRLF);
+    {
+      nsString tString;
+      tString.Assign(*outString);
+      tString.StripChars(CRLF);
+      outString->Assign(tString);
+    }
     else if (singleLineNewlineBehavior == ePasteFirstLine)
     {
-      PRInt32 firstCRLF = outString->FindCharInSet(CRLF);
+      nsString tString;
+      tString.Assign(*outString);
+      PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
       if (firstCRLF > 0)
-      outString->Truncate(firstCRLF);
+      {
+        tString.Truncate(firstCRLF);
+        outString->Assign(tString);
+      }
     }
     else // even if we're pasting newlines, don't paste leading/trailing ones
-      outString->Trim(CRLF, PR_TRUE, PR_TRUE);
+    {
+      nsString tString;
+      tString.Assign(*outString);
+      tString.Trim(CRLF, PR_TRUE, PR_TRUE);
+      outString->Assign(tString);
+    }
   }
 
   // get the (collapsed) selection location
@@ -576,7 +600,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     // dont spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
     nsSubsumeStr subStr;
-    const PRUnichar *unicodeBuf = outString->GetUnicode();
+    nsString tString(*outString);
+    const PRUnichar *unicodeBuf = tString.GetUnicode();
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
         
@@ -586,11 +611,11 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     if (isPRE)
     {
       char newlineChar = '\n';
-      while (unicodeBuf && (pos != -1) && ((PRUint32)pos < outString->Length()))
+      while (unicodeBuf && (pos != -1) && ((PRUint32)pos < tString.Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = outString->FindChar(newlineChar, PR_FALSE, oldPos);
+        pos = tString.FindChar(newlineChar, PR_FALSE, oldPos);
         
         if (pos != -1) 
         {
@@ -601,8 +626,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = outString->Length() - oldPos;
-          pos = outString->Length();
+          subStrLen = tString.Length() - oldPos;
+          pos = tString.Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
@@ -631,11 +656,11 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     {
       char specialChars[] = {'\t','\n',0};
       nsAutoString tabString; tabString.AssignWithConversion("    ");
-      while (unicodeBuf && (pos != -1) && ((PRUint32)pos < outString->Length()))
+      while (unicodeBuf && (pos != -1) && ((PRUint32)pos < tString.Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = outString->FindCharInSet(specialChars, oldPos);
+        pos = tString.FindCharInSet(specialChars, oldPos);
         
         if (pos != -1) 
         {
@@ -646,8 +671,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = outString->Length() - oldPos;
-          pos = outString->Length();
+          subStrLen = tString.Length() - oldPos;
+          pos = tString.Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
@@ -671,7 +696,10 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         if (NS_FAILED(res)) return res;
       }
     }
-    if (curNode) aSelection->Collapse(curNode, curOffset);
+    outString->Assign(tString);
+
+    if (curNode) 
+      aSelection->Collapse(curNode, curOffset);
   }
   return res;
 }
@@ -1018,8 +1046,8 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
 
 nsresult
 nsTextEditRules::WillOutputText(nsISelection *aSelection, 
-                                const nsString  *aOutputFormat,
-                                nsString *aOutString,                                
+                                const nsAReadableString  *aOutputFormat,
+                                nsAWritableString *aOutString,                                
                                 PRBool   *aCancel,
                                 PRBool   *aHandled)
 {
@@ -1031,7 +1059,9 @@ nsTextEditRules::WillOutputText(nsISelection *aSelection,
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
 
-  if (PR_TRUE == aOutputFormat->EqualsWithConversion("text/plain"))
+  nsAutoString outputFormat(*aOutputFormat);
+  outputFormat.ToLowerCase();
+  if (outputFormat.Equals(NS_LITERAL_STRING("text/plain")))
   { // only use these rules for plain text output
     if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
     {
@@ -1214,8 +1244,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
 
 nsresult
 nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection, 
-                                           const nsString  *aInString,
-                                           nsString        *aOutString,
+                                           const nsAReadableString  *aInString,
+                                           nsAWritableString  *aOutString,
                                            PRInt32          aMaxLength)
 {
   if (!aSelection || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
@@ -1263,7 +1293,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
 
 
 nsresult
-nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *aOutString)
+nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAWritableString *aOutString)
 {
   if (!aOutString) {return NS_ERROR_NULL_POINTER;}
 
@@ -1275,7 +1305,9 @@ nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *a
   PRInt32 i;
   aOutString->SetLength(0);
   for (i=0; i<length; i++)
-    aOutString->AppendWithConversion('*');
+  {
+    aOutString->Append(PRUnichar('*'));
+  }
 
   return NS_OK;
 }

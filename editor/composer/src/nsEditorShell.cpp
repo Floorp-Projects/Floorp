@@ -1061,9 +1061,7 @@ nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const
   nsresult  result = NS_NOINTERFACE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor) {
-    nsAutoString attributeStr(attr);
-    nsAutoString valueStr(value);
-    result = editor->SetAttribute(element, attributeStr, valueStr); 
+    result = editor->SetAttribute(element, nsLiteralString(attr), nsLiteralString(value)); 
   }
 
   return result;
@@ -1078,8 +1076,7 @@ nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
   nsresult  result = NS_NOINTERFACE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor) {
-    nsAutoString attributeStr(attr);
-    result = editor->RemoveAttribute(element, attributeStr);
+    result = editor->RemoveAttribute(element, nsLiteralString(attr));
   }
 
   return result;
@@ -1094,16 +1091,13 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
 
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(prop));      /// XXX Hack alert! Look in nsIEditProperty.h for this
   if (! styleAtom) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsAutoString    attributeStr(attr);
-  nsAutoString    valueStr(value);
-  
+ 
   switch (mEditorType)
   {
     case ePlainTextEditorType:
         // should we allow this?
     case eHTMLTextEditorType:
-      err = mEditor->SetInlineProperty(styleAtom, &attributeStr, &valueStr);
+      err = mEditor->SetInlineProperty(styleAtom, nsLiteralString(attr), nsLiteralString(value));
       break;
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
@@ -1127,7 +1121,7 @@ nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
     case ePlainTextEditorType:
         // should we allow this?
     case eHTMLTextEditorType:
-      err = mEditor->RemoveInlineProperty(styleAtom, &aAttr);
+      err = mEditor->RemoveInlineProperty(styleAtom, aAttr);
       break;
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
@@ -1172,15 +1166,12 @@ nsEditorShell::GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
 
   styleAtom = NS_NewAtom(prop);      /// XXX Hack alert! Look in nsIEditProperty.h for this
 
-  nsAutoString  aAttr(attr);
-  nsAutoString  aValue(value);
-  
   switch (mEditorType)
   {
     case ePlainTextEditorType:
         // should we allow this?
     case eHTMLTextEditorType:
-      err = mEditor->GetInlineProperty(styleAtom, &aAttr, &aValue, *firstHas, *anyHas, *allHas);
+      err = mEditor->GetInlineProperty(styleAtom, nsLiteralString(attr), nsLiteralString(value), firstHas, anyHas, allHas);
       break;
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
@@ -1238,7 +1229,7 @@ nsEditorShell::GetParagraphState(PRBool *aMixed, PRUnichar **_retval)
   {
     PRBool bMixed;
     nsAutoString state;
-    err = htmlEditor->GetParagraphState(bMixed, state);
+    err = htmlEditor->GetParagraphState(&bMixed, state);
     if (!bMixed)
       *_retval = state.ToNewUnicode();
   }
@@ -1257,7 +1248,7 @@ nsEditorShell::GetListState(PRBool *aMixed, PRUnichar **_retval)
   if (htmlEditor)
   {
     PRBool bOL, bUL, bDL;
-    err = htmlEditor->GetListState(*aMixed, bOL, bUL, bDL);
+    err = htmlEditor->GetListState(aMixed, &bOL, &bUL, &bDL);
     if (NS_SUCCEEDED(err))
     {
       if (!*aMixed)
@@ -1285,7 +1276,7 @@ nsEditorShell::GetListItemState(PRBool *aMixed, PRUnichar **_retval)
   if (htmlEditor)
   {
     PRBool bLI,bDT,bDD;
-    err = htmlEditor->GetListItemState(*aMixed, bLI, bDT, bDD);
+    err = htmlEditor->GetListItemState(aMixed, &bLI, &bDT, &bDD);
     if (NS_SUCCEEDED(err))
     {
       if (!*aMixed)
@@ -1313,7 +1304,7 @@ nsEditorShell::GetAlignment(PRBool *aMixed, PRUnichar **_retval)
   if (htmlEditor)
   {
     nsIHTMLEditor::EAlignment firstAlign;
-    err = htmlEditor->GetAlignment(*aMixed, firstAlign);
+    err = htmlEditor->GetAlignment(aMixed, &firstAlign);
     if (NS_SUCCEEDED(err))
     {
       nsAutoString tagStr;
@@ -1777,7 +1768,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
                 return NS_OK;
               }
               // This sets title in HTML node
-              mEditor->SetDocumentTitle(titleUnicode);
+              mEditor->SetDocumentTitle(nsLiteralString(titleUnicode));
               title = titleUnicode;
               nsCRT::free(titleUnicode);
               titleChanged = PR_TRUE;
@@ -2240,7 +2231,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
   if (mEditorType != eHTMLTextEditorType)
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  res = mEditor->SetDocumentTitle(title);
+  res = mEditor->SetDocumentTitle(nsLiteralString(title));
   if (NS_FAILED(res)) return res;
 
   // PR_FALSE means don't save menu to prefs
@@ -2283,7 +2274,7 @@ nsEditorShell::NodeIsBlock(nsIDOMNode *node, PRBool *_retval)
     case ePlainTextEditorType:
     case eHTMLTextEditorType:
       {
-        rv = mEditor->NodeIsBlock(node, *_retval);
+        rv = mEditor->NodeIsBlock(node, _retval);
       }
       break;
 
@@ -2610,7 +2601,7 @@ nsEditorShell::InsertText(const PRUnichar *textToInsert)
       {
         nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
         if (textEditor)
-          err = textEditor->InsertText(textToInsert);
+          err = textEditor->InsertText(nsLiteralString(textToInsert));
       }
       break;
 
@@ -2953,11 +2944,19 @@ nsEditorShell::Alert(const nsString& aTitle, const nsString& aMsg)
 NS_IMETHODIMP
 nsEditorShell::GetDocumentCharacterSet(PRUnichar** characterSet)
 {
+  if (!characterSet)
+      return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-
+  nsAutoString copiedData;
+  *characterSet = nsnull;
   if (editor)
-    return editor->GetDocumentCharacterSet(characterSet);
-
+  {
+    if (NS_SUCCEEDED(editor->GetDocumentCharacterSet(copiedData)))
+    {
+      *characterSet = ToNewUnicode(copiedData);
+      return NS_OK;
+    }
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -2968,7 +2967,7 @@ nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
 
   nsresult res = NS_OK;
   if (editor)
-    res = editor->SetDocumentCharacterSet(characterSet);
+    res = editor->SetDocumentCharacterSet(nsAutoString(characterSet));
   
   if(NS_SUCCEEDED(res)) {
     nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryReferent(mContentWindow));

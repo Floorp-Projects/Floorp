@@ -615,7 +615,7 @@ nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
     return NS_ERROR_NULL_POINTER;
   
   // ...figure out if a drag should be started...
-  nsresult rv = mEditor->CanDrag(aDragEvent, canDrag);
+  nsresult rv = mEditor->CanDrag(aDragEvent, &canDrag);
   if ( NS_SUCCEEDED(rv) && canDrag )
     rv = mEditor->DoDrag(aDragEvent);
 

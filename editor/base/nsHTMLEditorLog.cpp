@@ -54,7 +54,7 @@ nsHTMLEditorLog::~nsHTMLEditorLog()
 NS_IMPL_ISUPPORTS_INHERITED(nsHTMLEditorLog, nsHTMLEditor, nsIEditorLogging);
 
 NS_IMETHODIMP
-nsHTMLEditorLog::SetInlineProperty(nsIAtom *aProperty, const nsString *aAttribute, const nsString *aValue)
+nsHTMLEditorLog::SetInlineProperty(nsIAtom *aProperty, const nsAReadableString &aAttribute, const nsAReadableString &aValue)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -68,11 +68,11 @@ nsHTMLEditorLog::SetInlineProperty(nsIAtom *aProperty, const nsString *aAttribut
     Write("window.editorShell.SetTextProperty(\"");
     PrintUnicode(propStr);
     Write("\", \"");
-    if (aAttribute)
-      PrintUnicode(*aAttribute);
+    if (aAttribute.Length())
+      PrintUnicode(aAttribute);
     Write("\", \"");
-    if (aValue)
-      PrintUnicode(*aValue);
+    if (aValue.Length())
+      PrintUnicode(aValue);
     Write("\");\n");
 
     Flush();
@@ -100,7 +100,7 @@ nsHTMLEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute)
+nsHTMLEditorLog::RemoveInlineProperty(nsIAtom *aProperty, const nsAReadableString &aAttribute)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -114,8 +114,8 @@ nsHTMLEditorLog::RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttri
     Write("window.editorShell.RemoveTextProperty(\"");
     PrintUnicode(propStr);
     Write("\", \"");
-    if (aAttribute)
-      PrintUnicode(*aAttribute);
+    if (aAttribute.Length())
+      PrintUnicode(aAttribute);
     Write("\");\n");
 
     Flush();
@@ -143,7 +143,7 @@ nsHTMLEditorLog::DeleteSelection(nsIEditor::EDirection aAction)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertText(const PRUnichar* aStringToInsert)
+nsHTMLEditorLog::InsertText(const nsAReadableString& aStringToInsert)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -351,7 +351,7 @@ nsHTMLEditorLog::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::PasteAsCitedQuotation(const nsString& aCitation,
+nsHTMLEditorLog::PasteAsCitedQuotation(const nsAReadableString& aCitation,
                                        PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -369,7 +369,7 @@ nsHTMLEditorLog::PasteAsCitedQuotation(const nsString& aCitation,
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertAsQuotation(const nsString& aQuotedText,
+nsHTMLEditorLog::InsertAsQuotation(const nsAReadableString& aQuotedText,
                                    nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -387,7 +387,7 @@ nsHTMLEditorLog::InsertAsQuotation(const nsString& aQuotedText,
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsString& aQuotedText,
+nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsAReadableString& aQuotedText,
                                             nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -405,10 +405,10 @@ nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsString& aQuotedText,
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText,
-                                        const nsString& aCitation,
+nsHTMLEditorLog::InsertAsCitedQuotation(const nsAReadableString& aQuotedText,
+                                        const nsAReadableString& aCitation,
                                         PRBool aInsertHTML,
-                                        const nsString& aCharset,
+                                        const nsAReadableString& aCharset,
                                         nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -429,7 +429,7 @@ nsHTMLEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText,
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::SetBackgroundColor(const nsString& aColor)
+nsHTMLEditorLog::SetBackgroundColor(const nsAReadableString& aColor)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -445,7 +445,7 @@ nsHTMLEditorLog::SetBackgroundColor(const nsString& aColor)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
+nsHTMLEditorLog::SetBodyAttribute(const nsAReadableString& aAttr, const nsAReadableString& aValue)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -644,7 +644,7 @@ nsHTMLEditorLog::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMEle
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::MakeOrChangeList(const nsString& aListType, PRBool entireList)
+nsHTMLEditorLog::MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -662,7 +662,7 @@ nsHTMLEditorLog::MakeOrChangeList(const nsString& aListType, PRBool entireList)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::Indent(const nsString& aIndent)
+nsHTMLEditorLog::Indent(const nsAReadableString& aIndent)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -680,7 +680,7 @@ nsHTMLEditorLog::Indent(const nsString& aIndent)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::Align(const nsString& aAlign)
+nsHTMLEditorLog::Align(const nsAReadableString& aAlign)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -748,7 +748,7 @@ nsHTMLEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet)
+nsHTMLEditorLog::ApplyStyleSheet(const nsAReadableString& aURL, nsICSSStyleSheet **aStyleSheet)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -769,7 +769,7 @@ nsHTMLEditorLog::ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyle
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::SetDocumentTitle(const PRUnichar* aTitle)
+nsHTMLEditorLog::SetDocumentTitle(const nsAReadableString& aTitle)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -912,23 +912,25 @@ nsHTMLEditorLog::Flush()
 }
 
 nsresult
-nsHTMLEditorLog::PrintUnicode(const nsString &aString)
+nsHTMLEditorLog::PrintUnicode(const nsAReadableString &aString)
 {
-  const PRUnichar *uc = aString.GetUnicode();
-  PRInt32 i, len = aString.Length();
+  //const PRUnichar *uc = aString.GetUnicode();
   char buf[10];
-
-  for (i = 0; i < len; i++)
+  nsReadingIterator <PRUnichar> beginIter,endIter;
+  aString.BeginReading(beginIter);
+  aString.EndReading(endIter);
+  while(beginIter != endIter)
   {
-    if (nsCRT::IsAsciiAlpha(uc[i]) || nsCRT::IsAsciiDigit(uc[i]) || uc[i] == ' ')
-      sprintf(buf, "%c", uc[i]);
+    if (nsCRT::IsAsciiAlpha(*beginIter) || nsCRT::IsAsciiDigit(*beginIter) || *beginIter == ' ')
+      sprintf(buf, "%c", *beginIter);
     else
-      sprintf(buf, "\\u%.4x", uc[i]);
+      sprintf(buf, "\\u%.4x", *beginIter);
 
     nsresult result = Write(buf);
 
     if (NS_FAILED(result))
       return result;
+    ++beginIter;
   }
 
   return NS_OK;

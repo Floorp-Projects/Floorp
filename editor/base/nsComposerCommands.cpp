@@ -274,7 +274,7 @@ nsPasteQuotationCommand::IsCommandEnabled(const nsAReadableString & aCommandName
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
     if (editor)
-      editor->CanPaste(nsIClipboard::kGlobalClipboard, *outCmdEnabled);
+      editor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
   }
   
   return NS_OK;
@@ -322,7 +322,7 @@ nsStyleUpdatingCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char
   if (!htmlEditor) return NS_ERROR_NOT_INITIALIZED;
   
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(aTagName));
-  rv = htmlEditor->GetInlineProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+  rv = htmlEditor->GetInlineProperty(styleAtom, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""), &firstOfSelectionHasProp, &anyOfSelectionHasProp, &allOfSelectionHasProp);
   outStyleSet = allOfSelectionHasProp;			// change this to alter the behaviour
 
   return rv;
@@ -442,8 +442,7 @@ nsListItemCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagNam
     {
       if (!bMixed)
       {
-        nsAutoString listType(tagStr);
-        rv = htmlEditor->RemoveList(listType);    
+        rv = htmlEditor->RemoveList(nsLiteralString(tagStr));    
       }
       nsCRT::free(tagStr);
     }
@@ -554,7 +553,7 @@ nsOutdentCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISu
     if (htmlEditor)
     {
       PRBool canIndent, canOutdent;
-      htmlEditor->GetIndentState(canIndent, canOutdent);
+      htmlEditor->GetIndentState(&canIndent, &canOutdent);
       
       *outCmdEnabled = canOutdent;
     }
@@ -690,7 +689,7 @@ nsParagraphStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString&
   aEditorShell->GetEditor(getter_AddRefs(editor));
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
-  return htmlEditor->GetParagraphState(outMixed, outStateString);
+  return htmlEditor->GetParagraphState(&outMixed, outStateString);
 }
 
 
@@ -727,7 +726,7 @@ nsFontFaceStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& 
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
-  return htmlEditor->GetFontFaceState(outMixed, outStateString);
+  return htmlEditor->GetFontFaceState(&outMixed, outStateString);
 }
 
 
@@ -743,9 +742,6 @@ nsFontFaceStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newStat
   
   nsresult rv;
   
-  NS_ConvertASCIItoUCS2 emptyString("");
-  NS_ConvertASCIItoUCS2 fontString("font");
-  NS_ConvertASCIItoUCS2 faceString("face");
   
   nsCOMPtr<nsIAtom> ttAtom = getter_AddRefs(NS_NewAtom("tt"));
   nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
@@ -753,19 +749,19 @@ nsFontFaceStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newStat
   if (newState.EqualsWithConversion("tt"))
   {
     // The old "teletype" attribute  
-    rv = htmlEditor->SetInlineProperty(ttAtom, &emptyString, &emptyString);  
+    rv = htmlEditor->SetInlineProperty(ttAtom, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""));  
     // Clear existing font face
-    rv = htmlEditor->RemoveInlineProperty(fontAtom, &faceString);
+    rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("face"));
   }
   else
   {
     // Remove any existing TT nodes
-    rv = htmlEditor->RemoveInlineProperty(ttAtom, &emptyString);  
+    rv = htmlEditor->RemoveInlineProperty(ttAtom, NS_LITERAL_STRING(""));  
 
-    if (newState == emptyString || newState.EqualsWithConversion("normal")) {
-      rv = htmlEditor->RemoveInlineProperty(fontAtom, &faceString);
+    if (!newState.Length() || newState.EqualsWithConversion("normal")) {
+      rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("face"));
     } else {
-      rv = htmlEditor->SetInlineProperty(fontAtom, &faceString, &newState);
+      rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("face"), newState);
     }
   }
   
@@ -791,7 +787,7 @@ nsFontColorStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString&
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
-  return htmlEditor->GetFontColorState(outMixed, outStateString);
+  return htmlEditor->GetFontColorState(&outMixed, outStateString);
 }
 
 
@@ -807,16 +803,13 @@ nsFontColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newSta
   
   nsresult rv;
   
-  NS_ConvertASCIItoUCS2 emptyString("");
-  NS_ConvertASCIItoUCS2 fontString("font");
-  NS_ConvertASCIItoUCS2 colorString("color");
   
   nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
 
-  if (newState == emptyString || newState.EqualsWithConversion("normal")) {
-    rv = htmlEditor->RemoveInlineProperty(fontAtom, &colorString);
+  if (!newState.Length() || newState.EqualsWithConversion("normal")) {
+    rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("color"));
   } else {
-    rv = htmlEditor->SetInlineProperty(fontAtom, &colorString, &newState);
+    rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("color"), newState);
   }
   
   return rv;
@@ -842,7 +835,7 @@ nsBackgroundColorStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsS
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
 
-  return htmlEditor->GetBackgroundColorState(outMixed, outStateString);
+  return htmlEditor->GetBackgroundColorState(&outMixed, outStateString);
 }
 
 
@@ -879,7 +872,7 @@ nsAlignCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outState
   if (!htmlEditor) return NS_ERROR_FAILURE;
  
   nsIHTMLEditor::EAlignment firstAlign;
-  nsresult rv = htmlEditor->GetAlignment(outMixed, firstAlign);
+  nsresult rv = htmlEditor->GetAlignment(&outMixed, &firstAlign);
   if (NS_FAILED(rv)) return rv;
   switch (firstAlign)
   {

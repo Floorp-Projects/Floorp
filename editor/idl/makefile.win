@@ -26,13 +26,19 @@ DEPTH=..\..
 MODULE=editor
 XPIDL_MODULE=editor
 
-XPIDLSRCS = .\nsIEditorShell.idl           \
-            .\nsIPlaintextEditor.idl       \
-            .\nsIEditorSpellCheck.idl      \
-            .\nsIDocumentStateListener.idl \
-            .\nsIEditorService.idl         \
-            .\nsIEditorController.idl      \
-            .\nsPIEditorTransaction.idl    \
+XPIDLSRCS = .\nsICiter.idl \
+		.\nsIDocumentStateListener.idl \
+		.\nsIEditActionListener.idl \
+		.\nsIEditorController.idl \
+		.\nsIEditor.idl \
+		.\nsIEditorIMESupport.idl \
+		.\nsIEditorObserver.idl \
+		.\nsIEditorService.idl \
+		.\nsIEditorShell.idl \
+		.\nsIEditorSpellCheck.idl \
+		.\nsIHTMLEditor.idl \
+		.\nsIPlaintextEditor.idl \
+		.\nsPIEditorTransaction.idl \
             $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

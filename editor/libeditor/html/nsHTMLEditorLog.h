@@ -54,12 +54,12 @@ public:
 
   /* nsIHTMLEditor method implementations. */
   NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
-                               const nsString *aAttribute,
-                               const nsString *aValue);
+                            const nsAReadableString & aAttribute, 
+                            const nsAReadableString & aValue);
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
-  NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute);
+  NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsAReadableString& aAttribute);
   NS_IMETHOD DeleteSelection(nsIEditor::EDirection aAction);
-  NS_IMETHOD InsertText(const PRUnichar* aStringToInsert);
+  NS_IMETHOD InsertText(const nsAReadableString& aStringToInsert);
   NS_IMETHOD InsertLineBreak();
   NS_IMETHOD Undo(PRUint32 aCount);
   NS_IMETHOD Redo(PRUint32 aCount);
@@ -74,20 +74,22 @@ public:
   NS_IMETHOD Paste(PRInt32 aSelectionType);
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
   NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
+  NS_IMETHOD PasteAsCitedQuotation(const nsAReadableString& aCitation,
                                    PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText, nsIDOMNode** aNodeInserted);
-  NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText, nsIDOMNode** aNodeInserted);
-  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation, PRBool aInsertHTML, const nsString& aCharset, nsIDOMNode** aNodeInserted);
+  NS_IMETHOD InsertAsQuotation(const nsAReadableString& aQuotedText, nsIDOMNode** aNodeInserted);
+  NS_IMETHOD InsertAsPlaintextQuotation(const nsAReadableString& aQuotedText, nsIDOMNode** aNodeInserted);
+  NS_IMETHOD InsertAsCitedQuotation(const nsAReadableString& aQuotedText, const nsAReadableString& aCitation, 
+                                    PRBool aInsertHTML, const nsAReadableString& aCharset, 
+                                    nsIDOMNode** aNodeInserted);
 
-  NS_IMETHOD ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet);
-  NS_IMETHOD SetDocumentTitle(const PRUnichar* aTitle);
+  NS_IMETHOD ApplyStyleSheet(const nsAReadableString& aURL, nsICSSStyleSheet **aStyleSheet);
+  NS_IMETHOD SetDocumentTitle(const nsAReadableString& aTitle);
 
-  NS_IMETHOD SetBackgroundColor(const nsString& aColor);
-  NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue);
-  NS_IMETHOD MakeOrChangeList(const nsString& aListType, PRBool entireList);
-  NS_IMETHOD Indent(const nsString& aIndent);
-  NS_IMETHOD Align(const nsString& aAlign);
+  NS_IMETHOD SetBackgroundColor(const nsAReadableString& aColor);
+  NS_IMETHOD SetBodyAttribute(const nsAReadableString& aAttr, const nsAReadableString& aValue);
+  NS_IMETHOD MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList);
+  NS_IMETHOD Indent(const nsAReadableString& aIndent);
+  NS_IMETHOD Align(const nsAReadableString& aAlign);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
   
@@ -112,7 +114,7 @@ public:
   nsresult Write(const char *aBuffer);
   nsresult WriteInt(const char *aFormat, PRInt32 aInt);
   nsresult Flush();
-  nsresult PrintUnicode(const nsString &aString);
+  nsresult PrintUnicode(const nsAReadableString &aString);
   nsresult PrintSelection();
   nsresult PrintNode(nsIDOMNode *aNode, PRInt32 aDepth=0);
   nsresult PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth);

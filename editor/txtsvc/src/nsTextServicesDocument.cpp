@@ -2074,7 +2074,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
   nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor, &result));
   if (textEditor)
-    result = textEditor->InsertText(aText->GetUnicode());
+    result = textEditor->InsertText(*aText);
 
   if (NS_FAILED(result))
   {

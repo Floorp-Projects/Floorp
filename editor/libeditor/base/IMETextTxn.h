@@ -65,7 +65,7 @@ public:
                   PRUint32 aOffset,
 				  PRUint32 aReplaceLength,
 				  nsIPrivateTextRangeList* aTextRangeList,
-                  const nsString& aString,
+                  const nsAReadableString& aString,
                   nsWeakPtr aSelCon);
 
 private:

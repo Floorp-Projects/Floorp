@@ -53,11 +53,11 @@ public:
     * @param aValue  the new value for document title
     */
   NS_IMETHOD Init(nsIHTMLEditor  *aEditor,
-                  const nsString *aValue);
+                  const nsAReadableString *aValue);
 private:
   SetDocTitleTxn();
-  nsresult SetDocTitle(nsString& aTitle);
-  nsresult SetDomTitle(nsString& aTitle);
+  nsresult SetDocTitle(const nsAReadableString& aTitle);
+  nsresult SetDomTitle(const nsAReadableString& aTitle);
 
 public:
   NS_IMETHOD DoTransaction(void);

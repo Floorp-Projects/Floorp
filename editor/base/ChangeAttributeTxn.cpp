@@ -35,8 +35,8 @@ ChangeAttributeTxn::~ChangeAttributeTxn()
 
 NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                        nsIDOMElement  *aElement,
-                                       const nsString& aAttribute,
-                                       const nsString& aValue,
+                                       const nsAReadableString& aAttribute,
+                                       const nsAReadableString& aValue,
                                        PRBool aRemoveAttribute)
 {
 	NS_ASSERTION(aEditor && aElement, "bad arg");
@@ -58,7 +58,7 @@ NS_IMETHODIMP ChangeAttributeTxn::DoTransaction(void)
 	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
   // need to get the current value of the attribute and save it, and set mAttributeWasSet
-  nsresult result = mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, mAttributeWasSet);
+  nsresult result = mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, &mAttributeWasSet);
   // XXX: hack until attribute-was-set code is implemented
       if (PR_FALSE==mUndoValue.IsEmpty())
         mAttributeWasSet=PR_TRUE;

@@ -70,14 +70,14 @@ public:
 
   /* ------------ nsIEditorMailSupport overrides -------------- */
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText,
+  NS_IMETHOD InsertAsQuotation(const nsAReadableString& aQuotedText,
                                nsIDOMNode** aNodeInserted);
-  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
+  NS_IMETHOD PasteAsCitedQuotation(const nsAReadableString& aCitation,
                                    PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
-                                    const nsString& aCitation,
+  NS_IMETHOD InsertAsCitedQuotation(const nsAReadableString& aQuotedText,
+                                    const nsAReadableString& aCitation,
                                     PRBool aInsertHTML,
-                                    const nsString& aCharset,
+                                    const nsAReadableString& aCharset,
                                     nsIDOMNode** aNodeInserted);
   NS_IMETHOD Rewrap(PRBool aRespectNewlines);
   NS_IMETHOD StripCites();
@@ -85,7 +85,7 @@ public:
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
+  NS_IMETHOD SetCompositionString(const nsAReadableString & aCompositionString, nsIPrivateTextRangeList * aTextRange, nsTextEventReply * aReply);
   NS_IMETHOD GetReconversionString(nsReconversionEventReply* aReply);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
@@ -97,7 +97,7 @@ public:
 
   NS_IMETHOD DeleteSelection(EDirection aAction);
 
-  NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
+  NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString & characterSet);
 
   /** we override this here to install event listeners */
   NS_IMETHOD PostCreate();
@@ -109,13 +109,13 @@ public:
   NS_IMETHOD Redo(PRUint32 aCount);
 
   NS_IMETHOD Cut();
-  NS_IMETHOD CanCut(PRBool &aCanCut);
+  NS_IMETHOD CanCut(PRBool *aCanCut);
   NS_IMETHOD Copy();
-  NS_IMETHOD CanCopy(PRBool &aCanCopy);
+  NS_IMETHOD CanCopy(PRBool *aCanCopy);
   NS_IMETHOD Paste(PRInt32 aSelectionType);
-  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste);
+  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste);
 
-  NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag);
+  NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDrag);
   NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
@@ -125,7 +125,7 @@ public:
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
                             const nsAReadableString& aFormatType,
-                            const nsAReadableString* aCharsetOverride,
+                            const nsAReadableString& aCharsetOverride,
                             PRUint32 aFlags);
 
 
@@ -141,7 +141,7 @@ public:
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
   /* ------------ Utility Routines, not part of public API -------------- */
-  NS_IMETHOD TypedText(const PRUnichar* aString, PRInt32 aAction);
+  NS_IMETHOD TypedText(const nsAReadableString& aString, PRInt32 aAction);
 
   /** returns the absolute position of the end points of aSelection
     * in the document as a text stream.
@@ -183,7 +183,7 @@ protected:
   // Helpers for output routines
   NS_IMETHOD GetAndInitDocEncoder(const nsAReadableString& aFormatType,
                                   PRUint32 aFlags,
-                                  const nsAReadableString* aCharset,
+                                  const nsAReadableString& aCharset,
                                   nsIDocumentEncoder** encoder);
 
   // key event helpers

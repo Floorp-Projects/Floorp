@@ -59,6 +59,8 @@
 
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
+#include "nsReadableUtils.h"
+
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -83,7 +85,7 @@ enum
 static PRBool IsBlockNode(nsIDOMNode* node)
 {
   PRBool isBlock (PR_FALSE);
-  nsHTMLEditor::NodeIsBlockStatic(node, isBlock);
+  nsHTMLEditor::NodeIsBlockStatic(node, &isBlock);
   return isBlock;
 }
 
@@ -500,12 +502,14 @@ nsHTMLEditRules::DidDoAction(nsISelection *aSelection,
  ********************************************************/
 
 NS_IMETHODIMP 
-nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL)
+nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL)
 {
-  aMixed = PR_FALSE;
-  aOL = PR_FALSE;
-  aUL = PR_FALSE;
-  aDL = PR_FALSE;
+  if (!aMixed || !aOL || !aUL || !aDL)
+    return NS_ERROR_NULL_POINTER;
+  *aMixed = PR_FALSE;
+  *aOL = PR_FALSE;
+  *aUL = PR_FALSE;
+  *aDL = PR_FALSE;
   PRBool bNonList = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
@@ -522,9 +526,9 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
     if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ul))
-      aUL = PR_TRUE;
+      *aUL = PR_TRUE;
     else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ol))
-      aOL = PR_TRUE;
+      *aOL = PR_TRUE;
     else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::li))
     {
       nsCOMPtr<nsIDOMNode> parent;
@@ -532,32 +536,34 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &
       res = nsEditor::GetNodeLocation(curNode, address_of(parent), &offset);
       if (NS_FAILED(res)) return res;
       if (nsHTMLEditUtils::IsUnorderedList(parent))
-        aUL = PR_TRUE;
+        *aUL = PR_TRUE;
       else if (nsHTMLEditUtils::IsOrderedList(parent))
-        aOL = PR_TRUE;
+        *aOL = PR_TRUE;
     }
     else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dl) ||
              mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dt) ||
              mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dd) )
     {
-      aDL = PR_TRUE;
+      *aDL = PR_TRUE;
     }
     else bNonList = PR_TRUE;
   }  
   
   // hokey arithmetic with booleans
-  if ( (aUL + aOL + aDL + bNonList) > 1) aMixed = PR_TRUE;
+  if ( (*aUL + *aOL + *aDL + bNonList) > 1) *aMixed = PR_TRUE;
   
   return res;
 }
 
 NS_IMETHODIMP 
-nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD)
+nsHTMLEditRules::GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool *aDD)
 {
-  aMixed = PR_FALSE;
-  aLI = PR_FALSE;
-  aDT = PR_FALSE;
-  aDD = PR_FALSE;
+  if (!aMixed || !aLI || !aDT || !aDD)
+    return NS_ERROR_NULL_POINTER;
+  *aMixed = PR_FALSE;
+  *aLI = PR_FALSE;
+  *aDT = PR_FALSE;
+  *aDD = PR_FALSE;
   PRBool bNonList = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
@@ -577,15 +583,15 @@ nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBo
         mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ol) ||
         mHTMLEditor->NodeIsType(curNode,nsIEditProperty::li) )
     {
-      aLI = PR_TRUE;
+      *aLI = PR_TRUE;
     }
     else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dt))
     {
-      aDT = PR_TRUE;
+      *aDT = PR_TRUE;
     }
     else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dd))
     {
-      aDD = PR_TRUE;
+      *aDD = PR_TRUE;
     }
     else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dl))
     {
@@ -593,20 +599,20 @@ nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBo
       PRBool bDT, bDD;
       res = GetDefinitionListItemTypes(curNode, bDT, bDD);
       if (NS_FAILED(res)) return res;
-      aDT |= bDT;
-      aDD |= bDD;
+      *aDT |= bDT;
+      *aDD |= bDD;
     }
     else bNonList = PR_TRUE;
   }  
   
   // hokey arithmetic with booleans
-  if ( (aDT + aDD + bNonList) > 1) aMixed = PR_TRUE;
+  if ( (*aDT + *aDD + bNonList) > 1) *aMixed = PR_TRUE;
   
   return res;
 }
 
 NS_IMETHODIMP 
-nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
+nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 {
   // for now, just return first alignment.  we'll lie about
   // if it's mixed.  This is for efficiency
@@ -617,8 +623,10 @@ nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
   // this routine assumes that alignment is done ONLY via divs
   
   // default alignment is left
-  aMixed = PR_FALSE;
-  aAlign = nsIHTMLEditor::eLeft;
+  if (!aMixed || !aAlign)
+    return NS_ERROR_NULL_POINTER;
+  *aMixed = PR_FALSE;
+  *aAlign = nsIHTMLEditor::eLeft;
   
   // get selection
   nsCOMPtr<nsISelection>selection;
@@ -673,13 +681,13 @@ nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
         if (NS_SUCCEEDED(res) && typeAttrVal.Length())
         {
           if (typeAttrVal.EqualsWithConversion("center"))
-            aAlign = nsIHTMLEditor::eCenter;
+            *aAlign = nsIHTMLEditor::eCenter;
           else if (typeAttrVal.EqualsWithConversion("right"))
-            aAlign = nsIHTMLEditor::eRight;
+            *aAlign = nsIHTMLEditor::eRight;
           else if (typeAttrVal.EqualsWithConversion("justify"))
-            aAlign = nsIHTMLEditor::eJustify;
+            *aAlign = nsIHTMLEditor::eJustify;
           else
-            aAlign = nsIHTMLEditor::eLeft;
+            *aAlign = nsIHTMLEditor::eLeft;
           return res;
         }
       }
@@ -692,10 +700,12 @@ nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
+nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 {
-  aCanIndent = PR_TRUE;    
-  aCanOutdent = PR_FALSE;
+  if (!aCanIndent || !aCanOutdent)
+      return NS_ERROR_FAILURE;
+  *aCanIndent = PR_TRUE;    
+  *aCanOutdent = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   nsresult res = GetListActionNodes(address_of(arrayOfNodes), PR_FALSE, PR_TRUE);
@@ -716,7 +726,7 @@ nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
         nsHTMLEditUtils::IsListItem(curNode) ||
         nsHTMLEditUtils::IsBlockquote(curNode))
     {
-      aCanOutdent = PR_TRUE;
+      *aCanOutdent = PR_TRUE;
       break;
     }
   }  
@@ -726,17 +736,19 @@ nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
 
 
 NS_IMETHODIMP 
-nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
+nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
 {
   // This routine is *heavily* tied to our ui choices in the paragraph
   // style popup.  I cant see a way around that.
-  aMixed = PR_TRUE;
-  outFormat.AssignWithConversion("");
+  if (!aMixed)
+    return NS_ERROR_NULL_POINTER;
+  *aMixed = PR_TRUE;
+  outFormat.Truncate(0);
   
   PRBool bMixed = PR_FALSE;
   nsAutoString formatStr; 
   // using "x" as an uninitialized value, since "" is meaningful
-  formatStr.AssignWithConversion("x");
+  formatStr.Assign(NS_LITERAL_STRING("x"));
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   nsresult res = GetParagraphFormatNodes(address_of(arrayOfNodes), PR_TRUE);
@@ -794,12 +806,12 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
         }
         else
         {
-          format.AssignWithConversion("");
+          format.Truncate(0);
         }
       }
       else
       {
-        format.AssignWithConversion("");
+        format.Truncate(0);
       }  
     }    
     else if (nsHTMLEditUtils::IsHeader(curNode))
@@ -828,7 +840,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
     }
   }  
   
-  aMixed = bMixed;
+  *aMixed = bMixed;
   outFormat = formatStr;
   return res;
 }
@@ -904,8 +916,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
                                 nsISelection *aSelection, 
                                 PRBool          *aCancel,
                                 PRBool          *aHandled,
-                                const nsString  *inString,
-                                nsString        *outString,
+                                const nsAReadableString  *inString,
+                                nsAWritableString        *outString,
                                 PRInt32          aMaxLength)
 {  
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
@@ -986,7 +998,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // dont spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsSubsumeStr subStr;
-    const PRUnichar *unicodeBuf = inString->GetUnicode();
+    const nsPromiseFlatString &tString = PromiseFlatString(*inString);////MJUDGE SCC NEED HELP
+    const PRUnichar *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
         
@@ -995,13 +1008,21 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // it is to search for both tabs and newlines.
     if (isPRE)
     {
-      char newlineChar = '\n';
-      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
+      nsAutoString newlineChar(NS_LITERAL_STRING("\n"));
+      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)(*inString).Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = inString->FindChar(newlineChar, PR_FALSE, oldPos);
-        
+        pos = -1;
+        nsReadingIterator<PRUnichar> beginFindIter, endFindIter, beginIter;
+        inString->BeginReading(beginIter);
+        beginFindIter = beginIter;
+        inString->EndReading(endFindIter);
+        beginFindIter.advance(oldPos);
+        if (FindInReadable(newlineChar,beginFindIter,endFindIter))
+        {
+          pos = Distance(beginIter,beginFindIter);
+        }
         if (pos != -1) 
         {
           subStrLen = pos - oldPos;
@@ -1011,8 +1032,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = inString->Length() - oldPos;
-          pos = inString->Length();
+          subStrLen = (*inString).Length() - oldPos;
+          pos = (*inString).Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
@@ -1032,13 +1053,22 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     }
     else
     {
-      char specialChars[] = {'\t','\n',0};
+      nsAutoString specialChars;
+      specialChars = NS_LITERAL_STRING("\t\n");
       nsAutoString tabString; tabString.AssignWithConversion("    ");
-      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
+      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)(*inString).Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = inString->FindCharInSet(specialChars, oldPos);
+        nsReadingIterator<PRUnichar> beginFindIter,endFindIter;
+        (*inString).BeginReading(beginFindIter);
+        beginFindIter.advance(oldPos);
+        (*inString).EndReading(endFindIter);
+        nsReadingIterator<PRUnichar> distanceIter;
+        (*inString).BeginReading(distanceIter);
+        pos = -1;
+        if (FindInReadable((const nsAString &)specialChars,beginFindIter,endFindIter))
+          pos = Distance(distanceIter,beginFindIter);
         
         if (pos != -1) 
         {
@@ -1049,8 +1079,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = inString->Length() - oldPos;
-          pos = inString->Length();
+          subStrLen = (*inString).Length() - oldPos;
+          pos = (*inString).Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
@@ -1900,11 +1930,11 @@ nsHTMLEditRules::DeleteNonTableElements(nsIDOMNode *aNode)
 
 nsresult
 nsHTMLEditRules::WillMakeList(nsISelection *aSelection, 
-                              const nsString *aListType, 
+                              const nsAReadableString *aListType, 
                               PRBool aEntireList,
                               PRBool *aCancel,
                               PRBool *aHandled,
-                              const nsString *aItemType)
+                              const nsAReadableString *aItemType)
 {
   if (!aSelection || !aListType || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
@@ -1918,9 +1948,10 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
 
   // deduce what tag to use for list items
   nsAutoString itemType;
+  nsString tString(*aListType);//MJUDGE SCC NEED HELP
   if (aItemType) 
     itemType = *aItemType;
-  else if (aListType->EqualsWithConversion("dl"))
+  else if (tString.EqualsWithConversion("dl"))
     itemType.AssignWithConversion("dd");
   else
     itemType.AssignWithConversion("li");
@@ -2316,7 +2347,7 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
 
 nsresult
 nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection, 
-                                     const nsString *aItemType, 
+                                     const nsAReadableString *aItemType, 
                                      PRBool aEntireList, 
                                      PRBool *aCancel,
                                      PRBool *aHandled)
@@ -2329,7 +2360,7 @@ nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection,
 
 nsresult
 nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection, 
-                                    const nsString *aBlockType, 
+                                    const nsAReadableString *aBlockType, 
                                     PRBool *aCancel,
                                     PRBool *aHandled)
 {
@@ -2384,7 +2415,8 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
     // Ok, now go through all the nodes and make the right kind of blocks, 
     // or whatever is approriate.  Wohoo! 
     // Note: blockquote is handled a little differently
-    if (aBlockType->EqualsWithConversion("blockquote"))
+    nsString tString(*aBlockType);
+    if (tString.EqualsWithConversion("blockquote"))
       res = MakeBlockquote(arrayOfNodes);
     else
       res = ApplyBlockStyle(arrayOfNodes, aBlockType);
@@ -2664,8 +2696,8 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
 nsresult 
 nsHTMLEditRules::ConvertListType(nsIDOMNode *aList, 
                                  nsCOMPtr<nsIDOMNode> *outList,
-                                 const nsString& aListType, 
-                                 const nsString& aItemType) 
+                                 const nsAReadableString& aListType, 
+                                 const nsAReadableString& aItemType) 
 {
   if (!aList || !outList) return NS_ERROR_NULL_POINTER;
   *outList = aList;  // we migvht not need to change the list
@@ -2879,7 +2911,7 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode,
 
 nsresult
 nsHTMLEditRules::WillAlign(nsISelection *aSelection, 
-                           const nsString *alignType, 
+                           const nsAReadableString *alignType, 
                            PRBool *aCancel,
                            PRBool *aHandled)
 {
@@ -3046,7 +3078,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
 // AlignInnerBlocks: align inside table cells or list items
 //       
 nsresult
-nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsString *alignType)
+nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsAReadableString *alignType)
 {
   if (!aNode || !alignType) return NS_ERROR_NULL_POINTER;
   nsresult res;
@@ -3084,7 +3116,7 @@ nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsString *alignType)
 // AlignBlockContents: align contents of a block element
 //                  
 nsresult
-nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsString *alignType)
+nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *alignType)
 {
   if (!aNode || !alignType) return NS_ERROR_NULL_POINTER;
   nsresult res;
@@ -4149,7 +4181,7 @@ nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes,
 //                       
 nsresult 
 nsHTMLEditRules::InsertTab(nsISelection *aSelection, 
-                           nsString *outString)
+                           nsAWritableString *outString)
 {
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offset;
@@ -4165,14 +4197,14 @@ nsHTMLEditRules::InsertTab(nsISelection *aSelection,
     
   if (isPRE)
   {
-    outString->AssignWithConversion('\t');
+    outString->Assign(PRUnichar('\t'));
   }
   else
   {
     // number of spaces should be a pref?
     // note that we dont play around with nbsps here anymore.  
     // let the AfterEdit whitespace cleanup code handle it.
-    outString->AssignWithConversion("    ");
+    outString->Assign(NS_LITERAL_STRING("    "));
   }
   
   return NS_OK;
@@ -4566,7 +4598,7 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
 //                   one or more blocks of type blockTag.  
 //                       
 nsresult 
-nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString *aBlockTag)
+nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadableString *aBlockTag)
 {
   // intent of this routine is to be used for converting to/from
   // headers, paragraphs, pre, and address.  Those blocks
@@ -4582,7 +4614,8 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
   
   // we special case an empty tag name to mean "remove block parents".
   // This is used for the "normal" paragraph style in mail-compose
-  if (aBlockTag->IsEmpty() || aBlockTag->EqualsWithConversion("normal")) bNoParent = PR_TRUE;
+  nsString tString(*aBlockTag);////MJUDGE SCC NEED HELP
+  if (tString.IsEmpty() || tString.EqualsWithConversion("normal")) bNoParent = PR_TRUE;
   
   arrayOfNodes->Count(&listCount);
   
@@ -4674,7 +4707,8 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     else if (IsInlineNode(curNode) && !bNoParent)
     {
       // if curNode is a non editable, drop it if we are going to <pre>
-      if ((aBlockTag->EqualsWithConversion("pre")) && (!mHTMLEditor->IsEditable(curNode)))
+      nsString tString(*aBlockTag); ////MJUDGE SCC NEED HELP
+      if ((tString.EqualsWithConversion("pre")) && (!mHTMLEditor->IsEditable(curNode)))
         continue; // do nothing to this block
       
       // if no curBlock, make one
@@ -4707,7 +4741,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
 //                 where we can insert the tag.  Adjust inOutParent and
 //                 inOutOffset to pint to new location for tag.
 nsresult 
-nsHTMLEditRules::SplitAsNeeded(const nsString *aTag, 
+nsHTMLEditRules::SplitAsNeeded(const nsAReadableString *aTag, 
                                nsCOMPtr<nsIDOMNode> *inOutParent,
                                PRInt32 *inOutOffset)
 {
@@ -5443,47 +5477,48 @@ nsHTMLEditRules::DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aS
 
 
 nsresult 
-nsHTMLEditRules::ConvertWhitespace(const nsString & inString, nsString & outString)
+nsHTMLEditRules::ConvertWhitespace(const nsAReadableString & inString, nsAWritableString & outString)
 {
   PRUint32 j,len = inString.Length();
+  nsString tString(inString);////MJUDGE SCC NEED HELP
   switch (len)
   {
     case 0:
       outString.SetLength(0);
       return NS_OK;
     case 1:
-      if (inString.EqualsWithConversion("\n"))   // a bit of a hack: don't convert single newlines that 
-        outString.AssignWithConversion("\n");     // dont have whitespace adjacent.  This is to preserve 
+      if (tString.EqualsWithConversion("\n"))   // a bit of a hack: don't convert single newlines that 
+        outString.Assign(NS_LITERAL_STRING("\n"));     // dont have whitespace adjacent.  This is to preserve 
       else                    // html source formatting to some degree.
-        outString.AssignWithConversion(" ");
+        outString.Assign(NS_LITERAL_STRING(" "));
       return NS_OK;
     case 2:
-      outString.Assign((PRUnichar)nbsp);
-      outString.AppendWithConversion(" ");
+      outString.Assign(PRUnichar(nbsp));
+      outString.Append(NS_LITERAL_STRING(" "));
       return NS_OK;
     case 3:
-      outString.AssignWithConversion(" ");
-      outString += (PRUnichar)nbsp;
-      outString.AppendWithConversion(" ");
+      outString.Assign(NS_LITERAL_STRING(" "));
+      outString += PRUnichar(nbsp);
+      outString.Append(NS_LITERAL_STRING(" "));
       return NS_OK;
   }
   if (len%2)  // length is odd
   {
     for (j=0;j<len;j++)
     {
-      if (!(j & 0x01)) outString.AppendWithConversion(" ");      // even char
-      else outString += (PRUnichar)nbsp; // odd char
+      if (!(j & 0x01)) outString.Append(NS_LITERAL_STRING(" "));      // even char
+      else outString += PRUnichar(nbsp); // odd char
     }
   }
   else
   {
-    outString.AssignWithConversion(" ");
-    outString += (PRUnichar)nbsp;
-    outString += (PRUnichar)nbsp;
+    outString.Assign(NS_LITERAL_STRING(" "));
+    outString += PRUnichar(nbsp);
+    outString += PRUnichar(nbsp);
     for (j=0;j<len-3;j++)
     {
-      if (!(j%2)) outString.AppendWithConversion(" ");      // even char
-      else outString += (PRUnichar)nbsp; // odd char
+      if (!(j%2)) outString.Append(NS_LITERAL_STRING(" "));      // even char
+      else outString += PRUnichar(nbsp); // odd char
     }
   }  
   return NS_OK;
@@ -5687,13 +5722,13 @@ nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
 #endif
 
 NS_IMETHODIMP 
-nsHTMLEditRules::WillCreateNode(const nsString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
+nsHTMLEditRules::WillCreateNode(const nsAReadableString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
 {
   return NS_OK;  
 }
 
 NS_IMETHODIMP 
-nsHTMLEditRules::DidCreateNode(const nsString& aTag, 
+nsHTMLEditRules::DidCreateNode(const nsAReadableString& aTag, 
                                nsIDOMNode *aNode, 
                                nsIDOMNode *aParent, 
                                PRInt32 aPosition, 
@@ -5798,7 +5833,7 @@ nsHTMLEditRules::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
 
 NS_IMETHODIMP 
-nsHTMLEditRules::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString)
+nsHTMLEditRules::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAReadableString &aString)
 {
   return NS_OK;  
 }
@@ -5807,7 +5842,7 @@ nsHTMLEditRules::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset,
 NS_IMETHODIMP 
 nsHTMLEditRules::DidInsertText(nsIDOMCharacterData *aTextNode, 
                                   PRInt32 aOffset, 
-                                  const nsString &aString, 
+                                  const nsAReadableString &aString, 
                                   nsresult aResult)
 {
   if (!mListenerEnabled) return NS_OK;

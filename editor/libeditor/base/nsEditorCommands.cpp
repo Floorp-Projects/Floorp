@@ -53,7 +53,7 @@ nsUndoCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISuppo
   if (aEditor)
   {
     PRBool isEnabled;
-    return aEditor->CanUndo(isEnabled, *outCmdEnabled);
+    return aEditor->CanUndo(&isEnabled, outCmdEnabled);
   }
   return NS_OK;
 }
@@ -78,7 +78,7 @@ nsRedoCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISuppo
   if (aEditor)
   {
     PRBool isEnabled;
-    return aEditor->CanRedo(isEnabled, *outCmdEnabled);
+    return aEditor->CanRedo(&isEnabled, outCmdEnabled);
   }
   return NS_OK;
 }
@@ -101,7 +101,7 @@ nsCutCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISuppor
   nsCOMPtr<nsIEditor> aEditor = do_QueryInterface(aCommandRefCon);
   *outCmdEnabled = PR_FALSE;
   if (aEditor)
-    return aEditor->CanCut(*outCmdEnabled);
+    return aEditor->CanCut(outCmdEnabled);
 
   return NS_OK;
 }
@@ -155,7 +155,7 @@ nsCopyCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISuppo
   nsCOMPtr<nsIEditor> aEditor = do_QueryInterface(aCommandRefCon);
   *outCmdEnabled = PR_FALSE;
   if (aEditor)
-    return aEditor->CanCopy(*outCmdEnabled);
+    return aEditor->CanCopy(outCmdEnabled);
 
   return NS_OK;
 }
@@ -209,7 +209,7 @@ nsPasteCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupp
   nsCOMPtr<nsIEditor> aEditor = do_QueryInterface(aCommandRefCon);
   *outCmdEnabled = PR_FALSE;
   if (aEditor)
-    return aEditor->CanPaste(nsIClipboard::kGlobalClipboard, *outCmdEnabled);
+    return aEditor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
 
   return NS_OK;
 }
@@ -250,7 +250,7 @@ nsDeleteCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISup
   nsAutoString cmdString(aCommandName);
 
   if (cmdString.EqualsWithConversion("cmd_delete"))
-    rv = aEditor->CanCut(*outCmdEnabled);
+    rv = aEditor->CanCut(outCmdEnabled);
   else if (cmdString.EqualsWithConversion("cmd_deleteCharBackward"))
     *outCmdEnabled = PR_TRUE;
   else if (cmdString.EqualsWithConversion("cmd_deleteCharForward"))

@@ -23,9 +23,9 @@
 #ifndef nsAOLCiter_h__
 #define nsAOLCiter_h__
 
+#include "nsString.h"
 #include "nsICiter.h"
 
-#include "nsString.h"
 
 /** Mail citations using the AOL style >> This is a citation <<
   */
@@ -38,14 +38,14 @@ public:
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsEditor
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetCiteString(const nsString& aInString, nsString& aOutString);
+  NS_IMETHOD GetCiteString(const nsAReadableString & aInString, nsAWritableString & aOutString);
 
-  NS_IMETHOD StripCites(const nsString& aInString, nsString& aOutString);
+  NS_IMETHOD StripCites(const nsAReadableString & aInString, nsAWritableString & aOutString);
 
-  NS_IMETHOD Rewrap(const nsString& aInString,
+  NS_IMETHOD Rewrap(const nsAReadableString & aInString,
                     PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                     PRBool aRespectNewlines,
-                    nsString& aOutString);
+                    nsAWritableString & aOutString);
 };
 
 #endif //nsAOLCiter_h__

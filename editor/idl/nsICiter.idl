@@ -25,7 +25,9 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-
+%{C++
+#include "nsString.h"
+%}
 /** Handle plaintext citations, as in mail quoting.
   * Used by the editor but not dependant on it.
   */

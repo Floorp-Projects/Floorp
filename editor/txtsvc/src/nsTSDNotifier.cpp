@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-
+#include "nsString.h"
 #include "nsIEditActionListener.h"
 #include "nsTSDNotifier.h"
 #include "nsTextServicesDocument.h"
@@ -173,25 +173,25 @@ nsTSDNotifier::DidJoinNodes(nsIDOMNode  *aLeftNode,
 // -------------------------------
 
 NS_IMETHODIMP
-nsTSDNotifier::WillCreateNode(const nsString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
+nsTSDNotifier::WillCreateNode(const nsAReadableString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::DidCreateNode(const nsString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
+nsTSDNotifier::DidCreateNode(const nsAReadableString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString)
+nsTSDNotifier::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAReadableString &aString)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult)
+nsTSDNotifier::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAReadableString &aString, nsresult aResult)
 {
   return NS_OK;
 }

@@ -35,11 +35,11 @@ static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
  * Rewrap the given section of string, putting the result in aOutString.
  */
 nsresult
-nsWrapUtils::Rewrap(const nsString& aInString,
-                    PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
-                    PRBool aRespectNewlines,
-                    nsString aLineStartStr,
-                    nsString& aOutString)
+nsWrapUtils::Rewrap(const nsAReadableString& aInString,
+                         PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                         PRBool aRespectNewlines,
+                         const nsAReadableString &aLineStartStr,
+                         nsAWritableString& aOutString)
 {
   PRInt32 i;
 
@@ -61,7 +61,8 @@ nsWrapUtils::Rewrap(const nsString& aInString,
 
   // Now we either have a line breaker, or we don't.
   PRInt32 length = aInString.Length();
-  const PRUnichar* unicodeStr = aInString.GetUnicode();
+  nsString tString(aInString);
+  const PRUnichar* unicodeStr = tString.GetUnicode();
   for (i = 0; i < length; )    // loop over lines
   {
     nsAutoString remaining(unicodeStr + i, length - i);
@@ -75,7 +76,7 @@ nsWrapUtils::Rewrap(const nsString& aInString,
     if (eol > length)
     {
       aOutString.Append(unicodeStr + i, length - i);
-      aOutString.AppendWithConversion('\n');  // DOM line breaks, not NS_LINEBREAK
+      aOutString.Append(PRUnichar('\n'));  // DOM line breaks, not NS_LINEBREAK
       break;
     }
     if (i > 0) aFirstLineOffset = 0;
@@ -108,7 +109,7 @@ nsWrapUtils::Rewrap(const nsString& aInString,
     else breakPt += i;
     nsAutoString appending(unicodeStr + i, breakPt - i);
     aOutString.Append(unicodeStr + i, breakPt - i);
-    aOutString.AppendWithConversion('\n');  // DOM line breaks, not NS_LINEBREAK
+    aOutString.Append(PRUnichar('\n'));  // DOM line breaks, not NS_LINEBREAK
 
     i = breakPt;
   } // continue looping over lines

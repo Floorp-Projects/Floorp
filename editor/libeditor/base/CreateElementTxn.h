@@ -52,7 +52,7 @@ public:
     *                        if eAppend, the new element is appended as the last child
     */
   NS_IMETHOD Init(nsEditor *aEditor,
-                  const nsString& aTag,
+                  const nsAReadableString& aTag,
                   nsIDOMNode *aParent,
                   PRUint32 aOffsetInParent);
 

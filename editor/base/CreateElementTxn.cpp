@@ -43,7 +43,7 @@ CreateElementTxn::CreateElementTxn()
 }
 
 NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
-                                     const nsString &aTag,
+                                     const nsAReadableString &aTag,
                                      nsIDOMNode     *aParent,
                                      PRUint32        aOffsetInParent)
 {
