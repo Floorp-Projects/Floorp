@@ -45,6 +45,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsILayoutDebugger.h"
 #include "nsIHTMLElementFactory.h"
+#include "nsIXMLElementFactory.h"
 #include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
 #include "nsIFrameSelection.h"
@@ -55,6 +56,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
+static NS_DEFINE_CID(kXMLElementFactoryCID, NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCSSParserCID,     NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
@@ -360,6 +362,14 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewHTMLElementFactory((nsIHTMLElementFactory**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLElementFactory", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kXMLElementFactoryCID)) {
+    res = NS_NewXMLElementFactory((nsIXMLElementFactory**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXMLElementFactory", res);
       return res;
     }
     refCounted = PR_TRUE;

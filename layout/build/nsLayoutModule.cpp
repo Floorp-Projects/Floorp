@@ -313,6 +313,8 @@ static Components gComponents[] = {
   { "HTML element factory", NS_HTML_ELEMENT_FACTORY_CID, nsnull, },
   { "Text element", NS_TEXTNODE_CID, nsnull, },
 
+  { "XML element factory", NS_XML_ELEMENT_FACTORY_CID, nsnull, },
+
   { "Selection", NS_SELECTION_CID, nsnull, },
   { "Frame selection", NS_FRAMESELECTION_CID, nsnull, },
   { "Range", NS_RANGE_CID, nsnull, },

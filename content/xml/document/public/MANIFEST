@@ -1,2 +1,3 @@
 nsIXMLContentSink.h
 nsIXMLDocument.h
+nsIXMLElementFactory.h
