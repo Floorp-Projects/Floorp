@@ -14,7 +14,7 @@
     <button id="Button3" value="&cancelButton.label;" style="display: none;" oncommand="doButton3();"/>
     <button id="Button2" value="&cancelButton.label;" style="display: none;" oncommand="doButton2();"/>
     <button id="cancel" value="&cancelButton.label;" oncommand="doCancelButton();"/>
-    <button id="ok" value="&okButton.label;" oncommand="doOKButton();"/>
+    <button id="ok" default="true" value="&okButton.label;" oncommand="doOKButton();"/>
   </box>
 
   <keyset id="keyset">
