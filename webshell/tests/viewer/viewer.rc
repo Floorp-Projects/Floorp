@@ -40,20 +40,15 @@ VIEWER MENU DISCARDABLE
       MENUITEM "demo #8", VIEWER_DEMO8
       MENUITEM "demo #9", VIEWER_DEMO9
       MENUITEM "demo #10", VIEWER_DEMO10
-   }
-    MENUITEM "&Test Sites", VIEWER_TOP100
-	POPUP "Test &Widgets"
-	{
-		MENUITEM "&Tree View", VIEWER_TREEVIEW
-    MENUITEM "Tool&bar Test", VIEWER_TOOLBARDEMO
-	}
-    MENUITEM SEPARATOR
-    POPUP "Print &Preview"
-    {
-      MENUITEM "One Column", VIEWER_ONE_COLUMN
-      MENUITEM "Two Column", VIEWER_TWO_COLUMN
-      MENUITEM "Three Column", VIEWER_THREE_COLUMN
     }
+    MENUITEM "&Test Sites", VIEWER_TOP100
+    POPUP "Test &Widgets"
+    {
+      MENUITEM "&Tree View", VIEWER_TREEVIEW
+      MENUITEM "Tool&bar Test", VIEWER_TOOLBARDEMO
+    }
+    MENUITEM SEPARATOR
+    MENUITEM "Print &Preview", VIEWER_ONE_COLUMN
     MENUITEM "Print", VIEWER_PRINT
     MENUITEM "Print Setup", VIEWER_PRINT_SETUP
     MENUITEM SEPARATOR
