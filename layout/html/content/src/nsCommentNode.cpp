@@ -61,6 +61,7 @@ protected:
   nsGenericDOMDataNode mInner;
 };
 
+nsresult NS_NewCommentNode(nsIHTMLContent** aInstancePtrResult);
 nsresult
 NS_NewCommentNode(nsIHTMLContent** aInstancePtrResult)
 {
@@ -178,6 +179,7 @@ nsCommentNode::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+nsresult NS_NewCommentFrame(nsIFrame*& aResult);
 nsresult
 NS_NewCommentFrame(nsIFrame*& aResult)
 {
