@@ -888,7 +888,6 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
                                 // try to get filename, lineno from the first
                                 // stack frame location.
-                                PRUnichar* sourceNameUni = nsnull;
                                 PRInt32 lineNumber = 0;
                                 nsXPIDLCString sourceName;
 
