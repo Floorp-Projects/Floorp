@@ -46,6 +46,7 @@ template <class CharT>
 struct nsCharTraits
   {
     typedef CharT char_type;
+    typedef char  incompatible_char_type;
 
     static
     void
@@ -209,7 +210,8 @@ struct nsCharTraits
 NS_SPECIALIZE_TEMPLATE
 struct nsCharTraits<char>
   {
-    typedef char char_type;
+    typedef char      char_type;
+    typedef PRUnichar incompatible_char_type;
 
     static
     void
