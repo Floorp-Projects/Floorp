@@ -245,13 +245,8 @@ prvcy_checkStandardLocation_finished
 {
   History_entry * entry = SHIST_GetCurrent(&context->hist);
   if(entry && pUrl->server_status == 200) {
-/// char * pathPart = NULL;
     prvcy_addToCache(pUrl->address, TRUE);
     entry->privacy_policy_url = XP_STRDUP(pUrl->address);
-/// StrAllocCat(entry->privacy_policy_url, "?");
-/// pathPart = NET_ParseURL(pUrl->address, GET_PATH_PART);
-/// StrAllocCat(entry->privacy_policy_url, pathPart);
-/// XP_FREEIF(pathPart);
   } else {
     prvcy_addToCache(pUrl->address, FALSE);
   }
@@ -269,7 +264,6 @@ PRVCY_CheckStandardLocation(MWContext * context)
     URL_Struct *pUrl;
     char * privacyURL = NULL;
     XP_Bool found;
-/// char * pathPart = NULL;
     if (!entry || !entry->address || entry->privacy_policy_url) {
       return;
     }
@@ -293,12 +287,8 @@ PRVCY_CheckStandardLocation(MWContext * context)
       }
       return;
     }
-/// StrAllocCat(privacyURL, "/privacy.html?");
-/// pathPart = NET_ParseURL(entry->address, GET_PATH_PART);
-/// StrAllocCat(privacyURL, pathPart);
     pUrl = NET_CreateURLStruct(privacyURL, NET_NORMAL_RELOAD);
     XP_FREEIF(privacyURL);
-/// XP_FREEIF(pathPart);
     if (!pUrl) {
       return;
     }
