@@ -3783,6 +3783,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef KE_DEBUG
             printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
 #endif
+            // These must be checked here too as a lone WM_CHAR could be received 
+            // if a child window didn't handle it (for example Alt+Space in a content window)
+            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
 
             // ignore [shift+]alt+space so the OS can handle it 
             if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
