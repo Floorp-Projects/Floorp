@@ -2335,12 +2335,12 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
     baseHref.Trim(" \t\n\r");
 
     nsIURI* url = nsnull;
-    result = NS_NewURI(&url, baseHref, nsnull, docBaseURL);
-
+    {
+      result = NS_NewURI(&url, baseHref, nsnull, docBaseURL);
+    }
     NS_IF_RELEASE(docBaseURL);
     *aBaseURL = url;
   }
-
   return result;
 }
 
@@ -4573,6 +4573,32 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
   }
 
   return RemoveFocus(presContext);
+}
+
+nsresult
+nsGenericHTMLElement::HandleFrameOnloadEvent(nsIDOMEvent* aEvent)
+{
+  NS_ENSURE_TRUE(aEvent, NS_OK);
+
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (!type.EqualsIgnoreCase("load")) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPresContext> ctx;
+
+  GetPresContext(this, getter_AddRefs(ctx));
+  NS_ENSURE_TRUE(ctx, NS_OK);
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent event;
+
+  event.eventStructType = NS_EVENT;
+  event.message = NS_PAGE_LOAD;
+
+  return HandleDOMEvent(ctx, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 }
 
 // static

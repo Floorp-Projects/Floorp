@@ -185,8 +185,7 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mLastMouseButtonAction(LL_ZERO), mFullScreen(PR_FALSE),
   mOriginalPos(nsnull), mOriginalSize(nsnull),
   mGlobalObjectOwner(nsnull),
-  mDocShell(nsnull), mMutationBits(0), mChromeEventHandler(nsnull),
-  mFrameElement(nsnull)
+  mDocShell(nsnull), mMutationBits(0), mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
   // We could have failed the first time through trying
@@ -717,38 +716,6 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  if (aEvent->message == NS_PAGE_LOAD) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mFrameElement));
-
-    nsCOMPtr<nsIDOMWindowInternal> parent;
-    GetParentInternal(getter_AddRefs(parent));
-
-    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
-
-    PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
-
-    if (treeItem) {
-      treeItem->GetItemType(&itemType);
-    }
-
-    if (content && parent && itemType != nsIDocShellTreeItem::typeChrome) {
-      // If we're not in chrome, or at a chrome boundary, fire the
-      // onload event for the frame element.
-
-      nsCOMPtr<nsIPresContext> ctx;
-      mDocShell->GetPresContext(getter_AddRefs(ctx));
-      NS_ENSURE_TRUE(ctx, NS_OK);
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-
-      event.eventStructType = NS_EVENT;
-      event.message = NS_PAGE_LOAD;
-
-      return content->HandleDOMEvent(ctx, &event, nsnull, NS_EVENT_FLAG_INIT,
-                                     &status);
-    }
-  }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created an event,
@@ -2847,53 +2814,6 @@ GlobalWindowImpl::ReallyCloseWindow()
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetFrameElement(nsIDOMElement** aFrameElement)
-{
-  *aFrameElement = nsnull;
-
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShell(getter_AddRefs(docShell));
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellTI(do_QueryInterface(docShell));
-
-  if (!docShellTI) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> parent;
-  docShellTI->GetSameTypeParent(getter_AddRefs(parent));
-
-  if (!parent || parent == docShellTI) {
-    // We're at a chrome boundary, don't expose the chrome iframe
-    // element to content code.
-
-    return NS_OK;
-  }
-
-  *aFrameElement = mFrameElement;
-  NS_IF_ADDREF(*aFrameElement);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::GetFrameElementInternal(nsIDOMElement** aFrameElement)
-{
-  *aFrameElement = mFrameElement;
-  NS_IF_ADDREF(*aFrameElement);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::SetFrameElementInternal(nsIDOMElement* aFrameElement)
-{
-  mFrameElement = aFrameElement;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GlobalWindowImpl::UpdateCommands(const nsAString& anAction)
 {
   nsCOMPtr<nsIDOMWindowInternal> rootWindow;
@@ -4852,7 +4772,6 @@ nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
       break;
     case nsSizeMode_Normal:
       *aWindowState = nsIDOMChromeWindow::STATE_NORMAL;
-      break;
     default:
       NS_WARNING("Illegal window state for this chrome window");
       break;

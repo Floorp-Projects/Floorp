@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMNSHTMLFrameElement.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
@@ -48,14 +49,14 @@
 #include "nsIDOMDocument.h"
 #include "nsIWebNavigation.h"
 #include "nsIChromeEventHandler.h"
-#include "nsIDocShell.h"
 #include "nsDOMError.h"
 
 
 class nsHTMLFrameElement : public nsGenericHTMLLeafElement,
                            public nsIDOMHTMLFrameElement,
                            public nsIDOMNSHTMLFrameElement,
-                           public nsIChromeEventHandler
+                           public nsIChromeEventHandler,
+                           public nsIDOMEventListener
 {
 public:
   nsHTMLFrameElement();
@@ -81,6 +82,9 @@ public:
 
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
+
+  // nsIDOMEventListener
+  NS_DECL_NSIDOMEVENTLISTENER
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -139,6 +143,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFrameElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -186,21 +191,33 @@ NS_IMETHODIMP
 nsHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 {
   NS_ENSURE_ARG_POINTER(aContentDocument);
+
   *aContentDocument = nsnull;
 
-  if (!mDocument) {
-    return NS_OK;
-  }
+  NS_ENSURE_TRUE(mDocument, NS_OK);
 
-  nsCOMPtr<nsIDocument> content_document;
+  nsCOMPtr<nsIPresShell> presShell;
 
-  mDocument->GetSubDocumentFor(this, getter_AddRefs(content_document));
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, NS_OK);
 
-  if (!content_document) {
-    return NS_OK;
-  }
+  nsCOMPtr<nsISupports> tmp;
 
-  return CallQueryInterface(content_document, aContentDocument);
+  presShell->GetSubShellFor(this, getter_AddRefs(tmp));
+  NS_ENSURE_TRUE(tmp, NS_OK);
+
+  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(tmp);
+  NS_ENSURE_TRUE(webNav, NS_OK);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+
+  webNav->GetDocument(getter_AddRefs(domDoc));
+
+  *aContentDocument = domDoc;
+
+  NS_IF_ADDREF(*aContentDocument);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -312,3 +329,8 @@ nsHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
 }
 
+nsresult
+nsHTMLFrameElement::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return HandleFrameOnloadEvent(aEvent);
+}

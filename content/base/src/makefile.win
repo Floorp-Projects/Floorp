@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  chrome \
 		  docshell \
-		  uriloader \
 		  pref \
 		  xpconnect \
 		  util \
@@ -69,10 +68,10 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsCommentNode.obj		\
 	.\$(OBJDIR)\nsGenericDOMDataNode.obj	\
 	.\$(OBJDIR)\nsGenericDOMNodeList.obj	\
-	.\$(OBJDIR)\nsGenericElement.obj	\
-	.\$(OBJDIR)\nsContentList.obj		\
-	.\$(OBJDIR)\nsContentIterator.obj	\
-	.\$(OBJDIR)\nsContentPolicy.obj		\
+	.\$(OBJDIR)\nsGenericElement.obj 	\
+	.\$(OBJDIR)\nsContentList.obj 	 	\
+	.\$(OBJDIR)\nsContentIterator.obj 	\
+	.\$(OBJDIR)\nsContentPolicy.obj         \
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentEncoder.obj	\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\
@@ -80,7 +79,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsDOMAttribute.obj		\
 	.\$(OBJDIR)\nsDOMAttributeMap.obj	\
 	.\$(OBJDIR)\nsDOMDocumentType.obj	\
-	.\$(OBJDIR)\nsGeneratedIterator.obj	\
+	.\$(OBJDIR)\nsGeneratedIterator.obj 	\
 	.\$(OBJDIR)\nsNameSpaceManager.obj	\
 	.\$(OBJDIR)\nsNodeInfo.obj		\
 	.\$(OBJDIR)\nsNodeInfoManager.obj	\
@@ -92,13 +91,12 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsTreeWalker.obj		\
 	.\$(OBJDIR)\nsXMLContentSerializer.obj	\
 	.\$(OBJDIR)\nsHTMLContentSerializer.obj	\
-	.\$(OBJDIR)\nsParserUtils.obj		\
-	.\$(OBJDIR)\nsPlainTextSerializer.obj	\
-	.\$(OBJDIR)\nsContentUtils.obj		\
-	.\$(OBJDIR)\nsScriptLoader.obj		\
-	.\$(OBJDIR)\nsStyleLinkElement.obj	\
-	.\$(OBJDIR)\nsContentAreaDragDrop.obj	\
-	.\$(OBJDIR)\nsFrameLoader.obj		\
+	.\$(OBJDIR)\nsParserUtils.obj           \
+	.\$(OBJDIR)\nsPlainTextSerializer.obj   \
+	.\$(OBJDIR)\nsContentUtils.obj   \
+	.\$(OBJDIR)\nsScriptLoader.obj   \
+	.\$(OBJDIR)\nsStyleLinkElement.obj   \
+	.\$(OBJDIR)\nsContentAreaDragDrop.obj \
 	$(NULL)
 
 LINCS=-I..\..\html\base\src -I..\..\html\style\src \
