@@ -21,15 +21,11 @@
  */
 
 #include "nsFtpConnectionThread.h"
-#include "nsIEventQueueService.h"
-#include "nsIStringStream.h"
 #include "nsISocketTransport.h"
-#include "nsIPipe.h"
 #include "nsIMIMEService.h"
 #include "nsIStreamConverterService.h"
 #include "prprf.h"
 #include "prlog.h"
-#include "prmon.h"
 #include "netCore.h"
 #include "ftpCore.h"
 #include "nsProxiedService.h"
@@ -38,6 +34,7 @@
 #include "nsAsyncEvent.h"
 #include "nsIURL.h"
 #include "nsEscape.h"
+#include "nsNetUtil.h"
 
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
@@ -46,12 +43,12 @@
 
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID,         NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define FTP_COMMAND_CHANNEL_SEG_SIZE 64
 #define FTP_COMMAND_CHANNEL_MAX_SIZE 512
@@ -62,12 +59,12 @@ extern PRLogModuleInfo* gFTPLog;
 
 NS_IMPL_THREADSAFE_ADDREF(nsFtpConnectionThread);
 NS_IMPL_THREADSAFE_RELEASE(nsFtpConnectionThread); 
-NS_IMPL_QUERY_INTERFACE3(nsFtpConnectionThread, nsIRunnable, nsIRequest, nsIStreamObserver);
+NS_IMPL_QUERY_INTERFACE2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
 
 nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
     // bool init
-    mAsyncOpened = mConnected = mList = mRetryPass = mCachedConn = mSentStart = PR_FALSE;
+    mConnected = mList = mRetryPass = mCachedConn = mSentStart = PR_FALSE;
     mFireCallbacks = mUsePasv = mBin = mKeepRunning = mAnonymous = PR_TRUE;
 
     mAction = GET;
@@ -81,20 +78,13 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mPort = 21;
 
     mLock = nsnull;
-    mMonitor = nsnull;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpConnectionThread() called"));
-    if (mLock) {
-        PR_DestroyLock(mLock);
-        mLock = nsnull;
-    }
-
-    if (mMonitor) {
-        PR_DestroyMonitor(mMonitor);
-        mMonitor = nsnull;
-    }
+    nsXPIDLCString spec;
+    mURL->GetSpec(getter_Copies(spec));
+    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpConnectionThread() for %s", (const char*)spec));
+    if (mLock) PR_DestroyLock(mLock);
 }
 
 nsresult
@@ -665,10 +655,6 @@ nsFtpConnectionThread::Process() {
                     break;
                 }
                 mNextState = FTP_READ_BUF;
-
-                PLEvent *event = nsnull;
-                if (   NS_FAILED(mFTPEventQueue->WaitForEvent(&event))
-                    || NS_FAILED(mFTPEventQueue->HandleEvent(event))) return rv;
                 break;
                 }
                 // END: FTP_R_PASV
@@ -770,17 +756,9 @@ nsresult
 nsFtpConnectionThread::SetStreamObserver(nsIStreamObserver* aObserver, nsISupports *aContext) {
     nsresult rv = NS_OK;
     if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
-    if (aObserver) {
-        mObserverContext = aContext;
-        NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
-        if(NS_FAILED(rv)) return rv;
-
-        rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
-                                                  NS_GET_IID(nsIStreamObserver), 
-                                                  aObserver,
-                                                  PROXY_ASYNC | PROXY_ALWAYS,
-                                                  getter_AddRefs(mObserver));
-    }
+    NS_ASSERTION(aObserver, "null observer");
+    mObserver = aObserver;
+    mObserverContext = aContext;
     return rv;
 }
 
@@ -1125,12 +1103,6 @@ nsFtpConnectionThread::R_size() {
 
     }
 
-    if (mAsyncOpened && mObserver) {
-        rv = mObserver->OnStartRequest(mChannel, mObserverContext);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-        nsAutoCMonitor mon(this);
-        mon.Wait();
-    }
     return retState;
 }
 
@@ -1220,12 +1192,13 @@ nsFtpConnectionThread::S_list() {
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
     mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
-    return event->Fire(mUIEventQ);
+    return event->Fire();
 }
 
 FTP_STATE
 nsFtpConnectionThread::R_list() {
     if ((mResponseCode/100 == 4) || (mResponseCode/100 == 5)) {
+        mFireCallbacks = PR_TRUE;
         return FTP_ERROR;
     }
     return FTP_READ_BUF;
@@ -1249,14 +1222,32 @@ nsFtpConnectionThread::S_retr() {
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
     mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
-    return event->Fire(mUIEventQ);
+    return event->Fire();
 }
 
 FTP_STATE
 nsFtpConnectionThread::R_retr() {
     if (mResponseCode/100 == 1) {
+        // see if there's another response in this read.
+        // this can happen if the server sends back two
+        // responses before we've processed the first one.
+        PRInt32 loc = -1;
+        loc = mResponseMsg.FindChar(LF);
+        if (loc > -1) {
+            PRInt32 err;
+            nsCAutoString response;
+            mResponseMsg.Mid(response, loc, mResponseMsg.Length() - (loc+1));
+            if (response.Length()) {
+                PRInt32 code = response.ToInteger(&err);
+                if (code/100 != 2)
+                    return FTP_ERROR;
+                else
+                    return FTP_COMPLETE;
+            }
+        }
         return FTP_READ_BUF;
     }
+    mFireCallbacks = PR_TRUE;
     return FTP_ERROR;
 }
 
@@ -1282,7 +1273,7 @@ nsFtpConnectionThread::S_stor() {
                                                            mObserverContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
     mFireCallbacks = PR_FALSE; // observer callbacks will be handled by the transport.
-    return event->Fire(mUIEventQ);
+    return event->Fire();
 }
 
 FTP_STATE
@@ -1379,11 +1370,6 @@ nsFtpConnectionThread::R_pasv() {
 
     if (NS_FAILED(sTrans->SetReuseConnection(PR_FALSE))) return FTP_ERROR;
 
-    // The FTP connection thread will receive transport leve
-    // AsyncOpen notifications.
-    rv = mDPipe->AsyncOpen(this, nsnull);
-    if (NS_FAILED(rv)) return FTP_ERROR;
-
     // hook ourself up as a proxy for progress notifications
     nsCOMPtr<nsIInterfaceRequestor> progressProxy(do_QueryInterface(mChannel));
     rv = mDPipe->SetNotificationCallbacks(progressProxy);
@@ -1475,18 +1461,6 @@ nsFtpConnectionThread::R_mkdir() {
 NS_IMETHODIMP
 nsFtpConnectionThread::Run() {
     nsresult rv;
-
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mFTPEventQueue));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->GetThreadEventQueue(NS_UI_THREAD, getter_AddRefs(mUIEventQ));
-    if (NS_FAILED(rv)) return rv;
 
     rv = nsServiceManager::GetService(kSocketTransportServiceCID,
                                       NS_GET_IID(nsISocketTransportService), 
@@ -1591,18 +1565,6 @@ nsFtpConnectionThread::Resume(void)
     return rv;
 }
 
-// nsIStreamObserver methods
-NS_IMETHODIMP
-nsFtpConnectionThread::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
-    mState = FTP_S_MODE; // bump to the next state.
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpConnectionThread::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
-                                     nsresult aStatus, const PRUnichar *aMsg) {
-    return NS_OK;
-}
 nsresult
 nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
                             nsIChannel* aChannel,
@@ -1617,9 +1579,6 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
 
     mLock = PR_NewLock();
     if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
-
-    mMonitor = PR_NewMonitor();
-    if (!mMonitor) return NS_ERROR_OUT_OF_MEMORY;
 
     // parameter validation
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");
@@ -1674,8 +1633,11 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     mCacheKey.SetString(host);
     mCacheKey.Append(port);
 
-    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
-    if(NS_FAILED(rv)) return rv;
+    NS_WITH_SERVICE(nsIEventQueueService, eqs, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+    if (NS_FAILED(rv)) return rv;
 
     mFTPChannel = do_QueryInterface(aChannel, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -1694,13 +1656,6 @@ nsFtpConnectionThread::SetWriteStream(nsIInputStream* aInStream, PRUint32 aWrite
 }
 
 nsresult
-nsFtpConnectionThread::SetAsyncOpen(PRBool aAsyncOpen) {
-    if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
-    mAsyncOpened = aAsyncOpen;
-    return NS_OK;
-}
-
-nsresult
 nsFtpConnectionThread::StopProcessing() {
     nsresult rv;
     PRUnichar* errorMsg = nsnull;
@@ -1714,48 +1669,39 @@ nsFtpConnectionThread::StopProcessing() {
         rv = MapResultCodeToString(mInternalError, &errorMsg);
         if (NS_FAILED(rv)) return rv;
 
-        if (mCPipe) (void)mCPipe->Cancel();
-        if (mDPipe) (void)mDPipe->Cancel();
+        //if (mCPipe) (void)mCPipe->Cancel();
+        //if (mDPipe) (void)mDPipe->Cancel();
     }
 
     // Release the transports
     mCPipe = 0;
     mDPipe = 0;
 
-    rv = mFTPChannel->Stopped(mInternalError, errorMsg);
-    if (NS_FAILED(rv)) return rv;
-
-    // if we have an observer, end the transaction
-    if (mAsyncOpened && mObserver) {
-        rv = mObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, errorMsg);
-    }
-
     if (mFireCallbacks) {
         // we never got to the point that the transport would be
         // taking over notifications. we'll handle them our selves.
-        if (mObserver && !mAsyncOpened) {
-            rv = mObserver->OnStartRequest(mChannel, mObserverContext);
+
+        if (mObserver) {
+            nsCOMPtr<nsIStreamObserver> asyncObserver;
+            rv = NS_NewAsyncStreamObserver(mObserver, mEventQueue, getter_AddRefs(asyncObserver));
+            if(NS_FAILED(rv)) return rv;
+
+            rv = asyncObserver->OnStartRequest(mChannel, mObserverContext);
             if (NS_FAILED(rv)) return rv;
 
-            rv = mObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, errorMsg);
+            rv = asyncObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, errorMsg);
             if (NS_FAILED(rv)) return rv;
         }
 
         if (mListener) {
-            NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+            nsCOMPtr<nsIStreamListener> asyncListener;
+            rv = NS_NewAsyncStreamListener(mListener, mEventQueue, getter_AddRefs(asyncListener));
             if(NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIStreamListener> listener;
-            rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
-                                                      NS_GET_IID(nsIStreamListener), 
-                                                      mListener,
-                                                      PROXY_ASYNC | PROXY_ALWAYS,
-                                                      getter_AddRefs(listener));
+
+            rv = asyncListener->OnStartRequest(mChannel, mListenerContext);
             if (NS_FAILED(rv)) return rv;
 
-            rv = listener->OnStartRequest(mChannel, mListenerContext);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = listener->OnStopRequest(mChannel, mListenerContext, mInternalError, errorMsg);
+            rv = asyncListener->OnStopRequest(mChannel, mListenerContext, mInternalError, errorMsg);
             if (NS_FAILED(rv)) return rv;
         }
     }

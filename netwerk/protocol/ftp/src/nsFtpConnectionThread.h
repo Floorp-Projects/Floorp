@@ -30,9 +30,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "prtime.h"
-#include "prmon.h"
-#include "nsString2.h"
-#include "nsIEventQueue.h"
+#include "nsString.h"
 #include "nsPIFTPChannel.h"
 #include "nsIConnectionCache.h"
 #include "nsConnectionCacheObj.h"
@@ -42,6 +40,7 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
+#include "nsIEventQueueService.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -85,13 +84,11 @@ typedef enum _FTP_STATE {
 typedef enum _FTP_ACTION { GET, PUT, MKDIR, DEL} FTP_ACTION;
 
 class nsFtpConnectionThread : public nsIRunnable,
-                              public nsIRequest,
-                              public nsIStreamObserver {
+                              public nsIRequest {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
     NS_DECL_NSIREQUEST
-    NS_DECL_NSISTREAMOBSERVER
 
     nsFtpConnectionThread();
     virtual ~nsFtpConnectionThread();
@@ -109,10 +106,6 @@ public:
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
-
-    // use this to indicate that the transaction started w/ AsyncOpen. This
-    // affects how observers are notified.
-    nsresult SetAsyncOpen(PRBool aAsyncOpen);
 
 private:
     ///////////////////////////////////
@@ -211,13 +204,13 @@ private:
     PRUint32               mBufferSegmentSize;
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;
-    PRMonitor              *mMonitor;
     nsCOMPtr<nsIEventQueue>mUIEventQ;
     PLEvent                *mAsyncReadEvent;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRUint32               mWriteCount;    // The amount of data to write to the server.
-    PRBool                 mAsyncOpened;   // This is set when the consumer wants AsyncOpen info.
     PRBool                 mFireCallbacks; // Fire the listener callbacks.
+
+    nsCOMPtr<nsIEventQueue> mEventQueue;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

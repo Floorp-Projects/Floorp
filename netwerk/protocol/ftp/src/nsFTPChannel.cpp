@@ -24,11 +24,8 @@
 
 #include "nsFTPChannel.h"
 #include "nsIStreamListener.h"
-#include "nscore.h"
-#include "prlog.h"
 #include "nsIServiceManager.h"
 #include "nsIMIMEService.h"
-#include "nsIPipe.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 
@@ -53,14 +50,13 @@ nsFTPChannel::nsFTPChannel() {
     mSourceOffset = 0;
     mAmount = 0;
     mContentLength = -1;
-    mConnThread = nsnull;
-    mAsyncOpen = PR_FALSE;
     mLock = nsnull;
 }
 
 nsFTPChannel::~nsFTPChannel() {
-    NS_ASSERTION(!mConnThread, "FTP: connection thread ref still exists");
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() called"));
+    nsXPIDLCString spec;
+    mURL->GetSpec(getter_Copies(spec));
+    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() for %s", (const char*)spec));
     if (mLock) PR_DestroyLock(mLock);
 }
 
@@ -89,8 +85,10 @@ nsFTPChannel::Init(const char* verb,
 {
     nsresult rv = NS_OK;
 
-    if (mConnected)
+    if (mConnected) {
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("ERROR nsFTPChannel:Init called while connected.\n"));
         return NS_ERROR_ALREADY_CONNECTED;
+    }
 
     // parameter validation
     NS_ASSERTION(aPool, "FTP: channel needs a thread pool to play in");
@@ -154,6 +152,7 @@ nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 
 NS_IMETHODIMP
 nsFTPChannel::IsPending(PRBool *result) {
+    nsAutoLock lock(mLock);
     if (mProxyChannel)
         return mProxyChannel->IsPending(result);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -161,37 +160,39 @@ nsFTPChannel::IsPending(PRBool *result) {
 
 NS_IMETHODIMP
 nsFTPChannel::Cancel(void) {
-    if (mProxyChannel)
+    nsresult rv;
+    nsAutoLock lock(mLock);
+    if (mProxyChannel) {
         return mProxyChannel->Cancel();
-
-    // if we hit this assert, someone's hanging onto the channel too long.
-    NS_ASSERTION(mConnThread, "lost the connection thread.");
-
-    // it's ok for this method to *not* have the underlying thread because 
-    // the user obviously want's the underlying channel/connection to go away.
-    return mConnThread->Cancel();
+    } else if (mConnThread) {
+        rv = mConnThread->Cancel();
+        mConnThread = nsnull;
+        mConnected = PR_FALSE;
+        return rv;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFTPChannel::Suspend(void) {
-    if (mProxyChannel)
+    nsAutoLock lock(mLock);
+    if (mProxyChannel) {
         return mProxyChannel->Suspend();
-
-    // if we hit this assert, someone's hanging onto the channel too long.
-    NS_ASSERTION(mConnThread, "lost the connection thread.");
-
-    return mConnThread->Suspend();
+    } else if (mConnThread) {
+        return mConnThread->Suspend();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFTPChannel::Resume(void) {
-    if (mProxyChannel)
+    nsAutoLock lock(mLock);
+    if (mProxyChannel) {
         return mProxyChannel->Resume();
-
-    // if we hit this assert, someone's hanging onto the channel too long.
-    NS_ASSERTION(mConnThread, "lost the connection thread.");
-
-    return mConnThread->Resume();
+    } else if (mConnThread) {
+        return mConnThread->Resume();
+    }
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +226,10 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
         return mProxyChannel->OpenInputStream(startPosition, readCount, _retval);
     }
 
-    if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
+    if (mConnected) {
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("ERROR nsFTPChannel:OpenInputStream called while connected.\n"));
+        return NS_ERROR_ALREADY_CONNECTED;
+    }
     
     // create a pipe. The caller gets the input stream end,
     // and the FTP thread get's the output stream end.
@@ -237,6 +241,8 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
                                   getter_AddRefs(listener));
     if (NS_FAILED(rv)) return rv;
 
+    mListener = listener; // ensure that we insert ourselves as the proxy listener
+
     ///////////////////////////
     //// setup channel state
     mSourceOffset = startPosition;
@@ -244,35 +250,25 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
     ////////////////////////////////
     //// setup the channel thread
-    NS_NEWXPCOM(mConnThread, nsFtpConnectionThread);
-    if (!mConnThread) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mConnThread);
+    nsFtpConnectionThread *thread = nsnull;
+    NS_NEWXPCOM(thread, nsFtpConnectionThread);
+    if (!thread) return NS_ERROR_OUT_OF_MEMORY;
+    mConnThread = thread;
 
-    rv = mConnThread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
+    rv = thread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
     mHandler = 0;
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(mConnThread);
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
-    rv = mConnThread->SetStreamListener(listener);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(mConnThread);
-        return rv;
-    }
+    rv = thread->SetStreamListener(this, nsnull);
+    if (NS_FAILED(rv)) return rv;
 
     if (mLoadGroup) {
         rv = mLoadGroup->AddChannel(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
-
-    if (NS_FAILED(rv)) return rv;
-
     mConnected = PR_TRUE;
-
-    return NS_OK;
+    return mPool->DispatchRequest((nsIRunnable*)thread);
 }
 
 NS_IMETHODIMP
@@ -286,44 +282,7 @@ nsFTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval
 NS_IMETHODIMP
 nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 {
-    nsresult rv;
-
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncOpen() called\n"));
-
-    mObserver = observer;
-
-    if (mProxyChannel) {
-        return mProxyChannel->AsyncOpen(this, ctxt);
-    }
-
-    if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
-
-    ////////////////////////////////
-    //// setup the channel thread
-    NS_NEWXPCOM(mConnThread, nsFtpConnectionThread);
-    if (!mConnThread) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mConnThread);
-
-
-    rv = mConnThread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
-    mHandler = 0;
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(mConnThread);
-        return rv;
-    }
-
-    rv = mConnThread->SetStreamObserver(this, ctxt);
-    if (NS_FAILED(rv)) return rv;
-
-    mConnected = PR_TRUE;
-    mAsyncOpen = PR_TRUE;
-
-    if (mLoadGroup) {
-        rv = mLoadGroup->AddChannel(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    return mPool->DispatchRequest((nsIRunnable*)mConnThread);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -336,6 +295,7 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncRead() called\n"));
 
     mListener = listener;
+    mUserContext = ctxt;
 
     if (mEventSink) {
         nsAutoString statusMsg("Beginning FTP transaction.");
@@ -357,46 +317,28 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         return mProxyChannel->AsyncRead(startPosition, readCount, ctxt, this);
     }
 
-    if (mAsyncOpen) {
-        NS_ASSERTION(mConnThread, "FTP: underlying connection thread went away");
-        // we already initialized the connection thread via a prior call
-        // to AsyncOpen().
-        
-        // The connection thread is suspended right now.
-        // Set our AsyncRead pertinent state and then wake it up.
-        rv = mConnThread->SetStreamListener(this);
-        if (NS_FAILED(rv)) return rv;
-
-        mConnThread->Resume();
-    } else {
-
-        if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
-
-        ////////////////////////////////
-        //// setup the channel thread
-        NS_NEWXPCOM(mConnThread, nsFtpConnectionThread);
-        if (!mConnThread) return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(mConnThread);
-
-        rv = mConnThread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
-        mHandler = 0;
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(mConnThread);
-            return rv;
-        }
-
-        rv = mConnThread->SetStreamListener(this, ctxt);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(mConnThread);
-            return rv;
-        }
-
-        rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
-
-        mConnected = PR_TRUE;
+    if (mConnected) {
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("ERROR nsFTPChannel:AsyncRead called while connected.\n"));
+        return NS_ERROR_ALREADY_CONNECTED;
     }
 
-    return NS_OK;
+    ////////////////////////////////
+    //// setup the channel thread
+    nsFtpConnectionThread *thread = nsnull;
+    NS_NEWXPCOM(thread, nsFtpConnectionThread);
+    if (!thread) return NS_ERROR_OUT_OF_MEMORY;
+    mConnThread = thread;
+
+    rv = thread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
+    mHandler = nsnull;
+    if (NS_FAILED(rv)) return rv;
+
+    rv = thread->SetStreamListener(this, ctxt);
+    if (NS_FAILED(rv)) return rv;
+
+    mConnected = PR_TRUE;
+
+    return mPool->DispatchRequest((nsIRunnable*)thread);
 }
 
 NS_IMETHODIMP
@@ -409,45 +351,39 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
     nsresult rv = NS_OK;
 
     mObserver = observer;
+    mUserContext = ctxt;
 
     if (mProxyChannel) {
-        return mProxyChannel->AsyncOpen(this, ctxt);
+        return mProxyChannel->AsyncWrite(fromStream, startPosition,
+                                         writeCount, ctxt, observer);
     }
 
     NS_ASSERTION(writeCount > 0, "FTP requires stream len info");
     if (writeCount < 1) return NS_ERROR_NOT_INITIALIZED;
 
-    NS_NEWXPCOM(mConnThread, nsFtpConnectionThread);
-    if (!mConnThread) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mConnThread);
+    nsFtpConnectionThread *thread = nsnull;
+    NS_NEWXPCOM(thread, nsFtpConnectionThread);
+    if (!thread) return NS_ERROR_OUT_OF_MEMORY;
+    mConnThread = thread;
 
-    rv = mConnThread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
+    rv = thread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
     mHandler = 0;
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(mConnThread);
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
-    rv = mConnThread->SetWriteStream(fromStream, writeCount);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(mConnThread);
-        return rv;
-    }
+    rv = thread->SetWriteStream(fromStream, writeCount);
+    if (NS_FAILED(rv)) return rv;
 
-    rv = mConnThread->SetStreamObserver(this, ctxt);
-    if (NS_FAILED(rv))
-        NS_RELEASE(mConnThread);
+    rv = thread->SetStreamObserver(this, ctxt);
+    if (NS_FAILED(rv)) return rv;
 
     if (mLoadGroup) {
         rv = mLoadGroup->AddChannel(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
-
     mConnected = PR_TRUE;
 
-    return rv;
+    return mPool->DispatchRequest((nsIRunnable*)thread);
 }
 
 NS_IMETHODIMP
@@ -572,16 +508,6 @@ nsFTPChannel::SetContentLength(PRInt32 aLength) {
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFTPChannel::Stopped(nsresult aStatus, const PRUnichar *aMsg) {
-    nsAutoLock lock(mLock);
-    // the underlying connection thread has gone away.
-    mConnected = PR_FALSE;
-    NS_ASSERTION(mConnThread, "lost the connection thread before Stopped");
-    NS_RELEASE(mConnThread);
-    return NS_OK;
-}
-
 // nsIInterfaceRequestor method
 NS_IMETHODIMP
 nsFTPChannel::GetInterface(const nsIID &anIID, void **aResult ) {
@@ -623,8 +549,9 @@ nsFTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
 // nsIStreamObserver methods.
 NS_IMETHODIMP
 nsFTPChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
-                                      nsresult aStatus, const PRUnichar* aMsg) {
+                            nsresult aStatus, const PRUnichar* aMsg) {
     nsresult rv = NS_OK;
+    mConnThread = nsnull;
 
     if (mLoadGroup) {
         rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
