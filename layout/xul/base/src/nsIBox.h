@@ -53,6 +53,9 @@
 #include "nsISupports.h"
 #include "nsIBoxLayout.h"
 
+// turn on to spew box state
+//#define DEBUG_LAYOUT
+
 class nsBoxLayoutState;
 struct nsRect;
 struct nsSize;
@@ -127,7 +130,9 @@ public:
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
   NS_IMETHOD MarkChildrenStyleChange()=0;
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
+#ifdef DEBUG_LAYOUT
   NS_IMETHOD DumpBox(FILE* out)=0;
+#endif
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust)=0;
   NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex)=0;
 

@@ -87,7 +87,9 @@ protected:
 
   //virtual nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect, PRUint32 aFlags);
 
+#ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
+#endif
 
   nsIBox* mFirstChild;
   nsIBox* mLastChild;

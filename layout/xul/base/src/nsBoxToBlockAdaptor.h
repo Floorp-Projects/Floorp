@@ -70,7 +70,9 @@ public:
   virtual ~nsBoxToBlockAdaptor();
 
 protected:
+#ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
+#endif
   virtual PRBool HasStyleChange();
   virtual void SetStyleChangeFlag(PRBool aDirty);
 

@@ -89,11 +89,13 @@ nsContainerBox::~nsContainerBox()
 {
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsContainerBox::GetBoxName(nsAutoString& aName)
 {
   aName.Assign(NS_LITERAL_STRING("ContainerBox"));
 }
+#endif
 
 NS_IMETHODIMP 
 nsContainerBox::GetChildBox(nsIBox** aBox)

@@ -91,7 +91,9 @@ public:
 
 protected:
 
+#ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
+#endif
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
