@@ -54,7 +54,7 @@ public:
                          float w=0.0f, float h=0.0f);
 protected:
   nsSVGRect(float x, float y, float w, float h);
-  
+
 public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -65,8 +65,8 @@ public:
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
-  
-  
+
+
 protected:
   float mX, mY, mWidth, mHeight;
 };
@@ -80,7 +80,7 @@ nsSVGRect::Create(nsIDOMSVGRect** result,
 {
   *result = (nsIDOMSVGRect*) new nsSVGRect(x,y,w,h);
   if(!*result) return NS_ERROR_OUT_OF_MEMORY;
-  
+
   NS_ADDREF(*result);
   return NS_OK;
 }
@@ -122,7 +122,7 @@ nsSVGRect::SetValueString(const nsAString& aValue)
   int i;
   for (i=0;i<4;++i) {
     if (!(token = nsCRT::strtok(rest, delimiters, &rest))) break; // parse error
-    
+
     char *end;
     vals[i] = PR_strtod(token, &end);
     if (*end != '\0') break; // parse error
@@ -139,7 +139,9 @@ nsSVGRect::SetValueString(const nsAString& aValue)
     mHeight = (double)vals[3];
     DidModify();
   }
-  
+
+  nsMemory::Free(str);
+
   return rv;
 }
 
@@ -152,7 +154,7 @@ nsSVGRect::GetValueString(nsAString& aValue)
                             (double)mX, (double)mY,
                             (double)mWidth, (double)mHeight);
   aValue.Append(buf);
-  
+
   return NS_OK;
 }
 
@@ -232,7 +234,7 @@ protected:
   nsSVGRectPrototypeWrapper(nsIDOMSVGRect* prototype,
                             nsIDOMSVGRect* body);
   virtual ~nsSVGRectPrototypeWrapper();
-  
+
 public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -243,12 +245,12 @@ public:
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
-  
-  
+
+
 protected:
   void EnsureBody();
   nsIDOMSVGRect* Delegate() { return mBody ? mBody.get() : mPrototype.get(); }
-  
+
   nsCOMPtr<nsIDOMSVGRect> mPrototype;
   nsCOMPtr<nsIDOMSVGRect> mBody;
 };
@@ -263,7 +265,7 @@ nsSVGRectPrototypeWrapper::Create(nsIDOMSVGRect** result,
 {
   *result = (nsIDOMSVGRect*) new nsSVGRectPrototypeWrapper(prototype, body);
   if(!*result) return NS_ERROR_OUT_OF_MEMORY;
-  
+
   NS_ADDREF(*result);
   return NS_OK;
 }
@@ -326,7 +328,7 @@ nsSVGRectPrototypeWrapper::GetValueString(nsAString& aValue)
 {
   nsCOMPtr<nsISVGValue> val = do_QueryInterface( Delegate() );
   NS_ASSERTION(val, "missing interface on body");
-  
+
   return val->GetValueString(aValue);
 }
 
