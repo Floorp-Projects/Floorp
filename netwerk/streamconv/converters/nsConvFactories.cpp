@@ -154,6 +154,14 @@ static nsModuleComponentInfo components[] =
       CreateNewMultiMixedConvFactory
     },
 
+    // There are servers that hand back "multipart/mixed" to
+    // indicate they want x-mixed-replace behavior.
+    { "MultiMixedConverter2",
+      NS_MULTIMIXEDCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=multipart/mixed?to=*/*",
+      CreateNewMultiMixedConvFactory
+    },
+
     { "TXTToHTMLConverter", 
       MOZITXTTOHTMLCONV_CID,
       NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html", 
