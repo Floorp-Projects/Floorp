@@ -135,14 +135,22 @@ if ($action eq "") {
 </TR>
 };
     SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
-                    COUNT(keywords.bug_id)
+                    COUNT(keywords.bug_id), keywords.bug_id
              FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id = keywords.keywordid
              GROUP BY keyworddefs.id
              ORDER BY keyworddefs.name");
     while (MoreSQLData()) {
-        my ($id, $name, $description, $bugs) = FetchSQLData();
+        my ($id, $name, $description, $bugs, $onebug) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
         $bugs ||= 'none';
+        if (!$onebug) {
+            # This is silly hackery for old versions of MySQL that seem to
+            # return a count() of 1 even if there are no matching.  So, we 
+            # ask for an actual bug number.  If it can't find any bugs that
+            # match the keyword, then we set the count to be zero, ignoring
+            # what it had responded.
+            $bugs = 'none';
+        }
         print qq{
 <TR>
 <TH VALIGN="top"><A HREF="editkeywords.cgi?action=edit&id=$id">$name</TH>
