@@ -19,20 +19,24 @@
 #ifndef nsSocketTransport_h___
 #define nsSocketTransport_h___
 
+#define NSPIPE2
+
 #include "prclist.h"
 #include "prio.h"
 #include "prnetdb.h"
 
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
-#include "nsIBuffer.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
+#ifndef NSPIPE2
+#include "nsIBuffer.h"
+#else
 #include "nsIPipe.h"
-#define NSPIPE2
+#endif
 
 #define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (4*1024)
 #define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (64*1024)
