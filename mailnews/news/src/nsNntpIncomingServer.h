@@ -27,7 +27,6 @@
 #include "nscore.h"
 
 #include "nsMsgIncomingServer.h"
-#include "nsISubscribeDialogMaster.h"
 
 #include "nsIPref.h"
 
@@ -35,7 +34,12 @@
 #include "plstr.h"
 #include "prprf.h"
 
+#if defined(XP_WIN)
+#define HAVE_REAL_SUBSCRIBE 1
+#endif
+
 #ifdef HAVE_REAL_SUBSCRIBE
+#include "nsISubscribeDialogMaster.h"
 #include "nsISubscribeDialogListener.h"
 #endif
 
