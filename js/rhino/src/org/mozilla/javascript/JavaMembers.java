@@ -132,12 +132,22 @@ class JavaMembers
             if (bp.setter == null) {
                 throw reportMemberNotFound(name);
             }
-            Class setType = bp.setter.argTypes[0];
-            Object[] args = { Context.jsToJava(value, setType) };
-            try {
-                bp.setter.invoke(javaObject, args);
-            } catch (Exception ex) {
-                throw Context.throwAsScriptRuntimeEx(ex);
+            // If there's only one setter or if the value is null, use the
+            // main setter. Otherwise, let the NativeJavaMethod decide which
+            // setter to use:
+            if (bp.setters == null || value == null) {
+                Class setType = bp.setter.argTypes[0];
+                Object[] args = { Context.jsToJava(value, setType) };
+                try {
+                    bp.setter.invoke(javaObject, args);
+                } catch (Exception ex) {
+                  throw Context.throwAsScriptRuntimeEx(ex);
+                }
+            } else {
+                Object[] args = { value };
+                bp.setters.call(Context.getContext(),
+                                ScriptableObject.getTopLevelScope(scope),
+                                scope, args);
             }
         }
         else {
@@ -460,6 +470,7 @@ class JavaMembers
                         // We have a getter.  Now, do we have a setter?
                         NativeJavaMethod njmSet = null;
                         MemberBox setter = null;
+                        NativeJavaMethod setters = null;
                         String setterName = "set".concat(nameComponent);
                         if (ht.containsKey(setterName)) {
                             // Is this value a method?
@@ -469,10 +480,14 @@ class JavaMembers
                                 Class type = getter.method().getReturnType();
                                 setter = extractSetMethod(type, njmSet.methods,
                                                           isStatic);
+                                if (njmSet.methods.length > 1) {
+                                    setters = njmSet;
+                                }
                             }
                         }
                         // Make the property.
-                        BeanProperty bp = new BeanProperty(getter, setter);
+                        BeanProperty bp = new BeanProperty(getter, setter,
+                                                           setters);
                         toAdd.put(beanPropertyName, bp);
                     }
                 }
@@ -631,14 +646,16 @@ class JavaMembers
 
 class BeanProperty
 {
-    BeanProperty(MemberBox getter, MemberBox setter)
+    BeanProperty(MemberBox getter, MemberBox setter, NativeJavaMethod setters)
     {
         this.getter = getter;
         this.setter = setter;
+        this.setters = setters;
     }
 
     MemberBox getter;
     MemberBox setter;
+    NativeJavaMethod setters;
 }
 
 class FieldAndMethods extends NativeJavaMethod
