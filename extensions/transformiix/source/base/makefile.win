@@ -27,10 +27,8 @@ DEFINES= $(DEFINES) -DMOZ_XSL
 
 CPPSRCS=				\
 	ArrayList.cpp 			\
-	CommandLineUtils.cpp		\
 	DefaultStringComparator.cpp	\
 	Double.cpp			\
-	HashTable.cpp 			\
 	Integer.cpp			\
 	List.cpp			\
 	MITREObjectWrapper.cpp		\
@@ -47,17 +45,16 @@ CPPSRCS = $(CPPSRCS)			\
 	MozillaString.cpp		\
 	$(NULL)
 !else
-CPPSRCS = $(CPPSRCS)			\
+CPPSRCS = $(CPPSRCS)		\
+	CommandLineUtils.cpp	\
 	TxString.cpp			\
 	$(NULL)
 !endif
 
 CPP_OBJS=                                       \
 	.\$(OBJDIR)\ArrayList.obj 		\
-	.\$(OBJDIR)\CommandLineUtils.obj	\
 	.\$(OBJDIR)\DefaultStringComparator.obj	\
 	.\$(OBJDIR)\Double.obj			\
-	.\$(OBJDIR)\HashTable.obj		\
 	.\$(OBJDIR)\Integer.obj			\
 	.\$(OBJDIR)\List.obj			\
 	.\$(OBJDIR)\MITREObjectWrapper.obj	\
@@ -74,8 +71,9 @@ CPP_OBJS = $(CPP_OBJS)			\
 	.\$(OBJDIR)\MozillaString.obj	\
 	$(NULL)
 !else
-CPP_OBJS = $(CPP_OBJS)			\
-	.\$(OBJDIR)\TxString.obj	\
+CPP_OBJS = $(CPP_OBJS)			        \
+	.\$(OBJDIR)\CommandLineUtils.obj	\
+	.\$(OBJDIR)\TxString.obj	        \
 	$(NULL)
 !endif
 

@@ -6,7 +6,6 @@ BASE_OBJS = ArrayList.o               \
             CommandLineUtils.o        \
 			DefaultStringComparator.o \
 			Double.o \
-            HashTable.o \
             Integer.o \
             List.o \
             Map.o \
@@ -32,9 +31,6 @@ DefaultStringComparator.o: StringComparator.h DefaultStringComparator.cpp
 
 Double.o: primitives.h Double.cpp
 	$(CC) -c Double.cpp
-
-HashTable.o: HashTable.h HashTable.cpp
-	$(CC) -c HashTable.cpp
 
 Integer.o: primitives.h Integer.cpp
 	$(CC) -c Integer.cpp

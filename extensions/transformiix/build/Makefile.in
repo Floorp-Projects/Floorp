@@ -34,10 +34,8 @@ IS_COMPONENT	= 1
 
 CPPSRCS = XSLTProcessorModule.cpp
 OBJS =../source/base/ArrayList.o \
-  ../source/base/CommandLineUtils.o \
   ../source/base/DefaultStringComparator.o \
   ../source/base/Double.o \
-  ../source/base/HashTable.o \
   ../source/base/Integer.o \
   ../source/base/List.o \
   ../source/base/MITREObjectWrapper.o \

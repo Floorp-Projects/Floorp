@@ -29,7 +29,6 @@ CPP_OBJS=                                       \
   ../base/$(OBJDIR)/CommandLineUtils.obj \
   ../base/$(OBJDIR)/DefaultStringComparator.obj \
   ../base/$(OBJDIR)/Double.obj \
-  ../base/$(OBJDIR)/HashTable.obj \
   ../base/$(OBJDIR)/Integer.obj \
   ../base/$(OBJDIR)/List.obj \
   ../base/$(OBJDIR)/MITREObjectWrapper.obj \
