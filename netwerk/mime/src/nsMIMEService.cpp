@@ -228,19 +228,3 @@ NS_IMETHODIMP nsMIMEService::GetTypeFromFile( nsIFile* aFile, char **aContentTyp
 		return GetTypeFromExtension( fileExt, aContentType );
 }
 
-// get a specific data source
-NS_IMETHODIMP
-nsMIMEService::GetXMLDataSource(nsIMIMEDataSource * *aXMLDataSource){
-	*aXMLDataSource = mXML;
-	NS_IF_ADDREF( *aXMLDataSource );
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEService::GetNativeDataSource(nsIMIMEDataSource * *aNativeDataSource)
-{
-	*aNativeDataSource = mNative;
-	NS_IF_ADDREF( *aNativeDataSource );
-	return NS_OK;
-}
-
