@@ -83,7 +83,7 @@ function (request, data)
 StreamListener.prototype.onStopRequest =
 function (request, data, status)
 {
-    dd ("onStopRequest(): status: " + status);
+    dd ("onStopRequest(): status: " + status + "\n" /* + this.data*/);
     if (typeof this.observer.onComplete == "function")
         this.observer.onComplete (this.data, this.url, status);
 }
@@ -91,6 +91,7 @@ function (request, data, status)
 StreamListener.prototype.onDataAvailable =
 function (request, data, inStr, sourceOffset, count)
 {
+    /*dd ("onDataAvailable(): " + count);*/
     if (!this._sis)
     {
         this._sis = 
@@ -98,5 +99,5 @@ function (request, data, inStr, sourceOffset, count)
         this._sis.init(inStr);
     }
     
-    this.data += this._sis.read(this._sis.available());
+    this.data += this._sis.read(count);
 }
