@@ -71,7 +71,7 @@ protected:
 	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
 
 private:
-	nsresult SubscribeToFolder(const char *aName, PRBool subscribe);
+	nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
   nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
                                    nsIImapProtocol** aImapConnection);

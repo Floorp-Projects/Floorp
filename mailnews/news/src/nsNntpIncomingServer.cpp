@@ -980,21 +980,19 @@ nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::Subscribe(const char *aName)
+nsNntpIncomingServer::Subscribe(const PRUnichar *aUnicharName)
 {
-#ifdef DEBUG_NEWS
-	printf("subscribe to news group: %s\n",aName);
-#endif
-	return SubscribeToNewsgroup(aName);
+	nsCAutoString name;
+	name.AssignWithConversion(aUnicharName);
+	return SubscribeToNewsgroup((const char *)name);
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::Unsubscribe(const char *aName)
+nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
 {
 	nsresult rv;
-#ifdef DEBUG_NEWS
-	printf("unsubscribe to news group: %s\n",aName);
-#endif
+	nsCAutoString name;
+	name.AssignWithConversion(aUnicharName);
 
 	nsCOMPtr<nsIFolder> rootFolder;
     rv = GetRootFolder(getter_AddRefs(rootFolder));
@@ -1006,7 +1004,7 @@ nsNntpIncomingServer::Unsubscribe(const char *aName)
 	if (!serverFolder) return NS_ERROR_FAILURE;
 
 	nsCOMPtr <nsIFolder> subFolder;
-	rv = serverFolder->FindSubFolder(aName, getter_AddRefs(subFolder));
+	rv = serverFolder->FindSubFolder(name, getter_AddRefs(subFolder));
     if (NS_FAILED(rv)) return rv;	
 
     nsCOMPtr <nsIMsgFolder> newsgroupFolder = do_QueryInterface(subFolder, &rv);

@@ -1986,27 +1986,24 @@ nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::Subscribe(const char *aName)
+nsImapIncomingServer::Subscribe(const PRUnichar *aName)
 {
 	return SubscribeToFolder(aName, PR_TRUE);
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::Unsubscribe(const char *aName)
+nsImapIncomingServer::Unsubscribe(const PRUnichar *aName)
 {
 	return SubscribeToFolder(aName, PR_FALSE);
 }
 
 nsresult
-nsImapIncomingServer::SubscribeToFolder(const char *aName, PRBool subscribe)
+nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe)
 {
 	nsresult rv;
 	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 	if (!imapService) return NS_ERROR_FAILURE;
-
-	nsAutoString folderName;
-	folderName.AssignWithConversion(aName);
 
     nsCOMPtr<nsIFolder> rootFolder;
     rv = GetRootFolder(getter_AddRefs(rootFolder));
@@ -2024,21 +2021,15 @@ nsImapIncomingServer::SubscribeToFolder(const char *aName, PRBool subscribe)
     if (NS_FAILED(rv)) return rv;
 
 	if (subscribe) {
-#ifdef DEBUG_sspitzer
-			printf("subscribe to folder: %s\n",aName);
-#endif
 			rv = imapService->SubscribeFolder(queue,
                                rootMsgFolder,
-                               folderName.GetUnicode(),
+                               aName,
                                nsnull, nsnull);
 	}
 	else {
-#ifdef DEBUG_sspitzer
-			printf("unsubscribe to folder: %s\n",aName);
-#endif
 			rv = imapService->UnsubscribeFolder(queue,
                                rootMsgFolder,
-                               folderName.GetUnicode(),
+                               aName,
                                nsnull, nsnull);
 	}
 
