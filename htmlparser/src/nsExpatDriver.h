@@ -46,6 +46,7 @@
 #include "nsFileSpec.h"
 
 class nsIExpatSink;
+struct nsCatalogData;
 
 class nsExpatDriver : public nsIDTD,
                       public nsITokenizer
@@ -58,13 +59,10 @@ public:
   nsExpatDriver();
   virtual ~nsExpatDriver();
 
-    // Load up an external stream to get external entity information
-  static nsresult OpenInputStream(const XML_Char* aFPIStr,
-                                  const XML_Char* aURLStr, 
-                                  const XML_Char* aBaseURL,
-                                  nsIInputStream** in, 
-                                  nsAString& aAbsURL);
-  
+  int HandleExternalEntityRef(const PRUnichar *openEntityNames,
+                              const PRUnichar *base,
+                              const PRUnichar *systemId,
+                              const PRUnichar *publicId);
   nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts);
   nsresult HandleEndElement(const PRUnichar *aName);
   nsresult HandleCharacterData(const PRUnichar *aCData, const PRUint32 aLength);
@@ -77,7 +75,14 @@ public:
   nsresult HandleEndDoctypeDecl();
 
 protected:
-    
+
+  // Load up an external stream to get external entity information
+  nsresult OpenInputStream(const PRUnichar* aFPIStr,
+                           const PRUnichar* aURLStr, 
+                           const PRUnichar* aBaseURL,
+                           nsIInputStream** in, 
+                           nsAString& aAbsURL);
+
   nsresult ParseBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal);
   nsresult HandleError(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
   void     GetLine(const char* aSourceBuffer, PRUint32 aLength, PRUint32 aOffset, nsString& aLine);
@@ -93,7 +98,7 @@ protected:
   nsresult         mInternalState;
   PRUint32         mBytesParsed;
   PRUint32         mDoctypePos;
-
+  const nsCatalogData* mCatalogData; // weak
 
 };
 nsresult NS_NewExpatDriver(nsIDTD** aDriver);

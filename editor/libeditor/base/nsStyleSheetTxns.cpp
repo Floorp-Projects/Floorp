@@ -107,7 +107,7 @@ AddStyleSheetTxn::DoTransaction()
       rv = presShell->GetDocument(getter_AddRefs(document));
 
       if (NS_SUCCEEDED(rv) && document)
-        document->AddStyleSheet(styleSheet);
+        document->AddStyleSheet(styleSheet, 0);
     }
   }
   
@@ -270,7 +270,7 @@ RemoveStyleSheetTxn::UndoTransaction()
       rv = presShell->GetDocument(getter_AddRefs(document));
 
       if (NS_SUCCEEDED(rv) && document)
-        document->AddStyleSheet(styleSheet);
+        document->AddStyleSheet(styleSheet, 0);
     }
   }
   

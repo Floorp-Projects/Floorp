@@ -1460,7 +1460,8 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
 
 NS_IMETHODIMP
 nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype,
-                                    PRUint32 aLength)
+                                    PRUint32 aLength,
+                                    nsISupports* aCatalogData)
 {
   nsresult rv = NS_OK;
 
@@ -1487,7 +1488,6 @@ nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype,
   // The rest is the internal subset (minus whitespace)
   str.Trim(kWhitespace);
 
-  nsCOMPtr<nsIDOMDocumentType> oldDocType;
   nsCOMPtr<nsIDOMDocumentType> docType;
   
   // Create a new doctype node
@@ -1496,6 +1496,25 @@ nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype,
                              publicId, systemId, str);
   if (NS_FAILED(rv) || !docType) {
     return rv;
+  }
+
+  if (aCatalogData && mCSSLoader && mDocument) {
+    // bug 124570 - we only expect additional agent sheets for now -- ignore
+    // exit codes, error are not fatal here, just that the stylesheet won't apply
+    nsCOMPtr<nsIURI> uri(do_QueryInterface(aCatalogData));
+    if (uri) {
+      PRBool complete;
+      nsCOMPtr<nsICSSStyleSheet> sheet;
+      mCSSLoader->LoadAgentSheet(uri, *getter_AddRefs(sheet), complete, nsnull);
+#ifdef NS_DEBUG
+      nsCAutoString uriStr;
+      uri->GetSpec(uriStr);
+      printf("Loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
+#endif
+      if (sheet) {
+        mDocument->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
+      }
+    }
   }
 
   nsCOMPtr<nsIDOMNode> tmpNode;

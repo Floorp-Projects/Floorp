@@ -53,7 +53,6 @@ libs:: $(LIBRARY)
 libs::
 	$(MAKE_INSTALL) mathml.dtd $(DIST)\bin\res\dtd
 	$(MAKE_INSTALL) mathml.css $(DIST)\bin\res
-	$(PERL) mathml-css.pl $(DIST)\bin\res\ua.css
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
