@@ -288,7 +288,7 @@ private:
                                                     HDDEDATA hdata,
                                                     ULONG    dwData1,
                                                     ULONG    dwData2 );
-    static void HandleRequest( LPBYTE request );
+    static void HandleRequest( LPBYTE request, PRBool newWindow = PR_TRUE );
     static nsCString ParseDDEArg( HSZ args, int index );
     static void ActivateLastWindow();
     static HDDEDATA CreateDDEData( DWORD value );
@@ -296,7 +296,7 @@ private:
     static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
     static nsresult OpenWindow( const char *urlstr, const char *args );
-    static nsresult OpenBrowserWindow( const char *args );                   
+    static nsresult OpenBrowserWindow( const char *args, PRBool newWindow = PR_TRUE );
     static nsresult ReParent( nsISupports *window, HWND newParent );
     static nsresult HandleArbitraryStartup(nsICmdLineService *args);
     static int   mConversations;
@@ -970,7 +970,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
                     // Now handle it.
-                    HandleRequest( LPBYTE( url.get() ) );
+                    HandleRequest( LPBYTE( url.get() ), PR_FALSE );
                     // Return pseudo window ID.
                     result = CreateDDEData( 1 );
                     break;
@@ -1105,7 +1105,7 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( DWORD value ) {
 // arguments.  This replicates code elsewhere, to some extent,
 // unfortunately (if you can fix that, please do).
 void
-nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
+nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // Parse command line.
     
     nsCOMPtr<nsICmdLineService> args;
@@ -1122,7 +1122,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching browser on url [%s]...\n", (const char*)arg );
 #endif
-      (void)OpenBrowserWindow( arg );
+      (void)OpenBrowserWindow( arg, newWindow );
       return;
     }
 
@@ -1179,9 +1179,9 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
     if (defaultArgs) {
       nsCAutoString url;
       url.AssignWithConversion( defaultArgs );
-      OpenBrowserWindow((const char*)url);
+      OpenBrowserWindow((const char*)url, newWindow);
     } else {
-      OpenBrowserWindow("about:blank");
+      OpenBrowserWindow("about:blank", newWindow);
     }
 }
 
@@ -1487,7 +1487,7 @@ nsresult SafeJSContext::Push() {
 
 
 nsresult
-nsNativeAppSupportWin::OpenBrowserWindow( const char *args ) {
+nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     nsresult rv = NS_OK;
     // Open the argument URL in the most recently used Navigator window.
     // If there is no Nav window, open a new one.
@@ -1499,6 +1499,10 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args ) {
     // This isn't really a loop.  We just use "break" statements to fall
     // out to the OpenWindow call when things go awry.
     do {
+        // If caller requires a new window, then don't use an existing one.
+        if ( newWindow ) {
+            break;
+        }
         if ( !navWin ) {
             // Have to open a new one.
             break;
