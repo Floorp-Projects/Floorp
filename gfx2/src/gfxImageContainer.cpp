@@ -210,6 +210,8 @@ NS_IMETHODIMP gfxImageContainer::StartAnimation()
                    timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
     }
   }
+
+  return NS_OK;
 }
 
 /* void stopAnimation (); */
