@@ -57,7 +57,7 @@
   // Called to construct & edit the initial set of personal toolbar buttons.
 -(void)buildButtonList;
 -(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex;
--(void)editButton:(BookmarkItem*)aItem;
+-(void)updateButton:(BookmarkItem*)aItem;
 -(void)removeButton:(BookmarkItem*)aItem;
 
   // Called to lay out the buttons on the toolbar.

@@ -180,16 +180,18 @@ static const int kBMBarScanningStep = 5;
     [self reflowButtonsStartingAtIndex: aIndex];
 }
 
--(void)editButton:(BookmarkItem*)aItem
+-(void)updateButton:(BookmarkItem*)aItem
 {
   int count = [mButtons count];
+  // XXX nasty linear search
   for (int i = 0; i < count; i++)
   {
     BookmarkButton* button = [mButtons objectAtIndex: i];
-    if ([button BookmarkItem] == aItem)
+    if ([button bookmarkItem] == aItem)
     {
-      [button setBookmarkItem: aItem];
-      if (count > i && [self isShown])
+      BOOL needsReflow = NO;
+      [button bookmarkChanged:&needsReflow];
+      if (needsReflow && count > i && [self isShown])
         [self reflowButtonsStartingAtIndex: i];
       break;
     }
@@ -203,7 +205,7 @@ static const int kBMBarScanningStep = 5;
   for (int i = 0; i < count; i++)
   {
     BookmarkButton* button = [mButtons objectAtIndex: i];
-    if ([button BookmarkItem] == aItem)
+    if ([button bookmarkItem] == aItem)
     {
       [mButtons removeObjectAtIndex: i];
       [button removeFromSuperview];
@@ -235,7 +237,7 @@ static const int kBMBarScanningStep = 5;
 
   // coordinates for this view are flipped, making it easier to lay out from top left
   // to bottom right.
-  float oldHeight = [self frame].size.height;
+  float oldHeight     = [self frame].size.height;
   int   count         = [mButtons count];
   float curRowYOrigin = kBookmarkToolbarTopPadding;
   float curX          = kBookmarkButtonHorizPadding;
@@ -282,11 +284,12 @@ static const int kBMBarScanningStep = 5;
   {
     [super setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
                                 [self frame].size.width, computedHeight)];
-    [self setNeedsDisplay:YES];
 
     // tell the superview to resize its subviews
     [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
   }
+
+  [self setNeedsDisplay:YES];
 }
 
 -(BOOL)isFlipped
@@ -428,7 +431,7 @@ static const int kBMBarScanningStep = 5;
       return YES;
     
     mDragInsertionButton = targetButton;
-    if ([[targetButton BookmarkItem] isKindOfClass:[BookmarkFolder class]])
+    if ([[targetButton bookmarkItem] isKindOfClass:[BookmarkFolder class]])
       mDragInsertionPosition = CHInsertInto;
     else {
       NSPoint localLocation = [[self superview] convertPoint:testPoint toView:foundView];
@@ -474,7 +477,7 @@ static const int kBMBarScanningStep = 5;
     }
     else if (mDragInsertionPosition == CHInsertInto) {
       // drop onto folder
-      destItem = [mDragInsertionButton BookmarkItem];
+      destItem = [mDragInsertionButton bookmarkItem];
     }
     else if (mDragInsertionPosition == CHInsertBefore ||
              mDragInsertionPosition == CHInsertAfter) { // drop onto toolbar
@@ -550,7 +553,7 @@ static const int kBMBarScanningStep = 5;
     return NO;
 
   if (mDragInsertionPosition == CHInsertInto) { // drop onto folder
-    toolbar = (BookmarkFolder *)[mDragInsertionButton BookmarkItem];
+    toolbar = (BookmarkFolder *)[mDragInsertionButton bookmarkItem];
     index = [toolbar count];
   }
   else if (mDragInsertionPosition == CHInsertBefore ||
@@ -651,7 +654,7 @@ static const int kBMBarScanningStep = 5;
 
 - (void)bookmarkChanged:(NSNotification *)aNote
 {
-  [self editButton:[aNote object]];
+  [self updateButton:[aNote object]];
 }
 
 @end

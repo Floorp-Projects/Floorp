@@ -51,7 +51,9 @@
 -(id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item;
 
 - (void)setBookmarkItem:(BookmarkItem*)anItem;
-- (BookmarkItem*)BookmarkItem;
+- (BookmarkItem*)bookmarkItem;
+
+- (void)bookmarkChanged:(BOOL*)outNeedsReflow;
 
 -(IBAction)openBookmark:(id)aSender;
 -(IBAction)openBookmarkInNewTab:(id)aSender;

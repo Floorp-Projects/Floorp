@@ -104,19 +104,47 @@
   [self setTitle:[aItem title]];
   [self setImage:[aItem icon]];
   [self setTarget:self];
-  if ([aItem isKindOfClass:[Bookmark class]]) {
+  if ([aItem isKindOfClass:[Bookmark class]])
+  {
     [self setAction:@selector(openBookmark:)];
     [self setToolTip:[(Bookmark *)aItem url]];
-  } else {
+  }
+  else
+  {
     [[self cell] setClickHoldTimeout:0.5];
     if ([(BookmarkFolder *)aItem isGroup])
-      [self setAction: @selector(openBookmark:)];
+      [self setAction:@selector(openBookmark:)];
     else 
       [self setAction:@selector(showFolderPopupAction:)];
   }
 }
 
-- (BookmarkItem*)BookmarkItem
+- (void)bookmarkChanged:(BOOL*)outNeedsReflow
+{
+  if (![[self title] isEqualToString:[mItem title]])
+  {
+    *outNeedsReflow = YES;    // assume title width changed
+    [self setTitle:[mItem title]];
+  }
+  
+  if ([self image] != [mItem icon])
+  {
+    // all images are the same size, so this won't trigger reflows
+    *outNeedsReflow = !NSEqualSizes([[self image] size], [[mItem icon] size]);
+    [self setImage:[mItem icon]];
+  }
+
+  // folder items can be toggled between folders and tab groups
+  if ([mItem isKindOfClass:[BookmarkFolder class]])
+  {
+    if ([(BookmarkFolder *)mItem isGroup])
+      [self setAction:@selector(openBookmark:)];
+    else 
+      [self setAction:@selector(showFolderPopupAction:)];
+  }
+}
+
+- (BookmarkItem*)bookmarkItem
 {
   return mItem;
 }
@@ -124,7 +152,7 @@
 -(IBAction)openBookmark:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
-  BookmarkItem *item = [self BookmarkItem];
+  BookmarkItem *item = [self bookmarkItem];
 
   [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorDefault];
 }
@@ -132,7 +160,7 @@
 -(IBAction)openBookmarkInNewTab:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
-  BookmarkItem *item = [self BookmarkItem];
+  BookmarkItem *item = [self bookmarkItem];
 
   [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorNewTabDefault];
 }
@@ -140,7 +168,7 @@
 -(IBAction)openBookmarkInNewWindow:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
-  BookmarkItem *item = [self BookmarkItem];
+  BookmarkItem *item = [self bookmarkItem];
 
   [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorNewWindowDefault];
 }
@@ -148,13 +176,13 @@
 -(IBAction)showBookmarkInfo:(id)aSender
 {
   BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
-  [bic setBookmark:[self BookmarkItem]];
+  [bic setBookmark:[self bookmarkItem]];
   [bic showWindow:self];
 }
 
 -(IBAction)deleteBookmarks: (id)aSender
 {
-  BookmarkItem *item = [self BookmarkItem];
+  BookmarkItem *item = [self bookmarkItem];
   [[item parent] deleteChild:item];
   [self removeFromSuperview];
 }
@@ -175,7 +203,7 @@
 -(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
   lastEventWasMenu = YES;
-  return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:[self BookmarkItem] fromView:nil target:self];
+  return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:[self bookmarkItem] fromView:nil target:self];
 }
 
 //
@@ -205,7 +233,7 @@
   // dummy first item
   [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
   // make a temporary BookmarkMenu to build the menu
-  BookmarkMenu* bmMenu = [[BookmarkMenu alloc] initWithMenu:popupMenu firstItem:1 rootBookmarkFolder:(BookmarkFolder *)[self BookmarkItem]];
+  BookmarkMenu* bmMenu = [[BookmarkMenu alloc] initWithMenu:popupMenu firstItem:1 rootBookmarkFolder:(BookmarkFolder *)[self bookmarkItem]];
   // use a temporary NSPopUpButtonCell to display the menu.
   NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
   [popupCell setMenu: popupMenu];
@@ -238,7 +266,7 @@
   // (unless the drag happens on the folder itself)
   if (lastEventWasMenu && ([self hitTest:[[self superview] convertPoint:[aEvent locationInWindow] fromView:nil]] == nil))
     return;
-  BookmarkItem *item = [self BookmarkItem];
+  BookmarkItem *item = [self bookmarkItem];
   BOOL isSingleBookmark = [item isKindOfClass:[Bookmark class]];
   NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
   NSString     *title = [item title];
