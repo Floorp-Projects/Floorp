@@ -364,7 +364,7 @@ NP_GetMIMEDescription(void)
  *    that the navigator needs.
  */
 NPError
-NP_GetValue(NPP future, NPPVariable variable, void *value)
+NP_GetValue(void* future, NPPVariable variable, void *value)
 {
     return NPP_GetValue(future, variable, value);
 }
