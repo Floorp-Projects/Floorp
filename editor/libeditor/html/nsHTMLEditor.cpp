@@ -1309,7 +1309,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     
     // if we got here we either fell out of the tab case or have a normal character.
     // Either way, treat as normal character.
-    if (character && !altKey && !ctrlKey && !isShift && !metaKey)
+    if (character && !altKey && !ctrlKey && !metaKey)
     {
       aKeyEvent->PreventDefault();
       nsAutoString key(character);

@@ -2210,7 +2210,6 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 					}
 
 			aTranslatedKeyCode = 0;
-			mIsShiftDown = PR_FALSE;
 			break;
 		}
 	}

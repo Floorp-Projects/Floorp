@@ -953,20 +953,6 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.widget = focusWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
 
-  if (keyEvent.charCode)
-  {
-    /* This is the comment from the GTK code. Hope it makes more sense to you 
-     * than it did for me.                                                    
-     *  
-     * if the control, meta, or alt key is down, then we should leave
-     * the isShift flag alone (probably not a printable character)
-     * if none of the other modifier keys are pressed then we need to
-     * clear isShift so the character can be inserted in the editor
-     */
-    if (!keyEvent.isControl && !keyEvent.isAlt && !keyEvent.isMeta)
-      keyEvent.isShift = PR_FALSE;
-  }
-
   focusWidget->DispatchKeyEvent(keyEvent);
 
 }

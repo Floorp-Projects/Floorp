@@ -697,7 +697,6 @@ bool nsQEventHandler::KeyPressEvent(QKeyEvent *event,
         }
         if (nsEvent.charCode) {
            nsEvent.keyCode = 0;
-           nsEvent.isShift = PR_FALSE;
         }
         else
           nsEvent.keyCode = GetNSKey(event->key(),event->state());

@@ -973,7 +973,7 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent,
 		{
       if (!aKeyEvent.isMeta)
 			{
-				aKeyEvent.isShift = aKeyEvent.isControl = aKeyEvent.isAlt = aKeyEvent.isMeta = 0;
+				aKeyEvent.isControl = aKeyEvent.isAlt = aKeyEvent.isMeta = 0;
       } // if (!aKeyEvent.isMeta)
     
 			aKeyEvent.keyCode	= 0;

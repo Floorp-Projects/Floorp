@@ -1392,16 +1392,15 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
       if ((anEvent.isControl) || (anEvent.isAlt))
         anEvent.charCode = aPhKeyEvent->key_cap;
-	  	else
-	  	  anEvent.isShift = anEvent.isControl = anEvent.isAlt = anEvent.isMeta = PR_FALSE;
-    	}
-		else {
- 	    anEvent.charCode = 0; 
- 	    anEvent.keyCode  =  (keysym  & 0x00FF);
-  	  }
-  	}
-
-	}
+      else
+        anEvent.isControl = anEvent.isAlt = anEvent.isMeta = PR_FALSE;
+    }
+    else {
+      anEvent.charCode = 0; 
+      anEvent.keyCode  =  (keysym  & 0x00FF);
+    }
+  }
+}
 
 
 PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {

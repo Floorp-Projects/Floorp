@@ -114,7 +114,7 @@ protected:
                           const PRUnichar* aClickCount=nsnull, const PRUnichar* aPreventDefault=nsnull);
 
   void GetEventType(nsAString& type);
-  PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
+  PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent, PRInt32 aModifiersMask);
 
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
   inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
@@ -129,6 +129,7 @@ protected:
   static const PRInt32 cAlt;
   static const PRInt32 cControl;
   static const PRInt32 cMeta;
+  static const PRInt32 cAllModifiers;
 
 protected:
   union {
