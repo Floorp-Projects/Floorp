@@ -258,7 +258,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsDataFlavor();
     }
     else if (mClassID.Equals(kCGenericTransferable)) {
-        inst = (nsISupports*)new nsTransferable();
+        inst = (nsISupports*)(nsIGenericTransferable *)new nsTransferable();
     }
     else if (mClassID.Equals(kCXIFFormatConverter)) {
         inst = (nsISupports*)new nsXIFFormatConverter();

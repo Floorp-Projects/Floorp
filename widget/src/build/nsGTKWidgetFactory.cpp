@@ -253,7 +253,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsDataFlavor();
     }
     else if (mClassID.Equals(kCGenericTransferable)) {
-        inst = (nsISupports*)new nsTransferable();
+        inst = (nsISupports*)(nsIGenericTransferable *)new nsTransferable();
     }
 #ifdef NEW_CLIPBOARD_SUPPORT
     else if (mClassID.Equals(kCClipboard)) {
