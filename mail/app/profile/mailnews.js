@@ -337,6 +337,7 @@ pref("mail.server.default.delete_mail_left_on_server", false);
 pref("mail.server.default.valid", true);
 pref("mail.server.default.abbreviate",true);
 pref("mail.server.default.isSecure", false);
+pref("mail.server.default.useSecAuth", false);
 pref("mail.server.default.override_namespaces", true);
 
 pref("mail.server.default.delete_model", 1);
@@ -372,6 +373,9 @@ pref("mail.server.default.whiteListAbURI","moz-abmdbdirectory://abook.mab");  //
 pref("mail.server.default.purgeSpam",false);
 pref("mail.server.default.purgeSpamInterval",14); // 14 days
 pref("mail.server.default.spamLoggingEnabled",false);
+pref("mail.server.default.manualMark",false);
+pref("mail.server.default.manualMarkMode",0); // 0 == "move to junk folder", 1 = "delete"
+
 
 pref("mail.smtpserver.default.auth_method", 1); // auth any
 pref("mail.smtpserver.default.try_ssl", 0);

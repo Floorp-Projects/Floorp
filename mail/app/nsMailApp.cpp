@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
   return xre_main(argc, argv, appData);
 }
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 char* splash_xpm[] = {0};
 #endif
 
