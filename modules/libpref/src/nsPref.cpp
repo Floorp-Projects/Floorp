@@ -194,7 +194,7 @@ public:
     NS_IMETHOD DeleteBranch(const char *branchName);
 
 	NS_IMETHOD CreateChildList(const char* parent_node, char **child_list);
-	NS_IMETHOD NextChild(const char *child_list, PRInt16 *index, char **listchild);
+	NS_IMETHOD NextChild(const char *child_list, PRInt16 *indx, char **listchild);
 
 protected:
 
@@ -272,7 +272,7 @@ nsresult nsPref::useDefaultPrefFile()
 	    // There is no locator component. Or perhaps there is a locator, but the
 	    // locator couldn't find where to put it. So put it in the cwd (NB, viewer comes here.)
         // #include nsIComponentManager.h
-        nsresult rv = nsComponentManager::CreateInstance(
+        rv = nsComponentManager::CreateInstance(
         	(const char*)NS_FILESPEC_PROGID,
         	(nsISupports*)nsnull,
         	(const nsID&)nsIFileSpec::GetIID(),
@@ -915,7 +915,7 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
         // nsPersistentFileDescriptor requires an existing
         // object. Make it first. COM makes this difficult, of course...
 	    nsIFileSpec* tmp = nsnull;
-        nsresult rv = nsComponentManager::CreateInstance(
+        rv = nsComponentManager::CreateInstance(
         	(const char*)NS_FILESPEC_PROGID,
         	(nsISupports*)nsnull,
         	(const nsID&)nsIFileSpec::GetIID(),
@@ -1082,13 +1082,13 @@ NS_IMETHODIMP nsPref::CreateChildList(const char* parent_node, char **child_list
 	return (pcs.childList == NULL) ? PREF_OUT_OF_MEMORY : PREF_OK;
 }
 
-NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *index, char **listchild)
+NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *indx, char **listchild)
 {
-	char* temp = (char*)&child_list[*index];
+	char* temp = (char*)&child_list[*indx];
 	char* child = strtok(temp, ";");
 	if (child)
 	{
-		*index += strlen(child) + 1;
+		*indx += strlen(child) + 1;
 		*listchild = child;
 		return NS_OK;
 	}
@@ -1395,7 +1395,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		// Skip files in the special list.
 		if (shouldParse)
 		{
-			for (int j = 0; j < sizeof(specialFiles) / sizeof(char*); j++)
+			for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char*)); j++)
 				if (strcmp(leafName, specialFiles[j]) == 0)
 					shouldParse = PR_FALSE;
 		}
@@ -1414,7 +1414,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		NS_IF_RELEASE(child);
 	}
 	// Finally, parse any other special files (platform-specific ones).
-	for (k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
+	for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++)
 	{
         nsIFileSpec* specialChild2;
         if (NS_FAILED(locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &specialChild2)))

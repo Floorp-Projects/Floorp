@@ -124,7 +124,7 @@ NET_SortInsert(SortStruct * sort_struct, void * insert_before, void * new_object
 MODULE_PRIVATE void
 NET_DoSort(SortStruct * sort_struct, int (*compar) (const void *, const void *, void *))
 {
-    NS_QuickSort(sort_struct->list, sort_struct->num_entries, sizeof(void *), compar, NULL);
+    NS_QuickSort(sort_struct->list, (unsigned int) (sort_struct->num_entries), sizeof(void *), compar, NULL);
 } 
 
 /* unloads backwards :(
