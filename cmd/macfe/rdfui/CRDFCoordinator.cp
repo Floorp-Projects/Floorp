@@ -24,7 +24,50 @@
 // in the RDF database, and the view that displays the "hyper tree"
 // representation of the selected RDF view.
 //
-// It's responsible for coordinating the UI with the HT/RDF XP code.
+// It's responsible for coordinating the UI with the HT/RDF XP code. How does it
+// do that? Let's take a look at the interactions.
+//
+// There are two kinds of messages that we need to respond to, and the goal is to
+// keep them as separate as possible. The first kind are PowerPlant messages, sent
+// via the broadcaster/listener architecture. These messages should denote that
+// an event in the front end (eg, a user click) caused something to change and HT
+// (along with the rest of the UI) needs to know about it. The second kind of messages
+// come from HT itself, and are the result of a change within HT by calling HT functions
+// directly (or possibly by javascript, etc).
+//
+// Let's say the shelf is closed, and no workspaces are selected. The user then clicks
+// on one of the workspace icons. The CNavCenterSelectorPane figures out which HT view
+// corresponds to this icon and updates its internal state. In doing this, a
+// "active selection changed" message is broadcast to the coordinator. When this message
+// is received by the coordinator (CRDFCoordinator::ListenToMessage()), it tells the tree 
+// view to match the contents of the current HT view (CHyperTreeFlexTable::OpenView()). 
+// The coordinator also tells HT about the new active workspace by calling HT_SetSelectedView(),
+// but first it turns off HT notifications because we don't need to be told about this event
+// again (it has already been handled by PP's messages in the FE). Control then returns to the
+// selector pane which broadcasts a "shelf state changed" message to open the shelf. This 
+// is again received by the coordinator which tells the Navcenter shelf to spring out. Note
+// that this is done _after_ the tree view has been correctly set to avoid tons of asserts 
+// in the flex table code.
+//
+// When the user clicks either the close box or that same workspace icon, a message is sent to
+// the coordinator to close the shelf. The coordinator then tells the selector about the change
+// by calling SetActiveWorkspace(NULL) and closes the shelf.
+//
+// There are several times when HT wants to set the active workspace on its own, the most notable
+// occurs when a new window is created at startup. HT remembers the last active workspace
+// when the user quits and will reset when the new window is created. It does this by making a
+// call to HT_SetSelectedView() which sends an HT event to the coordinator (handled in 
+// CRDFCoordinator::HandleNotification()). The first thing the coordinator does is to call
+// SelectView() which opens the tree and ensures that the selector is up to date with the
+// current selection. Then it sends messages to open the shelf (if need be) and to update
+// the title in the title bar. Note that these last two things are done in different places
+// when the change comes from the FE so we don't end up doing them over and over again when
+// HT makes a change.
+//
+// My first stab at all this was to have one single flow of control that could handle view selection
+// from both the user and HT in one line. While possible (the last implementation did it), it was
+// very confusing. Hopefully this new world will make things somewhat easier to follow because
+// the messages are more separated based on where the action that kicked it off came from.
 //
 
 #include "CRDFCoordinator.h"
@@ -107,6 +150,25 @@ CRDFCoordinator::FinishCreateSelf()
 	if ( navCenterSelector )
 		mSelector = new CShelf ( navCenterSelector, Pref_ShowNavCenterSelector );
 	
+	// Register the title bar as a listener to both this class and the selector bar. It will
+	// receive messages from the selector when the _user_ changes the current workspace and 
+	// will receive messages from this class when _HT_ changes the current workspace. Either
+	// way it needs to know so it can update the title string.
+	CNavCenterTitle* titleBar =
+			dynamic_cast<CNavCenterTitle*>(FindPaneByID(CNavCenterTitle::pane_ID));
+	if ( titleBar ) {
+		AddListener(titleBar);
+		if ( mSelectorPane )
+			mSelectorPane->AddListener(titleBar);	
+	}
+		
+	// If the close box is there, register this class as a listener so we get the
+	// close message. It won't be there in the standalone window version		
+	LGAIconSuiteControl* closeBox = 
+			dynamic_cast<LGAIconSuiteControl*>(FindPaneByID(CNavCenterTitle::kCloseBoxPaneID));
+	if ( closeBox )
+		closeBox->AddListener(this);
+			
 	// setting view selection comes via CRDFNotificationHandler, so don't do it here.
 	mHTPane = CreateHTPane();
 	if (mHTPane)
@@ -122,23 +184,9 @@ CRDFCoordinator::FinishCreateSelf()
 				HT_View view = HT_GetNthView(mHTPane, i);
 				SelectorData* selector = new SelectorData(view);
 				HT_SetViewFEData ( view, selector );
-			}
-			
-			// register the title area as a listener of the selector so that it gets
-			// notitfications to update the title of the selected view.
-			CNavCenterTitle* title = 
-				dynamic_cast<CNavCenterTitle*>(FindPaneByID(CNavCenterTitle::pane_ID));			
-			if ( title )
-				mSelectorPane->AddListener(title);		
+			}			
 		}
-
-		// If the close box is there, register this class as a listener so we get the
-		// close message. It won't be there in the standalone window version		
-		LGAIconSuiteControl* closeBox = 
-				dynamic_cast<LGAIconSuiteControl*>(FindPaneByID(CNavCenterTitle::kCloseBoxPaneID));
-		if ( closeBox )
-			closeBox->AddListener(this);
-				
+			
 		// receive notifications from the tree view
 		if (mTreePane)
 			mTreePane->AddListener(this);
@@ -211,9 +259,18 @@ void CRDFCoordinator::HandleNotification(
 		}
 
 		case HT_EVENT_VIEW_SELECTED:
+		{
+			// if the current view is changed by HT (not interactively by the user), this
+			// is the only place in the call chain where we will get notification. Make sure
+			// the shelf is open/closed accordingly and the titlebar is updated.
 			SelectView(view);
+			
+			bool openShelf = (view != NULL);
+			ListenToMessage ( CNavCenterSelectorPane::msg_ShelfStateShouldChange, &openShelf );
+			BroadcastMessage ( CNavCenterSelectorPane::msg_ActiveSelectorChanged, view );
 			break;
-
+		}
+		
 		//
 		// we get this event before the node opens/closes. This is useful for closing so
 		// we can compute the number of visible children of the node being closed before
@@ -240,7 +297,24 @@ void CRDFCoordinator::HandleNotification(
 			// delete FE data if any is there....
 			break;
 		}
-		
+
+		//
+		// we get this event when a new node is created and is to be put in "inline edit" mode.
+		//
+		case HT_EVENT_NODE_EDIT:
+		{
+			//¥¥¥ There are currently some problems with redraw here because of the way that
+			// the drawing code and the inline editing code interact. You can uncomment the
+			// line below and see that the cell does not draw correctly because it never gets
+			// a drawCellContents() called on it (since it is the cell being edited). This
+			// needs some work.....
+			if ( view == mTreePane->GetHTView() ) {
+				TableIndexT rowToEdit = URDFUtilities::HTRowToPPRow( HT_GetNodeIndex(view, node) );
+//				mTreePane->DoInlineEditing(	rowToEdit );			
+			}
+			break;
+		}
+					
 		case HT_EVENT_NODE_VPROP_CHANGED:
 		{
 			//¥¥¥optimization? only redraw the cell that changed
@@ -255,14 +329,16 @@ void CRDFCoordinator::HandleNotification(
 			
 		case HT_EVENT_VIEW_REFRESH:
 		{
-#if 0
 			// update the sitemap icon if anything has changed
 			if ( view == HT_GetViewType(mHTPane, HT_VIEW_SITEMAP) ) {
-				
+				//.....update the icon, but we don't have an icon or an API yet....
 			}
-#endif
 
 			// only update if current view
+			//
+			// ¥¥¥ There are some fairly noticable redraw problems here. For example, when
+			// nodes are deleted or added, the entire view is redrawn (and flashes). We
+			// need some help from HT to prevent this.
 			if ( view == mTreePane->GetHTView() ) { 
 				uint32 newRowsInView = HT_GetItemListCount ( view );
 				TableIndexT numRows, numCols;
@@ -310,25 +386,18 @@ void CRDFCoordinator::HandleNotification(
 // SelectView
 //
 // Make the given view the current view and ensure that the selector widget 
-// is up to date. Also make sure the shelf is in the appropriate state.
+// is up to date.
 //
 void CRDFCoordinator::SelectView(HT_View view)
 {
-	bool openShelf = (view != NULL);
-	if ( openShelf )
+	if ( view )
 		mTreePane->OpenView(view);
 	
-	// if the current view is changed by HT (not interactively by the user), this
-	// is the only place in the call chain where we will get notification. Make sure
-	// the shelf is open/closed accordingly. This may be redundant for the cases
-	// where the user is the one changing things.
-	//
-	// As a side effect, HT can now open/close the shelf w/out the user doing anything. This
-	// may be quite useful, or it may be annoying. Let's let the net decide.
-	ListenToMessage ( CNavCenterSelectorPane::msg_ShelfStateShouldChange, &openShelf );
-
-	// find the appropriate workspace and make it active. We have to turn off
-	// listening to the selector pane to avoid infinite loops.
+	// find the appropriate workspace and make it active if it has not yet been set
+	// (such as when HT sets it explicitly). We have to turn off listening to the selector 
+	// pane to avoid infinite loops (changing the selector will send us a message that the 
+	// active selector changed). This code should not be executed when the view change
+	// is made by the FE.
 	if ( !mSelectorPane->GetActiveWorkspace() || mSelectorPane->GetActiveWorkspace() != view ) {
 		StopListening();
 		mSelectorPane->SetActiveWorkspace(view);
@@ -377,12 +446,17 @@ void CRDFCoordinator::ListenToMessage(
 	switch (inMessage) {
 	
 		// the user clicked in the selector pane to change the selected workspace. Tell
-		// the backend about it. This will cause a message to be sent to us by HT to
-		// update the tree with the new data (processed by HandleNotification()).
+		// the backend about it, but before we do that, turn off HT events so we don't actually
+		// get the notification back -- we don't need it because the view change was caused
+		// by the FE.
 		case CNavCenterSelectorPane::msg_ActiveSelectorChanged:
+		{
 			HT_View newView = reinterpret_cast<HT_View>(ioParam);
+			URDFUtilities::StHTEventMasking saveMask(mHTPane, HT_EVENT_NO_NOTIFICATION_MASK);
 			HT_SetSelectedView(mHTPane, newView);
+			SelectView(newView);
 			break;
+		}
 		
 		// expand/collapse the shelf to the state pointed to by |ioParam|. If we don't
 		// switch the target, we run into the problem where we are still the active
@@ -390,9 +464,9 @@ void CRDFCoordinator::ListenToMessage(
 		// view, HT will barf.
 		case CNavCenterSelectorPane::msg_ShelfStateShouldChange:
 			if ( mIsInChrome ) {
-				bool* nowOpen = reinterpret_cast<bool*>(ioParam);
-				mNavCenter->SetShelfState ( *nowOpen );
-				if ( *nowOpen ) {
+				bool nowOpen = *(reinterpret_cast<bool*>(ioParam));
+				mNavCenter->SetShelfState ( nowOpen );
+				if ( nowOpen ) {
 					mTreePane->SetRightmostVisibleColumn(1);	//¥¥Êavoid annoying columns
 					SwitchTarget(this);
 				}
