@@ -44,10 +44,30 @@ nsDeviceContextPh :: nsDeviceContextPh()
   mHeight = 0;
   mStupid = 1;
   mSpec = nsnull;
+  mDC = nsnull;
 }
 
 nsDeviceContextPh :: ~nsDeviceContextPh()
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::~nsDeviceContextPh destructor called mSurface=<%p>\n", mSurface));
+
+  nsDrawingSurfacePh *surf = (nsDrawingSurfacePh *)mSurface;
+
+  NS_IF_RELEASE(surf);    //this clears the surf pointer...
+  mSurface = nsnull;
+
+#if 0
+  if (NULL != mPaletteInfo.palette)
+    ::DeleteObject((HPALETTE)mPaletteInfo.palette);
+
+  if (NULL != mDC)
+  {
+    ::DeleteDC(mDC);
+    mDC = NULL;
+  }
+#endif
+
+  NS_IF_RELEASE(mSpec);
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: Init(nsNativeWidget aWidget)
@@ -60,7 +80,7 @@ NS_IMETHODIMP nsDeviceContextPh :: Init(nsNativeWidget aWidget)
   PhRid_t                         rid;
   PhRegion_t                      region;
 														
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with aWidget\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with aWidget aWidget=<%p>\n", aWidget));
   
   // this is a temporary hack!
   mPixelsToTwips = 15.0f;		// from debug under windows
@@ -111,11 +131,12 @@ NS_IMETHODIMP nsDeviceContextPh :: Init(nsNativeWidget aWidget)
 
 nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with nsNativeDeviceContext - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with nsNativeDeviceContext aContext=<%p> aOrigContext=<%p>\n", aContext, aOrigContext));
 
-  // this is a temporary hack, assumer 300 dpi / 72
-  mPixelsToTwips = 300.0f/72.0f;
+  /* REVISIT: This is not right, but it gets the job done for right now */
+  mPixelsToTwips =  1.0f;
   mTwipsToPixels = 1 / mPixelsToTwips;  
+  mDC = aContext;
 
   return NS_OK;
 }
@@ -158,9 +179,14 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext(nsIRenderingContext *&
 
 NS_IMETHODIMP nsDeviceContextPh :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::SupportsNativeWidgets\n"));
-//  aSupportsWidgets = PR_FALSE;	/* we think this is correct */
-    aSupportsWidgets = PR_TRUE;		/* but you have to return this ... look at nsView class CreateWidget method */
+/* REVISIT: These needs to return FALSE if we are printing! */
+  if (nsnull == mDC)
+     aSupportsWidgets = PR_TRUE;
+  else
+     aSupportsWidgets = PR_FALSE;		/* while printing! */
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::SupportsNativeWidgets aSupportsWidgets=<%d>\n", aSupportsWidgets));
+
   return NS_OK;
 }
 
@@ -282,8 +308,6 @@ NS_IMETHODIMP nsDeviceContextPh :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions - Not Implemented\n"));
-
   if (mStupid)
   {
 	mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
@@ -298,6 +322,8 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
     mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
 */
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions mDevUnitsToAppUnits=<%f> mWidth=<%d> mHeight=<%f>\n", mDevUnitsToAppUnits, mWidth, mHeight));
+
   aWidth = mWidth;
   aHeight = mHeight;
 
@@ -308,7 +334,7 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceContextFor - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceContextFor\n"));
 
   aContext = new nsDeviceContextPh();
   ((nsDeviceContextPh*) aContext)->mSpec = aDevice;
@@ -359,8 +385,6 @@ NS_IMETHODIMP nsDeviceContextPh :: EndDocument(void)
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - Not Implemented\n"));
   nsresult    ret_code = NS_ERROR_FAILURE;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - Not Implemented\n"));
-
   /* convert the mSpec into a nsDeviceContextPh */
   if (mSpec)
   {
@@ -401,5 +425,36 @@ NS_IMETHODIMP nsDeviceContextPh :: BeginPage(void)
 NS_IMETHODIMP nsDeviceContextPh :: EndPage(void)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndPage - Not Implemented\n"));
-  return NS_OK;
+
+  nsresult    ret_code = NS_ERROR_FAILURE;
+
+  /* convert the mSpec into a nsDeviceContextPh */
+  if (mSpec)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndPage - mSpec=<%p>\n", mSpec));
+    nsDeviceContextSpecPh * PrintSpec = nsnull;
+    mSpec->QueryInterface(kIDeviceContextSpecIID, (void**) &PrintSpec);
+    if (PrintSpec)
+    {
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndPage - PriontSpec=<%p>\n", PrintSpec));
+
+      PpPrintContext_t *PrinterContext = nsnull;
+  	  PrintSpec->GetPrintContext( PrinterContext );
+      if (PrinterContext)
+	  {
+        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndPage - PrinterContext=<%p>\n", PrinterContext));
+
+		int err;
+		err = PpPrintNewPage(PrinterContext);
+		if (err == 0)
+		{
+          PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndPage - err=<%d>\n", err));
+          ret_code = NS_OK;
+		}
+      }
+    }
+    NS_RELEASE(PrintSpec);
+  }  
+
+  return ret_code;
 }
