@@ -25,6 +25,7 @@
    - Contributor(s):
    -   Scott MacGregor <mscott@netscape.com>
    -   Bill Law        <law@netscape.com>
+   -   Aaron Kaluszka  <ask@swva.net>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -94,6 +95,8 @@
     <data id="string.openingTitle">&openingTitle;</data>
     <data id="string.openingSource">&openingSource;</data>
     <data id="string.openingTarget">&openingTarget;</data>
+    <data id="string.unknownSavingTitle">&unknownSavingTitle;</data>
+    <data id="string.unknownOpeningTitle">&unknownOpeningTitle;</data>
     <data id="string.pause">&pause;</data>
     <data id="string.resume">&resume;</data>
 

@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bill Law <law@netscape.com>
+ *   Bill Law       <law@netscape.com>
+ *   Aaron Kaluszka <ask@swva.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -493,13 +494,19 @@ nsProgressDialog.prototype = {
     // Set the dialog title.
     setTitle: function() {
         // Start with saving/opening template.
-        var title = this.saving ? this.getString( "savingTitle" ) : this.getString( "openingTitle" );
+        // If percentage is not known (-1), use alternate template
+        var title = this.saving 
+            ? ( this.percent != -1 ? this.getString( "savingTitle" ) : this.getString( "unknownSavingTitle" ) )
+            : ( this.percent != -1 ? this.getString( "openingTitle" ) : this.getString( "unknownOpeningTitle" ) );
+
 
         // Use file name as insert 1.
         title = this.replaceInsert( title, 1, this.fileName() );
 
-        // Use percentage as insert 2.
-        title = this.replaceInsert( title, 2, this.percent );
+        // Use percentage as insert 2 (if known).
+        if ( this.percent != -1 ) {
+            title = this.replaceInsert( title, 2, this.percent );
+        }
 
         // Set <window>'s title attribute.
         if ( this.dialog ) {
