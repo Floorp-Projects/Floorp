@@ -3359,7 +3359,9 @@ function GetSelectionContainer()
 
   // and make sure the element is not a special editor node like
   // the <br> we insert in blank lines
-  while (result.node.hasAttribute("_moz_editor_bogus_node"))
+  // and don't select anonymous content !!! (fix for bug 190279)
+  while (result.node.hasAttribute("_moz_editor_bogus_node") ||
+         editor.isAnonymousElement(result.node))
     result.node = result.node.parentNode;
 
   return result;

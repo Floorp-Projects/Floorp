@@ -6178,3 +6178,11 @@ nsHTMLEditor::EndUpdateViewBatch()
   return res;
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::IsAnonymousElement(nsIDOMElement * aElement, PRBool * aReturn)
+{
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  *aReturn = content->IsNativeAnonymous();
+  return NS_OK;
+}

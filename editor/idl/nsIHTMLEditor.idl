@@ -570,5 +570,7 @@ interface nsIHTMLEditor : nsISupports
   void removeInsertionListener(in nsIContentFilter inFilter);
 
   nsIDOMCSSStyleRule parseStyleAttrIntoCSSRule(in AString aString);
+
+  boolean isAnonymousElement(in nsIDOMElement aElement);
 };
 
