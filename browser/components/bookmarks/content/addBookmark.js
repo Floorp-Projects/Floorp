@@ -291,8 +291,8 @@ function getNormalizedURL(url)
 function createNewFolder ()
 {
   var bookmarksView = document.getElementById("bookmarks-view");
-  var selection = bookmarksView.getTreeSelection();
-  var target    = BookmarksUtils.getTargetFromSelection(selection)
+  var resource = bookmarksView.treeBuilder.getResourceAtIndex(bookmarksView.currentIndex);
+  var target = BookmarksUtils.getTargetFromFolder(resource);
   BookmarksCommand.createNewFolder(target);
 }
 
