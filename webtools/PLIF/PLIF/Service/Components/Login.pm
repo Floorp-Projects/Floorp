@@ -39,6 +39,7 @@ sub provides {
     return ($service eq 'input.verify' or 
             $service eq 'input.verify.user.generic' or 
             $service eq 'user.login' or
+            $service eq 'component.userLogin' or
             $service eq 'dispatcher.commands' or 
             $service eq 'dispatcher.output.generic' or 
             $service eq 'dataSource.strings.default' or

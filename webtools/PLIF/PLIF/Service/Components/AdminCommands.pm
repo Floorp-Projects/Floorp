@@ -44,6 +44,7 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'input.verify' or 
+            $service eq 'component.adminCommands' or 
             $service eq 'dispatcher.output.generic' or 
             $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
