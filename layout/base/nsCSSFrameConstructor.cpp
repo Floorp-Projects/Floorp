@@ -3842,14 +3842,6 @@ nsCSSFrameConstructor::PropagateScrollToViewport(nsPresContext* aPresContext)
 
   nsIContent* docElement = mDocument->GetRootContent();
 
-#ifdef MOZ_SVG
-  // Per the SVG specification overflow should be ignored on an
-  // outermost stand-alone <svg> (SVG document).  Sixth bullet.
-  // http://www.w3.org/TR/SVG11/masking.html#OverflowAndClipProperties
-  if (docElement->IsContentOfType(nsIContent::eSVG))
-    return nsnull;
-#endif
-
   // Check the style on the document root element
   nsStyleSet *styleSet = aPresContext->PresShell()->StyleSet();
   nsRefPtr<nsStyleContext> rootStyle;
