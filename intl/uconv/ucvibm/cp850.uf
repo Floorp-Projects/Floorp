@@ -70,20 +70,20 @@ End of Item 0001
 
 Begin of Item 0002
  Format 2
-  srcBegin = 0131
-  destBegin = 00D5
+  srcBegin = 0192
+  destBegin = 009F
 End of Item 0002 
 
 Begin of Item 0003
  Format 2
-  srcBegin = 0192
-  destBegin = 009F
+  srcBegin = 2017
+  destBegin = 00F2
 End of Item 0003 
 
 Begin of Item 0004
  Format 2
-  srcBegin = 2017
-  destBegin = 00F2
+  srcBegin = 20AC
+  destBegin = 00D5
 End of Item 0004 
 
 Begin of Item 0005
@@ -155,9 +155,9 @@ End of Item 0008
 /*       Offset=0x0007   Start of MapCell Array */ 
 /* 0000 */    0x0000, 0x007F, 0x0000, 
 /* 0001 */    0x00A0, 0x00FF, 0x0000, 
-/* 0002 */    0x0131, 0x0000, 0x00D5, 
-/* 0003 */    0x0192, 0x0000, 0x009F, 
-/* 0004 */    0x2017, 0x0000, 0x00F2, 
+/* 0002 */    0x0192, 0x0000, 0x009F, 
+/* 0003 */    0x2017, 0x0000, 0x00F2, 
+/* 0004 */    0x20AC, 0x0000, 0x00D5, 
 /* 0005 */    0x2500, 0x253C, 0x0060, 
 /* 0006 */    0x2550, 0x256C, 0x009D, 
 /* 0007 */    0x2580, 0x2593, 0x00BA, 
