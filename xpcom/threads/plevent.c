@@ -1493,16 +1493,6 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 #endif /* Winxx */
 
 #if defined(XP_OS2)
-/* These functions/values are defined in the EMX libraries, but are not declared
-   in the GCC 3.2.1 headers.  */
-#ifdef XP_OS2_EMX
-unsigned _control87 (unsigned, unsigned);
-#define MCW_EM  0x003f
-#define MCW_IC  0x1000
-#define MCW_RC  0x0c00
-#define MCW_PC  0x0300
-#endif
-
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
@@ -1511,22 +1501,8 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     /* Must have HMQ for this & can't assume we already have appshell */
     if( FALSE == WinQueryQueueInfo( HMQ_CURRENT, NULL, 0))
     {
-       unsigned cw;
-       
        HAB hab = WinInitialize( 0);
-       
-#ifdef XP_OS2_EMX
-       /* It seems that WinCreateMsgQueue likes to change the floating point
-          control word for undocumented reasons.  Unfortunately, it causes
-          floating point exceptions (SIGFPE) to be unmasked, so we crash in 
-          javascript on startup.  The two calls to _control87 simply save the
-          current value of the control word and resets it after the call */
-       cw = _control87(0,0);
-#endif
        WinCreateMsgQueue( hab, 0);
-#ifdef XP_OS2_EMX
-       _control87(cw, MCW_EM | MCW_IC | MCW_RC | MCW_PC);
-#endif
     }
 
     if( !_pr_PostEventMsgId)
