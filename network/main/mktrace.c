@@ -133,8 +133,13 @@ EnsureLogModule(void)
             if (PR_GetSystemInfo(PR_SI_SYSNAME, sysname, sizeof(sysname)) != PR_SUCCESS)
                 sysname[0] = '\0';
 
+            /* PR_SI_RELEASE only works for unix and it will still return success. */
+#ifdef XP_UNIX
             if (PR_GetSystemInfo(PR_SI_RELEASE, release, sizeof(release)) != PR_SUCCESS)
                 release[0] = '\0';
+#else
+            release[0] = '\0';
+#endif
 
             if (PR_GetSystemInfo(PR_SI_ARCHITECTURE, arch, sizeof(arch)) != PR_SUCCESS)
                 arch[0] = '\0';
