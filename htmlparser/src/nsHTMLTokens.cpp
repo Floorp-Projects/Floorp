@@ -35,11 +35,7 @@
 #include "nsEntityEx.cpp"
 #endif
 
-static nsString     gIdentChars("-0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
-static nsAutoString gDigits("0123456789");
-static nsAutoString gWhitespace("\b\t ");
 static const char*  gUserdefined = "userdefined";
-static const char*  gEmpty = "";
 
 const PRInt32 kMAXNAMELEN=10;
 
@@ -203,6 +199,11 @@ PRBool CStartToken::IsEmpty(void) {
   return mEmpty;
 }
 
+nsString& GetIdentChars(void) {
+  static nsString gIdentChars("-0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
+  return gIdentChars;
+}
+
 /*
  *  Consume the identifier portion of the start tag
  *  
@@ -219,7 +220,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   mTextValue=aChar;
-  nsresult result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_TRUE,PR_FALSE);
+  nsresult result=aScanner.ReadWhile(mTextValue,GetIdentChars(),PR_TRUE,PR_FALSE);
   char buffer[300];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
   mTypeID = NS_TagToEnum(buffer);
@@ -1045,6 +1046,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
         result=aScanner.GetChar(aChar);        //skip the hash sign...
         if(NS_OK==result) {
           mTextKey=aChar;
+          static nsAutoString gDigits("0123456789");
           result=aScanner.ReadWhile(mTextKey,gDigits,PR_TRUE,PR_FALSE);
         }
       }
@@ -1186,8 +1188,8 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
 nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   
   mTextValue=aChar;
-
-  nsresult result=aScanner.ReadWhile(mTextValue,gWhitespace,PR_FALSE,PR_FALSE);
+  static nsAutoString theWhitespace("\b\t ");
+  nsresult result=aScanner.ReadWhile(mTextValue,theWhitespace,PR_FALSE,PR_FALSE);
   if(NS_OK==result) {
     mTextValue.StripChars("\r");
   }
@@ -1287,7 +1289,7 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner&
       }
     } //if
     else {
-      result=aScanner.ReadWhile(aString,gIdentChars,PR_TRUE,PR_FALSE);
+      result=aScanner.ReadWhile(aString,GetIdentChars(),PR_TRUE,PR_FALSE);
       if(NS_OK==result) {
         result=aScanner.Peek(aChar);
         if(NS_OK==result) {
@@ -1521,6 +1523,8 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
  //If we find either, just eat them. If we find text or a tag, then go to the 
  //target endtag, or the start of another comment. 
 
+  static nsAutoString theWhitespace2("\b\t ");
+
   while((!done) && (NS_OK==result)) { 
     result=aScanner.GetChar(aChar); 
     if((NS_OK==result) && (kLessThan==aChar)) { 
@@ -1541,7 +1545,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
         result=aScanner.ReadUntil(temp,kGreaterThan,PR_TRUE); 
       } 
     } 
-    else if(0<=gWhitespace.BinarySearch(aChar)) { 
+    else if(0<=theWhitespace2.BinarySearch(aChar)) { 
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner); 
       if(NS_OK==result) { 
@@ -1587,7 +1591,7 @@ const char* GetTagName(PRInt32 aTag) {
   if (0 == result) {
     if(aTag>=eHTMLTag_userdefined)
       result = gUserdefined;
-    else result= gEmpty;
+    else result=0;
   }
   return result;
 }

@@ -58,10 +58,7 @@ static NS_DEFINE_IID(kClassIID,     NS_RTF_DTD_IID);
 
 static const char* kRTFTextContentType = "application/rtf";
 static const char* kRTFDocHeader= "{\\rtf0";
-static nsString     gAlphaChars("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-static nsAutoString gDigits("-0123456789");
 
-static nsAutoString gEmpty;
 
 struct RTFEntry {
   char      mName[10];
@@ -484,6 +481,9 @@ PRInt32 CRTFControlWord::GetTokenType() {
 
 
 PRInt32 CRTFControlWord::Consume(nsScanner& aScanner){
+  static nsString     gAlphaChars("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+  static nsAutoString gDigits("-0123456789");
+
   PRInt32 result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
   if(NS_OK==result) {
     //ok, now look for an option parameter...

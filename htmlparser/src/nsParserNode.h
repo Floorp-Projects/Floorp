@@ -174,7 +174,7 @@ class nsCParserNode :  public nsIParserNode {
     
     // nsAutoString  mName;
 
-    static const nsAutoString  mEmptyString;
+    static const nsString* mEmptyString;
 
 };
 

@@ -23,7 +23,7 @@
 #include "nshtmlpars.h"
 #include "nsITokenizer.h"
 
-const nsAutoString nsCParserNode::mEmptyString("");
+const nsString* nsCParserNode::mEmptyString=0;
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
@@ -38,6 +38,9 @@ static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID);
  */
 nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): nsIParserNode() {
   NS_INIT_REFCNT();
+  if(!mEmptyString) {
+    mEmptyString=new nsString("");  //this is going to leak, but it's a singleton
+  }
   mAttributeCount=0;
   mLineNumber=aLineNumber;
   mToken=aToken;
@@ -162,7 +165,7 @@ void nsCParserNode::SetSkippedContent(CToken* aToken){
  *  @return  string ref containing node name
  */
 const nsString& nsCParserNode::GetName() const {
-  return mEmptyString;
+  return *mEmptyString;
   // return mName;
 }
 
@@ -191,7 +194,7 @@ const nsString& nsCParserNode::GetSkippedContent() const {
   if (nsnull != mSkippedContent) {
     return ((CSkippedContentToken*)mSkippedContent)->GetKey();
   }
-  return mEmptyString;
+  return *mEmptyString;
 }
 
 /**
@@ -246,7 +249,7 @@ const nsString& nsCParserNode::GetKeyAt(PRInt32 anIndex) const {
     CAttributeToken* tkn=(CAttributeToken*)(mAttributes[anIndex]);
     return tkn->GetKey();
   }
-  return mEmptyString;
+  return *mEmptyString;
 }
 
 
@@ -262,7 +265,7 @@ const nsString& nsCParserNode::GetValueAt(PRInt32 anIndex) const {
   if(anIndex<mAttributeCount){
     return (mAttributes[anIndex])->GetStringValueXXX();
   }
-  return mEmptyString;
+  return *mEmptyString;
 }
 
 

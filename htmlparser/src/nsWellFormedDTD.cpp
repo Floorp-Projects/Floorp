@@ -52,17 +52,6 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_WELLFORMED_DTD_IID); 
 
 
-//static const char* kNullURL = "Error: Null URL given";
-//static const char* kNullFilename= "Error: Null filename given";
-//static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-//static const char* kNullToken = "Error: Null token given";
-//static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kViewSourceCommand= "view-source";
-
-static nsAutoString gEmpty;
-static CTokenRecycler gTokenRecycler;
-
-
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -120,7 +109,7 @@ NS_IMPL_ADDREF(CWellFormedDTD)
 NS_IMPL_RELEASE(CWellFormedDTD)
 
 
-static CTokenDeallocator gTokenKiller;
+//static CTokenDeallocator gTokenKiller;
 
 /**
  *  Default constructor
@@ -129,7 +118,7 @@ static CTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mTokenDeque(gTokenKiller) {
+CWellFormedDTD::CWellFormedDTD() : nsIDTD() {
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;

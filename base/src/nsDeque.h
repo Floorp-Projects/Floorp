@@ -71,7 +71,7 @@ public:
 class NS_BASE nsDeque {
 friend class nsDequeIterator;
   public:
-                       nsDeque(nsDequeFunctor& aMemDestroyer);
+                       nsDeque(nsDequeFunctor* aDeallocator);
                       ~nsDeque();
             
   /**
@@ -215,7 +215,7 @@ protected:
   PRInt32         mSize;
   PRInt32         mCapacity;
   PRInt32         mOrigin;
-  nsDequeFunctor& mMemDestroyer;
+  nsDequeFunctor* mDeallocator;
   void**          mData;
 
 

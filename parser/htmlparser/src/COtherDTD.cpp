@@ -58,13 +58,6 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOtherHTML_DTD_IID); 
 static NS_DEFINE_IID(kBaseClassIID, NS_INAVHTML_DTD_IID); 
 
-//static const char* kNullURL = "Error: Null URL given";
-//static const char* kNullFilename= "Error: Null filename given";
-//static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-//static const char* kNullToken = "Error: Null token given";
-//static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-
-static nsAutoString gEmpty;
 
 
 /**

@@ -44,13 +44,13 @@ PRBool CTagList::Contains(eHTMLTags aTag){
 /**
  * 
  * @update	gess 01/04/99
- * @param 
+ * @param  
  * @return
  */
 PRInt32 CTagList::GetTopmostIndexOf(nsTagStack& aTagStack){
   int max=aTagStack.mCount;
   int index;
-  for(index=max-1;index>0;index--){
+  for(index=max-1;index>=0;index--){
     if(Contains(aTagStack.mTags[index])) {
       return index;
     }
@@ -214,6 +214,7 @@ CTagList  gNoframeRoot(2,0,eHTMLTag_body,eHTMLTag_frameset);
 
 CTagList  gAutoClose(2,0,eHTMLTag_body,eHTMLTag_td);
 CTagList  gBodyAutoClose(1,0,eHTMLTag_head);
+CTagList  gTBodyAutoClose(1,0,eHTMLTag_thead);
 CTagList  gCaptionAutoClose(1,0,eHTMLTag_tbody);
 CTagList  gLIAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
 CTagList  gPAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
@@ -442,7 +443,7 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_dl,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kSpecial, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, (kSpecial|kFontStyle), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown},
 
@@ -904,7 +905,7 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_tbody,
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
-    /*autoclose starttags and endtags*/ 0,0,0,
+    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown},

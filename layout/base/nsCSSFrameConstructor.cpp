@@ -341,7 +341,7 @@ class nsBenignFunctor: public nsDequeFunctor{
     }
 };
 
-static nsBenignFunctor* gBenignFunctor = new nsBenignFunctor;
+//static nsBenignFunctor* gBenignFunctor = new nsBenignFunctor;
 
 
 // Construct the outer, inner table frames and the children frames for the table. 
@@ -763,7 +763,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
     aNewTopMostFrame = aNewRowFrame;
   } else { // construct an anonymous row group frame
     nsIFrame* groupFrame;
-    nsDeque* toDo = (aToDo) ? aToDo : new nsDeque(*gBenignFunctor);
+    nsDeque* toDo = (aToDo) ? aToDo : new nsDeque(0);
     rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, styleContext,
                                   aAbsoluteItems, PR_TRUE, aNewTopMostFrame, groupFrame,
                                   aFixedItems, aTableCreator, toDo);
@@ -918,7 +918,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
     aNewTopMostFrame = aNewCellFrame;
   } else { // construct anonymous row frame
     nsIFrame* rowFrame;
-    nsDeque toDo(*gBenignFunctor);
+    nsDeque toDo(0);
     rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext,
                                 aAbsoluteItems, aNewTopMostFrame, rowFrame, aFixedItems, aTableCreator, &toDo);
     if (NS_SUCCEEDED(rv)) {

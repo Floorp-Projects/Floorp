@@ -144,6 +144,7 @@ public:
   virtual         ~CTokenRecycler();
   virtual void    RecycleToken(CToken* aToken);
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
+  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
 
 protected:
     nsDeque*  mTokenCache[eToken_last-1];

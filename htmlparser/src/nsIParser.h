@@ -224,5 +224,6 @@ const PRUnichar kNullCh           = '\0';
 #define kRDFTextContentType   "text/rdf"
 #define kXIFTextContentType   "text/xif"
 #define kPlainTextContentType "text/plain"
+#define kViewSourceCommand    "view-source"
 
 #endif 

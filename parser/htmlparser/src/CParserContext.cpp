@@ -20,19 +20,6 @@
 #include "CParserContext.h"
 #include "nsToken.h"
 
-/*
-class CTokenDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    CToken* aToken = (CToken*)anObject;
-    delete aToken;
-    return 0;
-  }
-};
-
-CTokenDeallocator gTokenDeallocator;
-
-*/
 
 /**
  * Your friendly little constructor. Ok, it's not the friendly, but the only guy

@@ -51,10 +51,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_EXPAT_DTD_IID); 
 
-static const char* kViewSourceCommand= "view-source";
-
-
-static CTokenRecycler gTokenRecycler;
 
 
 /**

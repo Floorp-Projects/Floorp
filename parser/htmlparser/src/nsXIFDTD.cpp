@@ -43,8 +43,6 @@ static NS_DEFINE_IID(kClassIID,     NS_XIF_DTD_IID);
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kXIFDocHeader= "<!DOCTYPE xif>";
-
-static nsAutoString gEmpty;
   
 
 struct nsXIFTagEntry {
@@ -309,7 +307,6 @@ public:
 };
 
 
-static nsXIfTokenDeallocator gTokenKiller;
 
 /**
  *  Default constructor
@@ -318,7 +315,7 @@ static nsXIfTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-nsXIFDTD::nsXIFDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
+nsXIFDTD::nsXIFDTD() : nsIDTD(){
   NS_INIT_REFCNT();
   mParser=0;
   mTokenizer=0;
