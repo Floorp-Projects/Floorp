@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.36 $ $Date: 2002/02/28 22:55:29 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.37 $ $Date: 2002/03/01 21:43:55 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -247,6 +247,9 @@ nssToken_LoadCerts(NSSToken *token)
 	    if (!token->certList) {
 		return PR_FAILURE;
 	    }
+	} else if (nssList_Count(token->certList) > 0) {
+	    /* already been done */
+	    return PR_SUCCESS;
 	}
 	/* ignore the rv, just work without the list */
 	(void)nssToken_TraverseCertificates(token, NULL, &search);
