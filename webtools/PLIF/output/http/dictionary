@@ -19,7 +19,32 @@ TemplateToolkit
     [%- CASE DEFAULT -%] [%- content -%]
   [%- END -%]
   [%- CASE 'fields.control' -%] [%- SWITCH content -%]
-    [%- CASE DEFAULT -%] <input type="text" name="[%- name -%]" value="[%- value -%]">
+    [%- CASE DEFAULT -%] <input type="text" name="[%- name | html -%]" value="[%- value | html -%]">
   [%- END -%]
+  [%- CASE 'age' -%]
+    [%- IF content == 1 -%] one second
+    [%- ELSIF content < 55                -%] [%- content                         -%] seconds
+    [%- ELSIF content < 65                -%] one minute
+    [%- ELSIF content < 100               -%] [%- content                         -%] seconds
+    [%- ELSIF content < 60*55             -%] [%- content div (60)                -%] minutes
+    [%- ELSIF content < 60*65             -%] one hour
+    [%- ELSIF content < 60*91             -%] [%- content div (60)                -%] minutes
+    [%- ELSIF content < 60*60*23          -%] [%- content div (60*60)             -%] hours
+    [%- ELSIF content < 60*60*25          -%] one day
+    [%- ELSIF content < 60*60*47          -%] [%- content div (60*60)             -%] hours
+    [%- ELSIF content < 60*60*24*6        -%] [%- content div (60*60*24)          -%] days
+    [%- ELSIF content < 60*60*24*8        -%] one week
+    [%- ELSIF content < 60*60*24*13       -%] [%- content div (60*60*24)          -%] days
+    [%- ELSIF content < 60*60*24*15       -%] a fortnight
+    [%- ELSIF content < 60*60*24*7*4      -%] [%- content div (60*60*24*7)        -%] weeks
+    [%- ELSIF content < 60*60*24*7*5      -%] one month
+    [%- ELSIF content < 60*60*24*7*8      -%] [%- content div (60*60*24*7)        -%] weeks
+    [%- ELSIF content < 60*60*24*7*52     -%] [%- content div (60*60*24*30)       -%] months
+    [%- ELSIF content < 60*60*24*365*9    -%] [%- content div (60*60*24*365)      -%] years
+    [%- ELSIF content < 60*60*24*365*95   -%] [%- content div (60*60*24*365*10)   -%] decades
+    [%- ELSIF content < 60*60*24*365*995  -%] [%- content div (60*60*24*365*100)  -%] centuries
+    [%- ELSIF content < 60*60*24*365*9995 -%] [%- content div (60*60*24*365*1000) -%] millennia
+    [%- ELSE -%] [%- content -%] seconds
+  [%- END -%]    
   [%- CASE DEFAULT -%] [%- content -%]
 [%- END -%]
