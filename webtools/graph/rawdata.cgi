@@ -61,7 +61,7 @@ sub show_data {
 {
 	
   print "Content-type: text/html\n\n<HTML>\n";
-  print "<title>$TESTNAME machines</title>";
+  print "<title>rawdata for $TBOX $TESTNAME</title>";
 
   if(!$TESTNAME) {
 	print "Error: need testname.";
