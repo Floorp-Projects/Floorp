@@ -2,8 +2,13 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.9 $ 
-# $Date: 2000/11/09 19:19:57 $ 
+# admintree.cgi - the webform used by administrators to close the
+#		 tree, set the message of the day and stop build 
+#		 columns from being shown on the default pages.
+
+
+# $Revision: 1.10 $ 
+# $Date: 2001/01/04 00:25:14 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -101,6 +106,9 @@ sub get_params {
   @NEW_IGNORE_BUILDS = uniq(@NEW_IGNORE_BUILDS);
 
   $REMOTE_HOST = remote_host();
+
+  $ADMINISTRATIVE_NETWORK_PAT = ($TinderConfig::ADMINISTRATIVE_NETWORK_PAT ||
+                                 '.*');
 
   return ;
 }
@@ -484,6 +492,11 @@ sub security_problem {
     ($encoded eq $PASSWD_TABLE{$TREE}{$MAILADDR}) ||
       (push @out, "Error, Password Not Valid\n");
   }
+
+  ($REMOTE_HOST =~ m!$ADMINISTRATIVE_NETWORK_PAT!) ||
+    (push @out, ("Error, Host: '$REMOTE_HOST' not valid. ".
+                 " Requests must be made from an IP address".
+                 " in an administrative network.\n"));
 
   return @out;
 }
