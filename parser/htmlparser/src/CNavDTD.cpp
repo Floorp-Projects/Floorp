@@ -923,8 +923,10 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
             // illegal here so they'll be shipped out with their parents and
             // siblings.  See bug 40855 for an explanation (that bug was for
             // comments, but the same issues arise with whitespace, newlines,
-            // noscript, scripts, etc).
-            !gHTMLElements[theTag].HasSpecialProperty(kLegalOpen))) {
+            // noscript, etc).  Script is special, though.  Shipping it out
+            // breaks document.write stuff.  See bug 243064.
+            (!gHTMLElements[theTag].HasSpecialProperty(kLegalOpen) ||
+             theTag == eHTMLTag_script))) {
             
           mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; // reset the state since all the misplaced tokens are about to get handled.
 
