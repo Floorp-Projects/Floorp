@@ -97,7 +97,7 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
         if (numProfiles == 1)
         {
             // one profile exists: use that profile
-            profileService->GetSingleProfile(&currProfileName);
+            profileService->GetFirstProfile(&currProfileName);
             profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
         }
 	    else
