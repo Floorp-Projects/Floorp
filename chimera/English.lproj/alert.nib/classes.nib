@@ -23,6 +23,7 @@
                 confirmPanelButton2 = id; 
                 confirmPanelButton3 = id; 
                 confirmPanelText = id; 
+                expiredCertPanel = id; 
                 owner = id; 
                 passwordPanel = id; 
                 passwordPanelCheck = id; 

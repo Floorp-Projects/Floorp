@@ -650,7 +650,7 @@ nsCocoaBrowserService::CertExpired(nsITransportSecurityInfo *socketInfo,
   // HACK: there is no way to get which window this is for from the API. The
   // security team in mozilla just cheats and assumes the frontmost window so
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
-  *_retval = (PRBool)[controller badCert:[NSApp mainWindow]];
+  *_retval = (PRBool)[controller certExpired:[NSApp mainWindow]];
   
   return NS_OK;
 }
