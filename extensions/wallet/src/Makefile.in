@@ -41,5 +41,5 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(TARGETS)
+install::
 	$(INSTALL) $(srcdir)/wallet.properties $(DIST)/bin/res
