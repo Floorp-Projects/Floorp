@@ -94,7 +94,7 @@ interface nsIIOService : nsISupports
      * is usually a 2-letter code such as "en" and occasionally a 
      * five-character code to indicate a language subtype, such as "zh_CN". 
      */
-    readonly attribute wstring Language;
+    attribute wstring Language;
 
     /**
      * Get the current platform (machine type).

@@ -46,6 +46,7 @@ public:
     NS_IMETHOD GetAppVersion(PRUnichar* *aAppVersion);
     NS_IMETHOD GetAppName(PRUnichar* *aAppName);
     NS_IMETHOD GetLanguage(PRUnichar* *aLanguage);
+    NS_IMETHOD SetLanguage(PRUnichar* aLanguage);
     NS_IMETHOD GetPlatform(PRUnichar* *aPlatform);
     NS_IMETHOD GetUserAgent(PRUnichar* *aUserAgent);
     NS_IMETHOD NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue, nsIStreamObserver **_retval);
