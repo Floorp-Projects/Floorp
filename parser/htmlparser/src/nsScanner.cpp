@@ -545,7 +545,7 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
 
   start = mCurrentPosition;
 
-  if (mCountRemaining <= aOffset) {
+  if ((PRInt32)mCountRemaining <= aOffset) {
     return kEOF;
   }
 
