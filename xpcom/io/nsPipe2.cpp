@@ -55,7 +55,7 @@ public:
     // implementations to avoid the extra object allocation, and speed up method
     // invocation between them and the nsPipe's buffer  manipulation methods.
 
-    class nsPipeInputStream : public nsIInputStream {
+    class nsPipeInputStream : public nsIInputStream, public nsISearchableInputStream {
     public:
         NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr); 
         NS_IMETHOD_(nsrefcnt) AddRef(void); 
@@ -304,6 +304,14 @@ nsPipe::GetWriteSegment(char* *resultSegment,
 NS_IMETHODIMP
 nsPipe::nsPipeInputStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
+  if (aIID.Equals(NS_GET_IID(nsISearchableInputStream))) 
+  {
+    nsISearchableInputStream* in = NS_STATIC_CAST(nsISearchableInputStream *, this);
+    NS_ADDREF(in);
+    *aInstancePtr = in;
+    return NS_OK;
+  }
+  else
     return GET_INPUTSTREAM_PIPE(this)->QueryInterface(aIID, aInstancePtr);
 }
 
