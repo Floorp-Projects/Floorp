@@ -516,7 +516,7 @@ nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
 nsresult
 nsTransactionManager::Write(nsIOutputStream *aOutputStream)
 {
-  PRUint32 len;
+  PRInt32 len;
 
   if (!aOutputStream)
     return NS_ERROR_NULL_POINTER;

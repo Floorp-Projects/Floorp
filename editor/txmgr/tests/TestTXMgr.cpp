@@ -252,7 +252,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Close(void) {return NS_OK;}
-  NS_IMETHOD Write(const char *str, PRUint32 offset, PRUint32 len, PRUint32 *wcnt)
+  NS_IMETHOD Write(const char *str, PRInt32 offset, PRInt32 len, PRInt32 *wcnt)
   {
     *wcnt = fwrite(&str[offset], 1, len, stdout);
     fflush(stdout);
@@ -448,7 +448,7 @@ public:
   virtual nsresult Write(nsIOutputStream *aOutputStream)
   {
     char buf[256];
-    PRUint32 amt;
+    PRInt32 amt;
 
     sprintf(buf, "Transaction: %d - 0x%.8x\n", mVal, this);
     return aOutputStream->Write(buf, 0, strlen(buf), &amt);
